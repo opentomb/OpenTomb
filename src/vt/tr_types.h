@@ -60,7 +60,6 @@ typedef struct {
 typedef struct {
     uint8_t pixels[256][256];
 } tr_textile8_t;
-//typedef prtl::array < tr_textile8_t > tr_textile8_array_t;
 
 /** \brief 16-bit texture.
   *
@@ -73,7 +72,6 @@ typedef struct {
 typedef struct {
     uint16_t pixels[256][256];
 } tr2_textile16_t;
-//typedef prtl::array < tr2_textile16_t > tr2_textile16_array_t;
 
 /** \brief 32-bit texture.
   *
@@ -82,7 +80,6 @@ typedef struct {
 typedef struct {
     uint32_t pixels[256][256];
 } tr4_textile32_t;
-//typedef prtl::array < tr4_textile32_t > tr4_textile32_array_t;
 
 /** \brief Room portal.
   */
@@ -99,7 +96,6 @@ typedef struct {
                                    * AdjoiningRoom.
                                    */
 } tr_room_portal_t;
-//typedef prtl::array < tr_room_portal_t > tr_room_portal_array_t;
 
 /** \brief Room sector.
   */
@@ -111,7 +107,6 @@ typedef struct {
     uint8_t room_above;    // The number of the room above this one (-1 or 255 if none)
     int8_t ceiling;        // Absolute height of ceiling (multiply by 256 for world coordinates)
 } tr_room_sector_t;
-//typedef prtl::array < tr_room_sector_t > tr_room_sector_array_t;
 
 /** \brief Room light.
   */
@@ -133,7 +128,6 @@ typedef struct {
     tr5_vertex_t pos2;          // world coords
     tr5_vertex_t dir2;          // direction
 } tr5_room_light_t;
-//typedef prtl::array < tr5_room_light_t > tr5_room_light_array_t;
 
 /** \brief Room sprite.
   */
@@ -141,7 +135,6 @@ typedef struct {
     int16_t vertex;                 // offset into vertex list
     int16_t texture;                // offset into sprite texture list
 } tr_room_sprite_t;
-//typedef prtl::array < tr_room_sprite_t > tr_room_sprite_array_t;
 
 /** \brief Room layer (TR5).
   */
@@ -167,7 +160,6 @@ typedef struct {
     int16_t unknown_l8a;
     int16_t unknown_l8b;
 } tr5_room_layer_t;
-//typedef prtl::array < tr5_room_layer_t > tr5_room_layer_array_t;
 
 /** \brief Room vertex.
   */
@@ -197,7 +189,6 @@ typedef struct {
     uint16_t object_id;     // which StaticMesh item to draw
     tr5_colour_t tint;      // extracted from intensity
 } tr2_room_staticmesh_t;
-//typedef prtl::array < tr2_room_staticmesh_t > tr2_room_staticmesh_array_t;
 
 /** \brief Room.
   */
@@ -266,7 +257,6 @@ typedef struct {
     uint32_t unknown_r5;
     uint32_t unknown_r6;
 } tr5_room_t;
-//typedef prtl::array < tr5_room_t > tr5_room_array_t;
 
 /** \brief Mesh.
   */
@@ -302,7 +292,6 @@ typedef struct {                    // 32 bytes
     uint16_t flags;                 // Meaning uncertain; it is usually 2, and is 3 for objects Lara can travel through,
     // like TR2's skeletons and underwater vegetation
 } tr_staticmesh_t;
-//typedef prtl::array < tr_staticmesh_t > tr_staticmesh_array_t;
 
 /** \brief MeshTree.
   *
@@ -318,7 +307,6 @@ typedef struct {        // 4 bytes
     uint32_t flags;
     tr5_vertex_t offset;
 } tr_meshtree_t;
-//typedef prtl::array < tr_meshtree_t > tr_meshtree_array_t;
 
 /** \brief Frame.
   *
@@ -373,7 +361,6 @@ typedef struct {                // 18 bytes
     uint32_t frame_index;
     uint16_t animation_index;   // offset into Animations[]
 } tr_moveable_t;
-//typedef prtl::array < tr_moveable_t > tr_moveable_array_t;
 
 /** \brief Item.
   */
@@ -389,7 +376,6 @@ typedef struct {           // 24 bytes [TR1: 22 bytes]
     // 0x3e00 indicates "open" or "activated";  these can be XORed with
     // related FloorData::FDlist fields (e.g. for switches)
 } tr2_item_t;
-//typedef prtl::array < tr2_item_t > tr2_item_array_t;
 
 /** \brief Sprite texture.
   */
@@ -405,7 +391,6 @@ typedef struct {               // 16 bytes
     int16_t         right_side;
     int16_t         bottom_side;
 } tr_sprite_texture_t;
-//typedef prtl::array < tr_sprite_texture_t > tr_sprite_texture_array_t;
 
 /** \brief Sprite sequence.
   */
@@ -414,7 +399,6 @@ typedef struct {           // 8 bytes
     int16_t length;        // negative of "how many sprites are in this sequence"
     int16_t offset;        // where (in sprite texture list) this sequence starts
 } tr_sprite_sequence_t;
-//typedef prtl::array < tr_sprite_sequence_t > tr_sprite_sequence_array_t;
 
 /** \brief Animation.
   *
@@ -446,7 +430,6 @@ typedef struct {                // 32 bytes TR1/2/3 40 bytes TR4
     uint16_t num_anim_commands;     // How many of them to use.
     uint16_t anim_command;          // offset into AnimCommand[]
 } tr_animation_t;
-//typedef prtl::array < tr_animation_t > tr_animation_array_t;
 
 /** \brief State Change.
   *
@@ -459,7 +442,6 @@ typedef struct {                        // 6 bytes
     uint16_t num_anim_dispatches;       // number of ranges (seems to always be 1..5)
     uint16_t anim_dispatch;             // Offset into AnimDispatches[]
 } tr_state_change_t;
-//typedef prtl::array < tr_state_change_t > tr_state_change_array_t;
 
 /** \brief Animation Dispatch.
   *
@@ -473,7 +455,6 @@ typedef struct {                // 8 bytes
     int16_t next_animation;     // Animation to dispatch to
     int16_t next_frame;         // Frame offset to dispatch to
 } tr_anim_dispatch_t;
-//typedef prtl::array < tr_anim_dispatch_t > tr_anim_dispatch_array_t;
 
 /** \brief Animation Command.
   *
@@ -487,7 +468,6 @@ typedef struct {                // 8 bytes
 //typedef struct {        // 2 bytes
 //    int16_t value;
 //} tr_anim_command_t;
-//typedef prtl::array < tr_anim_command_t > tr_anim_command_array_t;
 
 /** \brief Box.
   */
@@ -500,7 +480,6 @@ typedef struct {            // 8 bytes [TR1: 20 bytes] In TR1, the first four ar
     int16_t overlap_index;  // index into Overlaps[]. The high bit is sometimes set; this
     // occurs in front of swinging doors and the like.
 } tr_box_t;
-//typedef prtl::array < tr_box_t > tr_box_array_t;
 
 /** \brief SoundSource.
   *
@@ -516,7 +495,6 @@ typedef struct {
     uint16_t sound_id;      // internal sound index
     uint16_t flags;         // 0x40, 0x80, or 0xc0
 } tr_sound_source_t;
-//typedef prtl::array < tr_sound_source_t > tr_sound_source_array_t;
 
 /** \brief SoundDetails.
  *
@@ -536,7 +514,6 @@ typedef struct {                         // 8 bytes
     uint8_t flags_2;                     // Bit 4: UNKNOWN, bit 5: Randomize pitch, bit 6: randomize volume
                                          // All other bits in flags_2 are unused.
 } tr_sound_details_t;
-//typedef prtl::array < tr_sound_details_t > tr_sound_detail_array_t;
 
 
 /** \brief Object Texture Vertex.
@@ -576,7 +553,6 @@ typedef struct {                    // 38 bytes TR4 - 20 in TR1/2/3
     uint32_t x_size;                            // TR4
     uint32_t y_size;                            // TR4
 } tr4_object_texture_t;
-//typedef prtl::array < tr4_object_texture_t > tr4_object_texture_array_t;
 
 /** \brief Animated Textures.
   */
@@ -585,7 +561,6 @@ typedef struct {
     int16_t  texture_ids_count;
     int16_t *texture_ids;       //[NumTextureIDs + 1]; // offsets into ObjectTextures[], in animation order.
 } tr_animated_textures_t;       //[NumAnimatedTextures];
-//typedef prtl::array < tr_animated_textures_t > tr_animated_texture_array_t;
 
 /** \brief Camera.
   */
@@ -596,23 +571,27 @@ typedef struct {
     int16_t room;
     uint16_t unknown1;    // correlates to Boxes[]? Zones[]?
 } tr_camera_t;
-//typedef prtl::array < tr_camera_t > tr_camera_array_t;
 
 /** \brief Extra Camera.
   */
 typedef struct {
-    int32_t x1;
-    int32_t y1;
-    int32_t z1;
-    int32_t x2;
-    int32_t y2;
-    int32_t z2;
-    uint8_t index1;
-    uint8_t index2;
-    uint16_t unknown[5];
-    int32_t id;
+    int32_t pos_x;
+    int32_t pos_y;
+    int32_t pos_z;
+    int32_t target_x;
+    int32_t target_y;
+    int32_t target_z;
+    uint8_t sequence;
+    uint8_t index;
+
+    uint16_t fov;
+    uint16_t roll;
+    uint16_t timer;
+    uint16_t speed;
+    uint16_t flags;
+    
+    int32_t room_id;
 } tr4_flyby_camera_t;
-//typedef prtl::array < tr4_flyby_camera_t > tr4_flyby_camera_array_t;
 
 /** \brief AI Object.
   */
@@ -626,7 +605,6 @@ typedef struct {
     uint16_t flags;        // The trigger flags (button 1-5, first button has value 2)
     int32_t angle;
 } tr4_ai_object_t;
-//typedef prtl::array < tr4_ai_object_t > tr4_ai_object_array_t;
 
 /** \brief Cinematic Frame.
   */

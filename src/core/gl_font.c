@@ -237,7 +237,7 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
         buffer = (GLubyte*)malloc(buffer_size);
         memset(buffer, 0x00, buffer_size);
 
-        for(i=0,x=0,y=0;i<glf->glyphs_count;i++)
+        for(i = 0, x=0, y=0; i < glf->glyphs_count; i++)
         {
             FT_GlyphSlot g;
             glf->glyphs[i].tex_index = 0;
@@ -279,7 +279,7 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
                     qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
                     qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
                     qglTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, glf->gl_tex_width, glf->gl_tex_width, 0, GL_ALPHA, GL_UNSIGNED_BYTE, buffer);
-                    for(ii=i0;ii<i;ii++)
+                    for(ii = i0; ii < i; ii++)
                     {
                         glf->glyphs[ii].tex_x0 /= (GLfloat)glf->gl_tex_width;
                         glf->glyphs[ii].tex_x1 /= (GLfloat)glf->gl_tex_width;
@@ -299,9 +299,9 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
             glf->glyphs[i].tex_y1 = (GLfloat)(y + g->bitmap.rows);
 
             glf->glyphs[i].tex_index = glf->gl_tex_indexes[glf->gl_real_tex_indexes_count];
-            for(xx=0;xx<g->bitmap.width;xx++)
+            for(xx = 0; xx < g->bitmap.width; xx++)
             {
-                for(yy=0;yy<g->bitmap.rows;yy++)
+                for(yy = 0; yy < g->bitmap.rows; yy++)
                 {
                     buffer[(y+yy)*glf->gl_tex_width + (x+xx)] = g->bitmap.buffer[yy * g->bitmap.width + xx];
                 }
@@ -317,7 +317,7 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
         qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         chars_in_column = NextPowerOf2(y + font_size + padding);
         qglTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, glf->gl_tex_width, chars_in_column, 0, GL_ALPHA, GL_UNSIGNED_BYTE, buffer);
-        for(ii=i0;ii<glf->glyphs_count;ii++)
+        for(ii = i0; ii < glf->glyphs_count; ii++)
         {
             glf->glyphs[ii].tex_x0 /= (GLfloat)glf->gl_tex_width;
             glf->glyphs[ii].tex_x1 /= (GLfloat)glf->gl_tex_width;
@@ -377,7 +377,7 @@ float glf_get_string_len(gl_tex_font_p glf, const char *text, int n)
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
 
-        for(i=0;(*ch!=0) && !((n>=0)&&(i>=n));i++)
+        for(i = 0; (*ch != 0) && !((n >= 0) && (i >= n)); i++)
         {
             FT_Vector kern;
 
@@ -416,7 +416,7 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
 
-        for(i=0;(*ch!=0) && !((n>=0)&&(i>=n));i++)
+        for(i = 0; (*ch != 0) && !((n >= 0) && (i >= n)); i++)
         {
             FT_Vector kern;
             char_info_p g = glf->glyphs + curr_utf32;
@@ -462,7 +462,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
 
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        for(p=buffer;*ch;)
+        for(p = buffer; *ch;)
         {
             char_info_p g;
             uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
@@ -543,7 +543,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        for(;*ch;)
+        for(; *ch;)
         {
             char_info_p g;
             uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
@@ -633,7 +633,7 @@ uint32_t utf8_strlen(const char *str)
     uint32_t i = 0;
     uint8_t *ch = (uint8_t*)str;
 
-    for(;*ch;i++)
+    for(; *ch; i++)
     {
         ch = utf8_next_symbol(ch);
     }

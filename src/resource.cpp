@@ -1152,7 +1152,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model, int16_t *base_anim_co
                         {
                             case TR_EFFECT_CHANGEDIRECTION:
                                 af->frames[frame].command |= ANIM_CMD_CHANGE_DIRECTION;
-                                Con_Printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames_count);
+                                //Con_Printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames_count);
                                 //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames_count);
                                 break;
                         }
@@ -1162,25 +1162,6 @@ void GenerateAnimCommandsTransform(skeletal_model_p model, int16_t *base_anim_co
         }
     }
 }
-
-
-/*room_sector_p TR_GetRoomSector(uint32_t room_id, int sx, int sy)
-{
-    room_p room;
-    if(room_id >= engine_world.room_count)
-    {
-        return NULL;
-    }
-
-    room = engine_world.rooms + room_id;
-    if((sx < 0) || (sx >= room->sectors_x) || (sy < 0) || (sy >= room->sectors_y))
-    {
-        return NULL;
-    }
-
-    return room->sectors + sx * room->sectors_y + sy;
-}*/
-
 
 /**   Assign animated texture to a polygon.
   *   While in original TRs we had TexInfo abstraction layer to refer texture,

@@ -662,6 +662,7 @@ function pickup_init(id, item_id)    -- Pick-ups
             if(dz < -256.0) then
                 need_set_pos = false;
                 setEntityAnim(activator_id, 425); -- Standing pickup, test version
+                --noFixEntityCollision(activator_id);
             else
                 setEntityAnim(activator_id, 135); -- Stay pickup
             end;
@@ -684,7 +685,7 @@ function pickup_init(id, item_id)    -- Pick-ups
                 if(getEntityDistance(object_id, activator_id) > 128.0) then
                     moveEntityToEntity(activator_id, object_id, 25.0);
                 end;
-            else
+            elseif(need_set_pos) then
                 if(getEntityDistance(object_id, activator_id) > 32.0) then
                     moveEntityToEntity(activator_id, object_id, 50.0);
                 end;

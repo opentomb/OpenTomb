@@ -63,7 +63,7 @@ typedef struct entity_s
     
     uint32_t                            trigger_layout : 8;     // Mask + once + event + sector status flags
     uint32_t                            dir_flag : 8;           // (move direction)
-    uint32_t                            move_type : 4;          // on floor / free fall / swim ....    
+    uint32_t                            move_type : 4;          // on floor / free fall / swim ....
     uint32_t                            was_rendered : 1;       // render once per frame trigger
     uint32_t                            was_rendered_lines : 1; // same for debug lines
     uint32_t                            no_fix_all : 1;

@@ -163,7 +163,7 @@ float TR_Level::read_float(SDL_RWops * const src)
   */
 float TR_Level::read_mixfloat(SDL_RWops * const src)
 {
-     int16_t base_int;
+    int16_t base_int;
     uint16_t sign_int;
 
     if (src == NULL)

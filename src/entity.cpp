@@ -1266,8 +1266,6 @@ void Entity_CheckActivators(struct entity_s *ent)
             if((cont->object_type == OBJECT_ENTITY) && (cont->object))
             {
                 entity_p e = (entity_p)cont->object;
-                float r = e->activation_offset[3];
-                r *= r;
                 if((e->type_flags & ENTITY_TYPE_INTERACTIVE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
                     //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
@@ -1279,6 +1277,8 @@ void Entity_CheckActivators(struct entity_s *ent)
                 else if((e->type_flags & ENTITY_TYPE_PICKABLE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
                     float *v = e->transform + 12;
+                    float r = e->activation_offset[3];
+                    r *= r;
                     if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
                                       (v[2] + 32.0 > ent->transform[12+2] + ent->bf->bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf->bb_max[2]))
                     {

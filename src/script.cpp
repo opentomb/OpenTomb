@@ -946,7 +946,7 @@ int lua_BindKey(lua_State *lua)
         return 0;
      }
 
-     for(int i=0;i<sm->mesh_count;i++)
+     for(int i = 0; i < sm->mesh_count; i++)
      {
          Con_Printf("mesh[%d] = %d", i, sm->mesh_tree[i].mesh_base->id);
      }
@@ -979,7 +979,7 @@ int lua_DumpRoom(lua_State * lua)
         room_sector_p rs = r->sectors;
         Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->id, r->sectors_x, r->sectors_y, r->bb_min[2], r->bb_max[2], r->transform[12 + 0], r->transform[12 + 1]);
         Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != NULL)?(r->alternate_room->id):(-1), (r->base_room != NULL)?(r->base_room->id):(-1));
-        for(uint32_t i=0;i<r->sectors_count;i++,rs++)
+        for(uint32_t i = 0; i < r->sectors_count; i++, rs++)
         {
             Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, (rs->portal_to_room)?(rs->portal_to_room->id):(-1));
         }
@@ -987,7 +987,7 @@ int lua_DumpRoom(lua_State * lua)
         {
             Sys_DebugLog("room_dump.txt", "static_mesh = %d", sm->object_id);
         }
-        for(engine_container_p cont = r->content->containers; cont!=NULL; cont = cont->next)
+        for(engine_container_p cont = r->content->containers; cont; cont = cont->next)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
@@ -1078,7 +1078,7 @@ int lua_ActivateEntity(lua_State *lua)
     uint16_t trigger_lock       = lua_tointeger(lua, 5);
     uint16_t trigger_timer      = lua_tointeger(lua, 6);
 
-    if(object && activator)
+    if(object)
     {
         Entity_Activate(object, activator, trigger_mask, trigger_op, trigger_lock, trigger_timer);
     }
@@ -1100,9 +1100,30 @@ int lua_DeactivateEntity(lua_State *lua)
     entity_p object             = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
     entity_p activator          = World_GetEntityByID(&engine_world, lua_tointeger(lua, 2));
 
-    if(object && activator)
+    if(object)
     {
         Entity_Deactivate(object, activator);
+    }
+
+    return 0;
+}
+
+
+int lua_NoFixEntityCollision(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 1)
+    {
+        Con_Warning("Expecting arguments (entity_id)");
+        return 0;
+    }
+
+    entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
+
+    if(ent)
+    {
+        ent->no_fix_all = 0x01;
     }
 
     return 0;
@@ -1633,7 +1654,7 @@ int lua_ResetCharacterHair(lua_State *lua)
         {
             if(ent->character->hairs)
             {
-                for(int i=0;i<ent->character->hair_count;i++)
+                for(int i = 0; i < ent->character->hair_count; i++)
                 {
                     Hair_Delete(ent->character->hairs[i]);
                     ent->character->hairs[i] = NULL;
@@ -2045,7 +2066,7 @@ int lua_PrintItems(lua_State * lua)
     if(ent->character)
     {
         inventory_node_p i = ent->character->inventory;
-        for(;i;i=i->next)
+        for(; i; i = i->next)
         {
             Con_Printf("item[id = %d]: count = %d", i->id, i->count);
         }
@@ -2086,7 +2107,7 @@ int lua_SetStateChangeRange(lua_State * lua)
     }
 
     animation_frame_p af = model->animations + anim;
-    for(uint16_t i=0;i<af->state_change_count;i++)
+    for(uint16_t i = 0; i < af->state_change_count; i++)
     {
         if(af->state_change[i].id == (uint32_t)state)
         {
@@ -4147,7 +4168,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
         bool dynamic = false;
         float mass = 0.0;
 
-        for(int i=0; i < body_number; i++)
+        for(int i = 0; i < body_number; i++)
         {
             if(top >= argn) mass = lua_tonumber(lua, argn++);
             if(mass > 0.0) dynamic = true;
@@ -4638,7 +4659,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
 
     if(model != NULL)
     {
-        polygon_p p=model->mesh_tree->mesh_base->transparency_polygons;
+        polygon_p p = model->mesh_tree->mesh_base->transparency_polygons;
         if((p != NULL) && (p->anim_id == 0))
         {
             engine_world.anim_sequences_count++;
@@ -4660,7 +4681,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
 
             float v_min, v_max;
             v_min = v_max = p->vertices->tex_coord[1];
-            for(uint16_t j=1;j<p->vertex_count;j++)
+            for(uint16_t j = 1; j < p->vertex_count; j++)
             {
                 if(p->vertices[j].tex_coord[1] > v_max)
                 {
@@ -4682,10 +4703,10 @@ int lua_genUVRotateAnimation(lua_State *lua)
             seq->frames->move[0] = 0.0;
             seq->frames->move[1] = 0.0;
 
-            for(;p!=NULL;p=p->next)
+            for(; p; p = p->next)
             {
                 p->anim_id = engine_world.anim_sequences_count;
-                for(uint16_t j=0;j<p->vertex_count;j++)
+                for(uint16_t j = 0; j < p->vertex_count; j++)
                 {
                     p->vertices[j].tex_coord[1] = v_min + 0.5 * (p->vertices[j].tex_coord[1] - v_min) + seq->frames->uvrotate_max;
                 }
@@ -4958,6 +4979,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "activateEntity", lua_ActivateEntity);
     lua_register(lua, "deactivateEntity", lua_DeactivateEntity);
+    lua_register(lua, "noFixEntityCollision", lua_NoFixEntityCollision);
 
     lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
     lua_register(lua, "moveEntityLocal", lua_MoveEntityLocal);
