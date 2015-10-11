@@ -28,73 +28,76 @@ struct lua_State;
 
 typedef struct world_s
 {
-    char                       *name;
-    uint32_t                    id;
-    uint32_t                    version;
+    char                           *name;
+    uint32_t                        id;
+    uint32_t                        version;
 
-    uint32_t                    room_count;
-    struct room_s              *rooms;
+    uint32_t                        room_count;
+    struct room_s                  *rooms;
 
-    uint32_t                    room_box_count;
-    struct room_box_s          *room_boxes;
+    uint32_t                        room_box_count;
+    struct room_box_s              *room_boxes;
     
-    uint32_t                    flip_count;             // Number of flips
-    uint8_t                    *flip_map;               // Flipped room activity array.
-    uint8_t                    *flip_state;             // Flipped room state array.
+    uint32_t                        flip_count;             // Number of flips
+    uint8_t                        *flip_map;               // Flipped room activity array.
+    uint8_t                        *flip_state;             // Flipped room state array.
 
-    bordered_texture_atlas     *tex_atlas;
-    uint32_t                    tex_count;              // Number of textures
-    GLuint                     *textures;               // OpenGL textures indexes
+    bordered_texture_atlas         *tex_atlas;
+    uint32_t                        tex_count;              // Number of textures
+    GLuint                         *textures;               // OpenGL textures indexes
 
-    uint32_t                    anim_sequences_count;   // Animated texture sequence count
-    struct anim_seq_s          *anim_sequences;         // Animated textures
+    uint32_t                        anim_sequences_count;   // Animated texture sequence count
+    struct anim_seq_s              *anim_sequences;         // Animated textures
 
-    uint32_t                    meshes_count;           // Base meshes count
-    struct base_mesh_s         *meshes;                 // Base meshes data
+    uint32_t                        meshes_count;           // Base meshes count
+    struct base_mesh_s             *meshes;                 // Base meshes data
 
-    uint32_t                    sprites_count;          // Base sprites count
-    struct sprite_s            *sprites;                // Base sprites data
+    uint32_t                        sprites_count;          // Base sprites count
+    struct sprite_s                *sprites;                // Base sprites data
 
-    uint32_t                    skeletal_model_count;   // number of base skeletal models
-    struct skeletal_model_s    *skeletal_models;        // base skeletal models data
+    uint32_t                        skeletal_model_count;   // number of base skeletal models
+    struct skeletal_model_s        *skeletal_models;        // base skeletal models data
 
-    struct entity_s            *Character;              // this is an unique Lara's pointer =)
-    struct skeletal_model_s    *sky_box;                // global skybox
+    struct entity_s                *Character;              // this is an unique Lara's pointer =)
+    struct skeletal_model_s        *sky_box;                // global skybox
 
-    struct RedBlackHeader_s    *entity_tree;            // tree of world active objects
-    struct RedBlackHeader_s    *items_tree;             // tree of world items
+    struct RedBlackHeader_s        *entity_tree;            // tree of world active objects
+    struct RedBlackHeader_s        *items_tree;             // tree of world items
 
-    uint32_t                    type;
+    uint32_t                        type;
     
-    uint32_t                    cameras_sinks_count;    // Amount of cameras and sinks.
-    struct stat_camera_sink_s  *cameras_sinks;          // Cameras and sinks. 
+    uint32_t                        cameras_sinks_count;    // Amount of cameras and sinks.
+    struct static_camera_sink_s    *cameras_sinks;          // Cameras and sinks. 
+    uint32_t                        flyby_cameras_count;
+    struct flyby_camera_state_s    *flyby_cameras;
+    struct flyby_camera_sequence_s *flyby_camera_sequences;
+    
+    uint32_t                        anim_commands_count;
+    int16_t                        *anim_commands;
 
-    uint32_t                    anim_commands_count;
-    int16_t                    *anim_commands;
+    uint32_t                        audio_emitters_count;   // Amount of audio emitters in level.
+    struct audio_emitter_s         *audio_emitters;         // Audio emitters.
 
-    uint32_t                    audio_emitters_count;   // Amount of audio emitters in level.
-    struct audio_emitter_s     *audio_emitters;         // Audio emitters.
+    uint32_t                        audio_map_count;        // Amount of overall effects in engine.
+    int16_t                        *audio_map;              // Effect indexes.
+    uint32_t                        audio_effects_count;    // Amount of available effects in level.
+    struct audio_effect_s          *audio_effects;          // Effects and their parameters.
 
-    uint32_t                    audio_map_count;        // Amount of overall effects in engine.
-    int16_t                    *audio_map;              // Effect indexes.
-    uint32_t                    audio_effects_count;    // Amount of available effects in level.
-    struct audio_effect_s      *audio_effects;          // Effects and their parameters.
+    uint32_t                        audio_buffers_count;    // Amount of samples.
+    ALuint                         *audio_buffers;          // Samples.
+    uint32_t                        audio_sources_count;    // Amount of runtime channels.
+    AudioSource                    *audio_sources;          // Channels.
 
-    uint32_t                    audio_buffers_count;    // Amount of samples.
-    ALuint                     *audio_buffers;          // Samples.
-    uint32_t                    audio_sources_count;    // Amount of runtime channels.
-    AudioSource                *audio_sources;          // Channels.
+    uint32_t                        stream_tracks_count;    // Amount of stream track channels.
+    StreamTrack                    *stream_tracks;          // Stream tracks.
 
-    uint32_t                    stream_tracks_count;    // Amount of stream track channels.
-    StreamTrack                *stream_tracks;          // Stream tracks.
-
-    uint32_t                    stream_track_map_count; // Stream track flag map count.
-    uint8_t                    *stream_track_map;       // Stream track flag map.
+    uint32_t                        stream_track_map_count; // Stream track flag map count.
+    uint8_t                        *stream_track_map;       // Stream track flag map.
     
     /// private:
-    struct lua_State           *objects_flags_conf;
-    struct lua_State           *ent_ID_override;
-    struct lua_State           *level_script;
+    struct lua_State               *objects_flags_conf;
+    struct lua_State               *ent_ID_override;
+    struct lua_State               *level_script;
 }world_t, *world_p;
 
 

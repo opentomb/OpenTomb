@@ -1151,7 +1151,7 @@ int Engine_ExecCmd(char *ch)
             Con_AddLine("cvars - lua's table of cvar's, to see them type: show_table(cvars)\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("free_look - switch camera mode\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("cam_distance - camera distance to actor\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room - render modes\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room, r_flyby - render modes\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("playsound(id) - play specified sound\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("stopsound(id) - stop specified sound\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("Watch out for case sensitive commands!\0", FONTSTYLE_CONSOLE_WARNING);
@@ -1275,6 +1275,11 @@ int Engine_ExecCmd(char *ch)
         else if(!strcmp(token, "r_skip_room"))
         {
             renderer.r_flags ^= R_SKIP_ROOM;
+            return 1;
+        }
+        else if(!strcmp(token, "r_flyby"))
+        {
+            renderer.r_flags ^= R_DRAW_FLYBY;
             return 1;
         }
         else if(!strcmp(token, "room_info"))

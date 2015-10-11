@@ -66,6 +66,7 @@ void World_GenMeshes(struct world_s *world, class VT_Level *tr);
 void World_GenSprites(struct world_s *world, class VT_Level *tr);
 void World_GenBoxes(struct world_s *world, class VT_Level *tr);
 void World_GenCameras(struct world_s *world, class VT_Level *tr);
+void World_GenFlyByCameras(struct world_s *world, class VT_Level *tr);
 void World_GenRoom(struct world_s *world, struct room_s *room, class VT_Level *tr);
 void World_GenRooms(struct world_s *world, class VT_Level *tr);
 void World_GenRoomFlipMap(struct world_s *world);
@@ -118,6 +119,9 @@ void World_Prepare(world_p world)
     world->room_box_count = 0;
     world->cameras_sinks = NULL;
     world->cameras_sinks_count = 0;
+    world->flyby_cameras = NULL;
+    world->flyby_cameras_count = 0;
+    world->flyby_camera_sequences = NULL;
     world->skeletal_models = NULL;
     world->skeletal_model_count = 0;
     world->sky_box = NULL;
@@ -162,6 +166,9 @@ void World_Open(world_p world, class VT_Level *tr)
 
     World_GenCameras(world, tr);        // Generate cameras & sinks.
     Gui_DrawLoadScreen(460);
+
+    World_GenFlyByCameras(world, tr);
+    Gui_DrawLoadScreen(480);
 
     World_GenRooms(world, tr);          // Build all rooms
     Gui_DrawLoadScreen(500);
@@ -281,6 +288,22 @@ void World_Clear(world_p world)
         world->cameras_sinks = NULL;
         world->cameras_sinks_count = 0;
     }
+
+    if(world->flyby_cameras_count)
+    {
+        free(world->flyby_cameras);
+        world->flyby_cameras = NULL;
+        world->flyby_cameras_count = 0;
+    }
+
+    for(flyby_camera_sequence_p s = world->flyby_camera_sequences; s;)
+    {
+        flyby_camera_sequence_p next = s->next;
+        FlyBySequence_Clear(s);
+        free(s);
+        s = next;
+    }
+    world->flyby_camera_sequences = NULL;
 
     /*sprite empty*/
     if(world->sprites_count)
@@ -1582,7 +1605,7 @@ void World_GenCameras(struct world_s *world, class VT_Level *tr)
 
     if(world->cameras_sinks_count)
     {
-        world->cameras_sinks = (stat_camera_sink_p)malloc(world->cameras_sinks_count * sizeof(stat_camera_sink_t));
+        world->cameras_sinks = (static_camera_sink_p)malloc(world->cameras_sinks_count * sizeof(static_camera_sink_t));
         for(uint32_t i = 0; i < world->cameras_sinks_count; i++)
         {
             world->cameras_sinks[i].x                   =  tr->cameras[i].x;
@@ -1590,6 +1613,46 @@ void World_GenCameras(struct world_s *world, class VT_Level *tr)
             world->cameras_sinks[i].z                   = -tr->cameras[i].y;
             world->cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
             world->cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;
+        }
+    }
+}
+
+
+void World_GenFlyByCameras(struct world_s *world, class VT_Level *tr)
+{
+    world->flyby_cameras = NULL;
+    world->flyby_cameras_count = tr->flyby_cameras_count;
+
+    if(world->flyby_cameras_count)
+    {
+        uint32_t start_index = 0;
+        flyby_camera_sequence_p *last_seq_ptr = &world->flyby_camera_sequences;
+        world->flyby_cameras = (flyby_camera_state_p)malloc(world->flyby_cameras_count * sizeof(flyby_camera_state_t));
+        for(uint32_t i = 0; i < world->flyby_cameras_count; i++)
+        {
+            world->flyby_cameras[i].pos[0]          =  tr->flyby_cameras[i].pos_x;
+            world->flyby_cameras[i].pos[1]          =  tr->flyby_cameras[i].pos_z;
+            world->flyby_cameras[i].pos[2]          = -tr->flyby_cameras[i].pos_y;
+            world->flyby_cameras[i].target[0]       =  tr->flyby_cameras[i].target_x;
+            world->flyby_cameras[i].target[1]       =  tr->flyby_cameras[i].target_z;
+            world->flyby_cameras[i].target[2]       = -tr->flyby_cameras[i].target_y;
+
+            world->flyby_cameras[i].fov             =  tr->flyby_cameras[i].fov;
+            world->flyby_cameras[i].roll            =  tr->flyby_cameras[i].roll;
+            world->flyby_cameras[i].timer           =  tr->flyby_cameras[i].timer;
+            world->flyby_cameras[i].speed           =  tr->flyby_cameras[i].speed;
+
+            world->flyby_cameras[i].sequence        =  tr->flyby_cameras[i].sequence;
+            world->flyby_cameras[i].index           =  tr->flyby_cameras[i].index;
+            world->flyby_cameras[i].flags           =  tr->flyby_cameras[i].flags;
+            world->flyby_cameras[i].room_id         =  tr->flyby_cameras[i].room_id;
+
+            if((i + 1 == world->flyby_cameras_count) || (tr->flyby_cameras[i].sequence != tr->flyby_cameras[i + 1].sequence))
+            {
+                *last_seq_ptr = FlyBySequence_Create(world->flyby_cameras + start_index, i - start_index + 1);
+                last_seq_ptr = &(*last_seq_ptr)->next;
+                start_index = i + 1;
+            }
         }
     }
 }

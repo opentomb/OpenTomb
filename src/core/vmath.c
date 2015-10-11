@@ -1,8 +1,123 @@
 
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
 #include "vmath.h"
 
+
+spline_p Spline_Create(uint32_t base_points_count)
+{
+    spline_p ret = NULL;
+    
+    if(base_points_count >= 3)
+    {
+        ret = (spline_p)malloc(sizeof(spline_t));
+
+        ret->base_points_count = base_points_count;
+        ret->a = (float*)malloc(base_points_count * sizeof(float));
+        ret->b = (float*)malloc(base_points_count * sizeof(float));
+        ret->c = (float*)malloc(base_points_count * sizeof(float));
+        ret->d = (float*)malloc(base_points_count * sizeof(float));
+    }
+    
+    return ret;
+}
+
+
+void Spline_Clear(spline_p spline)
+{
+    if(spline && spline->base_points_count)
+    {
+        spline->base_points_count = 0;
+        free(spline->a);
+        free(spline->b);
+        free(spline->c);
+        free(spline->d);
+    }
+}
+
+
+void Spline_Build(spline_p spline)
+{
+    long int i;
+    long int n = spline->base_points_count - 2;
+    float r, k;
+    float h = 1.0 / ((float)spline->base_points_count - 1.0);
+
+    k = 3.0/(h * h);
+
+    spline->b[0] = 0.0;
+    //============================================================================================
+
+    for(i = 1; i <= n; i++)
+    {
+    	r = spline->d[i + 1] - spline->d[i] - spline->d[i] + spline->d[i-1];
+	r *= k;
+    	spline->b[i] = r;
+	spline->a[i] = 4.0;
+    }
+
+    for(i = 1; i < n; i++)
+    {
+        k = 1.0 / spline->a[i];
+	spline->a[i + 1] -= k;
+	spline->b[i+1] -= k * spline->b[i];
+    }
+
+    for(i = n; i > 1; i--)
+    {
+    	spline->b[i - 1] -= (spline->b[i] / spline->a[i]);
+    	spline->b[i] /= spline->a[i];
+    }
+
+    spline->b[1] /= spline->a[1];
+
+    for(i = 0; i < n; i++)
+    {
+    	spline->a[i] = (spline->b[i + 1] - spline->b[i]) / (3.0 * h);
+    	spline->c[i] = (spline->d[i + 1] - spline->d[i]) / h;
+    	spline->c[i] -= h * (spline->b[i + 1] + 2.0 * spline->b[i]) / 3.0;
+    }
+    
+    spline->a[n] = -spline->b[n] / (3.0 * h);
+    spline->c[n] = (spline->d[n + 1] - spline->d[n]) / h;
+    spline->c[n] -= h * 2.0 * spline->b[n] / 3.0;
+}
+
+
+float    Spline_Get(spline_p spline, float t)
+{
+    long int i;
+    float dt, delta;
+    delta = 1.0 / ((float)spline->base_points_count - 1.0);
+    i = (long int)(t / delta);
+
+    if((i < 0) || (i > spline->base_points_count - 1))
+    {
+    	return 0.0;
+    }
+
+    if(i == spline->base_points_count - 1)
+    {
+    	return spline->d[i];
+    }
+
+    dt = t - delta * i;
+    delta = spline->d[i];
+    t = dt;
+    delta += spline->c[i] * t;
+    t *= dt;
+    delta += spline->b[i] * t;
+    t *= dt;
+    delta += spline->a[i] * t;
+    
+    return delta;
+}
+    
+
+/*
+ * VECTOR FUNCTIONS
+ */
 void vec4_rev(float rev[4], float src[4])
 {
     float module;

@@ -23,6 +23,7 @@
 #define R_DRAW_COLL             0x00001000      // Draw Bullet physics world
 #define R_DRAW_SKYBOX           0x00002000      // Draw skybox
 #define R_DRAW_POINTS           0x00004000      // Points rendering
+#define R_DRAW_FLYBY            0x00008000      // FlyBy cameras spline rendering
 
 #define STENCIL_FRUSTUM 1
 

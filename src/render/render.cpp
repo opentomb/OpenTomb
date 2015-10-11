@@ -136,7 +136,7 @@ void CRender::SetWorld(struct world_s *world)
             free(r_list);
         }
         r_list = (struct render_list_s*)malloc(list_size * sizeof(struct render_list_s));
-        for(uint32_t i=0; i < list_size; i++)
+        for(uint32_t i = 0; i < list_size; i++)
         {
             r_list[i].active = 0;
             r_list[i].room = NULL;
@@ -147,7 +147,7 @@ void CRender::SetWorld(struct world_s *world)
         r_list_size = list_size;
         r_list_active_count = 0;
 
-        for(uint32_t i=0; i < m_world->room_count; i++)
+        for(uint32_t i = 0; i < m_world->room_count; i++)
         {
             m_world->rooms[i].is_in_r_list = 0;
         }
@@ -244,7 +244,7 @@ void CRender::GenWorldList(struct camera_s *cam)
         curr_room->frustum = NULL;                                              // room with camera inside has no frustums!
         this->AddRoom(curr_room);                                               // room with camera inside adds to the render list immediately
         portal_p p = curr_room->portals;                                        // pointer to the portals array
-        for(uint16_t i=0; i < curr_room->portals_count; i++,p++)                // go through all start room portals
+        for(uint16_t i = 0; i < curr_room->portals_count; i++, p++)             // go through all start room portals
         {
             frustum_p last_frus = this->frustumManager->PortalFrustumIntersect(p, cam->frustum, cam);
             if(last_frus)
@@ -308,14 +308,14 @@ void CRender::DrawList()
     /*
      * room rendering
      */
-    for(uint32_t i=0; i<r_list_active_count; i++)
+    for(uint32_t i = 0; i < r_list_active_count; i++)
     {
         this->DrawRoom(r_list[i].room, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
     }
 
     qglDisable(GL_CULL_FACE);
-    qglDisableClientState(GL_NORMAL_ARRAY);                                      ///@FIXME: reduce number of gl state changes
-    for(uint32_t i=0; i<r_list_active_count; i++)
+    qglDisableClientState(GL_NORMAL_ARRAY);                                     ///@FIXME: reduce number of gl state changes
+    for(uint32_t i = 0; i < r_list_active_count; i++)
     {
         this->DrawRoomSprites(r_list[i].room, m_camera->gl_view_mat, m_camera->gl_proj_mat);
     }
@@ -325,7 +325,7 @@ void CRender::DrawList()
      * NOW render transparency polygons
      */
     /*First generate BSP from base room mesh - it has good for start splitter polygons*/
-    for(uint32_t i=0;i<r_list_active_count;i++)
+    for(uint32_t i = 0; i < r_list_active_count; i++)
     {
         room_p r = r_list[i].room;
         if((r->content->mesh != NULL) && (r->content->mesh->transparency_polygons != NULL))
@@ -334,7 +334,7 @@ void CRender::DrawList()
         }
     }
 
-    for(uint32_t i=0;i<r_list_active_count;i++)
+    for(uint32_t i = 0; i < r_list_active_count; i++)
     {
         room_p r = r_list[i].room;
         // Add transparency polygons from static meshes (if they exists)
@@ -355,7 +355,7 @@ void CRender::DrawList()
                 if((ent->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && Frustum_IsOBBVisibleInFrustumList(ent->obb, (r->frustum)?(r->frustum):(m_camera->frustum)))
                 {
                     float tr[16];
-                    for(uint16_t j=0;j<ent->bf->bone_tag_count;j++)
+                    for(uint16_t j = 0; j < ent->bf->bone_tag_count; j++)
                     {
                         if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
                         {
@@ -372,7 +372,7 @@ void CRender::DrawList()
     {
         float tr[16];
         entity_p ent = engine_world.Character;
-        for(uint16_t j=0;j<ent->bf->bone_tag_count;j++)
+        for(uint16_t j = 0; j < ent->bf->bone_tag_count; j++)
         {
             if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
             {
@@ -411,7 +411,7 @@ void CRender::DrawList()
 
 void CRender::DrawListDebugLines()
 {
-    if (m_world && (r_flags & (R_DRAW_BOXES | R_DRAW_ROOMBOXES | R_DRAW_PORTALS | R_DRAW_FRUSTUMS | R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_COLL)))
+    if(m_world && (r_flags & (R_DRAW_BOXES | R_DRAW_ROOMBOXES | R_DRAW_PORTALS | R_DRAW_FRUSTUMS | R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_COLL | R_DRAW_FLYBY)))
     {
         debugDrawer->SetDrawFlags(r_flags);
 
@@ -435,7 +435,7 @@ void CRender::DrawListDebugLines()
             debugDrawer->DrawMeshDebugLines(m_world->sky_box->mesh_tree->mesh_base, tr, NULL, NULL);
         }
 
-        for(uint32_t i=0; i<r_list_active_count; i++)
+        for(uint32_t i = 0; i < r_list_active_count; i++)
         {
             debugDrawer->DrawRoomDebugLines(r_list[i].room, m_camera);
         }
@@ -443,6 +443,36 @@ void CRender::DrawListDebugLines()
         if(r_flags & R_DRAW_COLL)
         {
             Physics_DebugDrawWorld();
+        }
+
+        if(r_flags & R_DRAW_FLYBY)
+        {
+            const float color_r[3] = {1.0f, 0.0f, 0.0f};
+            const float color_g[3] = {0.0f, 1.0f, 0.0f};
+            float v0[3], v1[3], dt;
+            dt = 1.0f / 256.0;
+
+            for(flyby_camera_sequence_p s = m_world->flyby_camera_sequences; s; s = s->next)
+            {
+                for(float t = 0.0f; t <= 1.0f - dt; t += dt)
+                {
+                    v0[0] = Spline_Get(s->pos_x, t);
+                    v0[1] = Spline_Get(s->pos_y, t);
+                    v0[2] = Spline_Get(s->pos_z, t);
+                    v1[0] = Spline_Get(s->pos_x, t + dt);
+                    v1[1] = Spline_Get(s->pos_y, t + dt);
+                    v1[2] = Spline_Get(s->pos_z, t + dt);
+                    debugDrawer->DrawLine(v0, v1, color_r, color_r);
+
+                    v0[0] = Spline_Get(s->target_x, t);
+                    v0[1] = Spline_Get(s->target_y, t);
+                    v0[2] = Spline_Get(s->target_z, t);
+                    v1[0] = Spline_Get(s->target_x, t + dt);
+                    v1[1] = Spline_Get(s->target_y, t + dt);
+                    v1[2] = Spline_Get(s->target_z, t + dt);
+                    debugDrawer->DrawLine(v0, v1, color_g, color_g);
+                }
+            }
         }
     }
 
@@ -472,7 +502,7 @@ void CRender::CleanList()
         m_world->Character->was_rendered_lines = 0;
     }
 
-    for(uint32_t i=0; i<r_list_active_count; i++)
+    for(uint32_t i = 0; i < r_list_active_count; i++)
     {
         r_list[i].active = 0;
         r_list[i].dist = 0.0;
@@ -545,11 +575,11 @@ void CRender::DrawBSPFrontToBack(struct bsp_node_s *root)
             this->DrawBSPFrontToBack(root->front);
         }
 
-        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(bsp_polygon_p p = root->polygons_front; p; p = p->next)
         {
             this->DrawBSPPolygon(p);
         }
-        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(bsp_polygon_p p = root->polygons_back; p; p = p->next)
         {
             this->DrawBSPPolygon(p);
         }
@@ -566,11 +596,11 @@ void CRender::DrawBSPFrontToBack(struct bsp_node_s *root)
             this->DrawBSPFrontToBack(root->back);
         }
 
-        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(bsp_polygon_p p = root->polygons_back; p; p = p->next)
         {
             this->DrawBSPPolygon(p);
         }
-        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(bsp_polygon_p p = root->polygons_front; p; p = p->next)
         {
             this->DrawBSPPolygon(p);
         }
@@ -593,11 +623,11 @@ void CRender::DrawBSPBackToFront(struct bsp_node_s *root)
             this->DrawBSPBackToFront(root->back);
         }
 
-        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(bsp_polygon_p p = root->polygons_back; p; p = p->next)
         {
             this->DrawBSPPolygon(p);
         }
-        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(bsp_polygon_p p = root->polygons_front; p; p = p->next)
         {
             this->DrawBSPPolygon(p);
         }
@@ -614,11 +644,11 @@ void CRender::DrawBSPBackToFront(struct bsp_node_s *root)
             this->DrawBSPBackToFront(root->front);
         }
 
-        for(bsp_polygon_p p=root->polygons_front;p!=NULL;p=p->next)
+        for(bsp_polygon_p p = root->polygons_front; p; p = p->next)
         {
             this->DrawBSPPolygon(p);
         }
-        for(bsp_polygon_p p=root->polygons_back;p!=NULL;p=p->next)
+        for(bsp_polygon_p p = root->polygons_back; p; p = p->next)
         {
             this->DrawBSPPolygon(p);
         }
@@ -785,7 +815,7 @@ void CRender::DrawSkeletalModel(const lit_shader_description *shader, struct ss_
     //mvMatrix = modelViewMatrix x entity->transform
     //mvpMatrix = modelViewProjectionMatrix x entity->transform
 
-    for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
+    for(uint16_t i = 0; i < bframe->bone_tag_count; i++, btag++)
     {
         float mvTransform[16];
         Mat4_Mat4_mul(mvTransform, mvMatrix, btag->full_transform);
@@ -841,10 +871,10 @@ void CRender::DrawEntity(struct entity_s *entity, const float modelViewMatrix[16
         {
             base_mesh_p mesh;
             float transform[16];
-            for(int h=0; h<entity->character->hair_count; h++)
+            for(int h = 0; h < entity->character->hair_count; h++)
             {
                 int num_elements = Hair_GetElementsCount(entity->character->hairs[h]);
-                for(uint16_t i=0; i<num_elements; i++)
+                for(uint16_t i = 0; i < num_elements; i++)
                 {
                     Hair_GetElementInfo(entity->character->hairs[h], i, &mesh, transform);
                     Mat4_Mat4_mul(subModelView, modelViewMatrix, transform);
@@ -871,7 +901,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
     bool need_stencil = false;
     if(room->frustum != NULL)
     {
-        for(uint16_t i=0;i<room->overlapped_room_list_size;i++)
+        for(uint16_t i = 0; i < room->overlapped_room_list_size; i++)
         {
             if(room->overlapped_room_list[i]->is_in_r_list)
             {
@@ -893,12 +923,12 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
             qglClear(GL_STENCIL_BUFFER_BIT);
             qglStencilFunc(GL_NEVER, 1, 0x00);
             qglStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
-            for(frustum_p f=room->frustum;f!=NULL;f=f->next)
+            for(frustum_p f = room->frustum; f; f = f->next)
             {
                 buf_size = f->vertex_count * elem_size;
                 GLfloat *v, *buf = (GLfloat*)Sys_GetTempMem(buf_size);
                 v=buf;
-                for(int16_t i=f->vertex_count-1;i>=0;i--)
+                for(int16_t i = f->vertex_count - 1; i >= 0; i--)
                 {
                     vec3_copy(v, f->vertex+3*i);                    v+=3;
                     vec3_copy_inv(v, engine_camera.view_dir);       v+=3;
@@ -1376,7 +1406,7 @@ void CRenderDebugDrawer::DrawFrustum(struct frustum_s *f)
         v = v0 = m_buffer + 3 * 4 * m_lines;
         m_lines += f->vertex_count;
 
-        for(uint16_t i=0;i<f->vertex_count-1;i++,fv += 3)
+        for(uint16_t i = 0; i < f->vertex_count - 1; i++, fv += 3)
         {
             vec3_copy(v, fv);
             v += 3;
@@ -1415,7 +1445,7 @@ void CRenderDebugDrawer::DrawPortal(struct portal_s *p)
         v = v0 = m_buffer + 3 * 4 * m_lines;
         m_lines += p->vertex_count;
 
-        for(uint16_t i=0;i<p->vertex_count-1;i++,pv += 3)
+        for(uint16_t i = 0; i < p->vertex_count - 1; i++, pv += 3)
         {
             vec3_copy(v, pv);
             v += 3;
@@ -1503,11 +1533,11 @@ void CRenderDebugDrawer::DrawOBB(struct obb_s *obb)
     vec3_copy(v, m_color);
     v += 3;
 
-    for(uint16_t i=0; i<2; i++,p++)
+    for(uint16_t i = 0; i < 2; i++, p++)
     {
         vertex_p pv = p->vertices;
         v0 = v;
-        for(uint16_t j=0;j<p->vertex_count-1;j++,pv++)
+        for(uint16_t j = 0; j < p->vertex_count - 1; j++, pv++)
         {
             vec3_copy(v, pv->position);
             v += 3;
@@ -1550,7 +1580,7 @@ void CRenderDebugDrawer::DrawMeshDebugLines(struct base_mesh_s *mesh, float tran
         {
             float *ov = (float*)overrideVertices;
             float *on = (float*)overrideNormals;
-            for(uint32_t i=0; i<mesh->vertex_count; i++,ov+=3,on+=3,v+=12)
+            for(uint32_t i = 0; i < mesh->vertex_count; i++, ov += 3, on += 3, v += 12)
             {
                 Mat4_vec3_mul_macro(v, transform, ov);
                 Mat4_vec3_rot_macro(n, transform, on);
@@ -1587,7 +1617,7 @@ void CRenderDebugDrawer::DrawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
         float tr[16];
 
         ss_bone_tag_p btag = bframe->bone_tags;
-        for(uint16_t i=0; i<bframe->bone_tag_count; i++,btag++)
+        for(uint16_t i = 0; i < bframe->bone_tag_count; i++, btag++)
         {
             Mat4_Mat4_mul(tr, transform, btag->full_transform);
             this->DrawMeshDebugLines(btag->mesh_base, tr, NULL, NULL);
@@ -1653,7 +1683,7 @@ void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room, struct camera_s
     {
         this->SetColor(0.0, 0.1, 0.9);
         this->DrawBBox(room->bb_min, room->bb_max, NULL);
-        /*for(uint32_t s=0;s<room->sectors_count;s++)
+        /*for(uint32_t s = 0; s < room->sectors_count; s++)
         {
             drawSectorDebugLines(room->sectors + s);
         }*/
@@ -1671,7 +1701,7 @@ void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room, struct camera_s
     if(m_drawFlags & R_DRAW_FRUSTUMS)
     {
         this->SetColor(1.0, 0.0, 0.0);
-        for(frus=room->frustum; frus; frus=frus->next)
+        for(frus = room->frustum; frus; frus = frus->next)
         {
             this->DrawFrustum(frus);
         }

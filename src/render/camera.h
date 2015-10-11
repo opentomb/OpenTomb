@@ -58,15 +58,46 @@ typedef struct camera_s
 // between these two types of objects.
 // Thanks to b122251 for extra info describing this structure.
 
-typedef struct stat_camera_sink_s
+typedef struct static_camera_sink_s
 {
     GLfloat                     x;
     GLfloat                     y;
     GLfloat                     z;
     uint16_t                    room_or_strength;   // Room for camera, strength for sink.
     uint16_t                    flag_or_zone;       // Flag for camera, zone for sink.
+}static_camera_sink_t, *static_camera_sink_p;
 
-}stat_camera_sink_t, *stat_camera_sink_p;
+typedef struct flyby_camera_state_s
+{
+    float                       pos[3];
+    float                       target[3];
+
+    float                       fov;
+    float                       roll;
+    float                       timer;
+    float                       speed;
+    
+    int8_t                      sequence;
+    int8_t                      index;
+    uint16_t                    flags;
+    uint32_t                    room_id;
+}flyby_camera_state_t, *flyby_camera_state_p;
+
+typedef struct flyby_camera_sequence_s
+{
+    struct flyby_camera_state_s    *start;
+    
+    struct spline_s                *pos_x;
+    struct spline_s                *pos_y;
+    struct spline_s                *pos_z;
+    struct spline_s                *target_x;
+    struct spline_s                *target_y;
+    struct spline_s                *target_z;
+    struct spline_s                *fov;
+    struct spline_s                *roll;
+    
+    struct flyby_camera_sequence_s *next;
+}flyby_camera_sequence_t, *flyby_camera_sequence_p;
 
 void Cam_Init(camera_p cam);                                       // set default camera parameters + frustum initialization
 void Cam_Apply(camera_p cam);                                      // set OpenGL projection matrix + model wiev matrix
@@ -78,5 +109,9 @@ void Cam_Shake(camera_p cam, GLfloat power, GLfloat time);         // make camer
 void Cam_DeltaRotation(camera_p cam, GLfloat angles[3]);           // rotate camera around current camera coordinate system
 void Cam_SetRotation(camera_p cam, GLfloat angles[3]);             // set orientation by angles
 void Cam_RecalcClipPlanes(camera_p cam);                           // recalculation of camera frustum clipplanes
+
+flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_t count);
+void FlyBySequence_Clear(flyby_camera_sequence_p s);
+void FlyBySequence_SetCamera(flyby_camera_sequence_p s, camera_p cam, float t);
 
 #endif

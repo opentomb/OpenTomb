@@ -7,14 +7,30 @@ extern "C" {
 #endif
 
 #include <math.h>
+#include <stdint.h>
+
+typedef struct spline_s
+{
+    uint32_t        base_points_count;
+    float          *a;
+    float          *b;
+    float          *c;
+    float          *d;
+}spline_t, *spline_p;
+
+
+spline_p Spline_Create(uint32_t base_points_count);
+void     Spline_Clear(spline_p spline);
+void     Spline_Build(spline_p spline);
+float    Spline_Get(spline_p spline, float t);
 
 #ifndef M_PI
 #define M_PI        3.14159265358979323846
 #endif
 
-#define PLANE_X        1
-#define PLANE_Y        2
-#define PLANE_Z        3
+#define PLANE_X        (1)
+#define PLANE_Y        (2)
+#define PLANE_Z        (3)
 
 #define ABS(x) (((x)>0)?(x):(-(x)))
 #define SWAPT(a, b, t) {(t) = (a); (a) = (b); (b) = (t);}

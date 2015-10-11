@@ -354,3 +354,85 @@ void Cam_RecalcClipPlanes(camera_p cam)
 
     vec3_add(cam->frustum->vertex, cam->pos, cam->view_dir);
 }
+
+/*
+ * FLYBY CAMERAS
+ */
+flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_t count)
+{
+    flyby_camera_sequence_p ret = (flyby_camera_sequence_p)malloc(sizeof(flyby_camera_sequence_t));
+
+    ret->start = start;
+    ret->next = NULL;
+
+    ret->pos_x = Spline_Create(count);
+    ret->pos_y = Spline_Create(count);
+    ret->pos_z = Spline_Create(count);
+    ret->target_x = Spline_Create(count);
+    ret->target_y = Spline_Create(count);
+    ret->target_z = Spline_Create(count);
+    ret->fov = Spline_Create(count);
+    ret->roll = Spline_Create(count);
+
+    for(uint32_t i = 0; i < count; i++)
+    {
+        ret->pos_x->d[i] = start[i].pos[0];
+        ret->pos_y->d[i] = start[i].pos[1];
+        ret->pos_z->d[i] = start[i].pos[2];
+        ret->target_x->d[i] = start[i].target[0];
+        ret->target_y->d[i] = start[i].target[1];
+        ret->target_z->d[i] = start[i].target[2];
+        ret->fov->d[i] = start[i].fov;
+        ret->roll->d[i] = start[i].roll;
+    }
+
+    Spline_Build(ret->pos_x);
+    Spline_Build(ret->pos_y);
+    Spline_Build(ret->pos_z);
+    Spline_Build(ret->target_x);
+    Spline_Build(ret->target_y);
+    Spline_Build(ret->target_z);
+    Spline_Build(ret->fov);
+    Spline_Build(ret->roll);
+
+    return ret;
+}
+
+
+void FlyBySequence_Clear(flyby_camera_sequence_p s)
+{
+    Spline_Clear(s->pos_x);
+    free(s->pos_x);
+    s->pos_x = NULL;
+    Spline_Clear(s->pos_y);
+    free(s->pos_y);
+    s->pos_y = NULL;
+    Spline_Clear(s->pos_z);
+    free(s->pos_z);
+    s->pos_z = NULL;
+    Spline_Clear(s->target_x);
+    free(s->target_x);
+    s->target_x = NULL;
+    Spline_Clear(s->target_y);
+    free(s->target_y);
+    s->target_y = NULL;
+    Spline_Clear(s->target_z);
+    free(s->target_z);
+    s->target_z = NULL;
+    Spline_Clear(s->roll);
+    free(s->roll);
+    s->roll = NULL;
+    Spline_Clear(s->fov);
+    free(s->fov);
+    s->fov = NULL;
+
+    s->start = NULL;
+    s->next = NULL;
+}
+
+
+void FlyBySequence_SetCamera(flyby_camera_sequence_p s, camera_p cam, float t)
+{
+
+
+}

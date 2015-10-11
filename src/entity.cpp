@@ -1106,7 +1106,7 @@ void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
 {
     if(sink_index < engine_world.cameras_sinks_count)
     {
-        stat_camera_sink_p sink = &engine_world.cameras_sinks[sink_index];
+        static_camera_sink_p sink = &engine_world.cameras_sinks[sink_index];
 
         float sink_pos[3], *ent_pos = entity->transform + 12;
         sink_pos[0] = sink->x;
