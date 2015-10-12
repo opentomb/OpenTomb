@@ -1650,10 +1650,14 @@ void World_GenFlyByCameras(struct world_s *world, class VT_Level *tr)
             if((i + 1 == world->flyby_cameras_count) || (tr->flyby_cameras[i].sequence != tr->flyby_cameras[i + 1].sequence))
             {
                 *last_seq_ptr = FlyBySequence_Create(world->flyby_cameras + start_index, i - start_index + 1);
-                last_seq_ptr = &(*last_seq_ptr)->next;
+                if(*last_seq_ptr)
+                {
+                    last_seq_ptr = &(*last_seq_ptr)->next;
+                }
                 start_index = i + 1;
             }
         }
+        *last_seq_ptr = NULL;
     }
 }
 
@@ -2143,7 +2147,7 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
     tr2_item_t *tr_item;
     entity_p entity;
 
-    for(uint32_t i = 0;i < tr->items_count; i++)
+    for(uint32_t i = 0; i < tr->items_count; i++)
     {
         tr_item = &tr->items[i];
         entity = Entity_Create();
@@ -2158,13 +2162,15 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
         if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->room_count))
         {
             entity->self->room = world->rooms + tr_item->room;
+            entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
         }
         else
         {
             entity->self->room = NULL;
+            entity->current_sector = NULL;
         }
 
-        entity->trigger_layout  = (tr_item->flags & 0x3E00) >> 9;   ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
+        entity->trigger_layout  = (tr_item->flags & 0x3E00) >> 9;               ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
         entity->OCB             = tr_item->ocb;
         entity->timer           = 0.0;
 
@@ -2174,7 +2180,7 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->inertia_linear     = 0.0;
         entity->inertia_angular[0] = 0.0;
         entity->inertia_angular[1] = 0.0;
-        entity->move_type          = 0;
+        entity->move_type          = MOVE_STATIC_POS;
 
         entity->bf->animations.model = World_GetModelByID(world, tr_item->object_id);
 
@@ -2243,7 +2249,7 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
 
         SSBoneFrame_CreateFromModel(entity->bf, entity->bf->animations.model);
 
-        if(0 == tr_item->object_id)                                             // Lara is unical model
+        if(0 == tr_item->object_id)                                             // Lara is an unical model
         {
             skeletal_model_p tmp, LM;                                           // LM - Lara Model
 
@@ -2280,7 +2286,7 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
                     if(LM)
                     {
                         SkeletalModel_CopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
-                        tmp = World_GetModelByID(world, 11);                   // moto / quadro cycle animations
+                        tmp = World_GetModelByID(world, 11);                    // moto / quadro cycle animations
                         if(tmp)
                         {
                             SkeletalModel_CopyMeshes(tmp->mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
@@ -2291,12 +2297,12 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
                 case TR_IV:
                 case TR_IV_DEMO:
                 case TR_V:
-                    LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_TR45);                         // base skeleton meshes
+                    LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_TR45);     // base skeleton meshes
                     if(LM)
                     {
                         SkeletalModel_CopyMeshes(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
                     }
-                    LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_JOINTS_TR45);                 // skin skeleton meshes
+                    LM = World_GetModelByID(world, TR_ITEM_LARA_SKIN_JOINTS_TR45);  // skin skeleton meshes
                     if(LM)
                     {
                         SkeletalModel_CopyMeshesToSkinned(world->skeletal_models[0].mesh_tree, LM->mesh_tree, world->skeletal_models[0].mesh_count);
@@ -2311,7 +2317,7 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
                 entity->bf->bone_tags[j].mesh_skin = entity->bf->animations.model->mesh_tree[j].mesh_skin;
                 entity->bf->bone_tags[j].mesh_slot = NULL;
             }
-            Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
+            Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0, -1);
             Physics_GenRigidBody(entity->physics, entity->bf, entity->transform);
             Character_Create(entity);
             entity->character->Height = 768.0;

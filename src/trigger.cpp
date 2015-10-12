@@ -436,6 +436,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_FLYBY:
+                    Game_PlayFlyBy(command->operands, 5.0);
                     ///snprintf(buf, 128, "   playFlyby(%d, %d); \n", command->operands, command->once);
                     break;
 

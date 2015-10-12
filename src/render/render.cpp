@@ -449,8 +449,8 @@ void CRender::DrawListDebugLines()
         {
             const float color_r[3] = {1.0f, 0.0f, 0.0f};
             const float color_g[3] = {0.0f, 1.0f, 0.0f};
-            float v0[3], v1[3], dt;
-            dt = 1.0f / 256.0;
+            const float dt = 1.0f / 256.0;
+            float v0[3], v1[3];
 
             for(flyby_camera_sequence_p s = m_world->flyby_camera_sequences; s; s = s->next)
             {

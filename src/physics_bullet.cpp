@@ -1112,9 +1112,9 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
             btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
             physics->bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
             //ent->physics->bt_body[i]->setCollisionFlags(ent->physics->bt_body[i]->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-            bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
             physics->bt_body[i]->setUserPointer(physics->cont);
             physics->bt_body[i]->setUserIndex(i);
+            bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
         }
     }
 }

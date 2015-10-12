@@ -217,7 +217,7 @@ void Cam_DeltaRotation(camera_p cam, GLfloat angles[3])                         
     vec4_mul(cam->up_dir, temp, Rt)
 }
 
-void Cam_SetRotation(camera_p cam, float angles[3])                          //angles = {OX, OY, OZ}
+void Cam_SetRotation(camera_p cam, float angles[3])
 {
     GLfloat R[4], Rt[4], temp[4];
     GLfloat sin_t2, cos_t2, t;
@@ -300,7 +300,7 @@ void Cam_RecalcClipPlanes(camera_p cam)
     LU[2] = V[2] - T[3] * cam->up_dir[2];
 
     vec3_cross(cam->clip_planes+8, cam->right_dir, LU)
-    LU[3] = vec3_abs(cam->clip_planes+8);                                      // модуль нормали к левой / правой плоскостям
+    LU[3] = vec3_abs(cam->clip_planes+8);                                       // модуль нормали к левой / правой плоскостям
     vec3_norm_plane(cam->clip_planes+8, cam->pos, LU[3])
 
     //   UP
@@ -360,40 +360,45 @@ void Cam_RecalcClipPlanes(camera_p cam)
  */
 flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_t count)
 {
-    flyby_camera_sequence_p ret = (flyby_camera_sequence_p)malloc(sizeof(flyby_camera_sequence_t));
+    flyby_camera_sequence_p ret = NULL;
 
-    ret->start = start;
-    ret->next = NULL;
-
-    ret->pos_x = Spline_Create(count);
-    ret->pos_y = Spline_Create(count);
-    ret->pos_z = Spline_Create(count);
-    ret->target_x = Spline_Create(count);
-    ret->target_y = Spline_Create(count);
-    ret->target_z = Spline_Create(count);
-    ret->fov = Spline_Create(count);
-    ret->roll = Spline_Create(count);
-
-    for(uint32_t i = 0; i < count; i++)
+    if(count > 2)
     {
-        ret->pos_x->d[i] = start[i].pos[0];
-        ret->pos_y->d[i] = start[i].pos[1];
-        ret->pos_z->d[i] = start[i].pos[2];
-        ret->target_x->d[i] = start[i].target[0];
-        ret->target_y->d[i] = start[i].target[1];
-        ret->target_z->d[i] = start[i].target[2];
-        ret->fov->d[i] = start[i].fov;
-        ret->roll->d[i] = start[i].roll;
-    }
+        ret = (flyby_camera_sequence_p)malloc(sizeof(flyby_camera_sequence_t));
 
-    Spline_Build(ret->pos_x);
-    Spline_Build(ret->pos_y);
-    Spline_Build(ret->pos_z);
-    Spline_Build(ret->target_x);
-    Spline_Build(ret->target_y);
-    Spline_Build(ret->target_z);
-    Spline_Build(ret->fov);
-    Spline_Build(ret->roll);
+        ret->start = start;
+        ret->next = NULL;
+
+        ret->pos_x = Spline_Create(count);
+        ret->pos_y = Spline_Create(count);
+        ret->pos_z = Spline_Create(count);
+        ret->target_x = Spline_Create(count);
+        ret->target_y = Spline_Create(count);
+        ret->target_z = Spline_Create(count);
+        ret->fov = Spline_Create(count);
+        ret->roll = Spline_Create(count);
+
+        for(uint32_t i = 0; i < count; i++)
+        {
+            ret->pos_x->d[i] = start[i].pos[0];
+            ret->pos_y->d[i] = start[i].pos[1];
+            ret->pos_z->d[i] = start[i].pos[2];
+            ret->target_x->d[i] = start[i].target[0];
+            ret->target_y->d[i] = start[i].target[1];
+            ret->target_z->d[i] = start[i].target[2];
+            ret->fov->d[i] = start[i].fov;
+            ret->roll->d[i] = start[i].roll * M_PI / (180.0f * 1024.0f);
+        }
+
+        Spline_Build(ret->pos_x);
+        Spline_Build(ret->pos_y);
+        Spline_Build(ret->pos_z);
+        Spline_Build(ret->target_x);
+        Spline_Build(ret->target_y);
+        Spline_Build(ret->target_z);
+        Spline_Build(ret->fov);
+        Spline_Build(ret->roll);
+    }
 
     return ret;
 }
@@ -433,6 +438,19 @@ void FlyBySequence_Clear(flyby_camera_sequence_p s)
 
 void FlyBySequence_SetCamera(flyby_camera_sequence_p s, camera_p cam, float t)
 {
+    float to[3];
 
+    cam->pos[0] = Spline_Get(s->pos_x, t);
+    cam->pos[1] = Spline_Get(s->pos_y, t);
+    cam->pos[2] = Spline_Get(s->pos_z, t);
 
+    to[0] = Spline_Get(s->target_x, t);
+    to[1] = Spline_Get(s->target_y, t);
+    to[2] = Spline_Get(s->target_z, t);
+
+    cam->ang[0] = atan2f(to[1] - cam->pos[1], to[0] - cam->pos[0]);
+    cam->ang[1] = atan2f(to[2] - cam->pos[2],-to[1] + cam->pos[1]);
+    cam->ang[2] = Spline_Get(s->roll, t);
+
+    Cam_SetRotation(cam, cam->ang);
 }

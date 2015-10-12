@@ -33,6 +33,7 @@ void Game_UpdateAI();
 void Game_UpdateCharacters();
 
 void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, float dz);
+void Game_PlayFlyBy(uint32_t sequence_id, float timer);
 
 #endif
 

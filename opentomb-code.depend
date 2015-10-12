@@ -6712,7 +6712,7 @@
 	<SDL2/SDL_opengl.h>
 	"gl_font.h"
 
-1440834260 d:\dev\opentomb\src\core\gl_font.h
+1444472061 d:\dev\opentomb\src\core\gl_font.h
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
@@ -6727,8 +6727,9 @@
 1433713936 d:\dev\opentomb\src\freetype2\include\freetype.h
 	<ft2build.h>
 
-1439230022 d:\dev\opentomb\src\core\vmath.h
+1444573552 d:\dev\opentomb\src\core\vmath.h
 	<math.h>
+	<stdint.h>
 
 1442644096 d:\dev\opentomb\src\core\polygon.h
 	<stdint.h>
@@ -6740,7 +6741,7 @@
 	<SDL2/SDL.h>
 	<stdint.h>
 
-1443207052 d:\dev\opentomb\src\world.h
+1444574407 d:\dev\opentomb\src\world.h
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 	<stdint.h>
@@ -6798,7 +6799,7 @@
 	"tr_types.h"
 	"tr_versions.h"
 
-1433713938 d:\dev\opentomb\src\vt\tr_types.h
+1444498194 d:\dev\opentomb\src\vt\tr_types.h
 	<stdint.h>
 	"glmath.h"
 
@@ -7356,7 +7357,7 @@
 	<SDL2/SDL_opengl.h>
 	<stdint.h>
 
-1444155724 d:\dev\opentomb\src\entity.h
+1444475405 d:\dev\opentomb\src\entity.h
 	<stdint.h>
 
 1433713936 d:\dev\opentomb\src\bullet\bulletcollision\collisiondispatch\btghostobject.h
@@ -7386,7 +7387,7 @@
 	<stdlib.h>
 	<stdint.h>
 
-1442943113 source:d:\dev\opentomb\src\audio.cpp
+1444321073 source:d:\dev\opentomb\src\audio.cpp
 	<SDL2/SDL.h>
 	<SDL2/SDL_audio.h>
 	<math.h>
@@ -10927,7 +10928,7 @@
 	"render.h"
 	"world.h"
 
-1443463506 source:d:\dev\opentomb\src\game.cpp
+1444321120 source:d:\dev\opentomb\src\game.cpp
 	<stdlib.h>
 	<stdio.h>
 	<lua.h>
@@ -10982,7 +10983,7 @@
 	"anim_state_control.h"
 	"world.h"
 
-1442943226 source:d:\dev\opentomb\src\gui.cpp
+1444321149 source:d:\dev\opentomb\src\gui.cpp
 	<stdint.h>
 	<SDL2/SDL_image.h>
 	"core/gl_util.h"
@@ -16230,7 +16231,7 @@
 1442143158 d:\dev\opentomb\src\engine_physics.h
 	<stdint.h>
 
-1443110341 d:\dev\opentomb\src\render\render.h
+1444579012 d:\dev\opentomb\src\render\render.h
 	<stdint.h>
 	<SDL2/SDL.h>
 	<SDL2/SDL_opengl.h>
@@ -16260,7 +16261,7 @@
 1433714796 d:\dev\opentomb\src\render\shader_manager.h
 	"shader_description.h"
 
-1440525794 d:\dev\opentomb\src\render\camera.h
+1444576457 d:\dev\opentomb\src\render\camera.h
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 
@@ -16406,7 +16407,7 @@
 	"trigger.h"
 	"room.h"
 
-1444155210 d:\dev\opentomb\src\trigger.h
+1444474032 d:\dev\opentomb\src\trigger.h
 	<stdint.h>
 
 1442143158 d:\dev\opentomb\src\physics.h

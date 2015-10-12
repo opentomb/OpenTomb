@@ -37,6 +37,11 @@ extern lua_State *engine_lua;
 
 void Save_EntityTree(FILE **f, RedBlackNode_p n);
 void Save_Entity(FILE **f, entity_p ent);
+void Cam_PlayFlyBy(float time);
+
+static float flyby_timer = 0.0f;
+static float flyby_time = 0.0f;
+static flyby_camera_sequence_p curr_flyby = NULL;
 
 int lua_mlook(lua_State * lua)
 {
@@ -474,6 +479,26 @@ void Game_ApplyControls(struct entity_s *ent)
 }
 
 
+void Cam_PlayFlyBy(float time)
+{
+    if(curr_flyby)
+    {
+        flyby_time += time;
+        float t = flyby_time / flyby_timer;
+        if(t <= 1.0f)
+        {
+            FlyBySequence_SetCamera(curr_flyby, &engine_camera, t);
+        }
+        else
+        {
+            curr_flyby = NULL;
+            flyby_time = 0.0f;
+            flyby_timer = 0.0;
+        }
+    }
+}
+
+
 void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, float dz)
 {
     float cam_pos[3], cameraFrom[3], cameraTo[3];
@@ -824,7 +849,13 @@ void Game_Frame(float time)
 
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
-    Game_ApplyControls(engine_world.Character);
+    if(!curr_flyby)
+    {
+        Game_ApplyControls(engine_world.Character);
+    }
+
+    Cam_PlayFlyBy(time);
+
     if(is_character)
     {
         if(engine_world.Character->type_flags & ENTITY_TYPE_DYNAMIC)
@@ -835,7 +866,10 @@ void Game_Frame(float time)
         {
             Character_ApplyCommands(engine_world.Character);
             Entity_Frame(engine_world.Character, engine_frame_time);
-            Cam_FollowEntity(&engine_camera, engine_world.Character, 16.0, 128.0);
+            if(!curr_flyby)
+            {
+                Cam_FollowEntity(&engine_camera, engine_world.Character, 16.0, 128.0);
+            }
         }
     }
 
@@ -892,6 +926,24 @@ void Game_Prepare()
     // Set gameflow parameters to default.
     // Reset secret trigger map.
     memset(gameflow_manager.SecretsTriggerMap, 0, sizeof(gameflow_manager.SecretsTriggerMap));
+}
+
+
+void Game_PlayFlyBy(uint32_t sequence_id, float timer)
+{
+    if(!curr_flyby)
+    {
+        for(flyby_camera_sequence_p s = engine_world.flyby_camera_sequences; s; s = s->next)
+        {
+            if(s->start->sequence == sequence_id)
+            {
+                curr_flyby = s;
+                flyby_timer = timer;
+                flyby_time = 0.0f;
+                break;
+            }
+        }
+    }
 }
 
 

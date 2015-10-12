@@ -50,7 +50,7 @@ static ALCdevice              *al_device      = NULL;
 static ALCcontext             *al_context     = NULL;
 
 static int                      engine_done   = 0;
-
+static int                      engine_set_sero_time = 0;
 float time_scale = 1.0f;
 
 engine_container_p      last_cont = NULL;
@@ -734,7 +734,7 @@ void Engine_MainLoop()
 {
     float time = 0.0f;
     float newtime = 0.0f;
-    float oldtime = 0.0f;
+    float oldtime = Sys_FloatTime();
     float time_cycl = 0.0f;
 
     const int max_cycles = 64;
@@ -747,6 +747,12 @@ void Engine_MainLoop()
         time = newtime - oldtime;
         oldtime = newtime;
         time *= time_scale;
+
+        if(engine_set_sero_time)
+        {
+            engine_set_sero_time = 0;
+            time = 0.0f;
+        }
 
         engine_frame_time = time;
 
@@ -1124,6 +1130,7 @@ int Engine_LoadMap(const char *name)
 
     Gui_DrawLoadScreen(1000);
     Gui_NotifierStop();
+    engine_set_sero_time = 1;
 
     return 1;
 }
