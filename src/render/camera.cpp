@@ -362,7 +362,7 @@ flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_
 {
     flyby_camera_sequence_p ret = NULL;
 
-    if(count > 2)
+    if(count >= 2)
     {
         ret = (flyby_camera_sequence_p)malloc(sizeof(flyby_camera_sequence_t));
 
@@ -387,7 +387,7 @@ flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_
             ret->target_y->d[i] = start[i].target[1];
             ret->target_z->d[i] = start[i].target[2];
             ret->fov->d[i] = start[i].fov;
-            ret->roll->d[i] = start[i].roll * M_PI / (180.0f * 1024.0f);
+            ret->roll->d[i] = start[i].roll * M_PI / (180.0f * 2048.0f);
         }
 
         Spline_Build(ret->pos_x);
@@ -438,7 +438,7 @@ void FlyBySequence_Clear(flyby_camera_sequence_p s)
 
 void FlyBySequence_SetCamera(flyby_camera_sequence_p s, camera_p cam, float t)
 {
-    float to[3];
+    float to[3], d;
 
     cam->pos[0] = Spline_Get(s->pos_x, t);
     cam->pos[1] = Spline_Get(s->pos_y, t);
@@ -448,9 +448,47 @@ void FlyBySequence_SetCamera(flyby_camera_sequence_p s, camera_p cam, float t)
     to[1] = Spline_Get(s->target_y, t);
     to[2] = Spline_Get(s->target_z, t);
 
-    cam->ang[0] = atan2f(to[1] - cam->pos[1], to[0] - cam->pos[0]);
-    cam->ang[1] = atan2f(to[2] - cam->pos[2],-to[1] + cam->pos[1]);
-    cam->ang[2] = Spline_Get(s->roll, t);
+    vec3_sub(cam->view_dir, to, cam->pos);
+    vec3_norm(cam->view_dir, d);
+    to[0] = 0.0f;
+    to[1] = 0.0f;
+    to[2] = 1.0f;
 
-    Cam_SetRotation(cam, cam->ang);
+    cam->right_dir[0] = cam->view_dir[1];
+    cam->right_dir[1] =-cam->view_dir[0];
+    cam->right_dir[2] = 0.0f;
+    vec3_norm(cam->right_dir, d);
+
+    vec3_cross(cam->up_dir, cam->right_dir, cam->view_dir);
+
+    d = Spline_Get(s->roll, t);
+
+    if(d != 0.0f)
+    {
+        float sin_t2, cos_t2, module;
+        float t1[4], t2[4], t[4];
+
+        d /= 2.0;
+        sin_t2 = sin(d);
+        cos_t2 = cos(d);
+
+        t1[3] = cos_t2;
+        t1[0] = cam->view_dir[0] * sin_t2;
+        t1[1] = cam->view_dir[1] * sin_t2;
+        t1[2] = cam->view_dir[2] * sin_t2;
+
+        module = vec4_abs(t1);
+        t2[3] = t1[3] / module;
+        t2[0] = -t1[0] / module;
+        t2[1] = -t1[1] / module;
+        t2[2] = -t1[2] / module;
+
+        cam->up_dir[3] = 0.0;
+        vec4_mul(t, t1, cam->up_dir);
+        vec4_mul(cam->up_dir, t, t2);
+
+        cam->right_dir[3] = 0.0;
+        vec4_mul(t, t1, cam->right_dir);
+        vec4_mul(cam->right_dir, t, t2);
+    }
 }

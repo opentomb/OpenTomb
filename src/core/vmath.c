@@ -9,7 +9,7 @@ spline_p Spline_Create(uint32_t base_points_count)
 {
     spline_p ret = NULL;
     
-    if(base_points_count >= 3)
+    if(base_points_count >= 2)
     {
         ret = (spline_p)malloc(sizeof(spline_t));
 
@@ -39,8 +39,8 @@ void Spline_Clear(spline_p spline)
 
 void Spline_Build(spline_p spline)
 {
-    long int i;
     long int n = spline->base_points_count - 2;
+    long int i;
     float r, k;
     float h = 1.0f / ((float)spline->base_points_count - 1.0f);
 
@@ -51,34 +51,34 @@ void Spline_Build(spline_p spline)
 
     for(i = 1; i <= n; i++)
     {
-    	r = spline->d[i + 1] - spline->d[i] - spline->d[i] + spline->d[i-1];
-	r *= k;
-    	spline->b[i] = r;
-	spline->a[i] = 4.0f;
+        r = spline->d[i + 1] - spline->d[i] - spline->d[i] + spline->d[i-1];
+        r *= k;
+        spline->b[i] = r;
+        spline->a[i] = 4.0f;
     }
 
     for(i = 1; i < n; i++)
     {
         k = 1.0f / spline->a[i];
-	spline->a[i + 1] -= k;
-	spline->b[i+1] -= k * spline->b[i];
+        spline->a[i + 1] -= k;
+        spline->b[i+1] -= k * spline->b[i];
     }
 
     for(i = n; i > 1; i--)
     {
-    	spline->b[i - 1] -= (spline->b[i] / spline->a[i]);
-    	spline->b[i] /= spline->a[i];
+        spline->b[i - 1] -= (spline->b[i] / spline->a[i]);
+        spline->b[i] /= spline->a[i];
     }
 
     spline->b[1] /= spline->a[1];
 
     for(i = 0; i < n; i++)
     {
-    	spline->a[i] = (spline->b[i + 1] - spline->b[i]) / (3.0f * h);
-    	spline->c[i] = (spline->d[i + 1] - spline->d[i]) / h;
-    	spline->c[i] -= h * (spline->b[i + 1] + spline->b[i] + spline->b[i]) / 3.0f;
+        spline->a[i] = (spline->b[i + 1] - spline->b[i]) / (3.0f * h);
+        spline->c[i] = (spline->d[i + 1] - spline->d[i]) / h;
+        spline->c[i] -= h * (spline->b[i + 1] + spline->b[i] + spline->b[i]) / 3.0f;
     }
-    
+
     spline->a[n] = -spline->b[n] / (3.0f * h);
     spline->c[n] = (spline->d[n + 1] - spline->d[n]) / h;
     spline->c[n] -= h * spline->b[n] * 2.0f / 3.0f;
