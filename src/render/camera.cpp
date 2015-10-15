@@ -392,14 +392,14 @@ flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_
             ret->speed->d[i] = start[i].speed;
         }
 
-        Spline_Build(ret->pos_x);
-        Spline_Build(ret->pos_y);
-        Spline_Build(ret->pos_z);
-        Spline_Build(ret->target_x);
-        Spline_Build(ret->target_y);
-        Spline_Build(ret->target_z);
-        Spline_Build(ret->fov);
-        Spline_Build(ret->roll);
+        Spline_BuildCubic(ret->pos_x);
+        Spline_BuildCubic(ret->pos_y);
+        Spline_BuildCubic(ret->pos_z);
+        Spline_BuildCubic(ret->target_x);
+        Spline_BuildCubic(ret->target_y);
+        Spline_BuildCubic(ret->target_z);
+        Spline_BuildCubic(ret->fov);
+        Spline_BuildCubic(ret->roll);
         Spline_BuildLine(ret->speed);
     }
 

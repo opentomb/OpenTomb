@@ -944,6 +944,12 @@ void Game_PlayFlyBy(uint32_t sequence_id)
 }
 
 
+void Game_StopFlyBy()
+{
+    curr_flyby = NULL;
+}
+
+
 void Game_LevelTransition(uint16_t level_index)
 {
     char file_path[MAX_ENGINE_PATH];

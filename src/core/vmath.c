@@ -37,7 +37,7 @@ void Spline_Clear(spline_p spline)
 }
 
 
-void Spline_Build(spline_p spline)
+void Spline_BuildCubic(spline_p spline)
 {
     long int n = spline->base_points_count - 2;
     long int i;

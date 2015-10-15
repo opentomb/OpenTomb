@@ -1083,6 +1083,7 @@ int Engine_LoadMap(const char *name)
         return 0;
     }
 
+    Game_StopFlyBy();
     engine_camera.current_room = NULL;
     renderer.SetWorld(NULL);
     Gui_DrawLoadScreen(0);

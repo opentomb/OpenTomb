@@ -21,7 +21,7 @@ typedef struct spline_s
 
 spline_p Spline_Create(uint32_t base_points_count);
 void     Spline_Clear(spline_p spline);
-void     Spline_Build(spline_p spline);
+void     Spline_BuildCubic(spline_p spline);
 void     Spline_BuildLine(spline_p spline);
 float    Spline_Get(spline_p spline, float t);
 
