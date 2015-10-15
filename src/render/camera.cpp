@@ -377,6 +377,7 @@ flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_
         ret->target_z = Spline_Create(count);
         ret->fov = Spline_Create(count);
         ret->roll = Spline_Create(count);
+        ret->speed = Spline_Create(count);
 
         for(uint32_t i = 0; i < count; i++)
         {
@@ -388,6 +389,7 @@ flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_
             ret->target_z->d[i] = start[i].target[2];
             ret->fov->d[i] = start[i].fov;
             ret->roll->d[i] = start[i].roll * M_PI / (180.0f * 2048.0f);
+            ret->speed->d[i] = start[i].speed;
         }
 
         Spline_Build(ret->pos_x);
@@ -398,6 +400,7 @@ flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_
         Spline_Build(ret->target_z);
         Spline_Build(ret->fov);
         Spline_Build(ret->roll);
+        Spline_BuildLine(ret->speed);
     }
 
     return ret;
@@ -430,6 +433,9 @@ void FlyBySequence_Clear(flyby_camera_sequence_p s)
     Spline_Clear(s->fov);
     free(s->fov);
     s->fov = NULL;
+    Spline_Clear(s->speed);
+    free(s->speed);
+    s->speed = NULL;
 
     s->start = NULL;
     s->next = NULL;

@@ -39,7 +39,6 @@ void Save_EntityTree(FILE **f, RedBlackNode_p n);
 void Save_Entity(FILE **f, entity_p ent);
 void Cam_PlayFlyBy(float time);
 
-static float flyby_timer = 0.0f;
 static float flyby_time = 0.0f;
 static flyby_camera_sequence_p curr_flyby = NULL;
 
@@ -483,17 +482,16 @@ void Cam_PlayFlyBy(float time)
 {
     if(curr_flyby)
     {
-        flyby_time += time;
-        float t = flyby_time / flyby_timer;
-        if(t <= 1.0f)
+        float speed = Spline_Get(curr_flyby->speed, flyby_time);
+        flyby_time += time * speed / ((1024.0f + 512.0f) * (curr_flyby->pos_x->base_points_count - 1));
+        if(flyby_time <= 1.0f)
         {
-            FlyBySequence_SetCamera(curr_flyby, &engine_camera, t);
+            FlyBySequence_SetCamera(curr_flyby, &engine_camera, flyby_time);
         }
         else
         {
             curr_flyby = NULL;
             flyby_time = 0.0f;
-            flyby_timer = 0.0;
         }
     }
 }
@@ -929,7 +927,7 @@ void Game_Prepare()
 }
 
 
-void Game_PlayFlyBy(uint32_t sequence_id, float timer)
+void Game_PlayFlyBy(uint32_t sequence_id)
 {
     if(!curr_flyby)
     {
@@ -938,7 +936,6 @@ void Game_PlayFlyBy(uint32_t sequence_id, float timer)
             if(s->start->sequence == sequence_id)
             {
                 curr_flyby = s;
-                flyby_timer = timer;
                 flyby_time = 0.0f;
                 break;
             }

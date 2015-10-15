@@ -95,6 +95,7 @@ typedef struct flyby_camera_sequence_s
     struct spline_s                *target_z;
     struct spline_s                *fov;
     struct spline_s                *roll;
+    struct spline_s                *speed;
     
     struct flyby_camera_sequence_s *next;
 }flyby_camera_sequence_t, *flyby_camera_sequence_p;

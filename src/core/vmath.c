@@ -85,7 +85,20 @@ void Spline_Build(spline_p spline)
 }
 
 
-float    Spline_Get(spline_p spline, float t)
+void Spline_BuildLine(spline_p spline)
+{
+    uint32_t i;
+    
+    for(i = 0; i < spline->base_points_count - 1; i++)
+    {
+        spline->a[i] = 0.0f;
+        spline->b[i] = 0.0f;
+        spline->c[i] = spline->d[i + 1] - spline->d[i];
+    }
+}
+
+
+float Spline_Get(spline_p spline, float t)
 {
     long int i;
     float dt, delta;
