@@ -449,12 +449,13 @@ void CRender::DrawListDebugLines()
         {
             const float color_r[3] = {1.0f, 0.0f, 0.0f};
             const float color_g[3] = {0.0f, 1.0f, 0.0f};
-            const float dt = 1.0f / 256.0;
             float v0[3], v1[3];
 
             for(flyby_camera_sequence_p s = m_world->flyby_camera_sequences; s; s = s->next)
             {
-                for(float t = 0.0f; t <= 1.0f - dt; t += dt)
+                const float max_s = s->pos_x->base_points_count - 1;
+                const float dt = max_s / 256.0f;
+                for(float t = 0.0f; t <= max_s - dt; t += dt)
                 {
                     v0[0] = Spline_Get(s->pos_x, t);
                     v0[1] = Spline_Get(s->pos_y, t);

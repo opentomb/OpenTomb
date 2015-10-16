@@ -482,9 +482,10 @@ void Cam_PlayFlyBy(float time)
 {
     if(curr_flyby)
     {
+        const float max_time = curr_flyby->pos_x->base_points_count - 1;
         float speed = Spline_Get(curr_flyby->speed, flyby_time);
-        flyby_time += time * speed / ((1024.0f + 512.0f) * (curr_flyby->pos_x->base_points_count - 1));
-        if(flyby_time <= 1.0f)
+        flyby_time += time * speed / (1024.0f + 512.0f);
+        if(flyby_time <= max_time)
         {
             FlyBySequence_SetCamera(curr_flyby, &engine_camera, flyby_time);
         }

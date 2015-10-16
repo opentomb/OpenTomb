@@ -42,7 +42,7 @@ void Spline_BuildCubic(spline_p spline)
     long int n = spline->base_points_count - 2;
     long int i;
     float r, k;
-    float h = 1.0f / ((float)spline->base_points_count - 1.0f);
+    const float h = 1.0f;
 
     k = 3.0f / (h * h);
 
@@ -88,43 +88,43 @@ void Spline_BuildCubic(spline_p spline)
 void Spline_BuildLine(spline_p spline)
 {
     uint32_t i;
+    const float h = 1.0f;
     
     for(i = 0; i < spline->base_points_count - 1; i++)
     {
         spline->a[i] = 0.0f;
         spline->b[i] = 0.0f;
-        spline->c[i] = spline->d[i + 1] - spline->d[i];
+        spline->c[i] = (spline->d[i + 1] - spline->d[i]) / h;
     }
 }
 
 
 float Spline_Get(spline_p spline, float t)
 {
-    long int i;
-    float dt, delta;
-    delta = 1.0f / ((float)spline->base_points_count - 1.0f);
-    i = (long int)(t / delta);
+    uint32_t i = t;
 
-    if((i < 0) || (i > spline->base_points_count - 1))
+    if((i < 0) || (i + 1 > spline->base_points_count))
     {
     	return 0.0f;
     }
-
-    if(i == spline->base_points_count - 1)
+    else if(i + 1 == spline->base_points_count)
     {
     	return spline->d[i];
     }
-
-    dt = t - delta * i;
-    delta = spline->d[i];
-    t = dt;
-    delta += spline->c[i] * t;
-    t *= dt;
-    delta += spline->b[i] * t;
-    t *= dt;
-    delta += spline->a[i] * t;
-    
-    return delta;
+    else
+    {
+        float x = t - i;
+        float summ = spline->d[i];
+        
+        t = x;
+        summ += spline->c[i] * t;
+        t *= x;
+        summ += spline->b[i] * t;
+        t *= x;
+        summ += spline->a[i] * t;
+        
+        return summ;
+    }
 }
     
 
