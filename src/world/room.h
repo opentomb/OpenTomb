@@ -11,6 +11,8 @@
 #include <memory>
 #include <vector>
 
+#include <boost/multi_array.hpp>
+
 class btRigidBody;
 
 namespace loader
@@ -52,8 +54,8 @@ struct RoomSector
     RoomSector        *sector_above;
     std::shared_ptr<Room> owner_room;    // Room that contain this sector
 
-    int16_t                     index_x;
-    int16_t                     index_y;
+    size_t index_x;
+    size_t index_y;
     glm::vec3 position;
 
     glm::vec3                   ceiling_corners[4];
@@ -127,9 +129,7 @@ struct Room : public Object
     std::shared_ptr<Room> alternate_room;                                 // alternative room pointer
     std::shared_ptr<Room> base_room;                                      // base room == room->alternate_room->base_room
 
-    uint16_t                    sectors_x;
-    uint16_t                    sectors_y;
-    std::vector<RoomSector> sectors;
+    boost::multi_array<RoomSector, 2> sectors;
 
     std::vector<Room*> near_room_list;
     std::vector<std::shared_ptr<Room>> overlapped_room_list;
@@ -155,7 +155,7 @@ struct Room : public Object
     bool isJoined(Room *r2);
     bool isOverlapped(Room *r1);
     bool isInNearRoomsList(const Room &r) const;
-    bool hasSector(int x, int y);//If this room contains a sector
+    bool hasSector(size_t x, size_t y);//If this room contains a sector
     void addEntity(Entity *entity);
     bool removeEntity(Entity *entity);
     void addToNearRoomsList(Room* r);
@@ -171,6 +171,6 @@ struct Room : public Object
     void genMesh(World *world, uint32_t room_index, const std::unique_ptr<loader::Level>& tr);
 };
 
-btCollisionShape* BT_CSfromHeightmap(const std::vector<RoomSector> &heightmap, const std::vector<SectorTween> &tweens, bool useCompression, bool buildBvh);
+btCollisionShape* BT_CSfromHeightmap(const boost::multi_array<RoomSector, 2>& heightmap, const std::vector<SectorTween> &tweens, bool useCompression, bool buildBvh);
 
 } // namespace world

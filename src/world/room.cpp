@@ -122,9 +122,9 @@ bool Room::isInNearRoomsList(const Room& r1) const
     return false;
 }
 
-bool Room::hasSector(int x, int y)
+bool Room::hasSector(size_t x, size_t y)
 {
-    return x < sectors_x && y < sectors_y;
+    return x < sectors.shape()[0] && y < sectors.shape()[1];
 }
 
 bool Room::isOverlapped(Room* r1)
@@ -150,7 +150,7 @@ RoomSector* Room::getSectorRaw(const glm::vec3& pos)
 
     int x = static_cast<int>(pos[0] - transform[3][0]) / 1024;
     int y = static_cast<int>(pos[1] - transform[3][1]) / 1024;
-    if(x < 0 || x >= sectors_x || y < 0 || y >= sectors_y)
+    if(x < 0 || static_cast<size_t>(x) >= sectors.shape()[0] || y < 0 || static_cast<size_t>(y) >= sectors.shape()[1])
     {
         return nullptr;
     }
@@ -158,7 +158,7 @@ RoomSector* Room::getSectorRaw(const glm::vec3& pos)
     // Column index system
     // X - column number, Y - string number
 
-    return &sectors[x * sectors_y + y];
+    return &sectors[x][y];
 }
 
 RoomSector* Room::getSectorXYZ(const glm::vec3& pos)
@@ -172,7 +172,7 @@ RoomSector* Room::getSectorXYZ(const glm::vec3& pos)
 
     int x = static_cast<int>(pos[0] - room->transform[3][0]) / 1024;
     int y = static_cast<int>(pos[1] - room->transform[3][1]) / 1024;
-    if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
+    if(x < 0 || static_cast<size_t>(x) >= room->sectors.shape()[0] || y < 0 || static_cast<size_t>(y) >= room->sectors.shape()[1])
     {
         return nullptr;
     }
@@ -180,7 +180,7 @@ RoomSector* Room::getSectorXYZ(const glm::vec3& pos)
     // Column index system
     // X - column number, Y - string number
 
-    RoomSector* ret = &room->sectors[x * room->sectors_y + y];
+    RoomSector* ret = &room->sectors[x][y];
 
     //resolve Z overlapped neighboard rooms. room below has more priority.
 
@@ -489,9 +489,9 @@ RoomSector* RoomSector::checkPortalPointerRaw()
         std::shared_ptr<Room> r = engine::engine_world.rooms[portal_to_room];
         int ind_x = static_cast<int>((position[0] - r->transform[3][0]) / MeteringSectorSize);
         int ind_y = static_cast<int>((position[1] - r->transform[3][1]) / MeteringSectorSize);
-        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
+        if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->sectors.shape()[1])
         {
-            return &r->sectors[(ind_x * r->sectors_y + ind_y)];
+            return &r->sectors[ind_x][ind_y];
         }
     }
 
@@ -513,9 +513,9 @@ RoomSector* RoomSector::checkPortalPointer()
         }
         int ind_x = static_cast<int>((position[0] - r->transform[3][0]) / MeteringSectorSize);
         int ind_y = static_cast<int>((position[1] - r->transform[3][1]) / MeteringSectorSize);
-        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
+        if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->sectors.shape()[1])
         {
-            return &r->sectors[(ind_x * r->sectors_y + ind_y)];
+            return &r->sectors[ind_x][ind_y];
         }
     }
 
@@ -529,9 +529,9 @@ RoomSector* RoomSector::checkBaseRoom()
         std::shared_ptr<Room> r = owner_room->base_room;
         int ind_x = static_cast<int>((position[0] - r->transform[3][0]) / MeteringSectorSize);
         int ind_y = static_cast<int>((position[1] - r->transform[3][1]) / MeteringSectorSize);
-        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
+        if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->sectors.shape()[1])
         {
-            return &r->sectors[(ind_x * r->sectors_y + ind_y)];
+            return &r->sectors[ind_x][ind_y];
         }
     }
 
@@ -545,9 +545,9 @@ RoomSector* RoomSector::checkAlternateRoom()
         std::shared_ptr<Room> r = owner_room->alternate_room;
         int ind_x = static_cast<int>((position[0] - r->transform[3][1]) / MeteringSectorSize);
         int ind_y = static_cast<int>((position[1] - r->transform[3][1]) / MeteringSectorSize);
-        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
+        if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->sectors.shape()[1])
         {
-            return &r->sectors[(ind_x * r->sectors_y + ind_y)];
+            return &r->sectors[ind_x][ind_y];
         }
     }
 
@@ -654,12 +654,12 @@ RoomSector* RoomSector::checkFlip()
     if(owner_room->base_room && owner_room->base_room->active)
     {
         std::shared_ptr<Room> r = owner_room->base_room;
-        return &r->sectors[index_x * r->sectors_y + index_y];
+        return &r->sectors[index_x][index_y];
     }
     else if(owner_room->alternate_room && owner_room->alternate_room->active)
     {
         std::shared_ptr<Room> r = owner_room->alternate_room;
-        return &r->sectors[index_x * r->sectors_y + index_y];
+        return &r->sectors[index_x][index_y];
     }
     else
     {
@@ -698,102 +698,105 @@ RoomSector* RoomSector::getHighestSector()
 }
 
 ///@TODO: resolve cases with floor >> ceiling (I.E. floor - ceiling >= 2048)
-btCollisionShape *BT_CSfromHeightmap(const std::vector<RoomSector>& heightmap, const std::vector<SectorTween>& tweens, bool useCompression, bool buildBvh)
+btCollisionShape *BT_CSfromHeightmap(const boost::multi_array<RoomSector, 2>& heightmap, const std::vector<SectorTween>& tweens, bool useCompression, bool buildBvh)
 {
     uint32_t cnt = 0;
-    std::shared_ptr<Room> r = heightmap.front().owner_room;
+    std::shared_ptr<Room> r = heightmap.origin()->owner_room;
     btTriangleMesh *trimesh = new btTriangleMesh;
 
-    for(uint32_t i = 0; i < r->sectors.size(); i++)
+    for(const auto& column : heightmap)
     {
-        if((heightmap[i].floor_penetration_config != PenetrationConfig::Ghost) &&
-           (heightmap[i].floor_penetration_config != PenetrationConfig::Wall))
+        for(const RoomSector& sector : column)
         {
-            if((heightmap[i].floor_diagonal_type == DiagonalType::None) ||
-               (heightmap[i].floor_diagonal_type == DiagonalType::NW))
+            if((sector.floor_penetration_config != PenetrationConfig::Ghost) &&
+               (sector.floor_penetration_config != PenetrationConfig::Wall))
             {
-                if(heightmap[i].floor_penetration_config != PenetrationConfig::DoorVerticalA)
+                if((sector.floor_diagonal_type == DiagonalType::None) ||
+                   (sector.floor_diagonal_type == DiagonalType::NW))
                 {
-                    trimesh->addTriangle(util::convert(heightmap[i].floor_corners[3]),
-                                         util::convert(heightmap[i].floor_corners[2]),
-                                         util::convert(heightmap[i].floor_corners[0]),
-                                         true);
-                    cnt++;
-                }
+                    if(sector.floor_penetration_config != PenetrationConfig::DoorVerticalA)
+                    {
+                        trimesh->addTriangle(util::convert(sector.floor_corners[3]),
+                                             util::convert(sector.floor_corners[2]),
+                                             util::convert(sector.floor_corners[0]),
+                                             true);
+                        cnt++;
+                    }
 
-                if(heightmap[i].floor_penetration_config != PenetrationConfig::DoorVerticalB)
+                    if(sector.floor_penetration_config != PenetrationConfig::DoorVerticalB)
+                    {
+                        trimesh->addTriangle(util::convert(sector.floor_corners[2]),
+                                             util::convert(sector.floor_corners[1]),
+                                             util::convert(sector.floor_corners[0]),
+                                             true);
+                        cnt++;
+                    }
+                }
+                else
                 {
-                    trimesh->addTriangle(util::convert(heightmap[i].floor_corners[2]),
-                                         util::convert(heightmap[i].floor_corners[1]),
-                                         util::convert(heightmap[i].floor_corners[0]),
-                                         true);
-                    cnt++;
+                    if(sector.floor_penetration_config != PenetrationConfig::DoorVerticalA)
+                    {
+                        trimesh->addTriangle(util::convert(sector.floor_corners[3]),
+                                             util::convert(sector.floor_corners[2]),
+                                             util::convert(sector.floor_corners[1]),
+                                             true);
+                        cnt++;
+                    }
+
+                    if(sector.floor_penetration_config != PenetrationConfig::DoorVerticalB)
+                    {
+                        trimesh->addTriangle(util::convert(sector.floor_corners[3]),
+                                             util::convert(sector.floor_corners[1]),
+                                             util::convert(sector.floor_corners[0]),
+                                             true);
+                        cnt++;
+                    }
                 }
             }
-            else
+
+            if((sector.ceiling_penetration_config != PenetrationConfig::Ghost) &&
+               (sector.ceiling_penetration_config != PenetrationConfig::Wall))
             {
-                if(heightmap[i].floor_penetration_config != PenetrationConfig::DoorVerticalA)
+                if((sector.ceiling_diagonal_type == DiagonalType::None) ||
+                   (sector.ceiling_diagonal_type == DiagonalType::NW))
                 {
-                    trimesh->addTriangle(util::convert(heightmap[i].floor_corners[3]),
-                                         util::convert(heightmap[i].floor_corners[2]),
-                                         util::convert(heightmap[i].floor_corners[1]),
-                                         true);
-                    cnt++;
-                }
+                    if(sector.ceiling_penetration_config != PenetrationConfig::DoorVerticalA)
+                    {
+                        trimesh->addTriangle(util::convert(sector.ceiling_corners[0]),
+                                             util::convert(sector.ceiling_corners[2]),
+                                             util::convert(sector.ceiling_corners[3]),
+                                             true);
+                        cnt++;
+                    }
 
-                if(heightmap[i].floor_penetration_config != PenetrationConfig::DoorVerticalB)
-                {
-                    trimesh->addTriangle(util::convert(heightmap[i].floor_corners[3]),
-                                         util::convert(heightmap[i].floor_corners[1]),
-                                         util::convert(heightmap[i].floor_corners[0]),
-                                         true);
-                    cnt++;
+                    if(sector.ceiling_penetration_config != PenetrationConfig::DoorVerticalB)
+                    {
+                        trimesh->addTriangle(util::convert(sector.ceiling_corners[0]),
+                                             util::convert(sector.ceiling_corners[1]),
+                                             util::convert(sector.ceiling_corners[2]),
+                                             true);
+                        cnt++;
+                    }
                 }
-            }
-        }
+                else
+                {
+                    if(sector.ceiling_penetration_config != PenetrationConfig::DoorVerticalA)
+                    {
+                        trimesh->addTriangle(util::convert(sector.ceiling_corners[0]),
+                                             util::convert(sector.ceiling_corners[1]),
+                                             util::convert(sector.ceiling_corners[3]),
+                                             true);
+                        cnt++;
+                    }
 
-        if((heightmap[i].ceiling_penetration_config != PenetrationConfig::Ghost) &&
-           (heightmap[i].ceiling_penetration_config != PenetrationConfig::Wall))
-        {
-            if((heightmap[i].ceiling_diagonal_type == DiagonalType::None) ||
-               (heightmap[i].ceiling_diagonal_type == DiagonalType::NW))
-            {
-                if(heightmap[i].ceiling_penetration_config != PenetrationConfig::DoorVerticalA)
-                {
-                    trimesh->addTriangle(util::convert(heightmap[i].ceiling_corners[0]),
-                                         util::convert(heightmap[i].ceiling_corners[2]),
-                                         util::convert(heightmap[i].ceiling_corners[3]),
-                                         true);
-                    cnt++;
-                }
-
-                if(heightmap[i].ceiling_penetration_config != PenetrationConfig::DoorVerticalB)
-                {
-                    trimesh->addTriangle(util::convert(heightmap[i].ceiling_corners[0]),
-                                         util::convert(heightmap[i].ceiling_corners[1]),
-                                         util::convert(heightmap[i].ceiling_corners[2]),
-                                         true);
-                    cnt++;
-                }
-            }
-            else
-            {
-                if(heightmap[i].ceiling_penetration_config != PenetrationConfig::DoorVerticalA)
-                {
-                    trimesh->addTriangle(util::convert(heightmap[i].ceiling_corners[0]),
-                                         util::convert(heightmap[i].ceiling_corners[1]),
-                                         util::convert(heightmap[i].ceiling_corners[3]),
-                                         true);
-                    cnt++;
-                }
-
-                if(heightmap[i].ceiling_penetration_config != PenetrationConfig::DoorVerticalB)
-                {
-                    trimesh->addTriangle(util::convert(heightmap[i].ceiling_corners[1]),
-                                         util::convert(heightmap[i].ceiling_corners[2]),
-                                         util::convert(heightmap[i].ceiling_corners[3]),
-                                         true);
-                    cnt++;
+                    if(sector.ceiling_penetration_config != PenetrationConfig::DoorVerticalB)
+                    {
+                        trimesh->addTriangle(util::convert(sector.ceiling_corners[1]),
+                                             util::convert(sector.ceiling_corners[2]),
+                                             util::convert(sector.ceiling_corners[3]),
+                                             true);
+                        cnt++;
+                    }
                 }
             }
         }

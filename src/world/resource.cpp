@@ -200,15 +200,15 @@ namespace world
     std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
     {
         std::vector<SectorTween> result;
-        for(uint16_t h = 0; h < room->sectors_y - 1; h++)
+        for(size_t h = 0; h < room->sectors.shape()[1] - 1; h++)
         {
-            for(uint16_t w = 0; w < room->sectors_x - 1; w++)
+            for(size_t w = 0; w < room->sectors.shape()[0] - 1; w++)
             {
                 result.emplace_back();
                 SectorTween* room_tween = &result.back();
                 // Init X-plane tween [ | ]
 
-                RoomSector* current_heightmap = &room->sectors[(w * room->sectors_y + h)];
+                RoomSector* current_heightmap = &room->sectors[w][h];
                 RoomSector* next_heightmap = current_heightmap + 1;
                 char joined_floors = 0;
                 char joined_ceilings = 0;
@@ -290,7 +290,7 @@ namespace world
                         }
                     }
 
-                    current_heightmap = &room->sectors[(w * room->sectors_y + h)];
+                    current_heightmap = &room->sectors[w][h];
                     next_heightmap = current_heightmap + 1;
                     if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                     {
@@ -339,7 +339,7 @@ namespace world
                         }
                     }
 
-                    current_heightmap = &room->sectors[(w * room->sectors_y + h)];
+                    current_heightmap = &room->sectors[w][h];
                     next_heightmap = current_heightmap + 1;
                     if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                     {
@@ -395,8 +395,8 @@ namespace world
 
                 result.emplace_back();
                 room_tween = &result.back();
-                current_heightmap = &room->sectors[(w * room->sectors_y + h)];
-                next_heightmap = &room->sectors[((w + 1) * room->sectors_y + h)];
+                current_heightmap = &room->sectors[w][h];
+                next_heightmap = &room->sectors[w + 1][h];
                 room_tween->floor_corners[0][0] = current_heightmap->floor_corners[1][0];
                 room_tween->floor_corners[1][0] = room_tween->floor_corners[0][0];
                 room_tween->floor_corners[2][0] = room_tween->floor_corners[0][0];
@@ -477,8 +477,8 @@ namespace world
                         }
                     }
 
-                    current_heightmap = &room->sectors[(w * room->sectors_y + h)];
-                    next_heightmap = &room->sectors[((w + 1) * room->sectors_y + h)];
+                    current_heightmap = &room->sectors[w][h];
+                    next_heightmap = &room->sectors[w + 1][h];
                     if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                     {
                         char valid = 0;
@@ -526,8 +526,8 @@ namespace world
                         }
                     }
 
-                    current_heightmap = &room->sectors[(w * room->sectors_y + h)];
-                    next_heightmap = &room->sectors[((w + 1) * room->sectors_y + h)];
+                    current_heightmap = &room->sectors[w][h];
+                    next_heightmap = &room->sectors[w + 1][h];
                     if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                     {
                         char valid = 0;
@@ -1506,9 +1506,9 @@ namespace world
          * Sectors loading
          */
 
-        for(size_t i = 0; i < room->sectors.size(); i++)
+        for(size_t i = 0; i < room->sectors.num_elements(); i++)
         {
-            RoomSector* sector = &room->sectors[i];
+            RoomSector* sector = &room->sectors[i/room->sectors.shape()[1]][i%room->sectors.shape()[1]];
             /*
              * Let us fill pointers to sectors above and sectors below
              */
@@ -1529,20 +1529,20 @@ namespace world
             RoomSector* near_sector = nullptr;
 
             /**** OX *****/
-            if((sector->index_y > 0) && (sector->index_y < room->sectors_y - 1) && (sector->index_x == 0))
+            if((sector->index_y > 0) && (sector->index_y < room->sectors.shape()[1] - 1) && (sector->index_x == 0))
             {
-                near_sector = sector + room->sectors_y;
+                near_sector = sector + room->sectors.shape()[1];
             }
-            if((sector->index_y > 0) && (sector->index_y < room->sectors_y - 1) && (sector->index_x == room->sectors_x - 1))
+            if((sector->index_y > 0) && (sector->index_y < room->sectors.shape()[1] - 1) && (sector->index_x == room->sectors.shape()[0] - 1))
             {
-                near_sector = sector - room->sectors_y;
+                near_sector = sector - room->sectors.shape()[1];
             }
             /**** OY *****/
-            if((sector->index_x > 0) && (sector->index_x < room->sectors_x - 1) && (sector->index_y == 0))
+            if((sector->index_x > 0) && (sector->index_x < room->sectors.shape()[0] - 1) && (sector->index_y == 0))
             {
                 near_sector = sector + 1;
             }
-            if((sector->index_x > 0) && (sector->index_x < room->sectors_x - 1) && (sector->index_y == room->sectors_y - 1))
+            if((sector->index_x > 0) && (sector->index_x < room->sectors.shape()[0] - 1) && (sector->index_y == room->sectors.shape()[1] - 1))
             {
                 near_sector = sector - 1;
             }
@@ -1574,12 +1574,12 @@ namespace world
         }
 
         auto room = engine::engine_world.rooms[room_id];
-        if((sx < 0) || (sx >= room->sectors_x) || (sy < 0) || (sy >= room->sectors_y))
+        if(sx < 0 || static_cast<size_t>(sx) >= room->sectors.shape()[0] || sy < 0 || static_cast<size_t>(sy) >= room->sectors.shape()[1])
         {
             return nullptr;
         }
 
-        return &room->sectors[sx * room->sectors_y + sy];
+        return &room->sectors[sx][sy];
     }
 
     void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::Value pen, lua::Value diag, lua::Value floor, float z0, float z1, float z2, float z3)
@@ -1912,9 +1912,7 @@ namespace world
         /*
          * let us load sectors
          */
-        room->sectors_x = tr_room->num_xsectors;
-        room->sectors_y = tr_room->num_zsectors;
-        room->sectors.resize(room->sectors_x * room->sectors_y);
+        room->sectors.resize(boost::extents[tr_room->num_xsectors][tr_room->num_zsectors]);
 
         /*
          * base sectors information loading and collisional mesh creation
@@ -1927,13 +1925,15 @@ namespace world
          // quickly detect slopes for pushable blocks and other entities that rely on
          // floor level.
 
-        for(size_t i = 0; i < room->sectors.size(); i++)
+        for(size_t i = 0; i < room->sectors.num_elements(); i++)
         {
-            RoomSector* sector = &room->sectors[i];
+            const auto indexX = i / room->sectors.shape()[1];
+            const auto indexY = i % room->sectors.shape()[1];
+            RoomSector* const sector = &room->sectors[indexX][indexY];
             // Filling base sectors information.
 
-            sector->index_x = i / room->sectors_y;
-            sector->index_y = i % room->sectors_y;
+            sector->index_x = indexX;
+            sector->index_y = indexY;
 
             sector->position[0] = room->transform[3][0] + sector->index_x * MeteringSectorSize + 0.5f * MeteringSectorSize;
             sector->position[1] = room->transform[3][1] + sector->index_y * MeteringSectorSize + 0.5f * MeteringSectorSize;
@@ -1972,43 +1972,43 @@ namespace world
 
             if(sector->ceiling == MeteringWallHeight)
             {
-                room->sectors[i].ceiling_penetration_config = PenetrationConfig::Wall;
+                sector->ceiling_penetration_config = PenetrationConfig::Wall;
             }
             else if(tr_room->sector_list[i].room_above != 0xFF)
             {
-                room->sectors[i].ceiling_penetration_config = PenetrationConfig::Ghost;
+                sector->ceiling_penetration_config = PenetrationConfig::Ghost;
             }
             else
             {
-                room->sectors[i].ceiling_penetration_config = PenetrationConfig::Solid;
+                sector->ceiling_penetration_config = PenetrationConfig::Solid;
             }
 
             // Reset some sector parameters to avoid garbaged memory issues.
 
-            room->sectors[i].portal_to_room = -1;
-            room->sectors[i].ceiling_diagonal_type = DiagonalType::None;
-            room->sectors[i].floor_diagonal_type = DiagonalType::None;
+            sector->portal_to_room = -1;
+            sector->ceiling_diagonal_type = DiagonalType::None;
+            sector->floor_diagonal_type = DiagonalType::None;
 
             // Now, we define heightmap cells position and draft (flat) height.
             // Draft height is derived from sector's floor and ceiling values, which are
             // copied into heightmap cells Y coordinates. As result, we receive flat
             // heightmap cell, which will be operated later with floordata.
 
-            room->sectors[i].ceiling_corners[0][0] = sector->index_x * MeteringSectorSize;
-            room->sectors[i].ceiling_corners[0][1] = sector->index_y * MeteringSectorSize + MeteringSectorSize;
-            room->sectors[i].ceiling_corners[0][2] = sector->ceiling;
+            sector->ceiling_corners[0][0] = sector->index_x * MeteringSectorSize;
+            sector->ceiling_corners[0][1] = sector->index_y * MeteringSectorSize + MeteringSectorSize;
+            sector->ceiling_corners[0][2] = sector->ceiling;
 
-            room->sectors[i].ceiling_corners[1][0] = sector->index_x * MeteringSectorSize + MeteringSectorSize;
-            room->sectors[i].ceiling_corners[1][1] = sector->index_y * MeteringSectorSize + MeteringSectorSize;
-            room->sectors[i].ceiling_corners[1][2] = sector->ceiling;
+            sector->ceiling_corners[1][0] = sector->index_x * MeteringSectorSize + MeteringSectorSize;
+            sector->ceiling_corners[1][1] = sector->index_y * MeteringSectorSize + MeteringSectorSize;
+            sector->ceiling_corners[1][2] = sector->ceiling;
 
-            room->sectors[i].ceiling_corners[2][0] = sector->index_x * MeteringSectorSize + MeteringSectorSize;
-            room->sectors[i].ceiling_corners[2][1] = sector->index_y * MeteringSectorSize;
-            room->sectors[i].ceiling_corners[2][2] = sector->ceiling;
+            sector->ceiling_corners[2][0] = sector->index_x * MeteringSectorSize + MeteringSectorSize;
+            sector->ceiling_corners[2][1] = sector->index_y * MeteringSectorSize;
+            sector->ceiling_corners[2][2] = sector->ceiling;
 
-            room->sectors[i].ceiling_corners[3][0] = sector->index_x * MeteringSectorSize;
-            room->sectors[i].ceiling_corners[3][1] = sector->index_y * MeteringSectorSize;
-            room->sectors[i].ceiling_corners[3][2] = sector->ceiling;
+            sector->ceiling_corners[3][0] = sector->index_x * MeteringSectorSize;
+            sector->ceiling_corners[3][1] = sector->index_y * MeteringSectorSize;
+            sector->ceiling_corners[3][2] = sector->ceiling;
 
             // BUILDING FLOOR HEIGHTMAP.
 
@@ -2016,32 +2016,32 @@ namespace world
 
             if(sector->floor == MeteringWallHeight)
             {
-                room->sectors[i].floor_penetration_config = PenetrationConfig::Wall;
+                sector->floor_penetration_config = PenetrationConfig::Wall;
             }
             else if(tr_room->sector_list[i].room_below != 0xFF)
             {
-                room->sectors[i].floor_penetration_config = PenetrationConfig::Ghost;
+                sector->floor_penetration_config = PenetrationConfig::Ghost;
             }
             else
             {
-                room->sectors[i].floor_penetration_config = PenetrationConfig::Solid;
+                sector->floor_penetration_config = PenetrationConfig::Solid;
             }
 
-            room->sectors[i].floor_corners[0][0] = sector->index_x * MeteringSectorSize;
-            room->sectors[i].floor_corners[0][1] = sector->index_y * MeteringSectorSize + MeteringSectorSize;
-            room->sectors[i].floor_corners[0][2] = sector->floor;
+            sector->floor_corners[0][0] = sector->index_x * MeteringSectorSize;
+            sector->floor_corners[0][1] = sector->index_y * MeteringSectorSize + MeteringSectorSize;
+            sector->floor_corners[0][2] = sector->floor;
 
-            room->sectors[i].floor_corners[1][0] = sector->index_x * MeteringSectorSize + MeteringSectorSize;
-            room->sectors[i].floor_corners[1][1] = sector->index_y * MeteringSectorSize + MeteringSectorSize;
-            room->sectors[i].floor_corners[1][2] = sector->floor;
+            sector->floor_corners[1][0] = sector->index_x * MeteringSectorSize + MeteringSectorSize;
+            sector->floor_corners[1][1] = sector->index_y * MeteringSectorSize + MeteringSectorSize;
+            sector->floor_corners[1][2] = sector->floor;
 
-            room->sectors[i].floor_corners[2][0] = sector->index_x * MeteringSectorSize + MeteringSectorSize;
-            room->sectors[i].floor_corners[2][1] = sector->index_y * MeteringSectorSize;
-            room->sectors[i].floor_corners[2][2] = sector->floor;
+            sector->floor_corners[2][0] = sector->index_x * MeteringSectorSize + MeteringSectorSize;
+            sector->floor_corners[2][1] = sector->index_y * MeteringSectorSize;
+            sector->floor_corners[2][2] = sector->floor;
 
-            room->sectors[i].floor_corners[3][0] = sector->index_x * MeteringSectorSize;
-            room->sectors[i].floor_corners[3][1] = sector->index_y * MeteringSectorSize;
-            room->sectors[i].floor_corners[3][2] = sector->floor;
+            sector->floor_corners[3][0] = sector->index_x * MeteringSectorSize;
+            sector->floor_corners[3][1] = sector->index_y * MeteringSectorSize;
+            sector->floor_corners[3][2] = sector->floor;
         }
 
         /*
@@ -2097,8 +2097,8 @@ namespace world
 
         room->boundingBox.min[0] = room->transform[3][0] + MeteringSectorSize;
         room->boundingBox.min[1] = room->transform[3][1] + MeteringSectorSize;
-        room->boundingBox.max[0] = room->transform[3][0] + MeteringSectorSize * room->sectors_x - MeteringSectorSize;
-        room->boundingBox.max[1] = room->transform[3][1] + MeteringSectorSize * room->sectors_y - MeteringSectorSize;
+        room->boundingBox.max[0] = room->transform[3][0] + MeteringSectorSize * room->sectors.shape()[0] - MeteringSectorSize;
+        room->boundingBox.max[1] = room->transform[3][1] + MeteringSectorSize * room->sectors.shape()[1] - MeteringSectorSize;
 
         /*
          * alternate room pointer calculation if one exists.
@@ -2160,10 +2160,13 @@ namespace world
             }
 
             // Fill heightmap and translate floordata.
-            for(RoomSector& sector : r->sectors)
+            for(auto column : r->sectors)
             {
-                TR_Sector_TranslateFloorData(&sector, tr);
-                Res_Sector_FixHeights(&sector);
+                for(RoomSector& sector : column)
+                {
+                    TR_Sector_TranslateFloorData(&sector, tr);
+                    Res_Sector_FixHeights(&sector);
+                }
             }
 
             // Generate links to the near rooms.

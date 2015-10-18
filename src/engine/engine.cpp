@@ -769,8 +769,8 @@ void dumpRoom(world::Room* r)
     {
         BOOST_LOG_TRIVIAL(debug) << boost::format("ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)")
                                     % r->getId()
-                                    % r->sectors_x
-                                    % r->sectors_y
+                                    % r->sectors.shape()[0]
+                                    % r->sectors.shape()[1]
                                     % r->boundingBox.min[2]
                                     % r->boundingBox.max[2]
                                     % r->transform[3][0]
@@ -779,15 +779,19 @@ void dumpRoom(world::Room* r)
                                     % r->flags
                                     % (r->alternate_room != nullptr ? r->alternate_room->getId() : -1)
                                     % (r->base_room != nullptr ? r->base_room->getId() : -1);
-        for(const world::RoomSector& rs : r->sectors)
+        for(const auto& column : r->sectors)
         {
-            BOOST_LOG_TRIVIAL(debug) << boost::format("(%d,%d) floor = %d, ceiling = %d, portal = %d")
-                                        % rs.index_x
-                                        % rs.index_y
-                                        % rs.floor
-                                        % rs.ceiling
-                                        % rs.portal_to_room;
+            for(const world::RoomSector& rs : column)
+            {
+                BOOST_LOG_TRIVIAL(debug) << boost::format("(%d,%d) floor = %d, ceiling = %d, portal = %d")
+                                            % rs.index_x
+                                            % rs.index_y
+                                            % rs.floor
+                                            % rs.ceiling
+                                            % rs.portal_to_room;
+            }
         }
+
         for(auto sm : r->static_mesh)
         {
             BOOST_LOG_TRIVIAL(debug) << "static_mesh = " << sm->getId();
@@ -1191,7 +1195,7 @@ int execCmd(const char *ch)
             if(world::Room* r = render::renderer.camera()->getCurrentRoom())
             {
                 sect = r->getSectorXYZ(render::renderer.camera()->getPosition());
-                Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->getId(), r->sectors_x, r->sectors_y);
+                Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->getId(), r->sectors.shape()[0], r->sectors.shape()[1]);
                 if(sect)
                 {
                     Console::instance().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d",

@@ -360,7 +360,7 @@ RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, const glm::vec3&
 
     x = static_cast<int>(pos[0] - room->transform[3][0]) / 1024;
     y = static_cast<int>(pos[1] - room->transform[3][1]) / 1024;
-    if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
+    if(x < 0 || static_cast<size_t>(x) >= room->sectors.shape()[0] || y < 0 || static_cast<size_t>(y) >= room->sectors.shape()[1])
     {
         return nullptr;
     }
@@ -368,7 +368,7 @@ RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, const glm::vec3&
     // Column index system
     // X - column number, Y - string number
 
-    ret = &room->sectors[x * room->sectors_y + y];
+    ret = &room->sectors[x][y];
     return ret;
 }
 
