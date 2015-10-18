@@ -290,6 +290,30 @@ void vec3_RotateZ(float res[3], float src[3], float ang)
     res[1] = t[1];
 }
 
+void vec4_GetRotationOperators(float t1[4], float t2[4], const float v[3], float ang)
+{
+    float sin_t2, cos_t2, module;
+
+    ang /= 2.0f;
+    sin_t2 = sin(ang);
+    cos_t2 = cos(ang);
+
+    t1[3] = cos_t2;
+    t1[0] = v[0] * sin_t2;
+    t1[1] = v[1] * sin_t2;
+    t1[2] = v[2] * sin_t2;
+    module = vec4_abs(t1);
+    t1[0] /= module;
+    t1[1] /= module;
+    t1[2] /= module;
+    t1[3] /= module;
+    
+    t2[3] = t1[3];
+    t2[0] = -t1[0];
+    t2[1] = -t1[1];
+    t2[2] = -t1[2];
+}
+
 void vec4_slerp(float ret[4], float q1[4], float q2[4], float t)
 {
     float cos_fi, sin_fi, fi, k1, k2, sign;
@@ -321,7 +345,7 @@ void vec4_slerp(float ret[4], float q1[4], float q2[4], float t)
     ret[3] /= fi;
 }
 
-void vec4_SetTRRotations(float v[4], float rot[3])
+void vec4_SetZXYRotations(float v[4], float rot[3])
 {
     float angle, sin_t2, cos_t2, qt[4], qX[4], qY[4], qZ[4];
 

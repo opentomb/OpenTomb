@@ -39,8 +39,6 @@ void Save_EntityTree(FILE **f, RedBlackNode_p n);
 void Save_Entity(FILE **f, entity_p ent);
 void Cam_PlayFlyBy(float time);
 
-static float flyby_time = 0.0f;
-static flyby_camera_sequence_p curr_flyby = NULL;
 
 int lua_mlook(lua_State * lua)
 {
@@ -480,19 +478,20 @@ void Game_ApplyControls(struct entity_s *ent)
 
 void Cam_PlayFlyBy(float time)
 {
-    if(curr_flyby)
+    if(engine_camera_state.state == CAMERA_STATE_FLYBY)
     {
-        const float max_time = curr_flyby->pos_x->base_points_count - 1;
-        float speed = Spline_Get(curr_flyby->speed, flyby_time);
-        flyby_time += time * speed / (1024.0f + 512.0f);
-        if(flyby_time <= max_time)
+        const float max_time = engine_camera_state.flyby->pos_x->base_points_count - 1;
+        float speed = Spline_Get(engine_camera_state.flyby->speed, engine_camera_state.time);
+        engine_camera_state.time += time * speed / (1024.0f + 512.0f);
+        if(engine_camera_state.time <= max_time)
         {
-            FlyBySequence_SetCamera(curr_flyby, &engine_camera, flyby_time);
+            FlyBySequence_SetCamera(engine_camera_state.flyby, &engine_camera, engine_camera_state.time);
         }
         else
         {
-            curr_flyby = NULL;
-            flyby_time = 0.0f;
+            engine_camera_state.state = CAMERA_STATE_NORMAL;
+            engine_camera_state.flyby = NULL;
+            engine_camera_state.time = 0.0f;
         }
     }
 }
@@ -601,13 +600,13 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
     }
 
     //Code to manage screen shaking effects
-    if((engine_camera.shake_time > 0.0) && (engine_camera.shake_value > 0.0))
+    /*if((engine_camera_state.time > 0.0) && (engine_camera_state.shake_value > 0.0))
     {
-        cam_pos[0] += ((rand() % abs(engine_camera.shake_value)) - (engine_camera.shake_value / 2)) * engine_camera.shake_time;;
-        cam_pos[1] += ((rand() % abs(engine_camera.shake_value)) - (engine_camera.shake_value / 2)) * engine_camera.shake_time;;
-        cam_pos[2] += ((rand() % abs(engine_camera.shake_value)) - (engine_camera.shake_value / 2)) * engine_camera.shake_time;;
-        engine_camera.shake_time  = (engine_camera.shake_time < 0.0)?(0.0):(engine_camera.shake_time)-engine_frame_time;
-    }
+        cam_pos[0] += ((rand() % abs(engine_camera_state.shake_value)) - (engine_camera_state.shake_value / 2)) * engine_camera_state.time;;
+        cam_pos[1] += ((rand() % abs(engine_camera_state.shake_value)) - (engine_camera_state.shake_value / 2)) * engine_camera_state.time;;
+        cam_pos[2] += ((rand() % abs(engine_camera_state.shake_value)) - (engine_camera_state.shake_value / 2)) * engine_camera_state.time;;
+        engine_camera_state.time  = (engine_camera_state.time < 0.0)?(0.0):(engine_camera_state.time)-engine_frame_time;
+    }*/
 
     vec3_copy(cameraFrom, cam_pos);
     cam_pos[2] += dz;
@@ -848,7 +847,7 @@ void Game_Frame(float time)
 
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
-    if(!curr_flyby)
+    if(engine_camera_state.state != CAMERA_STATE_FLYBY)
     {
         Game_ApplyControls(engine_world.Character);
     }
@@ -865,7 +864,7 @@ void Game_Frame(float time)
         {
             Character_ApplyCommands(engine_world.Character);
             Entity_Frame(engine_world.Character, engine_frame_time);
-            if(!curr_flyby)
+            if(engine_camera_state.state != CAMERA_STATE_FLYBY)
             {
                 Cam_FollowEntity(&engine_camera, engine_world.Character, 16.0, 128.0);
             }
@@ -928,16 +927,18 @@ void Game_Prepare()
 }
 
 
-void Game_PlayFlyBy(uint32_t sequence_id)
+void Game_PlayFlyBy(uint32_t sequence_id, int once)
 {
-    if(!curr_flyby)
+    if(engine_camera_state.state != CAMERA_STATE_FLYBY)
     {
         for(flyby_camera_sequence_p s = engine_world.flyby_camera_sequences; s; s = s->next)
         {
-            if(s->start->sequence == sequence_id)
+            if((s->start->sequence == sequence_id) && (!once || !s->locked))
             {
-                curr_flyby = s;
-                flyby_time = 0.0f;
+                engine_camera_state.state = CAMERA_STATE_FLYBY;
+                engine_camera_state.flyby = s;
+                s->locked = (once != 0x00);
+                engine_camera_state.time = 0.0f;
                 break;
             }
         }
@@ -945,9 +946,24 @@ void Game_PlayFlyBy(uint32_t sequence_id)
 }
 
 
+void Game_SetCamera(uint32_t sequence_id, int once)
+{
+    engine_camera_state.state = CAMERA_STATE_FIXED;
+    ///...
+}
+
+
+void Game_LookTo(uint32_t sequence_id, int once)
+{
+    engine_camera_state.state = CAMERA_STATE_LOOK_TO;
+    ///...
+}
+
+
 void Game_StopFlyBy()
 {
-    curr_flyby = NULL;
+    engine_camera_state.state = CAMERA_STATE_NORMAL;
+    engine_camera_state.flyby = NULL;
 }
 
 

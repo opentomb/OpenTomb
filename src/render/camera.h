@@ -18,6 +18,23 @@ struct frustum_s;
 #define TR_CAM_TARG_RIGHT (3)
 
 
+#define CAMERA_STATE_NORMAL     (0x0000)
+#define CAMERA_STATE_LOOK_TO    (0x0001)
+#define CAMERA_STATE_FIXED      (0x0002)
+#define CAMERA_STATE_FLYBY      (0x0003)
+
+
+typedef struct camera_state_s
+{
+    uint32_t                        state;
+    struct flyby_camera_sequence_s *flyby;
+    struct static_camera_sink_s    *sink;
+    
+    GLfloat                         shake_value;
+    GLfloat                         time;
+}camera_state_t, camera_state_p;
+
+
 typedef struct camera_s
 {
     GLfloat                     pos[3];                 // camera position
@@ -42,9 +59,6 @@ typedef struct camera_s
     GLfloat                     f;
     GLfloat                     h;
     GLfloat                     w;
-
-    GLfloat                     shake_value;
-    GLfloat                     shake_time;
 
     int8_t                      target_dir;//Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
 
@@ -86,6 +100,7 @@ typedef struct flyby_camera_state_s
 typedef struct flyby_camera_sequence_s
 {
     struct flyby_camera_state_s    *start;
+    uint32_t                        locked : 1;
     
     struct spline_s                *pos_x;
     struct spline_s                *pos_y;
@@ -106,9 +121,9 @@ void Cam_SetFovAspect(camera_p cam, GLfloat fov, GLfloat aspect);
 void Cam_MoveAlong(camera_p cam, GLfloat dist);
 void Cam_MoveStrafe(camera_p cam, GLfloat dist);
 void Cam_MoveVertical(camera_p cam, GLfloat dist);
-void Cam_Shake(camera_p cam, GLfloat power, GLfloat time);         // make camera shake
 void Cam_DeltaRotation(camera_p cam, GLfloat angles[3]);           // rotate camera around current camera coordinate system
 void Cam_SetRotation(camera_p cam, GLfloat angles[3]);             // set orientation by angles
+void Cam_LookTo(camera_p cam, GLfloat to[3]);
 void Cam_RecalcClipPlanes(camera_p cam);                           // recalculation of camera frustum clipplanes
 
 flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_t count);

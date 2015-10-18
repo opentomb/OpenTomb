@@ -422,7 +422,6 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_SECRET:
-                    //Con_Printf("Secret found: %d", command->operands);
                     Entity_SetSectorStatus(entity_activator, 1);
                     if((command->operands < TR_GAMEFLOW_MAX_SECRETS) && (gameflow_manager.SecretsTriggerMap[command->operands] == 0))
                     {
@@ -436,8 +435,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_FLYBY:
-                    Game_PlayFlyBy(command->operands);
-                    ///snprintf(buf, 128, "   playFlyby(%d, %d); \n", command->operands, command->once);
+                    Game_PlayFlyBy(command->operands, command->once);
                     break;
 
                 case TR_FD_TRIGFUNC_CUTSCENE:

@@ -74,9 +74,6 @@ void Cam_Init(camera_p cam)
     cam->up_dir[2] = 0.0;
     cam->up_dir[3] = 0.0;
 
-    cam->shake_value    = 0.0;
-    cam->shake_time     = 0.0;
-
     cam->current_room = NULL;
 }
 
@@ -161,11 +158,6 @@ void Cam_MoveVertical(camera_p cam, GLfloat dist)
     cam->pos[2] += cam->up_dir[2] * dist;
 }
 
-void Cam_Shake(camera_p cam, GLfloat power, GLfloat time)
-{
-    cam->shake_value = power;
-    cam->shake_time  = time;
-}
 
 void Cam_DeltaRotation(camera_p cam, GLfloat angles[3])                         //angles = {OX, OY, OZ}
 {
@@ -217,7 +209,7 @@ void Cam_DeltaRotation(camera_p cam, GLfloat angles[3])                         
     vec4_mul(cam->up_dir, temp, Rt)
 }
 
-void Cam_SetRotation(camera_p cam, float angles[3])
+void Cam_SetRotation(camera_p cam, GLfloat angles[3])
 {
     GLfloat R[4], Rt[4], temp[4];
     GLfloat sin_t2, cos_t2, t;
@@ -273,6 +265,27 @@ void Cam_SetRotation(camera_p cam, float angles[3])
     vec4_mul(temp, R, cam->up_dir);
     vec4_mul(cam->up_dir, temp, Rt);
 }
+
+
+void Cam_LookTo(camera_p cam, GLfloat to[3])
+{
+    float d;
+
+    vec3_sub(cam->view_dir, to, cam->pos);
+    vec3_norm(cam->view_dir, d);
+
+    if(fabs(cam->view_dir[2]) < 0.999f)
+    {
+        cam->right_dir[0] = cam->view_dir[1];
+        cam->right_dir[1] =-cam->view_dir[0];
+    }
+    cam->right_dir[2] = 0.0f;
+    vec3_norm(cam->right_dir, d);
+
+    vec3_cross(cam->up_dir, cam->right_dir, cam->view_dir);
+    vec3_norm(cam->up_dir, d);
+}
+
 
 void Cam_RecalcClipPlanes(camera_p cam)
 {
@@ -368,6 +381,7 @@ flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_
 
         ret->start = start;
         ret->next = NULL;
+        ret->locked = 0x00;
 
         ret->pos_x = Spline_Create(count);
         ret->pos_y = Spline_Create(count);
@@ -454,18 +468,7 @@ void FlyBySequence_SetCamera(flyby_camera_sequence_p s, camera_p cam, float t)
     to[1] = Spline_Get(s->target_y, t);
     to[2] = Spline_Get(s->target_z, t);
 
-    vec3_sub(cam->view_dir, to, cam->pos);
-    vec3_norm(cam->view_dir, d);
-    to[0] = 0.0f;
-    to[1] = 0.0f;
-    to[2] = 1.0f;
-
-    cam->right_dir[0] = cam->view_dir[1];
-    cam->right_dir[1] =-cam->view_dir[0];
-    cam->right_dir[2] = 0.0f;
-    vec3_norm(cam->right_dir, d);
-
-    vec3_cross(cam->up_dir, cam->right_dir, cam->view_dir);
+    Cam_LookTo(cam, to);
 
     d = Spline_Get(s->roll, t);
 
@@ -482,12 +485,13 @@ void FlyBySequence_SetCamera(flyby_camera_sequence_p s, camera_p cam, float t)
         t1[0] = cam->view_dir[0] * sin_t2;
         t1[1] = cam->view_dir[1] * sin_t2;
         t1[2] = cam->view_dir[2] * sin_t2;
-
         module = vec4_abs(t1);
-        t2[3] = t1[3] / module;
-        t2[0] = -t1[0] / module;
-        t2[1] = -t1[1] / module;
-        t2[2] = -t1[2] / module;
+        t1[0] /= module;
+        t1[1] /= module;
+        t1[2] /= module;
+        t1[3] /= module;
+
+        vec4_sop(t2, t1);
 
         cam->up_dir[3] = 0.0;
         vec4_mul(t, t1, cam->up_dir);

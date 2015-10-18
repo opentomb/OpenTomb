@@ -62,6 +62,7 @@ float                                   engine_frame_time = 0.0;
 
 lua_State                              *engine_lua = NULL;
 struct camera_s                         engine_camera;
+struct camera_state_s                   engine_camera_state;
 struct world_s                          engine_world;
 
 
@@ -229,6 +230,11 @@ void Engine_Init_Pre()
 
     Gameflow_Init();
     Cam_Init(&engine_camera);
+    engine_camera_state.state = CAMERA_STATE_NORMAL;
+    engine_camera_state.flyby = NULL;
+    engine_camera_state.sink = NULL;
+    engine_camera_state.shake_value = 0.0f;
+    engine_camera_state.time = 0.0f;
 
     Physics_Init();
 }

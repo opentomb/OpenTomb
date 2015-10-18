@@ -43,7 +43,6 @@
 #define COLLISION_GROUP_BULLETS                 (0x0008)        // bullets, rockets, grenades, arrows...
 #define COLLISION_GROUP_DYNAMICS                (0x0010)        // test balls, warious
 
-struct camera_s;
 
 typedef struct engine_container_s
 {
@@ -114,6 +113,7 @@ typedef struct engine_control_state_s
 
 extern float                                 engine_frame_time;
 extern struct camera_s                       engine_camera;
+extern struct camera_state_s                 engine_camera_state;
 extern struct world_s                        engine_world;
 
 engine_container_p Container_Create();

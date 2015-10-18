@@ -1669,7 +1669,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
             rot[0] = 0.0;
             rot[1] = 0.0;
             rot[2] = 0.0;
-            vec4_SetTRRotations(bone_tag->qrotate, rot);
+            vec4_SetZXYRotations(bone_tag->qrotate, rot);
             vec3_copy(bone_tag->offset, tree_tag->offset);
         }
         return;
@@ -1792,7 +1792,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                     rot[0] = 0.0;
                     rot[1] = 0.0;
                     rot[2] = 0.0;
-                    vec4_SetTRRotations(bone_tag->qrotate, rot);
+                    vec4_SetZXYRotations(bone_tag->qrotate, rot);
                     vec3_copy(bone_tag->offset, tree_tag->offset);
                 }
             }
@@ -1806,7 +1806,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                     rot[0] = 0.0;
                     rot[1] = 0.0;
                     rot[2] = 0.0;
-                    vec4_SetTRRotations(bone_tag->qrotate, rot);
+                    vec4_SetZXYRotations(bone_tag->qrotate, rot);
                     vec3_copy(bone_tag->offset, tree_tag->offset);
 
                     switch(tr->game_version)
@@ -1824,7 +1824,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                             rot[0] *= 360.0 / 1024.0;
                             rot[1] *= 360.0 / 1024.0;
                             rot[2] *= 360.0 / 1024.0;
-                            vec4_SetTRRotations(bone_tag->qrotate, rot);
+                            vec4_SetZXYRotations(bone_tag->qrotate, rot);
                             break;
 
                         default:                                                /* TR_II + */
@@ -1847,21 +1847,21 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                                     rot[0] = ang;
                                     rot[1] = 0;
                                     rot[2] = 0;
-                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
+                                    vec4_SetZXYRotations(bone_tag->qrotate, rot);
                                     break;
 
                                 case 0x8000:    // y only
                                     rot[0] = 0;
                                     rot[1] = 0;
                                     rot[2] =-ang;
-                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
+                                    vec4_SetZXYRotations(bone_tag->qrotate, rot);
                                     break;
 
                                 case 0xc000:    // z only
                                     rot[0] = 0;
                                     rot[1] = ang;
                                     rot[2] = 0;
-                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
+                                    vec4_SetZXYRotations(bone_tag->qrotate, rot);
                                     break;
 
                                 default:        // all three
@@ -1872,7 +1872,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                                     rot[0] *= 360.0 / 1024.0;
                                     rot[1] *= 360.0 / 1024.0;
                                     rot[2] *= 360.0 / 1024.0;
-                                    vec4_SetTRRotations(bone_tag->qrotate, rot);
+                                    vec4_SetZXYRotations(bone_tag->qrotate, rot);
                                     l ++;
                                     break;
                             };

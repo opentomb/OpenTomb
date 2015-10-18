@@ -4307,11 +4307,25 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
  */
 int lua_CamShake(lua_State *lua)
 {
-    if(lua_gettop(lua) != 2) return 0;
+    if(lua_gettop(lua) >= 2)
+    {
+        float power = lua_tonumber(lua, 1);
+        float time  = lua_tonumber(lua, 2);
+        //Cam_Shake(&engine_camera, power, time);
+    }
 
-    float power = lua_tonumber(lua, 1);
-    float time  = lua_tonumber(lua, 2);
-    Cam_Shake(&engine_camera, power, time);
+    return 0;
+}
+
+
+int lua_PlayFlyby(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        uint32_t flyby_id   = lua_tointeger(lua, 1);
+        int      once       = lua_tointeger(lua, 2);
+        Game_PlayFlyBy(flyby_id, once);
+    }
 
     return 0;
 }
@@ -4943,6 +4957,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "loadMap", lua_LoadMap);
 
     lua_register(lua, "camShake", lua_CamShake);
+    lua_register(lua, "playFlyby", lua_PlayFlyby);
 
     lua_register(lua, "flashSetup", lua_FlashSetup);
     lua_register(lua, "flashStart", lua_FlashStart);
