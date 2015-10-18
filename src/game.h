@@ -34,8 +34,8 @@ void Game_UpdateCharacters();
 
 void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, float dz);
 void Game_PlayFlyBy(uint32_t sequence_id, int once);
-void Game_SetCamera(uint32_t sequence_id, int once);
-void Game_LookTo(uint32_t sequence_id, int once);
+void Game_SetCameraTarget(uint32_t entity_id, float timer);
+void Game_SetCamera(uint32_t camera_id, int once, float timer, float zoom);
 void Game_StopFlyBy();
 
 #endif

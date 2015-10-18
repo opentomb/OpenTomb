@@ -502,6 +502,23 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
     float cam_pos[3], cameraFrom[3], cameraTo[3];
     collision_result_t cb;
 
+    if(engine_camera_state.state == CAMERA_STATE_FIXED)
+    {
+        cam->pos[0] = engine_camera_state.sink->x;
+        cam->pos[1] = engine_camera_state.sink->y;
+        cam->pos[2] = engine_camera_state.sink->z;
+
+        Cam_LookTo(cam, engine_camera_state.target);
+        engine_camera_state.time -= engine_frame_time;
+        if(engine_camera_state.time <= 0.0f)
+        {
+            engine_camera_state.state = CAMERA_STATE_NORMAL;
+            engine_camera_state.time = 0.0f;
+            engine_camera_state.sink = NULL;
+        }
+        return;
+    }
+
     vec3_copy(cam_pos, cam->pos);
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
     if(control_states.mouse_look == 0)//If mouse look is off
@@ -631,8 +648,20 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         }
 
         vec3_copy(cameraFrom, cam_pos);
-        cam_pos[0] += sinf(control_states.cam_angles[0]) * control_states.cam_distance;
-        cam_pos[1] -= cosf(control_states.cam_angles[0]) * control_states.cam_distance;
+        if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
+        {
+            float dir2d[2], dist;
+            dir2d[0] = engine_camera_state.target[0] - cam->pos[0];
+            dir2d[1] = engine_camera_state.target[1] - cam->pos[1];
+            dist = control_states.cam_distance / sqrtf(dir2d[0] * dir2d[0] + dir2d[1] * dir2d[1]);
+            cam_pos[0] -= dir2d[0] * dist;
+            cam_pos[1] -= dir2d[1] * dist;
+        }
+        else
+        {
+            cam_pos[0] += sinf(control_states.cam_angles[0]) * control_states.cam_distance;
+            cam_pos[1] -= cosf(control_states.cam_angles[0]) * control_states.cam_distance;
+        }
         vec3_copy(cameraTo, cam_pos);
 
         if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self))
@@ -653,7 +682,21 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         cam->pos[2] = cam->current_room->bb_max[2] + 2.0 * 64.0;
     }
 
-    Cam_SetRotation(cam, control_states.cam_angles);
+    if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
+    {
+        Cam_LookTo(cam, engine_camera_state.target);
+        engine_camera_state.time -= engine_frame_time;
+        if(engine_camera_state.time <= 0.0f)
+        {
+            engine_camera_state.state = CAMERA_STATE_NORMAL;
+            engine_camera_state.time = 0.0f;
+            engine_camera_state.sink = NULL;
+        }
+    }
+    else
+    {
+        Cam_SetRotation(cam, control_states.cam_angles);
+    }
     cam->current_room = World_FindRoomByPosCogerrence(&engine_world, cam->pos, cam->current_room);
 }
 
@@ -946,17 +989,32 @@ void Game_PlayFlyBy(uint32_t sequence_id, int once)
 }
 
 
-void Game_SetCamera(uint32_t sequence_id, int once)
+void Game_SetCameraTarget(uint32_t entity_id, float timer)
 {
-    engine_camera_state.state = CAMERA_STATE_FIXED;
-    ///...
+    if(engine_camera_state.state != CAMERA_STATE_LOOK_AT)
+    {
+        entity_p ent = World_GetEntityByID(&engine_world, entity_id);
+        if(ent)
+        {
+            vec3_copy(engine_camera_state.target, ent->transform + 12);
+            if(engine_camera_state.state != CAMERA_STATE_FIXED)
+            {
+                engine_camera_state.state = CAMERA_STATE_LOOK_AT;
+                engine_camera_state.time = timer;
+            }
+        }
+    }
 }
 
 
-void Game_LookTo(uint32_t sequence_id, int once)
+void Game_SetCamera(uint32_t camera_id, int once, float timer, float zoom)
 {
-    engine_camera_state.state = CAMERA_STATE_LOOK_TO;
-    ///...
+    if((engine_camera_state.state != CAMERA_STATE_FIXED) && (camera_id < engine_world.cameras_sinks_count))
+    {
+        engine_camera_state.state = CAMERA_STATE_FIXED;
+        engine_camera_state.sink = engine_world.cameras_sinks + camera_id;
+        engine_camera_state.time = timer;
+    }
 }
 
 

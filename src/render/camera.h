@@ -19,7 +19,7 @@ struct frustum_s;
 
 
 #define CAMERA_STATE_NORMAL     (0x0000)
-#define CAMERA_STATE_LOOK_TO    (0x0001)
+#define CAMERA_STATE_LOOK_AT    (0x0001)
 #define CAMERA_STATE_FIXED      (0x0002)
 #define CAMERA_STATE_FLYBY      (0x0003)
 
@@ -30,6 +30,7 @@ typedef struct camera_state_s
     struct flyby_camera_sequence_s *flyby;
     struct static_camera_sink_s    *sink;
     
+    GLfloat                         target[3];
     GLfloat                         shake_value;
     GLfloat                         time;
 }camera_state_t, camera_state_p;

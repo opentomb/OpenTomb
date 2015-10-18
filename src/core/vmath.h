@@ -51,8 +51,8 @@ float    Spline_Get(spline_p spline, float t);
 #define vec3_dot(x, y) ((x)[0]*(y)[0] + (x)[1]*(y)[1] + (x)[2]*(y)[2])
 #define vec3_norm(x, t) {(t) = vec3_abs(x); (x)[0] /= (t); (x)[1] /= (t); (x)[2] /= (t);}
 #define vec3_sqabs(x) ((x)[0]*(x)[0] + (x)[1]*(x)[1] + (x)[2]*(x)[2])
-#define vec3_abs(x) (sqrt((x)[0]*(x)[0] + (x)[1]*(x)[1] + (x)[2]*(x)[2]))
-#define vec3_dist(x, y) sqrt(((x)[0] - (y)[0]) * ((x)[0] - (y)[0]) + ((x)[1] - (y)[1]) * ((x)[1] - (y)[1]) + ((x)[2] - (y)[2]) * ((x)[2] - (y)[2]))
+#define vec3_abs(x) (sqrtf((x)[0]*(x)[0] + (x)[1]*(x)[1] + (x)[2]*(x)[2]))
+#define vec3_dist(x, y) sqrtf(((x)[0] - (y)[0]) * ((x)[0] - (y)[0]) + ((x)[1] - (y)[1]) * ((x)[1] - (y)[1]) + ((x)[2] - (y)[2]) * ((x)[2] - (y)[2]))
 #define vec3_dist_sq(x, y) (((x)[0] - (y)[0]) * ((x)[0] - (y)[0]) + ((x)[1] - (y)[1]) * ((x)[1] - (y)[1]) + ((x)[2] - (y)[2]) * ((x)[2] - (y)[2]))
 
 #define vec3_mul_scalar(res, x, t) {\
@@ -111,7 +111,7 @@ void vec3_RotateZ(float res[3], float src[3], float ang);
 #define vec4_inv(x) {(x)[0] = -(x)[0]; (x)[1] = -(x)[1]; (x)[2] = -(x)[2]; (x)[3] = -(x)[3];}
 
 #define vec4_norm(x) ((x)[0]*(x)[0] + (x)[1]*(x)[1] + (x)[2]*(x)[2] + (x)[3]*(x)[3])
-#define vec4_abs(x) (sqrt((x)[0]*(x)[0] + (x)[1]*(x)[1] + (x)[2]*(x)[2] + (x)[3]*(x)[3]))
+#define vec4_abs(x) (sqrtf((x)[0]*(x)[0] + (x)[1]*(x)[1] + (x)[2]*(x)[2] + (x)[3]*(x)[3]))
 
 #define vec4_mul(res, x, y) {\
                    (res)[0] = (x)[3]*(y)[0] + (x)[0]*(y)[3] + (x)[1]*(y)[2] - (x)[2]*(y)[1]; \

@@ -221,7 +221,7 @@ void vec4_GetPlaneEquation(float eq[4], float poly[12])
     eq[0] = v1[2]*v2[0] - v1[0]*v2[2];
     eq[2] = v1[0]*v2[1] - v1[1]*v2[0];
 
-    t = sqrt(eq[0]*eq[0] + eq[1]*eq[1] + eq[2]*eq[2]);                          // normalize vector
+    t = sqrtf(eq[0]*eq[0] + eq[1]*eq[1] + eq[2]*eq[2]);                         // normalize vector
     eq[0] /= t;
     eq[1] /= t;
     eq[2] /= t;
@@ -237,7 +237,7 @@ void vec3_GetPlaneEquation(float eq[4], float v0[3], float v1[3], float v2[3])
     vec3_sub(l2, v0, v2);                                                       // get the second vector inside the plane
     vec3_cross(eq, l1, l2);                                                     // get the normal vector to the plane
 
-    t = sqrt(eq[0]*eq[0] + eq[1]*eq[1] + eq[2]*eq[2]);                          // normalize vector
+    t = sqrtf(eq[0]*eq[0] + eq[1]*eq[1] + eq[2]*eq[2]);                         // normalize vector
     eq[0] /= t;
     eq[1] /= t;
     eq[2] /= t;

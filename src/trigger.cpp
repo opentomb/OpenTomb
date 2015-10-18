@@ -358,6 +358,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                 case TR_FD_TRIGFUNC_CAMERATARGET:
                     ///snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", command->cam_index, command->cam_timer, command->once, command->cam_zoom);
+                    Game_SetCamera(command->cam_index, command->once, command->cam_timer, command->cam_zoom);
                     break;
 
                 case TR_FD_TRIGFUNC_UWCURRENT:
@@ -403,7 +404,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_LOOKAT:
-                    ///snprintf(buf, 128, "   setCamTarget(%d, %d); \n", command->operands, trigger->timer);
+                    Game_SetCameraTarget(command->operands, trigger->timer);
                     break;
 
                 case TR_FD_TRIGFUNC_ENDLEVEL:
