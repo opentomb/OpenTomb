@@ -33,49 +33,14 @@
 
 #include <boost/log/trivial.hpp>
 
-constexpr float GhostVolumeCollisionCoefficient = 0.4f;
-
 namespace world
 {
-
-void Entity::createGhosts()
-{
-    if(!m_bf.getModel() || m_bf.getModel()->mesh_count <= 0)
-        return;
-
-    m_bt.manifoldArray.reset(new btManifoldArray());
-    m_bt.shapes.clear();
-    m_bt.ghostObjects.clear();
-    m_bt.last_collisions.clear();
-    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
-    {
-        glm::vec3 box = GhostVolumeCollisionCoefficient * m_bf.getBones()[i].mesh_base->boundingBox.getDiameter();
-        m_bt.shapes.emplace_back(new btBoxShape(util::convert(box)));
-        m_bt.shapes.back()->setMargin(COLLISION_MARGIN_DEFAULT);
-        m_bf.getBones()[i].mesh_base->m_radius = std::min(std::min(box.x, box.y), box.z);
-
-        m_bt.ghostObjects.emplace_back(new btPairCachingGhostObject());
-
-        m_bt.ghostObjects.back()->setIgnoreCollisionCheck(m_bt.bt_body[i].get(), true);
-
-        glm::mat4 gltr = m_transform * m_bf.getBones()[i].full_transform;
-        gltr[3] = glm::vec4( glm::mat3(gltr) * m_bf.getBones()[i].mesh_base->m_center, 1.0f );
-
-        m_bt.ghostObjects.back()->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(gltr));
-        m_bt.ghostObjects.back()->setCollisionFlags(m_bt.ghostObjects.back()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE | btCollisionObject::CF_CHARACTER_OBJECT);
-        m_bt.ghostObjects.back()->setUserPointer(this);
-        m_bt.ghostObjects.back()->setCollisionShape(m_bt.shapes.back().get());
-        engine::bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects.back().get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
-
-        m_bt.last_collisions.emplace_back();
-    }
-}
 
 void Entity::enable()
 {
     if(!m_enabled)
     {
-        enableCollision();
+        m_skeleton.enableCollision();
         m_enabled = m_active = m_visible = true;
     }
 }
@@ -84,111 +49,8 @@ void Entity::disable()
 {
     if(m_enabled)
     {
-        disableCollision();
+        m_skeleton.disableCollision();
         m_active = m_enabled = m_visible = false;
-    }
-}
-
-/**
- * This function enables collision for entity_p in all cases exept NULL models.
- * If collision models does not exists, function will create them;
- * @param ent - pointer to the entity.
- */
-void Entity::enableCollision()
-{
-    if(!m_bt.bt_body.empty())
-    {
-        for(const auto& b : m_bt.bt_body)
-        {
-            if(b && !b->isInWorld())
-            {
-                engine::bt_engine_dynamicsWorld->addRigidBody(b.get());
-            }
-        }
-    }
-}
-
-void Entity::disableCollision()
-{
-    if(!m_bt.bt_body.empty())
-    {
-        for(const auto& b : m_bt.bt_body)
-        {
-            if(b && b->isInWorld())
-            {
-                engine::bt_engine_dynamicsWorld->removeRigidBody(b.get());
-            }
-        }
-    }
-}
-
-void Entity::genRigidBody()
-{
-    if(!m_bf.getModel() || getCollisionType() == world::CollisionType::None)
-        return;
-
-    m_bt.bt_body.clear();
-
-    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
-    {
-        std::shared_ptr<core::BaseMesh> mesh = m_bf.getModel()->mesh_tree[i].mesh_base;
-        btCollisionShape *cshape;
-        switch(getCollisionShape())
-        {
-            case world::CollisionShape::Sphere:
-                cshape = core::BT_CSfromSphere(mesh->m_radius);
-                break;
-
-            case world::CollisionShape::TriMeshConvex:
-                cshape = core::BT_CSfromMesh(mesh, true, true, false);
-                break;
-
-            case world::CollisionShape::TriMesh:
-                cshape = core::BT_CSfromMesh(mesh, true, true, true);
-                break;
-
-            case world::CollisionShape::Box:
-            default:
-                cshape = core::BT_CSfromBBox(mesh->boundingBox, true, true);
-                break;
-        };
-
-        m_bt.bt_body.emplace_back();
-
-        if(cshape)
-        {
-            btVector3 localInertia(0, 0, 0);
-            if(getCollisionShape() != world::CollisionShape::TriMesh)
-                cshape->calculateLocalInertia(0.0, localInertia);
-
-            btTransform startTransform;
-            startTransform.setFromOpenGLMatrix(glm::value_ptr( m_transform * m_bf.getBones()[i].full_transform ));
-            m_bt.bt_body.back().reset(new btRigidBody(0.0, new btDefaultMotionState(startTransform), cshape, localInertia));
-
-            switch(getCollisionType())
-            {
-                case world::CollisionType::Kinematic:
-                    m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-                    break;
-
-                case world::CollisionType::Ghost:
-                    m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
-                    break;
-
-                case world::CollisionType::Actor:
-                case world::CollisionType::Vehicle:
-                    m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
-                    break;
-
-                case world::CollisionType::Static:
-                default:
-                    m_bt.bt_body.back()->setCollisionFlags(m_bt.bt_body.back()->getCollisionFlags() | btCollisionObject::CF_STATIC_OBJECT);
-                    break;
-            }
-
-            engine::bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
-            m_bt.bt_body.back()->setUserPointer(this);
-        }
     }
 }
 
@@ -265,95 +127,31 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 
 void Entity::ghostUpdate()
 {
-    if(m_bt.ghostObjects.empty())
+    if(!m_skeleton.hasGhosts())
         return;
-
-    BOOST_ASSERT(m_bt.ghostObjects.size() == m_bf.getBoneCount());
 
     if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
     {
-        for(size_t i = 0; i < m_bf.getBoneCount(); i++)
+        size_t i = 0;
+        for(const animation::Bone& bone : m_skeleton.getBones())
         {
-            auto tr = m_transform * m_bf.getBones()[i].full_transform;
-            auto v = m_bf.getModel()->mesh_tree[i].mesh_base->m_center;
-            m_bt.ghostObjects[i]->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr( tr ));
+            auto tr = m_transform * bone.full_transform;
+            auto v = m_skeleton.getModel()->meshes[i].mesh_base->m_center;
+            bone.ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr( tr ));
             auto pos = tr * glm::vec4(v, 1);
-            m_bt.ghostObjects[i]->getWorldTransform().setOrigin(util::convert(glm::vec3(pos)));
+            bone.ghostObject->getWorldTransform().setOrigin(util::convert(glm::vec3(pos)));
+
+            ++i;
         }
     }
     else
     {
-        for(size_t i = 0; i < m_bf.getBoneCount(); i++)
+        for(const animation::Bone& bone : m_skeleton.getBones())
         {
-            auto tr = m_bt.bt_body[i]->getWorldTransform();
-            tr.setOrigin(tr * util::convert(m_bf.getBones()[i].mesh_base->m_center));
-            m_bt.ghostObjects[i]->getWorldTransform() = tr;
+            auto tr = bone.bt_body->getWorldTransform();
+            tr.setOrigin(tr * util::convert(bone.mesh->m_center));
+            bone.ghostObject->getWorldTransform() = tr;
         }
-    }
-}
-
-void Entity::updateCurrentCollisions()
-{
-    if(m_bt.ghostObjects.empty())
-        return;
-
-    BOOST_ASSERT(m_bt.ghostObjects.size() == m_bf.getBoneCount());
-
-    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
-    {
-        const std::unique_ptr<btPairCachingGhostObject>& ghost = m_bt.ghostObjects[i];
-        EntityCollisionNode& cn = m_bt.last_collisions[i];
-
-        cn.obj.clear();
-        auto tr = m_transform * m_bf.getBones()[i].full_transform;
-        auto v = m_bf.getModel()->mesh_tree[i].mesh_base->m_center;
-        auto orig_tr = ghost->getWorldTransform();
-        ghost->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr));
-        auto pos = glm::vec3(tr * glm::vec4(v, 1.0f));
-        ghost->getWorldTransform().setOrigin(util::convert(pos));
-
-        btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
-        btVector3 aabb_min, aabb_max;
-
-        ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
-        engine::bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, engine::bt_engine_dynamicsWorld->getDispatcher());
-        engine::bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), engine::bt_engine_dynamicsWorld->getDispatchInfo(), engine::bt_engine_dynamicsWorld->getDispatcher());
-
-        int num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
-        for(int j = 0; j < num_pairs; j++)
-        {
-            m_bt.manifoldArray->clear();
-            btBroadphasePair *collisionPair = &pairArray[j];
-
-            if(!collisionPair)
-            {
-                continue;
-            }
-
-            if(collisionPair->m_algorithm)
-            {
-                collisionPair->m_algorithm->getAllContactManifolds(*m_bt.manifoldArray);
-            }
-
-            for(int k = 0; k < m_bt.manifoldArray->size(); k++)
-            {
-                btPersistentManifold* manifold = (*m_bt.manifoldArray)[k];
-                for(int c = 0; c < manifold->getNumContacts(); c++)
-                {
-                    if(manifold->getContactPoint(c).getDistance() < 0.0)
-                    {
-                        cn.obj.emplace_back();
-                        cn.obj.back() = const_cast<btCollisionObject*>((*m_bt.manifoldArray)[k]->getBody0());
-                        if(this == static_cast<Entity*>(cn.obj.back()->getUserPointer()))
-                        {
-                            cn.obj.back() = const_cast<btCollisionObject*>((*m_bt.manifoldArray)[k]->getBody1());
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        ghost->setWorldTransform(orig_tr);
     }
 }
 
@@ -361,38 +159,37 @@ void Entity::updateCurrentCollisions()
 int Entity::getPenetrationFixVector(glm::vec3* reaction, bool hasMove)
 {
     *reaction = { 0,0,0 };
-    if(m_bt.ghostObjects.empty() || m_bt.no_fix_all)
+    if(!m_skeleton.hasGhosts() || m_skeleton.getModel()->no_fix_all)
         return 0;
-
-    BOOST_ASSERT(m_bt.ghostObjects.size() == m_bf.getBoneCount());
 
     auto orig_pos = m_transform[3];
     int ret = 0;
-    for(size_t i = 0; i < m_bf.getModel()->collision_map.size(); i++)
+    for(size_t i = 0; i < m_skeleton.getModel()->collision_map.size(); i++)
     {
-        size_t m = m_bf.getModel()->collision_map[i];
-        const animation::Bone* btag = &m_bf.getBones()[m];
+        size_t m = m_skeleton.getModel()->collision_map[i];
+        const animation::Bone* btag = &m_skeleton.getBones()[m];
 
-        if(btag->body_part & m_bt.no_fix_body_parts)
+        if(btag->body_part & m_skeleton.getModel()->no_fix_body_parts)
         {
             continue;
         }
 
         // antitunneling condition for main body parts, needs only in move case: ((move != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER)))
         glm::vec3 from;
-        if((btag->parent == nullptr) || (hasMove && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
+        if(!btag->parent || (hasMove && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
         {
-            from = util::convert( m_bt.ghostObjects[m]->getWorldTransform().getOrigin() );
+            BOOST_ASSERT(m_skeleton.getBones()[m].ghostObject);
+            from = util::convert( m_skeleton.getBones()[m].ghostObject->getWorldTransform().getOrigin() );
             from += glm::vec3(m_transform[3] - orig_pos);
         }
         else
         {
-            glm::vec4 parent_from = btag->parent->full_transform * glm::vec4(btag->parent->mesh_base->m_center,1);
+            glm::vec4 parent_from = btag->parent->full_transform * glm::vec4(btag->parent->mesh->m_center,1);
             from = glm::vec3(m_transform * parent_from);
         }
 
         auto tr = m_transform * btag->full_transform;
-        auto to = glm::vec3(tr * glm::vec4(btag->mesh_base->m_center, 1.0f));
+        auto to = glm::vec3(tr * glm::vec4(btag->mesh->m_center, 1.0f));
         auto curr = from;
         auto move = to - from;
         auto move_len = move.length();
@@ -400,16 +197,15 @@ int Entity::getPenetrationFixVector(glm::vec3* reaction, bool hasMove)
         {
             break;
         }
-        int iter = static_cast<int>((4.0 * move_len / btag->mesh_base->m_radius) + 1);     ///@FIXME (not a critical): magick const 4.0!
+        int iter = static_cast<int>((4.0 * move_len / btag->mesh->m_radius) + 1);     ///@FIXME (not a critical): magick const 4.0!
         move /= static_cast<glm::float_t>(iter);
 
         for(int j = 0; j <= iter; j++)
         {
             tr[3] = glm::vec4(curr, 1.0f);
-            auto tr_current = tr;
-            m_bt.ghostObjects[m]->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr_current));
+            m_skeleton.getBones()[m].ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr));
             glm::vec3 tmp;
-            if(Ghost_GetPenetrationFixVector(m_bt.ghostObjects[m].get(), m_bt.manifoldArray.get(), &tmp))
+            if(Ghost_GetPenetrationFixVector(m_skeleton.getBones()[m].ghostObject.get(), &m_skeleton.manifoldArray(), &tmp))
             {
                 m_transform[3] += glm::vec4(tmp,0);
                 curr += tmp;
@@ -427,7 +223,7 @@ int Entity::getPenetrationFixVector(glm::vec3* reaction, bool hasMove)
 
 void Entity::fixPenetrations(const glm::vec3* move)
 {
-    if(m_bt.ghostObjects.empty())
+    if(!m_skeleton.hasGhosts())
         return;
 
     if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
@@ -435,7 +231,7 @@ void Entity::fixPenetrations(const glm::vec3* move)
         return;
     }
 
-    if(m_bt.no_fix_all)
+    if(m_skeleton.getModel()->no_fix_all)
     {
         ghostUpdate();
         return;
@@ -468,13 +264,12 @@ std::shared_ptr<engine::BtEngineClosestConvexResultCallback> Entity::callbackFor
 
 void Entity::checkCollisionCallbacks()
 {
-    if(m_bt.ghostObjects.empty())
+    if(!m_skeleton.hasGhosts())
         return;
 
-    btCollisionObject *cobj;
     uint32_t curr_flag;
-    updateCurrentCollisions();
-    while((cobj = getRemoveCollisionBodyParts(0xFFFFFFFF, &curr_flag)) != nullptr)
+    m_skeleton.updateCurrentCollisions(this, m_transform);
+    while(btCollisionObject* cobj = m_skeleton.getRemoveCollisionBodyParts(0xFFFFFFFF, &curr_flag))
     {
         // do callbacks here:
         Object* cont = static_cast<Object*>(cobj->getUserPointer());
@@ -497,67 +292,18 @@ void Entity::checkCollisionCallbacks()
 
 bool Entity::wasCollisionBodyParts(uint32_t parts_flags)
 {
-    if(m_bt.last_collisions.empty())
+    if(!m_skeleton.hasGhosts())
         return false;
 
-    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
+    for(const animation::Bone& bone : m_skeleton.getBones())
     {
-        if((m_bf.getBones()[i].body_part & parts_flags) && !m_bt.last_collisions[i].obj.empty())
+        if((bone.body_part & parts_flags) && !bone.last_collisions.empty())
         {
             return true;
         }
     }
 
     return false;
-}
-
-void Entity::cleanCollisionAllBodyParts()
-{
-    if(m_bt.last_collisions.empty())
-        return;
-
-    for(auto& coll : m_bt.last_collisions)
-    {
-        coll.obj.clear();
-    }
-}
-
-void Entity::cleanCollisionBodyParts(uint32_t parts_flags)
-{
-    if(m_bt.last_collisions.empty())
-        return;
-
-    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
-    {
-        if(m_bf.getBones()[i].body_part & parts_flags)
-        {
-            m_bt.last_collisions[i].obj.clear();
-        }
-    }
-}
-
-btCollisionObject* Entity::getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t *curr_flag)
-{
-    *curr_flag = 0x00;
-    if(m_bt.last_collisions.empty())
-        return nullptr;
-
-    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
-    {
-        if(m_bf.getBones()[i].body_part & parts_flags)
-        {
-            EntityCollisionNode& cn = m_bt.last_collisions[i];
-            if(!cn.obj.empty())
-            {
-                *curr_flag = m_bf.getBones()[i].body_part;
-                auto res = cn.obj.back();
-                cn.obj.pop_back();
-                return res;
-            }
-        }
-    }
-
-    return nullptr;
 }
 
 void Entity::updateRoomPos()
@@ -592,17 +338,16 @@ void Entity::updateRigidBody(bool force)
 {
     if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
     {
-        m_bt.bt_body[0]->getWorldTransform().getOpenGLMatrix(glm::value_ptr(m_transform));
+        m_skeleton.getBones()[0].bt_body->getWorldTransform().getOpenGLMatrix(glm::value_ptr(m_transform));
         updateRoomPos();
-        m_bf.updateTransform(m_bt, m_transform);
+        m_skeleton.updateTransform(m_transform);
         updateGhostRigidBody();
-        m_bf.updateBoundingBox();
+        m_skeleton.updateBoundingBox();
     }
     else
     {
-        if(   m_bf.getModel() == nullptr
-           || m_bt.bt_body.empty()
-           || (!force && m_bf.getModel()->animations.size() == 1 && m_bf.getModel()->animations.front().keyFrames.size() == 1))
+        if(   m_skeleton.getModel() == nullptr
+           || (!force && m_skeleton.getModel()->animations.size() == 1 && m_skeleton.getModel()->animations.front().keyFrames.size() == 1))
         {
             return;
         }
@@ -610,13 +355,7 @@ void Entity::updateRigidBody(bool force)
         updateRoomPos();
         if(getCollisionType() != world::CollisionType::Static)
         {
-            for(size_t i = 0; i < m_bf.getBoneCount(); i++)
-            {
-                if(m_bt.bt_body[i])
-                {
-                    m_bt.bt_body[i]->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(m_transform * m_bf.getBones()[i].full_transform));
-                }
-            }
+            m_skeleton.updateRigidBody(m_transform);
         }
     }
     rebuildBV();
@@ -668,10 +407,10 @@ void Entity::addOverrideAnim(int model_id)
 {
     SkeletalModel* sm = engine::engine_world.getModelByID(model_id);
 
-    if(!sm || sm->mesh_count != m_bf.getBoneCount())
+    if(!sm || sm->meshes.size() != m_skeleton.getBoneCount())
         return;
 
-    m_bf.setModel(sm);
+    m_skeleton.setModel(sm);
 }
 
 glm::float_t Entity::findDistance(const Entity& other)
@@ -688,7 +427,7 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
 {
     switch(command.cmdId)
     {
-        case TR_ANIMCOMMAND_SETPOSITION:    // (tr_x, tr_y, tr_z)
+        case animation::AnimCommandOpcode::SetPosition:    // (tr_x, tr_y, tr_z)
             {
                 // x=x, y=z, z=-y
                 const glm::float_t x = glm::float_t(command.param[0]);
@@ -700,7 +439,7 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
             }
             break;
 
-        case TR_ANIMCOMMAND_SETVELOCITY:    // (float vertical, float horizontal)
+        case animation::AnimCommandOpcode::SetVelocity:    // (float vertical, float horizontal)
             {
                 glm::float_t vert;
                 const glm::float_t horiz = glm::float_t(command.param[1]);
@@ -717,12 +456,12 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
             }
             break;
 
-        case TR_ANIMCOMMAND_EMPTYHANDS:     // ()
+        case animation::AnimCommandOpcode::EmptyHands:     // ()
             // This command is used only for Lara.
             // Reset interaction-blocking
             break;
 
-        case TR_ANIMCOMMAND_KILL:           // ()
+        case animation::AnimCommandOpcode::Kill:           // ()
             // This command is usually used only for non-Lara items,
             // although there seem to be Lara-anims with this cmd id (tr4 anim 415, shotgun overlay)
             // TODO: for switches, this command indicates the trigger-frame
@@ -732,7 +471,7 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
             }
             break;
 
-        case TR_ANIMCOMMAND_PLAYSOUND:      // (sndParam)
+        case animation::AnimCommandOpcode::PlaySound:      // (sndParam)
             {
                 int16_t sound_index = command.param[0] & 0x3FFF;
 
@@ -760,7 +499,7 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
             }
             break;
 
-        case TR_ANIMCOMMAND_PLAYEFFECT:     // (flipeffectParam)
+        case animation::AnimCommandOpcode::PlayEffect:     // (flipeffectParam)
             {
                 const uint16_t effect_id = command.param[0] & 0x3FFF;
                 if(effect_id == 0)  // rollflip
@@ -821,7 +560,7 @@ void Entity::processSector()
         try
         {
             if (engine_lua["tlist_RunTrigger"].is<lua::Callable>())
-                engine_lua["tlist_RunTrigger"].call(lowest_sector->trig_index, ((m_bf.getModel()->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), getId());
+                engine_lua["tlist_RunTrigger"].call(lowest_sector->trig_index, ((m_skeleton.getModel()->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), getId());
         }
         catch (lua::RuntimeError& error)
         {
@@ -832,18 +571,18 @@ void Entity::processSector()
 
 void Entity::setAnimation(int animation, int frame)
 {
-    m_bf.setAnimation(animation, frame);
+    m_skeleton.setAnimation(animation, frame);
 
-    m_bt.no_fix_all = false;
+    m_skeleton.model()->no_fix_all = false;
 
     // some items (jeep) need this here...
-    m_bf.updateCurrentBoneFrame();
+    m_skeleton.interpolate();
 //    updateRigidBody(false);
 }
 
 int Entity::getAnimDispatchCase(LaraState id)
 {
-    const animation::AnimationFrame* anim = &m_bf.getModel()->animations[m_bf.getCurrentAnimation()];
+    const animation::AnimationFrame* anim = &m_skeleton.getModel()->animations[m_skeleton.getCurrentAnimation()];
 
     for(const animation::StateChange& stc : anim->stateChanges)
     {
@@ -855,8 +594,8 @@ int Entity::getAnimDispatchCase(LaraState id)
             const animation::AnimDispatch& disp = stc.anim_dispatch[j];
 
             if(   disp.frame_high >= disp.frame_low
-               && m_bf.getCurrentFrame() >= disp.frame_low
-               && m_bf.getCurrentFrame() <= disp.frame_high)
+               && m_skeleton.getCurrentFrame() >= disp.frame_low
+               && m_skeleton.getCurrentFrame() <= disp.frame_high)
             {
                 return static_cast<int>(j);
             }
@@ -881,9 +620,9 @@ void Entity::updateInterpolation(util::Duration time)
         return;
 
     // Bone animation interp:
-    const glm::float_t lerp = glm::min(1.0f, m_bf.getLerp() + time / animation::FrameTime);
-    m_bf.updateCurrentBoneFrame();
-    m_bf.setLerp( lerp );
+    const glm::float_t lerp = glm::min(1.0f, m_skeleton.getLerp() + time / animation::FrameTime);
+    m_skeleton.interpolate();
+    m_skeleton.setLerp( lerp );
 
     // Entity transform interp:
     lerpTransform(m_lerp);
@@ -899,19 +638,19 @@ animation::AnimUpdate Entity::stepAnimation(util::Duration time)
     if(   (m_typeFlags & ENTITY_TYPE_DYNAMIC)
        || !m_active
        || !m_enabled
-       || m_bf.getModel() == nullptr
-       || (m_bf.getModel()->animations.size() == 1 && m_bf.getModel()->animations.front().keyFrames.size() == 1))
+       || m_skeleton.getModel() == nullptr
+       || (m_skeleton.getModel()->animations.size() == 1 && m_skeleton.getModel()->animations.front().keyFrames.size() == 1))
     {
         return animation::AnimUpdate::None;
     }
-    if(m_bf.getAnimationMode() == animation::AnimationMode::Locked)
+    if(m_skeleton.getAnimationMode() == animation::AnimationMode::Locked)
         return animation::AnimUpdate::NewFrame;  // penetration fix will be applyed in Character_Move... functions
 
-    animation::AnimUpdate stepResult = m_bf.stepAnimation(time, this);
+    animation::AnimUpdate stepResult = m_skeleton.stepAnimation(time, this);
 
 //    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
 
-    m_bf.updateCurrentBoneFrame();
+    m_skeleton.interpolate();
     fixPenetrations(nullptr);
 
     return stepResult;
@@ -947,7 +686,7 @@ void Entity::frame(util::Duration time)
     //       If m_transform changes, rigid body must be updated regardless of anim frame change...
     //if(animStepResult != ENTITY_ANIM_NONE)
     //{ }
-    m_bf.updateCurrentBoneFrame();
+    m_skeleton.interpolate();
     updateRigidBody(false);
 }
 
@@ -957,10 +696,10 @@ void Entity::frame(util::Duration time)
  */
 void Entity::rebuildBV()
 {
-    if(!m_bf.getModel())
+    if(!m_skeleton.getModel())
         return;
 
-    m_obb.rebuild(m_bf.getBoundingBox());
+    m_obb.rebuild(m_skeleton.getBoundingBox());
     m_obb.doTransform();
 }
 
@@ -969,7 +708,7 @@ void Entity::checkActivators()
     if (getRoom() == nullptr)
             return;
 
-    glm::vec4 ppos = m_transform[3] + m_transform[1] * m_bf.getBoundingBox().max[1];
+    glm::vec4 ppos = m_transform[3] + m_transform[1] * m_skeleton.getBoundingBox().max[1];
     auto containers = getRoom()->containers;
     for(Object* cont : containers)
     {
@@ -995,8 +734,8 @@ void Entity::checkActivators()
             const glm::vec4& v = e->m_transform[3];
             if(    e != this
                 && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r)
-                && (v[2] + 32.0 > m_transform[3][2] + m_bf.getBoundingBox().min[2])
-                && (v[2] - 32.0 < m_transform[3][2] + m_bf.getBoundingBox().max[2]))
+                && (v[2] + 32.0 > m_transform[3][2] + m_skeleton.getBoundingBox().min[2])
+                && (v[2] - 32.0 < m_transform[3][2] + m_skeleton.getBoundingBox().max[2]))
             {
                 engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
             }
@@ -1027,42 +766,9 @@ Entity::Entity(uint32_t id)
 
 Entity::~Entity()
 {
-    m_bt.last_collisions.clear();
-
-    if(!m_bt.bt_joints.empty())
+    if(!m_skeleton.getModel()->bt_joints.empty())
     {
         deleteRagdoll();
-    }
-
-    for(std::unique_ptr<btPairCachingGhostObject>& ghost : m_bt.ghostObjects)
-    {
-        ghost->setUserPointer(nullptr);
-        engine::bt_engine_dynamicsWorld->removeCollisionObject(ghost.get());
-    }
-    m_bt.ghostObjects.clear();
-
-    m_bt.shapes.clear();
-
-    m_bt.manifoldArray.reset();
-
-    if(!m_bt.bt_body.empty())
-    {
-        for(const auto& body : m_bt.bt_body)
-        {
-            if(body)
-            {
-                body->setUserPointer(nullptr);
-                if(body->getMotionState())
-                {
-                    delete body->getMotionState();
-                    body->setMotionState(nullptr);
-                }
-                body->setCollisionShape(nullptr);
-
-                engine::bt_engine_dynamicsWorld->removeRigidBody(body.get());
-            }
-        }
-        m_bt.bt_body.clear();
     }
 }
 
@@ -1070,7 +776,7 @@ bool Entity::createRagdoll(RDSetup* setup)
 {
     // No entity, setup or body count overflow - bypass function.
 
-    if(!setup || setup->body_setup.size() > m_bf.getBoneCount())
+    if(!setup || setup->body_setup.size() > m_skeleton.getBoneCount())
     {
         return false;
     }
@@ -1079,80 +785,37 @@ bool Entity::createRagdoll(RDSetup* setup)
 
     // If ragdoll already exists, overwrite it with new one.
 
-    if(!m_bt.bt_joints.empty())
+    if(!m_skeleton.getModel()->bt_joints.empty())
     {
         result = deleteRagdoll();
     }
 
     // Setup bodies.
-    m_bt.bt_joints.clear();
+    m_skeleton.model()->bt_joints.clear();
     // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
-    m_bf.updateCurrentBoneFrame();
-    m_bt.no_fix_all = false;
-    m_bt.no_fix_body_parts = 0x00000000;
+    m_skeleton.interpolate();
+    m_skeleton.model()->no_fix_all = false;
+    m_skeleton.model()->no_fix_body_parts = 0x00000000;
     fixPenetrations(nullptr);
 
-    for(size_t i = 0; i < setup->body_setup.size(); i++)
-    {
-        if(i >= m_bf.getBoneCount() || !m_bt.bt_body[i])
-        {
-            result = false;
-            continue;   // If body is absent, return false and bypass this body setup.
-        }
-
-        btVector3 inertia(0.0, 0.0, 0.0);
-        btScalar  mass = setup->body_setup[i].mass;
-
-        engine::bt_engine_dynamicsWorld->removeRigidBody(m_bt.bt_body[i].get());
-
-        m_bt.bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
-        m_bt.bt_body[i]->setMassProps(mass, inertia);
-
-        m_bt.bt_body[i]->updateInertiaTensor();
-        m_bt.bt_body[i]->clearForces();
-
-        m_bt.bt_body[i]->setLinearFactor(btVector3(1.0, 1.0, 1.0));
-        m_bt.bt_body[i]->setAngularFactor(btVector3(1.0, 1.0, 1.0));
-
-        m_bt.bt_body[i]->setDamping(setup->body_setup[i].damping[0], setup->body_setup[i].damping[1]);
-        m_bt.bt_body[i]->setRestitution(setup->body_setup[i].restitution);
-        m_bt.bt_body[i]->setFriction(setup->body_setup[i].friction);
-
-        m_bt.bt_body[i]->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
-
-        if(!m_bf.getBones()[i].parent)
-        {
-            glm::float_t r = m_bf.getBones()[i].mesh_base->boundingBox.getInnerDiameter();
-            m_bt.bt_body[i]->setCcdMotionThreshold(0.8f * r);
-            m_bt.bt_body[i]->setCcdSweptSphereRadius(r);
-        }
-    }
+    result &= m_skeleton.createRagdoll(*setup);
 
     updateRigidBody(true);
-    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
-    {
-        engine::bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get());
-        m_bt.bt_body[i]->activate();
-        m_bt.bt_body[i]->setLinearVelocity(util::convert(m_speed));
-        if(i < m_bt.ghostObjects.size() && m_bt.ghostObjects[i])
-        {
-            engine::bt_engine_dynamicsWorld->removeCollisionObject(m_bt.ghostObjects[i].get());
-            engine::bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects[i].get(), COLLISION_NONE, COLLISION_NONE);
-        }
-    }
+
+    m_skeleton.initCollisions(m_speed);
 
     // Setup constraints.
-    m_bt.bt_joints.resize(setup->joint_setup.size());
+    m_skeleton.model()->bt_joints.resize(setup->joint_setup.size());
 
     for(size_t i = 0; i < setup->joint_setup.size(); i++)
     {
-        if(setup->joint_setup[i].body_index >= m_bf.getBoneCount() || !m_bt.bt_body[setup->joint_setup[i].body_index])
+        if(setup->joint_setup[i].body_index >= m_skeleton.getBoneCount() || !m_skeleton.getBones()[setup->joint_setup[i].body_index].bt_body)
         {
             result = false;
             break;       // If body 1 or body 2 are absent, return false and bypass this joint.
         }
 
-        const animation::Bone* btB = &m_bf.getBones()[setup->joint_setup[i].body_index];
+        const animation::Bone* btB = &m_skeleton.getBones()[setup->joint_setup[i].body_index];
         const animation::Bone* btA = btB->parent;
         if(!btA)
         {
@@ -1171,32 +834,32 @@ bool Entity::createRagdoll(RDSetup* setup)
         {
             case RDJointSetup::Point:
             {
-                m_bt.bt_joints[i] = std::make_shared<btPoint2PointConstraint>(*m_bt.bt_body[btA->index], *m_bt.bt_body[btB->index], localA.getOrigin(), localB.getOrigin());
+                m_skeleton.model()->bt_joints[i] = std::make_shared<btPoint2PointConstraint>(*m_skeleton.getBones()[btA->index].bt_body, *m_skeleton.getBones()[btB->index].bt_body, localA.getOrigin(), localB.getOrigin());
             }
             break;
 
             case RDJointSetup::Hinge:
             {
-                std::shared_ptr<btHingeConstraint> hingeC = std::make_shared<btHingeConstraint>(*m_bt.bt_body[btA->index], *m_bt.bt_body[btB->index], localA, localB);
+                std::shared_ptr<btHingeConstraint> hingeC = std::make_shared<btHingeConstraint>(*m_skeleton.getBones()[btA->index].bt_body, *m_skeleton.getBones()[btB->index].bt_body, localA, localB);
                 hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], 0.9f, 0.3f, 0.3f);
-                m_bt.bt_joints[i] = hingeC;
+                m_skeleton.model()->bt_joints[i] = hingeC;
             }
             break;
 
             case RDJointSetup::Cone:
             {
-                std::shared_ptr<btConeTwistConstraint> coneC = std::make_shared<btConeTwistConstraint>(*m_bt.bt_body[btA->index], *m_bt.bt_body[btB->index], localA, localB);
+                std::shared_ptr<btConeTwistConstraint> coneC = std::make_shared<btConeTwistConstraint>(*m_skeleton.getBones()[btA->index].bt_body, *m_skeleton.getBones()[btB->index].bt_body, localA, localB);
                 coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2], 0.9f, 0.3f, 0.7f);
-                m_bt.bt_joints[i] = coneC;
+                m_skeleton.model()->bt_joints[i] = coneC;
             }
             break;
         }
 
-        m_bt.bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, -1);
-        m_bt.bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
+        m_skeleton.getModel()->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, -1);
+        m_skeleton.getModel()->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
 
-        m_bt.bt_joints[i]->setDbgDrawSize(64.0);
-        engine::bt_engine_dynamicsWorld->addConstraint(m_bt.bt_joints[i].get(), true);
+        m_skeleton.getModel()->bt_joints[i]->setDbgDrawSize(64.0);
+        engine::bt_engine_dynamicsWorld->addConstraint(m_skeleton.getModel()->bt_joints[i].get(), true);
     }
 
     if(!result)
@@ -1212,10 +875,10 @@ bool Entity::createRagdoll(RDSetup* setup)
 
 bool Entity::deleteRagdoll()
 {
-    if(m_bt.bt_joints.empty())
+    if(m_skeleton.getModel()->bt_joints.empty())
         return false;
 
-    for(auto& joint : m_bt.bt_joints)
+    for(std::shared_ptr<btTypedConstraint> joint : m_skeleton.getModel()->bt_joints)
     {
         if(joint)
         {
@@ -1224,19 +887,19 @@ bool Entity::deleteRagdoll()
         }
     }
 
-    for(size_t i = 0; i < m_bf.getBoneCount(); i++)
+    for(const animation::Bone& bone : m_skeleton.getBones())
     {
-        engine::bt_engine_dynamicsWorld->removeRigidBody(m_bt.bt_body[i].get());
-        m_bt.bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
-        engine::bt_engine_dynamicsWorld->addRigidBody(m_bt.bt_body[i].get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
-        if(i < m_bt.ghostObjects.size() && m_bt.ghostObjects[i])
+        engine::bt_engine_dynamicsWorld->removeRigidBody(bone.bt_body.get());
+        bone.bt_body->setMassProps(0, btVector3(0.0, 0.0, 0.0));
+        engine::bt_engine_dynamicsWorld->addRigidBody(bone.bt_body.get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
+        if(bone.ghostObject)
         {
-            engine::bt_engine_dynamicsWorld->removeCollisionObject(m_bt.ghostObjects[i].get());
-            engine::bt_engine_dynamicsWorld->addCollisionObject(m_bt.ghostObjects[i].get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
+            engine::bt_engine_dynamicsWorld->removeCollisionObject(bone.ghostObject.get());
+            engine::bt_engine_dynamicsWorld->addCollisionObject(bone.ghostObject.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
         }
     }
 
-    m_bt.bt_joints.clear();
+    m_skeleton.model()->bt_joints.clear();
 
     m_typeFlags &= ~ENTITY_TYPE_DYNAMIC;
 

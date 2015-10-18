@@ -45,7 +45,6 @@ list(APPEND PRJ_SRC
     render/bsp_tree.cpp
 
     world/entity.cpp
-    world/portal.cpp
     world/world.cpp
     world/camera.cpp
     world/hair.cpp

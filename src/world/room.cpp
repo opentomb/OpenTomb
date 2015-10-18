@@ -9,6 +9,8 @@
 
 #include <btBulletDynamicsCommon.h>
 
+#include <boost/log/trivial.hpp>
+
 namespace world
 {
 
@@ -202,6 +204,8 @@ void Room::enable()
         return;
     }
 
+    BOOST_LOG_TRIVIAL(debug) << "Enabling room " << getId();
+
     if(bt_body)
     {
         engine::bt_engine_dynamicsWorld->addRigidBody(bt_body.get());
@@ -236,6 +240,8 @@ void Room::disable()
     {
         return;
     }
+
+    BOOST_LOG_TRIVIAL(debug) << "Disabling room " << getId();
 
     if(bt_body)
     {

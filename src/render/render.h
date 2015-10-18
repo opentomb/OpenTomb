@@ -1,19 +1,21 @@
 #pragma once
 
+#include "vertex_array.h"
+#include "loader/datatypes.h"
+#include "world/core/orientedboundingbox.h"
+
 #include <array>
 #include <cstdint>
 #include <memory>
+#include <set>
 #include <vector>
 
 // glew must be included BEFORE btIDebugDraw.h
 #include <GL/glew.h>
 
 #include <LinearMath/btIDebugDraw.h>
-#include <glm/glm.hpp>
 
-#include "vertex_array.h"
-#include "loader/datatypes.h"
-#include "world/core/orientedboundingbox.h"
+#include <glm/glm.hpp>
 
 namespace world
 {
@@ -27,7 +29,7 @@ struct Character;
 
 namespace core
 {
-struct Frustum;
+class Frustum;
 struct OrientedBoundingBox;
 struct Sprite;
 struct BaseMesh;
@@ -67,14 +69,13 @@ class RenderDebugDrawer : public btIDebugDraw
 {
     uint32_t m_debugMode = 0;
 
-    std::array<GLfloat, 3> m_color{ {0,0,0} };
-    std::vector<std::array<GLfloat, 3>> m_buffer;
+    glm::vec3 m_color = {0,0,0};
+    std::vector<glm::vec3> m_buffer;
 
     world::core::OrientedBoundingBox m_obb;
 
-    void addLine(const std::array<GLfloat, 3> &start, const std::array<GLfloat, 3> &end);
-    void addLine(const btVector3& start, const btVector3& end);
-    void addLine(const std::array<GLfloat, 3> &start, const std::array<GLfloat, 3> &startColor, const std::array<GLfloat, 3> &end, const std::array<GLfloat, 3> &endColor);
+    void addLine(const glm::vec3& start, const glm::vec3& end);
+    void addLine(const glm::vec3& start, const glm::vec3& startColor, const glm::vec3& end, const glm::vec3& endColor);
 
     std::unique_ptr<VertexArray> m_vertexArray{};
     GLuint m_glbuffer = 0;
@@ -89,7 +90,7 @@ public:
     }
     void reset();
     void render();
-    void setColor(GLfloat r, GLfloat g, GLfloat b)
+    void setColor(glm::float_t r, glm::float_t g, glm::float_t b)
     {
         m_color[0] = r;
         m_color[1] = g;
@@ -133,7 +134,7 @@ struct RenderSettings
     int       z_depth = 16;
 
     bool      fog_enabled = true;
-    GLfloat   fog_color[4]{ 0,0,0,1 };
+    glm::vec4 fog_color = { 0,0,0,1 };
     float     fog_start_depth = 10000;
     float     fog_end_depth = 16000;
 
@@ -153,7 +154,7 @@ private:
     RenderSettings m_settings;
     std::unique_ptr<ShaderManager> m_shaderManager;
 
-    std::vector<world::Room*> m_renderList{};
+    std::set<world::Room*> m_renderList{};
 
     bool m_drawWire = false;
     bool m_drawRoomBoxes = false;

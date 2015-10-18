@@ -35,8 +35,8 @@ struct Vertex
 {
     glm::vec3 position = { 0,0,0 };
     glm::vec3 normal = { 0,0,0 };
-    std::array<glm::float_t, 4> color{ {0,0,0,0} };
-    std::array<glm::float_t, 2> tex_coord{ {0,0} };
+    glm::vec4 color = {0,0,0,0};
+    glm::vec2 tex_coord = {0,0};
 };
 
 struct Polygon

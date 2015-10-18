@@ -22,10 +22,10 @@ struct SkeletalModel
     /*
     * mesh tree base element structure
     */
-    struct MeshTreeTag
+    struct MeshReference
     {
         std::shared_ptr<core::BaseMesh> mesh_base; //!< pointer to the first mesh in array
-        std::shared_ptr<core::BaseMesh> mesh_skin = nullptr; //!< base skinned mesh for ?R4+
+        std::shared_ptr<core::BaseMesh> mesh_skin = nullptr; //!< base skinned mesh for TR4+
         glm::vec3 offset = {0,0,0}; //!< model position offset
         uint16_t                    flag = 0;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
         uint32_t                    body_part = 0;
@@ -34,27 +34,29 @@ struct SkeletalModel
     };
 
     uint32_t                    id;
-    bool                        has_transparency;
+    bool                        has_transparency = false;
 
     core::BoundingBox boundingBox;
-    glm::vec3                   center;
 
     std::vector<animation::AnimationFrame> animations;
 
-    size_t                      mesh_count = 0;
-    std::vector<MeshTreeTag>    mesh_tree;                                      // base mesh tree.
+    std::vector<MeshReference> meshes;
 
-    std::vector<uint16_t>       collision_map;
+    std::vector<size_t> collision_map;
+
+    bool no_fix_all = false;
+    uint32_t no_fix_body_parts = 0;
+
+    std::vector<std::shared_ptr<btTypedConstraint>> bt_joints;              // Ragdoll joints
 
     void clear();
     void updateTransparencyFlag();
     void interpolateFrames();
     void fillSkinnedMeshMap();
     bool findStateChange(LaraState stateid, uint16_t& animid_out, uint16_t& frameid_inout);
-};
 
-SkeletalModel::MeshTreeTag* SkeletonClone(SkeletalModel::MeshTreeTag* src, int tags_count);
-void SkeletonCopyMeshes(SkeletalModel::MeshTreeTag* dst, SkeletalModel::MeshTreeTag* src, int tags_count);
-void SkeletonCopyMeshes2(SkeletalModel::MeshTreeTag* dst, SkeletalModel::MeshTreeTag* src, int tags_count);
+    void setMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount);
+    void setSkinnedMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount);
+};
 
 } // namespace world

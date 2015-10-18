@@ -39,6 +39,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/io.hpp>
 
 #include <boost/log/trivial.hpp>
 
@@ -48,11 +49,11 @@ namespace world
 {
     void Res_SetEntityProperties(std::shared_ptr<Entity> ent)
     {
-        if(ent->m_bf.getModel() != nullptr && engine_lua["getEntityModelProperties"].is<lua::Callable>())
+        if(ent->m_skeleton.getModel() != nullptr && engine_lua["getEntityModelProperties"].is<lua::Callable>())
         {
             uint16_t flg;
             int collisionType, collisionShape;
-            lua::tie(collisionType, collisionShape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::engine_world.engineVersion), ent->m_bf.getModel()->id);
+            lua::tie(collisionType, collisionShape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::engine_world.engineVersion), ent->m_skeleton.getModel()->id);
             ent->setCollisionType(static_cast<world::CollisionType>(collisionType));
             ent->setCollisionShape(static_cast<world::CollisionShape>(collisionShape));
 
@@ -63,9 +64,9 @@ namespace world
 
     void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
     {
-        if(ent->m_bf.getModel())
+        if(ent->m_skeleton.getModel())
         {
-            const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine::engine_world.engineVersion), ent->m_bf.getModel()->id);
+            const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine::engine_world.engineVersion), ent->m_skeleton.getModel()->id);
             if(funcName)
                 Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->getId());
         }
@@ -579,13 +580,6 @@ namespace world
         return result;
     }
 
-    uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_t v4)
-    {
-        v1 = (v1 > v2) ? (v1) : (v2);
-        v2 = (v3 > v4) ? (v3) : (v4);
-        return (v1 > v2) ? (v1) : (v2);
-    }
-
     bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
     {
         // Fool-proof check for entity existence. Fixes LOTS of stray non-existent
@@ -598,7 +592,8 @@ namespace world
 
         while(*curr_table_index != -1)
         {
-            if(*curr_table_index == static_cast<int32_t>(entity_index)) return true;
+            if(*curr_table_index == static_cast<int32_t>(entity_index))
+                return true;
             curr_table_index++;
         }
 
@@ -1226,7 +1221,7 @@ namespace world
 
                         entry++;
 
-                        float overall_adjustment = static_cast<float>(Res_Sector_BiggestCorner(slope_t10, slope_t11, slope_t12, slope_t13)) * MeteringStep;
+                        float overall_adjustment = static_cast<float>(std::max({slope_t10, slope_t11, slope_t12, slope_t13})) * MeteringStep;
 
                         if((function == TR_FD_FUNC_FLOORTRIANGLE_NW) ||
                            (function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW) ||
@@ -1380,31 +1375,31 @@ namespace world
 
             for(uint32_t i = 0; i < af->num_anim_commands; i++)
             {
-                const auto command = *pointer;
+                const auto command = static_cast<animation::AnimCommandOpcode>(*pointer);
                 ++pointer;
                 switch(command)
                 {
                     /*
                      * End-of-anim commands:
                      */
-                    case TR_ANIMCOMMAND_SETPOSITION:
+                    case animation::AnimCommandOpcode::SetPosition:
                         af->animCommands.push_back({ command, pointer[0], pointer[1], pointer[2] });
                         // ConsoleInfo::instance().printf("ACmd MOVE: anim = %d, x = %d, y = %d, z = %d", static_cast<int>(anim), pointer[0], pointer[1], pointer[2]);
                         pointer += 3;
                         break;
 
-                    case TR_ANIMCOMMAND_SETVELOCITY:
+                    case animation::AnimCommandOpcode::SetVelocity:
                         af->animCommands.push_back({ command, pointer[0], pointer[1], 0 });
                         // ConsoleInfo::instance().printf("ACmd JUMP: anim = %d, vVert = %d, vHoriz = %d", static_cast<int>(anim), pointer[0], pointer[1]);
                         pointer += 2;
                         break;
 
-                    case TR_ANIMCOMMAND_EMPTYHANDS:
+                    case animation::AnimCommandOpcode::EmptyHands:
                         af->animCommands.push_back({ command, 0, 0, 0 });
                         // ConsoleInfo::instance().printf("ACmd EMTYHANDS: anim = %d", static_cast<int>(anim));
                         break;
 
-                    case TR_ANIMCOMMAND_KILL:
+                    case animation::AnimCommandOpcode::Kill:
                         af->animCommands.push_back({ command, 0, 0, 0 });
                         // ConsoleInfo::instance().printf("ACmd KILL: anim = %d", static_cast<int>(anim));
                         break;
@@ -1412,7 +1407,7 @@ namespace world
                         /*
                          * Per frame commands:
                          */
-                    case TR_ANIMCOMMAND_PLAYSOUND:
+                    case animation::AnimCommandOpcode::PlaySound:
                         if(pointer[0] < static_cast<int>(af->keyFrames.size()))
                         {
                             af->keyFrames[pointer[0]].animCommands.push_back({ command, pointer[1], 0, 0 });
@@ -1421,7 +1416,7 @@ namespace world
                         pointer += 2;
                         break;
 
-                    case TR_ANIMCOMMAND_PLAYEFFECT:
+                    case animation::AnimCommandOpcode::PlayEffect:
                         if(pointer[0] < static_cast<int>(af->keyFrames.size()))
                         {
                             af->keyFrames[pointer[0]].animCommands.push_back({ command, pointer[1], 0, 0 });
@@ -1436,7 +1431,7 @@ namespace world
 
     bool TR_IsSectorsIn2SideOfPortal(RoomSector* s1, RoomSector* s2, const Portal& p)
     {
-        if(s1->position[0] == s2->position[0] && s1->position[1] != s2->position[1] && glm::abs(p.normal.normal[1]) > 0.99)
+        if(util::fuzzyEqual(s1->position[0], s2->position[0]) && !util::fuzzyEqual(s1->position[1], s2->position[1]) && glm::abs(p.normal[1]) > 0.99)
         {
             glm::float_t min_x, max_x, min_y, max_y;
             max_x = min_x = p.vertices.front().x;
@@ -1462,12 +1457,12 @@ namespace world
                 max_y = s2->position[1];
             }
 
-            if((s1->position[0] < max_x) && (s1->position[0] > min_x) && (p.centre[1] < max_y) && (p.centre[1] > min_y))
+            if((s1->position[0] < max_x) && (s1->position[0] > min_x) && (p.center[1] < max_y) && (p.center[1] > min_y))
             {
                 return true;
             }
         }
-        else if(s1->position[0] != s2->position[0] && s1->position[1] == s2->position[1] && glm::abs(p.normal.normal[0]) > 0.99)
+        else if(!util::fuzzyEqual(s1->position[0], s2->position[0]) && util::fuzzyEqual(s1->position[1], s2->position[1]) && glm::abs(p.normal[0]) > 0.99)
         {
             glm::float_t min_x, max_x, min_y, max_y;
             max_y = min_y = p.vertices.front().y;
@@ -1493,7 +1488,7 @@ namespace world
                 max_x = s2->position[0];
             }
 
-            if((p.centre[0] < max_x) && (p.centre[0] > min_x) && (s1->position[1] < max_y) && (s1->position[1] > min_y))
+            if((p.center[0] < max_x) && (p.center[0] > min_x) && (s1->position[1] < max_y) && (s1->position[1] > min_y))
             {
                 return true;
             }
@@ -1511,9 +1506,9 @@ namespace world
          * Sectors loading
          */
 
-        RoomSector* sector = room->sectors.data();
-        for(uint32_t i = 0; i < room->sectors.size(); i++, sector++)
+        for(size_t i = 0; i < room->sectors.size(); i++)
         {
+            RoomSector* sector = &room->sectors[i];
             /*
              * Let us fill pointers to sectors above and sectors below
              */
@@ -1556,7 +1551,7 @@ namespace world
             {
                 for(const Portal& p : room->portals)
                 {
-                    if((p.normal.normal[2] < 0.01) && ((p.normal.normal[2] > -0.01)))
+                    if(util::fuzzyZero(p.normal[2]))
                     {
                         RoomSector* dst = p.dest_room ? p.dest_room->getSectorRaw(sector->position) : nullptr;
                         RoomSector* orig_dst = engine::engine_world.rooms[sector->portal_to_room]->getSectorRaw(sector->position);
@@ -1580,12 +1575,14 @@ namespace world
         return v;
     }
 
-    void TR_color_to_arr(std::array<GLfloat, 4>& v, const loader::FloatColor& tr_c)
+    glm::vec4 TR_color_to_arr(const loader::FloatColor& tr_c)
     {
+        glm::vec4 v;
         v[0] = tr_c.r * 2;
         v[1] = tr_c.g * 2;
         v[2] = tr_c.b * 2;
         v[3] = tr_c.a * 2;
+        return v;
     }
 
     RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
@@ -1744,7 +1741,7 @@ namespace world
         Res_GenRoomCollision(world);
         gui::drawLoadScreen(800);
 
-        TR_GenSamples(world, tr);
+        world->audioEngine.load(world, tr);
         gui::drawLoadScreen(850);
 
         world->sky_box = Res_GetSkybox(world, world->engineVersion);
@@ -2109,40 +2106,18 @@ namespace world
             const loader::Portal* tr_portal = &tr_room->portals[i];
             Portal* p = &room->portals[i];
             std::shared_ptr<Room> r_dest = world->rooms[tr_portal->adjoining_room];
-            p->vertices.resize(4); // in original TR all portals are axis aligned rectangles
             p->dest_room = r_dest;
             p->current_room = room;
-            p->vertices[0] = TR_vertex_to_arr(tr_portal->vertices[3]);
-            p->vertices[0] += glm::vec3(room->transform[3]);
-            p->vertices[1] = TR_vertex_to_arr(tr_portal->vertices[2]);
-            p->vertices[1] += glm::vec3(room->transform[3]);
-            p->vertices[2] = TR_vertex_to_arr(tr_portal->vertices[1]);
-            p->vertices[2] += glm::vec3(room->transform[3]);
-            p->vertices[3] = TR_vertex_to_arr(tr_portal->vertices[0]);
-            p->vertices[3] += glm::vec3(room->transform[3]);
-            p->centre = std::accumulate(p->vertices.begin(), p->vertices.end(), glm::vec3(0, 0, 0)) / static_cast<glm::float_t>(p->vertices.size());
-            p->updateNormal();
-
-            /*
-             * Portal position fix...
-             */
-             // X_MIN
-            if((p->normal.normal[0] > 0.999) && (static_cast<int>(p->centre[0]) % 2))
+            for(int j=0; j<4; ++j)
             {
-                p->move({ 1,0,0 });
+                p->vertices[j] = TR_vertex_to_arr(tr_portal->vertices[j]) + glm::vec3(room->transform[3]);
+                BOOST_LOG_TRIVIAL(debug) << "Room " << room->getId() << ", portal " << i << ": vertex[" << j << "]=" << p->vertices[j];
             }
+            p->normal = TR_vertex_to_arr(tr_portal->normal);
+            BOOST_LOG_TRIVIAL(debug) << "Room " << room->getId() << ", portal " << i << ": normal=" << p->normal;
 
-            // Y_MIN
-            if((p->normal.normal[1] > 0.999) && (static_cast<int>(p->centre[1]) % 2))
-            {
-                p->move({ 0,1,0 });
-            }
-
-            // Z_MAX
-            if((p->normal.normal[2] < -0.999) && (static_cast<int>(p->centre[2]) % 2))
-            {
-                p->move({ 0,0,-1 });
-            }
+            p->center = std::accumulate(p->vertices.begin(), p->vertices.end(), glm::vec3(0, 0, 0)) / static_cast<glm::float_t>(p->vertices.size());
+            BOOST_LOG_TRIVIAL(debug) << "Room " << room->getId() << ", portal " << i << ": center=" << p->center;
         }
 
         /*
@@ -2307,8 +2282,8 @@ namespace world
 
     void Res_GenSpritesBuffer(World *world)
     {
-        for(uint32_t i = 0; i < world->rooms.size(); i++)
-            Res_GenRoomSpritesBuffer(world->rooms[i]);
+        for(auto room : world->rooms)
+            Res_GenRoomSpritesBuffer(room);
     }
 
     void TR_GenTextures(World* world, const std::unique_ptr<loader::Level>& tr)
@@ -2611,7 +2586,7 @@ namespace world
             }
             else
             {
-                p->vertices[i].color.fill(1);
+                p->vertices[i].color = {1,1,1,1};
             }
         }
     }
@@ -2806,7 +2781,7 @@ namespace world
         {
             mesh->m_vertices[vertices[i]].normal += p->plane.normal;
             p->vertices[i].normal = p->plane.normal;
-            TR_color_to_arr(p->vertices[i].color, tr_room->vertices[vertices[i]].colour);
+            p->vertices[i].color = TR_color_to_arr(tr_room->vertices[vertices[i]].colour);
         }
 
         loader::ObjectTexture *tex = &tr->m_objectTextures[masked_texture];
@@ -3038,29 +3013,20 @@ namespace world
         world->anim_commands = std::move(tr->m_animCommands);
     }
 
-    void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, const std::unique_ptr<loader::Level>& tr)
+    void TR_GenSkeletalModel(World *world, size_t model_num, SkeletalModel *model, const std::unique_ptr<loader::Level>& tr, size_t meshCount)
     {
-        loader::Animation *tr_animation;
-
-        animation::BoneKeyFrame* bone_tag;
-        animation::SkeletonKeyFrame* bone_frame;
-        animation::AnimationFrame* anim;
-
         loader::Moveable *tr_moveable = &tr->m_moveables[model_num];  // original tr structure
 
-        model->collision_map.resize(model->mesh_count);
-        for(uint16_t i = 0; i < model->mesh_count; i++)
-        {
-            model->collision_map[i] = i;
-        }
+        model->collision_map.resize(model->meshes.size());
+        std::iota(model->collision_map.begin(), model->collision_map.end(), 0);
 
-        model->mesh_tree.resize(model->mesh_count);
+        model->meshes.resize(meshCount);
 
         const uint32_t *mesh_index = &tr->m_meshIndices[tr_moveable->starting_mesh];
 
-        for(size_t k = 0; k < model->mesh_count; k++)
+        for(size_t k = 0; k < model->meshes.size(); k++)
         {
-            SkeletalModel::MeshTreeTag* tree_tag = &model->mesh_tree[k];
+            SkeletalModel::MeshReference* tree_tag = &model->meshes[k];
             tree_tag->mesh_base = world->meshes[mesh_index[k]];
             if(k == 0)
             {
@@ -3087,7 +3053,7 @@ namespace world
              */
             model->animations.resize(1);
             model->animations.front().keyFrames.resize(1);
-            bone_frame = model->animations.front().keyFrames.data();
+            animation::SkeletonKeyFrame* bone_frame = model->animations.front().keyFrames.data();
 
             model->animations.front().id = 0;
             model->animations.front().next_anim = nullptr;
@@ -3095,13 +3061,13 @@ namespace world
             model->animations.front().stateChanges.clear();
             model->animations.front().original_frame_rate = 1;
 
-            bone_frame->boneKeyFrames.resize(model->mesh_count);
+            bone_frame->boneKeyFrames.resize(model->meshes.size());
 
             bone_frame->position = {0,0,0};
             for(size_t k = 0; k < bone_frame->boneKeyFrames.size(); k++)
             {
-                SkeletalModel::MeshTreeTag* tree_tag = &model->mesh_tree[k];
-                bone_tag = &bone_frame->boneKeyFrames[k];
+                SkeletalModel::MeshReference* tree_tag = &model->meshes[k];
+                animation::BoneKeyFrame* bone_tag = &bone_frame->boneKeyFrames[k];
 
                 bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
                 bone_tag->offset = tree_tag->offset;
@@ -3130,7 +3096,7 @@ namespace world
         for(size_t i = 0; i < model->animations.size(); i++)
         {
             animation::AnimationFrame* anim = &model->animations[i];
-            tr_animation = &tr->m_animations[tr_moveable->animation_index + i];
+            loader::Animation *tr_animation = &tr->m_animations[tr_moveable->animation_index + i];
 
             uint32_t frame_offset = tr_animation->frame_offset / 2;
             uint16_t l_start = 0x09;
@@ -3184,23 +3150,23 @@ namespace world
 
                 for(uint32_t count = 0; count < anim->num_anim_commands; count++)
                 {
-                    const auto command = *pointer;
+                    const auto command = static_cast<animation::AnimCommandOpcode>(*pointer);
                     ++pointer;
                     switch(command)
                     {
-                        case TR_ANIMCOMMAND_PLAYEFFECT:
-                        case TR_ANIMCOMMAND_PLAYSOUND:
+                        case animation::AnimCommandOpcode::PlayEffect:
+                        case animation::AnimCommandOpcode::PlaySound:
                             // Recalculate absolute frame number to relative.
                             pointer[0] -= tr_animation->frame_start;
                             pointer += 2;
                             break;
 
-                        case TR_ANIMCOMMAND_SETPOSITION:
+                        case animation::AnimCommandOpcode::SetPosition:
                             // Parse through 3 operands.
                             pointer += 3;
                             break;
 
-                        case TR_ANIMCOMMAND_SETVELOCITY:
+                        case animation::AnimCommandOpcode::SetVelocity:
                             // Parse through 2 operands.
                             pointer += 2;
                             break;
@@ -3223,12 +3189,11 @@ namespace world
             /*
              * let us begin to load animations
              */
-            bone_frame = anim->keyFrames.data();
-            for(uint16_t j = 0; j < anim->keyFrames.size(); j++, bone_frame++, frame_offset += frame_step)
-                //        for(uint16_t j = 0; j < numFrameData; j++, bone_frame++, frame_offset += frame_step)
+            for(size_t j = 0; j < anim->keyFrames.size(); j++, frame_offset += frame_step)
             {
+                animation::SkeletonKeyFrame* bone_frame = &anim->keyFrames[j];
                 // !Need bonetags in empty frames:
-                bone_frame->boneKeyFrames.resize(model->mesh_count);
+                bone_frame->boneKeyFrames.resize(model->meshes.size());
 
                 if(j >= numFrameData)
                     continue; // only create bone_tags for rate>1 fill-frames
@@ -3240,8 +3205,8 @@ namespace world
                 {
                     for(size_t k = 0; k < bone_frame->boneKeyFrames.size(); k++)
                     {
-                        SkeletalModel::MeshTreeTag* tree_tag = &model->mesh_tree[k];
-                        bone_tag = &bone_frame->boneKeyFrames[k];
+                        SkeletalModel::MeshReference* tree_tag = &model->meshes[k];
+                        animation::BoneKeyFrame* bone_tag = &bone_frame->boneKeyFrames[k];
                         bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
                         bone_tag->offset = tree_tag->offset;
                     }
@@ -3254,8 +3219,8 @@ namespace world
 
                     for(size_t k = 0; k < bone_frame->boneKeyFrames.size(); k++)
                     {
-                        SkeletalModel::MeshTreeTag* tree_tag = &model->mesh_tree[k];
-                        bone_tag = &bone_frame->boneKeyFrames[k];
+                        SkeletalModel::MeshReference* tree_tag = &model->meshes[k];
+                        animation::BoneKeyFrame* bone_tag = &bone_frame->boneKeyFrames[k];
                         bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
                         bone_tag->offset = tree_tag->offset;
 
@@ -3339,12 +3304,12 @@ namespace world
             Sys_DebugLog(LOG_FILENAME, "MODEL[%d], anims = %d", model_num, model->animations.size());
         }
 #endif
-        anim = model->animations.data();
-        for(uint16_t i = 0; i < model->animations.size(); i++, anim++)
+        for(size_t i = 0; i < model->animations.size(); i++)
         {
+            animation::AnimationFrame* anim = &model->animations[i];
             anim->stateChanges.clear();
 
-            tr_animation = &tr->m_animations[tr_moveable->animation_index + i];
+            loader::Animation *tr_animation = &tr->m_animations[tr_moveable->animation_index + i];
             int16_t animId = tr_animation->next_animation - tr_moveable->animation_index;
             animId &= 0x7fff; // this masks out the sign bit
             BOOST_ASSERT(animId >= 0);
@@ -3369,19 +3334,17 @@ namespace world
 
             anim->stateChanges.clear();
 
-            if((tr_animation->num_state_changes > 0) && (model->animations.size() > 1))
+            if(tr_animation->num_state_changes > 0 && model->animations.size() > 1)
             {
-                animation::StateChange* sch_p;
 #if LOG_ANIM_DISPATCHES
                 Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim) ? (anim->next_anim->id) : (-1), anim->next_frame);
 #endif
                 anim->stateChanges.resize(tr_animation->num_state_changes);
-                sch_p = anim->stateChanges.data();
 
-                for(uint16_t j = 0; j < tr_animation->num_state_changes; j++, sch_p++)
+                for(uint16_t j = 0; j < tr_animation->num_state_changes; j++)
                 {
-                    loader::StateChange *tr_sch;
-                    tr_sch = &tr->m_stateChanges[j + tr_animation->state_change_offset];
+                    animation::StateChange* sch_p = &anim->stateChanges[j];
+                    loader::StateChange *tr_sch = &tr->m_stateChanges[j + tr_animation->state_change_offset];
                     sch_p->id = static_cast<LaraState>(tr_sch->state_id);
                     sch_p->anim_dispatch.clear();
                     for(uint16_t l = 0; l < tr_sch->num_anim_dispatches; l++)
@@ -3517,14 +3480,13 @@ namespace world
     {
         world->skeletal_models.resize(tr->m_moveables.size());
 
-        for(uint32_t i = 0; i < tr->m_moveables.size(); i++)
+        for(size_t i = 0; i < tr->m_moveables.size(); i++)
         {
-            auto tr_moveable = &tr->m_moveables[i];
-            auto smodel = &world->skeletal_models[i];
-            smodel->id = tr_moveable->object_id;
-            smodel->mesh_count = tr_moveable->num_meshes;
-            TR_GenSkeletalModel(world, i, smodel, tr);
-            smodel->updateTransparencyFlag();
+            const loader::Moveable& tr_moveable = tr->m_moveables[i];
+            SkeletalModel& smodel = world->skeletal_models[i];
+            smodel.id = tr_moveable.object_id;
+            TR_GenSkeletalModel(world, i, &smodel, tr, tr_moveable.num_meshes);
+            smodel.updateTransparencyFlag();
         }
     }
 
@@ -3561,22 +3523,22 @@ namespace world
             entity->m_inertiaAngular[0] = 0.0;
             entity->m_inertiaAngular[1] = 0.0;
 
-            entity->m_bf.setModel( world->getModelByID(tr_item->object_id) );
+            entity->m_skeleton.setModel( world->getModelByID(tr_item->object_id) );
 
-            if(entity->m_bf.getModel() == nullptr)
+            if(entity->m_skeleton.getModel() == nullptr)
             {
                 int id = engine_lua.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
-                entity->m_bf.setModel( world->getModelByID(id) );
+                entity->m_skeleton.setModel( world->getModelByID(id) );
             }
 
             int replace_anim_id = engine_lua.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
             if(replace_anim_id > 0)
             {
                 SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);
-                std::swap(entity->m_bf.model()->animations, replace_anim_model->animations);
+                std::swap(entity->m_skeleton.model()->animations, replace_anim_model->animations);
             }
 
-            if(entity->m_bf.getModel() == nullptr)
+            if(entity->m_skeleton.getModel() == nullptr)
             {
                 // SPRITE LOADING
                 core::Sprite* sp = world->getSpriteByID(tr_item->object_id);
@@ -3598,7 +3560,7 @@ namespace world
                 continue;
             }
 
-            entity->m_bf.fromModel(entity->m_bf.model());
+            entity->m_skeleton.fromModel(entity->m_skeleton.model());
 
             if(0 == tr_item->object_id)                                             // Lara is unical model
             {
@@ -3610,7 +3572,6 @@ namespace world
                 lara->setCollisionType(world::CollisionType::Actor);
                 lara->setCollisionShape(world::CollisionShape::TriMeshConvex);
                 lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
-                SkeletalModel* LM;
 
                 engine_lua.set("player", lara->getId());
 
@@ -3619,12 +3580,11 @@ namespace world
                     case loader::Engine::TR1:
                         if(engine::Gameflow_Manager.getLevelID() == 0)
                         {
-                            LM = world->getModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
-                            if(LM)
+                            if(SkeletalModel* LM = world->getModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1))
                             {
                                 // In TR1, Lara has unified head mesh for all her alternate skins.
                                 // Hence, we copy all meshes except head, to prevent Potato Raider bug.
-                                SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count - 1);
+                                world->skeletal_models[0].setMeshes(LM->meshes, world->skeletal_models[0].meshes.size() - 1);
                             }
                         }
                         break;
@@ -3633,29 +3593,28 @@ namespace world
                         break;
 
                     case loader::Engine::TR3:
-                        LM = world->getModelByID(TR_ITEM_LARA_SKIN_TR3);
-                        if(LM)
+                        if(SkeletalModel* LM = world->getModelByID(TR_ITEM_LARA_SKIN_TR3))
                         {
-                            SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
+                            world->skeletal_models[0].setMeshes(LM->meshes, world->skeletal_models[0].meshes.size());
                             auto tmp = world->getModelByID(11);                   // moto / quadro cycle animations
                             if(tmp)
                             {
-                                SkeletonCopyMeshes(tmp->mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
+                                tmp->setMeshes(LM->meshes, world->skeletal_models[0].meshes.size());
                             }
                         }
                         break;
 
                     case loader::Engine::TR4:
                     case loader::Engine::TR5:
-                        LM = world->getModelByID(TR_ITEM_LARA_SKIN_TR45);                         // base skeleton meshes
-                        if(LM)
+                        // base skeleton meshes
+                        if(SkeletalModel* LM = world->getModelByID(TR_ITEM_LARA_SKIN_TR45))
                         {
-                            SkeletonCopyMeshes(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
+                            world->skeletal_models[0].setMeshes(LM->meshes, world->skeletal_models[0].meshes.size());
                         }
-                        LM = world->getModelByID(TR_ITEM_LARA_SKIN_JOINTS_TR45);                         // skin skeleton meshes
-                        if(LM)
+                        // skin skeleton meshes
+                        if(SkeletalModel* LM = world->getModelByID(TR_ITEM_LARA_SKIN_JOINTS_TR45))
                         {
-                            SkeletonCopyMeshes2(world->skeletal_models[0].mesh_tree.data(), LM->mesh_tree.data(), world->skeletal_models[0].mesh_count);
+                            world->skeletal_models[0].setSkinnedMeshes(LM->meshes, world->skeletal_models[0].meshes.size());
                         }
                         world->skeletal_models[0].fillSkinnedMeshMap();
                         break;
@@ -3664,11 +3623,11 @@ namespace world
                         break;
                 };
 
-                lara->m_bf.copyMeshBinding(lara->m_bf.getModel(), true);
+                lara->m_skeleton.copyMeshBinding(lara->m_skeleton.getModel(), true);
 
                 world->character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
-                lara->genRigidBody();
-                lara->createGhosts();
+                lara->m_skeleton.genRigidBody(lara.get(), lara->getCollisionShape(), lara->getCollisionType(), lara->m_transform);
+                lara->m_skeleton.createGhosts(lara.get(), lara->m_transform);
                 lara->m_height = 768.0;
 
                 continue;
@@ -3678,25 +3637,18 @@ namespace world
 
             Res_SetEntityProperties(entity);
             entity->rebuildBV();
-            entity->genRigidBody();
+            entity->m_skeleton.genRigidBody(entity.get(), entity->getCollisionShape(), entity->getCollisionType(), entity->m_transform);
 
             entity->getRoom()->addEntity(entity.get());
             world->addEntity(entity);
         }
     }
 
-    void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr)
-    {
-        world->audioEngine.load(world, tr);
-    }
-
     void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
     {
-        for(std::map<uint32_t, std::shared_ptr<BaseItem> >::iterator it = map.begin();
-        it != map.end();
-            ++it)
+        for(auto it : map)
         {
-            std::shared_ptr<BaseItem> item = it->second;
+            std::shared_ptr<BaseItem> item = it.second;
 
             for(const std::shared_ptr<Room>& room : engine::engine_world.rooms)
             {
@@ -3706,7 +3658,7 @@ namespace world
                     if(!ent)
                         continue;
 
-                    if(ent->m_bf.getModel()->id != item->world_model_id)
+                    if(ent->m_skeleton.getModel()->id != item->world_model_id)
                         continue;
 
                     if(engine_lua["entity_funcs"][static_cast<lua::Integer>(ent->getId())].is<lua::Nil>())
@@ -3714,7 +3666,7 @@ namespace world
 
                     engine_lua["pickup_init"](ent->getId(), item->id);
 
-                    ent->disableCollision();
+                    ent->m_skeleton.disableCollision();
                 }
             }
         }

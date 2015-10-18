@@ -45,7 +45,7 @@ void ItemNotifier::Animate()
         m_currentRotation.x = glm::mod(m_currentRotation.x + util::toSeconds(engine::engine_frame_time) * m_rotationSpeed, glm::radians(360.0f));
     }
 
-    if(util::fuzzyZero(mCurrTime))
+    if(util::fuzzyZero(mCurrTime.count()))
     {
         float step = (mCurrPosX - mEndPosX) * util::toSeconds(engine::engine_frame_time) * 4.0f;
         step = std::max(0.5f, step);

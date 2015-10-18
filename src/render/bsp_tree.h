@@ -12,7 +12,7 @@ class Camera;
 namespace core
 {
 struct Polygon;
-struct Frustum;
+class Frustum;
 } // namespace core
 } // namespace world
 

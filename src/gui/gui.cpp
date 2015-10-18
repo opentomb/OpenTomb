@@ -151,7 +151,7 @@ void switchGLMode(bool is_gui)
     }
     else                                                                        // set camera coordinate system
     {
-        guiProjectionMatrix = engine::engine_camera.m_glProjMat;
+        guiProjectionMatrix = engine::engine_camera.getProjection();
     }
 }
 

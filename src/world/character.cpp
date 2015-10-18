@@ -185,7 +185,7 @@ int32_t Character::getItemsCount(uint32_t item_id)         // returns items coun
  */
 void Character::updateCurrentHeight()
 {
-    glm::vec4 t{0, 0, m_bf.getRootTransform()[3][2], 1};
+    glm::vec4 t{0, 0, m_skeleton.getRootTransform()[3][2], 1};
     auto pos = glm::vec3(m_transform * t);
     Character::getHeightInfo(pos, &m_heightInfo, m_height);
 }
@@ -545,7 +545,7 @@ ClimbInfo Character::checkClimbability(const glm::vec3& offset, struct HeightInf
     btTransform t2 = btTransform::getIdentity();
     uint8_t up_founded = 0;
     test_height = (test_height >= m_maxStepUpHeight) ? (test_height) : (m_maxStepUpHeight);
-    glm::float_t d = pos[2] + m_bf.getBoundingBox().max[2] - test_height;
+    glm::float_t d = pos[2] + m_skeleton.getBoundingBox().max[2] - test_height;
     std::copy_n(glm::value_ptr(to), 3, &engine::cast_ray[0]);
     std::copy_n(glm::value_ptr(from), 3, &engine::cast_ray[3]);
     engine::cast_ray[5] -= d;
@@ -716,9 +716,9 @@ ClimbInfo Character::checkWallsClimbability()
     ret.up = { 0,0,1 };
 
     const glm::vec4& pos = m_transform[3];
-    glm::vec3 from = glm::vec3(pos + m_transform[2] * m_bf.getBoundingBox().max[2] - m_transform[1] * m_climbR);
+    glm::vec3 from = glm::vec3(pos + m_transform[2] * m_skeleton.getBoundingBox().max[2] - m_transform[1] * m_climbR);
     glm::vec3 to = from;
-    glm::float_t t = m_forwardSize + m_bf.getBoundingBox().max[1];
+    glm::float_t t = m_forwardSize + m_skeleton.getBoundingBox().max[1];
     to += glm::vec3(m_transform[1] * t);
 
     auto ccb = m_convexCb;
@@ -771,7 +771,7 @@ ClimbInfo Character::checkWallsClimbability()
         t = 0.67f * m_height;
         from -= glm::vec3(m_transform[2] * t);
         to = from;
-        t = m_forwardSize + m_bf.getBoundingBox().max[1];
+        t = m_forwardSize + m_skeleton.getBoundingBox().max[1];
         to += glm::vec3(m_transform[1] * t);
 
         ccb->m_closestHitFraction = 1.0;
@@ -974,7 +974,7 @@ int Character::moveOnFloor()
     m_response.vertical_collide = 0x00;
     // First of all - get information about floor and ceiling!!!
     updateCurrentHeight();
-    if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform[3][2] + m_bf.getBoundingBox().min[2]))
+    if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform[3][2] + m_skeleton.getBoundingBox().min[2]))
     {
         Object* cont = static_cast<Object*>(m_heightInfo.floor_obj->getUserPointer());
         if(Entity* e = dynamic_cast<Entity*>(cont))
@@ -1113,7 +1113,7 @@ int Character::moveOnFloor()
             updateRoomPos();
             return 2;
         }
-        if((m_transform[3][2] < m_heightInfo.floor_point[2]) && !m_bt.no_fix_all)
+        if((m_transform[3][2] < m_heightInfo.floor_point[2]) && !m_skeleton.getModel()->no_fix_all)
         {
             m_transform[3][2] = m_heightInfo.floor_point[2];
             fixPenetrations(nullptr);
@@ -1186,9 +1186,9 @@ int Character::freeFalling()
 
     if(m_heightInfo.ceiling_hit && m_speed[2] > 0.0)
     {
-        if(m_heightInfo.ceiling_point[2] < m_bf.getBoundingBox().max[2] + m_transform[3][2])
+        if(m_heightInfo.ceiling_point[2] < m_skeleton.getBoundingBox().max[2] + m_transform[3][2])
         {
-            m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_bf.getBoundingBox().max[2];
+            m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_skeleton.getBoundingBox().max[2];
             m_speed[2] = 1.0;   // As in original.
             m_response.vertical_collide |= 0x02;
             fixPenetrations(nullptr);
@@ -1197,7 +1197,7 @@ int Character::freeFalling()
     }
     if(m_heightInfo.floor_hit && m_speed[2] < 0.0)   // move down
     {
-        if(m_heightInfo.floor_point[2] >= m_transform[3][2] + m_bf.getBoundingBox().min[2] + move[2])
+        if(m_heightInfo.floor_point[2] >= m_transform[3][2] + m_skeleton.getBoundingBox().min[2] + move[2])
         {
             m_transform[3][2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
@@ -1214,16 +1214,16 @@ int Character::freeFalling()
 
     if(m_heightInfo.ceiling_hit && m_speed[2] > 0.0)
     {
-        if(m_heightInfo.ceiling_point[2] < m_bf.getBoundingBox().max[2] + m_transform[3][2])
+        if(m_heightInfo.ceiling_point[2] < m_skeleton.getBoundingBox().max[2] + m_transform[3][2])
         {
-            m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_bf.getBoundingBox().max[2];
+            m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_skeleton.getBoundingBox().max[2];
             m_speed[2] = 1.0;   // As in original.
             m_response.vertical_collide |= 0x02;
         }
     }
     if(m_heightInfo.floor_hit && m_speed[2] < 0.0)   // move down
     {
-        if(m_heightInfo.floor_point[2] >= m_transform[3][2] + m_bf.getBoundingBox().min[2] + move[2])
+        if(m_heightInfo.floor_point[2] >= m_transform[3][2] + m_skeleton.getBoundingBox().min[2] + move[2])
         {
             m_transform[3][2] = m_heightInfo.floor_point[2];
             //speed[2] = 0.0;
@@ -1293,9 +1293,9 @@ int Character::monkeyClimbing()
     m_transform[3] += glm::vec4(move, 0);
     fixPenetrations(&move);                              // get horizontal collide
                                                          ///@FIXME: rewrite conditions! or add fixer to update_entity_rigid_body func
-    if(m_heightInfo.ceiling_hit && (m_transform[3][2] + m_bf.getBoundingBox().max[2] - m_heightInfo.ceiling_point[2] > -0.33 * m_minStepUpHeight))
+    if(m_heightInfo.ceiling_hit && (m_transform[3][2] + m_skeleton.getBoundingBox().max[2] - m_heightInfo.ceiling_point[2] > -0.33 * m_minStepUpHeight))
     {
-        m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_bf.getBoundingBox().max[2];
+        m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_skeleton.getBoundingBox().max[2];
     }
     else
     {
@@ -1333,8 +1333,8 @@ int Character::wallsClimbing()
 
     m_angles[0] = glm::degrees(glm::atan(climb->n[0], -climb->n[1]));
     updateTransform();
-    m_transform[3][0] = climb->point[0] - m_transform[1][0] * m_bf.getBoundingBox().max[1];
-    m_transform[3][1] = climb->point[1] - m_transform[1][1] * m_bf.getBoundingBox().max[1];
+    m_transform[3][0] = climb->point[0] - m_transform[1][0] * m_skeleton.getBoundingBox().max[1];
+    m_transform[3][1] = climb->point[1] - m_transform[1][1] * m_skeleton.getBoundingBox().max[1];
 
     if(m_moveDir == MoveDirection::Forward)
     {
@@ -1367,9 +1367,9 @@ int Character::wallsClimbing()
     updateRoomPos();
 
     *climb = checkWallsClimbability();
-    if(m_transform[3][2] + m_bf.getBoundingBox().max[2] > climb->ceiling_limit)
+    if(m_transform[3][2] + m_skeleton.getBoundingBox().max[2] > climb->ceiling_limit)
     {
-        m_transform[3][2] = climb->ceiling_limit - m_bf.getBoundingBox().max[2];
+        m_transform[3][2] = climb->ceiling_limit - m_skeleton.getBoundingBox().max[2];
     }
 
     return 1;
@@ -1489,7 +1489,7 @@ int Character::moveUnderWater()
     fixPenetrations(&move);                              // get horizontal collide
 
     updateRoomPos();
-    if(m_heightInfo.water && (m_transform[3][2] + m_bf.getBoundingBox().max[2] >= m_heightInfo.transition_level))
+    if(m_heightInfo.water && (m_transform[3][2] + m_skeleton.getBoundingBox().max[2] >= m_heightInfo.transition_level))
     {
         if(/*(spd[2] > 0.0)*/m_transform[1][2] > 0.67)             ///@FIXME: magick!
         {
@@ -1499,7 +1499,7 @@ int Character::moveUnderWater()
         }
         if(!m_heightInfo.floor_hit || (m_heightInfo.transition_level - m_heightInfo.floor_point[2] >= m_height))
         {
-            m_transform[3][2] = m_heightInfo.transition_level - m_bf.getBoundingBox().max[2];
+            m_transform[3][2] = m_heightInfo.transition_level - m_skeleton.getBoundingBox().max[2];
         }
     }
 
@@ -1804,7 +1804,7 @@ void Character::applyCommands()
 
     updatePlatformPreStep();
 
-    m_stateController.handle( m_bf.getLastState() );
+    m_stateController.handle( m_skeleton.getLastState() );
 
     switch(m_moveType)
     {
@@ -1882,7 +1882,7 @@ void Character::updateParams()
                 setParam(PARAM_AIR, PARAM_ABSOLUTE_MAX);
             }
 
-            if(m_bf.getLastState() == LaraState::SPRINT || m_bf.getLastState() == LaraState::SPRINT_ROLL)
+            if(m_skeleton.getLastState() == LaraState::SPRINT || m_skeleton.getLastState() == LaraState::SPRINT_ROLL)
             {
                 changeParam(PARAM_STAMINA, -0.5);
             }
@@ -1982,69 +1982,69 @@ int Character::changeParam(int parameter, float value)
 // overrided == 0x03: overriding mesh in disarmed state;
 // overrided == 0x04: add mesh to slot in disarmed state;
 ///@TODO: separate mesh replacing control and animation disabling / enabling
-int Character::setWeaponModel(int weapon_model, int armed)
+bool Character::setWeaponModel(int weapon_model, bool armed)
 {
     SkeletalModel* sm = engine::engine_world.getModelByID(weapon_model);
 
-    if(sm != nullptr && m_bf.getBoneCount() == sm->mesh_count && sm->animations.size() >= 4)
+    if(sm != nullptr && m_skeleton.getBoneCount() == sm->meshes.size() && sm->animations.size() >= 4)
     {
-        const SkeletalModel* bm = m_bf.getModel();
+        const SkeletalModel* bm = m_skeleton.getModel();
         addOverrideAnim(weapon_model);
 
-        for(size_t i = 0; i < bm->mesh_count; i++)
+        for(size_t i = 0; i < bm->meshes.size(); i++)
         {
-            m_bf.bone(i).mesh_base = bm->mesh_tree[i].mesh_base;
-            m_bf.bone(i).mesh_slot = nullptr;
+            m_skeleton.bone(i).mesh = bm->meshes[i].mesh_base;
+            m_skeleton.bone(i).mesh_slot = nullptr;
         }
 
-        if(armed != 0)
+        if(armed)
         {
-            for(size_t i = 0; i < bm->mesh_count; i++)
+            for(size_t i = 0; i < bm->meshes.size(); i++)
             {
-                if(sm->mesh_tree[i].replace_mesh == 0x01)
+                if(sm->meshes[i].replace_mesh == 0x01)
                 {
-                    m_bf.bone(i).mesh_base = sm->mesh_tree[i].mesh_base;
+                    m_skeleton.bone(i).mesh = sm->meshes[i].mesh_base;
                 }
-                else if(sm->mesh_tree[i].replace_mesh == 0x02)
+                else if(sm->meshes[i].replace_mesh == 0x02)
                 {
-                    m_bf.bone(i).mesh_slot = sm->mesh_tree[i].mesh_base;
+                    m_skeleton.bone(i).mesh_slot = sm->meshes[i].mesh_base;
                 }
             }
         }
         else
         {
-            for(size_t i = 0; i < bm->mesh_count; i++)
+            for(size_t i = 0; i < bm->meshes.size(); i++)
             {
-                if(sm->mesh_tree[i].replace_mesh == 0x03)
+                if(sm->meshes[i].replace_mesh == 0x03)
                 {
-                    m_bf.bone(i).mesh_base = sm->mesh_tree[i].mesh_base;
+                    m_skeleton.bone(i).mesh = sm->meshes[i].mesh_base;
                 }
-                else if(sm->mesh_tree[i].replace_mesh == 0x04)
+                else if(sm->meshes[i].replace_mesh == 0x04)
                 {
-                    m_bf.bone(i).mesh_slot = sm->mesh_tree[i].mesh_base;
+                    m_skeleton.bone(i).mesh_slot = sm->meshes[i].mesh_base;
                 }
             }
         }
 
-        return 1;
+        return true;
     }
     else
     {
         // do unarmed default model
-        const SkeletalModel* bm = m_bf.getModel();
-        for(size_t i = 0; i < bm->mesh_count; i++)
+        const SkeletalModel* bm = m_skeleton.getModel();
+        for(size_t i = 0; i < bm->meshes.size(); i++)
         {
-            m_bf.bone(i).mesh_base = bm->mesh_tree[i].mesh_base;
-            m_bf.bone(i).mesh_slot = nullptr;
+            m_skeleton.bone(i).mesh = bm->meshes[i].mesh_base;
+            m_skeleton.bone(i).mesh_slot = nullptr;
         }
     }
 
-    return 0;
+    return false;
 }
 
 void Character::fixPenetrations(const glm::vec3* move)
 {
-    if(m_bt.ghostObjects.empty())
+    if(!m_skeleton.hasGhosts())
         return;
 
     if(move != nullptr)
@@ -2058,7 +2058,7 @@ void Character::fixPenetrations(const glm::vec3* move)
         return;
     }
 
-    if(m_bt.no_fix_all)
+    if(m_skeleton.getModel()->no_fix_all)
     {
         ghostUpdate();
         return;
@@ -2115,7 +2115,7 @@ void Character::fixPenetrations(const glm::vec3* move)
  */
 int Character::checkNextPenetration(const glm::vec3& move)
 {
-    if(m_bt.ghostObjects.empty())
+    if(!m_skeleton.hasGhosts())
         return 0;
 
     ghostUpdate();
@@ -2139,7 +2139,7 @@ int Character::checkNextPenetration(const glm::vec3& move)
     }
     m_transform[3] -= glm::vec4(move, 0);
     ghostUpdate();
-    cleanCollisionAllBodyParts();
+    m_skeleton.cleanCollisionAllBodyParts();
 
     return ret;
 }
@@ -2175,7 +2175,7 @@ void Character::frame(util::Duration time)
     }
     if(isPlayer() && (engine::control_states.noclip || engine::control_states.free_look))
     {
-        m_bf.updateCurrentBoneFrame();
+        m_skeleton.interpolate();
         updateRigidBody(false);     // bbox update, room update, m_transform from btBody...
         return;
     }
@@ -2196,9 +2196,9 @@ void Character::frame(util::Duration time)
     }
 
     animation::AnimUpdate animStepResult = stepAnimation(time);
-    if(m_bf.onFrame != nullptr)
+    if(m_skeleton.onFrame != nullptr)
     {
-        m_bf.onFrame(this, animStepResult);
+        m_skeleton.onFrame(this, animStepResult);
     }
 
     applyCommands();    // state_func()
@@ -2216,14 +2216,14 @@ void Character::frame(util::Duration time)
     doWeaponFrame(time);
 
     // Update acceleration/speed, it is calculated per anim frame index
-    const animation::AnimationFrame* af = &m_bf.getModel()->animations[m_bf.getCurrentAnimation()];
-    m_currentSpeed = (af->speed_x + m_bf.getCurrentFrame() * af->accel_x) / float(1 << 16); //Decompiled from TOMB5.EXE
+    const animation::AnimationFrame* af = &m_skeleton.getModel()->animations[m_skeleton.getCurrentAnimation()];
+    m_currentSpeed = (af->speed_x + m_skeleton.getCurrentFrame() * af->accel_x) / float(1 << 16); //Decompiled from TOMB5.EXE
 
 
                                                                                               // TODO: check rigidbody update requirements.
                                                                                               //if(animStepResult != ENTITY_ANIM_NONE)
                                                                                               //{ }
-    m_bf.updateCurrentBoneFrame();
+    m_skeleton.interpolate();
     updateRigidBody(false);     // bbox update, room update, m_transform from btBody...
 }
 
@@ -2354,15 +2354,14 @@ Substance Character::getSubstanceState() const
 
 void Character::updateGhostRigidBody()
 {
-    if(!m_bt.ghostObjects.empty())
+    if(!m_skeleton.hasGhosts())
+        return;
+
+    for(const world::animation::Bone& bone : m_skeleton.getBones())
     {
-        BOOST_ASSERT(m_bf.getBoneCount() == m_bt.ghostObjects.size());
-        for(size_t i = 0; i < m_bf.getBoneCount(); i++)
-        {
-            auto tr = m_bt.bt_body[i]->getWorldTransform();
-            tr.setOrigin(tr * util::convert(m_bf.getBones()[i].mesh_base->m_center));
-            m_bt.ghostObjects[i]->getWorldTransform() = tr;
-        }
+        auto tr = bone.bt_body->getWorldTransform();
+        tr.setOrigin(tr * util::convert(bone.mesh->m_center));
+        bone.ghostObject->getWorldTransform() = tr;
     }
 }
 
@@ -2397,30 +2396,30 @@ void Character::doWeaponFrame(util::Duration time)
     */
     if(m_command.ready_weapon && (m_currentWeapon > 0) && (m_weaponCurrentState == WeaponState::Hide))
     {
-        setWeaponModel(m_currentWeapon, 1);
+        setWeaponModel(m_currentWeapon, true);
     }
 
-    if(m_bf.getModel() != nullptr && m_bf.getModel()->animations.size() > 4)
+    if(m_skeleton.getModel() != nullptr && m_skeleton.getModel()->animations.size() > 4)
     {
         // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
-        m_bf.setAnimationMode( animation::AnimationMode::NormalControl );
+        m_skeleton.setAnimationMode( animation::AnimationMode::NormalControl );
         switch(m_weaponCurrentState)
         {
             case WeaponState::Hide:
                 if(m_command.ready_weapon)   // ready weapon
                 {
-                    m_bf.setAnimation(1);  // draw from holster
+                    m_skeleton.setAnimation(1);  // draw from holster
                                                // fixme: reset lerp:
-                    m_bf.setLerpLastAnimation(m_bf.getCurrentAnimation());
-                    m_bf.setLerpLastFrame(m_bf.getCurrentFrame());
+                    m_skeleton.setLerpLastAnimation(m_skeleton.getCurrentAnimation());
+                    m_skeleton.setLerpLastFrame(m_skeleton.getCurrentFrame());
                     m_weaponCurrentState = WeaponState::HideToReady;
                 }
                 break;
 
             case WeaponState::HideToReady:
-                if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                 {
-                    m_bf.setAnimation(0);  // hold drawn weapon to aim at target transition
+                    m_skeleton.setAnimation(0);  // hold drawn weapon to aim at target transition
                     m_weaponCurrentState = WeaponState::Idle;
                 }
                 break;
@@ -2428,7 +2427,7 @@ void Character::doWeaponFrame(util::Duration time)
             case WeaponState::Idle:
                 if(m_command.ready_weapon)
                 {
-                    m_bf.setAnimation(3);  // holster weapon
+                    m_skeleton.setAnimation(3);  // holster weapon
                     m_weaponCurrentState = WeaponState::IdleToHide;
                 }
                 else if(m_command.action)
@@ -2438,16 +2437,16 @@ void Character::doWeaponFrame(util::Duration time)
                 else
                 {
                     // stay at frame 0
-                    m_bf.setAnimation(0);  // hold drawn weapon to aim at target transition
+                    m_skeleton.setAnimation(0);  // hold drawn weapon to aim at target transition
                 }
                 break;
 
             case WeaponState::FireToIdle:
                 // reverse stepping:
                 // (there is a separate animation (4) for this, hence the original shotgun/bow don't reverse mid-anim)
-                if(m_bf.stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
+                if(m_skeleton.stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
                 {
-                    m_bf.setAnimation(0);  // hold drawn weapon to aim at target transition
+                    m_skeleton.setAnimation(0);  // hold drawn weapon to aim at target transition
                     m_weaponCurrentState = WeaponState::Idle;
                 }
                 break;
@@ -2455,9 +2454,9 @@ void Character::doWeaponFrame(util::Duration time)
             case WeaponState::IdleToFire:
                 if(m_command.action)
                 {
-                    if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                    if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        m_bf.setAnimation(2);  // shooting cycle
+                        m_skeleton.setAnimation(2);  // shooting cycle
                         m_weaponCurrentState = WeaponState::Fire;
                     }
                 }
@@ -2470,49 +2469,49 @@ void Character::doWeaponFrame(util::Duration time)
             case WeaponState::Fire:
                 if(m_command.action)
                 {
-                    if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                    if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        m_bf.setAnimation(2);  // shooting cycle
+                        m_skeleton.setAnimation(2);  // shooting cycle
                                                    // bang
                     }
                 }
                 else
                 {
-                    m_bf.setAnimation(0, -1);  // hold drawn weapon to aim at target transition
+                    m_skeleton.setAnimation(0, -1);  // hold drawn weapon to aim at target transition
                     m_weaponCurrentState = WeaponState::FireToIdle;
                 }
                 break;
 
             case WeaponState::IdleToHide:
-                if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                 {
                     m_weaponCurrentState = WeaponState::Hide;
-                    setWeaponModel(m_currentWeapon, 0);
+                    setWeaponModel(m_currentWeapon, false);
                 }
                 break;
         };
     }
-    else if(m_bf.getModel() != nullptr && m_bf.getModel()->animations.size() == 4)
+    else if(m_skeleton.getModel() != nullptr && m_skeleton.getModel()->animations.size() == 4)
     {
         // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
-        m_bf.setAnimationMode( animation::AnimationMode::WeaponCompat );
+        m_skeleton.setAnimationMode( animation::AnimationMode::WeaponCompat );
         switch(m_weaponCurrentState)
         {
             case WeaponState::Hide:
                 if(m_command.ready_weapon)   // ready weapon
                 {
-                    m_bf.setAnimation(2);  // draw from holster
+                    m_skeleton.setAnimation(2);  // draw from holster
                                                // fixme: reset lerp:
-                    m_bf.setLerpLastAnimation(m_bf.getCurrentAnimation());
-                    m_bf.setLerpLastFrame(m_bf.getCurrentFrame());
+                    m_skeleton.setLerpLastAnimation(m_skeleton.getCurrentAnimation());
+                    m_skeleton.setLerpLastFrame(m_skeleton.getCurrentFrame());
                     m_weaponCurrentState = WeaponState::HideToReady;
                 }
                 break;
 
             case WeaponState::HideToReady:
-                if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                 {
-                    m_bf.setAnimation(0);  // hold drawn weapon to aim at target transition
+                    m_skeleton.setAnimation(0);  // hold drawn weapon to aim at target transition
                     m_weaponCurrentState = WeaponState::Idle;
                 }
                 break;
@@ -2520,7 +2519,7 @@ void Character::doWeaponFrame(util::Duration time)
             case WeaponState::Idle:
                 if(m_command.ready_weapon)
                 {
-                    m_bf.setAnimation(2, -1);  // draw weapon, end for reverse
+                    m_skeleton.setAnimation(2, -1);  // draw weapon, end for reverse
                     m_weaponCurrentState = WeaponState::IdleToHide;
                 }
                 else if(m_command.action)
@@ -2530,15 +2529,15 @@ void Character::doWeaponFrame(util::Duration time)
                 else
                 {
                     // stay
-                    m_bf.setAnimation(0);  // hold drawn weapon to aim at target transition
+                    m_skeleton.setAnimation(0);  // hold drawn weapon to aim at target transition
                 }
                 break;
 
             case WeaponState::FireToIdle:
                 // reverse stepping:
-                if(m_bf.stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
+                if(m_skeleton.stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
                 {
-                    m_bf.setAnimation(0);  // hold drawn weapon to aim at target transition
+                    m_skeleton.setAnimation(0);  // hold drawn weapon to aim at target transition
                     m_weaponCurrentState = WeaponState::Idle;
                 }
                 break;
@@ -2546,9 +2545,9 @@ void Character::doWeaponFrame(util::Duration time)
             case WeaponState::IdleToFire:
                 if(m_command.action)
                 {
-                    if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                    if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        m_bf.setAnimation(3);  // shooting cycle
+                        m_skeleton.setAnimation(3);  // shooting cycle
                         m_weaponCurrentState = WeaponState::Fire;
                     }
                 }
@@ -2561,25 +2560,25 @@ void Character::doWeaponFrame(util::Duration time)
             case WeaponState::Fire:
                 if(m_command.action)
                 {
-                    if(m_bf.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                    if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
                     {
-                        m_bf.setAnimation(3);  // shooting cycle
+                        m_skeleton.setAnimation(3);  // shooting cycle
                                                    // bang
                     }
                 }
                 else
                 {
-                    m_bf.setAnimation(0, -1);  // hold drawn weapon to aim at target transition
+                    m_skeleton.setAnimation(0, -1);  // hold drawn weapon to aim at target transition
                     m_weaponCurrentState = WeaponState::FireToIdle;
                 }
                 break;
 
             case WeaponState::IdleToHide:
                 // reverse stepping:
-                if(m_bf.stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
+                if(m_skeleton.stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
                 {
                     m_weaponCurrentState = WeaponState::Hide;
-                    setWeaponModel(m_currentWeapon, 0);
+                    setWeaponModel(m_currentWeapon, false);
                 }
                 break;
         };

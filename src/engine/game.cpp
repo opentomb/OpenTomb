@@ -35,11 +35,6 @@ extern script::MainEngine engine_lua;
 
 constexpr float CameraCollisionSphereRadius = 16.0f;
 
-namespace
-{
-    const glm::float_t CameraRotationSpeed = glm::radians(1.0f);
-} // anonymous namespace
-
 namespace engine
 {
 
@@ -248,7 +243,7 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
     {
         uint32_t room_id = (ent->getRoom()) ? (ent->getRoom()->getId()) : (0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);",
-                ent->m_bf.getModel()->id,
+                ent->m_skeleton.getModel()->id,
                 ent->m_transform[3][0],
                 ent->m_transform[3][1],
                 ent->m_transform[3][2],
@@ -271,8 +266,8 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
     }
 
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->getId(), ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
-    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->getId(), ent->m_bf.getCurrentAnimation(), ent->m_bf.getCurrentFrame());
-    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->getId(), ent->m_bf.getNextState(), ent->m_bf.getLastState());
+    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->getId(), ent->m_skeleton.getCurrentAnimation(), ent->m_skeleton.getCurrentFrame());
+    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->getId(), ent->m_skeleton.getNextState(), ent->m_skeleton.getLastState());
     fprintf(*f, "\nsetEntityCollisionFlags(%d, %ld, %ld);", ent->getId(), static_cast<long>(ent->getCollisionType()), static_cast<long>(ent->getCollisionShape()));
 
     if(ent->m_enabled)
@@ -393,17 +388,17 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         {
             if(control_mapper.joy_look_x != 0)
             {
-                engine::engine_camera.rotate( {-CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_x, 0, 0} );
+                engine::engine_camera.rotate( {-world::CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_x, 0, 0} );
             }
             if(control_mapper.joy_look_y != 0)
             {
-                engine::engine_camera.rotate( {0, -CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_y, 0} );
+                engine::engine_camera.rotate( {0, -world::CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_y, 0} );
             }
         }
 
         if(control_states.mouse_look)
         {
-            engine::engine_camera.rotate({ -CameraRotationSpeed * control_states.look_axis_x, -CameraRotationSpeed * control_states.look_axis_y, 0 });
+            engine::engine_camera.rotate({ -world::CameraRotationSpeed * control_states.look_axis_x, -world::CameraRotationSpeed * control_states.look_axis_y, 0 });
             control_states.look_axis_x = 0.0;
             control_states.look_axis_y = 0.0;
         }
@@ -421,17 +416,17 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     {
         if(control_mapper.joy_look_x != 0)
         {
-            engine::engine_camera.rotate({ -CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_x, 0, 0 });
+            engine::engine_camera.rotate({ -world::CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_x, 0, 0 });
         }
         if(control_mapper.joy_look_y != 0)
         {
-            engine::engine_camera.rotate({ 0, -CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_y, 0 });
+            engine::engine_camera.rotate({ 0, -world::CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_y, 0 });
         }
     }
 
     if(control_states.mouse_look)
     {
-        engine::engine_camera.rotate({ -CameraRotationSpeed * control_states.look_axis_x, -CameraRotationSpeed * control_states.look_axis_y, 0 });
+        engine::engine_camera.rotate({ -world::CameraRotationSpeed * control_states.look_axis_x, -world::CameraRotationSpeed * control_states.look_axis_y, 0 });
         control_states.look_axis_x = 0.0;
         control_states.look_axis_y = 0.0;
     }
@@ -443,7 +438,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         render::renderer.camera()->moveAlong(dist * move_logic[0]);
         render::renderer.camera()->moveStrafe(dist * move_logic[1]);
         render::renderer.camera()->moveVertical(dist * move_logic[2]);
-        render::renderer.camera()->m_currentRoom = Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->m_currentRoom);
+        render::renderer.camera()->setCurrentRoom( Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()) );
     }
     else if(control_states.noclip)
     {
@@ -452,9 +447,9 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         render::renderer.camera()->moveAlong(dist * move_logic[0]);
         render::renderer.camera()->moveStrafe(dist * move_logic[1]);
         render::renderer.camera()->moveVertical(dist * move_logic[2]);
-        render::renderer.camera()->m_currentRoom = Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->m_currentRoom);
+        render::renderer.camera()->setCurrentRoom( Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()) );
 
-        ent->m_angles[0] = glm::degrees(engine::engine_camera.m_angles[0]);
+        ent->m_angles[0] = glm::degrees(engine::engine_camera.getAngles()[0]);
         glm::vec3 position = render::renderer.camera()->getPosition() + render::renderer.camera()->getViewDir() * control_states.cam_distance;
         position[2] -= 512.0;
         ent->m_transform[3] = glm::vec4(position, 1.0f);
@@ -545,15 +540,14 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
     if(!control_states.mouse_look)//If mouse look is off
     {
-        glm::float_t currentAngle = engine::engine_camera.m_angles[0];  //Current is the current cam angle
+        glm::float_t currentAngle = engine::engine_camera.getAngles()[0];  //Current is the current cam angle
         glm::float_t targetAngle = glm::radians(ent->m_angles[0]); //Target is the target angle which is the entity's angle itself
-        constexpr glm::float_t rotSpeed = 2.0; //Speed of rotation
 
         ///@FIXME
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
-        if(ent->m_bf.getLastState() == world::LaraState::REACH)
+        if(ent->m_skeleton.getLastState() == world::LaraState::REACH)
         {
-            if(cam->m_targetDir == world::CameraTarget::Back)
+            if(cam->getTargetDir() == world::CameraTarget::Back)
             {
                 glm::vec3 cam_pos2 = cam_pos;
                 cameraFrom.setOrigin(util::convert(cam_pos2));
@@ -572,29 +566,29 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
 
                     //If collided we want to go to back else right
                     if(Cam_HasHit(cb, cameraFrom, cameraTo))
-                        cam->m_targetDir = world::CameraTarget::Back;
+                        cam->setTargetDir( world::CameraTarget::Back );
                     else
-                        cam->m_targetDir = world::CameraTarget::Right;
+                        cam->setTargetDir( world::CameraTarget::Right );
                 }
                 else
                 {
-                    cam->m_targetDir = world::CameraTarget::Left;
+                    cam->setTargetDir( world::CameraTarget::Left );
                 }
             }
         }
-        else if(ent->m_bf.getLastState() == world::LaraState::JUMP_BACK)
+        else if(ent->m_skeleton.getLastState() == world::LaraState::JUMP_BACK)
         {
-            cam->m_targetDir = world::CameraTarget::Front;
+            cam->setTargetDir( world::CameraTarget::Front );
         }
-        else if(cam->m_targetDir != world::CameraTarget::Back)
+        else if(cam->getTargetDir() != world::CameraTarget::Back)
         {
-            cam->m_targetDir = world::CameraTarget::Back;
+            cam->setTargetDir( world::CameraTarget::Back );
         }
 
         //If target mis-matches current we need to update the camera's angle to reach target!
         if(currentAngle != targetAngle)
         {
-            switch(cam->m_targetDir)
+            switch(cam->getTargetDir())
             {
                 case world::CameraTarget::Back:
                     targetAngle = glm::radians(ent->m_angles[0]);
@@ -613,26 +607,17 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
                     break;
             }
 
-            glm::float_t d_angle = engine::engine_camera.m_angles[0] - targetAngle;
-            if(d_angle > util::Rad90)
-            {
-                d_angle -= CameraRotationSpeed;
-            }
-            if(d_angle < -util::Rad90)
-            {
-                d_angle += CameraRotationSpeed;
-            }
-            engine::engine_camera.m_angles[0] = glm::mod(engine::engine_camera.m_angles[0] + glm::atan(glm::sin(currentAngle - d_angle), glm::cos(currentAngle + d_angle)) * (util::toSeconds(engine_frame_time) * rotSpeed), util::Rad360); //Update camera's angle
+            engine::engine_camera.shake(currentAngle, targetAngle, engine_frame_time);
         }
     }
 
     cam_pos = ent->camPosForFollowing(dz);
 
     //Code to manage screen shaking effects
-    if(render::renderer.camera()->m_shakeTime.count()>0 && render::renderer.camera()->m_shakeValue > 0.0)
+    if(render::renderer.camera()->getShakeTime().count()>0 && render::renderer.camera()->getShakeValue() > 0.0)
     {
-        cam_pos += glm::ballRand(render::renderer.camera()->m_shakeValue/2.0f) * util::toSeconds(render::renderer.camera()->m_shakeTime);
-        render::renderer.camera()->m_shakeTime = std::max(util::Duration(0), render::renderer.camera()->m_shakeTime - engine_frame_time);
+        cam_pos += glm::ballRand(render::renderer.camera()->getShakeValue()/2.0f) * util::toSeconds(render::renderer.camera()->getShakeTime());
+        render::renderer.camera()->setShakeTime( std::max(util::Duration(0), render::renderer.camera()->getShakeTime() - engine_frame_time) );
     }
 
     cameraFrom.setOrigin(util::convert(cam_pos));
@@ -658,10 +643,10 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
         cameraFrom.setOrigin(util::convert(cam_pos));
 
         {
-            glm::float_t cos_ay =  glm::cos(engine::engine_camera.m_angles[1]);
-            glm::float_t cam_dx =  glm::sin(engine::engine_camera.m_angles[0]) * cos_ay;
-            glm::float_t cam_dy = -glm::cos(engine::engine_camera.m_angles[0]) * cos_ay;
-            glm::float_t cam_dz = -glm::sin(engine::engine_camera.m_angles[1]);
+            glm::float_t cos_ay =  glm::cos(engine::engine_camera.getAngles()[1]);
+            glm::float_t cam_dx =  glm::sin(engine::engine_camera.getAngles()[0]) * cos_ay;
+            glm::float_t cam_dy = -glm::cos(engine::engine_camera.getAngles()[0]) * cos_ay;
+            glm::float_t cam_dz = -glm::sin(engine::engine_camera.getAngles()[1]);
             cam_pos[0] += cam_dx * control_states.cam_distance;
             cam_pos[1] += cam_dy * control_states.cam_distance;
             cam_pos[2] += cam_dz * control_states.cam_distance;
@@ -679,16 +664,16 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
     cam->setPosition( cam_pos );
 
     //Modify cam pos for quicksand rooms
-    cam->m_currentRoom = Room_FindPosCogerrence(cam->getPosition() - glm::vec3(0, 0, 128), cam->m_currentRoom);
-    if((cam->m_currentRoom != nullptr) && (cam->m_currentRoom->flags & TR_ROOM_FLAG_QUICKSAND))
+    cam->setCurrentRoom( Room_FindPosCogerrence(cam->getPosition() - glm::vec3(0, 0, 128), cam->getCurrentRoom()) );
+    if(cam->getCurrentRoom() && (cam->getCurrentRoom()->flags & TR_ROOM_FLAG_QUICKSAND))
     {
         glm::vec3 position = cam->getPosition();
-        position[2] = cam->m_currentRoom->boundingBox.max[2] + 2.0f * 64.0f;
+        position[2] = cam->getCurrentRoom()->boundingBox.max[2] + 2.0f * 64.0f;
         cam->setPosition(position);
     }
 
     cam->applyRotation();
-    cam->m_currentRoom = Room_FindPosCogerrence(cam->getPosition(), cam->m_currentRoom);
+    cam->setCurrentRoom( Room_FindPosCogerrence(cam->getPosition(), cam->getCurrentRoom()) );
 }
 
 void Game_UpdateAI()

@@ -72,23 +72,8 @@ enum class Substance
 
 // Specific in-game entity structure.
 
-struct EntityCollisionNode
-{
-    std::vector<btCollisionObject*> obj;
-};
-
 struct BtEntityData
 {
-    bool no_fix_all = false;
-    uint32_t no_fix_body_parts = 0;
-    std::vector<std::unique_ptr<btPairCachingGhostObject>> ghostObjects;           // like Bullet character controller for penetration resolving.
-    std::unique_ptr<btManifoldArray> manifoldArray = nullptr;          // keep track of the contact manifolds
-
-    std::vector<std::unique_ptr<btCollisionShape>> shapes;
-    std::vector< std::shared_ptr<btRigidBody> > bt_body;
-    std::vector<std::shared_ptr<btTypedConstraint>> bt_joints;              // Ragdoll joints
-
-    std::vector<EntityCollisionNode> last_collisions;
 };
 
 
@@ -149,8 +134,8 @@ public:
     btScalar                            m_inertiaLinear = 0;     // linear inertia
     btScalar                            m_inertiaAngular[2] = {0,0}; // angular inertia - X and Y axes
 
-    animation::Skeleton m_bf;                 // current boneframe with full frame information
-    BtEntityData m_bt;
+    animation::Skeleton m_skeleton;
+
     glm::vec3 m_angles = { 0,0,0 };
     glm::mat4 m_transform{ 1.0f }; // GL transformation matrix
     glm::vec3 m_scaling = { 1,1,1 };
@@ -172,21 +157,13 @@ public:
     Entity(uint32_t id);
     ~Entity();
 
-    void createGhosts();
     void enable();
     void disable();
-    void enableCollision();
-    void disableCollision();
-    void genRigidBody();
 
     void ghostUpdate();
-    void updateCurrentCollisions();
     int getPenetrationFixVector(glm::vec3 *reaction, bool hasMove);
     void checkCollisionCallbacks();
     bool wasCollisionBodyParts(uint32_t parts_flags);
-    void cleanCollisionAllBodyParts();
-    void cleanCollisionBodyParts(uint32_t parts_flags);
-    btCollisionObject* getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t *curr_flag);
     void updateRoomPos();
     void updateRigidBody(bool force);
     void rebuildBV();
@@ -234,7 +211,7 @@ public:
     virtual void fixPenetrations(const glm::vec3* move);
     virtual glm::vec3 getRoomPos() const
     {
-        return glm::vec3(m_transform * glm::vec4(m_bf.getBoundingBox().getCenter(), 1.0f));
+        return glm::vec3(m_transform * glm::vec4(m_skeleton.getBoundingBox().getCenter(), 1.0f));
     }
     virtual void transferToRoom(Room *room);
 
@@ -254,7 +231,7 @@ public:
 
     virtual glm::vec3 camPosForFollowing(glm::float_t dz)
     {
-        glm::vec4 cam_pos = m_transform * m_bf.getRootTransform()[3];
+        glm::vec4 cam_pos = m_transform * m_skeleton.getRootTransform()[3];
         cam_pos[2] += dz;
         return glm::vec3(cam_pos);
     }

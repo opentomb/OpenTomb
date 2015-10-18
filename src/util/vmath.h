@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util/helpers.h"
+
 #include <LinearMath/btQuaternion.h>
 #include <LinearMath/btTransform.h>
 #include <LinearMath/btVector3.h>
@@ -68,7 +70,7 @@ struct Plane
 
     void assign(const glm::vec4& n)
     {
-        dot = n[3] / glm::length(glm::vec3(n));
+        dot = -n[3] / glm::length(glm::vec3(n));
         normal = glm::normalize(glm::vec3(n));
     }
 
@@ -102,6 +104,36 @@ inline glm::vec3 convert(const btVector3& v)
 inline btVector3 convert(const glm::vec3& v)
 {
     return btVector3(v[0], v[1], v[2]);
+}
+
+// glm has a bug in its implementation, comparing x<epsilon instead of abs(x)<epsilon
+inline bool intersectRayTriangle( const glm::vec3& rayStart, const glm::vec3& rayDir, const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2 )
+{
+    const glm::vec3 e1 = v1 - v0;
+    const glm::vec3 e2 = v2 - v0;
+
+    const glm::vec3 p = glm::cross(rayDir, e2);
+
+    const auto a = glm::dot(e1, p);
+
+    if(glm::abs(a) <= std::numeric_limits<decltype(a)>::epsilon())
+        return false; // ray is nearly parallel to the triangle
+
+    const glm::vec3 s = rayStart - v0;
+    const auto x = glm::dot(s, p) / a;
+    if( fuzzyZero(x) )
+        return false;
+
+    const glm::vec3 q = glm::cross(s, e1);
+    const auto y = glm::dot(rayDir, q) / a;
+    if(y < 0)
+        return false;
+    if(y + x > 1)
+        return false;
+
+    const auto z = glm::dot(e2, q) / a;
+
+    return z >= 0;
 }
 
 } // namespace util

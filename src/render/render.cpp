@@ -6,6 +6,9 @@
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
+
+#include <boost/log/trivial.hpp>
 
 #include "bsp_tree.h"
 #include "engine/engine.h"
@@ -99,10 +102,10 @@ void Render::renderSkyBox(const glm::mat4& modelViewProjectionMatrix)
         glUseProgram(shader->program);
         glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(fullView));
         glUniform1i(shader->sampler, 0);
-        GLfloat tint[] = { 1, 1, 1, 1 };
-        glUniform4fv(shader->tint_mult, 1, tint);
+        glm::vec4 tint = { 1, 1, 1, 1 };
+        glUniform4fv(shader->tint_mult, 1, glm::value_ptr(tint));
 
-        renderMesh(m_world->sky_box->mesh_tree.front().mesh_base);
+        renderMesh(m_world->sky_box->meshes.front().mesh_base);
         glDepthMask(GL_TRUE);
     }
 }
@@ -117,9 +120,9 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh)
         // Respecify the tex coord buffer
         glBindBuffer(GL_ARRAY_BUFFER, mesh->m_animatedVboTexCoordArray);
         // Tell OpenGL to discard the old values
-        glBufferData(GL_ARRAY_BUFFER, mesh->m_animatedVertices.size() * sizeof(GLfloat[2]), nullptr, GL_STREAM_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, mesh->m_animatedVertices.size() * sizeof(glm::vec2), nullptr, GL_STREAM_DRAW);
         // Get writable data (to avoid copy)
-        GLfloat *data = static_cast<GLfloat *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
+        glm::vec2 *data = static_cast<glm::vec2*>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
 
         size_t offset = 0;
         for(const world::core::Polygon& p : mesh->m_polygons)
@@ -136,10 +139,10 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh)
             for(const world::core::Vertex& vert : p.vertices)
             {
                 const auto& v = vert.tex_coord;
-                data[offset + 0] = tf->mat[0 + 0 * 2] * v[0] + tf->mat[0 + 1 * 2] * v[1] + tf->move[0];
-                data[offset + 1] = tf->mat[1 + 0 * 2] * v[0] + tf->mat[1 + 1 * 2] * v[1] + tf->move[1];
+                data[offset][0] = tf->mat[0 + 0 * 2] * v[0] + tf->mat[0 + 1 * 2] * v[1] + tf->move[0];
+                data[offset][1] = tf->mat[1 + 0 * 2] * v[0] + tf->mat[1 + 1 * 2] * v[1] + tf->move[1];
 
-                offset += 2;
+                ++offset;
             }
         }
         glUnmapBuffer(GL_ARRAY_BUFFER);
@@ -216,7 +219,7 @@ void Render::renderPolygonTransparency(loader::BlendingMode& currentTransparency
         };
     }
 
-    glm::mat4 mvp = m_cam->m_glViewProjMat * bsp_ref.transform;
+    glm::mat4 mvp = m_cam->getViewProjection() * bsp_ref.transform;
 
     glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(mvp));
 
@@ -335,7 +338,7 @@ void Render::renderSkeletalModel(const LitShaderDescription *shader, world::anim
         glm::mat4 mvpTransform = mvpMatrix * btag.full_transform;
         glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(mvpTransform));
 
-        renderMesh(btag.mesh_base);
+        renderMesh(btag.mesh);
         if(btag.mesh_slot)
         {
             renderMesh(btag.mesh_slot);
@@ -347,11 +350,10 @@ void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, world::
 {
     glUniformMatrix4fv(shader->projection, 1, false, glm::value_ptr(pMatrix));
 
-    for(const world::animation::Bone& btag : ent->m_bf.getBones())
+    for(const world::animation::Bone& btag : ent->m_skeleton.getBones())
     {
-        GLfloat transforms[32];
-        glm::mat4 mvTransforms = mvMatrix * btag.full_transform;
-        std::copy_n(glm::value_ptr(mvTransforms), 16, &transforms[0]);
+        glm::mat4 transforms[2];
+        transforms[0] = mvMatrix * btag.full_transform;
 
         // Calculate parent transform
         const glm::mat4& parentTransform = btag.parent ? btag.parent->full_transform : ent->m_transform;
@@ -360,9 +362,8 @@ void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, world::
 
         glm::mat4 secondTransform = parentTransform * translate;
 
-        glm::mat4 mvTransforms2 = mvMatrix * secondTransform;
-        std::copy_n(glm::value_ptr(mvTransforms2), 16, &transforms[16]);
-        glUniformMatrix4fv(shader->model_view, 2, false, transforms);
+        transforms[1] = mvMatrix * secondTransform;
+        glUniformMatrix4fv(shader->model_view, 2, false, glm::value_ptr(transforms[0]));
 
         if(btag.mesh_skin)
         {
@@ -375,39 +376,30 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, world::
 {
     glUniformMatrix4fv(shader->projection, 1, false, glm::value_ptr(pMatrix));
 
-    for(size_t i = 0; i < ent->m_bf.getBoneCount(); i++)
+    for(const world::animation::Bone& bone : ent->m_skeleton.getBones())
     {
         glm::mat4 mvTransforms[2];
 
         glm::mat4 tr0(1.0f);
-        ent->m_bt.bt_body[i]->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr0));
-        glm::mat4 tr1 = ent->m_transform;
+        bone.bt_body->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr0));
 
         mvTransforms[0] = mvMatrix * tr0;
 
         // Calculate parent transform
-        const world::animation::Bone &btag = ent->m_bf.getBones()[i];
-        for(size_t j = 0; j < ent->m_bf.getBoneCount(); j++)
-        {
-            if(&ent->m_bf.getBones()[j] == btag.parent)
-            {
-                ent->m_bt.bt_body[j]->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr1));
-                break;
-            }
-        }
+        glm::mat4 tr1;
+        if(bone.parent)
+            bone.parent->bt_body->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr1));
+        else
+            tr1 = ent->m_transform;
 
-        glm::mat4 secondTransform = glm::translate(tr1, btag.offset);
+        glm::mat4 secondTransform = glm::translate(tr1, bone.offset);
         mvTransforms[1] = mvMatrix * secondTransform;
 
-        GLfloat transforms[32];
-        std::copy_n(glm::value_ptr(mvTransforms[0]), 16, &transforms[0]);
-        std::copy_n(glm::value_ptr(mvTransforms[1]), 16, &transforms[16]);
+        glUniformMatrix4fv(shader->model_view, 2, false, glm::value_ptr(mvTransforms[0]));
 
-        glUniformMatrix4fv(shader->model_view, 2, false, transforms);
-
-        if(btag.mesh_skin)
+        if(bone.mesh_skin)
         {
-            renderMesh(btag.mesh_skin);
+            renderMesh(bone.mesh_skin);
         }
     }
 }
@@ -505,14 +497,14 @@ void Render::renderEntity(world::Entity* entity, const glm::mat4 &modelViewMatri
     // Calculate lighting
     const LitShaderDescription *shader = setupEntityLight(entity, modelViewMatrix, false);
 
-    if(entity->m_bf.getModel() && !entity->m_bf.getModel()->animations.empty())
+    if(entity->m_skeleton.getModel() && !entity->m_skeleton.getModel()->animations.empty())
     {
         // base frame offset
         if(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC)
         {
             renderDynamicEntity(shader, entity, modelViewMatrix, modelViewProjectionMatrix);
             ///@TODO: where I need to do bf skinning matrices update? this time ragdoll update function calculates these matrices;
-            if(entity->m_bf.getBones().front().mesh_skin)
+            if(entity->m_skeleton.getBones().front().mesh_skin)
             {
                 const LitShaderDescription *skinShader = setupEntityLight(entity, modelViewMatrix, true);
                 renderDynamicEntitySkin(skinShader, entity, modelViewMatrix, projection);
@@ -523,8 +515,8 @@ void Render::renderEntity(world::Entity* entity, const glm::mat4 &modelViewMatri
             glm::mat4 scaledTransform = glm::scale(entity->m_transform, entity->m_scaling);
             glm::mat4 subModelView = modelViewMatrix * scaledTransform;
             glm::mat4 subModelViewProjection = modelViewProjectionMatrix * scaledTransform;
-            renderSkeletalModel(shader, &entity->m_bf, subModelView, subModelViewProjection);
-            if(entity->m_bf.getBones().front().mesh_skin)
+            renderSkeletalModel(shader, &entity->m_skeleton, subModelView, subModelViewProjection);
+            if(entity->m_skeleton.getBones().front().mesh_skin)
             {
                 const LitShaderDescription *skinShader = setupEntityLight(entity, modelViewMatrix, true);
                 renderSkeletalModelSkin(skinShader, entity, subModelView, projection);
@@ -535,11 +527,10 @@ void Render::renderEntity(world::Entity* entity, const glm::mat4 &modelViewMatri
 
 void Render::renderDynamicEntity(const LitShaderDescription *shader, world::Entity* entity, const glm::mat4& modelViewMatrix, const glm::mat4& modelViewProjectionMatrix)
 {
-    size_t i=0;
-    for(const world::animation::Bone& btag : entity->m_bf.getBones())
+    for(const world::animation::Bone& btag : entity->m_skeleton.getBones())
     {
         glm::mat4 tr(1.0f);
-        entity->m_bt.bt_body[i]->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr));
+        btag.bt_body->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr));
         glm::mat4 mvTransform = modelViewMatrix * tr;
 
         glUniformMatrix4fv(shader->model_view, 1, false, glm::value_ptr(mvTransform));
@@ -547,13 +538,11 @@ void Render::renderDynamicEntity(const LitShaderDescription *shader, world::Enti
         glm::mat4 mvpTransform = modelViewProjectionMatrix * tr;
         glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(mvpTransform));
 
-        renderMesh(btag.mesh_base);
+        renderMesh(btag.mesh);
         if(btag.mesh_slot)
         {
             renderMesh(btag.mesh_slot);
         }
-
-        ++i;
     }
 }
 
@@ -569,7 +558,7 @@ void Render::renderHair(std::shared_ptr<world::Character> entity, const glm::mat
     for(size_t h = 0; h < entity->m_hairs.size(); h++)
     {
         // First: Head attachment
-        glm::mat4 globalHead(entity->m_transform * entity->m_bf.getBones()[entity->m_hairs[h]->m_ownerBody].full_transform);
+        glm::mat4 globalHead(entity->m_transform * entity->m_skeleton.getBones()[entity->m_hairs[h]->m_ownerBody].full_transform);
         glm::mat4 globalAttachment = globalHead * entity->m_hairs[h]->m_ownerBodyHairRoot;
 
         static constexpr int MatrixCount = 10;
@@ -722,12 +711,10 @@ void Render::renderRoomSprites(const world::Room* room, const glm::mat4 &modelVi
  */
 bool Render::addRoom(world::Room* room)
 {
-    if(!room->active || std::find(m_renderList.begin(), m_renderList.end(), room) != m_renderList.end())
+    if(!room->active || !m_renderList.insert(room).second)
     {
         return false;
     }
-
-    m_renderList.emplace_back(room);
 
     if(room->flags & TR_ROOM_FLAG_SKYBOX)
         m_drawSkybox = true;
@@ -781,12 +768,12 @@ void Render::drawList()
     glEnable(GL_CULL_FACE);
     glDisable(GL_BLEND);
 
-    renderSkyBox(m_cam->m_glViewProjMat);
+    renderSkyBox(m_cam->getViewProjection());
 
     if(m_world->character)
     {
-        renderEntity(m_world->character.get(), m_cam->m_glViewMat, m_cam->m_glViewProjMat, m_cam->m_glProjMat);
-        renderHair(m_world->character, m_cam->m_glViewMat, m_cam->m_glProjMat);
+        renderEntity(m_world->character.get(), m_cam->getView(), m_cam->getViewProjection(), m_cam->getProjection());
+        renderHair(m_world->character, m_cam->getView(), m_cam->getProjection());
     }
 
     /*
@@ -794,7 +781,7 @@ void Render::drawList()
      */
     for(const world::Room* room : m_renderList)
     {
-        renderRoom(room, m_cam->m_glViewMat, m_cam->m_glViewProjMat, m_cam->m_glProjMat);
+        renderRoom(room, m_cam->getView(), m_cam->getViewProjection(), m_cam->getProjection());
     }
 
     glDisable(GL_CULL_FACE);
@@ -802,7 +789,7 @@ void Render::drawList()
     ///@FIXME: reduce number of gl state changes
     for(const world::Room* room : m_renderList)
     {
-        renderRoomSprites(room, m_cam->m_glViewMat, m_cam->m_glProjMat);
+        renderRoomSprites(room, m_cam->getView(), m_cam->getProjection());
     }
 
     /*
@@ -814,7 +801,7 @@ void Render::drawList()
     {
         if(room->mesh && !room->mesh->m_transparencyPolygons.empty())
         {
-            render_dBSP.addNewPolygonList(room->mesh->m_transparentPolygons, room->transform, m_cam->frustum, *m_cam);
+            render_dBSP.addNewPolygonList(room->mesh->m_transparentPolygons, room->transform, m_cam->getFrustum(), *m_cam);
         }
     }
 
@@ -825,7 +812,7 @@ void Render::drawList()
         {
             if(!sm->mesh->m_transparentPolygons.empty())
             {
-                render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, m_cam->frustum, *m_cam);
+                render_dBSP.addNewPolygonList(sm->mesh->m_transparentPolygons, sm->transform, m_cam->getFrustum(), *m_cam);
             }
         }
 
@@ -836,29 +823,29 @@ void Render::drawList()
             if(!ent)
                 continue;
 
-            if(!ent->m_bf.getModel()->has_transparency || !ent->m_visible)
+            if(!ent->m_skeleton.getModel()->has_transparency || !ent->m_visible)
                 continue;
 
-            for(const world::animation::Bone& bone : ent->m_bf.getBones())
+            for(const world::animation::Bone& bone : ent->m_skeleton.getBones())
             {
-                if(!bone.mesh_base->m_transparencyPolygons.empty())
+                if(!bone.mesh->m_transparencyPolygons.empty())
                 {
                     auto tr = ent->m_transform * bone.full_transform;
-                    render_dBSP.addNewPolygonList(bone.mesh_base->m_transparentPolygons, tr, m_cam->frustum, *m_cam);
+                    render_dBSP.addNewPolygonList(bone.mesh->m_transparentPolygons, tr, m_cam->getFrustum(), *m_cam);
                 }
             }
         }
     }
 
-    if((engine::engine_world.character != nullptr) && engine::engine_world.character->m_bf.getModel()->has_transparency)
+    if((engine::engine_world.character != nullptr) && engine::engine_world.character->m_skeleton.getModel()->has_transparency)
     {
         world::Entity *ent = engine::engine_world.character.get();
-        for(const world::animation::Bone& bone : ent->m_bf.getBones())
+        for(const world::animation::Bone& bone : ent->m_skeleton.getBones())
         {
-            if(!bone.mesh_base->m_transparencyPolygons.empty())
+            if(!bone.mesh->m_transparencyPolygons.empty())
             {
                 auto tr = ent->m_transform * bone.full_transform;
-                render_dBSP.addNewPolygonList(bone.mesh_base->m_transparentPolygons, tr, m_cam->frustum, *m_cam);
+                render_dBSP.addNewPolygonList(bone.mesh->m_transparentPolygons, tr, m_cam->getFrustum(), *m_cam);
             }
         }
     }
@@ -868,7 +855,7 @@ void Render::drawList()
         UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(false, false);
         glUseProgram(shader->program);
         glUniform1i(shader->sampler, 0);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(m_cam->m_glViewProjMat));
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(m_cam->getViewProjection()));
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
@@ -898,7 +885,7 @@ void Render::drawListDebugLines()
     {
         glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->sky_box->animations.front().keyFrames.front().boneKeyFrames.front().offset);
         tr *= glm::mat4_cast(m_world->sky_box->animations.front().keyFrames.front().boneKeyFrames.front().qrotate);
-        debugDrawer.drawMeshDebugLines(m_world->sky_box->mesh_tree.front().mesh_base, tr, {}, {}, this);
+        debugDrawer.drawMeshDebugLines(m_world->sky_box->meshes.front().mesh_base, tr, {}, {}, this);
     }
 
     for(const world::Room* room : m_renderList)
@@ -916,7 +903,7 @@ void Render::drawListDebugLines()
         UnlitShaderDescription *shader = m_shaderManager->getDebugLineShader();
         glUseProgram(shader->program);
         glUniform1i(shader->sampler, 0);
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(m_cam->m_glViewProjMat));
+        glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(m_cam->getViewProjection()));
         glBindTexture(GL_TEXTURE_2D, engine::engine_world.textures.back());
         glPointSize(6.0f);
         glLineWidth(3.0f);
@@ -924,42 +911,117 @@ void Render::drawListDebugLines()
     }
 }
 
-/**
- * The recursion algorithm: go through the rooms with portal-frustum occlusion test.
- * @param portal we entered to the room through that portal
- * @return number of added rooms
- */
+struct PortalPath
+{
+    std::vector<const world::Portal*> portals;
+
+    bool checkVisibility(const world::Portal* portal, const glm::vec3& cameraPosition, const world::core::Frustum& frustum)
+    {
+        if(!portal->dest_room || !portal->dest_room->active)
+            return false; // no relevant destination
+
+        if(glm::dot(portal->normal, portal->center - cameraPosition) >= 0)
+            return false; // wrong orientation
+
+        if(!frustum.isVisible(*portal))
+            return false; // not in frustum
+
+        if(portals.empty())
+        {
+            // no need to check the path
+            portals.emplace_back(portal);
+            return true;
+        }
+
+        // Now the heavy work: trace the portal path and test if we can see the target portal through any other portal.
+        for(const world::Portal* testPortal : portals)
+        {
+            if(!testIntersection(cameraPosition, *portal, *testPortal))
+                return false;
+        }
+
+        portals.emplace_back(portal);
+        return true;
+    }
+
+    std::shared_ptr<world::Room> getLastDestinationRoom() const
+    {
+        BOOST_ASSERT(!portals.empty());
+        return portals.back()->dest_room;
+    }
+
+    const world::Portal* getLastPortal() const
+    {
+        BOOST_ASSERT(!portals.empty());
+        return portals.back();
+    }
+
+private:
+    static bool testIntersection(const glm::vec3& camPos, const world::Portal& a, const world::Portal& b)
+    {
+        // test if the ray from the camera to a's vertices crosses b's triangles
+        for(const glm::vec3& v : a.vertices)
+        {
+            if( util::intersectRayTriangle(camPos, v-camPos, b.vertices[0], b.vertices[1], b.vertices[2]) )
+                return true;
+            if( util::intersectRayTriangle(camPos, v-camPos, b.vertices[2], b.vertices[3], b.vertices[0]) )
+                return true;
+        }
+
+        // test if the ray from the camera to b's vertices crosses a's triangles
+        for(const glm::vec3& v : b.vertices)
+        {
+            if( util::intersectRayTriangle(camPos, v-camPos, a.vertices[0], a.vertices[1], a.vertices[2]) )
+                return true;
+            if( util::intersectRayTriangle(camPos, v-camPos, a.vertices[2], a.vertices[3], a.vertices[0]) )
+                return true;
+        }
+
+        return false;
+    }
+};
 
 void Render::processRoom(world::Room* room)
 {
+    // Breadth-first queue
+    std::queue<PortalPath> toVisit;
+
+    addRoom(room);
+    // always process direct neighbours
+    for(const world::Portal& portal : room->portals)
+    {
+        PortalPath path;
+        if(!path.checkVisibility(&portal, m_cam->getPosition(), m_cam->getFrustum()))
+            continue;
+
+        addRoom(portal.dest_room.get());
+
+        toVisit.emplace(std::move(path));
+    }
+
+    // Avoid infinite loops
     std::set<const world::Portal*> visited;
-    std::queue<const world::Portal*> toVisit;
-
-    for(const world::Portal& p : room->portals)
-        toVisit.push(&p);
-
     while(!toVisit.empty())
     {
-        auto currentPortal = toVisit.front();
+        const PortalPath currentPath = std::move(toVisit.front());
         toVisit.pop();
 
-        if(!visited.insert(currentPortal).second)
-            continue;
+        if(!visited.insert(currentPath.getLastPortal()).second)
+            continue; // already tested
 
-        std::shared_ptr<world::Room> destination = currentPortal->dest_room;
-        std::shared_ptr<world::Room> current = currentPortal->current_room;
-
-        if(!current || !current->active || !destination || !destination->active)
+        const auto room = currentPath.getLastDestinationRoom();
+        bool roomIsVisible = false;
+        for(const world::Portal& srcPortal : room->portals)
         {
-            continue;
-        }
+            PortalPath newPath = currentPath;
+            if(!newPath.checkVisibility(&srcPortal, m_cam->getPosition(), m_cam->getFrustum()))
+                continue;
 
-        if(m_cam->frustum.isVisible(*currentPortal))
-        {
-            addRoom(destination.get());
-            for(const world::Portal& p : destination->portals)
-                toVisit.push(&p);
+            roomIsVisible = true;
+            toVisit.emplace(std::move(newPath));
         }
+        if(roomIsVisible)
+            addRoom(room.get());
     }
 }
 
@@ -977,23 +1039,34 @@ void Render::genWorldList()
     //cam->frustum->next = NULL;
 
     // find room that contains camera
-    world::Room* curr_room = Room_FindPosCogerrence(m_cam->getPosition(), m_cam->m_currentRoom);
+    world::Room* curr_room = Room_FindPosCogerrence(m_cam->getPosition(), m_cam->getCurrentRoom());
 
-    m_cam->m_currentRoom = curr_room;         // set camera's cuttent room pointer
+    m_cam->setCurrentRoom( curr_room );
     if(curr_room != nullptr)                  // camera located in some room
     {
-        processRoom(curr_room);  // next start reccursion algorithm
+        processRoom(curr_room);
     }
     else if(engine::control_states.noclip)  // camera is out of all rooms AND noclip is on
     {
         for(auto r : m_world->rooms)
         {
-            if(m_cam->frustum.isVisible(r->boundingBox, *m_cam))
+            if(m_cam->getFrustum().isVisible(r->boundingBox, *m_cam))
             {
                 addRoom(r.get());
             }
         }
     }
+
+#if 0
+    // Enable/disable collision shapes
+    for(std::shared_ptr<world::Room> room : m_world->rooms)
+    {
+        if(m_renderList.find(room.get()) == m_renderList.end())
+            room->disable();
+        else
+            room->enable();
+    }
+#endif
 }
 
 // Coupling renderer and the world.
@@ -1001,20 +1074,13 @@ void Render::genWorldList()
 void Render::setWorld(world::World *world)
 {
     resetWorld();
-    size_t list_size = world->rooms.size() + 128;  // magic 128 was added for debug and testing
-
-    if(m_renderList.size() < list_size)  // if old list is less than new one requiring
-    {
-        m_renderList.resize(list_size);
-    }
 
     m_world = world;
     m_drawSkybox = false;
     m_renderList.clear();
 
     m_cam = &engine::engine_camera;
-    //engine_camera.frustum->next = NULL;
-    engine::engine_camera.m_currentRoom = nullptr;
+    engine::engine_camera.setCurrentRoom( nullptr );
 }
 
 
@@ -1033,19 +1099,12 @@ void RenderDebugDrawer::reset()
     m_buffer.clear();
 }
 
-void RenderDebugDrawer::addLine(const std::array<GLfloat, 3>& start, const std::array<GLfloat, 3>& end)
+void RenderDebugDrawer::addLine(const glm::vec3& start, const glm::vec3& end)
 {
     addLine(start, m_color, end, m_color);
 }
 
-void RenderDebugDrawer::addLine(const btVector3& start, const btVector3& end)
-{
-    std::array<GLfloat, 3> startA{ {start.x(), start.y(), start.z()} };
-    std::array<GLfloat, 3> endA{ {end.x(), end.y(), end.z()} };
-    addLine(startA, m_color, endA, m_color);
-}
-
-void RenderDebugDrawer::addLine(const std::array<GLfloat, 3>& start, const std::array<GLfloat, 3>& startColor, const std::array<GLfloat, 3>& end, const std::array<GLfloat, 3>& endColor)
+void RenderDebugDrawer::addLine(const glm::vec3& start, const glm::vec3& startColor, const glm::vec3& end, const glm::vec3& endColor)
 {
     m_buffer.emplace_back(start);
     m_buffer.emplace_back(startColor);
@@ -1055,10 +1114,7 @@ void RenderDebugDrawer::addLine(const std::array<GLfloat, 3>& start, const std::
 
 void RenderDebugDrawer::drawLine(const btVector3& from, const btVector3& to, const btVector3 &color)
 {
-    std::array<GLfloat, 3> fromA{ {from.x(), from.y(), from.z()} };
-    std::array<GLfloat, 3> toA{ {to.x(), to.y(), to.z()} };
-    std::array<GLfloat, 3> colorA{ {color.x(), color.y(), color.z()} };
-    addLine(fromA, colorA, toA, colorA);
+    addLine(util::convert(from), util::convert(color), util::convert(to), util::convert(color));
 }
 
 void RenderDebugDrawer::setDebugMode(int debugMode)
@@ -1090,16 +1146,16 @@ void RenderDebugDrawer::render()
         {
             glGenBuffers(1, &m_glbuffer);
             VertexArrayAttribute attribs[] = {
-                VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), 0),
-                VertexArrayAttribute(UnlitShaderDescription::Color,    3, GL_FLOAT, false, m_glbuffer, sizeof(GLfloat [6]), sizeof(GLfloat [3]))
+                VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, m_glbuffer, sizeof(glm::vec3)*2, 0),
+                VertexArrayAttribute(UnlitShaderDescription::Color,    3, GL_FLOAT, false, m_glbuffer, sizeof(glm::vec3)*2, sizeof(glm::vec3))
             };
             m_vertexArray.reset(new VertexArray(0, 2, attribs));
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, m_glbuffer);
-        glBufferData(GL_ARRAY_BUFFER, m_buffer.size() * sizeof(decltype(m_buffer[0])), nullptr, GL_STREAM_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, m_buffer.size() * sizeof(m_buffer[0]), nullptr, GL_STREAM_DRAW);
 
-        std::array<GLfloat, 3>* data = static_cast<std::array<GLfloat, 3>*>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
+        glm::vec3* data = static_cast<glm::vec3*>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
         std::copy(m_buffer.begin(), m_buffer.end(), data);
         glUnmapBuffer(GL_ARRAY_BUFFER);
 
@@ -1107,44 +1163,43 @@ void RenderDebugDrawer::render()
         glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(m_buffer.size() / 2));
     }
 
-    m_color.fill(0);
+    m_color = {0,0,0};
     m_buffer.clear();
 }
 
 void RenderDebugDrawer::drawAxis(glm::float_t r, const glm::mat4 &transform)
 {
-    std::array<GLfloat, 3> origin{ { transform[3].x, transform[3].y, transform[3].z } };
+    glm::vec3 origin{transform[3]};
 
     glm::vec4 v = transform[0] * r;
     v += transform[3];
     m_buffer.push_back(origin);
-    m_buffer.push_back({ {1.0, 0.0, 0.0} });
-    m_buffer.push_back({ {v.x, v.y, v.z} });
-    m_buffer.push_back({ {1.0, 0.0, 0.0} });
+    m_buffer.push_back({1.0, 0.0, 0.0});
+    m_buffer.push_back({v.x, v.y, v.z});
+    m_buffer.push_back({1.0, 0.0, 0.0});
 
     v = transform[1] * r;
     v += transform[3];
     m_buffer.push_back(origin);
-    m_buffer.push_back({ {0.0, 1.0, 0.0} });
-    m_buffer.push_back({ {v.x, v.y, v.z} });
-    m_buffer.push_back({ {0.0, 1.0, 0.0} });
+    m_buffer.push_back({0.0, 1.0, 0.0});
+    m_buffer.push_back({v.x, v.y, v.z});
+    m_buffer.push_back({0.0, 1.0, 0.0});
 
     v = transform[2] * r;
     v += transform[3];
     m_buffer.push_back(origin);
-    m_buffer.push_back({ {0.0, 0.0, 1.0} });
-    m_buffer.push_back({ {v.x, v.y, v.z} });
-    m_buffer.push_back({ {0.0, 0.0, 1.0} });
+    m_buffer.push_back({0.0, 0.0, 1.0});
+    m_buffer.push_back({v.x, v.y, v.z});
+    m_buffer.push_back({0.0, 0.0, 1.0});
 }
 
 void RenderDebugDrawer::drawPortal(const world::Portal& p)
 {
-    for(size_t i = 0; i < p.vertices.size() - 1; i++)
-    {
-        addLine(util::convert(p.vertices[i]), util::convert(p.vertices[i + 1]));
-    }
-
-    addLine(util::convert(p.vertices.back()), util::convert(p.vertices.front()));
+    addLine(p.vertices[0], p.vertices[1]);
+    addLine(p.vertices[1], p.vertices[2]);
+    addLine(p.vertices[2], p.vertices[3]);
+    addLine(p.vertices[3], p.vertices[0]);
+    addLine(p.vertices[1], p.vertices[3]);
 }
 
 void RenderDebugDrawer::drawBBox(const world::core::BoundingBox& boundingBox, const glm::mat4 *transform)
@@ -1158,18 +1213,18 @@ void RenderDebugDrawer::drawBBox(const world::core::BoundingBox& boundingBox, co
 void RenderDebugDrawer::drawOBB(const world::core::OrientedBoundingBox& obb)
 {
     const world::core::Polygon *p = obb.polygons.data();
-    addLine(util::convert(p->vertices[0].position), util::convert((p + 1)->vertices[0].position));
-    addLine(util::convert(p->vertices[1].position), util::convert((p + 1)->vertices[3].position));
-    addLine(util::convert(p->vertices[2].position), util::convert((p + 1)->vertices[2].position));
-    addLine(util::convert(p->vertices[3].position), util::convert((p + 1)->vertices[1].position));
+    addLine(p->vertices[0].position, (p + 1)->vertices[0].position);
+    addLine(p->vertices[1].position, (p + 1)->vertices[3].position);
+    addLine(p->vertices[2].position, (p + 1)->vertices[2].position);
+    addLine(p->vertices[3].position, (p + 1)->vertices[1].position);
 
     for(uint16_t i = 0; i < 2; i++, p++)
     {
         for(size_t j = 0; j < p->vertices.size() - 1; j++)
         {
-            addLine(util::convert(p->vertices[j].position), util::convert(p->vertices[j + 1].position));
+            addLine(p->vertices[j].position, p->vertices[j + 1].position);
         }
-        addLine(util::convert(p->vertices.back().position), util::convert(p->vertices.front().position));
+        addLine(p->vertices.back().position, p->vertices.front().position);
     }
 }
 
@@ -1183,10 +1238,10 @@ void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<world::core::Ba
             for(size_t i = 0; i < mesh->m_vertices.size(); i++)
             {
                 glm::vec4 v = transform * glm::vec4(overrideVertices[i], 1.0f);
-                m_buffer.push_back({ {v.x, v.y, v.z} });
+                m_buffer.push_back({v.x, v.y, v.z});
                 m_buffer.emplace_back(m_color);
                 v += glm::vec4(glm::mat3(transform) * overrideNormals[i] * 128.0f, 0);
-                m_buffer.push_back({ {v.x, v.y, v.z} });
+                m_buffer.push_back({v.x, v.y, v.z});
                 m_buffer.emplace_back(m_color);
             }
         }
@@ -1195,10 +1250,10 @@ void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<world::core::Ba
             for(size_t i = 0; i < mesh->m_vertices.size(); i++)
             {
                 glm::vec4 v = transform * glm::vec4(mesh->m_vertices[i].position, 1.0f);
-                m_buffer.push_back({ {v.x, v.y, v.z} });
+                m_buffer.push_back({v.x, v.y, v.z});
                 m_buffer.emplace_back(m_color);
                 v += glm::vec4(glm::mat3(transform) * mesh->m_vertices[i].normal * 128.0f, 0);
-                m_buffer.push_back({ {v.x, v.y, v.z} });
+                m_buffer.push_back({v.x, v.y, v.z});
                 m_buffer.emplace_back(m_color);
             }
         }
@@ -1211,7 +1266,7 @@ void RenderDebugDrawer::drawSkeletalModelDebugLines(const world::animation::Skel
         return;
 
     for(const world::animation::Bone& bone : skeleton.getBones())
-        drawMeshDebugLines(bone.mesh_base, transform * bone.full_transform, {}, {}, render);
+        drawMeshDebugLines(bone.mesh, transform * bone.full_transform, {}, {}, render);
 }
 
 void RenderDebugDrawer::drawEntityDebugLines(world::Entity* entity, Render* render)
@@ -1234,9 +1289,9 @@ void RenderDebugDrawer::drawEntityDebugLines(world::Entity* entity, Render* rend
         debugDrawer.drawAxis(1000.0, entity->m_transform);
     }
 
-    if(entity->m_bf.getModel() && !entity->m_bf.getModel()->animations.empty())
+    if(entity->m_skeleton.getModel() && !entity->m_skeleton.getModel()->animations.empty())
     {
-        debugDrawer.drawSkeletalModelDebugLines(entity->m_bf, entity->m_transform, render);
+        debugDrawer.drawSkeletalModelDebugLines(entity->m_skeleton, entity->m_transform, render);
     }
 
     entity->m_wasRenderedLines = true;
@@ -1265,11 +1320,13 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
 
     if(render->m_drawPortals)
     {
-        debugDrawer.setColor(0.0, 0.0, 0.0);
+        debugDrawer.setColor(1.0, 1.0, 0.0);
         for(const auto& p : room->portals)
-        {
             debugDrawer.drawPortal(p);
-        }
+
+        debugDrawer.setColor(1.0, 1.0, 0.5);
+        for(const auto& p : room->portals)
+            debugDrawer.addLine(p.center, p.center + p.normal*128.0f);
     }
 
     if(!render->m_skipRoom && (room->mesh != nullptr))
@@ -1366,15 +1423,15 @@ void fillCrosshairBuffer()
 
     struct BufferEntry
     {
-        GLfloat position[2];
+        glm::vec2 position;
         uint8_t color[4];
     };
 
     BufferEntry crosshair_buf[4] = {
-        {{static_cast<GLfloat>(engine::screen_info.w / 2.0f - 5.f), (static_cast<GLfloat>(engine::screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
-        {{static_cast<GLfloat>(engine::screen_info.w / 2.0f + 5.f), (static_cast<GLfloat>(engine::screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
-        {{static_cast<GLfloat>(engine::screen_info.w / 2.0f), (static_cast<GLfloat>(engine::screen_info.h) / 2.0f - 5.f)}, {255, 0, 0, 255}},
-        {{static_cast<GLfloat>(engine::screen_info.w / 2.0f), (static_cast<GLfloat>(engine::screen_info.h) / 2.0f + 5.f)}, {255, 0, 0, 255}}
+        {{static_cast<glm::float_t>(engine::screen_info.w / 2.0f - 5.f), (static_cast<glm::float_t>(engine::screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
+        {{static_cast<glm::float_t>(engine::screen_info.w / 2.0f + 5.f), (static_cast<glm::float_t>(engine::screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
+        {{static_cast<glm::float_t>(engine::screen_info.w / 2.0f), (static_cast<glm::float_t>(engine::screen_info.h) / 2.0f - 5.f)}, {255, 0, 0, 255}},
+        {{static_cast<glm::float_t>(engine::screen_info.w / 2.0f), (static_cast<glm::float_t>(engine::screen_info.h) / 2.0f + 5.f)}, {255, 0, 0, 255}}
     };
 
     glBindBuffer(GL_ARRAY_BUFFER, crosshairBuffer);
@@ -1392,13 +1449,13 @@ void drawCrosshair()
     GuiShaderDescription *shader = renderer.shaderManager()->getGuiShader(false);
 
     glUseProgram(shader->program);
-    GLfloat factor[2] = {
+    glm::vec2 factor = {
         2.0f / engine::screen_info.w,
         2.0f / engine::screen_info.h
     };
-    glUniform2fv(shader->factor, 1, factor);
-    GLfloat offset[2] = { -1.f, -1.f };
-    glUniform2fv(shader->offset, 1, offset);
+    glUniform2fv(shader->factor, 1, glm::value_ptr(factor));
+    glm::vec2 offset = { -1.f, -1.f };
+    glUniform2fv(shader->offset, 1, glm::value_ptr(offset));
 
     crosshairArray->bind();
 

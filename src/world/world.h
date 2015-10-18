@@ -197,7 +197,7 @@ struct SkeletalModel;
 namespace core
 {
 struct BaseMesh;
-struct Frustum;
+class Frustum;
 struct Polygon;
 } // namespace core
 

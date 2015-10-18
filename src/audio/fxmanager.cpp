@@ -109,33 +109,33 @@ void FxManager::updateListener(world::Camera *cam)
 
     alListenerfv(AL_POSITION, glm::value_ptr(cam->getPosition()));
 
-    glm::vec3 v2 = (cam->getPosition() - cam->m_prevPos) / util::toSeconds(engine::engine_frame_time);
+    glm::vec3 v2 = cam->getMovement() / util::toSeconds(engine::engine_frame_time);
     alListenerfv(AL_VELOCITY, glm::value_ptr(v2));
-    cam->m_prevPos = cam->getPosition();
+    cam->resetMovement();
 
-    if(cam->m_currentRoom)
+    if(!cam->getCurrentRoom())
+        return;
+
+    if(cam->getCurrentRoom()->flags & TR_ROOM_FLAG_WATER)
     {
-        if(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER)
+        current_room_type = loader::ReverbInfo::Water;
+    }
+    else
+    {
+        current_room_type = cam->getCurrentRoom()->reverb_info;
+    }
+
+    if(water_state != static_cast<bool>(cam->getCurrentRoom()->flags & TR_ROOM_FLAG_WATER))
+    {
+        water_state = (cam->getCurrentRoom()->flags & TR_ROOM_FLAG_WATER) != 0;
+
+        if(water_state)
         {
-            current_room_type = loader::ReverbInfo::Water;
+            engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_UNDERWATER);
         }
         else
         {
-            current_room_type = cam->m_currentRoom->reverb_info;
-        }
-
-        if(water_state != static_cast<bool>(cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER))
-        {
-            water_state = (cam->m_currentRoom->flags & TR_ROOM_FLAG_WATER) != 0;
-
-            if(water_state)
-            {
-                engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_UNDERWATER);
-            }
-            else
-            {
-                engine::engine_world.audioEngine.kill(TR_AUDIO_SOUND_UNDERWATER);
-            }
+            engine::engine_world.audioEngine.kill(TR_AUDIO_SOUND_UNDERWATER);
         }
     }
 }

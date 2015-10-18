@@ -8,7 +8,7 @@ namespace world
 
 void SkeletalModel::clear()
 {
-    mesh_tree.clear();
+    meshes.clear();
     collision_map.clear();
     animations.clear();
 }
@@ -20,137 +20,103 @@ void SkeletalModel::clear()
  */
 void SkeletalModel::interpolateFrames()
 {
-    animation::AnimationFrame* anim = animations.data();
 
-    for(uint16_t i = 0; i < animations.size(); i++, anim++)
+    for(animation::AnimationFrame& anim : animations)
     {
-        int length = anim->keyFrames.size();
-        int rate = anim->original_frame_rate;
-        if(length > 1 && rate > 1)
+        if(anim.keyFrames.size() <= 1 || anim.original_frame_rate < 1)
+            continue;
+
+        int destIdx = ((anim.keyFrames.size() - 1) / anim.original_frame_rate) * anim.original_frame_rate;
+
+        while(destIdx >= 0)
         {
-            int destIdx = ((length - 1) / rate) * rate;
-
-            while(destIdx >= 0)
+            int srcIdx = destIdx / anim.original_frame_rate;
+            for(int j = anim.original_frame_rate - 1; j>0; j--)
             {
-                int srcIdx = destIdx / rate;
-                for(int j = rate - 1; j>0; j--)
+                if(destIdx + j >= anim.keyFrames.size())
+                    continue;
+
+                glm::float_t lerp = static_cast<glm::float_t>(j) / static_cast<glm::float_t>(anim.original_frame_rate);
+
+                anim.keyFrames[destIdx + j].position = glm::mix(anim.keyFrames[srcIdx].position, anim.keyFrames[srcIdx + 1].position, lerp);
+                anim.keyFrames[destIdx + j].boundingBox.max = glm::mix(anim.keyFrames[srcIdx].boundingBox.max, anim.keyFrames[srcIdx + 1].boundingBox.max, lerp);
+                anim.keyFrames[destIdx + j].boundingBox.min = glm::mix(anim.keyFrames[srcIdx].boundingBox.min, anim.keyFrames[srcIdx + 1].boundingBox.min, lerp);
+
+                for(uint16_t k = 0; k < meshes.size(); k++)
                 {
-                    if(destIdx + j >= length) continue;
-
-                    glm::float_t lerp = static_cast<glm::float_t>(j) / static_cast<glm::float_t>(rate);
-
-                    anim->keyFrames[destIdx + j].position = glm::mix(anim->keyFrames[srcIdx].position, anim->keyFrames[srcIdx + 1].position, lerp);
-                    anim->keyFrames[destIdx + j].boundingBox.max = glm::mix(anim->keyFrames[srcIdx].boundingBox.max, anim->keyFrames[srcIdx + 1].boundingBox.max, lerp);
-                    anim->keyFrames[destIdx + j].boundingBox.min = glm::mix(anim->keyFrames[srcIdx].boundingBox.min, anim->keyFrames[srcIdx + 1].boundingBox.min, lerp);
-
-                    for(uint16_t k = 0; k < mesh_count; k++)
-                    {
-                        anim->keyFrames[destIdx + j].boneKeyFrames[k].offset = glm::mix(anim->keyFrames[srcIdx].boneKeyFrames[k].offset, anim->keyFrames[srcIdx + 1].boneKeyFrames[k].offset, lerp);
-                        anim->keyFrames[destIdx + j].boneKeyFrames[k].qrotate = glm::slerp(anim->keyFrames[srcIdx].boneKeyFrames[k].qrotate, anim->keyFrames[srcIdx + 1].boneKeyFrames[k].qrotate, lerp);
-                    }
+                    anim.keyFrames[destIdx + j].boneKeyFrames[k].offset = glm::mix(anim.keyFrames[srcIdx].boneKeyFrames[k].offset, anim.keyFrames[srcIdx + 1].boneKeyFrames[k].offset, lerp);
+                    anim.keyFrames[destIdx + j].boneKeyFrames[k].qrotate = glm::slerp(anim.keyFrames[srcIdx].boneKeyFrames[k].qrotate, anim.keyFrames[srcIdx + 1].boneKeyFrames[k].qrotate, lerp);
                 }
-                if(destIdx > 0)
-                {
-                    anim->keyFrames[destIdx] = anim->keyFrames[srcIdx];
-                }
-
-                destIdx -= rate;
             }
+            if(destIdx > 0)
+            {
+                anim.keyFrames[destIdx] = anim.keyFrames[srcIdx];
+            }
+
+            destIdx -= anim.original_frame_rate;
         }
     }
 }
 
 void SkeletalModel::updateTransparencyFlag()
 {
-    has_transparency = false;
-    for(uint16_t i = 0; i < mesh_count; i++)
-    {
-        if(!mesh_tree[i].mesh_base->m_transparencyPolygons.empty())
-        {
-            has_transparency = true;
-            return;
-        }
-    }
+    has_transparency = std::any_of(meshes.begin(), meshes.end(),
+                                   [](const MeshReference& mesh) { return !mesh.mesh_base->m_transparencyPolygons.empty(); }
+    );
 }
 
 void SkeletalModel::fillSkinnedMeshMap()
 {
-    core::Vertex* v, *rv;
-    MeshTreeTag* tree_tag, *prev_tree_tag;
-
-    tree_tag = mesh_tree.data();
-    for(uint16_t i = 0; i < mesh_count; i++, tree_tag++)
+    for(MeshReference& mesh : meshes)
     {
-        if(!tree_tag->mesh_skin)
+        if(!mesh.mesh_skin)
         {
-            return;
+            continue;
         }
 
-        tree_tag->mesh_skin->m_matrixIndices.resize(tree_tag->mesh_skin->m_vertices.size());
-        core::BaseMesh::MatrixIndex* ch = tree_tag->mesh_skin->m_matrixIndices.data();
-        v = tree_tag->mesh_skin->m_vertices.data();
-        for(size_t k = 0; k < tree_tag->mesh_skin->m_vertices.size(); k++, v++, ch++)
+        mesh.mesh_skin->m_matrixIndices.clear();
+        for(core::Vertex& v : mesh.mesh_skin->m_vertices)
         {
-            rv = tree_tag->mesh_base->findVertex(v->position);
-            if(rv != nullptr)
+            if(const core::Vertex* rv = mesh.mesh_base->findVertex(v.position))
             {
-                ch->i = 0;
-                ch->j = 0;
-                v->position = rv->position;
-                v->normal = rv->normal;
+                mesh.mesh_skin->m_matrixIndices.emplace_back(0,0);
+                v.position = rv->position;
+                v.normal = rv->normal;
+                continue;
             }
-            else
+
+            mesh.mesh_skin->m_matrixIndices.emplace_back(0,1);
+            glm::vec3 tv = v.position + mesh.offset;
+            for(const MeshReference& prevMesh : meshes)
             {
-                ch->i = 0;
-                ch->j = 1;
-                auto tv = v->position + tree_tag->offset;
-                prev_tree_tag = mesh_tree.data();
-                for(uint16_t l = 0; l < mesh_count; l++, prev_tree_tag++)
-                {
-                    rv = prev_tree_tag->mesh_base->findVertex(tv);
-                    if(rv != nullptr)
-                    {
-                        ch->i = 1;
-                        ch->j = 1;
-                        v->position = rv->position - tree_tag->offset;
-                        v->normal = rv->normal;
-                        break;
-                    }
-                }
+                const core::Vertex* rv = prevMesh.mesh_base->findVertex(tv);
+                if(rv == nullptr)
+                    continue;
+
+                mesh.mesh_skin->m_matrixIndices.emplace_back(1,1);
+                v.position = rv->position - mesh.offset;
+                v.normal = rv->normal;
+                break;
             }
         }
     }
 }
 
-SkeletalModel::MeshTreeTag *SkeletonClone(SkeletalModel::MeshTreeTag *src, int tags_count)
+void SkeletalModel::setMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount)
 {
-    SkeletalModel::MeshTreeTag* ret = new SkeletalModel::MeshTreeTag[tags_count];
-
-    for(int i = 0; i < tags_count; i++)
+    BOOST_ASSERT( meshCount <= meshes.size() && meshCount <= src.size() );
+    for(size_t i = 0; i < meshCount; i++)
     {
-        ret[i].mesh_base = src[i].mesh_base;
-        ret[i].mesh_skin = src[i].mesh_skin;
-        ret[i].flag = src[i].flag;
-        ret[i].offset = src[i].offset;
-        ret[i].replace_anim = src[i].replace_anim;
-        ret[i].replace_mesh = src[i].replace_mesh;
-    }
-    return ret;
-}
-
-void SkeletonCopyMeshes(SkeletalModel::MeshTreeTag *dst, SkeletalModel::MeshTreeTag *src, int tags_count)
-{
-    for(int i = 0; i < tags_count; i++)
-    {
-        dst[i].mesh_base = src[i].mesh_base;
+        meshes[i].mesh_base = src[i].mesh_base;
     }
 }
 
-void SkeletonCopyMeshes2(SkeletalModel::MeshTreeTag *dst, SkeletalModel::MeshTreeTag *src, int tags_count)
+void SkeletalModel::setSkinnedMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount)
 {
-    for(int i = 0; i < tags_count; i++)
+    BOOST_ASSERT( meshCount <= meshes.size() && meshCount <= src.size() );
+    for(size_t i = 0; i < meshCount; i++)
     {
-        dst[i].mesh_skin = src[i].mesh_base;
+        meshes[i].mesh_skin = src[i].mesh_base;
     }
 }
 
@@ -165,17 +131,17 @@ bool SkeletalModel::findStateChange(LaraState stateid, uint16_t& animid_inout, u
 {
     for(const animation::StateChange& stc : animations[animid_inout].stateChanges)
     {
-        if(stc.id == stateid)
+        if(stc.id != stateid)
+            continue;
+
+        for(const animation::AnimDispatch& dispatch : stc.anim_dispatch)
         {
-            for(const animation::AnimDispatch& dispatch : stc.anim_dispatch)
+            if(   frameid_inout >= dispatch.frame_low
+               && frameid_inout <= dispatch.frame_high)
             {
-                if(   frameid_inout >= dispatch.frame_low
-                   && frameid_inout <= dispatch.frame_high)
-                {
-                    animid_inout = dispatch.next_anim;
-                    frameid_inout = dispatch.next_frame;
-                    return true;
-                }
+                animid_inout = dispatch.next_anim;
+                frameid_inout = dispatch.next_frame;
+                return true;
             }
         }
     }

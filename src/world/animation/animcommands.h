@@ -1,14 +1,21 @@
 #pragma once
 
-//   ====== ANIMATION COMMANDS ======
-
-#define TR_ANIMCOMMAND_SETPOSITION  1
-#define TR_ANIMCOMMAND_SETVELOCITY  2
-#define TR_ANIMCOMMAND_EMPTYHANDS   3
-#define TR_ANIMCOMMAND_KILL         4
-#define TR_ANIMCOMMAND_PLAYSOUND    5
-#define TR_ANIMCOMMAND_PLAYEFFECT   6
-#define TR_ANIMCOMMAND_INTERACT     7
+namespace world
+{
+namespace animation
+{
+enum class AnimCommandOpcode : int
+{
+    SetPosition = 1,
+    SetVelocity = 2,
+    EmptyHands = 3,
+    Kill = 4,
+    PlaySound = 5,
+    PlayEffect = 6,
+    Interact = 7
+};
+}
+}
 
 //   ====== ANIMATION EFFECTS FLAGS ======
 

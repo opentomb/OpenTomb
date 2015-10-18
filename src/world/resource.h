@@ -92,7 +92,6 @@ void Res_GenRoomFlipMap(World *world);
 void Res_GenBaseItems(World *world);
 void Res_GenVBOs(World *world);
 
-uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_t v4);
 void     Res_Sector_SetTweenFloorConfig(SectorTween *tween);
 void     Res_Sector_SetTweenCeilingConfig(SectorTween *tween);
 bool     Res_Sector_IsWall(RoomSector* ws, RoomSector* ns);
@@ -134,7 +133,7 @@ void TR_GenWorld(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenMeshes(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<core::BaseMesh> mesh, const std::unique_ptr<loader::Level>& tr);
 void TR_GenSkeletalModels(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenSkeletalModel(size_t model_id, SkeletalModel *model, const std::unique_ptr<loader::Level>& tr);
+void TR_GenSkeletalModel(size_t model_id, SkeletalModel *model, const std::unique_ptr<loader::Level>& tr, size_t meshCount);
 void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenSprites(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenTextures(World *world, const std::unique_ptr<loader::Level>& tr);
@@ -145,12 +144,11 @@ void TR_GenRoom(std::shared_ptr<Room>& room, World *world, const std::unique_ptr
 void TR_GenRoomProperties(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenBoxes(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenCameras(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenSamples(World *world, const std::unique_ptr<loader::Level>& tr);
 
 // Helper functions to convert legacy TR structs to native OpenTomb structs.
 
 glm::vec3 TR_vertex_to_arr(const loader::Vertex& tr_v);
-void TR_color_to_arr(std::array<GLfloat, 4> &v, const loader::FloatColor &tr_c);
+glm::vec4 TR_color_to_arr(const loader::FloatColor &tr_c);
 
 // Functions for getting various parameters from legacy TR structs.
 

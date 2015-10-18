@@ -26,7 +26,7 @@ namespace core
 {
 struct SpriteBuffer;
 struct BaseMesh;
-struct Frustum;
+class Frustum;
 } // namespace core
 
 struct StaticMesh;

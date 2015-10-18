@@ -6,22 +6,25 @@
 #include <cmath>
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <boost/log/trivial.hpp>
 
 namespace world
 {
 void Camera::apply()
 {
-    m_glProjMat = glm::perspectiveFov(glm::radians(m_fov), m_width, m_height, m_distNear, m_distFar);
+    m_projection = glm::perspectiveFov(glm::radians(m_fov), m_width, m_height, m_nearClipping, m_farClipping);
 
-    m_glViewMat = glm::lookAt(m_position, m_position+getViewDir(), getUpDir());
+    m_view = glm::lookAt(m_position, m_position+getViewDir(), getUpDir());
 
-    m_glViewProjMat = m_glProjMat * m_glViewMat;
+    m_viewProjection = m_projection * m_view;
+    updateFrustum();
 }
 
 void Camera::setFovAspect(glm::float_t fov, glm::float_t aspect)
 {
     m_fov = fov;
-    m_height = 2.0f * m_distNear * glm::tan(glm::radians(m_fov) / 2);
+    m_height = 2.0f * m_nearClipping * glm::tan(glm::radians(m_fov) / 2);
     m_width = m_height * aspect;
 }
 
@@ -54,33 +57,15 @@ void Camera::applyRotation()
     m_axes = glm::mat3_cast(q);
 }
 
-void Camera::recalcClipPlanes()
+void Camera::updateFrustum()
 {
-    frustum.planes.resize(6);
-
-    // Extract frustum planes from matrix
-    // Planes are in format: normal(xyz), offset(w)
-
-    auto matr = glm::transpose(m_glViewProjMat);
-
-    // right
-    frustum.planes[0].assign(matr[3] - matr[0]);
-    // left
-    frustum.planes[1].assign(matr[3] + matr[0]);
-    // bottom
-    frustum.planes[2].assign(matr[3] + matr[1]);
-    // top
-    frustum.planes[3].assign(matr[3] - matr[1]);
-    // far
-    frustum.planes[4].assign(matr[3] - matr[2]);
-    // near
-    frustum.planes[5].assign(matr[3] + matr[2]);
+    m_frustum.setFromMatrix(m_viewProjection);
 }
 
 Camera::Camera()
 {
-    m_width = m_height = 2.0f * m_distNear * glm::tan(glm::radians(m_fov) / 2);
+    m_width = m_height = 2.0f * m_nearClipping * glm::tan(glm::radians(m_fov) / 2);
 
-    recalcClipPlanes();
+    apply();
 }
 } // namespace world

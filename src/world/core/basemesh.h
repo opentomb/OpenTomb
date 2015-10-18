@@ -43,12 +43,22 @@ struct BaseMesh
     glm::vec3 m_center; //!< geometry center of mesh
     BoundingBox boundingBox; //!< AABB bounding volume
     glm::float_t m_radius; //!< radius of the bounding sphere
+
 #pragma pack(push,1)
     struct MatrixIndex
     {
         int8_t i = 0, j = 0;
+
+        explicit MatrixIndex() = default;
+
+        MatrixIndex(int8_t i_, int8_t j_)
+            : i(i_)
+            , j(j_)
+        {
+        }
     };
 #pragma pack(pop)
+
     std::vector<MatrixIndex> m_matrixIndices; //!< vertices map for skin mesh
 
     GLuint                m_vboVertexArray = 0;

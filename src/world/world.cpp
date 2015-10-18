@@ -208,13 +208,13 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const glm::vec3
         ent->m_inertiaAngular[0] = 0.0;
         ent->m_inertiaAngular[1] = 0.0;
 
-        ent->m_bf.fromModel(model);
+        ent->m_skeleton.fromModel(model);
 
         ent->setAnimation(0, 0);                                     // Set zero animation and zero frame
 
         Res_SetEntityProperties(ent);
         ent->rebuildBV();
-        ent->genRigidBody();
+        ent->m_skeleton.genRigidBody(ent.get(), ent->getCollisionShape(), ent->getCollisionType(), ent->m_transform);
 
         if(ent->getRoom() != nullptr)
         {

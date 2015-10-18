@@ -6,6 +6,8 @@
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <boost/log/trivial.hpp>
+
 #include "LuaState.h"
 
 #include "audio/settings.h"
@@ -51,9 +53,9 @@ void lua_DumpModel(int id)
         return;
     }
 
-    for(size_t i = 0; i < sm->mesh_count; i++)
+    for(size_t i = 0; i < sm->meshes.size(); i++)
     {
-        Console::instance().printf("mesh[%d] = %d", static_cast<int>(i), sm->mesh_tree[i].mesh_base->m_id);
+        Console::instance().printf("mesh[%d] = %d", static_cast<int>(i), sm->meshes[i].mesh_base->m_id);
     }
 }
 
@@ -61,7 +63,7 @@ void lua_DumpRoom(lua::Value id)
 {
     if(id.is<lua::Nil>())
     {
-        engine::dumpRoom(engine::engine_camera.m_currentRoom);
+        engine::dumpRoom(engine::engine_camera.getCurrentRoom());
         return;
     }
     if(id.is<lua::Integer>() && static_cast<uint32_t>(id) >= engine::engine_world.rooms.size())
@@ -91,7 +93,7 @@ void lua_SetRoomEnabled(int id, bool value)
 
 // Base engine functions
 
-void lua_SetModelCollisionMapSize(int id, int size)
+void lua_SetModelCollisionMapSize(int id, size_t size)
 {
     world::SkeletalModel* model = engine::engine_world.getModelByID(id);
     if(model == nullptr)
@@ -100,13 +102,13 @@ void lua_SetModelCollisionMapSize(int id, int size)
         return;
     }
 
-    if(size >= 0 && static_cast<size_t>(size) < model->mesh_count)
+    if(size < model->meshes.size())
     {
         model->collision_map.resize(size);
     }
 }
 
-void lua_SetModelCollisionMap(int id, int arg, int val)
+void lua_SetModelCollisionMap(int id, size_t arg, size_t val)
 {
     /// engine_world.skeletal_models[id] != engine::engine_world.getModelByID(lua_tointeger(lua, 1));
     world::SkeletalModel* model = engine::engine_world.getModelByID(id);
@@ -116,10 +118,8 @@ void lua_SetModelCollisionMap(int id, int arg, int val)
         return;
     }
 
-    if(   arg >= 0
-       && static_cast<size_t>(arg) < model->collision_map.size()
-       && val >= 0
-       && static_cast<size_t>(val) < model->mesh_count)
+    if(   arg < model->collision_map.size()
+       && val < model->meshes.size())
     {
         model->collision_map[arg] = val;
     }
@@ -145,9 +145,9 @@ void lua_SetEntityCollision(int id, bool val)
     if(ent)
     {
         if(val)
-            ent->enableCollision();
+            ent->m_skeleton.enableCollision();
         else
-            ent->disableCollision();
+            ent->m_skeleton.disableCollision();
     }
 }
 
@@ -162,11 +162,11 @@ void lua_SetEntityCollisionFlags(int id, lua::Value ctype, lua::Value enableColl
         ent->setCollisionType( static_cast<world::CollisionType>(ctype.toInt()) );
         if(enableCollision.to<lua::Boolean>())
         {
-            ent->enableCollision();
+            ent->m_skeleton.enableCollision();
         }
         else
         {
-            ent->disableCollision();
+            ent->m_skeleton.disableCollision();
         }
     }
     if(cshape.is<lua::Integer>())
@@ -281,7 +281,7 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
     glm::vec3 move = ent->applyGravity(util::MilliSeconds(static_cast<int>(time*1000)));
 
     engine::BtEngineClosestRayResultCallback cb(ent.get());
-    glm::vec3 from = glm::vec3(ent->m_transform * glm::vec4(ent->m_bf.getBoundingBox().getCenter(), 1.0f));
+    glm::vec3 from = glm::vec3(ent->m_transform * glm::vec4(ent->m_skeleton.getBoundingBox().getCenter(), 1.0f));
     from[2] = ent->m_transform[3][2];
     glm::vec3 to = from + move;
     //to[2] -= (ent->m_bf.bb_max[2] - ent->m_bf.bb_min[2]);
@@ -319,9 +319,9 @@ int lua_GetEntityModelID(int id)
     if(ent == nullptr)
         return -1;
 
-    if(ent->m_bf.getModel())
+    if(ent->m_skeleton.getModel())
     {
-        return ent->m_bf.getModel()->id;
+        return ent->m_skeleton.getModel()->id;
     }
     return -1;
 }
@@ -510,7 +510,7 @@ void lua_RemoveEntityRagdoll(int ent_id)
 
     if(ent)
     {
-        if(!ent->m_bt.bt_joints.empty())
+        if(!ent->m_skeleton.getModel()->bt_joints.empty())
         {
             ent->deleteRagdoll();
         }
@@ -771,7 +771,7 @@ void lua_SetAnimEndCommands(int id, int anim, lua::Value table)
            && table[i][3].is<lua::Number>()
            && table[i][4].is<lua::Number>())
         {
-            model->animations[anim].animCommands.push_back({table[i][1].toInt(),table[i][2].toInt(),table[i][3].toInt(),table[i][4].toInt()});
+            model->animations[anim].animCommands.push_back({static_cast<world::animation::AnimCommandOpcode>(table[i][1].toInt()),table[i][2].toInt(),table[i][3].toInt(),table[i][4].toInt()});
         }
         else
         {
@@ -822,7 +822,7 @@ void lua_SetAnimFrameCommands(int id, int anim, int frame, lua::Value table)
            && table[i][3].is<lua::Integer>()
            && table[i][4].is<lua::Integer>())
         {
-            model->animations[anim].keyFrames[frame].animCommands.push_back({ table[i][1].toInt(),table[i][2].toInt(),table[i][3].toInt(),table[i][4].toInt() });
+            model->animations[anim].keyFrames[frame].animCommands.push_back({ static_cast<world::animation::AnimCommandOpcode>(table[i][1].toInt()),table[i][2].toInt(),table[i][3].toInt(),table[i][4].toInt() });
         }
         else
         {
@@ -1095,19 +1095,16 @@ void lua_SetEntityScaling(int id, float x, float y, float z)
     {
         ent->m_scaling = { x,y,z };
 
-        if(ent->m_bf.getBoneCount()>0 && !ent->m_bt.bt_body.empty())
+        for(const world::animation::Bone& bone : ent->m_skeleton.getBones())
         {
-            for(size_t i = 0; i < ent->m_bf.getBoneCount(); i++)
-            {
-                if(ent->m_bt.bt_body[i])
-                {
-                    engine::bt_engine_dynamicsWorld->removeRigidBody(ent->m_bt.bt_body[i].get());
-                    ent->m_bt.bt_body[i]->getCollisionShape()->setLocalScaling(util::convert(ent->m_scaling));
-                    engine::bt_engine_dynamicsWorld->addRigidBody(ent->m_bt.bt_body[i].get());
+            if(!bone.bt_body)
+                continue;
 
-                    ent->m_bt.bt_body[i]->activate();
-                }
-            }
+            engine::bt_engine_dynamicsWorld->removeRigidBody(bone.bt_body.get());
+            bone.bt_body->getCollisionShape()->setLocalScaling(util::convert(ent->m_scaling));
+            engine::bt_engine_dynamicsWorld->addRigidBody(bone.bt_body.get());
+
+            bone.bt_body->activate();
         }
 
         ent->updateRigidBody(true);
@@ -1430,7 +1427,7 @@ void lua_SetEntityAnimFlag(int id, uint16_t mode)
         return;
     }
 
-    ent->m_bf.setAnimationMode(static_cast<world::animation::AnimationMode>(mode));
+    ent->m_skeleton.setAnimationMode(static_cast<world::animation::AnimationMode>(mode));
 }
 
 void lua_SetEntityBodyPartFlag(int id, int bone_id, int body_part_flag)
@@ -1443,13 +1440,13 @@ void lua_SetEntityBodyPartFlag(int id, int bone_id, int body_part_flag)
         return;
     }
 
-    if(bone_id < 0 || bone_id >= static_cast<int>(ent->m_bf.getBoneCount()))
+    if(bone_id < 0 || bone_id >= static_cast<int>(ent->m_skeleton.getBoneCount()))
     {
         Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return;
     }
 
-    ent->m_bf.setBodyPartFlag(bone_id, body_part_flag);
+    ent->m_skeleton.setBodyPartFlag(bone_id, body_part_flag);
 }
 
 void lua_SetModelBodyPartFlag(int id, int bone_id, int body_part_flag)
@@ -1462,13 +1459,13 @@ void lua_SetModelBodyPartFlag(int id, int bone_id, int body_part_flag)
         return;
     }
 
-    if((bone_id < 0) || (static_cast<size_t>(bone_id) >= model->mesh_count))
+    if((bone_id < 0) || (static_cast<size_t>(bone_id) >= model->meshes.size()))
     {
         Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return;
     }
 
-    model->mesh_tree[bone_id].body_part = body_part_flag;
+    model->meshes[bone_id].body_part = body_part_flag;
 }
 
 std::tuple<int16_t, int16_t, uint32_t> lua_GetEntityAnim(int id)
@@ -1482,9 +1479,9 @@ std::tuple<int16_t, int16_t, uint32_t> lua_GetEntityAnim(int id)
     }
 
     return std::make_tuple(
-                ent->m_bf.getCurrentAnimation(),
-                ent->m_bf.getCurrentFrame(),
-                static_cast<uint32_t>(ent->m_bf.getModel()->animations[ent->m_bf.getCurrentAnimation()].keyFrames.size())
+                ent->m_skeleton.getCurrentAnimation(),
+                ent->m_skeleton.getCurrentFrame(),
+                static_cast<uint32_t>(ent->m_skeleton.getModel()->animations[ent->m_skeleton.getCurrentAnimation()].keyFrames.size())
             );
 }
 
@@ -2002,7 +1999,7 @@ int lua_GetEntityState(int id)
         return -1;
     }
 
-    return static_cast<int>(ent->m_bf.getLastState());
+    return static_cast<int>(ent->m_skeleton.getLastState());
 }
 
 uint32_t lua_GetEntityModel(int id)
@@ -2015,7 +2012,7 @@ uint32_t lua_GetEntityModel(int id)
         return -1;
     }
 
-    return ent->m_bf.getModel()->id;
+    return ent->m_skeleton.getModel()->id;
 }
 
 void lua_SetEntityState(int id, int16_t value, lua::Value next)
@@ -2028,9 +2025,9 @@ void lua_SetEntityState(int id, int16_t value, lua::Value next)
         return;
     }
 
-    ent->m_bf.setNextState( static_cast<world::LaraState>(value) );
+    ent->m_skeleton.setNextState( static_cast<world::LaraState>(value) );
     if(next.is<lua::Integer>())
-        ent->m_bf.setLastState( static_cast<world::LaraState>(next.toInt()) );
+        ent->m_skeleton.setLastState( static_cast<world::LaraState>(next.toInt()) );
 }
 
 void lua_SetEntityRoomMove(int id, uint32_t room, uint16_t moveType, int dirFlag)
@@ -2074,7 +2071,7 @@ uint32_t lua_GetEntityMeshCount(int id)
         return 0;
     }
 
-    return static_cast<uint32_t>( ent->m_bf.getBoneCount() );
+    return static_cast<uint32_t>( ent->m_skeleton.getBoneCount() );
 }
 
 void lua_SetEntityMeshswap(int id_dest, int id_src)
@@ -2082,7 +2079,7 @@ void lua_SetEntityMeshswap(int id_dest, int id_src)
     std::shared_ptr<world::Entity>  ent_dest = engine::engine_world.getEntityByID(id_dest);
     world::SkeletalModel* model_src = engine::engine_world.getModelByID(id_src);
 
-    ent_dest->m_bf.copyMeshBinding(model_src);
+    ent_dest->m_skeleton.copyMeshBinding(model_src);
 }
 
 void lua_SetModelMeshReplaceFlag(int id, int bone, int flag)
@@ -2090,9 +2087,9 @@ void lua_SetModelMeshReplaceFlag(int id, int bone, int flag)
     world::SkeletalModel* sm = engine::engine_world.getModelByID(id);
     if(sm != nullptr)
     {
-        if(bone >= 0 && static_cast<size_t>(bone) < sm->mesh_count)
+        if(bone >= 0 && static_cast<size_t>(bone) < sm->meshes.size())
         {
-            sm->mesh_tree[bone].replace_mesh = flag;
+            sm->meshes[bone].replace_mesh = flag;
         }
         else
         {
@@ -2110,9 +2107,9 @@ void lua_SetModelAnimReplaceFlag(int id, int bone, bool flag)
     world::SkeletalModel* sm = engine::engine_world.getModelByID(id);
     if(sm != nullptr)
     {
-        if((bone >= 0) && (static_cast<size_t>(bone) < sm->mesh_count))
+        if((bone >= 0) && (static_cast<size_t>(bone) < sm->meshes.size()))
         {
-            sm->mesh_tree[bone].replace_anim = flag;
+            sm->meshes[bone].replace_anim = flag;
         }
         else
         {
@@ -2125,7 +2122,7 @@ void lua_SetModelAnimReplaceFlag(int id, int bone, bool flag)
     }
 }
 
-void lua_CopyMeshFromModelToModel(int id1, int id2, int bone1, int bone2)
+void lua_CopyMeshFromModelToModel(int id1, int id2, size_t bone1, size_t bone2)
 {
     world::SkeletalModel* sm1 = engine::engine_world.getModelByID(id1);
     if(sm1 == nullptr)
@@ -2141,9 +2138,9 @@ void lua_CopyMeshFromModelToModel(int id1, int id2, int bone1, int bone2)
         return;
     }
 
-    if((bone1 >= 0) && (static_cast<size_t>(bone1) < sm1->mesh_count) && (bone2 >= 0) && (static_cast<size_t>(bone2) < sm2->mesh_count))
+    if(bone1 < sm1->meshes.size() && bone2 < sm2->meshes.size())
     {
-        sm1->mesh_tree[bone1].mesh_base = sm2->mesh_tree[bone2].mesh_base;
+        sm1->meshes[bone1].mesh_base = sm2->meshes[bone2].mesh_base;
     }
     else
     {
@@ -2155,9 +2152,9 @@ void lua_CreateEntityGhosts(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-    if(ent && (ent->m_bf.getBoneCount() > 0))
+    if(ent && (ent->m_skeleton.getBoneCount() > 0))
     {
-        ent->createGhosts();
+        ent->m_skeleton.createGhosts(ent.get(), ent->m_transform);
     }
 }
 
@@ -2165,7 +2162,10 @@ void lua_PushEntityBody(int id, uint32_t body_number, float h_force, float v_for
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-    if(ent && (body_number < ent->m_bf.getBoneCount()) && (ent->m_bt.bt_body[body_number] != nullptr) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    if(   ent
+       && body_number < ent->m_skeleton.getBoneCount()
+       && ent->m_skeleton.getBones()[body_number].bt_body != nullptr
+       && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC) != 0 )
     {
         glm::float_t t = glm::radians(ent->m_angles[0]);
 
@@ -2175,10 +2175,10 @@ void lua_PushEntityBody(int id, uint32_t body_number, float h_force, float v_for
         btVector3 angle(-ang1 * h_force, ang2 * h_force, v_force);
 
         if(resetFlag)
-            ent->m_bt.bt_body[body_number]->clearForces();
+            ent->m_skeleton.getBones()[body_number].bt_body->clearForces();
 
-        ent->m_bt.bt_body[body_number]->setLinearVelocity(angle);
-        ent->m_bt.bt_body[body_number]->setAngularVelocity(angle / 1024.0);
+        ent->m_skeleton.getBones()[body_number].bt_body->setLinearVelocity(angle);
+        ent->m_skeleton.getBones()[body_number].bt_body->setAngularVelocity(angle / 1024.0);
     }
     else
     {
@@ -2205,7 +2205,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
     uint16_t argn = 3;
     bool dynamic = false;
 
-    if(ent && ent->m_bf.getBoneCount() >= body_number)
+    if(ent && ent->m_skeleton.getBoneCount() >= body_number)
     {
         for(lua_Unsigned i = 0; i < body_number; i++)
         {
@@ -2216,40 +2216,43 @@ int lua_SetEntityBodyMass(lua_State *lua)
                 mass = static_cast<glm::float_t>( lua_tonumber(lua, argn) );
             argn++;
 
-            if(ent->m_bt.bt_body[i])
-            {
-                engine::bt_engine_dynamicsWorld->removeRigidBody(ent->m_bt.bt_body[i].get());
+            world::animation::Bone& bone = ent->m_skeleton.bone(i);
 
-                ent->m_bt.bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+            if(!bone.bt_body)
+                continue;
 
-                ent->m_bt.bt_body[i]->setMassProps(mass, inertia);
+            engine::bt_engine_dynamicsWorld->removeRigidBody(bone.bt_body.get());
 
-                ent->m_bt.bt_body[i]->updateInertiaTensor();
-                ent->m_bt.bt_body[i]->clearForces();
+            bone.bt_body->getCollisionShape()->calculateLocalInertia(mass, inertia);
 
-                ent->m_bt.bt_body[i]->getCollisionShape()->setLocalScaling(util::convert(ent->m_scaling));
+            bone.bt_body->setMassProps(mass, inertia);
 
-                btVector3 factor = (mass > 0.0) ? btVector3(1.0, 1.0, 1.0) : btVector3(0.0, 0.0, 0.0);
-                ent->m_bt.bt_body[i]->setLinearFactor(factor);
-                ent->m_bt.bt_body[i]->setAngularFactor(factor);
+            bone.bt_body->updateInertiaTensor();
+            bone.bt_body->clearForces();
 
-                //ent->bt_body[i]->forceActivationState(DISABLE_DEACTIVATION);
+            bone.bt_body->getCollisionShape()->setLocalScaling(util::convert(ent->m_scaling));
 
-                //ent->bt_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
-                //ent->bt_body[i]->setCcdSweptSphereRadius(32.0);
+            btVector3 factor = (mass > 0.0) ? btVector3(1.0, 1.0, 1.0) : btVector3(0.0, 0.0, 0.0);
+            bone.bt_body->setLinearFactor(factor);
+            bone.bt_body->setAngularFactor(factor);
 
-                engine::bt_engine_dynamicsWorld->addRigidBody(ent->m_bt.bt_body[i].get());
+            //ent->bt_body[i]->forceActivationState(DISABLE_DEACTIVATION);
 
-                ent->m_bt.bt_body[i]->activate();
+            //ent->bt_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
+            //ent->bt_body[i]->setCcdSweptSphereRadius(32.0);
 
-                //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterGroup = 0xFFFF;
-                //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterMask  = 0xFFFF;
+            engine::bt_engine_dynamicsWorld->addRigidBody(bone.bt_body.get());
 
-                //ent->self->object_type = OBJECT_ENTITY;
-                //ent->bt_body[i]->setUserPointer(ent->self);
+            bone.bt_body->activate();
 
-                if(mass > 0.0) dynamic = true;
-            }
+            //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterGroup = 0xFFFF;
+            //ent->bt_body[i]->getBroadphaseHandle()->m_collisionFilterMask  = 0xFFFF;
+
+            //ent->self->object_type = OBJECT_ENTITY;
+            //ent->bt_body[i]->setUserPointer(ent->self);
+
+            if(mass > 0.0)
+                dynamic = true;
         }
 
         if(dynamic)
@@ -2275,7 +2278,10 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-    if(ent && (body_number < ent->m_bf.getBoneCount()) && (ent->m_bt.bt_body[body_number] != nullptr) && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    if(   ent
+       && body_number < ent->m_skeleton.getBoneCount()
+       && ent->m_skeleton.getBones()[body_number].bt_body != nullptr
+       && (ent->m_typeFlags & ENTITY_TYPE_DYNAMIC) != 0 )
     {
         glm::float_t t = glm::float_t(ent->m_angles[0]);
         glm::float_t ang1 = glm::sin(t);
@@ -2287,7 +2293,7 @@ void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfa
             ang3 = glm::min(glm::abs(vfactor.to<float>()), 1.0f);
         }
 
-        ent->m_bt.bt_body[body_number]->setLinearFactor(btVector3(glm::abs(ang1), glm::abs(ang2), ang3));
+        ent->m_skeleton.getBones()[body_number].bt_body->setLinearFactor(btVector3(glm::abs(ang1), glm::abs(ang2), ang3));
     }
     else
     {
@@ -2545,18 +2551,16 @@ void lua_SetFlipState(uint32_t group, bool state)
 
     if(engine::engine_world.flip_data[group].map == 0x1F)         // Check flipmap state.
     {
-        std::vector< std::shared_ptr<world::Room> >::iterator current_room = engine::engine_world.rooms.begin();
-
         if(engine::engine_world.engineVersion > loader::Engine::TR3)
         {
-            for(; current_room != engine::engine_world.rooms.end(); ++current_room)
+            for(std::shared_ptr<world::Room> currentRoom : engine::engine_world.rooms)
             {
-                if((*current_room)->alternate_group == group)    // Check if group is valid.
+                if(currentRoom->alternate_group == group)    // Check if group is valid.
                 {
                     if(state)
-                        (*current_room)->swapToAlternate();
+                        currentRoom->swapToAlternate();
                     else
-                        (*current_room)->swapToBase();
+                        currentRoom->swapToBase();
                 }
             }
 
@@ -2564,12 +2568,12 @@ void lua_SetFlipState(uint32_t group, bool state)
         }
         else
         {
-            for(; current_room != engine::engine_world.rooms.end(); ++current_room)
+            for(std::shared_ptr<world::Room> currentRoom : engine::engine_world.rooms)
             {
                 if(state)
-                    (*current_room)->swapToAlternate();
+                    currentRoom->swapToAlternate();
                 else
-                    (*current_room)->swapToBase();
+                    currentRoom->swapToBase();
             }
 
             engine::engine_world.flip_data[0].state = state;    // In TR1-3, state is always global.
@@ -2630,9 +2634,9 @@ void lua_genUVRotateAnimation(int id)
     if(!model)
         return;
 
-    if(model->mesh_tree.front().mesh_base->m_transparencyPolygons.empty())
+    if(model->meshes.front().mesh_base->m_transparencyPolygons.empty())
         return;
-    const world::core::Polygon& firstPolygon = model->mesh_tree.front().mesh_base->m_transparencyPolygons.front();
+    const world::core::Polygon& firstPolygon = model->meshes.front().mesh_base->m_transparencyPolygons.front();
     if(firstPolygon.anim_id != 0)
         return;
 
@@ -2668,7 +2672,7 @@ void lua_genUVRotateAnimation(int id)
     }
 
     seq->uvrotate_max = 0.5f * (v_max - v_min);
-    seq->uvrotate_speed = seq->uvrotate_max / static_cast<glm::float_t>(seq->frames.size());
+    seq->uvrotate_speed = seq->uvrotate_max / seq->frames.size();
 
     for(uint16_t j = 0; j < seq->frames.size(); j++)
     {
@@ -2678,10 +2682,10 @@ void lua_genUVRotateAnimation(int id)
         seq->frames[j].mat[2] = 0.0;
         seq->frames[j].mat[3] = 1.0;
         seq->frames[j].move[0] = 0.0;
-        seq->frames[j].move[1] = -(static_cast<glm::float_t>(j) * seq->uvrotate_speed);
+        seq->frames[j].move[1] = -j * seq->uvrotate_speed;
     }
 
-    for(world::core::Polygon& p : model->mesh_tree.front().mesh_base->m_transparencyPolygons)
+    for(world::core::Polygon& p : model->meshes.front().mesh_base->m_transparencyPolygons)
     {
         p.anim_id = static_cast<uint16_t>( engine::engine_world.anim_sequences.size() );
         for(world::core::Vertex& v : p.vertices)
@@ -3238,13 +3242,12 @@ int ScriptEngine::panic(lua_State *lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        fprintf(stderr, "Fatal lua error (no details provided).\n");
+        BOOST_LOG_TRIVIAL(error) << "Fatal lua error (no details provided)";
     }
     else
     {
-        fprintf(stderr, "Fatal lua error: %s\n", lua_tostring(lua, 1));
+        BOOST_LOG_TRIVIAL(error) << "Fatal lua error: " << lua_tostring(lua, 1);
     }
-    fflush(stderr);
     return 0;
 }
 

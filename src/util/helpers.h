@@ -19,7 +19,7 @@ inline glm::float_t wrapAngle(const glm::float_t value)
 template<typename T>
 inline bool fuzzyZero(T value) noexcept
 {
-    return value <= glm::epsilon<T>();
+    return glm::abs(value) <= glm::epsilon<T>();
 }
 
 template<typename T>

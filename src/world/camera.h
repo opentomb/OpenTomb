@@ -30,7 +30,7 @@ struct Room;
 namespace core
 {
 struct Polygon;
-struct Frustum;
+class Frustum;
 } // namespace core
 
 enum class CameraTarget
@@ -45,49 +45,25 @@ namespace
 {
 constexpr float MaxShakeDistance = 8192;
 constexpr float DefaultShakePower = 100;
-}
+const glm::float_t CameraRotationSpeed = glm::radians(1.0f);
+} // anonymous namespace
 
 class Camera
 {
+private:
     glm::vec3 m_position{ 0,0,0 };
     glm::mat3 m_axes = glm::mat3(1.0f);       // coordinate system axes
-public:
-    glm::vec3 m_angles{ 0,0,0 };
-    const glm::vec3& getPosition() const
-    {
-        return m_position;
-    }
-
-    void setPosition(const glm::vec3& pos)
-    {
-        m_position = pos;
-    }
-
-    const glm::vec3& getViewDir() const
-    {
-        return m_axes[1];
-    }
-
-    const glm::vec3& getRightDir() const
-    {
-        return m_axes[0];
-    }
-
-    const glm::vec3& getUpDir() const
-    {
-        return m_axes[2];
-    }
 
     glm::vec3 m_prevPos{ 0,0,0 };            // previous camera position
 
-    glm::mat4 m_glViewMat = glm::mat4(1.0f);
-    glm::mat4 m_glProjMat = glm::mat4(1.0f);
-    glm::mat4 m_glViewProjMat = glm::mat4(1.0f);
+    glm::mat4 m_view = glm::mat4(1.0f);
+    glm::mat4 m_projection = glm::mat4(1.0f);
+    glm::mat4 m_viewProjection = glm::mat4(1.0f);
 
-    core::Frustum frustum;               // camera frustum structure
+    core::Frustum m_frustum;
 
-    glm::float_t m_distNear = 1;
-    glm::float_t m_distFar = 65536;
+    glm::float_t m_nearClipping = 1;
+    glm::float_t m_farClipping = 65536;
 
     glm::float_t m_fov = 75;
     glm::float_t m_width;
@@ -96,9 +72,123 @@ public:
     glm::float_t m_shakeValue = 0;
     util::Duration m_shakeTime{0};
 
-    CameraTarget m_targetDir = CameraTarget::Front;//Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
+    CameraTarget m_targetDir = CameraTarget::Front; //Target rotation direction
 
     Room* m_currentRoom = nullptr;
+
+    glm::vec3 m_angles{ 0,0,0 };
+
+public:
+    const glm::vec3& getPosition() const noexcept
+    {
+        return m_position;
+    }
+
+    glm::vec3 getMovement() const noexcept
+    {
+        return m_position - m_prevPos;
+    }
+
+    void resetMovement() noexcept
+    {
+        m_prevPos = m_position;
+    }
+
+    void setPosition(const glm::vec3& pos) noexcept
+    {
+        m_position = pos;
+    }
+
+    const glm::vec3& getViewDir() const noexcept
+    {
+        return m_axes[1];
+    }
+
+    const glm::vec3& getRightDir() const noexcept
+    {
+        return m_axes[0];
+    }
+
+    const glm::vec3& getUpDir() const noexcept
+    {
+        return m_axes[2];
+    }
+
+    const glm::mat4& getProjection() const noexcept
+    {
+        return m_projection;
+    }
+
+    const glm::mat4& getView() const noexcept
+    {
+        return m_view;
+    }
+
+    const glm::mat4& getViewProjection() const noexcept
+    {
+        return m_viewProjection;
+    }
+
+    Room* getCurrentRoom() noexcept
+    {
+        return m_currentRoom;
+    }
+
+    void setCurrentRoom(Room* room) noexcept
+    {
+        m_currentRoom = room;
+    }
+
+    const core::Frustum& getFrustum() const noexcept
+    {
+        return m_frustum;
+    }
+
+    CameraTarget getTargetDir() const noexcept
+    {
+        return m_targetDir;
+    }
+
+    void setTargetDir(CameraTarget target) noexcept
+    {
+        m_targetDir = target;
+    }
+
+    glm::float_t getShakeValue() const noexcept
+    {
+        return m_shakeValue;
+    }
+
+    const util::Duration& getShakeTime() const noexcept
+    {
+        return m_shakeTime;
+    }
+
+    void setShakeTime(const util::Duration& d) noexcept
+    {
+        m_shakeTime = d;
+    }
+
+    const glm::vec3& getAngles() const noexcept
+    {
+        return m_angles;
+    }
+
+    void shake(glm::float_t currentAngle, glm::float_t targetAngle, const util::Duration& frameTime)
+    {
+        constexpr glm::float_t RotationSpeed = 2.0; //Speed of rotation
+
+        glm::float_t d_angle = m_angles[0] - targetAngle;
+        if(d_angle > util::Rad90)
+        {
+            d_angle -= CameraRotationSpeed;
+        }
+        if(d_angle < -util::Rad90)
+        {
+            d_angle += CameraRotationSpeed;
+        }
+        m_angles[0] = glm::mod(m_angles[0] + glm::atan(glm::sin(currentAngle - d_angle), glm::cos(currentAngle + d_angle)) * util::toSeconds(frameTime) * RotationSpeed, util::Rad360);
+    }
 
     Camera();
     Camera(const Camera&) = delete;
@@ -116,7 +206,7 @@ public:
         m_angles += v;
     }
 
-    void recalcClipPlanes();
+    void updateFrustum();
 };
 
 // Static camera / sink structure.

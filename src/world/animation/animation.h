@@ -1,11 +1,15 @@
 #pragma once
 
+#include "animcommands.h"
 #include "util/helpers.h"
 #include "world/core/boundingbox.h"
 #include "world/statecontroller.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+
+#include <BulletDynamics/btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <boost/assert.hpp>
 
@@ -19,7 +23,9 @@ namespace world
 struct Character;
 struct SkeletalModel;
 struct Entity;
-struct BtEntityData;
+struct RDSetup;
+enum class CollisionShape;
+enum class CollisionType;
 
 namespace core
 {
@@ -49,7 +55,7 @@ enum class AnimUpdate
 
 struct AnimCommand
 {
-    int cmdId;
+    AnimCommandOpcode cmdId;
     int param[3];
 };
 
@@ -59,7 +65,7 @@ struct AnimCommand
 struct AnimatedVertex
 {
     glm::vec3 position;
-    std::array<float, 4> color;
+    glm::vec4 color;
     glm::vec3 normal;
 };
 
@@ -210,9 +216,9 @@ struct Bone
 {
     Bone *parent;
     uint16_t index;
-    std::shared_ptr<core::BaseMesh> mesh_base;
+    std::shared_ptr<core::BaseMesh> mesh; //!< The mesh this bone deforms
     std::shared_ptr<core::BaseMesh> mesh_skin;
-    std::shared_ptr<core::BaseMesh> mesh_slot;
+    std::shared_ptr<core::BaseMesh> mesh_slot; //!< Optional additional mesh
     glm::vec3 offset;
 
     glm::quat qrotate;
@@ -220,6 +226,13 @@ struct Bone
     glm::mat4 full_transform; //!< Global transformation matrix
 
     uint32_t body_part; //!< flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
+
+    std::shared_ptr<btRigidBody> bt_body;
+    std::shared_ptr<btPairCachingGhostObject> ghostObject; // like Bullet character controller for penetration resolving.
+    std::shared_ptr<btCollisionShape> shape;
+    std::vector<btCollisionObject*> last_collisions;
+
+    ~Bone();
 };
 
 class Skeleton
@@ -233,7 +246,7 @@ class Skeleton
     SkeletalModel* m_model = nullptr;
     util::Duration m_frameTime{0}; //!< time in current frame
 
-    int16_t m_currentAnimation = 0; //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
+    uint16_t m_currentAnimation = 0;
     int16_t m_currentFrame = 0; //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
 
     glm::float_t m_lerp = 0;
@@ -244,6 +257,10 @@ class Skeleton
     LaraState m_nextState = LaraState::WALK_FORWARD;
 
     AnimationMode m_mode = AnimationMode::NormalControl;
+
+    btManifoldArray m_manifoldArray;
+
+    bool m_hasGhosts = false;
 
 public:
     void (*onFrame)(Character* ent, AnimUpdate state) = nullptr;
@@ -257,7 +274,7 @@ public:
     {
         return m_currentAnimation;
     }
-    void setCurrentAnimation(int16_t value) noexcept
+    void setCurrentAnimation(uint16_t value) noexcept
     {
         m_currentAnimation = value;
     }
@@ -320,6 +337,10 @@ public:
         return m_lastState;
     }
 
+    bool hasGhosts() const noexcept
+    {
+        return m_hasGhosts;
+    }
 
     void fromModel(SkeletalModel* m_model);
 
@@ -329,7 +350,7 @@ public:
      */
     void itemFrame(util::Duration time);
 
-    void updateCurrentBoneFrame();
+    void interpolate();
 
     const core::BoundingBox& getBoundingBox() const noexcept
     {
@@ -348,6 +369,11 @@ public:
     }
 
     const std::vector<Bone>& getBones() const noexcept
+    {
+        return m_bones;
+    }
+
+    std::vector<Bone>& bones() noexcept
     {
         return m_bones;
     }
@@ -396,9 +422,49 @@ public:
         return m_lerp;
     }
 
-    void updateTransform(const world::BtEntityData &bt, const glm::mat4 &transform);
+    const btManifoldArray& getManifoldArray() const noexcept
+    {
+        return m_manifoldArray;
+    }
+
+    btManifoldArray& manifoldArray() noexcept
+    {
+        return m_manifoldArray;
+    }
+
+    void updateTransform(const glm::mat4 &transform);
 
     void updateBoundingBox();
+
+    void createGhosts(Entity* entity, const glm::mat4& transform);
+
+    void cleanCollisionBodyParts(uint32_t parts_flags)
+    {
+        for(Bone& bone : m_bones)
+        {
+            if(bone.body_part & parts_flags)
+            {
+                bone.last_collisions.clear();
+            }
+        }
+    }
+
+    void cleanCollisionAllBodyParts()
+    {
+        for(Bone& bone : m_bones)
+        {
+            bone.last_collisions.clear();
+        }
+    }
+
+    void updateCurrentCollisions(const Entity* entity, const glm::mat4& transform);
+    bool createRagdoll(const RDSetup& setup);
+    void initCollisions(const glm::vec3& speed);
+    void updateRigidBody(const glm::mat4& transform);
+    btCollisionObject* getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t *curr_flag);
+    void genRigidBody(Entity* entity, CollisionShape collisionShape, CollisionType collisionType, const glm::mat4& transform);
+    void enableCollision();
+    void disableCollision();
 };
 
 } // namespace animation

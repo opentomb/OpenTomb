@@ -360,7 +360,6 @@ void display()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT);
 
     engine_camera.apply();
-    engine_camera.recalcClipPlanes();
     // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
     if(screen_info.show_debuginfo)
     {
@@ -411,7 +410,7 @@ void resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     gui::resize();
 
     engine_camera.setFovAspect(screen_info.fov, static_cast<glm::float_t>(nominalW) / static_cast<glm::float_t>(nominalH));
-    engine_camera.recalcClipPlanes();
+    engine_camera.updateFrustum();
 
     glViewport(0, 0, pixelsW, pixelsH);
 }
@@ -470,17 +469,17 @@ void showDebugInfo()
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
         */
         gui::drawText(30.0, 30.0, "curr_anim = %03d, last_st = %03d, next_st = %03d, speed=%f frame=%d",
-                      ent->m_bf.getCurrentAnimation(),
-                      ent->m_bf.getLastState(),
-                      ent->m_bf.getNextState(),
+                      ent->m_skeleton.getCurrentAnimation(),
+                      ent->m_skeleton.getLastState(),
+                      ent->m_skeleton.getNextState(),
                       ent->m_currentSpeed,
-                      ent->m_bf.getCurrentFrame()
+                      ent->m_skeleton.getCurrentFrame()
                       );
         gui::drawText(30.0, 50.0, "lerp_last_anim = %3d, lerp_last_frame = %3d, frtime = %.4f, lerp = %.4f, lstpos: %s, curpos: %s",
-                ent->m_bf.getLerpLastAnimation(),
-                ent->m_bf.getLerpLastFrame(),
-                ent->m_bf.getFrameTime(),
-                ent->m_bf.getLerp(),
+                ent->m_skeleton.getLerpLastAnimation(),
+                ent->m_skeleton.getLerpLastFrame(),
+                ent->m_skeleton.getFrameTime(),
+                ent->m_skeleton.getLerp(),
                 glm::to_string(ent->m_lerp_last_transform[3]).c_str(),
                 glm::to_string(ent->m_lerp_curr_transform[3]).c_str()
                 );
@@ -492,7 +491,7 @@ void showDebugInfo()
     {
         if(world::Entity* e = dynamic_cast<world::Entity*>(last_cont))
         {
-            gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", e->getId(), e->m_bf.getModel()->id);
+            gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", e->getId(), e->m_skeleton.getModel()->id);
         }
         else if(world::StaticMesh* sm = dynamic_cast<world::StaticMesh*>(last_cont))
         {
@@ -504,12 +503,12 @@ void showDebugInfo()
         }
     }
 
-    if(engine_camera.m_currentRoom != nullptr)
+    if(engine_camera.getCurrentRoom() != nullptr)
     {
-        world::RoomSector* rs = engine_camera.m_currentRoom->getSectorRaw(engine_camera.getPosition());
+        world::RoomSector* rs = engine_camera.getCurrentRoom()->getSectorRaw(engine_camera.getPosition());
         if(rs != nullptr)
         {
-            gui::drawText(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.m_currentRoom->getId(), rs->index_x, rs->index_y);
+            gui::drawText(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.getCurrentRoom()->getId(), rs->index_x, rs->index_y);
             gui::drawText(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != nullptr) ? (rs->sector_below->owner_room->getId()) : (-1), (rs->sector_above != nullptr) ? (rs->sector_above->owner_room->getId()) : (-1));
         }
     }
@@ -590,19 +589,19 @@ void storeEntityLerpTransforms()
 
             if(engine_world.character->m_lerp_skip)
             {
-                engine_world.character->m_bf.setLerpLastAnimation(engine_world.character->m_bf.getCurrentAnimation());
-                engine_world.character->m_bf.setLerpLastFrame(engine_world.character->m_bf.getCurrentFrame());
+                engine_world.character->m_skeleton.setLerpLastAnimation(engine_world.character->m_skeleton.getCurrentAnimation());
+                engine_world.character->m_skeleton.setLerpLastFrame(engine_world.character->m_skeleton.getCurrentFrame());
                 engine_world.character->m_lerp_last_transform = engine_world.character->m_lerp_curr_transform;
                 engine_world.character->m_lerp_skip = false;
             }
 
             // set bones to next interval step, this keeps the ponytail (bullet's dynamic interpolation) in sync with actor interpolation:
-            glm::float_t tmp = engine_world.character->m_bf.getLerp();
-            engine_world.character->m_bf.setLerp( tmp + world::animation::FrameRate / world::animation::GameLogicFrameRate );
-            engine_world.character->m_bf.updateCurrentBoneFrame();
+            glm::float_t tmp = engine_world.character->m_skeleton.getLerp();
+            engine_world.character->m_skeleton.setLerp( tmp + world::animation::FrameRate / world::animation::GameLogicFrameRate );
+            engine_world.character->m_skeleton.interpolate();
             engine_world.character->updateRigidBody(false);
             engine_world.character->ghostUpdate();
-            engine_world.character->m_bf.setLerp( tmp );
+            engine_world.character->m_skeleton.setLerp( tmp );
 
         }
     }
@@ -619,18 +618,18 @@ void storeEntityLerpTransforms()
 
                 if(entity->m_lerp_skip)
                 {
-                    entity->m_bf.setLerpLastAnimation(entity->m_bf.getCurrentAnimation());
-                    entity->m_bf.setLerpLastFrame(entity->m_bf.getCurrentFrame());
+                    entity->m_skeleton.setLerpLastAnimation(entity->m_skeleton.getCurrentAnimation());
+                    entity->m_skeleton.setLerpLastFrame(entity->m_skeleton.getCurrentFrame());
                     entity->m_lerp_last_transform = entity->m_lerp_curr_transform;
                     entity->m_lerp_skip = false;
                 }
 
-                glm::float_t tmp = entity->m_bf.getLerp();
-                entity->m_bf.setLerp( tmp + world::animation::FrameRate / world::animation::GameLogicFrameRate );
-                entity->m_bf.updateCurrentBoneFrame();
+                glm::float_t tmp = entity->m_skeleton.getLerp();
+                entity->m_skeleton.setLerp( tmp + world::animation::FrameRate / world::animation::GameLogicFrameRate );
+                entity->m_skeleton.interpolate();
                 entity->updateRigidBody(false);
                 entity->ghostUpdate();
-                entity->m_bf.setLerp( tmp );
+                entity->m_skeleton.setLerp( tmp );
             }
         }
     }
@@ -797,7 +796,7 @@ void dumpRoom(world::Room* r)
         {
             if(world::Entity* ent = dynamic_cast<world::Entity*>(cont))
             {
-                BOOST_LOG_TRIVIAL(debug) << "entity: id = " << ent->getId() << ", model = " << ent->m_bf.getModel()->id;
+                BOOST_LOG_TRIVIAL(debug) << "entity: id = " << ent->getId() << ", model = " << ent->m_skeleton.getModel()->id;
             }
         }
     }
@@ -986,7 +985,7 @@ int loadMap(const std::string& name)
 
     gui::drawLoadScreen(0);
 
-    engine_camera.m_currentRoom = nullptr;
+    engine_camera.setCurrentRoom( nullptr );
 
     render::renderer.hideSkyBox();
     render::renderer.resetWorld();
@@ -1189,7 +1188,7 @@ int execCmd(const char *ch)
         }
         else if(!strcmp(token.data(), "room_info"))
         {
-            if(world::Room* r = render::renderer.camera()->m_currentRoom)
+            if(world::Room* r = render::renderer.camera()->getCurrentRoom())
             {
                 sect = r->getSectorXYZ(render::renderer.camera()->getPosition());
                 Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->getId(), r->sectors_x, r->sectors_y);
