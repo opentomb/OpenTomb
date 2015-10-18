@@ -131,7 +131,7 @@ struct Room : public Object
     uint16_t                    sectors_y;
     std::vector<RoomSector> sectors;
 
-    std::vector<std::shared_ptr<Room>> near_room_list;
+    std::vector<Room*> near_room_list;
     std::vector<std::shared_ptr<Room>> overlapped_room_list;
     std::unique_ptr<btRigidBody> bt_body;
 
@@ -158,7 +158,7 @@ struct Room : public Object
     bool hasSector(int x, int y);//If this room contains a sector
     void addEntity(Entity *entity);
     bool removeEntity(Entity *entity);
-    void addToNearRoomsList(std::shared_ptr<Room> r);
+    void addToNearRoomsList(Room* r);
 
     bool isPointIn(const glm::vec3& dot)
     {

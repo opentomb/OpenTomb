@@ -1,5 +1,6 @@
 #pragma once
 
+#include "loader/datatypes.h"
 #include "util/helpers.h"
 
 #include <LinearMath/btQuaternion.h>
@@ -104,6 +105,25 @@ inline glm::vec3 convert(const btVector3& v)
 inline btVector3 convert(const glm::vec3& v)
 {
     return btVector3(v[0], v[1], v[2]);
+}
+
+inline glm::vec3 convert(const loader::Vertex& tr_v)
+{
+    glm::vec3 v;
+    v[0] = tr_v.x;
+    v[1] = -tr_v.z;
+    v[2] = tr_v.y;
+    return v;
+}
+
+inline glm::vec4 convert(const loader::FloatColor& tr_c)
+{
+    glm::vec4 v;
+    v[0] = tr_c.r * 2;
+    v[1] = tr_c.g * 2;
+    v[2] = tr_c.b * 2;
+    v[3] = tr_c.a * 2;
+    return v;
 }
 
 // glm has a bug in its implementation, comparing x<epsilon instead of abs(x)<epsilon

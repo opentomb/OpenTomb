@@ -84,9 +84,9 @@ bool Room::removeEntity(Entity* entity)
     return false;
 }
 
-void Room::addToNearRoomsList(std::shared_ptr<Room> r)
+void Room::addToNearRoomsList(Room* r)
 {
-    if(r && !isInNearRoomsList(*r) && getId() != r->getId() && !isOverlapped(r.get()))
+    if(r && !isInNearRoomsList(*r) && getId() != r->getId() && !isOverlapped(r))
     {
         near_room_list.push_back(r);
     }
@@ -101,7 +101,7 @@ bool Room::isInNearRoomsList(const Room& r1) const
 
     if(r1.near_room_list.size() >= near_room_list.size())
     {
-        for(const std::shared_ptr<Room>& r : near_room_list)
+        for(const Room* r : near_room_list)
         {
             if(r->getId() == r1.getId())
             {
@@ -111,7 +111,7 @@ bool Room::isInNearRoomsList(const Room& r1) const
     }
     else
     {
-        for(const std::shared_ptr<Room>& r : r1.near_room_list)
+        for(const Room* r : r1.near_room_list)
         {
             if(r->getId() == getId())
             {
@@ -321,9 +321,9 @@ void Room::swapPortals(std::shared_ptr<Room> dest_room)
     {
         for(Portal& p : r->portals) //For every portal in this room
         {
-            if(p.dest_room && p.dest_room->getId() == getId())//If a portal is linked to the input room
+            if(p.destination && p.destination->getId() == getId())//If a portal is linked to the input room
             {
-                p.dest_room = dest_room;//The portal destination room is the destination room!
+                p.destination = dest_room.get();//The portal destination room is the destination room!
                                         //Con_Printf("The current room %d! has room %d joined to it!", id, i);
             }
         }
@@ -352,7 +352,7 @@ bool Room::isJoined(Room* r2)
 {
     for(const Portal& p : portals)
     {
-        if(p.dest_room && p.dest_room->getId() == r2->getId())
+        if(p.destination && p.destination->getId() == r2->getId())
         {
             return true;
         }
@@ -360,7 +360,7 @@ bool Room::isJoined(Room* r2)
 
     for(const Portal& p : r2->portals)
     {
-        if(p.dest_room && p.dest_room->getId() == getId())
+        if(p.destination && p.destination->getId() == getId())
         {
             return true;
         }
@@ -375,18 +375,18 @@ void Room::buildNearRoomsList()
 
     for(const Portal& p : portals)
     {
-        addToNearRoomsList(p.dest_room);
+        addToNearRoomsList(p.destination);
     }
 
     auto nrl = near_room_list;
-    for(const std::shared_ptr<Room>& r : nrl)
+    for(const Room* r : nrl)
     {
         if(!r)
             continue;
 
         for(const Portal& p : r->portals)
         {
-            addToNearRoomsList(p.dest_room);
+            addToNearRoomsList(p.destination);
         }
     }
 }
@@ -425,7 +425,7 @@ void Room::genMesh(World* world, uint32_t room_index, const std::unique_ptr<load
     auto vertex = mesh->m_vertices.data();
     for(size_t i = 0; i < mesh->m_vertices.size(); i++, vertex++)
     {
-        vertex->position = TR_vertex_to_arr(tr_room->vertices[i].vertex);
+        vertex->position = util::convert(tr_room->vertices[i].vertex);
         vertex->normal = { 0,0,0 };                                          // paranoid
     }
 

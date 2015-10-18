@@ -1553,36 +1553,17 @@ namespace world
                 {
                     if(util::fuzzyZero(p.normal[2]))
                     {
-                        RoomSector* dst = p.dest_room ? p.dest_room->getSectorRaw(sector->position) : nullptr;
+                        RoomSector* dst = p.destination ? p.destination->getSectorRaw(sector->position) : nullptr;
                         RoomSector* orig_dst = engine::engine_world.rooms[sector->portal_to_room]->getSectorRaw(sector->position);
 
-                        if((dst != nullptr) && (dst->portal_to_room < 0) && (dst->floor != MeteringWallHeight) && (dst->ceiling != MeteringWallHeight) && (static_cast<uint32_t>(sector->portal_to_room) != p.dest_room->getId()) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
+                        if((dst != nullptr) && (dst->portal_to_room < 0) && (dst->floor != MeteringWallHeight) && (dst->ceiling != MeteringWallHeight) && (static_cast<uint32_t>(sector->portal_to_room) != p.destination->getId()) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, dst, p))
                         {
-                            sector->portal_to_room = p.dest_room->getId();
+                            sector->portal_to_room = p.destination->getId();
                         }
                     }
                 }
             }
         }
-    }
-
-    glm::vec3 TR_vertex_to_arr(const loader::Vertex& tr_v)
-    {
-        glm::vec3 v;
-        v[0] = tr_v.x;
-        v[1] = -tr_v.z;
-        v[2] = tr_v.y;
-        return v;
-    }
-
-    glm::vec4 TR_color_to_arr(const loader::FloatColor& tr_c)
-    {
-        glm::vec4 v;
-        v[0] = tr_c.r * 2;
-        v[1] = tr_c.g * 2;
-        v[2] = tr_c.b * 2;
-        v[3] = tr_c.a * 2;
-        return v;
     }
 
     RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
@@ -1856,9 +1837,11 @@ namespace world
             // Disable static mesh collision, if flag value is 3 (TR1) or all bounding box
             // coordinates are equal (TR2-5).
 
-            if((tr_static->flags == 3) ||
-               ((tr_static->collision_box[0].x == -tr_static->collision_box[0].y) && (tr_static->collision_box[0].y == tr_static->collision_box[0].z) &&
-                (tr_static->collision_box[1].x == -tr_static->collision_box[1].y) && (tr_static->collision_box[1].y == tr_static->collision_box[1].z)))
+            if(tr_static->flags == 3 ||
+               (    tr_static->collision_box[0].x == -tr_static->collision_box[0].y
+                 && tr_static->collision_box[0].y ==  tr_static->collision_box[0].z
+                 && tr_static->collision_box[1].x == -tr_static->collision_box[1].y
+                 && tr_static->collision_box[1].y ==  tr_static->collision_box[1].z ))
             {
                 r_static->setCollisionType(world::CollisionType::None);
             }
@@ -1921,7 +1904,7 @@ namespace world
             if((tr_room->sprites[i].texture >= 0) && (static_cast<uint32_t>(tr_room->sprites[i].texture) < world->sprites.size()))
             {
                 room->sprites[i].sprite = &world->sprites[tr_room->sprites[i].texture];
-                room->sprites[i].pos = TR_vertex_to_arr(tr_room->vertices[tr_room->sprites[i].vertex].vertex);
+                room->sprites[i].pos = util::convert(tr_room->vertices[tr_room->sprites[i].vertex].vertex);
                 room->sprites[i].pos += glm::vec3(room->transform[3]);
             }
         }
@@ -2100,24 +2083,10 @@ namespace world
         /*
          * portals loading / calculation!!!
          */
-        room->portals.resize(tr_room->portals.size());
-        for(size_t i = 0; i < room->portals.size(); i++)
+        for(size_t i = 0; i < tr_room->portals.size(); i++)
         {
-            const loader::Portal* tr_portal = &tr_room->portals[i];
-            Portal* p = &room->portals[i];
-            std::shared_ptr<Room> r_dest = world->rooms[tr_portal->adjoining_room];
-            p->dest_room = r_dest;
-            p->current_room = room;
-            for(int j=0; j<4; ++j)
-            {
-                p->vertices[j] = TR_vertex_to_arr(tr_portal->vertices[j]) + glm::vec3(room->transform[3]);
-                BOOST_LOG_TRIVIAL(debug) << "Room " << room->getId() << ", portal " << i << ": vertex[" << j << "]=" << p->vertices[j];
-            }
-            p->normal = TR_vertex_to_arr(tr_portal->normal);
-            BOOST_LOG_TRIVIAL(debug) << "Room " << room->getId() << ", portal " << i << ": normal=" << p->normal;
-
-            p->center = std::accumulate(p->vertices.begin(), p->vertices.end(), glm::vec3(0, 0, 0)) / static_cast<glm::float_t>(p->vertices.size());
-            BOOST_LOG_TRIVIAL(debug) << "Room " << room->getId() << ", portal " << i << ": center=" << p->center;
+            std::shared_ptr<Room> r_dest = world->rooms[tr_room->portals[i].adjoining_room];
+            room->portals.emplace_back(tr_room->portals[i], r_dest.get(), room->transform);
         }
 
         /*
@@ -2163,20 +2132,20 @@ namespace world
 
             btCollisionShape *cshape = BT_CSfromHeightmap(room->sectors, room_tween, true, true);
 
-            if(cshape)
-            {
-                btVector3 localInertia(0, 0, 0);
-                btTransform tr;
-                tr.setFromOpenGLMatrix(glm::value_ptr(room->transform));
-                btDefaultMotionState* motionState = new btDefaultMotionState(tr);
-                room->bt_body.reset(new btRigidBody(0.0, motionState, cshape, localInertia));
-                engine::bt_engine_dynamicsWorld->addRigidBody(room->bt_body.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-                room->bt_body->setUserPointer(room.get());
-                room->bt_body->setRestitution(1.0);
-                room->bt_body->setFriction(1.0);
-                room->setCollisionType(world::CollisionType::Static);                    // meshtree
-                room->setCollisionShape(world::CollisionShape::TriMesh);
-            }
+            if(!cshape)
+                continue;
+
+            btVector3 localInertia(0, 0, 0);
+            btTransform tr;
+            tr.setFromOpenGLMatrix(glm::value_ptr(room->transform));
+            btDefaultMotionState* motionState = new btDefaultMotionState(tr);
+            room->bt_body.reset(new btRigidBody(0.0, motionState, cshape, localInertia));
+            engine::bt_engine_dynamicsWorld->addRigidBody(room->bt_body.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+            room->bt_body->setUserPointer(room.get());
+            room->bt_body->setRestitution(1.0);
+            room->bt_body->setFriction(1.0);
+            room->setCollisionType(world::CollisionType::Static);                    // meshtree
+            room->setCollisionShape(world::CollisionShape::TriMesh);
         }
     }
 
@@ -2540,7 +2509,7 @@ namespace world
 
         for(int i = 0; i < numCorners; i++)
         {
-            p->vertices[i].position = TR_vertex_to_arr(tr_mesh->vertices[vertex_indices[i]]);
+            p->vertices[i].position = util::convert(tr_mesh->vertices[vertex_indices[i]]);
         }
         p->updateNormal();
 
@@ -2622,7 +2591,7 @@ namespace world
         auto vertex = mesh->m_vertices.data();
         for(size_t i = 0; i < mesh->m_vertices.size(); i++, vertex++)
         {
-            vertex->position = TR_vertex_to_arr(tr_mesh->vertices[i]);
+            vertex->position = util::convert(tr_mesh->vertices[i]);
             vertex->normal = {0,0,0};                                          // paranoid
         }
 
@@ -2773,7 +2742,7 @@ namespace world
 
         for(int i = 0; i < numCorners; i++)
         {
-            p->vertices[i].position = TR_vertex_to_arr(tr_room->vertices[vertices[i]].vertex);
+            p->vertices[i].position = util::convert(tr_room->vertices[vertices[i]].vertex);
         }
         p->updateNormal();
 
@@ -2781,7 +2750,7 @@ namespace world
         {
             mesh->m_vertices[vertices[i]].normal += p->plane.normal;
             p->vertices[i].normal = p->plane.normal;
-            p->vertices[i].color = TR_color_to_arr(tr_room->vertices[vertices[i]].colour);
+            p->vertices[i].color = util::convert(tr_room->vertices[vertices[i]].colour);
         }
 
         loader::ObjectTexture *tex = &tr->m_objectTextures[masked_texture];

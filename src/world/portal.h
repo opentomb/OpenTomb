@@ -1,5 +1,6 @@
 #pragma once
 
+#include "loader/datatypes.h"
 #include "util/vmath.h"
 
 #include <array>
@@ -9,17 +10,25 @@ namespace world
 {
 struct Room;
 
-/*
- * пока геометрия текущего портала и портала назначения совпадают.
- * далее будет проведена привязка камеры к взаимоориентации порталов
- */
 struct Portal
 {
-    std::array<glm::vec3, 4> vertices;                                                           // Оригинальные вершины портала
-    glm::vec3 normal;                                                           // уравнение плоскости оригинальных вершин (оно же нормаль)
-    glm::vec3 center = { 0,0,0 };                                                         // центр портала
-    std::shared_ptr<Room> dest_room = nullptr;                                                   // куда ведет портал
-    std::shared_ptr<Room> current_room;                                                // комната, где нааходится портал
+    Portal(const loader::Portal& portal, Room* dest, const glm::mat4& transform)
+        : vertices{{}}
+        , normal{util::convert(portal.normal)}
+        , center{}
+        , destination{dest}
+    {
+        for(int j=0; j<4; ++j)
+        {
+            vertices[j] = util::convert(portal.vertices[j]) + glm::vec3(transform[3]);
+        }
+        center = std::accumulate(vertices.begin(), vertices.end(), glm::vec3(0, 0, 0)) / static_cast<glm::float_t>(vertices.size());
+    }
+
+    std::array<glm::vec3, 4> vertices;
+    glm::vec3 normal;
+    glm::vec3 center = { 0,0,0 };
+    Room* destination = nullptr;
 };
 
 } // namespace world

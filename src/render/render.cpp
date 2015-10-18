@@ -917,7 +917,7 @@ struct PortalPath
 
     bool checkVisibility(const world::Portal* portal, const glm::vec3& cameraPosition, const world::core::Frustum& frustum)
     {
-        if(!portal->dest_room || !portal->dest_room->active)
+        if(!portal->destination || !portal->destination->active)
             return false; // no relevant destination
 
         if(glm::dot(portal->normal, portal->center - cameraPosition) >= 0)
@@ -944,10 +944,10 @@ struct PortalPath
         return true;
     }
 
-    std::shared_ptr<world::Room> getLastDestinationRoom() const
+    world::Room* getLastDestinationRoom() const
     {
         BOOST_ASSERT(!portals.empty());
-        return portals.back()->dest_room;
+        return portals.back()->destination;
     }
 
     const world::Portal* getLastPortal() const
@@ -994,7 +994,7 @@ void Render::processRoom(world::Room* room)
         if(!path.checkVisibility(&portal, m_cam->getPosition(), m_cam->getFrustum()))
             continue;
 
-        addRoom(portal.dest_room.get());
+        addRoom(portal.destination);
 
         toVisit.emplace(std::move(path));
     }
@@ -1009,7 +1009,7 @@ void Render::processRoom(world::Room* room)
         if(!visited.insert(currentPath.getLastPortal()).second)
             continue; // already tested
 
-        const auto room = currentPath.getLastDestinationRoom();
+        world::Room* room = currentPath.getLastDestinationRoom();
         bool roomIsVisible = false;
         for(const world::Portal& srcPortal : room->portals)
         {
@@ -1021,7 +1021,7 @@ void Render::processRoom(world::Room* room)
             toVisit.emplace(std::move(newPath));
         }
         if(roomIsVisible)
-            addRoom(room.get());
+            addRoom(room);
     }
 }
 

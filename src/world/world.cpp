@@ -306,11 +306,11 @@ Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
         return engine::engine_world.rooms[new_sector->portal_to_room]->checkFlip();
     }
 
-    for(const std::shared_ptr<Room>& r : room->near_room_list)
+    for(Room* r : room->near_room_list)
     {
         if(r->active && r->boundingBox.contains(new_pos))
         {
-            return r.get();
+            return r;
         }
     }
 

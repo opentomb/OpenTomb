@@ -145,11 +145,6 @@ void TR_GenRoomProperties(World *world, const std::unique_ptr<loader::Level>& tr
 void TR_GenBoxes(World *world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenCameras(World *world, const std::unique_ptr<loader::Level>& tr);
 
-// Helper functions to convert legacy TR structs to native OpenTomb structs.
-
-glm::vec3 TR_vertex_to_arr(const loader::Vertex& tr_v);
-glm::vec4 TR_color_to_arr(const loader::FloatColor &tr_c);
-
 // Functions for getting various parameters from legacy TR structs.
 
 void     TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_offset, animation::SkeletonKeyFrame* keyFrame);

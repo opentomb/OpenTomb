@@ -36,7 +36,7 @@ bool Frustum::intersects(const glm::vec3& a, const glm::vec3& b) const
 
 bool Frustum::isVisible(const Portal& portal) const
 {
-    if(!portal.dest_room)
+    if(!portal.destination)
         return false;
 
     if(intersects(portal.vertices[0], portal.vertices[1])) return true;
