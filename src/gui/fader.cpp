@@ -8,6 +8,8 @@
 #include <SDL2/SDL_surface.h>
 #include <SDL2/SDL_image.h>
 
+#include <boost/filesystem.hpp>
+
 #include <map>
 
 namespace gui
@@ -122,11 +124,11 @@ void Fader::SetAspect()
     }
 }
 
-bool Fader::SetTexture(const char *texture_path)
+bool Fader::SetTexture(const std::string& texture_path)
 {
 #ifdef __APPLE_CC__
     // Load the texture file using ImageIO
-    CGDataProviderRef provider = CGDataProviderCreateWithFilename(texture_path);
+    CGDataProviderRef provider = CGDataProviderCreateWithFilename(texture_path.c_str());
     CFDictionaryRef empty = CFDictionaryCreate(kCFAllocatorDefault, nullptr, nullptr, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     CGImageSourceRef source = CGImageSourceCreateWithDataProvider(provider, empty);
     CGDataProviderRelease(provider);
@@ -137,7 +139,7 @@ bool Fader::SetTexture(const char *texture_path)
     if(status != kCGImageStatusComplete)
     {
         CFRelease(source);
-        Console::instance().warning(SYSWARN_IMAGE_NOT_LOADED, texture_path, status);
+        Console::instance().warning(SYSWARN_IMAGE_NOT_LOADED, texture_path.c_str(), status);
         return false;
     }
 
@@ -189,10 +191,10 @@ bool Fader::SetTexture(const char *texture_path)
 
     SetAspect();
 
-    Console::instance().notify(SYSNOTE_LOADED_FADER, texture_path);
+    Console::instance().notify(SYSNOTE_LOADED_FADER, texture_path.c_str());
     return true;
 #else
-    SDL_Surface *surface = IMG_Load(texture_path);
+    SDL_Surface *surface = IMG_Load(texture_path.c_str());
     GLenum       texture_format;
     GLint        color_depth;
 
@@ -221,7 +223,7 @@ bool Fader::SetTexture(const char *texture_path)
         }
         else
         {
-            Console::instance().warning(SYSWARN_NOT_TRUECOLOR_IMG, texture_path);
+            Console::instance().warning(SYSWARN_NOT_TRUECOLOR_IMG, texture_path.c_str());
             SDL_FreeSurface(surface);
             return false;
         }
@@ -245,7 +247,7 @@ bool Fader::SetTexture(const char *texture_path)
     }
     else
     {
-        Console::instance().warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path, SDL_GetError());
+        Console::instance().warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path.c_str(), SDL_GetError());
         return false;
     }
 
@@ -261,7 +263,7 @@ bool Fader::SetTexture(const char *texture_path)
 
         SetAspect();
 
-        Console::instance().notify(SYSNOTE_LOADED_FADER, texture_path);
+        Console::instance().notify(SYSNOTE_LOADED_FADER, texture_path.c_str());
         SDL_FreeSurface(surface);
         return true;
     }
@@ -557,61 +559,34 @@ bool fadeStop(FaderType fader)
 
 bool fadeAssignPic(FaderType fader, const std::string& pic_name)
 {
-    if((fader >= FaderType::Effect) && (fader < FaderType::Sentinel))
+    if(fader < FaderType::Effect || fader >= FaderType::Sentinel)
+        return false;
+
+    boost::filesystem::path buf = pic_name;
+
+    ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
+    if(!boost::filesystem::is_regular_file(buf))
     {
-        char buf[MAX_ENGINE_PATH];
-
-        ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
-        strncpy(buf, pic_name.c_str(), MAX_ENGINE_PATH);
-        if(!engine::fileExists(buf, false))
+        buf.replace_extension(".bmp");
+        if(!boost::filesystem::is_regular_file(buf))
         {
-            size_t ext_len = 0;
-
-            for(; ext_len + 1 < pic_name.length(); ext_len++)
+            buf.replace_extension(".jpg");
+            if(!boost::filesystem::is_regular_file(buf))
             {
-                if(buf[pic_name.length() - ext_len - 1] == '.')
+                buf.replace_extension(".png");
+                if(!boost::filesystem::is_regular_file(buf))
                 {
-                    break;
-                }
-            }
-
-            if(ext_len + 1 == pic_name.length())
-            {
-                return false;
-            }
-
-            buf[pic_name.length() - ext_len + 0] = 'b';
-            buf[pic_name.length() - ext_len + 1] = 'm';
-            buf[pic_name.length() - ext_len + 2] = 'p';
-            buf[pic_name.length() - ext_len + 3] = 0;
-            if(!engine::fileExists(buf, false))
-            {
-                buf[pic_name.length() - ext_len + 0] = 'j';
-                buf[pic_name.length() - ext_len + 1] = 'p';
-                buf[pic_name.length() - ext_len + 2] = 'g';
-                if(!engine::fileExists(buf, false))
-                {
-                    buf[pic_name.length() - ext_len + 0] = 'p';
-                    buf[pic_name.length() - ext_len + 1] = 'n';
-                    buf[pic_name.length() - ext_len + 2] = 'g';
-                    if(!engine::fileExists(buf, false))
+                    buf.replace_extension(".tga");
+                    if(!boost::filesystem::is_regular_file(buf))
                     {
-                        buf[pic_name.length() - ext_len + 0] = 't';
-                        buf[pic_name.length() - ext_len + 1] = 'g';
-                        buf[pic_name.length() - ext_len + 2] = 'a';
-                        if(!engine::fileExists(buf, false))
-                        {
-                            return false;
-                        }
+                        return false;
                     }
                 }
             }
         }
-
-        return faderType[fader].SetTexture(buf);
     }
 
-    return false;
+    return faderType[fader].SetTexture(buf.string());
 }
 
 void fadeSetup(FaderType fader,

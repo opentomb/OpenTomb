@@ -42,6 +42,7 @@
 #include <glm/gtx/io.hpp>
 
 #include <boost/log/trivial.hpp>
+#include <boost/filesystem.hpp>
 
 using gui::Console;
 
@@ -1647,13 +1648,13 @@ namespace world
 
     void Res_AutoexecOpen(loader::Game engine_version)
     {
-        std::string temp_script_name = engine::getAutoexecName(engine_version, std::string());
+        std::string autoexecScript = engine::getAutoexecName(engine_version, std::string());
 
-        if(engine::fileExists(temp_script_name, false))
+        if(boost::filesystem::is_regular_file(autoexecScript))
         {
             try
             {
-                engine_lua.doFile(temp_script_name);
+                engine_lua.doFile(autoexecScript);
             }
             catch(lua::RuntimeError& error)
             {

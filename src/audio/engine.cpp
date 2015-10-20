@@ -15,6 +15,8 @@
 
 #include <glm/gtc/type_ptr.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/format.hpp>
 
 using gui::Console;
 
@@ -169,10 +171,10 @@ bool loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t samp
     return result;   // Zero means success.
 }
 
-bool loadALbufferFromFile(ALuint buf_number, const char *fname)
+bool loadALbufferFromFile(ALuint buf_number, const std::string& fname)
 {
     SF_INFO sfInfo;
-    SNDFILE* file = sf_open(fname, SFM_READ, &sfInfo);
+    SNDFILE* file = sf_open(fname.c_str(), SFM_READ, &sfInfo);
 
     if(!file)
     {
@@ -918,8 +920,8 @@ void Engine::load(const world::World* world, const std::unique_ptr<loader::Level
 void Engine::loadSampleOverrideInfo()
 {
     int num_samples, num_sounds;
-    char sample_name_mask[256];
-    if(!engine_lua.getOverridedSamplesInfo(&num_samples, &num_sounds, sample_name_mask))
+    std::string sample_name_mask;
+    if(!engine_lua.getOverridedSamplesInfo(&num_samples, &num_sounds, &sample_name_mask))
         return;
 
     size_t buffer_counter = 0;
@@ -934,11 +936,10 @@ void Engine::loadSampleOverrideInfo()
         {
             for(int j = 0; j < sample_count; j++, buffer_counter++)
             {
-                char sample_name[256];
-                snprintf(sample_name, 255, sample_name_mask, (sample_index + j));
-                if(engine::fileExists(sample_name))
+                std::string sampleName = (boost::format(sample_name_mask) % (sample_index+j)).str();
+                if(!boost::filesystem::is_regular_file(sampleName))
                 {
-                    loadALbufferFromFile(getBuffer(buffer_counter), sample_name);
+                    loadALbufferFromFile(getBuffer(buffer_counter), sampleName);
                 }
             }
         }

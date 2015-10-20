@@ -163,7 +163,7 @@ void initBullet();
 
 // Config parser
 
-void initConfig(const char *filename);
+void initConfig(const std::string &filename);
 
 // Core system routines - display and tick.
 
@@ -188,7 +188,6 @@ bool loadPCLevel(const std::string &name);
 
 // General level loading routines.
 
-bool fileExists(const std::string &name, bool Write = false);
 int  getLevelFormat(const std::string &name);
 int  loadMap(const std::string &name);
 

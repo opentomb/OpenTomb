@@ -77,7 +77,7 @@ public:
     void SetSpeed(util::Duration fade_speed, util::Duration fade_speed_secondary = util::MilliSeconds(200));
     void SetDelay(util::Duration delay_msec);
 
-    bool SetTexture(const char* texture_path);
+    bool SetTexture(const std::string &texture_path);
 
 private:
     void SetAspect();

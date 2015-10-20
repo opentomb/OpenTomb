@@ -94,7 +94,7 @@ add_library(GLM INTERFACE)
 target_include_directories(GLM INTERFACE ${GLM_INCLUDE_DIR})
 target_compile_definitions(GLM INTERFACE -DGLM_FORCE_RADIANS)
 
-find_package(Boost COMPONENTS system log REQUIRED)
+find_package(Boost COMPONENTS system log filesystem REQUIRED)
 add_library(Boost INTERFACE)
 target_include_directories(Boost INTERFACE ${Boost_INCLUDE_DIR})
 target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})

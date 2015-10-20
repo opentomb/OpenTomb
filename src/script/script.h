@@ -190,7 +190,7 @@ namespace script
 
         // Helper Lua functions. Not directly called from scripts.
 
-        bool getOverridedSamplesInfo(int *num_samples, int *num_sounds, char *sample_name_mask);
+        bool getOverridedSamplesInfo(int *num_samples, int *num_sounds, std::string *sample_name_mask);
         bool getOverridedSample(int sound_id, int *first_sample_number, int *samples_count);
 
         int  getGlobalSound(int global_sound_id);

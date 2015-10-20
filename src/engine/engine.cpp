@@ -14,8 +14,6 @@
 
 #include <glm/gtx/string_cast.hpp>
 
-#include <boost/exception/all.hpp>
-
 #if !defined(__MACOSX__)
 #include <SDL2/SDL_image.h>
 #endif
@@ -52,6 +50,8 @@
 
 #include <boost/log/trivial.hpp>
 #include <boost/format.hpp>
+#include <boost/exception/all.hpp>
+#include <boost/filesystem.hpp>
 
 using gui::Console;
 
@@ -765,43 +765,43 @@ void initBullet()
 
 void dumpRoom(world::Room* r)
 {
-    if(r != nullptr)
-    {
-        BOOST_LOG_TRIVIAL(debug) << boost::format("ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)")
-                                    % r->getId()
-                                    % r->sectors.shape()[0]
-                                    % r->sectors.shape()[1]
-                                    % r->boundingBox.min[2]
-                                    % r->boundingBox.max[2]
-                                    % r->transform[3][0]
-                                    % r->transform[3][1];
-        BOOST_LOG_TRIVIAL(debug) << boost::format("flag = 0x%X, alt_room = %d, base_room = %d")
-                                    % r->flags
-                                    % (r->alternate_room != nullptr ? r->alternate_room->getId() : -1)
-                                    % (r->base_room != nullptr ? r->base_room->getId() : -1);
-        for(const auto& column : r->sectors)
-        {
-            for(const world::RoomSector& rs : column)
-            {
-                BOOST_LOG_TRIVIAL(debug) << boost::format("(%d,%d) floor = %d, ceiling = %d, portal = %d")
-                                            % rs.index_x
-                                            % rs.index_y
-                                            % rs.floor
-                                            % rs.ceiling
-                                            % rs.portal_to_room;
-            }
-        }
+    if(!r)
+        return;
 
-        for(auto sm : r->static_mesh)
+    BOOST_LOG_TRIVIAL(debug) << boost::format("ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)")
+                                % r->getId()
+                                % r->sectors.shape()[0]
+                                % r->sectors.shape()[1]
+                                % r->boundingBox.min[2]
+                                % r->boundingBox.max[2]
+                                % r->transform[3][0]
+                                % r->transform[3][1];
+    BOOST_LOG_TRIVIAL(debug) << boost::format("flag = 0x%X, alt_room = %d, base_room = %d")
+                                % r->flags
+                                % (r->alternate_room != nullptr ? r->alternate_room->getId() : -1)
+                                % (r->base_room != nullptr ? r->base_room->getId() : -1);
+    for(const auto& column : r->sectors)
+    {
+        for(const world::RoomSector& rs : column)
         {
-            BOOST_LOG_TRIVIAL(debug) << "static_mesh = " << sm->getId();
+            BOOST_LOG_TRIVIAL(debug) << boost::format("(%d,%d) floor = %d, ceiling = %d, portal = %d")
+                                        % rs.index_x
+                                        % rs.index_y
+                                        % rs.floor
+                                        % rs.ceiling
+                                        % rs.portal_to_room;
         }
-        for(world::Object* cont : r->containers)
+    }
+
+    for(auto sm : r->static_mesh)
+    {
+        BOOST_LOG_TRIVIAL(debug) << "static_mesh = " << sm->getId();
+    }
+    for(world::Object* cont : r->containers)
+    {
+        if(world::Entity* ent = dynamic_cast<world::Entity*>(cont))
         {
-            if(world::Entity* ent = dynamic_cast<world::Entity*>(cont))
-            {
-                BOOST_LOG_TRIVIAL(debug) << "entity: id = " << ent->getId() << ", model = " << ent->m_skeleton.getModel()->id;
-            }
+            BOOST_LOG_TRIVIAL(debug) << "entity: id = " << ent->getId() << ", model = " << ent->m_skeleton.getModel()->id;
         }
     }
 }
@@ -870,30 +870,6 @@ void shutdown(int val)
     SDL_Quit();
 
     exit(val);
-}
-
-bool fileExists(const std::string& name, bool Write)
-{
-    FILE *ff;
-
-    if(Write)
-    {
-        ff = fopen(name.c_str(), "ab");
-    }
-    else
-    {
-        ff = fopen(name.c_str(), "rb");
-    }
-
-    if(!ff)
-    {
-        return false;
-    }
-    else
-    {
-        fclose(ff);
-        return true;
-    }
 }
 
 int getLevelFormat(const std::string& /*name*/)
@@ -981,7 +957,7 @@ bool loadPCLevel(const std::string& name)
 
 int loadMap(const std::string& name)
 {
-    if(!fileExists(name))
+    if(!boost::filesystem::is_regular_file(name))
     {
         Console::instance().warning(SYSWARN_FILE_NOT_FOUND, name.c_str());
         return 0;
@@ -1262,11 +1238,11 @@ int execCmd(const char *ch)
     return 0;
 }
 
-void initConfig(const char *filename)
+void initConfig(const std::string& filename)
 {
     initDefaultGlobals();
 
-    if((filename != nullptr) && fileExists(filename))
+    if(boost::filesystem::is_regular_file(filename))
     {
         script::ScriptEngine state;
         state.registerC("bind", &script::MainEngine::bindKey);                             // get and set key bindings

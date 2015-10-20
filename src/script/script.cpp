@@ -3554,12 +3554,12 @@ int script::MainEngine::getNumTracks()
     return call("getNumTracks", static_cast<int>(engine::engine_world.engineVersion));
 }
 
-bool script::MainEngine::getOverridedSamplesInfo(int *num_samples, int *num_sounds, char *sample_name_mask)
+bool script::MainEngine::getOverridedSamplesInfo(int *num_samples, int *num_sounds, std::string* sample_name_mask)
 {
     const char* realPath;
     lua::tie(realPath, *num_sounds, *num_samples) = call("getOverridedSamplesInfo", static_cast<int>(engine::engine_world.engineVersion));
 
-    strcpy(sample_name_mask, realPath);
+    *sample_name_mask = realPath;
 
     return *num_sounds != -1 && *num_samples != -1 && strcmp(realPath, "NONE") != 0;
 }
