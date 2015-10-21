@@ -966,7 +966,7 @@ int lua_DumpRoom(lua_State * lua)
     else
     {
         uint32_t id = lua_tointeger(lua, 1);
-        if(id >= engine_world.room_count)
+        if(id >= engine_world.rooms_count)
         {
             Con_Warning("wrong room id = %d", id);
             return 0;
@@ -1010,7 +1010,7 @@ int lua_SetRoomEnabled(lua_State * lua)
     }
 
     uint32_t id = lua_tointeger(lua, 1);
-    if(id >= engine_world.room_count)
+    if(id >= engine_world.rooms_count)
     {
         Con_Warning("wrong room id = %d", id);
         return 0;
@@ -3925,7 +3925,7 @@ int lua_SetEntityRoomMove(lua_State * lua)
     }
 
     uint32_t room = lua_tointeger(lua, 2);
-    if(!lua_isnil(lua, 2) && (room < engine_world.room_count))
+    if(!lua_isnil(lua, 2) && (room < engine_world.rooms_count))
     {
         room_p r = engine_world.rooms + room;
         if(ent == engine_world.Character)

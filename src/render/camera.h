@@ -33,6 +33,7 @@ typedef struct camera_state_s
     GLfloat                         target[3];
     GLfloat                         shake_value;
     GLfloat                         time;
+    GLfloat                         zoom;
 }camera_state_t, camera_state_p;
 
 
@@ -95,7 +96,7 @@ typedef struct flyby_camera_state_s
     int8_t                      sequence;
     int8_t                      index;
     uint16_t                    flags;
-    uint32_t                    room_id;
+    struct room_s              *room;
 }flyby_camera_state_t, *flyby_camera_state_p;
 
 typedef struct flyby_camera_sequence_s

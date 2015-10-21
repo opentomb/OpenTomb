@@ -1073,7 +1073,7 @@ bool Engine_LoadPCLevel(const char *name)
 
     Con_Notify("loaded PC level");
     Con_Notify("version = %d, map = \"%s\"", trv, buf);
-    Con_Notify("rooms count = %d", engine_world.room_count);
+    Con_Notify("rooms count = %d", engine_world.rooms_count);
 
     delete tr_level;
 

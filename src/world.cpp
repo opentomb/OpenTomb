@@ -89,7 +89,7 @@ void World_Prepare(world_p world)
     world->meshes_count = 0;
     world->sprites = NULL;
     world->sprites_count = 0;
-    world->room_count = 0;
+    world->rooms_count = 0;
     world->rooms = 0;
     world->flip_map = NULL;
     world->flip_state = NULL;
@@ -116,14 +116,14 @@ void World_Prepare(world_p world)
     world->tex_count = 0;
     world->textures = 0;
     world->room_boxes = NULL;
-    world->room_box_count = 0;
+    world->room_boxes_count = 0;
     world->cameras_sinks = NULL;
     world->cameras_sinks_count = 0;
     world->flyby_cameras = NULL;
     world->flyby_cameras_count = 0;
     world->flyby_camera_sequences = NULL;
     world->skeletal_models = NULL;
-    world->skeletal_model_count = 0;
+    world->skeletal_models_count = 0;
     world->sky_box = NULL;
     world->anim_commands = NULL;
     world->anim_commands_count = 0;
@@ -167,10 +167,10 @@ void World_Open(world_p world, class VT_Level *tr)
     World_GenCameras(world, tr);        // Generate cameras & sinks.
     Gui_DrawLoadScreen(460);
 
-    World_GenFlyByCameras(world, tr);
+    World_GenRooms(world, tr);          // Build all rooms
     Gui_DrawLoadScreen(480);
 
-    World_GenRooms(world, tr);          // Build all rooms
+    World_GenFlyByCameras(world, tr);
     Gui_DrawLoadScreen(500);
 
     World_GenRoomFlipMap(world);        // Generate room flipmaps
@@ -262,7 +262,7 @@ void World_Clear(world_p world)
     /* Now we can delete physics misc objects */
     Physics_CleanUpObjects();
 
-    for(uint32_t i=0;i<world->room_count;i++)
+    for(uint32_t i=0;i<world->rooms_count;i++)
     {
         Room_Clear(world->rooms+i);
     }
@@ -275,11 +275,11 @@ void World_Clear(world_p world)
     world->flip_state = NULL;
     world->flip_count = 0;
 
-    if(world->room_box_count)
+    if(world->room_boxes_count)
     {
         free(world->room_boxes);
         world->room_boxes = NULL;
-        world->room_box_count = 0;
+        world->room_boxes_count = 0;
     }
 
     if(world->cameras_sinks_count)
@@ -324,15 +324,15 @@ void World_Clear(world_p world)
         world->Character = NULL;
     }
 
-    if(world->skeletal_model_count)
+    if(world->skeletal_models_count)
     {
-        for(uint32_t i=0;i<world->skeletal_model_count;i++)
+        for(uint32_t i=0;i<world->skeletal_models_count;i++)
         {
             SkeletalModel_Clear(world->skeletal_models+i);
         }
         free(world->skeletal_models);
         world->skeletal_models = NULL;
-        world->skeletal_model_count = 0;
+        world->skeletal_models_count = 0;
     }
 
     /*mesh empty*/
@@ -402,7 +402,7 @@ uint32_t World_SpawnEntity(world_p world, uint32_t model_id, uint32_t room_id, f
                     vec3_copy(entity->angles, ang);
                     Entity_UpdateTransform(entity);
                 }
-                if(room_id < world->room_count)
+                if(room_id < world->rooms_count)
                 {
                     entity->self->room = world->rooms + room_id;
                     entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform+12);
@@ -440,7 +440,7 @@ uint32_t World_SpawnEntity(world_p world, uint32_t model_id, uint32_t room_id, f
                 vec3_copy(entity->angles, ang);
                 Entity_UpdateTransform(entity);
             }
-            if(room_id < world->room_count)
+            if(room_id < world->rooms_count)
             {
                 entity->self->room = world->rooms + room_id;
                 entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
@@ -598,7 +598,7 @@ struct skeletal_model_s *World_GetModelByID(world_p world, uint32_t id)
     long int i, min, max;
 
     min = 0;
-    max = world->skeletal_model_count - 1;
+    max = world->skeletal_models_count - 1;
     if(world->skeletal_models[min].id == id)
     {
         return world->skeletal_models + min;
@@ -657,7 +657,7 @@ struct skeletal_model_s* World_GetSkybox(world_p world)
 struct room_s *World_FindRoomByPos(world_p world, float pos[3])
 {
     room_p r = world->rooms;
-    for(uint32_t i = 0; i < world->room_count; i++, r++)
+    for(uint32_t i = 0; i < world->rooms_count; i++, r++)
     {
         if(r->active &&
            (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
@@ -782,7 +782,7 @@ void World_BuildOverlappedRoomsList(world_p world, struct room_s *room)
 {
     room->overlapped_room_list_size = 0;
 
-    for(uint32_t i = 0; i < world->room_count; i++)
+    for(uint32_t i = 0; i < world->rooms_count; i++)
     {
         if(Room_IsOverlapped(room, world->rooms + i))
         {
@@ -811,7 +811,7 @@ int World_SetFlipState(world_p world, uint32_t flip_index, uint32_t flip_state)
 
         if(world->version > TR_III)
         {
-            for(uint32_t i = 0; i < world->room_count; i++, current_room++)
+            for(uint32_t i = 0; i < world->rooms_count; i++, current_room++)
             {
                 if(current_room->content->alternate_group == flip_index)        // Check if group is valid.
                 {
@@ -830,7 +830,7 @@ int World_SetFlipState(world_p world, uint32_t flip_index, uint32_t flip_state)
         }
         else
         {
-            for(uint32_t i = 0; i < world->room_count; i++, current_room++)
+            for(uint32_t i = 0; i < world->rooms_count; i++, current_room++)
             {
                 if(flip_state)
                 {
@@ -942,7 +942,7 @@ void RBItemFree(void *x)
 void World_SwapRoomPortals(world_p world, struct room_s *room, struct room_s *dest_room)
 {
     //Update portals in room rooms
-    for(uint32_t i = 0; i < world->room_count; i++)//For every room in the world itself
+    for(uint32_t i = 0; i < world->rooms_count; i++)//For every room in the world itself
     {
         for(uint16_t j = 0; j < world->rooms[i].portals_count; j++)//For every portal in this room
         {
@@ -1049,7 +1049,7 @@ int lua_SetSectorPortal(lua_State * lua)
     }
 
     uint32_t p = lua_tointeger(lua, 4);
-    if(p < engine_world.room_count)
+    if(p < engine_world.rooms_count)
     {
         rs->portal_to_room = engine_world.rooms + p;
     }
@@ -1580,12 +1580,12 @@ void World_GenSprites(struct world_s *world, class VT_Level *tr)
 void World_GenBoxes(struct world_s *world, class VT_Level *tr)
 {
     world->room_boxes = NULL;
-    world->room_box_count = tr->boxes_count;
+    world->room_boxes_count = tr->boxes_count;
 
-    if(world->room_box_count)
+    if(world->room_boxes_count)
     {
-        world->room_boxes = (room_box_p)malloc(world->room_box_count * sizeof(room_box_t));
-        for(uint32_t i = 0; i < world->room_box_count; i++)
+        world->room_boxes = (room_box_p)malloc(world->room_boxes_count * sizeof(room_box_t));
+        for(uint32_t i = 0; i < world->room_boxes_count; i++)
         {
             world->room_boxes[i].overlap_index = tr->boxes[i].overlap_index;
             world->room_boxes[i].true_floor =-tr->boxes[i].true_floor;
@@ -1645,7 +1645,10 @@ void World_GenFlyByCameras(struct world_s *world, class VT_Level *tr)
             world->flyby_cameras[i].sequence        =  tr->flyby_cameras[i].sequence;
             world->flyby_cameras[i].index           =  tr->flyby_cameras[i].index;
             world->flyby_cameras[i].flags           =  tr->flyby_cameras[i].flags;
-            world->flyby_cameras[i].room_id         =  tr->flyby_cameras[i].room_id;
+            if((tr->flyby_cameras[i].room_id >= 0) && (tr->flyby_cameras[i].room_id < world->rooms_count))
+            {
+                world->flyby_cameras[i].room            =  world->rooms + tr->flyby_cameras[i].room_id;
+            }
 
             if((i + 1 == world->flyby_cameras_count) || (tr->flyby_cameras[i].sequence != tr->flyby_cameras[i + 1].sequence))
             {
@@ -2098,9 +2101,9 @@ void World_GenRoom(struct world_s *world, struct room_s *room, class VT_Level *t
 
 void World_GenRooms(struct world_s *world, class VT_Level *tr)
 {
-    world->room_count = tr->rooms_count;
-    room_p r = world->rooms = (room_p)malloc(world->room_count * sizeof(room_t));
-    for(uint32_t i = 0; i < world->room_count; i++, r++)
+    world->rooms_count = tr->rooms_count;
+    room_p r = world->rooms = (room_p)malloc(world->rooms_count * sizeof(room_t));
+    for(uint32_t i = 0; i < world->rooms_count; i++, r++)
     {
         r->id = i;
         World_GenRoom(world, r, tr);
@@ -2126,10 +2129,10 @@ void World_GenSkeletalModels(struct world_s *world, class VT_Level *tr)
     skeletal_model_p smodel;
     tr_moveable_t *tr_moveable;
 
-    world->skeletal_model_count = tr->moveables_count;
-    smodel = world->skeletal_models = (skeletal_model_p)calloc(world->skeletal_model_count, sizeof(skeletal_model_t));
+    world->skeletal_models_count = tr->moveables_count;
+    smodel = world->skeletal_models = (skeletal_model_p)calloc(world->skeletal_models_count, sizeof(skeletal_model_t));
 
-    for(uint32_t i = 0; i < world->skeletal_model_count; i++, smodel++)
+    for(uint32_t i = 0; i < world->skeletal_models_count; i++, smodel++)
     {
         tr_moveable = &tr->moveables[i];
         smodel->id = tr_moveable->object_id;
@@ -2159,7 +2162,7 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->angles[1] = 0.0;
         entity->angles[2] = 0.0;
         Entity_UpdateTransform(entity);
-        if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->room_count))
+        if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->rooms_count))
         {
             entity->self->room = world->rooms + tr_item->room;
             entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
@@ -2354,7 +2357,7 @@ void World_GenBaseItems(struct world_s* world)
 
 void World_GenSpritesBuffer(struct world_s *world)
 {
-    for (uint32_t i = 0; i < world->room_count; i++)
+    for (uint32_t i = 0; i < world->rooms_count; i++)
     {
         Room_GenSpritesBuffer(&world->rooms[i]);
     }
@@ -2371,7 +2374,7 @@ void World_GenRoomProperties(struct world_s *world, class VT_Level *tr)
         SDL_RWclose(f);
     }
 
-    for(uint32_t i = 0; i < world->room_count; i++, r++)
+    for(uint32_t i = 0; i < world->rooms_count; i++, r++)
     {
         if(r->alternate_room != NULL)
         {
@@ -2381,7 +2384,7 @@ void World_GenRoomProperties(struct world_s *world, class VT_Level *tr)
         // Fill heightmap and translate floordata.
         for(uint32_t j = 0; j < r->sectors_count; j++)
         {
-            Res_Sector_TranslateFloorData(world->rooms, world->room_count, r->sectors + j, tr);
+            Res_Sector_TranslateFloorData(world->rooms, world->rooms_count, r->sectors + j, tr);
             Trigger_BuildScripts(r->sectors[j].trigger, r->sectors[j].trig_index, script_dump_name);
         }
 
@@ -2391,7 +2394,7 @@ void World_GenRoomProperties(struct world_s *world, class VT_Level *tr)
         World_BuildOverlappedRoomsList(world, r);
 
         // Basic sector calculations.
-        Res_RoomSectorsCalculate(world->rooms, world->room_count, i, tr);
+        Res_RoomSectorsCalculate(world->rooms, world->rooms_count, i, tr);
     }
 }
 
@@ -2407,7 +2410,7 @@ void World_GenRoomCollision(struct world_s *world)
     }
     */
 
-    for(uint32_t i = 0; i < world->room_count; i++, r++)
+    for(uint32_t i = 0; i < world->rooms_count; i++, r++)
     {
         // Inbetween polygons array is later filled by loop which scans adjacent
         // sector heightmaps and fills the gaps between them, thus creating inbetween
@@ -2701,7 +2704,7 @@ void World_GenSamples(struct world_s *world, class VT_Level *tr)
 void World_FixRooms(struct world_s *world)
 {
     room_p r = world->rooms;
-    for(uint32_t i = 0;i < world->room_count; i++, r++)
+    for(uint32_t i = 0;i < world->rooms_count; i++, r++)
     {
         if(r->base_room != NULL)
         {
@@ -2712,7 +2715,7 @@ void World_FixRooms(struct world_s *world)
         // Hence, this part is commented.
 
         /*
-        if((r->portal_count == 0) && (world->room_count > 1))
+        if((r->portal_count == 0) && (world->rooms_count > 1))
         {
             Room_Disable(r);
         }
@@ -2725,7 +2728,7 @@ void World_MakeEntityItems(world_p world, struct RedBlackNode_s *n)
 {
     base_item_p item = (base_item_p)n->data;
 
-    for(uint32_t i = 0; i < world->room_count; i++)
+    for(uint32_t i = 0; i < world->rooms_count; i++)
     {
         engine_container_p cont = world->rooms[i].content->containers;
         for(; cont; cont = cont->next)

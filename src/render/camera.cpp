@@ -401,7 +401,7 @@ flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_
             ret->target_x->d[i] = start[i].target[0];
             ret->target_y->d[i] = start[i].target[1];
             ret->target_z->d[i] = start[i].target[2];
-            ret->fov->d[i] = start[i].fov;
+            ret->fov->d[i] = start[i].fov / 256.0f;
             ret->roll->d[i] = start[i].roll * M_PI / (180.0f * 2048.0f);
             ret->speed->d[i] = start[i].speed;
         }
@@ -414,7 +414,7 @@ flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_
         Spline_BuildCubic(ret->target_z);
         Spline_BuildCubic(ret->fov);
         Spline_BuildCubic(ret->roll);
-        Spline_BuildLine(ret->speed);
+        Spline_BuildCubic(ret->speed);
     }
 
     return ret;
@@ -459,10 +459,17 @@ void FlyBySequence_Clear(flyby_camera_sequence_p s)
 void FlyBySequence_SetCamera(flyby_camera_sequence_p s, camera_p cam, float t)
 {
     float to[3], d;
+    uint32_t index = t;
 
     cam->pos[0] = Spline_Get(s->pos_x, t);
     cam->pos[1] = Spline_Get(s->pos_y, t);
     cam->pos[2] = Spline_Get(s->pos_z, t);
+    if(index < s->pos_x->base_points_count)
+    {
+        cam->current_room = s->start[index].room;
+    }
+
+    Cam_SetFovAspect(cam, Spline_Get(s->fov, t), cam->aspect);
 
     to[0] = Spline_Get(s->target_x, t);
     to[1] = Spline_Get(s->target_y, t);

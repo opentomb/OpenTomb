@@ -32,10 +32,10 @@ typedef struct world_s
     uint32_t                        id;
     uint32_t                        version;
 
-    uint32_t                        room_count;
+    uint32_t                        rooms_count;
     struct room_s                  *rooms;
 
-    uint32_t                        room_box_count;
+    uint32_t                        room_boxes_count;
     struct room_box_s              *room_boxes;
     
     uint32_t                        flip_count;             // Number of flips
@@ -55,7 +55,7 @@ typedef struct world_s
     uint32_t                        sprites_count;          // Base sprites count
     struct sprite_s                *sprites;                // Base sprites data
 
-    uint32_t                        skeletal_model_count;   // number of base skeletal models
+    uint32_t                        skeletal_models_count;  // number of base skeletal models
     struct skeletal_model_s        *skeletal_models;        // base skeletal models data
 
     struct entity_s                *Character;              // this is an unique Lara's pointer =)

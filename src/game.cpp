@@ -492,6 +492,7 @@ void Cam_PlayFlyBy(float time)
             engine_camera_state.state = CAMERA_STATE_NORMAL;
             engine_camera_state.flyby = NULL;
             engine_camera_state.time = 0.0f;
+            Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
         }
     }
 }
@@ -507,14 +508,24 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         cam->pos[0] = engine_camera_state.sink->x;
         cam->pos[1] = engine_camera_state.sink->y;
         cam->pos[2] = engine_camera_state.sink->z;
+        if(engine_camera_state.sink->room_or_strength < engine_world.rooms_count)
+        {
+            cam->current_room = engine_world.rooms + engine_camera_state.sink->room_or_strength;
+        }
 
         Cam_LookTo(cam, engine_camera_state.target);
+        ///@TODO: check that zoom
+        if(engine_camera_state.zoom > 0.0f)
+        {
+            Cam_SetFovAspect(cam, screen_info.fov / engine_camera_state.zoom, cam->aspect);
+        }
         engine_camera_state.time -= engine_frame_time;
         if(engine_camera_state.time <= 0.0f)
         {
             engine_camera_state.state = CAMERA_STATE_NORMAL;
             engine_camera_state.time = 0.0f;
             engine_camera_state.sink = NULL;
+            Cam_SetFovAspect(cam, screen_info.fov, cam->aspect);
         }
         return;
     }
@@ -954,7 +965,7 @@ void Game_Prepare()
         engine_world.Character->character->statistics.secrets_game   = 0;
         engine_world.Character->character->statistics.secrets_level  = 0;
     }
-    else if(engine_world.room_count > 0)
+    else if(engine_world.rooms_count > 0)
     {
         // If there is no character present, move default camera position to
         // the first room (useful for TR1-3 cutscene levels).
@@ -1014,6 +1025,7 @@ void Game_SetCamera(uint32_t camera_id, int once, float timer, float zoom)
         engine_camera_state.state = CAMERA_STATE_FIXED;
         engine_camera_state.sink = engine_world.cameras_sinks + camera_id;
         engine_camera_state.time = timer;
+        engine_camera_state.zoom = zoom;
     }
 }
 

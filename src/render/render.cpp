@@ -130,7 +130,7 @@ void CRender::SetWorld(struct world_s *world)
 
     if(world)
     {
-        uint32_t list_size = world->room_count + 128;                           // magick 128 was added for debug and testing
+        uint32_t list_size = world->rooms_count + 128;                           // magick 128 was added for debug and testing
         if(r_list)
         {
             free(r_list);
@@ -147,7 +147,7 @@ void CRender::SetWorld(struct world_s *world)
         r_list_size = list_size;
         r_list_active_count = 0;
 
-        for(uint32_t i = 0; i < m_world->room_count; i++)
+        for(uint32_t i = 0; i < m_world->rooms_count; i++)
         {
             m_world->rooms[i].is_in_r_list = 0;
         }
@@ -258,7 +258,7 @@ void CRender::GenWorldList(struct camera_s *cam)
     else                                                                        // camera is out of all rooms
     {
         curr_room = m_world->rooms;                                             // draw full level. Yes - it is slow, but it is not gameplay - it is debug.
-        for(uint32_t i = 0; i < m_world->room_count; i++, curr_room++)
+        for(uint32_t i = 0; i < m_world->rooms_count; i++, curr_room++)
         {
             if(Frustum_IsAABBVisible(curr_room->bb_min, curr_room->bb_max, cam->frustum))
             {
