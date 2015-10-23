@@ -27,6 +27,7 @@ extern "C" {
 #include "skeletal_model.h"
 #include "entity.h"
 #include "script.h"
+#include "trigger.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "gameflow.h"
@@ -485,7 +486,13 @@ void Cam_PlayFlyBy(float time)
         engine_camera_state.time += time * speed / (1024.0f + 512.0f);
         if(engine_camera_state.time <= max_time)
         {
+            room_sector_p rs = NULL;
             FlyBySequence_SetCamera(engine_camera_state.flyby, &engine_camera, engine_camera_state.time);
+            rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
+            if(rs && rs->trigger)
+            {
+                Trigger_DoCommands(rs->trigger, NULL);
+            }
         }
         else
         {
@@ -519,13 +526,16 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         {
             Cam_SetFovAspect(cam, screen_info.fov / engine_camera_state.zoom, cam->aspect);
         }
-        engine_camera_state.time -= engine_frame_time;
-        if(engine_camera_state.time <= 0.0f)
+        if(engine_camera_state.time > 0.0f)
         {
-            engine_camera_state.state = CAMERA_STATE_NORMAL;
-            engine_camera_state.time = 0.0f;
-            engine_camera_state.sink = NULL;
-            Cam_SetFovAspect(cam, screen_info.fov, cam->aspect);
+            engine_camera_state.time -= engine_frame_time;
+            if(engine_camera_state.time <= 0.0f)
+            {
+                engine_camera_state.state = CAMERA_STATE_NORMAL;
+                engine_camera_state.time = 0.0f;
+                engine_camera_state.sink = NULL;
+                Cam_SetFovAspect(cam, screen_info.fov, cam->aspect);
+            }
         }
         return;
     }
@@ -1002,13 +1012,13 @@ void Game_PlayFlyBy(uint32_t sequence_id, int once)
 
 void Game_SetCameraTarget(uint32_t entity_id, float timer)
 {
-    if(engine_camera_state.state != CAMERA_STATE_LOOK_AT)
+    //if(engine_camera_state.state != CAMERA_STATE_LOOK_AT)
     {
         entity_p ent = World_GetEntityByID(&engine_world, entity_id);
         if(ent)
         {
             vec3_copy(engine_camera_state.target, ent->transform + 12);
-            if(engine_camera_state.state != CAMERA_STATE_FIXED)
+            if((engine_camera_state.state != CAMERA_STATE_FIXED)&& (timer > 0.0f))
             {
                 engine_camera_state.state = CAMERA_STATE_LOOK_AT;
                 engine_camera_state.time = timer;
@@ -1017,10 +1027,10 @@ void Game_SetCameraTarget(uint32_t entity_id, float timer)
     }
 }
 
-
+// if timer == 0 then camera set is permanent
 void Game_SetCamera(uint32_t camera_id, int once, float timer, float zoom)
 {
-    if((engine_camera_state.state != CAMERA_STATE_FIXED) && (camera_id < engine_world.cameras_sinks_count))
+    if(camera_id < engine_world.cameras_sinks_count)
     {
         engine_camera_state.state = CAMERA_STATE_FIXED;
         engine_camera_state.sink = engine_world.cameras_sinks + camera_id;
@@ -1034,6 +1044,7 @@ void Game_StopFlyBy()
 {
     engine_camera_state.state = CAMERA_STATE_NORMAL;
     engine_camera_state.flyby = NULL;
+    Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
 }
 
 

@@ -885,7 +885,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
 
                         switch(command->function)
                         {
-                            case TR_FD_TRIGFUNC_CAMERATARGET:
+                            case TR_FD_TRIGFUNC_SET_CAMERA:
                                 {
                                     command->cam_index = (*entry) & 0x007F;
                                     entry++;
@@ -911,7 +911,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                             case TR_FD_TRIGFUNC_FLIPMAP:
                             case TR_FD_TRIGFUNC_FLIPON:
                             case TR_FD_TRIGFUNC_FLIPOFF:
-                            case TR_FD_TRIGFUNC_LOOKAT:
+                            case TR_FD_TRIGFUNC_SET_TARGET:
                             case TR_FD_TRIGFUNC_ENDLEVEL:
                             case TR_FD_TRIGFUNC_PLAYTRACK:
                             case TR_FD_TRIGFUNC_FLIPEFFECT:

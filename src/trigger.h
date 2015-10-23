@@ -51,12 +51,12 @@
 // Native trigger function types.
 
 #define TR_FD_TRIGFUNC_OBJECT           0x00
-#define TR_FD_TRIGFUNC_CAMERATARGET     0x01
+#define TR_FD_TRIGFUNC_SET_CAMERA       0x01
 #define TR_FD_TRIGFUNC_UWCURRENT        0x02
 #define TR_FD_TRIGFUNC_FLIPMAP          0x03
 #define TR_FD_TRIGFUNC_FLIPON           0x04
 #define TR_FD_TRIGFUNC_FLIPOFF          0x05
-#define TR_FD_TRIGFUNC_LOOKAT           0x06
+#define TR_FD_TRIGFUNC_SET_TARGET       0x06
 #define TR_FD_TRIGFUNC_ENDLEVEL         0x07
 #define TR_FD_TRIGFUNC_PLAYTRACK        0x08
 #define TR_FD_TRIGFUNC_FLIPEFFECT       0x09

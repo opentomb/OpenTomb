@@ -28,14 +28,17 @@ extern "C" {
 
 inline uint32_t Entity_GetSectorStatus(entity_p ent)
 {
-    return ((ent->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7);
+    return (ent)?((ent->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7):(0);
 }
 
 
 inline void Entity_SetSectorStatus(entity_p ent, uint16_t status)
 {
-    ent->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_SSTATUS);
-    ent->trigger_layout ^=  ((uint8_t)status) << 7;   // sector_status  - 10000000
+    if(ent)
+    {
+        ent->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_SSTATUS);
+        ent->trigger_layout ^=  ((uint8_t)status) << 7;   // sector_status  - 10000000
+    }
 }
 
 
@@ -69,44 +72,12 @@ function clearBodies()
 end
 
 
--- Plays specified flyby. Only valid in TR4-5.
-function playFlyby(flyby_index, once)
-    if(getLevelVersion() < TR_IV) then return 0 end;
-    print("FLYBY: index = " .. flyby_index .. " once = " .. once);
-end
-
-
 -- Plays specified cutscene. Only valid in retail TR4-5.
 function playCutscene(cutscene_index)
     if(getLevelVersion() < TR_IV) then return 0 end;
     print("CUTSCENE: index = " .. cutscene_index);
 end
  */
-
-
-bool Trigger_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
-{
-    // Fool-proof check for entity existence. Fixes LOTS of stray non-existent
-    // entity #256 occurences in original games (primarily TR4-5).
-    /*if(!World_GetEntityByID(&engine_world, entity_index))
-    {
-        return true;
-    }*/
-
-    int32_t *curr_table_index = lookup_table;
-
-    while(*curr_table_index != -1)
-    {
-        if(*curr_table_index == (int32_t)entity_index)
-        {
-            return true;
-        }
-        curr_table_index++;
-    }
-
-    *curr_table_index = (int32_t)entity_index;
-    return false;
-}
 
 ///@TODO: move here TickEntity with Inversing entity state... see carefully heavy irregular cases
 void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activator)
@@ -117,9 +88,6 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
         int action_type         = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
         int header_condition    = 1;                        // by default condition = true
         int mask_mode           = TRIGGER_OP_OR;            // Activation mask by default.
-        int32_t ent_lookup_table[64];
-
-        memset(ent_lookup_table, 0xFF, sizeof(int32_t)*64);
 
         // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
         // some specific entity classes.
@@ -147,7 +115,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     action_type = TR_ACTIONTYPE_ANTI;
                 }
                 // Check move type for triggering entity.
-                header_condition = (entity_activator->move_type == MOVE_ON_FLOOR);  // Set additional condition.
+                header_condition = entity_activator && (entity_activator->move_type == MOVE_ON_FLOOR);  // Set additional condition.
                 break;
 
             case TR_FD_TRIGTYPE_SWITCH:
@@ -175,7 +143,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
             case TR_FD_TRIGTYPE_COMBAT:
                 // Check weapon status for triggering entity.
-                header_condition = (entity_activator->character) && (entity_activator->character->weapon_current_state > 0);
+                header_condition = entity_activator && entity_activator->character && (entity_activator->character->weapon_current_state > 0);
                 break;
 
             case TR_FD_TRIGTYPE_DUMMY:
@@ -192,17 +160,17 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             case TR_FD_TRIGTYPE_MONKEY:
             case TR_FD_TRIGTYPE_CLIMB:
                 // Check move type for triggering entity.
-                header_condition = (trigger->sub_function == TR_FD_TRIGTYPE_MONKEY)?(entity_activator->move_type == MOVE_MONKEYSWING):(entity_activator->move_type == MOVE_CLIMBING);  // Set additional condition.
+                header_condition = entity_activator && ((trigger->sub_function == TR_FD_TRIGTYPE_MONKEY)?(entity_activator->move_type == MOVE_MONKEYSWING):(entity_activator->move_type == MOVE_CLIMBING));  // Set additional condition.
                 break;
 
             case TR_FD_TRIGTYPE_TIGHTROPE:
                 // Check state range for triggering entity.
-                header_condition = ((entity_activator->state_flags >= TR_STATE_LARA_TIGHTROPE_IDLE) && (entity_activator->state_flags <= TR_STATE_LARA_TIGHTROPE_EXIT));
+                header_condition = entity_activator && ((entity_activator->state_flags >= TR_STATE_LARA_TIGHTROPE_IDLE) && (entity_activator->state_flags <= TR_STATE_LARA_TIGHTROPE_EXIT));
                 break;
 
             case TR_FD_TRIGTYPE_CRAWLDUCK:
                 // Check state range for triggering entity.
-                header_condition = ((entity_activator->state_flags >= TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN) && (entity_activator->state_flags <= TR_ANIMATION_LARA_CRAWL_SMASH_LEFT));
+                header_condition = entity_activator && ((entity_activator->state_flags >= TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN) && (entity_activator->state_flags <= TR_ANIMATION_LARA_CRAWL_SMASH_LEFT));
                 break;
         }
 
@@ -221,6 +189,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
         //int only_continue_events = 0;
         int switch_sectorstatus = 0;
         uint32_t switch_mask = 0;
+        trigger_command_p prev_command = NULL;
         for(trigger_command_p command = trigger->commands; command; command = command->next)
         {
             entity_p trig_entity = World_GetEntityByID(&engine_world, command->operands);
@@ -276,8 +245,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 else    /// end if (action_type == TR_ACTIONTYPE_SWITCH)
                                 {
                                     // Ordinary type case (e.g. heavy switch).
-                                    switch_sectorstatus = (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
-                                    switch_mask = (entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK);
+                                    switch_sectorstatus = (entity_activator)?((entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7):(0);
+                                    switch_mask = (entity_activator)?(entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK):(0);
                                     // Trigger activation mask is here filtered through activator's own mask.
                                     switch_mask = (switch_mask == 0)?(0x1F & trigger->mask):(switch_mask & trigger->mask);
 
@@ -320,17 +289,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 break;
                         };
                     }
-                    else if(!Trigger_IsEntityProcessed(ent_lookup_table, command->operands))
+                    else if(!prev_command || (prev_command->operands != command->operands))
                     {
-                        // In many original Core Design levels, level designers left dublicated entity activation operands.
-                        // This results in setting same activation mask twice, effectively blocking entity from activation.
-                        // To prevent this, a lookup table was implemented to know if entity already had its activation
-                        // command added.
-
-                        // Other item operands are simply parsed as activation functions. Switch case is special, because
-                        // function is fed with activation mask argument derived from activator mask filter (switch_mask),
-                        // and also we need to process deactivation in a same way as activation, excluding resetting timer
-                        // field. This is needed for two-way switch combinations (e.g. Palace Midas).
                         if(activator == TR_ACTIVATOR_SWITCH)
                         {
                             if(action_type == TR_ACTIONTYPE_ANTI)
@@ -356,23 +316,28 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     }
                     break;
 
-                case TR_FD_TRIGFUNC_CAMERATARGET:
-                    ///snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", command->cam_index, command->cam_timer, command->once, command->cam_zoom);
-                    Game_SetCamera(command->cam_index, command->once, command->cam_timer, command->cam_zoom);
+                case TR_FD_TRIGFUNC_SET_CAMERA:
+                    //if(command->cam_timer > 0.0f)
+                    {
+                        Game_SetCamera(command->cam_index, command->once, command->cam_timer, command->cam_zoom);
+                    }
                     break;
 
                 case TR_FD_TRIGFUNC_UWCURRENT:
-                    if(entity_activator->move_type == MOVE_ON_WATER)
+                    if(entity_activator)
                     {
-                        if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
+                        if(entity_activator->move_type == MOVE_ON_WATER)
                         {
-                            Entity_SetAnimation(entity_activator, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0, -1);
-                            entity_activator->move_type = MOVE_UNDERWATER;
+                            if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
+                            {
+                                Entity_SetAnimation(entity_activator, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0, -1);
+                                entity_activator->move_type = MOVE_UNDERWATER;
+                            }
                         }
-                    }
-                    else if(entity_activator->move_type == MOVE_UNDERWATER)
-                    {
-                        Entity_MoveToSink(entity_activator, command->operands);
+                        else if(entity_activator->move_type == MOVE_UNDERWATER)
+                        {
+                            Entity_MoveToSink(entity_activator, command->operands);
+                        }
                     }
                     break;
 
@@ -403,7 +368,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     World_SetFlipState(&engine_world, command->operands, 0);
                     break;
 
-                case TR_FD_TRIGFUNC_LOOKAT:
+                case TR_FD_TRIGFUNC_SET_TARGET:
                     Game_SetCameraTarget(command->operands, trigger->timer);
                     break;
 
@@ -447,6 +412,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     Con_Printf("Unknown trigger function: 0x%X", command->function);
                     break;
             };
+
+            prev_command = command;
         }
 
         if(trigger->once)
@@ -478,11 +445,6 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
         int action_type = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
         int condition   = 0;                        // No condition by default.
         int mask_mode   = TRIGGER_OP_XOR;           // Activation mask by default.
-
-        // Processed entities lookup array initialization.
-
-        int32_t ent_lookup_table[64];
-        memset(ent_lookup_table, 0xFF, sizeof(int32_t)*64);
 
         // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
         // some specific entity classes.
@@ -576,6 +538,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
 
         // Now parse operand chain for trigger function!
         int argn = 0;
+        trigger_command_p prev_command = NULL;
         for(trigger_command_p command = trigger->commands; command; command = command->next)
         {
             switch(command->function)
@@ -638,12 +601,11 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
 
                         strcat(script, buf);
                     }
-                    else if(!Trigger_IsEntityProcessed(ent_lookup_table, command->operands))
+                    else if(!prev_command || (prev_command->operands != command->operands))
                     {
                         // In many original Core Design levels, level designers left dublicated entity activation operands.
                         // This results in setting same activation mask twice, effectively blocking entity from activation.
-                        // To prevent this, a lookup table was implemented to know if entity already had its activation
-                        // command added.
+                        // To prevent this, we compare previous item_id and current item_id.
                         // Other item operands are simply parsed as activation functions. Switch case is special, because
                         // function is fed with activation mask argument derived from activator mask filter (switch_mask),
                         // and also we need to process deactivation in a same way as activation, excluding resetting timer
@@ -666,7 +628,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                     argn++;
                     break;
 
-                case TR_FD_TRIGFUNC_CAMERATARGET:
+                case TR_FD_TRIGFUNC_SET_CAMERA:
                     {
                         snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", command->cam_index, command->cam_timer, command->once, command->cam_zoom);
                         strcat(single_events, buf);
@@ -707,7 +669,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                     strcat(single_events, buf);
                     break;
 
-                case TR_FD_TRIGFUNC_LOOKAT:
+                case TR_FD_TRIGFUNC_SET_TARGET:
                     snprintf(buf, 128, "   setCamTarget(%d, %d); \n", command->operands, trigger->timer);
                     strcat(single_events, buf);
                     break;
@@ -750,6 +712,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                 default: // UNKNOWN!
                     break;
             };
+            prev_command = command;
         }
 
         if(script[0])
