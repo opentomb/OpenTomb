@@ -259,7 +259,7 @@ std::shared_ptr<Room> World::findRoomByPosition(const glm::vec3& pos)
 {
     for(auto r : rooms)
     {
-        if(r->active && r->boundingBox.contains(pos))
+        if(r->m_active && r->m_boundingBox.contains(pos))
         {
             return r;
         }
@@ -274,15 +274,15 @@ Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
         return engine::engine_world.findRoomByPosition(new_pos).get();
     }
 
-    if(room->active &&
-       (new_pos[0] >= room->boundingBox.min[0]) && (new_pos[0] < room->boundingBox.max[0]) &&
-       (new_pos[1] >= room->boundingBox.min[1]) && (new_pos[1] < room->boundingBox.max[1]))
+    if(room->m_active &&
+       (new_pos[0] >= room->m_boundingBox.min[0]) && (new_pos[0] < room->m_boundingBox.max[0]) &&
+       (new_pos[1] >= room->m_boundingBox.min[1]) && (new_pos[1] < room->m_boundingBox.max[1]))
     {
-        if((new_pos[2] >= room->boundingBox.min[2]) && (new_pos[2] < room->boundingBox.max[2]))
+        if((new_pos[2] >= room->m_boundingBox.min[2]) && (new_pos[2] < room->m_boundingBox.max[2]))
         {
             return room;
         }
-        else if(new_pos[2] >= room->boundingBox.max[2])
+        else if(new_pos[2] >= room->m_boundingBox.max[2])
         {
             RoomSector* orig_sector = room->getSectorRaw(new_pos);
             if(orig_sector->sector_above != nullptr)
@@ -290,7 +290,7 @@ Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
                 return orig_sector->sector_above->owner_room->checkFlip();
             }
         }
-        else if(new_pos[2] < room->boundingBox.min[2])
+        else if(new_pos[2] < room->m_boundingBox.min[2])
         {
             RoomSector* orig_sector = room->getSectorRaw(new_pos);
             if(orig_sector->sector_below != nullptr)
@@ -306,9 +306,9 @@ Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
         return engine::engine_world.rooms[new_sector->portal_to_room]->checkFlip();
     }
 
-    for(Room* r : room->near_room_list)
+    for(Room* r : room->m_nearRooms)
     {
-        if(r->active && r->boundingBox.contains(new_pos))
+        if(r->m_active && r->m_boundingBox.contains(new_pos))
         {
             return r;
         }
@@ -336,15 +336,15 @@ RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, const glm::vec3&
 
     if(room != nullptr)
     {
-        if(!room->active)
+        if(!room->m_active)
         {
-            if((room->base_room != nullptr) && (room->base_room->active))
+            if((room->m_baseRoom != nullptr) && (room->m_baseRoom->m_active))
             {
-                room = room->base_room;
+                room = room->m_baseRoom;
             }
-            else if((room->alternate_room != nullptr) && (room->alternate_room->active))
+            else if((room->m_alternateRoom != nullptr) && (room->m_alternateRoom->m_active))
             {
-                room = room->alternate_room;
+                room = room->m_alternateRoom;
             }
         }
     }
@@ -353,14 +353,14 @@ RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, const glm::vec3&
         return nullptr;
     }
 
-    if(!room->active)
+    if(!room->m_active)
     {
         return nullptr;
     }
 
-    x = static_cast<int>(pos[0] - room->transform[3][0]) / 1024;
-    y = static_cast<int>(pos[1] - room->transform[3][1]) / 1024;
-    if(x < 0 || static_cast<size_t>(x) >= room->sectors.shape()[0] || y < 0 || static_cast<size_t>(y) >= room->sectors.shape()[1])
+    x = static_cast<int>(pos[0] - room->m_modelMatrix[3][0]) / 1024;
+    y = static_cast<int>(pos[1] - room->m_modelMatrix[3][1]) / 1024;
+    if(x < 0 || static_cast<size_t>(x) >= room->m_sectors.shape()[0] || y < 0 || static_cast<size_t>(y) >= room->m_sectors.shape()[1])
     {
         return nullptr;
     }
@@ -368,7 +368,7 @@ RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, const glm::vec3&
     // Column index system
     // X - column number, Y - string number
 
-    ret = &room->sectors[x][y];
+    ret = &room->m_sectors[x][y];
     return ret;
 }
 

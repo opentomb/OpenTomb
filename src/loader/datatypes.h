@@ -765,7 +765,7 @@ struct RoomStaticMesh
 // Also, underwater environment can be considered as additional
 // reverb flag, so overall amount is 6.
 
-enum class ReverbInfo : uint8_t
+enum class ReverbType : uint8_t
 {
     Outside,         // EFX_REVERB_PRESET_CITY
     SmallRoom,       // EFX_REVERB_PRESET_LIVINGROOM
@@ -814,7 +814,7 @@ struct Room
     // Water scheme is used with various room options, for example, R and M room flags in TRLE.
     // Also, it specifies lighting scheme, when 0x4000 vertex attribute is set.
 
-    ReverbInfo reverb_info;
+    ReverbType reverb_info;
 
     // Reverb info is used in TR3-5 and contains index that specifies reverb type.
     // 0 - Outside, 1 - Small room, 2 - Medium room, 3 - Large room, 4 - Pipe.
@@ -906,7 +906,7 @@ struct Room
         room.alternate_group = 0;   // Doesn't exist in TR1-3
 
         room.flags = reader.readU16();
-        room.reverb_info = ReverbInfo::MediumRoom;
+        room.reverb_info = ReverbType::MediumRoom;
 
         room.light_colour.r = room.intensity1 / 32767.0f;
         room.light_colour.g = room.intensity1 / 32767.0f;
@@ -978,11 +978,11 @@ struct Room
 
         if(room.flags & 0x0020)
         {
-            room.reverb_info = ReverbInfo::Outside;
+            room.reverb_info = ReverbType::Outside;
         }
         else
         {
-            room.reverb_info = ReverbInfo::MediumRoom;
+            room.reverb_info = ReverbType::MediumRoom;
         }
 
         room.light_colour.r = room.intensity1 / 16384.0f;
@@ -1064,7 +1064,7 @@ struct Room
         // Only in TR3-5
 
         room.water_scheme = reader.readU8();
-        room.reverb_info = static_cast<ReverbInfo>( reader.readU8() );
+        room.reverb_info = static_cast<ReverbType>( reader.readU8() );
 
         reader.skip(1);   // Alternate_group override?
 
@@ -1138,7 +1138,7 @@ struct Room
         // Only in TR3-5
 
         room.water_scheme = reader.readU8();
-        room.reverb_info = static_cast<ReverbInfo>( reader.readU8() );
+        room.reverb_info = static_cast<ReverbType>( reader.readU8() );
 
         // Only in TR4-5
 
@@ -1208,7 +1208,7 @@ struct Room
             std::cerr << "read_tr5_room: num_static_meshes > 512\n";
         }
 
-        room.reverb_info = static_cast<ReverbInfo>( reader.readU8() );
+        room.reverb_info = static_cast<ReverbType>( reader.readU8() );
         room.alternate_group = reader.readU8();
         room.water_scheme = static_cast<uint8_t>(reader.readU16());
 

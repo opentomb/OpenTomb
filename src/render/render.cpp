@@ -421,12 +421,12 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, cons
     world::Room* room = entity->getRoom();
 
     GLfloat ambient_component[4];
-    ambient_component[0] = room->ambient_lighting[0];
-    ambient_component[1] = room->ambient_lighting[1];
-    ambient_component[2] = room->ambient_lighting[2];
+    ambient_component[0] = room->m_ambientLighting[0];
+    ambient_component[1] = room->m_ambientLighting[1];
+    ambient_component[2] = room->m_ambientLighting[2];
     ambient_component[3] = 1.0f;
 
-    if(room->flags & TR_ROOM_FLAG_WATER)
+    if(room->m_flags & TR_ROOM_FLAG_WATER)
     {
         engine::engine_world.calculateWaterTint(ambient_component, false);
     }
@@ -441,9 +441,9 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, cons
     memset(innerRadiuses, 0, sizeof(innerRadiuses));
     memset(outerRadiuses, 0, sizeof(outerRadiuses));
 
-    for(uint32_t i = 0; i < room->lights.size() && current_light_number < EntityShaderLightsLimit; i++)
+    for(uint32_t i = 0; i < room->m_lights.size() && current_light_number < EntityShaderLightsLimit; i++)
     {
-        world::core::Light *current_light = &room->lights[i];
+        world::core::Light *current_light = &room->m_lights[i];
 
         glm::vec3 xyz = glm::vec3(entity->m_transform[3]) - current_light->position;
         glm::float_t distance = glm::length(xyz);
@@ -454,7 +454,7 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, cons
         colors[current_light_number*4 + 2] = std::min(std::max(current_light->colour[2], 0.0f), 1.0f);
         colors[current_light_number*4 + 3] = std::min(std::max(current_light->colour[3], 0.0f), 1.0f);
 
-        if(room->flags & TR_ROOM_FLAG_WATER)
+        if(room->m_flags & TR_ROOM_FLAG_WATER)
         {
             engine::engine_world.calculateWaterTint(&colors[current_light_number * 4], false);
         }
@@ -613,11 +613,11 @@ void Render::renderHair(std::shared_ptr<world::Character> entity, const glm::mat
  */
 void Render::renderRoom(const world::Room* room, const glm::mat4 &modelViewMatrix, const glm::mat4 &modelViewProjectionMatrix, const glm::mat4 &projection)
 {
-    if(!m_skipRoom && room->mesh)
+    if(!m_skipRoom && room->m_mesh)
     {
-        glm::mat4 modelViewProjectionTransform = modelViewProjectionMatrix * room->transform;
+        glm::mat4 modelViewProjectionTransform = modelViewProjectionMatrix * room->m_modelMatrix;
 
-        UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(room->light_mode == 1, room->flags & 1);
+        UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(room->m_lightMode == 1, room->m_flags & 1);
 
         float tint[4];
         engine::engine_world.calculateWaterTint(tint, true);
@@ -627,13 +627,13 @@ void Render::renderRoom(const world::Room* room, const glm::mat4 &modelViewMatri
         glUniform1f(shader->current_tick, static_cast<GLfloat>(SDL_GetTicks()));
         glUniform1i(shader->sampler, 0);
         glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(modelViewProjectionTransform));
-        renderMesh(room->mesh);
+        renderMesh(room->m_mesh);
     }
 
-    if(!room->static_mesh.empty())
+    if(!room->m_staticMeshes.empty())
     {
         glUseProgram(m_shaderManager->getStaticMeshShader()->program);
-        for(auto sm : room->static_mesh)
+        for(auto sm : room->m_staticMeshes)
         {
             if(sm->was_rendered)
             {
@@ -651,7 +651,7 @@ void Render::renderRoom(const world::Room* room, const glm::mat4 &modelViewMatri
             auto tint = sm->tint;
 
             //If this static mesh is in a water room
-            if(room->flags & TR_ROOM_FLAG_WATER)
+            if(room->m_flags & TR_ROOM_FLAG_WATER)
             {
                 engine::engine_world.calculateWaterTint(tint.data(), false);
             }
@@ -661,9 +661,9 @@ void Render::renderRoom(const world::Room* room, const glm::mat4 &modelViewMatri
         }
     }
 
-    if(!room->containers.empty())
+    if(!room->m_objects.empty())
     {
-        for(world::Object* cont : room->containers)
+        for(world::Object* cont : room->m_objects)
         {
             world::Entity* ent = dynamic_cast<world::Entity*>(cont);
             if(!ent)
@@ -680,7 +680,7 @@ void Render::renderRoom(const world::Room* room, const glm::mat4 &modelViewMatri
 
 void Render::renderRoomSprites(const world::Room* room, const glm::mat4 &modelViewMatrix, const glm::mat4 &projectionMatrix)
 {
-    if(!room->sprites.empty() && room->sprite_buffer)
+    if(!room->m_sprites.empty() && room->m_spriteBuffer)
     {
         SpriteShaderDescription *shader = m_shaderManager->getSpriteShader();
         glUseProgram(shader->program);
@@ -688,19 +688,19 @@ void Render::renderRoomSprites(const world::Room* room, const glm::mat4 &modelVi
         glUniformMatrix4fv(shader->projection, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
         glUniform1i(shader->sampler, 0);
 
-        room->sprite_buffer->data->bind();
+        room->m_spriteBuffer->data->bind();
 
         size_t offset = 0;
-        for(uint32_t texture = 0; texture < room->sprite_buffer->num_texture_pages; texture++)
+        for(uint32_t texture = 0; texture < room->m_spriteBuffer->num_texture_pages; texture++)
         {
-            if(room->sprite_buffer->element_count_per_texture[texture] == 0)
+            if(room->m_spriteBuffer->element_count_per_texture[texture] == 0)
             {
                 continue;
             }
 
             glBindTexture(GL_TEXTURE_2D, m_world->textures[texture]);
-            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(room->sprite_buffer->element_count_per_texture[texture]), GL_UNSIGNED_SHORT, reinterpret_cast<GLvoid *>(offset * sizeof(uint16_t)));
-            offset += room->sprite_buffer->element_count_per_texture[texture];
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(room->m_spriteBuffer->element_count_per_texture[texture]), GL_UNSIGNED_SHORT, reinterpret_cast<GLvoid *>(offset * sizeof(uint16_t)));
+            offset += room->m_spriteBuffer->element_count_per_texture[texture];
         }
     }
 }
@@ -711,21 +711,21 @@ void Render::renderRoomSprites(const world::Room* room, const glm::mat4 &modelVi
  */
 bool Render::addRoom(world::Room* room)
 {
-    if(!room->active || !m_renderList.insert(room).second)
+    if(!room->m_active || !m_renderList.insert(room).second)
     {
         return false;
     }
 
-    if(room->flags & TR_ROOM_FLAG_SKYBOX)
+    if(room->m_flags & TR_ROOM_FLAG_SKYBOX)
         m_drawSkybox = true;
 
-    for(auto sm : room->static_mesh)
+    for(auto sm : room->m_staticMeshes)
     {
         sm->was_rendered = 0;
         sm->was_rendered_lines = 0;
     }
 
-    for(world::Object* cont : room->containers)
+    for(world::Object* cont : room->m_objects)
     {
         world::Entity* ent = dynamic_cast<world::Entity*>(cont);
         if(!ent)
@@ -735,7 +735,7 @@ bool Render::addRoom(world::Room* room)
         ent->m_wasRenderedLines = false;
     }
 
-    for(world::RoomSprite& sp : room->sprites)
+    for(world::RoomSprite& sp : room->m_sprites)
     {
         sp.was_rendered = false;
     }
@@ -799,16 +799,16 @@ void Render::drawList()
     /*First generate BSP from base room mesh - it has good for start splitter polygons*/
     for(const world::Room* room : m_renderList)
     {
-        if(room->mesh && !room->mesh->m_transparencyPolygons.empty())
+        if(room->m_mesh && !room->m_mesh->m_transparencyPolygons.empty())
         {
-            render_dBSP.addNewPolygonList(room->mesh->m_transparentPolygons, room->transform, m_cam->getFrustum(), *m_cam);
+            render_dBSP.addNewPolygonList(room->m_mesh->m_transparentPolygons, room->m_modelMatrix, m_cam->getFrustum(), *m_cam);
         }
     }
 
     for(const world::Room* room : m_renderList)
     {
         // Add transparency polygons from static meshes (if they exists)
-        for(auto sm : room->static_mesh)
+        for(auto sm : room->m_staticMeshes)
         {
             if(!sm->mesh->m_transparentPolygons.empty())
             {
@@ -817,7 +817,7 @@ void Render::drawList()
         }
 
         // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
-        for(world::Object* cont : room->containers)
+        for(world::Object* cont : room->m_objects)
         {
             world::Entity* ent = dynamic_cast<world::Entity*>(cont);
             if(!ent)
@@ -917,7 +917,7 @@ struct PortalPath
 
     bool checkVisibility(const world::Portal* portal, const glm::vec3& cameraPosition, const world::core::Frustum& frustum)
     {
-        if(!portal->destination || !portal->destination->active)
+        if(!portal->destination || !portal->destination->m_active)
             return false; // no relevant destination
 
         if(glm::dot(portal->normal, portal->center - cameraPosition) >= 0)
@@ -988,7 +988,7 @@ void Render::processRoom(world::Room* room)
 
     addRoom(room);
     // always process direct neighbours
-    for(const world::Portal& portal : room->portals)
+    for(const world::Portal& portal : room->m_portals)
     {
         PortalPath path;
         if(!path.checkVisibility(&portal, m_cam->getPosition(), m_cam->getFrustum()))
@@ -1011,7 +1011,7 @@ void Render::processRoom(world::Room* room)
 
         world::Room* room = currentPath.getLastDestinationRoom();
         bool roomIsVisible = false;
-        for(const world::Portal& srcPortal : room->portals)
+        for(const world::Portal& srcPortal : room->m_portals)
         {
             PortalPath newPath = currentPath;
             if(!newPath.checkVisibility(&srcPortal, m_cam->getPosition(), m_cam->getFrustum()))
@@ -1045,12 +1045,14 @@ void Render::genWorldList()
     if(curr_room != nullptr)                  // camera located in some room
     {
         processRoom(curr_room);
+        return;
     }
-    else if(engine::control_states.noclip)  // camera is out of all rooms AND noclip is on
+
+    if(engine::control_states.noclip)  // camera is out of all rooms AND noclip is on
     {
         for(auto r : m_world->rooms)
         {
-            if(m_cam->getFrustum().isVisible(r->boundingBox, *m_cam))
+            if(m_cam->getFrustum().isVisible(r->m_boundingBox, *m_cam))
             {
                 addRoom(r.get());
             }
@@ -1311,7 +1313,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
     if(render->m_drawRoomBoxes)
     {
         debugDrawer.setColor(0.0, 0.1f, 0.9f);
-        debugDrawer.drawBBox(room->boundingBox, nullptr);
+        debugDrawer.drawBBox(room->m_boundingBox, nullptr);
         /*for(uint32_t s=0;s<room->sectors_count;s++)
         {
             drawSectorDebugLines(room->sectors + s);
@@ -1321,20 +1323,20 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
     if(render->m_drawPortals)
     {
         debugDrawer.setColor(1.0, 1.0, 0.0);
-        for(const auto& p : room->portals)
+        for(const auto& p : room->m_portals)
             debugDrawer.drawPortal(p);
 
         debugDrawer.setColor(1.0, 1.0, 0.5);
-        for(const auto& p : room->portals)
+        for(const auto& p : room->m_portals)
             debugDrawer.addLine(p.center, p.center + p.normal*128.0f);
     }
 
-    if(!render->m_skipRoom && (room->mesh != nullptr))
+    if(!render->m_skipRoom && (room->m_mesh != nullptr))
     {
-        debugDrawer.drawMeshDebugLines(room->mesh, room->transform, {}, {}, render);
+        debugDrawer.drawMeshDebugLines(room->m_mesh, room->m_modelMatrix, {}, {}, render);
     }
 
-    for(auto sm : room->static_mesh)
+    for(auto sm : room->m_staticMeshes)
     {
         if(sm->was_rendered_lines || (sm->hide && !render->m_drawDummyStatics))
         {
@@ -1357,7 +1359,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
         sm->was_rendered_lines = 1;
     }
 
-    for(world::Object* cont : room->containers)
+    for(world::Object* cont : room->m_objects)
     {
         world::Entity* ent = dynamic_cast<world::Entity*>(cont);
         if(!ent)

@@ -545,7 +545,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
 
         ///@FIXME
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
-        if(ent->m_skeleton.getLastState() == world::LaraState::REACH)
+        if(ent->m_skeleton.getLastState() == world::LaraState::Reach)
         {
             if(cam->getTargetDir() == world::CameraTarget::Back)
             {
@@ -576,7 +576,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
                 }
             }
         }
-        else if(ent->m_skeleton.getLastState() == world::LaraState::JUMP_BACK)
+        else if(ent->m_skeleton.getLastState() == world::LaraState::JumpBack)
         {
             cam->setTargetDir( world::CameraTarget::Front );
         }
@@ -665,10 +665,10 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
 
     //Modify cam pos for quicksand rooms
     cam->setCurrentRoom( Room_FindPosCogerrence(cam->getPosition() - glm::vec3(0, 0, 128), cam->getCurrentRoom()) );
-    if(cam->getCurrentRoom() && (cam->getCurrentRoom()->flags & TR_ROOM_FLAG_QUICKSAND))
+    if(cam->getCurrentRoom() && (cam->getCurrentRoom()->m_flags & TR_ROOM_FLAG_QUICKSAND))
     {
         glm::vec3 position = cam->getPosition();
-        position[2] = cam->getCurrentRoom()->boundingBox.max[2] + 2.0f * 64.0f;
+        position[2] = cam->getCurrentRoom()->m_boundingBox.max[2] + 2.0f * 64.0f;
         cam->setPosition(position);
     }
 
@@ -775,7 +775,7 @@ void Game_Prepare()
         // If there is no character present, move default camera position to
         // the first room (useful for TR1-3 cutscene levels).
 
-        engine_camera.setPosition(engine_world.rooms[0]->boundingBox.max);
+        engine_camera.setPosition(engine_world.rooms[0]->m_boundingBox.max);
     }
 
     // Set gameflow parameters to default.

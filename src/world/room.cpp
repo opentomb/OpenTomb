@@ -16,7 +16,7 @@ namespace world
 
 Room::~Room()
 {
-    for(std::shared_ptr<StaticMesh>& mesh : static_mesh)
+    for(std::shared_ptr<StaticMesh>& mesh : m_staticMeshes)
     {
         if(btRigidBody* body = mesh->bt_body)
         {
@@ -36,27 +36,27 @@ Room::~Room()
         mesh->setRoom( nullptr );
     }
 
-    if(bt_body)
+    if(m_btBody)
     {
-        bt_body->setUserPointer(nullptr);
-        if(auto state = bt_body->getMotionState())
+        m_btBody->setUserPointer(nullptr);
+        if(auto state = m_btBody->getMotionState())
         {
             delete state;
-            bt_body->setMotionState(nullptr);
+            m_btBody->setMotionState(nullptr);
         }
-        if(auto shape = bt_body->getCollisionShape())
+        if(auto shape = m_btBody->getCollisionShape())
         {
             delete shape;
-            bt_body->setCollisionShape(nullptr);
+            m_btBody->setCollisionShape(nullptr);
         }
 
-        engine::bt_engine_dynamicsWorld->removeRigidBody(bt_body.get());
+        engine::bt_engine_dynamicsWorld->removeRigidBody(m_btBody.get());
     }
 }
 
 void Room::addEntity(Entity* entity)
 {
-    for(const Object* curr : containers)
+    for(const Object* curr : m_objects)
     {
         if(curr == entity)
         {
@@ -65,18 +65,18 @@ void Room::addEntity(Entity* entity)
     }
 
     entity->setRoom( this );
-    containers.emplace_back(entity);
+    m_objects.emplace_back(entity);
 }
 
 bool Room::removeEntity(Entity* entity)
 {
-    if(!entity || containers.empty())
+    if(!entity || m_objects.empty())
         return false;
 
-    auto it = std::find(containers.begin(), containers.end(), entity);
-    if(it != containers.end())
+    auto it = std::find(m_objects.begin(), m_objects.end(), entity);
+    if(it != m_objects.end())
     {
-        containers.erase(it);
+        m_objects.erase(it);
         entity->setRoom( nullptr );
         return true;
     }
@@ -88,7 +88,7 @@ void Room::addToNearRoomsList(Room* r)
 {
     if(r && !isInNearRoomsList(*r) && getId() != r->getId() && !isOverlapped(r))
     {
-        near_room_list.push_back(r);
+        m_nearRooms.push_back(r);
     }
 }
 
@@ -99,9 +99,9 @@ bool Room::isInNearRoomsList(const Room& r1) const
         return true;
     }
 
-    if(r1.near_room_list.size() >= near_room_list.size())
+    if(r1.m_nearRooms.size() >= m_nearRooms.size())
     {
-        for(const Room* r : near_room_list)
+        for(const Room* r : m_nearRooms)
         {
             if(r->getId() == r1.getId())
             {
@@ -111,7 +111,7 @@ bool Room::isInNearRoomsList(const Room& r1) const
     }
     else
     {
-        for(const Room* r : r1.near_room_list)
+        for(const Room* r : r1.m_nearRooms)
         {
             if(r->getId() == getId())
             {
@@ -124,18 +124,18 @@ bool Room::isInNearRoomsList(const Room& r1) const
 
 bool Room::hasSector(size_t x, size_t y)
 {
-    return x < sectors.shape()[0] && y < sectors.shape()[1];
+    return x < m_sectors.shape()[0] && y < m_sectors.shape()[1];
 }
 
 bool Room::isOverlapped(Room* r1)
 {
     BOOST_ASSERT(r1 != nullptr);
-    if((this == r1) || (this == r1->alternate_room.get()) || (alternate_room.get() == r1))
+    if((this == r1) || (this == r1->m_alternateRoom.get()) || (m_alternateRoom.get() == r1))
     {
         return false;
     }
 
-    if(!boundingBox.overlaps(r1->boundingBox))
+    if(!m_boundingBox.overlaps(r1->m_boundingBox))
         return false;
 
     return !isJoined(r1);
@@ -143,14 +143,14 @@ bool Room::isOverlapped(Room* r1)
 
 RoomSector* Room::getSectorRaw(const glm::vec3& pos)
 {
-    if(!active)
+    if(!m_active)
     {
         return nullptr;
     }
 
-    int x = static_cast<int>(pos[0] - transform[3][0]) / 1024;
-    int y = static_cast<int>(pos[1] - transform[3][1]) / 1024;
-    if(x < 0 || static_cast<size_t>(x) >= sectors.shape()[0] || y < 0 || static_cast<size_t>(y) >= sectors.shape()[1])
+    int x = static_cast<int>(pos[0] - m_modelMatrix[3][0]) / 1024;
+    int y = static_cast<int>(pos[1] - m_modelMatrix[3][1]) / 1024;
+    if(x < 0 || static_cast<size_t>(x) >= m_sectors.shape()[0] || y < 0 || static_cast<size_t>(y) >= m_sectors.shape()[1])
     {
         return nullptr;
     }
@@ -158,21 +158,21 @@ RoomSector* Room::getSectorRaw(const glm::vec3& pos)
     // Column index system
     // X - column number, Y - string number
 
-    return &sectors[x][y];
+    return &m_sectors[x][y];
 }
 
 RoomSector* Room::getSectorXYZ(const glm::vec3& pos)
 {
     Room* room = checkFlip();
 
-    if(!room->active)
+    if(!room->m_active)
     {
         return nullptr;
     }
 
-    int x = static_cast<int>(pos[0] - room->transform[3][0]) / 1024;
-    int y = static_cast<int>(pos[1] - room->transform[3][1]) / 1024;
-    if(x < 0 || static_cast<size_t>(x) >= room->sectors.shape()[0] || y < 0 || static_cast<size_t>(y) >= room->sectors.shape()[1])
+    int x = static_cast<int>(pos[0] - room->m_modelMatrix[3][0]) / 1024;
+    int y = static_cast<int>(pos[1] - room->m_modelMatrix[3][1]) / 1024;
+    if(x < 0 || static_cast<size_t>(x) >= room->m_sectors.shape()[0] || y < 0 || static_cast<size_t>(y) >= room->m_sectors.shape()[1])
     {
         return nullptr;
     }
@@ -180,7 +180,7 @@ RoomSector* Room::getSectorXYZ(const glm::vec3& pos)
     // Column index system
     // X - column number, Y - string number
 
-    RoomSector* ret = &room->sectors[x][y];
+    RoomSector* ret = &room->m_sectors[x][y];
 
     //resolve Z overlapped neighboard rooms. room below has more priority.
 
@@ -199,19 +199,19 @@ RoomSector* Room::getSectorXYZ(const glm::vec3& pos)
 
 void Room::enable()
 {
-    if(active)
+    if(m_active)
     {
         return;
     }
 
     BOOST_LOG_TRIVIAL(debug) << "Enabling room " << getId();
 
-    if(bt_body)
+    if(m_btBody)
     {
-        engine::bt_engine_dynamicsWorld->addRigidBody(bt_body.get());
+        engine::bt_engine_dynamicsWorld->addRigidBody(m_btBody.get());
     }
 
-    for(auto sm : static_mesh)
+    for(const std::shared_ptr<StaticMesh>& sm : m_staticMeshes)
     {
         if(sm->bt_body != nullptr)
         {
@@ -231,24 +231,24 @@ void Room::enable()
     }
     */
 
-    active = true;
+    m_active = true;
 }
 
 void Room::disable()
 {
-    if(!active)
+    if(!m_active)
     {
         return;
     }
 
     BOOST_LOG_TRIVIAL(debug) << "Disabling room " << getId();
 
-    if(bt_body)
+    if(m_btBody)
     {
-        engine::bt_engine_dynamicsWorld->removeRigidBody(bt_body.get());
+        engine::bt_engine_dynamicsWorld->removeRigidBody(m_btBody.get());
     }
 
-    for(auto sm : static_mesh)
+    for(auto sm : m_staticMeshes)
     {
         if(sm->bt_body != nullptr)
         {
@@ -268,46 +268,46 @@ void Room::disable()
     }
     */
 
-    active = false;
+    m_active = false;
 }
 
 void Room::swapToBase()
 {
-    if((base_room != nullptr) && active)                        //If room is active alternate room
+    if((m_baseRoom != nullptr) && m_active)                        //If room is active alternate room
     {
         render::renderer.cleanList();
         disable();                             //Disable current room
-        base_room->disable();                  //Paranoid
-        swapPortals(base_room);        //Update portals to match this room
-        swapObjects(base_room);     //Update items to match this room
-        base_room->enable();                   //Enable original room
+        m_baseRoom->disable();                  //Paranoid
+        swapPortals(m_baseRoom);        //Update portals to match this room
+        swapObjects(m_baseRoom);     //Update items to match this room
+        m_baseRoom->enable();                   //Enable original room
     }
 }
 
 void Room::swapToAlternate()
 {
-    if((alternate_room != nullptr) && active)              //If room is active base room
+    if((m_alternateRoom != nullptr) && m_active)              //If room is active base room
     {
         render::renderer.cleanList();
         disable();                             //Disable current room
-        alternate_room->disable();             //Paranoid
-        swapPortals(alternate_room);   //Update portals to match this room
-        swapObjects(alternate_room);          //Update items to match this room
-        alternate_room->enable();                              //Enable base room
+        m_alternateRoom->disable();             //Paranoid
+        swapPortals(m_alternateRoom);   //Update portals to match this room
+        swapObjects(m_alternateRoom);          //Update items to match this room
+        m_alternateRoom->enable();                              //Enable base room
     }
 }
 
 Room* Room::checkFlip()
 {
-    if(!active)
+    if(!m_active)
     {
-        if((base_room != nullptr) && (base_room->active))
+        if((m_baseRoom != nullptr) && (m_baseRoom->m_active))
         {
-            return base_room.get();
+            return m_baseRoom.get();
         }
-        else if((alternate_room != nullptr) && (alternate_room->active))
+        else if((m_alternateRoom != nullptr) && (m_alternateRoom->m_active))
         {
-            return alternate_room.get();
+            return m_alternateRoom.get();
         }
     }
 
@@ -319,7 +319,7 @@ void Room::swapPortals(std::shared_ptr<Room> dest_room)
     //Update portals in room rooms
     for(auto r : engine::engine_world.rooms)//For every room in the world itself
     {
-        for(Portal& p : r->portals) //For every portal in this room
+        for(Portal& p : r->m_portals) //For every portal in this room
         {
             if(p.destination && p.destination->getId() == getId())//If a portal is linked to the input room
             {
@@ -333,24 +333,24 @@ void Room::swapPortals(std::shared_ptr<Room> dest_room)
 
 void Room::swapObjects(std::shared_ptr<Room> dest_room)
 {
-    for(Object* t : containers)
+    for(Object* t : m_objects)
     {
         t->setRoom( dest_room.get() );
     }
 
-    for(Object* t : dest_room->containers)
+    for(Object* t : dest_room->m_objects)
     {
         t->setRoom( this );
     }
 
-    std::swap(containers, dest_room->containers);
+    std::swap(m_objects, dest_room->m_objects);
 }
 
 // Check for join portals existing
 
 bool Room::isJoined(Room* r2)
 {
-    for(const Portal& p : portals)
+    for(const Portal& p : m_portals)
     {
         if(p.destination && p.destination->getId() == r2->getId())
         {
@@ -358,7 +358,7 @@ bool Room::isJoined(Room* r2)
         }
     }
 
-    for(const Portal& p : r2->portals)
+    for(const Portal& p : r2->m_portals)
     {
         if(p.destination && p.destination->getId() == getId())
         {
@@ -371,20 +371,20 @@ bool Room::isJoined(Room* r2)
 
 void Room::buildNearRoomsList()
 {
-    near_room_list.clear();
+    m_nearRooms.clear();
 
-    for(const Portal& p : portals)
+    for(const Portal& p : m_portals)
     {
         addToNearRoomsList(p.destination);
     }
 
-    auto nrl = near_room_list;
+    auto nrl = m_nearRooms;
     for(const Room* r : nrl)
     {
         if(!r)
             continue;
 
-        for(const Portal& p : r->portals)
+        for(const Portal& p : r->m_portals)
         {
             addToNearRoomsList(p.destination);
         }
@@ -393,53 +393,53 @@ void Room::buildNearRoomsList()
 
 void Room::buildOverlappedRoomsList()
 {
-    overlapped_room_list.clear();
+    m_overlappedRooms.clear();
 
     for(auto r : engine::engine_world.rooms)
     {
         if(isOverlapped(r.get()))
         {
-            overlapped_room_list.push_back(r);
+            m_overlappedRooms.push_back(r);
         }
     }
 }
 
-void Room::genMesh(World* world, uint32_t room_index, const std::unique_ptr<loader::Level>& tr)
+void Room::genMesh(World* world, const std::unique_ptr<loader::Level>& tr)
 {
     const uint32_t tex_mask = (world->engineVersion == loader::Engine::TR4) ? (loader::TextureIndexMaskTr4) : (loader::TextureIndexMask);
 
-    auto tr_room = &tr->m_rooms[room_index];
+    auto tr_room = &tr->m_rooms[getId()];
 
     if(tr_room->triangles.empty() && tr_room->rectangles.empty())
     {
-        mesh = nullptr;
+        m_mesh = nullptr;
         return;
     }
 
-    mesh = std::make_shared<core::BaseMesh>();
-    mesh->m_id = room_index;
-    mesh->m_texturePageCount = static_cast<uint32_t>(world->tex_atlas->getNumAtlasPages()) + 1;
-    mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
+    m_mesh = std::make_shared<core::BaseMesh>();
+    m_mesh->m_id = getId();
+    m_mesh->m_texturePageCount = static_cast<uint32_t>(world->tex_atlas->getNumAtlasPages()) + 1;
+    m_mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
 
-    mesh->m_vertices.resize(tr_room->vertices.size());
-    auto vertex = mesh->m_vertices.data();
-    for(size_t i = 0; i < mesh->m_vertices.size(); i++, vertex++)
+    m_mesh->m_vertices.resize(tr_room->vertices.size());
+    auto vertex = m_mesh->m_vertices.data();
+    for(size_t i = 0; i < m_mesh->m_vertices.size(); i++, vertex++)
     {
         vertex->position = util::convert(tr_room->vertices[i].vertex);
         vertex->normal = { 0,0,0 };                                          // paranoid
     }
 
-    mesh->updateBoundingBox();
+    m_mesh->updateBoundingBox();
 
-    mesh->m_polygons.resize(tr_room->triangles.size() + tr_room->rectangles.size());
-    auto p = mesh->m_polygons.begin();
+    m_mesh->m_polygons.resize(tr_room->triangles.size() + tr_room->rectangles.size());
+    auto p = m_mesh->m_polygons.begin();
 
     /*
     * triangles
     */
     for(uint32_t i = 0; i < tr_room->triangles.size(); i++, ++p)
     {
-        tr_setupRoomVertices(world, tr, tr_room, mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, &*p);
+        tr_setupRoomVertices(world, tr, tr_room, m_mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, &*p);
         p->double_side = (tr_room->triangles[i].texture & 0x8000) != 0;
     }
 
@@ -448,14 +448,14 @@ void Room::genMesh(World* world, uint32_t room_index, const std::unique_ptr<load
     */
     for(uint32_t i = 0; i < tr_room->rectangles.size(); i++, ++p)
     {
-        tr_setupRoomVertices(world, tr, tr_room, mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, &*p);
+        tr_setupRoomVertices(world, tr, tr_room, m_mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, &*p);
         p->double_side = (tr_room->rectangles[i].texture & 0x8000) != 0;
     }
 
     /*
     * let us normalise normales %)
     */
-    for(world::core::Vertex& v : mesh->m_vertices)
+    for(world::core::Vertex& v : m_mesh->m_vertices)
     {
         v.normal = glm::normalize(v.normal);
     }
@@ -463,10 +463,10 @@ void Room::genMesh(World* world, uint32_t room_index, const std::unique_ptr<load
     /*
     * triangles
     */
-    p = mesh->m_polygons.begin();
+    p = m_mesh->m_polygons.begin();
     for(size_t i = 0; i < tr_room->triangles.size(); i++, ++p)
     {
-        tr_copyNormals(&*p, mesh, tr_room->triangles[i].vertices);
+        tr_copyNormals(&*p, m_mesh, tr_room->triangles[i].vertices);
     }
 
     /*
@@ -474,12 +474,12 @@ void Room::genMesh(World* world, uint32_t room_index, const std::unique_ptr<load
     */
     for(uint32_t i = 0; i < tr_room->rectangles.size(); i++, ++p)
     {
-        tr_copyNormals(&*p, mesh, tr_room->rectangles[i].vertices);
+        tr_copyNormals(&*p, m_mesh, tr_room->rectangles[i].vertices);
     }
 
-    mesh->m_vertices.clear();
-    mesh->genFaces();
-    mesh->polySortInMesh();
+    m_mesh->m_vertices.clear();
+    m_mesh->genFaces();
+    m_mesh->polySortInMesh();
 }
 
 RoomSector* RoomSector::checkPortalPointerRaw()
@@ -487,11 +487,11 @@ RoomSector* RoomSector::checkPortalPointerRaw()
     if(portal_to_room >= 0)
     {
         std::shared_ptr<Room> r = engine::engine_world.rooms[portal_to_room];
-        int ind_x = static_cast<int>((position[0] - r->transform[3][0]) / MeteringSectorSize);
-        int ind_y = static_cast<int>((position[1] - r->transform[3][1]) / MeteringSectorSize);
-        if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->sectors.shape()[1])
+        int ind_x = static_cast<int>((position[0] - r->m_modelMatrix[3][0]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((position[1] - r->m_modelMatrix[3][1]) / MeteringSectorSize);
+        if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->m_sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->m_sectors.shape()[1])
         {
-            return &r->sectors[ind_x][ind_y];
+            return &r->m_sectors[ind_x][ind_y];
         }
     }
 
@@ -503,19 +503,19 @@ RoomSector* RoomSector::checkPortalPointer()
     if(portal_to_room >= 0)
     {
         std::shared_ptr<Room> r = engine::engine_world.rooms[portal_to_room];
-        if((owner_room->base_room != nullptr) && (r->alternate_room != nullptr))
+        if((owner_room->m_baseRoom != nullptr) && (r->m_alternateRoom != nullptr))
         {
-            r = r->alternate_room;
+            r = r->m_alternateRoom;
         }
-        else if((owner_room->alternate_room != nullptr) && (r->base_room != nullptr))
+        else if((owner_room->m_alternateRoom != nullptr) && (r->m_baseRoom != nullptr))
         {
-            r = r->base_room;
+            r = r->m_baseRoom;
         }
-        int ind_x = static_cast<int>((position[0] - r->transform[3][0]) / MeteringSectorSize);
-        int ind_y = static_cast<int>((position[1] - r->transform[3][1]) / MeteringSectorSize);
-        if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->sectors.shape()[1])
+        int ind_x = static_cast<int>((position[0] - r->m_modelMatrix[3][0]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((position[1] - r->m_modelMatrix[3][1]) / MeteringSectorSize);
+        if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->m_sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->m_sectors.shape()[1])
         {
-            return &r->sectors[ind_x][ind_y];
+            return &r->m_sectors[ind_x][ind_y];
         }
     }
 
@@ -524,14 +524,14 @@ RoomSector* RoomSector::checkPortalPointer()
 
 RoomSector* RoomSector::checkBaseRoom()
 {
-    if(owner_room->base_room != nullptr)
+    if(owner_room->m_baseRoom != nullptr)
     {
-        std::shared_ptr<Room> r = owner_room->base_room;
-        int ind_x = static_cast<int>((position[0] - r->transform[3][0]) / MeteringSectorSize);
-        int ind_y = static_cast<int>((position[1] - r->transform[3][1]) / MeteringSectorSize);
-        if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->sectors.shape()[1])
+        std::shared_ptr<Room> r = owner_room->m_baseRoom;
+        int ind_x = static_cast<int>((position[0] - r->m_modelMatrix[3][0]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((position[1] - r->m_modelMatrix[3][1]) / MeteringSectorSize);
+        if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->m_sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->m_sectors.shape()[1])
         {
-            return &r->sectors[ind_x][ind_y];
+            return &r->m_sectors[ind_x][ind_y];
         }
     }
 
@@ -540,14 +540,14 @@ RoomSector* RoomSector::checkBaseRoom()
 
 RoomSector* RoomSector::checkAlternateRoom()
 {
-    if(owner_room->alternate_room != nullptr)
+    if(owner_room->m_alternateRoom != nullptr)
     {
-        std::shared_ptr<Room> r = owner_room->alternate_room;
-        int ind_x = static_cast<int>((position[0] - r->transform[3][1]) / MeteringSectorSize);
-        int ind_y = static_cast<int>((position[1] - r->transform[3][1]) / MeteringSectorSize);
-        if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->sectors.shape()[1])
+        std::shared_ptr<Room> r = owner_room->m_alternateRoom;
+        int ind_x = static_cast<int>((position[0] - r->m_modelMatrix[3][1]) / MeteringSectorSize);
+        int ind_y = static_cast<int>((position[1] - r->m_modelMatrix[3][1]) / MeteringSectorSize);
+        if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->m_sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->m_sectors.shape()[1])
         {
-            return &r->sectors[ind_x][ind_y];
+            return &r->m_sectors[ind_x][ind_y];
         }
     }
 
@@ -648,18 +648,18 @@ glm::vec3 RoomSector::getCeilingPoint()
 
 RoomSector* RoomSector::checkFlip()
 {
-    if(owner_room->active)
+    if(owner_room->m_active)
         return this;
 
-    if(owner_room->base_room && owner_room->base_room->active)
+    if(owner_room->m_baseRoom && owner_room->m_baseRoom->m_active)
     {
-        std::shared_ptr<Room> r = owner_room->base_room;
-        return &r->sectors[index_x][index_y];
+        std::shared_ptr<Room> r = owner_room->m_baseRoom;
+        return &r->m_sectors[index_x][index_y];
     }
-    else if(owner_room->alternate_room && owner_room->alternate_room->active)
+    else if(owner_room->m_alternateRoom && owner_room->m_alternateRoom->m_active)
     {
-        std::shared_ptr<Room> r = owner_room->alternate_room;
-        return &r->sectors[index_x][index_y];
+        std::shared_ptr<Room> r = owner_room->m_alternateRoom;
+        return &r->m_sectors[index_x][index_y];
     }
     else
     {

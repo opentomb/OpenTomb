@@ -246,15 +246,16 @@ class Skeleton
     SkeletalModel* m_model = nullptr;
     util::Duration m_frameTime{0}; //!< time in current frame
 
+    glm::float_t m_frameLerp = 0; //!< Bias for mixing previous and current key frames
+
+    int16_t m_previousAnimation = 0;
     uint16_t m_currentAnimation = 0;
+
+    int16_t m_previousFrame = 0;
     int16_t m_currentFrame = 0; //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
 
-    glm::float_t m_lerp = 0;
-    int16_t m_lerpLastAnimation = 0;
-    int16_t m_lerpLastFrame = 0;
-
-    LaraState m_lastState = LaraState::WALK_FORWARD;
-    LaraState m_nextState = LaraState::WALK_FORWARD;
+    LaraState m_previousState = LaraState::WalkForward;
+    LaraState m_nextState = LaraState::WalkForward;
 
     AnimationMode m_mode = AnimationMode::NormalControl;
 
@@ -281,11 +282,11 @@ public:
 
     int16_t getLerpLastAnimation() const noexcept
     {
-        return m_lerpLastAnimation;
+        return m_previousAnimation;
     }
     void setLerpLastAnimation(int16_t value) noexcept
     {
-        m_lerpLastAnimation = value;
+        m_previousAnimation = value;
     }
 
     int16_t getCurrentFrame() const noexcept
@@ -299,11 +300,11 @@ public:
 
     int16_t getLerpLastFrame() const noexcept
     {
-        return m_lerpLastFrame;
+        return m_previousFrame;
     }
     void setLerpLastFrame(int16_t value) noexcept
     {
-        m_lerpLastFrame = value;
+        m_previousFrame = value;
     }
 
     util::Duration getFrameTime() const noexcept
@@ -334,7 +335,7 @@ public:
     }
     LaraState getLastState() const noexcept
     {
-        return m_lastState;
+        return m_previousState;
     }
 
     bool hasGhosts() const noexcept
@@ -346,11 +347,13 @@ public:
 
     /**
      * That function updates item animation and rebuilds skeletal matrices;
-     * @param bf - extended bone frame of the item;
      */
     void itemFrame(util::Duration time);
 
-    void interpolate();
+    /**
+     * @brief Update bone transformations from key frame interpolation.
+     */
+    void updatePose();
 
     const core::BoundingBox& getBoundingBox() const noexcept
     {
@@ -410,16 +413,16 @@ public:
 
     void setLastState(LaraState state) noexcept
     {
-        m_lastState = state;
+        m_previousState = state;
     }
 
     void setLerp(glm::float_t lerp)
     {
-        m_lerp = lerp;
+        m_frameLerp = lerp;
     }
     glm::float_t getLerp() const noexcept
     {
-        return m_lerp;
+        return m_frameLerp;
     }
 
     const btManifoldArray& getManifoldArray() const noexcept
@@ -432,7 +435,7 @@ public:
         return m_manifoldArray;
     }
 
-    void updateTransform(const glm::mat4 &transform);
+    void updateTransform(const glm::mat4 &entityTransform);
 
     void updateBoundingBox();
 

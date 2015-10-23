@@ -29,16 +29,16 @@ struct FxManager
     static constexpr int MaxSlots = 2;
 
     ALuint      al_filter = 0;
-    std::array<ALuint, static_cast<int>(loader::ReverbInfo::Sentinel)> al_effect;
+    std::array<ALuint, static_cast<int>(loader::ReverbType::Sentinel)> al_effect;
     std::array<ALuint,MaxSlots> al_slot;
     ALuint      current_slot = 0;
-    loader::ReverbInfo current_room_type = loader::ReverbInfo::Outside;
-    loader::ReverbInfo last_room_type = loader::ReverbInfo::Outside;
+    loader::ReverbType current_room_type = loader::ReverbType::Outside;
+    loader::ReverbType last_room_type = loader::ReverbType::Outside;
     bool        water_state = false;    // If listener is underwater, all samples will damp.
 
     ~FxManager();
 
-    bool loadReverb(loader::ReverbInfo effect_index, const EFXEAXREVERBPROPERTIES *reverb);
+    bool loadReverb(loader::ReverbType effect_index, const EFXEAXREVERBPROPERTIES *reverb);
     void updateListener(world::Camera *cam);
     void updateListener(world::Character* ent);
 

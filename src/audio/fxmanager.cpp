@@ -28,9 +28,9 @@ FxManager::~FxManager()
     alDeleteEffects(al_effect.size(), al_effect.data());
 }
 
-bool FxManager::loadReverb(loader::ReverbInfo effect_index, const EFXEAXREVERBPROPERTIES *reverb)
+bool FxManager::loadReverb(loader::ReverbType effect_index, const EFXEAXREVERBPROPERTIES *reverb)
 {
-    BOOST_ASSERT(effect_index>=loader::ReverbInfo::Outside && effect_index < loader::ReverbInfo::Sentinel);
+    BOOST_ASSERT(effect_index>=loader::ReverbType::Outside && effect_index < loader::ReverbType::Sentinel);
     ALuint effect = al_effect[static_cast<int>(effect_index)];
 
     if(alIsEffect(effect))
@@ -75,22 +75,22 @@ FxManager::FxManager(bool)
     // Fill up effects with reverb presets.
 
     EFXEAXREVERBPROPERTIES reverb1 = EFX_REVERB_PRESET_CITY;
-    loadReverb(loader::ReverbInfo::Outside, &reverb1);
+    loadReverb(loader::ReverbType::Outside, &reverb1);
 
     EFXEAXREVERBPROPERTIES reverb2 = EFX_REVERB_PRESET_LIVINGROOM;
-    loadReverb(loader::ReverbInfo::SmallRoom, &reverb2);
+    loadReverb(loader::ReverbType::SmallRoom, &reverb2);
 
     EFXEAXREVERBPROPERTIES reverb3 = EFX_REVERB_PRESET_WOODEN_LONGPASSAGE;
-    loadReverb(loader::ReverbInfo::MediumRoom, &reverb3);
+    loadReverb(loader::ReverbType::MediumRoom, &reverb3);
 
     EFXEAXREVERBPROPERTIES reverb4 = EFX_REVERB_PRESET_DOME_TOMB;
-    loadReverb(loader::ReverbInfo::LargeRoom, &reverb4);
+    loadReverb(loader::ReverbType::LargeRoom, &reverb4);
 
     EFXEAXREVERBPROPERTIES reverb5 = EFX_REVERB_PRESET_PIPE_LARGE;
-    loadReverb(loader::ReverbInfo::Pipe, &reverb5);
+    loadReverb(loader::ReverbType::Pipe, &reverb5);
 
     EFXEAXREVERBPROPERTIES reverb6 = EFX_REVERB_PRESET_UNDERWATER;
-    loadReverb(loader::ReverbInfo::Water, &reverb6);
+    loadReverb(loader::ReverbType::Water, &reverb6);
 }
 
 /**
@@ -116,18 +116,18 @@ void FxManager::updateListener(world::Camera *cam)
     if(!cam->getCurrentRoom())
         return;
 
-    if(cam->getCurrentRoom()->flags & TR_ROOM_FLAG_WATER)
+    if(cam->getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER)
     {
-        current_room_type = loader::ReverbInfo::Water;
+        current_room_type = loader::ReverbType::Water;
     }
     else
     {
-        current_room_type = cam->getCurrentRoom()->reverb_info;
+        current_room_type = cam->getCurrentRoom()->m_reverbType;
     }
 
-    if(water_state != static_cast<bool>(cam->getCurrentRoom()->flags & TR_ROOM_FLAG_WATER))
+    if(water_state != static_cast<bool>(cam->getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER))
     {
-        water_state = (cam->getCurrentRoom()->flags & TR_ROOM_FLAG_WATER) != 0;
+        water_state = (cam->getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER) != 0;
 
         if(water_state)
         {

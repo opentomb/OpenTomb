@@ -101,39 +101,38 @@ struct RoomSector
 
 struct Room : public Object
 {
-    uint32_t                    flags = 0;                                          // room's type + water, wind info
-    int16_t                     light_mode;                                     // (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
-    loader::ReverbInfo          reverb_info;                                    // room reverb type
-    uint8_t                     water_scheme;
-    uint8_t                     alternate_group;
+    uint32_t                    m_flags = 0; //!< room's type + water, wind info
+    int16_t                     m_lightMode; //!< (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
+    loader::ReverbType          m_reverbType;
+    uint8_t                     m_waterScheme;
+    uint8_t                     m_alternateGroup;
 
-    bool active;                                         // flag: is active
-    bool hide;                                           // do not render
-    std::shared_ptr<core::BaseMesh> mesh;                                           // room's base mesh
-    //struct bsp_node_s          *bsp_root;                                       // transparency polygons tree; next: add bsp_tree class as a bsp_tree header
-    core::SpriteBuffer *sprite_buffer;               // Render data for sprites
+    bool m_active = false;
+    bool m_hide = true;
+    std::shared_ptr<core::BaseMesh> m_mesh; //!< room's base mesh
+    core::SpriteBuffer* m_spriteBuffer = nullptr;     //!< Render data for sprites
+    std::vector<RoomSprite> m_sprites;
 
-    std::vector<std::shared_ptr<StaticMesh>> static_mesh;
-    std::vector<RoomSprite> sprites;
+    std::vector<std::shared_ptr<StaticMesh>> m_staticMeshes;
 
-    std::vector<world::Object*> containers;                                     // engine containers with moveables objects
+    std::vector<world::Object*> m_objects;
 
-    core::BoundingBox boundingBox;
-    glm::mat4 transform;                                  // GL transformation matrix
+    core::BoundingBox m_boundingBox;
+    glm::mat4 m_modelMatrix;
 
-    GLfloat ambient_lighting[3];
+    glm::vec3 m_ambientLighting;
 
-    std::vector<core::Light> lights;
+    std::vector<core::Light> m_lights;
 
-    std::vector<Portal> portals;                                        // room portals array
-    std::shared_ptr<Room> alternate_room;                                 // alternative room pointer
-    std::shared_ptr<Room> base_room;                                      // base room == room->alternate_room->base_room
+    std::vector<Portal> m_portals;
+    std::shared_ptr<Room> m_alternateRoom;
+    std::shared_ptr<Room> m_baseRoom; // room->m_alternateRoom->m_baseRoom
 
-    boost::multi_array<RoomSector, 2> sectors;
+    boost::multi_array<RoomSector, 2> m_sectors;
 
-    std::vector<Room*> near_room_list;
-    std::vector<std::shared_ptr<Room>> overlapped_room_list;
-    std::unique_ptr<btRigidBody> bt_body;
+    std::vector<Room*> m_nearRooms;
+    std::vector<std::shared_ptr<Room>> m_overlappedRooms;
+    std::unique_ptr<btRigidBody> m_btBody;
 
     explicit Room(uint32_t id, Room* room = nullptr)
         : Object(id, room)
@@ -160,15 +159,15 @@ struct Room : public Object
     bool removeEntity(Entity *entity);
     void addToNearRoomsList(Room* r);
 
-    bool isPointIn(const glm::vec3& dot)
+    bool contains(const glm::vec3& dot)
     {
-        return boundingBox.contains(dot);
+        return m_boundingBox.contains(dot);
     }
 
     RoomSector* getSectorRaw(const glm::vec3 &pos);
     RoomSector* getSectorXYZ(const glm::vec3 &pos);
 
-    void genMesh(World *world, uint32_t room_index, const std::unique_ptr<loader::Level>& tr);
+    void genMesh(World *world, const std::unique_ptr<loader::Level>& tr);
 };
 
 btCollisionShape* BT_CSfromHeightmap(const boost::multi_array<RoomSector, 2>& heightmap, const std::vector<SectorTween> &tweens, bool useCompression, bool buildBvh);

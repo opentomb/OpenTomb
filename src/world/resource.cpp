@@ -201,15 +201,15 @@ namespace world
     std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
     {
         std::vector<SectorTween> result;
-        for(size_t h = 0; h < room->sectors.shape()[1] - 1; h++)
+        for(size_t h = 0; h < room->m_sectors.shape()[1] - 1; h++)
         {
-            for(size_t w = 0; w < room->sectors.shape()[0] - 1; w++)
+            for(size_t w = 0; w < room->m_sectors.shape()[0] - 1; w++)
             {
                 result.emplace_back();
                 SectorTween* room_tween = &result.back();
                 // Init X-plane tween [ | ]
 
-                RoomSector* current_heightmap = &room->sectors[w][h];
+                RoomSector* current_heightmap = &room->m_sectors[w][h];
                 RoomSector* next_heightmap = current_heightmap + 1;
                 char joined_floors = 0;
                 char joined_ceilings = 0;
@@ -291,7 +291,7 @@ namespace world
                         }
                     }
 
-                    current_heightmap = &room->sectors[w][h];
+                    current_heightmap = &room->m_sectors[w][h];
                     next_heightmap = current_heightmap + 1;
                     if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                     {
@@ -340,7 +340,7 @@ namespace world
                         }
                     }
 
-                    current_heightmap = &room->sectors[w][h];
+                    current_heightmap = &room->m_sectors[w][h];
                     next_heightmap = current_heightmap + 1;
                     if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                     {
@@ -396,8 +396,8 @@ namespace world
 
                 result.emplace_back();
                 room_tween = &result.back();
-                current_heightmap = &room->sectors[w][h];
-                next_heightmap = &room->sectors[w + 1][h];
+                current_heightmap = &room->m_sectors[w][h];
+                next_heightmap = &room->m_sectors[w + 1][h];
                 room_tween->floor_corners[0][0] = current_heightmap->floor_corners[1][0];
                 room_tween->floor_corners[1][0] = room_tween->floor_corners[0][0];
                 room_tween->floor_corners[2][0] = room_tween->floor_corners[0][0];
@@ -478,8 +478,8 @@ namespace world
                         }
                     }
 
-                    current_heightmap = &room->sectors[w][h];
-                    next_heightmap = &room->sectors[w + 1][h];
+                    current_heightmap = &room->m_sectors[w][h];
+                    next_heightmap = &room->m_sectors[w + 1][h];
                     if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                     {
                         char valid = 0;
@@ -527,8 +527,8 @@ namespace world
                         }
                     }
 
-                    current_heightmap = &room->sectors[w][h];
-                    next_heightmap = &room->sectors[w + 1][h];
+                    current_heightmap = &room->m_sectors[w][h];
+                    next_heightmap = &room->m_sectors[w + 1][h];
                     if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
                     {
                         char valid = 0;
@@ -829,7 +829,7 @@ namespace world
 
                         case TR_FD_TRIGTYPE_TIGHTROPE:
                             // Check state range for triggering entity.
-                            snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", static_cast<int>(LaraState::TIGHTROPE_IDLE), static_cast<int>(LaraState::TIGHTROPE_EXIT));
+                            snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", static_cast<int>(LaraState::TightropeIdle), static_cast<int>(LaraState::TightropeExit));
                             condition = 1;  // Set additional condition.
                             break;
                         case TR_FD_TRIGTYPE_CRAWLDUCK:
@@ -1507,9 +1507,9 @@ namespace world
          * Sectors loading
          */
 
-        for(size_t i = 0; i < room->sectors.num_elements(); i++)
+        for(size_t i = 0; i < room->m_sectors.num_elements(); i++)
         {
-            RoomSector* sector = &room->sectors[i/room->sectors.shape()[1]][i%room->sectors.shape()[1]];
+            RoomSector* sector = &room->m_sectors[i/room->m_sectors.shape()[1]][i%room->m_sectors.shape()[1]];
             /*
              * Let us fill pointers to sectors above and sectors below
              */
@@ -1530,27 +1530,27 @@ namespace world
             RoomSector* near_sector = nullptr;
 
             /**** OX *****/
-            if((sector->index_y > 0) && (sector->index_y < room->sectors.shape()[1] - 1) && (sector->index_x == 0))
+            if((sector->index_y > 0) && (sector->index_y < room->m_sectors.shape()[1] - 1) && (sector->index_x == 0))
             {
-                near_sector = sector + room->sectors.shape()[1];
+                near_sector = sector + room->m_sectors.shape()[1];
             }
-            if((sector->index_y > 0) && (sector->index_y < room->sectors.shape()[1] - 1) && (sector->index_x == room->sectors.shape()[0] - 1))
+            if((sector->index_y > 0) && (sector->index_y < room->m_sectors.shape()[1] - 1) && (sector->index_x == room->m_sectors.shape()[0] - 1))
             {
-                near_sector = sector - room->sectors.shape()[1];
+                near_sector = sector - room->m_sectors.shape()[1];
             }
             /**** OY *****/
-            if((sector->index_x > 0) && (sector->index_x < room->sectors.shape()[0] - 1) && (sector->index_y == 0))
+            if((sector->index_x > 0) && (sector->index_x < room->m_sectors.shape()[0] - 1) && (sector->index_y == 0))
             {
                 near_sector = sector + 1;
             }
-            if((sector->index_x > 0) && (sector->index_x < room->sectors.shape()[0] - 1) && (sector->index_y == room->sectors.shape()[1] - 1))
+            if((sector->index_x > 0) && (sector->index_x < room->m_sectors.shape()[0] - 1) && (sector->index_y == room->m_sectors.shape()[1] - 1))
             {
                 near_sector = sector - 1;
             }
 
             if((near_sector != nullptr) && (sector->portal_to_room >= 0))
             {
-                for(const Portal& p : room->portals)
+                for(const Portal& p : room->m_portals)
                 {
                     if(util::fuzzyZero(p.normal[2]))
                     {
@@ -1575,12 +1575,12 @@ namespace world
         }
 
         auto room = engine::engine_world.rooms[room_id];
-        if(sx < 0 || static_cast<size_t>(sx) >= room->sectors.shape()[0] || sy < 0 || static_cast<size_t>(sy) >= room->sectors.shape()[1])
+        if(sx < 0 || static_cast<size_t>(sx) >= room->m_sectors.shape()[0] || sy < 0 || static_cast<size_t>(sy) >= room->m_sectors.shape()[1])
         {
             return nullptr;
         }
 
-        return &room->sectors[sx][sy];
+        return &room->m_sectors[sx][sy];
     }
 
     void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::Value pen, lua::Value diag, lua::Value floor, float z0, float z1, float z2, float z3)
@@ -1763,29 +1763,29 @@ namespace world
 
     void TR_GenRoom(std::shared_ptr<Room>& room, World *world, const std::unique_ptr<loader::Level>& tr)
     {
-        room->active = true;
-        room->flags = tr->m_rooms[room->getId()].flags;
-        room->light_mode = tr->m_rooms[room->getId()].light_mode;
-        room->reverb_info = tr->m_rooms[room->getId()].reverb_info;
-        room->water_scheme = tr->m_rooms[room->getId()].water_scheme;
-        room->alternate_group = tr->m_rooms[room->getId()].alternate_group;
+        room->m_active = true;
+        room->m_flags = tr->m_rooms[room->getId()].flags;
+        room->m_lightMode = tr->m_rooms[room->getId()].light_mode;
+        room->m_reverbType = tr->m_rooms[room->getId()].reverb_info;
+        room->m_waterScheme = tr->m_rooms[room->getId()].water_scheme;
+        room->m_alternateGroup = tr->m_rooms[room->getId()].alternate_group;
 
-        room->transform = glm::translate(glm::mat4(1.0f), { tr->m_rooms[room->getId()].offset.x, -tr->m_rooms[room->getId()].offset.z, tr->m_rooms[room->getId()].offset.y });
-        room->ambient_lighting[0] = tr->m_rooms[room->getId()].light_colour.r * 2;
-        room->ambient_lighting[1] = tr->m_rooms[room->getId()].light_colour.g * 2;
-        room->ambient_lighting[2] = tr->m_rooms[room->getId()].light_colour.b * 2;
+        room->m_modelMatrix = glm::translate(glm::mat4(1.0f), { tr->m_rooms[room->getId()].offset.x, -tr->m_rooms[room->getId()].offset.z, tr->m_rooms[room->getId()].offset.y });
+        room->m_ambientLighting[0] = tr->m_rooms[room->getId()].light_colour.r * 2;
+        room->m_ambientLighting[1] = tr->m_rooms[room->getId()].light_colour.g * 2;
+        room->m_ambientLighting[2] = tr->m_rooms[room->getId()].light_colour.b * 2;
         room->setRoom(room.get());
-        room->near_room_list.clear();
-        room->overlapped_room_list.clear();
+        room->m_nearRooms.clear();
+        room->m_overlappedRooms.clear();
 
-        room->genMesh(world, room->getId(), tr);
+        room->genMesh(world, tr);
 
-        room->bt_body.reset();
+        room->m_btBody.reset();
 
         /*
          *  let us load static room meshes
          */
-        room->static_mesh.clear();
+        room->m_staticMeshes.clear();
 
         const loader::Room *tr_room = &tr->m_rooms[room->getId()];
         for(uint16_t i = 0; i < tr_room->static_meshes.size(); i++)
@@ -1795,8 +1795,8 @@ namespace world
             {
                 continue;
             }
-            room->static_mesh.emplace_back(std::make_shared<StaticMesh>(tr_room->static_meshes[i].object_id));
-            std::shared_ptr<StaticMesh> r_static = room->static_mesh.back();
+            room->m_staticMeshes.emplace_back(std::make_shared<StaticMesh>(tr_room->static_meshes[i].object_id));
+            std::shared_ptr<StaticMesh> r_static = room->m_staticMeshes.back();
             r_static->setRoom(room.get());
             r_static->mesh = world->meshes[tr->m_meshIndices[tr_static->mesh]];
             r_static->position[0] = tr_room->static_meshes[i].position.x;
@@ -1825,8 +1825,8 @@ namespace world
             r_static->visibleBoundingBox.max[1] = -tr_static->visibility_box[1].z;
             r_static->visibleBoundingBox.max[2] = tr_static->visibility_box[0].y;
 
-            r_static->obb.transform = &room->static_mesh[i]->transform;
-            r_static->obb.radius = room->static_mesh[i]->mesh->m_radius;
+            r_static->obb.transform = &room->m_staticMeshes[i]->transform;
+            r_static->obb.radius = room->m_staticMeshes[i]->mesh->m_radius;
             r_static->transform = glm::rotate(glm::translate(glm::mat4(1.0f), r_static->position), glm::radians(r_static->rotation[0]), { 0,0,1 });
             r_static->was_rendered = 0;
             r_static->obb.rebuild(r_static->visibleBoundingBox);
@@ -1901,19 +1901,19 @@ namespace world
          */
         for(uint32_t i = 0; i < tr_room->sprites.size(); i++)
         {
-            room->sprites.emplace_back();
+            room->m_sprites.emplace_back();
             if((tr_room->sprites[i].texture >= 0) && (static_cast<uint32_t>(tr_room->sprites[i].texture) < world->sprites.size()))
             {
-                room->sprites[i].sprite = &world->sprites[tr_room->sprites[i].texture];
-                room->sprites[i].pos = util::convert(tr_room->vertices[tr_room->sprites[i].vertex].vertex);
-                room->sprites[i].pos += glm::vec3(room->transform[3]);
+                room->m_sprites[i].sprite = &world->sprites[tr_room->sprites[i].texture];
+                room->m_sprites[i].pos = util::convert(tr_room->vertices[tr_room->sprites[i].vertex].vertex);
+                room->m_sprites[i].pos += glm::vec3(room->m_modelMatrix[3]);
             }
         }
 
         /*
          * let us load sectors
          */
-        room->sectors.resize(boost::extents[tr_room->num_xsectors][tr_room->num_zsectors]);
+        room->m_sectors.resize(boost::extents[tr_room->num_xsectors][tr_room->num_zsectors]);
 
         /*
          * base sectors information loading and collisional mesh creation
@@ -1926,18 +1926,18 @@ namespace world
          // quickly detect slopes for pushable blocks and other entities that rely on
          // floor level.
 
-        for(size_t i = 0; i < room->sectors.num_elements(); i++)
+        for(size_t i = 0; i < room->m_sectors.num_elements(); i++)
         {
-            const auto indexX = i / room->sectors.shape()[1];
-            const auto indexY = i % room->sectors.shape()[1];
-            RoomSector* const sector = &room->sectors[indexX][indexY];
+            const auto indexX = i / room->m_sectors.shape()[1];
+            const auto indexY = i % room->m_sectors.shape()[1];
+            RoomSector* const sector = &room->m_sectors[indexX][indexY];
             // Filling base sectors information.
 
             sector->index_x = indexX;
             sector->index_y = indexY;
 
-            sector->position[0] = room->transform[3][0] + sector->index_x * MeteringSectorSize + 0.5f * MeteringSectorSize;
-            sector->position[1] = room->transform[3][1] + sector->index_y * MeteringSectorSize + 0.5f * MeteringSectorSize;
+            sector->position[0] = room->m_modelMatrix[3][0] + sector->index_x * MeteringSectorSize + 0.5f * MeteringSectorSize;
+            sector->position[1] = room->m_modelMatrix[3][1] + sector->index_y * MeteringSectorSize + 0.5f * MeteringSectorSize;
             sector->position[2] = 0.5f * (tr_room->y_bottom + tr_room->y_top);
 
             sector->owner_room = room;
@@ -2048,37 +2048,37 @@ namespace world
         /*
          *  load lights
          */
-        room->lights.resize(tr_room->lights.size());
+        room->m_lights.resize(tr_room->lights.size());
 
         for(size_t i = 0; i < tr_room->lights.size(); i++)
         {
-            room->lights[i].light_type = tr_room->lights[i].getLightType();
+            room->m_lights[i].light_type = tr_room->lights[i].getLightType();
 
-            room->lights[i].position[0] = tr_room->lights[i].position.x;
-            room->lights[i].position[1] = -tr_room->lights[i].position.z;
-            room->lights[i].position[2] = tr_room->lights[i].position.y;
+            room->m_lights[i].position[0] = tr_room->lights[i].position.x;
+            room->m_lights[i].position[1] = -tr_room->lights[i].position.z;
+            room->m_lights[i].position[2] = tr_room->lights[i].position.y;
 
-            if(room->lights[i].light_type == loader::LightType::Shadow)
+            if(room->m_lights[i].light_type == loader::LightType::Shadow)
             {
-                room->lights[i].colour[0] = -(tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
-                room->lights[i].colour[1] = -(tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
-                room->lights[i].colour[2] = -(tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
-                room->lights[i].colour[3] = 1.0f;
+                room->m_lights[i].colour[0] = -(tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
+                room->m_lights[i].colour[1] = -(tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
+                room->m_lights[i].colour[2] = -(tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
+                room->m_lights[i].colour[3] = 1.0f;
             }
             else
             {
-                room->lights[i].colour[0] = (tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
-                room->lights[i].colour[1] = (tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
-                room->lights[i].colour[2] = (tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
-                room->lights[i].colour[3] = 1.0f;
+                room->m_lights[i].colour[0] = (tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
+                room->m_lights[i].colour[1] = (tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
+                room->m_lights[i].colour[2] = (tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
+                room->m_lights[i].colour[3] = 1.0f;
             }
 
-            room->lights[i].inner = tr_room->lights[i].r_inner;
-            room->lights[i].outer = tr_room->lights[i].r_outer;
-            room->lights[i].length = tr_room->lights[i].length;
-            room->lights[i].cutoff = tr_room->lights[i].cutoff;
+            room->m_lights[i].inner = tr_room->lights[i].r_inner;
+            room->m_lights[i].outer = tr_room->lights[i].r_outer;
+            room->m_lights[i].length = tr_room->lights[i].length;
+            room->m_lights[i].cutoff = tr_room->lights[i].cutoff;
 
-            room->lights[i].falloff = 0.001f / room->lights[i].outer;
+            room->m_lights[i].falloff = 0.001f / room->m_lights[i].outer;
         }
 
         /*
@@ -2087,29 +2087,29 @@ namespace world
         for(size_t i = 0; i < tr_room->portals.size(); i++)
         {
             std::shared_ptr<Room> r_dest = world->rooms[tr_room->portals[i].adjoining_room];
-            room->portals.emplace_back(tr_room->portals[i], r_dest.get(), room->transform);
+            room->m_portals.emplace_back(tr_room->portals[i], r_dest.get(), room->m_modelMatrix);
         }
 
         /*
          * room borders calculation
          */
-        room->boundingBox.min[2] = tr_room->y_bottom;
-        room->boundingBox.max[2] = tr_room->y_top;
+        room->m_boundingBox.min[2] = tr_room->y_bottom;
+        room->m_boundingBox.max[2] = tr_room->y_top;
 
-        room->boundingBox.min[0] = room->transform[3][0] + MeteringSectorSize;
-        room->boundingBox.min[1] = room->transform[3][1] + MeteringSectorSize;
-        room->boundingBox.max[0] = room->transform[3][0] + MeteringSectorSize * room->sectors.shape()[0] - MeteringSectorSize;
-        room->boundingBox.max[1] = room->transform[3][1] + MeteringSectorSize * room->sectors.shape()[1] - MeteringSectorSize;
+        room->m_boundingBox.min[0] = room->m_modelMatrix[3][0] + MeteringSectorSize;
+        room->m_boundingBox.min[1] = room->m_modelMatrix[3][1] + MeteringSectorSize;
+        room->m_boundingBox.max[0] = room->m_modelMatrix[3][0] + MeteringSectorSize * room->m_sectors.shape()[0] - MeteringSectorSize;
+        room->m_boundingBox.max[1] = room->m_modelMatrix[3][1] + MeteringSectorSize * room->m_sectors.shape()[1] - MeteringSectorSize;
 
         /*
          * alternate room pointer calculation if one exists.
          */
-        room->alternate_room = nullptr;
-        room->base_room = nullptr;
+        room->m_alternateRoom = nullptr;
+        room->m_baseRoom = nullptr;
 
         if((tr_room->alternate_room >= 0) && (static_cast<uint32_t>(tr_room->alternate_room) < tr->m_rooms.size()))
         {
-            room->alternate_room = world->rooms[tr_room->alternate_room];
+            room->m_alternateRoom = world->rooms[tr_room->alternate_room];
         }
     }
 
@@ -2131,20 +2131,20 @@ namespace world
 
             // Final step is sending actual sectors to Bullet collision model. We do it here.
 
-            btCollisionShape *cshape = BT_CSfromHeightmap(room->sectors, room_tween, true, true);
+            btCollisionShape *cshape = BT_CSfromHeightmap(room->m_sectors, room_tween, true, true);
 
             if(!cshape)
                 continue;
 
             btVector3 localInertia(0, 0, 0);
             btTransform tr;
-            tr.setFromOpenGLMatrix(glm::value_ptr(room->transform));
+            tr.setFromOpenGLMatrix(glm::value_ptr(room->m_modelMatrix));
             btDefaultMotionState* motionState = new btDefaultMotionState(tr);
-            room->bt_body.reset(new btRigidBody(0.0, motionState, cshape, localInertia));
-            engine::bt_engine_dynamicsWorld->addRigidBody(room->bt_body.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-            room->bt_body->setUserPointer(room.get());
-            room->bt_body->setRestitution(1.0);
-            room->bt_body->setFriction(1.0);
+            room->m_btBody.reset(new btRigidBody(0.0, motionState, cshape, localInertia));
+            engine::bt_engine_dynamicsWorld->addRigidBody(room->m_btBody.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+            room->m_btBody->setUserPointer(room.get());
+            room->m_btBody->setRestitution(1.0);
+            room->m_btBody->setFriction(1.0);
             room->setCollisionType(world::CollisionType::Static);                    // meshtree
             room->setCollisionShape(world::CollisionShape::TriMesh);
         }
@@ -2155,13 +2155,13 @@ namespace world
         for(uint32_t i = 0; i < world->rooms.size(); i++)
         {
             std::shared_ptr<Room> r = world->rooms[i];
-            if(r->alternate_room != nullptr)
+            if(r->m_alternateRoom != nullptr)
             {
-                r->alternate_room->base_room = r;   // Refill base room pointer.
+                r->m_alternateRoom->m_baseRoom = r;   // Refill base room pointer.
             }
 
             // Fill heightmap and translate floordata.
-            for(auto column : r->sectors)
+            for(auto column : r->m_sectors)
             {
                 for(RoomSector& sector : column)
                 {
@@ -2769,7 +2769,7 @@ namespace world
         // Find the number of different texture pages used and the number of non-null sprites
         size_t highestTexturePageFound = 0;
         int actualSpritesFound = 0;
-        for(RoomSprite& sp : room->sprites)
+        for(RoomSprite& sp : room->m_sprites)
         {
             if(sp.sprite)
             {
@@ -2779,13 +2779,13 @@ namespace world
         }
         if(actualSpritesFound == 0)
         {
-            room->sprite_buffer = nullptr;
+            room->m_spriteBuffer = nullptr;
             return;
         }
 
-        room->sprite_buffer = new core::SpriteBuffer();
-        room->sprite_buffer->num_texture_pages = highestTexturePageFound + 1;
-        room->sprite_buffer->element_count_per_texture.resize(room->sprite_buffer->num_texture_pages, 0);
+        room->m_spriteBuffer = new core::SpriteBuffer();
+        room->m_spriteBuffer->num_texture_pages = highestTexturePageFound + 1;
+        room->m_spriteBuffer->element_count_per_texture.resize(room->m_spriteBuffer->num_texture_pages, 0);
 
         // First collect indices on a per-texture basis
         std::vector<std::vector<uint16_t>> elements_for_texture(highestTexturePageFound + 1);
@@ -2793,7 +2793,7 @@ namespace world
         std::vector<GLfloat> spriteData(actualSpritesFound * 4 * 7, 0);
 
         int writeIndex = 0;
-        for(const RoomSprite& room_sprite : room->sprites)
+        for(const RoomSprite& room_sprite : room->m_sprites)
         {
             if(room_sprite.sprite)
             {
@@ -2832,9 +2832,9 @@ namespace world
 
                 // Assign indices
                 size_t texture = room_sprite.sprite->texture;
-                size_t start = room->sprite_buffer->element_count_per_texture[texture];
+                size_t start = room->m_spriteBuffer->element_count_per_texture[texture];
                 size_t newElementCount = start + 6;
-                room->sprite_buffer->element_count_per_texture[texture] = newElementCount;
+                room->m_spriteBuffer->element_count_per_texture[texture] = newElementCount;
                 elements_for_texture[texture].resize(newElementCount);
 
                 elements_for_texture[texture][start + 0] = vertexStart + 0;
@@ -2854,8 +2854,8 @@ namespace world
             {
                 continue;
             }
-            BOOST_ASSERT(elements_for_texture[i].size() >= room->sprite_buffer->element_count_per_texture[i]);
-            std::copy_n(elements_for_texture[i].begin(), room->sprite_buffer->element_count_per_texture[i], std::back_inserter(elements));
+            BOOST_ASSERT(elements_for_texture[i].size() >= room->m_spriteBuffer->element_count_per_texture[i]);
+            std::copy_n(elements_for_texture[i].begin(), room->m_spriteBuffer->element_count_per_texture[i], std::back_inserter(elements));
             elements_for_texture[i].clear();
         }
         elements_for_texture.clear();
@@ -2878,7 +2878,7 @@ namespace world
             render::VertexArrayAttribute(render::SpriteShaderDescription::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat[7]), sizeof(GLfloat[5]))
         };
 
-        room->sprite_buffer->data.reset(new render::VertexArray(elementBuffer, 3, attribs));
+        room->m_spriteBuffer->data.reset(new render::VertexArray(elementBuffer, 3, attribs));
     }
 
     void Res_GenVBOs(World *world)
@@ -2893,9 +2893,9 @@ namespace world
 
         for(uint32_t i = 0; i < world->rooms.size(); i++)
         {
-            if(world->rooms[i]->mesh && (!world->rooms[i]->mesh->m_vertices.empty() || !world->rooms[i]->mesh->m_animatedVertices.empty()))
+            if(world->rooms[i]->m_mesh && (!world->rooms[i]->m_mesh->m_vertices.empty() || !world->rooms[i]->m_mesh->m_animatedVertices.empty()))
             {
-                world->rooms[i]->mesh->genVBO(&render::renderer);
+                world->rooms[i]->m_mesh->genVBO(&render::renderer);
             }
         }
     }
@@ -2915,7 +2915,7 @@ namespace world
         for(uint32_t i = 0; i < world->rooms.size(); i++)
         {
             auto r = world->rooms[i];
-            if(r->base_room != nullptr)
+            if(r->m_baseRoom != nullptr)
             {
                 r->disable();    // Disable current room
             }
@@ -3517,8 +3517,8 @@ namespace world
                 core::Sprite* sp = world->getSpriteByID(tr_item->object_id);
                 if(sp && entity->getRoom())
                 {
-                    entity->getRoom()->sprites.emplace_back();
-                    RoomSprite& rsp = entity->getRoom()->sprites.back();
+                    entity->getRoom()->m_sprites.emplace_back();
+                    RoomSprite& rsp = entity->getRoom()->m_sprites.back();
                     rsp.sprite = sp;
                     rsp.pos = glm::vec3(entity->m_transform[3]);
                     rsp.was_rendered = false;
@@ -3625,7 +3625,7 @@ namespace world
 
             for(const std::shared_ptr<Room>& room : engine::engine_world.rooms)
             {
-                for(world::Object* cont : room->containers)
+                for(world::Object* cont : room->m_objects)
                 {
                     Entity* ent = dynamic_cast<Entity*>(cont);
                     if(!ent)

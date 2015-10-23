@@ -598,7 +598,7 @@ void storeEntityLerpTransforms()
             // set bones to next interval step, this keeps the ponytail (bullet's dynamic interpolation) in sync with actor interpolation:
             glm::float_t tmp = engine_world.character->m_skeleton.getLerp();
             engine_world.character->m_skeleton.setLerp( tmp + world::animation::FrameRate / world::animation::GameLogicFrameRate );
-            engine_world.character->m_skeleton.interpolate();
+            engine_world.character->m_skeleton.updatePose();
             engine_world.character->updateRigidBody(false);
             engine_world.character->ghostUpdate();
             engine_world.character->m_skeleton.setLerp( tmp );
@@ -626,7 +626,7 @@ void storeEntityLerpTransforms()
 
                 glm::float_t tmp = entity->m_skeleton.getLerp();
                 entity->m_skeleton.setLerp( tmp + world::animation::FrameRate / world::animation::GameLogicFrameRate );
-                entity->m_skeleton.interpolate();
+                entity->m_skeleton.updatePose();
                 entity->updateRigidBody(false);
                 entity->ghostUpdate();
                 entity->m_skeleton.setLerp( tmp );
@@ -770,17 +770,17 @@ void dumpRoom(world::Room* r)
 
     BOOST_LOG_TRIVIAL(debug) << boost::format("ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)")
                                 % r->getId()
-                                % r->sectors.shape()[0]
-                                % r->sectors.shape()[1]
-                                % r->boundingBox.min[2]
-                                % r->boundingBox.max[2]
-                                % r->transform[3][0]
-                                % r->transform[3][1];
+                                % r->m_sectors.shape()[0]
+                                % r->m_sectors.shape()[1]
+                                % r->m_boundingBox.min[2]
+                                % r->m_boundingBox.max[2]
+                                % r->m_modelMatrix[3][0]
+                                % r->m_modelMatrix[3][1];
     BOOST_LOG_TRIVIAL(debug) << boost::format("flag = 0x%X, alt_room = %d, base_room = %d")
-                                % r->flags
-                                % (r->alternate_room != nullptr ? r->alternate_room->getId() : -1)
-                                % (r->base_room != nullptr ? r->base_room->getId() : -1);
-    for(const auto& column : r->sectors)
+                                % r->m_flags
+                                % (r->m_alternateRoom != nullptr ? r->m_alternateRoom->getId() : -1)
+                                % (r->m_baseRoom != nullptr ? r->m_baseRoom->getId() : -1);
+    for(const auto& column : r->m_sectors)
     {
         for(const world::RoomSector& rs : column)
         {
@@ -793,11 +793,11 @@ void dumpRoom(world::Room* r)
         }
     }
 
-    for(auto sm : r->static_mesh)
+    for(auto sm : r->m_staticMeshes)
     {
         BOOST_LOG_TRIVIAL(debug) << "static_mesh = " << sm->getId();
     }
-    for(world::Object* cont : r->containers)
+    for(world::Object* cont : r->m_objects)
     {
         if(world::Entity* ent = dynamic_cast<world::Entity*>(cont))
         {
@@ -1171,7 +1171,7 @@ int execCmd(const char *ch)
             if(world::Room* r = render::renderer.camera()->getCurrentRoom())
             {
                 sect = r->getSectorXYZ(render::renderer.camera()->getPosition());
-                Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->getId(), r->sectors.shape()[0], r->sectors.shape()[1]);
+                Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->getId(), r->m_sectors.shape()[0], r->m_sectors.shape()[1]);
                 if(sect)
                 {
                     Console::instance().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d",
@@ -1179,11 +1179,11 @@ int execCmd(const char *ch)
                                                sect->index_y,
                                                static_cast<int>(sect->ceiling == world::MeteringWallHeight || sect->floor == world::MeteringWallHeight),
                                                static_cast<int>(sect->sector_above != nullptr), static_cast<int>(sect->sector_below != nullptr));
-                    for(uint32_t i = 0; i < sect->owner_room->static_mesh.size(); i++)
+                    for(uint32_t i = 0; i < sect->owner_room->m_staticMeshes.size(); i++)
                     {
-                        Console::instance().printf("static[%d].object_id = %d", i, sect->owner_room->static_mesh[i]->getId());
+                        Console::instance().printf("static[%d].object_id = %d", i, sect->owner_room->m_staticMeshes[i]->getId());
                     }
-                    for(world::Object* cont : sect->owner_room->containers)
+                    for(world::Object* cont : sect->owner_room->m_objects)
                     {
                         if(world::Entity* e = dynamic_cast<world::Entity*>(cont))
                         {

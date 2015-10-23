@@ -351,9 +351,9 @@ struct Character : public Entity
     void updateParams();
 
     float getParam(int parameter);
-    int   setParam(int parameter, float value);
+    bool setParam(int parameter, float value);
     int   changeParam(int parameter, float value);
-    int   setParamMaximum(int parameter, float max_value);
+    bool setParamMaximum(int parameter, float max_value);
 
     bool setWeaponModel(int weapon_model, bool armed);
 

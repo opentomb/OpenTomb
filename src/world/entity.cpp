@@ -132,16 +132,13 @@ void Entity::ghostUpdate()
 
     if(m_typeFlags & ENTITY_TYPE_DYNAMIC)
     {
-        size_t i = 0;
         for(const animation::Bone& bone : m_skeleton.getBones())
         {
             auto tr = m_transform * bone.full_transform;
-            auto v = m_skeleton.getModel()->meshes[i].mesh_base->m_center;
             bone.ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr( tr ));
-            auto pos = tr * glm::vec4(v, 1);
+            auto pos = tr * glm::vec4(bone.mesh->m_center, 1);
             bone.ghostObject->getWorldTransform().setOrigin(util::convert(glm::vec3(pos)));
 
-            ++i;
         }
     }
     else
@@ -250,6 +247,7 @@ void Entity::transferToRoom(Room* room)
     {
         if(getRoom())
             getRoom()->removeEntity(this);
+
         if(room)
             room->addEntity(this);
     }
@@ -456,12 +454,12 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
             }
             break;
 
-        case animation::AnimCommandOpcode::EmptyHands:     // ()
+        case animation::AnimCommandOpcode::EmptyHands:
             // This command is used only for Lara.
             // Reset interaction-blocking
             break;
 
-        case animation::AnimCommandOpcode::Kill:           // ()
+        case animation::AnimCommandOpcode::Kill:
             // This command is usually used only for non-Lara items,
             // although there seem to be Lara-anims with this cmd id (tr4 anim 415, shotgun overlay)
             // TODO: for switches, this command indicates the trigger-frame
@@ -537,7 +535,8 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
 
 void Entity::processSector()
 {
-    if(!m_currentSector) return;
+    if(!m_currentSector)
+        return;
 
     // Calculate both above and below sectors for further usage.
     // Sector below is generally needed for getting proper trigger index,
@@ -576,7 +575,7 @@ void Entity::setAnimation(int animation, int frame)
     m_skeleton.model()->no_fix_all = false;
 
     // some items (jeep) need this here...
-    m_skeleton.interpolate();
+    m_skeleton.updatePose();
 //    updateRigidBody(false);
 }
 
@@ -621,7 +620,7 @@ void Entity::updateInterpolation(util::Duration time)
 
     // Bone animation interp:
     const glm::float_t lerp = glm::min(1.0f, m_skeleton.getLerp() + time / animation::FrameTime);
-    m_skeleton.interpolate();
+    m_skeleton.updatePose();
     m_skeleton.setLerp( lerp );
 
     // Entity transform interp:
@@ -650,7 +649,7 @@ animation::AnimUpdate Entity::stepAnimation(util::Duration time)
 
 //    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
 
-    m_skeleton.interpolate();
+    m_skeleton.updatePose();
     fixPenetrations(nullptr);
 
     return stepResult;
@@ -686,7 +685,7 @@ void Entity::frame(util::Duration time)
     //       If m_transform changes, rigid body must be updated regardless of anim frame change...
     //if(animStepResult != ENTITY_ANIM_NONE)
     //{ }
-    m_skeleton.interpolate();
+    m_skeleton.updatePose();
     updateRigidBody(false);
 }
 
@@ -709,7 +708,7 @@ void Entity::checkActivators()
             return;
 
     glm::vec4 ppos = m_transform[3] + m_transform[1] * m_skeleton.getBoundingBox().max[1];
-    auto containers = getRoom()->containers;
+    auto containers = getRoom()->m_objects;
     for(Object* cont : containers)
     {
         Entity* e = dynamic_cast<Entity*>(cont);
@@ -793,7 +792,7 @@ bool Entity::createRagdoll(RDSetup* setup)
     // Setup bodies.
     m_skeleton.model()->bt_joints.clear();
     // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
-    m_skeleton.interpolate();
+    m_skeleton.updatePose();
     m_skeleton.model()->no_fix_all = false;
     m_skeleton.model()->no_fix_body_parts = 0x00000000;
     fixPenetrations(nullptr);

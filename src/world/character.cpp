@@ -280,14 +280,14 @@ void Character::getHeightInfo(const glm::vec3& pos, struct HeightInfo *fc, glm::
     if(r)
     {
         const RoomSector* rs = r->getSectorXYZ(pos);                                         // if r != nullptr then rs can not been nullptr!!!
-        if(r->flags & TR_ROOM_FLAG_WATER)                                       // in water - go up
+        if(r->m_flags & TR_ROOM_FLAG_WATER)                                       // in water - go up
         {
             while(rs->sector_above)
             {
                 BOOST_ASSERT(rs->sector_above != nullptr);
                 rs = rs->sector_above->checkFlip();
                 BOOST_ASSERT(rs != nullptr && rs->owner_room != nullptr);
-                if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) == 0x00)        // find air
+                if((rs->owner_room->m_flags & TR_ROOM_FLAG_WATER) == 0x00)        // find air
                 {
                     fc->transition_level = static_cast<glm::float_t>(rs->floor);
                     fc->water = true;
@@ -295,14 +295,14 @@ void Character::getHeightInfo(const glm::vec3& pos, struct HeightInfo *fc, glm::
                 }
             }
         }
-        else if(r->flags & TR_ROOM_FLAG_QUICKSAND)
+        else if(r->m_flags & TR_ROOM_FLAG_QUICKSAND)
         {
             while(rs->sector_above)
             {
                 BOOST_ASSERT(rs->sector_above != nullptr);
                 rs = rs->sector_above->checkFlip();
                 BOOST_ASSERT(rs != nullptr && rs->owner_room != nullptr);
-                if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)    // find air
+                if((rs->owner_room->m_flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)    // find air
                 {
                     fc->transition_level = static_cast<glm::float_t>(rs->floor);
                     if(fc->transition_level - fc->floor_point[2] > v_offset)
@@ -324,13 +324,13 @@ void Character::getHeightInfo(const glm::vec3& pos, struct HeightInfo *fc, glm::
                 BOOST_ASSERT(rs->sector_below != nullptr);
                 rs = rs->sector_below->checkFlip();
                 BOOST_ASSERT(rs != nullptr && rs->owner_room != nullptr);
-                if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
+                if((rs->owner_room->m_flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
                 {
                     fc->transition_level = static_cast<glm::float_t>(rs->ceiling);
                     fc->water = true;
                     break;
                 }
-                else if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) != 0x00)        // find water
+                else if((rs->owner_room->m_flags & TR_ROOM_FLAG_QUICKSAND) != 0x00)        // find water
                 {
                     fc->transition_level = static_cast<glm::float_t>(rs->ceiling);
                     if(fc->transition_level - fc->floor_point[2] > v_offset)
@@ -1155,7 +1155,7 @@ int Character::freeFalling()
 
     updateCurrentHeight();
 
-    if(getRoom() && (getRoom()->flags & TR_ROOM_FLAG_WATER))
+    if(getRoom() && (getRoom()->m_flags & TR_ROOM_FLAG_WATER))
     {
         if(m_speed[2] < 0.0)
         {
@@ -1442,7 +1442,7 @@ int Character::moveUnderWater()
 
     // Check current place.
 
-    if(getRoom() && !(getRoom()->flags & TR_ROOM_FLAG_WATER))
+    if(getRoom() && !(getRoom()->m_flags & TR_ROOM_FLAG_WATER))
     {
         m_moveType = MoveType::FreeFalling;
         return 2;
@@ -1614,7 +1614,7 @@ int Character::findTraverse()
     if(obj_s != nullptr)
     {
         obj_s = obj_s->checkPortalPointer();
-        for(Object* cont : obj_s->owner_room->containers)
+        for(Object* cont : obj_s->owner_room->m_objects)
         {
             if(Entity* e = dynamic_cast<Entity*>(cont))
             {
@@ -1882,7 +1882,7 @@ void Character::updateParams()
                 setParam(PARAM_AIR, PARAM_ABSOLUTE_MAX);
             }
 
-            if(m_skeleton.getLastState() == LaraState::SPRINT || m_skeleton.getLastState() == LaraState::SPRINT_ROLL)
+            if(m_skeleton.getLastState() == LaraState::Sprint || m_skeleton.getLastState() == LaraState::SprintRoll)
             {
                 changeParam(PARAM_STAMINA, -0.5);
             }
@@ -1911,31 +1911,28 @@ void Character::updateParams()
     }
 }
 
-int Character::setParamMaximum(int parameter, float max_value)
+bool Character::setParamMaximum(int parameter, float max_value)
 {
     if(parameter >= PARAM_SENTINEL)
-        return 0;
+        return false;
 
     max_value = (max_value < 0) ? (0) : (max_value);    // Clamp max. to at least zero
     m_parameters.maximum[parameter] = max_value;
-    return 1;
+    return true;
 }
 
-int Character::setParam(int parameter, float value)
+bool Character::setParam(int parameter, float value)
 {
     if(parameter >= PARAM_SENTINEL)
-        return 0;
+        return false;
 
     if(value == m_parameters.param[parameter])
-        return 0;
+        return false;
 
     float maximum = m_parameters.maximum[parameter];
 
-    value = (value >= 0) ? (value) : (maximum); // Char params can't be less than zero.
-    value = (value <= maximum) ? (value) : (maximum);
-
-    m_parameters.param[parameter] = value;
-    return 1;
+    m_parameters.param[parameter] = glm::clamp(value, 0.0f, maximum);
+    return true;
 }
 
 float Character::getParam(int parameter)
@@ -2175,7 +2172,7 @@ void Character::frame(util::Duration time)
     }
     if(isPlayer() && (engine::control_states.noclip || engine::control_states.free_look))
     {
-        m_skeleton.interpolate();
+        m_skeleton.updatePose();
         updateRigidBody(false);     // bbox update, room update, m_transform from btBody...
         return;
     }
@@ -2223,7 +2220,7 @@ void Character::frame(util::Duration time)
                                                                                               // TODO: check rigidbody update requirements.
                                                                                               //if(animStepResult != ENTITY_ANIM_NONE)
                                                                                               //{ }
-    m_skeleton.interpolate();
+    m_skeleton.updatePose();
     updateRigidBody(false);     // bbox update, room update, m_transform from btBody...
 }
 
@@ -2320,7 +2317,7 @@ void Character::jump(glm::float_t v_vertical, glm::float_t v_horizontal)
 
 Substance Character::getSubstanceState() const
 {
-    if(getRoom()->flags & TR_ROOM_FLAG_QUICKSAND)
+    if(getRoom()->m_flags & TR_ROOM_FLAG_QUICKSAND)
     {
         if(m_heightInfo.transition_level > m_transform[3][2] + m_height)
         {

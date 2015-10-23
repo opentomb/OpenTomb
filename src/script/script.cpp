@@ -2555,7 +2555,7 @@ void lua_SetFlipState(uint32_t group, bool state)
         {
             for(std::shared_ptr<world::Room> currentRoom : engine::engine_world.rooms)
             {
-                if(currentRoom->alternate_group == group)    // Check if group is valid.
+                if(currentRoom->m_alternateGroup == group)    // Check if group is valid.
                 {
                     if(state)
                         currentRoom->swapToAlternate();

@@ -76,28 +76,28 @@ void Skeleton::fromModel(SkeletalModel* model)
 void Skeleton::itemFrame(util::Duration time)
 {
     stepAnimation(time, nullptr);
-    interpolate();
+    updatePose();
 }
 
-void Skeleton::interpolate()
+void Skeleton::updatePose()
 {
-    const animation::SkeletonKeyFrame& lastKeyFrame = m_model->animations[m_lerpLastAnimation].keyFrames[m_lerpLastFrame];
-    const animation::SkeletonKeyFrame& currentKeyFrame = m_model->animations[m_currentAnimation].keyFrames[m_currentFrame];
+    const animation::SkeletonKeyFrame& prevKeyFrame = m_model->animations[m_previousAnimation].keyFrames[m_previousFrame];
+    const animation::SkeletonKeyFrame& currKeyFrame = m_model->animations[m_currentAnimation].keyFrames[m_currentFrame];
 
-    m_boundingBox.max = glm::mix(lastKeyFrame.boundingBox.max, currentKeyFrame.boundingBox.max, m_lerp);
-    m_boundingBox.min = glm::mix(lastKeyFrame.boundingBox.min, currentKeyFrame.boundingBox.min, m_lerp);
-    m_position = glm::mix(lastKeyFrame.position, currentKeyFrame.position, m_lerp);
+    m_boundingBox.max = glm::mix(prevKeyFrame.boundingBox.max, currKeyFrame.boundingBox.max, m_frameLerp);
+    m_boundingBox.min = glm::mix(prevKeyFrame.boundingBox.min, currKeyFrame.boundingBox.min, m_frameLerp);
+    m_position = glm::mix(prevKeyFrame.position, currKeyFrame.position, m_frameLerp);
 
-    for(size_t k = 0; k < lastKeyFrame.boneKeyFrames.size(); k++)
+    for(size_t k = 0; k < prevKeyFrame.boneKeyFrames.size(); k++)
     {
-        m_bones[k].offset = glm::mix(lastKeyFrame.boneKeyFrames[k].offset, currentKeyFrame.boneKeyFrames[k].offset, m_lerp);
+        m_bones[k].offset = glm::mix(prevKeyFrame.boneKeyFrames[k].offset, currKeyFrame.boneKeyFrames[k].offset, m_frameLerp);
         m_bones[k].transform = glm::translate(glm::mat4(1.0f), m_bones[k].offset);
         if(k == 0)
         {
             m_bones[k].transform = glm::translate(m_bones[k].transform, m_position);
         }
 
-        m_bones[k].qrotate = glm::slerp(lastKeyFrame.boneKeyFrames[k].qrotate, currentKeyFrame.boneKeyFrames[k].qrotate, m_lerp);
+        m_bones[k].qrotate = glm::slerp(prevKeyFrame.boneKeyFrames[k].qrotate, currKeyFrame.boneKeyFrames[k].qrotate, m_frameLerp);
         m_bones[k].transform *= glm::mat4_cast(m_bones[k].qrotate);
     }
 
@@ -105,7 +105,7 @@ void Skeleton::interpolate()
      * build absolute coordinate matrix system
      */
     m_bones[0].full_transform = m_bones[0].transform;
-    for(size_t k = 1; k < lastKeyFrame.boneKeyFrames.size(); k++)
+    for(size_t k = 1; k < prevKeyFrame.boneKeyFrames.size(); k++)
     {
         m_bones[k].full_transform = m_bones[k].parent->full_transform * m_bones[k].transform;
     }
@@ -138,7 +138,7 @@ void Skeleton::setAnimation(int animation, int frame)
 
     m_currentAnimation = animation;
     m_currentFrame = frame;
-    m_lastState = anim->state_id;
+    m_previousState = anim->state_id;
     m_nextState = anim->state_id;
 
     //    m_bf.animations.lerp = 0.0f;
@@ -158,14 +158,14 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity) {
         m_frameTime -= time;
         if(m_frameTime + animation::GameLogicFrameTime / 2.0f < FrameTime)
         {
-            m_lerp = m_frameTime / FrameTime;
+            m_frameLerp = m_frameTime / FrameTime;
             return AnimUpdate::None;
         }
 
-        m_lerpLastAnimation = m_currentAnimation;
-        m_lerpLastFrame = m_currentFrame;
+        m_previousAnimation = m_currentAnimation;
+        m_previousFrame = m_currentFrame;
         m_frameTime = util::Duration(0);
-        m_lerp = 0.0f;
+        m_frameLerp = 0.0f;
         if(m_currentFrame > 0)
         {
             m_currentFrame--;
@@ -181,14 +181,14 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity) {
     m_frameTime += time;
     if(m_frameTime + animation::GameLogicFrameTime / 2.0f < FrameTime)
     {
-        m_lerp = m_frameTime / FrameTime; // re-sync
+        m_frameLerp = m_frameTime / FrameTime; // re-sync
         return AnimUpdate::None;
     }
 
-    m_lerpLastAnimation = m_currentAnimation;
-    m_lerpLastFrame = m_currentFrame;
+    m_previousAnimation = m_currentAnimation;
+    m_previousFrame = m_currentFrame;
     m_frameTime = util::Duration(0);
-    m_lerp = 0.0f;
+    m_frameLerp = 0.0f;
 
     uint16_t frame_id = m_currentFrame + 1;
 
@@ -222,12 +222,12 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity) {
     // check state change:
     AnimUpdate stepResult = AnimUpdate::NewFrame;
     auto anim_id = m_currentAnimation;
-    if(m_nextState != m_lastState)
+    if(m_nextState != m_previousState)
     {
         if(m_model->findStateChange(m_nextState, anim_id, frame_id))
         {
-            m_lastState = m_model->animations[anim_id].state_id;
-            m_nextState = m_lastState;
+            m_previousState = m_model->animations[anim_id].state_id;
+            m_nextState = m_previousState;
             stepResult = AnimUpdate::NewAnim;
         }
     }
@@ -250,8 +250,8 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity) {
             // some overlay anims may have invalid nextAnim/nextFrame values:
             if(anim_id < m_model->animations.size() && frame_id < m_model->animations[anim_id].keyFrames.size())
             {
-                m_lastState = m_model->animations[anim_id].state_id;
-                m_nextState = m_lastState;
+                m_previousState = m_model->animations[anim_id].state_id;
+                m_nextState = m_previousState;
             }
             else
             {
@@ -285,13 +285,14 @@ const AnimationFrame &Skeleton::getCurrentAnimationFrame() const
     return m_model->animations[m_currentAnimation];
 }
 
-void Skeleton::updateTransform(const glm::mat4& transform)
+void Skeleton::updateTransform(const glm::mat4& entityTransform)
 {
+    const glm::mat4 inverseTransform = glm::inverse(entityTransform);
     for(Bone& bone : m_bones)
     {
         glm::mat4 tr;
         bone.bt_body->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr));
-        bone.full_transform = glm::inverse(transform) * tr;
+        bone.full_transform = inverseTransform * tr;
     }
 
     // that cycle is necessary only for skinning models;
