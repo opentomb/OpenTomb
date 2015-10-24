@@ -2,6 +2,7 @@
 
 #include "render.h"
 #include "util/vmath.h"
+#include "world/camera.h"
 #include "world/core/frustum.h"
 #include "world/core/polygon.h"
 
@@ -56,7 +57,7 @@ void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& fa
     }
 }
 
-void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference>& p, const glm::mat4& transform, const world::core::Frustum& frustum, const world::Camera& cam)
+void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference>& p, const glm::mat4& transform, const world::Camera& cam)
 {
     for(const render::TransparentPolygonReference& pp : p)
     {
@@ -65,9 +66,9 @@ void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference
         transformed.copyTransformed(*pp.polygon, transform, true);
         transformed.double_side = pp.polygon->double_side;
 
-        if(frustum.isVisible(transformed, cam))
+        if(cam.getFrustum().isVisible(transformed, cam))
         {
-            this->addPolygon(m_root, BSPFaceRef(transform, &pp), transformed);
+            addPolygon(m_root, BSPFaceRef(transform, &pp), transformed);
         }
     }
 }

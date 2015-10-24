@@ -1828,7 +1828,7 @@ namespace world
             r_static->obb.transform = &room->m_staticMeshes[i]->transform;
             r_static->obb.radius = room->m_staticMeshes[i]->mesh->m_radius;
             r_static->transform = glm::rotate(glm::translate(glm::mat4(1.0f), r_static->position), glm::radians(r_static->rotation[0]), { 0,0,1 });
-            r_static->was_rendered = 0;
+            r_static->was_rendered = false;
             r_static->obb.rebuild(r_static->visibleBoundingBox);
             r_static->obb.doTransform();
 

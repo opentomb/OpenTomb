@@ -305,7 +305,7 @@ struct World
     audio::Engine audioEngine;
 
     void updateAnimTextures();
-    void calculateWaterTint(GLfloat *tint, bool fixed_colour);
+    glm::vec4 calculateWaterTint() const;
 
     void addEntity(std::shared_ptr<Entity> entity);
     bool createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, MenuItemType type, uint16_t count, const std::string &name);

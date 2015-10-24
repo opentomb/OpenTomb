@@ -14,8 +14,8 @@ namespace
 // Metering step and sector size are basic Tomb Raider world metrics.
 // Use these defines at all times, when you're referencing classic TR
 // dimensions and terrain manipulations.
-constexpr float MeteringStep = 256.0f;
-constexpr float MeteringSectorSize = 1024.0f;
+constexpr glm::float_t MeteringStep = 256.0f;
+constexpr glm::float_t MeteringSectorSize = 1024.0f;
 
 // Wall height is a magical constant which specifies that sector with such
 // height contains impassable wall.

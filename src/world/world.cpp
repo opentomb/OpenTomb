@@ -516,54 +516,24 @@ void World::updateAnimTextures()                                                
     }
 }
 
-void World::calculateWaterTint(GLfloat* tint, bool fixed_colour)
+glm::vec4 World::calculateWaterTint() const
 {
     if(engineVersion < loader::Engine::TR4)  // If water room and level is TR1-3
     {
         if(engineVersion < loader::Engine::TR3)
         {
             // Placeholder, color very similar to TR1 PSX ver.
-            if(fixed_colour)
-            {
-                tint[0] = 0.585f;
-                tint[1] = 0.9f;
-                tint[2] = 0.9f;
-                tint[3] = 1.0f;
-            }
-            else
-            {
-                tint[0] *= 0.585f;
-                tint[1] *= 0.9f;
-                tint[2] *= 0.9f;
-            }
+            return { 0.585f, 0.9f, 0.9f, 1.0f };
         }
         else
         {
             // TOMB3 - closely matches TOMB3
-            if(fixed_colour)
-            {
-                tint[0] = 0.275f;
-                tint[1] = 0.45f;
-                tint[2] = 0.5f;
-                tint[3] = 1.0f;
-            }
-            else
-            {
-                tint[0] *= 0.275f;
-                tint[1] *= 0.45f;
-                tint[2] *= 0.5f;
-            }
+            return { 0.275f, 0.45f, 0.5f, 1.0f };
         }
     }
     else
     {
-        if(fixed_colour)
-        {
-            tint[0] = 1.0f;
-            tint[1] = 1.0f;
-            tint[2] = 1.0f;
-            tint[3] = 1.0f;
-        }
+        return { 1, 1, 1, 1 };
     }
 }
 

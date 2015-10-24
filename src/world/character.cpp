@@ -1595,20 +1595,20 @@ int Character::findTraverse()
     RoomSector* obj_s = nullptr;
     if(m_transform[1][0] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<glm::float_t>(ch_s->position[0] + MeteringSectorSize), static_cast<glm::float_t>(ch_s->position[1]), static_cast<glm::float_t>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] + MeteringSectorSize, ch_s->position[1], glm::float_t(0.0) });
     }
     else if(m_transform[1][0] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<glm::float_t>(ch_s->position[0] - MeteringSectorSize), static_cast<glm::float_t>(ch_s->position[1]), static_cast<glm::float_t>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] - MeteringSectorSize, ch_s->position[1], glm::float_t(0.0) });
     }
     // OY move case
     else if(m_transform[1][1] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<glm::float_t>(ch_s->position[0]), static_cast<glm::float_t>(ch_s->position[1] + MeteringSectorSize), static_cast<glm::float_t>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] + MeteringSectorSize, glm::float_t(0.0) });
     }
     else if(m_transform[1][1] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ static_cast<glm::float_t>(ch_s->position[0]), static_cast<glm::float_t>(ch_s->position[1] - MeteringSectorSize), static_cast<glm::float_t>(0.0) });
+        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] - MeteringSectorSize, glm::float_t(0.0) });
     }
 
     if(obj_s != nullptr)
@@ -1618,7 +1618,7 @@ int Character::findTraverse()
         {
             if(Entity* e = dynamic_cast<Entity*>(cont))
             {
-                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && (1 == core::testOverlap(*e, *this) && (glm::abs(e->m_transform[3][2] - m_transform[3][2]) < 1.1)))
+                if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && core::testOverlap(*e, *this) && (glm::abs(e->m_transform[3][2] - m_transform[3][2]) < 1.1))
                 {
                     m_angles[0] = std::lround(m_angles[0] / 90.0f) * 90.0f;
                     m_traversedObject = e;
