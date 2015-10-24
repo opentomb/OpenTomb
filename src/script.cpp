@@ -1930,6 +1930,10 @@ int lua_AddItem(lua_State * lua)
     if(ent && ent->character)
     {
         lua_pushinteger(lua, Inventory_AddItem(&ent->character->inventory, item_id, count));
+        if(ent->id == engine_world.Character->id)
+        {
+            Gui_NotifierStart(item_id);
+        }
         return 1;
     }
 

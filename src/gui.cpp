@@ -195,7 +195,7 @@ void Gui_Destroy()
 
 void Gui_Update()
 {
-
+    
 }
 
 void Gui_UpdateResize()
