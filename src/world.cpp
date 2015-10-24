@@ -1708,6 +1708,7 @@ void World_GenRoom(struct world_s *world, struct room_s *room, class VT_Level *t
     room->content->mesh = NULL;
     room->content->static_mesh = NULL;
     room->content->sprites = NULL;
+    room->content->sprites_vertices = NULL;
     room->content->lights = NULL;
     room->content->light_mode = tr->rooms[room->id].light_mode;
     room->content->reverb_info = tr->rooms[room->id].reverb_info;

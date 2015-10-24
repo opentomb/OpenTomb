@@ -205,6 +205,7 @@ typedef struct room_content_s
     struct static_mesh_s       *static_mesh;
     uint32_t                    sprites_count;
     struct room_sprite_s       *sprites;
+    struct vertex_s            *sprites_vertices;
     uint32_t                    light_count;
     struct light_s             *lights;
     
@@ -215,7 +216,6 @@ typedef struct room_content_s
     
     float                       ambient_lighting[3];
     struct base_mesh_s         *mesh;                                           // room's base mesh
-    struct sprite_buffer_s     *sprite_buffer;                                  // Render data for sprites
     struct physics_object_s    *physics_body;
 }room_content_t, *room_content_p;
 

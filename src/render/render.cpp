@@ -130,7 +130,7 @@ void CRender::SetWorld(struct world_s *world)
 
     if(world)
     {
-        uint32_t list_size = world->rooms_count + 128;                           // magick 128 was added for debug and testing
+        uint32_t list_size = world->rooms_count + 128;                          // magick 128 was added for debug and testing
         if(r_list)
         {
             free(r_list);
@@ -314,12 +314,10 @@ void CRender::DrawList()
     }
 
     qglDisable(GL_CULL_FACE);
-    qglDisableClientState(GL_NORMAL_ARRAY);                                     ///@FIXME: reduce number of gl state changes
     for(uint32_t i = 0; i < r_list_active_count; i++)
     {
-        this->DrawRoomSprites(r_list[i].room, m_camera->gl_view_mat, m_camera->gl_proj_mat);
+        this->DrawRoomSprites(r_list[i].room);
     }
-    qglEnableClientState(GL_NORMAL_ARRAY);
 
     /*
      * NOW render transparency polygons
@@ -1034,56 +1032,52 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
 #endif
 }
 
-void CRender::DrawRoomSprites(struct room_s *room, const float modelViewMatrix[16], const float projectionMatrix[16])
+
+void CRender::DrawRoomSprites(struct room_s *room)
 {
-    if (room->content->sprites_count > 0 && room->content->sprite_buffer)
+    if (room->content->sprites_count > 0)
     {
-        /*const sprite_shader_description *shader = shaderManager->getSpriteShader();
+        const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(false, false);
+        GLfloat *up = m_camera->up_dir;
+        GLfloat *right = m_camera->right_dir;
+
+        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         qglUseProgramObjectARB(shader->program);
-        qglUniformMatrix4fvARB(shader->model_view, 1, GL_FALSE, modelViewMatrix);
-        qglUniformMatrix4fvARB(shader->projection, 1, GL_FALSE, projectionMatrix);
         qglUniform1iARB(shader->sampler, 0);
+        qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, m_camera->gl_view_proj_mat);
 
-        qglPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-        qglDisableClientState(GL_VERTEX_ARRAY);
-        qglDisableClientState(GL_NORMAL_ARRAY);
-        qglDisableClientState(GL_COLOR_ARRAY);
-        qglDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, room->content->sprite_buffer->array_buffer);
-
-        qglEnableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::position);
-        qglVertexAttribPointerARB(sprite_shader_description::vertex_attribs::position, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [0]));
-
-        qglEnableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::tex_coord);
-        qglVertexAttribPointerARB(sprite_shader_description::vertex_attribs::tex_coord, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [3]));
-
-        qglEnableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::corner_offset);
-        qglVertexAttribPointerARB(sprite_shader_description::vertex_attribs::corner_offset, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat [7]), (const GLvoid *) sizeof(GLfloat [5]));
-
-        qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, room->content->sprite_buffer->element_array_buffer);
-
-        unsigned long offset = 0;
-        for(uint32_t texture = 0; texture < room->content->sprite_buffer->num_texture_pages; texture++)
+        for(uint32_t i = 0; i < room->content->sprites_count; i++)
         {
-            if(room->content->sprite_buffer->element_count_per_texture[texture] == 0)
-            {
-                continue;
-            }
+            room_sprite_p s = room->content->sprites + i;
+            vertex_p v = room->content->sprites_vertices + i * 4;
+            vec3_copy_inv(v[0].normal, m_camera->view_dir);
+            vec3_copy_inv(v[1].normal, m_camera->view_dir);
+            vec3_copy_inv(v[2].normal, m_camera->view_dir);
+            vec3_copy_inv(v[3].normal, m_camera->view_dir);
 
-            if(m_active_texture != m_world->textures[texture])
-            {
-                m_active_texture = m_world->textures[texture];
-                qglBindTexture(GL_TEXTURE_2D, m_active_texture);
-            }
-            qglDrawElements(GL_TRIANGLES, room->content->sprite_buffer->element_count_per_texture[texture], GL_UNSIGNED_SHORT, (GLvoid *) (offset * sizeof(uint16_t)));
-            offset += room->content->sprite_buffer->element_count_per_texture[texture];
+            v[0].position[0] = s->pos[0] + s->sprite->right * right[0] + s->sprite->top * up[0];
+            v[0].position[1] = s->pos[1] + s->sprite->right * right[1] + s->sprite->top * up[1];
+            v[0].position[2] = s->pos[2] + s->sprite->right * right[2] + s->sprite->top * up[2];
+
+            v[1].position[0] = s->pos[0] + s->sprite->left * right[0] + s->sprite->top * up[0];
+            v[1].position[1] = s->pos[1] + s->sprite->left * right[1] + s->sprite->top * up[1];
+            v[1].position[2] = s->pos[2] + s->sprite->left * right[2] + s->sprite->top * up[2];
+
+            v[2].position[0] = s->pos[0] + s->sprite->left * right[0] + s->sprite->bottom * up[0];
+            v[2].position[1] = s->pos[1] + s->sprite->left * right[1] + s->sprite->bottom * up[1];
+            v[2].position[2] = s->pos[2] + s->sprite->left * right[2] + s->sprite->bottom * up[2];
+
+            v[3].position[0] = s->pos[0] + s->sprite->right * right[0] + s->sprite->bottom * up[0];
+            v[3].position[1] = s->pos[1] + s->sprite->right * right[1] + s->sprite->bottom * up[1];
+            v[3].position[2] = s->pos[2] + s->sprite->right * right[2] + s->sprite->bottom * up[2];
         }
 
-        qglDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::position);
-        qglDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::tex_coord);
-        qglDisableVertexAttribArrayARB(sprite_shader_description::vertex_attribs::corner_offset);
-        qglPopClientAttrib();*/
+        qglBindTexture(GL_TEXTURE_2D, room->content->sprites->sprite->texture_index);
+        qglVertexPointer(3, GL_FLOAT, sizeof(vertex_t), room->content->sprites_vertices->position);
+        qglColorPointer(4, GL_FLOAT, sizeof(vertex_t), room->content->sprites_vertices->color);
+        qglNormalPointer(GL_FLOAT, sizeof(vertex_t), room->content->sprites_vertices->normal);
+        qglTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), room->content->sprites_vertices->tex_coord);
+        qglDrawArrays(GL_QUADS, 0, 4 * room->content->sprites_count);
     }
 }
 

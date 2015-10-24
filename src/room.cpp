@@ -70,6 +70,12 @@ void Room_Clear(struct room_s *room)
             room->content->sprites_count = 0;
         }
 
+        if(room->content->sprites_vertices)
+        {
+            free(room->content->sprites_vertices);
+            room->content->sprites_vertices = NULL;
+        }
+
         if(room->content->light_count)
         {
             free(room->content->lights);
@@ -489,119 +495,29 @@ struct room_s *Room_CheckFlip(struct room_s *r)
 
 void Room_GenSpritesBuffer(struct room_s *room)
 {
-    room->content->sprite_buffer = NULL;
-    // Find the number of different texture pages used and the number of non-null sprites
-    /*uint32_t highestTexturePageFound = 0;
-    int actualSpritesFound = 0;
-    for (uint32_t i = 0; i < room->content->sprites_count; i++)
+    room->content->sprites_vertices = NULL;
+
+    if(room->content->sprites_count > 0)
     {
-        if (room->content->sprites[i].sprite)
+        room->content->sprites_vertices = (vertex_p)malloc(room->content->sprites_count * 4 * sizeof(vertex_t));
+        for(uint32_t i = 0; i < room->content->sprites_count; i++)
         {
-            actualSpritesFound += 1;
-            if(highestTexturePageFound < room->content->sprites[i].sprite->texture_index)
-            {
-                highestTexturePageFound = room->content->sprites[i].sprite->texture_index;
-            }
+            room_sprite_p s = room->content->sprites + i;
+            vertex_p v = room->content->sprites_vertices + i * 4;
+            vec4_set_one(v[0].color);
+            vec4_set_one(v[1].color);
+            vec4_set_one(v[2].color);
+            vec4_set_one(v[3].color);
+            v[0].tex_coord[0] = s->sprite->tex_coord[0];
+            v[0].tex_coord[1] = s->sprite->tex_coord[1];
+            v[1].tex_coord[0] = s->sprite->tex_coord[2];
+            v[1].tex_coord[1] = s->sprite->tex_coord[3];
+            v[2].tex_coord[0] = s->sprite->tex_coord[4];
+            v[2].tex_coord[1] = s->sprite->tex_coord[5];
+            v[3].tex_coord[0] = s->sprite->tex_coord[6];
+            v[3].tex_coord[1] = s->sprite->tex_coord[7];
         }
     }
-    if (actualSpritesFound == 0)
-    {
-        room->content->sprite_buffer = NULL;
-        return;
-    }
-
-    room->content->sprite_buffer = (struct sprite_buffer_s *)calloc(sizeof(struct sprite_buffer_s), 1);
-    room->content->sprite_buffer->num_texture_pages = highestTexturePageFound + 1;
-    room->content->sprite_buffer->element_count_per_texture = (uint32_t *) calloc(sizeof(uint32_t), room->content->sprite_buffer->num_texture_pages);
-
-    // First collect indices on a per-texture basis
-    uint16_t **elements_for_texture = (uint16_t **)calloc(sizeof(uint16_t*), highestTexturePageFound + 1);
-
-    GLfloat *spriteData = (GLfloat *) calloc(sizeof(GLfloat [7]), actualSpritesFound * 4);
-
-    int writeIndex = 0;
-    for (uint32_t i = 0; i < room->content->sprites_count; i++)
-    {
-        const struct room_sprite_s &room_sprite = room->content->sprites[i];
-        if (room_sprite.sprite)
-        {
-            int vertexStart = writeIndex;
-            // top right
-            memcpy(&spriteData[writeIndex*7 + 0], room_sprite.pos, sizeof(GLfloat [3]));
-            memcpy(&spriteData[writeIndex*7 + 3], &room_sprite.sprite->tex_coord[0], sizeof(GLfloat [2]));
-            spriteData[writeIndex * 7 + 5] = room_sprite.sprite->right;
-            spriteData[writeIndex * 7 + 6] = room_sprite.sprite->top;
-
-            writeIndex += 1;
-
-            // top left
-            memcpy(&spriteData[writeIndex*7 + 0], room_sprite.pos, sizeof(GLfloat [3]));
-            memcpy(&spriteData[writeIndex*7 + 3], &room_sprite.sprite->tex_coord[2], sizeof(GLfloat [2]));
-            spriteData[writeIndex * 7 + 5] = room_sprite.sprite->left;
-            spriteData[writeIndex * 7 + 6] = room_sprite.sprite->top;
-
-            writeIndex += 1;
-
-            // bottom left
-            memcpy(&spriteData[writeIndex*7 + 0], room_sprite.pos, sizeof(GLfloat [3]));
-            memcpy(&spriteData[writeIndex*7 + 3], &room_sprite.sprite->tex_coord[4], sizeof(GLfloat [2]));
-            spriteData[writeIndex * 7 + 5] = room_sprite.sprite->left;
-            spriteData[writeIndex * 7 + 6] = room_sprite.sprite->bottom;
-
-            writeIndex += 1;
-
-            // bottom right
-            memcpy(&spriteData[writeIndex*7 + 0], room_sprite.pos, sizeof(GLfloat [3]));
-            memcpy(&spriteData[writeIndex*7 + 3], &room_sprite.sprite->tex_coord[6], sizeof(GLfloat [2]));
-            spriteData[writeIndex * 7 + 5] = room_sprite.sprite->right;
-            spriteData[writeIndex * 7 + 6] = room_sprite.sprite->bottom;
-
-            writeIndex += 1;
-
-
-            // Assign indices
-            uint32_t texture = room_sprite.sprite->texture;
-            uint32_t start = room->content->sprite_buffer->element_count_per_texture[texture];
-            uint32_t newElementCount = start + 6;
-            room->content->sprite_buffer->element_count_per_texture[texture] = newElementCount;
-            elements_for_texture[texture] = (uint16_t *)realloc(elements_for_texture[texture], newElementCount * sizeof(uint16_t));
-
-            elements_for_texture[texture][start + 0] = vertexStart + 0;
-            elements_for_texture[texture][start + 1] = vertexStart + 1;
-            elements_for_texture[texture][start + 2] = vertexStart + 2;
-            elements_for_texture[texture][start + 3] = vertexStart + 2;
-            elements_for_texture[texture][start + 4] = vertexStart + 3;
-            elements_for_texture[texture][start + 5] = vertexStart + 0;
-        }
-    }
-
-    // Now flatten all these indices to a single array
-    uint16_t *elements = NULL;
-    uint32_t elementsSoFar = 0;
-    for(uint32_t i = 0; i <= highestTexturePageFound; i++)
-    {
-        if(elements_for_texture[i] == NULL)
-        {
-            continue;
-        }
-        elements = (uint16_t*)realloc(elements, (elementsSoFar + room->content->sprite_buffer->element_count_per_texture[i])*sizeof(elements_for_texture[0][0]));
-        memcpy(elements + elementsSoFar, elements_for_texture[i], room->content->sprite_buffer->element_count_per_texture[i]*sizeof(elements_for_texture[0][0]));
-
-        elementsSoFar += room->content->sprite_buffer->element_count_per_texture[i];
-        free(elements_for_texture[i]);
-    }
-    free(elements_for_texture);
-
-    // Now load into OpenGL
-    qglGenBuffersARB(1, &room->content->sprite_buffer->array_buffer);
-    qglBindBufferARB(GL_ARRAY_BUFFER, room->content->sprite_buffer->array_buffer);
-    qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat [7]) * 4 * actualSpritesFound, spriteData, GL_STATIC_DRAW);
-    free(spriteData);
-
-    qglGenBuffersARB(1, &room->content->sprite_buffer->element_array_buffer);
-    qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, room->content->sprite_buffer->element_array_buffer);
-    qglBufferDataARB(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * elementsSoFar, elements, GL_STATIC_DRAW);
-    free(elements);*/
 }
 
 

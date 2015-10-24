@@ -155,7 +155,7 @@ class CRender
         void DrawEntity(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16]);
 
         void DrawRoom(struct room_s *room, const float matrix[16], const float modelViewProjectionMatrix[16]);
-        void DrawRoomSprites(struct room_s *room, const float modelViewMatrix[16], const float projectionMatrix[16]);
+        void DrawRoomSprites(struct room_s *room);
 
     private:
         struct render_list_s
