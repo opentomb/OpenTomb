@@ -23,7 +23,6 @@ extern "C" {
 #include "physics.h"
 #include "script.h"
 #include "trigger.h"
-#include "gui.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "gameflow.h"

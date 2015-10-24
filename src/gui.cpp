@@ -4,6 +4,7 @@
 
 #include "core/gl_util.h"
 #include "core/gl_font.h"
+#include "core/gl_text.h"
 #include "core/system.h"
 #include "core/console.h"
 #include "core/vmath.h"
@@ -24,10 +25,6 @@
 #include "world.h"
 #include "inventory.h"
 
-static gui_text_line_p     gui_base_lines = NULL;
-static gui_text_line_t     gui_temp_lines[GUI_MAX_TEMP_LINES];
-static uint16_t            temp_lines_used = 0;
-
 gui_ItemNotifier    Notifier;
 gui_ProgressBar     Bar[BAR_LASTINDEX];
 
@@ -47,7 +44,6 @@ void Gui_Init()
 {
     Gui_InitBars();
     Gui_InitNotifier();
-    Gui_InitTempLines();
 
     qglGenBuffersARB(1, &crosshairBuffer);
     qglGenBuffersARB(1, &backgroundBuffer);
@@ -58,22 +54,6 @@ void Gui_Init()
     main_inventory_manager = new gui_InventoryManager();
 }
 
-void Gui_InitTempLines()
-{
-    for(int i=0;i<GUI_MAX_TEMP_LINES;i++)
-    {
-        gui_temp_lines[i].text_size = GUI_LINE_DEFAULTSIZE;
-        gui_temp_lines[i].text = (char*)malloc(GUI_LINE_DEFAULTSIZE * sizeof(char));
-        gui_temp_lines[i].text[0] = 0;
-        gui_temp_lines[i].show = 0;
-
-        gui_temp_lines[i].next = NULL;
-        gui_temp_lines[i].prev = NULL;
-
-        gui_temp_lines[i].font_id  = FONT_SECONDARY;
-        gui_temp_lines[i].style_id = FONTSTYLE_GENERIC;
-    }
-}
 
 void Gui_InitBars()
 {
@@ -201,16 +181,6 @@ void Gui_InitNotifier()
 
 void Gui_Destroy()
 {
-    for(int i = 0; i < GUI_MAX_TEMP_LINES ;i++)
-    {
-        gui_temp_lines[i].show = 0;
-        gui_temp_lines[i].text_size = 0;
-        free(gui_temp_lines[i].text);
-        gui_temp_lines[i].text = NULL;
-    }
-
-    temp_lines_used = GUI_MAX_TEMP_LINES;
-
     if(main_inventory_manager)
     {
         delete main_inventory_manager;
@@ -222,114 +192,19 @@ void Gui_Destroy()
     qglDeleteBuffersARB(1, &backgroundBuffer);
 }
 
-void Gui_AddLine(gui_text_line_p line)
-{
-    if(gui_base_lines == NULL)
-    {
-        gui_base_lines = line;
-        line->next = NULL;
-        line->prev = NULL;
-        return;
-    }
-
-    line->prev = NULL;
-    line->next = gui_base_lines;
-    gui_base_lines->prev = line;
-    gui_base_lines = line;
-}
-
-// line must be in the list, otherway You crash engine!
-void Gui_DeleteLine(gui_text_line_p line)
-{
-    if(line == gui_base_lines)
-    {
-        gui_base_lines = line->next;
-        if(gui_base_lines != NULL)
-        {
-            gui_base_lines->prev = NULL;
-        }
-        return;
-    }
-
-    line->prev->next = line->next;
-    if(line->next)
-    {
-        line->next->prev = line->prev;
-    }
-}
-
-void Gui_MoveLine(gui_text_line_p line)
-{
-    line->absXoffset = line->X * screen_info.scale_factor;
-    line->absYoffset = line->Y * screen_info.scale_factor;
-}
-
-/**
- * For simple temporary lines rendering.
- * Really all strings will be rendered in Gui_Render() function.
- */
-gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
-{
-    if(temp_lines_used < GUI_MAX_TEMP_LINES - 1)
-    {
-        va_list argptr;
-        gui_text_line_p l = gui_temp_lines + temp_lines_used;
-
-        l->font_id = FONT_SECONDARY;
-        l->style_id = FONTSTYLE_GENERIC;
-
-        va_start(argptr, fmt);
-        vsnprintf(l->text, GUI_LINE_DEFAULTSIZE, fmt, argptr);
-        va_end(argptr);
-
-        l->next = NULL;
-        l->prev = NULL;
-
-        temp_lines_used++;
-
-        l->X = x;
-        l->Y = y;
-        l->Xanchor = GUI_ANCHOR_HOR_LEFT;
-        l->Yanchor = GUI_ANCHOR_VERT_BOTTOM;
-
-        l->absXoffset = l->X * screen_info.scale_factor;
-        l->absYoffset = l->Y * screen_info.scale_factor;
-
-        l->show = 1;
-        return l;
-    }
-
-    return NULL;
-}
 
 void Gui_Update()
 {
 
 }
 
-void Gui_Resize()
+void Gui_UpdateResize()
 {
-    gui_text_line_p l = gui_base_lines;
-
-    for(;l;l = l->next)
-    {
-        l->absXoffset = l->X * screen_info.scale_factor;
-        l->absYoffset = l->Y * screen_info.scale_factor;
-    }
-
-    l = gui_temp_lines;
-    for(uint16_t i=0;i<temp_lines_used;i++,l++)
-    {
-        l->absXoffset = l->X * screen_info.scale_factor;
-        l->absYoffset = l->Y * screen_info.scale_factor;
-    }
-
     for(int i = 0; i < BAR_LASTINDEX; i++)
     {
         Bar[i].Resize();
     }
 
-    Con_SetScaleFonts(screen_info.scale_factor);
     Gui_FillCrosshairBuffer();
     Gui_FillBackgroundBuffer();
 }
@@ -367,132 +242,13 @@ void Gui_Render()
     Gui_DrawCrosshair();
     Gui_DrawBars();
 
-    Gui_RenderStrings();
+    GLText_RenderStrings();
     Con_Draw(engine_frame_time);
 
     qglDepthMask(GL_TRUE);
     qglPopClientAttrib();
     qglPopAttrib();
 }
-
-void Gui_RenderStringLine(gui_text_line_p l)
-{
-    GLfloat real_x = 0.0, real_y = 0.0;
-
-    gl_tex_font_p gl_font = Con_GetFont(l->font_id);
-    gl_fontstyle_p style = Con_GetFontStyle(l->style_id);
-
-    if((gl_font == NULL) || (style == NULL) || (!l->show))
-    {
-        return;
-    }
-
-    glf_get_string_bb(gl_font, l->text, -1, l->rect+0, l->rect+1, l->rect+2, l->rect+3);
-
-    switch(l->Xanchor)
-    {
-        case GUI_ANCHOR_HOR_LEFT:
-            real_x = l->absXoffset;   // Used with center and right alignments.
-            break;
-        case GUI_ANCHOR_HOR_RIGHT:
-            real_x = (float)screen_info.w - (l->rect[2] - l->rect[0]) - l->absXoffset;
-            break;
-        case GUI_ANCHOR_HOR_CENTER:
-            real_x = ((float)screen_info.w / 2.0) - ((l->rect[2] - l->rect[0]) / 2.0) + l->absXoffset;  // Absolute center.
-            break;
-    }
-
-    switch(l->Yanchor)
-    {
-        case GUI_ANCHOR_VERT_BOTTOM:
-            real_y += l->absYoffset;
-            break;
-        case GUI_ANCHOR_VERT_TOP:
-            real_y = (float)screen_info.h - (l->rect[3] - l->rect[1]) - l->absYoffset;
-            break;
-        case GUI_ANCHOR_VERT_CENTER:
-            real_y = ((float)screen_info.h / 2.0) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
-            break;
-    }
-
-    if(style->rect)
-    {
-        BindWhiteTexture();
-        GLfloat x0 = l->rect[0] + real_x - style->rect_border * screen_info.w_unit;
-        GLfloat y0 = l->rect[1] + real_y - style->rect_border * screen_info.h_unit;
-        GLfloat x1 = l->rect[2] + real_x + style->rect_border * screen_info.w_unit;
-        GLfloat y1 = l->rect[3] + real_y + style->rect_border * screen_info.h_unit;
-        GLfloat *v, backgroundArray[32];
-
-        v = backgroundArray;
-       *v++ = x0; *v++ = y0;
-        vec4_copy(v, style->rect_color);
-        v += 4;
-       *v++ = 0.0; *v++ = 0.0;
-
-       *v++ = x1; *v++ = y0;
-        vec4_copy(v, style->rect_color);
-        v += 4;
-       *v++ = 0.0; *v++ = 0.0;
-
-       *v++ = x1; *v++ = y1;
-        vec4_copy(v, style->rect_color);
-        v += 4;
-       *v++ = 0.0; *v++ = 0.0;
-
-       *v++ = x0; *v++ = y1;
-        vec4_copy(v, style->rect_color);
-        v += 4;
-       *v++ = 0.0; *v++ = 0.0;
-
-        qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray);
-        qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 2);
-        qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 6);
-        qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    }
-
-    if(style->shadowed)
-    {
-        gl_font->gl_font_color[0] = 0.0f;
-        gl_font->gl_font_color[1] = 0.0f;
-        gl_font->gl_font_color[2] = 0.0f;
-        gl_font->gl_font_color[3] = (float)style->font_color[3] * GUI_FONT_SHADOW_TRANSPARENCY;// Derive alpha from base color.
-        glf_render_str(gl_font,
-                       (real_x + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
-                       (real_y + GUI_FONT_SHADOW_VERTICAL_SHIFT  ),
-                       l->text);
-    }
-
-    vec4_copy(gl_font->gl_font_color, style->font_color);
-    glf_render_str(gl_font, real_x, real_y, l->text);
-}
-
-void Gui_RenderStrings()
-{
-    gui_text_line_p l = gui_base_lines;
-
-    qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    while(l)
-    {
-        Gui_RenderStringLine(l);
-        l = l->next;
-    }
-
-    l = gui_temp_lines;
-    for(uint16_t i=0;i<temp_lines_used;i++,l++)
-    {
-        if(l->show)
-        {
-            Gui_RenderStringLine(l);
-            l->show = 0;
-        }
-    }
-
-    temp_lines_used = 0;
-}
-
 
 /**
  * That function updates item animation and rebuilds skeletal matrices;
@@ -619,10 +375,10 @@ gui_InventoryManager::gui_InventoryManager()
 
     mInventory                  = NULL;
 
-    mLabel_Title.X              = 0.0;
-    mLabel_Title.Y              = 30.0;
-    mLabel_Title.Xanchor        = GUI_ANCHOR_HOR_CENTER;
-    mLabel_Title.Yanchor        = GUI_ANCHOR_VERT_TOP;
+    mLabel_Title.x              = 0.0;
+    mLabel_Title.y              = 30.0;
+    mLabel_Title.x_align        = GLTEXT_ALIGN_CENTER;
+    mLabel_Title.y_align        = GLTEXT_ALIGN_TOP;
 
     mLabel_Title.font_id        = FONT_PRIMARY;
     mLabel_Title.style_id       = FONTSTYLE_MENU_TITLE;
@@ -630,10 +386,10 @@ gui_InventoryManager::gui_InventoryManager()
     mLabel_Title_text[0]        = 0;
     mLabel_Title.show           = 0;
 
-    mLabel_ItemName.X           = 0.0;
-    mLabel_ItemName.Y           = 50.0;
-    mLabel_ItemName.Xanchor     = GUI_ANCHOR_HOR_CENTER;
-    mLabel_ItemName.Yanchor     = GUI_ANCHOR_VERT_BOTTOM;
+    mLabel_ItemName.x           = 0.0;
+    mLabel_ItemName.y           = 50.0;
+    mLabel_ItemName.x_align     = GLTEXT_ALIGN_CENTER;
+    mLabel_ItemName.y_align     = GLTEXT_ALIGN_BOTTOM;
 
     mLabel_ItemName.font_id     = FONT_PRIMARY;
     mLabel_ItemName.style_id    = FONTSTYLE_MENU_CONTENT;
@@ -641,8 +397,8 @@ gui_InventoryManager::gui_InventoryManager()
     mLabel_ItemName_text[0]     = 0;
     mLabel_ItemName.show        = 0;
 
-    Gui_AddLine(&mLabel_ItemName);
-    Gui_AddLine(&mLabel_Title);
+    GLText_AddLine(&mLabel_ItemName);
+    GLText_AddLine(&mLabel_Title);
 }
 
 gui_InventoryManager::~gui_InventoryManager()
@@ -652,10 +408,10 @@ gui_InventoryManager::~gui_InventoryManager()
     mInventory = NULL;
 
     mLabel_ItemName.show = 0;
-    Gui_DeleteLine(&mLabel_ItemName);
+    GLText_DeleteLine(&mLabel_ItemName);
 
     mLabel_Title.show = 0;
-    Gui_DeleteLine(&mLabel_Title);
+    GLText_DeleteLine(&mLabel_Title);
 }
 
 int gui_InventoryManager::getItemsTypeCount(int type)
@@ -1965,8 +1721,8 @@ void gui_ItemNotifier::Reset()
     mCurrRotX = 0.0;
     mCurrRotY = 0.0;
 
-    mEndPosX = ((float)screen_info.w / GUI_SCREEN_METERING_RESOLUTION) * mAbsPosX;
-    mPosY    = ((float)screen_info.h / GUI_SCREEN_METERING_RESOLUTION) * mAbsPosY;
+    mEndPosX = ((float)screen_info.w / SYS_SCREEN_METERING_RESOLUTION) * mAbsPosX;
+    mPosY    = ((float)screen_info.h / SYS_SCREEN_METERING_RESOLUTION) * mAbsPosY;
     mCurrPosX = screen_info.w + ((float)screen_info.w / GUI_NOTIFIER_OFFSCREEN_DIVIDER * mSize);
     mStartPosX = mCurrPosX;    // Equalize current and start positions.
 }

@@ -317,10 +317,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_SET_CAMERA:
-                    //if(command->cam_timer > 0.0f)
-                    {
-                        Game_SetCamera(command->cam_index, command->once, command->cam_timer, command->cam_zoom);
-                    }
+                    Game_SetCamera(command->cam_index, command->once, command->cam_timer, command->cam_zoom);
                     break;
 
                 case TR_FD_TRIGFUNC_UWCURRENT:
@@ -804,9 +801,6 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
             if(action_type != TR_ACTIONTYPE_BYPASS)
             {
                 SDL_RWwrite(file_dump, script, 1, strlen(script));
-                //Sys_DebugLog(file_name, script);    // Debug!
-                //luaL_loadstring(engine_lua, script);
-                //lua_CallAndLog(engine_lua, 0, LUA_MULTRET, 0); // Execute compiled script.
             }
             SDL_RWclose(file_dump);
         }

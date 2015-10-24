@@ -1012,17 +1012,14 @@ void Game_PlayFlyBy(uint32_t sequence_id, int once)
 
 void Game_SetCameraTarget(uint32_t entity_id, float timer)
 {
-    //if(engine_camera_state.state != CAMERA_STATE_LOOK_AT)
+    entity_p ent = World_GetEntityByID(&engine_world, entity_id);
+    if(ent)
     {
-        entity_p ent = World_GetEntityByID(&engine_world, entity_id);
-        if(ent)
+        vec3_copy(engine_camera_state.target, ent->transform + 12);
+        if((engine_camera_state.state != CAMERA_STATE_FIXED)&& (timer > 0.0f))
         {
-            vec3_copy(engine_camera_state.target, ent->transform + 12);
-            if((engine_camera_state.state != CAMERA_STATE_FIXED)&& (timer > 0.0f))
-            {
-                engine_camera_state.state = CAMERA_STATE_LOOK_AT;
-                engine_camera_state.time = timer;
-            }
+            engine_camera_state.state = CAMERA_STATE_LOOK_AT;
+            engine_camera_state.time = timer;
         }
     }
 }

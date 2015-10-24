@@ -23,7 +23,6 @@ extern "C" {
 #include "render/render.h"
 #include "game.h"
 #include "audio.h"
-#include "gui.h"
 #include "script.h"
 #include "engine.h"
 #include "entity.h"

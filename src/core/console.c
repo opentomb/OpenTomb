@@ -743,7 +743,7 @@ gl_fontstyle_p Con_GetFontStyle(uint16_t index)
 }
 
 
-void Con_SetScaleFonts(float scale)
+void Con_UpdateResize()
 {
     if(con_base.max_fonts > 0)
     {
@@ -752,7 +752,7 @@ void Con_SetScaleFonts(float scale)
         {
             if(con_base.fonts[i].gl_font)
             {
-                glf_resize(con_base.fonts[i].gl_font, (uint16_t)(((float)con_base.fonts[i].font_size) * scale));
+                glf_resize(con_base.fonts[i].gl_font, (uint16_t)(((float)con_base.fonts[i].font_size) * screen_info.scale_factor));
             }
         }
         Con_SetLineInterval(con_base.spacing);

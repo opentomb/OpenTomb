@@ -15,7 +15,6 @@
 #include "engine.h"
 #include "physics.h"
 #include "entity.h"
-#include "gui.h"
 #include "skeletal_model.h"
 #include "resource.h"
 #include "engine_string.h"

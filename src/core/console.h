@@ -101,7 +101,7 @@ int  Con_AddFontStyle(uint16_t index,
 int  Con_RemoveFontStyle(uint16_t index);
 gl_tex_font_p  Con_GetFont(uint16_t index);
 gl_fontstyle_p Con_GetFontStyle(uint16_t index);
-void Con_SetScaleFonts(float scale);
+void Con_UpdateResize();
 
 void Con_Clean();
 

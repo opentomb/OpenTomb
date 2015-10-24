@@ -19,7 +19,6 @@ extern "C" {
 #include "gameflow.h"
 #include "engine.h"
 #include "script.h"
-#include "gui.h"
 #include "anim_state_control.h"
 #include "world.h"
 
@@ -45,7 +44,6 @@ void Gameflow_Do()
         switch(gameflow_manager.Actions[i].opcode)
         {
             case TR_GAMEFLOW_OP_LEVELCOMPLETE:
-                //if(Gui_FadeCheck(FADER_LOADSCREEN) == GUI_FADER_STATUS_COMPLETE)     // Switch level only when fade is complete!
                 {
                     int top = lua_gettop(engine_lua);
                     lua_getglobal(engine_lua, "getNextLevel");                       // Must be loaded from gameflow script!
@@ -58,19 +56,7 @@ void Gameflow_Do()
                         gameflow_manager.CurrentLevelID = lua_tonumber(engine_lua, -1);   // First value in stack is level id
                         strncpy(gameflow_manager.CurrentLevelName, lua_tostring(engine_lua, -2), LEVEL_NAME_MAX_LEN); // Second value in stack is level name
                         strncpy(gameflow_manager.CurrentLevelPath, lua_tostring(engine_lua, -3), MAX_ENGINE_PATH); // Third value in stack is level path
-
-                        // Now, load the level! + if character exists then save inventory
-                        /*if((engine_world.Character != NULL) && (engine_world.Character->character != NULL))
-                        {
-                            inventory_node_p i = engine_world.Character->character->inventory;
-                            engine_world.Character->character->inventory = NULL;
-                            Engine_LoadMap(gameflow_manager.CurrentLevelPath);
-                            engine_world.Character->character->inventory = i;
-                        }
-                        else*/
-                        {
-                            Engine_LoadMap(gameflow_manager.CurrentLevelPath);
-                        }
+                        Engine_LoadMap(gameflow_manager.CurrentLevelPath);
                     }
                     else
                     {

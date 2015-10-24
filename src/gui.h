@@ -2,13 +2,8 @@
 #ifndef ENGINE_GUI_H
 #define ENGINE_GUI_H
 
-#define GUI_MAX_TEMP_LINES   (256)
-
-// Screen metering resolution specifies user-friendly relative dimensions of screen,
-// which are not dependent on screen resolution. They're primarily used to parse
-// bar and string dimensions.
-
-#define GUI_SCREEN_METERING_RESOLUTION 1000.0
+#include <stdint.h>
+#include "core/gl_text.h"
 
 // Anchoring is needed to link specific GUI element to specific screen position,
 // independent of screen resolution and aspect ratio. Vertical and horizontal
@@ -25,72 +20,6 @@
 
 
 struct inventory_node_s;
-
-// Horizontal alignment is simple side alignment, like in original TRs.
-// It means that X coordinate will be either used for left, right or
-// center orientation.
-
-#define GUI_LINE_ALIGN_LEFT   0
-#define GUI_LINE_ALIGN_RIGHT  1
-#define GUI_LINE_ALIGN_CENTER 2
-
-// Default line size is generally used for static in-game strings. Strings
-// that are created dynamically may have variable string sizes.
-
-#define GUI_LINE_DEFAULTSIZE 128
-
-typedef struct gui_text_line_s
-{
-    char                       *text;
-    uint16_t                    text_size;
-
-    uint16_t                    font_id;
-    uint16_t                    style_id;
-
-    GLfloat                     X;
-    uint8_t                     Xanchor;
-    GLfloat                     absXoffset;
-    GLfloat                     Y;
-    uint8_t                     Yanchor;
-    GLfloat                     absYoffset;
-
-    GLfloat                     rect[4];    //x0, yo, x1, y1
-
-    int8_t                      show;
-
-    struct gui_text_line_s     *next;
-    struct gui_text_line_s     *prev;
-} gui_text_line_t, *gui_text_line_p;
-
-
-typedef struct gui_rect_s
-{
-    GLfloat                     rect[4];
-    GLfloat                     absRect[4];
-
-    GLfloat                     X;  GLfloat absX;
-    GLfloat                     Y;  GLfloat absY;
-    int8_t                      align;
-
-    GLuint                      texture;
-    GLfloat                     color[16]; // TL, TR, BL, BR x 4
-    uint32_t                    blending_mode;
-
-    int16_t                     line_count;
-    gui_text_line_s            *lines;
-
-    int8_t                      state;      // Opening / static / closing
-    int8_t                      show;
-    GLfloat                     current_alpha;
-
-    int8_t                      focused;
-    int8_t                      focus_index;
-
-    int8_t                      selectable;
-    int8_t                      selection_index;
-
-    char                       *lua_click_function;
-} gui_rect_t, *gui_rect_p;
 
 
 #define GUI_MENU_ITEMTYPE_SYSTEM 0
@@ -262,13 +191,6 @@ void Gui_Destroy();
 
 void Gui_InitBars();
 void Gui_InitNotifier();
-void Gui_InitTempLines();
-
-void Gui_AddLine(gui_text_line_p line);
-void Gui_DeleteLine(gui_text_line_p line);
-void Gui_MoveLine(gui_text_line_p line);
-void Gui_RenderStringLine(gui_text_line_p l);
-void Gui_RenderStrings();
 
 /**
  * Inventory rendering / manipulation functions
@@ -280,32 +202,6 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatri
  */
 class gui_InventoryManager
 {
-private:
-    struct inventory_node_s   **mInventory;
-    int                         mCurrentState;
-    int                         mNextState;
-    int                         mNextItemsCount;
-
-    int                         mCurrentItemsType;
-    int                         mCurrentItemsCount;
-    int                         mItemsOffset;
-    
-    float                       mRingRotatePeriod;
-    float                       mRingTime;
-    float                       mRingAngle;
-    float                       mRingVerticalAngle;
-    float                       mRingAngleStep;
-    float                       mBaseRingRadius;
-    float                       mRingRadius;
-    float                       mVerticalOffset;
-    
-    float                       mItemRotatePeriod;
-    float                       mItemTime;
-    float                       mItemAngle;
-    
-    int getItemsTypeCount(int type);
-    void restoreItemAngle(float time);
-    
 public:
     enum inventoryState
     {
@@ -319,11 +215,6 @@ public:
         INVENTORY_DOWN,
         INVENTORY_ACTIVATE
     };
-
-    gui_text_line_s             mLabel_Title;
-    char                        mLabel_Title_text[GUI_LINE_DEFAULTSIZE];
-    gui_text_line_s             mLabel_ItemName;
-    char                        mLabel_ItemName_text[GUI_LINE_DEFAULTSIZE];
 
     gui_InventoryManager();
    ~gui_InventoryManager();
@@ -353,15 +244,41 @@ public:
     void setTitle(int items_type);
     void frame(float time);
     void render();
+    
+    gl_text_line_t              mLabel_Title;
+    char                        mLabel_Title_text[GUI_LINE_DEFAULTSIZE];
+    gl_text_line_t              mLabel_ItemName;
+    char                        mLabel_ItemName_text[GUI_LINE_DEFAULTSIZE];
+    
+private:
+    struct inventory_node_s   **mInventory;
+    int                         mCurrentState;
+    int                         mNextState;
+    int                         mNextItemsCount;
+
+    int                         mCurrentItemsType;
+    int                         mCurrentItemsCount;
+    int                         mItemsOffset;
+    
+    float                       mRingRotatePeriod;
+    float                       mRingTime;
+    float                       mRingAngle;
+    float                       mRingVerticalAngle;
+    float                       mRingAngleStep;
+    float                       mBaseRingRadius;
+    float                       mRingRadius;
+    float                       mVerticalOffset;
+    
+    float                       mItemRotatePeriod;
+    float                       mItemTime;
+    float                       mItemAngle;
+    
+    int getItemsTypeCount(int type);
+    void restoreItemAngle(float time);
 };
 
 
 extern gui_InventoryManager  *main_inventory_manager;
-
-/**
- * Draws text using a FONT_SECONDARY.
- */
-gui_text_line_p Gui_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...);
 
 /**
  * Helper method to setup OpenGL state for console drawing.
@@ -427,6 +344,6 @@ void Gui_DrawNotifier();
  * General GUI update routines.
  */
 void Gui_Update();
-void Gui_Resize();  // Called every resize event.
+void Gui_UpdateResize();  // Called every resize event.
 
 #endif

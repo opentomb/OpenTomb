@@ -11,6 +11,11 @@ extern "C" {
 #include <SDL2/SDL_opengl.h>
 
 #define SYS_LOG_FILENAME            "d_log.txt"
+// Screen metering resolution specifies user-friendly relative dimensions of screen,
+// which are not dependent on screen resolution. They're primarily used to parse
+// bar and string dimensions.
+
+#define SYS_SCREEN_METERING_RESOLUTION (1000.0f)
     
 typedef struct screen_info_s
 {

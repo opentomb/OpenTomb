@@ -22,6 +22,7 @@ extern "C" {
 #include "core/console.h"
 #include "core/redblack.h"
 #include "core/vmath.h"
+#include "core/gl_text.h"
 #include "render/camera.h"
 #include "render/render.h"
 #include "vt/vt_level.h"
@@ -150,10 +151,11 @@ void Engine_Shutdown(int val)
         engine_lua = NULL;
     }
 
-    Con_Destroy();
-    Sys_Destroy();
     Physics_Destroy();
     Gui_Destroy();
+    GLText_DestroyTempLines();
+    Con_Destroy();
+    Sys_Destroy();
 
     /* no more renderings */
     SDL_GL_DeleteContext(sdl_gl_context);
@@ -245,7 +247,7 @@ void Engine_Init_Post()
     Script_CallVoidFunc(engine_lua, "loadscript_post", true);
 
     Con_InitFont();
-
+    GLText_InitTempLines();
     Gui_Init();
 
     Con_AddLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
@@ -565,11 +567,13 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     screen_info.w = nominalW;
     screen_info.h = nominalH;
 
-    screen_info.w_unit = (float)nominalW / GUI_SCREEN_METERING_RESOLUTION;
-    screen_info.h_unit = (float)nominalH / GUI_SCREEN_METERING_RESOLUTION;
+    screen_info.w_unit = (float)nominalW / SYS_SCREEN_METERING_RESOLUTION;
+    screen_info.h_unit = (float)nominalH / SYS_SCREEN_METERING_RESOLUTION;
     screen_info.scale_factor = (screen_info.w < screen_info.h)?(screen_info.h_unit):(screen_info.w_unit);
 
-    Gui_Resize();
+    Con_UpdateResize();
+    GLText_UpdateResize();
+    Gui_UpdateResize();
 
     Cam_SetFovAspect(&engine_camera, screen_info.fov, (float)nominalW/(float)nominalH);
     Cam_RecalcClipPlanes(&engine_camera);
@@ -775,9 +779,9 @@ void Engine_MainLoop()
             time_cycl = 0.0f;
         }
 
-        gui_text_line_p fps = Gui_OutTextXY(10.0f, 10.0f, fps_str);
-        fps->Xanchor    = GUI_ANCHOR_HOR_RIGHT;
-        fps->Yanchor    = GUI_ANCHOR_VERT_BOTTOM;
+        gl_text_line_p fps = GLText_OutTextXY(10.0f, 10.0f, fps_str);
+        fps->x_align    = GLTEXT_ALIGN_RIGHT;
+        fps->y_align    = GLTEXT_ALIGN_BOTTOM;
         fps->font_id    = FONT_PRIMARY;
         fps->style_id   = FONTSTYLE_MENU_TITLE;
         fps->show       = 1;
@@ -799,12 +803,12 @@ void ShowDebugInfo()
     if(ent && ent->character)
     {
         /*height_info_p fc = &ent->character->height_info
-        txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
+        txt = GLText_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
         */
 
-        Gui_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf->animations.last_animation, ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.last_state, ent->bf->animations.next_state);
-        //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.current_frame, ent->bf->animations.next_frame);
-        //Gui_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
+        GLText_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf->animations.last_animation, ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.last_state, ent->bf->animations.next_state);
+        //GLText_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.current_frame, ent->bf->animations.next_frame);
+        //GLText_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
     }
 
     if(last_cont != NULL)
@@ -812,15 +816,15 @@ void ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                Gui_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf->animations.model->id);
+                GLText_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf->animations.model->id);
                 break;
 
             case OBJECT_STATIC_MESH:
-                Gui_OutTextXY(30.0, 60.0, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
+                GLText_OutTextXY(30.0, 60.0, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
                 break;
 
             case OBJECT_ROOM_BASE:
-                Gui_OutTextXY(30.0, 60.0, "cont_room: id = %d", ((room_p)last_cont->object)->id);
+                GLText_OutTextXY(30.0, 60.0, "cont_room: id = %d", ((room_p)last_cont->object)->id);
                 break;
         }
 
@@ -831,11 +835,11 @@ void ShowDebugInfo()
         room_sector_p rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
         if(rs != NULL)
         {
-            Gui_OutTextXY(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
-            Gui_OutTextXY(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
+            GLText_OutTextXY(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
+            GLText_OutTextXY(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
         }
     }
-    Gui_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
+    GLText_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
 }
 
 
