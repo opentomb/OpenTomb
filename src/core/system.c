@@ -204,7 +204,7 @@ void Sys_DebugLog(const char *file, const char *fmt, ...)
 
 void Sys_TakeScreenShot()
 {
-    GLint ViewPort[4], h;
+    GLint ViewPort[4], h, h2;
     char fname[128];
     GLubyte *pixels;
     SDL_Surface *surface;
@@ -217,7 +217,8 @@ void Sys_TakeScreenShot()
     qglReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
     GLubyte buf[str_size];
-    for(h=0;h<ViewPort[3]/2;h++)
+    h2 = ViewPort[3] / 2;
+    for(h = 0; h < h2; h++)
     {
         memcpy(buf, pixels + h * str_size, str_size);
         memcpy(pixels + h * str_size, pixels + (ViewPort[3] - h - 1) * str_size, str_size);

@@ -509,8 +509,9 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
 {
     float cam_pos[3], cameraFrom[3], cameraTo[3];
     collision_result_t cb;
+    entity_p target = World_GetEntityByID(&engine_world, engine_camera_state.target_id);
 
-    if(engine_camera_state.state == CAMERA_STATE_FIXED)
+    if(target && (engine_camera_state.state == CAMERA_STATE_FIXED))
     {
         cam->pos[0] = engine_camera_state.sink->x;
         cam->pos[1] = engine_camera_state.sink->y;
@@ -520,7 +521,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
             cam->current_room = engine_world.rooms + engine_camera_state.sink->room_or_strength;
         }
 
-        Cam_LookTo(cam, engine_camera_state.target);
+        Cam_LookTo(cam, target->transform + 12);
         ///@TODO: check that zoom
         if(engine_camera_state.zoom > 0.0f)
         {
@@ -534,6 +535,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
                 engine_camera_state.state = CAMERA_STATE_NORMAL;
                 engine_camera_state.time = 0.0f;
                 engine_camera_state.sink = NULL;
+                engine_camera_state.target_id = (engine_world.Character)?(engine_world.Character->id):(-1);
                 Cam_SetFovAspect(cam, screen_info.fov, cam->aspect);
             }
         }
@@ -671,12 +673,16 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         vec3_copy(cameraFrom, cam_pos);
         if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
         {
-            float dir2d[2], dist;
-            dir2d[0] = engine_camera_state.target[0] - cam->pos[0];
-            dir2d[1] = engine_camera_state.target[1] - cam->pos[1];
-            dist = control_states.cam_distance / sqrtf(dir2d[0] * dir2d[0] + dir2d[1] * dir2d[1]);
-            cam_pos[0] -= dir2d[0] * dist;
-            cam_pos[1] -= dir2d[1] * dist;
+            entity_p target = World_GetEntityByID(&engine_world, engine_camera_state.target_id);
+            if(target && target != engine_world.Character)
+            {
+                float dir2d[2], dist;
+                dir2d[0] = target->transform[12 + 0] - cam->pos[0];
+                dir2d[1] = target->transform[12 + 1] - cam->pos[1];
+                dist = control_states.cam_distance / sqrtf(dir2d[0] * dir2d[0] + dir2d[1] * dir2d[1]);
+                cam_pos[0] -= dir2d[0] * dist;
+                cam_pos[1] -= dir2d[1] * dist;
+            }
         }
         else
         {
@@ -705,13 +711,18 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
 
     if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
     {
-        Cam_LookTo(cam, engine_camera_state.target);
-        engine_camera_state.time -= engine_frame_time;
-        if(engine_camera_state.time <= 0.0f)
+        entity_p target = World_GetEntityByID(&engine_world, engine_camera_state.target_id);
+        if(target)
         {
-            engine_camera_state.state = CAMERA_STATE_NORMAL;
-            engine_camera_state.time = 0.0f;
-            engine_camera_state.sink = NULL;
+            Cam_LookTo(cam, target->transform + 12);
+            engine_camera_state.time -= engine_frame_time;
+            if(engine_camera_state.time <= 0.0f)
+            {
+                engine_camera_state.target_id = (engine_world.Character)?(engine_world.Character->id):(-1);
+                engine_camera_state.state = CAMERA_STATE_NORMAL;
+                engine_camera_state.time = 0.0f;
+                engine_camera_state.sink = NULL;
+            }
         }
     }
     else
@@ -1013,14 +1024,11 @@ void Game_PlayFlyBy(uint32_t sequence_id, int once)
 void Game_SetCameraTarget(uint32_t entity_id, float timer)
 {
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
-    if(ent)
+    engine_camera_state.target_id = entity_id;
+    if(ent && (engine_camera_state.state != CAMERA_STATE_FIXED) && (timer > 0.0f))
     {
-        vec3_copy(engine_camera_state.target, ent->transform + 12);
-        if((engine_camera_state.state != CAMERA_STATE_FIXED)&& (timer > 0.0f))
-        {
-            engine_camera_state.state = CAMERA_STATE_LOOK_AT;
-            engine_camera_state.time = timer;
-        }
+        engine_camera_state.state = CAMERA_STATE_LOOK_AT;
+        engine_camera_state.time = timer;
     }
 }
 
@@ -1029,6 +1037,11 @@ void Game_SetCamera(uint32_t camera_id, int once, float timer, float zoom)
 {
     if(camera_id < engine_world.cameras_sinks_count)
     {
+        if((engine_camera_state.state != CAMERA_STATE_LOOK_AT) && engine_world.Character)
+        {
+            engine_camera_state.target_id = engine_world.Character->id;
+            timer = (timer > 0.0f)?(timer):(2.0f);
+        }
         engine_camera_state.state = CAMERA_STATE_FIXED;
         engine_camera_state.sink = engine_world.cameras_sinks + camera_id;
         engine_camera_state.time = timer;

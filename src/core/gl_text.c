@@ -187,7 +187,7 @@ void GLText_RenderStrings()
     }
 
     l = gl_temp_lines;
-    for(uint16_t i=0;i<temp_lines_used;i++,l++)
+    for(uint16_t i = 0; i < temp_lines_used; i++, l++)
     {
         if(l->show)
         {

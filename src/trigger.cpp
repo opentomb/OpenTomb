@@ -289,13 +289,13 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 break;
                         };
                     }
-                    else if(!prev_command || (prev_command->operands != command->operands))
+                    else
                     {
                         if(activator == TR_ACTIVATOR_SWITCH)
                         {
                             if(action_type == TR_ACTIONTYPE_ANTI)
                             {
-                                Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, 0);
+                                Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, 0.0f);
                             }
                             else
                             {
@@ -314,10 +314,6 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                             }
                         }
                     }
-                    break;
-
-                case TR_FD_TRIGFUNC_SET_CAMERA:
-                    Game_SetCamera(command->cam_index, command->once, command->cam_timer, command->cam_zoom);
                     break;
 
                 case TR_FD_TRIGFUNC_UWCURRENT:
@@ -367,6 +363,10 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                 case TR_FD_TRIGFUNC_SET_TARGET:
                     Game_SetCameraTarget(command->operands, trigger->timer);
+                    break;
+
+                case TR_FD_TRIGFUNC_SET_CAMERA:
+                    Game_SetCamera(command->cam_index, command->once, command->cam_timer, command->cam_zoom);
                     break;
 
                 case TR_FD_TRIGFUNC_ENDLEVEL:

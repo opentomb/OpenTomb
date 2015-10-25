@@ -131,48 +131,34 @@
 		<Unit filename="scripts/inventory/items.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="scripts/level/tr1/GYM.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL1.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL10B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL10C_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL3A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL3B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL4_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL5_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL6_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL7A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL7B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL8A_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL8B_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="scripts/level/tr1/LEVEL8C_autoexec.lua">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="scripts/level/tr1/GYM.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL1.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL10A.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL10B.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL10B_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL10C.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL10C_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL2.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL3A.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL3A_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL3B.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL3B_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL4.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL4_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL5.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL5_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL6.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL6_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL7A.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL7A_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL7B.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL7B_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL8A.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL8A_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL8B.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL8B_autoexec.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL8C.lua" />
+		<Unit filename="scripts/level/tr1/LEVEL8C_autoexec.lua" />
 		<Unit filename="scripts/level/tr2/ASSAULT.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
@@ -1625,6 +1611,10 @@
 		<Unit filename="src/core/gl_font.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/core/gl_text.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/gl_text.h" />
 		<Unit filename="src/core/gl_util.c">
 			<Option compilerVar="CC" />
 		</Unit>

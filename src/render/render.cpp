@@ -380,7 +380,7 @@ void CRender::DrawList()
         }
     }
 
-    if((dynamicBSP->m_root->polygons_front != NULL) && (dynamicBSP->m_vbo != 0))
+    if(dynamicBSP->m_root->polygons_front && (dynamicBSP->m_vbo != 0))
     {
         const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(false, false);
         qglUseProgramObjectARB(shader->program);
@@ -1147,21 +1147,21 @@ int  CRender::AddRoom(struct room_s *room)
 int CRender::ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
 {
     int ret = 0;
-    room_p room = portal->dest_room;                                            // куда ведет портал
-    room_p src_room = portal->current_room;                                     // откуда ведет портал
+    room_p room = portal->dest_room;
+    room_p src_room = portal->current_room;
 
     if((src_room == NULL) || !src_room->active || (room == NULL) || !room->active)
     {
         return 0;
     }
 
-    for(uint16_t i = 0; i < room->portals_count; i++)                           // перебираем все порталы входной комнаты
+    for(uint16_t i = 0; i < room->portals_count; i++)
     {
         portal_p p = room->portals + i;
-        if((p->dest_room->active) && (p->dest_room != src_room))                // обратно идти даже не пытаемся
+        if((p->dest_room->active) && (p->dest_room != src_room))                // do not go back
         {
-            frustum_p gen_frus = frustumManager->PortalFrustumIntersect(p, frus, m_camera);// Главная ф-я портального рендерера. Тут и проверка
-            if(gen_frus)                                                        // на пересечение и генерация фрустума по порталу
+            frustum_p gen_frus = frustumManager->PortalFrustumIntersect(p, frus, m_camera);
+            if(gen_frus)
             {
                 ret++;
                 this->AddRoom(p->dest_room);

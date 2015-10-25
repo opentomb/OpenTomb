@@ -262,7 +262,7 @@ void World_Clear(world_p world)
     /* Now we can delete physics misc objects */
     Physics_CleanUpObjects();
 
-    for(uint32_t i=0;i<world->rooms_count;i++)
+    for(uint32_t i = 0; i < world->rooms_count; i++)
     {
         Room_Clear(world->rooms+i);
     }
@@ -326,7 +326,7 @@ void World_Clear(world_p world)
 
     if(world->skeletal_models_count)
     {
-        for(uint32_t i=0;i<world->skeletal_models_count;i++)
+        for(uint32_t i = 0; i < world->skeletal_models_count; i++)
         {
             SkeletalModel_Clear(world->skeletal_models+i);
         }
@@ -338,7 +338,7 @@ void World_Clear(world_p world)
     /*mesh empty*/
     if(world->meshes_count)
     {
-        for(uint32_t i=0;i<world->meshes_count;i++)
+        for(uint32_t i = 0; i < world->meshes_count; i++)
         {
             BaseMesh_Clear(world->meshes+i);
         }
@@ -363,7 +363,7 @@ void World_Clear(world_p world)
 
     if(world->anim_sequences_count)
     {
-        for(uint32_t i=0;i < world->anim_sequences_count;i++)
+        for(uint32_t i = 0; i < world->anim_sequences_count; i++)
         {
             if(world->anim_sequences[i].frames_count != 0)
             {
@@ -581,7 +581,7 @@ int World_DeleteItem(world_p world, uint32_t item_id)
 struct sprite_s *World_GetSpriteByID(world_p world, uint32_t ID)
 {
     sprite_p sp = world->sprites;
-    for(uint32_t i=0;i<world->sprites_count;i++,sp++)
+    for(uint32_t i = 0; i < world->sprites_count; i++, sp++)
     {
         if(sp->id == ID)
         {
@@ -710,7 +710,7 @@ struct room_s *World_FindRoomByPosCogerrence(world_p world, float pos[3], struct
         return Room_CheckFlip(new_sector->portal_to_room);
     }
 
-    for(uint16_t i=0;i<old_room->near_room_list_size;i++)
+    for(uint16_t i = 0; i < old_room->near_room_list_size; i++)
     {
         room_p r = old_room->near_room_list[i];
         if(r->active &&
@@ -1443,7 +1443,7 @@ void World_GenAnimTextures(struct world_s *world, class VT_Level *tr)
         world->anim_sequences = (anim_seq_p)calloc(num_sequences, sizeof(anim_seq_t));
 
         anim_seq_p seq = world->anim_sequences;
-        for(uint16_t i = 0; i < num_sequences; i++,seq++)
+        for(uint16_t i = 0; i < num_sequences; i++, seq++)
         {
             seq->frames_count = *(pointer++) + 1;
             seq->frame_list   =  (uint32_t*)calloc(seq->frames_count, sizeof(uint32_t));

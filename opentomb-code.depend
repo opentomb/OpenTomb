@@ -6701,12 +6701,12 @@
 	"resource.h"
 	"controls.h"
 
-1443110137 d:\dev\opentomb\src\core\system.h
+1445679466 d:\dev\opentomb\src\core\system.h
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 
-1441734347 d:\dev\opentomb\src\core\console.h
+1445677423 d:\dev\opentomb\src\core\console.h
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
@@ -7352,7 +7352,7 @@
 	"bullet/btBulletDynamicsCommon.h"
 	"bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
 
-1442739443 d:\dev\opentomb\src\mesh.h
+1445693751 d:\dev\opentomb\src\mesh.h
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 	<stdint.h>
@@ -7415,7 +7415,9 @@
 	"room.h"
 	"world.h"
 
-1440837832 d:\dev\opentomb\src\gui.h
+1445679427 d:\dev\opentomb\src\gui.h
+	<stdint.h>
+	"core/gl_text.h"
 
 1440838534 d:\dev\opentomb\src\engine_string.h
 
@@ -9156,9 +9158,10 @@
 	"console.h"
 	"gl_util.h"
 
-1439230092 source:d:\dev\opentomb\src\core\vmath.c
+1445182344 source:d:\dev\opentomb\src\core\vmath.c
 	<math.h>
 	<string.h>
+	<stdlib.h>
 	"vmath.h"
 
 1443463460 source:d:\dev\opentomb\src\engine.cpp
@@ -16231,7 +16234,7 @@
 1442143158 d:\dev\opentomb\src\engine_physics.h
 	<stdint.h>
 
-1444579012 d:\dev\opentomb\src\render\render.h
+1445694334 d:\dev\opentomb\src\render\render.h
 	<stdint.h>
 	<SDL2/SDL.h>
 	<SDL2/SDL_opengl.h>
@@ -16261,7 +16264,7 @@
 1433714796 d:\dev\opentomb\src\render\shader_manager.h
 	"shader_description.h"
 
-1445448766 d:\dev\opentomb\src\render\camera.h
+1445770975 d:\dev\opentomb\src\render\camera.h
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 
@@ -16316,7 +16319,7 @@
 	<SDL2/SDL_opengl.h>
 	"../core/vmath.h"
 
-1440525810 source:d:\dev\opentomb\src\render\camera.cpp
+1445449530 source:d:\dev\opentomb\src\render\camera.cpp
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 	<stdlib.h>
@@ -16380,7 +16383,7 @@
 	"mesh.h"
 	"skeletal_model.h"
 
-1442944012 d:\dev\opentomb\src\room.h
+1445698539 d:\dev\opentomb\src\room.h
 	<stdint.h>
 
 1440791738 source:d:\dev\opentomb\src\inventory.cpp
@@ -16464,4 +16467,9 @@
 	"room.h"
 	"world.h"
 	"physics.h"
+
+1445678184 d:\dev\opentomb\src\core\gl_text.h
+	<stdint.h>
+	<SDL2/SDL_platform.h>
+	<SDL2/SDL_opengl.h>
 

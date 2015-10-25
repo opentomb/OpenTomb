@@ -27,10 +27,10 @@ struct frustum_s;
 typedef struct camera_state_s
 {
     uint32_t                        state;
+    uint32_t                        target_id;
     struct flyby_camera_sequence_s *flyby;
     struct static_camera_sink_s    *sink;
     
-    GLfloat                         target[3];
     GLfloat                         shake_value;
     GLfloat                         time;
     GLfloat                         zoom;

@@ -237,7 +237,7 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
         buffer = (GLubyte*)malloc(buffer_size);
         memset(buffer, 0x00, buffer_size);
 
-        for(i = 0, x=0, y=0; i < glf->glyphs_count; i++)
+        for(i = 0, x = 0, y = 0; i < glf->glyphs_count; i++)
         {
             FT_GlyphSlot g;
             glf->glyphs[i].tex_index = 0;
@@ -372,12 +372,11 @@ float glf_get_string_len(gl_tex_font_p glf, const char *text, int n)
     {
         uint8_t *nch, *nch2, *ch = (uint8_t*)text;
         uint32_t curr_utf32, next_utf32;
-        int i;
 
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
 
-        for(i = 0; (*ch != 0) && !((n >= 0) && (i >= n)); i++)
+        for(int i = 0; (*ch != 0) && !((n >= 0) && (i >= n)); i++)
         {
             FT_Vector kern;
 
@@ -410,13 +409,12 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
         float x = 0.0;
         float y = 0.0;
         float xx0, xx1, yy0, yy1;
-        int i;
         uint32_t curr_utf32, next_utf32;
 
         nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
 
-        for(i = 0; (*ch != 0) && !((n >= 0) && (i >= n)); i++)
+        for(int i = 0; (*ch != 0) && !((n >= 0) && (i >= n)); i++)
         {
             FT_Vector kern;
             char_info_p g = glf->glyphs + curr_utf32;

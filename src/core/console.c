@@ -122,14 +122,14 @@ void Con_Init()
     con_base.line_text  = (char**)malloc(con_base.line_count*sizeof(char*));
     con_base.line_style_id = (uint16_t*)malloc(con_base.line_count * sizeof(uint16_t));
 
-    for(i=0;i<con_base.line_count;i++)
+    for(i = 0; i < con_base.line_count; i++)
     {
         con_base.line_text[i]  = (char*) calloc(con_base.line_size*sizeof(char), 1);
         con_base.line_style_id[i] = FONTSTYLE_GENERIC;
     }
 
     con_base.log_lines = (char**) realloc(con_base.log_lines, con_base.log_lines_count * sizeof(char*));
-    for(i=0;i<con_base.log_lines_count;i++)
+    for(i = 0; i < con_base.log_lines_count; i++)
     {
         con_base.log_lines[i] = (char*) calloc(con_base.line_size * sizeof(char), 1);
     }
@@ -137,9 +137,8 @@ void Con_Init()
     con_base.font_library   = NULL;
     FT_Init_FreeType(&con_base.font_library);
 
-    con_base.max_styles     = GUI_MAX_FONTSTYLES;
-    con_base.max_fonts      = GUI_MAX_FONTS;
-    con_base.styles         = (gl_fontstyle_p)malloc(con_base.max_styles * sizeof(gl_fontstyle_t));
+    con_base.max_styles = GUI_MAX_FONTSTYLES;
+    con_base.styles     = (gl_fontstyle_p)malloc(con_base.max_styles * sizeof(gl_fontstyle_t));
     for(i = 0; i < con_base.max_styles; i++)
     {
         con_base.styles[i].rect_color[0] = 1.0;
@@ -156,7 +155,8 @@ void Con_Init()
         con_base.styles[i].rect     = 0x00;
     }
 
-    con_base.fonts          = (gl_font_cont_p)malloc(con_base.max_fonts * sizeof(gl_font_cont_t));;
+    con_base.max_fonts = GUI_MAX_FONTS;
+    con_base.fonts     = (gl_font_cont_p)malloc(con_base.max_fonts * sizeof(gl_font_cont_t));
     for(i = 0; i < con_base.max_fonts; i++)
     {
         con_base.fonts[i].font_size = 0;
@@ -398,7 +398,7 @@ void Con_Edit(int key)
             //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
             if(con_base.log_pos == 0)
             {
-                for(;(con_base.log_pos < con_base.log_lines_count) && *con_base.log_lines[con_base.log_pos];con_base.log_pos++);
+                for(; (con_base.log_pos < con_base.log_lines_count) && *con_base.log_lines[con_base.log_pos]; con_base.log_pos++);
             }
             if((con_base.log_pos > 0) && *con_base.log_lines[con_base.log_pos-1])
             {
@@ -433,8 +433,7 @@ void Con_Edit(int key)
         case SDLK_BACKSPACE:
             if(con_base.cursor_pos > 0)
             {
-                int16_t i;
-                for(i = con_base.cursor_pos; i < oldLength ;i++)
+                for(int16_t i = con_base.cursor_pos; i < oldLength ;i++)
                 {
                     con_base.line_text[0][i-1] = con_base.line_text[0][i];
                 }
@@ -447,8 +446,7 @@ void Con_Edit(int key)
         case SDLK_DELETE:
             if(/*(con_base.cursor_pos > 0) && */(con_base.cursor_pos < oldLength))
             {
-                int16_t i;
-                for(i=con_base.cursor_pos;i<oldLength-1;i++)
+                for(int16_t i = con_base.cursor_pos; i < oldLength - 1; i++)
                 {
                     con_base.line_text[0][i] = con_base.line_text[0][i+1];
                 }
@@ -459,8 +457,7 @@ void Con_Edit(int key)
         default:
             if((oldLength < con_base.line_size-1) && (key >= SDLK_SPACE))
             {
-                int16_t i;
-                for(i=oldLength;i>con_base.cursor_pos;i--)
+                for(int16_t i = oldLength; i > con_base.cursor_pos; i--)
                 {
                     con_base.line_text[0][i] = con_base.line_text[0][i-1];
                 }
@@ -507,8 +504,7 @@ void Con_AddLog(const char *text)
         if(con_base.log_lines_count > 1)
         {
             char *last = con_base.log_lines[con_base.log_lines_count-1];        // save pointer to the last log string
-            uint16_t i;
-            for(i=con_base.log_lines_count-1;i>0;i--)                           // shift log
+            for(uint16_t i = con_base.log_lines_count - 1; i > 0; i--)          // shift log
             {
                 con_base.log_lines[i] = con_base.log_lines[i-1];                // shift is round
             }
@@ -535,20 +531,18 @@ void Con_AddLine(const char *text, uint16_t font_style)
         do
         {
             char *last = con_base.line_text[con_base.line_count-1];             // save pointer to the last log string
-            uint16_t i;
-
             len = strlen(text);
-            for(i=con_base.line_count-1;i>1;i--)                                // shift log
+            for(uint16_t i = con_base.line_count - 1; i > 1; i--)               // shift log
             {
-                con_base.line_style_id[i] = con_base.line_style_id[i-1];
-                con_base.line_text[i]  = con_base.line_text[i-1];               // shift is round
+                con_base.line_style_id[i] = con_base.line_style_id[i - 1];
+                con_base.line_text[i]  = con_base.line_text[i - 1];             // shift is round
             }
 
             con_base.line_text[1] = last;                                       // cycle the shift
             con_base.line_style_id[1] = font_style;
             strncpy(con_base.line_text[1], text, con_base.line_size);
-            con_base.line_text[1][con_base.line_size-1] = 0;                    // paranoid end of string
-            text += con_base.line_size-1;
+            con_base.line_text[1][con_base.line_size - 1] = 0;                  // paranoid end of string
+            text += con_base.line_size - 1;
         }
         while(len >= con_base.line_size);
     }
@@ -563,7 +557,7 @@ void Con_AddText(const char *text, uint16_t font_style)
         size_t i, j, text_size = strlen(text);
 
         buf[0] = 0;
-        for(i=0,j=0;i<text_size;i++)
+        for(i = 0, j = 0; i < text_size; i++)
         {
             ch = text[i];
             if((ch == 10) || (ch == 13))
@@ -747,8 +741,7 @@ void Con_UpdateResize()
 {
     if(con_base.max_fonts > 0)
     {
-        uint16_t i;
-        for(i = 0; i < con_base.max_fonts; i++)
+        for(uint16_t i = 0; i < con_base.max_fonts; i++)
         {
             if(con_base.fonts[i].gl_font)
             {
@@ -764,7 +757,7 @@ void Con_UpdateResize()
 
 void Con_Clean()
 {
-    for(uint16_t i=0;i<con_base.line_count;i++)
+    for(uint16_t i = 0; i < con_base.line_count; i++)
     {
         con_base.line_text[i][0]  = 0;
         con_base.line_style_id[i] = FONTSTYLE_GENERIC;
@@ -788,7 +781,7 @@ void Con_Draw(float time)
         Con_DrawBackground();
         Con_DrawCursor();
         
-        for(uint16_t i=0;i<con_base.showing_lines;i++)
+        for(uint16_t i = 0; i < con_base.showing_lines; i++)
         {
             GLfloat *col = Con_GetFontStyle(con_base.line_style_id[i])->font_color;
             y += con_base.line_height;

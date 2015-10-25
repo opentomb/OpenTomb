@@ -12,7 +12,7 @@ obb_p OBB_Create()
     obb_p ret;
 
     ret = (obb_p)malloc(sizeof(obb_t));
-    for(int i=0;i<6;i++)
+    for(int i = 0; i < 6; i++)
     {
         ret->base_polygons[i].vertex_count = 0;
         ret->polygons[i].vertex_count = 0;
@@ -20,8 +20,8 @@ obb_p OBB_Create()
         ret->polygons[i].vertices = NULL;
         ret->base_polygons[i].next = NULL;
         ret->polygons[i].next = NULL;
-        Polygon_Resize(ret->base_polygons+i, 4);
-        Polygon_Resize(ret->polygons+i, 4);
+        Polygon_Resize(ret->base_polygons + i, 4);
+        Polygon_Resize(ret->polygons + i, 4);
     }
     ret->transform = NULL;
 
@@ -33,7 +33,7 @@ void OBB_Clear(obb_p obb)
 {
     if(obb != NULL)
     {
-        for(int i=0;i<6;i++)
+        for(int i = 0; i < 6; i++)
         {
             Polygon_Clear(obb->polygons + i);
             Polygon_Clear(obb->base_polygons + i);
@@ -195,12 +195,12 @@ void OBB_Transform(obb_p obb)
         polygon_p p = obb->polygons;
         polygon_p src_p = obb->base_polygons;
         
-        for(int i=0;i<6;i++,p++,src_p++)
+        for(int i = 0; i < 6; i++, p++, src_p++)
         {
             vertex_p v = p->vertices;
             vertex_p src_v = src_p->vertices;
             Mat4_vec3_rot_macro(p->plane, obb->transform, src_p->plane);
-            for(uint16_t i=0;i<4;i++,v++,src_v++)
+            for(uint16_t i = 0; i < 4; i++, v++, src_v++)
             {
                 Mat4_vec3_mul_macro(v->position, obb->transform, src_v->position);
             }
@@ -210,9 +210,9 @@ void OBB_Transform(obb_p obb)
     }
     else
     {
-        for(int i=0;i<6;i++)
+        for(int i = 0; i < 6; i++)
         {
-            Polygon_Copy(obb->polygons+i, obb->base_polygons+i);
+            Polygon_Copy(obb->polygons + i, obb->base_polygons + i);
         }
         vec3_copy(obb->centre, obb->base_centre);
     }
@@ -240,9 +240,9 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
     int i, k;
 
     //calculate rotation matrix
-    for(i=0 ; i<3 ; i++)
+    for(i = 0 ; i < 3 ; i++)
     {
-        for(k=0 ; k<3 ; k++)
+        for(k = 0 ; k < 3 ; k++)
         {
             float *e1b = obb1->transform + 4 * i;
             float *e2b = obb2->transform + 4 * k;
@@ -255,7 +255,7 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
     boxes overlap. */
 
     //A's basis vectors
-    for(i=0;i<3;i++)
+    for(i = 0; i < 3; i++)
     {
         ra = a[i];
         rb = b[0]*fabs(R[i][0]) + b[1]*fabs(R[i][1]) + b[2]*fabs(R[i][2]);
@@ -268,7 +268,7 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
     }
 
     //B's basis vectors
-    for(k=0;k<3;k++)
+    for(k = 0; k < 3; k++)
     {
         ra = a[0]*fabs(R[0][k]) + a[1]*fabs(R[1][k]) + a[2]*fabs(R[2][k]);
         rb = b[k];

@@ -195,7 +195,7 @@ void Gui_Destroy()
 
 void Gui_Update()
 {
-    
+
 }
 
 void Gui_UpdateResize()
@@ -922,7 +922,7 @@ void Gui_DrawCrosshair()
 
 void Gui_DrawBars()
 {
-    /*if(engine_world.Character && engine_world.Character->character)
+    if(engine_world.Character && engine_world.Character->character)
     {
         if(engine_world.Character->character->weapon_current_state > WEAPON_STATE_HIDE_TO_READY)
             Bar[BAR_HEALTH].Forced = true;
@@ -931,7 +931,14 @@ void Gui_DrawBars()
         Bar[BAR_STAMINA].Show(Character_GetParam(engine_world.Character, PARAM_STAMINA));
         Bar[BAR_HEALTH].Show (Character_GetParam(engine_world.Character, PARAM_HEALTH ));
         Bar[BAR_WARMTH].Show (Character_GetParam(engine_world.Character, PARAM_WARMTH ));
-    }*/
+
+        const text_shader_description *shader = renderer.shaderManager->getTextShader();
+        screenSize[0] = screen_info.w;
+        screenSize[1] = screen_info.h;
+        qglUseProgramObjectARB(shader->program);
+        qglUniform1iARB(shader->sampler, 0);
+        qglUniform2fvARB(shader->screenSize, 1, screenSize);
+    }
 }
 
 void Gui_DrawInventory()
@@ -1000,11 +1007,8 @@ void Gui_DrawLoadScreen(int value)
     qglPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     qglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    //qglBindTexture(GL_TEXTURE_2D, 0);
     GLfloat color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     Gui_DrawRect(0.0, 0.0, screen_info.w, screen_info.h, color, color, color, color, BM_SCREEN, load_screen_tex);
-
-    //Fader[FADER_LOADSCREEN].Show();
     Bar[BAR_LOADING].Show(value);
 
     qglDepthMask(GL_TRUE);
