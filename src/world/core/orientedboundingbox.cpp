@@ -57,7 +57,7 @@ void OrientedBoundingBox::rebuild(const BoundingBox& boundingBox)
     p++;
 
     // DOWN
-    struct Polygon *p_down = p;
+    Polygon *p_down = p;
     v = &p->vertices.front();
     // 0 1
     // 0 0

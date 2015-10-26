@@ -42,7 +42,7 @@ void SkeletalModel::interpolateFrames()
                 anim.keyFrames[destIdx + j].boundingBox.max = glm::mix(anim.keyFrames[srcIdx].boundingBox.max, anim.keyFrames[srcIdx + 1].boundingBox.max, lerp);
                 anim.keyFrames[destIdx + j].boundingBox.min = glm::mix(anim.keyFrames[srcIdx].boundingBox.min, anim.keyFrames[srcIdx + 1].boundingBox.min, lerp);
 
-                for(uint16_t k = 0; k < meshes.size(); k++)
+                for(size_t k = 0; k < meshes.size(); k++)
                 {
                     anim.keyFrames[destIdx + j].boneKeyFrames[k].offset = glm::mix(anim.keyFrames[srcIdx].boneKeyFrames[k].offset, anim.keyFrames[srcIdx + 1].boneKeyFrames[k].offset, lerp);
                     anim.keyFrames[destIdx + j].boneKeyFrames[k].qrotate = glm::slerp(anim.keyFrames[srcIdx].boneKeyFrames[k].qrotate, anim.keyFrames[srcIdx + 1].boneKeyFrames[k].qrotate, lerp);

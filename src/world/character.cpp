@@ -30,7 +30,7 @@ namespace
  * @param floor: floor height
  * @return 0x01: can traverse, 0x00 can not;
  */
-int Sector_AllowTraverse(RoomSector *rs, glm::float_t floor, const Object* container)
+int Sector_AllowTraverse(RoomSector *rs, glm::float_t floor, const Object* object)
 {
     glm::float_t f0 = rs->floor_corners[0][2];
     if((rs->floor_corners[0][2] != f0) || (rs->floor_corners[1][2] != f0) ||
@@ -44,7 +44,7 @@ int Sector_AllowTraverse(RoomSector *rs, glm::float_t floor, const Object* conta
         return 0x01;
     }
 
-    engine::BtEngineClosestRayResultCallback cb(container);
+    engine::BtEngineClosestRayResultCallback cb(object);
     glm::vec3 from{ from[0] = rs->position[0], from[1] = rs->position[1], floor + MeteringSectorSize * 0.5f };
     glm::vec3 to = from - glm::vec3{0,0,MeteringSectorSize};
     engine::bt_engine_dynamicsWorld->rayTest(util::convert(from), util::convert(to), cb);
@@ -53,8 +53,8 @@ int Sector_AllowTraverse(RoomSector *rs, glm::float_t floor, const Object* conta
         glm::vec3 v = glm::mix(from, to, cb.m_closestHitFraction);
         if(glm::abs(v[2] - floor) < 1.1)
         {
-            Object* cont = static_cast<Object*>(cb.m_collisionObject->getUserPointer());
-            Entity* e = dynamic_cast<Entity*>(cont);
+            Object* object = static_cast<Object*>(cb.m_collisionObject->getUserPointer());
+            Entity* e = dynamic_cast<Entity*>(object);
             if(e && (e->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
             {
                 return 0x01;
@@ -976,8 +976,8 @@ int Character::moveOnFloor()
     updateCurrentHeight();
     if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform[3][2] + m_skeleton.getBoundingBox().min[2]))
     {
-        Object* cont = static_cast<Object*>(m_heightInfo.floor_obj->getUserPointer());
-        if(Entity* e = dynamic_cast<Entity*>(cont))
+        Object* object = static_cast<Object*>(m_heightInfo.floor_obj->getUserPointer());
+        if(Entity* e = dynamic_cast<Entity*>(object))
         {
             if(e->m_callbackFlags & ENTITY_CALLBACK_STAND)
             {
@@ -1614,9 +1614,9 @@ int Character::findTraverse()
     if(obj_s != nullptr)
     {
         obj_s = obj_s->checkPortalPointer();
-        for(Object* cont : obj_s->owner_room->m_objects)
+        for(Object* object : obj_s->owner_room->m_objects)
         {
-            if(Entity* e = dynamic_cast<Entity*>(cont))
+            if(Entity* e = dynamic_cast<Entity*>(object))
             {
                 if((e->m_typeFlags & ENTITY_TYPE_TRAVERSE) && core::testOverlap(*e, *this) && (glm::abs(e->m_transform[3][2] - m_transform[3][2]) < 1.1))
                 {
@@ -1685,8 +1685,8 @@ int Character::checkTraverse(const Entity& obj)
     engine::bt_engine_dynamicsWorld->rayTest(v0, v1, cb);
     if(cb.hasHit())
     {
-        Object* cont = static_cast<Object*>(cb.m_collisionObject->getUserPointer());
-        Entity* e = dynamic_cast<Entity*>(cont);
+        Object* object = static_cast<Object*>(cb.m_collisionObject->getUserPointer());
+        Entity* e = dynamic_cast<Entity*>(object);
         if(e && (e->m_typeFlags & ENTITY_TYPE_TRAVERSE))
         {
             return TraverseNone;
@@ -2254,9 +2254,9 @@ void Character::processSectorImpl()
         {
             if(m_heightInfo.floor_hit)
             {
-                Object* cont = static_cast<Object*>(m_heightInfo.floor_obj->getUserPointer());
+                Object* object = static_cast<Object*>(m_heightInfo.floor_obj->getUserPointer());
 
-                if(dynamic_cast<Room*>(cont))
+                if(dynamic_cast<Room*>(object))
                 {
                     setParam(PARAM_HEALTH, 0.0);
                     m_response.killed = true;

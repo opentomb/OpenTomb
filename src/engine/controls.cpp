@@ -26,7 +26,7 @@ extern SDL_GameController   *sdl_controller;
 extern SDL_Haptic           *sdl_haptic;
 extern SDL_Window           *sdl_window;
 
-extern world::Object* last_cont;
+extern world::Object* last_object;
 
 using gui::Console;
 
@@ -650,8 +650,8 @@ void Controls_PrimaryMouseDown()
     btRigidBody* body = new btRigidBody(12.0, motionState, cshape, localInertia);
     bt_engine_dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(util::convert(dir) * 6000);
-    world::BulletObject* cont = new world::BulletObject(Room_FindPosCogerrence(new_pos, engine_camera.getCurrentRoom()));
-    body->setUserPointer(cont);
+    world::BulletObject* object = new world::BulletObject(Room_FindPosCogerrence(new_pos, engine_camera.getCurrentRoom()));
+    body->setUserPointer(object);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
     body->setCcdSweptSphereRadius(dbgR);
 }
@@ -702,7 +702,7 @@ void Controls_SecondaryMouseDown()
             }
             else
             {
-                last_cont = c0;
+                last_object = c0;
             }
         }
     }

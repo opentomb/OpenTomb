@@ -101,9 +101,9 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
         {
             btPersistentManifold* manifold = (*manifoldArray)[j];
             glm::float_t directionSign = manifold->getBody0() == ghost ? glm::float_t(-1.0) : glm::float_t(1.0);
-            Object* cont0 = static_cast<Object*>(manifold->getBody0()->getUserPointer());
-            Object* cont1 = static_cast<Object*>(manifold->getBody1()->getUserPointer());
-            if(cont0->getCollisionType() == world::CollisionType::Ghost || cont1->getCollisionType() == world::CollisionType::Ghost)
+            Object* obj0 = static_cast<Object*>(manifold->getBody0()->getUserPointer());
+            Object* obj1 = static_cast<Object*>(manifold->getBody1()->getUserPointer());
+            if(obj0->getCollisionType() == world::CollisionType::Ghost || obj1->getCollisionType() == world::CollisionType::Ghost)
             {
                 continue;
             }
@@ -270,9 +270,9 @@ void Entity::checkCollisionCallbacks()
     while(btCollisionObject* cobj = m_skeleton.getRemoveCollisionBodyParts(0xFFFFFFFF, &curr_flag))
     {
         // do callbacks here:
-        Object* cont = static_cast<Object*>(cobj->getUserPointer());
+        Object* object = static_cast<Object*>(cobj->getUserPointer());
 
-        if(Entity* activator = dynamic_cast<Entity*>(cont))
+        if(Entity* activator = dynamic_cast<Entity*>(object))
         {
             if(activator->m_callbackFlags & ENTITY_CALLBACK_COLLISION)
             {
@@ -281,9 +281,9 @@ void Entity::checkCollisionCallbacks()
                 //ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
             }
         }
-        else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) && dynamic_cast<Room*>(cont))
+        else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) && dynamic_cast<Room*>(object))
         {
-            engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, getId(), static_cast<Room*>(cont)->getId());
+            engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, getId(), static_cast<Room*>(object)->getId());
         }
     }
 }
@@ -709,9 +709,9 @@ void Entity::checkActivators()
 
     glm::vec4 ppos = m_transform[3] + m_transform[1] * m_skeleton.getBoundingBox().max[1];
     auto containers = getRoom()->m_objects;
-    for(Object* cont : containers)
+    for(Object* object : containers)
     {
-        Entity* e = dynamic_cast<Entity*>(cont);
+        Entity* e = dynamic_cast<Entity*>(object);
         if(!e)
                 continue;
 

@@ -699,15 +699,15 @@ bool Render::addRoom(world::Room* room)
     if(room->m_flags & TR_ROOM_FLAG_SKYBOX)
         m_drawSkybox = true;
 
-    for(auto sm : room->m_staticMeshes)
+    for(std::shared_ptr<world::StaticMesh> sm : room->m_staticMeshes)
     {
         sm->was_rendered = false;
         sm->was_rendered_lines = false;
     }
 
-    for(world::Object* cont : room->m_objects)
+    for(world::Object* object : room->m_objects)
     {
-        world::Entity* ent = dynamic_cast<world::Entity*>(cont);
+        world::Entity* ent = dynamic_cast<world::Entity*>(object);
         if(!ent)
             continue;
 
@@ -797,9 +797,9 @@ void Render::drawList()
         }
 
         // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
-        for(world::Object* cont : room->m_objects)
+        for(world::Object* object : room->m_objects)
         {
-            world::Entity* ent = dynamic_cast<world::Entity*>(cont);
+            world::Entity* ent = dynamic_cast<world::Entity*>(object);
             if(!ent)
                 continue;
 
@@ -1322,9 +1322,9 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
         sm->was_rendered_lines = true;
     }
 
-    for(world::Object* cont : room->m_objects)
+    for(world::Object* object : room->m_objects)
     {
-        world::Entity* ent = dynamic_cast<world::Entity*>(cont);
+        world::Entity* ent = dynamic_cast<world::Entity*>(object);
         if(!ent)
             continue;
 

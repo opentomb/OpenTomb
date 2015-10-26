@@ -3625,9 +3625,9 @@ namespace world
 
             for(const std::shared_ptr<Room>& room : engine::engine_world.rooms)
             {
-                for(world::Object* cont : room->m_objects)
+                for(world::Object* object : room->m_objects)
                 {
-                    Entity* ent = dynamic_cast<Entity*>(cont);
+                    Entity* ent = dynamic_cast<Entity*>(object);
                     if(!ent)
                         continue;
 

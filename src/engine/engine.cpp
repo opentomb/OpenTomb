@@ -97,7 +97,7 @@ btOverlapFilterCallback             *bt_engine_filterCallback = nullptr;
 glm::vec3 light_position = { 255.0, 255.0, 8.0 };
 GLfloat cast_ray[6] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
-world::Object* last_cont = nullptr;
+world::Object* last_object = nullptr;
 
 void initGL()
 {
@@ -487,17 +487,17 @@ void showDebugInfo()
         gui::drawText(20, 8, "pos = %s, yaw = %f, entlerp = %f", glm::to_string(ent->m_transform[3]).c_str(), ent->m_angles[0], ent->m_lerp);
     }
 
-    if(last_cont != nullptr)
+    if(last_object != nullptr)
     {
-        if(world::Entity* e = dynamic_cast<world::Entity*>(last_cont))
+        if(world::Entity* e = dynamic_cast<world::Entity*>(last_object))
         {
             gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", e->getId(), e->m_skeleton.getModel()->id);
         }
-        else if(world::StaticMesh* sm = dynamic_cast<world::StaticMesh*>(last_cont))
+        else if(world::StaticMesh* sm = dynamic_cast<world::StaticMesh*>(last_object))
         {
             gui::drawText(30.0, 60.0, "cont_static: id = %d", sm->getId());
         }
-        else if(world::Room* r = dynamic_cast<world::Room*>(last_cont))
+        else if(world::Room* r = dynamic_cast<world::Room*>(last_object))
         {
             gui::drawText(30.0, 60.0, "cont_room: id = %d", r->getId());
         }
@@ -678,10 +678,10 @@ void internalTickCallback(btDynamicsWorld *world, float /*timeStep*/)
         {
             btTransform trans;
             body->getMotionState()->getWorldTransform(trans);
-            world::Object* cont = static_cast<world::Object*>(body->getUserPointer());
-            if(dynamic_cast<world::BulletObject*>(cont))
+            world::Object* object = static_cast<world::Object*>(body->getUserPointer());
+            if(dynamic_cast<world::BulletObject*>(object))
             {
-                cont->setRoom( Room_FindPosCogerrence(util::convert(trans.getOrigin()), cont->getRoom()) );
+                object->setRoom( Room_FindPosCogerrence(util::convert(trans.getOrigin()), object->getRoom()) );
             }
         }
     }
@@ -797,9 +797,9 @@ void dumpRoom(world::Room* r)
     {
         BOOST_LOG_TRIVIAL(debug) << "static_mesh = " << sm->getId();
     }
-    for(world::Object* cont : r->m_objects)
+    for(world::Object* object : r->m_objects)
     {
-        if(world::Entity* ent = dynamic_cast<world::Entity*>(cont))
+        if(world::Entity* ent = dynamic_cast<world::Entity*>(object))
         {
             BOOST_LOG_TRIVIAL(debug) << "entity: id = " << ent->getId() << ", model = " << ent->m_skeleton.getModel()->id;
         }
@@ -1183,11 +1183,11 @@ int execCmd(const char *ch)
                     {
                         Console::instance().printf("static[%d].object_id = %d", i, sect->owner_room->m_staticMeshes[i]->getId());
                     }
-                    for(world::Object* cont : sect->owner_room->m_objects)
+                    for(world::Object* object : sect->owner_room->m_objects)
                     {
-                        if(world::Entity* e = dynamic_cast<world::Entity*>(cont))
+                        if(world::Entity* e = dynamic_cast<world::Entity*>(object))
                         {
-                            Console::instance().printf("cont[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform[3][0]), static_cast<int>(e->m_transform[3][1]), static_cast<int>(e->m_transform[3][2]), e->getId());
+                            Console::instance().printf("object[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform[3][0]), static_cast<int>(e->m_transform[3][1]), static_cast<int>(e->m_transform[3][2]), e->getId());
                         }
                     }
                 }

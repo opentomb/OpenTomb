@@ -289,9 +289,9 @@ bool lua_DropEntity(int id, float time, lua::Value only_room)
 
     if(cb.hasHit())
     {
-        world::Object* cont = static_cast<world::Object*>(cb.m_collisionObject->getUserPointer());
+        world::Object* object = static_cast<world::Object*>(cb.m_collisionObject->getUserPointer());
 
-        if(!only_room.is<lua::Boolean>() || !only_room.to<bool>() || (only_room.to<bool>() && dynamic_cast<world::Room*>(cont)))
+        if(!only_room.is<lua::Boolean>() || !only_room.to<bool>() || (only_room.to<bool>() && dynamic_cast<world::Room*>(object)))
         {
             move = glm::mix(from, to, cb.m_closestHitFraction);
             ent->m_transform[3][2] = move[2];

@@ -16,7 +16,7 @@
 
 namespace engine
 {
-extern world::Object* last_cont;
+extern world::Object* last_object;
 } // namespace engine
 
 using gui::Console;
@@ -51,7 +51,7 @@ void World::prepare()
 
 void World::empty()
 {
-    engine::last_cont = nullptr;
+    engine::last_object = nullptr;
     engine_lua.clearTasks();
 
     audioEngine.deInitAudio(); // De-initialize and destroy all audio objects.
@@ -80,10 +80,10 @@ void World::empty()
             btCollisionObject* obj = engine::bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
             if(btRigidBody* body = btRigidBody::upcast(obj))
             {
-                Object* cont = static_cast<Object*>(body->getUserPointer());
+                Object* object = static_cast<Object*>(body->getUserPointer());
                 body->setUserPointer(nullptr);
 
-                if(dynamic_cast<BulletObject*>(cont))
+                if(dynamic_cast<BulletObject*>(object))
                 {
                     if(body->getMotionState())
                     {
@@ -94,7 +94,7 @@ void World::empty()
                     body->setCollisionShape(nullptr);
 
                     engine::bt_engine_dynamicsWorld->removeRigidBody(body);
-                    delete cont;
+                    delete object;
                     delete body;
                 }
             }

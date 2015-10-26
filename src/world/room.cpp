@@ -56,9 +56,9 @@ Room::~Room()
 
 void Room::addEntity(Entity* entity)
 {
-    for(const Object* curr : m_objects)
+    for(const Object* object : m_objects)
     {
-        if(curr == entity)
+        if(object == entity)
         {
             return;
         }
@@ -219,18 +219,6 @@ void Room::enable()
         }
     }
 
-    /*
-    for(const std::shared_ptr<EngineContainer>& cont : containers)
-    {
-    switch(cont->object_type)
-    {
-    case OBJECT_ENTITY:
-    static_cast<Entity*>(cont->object)->enable();
-    break;
-    }
-    }
-    */
-
     m_active = true;
 }
 
@@ -255,18 +243,6 @@ void Room::disable()
             engine::bt_engine_dynamicsWorld->removeRigidBody(sm->bt_body);
         }
     }
-
-    /*
-    for(const std::shared_ptr<EngineContainer>& cont : containers)
-    {
-    switch(cont->object_type)
-    {
-    case OBJECT_ENTITY:
-    static_cast<Entity*>(cont->object)->disable();
-    break;
-    }
-    }
-    */
 
     m_active = false;
 }
@@ -333,14 +309,14 @@ void Room::swapPortals(std::shared_ptr<Room> dest_room)
 
 void Room::swapObjects(std::shared_ptr<Room> dest_room)
 {
-    for(Object* t : m_objects)
+    for(Object* object : m_objects)
     {
-        t->setRoom( dest_room.get() );
+        object->setRoom( dest_room.get() );
     }
 
-    for(Object* t : dest_room->m_objects)
+    for(Object* object : dest_room->m_objects)
     {
-        t->setRoom( this );
+        object->setRoom( this );
     }
 
     std::swap(m_objects, dest_room->m_objects);
