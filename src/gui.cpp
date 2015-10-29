@@ -32,6 +32,7 @@ gui_InventoryManager  *main_inventory_manager = NULL;
 
 static GLuint crosshairBuffer = 0;
 static GLuint backgroundBuffer = 0;
+static GLuint rectBuffer = 0;
 static GLuint load_screen_tex = 0;
 static GLfloat guiProjectionMatrix[16];
 
@@ -47,6 +48,7 @@ void Gui_Init()
 
     qglGenBuffersARB(1, &crosshairBuffer);
     qglGenBuffersARB(1, &backgroundBuffer);
+    qglGenBuffersARB(1, &rectBuffer);
     qglGenTextures(1, &load_screen_tex);
     Gui_FillCrosshairBuffer();
     Gui_FillBackgroundBuffer();
@@ -190,6 +192,7 @@ void Gui_Destroy()
     qglDeleteTextures(1, &load_screen_tex);
     qglDeleteBuffersARB(1, &crosshairBuffer);
     qglDeleteBuffersARB(1, &backgroundBuffer);
+    qglDeleteBuffersARB(1, &rectBuffer);
 }
 
 
@@ -931,13 +934,6 @@ void Gui_DrawBars()
         Bar[BAR_STAMINA].Show(Character_GetParam(engine_world.Character, PARAM_STAMINA));
         Bar[BAR_HEALTH].Show (Character_GetParam(engine_world.Character, PARAM_HEALTH ));
         Bar[BAR_WARMTH].Show (Character_GetParam(engine_world.Character, PARAM_WARMTH ));
-
-        const text_shader_description *shader = renderer.shaderManager->getTextShader();
-        screenSize[0] = screen_info.w;
-        screenSize[1] = screen_info.h;
-        qglUseProgramObjectARB(shader->program);
-        qglUniform1iARB(shader->sampler, 0);
-        qglUniform2fvARB(shader->screenSize, 1, screenSize);
     }
 }
 
@@ -998,17 +994,32 @@ void Gui_DrawLoadScreen(int value)
 
     qglPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
     qglPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
+    //qglPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
+    //qglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+    qglEnableClientState(GL_VERTEX_ARRAY);
+    qglEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    qglEnableClientState(GL_COLOR_ARRAY);
+    qglDisableClientState(GL_NORMAL_ARRAY);
     qglEnable(GL_BLEND);
-    qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    qglEnable(GL_TEXTURE_2D);
     qglDisable(GL_ALPHA_TEST);
+    qglDisable(GL_DEPTH_TEST);
     qglDepthMask(GL_FALSE);
 
-    qglPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
-    qglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    qglPolygonMode(GL_FRONT, GL_FILL);
+    qglFrontFace(GL_CCW);
 
-    GLfloat color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    Gui_DrawRect(0.0, 0.0, screen_info.w, screen_info.h, color, color, color, color, BM_SCREEN, load_screen_tex);
+    const text_shader_description *shader = renderer.shaderManager->getTextShader();
+    screenSize[0] = screen_info.w;
+    screenSize[1] = screen_info.h;
+    qglUseProgramObjectARB(shader->program);
+    qglUniform1iARB(shader->sampler, 0);
+    qglUniform2fvARB(shader->screenSize, 1, screenSize);
+
+    GLfloat color_w[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    GLfloat color_g[4] = {0.0f, 1.0f, 0.0f, 1.0f};
+    Gui_DrawRect(0.0, 0.0, screen_info.w, screen_info.h, color_w, color_w, color_g, color_g, /*BM_SCREEN*/BM_OPAQUE, load_screen_tex);
     Bar[BAR_LOADING].Show(value);
 
     qglDepthMask(GL_TRUE);
@@ -1147,37 +1158,45 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
             break;
     };
 
-    //glDisable(GL_DEPTH_TEST);
+    GLfloat x0 = x;
+    GLfloat y0 = y + height;
+    GLfloat x1 = x + width;
+    GLfloat y1 = y;
+    GLfloat *v, rectArray[32];
 
-    qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+    v = rectArray;
+   *v++ = x0; *v++ = y0;
+   *v++ = 0.0f; *v++ = 1.0f;
+    vec4_copy(v, colorUpperLeft);
+    v += 4;
 
-    const GLfloat offset[2] = { x / (screen_info.w*0.5f) - 1.f, y / (screen_info.h*0.5f) - 1.f };
-    const GLfloat factor[2] = { (width / screen_info.w) * 2.0f, (height / screen_info.h) * 2.0f };
+   *v++ = x1; *v++ = y0;
+   *v++ = 1.0f; *v++ = 1.0f;
+    vec4_copy(v, colorUpperRight);
+    v += 4;
 
-    const gui_shader_description *shader = renderer.shaderManager->getGuiShader(texture != 0);
-    qglUseProgramObjectARB(shader->program);
-    qglUniform1iARB(shader->sampler, 0);
-    if (texture)
+   *v++ = x1; *v++ = y1;
+   *v++ = 1.0f; *v++ = 0.0f;
+    vec4_copy(v, colorLowerRight);
+    v += 4;
+
+   *v++ = x0; *v++ = y1;
+   *v++ = 0.0f; *v++ = 0.0f;
+    vec4_copy(v, colorLowerLeft);
+
+    if(texture)
     {
-        qglActiveTextureARB(GL_TEXTURE0);
         qglBindTexture(GL_TEXTURE_2D, texture);
     }
-    qglUniform2fvARB(shader->offset, 1, offset);
-    qglUniform2fvARB(shader->factor, 1, factor);
-
-    GLfloat rectCoords[8] = { 0, 0,
-        1, 0,
-        1, 1,
-        0, 1 };
-    qglVertexPointer(2, GL_FLOAT, sizeof(GLfloat [2]), rectCoords);
-
-    GLfloat rectColors[16];
-    memcpy(rectColors + 0,  colorLowerLeft,  sizeof(GLfloat) * 4);
-    memcpy(rectColors + 8,  colorUpperRight, sizeof(GLfloat) * 4);
-    memcpy(rectColors + 4,  colorLowerRight,  sizeof(GLfloat) * 4);
-    memcpy(rectColors + 12, colorUpperLeft, sizeof(GLfloat) * 4);
-    qglColorPointer(4, GL_FLOAT, sizeof(GLfloat [4]), rectColors);
-
+    else
+    {
+        BindWhiteTexture();
+    }
+    qglBindBufferARB(GL_ARRAY_BUFFER, rectBuffer);
+    qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), rectArray, GL_DYNAMIC_DRAW);
+    qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
+    qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[2]));
+    qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[4]));
     qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 

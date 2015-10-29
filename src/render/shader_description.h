@@ -30,34 +30,6 @@ struct shader_description
 };
 
 /*!
- * A shader description specifically for use in GUI situations.
- */
-struct gui_shader_description : public shader_description
-{
-    GLint offset;
-    GLint factor;
-    
-    gui_shader_description(const shader_stage &vertex, const shader_stage &fragment);
-};
-
-/*!
- * A shader description specifically for use in GUI situations.
- */
-struct sprite_shader_description : public shader_description
-{
-    GLint model_view;
-    GLint projection;
-    
-    enum vertex_attribs {
-        position = 0,
-        corner_offset,
-        tex_coord
-    };
-    
-    sprite_shader_description(const shader_stage &vertex, const shader_stage &fragment);
-};
-
-/*!
  * A shader description for text
  */
 struct text_shader_description : public shader_description

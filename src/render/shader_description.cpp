@@ -38,29 +38,10 @@ shader_description::~shader_description()
     qglDeleteObjectARB(program);
 }
 
-gui_shader_description::gui_shader_description(const shader_stage &vertex, const shader_stage &fragment)
-: shader_description(vertex, fragment)
-{
-    offset = qglGetUniformLocationARB(program, "offset");
-    factor = qglGetUniformLocationARB(program, "factor");
-}
-
 text_shader_description::text_shader_description(const shader_stage &vertex, const shader_stage &fragment)
 : shader_description(vertex, fragment)
 {
     screenSize = qglGetUniformLocationARB(program, "screenSize");
-}
-
-sprite_shader_description::sprite_shader_description(const shader_stage &vertex, const shader_stage &fragment)
-: shader_description(vertex, fragment)
-{
-    model_view = qglGetUniformLocationARB(program, "modelView");
-    projection = qglGetUniformLocationARB(program, "projection");
-    qglBindAttribLocationARB(program, vertex_attribs::position, "position");
-    qglBindAttribLocationARB(program, vertex_attribs::corner_offset, "cornerOffset");
-    qglBindAttribLocationARB(program, vertex_attribs::tex_coord, "texCoord");
-    qglLinkProgramARB(program);
-    printInfoLog(program);
 }
 
 unlit_shader_description::unlit_shader_description(const shader_stage &vertex, const shader_stage &fragment)
