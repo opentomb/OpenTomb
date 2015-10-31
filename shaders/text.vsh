@@ -13,5 +13,5 @@ void main(void)
     // Uses legacy built-in variables because changing that would require using a VBO.
     varying_color = gl_Color;
     varying_texCoord = gl_MultiTexCoord0.xy;
-    gl_Position = vec4(vec2(2) * (gl_Vertex.xy / screenSize) - vec2(1), 0, 1);
+    gl_Position = vec4(vec2(2, 2) * (gl_Vertex.xy / screenSize) - vec2(1, 1), 0, 1);
 }

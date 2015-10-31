@@ -35,6 +35,7 @@ struct shader_description
 struct text_shader_description : public shader_description
 {
     GLint screenSize;
+    GLint colorReplace;
     
     text_shader_description(const shader_stage &vertex, const shader_stage &fragment);
 };

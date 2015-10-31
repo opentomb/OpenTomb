@@ -521,7 +521,6 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
             x += (GLfloat)(kern.x + g->advance_x) / 64.0;
             y += (GLfloat)(kern.y + g->advance_y) / 64.0;
         }
-        qglUnmapBufferARB(GL_ARRAY_BUFFER_ARB);
         ///RENDER
         if(elements_count != 0)
         {

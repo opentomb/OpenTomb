@@ -220,6 +220,7 @@ void Gui_Render()
     qglUseProgramObjectARB(shader->program);
     qglUniform1iARB(shader->sampler, 0);
     qglUniform2fvARB(shader->screenSize, 1, screenSize);
+    qglUniform1fARB(shader->colorReplace, 0.0);
 
     qglPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
     qglPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT | GL_CLIENT_VERTEX_ARRAY_BIT);
@@ -245,9 +246,11 @@ void Gui_Render()
     Gui_DrawCrosshair();
     Gui_DrawBars();
 
+    qglUniform1fARB(shader->colorReplace, 1.0);
     GLText_RenderStrings();
     Con_Draw(engine_frame_time);
 
+    qglUniform1fARB(shader->colorReplace, 0.0);
     qglDepthMask(GL_TRUE);
     qglPopClientAttrib();
     qglPopAttrib();
@@ -990,26 +993,25 @@ void Gui_DrawLoadScreen(int value)
 {
     qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    Gui_SwitchGLMode(1);
-
     qglPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
     qglPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
-    //qglPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
-    //qglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    qglPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
+    qglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     qglEnableClientState(GL_VERTEX_ARRAY);
     qglEnableClientState(GL_TEXTURE_COORD_ARRAY);
     qglEnableClientState(GL_COLOR_ARRAY);
     qglDisableClientState(GL_NORMAL_ARRAY);
+
     qglEnable(GL_BLEND);
     qglEnable(GL_TEXTURE_2D);
     qglDisable(GL_ALPHA_TEST);
-    qglDisable(GL_DEPTH_TEST);
     qglDepthMask(GL_FALSE);
 
     qglPolygonMode(GL_FRONT, GL_FILL);
     qglFrontFace(GL_CCW);
 
+    const GLfloat color_w[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     const text_shader_description *shader = renderer.shaderManager->getTextShader();
     screenSize[0] = screen_info.w;
     screenSize[1] = screen_info.h;
@@ -1017,16 +1019,12 @@ void Gui_DrawLoadScreen(int value)
     qglUniform1iARB(shader->sampler, 0);
     qglUniform2fvARB(shader->screenSize, 1, screenSize);
 
-    GLfloat color_w[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-    GLfloat color_g[4] = {0.0f, 1.0f, 0.0f, 1.0f};
-    Gui_DrawRect(0.0, 0.0, screen_info.w, screen_info.h, color_w, color_w, color_g, color_g, /*BM_SCREEN*/BM_OPAQUE, load_screen_tex);
+    Gui_DrawRect(0.0, 0.0, screen_info.w, screen_info.h, color_w, color_w, color_w, color_w, BM_OPAQUE, load_screen_tex);
     Bar[BAR_LOADING].Show(value);
 
     qglDepthMask(GL_TRUE);
     qglPopClientAttrib();
     qglPopAttrib();
-
-    Gui_SwitchGLMode(0);
 
     Engine_GLSwapWindow();
 }
@@ -1166,25 +1164,25 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 
     v = rectArray;
    *v++ = x0; *v++ = y0;
-   *v++ = 0.0f; *v++ = 1.0f;
+   *v++ = 0.0f; *v++ = 0.0f;
     vec4_copy(v, colorUpperLeft);
     v += 4;
 
    *v++ = x1; *v++ = y0;
-   *v++ = 1.0f; *v++ = 1.0f;
+   *v++ = 1.0f; *v++ = 0.0f;
     vec4_copy(v, colorUpperRight);
     v += 4;
 
    *v++ = x1; *v++ = y1;
-   *v++ = 1.0f; *v++ = 0.0f;
+   *v++ = 1.0f; *v++ = 1.0f;
     vec4_copy(v, colorLowerRight);
     v += 4;
 
    *v++ = x0; *v++ = y1;
-   *v++ = 0.0f; *v++ = 0.0f;
+   *v++ = 0.0f; *v++ = 1.0f;
     vec4_copy(v, colorLowerLeft);
 
-    if(texture)
+    if(qglIsTexture(texture))
     {
         qglBindTexture(GL_TEXTURE_2D, texture);
     }

@@ -179,7 +179,7 @@ void GLText_RenderStrings()
 
     qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+    
     while(l)
     {
         GLText_RenderStringLine(l);

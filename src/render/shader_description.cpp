@@ -42,6 +42,7 @@ text_shader_description::text_shader_description(const shader_stage &vertex, con
 : shader_description(vertex, fragment)
 {
     screenSize = qglGetUniformLocationARB(program, "screenSize");
+    colorReplace = qglGetUniformLocationARB(program, "colorReplace");
 }
 
 unlit_shader_description::unlit_shader_description(const shader_stage &vertex, const shader_stage &fragment)
