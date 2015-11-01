@@ -255,7 +255,7 @@ void CDynamicBSP::AddNewPolygonList(struct polygon_s *p, float transform[16], st
 
         for(frustum_p ff = f; (!visible) && ff; ff = ff->next)
         {
-            if(Frustum_IsPolyVisible(np, ff))
+            if(Frustum_IsPolyVisible(np, ff, false))
             {
                 visible = true;
                 break;

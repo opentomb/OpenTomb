@@ -59,7 +59,7 @@ private:
 
 int Frustum_GetFrustumsCount(struct frustum_s *f);
 bool Frustum_HaveParent(frustum_p parent, frustum_p frustum);
-bool Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum);
+bool Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum, bool check_backface);
 bool Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *frustum);
 bool Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum);
 bool Frustum_IsOBBVisibleInFrustumList(struct obb_s *obb, struct frustum_s *frustum);

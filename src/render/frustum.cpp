@@ -393,14 +393,14 @@ bool Frustum_HaveParent(frustum_p parent, frustum_p frustum)
     return false;
 }
 
-bool Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum)
+bool Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum, bool check_backface)
 {
     float t, dir[3], T[3], dist[2];
     float *prev_n, *curr_n, *next_n;
     vertex_p curr_v, prev_v;
     char ins, outs;
 
-    if(vec3_plane_dist(p->plane, frustum->cam_pos) < 0.0)
+    if(check_backface && (vec3_plane_dist(p->plane, frustum->cam_pos) < 0.0))
     {
         return false;
     }
@@ -514,7 +514,7 @@ bool Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *fru
         vert[3].position[1] = bbmax[1];
         vert[3].position[2] = bbmin[2];
 
-        if(Frustum_IsPolyVisible(&poly, frustum))
+        if(Frustum_IsPolyVisible(&poly, frustum, true))
         {
             return true;
         }
@@ -540,7 +540,7 @@ bool Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *fru
         vert[3].position[1] = bbmax[1];
         vert[3].position[2] = bbmin[2];
 
-        if(Frustum_IsPolyVisible(&poly, frustum))
+        if(Frustum_IsPolyVisible(&poly, frustum, true))
         {
             return true;
         }
@@ -571,7 +571,7 @@ bool Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *fru
         vert[3].position[1] = bbmin[1];
         vert[3].position[2] = bbmin[2];
 
-        if(Frustum_IsPolyVisible(&poly, frustum))
+        if(Frustum_IsPolyVisible(&poly, frustum, true))
         {
             return true;
         }
@@ -597,7 +597,7 @@ bool Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *fru
         vert[3].position[1] = bbmax[1];
         vert[3].position[2] = bbmin[2];
 
-        if(Frustum_IsPolyVisible(&poly, frustum))
+        if(Frustum_IsPolyVisible(&poly, frustum, true))
         {
             return true;
         }
@@ -628,7 +628,7 @@ bool Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *fru
         vert[3].position[1] = bbmin[1];
         vert[3].position[2] = bbmin[2];
 
-        if(Frustum_IsPolyVisible(&poly, frustum))
+        if(Frustum_IsPolyVisible(&poly, frustum, true))
         {
             return true;
         }
@@ -654,7 +654,7 @@ bool Frustum_IsAABBVisible(float bbmin[3], float bbmax[3], struct frustum_s *fru
         vert[3].position[1] = bbmin[1];
         vert[3].position[2] = bbmax[2];
 
-        if(Frustum_IsPolyVisible(&poly, frustum))
+        if(Frustum_IsPolyVisible(&poly, frustum, true))
         {
             return true;
         }
@@ -674,7 +674,7 @@ bool Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum)
     for(int i = 0; i < 6; i++, p++)
     {
         t = vec3_plane_dist(p->plane, frustum->cam_pos);
-        if((t > 0.0) && Frustum_IsPolyVisible(p, frustum))
+        if((t > 0.0) && Frustum_IsPolyVisible(p, frustum, true))
         {
             return true;
         }
