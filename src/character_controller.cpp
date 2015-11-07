@@ -19,6 +19,7 @@
 #include "resource.h"
 #include "engine_string.h"
 #include "inventory.h"
+#include "game.h"
 
 void Character_Create(struct entity_s *ent)
 {
@@ -981,8 +982,6 @@ int Character_MoveOnFloor(struct entity_s *ent)
      */
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
-    // First of all - get information about floor and ceiling!!!
-    Character_UpdateCurrentHeight(ent);
     if(ent->character->height_info.floor_hit && (ent->character->height_info.floor_point[2] + 1.0 >= ent->transform[12+2] + ent->bf->bb_min[2]))
     {
         engine_container_p cont = ent->character->height_info.floor_obj;
@@ -1203,8 +1202,6 @@ int Character_FreeFalling(struct entity_s *ent)
     ent->speed[2] = (ent->speed[2] < -FREE_FALL_SPEED_MAXIMUM)?(-FREE_FALL_SPEED_MAXIMUM):(ent->speed[2]);
     vec3_RotateZ(ent->speed, ent->speed, rot);
 
-    Character_UpdateCurrentHeight(ent);
-
     if(ent->self->room && (ent->self->room->flags & TR_ROOM_FLAG_WATER))
     {
         if(ent->speed[2] < 0.0)
@@ -1334,7 +1331,6 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
 
     Entity_GhostUpdate(ent);
-    Character_UpdateCurrentHeight(ent);
     vec3_add(pos, pos, move);
     Entity_FixPenetrations(ent, move);                                          // get horizontal collide
     ///@FIXME: rewrite conditions! or add fixer to update_entity_rigid_body func
@@ -1412,7 +1408,6 @@ int Character_WallsClimbing(struct entity_s *ent)
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
 
     Entity_GhostUpdate(ent);
-    Character_UpdateCurrentHeight(ent);
     vec3_add(pos, pos, move);
     Entity_FixPenetrations(ent, move);                                          // get horizontal collide
     Entity_UpdateRoomPos(ent);
@@ -1890,6 +1885,7 @@ void Character_ApplyCommands(struct entity_s *ent)
         return;
     }
 
+    Character_UpdateCurrentHeight(ent);
     Character_UpdatePlatformPreStep(ent);
 
     if(ent->character->state_func)
@@ -1938,6 +1934,8 @@ void Character_ApplyCommands(struct entity_s *ent)
 
 void Character_UpdateParams(struct entity_s *ent)
 {
+    float speed = engine_frame_time / GAME_LOGIC_REFRESH_INTERVAL;
+
     switch(ent->move_type)
     {
         case MOVE_ON_FLOOR:
@@ -1949,38 +1947,37 @@ void Character_UpdateParams(struct entity_s *ent)
             if((ent->character->height_info.quicksand == 0x02) &&
                (ent->move_type == MOVE_ON_FLOOR))
             {
-                if(!Character_ChangeParam(ent, PARAM_AIR, -3.0))
-                    Character_ChangeParam(ent, PARAM_HEALTH, -3.0);
+                if(!Character_ChangeParam(ent, PARAM_AIR, -3.0 * speed))
+                    Character_ChangeParam(ent, PARAM_HEALTH, -3.0 * speed);
             }
             else if(ent->character->height_info.quicksand == 0x01)
             {
-                Character_ChangeParam(ent, PARAM_AIR, 3.0);
+                Character_ChangeParam(ent, PARAM_AIR, 3.0 * speed);
             }
             else
             {
                 Character_SetParam(ent, PARAM_AIR, PARAM_ABSOLUTE_MAX);
             }
 
-
             if((ent->bf->animations.last_state == TR_STATE_LARA_SPRINT) ||
                (ent->bf->animations.last_state == TR_STATE_LARA_SPRINT_ROLL))
             {
-                Character_ChangeParam(ent, PARAM_STAMINA, -0.5);
+                Character_ChangeParam(ent, PARAM_STAMINA, -0.5 * speed);
             }
             else
             {
-                Character_ChangeParam(ent, PARAM_STAMINA,  0.5);
+                Character_ChangeParam(ent, PARAM_STAMINA,  0.5 * speed);
             }
             break;
 
         case MOVE_ON_WATER:
-            Character_ChangeParam(ent, PARAM_AIR, 3.0);;
+            Character_ChangeParam(ent, PARAM_AIR, 3.0 * speed);
             break;
 
         case MOVE_UNDERWATER:
-            if(!Character_ChangeParam(ent, PARAM_AIR, -1.0))
+            if(!Character_ChangeParam(ent, PARAM_AIR, -1.0 * speed))
             {
-                if(!Character_ChangeParam(ent, PARAM_HEALTH, -3.0))
+                if(!Character_ChangeParam(ent, PARAM_HEALTH, -3.0 * speed))
                 {
                     ent->character->resp.kill = 1;
                 }
@@ -1992,15 +1989,13 @@ void Character_UpdateParams(struct entity_s *ent)
     }
 }
 
-bool IsCharacter(struct entity_s *ent)
-{
-    return ent && ent->character;
-}
 
 int Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value)
 {
-    if((!IsCharacter(ent)) || (parameter >= PARAM_LASTINDEX))
+    if(!ent || !ent->character || (parameter >= PARAM_LASTINDEX))
+    {
         return 0;
+    }
 
     max_value = (max_value < 0)?(0):(max_value);    // Clamp max. to at least zero
     ent->character->parameters.maximum[parameter] = max_value;
@@ -2009,8 +2004,10 @@ int Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_val
 
 int Character_SetParam(struct entity_s *ent, int parameter, float value)
 {
-    if((!IsCharacter(ent)) || (parameter >= PARAM_LASTINDEX))
+    if(!ent || !ent->character || (parameter >= PARAM_LASTINDEX))
+    {
         return 0;
+    }
 
     float maximum = ent->character->parameters.maximum[parameter];
 
@@ -2023,16 +2020,20 @@ int Character_SetParam(struct entity_s *ent, int parameter, float value)
 
 float Character_GetParam(struct entity_s *ent, int parameter)
 {
-    if((!IsCharacter(ent)) || (parameter >= PARAM_LASTINDEX))
+    if(!ent || !ent->character || (parameter >= PARAM_LASTINDEX))
+    {
         return 0;
+    }
 
     return ent->character->parameters.param[parameter];
 }
 
 int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
 {
-    if((!IsCharacter(ent)) || (parameter >= PARAM_LASTINDEX))
+    if(!ent || !ent->character || (parameter >= PARAM_LASTINDEX))
+    {
         return 0;
+    }
 
     float maximum = ent->character->parameters.maximum[parameter];
     float current = ent->character->parameters.param[parameter];
@@ -2081,7 +2082,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
             ent->bf->animations.next->model = sm;
         }
 
-        for(int i=0;i<bm->mesh_count;i++)
+        for(uint16_t i = 0; i < bm->mesh_count; i++)
         {
             ent->bf->bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
             ent->bf->bone_tags[i].mesh_slot = NULL;
@@ -2089,7 +2090,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
 
         if(armed != 0)
         {
-            for(int i=0;i<bm->mesh_count;i++)
+            for(uint16_t i = 0; i < bm->mesh_count; i++)
             {
                 if(sm->mesh_tree[i].replace_mesh == 0x01)
                 {
@@ -2103,7 +2104,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
         }
         else
         {
-            for(int i=0;i<bm->mesh_count;i++)
+            for(uint16_t i = 0; i < bm->mesh_count; i++)
             {
                 if(sm->mesh_tree[i].replace_mesh == 0x03)
                 {
@@ -2123,7 +2124,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
     {
         // do unarmed default model
         skeletal_model_p bm = ent->bf->animations.model;
-        for(int i=0;i<bm->mesh_count;i++)
+        for(uint16_t i = 0; i < bm->mesh_count; i++)
         {
             ent->bf->bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
             ent->bf->bone_tags[i].mesh_slot = NULL;
@@ -2136,3 +2137,405 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
 
     return 0;
 }
+
+/* There are stick code for multianimation (weapon mode) testing
+ * Model replacing will be upgraded too, I have to add override
+ * flags to model manually in the script*/
+void Character_DoWeaponFrame(struct entity_s *ent, float time)
+{
+    if(ent->character)
+    {
+        float dt;
+        int t;
+        /* anims (TR_I - TR_V):
+         * pistols:
+         * 0: idle to fire;
+         * 1: draw weapon (short?);
+         * 2: draw weapon (full);
+         * 3: fire process;
+         *
+         * shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons):
+         * 0: idle to fire;
+         * 1: draw weapon;
+         * 2: fire process;
+         * 3: hide weapon;
+         * 4: idle to fire (targeted);
+         */
+        if((ent->character->cmd.ready_weapon != 0x00) && (ent->character->current_weapon > 0) && (ent->character->weapon_current_state == WEAPON_STATE_HIDE))
+        {
+            Character_SetWeaponModel(ent, ent->character->current_weapon, 1);
+        }
+
+        for(ss_animation_p ss_anim=ent->bf->animations.next; ss_anim; ss_anim = ss_anim->next)
+        {
+            if((ss_anim->model != NULL) && (ss_anim->model->animation_count > 4))
+            {
+                switch(ent->character->weapon_current_state)
+                {
+                    case WEAPON_STATE_HIDE:
+                        if(ent->character->cmd.ready_weapon)   // ready weapon
+                        {
+                            ss_anim->current_animation = 1;
+                            ss_anim->next_animation = 1;
+                            ss_anim->current_frame = 0;
+                            ss_anim->next_frame = 0;
+                            ss_anim->frame_time = 0.0;
+                            ent->character->weapon_current_state = WEAPON_STATE_HIDE_TO_READY;
+                        }
+                        break;
+
+                    case WEAPON_STATE_HIDE_TO_READY:
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = dt / ss_anim->period;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+
+                        if(ss_anim->current_frame < t - 1)
+                        {
+                            ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                        }
+                        else if(ss_anim->current_frame < t)
+                        {
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = 0;
+                        }
+                        else
+                        {
+                            ss_anim->current_frame = 0;
+                            ss_anim->current_animation = 0;
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = 0;
+                            ss_anim->frame_time = 0.0;
+                            ent->character->weapon_current_state = WEAPON_STATE_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_IDLE:
+                        ss_anim->current_frame = 0;
+                        ss_anim->current_animation = 0;
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 0;
+                        ss_anim->frame_time = 0.0;
+                        if(ent->character->cmd.ready_weapon)
+                        {
+                            ss_anim->current_animation = 3;
+                            ss_anim->next_animation = 3;
+                            ss_anim->current_frame = ss_anim->next_frame = 0;
+                            ss_anim->frame_time = 0.0;
+                            ent->character->weapon_current_state = WEAPON_STATE_IDLE_TO_HIDE;
+                        }
+                        else if(ent->character->cmd.action)
+                        {
+                            ent->character->weapon_current_state = WEAPON_STATE_IDLE_TO_FIRE;
+                        }
+                        else
+                        {
+                            // do nothing here, may be;
+                        }
+                        break;
+
+                    case WEAPON_STATE_FIRE_TO_IDLE:
+                        // Yes, same animation, reverse frames order;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = dt / ss_anim->period;
+                        ss_anim->current_frame = t - 1 - ss_anim->current_frame;
+                        if(ss_anim->current_frame > 0)
+                        {
+                            ss_anim->next_frame = ss_anim->current_frame - 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                        }
+                        else
+                        {
+                            ss_anim->next_frame = ss_anim->current_frame = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                            ent->character->weapon_current_state = WEAPON_STATE_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_IDLE_TO_FIRE:
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = dt / ss_anim->period;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+
+                        if(ss_anim->current_frame < t - 1)
+                        {
+                            ss_anim->next_frame = ss_anim->current_frame + 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                        }
+                        else if(ss_anim->current_frame < t)
+                        {
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = 2;
+                        }
+                        else if(ent->character->cmd.action)
+                        {
+                            ss_anim->current_frame = 0;
+                            ss_anim->next_frame = 1;
+                            ss_anim->current_animation = 2;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                            ent->character->weapon_current_state = WEAPON_STATE_FIRE;
+                        }
+                        else
+                        {
+                            ss_anim->frame_time = 0.0;
+                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                            ent->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_FIRE:
+                        if(ent->character->cmd.action)
+                        {
+                            // inc time, loop;
+                            ss_anim->frame_time += time;
+                            ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                            dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
+                            ss_anim->lerp = dt / ss_anim->period;
+                            t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+
+                            if(ss_anim->current_frame < t - 1)
+                            {
+                                ss_anim->next_frame = ss_anim->current_frame + 1;
+                                ss_anim->next_animation = ss_anim->current_animation;
+                            }
+                            else if(ss_anim->current_frame < t)
+                            {
+                                ss_anim->next_frame = 0;
+                                ss_anim->next_animation = ss_anim->current_animation;
+                            }
+                            else
+                            {
+                                ss_anim->frame_time = dt;
+                                ss_anim->current_frame = 0;
+                                ss_anim->next_frame = 1;
+                            }
+                        }
+                        else
+                        {
+                            ss_anim->frame_time = 0.0;
+                            ss_anim->current_animation = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                            ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
+                            ent->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_IDLE_TO_HIDE:
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = dt / ss_anim->period;
+                        if(ss_anim->current_frame < t - 1)
+                        {
+                            ss_anim->next_frame = ss_anim->current_frame + 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                        }
+                        else
+                        {
+                            ss_anim->next_frame = ss_anim->current_frame = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                            ent->character->weapon_current_state = WEAPON_STATE_HIDE;
+                            Character_SetWeaponModel(ent, ent->character->current_weapon, 0);
+                        }
+                        break;
+                };
+            }
+            else if((ss_anim->model != NULL) && (ss_anim->model->animation_count == 4))
+            {
+                switch(ent->character->weapon_current_state)
+                {
+                    case WEAPON_STATE_HIDE:
+                        if(ent->character->cmd.ready_weapon)   // ready weapon
+                        {
+                            ss_anim->current_animation = 2;
+                            ss_anim->next_animation = 2;
+                            ss_anim->current_frame = 0;
+                            ss_anim->next_frame = 0;
+                            ss_anim->frame_time = 0.0;
+                            ent->character->weapon_current_state = WEAPON_STATE_HIDE_TO_READY;
+                        }
+                        break;
+
+                    case WEAPON_STATE_HIDE_TO_READY:
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = dt / ss_anim->period;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+
+                        if(ss_anim->current_frame < t - 1)
+                        {
+                            ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                        }
+                        else if(ss_anim->current_frame < t)
+                        {
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = 0;
+                        }
+                        else
+                        {
+                            ss_anim->current_frame = 0;
+                            ss_anim->current_animation = 0;
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = 0;
+                            ss_anim->frame_time = 0.0;
+                            ent->character->weapon_current_state = WEAPON_STATE_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_IDLE:
+                        ss_anim->current_frame = 0;
+                        ss_anim->current_animation = 0;
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = 0;
+                        ss_anim->frame_time = 0.0;
+                        if(ent->character->cmd.ready_weapon)
+                        {
+                            ss_anim->current_animation = 2;
+                            ss_anim->next_animation = 2;
+                            ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                            ss_anim->frame_time = 0.0;
+                            ent->character->weapon_current_state = WEAPON_STATE_IDLE_TO_HIDE;
+                        }
+                        else if(ent->character->cmd.action)
+                        {
+                            ent->character->weapon_current_state = WEAPON_STATE_IDLE_TO_FIRE;
+                        }
+                        else
+                        {
+                            // do nothing here, may be;
+                        }
+                        break;
+
+                    case WEAPON_STATE_FIRE_TO_IDLE:
+                        // Yes, same animation, reverse frames order;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = dt / ss_anim->period;
+                        ss_anim->current_frame = t - 1 - ss_anim->current_frame;
+                        if(ss_anim->current_frame > 0)
+                        {
+                            ss_anim->next_frame = ss_anim->current_frame - 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                        }
+                        else
+                        {
+                            ss_anim->next_frame = ss_anim->current_frame = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                            ent->character->weapon_current_state = WEAPON_STATE_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_IDLE_TO_FIRE:
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = dt / ss_anim->period;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+
+                        if(ss_anim->current_frame < t - 1)
+                        {
+                            ss_anim->next_frame = ss_anim->current_frame + 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                        }
+                        else if(ss_anim->current_frame < t)
+                        {
+                            ss_anim->next_frame = 0;
+                            ss_anim->next_animation = 3;
+                        }
+                        else if(ent->character->cmd.action)
+                        {
+                            ss_anim->current_frame = 0;
+                            ss_anim->next_frame = 1;
+                            ss_anim->current_animation = 3;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                            ent->character->weapon_current_state = WEAPON_STATE_FIRE;
+                        }
+                        else
+                        {
+                            ss_anim->frame_time = 0.0;
+                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                            ent->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_FIRE:
+                        if(ent->character->cmd.action)
+                        {
+                            // inc time, loop;
+                            ss_anim->frame_time += time;
+                            ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                            dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
+                            ss_anim->lerp = dt / ss_anim->period;
+                            t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+
+                            if(ss_anim->current_frame < t - 1)
+                            {
+                                ss_anim->next_frame = ss_anim->current_frame + 1;
+                                ss_anim->next_animation = ss_anim->current_animation;
+                            }
+                            else if(ss_anim->current_frame < t)
+                            {
+                                ss_anim->next_frame = 0;
+                                ss_anim->next_animation = ss_anim->current_animation;
+                            }
+                            else
+                            {
+                                ss_anim->frame_time = dt;
+                                ss_anim->current_frame = 0;
+                                ss_anim->next_frame = 1;
+                            }
+                        }
+                        else
+                        {
+                            ss_anim->frame_time = 0.0;
+                            ss_anim->current_animation = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                            ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                            ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
+                            ent->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
+                        }
+                        break;
+
+                    case WEAPON_STATE_IDLE_TO_HIDE:
+                        // Yes, same animation, reverse frames order;
+                        t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                        ss_anim->frame_time += time;
+                        ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
+                        dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->lerp = dt / ss_anim->period;
+                        ss_anim->current_frame = t - 1 - ss_anim->current_frame;
+                        if(ss_anim->current_frame > 0)
+                        {
+                            ss_anim->next_frame = ss_anim->current_frame - 1;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                        }
+                        else
+                        {
+                            ss_anim->next_frame = ss_anim->current_frame = 0;
+                            ss_anim->next_animation = ss_anim->current_animation;
+                            ent->character->weapon_current_state = WEAPON_STATE_HIDE;
+                            Character_SetWeaponModel(ent, ent->character->current_weapon, 0);
+                        }
+                        break;
+                };
+            }
+
+            Entity_DoAnimCommands(ent, ss_anim, 0);
+        }
+    }
+}
+
+

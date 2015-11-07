@@ -1497,7 +1497,7 @@ int lua_GetCharacterParam(lua_State * lua)
         return 0;
     }
 
-    if(IsCharacter(ent))
+    if(ent && ent->character)
     {
         lua_pushnumber(lua, Character_GetParam(ent, parameter));
         return 1;
@@ -1530,7 +1530,7 @@ int lua_SetCharacterParam(lua_State * lua)
         return 0;
     }
 
-    if(!IsCharacter(ent))
+    if(!ent || !ent->character)
     {
         Con_Warning("no character with id = %d", id);
         return 0;
@@ -1554,7 +1554,7 @@ int lua_GetCharacterCombatMode(lua_State * lua)
     if(lua_gettop(lua) < 1) return 0;
     entity_p ent = World_GetEntityByID(&engine_world, lua_tointeger(lua, 1));
 
-    if(IsCharacter(ent))
+    if(ent && ent->character)
     {
         lua_pushnumber(lua, ent->character->weapon_current_state);
         return 1;
@@ -1583,7 +1583,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
         return 0;
     }
 
-    if(IsCharacter(ent))
+    if(ent && ent->character)
     {
         Character_ChangeParam(ent, parameter, value);
     }
@@ -1609,7 +1609,7 @@ int lua_AddCharacterHair(lua_State *lua)
 
         entity_p ent   = World_GetEntityByID(&engine_world, ent_id);
 
-        if(IsCharacter(ent))
+        if(ent && ent->character)
         {
             hair_setup_s *hair_setup = Hair_GetSetup(lua, setup_index);
 
@@ -1650,7 +1650,7 @@ int lua_ResetCharacterHair(lua_State *lua)
         int ent_id   = lua_tointeger(lua, 1);
         entity_p ent = World_GetEntityByID(&engine_world, ent_id);
 
-        if(IsCharacter(ent))
+        if(ent && ent->character)
         {
             if(ent->character->hairs)
             {
@@ -3763,7 +3763,7 @@ int lua_GetEntityResponse(lua_State * lua)
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
 
-    if(IsCharacter(ent))
+    if(ent && ent->character)
     {
         switch(lua_tointeger(lua, 2))
         {
@@ -3804,7 +3804,7 @@ int lua_SetEntityResponse(lua_State * lua)
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
 
-    if(IsCharacter(ent))
+    if(ent && ent->character)
     {
         int8_t value = (int8_t)lua_tointeger(lua, 3);
 
@@ -4246,7 +4246,7 @@ int lua_SetCharacterWeaponModel(lua_State *lua)
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
 
-    if(IsCharacter(ent))
+    if(ent && ent->character)
     {
         Character_SetWeaponModel(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
     }
@@ -4270,7 +4270,7 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
 
-    if(IsCharacter(ent))
+    if(ent && ent->character)
     {
         lua_pushinteger(lua, ent->character->current_weapon);
         return 1;
@@ -4294,7 +4294,7 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(&engine_world, id);
 
-    if(IsCharacter(ent))
+    if(ent && ent->character)
     {
         ent->character->current_weapon = lua_tointeger(lua, 2);
     }
@@ -4873,9 +4873,6 @@ void Script_LoadConstants(lua_State *lua)
         lua_setglobal(lua, "TICK_STOPPED");
         lua_pushinteger(lua, TICK_ACTIVE);
         lua_setglobal(lua, "TICK_ACTIVE");
-
-        lua_pushnumber(lua, 1.0f / 60.0f);
-        lua_setglobal(lua, "FRAME_TIME");
 
         lua_settop(lua, top);
     }

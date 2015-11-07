@@ -1831,9 +1831,26 @@ void Audio_UpdateListenerByEntity(struct entity_s *ent)
     ///@FIXME: Add entity listener updater here.
 }
 
-void Audio_Update()
+
+__inline float CutTimeToLogicTime(float *game_logic_time)
 {
-    Audio_UpdateSources();
-    Audio_UpdateStreams();
-    Audio_UpdateListenerByCamera(&engine_camera);
+    int t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
+    float dt = (float)t * GAME_LOGIC_REFRESH_INTERVAL;
+    *game_logic_time -= dt;
+    return dt;
+}
+
+
+void Audio_Update(float time)
+{
+    static float game_logic_time  = 0.0;
+    game_logic_time += time;
+
+    if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
+    {
+        Audio_UpdateSources();
+        Audio_UpdateStreams();
+        Audio_UpdateListenerByCamera(&engine_camera);
+        CutTimeToLogicTime(&game_logic_time);
+    }
 }

@@ -421,7 +421,7 @@ void Audio_InitFX();
 
 void Audio_Init(uint32_t num_Sources = TR_AUDIO_MAX_CHANNELS);
 int  Audio_DeInit();
-void Audio_Update();
+void Audio_Update(float time);
 
 // Audio source (samples) routines.
 

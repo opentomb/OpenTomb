@@ -389,7 +389,7 @@ void Game_ApplyControls(struct entity_s *ent)
         control_states.look_axis_y = 0.0;
     }
 
-    if((control_states.free_look != 0) || !IsCharacter(ent))
+    if((control_states.free_look != 0) || !ent || !ent->character)
     {
         float dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
         Cam_SetRotation(&engine_camera, control_states.cam_angles);
@@ -527,17 +527,15 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         {
             Cam_SetFovAspect(cam, screen_info.fov / engine_camera_state.zoom, cam->aspect);
         }
-        if(engine_camera_state.time > 0.0f)
+
+        engine_camera_state.time -= engine_frame_time;
+        if(engine_camera_state.time <= 0.0f)
         {
-            engine_camera_state.time -= engine_frame_time;
-            if(engine_camera_state.time <= 0.0f)
-            {
-                engine_camera_state.state = CAMERA_STATE_NORMAL;
-                engine_camera_state.time = 0.0f;
-                engine_camera_state.sink = NULL;
-                engine_camera_state.target_id = (engine_world.Character)?(engine_world.Character->id):(-1);
-                Cam_SetFovAspect(cam, screen_info.fov, cam->aspect);
-            }
+            engine_camera_state.state = CAMERA_STATE_NORMAL;
+            engine_camera_state.time = 0.0f;
+            engine_camera_state.sink = NULL;
+            engine_camera_state.target_id = (engine_world.Character)?(engine_world.Character->id):(-1);
+            Cam_SetFovAspect(cam, screen_info.fov, cam->aspect);
         }
         return;
     }
@@ -851,20 +849,8 @@ void Game_UpdateCharacters()
 }
 
 
-__inline float CutTimeToLogicTime(float *game_logic_time)
-{
-    int t = *game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
-    float dt = (float)t * GAME_LOGIC_REFRESH_INTERVAL;
-    *game_logic_time -= dt;
-    return dt;
-}
-
-
 void Game_Frame(float time)
 {
-    static float game_logic_time  = 0.0;
-
-    game_logic_time += time;
     bool is_entitytree = ((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL));
     bool is_character  = (engine_world.Character != NULL);
 
@@ -891,11 +877,6 @@ void Game_Frame(float time)
     // If console or inventory is active, only thing to update is audio.
     if(Con_IsShown() || main_inventory_manager->getCurrentState() != gui_InventoryManager::INVENTORY_DISABLED)
     {
-        if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
-        {
-            Audio_Update();
-            CutTimeToLogicTime(&game_logic_time);
-        }
         return;
     }
 
@@ -903,21 +884,18 @@ void Game_Frame(float time)
     // We're going to update main logic with a fixed step.
     // This allows to conserve CPU resources and keep everything in sync!
 
-    if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
+    Script_DoTasks(engine_lua, time);
+    Game_UpdateAI();
+    if(is_character)
     {
-        float dt = CutTimeToLogicTime(&game_logic_time);
-        Script_DoTasks(engine_lua, dt);
-        Game_UpdateAI();
-        Audio_Update();
+        Entity_ProcessSector(engine_world.Character);
+        Character_UpdateParams(engine_world.Character);
+        Entity_CheckCollisionCallbacks(engine_world.Character);   ///@FIXME: Must do it for ALL interactive entities!
+    }
 
-        if(is_character)
-        {
-            Entity_ProcessSector(engine_world.Character);
-            Character_UpdateParams(engine_world.Character);
-            Entity_CheckCollisionCallbacks(engine_world.Character);   ///@FIXME: Must do it for ALL interactive entities!
-        }
-
-        if(is_entitytree) Game_LoopEntities(engine_world.entity_tree->root);
+    if(is_entitytree)
+    {
+        Game_LoopEntities(engine_world.entity_tree->root);
     }
 
     // This must be called EVERY frame to max out smoothness.
@@ -962,7 +940,7 @@ void Game_Frame(float time)
 
 void Game_Prepare()
 {
-    if(IsCharacter(engine_world.Character))
+    if(engine_world.Character && engine_world.Character->character)
     {
         // Set character values to default.
 
@@ -1025,7 +1003,7 @@ void Game_SetCameraTarget(uint32_t entity_id, float timer)
 {
     entity_p ent = World_GetEntityByID(&engine_world, entity_id);
     engine_camera_state.target_id = entity_id;
-    if(ent && (engine_camera_state.state != CAMERA_STATE_FIXED) && (timer > 0.0f))
+    if(ent && (engine_camera_state.state == CAMERA_STATE_NORMAL))
     {
         engine_camera_state.state = CAMERA_STATE_LOOK_AT;
         engine_camera_state.time = timer;
@@ -1040,12 +1018,15 @@ void Game_SetCamera(uint32_t camera_id, int once, float timer, float zoom)
         if((engine_camera_state.state != CAMERA_STATE_LOOK_AT) && engine_world.Character)
         {
             engine_camera_state.target_id = engine_world.Character->id;
-            timer = (timer > 0.0f)?(timer):(2.0f);
+            //timer = (timer > 0.0f)?(timer):(2.0f);
         }
-        engine_camera_state.state = CAMERA_STATE_FIXED;
-        engine_camera_state.sink = engine_world.cameras_sinks + camera_id;
-        engine_camera_state.time = timer;
-        engine_camera_state.zoom = zoom;
+        if(engine_camera_state.state != CAMERA_STATE_FLYBY)
+        {
+            engine_camera_state.state = CAMERA_STATE_FIXED;
+            engine_camera_state.sink = engine_world.cameras_sinks + camera_id;
+            engine_camera_state.time = timer;
+            engine_camera_state.zoom = zoom;
+        }
     }
 }
 

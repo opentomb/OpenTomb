@@ -791,6 +791,7 @@ void Engine_MainLoop()
         Game_Frame(time);
         Gameflow_Do();
 
+        Audio_Update(time);
         Engine_Display();
     }
 }

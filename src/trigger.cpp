@@ -189,7 +189,6 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
         //int only_continue_events = 0;
         int switch_sectorstatus = 0;
         uint32_t switch_mask = 0;
-        trigger_command_p prev_command = NULL;
         for(trigger_command_p command = trigger->commands; command; command = command->next)
         {
             entity_p trig_entity = World_GetEntityByID(&engine_world, command->operands);
@@ -369,6 +368,14 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     Game_SetCamera(command->cam_index, command->once, command->cam_timer, command->cam_zoom);
                     break;
 
+                case TR_FD_TRIGFUNC_FLYBY:
+                    Game_PlayFlyBy(command->operands, command->once);
+                    break;
+
+                case TR_FD_TRIGFUNC_CUTSCENE:
+                    ///snprintf(buf, 128, "   playCutscene(%d); \n", command->operands);
+                    break;
+
                 case TR_FD_TRIGFUNC_ENDLEVEL:
                     Con_Notify("level was changed to %d", command->operands);
                     Game_LevelTransition(command->operands);
@@ -397,20 +404,10 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     //snprintf(buf, 128, "   clearBodies(); \n");
                     break;
 
-                case TR_FD_TRIGFUNC_FLYBY:
-                    Game_PlayFlyBy(command->operands, command->once);
-                    break;
-
-                case TR_FD_TRIGFUNC_CUTSCENE:
-                    ///snprintf(buf, 128, "   playCutscene(%d); \n", command->operands);
-                    break;
-
                 default:
                     Con_Printf("Unknown trigger function: 0x%X", command->function);
                     break;
             };
-
-            prev_command = command;
         }
 
         if(trigger->once)

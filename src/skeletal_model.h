@@ -119,7 +119,7 @@ typedef struct mesh_tree_tag_s
     struct base_mesh_s         *mesh_base;                                      // base mesh - pointer to the first mesh in array
     struct base_mesh_s         *mesh_skin;                                      // base skinned mesh for ТР4+
     float                       offset[3];                                      // model position offset
-    uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
+    uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = POP + PUSH
     uint16_t                    parent;                                         // parent index
     uint32_t                    body_part;
     uint8_t                     replace_mesh;                                   // flag for shoot / guns animations (0x00, 0x01, 0x02, 0x03)
