@@ -243,7 +243,7 @@ void Entity::fixPenetrations(const glm::vec3* move)
 
 void Entity::transferToRoom(Room* room)
 {
-    if(getRoom() && !getRoom()->isOverlapped(room))
+    if(getRoom() && !getRoom()->overlaps(room))
     {
         if(getRoom())
             getRoom()->removeEntity(this);
@@ -345,7 +345,7 @@ void Entity::updateRigidBody(bool force)
     else
     {
         if(   m_skeleton.getModel() == nullptr
-           || (!force && m_skeleton.getModel()->animations.size() == 1 && m_skeleton.getModel()->animations.front().keyFrames.size() == 1))
+           || (!force && m_skeleton.getModel()->animations.size() == 1 && m_skeleton.getModel()->animations.front().getFrameDuration() == 1))
         {
             return;
         }
@@ -356,7 +356,7 @@ void Entity::updateRigidBody(bool force)
             m_skeleton.updateRigidBody(m_transform);
         }
     }
-    rebuildBV();
+    rebuildBoundingBox();
 }
 
 void Entity::updateTransform()
@@ -374,7 +374,7 @@ void Entity::updateTransform()
 
 void Entity::updateCurrentSpeed(bool zeroVz)
 {
-    glm::float_t t = m_currentSpeed * animation::FrameRate;
+    glm::float_t t = m_currentSpeed * animation::AnimationFrameRate;
     glm::float_t vz = (zeroVz) ? (0.0f) : (m_speed[2]);
 
     if(m_moveDir == MoveDirection::Forward)
@@ -433,7 +433,9 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
                 const glm::float_t z = -glm::float_t(command.param[1]);
                 glm::vec3 ofs(x, y, z);
                 m_transform[3] += glm::vec4(glm::mat3(m_transform) * ofs, 0);
+#if 0
                 m_lerp_skip = true;
+#endif
             }
             break;
 
@@ -518,7 +520,9 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
                         m_moveDir = MoveDirection::Backward;
                     }
                     updateTransform();
+#if 0
                     m_lerp_skip = true;
+#endif
                 }
                 else
                 {
@@ -581,23 +585,20 @@ void Entity::setAnimation(int animation, int frame)
 
 int Entity::getAnimDispatchCase(LaraState id)
 {
-    const animation::AnimationFrame* anim = &m_skeleton.getModel()->animations[m_skeleton.getCurrentAnimation()];
+    const animation::Animation* anim = &m_skeleton.getModel()->animations[m_skeleton.getCurrentAnimation()];
+    const animation::StateChange* stc = anim->findStateChangeByID(id);
+    if(!stc)
+        return -1;
 
-    for(const animation::StateChange& stc : anim->stateChanges)
+    for(size_t j = 0; j < stc->anim_dispatch.size(); j++)
     {
-        if(stc.id != id)
-            continue;
+        const animation::AnimDispatch& disp = stc->anim_dispatch[j];
 
-        for(size_t j = 0; j < stc.anim_dispatch.size(); j++)
+        if(   disp.frame_high >= disp.frame_low
+           && m_skeleton.getCurrentFrame() >= disp.frame_low
+           && m_skeleton.getCurrentFrame() <= disp.frame_high)
         {
-            const animation::AnimDispatch& disp = stc.anim_dispatch[j];
-
-            if(   disp.frame_high >= disp.frame_low
-               && m_skeleton.getCurrentFrame() >= disp.frame_low
-               && m_skeleton.getCurrentFrame() <= disp.frame_high)
-            {
-                return static_cast<int>(j);
-            }
+            return static_cast<int>(j);
         }
     }
 
@@ -605,31 +606,13 @@ int Entity::getAnimDispatchCase(LaraState id)
 }
 
 
-void Entity::lerpTransform(glm::float_t lerp)
-{
-    if(!m_lerp_valid)
-        return;
-
-    m_transform = glm::interpolate(m_lerp_last_transform, m_lerp_curr_transform, lerp);
-}
-
-void Entity::updateInterpolation(util::Duration time)
+void Entity::updateInterpolation()
 {
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC) != 0)
         return;
 
     // Bone animation interp:
-    const glm::float_t lerp = glm::min(1.0f, m_skeleton.getLerp() + time / animation::FrameTime);
     m_skeleton.updatePose();
-    m_skeleton.setLerp( lerp );
-
-    // Entity transform interp:
-    lerpTransform(m_lerp);
-    m_lerp += time / animation::GameLogicFrameTime;
-    if( m_lerp > 1.0 )
-    {
-        m_lerp = 1.0;
-    }
 }
 
 animation::AnimUpdate Entity::stepAnimation(util::Duration time)
@@ -638,7 +621,7 @@ animation::AnimUpdate Entity::stepAnimation(util::Duration time)
        || !m_active
        || !m_enabled
        || m_skeleton.getModel() == nullptr
-       || (m_skeleton.getModel()->animations.size() == 1 && m_skeleton.getModel()->animations.front().keyFrames.size() == 1))
+       || (m_skeleton.getModel()->animations.size() == 1 && m_skeleton.getModel()->animations.front().getFrameDuration() == 1))
     {
         return animation::AnimUpdate::None;
     }
@@ -693,7 +676,7 @@ void Entity::frame(util::Duration time)
 /**
  * The function rebuild / renew entity's BV
  */
-void Entity::rebuildBV()
+void Entity::rebuildBoundingBox()
 {
     if(!m_skeleton.getModel())
         return;

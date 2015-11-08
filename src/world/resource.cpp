@@ -44,6 +44,8 @@
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
 
+// #define LOG_ANIM_DISPATCHES
+
 using gui::Console;
 
 namespace world
@@ -1367,7 +1369,7 @@ namespace world
                 continue;                                                           // If no anim commands or current anim has more than 255 (according to TRosettaStone).
             }
 
-            animation::AnimationFrame* af = &model->animations[anim];
+            animation::Animation* af = &model->animations[anim];
             if(af->num_anim_commands == 0)
                 continue;
 
@@ -1384,24 +1386,24 @@ namespace world
                      * End-of-anim commands:
                      */
                     case animation::AnimCommandOpcode::SetPosition:
-                        af->animCommands.push_back({ command, pointer[0], pointer[1], pointer[2] });
+                        af->finalAnimCommands.push_back({ command, pointer[0], pointer[1], pointer[2] });
                         // ConsoleInfo::instance().printf("ACmd MOVE: anim = %d, x = %d, y = %d, z = %d", static_cast<int>(anim), pointer[0], pointer[1], pointer[2]);
                         pointer += 3;
                         break;
 
                     case animation::AnimCommandOpcode::SetVelocity:
-                        af->animCommands.push_back({ command, pointer[0], pointer[1], 0 });
+                        af->finalAnimCommands.push_back({ command, pointer[0], pointer[1], 0 });
                         // ConsoleInfo::instance().printf("ACmd JUMP: anim = %d, vVert = %d, vHoriz = %d", static_cast<int>(anim), pointer[0], pointer[1]);
                         pointer += 2;
                         break;
 
                     case animation::AnimCommandOpcode::EmptyHands:
-                        af->animCommands.push_back({ command, 0, 0, 0 });
+                        af->finalAnimCommands.push_back({ command, 0, 0, 0 });
                         // ConsoleInfo::instance().printf("ACmd EMTYHANDS: anim = %d", static_cast<int>(anim));
                         break;
 
                     case animation::AnimCommandOpcode::Kill:
-                        af->animCommands.push_back({ command, 0, 0, 0 });
+                        af->finalAnimCommands.push_back({ command, 0, 0, 0 });
                         // ConsoleInfo::instance().printf("ACmd KILL: anim = %d", static_cast<int>(anim));
                         break;
 
@@ -1409,18 +1411,18 @@ namespace world
                          * Per frame commands:
                          */
                     case animation::AnimCommandOpcode::PlaySound:
-                        if(pointer[0] < static_cast<int>(af->keyFrames.size()))
+                        if(pointer[0] < static_cast<int>(af->getFrameDuration()))
                         {
-                            af->keyFrames[pointer[0]].animCommands.push_back({ command, pointer[1], 0, 0 });
+                            af->animCommands(pointer[0]).push_back({ command, pointer[1], 0, 0 });
                         }
                         // ConsoleInfo::instance().printf("ACmd PLAYSOUND: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
                         pointer += 2;
                         break;
 
                     case animation::AnimCommandOpcode::PlayEffect:
-                        if(pointer[0] < static_cast<int>(af->keyFrames.size()))
+                        if(pointer[0] < static_cast<int>(af->getFrameDuration()))
                         {
-                            af->keyFrames[pointer[0]].animCommands.push_back({ command, pointer[1], 0, 0 });
+                            af->animCommands(pointer[0]).push_back({ command, pointer[1], 0, 0 });
                         }
                         //                    ConsoleInfo::instance().printf("ACmd FLIPEFFECT: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
                         pointer += 2;
@@ -2152,7 +2154,7 @@ namespace world
 
     void TR_GenRoomProperties(World *world, const std::unique_ptr<loader::Level>& tr)
     {
-        for(uint32_t i = 0; i < world->rooms.size(); i++)
+        for(size_t i = 0; i < world->rooms.size(); i++)
         {
             std::shared_ptr<Room> r = world->rooms[i];
             if(r->m_alternateRoom != nullptr)
@@ -2190,10 +2192,10 @@ namespace world
     {
         world->room_boxes.clear();
 
-        for(uint32_t i = 0; i < tr->m_boxes.size(); i++)
+        for(size_t i = 0; i < tr->m_boxes.size(); i++)
         {
             world->room_boxes.emplace_back();
-            auto& room = world->room_boxes.back();
+            RoomBox& room = world->room_boxes.back();
             room.overlap_index = tr->m_boxes[i].overlap_index;
             room.true_floor = -tr->m_boxes[i].true_floor;
             room.x_min = tr->m_boxes[i].xmin;
@@ -2207,7 +2209,7 @@ namespace world
     {
         world->cameras_sinks.clear();
 
-        for(uint32_t i = 0; i < tr->m_cameras.size(); i++)
+        for(size_t i = 0; i < tr->m_cameras.size(); i++)
         {
             world->cameras_sinks.emplace_back();
             world->cameras_sinks[i].x = tr->m_cameras[i].x;
@@ -2353,17 +2355,10 @@ namespace world
             seq->frame_list.resize(seq->frames.size());
 
             // Fill up new sequence with frame list.
-            seq->anim_type = animation::AnimTextureType::Forward;
-            seq->frame_lock = false; // by default anim is playing
-            seq->uvrotate = false; // by default uvrotate
-            seq->reverse_direction = false; // Needed for proper reverse-type start-up.
-            seq->frame_rate = util::MilliSeconds(50);  // Should be passed as 1 / FPS.
-            seq->frame_time = util::Duration(0);   // Reset frame time to initial state.
-            seq->current_frame = 0;     // Reset current frame to zero.
 
-            for(size_t j = 0; j < seq->frames.size(); j++)
+            for(uint32_t& frame : seq->frame_list)
             {
-                seq->frame_list[j] = *(pointer++);  // Add one frame.
+                frame = *(pointer++);  // Add one frame.
             }
 
             // UVRotate textures case.
@@ -3025,25 +3020,24 @@ namespace world
              * model has no start offset and any animation
              */
             model->animations.resize(1);
-            model->animations.front().keyFrames.resize(1);
-            animation::SkeletonKeyFrame* bone_frame = model->animations.front().keyFrames.data();
+            model->animations.front().setDuration(1, 1, 1);
+            animation::SkeletonKeyFrame* keyFrame = &model->animations.front().rawKeyFrame(0);
 
             model->animations.front().id = 0;
             model->animations.front().next_anim = nullptr;
             model->animations.front().next_frame = 0;
             model->animations.front().stateChanges.clear();
-            model->animations.front().original_frame_rate = 1;
 
-            bone_frame->boneKeyFrames.resize(model->meshes.size());
+            keyFrame->boneKeyFrames.resize(model->meshes.size());
 
-            bone_frame->position = {0,0,0};
-            for(size_t k = 0; k < bone_frame->boneKeyFrames.size(); k++)
+            keyFrame->position = {0,0,0};
+            for(size_t k = 0; k < keyFrame->boneKeyFrames.size(); k++)
             {
-                SkeletalModel::MeshReference* tree_tag = &model->meshes[k];
-                animation::BoneKeyFrame* bone_tag = &bone_frame->boneKeyFrames[k];
+                SkeletalModel::MeshReference* mesh = &model->meshes[k];
+                animation::BoneKeyFrame* boneKeyFrame = &keyFrame->boneKeyFrames[k];
 
-                bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
-                bone_tag->offset = tree_tag->offset;
+                boneKeyFrame->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
+                boneKeyFrame->offset = mesh->offset;
             }
             return;
         }
@@ -3068,7 +3062,7 @@ namespace world
          */
         for(size_t i = 0; i < model->animations.size(); i++)
         {
-            animation::AnimationFrame* anim = &model->animations[i];
+            animation::Animation* anim = &model->animations[i];
             loader::Animation *tr_animation = &tr->m_animations[tr_moveable->animation_index + i];
 
             uint32_t frame_offset = tr_animation->frame_offset / 2;
@@ -3079,10 +3073,8 @@ namespace world
                 l_start = 0x0A;
             }
 
-            uint32_t frame_step = tr_animation->frame_size;
-
             anim->id = i;
-            anim->original_frame_rate = tr_animation->frame_rate;
+            BOOST_LOG_TRIVIAL(debug) << "Anim " << i << " stretch factor = " << int(tr_animation->frame_rate) << ", frame count = " << (tr_animation->frame_end - tr_animation->frame_start + 1);
 
             anim->speed_x = tr_animation->speed;
             anim->accel_x = tr_animation->accel;
@@ -3100,13 +3092,9 @@ namespace world
                     // but due to the amount of currFrame-indexing, waste dummy frames for now:
                     // (I haven't seen this for framerate==1 animation, but it would be possible,
                     //  also, resizing now saves re-allocations in interpolateFrames later)
-            anim->keyFrames.resize(tr_animation->frame_end - tr_animation->frame_start + 1);
 
-            size_t numFrameData = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i);
-            if(numFrameData > anim->keyFrames.size())
-            {
-                numFrameData = anim->keyFrames.size();
-            }
+            const size_t keyFrameCount = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i);
+            anim->setDuration(tr_animation->frame_end - tr_animation->frame_start + 1, keyFrameCount, tr_animation->frame_rate);
 
             //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index));
 
@@ -3151,113 +3139,107 @@ namespace world
                 }
             }
 
-            if(anim->keyFrames.empty())
+            if(anim->getFrameDuration() == 0)
             {
                 /*
                  * number of animations must be >= 1, because frame contains base model offset
                  */
-                anim->keyFrames.resize(1);
+                anim->setDuration(1, 1, anim->getStretchFactor());
             }
 
             /*
              * let us begin to load animations
              */
-            for(size_t j = 0; j < anim->keyFrames.size(); j++, frame_offset += frame_step)
+            for(size_t j = 0; j < anim->getKeyFrameCount(); ++j, frame_offset += tr_animation->frame_size)
             {
-                animation::SkeletonKeyFrame* bone_frame = &anim->keyFrames[j];
+                animation::SkeletonKeyFrame* keyFrame = &anim->rawKeyFrame(j);
                 // !Need bonetags in empty frames:
-                bone_frame->boneKeyFrames.resize(model->meshes.size());
+                keyFrame->boneKeyFrames.resize(model->meshes.size());
 
-                if(j >= numFrameData)
+                if(j >= keyFrameCount)
+                {
+                    BOOST_LOG_TRIVIAL(warning) << "j=" << j << ", keyFrameCount=" << keyFrameCount << ", anim->getKeyFrameCount()=" << anim->getKeyFrameCount();
                     continue; // only create bone_tags for rate>1 fill-frames
+                }
 
-                bone_frame->position = {0,0,0};
-                TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
+                keyFrame->position = {0,0,0};
+                TR_GetBFrameBB_Pos(tr, frame_offset, keyFrame);
 
                 if(frame_offset >= tr->m_frameData.size())
                 {
-                    for(size_t k = 0; k < bone_frame->boneKeyFrames.size(); k++)
+                    for(size_t k = 0; k < keyFrame->boneKeyFrames.size(); k++)
                     {
-                        SkeletalModel::MeshReference* tree_tag = &model->meshes[k];
-                        animation::BoneKeyFrame* bone_tag = &bone_frame->boneKeyFrames[k];
-                        bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
-                        bone_tag->offset = tree_tag->offset;
+                        animation::BoneKeyFrame* boneKeyFrame = &keyFrame->boneKeyFrames[k];
+                        boneKeyFrame->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
+                        boneKeyFrame->offset = model->meshes[k].offset;
                     }
+                    continue;
                 }
-                else
+
+                uint16_t l = l_start;
+                uint16_t temp1, temp2;
+                float ang;
+
+                for(size_t k = 0; k < keyFrame->boneKeyFrames.size(); k++)
                 {
-                    uint16_t l = l_start;
-                    uint16_t temp1, temp2;
-                    float ang;
+                    animation::BoneKeyFrame* bone_tag = &keyFrame->boneKeyFrames[k];
+                    bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
+                    bone_tag->offset = model->meshes[k].offset;
 
-                    for(size_t k = 0; k < bone_frame->boneKeyFrames.size(); k++)
+                    if(loader::gameToEngine(tr->m_gameVersion) == loader::Engine::TR1)
                     {
-                        SkeletalModel::MeshReference* tree_tag = &model->meshes[k];
-                        animation::BoneKeyFrame* bone_tag = &bone_frame->boneKeyFrames[k];
-                        bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
-                        bone_tag->offset = tree_tag->offset;
-
-                        switch(tr->m_gameVersion)
+                        temp2 = tr->m_frameData[frame_offset + l];
+                        l++;
+                        temp1 = tr->m_frameData[frame_offset + l];
+                        l++;
+                        glm::vec3 rot;
+                        rot[0] = static_cast<float>((temp1 & 0x3ff0) >> 4);
+                        rot[2] = -static_cast<float>(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
+                        rot[1] = static_cast<float>(temp2 & 0x03ff);
+                        rot *= 360.0 / 1024.0;
+                        bone_tag->qrotate = util::vec4_SetTRRotations(rot);
+                    }
+                    else
+                    {
+                        temp1 = tr->m_frameData[frame_offset + l];
+                        l++;
+                        if(tr->m_gameVersion >= loader::Game::TR4)
                         {
-                            case loader::Game::TR1:                                              /* TR1 */
-                            case loader::Game::TR1UnfinishedBusiness:
-                            case loader::Game::TR1Demo:
-                            {
+                            ang = static_cast<float>(temp1 & 0x0fff);
+                            ang *= 360.0 / 4096.0;
+                        }
+                        else
+                        {
+                            ang = static_cast<float>(temp1 & 0x03ff);
+                            ang *= 360.0 / 1024.0;
+                        }
+
+                        switch(temp1 & 0xc000)
+                        {
+                            case 0x4000:    // x only
+                                bone_tag->qrotate = util::vec4_SetTRRotations({ ang,0,0 });
+                                break;
+
+                            case 0x8000:    // y only
+                                bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,-ang });
+                                break;
+
+                            case 0xc000:    // z only
+                                bone_tag->qrotate = util::vec4_SetTRRotations({ 0,ang,0 });
+                                break;
+
+                            default:
+                            {        // all three
                                 temp2 = tr->m_frameData[frame_offset + l];
-                                l++;
-                                temp1 = tr->m_frameData[frame_offset + l];
-                                l++;
                                 glm::vec3 rot;
                                 rot[0] = static_cast<float>((temp1 & 0x3ff0) >> 4);
                                 rot[2] = -static_cast<float>(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
                                 rot[1] = static_cast<float>(temp2 & 0x03ff);
                                 rot *= 360.0 / 1024.0;
                                 bone_tag->qrotate = util::vec4_SetTRRotations(rot);
+                                l++;
                                 break;
                             }
-
-                            default:                                                /* TR2 + */
-                                temp1 = tr->m_frameData[frame_offset + l];
-                                l++;
-                                if(tr->m_gameVersion >= loader::Game::TR4)
-                                {
-                                    ang = static_cast<float>(temp1 & 0x0fff);
-                                    ang *= 360.0 / 4096.0;
-                                }
-                                else
-                                {
-                                    ang = static_cast<float>(temp1 & 0x03ff);
-                                    ang *= 360.0 / 1024.0;
-                                }
-
-                                switch(temp1 & 0xc000)
-                                {
-                                    case 0x4000:    // x only
-                                        bone_tag->qrotate = util::vec4_SetTRRotations({ ang,0,0 });
-                                        break;
-
-                                    case 0x8000:    // y only
-                                        bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,-ang });
-                                        break;
-
-                                    case 0xc000:    // z only
-                                        bone_tag->qrotate = util::vec4_SetTRRotations({ 0,ang,0 });
-                                        break;
-
-                                    default:
-                                    {        // all three
-                                        temp2 = tr->m_frameData[frame_offset + l];
-                                        glm::vec3 rot;
-                                        rot[0] = static_cast<float>((temp1 & 0x3ff0) >> 4);
-                                        rot[2] = -static_cast<float>(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
-                                        rot[1] = static_cast<float>(temp2 & 0x03ff);
-                                        rot *= 360.0 / 1024.0;
-                                        bone_tag->qrotate = util::vec4_SetTRRotations(rot);
-                                        l++;
-                                        break;
-                                    }
-                                };
-                                break;
                         };
                     }
                 }
@@ -3265,21 +3247,17 @@ namespace world
         }
 
         /*
-         * Animations interpolation to 1/30 sec like in original. Needed for correct state change works.
-         */
-        model->interpolateFrames();
-        /*
          * state change's loading
          */
-#if LOG_ANIM_DISPATCHES
+#ifdef LOG_ANIM_DISPATCHES
         if(model->animations.size() > 1)
         {
-            Sys_DebugLog(LOG_FILENAME, "MODEL[%d], anims = %d", model_num, model->animations.size());
+            BOOST_LOG_TRIVIAL(debug) << "MODEL[" << model_num << "], anims = " << model->animations.size();
         }
 #endif
         for(size_t i = 0; i < model->animations.size(); i++)
         {
-            animation::AnimationFrame* anim = &model->animations[i];
+            animation::Animation* anim = &model->animations[i];
             anim->stateChanges.clear();
 
             loader::Animation *tr_animation = &tr->m_animations[tr_moveable->animation_index + i];
@@ -3290,13 +3268,13 @@ namespace world
             {
                 anim->next_anim = &model->animations[animId];
                 anim->next_frame = tr_animation->next_frame - tr->m_animations[tr_animation->next_animation].frame_start;
-                anim->next_frame %= anim->next_anim->keyFrames.size();
+                anim->next_frame %= anim->next_anim->getFrameDuration();
                 if(anim->next_frame < 0)
                 {
                     anim->next_frame = 0;
                 }
-#if LOG_ANIM_DISPATCHES
-                Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, anim->next_anim->id, anim->next_frame);
+#ifdef LOG_ANIM_DISPATCHES
+                BOOST_LOG_TRIVIAL(debug) << "ANIM[" << i << "], next_anim = " << anim->next_anim->id << ", next_frame = " << anim->next_frame;
 #endif
             }
             else
@@ -3309,15 +3287,17 @@ namespace world
 
             if(tr_animation->num_state_changes > 0 && model->animations.size() > 1)
             {
-#if LOG_ANIM_DISPATCHES
-                Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim) ? (anim->next_anim->id) : (-1), anim->next_frame);
+#ifdef LOG_ANIM_DISPATCHES
+                BOOST_LOG_TRIVIAL(debug) << "ANIM[" << i << "], next_anim = " << (anim->next_anim ? anim->next_anim->id : -1) << ", next_frame = " << anim->next_frame;
 #endif
-                anim->stateChanges.resize(tr_animation->num_state_changes);
-
                 for(uint16_t j = 0; j < tr_animation->num_state_changes; j++)
                 {
-                    animation::StateChange* sch_p = &anim->stateChanges[j];
                     loader::StateChange *tr_sch = &tr->m_stateChanges[j + tr_animation->state_change_offset];
+                    if(anim->findStateChangeByID(static_cast<LaraState>(tr_sch->state_id)) != nullptr)
+                    {
+                        BOOST_LOG_TRIVIAL(warning) << "Multiple state changes for id " << tr_sch->state_id;
+                    }
+                    animation::StateChange* sch_p = &anim->stateChanges[static_cast<LaraState>(tr_sch->state_id)];
                     sch_p->id = static_cast<LaraState>(tr_sch->state_id);
                     sch_p->anim_dispatch.clear();
                     for(uint16_t l = 0; l < tr_sch->num_anim_dispatches; l++)
@@ -3325,38 +3305,47 @@ namespace world
                         loader::AnimDispatch *tr_adisp = &tr->m_animDispatches[tr_sch->anim_dispatch + l];
                         uint16_t next_anim = tr_adisp->next_animation & 0x7fff;
                         uint16_t next_anim_ind = next_anim - (tr_moveable->animation_index & 0x7fff);
-                        if(next_anim_ind < model->animations.size())
+                        if(next_anim_ind >= model->animations.size())
+                            continue;
+
+                        sch_p->anim_dispatch.emplace_back();
+
+                        animation::AnimDispatch* adsp = &sch_p->anim_dispatch.back();
+                        size_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].getFrameDuration();
+                        uint16_t next_frame = tr_adisp->next_frame - tr->m_animations[next_anim].frame_start;
+
+                        uint16_t low = tr_adisp->low - tr_animation->frame_start;
+                        uint16_t high = tr_adisp->high - tr_animation->frame_start;
+
+                        // this is not good: frame_high can be frame_end+1 (for last-frame-loop statechanges,
+                        // secifically fall anims (75,77 etc), which may fail to change state),
+                        // And: if theses values are > framesize, then they're probably faulty and won't be fixed by modulo anyway:
+//                        adsp->frame_low = low  % anim->frames.size();
+//                        adsp->frame_high = (high - 1) % anim->frames.size();
+                        if(low > anim->getFrameDuration() || high > anim->getFrameDuration())
                         {
-                            sch_p->anim_dispatch.emplace_back();
-
-                            animation::AnimDispatch* adsp = &sch_p->anim_dispatch.back();
-                            size_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].keyFrames.size();
-                            uint16_t next_frame = tr_adisp->next_frame - tr->m_animations[next_anim].frame_start;
-
-                            uint16_t low = tr_adisp->low - tr_animation->frame_start;
-                            uint16_t high = tr_adisp->high - tr_animation->frame_start;
-
-                            // this is not good: frame_high can be frame_end+1 (for last-frame-loop statechanges,
-                            // secifically fall anims (75,77 etc), which may fail to change state),
-                            // And: if theses values are > framesize, then they're probably faulty and won't be fixed by modulo anyway:
-    //                        adsp->frame_low = low  % anim->frames.size();
-    //                        adsp->frame_high = (high - 1) % anim->frames.size();
-                            if(low > anim->keyFrames.size() || high > anim->keyFrames.size())
-                            {
-                                //Sys_Warn("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d", anim->id, sch_p->id, low, high);
-                                Console::instance().printf("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d", anim->id, sch_p->id, low, high);
-                            }
-                            adsp->frame_low = low;
-                            adsp->frame_high = high;
-                            adsp->next_anim = next_anim - tr_moveable->animation_index;
-                            adsp->next_frame = next_frame % next_frames_count;
-
-#if LOG_ANIM_DISPATCHES
-                            Sys_DebugLog(LOG_FILENAME, "anim_disp[%d], frames.size() = %d: interval[%d.. %d], next_anim = %d, next_frame = %d", l,
-                                         anim->frames.size(), adsp->frame_low, adsp->frame_high,
-                                         adsp->next_anim, adsp->next_frame);
-#endif
+                            //Sys_Warn("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d", anim->id, sch_p->id, low, high);
+                            Console::instance().printf("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d, duration: %d, timestretch: %d", anim->id, sch_p->id, low, high, int(anim->getFrameDuration()), int(anim->getStretchFactor()));
                         }
+                        adsp->frame_low = low;
+                        adsp->frame_high = high;
+                        adsp->next.animation = next_anim - tr_moveable->animation_index;
+                        adsp->next.frame = next_frame % next_frames_count;
+
+#ifdef LOG_ANIM_DISPATCHES
+                        BOOST_LOG_TRIVIAL(debug) << "anim_disp["
+                                                 << l
+                                                 << "], duration = "
+                                                 << anim->getFrameDuration()
+                                                 << ": interval["
+                                                 << adsp->frame_low
+                                                 << ".."
+                                                 << adsp->frame_high
+                                                 << "], next_anim = "
+                                                 << adsp->next.animation
+                                                 << ", next_frame = "
+                                                 << adsp->next.frame;
+#endif
                     }
                 }
             }
@@ -3427,7 +3416,7 @@ namespace world
     {
         if(frame_offset < tr->m_frameData.size())
         {
-            unsigned short int *frame = &tr->m_frameData[frame_offset];
+            const uint16_t* frame = &tr->m_frameData[frame_offset];
 
             keyFrame->boundingBox.min[0] = (short int)frame[0];   // x_min
             keyFrame->boundingBox.min[1] = (short int)frame[4];   // y_min
@@ -3443,6 +3432,7 @@ namespace world
         }
         else
         {
+            BOOST_LOG_TRIVIAL(warning) << "Reading animation data beyond end of frame data: offset = " << frame_offset << ", size = " << tr->m_frameData.size();
             keyFrame->boundingBox.min = {0,0,0};
             keyFrame->boundingBox.max = {0,0,0};
             keyFrame->position = {0,0,0};
@@ -3609,7 +3599,7 @@ namespace world
             entity->setAnimation(0, 0);                                      // Set zero animation and zero frame
 
             Res_SetEntityProperties(entity);
-            entity->rebuildBV();
+            entity->rebuildBoundingBox();
             entity->m_skeleton.genRigidBody(entity.get(), entity->getCollisionShape(), entity->getCollisionType(), entity->m_transform);
 
             entity->getRoom()->addEntity(entity.get());

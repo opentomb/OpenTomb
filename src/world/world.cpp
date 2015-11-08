@@ -213,7 +213,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const glm::vec3
         ent->setAnimation(0, 0);                                     // Set zero animation and zero frame
 
         Res_SetEntityProperties(ent);
-        ent->rebuildBV();
+        ent->rebuildBoundingBox();
         ent->m_skeleton.genRigidBody(ent.get(), ent->getCollisionShape(), ent->getCollisionType(), ent->m_transform);
 
         if(ent->getRoom() != nullptr)
@@ -471,10 +471,10 @@ void World::updateAnimTextures()                                                
         }
 
         seq.frame_time += engine::engine_frame_time;
-        if(seq.frame_time >= seq.frame_rate)
+        if(seq.frame_time >= seq.frame_duration)
         {
-            int j = static_cast<int>(seq.frame_time / seq.frame_rate);
-            seq.frame_time -= j * seq.frame_rate;
+            int j = static_cast<int>(seq.frame_time / seq.frame_duration);
+            seq.frame_time -= j * seq.frame_duration;
 
             switch(seq.anim_type)
             {

@@ -38,7 +38,7 @@ struct SkeletalModel
 
     core::BoundingBox boundingBox;
 
-    std::vector<animation::AnimationFrame> animations;
+    std::vector<animation::Animation> animations;
 
     std::vector<MeshReference> meshes;
 
@@ -51,7 +51,6 @@ struct SkeletalModel
 
     void clear();
     void updateTransparencyFlag();
-    void interpolateFrames();
     void fillSkinnedMeshMap();
     bool findStateChange(LaraState stateid, uint16_t& animid_out, uint16_t& frameid_inout);
 

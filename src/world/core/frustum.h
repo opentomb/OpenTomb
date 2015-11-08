@@ -51,8 +51,6 @@ public:
     bool isVisible(const std::vector<glm::vec3>& vertices) const;
     bool isVisible(const BoundingBox& bb, const Camera& cam) const;
     bool isVisible(const OrientedBoundingBox &obb, const Camera& cam) const;
-
-    //! The main function for working with portals.
     bool isVisible(const Portal &portal) const;
 
     //! Check if a line intersects with the frustum

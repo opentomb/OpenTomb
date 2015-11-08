@@ -25,9 +25,9 @@ namespace animation
 void Skeleton::fromModel(SkeletalModel* model)
 {
     m_hasSkin = false;
-    m_boundingBox.min = { 0,0,0 };
-    m_boundingBox.max = { 0,0,0 };
-    m_position = { 0,0,0 };
+    m_boundingBox.min = {0, 0, 0};
+    m_boundingBox.max = {0, 0, 0};
+    m_position = {0, 0, 0};
 
     m_model = model;
 
@@ -35,8 +35,8 @@ void Skeleton::fromModel(SkeletalModel* model)
 
     std::stack<Bone*> parents;
     parents.push(nullptr);
-    m_bones[0].parent = nullptr;                                             // root
-    for(size_t i = 0; i<m_bones.size(); i++)
+    m_bones[0].parent = nullptr; // root
+    for(size_t i = 0; i < m_bones.size(); i++)
     {
         m_bones[i].index = i;
         m_bones[i].mesh = model->meshes[i].mesh_base;
@@ -47,7 +47,7 @@ void Skeleton::fromModel(SkeletalModel* model)
         m_bones[i].body_part = model->meshes[i].body_part;
 
         m_bones[i].offset = model->meshes[i].offset;
-        m_bones[i].qrotate = { 0,0,0,0 };
+        m_bones[i].qrotate = {0, 0, 0, 0};
         m_bones[i].transform = glm::mat4(1.0f);
         m_bones[i].full_transform = glm::mat4(1.0f);
 
@@ -55,7 +55,7 @@ void Skeleton::fromModel(SkeletalModel* model)
             continue;
 
         m_bones[i].parent = &m_bones[i - 1];
-        if(model->meshes[i].flag & 0x01)                                 // POP
+        if(model->meshes[i].flag & 0x01) // POP
         {
             if(!parents.empty())
             {
@@ -63,11 +63,11 @@ void Skeleton::fromModel(SkeletalModel* model)
                 parents.pop();
             }
         }
-        if(model->meshes[i].flag & 0x02)                                 // PUSH
+        if(model->meshes[i].flag & 0x02) // PUSH
         {
             if(parents.size() + 1 < model->meshes.size())
             {
-                parents.push( m_bones[i].parent );
+                parents.push(m_bones[i].parent);
             }
         }
     }
@@ -81,23 +81,23 @@ void Skeleton::itemFrame(util::Duration time)
 
 void Skeleton::updatePose()
 {
-    const animation::SkeletonKeyFrame& prevKeyFrame = m_model->animations[m_previousAnimation].keyFrames[m_previousFrame];
-    const animation::SkeletonKeyFrame& currKeyFrame = m_model->animations[m_currentAnimation].keyFrames[m_currentFrame];
+    BOOST_ASSERT( m_currentAnimation.animation < m_model->animations.size() );
+    BOOST_ASSERT( m_currentAnimation.frame < m_model->animations[m_currentAnimation.animation].getFrameDuration() );
+    const animation::SkeletonKeyFrame keyFrame = m_model->animations[m_currentAnimation.animation].getInterpolatedFrame(m_currentAnimation.frame);
 
-    m_boundingBox.max = glm::mix(prevKeyFrame.boundingBox.max, currKeyFrame.boundingBox.max, m_frameLerp);
-    m_boundingBox.min = glm::mix(prevKeyFrame.boundingBox.min, currKeyFrame.boundingBox.min, m_frameLerp);
-    m_position = glm::mix(prevKeyFrame.position, currKeyFrame.position, m_frameLerp);
+    m_boundingBox = keyFrame.boundingBox;
+    m_position = keyFrame.position;
 
-    for(size_t k = 0; k < prevKeyFrame.boneKeyFrames.size(); k++)
+    for(size_t k = 0; k < keyFrame.boneKeyFrames.size(); k++)
     {
-        m_bones[k].offset = glm::mix(prevKeyFrame.boneKeyFrames[k].offset, currKeyFrame.boneKeyFrames[k].offset, m_frameLerp);
+        m_bones[k].offset = keyFrame.boneKeyFrames[k].offset;
         m_bones[k].transform = glm::translate(glm::mat4(1.0f), m_bones[k].offset);
         if(k == 0)
         {
             m_bones[k].transform = glm::translate(m_bones[k].transform, m_position);
         }
 
-        m_bones[k].qrotate = glm::slerp(prevKeyFrame.boneKeyFrames[k].qrotate, currKeyFrame.boneKeyFrames[k].qrotate, m_frameLerp);
+        m_bones[k].qrotate = keyFrame.boneKeyFrames[k].qrotate;
         m_bones[k].transform *= glm::mat4_cast(m_bones[k].qrotate);
     }
 
@@ -105,13 +105,13 @@ void Skeleton::updatePose()
      * build absolute coordinate matrix system
      */
     m_bones[0].full_transform = m_bones[0].transform;
-    for(size_t k = 1; k < prevKeyFrame.boneKeyFrames.size(); k++)
+    for(size_t k = 1; k < keyFrame.boneKeyFrames.size(); k++)
     {
         m_bones[k].full_transform = m_bones[k].parent->full_transform * m_bones[k].transform;
     }
 }
 
-void Skeleton::copyMeshBinding(const SkeletalModel *model, bool resetMeshSlot)
+void Skeleton::copyMeshBinding(const SkeletalModel* model, bool resetMeshSlot)
 {
     size_t meshes_to_copy = std::min(m_bones.size(), m_model->meshes.size());
 
@@ -129,20 +129,17 @@ void Skeleton::setAnimation(int animation, int frame)
     // FIXME: is anim < 0 actually happening?
     animation = (animation < 0) ? (0) : (animation);
 
-    AnimationFrame* anim = &m_model->animations[animation];
+    Animation* anim = &m_model->animations[animation];
 
     if(frame < 0)
-        frame = anim->keyFrames.size() - 1 - ((-frame - 1) % anim->keyFrames.size());
+        frame = anim->getFrameDuration() - 1 - ((-frame - 1) % anim->getFrameDuration());
     else
-        frame %= anim->keyFrames.size();
+        frame %= anim->getFrameDuration();
 
-    m_currentAnimation = animation;
-    m_currentFrame = frame;
-    m_previousState = anim->state_id;
-    m_nextState = anim->state_id;
-
-    //    m_bf.animations.lerp = 0.0f;
-    //    m_bf.animations.frame_time = 0.0f;
+    m_currentAnimation.animation = animation;
+    m_currentAnimation.frame = frame;
+    m_currentAnimation.state = anim->state_id;
+    m_previousAnimation.state = anim->state_id;
 }
 
 /**
@@ -151,112 +148,110 @@ void Skeleton::setAnimation(int animation, int frame)
 * @param cmdEntity     optional entity for which doAnimCommand is called
 * @return  ENTITY_ANIM_NONE if frame is unchanged (time<rate), ENTITY_ANIM_NEWFRAME or ENTITY_ANIM_NEWANIM
 */
-AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity) {
+AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
+{
     // FIXME: hack for reverse framesteps (weaponanims):
     if(time.count() < 0)
     {
-        m_frameTime -= time;
-        if(m_frameTime + animation::GameLogicFrameTime / 2.0f < FrameTime)
+        m_animationTime -= time;
+        if(m_animationTime >= util::Duration::zero())
         {
-            m_frameLerp = m_frameTime / FrameTime;
             return AnimUpdate::None;
         }
 
-        m_previousAnimation = m_currentAnimation;
-        m_previousFrame = m_currentFrame;
-        m_frameTime = util::Duration(0);
-        m_frameLerp = 0.0f;
-        if(m_currentFrame > 0)
+        m_previousAnimation.animation = m_currentAnimation.animation;
+        m_previousAnimation.frame = m_currentAnimation.frame;
+        m_animationTime += AnimationFrameTime;
+        if(m_currentAnimation.frame > 0)
         {
-            m_currentFrame--;
+            m_currentAnimation.frame--;
             return AnimUpdate::NewFrame;
         }
         else
         {
-            m_currentFrame = getCurrentAnimationFrame().keyFrames.size() - 1;
+            m_currentAnimation.frame = getCurrentAnimationFrame().getFrameDuration() - 1;
             return AnimUpdate::NewAnim;
         }
     }
 
-    m_frameTime += time;
-    if(m_frameTime + animation::GameLogicFrameTime / 2.0f < FrameTime)
+    m_animationTime += time;
+    if(m_animationTime < AnimationFrameTime)
     {
-        m_frameLerp = m_frameTime / FrameTime; // re-sync
         return AnimUpdate::None;
     }
 
-    m_previousAnimation = m_currentAnimation;
-    m_previousFrame = m_currentFrame;
-    m_frameTime = util::Duration(0);
-    m_frameLerp = 0.0f;
+    m_previousAnimation.animation = m_currentAnimation.animation;
+    m_previousAnimation.frame = m_currentAnimation.frame;
+    m_animationTime -= AnimationFrameTime;
 
-    uint16_t frame_id = m_currentFrame + 1;
+    uint16_t frame_id = m_currentAnimation.frame + 1;
 
     // check anim flags:
     if(m_mode == AnimationMode::LoopLastFrame)
     {
-        if(frame_id >= static_cast<int>(getCurrentAnimationFrame().keyFrames.size()))
+        if(frame_id >= getCurrentAnimationFrame().getFrameDuration())
         {
-            m_currentFrame = getCurrentAnimationFrame().keyFrames.size() - 1;
-            return AnimUpdate::NewFrame;    // period time has passed so it's a new frame, or should this be none?
+            m_currentAnimation.frame = getCurrentAnimationFrame().getFrameDuration() - 1;
+            return AnimUpdate::NewFrame; // period time has passed so it's a new frame, or should this be none?
         }
     }
     else if(m_mode == AnimationMode::Locked)
     {
-        m_currentFrame = 0;
+        m_currentAnimation.frame = 0;
         return AnimUpdate::NewFrame;
     }
     else if(m_mode == AnimationMode::WeaponCompat)
     {
-        if(frame_id >= getCurrentAnimationFrame().keyFrames.size())
+        if(frame_id >= getCurrentAnimationFrame().getFrameDuration())
         {
             return AnimUpdate::NewAnim;
         }
         else
         {
-            m_currentFrame = frame_id;
+            m_currentAnimation.frame = frame_id;
             return AnimUpdate::NewFrame;
         }
     }
 
     // check state change:
     AnimUpdate stepResult = AnimUpdate::NewFrame;
-    auto anim_id = m_currentAnimation;
-    if(m_nextState != m_previousState)
+    auto anim_id = m_currentAnimation.animation;
+    if(m_currentAnimation.state != m_previousAnimation.state)
     {
-        if(m_model->findStateChange(m_nextState, anim_id, frame_id))
+        if(m_model->findStateChange(m_currentAnimation.state, anim_id, frame_id))
         {
-            m_previousState = m_model->animations[anim_id].state_id;
-            m_nextState = m_previousState;
+            m_previousAnimation.state = m_model->animations[anim_id].state_id;
+            m_currentAnimation.state = m_previousAnimation.state;
             stepResult = AnimUpdate::NewAnim;
         }
     }
 
     // check end of animation:
-    if(frame_id >= m_model->animations[anim_id].keyFrames.size())
+    if(frame_id >= m_model->animations[anim_id].getFrameDuration())
     {
         if(cmdEntity)
         {
-            for(AnimCommand acmd : m_model->animations[anim_id].animCommands)  // end-of-anim cmdlist
+            for(AnimCommand acmd : m_model->animations[anim_id].finalAnimCommands) // end-of-anim cmdlist
             {
                 cmdEntity->doAnimCommand(acmd);
             }
         }
+
         if(m_model->animations[anim_id].next_anim)
         {
             frame_id = m_model->animations[anim_id].next_frame;
             anim_id = m_model->animations[anim_id].next_anim->id;
 
             // some overlay anims may have invalid nextAnim/nextFrame values:
-            if(anim_id < m_model->animations.size() && frame_id < m_model->animations[anim_id].keyFrames.size())
+            if(anim_id < m_model->animations.size() && frame_id < m_model->animations[anim_id].getFrameDuration())
             {
-                m_previousState = m_model->animations[anim_id].state_id;
-                m_nextState = m_previousState;
+                m_previousAnimation.state = m_model->animations[anim_id].state_id;
+                m_currentAnimation.state = m_previousAnimation.state;
             }
             else
             {
                 // invalid values:
-                anim_id = m_currentAnimation;
+                anim_id = m_currentAnimation.animation;
                 frame_id = 0;
             }
         }
@@ -267,22 +262,23 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity) {
         stepResult = AnimUpdate::NewAnim;
     }
 
-    m_currentAnimation = anim_id;
-    m_currentFrame = frame_id;
+    m_currentAnimation.animation = anim_id;
+    m_currentAnimation.frame = frame_id;
 
     if(cmdEntity)
     {
-        for(AnimCommand acmd : m_model->animations[anim_id].keyFrames[frame_id].animCommands)  // frame cmdlist
+        for(AnimCommand acmd : m_model->animations[anim_id].animCommands(frame_id))
         {
             cmdEntity->doAnimCommand(acmd);
         }
     }
+
     return stepResult;
 }
 
-const AnimationFrame &Skeleton::getCurrentAnimationFrame() const
+const Animation& Skeleton::getCurrentAnimationFrame() const
 {
-    return m_model->animations[m_currentAnimation];
+    return m_model->animations[m_currentAnimation.animation];
 }
 
 void Skeleton::updateTransform(const glm::mat4& entityTransform)
@@ -337,10 +333,11 @@ void Skeleton::createGhosts(Entity* entity, const glm::mat4& transform)
         bone.ghostObject->setIgnoreCollisionCheck(bone.bt_body.get(), true);
 
         glm::mat4 gltr = transform * bone.full_transform;
-        gltr[3] = glm::vec4( glm::mat3(gltr) * bone.mesh->m_center, 1.0f );
+        gltr[3] = glm::vec4(glm::mat3(gltr) * bone.mesh->m_center, 1.0f);
 
         bone.ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(gltr));
-        bone.ghostObject->setCollisionFlags(bone.ghostObject->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE | btCollisionObject::CF_CHARACTER_OBJECT);
+        bone.ghostObject->setCollisionFlags(bone.ghostObject->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE |
+                                            btCollisionObject::CF_CHARACTER_OBJECT);
         bone.ghostObject->setUserPointer(entity);
         bone.ghostObject->setCollisionShape(bone.shape.get());
         engine::bt_engine_dynamicsWorld->addCollisionObject(bone.ghostObject.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
@@ -387,18 +384,20 @@ void Skeleton::updateCurrentCollisions(const Entity* entity, const glm::mat4& tr
         bone.ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr));
         bone.ghostObject->getWorldTransform().setOrigin(util::convert(glm::vec3(tr * glm::vec4(v, 1.0f))));
 
-        btBroadphasePairArray &pairArray = bone.ghostObject->getOverlappingPairCache()->getOverlappingPairArray();
+        btBroadphasePairArray& pairArray = bone.ghostObject->getOverlappingPairCache()->getOverlappingPairArray();
         btVector3 aabb_min, aabb_max;
 
         bone.ghostObject->getCollisionShape()->getAabb(bone.ghostObject->getWorldTransform(), aabb_min, aabb_max);
-        engine::bt_engine_dynamicsWorld->getBroadphase()->setAabb(bone.ghostObject->getBroadphaseHandle(), aabb_min, aabb_max, engine::bt_engine_dynamicsWorld->getDispatcher());
-        engine::bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(bone.ghostObject->getOverlappingPairCache(), engine::bt_engine_dynamicsWorld->getDispatchInfo(), engine::bt_engine_dynamicsWorld->getDispatcher());
+        engine::bt_engine_dynamicsWorld->getBroadphase()->setAabb(bone.ghostObject->getBroadphaseHandle(), aabb_min, aabb_max,
+                                                                  engine::bt_engine_dynamicsWorld->getDispatcher());
+        engine::bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(
+            bone.ghostObject->getOverlappingPairCache(), engine::bt_engine_dynamicsWorld->getDispatchInfo(), engine::bt_engine_dynamicsWorld->getDispatcher());
 
         int num_pairs = bone.ghostObject->getOverlappingPairCache()->getNumOverlappingPairs();
         for(int j = 0; j < num_pairs; j++)
         {
             m_manifoldArray.clear();
-            btBroadphasePair *collisionPair = &pairArray[j];
+            btBroadphasePair* collisionPair = &pairArray[j];
 
             if(!collisionPair)
             {
@@ -417,7 +416,7 @@ void Skeleton::updateCurrentCollisions(const Entity* entity, const glm::mat4& tr
                 {
                     if(manifold->getContactPoint(c).getDistance() < 0.0)
                     {
-                        bone.last_collisions.emplace_back( const_cast<btCollisionObject*>(m_manifoldArray[k]->getBody0()) );
+                        bone.last_collisions.emplace_back(const_cast<btCollisionObject*>(m_manifoldArray[k]->getBody0()));
                         if(entity == static_cast<Entity*>(bone.last_collisions.back()->getUserPointer()))
                         {
                             bone.last_collisions.back() = const_cast<btCollisionObject*>(m_manifoldArray[k]->getBody1());
@@ -431,7 +430,7 @@ void Skeleton::updateCurrentCollisions(const Entity* entity, const glm::mat4& tr
     }
 }
 
-bool Skeleton::createRagdoll(const RDSetup &setup)
+bool Skeleton::createRagdoll(const RDSetup& setup)
 {
     bool result = true;
     for(size_t i = 0; i < setup.body_setup.size(); i++)
@@ -439,11 +438,11 @@ bool Skeleton::createRagdoll(const RDSetup &setup)
         if(i >= m_bones.size() || !m_bones[i].bt_body)
         {
             result = false;
-            continue;   // If body is absent, return false and bypass this body setup.
+            continue; // If body is absent, return false and bypass this body setup.
         }
 
         btVector3 inertia(0.0, 0.0, 0.0);
-        btScalar  mass = setup.body_setup[i].mass;
+        btScalar mass = setup.body_setup[i].mass;
 
         engine::bt_engine_dynamicsWorld->removeRigidBody(m_bones[i].bt_body.get());
 
@@ -498,7 +497,7 @@ void Skeleton::updateRigidBody(const glm::mat4& transform)
     }
 }
 
-btCollisionObject* Skeleton::getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t *curr_flag)
+btCollisionObject* Skeleton::getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t* curr_flag)
 {
     *curr_flag = 0x00;
     if(!hasGhosts())
@@ -528,7 +527,7 @@ void Skeleton::genRigidBody(Entity* entity, CollisionShape collisionShape, Colli
 
     for(animation::Bone& bone : m_bones)
     {
-        btCollisionShape *cshape = nullptr;
+        btCollisionShape* cshape = nullptr;
         switch(collisionShape)
         {
             case world::CollisionShape::Sphere:
@@ -557,7 +556,7 @@ void Skeleton::genRigidBody(Entity* entity, CollisionShape collisionShape, Colli
             cshape->calculateLocalInertia(0.0, localInertia);
 
         btTransform startTransform;
-        startTransform.setFromOpenGLMatrix(glm::value_ptr( transform * bone.full_transform ));
+        startTransform.setFromOpenGLMatrix(glm::value_ptr(transform * bone.full_transform));
         bone.bt_body = std::make_shared<btRigidBody>(0.0, new btDefaultMotionState(startTransform), cshape, localInertia);
 
         switch(collisionType)

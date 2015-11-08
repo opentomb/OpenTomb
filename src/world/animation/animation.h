@@ -12,11 +12,13 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <boost/assert.hpp>
+#include <boost/container/flat_map.hpp>
 
 #include <array>
 #include <list>
 #include <memory>
 #include <vector>
+#include <iostream>
 
 namespace world
 {
@@ -36,15 +38,15 @@ namespace animation
 {
 
 //! Default fixed TR framerate needed for animation calculation
-constexpr float FrameRate = 30;
-constexpr util::Duration FrameTime = util::fromSeconds(1.0/FrameRate);
+constexpr float AnimationFrameRate = 30;
+constexpr util::Duration AnimationFrameTime = util::fromSeconds(1.0 / AnimationFrameRate);
 
 // This is the global game logic refresh interval (physics timestep)
 // All game logic should be refreshed at this rate, including
 // enemy AI, values processing and audio update.
 // This should be a multiple of animation::FrameRate (1/30,60,90,120,...)
-constexpr float GameLogicFrameRate = 2*FrameRate;
-constexpr util::Duration GameLogicFrameTime = util::fromSeconds(1.0/GameLogicFrameRate);
+constexpr float GameLogicFrameRate = 2 * AnimationFrameRate;
+constexpr util::Duration GameLogicFrameTime = util::fromSeconds(1.0 / GameLogicFrameRate);
 
 enum class AnimUpdate
 {
@@ -82,32 +84,39 @@ enum class AnimTextureType
  */
 struct TexFrame
 {
-    glm::float_t    mat[4];
-    glm::float_t    move[2];
-    uint16_t    tex_ind;
+    glm::float_t mat[4];
+    glm::float_t move[2];
+    uint16_t tex_ind;
 };
 
 struct AnimSeq
 {
-    bool        uvrotate;               // UVRotate mode flag.
-    bool        frame_lock;             // Single frame mode. Needed for TR4-5 compatible UVRotate.
+    bool uvrotate = false;   // UVRotate mode flag.
+    bool frame_lock = false; // Single frame mode. Needed for TR4-5 compatible UVRotate.
 
-    bool        blend;                  // Blend flag.  Reserved for future use!
-    glm::float_t    blend_rate;             // Blend rate.  Reserved for future use!
-    glm::float_t    blend_time;             // Blend value. Reserved for future use!
+    bool blend;              // Blend flag.  Reserved for future use!
+    glm::float_t blend_rate; // Blend rate.  Reserved for future use!
+    glm::float_t blend_time; // Blend value. Reserved for future use!
 
-    AnimTextureType anim_type;
-    bool        reverse_direction;      // Used only with type 2 to identify current animation direction.
-    util::Duration frame_time;             // Time passed since last frame update.
-    uint16_t    current_frame;          // Current frame for this sequence.
-    util::Duration frame_rate;             // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
+    AnimTextureType anim_type = AnimTextureType::Forward;
+    bool reverse_direction = false;    // Used only with type 2 to identify current animation direction.
+    util::Duration frame_time = util::Duration::zero(); // Time passed since last frame update.
+    uint16_t current_frame = 0;    // Current frame for this sequence.
+    util::Duration frame_duration = util::MilliSeconds(50); // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
 
-    glm::float_t    uvrotate_speed;         // Speed of UVRotation, in seconds.
-    glm::float_t    uvrotate_max;           // Reference value used to restart rotation.
-    glm::float_t    current_uvrotate;       // Current coordinate window position.
+    glm::float_t uvrotate_speed;   // Speed of UVRotation, in seconds.
+    glm::float_t uvrotate_max;     // Reference value used to restart rotation.
+    glm::float_t current_uvrotate; // Current coordinate window position.
 
     std::vector<TexFrame> frames;
-    std::vector<uint32_t> frame_list;   // Offset into anim textures frame list.
+    std::vector<uint32_t> frame_list; // Offset into anim textures frame list.
+};
+
+struct AnimationState
+{
+    uint16_t animation = 0;
+    uint16_t frame = 0;
+    LaraState state = LaraState::WalkForward;
 };
 
 /*
@@ -115,15 +124,14 @@ struct AnimSeq
  */
 struct AnimDispatch
 {
-    uint16_t    next_anim;  //!< "switch to" animation
-    uint16_t    next_frame; //!< "switch to" frame
-    uint16_t    frame_low;  //!< low border of state change condition
-    uint16_t    frame_high; //!< high border of state change condition
+    AnimationState next;  //!< "switch to" animation
+    uint16_t frame_low;  //!< low border of state change condition
+    uint16_t frame_high; //!< high border of state change condition
 };
 
 struct StateChange
 {
-    LaraState                 id;
+    LaraState id;
     std::vector<AnimDispatch> anim_dispatch;
 };
 
@@ -142,44 +150,43 @@ struct BoneKeyFrame
 struct SkeletonKeyFrame
 {
     std::vector<BoneKeyFrame> boneKeyFrames;
-    glm::vec3            position;
-    core::BoundingBox    boundingBox;
-
-    std::vector<AnimCommand> animCommands;          // cmds for end-of-anim
+    glm::vec3 position = {0,0,0};
+    core::BoundingBox boundingBox;
 };
 
-struct AnimationFrame
+/**
+ * A sequence of keyframes.
+ */
+struct Animation
 {
-    uint32_t                    id;
-    uint8_t                     original_frame_rate;
-    int32_t                     speed_x;                // Forward-backward speed
-    int32_t                     accel_x;                // Forward-backward accel
-    int32_t                     speed_y;                // Left-right speed
-    int32_t                     accel_y;                // Left-right accel
-    uint32_t                    anim_command;
-    uint32_t                    num_anim_commands;
-    LaraState                   state_id;
-    std::vector<SkeletonKeyFrame> keyFrames;
+    uint32_t id;
+    int32_t speed_x; // Forward-backward speed
+    int32_t accel_x; // Forward-backward accel
+    int32_t speed_y; // Left-right speed
+    int32_t accel_y; // Left-right accel
+    uint32_t anim_command;
+    uint32_t num_anim_commands;
+    LaraState state_id;
 
-    std::vector<StateChange> stateChanges;           // Animation statechanges data
+    boost::container::flat_map<LaraState, StateChange> stateChanges;
 
-    AnimationFrame   *next_anim;              // Next default animation
-    int                         next_frame;             // Next default frame
+    Animation* next_anim = nullptr; // Next default animation
+    int next_frame;                 // Next default frame
 
-    std::vector<AnimCommand> animCommands; // cmds for end-of-anim
+    std::vector<AnimCommand> finalAnimCommands; // cmds for end-of-anim
 
-    const StateChange* findStateChangeByAnim(int state_change_anim) const noexcept
+    const StateChange* findStateChangeByAnim(int nextAnimId) const noexcept
     {
-        if(state_change_anim < 0)
+        if(nextAnimId < 0)
             return nullptr;
 
-        for(const StateChange& stateChange : stateChanges)
+        for(const auto& stateChange : stateChanges)
         {
-            for(const AnimDispatch& dispatch : stateChange.anim_dispatch)
+            for(const AnimDispatch& dispatch : stateChange.second.anim_dispatch)
             {
-                if(dispatch.next_anim == state_change_anim)
+                if(dispatch.next.animation == nextAnimId)
                 {
-                    return &stateChange;
+                    return &stateChange.second;
                 }
             }
         }
@@ -189,16 +196,105 @@ struct AnimationFrame
 
     const StateChange* findStateChangeByID(LaraState id) const noexcept
     {
-        for(const StateChange& stateChange : stateChanges)
+        auto it = stateChanges.find(id);
+        if(it == stateChanges.end())
+            return nullptr;
+
+        return &it->second;
+    }
+
+    StateChange* findStateChangeByID(LaraState id) noexcept
+    {
+        auto it = stateChanges.find(id);
+        if(it == stateChanges.end())
+            return nullptr;
+
+        return &it->second;
+    }
+
+    const BoneKeyFrame& getInitialBoneKeyFrame() const
+    {
+        return m_keyFrames.front().boneKeyFrames.front();
+    }
+
+    SkeletonKeyFrame getInterpolatedFrame(size_t frame) const
+    {
+        BOOST_ASSERT(frame < m_duration);
+        const size_t frameIndex = frame/m_stretchFactor;
+        BOOST_ASSERT(frameIndex < m_keyFrames.size());
+        const SkeletonKeyFrame& first = m_keyFrames[frameIndex];
+        const SkeletonKeyFrame& second = frameIndex+1 >= m_keyFrames.size()
+                                       ? m_keyFrames.back()
+                                       : m_keyFrames[frameIndex+1];
+
+        if(first.boneKeyFrames.size() != second.boneKeyFrames.size())
+            std::cerr << first.boneKeyFrames.size() << "," << second.boneKeyFrames.size() << "\n";
+
+        BOOST_ASSERT(first.boneKeyFrames.size() == second.boneKeyFrames.size());
+
+        const size_t subOffset = frame - frameIndex*m_stretchFactor; // offset between keyframes
+        if( subOffset == 0 )
+            return first; // no need to interpolate
+
+        const glm::float_t lerp = static_cast<glm::float_t>(subOffset) / static_cast<glm::float_t>(m_stretchFactor);
+
+        SkeletonKeyFrame result;
+        result.position = glm::mix(first.position, second.position, lerp);
+        result.boundingBox.max = glm::mix(first.boundingBox.max, second.boundingBox.max, lerp);
+        result.boundingBox.min = glm::mix(first.boundingBox.min, second.boundingBox.min, lerp);
+
+        result.boneKeyFrames.resize( first.boneKeyFrames.size() );
+
+        for(size_t k = 0; k < first.boneKeyFrames.size(); k++)
         {
-            if(stateChange.id == id)
-            {
-                return &stateChange;
-            }
+            result.boneKeyFrames[k].offset = glm::mix(first.boneKeyFrames[k].offset, second.boneKeyFrames[k].offset, lerp);
+            result.boneKeyFrames[k].qrotate = glm::slerp(first.boneKeyFrames[k].qrotate, second.boneKeyFrames[k].qrotate, lerp);
         }
 
-        return nullptr;
+        return result;
     }
+
+    SkeletonKeyFrame& rawKeyFrame(size_t idx)
+    {
+        if( idx >= m_keyFrames.size() )
+            throw std::out_of_range("Keyframe index out of bounds");
+        return m_keyFrames[idx];
+    }
+
+    size_t getFrameDuration() const
+    {
+        return m_duration;
+    }
+
+    void setDuration(size_t frames, size_t keyFrames, uint8_t stretchFactor)
+    {
+        BOOST_ASSERT(stretchFactor > 0);
+        BOOST_ASSERT(frames > 0);
+        m_keyFrames.resize(keyFrames);
+        m_duration = frames;
+        m_stretchFactor = stretchFactor;
+    }
+
+    size_t getKeyFrameCount() const noexcept
+    {
+        return m_keyFrames.size();
+    }
+
+    uint8_t getStretchFactor() const
+    {
+        return m_stretchFactor;
+    }
+
+    std::vector<AnimCommand>& animCommands(int frame)
+    {
+        return m_animCommands[frame];
+    }
+
+private:
+    std::vector<SkeletonKeyFrame> m_keyFrames;
+    uint8_t m_stretchFactor = 1; //!< Time scale (>1 means slowdown)
+    std::map<int, std::vector<AnimCommand>> m_animCommands; //!< Maps from real frame index to commands
+    size_t m_duration = 1; //!< Real frame duration
 };
 
 enum class AnimationMode
@@ -214,7 +310,7 @@ enum class AnimationMode
  */
 struct Bone
 {
-    Bone *parent;
+    Bone* parent;
     uint16_t index;
     std::shared_ptr<core::BaseMesh> mesh; //!< The mesh this bone deforms
     std::shared_ptr<core::BaseMesh> mesh_skin;
@@ -222,7 +318,7 @@ struct Bone
     glm::vec3 offset;
 
     glm::quat qrotate;
-    glm::mat4 transform; //!< Local transformation matrix
+    glm::mat4 transform;      //!< Local transformation matrix
     glm::mat4 full_transform; //!< Global transformation matrix
 
     uint32_t body_part; //!< flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
@@ -238,24 +334,15 @@ struct Bone
 class Skeleton
 {
     std::vector<Bone> m_bones{};
-    glm::vec3 m_position = {0,0,0};
+    glm::vec3 m_position = {0, 0, 0};
     core::BoundingBox m_boundingBox{};
 
     bool m_hasSkin = false; //!< whether any skinned meshes need rendering
 
     SkeletalModel* m_model = nullptr;
-    util::Duration m_frameTime{0}; //!< time in current frame
 
-    glm::float_t m_frameLerp = 0; //!< Bias for mixing previous and current key frames
-
-    int16_t m_previousAnimation = 0;
-    uint16_t m_currentAnimation = 0;
-
-    int16_t m_previousFrame = 0;
-    int16_t m_currentFrame = 0; //! @todo Many comparisons with unsigned, so check if it can be made unsigned.
-
-    LaraState m_previousState = LaraState::WalkForward;
-    LaraState m_nextState = LaraState::WalkForward;
+    AnimationState m_previousAnimation;
+    AnimationState m_currentAnimation;
 
     AnimationMode m_mode = AnimationMode::NormalControl;
 
@@ -263,57 +350,49 @@ class Skeleton
 
     bool m_hasGhosts = false;
 
-public:
+    util::Duration m_animationTime = util::Duration::zero();
+
+  public:
     void (*onFrame)(Character* ent, AnimUpdate state) = nullptr;
 
-    const AnimationFrame& getCurrentAnimationFrame() const;
-    AnimUpdate stepAnimation(util::Duration time, Entity *cmdEntity = nullptr);
+    const Animation& getCurrentAnimationFrame() const;
+    AnimUpdate stepAnimation(util::Duration time, Entity* cmdEntity = nullptr);
     void setAnimation(int animation, int frame = 0);
 
-
-    int16_t getCurrentAnimation() const noexcept
+    uint16_t getCurrentAnimation() const noexcept
     {
-        return m_currentAnimation;
+        return m_currentAnimation.animation;
     }
     void setCurrentAnimation(uint16_t value) noexcept
     {
-        m_currentAnimation = value;
+        m_currentAnimation.animation = value;
     }
 
-    int16_t getLerpLastAnimation() const noexcept
+    uint16_t getPreviousAnimation() const noexcept
     {
-        return m_previousAnimation;
+        return m_previousAnimation.animation;
     }
-    void setLerpLastAnimation(int16_t value) noexcept
+    void setPreviousAnimation(uint16_t value) noexcept
     {
-        m_previousAnimation = value;
-    }
-
-    int16_t getCurrentFrame() const noexcept
-    {
-        return m_currentFrame;
-    }
-    void setCurrentFrame(int16_t value) noexcept
-    {
-        m_currentFrame = value;
+        m_previousAnimation.animation = value;
     }
 
-    int16_t getLerpLastFrame() const noexcept
+    uint16_t getCurrentFrame() const noexcept
     {
-        return m_previousFrame;
+        return m_currentAnimation.frame;
     }
-    void setLerpLastFrame(int16_t value) noexcept
+    void setCurrentFrame(uint16_t value) noexcept
     {
-        m_previousFrame = value;
+        m_currentAnimation.frame = value;
     }
 
-    util::Duration getFrameTime() const noexcept
+    uint16_t getPreviousFrame() const noexcept
     {
-        return m_frameTime;
+        return m_previousAnimation.frame;
     }
-    void setFrameTime(util::Duration time) noexcept
+    void setPreviousFrame(uint16_t value) noexcept
     {
-        m_frameTime = time;
+        m_previousAnimation.frame = value;
     }
 
     const SkeletalModel* getModel() const noexcept
@@ -329,13 +408,13 @@ public:
         m_model = model;
     }
 
-    LaraState getNextState() const noexcept
+    LaraState getCurrentState() const noexcept
     {
-        return m_nextState;
+        return m_currentAnimation.state;
     }
-    LaraState getLastState() const noexcept
+    LaraState getPreviousState() const noexcept
     {
-        return m_previousState;
+        return m_previousAnimation.state;
     }
 
     bool hasGhosts() const noexcept
@@ -362,7 +441,7 @@ public:
 
     const glm::mat4& getRootTransform() const
     {
-        BOOST_ASSERT( !m_bones.empty() );
+        BOOST_ASSERT(!m_bones.empty());
         return m_bones.front().full_transform;
     }
 
@@ -406,23 +485,14 @@ public:
         return m_mode;
     }
 
-    void setNextState(LaraState state) noexcept
+    void setCurrentState(LaraState state) noexcept
     {
-        m_nextState = state;
+        m_currentAnimation.state = state;
     }
 
-    void setLastState(LaraState state) noexcept
+    void setPreviousState(LaraState state) noexcept
     {
-        m_previousState = state;
-    }
-
-    void setLerp(glm::float_t lerp)
-    {
-        m_frameLerp = lerp;
-    }
-    glm::float_t getLerp() const noexcept
-    {
-        return m_frameLerp;
+        m_previousAnimation.state = state;
     }
 
     const btManifoldArray& getManifoldArray() const noexcept
@@ -435,7 +505,7 @@ public:
         return m_manifoldArray;
     }
 
-    void updateTransform(const glm::mat4 &entityTransform);
+    void updateTransform(const glm::mat4& entityTransform);
 
     void updateBoundingBox();
 
@@ -464,7 +534,7 @@ public:
     bool createRagdoll(const RDSetup& setup);
     void initCollisions(const glm::vec3& speed);
     void updateRigidBody(const glm::mat4& transform);
-    btCollisionObject* getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t *curr_flag);
+    btCollisionObject* getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t* curr_flag);
     void genRigidBody(Entity* entity, CollisionShape collisionShape, CollisionType collisionType, const glm::mat4& transform);
     void enableCollision();
     void disableCollision();

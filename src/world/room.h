@@ -152,7 +152,7 @@ struct Room : public Object
     void buildOverlappedRoomsList();
 
     bool isJoined(Room *r2);
-    bool isOverlapped(Room *r1);
+    bool overlaps(Room *r1);
     bool isInNearRoomsList(const Room &r) const;
     bool hasSector(size_t x, size_t y);//If this room contains a sector
     void addEntity(Entity *entity);

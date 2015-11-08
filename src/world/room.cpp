@@ -86,7 +86,7 @@ bool Room::removeEntity(Entity* entity)
 
 void Room::addToNearRoomsList(Room* r)
 {
-    if(r && !isInNearRoomsList(*r) && getId() != r->getId() && !isOverlapped(r))
+    if(r && !isInNearRoomsList(*r) && getId() != r->getId() && !overlaps(r))
     {
         m_nearRooms.push_back(r);
     }
@@ -127,7 +127,7 @@ bool Room::hasSector(size_t x, size_t y)
     return x < m_sectors.shape()[0] && y < m_sectors.shape()[1];
 }
 
-bool Room::isOverlapped(Room* r1)
+bool Room::overlaps(Room* r1)
 {
     BOOST_ASSERT(r1 != nullptr);
     if((this == r1) || (this == r1->m_alternateRoom.get()) || (m_alternateRoom.get() == r1))
@@ -293,7 +293,7 @@ Room* Room::checkFlip()
 void Room::swapPortals(std::shared_ptr<Room> dest_room)
 {
     //Update portals in room rooms
-    for(auto r : engine::engine_world.rooms)//For every room in the world itself
+    for(std::shared_ptr<Room> r : engine::engine_world.rooms)//For every room in the world itself
     {
         for(Portal& p : r->m_portals) //For every portal in this room
         {
@@ -373,7 +373,7 @@ void Room::buildOverlappedRoomsList()
 
     for(auto r : engine::engine_world.rooms)
     {
-        if(isOverlapped(r.get()))
+        if(overlaps(r.get()))
         {
             m_overlappedRooms.push_back(r);
         }
@@ -413,7 +413,7 @@ void Room::genMesh(World* world, const std::unique_ptr<loader::Level>& tr)
     /*
     * triangles
     */
-    for(uint32_t i = 0; i < tr_room->triangles.size(); i++, ++p)
+    for(size_t i = 0; i < tr_room->triangles.size(); i++, ++p)
     {
         tr_setupRoomVertices(world, tr, tr_room, m_mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, &*p);
         p->double_side = (tr_room->triangles[i].texture & 0x8000) != 0;
@@ -422,7 +422,7 @@ void Room::genMesh(World* world, const std::unique_ptr<loader::Level>& tr)
     /*
     * rectangles
     */
-    for(uint32_t i = 0; i < tr_room->rectangles.size(); i++, ++p)
+    for(size_t i = 0; i < tr_room->rectangles.size(); i++, ++p)
     {
         tr_setupRoomVertices(world, tr, tr_room, m_mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, &*p);
         p->double_side = (tr_room->rectangles[i].texture & 0x8000) != 0;
@@ -448,7 +448,7 @@ void Room::genMesh(World* world, const std::unique_ptr<loader::Level>& tr)
     /*
     * rectangles
     */
-    for(uint32_t i = 0; i < tr_room->rectangles.size(); i++, ++p)
+    for(size_t i = 0; i < tr_room->rectangles.size(); i++, ++p)
     {
         tr_copyNormals(&*p, m_mesh, tr_room->rectangles[i].vertices);
     }

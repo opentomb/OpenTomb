@@ -267,7 +267,7 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
 
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->getId(), ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
     fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->getId(), ent->m_skeleton.getCurrentAnimation(), ent->m_skeleton.getCurrentFrame());
-    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->getId(), ent->m_skeleton.getNextState(), ent->m_skeleton.getLastState());
+    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->getId(), ent->m_skeleton.getCurrentState(), ent->m_skeleton.getPreviousState());
     fprintf(*f, "\nsetEntityCollisionFlags(%d, %ld, %ld);", ent->getId(), static_cast<long>(ent->getCollisionType()), static_cast<long>(ent->getCollisionShape()));
 
     if(ent->m_enabled)
@@ -454,7 +454,6 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         position[2] -= 512.0;
         ent->m_transform[3] = glm::vec4(position, 1.0f);
         ent->updateTransform();
-        ent->m_lerp_curr_transform = ent->m_transform;
     }
     else
     {
@@ -545,7 +544,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
 
         ///@FIXME
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
-        if(ent->m_skeleton.getLastState() == world::LaraState::Reach)
+        if(ent->m_skeleton.getPreviousState() == world::LaraState::Reach)
         {
             if(cam->getTargetDir() == world::CameraTarget::Back)
             {
@@ -576,7 +575,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
                 }
             }
         }
-        else if(ent->m_skeleton.getLastState() == world::LaraState::JumpBack)
+        else if(ent->m_skeleton.getPreviousState() == world::LaraState::JumpBack)
         {
             cam->setTargetDir( world::CameraTarget::Front );
         }
@@ -728,14 +727,14 @@ void Game_Frame(util::Duration time)
     bt_engine_dynamicsWorld->stepSimulation(util::toSeconds(time), MAX_SIM_SUBSTEPS, util::toSeconds(world::animation::GameLogicFrameTime));
 
     if(engine_world.character) {
-        engine_world.character->updateInterpolation(time);
+        engine_world.character->updateInterpolation();
 
         if(!control_states.noclip && !control_states.free_look)
             Cam_FollowEntity(render::renderer.camera(), engine_world.character, 16.0, 128.0);
     }
     for(auto entityPair : engine_world.entity_tree)
     {
-        entityPair.second->updateInterpolation(time);
+        entityPair.second->updateInterpolation();
     }
 
     Controls_RefreshStates();

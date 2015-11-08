@@ -57,9 +57,6 @@ enum class DiagonalType
 #define TR_ITEM_LARA_SKIN_TR45             8
 #define TR_ITEM_LARA_SKIN_JOINTS_TR45      9
 
-#define LOG_ANIM_DISPATCHES 0
-
-
 struct SectorTween;
 struct World;
 struct Room;

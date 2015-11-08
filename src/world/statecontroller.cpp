@@ -59,7 +59,7 @@ void onFrameSetOnFloor(Character* ent, animation::AnimUpdate state)
 void onFrameSetOnFloorAfterClimb(Character* ent, animation::AnimUpdate /*state*/)
 {
     // FIXME: this is more like an end-of-anim operation
-    if(ent->m_skeleton.getCurrentAnimation() != ent->m_skeleton.getLerpLastAnimation())
+    if(ent->m_skeleton.getCurrentAnimation() != ent->m_skeleton.getPreviousAnimation())
     {
         ent->m_transform[3] = glm::vec4(ent->m_climb.point,1);
 
@@ -848,8 +848,8 @@ void StateController::turnSlow()
             m_character->m_moveDir = MoveDirection::Forward;
         }
     }
-    else if((m_character->m_skeleton.getLastState() == LaraState::TurnLeftSlow && m_character->m_command.move[1] == -1) ||
-            (m_character->m_skeleton.getLastState() == LaraState::TurnRightSlow && m_character->m_command.move[1] == 1))
+    else if((m_character->m_skeleton.getPreviousState() == LaraState::TurnLeftSlow && m_character->m_command.move[1] == -1) ||
+            (m_character->m_skeleton.getPreviousState() == LaraState::TurnRightSlow && m_character->m_command.move[1] == 1))
     {
         Substance substance_state = m_character->getSubstanceState();
         if(isLastFrame() &&
@@ -1301,7 +1301,7 @@ void StateController::walkBack()
     {
         if(!m_character->m_skeleton.getModel()->no_fix_all)
         {
-            int frames_count = static_cast<int>(m_character->m_skeleton.getModel()->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].keyFrames.size());
+            int frames_count = static_cast<int>(m_character->m_skeleton.getModel()->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].getFrameDuration());
             int frames_count2 = (frames_count + 1) / 2;
             if((m_character->m_skeleton.getCurrentFrame() >= 0) && (m_character->m_skeleton.getCurrentFrame() <= frames_count2))
             {
@@ -1517,7 +1517,7 @@ void StateController::pushablePush()
     m_character->m_skeleton.onFrame = onFrameStopTraverse;
     m_character->m_command.rot[0] = 0.0;
     m_character->m_camFollowCenter = 64;
-    int i = static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().keyFrames.size());
+    int i = static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration());
 
     if(!m_character->m_command.action || !(Character::TraverseForward & m_character->checkTraverse(*m_character->m_traversedObject)))   //For TOMB4/5 If Lara is pushing and action let go, don't push
     {
@@ -1605,7 +1605,7 @@ void StateController::pushablePull()
     m_character->m_skeleton.onFrame = onFrameStopTraverse;
     m_character->m_command.rot[0] = 0.0;
     m_character->m_camFollowCenter = 64;
-    int i = static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().keyFrames.size());
+    int i = static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration());
 
     if(!m_character->m_command.action || !(Character::TraverseBackward & m_character->checkTraverse(*m_character->m_traversedObject)))   //For TOMB4/5 If Lara is pulling and action let go, don't pull
     {
@@ -3234,11 +3234,11 @@ void StateController::tightropeBalancingLeft()
         m_character->m_transform[3] += m_character->m_transform * glm::vec4(-256.0, 192.0, -640.0, 0);
     }
     else if(   m_character->m_skeleton.getCurrentAnimation() == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT
-            && m_character->m_skeleton.getCurrentFrame() >= static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().keyFrames.size() / 2)
+            && m_character->m_skeleton.getCurrentFrame() >= static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration() / 2)
             && m_character->m_command.move[1] == 1)
     {
         // MAGIC: mirroring animation offset.
-        m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_character->m_skeleton.getCurrentAnimationFrame().keyFrames.size()-m_character->m_skeleton.getCurrentFrame());
+        m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration()-m_character->m_skeleton.getCurrentFrame());
     }
 }
 
@@ -3253,11 +3253,11 @@ void StateController::tightropeBalancingRight()
         m_character->setAnimation(TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
     }
     else if(   m_character->m_skeleton.getCurrentAnimation() == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT
-            && m_character->m_skeleton.getCurrentFrame() >= static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().keyFrames.size() / 2)
+            && m_character->m_skeleton.getCurrentFrame() >= static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration() / 2)
             && m_character->m_command.move[1] == -1)
     {
         // MAGIC: mirroring animation offset.
-        m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_character->m_skeleton.getCurrentAnimationFrame().keyFrames.size()-m_character->m_skeleton.getCurrentFrame());
+        m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration()-m_character->m_skeleton.getCurrentFrame());
     }
 }
 
@@ -3292,7 +3292,7 @@ bool StateController::isLowVerticalSpace() const
 
 bool StateController::isLastFrame() const
 {
-    return static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().keyFrames.size()) <= m_character->m_skeleton.getCurrentFrame() + 1;
+    return static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration()) <= m_character->m_skeleton.getCurrentFrame() + 1;
 }
 
 void StateController::setNextState(LaraState state)
@@ -3303,7 +3303,7 @@ void StateController::setNextState(LaraState state)
         return;
     }
 
-    m_character->m_skeleton.setNextState( state );
+    m_character->m_skeleton.setCurrentState( state );
 }
 
 } // namespace world

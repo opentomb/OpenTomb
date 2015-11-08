@@ -49,10 +49,6 @@ bool Frustum::isVisible(const Portal& portal) const
     return false;
 }
 
-/**
- * Check polygon visibility through the portal.
- * This method is not for realtime since check is generally more expensive than rendering ...
- */
 bool Frustum::isVisible(const Polygon& polygon, const Camera& cam) const
 {
     if(!polygon.double_side && glm::dot(polygon.plane.normal, cam.getPosition()) < 0.0)
@@ -88,12 +84,6 @@ bool Frustum::isVisible(const std::vector<glm::vec3>& vertices) const
     return false;
 }
 
-/**
- *
- * @param bbmin - aabb corner (x_min, y_min, z_min)
- * @param bbmax - aabb corner (x_max, y_max, z_max)
- * @return true if aabb is in frustum.
- */
 bool Frustum::isVisible(const BoundingBox& bb, const Camera& cam) const
 {
 #if 0
@@ -225,7 +215,7 @@ bool Frustum::isVisible(const BoundingBox& bb, const Camera& cam) const
 
 bool Frustum::isVisible(const OrientedBoundingBox& obb, const Camera& cam) const
 {
-    bool ins = true;
+    bool inside = true;
     for(const Polygon& p : obb.polygons)
     {
         glm::float_t t = p.plane.distance(cam.getPosition());
@@ -235,10 +225,10 @@ bool Frustum::isVisible(const OrientedBoundingBox& obb, const Camera& cam) const
         if(isVisible(p, cam))
             return true;
 
-        ins = false;
+        inside = false;
     }
 
-    return ins;
+    return inside;
 }
 
 } // namespace core

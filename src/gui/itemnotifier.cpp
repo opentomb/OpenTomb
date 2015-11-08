@@ -96,11 +96,9 @@ void ItemNotifier::Draw()
 
     const auto anim = item->bf->getCurrentAnimation();
     const auto frame = item->bf->getCurrentFrame();
-    const auto time = item->bf->getFrameTime();
 
     item->bf->setCurrentAnimation(0);
     item->bf->setCurrentFrame(0);
-    item->bf->setFrameTime(util::Duration(0));
 
     item->bf->itemFrame(util::Duration(0));
     glm::mat4 matrix(1.0f);
@@ -111,7 +109,6 @@ void ItemNotifier::Draw()
 
     item->bf->setCurrentAnimation(anim);
     item->bf->setCurrentFrame(frame);
-    item->bf->setFrameTime(time);
 }
 
 void ItemNotifier::SetPos(float X, float Y)

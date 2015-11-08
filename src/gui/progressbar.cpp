@@ -230,8 +230,7 @@ void ProgressBar::SetAutoshow(bool enabled, util::Duration delay, bool fade, uti
 void ProgressBar::Show(float value)
 {
     // Initial value limiters (to prevent bar overflow).
-    value = (value >= 0) ? (value) : (0);
-    value = (value > mMaxValue) ? (mMaxValue) : (value);
+    value = glm::clamp(value, 0.0f, mMaxValue);
 
     // Enable blink mode, if value is gone below warning value.
     mBlink = (value <= mWarnValue) ? (true) : (false);
@@ -580,7 +579,7 @@ void drawBars()
 {
     if(engine::engine_world.character)
     {
-        if(engine::engine_world.character->m_weaponCurrentState > world::WeaponState::HideToReady)
+        if(engine::engine_world.character->m_currentWeaponState > world::WeaponState::HideToReady)
             g_bar[BarType::Health].Forced = true;
 
         if(engine::engine_world.character->getParam(world::PARAM_POISON) > 0.0)

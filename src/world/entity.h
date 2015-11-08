@@ -140,11 +140,9 @@ public:
     glm::mat4 m_transform{ 1.0f }; // GL transformation matrix
     glm::vec3 m_scaling = { 1,1,1 };
 
-    glm::mat4 m_lerp_last_transform{ 1.0f }; // interp
-    glm::mat4 m_lerp_curr_transform{ 1.0f }; // interp
-    bool        m_lerp_valid = false;
-    bool        m_lerp_skip = false;
-    glm::float_t m_lerp = 0;
+#if 0
+    bool m_lerp_skip = false;
+#endif
 
     core::OrientedBoundingBox m_obb;
 
@@ -166,7 +164,7 @@ public:
     bool wasCollisionBodyParts(uint32_t parts_flags);
     void updateRoomPos();
     void updateRigidBody(bool force);
-    void rebuildBV();
+    void rebuildBoundingBox();
 
     int  getAnimDispatchCase(LaraState id);
 
@@ -179,7 +177,7 @@ public:
         return reinterpret_cast<Entity*>(engine::engine_world.character.get()) == this;
     }
 
-    void updateInterpolation(util::Duration time);
+    void updateInterpolation();
 
     virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);
@@ -244,7 +242,6 @@ public:
 
 private:
 //    void doAnimMove(int16_t *anim, int16_t *frame);
-    void lerpTransform(glm::float_t lerp);
 
     static glm::float_t getInnerBBRadius(const core::BoundingBox& bb)
     {

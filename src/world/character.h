@@ -18,40 +18,40 @@ namespace world
 {
 
 // Lara's character behavior constants
-constexpr int   DEFAULT_MAX_MOVE_ITERATIONS             = 3;                              //!< @fixme magic
-constexpr float DEFAULT_MIN_STEP_UP_HEIGHT              = 128.0f;                         //!< @fixme check original
-constexpr float DEFAULT_MAX_STEP_UP_HEIGHT              = 256.0f + 32.0f;                 //!< @fixme check original
-constexpr float DEFAULT_FALL_DOWN_HEIGHT                = 320.0f;                         //!< @fixme check original
-constexpr float DEFAULT_CLIMB_UP_HEIGHT                 = 1920.0f;                        //!< @fixme check original
-constexpr float DEFAULT_CRITICAL_SLANT_Z_COMPONENT      = 0.810f;                         //!< @fixme cos(alpha = 30 deg)
-constexpr float DEFAULT_CRITICAL_WALL_COMPONENT         = -0.707f;                        //!< @fixme cos(alpha = 45 deg)
-constexpr float DEFAULT_CHARACTER_SLIDE_SPEED_MULT      = 75.0f;                          //!< @fixme magic - not like in original
-constexpr float DEFAULT_CHARACTER_CLIMB_R               = 32.0f;
-constexpr float DEFAULT_CHARACTER_WADE_DEPTH            = 256.0f;
+constexpr int DEFAULT_MAX_MOVE_ITERATIONS = 3;               //!< @fixme magic
+constexpr float DEFAULT_MIN_STEP_UP_HEIGHT = 128.0f;         //!< @fixme check original
+constexpr float DEFAULT_MAX_STEP_UP_HEIGHT = 256.0f + 32.0f; //!< @fixme check original
+constexpr float DEFAULT_FALL_DOWN_HEIGHT = 320.0f;           //!< @fixme check original
+constexpr float DEFAULT_CLIMB_UP_HEIGHT = 1920.0f;           //!< @fixme check original
+constexpr float DEFAULT_CRITICAL_SLANT_Z_COMPONENT = 0.810f; //!< @fixme cos(alpha = 30 deg)
+constexpr float DEFAULT_CRITICAL_WALL_COMPONENT = -0.707f;   //!< @fixme cos(alpha = 45 deg)
+constexpr float DEFAULT_CHARACTER_SLIDE_SPEED_MULT = 75.0f;  //!< @fixme magic - not like in original
+constexpr float DEFAULT_CHARACTER_CLIMB_R = 32.0f;
+constexpr float DEFAULT_CHARACTER_WADE_DEPTH = 256.0f;
 
 constexpr float CHARACTER_BOX_HALF_SIZE = 128.0f;
 constexpr float CHARACTER_BASE_RADIUS = 128.0f;
 constexpr float CHARACTER_BASE_HEIGHT = 512.0f;
 
 // Speed limits
-constexpr float FREE_FALL_SPEED_1        = 2000.0f;
-constexpr float FREE_FALL_SPEED_2        = 4500.0f;
-constexpr float FREE_FALL_SPEED_MAXSAFE  = 5500.0f;
+constexpr float FREE_FALL_SPEED_1 = 2000.0f;
+constexpr float FREE_FALL_SPEED_2 = 4500.0f;
+constexpr float FREE_FALL_SPEED_MAXSAFE = 5500.0f;
 constexpr float FREE_FALL_SPEED_CRITICAL = 7500.0f;
-constexpr float FREE_FALL_SPEED_MAXIMUM  = 7800.0f;
+constexpr float FREE_FALL_SPEED_MAXIMUM = 7800.0f;
 
-constexpr float MAX_SPEED_UNDERWATER     = 64.0f;
-constexpr float MAX_SPEED_ONWATER        = 24.0f;
-constexpr float MAX_SPEED_QUICKSAND      = 5.0f;
+constexpr float MAX_SPEED_UNDERWATER = 64.0f;
+constexpr float MAX_SPEED_ONWATER = 24.0f;
+constexpr float MAX_SPEED_QUICKSAND = 5.0f;
 
-constexpr float ROT_SPEED_UNDERWATER     = 2.0f;
-constexpr float ROT_SPEED_ONWATER        = 3.0f;
-constexpr float ROT_SPEED_LAND           = 4.5f;
-constexpr float ROT_SPEED_FREEFALL       = 0.5f;
-constexpr float ROT_SPEED_MONKEYSWING    = 3.5f;
+constexpr float ROT_SPEED_UNDERWATER = 2.0f;
+constexpr float ROT_SPEED_ONWATER = 3.0f;
+constexpr float ROT_SPEED_LAND = 4.5f;
+constexpr float ROT_SPEED_FREEFALL = 0.5f;
+constexpr float ROT_SPEED_MONKEYSWING = 3.5f;
 
 constexpr float INERTIA_SPEED_UNDERWATER = 1.0f;
-constexpr float INERTIA_SPEED_ONWATER    = 1.5f;
+constexpr float INERTIA_SPEED_ONWATER = 1.5f;
 
 //! If less than this much of Lara is looking out of the water, she goes from wading to swimming.
 //! @fixme Guess
@@ -59,16 +59,16 @@ constexpr float DEFAULT_CHARACTER_SWIM_DEPTH = 100.0f;
 
 struct CharacterCommand
 {
-    glm::vec3 rot = { 0,0,0 };
-    std::array<int8_t, 3> move{ { 0,0,0 } };
+    glm::vec3 rot = {0, 0, 0};
+    std::array<int8_t, 3> move{{0, 0, 0}};
 
-    bool        roll = false;
-    bool        jump = false;
-    bool        crouch = false;
-    bool        shift = false;
-    bool        action = false;
-    bool        ready_weapon = false;
-    bool        sprint = false;
+    bool roll = false;
+    bool jump = false;
+    bool crouch = false;
+    bool shift = false;
+    bool action = false;
+    bool ready_weapon = false;
+    bool sprint = false;
 };
 
 enum class SlideType
@@ -87,11 +87,11 @@ enum class LeanType
 
 struct CharacterResponse
 {
-    bool        killed = false;
-    int8_t      vertical_collide = 0;
-    int8_t      horizontal_collide = 0;
-    SlideType   slide = SlideType::None;
-    LeanType    lean = LeanType::None;
+    bool killed = false;
+    int8_t vertical_collide = 0;
+    int8_t horizontal_collide = 0;
+    SlideType slide = SlideType::None;
+    LeanType lean = LeanType::None;
 };
 
 enum class QuicksandPosition
@@ -109,23 +109,23 @@ struct HeightInfo
     std::shared_ptr<engine::BtEngineClosestConvexResultCallback> ccb;
     std::shared_ptr<btConvexShape> sp = std::make_shared<btSphereShape>(16.0);
 
-    bool                                        ceiling_climb = false;
-    bool                                        walls_climb = false;
-    int8_t                                      walls_climb_dir = 0;
+    bool ceiling_climb = false;
+    bool walls_climb = false;
+    int8_t walls_climb_dir = 0;
 
-    glm::vec3                                   floor_normale = { 0,0,1 };
-    glm::vec3                                   floor_point = { 0,0,0 };
-    bool                                        floor_hit = false;
-    const btCollisionObject                    *floor_obj = nullptr;
+    glm::vec3 floor_normale = {0, 0, 1};
+    glm::vec3 floor_point = {0, 0, 0};
+    bool floor_hit = false;
+    const btCollisionObject* floor_obj = nullptr;
 
-    glm::vec3                                   ceiling_normale = { 0,0,-1 };
-    glm::vec3                                   ceiling_point = { 0,0,0 };
-    bool                                        ceiling_hit = false;
-    const btCollisionObject                    *ceiling_obj = nullptr;
+    glm::vec3 ceiling_normale = {0, 0, -1};
+    glm::vec3 ceiling_point = {0, 0, 0};
+    bool ceiling_hit = false;
+    const btCollisionObject* ceiling_obj = nullptr;
 
-    glm::float_t                                transition_level = 0;
-    bool                                        water = false;
-    QuicksandPosition                           quicksand = QuicksandPosition::None;
+    glm::float_t transition_level = 0;
+    bool water = false;
+    QuicksandPosition quicksand = QuicksandPosition::None;
 };
 
 enum CharParameters
@@ -144,8 +144,8 @@ enum CharParameters
 
 struct CharacterParam
 {
-    std::array<float, PARAM_SENTINEL> param{ {} };
-    std::array<float, PARAM_SENTINEL> maximum{ {} };
+    std::array<float, PARAM_SENTINEL> param{{}};
+    std::array<float, PARAM_SENTINEL> maximum{{}};
 
     CharacterParam()
     {
@@ -156,14 +156,14 @@ struct CharacterParam
 
 struct CharacterStats
 {
-    float       distance;
-    uint32_t    secrets_level;         // Level amount of secrets.
-    uint32_t    secrets_game;          // Overall amount of secrets.
-    uint32_t    ammo_used;
-    uint32_t    hits;
-    uint32_t    kills;
-    uint32_t    medipacks_used;
-    uint32_t    saves_used;
+    float distance;
+    uint32_t secrets_level; // Level amount of secrets.
+    uint32_t secrets_game;  // Overall amount of secrets.
+    uint32_t ammo_used;
+    uint32_t hits;
+    uint32_t kills;
+    uint32_t medipacks_used;
+    uint32_t saves_used;
 };
 
 /**
@@ -202,24 +202,24 @@ enum class ClimbType
 
 struct ClimbInfo
 {
-    StepType                       height_info = StepType::Horizontal;
-    bool                           can_hang = false;
+    StepType height_info = StepType::Horizontal;
+    bool can_hang = false;
 
     glm::vec3 point;
     glm::vec3 n;
     glm::vec3 right;
     glm::vec3 up;
-    glm::float_t                       floor_limit;
-    glm::float_t                       ceiling_limit;
-    glm::float_t                       next_z_space = 0;
+    glm::float_t floor_limit;
+    glm::float_t ceiling_limit;
+    glm::float_t next_z_space = 0;
 
-    ClimbType                      wall_hit = ClimbType::None;
-    bool                           edge_hit = false;
-    glm::vec3                      edge_point;
-    glm::vec3                      edge_normale;
-    glm::vec3                      edge_tan_xy;
-    glm::float_t                       edge_z_ang;
-    btCollisionObject             *edge_obj = nullptr;
+    ClimbType wall_hit = ClimbType::None;
+    bool edge_hit = false;
+    glm::vec3 edge_point;
+    glm::vec3 edge_normale;
+    glm::vec3 edge_tan_xy;
+    glm::float_t edge_z_ang;
+    btCollisionObject* edge_obj = nullptr;
 };
 
 enum class WeaponState
@@ -235,37 +235,37 @@ enum class WeaponState
 
 struct Character : public Entity
 {
-    CharacterCommand   m_command;                    // character control commands
-    CharacterResponse  m_response;                   // character response info (collides, slide, next steps, drops, e.t.c.)
+    CharacterCommand m_command;   // character control commands
+    CharacterResponse m_response; // character response info (collides, slide, next steps, drops, e.t.c.)
 
     std::list<InventoryNode> m_inventory;
-    CharacterParam     m_parameters{};
-    CharacterStats     m_statistics;
+    CharacterParam m_parameters{};
+    CharacterStats m_statistics;
 
     std::vector<std::shared_ptr<Hair>> m_hairs{};
 
-    int                          m_currentWeapon = 0;
-    WeaponState m_weaponCurrentState = WeaponState::Hide;
+    int m_currentWeapon = 0;
+    WeaponState m_currentWeaponState = WeaponState::Hide;
 
-    int8_t                       m_camFollowCenter = 0;
-    glm::float_t                     m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
-    glm::float_t                     m_maxStepUpHeight = DEFAULT_MAX_STEP_UP_HEIGHT;
-    glm::float_t                     m_maxClimbHeight = DEFAULT_CLIMB_UP_HEIGHT;
-    glm::float_t                     m_fallDownHeight = DEFAULT_FALL_DOWN_HEIGHT;
-    glm::float_t                     m_criticalSlantZComponent = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
-    glm::float_t                     m_criticalWallComponent = DEFAULT_CRITICAL_WALL_COMPONENT;
+    int8_t m_camFollowCenter = 0;
+    glm::float_t m_minStepUpHeight = DEFAULT_MIN_STEP_UP_HEIGHT;
+    glm::float_t m_maxStepUpHeight = DEFAULT_MAX_STEP_UP_HEIGHT;
+    glm::float_t m_maxClimbHeight = DEFAULT_CLIMB_UP_HEIGHT;
+    glm::float_t m_fallDownHeight = DEFAULT_FALL_DOWN_HEIGHT;
+    glm::float_t m_criticalSlantZComponent = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
+    glm::float_t m_criticalWallComponent = DEFAULT_CRITICAL_WALL_COMPONENT;
 
-    glm::float_t                     m_climbR = DEFAULT_CHARACTER_CLIMB_R;                // climbing sensor radius
-    glm::float_t                     m_forwardSize = 48;           // offset for climbing calculation
-    glm::float_t                     m_height = CHARACTER_BASE_HEIGHT;                 // base character height
-    glm::float_t                     m_wadeDepth = DEFAULT_CHARACTER_WADE_DEPTH;             // water depth that enable wade walk
-    glm::float_t                     m_swimDepth = DEFAULT_CHARACTER_SWIM_DEPTH;             // depth offset for starting to swim
+    glm::float_t m_climbR = DEFAULT_CHARACTER_CLIMB_R;       // climbing sensor radius
+    glm::float_t m_forwardSize = 48;                         // offset for climbing calculation
+    glm::float_t m_height = CHARACTER_BASE_HEIGHT;           // base character height
+    glm::float_t m_wadeDepth = DEFAULT_CHARACTER_WADE_DEPTH; // water depth that enable wade walk
+    glm::float_t m_swimDepth = DEFAULT_CHARACTER_SWIM_DEPTH; // depth offset for starting to swim
 
-    std::unique_ptr<btSphereShape> m_sphere{ new btSphereShape(CHARACTER_BASE_RADIUS) };                 // needs to height calculation
+    std::unique_ptr<btSphereShape> m_sphere{new btSphereShape(CHARACTER_BASE_RADIUS)}; // needs to height calculation
     std::unique_ptr<btSphereShape> m_climbSensor;
 
-    HeightInfo         m_heightInfo{};
-    ClimbInfo          m_climb{};
+    HeightInfo m_heightInfo{};
+    ClimbInfo m_climb{};
 
     Entity* m_traversedObject = nullptr;
 
@@ -313,15 +313,15 @@ struct Character : public Entity
     }
     glm::vec3 camPosForFollowing(glm::float_t dz) override;
 
-    int32_t addItem(uint32_t item_id, int32_t count);       // returns items count after in the function's end
-    int32_t removeItem(uint32_t item_id, int32_t count);    // returns items count after in the function's end
+    int32_t addItem(uint32_t item_id, int32_t count);    // returns items count after in the function's end
+    int32_t removeItem(uint32_t item_id, int32_t count); // returns items count after in the function's end
     int32_t removeAllItems();
-    int32_t getItemsCount(uint32_t item_id);                // returns items count
+    int32_t getItemsCount(uint32_t item_id); // returns items count
 
-    static void getHeightInfo(const glm::vec3& pos, HeightInfo *fc, glm::float_t v_offset = 0.0);
-    StepType checkNextStep(const glm::vec3 &offset, HeightInfo *nfc) const;
-    bool hasStopSlant(const HeightInfo &next_fc);
-    ClimbInfo checkClimbability(const glm::vec3& offset, HeightInfo *nfc, glm::float_t test_height);
+    static void getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t v_offset = 0.0);
+    StepType checkNextStep(const glm::vec3& offset, HeightInfo* nfc) const;
+    bool hasStopSlant(const HeightInfo& next_fc);
+    ClimbInfo checkClimbability(const glm::vec3& offset, HeightInfo* nfc, glm::float_t test_height);
     ClimbInfo checkWallsClimbability();
 
     void updateCurrentHeight();
@@ -341,7 +341,7 @@ struct Character : public Entity
     int moveOnWater();
 
     int findTraverse();
-    int checkTraverse(const Entity &obj);
+    int checkTraverse(const Entity& obj);
 
     static constexpr const int TraverseNone = 0x00;
     static constexpr const int TraverseForward = 0x01;
@@ -352,12 +352,12 @@ struct Character : public Entity
 
     float getParam(int parameter);
     bool setParam(int parameter, float value);
-    int   changeParam(int parameter, float value);
+    bool changeParam(int parameter, float value);
     bool setParamMaximum(int parameter, float max_value);
 
     bool setWeaponModel(int weapon_model, bool armed);
 
-private:
+  private:
     StateController m_stateController;
 };
 

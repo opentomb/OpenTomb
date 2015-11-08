@@ -94,8 +94,8 @@ void Render::renderSkyBox()
     if(m_drawSkybox && (m_world != nullptr) && (m_world->sky_box != nullptr))
     {
         glDepthMask(GL_FALSE);
-        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->sky_box->animations.front().keyFrames.front().boneKeyFrames.front().offset);
-        tr *= glm::mat4_cast( m_world->sky_box->animations[0].keyFrames[0].boneKeyFrames[0].qrotate );
+        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->sky_box->animations.front().getInitialBoneKeyFrame().offset);
+        tr *= glm::mat4_cast( m_world->sky_box->animations[0].getInitialBoneKeyFrame().qrotate );
         const glm::mat4 fullView = m_cam->getViewProjection() * tr;
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getStaticMeshShader();
@@ -862,8 +862,8 @@ void Render::drawListDebugLines()
      */
     if(m_drawNormals && m_world && m_world->sky_box)
     {
-        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->sky_box->animations.front().keyFrames.front().boneKeyFrames.front().offset);
-        tr *= glm::mat4_cast(m_world->sky_box->animations.front().keyFrames.front().boneKeyFrames.front().qrotate);
+        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->sky_box->animations.front().getInitialBoneKeyFrame().offset);
+        tr *= glm::mat4_cast(m_world->sky_box->animations.front().getInitialBoneKeyFrame().qrotate);
         debugDrawer.drawMeshDebugLines(m_world->sky_box->meshes.front().mesh_base, tr, this);
     }
 
