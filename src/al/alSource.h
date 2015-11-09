@@ -5,15 +5,11 @@
 
 #include "alMain.h"
 #include "alu.h"
-#include "alFilter.h"
+#include "Alc/hrtf.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define SRC_HISTORY_BITS   (6)
-#define SRC_HISTORY_LENGTH (1<<SRC_HISTORY_BITS)
-#define SRC_HISTORY_MASK   (SRC_HISTORY_LENGTH-1)
 
 extern enum Resampler DefaultResampler;
 
@@ -21,62 +17,32 @@ extern const ALsizei ResamplerPadding[ResamplerMax];
 extern const ALsizei ResamplerPrePadding[ResamplerMax];
 
 
-typedef struct ALbufferlistitem
-{
-    struct ALbuffer         *buffer;
-    struct ALbufferlistitem *next;
-    struct ALbufferlistitem *prev;
+typedef struct ALbufferlistitem {
+    struct ALbuffer *buffer;
+    struct ALbufferlistitem *volatile next;
+    struct ALbufferlistitem *volatile prev;
 } ALbufferlistitem;
 
-typedef struct HrtfState {
-    ALboolean Moving;
-    ALuint Counter;
-    ALIGN(16) ALfloat History[MaxChannels][SRC_HISTORY_LENGTH];
-    ALIGN(16) ALfloat Values[MaxChannels][HRIR_LENGTH][2];
-    ALuint Offset;
-} HrtfState;
 
-typedef struct HrtfParams {
-    ALfloat Gain;
-    ALfloat Dir[3];
-    ALIGN(16) ALfloat Coeffs[MaxChannels][HRIR_LENGTH][2];
-    ALIGN(16) ALfloat CoeffStep[HRIR_LENGTH][2];
-    ALuint Delay[MaxChannels][2];
-    ALint DelayStep[2];
-    ALuint IrSize;
-} HrtfParams;
+typedef struct ALactivesource {
+    struct ALsource *Source;
 
-typedef struct DirectParams {
-    ALfloat (*OutBuffer)[BUFFERSIZE];
-    ALfloat *ClickRemoval;
-    ALfloat *PendingClicks;
+    /** Method to update mixing parameters. */
+    ALvoid (*Update)(struct ALactivesource *self, const ALCcontext *context);
 
-    struct {
-        HrtfParams Params;
-        HrtfState *State;
-    } Hrtf;
+    /** Current target parameters used for mixing. */
+    ALint Step;
 
-    /* A mixing matrix. First subscript is the channel number of the input data
-     * (regardless of channel configuration) and the second is the channel
-     * target (eg. FrontLeft). Not used with HRTF. */
-    ALfloat Gains[MaxChannels][MaxChannels];
+    ALboolean IsHrtf;
 
-    ALfilterState Filter[MaxChannels];
-} DirectParams;
+    ALuint Offset; /* Number of output samples mixed since starting. */
 
-typedef struct SendParams {
-    struct ALeffectslot *Slot;
-
-    /* Gain control, which applies to all input channels to a single (mono)
-     * output buffer. */
-    ALfloat Gain;
-
-    ALfilterState Filter[MaxChannels];
-} SendParams;
+    DirectParams Direct;
+    SendParams Send[MAX_SENDS];
+} ALactivesource;
 
 
-typedef struct ALsource
-{
+typedef struct ALsource {
     /** Source properties. */
     volatile ALfloat   Pitch;
     volatile ALfloat   Gain;
@@ -105,6 +71,8 @@ typedef struct ALsource
     volatile ALfloat RoomRolloffFactor;
     volatile ALfloat DopplerFactor;
 
+    volatile ALfloat Radius;
+
     enum Resampler Resampler;
 
     /**
@@ -130,49 +98,42 @@ typedef struct ALsource
     ALuint position_fraction;
 
     /** Source Buffer Queue info. */
-    ALbufferlistitem *queue;
-    ALuint BuffersInQueue;
-    ALuint BuffersPlayed;
+    ATOMIC(ALbufferlistitem*) queue;
+    ATOMIC(ALbufferlistitem*) current_buffer;
+    RWLock queue_lock;
 
     /** Current buffer sample info. */
     ALuint NumChannels;
     ALuint SampleSize;
 
     /** Direct filter and auxiliary send info. */
-    ALfloat DirectGain;
-    ALfloat DirectGainHF;
-
+    struct {
+        ALfloat Gain;
+        ALfloat GainHF;
+        ALfloat HFReference;
+        ALfloat GainLF;
+        ALfloat LFReference;
+    } Direct;
     struct {
         struct ALeffectslot *Slot;
         ALfloat Gain;
         ALfloat GainHF;
+        ALfloat HFReference;
+        ALfloat GainLF;
+        ALfloat LFReference;
     } Send[MAX_SENDS];
 
-    /** HRTF info. */
-    HrtfState Hrtf;
-
-    /** Current target parameters used for mixing. */
-    struct {
-        ResamplerFunc Resample;
-        DryMixerFunc DryMix;
-        WetMixerFunc WetMix;
-
-        ALint Step;
-
-        DirectParams Direct;
-
-        SendParams Send[MAX_SENDS];
-    } Params;
     /** Source needs to update its mixing parameters. */
-    volatile ALenum NeedsUpdate;
-
-    /** Method to update mixing parameters. */
-    ALvoid (*Update)(struct ALsource *self, const ALCcontext *context);
+    ATOMIC(ALenum) NeedsUpdate;
 
     /** Self ID */
     ALuint id;
 } ALsource;
-#define ALsource_Update(s,a)                 ((s)->Update(s,a))
+
+inline struct ALsource *LookupSource(ALCcontext *context, ALuint id)
+{ return (struct ALsource*)LookupUIntMapKey(&context->SourceMap, id); }
+inline struct ALsource *RemoveSource(ALCcontext *context, ALuint id)
+{ return (struct ALsource*)RemoveUIntMapKey(&context->SourceMap, id); }
 
 ALvoid SetSourceState(ALsource *Source, ALCcontext *Context, ALenum state);
 ALboolean ApplyOffset(ALsource *Source);

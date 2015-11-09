@@ -26,6 +26,7 @@
 #include <memory.h>
 #include <ctype.h>
 #include <signal.h>
+#include <string.h>
 
 #include "../alMain.h"
 #include "../alSource.h"
@@ -35,28 +36,43 @@
 #include "../alBuffer.h"
 #include "../alAuxEffectSlot.h"
 #include "../alError.h"
+#include "../alMidi.h"
 #include "../bs2b.h"
 #include "../alu.h"
 #include "../AL/alext.h"
 #include "../AL/efx.h"
 
+#include "compat.h"
+#include "../threads.h"
+#include "../Alc/alstring.h"
+
+#include "backends/base.h"
+#include "midi/base.h"
+
+
 /************************************************
  * Backends
  ************************************************/
-#define EmptyFuncs { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }
-static struct BackendInfo BackendList[] = {
-#ifdef HAVE_SDL
-    { "sdl", alc_sdl_init, alc_sdl_deinit, alc_sdl_probe, EmptyFuncs },
-#endif
-    { "null", alc_null_init, alc_null_deinit, alc_null_probe, EmptyFuncs },
-#ifdef HAVE_WAVE
-    { "wave", alc_wave_init, alc_wave_deinit, alc_wave_probe, EmptyFuncs },
-#endif
-    { NULL, NULL, NULL, NULL, EmptyFuncs }
+struct BackendInfo {
+    const char *name;
+    ALCbackendFactory* (*getFactory)(void);
+    ALCboolean (*Init)(BackendFuncs*);
+    void (*Deinit)(void);
+    void (*Probe)(enum DevProbe);
+    BackendFuncs Funcs;
 };
 
-static struct BackendInfo BackendLoopback = {
-    "loopback", alc_loopback_init, alc_loopback_deinit, alc_loopback_probe, EmptyFuncs
+#define EmptyFuncs { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }
+static struct BackendInfo BackendList[] = {
+#ifdef HAVE_SDL
+    { "sdl", NULL, alc_sdl_init, alc_sdl_deinit, alc_sdl_probe, EmptyFuncs },
+#endif
+    { "null", ALCnullBackendFactory_getFactory, NULL, NULL, NULL, EmptyFuncs },
+#ifdef HAVE_WAVE
+    { "wave", NULL, alc_wave_init, alc_wave_deinit, alc_wave_probe, EmptyFuncs },
+#endif
+
+    { NULL, NULL, NULL, NULL, NULL, EmptyFuncs }
 };
 #undef EmptyFuncs
 
@@ -105,6 +121,11 @@ static const ALCfunction alcFunctions[] = {
     DECL(alcLoopbackOpenDeviceSOFT),
     DECL(alcIsRenderFormatSupportedSOFT),
     DECL(alcRenderSamplesSOFT),
+
+    DECL(alcDevicePauseSOFT),
+    DECL(alcDeviceResumeSOFT),
+
+    DECL(alcGetInteger64vSOFT),
 
     DECL(alEnable),
     DECL(alDisable),
@@ -237,6 +258,40 @@ static const ALCfunction alcFunctions[] = {
     DECL(alGetSource3i64SOFT),
     DECL(alGetSourcei64vSOFT),
 
+    DECL(alGenSoundfontsSOFT),
+    DECL(alDeleteSoundfontsSOFT),
+    DECL(alIsSoundfontSOFT),
+    DECL(alGetSoundfontivSOFT),
+    DECL(alSoundfontPresetsSOFT),
+    DECL(alGenPresetsSOFT),
+    DECL(alDeletePresetsSOFT),
+    DECL(alIsPresetSOFT),
+    DECL(alPresetiSOFT),
+    DECL(alPresetivSOFT),
+    DECL(alGetPresetivSOFT),
+    DECL(alPresetFontsoundsSOFT),
+    DECL(alGenFontsoundsSOFT),
+    DECL(alDeleteFontsoundsSOFT),
+    DECL(alIsFontsoundSOFT),
+    DECL(alFontsoundiSOFT),
+    DECL(alFontsound2iSOFT),
+    DECL(alFontsoundivSOFT),
+    DECL(alGetFontsoundivSOFT),
+    DECL(alFontsoundModulatoriSOFT),
+    DECL(alGetFontsoundModulatorivSOFT),
+    DECL(alMidiSoundfontSOFT),
+    DECL(alMidiSoundfontvSOFT),
+    DECL(alMidiEventSOFT),
+    DECL(alMidiSysExSOFT),
+    DECL(alMidiPlaySOFT),
+    DECL(alMidiPauseSOFT),
+    DECL(alMidiStopSOFT),
+    DECL(alMidiResetSOFT),
+    DECL(alMidiGainSOFT),
+    DECL(alGetInteger64SOFT),
+    DECL(alGetInteger64vSOFT),
+    DECL(alLoadSoundfontSOFT),
+
     { NULL, NULL }
 };
 #undef DECL
@@ -358,6 +413,8 @@ static const ALCenums enumeration[] = {
     DECL(AL_FORMAT_STEREO_DOUBLE_EXT),
     DECL(AL_FORMAT_MONO_IMA4),
     DECL(AL_FORMAT_STEREO_IMA4),
+    DECL(AL_FORMAT_MONO_MSADPCM_SOFT),
+    DECL(AL_FORMAT_STEREO_MSADPCM_SOFT),
     DECL(AL_FORMAT_QUAD8_LOKI),
     DECL(AL_FORMAT_QUAD16_LOKI),
     DECL(AL_FORMAT_QUAD8),
@@ -436,6 +493,8 @@ static const ALCenums enumeration[] = {
     DECL(AL_BYTE_LENGTH_SOFT),
     DECL(AL_SAMPLE_LENGTH_SOFT),
     DECL(AL_SEC_LENGTH_SOFT),
+    DECL(AL_UNPACK_BLOCK_ALIGNMENT_SOFT),
+    DECL(AL_PACK_BLOCK_ALIGNMENT_SOFT),
 
     DECL(AL_UNUSED),
     DECL(AL_PENDING),
@@ -470,13 +529,18 @@ static const ALCenums enumeration[] = {
     DECL(AL_FILTER_TYPE),
     DECL(AL_FILTER_NULL),
     DECL(AL_FILTER_LOWPASS),
-#if 0
     DECL(AL_FILTER_HIGHPASS),
     DECL(AL_FILTER_BANDPASS),
-#endif
 
     DECL(AL_LOWPASS_GAIN),
     DECL(AL_LOWPASS_GAINHF),
+
+    DECL(AL_HIGHPASS_GAIN),
+    DECL(AL_HIGHPASS_GAINLF),
+
+    DECL(AL_BANDPASS_GAIN),
+    DECL(AL_BANDPASS_GAINHF),
+    DECL(AL_BANDPASS_GAINLF),
 
     DECL(AL_EFFECT_TYPE),
     DECL(AL_EFFECT_NULL),
@@ -494,8 +558,8 @@ static const ALCenums enumeration[] = {
     DECL(AL_EFFECT_RING_MODULATOR),
 #if 0
     DECL(AL_EFFECT_AUTOWAH),
-    DECL(AL_EFFECT_COMPRESSOR),
 #endif
+    DECL(AL_EFFECT_COMPRESSOR),
     DECL(AL_EFFECT_EQUALIZER),
     DECL(AL_EFFECT_DEDICATED_LOW_FREQUENCY_EFFECT),
     DECL(AL_EFFECT_DEDICATED_DIALOGUE),
@@ -538,12 +602,6 @@ static const ALCenums enumeration[] = {
     DECL(AL_REVERB_ROOM_ROLLOFF_FACTOR),
     DECL(AL_REVERB_DECAY_HFLIMIT),
 
-    DECL(AL_ECHO_DELAY),
-    DECL(AL_ECHO_LRDELAY),
-    DECL(AL_ECHO_DAMPING),
-    DECL(AL_ECHO_FEEDBACK),
-    DECL(AL_ECHO_SPREAD),
-
     DECL(AL_CHORUS_WAVEFORM),
     DECL(AL_CHORUS_PHASE),
     DECL(AL_CHORUS_RATE),
@@ -551,12 +609,37 @@ static const ALCenums enumeration[] = {
     DECL(AL_CHORUS_FEEDBACK),
     DECL(AL_CHORUS_DELAY),
 
+    DECL(AL_DISTORTION_EDGE),
+    DECL(AL_DISTORTION_GAIN),
+    DECL(AL_DISTORTION_LOWPASS_CUTOFF),
+    DECL(AL_DISTORTION_EQCENTER),
+    DECL(AL_DISTORTION_EQBANDWIDTH),
+
+    DECL(AL_ECHO_DELAY),
+    DECL(AL_ECHO_LRDELAY),
+    DECL(AL_ECHO_DAMPING),
+    DECL(AL_ECHO_FEEDBACK),
+    DECL(AL_ECHO_SPREAD),
+
     DECL(AL_FLANGER_WAVEFORM),
     DECL(AL_FLANGER_PHASE),
     DECL(AL_FLANGER_RATE),
     DECL(AL_FLANGER_DEPTH),
     DECL(AL_FLANGER_FEEDBACK),
     DECL(AL_FLANGER_DELAY),
+
+    DECL(AL_RING_MODULATOR_FREQUENCY),
+    DECL(AL_RING_MODULATOR_HIGHPASS_CUTOFF),
+    DECL(AL_RING_MODULATOR_WAVEFORM),
+
+#if 0
+    DECL(AL_AUTOWAH_ATTACK_TIME),
+    DECL(AL_AUTOWAH_PEAK_GAIN),
+    DECL(AL_AUTOWAH_RELEASE_TIME),
+    DECL(AL_AUTOWAH_RESONANCE),
+#endif
+
+    DECL(AL_COMPRESSOR_ONOFF),
 
     DECL(AL_EQUALIZER_LOW_GAIN),
     DECL(AL_EQUALIZER_LOW_CUTOFF),
@@ -568,16 +651,6 @@ static const ALCenums enumeration[] = {
     DECL(AL_EQUALIZER_MID2_WIDTH),
     DECL(AL_EQUALIZER_HIGH_GAIN),
     DECL(AL_EQUALIZER_HIGH_CUTOFF),
-
-    DECL(AL_DISTORTION_EDGE),
-    DECL(AL_DISTORTION_GAIN),
-    DECL(AL_DISTORTION_LOWPASS_CUTOFF),
-    DECL(AL_DISTORTION_EQCENTER),
-    DECL(AL_DISTORTION_EQBANDWIDTH),
-
-    DECL(AL_RING_MODULATOR_FREQUENCY),
-    DECL(AL_RING_MODULATOR_HIGHPASS_CUTOFF),
-    DECL(AL_RING_MODULATOR_WAVEFORM),
 
     DECL(AL_DEDICATED_GAIN),
 
@@ -599,11 +672,9 @@ static const ALCchar alcErrOutOfMemory[] = "Out of Memory";
 
 /* Enumerated device names */
 static const ALCchar alcDefaultName[] = "OpenAL Soft\0";
-static ALCchar *alcAllDevicesList;
-static ALCchar *alcCaptureDeviceList;
-/* Sizes only include the first ending null character, not the second */
-static size_t alcAllDevicesListSize;
-static size_t alcCaptureDeviceListSize;
+
+static al_string alcAllDevicesList;
+static al_string alcCaptureDeviceList;
 
 /* Default is always the first in the list */
 static ALCchar *alcDefaultAllDevicesSpecifier;
@@ -614,16 +685,17 @@ static const ALchar alExtList[] =
     "AL_EXT_ALAW AL_EXT_DOUBLE AL_EXT_EXPONENT_DISTANCE AL_EXT_FLOAT32 "
     "AL_EXT_IMA4 AL_EXT_LINEAR_DISTANCE AL_EXT_MCFORMATS AL_EXT_MULAW "
     "AL_EXT_MULAW_MCFORMATS AL_EXT_OFFSET AL_EXT_source_distance_model "
-    "AL_LOKI_quadriphonic AL_SOFT_buffer_samples AL_SOFT_buffer_sub_data "
-    "AL_SOFTX_deferred_updates AL_SOFT_direct_channels AL_SOFT_loop_points "
-    "AL_SOFT_source_latency";
+    "AL_LOKI_quadriphonic AL_SOFT_block_alignment AL_SOFT_buffer_samples "
+    "AL_SOFT_buffer_sub_data AL_SOFT_deferred_updates AL_SOFT_direct_channels "
+    "AL_SOFT_loop_points AL_SOFT_MSADPCM AL_SOFT_source_latency "
+    "AL_SOFT_source_length";
 
-static volatile ALCenum LastNullDeviceError = ALC_NO_ERROR;
+static ATOMIC(ALCenum) LastNullDeviceError = ATOMIC_INIT_STATIC(ALC_NO_ERROR);
 
 /* Thread-local current context */
-static pthread_key_t LocalContext;
+static altss_t LocalContext;
 /* Process-wide current context */
-static ALCcontext *volatile GlobalContext = NULL;
+static ATOMIC(ALCcontext*) GlobalContext = ATOMIC_INIT_STATIC(NULL);
 
 /* Mixing thread piority level */
 ALint RTPrioLevel;
@@ -639,7 +711,7 @@ enum LogLevel LogLevel = LogError;
 static ALCboolean TrapALCError = ALC_FALSE;
 
 /* One-time configuration init control */
-static pthread_once_t alc_config_once = PTHREAD_ONCE_INIT;
+static alonce_flag alc_config_once = AL_ONCE_FLAG_INIT;
 
 /* Default effect that applies to sources that don't have an effect on send 0 */
 static ALeffect DefaultEffect;
@@ -654,7 +726,8 @@ static const ALCchar alcNoDeviceExtList[] =
 static const ALCchar alcExtensionList[] =
     "ALC_ENUMERATE_ALL_EXT ALC_ENUMERATION_EXT ALC_EXT_CAPTURE "
     "ALC_EXT_DEDICATED ALC_EXT_disconnect ALC_EXT_EFX "
-    "ALC_EXT_thread_local_context ALC_SOFT_loopback";
+    "ALC_EXT_thread_local_context ALC_SOFTX_device_clock ALC_SOFTX_HRTF "
+    "ALC_SOFT_loopback ALC_SOFTX_midi_interface ALC_SOFT_pause_device";
 static const ALCint alcMajorVersion = 1;
 static const ALCint alcMinorVersion = 1;
 
@@ -665,17 +738,18 @@ static const ALCint alcEFXMinorVersion = 0;
 /************************************************
  * Device lists
  ************************************************/
-static ALCdevice *volatile DeviceList = NULL;
+static ATOMIC(ALCdevice*) DeviceList = ATOMIC_INIT_STATIC(NULL);
 
-static pthread_mutex_t ListLock;
-
-static void LockLists(void)
+static almtx_t ListLock;
+static inline void LockLists(void)
 {
-    al_EnterCriticalSection(&ListLock);
+    int lockret = almtx_lock(&ListLock);
+    assert(lockret == althrd_success);
 }
-static void UnlockLists(void)
+static inline void UnlockLists(void)
 {
-    al_LeaveCriticalSection(&ListLock);
+    int unlockret = almtx_unlock(&ListLock);
+    assert(unlockret == althrd_success);
 }
 
 /************************************************
@@ -686,7 +760,6 @@ static void alc_init(void);
 static void alc_deinit(void);
 static void alc_deinit_safe(void);
 
-UIntMap TlsDestructor;
 
 #if defined(HAVE_GCC_DESTRUCTOR)
 static void alc_init(void) __attribute__((constructor));
@@ -708,8 +781,12 @@ static void ReleaseThreadCtx(void *ptr);
 static void alc_init(void)
 {
     const char *str;
+    int ret;
 
     LogFile = stderr;
+
+    AL_STRING_INIT(alcAllDevicesList);
+    AL_STRING_INIT(alcCaptureDeviceList);
 
     str = getenv("__ALSOFT_HALF_ANGLE_CONES");
     if(str && (strcasecmp(str, "true") == 0 || strtol(str, NULL, 0) == 1))
@@ -719,8 +796,12 @@ static void alc_init(void)
     if(str && (strcasecmp(str, "true") == 0 || strtol(str, NULL, 0) == 1))
         ZScale *= -1.0f;
 
-    pthread_key_create(&LocalContext, ReleaseThreadCtx);
-    al_InitializeCriticalSection(&ListLock);
+    ret = altss_create(&LocalContext, ReleaseThreadCtx);
+    assert(ret == althrd_success);
+
+    ret = almtx_init(&ListLock, almtx_recursive);
+    assert(ret == althrd_success);
+
     ThunkInit();
 }
 
@@ -742,7 +823,7 @@ static void alc_initconfig(void)
     str = getenv("ALSOFT_LOGFILE");
     if(str && str[0])
     {
-        FILE *logfile = fopen(str, "wat");
+        FILE *logfile = al_fopen(str, "wt");
         if(logfile) LogFile = logfile;
         else ERR("Failed to open log file '%s'\n", str);
     }
@@ -757,8 +838,12 @@ static void alc_initconfig(void)
     ReadALConfig();
 
     capfilter = 0;
-#ifdef HAVE_SSE
+#if defined(HAVE_SSE4_1)
+    capfilter |= CPU_CAP_SSE | CPU_CAP_SSE2 | CPU_CAP_SSE4_1;
+#elif defined(HAVE_SSE2)
     capfilter |= CPU_CAP_SSE | CPU_CAP_SSE2;
+#elif defined(HAVE_SSE)
+    capfilter |= CPU_CAP_SSE;
 #endif
 #ifdef HAVE_NEON
     capfilter |= CPU_CAP_NEON;
@@ -772,22 +857,25 @@ static void alc_initconfig(void)
             size_t len;
             const char *next = str;
 
-            i = 0;
             do {
                 str = next;
-                next = strchr(str, ',');
-
                 while(isspace(str[0]))
                     str++;
+                next = strchr(str, ',');
+
                 if(!str[0] || str[0] == ',')
                     continue;
 
                 len = (next ? ((size_t)(next-str)) : strlen(str));
-                if(strncasecmp(str, "sse", len) == 0)
+                while(len > 0 && isspace(str[len-1]))
+                    len--;
+                if(len == 3 && strncasecmp(str, "sse", len) == 0)
                     capfilter &= ~CPU_CAP_SSE;
-                else if(strncasecmp(str, "sse2", len) == 0)
+                else if(len == 4 && strncasecmp(str, "sse2", len) == 0)
                     capfilter &= ~CPU_CAP_SSE2;
-                else if(strncasecmp(str, "neon", len) == 0)
+                else if(len == 6 && strncasecmp(str, "sse4.1", len) == 0)
+                    capfilter &= ~CPU_CAP_SSE4_1;
+                else if(len == 4 && strncasecmp(str, "neon", len) == 0)
                     capfilter &= ~CPU_CAP_NEON;
                 else
                     WARN("Invalid CPU extension \"%s\"\n", str);
@@ -858,6 +946,8 @@ static void alc_initconfig(void)
         i = 0;
         do {
             devs = next;
+            while(isspace(devs[0]))
+                devs++;
             next = strchr(devs, ',');
 
             delitem = (devs[0] == '-');
@@ -871,7 +961,9 @@ static void alc_initconfig(void)
             endlist = 1;
 
             len = (next ? ((size_t)(next-devs)) : strlen(devs));
-            for(n = i;BackendList[n].Init;n++)
+            while(len > 0 && isspace(devs[len-1]))
+                len--;
+            for(n = i;BackendList[n].name;n++)
             {
                 if(len == strlen(BackendList[n].name) &&
                    strncmp(BackendList[n].name, devs, len) == 0)
@@ -881,7 +973,7 @@ static void alc_initconfig(void)
                         do {
                             BackendList[n] = BackendList[n+1];
                             ++n;
-                        } while(BackendList[n].Init);
+                        } while(BackendList[n].name);
                     }
                     else
                     {
@@ -903,15 +995,39 @@ static void alc_initconfig(void)
         if(endlist)
         {
             BackendList[i].name = NULL;
+            BackendList[i].getFactory = NULL;
             BackendList[i].Init = NULL;
             BackendList[i].Deinit = NULL;
             BackendList[i].Probe = NULL;
         }
     }
 
-    // take the first working backend...
-    for(i = 0;BackendList[i].Init && (!PlaybackBackend.name || !CaptureBackend.name);i++)
+    for(i = 0;(BackendList[i].Init || BackendList[i].getFactory) && (!PlaybackBackend.name || !CaptureBackend.name);i++)
     {
+        if(BackendList[i].getFactory)
+        {
+            ALCbackendFactory *factory = BackendList[i].getFactory();
+            if(!V0(factory,init)())
+            {
+                WARN("Failed to initialize backend \"%s\"\n", BackendList[i].name);
+                continue;
+            }
+
+            TRACE("Initialized backend \"%s\"\n", BackendList[i].name);
+            if(!PlaybackBackend.name && V(factory,querySupport)(ALCbackend_Playback))
+            {
+                PlaybackBackend = BackendList[i];
+                TRACE("Added \"%s\" for playback\n", PlaybackBackend.name);
+            }
+            if(!CaptureBackend.name && V(factory,querySupport)(ALCbackend_Capture))
+            {
+                CaptureBackend = BackendList[i];
+                TRACE("Added \"%s\" for capture\n", CaptureBackend.name);
+            }
+
+            continue;
+        }
+
         if(!BackendList[i].Init(&BackendList[i].Funcs))
         {
             WARN("Failed to initialize backend \"%s\"\n", BackendList[i].name);
@@ -930,7 +1046,10 @@ static void alc_initconfig(void)
             TRACE("Added \"%s\" for capture\n", CaptureBackend.name);
         }
     }
-    BackendLoopback.Init(&BackendLoopback.Funcs);
+    {
+        ALCbackendFactory *factory = ALCloopbackFactory_getFactory();
+        V0(factory,init)();
+    }
 
     if(ConfigValueStr(NULL, "excludefx", &str))
     {
@@ -961,7 +1080,7 @@ static void alc_initconfig(void)
     if((str && str[0]) || ConfigValueStr(NULL, "default-reverb", &str))
         LoadReverbPreset(str, &DefaultEffect);
 }
-#define DO_INITCONFIG() pthread_once(&alc_config_once, alc_initconfig)
+#define DO_INITCONFIG() alcall_once(&alc_config_once, alc_initconfig)
 
 
 /************************************************
@@ -971,17 +1090,15 @@ static void alc_cleanup(void)
 {
     ALCdevice *dev;
 
-    free(alcAllDevicesList); alcAllDevicesList = NULL;
-    alcAllDevicesListSize = 0;
-    free(alcCaptureDeviceList); alcCaptureDeviceList = NULL;
-    alcCaptureDeviceListSize = 0;
+    AL_STRING_DEINIT(alcAllDevicesList);
+    AL_STRING_DEINIT(alcCaptureDeviceList);
 
     free(alcDefaultAllDevicesSpecifier);
     alcDefaultAllDevicesSpecifier = NULL;
     free(alcCaptureDefaultDeviceSpecifier);
     alcCaptureDefaultDeviceSpecifier = NULL;
 
-    if((dev=ExchangePtr((XchgPtr*)&DeviceList, NULL)) != NULL)
+    if((dev=ATOMIC_EXCHANGE(ALCdevice*, &DeviceList, NULL)) != NULL)
     {
         ALCuint num = 0;
         do {
@@ -1001,8 +1118,8 @@ static void alc_deinit_safe(void)
     FreeALConfig();
 
     ThunkExit();
-    al_DeleteCriticalSection(&ListLock);
-    pthread_key_delete(LocalContext);
+    almtx_destroy(&ListLock);
+    altss_delete(LocalContext);
 
     if(LogFile != stderr)
         fclose(LogFile);
@@ -1018,9 +1135,20 @@ static void alc_deinit(void)
     memset(&PlaybackBackend, 0, sizeof(PlaybackBackend));
     memset(&CaptureBackend, 0, sizeof(CaptureBackend));
 
-    for(i = 0;BackendList[i].Deinit;i++)
-        BackendList[i].Deinit();
-    BackendLoopback.Deinit();
+    for(i = 0;BackendList[i].Deinit || BackendList[i].getFactory;i++)
+    {
+        if(!BackendList[i].getFactory)
+            BackendList[i].Deinit();
+        else
+        {
+            ALCbackendFactory *factory = BackendList[i].getFactory();
+            V0(factory,deinit)();
+        }
+    }
+    {
+        ALCbackendFactory *factory = ALCloopbackFactory_getFactory();
+        V0(factory,deinit)();
+    }
 
     alc_deinit_safe();
 }
@@ -1029,57 +1157,53 @@ static void alc_deinit(void)
 /************************************************
  * Device enumeration
  ************************************************/
-static void ProbeList(ALCchar **list, size_t *listsize, enum DevProbe type)
+static void ProbeDevices(al_string *list, enum DevProbe type)
 {
     DO_INITCONFIG();
 
     LockLists();
-    free(*list);
-    *list = NULL;
-    *listsize = 0;
+    al_string_clear(list);
 
-    if(type == ALL_DEVICE_PROBE && PlaybackBackend.Probe)
-        PlaybackBackend.Probe(type);
-    else if(type == CAPTURE_DEVICE_PROBE && CaptureBackend.Probe)
-        CaptureBackend.Probe(type);
+    if(type == ALL_DEVICE_PROBE && (PlaybackBackend.Probe || PlaybackBackend.getFactory))
+    {
+        if(!PlaybackBackend.getFactory)
+            PlaybackBackend.Probe(type);
+        else
+        {
+            ALCbackendFactory *factory = PlaybackBackend.getFactory();
+            V(factory,probe)(type);
+        }
+    }
+    else if(type == CAPTURE_DEVICE_PROBE && (CaptureBackend.Probe || CaptureBackend.getFactory))
+    {
+        if(!CaptureBackend.getFactory)
+            CaptureBackend.Probe(type);
+        else
+        {
+            ALCbackendFactory *factory = CaptureBackend.getFactory();
+            V(factory,probe)(type);
+        }
+    }
     UnlockLists();
 }
-
 static void ProbeAllDevicesList(void)
-{ ProbeList(&alcAllDevicesList, &alcAllDevicesListSize, ALL_DEVICE_PROBE); }
+{ ProbeDevices(&alcAllDevicesList, ALL_DEVICE_PROBE); }
 static void ProbeCaptureDeviceList(void)
-{ ProbeList(&alcCaptureDeviceList, &alcCaptureDeviceListSize, CAPTURE_DEVICE_PROBE); }
+{ ProbeDevices(&alcCaptureDeviceList, CAPTURE_DEVICE_PROBE); }
 
-
-static void AppendList(const ALCchar *name, ALCchar **List, size_t *ListSize)
+static void AppendDevice(const ALCchar *name, al_string *devnames)
 {
     size_t len = strlen(name);
-    void *temp;
-
-    if(len == 0)
-        return;
-
-    temp = realloc(*List, (*ListSize) + len + 2);
-    if(!temp)
+    if(len > 0)
     {
-        ERR("Realloc failed to add %s!\n", name);
-        return;
+        al_string_append_range(devnames, name, name+len);
+        al_string_append_char(devnames, '\0');
     }
-    *List = temp;
-
-    memcpy((*List)+(*ListSize), name, len+1);
-    *ListSize += len+1;
-    (*List)[*ListSize] = 0;
 }
-
-#define DECL_APPEND_LIST_FUNC(type)                                          \
-void Append##type##List(const ALCchar *name)                                 \
-{ AppendList(name, &alc##type##List, &alc##type##ListSize); }
-
-DECL_APPEND_LIST_FUNC(AllDevices)
-DECL_APPEND_LIST_FUNC(CaptureDevice)
-
-#undef DECL_APPEND_LIST_FUNC
+void AppendAllDevicesList(const ALCchar *name)
+{ AppendDevice(name, &alcAllDevicesList); }
+void AppendCaptureDeviceList(const ALCchar *name)
+{ AppendDevice(name, &alcCaptureDeviceList); }
 
 
 /************************************************
@@ -1114,6 +1238,7 @@ const ALCchar *DevFmtChannelsString(enum DevFmtChannels chans)
     return "(unknown channels)";
 }
 
+extern inline ALuint FrameSizeFromDevFmt(enum DevFmtChannels chans, enum DevFmtType type);
 ALuint BytesFromDevFmt(enum DevFmtType type)
 {
     switch(type)
@@ -1143,8 +1268,8 @@ ALuint ChannelsFromDevFmt(enum DevFmtChannels chans)
     return 0;
 }
 
-static ALboolean DecomposeDevFormat(ALenum format, enum DevFmtChannels *chans,
-                                    enum DevFmtType *type)
+DECL_CONST static ALboolean DecomposeDevFormat(ALenum format,
+  enum DevFmtChannels *chans, enum DevFmtType *type)
 {
     static const struct {
         ALenum format;
@@ -1190,7 +1315,7 @@ static ALboolean DecomposeDevFormat(ALenum format, enum DevFmtChannels *chans,
     return AL_FALSE;
 }
 
-static ALCboolean IsValidALCType(ALCenum type)
+DECL_CONST static ALCboolean IsValidALCType(ALCenum type)
 {
     switch(type)
     {
@@ -1206,7 +1331,7 @@ static ALCboolean IsValidALCType(ALCenum type)
     return ALC_FALSE;
 }
 
-static ALCboolean IsValidALCChannels(ALCenum channels)
+DECL_CONST static ALCboolean IsValidALCChannels(ALCenum channels)
 {
     switch(channels)
     {
@@ -1225,20 +1350,29 @@ static ALCboolean IsValidALCChannels(ALCenum channels)
 /************************************************
  * Miscellaneous ALC helpers
  ************************************************/
+extern inline void LockContext(ALCcontext *context);
+extern inline void UnlockContext(ALCcontext *context);
 
-void ALCdevice_LockDefault(ALCdevice *device)
+ALint64 ALCdevice_GetLatencyDefault(ALCdevice *UNUSED(device))
 {
-    al_EnterCriticalSection(&device->Mutex);
-}
-void ALCdevice_UnlockDefault(ALCdevice *device)
-{
-    al_LeaveCriticalSection(&device->Mutex);
-}
-ALint64 ALCdevice_GetLatencyDefault(ALCdevice *device)
-{
-    (void)device;
     return 0;
 }
+
+ALint64 ALCdevice_GetLatency(ALCdevice *device)
+{
+    return V0(device->Backend,getLatency)();
+}
+
+void ALCdevice_Lock(ALCdevice *device)
+{
+    V0(device->Backend,lock)();
+}
+
+void ALCdevice_Unlock(ALCdevice *device)
+{
+    V0(device->Backend,unlock)();
+}
+
 
 /* SetDefaultWFXChannelOrder
  *
@@ -1347,14 +1481,29 @@ static void alcSetError(ALCdevice *device, ALCenum errorCode)
 {
     if(TrapALCError)
     {
+#if defined(SIGTRAP)
+        raise(SIGTRAP);
+#endif
     }
 
     if(device)
-        device->LastError = errorCode;
+        ATOMIC_STORE(&device->LastError, errorCode);
     else
-        LastNullDeviceError = errorCode;
+        ATOMIC_STORE(&LastNullDeviceError, errorCode);
 }
 
+
+/* UpdateClockBase
+ *
+ * Updates the device's base clock time with however many samples have been
+ * done. This is used so frequency changes on the device don't cause the time
+ * to jump forward or back.
+ */
+static inline void UpdateClockBase(ALCdevice *device)
+{
+    device->ClockBase += device->SamplesDone * DEVICE_CLOCK_RES / device->Frequency;
+    device->SamplesDone = 0;
+}
 
 /* UpdateDeviceParams
  *
@@ -1368,7 +1517,6 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
     enum DevFmtType oldType;
     ALCuint oldFreq;
     FPUCtl oldMode;
-    ALuint i;
 
     // Check for attributes
     if(device->Type == Loopback)
@@ -1379,7 +1527,7 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
             GotType  = 1<<2,
             GotAll   = GotFreq|GotChans|GotType
         };
-        ALCuint freq, numMono, numStereo, numSends;
+        ALCuint freq, numMono, numStereo, numSends, flags;
         enum DevFmtChannels schans;
         enum DevFmtType stype;
         ALCuint attrIdx = 0;
@@ -1397,6 +1545,7 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
         schans = device->FmtChans;
         stype = device->FmtType;
         freq = device->Frequency;
+        flags = device->Flags;
 
         while(attrList[attrIdx])
         {
@@ -1438,6 +1587,14 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
             if(attrList[attrIdx] == ALC_MAX_AUXILIARY_SENDS)
                 numSends = attrList[attrIdx + 1];
 
+            if(attrList[attrIdx] == ALC_HRTF_SOFT)
+            {
+                if(attrList[attrIdx + 1] != ALC_FALSE)
+                    flags |= DEVICE_HRTF_REQUEST;
+                else
+                    flags &= ~DEVICE_HRTF_REQUEST;
+            }
+
             attrIdx += 2;
         }
 
@@ -1451,9 +1608,11 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
         numSends = minu(MAX_SENDS, numSends);
 
         if((device->Flags&DEVICE_RUNNING))
-            ALCdevice_StopPlayback(device);
-        device->Flags &= ~DEVICE_RUNNING;
+            V0(device->Backend,stop)();
+        device->Flags = (flags & ~DEVICE_RUNNING);
 
+        if(freq != device->Frequency)
+            UpdateClockBase(device);
         device->Frequency = freq;
         device->FmtChans = schans;
         device->FmtType = stype;
@@ -1469,7 +1628,7 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
         /* If a context is already running on the device, stop playback so the
          * device attributes can be updated. */
         if((device->Flags&DEVICE_RUNNING))
-            ALCdevice_StopPlayback(device);
+            V0(device->Backend,stop)();
         device->Flags &= ~DEVICE_RUNNING;
 
         freq = device->Frequency;
@@ -1497,6 +1656,14 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
             if(attrList[attrIdx] == ALC_MAX_AUXILIARY_SENDS)
                 numSends = attrList[attrIdx + 1];
 
+            if(attrList[attrIdx] == ALC_HRTF_SOFT)
+            {
+                if(attrList[attrIdx + 1] != ALC_FALSE)
+                    device->Flags |= DEVICE_HRTF_REQUEST;
+                else
+                    device->Flags &= ~DEVICE_HRTF_REQUEST;
+            }
+
             attrIdx += 2;
         }
 
@@ -1508,10 +1675,12 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
 
         device->UpdateSize = (ALuint64)device->UpdateSize * freq /
                              device->Frequency;
-        /* SSE does best with the update size being a multiple of 4 */
-        if((CPUCapFlags&CPU_CAP_SSE))
+        /* SSE and Neon do best with the update size being a multiple of 4 */
+        if((CPUCapFlags&(CPU_CAP_SSE|CPU_CAP_NEON)) != 0)
             device->UpdateSize = (device->UpdateSize+3)&~3;
 
+        if(freq != device->Frequency)
+            UpdateClockBase(device);
         device->Frequency = freq;
         device->NumMonoSources = numMono;
         device->NumStereoSources = numStereo;
@@ -1520,6 +1689,8 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
 
     if((device->Flags&DEVICE_RUNNING))
         return ALC_NO_ERROR;
+
+    UpdateClockBase(device);
 
     oldFreq  = device->Frequency;
     oldChans = device->FmtChans;
@@ -1534,7 +1705,37 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
           device->Frequency,
           device->UpdateSize, device->NumUpdates);
 
-    if(ALCdevice_ResetPlayback(device) == ALC_FALSE)
+    if(device->Type != Loopback)
+    {
+        bool usehrtf = !!(device->Flags&DEVICE_HRTF_REQUEST);
+        if(GetConfigValueBool(NULL, "hrtf", usehrtf))
+            device->Flags |= DEVICE_HRTF_REQUEST;
+        else
+            device->Flags &= ~DEVICE_HRTF_REQUEST;
+    }
+    if((device->Flags&DEVICE_HRTF_REQUEST))
+    {
+        enum DevFmtChannels chans = device->FmtChans;
+        ALCuint freq = device->Frequency;
+        if(FindHrtfFormat(&chans, &freq))
+        {
+            if(device->Type != Loopback)
+            {
+                device->Frequency = freq;
+                device->FmtChans = chans;
+                device->Flags |= DEVICE_CHANNELS_REQUEST |
+                                 DEVICE_FREQUENCY_REQUEST;
+            }
+            else if(device->Frequency != freq || device->FmtChans != chans)
+            {
+                ERR("Requested format not HRTF compatible: %s, %uhz\n",
+                    DevFmtChannelsString(device->FmtChans), device->Frequency);
+                device->Flags &= ~DEVICE_HRTF_REQUEST;
+            }
+        }
+    }
+
+    if(V0(device->Backend,reset)() == ALC_FALSE)
         return ALC_INVALID_DEVICE;
 
     if(device->FmtChans != oldChans && (device->Flags&DEVICE_CHANNELS_REQUEST))
@@ -1562,15 +1763,15 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
 
     aluInitPanning(device);
 
-    for(i = 0;i < MaxChannels;i++)
-    {
-        device->ClickRemoval[i] = 0.0f;
-        device->PendingClicks[i] = 0.0f;
-    }
+    V(device->Synth,update)(device);
 
     device->Hrtf = NULL;
-    if(device->Type != Loopback && GetConfigValueBool(NULL, "hrtf", AL_FALSE))
-        device->Hrtf = GetHrtf(device);
+    if((device->Flags&DEVICE_HRTF_REQUEST))
+    {
+        device->Hrtf = GetHrtf(device->FmtChans, device->Frequency);
+        if(!device->Hrtf)
+            device->Flags &= ~DEVICE_HRTF_REQUEST;
+    }
     TRACE("HRTF %s\n", device->Hrtf?"enabled":"disabled");
 
     if(!device->Hrtf && device->Bs2bLevel > 0 && device->Bs2bLevel <= 6)
@@ -1599,30 +1800,32 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
     {
         if((CPUCapFlags&CPU_CAP_SSE))
             WARN("SSE performs best with multiple of 4 update sizes (%u)\n", device->UpdateSize);
+        if((CPUCapFlags&CPU_CAP_NEON))
+            WARN("NEON performs best with multiple of 4 update sizes (%u)\n", device->UpdateSize);
     }
 
     SetMixerFPUMode(&oldMode);
     ALCdevice_Lock(device);
-    context = device->ContextList;
+    context = ATOMIC_LOAD(&device->ContextList);
     while(context)
     {
         ALsizei pos;
 
-        context->UpdateSources = AL_FALSE;
+        ATOMIC_STORE(&context->UpdateSources, AL_FALSE);
         LockUIntMapRead(&context->EffectSlotMap);
         for(pos = 0;pos < context->EffectSlotMap.size;pos++)
         {
             ALeffectslot *slot = context->EffectSlotMap.array[pos].value;
 
-            if(VCALL(slot->EffectState,DeviceUpdate,(device)) == AL_FALSE)
+            if(V(slot->EffectState,deviceUpdate)(device) == AL_FALSE)
             {
                 UnlockUIntMapRead(&context->EffectSlotMap);
                 ALCdevice_Unlock(device);
                 RestoreFPUMode(&oldMode);
                 return ALC_INVALID_DEVICE;
             }
-            slot->NeedsUpdate = AL_FALSE;
-            VCALL(slot->EffectState,Update,(device, slot));
+            ATOMIC_STORE(&slot->NeedsUpdate, AL_FALSE);
+            V(slot->EffectState,update)(device, slot);
         }
         UnlockUIntMapRead(&context->EffectSlotMap);
 
@@ -1640,10 +1843,25 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
                 source->Send[s].GainHF = 1.0f;
                 s++;
             }
-            source->NeedsUpdate = AL_FALSE;
-            ALsource_Update(source, context);
+            ATOMIC_STORE(&source->NeedsUpdate, AL_TRUE);
         }
         UnlockUIntMapRead(&context->SourceMap);
+
+        for(pos = 0;pos < context->ActiveSourceCount;pos++)
+        {
+            ALactivesource *src = context->ActiveSources[pos];
+            ALsource *source = src->Source;
+            ALuint s = device->NumAuxSends;
+            while(s < MAX_SENDS)
+            {
+                src->Send[s].Moving = AL_FALSE;
+                src->Send[s].Counter = 0;
+                s++;
+            }
+
+            src->Update(src, context);
+            ATOMIC_STORE(&source->NeedsUpdate, AL_FALSE);
+        }
 
         context = context->next;
     }
@@ -1651,21 +1869,24 @@ static ALCenum UpdateDeviceParams(ALCdevice *device, const ALCint *attrList)
     {
         ALeffectslot *slot = device->DefaultSlot;
 
-        if(VCALL(slot->EffectState,DeviceUpdate,(device)) == AL_FALSE)
+        if(V(slot->EffectState,deviceUpdate)(device) == AL_FALSE)
         {
             ALCdevice_Unlock(device);
             RestoreFPUMode(&oldMode);
             return ALC_INVALID_DEVICE;
         }
-        slot->NeedsUpdate = AL_FALSE;
-        VCALL(slot->EffectState,Update,(device, slot));
+        ATOMIC_STORE(&slot->NeedsUpdate, AL_FALSE);
+        V(slot->EffectState,update)(device, slot);
     }
     ALCdevice_Unlock(device);
     RestoreFPUMode(&oldMode);
 
-    if(ALCdevice_StartPlayback(device) == ALC_FALSE)
-        return ALC_INVALID_DEVICE;
-    device->Flags |= DEVICE_RUNNING;
+    if(!(device->Flags&DEVICE_PAUSED))
+    {
+        if(V0(device->Backend,start)() == ALC_FALSE)
+            return ALC_INVALID_DEVICE;
+        device->Flags |= DEVICE_RUNNING;
+    }
 
     return ALC_NO_ERROR;
 }
@@ -1679,10 +1900,12 @@ static ALCvoid FreeDevice(ALCdevice *device)
 {
     TRACE("%p\n", device);
 
-    if(device->Type != Capture)
-        ALCdevice_ClosePlayback(device);
-    else
-        ALCdevice_CloseCapture(device);
+    V0(device->Backend,close)();
+    DELETE_OBJ(device->Backend);
+    device->Backend = NULL;
+
+    DELETE_OBJ(device->Synth);
+    device->Synth = NULL;
 
     if(device->DefaultSlot)
     {
@@ -1690,6 +1913,10 @@ static ALCvoid FreeDevice(ALCdevice *device)
         device->DefaultSlot = NULL;
         DELETE_OBJ(state);
     }
+
+    if(device->DefaultSfont)
+        ALsoundfont_deleteSoundfont(device->DefaultSfont, device);
+    device->DefaultSfont = NULL;
 
     if(device->BufferMap.size > 0)
     {
@@ -1712,13 +1939,31 @@ static ALCvoid FreeDevice(ALCdevice *device)
     }
     ResetUIntMap(&device->FilterMap);
 
+    if(device->SfontMap.size > 0)
+    {
+        WARN("(%p) Deleting %d Soundfont(s)\n", device, device->SfontMap.size);
+        ReleaseALSoundfonts(device);
+    }
+    ResetUIntMap(&device->SfontMap);
+
+    if(device->PresetMap.size > 0)
+    {
+        WARN("(%p) Deleting %d Preset(s)\n", device, device->PresetMap.size);
+        ReleaseALPresets(device);
+    }
+    ResetUIntMap(&device->PresetMap);
+
+    if(device->FontsoundMap.size > 0)
+    {
+        WARN("(%p) Deleting %d Fontsound(s)\n", device, device->FontsoundMap.size);
+        ReleaseALFontsounds(device);
+    }
+    ResetUIntMap(&device->FontsoundMap);
+
     free(device->Bs2b);
     device->Bs2b = NULL;
 
-    free(device->DeviceName);
-    device->DeviceName = NULL;
-
-    al_DeleteCriticalSection(&device->Mutex);
+    AL_STRING_DEINIT(device->DeviceName);
 
     al_free(device);
 }
@@ -1726,14 +1971,14 @@ static ALCvoid FreeDevice(ALCdevice *device)
 
 void ALCdevice_IncRef(ALCdevice *device)
 {
-    RefCount ref;
+    uint ref;
     ref = IncrementRef(&device->ref);
     TRACEREF("%p increasing refcount to %u\n", device, ref);
 }
 
 void ALCdevice_DecRef(ALCdevice *device)
 {
-    RefCount ref;
+    uint ref;
     ref = DecrementRef(&device->ref);
     TRACEREF("%p decreasing refcount to %u\n", device, ref);
     if(ref == 0) FreeDevice(device);
@@ -1751,7 +1996,7 @@ static ALCdevice *VerifyDevice(ALCdevice *device)
         return NULL;
 
     LockLists();
-    tmpDevice = DeviceList;
+    tmpDevice = ATOMIC_LOAD(&DeviceList);
     while(tmpDevice && tmpDevice != device)
         tmpDevice = tmpDevice->next;
 
@@ -1794,8 +2039,8 @@ static ALvoid InitContext(ALCcontext *Context)
         Context->Listener->Params.Velocity[i] = 0.0f;
 
     //Validate Context
-    Context->LastError = AL_NO_ERROR;
-    Context->UpdateSources = AL_FALSE;
+    ATOMIC_INIT(&Context->LastError, AL_NO_ERROR);
+    ATOMIC_INIT(&Context->UpdateSources, AL_FALSE);
     Context->ActiveSourceCount = 0;
     InitUIntMap(&Context->SourceMap, Context->Device->MaxNoOfSources);
     InitUIntMap(&Context->EffectSlotMap, Context->Device->AuxiliaryEffectSlotMax);
@@ -1819,6 +2064,8 @@ static ALvoid InitContext(ALCcontext *Context)
  */
 static ALCvoid FreeContext(ALCcontext *context)
 {
+    ALsizei i;
+
     TRACE("%p\n", context);
 
     if(context->SourceMap.size > 0)
@@ -1835,21 +2082,17 @@ static ALCvoid FreeContext(ALCcontext *context)
     }
     ResetUIntMap(&context->EffectSlotMap);
 
-    context->ActiveSourceCount = 0;
-    if(context->ActiveSources != NULL)
+    for(i = 0;i < context->MaxActiveSources;i++)
     {
-        free(context->ActiveSources);
-        context->ActiveSources = NULL;
+        al_free(context->ActiveSources[i]);
+        context->ActiveSources[i] = NULL;
     }
+    free(context->ActiveSources);
+    context->ActiveSources = NULL;
+    context->ActiveSourceCount = 0;
     context->MaxActiveSources = 0;
 
-    context->ActiveEffectSlotCount = 0;
-    if(context->ActiveEffectSlots != NULL)
-    {
-        free(context->ActiveEffectSlots);
-        context->ActiveEffectSlots = NULL;
-    }
-    context->MaxActiveEffectSlots = 0;
+    VECTOR_DEINIT(context->ActiveAuxSlots);
 
     ALCdevice_DecRef(context->Device);
     context->Device = NULL;
@@ -1866,25 +2109,30 @@ static ALCvoid FreeContext(ALCcontext *context)
  */
 static void ReleaseContext(ALCcontext *context, ALCdevice *device)
 {
-    ALCcontext *volatile*tmp_ctx;
+    ALCcontext *nextctx;
+    ALCcontext *origctx;
 
-    if(pthread_getspecific(LocalContext) == context)
+    if(altss_get(LocalContext) == context)
     {
         WARN("%p released while current on thread\n", context);
-        pthread_setspecific(LocalContext, NULL);
+        altss_set(LocalContext, NULL);
         ALCcontext_DecRef(context);
     }
 
-    if(CompExchangePtr((XchgPtr*)&GlobalContext, context, NULL))
+    origctx = context;
+    if(ATOMIC_COMPARE_EXCHANGE_STRONG(ALCcontext*, &GlobalContext, &origctx, NULL))
         ALCcontext_DecRef(context);
 
     ALCdevice_Lock(device);
-    tmp_ctx = &device->ContextList;
-    while(*tmp_ctx)
+    origctx = context;
+    nextctx = context->next;
+    if(!ATOMIC_COMPARE_EXCHANGE_STRONG(ALCcontext*, &device->ContextList, &origctx, nextctx))
     {
-        if(CompExchangePtr((XchgPtr*)tmp_ctx, context, context->next))
-            break;
-        tmp_ctx = &(*tmp_ctx)->next;
+        ALCcontext *list;
+        do {
+            list = origctx;
+            origctx = context;
+        } while(!COMPARE_EXCHANGE(&list->next, &origctx, nextctx));
     }
     ALCdevice_Unlock(device);
 
@@ -1893,14 +2141,14 @@ static void ReleaseContext(ALCcontext *context, ALCdevice *device)
 
 void ALCcontext_IncRef(ALCcontext *context)
 {
-    RefCount ref;
+    uint ref;
     ref = IncrementRef(&context->ref);
     TRACEREF("%p increasing refcount to %u\n", context, ref);
 }
 
 void ALCcontext_DecRef(ALCcontext *context)
 {
-    RefCount ref;
+    uint ref;
     ref = DecrementRef(&context->ref);
     TRACEREF("%p decreasing refcount to %u\n", context, ref);
     if(ref == 0) FreeContext(context);
@@ -1921,19 +2169,19 @@ static ALCcontext *VerifyContext(ALCcontext *context)
     ALCdevice *dev;
 
     LockLists();
-    dev = DeviceList;
+    dev = ATOMIC_LOAD(&DeviceList);
     while(dev)
     {
-        ALCcontext *tmp_ctx = dev->ContextList;
-        while(tmp_ctx)
+        ALCcontext *ctx = ATOMIC_LOAD(&dev->ContextList);
+        while(ctx)
         {
-            if(tmp_ctx == context)
+            if(ctx == context)
             {
-                ALCcontext_IncRef(tmp_ctx);
+                ALCcontext_IncRef(ctx);
                 UnlockLists();
-                return tmp_ctx;
+                return ctx;
             }
-            tmp_ctx = tmp_ctx->next;
+            ctx = ctx->next;
         }
         dev = dev->next;
     }
@@ -1952,13 +2200,13 @@ ALCcontext *GetContextRef(void)
 {
     ALCcontext *context;
 
-    context = pthread_getspecific(LocalContext);
+    context = altss_get(LocalContext);
     if(context)
         ALCcontext_IncRef(context);
     else
     {
         LockLists();
-        context = GlobalContext;
+        context = ATOMIC_LOAD(&GlobalContext);
         if(context)
             ALCcontext_IncRef(context);
         UnlockLists();
@@ -1982,11 +2230,11 @@ ALC_API ALCenum ALC_APIENTRY alcGetError(ALCdevice *device)
 
     if(VerifyDevice(device))
     {
-        errorCode = ExchangeInt(&device->LastError, ALC_NO_ERROR);
+        errorCode = ATOMIC_EXCHANGE(ALCenum, &device->LastError, ALC_NO_ERROR);
         ALCdevice_DecRef(device);
     }
     else
-        errorCode = ExchangeInt(&LastNullDeviceError, ALC_NO_ERROR);
+        errorCode = ATOMIC_EXCHANGE(ALCenum, &LastNullDeviceError, ALC_NO_ERROR);
 
     return errorCode;
 }
@@ -1996,18 +2244,16 @@ ALC_API ALCenum ALC_APIENTRY alcGetError(ALCdevice *device)
  *
  * Not functional
  */
-ALC_API ALCvoid ALC_APIENTRY alcSuspendContext(ALCcontext *Context)
+ALC_API ALCvoid ALC_APIENTRY alcSuspendContext(ALCcontext *UNUSED(context))
 {
-    (void)Context;
 }
 
 /* alcProcessContext
  *
  * Not functional
  */
-ALC_API ALCvoid ALC_APIENTRY alcProcessContext(ALCcontext *Context)
+ALC_API ALCvoid ALC_APIENTRY alcProcessContext(ALCcontext *UNUSED(context))
 {
-    (void)Context;
 }
 
 
@@ -2052,26 +2298,26 @@ ALC_API const ALCchar* ALC_APIENTRY alcGetString(ALCdevice *Device, ALCenum para
     case ALC_ALL_DEVICES_SPECIFIER:
         if(VerifyDevice(Device))
         {
-            value = Device->DeviceName;
+            value = al_string_get_cstr(Device->DeviceName);
             ALCdevice_DecRef(Device);
         }
         else
         {
             ProbeAllDevicesList();
-            value = alcAllDevicesList;
+            value = al_string_get_cstr(alcAllDevicesList);
         }
         break;
 
     case ALC_CAPTURE_DEVICE_SPECIFIER:
         if(VerifyDevice(Device))
         {
-            value = Device->DeviceName;
+            value = al_string_get_cstr(Device->DeviceName);
             ALCdevice_DecRef(Device);
         }
         else
         {
             ProbeCaptureDeviceList();
-            value = alcCaptureDeviceList;
+            value = al_string_get_cstr(alcCaptureDeviceList);
         }
         break;
 
@@ -2081,14 +2327,13 @@ ALC_API const ALCchar* ALC_APIENTRY alcGetString(ALCdevice *Device, ALCenum para
         break;
 
     case ALC_DEFAULT_ALL_DEVICES_SPECIFIER:
-        if(!alcAllDevicesList)
+        if(al_string_empty(alcAllDevicesList))
             ProbeAllDevicesList();
 
         Device = VerifyDevice(Device);
 
         free(alcDefaultAllDevicesSpecifier);
-        alcDefaultAllDevicesSpecifier = strdup(alcAllDevicesList ?
-                                               alcAllDevicesList : "");
+        alcDefaultAllDevicesSpecifier = strdup(al_string_get_cstr(alcAllDevicesList));
         if(!alcDefaultAllDevicesSpecifier)
             alcSetError(Device, ALC_OUT_OF_MEMORY);
 
@@ -2097,14 +2342,13 @@ ALC_API const ALCchar* ALC_APIENTRY alcGetString(ALCdevice *Device, ALCenum para
         break;
 
     case ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER:
-        if(!alcCaptureDeviceList)
+        if(al_string_empty(alcCaptureDeviceList))
             ProbeCaptureDeviceList();
 
         Device = VerifyDevice(Device);
 
         free(alcCaptureDefaultDeviceSpecifier);
-        alcCaptureDefaultDeviceSpecifier = strdup(alcCaptureDeviceList ?
-                                                  alcCaptureDeviceList : "");
+        alcCaptureDefaultDeviceSpecifier = strdup(al_string_get_cstr(alcAllDevicesList));
         if(!alcCaptureDefaultDeviceSpecifier)
             alcSetError(Device, ALC_OUT_OF_MEMORY);
 
@@ -2133,19 +2377,14 @@ ALC_API const ALCchar* ALC_APIENTRY alcGetString(ALCdevice *Device, ALCenum para
 }
 
 
-/* alcGetIntegerv
- *
- * Returns information about the device and the version of OpenAL
- */
-ALC_API ALCvoid ALC_APIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALsizei size,ALCint *data)
+static ALCsizei GetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *values)
 {
-    device = VerifyDevice(device);
+    ALCsizei i;
 
-    if(size == 0 || data == NULL)
+    if(size <= 0 || values == NULL)
     {
         alcSetError(device, ALC_INVALID_VALUE);
-        if(device) ALCdevice_DecRef(device);
-        return;
+        return 0;
     }
 
     if(!device)
@@ -2153,11 +2392,11 @@ ALC_API ALCvoid ALC_APIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALsi
         switch(param)
         {
             case ALC_MAJOR_VERSION:
-                *data = alcMajorVersion;
-                break;
+                values[0] = alcMajorVersion;
+                return 1;
             case ALC_MINOR_VERSION:
-                *data = alcMinorVersion;
-                break;
+                values[0] = alcMinorVersion;
+                return 1;
 
             case ALC_ATTRIBUTES_SIZE:
             case ALC_ALL_ATTRIBUTES:
@@ -2170,146 +2409,269 @@ ALC_API ALCvoid ALC_APIENTRY alcGetIntegerv(ALCdevice *device,ALCenum param,ALsi
             case ALC_FORMAT_CHANNELS_SOFT:
             case ALC_FORMAT_TYPE_SOFT:
                 alcSetError(NULL, ALC_INVALID_DEVICE);
-                break;
+                return 0;
 
             default:
                 alcSetError(NULL, ALC_INVALID_ENUM);
-                break;
+                return 0;
         }
+        return 0;
     }
-    else if(device->Type == Capture)
+
+    if(device->Type == Capture)
     {
         switch(param)
         {
             case ALC_CAPTURE_SAMPLES:
                 ALCdevice_Lock(device);
-                *data = ALCdevice_AvailableSamples(device);
+                values[0] = V0(device->Backend,availableSamples)();
                 ALCdevice_Unlock(device);
-                break;
+                return 1;
 
             case ALC_CONNECTED:
-                *data = device->Connected;
-                break;
+                values[0] = device->Connected;
+                return 1;
 
             default:
                 alcSetError(device, ALC_INVALID_ENUM);
-                break;
+                return 0;
         }
+        return 0;
+    }
+
+    /* render device */
+    switch(param)
+    {
+        case ALC_MAJOR_VERSION:
+            values[0] = alcMajorVersion;
+            return 1;
+
+        case ALC_MINOR_VERSION:
+            values[0] = alcMinorVersion;
+            return 1;
+
+        case ALC_EFX_MAJOR_VERSION:
+            values[0] = alcEFXMajorVersion;
+            return 1;
+
+        case ALC_EFX_MINOR_VERSION:
+            values[0] = alcEFXMinorVersion;
+            return 1;
+
+        case ALC_ATTRIBUTES_SIZE:
+            values[0] = 15;
+            return 1;
+
+        case ALC_ALL_ATTRIBUTES:
+            if(size < 15)
+            {
+                alcSetError(device, ALC_INVALID_VALUE);
+                return 0;
+            }
+
+            i = 0;
+            values[i++] = ALC_FREQUENCY;
+            values[i++] = device->Frequency;
+
+            if(device->Type != Loopback)
+            {
+                values[i++] = ALC_REFRESH;
+                values[i++] = device->Frequency / device->UpdateSize;
+
+                values[i++] = ALC_SYNC;
+                values[i++] = ALC_FALSE;
+            }
+            else
+            {
+                values[i++] = ALC_FORMAT_CHANNELS_SOFT;
+                values[i++] = device->FmtChans;
+
+                values[i++] = ALC_FORMAT_TYPE_SOFT;
+                values[i++] = device->FmtType;
+            }
+
+            values[i++] = ALC_MONO_SOURCES;
+            values[i++] = device->NumMonoSources;
+
+            values[i++] = ALC_STEREO_SOURCES;
+            values[i++] = device->NumStereoSources;
+
+            values[i++] = ALC_MAX_AUXILIARY_SENDS;
+            values[i++] = device->NumAuxSends;
+
+            values[i++] = ALC_HRTF_SOFT;
+            values[i++] = (device->Hrtf ? ALC_TRUE : ALC_FALSE);
+
+            values[i++] = 0;
+            return i;
+
+        case ALC_FREQUENCY:
+            values[0] = device->Frequency;
+            return 1;
+
+        case ALC_REFRESH:
+            if(device->Type == Loopback)
+            {
+                alcSetError(device, ALC_INVALID_DEVICE);
+                return 0;
+            }
+            values[0] = device->Frequency / device->UpdateSize;
+            return 1;
+
+        case ALC_SYNC:
+            if(device->Type == Loopback)
+            {
+                alcSetError(device, ALC_INVALID_DEVICE);
+                return 0;
+            }
+            values[0] = ALC_FALSE;
+            return 1;
+
+        case ALC_FORMAT_CHANNELS_SOFT:
+            if(device->Type != Loopback)
+            {
+                alcSetError(device, ALC_INVALID_DEVICE);
+                return 0;
+            }
+            values[0] = device->FmtChans;
+            return 1;
+
+        case ALC_FORMAT_TYPE_SOFT:
+            if(device->Type != Loopback)
+            {
+                alcSetError(device, ALC_INVALID_DEVICE);
+                return 0;
+            }
+            values[0] = device->FmtType;
+            return 1;
+
+        case ALC_MONO_SOURCES:
+            values[0] = device->NumMonoSources;
+            return 1;
+
+        case ALC_STEREO_SOURCES:
+            values[0] = device->NumStereoSources;
+            return 1;
+
+        case ALC_MAX_AUXILIARY_SENDS:
+            values[0] = device->NumAuxSends;
+            return 1;
+
+        case ALC_CONNECTED:
+            values[0] = device->Connected;
+            return 1;
+
+        case ALC_HRTF_SOFT:
+            values[0] = (device->Hrtf ? ALC_TRUE : ALC_FALSE);
+            return 1;
+
+        default:
+            alcSetError(device, ALC_INVALID_ENUM);
+            return 0;
+    }
+    return 0;
+}
+
+/* alcGetIntegerv
+ *
+ * Returns information about the device and the version of OpenAL
+ */
+ALC_API void ALC_APIENTRY alcGetIntegerv(ALCdevice *device, ALCenum param, ALCsizei size, ALCint *values)
+{
+    device = VerifyDevice(device);
+    if(size <= 0 || values == NULL)
+        alcSetError(device, ALC_INVALID_VALUE);
+    else
+        GetIntegerv(device, param, size, values);
+    if(device) ALCdevice_DecRef(device);
+}
+
+ALC_API void ALC_APIENTRY alcGetInteger64vSOFT(ALCdevice *device, ALCenum pname, ALCsizei size, ALCint64SOFT *values)
+{
+    ALCint *ivals;
+    ALsizei i;
+
+    device = VerifyDevice(device);
+    if(size <= 0 || values == NULL)
+        alcSetError(device, ALC_INVALID_VALUE);
+    else if(!device || device->Type == Capture)
+    {
+        ivals = malloc(size * sizeof(ALCint));
+        size = GetIntegerv(device, pname, size, ivals);
+        for(i = 0;i < size;i++)
+            values[i] = ivals[i];
+        free(ivals);
     }
     else /* render device */
     {
-        switch(param)
+        switch(pname)
         {
-            case ALC_MAJOR_VERSION:
-                *data = alcMajorVersion;
-                break;
-
-            case ALC_MINOR_VERSION:
-                *data = alcMinorVersion;
-                break;
-
-            case ALC_EFX_MAJOR_VERSION:
-                *data = alcEFXMajorVersion;
-                break;
-
-            case ALC_EFX_MINOR_VERSION:
-                *data = alcEFXMinorVersion;
-                break;
-
             case ALC_ATTRIBUTES_SIZE:
-                *data = 13;
+                *values = 17;
                 break;
 
             case ALC_ALL_ATTRIBUTES:
-                if(size < 13)
+                if(size < 17)
                     alcSetError(device, ALC_INVALID_VALUE);
                 else
                 {
                     int i = 0;
 
-                    data[i++] = ALC_FREQUENCY;
-                    data[i++] = device->Frequency;
+                    V0(device->Backend,lock)();
+                    values[i++] = ALC_FREQUENCY;
+                    values[i++] = device->Frequency;
 
                     if(device->Type != Loopback)
                     {
-                        data[i++] = ALC_REFRESH;
-                        data[i++] = device->Frequency / device->UpdateSize;
+                        values[i++] = ALC_REFRESH;
+                        values[i++] = device->Frequency / device->UpdateSize;
 
-                        data[i++] = ALC_SYNC;
-                        data[i++] = ALC_FALSE;
+                        values[i++] = ALC_SYNC;
+                        values[i++] = ALC_FALSE;
                     }
                     else
                     {
-                        data[i++] = ALC_FORMAT_CHANNELS_SOFT;
-                        data[i++] = device->FmtChans;
+                        values[i++] = ALC_FORMAT_CHANNELS_SOFT;
+                        values[i++] = device->FmtChans;
 
-                        data[i++] = ALC_FORMAT_TYPE_SOFT;
-                        data[i++] = device->FmtType;
+                        values[i++] = ALC_FORMAT_TYPE_SOFT;
+                        values[i++] = device->FmtType;
                     }
 
-                    data[i++] = ALC_MONO_SOURCES;
-                    data[i++] = device->NumMonoSources;
+                    values[i++] = ALC_MONO_SOURCES;
+                    values[i++] = device->NumMonoSources;
 
-                    data[i++] = ALC_STEREO_SOURCES;
-                    data[i++] = device->NumStereoSources;
+                    values[i++] = ALC_STEREO_SOURCES;
+                    values[i++] = device->NumStereoSources;
 
-                    data[i++] = ALC_MAX_AUXILIARY_SENDS;
-                    data[i++] = device->NumAuxSends;
+                    values[i++] = ALC_MAX_AUXILIARY_SENDS;
+                    values[i++] = device->NumAuxSends;
 
-                    data[i++] = 0;
+                    values[i++] = ALC_HRTF_SOFT;
+                    values[i++] = (device->Hrtf ? ALC_TRUE : ALC_FALSE);
+
+                    values[i++] = ALC_DEVICE_CLOCK_SOFT;
+                    values[i++] = device->ClockBase +
+                                  (device->SamplesDone * DEVICE_CLOCK_RES / device->Frequency);
+
+                    values[i++] = 0;
+                    V0(device->Backend,unlock)();
                 }
                 break;
 
-            case ALC_FREQUENCY:
-                *data = device->Frequency;
-                break;
-
-            case ALC_REFRESH:
-                if(device->Type == Loopback)
-                    alcSetError(device, ALC_INVALID_DEVICE);
-                else
-                    *data = device->Frequency / device->UpdateSize;
-                break;
-
-            case ALC_SYNC:
-                if(device->Type == Loopback)
-                    alcSetError(device, ALC_INVALID_DEVICE);
-                else
-                    *data = ALC_FALSE;
-                break;
-
-            case ALC_FORMAT_CHANNELS_SOFT:
-                if(device->Type != Loopback)
-                    alcSetError(device, ALC_INVALID_DEVICE);
-                else
-                    *data = device->FmtChans;
-                break;
-
-            case ALC_FORMAT_TYPE_SOFT:
-                if(device->Type != Loopback)
-                    alcSetError(device, ALC_INVALID_DEVICE);
-                else
-                    *data = device->FmtType;
-                break;
-
-            case ALC_MONO_SOURCES:
-                *data = device->NumMonoSources;
-                break;
-
-            case ALC_STEREO_SOURCES:
-                *data = device->NumStereoSources;
-                break;
-
-            case ALC_MAX_AUXILIARY_SENDS:
-                *data = device->NumAuxSends;
-                break;
-
-            case ALC_CONNECTED:
-                *data = device->Connected;
+            case ALC_DEVICE_CLOCK_SOFT:
+                V0(device->Backend,lock)();
+                *values = device->ClockBase +
+                          (device->SamplesDone * DEVICE_CLOCK_RES / device->Frequency);
+                V0(device->Backend,unlock)();
                 break;
 
             default:
-                alcSetError(device, ALC_INVALID_ENUM);
+                ivals = malloc(size * sizeof(ALCint));
+                size = GetIntegerv(device, pname, size, ivals);
+                for(i = 0;i < size;i++)
+                    values[i] = ivals[i];
+                free(ivals);
                 break;
         }
     }
@@ -2426,7 +2788,7 @@ ALC_API ALCcontext* ALC_APIENTRY alcCreateContext(ALCdevice *device, const ALCin
         return NULL;
     }
 
-    device->LastError = ALC_NO_ERROR;
+    ATOMIC_STORE(&device->LastError, ALC_NO_ERROR);
 
     if((err=UpdateDeviceParams(device, attrList)) != ALC_NO_ERROR)
     {
@@ -2442,27 +2804,37 @@ ALC_API ALCcontext* ALC_APIENTRY alcCreateContext(ALCdevice *device, const ALCin
         return NULL;
     }
 
-    ALContext = calloc(1, sizeof(ALCcontext)+15+sizeof(ALlistener));
+    ALContext = calloc(1, sizeof(ALCcontext)+sizeof(ALlistener));
     if(ALContext)
     {
-        ALContext->ref = 1;
-        ALContext->Listener = (ALlistener*)(((ALintptrEXT)(ALContext+1)+15)&~15);
+        InitRef(&ALContext->ref, 1);
+        ALContext->Listener = (ALlistener*)ALContext->_listener_mem;
+
+        VECTOR_INIT(ALContext->ActiveAuxSlots);
 
         ALContext->MaxActiveSources = 256;
-        ALContext->ActiveSources = malloc(sizeof(ALContext->ActiveSources[0]) *
-                                          ALContext->MaxActiveSources);
+        ALContext->ActiveSources = calloc(ALContext->MaxActiveSources,
+                                          sizeof(ALContext->ActiveSources[0]));
     }
     if(!ALContext || !ALContext->ActiveSources)
     {
-        if(!device->ContextList)
+        if(!ATOMIC_LOAD(&device->ContextList))
         {
-            ALCdevice_StopPlayback(device);
+            V0(device->Backend,stop)();
             device->Flags &= ~DEVICE_RUNNING;
         }
         UnlockLists();
 
-        free(ALContext);
-        ALContext = NULL;
+        if(ALContext)
+        {
+            free(ALContext->ActiveSources);
+            ALContext->ActiveSources = NULL;
+
+            VECTOR_DEINIT(ALContext->ActiveAuxSlots);
+
+            free(ALContext);
+            ALContext = NULL;
+        }
 
         alcSetError(device, ALC_OUT_OF_MEMORY);
         ALCdevice_DecRef(device);
@@ -2473,9 +2845,12 @@ ALC_API ALCcontext* ALC_APIENTRY alcCreateContext(ALCdevice *device, const ALCin
     ALCdevice_IncRef(device);
     InitContext(ALContext);
 
-    do {
-        ALContext->next = device->ContextList;
-    } while(!CompExchangePtr((XchgPtr*)&device->ContextList, ALContext->next, ALContext));
+    {
+        ALCcontext *head = ATOMIC_LOAD(&device->ContextList);
+        do {
+            ALContext->next = head;
+        } while(!ATOMIC_COMPARE_EXCHANGE_WEAK(ALCcontext*, &device->ContextList, &head, ALContext));
+    }
     UnlockLists();
 
     ALCdevice_DecRef(device);
@@ -2498,9 +2873,9 @@ ALC_API ALCvoid ALC_APIENTRY alcDestroyContext(ALCcontext *context)
     if(Device)
     {
         ReleaseContext(context, Device);
-        if(!Device->ContextList)
+        if(!ATOMIC_LOAD(&Device->ContextList))
         {
-            ALCdevice_StopPlayback(Device);
+            V0(Device->Backend,stop)();
             Device->Flags &= ~DEVICE_RUNNING;
         }
     }
@@ -2514,11 +2889,8 @@ ALC_API ALCvoid ALC_APIENTRY alcDestroyContext(ALCcontext *context)
  */
 ALC_API ALCcontext* ALC_APIENTRY alcGetCurrentContext(void)
 {
-    ALCcontext *Context;
-
-    Context = pthread_getspecific(LocalContext);
-    if(!Context) Context = GlobalContext;
-
+    ALCcontext *Context = altss_get(LocalContext);
+    if(!Context) Context = ATOMIC_LOAD(&GlobalContext);
     return Context;
 }
 
@@ -2528,9 +2900,7 @@ ALC_API ALCcontext* ALC_APIENTRY alcGetCurrentContext(void)
  */
 ALC_API ALCcontext* ALC_APIENTRY alcGetThreadContext(void)
 {
-    ALCcontext *Context;
-    Context = pthread_getspecific(LocalContext);
-    return Context;
+    return altss_get(LocalContext);
 }
 
 
@@ -2548,12 +2918,12 @@ ALC_API ALCboolean ALC_APIENTRY alcMakeContextCurrent(ALCcontext *context)
         return ALC_FALSE;
     }
     /* context's reference count is already incremented */
-    context = ExchangePtr((XchgPtr*)&GlobalContext, context);
+    context = ATOMIC_EXCHANGE(ALCcontext*, &GlobalContext, context);
     if(context) ALCcontext_DecRef(context);
 
-    if((context=pthread_getspecific(LocalContext)) != NULL)
+    if((context=altss_get(LocalContext)) != NULL)
     {
-        pthread_setspecific(LocalContext, NULL);
+        altss_set(LocalContext, NULL);
         ALCcontext_DecRef(context);
     }
 
@@ -2575,8 +2945,8 @@ ALC_API ALCboolean ALC_APIENTRY alcSetThreadContext(ALCcontext *context)
         return ALC_FALSE;
     }
     /* context's reference count is already incremented */
-    old = pthread_getspecific(LocalContext);
-    pthread_setspecific(LocalContext, context);
+    old = altss_get(LocalContext);
+    altss_set(LocalContext, context);
     if(old) ALCcontext_DecRef(old);
 
     return ALC_TRUE;
@@ -2622,11 +2992,9 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALCchar *deviceName)
     }
 
     if(deviceName && (!deviceName[0] || strcasecmp(deviceName, alcDefaultName) == 0 || strcasecmp(deviceName, "openal-soft") == 0))
-    {
         deviceName = NULL;
-    }
-    
-    device = al_calloc(16, sizeof(ALCdevice)+15+sizeof(ALeffectslot));
+
+    device = al_calloc(16, sizeof(ALCdevice)+sizeof(ALeffectslot));
     if(!device)
     {
         alcSetError(NULL, ALC_OUT_OF_MEMORY);
@@ -2634,19 +3002,20 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALCchar *deviceName)
     }
 
     //Validate device
-    device->Funcs = &PlaybackBackend.Funcs;
-    device->ref = 1;
+    InitRef(&device->ref, 1);
     device->Connected = ALC_TRUE;
     device->Type = Playback;
-    al_InitializeCriticalSection(&device->Mutex);
-    device->LastError = ALC_NO_ERROR;
+    ATOMIC_INIT(&device->LastError, ALC_NO_ERROR);
 
     device->Flags = 0;
     device->Bs2b = NULL;
     device->Bs2bLevel = 0;
-    device->DeviceName = NULL;
+    AL_STRING_INIT(device->DeviceName);
 
-    device->ContextList = NULL;
+    ATOMIC_INIT(&device->ContextList, NULL);
+
+    device->ClockBase = 0;
+    device->SamplesDone = 0;
 
     device->MaxNoOfSources = 256;
     device->AuxiliaryEffectSlotMax = 4;
@@ -2655,6 +3024,9 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALCchar *deviceName)
     InitUIntMap(&device->BufferMap, ~0);
     InitUIntMap(&device->EffectMap, ~0);
     InitUIntMap(&device->FilterMap, ~0);
+    InitUIntMap(&device->SfontMap, ~0);
+    InitUIntMap(&device->PresetMap, ~0);
+    InitUIntMap(&device->FontsoundMap, ~0);
 
     //Set output format
     device->FmtChans = DevFmtChannelsDefault;
@@ -2662,6 +3034,22 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALCchar *deviceName)
     device->Frequency = DEFAULT_OUTPUT_RATE;
     device->NumUpdates = 4;
     device->UpdateSize = 1024;
+
+    if(!PlaybackBackend.getFactory)
+        device->Backend = create_backend_wrapper(device, &PlaybackBackend.Funcs,
+                                                 ALCbackend_Playback);
+    else
+    {
+        ALCbackendFactory *factory = PlaybackBackend.getFactory();
+        device->Backend = V(factory,createBackend)(device, ALCbackend_Playback);
+    }
+    if(!device->Backend)
+    {
+        al_free(device);
+        alcSetError(NULL, ALC_OUT_OF_MEMORY);
+        return NULL;
+    }
+
 
     if(ConfigValueStr(NULL, "channels", &fmt))
     {
@@ -2798,10 +3186,20 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALCchar *deviceName)
     device->NumStereoSources = 1;
     device->NumMonoSources = device->MaxNoOfSources - device->NumStereoSources;
 
-    // Find a playback device to open
-    if((err=ALCdevice_OpenPlayback(device, deviceName)) != ALC_NO_ERROR)
+    device->Synth = SynthCreate(device);
+    if(!device->Synth)
     {
-        al_DeleteCriticalSection(&device->Mutex);
+        DELETE_OBJ(device->Backend);
+        al_free(device);
+        alcSetError(NULL, ALC_OUT_OF_MEMORY);
+        return NULL;
+    }
+
+    // Find a playback device to open
+    if((err=V(device->Backend,open)(deviceName)) != ALC_NO_ERROR)
+    {
+        DELETE_OBJ(device->Synth);
+        DELETE_OBJ(device->Backend);
         al_free(device);
         alcSetError(NULL, err);
         return NULL;
@@ -2809,7 +3207,7 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALCchar *deviceName)
 
     if(DefaultEffect.type != AL_EFFECT_NULL)
     {
-        device->DefaultSlot = (ALeffectslot*)(((ALintptrEXT)(device+1)+15)&~15);
+        device->DefaultSlot = (ALeffectslot*)device->_slot_mem;
         if(InitEffectSlot(device->DefaultSlot) != AL_NO_ERROR)
         {
             device->DefaultSlot = NULL;
@@ -2824,11 +3222,14 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALCchar *deviceName)
         }
     }
 
-    do {
-        device->next = DeviceList;
-    } while(!CompExchangePtr((XchgPtr*)&DeviceList, device->next, device));
+    {
+        ALCdevice *head = ATOMIC_LOAD(&DeviceList);
+        do {
+            device->next = head;
+        } while(!ATOMIC_COMPARE_EXCHANGE_WEAK(ALCdevice*, &DeviceList, &head, device));
+    }
 
-    TRACE("Created device %p, \"%s\"\n", device, device->DeviceName);
+    TRACE("Created device %p, \"%s\"\n", device, al_string_get_cstr(device->DeviceName));
     return device;
 }
 
@@ -2836,36 +3237,48 @@ ALC_API ALCdevice* ALC_APIENTRY alcOpenDevice(const ALCchar *deviceName)
  *
  * Closes the given device.
  */
-ALC_API ALCboolean ALC_APIENTRY alcCloseDevice(ALCdevice *Device)
+ALC_API ALCboolean ALC_APIENTRY alcCloseDevice(ALCdevice *device)
 {
-    ALCdevice *volatile*list;
+    ALCdevice *list, *origdev, *nextdev;
     ALCcontext *ctx;
 
     LockLists();
-    list = &DeviceList;
-    while(*list && *list != Device)
-        list = &(*list)->next;
-
-    if(!*list || (*list)->Type == Capture)
+    list = ATOMIC_LOAD(&DeviceList);
+    do {
+        if(list == device)
+            break;
+    } while((list=list->next) != NULL);
+    if(!list || list->Type == Capture)
     {
-        alcSetError(*list, ALC_INVALID_DEVICE);
+        alcSetError(list, ALC_INVALID_DEVICE);
         UnlockLists();
         return ALC_FALSE;
     }
 
-    *list = (*list)->next;
+    origdev = device;
+    nextdev = device->next;
+    if(!ATOMIC_COMPARE_EXCHANGE_STRONG(ALCdevice*, &DeviceList, &origdev, nextdev))
+    {
+        do {
+            list = origdev;
+            origdev = device;
+        } while(!COMPARE_EXCHANGE(&list->next, &origdev, nextdev));
+    }
     UnlockLists();
 
-    while((ctx=Device->ContextList) != NULL)
+    ctx = ATOMIC_LOAD(&device->ContextList);
+    while(ctx != NULL)
     {
+        ALCcontext *next = ctx->next;
         WARN("Releasing context %p\n", ctx);
-        ReleaseContext(ctx, Device);
+        ReleaseContext(ctx, device);
+        ctx = next;
     }
-    if((Device->Flags&DEVICE_RUNNING))
-        ALCdevice_StopPlayback(Device);
-    Device->Flags &= ~DEVICE_RUNNING;
+    if((device->Flags&DEVICE_RUNNING))
+        V0(device->Backend,stop)();
+    device->Flags &= ~DEVICE_RUNNING;
 
-    ALCdevice_DecRef(Device);
+    ALCdevice_DecRef(device);
 
     return ALC_TRUE;
 }
@@ -2904,17 +3317,33 @@ ALC_API ALCdevice* ALC_APIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, 
     }
 
     //Validate device
-    device->Funcs = &CaptureBackend.Funcs;
-    device->ref = 1;
+    InitRef(&device->ref, 1);
     device->Connected = ALC_TRUE;
     device->Type = Capture;
-    al_InitializeCriticalSection(&device->Mutex);
+
+    AL_STRING_INIT(device->DeviceName);
 
     InitUIntMap(&device->BufferMap, ~0);
     InitUIntMap(&device->EffectMap, ~0);
     InitUIntMap(&device->FilterMap, ~0);
+    InitUIntMap(&device->SfontMap, ~0);
+    InitUIntMap(&device->PresetMap, ~0);
+    InitUIntMap(&device->FontsoundMap, ~0);
 
-    device->DeviceName = NULL;
+    if(!CaptureBackend.getFactory)
+        device->Backend = create_backend_wrapper(device, &CaptureBackend.Funcs,
+                                                 ALCbackend_Capture);
+    else
+    {
+        ALCbackendFactory *factory = CaptureBackend.getFactory();
+        device->Backend = V(factory,createBackend)(device, ALCbackend_Capture);
+    }
+    if(!device->Backend)
+    {
+        al_free(device);
+        alcSetError(NULL, ALC_OUT_OF_MEMORY);
+        return NULL;
+    }
 
     device->Flags |= DEVICE_FREQUENCY_REQUEST;
     device->Frequency = frequency;
@@ -2922,7 +3351,6 @@ ALC_API ALCdevice* ALC_APIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, 
     device->Flags |= DEVICE_CHANNELS_REQUEST | DEVICE_SAMPLE_TYPE_REQUEST;
     if(DecomposeDevFormat(format, &device->FmtChans, &device->FmtType) == AL_FALSE)
     {
-        al_DeleteCriticalSection(&device->Mutex);
         al_free(device);
         alcSetError(NULL, ALC_INVALID_ENUM);
         return NULL;
@@ -2931,42 +3359,53 @@ ALC_API ALCdevice* ALC_APIENTRY alcCaptureOpenDevice(const ALCchar *deviceName, 
     device->UpdateSize = samples;
     device->NumUpdates = 1;
 
-    if((err=ALCdevice_OpenCapture(device, deviceName)) != ALC_NO_ERROR)
+    if((err=V(device->Backend,open)(deviceName)) != ALC_NO_ERROR)
     {
-        al_DeleteCriticalSection(&device->Mutex);
         al_free(device);
         alcSetError(NULL, err);
         return NULL;
     }
 
-    do {
-        device->next = DeviceList;
-    } while(!CompExchangePtr((XchgPtr*)&DeviceList, device->next, device));
+    {
+        ALCdevice *head = ATOMIC_LOAD(&DeviceList);
+        do {
+            device->next = head;
+        } while(!ATOMIC_COMPARE_EXCHANGE_WEAK(ALCdevice*, &DeviceList, &head, device));
+    }
 
-    TRACE("Created device %p, \"%s\"\n", device, device->DeviceName);
+    TRACE("Created device %p, \"%s\"\n", device, al_string_get_cstr(device->DeviceName));
     return device;
 }
 
-ALC_API ALCboolean ALC_APIENTRY alcCaptureCloseDevice(ALCdevice *Device)
+ALC_API ALCboolean ALC_APIENTRY alcCaptureCloseDevice(ALCdevice *device)
 {
-    ALCdevice *volatile*list;
+    ALCdevice *list, *next, *nextdev;
 
     LockLists();
-    list = &DeviceList;
-    while(*list && *list != Device)
-        list = &(*list)->next;
-
-    if(!*list || (*list)->Type != Capture)
+    list = ATOMIC_LOAD(&DeviceList);
+    do {
+        if(list == device)
+            break;
+    } while((list=list->next) != NULL);
+    if(!list || list->Type != Capture)
     {
-        alcSetError(*list, ALC_INVALID_DEVICE);
+        alcSetError(list, ALC_INVALID_DEVICE);
         UnlockLists();
         return ALC_FALSE;
     }
 
-    *list = (*list)->next;
+    next = device;
+    nextdev = device->next;
+    if(!ATOMIC_COMPARE_EXCHANGE_STRONG(ALCdevice*, &DeviceList, &next, nextdev))
+    {
+        do {
+            list = next;
+            next = device;
+        } while(!COMPARE_EXCHANGE(&list->next, &next, nextdev));
+    }
     UnlockLists();
 
-    ALCdevice_DecRef(Device);
+    ALCdevice_DecRef(device);
 
     return ALC_TRUE;
 }
@@ -2981,7 +3420,7 @@ ALC_API void ALC_APIENTRY alcCaptureStart(ALCdevice *device)
         if(device->Connected)
         {
             if(!(device->Flags&DEVICE_RUNNING))
-                ALCdevice_StartCapture(device);
+                V0(device->Backend,start)();
             device->Flags |= DEVICE_RUNNING;
         }
         ALCdevice_Unlock(device);
@@ -2998,7 +3437,7 @@ ALC_API void ALC_APIENTRY alcCaptureStop(ALCdevice *device)
     {
         ALCdevice_Lock(device);
         if((device->Flags&DEVICE_RUNNING))
-            ALCdevice_StopCapture(device);
+            V0(device->Backend,stop)();
         device->Flags &= ~DEVICE_RUNNING;
         ALCdevice_Unlock(device);
     }
@@ -3008,15 +3447,15 @@ ALC_API void ALC_APIENTRY alcCaptureStop(ALCdevice *device)
 
 ALC_API void ALC_APIENTRY alcCaptureSamples(ALCdevice *device, ALCvoid *buffer, ALCsizei samples)
 {
-    if(!(device=VerifyDevice(device)) && device->Type != Capture)
+    if(!(device=VerifyDevice(device)) || device->Type != Capture)
         alcSetError(device, ALC_INVALID_DEVICE);
     else
     {
         ALCenum err = ALC_INVALID_VALUE;
 
         ALCdevice_Lock(device);
-        if(samples >= 0 && ALCdevice_AvailableSamples(device) >= (ALCuint)samples)
-            err = ALCdevice_CaptureSamples(device, buffer, samples);
+        if(samples >= 0 && V0(device->Backend,availableSamples)() >= (ALCuint)samples)
+            err = V(device->Backend,captureSamples)(buffer, samples);
         ALCdevice_Unlock(device);
 
         if(err != ALC_NO_ERROR)
@@ -3036,6 +3475,7 @@ ALC_API void ALC_APIENTRY alcCaptureSamples(ALCdevice *device, ALCvoid *buffer, 
  */
 ALC_API ALCdevice* ALC_APIENTRY alcLoopbackOpenDeviceSOFT(const ALCchar *deviceName)
 {
+    ALCbackendFactory *factory;
     ALCdevice *device;
 
     DO_INITCONFIG();
@@ -3055,19 +3495,20 @@ ALC_API ALCdevice* ALC_APIENTRY alcLoopbackOpenDeviceSOFT(const ALCchar *deviceN
     }
 
     //Validate device
-    device->Funcs = &BackendLoopback.Funcs;
-    device->ref = 1;
+    InitRef(&device->ref, 1);
     device->Connected = ALC_TRUE;
     device->Type = Loopback;
-    al_InitializeCriticalSection(&device->Mutex);
-    device->LastError = ALC_NO_ERROR;
+    ATOMIC_INIT(&device->LastError, ALC_NO_ERROR);
 
     device->Flags = 0;
     device->Bs2b = NULL;
     device->Bs2bLevel = 0;
-    device->DeviceName = NULL;
+    AL_STRING_INIT(device->DeviceName);
 
-    device->ContextList = NULL;
+    ATOMIC_INIT(&device->ContextList, NULL);
+
+    device->ClockBase = 0;
+    device->SamplesDone = 0;
 
     device->MaxNoOfSources = 256;
     device->AuxiliaryEffectSlotMax = 4;
@@ -3076,6 +3517,18 @@ ALC_API ALCdevice* ALC_APIENTRY alcLoopbackOpenDeviceSOFT(const ALCchar *deviceN
     InitUIntMap(&device->BufferMap, ~0);
     InitUIntMap(&device->EffectMap, ~0);
     InitUIntMap(&device->FilterMap, ~0);
+    InitUIntMap(&device->SfontMap, ~0);
+    InitUIntMap(&device->PresetMap, ~0);
+    InitUIntMap(&device->FontsoundMap, ~0);
+
+    factory = ALCloopbackFactory_getFactory();
+    device->Backend = V(factory,createBackend)(device, ALCbackend_Loopback);
+    if(!device->Backend)
+    {
+        al_free(device);
+        alcSetError(NULL, ALC_OUT_OF_MEMORY);
+        return NULL;
+    }
 
     //Set output format
     device->NumUpdates = 0;
@@ -3097,11 +3550,24 @@ ALC_API ALCdevice* ALC_APIENTRY alcLoopbackOpenDeviceSOFT(const ALCchar *deviceN
     device->NumStereoSources = 1;
     device->NumMonoSources = device->MaxNoOfSources - device->NumStereoSources;
 
+    device->Synth = SynthCreate(device);
+    if(!device->Synth)
+    {
+        DELETE_OBJ(device->Backend);
+        al_free(device);
+        alcSetError(NULL, ALC_OUT_OF_MEMORY);
+        return NULL;
+    }
+
     // Open the "backend"
-    ALCdevice_OpenPlayback(device, "Loopback");
-    do {
-        device->next = DeviceList;
-    } while(!CompExchangePtr((XchgPtr*)&DeviceList, device->next, device));
+    V(device->Backend,open)("Loopback");
+
+    {
+        ALCdevice *head = ATOMIC_LOAD(&DeviceList);
+        do {
+            device->next = head;
+        } while(!ATOMIC_COMPARE_EXCHANGE_WEAK(ALCdevice*, &DeviceList, &head, device));
+    }
 
     TRACE("Created device %p\n", device);
     return device;
@@ -3136,7 +3602,7 @@ ALC_API ALCboolean ALC_APIENTRY alcIsRenderFormatSupportedSOFT(ALCdevice *device
  * Renders some samples into a buffer, using the format last set by the
  * attributes given to alcCreateContext.
  */
-ALC_API void ALC_APIENTRY alcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples)
+FORCE_ALIGN ALC_API void ALC_APIENTRY alcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffer, ALCsizei samples)
 {
     if(!(device=VerifyDevice(device)) || device->Type != Loopback)
         alcSetError(device, ALC_INVALID_DEVICE);
@@ -3144,5 +3610,62 @@ ALC_API void ALC_APIENTRY alcRenderSamplesSOFT(ALCdevice *device, ALCvoid *buffe
         alcSetError(device, ALC_INVALID_VALUE);
     else
         aluMixData(device, buffer, samples);
+    if(device) ALCdevice_DecRef(device);
+}
+
+
+/************************************************
+ * ALC DSP pause/resume functions
+ ************************************************/
+
+/* alcDevicePauseSOFT
+ *
+ * Pause the DSP to stop audio processing.
+ */
+ALC_API void ALC_APIENTRY alcDevicePauseSOFT(ALCdevice *device)
+{
+    if(!(device=VerifyDevice(device)) || device->Type != Playback)
+        alcSetError(device, ALC_INVALID_DEVICE);
+    else
+    {
+        LockLists();
+        if((device->Flags&DEVICE_RUNNING))
+            V0(device->Backend,stop)();
+        device->Flags &= ~DEVICE_RUNNING;
+        device->Flags |= DEVICE_PAUSED;
+        UnlockLists();
+    }
+    if(device) ALCdevice_DecRef(device);
+}
+
+/* alcDeviceResumeSOFT
+ *
+ * Resume the DSP to restart audio processing.
+ */
+ALC_API void ALC_APIENTRY alcDeviceResumeSOFT(ALCdevice *device)
+{
+    if(!(device=VerifyDevice(device)) || device->Type != Playback)
+        alcSetError(device, ALC_INVALID_DEVICE);
+    else
+    {
+        LockLists();
+        if((device->Flags&DEVICE_PAUSED))
+        {
+            device->Flags &= ~DEVICE_PAUSED;
+            if(ATOMIC_LOAD(&device->ContextList) != NULL)
+            {
+                if(V0(device->Backend,start)() != ALC_FALSE)
+                    device->Flags |= DEVICE_RUNNING;
+                else
+                {
+                    alcSetError(device, ALC_INVALID_DEVICE);
+                    ALCdevice_Lock(device);
+                    aluHandleDisconnect(device);
+                    ALCdevice_Unlock(device);
+                }
+            }
+        }
+        UnlockLists();
+    }
     if(device) ALCdevice_DecRef(device);
 }

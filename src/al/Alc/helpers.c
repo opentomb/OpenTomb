@@ -40,6 +40,19 @@
 #endif
 
 #include "../alMain.h"
+#include "../alu.h"
+#include "../atomic.h"
+#include "../uintmap.h"
+#include "../Alc/vector.h"
+#include "../Alc/alstring.h"
+#include "../Alc/compat.h"
+#include "../threads.h"
+
+
+extern inline ALuint NextPowerOf2(ALuint value);
+extern inline ALint fastf2i(ALfloat f);
+extern inline ALuint fastf2u(ALfloat f);
+
 
 ALuint CPUCapFlags = 0;
 
@@ -50,8 +63,8 @@ void FillCPUCaps(ALuint capfilter)
 
 /* FIXME: We really should get this for all available CPUs in case different
  * CPUs have different caps (is that possible on one machine?). */
-#if defined(HAVE_CPUID_H) && (defined(__i386__) || defined(__x86_64__) || \
-                              defined(_M_IX86) || defined(_M_X64))
+#if defined(HAVE_GCC_GET_CPUID) && (defined(__i386__) || defined(__x86_64__) || \
+                                    defined(_M_IX86) || defined(_M_X64))
     union {
         unsigned int regs[4];
         char str[sizeof(unsigned int[4])];
@@ -78,26 +91,87 @@ void FillCPUCaps(ALuint capfilter)
         if(maxfunc >= 1 &&
            __get_cpuid(1, &cpuinf[0].regs[0], &cpuinf[0].regs[1], &cpuinf[0].regs[2], &cpuinf[0].regs[3]))
         {
-#ifdef bit_SSE
-            if((cpuinf[0].regs[3]&bit_SSE))
+            if((cpuinf[0].regs[3]&(1<<25)))
             {
                 caps |= CPU_CAP_SSE;
-                if((cpuinf[0].regs[3]&bit_SSE2))
+                if((cpuinf[0].regs[3]&(1<<26)))
+                {
                     caps |= CPU_CAP_SSE2;
+                    if((cpuinf[0].regs[2]&(1<<19)))
+                        caps |= CPU_CAP_SSE4_1;
+                }
             }
-#endif
         }
     }
+#elif defined(HAVE_CPUID_INTRINSIC) && (defined(__i386__) || defined(__x86_64__) || \
+                                        defined(_M_IX86) || defined(_M_X64))
+    union {
+        int regs[4];
+        char str[sizeof(int[4])];
+    } cpuinf[3];
+
+    (__cpuid)(cpuinf[0].regs, 0);
+    if(cpuinf[0].regs[0] == 0)
+        ERR("Failed to get CPUID\n");
+    else
+    {
+        unsigned int maxfunc = cpuinf[0].regs[0];
+        unsigned int maxextfunc;
+
+        (__cpuid)(cpuinf[0].regs, 0x80000000);
+        maxextfunc = cpuinf[0].regs[0];
+
+        TRACE("Detected max CPUID function: 0x%x (ext. 0x%x)\n", maxfunc, maxextfunc);
+
+        TRACE("Vendor ID: \"%.4s%.4s%.4s\"\n", cpuinf[0].str+4, cpuinf[0].str+12, cpuinf[0].str+8);
+        if(maxextfunc >= 0x80000004)
+        {
+            (__cpuid)(cpuinf[0].regs, 0x80000002);
+            (__cpuid)(cpuinf[1].regs, 0x80000003);
+            (__cpuid)(cpuinf[2].regs, 0x80000004);
+            TRACE("Name: \"%.16s%.16s%.16s\"\n", cpuinf[0].str, cpuinf[1].str, cpuinf[2].str);
+        }
+
+        if(maxfunc >= 1)
+        {
+            (__cpuid)(cpuinf[0].regs, 1);
+            if((cpuinf[0].regs[3]&(1<<25)))
+            {
+                caps |= CPU_CAP_SSE;
+                if((cpuinf[0].regs[3]&(1<<26)))
+                {
+                    caps |= CPU_CAP_SSE2;
+                    if((cpuinf[0].regs[2]&(1<<19)))
+                        caps |= CPU_CAP_SSE4_1;
+                }
+            }
+        }
+    }
+#else
+    /* Assume support for whatever's supported if we can't check for it */
+#if defined(HAVE_SSE4_1)
+#warning "Assuming SSE 4.1 run-time support!"
+    capfilter |= CPU_CAP_SSE | CPU_CAP_SSE2 | CPU_CAP_SSE4_1;
+#elif defined(HAVE_SSE2)
+#warning "Assuming SSE 2 run-time support!"
+    capfilter |= CPU_CAP_SSE | CPU_CAP_SSE2;
+#elif defined(HAVE_SSE)
+#warning "Assuming SSE run-time support!"
+    capfilter |= CPU_CAP_SSE;
+#endif
 #endif
 #ifdef HAVE_NEON
     /* Assume Neon support if compiled with it */
     caps |= CPU_CAP_NEON;
 #endif
 
-    TRACE("Got caps:%s%s%s%s\n", ((caps&CPU_CAP_SSE)?((capfilter&CPU_CAP_SSE)?" SSE":" (SSE)"):""),
-                                 ((caps&CPU_CAP_SSE)?((capfilter&CPU_CAP_SSE2)?" SSE2":" (SSE2)"):""),
-                                 ((caps&CPU_CAP_NEON)?((capfilter&CPU_CAP_NEON)?" Neon":" (Neon)"):""),
-                                 ((!caps)?" -none-":""));
+    TRACE("Extensions:%s%s%s%s%s\n",
+        ((capfilter&CPU_CAP_SSE)    ? ((caps&CPU_CAP_SSE)    ? " +SSE"    : " -SSE")    : ""),
+        ((capfilter&CPU_CAP_SSE2)   ? ((caps&CPU_CAP_SSE2)   ? " +SSE2"   : " -SSE2")   : ""),
+        ((capfilter&CPU_CAP_SSE4_1) ? ((caps&CPU_CAP_SSE4_1) ? " +SSE4.1" : " -SSE4.1") : ""),
+        ((capfilter&CPU_CAP_NEON)   ? ((caps&CPU_CAP_NEON)   ? " +Neon"   : " -Neon")   : ""),
+        ((!capfilter) ? " -none-" : "")
+    );
     CPUCapFlags = caps & capfilter;
 }
 
@@ -152,12 +226,6 @@ void al_free(void *ptr)
 }
 
 
-#if (defined(HAVE___CONTROL87_2) || defined(HAVE__CONTROLFP)) && (defined(__x86_64__) || defined(_M_X64))
-/* Win64 doesn't allow us to set the precision control. */
-#undef _MCW_PC
-#define _MCW_PC 0
-#endif
-
 void SetMixerFPUMode(FPUCtl *ctl)
 {
 #ifdef HAVE_FENV_H
@@ -186,7 +254,7 @@ void SetMixerFPUMode(FPUCtl *ctl)
 
     int mode;
     __control87_2(0, 0, &ctl->state, NULL);
-    __control87_2(_RC_CHOP|_PC_24, _MCW_RC|_MCW_PC, &mode, NULL);
+    __control87_2(_RC_CHOP, _MCW_RC, &mode, NULL);
 #ifdef HAVE_SSE
     if((CPUCapFlags&CPU_CAP_SSE))
     {
@@ -198,7 +266,7 @@ void SetMixerFPUMode(FPUCtl *ctl)
 #elif defined(HAVE__CONTROLFP)
 
     ctl->state = _controlfp(0, 0);
-    (void)_controlfp(_RC_CHOP|_PC_24, _MCW_RC|_MCW_PC);
+    (void)_controlfp(_RC_CHOP, _MCW_RC);
 #endif
 }
 
@@ -214,7 +282,7 @@ void RestoreFPUMode(const FPUCtl *ctl)
 #elif defined(HAVE___CONTROL87_2)
 
     int mode;
-    __control87_2(ctl->state, _MCW_RC|_MCW_PC, &mode, NULL);
+    __control87_2(ctl->state, _MCW_RC, &mode, NULL);
 #ifdef HAVE_SSE
     if((CPUCapFlags&CPU_CAP_SSE))
         __control87_2(ctl->sse_state, _MCW_RC|_MCW_DN, NULL, &mode);
@@ -222,84 +290,10 @@ void RestoreFPUMode(const FPUCtl *ctl)
 
 #elif defined(HAVE__CONTROLFP)
 
-    _controlfp(ctl->state, _MCW_RC|_MCW_PC);
+    _controlfp(ctl->state, _MCW_RC);
 #endif
 }
 
-
-#include <pthread.h>
-#ifdef HAVE_PTHREAD_NP_H
-#include <pthread_np.h>
-#endif
-#include <sched.h>
-
-void al_InitializeCriticalSection(pthread_mutex_t *cs)
-{
-    pthread_mutexattr_t attrib;
-    int ret;
-
-    ret = pthread_mutexattr_init(&attrib);
-    assert(ret == 0);
-
-    ret = pthread_mutexattr_settype(&attrib, PTHREAD_MUTEX_RECURSIVE);
-#ifdef HAVE_PTHREAD_NP_H
-    if(ret != 0)
-        ret = pthread_mutexattr_setkind_np(&attrib, PTHREAD_MUTEX_RECURSIVE);
-#endif
-    assert(ret == 0);
-    ret = pthread_mutex_init(cs, &attrib);
-    assert(ret == 0);
-
-    pthread_mutexattr_destroy(&attrib);
-}
-void al_DeleteCriticalSection(pthread_mutex_t *cs)
-{
-    int ret;
-    ret = pthread_mutex_destroy(cs);
-    assert(ret == 0);
-}
-void al_EnterCriticalSection(pthread_mutex_t *cs)
-{
-    int ret;
-    ret = pthread_mutex_lock(cs);
-    assert(ret == 0);
-}
-void al_LeaveCriticalSection(pthread_mutex_t *cs)
-{
-    int ret;
-    ret = pthread_mutex_unlock(cs);
-    assert(ret == 0);
-}
-
-/* NOTE: This wrapper isn't quite accurate as it returns an ALuint, as opposed
- * to the expected DWORD. Both are defined as unsigned 32-bit types, however.
- * Additionally, Win32 is supposed to measure the time since Windows started,
- * as opposed to the actual time. */
-ALuint al_timeGetTime(void)
-{
-    struct timeval tv;
-    int ret;
-
-    ret = gettimeofday(&tv, NULL);
-    assert(ret == 0);
-
-    return tv.tv_usec/1000 + tv.tv_sec*1000;
-}
-
-#include <stdlib.h>
-
-void al_Sleep(ALuint t)
-{
-    ALuint seconds = (ALuint)t / 1000;
-    ALuint rest = t - seconds * 1000;
-
-    while(seconds > 0)
-    {
-        usleep (1000000);
-        seconds--;
-    }
-    usleep((unsigned int) (rest * 1000));
-}
 
 void al_print(const char *type, const char *func, const char *fmt, ...)
 {
@@ -313,11 +307,84 @@ void al_print(const char *type, const char *func, const char *fmt, ...)
     fflush(LogFile);
 }
 
+FILE *OpenDataFile(const char *fname, const char *subdir)
+{
+    char buffer[PATH_MAX] = "";
+    const char *str, *next;
+    FILE *f;
+
+    if(fname[0] == '/')
+    {
+        if((f=al_fopen(fname, "rb")) != NULL)
+        {
+            TRACE("Opened %s\n", fname);
+            return f;
+        }
+        WARN("Could not open %s\n", fname);
+        return NULL;
+    }
+
+    if((f=al_fopen(fname, "rb")) != NULL)
+    {
+        TRACE("Opened %s\n", fname);
+        return f;
+    }
+    WARN("Could not open %s\n", fname);
+
+    if((str=getenv("XDG_DATA_HOME")) != NULL && str[0] != '\0')
+        snprintf(buffer, sizeof(buffer), "%s/%s/%s", str, subdir, fname);
+    else if((str=getenv("HOME")) != NULL && str[0] != '\0')
+        snprintf(buffer, sizeof(buffer), "%s/.local/share/%s/%s", str, subdir, fname);
+    if(buffer[0])
+    {
+        if((f=al_fopen(buffer, "rb")) != NULL)
+        {
+            TRACE("Opened %s\n", buffer);
+            return f;
+        }
+        WARN("Could not open %s\n", buffer);
+    }
+
+    if((str=getenv("XDG_DATA_DIRS")) == NULL || str[0] == '\0')
+        str = "/usr/local/share/:/usr/share/";
+
+    next = str;
+    while((str=next) != NULL && str[0] != '\0')
+    {
+        size_t len;
+        next = strchr(str, ':');
+
+        if(!next)
+            len = strlen(str);
+        else
+        {
+            len = next - str;
+            next++;
+        }
+
+        if(len > sizeof(buffer)-1)
+            len = sizeof(buffer)-1;
+        strncpy(buffer, str, len);
+        buffer[len] = '\0';
+        snprintf(buffer+len, sizeof(buffer)-len, "/%s/%s", subdir, fname);
+
+        if((f=al_fopen(buffer, "rb")) != NULL)
+        {
+            TRACE("Opened %s\n", buffer);
+            return f;
+        }
+        WARN("Could not open %s\n", buffer);
+    }
+
+    return NULL;
+}
+
 
 void SetRTPriority(void)
 {
     ALboolean failed = AL_FALSE;
 
+#if defined(HAVE_PTHREAD_SETSCHEDPARAM) && !defined(__OpenBSD__)
     if(RTPrioLevel > 0)
     {
         struct sched_param param;
@@ -326,188 +393,172 @@ void SetRTPriority(void)
         param.sched_priority = sched_get_priority_min(SCHED_RR);
         failed = !!pthread_setschedparam(pthread_self(), SCHED_RR, &param);
     }
+#else
+    /* Real-time priority not available */
+    failed = (RTPrioLevel>0);
+#endif
     if(failed)
         ERR("Failed to set priority level for thread\n");
 }
 
 
-static void Lock(volatile ALenum *l)
+ALboolean vector_reserve(char *ptr, size_t base_size, size_t obj_size, ALsizei obj_count, ALboolean exact)
 {
-    while(ExchangeInt(l, AL_TRUE) == AL_TRUE)
-        sched_yield();
-}
-
-static void Unlock(volatile ALenum *l)
-{
-    ExchangeInt(l, AL_FALSE);
-}
-
-void RWLockInit(RWLock *lock)
-{
-    lock->read_count = 0;
-    lock->write_count = 0;
-    lock->read_lock = AL_FALSE;
-    lock->read_entry_lock = AL_FALSE;
-    lock->write_lock = AL_FALSE;
-}
-
-void ReadLock(RWLock *lock)
-{
-    Lock(&lock->read_entry_lock);
-    Lock(&lock->read_lock);
-    if(IncrementRef(&lock->read_count) == 1)
-        Lock(&lock->write_lock);
-    Unlock(&lock->read_lock);
-    Unlock(&lock->read_entry_lock);
-}
-
-void ReadUnlock(RWLock *lock)
-{
-    if(DecrementRef(&lock->read_count) == 0)
-        Unlock(&lock->write_lock);
-}
-
-void WriteLock(RWLock *lock)
-{
-    if(IncrementRef(&lock->write_count) == 1)
-        Lock(&lock->read_lock);
-    Lock(&lock->write_lock);
-}
-
-void WriteUnlock(RWLock *lock)
-{
-    Unlock(&lock->write_lock);
-    if(DecrementRef(&lock->write_count) == 0)
-        Unlock(&lock->read_lock);
-}
-
-
-void InitUIntMap(UIntMap *map, ALsizei limit)
-{
-    map->array = NULL;
-    map->size = 0;
-    map->maxsize = 0;
-    map->limit = limit;
-    RWLockInit(&map->lock);
-}
-
-void ResetUIntMap(UIntMap *map)
-{
-    WriteLock(&map->lock);
-    free(map->array);
-    map->array = NULL;
-    map->size = 0;
-    map->maxsize = 0;
-    WriteUnlock(&map->lock);
-}
-
-ALenum InsertUIntMapEntry(UIntMap *map, ALuint key, ALvoid *value)
-{
-    ALsizei pos = 0;
-
-    WriteLock(&map->lock);
-    if(map->size > 0)
+    vector_ *vecptr = (vector_*)ptr;
+    if(obj_count < 0)
+        return AL_FALSE;
+    if((*vecptr ? (*vecptr)->Capacity : 0) < obj_count)
     {
-        ALsizei low = 0;
-        ALsizei high = map->size - 1;
-        while(low < high)
+        ALsizei old_size = (*vecptr ? (*vecptr)->Size : 0);
+        void *temp;
+
+        /* Use the next power-of-2 size if we don't need to allocate the exact
+         * amount. This is preferred when regularly increasing the vector since
+         * it means fewer reallocations. Though it means it also wastes some
+         * memory. */
+        if(exact == AL_FALSE)
         {
-            ALsizei mid = low + (high-low)/2;
-            if(map->array[mid].key < key)
-                low = mid + 1;
-            else
-                high = mid;
+            obj_count = NextPowerOf2((ALuint)obj_count);
+            if(obj_count < 0) return AL_FALSE;
         }
-        if(map->array[low].key < key)
-            low++;
-        pos = low;
+
+        /* Need to be explicit with the caller type's base size, because it
+         * could have extra padding before the start of the array (that is,
+         * sizeof(*vector_) may not equal base_size). */
+        temp = realloc(*vecptr, base_size + obj_size*obj_count);
+        if(temp == NULL) return AL_FALSE;
+
+        *vecptr = temp;
+        (*vecptr)->Capacity = obj_count;
+        (*vecptr)->Size = old_size;
     }
-
-    if(pos == map->size || map->array[pos].key != key)
-    {
-        if(map->size == map->limit)
-        {
-            WriteUnlock(&map->lock);
-            return AL_OUT_OF_MEMORY;
-        }
-
-        if(map->size == map->maxsize)
-        {
-            ALvoid *temp = NULL;
-            ALsizei newsize;
-
-            newsize = (map->maxsize ? (map->maxsize<<1) : 4);
-            if(newsize >= map->maxsize)
-                temp = realloc(map->array, newsize*sizeof(map->array[0]));
-            if(!temp)
-            {
-                WriteUnlock(&map->lock);
-                return AL_OUT_OF_MEMORY;
-            }
-            map->array = temp;
-            map->maxsize = newsize;
-        }
-
-        if(pos < map->size)
-            memmove(&map->array[pos+1], &map->array[pos],
-                    (map->size-pos)*sizeof(map->array[0]));
-        map->size++;
-    }
-    map->array[pos].key = key;
-    map->array[pos].value = value;
-    WriteUnlock(&map->lock);
-
-    return AL_NO_ERROR;
+    return AL_TRUE;
 }
 
-ALvoid *RemoveUIntMapKey(UIntMap *map, ALuint key)
+ALboolean vector_resize(char *ptr, size_t base_size, size_t obj_size, ALsizei obj_count)
 {
-    ALvoid *ptr = NULL;
-    WriteLock(&map->lock);
-    if(map->size > 0)
+    vector_ *vecptr = (vector_*)ptr;
+    if(obj_count < 0)
+        return AL_FALSE;
+    if(*vecptr || obj_count > 0)
     {
-        ALsizei low = 0;
-        ALsizei high = map->size - 1;
-        while(low < high)
-        {
-            ALsizei mid = low + (high-low)/2;
-            if(map->array[mid].key < key)
-                low = mid + 1;
-            else
-                high = mid;
-        }
-        if(map->array[low].key == key)
-        {
-            ptr = map->array[low].value;
-            if(low < map->size-1)
-                memmove(&map->array[low], &map->array[low+1],
-                        (map->size-1-low)*sizeof(map->array[0]));
-            map->size--;
-        }
+        if(!vector_reserve((char*)vecptr, base_size, obj_size, obj_count, AL_TRUE))
+            return AL_FALSE;
+        (*vecptr)->Size = obj_count;
     }
-    WriteUnlock(&map->lock);
-    return ptr;
+    return AL_TRUE;
 }
 
-ALvoid *LookupUIntMapKey(UIntMap *map, ALuint key)
+ALboolean vector_insert(char *ptr, size_t base_size, size_t obj_size, void *ins_pos, const void *datstart, const void *datend)
 {
-    ALvoid *ptr = NULL;
-    ReadLock(&map->lock);
-    if(map->size > 0)
+    vector_ *vecptr = (vector_*)ptr;
+    if(datstart != datend)
     {
-        ALsizei low = 0;
-        ALsizei high = map->size - 1;
-        while(low < high)
+        ptrdiff_t ins_elem = (*vecptr ? ((char*)ins_pos - ((char*)(*vecptr) + base_size)) :
+                                        ((char*)ins_pos - (char*)NULL)) /
+                             obj_size;
+        ptrdiff_t numins = ((const char*)datend - (const char*)datstart) / obj_size;
+
+        assert(numins > 0);
+        if(INT_MAX-VECTOR_SIZE(*vecptr) <= numins ||
+           !vector_reserve((char*)vecptr, base_size, obj_size, VECTOR_SIZE(*vecptr)+numins, AL_TRUE))
+            return AL_FALSE;
+
+        /* NOTE: ins_pos may have been invalidated if *vecptr moved. Use ins_elem instead. */
+        if(ins_elem < (*vecptr)->Size)
         {
-            ALsizei mid = low + (high-low)/2;
-            if(map->array[mid].key < key)
-                low = mid + 1;
-            else
-                high = mid;
+            memmove((char*)(*vecptr) + base_size + ((ins_elem+numins)*obj_size),
+                    (char*)(*vecptr) + base_size + ((ins_elem       )*obj_size),
+                    ((*vecptr)->Size-ins_elem)*obj_size);
         }
-        if(map->array[low].key == key)
-            ptr = map->array[low].value;
+        memcpy((char*)(*vecptr) + base_size + (ins_elem*obj_size),
+               datstart, numins*obj_size);
+        (*vecptr)->Size += (ALsizei)numins;
     }
-    ReadUnlock(&map->lock);
-    return ptr;
+    return AL_TRUE;
+}
+
+
+extern inline void al_string_deinit(al_string *str);
+extern inline ALsizei al_string_length(const_al_string str);
+extern inline ALboolean al_string_empty(const_al_string str);
+extern inline const al_string_char_type *al_string_get_cstr(const_al_string str);
+
+void al_string_clear(al_string *str)
+{
+    /* Reserve one more character than the total size of the string. This is to
+     * ensure we have space to add a null terminator in the string data so it
+     * can be used as a C-style string. */
+    VECTOR_RESERVE(*str, 1);
+    VECTOR_RESIZE(*str, 0);
+    *VECTOR_ITER_END(*str) = 0;
+}
+
+static inline int al_string_compare(const al_string_char_type *str1, ALsizei str1len,
+                                    const al_string_char_type *str2, ALsizei str2len)
+{
+    ALsizei complen = mini(str1len, str2len);
+    int ret = memcmp(str1, str2, complen);
+    if(ret == 0)
+    {
+        if(str1len > str2len) return  1;
+        if(str1len < str2len) return -1;
+    }
+    return ret;
+}
+int al_string_cmp(const_al_string str1, const_al_string str2)
+{
+    return al_string_compare(&VECTOR_FRONT(str1), al_string_length(str1),
+                             &VECTOR_FRONT(str2), al_string_length(str2));
+}
+int al_string_cmp_cstr(const_al_string str1, const al_string_char_type *str2)
+{
+    return al_string_compare(&VECTOR_FRONT(str1), al_string_length(str1),
+                             str2, (ALsizei)strlen(str2));
+}
+
+void al_string_copy(al_string *str, const_al_string from)
+{
+    ALsizei len = VECTOR_SIZE(from);
+    VECTOR_RESERVE(*str, len+1);
+    VECTOR_RESIZE(*str, 0);
+    VECTOR_INSERT(*str, VECTOR_ITER_END(*str), VECTOR_ITER_BEGIN(from), VECTOR_ITER_BEGIN(from)+len);
+    *VECTOR_ITER_END(*str) = 0;
+}
+
+void al_string_copy_cstr(al_string *str, const al_string_char_type *from)
+{
+    size_t len = strlen(from);
+    VECTOR_RESERVE(*str, len+1);
+    VECTOR_RESIZE(*str, 0);
+    VECTOR_INSERT(*str, VECTOR_ITER_END(*str), from, from+len);
+    *VECTOR_ITER_END(*str) = 0;
+}
+
+void al_string_append_char(al_string *str, const al_string_char_type c)
+{
+    VECTOR_RESERVE(*str, al_string_length(*str)+2);
+    VECTOR_PUSH_BACK(*str, c);
+    *VECTOR_ITER_END(*str) = 0;
+}
+
+void al_string_append_cstr(al_string *str, const al_string_char_type *from)
+{
+    size_t len = strlen(from);
+    if(len != 0)
+    {
+        VECTOR_RESERVE(*str, al_string_length(*str)+len+1);
+        VECTOR_INSERT(*str, VECTOR_ITER_END(*str), from, from+len);
+        *VECTOR_ITER_END(*str) = 0;
+    }
+}
+
+void al_string_append_range(al_string *str, const al_string_char_type *from, const al_string_char_type *to)
+{
+    if(to != from)
+    {
+        VECTOR_RESERVE(*str, al_string_length(*str)+(to-from)+1);
+        VECTOR_INSERT(*str, VECTOR_ITER_END(*str), from, to);
+        *VECTOR_ITER_END(*str) = 0;
+    }
 }

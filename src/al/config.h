@@ -3,12 +3,8 @@
 #define ALC_API
 
 /* Define to the library version */
-#define ALSOFT_VERSION "1.15.1.TRE"
+#define ALSOFT_VERSION "1.16.0.TRE"
 
-#ifndef M_PI
-#define M_PI        3.14159265358979323846
-#define M_PI_2      1.57079632679489661923
-#endif
 
 /* Define any available alignment declaration */
 #define ALIGN(x)
@@ -36,9 +32,6 @@
 #if 0 && defined(__SSE__)                                                       ///@FIXME: enabling __SSE__ prevents engine to crash!
 /* Define if we have SSE CPU extensions */
 #define HAVE_SSE
-
-/* Define if we have xmmintrin.h */
-#define HAVE_XMMINTRIN_H 1
 #endif
 
 /* Define if we have ARM Neon CPU extensions */
@@ -92,6 +85,8 @@
 
 /* Define if we have __control87_2() */
 //#define HAVE___CONTROL87_2 1
+
+#define HAVE_GCC_GET_CPUID 1
 
 /* Define if we have pthread_setschedparam() */
 #define HAVE_PTHREAD_SETSCHEDPARAM 1

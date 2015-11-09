@@ -30,28 +30,26 @@
 #include "../../alu.h"
 
 
-typedef struct ALchorusStateFactory {
-    DERIVE_FROM_TYPE(ALeffectStateFactory);
-} ALchorusStateFactory;
-
-static ALchorusStateFactory ChorusFactory;
-
+enum ChorusWaveForm {
+    CWF_Triangle = AL_CHORUS_WAVEFORM_TRIANGLE,
+    CWF_Sinusoid = AL_CHORUS_WAVEFORM_SINUSOID
+};
 
 typedef struct ALchorusState {
     DERIVE_FROM_TYPE(ALeffectState);
 
-    ALfloat *SampleBufferLeft;
-    ALfloat *SampleBufferRight;
+    ALfloat *SampleBuffer[2];
     ALuint BufferLength;
-    ALint offset;
-    ALfloat lfo_coeff;
+    ALuint offset;
+    ALuint lfo_range;
+    ALfloat lfo_scale;
     ALint lfo_disp;
 
     /* Gains for left and right sides */
     ALfloat Gain[2][MaxChannels];
 
     /* effect parameters */
-    ALint waveform;
+    enum ChorusWaveForm waveform;
     ALint delay;
     ALfloat depth;
     ALfloat feedback;
@@ -59,14 +57,12 @@ typedef struct ALchorusState {
 
 static ALvoid ALchorusState_Destruct(ALchorusState *state)
 {
-    free(state->SampleBufferLeft);
-    state->SampleBufferLeft = NULL;
-
-    free(state->SampleBufferRight);
-    state->SampleBufferRight = NULL;
+    free(state->SampleBuffer[0]);
+    state->SampleBuffer[0] = NULL;
+    state->SampleBuffer[1] = NULL;
 }
 
-static ALboolean ALchorusState_DeviceUpdate(ALchorusState *state, ALCdevice *Device)
+static ALboolean ALchorusState_deviceUpdate(ALchorusState *state, ALCdevice *Device)
 {
     ALuint maxlen;
     ALuint it;
@@ -78,40 +74,38 @@ static ALboolean ALchorusState_DeviceUpdate(ALchorusState *state, ALCdevice *Dev
     {
         void *temp;
 
-        temp = realloc(state->SampleBufferLeft, maxlen * sizeof(ALfloat));
+        temp = realloc(state->SampleBuffer[0], maxlen * sizeof(ALfloat) * 2);
         if(!temp) return AL_FALSE;
-        state->SampleBufferLeft = temp;
-
-        temp = realloc(state->SampleBufferRight, maxlen * sizeof(ALfloat));
-        if(!temp) return AL_FALSE;
-        state->SampleBufferRight = temp;
+        state->SampleBuffer[0] = temp;
+        state->SampleBuffer[1] = state->SampleBuffer[0] + maxlen;
 
         state->BufferLength = maxlen;
     }
 
     for(it = 0;it < state->BufferLength;it++)
     {
-        state->SampleBufferLeft[it] = 0.0f;
-        state->SampleBufferRight[it] = 0.0f;
+        state->SampleBuffer[0][it] = 0.0f;
+        state->SampleBuffer[1][it] = 0.0f;
     }
 
     return AL_TRUE;
 }
 
-static ALvoid ALchorusState_Update(ALchorusState *state, ALCdevice *Device, const ALeffectslot *Slot)
+static ALvoid ALchorusState_update(ALchorusState *state, ALCdevice *Device, const ALeffectslot *Slot)
 {
     ALfloat frequency = (ALfloat)Device->Frequency;
     ALfloat rate;
     ALint phase;
-    ALuint it;
 
-    for (it = 0; it < MaxChannels; it++)
+    switch(Slot->EffectProps.Chorus.Waveform)
     {
-        state->Gain[0][it] = 0.0f;
-        state->Gain[1][it] = 0.0f;
+        case AL_CHORUS_WAVEFORM_TRIANGLE:
+            state->waveform = CWF_Triangle;
+            break;
+        case AL_CHORUS_WAVEFORM_SINUSOID:
+            state->waveform = CWF_Sinusoid;
+            break;
     }
-
-    state->waveform = Slot->EffectProps.Chorus.Waveform;
     state->depth = Slot->EffectProps.Chorus.Depth;
     state->feedback = Slot->EffectProps.Chorus.Feedback;
     state->delay = fastf2i(Slot->EffectProps.Chorus.Delay * frequency);
@@ -122,112 +116,84 @@ static ALvoid ALchorusState_Update(ALchorusState *state, ALCdevice *Device, cons
 
     phase = Slot->EffectProps.Chorus.Phase;
     rate = Slot->EffectProps.Chorus.Rate;
-
-    /* Calculate LFO coefficient */
-    switch (state->waveform)
+    if(!(rate > 0.0f))
     {
-        case AL_CHORUS_WAVEFORM_TRIANGLE:
-             if(rate == 0.0f)
-                 state->lfo_coeff = 0.0f;
-             else
-                 state->lfo_coeff = 1.0f / (frequency / rate);
-             break;
-        case AL_CHORUS_WAVEFORM_SINUSOID:
-             if(rate == 0.0f)
-                 state->lfo_coeff = 0.0f;
-             else
-                 state->lfo_coeff = M_PI*2.0f / (frequency / rate);
-             break;
-    }
-
-    /* Calculate lfo phase displacement */
-    if(phase == 0 || rate == 0.0f)
+        state->lfo_scale = 0.0f;
+        state->lfo_range = 1;
         state->lfo_disp = 0;
+    }
     else
-        state->lfo_disp = fastf2i(frequency / rate / (360.0f/phase));
+    {
+        /* Calculate LFO coefficient */
+        state->lfo_range = fastf2u(frequency/rate + 0.5f);
+        switch(state->waveform)
+        {
+            case CWF_Triangle:
+                state->lfo_scale = 4.0f / state->lfo_range;
+                break;
+            case CWF_Sinusoid:
+                state->lfo_scale = F_2PI / state->lfo_range;
+                break;
+        }
+
+        /* Calculate lfo phase displacement */
+        state->lfo_disp = fastf2i(state->lfo_range * (phase/360.0f));
+    }
 }
 
-static __inline void Triangle(ALint *delay_left, ALint *delay_right, ALint offset, const ALchorusState *state)
+static inline void Triangle(ALint *delay_left, ALint *delay_right, ALuint offset, const ALchorusState *state)
 {
     ALfloat lfo_value;
 
-    lfo_value = 2.0f - fabsf(2.0f - fmodf(state->lfo_coeff*offset*4.0f, 4.0f));
+    lfo_value = 2.0f - fabsf(2.0f - state->lfo_scale*(offset%state->lfo_range));
     lfo_value *= state->depth * state->delay;
     *delay_left = fastf2i(lfo_value) + state->delay;
 
-    lfo_value = 2.0f - fabsf(2.0f - fmodf(state->lfo_coeff *
-                                          (offset+state->lfo_disp)*4.0f,
-                                          4.0f));
+    offset += state->lfo_disp;
+    lfo_value = 2.0f - fabsf(2.0f - state->lfo_scale*(offset%state->lfo_range));
     lfo_value *= state->depth * state->delay;
     *delay_right = fastf2i(lfo_value) + state->delay;
 }
 
-static __inline void Sinusoid(ALint *delay_left, ALint *delay_right, ALint offset, const ALchorusState *state)
+static inline void Sinusoid(ALint *delay_left, ALint *delay_right, ALuint offset, const ALchorusState *state)
 {
     ALfloat lfo_value;
 
-    lfo_value = 1.0f + sinf(fmodf(state->lfo_coeff*offset, 2.0f*M_PI));
+    lfo_value = 1.0f + sinf(state->lfo_scale*(offset%state->lfo_range));
     lfo_value *= state->depth * state->delay;
     *delay_left = fastf2i(lfo_value) + state->delay;
 
-    lfo_value = 1.0f + sinf(fmodf(state->lfo_coeff*(offset+state->lfo_disp),
-                                  2.0f*M_PI));
+    offset += state->lfo_disp;
+    lfo_value = 1.0f + sinf(state->lfo_scale*(offset%state->lfo_range));
     lfo_value *= state->depth * state->delay;
     *delay_right = fastf2i(lfo_value) + state->delay;
 }
 
-#define DECL_TEMPLATE(func)                                                    \
-static void Process##func(ALchorusState *state, ALuint SamplesToDo,            \
-                          const ALfloat *__restrict__ SamplesIn,                   \
-                          ALfloat (*__restrict__ SamplesOut)[BUFFERSIZE])          \
-{                                                                              \
-    const ALint mask = state->BufferLength-1;                                  \
-    ALint offset = state->offset;                                              \
-    ALuint it, kt;                                                             \
-    ALuint base;                                                               \
-                                                                               \
-    for(base = 0;base < SamplesToDo;)                                          \
-    {                                                                          \
-        ALfloat temps[64][2];                                                  \
-        ALuint td = minu(SamplesToDo-base, 64);                                \
-                                                                               \
-        for(it = 0;it < td;it++,offset++)                                      \
-        {                                                                      \
-            ALint delay_left, delay_right;                                     \
-            (func)(&delay_left, &delay_right, offset, state);                  \
-                                                                               \
-            temps[it][0] = state->SampleBufferLeft[(offset-delay_left)&mask];  \
-            state->SampleBufferLeft[offset&mask] = (temps[it][0] +             \
-                                                    SamplesIn[it+base]) *      \
-                                                   state->feedback;            \
-                                                                               \
-            temps[it][1] = state->SampleBufferRight[(offset-delay_right)&mask];\
-            state->SampleBufferRight[offset&mask] = (temps[it][1] +            \
-                                                     SamplesIn[it+base]) *     \
-                                                    state->feedback;           \
-        }                                                                      \
-                                                                               \
-        for(kt = 0;kt < MaxChannels;kt++)                                      \
-        {                                                                      \
-            ALfloat gain = state->Gain[0][kt];                                 \
-            if(gain > 0.00001f)                                                \
-            {                                                                  \
-                for(it = 0;it < td;it++)                                       \
-                    SamplesOut[kt][it+base] += temps[it][0] * gain;            \
-            }                                                                  \
-                                                                               \
-            gain = state->Gain[1][kt];                                         \
-            if(gain > 0.00001f)                                                \
-            {                                                                  \
-                for(it = 0;it < td;it++)                                       \
-                    SamplesOut[kt][it+base] += temps[it][1] * gain;            \
-            }                                                                  \
-        }                                                                      \
-                                                                               \
-        base += td;                                                            \
-    }                                                                          \
-                                                                               \
-    state->offset = offset;                                                    \
+#define DECL_TEMPLATE(Func)                                                   \
+static void Process##Func(ALchorusState *state, const ALuint SamplesToDo,     \
+  const ALfloat *__restrict__ SamplesIn, ALfloat (*__restrict__ out)[2])              \
+{                                                                             \
+    const ALuint bufmask = state->BufferLength-1;                             \
+    ALfloat *__restrict__ leftbuf = state->SampleBuffer[0];                       \
+    ALfloat *__restrict__ rightbuf = state->SampleBuffer[1];                      \
+    ALuint offset = state->offset;                                            \
+    const ALfloat feedback = state->feedback;                                 \
+    ALuint it;                                                                \
+                                                                              \
+    for(it = 0;it < SamplesToDo;it++)                                         \
+    {                                                                         \
+        ALint delay_left, delay_right;                                        \
+        Func(&delay_left, &delay_right, offset, state);                       \
+                                                                              \
+        out[it][0] = leftbuf[(offset-delay_left)&bufmask];                    \
+        leftbuf[offset&bufmask] = (out[it][0]+SamplesIn[it]) * feedback;      \
+                                                                              \
+        out[it][1] = rightbuf[(offset-delay_right)&bufmask];                  \
+        rightbuf[offset&bufmask] = (out[it][1]+SamplesIn[it]) * feedback;     \
+                                                                              \
+        offset++;                                                             \
+    }                                                                         \
+    state->offset = offset;                                                   \
 }
 
 DECL_TEMPLATE(Triangle)
@@ -235,35 +201,70 @@ DECL_TEMPLATE(Sinusoid)
 
 #undef DECL_TEMPLATE
 
-static ALvoid ALchorusState_Process(ALchorusState *state, ALuint SamplesToDo, const ALfloat *__restrict__ SamplesIn, ALfloat (*__restrict__ SamplesOut)[BUFFERSIZE])
+static ALvoid ALchorusState_process(ALchorusState *state, ALuint SamplesToDo, const ALfloat *__restrict__ SamplesIn, ALfloat (*__restrict__ SamplesOut)[BUFFERSIZE])
 {
-    if(state->waveform == AL_CHORUS_WAVEFORM_TRIANGLE)
-        ProcessTriangle(state, SamplesToDo, SamplesIn, SamplesOut);
-    else if(state->waveform == AL_CHORUS_WAVEFORM_SINUSOID)
-        ProcessSinusoid(state, SamplesToDo, SamplesIn, SamplesOut);
+    ALuint it, kt;
+    ALuint base;
+
+    for(base = 0;base < SamplesToDo;)
+    {
+        ALfloat temps[64][2];
+        ALuint td = minu(SamplesToDo-base, 64);
+
+        switch(state->waveform)
+        {
+            case CWF_Triangle:
+                ProcessTriangle(state, td, SamplesIn+base, temps);
+                break;
+            case CWF_Sinusoid:
+                ProcessSinusoid(state, td, SamplesIn+base, temps);
+                break;
+        }
+
+        for(kt = 0;kt < MaxChannels;kt++)
+        {
+            ALfloat gain = state->Gain[0][kt];
+            if(gain > GAIN_SILENCE_THRESHOLD)
+            {
+                for(it = 0;it < td;it++)
+                    SamplesOut[kt][it+base] += temps[it][0] * gain;
+            }
+
+            gain = state->Gain[1][kt];
+            if(gain > GAIN_SILENCE_THRESHOLD)
+            {
+                for(it = 0;it < td;it++)
+                    SamplesOut[kt][it+base] += temps[it][1] * gain;
+            }
+        }
+
+        base += td;
+    }
 }
 
-static void ALchorusState_Delete(ALchorusState *state)
-{
-    free(state);
-}
+DECLARE_DEFAULT_ALLOCATORS(ALchorusState)
 
 DEFINE_ALEFFECTSTATE_VTABLE(ALchorusState);
 
 
-static ALeffectState *ALchorusStateFactory_create(ALchorusStateFactory *factory)
+typedef struct ALchorusStateFactory {
+    DERIVE_FROM_TYPE(ALeffectStateFactory);
+} ALchorusStateFactory;
+
+static ALeffectState *ALchorusStateFactory_create(ALchorusStateFactory *UNUSED(factory))
 {
     ALchorusState *state;
-    (void)factory;
 
-    state = malloc(sizeof(*state));
+    state = ALchorusState_New(sizeof(*state));
     if(!state) return NULL;
     SET_VTABLE2(ALchorusState, ALeffectState, state);
 
     state->BufferLength = 0;
-    state->SampleBufferLeft = NULL;
-    state->SampleBufferRight = NULL;
+    state->SampleBuffer[0] = NULL;
+    state->SampleBuffer[1] = NULL;
     state->offset = 0;
+    state->lfo_range = 1;
+    state->waveform = CWF_Triangle;
 
     return STATIC_CAST(ALeffectState, state);
 }
@@ -271,20 +272,15 @@ static ALeffectState *ALchorusStateFactory_create(ALchorusStateFactory *factory)
 DEFINE_ALEFFECTSTATEFACTORY_VTABLE(ALchorusStateFactory);
 
 
-static void init_chorus_factory(void)
-{
-    SET_VTABLE2(ALchorusStateFactory, ALeffectStateFactory, &ChorusFactory);
-}
-
 ALeffectStateFactory *ALchorusStateFactory_getFactory(void)
 {
-    static pthread_once_t once = PTHREAD_ONCE_INIT;
-    pthread_once(&once, init_chorus_factory);
+    static ALchorusStateFactory ChorusFactory = { { GET_VTABLE2(ALchorusStateFactory, ALeffectStateFactory) } };
+
     return STATIC_CAST(ALeffectStateFactory, &ChorusFactory);
 }
 
 
-void ALchorus_SetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALint val)
+void ALchorus_setParami(ALeffect *effect, ALCcontext *context, ALenum param, ALint val)
 {
     ALeffectProps *props = &effect->Props;
     switch(param)
@@ -305,11 +301,11 @@ void ALchorus_SetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALi
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALchorus_SetParamiv(ALeffect *effect, ALCcontext *context, ALenum param, const ALint *vals)
+void ALchorus_setParamiv(ALeffect *effect, ALCcontext *context, ALenum param, const ALint *vals)
 {
-    ALchorus_SetParami(effect, context, param, vals[0]);
+    ALchorus_setParami(effect, context, param, vals[0]);
 }
-void ALchorus_SetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat val)
+void ALchorus_setParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat val)
 {
     ALeffectProps *props = &effect->Props;
     switch(param)
@@ -342,12 +338,12 @@ void ALchorus_SetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALf
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALchorus_SetParamfv(ALeffect *effect, ALCcontext *context, ALenum param, const ALfloat *vals)
+void ALchorus_setParamfv(ALeffect *effect, ALCcontext *context, ALenum param, const ALfloat *vals)
 {
-    ALchorus_SetParamf(effect, context, param, vals[0]);
+    ALchorus_setParamf(effect, context, param, vals[0]);
 }
 
-void ALchorus_GetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALint *val)
+void ALchorus_getParami(const ALeffect *effect, ALCcontext *context, ALenum param, ALint *val)
 {
     const ALeffectProps *props = &effect->Props;
     switch(param)
@@ -364,11 +360,11 @@ void ALchorus_GetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALi
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALchorus_GetParamiv(ALeffect *effect, ALCcontext *context, ALenum param, ALint *vals)
+void ALchorus_getParamiv(const ALeffect *effect, ALCcontext *context, ALenum param, ALint *vals)
 {
-    ALchorus_GetParami(effect, context, param, vals);
+    ALchorus_getParami(effect, context, param, vals);
 }
-void ALchorus_GetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *val)
+void ALchorus_getParamf(const ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *val)
 {
     const ALeffectProps *props = &effect->Props;
     switch(param)
@@ -393,9 +389,9 @@ void ALchorus_GetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALf
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALchorus_GetParamfv(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *vals)
+void ALchorus_getParamfv(const ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *vals)
 {
-    ALchorus_GetParamf(effect, context, param, vals);
+    ALchorus_getParamf(effect, context, param, vals);
 }
 
 DEFINE_ALEFFECT_VTABLE(ALchorus);

@@ -30,13 +30,6 @@
 #include "../../alu.h"
 
 
-typedef struct ALechoStateFactory {
-    DERIVE_FROM_TYPE(ALeffectStateFactory);
-} ALechoStateFactory;
-
-static ALechoStateFactory EchoFactory;
-
-
 typedef struct ALechoState {
     DERIVE_FROM_TYPE(ALeffectState);
 
@@ -63,7 +56,7 @@ static ALvoid ALechoState_Destruct(ALechoState *state)
     state->SampleBuffer = NULL;
 }
 
-static ALboolean ALechoState_DeviceUpdate(ALechoState *state, ALCdevice *Device)
+static ALboolean ALechoState_deviceUpdate(ALechoState *state, ALCdevice *Device)
 {
     ALuint maxlen, i;
 
@@ -78,8 +71,7 @@ static ALboolean ALechoState_DeviceUpdate(ALechoState *state, ALCdevice *Device)
         void *temp;
 
         temp = realloc(state->SampleBuffer, maxlen * sizeof(ALfloat));
-        if(!temp)
-            return AL_FALSE;
+        if(!temp) return AL_FALSE;
         state->SampleBuffer = temp;
         state->BufferLength = maxlen;
     }
@@ -89,12 +81,11 @@ static ALboolean ALechoState_DeviceUpdate(ALechoState *state, ALCdevice *Device)
     return AL_TRUE;
 }
 
-static ALvoid ALechoState_Update(ALechoState *state, ALCdevice *Device, const ALeffectslot *Slot)
+static ALvoid ALechoState_update(ALechoState *state, ALCdevice *Device, const ALeffectslot *Slot)
 {
     ALuint frequency = Device->Frequency;
     ALfloat lrpan, gain;
     ALfloat dirGain;
-    ALuint i;
 
     state->Tap[0].delay = fastf2u(Slot->EffectProps.Echo.Delay * frequency) + 1;
     state->Tap[1].delay = fastf2u(Slot->EffectProps.Echo.LRDelay * frequency);
@@ -106,25 +97,19 @@ static ALvoid ALechoState_Update(ALechoState *state, ALCdevice *Device, const AL
 
     ALfilterState_setParams(&state->Filter, ALfilterType_HighShelf,
                             1.0f - Slot->EffectProps.Echo.Damping,
-                            (ALfloat)LOWPASSFREQREF/frequency, 0.0f);
+                            LOWPASSFREQREF/frequency, 0.0f);
 
     gain = Slot->Gain;
-    for(i = 0;i < MaxChannels;i++)
-    {
-        state->Gain[0][i] = 0.0f;
-        state->Gain[1][i] = 0.0f;
-    }
-
     dirGain = fabsf(lrpan);
 
     /* First tap panning */
-    ComputeAngleGains(Device, atan2f(-lrpan, 0.0f), (1.0f-dirGain)*M_PI, gain, state->Gain[0]);
+    ComputeAngleGains(Device, atan2f(-lrpan, 0.0f), (1.0f-dirGain)*F_PI, gain, state->Gain[0]);
 
     /* Second tap panning */
-    ComputeAngleGains(Device, atan2f(+lrpan, 0.0f), (1.0f-dirGain)*M_PI, gain, state->Gain[1]);
+    ComputeAngleGains(Device, atan2f(+lrpan, 0.0f), (1.0f-dirGain)*F_PI, gain, state->Gain[1]);
 }
 
-static ALvoid ALechoState_Process(ALechoState *state, ALuint SamplesToDo, const ALfloat *__restrict__ SamplesIn, ALfloat (*__restrict__ SamplesOut)[BUFFERSIZE])
+static ALvoid ALechoState_process(ALechoState *state, ALuint SamplesToDo, const ALfloat *__restrict__ SamplesIn, ALfloat (*__restrict__ SamplesOut)[BUFFERSIZE])
 {
     const ALuint mask = state->BufferLength-1;
     const ALuint tap1 = state->Tap[0].delay;
@@ -148,21 +133,22 @@ static ALvoid ALechoState_Process(ALechoState *state, ALuint SamplesToDo, const 
 
             // Apply damping and feedback gain to the second tap, and mix in the
             // new sample
-            smp = ALfilterState_processSingle(&state->Filter, temps[i][1]+SamplesIn[i]);
+            smp = ALfilterState_processSingle(&state->Filter, temps[i][1]+SamplesIn[i+base]);
             state->SampleBuffer[offset&mask] = smp * state->FeedGain;
+            offset++;
         }
 
         for(k = 0;k < MaxChannels;k++)
         {
             ALfloat gain = state->Gain[0][k];
-            if(gain > 0.00001f)
+            if(gain > GAIN_SILENCE_THRESHOLD)
             {
                 for(i = 0;i < td;i++)
                     SamplesOut[k][i+base] += temps[i][0] * gain;
             }
 
             gain = state->Gain[1][k];
-            if(gain > 0.00001f)
+            if(gain > GAIN_SILENCE_THRESHOLD)
             {
                 for(i = 0;i < td;i++)
                     SamplesOut[k][i+base] += temps[i][1] * gain;
@@ -175,20 +161,20 @@ static ALvoid ALechoState_Process(ALechoState *state, ALuint SamplesToDo, const 
     state->Offset = offset;
 }
 
-static void ALechoState_Delete(ALechoState *state)
-{
-    free(state);
-}
+DECLARE_DEFAULT_ALLOCATORS(ALechoState)
 
 DEFINE_ALEFFECTSTATE_VTABLE(ALechoState);
 
 
-ALeffectState *ALechoStateFactory_create(ALechoStateFactory *factory)
+typedef struct ALechoStateFactory {
+    DERIVE_FROM_TYPE(ALeffectStateFactory);
+} ALechoStateFactory;
+
+ALeffectState *ALechoStateFactory_create(ALechoStateFactory *UNUSED(factory))
 {
     ALechoState *state;
-    (void)factory;
 
-    state = malloc(sizeof(*state));
+    state = ALechoState_New(sizeof(*state));
     if(!state) return NULL;
     SET_VTABLE2(ALechoState, ALeffectState, state);
 
@@ -206,27 +192,21 @@ ALeffectState *ALechoStateFactory_create(ALechoStateFactory *factory)
 
 DEFINE_ALEFFECTSTATEFACTORY_VTABLE(ALechoStateFactory);
 
-
-static void init_echo_factory(void)
-{
-    SET_VTABLE2(ALechoStateFactory, ALeffectStateFactory, &EchoFactory);
-}
-
 ALeffectStateFactory *ALechoStateFactory_getFactory(void)
 {
-    static pthread_once_t once = PTHREAD_ONCE_INIT;
-    pthread_once(&once, init_echo_factory);
+    static ALechoStateFactory EchoFactory = { { GET_VTABLE2(ALechoStateFactory, ALeffectStateFactory) } };
+
     return STATIC_CAST(ALeffectStateFactory, &EchoFactory);
 }
 
 
-void ALecho_SetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALint val)
-{ SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM); (void)effect;(void)param;(void)val; }
-void ALecho_SetParamiv(ALeffect *effect, ALCcontext *context, ALenum param, const ALint *vals)
+void ALecho_setParami(ALeffect *UNUSED(effect), ALCcontext *context, ALenum UNUSED(param), ALint UNUSED(val))
+{ SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM); }
+void ALecho_setParamiv(ALeffect *effect, ALCcontext *context, ALenum param, const ALint *vals)
 {
-    ALecho_SetParami(effect, context, param, vals[0]);
+    ALecho_setParami(effect, context, param, vals[0]);
 }
-void ALecho_SetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat val)
+void ALecho_setParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat val)
 {
     ALeffectProps *props = &effect->Props;
     switch(param)
@@ -265,18 +245,18 @@ void ALecho_SetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALflo
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALecho_SetParamfv(ALeffect *effect, ALCcontext *context, ALenum param, const ALfloat *vals)
+void ALecho_setParamfv(ALeffect *effect, ALCcontext *context, ALenum param, const ALfloat *vals)
 {
-    ALecho_SetParamf(effect, context, param, vals[0]);
+    ALecho_setParamf(effect, context, param, vals[0]);
 }
 
-void ALecho_GetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALint *val)
-{ SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM); (void)effect;(void)param;(void)val; }
-void ALecho_GetParamiv(ALeffect *effect, ALCcontext *context, ALenum param, ALint *vals)
+void ALecho_getParami(const ALeffect *UNUSED(effect), ALCcontext *context, ALenum UNUSED(param), ALint *UNUSED(val))
+{ SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM); }
+void ALecho_getParamiv(const ALeffect *effect, ALCcontext *context, ALenum param, ALint *vals)
 {
-    ALecho_GetParami(effect, context, param, vals);
+    ALecho_getParami(effect, context, param, vals);
 }
-void ALecho_GetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *val)
+void ALecho_getParamf(const ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *val)
 {
     const ALeffectProps *props = &effect->Props;
     switch(param)
@@ -305,9 +285,9 @@ void ALecho_GetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALflo
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALecho_GetParamfv(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *vals)
+void ALecho_getParamfv(const ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *vals)
 {
-    ALecho_GetParamf(effect, context, param, vals);
+    ALecho_getParamf(effect, context, param, vals);
 }
 
 DEFINE_ALEFFECT_VTABLE(ALecho);

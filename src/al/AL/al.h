@@ -6,14 +6,11 @@ extern "C" {
 #endif
 
 #ifndef AL_API
-  #define AL_API
+#define AL_API
 #endif
 
-#if defined(_WIN32)
- #define AL_APIENTRY __cdecl
-#else
- #define AL_APIENTRY
-#endif
+//#define AL_APIENTRY __cdecl
+#define AL_APIENTRY
 
 
 /** Deprecated macro. */

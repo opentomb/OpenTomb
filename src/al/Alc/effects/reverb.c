@@ -25,17 +25,11 @@
 #include <math.h>
 
 #include "../../alMain.h"
-#include "../../alFilter.h"
-#include "../../alEffect.h"
-#include "../../alAuxEffectSlot.h"
-#include "../../alError.h"
 #include "../../alu.h"
-
-typedef struct ALreverbStateFactory {
-    DERIVE_FROM_TYPE(ALeffectStateFactory);
-} ALreverbStateFactory;
-
-static ALreverbStateFactory ReverbFactory;
+#include "../../alAuxEffectSlot.h"
+#include "../../alEffect.h"
+#include "../../alFilter.h"
+#include "../../alError.h"
 
 
 typedef struct DelayLine
@@ -56,8 +50,9 @@ typedef struct ALreverbState {
     ALfloat  *SampleBuffer;
     ALuint    TotalSamples;
 
-    // Master effect low-pass filter
+    // Master effect filters
     ALfilterState LpFilter;
+    ALfilterState HpFilter; // EAX only
 
     struct {
         // Modulator delay line.
@@ -229,24 +224,24 @@ static const ALfloat LATE_LINE_MULTIPLIER = 4.0f;
 
 
 // Basic delay line input/output routines.
-static __inline ALfloat DelayLineOut(DelayLine *Delay, ALuint offset)
+static inline ALfloat DelayLineOut(DelayLine *Delay, ALuint offset)
 {
     return Delay->Line[offset&Delay->Mask];
 }
 
-static __inline ALvoid DelayLineIn(DelayLine *Delay, ALuint offset, ALfloat in)
+static inline ALvoid DelayLineIn(DelayLine *Delay, ALuint offset, ALfloat in)
 {
     Delay->Line[offset&Delay->Mask] = in;
 }
 
 // Attenuated delay line output routine.
-static __inline ALfloat AttenuatedDelayLineOut(DelayLine *Delay, ALuint offset, ALfloat coeff)
+static inline ALfloat AttenuatedDelayLineOut(DelayLine *Delay, ALuint offset, ALfloat coeff)
 {
     return coeff * Delay->Line[offset&Delay->Mask];
 }
 
 // Basic attenuated all-pass input/output routine.
-static __inline ALfloat AllpassInOut(DelayLine *Delay, ALuint outOffset, ALuint inOffset, ALfloat in, ALfloat feedCoeff, ALfloat coeff)
+static inline ALfloat AllpassInOut(DelayLine *Delay, ALuint outOffset, ALuint inOffset, ALfloat in, ALfloat feedCoeff, ALfloat coeff)
 {
     ALfloat out, feed;
 
@@ -262,7 +257,7 @@ static __inline ALfloat AllpassInOut(DelayLine *Delay, ALuint outOffset, ALuint 
 
 // Given an input sample, this function produces modulation for the late
 // reverb.
-static __inline ALfloat EAXModulation(ALreverbState *State, ALfloat in)
+static inline ALfloat EAXModulation(ALreverbState *State, ALfloat in)
 {
     ALfloat sinus, frac;
     ALuint offset;
@@ -271,7 +266,7 @@ static __inline ALfloat EAXModulation(ALreverbState *State, ALfloat in)
     // Calculate the sinus rythm (dependent on modulation time and the
     // sampling rate).  The center of the sinus is moved to reduce the delay
     // of the effect when the time or depth are low.
-    sinus = 1.0f - cosf(M_PI*2.0f * State->Mod.Index / State->Mod.Range);
+    sinus = 1.0f - cosf(F_2PI * State->Mod.Index / State->Mod.Range);
 
     // The depth determines the range over which to read the input samples
     // from, so it must be filtered to reduce the distortion caused by even
@@ -299,7 +294,7 @@ static __inline ALfloat EAXModulation(ALreverbState *State, ALfloat in)
 }
 
 // Delay line output routine for early reflections.
-static __inline ALfloat EarlyDelayLineOut(ALreverbState *State, ALuint index)
+static inline ALfloat EarlyDelayLineOut(ALreverbState *State, ALuint index)
 {
     return AttenuatedDelayLineOut(&State->Early.Delay[index],
                                   State->Offset - State->Early.Offset[index],
@@ -308,7 +303,7 @@ static __inline ALfloat EarlyDelayLineOut(ALreverbState *State, ALuint index)
 
 // Given an input sample, this function produces four-channel output for the
 // early reflections.
-static __inline ALvoid EarlyReflection(ALreverbState *State, ALfloat in, ALfloat *__restrict__ out)
+static inline ALvoid EarlyReflection(ALreverbState *State, ALfloat in, ALfloat *__restrict__ out)
 {
     ALfloat d[4], v, f[4];
 
@@ -353,7 +348,7 @@ static __inline ALvoid EarlyReflection(ALreverbState *State, ALfloat in, ALfloat
 }
 
 // All-pass input/output routine for late reverb.
-static __inline ALfloat LateAllPassInOut(ALreverbState *State, ALuint index, ALfloat in)
+static inline ALfloat LateAllPassInOut(ALreverbState *State, ALuint index, ALfloat in)
 {
     return AllpassInOut(&State->Late.ApDelay[index],
                         State->Offset - State->Late.ApOffset[index],
@@ -362,7 +357,7 @@ static __inline ALfloat LateAllPassInOut(ALreverbState *State, ALuint index, ALf
 }
 
 // Delay line output routine for late reverb.
-static __inline ALfloat LateDelayLineOut(ALreverbState *State, ALuint index)
+static inline ALfloat LateDelayLineOut(ALreverbState *State, ALuint index)
 {
     return AttenuatedDelayLineOut(&State->Late.Delay[index],
                                   State->Offset - State->Late.Offset[index],
@@ -370,7 +365,7 @@ static __inline ALfloat LateDelayLineOut(ALreverbState *State, ALuint index)
 }
 
 // Low-pass filter input/output routine for late reverb.
-static __inline ALfloat LateLowPassInOut(ALreverbState *State, ALuint index, ALfloat in)
+static inline ALfloat LateLowPassInOut(ALreverbState *State, ALuint index, ALfloat in)
 {
     in = lerp(in, State->Late.LpSample[index], State->Late.LpCoeff[index]);
     State->Late.LpSample[index] = in;
@@ -379,7 +374,7 @@ static __inline ALfloat LateLowPassInOut(ALreverbState *State, ALuint index, ALf
 
 // Given four decorrelated input samples, this function produces four-channel
 // output for the late reverb.
-static __inline ALvoid LateReverb(ALreverbState *State, const ALfloat *__restrict__ in, ALfloat *__restrict__ out)
+static inline ALvoid LateReverb(ALreverbState *State, const ALfloat *__restrict__ in, ALfloat *__restrict__ out)
 {
     ALfloat d[4], f[4];
 
@@ -450,7 +445,7 @@ static __inline ALvoid LateReverb(ALreverbState *State, const ALfloat *__restric
 
 // Given an input sample, this function mixes echo into the four-channel late
 // reverb.
-static __inline ALvoid EAXEcho(ALreverbState *State, ALfloat in, ALfloat *__restrict__ late)
+static inline ALvoid EAXEcho(ALreverbState *State, ALfloat in, ALfloat *__restrict__ late)
 {
     ALfloat out, feed;
 
@@ -484,11 +479,11 @@ static __inline ALvoid EAXEcho(ALreverbState *State, ALfloat in, ALfloat *__rest
 
 // Perform the non-EAX reverb pass on a given input sample, resulting in
 // four-channel output.
-static __inline ALvoid VerbPass(ALreverbState *State, ALfloat in, ALfloat *__restrict__ out)
+static inline ALvoid VerbPass(ALreverbState *State, ALfloat in, ALfloat *__restrict__ out)
 {
     ALfloat feed, late[4], taps[4];
 
-    // Low-pass filter the incoming sample.
+    // Filter the incoming sample.
     in = ALfilterState_processSingle(&State->LpFilter, in);
 
     // Feed the initial delay line.
@@ -523,12 +518,13 @@ static __inline ALvoid VerbPass(ALreverbState *State, ALfloat in, ALfloat *__res
 
 // Perform the EAX reverb pass on a given input sample, resulting in four-
 // channel output.
-static __inline ALvoid EAXVerbPass(ALreverbState *State, ALfloat in, ALfloat *__restrict__ early, ALfloat *__restrict__ late)
+static inline ALvoid EAXVerbPass(ALreverbState *State, ALfloat in, ALfloat *__restrict__ early, ALfloat *__restrict__ late)
 {
     ALfloat feed, taps[4];
 
     // Low-pass filter the incoming sample.
     in = ALfilterState_processSingle(&State->LpFilter, in);
+    in = ALfilterState_processSingle(&State->HpFilter, in);
 
     // Perform any modulation on the input.
     in = EAXModulation(State, in);
@@ -560,7 +556,7 @@ static __inline ALvoid EAXVerbPass(ALreverbState *State, ALfloat in, ALfloat *__
     State->Offset++;
 }
 
-static ALvoid ALreverbState_ProcessStandard(ALreverbState *State, ALuint SamplesToDo, const ALfloat *__restrict__ SamplesIn, ALfloat (*__restrict__ SamplesOut)[BUFFERSIZE])
+static ALvoid ALreverbState_processStandard(ALreverbState *State, ALuint SamplesToDo, const ALfloat *__restrict__ SamplesIn, ALfloat (*__restrict__ SamplesOut)[BUFFERSIZE])
 {
     ALfloat (*__restrict__ out)[4] = State->ReverbSamples;
     ALuint index, c;
@@ -572,15 +568,15 @@ static ALvoid ALreverbState_ProcessStandard(ALreverbState *State, ALuint Samples
     for(c = 0;c < MaxChannels;c++)
     {
         ALfloat gain = State->Gain[c];
-        if(gain > 0.00001f)
-        {
-            for(index = 0;index < SamplesToDo;index++)
-                SamplesOut[c][index] += gain * out[index][c&3];
-        }
+        if(!(gain > GAIN_SILENCE_THRESHOLD))
+            continue;
+
+        for(index = 0;index < SamplesToDo;index++)
+            SamplesOut[c][index] += gain * out[index][c&3];
     }
 }
 
-static ALvoid ALreverbState_ProcessEax(ALreverbState *State, ALuint SamplesToDo, const ALfloat *__restrict__ SamplesIn, ALfloat (*__restrict__ SamplesOut)[BUFFERSIZE])
+static ALvoid ALreverbState_processEax(ALreverbState *State, ALuint SamplesToDo, const ALfloat *__restrict__ SamplesIn, ALfloat (*__restrict__ SamplesOut)[BUFFERSIZE])
 {
     ALfloat (*__restrict__ early)[4] = State->EarlySamples;
     ALfloat (*__restrict__ late)[4] = State->ReverbSamples;
@@ -592,15 +588,16 @@ static ALvoid ALreverbState_ProcessEax(ALreverbState *State, ALuint SamplesToDo,
 
     for(c = 0;c < MaxChannels;c++)
     {
-        ALfloat earlyGain = State->Early.PanGain[c];
-        ALfloat lateGain = State->Late.PanGain[c];
+        ALfloat earlyGain, lateGain;
 
-        if(earlyGain > 0.00001f)
+        earlyGain = State->Early.PanGain[c];
+        if(earlyGain > GAIN_SILENCE_THRESHOLD)
         {
             for(index = 0;index < SamplesToDo;index++)
                 SamplesOut[c][index] += earlyGain*early[index][c&3];
         }
-        if(lateGain > 0.00001f)
+        lateGain = State->Late.PanGain[c];
+        if(lateGain > GAIN_SILENCE_THRESHOLD)
         {
             for(index = 0;index < SamplesToDo;index++)
                 SamplesOut[c][index] += lateGain*late[index][c&3];
@@ -608,17 +605,17 @@ static ALvoid ALreverbState_ProcessEax(ALreverbState *State, ALuint SamplesToDo,
     }
 }
 
-static ALvoid ALreverbState_Process(ALreverbState *State, ALuint SamplesToDo, const ALfloat *__restrict__ SamplesIn, ALfloat (*__restrict__ SamplesOut)[BUFFERSIZE])
+static ALvoid ALreverbState_process(ALreverbState *State, ALuint SamplesToDo, const ALfloat *__restrict__ SamplesIn, ALfloat (*__restrict__ SamplesOut)[BUFFERSIZE])
 {
     if(State->IsEax)
-        ALreverbState_ProcessEax(State, SamplesToDo, SamplesIn, SamplesOut);
+        ALreverbState_processEax(State, SamplesToDo, SamplesIn, SamplesOut);
     else
-        ALreverbState_ProcessStandard(State, SamplesToDo, SamplesIn, SamplesOut);
+        ALreverbState_processStandard(State, SamplesToDo, SamplesIn, SamplesOut);
 }
 
 // Given the allocated sample buffer, this function updates each delay line
 // offset.
-static __inline ALvoid RealizeLineOffset(ALfloat *sampleBuffer, DelayLine *Delay)
+static inline ALvoid RealizeLineOffset(ALfloat *sampleBuffer, DelayLine *Delay)
 {
     Delay->Line = &sampleBuffer[(ALintptrEXT)Delay->Line];
 }
@@ -730,7 +727,7 @@ static ALboolean AllocLines(ALuint frequency, ALreverbState *State)
     return AL_TRUE;
 }
 
-static ALboolean ALreverbState_DeviceUpdate(ALreverbState *State, ALCdevice *Device)
+static ALboolean ALreverbState_deviceUpdate(ALreverbState *State, ALCdevice *Device)
 {
     ALuint frequency = Device->Frequency, index;
 
@@ -764,28 +761,21 @@ static ALboolean ALreverbState_DeviceUpdate(ALreverbState *State, ALCdevice *Dev
 
 // Calculate a decay coefficient given the length of each cycle and the time
 // until the decay reaches -60 dB.
-static __inline ALfloat CalcDecayCoeff(ALfloat length, ALfloat decayTime)
+static inline ALfloat CalcDecayCoeff(ALfloat length, ALfloat decayTime)
 {
     return powf(0.001f/*-60 dB*/, length/decayTime);
 }
 
 // Calculate a decay length from a coefficient and the time until the decay
 // reaches -60 dB.
-static __inline ALfloat CalcDecayLength(ALfloat coeff, ALfloat decayTime)
+static inline ALfloat CalcDecayLength(ALfloat coeff, ALfloat decayTime)
 {
     return log10f(coeff) * decayTime / log10f(0.001f)/*-60 dB*/;
 }
 
-// Calculate the high frequency parameter for the I3DL2 coefficient
-// calculation.
-static __inline ALfloat CalcI3DL2HFreq(ALfloat hfRef, ALuint frequency)
-{
-    return cosf(M_PI*2.0f * hfRef / frequency);
-}
-
 // Calculate an attenuation to be applied to the input of any echo models to
 // compensate for modal density and decay time.
-static __inline ALfloat CalcDensityGain(ALfloat a)
+static inline ALfloat CalcDensityGain(ALfloat a)
 {
     /* The energy of a signal can be obtained by finding the area under the
      * squared signal.  This takes the form of Sum(x_n^2), where x is the
@@ -804,7 +794,7 @@ static __inline ALfloat CalcDensityGain(ALfloat a)
 }
 
 // Calculate the mixing matrix coefficients given a diffusion factor.
-static __inline ALvoid CalcMatrixCoeffs(ALfloat diffusion, ALfloat *x, ALfloat *y)
+static inline ALvoid CalcMatrixCoeffs(ALfloat diffusion, ALfloat *x, ALfloat *y)
 {
     ALfloat n, t;
 
@@ -839,7 +829,7 @@ static ALfloat CalcLimitedHfRatio(ALfloat hfRatio, ALfloat airAbsorptionGainHF, 
 
 // Calculate the coefficient for a HF (and eventually LF) decay damping
 // filter.
-static __inline ALfloat CalcDampingCoeff(ALfloat hfRatio, ALfloat length, ALfloat decayTime, ALfloat decayCoeff, ALfloat cw)
+static inline ALfloat CalcDampingCoeff(ALfloat hfRatio, ALfloat length, ALfloat decayTime, ALfloat decayCoeff, ALfloat cw)
 {
     ALfloat coeff, g;
 
@@ -854,7 +844,14 @@ static __inline ALfloat CalcDampingCoeff(ALfloat hfRatio, ALfloat length, ALfloa
 
         // Damping is done with a 1-pole filter, so g needs to be squared.
         g *= g;
-        coeff = lpCoeffCalc(g, cw);
+        if(g < 0.9999f) /* 1-epsilon */
+        {
+            /* Be careful with gains < 0.001, as that causes the coefficient
+             * head towards 1, which will flatten the signal. */
+            g = maxf(g, 0.001f);
+            coeff = (1 - g*cw - sqrtf(2*g*(1-cw) - g*g*(1 - cw*cw))) /
+                    (1 - g);
+        }
 
         // Very low decay times will produce minimal output, so apply an
         // upper bound to the coefficient.
@@ -1041,7 +1038,6 @@ static ALvoid Update3DPanning(const ALCdevice *Device, const ALfloat *Reflection
     ALfloat ambientGain;
     ALfloat dirGain;
     ALfloat length;
-    ALuint index;
 
     Gain *= ReverbBoost;
 
@@ -1067,22 +1063,19 @@ static ALvoid Update3DPanning(const ALCdevice *Device, const ALfloat *Reflection
     }
 
     dirGain = sqrtf(earlyPan[0]*earlyPan[0] + earlyPan[2]*earlyPan[2]);
-    for(index = 0;index < MaxChannels;index++)
-         State->Early.PanGain[index] = 0.0f;
-    ComputeAngleGains(Device, atan2f(earlyPan[0], earlyPan[2]), (1.0f-dirGain)*M_PI,
+    ComputeAngleGains(Device, atan2f(earlyPan[0], earlyPan[2]), (1.0f-dirGain)*F_PI,
                       lerp(ambientGain, 1.0f, dirGain) * Gain, State->Early.PanGain);
 
     dirGain = sqrtf(latePan[0]*latePan[0] + latePan[2]*latePan[2]);
-    for(index = 0;index < MaxChannels;index++)
-         State->Late.PanGain[index] = 0.0f;
-    ComputeAngleGains(Device, atan2f(latePan[0], latePan[2]), (1.0f-dirGain)*M_PI,
+    ComputeAngleGains(Device, atan2f(latePan[0], latePan[2]), (1.0f-dirGain)*F_PI,
                       lerp(ambientGain, 1.0f, dirGain) * Gain, State->Late.PanGain);
 }
 
-static ALvoid ALreverbState_Update(ALreverbState *State, ALCdevice *Device, const ALeffectslot *Slot)
+static ALvoid ALreverbState_update(ALreverbState *State, ALCdevice *Device, const ALeffectslot *Slot)
 {
     ALuint frequency = Device->Frequency;
-    ALfloat freq_scale, cw, x, y, hfRatio;
+    ALfloat lfscale, hfscale, hfRatio;
+    ALfloat cw, x, y;
 
     if(Slot->EffectType == AL_EFFECT_EAXREVERB && !EmulateEAXReverb)
         State->IsEax = AL_TRUE;
@@ -1091,12 +1084,23 @@ static ALvoid ALreverbState_Update(ALreverbState *State, ALCdevice *Device, cons
 
     // Calculate the master low-pass filter (from the master effect HF gain).
     if(State->IsEax)
-        freq_scale = Slot->EffectProps.Reverb.HFReference / frequency;
+    {
+        hfscale = Slot->EffectProps.Reverb.HFReference / frequency;
+        ALfilterState_setParams(&State->LpFilter, ALfilterType_HighShelf,
+                                Slot->EffectProps.Reverb.GainHF,
+                                hfscale, 0.0f);
+        lfscale = Slot->EffectProps.Reverb.LFReference / frequency;
+        ALfilterState_setParams(&State->HpFilter, ALfilterType_LowShelf,
+                                Slot->EffectProps.Reverb.GainLF,
+                                lfscale, 0.0f);
+    }
     else
-        freq_scale = (ALfloat)LOWPASSFREQREF / frequency;
-    ALfilterState_setParams(&State->LpFilter, ALfilterType_LowPass,
-                            Slot->EffectProps.Reverb.GainHF,
-                            freq_scale, 0.0f);
+    {
+        hfscale = LOWPASSFREQREF / frequency;
+        ALfilterState_setParams(&State->LpFilter, ALfilterType_HighShelf,
+                                Slot->EffectProps.Reverb.GainHF,
+                                hfscale, 0.0f);
+    }
 
     if(State->IsEax)
     {
@@ -1133,7 +1137,7 @@ static ALvoid ALreverbState_Update(ALreverbState *State, ALCdevice *Device, cons
                                      Slot->EffectProps.Reverb.AirAbsorptionGainHF,
                                      Slot->EffectProps.Reverb.DecayTime);
 
-    cw = cosf(M_PI*2.0f * freq_scale);
+    cw = cosf(F_2PI * hfscale);
     // Update the late lines.
     UpdateLateLines(Slot->EffectProps.Reverb.Gain, Slot->EffectProps.Reverb.LateReverbGain,
                     x, Slot->EffectProps.Reverb.Density, Slot->EffectProps.Reverb.DecayTime,
@@ -1153,18 +1157,9 @@ static ALvoid ALreverbState_Update(ALreverbState *State, ALCdevice *Device, cons
     }
     else
     {
-        ALfloat gain = Slot->Gain;
-        ALuint index;
-
         /* Update channel gains */
-        gain *= sqrtf(2.0f/Device->NumChan) * ReverbBoost;
-        for(index = 0;index < MaxChannels;index++)
-             State->Gain[index] = 0.0f;
-        for(index = 0;index < Device->NumChan;index++)
-        {
-            enum Channel chan = Device->Speaker2Chan[index];
-            State->Gain[chan] = gain;
-        }
+        ALfloat gain = sqrtf(2.0f/Device->NumChan) * ReverbBoost * Slot->Gain;
+        SetGains(Device, gain, State->Gain);
     }
 }
 
@@ -1175,21 +1170,21 @@ static ALvoid ALreverbState_Destruct(ALreverbState *State)
     State->SampleBuffer = NULL;
 }
 
-static void ALreverbState_Delete(ALreverbState *state)
-{
-    free(state);
-}
+DECLARE_DEFAULT_ALLOCATORS(ALreverbState)
 
 DEFINE_ALEFFECTSTATE_VTABLE(ALreverbState);
 
 
-static ALeffectState *ALreverbStateFactory_create(ALreverbStateFactory *factory)
+typedef struct ALreverbStateFactory {
+    DERIVE_FROM_TYPE(ALeffectStateFactory);
+} ALreverbStateFactory;
+
+static ALeffectState *ALreverbStateFactory_create(ALreverbStateFactory* UNUSED(factory))
 {
     ALreverbState *state;
     ALuint index;
-    (void)factory;
 
-    state = malloc(sizeof(ALreverbState));
+    state = ALreverbState_New(sizeof(*state));
     if(!state) return NULL;
     SET_VTABLE2(ALreverbState, ALeffectState, state);
 
@@ -1197,6 +1192,7 @@ static ALeffectState *ALreverbStateFactory_create(ALreverbStateFactory *factory)
     state->SampleBuffer = NULL;
 
     ALfilterState_clear(&state->LpFilter);
+    ALfilterState_clear(&state->HpFilter);
 
     state->Mod.Delay.Mask = 0;
     state->Mod.Delay.Line = NULL;
@@ -1276,21 +1272,15 @@ static ALeffectState *ALreverbStateFactory_create(ALreverbStateFactory *factory)
 
 DEFINE_ALEFFECTSTATEFACTORY_VTABLE(ALreverbStateFactory);
 
-
-static void init_reverb_factory(void)
-{
-    SET_VTABLE2(ALreverbStateFactory, ALeffectStateFactory, &ReverbFactory);
-}
-
 ALeffectStateFactory *ALreverbStateFactory_getFactory(void)
 {
-    static pthread_once_t once = PTHREAD_ONCE_INIT;
-    pthread_once(&once, init_reverb_factory);
+    static ALreverbStateFactory ReverbFactory = { { GET_VTABLE2(ALreverbStateFactory, ALeffectStateFactory) } };
+
     return STATIC_CAST(ALeffectStateFactory, &ReverbFactory);
 }
 
 
-void ALeaxreverb_SetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALint val)
+void ALeaxreverb_setParami(ALeffect *effect, ALCcontext *context, ALenum param, ALint val)
 {
     ALeffectProps *props = &effect->Props;
     switch(param)
@@ -1305,11 +1295,11 @@ void ALeaxreverb_SetParami(ALeffect *effect, ALCcontext *context, ALenum param, 
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALeaxreverb_SetParamiv(ALeffect *effect, ALCcontext *context, ALenum param, const ALint *vals)
+void ALeaxreverb_setParamiv(ALeffect *effect, ALCcontext *context, ALenum param, const ALint *vals)
 {
-    ALeaxreverb_SetParami(effect, context, param, vals[0]);
+    ALeaxreverb_setParami(effect, context, param, vals[0]);
 }
-void ALeaxreverb_SetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat val)
+void ALeaxreverb_setParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat val)
 {
     ALeffectProps *props = &effect->Props;
     switch(param)
@@ -1438,7 +1428,7 @@ void ALeaxreverb_SetParamf(ALeffect *effect, ALCcontext *context, ALenum param, 
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALeaxreverb_SetParamfv(ALeffect *effect, ALCcontext *context, ALenum param, const ALfloat *vals)
+void ALeaxreverb_setParamfv(ALeffect *effect, ALCcontext *context, ALenum param, const ALfloat *vals)
 {
     ALeffectProps *props = &effect->Props;
     switch(param)
@@ -1463,12 +1453,12 @@ void ALeaxreverb_SetParamfv(ALeffect *effect, ALCcontext *context, ALenum param,
             break;
 
         default:
-            ALeaxreverb_SetParamf(effect, context, param, vals[0]);
+            ALeaxreverb_setParamf(effect, context, param, vals[0]);
             break;
     }
 }
 
-void ALeaxreverb_GetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALint *val)
+void ALeaxreverb_getParami(const ALeffect *effect, ALCcontext *context, ALenum param, ALint *val)
 {
     const ALeffectProps *props = &effect->Props;
     switch(param)
@@ -1481,11 +1471,11 @@ void ALeaxreverb_GetParami(ALeffect *effect, ALCcontext *context, ALenum param, 
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALeaxreverb_GetParamiv(ALeffect *effect, ALCcontext *context, ALenum param, ALint *vals)
+void ALeaxreverb_getParamiv(const ALeffect *effect, ALCcontext *context, ALenum param, ALint *vals)
 {
-    ALeaxreverb_GetParami(effect, context, param, vals);
+    ALeaxreverb_getParami(effect, context, param, vals);
 }
-void ALeaxreverb_GetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *val)
+void ALeaxreverb_getParamf(const ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *val)
 {
     const ALeffectProps *props = &effect->Props;
     switch(param)
@@ -1574,7 +1564,7 @@ void ALeaxreverb_GetParamf(ALeffect *effect, ALCcontext *context, ALenum param, 
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALeaxreverb_GetParamfv(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *vals)
+void ALeaxreverb_getParamfv(const ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *vals)
 {
     const ALeffectProps *props = &effect->Props;
     switch(param)
@@ -1595,14 +1585,14 @@ void ALeaxreverb_GetParamfv(ALeffect *effect, ALCcontext *context, ALenum param,
             break;
 
         default:
-            ALeaxreverb_GetParamf(effect, context, param, vals);
+            ALeaxreverb_getParamf(effect, context, param, vals);
             break;
     }
 }
 
 DEFINE_ALEFFECT_VTABLE(ALeaxreverb);
 
-void ALreverb_SetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALint val)
+void ALreverb_setParami(ALeffect *effect, ALCcontext *context, ALenum param, ALint val)
 {
     ALeffectProps *props = &effect->Props;
     switch(param)
@@ -1617,11 +1607,11 @@ void ALreverb_SetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALi
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALreverb_SetParamiv(ALeffect *effect, ALCcontext *context, ALenum param, const ALint *vals)
+void ALreverb_setParamiv(ALeffect *effect, ALCcontext *context, ALenum param, const ALint *vals)
 {
-    ALreverb_SetParami(effect, context, param, vals[0]);
+    ALreverb_setParami(effect, context, param, vals[0]);
 }
-void ALreverb_SetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat val)
+void ALreverb_setParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat val)
 {
     ALeffectProps *props = &effect->Props;
     switch(param)
@@ -1702,12 +1692,12 @@ void ALreverb_SetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALf
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALreverb_SetParamfv(ALeffect *effect, ALCcontext *context, ALenum param, const ALfloat *vals)
+void ALreverb_setParamfv(ALeffect *effect, ALCcontext *context, ALenum param, const ALfloat *vals)
 {
-    ALreverb_SetParamf(effect, context, param, vals[0]);
+    ALreverb_setParamf(effect, context, param, vals[0]);
 }
 
-void ALreverb_GetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALint *val)
+void ALreverb_getParami(const ALeffect *effect, ALCcontext *context, ALenum param, ALint *val)
 {
     const ALeffectProps *props = &effect->Props;
     switch(param)
@@ -1720,11 +1710,11 @@ void ALreverb_GetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALi
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALreverb_GetParamiv(ALeffect *effect, ALCcontext *context, ALenum param, ALint *vals)
+void ALreverb_getParamiv(const ALeffect *effect, ALCcontext *context, ALenum param, ALint *vals)
 {
-    ALreverb_GetParami(effect, context, param, vals);
+    ALreverb_getParami(effect, context, param, vals);
 }
-void ALreverb_GetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *val)
+void ALreverb_getParamf(const ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *val)
 {
     const ALeffectProps *props = &effect->Props;
     switch(param)
@@ -1781,9 +1771,9 @@ void ALreverb_GetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALf
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALreverb_GetParamfv(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *vals)
+void ALreverb_getParamfv(const ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *vals)
 {
-    ALreverb_GetParamf(effect, context, param, vals);
+    ALreverb_getParamf(effect, context, param, vals);
 }
 
 DEFINE_ALEFFECT_VTABLE(ALreverb);

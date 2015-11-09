@@ -250,9 +250,7 @@ BackendFuncs sdl_funcs = {
     NULL,//sdl_stop_capture,                   // void (*StopCapture)(ALCdevice*);
     NULL,//sdl_capture_samples,                // ALCenum (*CaptureSamples)(ALCdevice*, void*, ALCuint);
     NULL,//sdl_available_samples,              // ALCuint (*AvailableSamples)(ALCdevice*);
-            
-    ALCdevice_LockDefault,
-    ALCdevice_UnlockDefault,
+    
     ALCdevice_GetLatencyDefault
 };
 

@@ -34,88 +34,88 @@
 
 ALboolean DisabledEffects[MAX_EFFECTS];
 
+extern inline struct ALeffect *LookupEffect(ALCdevice *device, ALuint id);
+extern inline struct ALeffect *RemoveEffect(ALCdevice *device, ALuint id);
+extern inline ALboolean IsReverbEffect(ALenum type);
 
 static void InitEffectParams(ALeffect *effect, ALenum type);
 
 
 AL_API ALvoid AL_APIENTRY alGenEffects(ALsizei n, ALuint *effects)
 {
-    ALCcontext *Context;
-    ALsizei    cur = 0;
+    ALCdevice *device;
+    ALCcontext *context;
+    ALsizei cur;
 
-    Context = GetContextRef();
-    if(!Context) return;
+    context = GetContextRef();
+    if(!context) return;
 
-    al_try
+    if(!(n >= 0))
+        SET_ERROR_AND_GOTO(context, AL_INVALID_VALUE, done);
+
+    device = context->Device;
+    for(cur = 0;cur < n;cur++)
     {
-        ALCdevice *device = Context->Device;
-        ALenum err;
-
-        CHECK_VALUE(Context, n >= 0);
-        for(cur = 0;cur < n;cur++)
+        ALeffect *effect = calloc(1, sizeof(ALeffect));
+        ALenum err = AL_OUT_OF_MEMORY;
+        if(!effect || (err=InitEffect(effect)) != AL_NO_ERROR)
         {
-            ALeffect *effect = calloc(1, sizeof(ALeffect));
-            err = AL_OUT_OF_MEMORY;
-            if(!effect || (err=InitEffect(effect)) != AL_NO_ERROR)
-            {
-                free(effect);
-                alDeleteEffects(cur, effects);
-                al_throwerr(Context, err);
-            }
-
-            err = NewThunkEntry(&effect->id);
-            if(err == AL_NO_ERROR)
-                err = InsertUIntMapEntry(&device->EffectMap, effect->id, effect);
-            if(err != AL_NO_ERROR)
-            {
-                FreeThunkEntry(effect->id);
-                memset(effect, 0, sizeof(ALeffect));
-                free(effect);
-
-                alDeleteEffects(cur, effects);
-                al_throwerr(Context, err);
-            }
-
-            effects[cur] = effect->id;
+            free(effect);
+            alDeleteEffects(cur, effects);
+            SET_ERROR_AND_GOTO(context, err, done);
         }
-    }
-    al_endtry;
 
-    ALCcontext_DecRef(Context);
+        err = NewThunkEntry(&effect->id);
+        if(err == AL_NO_ERROR)
+            err = InsertUIntMapEntry(&device->EffectMap, effect->id, effect);
+        if(err != AL_NO_ERROR)
+        {
+            FreeThunkEntry(effect->id);
+            memset(effect, 0, sizeof(ALeffect));
+            free(effect);
+
+            alDeleteEffects(cur, effects);
+            SET_ERROR_AND_GOTO(context, err, done);
+        }
+
+        effects[cur] = effect->id;
+    }
+
+done:
+    ALCcontext_DecRef(context);
 }
 
 AL_API ALvoid AL_APIENTRY alDeleteEffects(ALsizei n, const ALuint *effects)
 {
-    ALCcontext *Context;
-    ALeffect *Effect;
+    ALCdevice *device;
+    ALCcontext *context;
+    ALeffect *effect;
     ALsizei i;
 
-    Context = GetContextRef();
-    if(!Context) return;
+    context = GetContextRef();
+    if(!context) return;
 
-    al_try
+    if(!(n >= 0))
+        SET_ERROR_AND_GOTO(context, AL_INVALID_VALUE, done);
+
+    device = context->Device;
+    for(i = 0;i < n;i++)
     {
-        ALCdevice *device = Context->Device;
-        CHECK_VALUE(Context, n >= 0);
-        for(i = 0;i < n;i++)
-        {
-            if(effects[i] && LookupEffect(device, effects[i]) == NULL)
-                al_throwerr(Context, AL_INVALID_NAME);
-        }
-
-        for(i = 0;i < n;i++)
-        {
-            if((Effect=RemoveEffect(device, effects[i])) == NULL)
-                continue;
-            FreeThunkEntry(Effect->id);
-
-            memset(Effect, 0, sizeof(*Effect));
-            free(Effect);
-        }
+        if(effects[i] && LookupEffect(device, effects[i]) == NULL)
+            SET_ERROR_AND_GOTO(context, AL_INVALID_NAME, done);
     }
-    al_endtry;
+    for(i = 0;i < n;i++)
+    {
+        if((effect=RemoveEffect(device, effects[i])) == NULL)
+            continue;
+        FreeThunkEntry(effect->id);
 
-    ALCcontext_DecRef(Context);
+        memset(effect, 0, sizeof(*effect));
+        free(effect);
+    }
+
+done:
+    ALCcontext_DecRef(context);
 }
 
 AL_API ALboolean AL_APIENTRY alIsEffect(ALuint effect)
@@ -167,7 +167,7 @@ AL_API ALvoid AL_APIENTRY alEffecti(ALuint effect, ALenum param, ALint value)
         else
         {
             /* Call the appropriate handler */
-            VCALL(ALEffect,SetParami,(Context, param, value));
+            V(ALEffect,setParami)(Context, param, value);
         }
     }
 
@@ -196,7 +196,7 @@ AL_API ALvoid AL_APIENTRY alEffectiv(ALuint effect, ALenum param, const ALint *v
     else
     {
         /* Call the appropriate handler */
-        VCALL(ALEffect,SetParamiv,(Context, param, values));
+        V(ALEffect,setParamiv)(Context, param, values);
     }
 
     ALCcontext_DecRef(Context);
@@ -217,7 +217,7 @@ AL_API ALvoid AL_APIENTRY alEffectf(ALuint effect, ALenum param, ALfloat value)
     else
     {
         /* Call the appropriate handler */
-        VCALL(ALEffect,SetParamf,(Context, param, value));
+        V(ALEffect,setParamf)(Context, param, value);
     }
 
     ALCcontext_DecRef(Context);
@@ -238,7 +238,7 @@ AL_API ALvoid AL_APIENTRY alEffectfv(ALuint effect, ALenum param, const ALfloat 
     else
     {
         /* Call the appropriate handler */
-        VCALL(ALEffect,SetParamfv,(Context, param, values));
+        V(ALEffect,setParamfv)(Context, param, values);
     }
 
     ALCcontext_DecRef(Context);
@@ -263,7 +263,7 @@ AL_API ALvoid AL_APIENTRY alGetEffecti(ALuint effect, ALenum param, ALint *value
         else
         {
             /* Call the appropriate handler */
-            VCALL(ALEffect,GetParami,(Context, param, value));
+            V(ALEffect,getParami)(Context, param, value);
         }
     }
 
@@ -292,7 +292,7 @@ AL_API ALvoid AL_APIENTRY alGetEffectiv(ALuint effect, ALenum param, ALint *valu
     else
     {
         /* Call the appropriate handler */
-        VCALL(ALEffect,GetParamiv,(Context, param, values));
+        V(ALEffect,getParamiv)(Context, param, values);
     }
 
     ALCcontext_DecRef(Context);
@@ -313,7 +313,7 @@ AL_API ALvoid AL_APIENTRY alGetEffectf(ALuint effect, ALenum param, ALfloat *val
     else
     {
         /* Call the appropriate handler */
-        VCALL(ALEffect,GetParamf,(Context, param, value));
+        V(ALEffect,getParamf)(Context, param, value);
     }
 
     ALCcontext_DecRef(Context);
@@ -334,7 +334,7 @@ AL_API ALvoid AL_APIENTRY alGetEffectfv(ALuint effect, ALenum param, ALfloat *va
     else
     {
         /* Call the appropriate handler */
-        VCALL(ALEffect,GetParamfv,(Context, param, values));
+        V(ALEffect,getParamfv)(Context, param, values);
     }
 
     ALCcontext_DecRef(Context);
@@ -395,7 +395,7 @@ static void InitEffectParams(ALeffect *effect, ALenum type)
         effect->Props.Reverb.LFReference = AL_EAXREVERB_DEFAULT_LFREFERENCE;
         effect->Props.Reverb.RoomRolloffFactor = AL_EAXREVERB_DEFAULT_ROOM_ROLLOFF_FACTOR;
         effect->Props.Reverb.DecayHFLimit = AL_EAXREVERB_DEFAULT_DECAY_HFLIMIT;
-        effect->vtbl = &ALeaxreverb_vtable;
+        SET_VTABLE1(ALeaxreverb, effect);
         break;
     case AL_EFFECT_REVERB:
         effect->Props.Reverb.Density   = AL_REVERB_DEFAULT_DENSITY;
@@ -411,7 +411,14 @@ static void InitEffectParams(ALeffect *effect, ALenum type)
         effect->Props.Reverb.AirAbsorptionGainHF = AL_REVERB_DEFAULT_AIR_ABSORPTION_GAINHF;
         effect->Props.Reverb.RoomRolloffFactor = AL_REVERB_DEFAULT_ROOM_ROLLOFF_FACTOR;
         effect->Props.Reverb.DecayHFLimit = AL_REVERB_DEFAULT_DECAY_HFLIMIT;
-        effect->vtbl = &ALreverb_vtable;
+        SET_VTABLE1(ALreverb, effect);
+        break;
+    case AL_EFFECT_AUTOWAH:
+        effect->Props.Autowah.AttackTime = AL_AUTOWAH_DEFAULT_ATTACK_TIME;
+        effect->Props.Autowah.PeakGain = AL_AUTOWAH_DEFAULT_PEAK_GAIN;
+        effect->Props.Autowah.ReleaseTime = AL_AUTOWAH_DEFAULT_RELEASE_TIME;
+        effect->Props.Autowah.Resonance = AL_AUTOWAH_DEFAULT_RESONANCE;
+        SET_VTABLE1(ALautowah, effect);
         break;
     case AL_EFFECT_CHORUS:
         effect->Props.Chorus.Waveform = AL_CHORUS_DEFAULT_WAVEFORM;
@@ -420,7 +427,11 @@ static void InitEffectParams(ALeffect *effect, ALenum type)
         effect->Props.Chorus.Depth = AL_CHORUS_DEFAULT_DEPTH;
         effect->Props.Chorus.Feedback = AL_CHORUS_DEFAULT_FEEDBACK;
         effect->Props.Chorus.Delay = AL_CHORUS_DEFAULT_DELAY;
-        effect->vtbl = &ALchorus_vtable;
+        SET_VTABLE1(ALchorus, effect);
+        break;
+    case AL_EFFECT_COMPRESSOR:
+        effect->Props.Compressor.OnOff = AL_COMPRESSOR_DEFAULT_ONOFF;
+        SET_VTABLE1(ALcompressor, effect);
         break;
     case AL_EFFECT_DISTORTION:
         effect->Props.Distortion.Edge = AL_DISTORTION_DEFAULT_EDGE;
@@ -428,7 +439,7 @@ static void InitEffectParams(ALeffect *effect, ALenum type)
         effect->Props.Distortion.LowpassCutoff = AL_DISTORTION_DEFAULT_LOWPASS_CUTOFF;
         effect->Props.Distortion.EQCenter = AL_DISTORTION_DEFAULT_EQCENTER;
         effect->Props.Distortion.EQBandwidth = AL_DISTORTION_DEFAULT_EQBANDWIDTH;
-        effect->vtbl = &ALdistortion_vtable;
+        SET_VTABLE1(ALdistortion, effect);
         break;
     case AL_EFFECT_ECHO:
         effect->Props.Echo.Delay    = AL_ECHO_DEFAULT_DELAY;
@@ -436,7 +447,7 @@ static void InitEffectParams(ALeffect *effect, ALenum type)
         effect->Props.Echo.Damping  = AL_ECHO_DEFAULT_DAMPING;
         effect->Props.Echo.Feedback = AL_ECHO_DEFAULT_FEEDBACK;
         effect->Props.Echo.Spread   = AL_ECHO_DEFAULT_SPREAD;
-        effect->vtbl = &ALecho_vtable;
+        SET_VTABLE1(ALecho, effect);
         break;
     case AL_EFFECT_EQUALIZER:
         effect->Props.Equalizer.LowCutoff = AL_EQUALIZER_DEFAULT_LOW_CUTOFF;
@@ -449,7 +460,7 @@ static void InitEffectParams(ALeffect *effect, ALenum type)
         effect->Props.Equalizer.Mid2Width = AL_EQUALIZER_DEFAULT_MID2_WIDTH;
         effect->Props.Equalizer.HighCutoff = AL_EQUALIZER_DEFAULT_HIGH_CUTOFF;
         effect->Props.Equalizer.HighGain = AL_EQUALIZER_DEFAULT_HIGH_GAIN;
-        effect->vtbl = &ALequalizer_vtable;
+        SET_VTABLE1(ALequalizer, effect);
         break;
     case AL_EFFECT_FLANGER:
         effect->Props.Flanger.Waveform = AL_FLANGER_DEFAULT_WAVEFORM;
@@ -458,21 +469,21 @@ static void InitEffectParams(ALeffect *effect, ALenum type)
         effect->Props.Flanger.Depth = AL_FLANGER_DEFAULT_DEPTH;
         effect->Props.Flanger.Feedback = AL_FLANGER_DEFAULT_FEEDBACK;
         effect->Props.Flanger.Delay = AL_FLANGER_DEFAULT_DELAY;
-        effect->vtbl = &ALflanger_vtable;
+        SET_VTABLE1(ALflanger, effect);
         break;
     case AL_EFFECT_RING_MODULATOR:
         effect->Props.Modulator.Frequency      = AL_RING_MODULATOR_DEFAULT_FREQUENCY;
         effect->Props.Modulator.HighPassCutoff = AL_RING_MODULATOR_DEFAULT_HIGHPASS_CUTOFF;
         effect->Props.Modulator.Waveform       = AL_RING_MODULATOR_DEFAULT_WAVEFORM;
-        effect->vtbl = &ALmodulator_vtable;
+        SET_VTABLE1(ALmodulator, effect);
         break;
     case AL_EFFECT_DEDICATED_LOW_FREQUENCY_EFFECT:
     case AL_EFFECT_DEDICATED_DIALOGUE:
         effect->Props.Dedicated.Gain = 1.0f;
-        effect->vtbl = &ALdedicated_vtable;
+        SET_VTABLE1(ALdedicated, effect);
         break;
     default:
-        effect->vtbl = &ALnull_vtable;
+        SET_VTABLE1(ALnull, effect);
         break;
     }
     effect->type = type;

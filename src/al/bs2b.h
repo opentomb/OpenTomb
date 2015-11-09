@@ -51,24 +51,21 @@ struct bs2b {
     int srate;   /* Sample rate (Hz) */
 
     /* Lowpass IIR filter coefficients */
-    double a0_lo;
-    double b1_lo;
+    float a0_lo;
+    float b1_lo;
 
     /* Highboost IIR filter coefficients */
-    double a0_hi;
-    double a1_hi;
-    double b1_hi;
-
-    /* Global gain against overloading */
-    float gain;
+    float a0_hi;
+    float a1_hi;
+    float b1_hi;
 
     /* Buffer of last filtered sample.
      * [0] - first channel, [1] - second channel
      */
     struct t_last_sample {
-        double asis[2];
-        double lo[2];
-        double hi[2];
+        float asis[2];
+        float lo[2];
+        float hi[2];
     } last_sample;
 };
 
@@ -93,11 +90,36 @@ void bs2b_clear(struct bs2b *bs2b);
 
 /* Crossfeeds one stereo sample that are pointed by sample.
  * [0] - first channel, [1] - second channel.
- * Returns crossfided samle by sample pointer.
+ * Returns crossfided sample by sample pointer.
+ */
+inline void bs2b_cross_feed(struct bs2b *bs2b, float *__restrict__ sample)
+{
+/* Single pole IIR filter.
+ * O[n] = a0*I[n] + a1*I[n-1] + b1*O[n-1]
  */
 
-/* sample poits to floats */
-void bs2b_cross_feed(struct bs2b *bs2b, float *sample);
+/* Lowpass filter */
+#define lo_filter(in, out_1) (bs2b->a0_lo*(in) + bs2b->b1_lo*(out_1))
+
+/* Highboost filter */
+#define hi_filter(in, in_1, out_1) (bs2b->a0_hi*(in) + bs2b->a1_hi*(in_1) + bs2b->b1_hi*(out_1))
+
+    /* Lowpass filter */
+    bs2b->last_sample.lo[0] = lo_filter(sample[0], bs2b->last_sample.lo[0]);
+    bs2b->last_sample.lo[1] = lo_filter(sample[1], bs2b->last_sample.lo[1]);
+
+    /* Highboost filter */
+    bs2b->last_sample.hi[0] = hi_filter(sample[0], bs2b->last_sample.asis[0], bs2b->last_sample.hi[0]);
+    bs2b->last_sample.hi[1] = hi_filter(sample[1], bs2b->last_sample.asis[1], bs2b->last_sample.hi[1]);
+    bs2b->last_sample.asis[0] = sample[0];
+    bs2b->last_sample.asis[1] = sample[1];
+
+    /* Crossfeed */
+    sample[0] = bs2b->last_sample.hi[0] + bs2b->last_sample.lo[1];
+    sample[1] = bs2b->last_sample.hi[1] + bs2b->last_sample.lo[0];
+#undef hi_filter
+#undef lo_filter
+} /* bs2b_cross_feed */
 
 #ifdef __cplusplus
 }    /* extern "C" */

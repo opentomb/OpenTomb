@@ -22,18 +22,22 @@
 
 #include <signal.h>
 
-#include "../AL/alc.h"
 #include "../alMain.h"
+#include "../AL/alc.h"
 #include "../alError.h"
 
 ALboolean TrapALError = AL_FALSE;
 
 ALvoid alSetError(ALCcontext *Context, ALenum errorCode)
 {
+    ALenum curerr = AL_NO_ERROR;
     if(TrapALError)
     {
+#if defined(SIGTRAP)
+        raise(SIGTRAP);
+#endif
     }
-    CompExchangeInt(&Context->LastError, AL_NO_ERROR, errorCode);
+    ATOMIC_COMPARE_EXCHANGE_STRONG(ALenum, &Context->LastError, &curerr, errorCode);
 }
 
 AL_API ALenum AL_APIENTRY alGetError(void)
@@ -46,11 +50,14 @@ AL_API ALenum AL_APIENTRY alGetError(void)
     {
         if(TrapALError)
         {
+#if defined(SIGTRAP)
+        raise(SIGTRAP);
+#endif
         }
         return AL_INVALID_OPERATION;
     }
 
-    errorCode = ExchangeInt(&Context->LastError, AL_NO_ERROR);
+    errorCode = ATOMIC_EXCHANGE(ALenum, &Context->LastError, AL_NO_ERROR);
 
     ALCcontext_DecRef(Context);
 

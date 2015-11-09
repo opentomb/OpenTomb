@@ -30,13 +30,6 @@
 #include "../../alu.h"
 
 
-typedef struct ALequalizerStateFactory {
-    DERIVE_FROM_TYPE(ALeffectStateFactory);
-} ALequalizerStateFactory;
-
-static ALequalizerStateFactory EqualizerFactory;
-
-
 /*  The document  "Effects Extension Guide.pdf"  says that low and high  *
  *  frequencies are cutoff frequencies. This is not fully correct, they  *
  *  are corner frequencies for low and high shelf filters. If they were  *
@@ -88,61 +81,45 @@ typedef struct ALequalizerState {
     ALfilterState filter[4];
 } ALequalizerState;
 
-static ALvoid ALequalizerState_Destruct(ALequalizerState *state)
+static ALvoid ALequalizerState_Destruct(ALequalizerState *UNUSED(state))
 {
-    (void)state;
 }
 
-static ALboolean ALequalizerState_DeviceUpdate(ALequalizerState *state, ALCdevice *device)
+static ALboolean ALequalizerState_deviceUpdate(ALequalizerState *UNUSED(state), ALCdevice *UNUSED(device))
 {
     return AL_TRUE;
-    (void)state;
-    (void)device;
 }
 
-static ALvoid ALequalizerState_Update(ALequalizerState *state, ALCdevice *device, const ALeffectslot *slot)
+static ALvoid ALequalizerState_update(ALequalizerState *state, ALCdevice *device, const ALeffectslot *slot)
 {
     ALfloat frequency = (ALfloat)device->Frequency;
     ALfloat gain = sqrtf(1.0f / device->NumChan) * slot->Gain;
-    ALuint it;
 
-    for(it = 0;it < MaxChannels;it++)
-        state->Gain[it] = 0.0f;
-    for(it = 0; it < device->NumChan; it++)
-    {
-        enum Channel chan = device->Speaker2Chan[it];
-        state->Gain[chan] = gain;
-    }
+    SetGains(device, gain, state->Gain);
 
     /* Calculate coefficients for the each type of filter */
-    for(it = 0; it < 4; it++)
-    {
-        /* Low Shelf */
-        ALfilterState_setParams(&state->filter[0],
-                                ALfilterType_LowShelf,
-                                sqrtf(slot->EffectProps.Equalizer.LowGain),
-                                slot->EffectProps.Equalizer.LowCutoff/frequency,
-                                0.0f);
-        /* Peaking */
-        ALfilterState_setParams(&state->filter[1], ALfilterType_Peaking,
-                                sqrtf(slot->EffectProps.Equalizer.Mid1Gain),
-                                slot->EffectProps.Equalizer.Mid1Width/frequency,
-                                slot->EffectProps.Equalizer.Mid1Width);
-         /* Peaking */
-        ALfilterState_setParams(&state->filter[2], ALfilterType_Peaking,
-                                sqrtf(slot->EffectProps.Equalizer.Mid2Gain),
-                                slot->EffectProps.Equalizer.Mid2Width/frequency,
-                                slot->EffectProps.Equalizer.Mid2Width);
-         /* High Shelf */
-        ALfilterState_setParams(&state->filter[3],
-                                ALfilterType_HighShelf,
-                                sqrtf(slot->EffectProps.Equalizer.HighGain),
-                                slot->EffectProps.Equalizer.HighCutoff/frequency,
-                                0.0f);
-    }
+    ALfilterState_setParams(&state->filter[0], ALfilterType_LowShelf,
+                            sqrtf(slot->EffectProps.Equalizer.LowGain),
+                            slot->EffectProps.Equalizer.LowCutoff/frequency,
+                            0.0f);
+
+    ALfilterState_setParams(&state->filter[1], ALfilterType_Peaking,
+                            sqrtf(slot->EffectProps.Equalizer.Mid1Gain),
+                            slot->EffectProps.Equalizer.Mid1Center/frequency,
+                            slot->EffectProps.Equalizer.Mid1Width);
+
+    ALfilterState_setParams(&state->filter[2], ALfilterType_Peaking,
+                            sqrtf(slot->EffectProps.Equalizer.Mid2Gain),
+                            slot->EffectProps.Equalizer.Mid2Center/frequency,
+                            slot->EffectProps.Equalizer.Mid2Width);
+
+    ALfilterState_setParams(&state->filter[3], ALfilterType_HighShelf,
+                            sqrtf(slot->EffectProps.Equalizer.HighGain),
+                            slot->EffectProps.Equalizer.HighCutoff/frequency,
+                            0.0f);
 }
 
-static ALvoid ALequalizerState_Process(ALequalizerState *state, ALuint SamplesToDo, const ALfloat *__restrict__ SamplesIn, ALfloat (*__restrict__ SamplesOut)[BUFFERSIZE])
+static ALvoid ALequalizerState_process(ALequalizerState *state, ALuint SamplesToDo, const ALfloat *__restrict__ SamplesIn, ALfloat (*__restrict__ SamplesOut)[BUFFERSIZE])
 {
     ALuint base;
     ALuint it;
@@ -167,7 +144,7 @@ static ALvoid ALequalizerState_Process(ALequalizerState *state, ALuint SamplesTo
         for(kt = 0;kt < MaxChannels;kt++)
         {
             ALfloat gain = state->Gain[kt];
-            if(!(gain > 0.00001f))
+            if(!(gain > GAIN_SILENCE_THRESHOLD))
                 continue;
 
             for(it = 0;it < td;it++)
@@ -178,21 +155,21 @@ static ALvoid ALequalizerState_Process(ALequalizerState *state, ALuint SamplesTo
     }
 }
 
-static void ALequalizerState_Delete(ALequalizerState *state)
-{
-    free(state);
-}
+DECLARE_DEFAULT_ALLOCATORS(ALequalizerState)
 
 DEFINE_ALEFFECTSTATE_VTABLE(ALequalizerState);
 
 
-ALeffectState *ALequalizerStateFactory_create(ALequalizerStateFactory *factory)
+typedef struct ALequalizerStateFactory {
+    DERIVE_FROM_TYPE(ALeffectStateFactory);
+} ALequalizerStateFactory;
+
+ALeffectState *ALequalizerStateFactory_create(ALequalizerStateFactory *UNUSED(factory))
 {
     ALequalizerState *state;
     int it;
-    (void)factory;
 
-    state = malloc(sizeof(*state));
+    state = ALequalizerState_New(sizeof(*state));
     if(!state) return NULL;
     SET_VTABLE2(ALequalizerState, ALeffectState, state);
 
@@ -206,27 +183,21 @@ ALeffectState *ALequalizerStateFactory_create(ALequalizerStateFactory *factory)
 
 DEFINE_ALEFFECTSTATEFACTORY_VTABLE(ALequalizerStateFactory);
 
-
-static void init_equalizer_factory(void)
-{
-    SET_VTABLE2(ALequalizerStateFactory, ALeffectStateFactory, &EqualizerFactory);
-}
-
 ALeffectStateFactory *ALequalizerStateFactory_getFactory(void)
 {
-    static pthread_once_t once = PTHREAD_ONCE_INIT;
-    pthread_once(&once, init_equalizer_factory);
+    static ALequalizerStateFactory EqualizerFactory = { { GET_VTABLE2(ALequalizerStateFactory, ALeffectStateFactory) } };
+
     return STATIC_CAST(ALeffectStateFactory, &EqualizerFactory);
 }
 
 
-void ALequalizer_SetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALint val)
-{ SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM); (void)effect;(void)param;(void)val; }
-void ALequalizer_SetParamiv(ALeffect *effect, ALCcontext *context, ALenum param, const ALint *vals)
+void ALequalizer_setParami(ALeffect *UNUSED(effect), ALCcontext *context, ALenum UNUSED(param), ALint UNUSED(val))
+{ SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM); }
+void ALequalizer_setParamiv(ALeffect *effect, ALCcontext *context, ALenum param, const ALint *vals)
 {
-    ALequalizer_SetParami(effect, context, param, vals[0]);
+    ALequalizer_setParami(effect, context, param, vals[0]);
 }
-void ALequalizer_SetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat val)
+void ALequalizer_setParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat val)
 {
     ALeffectProps *props = &effect->Props;
     switch(param)
@@ -295,18 +266,18 @@ void ALequalizer_SetParamf(ALeffect *effect, ALCcontext *context, ALenum param, 
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALequalizer_SetParamfv(ALeffect *effect, ALCcontext *context, ALenum param, const ALfloat *vals)
+void ALequalizer_setParamfv(ALeffect *effect, ALCcontext *context, ALenum param, const ALfloat *vals)
 {
-    ALequalizer_SetParamf(effect, context, param, vals[0]);
+    ALequalizer_setParamf(effect, context, param, vals[0]);
 }
 
-void ALequalizer_GetParami(ALeffect *effect, ALCcontext *context, ALenum param, ALint *val)
-{ SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM); (void)effect;(void)param;(void)val; }
-void ALequalizer_GetParamiv(ALeffect *effect, ALCcontext *context, ALenum param, ALint *vals)
+void ALequalizer_getParami(const ALeffect *UNUSED(effect), ALCcontext *context, ALenum UNUSED(param), ALint *UNUSED(val))
+{ SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM); }
+void ALequalizer_getParamiv(const ALeffect *effect, ALCcontext *context, ALenum param, ALint *vals)
 {
-    ALequalizer_GetParami(effect, context, param, vals);
+    ALequalizer_getParami(effect, context, param, vals);
 }
-void ALequalizer_GetParamf(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *val)
+void ALequalizer_getParamf(const ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *val)
 {
     const ALeffectProps *props = &effect->Props;
     switch(param)
@@ -355,9 +326,9 @@ void ALequalizer_GetParamf(ALeffect *effect, ALCcontext *context, ALenum param, 
             SET_ERROR_AND_RETURN(context, AL_INVALID_ENUM);
     }
 }
-void ALequalizer_GetParamfv(ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *vals)
+void ALequalizer_getParamfv(const ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *vals)
 {
-    ALequalizer_GetParamf(effect, context, param, vals);
+    ALequalizer_getParamf(effect, context, param, vals);
 }
 
 DEFINE_ALEFFECT_VTABLE(ALequalizer);

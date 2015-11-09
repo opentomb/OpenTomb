@@ -2537,5 +2537,3 @@ void Character_DoWeaponFrame(struct entity_s *ent, float time)
         }
     }
 }
-
-

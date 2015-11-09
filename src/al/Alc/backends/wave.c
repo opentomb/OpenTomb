@@ -23,9 +23,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <memory.h>
+#include <errno.h>
+#ifdef HAVE_WINDOWS_H
+#include <windows.h>
+#endif
 
 #include "../../alMain.h"
 #include "../../alu.h"
+#include "../../threads.h"
+#include "../../Alc/compat.h"
 
 
 typedef struct {
@@ -36,7 +42,7 @@ typedef struct {
     ALuint size;
 
     volatile int killNow;
-    ALvoid *thread;
+    althrd_t thread;
 } wave_data;
 
 
@@ -79,47 +85,55 @@ static void fwrite32le(ALuint val, FILE *f)
 }
 
 
-static ALuint WaveProc(ALvoid *ptr)
+static int WaveProc(void *ptr)
 {
-    ALCdevice *Device = (ALCdevice*)ptr;
-    wave_data *data = (wave_data*)Device->ExtraData;
+    ALCdevice *device = (ALCdevice*)ptr;
+    wave_data *data = (wave_data*)device->ExtraData;
+    struct timespec now, start;
+    ALint64 avail, done;
     ALuint frameSize;
-    ALuint now, start;
-    ALuint64 avail, done;
     size_t fs;
-    const ALuint restTime = (ALuint64)Device->UpdateSize * 1000 /
-                            Device->Frequency / 2;
+    const long restTime = (long)((ALuint64)device->UpdateSize * 1000000000 /
+                                 device->Frequency / 2);
 
-    frameSize = FrameSizeFromDevFmt(Device->FmtChans, Device->FmtType);
+    althrd_setname(althrd_current(), MIXER_THREAD_NAME);
+
+    frameSize = FrameSizeFromDevFmt(device->FmtChans, device->FmtType);
 
     done = 0;
-    start = al_timeGetTime();
-    while(!data->killNow && Device->Connected)
+    if(altimespec_get(&start, AL_TIME_UTC) != AL_TIME_UTC)
     {
-        now = al_timeGetTime();
+        ERR("Failed to get starting time\n");
+        return 1;
+    }
+    while(!data->killNow && device->Connected)
+    {
+        if(altimespec_get(&now, AL_TIME_UTC) != AL_TIME_UTC)
+        {
+            ERR("Failed to get current time\n");
+            return 1;
+        }
 
-        avail = (ALuint64)(now-start) * Device->Frequency / 1000;
+        avail  = (now.tv_sec - start.tv_sec) * device->Frequency;
+        avail += (ALint64)(now.tv_nsec - start.tv_nsec) * device->Frequency / 1000000000;
         if(avail < done)
         {
-            /* Timer wrapped (50 days???). Add the remainder of the cycle to
-             * the available count and reset the number of samples done */
-            avail += ((ALuint64)1<<32)*Device->Frequency/1000 - done;
-            done = 0;
-        }
-        if(avail-done < Device->UpdateSize)
-        {
-            al_Sleep(restTime);
-            continue;
+            /* Oops, time skipped backwards. Reset the number of samples done
+             * with one update available since we (likely) just came back from
+             * sleeping. */
+            done = avail - device->UpdateSize;
         }
 
-        while(avail-done >= Device->UpdateSize)
+        if(avail-done < device->UpdateSize)
+            al_nssleep(0, restTime);
+        else while(avail-done >= device->UpdateSize)
         {
-            aluMixData(Device, data->buffer, Device->UpdateSize);
-            done += Device->UpdateSize;
+            aluMixData(device, data->buffer, device->UpdateSize);
+            done += device->UpdateSize;
 
             if(!IS_LITTLE_ENDIAN)
             {
-                ALuint bytesize = BytesFromDevFmt(Device->FmtType);
+                ALuint bytesize = BytesFromDevFmt(device->FmtType);
                 ALubyte *bytes = data->buffer;
                 ALuint i;
 
@@ -141,16 +155,16 @@ static ALuint WaveProc(ALvoid *ptr)
             }
             else
             {
-                fs = fwrite(data->buffer, frameSize, Device->UpdateSize,
+                fs = fwrite(data->buffer, frameSize, device->UpdateSize,
                             data->f);
-                fs = fs;
+                (void)fs;
             }
             if(ferror(data->f))
             {
                 ERR("Error writing to file\n");
-                ALCdevice_Lock(Device);
-                aluHandleDisconnect(Device);
-                ALCdevice_Unlock(Device);
+                ALCdevice_Lock(device);
+                aluHandleDisconnect(device);
+                ALCdevice_Unlock(device);
                 break;
             }
         }
@@ -175,7 +189,7 @@ static ALCenum wave_open_playback(ALCdevice *device, const ALCchar *deviceName)
 
     data = (wave_data*)calloc(1, sizeof(wave_data));
 
-    data->f = fopen(fname, "wb");
+    data->f = al_fopen(fname, "wb");
     if(!data->f)
     {
         free(data);
@@ -183,7 +197,7 @@ static ALCenum wave_open_playback(ALCdevice *device, const ALCchar *deviceName)
         return ALC_INVALID_VALUE;
     }
 
-    device->DeviceName = strdup(deviceName);
+    al_string_copy_cstr(&device->DeviceName, deviceName);
     device->ExtraData = data;
     return ALC_NO_ERROR;
 }
@@ -254,7 +268,7 @@ static ALCboolean wave_reset_playback(ALCdevice *device)
     fwrite32le(channel_masks[channels], data->f);
     // 16 byte GUID, sub-type format
     val = fwrite(((bits==32) ? SUBTYPE_FLOAT : SUBTYPE_PCM), 1, 16, data->f);
-    val = val;
+    (void)val;
 
     fprintf(data->f, "data");
     fwrite32le(0xFFFFFFFF, data->f); // 'data' header len; filled in at close
@@ -283,8 +297,8 @@ static ALCboolean wave_start_playback(ALCdevice *device)
         return ALC_FALSE;
     }
 
-    data->thread = StartThread(WaveProc, device);
-    if(data->thread == NULL)
+    data->killNow = 0;
+    if(althrd_create(&data->thread, WaveProc, device) != althrd_success)
     {
         free(data->buffer);
         data->buffer = NULL;
@@ -299,15 +313,13 @@ static void wave_stop_playback(ALCdevice *device)
     wave_data *data = (wave_data*)device->ExtraData;
     ALuint dataLen;
     long size;
+    int res;
 
-    if(!data->thread)
+    if(data->killNow)
         return;
 
     data->killNow = 1;
-    StopThread(data->thread);
-    data->thread = NULL;
-
-    data->killNow = 0;
+    althrd_join(data->thread, &res);
 
     free(data->buffer);
     data->buffer = NULL;
@@ -336,8 +348,6 @@ static const BackendFuncs wave_funcs = {
     NULL,
     NULL,
     NULL,
-    ALCdevice_LockDefault,
-    ALCdevice_UnlockDefault,
     ALCdevice_GetLatencyDefault
 };
 

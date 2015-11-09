@@ -34,16 +34,77 @@
 #include "../alListener.h"
 #include "../alAuxEffectSlot.h"
 #include "../alu.h"
-#include "../bs2b.h"
+
+#include "mixer_defs.h"
 
 
-static __inline ALfloat Sample_ALbyte(ALbyte val)
+extern inline void InitiatePositionArrays(ALuint frac, ALuint increment, ALuint *frac_arr, ALuint *pos_arr, ALuint size);
+
+
+static inline HrtfMixerFunc SelectHrtfMixer(void)
+{
+#ifdef HAVE_SSE
+    if((CPUCapFlags&CPU_CAP_SSE))
+        return MixHrtf_SSE;
+#endif
+#ifdef HAVE_NEON
+    if((CPUCapFlags&CPU_CAP_NEON))
+        return MixHrtf_Neon;
+#endif
+
+    return MixHrtf_C;
+}
+
+static inline MixerFunc SelectMixer(void)
+{
+#ifdef HAVE_SSE
+    if((CPUCapFlags&CPU_CAP_SSE))
+        return Mix_SSE;
+#endif
+#ifdef HAVE_NEON
+    if((CPUCapFlags&CPU_CAP_NEON))
+        return Mix_Neon;
+#endif
+
+    return Mix_C;
+}
+
+static inline ResamplerFunc SelectResampler(enum Resampler Resampler, ALuint increment)
+{
+    if(increment == FRACTIONONE)
+        return Resample_copy32_C;
+    switch(Resampler)
+    {
+        case PointResampler:
+            return Resample_point32_C;
+        case LinearResampler:
+#ifdef HAVE_SSE4_1
+            if((CPUCapFlags&CPU_CAP_SSE4_1))
+                return Resample_lerp32_SSE41;
+#endif
+#ifdef HAVE_SSE2
+            if((CPUCapFlags&CPU_CAP_SSE2))
+                return Resample_lerp32_SSE2;
+#endif
+            return Resample_lerp32_C;
+        case CubicResampler:
+            return Resample_cubic32_C;
+        case ResamplerMax:
+            /* Shouldn't happen */
+            break;
+    }
+
+    return Resample_point32_C;
+}
+
+
+static inline ALfloat Sample_ALbyte(ALbyte val)
 { return val * (1.0f/127.0f); }
 
-static __inline ALfloat Sample_ALshort(ALshort val)
+static inline ALfloat Sample_ALshort(ALshort val)
 { return val * (1.0f/32767.0f); }
 
-static __inline ALfloat Sample_ALfloat(ALfloat val)
+static inline ALfloat Sample_ALfloat(ALfloat val)
 { return val; }
 
 #define DECL_TEMPLATE(T)                                                      \
@@ -60,7 +121,7 @@ DECL_TEMPLATE(ALfloat)
 
 #undef DECL_TEMPLATE
 
-static void LoadData(ALfloat *dst, const ALvoid *src, ALuint srcstep, enum FmtType srctype, ALuint samples)
+static void LoadSamples(ALfloat *dst, const ALvoid *src, ALuint srcstep, enum FmtType srctype, ALuint samples)
 {
     switch(srctype)
     {
@@ -76,7 +137,7 @@ static void LoadData(ALfloat *dst, const ALvoid *src, ALuint srcstep, enum FmtTy
     }
 }
 
-static void SilenceData(ALfloat *dst, ALuint samples)
+static void SilenceSamples(ALfloat *dst, ALuint samples)
 {
     ALuint i;
     for(i = 0;i < samples;i++)
@@ -84,21 +145,47 @@ static void SilenceData(ALfloat *dst, ALuint samples)
 }
 
 
-static void DoFilter(ALfilterState *filter, ALfloat *__restrict__ dst, const ALfloat *__restrict__ src,
-                     ALuint numsamples)
+static const ALfloat *DoFilters(ALfilterState *lpfilter, ALfilterState *hpfilter,
+                                ALfloat *__restrict__ dst, const ALfloat *__restrict__ src,
+                                ALuint numsamples, enum ActiveFilters type)
 {
     ALuint i;
-    for(i = 0;i < numsamples;i++)
-        dst[i] = ALfilterState_processSingle(filter, src[i]);
-    dst[i] = ALfilterState_processSingleC(filter, src[i]);
+    switch(type)
+    {
+        case AF_None:
+            break;
+
+        case AF_LowPass:
+            ALfilterState_process(lpfilter, dst, src, numsamples);
+            return dst;
+        case AF_HighPass:
+            ALfilterState_process(hpfilter, dst, src, numsamples);
+            return dst;
+
+        case AF_BandPass:
+            for(i = 0;i < numsamples;)
+            {
+                ALfloat temp[64];
+                ALuint todo = minu(64, numsamples-i);
+
+                ALfilterState_process(lpfilter, temp, src+i, todo);
+                ALfilterState_process(hpfilter, dst+i, temp, todo);
+                i += todo;
+            }
+            return dst;
+    }
+    return src;
 }
 
 
-ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
+ALvoid MixSource(ALactivesource *src, ALCdevice *Device, ALuint SamplesToDo)
 {
+    MixerFunc Mix;
+    HrtfMixerFunc HrtfMix;
+    ResamplerFunc Resample;
+    ALsource *Source = src->Source;
     ALbufferlistitem *BufferListItem;
     ALuint DataPosInt, DataPosFrac;
-    ALuint BuffersPlayed;
     ALboolean Looping;
     ALuint increment;
     enum Resampler Resampler;
@@ -110,20 +197,19 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
     ALuint chan, j;
 
     /* Get source info */
-    State         = Source->state;
-    BuffersPlayed = Source->BuffersPlayed;
-    DataPosInt    = Source->position;
-    DataPosFrac   = Source->position_fraction;
-    Looping       = Source->Looping;
-    increment     = Source->Params.Step;
-    Resampler     = (increment==FRACTIONONE) ? PointResampler : Source->Resampler;
-    NumChannels   = Source->NumChannels;
-    SampleSize    = Source->SampleSize;
+    State          = Source->state;
+    BufferListItem = ATOMIC_LOAD(&Source->current_buffer);
+    DataPosInt     = Source->position;
+    DataPosFrac    = Source->position_fraction;
+    Looping        = Source->Looping;
+    increment      = src->Step;
+    Resampler      = (increment==FRACTIONONE) ? PointResampler : Source->Resampler;
+    NumChannels    = Source->NumChannels;
+    SampleSize     = Source->SampleSize;
 
-    /* Get current buffer queue item */
-    BufferListItem = Source->queue;
-    for(j = 0;j < BuffersPlayed;j++)
-        BufferListItem = BufferListItem->next;
+    Mix = SelectMixer();
+    HrtfMix = SelectHrtfMixer();
+    Resample = SelectResampler(Resampler, increment);
 
     OutPos = 0;
     do {
@@ -131,8 +217,8 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
         const ALuint BufferPadding = ResamplerPadding[Resampler];
         ALuint SrcBufferSize, DstBufferSize;
 
-        /* Figure out how many buffer bytes will be needed */
-        DataSize64  = SamplesToDo-OutPos+1;
+        /* Figure out how many buffer samples will be needed */
+        DataSize64  = SamplesToDo-OutPos;
         DataSize64 *= increment;
         DataSize64 += DataPosFrac+FRACTIONMASK;
         DataSize64 >>= FRACTIONBITS;
@@ -144,7 +230,6 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
         DataSize64  = SrcBufferSize;
         DataSize64 -= BufferPadding+BufferPrePadding;
         DataSize64 <<= FRACTIONBITS;
-        DataSize64 -= increment;
         DataSize64 -= DataPosFrac;
 
         DstBufferSize = (ALuint)((DataSize64+(increment-1)) / increment);
@@ -157,13 +242,13 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
 
         for(chan = 0;chan < NumChannels;chan++)
         {
-            ALfloat *SrcData = Device->SampleData1;
-            ALfloat *ResampledData = Device->SampleData2;
+            const ALfloat *ResampledData;
+            ALfloat *SrcData = Device->SourceData;
             ALuint SrcDataSize = 0;
 
             if(Source->SourceType == AL_STATIC)
             {
-                const ALbuffer *ALBuffer = Source->queue->buffer;
+                const ALbuffer *ALBuffer = BufferListItem->buffer;
                 const ALubyte *Data = ALBuffer->data;
                 ALuint DataSize;
                 ALuint pos;
@@ -180,7 +265,7 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
                         DataSize = BufferPrePadding - DataPosInt;
                         DataSize = minu(SrcBufferSize - SrcDataSize, DataSize);
 
-                        SilenceData(&SrcData[SrcDataSize], DataSize);
+                        SilenceSamples(&SrcData[SrcDataSize], DataSize);
                         SrcDataSize += DataSize;
 
                         pos = 0;
@@ -190,11 +275,11 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
                      * rest of the temp buffer */
                     DataSize = minu(SrcBufferSize - SrcDataSize, ALBuffer->SampleLen - pos);
 
-                    LoadData(&SrcData[SrcDataSize], &Data[(pos*NumChannels + chan)*SampleSize],
-                             NumChannels, ALBuffer->FmtType, DataSize);
+                    LoadSamples(&SrcData[SrcDataSize], &Data[(pos*NumChannels + chan)*SampleSize],
+                                NumChannels, ALBuffer->FmtType, DataSize);
                     SrcDataSize += DataSize;
 
-                    SilenceData(&SrcData[SrcDataSize], SrcBufferSize - SrcDataSize);
+                    SilenceSamples(&SrcData[SrcDataSize], SrcBufferSize - SrcDataSize);
                     SrcDataSize += SrcBufferSize - SrcDataSize;
                 }
                 else
@@ -217,7 +302,7 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
                         DataSize = BufferPrePadding - DataPosInt;
                         DataSize = minu(SrcBufferSize - SrcDataSize, DataSize);
 
-                        SilenceData(&SrcData[SrcDataSize], DataSize);
+                        SilenceSamples(&SrcData[SrcDataSize], DataSize);
                         SrcDataSize += DataSize;
 
                         pos = 0;
@@ -228,8 +313,8 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
                     DataSize = LoopEnd - pos;
                     DataSize = minu(SrcBufferSize - SrcDataSize, DataSize);
 
-                    LoadData(&SrcData[SrcDataSize], &Data[(pos*NumChannels + chan)*SampleSize],
-                             NumChannels, ALBuffer->FmtType, DataSize);
+                    LoadSamples(&SrcData[SrcDataSize], &Data[(pos*NumChannels + chan)*SampleSize],
+                                NumChannels, ALBuffer->FmtType, DataSize);
                     SrcDataSize += DataSize;
 
                     DataSize = LoopEnd-LoopStart;
@@ -237,8 +322,8 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
                     {
                         DataSize = minu(SrcBufferSize - SrcDataSize, DataSize);
 
-                        LoadData(&SrcData[SrcDataSize], &Data[(LoopStart*NumChannels + chan)*SampleSize],
-                                 NumChannels, ALBuffer->FmtType, DataSize);
+                        LoadSamples(&SrcData[SrcDataSize], &Data[(LoopStart*NumChannels + chan)*SampleSize],
+                                    NumChannels, ALBuffer->FmtType, DataSize);
                         SrcDataSize += DataSize;
                     }
                 }
@@ -256,23 +341,23 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
                     pos = BufferPrePadding - DataPosInt;
                     while(pos > 0)
                     {
-                        if(!tmpiter->prev && !Looping)
+                        ALbufferlistitem *prev;
+                        if((prev=tmpiter->prev) != NULL)
+                            tmpiter = prev;
+                        else if(Looping)
+                        {
+                            while(tmpiter->next)
+                                tmpiter = tmpiter->next;
+                        }
+                        else
                         {
                             ALuint DataSize = minu(SrcBufferSize - SrcDataSize, pos);
 
-                            SilenceData(&SrcData[SrcDataSize], DataSize);
+                            SilenceSamples(&SrcData[SrcDataSize], DataSize);
                             SrcDataSize += DataSize;
 
                             pos = 0;
                             break;
-                        }
-
-                        if(tmpiter->prev)
-                            tmpiter = tmpiter->prev;
-                        else
-                        {
-                            while(tmpiter->next)
-                                tmpiter = tmpiter->next;
                         }
 
                         if(tmpiter->buffer)
@@ -305,55 +390,72 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
                             pos -= pos;
 
                             DataSize = minu(SrcBufferSize - SrcDataSize, DataSize);
-                            LoadData(&SrcData[SrcDataSize], Data, NumChannels,
-                                     ALBuffer->FmtType, DataSize);
+                            LoadSamples(&SrcData[SrcDataSize], Data, NumChannels,
+                                        ALBuffer->FmtType, DataSize);
                             SrcDataSize += DataSize;
                         }
                     }
                     tmpiter = tmpiter->next;
                     if(!tmpiter && Looping)
-                        tmpiter = Source->queue;
+                        tmpiter = ATOMIC_LOAD(&Source->queue);
                     else if(!tmpiter)
                     {
-                        SilenceData(&SrcData[SrcDataSize], SrcBufferSize - SrcDataSize);
+                        SilenceSamples(&SrcData[SrcDataSize], SrcBufferSize - SrcDataSize);
                         SrcDataSize += SrcBufferSize - SrcDataSize;
                     }
                 }
             }
 
             /* Now resample, then filter and mix to the appropriate outputs. */
-            Source->Params.Resample(&SrcData[BufferPrePadding], DataPosFrac,
-                                    increment, ResampledData, DstBufferSize);
-
+            ResampledData = Resample(
+                &SrcData[BufferPrePadding], DataPosFrac, increment,
+                Device->ResampledData, DstBufferSize
+            );
             {
-                DirectParams *directparms = &Source->Params.Direct;
+                DirectParams *parms = &src->Direct;
+                const ALfloat *samples;
 
-                DoFilter(&directparms->Filter[chan], SrcData, ResampledData,
-                         DstBufferSize);
-                Source->Params.DryMix(directparms, SrcData, chan, OutPos,
-                                      SamplesToDo, DstBufferSize);
+                samples = DoFilters(
+                    &parms->Filters[chan].LowPass, &parms->Filters[chan].HighPass,
+                    Device->FilteredData, ResampledData, DstBufferSize,
+                    parms->Filters[chan].ActiveType
+                );
+                if(!src->IsHrtf)
+                    Mix(samples, MaxChannels, parms->OutBuffer, parms->Mix.Gains[chan],
+                        parms->Counter, OutPos, DstBufferSize);
+                else
+                    HrtfMix(parms->OutBuffer, samples, parms->Counter, src->Offset,
+                            OutPos, parms->Mix.Hrtf.IrSize, &parms->Mix.Hrtf.Params[chan],
+                            &parms->Mix.Hrtf.State[chan], DstBufferSize);
             }
 
             for(j = 0;j < Device->NumAuxSends;j++)
             {
-                SendParams *sendparms = &Source->Params.Send[j];
-                if(!sendparms->Slot)
+                SendParams *parms = &src->Send[j];
+                const ALfloat *samples;
+
+                if(!parms->OutBuffer)
                     continue;
 
-                DoFilter(&sendparms->Filter[chan], SrcData, ResampledData,
-                         DstBufferSize);
-                Source->Params.WetMix(sendparms, SrcData, OutPos,
-                                      SamplesToDo, DstBufferSize);
+                samples = DoFilters(
+                    &parms->Filters[chan].LowPass, &parms->Filters[chan].HighPass,
+                    Device->FilteredData, ResampledData, DstBufferSize,
+                    parms->Filters[chan].ActiveType
+                );
+                Mix(samples, 1, parms->OutBuffer, &parms->Gain,
+                    parms->Counter, OutPos, DstBufferSize);
             }
         }
         /* Update positions */
-        for(j = 0;j < DstBufferSize;j++)
-        {
-            DataPosFrac += increment;
-            DataPosInt  += DataPosFrac>>FRACTIONBITS;
-            DataPosFrac &= FRACTIONMASK;
-        }
+        DataPosFrac += increment*DstBufferSize;
+        DataPosInt  += DataPosFrac>>FRACTIONBITS;
+        DataPosFrac &= FRACTIONMASK;
+
         OutPos += DstBufferSize;
+        src->Offset += DstBufferSize;
+        src->Direct.Counter = maxu(src->Direct.Counter, DstBufferSize) - DstBufferSize;
+        for(j = 0;j < Device->NumAuxSends;j++)
+            src->Send[j].Counter = maxu(src->Send[j].Counter, DstBufferSize) - DstBufferSize;
 
         /* Handle looping sources */
         while(1)
@@ -374,6 +476,7 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
 
             if(Looping && Source->SourceType == AL_STATIC)
             {
+                assert(LoopEnd > LoopStart);
                 DataPosInt = ((DataPosInt-LoopStart)%(LoopEnd-LoopStart)) + LoopStart;
                 break;
             }
@@ -381,24 +484,18 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
             if(DataSize > DataPosInt)
                 break;
 
-            if(BufferListItem->next)
+            if(!(BufferListItem=BufferListItem->next))
             {
-                BufferListItem = BufferListItem->next;
-                BuffersPlayed++;
-            }
-            else if(Looping)
-            {
-                BufferListItem = Source->queue;
-                BuffersPlayed = 0;
-            }
-            else
-            {
-                State = AL_STOPPED;
-                BufferListItem = Source->queue;
-                BuffersPlayed = Source->BuffersInQueue;
-                DataPosInt = 0;
-                DataPosFrac = 0;
-                break;
+                if(Looping)
+                    BufferListItem = ATOMIC_LOAD(&Source->queue);
+                else
+                {
+                    State = AL_STOPPED;
+                    BufferListItem = NULL;
+                    DataPosInt = 0;
+                    DataPosFrac = 0;
+                    break;
+                }
             }
 
             DataPosInt -= DataSize;
@@ -407,15 +504,7 @@ ALvoid MixSource(ALsource *Source, ALCdevice *Device, ALuint SamplesToDo)
 
     /* Update source info */
     Source->state             = State;
-    Source->BuffersPlayed     = BuffersPlayed;
+    ATOMIC_STORE(&Source->current_buffer, BufferListItem);
     Source->position          = DataPosInt;
     Source->position_fraction = DataPosFrac;
-    Source->Hrtf.Offset      += OutPos;
-    if(State == AL_PLAYING)
-        Source->Hrtf.Counter = maxu(Source->Hrtf.Counter, OutPos) - OutPos;
-    else
-    {
-        Source->Hrtf.Counter = 0;
-        Source->Hrtf.Moving  = AL_FALSE;
-    }
 }

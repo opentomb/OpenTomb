@@ -9,11 +9,8 @@ extern "C" {
   #define ALC_API
 #endif
 
-#if defined(_WIN32)
- #define ALC_APIENTRY __cdecl
-#else
- #define ALC_APIENTRY
-#endif
+//#define ALC_APIENTRY __cdecl
+#define ALC_APIENTRY
 
 
 /** Deprecated macro. */

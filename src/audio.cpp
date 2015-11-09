@@ -8,6 +8,7 @@ extern "C" {
 #include "al/AL/al.h"
 #include "al/AL/alc.h"
 #include "al/AL/alext.h"
+#include "al/AL/efx.h"
 #include "al/AL/efx-presets.h"
 
 #include "ogg/codec.h"

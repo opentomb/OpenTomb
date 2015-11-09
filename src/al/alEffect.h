@@ -12,13 +12,15 @@ struct ALeffect;
 enum {
     EAXREVERB = 0,
     REVERB,
+    AUTOWAH,
+    CHORUS,
+    COMPRESSOR,
+    DISTORTION,
     ECHO,
+    EQUALIZER,
+    FLANGER,
     MODULATOR,
     DEDICATED,
-    CHORUS,
-    FLANGER,
-    EQUALIZER,
-    DISTORTION,
 
     MAX_EFFECTS
 };
@@ -28,28 +30,30 @@ extern ALfloat ReverbBoost;
 extern ALboolean EmulateEAXReverb;
 
 struct ALeffectVtable {
-    void (*const SetParami)(struct ALeffect *effect, ALCcontext *context, ALenum param, ALint val);
-    void (*const SetParamiv)(struct ALeffect *effect, ALCcontext *context, ALenum param, const ALint *vals);
-    void (*const SetParamf)(struct ALeffect *effect, ALCcontext *context, ALenum param, ALfloat val);
-    void (*const SetParamfv)(struct ALeffect *effect, ALCcontext *context, ALenum param, const ALfloat *vals);
+    void (*const setParami)(struct ALeffect *effect, ALCcontext *context, ALenum param, ALint val);
+    void (*const setParamiv)(struct ALeffect *effect, ALCcontext *context, ALenum param, const ALint *vals);
+    void (*const setParamf)(struct ALeffect *effect, ALCcontext *context, ALenum param, ALfloat val);
+    void (*const setParamfv)(struct ALeffect *effect, ALCcontext *context, ALenum param, const ALfloat *vals);
 
-    void (*const GetParami)(struct ALeffect *effect, ALCcontext *context, ALenum param, ALint *val);
-    void (*const GetParamiv)(struct ALeffect *effect, ALCcontext *context, ALenum param, ALint *vals);
-    void (*const GetParamf)(struct ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *val);
-    void (*const GetParamfv)(struct ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *vals);
+    void (*const getParami)(const struct ALeffect *effect, ALCcontext *context, ALenum param, ALint *val);
+    void (*const getParamiv)(const struct ALeffect *effect, ALCcontext *context, ALenum param, ALint *vals);
+    void (*const getParamf)(const struct ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *val);
+    void (*const getParamfv)(const struct ALeffect *effect, ALCcontext *context, ALenum param, ALfloat *vals);
 };
 
 #define DEFINE_ALEFFECT_VTABLE(T)           \
 const struct ALeffectVtable T##_vtable = {  \
-    T##_SetParami, T##_SetParamiv,          \
-    T##_SetParamf, T##_SetParamfv,          \
-    T##_GetParami, T##_GetParamiv,          \
-    T##_GetParamf, T##_GetParamfv,          \
+    T##_setParami, T##_setParamiv,          \
+    T##_setParamf, T##_setParamfv,          \
+    T##_getParami, T##_getParamiv,          \
+    T##_getParamf, T##_getParamfv,          \
 }
 
 extern const struct ALeffectVtable ALeaxreverb_vtable;
 extern const struct ALeffectVtable ALreverb_vtable;
+extern const struct ALeffectVtable ALautowah_vtable;
 extern const struct ALeffectVtable ALchorus_vtable;
+extern const struct ALeffectVtable ALcompressor_vtable;
 extern const struct ALeffectVtable ALdistortion_vtable;
 extern const struct ALeffectVtable ALecho_vtable;
 extern const struct ALeffectVtable ALequalizer_vtable;
@@ -90,24 +94,11 @@ typedef union ALeffectProps {
     } Reverb;
 
     struct {
-        ALfloat Delay;
-        ALfloat LRDelay;
-
-        ALfloat Damping;
-        ALfloat Feedback;
-
-        ALfloat Spread;
-    } Echo;
-
-    struct {
-        ALfloat Frequency;
-        ALfloat HighPassCutoff;
-        ALint Waveform;
-    } Modulator;
-
-    struct {
-        ALfloat Gain;
-    } Dedicated;
+        ALfloat AttackTime;
+        ALfloat ReleaseTime;
+        ALfloat PeakGain;
+        ALfloat Resonance;
+    } Autowah;
 
     struct {
         ALint Waveform;
@@ -119,13 +110,26 @@ typedef union ALeffectProps {
     } Chorus;
 
     struct {
-        ALint Waveform;
-        ALint Phase;
-        ALfloat Rate;
-        ALfloat Depth;
-        ALfloat Feedback;
+        ALboolean OnOff;
+    } Compressor;
+
+    struct {
+        ALfloat Edge;
+        ALfloat Gain;
+        ALfloat LowpassCutoff;
+        ALfloat EQCenter;
+        ALfloat EQBandwidth;
+    } Distortion;
+
+    struct {
         ALfloat Delay;
-    } Flanger;
+        ALfloat LRDelay;
+
+        ALfloat Damping;
+        ALfloat Feedback;
+
+        ALfloat Spread;
+    } Echo;
 
     struct {
         ALfloat Delay;
@@ -142,12 +146,23 @@ typedef union ALeffectProps {
     } Equalizer;
 
     struct {
-        ALfloat Edge;
+        ALint Waveform;
+        ALint Phase;
+        ALfloat Rate;
+        ALfloat Depth;
+        ALfloat Feedback;
+        ALfloat Delay;
+    } Flanger;
+
+    struct {
+        ALfloat Frequency;
+        ALfloat HighPassCutoff;
+        ALint Waveform;
+    } Modulator;
+
+    struct {
         ALfloat Gain;
-        ALfloat LowpassCutoff;
-        ALfloat EQCenter;
-        ALfloat EQBandwidth;
-    } Distortion;
+    } Dedicated;
 } ALeffectProps;
 
 typedef struct ALeffect {
@@ -162,7 +177,12 @@ typedef struct ALeffect {
     ALuint id;
 } ALeffect;
 
-static __inline ALboolean IsReverbEffect(ALenum type)
+inline struct ALeffect *LookupEffect(ALCdevice *device, ALuint id)
+{ return (struct ALeffect*)LookupUIntMapKey(&device->EffectMap, id); }
+inline struct ALeffect *RemoveEffect(ALCdevice *device, ALuint id)
+{ return (struct ALeffect*)RemoveUIntMapKey(&device->EffectMap, id); }
+
+inline ALboolean IsReverbEffect(ALenum type)
 { return type == AL_EFFECT_REVERB || type == AL_EFFECT_EAXREVERB; }
 
 ALenum InitEffect(ALeffect *effect);
