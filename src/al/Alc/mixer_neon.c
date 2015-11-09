@@ -1,12 +1,13 @@
-#include "config.h"
+#include "../config.h"
 
+#ifdef HAVE_NEON
 #include <arm_neon.h>
 
-#include "AL/al.h"
-#include "AL/alc.h"
-#include "alMain.h"
-#include "alu.h"
-#include "hrtf.h"
+#include "../AL/al.h"
+#include "../AL/alc.h"
+#include "../alMain.h"
+#include "../alu.h"
+#include "../hrtf.h"
 
 
 static inline void ApplyCoeffsStep(ALuint Offset, ALfloat (*restrict Values)[2],
@@ -116,3 +117,4 @@ void MixDirect_Neon(const ALfloat *data, ALuint OutChans, ALfloat (*restrict Out
             OutBuffer[c][OutPos+pos] += data[pos]*gain;
     }
 }
+#endif

@@ -603,24 +603,12 @@
 		<Unit filename="shaders/text.vsh">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/al/AL/al.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/AL/alc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/AL/alext.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/AL/efx-creative.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/AL/efx-presets.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/AL/efx.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/al/AL/al.h" />
+		<Unit filename="src/al/AL/alc.h" />
+		<Unit filename="src/al/AL/alext.h" />
+		<Unit filename="src/al/AL/efx-creative.h" />
+		<Unit filename="src/al/AL/efx-presets.h" />
+		<Unit filename="src/al/AL/efx.h" />
 		<Unit filename="src/al/Alc/ALc.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -633,12 +621,14 @@
 		<Unit filename="src/al/Alc/alcRing.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/al/Alc/alcThread.c">
-			<Option compilerVar="CC" />
-		</Unit>
+		<Unit filename="src/al/Alc/alstring.h" />
 		<Unit filename="src/al/Alc/backends/backend.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/al/Alc/backends/base.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/al/Alc/backends/base.h" />
 		<Unit filename="src/al/Alc/backends/loopback.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -651,7 +641,14 @@
 		<Unit filename="src/al/Alc/bs2b.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/al/Alc/compat.h" />
+		<Unit filename="src/al/Alc/effects/autowah.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/al/Alc/effects/chorus.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/al/Alc/effects/compressor.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/al/Alc/effects/dedicated.c">
@@ -663,9 +660,6 @@
 		<Unit filename="src/al/Alc/effects/echo.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/al/Alc/effects/effect_null.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="src/al/Alc/effects/equalizer.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -675,13 +669,34 @@
 		<Unit filename="src/al/Alc/effects/modulator.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/al/Alc/effects/null.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/al/Alc/effects/reverb.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/al/Alc/evtqueue.h" />
 		<Unit filename="src/al/Alc/helpers.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/al/Alc/hrtf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/al/Alc/hrtf.h" />
+		<Unit filename="src/al/Alc/midi/base.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/al/Alc/midi/base.h" />
+		<Unit filename="src/al/Alc/midi/dummy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/al/Alc/midi/fluidsynth.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/al/Alc/midi/sf2load.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/al/Alc/midi/soft.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/al/Alc/mixer.c">
@@ -690,21 +705,24 @@
 		<Unit filename="src/al/Alc/mixer_c.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/al/Alc/mixer_defs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/Alc/mixer_inc.c">
-			<Option compilerVar="CC" />
-		</Unit>
+		<Unit filename="src/al/Alc/mixer_defs.h" />
+		<Unit filename="src/al/Alc/mixer_inc.hpp" />
 		<Unit filename="src/al/Alc/mixer_neon.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/al/Alc/mixer_sse.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/al/Alc/mixer_sse2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/al/Alc/mixer_sse41.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/al/Alc/panning.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/al/Alc/vector.h" />
 		<Unit filename="src/al/OpenAL32/alAuxEffectSlot.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -723,7 +741,19 @@
 		<Unit filename="src/al/OpenAL32/alFilter.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="src/al/OpenAL32/alFontsound.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="src/al/OpenAL32/alListener.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/al/OpenAL32/alMidi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/al/OpenAL32/alPreset.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/al/OpenAL32/alSoundfont.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/al/OpenAL32/alSource.c">
@@ -735,42 +765,42 @@
 		<Unit filename="src/al/OpenAL32/alThunk.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/al/alAuxEffectSlot.h">
-			<Option target="&lt;{~None~}&gt;" />
+		<Unit filename="src/al/OpenAL32/sample_cvt.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/al/alBuffer.h">
-			<Option target="&lt;{~None~}&gt;" />
+		<Unit filename="src/al/alAuxEffectSlot.h" />
+		<Unit filename="src/al/alBuffer.h" />
+		<Unit filename="src/al/alEffect.h" />
+		<Unit filename="src/al/alError.h" />
+		<Unit filename="src/al/alFilter.h" />
+		<Unit filename="src/al/alListener.h" />
+		<Unit filename="src/al/alMain.h" />
+		<Unit filename="src/al/alMidi.h" />
+		<Unit filename="src/al/alSource.h" />
+		<Unit filename="src/al/alThunk.h" />
+		<Unit filename="src/al/align.h" />
+		<Unit filename="src/al/alu.h" />
+		<Unit filename="src/al/atomic.h" />
+		<Unit filename="src/al/bool.h" />
+		<Unit filename="src/al/bs2b.h" />
+		<Unit filename="src/al/common/atomic.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/al/alEffect.h">
-			<Option target="&lt;{~None~}&gt;" />
+		<Unit filename="src/al/common/rwlock.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/al/alError.h">
-			<Option target="&lt;{~None~}&gt;" />
+		<Unit filename="src/al/common/threads.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/al/alFilter.h">
-			<Option target="&lt;{~None~}&gt;" />
+		<Unit filename="src/al/common/uintmap.c">
+			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="src/al/alListener.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/alMain.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/alSource.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/alThunk.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/alu.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/bs2b.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/al/config.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/al/config.h" />
+		<Unit filename="src/al/rwlock.h" />
+		<Unit filename="src/al/sample_cvt.h" />
+		<Unit filename="src/al/static_assert.h" />
+		<Unit filename="src/al/threads.h" />
+		<Unit filename="src/al/uintmap.h" />
 		<Unit filename="src/anim_state_control.cpp" />
 		<Unit filename="src/anim_state_control.h">
 			<Option target="&lt;{~None~}&gt;" />
