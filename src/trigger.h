@@ -113,7 +113,7 @@ typedef struct trigger_command_s
     uint8_t                         once;
     uint8_t                         cam_index;
     uint8_t                         cam_timer;
-    uint8_t                         cam_zoom;
+    uint8_t                         cam_move;
     struct trigger_command_s       *next;
 }trigger_command_t, *trigger_command_p;
 

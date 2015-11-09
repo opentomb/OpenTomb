@@ -728,7 +728,7 @@ struct room_s *World_FindRoomByPosCogerrence(world_p world, float pos[3], struct
 
 void World_SwapRoomToBase(world_p world, struct room_s *room)
 {
-    if((room->base_room != NULL) && (room->active == 1))            // If room is active alternate room
+    if(room->base_room && room->active)                             // If room is active alternate room
     {
         renderer.CleanList();
         Room_Disable(room);                                         // Disable current room
@@ -742,7 +742,7 @@ void World_SwapRoomToBase(world_p world, struct room_s *room)
 
 void World_SwapRoomToAlternate(world_p world, struct room_s *room)
 {
-    if((room->alternate_room != NULL) && (room->active == 1))       // If room is active base room
+    if(room->alternate_room && room->active)                        // If room is active base room
     {
         renderer.CleanList();
         Room_Disable(room);                                         // Disable current room

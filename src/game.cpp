@@ -522,11 +522,6 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         }
 
         Cam_LookTo(cam, target->transform + 12);
-        ///@TODO: check that zoom
-        if(engine_camera_state.zoom > 0.0f)
-        {
-            Cam_SetFovAspect(cam, screen_info.fov / engine_camera_state.zoom, cam->aspect);
-        }
 
         engine_camera_state.time -= engine_frame_time;
         if(engine_camera_state.time <= 0.0f)
@@ -1011,7 +1006,7 @@ void Game_SetCameraTarget(uint32_t entity_id, float timer)
 }
 
 // if timer == 0 then camera set is permanent
-void Game_SetCamera(uint32_t camera_id, int once, float timer, float zoom)
+void Game_SetCamera(uint32_t camera_id, int once, int move, float timer)
 {
     if(camera_id < engine_world.cameras_sinks_count)
     {
@@ -1025,7 +1020,7 @@ void Game_SetCamera(uint32_t camera_id, int once, float timer, float zoom)
             engine_camera_state.state = CAMERA_STATE_FIXED;
             engine_camera_state.sink = engine_world.cameras_sinks + camera_id;
             engine_camera_state.time = timer;
-            engine_camera_state.zoom = zoom;
+            engine_camera_state.move = move;
         }
     }
 }

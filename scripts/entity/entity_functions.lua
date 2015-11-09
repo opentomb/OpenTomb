@@ -1175,18 +1175,18 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
         -- pop-retract phase. Pop phase is done in first 10 frames, and retract phase is done after
         -- frame 50 (e.g. 60-10 = 10 frames as well). For mode 1, we stop the phase right after
         -- spikes were popped out, and send them to idle state - so they can be deactivated later.
-        
+        local time_coef = frame_time * 60.0;
         if(entity_funcs[object_id].curr_timer < 60) then
-            entity_funcs[object_id].curr_subscaling = entity_funcs[object_id].curr_subscaling + 6;  -- Subscaling makes full turn in 1 sec.
+            entity_funcs[object_id].curr_subscaling = entity_funcs[object_id].curr_subscaling + 6 * time_coef;  -- Subscaling makes full turn in 1 sec.
             if(entity_funcs[object_id].curr_timer <= 10) then
-                entity_funcs[object_id].curr_scaling = entity_funcs[object_id].curr_scaling + 0.1;
+                entity_funcs[object_id].curr_scaling = entity_funcs[object_id].curr_scaling + 0.1 * time_coef;
             elseif(entity_funcs[object_id].curr_timer > 50) then
                 if(entity_funcs[object_id].mode == 1) then
                     entity_funcs[object_id].waiting = true;
                     setEntityActivity(object_id, 0);
                     return;
                 else
-                    entity_funcs[object_id].curr_scaling = entity_funcs[object_id].curr_scaling - 0.1;
+                    entity_funcs[object_id].curr_scaling = entity_funcs[object_id].curr_scaling - 0.1 * time_coef;
                 end;
             end;
             
@@ -1226,7 +1226,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
             setEntityScaling(object_id, 1.0, 1.0, entity_funcs[object_id].curr_scaling - math.abs(math.cos(math.rad(entity_funcs[object_id].curr_subscaling))) / 4);
         end;
         
-        entity_funcs[object_id].curr_timer = entity_funcs[object_id].curr_timer + 1;
+        entity_funcs[object_id].curr_timer = entity_funcs[object_id].curr_timer + 1.0 * time_coef;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)

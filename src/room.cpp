@@ -158,7 +158,7 @@ void Room_Enable(struct room_s *room)
         }
     }
 
-    for(engine_container_p cont = room->content->containers; cont; cont = cont->next)
+    /*for(engine_container_p cont = room->content->containers; cont; cont = cont->next)
     {
         switch(cont->object_type)
         {
@@ -166,7 +166,7 @@ void Room_Enable(struct room_s *room)
                 Entity_Enable((entity_p)cont->object);
                 break;
         }
-    }
+    }*/
 
     room->active = 1;
 }
@@ -192,7 +192,7 @@ void Room_Disable(struct room_s *room)
         }
     }
 
-    for(engine_container_p cont = room->content->containers; cont; cont = cont->next)
+    /*for(engine_container_p cont = room->content->containers; cont; cont = cont->next)
     {
         switch(cont->object_type)
         {
@@ -200,7 +200,7 @@ void Room_Disable(struct room_s *room)
                 Entity_Disable((entity_p)cont->object);
                 break;
         }
-    }
+    }*/
 
     room->active = 0;
 }

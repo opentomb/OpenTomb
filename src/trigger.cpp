@@ -93,10 +93,14 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
         // some specific entity classes.
         // entity_activator_type  == TR_ACTIVATORTYPE_LARA and
         // trigger_activator_type == TR_ACTIVATORTYPE_MISC
-        if(entity_activator && (entity_activator->bf->animations.model->id == 0) &&
-           ((trigger->sub_function == TR_FD_TRIGTYPE_HEAVY)            ||
+        if(((trigger->sub_function == TR_FD_TRIGTYPE_HEAVY)            ||
             (trigger->sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER) ||
             (trigger->sub_function == TR_FD_TRIGTYPE_HEAVYSWITCH)))
+        {
+            if(entity_activator && (entity_activator->bf->animations.model->id == 0))
+            return;
+        }
+        else if(!entity_activator)
         {
             return;
         }
@@ -365,7 +369,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_SET_CAMERA:
-                    Game_SetCamera(command->cam_index, command->once, command->cam_timer, command->cam_zoom);
+                    Game_SetCamera(command->cam_index, command->once, command->cam_move, command->cam_timer);
                     break;
 
                 case TR_FD_TRIGFUNC_FLYBY:
@@ -624,7 +628,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
 
                 case TR_FD_TRIGFUNC_SET_CAMERA:
                     {
-                        snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", command->cam_index, command->cam_timer, command->once, command->cam_zoom);
+                        snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", command->cam_index, command->cam_timer, command->once, command->cam_move);
                         strcat(single_events, buf);
                     }
                     break;

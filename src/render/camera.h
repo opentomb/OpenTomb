@@ -33,7 +33,7 @@ typedef struct camera_state_s
     
     GLfloat                         shake_value;
     GLfloat                         time;
-    GLfloat                         zoom;
+    int                             move;
 }camera_state_t, camera_state_p;
 
 

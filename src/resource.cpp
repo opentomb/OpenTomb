@@ -881,7 +881,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                         command->once = 0;
                         command->cam_index = 0;
                         command->cam_timer = 0;
-                        command->cam_zoom = 0;
+                        command->cam_move = 0;
 
                         switch(command->function)
                         {
@@ -892,7 +892,7 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                     current_offset++;
                                     command->cam_timer = ((*entry) & 0x00FF);
                                     command->once      = ((*entry) & 0x0100) >> 8;
-                                    command->cam_zoom  = ((*entry) & 0x1000) >> 12;
+                                    command->cam_move  = ((*entry) & 0x1000) >> 12;
                                     fd_trigger_function.cont_bit  = ((*entry) & 0x8000) >> 15;
                                 }
                                 break;
