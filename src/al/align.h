@@ -14,7 +14,7 @@
 #else
 /* NOTE: Our custom ALIGN macro can't take a type name like alignas can. For
  * maximum compatibility, only provide constant integer values to alignas. */
-#define alignas(_x) ALIGN(_x)
+#define alignas(_x) __attribute__((packed, aligned(_x)))
 #endif
 #endif
 

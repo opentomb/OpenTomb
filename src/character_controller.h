@@ -318,6 +318,7 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent);
 
 void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizontal);
 void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lean);
+void Character_LookAt(struct entity_s *ent, float target[3]);
 float Character_InertiaLinear(struct entity_s *ent, float max_speed, float accel, int8_t command);
 float Character_InertiaAngular(struct entity_s *ent, float max_angle, float accel, uint8_t axis);
 

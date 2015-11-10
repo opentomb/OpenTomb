@@ -873,6 +873,48 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
 }
 
 
+void Character_LookAt(struct entity_s *ent, float target[3])
+{
+    ss_bone_tag_p b_tag = NULL;
+    uint16_t start_bone;
+    for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
+    {
+        if(ent->bf->bone_tags[i].body_part == BODY_PART_HEAD)
+        {
+            b_tag = ent->bf->bone_tags + i;
+            start_bone = i;
+            break;
+        }
+    }
+
+    if(b_tag)
+    {
+        const float head_z_amp = 85.0f;
+        //const float head_x_amp = 65.0f;
+        float dir[3], tr[16];
+        Mat4_Mat4_mul(tr, ent->transform, b_tag->full_transform);
+        vec3_sub(dir, target, tr + 12);
+        float cos_z = tr[4 + 0];
+        float sin_z =-tr[4 + 1];
+        float t = sqrtf(cos_z * cos_z + sin_z * sin_z);
+        cos_z /= t;
+        sin_z /= t;
+        float x_z = dir[0] * cos_z - dir[1] * sin_z;
+        float y_z = dir[0] * sin_z + dir[1] * cos_z;
+        float delta_oz = atan2f(y_z, x_z) * 180.0f / M_PI;
+        if(delta_oz > head_z_amp)   delta_oz = head_z_amp;
+        if(delta_oz <-head_z_amp)   delta_oz =-head_z_amp;
+        Mat4_RotateZ(b_tag->transform, delta_oz);
+
+        for(uint16_t i = start_bone; i < ent->bf->bone_tag_count; i++)
+        {
+            ss_bone_tag_p btag = ent->bf->bone_tags + i;
+            Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
+        }
+    }
+}
+
+
 /*
  * Linear inertia is absolutely needed for in-water states, and also it gives
  * more organic feel to land animations.

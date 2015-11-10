@@ -1,21 +1,9 @@
-/* API declaration export attribute - using like in staticlibrarys */
-#define AL_API
-#define ALC_API
-
 /* Define to the library version */
-#define ALSOFT_VERSION "1.16.0.TRE"
+#define ALSOFT_VERSION "1.16.0.SDL"
 
 
-/* Define any available alignment declaration */
-#define ALIGN(x)
-#ifdef __MINGW32__
-#define align(x) aligned(x)
-#endif
-
-//#define HAVE_NANOSLEEP
-#define HAVE_TIME_H 1
-#define HAVE_USLEEP 1 
-#define HAVE_UNISTD_H 1
+// #define HAVE_STDALIGN_H 1
+// #define HAVE_C11_ALIGNAS 1
 
 /* Define if we have the SDL audio backend */
 #define HAVE_SDL 1
@@ -46,9 +34,6 @@
 /* Define if we have the strtof function */
 #define HAVE_STRTOF 1
 
-/* Define if we have the __int64 type */
-#define HAVE___INT64 1
-
 /* Define if we have GCC's destructor attribute 
  CHECK_C_SOURCE_COMPILES("int foo() __attribute__((destructor));
                              int main() {return 0;}" HAVE_GCC_DESTRUCTOR)*/
@@ -58,9 +43,6 @@
  CHECK_C_SOURCE_COMPILES("int foo(const char *str, ...) __attribute__((format(printf, 1, 2)));
                          int main() {return 0;}" HAVE_GCC_FORMAT)*/
 //#define HAVE_GCC_FORMAT 1
-
-/* Define if we have stdint.h */
-#define HAVE_STDINT_H 1
 
 /* Define if we have pthread_np.h */
 //#define HAVE_PTHREAD_NP_H 1

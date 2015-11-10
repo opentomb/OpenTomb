@@ -161,8 +161,8 @@ void vec4_rotate(float rot[4], float vec[4], float angle)
     float t1[4], t2[4], t[4];
 
     angle /= 2.0;
-    sin_t2 = sin(angle);
-    cos_t2 = cos(angle);
+    sin_t2 = sinf(angle);
+    cos_t2 = cosf(angle);
 
     t1[3] = cos_t2;
     t1[0] = vec[0] * sin_t2;
@@ -187,21 +187,21 @@ void vec4_GetEilerOrientationTransform(float R[4], float ang[3])
     t = ang[2] / 2.0;                                                           // ROLL
     R[0] = 0.0;                                                                 // -OZ
     R[1] = 0.0;
-    R[2] = -sin(t);
-    R[3] = cos(t);
+    R[2] = -sinf(t);
+    R[3] = cosf(t);
 
     t = ang[0] / 2.0;                                                           // PITCH
-    Rt[0] = sin(t);                                                             // OX
+    Rt[0] = sinf(t);                                                             // OX
     Rt[1] = 0.0;
     Rt[2] = 0.0;
-    Rt[3] = cos(t);
+    Rt[3] = cosf(t);
     vec4_mul(T, R, Rt)
 
     t = ang[1] / 2.0;                                                           // YAW
     Rt[0] = 0.0;                                                                // OY
-    Rt[1] = sin(t);
+    Rt[1] = sinf(t);
     Rt[2] = 0.0;
-    Rt[3] = cos(t);
+    Rt[3] = cosf(t);
     vec4_mul(R, T, Rt)
 }
 
@@ -250,8 +250,8 @@ void vec3_RotateX(float res[3], float src[3], float ang)
     float t[2], sint, cost;
 
     ang *= M_PI / 180.0;
-    sint = sin(ang);
-    cost = cos(ang);
+    sint = sinf(ang);
+    cost = cosf(ang);
     res[0] = src[0];
     t[0] = src[1] * cost - src[2] * sint;
     t[1] = src[1] * sint + src[2] * cost;
@@ -265,8 +265,8 @@ void vec3_RotateY(float res[3], float src[3], float ang)
     float t[2], sint, cost;
 
     ang *= M_PI / 180.0;
-    sint = sin(ang);
-    cost = cos(ang);
+    sint = sinf(ang);
+    cost = cosf(ang);
     res[1] = src[1];
     t[0] = src[0] * cost + src[2] * sint;
     t[1] =-src[0] * sint + src[2] * cost;
@@ -280,8 +280,8 @@ void vec3_RotateZ(float res[3], float src[3], float ang)
     float t[2], sint, cost;
 
     ang *= M_PI / 180.0;
-    sint = sin(ang);
-    cost = cos(ang);
+    sint = sinf(ang);
+    cost = cosf(ang);
     res[2] = src[2];
     t[0] = src[0]*cost - src[1] * sint;
     t[1] = src[0]*sint + src[1] * cost;
@@ -295,8 +295,8 @@ void vec4_GetRotationOperators(float t1[4], float t2[4], const float v[3], float
     float sin_t2, cos_t2, module;
 
     ang /= 2.0f;
-    sin_t2 = sin(ang);
-    cos_t2 = cos(ang);
+    sin_t2 = sinf(ang);
+    cos_t2 = cosf(ang);
 
     t1[3] = cos_t2;
     t1[0] = v[0] * sin_t2;
@@ -319,13 +319,13 @@ void vec4_slerp(float ret[4], float q1[4], float q2[4], float t)
     float cos_fi, sin_fi, fi, k1, k2, sign;
     cos_fi = q1[3] * q2[3] + q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2];
     sign = (cos_fi < 0.0)?(-1.0):(1.0);
-    fi = acos(sign * cos_fi);
-    sin_fi = sin(fi);
+    fi = acosf(sign * cos_fi);
+    sin_fi = sinf(fi);
 
     if((fabs(sin_fi) > 0.00001) && (t > 0.0001))
     {
-        k1 = sin(fi * (1.0 - t)) / sin_fi;
-        k2 = sin(fi * t * sign) / sin_fi;
+        k1 = sinf(fi * (1.0 - t)) / sin_fi;
+        k2 = sinf(fi * t * sign) / sin_fi;
     }
     else
     {
@@ -351,8 +351,8 @@ void vec4_SetZXYRotations(float v[4], float rot[3])
 
     // OZ    Mat4_RotateZ(btag->transform, btag->rotate[2]);
     angle = M_PI * rot[2] / 360.0;
-    sin_t2 = sin(angle);
-    cos_t2 = cos(angle);
+    sin_t2 = sinf(angle);
+    cos_t2 = cosf(angle);
 
     qZ[3] = cos_t2;
     qZ[0] = 0.0 * sin_t2;
@@ -361,8 +361,8 @@ void vec4_SetZXYRotations(float v[4], float rot[3])
 
     // OX    Mat4_RotateX(btag->transform, btag->rotate[0]);
     angle = M_PI * rot[0] / 360.0;
-    sin_t2 = sin(angle);
-    cos_t2 = cos(angle);
+    sin_t2 = sinf(angle);
+    cos_t2 = cosf(angle);
 
     qX[3] = cos_t2;
     qX[0] = 1.0 * sin_t2;
@@ -371,8 +371,8 @@ void vec4_SetZXYRotations(float v[4], float rot[3])
 
     // OY    Mat4_RotateY(btag->transform, btag->rotate[1]);
     angle = M_PI * rot[1] / 360.0;
-    sin_t2 = sin(angle);
-    cos_t2 = cos(angle);
+    sin_t2 = sinf(angle);
+    cos_t2 = cosf(angle);
 
     qY[3] = cos_t2;
     qY[0] = 0.0 * sin_t2;
@@ -446,8 +446,8 @@ void Mat4_RotateX(float mat[16], float ang)
     float sina, cosa, R[9];
 
     R[0] = ang * M_PI / 180.0;
-    sina = sin(R[0]);
-    cosa = cos(R[0]);
+    sina = sinf(R[0]);
+    cosa = cosf(R[0]);
 
     R[0] = mat[0];
     R[1] = mat[1];
@@ -471,8 +471,8 @@ void Mat4_RotateY(float mat[16], float ang)
     float sina, cosa, R[9];
 
     R[0] = ang * M_PI / 180.0;
-    sina = sin(R[0]);
-    cosa = cos(R[0]);
+    sina = sinf(R[0]);
+    cosa = cosf(R[0]);
 
     R[0] = mat[0] * cosa - mat[8] * sina;
     R[1] = mat[1] * cosa - mat[9] * sina;
@@ -496,8 +496,8 @@ void Mat4_RotateZ(float mat[16], float ang)
     float sina, cosa, R[9];
 
     R[0] = ang * M_PI / 180.0;
-    sina = sin(R[0]);
-    cosa = cos(R[0]);
+    sina = sinf(R[0]);
+    cosa = cosf(R[0]);
 
     R[0] = mat[0] * cosa +  mat[4] * sina;
     R[1] = mat[1] * cosa +  mat[5] * sina;
@@ -659,8 +659,8 @@ void Mat4_SetSelfOrientation(float mat[16], float ang[3])
     if(ang[0] != 0.0)
     {
         t = ang[0] * M_PI / 180.0;
-        sin_t2 = sin(t);
-        cos_t2 = cos(t);
+        sin_t2 = sinf(t);
+        cos_t2 = cosf(t);
     }
 
     /*
@@ -685,8 +685,8 @@ void Mat4_SetSelfOrientation(float mat[16], float ang[3])
     if(ang[1] != 0.0)
     {
         t = ang[1] * M_PI / 360.0;                                              // UP - DOWN
-        sin_t2 = sin(t);
-        cos_t2 = cos(t);
+        sin_t2 = sinf(t);
+        cos_t2 = cosf(t);
         R[3] = cos_t2;
         R[0] = mat[0] * sin_t2;                                                 // strafe sxis
         R[1] = mat[1] * sin_t2;
@@ -704,8 +704,8 @@ void Mat4_SetSelfOrientation(float mat[16], float ang[3])
     if(ang[2] != 0.0)
     {
         t = ang[2] * M_PI / 360.0;                                              // ROLL
-        sin_t2 = sin(t);
-        cos_t2 = cos(t);
+        sin_t2 = sinf(t);
+        cos_t2 = cosf(t);
         R[3] = cos_t2;
         R[0] = mat[4] * sin_t2;                                                 // view axis
         R[1] = mat[5] * sin_t2;

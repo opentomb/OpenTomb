@@ -916,6 +916,14 @@ void Game_Frame(float time)
             {
                 Cam_FollowEntity(&engine_camera, engine_world.Character, 16.0, 128.0);
             }
+            if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
+            {
+                entity_p target = World_GetEntityByID(&engine_world, engine_camera_state.target_id);
+                if(target)
+                {
+                    Character_LookAt(engine_world.Character, target->transform + 12);
+                }
+            }
         }
     }
 

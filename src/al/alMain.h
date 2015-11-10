@@ -427,11 +427,6 @@ inline ALint fastf2i(ALfloat f)
 {
 #ifdef HAVE_LRINTF
     return lrintf(f);
-#elif defined(_MSC_VER) && defined(_M_IX86)
-    ALint i;
-    __asm fld f
-    __asm fistp i
-    return i;
 #else
     return (ALint)f;
 #endif

@@ -87,7 +87,7 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
     
     if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
     {
-        //Sys_extWarn("AL: Failed to init SDL_InitSubSystem(SDL_INIT_AUDIO): %s", SDL_GetError());
+        //fprintf(stderr, "AL: Failed to init SDL_InitSubSystem(SDL_INIT_AUDIO): %s", SDL_GetError());
         return ALC_FALSE;
     }
     
@@ -119,6 +119,7 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
             
         default:
             SDL_QuitSubSystem(SDL_INIT_AUDIO);
+            //fprintf(stderr, "AL: Wrong channels number");
             return ALC_FALSE;                  // wrong channels number
     };
  
@@ -131,6 +132,7 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
     if(sdl_dev_id < 2)                                                          // SDL: valid ID >= 2
     {
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
+        //fprintf(stderr, "AL: Invalid SDL audio device ID");
         return ALC_FALSE;
     }
     
@@ -175,6 +177,7 @@ static ALCboolean sdl_reset_playback(ALCdevice *device)
         default:
             SDL_CloseAudioDevice(sdl_dev_id);
             SDL_QuitSubSystem(SDL_INIT_AUDIO);
+            //fprintf(stderr, "AL: Not supported audio format");
             return ALC_FALSE;
     };
     
