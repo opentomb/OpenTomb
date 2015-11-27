@@ -3,54 +3,75 @@
 #   $ mkdir build && cd build
 #   $ cmake .. && make
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
 project(OpenTomb)
 
-if(APPLE)
-    file(GLOB OPENAL_SRC
-        3rdparty/al/*.c
-        3rdparty/al/*/*.c
-        3rdparty/al/*/*/*.c
+include(ExternalProject)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+
+
+find_package(OpenAL)
+add_library(OpenAL INTERFACE)
+
+option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions." ON)
+
+if(USE_OPENAL_FLOAT)
+    target_compile_definitions(OpenAL INTERFACE -DAUDIO_OPENAL_FLOAT)
+endif(USE_OPENAL_FLOAT)
+
+if(NOT OPENAL_FOUND)
+    ExternalProject_Add(
+        OpenAL-Ext
+        PREFIX ${CMAKE_SOURCE_DIR}/3rdparty/OpenAL
+        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+        GIT_REPOSITORY git://repo.or.cz/openal-soft.git
+        GIT_TAG openal-soft-1.17.0
     )
-    file(GLOB OPENAL_HDR
-        3rdparty/al/*.h
-        3rdparty/al/*/*.h
-        3rdparty/al/*/*/*.h
-    )
-    add_library(OpenAL STATIC ${OPENAL_HDR} ${OPENAL_SRC})
-    # Don’t attempt to find AL anywhere, just use ours directly.
-    target_include_directories(OpenAL INTERFACE 3rdparty/al/)
+    target_include_directories(OpenAL INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/OpenAL/include)
+    target_link_libraries(OpenAL INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/OpenAL/libopenal.so)
 else()
-    find_package(OpenAL REQUIRED)
-    add_library(OpenAL INTERFACE)
     target_include_directories(OpenAL INTERFACE ${OPENAL_INCLUDE_DIR})
     target_link_libraries(OpenAL INTERFACE ${OPENAL_LIBRARY})
 endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
-find_package(Bullet)
+
+
+option(SKIP_SYSTEM_BULLET "Skip the sytem-provided Bullet installation and use a custom built 2.83.5." ON)
+
+if(NOT SKIP_SYSTEM_BULLET)
+    find_package(Bullet)
+endif()
+add_library(Bullet INTERFACE)
+
 if(BULLET_FOUND)
-    add_library(Bullet INTERFACE)
     target_include_directories(Bullet INTERFACE ${BULLET_INCLUDE_DIRS})
     target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
 else()
-    set(BULLET_DIR 3rdparty/bullet/src)
-
-    file(GLOB BULLET_FILES
-        ${BULLET_DIR}/*.h
-        ${BULLET_DIR}/*/*.h
-        ${BULLET_DIR}/*/*/*.h
-        ${BULLET_DIR}/*.cpp
-        ${BULLET_DIR}/*/*.cpp
-        ${BULLET_DIR}/*/*/*.cpp
+    ExternalProject_Add(
+        Bullet-Ext
+        PREFIX ${CMAKE_SOURCE_DIR}/3rdparty/Bullet
+        CMAKE_ARGS
+            -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+            -DBUILD_BULLET2_DEMOS=OFF
+            -DBUILD_CPU_DEMOS=OFF
+            -DBUILD_OPENGL3_DEMOS=OFF
+            -DBUILD_UNIT_TESTS=OFF
+            -DINSTALL_EXTRA_LIBS=ON
+        GIT_REPOSITORY https://github.com/bulletphysics/bullet3.git
+        GIT_TAG 2.83.5
     )
+    #include(${CMAKE_SOURCE_DIR}/3rdparty/Bullet/lib/cmake/bullet/BulletConfig.cmake)
 
-    add_library(Bullet ${BULLET_FILES})
-    target_compile_options(Bullet PRIVATE -O2)
-    target_include_directories(Bullet PUBLIC ${BULLET_DIR})
+    link_directories(${CMAKE_SOURCE_DIR}/3rdparty/Bullet/lib)
+
+    target_include_directories(Bullet INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/Bullet/include/bullet)
+    target_link_libraries(Bullet INTERFACE BulletDynamics BulletSoftBody BulletCollision LinearMath)
 endif()
+
+
 
 find_package(Freetype REQUIRED)
 add_library(Freetype INTERFACE)
@@ -99,12 +120,6 @@ add_library(Boost INTERFACE)
 target_include_directories(Boost INTERFACE ${Boost_INCLUDE_DIR})
 target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})
 target_compile_definitions(Boost INTERFACE -DBOOST_LOG_DYN_LINK)
-
-option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions." ON)
-
-if(USE_OPENAL_FLOAT)
-    target_compile_definitions(OpenAL INTERFACE -DAUDIO_OPENAL_FLOAT)
-endif(USE_OPENAL_FLOAT)
 
 find_package(OGG REQUIRED)
 include_directories(${OGG_INCLUDE_DIR})
