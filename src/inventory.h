@@ -131,7 +131,7 @@ private:
     util::Duration              m_itemTime;
     float                       m_itemAngle;
 
-    int getItemsTypeCount(MenuItemType type);
+    int getItemsTypeCount(MenuItemType type) const;
     void restoreItemAngle(util::Duration time);
 
 public:
@@ -141,12 +141,12 @@ public:
     InventoryManager();
     ~InventoryManager();
 
-    InventoryState getCurrentState()
+    InventoryState getCurrentState() const
     {
         return m_currentState;
     }
 
-    InventoryState getNextState()
+    InventoryState getNextState() const
     {
         return m_nextState;
     }
@@ -156,7 +156,7 @@ public:
         m_nextState = state;
     }
 
-    MenuItemType getItemsType()
+    MenuItemType getItemsType() const
     {
         return m_currentItemsType;
     }

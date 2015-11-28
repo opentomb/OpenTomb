@@ -1,6 +1,5 @@
 #include "script.h"
 
-#include <cstdio>
 #include <cstring>
 
 #include <GL/glew.h>
@@ -2253,7 +2252,7 @@ void lua_SetCharacterWeaponModel(int id, int weaponmodel, int state)
 
     if(ent)
     {
-        ent->setWeaponModel(weaponmodel, state);
+        ent->setWeaponModel(weaponmodel, state!=0);
     }
     else
     {
@@ -3582,7 +3581,7 @@ void script::MainEngine::execEffect(int id, int caller, int operand)
 
 // Parsing config file entries.
 
-void script::ScriptEngine::parseControls(engine::ControlSettings *cs)
+void script::ScriptEngine::parseControls(engine::ControlSettings *cs) const
 {
     cs->mouse_sensitivity = (*this)["controls"]["mouse_sensitivity"];
     cs->mouse_scale_x = (*this)["controls"]["mouse_scale_x"];
@@ -3604,7 +3603,7 @@ void script::ScriptEngine::parseControls(engine::ControlSettings *cs)
     cs->joy_move_deadzone = (*this)["controls"]["joy_move_deadzone"];
 }
 
-void script::ScriptEngine::parseScreen(engine::ScreenInfo *sc)
+void script::ScriptEngine::parseScreen(engine::ScreenInfo *sc) const
 {
     sc->x = (*this)["screen"]["x"];
     sc->y = (*this)["screen"]["y"];
@@ -3620,7 +3619,7 @@ void script::ScriptEngine::parseScreen(engine::ScreenInfo *sc)
     sc->vsync = (*this)["screen"]["vsync"];
 }
 
-void script::ScriptEngine::parseRender(render::RenderSettings *rs)
+void script::ScriptEngine::parseRender(render::RenderSettings *rs) const
 {
     rs->mipmap_mode = (*this)["render"]["mipmap_mode"];
     rs->mipmaps = (*this)["render"]["mipmaps"];
@@ -3648,7 +3647,7 @@ void script::ScriptEngine::parseRender(render::RenderSettings *rs)
         rs->z_depth = 24;
 }
 
-void script::ScriptEngine::parseAudio(audio::Settings *as)
+void script::ScriptEngine::parseAudio(audio::Settings *as) const
 {
     as->music_volume = (*this)["audio"]["music_volume"];
     as->sound_volume = (*this)["audio"]["sound_volume"];
@@ -3662,7 +3661,7 @@ void script::ScriptEngine::parseAudio(audio::Settings *as)
     as->music_volume = (*this)["audio"]["music_volume"];
 }
 
-void script::ScriptEngine::parseConsole(Console *cn)
+void script::ScriptEngine::parseConsole(Console *cn) const
 {
     {
         float r = (*this)["console"]["background_color"]["r"];
@@ -3699,7 +3698,7 @@ void script::ScriptEngine::parseConsole(Console *cn)
     cn->setShowCursorPeriod(util::MilliSeconds(tmpI));
 }
 
-void script::ScriptEngine::parseSystem(engine::SystemSettings *ss)
+void script::ScriptEngine::parseSystem(engine::SystemSettings *ss) const
 {
     ss->logging = (*this)["system"]["logging"];
 }

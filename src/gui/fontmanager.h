@@ -92,11 +92,11 @@ public:
     bool             RemoveFontStyle(const FontStyle index);
     FontStyleData*  GetFontStyle(const FontStyle index);
 
-    uint32_t getFontCount()
+    uint32_t getFontCount() const
     {
         return static_cast<uint32_t>(m_fonts.size());
     }
-    uint32_t getFontStyleCount()
+    uint32_t getFontStyleCount() const
     {
         return static_cast<uint32_t>(m_styles.size());
     }

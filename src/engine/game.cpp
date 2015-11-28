@@ -1,7 +1,6 @@
 #include "game.h"
 
 #include <cstdio>
-#include <cstdlib>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>

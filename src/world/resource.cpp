@@ -7,7 +7,6 @@
 #include "bordered_texture_atlas.h"
 #include "engine/engine.h"
 #include "engine/gameflow.h"
-#include "engine/system.h"
 #include "gui/console.h"
 #include "gui/gui.h"
 #include "render/render.h"
@@ -39,7 +38,6 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/io.hpp>
 
 #include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
@@ -3416,19 +3414,19 @@ namespace world
     {
         if(frame_offset < tr->m_frameData.size())
         {
-            const uint16_t* frame = &tr->m_frameData[frame_offset];
+            const int16_t* frame = &tr->m_frameData[frame_offset];
 
-            keyFrame->boundingBox.min[0] = (short int)frame[0];   // x_min
-            keyFrame->boundingBox.min[1] = (short int)frame[4];   // y_min
-            keyFrame->boundingBox.min[2] = -(short int)frame[3];  // z_min
+            keyFrame->boundingBox.min[0] = frame[0];   // x_min
+            keyFrame->boundingBox.min[1] = frame[4];   // y_min
+            keyFrame->boundingBox.min[2] = -frame[3];  // z_min
 
-            keyFrame->boundingBox.max[0] = (short int)frame[1];   // x_max
-            keyFrame->boundingBox.max[1] = (short int)frame[5];   // y_max
-            keyFrame->boundingBox.max[2] = -(short int)frame[2];  // z_max
+            keyFrame->boundingBox.max[0] = frame[1];   // x_max
+            keyFrame->boundingBox.max[1] = frame[5];   // y_max
+            keyFrame->boundingBox.max[2] = -frame[2];  // z_max
 
-            keyFrame->position[0] = (short int)frame[6];
-            keyFrame->position[1] = (short int)frame[8];
-            keyFrame->position[2] = -(short int)frame[7];
+            keyFrame->position[0] = frame[6];
+            keyFrame->position[1] = frame[8];
+            keyFrame->position[2] = -frame[7];
         }
         else
         {

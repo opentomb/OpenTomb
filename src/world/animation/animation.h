@@ -11,11 +11,9 @@
 #include <BulletDynamics/btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
-#include <boost/assert.hpp>
 #include <boost/container/flat_map.hpp>
 
 #include <array>
-#include <list>
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -39,14 +37,14 @@ namespace animation
 
 //! Default fixed TR framerate needed for animation calculation
 constexpr float AnimationFrameRate = 30;
-constexpr util::Duration AnimationFrameTime = util::fromSeconds(1.0 / AnimationFrameRate);
+constexpr util::Duration AnimationFrameTime = util::fromSeconds(1.0f / AnimationFrameRate);
 
 // This is the global game logic refresh interval (physics timestep)
 // All game logic should be refreshed at this rate, including
 // enemy AI, values processing and audio update.
 // This should be a multiple of animation::FrameRate (1/30,60,90,120,...)
 constexpr float GameLogicFrameRate = 2 * AnimationFrameRate;
-constexpr util::Duration GameLogicFrameTime = util::fromSeconds(1.0 / GameLogicFrameRate);
+constexpr util::Duration GameLogicFrameTime = util::fromSeconds(1.0f / GameLogicFrameRate);
 
 enum class AnimUpdate
 {

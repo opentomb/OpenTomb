@@ -5,7 +5,6 @@
 #include <SDL2/SDL.h>
 
 #include "engine/engine.h"
-#include "engine/system.h"
 #include "gui/console.h"
 
 #include <boost/log/trivial.hpp>

@@ -3,7 +3,6 @@
 #include "alext.h"
 #include "audio.h"
 #include "engine/engine.h"
-#include "engine/system.h"
 #include "gui/console.h"
 #include "loader/level.h"
 #include "settings.h"

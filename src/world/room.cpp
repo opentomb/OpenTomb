@@ -122,7 +122,7 @@ bool Room::isInNearRoomsList(const Room& r1) const
     return false;
 }
 
-bool Room::hasSector(size_t x, size_t y)
+bool Room::hasSector(size_t x, size_t y) const
 {
     return x < m_sectors.shape()[0] && y < m_sectors.shape()[1];
 }
@@ -570,7 +570,7 @@ bool RoomSector::is2SidePortals(RoomSector* s2)
     return false;
 }
 
-bool RoomSector::similarCeiling(RoomSector* s2, bool ignore_doors)
+bool RoomSector::similarCeiling(RoomSector* s2, bool ignore_doors) const
 {
     if(!s2)
         return false;
@@ -592,7 +592,7 @@ bool RoomSector::similarCeiling(RoomSector* s2, bool ignore_doors)
     return true;
 }
 
-bool RoomSector::similarFloor(RoomSector* s2, bool ignore_doors)
+bool RoomSector::similarFloor(RoomSector* s2, bool ignore_doors) const
 {
     if(!s2) return false;
     if(this == s2) return true;

@@ -513,7 +513,7 @@ void Fader::Show()
     }   // end if(mTexture)
 }
 
-FaderStatus Fader::getStatus()
+FaderStatus Fader::getStatus() const
 {
     if(mComplete)
     {

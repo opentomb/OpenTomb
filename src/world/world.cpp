@@ -9,7 +9,6 @@
 #include "inventory.h"
 #include "resource.h"
 #include "script/script.h"
-#include "util/vmath.h"
 #include "world/character.h"
 #include "world/core/sprite.h"
 #include "world/room.h"

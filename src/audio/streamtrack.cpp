@@ -3,7 +3,6 @@
 #include "alext.h"
 #include "audio.h"
 #include "engine/engine.h"
-#include "engine/system.h"
 #include "fxmanager.h"
 #include "gui/console.h"
 #include "settings.h"
@@ -146,7 +145,8 @@ bool StreamTrack::unload()
 bool StreamTrack::loadTrack(const char *path)
 {
     memset(&m_sfInfo, 0, sizeof(m_sfInfo));
-    if(!(m_sndFile = sf_open(path, SFM_READ, &m_sfInfo)))
+    m_sndFile = sf_open(path, SFM_READ, &m_sfInfo);
+    if(m_sndFile == nullptr)
     {
         BOOST_LOG_TRIVIAL(debug) << "Load_Track: Couldn't open file: " << path;
         m_method = StreamMethod::Any;    // T4Larson <t4larson@gmail.com>: stream is uninitialised, avoid clear.
@@ -201,8 +201,9 @@ bool StreamTrack::loadWad(uint8_t index, const char* filename)
             fread(static_cast<void*>(&offset), sizeof(uint32_t), 1, m_wadFile);
 
             fseek(m_wadFile, offset, 0);
-
-            if(!(m_sndFile = sf_open_fd(fileno(m_wadFile), SFM_READ, &m_sfInfo, false)))
+            
+            m_sndFile = sf_open_fd(fileno(m_wadFile), SFM_READ, &m_sfInfo, false);
+            if(m_sndFile == nullptr)
             {
                 Console::instance().warning(SYSWARN_WAD_SEEK_FAILED, offset);
                 m_method = StreamMethod::Any;

@@ -6,7 +6,6 @@
 #include "character.h"
 #include "character_controller.h"
 #include "engine/engine.h"
-#include "engine/system.h"
 #include "resource.h"
 #include "room.h"
 
@@ -2327,10 +2326,6 @@ void StateController::jumpForwardFallBackward()
     else if(m_character->m_command.shift)
     {
         setNextState(LaraState::SwandiveBegin);              // fly like fish
-    }
-    else if(m_character->m_speed[2] <= -FREE_FALL_SPEED_2)
-    {
-        setNextState(LaraState::FreeFall);                    // free falling
     }
     else if(m_character->m_command.roll)
     {

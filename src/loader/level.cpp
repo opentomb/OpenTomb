@@ -19,15 +19,14 @@
  *
  */
 
-#include <SDL2/SDL.h>
-#include <algorithm>
-
 #include "level.h"
 #include "tr1level.h"
 #include "tr2level.h"
 #include "tr3level.h"
 #include "tr4level.h"
 #include "tr5level.h"
+
+#include <algorithm>
 
 using namespace loader;
 

@@ -102,10 +102,10 @@ public:
 private:
     std::string       m_currentLevelPath;       //Level path from script example: DATA/TR1/DATA/LEVEL1.PHD
     std::string       m_currentLevelName;       //Level name from script example: Caves
-    uint8_t           m_currentGameID;          //
-    uint32_t          m_currentLevelID;         //Level ID from script example: 1 = Caves.
+    uint8_t           m_currentGameID = 0;
+    uint32_t          m_currentLevelID = 0;     //Level ID from script example: 1 = Caves.
 
-    bool              m_nextAction;             //Should gameflow do next action?
+    bool              m_nextAction = false;     //Should gameflow do next action?
     std::array<GameflowAction, 32> m_actions;
     std::array<bool, 256> m_secretsTriggerMap;                     //Info for what secrets have been triggered in a level
 };

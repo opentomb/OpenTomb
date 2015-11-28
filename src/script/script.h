@@ -123,12 +123,12 @@ namespace script
         void exposeConstants();
         std::vector<std::string> getGlobals();
 
-        void parseScreen(engine::ScreenInfo *sc);
-        void parseRender(render::RenderSettings *rs);
-        void parseAudio(audio::Settings *as);
-        void parseConsole(gui::Console *cn);
-        void parseControls(engine::ControlSettings *cs);
-        void parseSystem(engine::SystemSettings *ss);
+        void parseScreen(engine::ScreenInfo *sc) const;
+        void parseRender(render::RenderSettings *rs) const;
+        void parseAudio(audio::Settings *as) const;
+        void parseConsole(gui::Console *cn) const;
+        void parseControls(engine::ControlSettings *cs) const;
+        void parseSystem(engine::SystemSettings *ss) const;
 
     protected:
         void checkStack();

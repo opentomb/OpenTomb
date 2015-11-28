@@ -85,7 +85,7 @@ void ItemNotifier::Reset()
     mStartPosX = mCurrPosX;    // Equalize current and start positions.
 }
 
-void ItemNotifier::Draw()
+void ItemNotifier::Draw() const
 {
     if(!mActive)
         return;

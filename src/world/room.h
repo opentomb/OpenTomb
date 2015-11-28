@@ -5,8 +5,6 @@
 #include "object.h"
 #include "portal.h"
 
-#include <GL/glew.h>
-
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -77,8 +75,8 @@ struct RoomSector
     RoomSector* checkPortalPointerRaw();
     RoomSector* checkPortalPointer();
     bool is2SidePortals(RoomSector* s2);
-    bool similarCeiling(RoomSector* s2, bool ignore_doors);
-    bool similarFloor(RoomSector* s2, bool ignore_doors);
+    bool similarCeiling(RoomSector* s2, bool ignore_doors) const;
+    bool similarFloor(RoomSector* s2, bool ignore_doors) const;
     glm::vec3 getFloorPoint();
     glm::vec3 getCeilingPoint();
 
@@ -102,10 +100,10 @@ struct RoomSector
 struct Room : public Object
 {
     uint32_t                    m_flags = 0; //!< room's type + water, wind info
-    int16_t                     m_lightMode; //!< (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
-    loader::ReverbType          m_reverbType;
-    uint8_t                     m_waterScheme;
-    uint8_t                     m_alternateGroup;
+    int16_t                     m_lightMode = 0; //!< (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
+    loader::ReverbType          m_reverbType = loader::ReverbType::Outside;
+    uint8_t                     m_waterScheme = 0;
+    uint8_t                     m_alternateGroup = 0;
 
     bool m_active = false;
     bool m_hide = true;
@@ -154,12 +152,12 @@ struct Room : public Object
     bool isJoined(Room *r2);
     bool overlaps(Room *r1);
     bool isInNearRoomsList(const Room &r) const;
-    bool hasSector(size_t x, size_t y);//If this room contains a sector
+    bool hasSector(size_t x, size_t y) const;//If this room contains a sector
     void addEntity(Entity *entity);
     bool removeEntity(Entity *entity);
     void addToNearRoomsList(Room* r);
 
-    bool contains(const glm::vec3& dot)
+    bool contains(const glm::vec3& dot) const
     {
         return m_boundingBox.contains(dot);
     }

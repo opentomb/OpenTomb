@@ -203,7 +203,7 @@ struct Polygon;
 
 namespace animation
 {
-struct Skeleton;
+class Skeleton;
 } // namespace animation
 
 struct BaseItem

@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include <boost/assert.hpp>
+
 /**
  * @brief A Binary Space Partition Tree for 2D space.
  */

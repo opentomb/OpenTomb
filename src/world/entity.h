@@ -5,8 +5,6 @@
 
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
-#include <BulletCollision/CollisionShapes/btCollisionShape.h>
-#include <BulletDynamics/ConstraintSolver/btTypedConstraint.h>
 
 #include "animation/animation.h"
 #include "core/orientedboundingbox.h"
@@ -129,7 +127,7 @@ public:
 
     glm::float_t                        m_currentSpeed = 0;      // current linear speed from animation info
     glm::vec3                           m_speed = {0,0,0};              // speed of the entity XYZ
-    glm::float_t                        m_vspeed_override;
+    glm::float_t                        m_vspeed_override = 0;
 
     btScalar                            m_inertiaLinear = 0;     // linear inertia
     btScalar                            m_inertiaAngular[2] = {0,0}; // angular inertia - X and Y axes
@@ -161,12 +159,12 @@ public:
     void ghostUpdate();
     int getPenetrationFixVector(glm::vec3 *reaction, bool hasMove);
     void checkCollisionCallbacks();
-    bool wasCollisionBodyParts(uint32_t parts_flags);
+    bool wasCollisionBodyParts(uint32_t parts_flags) const;
     void updateRoomPos();
     void updateRigidBody(bool force);
     void rebuildBoundingBox();
 
-    int  getAnimDispatchCase(LaraState id);
+    int  getAnimDispatchCase(LaraState id) const;
 
     animation::AnimUpdate stepAnimation(util::Duration time);
     virtual void frame(util::Duration time);  // entity frame step

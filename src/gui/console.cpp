@@ -1,7 +1,6 @@
 #include "console.h"
 
 #include <cstdio>
-#include <iostream>
 
 #include <GL/glew.h>
 #include <SDL2/SDL.h>

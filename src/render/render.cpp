@@ -1,16 +1,5 @@
 #include "render.h"
 
-#include <algorithm>
-#include <array>
-#include <cmath>
-#include <set>
-
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/string_cast.hpp>
-
-#include <boost/log/trivial.hpp>
-
 #include "bsp_tree.h"
 #include "engine/engine.h"
 #include "engine/system.h"
@@ -35,6 +24,15 @@
 #include "world/skeletalmodel.h"
 #include "world/staticmesh.h"
 #include "world/world.h"
+
+#include <array>
+#include <queue>
+#include <set>
+
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <boost/log/trivial.hpp>
 
 namespace render
 {
@@ -113,7 +111,7 @@ void Render::renderSkyBox()
 /**
  * Opaque meshes drawing
  */
-void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh)
+void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh) const
 {
     if(!mesh->m_allAnimatedElements.empty())
     {
@@ -181,7 +179,7 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh)
 /**
  * draw transparency polygons
  */
-void Render::renderPolygonTransparency(loader::BlendingMode currentTransparency, const BSPFaceRef& bsp_ref, const UnlitTintedShaderDescription *shader)
+void Render::renderPolygonTransparency(loader::BlendingMode currentTransparency, const BSPFaceRef& bsp_ref, const UnlitTintedShaderDescription *shader) const
 {
     // Blending mode switcher.
     // Note that modes above 2 aren't explicitly used in TR textures, only for
@@ -189,7 +187,6 @@ void Render::renderPolygonTransparency(loader::BlendingMode currentTransparency,
     // them if you will force type via TRTextur utility.
     if(currentTransparency != bsp_ref.polygon->polygon->blendMode)
     {
-        currentTransparency = bsp_ref.polygon->polygon->blendMode;
         switch(bsp_ref.polygon->polygon->blendMode)
         {
             case loader::BlendingMode::Multiply:                                    // Classic PC alpha
@@ -398,7 +395,7 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, world::
  * Sets up the light calculations for the given entity based on its current
  * room. Returns the used shader, which will have been made current already.
  */
-const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, bool skin)
+const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, bool skin) const
 {
     // Calculate lighting
     if(!entity->getRoom())
@@ -658,7 +655,7 @@ void Render::renderRoom(const world::Room* room)
     }
 }
 
-void Render::renderRoomSprites(const world::Room* room)
+void Render::renderRoomSprites(const world::Room* room) const
 {
     if(!room->m_sprites.empty() && room->m_spriteBuffer)
     {
@@ -988,9 +985,9 @@ void Render::processRoom(world::Room* room)
         if(!visited.insert(currentPath.getLastPortal()).second)
             continue; // already tested
 
-        world::Room* room = currentPath.getLastDestinationRoom();
+        world::Room* destRoom = currentPath.getLastDestinationRoom();
         bool roomIsVisible = false;
-        for(const world::Portal& srcPortal : room->m_portals)
+        for(const world::Portal& srcPortal : destRoom->m_portals)
         {
             PortalPath newPath = currentPath;
             if(!newPath.checkVisibility(&srcPortal, m_cam->getPosition(), m_cam->getFrustum()))

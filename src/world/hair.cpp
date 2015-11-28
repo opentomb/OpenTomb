@@ -1,9 +1,6 @@
 #include "hair.h"
 
 #include <algorithm>
-#include <cmath>
-
-#include "hair.h"
 
 #include "LuaState.h"
 

@@ -15,7 +15,7 @@ public:
     void    Start(int item, util::Duration time);
     void    Reset();
     void    Animate();
-    void    Draw();
+    void    Draw() const;
 
     void    SetPos(float X, float Y);
     void    SetRot(glm::float_t X, glm::float_t Y);

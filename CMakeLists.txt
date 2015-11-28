@@ -119,7 +119,7 @@ find_package(Boost COMPONENTS system log filesystem REQUIRED)
 add_library(Boost INTERFACE)
 target_include_directories(Boost INTERFACE ${Boost_INCLUDE_DIR})
 target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})
-target_compile_definitions(Boost INTERFACE -DBOOST_LOG_DYN_LINK)
+target_compile_definitions(Boost INTERFACE -DBOOST_LOG_DYN_LINK -DBOOST_ALL_NO_LIB)
 
 find_package(OGG REQUIRED)
 include_directories(${OGG_INCLUDE_DIR})

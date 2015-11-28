@@ -68,7 +68,7 @@ public:
     void Engage(FaderDir fade_dir);    // Resets and starts fader.
     void Cut();                   // Immediately cuts fader.
 
-    FaderStatus getStatus();              // Get current state of the fader.
+    FaderStatus getStatus() const;              // Get current state of the fader.
 
     void SetScaleMode(FaderScale mode = FaderScale::Zoom);
     void SetColor(uint8_t R, uint8_t G, uint8_t B, FaderCorner corner = FaderCorner::None);

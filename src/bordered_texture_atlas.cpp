@@ -8,13 +8,14 @@
 
 #include "bordered_texture_atlas.h"
 
+#include "bsp_tree_2d.h"
+#include "world/core/polygon.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <cstring>
 
-#include "bsp_tree_2d.h"
-#include "world/core/polygon.h"
+#include <boost/assert.hpp>
 
 #ifndef __APPLE__
 

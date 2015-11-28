@@ -3,8 +3,6 @@
 #include "engine/system.h"
 #include "render/shader_manager.h"
 
-#include <algorithm>
-
 namespace gui
 {
 

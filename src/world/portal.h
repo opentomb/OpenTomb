@@ -4,7 +4,7 @@
 #include "util/vmath.h"
 
 #include <array>
-#include <memory>
+#include <numeric>
 
 namespace world
 {

@@ -51,7 +51,7 @@ void Skeleton::fromModel(SkeletalModel* model)
         m_bones[i].transform = glm::mat4(1.0f);
         m_bones[i].full_transform = glm::mat4(1.0f);
 
-        if(i <= 0)
+        if(i == 0)
             continue;
 
         m_bones[i].parent = &m_bones[i - 1];

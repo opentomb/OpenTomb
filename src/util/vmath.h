@@ -3,8 +3,6 @@
 #include "loader/datatypes.h"
 #include "util/helpers.h"
 
-#include <LinearMath/btQuaternion.h>
-#include <LinearMath/btTransform.h>
 #include <LinearMath/btVector3.h>
 
 #include <glm/glm.hpp>

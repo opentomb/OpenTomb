@@ -1,13 +1,14 @@
 #pragma once
 
-#include <cstdint>
+#include "game.h"
+#include "io/sdlreader.h"
+#include "util/helpers.h"
+
 #include <iostream>
 #include <stdexcept>
 #include <vector>
 
-#include "game.h"
-#include "io/sdlreader.h"
-#include "util/helpers.h"
+#include <boost/throw_exception.hpp>
 
 namespace loader
 {

@@ -272,7 +272,7 @@ struct Character : public Entity
     std::shared_ptr<engine::BtEngineClosestRayResultCallback> m_rayCb;
     std::shared_ptr<engine::BtEngineClosestConvexResultCallback> m_convexCb;
 
-    Character(uint32_t id);
+    explicit Character(uint32_t id);
     ~Character();
 
     int checkNextPenetration(const glm::vec3& move);

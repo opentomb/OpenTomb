@@ -1,9 +1,6 @@
 #include "orientedboundingbox.h"
 
-#include <cmath>
-
 #include "engine/engine.h"
-#include "util/vmath.h"
 #include "world/core/polygon.h"
 #include "world/entity.h"
 

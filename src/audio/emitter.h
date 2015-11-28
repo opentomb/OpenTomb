@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cstdint>
-
 #include <AL/al.h>
 #include <glm/glm.hpp>
 

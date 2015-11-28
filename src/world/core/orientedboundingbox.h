@@ -9,6 +9,8 @@
 
 #include "polygon.h"
 
+#include <array>
+
 namespace world
 {
 class Camera;

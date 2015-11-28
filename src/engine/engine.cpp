@@ -50,7 +50,6 @@
 
 #include <boost/log/trivial.hpp>
 #include <boost/format.hpp>
-#include <boost/exception/all.hpp>
 #include <boost/filesystem.hpp>
 
 using gui::Console;
@@ -1125,12 +1124,12 @@ int execCmd(const char *ch)
             if(world::Room* r = render::renderer.camera()->getCurrentRoom())
             {
                 sect = r->getSectorXYZ(render::renderer.camera()->getPosition());
-                Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->getId(), r->m_sectors.shape()[0], r->m_sectors.shape()[1]);
+                Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->getId(), static_cast<int>(r->m_sectors.shape()[0]), static_cast<int>(r->m_sectors.shape()[1]));
                 if(sect)
                 {
                     Console::instance().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d",
-                                               sect->index_x,
-                                               sect->index_y,
+                                               static_cast<int>(sect->index_x),
+                                               static_cast<int>(sect->index_y),
                                                static_cast<int>(sect->ceiling == world::MeteringWallHeight || sect->floor == world::MeteringWallHeight),
                                                static_cast<int>(sect->sector_above != nullptr), static_cast<int>(sect->sector_below != nullptr));
                     for(uint32_t i = 0; i < sect->owner_room->m_staticMeshes.size(); i++)

@@ -1,7 +1,6 @@
 #include "skeletalmodel.h"
 
 #include "core/basemesh.h"
-#include "util/vmath.h"
 
 namespace world
 {

@@ -4,8 +4,6 @@
 
 #include "character_controller.h"
 #include "engine/engine.h"
-#include "engine/system.h"
-#include "gui/console.h"
 #include "ragdoll.h"
 #include "script/script.h"
 #include "util/helpers.h"
@@ -13,7 +11,6 @@
 #include "world.h"
 #include "world/animation/animcommands.h"
 #include "world/core/orientedboundingbox.h"
-#include "world/core/util.h"
 #include "world/room.h"
 #include "world/skeletalmodel.h"
 
@@ -26,10 +23,8 @@
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
-#include <glm/gtx/matrix_interpolation.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 #include <boost/log/trivial.hpp>
 
@@ -288,7 +283,7 @@ void Entity::checkCollisionCallbacks()
     }
 }
 
-bool Entity::wasCollisionBodyParts(uint32_t parts_flags)
+bool Entity::wasCollisionBodyParts(uint32_t parts_flags) const
 {
     if(!m_skeleton.hasGhosts())
         return false;
@@ -583,7 +578,7 @@ void Entity::setAnimation(int animation, int frame)
 //    updateRigidBody(false);
 }
 
-int Entity::getAnimDispatchCase(LaraState id)
+int Entity::getAnimDispatchCase(LaraState id) const
 {
     const animation::Animation* anim = &m_skeleton.getModel()->animations[m_skeleton.getCurrentAnimation()];
     const animation::StateChange* stc = anim->findStateChangeByID(id);

@@ -509,8 +509,8 @@ ClimbInfo Character::checkClimbability(const glm::vec3& offset, struct HeightInf
     ret.can_hang = false;
     ret.edge_hit = false;
     ret.edge_obj = nullptr;
-    ret.floor_limit = (m_heightInfo.floor_hit) ? (m_heightInfo.floor_point[2]) : (-9E10);
-    ret.ceiling_limit = (m_heightInfo.ceiling_hit) ? (m_heightInfo.ceiling_point[2]) : (9E10);
+    ret.floor_limit = m_heightInfo.floor_hit ? m_heightInfo.floor_point[2] : -9E10f;
+    ret.ceiling_limit = m_heightInfo.ceiling_hit ? m_heightInfo.ceiling_point[2] : 9E10f;
     if(nfc->ceiling_hit && (nfc->ceiling_point[2] < ret.ceiling_limit))
     {
         ret.ceiling_limit = nfc->ceiling_point[2];
@@ -691,8 +691,8 @@ ClimbInfo Character::checkWallsClimbability()
     ret.wall_hit = ClimbType::None;
     ret.edge_hit = false;
     ret.edge_obj = nullptr;
-    ret.floor_limit = (m_heightInfo.floor_hit) ? (m_heightInfo.floor_point[2]) : (-9E10);
-    ret.ceiling_limit = (m_heightInfo.ceiling_hit) ? (m_heightInfo.ceiling_point[2]) : (9E10);
+    ret.floor_limit = m_heightInfo.floor_hit ? m_heightInfo.floor_point[2] : -9E10f;
+    ret.ceiling_limit = m_heightInfo.ceiling_hit ? m_heightInfo.ceiling_point[2] : 9E10f;
     ret.point = m_climb.point;
 
     if(!m_heightInfo.walls_climb)

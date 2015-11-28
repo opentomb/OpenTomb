@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "effect.h"
 #include "emitter.h"
 #include "fxmanager.h"
@@ -9,7 +7,10 @@
 #include "source.h"
 #include "streamtrack.h"
 
+#include <memory>
+
 #include <AL/alc.h>
+#include <boost/assert.hpp>
 
 namespace world
 {

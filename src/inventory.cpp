@@ -73,7 +73,7 @@ InventoryManager::~InventoryManager()
     gui::deleteLine(&mLabel_Title);
 }
 
-int InventoryManager::getItemsTypeCount(MenuItemType type)
+int InventoryManager::getItemsTypeCount(MenuItemType type) const
 {
     int ret = 0;
     for(const InventoryNode& i : *m_inventory)

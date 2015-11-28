@@ -3,8 +3,6 @@
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
 
-#include "LuaState.h"
-
 #include "controls.h"
 #include "world/object.h"
 #include "world/world.h"
