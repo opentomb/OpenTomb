@@ -85,7 +85,7 @@ struct HairSetup
     glm::vec3    m_rootAngle;      // First constraint set angle (to align hair angle)
 
     // Gets scripted hair set-up to specified hair set-up structure.
-    void getSetup(uint32_t hair_entry_index);
+    void getSetup(int hair_entry_index);
 };
 
 } // namespace world

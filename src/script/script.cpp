@@ -60,17 +60,17 @@ void lua_DumpModel(int id)
 
 void lua_DumpRoom(lua::Value id)
 {
-    if(id.is<lua::Nil>())
+    if(!id.is<lua::Integer>())
     {
         engine::dumpRoom(engine::engine_camera.getCurrentRoom());
         return;
     }
-    if(id.is<lua::Integer>() && static_cast<uint32_t>(id) >= engine::engine_world.rooms.size())
+    if(id.toInt() < 0 || id.toInt() >= engine::engine_world.rooms.size())
     {
-        Console::instance().warning(SYSWARN_WRONG_ROOM, static_cast<int>(id));
+        Console::instance().warning(SYSWARN_WRONG_ROOM, id.toInt());
         return;
     }
-    engine::dumpRoom(engine::engine_world.rooms[id].get());
+    engine::dumpRoom(engine::engine_world.rooms[id.toInt()].get());
 }
 
 void lua_SetRoomEnabled(int id, bool value)
@@ -92,7 +92,7 @@ void lua_SetRoomEnabled(int id, bool value)
 
 // Base engine functions
 
-void lua_SetModelCollisionMapSize(int id, size_t size)
+void lua_SetModelCollisionMapSize(int id, int size)
 {
     world::SkeletalModel* model = engine::engine_world.getModelByID(id);
     if(model == nullptr)
@@ -107,7 +107,7 @@ void lua_SetModelCollisionMapSize(int id, size_t size)
     }
 }
 
-void lua_SetModelCollisionMap(int id, size_t arg, size_t val)
+void lua_SetModelCollisionMap(int id, int arg, int val)
 {
     /// engine_world.skeletal_models[id] != engine::engine_world.getModelByID(lua_tointeger(lua, 1));
     world::SkeletalModel* model = engine::engine_world.getModelByID(id);
@@ -174,7 +174,7 @@ void lua_SetEntityCollisionFlags(int id, lua::Value ctype, lua::Value enableColl
     }
 }
 
-uint32_t lua_GetEntitySectorFlags(int id)
+int lua_GetEntitySectorFlags(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -185,7 +185,7 @@ uint32_t lua_GetEntitySectorFlags(int id)
     return 0;
 }
 
-uint32_t lua_GetEntitySectorIndex(int id)
+int lua_GetEntitySectorIndex(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -196,7 +196,7 @@ uint32_t lua_GetEntitySectorIndex(int id)
     return 0;
 }
 
-uint32_t lua_GetEntitySectorMaterial(int id)
+int lua_GetEntitySectorMaterial(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -207,13 +207,13 @@ uint32_t lua_GetEntitySectorMaterial(int id)
     return 0;
 }
 
-uint32_t lua_GetEntitySubstanceState(int id)
+int lua_GetEntitySubstanceState(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
     if(ent != nullptr)
     {
-        return static_cast<uint32_t>(ent->getSubstanceState());
+        return static_cast<int>(ent->getSubstanceState());
     }
     return 0;
 }
@@ -263,7 +263,7 @@ std::tuple<float, float, float> lua_GetGravity()
 
 void lua_SetGravity(float x, lua::Value y, lua::Value z)                                             // function to be exported to Lua
 {
-    btVector3 g(x, y.is<lua::Number>() ? y.toFloat() : 0, z.is<lua::Number>() ? z.toFloat() : 0);
+    btVector3 g(x, y.is<lua::Number>() ? y.toNumber() : 0, z.is<lua::Number>() ? z.toNumber() : 0);
     engine::bt_engine_dynamicsWorld->setGravity(g);
     Console::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
 }
@@ -349,7 +349,7 @@ void lua_SetEntityActivationOffset(int id, float x, float y, float z, lua::Value
 
     ent->m_activationOffset = { x,y,z };
     if(r.is<lua::Number>())
-        ent->m_activationRadius = r;
+        ent->m_activationRadius = r.toNumber();
 }
 
 float lua_GetCharacterParam(int id, int parameter)
@@ -396,7 +396,7 @@ void lua_SetCharacterParam(int id, int parameter, float value, lua::Value max_va
     else
     {
         ent->m_parameters.param[parameter] = value;
-        ent->m_parameters.maximum[parameter] = max_value;
+        ent->m_parameters.maximum[parameter] = max_value.toNumber();
     }
 }
 
@@ -425,7 +425,7 @@ void lua_ChangeCharacterParam(int id, int parameter, lua::Value value)
     if(ent && (value.is<lua::Number>() || value.is<lua::Integer>()))
     {
         if(value.is<lua::Number>())
-            ent->changeParam(parameter, value.toFloat());
+            ent->changeParam(parameter, value.toNumber());
     }
     else
     {
@@ -573,10 +573,10 @@ void script::MainEngine::bindKey(int act, int primary, lua::Value secondary)
     }
     engine::control_mapper.action_map[act].primary = primary;
     if(secondary.is<lua::Integer>())
-        engine::control_mapper.action_map[act].secondary = secondary;
+        engine::control_mapper.action_map[act].secondary = secondary.toInt();
 }
 
-void lua_AddFont(int index, const char* path, uint32_t size)
+void lua_AddFont(int index, const char* path, int size)
 {
     if(!gui::fontManager->AddFont(static_cast<gui::FontType>(index), size, path))
     {
@@ -622,7 +622,7 @@ int lua_AddItem(int entity_id, int item_id, lua::Value count)
 
     if(ent)
     {
-        return ent->addItem(item_id, count.is<lua::Integer>() ? count : -1);
+        return ent->addItem(item_id, count.is<lua::Integer>() ? count.toInt() : -1);
     }
     else
     {
@@ -726,8 +726,8 @@ void lua_SetStateChangeRange(int id, int anim, int state, int dispatch, int fram
             stc->anim_dispatch[dispatch].frame_high = frame_high;
             if(!next_anim.is<lua::Nil>() && !next_frame.is<lua::Nil>())
             {
-                stc->anim_dispatch[dispatch].next.animation = next_anim;
-                stc->anim_dispatch[dispatch].next.frame = next_frame;
+                stc->anim_dispatch[dispatch].next.animation = next_anim.toInt();
+                stc->anim_dispatch[dispatch].next.frame = next_frame.toInt();
             }
         }
         else
@@ -762,12 +762,16 @@ void lua_SetAnimEndCommands(int id, int anim, lua::Value table)
 
     for(int i=1; table[i].is<lua::Table>(); i++)
     {
-        if(table[i][1].is<lua::Number>()
+        if(   table[i][1].is<lua::Number>()
            && table[i][2].is<lua::Number>()
            && table[i][3].is<lua::Number>()
            && table[i][4].is<lua::Number>())
         {
-            model->animations[anim].finalAnimCommands.push_back({static_cast<world::animation::AnimCommandOpcode>(table[i][1].toInt()),table[i][2].toInt(),table[i][3].toInt(),table[i][4].toInt()});
+            model->animations[anim].finalAnimCommands.push_back({
+                                                                    static_cast<world::animation::AnimCommandOpcode>(table[i][1].toInt()),
+                                                                    table[i][2].toInt(),
+                                                                    table[i][3].toInt(),
+                                                                    table[i][4].toInt()});
         }
         else
         {
@@ -777,11 +781,11 @@ void lua_SetAnimEndCommands(int id, int anim, lua::Value table)
     }
 }
 
-uint32_t lua_SpawnEntity(int model_id, float x, float y, float z, float ax, float ay, float az, int room_id, lua::Value ov_id)
+int lua_SpawnEntity(int model_id, float x, float y, float z, float ax, float ay, float az, int room_id, lua::Value ov_id)
 {
     glm::vec3 position{ x,y,z }, ang{ ax,ay,az };
 
-    uint32_t id = engine::engine_world.spawnEntity(model_id, room_id, &position, &ang, ov_id.is<lua::Integer>() ? ov_id : -1);
+    int id = engine::engine_world.spawnEntity(model_id, room_id, &position, &ang, ov_id.is<lua::Integer>() ? ov_id.toInt() : -1);
     if(id == 0xFFFFFFFF)
     {
         return -1;
@@ -886,7 +890,7 @@ bool lua_IsInRoom(int id)
     }
 }
 
-std::tuple<float, float, float, float, float, float, uint32_t> lua_GetEntityPosition(int id)
+std::tuple<float, float, float, float, float, float, int> lua_GetEntityPosition(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
     if(ent == nullptr)
@@ -898,12 +902,12 @@ std::tuple<float, float, float, float, float, float, uint32_t> lua_GetEntityPosi
     return std::make_tuple
     (
         ent->m_transform[3][0],
-            ent->m_transform[3][1],
-            ent->m_transform[3][2],
-            ent->m_angles[0],
-            ent->m_angles[1],
-            ent->m_angles[2],
-            ent->getRoom()->getId()
+        ent->m_transform[3][1],
+        ent->m_transform[3][2],
+        ent->m_angles[0],
+        ent->m_angles[1],
+        ent->m_angles[2],
+        ent->getRoom()->getId()
     );
 }
 
@@ -961,7 +965,7 @@ bool lua_SimilarSector(int id, float dx, float dy, float dz, bool ignore_doors, 
     curr_sector = curr_sector->checkPortalPointer();
     next_sector = next_sector->checkPortalPointer();
 
-    if(ceiling.is<lua::Boolean>() && static_cast<bool>(ceiling))
+    if(ceiling.is<lua::Boolean>() && ceiling.toBool())
     {
         return curr_sector->similarCeiling(next_sector, ignore_doors);
     }
@@ -984,7 +988,7 @@ float lua_GetSectorHeight(int id, lua::Value ceiling, lua::Value dx, lua::Value 
     auto position = ent->m_transform[3];
 
     if(dx.is<lua::Number>() && dy.is<lua::Number>() && dz.is<lua::Number>())
-        position += dx.to<float>() * ent->m_transform[0] + dy.to<float>() * ent->m_transform[1] + dz.to<float>() * ent->m_transform[2];
+        position += dx.toFloat() * ent->m_transform[0] + dy.toFloat() * ent->m_transform[1] + dz.toFloat() * ent->m_transform[2];
 
     world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(glm::vec3(position));
     curr_sector = curr_sector->checkPortalPointer();
@@ -1005,7 +1009,7 @@ void lua_SetEntityPosition(int id, float x, float y, float z, lua::Value ax, lua
     }
     ent->m_transform[3] = { x,y,z,0 };
     if(ax.is<lua::Number>() && ay.is<lua::Number>() && az.is<lua::Number>())
-        ent->m_angles = { ax,ay,az };
+        ent->m_angles = { ax.toNumber(), ay.toNumber(), az.toNumber() };
     ent->updateTransform();
     ent->updatePlatformPreStep();
 }
@@ -1023,7 +1027,7 @@ void lua_SetEntityAngles(int id, float x, lua::Value y, lua::Value z)
         if(!y.is<lua::Number>() || !z.is<lua::Number>())
             ent->m_angles[0] = x;
         else
-            ent->m_angles = { x,y,z };
+            ent->m_angles = { x, y.toNumber(), z.toNumber() };
         ent->updateTransform();
     }
 }
@@ -1150,7 +1154,7 @@ void lua_MoveEntityToEntity(int id1, int id2, float speed_mult, lua::Value ignor
 
     ent1->m_transform[3][0] += speed[0];
     ent1->m_transform[3][1] += speed[1];
-    if(!ignore_z.is<lua::Boolean>() || !static_cast<bool>(ignore_z))
+    if(!ignore_z.is<lua::Boolean>() || !ignore_z.toBool())
         ent1->m_transform[3][2] += speed[2];
     ent1->updatePlatformPreStep();
     ent1->updateRigidBody(true);
@@ -1169,7 +1173,7 @@ void lua_RotateEntity(int id, float rx, lua::Value ry, lua::Value rz)
         if(!ry.is<lua::Number>() || !rz.is<lua::Number>())
             ent->m_angles += glm::vec3{rx, 0, 0};
         else
-            ent->m_angles += glm::vec3{rx, ry.toFloat(), rz.toFloat()};
+            ent->m_angles += glm::vec3{rx, ry.toNumber(), rz.toNumber()};
 
         ent->updateTransform();
         ent->updateRigidBody(true);
@@ -1218,7 +1222,7 @@ void lua_RotateEntityToEntity(int id1, int id2, int axis, lua::Value speed_, lua
 
         theta = glm::degrees(theta);
         if(add_angle_.is<lua::Number>())
-            theta += static_cast<glm::float_t>(add_angle_);
+            theta += add_angle_.toNumber();
 
         glm::float_t delta = *targ_angle - theta;
 
@@ -1226,7 +1230,7 @@ void lua_RotateEntityToEntity(int id1, int id2, int axis, lua::Value speed_, lua
         {
             if(speed_.is<lua::Number>())
             {
-                glm::float_t speed = static_cast<glm::float_t>(speed_);
+                glm::float_t speed = speed_.toNumber();
 
                 if(glm::abs(delta) > speed)
                 {
@@ -1291,7 +1295,7 @@ float lua_GetEntityOrientation(int id1, int id2, lua::Value add_angle_)
 
     glm::float_t theta = glm::degrees(glm::atan(-facing.x, facing.y));
     if(add_angle_.is<lua::Number>())
-        theta += static_cast<glm::float_t>(add_angle_);
+        theta += add_angle_.toNumber();
 
     return util::wrapAngle(ent2->m_angles[0] - theta);
 }
@@ -1341,7 +1345,7 @@ void lua_SetEntitySpeed(int id, float vx, lua::Value vy, lua::Value vz)
         if(!vy.is<lua::Number>() || !vz.is<lua::Number>())
             ent->m_speed[0] = vx;
         else
-            ent->m_speed = { vx,vy,vz };
+            ent->m_speed = { vx, vy.toNumber(), vz.toNumber() };
         ent->updateCurrentSpeed();
     }
 }
@@ -1356,13 +1360,13 @@ void lua_SetEntityAnim(int id, int anim, lua::Value frame)
         return;
     }
 
-    if(frame.is<lua::Number>())
-        ent->setAnimation(anim, frame);
+    if(frame.is<lua::Integer>())
+        ent->setAnimation(anim, frame.toInt());
     else
         ent->setAnimation(anim);
 }
 
-void lua_SetEntityAnimFlag(int id, uint16_t mode)
+void lua_SetEntityAnimFlag(int id, int mode)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1413,7 +1417,7 @@ void lua_SetModelBodyPartFlag(int id, int bone_id, int body_part_flag)
     model->meshes[bone_id].body_part = body_part_flag;
 }
 
-std::tuple<int16_t, int16_t, uint32_t> lua_GetEntityAnim(int id)
+std::tuple<int, int, int> lua_GetEntityAnim(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1426,7 +1430,7 @@ std::tuple<int16_t, int16_t, uint32_t> lua_GetEntityAnim(int id)
     return std::make_tuple(
                 ent->m_skeleton.getCurrentAnimation(),
                 ent->m_skeleton.getCurrentFrame(),
-                static_cast<uint32_t>(ent->m_skeleton.getModel()->animations[ent->m_skeleton.getCurrentAnimation()].getFrameDuration())
+                static_cast<int>(ent->m_skeleton.getModel()->animations[ent->m_skeleton.getCurrentAnimation()].getFrameDuration())
             );
 }
 
@@ -1445,14 +1449,14 @@ bool lua_CanTriggerEntity(int id1, int id2, lua::Value rv, lua::Value ofsX, lua:
     }
 
     glm::float_t r;
-    if(!rv.is<lua::Number>() || rv<0)
+    if(!rv.is<lua::Number>() || rv.toNumber()<0)
         r = e2->m_activationRadius;
     else
-        r = rv;
+        r = rv.toNumber();
 
     glm::vec3 offset;
     if(ofsX.is<lua::Number>() && ofsY.is<lua::Number>() && ofsZ.is<lua::Number>())
-        offset = { ofsX,ofsY,ofsZ };
+        offset = { ofsX.toNumber(), ofsY.toNumber(), ofsZ.toNumber() };
     else
         offset = e2->m_activationOffset;
 
@@ -1673,7 +1677,7 @@ void lua_SetEntityOCB(int id, int ocb)
     ent->m_OCB = ocb;
 }
 
-std::tuple<bool, bool, bool, uint16_t, uint32_t> lua_GetEntityFlags(int id)
+std::tuple<bool, bool, bool, int, int> lua_GetEntityFlags(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1683,17 +1687,16 @@ std::tuple<bool, bool, bool, uint16_t, uint32_t> lua_GetEntityFlags(int id)
         return{};
     }
 
-    return std::tuple<bool, bool, bool, uint16_t, uint32_t>
-    {
+    return std::make_tuple(
         ent->m_active,
-            ent->m_enabled,
-            ent->m_visible,
-            ent->m_typeFlags,
-            ent->m_callbackFlags
-    };
+        ent->m_enabled,
+        ent->m_visible,
+        ent->m_typeFlags,
+        ent->m_callbackFlags
+    );
 }
 
-void lua_SetEntityFlags(int id, bool active, bool enabled, bool visible, uint16_t typeFlags, lua::Value cbFlags)
+void lua_SetEntityFlags(int id, bool active, bool enabled, bool visible, int typeFlags, lua::Value cbFlags)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1708,10 +1711,10 @@ void lua_SetEntityFlags(int id, bool active, bool enabled, bool visible, uint16_
     ent->m_visible = visible;
     ent->m_typeFlags = typeFlags;
     if(cbFlags.is<lua::Integer>())
-        ent->m_callbackFlags = cbFlags;
+        ent->m_callbackFlags = cbFlags.toInt();
 }
 
-uint32_t lua_GetEntityTypeFlag(int id, lua::Value flag)
+int lua_GetEntityTypeFlag(int id, lua::Value flag)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1722,12 +1725,12 @@ uint32_t lua_GetEntityTypeFlag(int id, lua::Value flag)
     }
 
     if(flag.is<lua::Integer>())
-        return ent->m_typeFlags & static_cast<uint16_t>(flag);
+        return ent->m_typeFlags & flag.toInt();
     else
         return ent->m_typeFlags;
 }
 
-void lua_SetEntityTypeFlag(int id, uint16_t type_flag, lua::Value value)
+void lua_SetEntityTypeFlag(int id, int type_flag, lua::Value value)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1742,7 +1745,7 @@ void lua_SetEntityTypeFlag(int id, uint16_t type_flag, lua::Value value)
         return;
     }
 
-    if(static_cast<bool>(value))
+    if(value.toBool())
     {
         ent->m_typeFlags |= type_flag;
     }
@@ -1791,12 +1794,12 @@ void lua_SetEntityStateFlag(int id, const char* whichCstr, lua::Value value)
     else return;
 
     if(value.is<lua::Boolean>())
-        *flag = value;
+        *flag = value.toBool();
     else
         *flag = !*flag;
 }
 
-uint32_t lua_GetEntityCallbackFlag(int id, lua::Value flag)
+int lua_GetEntityCallbackFlag(int id, lua::Value flag)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1809,10 +1812,10 @@ uint32_t lua_GetEntityCallbackFlag(int id, lua::Value flag)
     if(!flag.is<lua::Integer>())
         return ent->m_callbackFlags;
     else
-        return ent->m_callbackFlags & static_cast<uint16_t>(flag);
+        return ent->m_callbackFlags & flag.toInt();
 }
 
-void lua_SetEntityCallbackFlag(int id, uint32_t flag, lua::Value value)
+void lua_SetEntityCallbackFlag(int id, int flag, lua::Value value)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1828,7 +1831,7 @@ void lua_SetEntityCallbackFlag(int id, uint32_t flag, lua::Value value)
         return;
     }
 
-    if(static_cast<bool>(value))
+    if(value.toBool())
     {
         ent->m_callbackFlags |= flag;
     }
@@ -1856,7 +1859,7 @@ void lua_SetEntityTimer(int id, float timer)
     ent->m_timer = timer;
 }
 
-uint16_t lua_GetEntityMoveType(int id)
+int lua_GetEntityMoveType(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1866,10 +1869,10 @@ uint16_t lua_GetEntityMoveType(int id)
         return -1;
     }
 
-    return static_cast<uint16_t>(ent->m_moveType);
+    return static_cast<int>(ent->m_moveType);
 }
 
-void lua_SetEntityMoveType(int id, uint16_t type)
+void lua_SetEntityMoveType(int id, int type)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1947,7 +1950,7 @@ int lua_GetEntityState(int id)
     return static_cast<int>(ent->m_skeleton.getPreviousState());
 }
 
-uint32_t lua_GetEntityModel(int id)
+int lua_GetEntityModel(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1975,7 +1978,7 @@ void lua_SetEntityState(int id, int16_t value, lua::Value next)
         ent->m_skeleton.setPreviousState( static_cast<world::LaraState>(next.toInt()) );
 }
 
-void lua_SetEntityRoomMove(int id, uint32_t room, uint16_t moveType, int dirFlag)
+void lua_SetEntityRoomMove(int id, int room, int moveType, int dirFlag)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
     if(ent == nullptr)
@@ -2006,7 +2009,7 @@ void lua_SetEntityRoomMove(int id, uint32_t room, uint16_t moveType, int dirFlag
     ent->m_moveDir = static_cast<world::MoveDirection>(dirFlag);
 }
 
-uint32_t lua_GetEntityMeshCount(int id)
+int lua_GetEntityMeshCount(int id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -2016,7 +2019,7 @@ uint32_t lua_GetEntityMeshCount(int id)
         return 0;
     }
 
-    return static_cast<uint32_t>( ent->m_skeleton.getBoneCount() );
+    return static_cast<int>( ent->m_skeleton.getBoneCount() );
 }
 
 void lua_SetEntityMeshswap(int id_dest, int id_src)
@@ -2067,7 +2070,7 @@ void lua_SetModelAnimReplaceFlag(int id, int bone, bool flag)
     }
 }
 
-void lua_CopyMeshFromModelToModel(int id1, int id2, size_t bone1, size_t bone2)
+void lua_CopyMeshFromModelToModel(int id1, int id2, int bone1, int bone2)
 {
     world::SkeletalModel* sm1 = engine::engine_world.getModelByID(id1);
     if(sm1 == nullptr)
@@ -2103,7 +2106,7 @@ void lua_CreateEntityGhosts(int id)
     }
 }
 
-void lua_PushEntityBody(int id, uint32_t body_number, float h_force, float v_force, bool resetFlag)
+void lua_PushEntityBody(int id, int body_number, float h_force, float v_force, bool resetFlag)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -2141,13 +2144,13 @@ int lua_SetEntityBodyMass(lua_State *lua)
         return 0;
     }
 
-    const lua_Unsigned id = lua_tounsigned(lua, 1);
-    std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(static_cast<uint32_t>(id));
+    const lua::Integer id = lua_tointeger(lua, 1);
+    std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-    lua_Unsigned body_number = lua_tounsigned(lua, 2);
+    lua::Integer body_number = lua_tointeger(lua, 2);
     body_number = (body_number < 1) ? (1) : (body_number);
 
-    uint16_t argn = 3;
+    size_t argn = 3;
     bool dynamic = false;
 
     if(ent && ent->m_skeleton.getBoneCount() >= body_number)
@@ -2219,7 +2222,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
     return 0;
 }
 
-void lua_LockEntityBodyLinearFactor(int id, uint32_t body_number, lua::Value vfactor)
+void lua_LockEntityBodyLinearFactor(int id, int body_number, lua::Value vfactor)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -2293,9 +2296,9 @@ void lua_SetCharacterCurrentWeapon(int id, int weapon)
 
 void lua_CamShake(float power, float time, lua::Value id)
 {
-    if(!id.is<lua::Nil>() && id >= 0)
+    if(!id.is<lua::Nil>() && id.toInt() >= 0)
     {
-        std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
+        std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id.toInt());
 
         glm::vec3 cam_pos = render::renderer.camera()->getPosition();
 
@@ -2350,7 +2353,7 @@ void lua_PlayStream(int id, lua::Value mask)
 
     if(!mask.is<lua::Nil>())
     {
-        engine::engine_world.audioEngine.streamPlay(id, mask.to<int>());
+        engine::engine_world.audioEngine.streamPlay(id, mask.toInt());
     }
     else
     {
@@ -2375,7 +2378,7 @@ void lua_PlaySound(int id, lua::Value ent_id)
 
     int eid = -1;
     if(!ent_id.is<lua::Nil>())
-        eid = static_cast<int>(ent_id);
+        eid = ent_id.toInt();
     if(eid < 0 || !engine::engine_world.getEntityByID(eid))
         eid = -1;
 
@@ -2405,7 +2408,7 @@ void lua_PlaySound(int id, lua::Value ent_id)
     }
 }
 
-void lua_StopSound(uint32_t id, lua::Value ent_id)
+void lua_StopSound(int id, lua::Value ent_id)
 {
     if(id >= engine::engine_world.audioEngine.getAudioMapSize())
     {
@@ -2415,7 +2418,7 @@ void lua_StopSound(uint32_t id, lua::Value ent_id)
 
     int eid = -1;
     if(!ent_id.is<lua::Nil>())
-        eid = static_cast<int>(ent_id);
+        eid = ent_id.toInt();
     if(eid < 0 || engine::engine_world.getEntityByID(eid) == nullptr)
         eid = -1;
 
@@ -2450,10 +2453,10 @@ void lua_SetLevel(int id)
 void lua_SetGame(int gameId, lua::Value levelId)
 {
     engine::Gameflow_Manager.setGameID(gameId);
-    if(!levelId.is<lua::Nil>() && levelId >= 0)
-        engine::Gameflow_Manager.setLevelID(levelId);
+    if(!levelId.is<lua::Nil>() && levelId.toInt() >= 0)
+        engine::Gameflow_Manager.setLevelID(levelId.toInt());
 
-    const char* str = engine_lua["getTitleScreen"](int(engine::Gameflow_Manager.getGameID()));
+    const char* str = engine_lua["getTitleScreen"](int(engine::Gameflow_Manager.getGameID())).toCStr();
     gui::fadeAssignPic(gui::FaderType::LoadScreen, str);
     gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
@@ -2468,13 +2471,13 @@ void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
 
     if(mapName && mapName != engine::Gameflow_Manager.getLevelPath())
     {
-        if(gameId.is<lua::Integer>() && gameId >= 0)
+        if(gameId.is<lua::Integer>() && gameId.toInt() >= 0)
         {
-            engine::Gameflow_Manager.setGameID(static_cast<int>(gameId));
+            engine::Gameflow_Manager.setGameID(gameId.toInt());
         }
-        if(mapId.is<lua::Integer>() && mapId >= 0)
+        if(mapId.is<lua::Integer>() && mapId.toInt() >= 0)
         {
-            engine::Gameflow_Manager.setLevelID(mapId);
+            engine::Gameflow_Manager.setLevelID(mapId.toInt());
         }
         char file_path[MAX_ENGINE_PATH];
         engine_lua.getLoadingScreen(engine::Gameflow_Manager.getLevelID(), file_path);
@@ -2486,7 +2489,7 @@ void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
 
 // Flipped (alternate) room functions
 
-void lua_SetFlipState(uint32_t group, bool state)
+void lua_SetFlipState(int group, bool state)
 {
     if(group >= engine::engine_world.flip_data.size())
     {
@@ -2526,7 +2529,7 @@ void lua_SetFlipState(uint32_t group, bool state)
     }
 }
 
-void lua_SetFlipMap(uint32_t group, int mask, int /*op*/)
+void lua_SetFlipMap(int group, int mask, int /*op*/)
 {
     int op = (mask > AMASK_OP_XOR) ? (AMASK_OP_XOR) : (AMASK_OP_OR);
 
@@ -2546,7 +2549,7 @@ void lua_SetFlipMap(uint32_t group, int mask, int /*op*/)
     }
 }
 
-int lua_GetFlipMap(uint32_t group)
+int lua_GetFlipMap(int group)
 {
     if(group >= engine::engine_world.flip_data.size())
     {
@@ -2557,7 +2560,7 @@ int lua_GetFlipMap(uint32_t group)
     return engine::engine_world.flip_data[group].map;
 }
 
-int lua_GetFlipState(uint32_t group)
+int lua_GetFlipState(int group)
 {
     if(group >= engine::engine_world.flip_data.size())
     {
@@ -2619,7 +2622,7 @@ void lua_genUVRotateAnimation(int id)
     seq->uvrotate_max = 0.5f * (v_max - v_min);
     seq->uvrotate_speed = seq->uvrotate_max / seq->frames.size();
 
-    for(uint16_t j = 0; j < seq->frames.size(); j++)
+    for(size_t j = 0; j < seq->frames.size(); j++)
     {
         seq->frames[j].tex_ind = firstPolygon.tex_index;
         seq->frames[j].mat[0] = 1.0;
@@ -3206,7 +3209,8 @@ void MainEngine::registerMainFunctions()
 
     // Register script functions
 
-    registerC("checkStack", std::function<void()>(std::bind(&MainEngine::checkStack, this)));
+    auto self = this;
+    registerC("checkStack", std::function<void()>([self]{self->checkStack();}));
     registerC("dumpModel", lua_DumpModel);
     registerC("dumpRoom", lua_DumpRoom);
     registerC("setRoomEnabled", lua_SetRoomEnabled);
@@ -3485,17 +3489,17 @@ int script::MainEngine::parseInt(char **ch)
 
 int script::MainEngine::getGlobalSound(int global_sound_id)
 {
-    return call("getGlobalSound", static_cast<int>(engine::engine_world.engineVersion), global_sound_id);
+    return call("getGlobalSound", static_cast<int>(engine::engine_world.engineVersion), global_sound_id).toInt();
 }
 
 int script::MainEngine::getSecretTrackNumber()
 {
-    return call("getSecretTrackNumber", static_cast<int>(engine::engine_world.engineVersion));
+    return call("getSecretTrackNumber", static_cast<int>(engine::engine_world.engineVersion)).toInt();
 }
 
 int script::MainEngine::getNumTracks()
 {
-    return call("getNumTracks", static_cast<int>(engine::engine_world.engineVersion));
+    return call("getNumTracks", static_cast<int>(engine::engine_world.engineVersion)).toInt();
 }
 
 bool script::MainEngine::getOverridedSamplesInfo(int *num_samples, int *num_sounds, std::string* sample_name_mask)
@@ -3528,21 +3532,21 @@ bool script::MainEngine::getSoundtrack(int track_index, char *file_path, audio::
 
 bool script::MainEngine::getString(int string_index, size_t string_size, char *buffer)
 {
-    const char* str = call("getString", string_index);
+    const char* str = call("getString", string_index).toCStr();
     strncpy(buffer, str, string_size);
     return true;
 }
 
 bool script::MainEngine::getSysNotify(int string_index, size_t string_size, char *buffer)
 {
-    const char* str = call("getSysNotify", string_index);
+    const char* str = call("getSysNotify", string_index).toCStr();
     strncpy(buffer, str, string_size);
     return true;
 }
 
 bool script::MainEngine::getLoadingScreen(int level_index, char *pic_path)
 {
-    const char* realPath = call("getLoadingScreen", int(engine::Gameflow_Manager.getGameID()), int(engine::Gameflow_Manager.getLevelID()), level_index);
+    const char* realPath = call("getLoadingScreen", int(engine::Gameflow_Manager.getGameID()), int(engine::Gameflow_Manager.getLevelID()), level_index).toCStr();
     strncpy(pic_path, realPath, MAX_ENGINE_PATH);
     return true;
 }
@@ -3583,65 +3587,63 @@ void script::MainEngine::execEffect(int id, int caller, int operand)
 
 void script::ScriptEngine::parseControls(engine::ControlSettings *cs) const
 {
-    cs->mouse_sensitivity = (*this)["controls"]["mouse_sensitivity"];
-    cs->mouse_scale_x = (*this)["controls"]["mouse_scale_x"];
-    cs->mouse_scale_y = (*this)["controls"]["mouse_scale_y"];
-    cs->use_joy = (*this)["controls"]["use_joy"].to<bool>();
-    cs->joy_number = (*this)["controls"]["joy_number"];
-    cs->joy_rumble = (*this)["controls"]["joy_rumble"].to<bool>();
-    cs->joy_axis_map[engine::AXIS_LOOK_X] = (*this)["controls"]["joy_look_axis_x"];
-    cs->joy_axis_map[engine::AXIS_LOOK_Y] = (*this)["controls"]["joy_look_axis_y"];
-    cs->joy_axis_map[engine::AXIS_MOVE_X] = (*this)["controls"]["joy_move_axis_x"];
-    cs->joy_axis_map[engine::AXIS_MOVE_Y] = (*this)["controls"]["joy_move_axis_y"];
-    cs->joy_look_invert_x = (*this)["controls"]["joy_look_invert_x"].to<bool>();
-    cs->joy_look_invert_y = (*this)["controls"]["joy_look_invert_y"].to<bool>();
-    cs->joy_look_sensitivity = (*this)["controls"]["joy_look_sensitivity"];
-    cs->joy_look_deadzone = (*this)["controls"]["joy_look_deadzone"];
-    cs->joy_move_invert_x = (*this)["controls"]["joy_move_invert_x"].to<bool>();
-    cs->joy_move_invert_y = (*this)["controls"]["joy_move_invert_y"].to<bool>();
-    cs->joy_move_sensitivity = (*this)["controls"]["joy_move_sensitivity"];
-    cs->joy_move_deadzone = (*this)["controls"]["joy_move_deadzone"];
+    cs->mouse_sensitivity = (*this)["controls"]["mouse_sensitivity"].toNumber();
+    cs->mouse_scale_x = (*this)["controls"]["mouse_scale_x"].toNumber();
+    cs->mouse_scale_y = (*this)["controls"]["mouse_scale_y"].toNumber();
+    cs->use_joy = (*this)["controls"]["use_joy"].toBool();
+    cs->joy_number = (*this)["controls"]["joy_number"].toInt();
+    cs->joy_rumble = (*this)["controls"]["joy_rumble"].toBool();
+    cs->joy_axis_map[engine::AXIS_LOOK_X] = (*this)["controls"]["joy_look_axis_x"].toInt();
+    cs->joy_axis_map[engine::AXIS_LOOK_Y] = (*this)["controls"]["joy_look_axis_y"].toInt();
+    cs->joy_axis_map[engine::AXIS_MOVE_X] = (*this)["controls"]["joy_move_axis_x"].toInt();
+    cs->joy_axis_map[engine::AXIS_MOVE_Y] = (*this)["controls"]["joy_move_axis_y"].toInt();
+    cs->joy_look_invert_x = (*this)["controls"]["joy_look_invert_x"].toBool();
+    cs->joy_look_invert_y = (*this)["controls"]["joy_look_invert_y"].toBool();
+    cs->joy_look_sensitivity = (*this)["controls"]["joy_look_sensitivity"].toNumber();
+    cs->joy_look_deadzone = (*this)["controls"]["joy_look_deadzone"].toInt();
+    cs->joy_move_invert_x = (*this)["controls"]["joy_move_invert_x"].toBool();
+    cs->joy_move_invert_y = (*this)["controls"]["joy_move_invert_y"].toBool();
+    cs->joy_move_sensitivity = (*this)["controls"]["joy_move_sensitivity"].toNumber();
+    cs->joy_move_deadzone = (*this)["controls"]["joy_move_deadzone"].toInt();
 }
 
 void script::ScriptEngine::parseScreen(engine::ScreenInfo *sc) const
 {
-    sc->x = (*this)["screen"]["x"];
-    sc->y = (*this)["screen"]["y"];
-    sc->w = (*this)["screen"]["width"];
-    sc->h = (*this)["screen"]["height"];
-    sc->w = (*this)["screen"]["width"];
+    sc->x = (*this)["screen"]["x"].toInt();
+    sc->y = (*this)["screen"]["y"].toInt();
+    sc->w = (*this)["screen"]["width"].toInt();
+    sc->h = (*this)["screen"]["height"].toInt();
     sc->w_unit = sc->w / gui::ScreenMeteringResolution;
-    sc->h = (*this)["screen"]["height"];
     sc->h_unit = sc->h / gui::ScreenMeteringResolution;
-    sc->FS_flag = (*this)["screen"]["fullscreen"];
-    sc->show_debuginfo = (*this)["screen"]["debug_info"];
-    sc->fov = (*this)["screen"]["fov"];
-    sc->vsync = (*this)["screen"]["vsync"];
+    sc->FS_flag = (*this)["screen"]["fullscreen"].toBool();
+    sc->show_debuginfo = (*this)["screen"]["debug_info"].toBool();
+    sc->fov = (*this)["screen"]["fov"].toNumber();
+    sc->vsync = (*this)["screen"]["vsync"].toBool();
 }
 
 void script::ScriptEngine::parseRender(render::RenderSettings *rs) const
 {
-    rs->mipmap_mode = (*this)["render"]["mipmap_mode"];
-    rs->mipmaps = (*this)["render"]["mipmaps"];
-    rs->lod_bias = (*this)["render"]["lod_bias"];
-    rs->anisotropy = (*this)["render"]["anisotropy"];
-    rs->antialias = (*this)["render"]["antialias"];
-    rs->antialias_samples = (*this)["render"]["antialias_samples"];
-    rs->texture_border = (*this)["render"]["texture_border"];
-    rs->save_texture_memory = (*this)["render"]["save_texture_memory"];
-    rs->z_depth = (*this)["render"]["z_depth"];
-    rs->fog_enabled = (*this)["render"]["fog_enabled"];
-    rs->fog_start_depth = (*this)["render"]["fog_start_depth"];
-    rs->fog_end_depth = (*this)["render"]["fog_end_depth"];
-    rs->fog_color[0] = (*this)["render"]["fog_color"]["r"];
+    rs->mipmap_mode = (*this)["render"]["mipmap_mode"].toInt();
+    rs->mipmaps = (*this)["render"]["mipmaps"].toInt();
+    rs->lod_bias = (*this)["render"]["lod_bias"].toNumber();
+    rs->anisotropy = (*this)["render"]["anisotropy"].toInt();
+    rs->antialias = (*this)["render"]["antialias"].toBool();
+    rs->antialias_samples = (*this)["render"]["antialias_samples"].toInt();
+    rs->texture_border = (*this)["render"]["texture_border"].toInt();
+    rs->save_texture_memory = (*this)["render"]["save_texture_memory"].toBool();
+    rs->z_depth = (*this)["render"]["z_depth"].toInt();
+    rs->fog_enabled = (*this)["render"]["fog_enabled"].toBool();
+    rs->fog_start_depth = (*this)["render"]["fog_start_depth"].toNumber();
+    rs->fog_end_depth = (*this)["render"]["fog_end_depth"].toNumber();
+    rs->fog_color[0] = (*this)["render"]["fog_color"]["r"].toInt();
     rs->fog_color[0] /= 255.0;
-    rs->fog_color[1] = (*this)["render"]["fog_color"]["g"];
+    rs->fog_color[1] = (*this)["render"]["fog_color"]["g"].toInt();
     rs->fog_color[1] /= 255.0;
-    rs->fog_color[2] = (*this)["render"]["fog_color"]["b"];
+    rs->fog_color[2] = (*this)["render"]["fog_color"]["b"].toInt();
     rs->fog_color[2] /= 255.0;
     rs->fog_color[3] = 1;
 
-    rs->use_gl3 = (*this)["render"]["use_gl3"];
+    rs->use_gl3 = (*this)["render"]["use_gl3"].toBool();
 
     if(rs->z_depth != 8 && rs->z_depth != 16 && rs->z_depth != 24)
         rs->z_depth = 24;
@@ -3649,56 +3651,56 @@ void script::ScriptEngine::parseRender(render::RenderSettings *rs) const
 
 void script::ScriptEngine::parseAudio(audio::Settings *as) const
 {
-    as->music_volume = (*this)["audio"]["music_volume"];
-    as->sound_volume = (*this)["audio"]["sound_volume"];
-    as->use_effects = (*this)["audio"]["use_effects"].to<bool>();
-    as->listener_is_player = (*this)["audio"]["listener_is_player"].to<bool>();
-    as->stream_buffer_size = (*this)["audio"]["stream_buffer_size"];
+    as->music_volume = (*this)["audio"]["music_volume"].toNumber();
+    as->sound_volume = (*this)["audio"]["sound_volume"].toNumber();
+    as->use_effects = (*this)["audio"]["use_effects"].toBool();
+    as->listener_is_player = (*this)["audio"]["listener_is_player"].toBool();
+    as->stream_buffer_size = (*this)["audio"]["stream_buffer_size"].toInt();
     as->stream_buffer_size *= 1024;
     if(as->stream_buffer_size <= 0)
         as->stream_buffer_size = 128 * 1024;
-    as->music_volume = (*this)["audio"]["music_volume"];
-    as->music_volume = (*this)["audio"]["music_volume"];
+    as->music_volume = (*this)["audio"]["music_volume"].toNumber();
+    as->music_volume = (*this)["audio"]["music_volume"].toNumber();
 }
 
 void script::ScriptEngine::parseConsole(Console *cn) const
 {
     {
-        float r = (*this)["console"]["background_color"]["r"];
-        float g = (*this)["console"]["background_color"]["g"];
-        float b = (*this)["console"]["background_color"]["b"];
-        float a = (*this)["console"]["background_color"]["a"];
+        float r = (*this)["console"]["background_color"]["r"].toInt();
+        float g = (*this)["console"]["background_color"]["g"].toInt();
+        float b = (*this)["console"]["background_color"]["b"].toInt();
+        float a = (*this)["console"]["background_color"]["a"].toInt();
         cn->setBackgroundColor(r / 255, g / 255, b / 255, a / 255);
     }
 
-    float tmpF = (*this)["console"]["spacing"];
+    float tmpF = (*this)["console"]["spacing"].toNumber();
     if(tmpF >= CON_MIN_LINE_INTERVAL && tmpF <= CON_MAX_LINE_INTERVAL)
         cn->setSpacing(tmpF);
 
-    int tmpI = (*this)["console"]["line_size"];
+    int tmpI = (*this)["console"]["line_size"].toInt();
     if(tmpI >= CON_MIN_LINE_SIZE && tmpI <= CON_MAX_LINE_SIZE)
         cn->setLineSize(tmpI);
 
-    tmpI = (*this)["console"]["showing_lines"];
+    tmpI = (*this)["console"]["showing_lines"].toInt();
     if(tmpI >= CON_MIN_LINES && tmpI <= CON_MIN_LINES)
         cn->setVisibleLines(tmpI);
 
-    tmpI = (*this)["console"]["log_size"];
+    tmpI = (*this)["console"]["log_size"].toInt();
     if(tmpI >= CON_MIN_LOG && tmpI <= CON_MAX_LOG)
         cn->setHistorySize(tmpI);
 
-    tmpI = (*this)["console"]["lines_count"];
+    tmpI = (*this)["console"]["lines_count"].toInt();
     if(tmpI >= CON_MIN_LOG && tmpI <= CON_MAX_LOG)
         cn->setBufferSize(tmpI);
 
-    bool tmpB = (*this)["console"]["show"];
+    bool tmpB = (*this)["console"]["show"].toBool();
     cn->setVisible(tmpB);
 
-    tmpI = (*this)["console"]["show_cursor_period"];
+    tmpI = (*this)["console"]["show_cursor_period"].toInt();
     cn->setShowCursorPeriod(util::MilliSeconds(tmpI));
 }
 
 void script::ScriptEngine::parseSystem(engine::SystemSettings *ss) const
 {
-    ss->logging = (*this)["system"]["logging"];
+    ss->logging = (*this)["system"]["logging"].toBool();
 }
