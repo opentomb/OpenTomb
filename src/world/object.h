@@ -26,6 +26,8 @@ enum class CollisionType
     Ghost      //!< no fix character position, but works in collision callbacks and interacts with dynamic objects
 };
 
+using ObjectId = uint32_t;
+
 class Object
 {
     Object(const Object&) = delete;
@@ -64,20 +66,20 @@ public:
         m_collisionShape = shape;
     }
 
-    uint32_t getId() const noexcept
+    ObjectId getId() const noexcept
     {
         return m_id;
     }
 
 protected:
-    explicit Object(uint32_t id, Room* room = nullptr)
+    explicit Object(ObjectId id, Room* room = nullptr)
         : m_id(id)
         , m_room(room)
     {
     }
 
 private:
-    const uint32_t m_id;                 // Unique entity ID
+    const ObjectId m_id;                 // Unique entity ID
 
     world::Room* m_room = nullptr;
     CollisionType m_collisionType = CollisionType::None;

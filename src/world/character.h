@@ -355,7 +355,7 @@ struct Character : public Entity
     bool changeParam(int parameter, float value);
     bool setParamMaximum(int parameter, float max_value);
 
-    bool setWeaponModel(int weapon_model, bool armed);
+    bool setWeaponModel(ModelId weapon_model, bool armed);
 
   private:
     StateController m_stateController;

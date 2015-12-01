@@ -260,7 +260,7 @@ void Character::updatePlatformPostStep()
 /**
  * Start position are taken from transform
  */
-void Character::getHeightInfo(const glm::vec3& pos, struct HeightInfo* fc, glm::float_t v_offset)
+void Character::getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t v_offset)
 {
     auto cb = fc->cb;
     Room* r = (cb->m_object) ? (cb->m_object->getRoom()) : (nullptr);
@@ -1978,7 +1978,7 @@ bool Character::changeParam(int parameter, float value)
 // overrided == 0x03: overriding mesh in disarmed state;
 // overrided == 0x04: add mesh to slot in disarmed state;
 ///@TODO: separate mesh replacing control and animation disabling / enabling
-bool Character::setWeaponModel(int weapon_model, bool armed)
+bool Character::setWeaponModel(ModelId weapon_model, bool armed)
 {
     SkeletalModel* model = engine::engine_world.getModelByID(weapon_model);
 

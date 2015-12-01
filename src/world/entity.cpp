@@ -396,7 +396,7 @@ void Entity::updateCurrentSpeed(bool zeroVz)
     m_speed[2] = vz;
 }
 
-void Entity::addOverrideAnim(int model_id)
+void Entity::addOverrideAnim(ModelId model_id)
 {
     SkeletalModel* sm = engine::engine_world.getModelByID(model_id);
 

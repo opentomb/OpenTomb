@@ -17,16 +17,16 @@ bool RDSetup::getSetup(int ragdoll_index)
 
     size_t tmp;
 
-    tmp = rds["joint_count"].toInt();
+    tmp = rds["joint_count"].toUInt();
     joint_setup.resize(tmp);
 
-    tmp = rds["body_count"].toInt();
+    tmp = rds["body_count"].toUInt();
     body_setup.resize(tmp);
 
     joint_cfm = rds["joint_cfm"].toFloat();
     joint_erp = rds["joint_erp"].toFloat();
 
-    for(int i = 0; i < body_setup.size(); i++)
+    for(size_t i = 0; i < body_setup.size(); i++)
     {
         body_setup[i].mass = rds["body"][i + 1]["mass"].toFloat();
         body_setup[i].restitution = rds["body"][i + 1]["restitution"].toFloat();
@@ -38,7 +38,7 @@ bool RDSetup::getSetup(int ragdoll_index)
         }
     }
 
-    for(int i = 0; i < joint_setup.size(); i++)
+    for(size_t i = 0; i < joint_setup.size(); i++)
     {
         joint_setup[i].body_index = rds["joint"][i + 1]["body_index"].toInt();
         joint_setup[i].joint_type = static_cast<RDJointSetup::Type>(rds["joint"][i + 1]["joint_type"].toInt());

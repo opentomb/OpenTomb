@@ -179,7 +179,7 @@ public:
 
     virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);
-    void addOverrideAnim(int model_id);
+    void addOverrideAnim(ModelId model_id);
     void checkActivators();
 
     virtual Substance getSubstanceState() const

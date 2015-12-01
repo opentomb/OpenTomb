@@ -6,6 +6,7 @@
 #include "settings.h"
 #include "source.h"
 #include "streamtrack.h"
+#include "world/object.h"
 
 #include <memory>
 
@@ -87,7 +88,7 @@ public:
     void deInitAudio();
     // If exist, immediately stop and destroy all effects with given parameters.
     Error kill(int effect_ID, EmitterType entity_type = EmitterType::Global, int entity_ID = 0);
-    bool isInRange(EmitterType entity_type, int entity_ID, float range, float gain);
+    bool isInRange(EmitterType entity_type, world::ObjectId entity_ID, float range, float gain);
     Error send(int effect_ID, EmitterType entity_type = EmitterType::Global, int entity_ID = 0);
 
     ALuint getBuffer(size_t index) const

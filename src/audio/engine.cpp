@@ -286,7 +286,7 @@ int Engine::findSource(int effect_ID, EmitterType entity_type, int entity_ID) co
     for(uint32_t i = 0; i < m_sources.size(); i++)
     {
         if((entity_type == EmitterType::Any || m_sources[i].m_emitterType == entity_type) &&
-                (entity_ID == -1                        || m_sources[i].m_emitterID == static_cast<int32_t>(entity_ID)) &&
+                (entity_ID == -1                        || m_sources[i].m_emitterID == static_cast<world::ObjectId>(entity_ID)) &&
                 (effect_ID == -1                        || m_sources[i].m_effectIndex == static_cast<uint32_t>(effect_ID)))
         {
             if(m_sources[i].isPlaying())
@@ -530,7 +530,7 @@ Error Engine::kill(int effect_ID, EmitterType entity_type, int entity_ID)
     return Error::Ignored;
 }
 
-bool Engine::isInRange(EmitterType entity_type, int entity_ID, float range, float gain)
+bool Engine::isInRange(EmitterType entity_type, world::ObjectId entity_ID, float range, float gain)
 {
     glm::vec3 vec;
     switch(entity_type)
@@ -547,7 +547,7 @@ bool Engine::isInRange(EmitterType entity_type, int entity_ID, float range, floa
         break;
 
     case EmitterType::SoundSource:
-        if(static_cast<uint32_t>(entity_ID) + 1 > m_emitters.size())
+        if(entity_ID >= m_emitters.size())
         {
             return false;
         }

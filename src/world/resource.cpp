@@ -580,7 +580,7 @@ namespace world
         return result;
     }
 
-    bool Res_IsEntityProcessed(int32_t *lookup_table, uint16_t entity_index)
+    bool Res_IsEntityProcessed(int32_t *lookup_table, world::ObjectId entity_index)
     {
         // Fool-proof check for entity existence. Fixes LOTS of stray non-existent
         // entity #256 occurences in original games (primarily TR4-5).
@@ -3483,15 +3483,15 @@ namespace world
             entity->m_inertiaAngular[0] = 0.0;
             entity->m_inertiaAngular[1] = 0.0;
 
-            entity->m_skeleton.setModel( world->getModelByID(tr_item->object_id) );
+            entity->m_skeleton.setModel( world->getModelByID(static_cast<ModelId>(tr_item->object_id)) );
 
             if(entity->m_skeleton.getModel() == nullptr)
             {
-                int id = engine_lua.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id).toInt();
+                ModelId id = engine_lua.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id).to<ModelId>();
                 entity->m_skeleton.setModel( world->getModelByID(id) );
             }
 
-            int replace_anim_id = engine_lua.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id).toInt();
+            ModelId replace_anim_id = engine_lua.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id).to<ModelId>();
             if(replace_anim_id > 0)
             {
                 SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);

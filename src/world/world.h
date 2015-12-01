@@ -1,15 +1,18 @@
 #pragma once
 
-#include <cstdint>
-#include <map>
-#include <memory>
-#include <vector>
-
 #include "audio/engine.h"
 #include "bordered_texture_atlas.h"
 #include "camera.h"
 #include "world/core/sprite.h"
+#include "world/object.h"
 #include "world/skeletalmodel.h"
+
+#include <boost/optional.hpp>
+
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <vector>
 
 class btCollisionShape;
 class btRigidBody;
@@ -308,19 +311,19 @@ struct World
     glm::vec4 calculateWaterTint() const;
 
     void addEntity(std::shared_ptr<Entity> entity);
-    bool createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, MenuItemType type, uint16_t count, const std::string &name);
+    bool createItem(ModelId item_id, uint32_t model_id, uint32_t world_model_id, MenuItemType type, uint16_t count, const std::string &name);
     int deleteItem(uint32_t item_id);
     core::Sprite* getSpriteByID(unsigned int ID);
-    SkeletalModel* getModelByID(uint32_t id);           // binary search the model by ID
+    SkeletalModel* getModelByID(ModelId id);           // binary search the model by ID
 
     void prepare();
     void empty();
 
-    uint32_t spawnEntity(uint32_t model_id, uint32_t room_id, const glm::vec3 *pos, const glm::vec3 *ang, int32_t id);
+    boost::optional<ObjectId> spawnEntity(ModelId model_id, uint32_t room_id, const glm::vec3 *pos, const glm::vec3 *ang, boost::optional<ObjectId> id);
     bool     deleteEntity(uint32_t id);
 
-    std::shared_ptr<Entity>    getEntityByID(uint32_t id);
-    std::shared_ptr<Character> getCharacterByID(uint32_t id);
+    std::shared_ptr<Entity>    getEntityByID(ObjectId id);
+    std::shared_ptr<Character> getCharacterByID(ObjectId id);
 
     std::shared_ptr<BaseItem> getBaseItemByID(uint32_t id);
     std::shared_ptr<Room> findRoomByPosition(const glm::vec3& pos);

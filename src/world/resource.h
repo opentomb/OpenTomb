@@ -45,17 +45,17 @@ enum class DiagonalType
 
 ///@FIXME: Move skybox item IDs to script!
 
-#define TR_ITEM_SKYBOX_TR2 254
-#define TR_ITEM_SKYBOX_TR3 355
-#define TR_ITEM_SKYBOX_TR4 459
-#define TR_ITEM_SKYBOX_TR5 454
+constexpr ModelId TR_ITEM_SKYBOX_TR2 = 254;
+constexpr ModelId TR_ITEM_SKYBOX_TR3 = 355;
+constexpr ModelId TR_ITEM_SKYBOX_TR4 = 459;
+constexpr ModelId TR_ITEM_SKYBOX_TR5 = 454;
 
 ///@FIXME: Move Lara skin item IDs to script!
 
-#define TR_ITEM_LARA_SKIN_ALTERNATE_TR1    5
-#define TR_ITEM_LARA_SKIN_TR3            315
-#define TR_ITEM_LARA_SKIN_TR45             8
-#define TR_ITEM_LARA_SKIN_JOINTS_TR45      9
+constexpr ModelId TR_ITEM_LARA_SKIN_ALTERNATE_TR1 =   5;
+constexpr ModelId TR_ITEM_LARA_SKIN_TR3           = 315;
+constexpr ModelId TR_ITEM_LARA_SKIN_TR45          =   8;
+constexpr ModelId TR_ITEM_LARA_SKIN_JOINTS_TR45   =   9;
 
 struct SectorTween;
 struct World;

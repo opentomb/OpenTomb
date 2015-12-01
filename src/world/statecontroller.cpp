@@ -1302,7 +1302,7 @@ void StateController::walkBack()
         {
             int frames_count = static_cast<int>(m_character->m_skeleton.getModel()->animations[TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].getFrameDuration());
             int frames_count2 = (frames_count + 1) / 2;
-            if((m_character->m_skeleton.getCurrentFrame() >= 0) && (m_character->m_skeleton.getCurrentFrame() <= frames_count2))
+            if(m_character->m_skeleton.getCurrentFrame() <= frames_count2)
             {
                 m_character->setAnimation(TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT, m_character->m_skeleton.getCurrentFrame());
                 m_character->m_moveDir = MoveDirection::Backward;

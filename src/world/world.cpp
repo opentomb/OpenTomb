@@ -135,11 +135,12 @@ bool World::deleteEntity(uint32_t id)
     }
 }
 
-uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const glm::vec3* pos, const glm::vec3* ang, int32_t id)
+boost::optional<ObjectId> World::spawnEntity(ModelId model_id, uint32_t room_id, const glm::vec3* pos, const glm::vec3* ang, boost::optional<ObjectId> id)
 {
     if(SkeletalModel* model = getModelByID(model_id))
     {
-        if(std::shared_ptr<Entity> ent = getEntityByID(id))
+        std::shared_ptr<Entity> ent;
+        if(id && (ent = getEntityByID(*id)))
         {
             if(pos != nullptr)
             {
@@ -163,8 +164,7 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const glm::vec3
             return ent->getId();
         }
 
-        std::shared_ptr<Entity> ent;
-        if(id < 0)
+        if(!id)
         {
             ent = std::make_shared<Entity>(next_entity_id);
             entity_tree[next_entity_id] = ent;
@@ -172,9 +172,9 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const glm::vec3
         }
         else
         {
-            ent = std::make_shared<Entity>(id);
-            if(static_cast<uint32_t>(id + 1) > next_entity_id)
-                next_entity_id = id + 1;
+            ent = std::make_shared<Entity>(*id);
+            if(static_cast<uint32_t>(*id + 1) > next_entity_id)
+                next_entity_id = *id + 1;
         }
 
         if(pos != nullptr)
@@ -225,10 +225,10 @@ uint32_t World::spawnEntity(uint32_t model_id, uint32_t room_id, const glm::vec3
         return ent->getId();
     }
 
-    return 0xFFFFFFFF;
+    return boost::none;
 }
 
-std::shared_ptr<Entity> World::getEntityByID(uint32_t id)
+std::shared_ptr<Entity> World::getEntityByID(ObjectId id)
 {
     if(character->getId() == id)
         return character;
@@ -240,7 +240,7 @@ std::shared_ptr<Entity> World::getEntityByID(uint32_t id)
         return it->second;
 }
 
-std::shared_ptr<Character> World::getCharacterByID(uint32_t id)
+std::shared_ptr<Character> World::getCharacterByID(ObjectId id)
 {
     return std::dynamic_pointer_cast<Character>(getEntityByID(id));
 }
@@ -381,7 +381,7 @@ void World::addEntity(std::shared_ptr<Entity> entity)
         next_entity_id = entity->getId() + 1;
 }
 
-bool World::createItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, MenuItemType type, uint16_t count, const std::string& name)
+bool World::createItem(ModelId item_id, uint32_t model_id, uint32_t world_model_id, MenuItemType type, uint16_t count, const std::string& name)
 {
     SkeletalModel* model = getModelByID(model_id);
     if(!model)
@@ -412,7 +412,7 @@ int World::deleteItem(uint32_t item_id)
     return 1;
 }
 
-SkeletalModel* World::getModelByID(uint32_t id)
+SkeletalModel* World::getModelByID(ModelId id)
 {
     if(skeletal_models.front().id == id)
     {

@@ -65,7 +65,7 @@ private:
 
 struct HairSetup
 {
-    uint32_t     m_model;              // Hair model ID
+    ModelId      m_model;              // Hair model ID
     uint32_t     m_linkBody;          // Lara's head mesh index
 
     glm::float_t     m_rootWeight;        // Root and tail hair body weight. Intermediate body

@@ -1,9 +1,11 @@
 #pragma once
 
-#include <cctype>
+#include "LuaState.h"
 
 #include "util/helpers.h"
-#include "LuaState.h"
+#include "world/object.h"
+
+#include <cctype>
 
 #define CVAR_NAME_SIZE 32
 #define CVAR_LUA_TABLE_NAME "cvars"
@@ -188,7 +190,7 @@ namespace script
 
         // System Lua functions. Not directly called from scripts.
 
-        void loopEntity(int object_id);
+        void loopEntity(world::ObjectId object_id);
         void execEntity(int id_callback, int id_object, int id_activator = -1);
         void execEffect(int id, int caller = -1, int operand = -1);
 

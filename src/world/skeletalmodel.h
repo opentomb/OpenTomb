@@ -11,6 +11,8 @@ namespace core
 struct BaseMesh;
 }
 
+using ModelId = uint32_t;
+
 /*
  * skeletal model with animations data.
  * Animated skeletal model. Taken from openraider.
@@ -33,7 +35,7 @@ struct SkeletalModel
         bool                        replace_anim = false;
     };
 
-    uint32_t                    id;
+    ModelId                     id;
     bool                        has_transparency = false;
 
     core::BoundingBox boundingBox;

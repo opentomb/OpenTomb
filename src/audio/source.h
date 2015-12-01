@@ -1,5 +1,7 @@
 #pragma once
 
+#include "world/object.h"
+
 #include <AL/al.h>
 
 #include <cstdint>
@@ -47,7 +49,7 @@ public:
     bool isPlaying() const;           // Check if source is currently playing.
     bool isActive() const;            // Check if source is active.
 
-    int32_t     m_emitterID;     // Entity of origin. -1 means no entity (hence - empty source).
+    world::ObjectId m_emitterID;     // Entity of origin. -1 means no entity (hence - empty source).
     EmitterType m_emitterType;   // 0 - ordinary entity, 1 - sound source, 2 - global sound.
     uint32_t    m_effectIndex;   // Effect index. Used to associate effect with entity for R/W flags.
     uint32_t    m_sampleIndex;   // OpenAL sample (buffer) index. May be the same for different sources.
