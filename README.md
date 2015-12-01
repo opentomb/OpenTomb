@@ -1,8 +1,6 @@
 OpenTomb — an open-source Tomb Raider 1-5 engine remake
 -------------------------------------------------------
 
-[![Build Status](https://drone.io/github.com/opentomb/OpenTomb/status.png)](http://sourceforge.net/projects/opentomb/files/NightlyBuilds/)
-
 ### Table of contents ###
 
 1. What is this?
