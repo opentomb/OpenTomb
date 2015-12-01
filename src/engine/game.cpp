@@ -363,13 +363,13 @@ int Game_Save(const char* name)
 void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 {
     // Keyboard move logic
-    world::LookAndMoveLogic moveLogic;
+    world::Movement moveLogic;
     moveLogic.setX(control_states.move_left, control_states.move_right);
     moveLogic.setY(control_states.move_up, control_states.move_down);
     moveLogic.setZ(control_states.move_forward, control_states.move_backward);
 
     // Keyboard look logic
-    world::LookAndMoveLogic lookLogic;
+    world::Movement lookLogic;
     lookLogic.setX(control_states.look_left, control_states.look_right);
     lookLogic.setY(control_states.look_up, control_states.look_down);
     lookLogic.setZ(control_states.look_roll_left, control_states.look_roll_right);

@@ -1921,10 +1921,10 @@ void lua_SetEntityResponse(world::ObjectId id, int response, int value)
                 ent->m_response.horizontal_collide = value;
                 break;
             case 3:
-                ent->m_response.slide = static_cast<world::SlideType>(value);
+                ent->m_response.slide = static_cast<world::MovementWalk>(value);
                 break;
             case 4:
-                ent->m_response.lean = static_cast<world::LeanType>(value);
+                ent->m_response.lean = static_cast<world::MovementStrafe>(value);
                 break;
             default:
                 break;

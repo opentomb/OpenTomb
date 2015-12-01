@@ -57,70 +57,70 @@ constexpr float INERTIA_SPEED_ONWATER = 1.5f;
 //! @fixme Guess
 constexpr float DEFAULT_CHARACTER_SWIM_DEPTH = 100.0f;
 
-enum class LookAndMoveX
+enum class MovementStrafe
 {
     Left,
     None,
     Right
 };
 
-enum class LookAndMoveY
+enum class MovementVertical
 {
     Up,
     None,
     Down
 };
 
-enum class LookAndMoveZ
+enum class MovementWalk
 {
     Forward,
     None,
     Backward
 };
 
-struct LookAndMoveLogic final
+struct Movement final
 {
-    LookAndMoveX x = LookAndMoveX::None;
-    LookAndMoveY y = LookAndMoveY::None;
-    LookAndMoveZ z = LookAndMoveZ::None;
+    MovementStrafe x = MovementStrafe::None;
+    MovementVertical y = MovementVertical::None;
+    MovementWalk z = MovementWalk::None;
 
     void setX(bool left, bool right) noexcept
     {
         if(left && !right)
-            x = LookAndMoveX::Left;
+            x = MovementStrafe::Left;
         else if(right && !left)
-            x = LookAndMoveX::Right;
+            x = MovementStrafe::Right;
         else
-            x = LookAndMoveX::None;
+            x = MovementStrafe::None;
     }
 
     void setY(bool up, bool down) noexcept
     {
         if(up && !down)
-            y = LookAndMoveY::Up;
+            y = MovementVertical::Up;
         else if(down && !up)
-            y = LookAndMoveY::Down;
+            y = MovementVertical::Down;
         else
-            y = LookAndMoveY::None;
+            y = MovementVertical::None;
     }
 
     void setZ(bool forward, bool back) noexcept
     {
         if(forward && !back)
-            z = LookAndMoveZ::Forward;
+            z = MovementWalk::Forward;
         else if(back && !forward)
-            z = LookAndMoveZ::Backward;
+            z = MovementWalk::Backward;
         else
-            z = LookAndMoveZ::None;
+            z = MovementWalk::None;
     }
 
     glm::float_t getDistanceX(glm::float_t dist) const noexcept
     {
         switch(x)
         {
-            case LookAndMoveX::Left:
+            case MovementStrafe::Left:
                 return -dist;
-            case LookAndMoveX::Right:
+            case MovementStrafe::Right:
                 return dist;
             default:
                 return 0;
@@ -131,9 +131,9 @@ struct LookAndMoveLogic final
     {
         switch(y)
         {
-            case LookAndMoveY::Up:
+            case MovementVertical::Up:
                 return dist;
-            case LookAndMoveY::Down:
+            case MovementVertical::Down:
                 return -dist;
             default:
                 return 0;
@@ -144,9 +144,9 @@ struct LookAndMoveLogic final
     {
         switch(z)
         {
-            case LookAndMoveZ::Forward:
+            case MovementWalk::Forward:
                 return dist;
-            case LookAndMoveZ::Backward:
+            case MovementWalk::Backward:
                 return -dist;
             default:
                 return 0;
@@ -166,7 +166,7 @@ struct LookAndMoveLogic final
 struct CharacterCommand
 {
     glm::vec3 rot = {0, 0, 0};
-    LookAndMoveLogic move;
+    Movement move;
 
     bool roll = false;
     bool jump = false;
@@ -177,27 +177,13 @@ struct CharacterCommand
     bool sprint = false;
 };
 
-enum class SlideType
-{
-    None,
-    Back,
-    Front
-};
-
-enum class LeanType
-{
-    None,
-    Left,
-    Right
-};
-
 struct CharacterResponse
 {
     bool killed = false;
     int8_t vertical_collide = 0;
     int8_t horizontal_collide = 0;
-    SlideType slide = SlideType::None;
-    LeanType lean = LeanType::None;
+    MovementWalk slide = MovementWalk::None;
+    MovementStrafe lean = MovementStrafe::None;
 };
 
 enum class QuicksandPosition
@@ -219,15 +205,32 @@ struct HeightInfo
     bool walls_climb = false;
     int8_t walls_climb_dir = 0;
 
-    glm::vec3 floor_normale = {0, 0, 1};
-    glm::vec3 floor_point = {0, 0, 0};
-    bool floor_hit = false;
-    const btCollisionObject* floor_obj = nullptr;
+    struct HitObject final
+    {
+        bool hasHit = false;
+        glm::vec3 hitNormal;
+        glm::vec3 hitPoint = {0, 0, 0};
+        const btCollisionObject* collisionObject = nullptr;
 
-    glm::vec3 ceiling_normale = {0, 0, -1};
-    glm::vec3 ceiling_point = {0, 0, 0};
-    bool ceiling_hit = false;
-    const btCollisionObject* ceiling_obj = nullptr;
+        explicit HitObject(glm::float_t normalZComponent) noexcept
+            : hitNormal{0,0,normalZComponent}
+        {
+        }
+
+        void assign(const btCollisionWorld::ClosestRayResultCallback& cb, const glm::vec3& from, const glm::vec3& to)
+        {
+            hasHit = cb.hasHit();
+            if(hasHit)
+            {
+                hitNormal = util::convert(cb.m_hitNormalWorld);
+                hitPoint = glm::mix(from, to, cb.m_closestHitFraction);
+                collisionObject = cb.m_collisionObject;
+            }
+        }
+    };
+
+    HitObject floor{1};
+    HitObject ceiling{-1};
 
     glm::float_t transition_level = 0;
     bool water = false;

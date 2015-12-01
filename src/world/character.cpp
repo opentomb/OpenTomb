@@ -30,21 +30,21 @@ namespace
  * @param floor: floor height
  * @return 0x01: can traverse, 0x00 can not;
  */
-int Sector_AllowTraverse(RoomSector* rs, glm::float_t floor, const Object* object)
+bool allowTraverse(const RoomSector& rs, glm::float_t floor, const Object& object)
 {
-    glm::float_t f0 = rs->floor_corners[0][2];
-    if((rs->floor_corners[0][2] != f0) || (rs->floor_corners[1][2] != f0) || (rs->floor_corners[2][2] != f0) || (rs->floor_corners[3][2] != f0))
+    glm::float_t f0 = rs.floor_corners[0][2];
+    if(rs.floor_corners[0][2] != f0 || rs.floor_corners[1][2] != f0 || rs.floor_corners[2][2] != f0 || rs.floor_corners[3][2] != f0)
     {
-        return 0x00;
+        return false;
     }
 
-    if(glm::abs(floor - f0) < 1.1 && rs->ceiling - rs->floor >= MeteringSectorSize)
+    if(glm::abs(floor - f0) < 1.1 && rs.ceiling - rs.floor >= MeteringSectorSize)
     {
-        return 0x01;
+        return true;
     }
 
-    engine::BtEngineClosestRayResultCallback cb(object);
-    glm::vec3 from{from[0] = rs->position[0], from[1] = rs->position[1], floor + MeteringSectorSize * 0.5f};
+    engine::BtEngineClosestRayResultCallback cb(&object);
+    glm::vec3 from{rs.position[0], rs.position[1], floor + MeteringSectorSize * 0.5f};
     glm::vec3 to = from - glm::vec3{0, 0, MeteringSectorSize};
     engine::bt_engine_dynamicsWorld->rayTest(util::convert(from), util::convert(to), cb);
     if(cb.hasHit())
@@ -56,12 +56,12 @@ int Sector_AllowTraverse(RoomSector* rs, glm::float_t floor, const Object* objec
             Entity* e = dynamic_cast<Entity*>(object);
             if(e && (e->m_typeFlags & ENTITY_TYPE_TRAVERSE_FLOOR))
             {
-                return 0x01;
+                return true;
             }
         }
     }
 
-    return 0x00;
+    return false;
 }
 } // anonymous namespace
 
@@ -265,8 +265,8 @@ void Character::getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t
     auto cb = fc->cb;
     Room* r = (cb->m_object) ? (cb->m_object->getRoom()) : (nullptr);
 
-    fc->floor_hit = false;
-    fc->ceiling_hit = false;
+    fc->floor.hasHit = false;
+    fc->ceiling.hasHit = false;
     fc->water = false;
     fc->quicksand = QuicksandPosition::None;
     fc->transition_level = 32512.0;
@@ -302,7 +302,7 @@ void Character::getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t
                 if((rs->owner_room->m_flags & TR_ROOM_FLAG_QUICKSAND) == 0x00) // find air
                 {
                     fc->transition_level = static_cast<glm::float_t>(rs->floor);
-                    if(fc->transition_level - fc->floor_point[2] > v_offset)
+                    if(fc->transition_level - fc->floor.hitPoint[2] > v_offset)
                     {
                         fc->quicksand = QuicksandPosition::Drowning;
                     }
@@ -330,7 +330,7 @@ void Character::getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t
                 else if((rs->owner_room->m_flags & TR_ROOM_FLAG_QUICKSAND) != 0x00) // find water
                 {
                     fc->transition_level = static_cast<glm::float_t>(rs->ceiling);
-                    if(fc->transition_level - fc->floor_point[2] > v_offset)
+                    if(fc->transition_level - fc->floor.hitPoint[2] > v_offset)
                     {
                         fc->quicksand = QuicksandPosition::Drowning;
                     }
@@ -353,13 +353,7 @@ void Character::getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t
     cb->m_closestHitFraction = 1.0;
     cb->m_collisionObject = nullptr;
     engine::bt_engine_dynamicsWorld->rayTest(util::convert(from), util::convert(to), *cb);
-    fc->floor_hit = cb->hasHit();
-    if(fc->floor_hit)
-    {
-        fc->floor_normale = util::convert(cb->m_hitNormalWorld);
-        fc->floor_point = glm::mix(from, to, cb->m_closestHitFraction);
-        fc->floor_obj = cb->m_collisionObject;
-    }
+    fc->floor.assign(*cb, from, to);
 
     to = from;
     to[2] += 4096.0;
@@ -367,13 +361,7 @@ void Character::getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t
     cb->m_collisionObject = nullptr;
     // cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
     engine::bt_engine_dynamicsWorld->rayTest(util::convert(from), util::convert(to), *cb);
-    fc->ceiling_hit = cb->hasHit();
-    if(fc->ceiling_hit)
-    {
-        fc->ceiling_normale = util::convert(cb->m_hitNormalWorld);
-        fc->ceiling_point = glm::mix(from, to, cb->m_closestHitFraction);
-        fc->ceiling_obj = cb->m_collisionObject;
-    }
+    fc->ceiling.assign(*cb, from, to);
 }
 
 /**
@@ -389,18 +377,18 @@ StepType Character::checkNextStep(const glm::vec3& offset, struct HeightInfo* nf
 
     glm::vec3 from, to;
     StepType ret;
-    if(m_heightInfo.floor_hit && nfc->floor_hit)
+    if(m_heightInfo.floor.hasHit && nfc->floor.hasHit)
     {
-        glm::float_t delta = nfc->floor_point[2] - m_heightInfo.floor_point[2];
+        glm::float_t delta = nfc->floor.hitPoint[2] - m_heightInfo.floor.hitPoint[2];
         if(glm::abs(delta) < core::SplitEpsilon)
         {
-            from[2] = m_heightInfo.floor_point[2];
+            from[2] = m_heightInfo.floor.hitPoint[2];
             ret = StepType::Horizontal; // horizontal
         }
         else if(delta < 0.0) // down way
         {
             delta = -delta;
-            from[2] = m_heightInfo.floor_point[2];
+            from[2] = m_heightInfo.floor.hitPoint[2];
             if(delta <= m_minStepUpHeight)
             {
                 ret = StepType::DownLittle;
@@ -420,7 +408,7 @@ StepType Character::checkNextStep(const glm::vec3& offset, struct HeightInfo* nf
         }
         else // up way
         {
-            from[2] = nfc->floor_point[2];
+            from[2] = nfc->floor.hitPoint[2];
             if(delta <= m_minStepUpHeight)
             {
                 ret = StepType::UpLittle;
@@ -439,19 +427,19 @@ StepType Character::checkNextStep(const glm::vec3& offset, struct HeightInfo* nf
             }
         }
     }
-    else if(!m_heightInfo.floor_hit && !nfc->floor_hit)
+    else if(!m_heightInfo.floor.hasHit && !nfc->floor.hasHit)
     {
         from[2] = pos[2];
         ret = StepType::Horizontal; // horizontal? yes no maybe...
     }
-    else if(!m_heightInfo.floor_hit && nfc->floor_hit) // strange case
+    else if(!m_heightInfo.floor.hasHit && nfc->floor.hasHit) // strange case
     {
-        from[2] = nfc->floor_point[2];
+        from[2] = nfc->floor.hitPoint[2];
         ret = StepType::Horizontal;
     }
     else // if(m_heightInfo.floor_hit && !nfc->floor_hit)                                 // bottomless
     {
-        from[2] = m_heightInfo.floor_point[2];
+        from[2] = m_heightInfo.floor.hitPoint[2];
         ret = StepType::DownCanHang;
     }
 
@@ -483,9 +471,9 @@ bool Character::hasStopSlant(const HeightInfo& next_fc)
 {
     const glm::vec4& pos = m_transform[3];
     const glm::vec4 forward = m_transform[1];
-    const glm::vec3& floor = next_fc.floor_normale;
+    const glm::vec3& floor = next_fc.floor.hitNormal;
 
-    return next_fc.floor_point[2] > pos[2] && next_fc.floor_normale[2] < m_criticalSlantZComponent && (forward[0] * floor[0] + forward[1] * floor[1]) < 0.0;
+    return next_fc.floor.hitPoint[2] > pos[2] && next_fc.floor.hitNormal[2] < m_criticalSlantZComponent && (forward[0] * floor[0] + forward[1] * floor[1]) < 0.0;
 }
 
 /**
@@ -509,19 +497,19 @@ ClimbInfo Character::checkClimbability(const glm::vec3& offset, struct HeightInf
     ret.can_hang = false;
     ret.edge_hit = false;
     ret.edge_obj = nullptr;
-    ret.floor_limit = m_heightInfo.floor_hit ? m_heightInfo.floor_point[2] : -9E10f;
-    ret.ceiling_limit = m_heightInfo.ceiling_hit ? m_heightInfo.ceiling_point[2] : 9E10f;
-    if(nfc->ceiling_hit && (nfc->ceiling_point[2] < ret.ceiling_limit))
+    ret.floor_limit = m_heightInfo.floor.hasHit ? m_heightInfo.floor.hitPoint[2] : std::numeric_limits<glm::float_t>::min();
+    ret.ceiling_limit = m_heightInfo.ceiling.hasHit ? m_heightInfo.ceiling.hitPoint[2] : std::numeric_limits<glm::float_t>::max();
+    if(nfc->ceiling.hasHit && (nfc->ceiling.hitPoint[2] < ret.ceiling_limit))
     {
-        ret.ceiling_limit = nfc->ceiling_point[2];
+        ret.ceiling_limit = nfc->ceiling.hitPoint[2];
     }
     ret.point = m_climb.point;
     /*
      * check max height
      */
-    if(m_heightInfo.ceiling_hit && (tmp[2] > m_heightInfo.ceiling_point[2] - m_climbR - 1.0))
+    if(m_heightInfo.ceiling.hasHit && (tmp[2] > m_heightInfo.ceiling.hitPoint[2] - m_climbR - 1.0f))
     {
-        tmp[2] = m_heightInfo.ceiling_point[2] - m_climbR - 1.0f;
+        tmp[2] = m_heightInfo.ceiling.hitPoint[2] - m_climbR - 1.0f;
     }
 
     /*
@@ -670,15 +658,15 @@ ClimbInfo Character::checkClimbability(const glm::vec3& offset, struct HeightInf
     ret.edge_tan_xy /= btSqrt(n2[0] * n2[0] + n2[1] * n2[1]);
     ret.right = ret.edge_tan_xy;
 
-    if(!m_heightInfo.floor_hit || (ret.edge_point[2] - m_heightInfo.floor_point[2] >= m_height))
+    if(!m_heightInfo.floor.hasHit || (ret.edge_point[2] - m_heightInfo.floor.hitPoint[2] >= m_height))
     {
         ret.can_hang = true;
     }
 
     ret.next_z_space = 2.0f * m_height;
-    if(nfc->floor_hit && nfc->ceiling_hit)
+    if(nfc->floor.hasHit && nfc->ceiling.hasHit)
     {
-        ret.next_z_space = nfc->ceiling_point[2] - nfc->floor_point[2];
+        ret.next_z_space = nfc->ceiling.hitPoint[2] - nfc->floor.hitPoint[2];
     }
 
     return ret;
@@ -691,8 +679,8 @@ ClimbInfo Character::checkWallsClimbability()
     ret.wall_hit = ClimbType::None;
     ret.edge_hit = false;
     ret.edge_obj = nullptr;
-    ret.floor_limit = m_heightInfo.floor_hit ? m_heightInfo.floor_point[2] : -9E10f;
-    ret.ceiling_limit = m_heightInfo.ceiling_hit ? m_heightInfo.ceiling_point[2] : 9E10f;
+    ret.floor_limit = m_heightInfo.floor.hasHit ? m_heightInfo.floor.hitPoint[2] : std::numeric_limits<glm::float_t>::min();
+    ret.ceiling_limit = m_heightInfo.ceiling.hasHit ? m_heightInfo.ceiling.hitPoint[2] : std::numeric_limits<glm::float_t>::max();
     ret.point = m_climb.point;
 
     if(!m_heightInfo.walls_climb)
@@ -784,7 +772,7 @@ void Character::lean(glm::float_t max_lean)
 
     // Continously lean character, according to current left/right direction.
 
-    if(m_command.move.x == LookAndMoveX::None || util::fuzzyZero(max_lean)) // No direction - restore straight vertical position!
+    if(m_command.move.x == MovementStrafe::None || util::fuzzyZero(max_lean)) // No direction - restore straight vertical position!
     {
         if(m_angles[2] != 0.0)
         {
@@ -802,7 +790,7 @@ void Character::lean(glm::float_t max_lean)
             }
         }
     }
-    else if(m_command.move.x == LookAndMoveX::Right) // Right direction
+    else if(m_command.move.x == MovementStrafe::Right) // Right direction
     {
         if(m_angles[2] != max_lean)
         {
@@ -826,7 +814,7 @@ void Character::lean(glm::float_t max_lean)
             }
         }
     }
-    else if(m_command.move.x == LookAndMoveX::Left) // Left direction
+    else if(m_command.move.x == MovementStrafe::Left) // Left direction
     {
         if(m_angles[2] != neg_lean)
         {
@@ -964,9 +952,9 @@ int Character::moveOnFloor()
     m_response.vertical_collide = 0x00;
     // First of all - get information about floor and ceiling!!!
     updateCurrentHeight();
-    if(m_heightInfo.floor_hit && (m_heightInfo.floor_point[2] + 1.0 >= m_transform[3][2] + m_skeleton.getBoundingBox().min[2]))
+    if(m_heightInfo.floor.hasHit && (m_heightInfo.floor.hitPoint[2] + 1.0 >= m_transform[3][2] + m_skeleton.getBoundingBox().min[2]))
     {
-        Object* object = static_cast<Object*>(m_heightInfo.floor_obj->getUserPointer());
+        Object* object = static_cast<Object*>(m_heightInfo.floor.collisionObject->getUserPointer());
         if(Entity* e = dynamic_cast<Entity*>(object))
         {
             if(e->m_callbackFlags & ENTITY_CALLBACK_STAND)
@@ -981,9 +969,9 @@ int Character::moveOnFloor()
     /*
     * check move type
     */
-    if(m_heightInfo.floor_hit || (m_response.vertical_collide & 0x01))
+    if(m_heightInfo.floor.hasHit || (m_response.vertical_collide & 0x01))
     {
-        if(m_heightInfo.floor_point[2] + m_fallDownHeight < m_transform[3][2])
+        if(m_heightInfo.floor.hitPoint[2] + m_fallDownHeight < m_transform[3][2])
         {
             m_moveType = MoveType::FreeFalling;
             m_speed[2] = 0.0;
@@ -994,7 +982,7 @@ int Character::moveOnFloor()
             m_response.vertical_collide |= 0x01;
         }
 
-        glm::vec3 floorNormal = m_heightInfo.floor_normale;
+        glm::vec3 floorNormal = m_heightInfo.floor.hitNormal;
         if(floorNormal[2] > 0.02 && floorNormal[2] < m_criticalSlantZComponent)
         {
             floorNormal[2] = -floorNormal[2];
@@ -1005,13 +993,13 @@ int Character::moveOnFloor()
             if(t >= 0.0)
             {
                 // front forward slide down
-                m_response.slide = SlideType::Front;
+                m_response.slide = MovementWalk::Forward;
                 m_angles[0] = zAngle + 180;
             }
             else
             {
                 // back forward slide down
-                m_response.slide = SlideType::Back;
+                m_response.slide = MovementWalk::Backward;
                 m_angles[0] = zAngle;
             }
             updateTransform();
@@ -1046,12 +1034,12 @@ int Character::moveOnFloor()
             {
                 // dir_flag = DirFlag::Forward;
             }
-            m_response.slide = SlideType::None;
+            m_response.slide = MovementWalk::None;
         }
     }
     else // no hit to the floor
     {
-        m_response.slide = SlideType::None;
+        m_response.slide = MovementWalk::None;
         m_response.vertical_collide = 0x00;
         m_moveType = MoveType::FreeFalling;
         m_speed[2] = 0.0;
@@ -1079,19 +1067,19 @@ int Character::moveOnFloor()
     ghostUpdate();
     m_transform[3] += glm::vec4(positionDelta, 0);
     fixPenetrations(&positionDelta);
-    if(m_heightInfo.floor_hit)
+    if(m_heightInfo.floor.hasHit)
     {
-        if(m_heightInfo.floor_point[2] + m_fallDownHeight > m_transform[3][2])
+        if(m_heightInfo.floor.hitPoint[2] + m_fallDownHeight > m_transform[3][2])
         {
             glm::float_t dz_to_land = util::toSeconds(engine::engine_frame_time) * 2400.0f; ///@FIXME: magick
-            if(m_transform[3][2] > m_heightInfo.floor_point[2] + dz_to_land)
+            if(m_transform[3][2] > m_heightInfo.floor.hitPoint[2] + dz_to_land)
             {
                 m_transform[3][2] -= dz_to_land;
                 fixPenetrations(nullptr);
             }
-            else if(m_transform[3][2] > m_heightInfo.floor_point[2])
+            else if(m_transform[3][2] > m_heightInfo.floor.hitPoint[2])
             {
-                m_transform[3][2] = m_heightInfo.floor_point[2];
+                m_transform[3][2] = m_heightInfo.floor.hitPoint[2];
                 fixPenetrations(nullptr);
             }
         }
@@ -1102,9 +1090,9 @@ int Character::moveOnFloor()
             updateRoomPos();
             return 2;
         }
-        if((m_transform[3][2] < m_heightInfo.floor_point[2]) && !m_skeleton.getModel()->no_fix_all)
+        if((m_transform[3][2] < m_heightInfo.floor.hitPoint[2]) && !m_skeleton.getModel()->no_fix_all)
         {
-            m_transform[3][2] = m_heightInfo.floor_point[2];
+            m_transform[3][2] = m_heightInfo.floor.hitPoint[2];
             fixPenetrations(nullptr);
             m_response.vertical_collide |= 0x01;
         }
@@ -1128,7 +1116,7 @@ int Character::freeFalling()
     * init height info structure
     */
 
-    m_response.slide = SlideType::None;
+    m_response.slide = MovementWalk::None;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1173,22 +1161,22 @@ int Character::freeFalling()
 
     ghostUpdate();
 
-    if(m_heightInfo.ceiling_hit && m_speed[2] > 0.0)
+    if(m_heightInfo.ceiling.hasHit && m_speed[2] > 0.0)
     {
-        if(m_heightInfo.ceiling_point[2] < m_skeleton.getBoundingBox().max[2] + m_transform[3][2])
+        if(m_heightInfo.ceiling.hitPoint[2] < m_skeleton.getBoundingBox().max[2] + m_transform[3][2])
         {
-            m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_skeleton.getBoundingBox().max[2];
+            m_transform[3][2] = m_heightInfo.ceiling.hitPoint[2] - m_skeleton.getBoundingBox().max[2];
             m_speed[2] = 1.0; // As in original.
             m_response.vertical_collide |= 0x02;
             fixPenetrations(nullptr);
             updateRoomPos();
         }
     }
-    if(m_heightInfo.floor_hit && m_speed[2] < 0.0) // move down
+    if(m_heightInfo.floor.hasHit && m_speed[2] < 0.0) // move down
     {
-        if(m_heightInfo.floor_point[2] >= m_transform[3][2] + m_skeleton.getBoundingBox().min[2] + move[2])
+        if(m_heightInfo.floor.hitPoint[2] >= m_transform[3][2] + m_skeleton.getBoundingBox().min[2] + move[2])
         {
-            m_transform[3][2] = m_heightInfo.floor_point[2];
+            m_transform[3][2] = m_heightInfo.floor.hitPoint[2];
             // speed[2] = 0.0;
             m_moveType = MoveType::OnFloor;
             m_response.vertical_collide |= 0x01;
@@ -1201,20 +1189,20 @@ int Character::freeFalling()
     m_transform[3] += glm::vec4(move, 0);
     fixPenetrations(&move); // get horizontal collide
 
-    if(m_heightInfo.ceiling_hit && m_speed[2] > 0.0)
+    if(m_heightInfo.ceiling.hasHit && m_speed[2] > 0.0)
     {
-        if(m_heightInfo.ceiling_point[2] < m_skeleton.getBoundingBox().max[2] + m_transform[3][2])
+        if(m_heightInfo.ceiling.hitPoint[2] < m_skeleton.getBoundingBox().max[2] + m_transform[3][2])
         {
-            m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_skeleton.getBoundingBox().max[2];
+            m_transform[3][2] = m_heightInfo.ceiling.hitPoint[2] - m_skeleton.getBoundingBox().max[2];
             m_speed[2] = 1.0; // As in original.
             m_response.vertical_collide |= 0x02;
         }
     }
-    if(m_heightInfo.floor_hit && m_speed[2] < 0.0) // move down
+    if(m_heightInfo.floor.hasHit && m_speed[2] < 0.0) // move down
     {
-        if(m_heightInfo.floor_point[2] >= m_transform[3][2] + m_skeleton.getBoundingBox().min[2] + move[2])
+        if(m_heightInfo.floor.hitPoint[2] >= m_transform[3][2] + m_skeleton.getBoundingBox().min[2] + move[2])
         {
-            m_transform[3][2] = m_heightInfo.floor_point[2];
+            m_transform[3][2] = m_heightInfo.floor.hitPoint[2];
             // speed[2] = 0.0;
             m_moveType = MoveType::OnFloor;
             m_response.vertical_collide |= 0x01;
@@ -1238,8 +1226,8 @@ int Character::monkeyClimbing()
 
     m_speed[2] = 0.0;
 
-    m_response.slide = SlideType::None;
-    m_response.lean = LeanType::None;
+    m_response.slide = MovementWalk::None;
+    m_response.lean = MovementStrafe::None;
 
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
@@ -1282,9 +1270,9 @@ int Character::monkeyClimbing()
     m_transform[3] += glm::vec4(move, 0);
     fixPenetrations(&move); // get horizontal collide
                             ///@FIXME: rewrite conditions! or add fixer to update_entity_rigid_body func
-    if(m_heightInfo.ceiling_hit && (m_transform[3][2] + m_skeleton.getBoundingBox().max[2] - m_heightInfo.ceiling_point[2] > -0.33 * m_minStepUpHeight))
+    if(m_heightInfo.ceiling.hasHit && (m_transform[3][2] + m_skeleton.getBoundingBox().max[2] - m_heightInfo.ceiling.hitPoint[2] > -0.33 * m_minStepUpHeight))
     {
-        m_transform[3][2] = m_heightInfo.ceiling_point[2] - m_skeleton.getBoundingBox().max[2];
+        m_transform[3][2] = m_heightInfo.ceiling.hitPoint[2] - m_skeleton.getBoundingBox().max[2];
     }
     else
     {
@@ -1307,7 +1295,7 @@ int Character::wallsClimbing()
     glm::vec3 spd, move;
     glm::float_t t;
 
-    m_response.slide = SlideType::None;
+    m_response.slide = MovementWalk::None;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1371,7 +1359,7 @@ int Character::climbing()
 {
     glm::float_t z = m_transform[3][2];
 
-    m_response.slide = SlideType::None;
+    m_response.slide = MovementWalk::None;
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
@@ -1400,13 +1388,13 @@ int Character::climbing()
     }
     else
     {
-        m_response.slide = SlideType::None;
+        m_response.slide = MovementWalk::None;
         ghostUpdate();
         fixPenetrations(nullptr);
         return 1;
     }
 
-    m_response.slide = SlideType::None;
+    m_response.slide = MovementWalk::None;
 
     glm::vec3 move = m_speed * util::toSeconds(engine::engine_frame_time);
 
@@ -1437,8 +1425,8 @@ int Character::moveUnderWater()
         return 2;
     }
 
-    m_response.slide = SlideType::None;
-    m_response.lean = LeanType::None;
+    m_response.slide = MovementWalk::None;
+    m_response.lean = MovementStrafe::None;
 
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
@@ -1485,7 +1473,7 @@ int Character::moveUnderWater()
             // pos[2] = fc.transition_level;
             return 2;
         }
-        if(!m_heightInfo.floor_hit || (m_heightInfo.transition_level - m_heightInfo.floor_point[2] >= m_height))
+        if(!m_heightInfo.floor.hasHit || (m_heightInfo.transition_level - m_heightInfo.floor.hitPoint[2] >= m_height))
         {
             m_transform[3][2] = m_heightInfo.transition_level - m_skeleton.getBoundingBox().max[2];
         }
@@ -1496,8 +1484,8 @@ int Character::moveUnderWater()
 
 int Character::moveOnWater()
 {
-    m_response.slide = SlideType::None;
-    m_response.lean = LeanType::None;
+    m_response.slide = MovementWalk::None;
+    m_response.lean = MovementStrafe::None;
 
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
@@ -1509,21 +1497,21 @@ int Character::moveOnWater()
 
     // Calculate current speed.
 
-    glm::float_t t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, m_command.move.z != LookAndMoveZ::None || m_command.move.x != LookAndMoveX::None);
+    glm::float_t t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, m_command.move.z != MovementWalk::None || m_command.move.x != MovementStrafe::None);
 
-    if(m_moveDir == MoveDirection::Forward && m_command.move.z == LookAndMoveZ::Forward)
+    if(m_moveDir == MoveDirection::Forward && m_command.move.z == MovementWalk::Forward)
     {
         m_speed = glm::vec3(m_transform[1] * t);
     }
-    else if(m_moveDir == MoveDirection::Backward && m_command.move.z == LookAndMoveZ::Backward)
+    else if(m_moveDir == MoveDirection::Backward && m_command.move.z == MovementWalk::Backward)
     {
         m_speed = glm::vec3(m_transform[1] * -t);
     }
-    else if(m_moveDir == MoveDirection::Left && m_command.move.x == LookAndMoveX::Left)
+    else if(m_moveDir == MoveDirection::Left && m_command.move.x == MovementStrafe::Left)
     {
         m_speed = glm::vec3(m_transform[0] * -t);
     }
-    else if(m_moveDir == MoveDirection::Right && m_command.move.x == LookAndMoveX::Right)
+    else if(m_moveDir == MoveDirection::Right && m_command.move.x == MovementStrafe::Right)
     {
         m_speed = glm::vec3(m_transform[0] * t);
     }
@@ -1632,35 +1620,31 @@ int Character::checkTraverse(const Entity& obj)
     {
         if(m_transform[1][0] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({static_cast<glm::float_t>(obj_s->position[0] - MeteringSectorSize),
-                                                    static_cast<glm::float_t>(obj_s->position[1]), static_cast<glm::float_t>(0.0)});
+            ch_s = obj_s->owner_room->getSectorRaw({obj_s->position[0] - MeteringSectorSize, obj_s->position[1], 0});
         }
         else if(m_transform[1][0] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({static_cast<glm::float_t>(obj_s->position[0] + MeteringSectorSize),
-                                                    static_cast<glm::float_t>(obj_s->position[1]), static_cast<glm::float_t>(0.0)});
+            ch_s = obj_s->owner_room->getSectorRaw({obj_s->position[0] + MeteringSectorSize, obj_s->position[1], 0});
         }
         // OY move case
         else if(m_transform[1][1] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({static_cast<glm::float_t>(obj_s->position[0]),
-                                                    static_cast<glm::float_t>(obj_s->position[1] - MeteringSectorSize), static_cast<glm::float_t>(0.0)});
+            ch_s = obj_s->owner_room->getSectorRaw({obj_s->position[0], obj_s->position[1] - MeteringSectorSize, 0});
         }
         else if(m_transform[1][1] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({static_cast<glm::float_t>(obj_s->position[0]),
-                                                    static_cast<glm::float_t>(obj_s->position[1] + MeteringSectorSize), static_cast<glm::float_t>(0.0)});
+            ch_s = obj_s->owner_room->getSectorRaw({obj_s->position[0], obj_s->position[1] + MeteringSectorSize, 0});
         }
         ch_s = ch_s->checkPortalPointer();
     }
 
-    if((ch_s == nullptr) || (obj_s == nullptr))
+    if(ch_s == nullptr || obj_s == nullptr)
     {
         return TraverseNone;
     }
 
     glm::float_t floor = m_transform[3][2];
-    if((ch_s->floor != obj_s->floor) || (Sector_AllowTraverse(ch_s, floor, this) == 0x00) || (Sector_AllowTraverse(obj_s, floor, &obj) == 0x00))
+    if(ch_s->floor != obj_s->floor || !allowTraverse(*ch_s, floor, *this) || !allowTraverse(*obj_s, floor, obj))
     {
         return TraverseNone;
     }
@@ -1714,7 +1698,7 @@ int Character::checkTraverse(const Entity& obj)
     if(next_s)
         next_s = next_s->checkPortalPointer();
 
-    if((next_s != nullptr) && (Sector_AllowTraverse(next_s, floor, this) == 0x01))
+    if(next_s != nullptr && allowTraverse(*next_s, floor, *this))
     {
         btTransform from;
         from.setIdentity();
@@ -1742,30 +1726,26 @@ int Character::checkTraverse(const Entity& obj)
     // OX move case
     if(m_transform[1][0] > 0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw(
-            {static_cast<glm::float_t>(ch_s->position[0] - MeteringSectorSize), static_cast<glm::float_t>(ch_s->position[1]), static_cast<glm::float_t>(0.0)});
+        next_s = ch_s->owner_room->getSectorRaw({ch_s->position[0] - MeteringSectorSize, ch_s->position[1], 0});
     }
     else if(m_transform[1][0] < -0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw(
-            {static_cast<glm::float_t>(ch_s->position[0] + MeteringSectorSize), static_cast<glm::float_t>(ch_s->position[1]), static_cast<glm::float_t>(0.0)});
+        next_s = ch_s->owner_room->getSectorRaw({ch_s->position[0] + MeteringSectorSize, ch_s->position[1], 0});
     }
     // OY move case
     else if(m_transform[1][1] > 0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw(
-            {static_cast<glm::float_t>(ch_s->position[0]), static_cast<glm::float_t>(ch_s->position[1] - MeteringSectorSize), static_cast<glm::float_t>(0.0)});
+        next_s = ch_s->owner_room->getSectorRaw({ch_s->position[0], ch_s->position[1] - MeteringSectorSize, 0});
     }
     else if(m_transform[1][1] < -0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw(
-            {static_cast<glm::float_t>(ch_s->position[0]), static_cast<glm::float_t>(ch_s->position[1] + MeteringSectorSize), static_cast<glm::float_t>(0.0)});
+        next_s = ch_s->owner_room->getSectorRaw({ch_s->position[0], ch_s->position[1] + MeteringSectorSize, 0});
     }
 
     if(next_s)
         next_s = next_s->checkPortalPointer();
 
-    if((next_s != nullptr) && (Sector_AllowTraverse(next_s, floor, this) == 0x01))
+    if(next_s != nullptr && allowTraverse(*next_s, floor, *this))
     {
         btTransform from;
         from.setIdentity();
@@ -2088,12 +2068,12 @@ void Character::fixPenetrations(const glm::vec3* move)
         }
     }
 
-    if(m_heightInfo.ceiling_hit && (reaction[2] < -0.1))
+    if(m_heightInfo.ceiling.hasHit && (reaction[2] < -0.1))
     {
         m_response.vertical_collide |= 0x02;
     }
 
-    if(m_heightInfo.floor_hit && (reaction[2] > 0.1))
+    if(m_heightInfo.floor.hasHit && (reaction[2] > 0.1))
     {
         m_response.vertical_collide |= 0x01;
     }
@@ -2243,9 +2223,9 @@ void Character::processSectorImpl()
     {
         if((m_moveType == MoveType::OnFloor) || (m_moveType == MoveType::Wade) || (m_moveType == MoveType::Quicksand))
         {
-            if(m_heightInfo.floor_hit)
+            if(m_heightInfo.floor.hasHit)
             {
-                Object* object = static_cast<Object*>(m_heightInfo.floor_obj->getUserPointer());
+                Object* object = static_cast<Object*>(m_heightInfo.floor.collisionObject->getUserPointer());
 
                 if(dynamic_cast<Room*>(object))
                 {
@@ -2294,8 +2274,8 @@ void Character::jump(glm::float_t v_vertical, glm::float_t v_horizontal)
 
     m_response.vertical_collide = 0x00;
 
-    m_response.slide = SlideType::None;
-    m_response.lean = LeanType::None;
+    m_response.slide = MovementWalk::None;
+    m_response.lean = MovementStrafe::None;
 
     // Jump speed should NOT be added to current speed, as native engine
     // fully replaces current speed with jump speed by anim command.
