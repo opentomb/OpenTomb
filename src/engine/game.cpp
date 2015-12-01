@@ -51,7 +51,7 @@ void lua_mlook(lua::Value mlook)
         return;
     }
 
-    control_states.mouse_look = mlook;
+    control_states.mouse_look = mlook.toBool();
     Console::instance().printf("mlook = %d", control_states.mouse_look);
 }
 
@@ -64,7 +64,7 @@ void lua_freelook(lua::Value free)
         return;
     }
 
-    control_states.free_look = free;
+    control_states.free_look = free.toBool();
     Console::instance().printf("free_look = %d", control_states.free_look);
 }
 
@@ -76,7 +76,7 @@ void lua_cam_distance(lua::Value distance)
         return;
     }
 
-    control_states.cam_distance = distance;
+    control_states.cam_distance = distance.toFloat();
     Console::instance().printf("cam_distance = %.2f", control_states.cam_distance);
 }
 
@@ -88,7 +88,7 @@ void lua_noclip(lua::Value noclip)
     }
     else
     {
-        control_states.noclip = noclip;
+        control_states.noclip = noclip.toBool();
     }
 
     Console::instance().printf("noclip = %d", control_states.noclip);
@@ -102,7 +102,7 @@ void lua_debuginfo(lua::Value show)
     }
     else
     {
-        screen_info.show_debuginfo = show;
+        screen_info.show_debuginfo = show.toBool();
     }
 
     Console::instance().printf("debug info = %d", screen_info.show_debuginfo);
@@ -123,7 +123,7 @@ void lua_timescale(lua::Value scale)
     }
     else
     {
-        time_scale = scale;
+        time_scale = scale.toFloat();
     }
 
     Console::instance().printf("time_scale = %.3f", time_scale);

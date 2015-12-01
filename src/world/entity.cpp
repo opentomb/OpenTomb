@@ -558,7 +558,7 @@ void Entity::processSector()
         try
         {
             if (engine_lua["tlist_RunTrigger"].is<lua::Callable>())
-                engine_lua["tlist_RunTrigger"].call(lowest_sector->trig_index, ((m_skeleton.getModel()->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), getId());
+                engine_lua["tlist_RunTrigger"].call(int(lowest_sector->trig_index), ((m_skeleton.getModel()->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), int(getId()));
         }
         catch (lua::RuntimeError& error)
         {

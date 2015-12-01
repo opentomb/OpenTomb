@@ -52,9 +52,8 @@ namespace world
     {
         if(ent->m_skeleton.getModel() != nullptr && engine_lua["getEntityModelProperties"].is<lua::Callable>())
         {
-            uint16_t flg;
-            int collisionType, collisionShape;
-            lua::tie(collisionType, collisionShape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::engine_world.engineVersion), ent->m_skeleton.getModel()->id);
+            int collisionType, collisionShape, flg;
+            lua::tie(collisionType, collisionShape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::engine_world.engineVersion), int(ent->m_skeleton.getModel()->id));
             ent->setCollisionType(static_cast<world::CollisionType>(collisionType));
             ent->setCollisionShape(static_cast<world::CollisionShape>(collisionShape));
 
@@ -67,7 +66,7 @@ namespace world
     {
         if(ent->m_skeleton.getModel())
         {
-            const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine::engine_world.engineVersion), ent->m_skeleton.getModel()->id);
+            const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine::engine_world.engineVersion), int(ent->m_skeleton.getModel()->id)).toCStr();
             if(funcName)
                 Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->getId());
         }
@@ -92,7 +91,7 @@ namespace world
     {
         lua::Integer _collision_type, _collision_shape;
         lua::Boolean _hide;
-        lua::tie(_collision_type, _collision_shape, _hide) = engine_lua.call("getStaticMeshProperties", r_static->getId());
+        lua::tie(_collision_type, _collision_shape, _hide) = engine_lua.call("getStaticMeshProperties", int(r_static->getId()));
 
         if(_collision_type > 0)
         {
@@ -1594,7 +1593,7 @@ namespace world
 
         if(pen.is<lua::Integer>())   rs->floor_penetration_config = static_cast<PenetrationConfig>(pen.toInt());
         if(diag.is<lua::Integer>())  rs->floor_diagonal_type = static_cast<DiagonalType>(diag.toInt());
-        if(floor.is<lua::Integer>()) rs->floor = floor;
+        if(floor.is<lua::Integer>()) rs->floor = floor.toInt();
         rs->floor_corners[0] = { z0,z1,z2 };
         rs->floor_corners[0][3] = z3;
     }
@@ -1610,7 +1609,7 @@ namespace world
 
         if(pen.is<lua::Integer>())  rs->ceiling_penetration_config = static_cast<PenetrationConfig>(pen.toInt());
         if(diag.is<lua::Integer>()) rs->ceiling_diagonal_type = static_cast<DiagonalType>(diag.toInt());
-        if(ceil.is<lua::Integer>()) rs->ceiling = ceil;
+        if(ceil.is<lua::Integer>()) rs->ceiling = ceil.toInt();
 
         rs->ceiling_corners[0] = { z0,z1,z2 };
         rs->ceiling_corners[0][3] = z3;
@@ -3488,11 +3487,11 @@ namespace world
 
             if(entity->m_skeleton.getModel() == nullptr)
             {
-                int id = engine_lua.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
+                int id = engine_lua.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id).toInt();
                 entity->m_skeleton.setModel( world->getModelByID(id) );
             }
 
-            int replace_anim_id = engine_lua.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
+            int replace_anim_id = engine_lua.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id).toInt();
             if(replace_anim_id > 0)
             {
                 SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);
@@ -3534,7 +3533,7 @@ namespace world
                 lara->setCollisionShape(world::CollisionShape::TriMeshConvex);
                 lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
 
-                engine_lua.set("player", lara->getId());
+                engine_lua.set("player", int(lara->getId()));
 
                 switch(loader::gameToEngine(tr->m_gameVersion))
                 {
@@ -3625,7 +3624,7 @@ namespace world
                     if(engine_lua["entity_funcs"][static_cast<lua::Integer>(ent->getId())].is<lua::Nil>())
                         engine_lua["entity_funcs"].set(static_cast<lua::Integer>(ent->getId()), lua::Table());
 
-                    engine_lua["pickup_init"](ent->getId(), item->id);
+                    engine_lua["pickup_init"](int(ent->getId()), int(item->id));
 
                     ent->m_skeleton.disableCollision();
                 }

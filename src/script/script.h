@@ -73,21 +73,21 @@ namespace script
         }
 
         template<typename K, typename V>
-        ScriptEngine& set(const K& key, const V& value)
+        ScriptEngine& set(const K& key, V&& value)
         {
-            m_state.set(key, value);
+            m_state.set(key, std::forward<V>(value));
             return *this;
         }
 
         template<typename... T>
-        lua::Value call(const std::string& funcName, const T&... args) const
+        lua::Value call(const std::string& funcName, T&&... args) const
         {
-            return get(funcName.c_str()).call(args...);
+            return get(funcName.c_str()).call(std::forward<T>(args)...);
         }
 
         // Simple override to register both upper- and lowercase versions of function name.
         template<typename Function>
-        inline void registerC(const std::string& func_name, Function func)
+        inline void registerC(const std::string& func_name, std::function<Function> func)
         {
             std::string uc, lc;
             for(char c : func_name)
@@ -96,9 +96,17 @@ namespace script
                 uc += std::toupper(c);
             }
 
-            m_state.set(func_name.c_str(), func);
-            m_state.set(lc.c_str(), func);
-            m_state.set(uc.c_str(), func);
+            std::function<Function> f{func};
+
+            m_state.set(func_name.c_str(), f);
+            m_state.set(lc.c_str(), f);
+            m_state.set(uc.c_str(), f);
+        }
+
+        template<typename Function>
+        inline void registerC(const std::string& func_name, Function* func)
+        {
+            registerC(func_name, std::function<Function>(func));
         }
 
         inline void registerC(const std::string& func_name, int(*func)(lua_State*))
@@ -172,7 +180,7 @@ namespace script
 
         void doTasks(util::Duration time)
         {
-            set("FRAME_TIME", util::toSeconds(time));
+            set("FRAME_TIME", static_cast<lua::Number>(util::toSeconds(time)));
 
             call("doTasks");
             call("clearKeys");
