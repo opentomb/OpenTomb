@@ -363,22 +363,20 @@ int Game_Save(const char* name)
 void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 {
     // Keyboard move logic
-
-    std::array<int8_t, 3> move_logic;
-    move_logic[0] = control_states.move_forward - control_states.move_backward;
-    move_logic[1] = control_states.move_right - control_states.move_left;
-    move_logic[2] = control_states.move_up - control_states.move_down;
+    world::LookAndMoveLogic moveLogic;
+    moveLogic.setX(control_states.move_left, control_states.move_right);
+    moveLogic.setY(control_states.move_up, control_states.move_down);
+    moveLogic.setZ(control_states.move_forward, control_states.move_backward);
 
     // Keyboard look logic
-
-    int8_t look_logic[3];
-    look_logic[0] = control_states.look_left - control_states.look_right;
-    look_logic[1] = control_states.look_down - control_states.look_up;
-    look_logic[2] = control_states.look_roll_right - control_states.look_roll_left;
+    world::LookAndMoveLogic lookLogic;
+    lookLogic.setX(control_states.look_left, control_states.look_right);
+    lookLogic.setY(control_states.look_up, control_states.look_down);
+    lookLogic.setZ(control_states.look_roll_left, control_states.look_roll_right);
 
     // APPLY CONTROLS
 
-    engine::engine_camera.rotate( glm::vec3{look_logic[0], look_logic[1], look_logic[2]} * glm::radians(2.2f) * util::toSeconds(engine_frame_time) );
+    engine::engine_camera.rotate( lookLogic.getDistance(glm::radians(2.2f) * util::toSeconds(engine_frame_time)) );
 
     // FIXME: Duplicate code - do we need cam control with no world??
     if(!render::renderer.world())
@@ -404,9 +402,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
         render::renderer.camera()->applyRotation();
         glm::float_t dist = (control_states.state_walk) ? (control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f) : (control_states.free_look_speed * util::toSeconds(engine_frame_time));
-        render::renderer.camera()->moveAlong(dist * move_logic[0]);
-        render::renderer.camera()->moveStrafe(dist * move_logic[1]);
-        render::renderer.camera()->moveVertical(dist * move_logic[2]);
+        render::renderer.camera()->move(moveLogic.getDistance(dist));
 
         return;
     }
@@ -434,18 +430,14 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     {
         glm::float_t dist = (control_states.state_walk) ? (control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f) : (control_states.free_look_speed * util::toSeconds(engine_frame_time));
         render::renderer.camera()->applyRotation();
-        render::renderer.camera()->moveAlong(dist * move_logic[0]);
-        render::renderer.camera()->moveStrafe(dist * move_logic[1]);
-        render::renderer.camera()->moveVertical(dist * move_logic[2]);
+        render::renderer.camera()->move(moveLogic.getDistance(dist));
         render::renderer.camera()->setCurrentRoom( Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()) );
     }
     else if(control_states.noclip)
     {
         glm::float_t dist = (control_states.state_walk) ? (control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f) : (control_states.free_look_speed * util::toSeconds(engine_frame_time));
         render::renderer.camera()->applyRotation();
-        render::renderer.camera()->moveAlong(dist * move_logic[0]);
-        render::renderer.camera()->moveStrafe(dist * move_logic[1]);
-        render::renderer.camera()->moveVertical(dist * move_logic[2]);
+        render::renderer.camera()->move(moveLogic.getDistance(dist));
         render::renderer.camera()->setCurrentRoom( Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()) );
 
         ent->m_angles[0] = glm::degrees(engine::engine_camera.getAngles()[0]);
@@ -500,7 +492,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         }
         else
         {
-            ch->m_command.rot[0] += glm::degrees(-2 * util::toSeconds(engine_frame_time) * static_cast<glm::float_t>(move_logic[1]));
+            ch->m_command.rot[0] += moveLogic.getDistanceX( glm::degrees(-2.0f) * util::toSeconds(engine_frame_time) );
         }
 
         if(control_mapper.use_joy && (control_mapper.joy_move_y != 0))
@@ -509,10 +501,10 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         }
         else
         {
-            ch->m_command.rot[1] += glm::degrees(2 * util::toSeconds(engine_frame_time) * static_cast<glm::float_t>(move_logic[0]));
+            ch->m_command.rot[1] += moveLogic.getDistanceZ( glm::degrees(2.0f) * util::toSeconds(engine_frame_time) );
         }
 
-        ch->m_command.move = move_logic;
+        ch->m_command.move = moveLogic;
     }
 }
 

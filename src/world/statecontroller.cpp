@@ -455,7 +455,7 @@ void StateController::stop()
         m_character->m_transform[3][0] = v[0] - m_character->m_transform[1].x * t;
         m_character->m_transform[3][1] = v[1] - m_character->m_transform[1].y * t;
     }
-    else if(m_character->m_command.move[0] == 1)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Forward)
     {
         if(m_character->m_command.shift)
         {
@@ -569,7 +569,7 @@ void StateController::stop()
             }
         }
     }       // end CMD->MOVE FORWARD
-    else if(m_character->m_command.move[0] == -1)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Backward)
     {
         if(m_character->m_command.shift)
         {
@@ -605,7 +605,7 @@ void StateController::stop()
             }
         }
     }       // end CMD->MOVE BACK
-    else if(m_character->m_command.move[1] == 1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Right)
     {
         if(m_character->m_command.shift)
         {
@@ -628,7 +628,7 @@ void StateController::stop()
             setNextState(LaraState::TurnRightSlow);
         }
     }       // end MOVE RIGHT
-    else if(m_character->m_command.move[1] == -1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Left)
     {
         if(m_character->m_command.shift)
         {
@@ -662,18 +662,18 @@ void StateController::jumpPrepare()
     if(m_character->m_response.slide == SlideType::Back)      // Slide checking is only for jumps direction correction!
     {
         m_character->setAnimation(TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
-        m_character->m_command.move[0] = -1;
+        m_character->m_command.move.z = LookAndMoveZ::Backward;
     }
     else if(m_character->m_response.slide == SlideType::Front)
     {
         m_character->setAnimation(TR_ANIMATION_LARA_JUMP_FORWARD_BEGIN, 0);
-        m_character->m_command.move[0] = 1;
+        m_character->m_command.move.z = LookAndMoveZ::Forward;
     }
     if((m_character->m_heightInfo.water || m_character->m_heightInfo.quicksand != QuicksandPosition::None) && m_character->m_heightInfo.floor_hit && (m_character->m_heightInfo.transition_level - m_character->m_heightInfo.floor_point[2] > m_character->m_wadeDepth))
     {
         //Stay, directional jumps are not allowed whilst in wade depth
     }
-    else if(m_character->m_command.move[0] == 1)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Forward)
     {
         m_character->m_moveDir = MoveDirection::Forward;
         glm::vec3 move( m_character->m_transform[1] * PenetrationTestOffset );
@@ -682,7 +682,7 @@ void StateController::jumpPrepare()
             setNextState(LaraState::JumpForward);  // Jump forward
         }
     }
-    else if(m_character->m_command.move[0] == -1)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Backward)
     {
         m_character->m_moveDir = MoveDirection::Backward;
         glm::vec3 move( m_character->m_transform[1] * -PenetrationTestOffset );
@@ -691,7 +691,7 @@ void StateController::jumpPrepare()
             setNextState(LaraState::JumpBack);  // Jump backward
         }
     }
-    else if(m_character->m_command.move[1] == 1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Right)
     {
         m_character->m_moveDir = MoveDirection::Right;
         glm::vec3 move( m_character->m_transform[0] * PenetrationTestOffset );
@@ -700,7 +700,7 @@ void StateController::jumpPrepare()
             setNextState(LaraState::JumpLeft);  // Jump right
         }
     }
-    else if(m_character->m_command.move[1] == -1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Left)
     {
         m_character->m_moveDir = MoveDirection::Left;
         glm::vec3 move( m_character->m_transform[0] * -PenetrationTestOffset );
@@ -824,7 +824,7 @@ void StateController::turnSlow()
     m_character->lean(0.0);
     m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
 
-    if(m_character->m_command.move[0] == 1)
+    if(m_character->m_command.move.z == LookAndMoveZ::Forward)
     {
         Substance substance_state = m_character->getSubstanceState();
         if((substance_state == Substance::None) ||
@@ -847,8 +847,8 @@ void StateController::turnSlow()
             m_character->m_moveDir = MoveDirection::Forward;
         }
     }
-    else if((m_character->m_skeleton.getPreviousState() == LaraState::TurnLeftSlow && m_character->m_command.move[1] == -1) ||
-            (m_character->m_skeleton.getPreviousState() == LaraState::TurnRightSlow && m_character->m_command.move[1] == 1))
+    else if((m_character->m_skeleton.getPreviousState() == LaraState::TurnLeftSlow && m_character->m_command.move.x == LookAndMoveX::Left) ||
+            (m_character->m_skeleton.getPreviousState() == LaraState::TurnRightSlow && m_character->m_command.move.x == LookAndMoveX::Right))
     {
         Substance substance_state = m_character->getSubstanceState();
         if(isLastFrame() &&
@@ -876,17 +876,17 @@ void StateController::turnFast()
     {
         m_character->setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
     }
-    else if(m_character->m_command.move[0] == 1 && !m_character->m_command.jump && !m_character->m_command.crouch && m_character->m_command.shift)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Forward && !m_character->m_command.jump && !m_character->m_command.crouch && m_character->m_command.shift)
     {
         setNextState(LaraState::WalkForward);
         m_character->m_moveDir = MoveDirection::Forward;
     }
-    else if(m_character->m_command.move[0] == 1 && !m_character->m_command.jump && !m_character->m_command.crouch && !m_character->m_command.shift)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Forward && !m_character->m_command.jump && !m_character->m_command.crouch && !m_character->m_command.shift)
     {
         setNextState(LaraState::RunForward);
         m_character->m_moveDir = MoveDirection::Forward;
     }
-    else if(m_character->m_command.move[1] == 0)
+    else if(m_character->m_command.move.z == LookAndMoveZ::None)
     {
         setNextState(LaraState::Stop);
     }
@@ -932,7 +932,7 @@ void StateController::runForward()
     {
         setNextState(LaraState::CrouchIdle);
     }
-    else if((m_character->m_command.move[0] == 1) && !m_character->m_command.crouch && (next_fc.floor_normale[2] >= m_character->m_criticalSlantZComponent) && nextStep == StepType::UpBig)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Forward && !m_character->m_command.crouch && (next_fc.floor_normale[2] >= m_character->m_criticalSlantZComponent) && nextStep == StepType::UpBig)
     {
         m_character->m_moveDir = MoveDirection::Stay;
         int i = m_character->getAnimDispatchCase(LaraState::Stop);  // Select correct anim dispatch.
@@ -961,7 +961,7 @@ void StateController::runForward()
         {
             engine::Controls_JoyRumble(200.0, 200);
 
-            if(m_character->m_command.move[0] == 1)
+            if(m_character->m_command.move.z == LookAndMoveZ::Forward)
             {
                 int i = m_character->getAnimDispatchCase(LaraState::Stop);
                 if(i == 1)
@@ -980,7 +980,7 @@ void StateController::runForward()
         }
         m_character->updateCurrentSpeed(false);
     }
-    else if(m_character->m_command.move[0] == 1)  // If we continue running...
+    else if(m_character->m_command.move.z == LookAndMoveZ::Forward)  // If we continue running...
     {
         if((m_character->m_heightInfo.water || m_character->m_heightInfo.quicksand != QuicksandPosition::None) && m_character->m_heightInfo.floor_hit && (m_character->m_heightInfo.transition_level - m_character->m_heightInfo.floor_point[2] > m_character->m_wadeDepth))
         {
@@ -1070,7 +1070,7 @@ void StateController::sprint()
     }
     else if(!m_character->m_command.sprint)
     {
-        if(m_character->m_command.move[0] == 1)
+        if(m_character->m_command.move.z == LookAndMoveZ::Forward)
         {
             setNextState(LaraState::RunForward);
         }
@@ -1094,7 +1094,7 @@ void StateController::sprint()
         {
             setNextState(LaraState::CrouchIdle);
         }
-        else if(m_character->m_command.move[0] == 0)
+        else if(m_character->m_command.move.z == LookAndMoveZ::Forward)
         {
             setNextState(LaraState::Stop);
         }
@@ -1176,7 +1176,7 @@ void StateController::walkForward()
         m_character->m_moveDir = MoveDirection::Stay;
         m_character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
     }
-    else if(m_character->m_command.move[0] != 1)
+    else if(m_character->m_command.move.z != LookAndMoveZ::Forward)
     {
         setNextState(LaraState::Stop);
     }
@@ -1184,7 +1184,7 @@ void StateController::walkForward()
     {
         setNextState(LaraState::WadeForward);
     }
-    else if(m_character->m_command.move[0] == 1 && !m_character->m_command.crouch && !m_character->m_command.shift)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Forward && !m_character->m_command.crouch && !m_character->m_command.shift)
     {
         setNextState(LaraState::RunForward);
     }
@@ -1200,7 +1200,7 @@ void StateController::wadeForward()
         m_character->m_currentSpeed = std::min(m_character->m_currentSpeed, MAX_SPEED_QUICKSAND);
     }
 
-    if(m_character->m_command.move[0] == 1)
+    if(m_character->m_command.move.z == LookAndMoveZ::Forward)
     {
         glm::vec3 move( m_character->m_transform[1] * PenetrationTestOffset );
         m_character->checkNextPenetration(move);
@@ -1220,7 +1220,7 @@ void StateController::wadeForward()
         if((m_character->m_heightInfo.transition_level - m_character->m_heightInfo.floor_point[2] <= m_character->m_wadeDepth))
         {
             // run / walk case
-            if((m_character->m_command.move[0] == 1) && (m_character->m_response.horizontal_collide == 0))
+            if(m_character->m_command.move.z == LookAndMoveZ::Forward && (m_character->m_response.horizontal_collide == 0))
             {
                 setNextState(LaraState::RunForward);
             }
@@ -1245,7 +1245,7 @@ void StateController::wadeForward()
         }
         else if(m_character->m_heightInfo.transition_level - m_character->m_heightInfo.floor_point[2] > m_character->m_wadeDepth)              // wade case
         {
-            if((m_character->m_command.move[0] != 1) || (m_character->m_response.horizontal_collide != 0))
+            if(m_character->m_command.move.z != LookAndMoveZ::Forward || m_character->m_response.horizontal_collide != 0)
             {
                 setNextState(LaraState::Stop);
             }
@@ -1253,7 +1253,7 @@ void StateController::wadeForward()
     }
     else                                                                // no water, stay or run / walk
     {
-        if((m_character->m_command.move[0] == 1) && (m_character->m_response.horizontal_collide == 0))
+        if(m_character->m_command.move.z == LookAndMoveZ::Forward && (m_character->m_response.horizontal_collide == 0))
         {
             if(m_character->m_heightInfo.quicksand == QuicksandPosition::None)
             {
@@ -1322,7 +1322,7 @@ void StateController::walkBack()
             }
         }
     }
-    else if((m_character->m_command.move[0] == -1) && (m_character->m_command.shift || m_character->m_heightInfo.quicksand != QuicksandPosition::None))
+    else if(m_character->m_command.move.z == LookAndMoveZ::Backward && (m_character->m_command.shift || m_character->m_heightInfo.quicksand != QuicksandPosition::None))
     {
         m_character->m_moveDir = MoveDirection::Backward;
         setNextState(LaraState::WalkBackward);
@@ -1341,7 +1341,7 @@ void StateController::walkLeft()
     {
         m_character->setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
     }
-    else if(m_character->m_command.move[1] == -1 && m_character->m_command.shift)
+    else if(m_character->m_command.move.x == LookAndMoveX::Left && m_character->m_command.shift)
     {
         glm::vec3 global_offset( m_character->m_transform[0] * -RunForwardOffset );  // not an error - RUN_... more correct here
         global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
@@ -1380,7 +1380,7 @@ void StateController::walkRight()
     {
         m_character->setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
     }
-    else if(m_character->m_command.move[1] == 1 && m_character->m_command.shift)
+    else if(m_character->m_command.move.x == LookAndMoveX::Right && m_character->m_command.shift)
     {
         // Not a error - RUN_... constant is more correct here
         glm::vec3 global_offset( m_character->m_transform[0] * RunForwardOffset );
@@ -1456,7 +1456,7 @@ void StateController::slideForward()
     }
     else if(m_character->m_response.slide == SlideType::None)
     {
-        if((m_character->m_command.move[0] == 1) && (engine::engine_world.engineVersion >= loader::Engine::TR3))
+        if(m_character->m_command.move.z == LookAndMoveZ::Forward && (engine::engine_world.engineVersion >= loader::Engine::TR3))
         {
             setNextState(LaraState::RunForward);
         }
@@ -1489,13 +1489,13 @@ void StateController::pushableGrab()
         m_character->m_moveDir = MoveDirection::Stay;
         m_character->m_skeleton.setAnimationMode( animation::AnimationMode::LoopLastFrame );  //We hold it (loop last frame)
 
-        if((m_character->m_command.move[0] == 1) && (tf & Character::TraverseForward))  // If player presses up, then push
+        if(m_character->m_command.move.z == LookAndMoveZ::Forward && (tf & Character::TraverseForward))  // If player presses up, then push
         {
             m_character->m_moveDir = MoveDirection::Forward;
             m_character->m_skeleton.setAnimationMode( animation::AnimationMode::NormalControl );
             setNextState(LaraState::PushablePush);
         }
-        else if((m_character->m_command.move[0] == -1) && (tf & Character::TraverseBackward))  //If player presses down, then pull
+        else if(m_character->m_command.move.z == LookAndMoveZ::Backward && (tf & Character::TraverseBackward))  //If player presses down, then pull
         {
             m_character->m_moveDir = MoveDirection::Backward;
             m_character->m_skeleton.setAnimationMode( animation::AnimationMode::NormalControl );
@@ -1750,19 +1750,19 @@ void StateController::jumpUp()
         }
     }
 
-    if(m_character->m_command.move[0] == 1)
+    if(m_character->m_command.move.z == LookAndMoveZ::Forward)
     {
         m_character->m_moveDir = MoveDirection::Forward;
     }
-    else if(m_character->m_command.move[0] == -1)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Backward)
     {
         m_character->m_moveDir = MoveDirection::Backward;
     }
-    else if(m_character->m_command.move[1] == 1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Right)
     {
         m_character->m_moveDir = MoveDirection::Right;
     }
-    else if(m_character->m_command.move[1] == -1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Left)
     {
         m_character->m_moveDir = MoveDirection::Left;
     }
@@ -1875,24 +1875,24 @@ void StateController::hang()
     {
         if(m_character->m_command.action)
         {
-            if(m_character->m_climb.wall_hit == ClimbType::FullBody && (m_character->m_command.move[0] == 0) && (m_character->m_command.move[1] == 0))
+            if(m_character->m_climb.wall_hit == ClimbType::FullBody && m_character->m_command.move.z == LookAndMoveZ::None && m_character->m_command.move.x == LookAndMoveX::None)
             {
                 setNextState(LaraState::LadderIdle);
             }
-            else if(m_character->m_command.move[0] == 1)  // UP
+            else if(m_character->m_command.move.z == LookAndMoveZ::Forward)  // UP
             {
                 m_character->setAnimation(TR_ANIMATION_LARA_LADDER_UP_HANDS, 0);
             }
-            else if(m_character->m_command.move[0] == -1)  // DOWN
+            else if(m_character->m_command.move.z == LookAndMoveZ::Backward)  // DOWN
             {
                 m_character->setAnimation(TR_ANIMATION_LARA_LADDER_DOWN_HANDS, 0);
             }
-            else if(m_character->m_command.move[1] == 1)
+            else if(m_character->m_command.move.x == LookAndMoveX::Right)
             {
                 m_character->m_moveDir = MoveDirection::Right;
                 m_character->setAnimation(TR_ANIMATION_LARA_CLIMB_RIGHT, 0);  // Edge climb right
             }
-            else if(m_character->m_command.move[1] == -1)
+            else if(m_character->m_command.move.x == LookAndMoveX::Left)
             {
                 m_character->m_moveDir = MoveDirection::Left;
                 m_character->setAnimation(TR_ANIMATION_LARA_CLIMB_LEFT, 0);  // Edge climb left
@@ -1939,7 +1939,7 @@ void StateController::hang()
 
     if(m_character->m_moveType == MoveType::Climbing)
     {
-        if(m_character->m_command.move[0] == 1)
+        if(m_character->m_command.move.z == LookAndMoveZ::Forward)
         {
             if(m_character->m_climb.edge_hit && (m_character->m_climb.next_z_space >= 512.0) && ((m_character->m_climb.next_z_space < m_character->m_height - LaraHangVerticalEpsilon) || m_character->m_command.crouch))
             {
@@ -1961,7 +1961,7 @@ void StateController::hang()
                 m_character->m_skeleton.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
             }
         }
-        else if(m_character->m_command.move[0] == -1)  // Check walls climbing
+        else if(m_character->m_command.move.z == LookAndMoveZ::Backward)  // Check walls climbing
         {
             m_character->m_climb = m_character->checkWallsClimbability();
             if(m_character->m_climb.wall_hit != ClimbType::None)
@@ -1970,7 +1970,7 @@ void StateController::hang()
             }
             m_character->m_skeleton.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
         }
-        else if(m_character->m_command.move[1] == -1)
+        else if(m_character->m_command.move.x == LookAndMoveX::Left)
         {
             glm::vec3 move( m_character->m_transform[0] * -PenetrationTestOffset );
             if((m_character->checkNextPenetration(move) == 0) || (m_character->m_response.horizontal_collide == 0x00)) //we only want lara to shimmy when last frame is reached!
@@ -1983,7 +1983,7 @@ void StateController::hang()
                 m_character->m_skeleton.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
             }
         }
-        else if(m_character->m_command.move[1] == 1)
+        else if(m_character->m_command.move.x == LookAndMoveX::Right)
         {
             glm::vec3 move( m_character->m_transform[0] * PenetrationTestOffset );
             if((m_character->checkNextPenetration(move) == 0) || (m_character->m_response.horizontal_collide == 0x00)) //we only want lara to shimmy when last frame is reached!
@@ -2039,7 +2039,7 @@ void StateController::ladderIdle()
         setNextState(LaraState::JumpBack);
         m_character->m_moveDir = MoveDirection::Backward;
     }
-    else if(m_character->m_command.move[0] == 1)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Forward)
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
@@ -2056,15 +2056,15 @@ void StateController::ladderIdle()
             setNextState(LaraState::LadderUp);
         }
     }
-    else if(m_character->m_command.move[0] == -1)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Backward)
     {
         setNextState(LaraState::LadderDown);
     }
-    else if(m_character->m_command.move[1] == 1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Right)
     {
         setNextState(LaraState::LadderRight);
     }
-    else if(m_character->m_command.move[1] == -1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Left)
     {
         setNextState(LaraState::LadderLeft);
     }
@@ -2117,7 +2117,7 @@ void StateController::ladderUp()
             m_character->m_moveType = MoveType::Climbing;
             setNextState(LaraState::LadderIdle);
         }
-        else if((m_character->m_command.move[0] <= 0) && (m_character->m_heightInfo.ceiling_hit || (m_character->m_transform[3][2] + m_character->m_skeleton.getBoundingBox().max[2] >= m_character->m_heightInfo.ceiling_point[2])))
+        else if(m_character->m_command.move.z != LookAndMoveZ::Forward && (m_character->m_heightInfo.ceiling_hit || (m_character->m_transform[3][2] + m_character->m_skeleton.getBoundingBox().max[2] >= m_character->m_heightInfo.ceiling_point[2])))
         {
             setNextState(LaraState::LadderIdle);
         }
@@ -2137,7 +2137,7 @@ void StateController::ladderUp()
 void StateController::ladderDown()
 {
     m_character->m_camFollowCenter = 64;
-    if(m_character->m_command.action && m_character->m_climb.wall_hit != ClimbType::None && (m_character->m_command.move[1] < 0))
+    if(m_character->m_command.action && m_character->m_climb.wall_hit != ClimbType::None && m_character->m_command.move.x != LookAndMoveX::Right)
     {
         if(m_character->m_climb.wall_hit != ClimbType::FullBody)
         {
@@ -2198,7 +2198,7 @@ void StateController::shimmyLeft()
         }
     }
 
-    if(m_character->m_command.move[1] == -1)
+    if(m_character->m_command.move.x == LookAndMoveX::Left)
     {
         glm::vec3 move( m_character->m_transform[0] * -PenetrationTestOffset );
         if((m_character->checkNextPenetration(move) > 0) && (m_character->m_response.horizontal_collide != 0x00))
@@ -2260,7 +2260,7 @@ void StateController::shimmyRight()
         }
     }
 
-    if(m_character->m_command.move[1] == 1)
+    if(m_character->m_command.move.x == LookAndMoveX::Right)
     {
         glm::vec3 move( m_character->m_transform[0] * PenetrationTestOffset );
         if((m_character->checkNextPenetration(move) > 0) && (m_character->m_response.horizontal_collide != 0x00))
@@ -2292,7 +2292,7 @@ void StateController::jumpForwardFallBackward()
         {
             m_character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
         }
-        else if(!m_character->m_command.action && (m_character->m_command.move[0] == 1) && !m_character->m_command.crouch)
+        else if(!m_character->m_command.action && m_character->m_command.move.z == LookAndMoveZ::Forward && !m_character->m_command.crouch)
         {
             m_character->m_moveType = MoveType::OnFloor;
             setNextState(LaraState::RunForward);
@@ -2563,17 +2563,17 @@ void StateController::onwaterStop()
     {
         setNextState(LaraState::WaterDeath);
     }
-    else if((m_character->m_command.move[0] == 1) || m_character->m_command.jump)                    // dive works correct only after LaraState::ONWATER_FORWARD
+    else if(m_character->m_command.move.z == LookAndMoveZ::Forward || m_character->m_command.jump)                    // dive works correct only after LaraState::ONWATER_FORWARD
     {
         m_character->m_moveDir = MoveDirection::Forward;
         setNextState(LaraState::OnWaterForward);
     }
-    else if(m_character->m_command.move[0] == -1)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Backward)
     {
         m_character->m_moveDir = MoveDirection::Backward;
         setNextState(LaraState::OnWaterBackward);
     }
-    else if(m_character->m_command.move[1] == -1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Left)
     {
         if(m_character->m_command.shift)
         {
@@ -2586,7 +2586,7 @@ void StateController::onwaterStop()
             // rotate on water
         }
     }
-    else if(m_character->m_command.move[1] == 1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Right)
     {
         if(m_character->m_command.shift)
         {
@@ -2623,7 +2623,7 @@ void StateController::onwaterForward()
         setNextState(LaraState::UnderwaterForward);
         m_character->m_skeleton.onFrame = onFrameSetUnderwater;                          // dive
     }
-    else if(m_character->m_command.move[0] == 1)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Forward)
     {
         if(m_character->m_command.action)
         {
@@ -2692,7 +2692,7 @@ void StateController::onwaterForward()
 
 void StateController::onwaterBack()
 {
-    if(m_character->m_command.move[0] == -1 && !m_character->m_command.jump)
+    if(m_character->m_command.move.z == LookAndMoveZ::Backward && !m_character->m_command.jump)
     {
         if(!m_character->m_heightInfo.floor_hit || (m_character->m_heightInfo.floor_point[2] + m_character->m_height < m_character->m_heightInfo.transition_level))
         {
@@ -2714,7 +2714,7 @@ void StateController::onwaterLeft()
     m_character->m_command.rot[0] = 0.0;
     if(!m_character->m_command.jump)
     {
-        if(m_character->m_command.move[1] == -1 && m_character->m_command.shift)
+        if(m_character->m_command.move.x == LookAndMoveX::Left && m_character->m_command.shift)
         {
             if(!m_character->m_heightInfo.floor_hit || (m_character->m_transform[3][2] - m_character->m_height > m_character->m_heightInfo.floor_point[2]))
             {
@@ -2748,7 +2748,7 @@ void StateController::onwaterRight()
         return;
     }
 
-    if(m_character->m_command.move[1] != 1 || m_character->m_command.shift)
+    if(m_character->m_command.move.x != LookAndMoveX::Right || m_character->m_command.shift)
     {
         setNextState(LaraState::OnWaterStop);
         return;
@@ -2782,7 +2782,7 @@ void StateController::crouchIdle()
     {
         setNextState(LaraState::Stop);                        // Back to stand
     }
-    else if((m_character->m_command.move[0] != 0) || m_character->m_response.killed)
+    else if(m_character->m_command.move.z != LookAndMoveZ::None || m_character->m_response.killed)
     {
         setNextState(LaraState::CrawlIdle);                  // Both forward & back provoke crawl stage
     }
@@ -2794,12 +2794,12 @@ void StateController::crouchIdle()
     {
         if(engine::engine_world.engineVersion > loader::Engine::TR3)
         {
-            if(m_character->m_command.move[1] == 1)
+            if(m_character->m_command.move.x == LookAndMoveX::Right)
             {
                 m_character->m_moveDir = MoveDirection::Forward;
                 setNextState(LaraState::CrouchTurnRight);
             }
-            else if(m_character->m_command.move[1] == -1)
+            else if(m_character->m_command.move.x == LookAndMoveX::Left)
             {
                 m_character->m_moveDir = MoveDirection::Forward;
                 setNextState(LaraState::CrouchTurnLeft);
@@ -2837,17 +2837,17 @@ void StateController::crawlIdle()
         m_character->m_moveDir = MoveDirection::Stay;
         setNextState(LaraState::Death);
     }
-    else if(m_character->m_command.move[1] == -1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Left)
     {
         m_character->m_moveDir = MoveDirection::Forward;
         m_character->setAnimation(TR_ANIMATION_LARA_CRAWL_TURN_LEFT, 0);
     }
-    else if(m_character->m_command.move[1] == 1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Right)
     {
         m_character->m_moveDir = MoveDirection::Forward;
         m_character->setAnimation(TR_ANIMATION_LARA_CRAWL_TURN_RIGHT, 0);
     }
-    else if(m_character->m_command.move[0] == 1)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Forward)
     {
         glm::vec3 move( m_character->m_transform[1] * PenetrationTestOffset );
         if((m_character->checkNextPenetration(move) == 0) || (m_character->m_response.horizontal_collide == 0x00))
@@ -2864,7 +2864,7 @@ void StateController::crawlIdle()
             }
         }
     }
-    else if(m_character->m_command.move[0] == -1)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Backward)
     {
         glm::vec3 move( m_character->m_transform[1] * -PenetrationTestOffset );
         if((m_character->checkNextPenetration(move) == 0) || (m_character->m_response.horizontal_collide == 0x00))
@@ -2940,7 +2940,7 @@ void StateController::crawlForward()
     HeightInfo next_fc = initHeightInfo();
     Character::getHeightInfo(global_offset, &next_fc);
 
-    if((m_character->m_command.move[0] != 1) || m_character->m_response.killed)
+    if((m_character->m_command.move.z != LookAndMoveZ::Forward) || m_character->m_response.killed)
     {
         setNextState(LaraState::CrawlIdle); // Stop
     }
@@ -2969,7 +2969,7 @@ void StateController::crawlBack()
     global_offset += glm::vec3(m_character->m_transform[3]);
     HeightInfo next_fc = initHeightInfo();
     Character::getHeightInfo(global_offset, &next_fc);
-    if((m_character->m_command.move[0] != -1) || m_character->m_response.killed)
+    if(m_character->m_command.move.z != LookAndMoveZ::Backward || m_character->m_response.killed)
     {
         setNextState(LaraState::CrawlIdle); // Stop
     }
@@ -2987,7 +2987,7 @@ void StateController::crawlTurnLeft()
     m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     m_character->m_command.rot[0] *= ((m_character->m_skeleton.getCurrentFrame() > 3) && (m_character->m_skeleton.getCurrentFrame() < 14)) ? (1.0f) : (0.0f);
 
-    if((m_character->m_command.move[1] != -1) || m_character->m_response.killed)
+    if(m_character->m_command.move.x != LookAndMoveX::Left || m_character->m_response.killed)
     {
         setNextState(LaraState::CrawlIdle); // stop
     }
@@ -2999,7 +2999,7 @@ void StateController::crawlTurnRight()
     m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     m_character->m_command.rot[0] *= ((m_character->m_skeleton.getCurrentFrame() > 3) && (m_character->m_skeleton.getCurrentFrame() < 14)) ? (1.0f) : (0.0f);
 
-    if((m_character->m_command.move[1] != 1) || m_character->m_response.killed)
+    if((m_character->m_command.move.x != LookAndMoveX::Right) || m_character->m_response.killed)
     {
         setNextState(LaraState::CrawlIdle); // stop
     }
@@ -3010,7 +3010,7 @@ void StateController::crouchTurnLeftRight()
     m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     m_character->m_command.rot[0] *= ((m_character->m_skeleton.getCurrentFrame() > 3) && (m_character->m_skeleton.getCurrentFrame() < 23)) ? (0.6f) : (0.0f);
 
-    if((m_character->m_command.move[1] == 0) || m_character->m_response.killed)
+    if(m_character->m_command.move.x == LookAndMoveX::None || m_character->m_response.killed)
     {
         setNextState(LaraState::CrouchIdle);
     }
@@ -3035,24 +3035,24 @@ void StateController::monkeyswingIdle()
         m_character->m_moveDir = MoveDirection::Stay;
         m_character->m_moveType = MoveType::FreeFalling;
     }
-    else if(m_character->m_command.shift && (m_character->m_command.move[1] == -1))
+    else if(m_character->m_command.shift && m_character->m_command.move.x == LookAndMoveX::Left)
     {
         setNextState(LaraState::MonkeyswingLeft);
     }
-    else if(m_character->m_command.shift && (m_character->m_command.move[1] == 1))
+    else if(m_character->m_command.shift && m_character->m_command.move.x == LookAndMoveX::Right)
     {
         setNextState(LaraState::MonkeyswingRight);
     }
-    else if(m_character->m_command.move[0] == 1)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Forward)
     {
         m_character->m_moveDir = MoveDirection::Forward;
         setNextState(LaraState::MonkeyswingForward);
     }
-    else if(m_character->m_command.move[1] == -1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Left)
     {
         setNextState(LaraState::MonkeyswingTurnLeft);
     }
-    else if(m_character->m_command.move[1] == 1)
+    else if(m_character->m_command.move.x == LookAndMoveX::Right)
     {
         setNextState(LaraState::MonkeyswingTurnRight);
     }
@@ -3067,7 +3067,7 @@ void StateController::monkeyswingTurnLeft()
         m_character->m_moveDir = MoveDirection::Stay;
         m_character->m_moveType = MoveType::FreeFalling;
     }
-    else if(m_character->m_command.move[1] != -1)
+    else if(m_character->m_command.move.x != LookAndMoveX::Left)
     {
         setNextState(LaraState::MonkeyswingIdle);
     }
@@ -3082,7 +3082,7 @@ void StateController::monkeyswingTurnRight()
         m_character->m_moveDir = MoveDirection::Stay;
         m_character->m_moveType = MoveType::FreeFalling;
     }
-    else if(m_character->m_command.move[1] != 1)
+    else if(m_character->m_command.move.x != LookAndMoveX::Right)
     {
         setNextState(LaraState::MonkeyswingIdle);
     }
@@ -3098,7 +3098,7 @@ void StateController::monkeyswingForward()
         m_character->setAnimation(TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
         m_character->m_moveType = MoveType::FreeFalling;
     }
-    else if(m_character->m_command.move[0] != 1)
+    else if(m_character->m_command.move.z != LookAndMoveZ::Forward)
     {
         setNextState(LaraState::MonkeyswingIdle);
     }
@@ -3114,7 +3114,7 @@ void StateController::monkeyswingLeft()
         m_character->setAnimation(TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
         m_character->m_moveType = MoveType::FreeFalling;
     }
-    else if(m_character->m_command.move[0] != 1)
+    else if(m_character->m_command.move.z != LookAndMoveZ::Forward)
     {
         setNextState(LaraState::MonkeyswingIdle);
     }
@@ -3130,7 +3130,7 @@ void StateController::monkeyswingRight()
         m_character->setAnimation(TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0);
         m_character->m_moveType = MoveType::FreeFalling;
     }
-    else if(m_character->m_command.move[0] != 1)
+    else if(m_character->m_command.move.z != LookAndMoveZ::Forward)
     {
         setNextState(LaraState::MonkeyswingIdle);
     }
@@ -3183,12 +3183,12 @@ void StateController::tightropeIdle()
         }
     }
 
-    if((m_character->m_command.roll) || (m_character->m_command.move[0] == -1))
+    if((m_character->m_command.roll) || (m_character->m_command.move.z == LookAndMoveZ::Backward))
     {
         m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_TURN, 0);
         m_character->m_moveDir = MoveDirection::Forward;
     }
-    else if(m_character->m_command.move[0] == 1)
+    else if(m_character->m_command.move.z == LookAndMoveZ::Forward)
     {
         setNextState(LaraState::TightropeForward);
     }
@@ -3199,7 +3199,7 @@ void StateController::tightropeForward()
     m_character->m_command.rot[0] = 0.0;
     m_character->m_moveDir = MoveDirection::Forward;
 
-    if(m_character->m_command.move[0] != 1)
+    if(m_character->m_command.move.z != LookAndMoveZ::Forward)
     {
         setNextState(LaraState::TightropeIdle);
     }
@@ -3230,7 +3230,7 @@ void StateController::tightropeBalancingLeft()
     }
     else if(   m_character->m_skeleton.getCurrentAnimation() == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT
             && m_character->m_skeleton.getCurrentFrame() >= static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration() / 2)
-            && m_character->m_command.move[1] == 1)
+            && m_character->m_command.move.x == LookAndMoveX::Right)
     {
         // MAGIC: mirroring animation offset.
         m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration()-m_character->m_skeleton.getCurrentFrame());
@@ -3249,7 +3249,7 @@ void StateController::tightropeBalancingRight()
     }
     else if(   m_character->m_skeleton.getCurrentAnimation() == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT
             && m_character->m_skeleton.getCurrentFrame() >= static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration() / 2)
-            && m_character->m_command.move[1] == -1)
+            && m_character->m_command.move.x == LookAndMoveX::Left)
     {
         // MAGIC: mirroring animation offset.
         m_character->setAnimation(TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration()-m_character->m_skeleton.getCurrentFrame());

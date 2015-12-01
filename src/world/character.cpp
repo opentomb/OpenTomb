@@ -784,7 +784,7 @@ void Character::lean(glm::float_t max_lean)
 
     // Continously lean character, according to current left/right direction.
 
-    if((m_command.move[1] == 0) || util::fuzzyZero(max_lean)) // No direction - restore straight vertical position!
+    if(m_command.move.x == LookAndMoveX::None || util::fuzzyZero(max_lean)) // No direction - restore straight vertical position!
     {
         if(m_angles[2] != 0.0)
         {
@@ -802,7 +802,7 @@ void Character::lean(glm::float_t max_lean)
             }
         }
     }
-    else if(m_command.move[1] == 1) // Right direction
+    else if(m_command.move.x == LookAndMoveX::Right) // Right direction
     {
         if(m_angles[2] != max_lean)
         {
@@ -826,7 +826,7 @@ void Character::lean(glm::float_t max_lean)
             }
         }
     }
-    else if(m_command.move[1] == -1) // Left direction
+    else if(m_command.move.x == LookAndMoveX::Left) // Left direction
     {
         if(m_angles[2] != neg_lean)
         {
@@ -1496,8 +1496,6 @@ int Character::moveUnderWater()
 
 int Character::moveOnWater()
 {
-    glm::vec3 move;
-
     m_response.slide = SlideType::None;
     m_response.lean = LeanType::None;
 
@@ -1511,21 +1509,21 @@ int Character::moveOnWater()
 
     // Calculate current speed.
 
-    glm::float_t t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, glm::abs(m_command.move[0]) != 0 || glm::abs(m_command.move[1]) != 0);
+    glm::float_t t = inertiaLinear(MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, m_command.move.z != LookAndMoveZ::None || m_command.move.x != LookAndMoveX::None);
 
-    if((m_moveDir == MoveDirection::Forward) && (m_command.move[0] == 1))
+    if(m_moveDir == MoveDirection::Forward && m_command.move.z == LookAndMoveZ::Forward)
     {
         m_speed = glm::vec3(m_transform[1] * t);
     }
-    else if((m_moveDir == MoveDirection::Backward) && (m_command.move[0] == -1))
+    else if(m_moveDir == MoveDirection::Backward && m_command.move.z == LookAndMoveZ::Backward)
     {
         m_speed = glm::vec3(m_transform[1] * -t);
     }
-    else if((m_moveDir == MoveDirection::Left) && (m_command.move[1] == -1))
+    else if(m_moveDir == MoveDirection::Left && m_command.move.x == LookAndMoveX::Left)
     {
         m_speed = glm::vec3(m_transform[0] * -t);
     }
-    else if((m_moveDir == MoveDirection::Right) && (m_command.move[1] == 1))
+    else if(m_moveDir == MoveDirection::Right && m_command.move.x == LookAndMoveX::Right)
     {
         m_speed = glm::vec3(m_transform[0] * t);
     }
@@ -1549,7 +1547,7 @@ int Character::moveOnWater()
     /*
     * Prepare to moving
     */
-    move = m_speed * util::toSeconds(engine::engine_frame_time);
+    glm::vec3 move = m_speed * util::toSeconds(engine::engine_frame_time);
     ghostUpdate();
     m_transform[3] += glm::vec4(move, 0);
     fixPenetrations(&move); // get horizontal collide

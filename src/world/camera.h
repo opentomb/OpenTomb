@@ -199,6 +199,13 @@ public:
     void moveAlong(glm::float_t dist);
     void moveStrafe(glm::float_t dist);
     void moveVertical(glm::float_t dist);
+    void move(const glm::vec3& v)
+    {
+        moveAlong(v.z);
+        moveStrafe(v.x);
+        moveVertical(v.y);
+    }
+
     void shake(glm::float_t power, util::Duration time);
     void applyRotation();
     void rotate(const glm::vec3& v)

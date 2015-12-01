@@ -57,10 +57,116 @@ constexpr float INERTIA_SPEED_ONWATER = 1.5f;
 //! @fixme Guess
 constexpr float DEFAULT_CHARACTER_SWIM_DEPTH = 100.0f;
 
+enum class LookAndMoveX
+{
+    Left,
+    None,
+    Right
+};
+
+enum class LookAndMoveY
+{
+    Up,
+    None,
+    Down
+};
+
+enum class LookAndMoveZ
+{
+    Forward,
+    None,
+    Backward
+};
+
+struct LookAndMoveLogic final
+{
+    LookAndMoveX x = LookAndMoveX::None;
+    LookAndMoveY y = LookAndMoveY::None;
+    LookAndMoveZ z = LookAndMoveZ::None;
+
+    void setX(bool left, bool right) noexcept
+    {
+        if(left && !right)
+            x = LookAndMoveX::Left;
+        else if(right && !left)
+            x = LookAndMoveX::Right;
+        else
+            x = LookAndMoveX::None;
+    }
+
+    void setY(bool up, bool down) noexcept
+    {
+        if(up && !down)
+            y = LookAndMoveY::Up;
+        else if(down && !up)
+            y = LookAndMoveY::Down;
+        else
+            y = LookAndMoveY::None;
+    }
+
+    void setZ(bool forward, bool back) noexcept
+    {
+        if(forward && !back)
+            z = LookAndMoveZ::Forward;
+        else if(back && !forward)
+            z = LookAndMoveZ::Backward;
+        else
+            z = LookAndMoveZ::None;
+    }
+
+    glm::float_t getDistanceX(glm::float_t dist) const noexcept
+    {
+        switch(x)
+        {
+            case LookAndMoveX::Left:
+                return -dist;
+            case LookAndMoveX::Right:
+                return dist;
+            default:
+                return 0;
+        }
+    }
+
+    glm::float_t getDistanceY(glm::float_t dist) const noexcept
+    {
+        switch(y)
+        {
+            case LookAndMoveY::Up:
+                return dist;
+            case LookAndMoveY::Down:
+                return -dist;
+            default:
+                return 0;
+        }
+    }
+
+    glm::float_t getDistanceZ(glm::float_t dist) const noexcept
+    {
+        switch(z)
+        {
+            case LookAndMoveZ::Forward:
+                return dist;
+            case LookAndMoveZ::Backward:
+                return -dist;
+            default:
+                return 0;
+        }
+    }
+
+    glm::vec3 getDistance(glm::float_t dist) const noexcept
+    {
+        return {
+            getDistanceX(dist),
+            getDistanceY(dist),
+            getDistanceZ(dist)
+        };
+    }
+};
+
 struct CharacterCommand
 {
     glm::vec3 rot = {0, 0, 0};
-    std::array<int8_t, 3> move{{0, 0, 0}};
+    LookAndMoveLogic move;
 
     bool roll = false;
     bool jump = false;
