@@ -59,7 +59,9 @@ else()
             -DBUILD_CPU_DEMOS=OFF
             -DBUILD_OPENGL3_DEMOS=OFF
             -DBUILD_UNIT_TESTS=OFF
-            -DINSTALL_EXTRA_LIBS=ON
+            -DINSTALL_EXTRA_LIBS=OFF
+            -DBUILD_EXTRAS=OFF
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo
         GIT_REPOSITORY https://github.com/bulletphysics/bullet3.git
         GIT_TAG 2.83.5
     )
@@ -115,8 +117,49 @@ add_library(GLM INTERFACE)
 target_include_directories(GLM INTERFACE ${GLM_INCLUDE_DIR})
 target_compile_definitions(GLM INTERFACE -DGLM_FORCE_RADIANS)
 
-find_package(Boost COMPONENTS system log filesystem REQUIRED)
+find_package(Boost COMPONENTS system log filesystem)
 add_library(Boost INTERFACE)
+
+if(NOT BOOST_FOUND)
+    if( UNIX OR APPLE )
+        set( BOOST_BOOTSTRAP ./bootstrap.sh )
+        set( BOOST_B2 ./b2 )
+    elseif( WIN32 )
+        set( BOOST_BOOTSTRAP bootstrap.bat )
+        set( BOOST_B2 ./b2.exe )
+    endif()
+
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(BOOST_ADDRESS_MODEL 64)
+    else()
+        set(BOOST_ADDRESS_MODEL 32)
+    endif()
+
+    ExternalProject_Add(Boost-Ext
+        PREFIX ${CMAKE_SOURCE_DIR}/3rdparty/Boost
+        INSTALL_DIR ${CMAKE_SOURCE_DIR}/3rdparty/Boost/install
+        GIT_REPOSITORY "https://github.com/boostorg/boost.git"
+        GIT_TAG "boost-1.55.0"
+        BUILD_IN_SOURCE 1
+        CONFIGURE_COMMAND ${BOOST_BOOTSTRAP}
+        BUILD_COMMAND  ${BOOST_B2} address-model=${BOOST_ADDRESS_MODEL} install
+            --without-python
+            --without-mpi
+            --disable-icu
+            --prefix=<INSTALL_DIR>
+            --threading=multi
+            --link=static
+            --variant=release
+            -j4
+        INSTALL_COMMAND ""
+    )
+
+    ExternalProject_Get_Property(Boost-Ext BOOST_ROOT)
+    link_directories(${BOOST_ROOT}/lib)
+    set(Boost_INCLUDE_DIR ${BOOST_ROOT}/include )
+    set(Boost_LIBRARIES system log filesystem)
+endif()
+
 target_include_directories(Boost INTERFACE ${Boost_INCLUDE_DIR})
 target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})
 target_compile_definitions(Boost INTERFACE -DBOOST_LOG_DYN_LINK -DBOOST_ALL_NO_LIB)
