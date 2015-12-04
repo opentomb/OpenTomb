@@ -139,7 +139,7 @@ if(NOT BOOST_FOUND)
         PREFIX ${CMAKE_SOURCE_DIR}/3rdparty/Boost
         INSTALL_DIR ${CMAKE_SOURCE_DIR}/3rdparty/Boost/install
         GIT_REPOSITORY "https://github.com/boostorg/boost.git"
-        GIT_TAG "boost-1.55.0"
+        GIT_TAG "boost-1.56.0"
         BUILD_IN_SOURCE 1
         CONFIGURE_COMMAND ${BOOST_BOOTSTRAP}
         BUILD_COMMAND  ${BOOST_B2} address-model=${BOOST_ADDRESS_MODEL} install
