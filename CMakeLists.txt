@@ -120,7 +120,7 @@ target_compile_definitions(GLM INTERFACE -DGLM_FORCE_RADIANS)
 find_package(Boost COMPONENTS system log filesystem)
 add_library(Boost INTERFACE)
 
-if(NOT BOOST_FOUND)
+if(NOT Boost_FOUND)
     if( UNIX OR APPLE )
         set( BOOST_BOOTSTRAP ./bootstrap.sh )
         set( BOOST_B2 ./b2 )

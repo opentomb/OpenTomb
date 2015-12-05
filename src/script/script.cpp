@@ -3183,13 +3183,16 @@ int ScriptEngine::print(lua_State* state)
 
 int ScriptEngine::panic(lua_State *lua)
 {
-    if(lua_gettop(lua) < 1)
+    const auto top = lua_gettop(lua);
+    if(top < 1)
     {
         BOOST_LOG_TRIVIAL(error) << "Fatal lua error (no details provided)";
     }
     else
     {
-        BOOST_LOG_TRIVIAL(error) << "Fatal lua error: " << lua_tostring(lua, 1);
+        const auto msg = lua_tostring(lua, top);
+        BOOST_LOG_TRIVIAL(error) << "Fatal lua error: " << (msg ? msg : "<null>");
+        BOOST_LOG_TRIVIAL(error) << "Backtrace:";
     }
     return 0;
 }
