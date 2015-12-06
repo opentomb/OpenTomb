@@ -3028,6 +3028,7 @@ namespace world
             keyFrame->boneKeyFrames.resize(model->meshes.size());
 
             keyFrame->position = {0,0,0};
+
             for(size_t k = 0; k < keyFrame->boneKeyFrames.size(); k++)
             {
                 SkeletalModel::MeshReference* mesh = &model->meshes[k];
@@ -3491,10 +3492,12 @@ namespace world
                 entity->m_skeleton.setModel( world->getModelByID(id) );
             }
 
-            ModelId replace_anim_id = engine_lua.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id).to<ModelId>();
-            if(replace_anim_id > 0)
+            lua::Value replace_anim_id = engine_lua.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
+            if(!replace_anim_id.isNil())
             {
-                SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id);
+                SkeletalModel* replace_anim_model = world->getModelByID(replace_anim_id.to<ModelId>());
+                BOOST_ASSERT(replace_anim_model != nullptr);
+                BOOST_ASSERT(entity->m_skeleton.model() != nullptr);
                 std::swap(entity->m_skeleton.model()->animations, replace_anim_model->animations);
             }
 

@@ -225,9 +225,6 @@ struct Animation
                                        ? m_keyFrames.back()
                                        : m_keyFrames[frameIndex+1];
 
-        if(first.boneKeyFrames.size() != second.boneKeyFrames.size())
-            std::cerr << first.boneKeyFrames.size() << "," << second.boneKeyFrames.size() << "\n";
-
         BOOST_ASSERT(first.boneKeyFrames.size() == second.boneKeyFrames.size());
 
         const size_t subOffset = frame - frameIndex*m_stretchFactor; // offset between keyframes

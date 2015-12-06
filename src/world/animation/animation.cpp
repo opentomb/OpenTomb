@@ -88,6 +88,8 @@ void Skeleton::updatePose()
     m_boundingBox = keyFrame.boundingBox;
     m_position = keyFrame.position;
 
+    BOOST_ASSERT(keyFrame.boneKeyFrames.size() <= m_bones.size());
+
     for(size_t k = 0; k < keyFrame.boneKeyFrames.size(); k++)
     {
         m_bones[k].offset = keyFrame.boneKeyFrames[k].offset;
@@ -107,6 +109,7 @@ void Skeleton::updatePose()
     m_bones[0].full_transform = m_bones[0].transform;
     for(size_t k = 1; k < keyFrame.boneKeyFrames.size(); k++)
     {
+        BOOST_ASSERT(m_bones[k].parent != nullptr);
         m_bones[k].full_transform = m_bones[k].parent->full_transform * m_bones[k].transform;
     }
 }
