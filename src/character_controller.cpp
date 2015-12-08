@@ -889,24 +889,45 @@ void Character_LookAt(struct entity_s *ent, float target[3])
 
     if(b_tag)
     {
-        const float head_z_amp = 85.0f;
-        //const float head_x_amp = 65.0f;
-        float dir[3], tr[16];
-        Mat4_Mat4_mul(tr, ent->transform, b_tag->full_transform);
-        vec3_sub(dir, target, tr + 12);
-        float cos_z = tr[4 + 0];
-        float sin_z =-tr[4 + 1];
-        float t = sqrtf(cos_z * cos_z + sin_z * sin_z);
-        cos_z /= t;
-        sin_z /= t;
-        float x_z = dir[0] * cos_z - dir[1] * sin_z;
-        float y_z = dir[0] * sin_z + dir[1] * cos_z;
-        float delta_oz = atan2f(y_z, x_z) * 180.0f / M_PI;
-        if(delta_oz > head_z_amp)   delta_oz = head_z_amp;
-        if(delta_oz <-head_z_amp)   delta_oz =-head_z_amp;
-        Mat4_RotateZ(b_tag->transform, delta_oz);
+        const float head_amp = 75.0f * M_PI / 180.0;
+        float alpha, vt1[3], vt2[3], comp[3], axis[3], dir[3], target_local[3], t;
 
-        for(uint16_t i = start_bone; i < ent->bf->bone_tag_count; i++)
+        Mat4_vec3_mul_inv(target_local, ent->transform, target);
+        vec3_sub(dir, target_local, b_tag->full_transform + 12);
+        vec3_norm(dir, t);
+        vec3_cross(axis, dir, b_tag->full_transform + 4);
+        vec3_norm(axis, t);
+        if(t < 0.001)
+        {
+            return;
+        }
+
+        float cos_a = vec3_dot(dir, b_tag->full_transform + 4);
+        if(cos_a > 1.0f)
+        {
+            alpha = 0.0f;
+            return;
+        }
+        else if(cos_a < -1.0f)
+        {
+            alpha = -M_PI / 2.0f;
+        }
+        else
+        {
+            // get sign alpha
+            vec3_sub(comp, dir, b_tag->full_transform + 4);
+            vec3_cross(vt1, axis, comp);
+            vec3_add(vt2, dir, b_tag->full_transform + 4);
+            alpha = (vec3_dot(vt1, vt2) < 0.0) ? (acosf(cos_a)) : (-acosf(cos_a));
+        }
+
+        // clamp alpha
+        if(alpha > head_amp)   alpha = head_amp;
+        if(alpha <-head_amp)   alpha =-head_amp;
+
+        Mat4_RotateAxis(b_tag->full_transform, axis, alpha * 180.0 / M_PI);
+        Mat4_inv_Mat4_affine_mul(b_tag->transform, b_tag->parent->full_transform, b_tag->full_transform);
+        for(uint16_t i = start_bone + 1; i < ent->bf->bone_tag_count; i++)
         {
             ss_bone_tag_p btag = ent->bf->bone_tags + i;
             Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);

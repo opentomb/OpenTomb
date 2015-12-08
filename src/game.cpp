@@ -989,7 +989,7 @@ void Game_PlayFlyBy(uint32_t sequence_id, int once)
     {
         for(flyby_camera_sequence_p s = engine_world.flyby_camera_sequences; s; s = s->next)
         {
-            if((s->start->sequence == sequence_id) && (!once || !s->locked))
+            if((s->start->sequence == (int)sequence_id) && (!once || !s->locked))
             {
                 engine_camera_state.state = CAMERA_STATE_FLYBY;
                 engine_camera_state.flyby = s;

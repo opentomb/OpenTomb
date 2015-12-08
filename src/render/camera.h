@@ -24,6 +24,27 @@ struct frustum_s;
 #define CAMERA_STATE_FLYBY      (0x0003)
 
 
+typedef struct camera_flags_s
+{
+    uint16_t        smoothly_init : 1;
+    uint16_t        subjective : 1;
+    uint16_t        infinitely_loop : 1;
+    uint16_t        track_player : 1;
+    uint16_t        last_head_position : 1;
+    uint16_t        track_head_position : 1;
+    uint16_t        smoothly_end : 1;
+    uint16_t        switch_to_other_camera : 1;   // see timer field for camera number
+    uint16_t        pause_movement_camera : 1;    // see timer field for waiting time
+    uint16_t        disable_breakout : 1;
+    uint16_t        disable_controls : 1;
+    uint16_t        enable_controls : 1;
+    uint16_t        fade_in : 1;
+    uint16_t        fade_out : 1;
+    uint16_t        heawy_triggering : 1;
+    uint16_t        : 1;
+    //Bit 15 —  TR5 only TRLE for TR5 says this flag is used to make camera one-shot, but it’s not true. Actual one-shot flag is placed in extra uint16_t field at 0x0100 for flyby camera TrigAction.*/
+}camera_flags_t, *camera_flags_p;
+
 typedef struct camera_state_s
 {
     uint32_t                        state;
@@ -95,7 +116,7 @@ typedef struct flyby_camera_state_s
     
     int8_t                      sequence;
     int8_t                      index;
-    uint16_t                    flags;
+    struct camera_flags_s       flags;
     struct room_s              *room;
 }flyby_camera_state_t, *flyby_camera_state_p;
 

@@ -516,6 +516,38 @@ void Mat4_RotateZ(float mat[16], float ang)
     vec3_copy(mat+8, R+6);
 }
 
+void Mat4_RotateAxis(float mat[16], float axis[3], float ang)
+{
+    if(ang != 0.0)
+    {
+        float t = ang * M_PI / 360.0;
+        float sin_t2 = sinf(t);
+        float cos_t2 = cosf(t);
+        float R[4], Rt[4], *v, buf[4];
+        
+        R[0] = axis[0] * sin_t2;
+        R[1] = axis[1] * sin_t2;
+        R[2] = axis[2] * sin_t2;
+        R[3] = cos_t2;
+        vec4_sop(Rt, R);
+
+        v = mat + 0;
+        vec4_mul(buf, R, v);
+        vec4_mul(v, buf, Rt);
+        mat[0 + 3] = 0.0f;
+        
+        v = mat + 4;
+        vec4_mul(buf, R, v);
+        vec4_mul(v, buf, Rt);
+        mat[4 + 3] = 0.0f;
+        
+        v = mat + 8;
+        vec4_mul(buf, R, v);
+        vec4_mul(v, buf, Rt);
+        mat[8 + 3] = 0.0f;
+    }
+}
+
 void Mat4_T(float mat[16])
 {
     float t;

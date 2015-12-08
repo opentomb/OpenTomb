@@ -1630,6 +1630,14 @@ void World_GenFlyByCameras(struct world_s *world, class VT_Level *tr)
         world->flyby_cameras = (flyby_camera_state_p)malloc(world->flyby_cameras_count * sizeof(flyby_camera_state_t));
         for(uint32_t i = 0; i < world->flyby_cameras_count; i++)
         {
+            union
+            {
+                camera_flags_t flags;
+                uint16_t       flags_ui;
+            };
+            flags_ui  =  tr->flyby_cameras[i].flags;
+
+            world->flyby_cameras[i].flags           =  flags;
             world->flyby_cameras[i].pos[0]          =  tr->flyby_cameras[i].pos_x;
             world->flyby_cameras[i].pos[1]          =  tr->flyby_cameras[i].pos_z;
             world->flyby_cameras[i].pos[2]          = -tr->flyby_cameras[i].pos_y;
@@ -1644,8 +1652,8 @@ void World_GenFlyByCameras(struct world_s *world, class VT_Level *tr)
 
             world->flyby_cameras[i].sequence        =  tr->flyby_cameras[i].sequence;
             world->flyby_cameras[i].index           =  tr->flyby_cameras[i].index;
-            world->flyby_cameras[i].flags           =  tr->flyby_cameras[i].flags;
-            if((tr->flyby_cameras[i].room_id >= 0) && (tr->flyby_cameras[i].room_id < world->rooms_count))
+
+            if((tr->flyby_cameras[i].room_id >= 0) && ((uint32_t)tr->flyby_cameras[i].room_id < world->rooms_count))
             {
                 world->flyby_cameras[i].room            =  world->rooms + tr->flyby_cameras[i].room_id;
             }

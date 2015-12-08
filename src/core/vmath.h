@@ -224,6 +224,7 @@ void Mat4_Scale(float mat[16], float x, float y, float z);
 void Mat4_RotateX(float mat[16], float ang);
 void Mat4_RotateY(float mat[16], float ang);
 void Mat4_RotateZ(float mat[16], float ang);
+void Mat4_RotateAxis(float mat[16], float axis[3], float ang);
 void Mat4_T(float mat[16]);
 void Mat4_affine_inv(float mat[16]);
 void Mat4_Mat4_mul(float result[16], const float src1[16], const float src2[16]);

@@ -19,60 +19,130 @@
 #include "gl_text.h"
 #include "gl_font.h"
 #include "gl_util.h"
-#include "console.h"
 
 
 #define vec4_copy(x, y) {(x)[0] = (y)[0]; (x)[1] = (y)[1]; (x)[2] = (y)[2]; (x)[3] = (y)[3];}
 
-static gl_text_line_p      gl_base_lines = NULL;
-static gl_text_line_t      gl_temp_lines[GLTEXT_MAX_TEMP_LINES];
-static uint16_t            temp_lines_used = 0;
-
-
-void GLText_InitTempLines()
+static struct
 {
+    gl_text_line_p           gl_base_lines;
+    gl_text_line_t           gl_temp_lines[GLTEXT_MAX_TEMP_LINES];
+    uint16_t                 temp_lines_used;
+    FT_Library               font_library;               // GLF font library unit.
+    uint16_t                 max_styles;
+    struct gl_fontstyle_s   *styles;
+
+    uint16_t                 max_fonts;
+    struct gl_font_cont_s   *fonts;
+} font_data;
+
+void GLText_Init()
+{
+    int i;
+    font_data.font_library   = NULL;
+    FT_Init_FreeType(&font_data.font_library);
+
+    font_data.max_styles = GLTEXT_MAX_FONTSTYLES;
+    font_data.styles     = (gl_fontstyle_p)malloc(font_data.max_styles * sizeof(gl_fontstyle_t));
+    for(i = 0; i < font_data.max_styles; i++)
+    {
+        font_data.styles[i].rect_color[0] = 1.0;
+        font_data.styles[i].rect_color[1] = 1.0;
+        font_data.styles[i].rect_color[2] = 1.0;
+        font_data.styles[i].rect_color[3] = 0.0;
+
+        font_data.styles[i].font_color[0] = 0.0;
+        font_data.styles[i].font_color[1] = 0.0;
+        font_data.styles[i].font_color[2] = 0.0;
+        font_data.styles[i].font_color[3] = 1.0;
+
+        font_data.styles[i].shadowed = 0x00;
+        font_data.styles[i].rect     = 0x00;
+    }
+
+    font_data.max_fonts = GLTEXT_MAX_FONTS;
+    font_data.fonts     = (gl_font_cont_p)malloc(font_data.max_fonts * sizeof(gl_font_cont_t));
+    for(i = 0; i < font_data.max_fonts; i++)
+    {
+        font_data.fonts[i].font_size = 0;
+        font_data.fonts[i].gl_font   = NULL;
+    }
+    
     for(int i = 0; i < GLTEXT_MAX_TEMP_LINES; i++)
     {
-        gl_temp_lines[i].text_size = GUI_LINE_DEFAULTSIZE;
-        gl_temp_lines[i].text = (char*)malloc(GUI_LINE_DEFAULTSIZE * sizeof(char));
-        gl_temp_lines[i].text[0] = 0;
-        gl_temp_lines[i].show = 0;
+        font_data.gl_temp_lines[i].text_size = GUI_LINE_DEFAULTSIZE;
+        font_data.gl_temp_lines[i].text = (char*)malloc(GUI_LINE_DEFAULTSIZE * sizeof(char));
+        font_data.gl_temp_lines[i].text[0] = 0;
+        font_data.gl_temp_lines[i].show = 0;
 
-        gl_temp_lines[i].next = NULL;
-        gl_temp_lines[i].prev = NULL;
+        font_data.gl_temp_lines[i].next = NULL;
+        font_data.gl_temp_lines[i].prev = NULL;
 
-        gl_temp_lines[i].font_id  = FONT_SECONDARY;
-        gl_temp_lines[i].style_id = FONTSTYLE_GENERIC;
+        font_data.gl_temp_lines[i].font_id  = FONT_SECONDARY;
+        font_data.gl_temp_lines[i].style_id = FONTSTYLE_GENERIC;
     }
+    
+    font_data.temp_lines_used = 0;
 }
 
 
-void GLText_DestroyTempLines()
+void GLText_Destroy()
 {
-    for(int i = 0; i < GLTEXT_MAX_TEMP_LINES ;i++)
+    int i;
+    
+    for(i = 0; i < GLTEXT_MAX_TEMP_LINES ;i++)
     {
-        gl_temp_lines[i].show = 0;
-        gl_temp_lines[i].text_size = 0;
-        free(gl_temp_lines[i].text);
-        gl_temp_lines[i].text = NULL;
+        font_data.gl_temp_lines[i].show = 0;
+        font_data.gl_temp_lines[i].text_size = 0;
+        free(font_data.gl_temp_lines[i].text);
+        font_data.gl_temp_lines[i].text = NULL;
     }
 
-    temp_lines_used = GLTEXT_MAX_TEMP_LINES;
+    font_data.temp_lines_used = GLTEXT_MAX_TEMP_LINES;
+    
+    for(i = 0; i < font_data.max_fonts; i++)
+    {
+        glf_free_font(font_data.fonts[i].gl_font);
+        font_data.fonts[i].font_size = 0;
+        font_data.fonts[i].gl_font   = NULL;
+    }
+    free(font_data.fonts);
+    font_data.fonts = NULL;
+
+    free(font_data.styles);
+    font_data.styles = NULL;
+
+    font_data.max_fonts = 0;
+    font_data.max_styles = 0;
+
+    FT_Done_FreeType(font_data.font_library);
+    font_data.font_library = NULL;
 }
 
 
-void GLText_UpdateResize()
+void GLText_UpdateResize(float scale)
 {
-    gl_text_line_p l = gl_base_lines;
+    gl_text_line_p l = font_data.gl_base_lines;
 
+    if(font_data.max_fonts > 0)
+    {
+        for(uint16_t i = 0; i < font_data.max_fonts; i++)
+        {
+            if(font_data.fonts[i].gl_font)
+            {
+                glf_resize(font_data.fonts[i].gl_font, (uint16_t)(((float)font_data.fonts[i].font_size) * scale));
+            }
+        }
+    }
+    
     for(; l; l = l->next)
     {
         l->absXoffset = l->x * screen_info.scale_factor;
         l->absYoffset = l->y * screen_info.scale_factor;
     }
 
-    l = gl_temp_lines;
-    for(uint16_t i = 0; i < temp_lines_used; i++, l++)
+    l = font_data.gl_temp_lines;
+    for(uint16_t i = 0; i < font_data.temp_lines_used; i++, l++)
     {
         l->absXoffset = l->x * screen_info.scale_factor;
         l->absYoffset = l->y * screen_info.scale_factor;
@@ -87,7 +157,7 @@ void GLText_RenderStringLine(gl_text_line_p l)
     gl_tex_font_p gl_font = NULL;
     gl_fontstyle_p style = NULL;
 
-    if(!l->show || ((gl_font = Con_GetFont(l->font_id)) == NULL) || ((style = Con_GetFontStyle(l->style_id)) == NULL))
+    if(!l->show || ((gl_font = GLText_GetFont(l->font_id)) == NULL) || ((style = GLText_GetFontStyle(l->style_id)) == NULL))
     {
         return;
     }
@@ -175,7 +245,7 @@ void GLText_RenderStringLine(gl_text_line_p l)
 
 void GLText_RenderStrings()
 {
-    gl_text_line_p l = gl_base_lines;
+    gl_text_line_p l = font_data.gl_base_lines;
 
     qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -186,8 +256,8 @@ void GLText_RenderStrings()
         l = l->next;
     }
 
-    l = gl_temp_lines;
-    for(uint16_t i = 0; i < temp_lines_used; i++, l++)
+    l = font_data.gl_temp_lines;
+    for(uint16_t i = 0; i < font_data.temp_lines_used; i++, l++)
     {
         if(l->show)
         {
@@ -196,36 +266,36 @@ void GLText_RenderStrings()
         }
     }
 
-    temp_lines_used = 0;
+    font_data.temp_lines_used = 0;
 }
 
 
 void GLText_AddLine(gl_text_line_p line)
 {
-    if(gl_base_lines == NULL)
+    if(font_data.gl_base_lines == NULL)
     {
-        gl_base_lines = line;
+        font_data.gl_base_lines = line;
         line->next = NULL;
         line->prev = NULL;
         return;
     }
 
     line->prev = NULL;
-    line->next = gl_base_lines;
-    gl_base_lines->prev = line;
-    gl_base_lines = line;
+    line->next = font_data.gl_base_lines;
+    font_data.gl_base_lines->prev = line;
+    font_data.gl_base_lines = line;
 }
 
 
 // line must be in the list, otherway You crash engine!
 void GLText_DeleteLine(gl_text_line_p line)
 {
-    if(line == gl_base_lines)
+    if(line == font_data.gl_base_lines)
     {
-        gl_base_lines = line->next;
-        if(gl_base_lines != NULL)
+        font_data.gl_base_lines = line->next;
+        if(font_data.gl_base_lines != NULL)
         {
-            gl_base_lines->prev = NULL;
+            font_data.gl_base_lines->prev = NULL;
         }
         return;
     }
@@ -249,10 +319,10 @@ void GLText_MoveLine(gl_text_line_p line)
  */
 gl_text_line_p GLText_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 {
-    if(temp_lines_used < GLTEXT_MAX_TEMP_LINES - 1)
+    if(font_data.temp_lines_used < GLTEXT_MAX_TEMP_LINES - 1)
     {
         va_list argptr;
-        gl_text_line_p l = gl_temp_lines + temp_lines_used;
+        gl_text_line_p l = font_data.gl_temp_lines + font_data.temp_lines_used;
 
         l->font_id = FONT_SECONDARY;
         l->style_id = FONTSTYLE_GENERIC;
@@ -264,7 +334,7 @@ gl_text_line_p GLText_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         l->next = NULL;
         l->prev = NULL;
 
-        temp_lines_used++;
+        font_data.temp_lines_used++;
 
         l->x = x;
         l->y = y;
@@ -278,5 +348,113 @@ gl_text_line_p GLText_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         return l;
     }
 
+    return NULL;
+}
+
+
+int GLText_AddFont(uint16_t index, uint16_t size, const char* path)
+{
+    if(index < font_data.max_fonts)
+    {
+        gl_tex_font_p new_font = glf_create_font(font_data.font_library, path, size);
+        if(new_font)
+        {
+            if(font_data.fonts[index].gl_font)
+            {
+                glf_free_font(font_data.fonts[index].gl_font);
+            }
+            font_data.fonts[index].font_size = size;
+            font_data.fonts[index].gl_font = new_font;
+            return 1;
+        }
+    }
+    
+    return 0;
+}
+
+
+int GLText_RemoveFont(uint16_t index)
+{
+    if((index < font_data.max_fonts) && (font_data.fonts[index].gl_font))
+    {
+        glf_free_font(font_data.fonts[index].gl_font);
+        font_data.fonts[index].gl_font = NULL;
+        return 1;
+    }
+
+    return 0;
+}
+
+
+int GLText_AddFontStyle(uint16_t index,
+                     GLfloat R, GLfloat G, GLfloat B, GLfloat A,
+                     uint8_t shadow, uint8_t rect, uint8_t rect_border,
+                     GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A)
+{
+    if(index < font_data.max_styles)
+    {
+        gl_fontstyle_p desired_style = font_data.styles + index;
+                
+        desired_style->rect_border   = rect_border;
+        desired_style->rect_color[0] = rect_R;
+        desired_style->rect_color[1] = rect_G;
+        desired_style->rect_color[2] = rect_B;
+        desired_style->rect_color[3] = rect_A;
+
+        desired_style->font_color[0]  = R;
+        desired_style->font_color[1]  = G;
+        desired_style->font_color[2]  = B;
+        desired_style->font_color[3]  = A;
+
+        desired_style->shadowed  = shadow;
+        desired_style->rect      = rect;
+        return 1;
+    }
+    
+    return 0;
+}
+
+
+int GLText_RemoveFontStyle(uint16_t index)
+{
+    if(index < font_data.max_styles)
+    {
+        font_data.styles[index].rect_color[0] = 1.0;
+        font_data.styles[index].rect_color[1] = 1.0;
+        font_data.styles[index].rect_color[2] = 1.0;
+        font_data.styles[index].rect_color[3] = 0.0;
+
+        font_data.styles[index].font_color[0] = 0.0;
+        font_data.styles[index].font_color[1] = 0.0;
+        font_data.styles[index].font_color[2] = 0.0;
+        font_data.styles[index].font_color[3] = 1.0;
+
+        font_data.styles[index].shadowed = 0x00;
+        font_data.styles[index].rect     = 0x00;
+        return 1;
+    }
+    
+    return 0;
+}
+
+
+gl_tex_font_p GLText_GetFont(uint16_t index)
+{
+    if(index < font_data.max_fonts)
+    {
+        return font_data.fonts[index].gl_font;
+    }
+    
+    return NULL;
+}
+
+
+gl_fontstyle_p GLText_GetFontStyle(uint16_t index)
+{
+    if(index < font_data.max_styles)
+    {
+        return font_data.styles + index;
+    }
+    
     return NULL;
 }

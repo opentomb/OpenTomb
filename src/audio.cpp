@@ -18,6 +18,7 @@ extern "C" {
 }
 
 #include "core/system.h"
+#include "core/gl_text.h"
 #include "core/console.h"
 #include "core/vmath.h"
 #include "render/camera.h"

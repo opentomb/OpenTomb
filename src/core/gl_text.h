@@ -16,6 +16,12 @@ extern "C" {
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
+#include "gl_font.h"
+
+
+#define GLTEXT_MAX_FONTSTYLES 32
+#define GLTEXT_MAX_FONTS      8
+    
 #define GLTEXT_MAX_TEMP_LINES   (256)
 
 // Horizontal alignment is simple side alignment, like in original TRs.
@@ -32,6 +38,41 @@ extern "C" {
 // that are created dynamically may have variable string sizes.
 
 #define GUI_LINE_DEFAULTSIZE 128
+
+    
+// OpenTomb has three types of fonts - primary, secondary and console
+// font. This should be enough for most of the cases. However, user
+// can generate and use additional font types via script, but engine
+// behaviour with extra font types is undefined.
+enum font_Type
+{
+    FONT_CONSOLE = 0,
+    FONT_PRIMARY,
+    FONT_SECONDARY
+};
+    
+// This is predefined enumeration of font styles, which can be extended
+// with user-defined script functions.
+///@TODO: add system message console style
+enum font_Style
+{
+    FONTSTYLE_CONSOLE_INFO = 0,
+    FONTSTYLE_CONSOLE_WARNING,
+    FONTSTYLE_CONSOLE_EVENT,
+    FONTSTYLE_CONSOLE_NOTIFY,
+    FONTSTYLE_MENU_TITLE,
+    FONTSTYLE_MENU_HEADING1,
+    FONTSTYLE_MENU_HEADING2,
+    FONTSTYLE_MENU_ITEM_ACTIVE,
+    FONTSTYLE_MENU_ITEM_INACTIVE,
+    FONTSTYLE_MENU_CONTENT,
+    FONTSTYLE_STATS_TITLE,
+    FONTSTYLE_STATS_CONTENT,
+    FONTSTYLE_NOTIFIER,
+    FONTSTYLE_SAVEGAMELIST,
+    FONTSTYLE_GENERIC
+};
+
 
 typedef struct gl_text_line_s
 {
@@ -60,10 +101,10 @@ typedef struct gl_text_line_s
 /**
  * Draws text using a FONT_SECONDARY.
  */
-void GLText_InitTempLines();
-void GLText_DestroyTempLines();
+void GLText_Init();
+void GLText_Destroy();
 
-void GLText_UpdateResize();
+void GLText_UpdateResize(float scale);
 void GLText_RenderStringLine(gl_text_line_p l);
 void GLText_RenderStrings();
 
@@ -72,6 +113,16 @@ void GLText_DeleteLine(gl_text_line_p line);
 void GLText_MoveLine(gl_text_line_p line);
 gl_text_line_p GLText_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...);
 
+
+int  GLText_AddFont(uint16_t index, uint16_t size, const char* path);
+int  GLText_RemoveFont(uint16_t index);
+int  GLText_AddFontStyle(uint16_t index,
+                      GLfloat R, GLfloat G, GLfloat B, GLfloat A,
+                      uint8_t shadow, uint8_t rect, uint8_t rect_border,
+                      GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A);
+int  GLText_RemoveFontStyle(uint16_t index);
+gl_tex_font_p  GLText_GetFont(uint16_t index);
+gl_fontstyle_p GLText_GetFontStyle(uint16_t index);
 
 #ifdef	__cplusplus
 }

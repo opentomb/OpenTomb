@@ -153,8 +153,8 @@ void Engine_Shutdown(int val)
 
     Physics_Destroy();
     Gui_Destroy();
-    GLText_DestroyTempLines();
     Con_Destroy();
+    GLText_Destroy();
     Sys_Destroy();
 
     /* no more renderings */
@@ -224,6 +224,7 @@ void Engine_Init_Pre()
      * Rendering activation may be done later. */
 
     Sys_Init();
+    GLText_Init();
     Con_Init();
     Con_SetExecFunction(Engine_ExecCmd);
     Script_LuaInit();
@@ -247,7 +248,6 @@ void Engine_Init_Post()
     Script_CallVoidFunc(engine_lua, "loadscript_post", true);
 
     Con_InitFont();
-    GLText_InitTempLines();
     Gui_Init();
 
     Con_AddLine("Engine inited!", FONTSTYLE_CONSOLE_EVENT);
@@ -571,8 +571,8 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     screen_info.h_unit = (float)nominalH / SYS_SCREEN_METERING_RESOLUTION;
     screen_info.scale_factor = (screen_info.w < screen_info.h)?(screen_info.h_unit):(screen_info.w_unit);
 
+    GLText_UpdateResize(screen_info.scale_factor);
     Con_UpdateResize();
-    GLText_UpdateResize();
     Gui_UpdateResize();
 
     Cam_SetFovAspect(&engine_camera, screen_info.fov, (float)nominalW/(float)nominalH);

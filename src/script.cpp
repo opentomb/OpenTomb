@@ -12,6 +12,7 @@ extern "C" {
 }
 
 #include "core/system.h"
+#include "core/gl_text.h"
 #include "core/console.h"
 #include "core/vmath.h"
 #include "core/polygon.h"
@@ -1826,7 +1827,7 @@ int lua_AddFont(lua_State *lua)
         return 0;
     }
 
-    if(!Con_AddFont(lua_tointeger(lua, 1), lua_tointeger(lua, 3), lua_tostring(lua, 2)))
+    if(!GLText_AddFont(lua_tointeger(lua, 1), lua_tointeger(lua, 3), lua_tostring(lua, 2)))
     {
         Con_Warning("can't create font with id = %d", lua_tointeger(lua, 1));
     }
@@ -1856,7 +1857,7 @@ int lua_AddFontStyle(lua_State *lua)
     GLfloat     rect_B      = (GLfloat)lua_tonumber(lua, 11);
     GLfloat     rect_A      = (GLfloat)lua_tonumber(lua, 12);
 
-    if(!Con_AddFontStyle(style_index,
+    if(!GLText_AddFontStyle(style_index,
                          color_R, color_G, color_B, color_A,
                          shadowed, rect, rect_border,
                          rect_R, rect_G, rect_B, rect_A))
@@ -1876,7 +1877,7 @@ int lua_RemoveFont(lua_State *lua)
         return 0;
     }
 
-    if(!Con_RemoveFont(lua_tointeger(lua, 1)))
+    if(!GLText_RemoveFont(lua_tointeger(lua, 1)))
     {
         Con_Warning("can't remove font");
     }
@@ -1893,7 +1894,7 @@ int lua_RemoveFontStyle(lua_State *lua)
         return 0;
     }
 
-    if(!Con_RemoveFontStyle(lua_tointeger(lua, 1)))
+    if(!GLText_RemoveFontStyle(lua_tointeger(lua, 1)))
     {
         Con_Warning("can't remove font style");
     }

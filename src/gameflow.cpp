@@ -14,6 +14,7 @@ extern "C" {
 #include "al/AL/alc.h"
 }
 
+#include "core/gl_text.h"
 #include "core/console.h"
 #include "engine.h"
 #include "gameflow.h"

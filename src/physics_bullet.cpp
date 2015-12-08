@@ -20,6 +20,7 @@ extern "C" {
 
 #include "core/gl_util.h"
 #include "core/gl_font.h"
+#include "core/gl_text.h"
 #include "core/console.h"
 #include "core/obb.h"
 #include "render/render.h"
