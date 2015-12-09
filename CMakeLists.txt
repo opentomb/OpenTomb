@@ -4,6 +4,13 @@
 #   $ cmake .. && make
 
 cmake_minimum_required(VERSION 3.0)
+ 
+include("cmake/HunterGate.cmake")
+
+HunterGate(
+    URL "https://github.com/stohrendorf/hunter/archive/edcdea005a0f5c2beca2c9f4ecf4dda254358563.zip"
+    SHA1 "b931e91e90cad55a11131087919481cbcfb7b0e9"
+)
 
 project(OpenTomb)
 
@@ -11,7 +18,15 @@ include(ExternalProject)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
+if(NOT LINUX)
+    option(DEFAULT_EXTERNAL_HUNTER "Always ignore system-provided libraries." ON)
+else()
+    option(DEFAULT_EXTERNAL_HUNTER "Always ignore system-provided libraries." OFF)
+endif()
 
+message(STATUS "Always ignore system-provided libraries: ${DEFAULT_EXTERNAL_HUNTER}")
+
+# Dependency: OpenAL
 find_package(OpenAL)
 add_library(OpenAL INTERFACE)
 
@@ -37,10 +52,20 @@ else()
 endif()
 
 
+# Dependency: Bullet
+option(SKIP_SYSTEM_BULLET "Skip the sytem-provided Bullet installation and use a custom built 2.83.6." ON)
 
 
-option(SKIP_SYSTEM_BULLET "Skip the sytem-provided Bullet installation and use a custom built 2.83.5." ON)
+if(SKIP_SYSTEM_BULLET)
+    hunter_add_package(Bullet)
+    find_package(Bullet CONFIG REQUIRED)
+else()
+    find_package(Bullet REQUIRED)
+endif()
+add_library(Bullet INTERFACE)
 
+
+if(false)
 if(NOT SKIP_SYSTEM_BULLET)
     find_package(Bullet)
 endif()
@@ -72,104 +97,99 @@ else()
     target_include_directories(Bullet INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/Bullet/include/bullet)
     target_link_libraries(Bullet INTERFACE BulletDynamics BulletSoftBody BulletCollision LinearMath)
 endif()
+endif() #### FALSE
 
 
 
-find_package(Freetype REQUIRED)
+# Dependency: Freetype
+option(SKIP_SYSTEM_FREETYPE "Skip the sytem-provided Freetype installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
+if(SKIP_SYSTEM_FREETYPE)
+    hunter_add_package(Freetype)
+    find_package(Freetype CONFIG REQUIRED)
+else()
+    find_package(Freetype REQUIRED)
+endif()
 add_library(Freetype INTERFACE)
 target_include_directories(Freetype INTERFACE ${FREETYPE_INCLUDE_DIRS})
 target_link_libraries(Freetype INTERFACE ${FREETYPE_LIBRARIES})
 
+# Dependency: OpenGL
 find_package(OpenGL REQUIRED)
 add_library(OpenGL INTERFACE)
 target_include_directories(OpenGL INTERFACE ${OPENGL_INCLUDE_DIR})
 target_link_libraries(OpenGL INTERFACE ${OPENGL_LIBRARIES})
 
+# Dependency: GLEW
 find_package(GLEW REQUIRED)
 add_library(GLEW INTERFACE)
 target_include_directories(GLEW INTERFACE ${GLEW_INCLUDE_DIRS})
 target_link_libraries(GLEW INTERFACE ${GLEW_LIBRARIES})
 
-find_package(ZLIB REQUIRED)
+# Dependency: ZLIB
+option(SKIP_SYSTEM_ZLIB "Skip the sytem-provided ZLIB installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
+if(SKIP_SYSTEM_ZLIB)
+    hunter_add_package(ZLIB)
+    find_package(ZLIB CONFIG REQUIRED)
+else()
+    find_package(ZLIB REQUIRED)
+endif()
 add_library(ZLIB INTERFACE)
 target_include_directories(ZLIB INTERFACE ${ZLIB_INCLUDE_DIR})
 target_link_libraries(ZLIB INTERFACE ${ZLIB_LIBRARY})
 
+# Dependency: Lua
 find_package(Lua REQUIRED)
 add_library(Lua INTERFACE)
 target_include_directories(Lua INTERFACE ${LUA_INCLUDE_DIR})
 target_compile_definitions(Lua INTERFACE -DLUA_COMPAT_APIINTCASTS)
 target_link_libraries(Lua INTERFACE ${LUA_LIBRARIES})
 
+# Dependency: SDL2
 find_package(SDL2 REQUIRED)
 add_library(SDL2 INTERFACE)
 target_include_directories(SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
 target_link_libraries(SDL2 INTERFACE ${SDL2_LIBRARY})
 
+# Dependency: SDL2Image
 find_package(SDL2Image REQUIRED)
 add_library(SDL2_IMAGE INTERFACE)
 target_include_directories(SDL2_IMAGE INTERFACE ${SDL2_INCLUDE_DIR})
 target_include_directories(SDL2_IMAGE INTERFACE ${SDL2IMAGE_INCLUDE_DIR})
 target_link_libraries(SDL2_IMAGE INTERFACE ${SDL2IMAGE_LIBRARY})
 
+# Dependency: GLM
 find_package(GLM REQUIRED)
 add_library(GLM INTERFACE)
 target_include_directories(GLM INTERFACE ${GLM_INCLUDE_DIR})
 target_compile_definitions(GLM INTERFACE -DGLM_FORCE_RADIANS)
 
-find_package(Boost COMPONENTS system log filesystem)
+# Dependency: Boost
+option(SKIP_SYSTEM_BOOST "Skip the sytem-provided Boost installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
+if(SKIP_SYSTEM_BOOST)
+    hunter_add_package(Boost COMPONENTS system log filesystem)
+    find_package(Boost CONFIG REQUIRED system log filesystem)
+else()
+    find_package(Boost REQUIRED system log filesystem)
+endif()
 add_library(Boost INTERFACE)
 
-if(NOT Boost_FOUND)
-    if( UNIX OR APPLE )
-        set( BOOST_BOOTSTRAP ./bootstrap.sh )
-        set( BOOST_B2 ./b2 )
-    elseif( WIN32 )
-        set( BOOST_BOOTSTRAP bootstrap.bat )
-        set( BOOST_B2 ./b2.exe )
-    endif()
-
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(BOOST_ADDRESS_MODEL 64)
-    else()
-        set(BOOST_ADDRESS_MODEL 32)
-    endif()
-
-    ExternalProject_Add(Boost-Ext
-        PREFIX ${CMAKE_SOURCE_DIR}/3rdparty/Boost
-        INSTALL_DIR ${CMAKE_SOURCE_DIR}/3rdparty/Boost/install
-        GIT_REPOSITORY "https://github.com/boostorg/boost.git"
-        GIT_TAG "boost-1.56.0"
-        BUILD_IN_SOURCE 1
-        CONFIGURE_COMMAND ${BOOST_BOOTSTRAP}
-        BUILD_COMMAND  ${BOOST_B2} address-model=${BOOST_ADDRESS_MODEL} install
-            --without-python
-            --without-mpi
-            --disable-icu
-            --prefix=<INSTALL_DIR>
-            --threading=multi
-            --link=static
-            --variant=release
-            -j4
-        INSTALL_COMMAND ""
-    )
-
-    ExternalProject_Get_Property(Boost-Ext BOOST_ROOT)
-    link_directories(${BOOST_ROOT}/lib)
-    set(Boost_INCLUDE_DIR ${BOOST_ROOT}/include )
-    set(Boost_LIBRARIES system log filesystem)
-endif()
-
 target_include_directories(Boost INTERFACE ${Boost_INCLUDE_DIR})
-target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})
+target_link_libraries(Boost INTERFACE Boost::system Boost::log Boost::filesystem)
 target_compile_definitions(Boost INTERFACE -DBOOST_LOG_DYN_LINK -DBOOST_ALL_NO_LIB)
 
+# Dependency: OGG
 find_package(OGG REQUIRED)
 include_directories(${OGG_INCLUDE_DIR})
+
+# Dependency: Vorbis
 find_package(Vorbis REQUIRED)
 include_directories(${VORBIS_INCLUDE_DIR})
+
+# Dependency: VorbisFile
 find_package(VorbisFile REQUIRED)
 include_directories(${VORBISFILE_INCLUDE_DIR})
+
+# Dependency: SndFile
 find_package(SndFile REQUIRED)
 include_directories(${SNDFILE_INCLUDE_DIR})
 
