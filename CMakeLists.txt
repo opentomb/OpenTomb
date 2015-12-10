@@ -8,8 +8,8 @@ cmake_minimum_required(VERSION 3.2)
 include("cmake/HunterGate.cmake")
 
 HunterGate(
-    URL "https://github.com/stohrendorf/hunter/archive/a0b68aa14fb1db611238ec58037087100b139eb0.zip"
-    SHA1 "e42eff1abf8b0ffcddc2107bd55421c509b46d83"
+    URL "https://github.com/stohrendorf/hunter/archive/9ef939509b91663cba83cde6438eb94c157eff2c.zip"
+    SHA1 "3b8ff5cf6508ab2fb397c89bb050354a11380e67"
 )
 
 project(OpenTomb)
@@ -135,7 +135,13 @@ target_link_libraries(SDL2_IMAGE INTERFACE ${SDL2IMAGE_LIBRARY})
 
 
 # Dependency: GLM
-find_package(GLM REQUIRED)
+option(SKIP_SYSTEM_GLM "Skip the sytem-provided GLM installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
+if(SKIP_SYSTEM_GLM)
+    hunter_add_package(glm)
+    find_package(glm CONFIG REQUIRED)
+else()
+    find_package(GLM MODULE REQUIRED)
+endif()
 add_library(GLM INTERFACE)
 target_include_directories(GLM INTERFACE ${GLM_INCLUDE_DIR})
 target_compile_definitions(GLM INTERFACE -DGLM_FORCE_RADIANS)
