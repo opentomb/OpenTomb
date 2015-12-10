@@ -185,6 +185,9 @@ else()
     add_executable(${PROJECT_NAME} ${PRJ_HDR} ${PRJ_SRC})
 endif()
 
+GROUP_FILES(${PRJ_SRC})
+GROUP_FILES(${PRJ_HDR})
+
 target_include_directories(${PROJECT_NAME} PRIVATE .)
 
 target_link_libraries(

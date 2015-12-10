@@ -26,6 +26,18 @@ endif()
 
 message(STATUS "Always ignore system-provided libraries: ${DEFAULT_EXTERNAL_HUNTER}")
 
+
+function(GROUP_FILES)
+    foreach(fn ${ARGV}) 
+        get_filename_component(parentDir "${fn}" PATH)
+
+        # change /'s to \\'s, and reduce redundant // or \\.
+        string(REGEX REPLACE "[\\/]+" "\\\\" grp "${parentDir}")
+
+        source_group("${grp}" FILES "${fn}")
+    endforeach()
+endfunction()
+
 # Dependency: OpenAL
 find_package(OpenAL)
 add_library(OpenAL INTERFACE)
