@@ -194,7 +194,7 @@ target_link_libraries(
     GLEW
     SDL2
     SDL2_IMAGE
-    ZLIB
+    ZLIB::zlib
     Lua
     Freetype
     OpenAL

@@ -3,22 +3,22 @@
 #   $ mkdir build && cd build
 #   $ cmake .. && make
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.2)
  
 include("cmake/HunterGate.cmake")
 
 HunterGate(
-    URL "https://github.com/stohrendorf/hunter/archive/edcdea005a0f5c2beca2c9f4ecf4dda254358563.zip"
-    SHA1 "b931e91e90cad55a11131087919481cbcfb7b0e9"
+    URL "https://github.com/stohrendorf/hunter/archive/a0b68aa14fb1db611238ec58037087100b139eb0.zip"
+    SHA1 "e42eff1abf8b0ffcddc2107bd55421c509b46d83"
 )
 
 project(OpenTomb)
 
 include(ExternalProject)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
 
-if(NOT LINUX)
+if(WIN32 OR APPLE)
     option(DEFAULT_EXTERNAL_HUNTER "Always ignore system-provided libraries." ON)
 else()
     option(DEFAULT_EXTERNAL_HUNTER "Always ignore system-provided libraries." OFF)
@@ -54,15 +54,13 @@ endif()
 
 # Dependency: Bullet
 option(SKIP_SYSTEM_BULLET "Skip the sytem-provided Bullet installation and use a custom built 2.83.6." ON)
-
-
 if(SKIP_SYSTEM_BULLET)
     hunter_add_package(Bullet)
-    find_package(Bullet CONFIG REQUIRED)
-else()
-    find_package(Bullet REQUIRED)
 endif()
+find_package(Bullet MODULE REQUIRED) # Bullet's own BulletConfig.cmake is crap
 add_library(Bullet INTERFACE)
+target_include_directories(Bullet INTERFACE ${BULLET_INCLUDE_DIRS})
+target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
 
 
 # Dependency: Freetype
@@ -71,7 +69,7 @@ if(SKIP_SYSTEM_FREETYPE)
     hunter_add_package(Freetype)
     find_package(Freetype CONFIG REQUIRED)
 else()
-    find_package(Freetype REQUIRED)
+    find_package(Freetype MODULE REQUIRED)
 endif()
 add_library(Freetype INTERFACE)
 target_include_directories(Freetype INTERFACE ${FREETYPE_INCLUDE_DIRS})
@@ -98,12 +96,8 @@ if(SKIP_SYSTEM_ZLIB)
     hunter_add_package(ZLIB)
     find_package(ZLIB CONFIG REQUIRED)
 else()
-    find_package(ZLIB REQUIRED)
+    find_package(ZLIB MODULE REQUIRED)
 endif()
-add_library(ZLIB INTERFACE)
-target_include_directories(ZLIB INTERFACE ${ZLIB_INCLUDE_DIR})
-target_link_libraries(ZLIB INTERFACE ${ZLIB_LIBRARY})
-
 
 # Dependency: Lua
 find_package(Lua REQUIRED)
@@ -139,15 +133,14 @@ target_compile_definitions(GLM INTERFACE -DGLM_FORCE_RADIANS)
 option(SKIP_SYSTEM_BOOST "Skip the sytem-provided Boost installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
 if(SKIP_SYSTEM_BOOST)
     hunter_add_package(Boost COMPONENTS system log filesystem)
-    find_package(Boost CONFIG REQUIRED system log filesystem)
+    find_package(Boost CONFIG REQUIRED system log filesystem thread)
 else()
-    find_package(Boost REQUIRED system log filesystem)
+    find_package(Boost MODULE REQUIRED system log filesystem thread)
 endif()
 add_library(Boost INTERFACE)
 
 target_include_directories(Boost INTERFACE ${Boost_INCLUDE_DIR})
-target_link_libraries(Boost INTERFACE Boost::system Boost::log Boost::filesystem)
-target_compile_definitions(Boost INTERFACE -DBOOST_LOG_DYN_LINK -DBOOST_ALL_NO_LIB)
+target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})
 
 
 # Dependency: OGG
