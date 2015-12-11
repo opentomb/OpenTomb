@@ -8,8 +8,8 @@ cmake_minimum_required(VERSION 3.2)
 include("cmake/HunterGate.cmake")
 
 HunterGate(
-    URL "https://github.com/stohrendorf/hunter/archive/0c2454bebd496166e0ee93d3c70ce6fd561c88af.zip"
-    SHA1 "3062ccfb361458617f7bb56d9eb403d92d213bdd"
+    URL "https://github.com/stohrendorf/hunter/archive/c39ae642c8499910d3f2a23c38bdbfa7a91d958a.zip"
+    SHA1 "6032b31bed5dabd62a095780fc09618870ccee0b"
 )
 
 project(OpenTomb)
@@ -120,6 +120,9 @@ find_package(Lua MODULE REQUIRED) # CMake's own one is fine enough
 add_library(Lua INTERFACE)
 target_include_directories(Lua INTERFACE ${LUA_INCLUDE_DIR})
 target_link_libraries(Lua INTERFACE ${LUA_LIBRARIES})
+if(NOT WIN32 AND SKIP_SYSTEM_LUA)
+    target_link_libraries(Lua INTERFACE dl)
+endif()
 
 
 # Dependency: SDL2
