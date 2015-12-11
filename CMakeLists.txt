@@ -103,7 +103,7 @@ target_link_libraries(GLEW INTERFACE ${GLEW_LIBRARIES})
 
 
 # Dependency: ZLIB
-option(SKIP_SYSTEM_ZLIB "Skip the sytem-provided ZLIB installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
+option(SKIP_SYSTEM_ZLIB "Skip the sytem-provided ZLIB installation and use a custom built" ON)
 if(SKIP_SYSTEM_ZLIB)
     hunter_add_package(ZLIB)
     find_package(ZLIB CONFIG REQUIRED)
@@ -152,10 +152,12 @@ option(SKIP_SYSTEM_BOOST "Skip the sytem-provided Boost installation and use a c
 if(SKIP_SYSTEM_BOOST)
     hunter_add_package(Boost COMPONENTS system log filesystem)
     find_package(Boost CONFIG REQUIRED system log filesystem thread)
+    add_library(Boost INTERFACE)
 else()
     find_package(Boost MODULE REQUIRED system log filesystem thread)
+    add_library(Boost INTERFACE)
+    target_compile_definitions(Boost INTERFACE -DBOOST_LOG_DYN_LINK=0)
 endif()
-add_library(Boost INTERFACE)
 
 target_include_directories(Boost INTERFACE ${Boost_INCLUDE_DIR})
 target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})
