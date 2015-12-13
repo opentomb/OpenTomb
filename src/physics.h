@@ -58,6 +58,7 @@ int  Physics_SphereTest(struct collision_result_s *result, float from[3], float 
 /* Physics object manipulation functions */
 int  Physics_IsBodyesInited(struct physics_data_s *physics);
 int  Physics_IsGhostsInited(struct physics_data_s *physics);
+int  Physics_GetBodiesCount(struct physics_data_s *physics);
 void Physics_GetBodyWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index);
 void Physics_SetBodyWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index);
 void Physics_GetGhostWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index);

@@ -136,7 +136,7 @@ void Entity_Clear(entity_p entity)
                 entity->bf->bone_tag_count = 0;
             }
 
-            for(ss_animation_p ss_anim=entity->bf->animations.next;ss_anim!=NULL;)
+            for(ss_animation_p ss_anim = entity->bf->animations.next; ss_anim;)
             {
                 ss_animation_p ss_anim_next = ss_anim->next;
                 ss_anim->next = NULL;
@@ -408,15 +408,19 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
         float tr[16];
         Physics_GetBodyWorldTransform(ent->physics, ent->transform, 0);
         Entity_UpdateRoomPos(ent);
+        if(ent->self->collision_shape == COLLISION_SHAPE_SINGLE_BOX)
+        {
+            return;
+        }
         Mat4_E(ent->bf->bone_tags[0].full_transform);
-        for(uint16_t i=1;i<ent->bf->bone_tag_count;i++)
+        for(uint16_t i = 1; i < ent->bf->bone_tag_count; i++)
         {
             Physics_GetBodyWorldTransform(ent->physics, tr, i);
             Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].full_transform, ent->transform, tr);
         }
 
         // fill bone frame transformation matrices;
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
         {
             if(ent->bf->bone_tags[i].parent != NULL)
             {
@@ -438,7 +442,7 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
         {
             vec3_copy(ent->bf->bb_min, ent->bf->bone_tags[0].mesh_base->bb_min);
             vec3_copy(ent->bf->bb_max, ent->bf->bone_tags[0].mesh_base->bb_max);
-            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+            for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
             {
                 float *pos = ent->bf->bone_tags[i].full_transform + 12;
                 float *bb_min = ent->bf->bone_tags[i].mesh_base->bb_min;
@@ -490,11 +494,18 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
         if(ent->self->collision_type & 0x0001)
         //if(ent->self->collision_type != COLLISION_TYPE_STATIC)
         {
-            float tr[16];
-            for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+            if(ent->self->collision_shape == COLLISION_SHAPE_SINGLE_BOX)
             {
-                Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
-                Physics_SetBodyWorldTransform(ent->physics, tr, i);
+                Physics_SetBodyWorldTransform(ent->physics, ent->transform, 0);
+            }
+            else
+            {
+                float tr[16];
+                for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
+                {
+                    Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
+                    Physics_SetBodyWorldTransform(ent->physics, tr, i);
+                }
             }
         }
     }
@@ -508,7 +519,7 @@ void Entity_GhostUpdate(struct entity_s *ent)
     if(Physics_IsGhostsInited(ent->physics))
     {
         float tr[16], v[3];
-        for(uint16_t i=0;i<ent->bf->bone_tag_count;i++)
+        for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
         {
             Physics_GetBodyWorldTransform(ent->physics, tr, i);
             Mat4_vec3_mul(v, tr, ent->bf->bone_tags[i].mesh_base->centre);
@@ -571,7 +582,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             move[1] /= (float)iter;
             move[2] /= (float)iter;
 
-            for(int j=0;j<=iter;j++)
+            for(int j = 0; j <= iter; j++)
             {
                 vec3_copy(tr+12, curr);
                 Physics_SetGhostWorldTransform(ent->physics, tr, m);
@@ -748,7 +759,7 @@ void Entity_CheckCollisionCallbacks(entity_p ent)
     // I do not know why, but without Entity_GhostUpdate(ent); it works pretty slow!
     Entity_GhostUpdate(ent);
     collision_node_p cn = Physics_GetCurrentCollisions(ent->physics);
-    for(;cn;cn=cn->next)
+    for(; cn; cn = cn->next)
     {
         // do callbacks here:
         if(cn->obj->object_type == OBJECT_ENTITY)
@@ -1034,7 +1045,7 @@ void Entity_ProcessSector(entity_p ent)
 }
 
 
-void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_model)
+void Entity_SetAnimation(entity_p entity, int animation, int frame)
 {
     if(!entity || !entity->bf->animations.model || (animation >= entity->bf->animations.model->animation_count))
     {
@@ -1043,13 +1054,6 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame, int another_
 
     animation = (animation < 0)?(0):(animation);
     entity->no_fix_all = 0x00;
-
-    if(another_model >= 0)
-    {
-        skeletal_model_p model = World_GetModelByID(&engine_world, another_model);
-        if((!model) || (animation >= model->animation_count)) return;
-        entity->bf->animations.model = model;
-    }
 
     entity->current_speed = entity->bf->animations.model->animations[animation].speed_x;
     Anim_SetAnimation(entity->bf, animation, frame);
@@ -1259,7 +1263,7 @@ void Entity_CheckActivators(struct entity_s *ent)
         ppos[1] = ent->transform[12+1] + ent->transform[4+1] * ent->bf->bb_max[1];
         ppos[2] = ent->transform[12+2] + ent->transform[4+2] * ent->bf->bb_max[1];
         engine_container_p cont = ent->self->room->content->containers;
-        for(;cont;cont=cont->next)
+        for(; cont; cont = cont->next)
         {
             if((cont->object_type == OBJECT_ENTITY) && (cont->object))
             {

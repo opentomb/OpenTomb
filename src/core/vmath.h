@@ -133,13 +133,16 @@ void vec4_div(float ret[4], float a[4], float b[4]);
 void vec4_rotate(float rot[4], float vec[4], float angle);
 void vec4_GetEilerOrientationTransform(float R[4], float ang[3]);
 void vec4_GetPlaneEquation(float eq[4], float poly[12]);
+void vec4_GetQuaternionRotation(float q[4], float v0[3], float v1[3]);
+void vec4_ClampQuaternionRotation(float q[4], float cos_abs);
 void vec4_GetRotationOperators(float t1[4], float t2[4], const float v[3], float ang);
 void vec4_slerp(float ret[4], float q1[4], float q2[4], float t);
 void vec4_SetZXYRotations(float v[4], float rot[3]);
+
+
 /*
  * Matrix transformation functions and macro
  */
-
 #define Mat4_vec3_mul_macro(ret, tr, src)\
 { \
     (ret)[0] = (tr)[0] * (src)[0] + (tr)[4] * (src)[1] + (tr)[8]  * (src)[2] + (tr)[12];\
@@ -225,6 +228,7 @@ void Mat4_RotateX(float mat[16], float ang);
 void Mat4_RotateY(float mat[16], float ang);
 void Mat4_RotateZ(float mat[16], float ang);
 void Mat4_RotateAxis(float mat[16], float axis[3], float ang);
+void Mat4_RotateQuaternion(float mat[16], float q[4]);
 void Mat4_T(float mat[16]);
 void Mat4_affine_inv(float mat[16]);
 void Mat4_Mat4_mul(float result[16], const float src1[16], const float src2[16]);

@@ -1097,6 +1097,7 @@ void World_ScriptsOpen(world_p world)
     if(world->level_script)
     {
         luaL_openlibs(world->level_script);
+        Script_LoadConstants(world->level_script);
         lua_register(world->level_script, "print", lua_print);
         //lua_register(world->level_script, "setSectorFloorConfig", lua_SetSectorFloorConfig);
         //lua_register(world->level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
@@ -1122,6 +1123,7 @@ void World_ScriptsOpen(world_p world)
     if(world->objects_flags_conf)
     {
         luaL_openlibs(world->objects_flags_conf);
+        Script_LoadConstants(world->objects_flags_conf);
         int lua_err = luaL_loadfile(world->objects_flags_conf, "scripts/entity/entity_properties.lua");
         if(lua_err)
         {
@@ -1144,6 +1146,7 @@ void World_ScriptsOpen(world_p world)
     if(world->ent_ID_override)
     {
         luaL_openlibs(world->ent_ID_override);
+        Script_LoadConstants(world->ent_ID_override);
         int lua_err = luaL_loadfile(world->ent_ID_override, "scripts/entity/entity_model_ID_override.lua");
         if(lua_err)
         {
@@ -2329,7 +2332,7 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
                 entity->bf->bone_tags[j].mesh_skin = entity->bf->animations.model->mesh_tree[j].mesh_skin;
                 entity->bf->bone_tags[j].mesh_slot = NULL;
             }
-            Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0, -1);
+            Entity_SetAnimation(world->Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
             Physics_GenRigidBody(entity->physics, entity->bf, entity->transform);
             Character_Create(entity);
             entity->character->Height = 768.0;

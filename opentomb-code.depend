@@ -6237,9 +6237,9 @@
 	"backends/base.h"
 	"midi/base.h"
 
-1447099076 d:\dev\opentomb\src\al\config.h
+1447143983 d:\dev\opentomb\src\al\config.h
 
-1447094389 d:\dev\opentomb\src\al\almain.h
+1447142741 d:\dev\opentomb\src\al\almain.h
 	<string.h>
 	<stdio.h>
 	<stdarg.h>
@@ -6566,17 +6566,17 @@
 	"../alSource.h"
 	"mixer_defs.h"
 
-1408086419 source:d:\dev\opentomb\src\al\alc\mixer_neon.c
-	"config.h"
+1447101012 source:d:\dev\opentomb\src\al\alc\mixer_neon.c
+	"../config.h"
 	<arm_neon.h>
-	"AL/al.h"
-	"AL/alc.h"
-	"alMain.h"
-	"alu.h"
-	"hrtf.h"
+	"../AL/al.h"
+	"../AL/alc.h"
+	"../alMain.h"
+	"../alu.h"
+	"../hrtf.h"
 	"mixer_inc.c"
 
-1433713936 source:d:\dev\opentomb\src\al\alc\mixer_sse.c
+1447098961 source:d:\dev\opentomb\src\al\alc\mixer_sse.c
 	"../config.h"
 	<xmmintrin.h>
 	"../AL/al.h"
@@ -6588,7 +6588,7 @@
 	"mixer_defs.h"
 	"mixer_inc.c"
 
-1433713936 source:d:\dev\opentomb\src\al\alc\panning.c
+1447092170 source:d:\dev\opentomb\src\al\alc\panning.c
 	"../config.h"
 	<math.h>
 	<stdlib.h>
@@ -6600,7 +6600,7 @@
 	"../AL/alc.h"
 	"../alu.h"
 
-1433713936 source:d:\dev\opentomb\src\al\openal32\alauxeffectslot.c
+1447092192 source:d:\dev\opentomb\src\al\openal32\alauxeffectslot.c
 	"../config.h"
 	<stdlib.h>
 	<math.h>
@@ -6612,19 +6612,21 @@
 	"../alError.h"
 	"../alSource.h"
 
-1433713936 source:d:\dev\opentomb\src\al\openal32\albuffer.c
+1447092218 source:d:\dev\opentomb\src\al\openal32\albuffer.c
 	"../config.h"
 	<stdlib.h>
 	<stdio.h>
 	<assert.h>
 	<limits.h>
+	<malloc.h>
 	"../alMain.h"
 	"../alu.h"
 	"../alError.h"
 	"../alBuffer.h"
 	"../alThunk.h"
+	"../sample_cvt.h"
 
-1433713936 source:d:\dev\opentomb\src\al\openal32\aleffect.c
+1447092245 source:d:\dev\opentomb\src\al\openal32\aleffect.c
 	"../config.h"
 	<stdlib.h>
 	<math.h>
@@ -6639,14 +6641,14 @@
 
 1408086419 d:\dev\opentomb\src\al\al\efx-presets.h
 
-1433713936 source:d:\dev\opentomb\src\al\openal32\alerror.c
+1447095313 source:d:\dev\opentomb\src\al\openal32\alerror.c
 	"../config.h"
 	<signal.h>
-	"../AL/alc.h"
 	"../alMain.h"
+	"../AL/alc.h"
 	"../alError.h"
 
-1433713936 source:d:\dev\opentomb\src\al\openal32\alextension.c
+1447093365 source:d:\dev\opentomb\src\al\openal32\alextension.c
 	"../config.h"
 	<stdlib.h>
 	<string.h>
@@ -6661,7 +6663,7 @@
 	"../AL/al.h"
 	"../AL/alc.h"
 
-1433713936 source:d:\dev\opentomb\src\al\openal32\alfilter.c
+1447092353 source:d:\dev\opentomb\src\al\openal32\alfilter.c
 	"../config.h"
 	<stdlib.h>
 	"../alMain.h"
@@ -6670,15 +6672,15 @@
 	"../alThunk.h"
 	"../alError.h"
 
-1433713936 source:d:\dev\opentomb\src\al\openal32\allistener.c
+1447092415 source:d:\dev\opentomb\src\al\openal32\allistener.c
 	"../config.h"
-	"../AL/alc.h"
 	"../alMain.h"
+	"../AL/alc.h"
 	"../alError.h"
 	"../alListener.h"
 	"../alSource.h"
 
-1433713936 source:d:\dev\opentomb\src\al\openal32\alsource.c
+1447092608 source:d:\dev\opentomb\src\al\openal32\alsource.c
 	"../config.h"
 	<stdlib.h>
 	<math.h>
@@ -6691,24 +6693,28 @@
 	"../alBuffer.h"
 	"../alThunk.h"
 	"../alAuxEffectSlot.h"
+	"../threads.h"
 
-1433713936 source:d:\dev\opentomb\src\al\openal32\alstate.c
+1447092641 source:d:\dev\opentomb\src\al\openal32\alstate.c
 	"../config.h"
 	<stdlib.h>
-	"../AL/alc.h"
-	"../AL/alext.h"
 	"../alMain.h"
+	"../AL/alc.h"
+	"../AL/al.h"
+	"../AL/alext.h"
 	"../alError.h"
 	"../alSource.h"
 	"../alAuxEffectSlot.h"
+	"../alMidi.h"
+	"../Alc/midi/base.h"
 
-1433713936 source:d:\dev\opentomb\src\al\openal32\althunk.c
+1447092653 source:d:\dev\opentomb\src\al\openal32\althunk.c
 	"../config.h"
 	<stdlib.h>
 	"../alMain.h"
 	"../alThunk.h"
 
-1443855509 source:d:\dev\opentomb\src\anim_state_control.cpp
+1446906904 source:d:\dev\opentomb\src\anim_state_control.cpp
 	<stdlib.h>
 	<stdio.h>
 	"core/system.h"
@@ -6738,11 +6744,10 @@
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 
-1445677423 d:\dev\opentomb\src\core\console.h
+1449588782 d:\dev\opentomb\src\core\console.h
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
-	"gl_font.h"
 
 1444472061 d:\dev\opentomb\src\core\gl_font.h
 	<stdint.h>
@@ -6759,7 +6764,7 @@
 1433713936 d:\dev\opentomb\src\freetype2\include\freetype.h
 	<ft2build.h>
 
-1445182327 d:\dev\opentomb\src\core\vmath.h
+1449908492 d:\dev\opentomb\src\core\vmath.h
 	<math.h>
 	<stdint.h>
 
@@ -7410,7 +7415,7 @@
 
 1440848652 d:\dev\opentomb\src\anim_state_control.h
 
-1446904536 d:\dev\opentomb\src\character_controller.h
+1447151219 d:\dev\opentomb\src\character_controller.h
 	<stdint.h>
 
 1443031877 d:\dev\opentomb\src\resource.h
@@ -9311,7 +9316,7 @@
 	"engine.h"
 	"entity.h"
 
-1445680737 source:d:\dev\opentomb\src\entity.cpp
+1446907424 source:d:\dev\opentomb\src\entity.cpp
 	<stdlib.h>
 	<math.h>
 	<lua.h>
@@ -16295,7 +16300,7 @@
 1446136555 d:\dev\opentomb\src\render\shader_manager.h
 	"shader_description.h"
 
-1447060710 d:\dev\opentomb\src\render\camera.h
+1448216514 d:\dev\opentomb\src\render\camera.h
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 
@@ -16333,7 +16338,7 @@
 	"../core/polygon.h"
 	"../vt/tr_types.h"
 
-1442687222 source:d:\dev\opentomb\src\render\bsp_tree.cpp
+1446363750 source:d:\dev\opentomb\src\render\bsp_tree.cpp
 	<stdlib.h>
 	<stdint.h>
 	<SDL2/SDL_platform.h>
@@ -16361,7 +16366,7 @@
 	"camera.h"
 	"frustum.h"
 
-1446363260 source:d:\dev\opentomb\src\render\frustum.cpp
+1446363798 source:d:\dev\opentomb\src\render\frustum.cpp
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL_platform.h>
@@ -16423,7 +16428,7 @@
 	"engine.h"
 	"world.h"
 
-1445698911 source:d:\dev\opentomb\src\room.cpp
+1447059192 source:d:\dev\opentomb\src\room.cpp
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL.h>
@@ -16441,13 +16446,13 @@
 	"trigger.h"
 	"room.h"
 
-1445537407 d:\dev\opentomb\src\trigger.h
+1447058611 d:\dev\opentomb\src\trigger.h
 	<stdint.h>
 
 1442143158 d:\dev\opentomb\src\physics.h
 	<stdint.h>
 
-1445769987 source:d:\dev\opentomb\src\trigger.cpp
+1447060850 source:d:\dev\opentomb\src\trigger.cpp
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL.h>
@@ -16499,10 +16504,11 @@
 	"world.h"
 	"physics.h"
 
-1445678184 d:\dev\opentomb\src\core\gl_text.h
+1449588794 d:\dev\opentomb\src\core\gl_text.h
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
+	"gl_font.h"
 
 1446228484 source:d:\dev\opentomb\src\core\gl_text.c
 	<stdint.h>
@@ -16526,7 +16532,7 @@
 1408086419 d:\dev\opentomb\src\al\static_assert.h
 	<assert.h>
 
-1408086419 d:\dev\opentomb\src\al\align.h
+1447143862 d:\dev\opentomb\src\al\align.h
 	<stdalign.h>
 
 1447094929 d:\dev\opentomb\src\al\atomic.h
@@ -16681,4 +16687,110 @@
 	"../Alc/hrtf.h"
 	"mixer_defs.h"
 	"../align.h"
+
+1447100078 source:d:\dev\opentomb\src\al\alc\mixer_sse2.c
+	"../config.h"
+	<xmmintrin.h>
+	<emmintrin.h>
+	"../alu.h"
+	"mixer_defs.h"
+
+1447100039 source:d:\dev\opentomb\src\al\alc\mixer_sse41.c
+	"../config.h"
+	<xmmintrin.h>
+	<emmintrin.h>
+	<smmintrin.h>
+	"../alu.h"
+	"mixer_defs.h"
+
+1447092720 source:d:\dev\opentomb\src\al\common\atomic.c
+	"../config.h"
+	"../atomic.h"
+
+1447092739 source:d:\dev\opentomb\src\al\common\rwlock.c
+	"../config.h"
+	"../rwlock.h"
+	"../bool.h"
+	"../atomic.h"
+	"../threads.h"
+
+1447092937 source:d:\dev\opentomb\src\al\common\threads.c
+	"../config.h"
+	"../threads.h"
+	<stdlib.h>
+	<string.h>
+	<errno.h>
+	"../uintmap.h"
+	<sys/time.h>
+	<unistd.h>
+	<pthread.h>
+	<pthread_np.h>
+
+1447092956 source:d:\dev\opentomb\src\al\common\uintmap.c
+	"../config.h"
+	"../uintmap.h"
+	<stdlib.h>
+	<string.h>
+
+1408086419 d:\dev\opentomb\src\al\sample_cvt.h
+	"AL/al.h"
+	"alBuffer.h"
+
+1447092397 source:d:\dev\opentomb\src\al\openal32\alfontsound.c
+	"../config.h"
+	<stdlib.h>
+	<string.h>
+	"../alMain.h"
+	"../alMidi.h"
+	"../alError.h"
+	"../alThunk.h"
+	"../alBuffer.h"
+	"../Alc/midi/base.h"
+
+1447092503 source:d:\dev\opentomb\src\al\openal32\almidi.c
+	"../config.h"
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<limits.h>
+	"../alMain.h"
+	"../alMidi.h"
+	"../alError.h"
+	"../alThunk.h"
+	"../Alc/evtqueue.h"
+	"../rwlock.h"
+	"../alu.h"
+	"../Alc/midi/base.h"
+
+1447092532 source:d:\dev\opentomb\src\al\openal32\alpreset.c
+	"../config.h"
+	<stdlib.h>
+	<string.h>
+	"../alMain.h"
+	"../alMidi.h"
+	"../alError.h"
+	"../alThunk.h"
+	"../Alc/midi/base.h"
+
+1447092573 source:d:\dev\opentomb\src\al\openal32\alsoundfont.c
+	"../config.h"
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<ctype.h>
+	"../alMain.h"
+	"../alMidi.h"
+	"../alThunk.h"
+	"../alError.h"
+	"../alBuffer.h"
+	"../Alc/midi/base.h"
+
+1447092703 source:d:\dev\opentomb\src\al\openal32\sample_cvt.c
+	"../config.h"
+	"../sample_cvt.h"
+	<alloca.h>
+	<malloc.h>
+	"../AL/al.h"
+	"../alu.h"
+	"../alBuffer.h"
 

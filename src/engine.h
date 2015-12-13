@@ -20,10 +20,11 @@
 #define OBJECT_BULLET_MISC                      (0x7FFF)
 
 #define COLLISION_SHAPE_BOX                     0x0001
-#define COLLISION_SHAPE_BOX_BASE                0x0002     // use single box collision
-#define COLLISION_SHAPE_SPHERE                  0x0003
-#define COLLISION_SHAPE_TRIMESH                 0x0004     // for static objects and room's!
-#define COLLISION_SHAPE_TRIMESH_CONVEX          0x0005     // for dynamic objects
+#define COLLISION_SHAPE_BOX_BASE                0x0002     // use mesh box collision
+#define COLLISION_SHAPE_SINGLE_BOX              0x0003     // use single box collision
+#define COLLISION_SHAPE_SPHERE                  0x0004
+#define COLLISION_SHAPE_TRIMESH                 0x0005     // for static objects and room's!
+#define COLLISION_SHAPE_TRIMESH_CONVEX          0x0006     // for dynamic objects
 
 #define COLLISION_TYPE_NONE                     0x0000
 #define COLLISION_TYPE_STATIC                   0x0001     // static object - never moved

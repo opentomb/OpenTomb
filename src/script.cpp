@@ -1222,6 +1222,10 @@ int lua_SetEntityCollisionFlags(lua_State * lua)
     }
     ent->self->collision_type = collision_type;
     ent->self->collision_shape = collision_shape;
+    if(Physics_GetBodiesCount(ent->physics) != ent->bf->bone_tag_count)
+    {
+        ent->self->collision_shape = COLLISION_SHAPE_SINGLE_BOX;
+    }
 
     return 0;
 }
@@ -2899,18 +2903,13 @@ int lua_SetEntityAnim(lua_State * lua)
         return 0;
     }
 
-    switch(top)
+    if(top >= 3)
     {
-        case 2:
-        default:
-            Entity_SetAnimation(ent, lua_tointeger(lua, 2));
-            break;
-        case 3:
-            Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
-            break;
-        case 4:
-            Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3), lua_tointeger(lua, 4));
-            break;
+        Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
+    }
+    else if(top == 2)
+    {
+        Entity_SetAnimation(ent, lua_tointeger(lua, 2), 0);
     }
 
     return 0;
@@ -4874,6 +4873,34 @@ void Script_LoadConstants(lua_State *lua)
         lua_setglobal(lua, "TICK_STOPPED");
         lua_pushinteger(lua, TICK_ACTIVE);
         lua_setglobal(lua, "TICK_ACTIVE");
+
+        lua_pushinteger(lua, COLLISION_SHAPE_BOX);
+        lua_setglobal(lua, "COLLISION_SHAPE_BOX");
+        lua_pushinteger(lua, COLLISION_SHAPE_BOX_BASE);
+        lua_setglobal(lua, "COLLISION_SHAPE_BOX_BASE");
+        lua_pushinteger(lua, COLLISION_SHAPE_SINGLE_BOX);
+        lua_setglobal(lua, "COLLISION_SHAPE_SINGLE_BOX");
+        lua_pushinteger(lua, COLLISION_SHAPE_SPHERE);
+        lua_setglobal(lua, "COLLISION_SHAPE_SPHERE");
+        lua_pushinteger(lua, COLLISION_SHAPE_TRIMESH);
+        lua_setglobal(lua, "COLLISION_SHAPE_TRIMESH");
+        lua_pushinteger(lua, COLLISION_SHAPE_TRIMESH_CONVEX);
+        lua_setglobal(lua, "COLLISION_SHAPE_TRIMESH_CONVEX");
+
+        lua_pushinteger(lua, COLLISION_TYPE_NONE);
+        lua_setglobal(lua, "COLLISION_TYPE_NONE");
+        lua_pushinteger(lua, COLLISION_TYPE_STATIC);
+        lua_setglobal(lua, "COLLISION_TYPE_STATIC");
+        lua_pushinteger(lua, COLLISION_TYPE_KINEMATIC);
+        lua_setglobal(lua, "COLLISION_TYPE_KINEMATIC");
+        lua_pushinteger(lua, COLLISION_TYPE_DYNAMIC);
+        lua_setglobal(lua, "COLLISION_TYPE_DYNAMIC");
+        lua_pushinteger(lua, COLLISION_TYPE_ACTOR);
+        lua_setglobal(lua, "COLLISION_TYPE_ACTOR");
+        lua_pushinteger(lua, COLLISION_TYPE_VEHICLE);
+        lua_setglobal(lua, "COLLISION_TYPE_VEHICLE");
+        lua_pushinteger(lua, COLLISION_TYPE_GHOST);
+        lua_setglobal(lua, "COLLISION_TYPE_GHOST");
 
         lua_settop(lua, top);
     }

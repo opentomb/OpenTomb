@@ -133,8 +133,7 @@ float Spline_Get(spline_p spline, float t)
  */
 void vec4_rev(float rev[4], float src[4])
 {
-    float module;
-    module = vec4_abs(src);
+    float module = vec4_abs(src);
     rev[3] = src[3] / module;                                                   // w
     rev[0] = - src[0] / module;                                                 // x
     rev[1] = - src[1] / module;                                                 // y
@@ -227,6 +226,32 @@ void vec4_GetPlaneEquation(float eq[4], float poly[12])
     eq[2] /= t;
 
     eq[3] = -(poly[0]*eq[0] + poly[1]*eq[1] + poly[2]*eq[2]);                   // distance from the plane to (0, 0, 0)
+}
+
+void vec4_GetQuaternionRotation(float q[4], float v0[3], float v1[3])
+{
+    float t;
+    
+    vec3_cross(q, v0, v1);
+    q[3] = vec3_dot(v0, v1);
+    q[3] += sqrtf(vec3_sqabs(v0) * vec3_sqabs(v1));
+    t = vec4_abs(q);
+    q[0] /= t;
+    q[1] /= t;
+    q[2] /= t;
+    q[3] /= t;
+}
+
+void vec4_ClampQuaternionRotation(float q[4], float cos_abs)
+{
+    if(q[3] < cos_abs)
+    {
+        float k = sqrtf((1.0f - cos_abs * cos_abs) / (1.0f - q[3] * q[3]));
+        q[0] *= k;
+        q[1] *= k;
+        q[2] *= k;
+        q[3] = cos_abs;
+    }
 }
 
 void vec3_GetPlaneEquation(float eq[4], float v0[3], float v1[3], float v2[3])
@@ -546,6 +571,27 @@ void Mat4_RotateAxis(float mat[16], float axis[3], float ang)
         vec4_mul(v, buf, Rt);
         mat[8 + 3] = 0.0f;
     }
+}
+
+void Mat4_RotateQuaternion(float mat[16], float q[4])
+{
+    float qt[4], *v, buf[4];
+    vec4_sop(qt, q);
+
+    v = mat + 0;
+    vec4_mul(buf, q, v);
+    vec4_mul(v, buf, qt);
+    mat[0 + 3] = 0.0f;
+
+    v = mat + 4;
+    vec4_mul(buf, q, v);
+    vec4_mul(v, buf, qt);
+    mat[4 + 3] = 0.0f;
+
+    v = mat + 8;
+    vec4_mul(buf, q, v);
+    vec4_mul(v, buf, qt);
+    mat[8 + 3] = 0.0f;
 }
 
 void Mat4_T(float mat[16])

@@ -889,48 +889,26 @@ void Character_LookAt(struct entity_s *ent, float target[3])
 
     if(b_tag)
     {
-        const float head_amp = 75.0f * M_PI / 180.0;
-        float alpha, vt1[3], vt2[3], comp[3], axis[3], dir[3], target_local[3], t;
+        //const float head_amp = 75.0f * M_PI / 180.0;
+        float q[4], dir[3], target_local[3];
 
         Mat4_vec3_mul_inv(target_local, ent->transform, target);
-        vec3_sub(dir, target_local, b_tag->full_transform + 12);
-        vec3_norm(dir, t);
-        vec3_cross(axis, dir, b_tag->full_transform + 4);
-        vec3_norm(axis, t);
-        if(t < 0.001)
-        {
-            return;
-        }
+        Mat4_vec3_mul_inv(dir, b_tag->full_transform, target_local);
+        vec4_GetQuaternionRotation(q, b_tag->transform + 4, dir);
+        vec4_ClampQuaternionRotation(q, 0.77f);
 
-        float cos_a = vec3_dot(dir, b_tag->full_transform + 4);
-        if(cos_a > 1.0f)
-        {
-            alpha = 0.0f;
-            return;
-        }
-        else if(cos_a < -1.0f)
-        {
-            alpha = -M_PI / 2.0f;
-        }
-        else
-        {
-            // get sign alpha
-            vec3_sub(comp, dir, b_tag->full_transform + 4);
-            vec3_cross(vt1, axis, comp);
-            vec3_add(vt2, dir, b_tag->full_transform + 4);
-            alpha = (vec3_dot(vt1, vt2) < 0.0) ? (acosf(cos_a)) : (-acosf(cos_a));
-        }
-
-        // clamp alpha
-        if(alpha > head_amp)   alpha = head_amp;
-        if(alpha <-head_amp)   alpha =-head_amp;
-
-        Mat4_RotateAxis(b_tag->full_transform, axis, alpha * 180.0 / M_PI);
-        Mat4_inv_Mat4_affine_mul(b_tag->transform, b_tag->parent->full_transform, b_tag->full_transform);
-        for(uint16_t i = start_bone + 1; i < ent->bf->bone_tag_count; i++)
+        Mat4_RotateQuaternion(b_tag->transform, q);
+        for(uint16_t i = start_bone; i < ent->bf->bone_tag_count; i++)
         {
             ss_bone_tag_p btag = ent->bf->bone_tags + i;
-            Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
+            if(btag->parent)
+            {
+                Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
+            }
+            else
+            {
+                Mat4_Copy(btag->full_transform, btag->transform);
+            }
         }
     }
 }
