@@ -4878,14 +4878,16 @@ void Script_LoadConstants(lua_State *lua)
         lua_setglobal(lua, "COLLISION_SHAPE_BOX");
         lua_pushinteger(lua, COLLISION_SHAPE_BOX_BASE);
         lua_setglobal(lua, "COLLISION_SHAPE_BOX_BASE");
-        lua_pushinteger(lua, COLLISION_SHAPE_SINGLE_BOX);
-        lua_setglobal(lua, "COLLISION_SHAPE_SINGLE_BOX");
         lua_pushinteger(lua, COLLISION_SHAPE_SPHERE);
         lua_setglobal(lua, "COLLISION_SHAPE_SPHERE");
         lua_pushinteger(lua, COLLISION_SHAPE_TRIMESH);
         lua_setglobal(lua, "COLLISION_SHAPE_TRIMESH");
         lua_pushinteger(lua, COLLISION_SHAPE_TRIMESH_CONVEX);
         lua_setglobal(lua, "COLLISION_SHAPE_TRIMESH_CONVEX");
+        lua_pushinteger(lua, COLLISION_SHAPE_SINGLE_BOX);
+        lua_setglobal(lua, "COLLISION_SHAPE_SINGLE_BOX");
+        lua_pushinteger(lua, COLLISION_SHAPE_SINGLE_SPHERE);
+        lua_setglobal(lua, "COLLISION_SHAPE_SINGLE_SPHERE");
 
         lua_pushinteger(lua, COLLISION_TYPE_NONE);
         lua_setglobal(lua, "COLLISION_TYPE_NONE");

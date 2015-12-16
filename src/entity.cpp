@@ -408,10 +408,24 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
         float tr[16];
         Physics_GetBodyWorldTransform(ent->physics, ent->transform, 0);
         Entity_UpdateRoomPos(ent);
-        if(ent->self->collision_shape == COLLISION_SHAPE_SINGLE_BOX)
+        switch(ent->self->collision_shape)
         {
-            return;
-        }
+            case COLLISION_SHAPE_SINGLE_BOX:
+                return;
+
+            case COLLISION_SHAPE_SINGLE_SPHERE:
+                {
+                    float centre[3], offset[3];
+                    centre[0] = 0.5f * (ent->bf->bb_min[0] + ent->bf->bb_max[0]);
+                    centre[1] = 0.5f * (ent->bf->bb_min[1] + ent->bf->bb_max[1]);
+                    centre[2] = 0.5f * (ent->bf->bb_min[2] + ent->bf->bb_max[2]);
+                    Mat4_vec3_rot_macro(offset, ent->transform, centre);
+                    ent->transform[12 + 0] -= offset[0];
+                    ent->transform[12 + 1] -= offset[1];
+                    ent->transform[12 + 2] -= offset[2];
+                }
+                return;
+        };
         Mat4_E(ent->bf->bone_tags[0].full_transform);
         for(uint16_t i = 1; i < ent->bf->bone_tag_count; i++)
         {
@@ -492,21 +506,41 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
 
         Entity_UpdateRoomPos(ent);
         if(ent->self->collision_type & 0x0001)
-        //if(ent->self->collision_type != COLLISION_TYPE_STATIC)
         {
-            if(ent->self->collision_shape == COLLISION_SHAPE_SINGLE_BOX)
+            switch(ent->self->collision_shape)
             {
-                Physics_SetBodyWorldTransform(ent->physics, ent->transform, 0);
-            }
-            else
-            {
-                float tr[16];
-                for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
-                {
-                    Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
-                    Physics_SetBodyWorldTransform(ent->physics, tr, i);
-                }
-            }
+                case COLLISION_SHAPE_SINGLE_BOX:
+                    Physics_SetBodyWorldTransform(ent->physics, ent->transform, 0);
+                    break;
+
+                case COLLISION_SHAPE_SINGLE_SPHERE:
+                    {
+                        float centre[3], offset[3];
+                        centre[0] = 0.5f * (ent->bf->bb_min[0] + ent->bf->bb_max[0]);
+                        centre[1] = 0.5f * (ent->bf->bb_min[1] + ent->bf->bb_max[1]);
+                        centre[2] = 0.5f * (ent->bf->bb_min[2] + ent->bf->bb_max[2]);
+                        Mat4_vec3_rot_macro(offset, ent->transform, centre);
+                        ent->transform[12 + 0] += offset[0];
+                        ent->transform[12 + 1] += offset[1];
+                        ent->transform[12 + 2] += offset[2];
+                        Physics_SetBodyWorldTransform(ent->physics, ent->transform, 0);
+                        ent->transform[12 + 0] -= offset[0];
+                        ent->transform[12 + 1] -= offset[1];
+                        ent->transform[12 + 2] -= offset[2];
+                    }
+                    break;
+
+                default:
+                    {
+                        float tr[16];
+                        for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
+                        {
+                            Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
+                            Physics_SetBodyWorldTransform(ent->physics, tr, i);
+                        }
+                    }
+                    break;
+            };
         }
     }
 
@@ -519,7 +553,8 @@ void Entity_GhostUpdate(struct entity_s *ent)
     if(Physics_IsGhostsInited(ent->physics))
     {
         float tr[16], v[3];
-        for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
+        uint16_t max_index = Physics_GetBodiesCount(ent->physics);
+        for(uint16_t i = 0; i < max_index; i++)
         {
             Physics_GetBodyWorldTransform(ent->physics, tr, i);
             Mat4_vec3_mul(v, tr, ent->bf->bone_tags[i].mesh_base->centre);
@@ -536,7 +571,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
     int ret = 0;
 
     vec3_set_zero(reaction);
-    if(Physics_IsGhostsInited(ent->physics) && (ent->no_fix_all == 0x00))
+    if(Physics_IsGhostsInited(ent->physics) && (ent->no_fix_all == 0x00) && (Physics_GetBodiesCount(ent->physics) == ent->bf->bone_tag_count))
     {
         float tmp[3], orig_pos[3];
         float tr[16];

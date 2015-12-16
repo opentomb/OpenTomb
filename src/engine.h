@@ -8,11 +8,6 @@
 #define LEVEL_NAME_MAX_LEN                      (64)
 #define MAX_ENGINE_PATH                         (1024)
 
-#define LEVEL_FORMAT_PC         0
-#define LEVEL_FORMAT_PSX        1
-#define LEVEL_FORMAT_DC         2
-#define LEVEL_FORMAT_OPENTOMB   3   // Maybe some day...
-
 #define OBJECT_STATIC_MESH                      (0x0001)
 #define OBJECT_ROOM_BASE                        (0x0002)
 #define OBJECT_ENTITY                           (0x0003)
@@ -21,10 +16,11 @@
 
 #define COLLISION_SHAPE_BOX                     0x0001
 #define COLLISION_SHAPE_BOX_BASE                0x0002     // use mesh box collision
-#define COLLISION_SHAPE_SINGLE_BOX              0x0003     // use single box collision
-#define COLLISION_SHAPE_SPHERE                  0x0004
-#define COLLISION_SHAPE_TRIMESH                 0x0005     // for static objects and room's!
-#define COLLISION_SHAPE_TRIMESH_CONVEX          0x0006     // for dynamic objects
+#define COLLISION_SHAPE_SPHERE                  0x0003
+#define COLLISION_SHAPE_TRIMESH                 0x0004     // for static objects and room's!
+#define COLLISION_SHAPE_TRIMESH_CONVEX          0x0005     // for dynamic objects
+#define COLLISION_SHAPE_SINGLE_BOX              0x0006     // use single box collision
+#define COLLISION_SHAPE_SINGLE_SPHERE           0x0007
 
 #define COLLISION_TYPE_NONE                     0x0000
 #define COLLISION_TYPE_STATIC                   0x0001     // static object - never moved
@@ -133,11 +129,9 @@ void Engine_MainLoop();
 // PC-specific level loader routines.
 
 bool Engine_LoadPCLevel(const char *name);
-int  Engine_GetPCLevelVersion(const char *name);
 
 // General level loading routines.
 
-int  Engine_GetLevelFormat(const char *name);
 void Engine_GetLevelName(char *name, const char *path);
 void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix);
 int  Engine_LoadMap(const char *name);

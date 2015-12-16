@@ -36,7 +36,8 @@
   * All indexes are converted, so they can be used directly.
   * Endian conversion is done at the lowest possible layer, most of the time this is in the read_bitxxx functions.
   */
-class TR_Level {
+class TR_Level 
+{
       public:
         TR_Level()
         {
@@ -106,7 +107,7 @@ class TR_Level {
             this->sample_indices = NULL;        // destroyed
             this->samples_data_size = 0;
             this->samples_count = 0;            // destroyed
-            this->samples_data = NULL;               // destroyed
+            this->samples_data = NULL;          // destroyed
 
             this->frame_data_size = 0;          // destroyed
             this->frame_data = NULL;            // destroyed

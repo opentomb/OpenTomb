@@ -1,6 +1,11 @@
 #ifndef _TR_VERSIONS_H_
 #define _TR_VERSIONS_H_
 
+#define LEVEL_FORMAT_PC         (0)
+#define LEVEL_FORMAT_PSX        (1)
+#define LEVEL_FORMAT_DC         (2)
+#define LEVEL_FORMAT_OPENTOMB   (3)   // Maybe some day...
+
 #define TR_I            (0)
 #define TR_I_DEMO       (1)
 #define TR_I_UB         (2)

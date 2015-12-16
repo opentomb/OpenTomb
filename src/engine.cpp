@@ -847,140 +847,6 @@ void ShowDebugInfo()
 /*
  * MISC ENGINE FUNCTIONALITY
  */
-int Engine_GetLevelFormat(const char *name)
-{
-    // PLACEHOLDER: Currently, only PC levels are supported.
-
-    return LEVEL_FORMAT_PC;
-}
-
-
-int Engine_GetPCLevelVersion(const char *name)
-{
-    int ret = TR_UNKNOWN;
-    int len = strlen(name);
-    FILE *ff;
-
-    if(len < 5)
-    {
-        return ret;                                                             // Wrong (too short) filename
-    }
-
-    ff = fopen(name, "rb");
-    if(ff)
-    {
-        char ext[5];
-        uint8_t check[4];
-
-        ext[0] = name[len-4];                                                   // .
-        ext[1] = toupper(name[len-3]);                                          // P
-        ext[2] = toupper(name[len-2]);                                          // H
-        ext[3] = toupper(name[len-1]);                                          // D
-        ext[4] = 0;
-        fread(check, 4, 1, ff);
-
-        if(!strncmp(ext, ".PHD", 4))                                            //
-        {
-            if(check[0] == 0x20 &&
-               check[1] == 0x00 &&
-               check[2] == 0x00 &&
-               check[3] == 0x00)
-            {
-                ret = TR_I;                                                     // TR_I ? OR TR_I_DEMO
-            }
-            else
-            {
-                ret = TR_UNKNOWN;
-            }
-        }
-        else if(!strncmp(ext, ".TUB", 4))
-        {
-            if(check[0] == 0x20 &&
-               check[1] == 0x00 &&
-               check[2] == 0x00 &&
-               check[3] == 0x00)
-            {
-                ret = TR_I_UB;                                                  // TR_I_UB
-            }
-            else
-            {
-                ret = TR_UNKNOWN;
-            }
-        }
-        else if(!strncmp(ext, ".TR2", 4))
-        {
-            if(check[0] == 0x2D &&
-               check[1] == 0x00 &&
-               check[2] == 0x00 &&
-               check[3] == 0x00)
-            {
-                ret = TR_II;                                                    // TR_II
-            }
-            else if((check[0] == 0x38 || check[0] == 0x34) &&
-                    (check[1] == 0x00) &&
-                    (check[2] == 0x18 || check[2] == 0x08) &&
-                    (check[3] == 0xFF))
-            {
-                ret = TR_III;                                                   // TR_III
-            }
-            else
-            {
-                ret = TR_UNKNOWN;
-            }
-        }
-        else if(!strncmp(ext, ".TR4", 4))
-        {
-            if(check[0] == 0x54 &&                                              // T
-               check[1] == 0x52 &&                                              // R
-               check[2] == 0x34 &&                                              // 4
-               check[3] == 0x00)
-            {
-                ret = TR_IV;                                                    // OR TR TR_IV_DEMO
-            }
-            else if(check[0] == 0x54 &&                                         // T
-                    check[1] == 0x52 &&                                         // R
-                    check[2] == 0x34 &&                                         // 4
-                    check[3] == 0x63)                                           //
-            {
-                ret = TR_IV;                                                    // TRLE
-            }
-            else if(check[0] == 0xF0 &&                                         // T
-                    check[1] == 0xFF &&                                         // R
-                    check[2] == 0xFF &&                                         // 4
-                    check[3] == 0xFF)
-            {
-                ret = TR_IV;                                                    // BOGUS (OpenRaider =))
-            }
-            else
-            {
-                ret = TR_UNKNOWN;
-            }
-        }
-        else if(!strncmp(ext, ".TRC", 4))
-        {
-            if(check[0] == 0x54 &&                                              // T
-               check[1] == 0x52 &&                                              // R
-               check[2] == 0x34 &&                                              // 4
-               check[3] == 0x00)
-            {
-                ret = TR_V;                                                     // TR_V
-            }
-            else
-            {
-                ret = TR_UNKNOWN;
-            }
-        }
-        else                                                                    // unknown ext.
-        {
-            ret = TR_UNKNOWN;
-        }
-
-        fclose(ff);
-    }
-
-    return ret;
-}
-
 
 void Engine_GetLevelName(char *name, const char *path)
 {
@@ -995,7 +861,7 @@ void Engine_GetLevelName(char *name, const char *path)
     ext = len = strlen(path);
     start = 0;
 
-    for(i=len;i>=0;i--)
+    for(i = len; i >= 0; i--)
     {
         if(path[i] == '.')
         {
@@ -1008,7 +874,7 @@ void Engine_GetLevelName(char *name, const char *path)
         }
     }
 
-    for(i=start;i<ext && i-start<LEVEL_NAME_MAX_LEN-1;i++)
+    for(i = start; (i < ext) && (i + 1 < LEVEL_NAME_MAX_LEN + start); i++)
     {
         name[i-start] = path[i];
     }
@@ -1046,7 +912,7 @@ void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix
         strcat(name, "tr5/");
     }
 
-    for(char *ch=level_name;*ch!=0;ch++)
+    for(char *ch = level_name; *ch; ch++)
     {
         *ch = toupper(*ch);
     }
@@ -1064,7 +930,7 @@ bool Engine_LoadPCLevel(const char *name)
 {
     VT_Level *tr_level = new VT_Level();
 
-    int trv = Engine_GetPCLevelVersion(name);
+    int trv = VT_Level::get_PC_level_version(name);
     if(trv == TR_UNKNOWN) return false;
 
     tr_level->read_level(name, trv);
@@ -1105,7 +971,7 @@ int Engine_LoadMap(const char *name)
 
 
     // Here we can place different platform-specific level loading routines.
-    switch(Engine_GetLevelFormat(name))
+    switch(VT_Level::get_level_format(name))
     {
         case LEVEL_FORMAT_PC:
             if(!Engine_LoadPCLevel(name))
@@ -1312,11 +1178,11 @@ int Engine_ExecCmd(char *ch)
                 {
                     Con_Printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
                                (int)(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), (int)(sect->sector_above != NULL), (int)(sect->sector_below != NULL));
-                    for(uint32_t i=0;i<sect->owner_room->content->static_mesh_count;i++)
+                    for(uint32_t i = 0; i < sect->owner_room->content->static_mesh_count; i++)
                     {
                         Con_Printf("static[%d].object_id = %d", i, sect->owner_room->content->static_mesh[i].object_id);
                     }
-                    for(engine_container_p cont=sect->owner_room->content->containers;cont;cont=cont->next)
+                    for(engine_container_p cont = sect->owner_room->content->containers; cont; cont=cont->next)
                     {
                         if(cont->object_type == OBJECT_ENTITY)
                         {

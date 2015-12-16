@@ -8,10 +8,13 @@
 //#define TR_TEXTURE_SHAPE_MASK     (0x7000)          // still not used
 #define TR_TEXTURE_FLIPPED_MASK     (0x8000)
 
+
 void WriteTGAfile(const char *filename, const uint8_t *data, const int width, const int height, char invY);
 
 class VT_Level : public TR_Level {
     public:
+    static int get_level_format(const char *name);
+    static int get_PC_level_version(const char *name);
     void prepare_level();
     void dump_textures();
     tr_staticmesh_t *find_staticmesh_id(uint32_t object_id);
