@@ -8,8 +8,8 @@ cmake_minimum_required(VERSION 3.2)
 include("cmake/HunterGate.cmake")
 
 HunterGate(
-    URL "https://github.com/stohrendorf/hunter/archive/c39ae642c8499910d3f2a23c38bdbfa7a91d958a.zip"
-    SHA1 "6032b31bed5dabd62a095780fc09618870ccee0b"
+    URL "https://github.com/stohrendorf/hunter/archive/0cc54959b3c29b19335db6fd72b1dc02722b9705.zip"
+    SHA1 "6ce632f1b211bfab8de69ac90f88d3ecb1a43b32"
 )
 
 project(OpenTomb)
@@ -115,14 +115,15 @@ endif()
 option(SKIP_SYSTEM_LUA "Skip the sytem-provided Lua installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
 if(SKIP_SYSTEM_LUA)
     hunter_add_package(Lua)
+    find_package(Lua CONFIG REQUIRED)
+    add_library(Lua INTERFACE)
+    target_link_libraries(Lua INTERFACE Lua::lua_lib)
+else()
+    find_package(Lua MODULE REQUIRED)
+    add_library(Lua INTERFACE)
+    target_link_libraries(Lua INTERFACE ${LUA_LIBRARIES})
 endif()
-find_package(Lua MODULE REQUIRED) # CMake's own one is fine enough
-add_library(Lua INTERFACE)
 target_include_directories(Lua INTERFACE ${LUA_INCLUDE_DIR})
-target_link_libraries(Lua INTERFACE ${LUA_LIBRARIES})
-if(NOT WIN32 AND SKIP_SYSTEM_LUA)
-    target_link_libraries(Lua INTERFACE dl)
-endif()
 
 
 # Dependency: SDL2
