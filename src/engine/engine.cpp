@@ -409,7 +409,7 @@ void resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     gui::resize();
 
     engine_camera.setFovAspect(screen_info.fov, static_cast<glm::float_t>(nominalW) / static_cast<glm::float_t>(nominalH));
-    engine_camera.updateFrustum();
+    engine_camera.apply();
 
     glViewport(0, 0, pixelsW, pixelsH);
 }

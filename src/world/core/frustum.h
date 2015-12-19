@@ -2,6 +2,8 @@
 
 #include "util/vmath.h"
 
+#include <glm/gtx/string_cast.hpp>
+
 #include <array>
 #include <vector>
 

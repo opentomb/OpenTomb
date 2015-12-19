@@ -12,10 +12,11 @@ struct Room;
 
 struct Portal
 {
-    Portal(const loader::Portal& portal, Room* dest, const glm::mat4& transform)
+    Portal(const loader::Portal& portal, Room* src, Room* dest, const glm::mat4& transform)
         : vertices{{}}
         , normal{util::convert(portal.normal)}
         , center{}
+        , source{src}
         , destination{dest}
     {
         for(int j=0; j<4; ++j)
@@ -28,6 +29,7 @@ struct Portal
     std::array<glm::vec3, 4> vertices;
     glm::vec3 normal;
     glm::vec3 center = { 0,0,0 };
+    Room* source = nullptr;
     Room* destination = nullptr;
 };
 

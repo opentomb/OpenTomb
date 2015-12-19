@@ -105,6 +105,7 @@ list(APPEND PRJ_HDR
     audio/engine.h
 
     render/gl_util.h
+    render/portaltracer.h
     render/render.h
     render/shader_description.h
     render/shader_manager.h

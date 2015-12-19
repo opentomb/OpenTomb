@@ -773,7 +773,7 @@ namespace world
                         case TR_FD_TRIGTYPE_PAD:
                         case TR_FD_TRIGTYPE_ANTIPAD:
                             // Check move type for triggering entity.
-                            snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", MoveType::OnFloor);
+                            snprintf(buf, 128, " if(getEntityMoveType(entity_index) == MOVE_ON_FLOOR) then \n");
                             if(sub_function == TR_FD_TRIGTYPE_ANTIPAD)
                                 action_type = ActionType::Anti;
                             condition = 1;  // Set additional condition.
@@ -2086,7 +2086,7 @@ namespace world
         for(size_t i = 0; i < tr_room->portals.size(); i++)
         {
             std::shared_ptr<Room> r_dest = world->rooms[tr_room->portals[i].adjoining_room];
-            room->m_portals.emplace_back(tr_room->portals[i], r_dest.get(), room->m_modelMatrix);
+            room->m_portals.emplace_back(tr_room->portals[i], room.get(), r_dest.get(), room->m_modelMatrix);
         }
 
         /*
@@ -2209,9 +2209,9 @@ namespace world
         for(size_t i = 0; i < tr->m_cameras.size(); i++)
         {
             world->cameras_sinks.emplace_back();
-            world->cameras_sinks[i].x = tr->m_cameras[i].x;
-            world->cameras_sinks[i].y = tr->m_cameras[i].z;
-            world->cameras_sinks[i].z = -tr->m_cameras[i].y;
+            world->cameras_sinks[i].position.x = tr->m_cameras[i].x;
+            world->cameras_sinks[i].position.y = tr->m_cameras[i].z;
+            world->cameras_sinks[i].position.z = -tr->m_cameras[i].y;
             world->cameras_sinks[i].room_or_strength = tr->m_cameras[i].room;
             world->cameras_sinks[i].flag_or_zone = tr->m_cameras[i].unknown1;
         }

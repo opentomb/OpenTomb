@@ -33,14 +33,14 @@ struct Plane
 
     glm::float_t distance(const glm::vec3& position) const
     {
-        return glm::dot( normal, position ) - dot;
+        return glm::dot( normal, position ) + dot;
     }
 
     glm::vec3 rayIntersect(const glm::vec3& rayStart, const glm::vec3& rayDir, glm::float_t& lambda) const
     {
-        lambda = dot - glm::dot( normal, rayStart );
+        lambda = dot + glm::dot( normal, rayStart );
         lambda /= glm::dot( normal, rayDir );
-        return rayStart + lambda * rayDir;
+        return rayStart - lambda * rayDir;
     }
 
     glm::vec3 rayIntersect(const glm::vec3& rayStart, const glm::vec3& rayDir) const
@@ -55,22 +55,11 @@ struct Plane
         dot = glm::dot(normal, position);
     }
 
-    void assign(const glm::vec3& n, const glm::vec3& position)
-    {
-        normal = glm::normalize(n);
-        dot = glm::dot(normal, position);
-    }
-
-    void assign(const glm::vec3& n, const glm::float_t& d)
-    {
-        dot = d / glm::length(n);
-        normal = glm::normalize(n);
-    }
-
     void assign(const glm::vec4& n)
     {
-        dot = -n[3] / glm::length(glm::vec3(n));
-        normal = glm::normalize(glm::vec3(n));
+        const glm::float_t len = glm::length(glm::vec3(n));
+        dot = n[3] / len;
+        normal = glm::vec3(n)/len;
     }
 
     void mirrorNormal()
@@ -124,34 +113,27 @@ inline glm::vec4 convert(const loader::FloatColor& tr_c)
     return v;
 }
 
-// glm has a bug in its implementation, comparing x<epsilon instead of abs(x)<epsilon
 inline bool intersectRayTriangle( const glm::vec3& rayStart, const glm::vec3& rayDir, const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2 )
 {
-    const glm::vec3 e1 = v1 - v0;
-    const glm::vec3 e2 = v2 - v0;
-
-    const glm::vec3 p = glm::cross(rayDir, e2);
-
-    const auto a = glm::dot(e1, p);
-
-    if(glm::abs(a) <= std::numeric_limits<decltype(a)>::epsilon())
-        return false; // ray is nearly parallel to the triangle
-
-    const glm::vec3 s = rayStart - v0;
-    const auto x = glm::dot(s, p) / a;
-    if( fuzzyZero(x) )
+    BOOST_ASSERT(!fuzzyZero(glm::length(rayDir)));
+    // Check for intersection with each of the portal's 2 front triangles
+    // Solve line-plane intersection using parametric form
+    glm::vec3 tuv = glm::inverse(glm::mat3(rayDir, v1-v0, v2-v0)) * (rayStart-v0);
+    if (tuv.y >= 0 && tuv.y <= 1 && tuv.z >= 0 && tuv.z <= 1 && (tuv.y + tuv.z) <= 1)
+        return true;
+    else
         return false;
-
-    const glm::vec3 q = glm::cross(s, e1);
-    const auto y = glm::dot(rayDir, q) / a;
-    if(y < 0)
-        return false;
-    if(y + x > 1)
-        return false;
-
-    const auto z = glm::dot(e2, q) / a;
-
-    return z >= 0;
 }
 
+inline bool intersectRayRectangle( const glm::vec3& rayStart, const glm::vec3& rayDir, const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2 )
+{
+    BOOST_ASSERT(!fuzzyZero(glm::length(rayDir)));
+    BOOST_ASSERT(fuzzyZero(glm::dot(v1-v0, v2-v0))); // test if the vertices are perpendicular
+    // Solve line-plane intersection using parametric form
+    glm::vec3 tuv = glm::inverse(glm::mat3(rayDir, v1-v0, v2-v0)) * (rayStart-v0);
+    if (tuv.y >= 0 && tuv.y <= 1 && tuv.z >= 0 && tuv.z <= 1)
+        return true;
+    else
+        return false;
+}
 } // namespace util

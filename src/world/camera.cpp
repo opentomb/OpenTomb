@@ -16,7 +16,8 @@ void Camera::apply()
     m_view = glm::lookAt(m_position, m_position+getViewDir(), getUpDir());
 
     m_viewProjection = m_projection * m_view;
-    updateFrustum();
+
+    m_frustum.setFromMatrix(m_viewProjection);
 }
 
 void Camera::setFovAspect(glm::float_t fov, glm::float_t aspect)
@@ -53,11 +54,6 @@ void Camera::applyRotation()
     q *= glm::rotate(glm::quat(1, 0, 0, 0), m_angles.x, { 0,0,1 });
     q *= glm::rotate(glm::quat(1, 0, 0, 0), m_angles.y, { 1,0,0 });
     m_axes = glm::mat3_cast(q);
-}
-
-void Camera::updateFrustum()
-{
-    m_frustum.setFromMatrix(m_viewProjection);
 }
 
 Camera::Camera()

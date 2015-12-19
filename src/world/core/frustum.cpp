@@ -199,14 +199,14 @@ bool Frustum::isVisible(const BoundingBox& bb, const Camera& cam) const
     return inside;
 #else
     // see https://fgiesen.wordpress.com/2010/10/17/view-frustum-culling/, method 5
-    const glm::vec3 center = bb.getCenter() - cam.getPosition();
+    const glm::vec3 center = bb.getCenter();
     const glm::vec3 extent = bb.getDiameter();
     for(const util::Plane& plane : m_planes)
     {
-        glm::vec3 signFlipped;
+        glm::vec3 signFlipped = center;
         for(int i=0; i<3; ++i)
-            signFlipped[i] = glm::sign(plane.normal[i]) * extent[i];
-        if(glm::dot(center + signFlipped, plane.normal) >= plane.dot)
+            signFlipped[i] += glm::sign(plane.normal[i]) * extent[i];
+        if(plane.distance(signFlipped) >= 0)
             return true;
     }
     return false;

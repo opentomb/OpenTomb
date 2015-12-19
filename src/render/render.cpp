@@ -4,6 +4,7 @@
 #include "engine/engine.h"
 #include "engine/system.h"
 #include "gui/console.h"
+#include "portaltracer.h"
 #include "shader_description.h"
 #include "shader_manager.h"
 #include "util/vmath.h"
@@ -887,86 +888,16 @@ void Render::drawListDebugLines()
     }
 }
 
-struct PortalPath
-{
-    std::vector<const world::Portal*> portals;
-
-    bool checkVisibility(const world::Portal* portal, const glm::vec3& cameraPosition, const world::core::Frustum& frustum)
-    {
-        if(!portal->destination || !portal->destination->m_active)
-            return false; // no relevant destination
-
-        if(glm::dot(portal->normal, portal->center - cameraPosition) >= 0)
-            return false; // wrong orientation
-
-        if(!frustum.isVisible(*portal))
-            return false; // not in frustum
-
-        if(portals.empty())
-        {
-            // no need to check the path
-            portals.emplace_back(portal);
-            return true;
-        }
-
-        // Now the heavy work: trace the portal path and test if we can see the target portal through any other portal.
-        for(const world::Portal* testPortal : portals)
-        {
-            if(!testIntersection(cameraPosition, *portal, *testPortal))
-                return false;
-        }
-
-        portals.emplace_back(portal);
-        return true;
-    }
-
-    world::Room* getLastDestinationRoom() const
-    {
-        BOOST_ASSERT(!portals.empty());
-        return portals.back()->destination;
-    }
-
-    const world::Portal* getLastPortal() const
-    {
-        BOOST_ASSERT(!portals.empty());
-        return portals.back();
-    }
-
-private:
-    static bool testIntersection(const glm::vec3& camPos, const world::Portal& a, const world::Portal& b)
-    {
-        // test if the ray from the camera to a's vertices crosses b's triangles
-        for(const glm::vec3& v : a.vertices)
-        {
-            if( util::intersectRayTriangle(camPos, v-camPos, b.vertices[0], b.vertices[1], b.vertices[2]) )
-                return true;
-            if( util::intersectRayTriangle(camPos, v-camPos, b.vertices[2], b.vertices[3], b.vertices[0]) )
-                return true;
-        }
-
-        // test if the ray from the camera to b's vertices crosses a's triangles
-        for(const glm::vec3& v : b.vertices)
-        {
-            if( util::intersectRayTriangle(camPos, v-camPos, a.vertices[0], a.vertices[1], a.vertices[2]) )
-                return true;
-            if( util::intersectRayTriangle(camPos, v-camPos, a.vertices[2], a.vertices[3], a.vertices[0]) )
-                return true;
-        }
-
-        return false;
-    }
-};
-
 void Render::processRoom(world::Room* room)
 {
     // Breadth-first queue
-    std::queue<PortalPath> toVisit;
+    std::queue<PortalTracer> toVisit;
 
     addRoom(room);
     // always process direct neighbours
     for(const world::Portal& portal : room->m_portals)
     {
-        PortalPath path;
+        PortalTracer path;
         if(!path.checkVisibility(&portal, m_cam->getPosition(), m_cam->getFrustum()))
             continue;
 
@@ -979,25 +910,25 @@ void Render::processRoom(world::Room* room)
     std::set<const world::Portal*> visited;
     while(!toVisit.empty())
     {
-        const PortalPath currentPath = std::move(toVisit.front());
+        const PortalTracer currentPath = std::move(toVisit.front());
         toVisit.pop();
 
         if(!visited.insert(currentPath.getLastPortal()).second)
+        {
             continue; // already tested
+        }
 
+        // iterate through the last room's portals and add the destinations if suitable
         world::Room* destRoom = currentPath.getLastDestinationRoom();
-        bool roomIsVisible = false;
         for(const world::Portal& srcPortal : destRoom->m_portals)
         {
-            PortalPath newPath = currentPath;
+            PortalTracer newPath = currentPath;
             if(!newPath.checkVisibility(&srcPortal, m_cam->getPosition(), m_cam->getFrustum()))
                 continue;
 
-            roomIsVisible = true;
+            addRoom(srcPortal.destination);
             toVisit.emplace(std::move(newPath));
         }
-        if(roomIsVisible)
-            addRoom(room);
     }
 }
 

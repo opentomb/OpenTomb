@@ -212,8 +212,6 @@ public:
     {
         m_angles += v;
     }
-
-    void updateFrustum();
 };
 
 // Static camera / sink structure.
@@ -225,28 +223,21 @@ public:
 
 struct StatCameraSink
 {
-    glm::float_t                     x;
-    glm::float_t                     y;
-    glm::float_t                     z;
-    uint16_t                    room_or_strength;   // Room for camera, strength for sink.
-    uint16_t                    flag_or_zone;       // Flag for camera, zone for sink.
+    glm::vec3 position;
+    uint16_t room_or_strength;   // Room for camera, strength for sink.
+    uint16_t flag_or_zone;       // Flag for camera, zone for sink.
 };
 
 // Flyby camera structure.
 
 struct FlybyCamera
 {
-    glm::float_t     cam_x;      // Camera position vector
-    glm::float_t     cam_y;
-    glm::float_t     cam_z;
+    glm::vec3 position;
+    glm::vec3 rotation;
 
-    glm::float_t     target_x;   // Target orientation vector
-    glm::float_t     target_y;
-    glm::float_t     target_z;
-
-    glm::float_t     fov;
-    glm::float_t     roll;
-    glm::float_t     speed;
+    glm::float_t fov;
+    glm::float_t roll;
+    glm::float_t speed;
 
     uint32_t    sequence;   // Sequence number to which camera belongs
     uint32_t    index;      // Index in sequence

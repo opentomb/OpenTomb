@@ -1100,17 +1100,14 @@ void lua_MoveEntityToSink(world::ObjectId id, int sink_index)
     ent_pos[1] = ent->m_transform[3][1];
     ent_pos[2] = ent->m_transform[3][2];
 
-    glm::vec3 sink_pos; sink_pos[0] = sink->x;
-    sink_pos[1] = sink->y;
-    sink_pos[2] = sink->z + 256.0f;
+    glm::vec3 sink_pos = sink->position + glm::vec3(0, 0, 256.0f);
 
     BOOST_ASSERT(ent->m_currentSector != nullptr);
     world::RoomSector* ls = ent->m_currentSector->getLowestSector();
     BOOST_ASSERT(ls != nullptr);
     world::RoomSector* hs = ent->m_currentSector->getHighestSector();
     BOOST_ASSERT(hs != nullptr);
-    if((sink_pos[2] > hs->ceiling) ||
-       (sink_pos[2] < ls->floor))
+    if(sink_pos[2] > hs->ceiling || sink_pos[2] < ls->floor)
     {
         sink_pos[2] = ent_pos[2];
     }
@@ -1121,9 +1118,7 @@ void lua_MoveEntityToSink(world::ObjectId id, int sink_index)
 
     glm::vec3 speed = ((sink_pos - ent_pos) / dist) * (sink->room_or_strength * 1.5f);
 
-    ent->m_transform[3][0] += speed[0];
-    ent->m_transform[3][1] += speed[1];
-    ent->m_transform[3][2] += speed[2] * 16.0f;
+    ent->m_transform[3] += glm::vec4(speed, 0.0f);
 
     ent->updateRigidBody(true);
     ent->ghostUpdate();
