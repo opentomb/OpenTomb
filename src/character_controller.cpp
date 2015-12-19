@@ -61,6 +61,8 @@ void Character_Create(struct entity_s *ent)
     vec3_set_zero(ret->cmd.rot);
 
     ret->cam_follow_center = 0x00;
+    ret->linear_speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
+    ret->rotate_speed_mult = 1.0f;
     ret->min_step_up_height = DEFAULT_MIN_STEP_UP_HEIGHT;
     ret->max_climb_height = DEFAULT_CLIMB_UP_HEIGHT;
     ret->max_step_up_height = DEFAULT_MAX_STEP_UP_HEIGHT;
@@ -84,6 +86,7 @@ void Character_Create(struct entity_s *ent)
     ret->height_info.water = 0x00;
 
     ret->climb.edge_obj = NULL;
+    ret->climb.edge_z_ang = 0.0f;
     ret->climb.can_hang = 0x00;
     ret->climb.next_z_space = 0.0;
     ret->climb.height_info = 0x00;
@@ -129,6 +132,40 @@ void Character_Clean(struct entity_s *ent)
 
     free(ent->character);
     ent->character = NULL;
+}
+
+/**
+ * Calculates character speed, based on direction flag and anim linear speed
+ * @param ent
+ */
+void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
+{
+    float t  = ent->anim_linear_speed;
+    float vz = (zeroVz)?(0.0):(ent->speed[2]);
+
+    t *= (ent->character) ? (ent->character->linear_speed_mult) : (DEFAULT_CHARACTER_SPEED_MULT);
+    if(ent->dir_flag & ENT_MOVE_FORWARD)
+    {
+        vec3_mul_scalar(ent->speed, ent->transform+4, t);
+    }
+    else if(ent->dir_flag & ENT_MOVE_BACKWARD)
+    {
+        vec3_mul_scalar(ent->speed, ent->transform+4,-t);
+    }
+    else if(ent->dir_flag & ENT_MOVE_LEFT)
+    {
+        vec3_mul_scalar(ent->speed, ent->transform+0,-t);
+    }
+    else if(ent->dir_flag & ENT_MOVE_RIGHT)
+    {
+        vec3_mul_scalar(ent->speed, ent->transform+0, t);
+    }
+    else
+    {
+        vec3_set_zero(ent->speed);
+    }
+
+    ent->speed[2] = vz;
 }
 
 /**
@@ -767,7 +804,7 @@ void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizon
     }
 
     // Jump length is a speed value multiplied by global speed coefficient.
-    t = v_horizontal * ent->speed_mult;
+    t = v_horizontal * ent->character->linear_speed_mult;
 
     // Calculate the direction of jump by vector multiplication.
     if(ent->dir_flag & ENT_MOVE_FORWARD)
@@ -798,7 +835,7 @@ void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizon
     ent->character->resp.slide = 0x00;
 
     // Apply vertical speed.
-    ent->speed[2] = v_vertical * ent->speed_mult;
+    ent->speed[2] = v_vertical * ent->character->linear_speed_mult;
     ent->move_type = MOVE_FREE_FALLING;
 }
 
@@ -806,7 +843,7 @@ void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizon
 void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lean)
 {
     float neg_lean   = 360.0 - max_lean;
-    float lean_coeff = (max_lean == 0.0)?(48.0):(max_lean * 3);
+    float lean_coeff = (max_lean == 0.0) ? (48.0) : (max_lean * 3.0f);
 
     // Continously lean character, according to current left/right direction.
 
@@ -816,12 +853,12 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
         {
             if(ent->angles[2] < 180.0)
             {
-                ent->angles[2] -= ((abs(ent->angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                ent->angles[2] -= 0.5f * (fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
                 if(ent->angles[2] < 0.0) ent->angles[2] = 0.0;
             }
             else
             {
-                ent->angles[2] += ((360 - abs(ent->angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                ent->angles[2] += 0.5f * (360 - fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
                 if(ent->angles[2] < 180.0) ent->angles[2] = 0.0;
             }
         }
@@ -832,18 +869,18 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
         {
             if(ent->angles[2] < max_lean)   // Approaching from center
             {
-                ent->angles[2] += ((abs(ent->angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                ent->angles[2] += 0.5f * (fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
                 if(ent->angles[2] > max_lean)
                     ent->angles[2] = max_lean;
             }
             else if(ent->angles[2] > 180.0) // Approaching from left
             {
-                ent->angles[2] += ((360.0 - abs(ent->angles[2]) + (lean_coeff*2) / 2) * engine_frame_time);
+                ent->angles[2] += 0.5f * (360.0 - fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
                 if(ent->angles[2] < 180.0) ent->angles[2] = 0.0;
             }
             else    // Reduce previous lean
             {
-                ent->angles[2] -= ((abs(ent->angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                ent->angles[2] -= 0.5f * (fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
                 if(ent->angles[2] < 0.0) ent->angles[2] = 0.0;
             }
         }
@@ -854,18 +891,18 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
         {
             if(ent->angles[2] > neg_lean)   // Reduce previous lean
             {
-                ent->angles[2] -= ((360.0 - abs(ent->angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                ent->angles[2] -= 0.5f * (360.0 - fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
                 if(ent->angles[2] < neg_lean)
                     ent->angles[2] = neg_lean;
             }
             else if(ent->angles[2] < 180.0) // Approaching from right
             {
-                ent->angles[2] -= ((abs(ent->angles[2]) + (lean_coeff*2)) / 2) * engine_frame_time;
+                ent->angles[2] -= 0.5f * (fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
                 if(ent->angles[2] < 0.0) ent->angles[2] += 360.0;
             }
             else    // Approaching from center
             {
-                ent->angles[2] += ((360.0 - abs(ent->angles[2]) + lean_coeff) / 2) * engine_frame_time;
+                ent->angles[2] += 0.5f * (360.0 - fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
                 if(ent->angles[2] > 360.0) ent->angles[2] -= 360.0;
             }
         }
@@ -911,98 +948,6 @@ void Character_LookAt(struct entity_s *ent, float target[3])
             }
         }
     }
-}
-
-
-/*
- * Linear inertia is absolutely needed for in-water states, and also it gives
- * more organic feel to land animations.
- */
-float Character_InertiaLinear(struct entity_s *ent, float max_speed, float accel, int8_t command)
-{
-    if((!ent) || (!ent->character)) return 0.0;
-
-    if((accel == 0.0) || (accel >= max_speed))
-    {
-        if(command)
-        {
-            ent->inertia_linear = max_speed;
-        }
-        else
-        {
-            ent->inertia_linear = 0.0;
-        }
-    }
-    else
-    {
-        if(command)
-        {
-            if(ent->inertia_linear < max_speed)
-            {
-                ent->inertia_linear += max_speed * accel * engine_frame_time;
-                if(ent->inertia_linear > max_speed) ent->inertia_linear = max_speed;
-            }
-        }
-        else
-        {
-            if(ent->inertia_linear > 0.0)
-            {
-                ent->inertia_linear -= max_speed * accel * engine_frame_time;
-                if(ent->inertia_linear < 0.0) ent->inertia_linear = 0.0;
-            }
-        }
-    }
-
-    return ent->inertia_linear * ent->speed_mult;
-}
-
-/*
- * Angular inertia is used on keyboard-driven (non-analog) rotational controls.
- */
-float Character_InertiaAngular(struct entity_s *ent, float max_angle, float accel, uint8_t axis)
-{
-    if((!ent) || (!ent->character) || (axis > 1)) return 0.0;
-
-    uint8_t curr_rot_dir = 0;
-    if     (ent->character->cmd.rot[axis] < 0.0) { curr_rot_dir = 1; }
-    else if(ent->character->cmd.rot[axis] > 0.0) { curr_rot_dir = 2; }
-
-    if((!curr_rot_dir) || (max_angle == 0.0) || (accel == 0.0))
-    {
-        ent->inertia_angular[axis] = 0.0;
-    }
-    else
-    {
-        if(ent->inertia_angular[axis] != max_angle)
-        {
-            if(curr_rot_dir == 2)
-            {
-                if(ent->inertia_angular[axis] < 0.0)
-                {
-                    ent->inertia_angular[axis] = 0.0;
-                }
-                else
-                {
-                    ent->inertia_angular[axis] += max_angle * accel * engine_frame_time;
-                    if(ent->inertia_angular[axis] > max_angle) ent->inertia_angular[axis] = max_angle;
-                }
-            }
-            else
-            {
-                if(ent->inertia_angular[axis] > 0.0)
-                {
-                    ent->inertia_angular[axis] = 0.0;
-                }
-                else
-                {
-                    ent->inertia_angular[axis] -= max_angle * accel * engine_frame_time;
-                    if(ent->inertia_angular[axis] < -max_angle) ent->inertia_angular[axis] = -max_angle;
-                }
-            }
-        }
-    }
-
-    return fabs(ent->inertia_angular[axis]) * ent->character->cmd.rot[axis];
 }
 
 /*
@@ -1056,7 +1001,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         if(tv[2] > 0.02 && tv[2] < ent->character->critical_slant_z_component)
         {
             tv[2] = -tv[2];
-            t = ent->speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT;
+            t = ent->character->linear_speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT;
             vec3_mul_scalar(ent->speed, tv, t);                                 // slide down direction
             ang = 180.0 * atan2f(tv[0], -tv[1]) / M_PI;                         // from -180 deg to +180 deg
             //ang = (ang < 0.0)?(ang + 360.0):(ang);
@@ -1078,10 +1023,10 @@ int Character_MoveOnFloor(struct entity_s *ent)
         }
         else    // no slide - free to walk
         {
-            t = ent->current_speed * ent->speed_mult;
+            t = ent->anim_linear_speed * ent->character->linear_speed_mult;
             ent->character->resp.vertical_collide |= 0x01;
 
-            ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_LAND, 0);
+            ent->angles[0] += ROT_SPEED_LAND * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
 
             Entity_UpdateTransform(ent); // apply rotations
 
@@ -1203,7 +1148,7 @@ int Character_FreeFalling(struct entity_s *ent)
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 
-    float rot = Character_InertiaAngular(ent, 1.0, ROT_SPEED_FREEFALL, 0);
+    float rot = ROT_SPEED_FREEFALL * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
     ent->angles[0] += rot;
     ent->angles[1] = 0.0;
 
@@ -1247,7 +1192,7 @@ int Character_FreeFalling(struct entity_s *ent)
     {
         if(ent->speed[2] < 0.0)
         {
-            ent->current_speed = 0.0;
+            ent->anim_linear_speed = 0.0;
             ent->speed[0] = 0.0;
             ent->speed[1] = 0.0;
         }
@@ -1338,13 +1283,13 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 
-    t = ent->current_speed * ent->speed_mult;
+    t = ent->anim_linear_speed * ent->character->linear_speed_mult;
     ent->character->resp.vertical_collide |= 0x01;
 
-    ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_MONKEYSWING, 0);
+    ent->angles[0] += ROT_SPEED_MONKEYSWING * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
     ent->angles[1] = 0.0;
     ent->angles[2] = 0.0;
-    Entity_UpdateTransform(ent);                                                 // apply rotations
+    Entity_UpdateTransform(ent);                                                // apply rotations
 
     if(ent->dir_flag & ENT_MOVE_FORWARD)
     {
@@ -1444,7 +1389,7 @@ int Character_WallsClimbing(struct entity_s *ent)
         move[2] /= t;
     }
 
-    t = ent->current_speed * ent->speed_mult;
+    t = ent->anim_linear_speed * ent->character->linear_speed_mult;
     vec3_mul_scalar(ent->speed, move, t);
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
 
@@ -1475,12 +1420,12 @@ int Character_Climbing(struct entity_s *ent)
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 
-    t = ent->current_speed * ent->speed_mult;
+    t = ent->anim_linear_speed * ent->character->linear_speed_mult;
     ent->character->resp.vertical_collide |= 0x01;
-    ent->angles[0] += ent->character->cmd.rot[0];
+    ent->angles[0] += ROT_SPEED_MONKEYSWING * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
     ent->angles[1] = 0.0;
     ent->angles[2] = 0.0;
-    Entity_UpdateTransform(ent);                                                 // apply rotations
+    Entity_UpdateTransform(ent);                                                // apply rotations
 
     if(ent->dir_flag == ENT_MOVE_FORWARD)
     {
@@ -1541,14 +1486,28 @@ int Character_MoveUnderWater(struct entity_s *ent)
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 
-    // Calculate current speed.
-
-    float t = Character_InertiaLinear(ent, MAX_SPEED_UNDERWATER, INERTIA_SPEED_UNDERWATER, ent->character->cmd.jump);
-
     if(!ent->character->resp.kill)   // Block controls if Lara is dead.
     {
-        ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_UNDERWATER, 0);
-        ent->angles[1] -= Character_InertiaAngular(ent, 1.0, ROT_SPEED_UNDERWATER, 1);
+        // Calculate current speed.
+        if(ent->character->cmd.jump)
+        {
+            ent->linear_speed += MAX_SPEED_UNDERWATER * INERTIA_SPEED_UNDERWATER * engine_frame_time;
+            if(ent->linear_speed > MAX_SPEED_UNDERWATER)
+            {
+                ent->linear_speed = MAX_SPEED_UNDERWATER;
+            }
+        }
+        else if(ent->linear_speed > 0.0f)
+        {
+            ent->linear_speed -= MAX_SPEED_UNDERWATER * INERTIA_SPEED_UNDERWATER * engine_frame_time;
+            if(ent->linear_speed < 0.0f)
+            {
+                ent->linear_speed = 0.0f;
+            }
+        }
+
+        ent->angles[0] += ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
+        ent->angles[1] -= ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[1];
         ent->angles[2]  = 0.0;
 
         if((ent->angles[1] > 70.0) && (ent->angles[1] < 180.0))                 // Underwater angle limiter.
@@ -1561,7 +1520,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
         }
 
         Entity_UpdateTransform(ent);                                            // apply rotations
-        vec3_mul_scalar(ent->speed, ent->transform +4 , t);                     // OY move only!
+        vec3_mul_scalar(ent->speed, ent->transform + 4, ent->linear_speed * ent->character->linear_speed_mult);    // OY move only!
     }
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
 
@@ -1572,7 +1531,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
     Entity_UpdateRoomPos(ent);
     if(ent->character->height_info.water && (pos[2] + ent->bf->bb_max[2] >= ent->character->height_info.transition_level))
     {
-        if(/*(spd.m_floats[2] > 0.0)*/ent->transform[4 + 2] > 0.67)             ///@FIXME: magick!
+        if(ent->transform[4 + 2] > 0.67)             ///@FIXME: magick!
         {
             ent->move_type = MOVE_ON_WATER;
             //pos[2] = fc.transition_level;
@@ -1597,15 +1556,30 @@ int Character_MoveOnWater(struct entity_s *ent)
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 
-    ent->angles[0] += Character_InertiaAngular(ent, 1.0, ROT_SPEED_ONWATER, 0);
+    ent->angles[0] += ROT_SPEED_ONWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
     ent->angles[1] = 0.0;
     ent->angles[2] = 0.0;
     Entity_UpdateTransform(ent);     // apply rotations
 
     // Calculate current speed.
+    if(ent->character->cmd.move[0] || ent->character->cmd.move[1])
+    {
+        ent->linear_speed += MAX_SPEED_ONWATER * INERTIA_SPEED_ONWATER * engine_frame_time;
+        if(ent->linear_speed > MAX_SPEED_ONWATER)
+        {
+            ent->linear_speed = MAX_SPEED_ONWATER;
+        }
+    }
+    else if(ent->linear_speed > 0.0f)
+    {
+        ent->linear_speed -= MAX_SPEED_ONWATER * INERTIA_SPEED_ONWATER * engine_frame_time;
+        if(ent->linear_speed < 0.0f)
+        {
+            ent->linear_speed = 0.0f;
+        }
+    }
 
-    float t = Character_InertiaLinear(ent, MAX_SPEED_ONWATER, INERTIA_SPEED_ONWATER, ((abs(ent->character->cmd.move[0])) | (abs(ent->character->cmd.move[1]))));
-
+    float t = ent->linear_speed * ent->linear_speed;
     if((ent->dir_flag & ENT_MOVE_FORWARD) && (ent->character->cmd.move[0] == 1))
     {
         vec3_mul_scalar(ent->speed, ent->transform+4, t);

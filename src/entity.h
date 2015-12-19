@@ -73,12 +73,9 @@ typedef struct entity_s
     uint16_t                            type_flags;
     uint16_t                            state_flags;
 
-    float                               current_speed;      // current linear speed from animation info
-    float                               speed_mult;
+    float                               linear_speed;
+    float                               anim_linear_speed;  // current linear speed from animation info
     float                               speed[3];           // speed of the entity XYZ
-    
-    float                               inertia_linear;     // linear inertia
-    float                               inertia_angular[2]; // angular inertia - X and Y axes
     
     uint32_t                            no_fix_skeletal_parts;
     struct ss_bone_frame_s             *bf;                 // current boneframe with full frame information
@@ -112,7 +109,6 @@ int  Entity_Frame(entity_p entity, float time);  // process frame + trying to ch
 
 void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateTransform(entity_p entity);
-void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz = 0);
 void Entity_AddOverrideAnim(struct entity_s *ent, int model_id);
 void Entity_CheckActivators(struct entity_s *ent);
 void Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer);

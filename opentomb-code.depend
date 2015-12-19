@@ -6362,7 +6362,7 @@
 	"../alMain.h"
 	"../alu.h"
 
-1447090253 source:d:\dev\opentomb\src\al\alc\backends\backend.c
+1447151932 source:d:\dev\opentomb\src\al\alc\backends\backend.c
 	"../../config.h"
 	"../../alMain.h"
 	"../../alu.h"
@@ -6764,7 +6764,7 @@
 1433713936 d:\dev\opentomb\src\freetype2\include\freetype.h
 	<ft2build.h>
 
-1449908492 d:\dev\opentomb\src\core\vmath.h
+1449939597 d:\dev\opentomb\src\core\vmath.h
 	<math.h>
 	<stdint.h>
 
@@ -6774,7 +6774,7 @@
 	<SDL2/SDL_opengl.h>
 	"vmath.h"
 
-1445167485 d:\dev\opentomb\src\engine.h
+1450282175 d:\dev\opentomb\src\engine.h
 	<SDL2/SDL.h>
 	<stdint.h>
 
@@ -6825,10 +6825,10 @@
 	<stdio.h>
 	"codec.h"
 
-1433713938 d:\dev\opentomb\src\vt\vt_level.h
+1450282789 d:\dev\opentomb\src\vt\vt_level.h
 	"l_main.h"
 
-1437317608 d:\dev\opentomb\src\vt\l_main.h
+1450282675 d:\dev\opentomb\src\vt\l_main.h
 	<SDL2/SDL_rwops.h>
 	<stdlib.h>
 	<stdio.h>
@@ -6842,7 +6842,7 @@
 
 1433713938 d:\dev\opentomb\src\vt\glmath.h
 
-1433713938 d:\dev\opentomb\src\vt\tr_versions.h
+1450282348 d:\dev\opentomb\src\vt\tr_versions.h
 
 1447060680 d:\dev\opentomb\src\game.h
 	<stdint.h>
@@ -7394,7 +7394,7 @@
 	<SDL2/SDL_opengl.h>
 	<stdint.h>
 
-1444475405 d:\dev\opentomb\src\entity.h
+1450459253 d:\dev\opentomb\src\entity.h
 	<stdint.h>
 
 1433713936 d:\dev\opentomb\src\bullet\bulletcollision\collisiondispatch\btghostobject.h
@@ -7415,7 +7415,7 @@
 
 1440848652 d:\dev\opentomb\src\anim_state_control.h
 
-1447151219 d:\dev\opentomb\src\character_controller.h
+1450460939 d:\dev\opentomb\src\character_controller.h
 	<stdint.h>
 
 1443031877 d:\dev\opentomb\src\resource.h
@@ -7424,19 +7424,21 @@
 	<stdlib.h>
 	<stdint.h>
 
-1445679095 source:d:\dev\opentomb\src\audio.cpp
+1449588825 source:d:\dev\opentomb\src\audio.cpp
 	<SDL2/SDL.h>
 	<SDL2/SDL_audio.h>
 	<math.h>
 	"al/AL/al.h"
 	"al/AL/alc.h"
 	"al/AL/alext.h"
+	"al/AL/efx.h"
 	"al/AL/efx-presets.h"
 	"ogg/codec.h"
 	"ogg/ogg.h"
 	"ogg/os_types.h"
 	"ogg/vorbisfile.h"
 	"core/system.h"
+	"core/gl_text.h"
 	"core/console.h"
 	"core/vmath.h"
 	"render/camera.h"
@@ -9035,7 +9037,7 @@
 	"camera.h"
 	"frustum.h"
 
-1445679113 source:d:\dev\opentomb\src\character_controller.cpp
+1450460645 source:d:\dev\opentomb\src\character_controller.cpp
 	"core/vmath.h"
 	"core/console.h"
 	"core/polygon.h"
@@ -9055,6 +9057,7 @@
 	"resource.h"
 	"engine_string.h"
 	"inventory.h"
+	"game.h"
 
 1439230092 d:\dev\opentomb\src\core\obb.h
 	<stdint.h>
@@ -9111,7 +9114,7 @@
 	<stdio.h>
 	<string.h>
 
-1446227509 source:d:\dev\opentomb\src\core\console.c
+1449588715 source:d:\dev\opentomb\src\core\console.c
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL_platform.h>
@@ -9125,6 +9128,7 @@
 	"console.h"
 	"system.h"
 	"vmath.h"
+	"gl_text.h"
 
 1446228317 source:d:\dev\opentomb\src\core\gl_font.c
 	<stdint.h>
@@ -9193,13 +9197,13 @@
 	"console.h"
 	"gl_util.h"
 
-1445182344 source:d:\dev\opentomb\src\core\vmath.c
+1450457435 source:d:\dev\opentomb\src\core\vmath.c
 	<math.h>
 	<string.h>
 	<stdlib.h>
 	"vmath.h"
 
-1445679531 source:d:\dev\opentomb\src\engine.cpp
+1450288679 source:d:\dev\opentomb\src\engine.cpp
 	<SDL2/SDL.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_image.h>
@@ -9316,7 +9320,7 @@
 	"engine.h"
 	"entity.h"
 
-1446907424 source:d:\dev\opentomb\src\entity.cpp
+1450457660 source:d:\dev\opentomb\src\entity.cpp
 	<stdlib.h>
 	<math.h>
 	<lua.h>
@@ -10966,7 +10970,7 @@
 	"render.h"
 	"world.h"
 
-1445771825 source:d:\dev\opentomb\src\game.cpp
+1449588926 source:d:\dev\opentomb\src\game.cpp
 	<stdlib.h>
 	<stdio.h>
 	<lua.h>
@@ -11000,7 +11004,7 @@
 
 1440791764 d:\dev\opentomb\src\inventory.h
 
-1445679313 source:d:\dev\opentomb\src\gameflow.cpp
+1449588943 source:d:\dev\opentomb\src\gameflow.cpp
 	<SDL2/SDL.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
@@ -11013,6 +11017,7 @@
 	<lauxlib.h>
 	"al/AL/al.h"
 	"al/AL/alc.h"
+	"core/gl_text.h"
 	"core/console.h"
 	"engine.h"
 	"gameflow.h"
@@ -11460,7 +11465,7 @@
 	"shader_description.h"
 	"shader_manager.h"
 
-1445537440 source:d:\dev\opentomb\src\resource.cpp
+1449588989 source:d:\dev\opentomb\src\resource.cpp
 	<algorithm>
 	<assert.h>
 	<stdio.h>
@@ -11473,6 +11478,7 @@
 	"core/system.h"
 	"core/vmath.h"
 	"core/gl_util.h"
+	"core/gl_text.h"
 	"core/console.h"
 	"core/redblack.h"
 	"core/polygon.h"
@@ -11496,7 +11502,7 @@
 	"inventory.h"
 	"resource.h"
 
-1445680874 source:d:\dev\opentomb\src\script.cpp
+1450195000 source:d:\dev\opentomb\src\script.cpp
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
@@ -11506,6 +11512,7 @@
 	"al/AL/al.h"
 	"al/AL/alc.h"
 	"core/system.h"
+	"core/gl_text.h"
 	"core/console.h"
 	"core/vmath.h"
 	"core/polygon.h"
@@ -11587,13 +11594,14 @@
 	<SDL2/SDL.h>
 	<SDL2/SDL_endian.h>
 
-1433713938 source:d:\dev\opentomb\src\vt\vt_level.cpp
+1450282411 source:d:\dev\opentomb\src\vt\vt_level.cpp
 	<SDL2/SDL.h>
 	<SDL2/SDL_endian.h>
 	<stdio.h>
+	"tr_versions.h"
 	"vt_level.h"
 
-1445703172 source:d:\dev\opentomb\src\world.cpp
+1450459479 source:d:\dev\opentomb\src\world.cpp
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL.h>
@@ -16409,7 +16417,7 @@
 	"../physics.h"
 	"../resource.h"
 
-1442507019 source:d:\dev\opentomb\src\skeletal_model.c
+1449862061 source:d:\dev\opentomb\src\skeletal_model.c
 	<stdlib.h>
 	"core/system.h"
 	"core/gl_util.h"
@@ -16449,10 +16457,10 @@
 1447058611 d:\dev\opentomb\src\trigger.h
 	<stdint.h>
 
-1442143158 d:\dev\opentomb\src\physics.h
+1450020183 d:\dev\opentomb\src\physics.h
 	<stdint.h>
 
-1447060850 source:d:\dev\opentomb\src\trigger.cpp
+1450007363 source:d:\dev\opentomb\src\trigger.cpp
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL.h>
@@ -16475,7 +16483,7 @@
 	"anim_state_control.h"
 	"world.h"
 
-1444582518 source:d:\dev\opentomb\src\physics_bullet.cpp
+1450199435 source:d:\dev\opentomb\src\physics_bullet.cpp
 	<stdio.h>
 	<stdlib.h>
 	<lua.h>
@@ -16490,6 +16498,7 @@
 	"bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
 	"core/gl_util.h"
 	"core/gl_font.h"
+	"core/gl_text.h"
 	"core/console.h"
 	"core/obb.h"
 	"render/render.h"
@@ -16510,7 +16519,7 @@
 	<SDL2/SDL_opengl.h>
 	"gl_font.h"
 
-1446228484 source:d:\dev\opentomb\src\core\gl_text.c
+1449596029 source:d:\dev\opentomb\src\core\gl_text.c
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
@@ -16523,7 +16532,6 @@
 	"gl_text.h"
 	"gl_font.h"
 	"gl_util.h"
-	"console.h"
 
 1447089157 d:\dev\opentomb\src\al\alc\hrtf.h
 	"../AL/al.h"

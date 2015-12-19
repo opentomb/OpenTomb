@@ -736,7 +736,7 @@ void Mat4_SetSelfOrientation(float mat[16], float ang[3])
 
     if(ang[0] != 0.0)
     {
-        t = ang[0] * M_PI / 180.0;
+        t = ang[0] * M_PI / 180.0f;
         sin_t2 = sinf(t);
         cos_t2 = cosf(t);
     }
@@ -762,7 +762,7 @@ void Mat4_SetSelfOrientation(float mat[16], float ang[3])
 
     if(ang[1] != 0.0)
     {
-        t = ang[1] * M_PI / 360.0;                                              // UP - DOWN
+        t = ang[1] * M_PI / 360.0f;                                             // UP - DOWN
         sin_t2 = sinf(t);
         cos_t2 = cosf(t);
         R[3] = cos_t2;
@@ -781,7 +781,7 @@ void Mat4_SetSelfOrientation(float mat[16], float ang[3])
 
     if(ang[2] != 0.0)
     {
-        t = ang[2] * M_PI / 360.0;                                              // ROLL
+        t = ang[2] * M_PI / 360.0f;                                             // ROLL
         sin_t2 = sinf(t);
         cos_t2 = cosf(t);
         R[3] = cos_t2;

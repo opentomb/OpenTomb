@@ -258,8 +258,9 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     end
     
     entity_funcs[id].onLoop = function(object_id)
-        entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + 40.0;
-        moveEntityLocal(object_id, 0.0, 40.0, 0.0);
+        local dy = 40.0 * 60.0 * frame_time;
+        entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + dy;
+        moveEntityLocal(object_id, 0.0, dy, 0.0);
         if(entity_funcs[object_id].distance_passed > 30720) then
             stopSound(297, object_id);
             disableEntity(object_id);
@@ -556,7 +557,7 @@ function propeller_init(id)      -- Generic propeller (TR1-TR2)
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if(getEntityState(object_id) == 0) then changeCharacterParam(activator_id, PARAM_HEALTH, -100) end;
+        if(getEntityState(object_id) == 0) then changeCharacterParam(activator_id, PARAM_HEALTH, -100 * 60.0 * frame_time) end;
     end
     
     prepareEntity(id);

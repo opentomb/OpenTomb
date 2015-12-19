@@ -459,9 +459,6 @@ uint32_t World_SpawnEntity(world_p world, uint32_t model_id, uint32_t room_id, f
             entity->self->collision_type = COLLISION_NONE;
             entity->self->collision_shape = COLLISION_SHAPE_TRIMESH;
             entity->move_type          = 0x0000;
-            entity->inertia_linear     = 0.0;
-            entity->inertia_angular[0] = 0.0;
-            entity->inertia_angular[1] = 0.0;
             entity->move_type          = 0;
 
             SSBoneFrame_CreateFromModel(entity->bf, model);
@@ -2171,8 +2168,8 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->transform[13] =-tr_item->pos.z;
         entity->transform[14] = tr_item->pos.y;
         entity->angles[0] = tr_item->rotation;
-        entity->angles[1] = 0.0;
-        entity->angles[2] = 0.0;
+        entity->angles[1] = 0.0f;
+        entity->angles[2] = 0.0f;
         Entity_UpdateTransform(entity);
         if((tr_item->room >= 0) && ((uint32_t)tr_item->room < world->rooms_count))
         {
@@ -2192,9 +2189,6 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
         entity->self->collision_type = COLLISION_TYPE_KINEMATIC;
         entity->self->collision_shape = COLLISION_SHAPE_TRIMESH;
         entity->move_type          = 0x0000;
-        entity->inertia_linear     = 0.0;
-        entity->inertia_angular[0] = 0.0;
-        entity->inertia_angular[1] = 0.0;
         entity->move_type          = MOVE_STATIC_POS;
 
         entity->bf->animations.model = World_GetModelByID(world, tr_item->object_id);

@@ -415,6 +415,7 @@ void Game_ApplyControls(struct entity_s *ent)
         vec3_copy(ent->transform+12, pos);
         Entity_UpdateTransform(ent);
         Entity_UpdateRigidBody(ent, 1);
+        Entity_GhostUpdate(ent);
     }
     else
     {
@@ -456,20 +457,20 @@ void Game_ApplyControls(struct entity_s *ent)
 
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0 ))
         {
-            ent->character->cmd.rot[0] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_x;
+            ent->character->cmd.rot[0] = (control_mapper.joy_move_x > 0) ? (-1) : (1);
         }
         else
         {
-            ent->character->cmd.rot[0] = -360.0 / M_PI * engine_frame_time * (float)move_logic[1];
+            ent->character->cmd.rot[0] = -move_logic[1];
         }
 
         if( (control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0 ) )
         {
-            ent->character->cmd.rot[1] = -360.0 / M_PI * engine_frame_time * control_mapper.joy_move_y;
+            ent->character->cmd.rot[1] = (control_mapper.joy_move_y > 0) ? (1) : (-1);
         }
         else
         {
-            ent->character->cmd.rot[1] = 360.0 / M_PI * engine_frame_time * (float)move_logic[0];
+            ent->character->cmd.rot[1] = move_logic[0];
         }
 
         vec3_copy(ent->character->cmd.move, move_logic);

@@ -2877,7 +2877,7 @@ int lua_SetEntitySpeed(lua_State * lua)
             ent->speed[2] = lua_tonumber(lua, 4);
         }
 
-        Entity_UpdateCurrentSpeed(ent);
+        Character_UpdateCurrentSpeed(ent);
     }
 
     return 0;

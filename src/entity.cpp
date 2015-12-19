@@ -82,8 +82,8 @@ entity_p Entity_Create()
     vec3_set_zero(ret->speed);
     vec3_set_one(ret->scaling);
 
-    ret->speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
-    ret->current_speed = 0.0;
+    ret->linear_speed = 0.0;
+    ret->anim_linear_speed = 0.0;
 
     ret->activation_offset[0] = 0.0;
     ret->activation_offset[1] = 256.0;
@@ -255,18 +255,7 @@ void Entity_UpdateRoomPos(entity_p ent)
 
 void Entity_UpdateTransform(entity_p entity)
 {
-    float R[4], Rt[4], temp[4];
-    float sin_t2, cos_t2, t;
-    float *up_dir = entity->transform + 8;                                   // OZ
-    float *view_dir = entity->transform + 4;                                 // OY
-    float *right_dir = entity->transform + 0;                                // OX
-    int i;
-
-    if(entity->character != NULL)
-    {
-        Entity_GhostUpdate(entity);
-    }
-    i = entity->angles[0] / 360.0;
+    int32_t i = entity->angles[0] / 360.0;
     i = (entity->angles[0] < 0.0)?(i-1):(i);
     entity->angles[0] -= 360.0 * i;
 
@@ -278,101 +267,7 @@ void Entity_UpdateTransform(entity_p entity)
     i = (entity->angles[2] < 0.0)?(i-1):(i);
     entity->angles[2] -= 360.0 * i;
 
-    t = entity->angles[0] * M_PI / 180.0;
-    sin_t2 = sin(t);
-    cos_t2 = cos(t);
-
-    /*
-     * LEFT - RIGHT INIT
-     */
-
-    view_dir[0] =-sin_t2;                                                       // OY - view
-    view_dir[1] = cos_t2;
-    view_dir[2] = 0.0;
-    view_dir[3] = 0.0;
-
-    right_dir[0] = cos_t2;                                                      // OX - right
-    right_dir[1] = sin_t2;
-    right_dir[2] = 0.0;
-    right_dir[3] = 0.0;
-
-    up_dir[0] = 0.0;                                                            // OZ - up
-    up_dir[1] = 0.0;
-    up_dir[2] = 1.0;
-    up_dir[3] = 0.0;
-
-    if(entity->angles[1] != 0.0)
-    {
-        t = entity->angles[1] * M_PI / 360.0;                                   // UP - DOWN
-        sin_t2 = sin(t);
-        cos_t2 = cos(t);
-        R[3] = cos_t2;
-        R[0] = right_dir[0] * sin_t2;
-        R[1] = right_dir[1] * sin_t2;
-        R[2] = right_dir[2] * sin_t2;
-        vec4_sop(Rt, R);
-
-        vec4_mul(temp, R, up_dir);
-        vec4_mul(up_dir, temp, Rt);
-        vec4_mul(temp, R, view_dir);
-        vec4_mul(view_dir, temp, Rt);
-    }
-
-    if(entity->angles[2] != 0.0)
-    {
-        t = entity->angles[2] * M_PI / 360.0;                                   // ROLL
-        sin_t2 = sin(t);
-        cos_t2 = cos(t);
-        R[3] = cos_t2;
-        R[0] = view_dir[0] * sin_t2;
-        R[1] = view_dir[1] * sin_t2;
-        R[2] = view_dir[2] * sin_t2;
-        vec4_sop(Rt, R);
-
-        vec4_mul(temp, R, right_dir);
-        vec4_mul(right_dir, temp, Rt);
-        vec4_mul(temp, R, up_dir);
-        vec4_mul(up_dir, temp, Rt);
-    }
-
-    view_dir[3] = 0.0;
-    right_dir[3] = 0.0;
-    up_dir[3] = 0.0;
-
-    if(entity->character)
-    {
-        Entity_FixPenetrations(entity, NULL);
-    }
-}
-
-
-void Entity_UpdateCurrentSpeed(entity_p entity, int zeroVz)
-{
-    float t  = entity->current_speed * entity->speed_mult;
-    float vz = (zeroVz)?(0.0):(entity->speed[2]);
-
-    if(entity->dir_flag & ENT_MOVE_FORWARD)
-    {
-        vec3_mul_scalar(entity->speed, entity->transform+4, t);
-    }
-    else if(entity->dir_flag & ENT_MOVE_BACKWARD)
-    {
-        vec3_mul_scalar(entity->speed, entity->transform+4,-t);
-    }
-    else if(entity->dir_flag & ENT_MOVE_LEFT)
-    {
-        vec3_mul_scalar(entity->speed, entity->transform+0,-t);
-    }
-    else if(entity->dir_flag & ENT_MOVE_RIGHT)
-    {
-        vec3_mul_scalar(entity->speed, entity->transform+0, t);
-    }
-    else
-    {
-        vec3_set_zero(entity->speed);
-    }
-
-    entity->speed[2] = vz;
+    Mat4_SetSelfOrientation(entity->transform, entity->angles);
 }
 
 
@@ -805,7 +700,7 @@ void Entity_CheckCollisionCallbacks(entity_p ent)
             {
                 // Activator and entity IDs are swapped in case of collision callback.
                 Script_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->id, ent->id);
-                Con_Printf("collider_bone_index = %d, collider_type = %d", cn->part_self, cn->obj->object_type);
+                //Con_Printf("collider_bone_index = %d, collider_type = %d", cn->part_self, cn->obj->object_type);
             }
         }
     }
@@ -1090,7 +985,7 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     animation = (animation < 0)?(0):(animation);
     entity->no_fix_all = 0x00;
 
-    entity->current_speed = entity->bf->animations.model->animations[animation].speed_x;
+    entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
     Anim_SetAnimation(entity->bf, animation, frame);
     Anim_UpdateCurrentBoneFrame(entity->bf, entity->transform);
     Entity_UpdateRigidBody(entity, 0);
@@ -1111,7 +1006,7 @@ void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
         if(curr_bf->command & ANIM_CMD_CHANGE_DIRECTION)
         {
             //Con_Printf("ROTATED: anim = %d, frame = %d of %d", entity->bf->animations.current_animation, entity->bf->animations.current_frame, entity->bf->animations.model->animations[entity->bf->animations.current_animation].frames_count);
-            entity->angles[0] += 180.0;
+            entity->angles[0] += 180.0f;
             if(entity->move_type == MOVE_UNDERWATER)
             {
                 entity->angles[1] = -entity->angles[1];                         // for underwater case
@@ -1245,11 +1140,11 @@ int Entity_Frame(entity_p entity, float time)
         // NB!!! For Lara, we update ONLY X-axis speed/accel.
         if((af->accel_x == 0) || (frame < entity->bf->animations.current_frame))
         {
-            entity->current_speed  = af->speed_x;
+            entity->anim_linear_speed  = af->speed_x;
         }
         else
         {
-            entity->current_speed += af->accel_x;
+            entity->anim_linear_speed += af->accel_x;
         }
     }
 

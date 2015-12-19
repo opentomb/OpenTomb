@@ -928,27 +928,27 @@ void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix
 
 bool Engine_LoadPCLevel(const char *name)
 {
-    VT_Level *tr_level = new VT_Level();
-
     int trv = VT_Level::get_PC_level_version(name);
-    if(trv == TR_UNKNOWN) return false;
+    if(trv != TR_UNKNOWN)
+    {
+        VT_Level *tr_level = new VT_Level();
+        tr_level->read_level(name, trv);
+        tr_level->prepare_level();
+        //tr_level->dump_textures();
 
-    tr_level->read_level(name, trv);
-    tr_level->prepare_level();
-    //tr_level->dump_textures();
+        World_Open(&engine_world, tr_level);
 
-    World_Open(&engine_world, tr_level);
+        char buf[LEVEL_NAME_MAX_LEN] = {0x00};
+        Engine_GetLevelName(buf, name);
 
-    char buf[LEVEL_NAME_MAX_LEN] = {0x00};
-    Engine_GetLevelName(buf, name);
+        Con_Notify("loaded PC level");
+        Con_Notify("version = %d, map = \"%s\"", trv, buf);
+        Con_Notify("rooms count = %d", engine_world.rooms_count);
 
-    Con_Notify("loaded PC level");
-    Con_Notify("version = %d, map = \"%s\"", trv, buf);
-    Con_Notify("rooms count = %d", engine_world.rooms_count);
-
-    delete tr_level;
-
-    return true;
+        delete tr_level;
+        return true;
+    }
+    return false;
 }
 
 
@@ -965,7 +965,8 @@ int Engine_LoadMap(const char *name)
     renderer.SetWorld(NULL);
     Gui_DrawLoadScreen(0);
 
-    strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);          // it is needed for "not in the game" levels or correct saves loading.
+    // it is needed for "not in the game" levels or correct saves loading.
+    strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);
 
     Gui_DrawLoadScreen(100);
 

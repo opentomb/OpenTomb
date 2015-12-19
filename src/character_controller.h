@@ -115,11 +115,11 @@
 #define MAX_SPEED_ONWATER        (24.0)
 #define MAX_SPEED_QUICKSAND      (5.0 )
 
-#define ROT_SPEED_UNDERWATER     (2.0)
-#define ROT_SPEED_ONWATER        (3.0)
-#define ROT_SPEED_LAND           (4.5)
-#define ROT_SPEED_FREEFALL       (0.5)
-#define ROT_SPEED_MONKEYSWING    (3.5)
+#define ROT_SPEED_UNDERWATER     (1.0)
+#define ROT_SPEED_ONWATER        (1.5)
+#define ROT_SPEED_LAND           (2.25)
+#define ROT_SPEED_FREEFALL       (0.25)
+#define ROT_SPEED_MONKEYSWING    (1.75)
 
 #define INERTIA_SPEED_UNDERWATER (1.0)
 #define INERTIA_SPEED_ONWATER    (1.5)
@@ -180,7 +180,7 @@ typedef struct climb_info_s
     int8_t                      can_hang;
     int8_t                      wall_hit;                                       // 0x00 - none, 0x01 hands only climb, 0x02 - 4 point wall climbing
     int8_t                      edge_hit;
-    
+
     float                       point[3];
     float                       n[3];
     float                       t[3];
@@ -203,7 +203,7 @@ typedef struct height_info_s
     int8_t                                   walls_climb;
     int8_t                                   walls_climb_dir;
     struct engine_container_s               *self;
-    
+
     float                                    floor_normale[3];
     float                                    floor_point[3];
     int16_t                                  floor_hit;
@@ -221,10 +221,10 @@ typedef struct height_info_s
 
 typedef struct character_command_s
 {
-    float       rot[3];
+    int8_t      rot[3];
     int8_t      move[3];
     int8_t      flags;
-    
+
     uint16_t    roll : 1;
     uint16_t    jump : 1;
     uint16_t    crouch : 1;
@@ -267,20 +267,22 @@ typedef struct character_s
     struct entity_s            *ent;                    // actor entity
     struct character_command_s  cmd;                    // character control commands
     struct character_response_s resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
-    
+
     struct inventory_node_s    *inventory;
     struct character_param_s    parameters;
     struct character_stats_s    statistics;
-    
+
     int8_t                      hair_count;
     struct hair_s             **hairs;
-    
+
     int                         current_weapon;
     int                         weapon_current_state;
-    
+
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
-    
+
     int8_t                      cam_follow_center;
+    float                       linear_speed_mult;
+    float                       rotate_speed_mult;
     float                       min_step_up_height;
     float                       max_step_up_height;
     float                       max_climb_height;
@@ -293,7 +295,7 @@ typedef struct character_s
     float                       Height;                 // base character height
     float                       wade_depth;             // water depth that enable wade walk
     float                       swim_depth;             // depth offset for starting to swim
-    
+
     float                       sphere;                 // needs to height calculation
     float                       climb_sensor;
 
@@ -312,6 +314,7 @@ int  Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
 void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float offset[3], struct height_info_s *nfc, float test_height);
 void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s *climb);
 
+void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz = 0);
 void Character_UpdateCurrentHeight(struct entity_s *ent);
 void Character_UpdatePlatformPreStep(struct entity_s *ent);
 void Character_UpdatePlatformPostStep(struct entity_s *ent);
@@ -319,8 +322,6 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent);
 void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizontal);
 void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lean);
 void Character_LookAt(struct entity_s *ent, float target[3]);
-float Character_InertiaLinear(struct entity_s *ent, float max_speed, float accel, int8_t command);
-float Character_InertiaAngular(struct entity_s *ent, float max_angle, float accel, uint8_t axis);
 
 int Character_MoveOnFloor(struct entity_s *ent);
 int Character_FreeFalling(struct entity_s *ent);
