@@ -81,24 +81,22 @@ struct SkeletonKeyFrame;
 // additional _TR_ prefix. Functions which doesn't use specific TR structures
 // should NOT use such prefix!
 
-void Res_GenRBTrees(World *world);
-void Res_GenSpritesBuffer(World *world);
+void Res_GenRBTrees(World& world);
+void Res_GenSpritesBuffer(World& world);
 void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room);
-void Res_GenRoomCollision(World *world);
-void Res_GenRoomFlipMap(World *world);
-void Res_GenBaseItems(World *world);
-void Res_GenVBOs(World *world);
+void Res_GenRoomCollision(World& world);
+void Res_GenRoomFlipMap(World& world);
+void Res_GenBaseItems(World& world);
+void Res_GenVBOs(World& world);
 
-void     Res_Sector_SetTweenFloorConfig(SectorTween *tween);
-void     Res_Sector_SetTweenCeilingConfig(SectorTween *tween);
+void     Res_Sector_SetTweenFloorConfig(SectorTween& tween);
+void     Res_Sector_SetTweenCeilingConfig(SectorTween& tween);
 bool     Res_Sector_IsWall(RoomSector* ws, RoomSector* ns);
-void     Res_Sector_FixHeights(RoomSector* sector);
+void     Res_Sector_FixHeights(RoomSector& sector);
 
-bool     Res_Poly_SetAnimTexture(core::Polygon *polygon, uint32_t tex_index, World *world);
+void     Res_FixRooms(World& world);   // Fix start-up room states.
 
-void     Res_FixRooms(World *world);   // Fix start-up room states.
-
-SkeletalModel* Res_GetSkybox(World *world, loader::Engine engine_version);
+SkeletalModel* Res_GetSkybox(World& world);
 
 // Create entity function from script, if exists.
 
@@ -115,36 +113,30 @@ void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> > &map);
 void Res_SetEntityProperties(std::shared_ptr<Entity> ent);
 void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static);
 
-// Check if entity index was already processed (needed to remove dublicated activation calls).
-// If entity is not processed, add its index into lookup table.
-
-bool Res_IsEntityProcessed(uint16_t *lookup_table, uint16_t entity_index);
-
 // Open autoexec.
 
 void Res_AutoexecOpen(loader::Game engine_version);
 
 // Functions generating native OpenTomb structs from legacy TR structs.
 
-void TR_GenWorld(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenMeshes(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenMesh(World *world, size_t mesh_index, std::shared_ptr<core::BaseMesh> mesh, const std::unique_ptr<loader::Level>& tr);
-void TR_GenSkeletalModels(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenSkeletalModel(size_t model_id, SkeletalModel *model, const std::unique_ptr<loader::Level>& tr, size_t meshCount);
-void TR_GenEntities(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenSprites(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenTextures(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenAnimCommands(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenAnimTextures(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenRooms(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenRoom(std::shared_ptr<Room>& room, World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenRoomProperties(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenBoxes(World *world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenCameras(World *world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenWorld(World& world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenMeshes(World& world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenMesh(World& world, size_t mesh_index, std::shared_ptr<core::BaseMesh> mesh, const std::unique_ptr<loader::Level>& tr);
+void TR_GenSkeletalModels(World& world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenSprites(World& world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenTextures(World& world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenAnimCommands(World& world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenAnimTextures(World& world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenRooms(World& world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenRoom(std::shared_ptr<Room>& room, World& world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenRoomProperties(World& world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenBoxes(World& world, const std::unique_ptr<loader::Level>& tr);
+void TR_GenCameras(World& world, const std::unique_ptr<loader::Level>& tr);
 
 // Functions for getting various parameters from legacy TR structs.
 
-void     TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_offset, animation::SkeletonKeyFrame* keyFrame);
+void     TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_offset, animation::SkeletonKeyFrame& keyFrame);
 size_t   TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, size_t moveable_ind);
 size_t   TR_GetNumFramesForAnimation(const std::unique_ptr<loader::Level>& tr, size_t animation_ind);
 long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, const std::unique_ptr<loader::Level>& tr);
@@ -153,9 +145,9 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, cons
 // to native OpenTomb structs.
 
 int      TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loader::Level>& tr);
-void     TR_Sector_Calculate(World *world, const std::unique_ptr<loader::Level>& tr, long int room_index);
+void     TR_Sector_Calculate(World& world, const std::unique_ptr<loader::Level>& tr, long int room_index);
 
-void tr_setupRoomVertices(World *world, const std::unique_ptr<loader::Level>& tr, loader::Room *tr_room, const std::shared_ptr<core::BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, core::Polygon *p);
-void tr_copyNormals(core::Polygon *polygon, const std::shared_ptr<core::BaseMesh>& mesh, const uint16_t *mesh_vertex_indices);
+void tr_setupRoomVertices(World& world, const std::unique_ptr<loader::Level>& tr, loader::Room& tr_room, const std::shared_ptr<core::BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, core::Polygon& p);
+void tr_copyNormals(core::Polygon& polygon, const core::BaseMesh& mesh, const uint16_t *mesh_vertex_indices);
 
 } // namespace world

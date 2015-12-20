@@ -168,7 +168,7 @@ public:
         return m_effects[m_effectMap[index]].sample_count;
     }
 
-    void load(const world::World *world, const std::unique_ptr<loader::Level>& tr);
+    void load(const world::World& world, const std::unique_ptr<loader::Level>& tr);
 
     const Settings& getSettings() const
     {

@@ -122,8 +122,8 @@ public:
     MoveDirection                       m_moveDir = MoveDirection::Stay;           // (move direction)
     MoveType                            m_moveType = MoveType::OnFloor;          // on floor / free fall / swim ....
 
-    bool m_wasRendered = false;       // render once per frame trigger
-    bool m_wasRenderedLines = false; // same for debug lines
+    mutable bool m_wasRendered = false;       // render once per frame trigger
+    mutable bool m_wasRenderedLines = false; // same for debug lines
 
     glm::float_t                        m_currentSpeed = 0;      // current linear speed from animation info
     glm::vec3                           m_speed = {0,0,0};              // speed of the entity XYZ
@@ -157,7 +157,7 @@ public:
     void disable();
 
     void ghostUpdate();
-    int getPenetrationFixVector(glm::vec3 *reaction, bool hasMove);
+    int getPenetrationFixVector(glm::vec3& reaction, bool hasMove);
     void checkCollisionCallbacks();
     bool wasCollisionBodyParts(uint32_t parts_flags) const;
     void updateRoomPos();
@@ -248,6 +248,6 @@ private:
     }
 };
 
-int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, glm::vec3 *correction);
+int Ghost_GetPenetrationFixVector(btPairCachingGhostObject& ghost, btManifoldArray& manifoldArray, glm::vec3& correction);
 
 } // namespace world

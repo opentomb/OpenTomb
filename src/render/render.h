@@ -99,11 +99,11 @@ public:
     void drawPortal(const world::Portal &p);
     void drawBBox(const world::core::BoundingBox &boundingBox, const glm::mat4 *transform);
     void drawOBB(const world::core::OrientedBoundingBox& obb);
-    void drawMeshDebugLines(const std::shared_ptr<world::core::BaseMesh> &mesh, const glm::mat4& transform, Render* render);
-    void drawSkeletalModelDebugLines(const world::animation::Skeleton &skeleton, const glm::mat4& transform, Render *render);
-    static void drawEntityDebugLines(world::Entity *entity, Render *render);
-    void drawSectorDebugLines(world::RoomSector *rs);
-    static void drawRoomDebugLines(const world::Room *room, Render *render);
+    void drawMeshDebugLines(const std::shared_ptr<world::core::BaseMesh> &mesh, const glm::mat4& transform, const Render& render);
+    void drawSkeletalModelDebugLines(const world::animation::Skeleton &skeleton, const glm::mat4& transform, const Render& render);
+    static void drawEntityDebugLines(const world::Entity& entity, const Render& render);
+    void drawSectorDebugLines(const world::RoomSector& rs);
+    static void drawRoomDebugLines(const world::Room& room, const Render& render);
 
     // bullet's debug interface
     virtual void   drawLine(const btVector3& from, const btVector3& to, const btVector3 &color) override;
@@ -153,7 +153,7 @@ private:
     RenderSettings m_settings;
     std::unique_ptr<ShaderManager> m_shaderManager;
 
-    std::set<world::Room*> m_renderList{};
+    std::set<const world::Room*> m_renderList{};
 
     bool m_drawWire = false;
     bool m_drawRoomBoxes = false;
@@ -178,8 +178,8 @@ public:
     void initGlobals();
     void init();
     void empty();
-    bool addRoom(world::Room *room);
-    void setWorld(world::World* m_world);
+    bool addRoom(const world::Room *room);
+    void setWorld(world::World* world);
     void resetWorld()
     {
         m_world = nullptr;
@@ -261,30 +261,30 @@ public:
         m_skipRoom = !m_skipRoom;
     }
 
-    void renderEntity(world::Entity *entity);
-    void renderDynamicEntity(const LitShaderDescription *shader, world::Entity *entity);
-    void renderDynamicEntitySkin(const LitShaderDescription *shader, world::Entity *ent);
-    void renderSkeletalModel(const LitShaderDescription *shader, world::animation::Skeleton* bframe, const glm::mat4 &mvMatrix, const glm::mat4 &mvpMatrix);
-    void renderSkeletalModelSkin(const LitShaderDescription *shader, world::Entity *ent, const glm::mat4 &mvMatrix);
+    void renderEntity(const world::Entity& entity);
+    void renderDynamicEntity(const LitShaderDescription& shader, const world::Entity& entity);
+    void renderDynamicEntitySkin(const LitShaderDescription& shader, const world::Entity& ent);
+    void renderSkeletalModel(const LitShaderDescription& shader, const world::animation::Skeleton& bframe, const glm::mat4 &mvMatrix, const glm::mat4 &mvpMatrix);
+    void renderSkeletalModelSkin(const LitShaderDescription& shader, const world::Entity& ent, const glm::mat4 &mvMatrix);
     void renderHair(std::shared_ptr<world::Character> entity);
     void renderSkyBox();
     void renderMesh(const std::shared_ptr<world::core::BaseMesh> &mesh) const;
-    void renderPolygonTransparency(loader::BlendingMode currentTransparency, const BSPFaceRef &p, const UnlitTintedShaderDescription *shader) const;
-    void renderBSPFrontToBack(loader::BlendingMode currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
-    void renderBSPBackToFront(loader::BlendingMode currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription *shader);
-    void renderRoom(const world::Room *room);
-    void renderRoomSprites(const world::Room *room) const;
+    void renderPolygonTransparency(loader::BlendingMode currentTransparency, const BSPFaceRef &p, const UnlitTintedShaderDescription& shader) const;
+    void renderBSPFrontToBack(loader::BlendingMode currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription& shader);
+    void renderBSPBackToFront(loader::BlendingMode currentTransparency, const std::unique_ptr<BSPNode> &root, const UnlitTintedShaderDescription& shader);
+    void renderRoom(const world::Room& room);
+    void renderRoomSprites(const world::Room& room) const;
 
-    void processRoom(world::Room* room);
+    void processRoom(const world::Room& room);
 
 private:
-    const LitShaderDescription *setupEntityLight(world::Entity *entity, bool skin) const;
+    const LitShaderDescription *setupEntityLight(const world::Entity& entity, bool skin) const;
 };
 
 extern Render renderer;
 
 void fillCrosshairBuffer();
 void drawCrosshair();
-void renderItem(world::animation::Skeleton *bf, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix);
+void renderItem(const world::animation::Skeleton& bf, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix);
 
 } // namespace render

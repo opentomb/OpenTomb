@@ -52,7 +52,7 @@ void Entity::disable()
 /**
  * It is from bullet_character_controller
  */
-int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArray *manifoldArray, glm::vec3* correction)
+int Ghost_GetPenetrationFixVector(btPairCachingGhostObject& ghost, btManifoldArray& manifoldArray, glm::vec3& correction)
 {
     // Here we must refresh the overlapping paircache as the penetrating movement itself or the
     // previous recovery iteration might have used setWorldTransform and pushed us into an object
@@ -62,20 +62,19 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
     // Do this by calling the broadphase's setAabb with the moved AABB, this will update the broadphase
     // paircache and the ghostobject's internal paircache at the same time.    /BW
 
-    int ret = 0;
-    int num_pairs, manifolds_size;
-    btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
+    btBroadphasePairArray &pairArray = ghost.getOverlappingPairCache()->getOverlappingPairArray();
+
     btVector3 aabb_min, aabb_max;
+    ghost.getCollisionShape()->getAabb(ghost.getWorldTransform(), aabb_min, aabb_max);
+    engine::bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost.getBroadphaseHandle(), aabb_min, aabb_max, engine::bt_engine_dynamicsWorld->getDispatcher());
+    engine::bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost.getOverlappingPairCache(), engine::bt_engine_dynamicsWorld->getDispatchInfo(), engine::bt_engine_dynamicsWorld->getDispatcher());
 
-    ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
-    engine::bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, engine::bt_engine_dynamicsWorld->getDispatcher());
-    engine::bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), engine::bt_engine_dynamicsWorld->getDispatchInfo(), engine::bt_engine_dynamicsWorld->getDispatcher());
-
-    *correction = {0,0,0};
-    num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
+    correction = {0,0,0};
+    int num_pairs = ghost.getOverlappingPairCache()->getNumOverlappingPairs();
+    int ret = 0;
     for(int i = 0; i < num_pairs; i++)
     {
-        manifoldArray->clear();
+        manifoldArray.clear();
         // do not use commented code: it prevents to collision skips.
         //btBroadphasePair &pair = pairArray[i];
         //btBroadphasePair* collisionPair = bt_engine_dynamicsWorld->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
@@ -88,14 +87,13 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 
         if(collisionPair->m_algorithm)
         {
-            collisionPair->m_algorithm->getAllContactManifolds(*manifoldArray);
+            collisionPair->m_algorithm->getAllContactManifolds(manifoldArray);
         }
 
-        manifolds_size = manifoldArray->size();
+        int manifolds_size = manifoldArray.size();
         for(int j = 0; j < manifolds_size; j++)
         {
-            btPersistentManifold* manifold = (*manifoldArray)[j];
-            glm::float_t directionSign = manifold->getBody0() == ghost ? glm::float_t(-1.0) : glm::float_t(1.0);
+            btPersistentManifold* manifold = manifoldArray[j];
             Object* obj0 = static_cast<Object*>(manifold->getBody0()->getUserPointer());
             Object* obj1 = static_cast<Object*>(manifold->getBody1()->getUserPointer());
             if(obj0->getCollisionType() == world::CollisionType::Ghost || obj1->getCollisionType() == world::CollisionType::Ghost)
@@ -109,8 +107,8 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject *ghost, btManifoldArr
 
                 if(dist < 0.0)
                 {
-                    glm::vec3 t = util::convert(pt.m_normalWorldOnB) * dist * directionSign;
-                    *correction += t;
+                    glm::vec3 t = -util::convert(pt.m_normalWorldOnB) * dist;
+                    correction += t;
                     ret++;
                 }
             }
@@ -148,9 +146,9 @@ void Entity::ghostUpdate()
 }
 
 ///@TODO: make experiment with convexSweepTest with spheres: no more iterative cycles;
-int Entity::getPenetrationFixVector(glm::vec3* reaction, bool hasMove)
+int Entity::getPenetrationFixVector(glm::vec3& reaction, bool hasMove)
 {
-    *reaction = { 0,0,0 };
+    reaction = { 0,0,0 };
     if(!m_skeleton.hasGhosts() || m_skeleton.getModel()->no_fix_all)
         return 0;
 
@@ -197,7 +195,7 @@ int Entity::getPenetrationFixVector(glm::vec3* reaction, bool hasMove)
             tr[3] = glm::vec4(curr, 1.0f);
             m_skeleton.getBones()[m].ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr));
             glm::vec3 tmp;
-            if(Ghost_GetPenetrationFixVector(m_skeleton.getBones()[m].ghostObject.get(), &m_skeleton.manifoldArray(), &tmp))
+            if(Ghost_GetPenetrationFixVector(*m_skeleton.getBones()[m].ghostObject, m_skeleton.manifoldArray(), tmp))
             {
                 m_transform[3] += glm::vec4(tmp,0);
                 curr += tmp;
@@ -207,7 +205,7 @@ int Entity::getPenetrationFixVector(glm::vec3* reaction, bool hasMove)
             curr += move;
         }
     }
-    *reaction = glm::vec3(m_transform[3] - orig_pos);
+    reaction = glm::vec3(m_transform[3] - orig_pos);
     m_transform[3] = orig_pos;
 
     return ret;
@@ -230,7 +228,7 @@ void Entity::fixPenetrations(const glm::vec3* move)
     }
 
     glm::vec3 reaction;
-    getPenetrationFixVector(&reaction, move != nullptr);
+    getPenetrationFixVector(reaction, move != nullptr);
     m_transform[3] += glm::vec4(reaction, 0);
 
     ghostUpdate();
@@ -261,8 +259,8 @@ void Entity::checkCollisionCallbacks()
         return;
 
     uint32_t curr_flag;
-    m_skeleton.updateCurrentCollisions(this, m_transform);
-    while(btCollisionObject* cobj = m_skeleton.getRemoveCollisionBodyParts(0xFFFFFFFF, &curr_flag))
+    m_skeleton.updateCurrentCollisions(*this, m_transform);
+    while(btCollisionObject* cobj = m_skeleton.getRemoveCollisionBodyParts(0xFFFFFFFF, curr_flag))
     {
         // do callbacks here:
         Object* object = static_cast<Object*>(cobj->getUserPointer());

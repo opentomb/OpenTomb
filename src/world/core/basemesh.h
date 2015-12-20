@@ -77,7 +77,7 @@ struct BaseMesh
     ~BaseMesh();
 
     void updateBoundingBox();
-    void genVBO(const render::Render *renderer);
+    void genVBO();
     void genFaces();
     size_t addVertex(const Vertex& v);
     size_t addAnimatedVertex(const Vertex& v);

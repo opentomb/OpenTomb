@@ -317,7 +317,7 @@ void Skeleton::updateBoundingBox()
     }
 }
 
-void Skeleton::createGhosts(Entity* entity, const glm::mat4& transform)
+void Skeleton::createGhosts(Entity& entity)
 {
     if(!m_model || m_model->meshes.empty())
         return;
@@ -335,13 +335,13 @@ void Skeleton::createGhosts(Entity* entity, const glm::mat4& transform)
 
         bone.ghostObject->setIgnoreCollisionCheck(bone.bt_body.get(), true);
 
-        glm::mat4 gltr = transform * bone.full_transform;
+        glm::mat4 gltr = entity.m_transform * bone.full_transform;
         gltr[3] = glm::vec4(glm::mat3(gltr) * bone.mesh->m_center, 1.0f);
 
         bone.ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(gltr));
         bone.ghostObject->setCollisionFlags(bone.ghostObject->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE |
                                             btCollisionObject::CF_CHARACTER_OBJECT);
-        bone.ghostObject->setUserPointer(entity);
+        bone.ghostObject->setUserPointer(&entity);
         bone.ghostObject->setCollisionShape(bone.shape.get());
         engine::bt_engine_dynamicsWorld->addCollisionObject(bone.ghostObject.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
 
@@ -372,7 +372,7 @@ Bone::~Bone()
     }
 }
 
-void Skeleton::updateCurrentCollisions(const Entity* entity, const glm::mat4& transform)
+void Skeleton::updateCurrentCollisions(const Entity& entity, const glm::mat4& transform)
 {
     if(!hasGhosts())
         return;
@@ -420,7 +420,7 @@ void Skeleton::updateCurrentCollisions(const Entity* entity, const glm::mat4& tr
                     if(manifold->getContactPoint(c).getDistance() < 0.0)
                     {
                         bone.last_collisions.emplace_back(const_cast<btCollisionObject*>(m_manifoldArray[k]->getBody0()));
-                        if(entity == static_cast<Entity*>(bone.last_collisions.back()->getUserPointer()))
+                        if(&entity == static_cast<Entity*>(bone.last_collisions.back()->getUserPointer()))
                         {
                             bone.last_collisions.back() = const_cast<btCollisionObject*>(m_manifoldArray[k]->getBody1());
                         }
@@ -500,9 +500,9 @@ void Skeleton::updateRigidBody(const glm::mat4& transform)
     }
 }
 
-btCollisionObject* Skeleton::getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t* curr_flag)
+btCollisionObject* Skeleton::getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t& curr_flag)
 {
-    *curr_flag = 0x00;
+    curr_flag = 0x00;
     if(!hasGhosts())
         return nullptr;
 
@@ -512,7 +512,7 @@ btCollisionObject* Skeleton::getRemoveCollisionBodyParts(uint32_t parts_flags, u
         {
             if(!bone.last_collisions.empty())
             {
-                *curr_flag = bone.body_part;
+                curr_flag = bone.body_part;
                 auto res = bone.last_collisions.back();
                 bone.last_collisions.pop_back();
                 return res;
@@ -523,15 +523,15 @@ btCollisionObject* Skeleton::getRemoveCollisionBodyParts(uint32_t parts_flags, u
     return nullptr;
 }
 
-void Skeleton::genRigidBody(Entity* entity, CollisionShape collisionShape, CollisionType collisionType, const glm::mat4& transform)
+void Skeleton::genRigidBody(Entity& entity)
 {
-    if(!m_model || collisionType == world::CollisionType::None)
+    if(!m_model || entity.getCollisionType() == world::CollisionType::None)
         return;
 
     for(animation::Bone& bone : m_bones)
     {
         btCollisionShape* cshape = nullptr;
-        switch(collisionShape)
+        switch(entity.getCollisionShape())
         {
             case world::CollisionShape::Sphere:
                 cshape = core::BT_CSfromSphere(bone.mesh->m_radius);
@@ -555,14 +555,14 @@ void Skeleton::genRigidBody(Entity* entity, CollisionShape collisionShape, Colli
             continue;
 
         btVector3 localInertia(0, 0, 0);
-        if(collisionShape != world::CollisionShape::TriMesh)
+        if(entity.getCollisionShape() != world::CollisionShape::TriMesh)
             cshape->calculateLocalInertia(0.0, localInertia);
 
         btTransform startTransform;
-        startTransform.setFromOpenGLMatrix(glm::value_ptr(transform * bone.full_transform));
+        startTransform.setFromOpenGLMatrix(glm::value_ptr(entity.m_transform * bone.full_transform));
         bone.bt_body = std::make_shared<btRigidBody>(0.0, new btDefaultMotionState(startTransform), cshape, localInertia);
 
-        switch(collisionType)
+        switch(entity.getCollisionType())
         {
             case world::CollisionType::Kinematic:
                 bone.bt_body->setCollisionFlags(bone.bt_body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
@@ -584,7 +584,7 @@ void Skeleton::genRigidBody(Entity* entity, CollisionShape collisionShape, Colli
         }
 
         engine::bt_engine_dynamicsWorld->addRigidBody(bone.bt_body.get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
-        bone.bt_body->setUserPointer(entity);
+        bone.bt_body->setUserPointer(&entity);
     }
 }
 

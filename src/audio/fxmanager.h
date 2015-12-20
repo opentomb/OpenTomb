@@ -39,8 +39,8 @@ struct FxManager
     ~FxManager();
 
     bool loadReverb(loader::ReverbType effect_index, const EFXEAXREVERBPROPERTIES *reverb);
-    void updateListener(world::Camera *cam);
-    void updateListener(world::Character* ent);
+    void updateListener(world::Camera& cam);
+    void updateListener(world::Character& ent);
 
     explicit FxManager() = default;
     explicit FxManager(bool); // Bool param only used for distinguishing from default constructor

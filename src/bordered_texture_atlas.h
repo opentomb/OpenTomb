@@ -138,7 +138,7 @@ public:
      */
     void getCoordinates(size_t texture,
                         bool reverse,
-                        world::core::Polygon* poly,
+                        world::core::Polygon& poly,
                         int shift = 0,
                         bool split = false) const;
 

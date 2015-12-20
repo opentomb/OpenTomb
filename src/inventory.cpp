@@ -470,7 +470,7 @@ void InventoryManager::render()
             }
             matrix = glm::translate(matrix, -0.5f * bi->bf->getBoundingBox().getCenter());
             matrix = glm::scale(matrix, {0.7f, 0.7f, 0.7f});
-            render::renderItem(bi->bf.get(), 0.0f, matrix, gui::guiProjectionMatrix);
+            render::renderItem(*bi->bf, 0.0f, matrix, gui::guiProjectionMatrix);
 
             num++;
         }

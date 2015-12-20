@@ -51,7 +51,4 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent);
 
 void Game_UpdateAI();
 
-void Cam_FollowEntity(world::Camera *cam, world::Entity *ent, glm::float_t dx, glm::float_t dz);
-bool Cam_HasHit(BtEngineClosestConvexResultCallback *cb, btTransform &cameraFrom, btTransform &cameraTo);
-
 } // namespace engine

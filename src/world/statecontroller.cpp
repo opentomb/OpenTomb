@@ -29,168 +29,168 @@ constexpr glm::float_t LaraHangSensorZ = 800.0f;       // It works more stable t
 
 using animation::Skeleton;
 
-void onFrameStopTraverse(Character* ent, animation::AnimUpdate state)
+void onFrameStopTraverse(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        glm::vec4& v = ent->m_traversedObject->m_transform[3];
+        glm::vec4& v = ent.m_traversedObject->m_transform[3];
         int i = static_cast<int>(v[0] / MeteringSectorSize);
         v[0] = i * MeteringSectorSize + 512.0f;
         i = static_cast<int>(v[1] / MeteringSectorSize);
         v[1] = i * MeteringSectorSize + 512.0f;
-        ent->m_traversedObject->updateRigidBody(true);
-        ent->m_traversedObject = nullptr;
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_traversedObject->updateRigidBody(true);
+        ent.m_traversedObject = nullptr;
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameSetOnFloor(Character* ent, animation::AnimUpdate state)
+void onFrameSetOnFloor(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        ent->m_moveType = MoveType::OnFloor;
-        ent->m_transform[3][2] = ent->m_heightInfo.floor.hitPoint[2];
-        ent->ghostUpdate();
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_moveType = MoveType::OnFloor;
+        ent.m_transform[3][2] = ent.m_heightInfo.floor.hitPoint[2];
+        ent.ghostUpdate();
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameSetOnFloorAfterClimb(Character* ent, animation::AnimUpdate /*state*/)
+void onFrameSetOnFloorAfterClimb(Character& ent, animation::AnimUpdate /*state*/)
 {
     // FIXME: this is more like an end-of-anim operation
-    if(ent->m_skeleton.getCurrentAnimation() != ent->m_skeleton.getPreviousAnimation())
+    if(ent.m_skeleton.getCurrentAnimation() != ent.m_skeleton.getPreviousAnimation())
     {
-        ent->m_transform[3] = glm::vec4(ent->m_climb.point,1);
+        ent.m_transform[3] = glm::vec4(ent.m_climb.point,1);
 
         // FIXME: position adjust after climb
-        glm::vec3 climbfix(0, ent->m_climbR, 0);
-        ent->m_transform[3] = glm::vec4(ent->m_climb.point + glm::mat3(ent->m_transform) * climbfix, 1.0f);
+        glm::vec3 climbfix(0, ent.m_climbR, 0);
+        ent.m_transform[3] = glm::vec4(ent.m_climb.point + glm::mat3(ent.m_transform) * climbfix, 1.0f);
 
-        ent->m_moveType = MoveType::OnFloor;
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_moveType = MoveType::OnFloor;
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameSetUnderwater(Character* ent, animation::AnimUpdate state)
+void onFrameSetUnderwater(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        ent->m_moveType = MoveType::Underwater;
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_moveType = MoveType::Underwater;
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameSetFreeFalling(Character* ent, animation::AnimUpdate state)
+void onFrameSetFreeFalling(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        ent->m_moveType = MoveType::FreeFalling;
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_moveType = MoveType::FreeFalling;
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameSetCmdSlide(Character* ent, animation::AnimUpdate state)
+void onFrameSetCmdSlide(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        ent->m_response.slide = MovementWalk::Backward;
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_response.slide = MovementWalk::Backward;
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameCorrectDivingAngle(Character* ent, animation::AnimUpdate state)
+void onFrameCorrectDivingAngle(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        ent->m_angles[1] = -45.0;
-        ent->updateTransform();
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_angles[1] = -45.0;
+        ent.updateTransform();
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameToOnWater(Character* ent, animation::AnimUpdate state)
+void onFrameToOnWater(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        ent->m_transform[3][2] = ent->m_heightInfo.transition_level;
-        ent->ghostUpdate();
-        ent->m_moveType = MoveType::OnWater;
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_transform[3][2] = ent.m_heightInfo.transition_level;
+        ent.ghostUpdate();
+        ent.m_moveType = MoveType::OnWater;
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameClimbOutOfWater(Character* ent, animation::AnimUpdate state)
+void onFrameClimbOutOfWater(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        ent->m_transform[3] = glm::vec4(ent->m_climb.point,0) + ent->m_transform[1] * 48.0f;             // temporary stick
-        ent->m_transform[3][2] = ent->m_climb.point[2];
-        ent->ghostUpdate();
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_transform[3] = glm::vec4(ent.m_climb.point,0) + ent.m_transform[1] * 48.0f;             // temporary stick
+        ent.m_transform[3][2] = ent.m_climb.point[2];
+        ent.ghostUpdate();
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameToEdgeClimb(Character* ent, animation::AnimUpdate state)
+void onFrameToEdgeClimb(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        ent->m_transform[3][0] = ent->m_climb.point[0] - ent->m_transform[1][0] * ent->m_skeleton.getBoundingBox().max[1];
-        ent->m_transform[3][1] = ent->m_climb.point[1] - ent->m_transform[1][1] * ent->m_skeleton.getBoundingBox().max[1];
-        ent->m_transform[3][2] = ent->m_climb.point[2] - ent->m_skeleton.getBoundingBox().max[2];
-        ent->ghostUpdate();
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_transform[3][0] = ent.m_climb.point[0] - ent.m_transform[1][0] * ent.m_skeleton.getBoundingBox().max[1];
+        ent.m_transform[3][1] = ent.m_climb.point[1] - ent.m_transform[1][1] * ent.m_skeleton.getBoundingBox().max[1];
+        ent.m_transform[3][2] = ent.m_climb.point[2] - ent.m_skeleton.getBoundingBox().max[2];
+        ent.ghostUpdate();
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameToMonkeyswing(Character* ent, animation::AnimUpdate state)
+void onFrameToMonkeyswing(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        ent->m_moveType = MoveType::Monkeyswing;
-        ent->m_transform[3][2] = ent->m_heightInfo.ceiling.hitPoint[2] - ent->m_skeleton.getBoundingBox().max[2];
-        ent->ghostUpdate();
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_moveType = MoveType::Monkeyswing;
+        ent.m_transform[3][2] = ent.m_heightInfo.ceiling.hitPoint[2] - ent.m_skeleton.getBoundingBox().max[2];
+        ent.ghostUpdate();
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameToTightrope(Character* ent, animation::AnimUpdate state)
+void onFrameToTightrope(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        ent->m_moveType = MoveType::Climbing;
-        ent->ghostUpdate();
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_moveType = MoveType::Climbing;
+        ent.ghostUpdate();
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameFromTightrope(Character* ent, animation::AnimUpdate state)
+void onFrameFromTightrope(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        ent->m_moveType = MoveType::OnFloor;
-        ent->ghostUpdate();
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_moveType = MoveType::OnFloor;
+        ent.ghostUpdate();
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameCrawlToClimb(Character* ent, animation::AnimUpdate state)
+void onFrameCrawlToClimb(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        if(!ent->m_command.action)
+        if(!ent.m_command.action)
         {
-            ent->setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
-            ent->m_moveType = MoveType::FreeFalling;
-            ent->m_moveDir = MoveDirection::Backward;
+            ent.setAnimation(TR_ANIMATION_LARA_START_FREE_FALL, 0);
+            ent.m_moveType = MoveType::FreeFalling;
+            ent.m_moveDir = MoveDirection::Backward;
         }
         else
         {
-            ent->setAnimation(TR_ANIMATION_LARA_HANG_IDLE, -1);
+            ent.setAnimation(TR_ANIMATION_LARA_HANG_IDLE, -1);
         }
 
-        ent->m_skeleton.model()->no_fix_all = false;
+        ent.m_skeleton.model()->no_fix_all = false;
         onFrameToEdgeClimb(ent, state);
-        ent->m_skeleton.onFrame = nullptr;
+        ent.m_skeleton.onFrame = nullptr;
     }
 }
 } // anonymous namespace
@@ -2647,7 +2647,7 @@ void StateController::onwaterForward()
                     m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
                 }
 
-                if(m_character->m_climb.edge_hit && (m_character->m_climb.next_z_space >= m_character->m_height - LaraHangVerticalEpsilon))// && (climb->edge_point[2] - pos[2] < ent->character->max_step_up_height))   // max_step_up_height is not correct value here
+                if(m_character->m_climb.edge_hit && (m_character->m_climb.next_z_space >= m_character->m_height - LaraHangVerticalEpsilon))// && (climb->edge_point[2] - pos[2] < ent.character->max_step_up_height))   // max_step_up_height is not correct value here
                 {
                     m_character->m_moveDir = MoveDirection::Stay;
                     m_character->m_moveType = MoveType::Climbing;
@@ -2671,12 +2671,12 @@ void StateController::onwaterForward()
                 {
                     m_character->setAnimation(TR_ANIMATION_LARA_CLIMB_OUT_OF_WATER, 0);
                 }
-                onFrameClimbOutOfWater(m_character, world::animation::AnimUpdate::NewAnim);
+                onFrameClimbOutOfWater(*m_character, world::animation::AnimUpdate::NewAnim);
             }
         }
         else if(!m_character->m_heightInfo.floor.hasHit || (m_character->m_transform[3][2] - m_character->m_height > m_character->m_heightInfo.floor.hitPoint[2] - m_character->m_swimDepth))
         {
-            //ent->last_state = ent->last_state;                          // swim forward
+            //ent.last_state = ent.last_state;                          // swim forward
         }
         else
         {
@@ -2696,7 +2696,7 @@ void StateController::onwaterBack()
     {
         if(!m_character->m_heightInfo.floor.hasHit || (m_character->m_heightInfo.floor.hitPoint[2] + m_character->m_height < m_character->m_heightInfo.transition_level))
         {
-            //ent->current_state = TR_STATE_CURRENT;                      // continue swimming
+            //ent.current_state = TR_STATE_CURRENT;                      // continue swimming
         }
         else
         {

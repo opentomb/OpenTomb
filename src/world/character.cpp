@@ -2038,7 +2038,7 @@ void Character::fixPenetrations(const glm::vec3* move)
     }
 
     glm::vec3 reaction;
-    int numPenetrationLoops = getPenetrationFixVector(&reaction, move != nullptr);
+    int numPenetrationLoops = getPenetrationFixVector(reaction, move != nullptr);
     m_transform[3] += glm::vec4(reaction, 0);
 
     updateCurrentHeight();
@@ -2095,7 +2095,7 @@ int Character::checkNextPenetration(const glm::vec3& move)
     m_transform[3] += glm::vec4(move, 0);
     // resp->horizontal_collide = 0x00;
     glm::vec3 reaction;
-    int ret = getPenetrationFixVector(&reaction, true);
+    int ret = getPenetrationFixVector(reaction, true);
     if(ret > 0)
     {
         glm::float_t t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
@@ -2171,7 +2171,7 @@ void Character::frame(util::Duration time)
     animation::AnimUpdate animStepResult = stepAnimation(time);
     if(m_skeleton.onFrame != nullptr)
     {
-        m_skeleton.onFrame(this, animStepResult);
+        m_skeleton.onFrame(*this, animStepResult);
     }
 
     applyCommands(); // state_func()

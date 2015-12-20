@@ -56,11 +56,11 @@ struct Polygon
     void transform(const glm::mat4 &tr);
 
     void updateNormal();
-    bool rayIntersect(const glm::vec3 &rayDir, const glm::vec3 &dot, glm::float_t *lambda) const;
-    bool intersectPolygon(Polygon* p2);
+    bool rayIntersect(const glm::vec3 &rayDir, const glm::vec3 &dot, glm::float_t& lambda) const;
+    bool intersectPolygon(const Polygon& p2);
 
-    SplitType splitClassify(const util::Plane &plane);
-    void split(const util::Plane &n, Polygon* front, Polygon* back);
+    SplitType splitClassify(const util::Plane &plane) const;
+    void split(const util::Plane &n, Polygon& front, Polygon& back);
 
     bool isInsideBBox(const BoundingBox& bb) const;
     bool isInsideBQuad(const BoundingBox& bb) const;

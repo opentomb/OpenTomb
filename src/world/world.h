@@ -260,7 +260,7 @@ struct RoomSprite
 {
     core::Sprite* sprite;
     glm::vec3 pos;
-    bool was_rendered;
+    mutable bool was_rendered;
 };
 
 struct World

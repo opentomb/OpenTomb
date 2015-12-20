@@ -10,13 +10,13 @@ namespace core
 
 void BaseMesh::polySortInMesh()
 {
-    for(Polygon &p : m_polygons)
+    for(Polygon& p : m_polygons)
     {
         if(p.anim_id > 0 && p.anim_id <= engine::engine_world.anim_sequences.size())
         {
             animation::AnimSeq* seq = &engine::engine_world.anim_sequences[p.anim_id - 1];
             // set tex coordinates to the first frame for correct texture transform in renderer
-            engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, &p, 0, seq->uvrotate);
+            engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, p, 0, seq->uvrotate);
         }
 
         if(p.blendMode != loader::BlendingMode::Opaque && p.blendMode != loader::BlendingMode::Transparent)
@@ -58,7 +58,7 @@ void BaseMesh::updateBoundingBox()
     }
 }
 
-void BaseMesh::genVBO(const render::Render* /*renderer*/)
+void BaseMesh::genVBO()
 {
     if(m_vboIndexArray || m_vboVertexArray || m_vboSkinArray)
         return;

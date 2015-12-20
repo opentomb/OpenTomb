@@ -380,13 +380,13 @@ void Room::buildOverlappedRoomsList()
     }
 }
 
-void Room::genMesh(World* world, const std::unique_ptr<loader::Level>& tr)
+void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
 {
-    const uint32_t tex_mask = (world->engineVersion == loader::Engine::TR4) ? (loader::TextureIndexMaskTr4) : (loader::TextureIndexMask);
+    const uint32_t tex_mask = (world.engineVersion == loader::Engine::TR4) ? (loader::TextureIndexMaskTr4) : (loader::TextureIndexMask);
 
-    auto tr_room = &tr->m_rooms[getId()];
+    auto& tr_room = tr->m_rooms[getId()];
 
-    if(tr_room->triangles.empty() && tr_room->rectangles.empty())
+    if(tr_room.triangles.empty() && tr_room.rectangles.empty())
     {
         m_mesh = nullptr;
         return;
@@ -394,38 +394,38 @@ void Room::genMesh(World* world, const std::unique_ptr<loader::Level>& tr)
 
     m_mesh = std::make_shared<core::BaseMesh>();
     m_mesh->m_id = getId();
-    m_mesh->m_texturePageCount = static_cast<uint32_t>(world->tex_atlas->getNumAtlasPages()) + 1;
+    m_mesh->m_texturePageCount = static_cast<uint32_t>(world.tex_atlas->getNumAtlasPages()) + 1;
     m_mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
 
-    m_mesh->m_vertices.resize(tr_room->vertices.size());
+    m_mesh->m_vertices.resize(tr_room.vertices.size());
     auto vertex = m_mesh->m_vertices.data();
     for(size_t i = 0; i < m_mesh->m_vertices.size(); i++, vertex++)
     {
-        vertex->position = util::convert(tr_room->vertices[i].vertex);
+        vertex->position = util::convert(tr_room.vertices[i].vertex);
         vertex->normal = { 0,0,0 };                                          // paranoid
     }
 
     m_mesh->updateBoundingBox();
 
-    m_mesh->m_polygons.resize(tr_room->triangles.size() + tr_room->rectangles.size());
+    m_mesh->m_polygons.resize(tr_room.triangles.size() + tr_room.rectangles.size());
     auto p = m_mesh->m_polygons.begin();
 
     /*
     * triangles
     */
-    for(size_t i = 0; i < tr_room->triangles.size(); i++, ++p)
+    for(size_t i = 0; i < tr_room.triangles.size(); i++, ++p)
     {
-        tr_setupRoomVertices(world, tr, tr_room, m_mesh, 3, tr_room->triangles[i].vertices, tr_room->triangles[i].texture & tex_mask, &*p);
-        p->double_side = (tr_room->triangles[i].texture & 0x8000) != 0;
+        tr_setupRoomVertices(world, tr, tr_room, m_mesh, 3, tr_room.triangles[i].vertices, tr_room.triangles[i].texture & tex_mask, *p);
+        p->double_side = (tr_room.triangles[i].texture & 0x8000) != 0;
     }
 
     /*
     * rectangles
     */
-    for(size_t i = 0; i < tr_room->rectangles.size(); i++, ++p)
+    for(size_t i = 0; i < tr_room.rectangles.size(); i++, ++p)
     {
-        tr_setupRoomVertices(world, tr, tr_room, m_mesh, 4, tr_room->rectangles[i].vertices, tr_room->rectangles[i].texture & tex_mask, &*p);
-        p->double_side = (tr_room->rectangles[i].texture & 0x8000) != 0;
+        tr_setupRoomVertices(world, tr, tr_room, m_mesh, 4, tr_room.rectangles[i].vertices, tr_room.rectangles[i].texture & tex_mask, *p);
+        p->double_side = (tr_room.rectangles[i].texture & 0x8000) != 0;
     }
 
     /*
@@ -440,17 +440,17 @@ void Room::genMesh(World* world, const std::unique_ptr<loader::Level>& tr)
     * triangles
     */
     p = m_mesh->m_polygons.begin();
-    for(size_t i = 0; i < tr_room->triangles.size(); i++, ++p)
+    for(size_t i = 0; i < tr_room.triangles.size(); i++, ++p)
     {
-        tr_copyNormals(&*p, m_mesh, tr_room->triangles[i].vertices);
+        tr_copyNormals(*p, *m_mesh, tr_room.triangles[i].vertices);
     }
 
     /*
     * rectangles
     */
-    for(size_t i = 0; i < tr_room->rectangles.size(); i++, ++p)
+    for(size_t i = 0; i < tr_room.rectangles.size(); i++, ++p)
     {
-        tr_copyNormals(&*p, m_mesh, tr_room->rectangles[i].vertices);
+        tr_copyNormals(*p, *m_mesh, tr_room.rectangles[i].vertices);
     }
 
     m_mesh->m_vertices.clear();

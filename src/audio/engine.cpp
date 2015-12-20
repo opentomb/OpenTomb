@@ -376,11 +376,11 @@ void Engine::updateAudio()
 
     if(m_settings.listener_is_player)
     {
-        m_fxManager->updateListener(engine::engine_world.character.get());
+        m_fxManager->updateListener(*engine::engine_world.character);
     }
     else
     {
-        m_fxManager->updateListener(render::renderer.camera());
+        m_fxManager->updateListener(*render::renderer.camera());
     }
 }
 
@@ -721,7 +721,7 @@ Error Engine::send(int effect_ID, EmitterType entity_type, int entity_ID)
     }
 }
 
-void Engine::load(const world::World* world, const std::unique_ptr<loader::Level>& tr)
+void Engine::load(const world::World& world, const std::unique_ptr<loader::Level>& tr)
 {
     // Generate new buffer array.
     m_buffers.resize(tr->m_samplesCount, 0);
@@ -884,7 +884,7 @@ void Engine::load(const world::World* world, const std::unique_ptr<loader::Level
 
     // Hardcoded version-specific fixes!
 
-    switch(world->engineVersion)
+    switch(world.engineVersion)
     {
         case loader::Engine::TR1:
             // Fix for underwater looped sound.
@@ -920,7 +920,7 @@ void Engine::loadSampleOverrideInfo()
 {
     int num_samples, num_sounds;
     std::string sample_name_mask;
-    if(!engine_lua.getOverridedSamplesInfo(&num_samples, &num_sounds, &sample_name_mask))
+    if(!engine_lua.getOverridedSamplesInfo(num_samples, num_sounds, sample_name_mask))
         return;
 
     size_t buffer_counter = 0;
@@ -931,7 +931,7 @@ void Engine::loadSampleOverrideInfo()
             continue;
 
         int sample_index, sample_count;
-        if(engine_lua.getOverridedSample(i, &sample_index, &sample_count))
+        if(engine_lua.getOverridedSample(i, sample_index, sample_count))
         {
             for(int j = 0; j < sample_count; j++, buffer_counter++)
             {

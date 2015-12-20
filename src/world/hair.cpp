@@ -218,7 +218,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
         curr_joint++;   // Point to the next joint.
     }
 
-    createHairMesh(model);
+    createHairMesh(*model);
 
     return true;
 }
@@ -226,16 +226,16 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 // Internal utility function:
 // Creates a single mesh out of all the parts of the given model.
 // This assumes that Mesh_GenFaces was already called on the parts of model.
-void Hair::createHairMesh(const SkeletalModel *model)
+void Hair::createHairMesh(const SkeletalModel& model)
 {
     m_mesh = std::make_shared<core::BaseMesh>();
     m_mesh->m_elementsPerTexture.resize(engine::engine_world.textures.size(), 0);
     size_t totalElements = 0;
 
     // Gather size information
-    for(size_t i = 0; i < model->meshes.size(); i++)
+    for(size_t i = 0; i < model.meshes.size(); i++)
     {
-        const std::shared_ptr<core::BaseMesh> original = model->meshes[i].mesh_base;
+        const std::shared_ptr<core::BaseMesh> original = model.meshes[i].mesh_base;
 
         m_mesh->m_texturePageCount = std::max(m_mesh->m_texturePageCount, original->m_texturePageCount);
 
@@ -255,9 +255,9 @@ void Hair::createHairMesh(const SkeletalModel *model)
     // Copy information
     std::vector<uint32_t> elementsStartPerTexture(m_mesh->m_texturePageCount);
     m_mesh->m_vertices.clear();
-    for(size_t i = 0; i < model->meshes.size(); i++)
+    for(size_t i = 0; i < model.meshes.size(); i++)
     {
-        const std::shared_ptr<core::BaseMesh> original = model->meshes[i].mesh_base;
+        const std::shared_ptr<core::BaseMesh> original = model.meshes[i].mesh_base;
 
         // Copy vertices
         const size_t verticesStart = m_mesh->m_vertices.size();
@@ -291,7 +291,7 @@ void Hair::createHairMesh(const SkeletalModel *model)
          * (i.e. as one big rope). The shader and matrix then transform it
          * correctly.
          */
-        m_elements[i].position = model->meshes[i].offset;
+        m_elements[i].position = model.meshes[i].offset;
         if(i > 0)
         {
             // TODO: This assumes the parent is always the preceding mesh.
@@ -313,7 +313,7 @@ void Hair::createHairMesh(const SkeletalModel *model)
             else
             {
                 m_mesh->m_matrixIndices[verticesStart + j].i = i + 1;
-                m_mesh->m_matrixIndices[verticesStart + j].j = std::min(static_cast<int8_t>(i + 2), static_cast<int8_t>(model->meshes.size()));
+                m_mesh->m_matrixIndices[verticesStart + j].j = std::min(static_cast<int8_t>(i + 2), static_cast<int8_t>(model.meshes.size()));
             }
 
             // Now move all the hair vertices
@@ -329,7 +329,7 @@ void Hair::createHairMesh(const SkeletalModel *model)
         }
     }
 
-    m_mesh->genVBO(&render::renderer);
+    m_mesh->genVBO();
 }
 
 void HairSetup::getSetup(int hair_entry_index)

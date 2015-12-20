@@ -105,7 +105,7 @@ void ItemNotifier::Draw() const
     matrix = glm::translate(matrix, { mCurrPosX, mPosY, -2048.0 });
     matrix = glm::rotate(matrix, m_currentRotation.x + m_rotation.x, { 0,1,0 });
     matrix = glm::rotate(matrix, m_currentRotation.y + m_rotation.y, { 1,0,0 });
-    render::renderItem(item->bf.get(), mSize, matrix, gui::guiProjectionMatrix);
+    render::renderItem(*item->bf, mSize, matrix, gui::guiProjectionMatrix);
 
     item->bf->setCurrentAnimation(anim);
     item->bf->setCurrentFrame(frame);

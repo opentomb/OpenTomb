@@ -117,8 +117,8 @@ void BorderedTextureAtlas::layOutTextures()
         {
             found_place = result_pages[page].findSpaceFor(canonical.width + 2 * m_borderWidth,
                                                           canonical.height + 2 * m_borderWidth,
-                                                          &canonical.new_x_with_border,
-                                                          &canonical.new_y_with_border);
+                                                          canonical.new_x_with_border,
+                                                          canonical.new_y_with_border);
             if(found_place)
             {
                 canonical.new_page = page;
@@ -139,8 +139,8 @@ void BorderedTextureAtlas::layOutTextures()
 
             result_pages.back().findSpaceFor(canonical.width + 2 * m_borderWidth,
                                              canonical.height + 2 * m_borderWidth,
-                                             &canonical.new_x_with_border,
-                                             &canonical.new_y_with_border);
+                                             canonical.new_x_with_border,
+                                             canonical.new_y_with_border);
 
             m_resultPageHeights.emplace_back(canonical.new_y_with_border + canonical.height + m_borderWidth * 2);
         }
@@ -326,18 +326,18 @@ size_t BorderedTextureAtlas::getTextureHeight(size_t texture) const
 ///@FIXME - use Polygon* to replace vertex and numCoordinates (maybe texture in / out))
 void BorderedTextureAtlas::getCoordinates(size_t texture,
                                           bool reverse,
-                                          world::core::Polygon *poly,
+                                          world::core::Polygon& poly,
                                           int shift,
-                                          bool split)  const
+                                          bool split) const
 {
-    BOOST_ASSERT(poly->vertices.size() <= 4);
+    BOOST_ASSERT(poly.vertices.size() <= 4);
 
     BOOST_ASSERT(texture < m_fileObjectTextures.size());
     const FileObjectTexture& file_object_texture = m_fileObjectTextures[texture];
     const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[file_object_texture.canonical_texture_index];
 
-    poly->tex_index = static_cast<uint16_t>( canonical.new_page );
-    for (size_t i = 0; i < poly->vertices.size(); i++)
+    poly.tex_index = static_cast<uint16_t>( canonical.new_page );
+    for (size_t i = 0; i < poly.vertices.size(); i++)
     {
         unsigned x_coord = 0;
         unsigned y_coord = 0;
@@ -374,10 +374,10 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
                 BOOST_ASSERT(false);
         }
 
-        size_t index = reverse ? (poly->vertices.size() - i - 1) : i;
+        size_t index = reverse ? (poly.vertices.size() - i - 1) : i;
 
-        poly->vertices[index].tex_coord[0] = static_cast<glm::float_t>(x_coord) / static_cast<glm::float_t>(m_resultPageWidth);
-        poly->vertices[index].tex_coord[1] = static_cast<glm::float_t>(y_coord) / static_cast<glm::float_t>(m_resultPageHeights[canonical.new_page]);
+        poly.vertices[index].tex_coord[0] = static_cast<glm::float_t>(x_coord) / static_cast<glm::float_t>(m_resultPageWidth);
+        poly.vertices[index].tex_coord[1] = static_cast<glm::float_t>(y_coord) / static_cast<glm::float_t>(m_resultPageHeights[canonical.new_page]);
     }
 }
 

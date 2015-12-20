@@ -2092,7 +2092,7 @@ void lua_CreateEntityGhosts(world::ObjectId id)
 
     if(ent && (ent->m_skeleton.getBoneCount() > 0))
     {
-        ent->m_skeleton.createGhosts(ent.get(), ent->m_transform);
+        ent->m_skeleton.createGhosts(*ent);
     }
 }
 
@@ -3495,20 +3495,17 @@ int script::MainEngine::getNumTracks()
     return call("getNumTracks", static_cast<int>(engine::engine_world.engineVersion)).toInt();
 }
 
-bool script::MainEngine::getOverridedSamplesInfo(int *num_samples, int *num_sounds, std::string* sample_name_mask)
+bool script::MainEngine::getOverridedSamplesInfo(int& num_samples, int& num_sounds, std::string& sample_name_mask)
 {
-    const char* realPath;
-    lua::tie(realPath, *num_sounds, *num_samples) = call("getOverridedSamplesInfo", static_cast<int>(engine::engine_world.engineVersion));
+    lua::tie(sample_name_mask, num_sounds, num_samples) = call("getOverridedSamplesInfo", static_cast<int>(engine::engine_world.engineVersion));
 
-    *sample_name_mask = realPath;
-
-    return *num_sounds != -1 && *num_samples != -1 && strcmp(realPath, "NONE") != 0;
+    return num_sounds != -1 && num_samples != -1 && sample_name_mask != "NONE";
 }
 
-bool script::MainEngine::getOverridedSample(int sound_id, int *first_sample_number, int *samples_count)
+bool script::MainEngine::getOverridedSample(int sound_id, int& first_sample_number, int& samples_count)
 {
-    lua::tie(*first_sample_number, *samples_count) = call("getOverridedSample", static_cast<int>(engine::engine_world.engineVersion), int(engine::Gameflow_Manager.getLevelID()), sound_id);
-    return *first_sample_number != -1 && *samples_count != -1;
+    lua::tie(first_sample_number, samples_count) = call("getOverridedSample", static_cast<int>(engine::engine_world.engineVersion), int(engine::Gameflow_Manager.getLevelID()), sound_id);
+    return first_sample_number != -1 && samples_count != -1;
 }
 
 bool script::MainEngine::getSoundtrack(int track_index, char *file_path, audio::StreamMethod *load_method, audio::StreamType *stream_type)
@@ -3578,122 +3575,122 @@ void script::MainEngine::execEffect(int id, int caller, int operand)
 
 // Parsing config file entries.
 
-void script::ScriptEngine::parseControls(engine::ControlSettings *cs) const
+void script::ScriptEngine::parseControls(engine::ControlSettings& cs) const
 {
-    cs->mouse_sensitivity = (*this)["controls"]["mouse_sensitivity"].toNumber();
-    cs->mouse_scale_x = (*this)["controls"]["mouse_scale_x"].toNumber();
-    cs->mouse_scale_y = (*this)["controls"]["mouse_scale_y"].toNumber();
-    cs->use_joy = (*this)["controls"]["use_joy"].toBool();
-    cs->joy_number = (*this)["controls"]["joy_number"].toInt();
-    cs->joy_rumble = (*this)["controls"]["joy_rumble"].toBool();
-    cs->joy_axis_map[engine::AXIS_LOOK_X] = (*this)["controls"]["joy_look_axis_x"].toInt();
-    cs->joy_axis_map[engine::AXIS_LOOK_Y] = (*this)["controls"]["joy_look_axis_y"].toInt();
-    cs->joy_axis_map[engine::AXIS_MOVE_X] = (*this)["controls"]["joy_move_axis_x"].toInt();
-    cs->joy_axis_map[engine::AXIS_MOVE_Y] = (*this)["controls"]["joy_move_axis_y"].toInt();
-    cs->joy_look_invert_x = (*this)["controls"]["joy_look_invert_x"].toBool();
-    cs->joy_look_invert_y = (*this)["controls"]["joy_look_invert_y"].toBool();
-    cs->joy_look_sensitivity = (*this)["controls"]["joy_look_sensitivity"].toNumber();
-    cs->joy_look_deadzone = (*this)["controls"]["joy_look_deadzone"].toInt();
-    cs->joy_move_invert_x = (*this)["controls"]["joy_move_invert_x"].toBool();
-    cs->joy_move_invert_y = (*this)["controls"]["joy_move_invert_y"].toBool();
-    cs->joy_move_sensitivity = (*this)["controls"]["joy_move_sensitivity"].toNumber();
-    cs->joy_move_deadzone = (*this)["controls"]["joy_move_deadzone"].toInt();
+    cs.mouse_sensitivity = (*this)["controls"]["mouse_sensitivity"].toNumber();
+    cs.mouse_scale_x = (*this)["controls"]["mouse_scale_x"].toNumber();
+    cs.mouse_scale_y = (*this)["controls"]["mouse_scale_y"].toNumber();
+    cs.use_joy = (*this)["controls"]["use_joy"].toBool();
+    cs.joy_number = (*this)["controls"]["joy_number"].toInt();
+    cs.joy_rumble = (*this)["controls"]["joy_rumble"].toBool();
+    cs.joy_axis_map[engine::AXIS_LOOK_X] = (*this)["controls"]["joy_look_axis_x"].toInt();
+    cs.joy_axis_map[engine::AXIS_LOOK_Y] = (*this)["controls"]["joy_look_axis_y"].toInt();
+    cs.joy_axis_map[engine::AXIS_MOVE_X] = (*this)["controls"]["joy_move_axis_x"].toInt();
+    cs.joy_axis_map[engine::AXIS_MOVE_Y] = (*this)["controls"]["joy_move_axis_y"].toInt();
+    cs.joy_look_invert_x = (*this)["controls"]["joy_look_invert_x"].toBool();
+    cs.joy_look_invert_y = (*this)["controls"]["joy_look_invert_y"].toBool();
+    cs.joy_look_sensitivity = (*this)["controls"]["joy_look_sensitivity"].toNumber();
+    cs.joy_look_deadzone = (*this)["controls"]["joy_look_deadzone"].toInt();
+    cs.joy_move_invert_x = (*this)["controls"]["joy_move_invert_x"].toBool();
+    cs.joy_move_invert_y = (*this)["controls"]["joy_move_invert_y"].toBool();
+    cs.joy_move_sensitivity = (*this)["controls"]["joy_move_sensitivity"].toNumber();
+    cs.joy_move_deadzone = (*this)["controls"]["joy_move_deadzone"].toInt();
 }
 
-void script::ScriptEngine::parseScreen(engine::ScreenInfo *sc) const
+void script::ScriptEngine::parseScreen(engine::ScreenInfo& sc) const
 {
-    sc->x = (*this)["screen"]["x"].toInt();
-    sc->y = (*this)["screen"]["y"].toInt();
-    sc->w = (*this)["screen"]["width"].toInt();
-    sc->h = (*this)["screen"]["height"].toInt();
-    sc->w_unit = sc->w / gui::ScreenMeteringResolution;
-    sc->h_unit = sc->h / gui::ScreenMeteringResolution;
-    sc->FS_flag = (*this)["screen"]["fullscreen"].toBool();
-    sc->show_debuginfo = (*this)["screen"]["debug_info"].toBool();
-    sc->fov = (*this)["screen"]["fov"].toNumber();
-    sc->vsync = (*this)["screen"]["vsync"].toBool();
+    sc.x = (*this)["screen"]["x"].toInt();
+    sc.y = (*this)["screen"]["y"].toInt();
+    sc.w = (*this)["screen"]["width"].toInt();
+    sc.h = (*this)["screen"]["height"].toInt();
+    sc.w_unit = sc.w / gui::ScreenMeteringResolution;
+    sc.h_unit = sc.h / gui::ScreenMeteringResolution;
+    sc.FS_flag = (*this)["screen"]["fullscreen"].toBool();
+    sc.show_debuginfo = (*this)["screen"]["debug_info"].toBool();
+    sc.fov = (*this)["screen"]["fov"].toNumber();
+    sc.vsync = (*this)["screen"]["vsync"].toBool();
 }
 
-void script::ScriptEngine::parseRender(render::RenderSettings *rs) const
+void script::ScriptEngine::parseRender(render::RenderSettings& rs) const
 {
-    rs->mipmap_mode = (*this)["render"]["mipmap_mode"].toInt();
-    rs->mipmaps = (*this)["render"]["mipmaps"].toInt();
-    rs->lod_bias = (*this)["render"]["lod_bias"].toNumber();
-    rs->anisotropy = (*this)["render"]["anisotropy"].toInt();
-    rs->antialias = (*this)["render"]["antialias"].toBool();
-    rs->antialias_samples = (*this)["render"]["antialias_samples"].toInt();
-    rs->texture_border = (*this)["render"]["texture_border"].toInt();
-    rs->save_texture_memory = (*this)["render"]["save_texture_memory"].toBool();
-    rs->z_depth = (*this)["render"]["z_depth"].toInt();
-    rs->fog_enabled = (*this)["render"]["fog_enabled"].toBool();
-    rs->fog_start_depth = (*this)["render"]["fog_start_depth"].toNumber();
-    rs->fog_end_depth = (*this)["render"]["fog_end_depth"].toNumber();
-    rs->fog_color[0] = (*this)["render"]["fog_color"]["r"].toInt();
-    rs->fog_color[0] /= 255.0;
-    rs->fog_color[1] = (*this)["render"]["fog_color"]["g"].toInt();
-    rs->fog_color[1] /= 255.0;
-    rs->fog_color[2] = (*this)["render"]["fog_color"]["b"].toInt();
-    rs->fog_color[2] /= 255.0;
-    rs->fog_color[3] = 1;
+    rs.mipmap_mode = (*this)["render"]["mipmap_mode"].toInt();
+    rs.mipmaps = (*this)["render"]["mipmaps"].toInt();
+    rs.lod_bias = (*this)["render"]["lod_bias"].toNumber();
+    rs.anisotropy = (*this)["render"]["anisotropy"].toInt();
+    rs.antialias = (*this)["render"]["antialias"].toBool();
+    rs.antialias_samples = (*this)["render"]["antialias_samples"].toInt();
+    rs.texture_border = (*this)["render"]["texture_border"].toInt();
+    rs.save_texture_memory = (*this)["render"]["save_texture_memory"].toBool();
+    rs.z_depth = (*this)["render"]["z_depth"].toInt();
+    rs.fog_enabled = (*this)["render"]["fog_enabled"].toBool();
+    rs.fog_start_depth = (*this)["render"]["fog_start_depth"].toNumber();
+    rs.fog_end_depth = (*this)["render"]["fog_end_depth"].toNumber();
+    rs.fog_color[0] = (*this)["render"]["fog_color"]["r"].toInt();
+    rs.fog_color[0] /= 255.0;
+    rs.fog_color[1] = (*this)["render"]["fog_color"]["g"].toInt();
+    rs.fog_color[1] /= 255.0;
+    rs.fog_color[2] = (*this)["render"]["fog_color"]["b"].toInt();
+    rs.fog_color[2] /= 255.0;
+    rs.fog_color[3] = 1;
 
-    rs->use_gl3 = (*this)["render"]["use_gl3"].toBool();
+    rs.use_gl3 = (*this)["render"]["use_gl3"].toBool();
 
-    if(rs->z_depth != 8 && rs->z_depth != 16 && rs->z_depth != 24)
-        rs->z_depth = 24;
+    if(rs.z_depth != 8 && rs.z_depth != 16 && rs.z_depth != 24)
+        rs.z_depth = 24;
 }
 
-void script::ScriptEngine::parseAudio(audio::Settings *as) const
+void script::ScriptEngine::parseAudio(audio::Settings& as) const
 {
-    as->music_volume = (*this)["audio"]["music_volume"].toNumber();
-    as->sound_volume = (*this)["audio"]["sound_volume"].toNumber();
-    as->use_effects = (*this)["audio"]["use_effects"].toBool();
-    as->listener_is_player = (*this)["audio"]["listener_is_player"].toBool();
-    as->stream_buffer_size = (*this)["audio"]["stream_buffer_size"].toInt();
-    as->stream_buffer_size *= 1024;
-    if(as->stream_buffer_size <= 0)
-        as->stream_buffer_size = 128 * 1024;
-    as->music_volume = (*this)["audio"]["music_volume"].toNumber();
-    as->music_volume = (*this)["audio"]["music_volume"].toNumber();
+    as.music_volume = (*this)["audio"]["music_volume"].toNumber();
+    as.sound_volume = (*this)["audio"]["sound_volume"].toNumber();
+    as.use_effects = (*this)["audio"]["use_effects"].toBool();
+    as.listener_is_player = (*this)["audio"]["listener_is_player"].toBool();
+    as.stream_buffer_size = (*this)["audio"]["stream_buffer_size"].toInt();
+    as.stream_buffer_size *= 1024;
+    if(as.stream_buffer_size <= 0)
+        as.stream_buffer_size = 128 * 1024;
+    as.music_volume = (*this)["audio"]["music_volume"].toNumber();
+    as.music_volume = (*this)["audio"]["music_volume"].toNumber();
 }
 
-void script::ScriptEngine::parseConsole(Console *cn) const
+void script::ScriptEngine::parseConsole(gui::Console& cn) const
 {
     {
         float r = (*this)["console"]["background_color"]["r"].toInt();
         float g = (*this)["console"]["background_color"]["g"].toInt();
         float b = (*this)["console"]["background_color"]["b"].toInt();
         float a = (*this)["console"]["background_color"]["a"].toInt();
-        cn->setBackgroundColor(r / 255, g / 255, b / 255, a / 255);
+        cn.setBackgroundColor(r / 255, g / 255, b / 255, a / 255);
     }
 
     float tmpF = (*this)["console"]["spacing"].toNumber();
     if(tmpF >= CON_MIN_LINE_INTERVAL && tmpF <= CON_MAX_LINE_INTERVAL)
-        cn->setSpacing(tmpF);
+        cn.setSpacing(tmpF);
 
     int tmpI = (*this)["console"]["line_size"].toInt();
     if(tmpI >= CON_MIN_LINE_SIZE && tmpI <= CON_MAX_LINE_SIZE)
-        cn->setLineSize(tmpI);
+        cn.setLineSize(tmpI);
 
     tmpI = (*this)["console"]["showing_lines"].toInt();
     if(tmpI >= CON_MIN_LINES && tmpI <= CON_MIN_LINES)
-        cn->setVisibleLines(tmpI);
+        cn.setVisibleLines(tmpI);
 
     tmpI = (*this)["console"]["log_size"].toInt();
     if(tmpI >= CON_MIN_LOG && tmpI <= CON_MAX_LOG)
-        cn->setHistorySize(tmpI);
+        cn.setHistorySize(tmpI);
 
     tmpI = (*this)["console"]["lines_count"].toInt();
     if(tmpI >= CON_MIN_LOG && tmpI <= CON_MAX_LOG)
-        cn->setBufferSize(tmpI);
+        cn.setBufferSize(tmpI);
 
     bool tmpB = (*this)["console"]["show"].toBool();
-    cn->setVisible(tmpB);
+    cn.setVisible(tmpB);
 
     tmpI = (*this)["console"]["show_cursor_period"].toInt();
-    cn->setShowCursorPeriod(util::MilliSeconds(tmpI));
+    cn.setShowCursorPeriod(util::MilliSeconds(tmpI));
 }
 
-void script::ScriptEngine::parseSystem(engine::SystemSettings *ss) const
+void script::ScriptEngine::parseSystem(engine::SystemSettings& ss) const
 {
-    ss->logging = (*this)["system"]["logging"].toBool();
+    ss.logging = (*this)["system"]["logging"].toBool();
 }

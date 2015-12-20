@@ -180,7 +180,7 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh) cons
 /**
  * draw transparency polygons
  */
-void Render::renderPolygonTransparency(loader::BlendingMode currentTransparency, const BSPFaceRef& bsp_ref, const UnlitTintedShaderDescription *shader) const
+void Render::renderPolygonTransparency(loader::BlendingMode currentTransparency, const BSPFaceRef& bsp_ref, const UnlitTintedShaderDescription& shader) const
 {
     // Blending mode switcher.
     // Note that modes above 2 aren't explicitly used in TR textures, only for
@@ -217,7 +217,7 @@ void Render::renderPolygonTransparency(loader::BlendingMode currentTransparency,
 
     glm::mat4 mvp = m_cam->getViewProjection() * bsp_ref.transform;
 
-    glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(mvp));
+    glUniformMatrix4fv(shader.model_view_projection, 1, false, glm::value_ptr(mvp));
 
     bsp_ref.polygon->used_vertex_array->bind();
     glBindTexture(GL_TEXTURE_2D, m_world->textures[bsp_ref.polygon->polygon->tex_index]);
@@ -225,7 +225,7 @@ void Render::renderPolygonTransparency(loader::BlendingMode currentTransparency,
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(bsp_ref.polygon->count), GL_UNSIGNED_INT, reinterpret_cast<GLvoid *>(sizeof(GLuint) * bsp_ref.polygon->firstIndex));
 }
 
-void Render::renderBSPFrontToBack(loader::BlendingMode currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
+void Render::renderBSPFrontToBack(loader::BlendingMode currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription& shader)
 {
     if(root->plane.distance(engine::engine_camera.getPosition()) >= 0)
     {
@@ -271,7 +271,7 @@ void Render::renderBSPFrontToBack(loader::BlendingMode currentTransparency, cons
     }
 }
 
-void Render::renderBSPBackToFront(loader::BlendingMode currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription *shader)
+void Render::renderBSPBackToFront(loader::BlendingMode currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription& shader)
 {
     if(root->plane.distance(engine::engine_camera.getPosition()) >= 0)
     {
@@ -320,13 +320,13 @@ void Render::renderBSPBackToFront(loader::BlendingMode currentTransparency, cons
 /**
  * skeletal model drawing
  */
-void Render::renderSkeletalModel(const LitShaderDescription *shader, world::animation::Skeleton *skeleton, const glm::mat4& mvMatrix, const glm::mat4& mvpMatrix)
+void Render::renderSkeletalModel(const LitShaderDescription& shader, const world::animation::Skeleton& skeleton, const glm::mat4& mvMatrix, const glm::mat4& mvpMatrix)
 {
-    for(const world::animation::Bone& bone : skeleton->getBones())
+    for(const world::animation::Bone& bone : skeleton.getBones())
     {
-        glUniformMatrix4fv(shader->model_view, 1, false, glm::value_ptr(mvMatrix * bone.full_transform));
+        glUniformMatrix4fv(shader.model_view, 1, false, glm::value_ptr(mvMatrix * bone.full_transform));
 
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(mvpMatrix * bone.full_transform));
+        glUniformMatrix4fv(shader.model_view_projection, 1, false, glm::value_ptr(mvpMatrix * bone.full_transform));
 
         renderMesh(bone.mesh);
         if(bone.mesh_slot)
@@ -336,22 +336,22 @@ void Render::renderSkeletalModel(const LitShaderDescription *shader, world::anim
     }
 }
 
-void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, world::Entity* ent, const glm::mat4& mvMatrix)
+void Render::renderSkeletalModelSkin(const LitShaderDescription& shader, const world::Entity& ent, const glm::mat4& mvMatrix)
 {
-    glUniformMatrix4fv(shader->projection, 1, false, glm::value_ptr(m_cam->getProjection()));
+    glUniformMatrix4fv(shader.projection, 1, false, glm::value_ptr(m_cam->getProjection()));
 
-    for(const world::animation::Bone& bone : ent->m_skeleton.getBones())
+    for(const world::animation::Bone& bone : ent.m_skeleton.getBones())
     {
         glm::mat4 transforms[2];
         transforms[0] = mvMatrix * bone.full_transform;
 
         // Calculate parent transform
-        const glm::mat4& parentTransform = bone.parent ? bone.parent->full_transform : ent->m_transform;
+        const glm::mat4& parentTransform = bone.parent ? bone.parent->full_transform : ent.m_transform;
 
         glm::mat4 secondTransform = parentTransform * glm::translate(glm::mat4(1.0f), bone.offset);
 
         transforms[1] = mvMatrix * secondTransform;
-        glUniformMatrix4fv(shader->model_view, 2, false, glm::value_ptr(transforms[0]));
+        glUniformMatrix4fv(shader.model_view, 2, false, glm::value_ptr(transforms[0]));
 
         if(bone.mesh_skin)
         {
@@ -360,11 +360,11 @@ void Render::renderSkeletalModelSkin(const LitShaderDescription *shader, world::
     }
 }
 
-void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, world::Entity* ent)
+void Render::renderDynamicEntitySkin(const LitShaderDescription& shader, const world::Entity& ent)
 {
-    glUniformMatrix4fv(shader->projection, 1, false, glm::value_ptr(m_cam->getProjection()));
+    glUniformMatrix4fv(shader.projection, 1, false, glm::value_ptr(m_cam->getProjection()));
 
-    for(const world::animation::Bone& bone : ent->m_skeleton.getBones())
+    for(const world::animation::Bone& bone : ent.m_skeleton.getBones())
     {
         glm::mat4 mvTransforms[2];
 
@@ -378,12 +378,12 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, world::
         if(bone.parent)
             bone.parent->bt_body->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr1));
         else
-            tr1 = ent->m_transform;
+            tr1 = ent.m_transform;
 
         glm::mat4 secondTransform = glm::translate(tr1, bone.offset);
         mvTransforms[1] = m_cam->getView() * secondTransform;
 
-        glUniformMatrix4fv(shader->model_view, 2, false, glm::value_ptr(mvTransforms[0]));
+        glUniformMatrix4fv(shader.model_view, 2, false, glm::value_ptr(mvTransforms[0]));
 
         if(bone.mesh_skin)
         {
@@ -396,19 +396,19 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription *shader, world::
  * Sets up the light calculations for the given entity based on its current
  * room. Returns the used shader, which will have been made current already.
  */
-const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, bool skin) const
+const LitShaderDescription *Render::setupEntityLight(const world::Entity& entity, bool skin) const
 {
     // Calculate lighting
-    if(!entity->getRoom())
+    if(!entity.getRoom())
     {
         const LitShaderDescription *shader = m_shaderManager->getEntityShader(0, skin);
         glUseProgram(shader->program);
         return shader;
     }
 
-    glm::vec4 ambient_component( entity->getRoom()->m_ambientLighting, 1.0f );
+    glm::vec4 ambient_component( entity.getRoom()->m_ambientLighting, 1.0f );
 
-    if(entity->getRoom()->m_flags & TR_ROOM_FLAG_WATER)
+    if(entity.getRoom()->m_flags & TR_ROOM_FLAG_WATER)
     {
         ambient_component *= engine::engine_world.calculateWaterTint();
     }
@@ -426,11 +426,11 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, bool
     std::array<glm::float_t, EntityShaderLightsLimit> outerRadiuses;
     std::fill(outerRadiuses.begin(), outerRadiuses.end(), 0);
 
-    for(size_t i = 0; i < entity->getRoom()->m_lights.size() && current_light_number < EntityShaderLightsLimit; i++)
+    for(size_t i = 0; i < entity.getRoom()->m_lights.size() && current_light_number < EntityShaderLightsLimit; i++)
     {
-        world::core::Light *current_light = &entity->getRoom()->m_lights[i];
+        world::core::Light *current_light = &entity.getRoom()->m_lights[i];
 
-        glm::vec3 xyz = glm::vec3(entity->m_transform[3]) - current_light->position;
+        glm::vec3 xyz = glm::vec3(entity.m_transform[3]) - current_light->position;
         glm::float_t distance = glm::length(xyz);
 
         // Find color
@@ -441,7 +441,7 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, bool
             glm::clamp(current_light->colour[3], 0.0f, 1.0f)
         };
 
-        if(entity->getRoom()->m_flags & TR_ROOM_FLAG_WATER)
+        if(entity.getRoom()->m_flags & TR_ROOM_FLAG_WATER)
         {
             colors[current_light_number] *= engine::engine_world.calculateWaterTint();
         }
@@ -474,54 +474,54 @@ const LitShaderDescription *Render::setupEntityLight(world::Entity* entity, bool
     return shader;
 }
 
-void Render::renderEntity(world::Entity* entity)
+void Render::renderEntity(const world::Entity& entity)
 {
-    if(!m_drawAllModels && (entity->m_wasRendered || !entity->m_visible))
+    if(!m_drawAllModels && (entity.m_wasRendered || !entity.m_visible))
         return;
 
     // Calculate lighting
     const LitShaderDescription *shader = setupEntityLight(entity, false);
 
-    if(entity->m_skeleton.getModel() && !entity->m_skeleton.getModel()->animations.empty())
+    if(entity.m_skeleton.getModel() && !entity.m_skeleton.getModel()->animations.empty())
     {
         // base frame offset
-        if(entity->m_typeFlags & ENTITY_TYPE_DYNAMIC)
+        if(entity.m_typeFlags & ENTITY_TYPE_DYNAMIC)
         {
-            renderDynamicEntity(shader, entity);
+            renderDynamicEntity(*shader, entity);
             ///@TODO: where I need to do bf skinning matrices update? this time ragdoll update function calculates these matrices;
-            if(entity->m_skeleton.getBones().front().mesh_skin)
+            if(entity.m_skeleton.getBones().front().mesh_skin)
             {
                 const LitShaderDescription *skinShader = setupEntityLight(entity, true);
-                renderDynamicEntitySkin(skinShader, entity);
+                renderDynamicEntitySkin(*skinShader, entity);
             }
         }
         else
         {
-            glm::mat4 scaledTransform = glm::scale(entity->m_transform, entity->m_scaling);
+            glm::mat4 scaledTransform = glm::scale(entity.m_transform, entity.m_scaling);
             glm::mat4 subModelView = m_cam->getView() * scaledTransform;
             glm::mat4 subModelViewProjection = m_cam->getViewProjection() * scaledTransform;
-            renderSkeletalModel(shader, &entity->m_skeleton, subModelView, subModelViewProjection);
-            if(entity->m_skeleton.getBones().front().mesh_skin)
+            renderSkeletalModel(*shader, entity.m_skeleton, subModelView, subModelViewProjection);
+            if(entity.m_skeleton.getBones().front().mesh_skin)
             {
                 const LitShaderDescription *skinShader = setupEntityLight(entity, true);
-                renderSkeletalModelSkin(skinShader, entity, subModelView);
+                renderSkeletalModelSkin(*skinShader, entity, subModelView);
             }
         }
     }
 }
 
-void Render::renderDynamicEntity(const LitShaderDescription *shader, world::Entity* entity)
+void Render::renderDynamicEntity(const LitShaderDescription& shader, const world::Entity& entity)
 {
-    for(const world::animation::Bone& bone : entity->m_skeleton.getBones())
+    for(const world::animation::Bone& bone : entity.m_skeleton.getBones())
     {
         glm::mat4 tr(1.0f);
         bone.bt_body->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr));
         glm::mat4 mvTransform = m_cam->getView() * tr;
 
-        glUniformMatrix4fv(shader->model_view, 1, false, glm::value_ptr(mvTransform));
+        glUniformMatrix4fv(shader.model_view, 1, false, glm::value_ptr(mvTransform));
 
         glm::mat4 mvpTransform = m_cam->getViewProjection() * tr;
-        glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(mvpTransform));
+        glUniformMatrix4fv(shader.model_view_projection, 1, false, glm::value_ptr(mvpTransform));
 
         renderMesh(bone.mesh);
         if(bone.mesh_slot)
@@ -538,7 +538,7 @@ void Render::renderHair(std::shared_ptr<world::Character> entity)
         return;
 
     // Calculate lighting
-    const LitShaderDescription *shader = setupEntityLight(entity.get(), true);
+    const LitShaderDescription *shader = setupEntityLight(*entity, true);
 
     for(const std::shared_ptr<world::Hair>& hair : entity->m_hairs)
     {
@@ -596,13 +596,13 @@ void Render::renderHair(std::shared_ptr<world::Character> entity)
 /**
  * drawing world models.
  */
-void Render::renderRoom(const world::Room* room)
+void Render::renderRoom(const world::Room& room)
 {
-    if(!m_skipRoom && room->m_mesh)
+    if(!m_skipRoom && room.m_mesh)
     {
-        glm::mat4 modelViewProjection = m_cam->getViewProjection() * room->m_modelMatrix;
+        glm::mat4 modelViewProjection = m_cam->getViewProjection() * room.m_modelMatrix;
 
-        UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(room->m_lightMode == 1, room->m_flags & 1);
+        UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(room.m_lightMode == 1, room.m_flags & 1);
 
         glm::vec4 tint = engine::engine_world.calculateWaterTint();
         glUseProgram(shader->program);
@@ -611,13 +611,13 @@ void Render::renderRoom(const world::Room* room)
         glUniform1f(shader->current_tick, static_cast<GLfloat>(SDL_GetTicks()));
         glUniform1i(shader->sampler, 0);
         glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(modelViewProjection));
-        renderMesh(room->m_mesh);
+        renderMesh(room.m_mesh);
     }
 
-    if(!room->m_staticMeshes.empty())
+    if(!room.m_staticMeshes.empty())
     {
         glUseProgram(m_shaderManager->getStaticMeshShader()->program);
-        for(const std::shared_ptr<world::StaticMesh>& sm : room->m_staticMeshes)
+        for(const std::shared_ptr<world::StaticMesh>& sm : room.m_staticMeshes)
         {
             if(sm->was_rendered)
             {
@@ -635,7 +635,7 @@ void Render::renderRoom(const world::Room* room)
             glm::vec4 tint = sm->tint;
 
             //If this static mesh is in a water room
-            if(room->m_flags & TR_ROOM_FLAG_WATER)
+            if(room.m_flags & TR_ROOM_FLAG_WATER)
             {
                 tint *= engine::engine_world.calculateWaterTint();
             }
@@ -645,20 +645,20 @@ void Render::renderRoom(const world::Room* room)
         }
     }
 
-    for(world::Object* object : room->m_objects)
+    for(world::Object* object : room.m_objects)
     {
         world::Entity* ent = dynamic_cast<world::Entity*>(object);
         if(!ent || ent->m_wasRendered)
             continue;
 
-        renderEntity(ent);
+        renderEntity(*ent);
         ent->m_wasRendered = true;
     }
 }
 
-void Render::renderRoomSprites(const world::Room* room) const
+void Render::renderRoomSprites(const world::Room& room) const
 {
-    if(!room->m_sprites.empty() && room->m_spriteBuffer)
+    if(!room.m_sprites.empty() && room.m_spriteBuffer)
     {
         SpriteShaderDescription *shader = m_shaderManager->getSpriteShader();
         glUseProgram(shader->program);
@@ -666,19 +666,19 @@ void Render::renderRoomSprites(const world::Room* room) const
         glUniformMatrix4fv(shader->projection, 1, GL_FALSE, glm::value_ptr(m_cam->getProjection()));
         glUniform1i(shader->sampler, 0);
 
-        room->m_spriteBuffer->data->bind();
+        room.m_spriteBuffer->data->bind();
 
         size_t offset = 0;
-        for(uint32_t texture = 0; texture < room->m_spriteBuffer->num_texture_pages; texture++)
+        for(uint32_t texture = 0; texture < room.m_spriteBuffer->num_texture_pages; texture++)
         {
-            if(room->m_spriteBuffer->element_count_per_texture[texture] == 0)
+            if(room.m_spriteBuffer->element_count_per_texture[texture] == 0)
             {
                 continue;
             }
 
             glBindTexture(GL_TEXTURE_2D, m_world->textures[texture]);
-            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(room->m_spriteBuffer->element_count_per_texture[texture]), GL_UNSIGNED_SHORT, reinterpret_cast<GLvoid *>(offset * sizeof(uint16_t)));
-            offset += room->m_spriteBuffer->element_count_per_texture[texture];
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(room.m_spriteBuffer->element_count_per_texture[texture]), GL_UNSIGNED_SHORT, reinterpret_cast<GLvoid *>(offset * sizeof(uint16_t)));
+            offset += room.m_spriteBuffer->element_count_per_texture[texture];
         }
     }
 }
@@ -687,7 +687,7 @@ void Render::renderRoomSprites(const world::Room* room) const
  * Add a room to the render list.
  * If the room is already listed - false is returned and the room is not added twice.
  */
-bool Render::addRoom(world::Room* room)
+bool Render::addRoom(const world::Room* room)
 {
     if(!room->m_active || !m_renderList.insert(room).second)
     {
@@ -713,7 +713,7 @@ bool Render::addRoom(world::Room* room)
         ent->m_wasRenderedLines = false;
     }
 
-    for(world::RoomSprite& sp : room->m_sprites)
+    for(const world::RoomSprite& sp : room->m_sprites)
     {
         sp.was_rendered = false;
     }
@@ -750,7 +750,7 @@ void Render::drawList()
 
     if(m_world->character)
     {
-        renderEntity(m_world->character.get());
+        renderEntity(*m_world->character);
         renderHair(m_world->character);
     }
 
@@ -759,7 +759,7 @@ void Render::drawList()
      */
     for(const world::Room* room : m_renderList)
     {
-        renderRoom(room);
+        renderRoom(*room);
     }
 
     glDisable(GL_CULL_FACE);
@@ -767,7 +767,7 @@ void Render::drawList()
     ///@FIXME: reduce number of gl state changes
     for(const world::Room* room : m_renderList)
     {
-        renderRoomSprites(room);
+        renderRoomSprites(*room);
     }
 
     /*
@@ -837,7 +837,7 @@ void Render::drawList()
         glDepthMask(GL_FALSE);
         glDisable(GL_ALPHA_TEST);
         glEnable(GL_BLEND);
-        renderBSPBackToFront(loader::BlendingMode::Opaque, render_dBSP.root(), shader);
+        renderBSPBackToFront(loader::BlendingMode::Opaque, render_dBSP.root(), *shader);
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
@@ -852,7 +852,7 @@ void Render::drawListDebugLines()
 
     if(m_world->character)
     {
-        debugDrawer.drawEntityDebugLines(m_world->character.get(), this);
+        debugDrawer.drawEntityDebugLines(*m_world->character, *this);
     }
 
     /*
@@ -862,12 +862,12 @@ void Render::drawListDebugLines()
     {
         glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->sky_box->animations.front().getInitialBoneKeyFrame().offset);
         tr *= glm::mat4_cast(m_world->sky_box->animations.front().getInitialBoneKeyFrame().qrotate);
-        debugDrawer.drawMeshDebugLines(m_world->sky_box->meshes.front().mesh_base, tr, this);
+        debugDrawer.drawMeshDebugLines(m_world->sky_box->meshes.front().mesh_base, tr, *this);
     }
 
     for(const world::Room* room : m_renderList)
     {
-        debugDrawer.drawRoomDebugLines(room, this);
+        debugDrawer.drawRoomDebugLines(*room, *this);
     }
 
     if(m_drawColl)
@@ -888,14 +888,14 @@ void Render::drawListDebugLines()
     }
 }
 
-void Render::processRoom(world::Room* room)
+void Render::processRoom(const world::Room& room)
 {
     // Breadth-first queue
     std::queue<PortalTracer> toVisit;
 
-    addRoom(room);
+    addRoom(&room);
     // always process direct neighbours
-    for(const world::Portal& portal : room->m_portals)
+    for(const world::Portal& portal : room.m_portals)
     {
         PortalTracer path;
         if(!path.checkVisibility(&portal, m_cam->getPosition(), m_cam->getFrustum()))
@@ -951,7 +951,7 @@ void Render::genWorldList()
     m_cam->setCurrentRoom( curr_room );
     if(curr_room != nullptr)                  // camera located in some room
     {
-        processRoom(curr_room);
+        processRoom(*curr_room);
         return;
     }
 
@@ -1137,9 +1137,9 @@ void RenderDebugDrawer::drawOBB(const world::core::OrientedBoundingBox& obb)
     }
 }
 
-void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<world::core::BaseMesh> &mesh, const glm::mat4& transform, Render* render)
+void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<world::core::BaseMesh> &mesh, const glm::mat4& transform, const Render& render)
 {
-    if(!render->m_drawNormals)
+    if(!render.m_drawNormals)
         return;
 
     setColor(0.8f, 0.0f, 0.9f);
@@ -1154,93 +1154,93 @@ void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<world::core::Ba
     }
 }
 
-void RenderDebugDrawer::drawSkeletalModelDebugLines(const world::animation::Skeleton& skeleton, const glm::mat4& transform, Render *render)
+void RenderDebugDrawer::drawSkeletalModelDebugLines(const world::animation::Skeleton& skeleton, const glm::mat4& transform, const Render& render)
 {
-    if(!render->m_drawNormals)
+    if(!render.m_drawNormals)
         return;
 
     for(const world::animation::Bone& bone : skeleton.getBones())
         drawMeshDebugLines(bone.mesh, transform * bone.full_transform, render);
 }
 
-void RenderDebugDrawer::drawEntityDebugLines(world::Entity* entity, Render* render)
+void RenderDebugDrawer::drawEntityDebugLines(const world::Entity& entity, const Render& render)
 {
-    if(entity->m_wasRenderedLines || !(render->m_drawAxis || render->m_drawNormals || render->m_drawBoxes) || !entity->m_visible)
+    if(entity.m_wasRenderedLines || !(render.m_drawAxis || render.m_drawNormals || render.m_drawBoxes) || !entity.m_visible)
     {
         return;
     }
 
-    if(render->m_drawBoxes)
+    if(render.m_drawBoxes)
     {
         debugDrawer.setColor(0.0, 0.0, 1.0);
-        debugDrawer.drawOBB(entity->m_obb);
+        debugDrawer.drawOBB(entity.m_obb);
     }
 
-    if(render->m_drawAxis)
+    if(render.m_drawAxis)
     {
         // If this happens, the lines after this will get drawn with random colors. I don't care.
-        debugDrawer.drawAxis(1000.0, entity->m_transform);
+        debugDrawer.drawAxis(1000.0, entity.m_transform);
     }
 
-    if(entity->m_skeleton.getModel() && !entity->m_skeleton.getModel()->animations.empty())
+    if(entity.m_skeleton.getModel() && !entity.m_skeleton.getModel()->animations.empty())
     {
-        debugDrawer.drawSkeletalModelDebugLines(entity->m_skeleton, entity->m_transform, render);
+        debugDrawer.drawSkeletalModelDebugLines(entity.m_skeleton, entity.m_transform, render);
     }
 
-    entity->m_wasRenderedLines = true;
+    entity.m_wasRenderedLines = true;
 }
 
-void RenderDebugDrawer::drawSectorDebugLines(world::RoomSector *rs)
+void RenderDebugDrawer::drawSectorDebugLines(const world::RoomSector& rs)
 {
     world::core::BoundingBox bb;
-    bb.min = { rs->position[0] - world::MeteringSectorSize / 2.0f, rs->position[1] - world::MeteringSectorSize / 2.0f, static_cast<glm::float_t>(rs->floor) };
-    bb.max = { rs->position[0] + world::MeteringSectorSize / 2.0f, rs->position[1] + world::MeteringSectorSize / 2.0f, static_cast<glm::float_t>(rs->ceiling) };
+    bb.min = { rs.position[0] - world::MeteringSectorSize / 2.0f, rs.position[1] - world::MeteringSectorSize / 2.0f, static_cast<glm::float_t>(rs.floor) };
+    bb.max = { rs.position[0] + world::MeteringSectorSize / 2.0f, rs.position[1] + world::MeteringSectorSize / 2.0f, static_cast<glm::float_t>(rs.ceiling) };
 
     drawBBox(bb, nullptr);
 }
 
-void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* render)
+void RenderDebugDrawer::drawRoomDebugLines(const world::Room& room, const Render& render)
 {
-    if(render->m_drawRoomBoxes)
+    if(render.m_drawRoomBoxes)
     {
         debugDrawer.setColor(0.0, 0.1f, 0.9f);
-        debugDrawer.drawBBox(room->m_boundingBox, nullptr);
+        debugDrawer.drawBBox(room.m_boundingBox, nullptr);
         /*for(uint32_t s=0;s<room->sectors_count;s++)
         {
             drawSectorDebugLines(room->sectors + s);
         }*/
     }
 
-    if(render->m_drawPortals)
+    if(render.m_drawPortals)
     {
         debugDrawer.setColor(1.0, 1.0, 0.0);
-        for(const auto& p : room->m_portals)
+        for(const auto& p : room.m_portals)
             debugDrawer.drawPortal(p);
 
         debugDrawer.setColor(1.0, 1.0, 0.5);
-        for(const auto& p : room->m_portals)
+        for(const auto& p : room.m_portals)
             debugDrawer.addLine(p.center, p.center + p.normal*128.0f);
     }
 
-    if(!render->m_skipRoom && (room->m_mesh != nullptr))
+    if(!render.m_skipRoom && (room.m_mesh != nullptr))
     {
-        debugDrawer.drawMeshDebugLines(room->m_mesh, room->m_modelMatrix, render);
+        debugDrawer.drawMeshDebugLines(room.m_mesh, room.m_modelMatrix, render);
     }
 
-    for(auto sm : room->m_staticMeshes)
+    for(auto sm : room.m_staticMeshes)
     {
-        if(sm->was_rendered_lines || (sm->hide && !render->m_drawDummyStatics))
+        if(sm->was_rendered_lines || (sm->hide && !render.m_drawDummyStatics))
         {
             continue;
         }
 
-        if(render->m_drawBoxes)
+        if(render.m_drawBoxes)
         {
             debugDrawer.setColor(0.0f, 1.0f, 0.1f);
             debugDrawer.drawOBB(sm->obb);
         }
 
-        if(render->m_drawAxis)
+        if(render.m_drawAxis)
         {
             debugDrawer.drawAxis(1000.0, sm->transform);
         }
@@ -1250,7 +1250,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
         sm->was_rendered_lines = true;
     }
 
-    for(world::Object* object : room->m_objects)
+    for(world::Object* object : room.m_objects)
     {
         world::Entity* ent = dynamic_cast<world::Entity*>(object);
         if(!ent)
@@ -1259,7 +1259,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
         if(ent->m_wasRenderedLines)
             continue;
 
-        debugDrawer.drawEntityDebugLines(ent, render);
+        debugDrawer.drawEntityDebugLines(*ent, render);
         ent->m_wasRenderedLines = true;
     }
 }
@@ -1271,7 +1271,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room* room, Render* rend
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void renderItem(world::animation::Skeleton *bf, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix)
+void renderItem(const world::animation::Skeleton& bf, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix)
 {
     const LitShaderDescription *shader = renderer.shaderManager()->getEntityShader(0, false);
     glUseProgram(shader->program);
@@ -1280,7 +1280,7 @@ void renderItem(world::animation::Skeleton *bf, glm::float_t size, const glm::ma
 
     if(size != 0.0)
     {
-        auto bb = bf->getBoundingBox().getDiameter();
+        auto bb = bf.getBoundingBox().getDiameter();
         size /= glm::max(glm::max(bb[0], bb[1]), bb[2]);
         size *= 0.8f;
 
@@ -1294,12 +1294,12 @@ void renderItem(world::animation::Skeleton *bf, glm::float_t size, const glm::ma
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        renderer.renderSkeletalModel(*shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
     else
     {
         glm::mat4 mvpMatrix = guiProjectionMatrix * mvMatrix;
-        renderer.renderSkeletalModel(shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        renderer.renderSkeletalModel(*shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
 

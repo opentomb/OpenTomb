@@ -213,7 +213,7 @@ boost::optional<ObjectId> World::spawnEntity(ModelId model_id, uint32_t room_id,
 
         Res_SetEntityProperties(ent);
         ent->rebuildBoundingBox();
-        ent->m_skeleton.genRigidBody(ent.get(), ent->getCollisionShape(), ent->getCollisionType(), ent->m_transform);
+        ent->m_skeleton.genRigidBody(*ent);
 
         if(ent->getRoom() != nullptr)
         {

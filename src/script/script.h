@@ -133,12 +133,12 @@ namespace script
         void exposeConstants();
         std::vector<std::string> getGlobals();
 
-        void parseScreen(engine::ScreenInfo *sc) const;
-        void parseRender(render::RenderSettings *rs) const;
-        void parseAudio(audio::Settings *as) const;
-        void parseConsole(gui::Console *cn) const;
-        void parseControls(engine::ControlSettings *cs) const;
-        void parseSystem(engine::SystemSettings *ss) const;
+        void parseScreen(engine::ScreenInfo& sc) const;
+        void parseRender(render::RenderSettings& rs) const;
+        void parseAudio(audio::Settings& as) const;
+        void parseConsole(gui::Console& cn) const;
+        void parseControls(engine::ControlSettings& cs) const;
+        void parseSystem(engine::SystemSettings& ss) const;
 
     protected:
         void checkStack();
@@ -200,8 +200,8 @@ namespace script
 
         // Helper Lua functions. Not directly called from scripts.
 
-        bool getOverridedSamplesInfo(int *num_samples, int *num_sounds, std::string *sample_name_mask);
-        bool getOverridedSample(int sound_id, int *first_sample_number, int *samples_count);
+        bool getOverridedSamplesInfo(int& num_samples, int& num_sounds, std::string& sample_name_mask);
+        bool getOverridedSample(int sound_id, int& first_sample_number, int& samples_count);
 
         int  getGlobalSound(int global_sound_id);
         int  getSecretTrackNumber();

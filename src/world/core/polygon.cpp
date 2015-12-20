@@ -94,14 +94,14 @@ void Polygon::copyTransformed(const Polygon& src, const glm::mat4& tr, bool copy
     plane.moveTo(vertices[0].position);
 }
 
-bool Polygon::rayIntersect(const glm::vec3& rayDir, const glm::vec3& dot, glm::float_t* lambda) const
+bool Polygon::rayIntersect(const glm::vec3& rayDir, const glm::vec3& dot, glm::float_t& lambda) const
 {
     glm::float_t u = glm::dot(plane.normal, rayDir);
     if(glm::abs(u) < 0.001 /*|| vec3_plane_dist(plane, dot) < -0.001*/)          // FIXME: magick
     {
         return false;    // plane is parallel to the ray - no intersection
     }
-    *lambda = -plane.distance(dot) / u;
+    lambda = -plane.distance(dot) / u;
 
     auto vp = &vertices.front();           // current polygon pointer
     glm::vec3 T = dot - vp[0].position;
@@ -129,9 +129,9 @@ bool Polygon::rayIntersect(const glm::vec3& rayDir, const glm::vec3& dot, glm::f
     return false;
 }
 
-bool Polygon::intersectPolygon(Polygon* p2)
+bool Polygon::intersectPolygon(const Polygon& p2)
 {
-    if(SplitType::InBoth != splitClassify(p2->plane) || (SplitType::InBoth != p2->splitClassify(plane)))
+    if(SplitType::InBoth != splitClassify(p2.plane) || (SplitType::InBoth != p2.splitClassify(plane)))
     {
         return false;  // quick check
     }
@@ -141,17 +141,17 @@ bool Polygon::intersectPolygon(Polygon* p2)
     /*
      * intersection of polygon p1 and plane p2
      */
-    auto prev_v = &vertices.back();
-    auto curr_v = &vertices.front();
-    glm::float_t dist0 = p2->plane.distance(prev_v->position);
+    const Vertex* prev_v = &vertices.back();
+    const Vertex* curr_v = &vertices.front();
+    glm::float_t dist0 = p2.plane.distance(prev_v->position);
     for(size_t i = 0; i < vertices.size(); i++)
     {
-        glm::float_t dist1 = p2->plane.distance(curr_v->position);
+        glm::float_t dist1 = p2.plane.distance(curr_v->position);
         if(dist1 > SplitEpsilon)
         {
             if(dist0 < -SplitEpsilon)
             {
-                result_buf.emplace_back(p2->plane.rayIntersect(prev_v->position,
+                result_buf.emplace_back(p2.plane.rayIntersect(prev_v->position,
                                                                curr_v->position - prev_v->position));
             }
         }
@@ -159,7 +159,7 @@ bool Polygon::intersectPolygon(Polygon* p2)
         {
             if(dist0 > SplitEpsilon)
             {
-                result_buf.emplace_back(p2->plane.rayIntersect(prev_v->position,
+                result_buf.emplace_back(p2.plane.rayIntersect(prev_v->position,
                                                                curr_v->position - prev_v->position));
             }
         }
@@ -180,10 +180,10 @@ bool Polygon::intersectPolygon(Polygon* p2)
     /*
      * splitting p2 by p1 split plane
      */
-    prev_v = &p2->vertices.back();
-    curr_v = &p2->vertices.front();
+    prev_v = &p2.vertices.back();
+    curr_v = &p2.vertices.front();
     dist0 = plane.distance(prev_v->position);
-    for(size_t i = 0; i < p2->vertices.size(); i++)
+    for(size_t i = 0; i < p2.vertices.size(); i++)
     {
         glm::float_t dist1 = plane.distance(curr_v->position);
         if(dist1 > SplitEpsilon)
@@ -216,7 +216,7 @@ bool Polygon::intersectPolygon(Polygon* p2)
         curr_v++;
     }
 
-    auto dir = glm::cross(plane.normal, p2->plane.normal);  // vector of two planes intersection line
+    auto dir = glm::cross(plane.normal, p2.plane.normal);  // vector of two planes intersection line
     glm::float_t t = glm::abs(dir[0]);
     dist0 = glm::abs(dir[1]);
     glm::float_t dist1 = glm::abs(dir[2]);
@@ -260,7 +260,7 @@ bool Polygon::intersectPolygon(Polygon* p2)
     return !((dist1 < dist0 && dist2 < dist0) || (dist1 > 0.0 && dist2 > 0.0));
 }
 
-SplitType Polygon::splitClassify(const util::Plane& plane)
+SplitType Polygon::splitClassify(const util::Plane& plane) const
 {
     size_t positive = 0, negative = 0;
     for(const auto& v : vertices)
@@ -295,21 +295,21 @@ SplitType Polygon::splitClassify(const util::Plane& plane)
 /*
  * animated textures coordinates splits too!
  */
-void Polygon::split(const util::Plane& n, Polygon* front, Polygon* back)
+void Polygon::split(const util::Plane& n, Polygon& front, Polygon& back)
 {
-    front->plane = plane;
-    front->anim_id = anim_id;
-    front->frame_offset = frame_offset;
-    front->double_side = double_side;
-    front->tex_index = tex_index;
-    front->blendMode = blendMode;
+    front.plane = plane;
+    front.anim_id = anim_id;
+    front.frame_offset = frame_offset;
+    front.double_side = double_side;
+    front.tex_index = tex_index;
+    front.blendMode = blendMode;
 
-    back->plane = plane;
-    back->anim_id = anim_id;
-    back->frame_offset = frame_offset;
-    back->double_side = double_side;
-    back->tex_index = tex_index;
-    back->blendMode = blendMode;
+    back.plane = plane;
+    back.anim_id = anim_id;
+    back.frame_offset = frame_offset;
+    back.double_side = double_side;
+    back.tex_index = tex_index;
+    back.blendMode = blendMode;
 
     auto curr_v = &vertices.front();
     auto prev_v = &vertices.back();
@@ -337,10 +337,10 @@ void Polygon::split(const util::Plane& n, Polygon* front, Polygon* back)
                 tv.tex_coord[0] = prev_v->tex_coord[0] + t * (curr_v->tex_coord[0] - prev_v->tex_coord[0]);
                 tv.tex_coord[1] = prev_v->tex_coord[1] + t * (curr_v->tex_coord[1] - prev_v->tex_coord[1]);
 
-                front->vertices.emplace_back(tv);
-                back->vertices.emplace_back(tv);
+                front.vertices.emplace_back(tv);
+                back.vertices.emplace_back(tv);
             }
-            front->vertices.emplace_back(*curr_v);
+            front.vertices.emplace_back(*curr_v);
         }
         else if(dist1 < -SplitEpsilon)
         {
@@ -360,15 +360,15 @@ void Polygon::split(const util::Plane& n, Polygon* front, Polygon* back)
                 tv.tex_coord[0] = prev_v->tex_coord[0] + t * (curr_v->tex_coord[0] - prev_v->tex_coord[0]);
                 tv.tex_coord[1] = prev_v->tex_coord[1] + t * (curr_v->tex_coord[1] - prev_v->tex_coord[1]);
 
-                front->vertices.emplace_back(tv);
-                back->vertices.emplace_back(tv);
+                front.vertices.emplace_back(tv);
+                back.vertices.emplace_back(tv);
             }
-            back->vertices.emplace_back(*curr_v);
+            back.vertices.emplace_back(*curr_v);
         }
         else
         {
-            front->vertices.emplace_back(*curr_v);
-            back->vertices.emplace_back(*curr_v);
+            front.vertices.emplace_back(*curr_v);
+            back.vertices.emplace_back(*curr_v);
         }
 
         prev_v = curr_v;

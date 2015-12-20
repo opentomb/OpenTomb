@@ -165,7 +165,7 @@ struct Room : public Object
     RoomSector* getSectorRaw(const glm::vec3 &pos);
     RoomSector* getSectorXYZ(const glm::vec3 &pos);
 
-    void genMesh(World *world, const std::unique_ptr<loader::Level>& tr);
+    void genMesh(World& world, const std::unique_ptr<loader::Level>& tr);
 };
 
 btCollisionShape* BT_CSfromHeightmap(const boost::multi_array<RoomSector, 2>& heightmap, const std::vector<SectorTween> &tweens, bool useCompression, bool buildBvh);

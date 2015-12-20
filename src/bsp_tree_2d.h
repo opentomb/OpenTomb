@@ -74,7 +74,7 @@ struct BSPTree2DNode
      * @param destY
      * @return
      */
-    bool findSpaceFor(uint32_t needleWidth, uint32_t needleHeight, uint32_t *destX, uint32_t *destY)
+    bool findSpaceFor(uint32_t needleWidth, uint32_t needleHeight, uint32_t& destX, uint32_t& destY)
     {
         // Could this possibly fit?
         if(!fits(needleWidth, needleHeight))
@@ -110,8 +110,8 @@ struct BSPTree2DNode
         {
             // Perfect match
             isFilled = true;
-            *destX = x;
-            *destY = y;
+            destX = x;
+            destY = y;
             return true;
         }
         else if(height == needleHeight)
@@ -121,8 +121,8 @@ struct BSPTree2DNode
 
             // height already fits, width fits too now, so this is the result
             left->isFilled = true;
-            *destX = left->x;
-            *destY = left->y;
+            destX = left->x;
+            destY = left->y;
             return true;
         }
         else

@@ -897,7 +897,7 @@ bool loadPCLevel(const std::string& name)
 
     loader->load();
 
-    TR_GenWorld(&engine_world, loader);
+    TR_GenWorld(engine_world, loader);
 
     std::string buf = getLevelName(name);
 
@@ -1214,12 +1214,12 @@ void initConfig(const std::string& filename)
             return;
         }
 
-        state.parseScreen(&screen_info);
-        state.parseRender(&render::renderer.settings());
-        state.parseAudio(&engine_world.audioEngine.settings());
-        state.parseConsole(&Console::instance());
-        state.parseControls(&control_mapper);
-        state.parseSystem(&system_settings);
+        state.parseScreen(screen_info);
+        state.parseRender(render::renderer.settings());
+        state.parseAudio(engine_world.audioEngine.settings());
+        state.parseConsole(Console::instance());
+        state.parseControls(control_mapper);
+        state.parseSystem(system_settings);
     }
     else
     {

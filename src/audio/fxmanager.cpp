@@ -97,36 +97,36 @@ FxManager::FxManager(bool)
  * that function have to be called every game frame.
  * @param cam - pointer to the camera structure.
  */
-void FxManager::updateListener(world::Camera *cam)
+void FxManager::updateListener(world::Camera& cam)
 {
     ALfloat v[6] = {
-        cam->getViewDir()[0], cam->getViewDir()[1], cam->getViewDir()[2],
-        cam->getUpDir()[0], cam->getUpDir()[1], cam->getUpDir()[2]
+        cam.getViewDir()[0], cam.getViewDir()[1], cam.getViewDir()[2],
+        cam.getUpDir()[0], cam.getUpDir()[1], cam.getUpDir()[2]
     };
 
     alListenerfv(AL_ORIENTATION, v);
 
-    alListenerfv(AL_POSITION, glm::value_ptr(cam->getPosition()));
+    alListenerfv(AL_POSITION, glm::value_ptr(cam.getPosition()));
 
-    glm::vec3 v2 = cam->getMovement() / util::toSeconds(engine::engine_frame_time);
+    glm::vec3 v2 = cam.getMovement() / util::toSeconds(engine::engine_frame_time);
     alListenerfv(AL_VELOCITY, glm::value_ptr(v2));
-    cam->resetMovement();
+    cam.resetMovement();
 
-    if(!cam->getCurrentRoom())
+    if(!cam.getCurrentRoom())
         return;
 
-    if(cam->getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER)
+    if(cam.getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER)
     {
         current_room_type = loader::ReverbType::Water;
     }
     else
     {
-        current_room_type = cam->getCurrentRoom()->m_reverbType;
+        current_room_type = cam.getCurrentRoom()->m_reverbType;
     }
 
-    if(water_state != static_cast<bool>(cam->getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER))
+    if(water_state != static_cast<bool>(cam.getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER))
     {
-        water_state = (cam->getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER) != 0;
+        water_state = (cam.getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER) != 0;
 
         if(water_state)
         {
@@ -139,7 +139,7 @@ void FxManager::updateListener(world::Camera *cam)
     }
 }
 
-void FxManager::updateListener(world::Character* /*ent*/)
+void FxManager::updateListener(world::Character& /*ent*/)
 {
     ///@FIXME: Add entity listener updater here.
 }

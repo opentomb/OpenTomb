@@ -348,7 +348,7 @@ class Skeleton
     util::Duration m_animationTime = util::Duration::zero();
 
   public:
-    void (*onFrame)(Character* ent, AnimUpdate state) = nullptr;
+    void (*onFrame)(Character& ent, AnimUpdate state) = nullptr;
 
     const Animation& getCurrentAnimationFrame() const;
     AnimUpdate stepAnimation(util::Duration time, Entity* cmdEntity = nullptr);
@@ -504,7 +504,7 @@ class Skeleton
 
     void updateBoundingBox();
 
-    void createGhosts(Entity* entity, const glm::mat4& transform);
+    void createGhosts(Entity& entity);
 
     void cleanCollisionBodyParts(uint32_t parts_flags)
     {
@@ -525,12 +525,12 @@ class Skeleton
         }
     }
 
-    void updateCurrentCollisions(const Entity* entity, const glm::mat4& transform);
+    void updateCurrentCollisions(const Entity& entity, const glm::mat4& transform);
     bool createRagdoll(const RDSetup& setup);
     void initCollisions(const glm::vec3& speed);
     void updateRigidBody(const glm::mat4& transform);
-    btCollisionObject* getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t* curr_flag);
-    void genRigidBody(Entity* entity, CollisionShape collisionShape, CollisionType collisionType, const glm::mat4& transform);
+    btCollisionObject* getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t& curr_flag);
+    void genRigidBody(Entity& entity);
     void enableCollision();
     void disableCollision();
 };
