@@ -1551,7 +1551,7 @@ namespace world
                 dy = -1;
             }
 
-            RoomSector& near_sector = near_sector = room->m_sectors[i/room->m_sectors.shape()[1] + dx][i%room->m_sectors.shape()[1] + dy];
+            RoomSector& near_sector = room->m_sectors[i/room->m_sectors.shape()[1] + dx][i%room->m_sectors.shape()[1] + dy];
 
             if(dx != 0  && dy != 0 && sector.portal_to_room >= 0)
             {
