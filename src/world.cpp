@@ -1787,7 +1787,6 @@ void World_GenRoom(struct world_s *world, struct room_s *room, class VT_Level *t
         Mat4_E(r_static->transform);
         Mat4_Translate(r_static->transform, r_static->pos);
         Mat4_RotateZ(r_static->transform, r_static->rot[0]);
-        r_static->was_rendered = 0;
         OBB_Rebuild(r_static->obb, r_static->vbb_min, r_static->vbb_max);
         OBB_Transform(r_static->obb);
 
@@ -2095,6 +2094,15 @@ void World_GenRoom(struct world_s *world, struct room_s *room, class VT_Level *t
     room->bb_max[0] = room->transform[12] + TR_METERING_SECTORSIZE * room->sectors_x - TR_METERING_SECTORSIZE;
     room->bb_max[1] = room->transform[13] + TR_METERING_SECTORSIZE * room->sectors_y - TR_METERING_SECTORSIZE;
 
+    room->obb = OBB_Create();
+    room->obb->transform = room->transform;
+    {
+        float bb_min[3], bb_max[3];
+        vec3_sub(bb_min, room->bb_min, room->transform + 12);
+        vec3_sub(bb_max, room->bb_max, room->transform + 12);
+        OBB_Rebuild(room->obb, bb_min, bb_max);
+        OBB_Transform(room->obb);
+    }
     /*
      * alternate room pointer calculation if one exists.
      */
@@ -2241,7 +2249,6 @@ void World_GenEntities(struct world_s *world, class VT_Level *tr)
                 rsp->pos[0] = entity->transform[12];
                 rsp->pos[1] = entity->transform[13];
                 rsp->pos[2] = entity->transform[14];
-                rsp->was_rendered = 0;
             }
 
             Entity_Clear(entity);

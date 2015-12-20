@@ -412,7 +412,7 @@ void TR_Level::read_tr2_level(SDL_RWops * const src, bool demo)
     // remap all sample indices here
     for(i = 0; i < this->sound_details_count; i++)
     {
-        if((this->sound_details[i].sample >= 0) && (this->sound_details[i].sample < this->sample_indices_count))
+        if(this->sound_details[i].sample < this->sample_indices_count)
         {
             this->sound_details[i].sample = this->sample_indices[this->sound_details[i].sample];
         }

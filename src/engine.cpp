@@ -1197,19 +1197,19 @@ int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "xxx"))
         {
-            FILE *f = fopen("ascII.txt", "r");
+            SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
             if(f)
             {
                 long int size;
                 char *buf;
-                fseek(f, 0, SEEK_END);
-                size= ftell(f);
+                SDL_RWseek(f, 0, RW_SEEK_END);
+                size= SDL_RWtell(f);
                 buf = (char*) malloc((size+1)*sizeof(char));
 
-                fseek(f, 0, SEEK_SET);
-                fread(buf, size, sizeof(char), f);
+                SDL_RWseek(f, 0, RW_SEEK_SET);
+                SDL_RWread(f, buf, sizeof(char), size);
                 buf[size] = 0;
-                fclose(f);
+                SDL_RWclose(f);
                 Con_Clean();
                 Con_AddText(buf, FONTSTYLE_CONSOLE_INFO);
                 free(buf);

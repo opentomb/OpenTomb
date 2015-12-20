@@ -495,12 +495,6 @@ void CRender::DrawListDebugLines()
 
 void CRender::CleanList()
 {
-    if(m_world && m_world->Character)
-    {
-        m_world->Character->was_rendered = 0;
-        m_world->Character->was_rendered_lines = 0;
-    }
-
     for(uint32_t i = 0; i < r_list_active_count; i++)
     {
         r_list[i].active = 0;
@@ -838,7 +832,7 @@ void CRender::DrawSkeletalModel(const lit_shader_description *shader, struct ss_
 
 void CRender::DrawEntity(struct entity_s *entity, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])
 {
-    if(entity->was_rendered || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf->animations.model->hide && !(r_flags & R_DRAW_NULLMESHES)))
+    if(!(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf->animations.model->hide && !(r_flags & R_DRAW_NULLMESHES)))
     {
         return;
     }
@@ -890,6 +884,7 @@ void CRender::DrawEntity(struct entity_s *entity, const float modelViewMatrix[16
 
 void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])
 {
+    float transform[16];
     engine_container_p cont;
     entity_p ent;
 
@@ -978,32 +973,24 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         qglUseProgramObjectARB(shaderManager->getStaticMeshShader()->program);
         for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
         {
-            if(room->content->static_mesh[i].was_rendered || !Frustum_IsOBBVisibleInFrustumList(room->content->static_mesh[i].obb, (room->frustum)?(room->frustum):(m_camera->frustum)))
+            if(Frustum_IsOBBVisibleInFrustumList(room->content->static_mesh[i].obb, (room->frustum)?(room->frustum):(m_camera->frustum)) &&
+               (!room->content->static_mesh[i].hide || (r_flags & R_DRAW_DUMMY_STATICS)))
             {
-                continue;
+                Mat4_Mat4_mul(transform, modelViewProjectionMatrix, room->content->static_mesh[i].transform);
+                qglUniformMatrix4fvARB(shaderManager->getStaticMeshShader()->model_view_projection, 1, false, transform);
+                base_mesh_s *mesh = room->content->static_mesh[i].mesh;
+                GLfloat tint[4];
+
+                vec4_copy(tint, room->content->static_mesh[i].tint);
+
+                //If this static mesh is in a water room
+                if(room->flags & TR_ROOM_FLAG_WATER)
+                {
+                    CalculateWaterTint(tint, 0);
+                }
+                qglUniform4fvARB(shaderManager->getStaticMeshShader()->tint_mult, 1, tint);
+                this->DrawMesh(mesh, NULL, NULL);
             }
-
-            if((room->content->static_mesh[i].hide == 1) && !(r_flags & R_DRAW_DUMMY_STATICS))
-            {
-                continue;
-            }
-
-            float transform[16];
-            Mat4_Mat4_mul(transform, modelViewProjectionMatrix, room->content->static_mesh[i].transform);
-            qglUniformMatrix4fvARB(shaderManager->getStaticMeshShader()->model_view_projection, 1, false, transform);
-            base_mesh_s *mesh = room->content->static_mesh[i].mesh;
-            GLfloat tint[4];
-
-            vec4_copy(tint, room->content->static_mesh[i].tint);
-
-            //If this static mesh is in a water room
-            if(room->flags & TR_ROOM_FLAG_WATER)
-            {
-                CalculateWaterTint(tint, 0);
-            }
-            qglUniform4fvARB(shaderManager->getStaticMeshShader()->tint_mult, 1, tint);
-            this->DrawMesh(mesh, NULL, NULL);
-            room->content->static_mesh[i].was_rendered = 1;
         }
     }
 
@@ -1013,17 +1000,69 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         {
         case OBJECT_ENTITY:
             ent = (entity_p)cont->object;
-            if(ent->was_rendered == 0)
+            if(Frustum_IsOBBVisibleInFrustumList(ent->obb, (room->frustum)?(room->frustum):(m_camera->frustum)))
             {
-                if(Frustum_IsOBBVisibleInFrustumList(ent->obb, (room->frustum)?(room->frustum):(m_camera->frustum)))
-                {
-                    this->DrawEntity(ent, modelViewMatrix, modelViewProjectionMatrix);
-                }
-                ent->was_rendered = 1;
+                this->DrawEntity(ent, modelViewMatrix, modelViewProjectionMatrix);
             }
             break;
         };
     }
+
+#if 1
+    for(uint16_t pi = 0; pi < room->portals_count; pi++)
+    {
+        room_p near_room = room->portals[pi].dest_room;
+#else
+    for(uint16_t ni = 0; ni < room->near_room_list_size; ni++)
+    {
+        room_p near_room = room->near_room_list[ni];
+#endif
+        if(near_room->active && !near_room->is_in_r_list)
+        {
+            if (near_room->content->static_mesh_count > 0)
+            {
+                for(uint32_t si = 0; si < near_room->content->static_mesh_count; si++)
+                {
+                    if(OBB_OBB_Test(near_room->content->static_mesh[si].obb, room->obb) &&
+                       Frustum_IsOBBVisibleInFrustumList(near_room->content->static_mesh[si].obb, (room->frustum) ? (room->frustum) : (m_camera->frustum)) &&
+                       (!near_room->content->static_mesh[si].hide || (r_flags & R_DRAW_DUMMY_STATICS)))
+                    {
+                        qglUseProgramObjectARB(shaderManager->getStaticMeshShader()->program);
+                        Mat4_Mat4_mul(transform, modelViewProjectionMatrix, near_room->content->static_mesh[si].transform);
+                        qglUniformMatrix4fvARB(shaderManager->getStaticMeshShader()->model_view_projection, 1, false, transform);
+                        base_mesh_s *mesh = near_room->content->static_mesh[si].mesh;
+                        GLfloat tint[4];
+
+                        vec4_copy(tint, near_room->content->static_mesh[si].tint);
+
+                        //If this static mesh is in a water near_room
+                        if(near_room->flags & TR_ROOM_FLAG_WATER)
+                        {
+                            CalculateWaterTint(tint, 0);
+                        }
+                        qglUniform4fvARB(shaderManager->getStaticMeshShader()->tint_mult, 1, tint);
+                        this->DrawMesh(mesh, NULL, NULL);
+                    }
+                }
+            }
+
+            for(cont = near_room->content->containers; cont; cont=cont->next)
+            {
+                switch(cont->object_type)
+                {
+                case OBJECT_ENTITY:
+                    ent = (entity_p)cont->object;
+                    if(OBB_OBB_Test(ent->obb, room->obb) &&
+                       Frustum_IsOBBVisibleInFrustumList(ent->obb, (room->frustum) ? (room->frustum) : (m_camera->frustum)))
+                    {
+                        this->DrawEntity(ent, modelViewMatrix, modelViewProjectionMatrix);
+                    }
+                    break;
+                };
+            }
+        }
+    }
+
 #if STENCIL_FRUSTUM
     if(need_stencil)
     {
@@ -1084,7 +1123,6 @@ void CRender::DrawRoomSprites(struct room_s *room)
 int  CRender::AddRoom(struct room_s *room)
 {
     int ret = 0;
-    engine_container_p cont;
     float dist, centre[3];
 
     if(room->is_in_r_list || !room->active)
@@ -1109,28 +1147,6 @@ int  CRender::AddRoom(struct room_s *room)
         {
             r_flags |= R_DRAW_SKYBOX;
         }
-    }
-
-    for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
-    {
-        room->content->static_mesh[i].was_rendered = 0;
-        room->content->static_mesh[i].was_rendered_lines = 0;
-    }
-
-    for(cont = room->content->containers; cont; cont = cont->next)
-    {
-        switch(cont->object_type)
-        {
-            case OBJECT_ENTITY:
-                ((entity_p)cont->object)->was_rendered = 0;
-                ((entity_p)cont->object)->was_rendered_lines = 0;
-                break;
-        };
-    }
-
-    for(uint32_t i = 0; i <room->content->sprites_count; i++)
-    {
-        room->content->sprites[i].was_rendered = 0;
     }
 
     room->is_in_r_list = 1;
@@ -1622,7 +1638,7 @@ void CRenderDebugDrawer::DrawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
 
 void CRenderDebugDrawer::DrawEntityDebugLines(struct entity_s *entity)
 {
-    if(m_need_realloc || entity->was_rendered_lines || !(m_drawFlags & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
+    if(m_need_realloc || !(m_drawFlags & (R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_BOXES)) ||
        !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->bf->animations.model->hide && !(m_drawFlags & R_DRAW_NULLMESHES)))
     {
         return;
@@ -1636,7 +1652,6 @@ void CRenderDebugDrawer::DrawEntityDebugLines(struct entity_s *entity)
 
     if(m_drawFlags & R_DRAW_AXIS)
     {
-        // If this happens, the lines after this will get drawn with random colors. I don't care.
         this->DrawAxis(1000.0, entity->transform);
     }
 
@@ -1644,8 +1659,6 @@ void CRenderDebugDrawer::DrawEntityDebugLines(struct entity_s *entity)
     {
         this->DrawSkeletalModelDebugLines(entity->bf, entity->transform);
     }
-
-    entity->was_rendered_lines = 1;
 }
 
 void CRenderDebugDrawer::DrawSectorDebugLines(struct room_sector_s *rs)
@@ -1710,26 +1723,22 @@ void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room, struct camera_s
     bool draw_boxes = m_drawFlags & R_DRAW_BOXES;
     for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
     {
-        if(room->content->static_mesh[i].was_rendered_lines || !Frustum_IsOBBVisibleInFrustumList(room->content->static_mesh[i].obb, (room->frustum)?(room->frustum):(cam->frustum)) ||
-          ((room->content->static_mesh[i].hide == 1) && !(m_drawFlags & R_DRAW_DUMMY_STATICS)))
+        if(Frustum_IsOBBVisibleInFrustumList(room->content->static_mesh[i].obb, (room->frustum)?(room->frustum):(cam->frustum)) &&
+           (!room->content->static_mesh[i].hide || (m_drawFlags & R_DRAW_DUMMY_STATICS)))
         {
-            continue;
+            if(draw_boxes)
+            {
+                this->SetColor(0.0, 1.0, 0.1);
+                this->DrawOBB(room->content->static_mesh[i].obb);
+            }
+
+            if(m_drawFlags & R_DRAW_AXIS)
+            {
+                this->DrawAxis(1000.0, room->content->static_mesh[i].transform);
+            }
+
+            this->DrawMeshDebugLines(room->content->static_mesh[i].mesh, room->content->static_mesh[i].transform, NULL, NULL);
         }
-
-        if(draw_boxes)
-        {
-            this->SetColor(0.0, 1.0, 0.1);
-            this->DrawOBB(room->content->static_mesh[i].obb);
-        }
-
-        if(m_drawFlags & R_DRAW_AXIS)
-        {
-            this->DrawAxis(1000.0, room->content->static_mesh[i].transform);
-        }
-
-        this->DrawMeshDebugLines(room->content->static_mesh[i].mesh, room->content->static_mesh[i].transform, NULL, NULL);
-
-        room->content->static_mesh[i].was_rendered_lines = 1;
     }
 
     for(cont = room->content->containers; cont; cont = cont->next)
@@ -1738,13 +1747,9 @@ void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room, struct camera_s
         {
             case OBJECT_ENTITY:
                 ent = (entity_p)cont->object;
-                if(ent->was_rendered_lines == 0)
+                if(Frustum_IsOBBVisibleInFrustumList(ent->obb, (room->frustum) ? (room->frustum) : (cam->frustum)))
                 {
-                    if(Frustum_IsOBBVisibleInFrustumList(ent->obb, (room->frustum)?(room->frustum):(cam->frustum)))
-                    {
-                        this->DrawEntityDebugLines(ent);
-                    }
-                    ent->was_rendered_lines = 1;
+                    this->DrawEntityDebugLines(ent);
                 }
                 break;
         };

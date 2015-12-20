@@ -110,7 +110,6 @@ struct portal_s;
 struct frustum_s;
 struct base_mesh_s;
 struct physics_object_s;
-struct sprite_buffer_s;
 struct trigger_header_s;
 
 
@@ -170,15 +169,12 @@ typedef struct room_sprite_s
 {
     struct sprite_s            *sprite;
     float                       pos[3];
-    int8_t                      was_rendered;
 }room_sprite_t, *room_sprite_p;
 
 
 typedef struct static_mesh_s
 {
     uint32_t                    object_id;                                      //
-    uint8_t                     was_rendered;                                   // 0 - was not rendered, 1 - opaque, 2 - transparency, 3 - full rendered
-    uint8_t                     was_rendered_lines;
     uint8_t                     hide;                                           // disable static mesh rendering
     float                       pos[3];                                         // model position
     float                       rot[3];                                         // model angles
@@ -233,6 +229,7 @@ typedef struct room_s
     struct room_s              *base_room;                                      // base room == room->alternate_room->base_room
     struct frustum_s           *frustum;
     
+    struct obb_s               *obb;
     float                       bb_min[3];                                      // room's bounding box
     float                       bb_max[3];                                      // room's bounding box
     float                       transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix

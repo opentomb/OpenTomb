@@ -129,6 +129,13 @@ void Room_Clear(struct room_s *room)
         room->sectors_y = 0;
     }
 
+    if(room->obb)
+    {
+        OBB_Clear(room->obb);
+        free(room->obb);
+        room->obb = NULL;
+    }
+
     if(room->self)
     {
         room->self->room = NULL;
