@@ -8,8 +8,8 @@ cmake_minimum_required(VERSION 3.2)
 include("cmake/HunterGate.cmake")
 
 HunterGate(
-    URL "https://github.com/stohrendorf/hunter/archive/0cc54959b3c29b19335db6fd72b1dc02722b9705.zip"
-    SHA1 "6ce632f1b211bfab8de69ac90f88d3ecb1a43b32"
+    URL "https://github.com/stohrendorf/hunter/archive/c08b8a8f9ff046efc1070b0c330cab9340a514cc.zip"
+    SHA1 "cdd715810d6ba32b5cb16b4d06a4d1f54e401059"
 )
 
 project(OpenTomb)
@@ -82,10 +82,10 @@ if(SKIP_SYSTEM_FREETYPE)
     find_package(Freetype CONFIG REQUIRED)
 else()
     find_package(Freetype MODULE REQUIRED)
+    add_library(freetype INTERFACE)
+    target_include_directories(freetype INTERFACE ${FREETYPE_INCLUDE_DIRS})
+    target_link_libraries(freetype INTERFACE ${FREETYPE_LIBRARIES})
 endif()
-add_library(Freetype INTERFACE)
-target_include_directories(Freetype INTERFACE ${FREETYPE_INCLUDE_DIRS})
-target_link_libraries(Freetype INTERFACE ${FREETYPE_LIBRARIES})
 
 
 # Dependency: OpenGL

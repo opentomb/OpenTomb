@@ -1,15 +1,20 @@
-# -std-gnu++11 is needed for picky fileno function in streaming track code.
-# I'm not sure it will work on other platforms this way, but on Windows, it does perfect job.
-
 if(APPLE)
-    file(GLOB PRJ_SRC *.cpp mac/*.m)
-    file(GLOB PRJ_HDR *.h   mac/*.h)
-else()
-    file(GLOB PRJ_SRC *.cpp)
-    file(GLOB PRJ_HDR *.h)
+    list(APPEND PRJ_SRC
+        mac/FindConfigFile.m
+    )
+    list(APPEND PRJ_HDR
+        mac/FindConfigFile.h
+    )
 endif()
 
 list(APPEND PRJ_SRC
+    bordered_texture_atlas.cpp
+    common.cpp
+    gl_font.cpp
+    gl_font_buffer.cpp
+    inventory.cpp
+    main_SDL.cpp
+
     loader/level.cpp
     loader/tr1level.cpp
     loader/tr2level.cpp
@@ -71,6 +76,15 @@ list(APPEND PRJ_SRC
 )
 
 list(APPEND PRJ_HDR
+    bordered_texture_atlas.h
+    bsp_tree_2d.h
+    character_controller.h
+    common.h
+    gl_font.h
+    gl_font_buffer.h
+    inventory.h
+    strings.h
+
     loader/io/sdlreader.h
     loader/datatypes.h
     loader/level.h
@@ -200,7 +214,7 @@ target_link_libraries(
     SDL2_IMAGE
     ZLIB::zlib
     Lua
-    Freetype
+    freetype
     OpenAL
     GLM
     Boost
