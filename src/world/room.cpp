@@ -460,9 +460,9 @@ void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
 
 RoomSector* RoomSector::checkPortalPointerRaw()
 {
-    if(portal_to_room >= 0)
+    if(portal_to_room)
     {
-        std::shared_ptr<Room> r = engine::engine_world.rooms[portal_to_room];
+        std::shared_ptr<Room> r = engine::engine_world.rooms[*portal_to_room];
         int ind_x = static_cast<int>((position[0] - r->m_modelMatrix[3][0]) / MeteringSectorSize);
         int ind_y = static_cast<int>((position[1] - r->m_modelMatrix[3][1]) / MeteringSectorSize);
         if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->m_sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->m_sectors.shape()[1])
@@ -476,9 +476,9 @@ RoomSector* RoomSector::checkPortalPointerRaw()
 
 RoomSector* RoomSector::checkPortalPointer()
 {
-    if(portal_to_room >= 0)
+    if(portal_to_room)
     {
-        std::shared_ptr<Room> r = engine::engine_world.rooms[portal_to_room];
+        std::shared_ptr<Room> r = engine::engine_world.rooms[*portal_to_room];
         if((owner_room->m_baseRoom != nullptr) && (r->m_alternateRoom != nullptr))
         {
             r = r->m_alternateRoom;
@@ -544,18 +544,18 @@ bool RoomSector::is2SidePortals(RoomSector* s2)
     RoomSector* s2p = s1->owner_room->getSectorRaw(s2->position);
 
     // 2 next conditions are the stick for TR5 door-roll-wall
-    if(s1p->portal_to_room < 0)
+    if(!s1p->portal_to_room)
     {
         s1p = s1p->checkAlternateRoom();
-        if(s1p->portal_to_room < 0)
+        if(!s1p->portal_to_room)
         {
             return false;
         }
     }
-    if(s2p->portal_to_room < 0)
+    if(!s2p->portal_to_room)
     {
         s2p = s2p->checkAlternateRoom();
-        if(s2p->portal_to_room < 0)
+        if(!s2p->portal_to_room)
         {
             return false;
         }

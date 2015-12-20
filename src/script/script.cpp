@@ -3550,10 +3550,10 @@ void script::MainEngine::addKey(int keycode, bool state)
     call("addKey", keycode, state);
 }
 
-void script::MainEngine::execEntity(int id_callback, int id_object, int id_activator)
+void script::MainEngine::execEntity(int id_callback, world::ObjectId id_object, const boost::optional<world::ObjectId>& id_activator)
 {
-    if(id_activator >= 0)
-        call("execEntity", id_callback, id_object, id_activator);
+    if(id_activator)
+        call("execEntity", id_callback, id_object, *id_activator);
     else
         call("execEntity", id_callback, id_object);
 }
@@ -3567,9 +3567,9 @@ void script::MainEngine::loopEntity(world::ObjectId object_id)
     }
 }
 
-void script::MainEngine::execEffect(int id, int caller, int operand)
+void script::MainEngine::execEffect(int id, const boost::optional<world::ObjectId>& caller, const boost::optional<world::ObjectId>& operand)
 {
-    call("execFlipeffect", id, caller, operand);
+    call("execFlipeffect", id, caller ? *caller : -1, operand ? *operand : -1);
 }
 
 

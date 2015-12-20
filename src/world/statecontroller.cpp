@@ -935,8 +935,8 @@ void StateController::runForward()
     else if(m_character->m_command.move.z == MovementWalk::Forward && !m_character->m_command.crouch && (next_fc.floor.hitNormal[2] >= m_character->m_criticalSlantZComponent) && nextStep == StepType::UpBig)
     {
         m_character->m_moveDir = MoveDirection::Stay;
-        int i = m_character->getAnimDispatchCase(LaraState::Stop);  // Select correct anim dispatch.
-        if(i == 0)
+        boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);  // Select correct anim dispatch.
+        if(*i == 0)
         {
             m_character->setAnimation(TR_ANIMATION_LARA_RUN_UP_STEP_RIGHT, 0);
             m_character->m_transform[3][2] = next_fc.floor.hitPoint[2];
@@ -963,8 +963,8 @@ void StateController::runForward()
 
             if(m_character->m_command.move.z == MovementWalk::Forward)
             {
-                int i = m_character->getAnimDispatchCase(LaraState::Stop);
-                if(i == 1)
+                boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);
+                if(*i == 1)
                 {
                     m_character->setAnimation(TR_ANIMATION_LARA_WALL_SMASH_LEFT, 0);
                 }
@@ -1057,12 +1057,12 @@ void StateController::sprint()
     {
         engine::Controls_JoyRumble(200.0, 200);
 
-        int i = m_character->getAnimDispatchCase(LaraState::Stop);
-        if(i == 1)
+        boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);
+        if(*i == 1)
         {
             m_character->setAnimation(TR_ANIMATION_LARA_WALL_SMASH_LEFT, 0);
         }
-        else if(i == 0)
+        else if(*i == 0)
         {
             m_character->setAnimation(TR_ANIMATION_LARA_WALL_SMASH_RIGHT, 0);
         }
@@ -1130,8 +1130,8 @@ void StateController::walkForward()
         // Climb up
 
         m_character->m_moveDir = MoveDirection::Stay;
-        int i = m_character->getAnimDispatchCase(LaraState::Stop);
-        if(i == 1)
+        boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);
+        if(*i == 1)
         {
             m_character->setAnimation(TR_ANIMATION_LARA_WALK_UP_STEP_RIGHT, 0);
             m_character->m_transform[3] = glm::vec4(next_fc.floor.hitPoint, 1.0f);
@@ -1151,8 +1151,8 @@ void StateController::walkForward()
         // Climb down
 
         m_character->m_moveDir = MoveDirection::Stay;
-        int i = m_character->getAnimDispatchCase(LaraState::Stop);
-        if(i == 1)
+        boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);
+        if(*i == 1)
         {
             m_character->setAnimation(TR_ANIMATION_LARA_WALK_DOWN_RIGHT, 0);
             m_character->m_climb.point = next_fc.floor.hitPoint;
@@ -1568,7 +1568,7 @@ void StateController::pushablePush()
         {
             if(was_traversed)
             {
-                if(engine::engine_world.audioEngine.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId()) == -1)
+                if(!engine::engine_world.audioEngine.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId()))
                     engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId());
             }
             else
@@ -1582,7 +1582,7 @@ void StateController::pushablePush()
                || m_character->m_skeleton.getCurrentFrame() == 110
                || m_character->m_skeleton.getCurrentFrame() == 142)
             {
-                if(engine::engine_world.audioEngine.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId()) == -1)
+                if(!engine::engine_world.audioEngine.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId()))
                     engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId());
             }
         }
@@ -1656,7 +1656,7 @@ void StateController::pushablePull()
         {
             if(was_traversed)
             {
-                if(engine::engine_world.audioEngine.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId()) == -1)
+                if(!engine::engine_world.audioEngine.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId()))
                     engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId());
             }
             else
@@ -1671,7 +1671,7 @@ void StateController::pushablePull()
                || m_character->m_skeleton.getCurrentFrame() == 124
                || m_character->m_skeleton.getCurrentFrame() == 156)
             {
-                if(engine::engine_world.audioEngine.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId()) == -1)
+                if(!engine::engine_world.audioEngine.findSource(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId()))
                     engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_PUSHABLE, audio::EmitterType::Entity, m_character->getId());
             }
         }

@@ -118,7 +118,7 @@ void World::empty()
     anim_sequences.clear();
 }
 
-bool World::deleteEntity(uint32_t id)
+bool World::deleteEntity(ObjectId id)
 {
     if(character->getId() == id)
         return false;
@@ -245,7 +245,7 @@ std::shared_ptr<Character> World::getCharacterByID(ObjectId id)
     return std::dynamic_pointer_cast<Character>(getEntityByID(id));
 }
 
-std::shared_ptr<BaseItem> World::getBaseItemByID(uint32_t id)
+std::shared_ptr<BaseItem> World::getBaseItemByID(ObjectId id)
 {
     auto it = items_tree.find(id);
     if(it == items_tree.end())
@@ -300,9 +300,9 @@ Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
     }
 
     RoomSector* new_sector = room->getSectorRaw(new_pos);
-    if((new_sector != nullptr) && (new_sector->portal_to_room >= 0))
+    if((new_sector != nullptr) && new_sector->portal_to_room)
     {
-        return engine::engine_world.rooms[new_sector->portal_to_room]->checkFlip();
+        return engine::engine_world.rooms[*new_sector->portal_to_room]->checkFlip();
     }
 
     for(Room* r : room->m_nearRooms)
@@ -316,7 +316,7 @@ Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
     return engine::engine_world.findRoomByPosition(new_pos).get();
 }
 
-std::shared_ptr<Room> World::getByID(unsigned int ID)
+std::shared_ptr<Room> World::getByID(ObjectId ID)
 {
     for(auto r : rooms)
     {
@@ -381,7 +381,7 @@ void World::addEntity(std::shared_ptr<Entity> entity)
         next_entity_id = entity->getId() + 1;
 }
 
-bool World::createItem(ModelId item_id, uint32_t model_id, uint32_t world_model_id, MenuItemType type, uint16_t count, const std::string& name)
+bool World::createItem(ModelId item_id, ModelId model_id, ModelId world_model_id, MenuItemType type, uint16_t count, const std::string& name)
 {
     SkeletalModel* model = getModelByID(model_id);
     if(!model)
@@ -406,7 +406,7 @@ bool World::createItem(ModelId item_id, uint32_t model_id, uint32_t world_model_
     return true;
 }
 
-int World::deleteItem(uint32_t item_id)
+int World::deleteItem(ObjectId item_id)
 {
     items_tree.erase(items_tree.find(item_id));
     return 1;

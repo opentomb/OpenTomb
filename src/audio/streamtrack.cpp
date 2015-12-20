@@ -62,7 +62,7 @@ StreamTrack::StreamTrack()
         alSourcei(m_source, AL_SOURCE_RELATIVE, AL_TRUE);
         alSourcei(m_source, AL_LOOPING, AL_FALSE); // No effect, but just in case...
 
-        m_currentTrack = -1;
+        m_currentTrack = boost::none;
         m_currentVolume = 0.0f;
         m_dampedVolume = 0.0f;
         m_active = false;
@@ -85,7 +85,7 @@ StreamTrack::~StreamTrack()
     alDeleteBuffers(StreamBufferCount, m_buffers);
 }
 
-bool StreamTrack::load(const char *path, const int index, const StreamType type, const StreamMethod load_method)
+bool StreamTrack::load(const char *path, size_t index, const StreamType type, const StreamMethod load_method)
 {
     if(path == nullptr)
     {
@@ -435,9 +435,9 @@ bool StreamTrack::update()
     return buffered;
 }
 
-bool StreamTrack::isTrack(const int track_index) const    // Check if track has specific index.
+bool StreamTrack::isTrack(size_t track_index) const    // Check if track has specific index.
 {
-    return (m_currentTrack == track_index);
+    return m_currentTrack && *m_currentTrack == track_index;
 }
 
 bool StreamTrack::isType(const StreamType track_type) const      // Check if track has specific type.

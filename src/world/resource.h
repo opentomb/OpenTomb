@@ -101,12 +101,12 @@ SkeletalModel* Res_GetSkybox(World& world);
 // Create entity function from script, if exists.
 
 void Res_SetEntityFunction(std::shared_ptr<Entity> ent);
-void Res_CreateEntityFunc(script::ScriptEngine &lua, const std::string &func_name, int entity_id);
+void Res_CreateEntityFunc(script::ScriptEngine &lua, const std::string &func_name, ObjectId entity_id);
 void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity>>& entities);
 
 // Assign pickup functions to previously created base items.
 
-void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> > &map);
+void Res_EntityToItem(std::map<ObjectId, std::shared_ptr<BaseItem> >& map);
 
 // Functions setting parameters from configuration scripts.
 

@@ -150,7 +150,7 @@ public:
     glm::vec3 m_activationOffset = { 0,256,0 };   // where we can activate object (dx, dy, dz)
     glm::float_t m_activationRadius = 128;
 
-    Entity(uint32_t id);
+    Entity(ObjectId id);
     ~Entity();
 
     void enable();
@@ -164,7 +164,7 @@ public:
     void updateRigidBody(bool force);
     void rebuildBoundingBox();
 
-    int  getAnimDispatchCase(LaraState id) const;
+    boost::optional<size_t> getAnimDispatchCase(LaraState id) const;
 
     animation::AnimUpdate stepAnimation(util::Duration time);
     virtual void frame(util::Duration time);  // entity frame step

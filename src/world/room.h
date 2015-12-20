@@ -10,6 +10,7 @@
 #include <vector>
 
 #include <boost/multi_array.hpp>
+#include <boost/optional.hpp>
 
 class btRigidBody;
 
@@ -64,7 +65,7 @@ struct RoomSector
     DiagonalType                floor_diagonal_type;
     PenetrationConfig           floor_penetration_config;
 
-    int32_t                     portal_to_room;
+    boost::optional<ObjectId> portal_to_room;
 
     RoomSector* getLowestSector();
     RoomSector* getHighestSector();

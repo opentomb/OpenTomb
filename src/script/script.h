@@ -5,6 +5,8 @@
 #include "util/helpers.h"
 #include "world/object.h"
 
+#include <boost/optional.hpp>
+
 #include <cctype>
 
 #define CVAR_NAME_SIZE 32
@@ -191,8 +193,8 @@ namespace script
         // System Lua functions. Not directly called from scripts.
 
         void loopEntity(world::ObjectId object_id);
-        void execEntity(int id_callback, int id_object, int id_activator = -1);
-        void execEffect(int id, int caller = -1, int operand = -1);
+        void execEntity(int id_callback, world::ObjectId id_object, const boost::optional<world::ObjectId>& id_activator = boost::none);
+        void execEffect(int id, const boost::optional<world::ObjectId>& caller = boost::none, const boost::optional<world::ObjectId>& operand = boost::none);
 
         void addKey(int keycode, bool state);
 

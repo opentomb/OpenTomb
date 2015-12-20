@@ -742,7 +742,7 @@ void dumpRoom(world::Room* r)
                                         % rs.index_y
                                         % rs.floor
                                         % rs.ceiling
-                                        % rs.portal_to_room;
+                                        % (rs.portal_to_room ? *rs.portal_to_room : -1);
         }
     }
 

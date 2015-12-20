@@ -1306,7 +1306,7 @@ void renderItem(const world::animation::Skeleton& bf, glm::float_t size, const g
 namespace
 {
 GLuint crosshairBuffer = 0;
-VertexArray *crosshairArray = nullptr;
+std::unique_ptr<VertexArray> crosshairArray = nullptr;
 }
 
 void fillCrosshairBuffer()
@@ -1334,7 +1334,7 @@ void fillCrosshairBuffer()
         VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(BufferEntry), offsetof(BufferEntry, position)),
         VertexArrayAttribute(GuiShaderDescription::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(BufferEntry), offsetof(BufferEntry, color))
     };
-    crosshairArray = new VertexArray(0, 2, attribs);
+    crosshairArray.reset(new VertexArray(0, 2, attribs));
 }
 
 void drawCrosshair()

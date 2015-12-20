@@ -943,7 +943,7 @@ glm::float_t Character::inertiaAngular(glm::float_t max_angle, glm::float_t acce
 /*
  * MOVE IN DIFFERENT CONDITIONS
  */
-int Character::moveOnFloor()
+void Character::moveOnFloor()
 {
     /*
     * init height info structure
@@ -975,7 +975,7 @@ int Character::moveOnFloor()
         {
             m_moveType = MoveType::FreeFalling;
             m_speed[2] = 0.0;
-            return -1; // nothing to do here
+            return; // nothing to do here
         }
         else
         {
@@ -1043,7 +1043,7 @@ int Character::moveOnFloor()
         m_response.vertical_collide = 0x00;
         m_moveType = MoveType::FreeFalling;
         m_speed[2] = 0.0;
-        return -1; // nothing to do here
+        return; // nothing to do here
     }
 
     /*
@@ -1088,7 +1088,7 @@ int Character::moveOnFloor()
             m_moveType = MoveType::FreeFalling;
             m_speed[2] = 0.0;
             updateRoomPos();
-            return 2;
+            return;
         }
         if((m_transform[3][2] < m_heightInfo.floor.hitPoint[2]) && !m_skeleton.getModel()->no_fix_all)
         {
@@ -1102,12 +1102,10 @@ int Character::moveOnFloor()
         m_moveType = MoveType::FreeFalling;
         m_speed[2] = 0.0;
         updateRoomPos();
-        return 2;
+        return;
     }
 
     updateRoomPos();
-
-    return 1;
 }
 
 int Character::freeFalling()

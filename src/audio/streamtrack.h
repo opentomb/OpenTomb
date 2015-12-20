@@ -3,6 +3,8 @@
 #include <sndfile.h>
 #include <AL/al.h>
 
+#include <boost/optional.hpp>
+
 #include <cstdint>
 
 namespace audio
@@ -45,7 +47,7 @@ public:
      // stream type (background, one-shot or chat) and load method, which
      // differs for TR1-2, TR3 and TR4-5.
 
-    bool load(const char *path, const int index, const StreamType type, const StreamMethod load_method);
+    bool load(const char *path, size_t index, const StreamType type, const StreamMethod load_method);
     bool unload();
 
     bool play(FxManager &manager, bool fade_in = false);     // Begins to play track.
@@ -54,7 +56,7 @@ public:
     void stop();                         // Immediately stop track.
     bool update();                       // Update track and manage streaming.
 
-    bool isTrack(const int track_index) const; // Checks desired track's index.
+    bool isTrack(size_t track_index) const; // Checks desired track's index.
     bool isType(const StreamType track_type) const;   // Checks desired track's type.
     bool isPlaying() const;                    // Checks if track is playing.
     bool isActive() const;                     // Checks if track is still active.
@@ -93,7 +95,7 @@ private:
     bool            m_ending;            //!< Used when track is being faded by other one.
     bool            m_dampable;          //!< Specifies if track can be damped by others.
     StreamType      m_streamType;        //!< Either BACKGROUND, ONESHOT or CHAT.
-    int             m_currentTrack;      //!< Needed to prevent same track sending.
+    boost::optional<size_t> m_currentTrack = boost::none;      //!< Needed to prevent same track sending.
     StreamMethod    m_method;            //!< TRACK (TR1-2/4-5) or WAD (TR3).
 };
 

@@ -209,10 +209,11 @@ namespace animation
 class Skeleton;
 } // namespace animation
 
+
 struct BaseItem
 {
-    uint32_t                    id;
-    uint32_t                    world_model_id;
+    ObjectId                    id;
+    ModelId                     world_model_id;
     MenuItemType                type;
     uint16_t                    count;
     char                        name[64];
@@ -295,9 +296,9 @@ struct World
     std::shared_ptr<Character> character;              // this is an unique Lara's pointer =)
     SkeletalModel* sky_box = nullptr;                // global skybox
 
-    std::map<uint32_t, std::shared_ptr<Entity>   > entity_tree;            // tree of world active objects
-    uint32_t                                       next_entity_id = 0;
-    std::map<uint32_t, std::shared_ptr<BaseItem> > items_tree;             // tree of world items
+    std::map<ObjectId, std::shared_ptr<Entity>> entity_tree;            // tree of world active objects
+    ObjectId next_entity_id = 0;
+    std::map<ObjectId, std::shared_ptr<BaseItem>> items_tree;             // tree of world items
 
     uint32_t                    type = 0;
 
@@ -311,8 +312,8 @@ struct World
     glm::vec4 calculateWaterTint() const;
 
     void addEntity(std::shared_ptr<Entity> entity);
-    bool createItem(ModelId item_id, uint32_t model_id, uint32_t world_model_id, MenuItemType type, uint16_t count, const std::string &name);
-    int deleteItem(uint32_t item_id);
+    bool createItem(ModelId item_id, ModelId model_id, ModelId world_model_id, MenuItemType type, uint16_t count, const std::string &name);
+    int deleteItem(ObjectId item_id);
     core::Sprite* getSpriteByID(unsigned int ID);
     SkeletalModel* getModelByID(ModelId id);           // binary search the model by ID
 
@@ -320,14 +321,14 @@ struct World
     void empty();
 
     boost::optional<ObjectId> spawnEntity(ModelId model_id, uint32_t room_id, const glm::vec3 *pos, const glm::vec3 *ang, boost::optional<ObjectId> id);
-    bool     deleteEntity(uint32_t id);
+    bool     deleteEntity(ObjectId id);
 
     std::shared_ptr<Entity>    getEntityByID(ObjectId id);
     std::shared_ptr<Character> getCharacterByID(ObjectId id);
 
-    std::shared_ptr<BaseItem> getBaseItemByID(uint32_t id);
+    std::shared_ptr<BaseItem> getBaseItemByID(ObjectId id);
     std::shared_ptr<Room> findRoomByPosition(const glm::vec3& pos);
-    std::shared_ptr<Room> getByID(unsigned int ID);
+    std::shared_ptr<Room> getByID(ObjectId ID);
 };
 
 Room *Room_FindPosCogerrence(const glm::vec3& new_pos, Room *room);

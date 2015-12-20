@@ -4,6 +4,7 @@
 #include "polygon.h"
 #include "render/render.h"
 #include "world/animation/animation.h"
+#include "world/object.h"
 
 #include <vector>
 
@@ -19,7 +20,7 @@ namespace core
 
 struct BaseMesh
 {
-    uint32_t m_id;
+    ObjectId m_id;
     bool m_usesVertexColors; //!< does this mesh have prebaked vertex lighting
 
     std::vector<Polygon> m_polygons;

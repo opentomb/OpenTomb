@@ -219,17 +219,17 @@ void Engine::resumeAllSources()
     }
 }
 
-int Engine::getFreeSource() const  ///@FIXME: add condition (compare max_dist with new source dist)
+boost::optional<size_t> Engine::getFreeSource() const  ///@FIXME: add condition (compare max_dist with new source dist)
 {
     for(size_t i = 0; i < m_sources.size(); i++)
     {
         if(!m_sources[i].isActive())
         {
-            return static_cast<int>(i);
+            return i;
         }
     }
 
-    return -1;
+    return boost::none;
 }
 
 bool Engine::endStreams(StreamType stream_type)
@@ -268,11 +268,11 @@ bool Engine::stopStreams(StreamType stream_type)
     return result;
 }
 
-bool Engine::isTrackPlaying(int32_t track_index) const
+bool Engine::isTrackPlaying(const boost::optional<int32_t>& track_index) const
 {
     for(const StreamTrack& track : m_tracks)
     {
-        if((track_index == -1 || track.isTrack(track_index)) && track.isPlaying())
+        if((!track_index || track.isTrack(*track_index)) && track.isPlaying())
         {
             return true;
         }
@@ -281,23 +281,23 @@ bool Engine::isTrackPlaying(int32_t track_index) const
     return false;
 }
 
-int Engine::findSource(int effect_ID, EmitterType entity_type, int entity_ID) const
+boost::optional<size_t> Engine::findSource(const boost::optional<uint32_t>& effect_ID, EmitterType entity_type, const boost::optional<world::ObjectId>& entity_ID) const
 {
-    for(uint32_t i = 0; i < m_sources.size(); i++)
+    for(size_t i = 0; i < m_sources.size(); i++)
     {
         if((entity_type == EmitterType::Any || m_sources[i].m_emitterType == entity_type) &&
-                (entity_ID == -1                        || m_sources[i].m_emitterID == static_cast<world::ObjectId>(entity_ID)) &&
-                (effect_ID == -1                        || m_sources[i].m_effectIndex == static_cast<uint32_t>(effect_ID)))
+                (!entity_ID                        || m_sources[i].m_emitterID == *entity_ID) &&
+                (!effect_ID                        || m_sources[i].m_effectIndex == *effect_ID))
         {
             if(m_sources[i].isPlaying())
                 return i;
         }
     }
 
-    return -1;
+    return boost::none;
 }
 
-int Engine::getFreeStream() const
+boost::optional<size_t> Engine::getFreeStream() const
 {
     for(uint32_t i = 0; i < m_tracks.size(); i++)
     {
@@ -307,7 +307,7 @@ int Engine::getFreeStream() const
         }
     }
 
-    return -1;  // If no free source, return error.
+    return boost::none;  // If no free source, return error.
 }
 
 void Engine::updateStreams()
@@ -434,15 +434,15 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
 
     // Entry found, now process to actual track loading.
 
-    int target_stream = getFreeStream();            // At first, we need to get free stream.
+    boost::optional<size_t> target_stream = getFreeStream();            // At first, we need to get free stream.
 
     bool do_fade_in;
-    if(target_stream == -1)
+    if(!target_stream)
     {
         do_fade_in = stopStreams(stream_type);  // If no free track found, hardly stop all tracks.
         target_stream = getFreeStream();        // Try again to assign free stream.
 
-        if(target_stream == -1)
+        if(!target_stream)
         {
             Console::instance().warning(SYSWARN_NO_FREE_STREAM);
             return StreamError::NoFreeStream;  // No success, exit and don't play anything.
@@ -460,7 +460,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
 
     // Finally - load our track.
 
-    if(!m_tracks[target_stream].load(file_path, track_index, stream_type, load_method))
+    if(!m_tracks[*target_stream].load(file_path, track_index, stream_type, load_method))
     {
         Console::instance().warning(SYSWARN_STREAM_LOAD_ERROR);
         return StreamError::LoadError;
@@ -468,7 +468,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
 
     // Try to play newly assigned and loaded track.
 
-    if(!m_tracks[target_stream].play(fxManager(), do_fade_in))
+    if(!m_tracks[*target_stream].play(fxManager(), do_fade_in))
     {
         Console::instance().warning(SYSWARN_STREAM_PLAY_ERROR);
         return StreamError::PlayError;
@@ -481,7 +481,7 @@ bool Engine::deInitDelay()
 {
     const std::chrono::high_resolution_clock::time_point begin_time = std::chrono::high_resolution_clock::now();
 
-    while(isTrackPlaying() || (findSource() >= 0))
+    while(isTrackPlaying() || findSource())
     {
         auto curr_time = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - begin_time).count() / 1.0e6;
 
@@ -517,13 +517,13 @@ void Engine::deInitAudio()
     m_fxManager.reset();
 }
 
-Error Engine::kill(int effect_ID, EmitterType entity_type, int entity_ID)
+Error Engine::kill(int effect_ID, EmitterType entity_type, world::ObjectId entity_ID)
 {
-    int playing_sound = findSource(effect_ID, entity_type, entity_ID);
+    boost::optional<size_t> playing_sound = findSource(effect_ID, entity_type, entity_ID);
 
-    if(playing_sound != -1)
+    if(playing_sound)
     {
-        m_sources[playing_sound].stop();
+        m_sources[*playing_sound].stop();
         return Error::Processed;
     }
 
@@ -572,29 +572,28 @@ bool Engine::isInRange(EmitterType entity_type, world::ObjectId entity_ID, float
     return dist < range * range;
 }
 
-Error Engine::send(int effect_ID, EmitterType entity_type, int entity_ID)
+Error Engine::send(const boost::optional<uint32_t>& effect_ID, EmitterType entity_type, world::ObjectId entity_ID)
 {
-    int32_t         source_number;
     uint16_t        random_value;
     ALfloat         random_float;
 
     // If there are no audio buffers or effect index is wrong, don't process.
 
-    if(m_buffers.empty() || effect_ID < 0)
+    if(m_buffers.empty() || !effect_ID)
         return Error::Ignored;
 
     // Remap global engine effect ID to local effect ID.
 
-    if(static_cast<uint32_t>(effect_ID) >= m_effectMap.size())
+    if(*effect_ID >= m_effectMap.size())
     {
         return Error::NoSample;  // Sound is out of bounds; stop.
     }
 
-    int real_ID = static_cast<int>(m_effectMap[effect_ID]);
+    int real_ID = static_cast<int>(m_effectMap[*effect_ID]);
 
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
 
-    if(real_ID == -1)
+    if(real_ID < 0)
     {
         return Error::Ignored;
     }
@@ -628,13 +627,13 @@ Error Engine::send(int effect_ID, EmitterType entity_type, int entity_ID)
     // Otherwise, if W (Wait) or L (Looped) flag is set, and same effect is
     // playing for current entity, don't send it and exit function.
 
-    source_number = findSource(effect_ID, entity_type, entity_ID);
+    boost::optional<size_t> source_number = findSource(effect_ID, entity_type, entity_ID);
 
-    if(source_number != -1)
+    if(source_number)
     {
         if(effect->loop == loader::LoopType::PingPong)
         {
-            m_sources[source_number].stop();
+            m_sources[*source_number].stop();
         }
         else if(effect->loop != loader::LoopType::None) // Any other looping case (Wait / Loop).
         {
@@ -646,7 +645,7 @@ Error Engine::send(int effect_ID, EmitterType entity_type, int entity_ID)
         source_number = getFreeSource();  // Get free source.
     }
 
-    if(source_number != -1)  // Everything is OK, we're sending audio to channel.
+    if(source_number)  // Everything is OK, we're sending audio to channel.
     {
         int buffer_index;
 
@@ -664,7 +663,7 @@ Error Engine::send(int effect_ID, EmitterType entity_type, int entity_ID)
             buffer_index = effect->sample_index;
         }
 
-        Source *source = &m_sources[source_number];
+        Source *source = &m_sources[*source_number];
 
         source->setBuffer(buffer_index);
 
@@ -683,7 +682,7 @@ Error Engine::send(int effect_ID, EmitterType entity_type, int entity_ID)
 
         source->m_emitterID = entity_ID;
         source->m_emitterType = entity_type;
-        source->m_effectIndex = effect_ID;
+        source->m_effectIndex = *effect_ID;
 
         // Step 4. Apply sound effect properties.
 

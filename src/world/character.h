@@ -441,7 +441,7 @@ struct Character : public Entity
     glm::float_t inertiaLinear(glm::float_t max_speed, glm::float_t accel, bool command);
     glm::float_t inertiaAngular(glm::float_t max_angle, glm::float_t accel, uint8_t axis);
 
-    int moveOnFloor();
+    void moveOnFloor();
     int freeFalling();
     int monkeyClimbing();
     int wallsClimbing();

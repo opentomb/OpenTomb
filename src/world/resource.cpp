@@ -39,8 +39,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <boost/log/trivial.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/range/adaptors.hpp>
 
 // #define LOG_ANIM_DISPATCHES
 
@@ -72,7 +73,7 @@ namespace world
         }
     }
 
-    void Res_CreateEntityFunc(script::ScriptEngine& state, const std::string& func_name, int entity_id)
+    void Res_CreateEntityFunc(script::ScriptEngine& state, const std::string& func_name, ObjectId entity_id)
     {
         if(state["entity_funcs"][entity_id].is<lua::Nil>())
             state["entity_funcs"].set(entity_id, lua::Table());
@@ -91,7 +92,7 @@ namespace world
     {
         lua::Integer _collision_type, _collision_shape;
         lua::Boolean _hide;
-        lua::tie(_collision_type, _collision_shape, _hide) = engine_lua.call("getStaticMeshProperties", int(r_static->getId()));
+        lua::tie(_collision_type, _collision_shape, _hide) = engine_lua.call("getStaticMeshProperties", r_static->getId());
 
         if(_collision_type > 0)
         {
@@ -182,12 +183,12 @@ namespace world
         BOOST_ASSERT(ws != nullptr);
         BOOST_ASSERT(ns != nullptr);
 
-        if((ws->portal_to_room < 0) && (ns->portal_to_room < 0) && (ws->floor_penetration_config == PenetrationConfig::Wall))
+        if(!ws->portal_to_room && !ns->portal_to_room && (ws->floor_penetration_config == PenetrationConfig::Wall))
         {
             return true;
         }
 
-        if((ns->portal_to_room < 0) && (ns->floor_penetration_config != PenetrationConfig::Wall) && (ws->portal_to_room >= 0))
+        if(!ns->portal_to_room && (ns->floor_penetration_config != PenetrationConfig::Wall) && ws->portal_to_room)
         {
             ws = ws->checkPortalPointer();
             if((ws->floor_penetration_config == PenetrationConfig::Wall) || !ns->is2SidePortals(ws))
@@ -264,11 +265,11 @@ namespace world
                         else
                         {
                             /************************** SECTION WITH DROPS CALCULATIONS **********************/
-                            if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || current_heightmap->is2SidePortals(next_heightmap))
+                            if((!current_heightmap->portal_to_room && !next_heightmap->portal_to_room) || current_heightmap->is2SidePortals(next_heightmap))
                             {
                                 current_heightmap = current_heightmap->checkPortalPointer();
                                 next_heightmap = next_heightmap->checkPortalPointer();
-                                if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
+                                if(!current_heightmap->portal_to_room && !next_heightmap->portal_to_room && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
                                 {
                                     if((current_heightmap->floor_penetration_config == PenetrationConfig::Solid) || (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                                     {
@@ -295,10 +296,10 @@ namespace world
 
                     current_heightmap = &room->m_sectors[w][h];
                     next_heightmap = current_heightmap + 1;
-                    if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
+                    if((joined_floors == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
                     {
                         char valid = 0;
-                        if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                        if(next_heightmap->portal_to_room && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                         {
                             next_heightmap = next_heightmap->checkPortalPointer();
                             if(next_heightmap->owner_room->getId() == current_heightmap->sector_above->owner_room->getId())
@@ -308,14 +309,14 @@ namespace world
                             if(valid == 0)
                             {
                                 RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->position);
-                                if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->getId()))
+                                if(rs && *rs->portal_to_room == next_heightmap->owner_room->getId())
                                 {
                                     valid = 1;
                                 }
                             }
                         }
 
-                        if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                        if(current_heightmap->portal_to_room && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                         {
                             current_heightmap = current_heightmap->checkPortalPointer();
                             if(current_heightmap->owner_room->getId() == next_heightmap->sector_above->owner_room->getId())
@@ -325,7 +326,7 @@ namespace world
                             if(valid == 0)
                             {
                                 RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->position);
-                                if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->getId()))
+                                if(rs && *rs->portal_to_room == current_heightmap->owner_room->getId())
                                 {
                                     valid = 1;
                                 }
@@ -344,10 +345,10 @@ namespace world
 
                     current_heightmap = &room->m_sectors[w][h];
                     next_heightmap = current_heightmap + 1;
-                    if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
+                    if((joined_ceilings == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
                     {
                         char valid = 0;
-                        if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
+                        if(next_heightmap->portal_to_room && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
                         {
                             next_heightmap = next_heightmap->checkPortalPointer();
                             if(next_heightmap->owner_room->getId() == current_heightmap->sector_below->owner_room->getId())
@@ -357,14 +358,14 @@ namespace world
                             if(valid == 0)
                             {
                                 RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->position);
-                                if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->getId()))
+                                if(rs && *rs->portal_to_room == next_heightmap->owner_room->getId())
                                 {
                                     valid = 1;
                                 }
                             }
                         }
 
-                        if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                        if(current_heightmap->portal_to_room && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                         {
                             current_heightmap = current_heightmap->checkPortalPointer();
                             if(current_heightmap->owner_room->getId() == next_heightmap->sector_below->owner_room->getId())
@@ -374,7 +375,7 @@ namespace world
                             if(valid == 0)
                             {
                                 RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->position);
-                                if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->getId()))
+                                if(rs && *rs->portal_to_room == current_heightmap->owner_room->getId())
                                 {
                                     valid = 1;
                                 }
@@ -451,11 +452,11 @@ namespace world
                         else
                         {
                             /************************** BIG SECTION WITH DROPS CALCULATIONS **********************/
-                            if(((current_heightmap->portal_to_room < 0) && ((next_heightmap->portal_to_room < 0))) || current_heightmap->is2SidePortals(next_heightmap))
+                            if((!current_heightmap->portal_to_room && !next_heightmap->portal_to_room) || current_heightmap->is2SidePortals(next_heightmap))
                             {
                                 current_heightmap = current_heightmap->checkPortalPointer();
                                 next_heightmap = next_heightmap->checkPortalPointer();
-                                if((current_heightmap->portal_to_room < 0) && (next_heightmap->portal_to_room < 0) && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
+                                if(!current_heightmap->portal_to_room && !next_heightmap->portal_to_room && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
                                 {
                                     if((current_heightmap->floor_penetration_config == PenetrationConfig::Solid) || (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                                     {
@@ -482,10 +483,10 @@ namespace world
 
                     current_heightmap = &room->m_sectors[w][h];
                     next_heightmap = &room->m_sectors[w + 1][h];
-                    if((joined_floors == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
+                    if((joined_floors == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
                     {
                         char valid = 0;
-                        if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                        if(next_heightmap->portal_to_room && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                         {
                             next_heightmap = next_heightmap->checkPortalPointer();
                             if(next_heightmap->owner_room->getId() == current_heightmap->sector_above->owner_room->getId())
@@ -495,14 +496,14 @@ namespace world
                             if(valid == 0)
                             {
                                 RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->position);
-                                if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->getId()))
+                                if(rs && *rs->portal_to_room == next_heightmap->owner_room->getId())
                                 {
                                     valid = 1;
                                 }
                             }
                         }
 
-                        if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                        if(current_heightmap->portal_to_room && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                         {
                             current_heightmap = current_heightmap->checkPortalPointer();
                             if(current_heightmap->owner_room->getId() == next_heightmap->sector_above->owner_room->getId())
@@ -512,7 +513,7 @@ namespace world
                             if(valid == 0)
                             {
                                 RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->position);
-                                if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->getId()))
+                                if(rs && *rs->portal_to_room == current_heightmap->owner_room->getId())
                                 {
                                     valid = 1;
                                 }
@@ -531,44 +532,44 @@ namespace world
 
                     current_heightmap = &room->m_sectors[w][h];
                     next_heightmap = &room->m_sectors[w + 1][h];
-                    if((joined_ceilings == 0) && ((current_heightmap->portal_to_room < 0) || (next_heightmap->portal_to_room < 0)))
+                    if((joined_ceilings == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
                     {
-                        char valid = 0;
-                        if((next_heightmap->portal_to_room >= 0) && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
+                        bool valid = false;
+                        if(next_heightmap->portal_to_room && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
                         {
                             next_heightmap = next_heightmap->checkPortalPointer();
                             if(next_heightmap->owner_room->getId() == current_heightmap->sector_below->owner_room->getId())
                             {
-                                valid = 1;
+                                valid = true;
                             }
-                            if(valid == 0)
+                            if(!valid)
                             {
                                 RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->position);
-                                if(rs && (static_cast<uint32_t>(rs->portal_to_room) == next_heightmap->owner_room->getId()))
+                                if(rs && *rs->portal_to_room == next_heightmap->owner_room->getId())
                                 {
-                                    valid = 1;
+                                    valid = true;
                                 }
                             }
                         }
 
-                        if((current_heightmap->portal_to_room >= 0) && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                        if(current_heightmap->portal_to_room && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
                         {
                             current_heightmap = current_heightmap->checkPortalPointer();
                             if(current_heightmap->owner_room->getId() == next_heightmap->sector_below->owner_room->getId())
                             {
-                                valid = 1;
+                                valid = true;
                             }
-                            if(valid == 0)
+                            if(!valid)
                             {
                                 RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->position);
-                                if(rs && (static_cast<uint32_t>(rs->portal_to_room) == current_heightmap->owner_room->getId()))
+                                if(rs && *rs->portal_to_room == current_heightmap->owner_room->getId())
                                 {
-                                    valid = 1;
+                                    valid = true;
                                 }
                             }
                         }
 
-                        if((valid == 1) && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
+                        if(valid && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
                         {
                             room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[1][2];
                             room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[0][2];
@@ -585,7 +586,7 @@ namespace world
 
     // Check if entity index was already processed (needed to remove dublicated activation calls).
     // If entity is not processed, add its index into lookup table.
-    bool Res_IsEntityProcessed(int32_t *lookup_table, world::ObjectId entity_index)
+    bool Res_IsEntityProcessed(std::set<world::ObjectId>& lookup_table, world::ObjectId entity_index)
     {
         // Fool-proof check for entity existence. Fixes LOTS of stray non-existent
         // entity #256 occurences in original games (primarily TR4-5).
@@ -593,17 +594,7 @@ namespace world
         if(!engine::engine_world.getEntityByID(entity_index))
             return true;
 
-        int32_t *curr_table_index = lookup_table;
-
-        while(*curr_table_index != -1)
-        {
-            if(*curr_table_index == static_cast<int32_t>(entity_index))
-                return true;
-            curr_table_index++;
-        }
-
-        *curr_table_index = static_cast<int32_t>(entity_index);
-        return false;
+        return !lookup_table.insert(entity_index).second;
     }
 
     int TR_Sector_TranslateFloorData(RoomSector& sector, const std::unique_ptr<loader::Level>& tr)
@@ -750,8 +741,7 @@ namespace world
 
                     // Processed entities lookup array initialization.
 
-                    int32_t ent_lookup_table[64];
-                    memset(ent_lookup_table, 0xFF, sizeof(int32_t) * 64);
+                    std::set<world::ObjectId> ent_lookup_table;
 
                     // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
                     // some specific entity classes.
@@ -1553,7 +1543,7 @@ namespace world
 
             RoomSector& near_sector = room->m_sectors[i/room->m_sectors.shape()[1] + dx][i%room->m_sectors.shape()[1] + dy];
 
-            if(dx != 0  && dy != 0 && sector.portal_to_room >= 0)
+            if(dx != 0  && dy != 0 && sector.portal_to_room)
             {
                 for(const Portal& p : room->m_portals)
                 {
@@ -1563,9 +1553,9 @@ namespace world
                         if(dst == nullptr)
                             continue;
 
-                        RoomSector* orig_dst = engine::engine_world.rooms[sector.portal_to_room]->getSectorRaw(sector.position);
+                        RoomSector* orig_dst = engine::engine_world.rooms[*sector.portal_to_room]->getSectorRaw(sector.position);
 
-                        if((dst->portal_to_room < 0) && (dst->floor != MeteringWallHeight) && (dst->ceiling != MeteringWallHeight) && (static_cast<uint32_t>(sector.portal_to_room) != p.destination->getId()) && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, *dst, p))
+                        if(!dst->portal_to_room && (dst->floor != MeteringWallHeight) && (dst->ceiling != MeteringWallHeight) && *sector.portal_to_room != p.destination->getId() && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, *dst, p))
                         {
                             sector.portal_to_room = p.destination->getId();
                         }
@@ -1995,7 +1985,7 @@ namespace world
 
             // Reset some sector parameters to avoid garbaged memory issues.
 
-            sector.portal_to_room = -1;
+            sector.portal_to_room = boost::none;
             sector.ceiling_diagonal_type = DiagonalType::None;
             sector.floor_diagonal_type = DiagonalType::None;
 
@@ -3546,7 +3536,7 @@ namespace world
                 lara->setCollisionShape(world::CollisionShape::TriMeshConvex);
                 lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
 
-                engine_lua.set("player", int(lara->getId()));
+                engine_lua.set("player", lara->getId());
 
                 switch(loader::gameToEngine(tr->m_gameVersion))
                 {
@@ -3617,12 +3607,10 @@ namespace world
         }
     }
 
-    void Res_EntityToItem(std::map<uint32_t, std::shared_ptr<BaseItem> >& map)
+    void Res_EntityToItem(std::map<ObjectId, std::shared_ptr<BaseItem> >& map)
     {
-        for(auto it : map)
+        for(std::shared_ptr<BaseItem> item : map | boost::adaptors::map_values)
         {
-            std::shared_ptr<BaseItem> item = it.second;
-
             for(const std::shared_ptr<Room>& room : engine::engine_world.rooms)
             {
                 for(world::Object* object : room->m_objects)
@@ -3634,10 +3622,10 @@ namespace world
                     if(ent->m_skeleton.getModel()->id != item->world_model_id)
                         continue;
 
-                    if(engine_lua["entity_funcs"][static_cast<lua::Integer>(ent->getId())].is<lua::Nil>())
-                        engine_lua["entity_funcs"].set(static_cast<lua::Integer>(ent->getId()), lua::Table());
+                    if(engine_lua["entity_funcs"][ent->getId()].is<lua::Nil>())
+                        engine_lua["entity_funcs"].set(ent->getId(), lua::Table());
 
-                    engine_lua["pickup_init"](int(ent->getId()), int(item->id));
+                    engine_lua["pickup_init"](ent->getId(), item->id);
 
                     ent->m_skeleton.disableCollision();
                 }

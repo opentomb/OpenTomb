@@ -179,7 +179,7 @@ bool startsWithLowercase(const std::string& haystack, const std::string& needle)
 }
 }
 
-void Console::edit(int key, int mod)
+void Console::edit(int key, const boost::optional<Uint16>& mod)
 {
     if(key == SDLK_UNKNOWN || key == SDLK_BACKQUOTE || key == SDLK_BACKSLASH || !inited)
     {
@@ -314,7 +314,7 @@ void Console::edit(int key, int mod)
             break;
 
         default:
-            if( key == SDLK_v && mod>0 && (mod & KMOD_CTRL) )
+            if( key == SDLK_v && mod && (*mod & KMOD_CTRL) )
             {
                 if(char* clipboard = SDL_GetClipboardText())
                 {
@@ -327,7 +327,7 @@ void Console::edit(int key, int mod)
                     SDL_free(clipboard);
                 }
             }
-            else if(mod<0 && (oldLength < m_lineSize - 1) && (key >= SDLK_SPACE))
+            else if(!mod && (oldLength < m_lineSize - 1) && (key >= SDLK_SPACE))
             {
                 m_editingLine.insert(m_editingLine.begin() + m_cursorPos, char(key));
                 m_cursorPos++;

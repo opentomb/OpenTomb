@@ -276,7 +276,7 @@ void Entity::checkCollisionCallbacks()
         }
         else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) && dynamic_cast<Room*>(object))
         {
-            engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, getId(), static_cast<Room*>(object)->getId());
+            engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, getId(), object->getId());
         }
     }
 }
@@ -556,7 +556,7 @@ void Entity::processSector()
         try
         {
             if (engine_lua["tlist_RunTrigger"].is<lua::Callable>())
-                engine_lua["tlist_RunTrigger"].call(int(lowest_sector->trig_index), ((m_skeleton.getModel()->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), int(getId()));
+                engine_lua["tlist_RunTrigger"].call(int(lowest_sector->trig_index), ((m_skeleton.getModel()->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), getId());
         }
         catch (lua::RuntimeError& error)
         {
@@ -576,12 +576,12 @@ void Entity::setAnimation(int animation, int frame)
 //    updateRigidBody(false);
 }
 
-int Entity::getAnimDispatchCase(LaraState id) const
+boost::optional<size_t> Entity::getAnimDispatchCase(LaraState id) const
 {
     const animation::Animation* anim = &m_skeleton.getModel()->animations[m_skeleton.getCurrentAnimation()];
     const animation::StateChange* stc = anim->findStateChangeByID(id);
     if(!stc)
-        return -1;
+        return boost::none;
 
     for(size_t j = 0; j < stc->anim_dispatch.size(); j++)
     {
@@ -591,11 +591,11 @@ int Entity::getAnimDispatchCase(LaraState id) const
            && m_skeleton.getCurrentFrame() >= disp.frame_low
            && m_skeleton.getCurrentFrame() <= disp.frame_high)
         {
-            return static_cast<int>(j);
+            return j;
         }
     }
 
-    return -1;
+    return boost::none;
 }
 
 
@@ -733,7 +733,7 @@ void Entity::moveVertical(glm::float_t dist)
     m_transform[3] += m_transform[2] * dist;
 }
 
-Entity::Entity(uint32_t id)
+Entity::Entity(ObjectId id)
     : Object(id)
 {
     m_obb.transform = &m_transform;

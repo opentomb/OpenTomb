@@ -240,7 +240,7 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
 
     if(ent->m_typeFlags & ENTITY_TYPE_SPAWNED)
     {
-        uint32_t room_id = (ent->getRoom()) ? (ent->getRoom()->getId()) : (0xFFFFFFFF);
+        world::ObjectId room_id = (ent->getRoom()) ? (ent->getRoom()->getId()) : (0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);",
                 ent->m_skeleton.getModel()->id,
                 ent->m_transform[3][0],

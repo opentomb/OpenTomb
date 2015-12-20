@@ -12,6 +12,7 @@
 
 #include <AL/alc.h>
 #include <boost/assert.hpp>
+#include <boost/optional.hpp>
 
 namespace world
 {
@@ -70,12 +71,12 @@ public:
     void pauseAllSources();
     void stopAllSources();
     void resumeAllSources();
-    int getFreeSource() const;
+    boost::optional<size_t> getFreeSource() const;
     bool endStreams(StreamType stream_type = StreamType::Any);
     bool stopStreams(StreamType stream_type = StreamType::Any);
-    bool isTrackPlaying(int32_t track_index = -1) const;
-    int findSource(int effect_ID = -1, EmitterType entity_type = EmitterType::Any, int entity_ID = -1) const;
-    int getFreeStream() const;
+    bool isTrackPlaying(const boost::optional<int32_t>& track_index = boost::none) const;
+    boost::optional<size_t> findSource(const boost::optional<uint32_t>& effect_ID = boost::none, EmitterType entity_type = EmitterType::Any, const boost::optional<world::ObjectId>& entity_ID = boost::none) const;
+    boost::optional<size_t> getFreeStream() const;
     // Update routine for all streams. Should be placed into main loop.
     void updateStreams();
     bool trackAlreadyPlayed(uint32_t track_index, int8_t mask);
@@ -87,9 +88,9 @@ public:
     bool deInitDelay();
     void deInitAudio();
     // If exist, immediately stop and destroy all effects with given parameters.
-    Error kill(int effect_ID, EmitterType entity_type = EmitterType::Global, int entity_ID = 0);
+    Error kill(int effect_ID, EmitterType entity_type = EmitterType::Global, world::ObjectId entity_ID = 0);
     bool isInRange(EmitterType entity_type, world::ObjectId entity_ID, float range, float gain);
-    Error send(int effect_ID, EmitterType entity_type = EmitterType::Global, int entity_ID = 0);
+    Error send(const boost::optional<uint32_t>& effect_ID, EmitterType entity_type = EmitterType::Global, world::ObjectId entity_ID = 0);
 
     ALuint getBuffer(size_t index) const
     {

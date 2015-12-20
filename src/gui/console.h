@@ -1,10 +1,12 @@
 #pragma once
 
+#include "gl_font.h"
+#include "gui.h"
+
 #include <cstdint>
 #include <string>
 
-#include "gl_font.h"
-#include "gui.h"
+#include <boost/optional.hpp>
 
 #define CON_MIN_LOG 16
 #define CON_MAX_LOG 128
@@ -98,7 +100,7 @@ public:
 
     void filter(const std::string& text);
 
-    void edit(int key, int mod = -1);
+    void edit(int key, const boost::optional<Uint16>& mod = boost::none);
 
     void calcCursorPosition();
 

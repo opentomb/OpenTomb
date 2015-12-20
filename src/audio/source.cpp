@@ -14,13 +14,6 @@ namespace audio
 
 Source::Source()
 {
-    m_active = false;
-    m_emitterID = -1;
-    m_emitterType = EmitterType::Entity;
-    m_effectIndex = 0;
-    m_sampleIndex = 0;
-    m_sampleCount = 0;
-    m_isWater = false;
     alGenSources(1, &m_sourceIndex);
 
     if(alIsSource(m_sourceIndex))
@@ -159,7 +152,7 @@ void Source::update(const FxManager& manager)
     // Check if source is in listener's range, and if so, update position,
     // else stop and disable it.
 
-    if(engine::engine_world.audioEngine.isInRange(m_emitterType, m_emitterID, range, gain))
+    if(engine::engine_world.audioEngine.isInRange(m_emitterType, *m_emitterID, range, gain))
     {
         linkEmitter();
 
@@ -296,6 +289,8 @@ void Source::setUnderwater(const FxManager& fxManager)
 
 void Source::linkEmitter()
 {
+    BOOST_ASSERT(m_emitterID.is_initialized());
+
     switch(m_emitterType)
     {
         case EmitterType::Any:
@@ -306,7 +301,7 @@ void Source::linkEmitter()
             break;
 
         case EmitterType::Entity:
-            if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(m_emitterID))
+            if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(*m_emitterID))
             {
                 setPosition(glm::value_ptr(ent->m_transform[3]));
                 setVelocity(glm::value_ptr(ent->m_speed));
@@ -314,7 +309,7 @@ void Source::linkEmitter()
             break;
 
         case EmitterType::SoundSource:
-            setPosition(glm::value_ptr(engine::engine_world.audioEngine.getEmitter(m_emitterID).position));
+            setPosition(glm::value_ptr(engine::engine_world.audioEngine.getEmitter(*m_emitterID).position));
             break;
     }
 }
