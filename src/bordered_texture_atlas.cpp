@@ -350,7 +350,7 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
 
                 if(split)
                 {
-                    y_coord += (canonical.height / 2);
+                    y_coord += canonical.height / 2;
                 }
                 break;
             case TOP_RIGHT:
@@ -359,7 +359,7 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
 
                 if(split)
                 {
-                    y_coord += (canonical.height / 2);
+                    y_coord += canonical.height / 2;
                 }
                 break;
             case BOTTOM_LEFT:
@@ -374,7 +374,7 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
                 BOOST_ASSERT(false);
         }
 
-        size_t index = reverse ? (poly.vertices.size() - i - 1) : i;
+        size_t index = reverse ? poly.vertices.size() - i - 1 : i;
 
         poly.vertices[index].tex_coord[0] = static_cast<glm::float_t>(x_coord) / static_cast<glm::float_t>(m_resultPageWidth);
         poly.vertices[index].tex_coord[1] = static_cast<glm::float_t>(y_coord) / static_cast<glm::float_t>(m_resultPageHeights[canonical.new_page]);
@@ -535,11 +535,13 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
             //WriteTGAfile(tgan, mip_data, w, h, 0);
             glTexImage2D(GL_TEXTURE_2D, mip_level, GL_RGBA, static_cast<GLsizei>(w), static_cast<GLsizei>(h), 0, GL_RGBA, GL_UNSIGNED_BYTE, mip_data.data());
 
-            while((w > 1) && (h > 1) /*&& (mip_level < 4)*/)
+            while(w > 1 && h > 1 /*&& (mip_level < 4)*/)
             {
                 mip_level++;
-                w /= 2; w = (w == 0) ? 1 : w;
-                h /= 2; h = (h == 0) ? 1 : h;
+                w /= 2;
+                w = w == 0 ? 1 : w;
+                h /= 2;
+                h = h == 0 ? 1 : h;
                 for(int i = 0; i < h; i++)
                 {
                     for(int j = 0; j < w; j++)

@@ -55,7 +55,7 @@ bool Source::isLooping() const
     {
         ALint looping;
         alGetSourcei(m_sourceIndex, AL_LOOPING, &looping);
-        return (looping != AL_FALSE);
+        return looping != AL_FALSE;
     }
     else
     {
@@ -71,7 +71,7 @@ bool Source::isPlaying() const
         alGetSourcei(m_sourceIndex, AL_SOURCE_STATE, &state);
 
         // Paused state and existing file pointers also counts as playing.
-        return ((state == AL_PLAYING) || (state == AL_PAUSED));
+        return state == AL_PLAYING || state == AL_PAUSED;
     }
     else
     {
@@ -241,7 +241,7 @@ void Source::setFX(FxManager& manager)
     if(manager.current_room_type != manager.last_room_type)  // Switch audio send.
     {
         manager.last_room_type = manager.current_room_type;
-        manager.current_slot = (++manager.current_slot > (FxManager::MaxSlots - 1)) ? (0) : (manager.current_slot);
+        manager.current_slot = ++manager.current_slot > FxManager::MaxSlots - 1 ? 0 : manager.current_slot;
 
         ALuint effect = manager.al_effect[static_cast<int>(manager.current_room_type)];
         slot = manager.al_slot[manager.current_slot];

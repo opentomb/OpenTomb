@@ -140,7 +140,7 @@ void initSDLControls()
 
         int NumJoysticks = SDL_NumJoysticks();
 
-        if((NumJoysticks < 1) || ((NumJoysticks - 1) < control_mapper.joy_number))
+        if(NumJoysticks < 1 || NumJoysticks - 1 < control_mapper.joy_number)
         {
             BOOST_LOG_TRIVIAL(error) << "There is no joystick #" << control_mapper.joy_number << " present";
             return;
@@ -209,7 +209,7 @@ void initSDLVideo()
     }
     else
     {
-        video_flags |= (SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
+        video_flags |= SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN;
     }
 
     ///@TODO: is it really needed for correct work?
@@ -245,7 +245,7 @@ void initSDLVideo()
     {
         GLint maxSamples = 0;
         glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
-        maxSamples = (maxSamples > 16) ? (16) : (maxSamples);   // Fix for faulty GL max. sample number.
+        maxSamples = maxSamples > 16 ? 16 : maxSamples;   // Fix for faulty GL max. sample number.
 
         if(render::renderer.settings().antialias_samples > maxSamples)
         {
@@ -404,7 +404,7 @@ void resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 
     screen_info.w_unit = static_cast<float>(nominalW) / gui::ScreenMeteringResolution;
     screen_info.h_unit = static_cast<float>(nominalH) / gui::ScreenMeteringResolution;
-    screen_info.scale_factor = (screen_info.w < screen_info.h) ? (screen_info.h_unit) : (screen_info.w_unit);
+    screen_info.scale_factor = screen_info.w < screen_info.h ? screen_info.h_unit : screen_info.w_unit;
 
     gui::resize();
 
@@ -430,7 +430,7 @@ namespace
         }
         else
         {
-            screen_info.fps = (20.0f / util::toSeconds(fpsTime));
+            screen_info.fps = 20.0f / util::toSeconds(fpsTime);
             char tmp[16];
             snprintf(tmp, 16, "%.1f", screen_info.fps);
             system_fps.text = tmp;
@@ -504,7 +504,7 @@ void showDebugInfo()
         if(rs != nullptr)
         {
             gui::drawText(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.getCurrentRoom()->getId(), rs->index_x, rs->index_y);
-            gui::drawText(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != nullptr) ? (rs->sector_below->owner_room->getId()) : (-1), (rs->sector_above != nullptr) ? (rs->sector_above->owner_room->getId()) : (-1));
+            gui::drawText(30.0, 120.0, "room_below = %d, room_above = %d", rs->sector_below != nullptr ? rs->sector_below->owner_room->getId() : -1, rs->sector_above != nullptr ? rs->sector_above->owner_room->getId() : -1);
         }
     }
     gui::drawText(30.0, 150.0, "cam_pos = %s", glm::to_string(engine_camera.getPosition()).c_str());
@@ -1052,7 +1052,7 @@ int execCmd(const char *ch)
             else
             {
                 const auto val = atoi(token.data());
-                if((val >=2 ) && (val <= screen_info.h/Console::instance().lineHeight()))
+                if(val >=2 && val <= screen_info.h/Console::instance().lineHeight())
                 {
                     Console::instance().setVisibleLines(val);
                     Console::instance().setCursorY(screen_info.h - Console::instance().lineHeight() * Console::instance().visibleLines());

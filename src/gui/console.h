@@ -4,7 +4,6 @@
 #include "gui.h"
 
 #include <cstdint>
-#include <string>
 
 #include <boost/optional.hpp>
 

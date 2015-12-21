@@ -137,46 +137,16 @@ bool World::deleteEntity(ObjectId id)
 
 boost::optional<ObjectId> World::spawnEntity(ModelId model_id, uint32_t room_id, const glm::vec3* pos, const glm::vec3* ang, boost::optional<ObjectId> id)
 {
-    if(SkeletalModel* model = getModelByID(model_id))
+    SkeletalModel* model = getModelByID(model_id);
+    if(!model)
+        return boost::none;
+
+    std::shared_ptr<Entity> ent;
+    if(id)
+        ent = getEntityByID(*id);
+
+    if(ent)
     {
-        std::shared_ptr<Entity> ent;
-        if(id && (ent = getEntityByID(*id)))
-        {
-            if(pos != nullptr)
-            {
-                ent->m_transform[3] = glm::vec4(*pos,1.0f);
-            }
-            if(ang != nullptr)
-            {
-                ent->m_angles = *ang;
-                ent->updateTransform();
-            }
-            if(room_id < rooms.size())
-            {
-                ent->setRoom( rooms[room_id].get() );
-                ent->m_currentSector = ent->getRoom()->getSectorRaw(glm::vec3(ent->m_transform[3]));
-            }
-            else
-            {
-                ent->setRoom( nullptr );
-            }
-
-            return ent->getId();
-        }
-
-        if(!id)
-        {
-            ent = std::make_shared<Entity>(next_entity_id);
-            entity_tree[next_entity_id] = ent;
-            ++next_entity_id;
-        }
-        else
-        {
-            ent = std::make_shared<Entity>(*id);
-            if(static_cast<uint32_t>(*id + 1) > next_entity_id)
-                next_entity_id = *id + 1;
-        }
-
         if(pos != nullptr)
         {
             ent->m_transform[3] = glm::vec4(*pos,1.0f);
@@ -196,36 +166,68 @@ boost::optional<ObjectId> World::spawnEntity(ModelId model_id, uint32_t room_id,
             ent->setRoom( nullptr );
         }
 
-        ent->m_typeFlags = ENTITY_TYPE_SPAWNED;
-        ent->m_active = ent->m_enabled = true;
-        ent->m_triggerLayout = 0x00;
-        ent->m_OCB = 0x00;
-        ent->m_timer = 0.0;
-
-        ent->m_moveType = MoveType::StaticPos;
-        ent->m_inertiaLinear = 0.0;
-        ent->m_inertiaAngular[0] = 0.0;
-        ent->m_inertiaAngular[1] = 0.0;
-
-        ent->m_skeleton.fromModel(model);
-
-        ent->setAnimation(0, 0);                                     // Set zero animation and zero frame
-
-        Res_SetEntityProperties(ent);
-        ent->rebuildBoundingBox();
-        ent->m_skeleton.genRigidBody(*ent);
-
-        if(ent->getRoom() != nullptr)
-        {
-            ent->getRoom()->addEntity(ent.get());
-        }
-        addEntity(ent);
-        Res_SetEntityFunction(ent);
-
         return ent->getId();
     }
 
-    return boost::none;
+    if(!id)
+    {
+        ent = std::make_shared<Entity>(next_entity_id);
+        entity_tree[next_entity_id] = ent;
+        ++next_entity_id;
+    }
+    else
+    {
+        ent = std::make_shared<Entity>(*id);
+        if(*id + 1 > next_entity_id)
+            next_entity_id = *id + 1;
+    }
+
+    if(pos != nullptr)
+    {
+        ent->m_transform[3] = glm::vec4(*pos,1.0f);
+    }
+    if(ang != nullptr)
+    {
+        ent->m_angles = *ang;
+        ent->updateTransform();
+    }
+    if(room_id < rooms.size())
+    {
+        ent->setRoom( rooms[room_id].get() );
+        ent->m_currentSector = ent->getRoom()->getSectorRaw(glm::vec3(ent->m_transform[3]));
+    }
+    else
+    {
+        ent->setRoom( nullptr );
+    }
+
+    ent->m_typeFlags = ENTITY_TYPE_SPAWNED;
+    ent->m_active = ent->m_enabled = true;
+    ent->m_triggerLayout = 0x00;
+    ent->m_OCB = 0x00;
+    ent->m_timer = 0.0;
+
+    ent->m_moveType = MoveType::StaticPos;
+    ent->m_inertiaLinear = 0.0;
+    ent->m_inertiaAngular[0] = 0.0;
+    ent->m_inertiaAngular[1] = 0.0;
+
+    ent->m_skeleton.fromModel(model);
+
+    ent->setAnimation(0, 0);                                     // Set zero animation and zero frame
+
+    Res_SetEntityProperties(ent);
+    ent->rebuildBoundingBox();
+    ent->m_skeleton.genRigidBody(*ent);
+
+    if(ent->getRoom() != nullptr)
+    {
+        ent->getRoom()->addEntity(ent.get());
+    }
+    addEntity(ent);
+    Res_SetEntityFunction(ent);
+
+    return ent->getId();
 }
 
 std::shared_ptr<Entity> World::getEntityByID(ObjectId id)
@@ -274,10 +276,10 @@ Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
     }
 
     if(room->m_active &&
-       (new_pos[0] >= room->m_boundingBox.min[0]) && (new_pos[0] < room->m_boundingBox.max[0]) &&
-       (new_pos[1] >= room->m_boundingBox.min[1]) && (new_pos[1] < room->m_boundingBox.max[1]))
+       new_pos[0] >= room->m_boundingBox.min[0] && new_pos[0] < room->m_boundingBox.max[0] &&
+       new_pos[1] >= room->m_boundingBox.min[1] && new_pos[1] < room->m_boundingBox.max[1])
     {
-        if((new_pos[2] >= room->m_boundingBox.min[2]) && (new_pos[2] < room->m_boundingBox.max[2]))
+        if(new_pos[2] >= room->m_boundingBox.min[2] && new_pos[2] < room->m_boundingBox.max[2])
         {
             return room;
         }
@@ -300,7 +302,7 @@ Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
     }
 
     RoomSector* new_sector = room->getSectorRaw(new_pos);
-    if((new_sector != nullptr) && new_sector->portal_to_room)
+    if(new_sector != nullptr && new_sector->portal_to_room)
     {
         return engine::engine_world.rooms[*new_sector->portal_to_room]->checkFlip();
     }
@@ -337,11 +339,11 @@ RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, const glm::vec3&
     {
         if(!room->m_active)
         {
-            if((room->m_baseRoom != nullptr) && (room->m_baseRoom->m_active))
+            if(room->m_baseRoom != nullptr && room->m_baseRoom->m_active)
             {
                 room = room->m_baseRoom;
             }
-            else if((room->m_alternateRoom != nullptr) && (room->m_alternateRoom->m_active))
+            else if(room->m_alternateRoom != nullptr && room->m_alternateRoom->m_active)
             {
                 room = room->m_alternateRoom;
             }

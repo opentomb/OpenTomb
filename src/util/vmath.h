@@ -119,7 +119,7 @@ inline bool intersectRayTriangle( const glm::vec3& rayStart, const glm::vec3& ra
     // Check for intersection with each of the portal's 2 front triangles
     // Solve line-plane intersection using parametric form
     glm::vec3 tuv = glm::inverse(glm::mat3(rayDir, v1-v0, v2-v0)) * (rayStart-v0);
-    if (tuv.y >= 0 && tuv.y <= 1 && tuv.z >= 0 && tuv.z <= 1 && (tuv.y + tuv.z) <= 1)
+    if (tuv.y >= 0 && tuv.y <= 1 && tuv.z >= 0 && tuv.z <= 1 && tuv.y + tuv.z <= 1)
         return true;
     else
         return false;

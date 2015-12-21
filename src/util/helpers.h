@@ -12,7 +12,7 @@ namespace util
 inline glm::float_t wrapAngle(const glm::float_t value)
 {
     int i = static_cast<int>(value / 360.0);
-    i = (value < 0.0)?(i-1):(i);
+    i = value < 0.0 ? i-1 : i;
     return value - 360.0f * i;
 }
 

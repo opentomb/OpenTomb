@@ -40,7 +40,7 @@ void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& fa
     {
         addPolygon(root->front, face, transformed);
     }
-    else if((positive == 0) && (negative > 0))              // SPLIT_BACK
+    else if(positive == 0 && negative > 0)              // SPLIT_BACK
     {
         addPolygon(root->back, face, transformed);
     }

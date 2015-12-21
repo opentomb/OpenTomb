@@ -425,7 +425,7 @@ void InventoryManager::frame(util::Duration time)
 
 void InventoryManager::render()
 {
-    if((m_currentState != InventoryState::Disabled) && (m_inventory != nullptr) && !m_inventory->empty() && (gui::fontManager != nullptr))
+    if(m_currentState != InventoryState::Disabled && m_inventory != nullptr && !m_inventory->empty() && gui::fontManager != nullptr)
     {
         int num = 0;
         for(InventoryNode& i : *m_inventory)

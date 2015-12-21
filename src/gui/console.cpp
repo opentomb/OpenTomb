@@ -60,8 +60,7 @@ void Console::initGlobals() {
 
 void Console::setLineInterval(float interval)
 {
-    if(!inited || !fontManager ||
-       (interval < CON_MIN_LINE_INTERVAL) || (interval > CON_MAX_LINE_INTERVAL))
+    if(!inited || !fontManager || interval < CON_MIN_LINE_INTERVAL || interval > CON_MAX_LINE_INTERVAL)
     {
         return; // nothing to do
     }
@@ -327,7 +326,7 @@ void Console::edit(int key, const boost::optional<Uint16>& mod)
                     SDL_free(clipboard);
                 }
             }
-            else if(!mod && (oldLength < m_lineSize - 1) && (key >= SDLK_SPACE))
+            else if(!mod && oldLength < m_lineSize - 1 && key >= SDLK_SPACE)
             {
                 m_editingLine.insert(m_editingLine.begin() + m_cursorPos, char(key));
                 m_cursorPos++;

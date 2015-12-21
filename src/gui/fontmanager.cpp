@@ -62,7 +62,7 @@ FontStyleData *FontManager::GetFontStyle(const FontStyle index)
 
 bool FontManager::AddFont(const FontType index, const uint32_t size, const char* path)
 {
-    if((size < MinFontSize) || (size > MaxFontSize))
+    if(size < MinFontSize || size > MaxFontSize)
     {
         return false;
     }

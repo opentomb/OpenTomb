@@ -20,8 +20,8 @@ void Sys_Init()
 {
     system_fps.text.clear();
 
-    system_fps.X = (10.0);
-    system_fps.Y = (10.0);
+    system_fps.X = 10.0;
+    system_fps.Y = 10.0;
     system_fps.Xanchor = gui::HorizontalAnchor::Right;
     system_fps.Yanchor = gui::VerticalAnchor::Bottom;
 

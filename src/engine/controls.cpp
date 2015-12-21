@@ -40,8 +40,8 @@ void Controls_Key(int32_t button, bool state)
 
     for(int i = 0; i < ACT_LASTINDEX; i++)
     {
-        if((button == control_mapper.action_map[i].primary) ||
-           (button == control_mapper.action_map[i].secondary))  // If button = mapped action...
+        if(button == control_mapper.action_map[i].primary ||
+           button == control_mapper.action_map[i].secondary)  // If button = mapped action...
         {
             switch(i)                                           // ...Choose corresponding action.
             {
@@ -185,7 +185,7 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
             switch(i)                                   // ...Choose corresponding action.
             {
                 case AXIS_LOOK_X:
-                    if((axisValue < -control_mapper.joy_look_deadzone) || (axisValue > control_mapper.joy_look_deadzone))
+                    if(axisValue < -control_mapper.joy_look_deadzone || axisValue > control_mapper.joy_look_deadzone)
                     {
                         if(control_mapper.joy_look_invert_x)
                         {
@@ -193,7 +193,7 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                         }
                         else
                         {
-                            control_mapper.joy_look_x = (axisValue / (32767 / control_mapper.joy_look_sensitivity));
+                            control_mapper.joy_look_x = axisValue / (32767 / control_mapper.joy_look_sensitivity);
                         }
                     }
                     else
@@ -203,7 +203,7 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                     return;
 
                 case AXIS_LOOK_Y:
-                    if((axisValue < -control_mapper.joy_look_deadzone) || (axisValue > control_mapper.joy_look_deadzone))
+                    if(axisValue < -control_mapper.joy_look_deadzone || axisValue > control_mapper.joy_look_deadzone)
                     {
                         if(control_mapper.joy_look_invert_y)
                         {
@@ -211,7 +211,7 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                         }
                         else
                         {
-                            control_mapper.joy_look_y = (axisValue / (32767 / control_mapper.joy_look_sensitivity));
+                            control_mapper.joy_look_y = axisValue / (32767 / control_mapper.joy_look_sensitivity);
                         }
                     }
                     else
@@ -221,7 +221,7 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                     return;
 
                 case AXIS_MOVE_X:
-                    if((axisValue < -control_mapper.joy_move_deadzone) || (axisValue > control_mapper.joy_move_deadzone))
+                    if(axisValue < -control_mapper.joy_move_deadzone || axisValue > control_mapper.joy_move_deadzone)
                     {
                         if(control_mapper.joy_move_invert_x)
                         {
@@ -240,7 +240,7 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                         }
                         else
                         {
-                            control_mapper.joy_move_x = (axisValue / (32767 / control_mapper.joy_move_sensitivity));
+                            control_mapper.joy_move_x = axisValue / (32767 / control_mapper.joy_move_sensitivity);
                             if(axisValue > control_mapper.joy_move_deadzone)
                             {
                                 control_states.move_left = false;
@@ -262,7 +262,7 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                     return;
 
                 case AXIS_MOVE_Y:
-                    if((axisValue < -control_mapper.joy_move_deadzone) || (axisValue > control_mapper.joy_move_deadzone))
+                    if(axisValue < -control_mapper.joy_move_deadzone || axisValue > control_mapper.joy_move_deadzone)
                     {
                         if(control_mapper.joy_move_invert_y)
                         {
@@ -280,7 +280,7 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                         }
                         else
                         {
-                            control_mapper.joy_move_y = (axisValue / (32767 / control_mapper.joy_move_sensitivity));
+                            control_mapper.joy_move_y = axisValue / (32767 / control_mapper.joy_move_sensitivity);
                             if(axisValue > control_mapper.joy_move_deadzone)
                             {
                                 control_states.move_forward = false;
@@ -352,7 +352,7 @@ void Controls_WrapGameControllerKey(int button, bool state)
             Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, state);
             break;
         default:
-            Controls_Key((JOY_BUTTON_MASK + button), state);
+            Controls_Key(JOY_BUTTON_MASK + button, state);
             break;
     }
 }
@@ -364,16 +364,16 @@ void Controls_WrapGameControllerAxis(int axis, Sint16 value)
     // Button event is invoked only if trigger is pressed more than 1/3 of its range.
     // Triggers are coded as native SDL2 enum number + JOY_TRIGGER_MASK (1200).
 
-    if((axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT) ||
-       (axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT))
+    if(axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT ||
+       axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT)
     {
         if(value >= JOY_TRIGGER_DEADZONE)
         {
-            Controls_Key((axis + JOY_TRIGGER_MASK), true);
+            Controls_Key(axis + JOY_TRIGGER_MASK, true);
         }
         else
         {
-            Controls_Key((axis + JOY_TRIGGER_MASK), false);
+            Controls_Key(axis + JOY_TRIGGER_MASK, false);
         }
     }
     else
@@ -511,7 +511,7 @@ void Controls_PollSDLInput()
             case SDL_JOYBUTTONUP:
                 // NOTE: Joystick button numbers are passed with added JOY_BUTTON_MASK (1000).
                 if(sdl_joystick)
-                    Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state == SDL_PRESSED);
+                    Controls_Key(event.jbutton.button + JOY_BUTTON_MASK, event.jbutton.state == SDL_PRESSED);
                 break;
 
             case SDL_TEXTINPUT:
@@ -525,9 +525,9 @@ void Controls_PollSDLInput()
 
             case SDL_KEYUP:
             case SDL_KEYDOWN:
-                if((event.key.keysym.sym == SDLK_F4) &&
-                   (event.key.state == SDL_PRESSED) &&
-                   (event.key.keysym.mod & KMOD_ALT))
+                if(event.key.keysym.sym == SDLK_F4 &&
+                   event.key.state == SDL_PRESSED &&
+                   event.key.keysym.mod & KMOD_ALT)
                 {
                     done = true;
                     break;

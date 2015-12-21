@@ -111,7 +111,7 @@ void Fader::SetAspect()
 {
     if(mTexture)
     {
-        if((static_cast<float>(mTextureWidth) / static_cast<float>(engine::screen_info.w)) >= (static_cast<float>(mTextureHeight) / static_cast<float>(engine::screen_info.h)))
+        if(static_cast<float>(mTextureWidth) / static_cast<float>(engine::screen_info.w) >= static_cast<float>(mTextureHeight) / static_cast<float>(engine::screen_info.h))
         {
             mTextureWide = true;
             mTextureAspectRatio = static_cast<float>(mTextureHeight) / static_cast<float>(mTextureWidth);
@@ -422,13 +422,13 @@ void Fader::Show()
                 drawRect(0.0,
                              0.0,
                              engine::screen_info.w,
-                             (engine::screen_info.h - (engine::screen_info.w * mTextureAspectRatio)) / 2,
+                             (engine::screen_info.h - engine::screen_info.w * mTextureAspectRatio) / 2,
                              mBottomLeftColor, mBottomRightColor, mBottomLeftColor, mBottomRightColor,
                              mBlendingMode);
 
                 // Draw texture.
                 drawRect(0.0,
-                             (engine::screen_info.h - (engine::screen_info.w * mTextureAspectRatio)) / 2,
+                             (engine::screen_info.h - engine::screen_info.w * mTextureAspectRatio) / 2,
                              engine::screen_info.w,
                              engine::screen_info.w * mTextureAspectRatio,
                              tex_color, tex_color, tex_color, tex_color,
@@ -437,9 +437,9 @@ void Fader::Show()
 
                 // Draw upper letterbox.
                 drawRect(0.0,
-                             engine::screen_info.h - (engine::screen_info.h - (engine::screen_info.w * mTextureAspectRatio)) / 2,
+                             engine::screen_info.h - (engine::screen_info.h - engine::screen_info.w * mTextureAspectRatio) / 2,
                              engine::screen_info.w,
-                             (engine::screen_info.h - (engine::screen_info.w * mTextureAspectRatio)) / 2,
+                             (engine::screen_info.h - engine::screen_info.w * mTextureAspectRatio) / 2,
                              mTopLeftColor, mTopRightColor, mTopLeftColor, mTopRightColor,
                              mBlendingMode);
             }
@@ -448,13 +448,13 @@ void Fader::Show()
                 // Draw left pillarbox.
                 drawRect(0.0,
                              0.0,
-                             (engine::screen_info.w - (engine::screen_info.h / mTextureAspectRatio)) / 2,
+                             (engine::screen_info.w - engine::screen_info.h / mTextureAspectRatio) / 2,
                              engine::screen_info.h,
                              mTopLeftColor, mTopLeftColor, mBottomLeftColor, mBottomLeftColor,
                              mBlendingMode);
 
                 // Draw texture.
-                drawRect((engine::screen_info.w - (engine::screen_info.h / mTextureAspectRatio)) / 2,
+                drawRect((engine::screen_info.w - engine::screen_info.h / mTextureAspectRatio) / 2,
                              0.0,
                              engine::screen_info.h / mTextureAspectRatio,
                              engine::screen_info.h,
@@ -463,9 +463,9 @@ void Fader::Show()
                              mTexture);
 
                 // Draw right pillarbox.
-                drawRect(engine::screen_info.w - (engine::screen_info.w - (engine::screen_info.h / mTextureAspectRatio)) / 2,
+                drawRect(engine::screen_info.w - (engine::screen_info.w - engine::screen_info.h / mTextureAspectRatio) / 2,
                              0.0,
-                             (engine::screen_info.w - (engine::screen_info.h / mTextureAspectRatio)) / 2,
+                             (engine::screen_info.w - engine::screen_info.h / mTextureAspectRatio) / 2,
                              engine::screen_info.h,
                              mTopRightColor, mTopRightColor, mBottomRightColor, mBottomRightColor,
                              mBlendingMode);
@@ -475,7 +475,7 @@ void Fader::Show()
         {
             if(mTextureWide)    // Texture is wider than the screen - scale vertical.
             {
-                drawRect(-(((engine::screen_info.h / mTextureAspectRatio) - engine::screen_info.w) / 2),
+                drawRect(-((engine::screen_info.h / mTextureAspectRatio - engine::screen_info.w) / 2),
                              0.0,
                              engine::screen_info.h / mTextureAspectRatio,
                              engine::screen_info.h,
@@ -486,7 +486,7 @@ void Fader::Show()
             else                // Texture is taller than the screen - scale horizontal.
             {
                 drawRect(0.0,
-                             -(((engine::screen_info.w / mTextureAspectRatio) - engine::screen_info.h) / 2),
+                             -((engine::screen_info.w / mTextureAspectRatio - engine::screen_info.h) / 2),
                              engine::screen_info.w,
                              engine::screen_info.w / mTextureAspectRatio,
                              tex_color, tex_color, tex_color, tex_color,
@@ -533,7 +533,7 @@ bool fadeStart(FaderType fader, FaderDir fade_direction)
 {
     // If fader exists, and is not active, we engage it.
 
-    if((fader < FaderType::Sentinel) && (faderType[fader].getStatus() != FaderStatus::Fading))
+    if(fader < FaderType::Sentinel && faderType[fader].getStatus() != FaderStatus::Fading)
     {
         faderType[fader].Engage(fade_direction);
         return true;
@@ -546,7 +546,7 @@ bool fadeStart(FaderType fader, FaderDir fade_direction)
 
 bool fadeStop(FaderType fader)
 {
-    if((fader < FaderType::Sentinel) && (faderType[fader].getStatus() != FaderStatus::Idle))
+    if(fader < FaderType::Sentinel && faderType[fader].getStatus() != FaderStatus::Idle)
     {
         faderType[fader].Cut();
         return true;
@@ -603,7 +603,7 @@ void fadeSetup(FaderType fader,
 
 FaderStatus getFaderStatus(FaderType fader)
 {
-    if((fader >= FaderType::Effect) && (fader < FaderType::Sentinel))
+    if(fader >= FaderType::Effect && fader < FaderType::Sentinel)
     {
         return faderType[fader].getStatus();
     }

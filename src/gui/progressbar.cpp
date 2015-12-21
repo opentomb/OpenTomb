@@ -150,7 +150,7 @@ void ProgressBar::RecalculateSize()
     // If bar alignment is set to horizontal, calculate it from bar width.
     // If bar is vertical, then calculate it from height.
 
-    mRangeUnit = (!Vertical) ? ((mWidth) / mMaxValue) : ((mHeight) / mMaxValue);
+    mRangeUnit = !Vertical ? mWidth / mMaxValue : mHeight / mMaxValue;
 }
 
 // Recalculate position, according to viewport resolution.
@@ -162,8 +162,8 @@ void ProgressBar::RecalculatePosition()
             mX = static_cast<float>(mAbsXoffset + mAbsBorderSize) * engine::screen_info.scale_factor;
             break;
         case HorizontalAnchor::Center:
-            mX = (static_cast<float>(engine::screen_info.w) - (static_cast<float>(mAbsWidth + mAbsBorderSize * 2) * engine::screen_info.scale_factor)) / 2 +
-                (static_cast<float>(mAbsXoffset) * engine::screen_info.scale_factor);
+            mX = (static_cast<float>(engine::screen_info.w) - static_cast<float>(mAbsWidth + mAbsBorderSize * 2) * engine::screen_info.scale_factor) / 2 +
+                static_cast<float>(mAbsXoffset) * engine::screen_info.scale_factor;
             break;
         case HorizontalAnchor::Right:
             mX = static_cast<float>(engine::screen_info.w) - static_cast<float>(mAbsXoffset + mAbsWidth + mAbsBorderSize * 2) * engine::screen_info.scale_factor;
@@ -176,8 +176,8 @@ void ProgressBar::RecalculatePosition()
             mY = static_cast<float>(engine::screen_info.h) - static_cast<float>(mAbsYoffset + mAbsHeight + mAbsBorderSize * 2) * engine::screen_info.scale_factor;
             break;
         case VerticalAnchor::Center:
-            mY = (static_cast<float>(engine::screen_info.h) - (static_cast<float>(mAbsHeight + mAbsBorderSize * 2) * engine::screen_info.h_unit)) / 2 +
-                (static_cast<float>(mAbsYoffset) * engine::screen_info.scale_factor);
+            mY = (static_cast<float>(engine::screen_info.h) - static_cast<float>(mAbsHeight + mAbsBorderSize * 2) * engine::screen_info.h_unit) / 2 +
+                static_cast<float>(mAbsYoffset) * engine::screen_info.scale_factor;
             break;
         case VerticalAnchor::Bottom:
             mY = (mAbsYoffset + mAbsBorderSize) * engine::screen_info.scale_factor;
@@ -233,7 +233,7 @@ void ProgressBar::Show(float value)
     value = glm::clamp(value, 0.0f, mMaxValue);
 
     // Enable blink mode, if value is gone below warning value.
-    mBlink = (value <= mWarnValue) ? (true) : (false);
+    mBlink = value <= mWarnValue;
 
     if(mAutoShow)   // Check autoshow visibility conditions.
     {
@@ -328,7 +328,7 @@ void ProgressBar::Show(float value)
     // Border rect should be rendered first, as it lies beneath actual bar,
     // and additionally, we need to show it in any case, even if bar is in
     // warning state (blinking).
-    drawRect(mX, mY, mWidth + (mBorderWidth * 2), mHeight + (mBorderHeight * 2),
+    drawRect(mX, mY, mWidth + mBorderWidth * 2, mHeight + mBorderHeight * 2,
                  mBorderMainColor, mBorderMainColor,
                  mBorderFadeColor, mBorderFadeColor,
                  loader::BlendingMode::Opaque);
@@ -355,8 +355,8 @@ void ProgressBar::Show(float value)
     {
         // Draw full-sized background rect (instead of base bar rect)
         drawRect(mX + mBorderWidth, mY + mBorderHeight, mWidth, mHeight,
-                     mBackMainColor, (Vertical) ? (mBackFadeColor) : (mBackMainColor),
-                     (Vertical) ? (mBackMainColor) : (mBackFadeColor), mBackFadeColor,
+                     mBackMainColor, Vertical ? mBackFadeColor : mBackMainColor,
+                     Vertical ? mBackMainColor : mBackFadeColor, mBackFadeColor,
                      loader::BlendingMode::Opaque);
         return;
     }
@@ -374,24 +374,24 @@ void ProgressBar::Show(float value)
     if(Invert)
     {
         memcpy(RectFirstColor,
-               (Alternate) ? (mAltMainColor) : (mBaseMainColor),
+               Alternate ? mAltMainColor : mBaseMainColor,
                sizeof(float) * 4);
 
         // Main-fade gradient is recalculated according to current / maximum value ratio.
         for(int i = 0; i <= 3; i++)
-            RectSecondColor[i] = (Alternate) ? ((mBaseRatio * mAltFadeColor[i]) + ((1 - mBaseRatio) * mAltMainColor[i]))
-            : ((mBaseRatio * mBaseFadeColor[i]) + ((1 - mBaseRatio) * mBaseMainColor[i]));
+            RectSecondColor[i] = Alternate ? mBaseRatio * mAltFadeColor[i] + (1 - mBaseRatio) * mAltMainColor[i]
+            : mBaseRatio * mBaseFadeColor[i] + (1 - mBaseRatio) * mBaseMainColor[i];
     }
     else
     {
         memcpy(RectSecondColor,
-               (Alternate) ? (mAltMainColor) : (mBaseMainColor),
+               Alternate ? mAltMainColor : mBaseMainColor,
                sizeof(float) * 4);
 
         // Main-fade gradient is recalculated according to current / maximum value ratio.
         for(int i = 0; i <= 3; i++)
-            RectFirstColor[i] = (Alternate) ? ((mBaseRatio * mAltFadeColor[i]) + ((1 - mBaseRatio) * mAltMainColor[i]))
-            : ((mBaseRatio * mBaseFadeColor[i]) + ((1 - mBaseRatio) * mBaseMainColor[i]));
+            RectFirstColor[i] = Alternate ? mBaseRatio * mAltFadeColor[i] + (1 - mBaseRatio) * mAltMainColor[i]
+            : mBaseRatio * mBaseFadeColor[i] + (1 - mBaseRatio) * mBaseMainColor[i];
     } // end if(Invert)
 
     // We need to reset Alternate flag each frame, cause behaviour is immediate.
@@ -401,7 +401,7 @@ void ProgressBar::Show(float value)
     // If vertical style flag is set, we draw bar base top-bottom, else we draw it left-right.
     if(Vertical)
     {
-        RectAnchor = ((Invert) ? (mY + mHeight - mBaseSize) : (mY)) + mBorderHeight;
+        RectAnchor = (Invert ? mY + mHeight - mBaseSize : mY) + mBorderHeight;
 
         // Draw actual bar base.
         drawRect(mX + mBorderWidth, RectAnchor,
@@ -412,7 +412,7 @@ void ProgressBar::Show(float value)
 
         // Draw background rect.
         drawRect(mX + mBorderWidth,
-                     (Invert) ? (mY + mBorderHeight) : (RectAnchor + mBaseSize),
+                     Invert ? mY + mBorderHeight : RectAnchor + mBaseSize,
                      mWidth, mHeight - mBaseSize,
                      mBackMainColor, mBackFadeColor,
                      mBackMainColor, mBackFadeColor,
@@ -436,7 +436,7 @@ void ProgressBar::Show(float value)
     }
     else
     {
-        RectAnchor = ((Invert) ? (mX + mWidth - mBaseSize) : (mX)) + mBorderWidth;
+        RectAnchor = (Invert ? mX + mWidth - mBaseSize : mX) + mBorderWidth;
 
         // Draw actual bar base.
         drawRect(RectAnchor, mY + mBorderHeight,
@@ -446,7 +446,7 @@ void ProgressBar::Show(float value)
                      loader::BlendingMode::Opaque);
 
         // Draw background rect.
-        drawRect((Invert) ? (mX + mBorderWidth) : (RectAnchor + mBaseSize),
+        drawRect(Invert ? mX + mBorderWidth : RectAnchor + mBaseSize,
                      mY + mBorderHeight,
                      mWidth - mBaseSize, mHeight,
                      mBackMainColor, mBackMainColor,
@@ -462,7 +462,7 @@ void ProgressBar::Show(float value)
                          transparentColor, transparentColor,
                          mExtrudeDepth, mExtrudeDepth,
                          loader::BlendingMode::Opaque);
-            drawRect(RectAnchor, mY + mBorderHeight + (mHeight / 2),
+            drawRect(RectAnchor, mY + mBorderHeight + mHeight / 2,
                          mBaseSize, mHeight / 2,
                          mExtrudeDepth, mExtrudeDepth,
                          transparentColor, transparentColor,
@@ -510,7 +510,7 @@ void initBars()
         g_bar[i].SetColor(BarColorType::BackFade, 60, 60, 60, 130);
         g_bar[i].SetColor(BarColorType::BorderMain, 200, 200, 200, 50);
         g_bar[i].SetColor(BarColorType::BorderFade, 80, 80, 80, 100);
-        g_bar[i].SetValues(LARA_PARAM_AIR_MAX, (LARA_PARAM_AIR_MAX / 3));
+        g_bar[i].SetValues(LARA_PARAM_AIR_MAX, LARA_PARAM_AIR_MAX / 3);
         g_bar[i].SetBlink(util::MilliSeconds(300));
         g_bar[i].SetExtrude(true, 100);
         g_bar[i].SetAutoshow(true, util::MilliSeconds(2000), true, util::MilliSeconds(400));

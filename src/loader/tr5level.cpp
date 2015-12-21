@@ -84,7 +84,7 @@ void TR5Level::load()
     comp_size = m_reader.readU32();
     if(comp_size > 0)
     {
-        if((uncomp_size / (256 * 256 * 4)) > 3)
+        if(uncomp_size / (256 * 256 * 4) > 3)
             std::cerr << "read_tr5_level: num_misc_textiles > 3\n";
 
         std::vector<uint8_t> comp_buffer(comp_size);

@@ -90,7 +90,7 @@ void Render::empty()
 
 void Render::renderSkyBox()
 {
-    if(m_drawSkybox && (m_world != nullptr) && (m_world->sky_box != nullptr))
+    if(m_drawSkybox && m_world != nullptr && m_world->sky_box != nullptr)
     {
         glDepthMask(GL_FALSE);
         glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->sky_box->animations.front().getInitialBoneKeyFrame().offset);
@@ -815,7 +815,7 @@ void Render::drawList()
         }
     }
 
-    if((engine::engine_world.character != nullptr) && engine::engine_world.character->m_skeleton.getModel()->has_transparency)
+    if(engine::engine_world.character != nullptr && engine::engine_world.character->m_skeleton.getModel()->has_transparency)
     {
         world::Entity *ent = engine::engine_world.character.get();
         for(const world::animation::Bone& bone : ent->m_skeleton.getBones())
@@ -1222,7 +1222,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room& room, const Render
             debugDrawer.addLine(p.center, p.center + p.normal*128.0f);
     }
 
-    if(!render.m_skipRoom && (room.m_mesh != nullptr))
+    if(!render.m_skipRoom && room.m_mesh != nullptr)
     {
         debugDrawer.drawMeshDebugLines(room.m_mesh, room.m_modelMatrix, render);
     }

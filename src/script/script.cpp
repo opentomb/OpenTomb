@@ -178,7 +178,7 @@ lua::Any lua_GetEntitySectorFlags(world::ObjectId id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-    if((ent != nullptr) && (ent->m_currentSector))
+    if(ent != nullptr && ent->m_currentSector)
     {
         return ent->m_currentSector->flags;
     }
@@ -189,7 +189,7 @@ lua::Any lua_GetEntitySectorIndex(world::ObjectId id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-    if((ent != nullptr) && (ent->m_currentSector))
+    if(ent != nullptr && ent->m_currentSector)
     {
         return ent->m_currentSector->trig_index;
     }
@@ -200,7 +200,7 @@ lua::Any lua_GetEntitySectorMaterial(world::ObjectId id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-    if((ent != nullptr) && (ent->m_currentSector))
+    if(ent != nullptr && ent->m_currentSector)
     {
         return ent->m_currentSector->material;
     }
@@ -710,7 +710,7 @@ void lua_SetStateChangeRange(world::ModelId id, int anim, int state, int dispatc
         return;
     }
 
-    if((anim < 0) || (anim + 1 > static_cast<int>(model->animations.size())))
+    if(anim < 0 || anim + 1 > static_cast<int>(model->animations.size()))
     {
         Console::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return;
@@ -988,7 +988,7 @@ lua::Any lua_GetSectorHeight(world::ObjectId id, lua::Value ceiling, lua::Value 
 
     world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(glm::vec3(position));
     curr_sector = curr_sector->checkPortalPointer();
-    glm::vec3 point = (ceiling.is<lua::Boolean>() && ceiling.to<bool>())
+    glm::vec3 point = ceiling.is<lua::Boolean>() && ceiling.to<bool>()
         ? curr_sector->getCeilingPoint()
         : curr_sector->getFloorPoint();
 
@@ -1116,7 +1116,7 @@ void lua_MoveEntityToSink(world::ObjectId id, int sink_index)
     if(util::fuzzyZero(dist))
         dist = 1.0; // Prevents division by zero.
 
-    glm::vec3 speed = ((sink_pos - ent_pos) / dist) * (sink->room_or_strength * 1.5f);
+    glm::vec3 speed = (sink_pos - ent_pos) / dist * (sink->room_or_strength * 1.5f);
 
     ent->m_transform[3] += glm::vec4(speed, 0.0f);
 
@@ -1141,7 +1141,7 @@ void lua_MoveEntityToEntity(world::ObjectId id1, world::ObjectId id2, float spee
     if(util::fuzzyZero(dist))
         dist = 1.0; // Prevents division by zero.
 
-    glm::vec3 speed = ((ent2_pos - ent1_pos) / dist) * speed_mult; // FIXME!
+    glm::vec3 speed = (ent2_pos - ent1_pos) / dist * speed_mult; // FIXME!
 
     ent1->m_transform[3][0] += speed[0];
     ent1->m_transform[3][1] += speed[1];
@@ -1176,13 +1176,13 @@ void lua_RotateEntityToEntity(world::ObjectId id1, world::ObjectId id2, int axis
     std::shared_ptr<world::Entity> ent1 = engine::engine_world.getEntityByID(id1);
     std::shared_ptr<world::Entity> ent2 = engine::engine_world.getEntityByID(id2);
 
-    if((!ent1) || (!ent2))
+    if(!ent1 || !ent2)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, ((!ent1)?id1:id2));
+        Console::instance().warning(SYSWARN_NO_ENTITY, !ent1 ? id1 : id2);
     }
-    else if((axis < 0) || (axis > 2))
+    else if(axis < 0 || axis > 2)
     {
-        Console::instance().warning(SYSWARN_WRONG_AXIS, ((!ent1)?id1:id2));
+        Console::instance().warning(SYSWARN_WRONG_AXIS, !ent1 ? id1 : id2);
     }
     else
     {
@@ -1231,11 +1231,11 @@ void lua_RotateEntityToEntity(world::ObjectId id1, world::ObjectId id2, int axis
                     {
                         if(*targ_angle > theta)
                         {
-                            delta = -((360.0f - *targ_angle) + theta);
+                            delta = -(360.0f - *targ_angle + theta);
                         }
                         else
                         {
-                            delta = (360.0f - theta) + *targ_angle;
+                            delta = 360.0f - theta + *targ_angle;
                         }
                     }
 
@@ -1243,7 +1243,7 @@ void lua_RotateEntityToEntity(world::ObjectId id1, world::ObjectId id2, int axis
                     {
                         *targ_angle = theta + 180.0f;
                     }
-                    else if((delta >= 0.0) && (delta < 180.0))
+                    else if(delta >= 0.0 && delta < 180.0)
                     {
                         *targ_angle += speed;
                     }
@@ -1398,7 +1398,7 @@ void lua_SetModelBodyPartFlag(world::ModelId id, int bone_id, int body_part_flag
         return;
     }
 
-    if((bone_id < 0) || (static_cast<size_t>(bone_id) >= model->meshes.size()))
+    if(bone_id < 0 || static_cast<size_t>(bone_id) >= model->meshes.size())
     {
         Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return;
@@ -1452,7 +1452,7 @@ bool lua_CanTriggerEntity(world::ObjectId id1, world::ObjectId id2, lua::Value r
 
     glm::vec3 position = glm::vec3(e2->m_transform * glm::vec4(offset, 1.0f));
     if(glm::dot(e1->m_transform[1], e2->m_transform[1]) > 0.75 &&
-       (glm::distance(glm::vec3(e1->m_transform[3]), position) < r))
+       glm::distance(glm::vec3(e1->m_transform[3]), position) < r)
     {
         return true;
     }
@@ -1579,7 +1579,7 @@ lua::Any lua_GetEntityLock(world::ObjectId id)
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
     if(ent != nullptr)
     {
-        return ((ent->m_triggerLayout & ENTITY_TLAYOUT_LOCK) >> 6) != 0;      // lock
+        return (ent->m_triggerLayout & ENTITY_TLAYOUT_LOCK) >> 6 != 0;      // lock
     }
     return {};
 }
@@ -1600,7 +1600,7 @@ lua::Any lua_GetEntityEvent(world::ObjectId id)
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
     if(ent != nullptr)
     {
-        return ((ent->m_triggerLayout & ENTITY_TLAYOUT_EVENT) >> 5) != 0;    // event
+        return (ent->m_triggerLayout & ENTITY_TLAYOUT_EVENT) >> 5 != 0;    // event
     }
     return {};
 }
@@ -1632,7 +1632,7 @@ lua::Any lua_GetEntitySectorStatus(world::ObjectId id)
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
     if(ent != nullptr)
     {
-        return ((ent->m_triggerLayout & ENTITY_TLAYOUT_SSTATUS) >> 7) != 0;
+        return (ent->m_triggerLayout & ENTITY_TLAYOUT_SSTATUS) >> 7 != 0;
     }
     return {};
 }
@@ -1879,7 +1879,7 @@ lua::Any lua_GetEntityResponse(world::ObjectId id, int response)
     {
         switch(response)
         {
-            case 0: return (ent->m_response.killed ? 1 : 0);
+            case 0: return ent->m_response.killed ? 1 : 0;
             case 1: return ent->m_response.vertical_collide;
             case 2: return ent->m_response.horizontal_collide;
             case 3: return static_cast<int>(ent->m_response.slide);
@@ -1903,7 +1903,7 @@ void lua_SetEntityResponse(world::ObjectId id, int response, int value)
         switch(response)
         {
             case 0:
-                ent->m_response.killed = (value!=0);
+                ent->m_response.killed = value!=0;
                 break;
             case 1:
                 ent->m_response.vertical_collide = value;
@@ -2090,7 +2090,7 @@ void lua_CreateEntityGhosts(world::ObjectId id)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
-    if(ent && (ent->m_skeleton.getBoneCount() > 0))
+    if(ent && ent->m_skeleton.getBoneCount() > 0)
     {
         ent->m_skeleton.createGhosts(*ent);
     }
@@ -2169,7 +2169,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
 
             bone.bt_body->getCollisionShape()->setLocalScaling(util::convert(ent->m_scaling));
 
-            btVector3 factor = (mass > 0.0) ? btVector3(1.0, 1.0, 1.0) : btVector3(0.0, 0.0, 0.0);
+            btVector3 factor = mass > 0.0 ? btVector3(1.0, 1.0, 1.0) : btVector3(0.0, 0.0, 0.0);
             bone.bt_body->setLinearFactor(factor);
             bone.bt_body->setAngularFactor(factor);
 
@@ -2292,7 +2292,7 @@ void lua_CamShake(float power, float time, lua::Value id)
         glm::vec3 cam_pos = render::renderer.camera()->getPosition();
 
         glm::float_t dist = glm::distance(glm::vec3(ent->m_transform[3]), cam_pos);
-        dist = (dist > world::MaxShakeDistance) ? (0) : (1.0f - (dist / world::MaxShakeDistance));
+        dist = dist > world::MaxShakeDistance ? 0 : 1.0f - dist / world::MaxShakeDistance;
 
         power *= dist;
     }
@@ -2521,7 +2521,7 @@ void lua_SetFlipState(size_t group, bool state)
 
 void lua_SetFlipMap(size_t group, int mask, int /*op*/)
 {
-    int op = (mask > AMASK_OP_XOR) ? (AMASK_OP_XOR) : (AMASK_OP_OR);
+    int op = mask > AMASK_OP_XOR ? AMASK_OP_XOR : AMASK_OP_OR;
 
     if(group >= engine::engine_world.flip_data.size())
     {
@@ -3459,7 +3459,7 @@ skipwhite:
 float script::MainEngine::parseFloat(const char **ch)
 {
     char token[64];
-    (*ch) = parse_token(*ch, token);
+    *ch = parse_token(*ch, token);
     if(token[0])
     {
         return std::stof(token);
@@ -3470,7 +3470,7 @@ float script::MainEngine::parseFloat(const char **ch)
 int script::MainEngine::parseInt(char **ch)
 {
     char token[64];
-    (*ch) = const_cast<char*>(parse_token(*ch, token));
+    *ch = const_cast<char*>(parse_token(*ch, token));
     if(token[0])
     {
         return atoi(token);

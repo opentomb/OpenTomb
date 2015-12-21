@@ -121,7 +121,7 @@ bool Polygon::rayIntersect(const glm::vec3& rayDir, const glm::vec3& dot, glm::f
         glm::float_t v = glm::dot(Q, rayDir);
         v /= tt;
         tt = 1.0f - u - v;
-        if((u <= 1.0) && (u >= 0.0) && (v <= 1.0) && (v >= 0.0) && (tt <= 1.0) && (tt >= 0.0))
+        if(u <= 1.0 && u >= 0.0 && v <= 1.0 && v >= 0.0 && tt <= 1.0 && tt >= 0.0)
         {
             return true;
         }
@@ -131,7 +131,7 @@ bool Polygon::rayIntersect(const glm::vec3& rayDir, const glm::vec3& dot, glm::f
 
 bool Polygon::intersectPolygon(const Polygon& p2)
 {
-    if(SplitType::InBoth != splitClassify(p2.plane) || (SplitType::InBoth != p2.splitClassify(plane)))
+    if(SplitType::InBoth != splitClassify(p2.plane) || SplitType::InBoth != p2.splitClassify(plane))
     {
         return false;  // quick check
     }
@@ -381,9 +381,9 @@ bool Polygon::isInsideBBox(const BoundingBox& bb) const
 {
     for(const auto& v : vertices)
     {
-        if((v.position[0] < bb.min[0]) || (v.position[0] > bb.max[0]) ||
-           (v.position[1] < bb.min[1]) || (v.position[1] > bb.max[1]) ||
-           (v.position[2] < bb.min[2]) || (v.position[2] > bb.max[2]))
+        if(v.position[0] < bb.min[0] || v.position[0] > bb.max[0] ||
+           v.position[1] < bb.min[1] || v.position[1] > bb.max[1] ||
+           v.position[2] < bb.min[2] || v.position[2] > bb.max[2])
         {
             return 0;
         }
@@ -396,8 +396,8 @@ bool Polygon::isInsideBQuad(const BoundingBox& bb) const
 {
     for(const auto& v : vertices)
     {
-        if((v.position[0] < bb.min[0]) || (v.position[0] > bb.max[0]) ||
-           (v.position[1] < bb.min[1]) || (v.position[1] > bb.max[1]))
+        if(v.position[0] < bb.min[0] || v.position[0] > bb.max[0] ||
+           v.position[1] < bb.min[1] || v.position[1] > bb.max[1])
         {
             return false;
         }

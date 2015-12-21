@@ -33,7 +33,7 @@ void TR3Level::load()
     // Version
     uint32_t file_version = m_reader.readU32();
 
-    if((file_version != 0xFF080038) && (file_version != 0xFF180038) && (file_version != 0xFF180034))
+    if(file_version != 0xFF080038 && file_version != 0xFF180038 && file_version != 0xFF180034)
         BOOST_THROW_EXCEPTION( std::runtime_error("Wrong level version") );
 
     m_palette = Palette::readTr1(m_reader);
@@ -134,7 +134,7 @@ void TR3Level::load()
         for(size_t i = 0; i < m_samplesData.size(); i++)
         {
             m_samplesData[i] = newsrc.readU8();
-            if((i >= 4) && (*reinterpret_cast<uint32_t*>(m_samplesData.data() + i - 4) == 0x46464952))   /// RIFF
+            if(i >= 4 && *reinterpret_cast<uint32_t*>(m_samplesData.data() + i - 4) == 0x46464952)   /// RIFF
             {
                 m_samplesCount++;
             }

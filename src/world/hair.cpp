@@ -77,7 +77,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
         // Make collision shape out of mesh.
 
         m_elements[i].shape.reset(BT_CSfromMesh(m_elements[i].mesh, true, true, false));
-        m_elements[i].shape->calculateLocalInertia((current_weight * setup->m_hairInertia), localInertia);
+        m_elements[i].shape->calculateLocalInertia(current_weight * setup->m_hairInertia, localInertia);
 
         // Decrease next body weight to weight_step parameter.
 
@@ -174,7 +174,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
         // Create 6DOF constraint.
 
-        m_joints[curr_joint].reset(new btGeneric6DofConstraint(*prev_body, *(m_elements[i].body), localA, localB, true));
+        m_joints[curr_joint].reset(new btGeneric6DofConstraint(*prev_body, *m_elements[i].body, localA, localB, true));
 
         // CFM and ERP parameters are critical for making joint "hard" and link
         // to Lara's head. With wrong values, constraints may become "elastic".

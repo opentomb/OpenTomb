@@ -5,9 +5,6 @@
 #include <cstdint>
 #include <memory>
 
-#include <btBulletCollisionCommon.h>
-#include <glm/glm.hpp>
-
 // Max. number of game steps that are caught-up between
 // rendering: This limits escalation if the system is too
 // slow to keep up the logic interval.

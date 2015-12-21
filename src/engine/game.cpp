@@ -159,7 +159,7 @@ int Game_Load(const char* name)
     local = 1;
     for(ch = const_cast<char*>(name); *ch; ch++)
     {
-        if((*ch == '\\') || (*ch == '/'))
+        if(*ch == '\\' || *ch == '/')
         {
             local = 0;
             break;
@@ -240,7 +240,7 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
 
     if(ent->m_typeFlags & ENTITY_TYPE_SPAWNED)
     {
-        world::ObjectId room_id = (ent->getRoom()) ? (ent->getRoom()->getId()) : (0xFFFFFFFF);
+        world::ObjectId room_id = ent->getRoom() ? ent->getRoom()->getId() : 0xFFFFFFFF;
         fprintf(*f, "\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);",
                 ent->m_skeleton.getModel()->id,
                 ent->m_transform[3][0],
@@ -318,7 +318,7 @@ int Game_Save(const char* name)
     local = 1;
     for(ch = const_cast<char*>(name); *ch; ch++)
     {
-        if((*ch == '\\') || (*ch == '/'))
+        if(*ch == '\\' || *ch == '/')
         {
             local = 0;
             break;
@@ -401,7 +401,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         }
 
         render::renderer.camera()->applyRotation();
-        glm::float_t dist = (control_states.state_walk) ? (control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f) : (control_states.free_look_speed * util::toSeconds(engine_frame_time));
+        glm::float_t dist = control_states.state_walk ? control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f : control_states.free_look_speed * util::toSeconds(engine_frame_time);
         render::renderer.camera()->move(moveLogic.getDistance(dist));
 
         return;
@@ -428,14 +428,14 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
     if(control_states.free_look || !std::dynamic_pointer_cast<world::Character>(ent))
     {
-        glm::float_t dist = (control_states.state_walk) ? (control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f) : (control_states.free_look_speed * util::toSeconds(engine_frame_time));
+        glm::float_t dist = control_states.state_walk ? control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f : control_states.free_look_speed * util::toSeconds(engine_frame_time);
         render::renderer.camera()->applyRotation();
         render::renderer.camera()->move(moveLogic.getDistance(dist));
         render::renderer.camera()->setCurrentRoom( Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()) );
     }
     else if(control_states.noclip)
     {
-        glm::float_t dist = (control_states.state_walk) ? (control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f) : (control_states.free_look_speed * util::toSeconds(engine_frame_time));
+        glm::float_t dist = control_states.state_walk ? control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f : control_states.free_look_speed * util::toSeconds(engine_frame_time);
         render::renderer.camera()->applyRotation();
         render::renderer.camera()->move(moveLogic.getDistance(dist));
         render::renderer.camera()->setCurrentRoom( Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()) );
@@ -455,7 +455,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         ch->m_command.jump = control_states.do_jump;
         ch->m_command.shift = control_states.state_walk;
 
-        ch->m_command.roll = ((control_states.move_forward && control_states.move_backward) || control_states.do_roll);
+        ch->m_command.roll = (control_states.move_forward && control_states.move_backward) || control_states.do_roll;
 
         // New commands only for TR3 and above
         ch->m_command.sprint = control_states.state_sprint;
@@ -486,7 +486,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
             control_states.use_big_medi = !control_states.use_big_medi;
         }
 
-        if(control_mapper.use_joy && (control_mapper.joy_move_x != 0))
+        if(control_mapper.use_joy && control_mapper.joy_move_x != 0)
         {
             ch->m_command.rot[0] += glm::degrees(-2 * util::toSeconds(engine_frame_time) * control_mapper.joy_move_x);
         }
@@ -495,7 +495,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
             ch->m_command.rot[0] += moveLogic.getDistanceX( glm::degrees(-2.0f) * util::toSeconds(engine_frame_time) );
         }
 
-        if(control_mapper.use_joy && (control_mapper.joy_move_y != 0))
+        if(control_mapper.use_joy && control_mapper.joy_move_y != 0)
         {
             ch->m_command.rot[1] += glm::degrees(-2 * util::toSeconds(engine_frame_time) * control_mapper.joy_move_y);
         }

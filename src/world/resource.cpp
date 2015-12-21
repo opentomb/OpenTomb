@@ -128,8 +128,8 @@ namespace world
         {
             tween.floor_tween_type = TweenType::TwoTriangles;              // like a butterfly
         }
-        else if((tween.floor_corners[0][2] != tween.floor_corners[1][2]) &&
-                (tween.floor_corners[2][2] != tween.floor_corners[3][2]))
+        else if(tween.floor_corners[0][2] != tween.floor_corners[1][2] &&
+                tween.floor_corners[2][2] != tween.floor_corners[3][2])
         {
             tween.floor_tween_type = TweenType::Quad;
         }
@@ -159,8 +159,8 @@ namespace world
         {
             tween.ceiling_tween_type = TweenType::TwoTriangles;            // like a butterfly
         }
-        else if((tween.ceiling_corners[0][2] != tween.ceiling_corners[1][2]) &&
-                (tween.ceiling_corners[2][2] != tween.ceiling_corners[3][2]))
+        else if(tween.ceiling_corners[0][2] != tween.ceiling_corners[1][2] &&
+                tween.ceiling_corners[2][2] != tween.ceiling_corners[3][2])
         {
             tween.ceiling_tween_type = TweenType::Quad;
         }
@@ -183,15 +183,15 @@ namespace world
         BOOST_ASSERT(ws != nullptr);
         BOOST_ASSERT(ns != nullptr);
 
-        if(!ws->portal_to_room && !ns->portal_to_room && (ws->floor_penetration_config == PenetrationConfig::Wall))
+        if(!ws->portal_to_room && !ns->portal_to_room && ws->floor_penetration_config == PenetrationConfig::Wall)
         {
             return true;
         }
 
-        if(!ns->portal_to_room && (ns->floor_penetration_config != PenetrationConfig::Wall) && ws->portal_to_room)
+        if(!ns->portal_to_room && ns->floor_penetration_config != PenetrationConfig::Wall && ws->portal_to_room)
         {
             ws = ws->checkPortalPointer();
-            if((ws->floor_penetration_config == PenetrationConfig::Wall) || !ns->is2SidePortals(ws))
+            if(ws->floor_penetration_config == PenetrationConfig::Wall || !ns->is2SidePortals(ws))
             {
                 return true;
             }
@@ -238,7 +238,7 @@ namespace world
 
                 if(w > 0)
                 {
-                    if((next_heightmap->floor_penetration_config != PenetrationConfig::Wall) || (current_heightmap->floor_penetration_config != PenetrationConfig::Wall))                                                           // Init X-plane tween [ | ]
+                    if(next_heightmap->floor_penetration_config != PenetrationConfig::Wall || current_heightmap->floor_penetration_config != PenetrationConfig::Wall)                                                           // Init X-plane tween [ | ]
                     {
                         if(Res_Sector_IsWall(next_heightmap, current_heightmap))
                         {
@@ -269,9 +269,9 @@ namespace world
                             {
                                 current_heightmap = current_heightmap->checkPortalPointer();
                                 next_heightmap = next_heightmap->checkPortalPointer();
-                                if(!current_heightmap->portal_to_room && !next_heightmap->portal_to_room && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
+                                if(!current_heightmap->portal_to_room && !next_heightmap->portal_to_room && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
                                 {
-                                    if((current_heightmap->floor_penetration_config == PenetrationConfig::Solid) || (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                                    if(current_heightmap->floor_penetration_config == PenetrationConfig::Solid || next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                                     {
                                         room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
                                         room_tween->floor_corners[1][2] = next_heightmap->floor_corners[3][2];
@@ -280,7 +280,7 @@ namespace world
                                         Res_Sector_SetTweenFloorConfig(*room_tween);
                                         joined_floors = 1;
                                     }
-                                    if((current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid) || (next_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
+                                    if(current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid || next_heightmap->ceiling_penetration_config == PenetrationConfig::Solid)
                                     {
                                         room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[0][2];
                                         room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[3][2];
@@ -296,10 +296,10 @@ namespace world
 
                     current_heightmap = &room->m_sectors[w][h];
                     next_heightmap = current_heightmap + 1;
-                    if((joined_floors == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
+                    if(joined_floors == 0 && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
                     {
                         char valid = 0;
-                        if(next_heightmap->portal_to_room && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                        if(next_heightmap->portal_to_room && current_heightmap->sector_above != nullptr && current_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                         {
                             next_heightmap = next_heightmap->checkPortalPointer();
                             if(next_heightmap->owner_room->getId() == current_heightmap->sector_above->owner_room->getId())
@@ -316,7 +316,7 @@ namespace world
                             }
                         }
 
-                        if(current_heightmap->portal_to_room && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                        if(current_heightmap->portal_to_room && next_heightmap->sector_above != nullptr && next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                         {
                             current_heightmap = current_heightmap->checkPortalPointer();
                             if(current_heightmap->owner_room->getId() == next_heightmap->sector_above->owner_room->getId())
@@ -333,7 +333,7 @@ namespace world
                             }
                         }
 
-                        if((valid == 1) && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
+                        if(valid == 1 && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
                         {
                             room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
                             room_tween->floor_corners[1][2] = next_heightmap->floor_corners[3][2];
@@ -345,10 +345,10 @@ namespace world
 
                     current_heightmap = &room->m_sectors[w][h];
                     next_heightmap = current_heightmap + 1;
-                    if((joined_ceilings == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
+                    if(joined_ceilings == 0 && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
                     {
                         char valid = 0;
-                        if(next_heightmap->portal_to_room && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
+                        if(next_heightmap->portal_to_room && current_heightmap->sector_below != nullptr && current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid)
                         {
                             next_heightmap = next_heightmap->checkPortalPointer();
                             if(next_heightmap->owner_room->getId() == current_heightmap->sector_below->owner_room->getId())
@@ -365,7 +365,7 @@ namespace world
                             }
                         }
 
-                        if(current_heightmap->portal_to_room && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                        if(current_heightmap->portal_to_room && next_heightmap->sector_below != nullptr && next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                         {
                             current_heightmap = current_heightmap->checkPortalPointer();
                             if(current_heightmap->owner_room->getId() == next_heightmap->sector_below->owner_room->getId())
@@ -382,7 +382,7 @@ namespace world
                             }
                         }
 
-                        if((valid == 1) && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
+                        if(valid == 1 && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
                         {
                             room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[0][2];
                             room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[3][2];
@@ -424,7 +424,7 @@ namespace world
 
                 if(h > 0)
                 {
-                    if((next_heightmap->floor_penetration_config != PenetrationConfig::Wall) || (current_heightmap->floor_penetration_config != PenetrationConfig::Wall))
+                    if(next_heightmap->floor_penetration_config != PenetrationConfig::Wall || current_heightmap->floor_penetration_config != PenetrationConfig::Wall)
                     {
                         // Init Y-plane tween  [ - ]
                         if(Res_Sector_IsWall(next_heightmap, current_heightmap))
@@ -456,9 +456,9 @@ namespace world
                             {
                                 current_heightmap = current_heightmap->checkPortalPointer();
                                 next_heightmap = next_heightmap->checkPortalPointer();
-                                if(!current_heightmap->portal_to_room && !next_heightmap->portal_to_room && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
+                                if(!current_heightmap->portal_to_room && !next_heightmap->portal_to_room && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
                                 {
-                                    if((current_heightmap->floor_penetration_config == PenetrationConfig::Solid) || (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                                    if(current_heightmap->floor_penetration_config == PenetrationConfig::Solid || next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                                     {
                                         room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
                                         room_tween->floor_corners[1][2] = next_heightmap->floor_corners[0][2];
@@ -467,7 +467,7 @@ namespace world
                                         Res_Sector_SetTweenFloorConfig(*room_tween);
                                         joined_floors = 1;
                                     }
-                                    if((current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid) || (next_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
+                                    if(current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid || next_heightmap->ceiling_penetration_config == PenetrationConfig::Solid)
                                     {
                                         room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[1][2];
                                         room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[0][2];
@@ -483,10 +483,10 @@ namespace world
 
                     current_heightmap = &room->m_sectors[w][h];
                     next_heightmap = &room->m_sectors[w + 1][h];
-                    if((joined_floors == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
+                    if(joined_floors == 0 && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
                     {
                         char valid = 0;
-                        if(next_heightmap->portal_to_room && (current_heightmap->sector_above != nullptr) && (current_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                        if(next_heightmap->portal_to_room && current_heightmap->sector_above != nullptr && current_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                         {
                             next_heightmap = next_heightmap->checkPortalPointer();
                             if(next_heightmap->owner_room->getId() == current_heightmap->sector_above->owner_room->getId())
@@ -503,7 +503,7 @@ namespace world
                             }
                         }
 
-                        if(current_heightmap->portal_to_room && (next_heightmap->sector_above != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                        if(current_heightmap->portal_to_room && next_heightmap->sector_above != nullptr && next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                         {
                             current_heightmap = current_heightmap->checkPortalPointer();
                             if(current_heightmap->owner_room->getId() == next_heightmap->sector_above->owner_room->getId())
@@ -520,7 +520,7 @@ namespace world
                             }
                         }
 
-                        if((valid == 1) && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
+                        if(valid == 1 && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
                         {
                             room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
                             room_tween->floor_corners[1][2] = next_heightmap->floor_corners[0][2];
@@ -532,10 +532,10 @@ namespace world
 
                     current_heightmap = &room->m_sectors[w][h];
                     next_heightmap = &room->m_sectors[w + 1][h];
-                    if((joined_ceilings == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
+                    if(joined_ceilings == 0 && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
                     {
                         bool valid = false;
-                        if(next_heightmap->portal_to_room && (current_heightmap->sector_below != nullptr) && (current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid))
+                        if(next_heightmap->portal_to_room && current_heightmap->sector_below != nullptr && current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid)
                         {
                             next_heightmap = next_heightmap->checkPortalPointer();
                             if(next_heightmap->owner_room->getId() == current_heightmap->sector_below->owner_room->getId())
@@ -552,7 +552,7 @@ namespace world
                             }
                         }
 
-                        if(current_heightmap->portal_to_room && (next_heightmap->sector_below != nullptr) && (next_heightmap->floor_penetration_config == PenetrationConfig::Solid))
+                        if(current_heightmap->portal_to_room && next_heightmap->sector_below != nullptr && next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                         {
                             current_heightmap = current_heightmap->checkPortalPointer();
                             if(current_heightmap->owner_room->getId() == next_heightmap->sector_below->owner_room->getId())
@@ -569,7 +569,7 @@ namespace world
                             }
                         }
 
-                        if(valid && (current_heightmap->floor_penetration_config != PenetrationConfig::Wall) && (next_heightmap->floor_penetration_config != PenetrationConfig::Wall))
+                        if(valid && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
                         {
                             room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[1][2];
                             room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[0][2];
@@ -623,11 +623,11 @@ namespace world
             //sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
 
             //TR3+, but works with TR1 - TR2
-            uint16_t function = ((*entry) & 0x001F);             // 0b00000000 00011111
+            uint16_t function = *entry & 0x001F;             // 0b00000000 00011111
             // uint16_t function_value = ((*entry) & 0x00E0) >> 5;        // 0b00000000 11100000  TR3+
-            uint16_t sub_function = ((*entry) & 0x7F00) >> 8;        // 0b01111111 00000000
+            uint16_t sub_function = (*entry & 0x7F00) >> 8;        // 0b01111111 00000000
 
-            end_bit = ((*entry) & 0x8000) >> 15;       // 0b10000000 00000000
+            end_bit = (*entry & 0x8000) >> 15;       // 0b10000000 00000000
 
             entry++;
 
@@ -649,32 +649,32 @@ namespace world
                 case TR_FD_FUNC_FLOORSLANT:          // FLOOR SLANT
                     if(sub_function == 0x00)
                     {
-                        int8_t raw_y_slant = (*entry & 0x00FF);
-                        int8_t raw_x_slant = ((*entry & 0xFF00) >> 8);
+                        int8_t raw_y_slant = *entry & 0x00FF;
+                        int8_t raw_x_slant = (*entry & 0xFF00) >> 8;
 
                         sector.floor_diagonal_type = DiagonalType::None;
                         sector.floor_penetration_config = PenetrationConfig::Solid;
 
                         if(raw_x_slant > 0)
                         {
-                            sector.floor_corners[2][2] -= (static_cast<glm::float_t>(raw_x_slant) * MeteringStep);
-                            sector.floor_corners[3][2] -= (static_cast<glm::float_t>(raw_x_slant) * MeteringStep);
+                            sector.floor_corners[2][2] -= static_cast<glm::float_t>(raw_x_slant) * MeteringStep;
+                            sector.floor_corners[3][2] -= static_cast<glm::float_t>(raw_x_slant) * MeteringStep;
                         }
                         else if(raw_x_slant < 0)
                         {
-                            sector.floor_corners[0][2] -= (glm::abs(static_cast<glm::float_t>(raw_x_slant)) * MeteringStep);
-                            sector.floor_corners[1][2] -= (glm::abs(static_cast<glm::float_t>(raw_x_slant)) * MeteringStep);
+                            sector.floor_corners[0][2] -= glm::abs(static_cast<glm::float_t>(raw_x_slant)) * MeteringStep;
+                            sector.floor_corners[1][2] -= glm::abs(static_cast<glm::float_t>(raw_x_slant)) * MeteringStep;
                         }
 
                         if(raw_y_slant > 0)
                         {
-                            sector.floor_corners[0][2] -= (static_cast<glm::float_t>(raw_y_slant) * MeteringStep);
-                            sector.floor_corners[3][2] -= (static_cast<glm::float_t>(raw_y_slant) * MeteringStep);
+                            sector.floor_corners[0][2] -= static_cast<glm::float_t>(raw_y_slant) * MeteringStep;
+                            sector.floor_corners[3][2] -= static_cast<glm::float_t>(raw_y_slant) * MeteringStep;
                         }
                         else if(raw_y_slant < 0)
                         {
-                            sector.floor_corners[1][2] -= (glm::abs(static_cast<glm::float_t>(raw_y_slant)) * MeteringStep);
-                            sector.floor_corners[2][2] -= (glm::abs(static_cast<glm::float_t>(raw_y_slant)) * MeteringStep);
+                            sector.floor_corners[1][2] -= glm::abs(static_cast<glm::float_t>(raw_y_slant)) * MeteringStep;
+                            sector.floor_corners[2][2] -= glm::abs(static_cast<glm::float_t>(raw_y_slant)) * MeteringStep;
                         }
 
                         entry++;
@@ -684,32 +684,32 @@ namespace world
                 case TR_FD_FUNC_CEILINGSLANT:          // CEILING SLANT
                     if(sub_function == 0x00)
                     {
-                        int8_t raw_y_slant = (*entry & 0x00FF);
-                        int8_t raw_x_slant = ((*entry & 0xFF00) >> 8);
+                        int8_t raw_y_slant = *entry & 0x00FF;
+                        int8_t raw_x_slant = (*entry & 0xFF00) >> 8;
 
                         sector.ceiling_diagonal_type = DiagonalType::None;
                         sector.ceiling_penetration_config = PenetrationConfig::Solid;
 
                         if(raw_x_slant > 0)
                         {
-                            sector.ceiling_corners[3][2] += (static_cast<glm::float_t>(raw_x_slant) * MeteringStep);
-                            sector.ceiling_corners[2][2] += (static_cast<glm::float_t>(raw_x_slant) * MeteringStep);
+                            sector.ceiling_corners[3][2] += static_cast<glm::float_t>(raw_x_slant) * MeteringStep;
+                            sector.ceiling_corners[2][2] += static_cast<glm::float_t>(raw_x_slant) * MeteringStep;
                         }
                         else if(raw_x_slant < 0)
                         {
-                            sector.ceiling_corners[1][2] += (glm::abs(static_cast<glm::float_t>(raw_x_slant)) * MeteringStep);
-                            sector.ceiling_corners[0][2] += (glm::abs(static_cast<glm::float_t>(raw_x_slant)) * MeteringStep);
+                            sector.ceiling_corners[1][2] += glm::abs(static_cast<glm::float_t>(raw_x_slant)) * MeteringStep;
+                            sector.ceiling_corners[0][2] += glm::abs(static_cast<glm::float_t>(raw_x_slant)) * MeteringStep;
                         }
 
                         if(raw_y_slant > 0)
                         {
-                            sector.ceiling_corners[1][2] += (static_cast<glm::float_t>(raw_y_slant) * MeteringStep);
-                            sector.ceiling_corners[2][2] += (static_cast<glm::float_t>(raw_y_slant) * MeteringStep);
+                            sector.ceiling_corners[1][2] += static_cast<glm::float_t>(raw_y_slant) * MeteringStep;
+                            sector.ceiling_corners[2][2] += static_cast<glm::float_t>(raw_y_slant) * MeteringStep;
                         }
                         else if(raw_y_slant < 0)
                         {
-                            sector.ceiling_corners[0][2] += (glm::abs(static_cast<glm::float_t>(raw_y_slant)) * MeteringStep);
-                            sector.ceiling_corners[3][2] += (glm::abs(static_cast<glm::float_t>(raw_y_slant)) * MeteringStep);
+                            sector.ceiling_corners[0][2] += glm::abs(static_cast<glm::float_t>(raw_y_slant)) * MeteringStep;
+                            sector.ceiling_corners[3][2] += glm::abs(static_cast<glm::float_t>(raw_y_slant)) * MeteringStep;
                         }
 
                         entry++;
@@ -735,9 +735,9 @@ namespace world
                     int condition = 0;                        // No condition by default.
                     int mask_mode = AMASK_OP_OR;              // Activation mask by default.
 
-                    int8_t  timer_field = (*entry) & 0x00FF;          // Used as common parameter for some commands.
-                    uint8_t trigger_mask = ((*entry) & 0x3E00) >> 9;
-                    uint8_t only_once = ((*entry) & 0x0100) >> 8;    // Lock out triggered items after activation.
+                    int8_t  timer_field = *entry & 0x00FF;          // Used as common parameter for some commands.
+                    uint8_t trigger_mask = (*entry & 0x3E00) >> 9;
+                    uint8_t only_once = (*entry & 0x0100) >> 8;    // Lock out triggered items after activation.
 
                     // Processed entities lookup array initialization.
 
@@ -746,9 +746,9 @@ namespace world
                     // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
                     // some specific entity classes.
 
-                    int activator_type = ((sub_function == TR_FD_TRIGTYPE_HEAVY) ||
-                                          (sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER) ||
-                                          (sub_function == TR_FD_TRIGTYPE_HEAVYSWITCH)) ? TR_ACTIVATORTYPE_MISC : TR_ACTIVATORTYPE_LARA;
+                    int activator_type = (sub_function == TR_FD_TRIGTYPE_HEAVY) ||
+                                         (sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER) ||
+                                         (sub_function == TR_FD_TRIGTYPE_HEAVYSWITCH) ? TR_ACTIVATORTYPE_MISC : TR_ACTIVATORTYPE_LARA;
 
                     // Table cell header.
 
@@ -844,16 +844,16 @@ namespace world
                     {
                         entry++;
 
-                        uint16_t trigger_function = (((*entry) & 0x7C00)) >> 10;    // 0b01111100 00000000
-                        uint16_t operands = (*entry) & 0x03FF;                      // 0b00000011 11111111
-                        cont_bit = ((*entry) & 0x8000) >> 15;              // 0b10000000 00000000
+                        uint16_t trigger_function = (*entry & 0x7C00) >> 10;    // 0b01111100 00000000
+                        uint16_t operands = *entry & 0x03FF;                      // 0b00000011 11111111
+                        cont_bit = (*entry & 0x8000) >> 15;              // 0b10000000 00000000
 
                         switch(trigger_function)
                         {
                             case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
                                 // If activator is specified, first item operand counts as activator index (except
                                 // heavy switch case, which is ordinary heavy trigger case with certain differences).
-                                if((argn == 0) && activator != ActivatorType::Normal)
+                                if(argn == 0 && activator != ActivatorType::Normal)
                                 {
                                     switch(activator)
                                     {
@@ -945,10 +945,10 @@ namespace world
 
                             case TR_FD_TRIGFUNC_CAMERATARGET:
                             {
-                                uint8_t cam_index = (*entry) & 0x007F;
+                                uint8_t cam_index = *entry & 0x007F;
                                 entry++;
-                                uint8_t cam_timer = ((*entry) & 0x00FF);
-                                uint8_t cam_once = ((*entry) & 0x0100) >> 8;
+                                uint8_t cam_timer = *entry & 0x00FF;
+                                uint8_t cam_once = (*entry & 0x0100) >> 8;
                                 uint8_t cam_zoom = engine::engine_world.engineVersion < loader::Engine::TR2
                                     ? (*entry & 0x0400) >> 10
                                     : (*entry & 0x1000) >> 12;
@@ -1036,8 +1036,8 @@ namespace world
                             case TR_FD_TRIGFUNC_FLYBY:
                             {
                                 entry++;
-                                uint8_t flyby_once = ((*entry) & 0x0100) >> 8;
-                                cont_bit = ((*entry) & 0x8000) >> 15;
+                                uint8_t flyby_once = (*entry & 0x0100) >> 8;
+                                cont_bit = (*entry & 0x8000) >> 15;
 
                                 snprintf(buf, 128, "   playFlyby(%d, %d); \n", operands, flyby_once);
                                 cont_events += buf;
@@ -1124,7 +1124,7 @@ namespace world
                             script += single_events;
                             script += item_events;
                             script += cont_events;
-                            if((action_type == ActionType::Switch) && (activator == ActivatorType::Switch))
+                            if(action_type == ActionType::Switch && activator == ActivatorType::Switch)
                             {
                                 script += buf2;
                                 if(engine::engine_world.engineVersion < loader::Engine::TR3 || !only_once)
@@ -1194,7 +1194,7 @@ namespace world
                     {
                         entry--;    // Go back, since these functions are parsed differently.
 
-                        end_bit = ((*entry) & 0x8000) >> 15;      // 0b10000000 00000000
+                        end_bit = (*entry & 0x8000) >> 15;      // 0b10000000 00000000
 
 #if 0
                         int16_t  slope_t01 = ((*entry) & 0x7C00) >> 10;      // 0b01111100 00000000
@@ -1209,10 +1209,10 @@ namespace world
 
                         entry++;
 
-                        uint16_t slope_t13 = ((*entry) & 0xF000) >> 12;      // 0b11110000 00000000
-                        uint16_t slope_t12 = ((*entry) & 0x0F00) >> 8;       // 0b00001111 00000000
-                        uint16_t slope_t11 = ((*entry) & 0x00F0) >> 4;       // 0b00000000 11110000
-                        uint16_t slope_t10 = ((*entry) & 0x000F);            // 0b00000000 00001111
+                        uint16_t slope_t13 = (*entry & 0xF000) >> 12;      // 0b11110000 00000000
+                        uint16_t slope_t12 = (*entry & 0x0F00) >> 8;       // 0b00001111 00000000
+                        uint16_t slope_t11 = (*entry & 0x00F0) >> 4;       // 0b00000000 11110000
+                        uint16_t slope_t10 = *entry & 0x000F;            // 0b00000000 00001111
 
                         entry++;
 
@@ -1224,10 +1224,10 @@ namespace world
                         {
                             sector.floor_diagonal_type = DiagonalType::NW;
 
-                            sector.floor_corners[0][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t12) * MeteringStep);
-                            sector.floor_corners[1][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t13) * MeteringStep);
-                            sector.floor_corners[2][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t10) * MeteringStep);
-                            sector.floor_corners[3][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t11) * MeteringStep);
+                            sector.floor_corners[0][2] -= overall_adjustment - static_cast<glm::float_t>(slope_t12) * MeteringStep;
+                            sector.floor_corners[1][2] -= overall_adjustment - static_cast<glm::float_t>(slope_t13) * MeteringStep;
+                            sector.floor_corners[2][2] -= overall_adjustment - static_cast<glm::float_t>(slope_t10) * MeteringStep;
+                            sector.floor_corners[3][2] -= overall_adjustment - static_cast<glm::float_t>(slope_t11) * MeteringStep;
 
                             if(function == TR_FD_FUNC_FLOORTRIANGLE_NW_PORTAL_SW)
                             {
@@ -1248,10 +1248,10 @@ namespace world
                         {
                             sector.floor_diagonal_type = DiagonalType::NE;
 
-                            sector.floor_corners[0][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t12) * MeteringStep);
-                            sector.floor_corners[1][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t13) * MeteringStep);
-                            sector.floor_corners[2][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t10) * MeteringStep);
-                            sector.floor_corners[3][2] -= overall_adjustment - (static_cast<glm::float_t>(slope_t11) * MeteringStep);
+                            sector.floor_corners[0][2] -= overall_adjustment - static_cast<glm::float_t>(slope_t12) * MeteringStep;
+                            sector.floor_corners[1][2] -= overall_adjustment - static_cast<glm::float_t>(slope_t13) * MeteringStep;
+                            sector.floor_corners[2][2] -= overall_adjustment - static_cast<glm::float_t>(slope_t10) * MeteringStep;
+                            sector.floor_corners[3][2] -= overall_adjustment - static_cast<glm::float_t>(slope_t11) * MeteringStep;
 
                             if(function == TR_FD_FUNC_FLOORTRIANGLE_NE_PORTAL_NW)
                             {
@@ -1452,7 +1452,7 @@ namespace world
                 max_y = s2.position[1];
             }
 
-            if((s1.position[0] < max_x) && (s1.position[0] > min_x) && (p.center[1] < max_y) && (p.center[1] > min_y))
+            if(s1.position[0] < max_x && s1.position[0] > min_x && p.center[1] < max_y && p.center[1] > min_y)
             {
                 return true;
             }
@@ -1483,7 +1483,7 @@ namespace world
                 max_x = s2.position[0];
             }
 
-            if((p.center[0] < max_x) && (p.center[0] > min_x) && (s1.position[1] < max_y) && (s1.position[1] > min_y))
+            if(p.center[0] < max_x && p.center[0] > min_x && s1.position[1] < max_y && s1.position[1] > min_y)
             {
                 return true;
             }
@@ -1523,20 +1523,20 @@ namespace world
 
             int dx = 0, dy = 0;
             /**** OX *****/
-            if((sector.index_y > 0) && (sector.index_y < room->m_sectors.shape()[1] - 1) && (sector.index_x == 0))
+            if(sector.index_y > 0 && sector.index_y < room->m_sectors.shape()[1] - 1 && sector.index_x == 0)
             {
                 dx = 1;
             }
-            if((sector.index_y > 0) && (sector.index_y < room->m_sectors.shape()[1] - 1) && (sector.index_x == room->m_sectors.shape()[0] - 1))
+            if(sector.index_y > 0 && sector.index_y < room->m_sectors.shape()[1] - 1 && sector.index_x == room->m_sectors.shape()[0] - 1)
             {
                 dx = -1;
             }
             /**** OY *****/
-            if((sector.index_x > 0) && (sector.index_x < room->m_sectors.shape()[0] - 1) && (sector.index_y == 0))
+            if(sector.index_x > 0 && sector.index_x < room->m_sectors.shape()[0] - 1 && sector.index_y == 0)
             {
                 dy = 1;
             }
-            if((sector.index_x > 0) && (sector.index_x < room->m_sectors.shape()[0] - 1) && (sector.index_y == room->m_sectors.shape()[1] - 1))
+            if(sector.index_x > 0 && sector.index_x < room->m_sectors.shape()[0] - 1 && sector.index_y == room->m_sectors.shape()[1] - 1)
             {
                 dy = -1;
             }
@@ -1555,7 +1555,7 @@ namespace world
 
                         RoomSector* orig_dst = engine::engine_world.rooms[*sector.portal_to_room]->getSectorRaw(sector.position);
 
-                        if(!dst->portal_to_room && (dst->floor != MeteringWallHeight) && (dst->ceiling != MeteringWallHeight) && *sector.portal_to_room != p.destination->getId() && (dst->floor < orig_dst->floor) && TR_IsSectorsIn2SideOfPortal(near_sector, *dst, p))
+                        if(!dst->portal_to_room && dst->floor != MeteringWallHeight && dst->ceiling != MeteringWallHeight && *sector.portal_to_room != p.destination->getId() && dst->floor < orig_dst->floor && TR_IsSectorsIn2SideOfPortal(near_sector, *dst, p))
                         {
                             sector.portal_to_room = p.destination->getId();
                         }
@@ -2066,9 +2066,9 @@ namespace world
             }
             else
             {
-                room->m_lights[i].colour[0] = (tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
-                room->m_lights[i].colour[1] = (tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
-                room->m_lights[i].colour[2] = (tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
+                room->m_lights[i].colour[0] = tr_room->lights[i].color.r / 255.0f * tr_room->lights[i].intensity;
+                room->m_lights[i].colour[1] = tr_room->lights[i].color.g / 255.0f * tr_room->lights[i].intensity;
+                room->m_lights[i].colour[2] = tr_room->lights[i].color.b / 255.0f * tr_room->lights[i].intensity;
                 room->m_lights[i].colour[3] = 1.0f;
             }
 
@@ -2106,7 +2106,7 @@ namespace world
         room->m_alternateRoom = nullptr;
         room->m_baseRoom = nullptr;
 
-        if((tr_room->alternate_room >= 0) && (static_cast<uint32_t>(tr_room->alternate_room) < tr->m_rooms.size()))
+        if(tr_room->alternate_room >= 0 && static_cast<uint32_t>(tr_room->alternate_room) < tr->m_rooms.size())
         {
             room->m_alternateRoom = world.rooms[tr_room->alternate_room];
         }
@@ -2245,7 +2245,7 @@ namespace world
 
         for(uint32_t i = 0; i < tr->m_spriteSequences.size(); i++)
         {
-            if((tr->m_spriteSequences[i].offset >= 0) && (static_cast<uint32_t>(tr->m_spriteSequences[i].offset) < world.sprites.size()))
+            if(tr->m_spriteSequences[i].offset >= 0 && static_cast<uint32_t>(tr->m_spriteSequences[i].offset) < world.sprites.size())
             {
                 world.sprites[tr->m_spriteSequences[i].offset].id = tr->m_spriteSequences[i].object_id;
             }
@@ -2341,21 +2341,21 @@ namespace world
         const uint16_t* pointer = tr->m_animatedTextures.data();
         const uint16_t num_uvrotates = tr->m_animatedTexturesUvCount;
 
-        const uint16_t num_sequences = *(pointer++);   // First word in a stream is sequence count.
+        const uint16_t num_sequences = *pointer++;   // First word in a stream is sequence count.
 
         world.anim_sequences.resize(num_sequences);
 
         for(size_t i = 0; i < world.anim_sequences.size(); i++)
         {
             animation::AnimSeq* seq = &world.anim_sequences[i];
-            seq->frames.resize(*(pointer++) + 1);
+            seq->frames.resize(*pointer++ + 1);
             seq->frame_list.resize(seq->frames.size());
 
             // Fill up new sequence with frame list.
 
             for(uint32_t& frame : seq->frame_list)
             {
-                frame = *(pointer++);  // Add one frame.
+                frame = *pointer++;  // Add one frame.
             }
 
             // UVRotate textures case.
@@ -2524,9 +2524,9 @@ namespace world
             p.vertices[i].color[2] = tr->m_palette.colour[color].b / 255.0f;
             if(tr_mesh.lights.size() == tr_mesh.vertices.size())
             {
-                p.vertices[i].color[0] = p.vertices[i].color[0] * 1.0f - (tr_mesh.lights[vertex_indices[i]] / (8192.0f));
-                p.vertices[i].color[1] = p.vertices[i].color[1] * 1.0f - (tr_mesh.lights[vertex_indices[i]] / (8192.0f));
-                p.vertices[i].color[2] = p.vertices[i].color[2] * 1.0f - (tr_mesh.lights[vertex_indices[i]] / (8192.0f));
+                p.vertices[i].color[0] = p.vertices[i].color[0] * 1.0f - tr_mesh.lights[vertex_indices[i]] / 8192.0f;
+                p.vertices[i].color[1] = p.vertices[i].color[1] * 1.0f - tr_mesh.lights[vertex_indices[i]] / 8192.0f;
+                p.vertices[i].color[2] = p.vertices[i].color[2] * 1.0f - tr_mesh.lights[vertex_indices[i]] / 8192.0f;
             }
             p.vertices[i].color[3] = 1.0f;
 
@@ -2542,9 +2542,9 @@ namespace world
         {
             if(tr_mesh.lights.size() == tr_mesh.vertices.size())
             {
-                p.vertices[i].color[0] = 1.0f - (tr_mesh.lights[vertex_indices[i]] / (8192.0f));
-                p.vertices[i].color[1] = 1.0f - (tr_mesh.lights[vertex_indices[i]] / (8192.0f));
-                p.vertices[i].color[2] = 1.0f - (tr_mesh.lights[vertex_indices[i]] / (8192.0f));
+                p.vertices[i].color[0] = 1.0f - tr_mesh.lights[vertex_indices[i]] / 8192.0f;
+                p.vertices[i].color[1] = 1.0f - tr_mesh.lights[vertex_indices[i]] / 8192.0f;
+                p.vertices[i].color[2] = 1.0f - tr_mesh.lights[vertex_indices[i]] / 8192.0f;
                 p.vertices[i].color[3] = 1.0f;
 
                 mesh.m_usesVertexColors = true;
@@ -2558,7 +2558,7 @@ namespace world
 
     void TR_GenMesh(World& world, size_t mesh_index, std::shared_ptr<core::BaseMesh> mesh, const std::unique_ptr<loader::Level>& tr)
     {
-        const uint32_t tex_mask = (world.engineVersion == loader::Engine::TR4) ? (loader::TextureIndexMaskTr4) : (loader::TextureIndexMask);
+        const uint32_t tex_mask = world.engineVersion == loader::Engine::TR4 ? loader::TextureIndexMaskTr4 : loader::TextureIndexMask;
 
         /* TR WAD FORMAT DOCUMENTATION!
          * tr4_face[3,4]_t:
@@ -2943,7 +2943,7 @@ namespace world
         }
         else
         {
-            if((offset < tr_animation->frame_offset) && (offset >= (tr_animation + 1)->frame_offset))
+            if(offset < tr_animation->frame_offset && offset >= (tr_animation + 1)->frame_offset)
             {
                 return -2;
             }
@@ -3000,7 +3000,7 @@ namespace world
             else
             {
                 uint32_t *tr_mesh_tree = tr->m_meshTreeData.data() + tr_moveable->mesh_tree_index + (k - 1) * 4;
-                tree_tag->flag = (tr_mesh_tree[0] & 0xFF);
+                tree_tag->flag = tr_mesh_tree[0] & 0xFF;
                 tree_tag->offset[0] = static_cast<float>(static_cast<int32_t>(tr_mesh_tree[1]));
                 tree_tag->offset[1] = static_cast<float>(static_cast<int32_t>(tr_mesh_tree[3]));
                 tree_tag->offset[2] = -static_cast<float>(static_cast<int32_t>(tr_mesh_tree[2]));
@@ -3101,7 +3101,7 @@ namespace world
             // See http://evpopov.com/dl/TR4format.html#Animations for details.
             // FIXME: This is done here only to adjust relative frame indices
             //        see GenerateAnimCommands()
-            if((anim->num_anim_commands > 0) && (anim->num_anim_commands <= 255))
+            if(anim->num_anim_commands > 0 && anim->num_anim_commands <= 255)
             {
                 // Calculate current animation anim command block offset.
                 BOOST_ASSERT(anim->anim_command < world.anim_commands.size());
@@ -3456,7 +3456,7 @@ namespace world
         for(uint32_t i = 0; i < tr->m_items.size(); i++)
         {
             loader::Item *tr_item = &tr->m_items[i];
-            std::shared_ptr<Entity> entity = (tr_item->object_id == 0) ? std::make_shared<Character>(i) : std::make_shared<Entity>(i);
+            std::shared_ptr<Entity> entity = tr_item->object_id == 0 ? std::make_shared<Character>(i) : std::make_shared<Entity>(i);
             entity->m_transform[3][0] = tr_item->position.x;
             entity->m_transform[3][1] = -tr_item->position.z;
             entity->m_transform[3][2] = tr_item->position.y;
@@ -3464,7 +3464,7 @@ namespace world
             entity->m_angles[1] = 0;
             entity->m_angles[2] = 0;
             entity->updateTransform();
-            if((tr_item->room >= 0) && (static_cast<uint32_t>(tr_item->room) < world.rooms.size()))
+            if(tr_item->room >= 0 && static_cast<uint32_t>(tr_item->room) < world.rooms.size())
             {
                 entity->setRoom(world.rooms[tr_item->room].get());
             }

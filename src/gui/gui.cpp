@@ -78,7 +78,7 @@ bool update()
     if(!Console::instance().isVisible() && engine::control_states.gui_inventory && main_inventory_manager)
     {
         if(engine::engine_world.character &&
-           (main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Disabled))
+           main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Disabled)
         {
             main_inventory_manager->setInventory(&engine::engine_world.character->m_inventory);
             main_inventory_manager->send(InventoryManager::InventoryState::Open);
@@ -284,7 +284,7 @@ void drawRect(const GLfloat &x, const GLfloat &y,
     glUnmapBuffer(GL_ARRAY_BUFFER);
 
     const GLfloat offset[2] = { x / (engine::screen_info.w*0.5f) - 1.f, y / (engine::screen_info.h*0.5f) - 1.f };
-    const GLfloat factor[2] = { (width / engine::screen_info.w) * 2.0f, (height / engine::screen_info.h) * 2.0f };
+    const GLfloat factor[2] = { width / engine::screen_info.w * 2.0f, height / engine::screen_info.h * 2.0f };
 
     render::GuiShaderDescription *shader = render::renderer.shaderManager()->getGuiShader(texture != 0);
     glUseProgram(shader->program);

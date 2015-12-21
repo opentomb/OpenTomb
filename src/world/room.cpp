@@ -130,7 +130,7 @@ bool Room::hasSector(size_t x, size_t y) const
 bool Room::overlaps(Room* r1)
 {
     BOOST_ASSERT(r1 != nullptr);
-    if((this == r1) || (this == r1->m_alternateRoom.get()) || (m_alternateRoom.get() == r1))
+    if(this == r1 || this == r1->m_alternateRoom.get() || m_alternateRoom.get() == r1)
     {
         return false;
     }
@@ -184,12 +184,12 @@ RoomSector* Room::getSectorXYZ(const glm::vec3& pos)
 
     //resolve Z overlapped neighboard rooms. room below has more priority.
 
-    if(ret->sector_below && (ret->sector_below->ceiling >= pos[2]))
+    if(ret->sector_below && ret->sector_below->ceiling >= pos[2])
     {
         return ret->sector_below->checkFlip();
     }
 
-    if(ret->sector_above && (ret->sector_above->floor <= pos[2]))
+    if(ret->sector_above && ret->sector_above->floor <= pos[2])
     {
         return ret->sector_above->checkFlip();
     }
@@ -249,7 +249,7 @@ void Room::disable()
 
 void Room::swapToBase()
 {
-    if((m_baseRoom != nullptr) && m_active)                        //If room is active alternate room
+    if(m_baseRoom != nullptr && m_active)                        //If room is active alternate room
     {
         render::renderer.cleanList();
         disable();                             //Disable current room
@@ -262,7 +262,7 @@ void Room::swapToBase()
 
 void Room::swapToAlternate()
 {
-    if((m_alternateRoom != nullptr) && m_active)              //If room is active base room
+    if(m_alternateRoom != nullptr && m_active)              //If room is active base room
     {
         render::renderer.cleanList();
         disable();                             //Disable current room
@@ -277,11 +277,11 @@ Room* Room::checkFlip()
 {
     if(!m_active)
     {
-        if((m_baseRoom != nullptr) && (m_baseRoom->m_active))
+        if(m_baseRoom != nullptr && m_baseRoom->m_active)
         {
             return m_baseRoom.get();
         }
-        else if((m_alternateRoom != nullptr) && (m_alternateRoom->m_active))
+        else if(m_alternateRoom != nullptr && m_alternateRoom->m_active)
         {
             return m_alternateRoom.get();
         }
@@ -382,7 +382,7 @@ void Room::buildOverlappedRoomsList()
 
 void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
 {
-    const uint32_t tex_mask = (world.engineVersion == loader::Engine::TR4) ? (loader::TextureIndexMaskTr4) : (loader::TextureIndexMask);
+    const uint32_t tex_mask = world.engineVersion == loader::Engine::TR4 ? loader::TextureIndexMaskTr4 : loader::TextureIndexMask;
 
     auto& tr_room = tr->m_rooms[getId()];
 
@@ -479,11 +479,11 @@ RoomSector* RoomSector::checkPortalPointer()
     if(portal_to_room)
     {
         std::shared_ptr<Room> r = engine::engine_world.rooms[*portal_to_room];
-        if((owner_room->m_baseRoom != nullptr) && (r->m_alternateRoom != nullptr))
+        if(owner_room->m_baseRoom != nullptr && r->m_alternateRoom != nullptr)
         {
             r = r->m_alternateRoom;
         }
-        else if((owner_room->m_alternateRoom != nullptr) && (r->m_baseRoom != nullptr))
+        else if(owner_room->m_alternateRoom != nullptr && r->m_baseRoom != nullptr)
         {
             r = r->m_baseRoom;
         }
@@ -561,8 +561,8 @@ bool RoomSector::is2SidePortals(RoomSector* s2)
         }
     }
 
-    if(((s1p->checkPortalPointer() == s1->checkBaseRoom()) && (s2p->checkPortalPointer() == s2->checkBaseRoom())) ||
-       ((s1p->checkPortalPointer() == s1->checkAlternateRoom()) && (s2p->checkPortalPointer() == s2->checkAlternateRoom())))
+    if((s1p->checkPortalPointer() == s1->checkBaseRoom() && s2p->checkPortalPointer() == s2->checkBaseRoom()) ||
+       (s1p->checkPortalPointer() == s1->checkAlternateRoom() && s2p->checkPortalPointer() == s2->checkAlternateRoom()))
     {
         return true;
     }
@@ -577,9 +577,9 @@ bool RoomSector::similarCeiling(RoomSector* s2, bool ignore_doors) const
     if(this == s2)
         return true;
 
-    if((ceiling != s2->ceiling) ||
-       (ceiling_penetration_config == PenetrationConfig::Wall) ||
-       (s2->ceiling_penetration_config == PenetrationConfig::Wall) ||
+    if(ceiling != s2->ceiling ||
+       ceiling_penetration_config == PenetrationConfig::Wall ||
+       s2->ceiling_penetration_config == PenetrationConfig::Wall ||
        (!ignore_doors && (sector_above || s2->sector_above)))
         return false;
 
@@ -597,9 +597,9 @@ bool RoomSector::similarFloor(RoomSector* s2, bool ignore_doors) const
     if(!s2) return false;
     if(this == s2) return true;
 
-    if((floor != s2->floor) ||
-       (floor_penetration_config == PenetrationConfig::Wall) ||
-       (s2->floor_penetration_config == PenetrationConfig::Wall) ||
+    if(floor != s2->floor ||
+       floor_penetration_config == PenetrationConfig::Wall ||
+       s2->floor_penetration_config == PenetrationConfig::Wall ||
        (!ignore_doors && (sector_below || s2->sector_below)))
         return false;
 
@@ -684,11 +684,11 @@ btCollisionShape *BT_CSfromHeightmap(const boost::multi_array<RoomSector, 2>& he
     {
         for(const RoomSector& sector : column)
         {
-            if((sector.floor_penetration_config != PenetrationConfig::Ghost) &&
-               (sector.floor_penetration_config != PenetrationConfig::Wall))
+            if(sector.floor_penetration_config != PenetrationConfig::Ghost &&
+               sector.floor_penetration_config != PenetrationConfig::Wall)
             {
-                if((sector.floor_diagonal_type == DiagonalType::None) ||
-                   (sector.floor_diagonal_type == DiagonalType::NW))
+                if(sector.floor_diagonal_type == DiagonalType::None ||
+                   sector.floor_diagonal_type == DiagonalType::NW)
                 {
                     if(sector.floor_penetration_config != PenetrationConfig::DoorVerticalA)
                     {
@@ -730,11 +730,11 @@ btCollisionShape *BT_CSfromHeightmap(const boost::multi_array<RoomSector, 2>& he
                 }
             }
 
-            if((sector.ceiling_penetration_config != PenetrationConfig::Ghost) &&
-               (sector.ceiling_penetration_config != PenetrationConfig::Wall))
+            if(sector.ceiling_penetration_config != PenetrationConfig::Ghost &&
+               sector.ceiling_penetration_config != PenetrationConfig::Wall)
             {
-                if((sector.ceiling_diagonal_type == DiagonalType::None) ||
-                   (sector.ceiling_diagonal_type == DiagonalType::NW))
+                if(sector.ceiling_diagonal_type == DiagonalType::None ||
+                   sector.ceiling_diagonal_type == DiagonalType::NW)
                 {
                     if(sector.ceiling_penetration_config != PenetrationConfig::DoorVerticalA)
                     {

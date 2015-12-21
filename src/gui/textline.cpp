@@ -40,7 +40,7 @@ void renderStringLine(const TextLine *l)
     FontTexture* gl_font = fontManager->GetFont(l->font_id);
     FontStyleData* style = fontManager->GetFontStyle(l->style_id);
 
-    if((gl_font == nullptr) || (style == nullptr) || (!l->show) || (style->hidden))
+    if(gl_font == nullptr || style == nullptr || !l->show || style->hidden)
     {
         return;
     }
@@ -56,7 +56,7 @@ void renderStringLine(const TextLine *l)
             real_x = static_cast<float>(engine::screen_info.w) - (l->rect[2] - l->rect[0]) - l->absXoffset;
             break;
         case HorizontalAnchor::Center:
-            real_x = (engine::screen_info.w / 2.0f) - ((l->rect[2] - l->rect[0]) / 2.0f) + l->absXoffset;  // Absolute center.
+            real_x = engine::screen_info.w / 2.0f - (l->rect[2] - l->rect[0]) / 2.0f + l->absXoffset;  // Absolute center.
             break;
     }
 
@@ -69,7 +69,7 @@ void renderStringLine(const TextLine *l)
             real_y = static_cast<float>(engine::screen_info.h) - (l->rect[3] - l->rect[1]) - l->absYoffset;
             break;
         case VerticalAnchor::Center:
-            real_y = (engine::screen_info.h / 2.0f) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
+            real_y = engine::screen_info.h / 2.0f + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
             break;
     }
 
@@ -99,8 +99,8 @@ void renderStringLine(const TextLine *l)
         gl_font->gl_font_color[2] = 0.0f;
         gl_font->gl_font_color[3] = style->color[3] * FontShadowTransparency;// Derive alpha from base color.
         glf_render_str(gl_font,
-                       (real_x + FontShadowHorizontalShift),
-                       (real_y + FontShadowVerticalShift),
+                       real_x + FontShadowHorizontalShift,
+                       real_y + FontShadowVerticalShift,
                        l->text.c_str());
     }
 

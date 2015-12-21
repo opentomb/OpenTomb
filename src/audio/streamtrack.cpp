@@ -95,17 +95,17 @@ bool StreamTrack::load(const char *path, size_t index, const StreamType type, co
     m_currentTrack = index;
     m_streamType = type;
     m_method = load_method;
-    m_dampable = (m_streamType == StreamType::Background);   // Damp only looped (BGM) tracks.
+    m_dampable = m_streamType == StreamType::Background;   // Damp only looped (BGM) tracks.
 
     // Select corresponding stream loading method.
 
     if(m_method == StreamMethod::Track)
     {
-        return (loadTrack(path));
+        return loadTrack(path);
     }
     else
     {
-        return (loadWad(static_cast<uint8_t>(index), path));
+        return loadWad(static_cast<uint8_t>(index), path);
     }
 }
 
@@ -195,7 +195,7 @@ bool StreamTrack::loadWad(uint8_t index, const char* filename)
             uint32_t length = 0;
 
             setbuf(m_wadFile, nullptr);
-            fseek(m_wadFile, (index * WADStride), 0);
+            fseek(m_wadFile, index * WADStride, 0);
             fread(static_cast<void*>(track_name), WADNameLength, 1, m_wadFile);
             fread(static_cast<void*>(&length), sizeof(uint32_t), 1, m_wadFile);
             fread(static_cast<void*>(&offset), sizeof(uint32_t), 1, m_wadFile);
@@ -332,7 +332,7 @@ bool StreamTrack::update()
     {
         // We check if damp condition is active, and if so, is it already at low-level or not.
 
-        if(damp_active && (m_dampedVolume < StreamDampLevel))
+        if(damp_active && m_dampedVolume < StreamDampLevel)
         {
             m_dampedVolume += StreamDampSpeed;
 
@@ -340,7 +340,7 @@ bool StreamTrack::update()
             m_dampedVolume = glm::clamp(m_dampedVolume, 0.0f, StreamDampLevel);
             change_gain   = true;
         }
-        else if(!damp_active && (m_dampedVolume > 0))    // If damp is not active, but it's still at low, restore it.
+        else if(!damp_active && m_dampedVolume > 0)    // If damp is not active, but it's still at low, restore it.
         {
             m_dampedVolume -= StreamDampSpeed;
 
@@ -442,7 +442,7 @@ bool StreamTrack::isTrack(size_t track_index) const    // Check if track has spe
 
 bool StreamTrack::isType(const StreamType track_type) const      // Check if track has specific type.
 {
-    return (track_type == m_streamType);
+    return track_type == m_streamType;
 }
 
 bool StreamTrack::isActive() const                         // Check if track is still active.
@@ -463,7 +463,7 @@ bool StreamTrack::isPlaying() const                       // Check if track is p
         alGetSourcei(m_source, AL_SOURCE_STATE, &state);
 
         // Paused state and existing file pointers also counts as playing.
-        return ((state == AL_PLAYING) || (state == AL_PAUSED));
+        return state == AL_PLAYING || state == AL_PAUSED;
     }
     else
     {
@@ -485,7 +485,7 @@ bool StreamTrack::stream(ALuint buffer)
     while(size < pcm.size() - m_sfInfo.channels + 1)
     {
         // we need to read a multiple of sf_info.channels here
-        const size_t samplesToRead = ((engine::engine_world.audioEngine.getSettings().stream_buffer_size - size) / m_sfInfo.channels) * m_sfInfo.channels;
+        const size_t samplesToRead = (engine::engine_world.audioEngine.getSettings().stream_buffer_size - size) / m_sfInfo.channels * m_sfInfo.channels;
 #ifdef AUDIO_OPENAL_FLOAT
         const sf_count_t samplesRead = sf_read_float(m_sndFile, pcm.data() + size, samplesToRead);
 #else
@@ -536,7 +536,7 @@ void StreamTrack::setFX(FxManager& manager)
     if(manager.current_room_type != manager.last_room_type)  // Switch audio send.
     {
         manager.last_room_type = manager.current_room_type;
-        manager.current_slot = (++manager.current_slot > (FxManager::MaxSlots - 1)) ? (0) : (manager.current_slot);
+        manager.current_slot = ++manager.current_slot > FxManager::MaxSlots - 1 ? 0 : manager.current_slot;
 
         ALuint effect = manager.al_effect[static_cast<int>(manager.current_room_type)];
         slot = manager.al_slot[manager.current_slot];

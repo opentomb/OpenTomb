@@ -83,7 +83,7 @@ void Level::readFrameMoveableData(io::SDLReader& reader)
         {
             m_moveables[i] = Moveable::readTr1(reader);
             // Disable unused skybox polygons.
-            if((m_gameVersion == Game::TR3) && (m_moveables[i].object_id == 355))
+            if(m_gameVersion == Game::TR3 && m_moveables[i].object_id == 355)
             {
                 m_meshes[m_meshIndices[m_moveables[i].starting_mesh]].coloured_triangles.resize(16);
             }
@@ -127,7 +127,7 @@ std::unique_ptr<Level> Level::createLoader(const std::string& filename, Game gam
 
     for(size_t i = 0; i < filename.length(); i++)
     {
-        if((filename[i] == '/') || (filename[i] == '\\'))
+        if(filename[i] == '/' || filename[i] == '\\')
         {
             len2 = i;
         }
@@ -249,9 +249,9 @@ Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
             ret = loader::Game::TR2;
         }
         else if((check[0] == 0x38 || check[0] == 0x34) &&
-                (check[1] == 0x00) &&
+                check[1] == 0x00 &&
                 (check[2] == 0x18 || check[2] == 0x08) &&
-                (check[3] == 0xFF))
+                check[3] == 0xFF)
         {
             ret = loader::Game::TR3;
         }
@@ -297,7 +297,7 @@ Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
 StaticMesh *Level::findStaticMeshById(uint32_t object_id)
 {
     for (size_t i = 0; i < m_staticMeshes.size(); i++)
-        if ((m_staticMeshes[i].object_id == object_id) && (m_meshIndices[m_staticMeshes[i].mesh]))
+        if (m_staticMeshes[i].object_id == object_id && m_meshIndices[m_staticMeshes[i].mesh])
             return &m_staticMeshes[i];
 
     return nullptr;

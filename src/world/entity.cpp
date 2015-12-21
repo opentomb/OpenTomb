@@ -183,11 +183,11 @@ int Entity::getPenetrationFixVector(glm::vec3& reaction, bool hasMove)
         auto curr = from;
         auto move = to - from;
         auto move_len = move.length();
-        if((i == 0) && (move_len > 1024.0))                                 ///@FIXME: magick const 1024.0!
+        if(i == 0 && move_len > 1024.0)                                 ///@FIXME: magick const 1024.0!
         {
             break;
         }
-        int iter = static_cast<int>((4.0 * move_len / btag->mesh->m_radius) + 1);     ///@FIXME (not a critical): magick const 4.0!
+        int iter = static_cast<int>(4.0 * move_len / btag->mesh->m_radius + 1);     ///@FIXME (not a critical): magick const 4.0!
         move /= static_cast<glm::float_t>(iter);
 
         for(int j = 0; j <= iter; j++)
@@ -368,7 +368,7 @@ void Entity::updateTransform()
 void Entity::updateCurrentSpeed(bool zeroVz)
 {
     glm::float_t t = m_currentSpeed * animation::AnimationFrameRate;
-    glm::float_t vz = (zeroVz) ? (0.0f) : (m_speed[2]);
+    glm::float_t vz = zeroVz ? 0.0f : m_speed[2];
 
     if(m_moveDir == MoveDirection::Forward)
     {
@@ -469,8 +469,8 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
                 int16_t sound_index = command.param[0] & 0x3FFF;
 
                 // Quick workaround for TR3 quicksand.
-                if((getSubstanceState() == Substance::QuicksandConsumed) ||
-                   (getSubstanceState() == Substance::QuicksandShallow))
+                if(getSubstanceState() == Substance::QuicksandConsumed ||
+                   getSubstanceState() == Substance::QuicksandShallow)
                 {
                     sound_index = 18;
                 }
@@ -556,7 +556,7 @@ void Entity::processSector()
         try
         {
             if (engine_lua["tlist_RunTrigger"].is<lua::Callable>())
-                engine_lua["tlist_RunTrigger"].call(int(lowest_sector->trig_index), ((m_skeleton.getModel()->id == 0) ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC), getId());
+                engine_lua["tlist_RunTrigger"].call(int(lowest_sector->trig_index), m_skeleton.getModel()->id == 0 ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC, getId());
         }
         catch (lua::RuntimeError& error)
         {
@@ -708,9 +708,9 @@ void Entity::checkActivators()
             r *= r;
             const glm::vec4& v = e->m_transform[3];
             if(    e != this
-                && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r)
-                && (v[2] + 32.0 > m_transform[3][2] + m_skeleton.getBoundingBox().min[2])
-                && (v[2] - 32.0 < m_transform[3][2] + m_skeleton.getBoundingBox().max[2]))
+                && (v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r
+                && v[2] + 32.0 > m_transform[3][2] + m_skeleton.getBoundingBox().min[2]
+                && v[2] - 32.0 < m_transform[3][2] + m_skeleton.getBoundingBox().max[2])
             {
                 engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
             }

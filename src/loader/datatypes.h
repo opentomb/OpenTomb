@@ -631,7 +631,7 @@ struct RoomVertex
 
         room_vertex.colour.r = ((room_vertex.lighting2 & 0x7C00) >> 10) / 62.0f;
         room_vertex.colour.g = ((room_vertex.lighting2 & 0x03E0) >> 5) / 62.0f;
-        room_vertex.colour.b = ((room_vertex.lighting2 & 0x001F)) / 62.0f;
+        room_vertex.colour.b = (room_vertex.lighting2 & 0x001F) / 62.0f;
         room_vertex.colour.a = 1.0f;
         return room_vertex;
     }
@@ -651,7 +651,7 @@ struct RoomVertex
 
         room_vertex.colour.r = ((room_vertex.lighting2 & 0x7C00) >> 10) / 31.0f;
         room_vertex.colour.g = ((room_vertex.lighting2 & 0x03E0) >> 5) / 31.0f;
-        room_vertex.colour.b = ((room_vertex.lighting2 & 0x001F)) / 31.0f;
+        room_vertex.colour.b = (room_vertex.lighting2 & 0x001F) / 31.0f;
         room_vertex.colour.a = 1.0f;
         return room_vertex;
     }
@@ -698,7 +698,7 @@ struct RoomStaticMesh
         // only in TR2
         room_static_mesh.intensity2 = room_static_mesh.intensity1;
 
-        room_static_mesh.tint.b = room_static_mesh.tint.g = room_static_mesh.tint.r = (room_static_mesh.intensity2 / 16384.0f);
+        room_static_mesh.tint.b = room_static_mesh.tint.g = room_static_mesh.tint.r = room_static_mesh.intensity2 / 16384.0f;
         room_static_mesh.tint.a = 1.0f;
         return room_static_mesh;
     }
@@ -717,7 +717,7 @@ struct RoomStaticMesh
         if(room_static_mesh.intensity2 >= 0)
             room_static_mesh.intensity2 = (8191 - room_static_mesh.intensity2) << 2;
 
-        room_static_mesh.tint.b = room_static_mesh.tint.g = room_static_mesh.tint.r = (room_static_mesh.intensity2 / 16384.0f);
+        room_static_mesh.tint.b = room_static_mesh.tint.g = room_static_mesh.tint.r = room_static_mesh.intensity2 / 16384.0f;
         room_static_mesh.tint.a = 1.0f;
         return room_static_mesh;
     }
@@ -731,7 +731,7 @@ struct RoomStaticMesh
         room_static_mesh.intensity2 = reader.readI16();
         room_static_mesh.object_id = reader.readU16();
 
-        room_static_mesh.tint.r = ((room_static_mesh.intensity1 & 0x001F)) / 62.0f;
+        room_static_mesh.tint.r = (room_static_mesh.intensity1 & 0x001F) / 62.0f;
 
         room_static_mesh.tint.g = ((room_static_mesh.intensity1 & 0x03E0) >> 5) / 62.0f;
 
@@ -749,7 +749,7 @@ struct RoomStaticMesh
         room_static_mesh.intensity2 = reader.readI16();
         room_static_mesh.object_id = reader.readU16();
 
-        room_static_mesh.tint.r = ((room_static_mesh.intensity1 & 0x001F)) / 31.0f;
+        room_static_mesh.tint.r = (room_static_mesh.intensity1 & 0x001F) / 31.0f;
 
         room_static_mesh.tint.g = ((room_static_mesh.intensity1 & 0x03E0) >> 5) / 31.0f;
 
@@ -876,7 +876,7 @@ struct Room
             room.sprites[i] = Sprite::read(reader);
 
         // set to the right position in case that there is some unused data
-        reader.seek(position + (num_data_words * 2));
+        reader.seek(position + num_data_words * 2);
 
         room.portals.resize(reader.readU16());
         for(size_t i = 0; i < room.portals.size(); i++)
@@ -947,7 +947,7 @@ struct Room
             room.sprites[i] = Sprite::read(reader);
 
         // set to the right position in case that there is some unused data
-        reader.seek(position + (num_data_words * 2));
+        reader.seek(position + num_data_words * 2);
 
         room.portals.resize(reader.readU16());
         for(size_t i = 0; i < room.portals.size(); i++)
@@ -1025,7 +1025,7 @@ struct Room
             room.sprites[i] = Sprite::read(reader);
 
         // set to the right position in case that there is some unused data
-        reader.seek(position + (num_data_words * 2));
+        reader.seek(position + num_data_words * 2);
 
         room.portals.resize(reader.readU16());
         for(size_t i = 0; i < room.portals.size(); i++)
@@ -1107,7 +1107,7 @@ struct Room
             room.sprites[i] = Sprite::read(reader);
 
         // set to the right position in case that there is some unused data
-        reader.seek(position + (num_data_words * 2));
+        reader.seek(position + num_data_words * 2);
 
         room.portals.resize(reader.readU16());
         for(size_t i = 0; i < room.portals.size(); i++)
@@ -1145,10 +1145,10 @@ struct Room
 
         room.alternate_group = reader.readU8();
 
-        room.light_colour.r = ((room.intensity2 & 0x00FF) / 255.0f);
-        room.light_colour.g = (((room.intensity1 & 0xFF00) >> 8) / 255.0f);
-        room.light_colour.b = ((room.intensity1 & 0x00FF) / 255.0f);
-        room.light_colour.a = (((room.intensity2 & 0xFF00) >> 8) / 255.0f);
+        room.light_colour.r = (room.intensity2 & 0x00FF) / 255.0f;
+        room.light_colour.g = ((room.intensity1 & 0xFF00) >> 8) / 255.0f;
+        room.light_colour.b = (room.intensity1 & 0x00FF) / 255.0f;
+        room.light_colour.a = ((room.intensity2 & 0xFF00) >> 8) / 255.0f;
         return room;
     }
 
@@ -1174,7 +1174,7 @@ struct Room
         /*portal_offset = */reader.readI32();             // StartPortalOffset?   // endSDOffset
         auto sector_data_offset = reader.readU32();    // StartSDOffset
         auto temp = reader.readU32();
-        if((temp != 0) && (temp != 0xCDCDCDCD))
+        if(temp != 0 && temp != 0xCDCDCDCD)
         {
             std::cerr << "read_tr5_room: seperator2 has wrong value\n";
         }
@@ -1247,7 +1247,7 @@ struct Room
         room.unknown_r3 = reader.readU32();
 
         temp = reader.readU32();
-        if((temp != 0) && (temp != 0xCDCDCDCD))
+        if(temp != 0 && temp != 0xCDCDCDCD)
         {
             std::cerr << "read_tr5_room: seperator7 has wrong value\n";
         }
@@ -1280,7 +1280,7 @@ struct Room
         }
 
         temp = reader.readU32();
-        if((temp != 0) && (temp != 0xCDCDCDCD))
+        if(temp != 0 && temp != 0xCDCDCDCD)
         {
             std::cerr << "read_tr5_room: seperator12 has wrong value\n";
         }
@@ -1332,7 +1332,7 @@ struct Room
             BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_room: poly_offset != poly_offset2") );
 
         auto vertices_size = reader.readU32();
-        if((vertices_size % 28) != 0)
+        if(vertices_size % 28 != 0)
             BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_room: vertices_size has wrong value") );
 
         if(reader.readU32() != 0xCDCDCDCD)
@@ -2461,7 +2461,7 @@ struct LightMap
     static LightMap read(io::SDLReader& reader)
     {
         LightMap lightmap;
-        for(int i = 0; i < (32 * 256); i++)
+        for(int i = 0; i < 32 * 256; i++)
             lightmap.map[i] = reader.readU8();
         return lightmap;
     }

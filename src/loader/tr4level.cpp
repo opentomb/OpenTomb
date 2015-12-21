@@ -91,7 +91,7 @@ void TR4Level::load()
             }
             else
             {
-                if((uncomp_size / (256 * 256 * 4)) > 2)
+                if(uncomp_size / (256 * 256 * 4) > 2)
                     std::cerr << "read_tr4_level: num_misc_textiles > 2\n";
 
                 if(m_textures.empty())

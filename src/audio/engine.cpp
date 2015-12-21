@@ -151,7 +151,7 @@ bool loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t samp
 
     size_t real_size = sfInfo.frames * sizeof(uint16_t);
 
-    if((uncomp_sample_size == 0) || (real_size < uncomp_sample_size))
+    if(uncomp_sample_size == 0 || real_size < uncomp_sample_size)
     {
         uncomp_sample_size = real_size;
     }
@@ -238,7 +238,7 @@ bool Engine::endStreams(StreamType stream_type)
 
     for(StreamTrack& track : m_tracks)
     {
-        if((stream_type == StreamType::Any) ||                              // End ALL streams at once.
+        if(stream_type == StreamType::Any ||                              // End ALL streams at once.
                 (track.isPlaying() &&
                  track.isType(stream_type)))
         {
@@ -426,7 +426,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
     // Also, bit mask is valid only for non-looped tracks, since looped tracks are played
     // in any way.
 
-    if((stream_type != StreamType::Background) &&
+    if(stream_type != StreamType::Background &&
             trackAlreadyPlayed(track_index, mask))
     {
         return StreamError::Ignored;
@@ -455,7 +455,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
         // Additionally check if track type is looped. If it is, force fade in in any case.
         // This is needed to smooth out possible pop with gapless looped track at a start-up.
 
-        do_fade_in = (stream_type == StreamType::Background);
+        do_fade_in = stream_type == StreamType::Background;
     }
 
     // Finally - load our track.
@@ -567,7 +567,7 @@ bool Engine::isInRange(EmitterType entity_type, world::ObjectId entity_ID, float
     // We add 1/4 of overall distance to fix up some issues with
     // pseudo-looped sounds that are called at certain frames in animations.
 
-    dist /= (gain + 1.25f);
+    dist /= gain + 1.25f;
 
     return dist < range * range;
 }
@@ -603,7 +603,7 @@ Error Engine::send(const boost::optional<uint32_t>& effect_ID, EmitterType entit
     // Pre-step 2: check if sound non-looped and chance to play isn't zero,
     // then randomly select if it should be played or not.
 
-    if((effect->loop != loader::LoopType::Forward) && (effect->chance > 0))
+    if(effect->loop != loader::LoopType::Forward && effect->chance > 0)
     {
         random_value = rand() % 0x7FFF;
         if(effect->chance < random_value)
@@ -654,7 +654,7 @@ Error Engine::send(const boost::optional<uint32_t>& effect_ID, EmitterType entit
         if(effect->sample_count > 1)
         {
             // Select random buffer, if effect info contains more than 1 assigned samples.
-            random_value = rand() % (effect->sample_count);
+            random_value = rand() % effect->sample_count;
             buffer_index = random_value + effect->sample_index;
         }
         else
@@ -689,7 +689,7 @@ Error Engine::send(const boost::optional<uint32_t>& effect_ID, EmitterType entit
         if(effect->rand_pitch)  // Vary pitch, if flag is set.
         {
             random_float = static_cast<ALfloat>( rand() % effect->rand_pitch_var );
-            random_float = effect->pitch + ((random_float - 25.0f) / 200.0f);
+            random_float = effect->pitch + (random_float - 25.0f) / 200.0f;
             source->setPitch(random_float);
         }
         else

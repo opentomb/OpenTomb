@@ -79,9 +79,9 @@ void ItemNotifier::Reset()
     mCurrTime = util::Duration(0);
     m_currentRotation = {0,0};
 
-    mEndPosX = (static_cast<float>(engine::screen_info.w) / ScreenMeteringResolution) * mAbsPosX;
-    mPosY = (static_cast<float>(engine::screen_info.h) / ScreenMeteringResolution) * mAbsPosY;
-    mCurrPosX = engine::screen_info.w + (static_cast<float>(engine::screen_info.w) / NotifierOffscreenDivider * mSize);
+    mEndPosX = static_cast<float>(engine::screen_info.w) / ScreenMeteringResolution * mAbsPosX;
+    mPosY = static_cast<float>(engine::screen_info.h) / ScreenMeteringResolution * mAbsPosY;
+    mCurrPosX = engine::screen_info.w + static_cast<float>(engine::screen_info.w) / NotifierOffscreenDivider * mSize;
     mStartPosX = mCurrPosX;    // Equalize current and start positions.
 }
 
@@ -129,7 +129,7 @@ void ItemNotifier::SetSize(float size)
 
 void ItemNotifier::SetRotateTime(float time)
 {
-    m_rotationSpeed = (1000.0f / time) * glm::radians(360.0f);
+    m_rotationSpeed = 1000.0f / time * glm::radians(360.0f);
 }
 
 void initNotifier()

@@ -30,5 +30,5 @@ int main(int /*argc*/, char** /*argv*/)
     // Main loop interrupted; shutting down.
 
     engine::shutdown(EXIT_SUCCESS);
-    return(EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }

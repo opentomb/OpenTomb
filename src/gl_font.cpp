@@ -149,7 +149,7 @@ static __inline void bbox_add(float *x0, float *x1, float *y0, float *y1,
 
 void glf_resize(FontTexture *glf, uint16_t font_size)
 {
-    if((glf != nullptr) && (glf->ft_face != nullptr))
+    if(glf != nullptr && glf->ft_face != nullptr)
     {
         const GLint padding = 2;
         GLint chars_in_row, chars_in_column;
@@ -179,7 +179,7 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
         // create new atlas
         chars_in_row = glf->gl_tex_width / (font_size + padding);
         chars_in_column = static_cast<GLint>( glf->glyphs.size() / chars_in_row + 1 );
-        glf->gl_tex_indexes.resize((chars_in_column * (font_size + padding)) / glf->gl_tex_width + 1);
+        glf->gl_tex_indexes.resize(chars_in_column * (font_size + padding) / glf->gl_tex_width + 1);
         glGenTextures(static_cast<GLsizei>(glf->gl_tex_indexes.size()), glf->gl_tex_indexes.data());
 
         buffer_size = glf->gl_tex_width * glf->gl_tex_width * sizeof(GLubyte);
@@ -211,7 +211,7 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
             glf->glyphs[i].left = g->bitmap_left;
             glf->glyphs[i].top = g->bitmap_top;
 
-            if((g->bitmap.width == 0) || (g->bitmap.rows == 0))
+            if(g->bitmap.width == 0 || g->bitmap.rows == 0)
             {
                 continue;
             }
@@ -256,7 +256,7 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
                 }
             }
 
-            x += (g->bitmap.width + padding);
+            x += g->bitmap.width + padding;
         }
 
         glBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[glf->gl_real_tex_indexes_count]);
@@ -292,7 +292,7 @@ void glf_reface(FontTexture *glf, const char *file_name, uint16_t font_size)
 
 float glf_get_ascender(FontTexture *glf)
 {
-    if((glf->font_size == 0) || (glf->ft_face == nullptr))
+    if(glf->font_size == 0 || glf->ft_face == nullptr)
     {
         return 0.0;
     }
@@ -302,7 +302,7 @@ float glf_get_ascender(FontTexture *glf)
 
 uint16_t glf_get_font_size(FontTexture *glf)
 {
-    if((glf != nullptr) && (glf->ft_face != nullptr))
+    if(glf != nullptr && glf->ft_face != nullptr)
     {
         return glf->font_size;
     }
@@ -316,7 +316,7 @@ float glf_get_string_len(FontTexture *glf, const char *text, int n)
 {
     float x = 0.0;
 
-    if((glf != nullptr) && (glf->ft_face != nullptr))
+    if(glf != nullptr && glf->ft_face != nullptr)
     {
         const uint8_t *ch = reinterpret_cast<const uint8_t*>(text);
         uint32_t curr_utf32, next_utf32;
@@ -325,7 +325,7 @@ float glf_get_string_len(FontTexture *glf, const char *text, int n)
         const uint8_t *nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face.get(), curr_utf32);
 
-        for(i = 0; (*ch != 0) && !((n >= 0) && (i >= n)); i++)
+        for(i = 0; *ch != 0 && !(n >= 0 && i >= n); i++)
         {
             FT_Vector kern;
 
@@ -350,7 +350,7 @@ void glf_get_string_bb(FontTexture *glf, const char *text, int n, GLfloat *x0, G
     *y0 = 0.0;
     *y1 = 0.0;
 
-    if((glf != nullptr) && (glf->ft_face != nullptr))
+    if(glf != nullptr && glf->ft_face != nullptr)
     {
         const uint8_t *nch2;
         const uint8_t *ch = reinterpret_cast<const uint8_t*>(text);
@@ -363,7 +363,7 @@ void glf_get_string_bb(FontTexture *glf, const char *text, int n, GLfloat *x0, G
         const uint8_t *nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face.get(), curr_utf32);
 
-        for(i = 0; (*ch != 0) && !((n >= 0) && (i >= n)); i++)
+        for(i = 0; *ch != 0 && !(n >= 0 && i >= n); i++)
         {
             FT_Vector kern;
             CharInfo* g = &glf->glyphs[curr_utf32];
@@ -395,7 +395,7 @@ void glf_render_str(FontTexture *glf, GLfloat x, GLfloat y, const char *text)
     const uint8_t *ch = reinterpret_cast<const uint8_t*>(text);
     FT_Vector kern;
 
-    if((glf == nullptr) || (glf->ft_face == nullptr) || (text == nullptr) || (text[0] == '\0'))
+    if(glf == nullptr || glf->ft_face == nullptr || text == nullptr || text[0] == '\0')
     {
         return;
     }
@@ -608,7 +608,7 @@ const uint8_t* utf8_to_utf32(const uint8_t *utf8, uint32_t *utf32)
     while(--len)
     {
         c <<= shift;
-        c |= (*u_utf8++) & 0x3f;
+        c |= *u_utf8++ & 0x3f;
         shift = 6;
     }
 
