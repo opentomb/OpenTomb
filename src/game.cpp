@@ -1019,11 +1019,11 @@ void Game_SetCamera(uint32_t camera_id, int once, int move, float timer)
 {
     if(camera_id < engine_world.cameras_sinks_count)
     {
-        if((engine_camera_state.state != CAMERA_STATE_LOOK_AT) && engine_world.Character)
+        /*if((engine_camera_state.state != CAMERA_STATE_LOOK_AT) && engine_world.Character)
         {
             engine_camera_state.target_id = engine_world.Character->id;
             //timer = (timer > 0.0f)?(timer):(2.0f);
-        }
+        }*/
         if(engine_camera_state.state != CAMERA_STATE_FLYBY)
         {
             engine_camera_state.state = CAMERA_STATE_FIXED;

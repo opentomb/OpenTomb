@@ -1251,7 +1251,7 @@ void Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, entity_object->id, activator_id);
             event = 1;
         }
-        else if((mask != 0x1F) and (event == 1))
+        else if((mask != 0x1F) && (event == 1))
         {
             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_DEACTIVATE, entity_object->id, activator_id);
             event = 0;

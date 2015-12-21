@@ -545,7 +545,7 @@ void Anim_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_chan
         anim_dispatch_p disp = stc->anim_dispatch;
         for(uint16_t i = 0; i < stc->anim_dispatch_count; i++, disp++)
         {
-            if((disp->frame_high >= disp->frame_low) && ((*frame >= disp->frame_low) && (*frame <= disp->frame_high) /*|| (bf->animations.current_frame < disp->frame_low) && (*frame > disp->frame_high)*/))
+            if((disp->frame_high >= disp->frame_low) && ((*frame >= disp->frame_low) && (*frame <= disp->frame_high) || (bf->animations.current_frame < disp->frame_low) && (*frame > disp->frame_high)))
             {
                 *anim  = disp->next_anim;
                 *frame = disp->next_frame;

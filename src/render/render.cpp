@@ -1008,15 +1008,9 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         };
     }
 
-#if 1
-    for(uint16_t pi = 0; pi < room->portals_count; pi++)
-    {
-        room_p near_room = room->portals[pi].dest_room;
-#else
     for(uint16_t ni = 0; ni < room->near_room_list_size; ni++)
     {
         room_p near_room = room->near_room_list[ni];
-#endif
         if(near_room->active && !near_room->is_in_r_list)
         {
             if (near_room->content->static_mesh_count > 0)

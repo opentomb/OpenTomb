@@ -367,7 +367,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
     elseif(off.ready_anim == t and getEntityLock(object_id) ~= 1) then  -- Locked switches doesn't flip back!
         setEntityAnim(object_id, off.trig_anim, 0);
         setEntityAnim(actor_id, off.actor_anim, 0);
-        --setEntityActivity(object_id, 1);
+        setEntityActivity(object_id, 1);
         addTask(
         function()
             local a, f, c = getEntityAnim(actor_id);

@@ -178,19 +178,13 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                 break;
         }
 
-        if(!header_condition)
-        {
-            return;
-        }
-
-        if((activator == TR_ACTIVATOR_NORMAL) && (Entity_GetSectorStatus(entity_activator) == 1))
+        if(!header_condition || ((activator == TR_ACTIVATOR_NORMAL) && (Entity_GetSectorStatus(entity_activator) == 1)))
         {
             return;
         }
 
         // Now execute operand chain for trigger function!
         int first_command = 1;
-        //int only_continue_events = 0;
         int switch_sectorstatus = 0;
         uint32_t switch_mask = 0;
         for(trigger_command_p command = trigger->commands; command; command = command->next)
@@ -205,7 +199,6 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     if(!trig_entity)
                     {
                         break;
-                        return;
                     }
 
                     if(first_command && (activator != TR_ACTIVATOR_NORMAL))
@@ -222,7 +215,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                     switch_sectorstatus = (trig_entity->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
                                     switch_mask = (trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK);
                                     // Trigger activation mask is here filtered through activator's own mask.
-                                    switch_mask = (switch_mask == 0)?(0x1F & trigger->mask):(switch_mask & trigger->mask);
+                                    switch_mask = (switch_mask == 0) ? (0x1F & trigger->mask) : (switch_mask & trigger->mask);
 
                                     if((switch_anim_state == 0) && (switch_sectorstatus == 1))
                                     {
@@ -248,10 +241,10 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 else    /// end if (action_type == TR_ACTIONTYPE_SWITCH)
                                 {
                                     // Ordinary type case (e.g. heavy switch).
-                                    switch_sectorstatus = (entity_activator)?((entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7):(0);
-                                    switch_mask = (entity_activator)?(entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK):(0);
+                                    switch_sectorstatus = (entity_activator) ? ((entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7) : (0);
+                                    switch_mask = (entity_activator) ? (entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK) : (0);
                                     // Trigger activation mask is here filtered through activator's own mask.
-                                    switch_mask = (switch_mask == 0)?(0x1F & trigger->mask):(switch_mask & trigger->mask);
+                                    switch_mask = (switch_mask == 0) ? (0x1F & trigger->mask) : (switch_mask & trigger->mask);
 
                                     if(switch_sectorstatus == 0)
                                     {
@@ -294,6 +287,10 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     }
                     else
                     {
+                        if(entity_activator && (entity_activator->bf->animations.model->id != 0) && (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS))
+                        {
+                            return;
+                        }
                         if(activator == TR_ACTIVATOR_SWITCH)
                         {
                             if(action_type == TR_ACTIONTYPE_ANTI)
@@ -315,6 +312,10 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                             {
                                 Entity_Activate(trig_entity, entity_activator, trigger->mask, mask_mode, trigger->once, trigger->timer);
                             }
+                        }
+                        if(entity_activator->bf->animations.model->id != 0)
+                        {
+                            Entity_SetSectorStatus(entity_activator, 1);
                         }
                     }
                     break;
