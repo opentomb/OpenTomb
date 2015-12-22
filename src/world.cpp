@@ -45,7 +45,6 @@ int  compEntityEQ(void *x, void *y);
 int  compEntityLT(void *x, void *y);
 void RBEntityFree(void *x);
 void RBItemFree(void *x);
-void World_SwapRoomPortals(world_p world, struct room_s *room, struct room_s *dest_room);
 
 // private load level functions prototipes:
 void World_SetEntityModelProperties(world_p world, struct entity_s *ent);
@@ -675,6 +674,8 @@ struct room_s *World_FindRoomByPosCogerrence(world_p world, float pos[3], struct
         return World_FindRoomByPos(world, pos);
     }
 
+    old_room = Room_CheckFlip(old_room);
+
     if(old_room->active &&
        (pos[0] >= old_room->bb_min[0]) && (pos[0] < old_room->bb_max[0]) &&
        (pos[1] >= old_room->bb_min[1]) && (pos[1] < old_room->bb_max[1]))
@@ -709,7 +710,7 @@ struct room_s *World_FindRoomByPosCogerrence(world_p world, float pos[3], struct
 
     for(uint16_t i = 0; i < old_room->near_room_list_size; i++)
     {
-        room_p r = old_room->near_room_list[i];
+        room_p r = Room_CheckFlip(old_room->near_room_list[i]);
         if(r->active &&
            (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
@@ -727,11 +728,12 @@ void World_SwapRoomToBase(world_p world, struct room_s *room)
 {
     if(room->base_room && room->active)                             // If room is active alternate room
     {
+        room->frustum = NULL;
+        room->base_room->frustum = NULL;
         renderer.CleanList();
         Room_Disable(room);                                         // Disable current room
         Room_Disable(room->base_room);                              // Paranoid
-        World_SwapRoomPortals(world, room, room->base_room);        // Update portals to match this room
-        Room_SwapItems(room, room->base_room);                      // Update items to match this room
+        //Room_SwapItems(room, room->alternate_room);                 // Update items to match this room
         Room_Enable(room->base_room);                               // Enable original room
     }
 }
@@ -741,12 +743,13 @@ void World_SwapRoomToAlternate(world_p world, struct room_s *room)
 {
     if(room->alternate_room && room->active)                        // If room is active base room
     {
+        room->frustum = NULL;
+        room->alternate_room->frustum = NULL;
         renderer.CleanList();
         Room_Disable(room);                                         // Disable current room
         Room_Disable(room->alternate_room);                         // Paranoid
-        World_SwapRoomPortals(world, room, room->alternate_room);   // Update portals to match this room
-        Room_SwapItems(room, room->alternate_room);                 // Update items to match this room
-        Room_Enable(room->alternate_room);                          // Enable base room
+        //Room_SwapItems(room, room->alternate_room);                 // Update items to match this room
+        Room_Enable(room->alternate_room);                          //
     }
 }
 
@@ -794,7 +797,7 @@ void World_BuildOverlappedRoomsList(world_p world, struct room_s *room)
  */
 int World_SetFlipState(world_p world, uint32_t flip_index, uint32_t flip_state)
 {
-    flip_state = (flip_state > 1)?(1):(flip_state); // State is always boolean.
+    flip_state &= 0x01;  // State is always boolean.
 
     if(flip_index >= world->flip_count)
     {
@@ -805,29 +808,10 @@ int World_SetFlipState(world_p world, uint32_t flip_index, uint32_t flip_state)
     if(world->flip_map[flip_index] == 0x1F)         // Check flipmap state.
     {
         room_p current_room = world->rooms;
-
-        if(world->version > TR_III)
+        bool is_global_flip = world->version < TR_IV;
+        for(uint32_t i = 0; i < world->rooms_count; i++, current_room++)
         {
-            for(uint32_t i = 0; i < world->rooms_count; i++, current_room++)
-            {
-                if(current_room->content->alternate_group == flip_index)        // Check if group is valid.
-                {
-                    if(flip_state)
-                    {
-                        World_SwapRoomToAlternate(world, current_room);
-                    }
-                    else
-                    {
-                        World_SwapRoomToBase(world, current_room);
-                    }
-                }
-            }
-
-            world->flip_state[flip_index] = flip_state;
-        }
-        else
-        {
-            for(uint32_t i = 0; i < world->rooms_count; i++, current_room++)
+            if(is_global_flip || (current_room->content->alternate_group == flip_index))
             {
                 if(flip_state)
                 {
@@ -838,9 +822,8 @@ int World_SetFlipState(world_p world, uint32_t flip_index, uint32_t flip_state)
                     World_SwapRoomToBase(world, current_room);
                 }
             }
-
-            world->flip_state[0] = flip_state;    // In TR1-3, state is always global.
         }
+        world->flip_state[flip_index] = flip_state;
     }
 
     return 0;
@@ -935,23 +918,6 @@ void RBItemFree(void *x)
     free(x);
 }
 
-
-void World_SwapRoomPortals(world_p world, struct room_s *room, struct room_s *dest_room)
-{
-    //Update portals in room rooms
-    for(uint32_t i = 0; i < world->rooms_count; i++)//For every room in the world itself
-    {
-        for(uint16_t j = 0; j < world->rooms[i].portals_count; j++)//For every portal in this room
-        {
-            if(world->rooms[i].portals[j].dest_room->id == room->id)//If a portal is linked to the input room
-            {
-                world->rooms[i].portals[j].dest_room = dest_room;//The portal destination room is the destination room!
-                //Con_Printf("The current room %d! has room %d joined to it!", room->id, i);
-            }
-        }
-        World_BuildNearRoomsList(world, world->rooms + i); //Rebuild room near list!
-    }
-}
 
 /*
  * Load level functions

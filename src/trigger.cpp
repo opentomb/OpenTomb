@@ -354,15 +354,27 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_FLIPON:
-                    // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
-                    // the switch with FLIP_ON trigger, room will remain flipped.
-                    World_SetFlipState(&engine_world, command->operands, 1);
+                    {
+                        if(!Entity_GetLock(trig_entity))
+                        {
+                            // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
+                            // the switch with FLIP_ON trigger, room will remain flipped.
+                            World_SetFlipMap(&engine_world, command->operands, trigger->mask, 1);
+                            World_SetFlipState(&engine_world, command->operands, 1);
+                        }
+                    }
                     break;
 
                 case TR_FD_TRIGFUNC_FLIPOFF:
-                    // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
-                    // the switch with FLIP_OFF trigger, room will remain unflipped.
-                    World_SetFlipState(&engine_world, command->operands, 0);
+                    {
+                        if(!Entity_GetLock(trig_entity))
+                        {
+                            // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
+                            // the switch with FLIP_OFF trigger, room will remain unflipped.
+                            World_SetFlipMap(&engine_world, command->operands, trigger->mask, 0);
+                            World_SetFlipState(&engine_world, command->operands, 0);
+                        }
+                    }
                     break;
 
                 case TR_FD_TRIGFUNC_SET_TARGET:

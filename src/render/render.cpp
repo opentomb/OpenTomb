@@ -38,6 +38,11 @@ void CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour);
  * =============================================================================
  */
 
+inline bool Room_HasActiveVariant(room_p r)
+{
+    return r && (r->active || (r->alternate_room && r->alternate_room->active));
+}
+
 CRender::CRender():
 m_world(NULL),
 m_camera(NULL),
@@ -243,8 +248,19 @@ void CRender::GenWorldList(struct camera_s *cam)
     {
         curr_room->frustum = NULL;                                              // room with camera inside has no frustums!
         this->AddRoom(curr_room);                                               // room with camera inside adds to the render list immediately
-        portal_p p = curr_room->portals;                                        // pointer to the portals array
-        for(uint16_t i = 0; i < curr_room->portals_count; i++, p++)             // go through all start room portals
+        portal_p p;
+        uint16_t portals_count;
+        if(curr_room->base_room)
+        {
+            p = curr_room->base_room->portals;
+            portals_count = curr_room->base_room->portals_count;
+        }
+        else
+        {
+            p = curr_room->portals;
+            portals_count = curr_room->portals_count;
+        }
+        for(uint16_t i = 0; i < portals_count; i++, p++)                        // go through all start room portals
         {
             frustum_p last_frus = this->frustumManager->PortalFrustumIntersect(p, cam->frustum, cam);
             if(last_frus)
@@ -946,12 +962,14 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
     }
 #endif
 
-    if(!(r_flags & R_SKIP_ROOM) && room->content->mesh)
+    room_p real_room = (!room->active && room->alternate_room) ? (room->alternate_room) : (room);
+
+    if(!(r_flags & R_SKIP_ROOM) && real_room->content->mesh)
     {
         float modelViewProjectionTransform[16];
-        Mat4_Mat4_mul(modelViewProjectionTransform, modelViewProjectionMatrix, room->transform);
+        Mat4_Mat4_mul(modelViewProjectionTransform, modelViewProjectionMatrix, real_room->transform);
 
-        const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(room->content->light_mode == 1, room->flags & 1);
+        const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(real_room->content->light_mode == 1, room->flags & 1);
 
         GLfloat tint[4];
         CalculateWaterTint(tint, 1);
@@ -965,26 +983,26 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         qglUniform1fARB(shader->current_tick, (GLfloat) SDL_GetTicks());
         qglUniform1iARB(shader->sampler, 0);
         qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, modelViewProjectionTransform);
-        this->DrawMesh(room->content->mesh, NULL, NULL);
+        this->DrawMesh(real_room->content->mesh, NULL, NULL);
     }
 
-    if (room->content->static_mesh_count > 0)
+    if (real_room->content->static_mesh_count > 0)
     {
         qglUseProgramObjectARB(shaderManager->getStaticMeshShader()->program);
-        for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
+        for(uint32_t i = 0; i < real_room->content->static_mesh_count; i++)
         {
-            if(Frustum_IsOBBVisibleInFrustumList(room->content->static_mesh[i].obb, (room->frustum)?(room->frustum):(m_camera->frustum)) &&
-               (!room->content->static_mesh[i].hide || (r_flags & R_DRAW_DUMMY_STATICS)))
+            if(Frustum_IsOBBVisibleInFrustumList(real_room->content->static_mesh[i].obb, (room->frustum) ? (room->frustum) : (m_camera->frustum)) &&
+               (!real_room->content->static_mesh[i].hide || (r_flags & R_DRAW_DUMMY_STATICS)))
             {
-                Mat4_Mat4_mul(transform, modelViewProjectionMatrix, room->content->static_mesh[i].transform);
+                Mat4_Mat4_mul(transform, modelViewProjectionMatrix, real_room->content->static_mesh[i].transform);
                 qglUniformMatrix4fvARB(shaderManager->getStaticMeshShader()->model_view_projection, 1, false, transform);
-                base_mesh_s *mesh = room->content->static_mesh[i].mesh;
+                base_mesh_s *mesh = real_room->content->static_mesh[i].mesh;
                 GLfloat tint[4];
 
-                vec4_copy(tint, room->content->static_mesh[i].tint);
+                vec4_copy(tint, real_room->content->static_mesh[i].tint);
 
                 //If this static mesh is in a water room
-                if(room->flags & TR_ROOM_FLAG_WATER)
+                if(real_room->flags & TR_ROOM_FLAG_WATER)
                 {
                     CalculateWaterTint(tint, 0);
                 }
@@ -994,7 +1012,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         }
     }
 
-    for(cont = room->content->containers; cont; cont=cont->next)
+    for(cont = real_room->content->containers; cont; cont = cont->next)
     {
         switch(cont->object_type)
         {
@@ -1011,7 +1029,8 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
     for(uint16_t ni = 0; ni < room->near_room_list_size; ni++)
     {
         room_p near_room = room->near_room_list[ni];
-        if(near_room->active && !near_room->is_in_r_list)
+        near_room = (!near_room->active && near_room->alternate_room) ? (near_room->alternate_room) : (near_room);
+        if(near_room->active && !room->near_room_list[ni]->is_in_r_list)
         {
             if (near_room->content->static_mesh_count > 0)
             {
@@ -1117,33 +1136,32 @@ void CRender::DrawRoomSprites(struct room_s *room)
 int  CRender::AddRoom(struct room_s *room)
 {
     int ret = 0;
-    float dist, centre[3];
 
-    if(room->is_in_r_list || !room->active)
+
+    if(!room->is_in_r_list && Room_HasActiveVariant(room))
     {
-        return 0;
-    }
+        float dist, centre[3];
+        centre[0] = (room->bb_min[0] + room->bb_max[0]) / 2;
+        centre[1] = (room->bb_min[1] + room->bb_max[1]) / 2;
+        centre[2] = (room->bb_min[2] + room->bb_max[2]) / 2;
+        dist = vec3_dist(m_camera->pos, centre);
 
-    centre[0] = (room->bb_min[0] + room->bb_max[0]) / 2;
-    centre[1] = (room->bb_min[1] + room->bb_max[1]) / 2;
-    centre[2] = (room->bb_min[2] + room->bb_max[2]) / 2;
-    dist = vec3_dist(m_camera->pos, centre);
-
-    if(r_list_active_count < r_list_size)
-    {
-        r_list[r_list_active_count].room = room;
-        r_list[r_list_active_count].active = 1;
-        r_list[r_list_active_count].dist = dist;
-        r_list_active_count++;
-        ret++;
-
-        if(room->flags & TR_ROOM_FLAG_SKYBOX)
+        if(r_list_active_count < r_list_size)
         {
-            r_flags |= R_DRAW_SKYBOX;
-        }
-    }
+            r_list[r_list_active_count].room = room;
+            r_list[r_list_active_count].active = 1;
+            r_list[r_list_active_count].dist = dist;
+            r_list_active_count++;
+            ret++;
 
-    room->is_in_r_list = 1;
+            if(room->flags & TR_ROOM_FLAG_SKYBOX)
+            {
+                r_flags |= R_DRAW_SKYBOX;
+            }
+        }
+
+        room->is_in_r_list = 1;
+    }
 
     return ret;
 }
@@ -1160,7 +1178,7 @@ int CRender::ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
     room_p room = portal->dest_room;
     room_p src_room = portal->current_room;
 
-    if((src_room == NULL) || !src_room->active || (room == NULL) || !room->active)
+    if(!src_room || !Room_HasActiveVariant(room))
     {
         return 0;
     }
@@ -1168,7 +1186,7 @@ int CRender::ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
     for(uint16_t i = 0; i < room->portals_count; i++)
     {
         portal_p p = room->portals + i;
-        if((p->dest_room->active) && (p->dest_room != src_room))                // do not go back
+        if(Room_HasActiveVariant(p->dest_room) && (p->dest_room != src_room))   // do not go back
         {
             frustum_p gen_frus = frustumManager->PortalFrustumIntersect(p, frus, m_camera);
             if(gen_frus)
