@@ -263,7 +263,7 @@ std::tuple<float, float, float> lua_GetGravity()
 
 void lua_SetGravity(float x, lua::Value y, lua::Value z)                                             // function to be exported to Lua
 {
-    btVector3 g(x, y.is<lua::Number>() ? y.toNumber() : 0, z.is<lua::Number>() ? z.toNumber() : 0);
+    btVector3 g(x, y.is<btScalar>() ? y.to<btScalar>() : 0, z.is<btScalar>() ? z.to<btScalar>() : 0);
     engine::bt_engine_dynamicsWorld->setGravity(g);
     Console::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
 }
@@ -349,7 +349,7 @@ void lua_SetEntityActivationOffset(world::ObjectId id, float x, float y, float z
 
     ent->m_activationOffset = { x,y,z };
     if(r.is<lua::Number>())
-        ent->m_activationRadius = r.toNumber();
+        ent->m_activationRadius = r.to<glm::float_t>();
 }
 
 lua::Any lua_GetCharacterParam(world::ObjectId id, int parameter)
@@ -396,7 +396,7 @@ void lua_SetCharacterParam(world::ObjectId id, int parameter, float value, lua::
     else
     {
         ent->m_parameters.param[parameter] = value;
-        ent->m_parameters.maximum[parameter] = max_value.toNumber();
+        ent->m_parameters.maximum[parameter] = max_value.toFloat();
     }
 }
 
@@ -1213,7 +1213,7 @@ void lua_RotateEntityToEntity(world::ObjectId id1, world::ObjectId id2, int axis
 
         theta = glm::degrees(theta);
         if(add_angle_.is<lua::Number>())
-            theta += add_angle_.toNumber();
+            theta += add_angle_.to<glm::float_t>();
 
         glm::float_t delta = *targ_angle - theta;
 
@@ -1221,7 +1221,7 @@ void lua_RotateEntityToEntity(world::ObjectId id1, world::ObjectId id2, int axis
         {
             if(speed_.is<lua::Number>())
             {
-                glm::float_t speed = speed_.toNumber();
+                glm::float_t speed = speed_.to<glm::float_t>();
 
                 if(glm::abs(delta) > speed)
                 {
@@ -1286,7 +1286,7 @@ lua::Any lua_GetEntityOrientation(world::ObjectId id1, world::ObjectId id2, lua:
 
     glm::float_t theta = glm::degrees(glm::atan(-facing.x, facing.y));
     if(add_angle_.is<lua::Number>())
-        theta += add_angle_.toNumber();
+        theta += add_angle_.to<glm::float_t>();
 
     return util::wrapAngle(ent2->m_angles[0] - theta);
 }
@@ -1442,7 +1442,7 @@ bool lua_CanTriggerEntity(world::ObjectId id1, world::ObjectId id2, lua::Value r
     if(!rv.is<lua::Number>() || rv.toNumber()<0)
         r = e2->m_activationRadius;
     else
-        r = rv.toNumber();
+        r = rv.to<glm::float_t>();
 
     glm::vec3 offset;
     if(ofsX.is<lua::Number>() && ofsY.is<lua::Number>() && ofsZ.is<lua::Number>())
@@ -2620,7 +2620,7 @@ void lua_genUVRotateAnimation(world::ModelId id)
         seq->frames[j].mat[2] = 0.0;
         seq->frames[j].mat[3] = 1.0;
         seq->frames[j].move[0] = 0.0;
-        seq->frames[j].move[1] = -j * seq->uvrotate_speed;
+        seq->frames[j].move[1] = -seq->uvrotate_speed * j;
     }
 
     for(world::core::Polygon& p : model->meshes.front().mesh_base->m_transparencyPolygons)
@@ -3577,9 +3577,9 @@ void script::MainEngine::execEffect(int id, const boost::optional<world::ObjectI
 
 void script::ScriptEngine::parseControls(engine::ControlSettings& cs) const
 {
-    cs.mouse_sensitivity = (*this)["controls"]["mouse_sensitivity"].toNumber();
-    cs.mouse_scale_x = (*this)["controls"]["mouse_scale_x"].toNumber();
-    cs.mouse_scale_y = (*this)["controls"]["mouse_scale_y"].toNumber();
+    cs.mouse_sensitivity = (*this)["controls"]["mouse_sensitivity"].toFloat();
+    cs.mouse_scale_x = (*this)["controls"]["mouse_scale_x"].toFloat();
+    cs.mouse_scale_y = (*this)["controls"]["mouse_scale_y"].toFloat();
     cs.use_joy = (*this)["controls"]["use_joy"].toBool();
     cs.joy_number = (*this)["controls"]["joy_number"].toInt();
     cs.joy_rumble = (*this)["controls"]["joy_rumble"].toBool();
@@ -3589,11 +3589,11 @@ void script::ScriptEngine::parseControls(engine::ControlSettings& cs) const
     cs.joy_axis_map[engine::AXIS_MOVE_Y] = (*this)["controls"]["joy_move_axis_y"].toInt();
     cs.joy_look_invert_x = (*this)["controls"]["joy_look_invert_x"].toBool();
     cs.joy_look_invert_y = (*this)["controls"]["joy_look_invert_y"].toBool();
-    cs.joy_look_sensitivity = (*this)["controls"]["joy_look_sensitivity"].toNumber();
+    cs.joy_look_sensitivity = (*this)["controls"]["joy_look_sensitivity"].toFloat();
     cs.joy_look_deadzone = (*this)["controls"]["joy_look_deadzone"].toInt();
     cs.joy_move_invert_x = (*this)["controls"]["joy_move_invert_x"].toBool();
     cs.joy_move_invert_y = (*this)["controls"]["joy_move_invert_y"].toBool();
-    cs.joy_move_sensitivity = (*this)["controls"]["joy_move_sensitivity"].toNumber();
+    cs.joy_move_sensitivity = (*this)["controls"]["joy_move_sensitivity"].toFloat();
     cs.joy_move_deadzone = (*this)["controls"]["joy_move_deadzone"].toInt();
 }
 
@@ -3607,7 +3607,7 @@ void script::ScriptEngine::parseScreen(engine::ScreenInfo& sc) const
     sc.h_unit = sc.h / gui::ScreenMeteringResolution;
     sc.FS_flag = (*this)["screen"]["fullscreen"].toBool();
     sc.show_debuginfo = (*this)["screen"]["debug_info"].toBool();
-    sc.fov = (*this)["screen"]["fov"].toNumber();
+    sc.fov = (*this)["screen"]["fov"].toFloat();
     sc.vsync = (*this)["screen"]["vsync"].toBool();
 }
 
@@ -3615,7 +3615,7 @@ void script::ScriptEngine::parseRender(render::RenderSettings& rs) const
 {
     rs.mipmap_mode = (*this)["render"]["mipmap_mode"].toInt();
     rs.mipmaps = (*this)["render"]["mipmaps"].toInt();
-    rs.lod_bias = (*this)["render"]["lod_bias"].toNumber();
+    rs.lod_bias = (*this)["render"]["lod_bias"].toFloat();
     rs.anisotropy = (*this)["render"]["anisotropy"].toInt();
     rs.antialias = (*this)["render"]["antialias"].toBool();
     rs.antialias_samples = (*this)["render"]["antialias_samples"].toInt();
@@ -3623,13 +3623,13 @@ void script::ScriptEngine::parseRender(render::RenderSettings& rs) const
     rs.save_texture_memory = (*this)["render"]["save_texture_memory"].toBool();
     rs.z_depth = (*this)["render"]["z_depth"].toInt();
     rs.fog_enabled = (*this)["render"]["fog_enabled"].toBool();
-    rs.fog_start_depth = (*this)["render"]["fog_start_depth"].toNumber();
-    rs.fog_end_depth = (*this)["render"]["fog_end_depth"].toNumber();
-    rs.fog_color[0] = (*this)["render"]["fog_color"]["r"].toInt();
+    rs.fog_start_depth = (*this)["render"]["fog_start_depth"].toFloat();
+    rs.fog_end_depth = (*this)["render"]["fog_end_depth"].toFloat();
+    rs.fog_color[0] = (*this)["render"]["fog_color"]["r"].toFloat();
     rs.fog_color[0] /= 255.0;
-    rs.fog_color[1] = (*this)["render"]["fog_color"]["g"].toInt();
+    rs.fog_color[1] = (*this)["render"]["fog_color"]["g"].toFloat();
     rs.fog_color[1] /= 255.0;
-    rs.fog_color[2] = (*this)["render"]["fog_color"]["b"].toInt();
+    rs.fog_color[2] = (*this)["render"]["fog_color"]["b"].toFloat();
     rs.fog_color[2] /= 255.0;
     rs.fog_color[3] = 1;
 
@@ -3641,29 +3641,29 @@ void script::ScriptEngine::parseRender(render::RenderSettings& rs) const
 
 void script::ScriptEngine::parseAudio(audio::Settings& as) const
 {
-    as.music_volume = (*this)["audio"]["music_volume"].toNumber();
-    as.sound_volume = (*this)["audio"]["sound_volume"].toNumber();
+    as.music_volume = (*this)["audio"]["music_volume"].to<ALfloat>();
+    as.sound_volume = (*this)["audio"]["sound_volume"].to<ALfloat>();
     as.use_effects = (*this)["audio"]["use_effects"].toBool();
     as.listener_is_player = (*this)["audio"]["listener_is_player"].toBool();
     as.stream_buffer_size = (*this)["audio"]["stream_buffer_size"].toInt();
     as.stream_buffer_size *= 1024;
     if(as.stream_buffer_size <= 0)
         as.stream_buffer_size = 128 * 1024;
-    as.music_volume = (*this)["audio"]["music_volume"].toNumber();
-    as.music_volume = (*this)["audio"]["music_volume"].toNumber();
+    as.music_volume = (*this)["audio"]["music_volume"].to<ALfloat>();
+    as.music_volume = (*this)["audio"]["music_volume"].to<ALfloat>();
 }
 
 void script::ScriptEngine::parseConsole(gui::Console& cn) const
 {
     {
-        float r = (*this)["console"]["background_color"]["r"].toInt();
-        float g = (*this)["console"]["background_color"]["g"].toInt();
-        float b = (*this)["console"]["background_color"]["b"].toInt();
-        float a = (*this)["console"]["background_color"]["a"].toInt();
+        float r = (*this)["console"]["background_color"]["r"].toFloat();
+        float g = (*this)["console"]["background_color"]["g"].toFloat();
+        float b = (*this)["console"]["background_color"]["b"].toFloat();
+        float a = (*this)["console"]["background_color"]["a"].toFloat();
         cn.setBackgroundColor(r / 255, g / 255, b / 255, a / 255);
     }
 
-    float tmpF = (*this)["console"]["spacing"].toNumber();
+    float tmpF = (*this)["console"]["spacing"].toFloat();
     if(tmpF >= CON_MIN_LINE_INTERVAL && tmpF <= CON_MAX_LINE_INTERVAL)
         cn.setSpacing(tmpF);
 

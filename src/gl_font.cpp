@@ -189,7 +189,6 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
         size_t i0 = 0;
         for(size_t i = 0, x = 0; i < glf->glyphs.size(); i++)
         {
-            FT_GlyphSlot g;
             glf->glyphs[i].tex_index = 0;
 
             /* load glyph image into the slot (erase previous one) */
@@ -203,11 +202,11 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
                 continue;
             }
 
-            g = glf->ft_face->glyph;
+            FT_GlyphSlot g = glf->ft_face->glyph;
             glf->glyphs[i].width = g->bitmap.width;
             glf->glyphs[i].height = g->bitmap.rows;
-            glf->glyphs[i].advance_x = g->advance.x;
-            glf->glyphs[i].advance_y = g->advance.y;
+            glf->glyphs[i].advance_x = static_cast<GLfloat>(g->advance.x);
+            glf->glyphs[i].advance_y = static_cast<GLfloat>(g->advance.y);
             glf->glyphs[i].left = g->bitmap_left;
             glf->glyphs[i].top = g->bitmap_top;
 

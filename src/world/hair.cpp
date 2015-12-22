@@ -340,16 +340,16 @@ void HairSetup::getSetup(int hair_entry_index)
 
     m_model = res["model"].toInt();
     m_linkBody = res["link_body"].toInt();
-    m_rootWeight = res["props"]["root_weight"].toNumber();
-    m_tailWeight = res["props"]["tail_weight"].toNumber();
-    m_hairInertia = res["props"]["hair_inertia"].toNumber();
-    m_hairFriction = res["props"]["hair_friction"].toNumber();
-    m_hairRestitution = res["props"]["hair_bouncing"].toNumber();
-    m_jointOverlap = res["props"]["joint_overlap"].toNumber();
-    m_jointCfm = res["props"]["joint_cfm"].toNumber();
-    m_jointErp = res["props"]["joint_erp"].toNumber();
-    m_hairDamping[0] = res["props"]["hair_damping"][1].toNumber();
-    m_hairDamping[1] = res["props"]["hair_damping"][2].toNumber();
+    m_rootWeight = res["props"]["root_weight"].to<glm::float_t>();
+    m_tailWeight = res["props"]["tail_weight"].to<glm::float_t>();
+    m_hairInertia = res["props"]["hair_inertia"].to<glm::float_t>();
+    m_hairFriction = res["props"]["hair_friction"].to<glm::float_t>();
+    m_hairRestitution = res["props"]["hair_bouncing"].to<glm::float_t>();
+    m_jointOverlap = res["props"]["joint_overlap"].to<glm::float_t>();
+    m_jointCfm = res["props"]["joint_cfm"].to<glm::float_t>();
+    m_jointErp = res["props"]["joint_erp"].to<glm::float_t>();
+    m_hairDamping[0] = res["props"]["hair_damping"][1].to<glm::float_t>();
+    m_hairDamping[1] = res["props"]["hair_damping"][2].to<glm::float_t>();
     m_headOffset = { res["offset"][1].toFloat(), res["offset"][2].toFloat(), res["offset"][3].toFloat() };
     m_rootAngle = { res["root_angle"][1].toFloat(), res["root_angle"][2].toFloat(), res["root_angle"][3].toFloat() };
 }

@@ -360,16 +360,16 @@ void BaseMesh::genFaces()
                 m_transparentPolygons[transparentPolygonStart].isAnimated = true;
                 transparentPolygonStart += 1;
             }
-            uint32_t backwardsStart = oldStart + backwardsStartOffset;
+            size_t backwardsStart = oldStart + backwardsStartOffset;
 
             // Render the polygon as a triangle fan. That is obviously correct for
             // a triangle and also correct for any quad.
-            uint32_t startElement = static_cast<uint32_t>(addAnimatedVertex(p.vertices[0]));
-            uint32_t previousElement = static_cast<uint32_t>(addAnimatedVertex(p.vertices[1]));
+            size_t startElement = addAnimatedVertex(p.vertices[0]);
+            size_t previousElement = addAnimatedVertex(p.vertices[1]);
 
             for(size_t j = 2; j < p.vertices.size(); j++)
             {
-                uint32_t thisElement = static_cast<uint32_t>(addAnimatedVertex(p.vertices[j]));
+                size_t thisElement = addAnimatedVertex(p.vertices[j]);
 
                 m_allAnimatedElements[oldStart + (j - 2) * 3 + 0] = startElement;
                 m_allAnimatedElements[oldStart + (j - 2) * 3 + 1] = previousElement;
