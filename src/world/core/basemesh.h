@@ -27,7 +27,7 @@ struct BaseMesh
 
     std::vector<Polygon> m_transparencyPolygons;
 
-    uint32_t              m_texturePageCount;
+    size_t m_texturePageCount;
     std::vector<size_t> m_elementsPerTexture;
     std::vector<GLuint> m_elements;
     size_t m_alphaElements;
@@ -42,7 +42,7 @@ struct BaseMesh
     std::vector<render::TransparentPolygonReference> m_transparentPolygons;
 
     glm::vec3 m_center; //!< geometry center of mesh
-    BoundingBox boundingBox; //!< AABB bounding volume
+    BoundingBox m_boundingBox; //!< AABB bounding volume
     glm::float_t m_radius; //!< radius of the bounding sphere
 
 #pragma pack(push,1)

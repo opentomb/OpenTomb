@@ -127,7 +127,7 @@ void Skeleton::copyMeshBinding(const SkeletalModel* model, bool resetMeshSlot)
     }
 }
 
-void Skeleton::setAnimation(int animation, int frame)
+void Skeleton::setAnimation(AnimationId animation, int frame)
 {
     // FIXME: is anim < 0 actually happening?
     animation = animation < 0 ? 0 : animation;
@@ -187,7 +187,7 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
     m_previousAnimation.frame = m_currentAnimation.frame;
     m_animationTime -= AnimationFrameTime;
 
-    uint16_t frame_id = m_currentAnimation.frame + 1;
+    size_t frame_id = m_currentAnimation.frame + 1;
 
     // check anim flags:
     if(m_mode == AnimationMode::LoopLastFrame)
@@ -218,7 +218,7 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
 
     // check state change:
     AnimUpdate stepResult = AnimUpdate::NewFrame;
-    auto anim_id = m_currentAnimation.animation;
+    AnimationId anim_id = m_currentAnimation.animation;
     if(m_currentAnimation.state != m_previousAnimation.state)
     {
         if(m_model->findStateChange(m_currentAnimation.state, anim_id, frame_id))
@@ -310,10 +310,10 @@ void Skeleton::updateTransform(const glm::mat4& entityTransform)
 
 void Skeleton::updateBoundingBox()
 {
-    m_boundingBox = m_bones[0].mesh->boundingBox;
+    m_boundingBox = m_bones[0].mesh->m_boundingBox;
     for(const Bone& bone : m_bones)
     {
-        m_boundingBox.adjust(glm::vec3(bone.full_transform[3]), bone.mesh->boundingBox.getOuterDiameter() * 0.5f);
+        m_boundingBox.adjust(glm::vec3(bone.full_transform[3]), bone.mesh->m_boundingBox.getOuterDiameter() * 0.5f);
     }
 }
 
@@ -326,7 +326,7 @@ void Skeleton::createGhosts(Entity& entity)
 
     for(world::animation::Bone& bone : m_bones)
     {
-        glm::vec3 box = GhostVolumeCollisionCoefficient * bone.mesh->boundingBox.getDiameter();
+        glm::vec3 box = GhostVolumeCollisionCoefficient * bone.mesh->m_boundingBox.getDiameter();
         bone.shape = std::make_shared<btBoxShape>(util::convert(box));
         bone.shape->setMargin(COLLISION_MARGIN_DEFAULT);
         bone.mesh->m_radius = std::min(std::min(box.x, box.y), box.z);
@@ -466,7 +466,7 @@ bool Skeleton::createRagdoll(const RDSetup& setup)
 
         if(!m_bones[i].parent)
         {
-            glm::float_t r = m_bones[i].mesh->boundingBox.getInnerDiameter();
+            glm::float_t r = m_bones[i].mesh->m_boundingBox.getInnerDiameter();
             m_bones[i].bt_body->setCcdMotionThreshold(0.8f * r);
             m_bones[i].bt_body->setCcdSweptSphereRadius(r);
         }
@@ -547,7 +547,7 @@ void Skeleton::genRigidBody(Entity& entity)
 
             case world::CollisionShape::Box:
             default:
-                cshape = core::BT_CSfromBBox(bone.mesh->boundingBox, true, true);
+                cshape = core::BT_CSfromBBox(bone.mesh->m_boundingBox, true, true);
                 break;
         };
 

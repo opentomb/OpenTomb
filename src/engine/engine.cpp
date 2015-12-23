@@ -957,10 +957,6 @@ int loadMap(const std::string& name)
             break;
     }
 
-    engine_world.id = 0;
-    engine_world.name = nullptr;
-    engine_world.type = 0;
-
     Game_Prepare();
 
     engine_lua.prepare();

@@ -353,7 +353,7 @@ struct Character : public Entity
 
     std::vector<std::shared_ptr<Hair>> m_hairs{};
 
-    int m_currentWeapon = 0;
+    ModelId m_currentWeapon = 0;
     WeaponState m_currentWeaponState = WeaponState::Hide;
 
     int8_t m_camFollowCenter = 0;

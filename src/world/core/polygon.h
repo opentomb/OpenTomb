@@ -1,10 +1,12 @@
 #pragma once
 
-#include <cstdint>
-#include <vector>
-
 #include "loader/datatypes.h"
 #include "util/vmath.h"
+
+#include <boost/optional.hpp>
+
+#include <cstdint>
+#include <vector>
 
 namespace world
 {
@@ -19,10 +21,7 @@ enum class SplitType
     InBoth
 };
 
-namespace
-{
 constexpr float SplitEpsilon = 0.02f;
-}
 
 struct BoundingBox;
 
@@ -40,13 +39,13 @@ struct Vertex
 
 struct Polygon
 {
-    std::vector<Vertex> vertices{ 4 };                                              // vertices data
-    uint16_t            tex_index = 0;                                              // texture index
-    uint16_t            anim_id = 0;                                                // anim texture ID
-    uint16_t            frame_offset = 0;                                           // anim texture frame offset
-    loader::BlendingMode blendMode = loader::BlendingMode::Opaque;                  // transparency information
-    bool                double_side = false;                                        // double side flag
-    util::Plane plane;                                               // polygon plane equation
+    std::vector<Vertex> vertices{ 4 }; //!< vertices data
+    size_t textureIndex = 0; //!< texture index
+    boost::optional<size_t> textureAnimationId = boost::none; //!< anim texture ID
+    size_t startFrame = 0; //!< anim texture frame offset
+    loader::BlendingMode blendMode = loader::BlendingMode::Opaque; //!< transparency information
+    bool isDoubleSided = false;  //!< double side flag
+    util::Plane plane; //!< polygon plane equation
 
     bool isBroken() const;
 

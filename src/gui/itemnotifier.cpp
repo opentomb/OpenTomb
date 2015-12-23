@@ -94,7 +94,7 @@ void ItemNotifier::Draw() const
     if(!item)
         return;
 
-    const auto anim = item->bf->getCurrentAnimation();
+    const world::animation::AnimationId anim = item->bf->getCurrentAnimation();
     const auto frame = item->bf->getCurrentFrame();
 
     item->bf->setCurrentAnimation(0);

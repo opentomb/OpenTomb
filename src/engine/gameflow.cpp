@@ -36,7 +36,7 @@ void Gameflow::execute()
                 if(gui::getFaderStatus(gui::FaderType::LoadScreen) == gui::FaderStatus::Complete && !engine_world.audioEngine.isTrackPlaying())
                 {
                     int id = 0;
-                    lua::tie(m_currentLevelPath, m_currentLevelName, id) = engine_lua["getNextLevel"](int(m_currentGameID), int(m_currentLevelID), int(action.operand));
+                    lua::tie(m_currentLevelPath, m_currentLevelName, id) = engine_lua["getNextLevel"](m_currentGameID, m_currentLevelID, action.operand);
                     m_currentLevelID = id;
                     engine::loadMap(m_currentLevelPath);
                     action.opcode = Opcode::Sentinel;

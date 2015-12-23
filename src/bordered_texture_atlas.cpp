@@ -336,7 +336,7 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
     const FileObjectTexture& file_object_texture = m_fileObjectTextures[texture];
     const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[file_object_texture.canonical_texture_index];
 
-    poly.tex_index = static_cast<uint16_t>( canonical.new_page );
+    poly.textureIndex = canonical.new_page;
     for (size_t i = 0; i < poly.vertices.size(); i++)
     {
         unsigned x_coord = 0;

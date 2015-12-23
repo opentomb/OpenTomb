@@ -33,6 +33,8 @@ struct BaseMesh;
 namespace animation
 {
 
+using AnimationId = uint32_t;
+
 //! Default fixed TR framerate needed for animation calculation
 constexpr float AnimationFrameRate = 30;
 constexpr util::Duration AnimationFrameTime = util::fromSeconds(1.0f / AnimationFrameRate);
@@ -68,7 +70,7 @@ struct AnimatedVertex
 };
 
 // Animated texture types
-enum class AnimTextureType
+enum class TextureAnimationType
 {
     Forward,
     Backward,
@@ -78,57 +80,52 @@ enum class AnimTextureType
 /*
  *  Animated sequence. Used globally with animated textures to refer its parameters and frame numbers.
  */
-struct TexFrame
+struct TextureAnimationKeyFrame
 {
-    glm::float_t mat[4];
-    glm::float_t move[2];
-    uint16_t tex_ind;
+    glm::mat2 coordinateTransform;
+    glm::vec2 move;
+    size_t textureIndex;
 };
 
-struct AnimSeq
+struct TextureAnimationSequence
 {
-    bool uvrotate = false;   // UVRotate mode flag.
-    bool frame_lock = false; // Single frame mode. Needed for TR4-5 compatible UVRotate.
+    bool uvrotate = false;   //!< UVRotate mode flag.
+    glm::float_t uvrotateSpeed;   // Speed of UVRotation, in seconds.
+    glm::float_t uvrotateMax;     // Reference value used to restart rotation.
 
-    bool blend;              // Blend flag.  Reserved for future use!
-    glm::float_t blend_rate; // Blend rate.  Reserved for future use!
-    glm::float_t blend_time; // Blend value. Reserved for future use!
+    bool frame_lock = false; //!< Single frame mode. Needed for TR4-5 compatible UVRotate.
 
-    AnimTextureType anim_type = AnimTextureType::Forward;
-    bool reverse_direction = false;    // Used only with type 2 to identify current animation direction.
-    util::Duration frame_time = util::Duration::zero(); // Time passed since last frame update.
-    uint16_t current_frame = 0;    // Current frame for this sequence.
-    util::Duration frame_duration = util::MilliSeconds(50); // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
+    TextureAnimationType textureType = TextureAnimationType::Forward;
+    bool reverse = false;    // Used only with type 2 to identify current animation direction.
+    util::Duration frameTime = util::Duration::zero(); // Time passed since last frame update.
+    size_t currentFrame = 0;    // Current frame for this sequence.
+    util::Duration timePerFrame = util::MilliSeconds(50); // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
 
-    glm::float_t uvrotate_speed;   // Speed of UVRotation, in seconds.
-    glm::float_t uvrotate_max;     // Reference value used to restart rotation.
-    glm::float_t current_uvrotate; // Current coordinate window position.
-
-    std::vector<TexFrame> frames;
-    std::vector<uint32_t> frame_list; // Offset into anim textures frame list.
+    std::vector<TextureAnimationKeyFrame> keyFrames;
+    std::vector<size_t> textureIndices; // Offset into anim textures frame list.
 };
 
 struct AnimationState
 {
-    uint16_t animation = 0;
-    uint16_t frame = 0;
+    AnimationId animation = 0;
+    size_t frame = 0;
     LaraState state = LaraState::WalkForward;
 };
 
 /*
  * animation switching control structure
  */
-struct AnimDispatch
+struct AnimationDispatch
 {
     AnimationState next;  //!< "switch to" animation
-    uint16_t frame_low;  //!< low border of state change condition
-    uint16_t frame_high; //!< high border of state change condition
+    size_t start;  //!< low border of state change condition
+    size_t end; //!< high border of state change condition
 };
 
 struct StateChange
 {
     LaraState id;
-    std::vector<AnimDispatch> anim_dispatch;
+    std::vector<AnimationDispatch> dispatches;
 };
 
 /**
@@ -150,45 +147,27 @@ struct SkeletonKeyFrame
     core::BoundingBox boundingBox;
 };
 
+
 /**
  * A sequence of keyframes.
  */
 struct Animation
 {
-    uint32_t id;
+    AnimationId id;
     int32_t speed_x; // Forward-backward speed
     int32_t accel_x; // Forward-backward accel
     int32_t speed_y; // Left-right speed
     int32_t accel_y; // Left-right accel
-    uint32_t anim_command;
-    uint32_t num_anim_commands;
+    size_t animationCommand;
+    size_t animationCommandCount;
     LaraState state_id;
 
     boost::container::flat_map<LaraState, StateChange> stateChanges;
 
     Animation* next_anim = nullptr; // Next default animation
-    int next_frame;                 // Next default frame
+    size_t next_frame;                 // Next default frame
 
     std::vector<AnimCommand> finalAnimCommands; // cmds for end-of-anim
-
-    const StateChange* findStateChangeByAnim(int nextAnimId) const noexcept
-    {
-        if(nextAnimId < 0)
-            return nullptr;
-
-        for(const auto& stateChange : stateChanges)
-        {
-            for(const AnimDispatch& dispatch : stateChange.second.anim_dispatch)
-            {
-                if(dispatch.next.animation == nextAnimId)
-                {
-                    return &stateChange.second;
-                }
-            }
-        }
-
-        return nullptr;
-    }
 
     const StateChange* findStateChangeByID(LaraState id) const noexcept
     {
@@ -298,13 +277,15 @@ enum class AnimationMode
     Locked
 };
 
+using BoneId = uint32_t;
+
 /**
  * @brief A single bone in a @c Skeleton
  */
 struct Bone
 {
     Bone* parent;
-    uint16_t index;
+    BoneId index;
     std::shared_ptr<core::BaseMesh> mesh; //!< The mesh this bone deforms
     std::shared_ptr<core::BaseMesh> mesh_skin;
     std::shared_ptr<core::BaseMesh> mesh_slot; //!< Optional additional mesh
@@ -350,40 +331,40 @@ class Skeleton
 
     const Animation& getCurrentAnimationFrame() const;
     AnimUpdate stepAnimation(util::Duration time, Entity* cmdEntity = nullptr);
-    void setAnimation(int animation, int frame = 0);
+    void setAnimation(AnimationId animation, int frame = 0);
 
-    uint16_t getCurrentAnimation() const noexcept
+    AnimationId getCurrentAnimation() const noexcept
     {
         return m_currentAnimation.animation;
     }
-    void setCurrentAnimation(uint16_t value) noexcept
+    void setCurrentAnimation(AnimationId value) noexcept
     {
         m_currentAnimation.animation = value;
     }
 
-    uint16_t getPreviousAnimation() const noexcept
+    AnimationId getPreviousAnimation() const noexcept
     {
         return m_previousAnimation.animation;
     }
-    void setPreviousAnimation(uint16_t value) noexcept
+    void setPreviousAnimation(AnimationId value) noexcept
     {
         m_previousAnimation.animation = value;
     }
 
-    uint16_t getCurrentFrame() const noexcept
+    size_t getCurrentFrame() const noexcept
     {
         return m_currentAnimation.frame;
     }
-    void setCurrentFrame(uint16_t value) noexcept
+    void setCurrentFrame(size_t value) noexcept
     {
         m_currentAnimation.frame = value;
     }
 
-    uint16_t getPreviousFrame() const noexcept
+    size_t getPreviousFrame() const noexcept
     {
         return m_previousAnimation.frame;
     }
-    void setPreviousFrame(uint16_t value) noexcept
+    void setPreviousFrame(size_t value) noexcept
     {
         m_previousAnimation.frame = value;
     }

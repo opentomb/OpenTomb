@@ -9,7 +9,7 @@ namespace world
 
 struct StaticMesh : public Object
 {
-    explicit StaticMesh(uint32_t id, Room* room = nullptr)
+    explicit StaticMesh(ObjectId id, Room* room = nullptr)
         : Object(id, room)
     {
     }

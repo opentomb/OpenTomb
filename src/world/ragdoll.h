@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cstdint>
-#include <string>
-#include <vector>
+#include "animation/animation.h"
 
 #include <LinearMath/btVector3.h>
+
+#include <vector>
 
 namespace world
 {
@@ -23,7 +23,7 @@ struct RDJointSetup
         Cone = 2
     };
 
-    uint16_t        body_index;     // Primary body index
+    animation::BoneId body_index;     // Primary body index
     Type joint_type;     // See above as RD_CONSTRAINT_* definitions.
 
     btVector3       body1_offset;   // Primary pivot point offset

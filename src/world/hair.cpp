@@ -55,8 +55,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
     // last element of the hair, as it indicates absence of "child" constraint.
 
     m_rootIndex = 0;
-    BOOST_ASSERT( m_elements.size() <= 256 );
-    m_tailIndex = static_cast<uint8_t>( m_elements.size() - 1 );
+    m_tailIndex = m_elements.size() - 1;
 
     // Weight step is needed to determine the weight of each hair body.
     // It is derived from root body weight and tail body weight.
@@ -159,7 +158,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
         {
             // Adjust pivot point A to previous mesh's length, considering mesh overlap multiplier.
 
-            body_length = glm::abs(m_elements[i - 1].mesh->boundingBox.max[1] - m_elements[i - 1].mesh->boundingBox.min[1]) * setup->m_jointOverlap;
+            body_length = glm::abs(m_elements[i - 1].mesh->m_boundingBox.max[1] - m_elements[i - 1].mesh->m_boundingBox.min[1]) * setup->m_jointOverlap;
 
             localA.setOrigin(btVector3(joint_x, body_length, joint_y));
             localA.getBasis().setEulerZYX(0, SIMD_HALF_PI, 0);
@@ -253,7 +252,7 @@ void Hair::createHairMesh(const SkeletalModel& model)
     m_mesh->m_matrixIndices.resize(m_mesh->m_vertices.size());
 
     // Copy information
-    std::vector<uint32_t> elementsStartPerTexture(m_mesh->m_texturePageCount);
+    std::vector<size_t> elementsStartPerTexture(m_mesh->m_texturePageCount);
     m_mesh->m_vertices.clear();
     for(size_t i = 0; i < model.meshes.size(); i++)
     {
@@ -264,7 +263,7 @@ void Hair::createHairMesh(const SkeletalModel& model)
         m_mesh->m_vertices.insert(m_mesh->m_vertices.end(), original->m_vertices.begin(), original->m_vertices.end());
 
         // Copy elements
-        uint32_t originalElementsStart = 0;
+        size_t originalElementsStart = 0;
         for(size_t page = 0; page < original->m_texturePageCount; page++)
         {
             if (original->m_elementsPerTexture[page] == 0)
@@ -339,7 +338,7 @@ void HairSetup::getSetup(int hair_entry_index)
         return;
 
     m_model = res["model"].toInt();
-    m_linkBody = res["link_body"].toInt();
+    m_linkBody = res["link_body"].to<animation::BoneId>();
     m_rootWeight = res["props"]["root_weight"].to<glm::float_t>();
     m_tailWeight = res["props"]["tail_weight"].to<glm::float_t>();
     m_hairInertia = res["props"]["hair_inertia"].to<glm::float_t>();

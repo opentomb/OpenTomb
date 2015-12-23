@@ -475,12 +475,12 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
                     sound_index = 18;
                 }
 
-                if(command.param[0] & TR_ANIMCOMMAND_CONDITION_WATER)
+                if(command.param[0] & animation::TR_ANIMCOMMAND_CONDITION_WATER)
                 {
                     if(getSubstanceState() == Substance::WaterShallow)
                         engine::engine_world.audioEngine.send(sound_index, audio::EmitterType::Entity, getId());
                 }
-                else if(command.param[0] & TR_ANIMCOMMAND_CONDITION_LAND)
+                else if(command.param[0] & animation::TR_ANIMCOMMAND_CONDITION_LAND)
                 {
                     if(getSubstanceState() != Substance::WaterShallow)
                         engine::engine_world.audioEngine.send(sound_index, audio::EmitterType::Entity, getId());
@@ -565,7 +565,7 @@ void Entity::processSector()
     }
 }
 
-void Entity::setAnimation(int animation, int frame)
+void Entity::setAnimation(animation::AnimationId animation, int frame)
 {
     m_skeleton.setAnimation(animation, frame);
 
@@ -583,13 +583,13 @@ boost::optional<size_t> Entity::getAnimDispatchCase(LaraState id) const
     if(!stc)
         return boost::none;
 
-    for(size_t j = 0; j < stc->anim_dispatch.size(); j++)
+    for(size_t j = 0; j < stc->dispatches.size(); j++)
     {
-        const animation::AnimDispatch& disp = stc->anim_dispatch[j];
+        const animation::AnimationDispatch& disp = stc->dispatches[j];
 
-        if(   disp.frame_high >= disp.frame_low
-           && m_skeleton.getCurrentFrame() >= disp.frame_low
-           && m_skeleton.getCurrentFrame() <= disp.frame_high)
+        if(   disp.end >= disp.start
+           && m_skeleton.getCurrentFrame() >= disp.start
+           && m_skeleton.getCurrentFrame() <= disp.end)
         {
             return j;
         }

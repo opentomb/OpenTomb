@@ -43,10 +43,11 @@ enum class CameraTarget
 
 namespace
 {
-constexpr float MaxShakeDistance = 8192;
-constexpr float DefaultShakePower = 100;
 const glm::float_t CameraRotationSpeed = glm::radians(1.0f);
 } // anonymous namespace
+
+constexpr float MaxShakeDistance = 8192;
+constexpr float DefaultShakePower = 100;
 
 class Camera
 {

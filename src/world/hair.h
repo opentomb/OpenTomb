@@ -21,6 +21,8 @@ namespace world
 #define HAIR_TR5_KID_2 7
 #define HAIR_TR5_OLD   8
 
+using HairElementId = uint32_t;
+
 struct HairElement
 {
     std::shared_ptr<core::BaseMesh> mesh;           // Pointer to rendered mesh.
@@ -36,11 +38,11 @@ struct HairSetup;
 struct Hair : public Object
 {
     std::weak_ptr<Entity> m_ownerChar;         // Entity who owns this hair.
-    uint32_t m_ownerBody = 0;         // Owner entity's body ID.
+    animation::BoneId m_ownerBody = 0;         // Owner entity's body ID.
     glm::mat4 m_ownerBodyHairRoot{ 1.0f }; // transform from owner body to root of hair start
 
-    uint8_t m_rootIndex = 0;         // Index of "root" element.
-    uint8_t m_tailIndex = 0;         // Index of "tail" element.
+    HairElementId m_rootIndex = 0;         // Index of "root" element.
+    HairElementId m_tailIndex = 0;         // Index of "tail" element.
 
     std::vector<HairElement> m_elements;           // Array of elements.
 
@@ -66,7 +68,7 @@ private:
 struct HairSetup
 {
     ModelId      m_model;              // Hair model ID
-    uint32_t     m_linkBody;          // Lara's head mesh index
+    animation::BoneId m_linkBody;          // Lara's head mesh index
 
     glm::float_t     m_rootWeight;        // Root and tail hair body weight. Intermediate body
     glm::float_t     m_tailWeight;        // weights are calculated from these two parameters

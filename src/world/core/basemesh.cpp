@@ -12,11 +12,11 @@ void BaseMesh::polySortInMesh()
 {
     for(Polygon& p : m_polygons)
     {
-        if(p.anim_id > 0 && p.anim_id <= engine::engine_world.anim_sequences.size())
+        if(p.textureAnimationId && p.textureAnimationId <= engine::engine_world.textureAnimations.size())
         {
-            animation::AnimSeq* seq = &engine::engine_world.anim_sequences[p.anim_id - 1];
+            animation::TextureAnimationSequence* seq = &engine::engine_world.textureAnimations[*p.textureAnimationId];
             // set tex coordinates to the first frame for correct texture transform in renderer
-            engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, p, 0, seq->uvrotate);
+            engine::engine_world.tex_atlas->getCoordinates(seq->textureIndices[0], false, p, 0, seq->uvrotate);
         }
 
         if(p.blendMode != loader::BlendingMode::Opaque && p.blendMode != loader::BlendingMode::Transparent)
@@ -48,13 +48,13 @@ void BaseMesh::updateBoundingBox()
 {
     if(!m_vertices.empty())
     {
-        boundingBox.min = boundingBox.max = m_vertices.front().position;
+        m_boundingBox.min = m_boundingBox.max = m_vertices.front().position;
         for(const auto& v : m_vertices)
         {
-            boundingBox.adjust(v.position);
+            m_boundingBox.adjust(v.position);
         }
 
-        m_center = boundingBox.getCenter();
+        m_center = m_boundingBox.getCenter();
     }
 }
 
@@ -81,7 +81,7 @@ void BaseMesh::genVBO()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vboIndexArray);
 
     GLsizeiptr elementsSize = sizeof(GLuint) * m_alphaElements;
-    for(uint32_t i = 0; i < m_texturePageCount; i++)
+    for(size_t i = 0; i < m_texturePageCount; i++)
     {
         elementsSize += sizeof(GLuint) * m_elementsPerTexture[i];
     }
@@ -238,14 +238,14 @@ void BaseMesh::genFaces()
             continue;
 
         size_t elementCount = (p.vertices.size() - 2) * 3;
-        if(p.double_side)
+        if(p.isDoubleSided)
             elementCount *= 2;
 
-        if(p.anim_id == 0)
+        if(!p.textureAnimationId)
         {
             if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
             {
-                m_elementsPerTexture[p.tex_index] += elementCount;
+                m_elementsPerTexture[p.textureIndex] += elementCount;
                 numNormalElements += elementCount;
             }
             else
@@ -269,7 +269,7 @@ void BaseMesh::genFaces()
     m_elements.resize(numNormalElements + m_alphaElements);
     size_t elementOffset = 0;
     std::vector<size_t> startPerTexture(m_texturePageCount, 0);
-    for(uint32_t i = 0; i < m_texturePageCount; i++)
+    for(size_t i = 0; i < m_texturePageCount; i++)
     {
         startPerTexture[i] = elementOffset;
         elementOffset += m_elementsPerTexture[i];
@@ -290,21 +290,20 @@ void BaseMesh::genFaces()
 
         size_t elementCount = (p.vertices.size() - 2) * 3;
         size_t backwardsStartOffset = elementCount;
-        if(p.double_side)
+        if(p.isDoubleSided)
         {
             elementCount *= 2;
         }
 
-        if(p.anim_id == 0)
+        if(!p.textureAnimationId)
         {
             // Not animated
-            uint32_t texture = p.tex_index;
 
             size_t oldStart;
             if(p.blendMode == loader::BlendingMode::Opaque || p.blendMode == loader::BlendingMode::Transparent)
             {
-                oldStart = startPerTexture[texture];
-                startPerTexture[texture] += elementCount;
+                oldStart = startPerTexture[p.textureIndex];
+                startPerTexture[p.textureIndex] += elementCount;
             }
             else
             {
@@ -331,7 +330,7 @@ void BaseMesh::genFaces()
                 m_elements[oldStart + (j - 2) * 3 + 1] = previousElement;
                 m_elements[oldStart + (j - 2) * 3 + 2] = thisElement;
 
-                if(p.double_side)
+                if(p.isDoubleSided)
                 {
                     m_elements[backwardsStart + (j - 2) * 3 + 0] = startElement;
                     m_elements[backwardsStart + (j - 2) * 3 + 1] = thisElement;
@@ -375,7 +374,7 @@ void BaseMesh::genFaces()
                 m_allAnimatedElements[oldStart + (j - 2) * 3 + 1] = previousElement;
                 m_allAnimatedElements[oldStart + (j - 2) * 3 + 2] = thisElement;
 
-                if(p.double_side)
+                if(p.isDoubleSided)
                 {
                     m_allAnimatedElements[backwardsStart + (j - 2) * 3 + 0] = startElement;
                     m_allAnimatedElements[backwardsStart + (j - 2) * 3 + 1] = thisElement;

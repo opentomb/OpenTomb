@@ -126,20 +126,22 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh) cons
         size_t offset = 0;
         for(const world::core::Polygon& p : mesh->m_polygons)
         {
-            if(p.anim_id == 0 || p.isBroken())
+            if(!p.textureAnimationId || p.isBroken())
             {
                 continue;
             }
 
-            world::animation::AnimSeq* seq = &engine::engine_world.anim_sequences[p.anim_id - 1];
+            world::animation::TextureAnimationSequence* seq = &engine::engine_world.textureAnimations[*p.textureAnimationId];
 
-            uint16_t frame = (seq->current_frame + p.frame_offset) % seq->frames.size();
-            world::animation::TexFrame* tf = &seq->frames[frame];
+            size_t frame = (seq->currentFrame + p.startFrame) % seq->keyFrames.size();
+            world::animation::TextureAnimationKeyFrame* tf = &seq->keyFrames[frame];
             for(const world::core::Vertex& vert : p.vertices)
             {
+                BOOST_ASSERT(offset < mesh->m_animatedVertices.size());
+
                 const auto& v = vert.tex_coord;
-                data[offset][0] = tf->mat[0 + 0 * 2] * v[0] + tf->mat[0 + 1 * 2] * v[1] + tf->move[0];
-                data[offset][1] = tf->mat[1 + 0 * 2] * v[0] + tf->mat[1 + 1 * 2] * v[1] + tf->move[1];
+                data[offset][0] = glm::dot(tf->coordinateTransform[0], v) + tf->move.x;
+                data[offset][1] = glm::dot(tf->coordinateTransform[1], v) + tf->move.y;
 
                 ++offset;
             }
@@ -163,7 +165,7 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh) cons
         const uint32_t* const elementsbase = nullptr;
 
         size_t offset = 0;
-        for(uint32_t texture = 0; texture < mesh->m_texturePageCount; texture++)
+        for(size_t texture = 0; texture < mesh->m_texturePageCount; texture++)
         {
             if(mesh->m_elementsPerTexture[texture] == 0)
             {
@@ -220,7 +222,7 @@ void Render::renderPolygonTransparency(loader::BlendingMode currentTransparency,
     glUniformMatrix4fv(shader.model_view_projection, 1, false, glm::value_ptr(mvp));
 
     bsp_ref.polygon->used_vertex_array->bind();
-    glBindTexture(GL_TEXTURE_2D, m_world->textures[bsp_ref.polygon->polygon->tex_index]);
+    glBindTexture(GL_TEXTURE_2D, m_world->textures[bsp_ref.polygon->polygon->textureIndex]);
 
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(bsp_ref.polygon->count), GL_UNSIGNED_INT, reinterpret_cast<GLvoid *>(sizeof(GLuint) * bsp_ref.polygon->firstIndex));
 }

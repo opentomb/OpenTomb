@@ -828,7 +828,7 @@ namespace world
                             break;
                         case TR_FD_TRIGTYPE_CRAWLDUCK:
                             // Check state range for triggering entity.
-                            snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
+                            snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", animation::TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, animation::TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
                             condition = true;  // Set additional condition.
                             break;
                     }
@@ -1356,19 +1356,19 @@ namespace world
         //Sys_DebugLog("anim_transform.txt", "MODEL[%d]", model.id);
         for(size_t anim = 0; anim < model.animations.size(); anim++)
         {
-            if(model.animations[anim].num_anim_commands > 255)
+            if(model.animations[anim].animationCommandCount > 255)
             {
                 continue;                                                           // If no anim commands or current anim has more than 255 (according to TRosettaStone).
             }
 
             animation::Animation* af = &model.animations[anim];
-            if(af->num_anim_commands == 0)
+            if(af->animationCommandCount == 0)
                 continue;
 
-            BOOST_ASSERT(af->anim_command < engine::engine_world.anim_commands.size());
-            int16_t *pointer = &engine::engine_world.anim_commands[af->anim_command];
+            BOOST_ASSERT(af->animationCommand < engine::engine_world.anim_commands.size());
+            int16_t *pointer = &engine::engine_world.anim_commands[af->animationCommand];
 
-            for(uint32_t i = 0; i < af->num_anim_commands; i++)
+            for(size_t i = 0; i < af->animationCommandCount; i++)
             {
                 const auto command = static_cast<animation::AnimCommandOpcode>(*pointer);
                 ++pointer;
@@ -1865,7 +1865,7 @@ namespace world
                         break;
 
                     case CollisionShape::BoxBase:
-                        cshape = core::BT_CSfromBBox(r_static->mesh->boundingBox, true, true);
+                        cshape = core::BT_CSfromBBox(r_static->mesh->m_boundingBox, true, true);
                         break;
 
                     case CollisionShape::TriMesh:
@@ -2332,28 +2332,28 @@ namespace world
     {
         int32_t uvrotate_script = 0;
 
-        core::Polygon p0;
-        p0.vertices.resize(3);
+        core::Polygon uvCoord0;
+        uvCoord0.vertices.resize(3);
 
-        core::Polygon p;
-        p.vertices.resize(3);
+        core::Polygon uvCoordJ;
+        uvCoordJ.vertices.resize(3);
 
         const uint16_t* pointer = tr->m_animatedTextures.data();
         const uint16_t num_uvrotates = tr->m_animatedTexturesUvCount;
 
         const uint16_t num_sequences = *pointer++;   // First word in a stream is sequence count.
 
-        world.anim_sequences.resize(num_sequences);
+        world.textureAnimations.resize(num_sequences);
 
-        for(size_t i = 0; i < world.anim_sequences.size(); i++)
+        for(size_t i = 0; i < world.textureAnimations.size(); i++)
         {
-            animation::AnimSeq* seq = &world.anim_sequences[i];
-            seq->frames.resize(*pointer++ + 1);
-            seq->frame_list.resize(seq->frames.size());
+            animation::TextureAnimationSequence* seq = &world.textureAnimations[i];
+            seq->keyFrames.resize(*pointer++ + 1);
+            seq->textureIndices.resize(seq->keyFrames.size());
 
             // Fill up new sequence with frame list.
 
-            for(uint32_t& frame : seq->frame_list)
+            for(size_t& frame : seq->textureIndices)
             {
                 frame = *pointer++;  // Add one frame.
             }
@@ -2377,74 +2377,74 @@ namespace world
                 // Get texture height and divide it in half.
                 // This way, we get a reference value which is used to identify
                 // if scrolling is completed or not.
-                seq->frames.resize(8);
-                seq->uvrotate_max = world.tex_atlas->getTextureHeight(seq->frame_list[0]) / 2;
-                seq->uvrotate_speed = seq->uvrotate_max / static_cast<glm::float_t>(seq->frames.size());
-                seq->frame_list.resize(8);
+                seq->keyFrames.resize(8);
+                seq->uvrotateMax = world.tex_atlas->getTextureHeight(seq->textureIndices[0]) / 2;
+                seq->uvrotateSpeed = seq->uvrotateMax / static_cast<glm::float_t>(seq->keyFrames.size());
+                seq->textureIndices.resize(8);
 
                 if(uvrotate_script > 0)
                 {
-                    seq->anim_type = animation::AnimTextureType::Forward;
+                    seq->textureType = animation::TextureAnimationType::Forward;
                 }
                 else if(uvrotate_script < 0)
                 {
-                    seq->anim_type = animation::AnimTextureType::Backward;
+                    seq->textureType = animation::TextureAnimationType::Backward;
                 }
 
-                engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, p, 0, true);
-                for(uint16_t j = 0; j < seq->frames.size(); j++)
+                engine::engine_world.tex_atlas->getCoordinates(seq->textureIndices[0], false, uvCoord0, 0, true);
+                for(size_t j = 0; j < seq->keyFrames.size(); j++)
                 {
-                    engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, p, j * seq->uvrotate_speed, true);
-                    seq->frames[j].tex_ind = p.tex_index;
+                    engine::engine_world.tex_atlas->getCoordinates(seq->textureIndices[0], false, uvCoordJ, j * seq->uvrotateSpeed, true);
+                    seq->keyFrames[j].textureIndex = uvCoordJ.textureIndex;
 
-                    GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move
-                    A0[0] = p0.vertices[1].tex_coord[0] - p0.vertices[0].tex_coord[0];
-                    A0[1] = p0.vertices[1].tex_coord[1] - p0.vertices[0].tex_coord[1];
-                    B0[0] = p0.vertices[2].tex_coord[0] - p0.vertices[0].tex_coord[0];
-                    B0[1] = p0.vertices[2].tex_coord[1] - p0.vertices[0].tex_coord[1];
+                    ///@PARANOID: texture transformation may be not only move
 
-                    A[0] = p.vertices[1].tex_coord[0] - p.vertices[0].tex_coord[0];
-                    A[1] = p.vertices[1].tex_coord[1] - p.vertices[0].tex_coord[1];
-                    B[0] = p.vertices[2].tex_coord[0] - p.vertices[0].tex_coord[0];
-                    B[1] = p.vertices[2].tex_coord[1] - p.vertices[0].tex_coord[1];
+                    glm::mat2 textureSize0;
+                    textureSize0[0] = uvCoord0.vertices[1].tex_coord - uvCoord0.vertices[0].tex_coord;
+                    textureSize0[1] = uvCoord0.vertices[2].tex_coord - uvCoord0.vertices[0].tex_coord;
 
-                    d = A0[0] * B0[1] - A0[1] * B0[0];
-                    seq->frames[j].mat[0 + 0 * 2] = (A[0] * B0[1] - A0[1] * B[0]) / d;
-                    seq->frames[j].mat[1 + 0 * 2] = -(A[1] * B0[1] - A0[1] * B[1]) / d;
-                    seq->frames[j].mat[0 + 1 * 2] = -(A0[0] * B[0] - A[0] * B0[0]) / d;
-                    seq->frames[j].mat[1 + 1 * 2] = (A0[0] * B[1] - A[1] * B0[0]) / d;
+                    glm::mat2 textureSizeJ;
+                    textureSizeJ[0] = uvCoordJ.vertices[1].tex_coord - uvCoordJ.vertices[0].tex_coord;
+                    textureSizeJ[1] = uvCoordJ.vertices[2].tex_coord - uvCoordJ.vertices[0].tex_coord;
 
-                    seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[0 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[0 + 1 * 2]);
-                    seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[1 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[1 + 1 * 2]);
+                    glm::float_t d = glm::determinant(textureSize0);
+
+                    seq->keyFrames[j].coordinateTransform[0][0] =  (textureSizeJ[0][0] * textureSize0[1][1] - textureSize0[0][1] * textureSizeJ[1][0]) / d;
+                    seq->keyFrames[j].coordinateTransform[1][0] = -(textureSizeJ[0][1] * textureSize0[1][1] - textureSize0[0][1] * textureSizeJ[1][1]) / d;
+                    seq->keyFrames[j].coordinateTransform[0][1] = -(textureSize0[0][0] * textureSizeJ[1][0] - textureSizeJ[0][0] * textureSize0[1][0]) / d;
+                    seq->keyFrames[j].coordinateTransform[1][1] =  (textureSize0[0][0] * textureSizeJ[1][1] - textureSizeJ[0][1] * textureSize0[1][0]) / d;
+
+                    seq->keyFrames[j].move.x = uvCoordJ.vertices[0].tex_coord[0] - glm::dot(uvCoord0.vertices[0].tex_coord, seq->keyFrames[j].coordinateTransform[0]);
+                    seq->keyFrames[j].move.y = uvCoordJ.vertices[0].tex_coord[1] - glm::dot(uvCoord0.vertices[0].tex_coord, seq->keyFrames[j].coordinateTransform[1]);
                 }
             }
             else
             {
-                engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[0], false, p0);
-                for(uint16_t j = 0; j < seq->frames.size(); j++)
+                engine::engine_world.tex_atlas->getCoordinates(seq->textureIndices[0], false, uvCoord0);
+                for(size_t j = 0; j < seq->keyFrames.size(); j++)
                 {
-                    engine::engine_world.tex_atlas->getCoordinates(seq->frame_list[j], false, p);
-                    seq->frames[j].tex_ind = p.tex_index;
+                    engine::engine_world.tex_atlas->getCoordinates(seq->textureIndices[j], false, uvCoordJ);
+                    seq->keyFrames[j].textureIndex = uvCoordJ.textureIndex;
 
-                    GLfloat A0[2], B0[2], A[2], B[2], d;                            ///@PARANOID: texture transformation may be not only move
-                    A0[0] = p0.vertices[1].tex_coord[0] - p0.vertices[0].tex_coord[0];
-                    A0[1] = p0.vertices[1].tex_coord[1] - p0.vertices[0].tex_coord[1];
-                    B0[0] = p0.vertices[2].tex_coord[0] - p0.vertices[0].tex_coord[0];
-                    B0[1] = p0.vertices[2].tex_coord[1] - p0.vertices[0].tex_coord[1];
+                    ///@PARANOID: texture transformation may be not only move
 
-                    A[0] = p.vertices[1].tex_coord[0] - p.vertices[0].tex_coord[0];
-                    A[1] = p.vertices[1].tex_coord[1] - p.vertices[0].tex_coord[1];
-                    B[0] = p.vertices[2].tex_coord[0] - p.vertices[0].tex_coord[0];
-                    B[1] = p.vertices[2].tex_coord[1] - p.vertices[0].tex_coord[1];
+                    glm::mat2 textureSize0;
+                    textureSize0[0] = uvCoord0.vertices[1].tex_coord - uvCoord0.vertices[0].tex_coord;
+                    textureSize0[1] = uvCoord0.vertices[2].tex_coord - uvCoord0.vertices[0].tex_coord;
 
-                    d = A0[0] * B0[1] - A0[1] * B0[0];
-                    seq->frames[j].mat[0 + 0 * 2] = (A[0] * B0[1] - A0[1] * B[0]) / d;
-                    seq->frames[j].mat[1 + 0 * 2] = -(A[1] * B0[1] - A0[1] * B[1]) / d;
-                    seq->frames[j].mat[0 + 1 * 2] = -(A0[0] * B[0] - A[0] * B0[0]) / d;
-                    seq->frames[j].mat[1 + 1 * 2] = (A0[0] * B[1] - A[1] * B0[0]) / d;
+                    glm::mat2 textureSizeJ;
+                    textureSizeJ[0] = uvCoordJ.vertices[1].tex_coord - uvCoordJ.vertices[0].tex_coord;
+                    textureSizeJ[1] = uvCoordJ.vertices[2].tex_coord - uvCoordJ.vertices[0].tex_coord;
 
-                    seq->frames[j].move[0] = p.vertices[0].tex_coord[0] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[0 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[0 + 1 * 2]);
-                    seq->frames[j].move[1] = p.vertices[0].tex_coord[1] - (p0.vertices[0].tex_coord[0] * seq->frames[j].mat[1 + 0 * 2] + p0.vertices[0].tex_coord[1] * seq->frames[j].mat[1 + 1 * 2]);
+                    glm::float_t d = glm::determinant(textureSize0);
+
+                    seq->keyFrames[j].coordinateTransform[0][0] =  (textureSizeJ[0][0] * textureSize0[1][1] - textureSize0[0][1] * textureSizeJ[1][0]) / d;
+                    seq->keyFrames[j].coordinateTransform[1][0] = -(textureSizeJ[0][1] * textureSize0[1][1] - textureSize0[0][1] * textureSizeJ[1][1]) / d;
+                    seq->keyFrames[j].coordinateTransform[0][1] = -(textureSize0[0][0] * textureSizeJ[1][0] - textureSizeJ[0][0] * textureSize0[1][0]) / d;
+                    seq->keyFrames[j].coordinateTransform[1][1] =  (textureSize0[0][0] * textureSizeJ[1][1] - textureSizeJ[0][1] * textureSize0[1][0]) / d;
+
+                    seq->keyFrames[j].move.x = uvCoordJ.vertices[0].tex_coord[0] - glm::dot(uvCoord0.vertices[0].tex_coord, seq->keyFrames[j].coordinateTransform[0]);
+                    seq->keyFrames[j].move.y = uvCoordJ.vertices[0].tex_coord[1] - glm::dot(uvCoord0.vertices[0].tex_coord, seq->keyFrames[j].coordinateTransform[1]);
                 }
             }
         }
@@ -2459,19 +2459,19 @@ namespace world
       */
     bool SetAnimTexture(core::Polygon& polygon, uint32_t tex_index, const World& world)
     {
-        polygon.anim_id = 0;                           // Reset to 0 by default.
+        polygon.textureAnimationId.reset();
 
-        for(uint32_t i = 0; i < world.anim_sequences.size(); i++)
+        for(size_t i = 0; i < world.textureAnimations.size(); i++)
         {
-            for(uint16_t j = 0; j < world.anim_sequences[i].frames.size(); j++)
+            for(size_t j = 0; j < world.textureAnimations[i].keyFrames.size(); j++)
             {
-                if(world.anim_sequences[i].frame_list[j] == tex_index)
+                if(world.textureAnimations[i].textureIndices[j] == tex_index)
                 {
                     // If we have found assigned texture ID in animation texture lists,
                     // we assign corresponding animation sequence to this polygon,
                     // additionally specifying frame offset.
-                    polygon.anim_id = i + 1;  // Animation sequence ID.
-                    polygon.frame_offset = j;     // Animation frame offset.
+                    polygon.textureAnimationId = i;  // Animation sequence ID.
+                    polygon.startFrame = j;     // Animation frame offset.
                     return true;
                 }
             }
@@ -2483,7 +2483,7 @@ namespace world
     void TR_GenMeshes(World& world, const std::unique_ptr<loader::Level>& tr)
     {
         world.meshes.resize(tr->m_meshes.size());
-        size_t i = 0;
+        ObjectId i = 0;
         for(std::shared_ptr<core::BaseMesh>& baseMesh : world.meshes)
         {
             baseMesh = std::make_shared<core::BaseMesh>();
@@ -2556,7 +2556,7 @@ namespace world
         }
     }
 
-    void TR_GenMesh(World& world, size_t mesh_index, std::shared_ptr<core::BaseMesh> mesh, const std::unique_ptr<loader::Level>& tr)
+    void TR_GenMesh(World& world, ObjectId mesh_index, std::shared_ptr<core::BaseMesh> mesh, const std::unique_ptr<loader::Level>& tr)
     {
         const uint32_t tex_mask = world.engineVersion == loader::Engine::TR4 ? loader::TextureIndexMaskTr4 : loader::TextureIndexMask;
 
@@ -2576,12 +2576,12 @@ namespace world
          */
 
         const loader::Mesh& tr_mesh = tr->m_meshes[mesh_index];
-        mesh->m_id = static_cast<uint32_t>(mesh_index);
+        mesh->m_id = mesh_index;
         mesh->m_center[0] = tr_mesh.centre.x;
         mesh->m_center[1] = -tr_mesh.centre.z;
         mesh->m_center[2] = tr_mesh.centre.y;
         mesh->m_radius = tr_mesh.collision_size;
-        mesh->m_texturePageCount = static_cast<uint32_t>(world.tex_atlas->getNumAtlasPages()) + 1;
+        mesh->m_texturePageCount = world.tex_atlas->getNumAtlasPages() + 1;
 
         mesh->m_vertices.resize(tr_mesh.vertices.size());
         auto vertex = mesh->m_vertices.data();
@@ -2606,7 +2606,7 @@ namespace world
             auto face3 = &tr_mesh.textured_triangles[i];
             auto tex = &tr->m_objectTextures[face3->texture & tex_mask];
 
-            p.double_side = (face3->texture & 0x8000) != 0;    // CORRECT, BUT WRONG IN TR3-5
+            p.isDoubleSided = (face3->texture & 0x8000) != 0;    // CORRECT, BUT WRONG IN TR3-5
 
             SetAnimTexture(p, face3->texture & tex_mask, world);
 
@@ -2635,9 +2635,9 @@ namespace world
 
             auto face3 = &tr_mesh.coloured_triangles[i];
             auto col = face3->texture & 0xff;
-            p.tex_index = static_cast<uint16_t>(world.tex_atlas->getNumAtlasPages());
+            p.textureIndex = world.tex_atlas->getNumAtlasPages();
             p.blendMode = loader::BlendingMode::Opaque;
-            p.anim_id = 0;
+            p.textureAnimationId.reset();
 
             tr_accumulateNormals(tr_mesh, *mesh, 3, face3->vertices, p);
             tr_setupColoredFace(tr_mesh, tr, *mesh, face3->vertices, col, p);
@@ -2654,7 +2654,7 @@ namespace world
             auto face4 = &tr_mesh.textured_rectangles[i];
             auto tex = &tr->m_objectTextures[face4->texture & tex_mask];
 
-            p.double_side = (face4->texture & 0x8000) != 0;    // CORRECT, BUT WRONG IN TR3-5
+            p.isDoubleSided = (face4->texture & 0x8000) != 0;    // CORRECT, BUT WRONG IN TR3-5
 
             SetAnimTexture(p, face4->texture & tex_mask, world);
 
@@ -2684,9 +2684,9 @@ namespace world
             auto face4 = &tr_mesh.coloured_rectangles[i];
             auto col = face4->texture & 0xff;
             p.vertices.resize(4);
-            p.tex_index = static_cast<uint32_t>(world.tex_atlas->getNumAtlasPages());
+            p.textureIndex = world.tex_atlas->getNumAtlasPages();
             p.blendMode = loader::BlendingMode::Opaque;
-            p.anim_id = 0;
+            p.textureAnimationId.reset();
 
             tr_accumulateNormals(tr_mesh, *mesh, 4, face4->vertices, p);
             tr_setupColoredFace(tr_mesh, tr, *mesh, face4->vertices, col, p);
@@ -3079,8 +3079,8 @@ namespace world
             anim->speed_y = tr_animation->accel_lateral;
             anim->accel_y = tr_animation->speed_lateral;
 
-            anim->anim_command = tr_animation->anim_command;
-            anim->num_anim_commands = tr_animation->num_anim_commands;
+            anim->animationCommand = tr_animation->anim_command;
+            anim->animationCommandCount = tr_animation->num_anim_commands;
             anim->state_id = static_cast<LaraState>(tr_animation->state_id);
 
             //        anim->frames.resize(TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i));
@@ -3101,13 +3101,13 @@ namespace world
             // See http://evpopov.com/dl/TR4format.html#Animations for details.
             // FIXME: This is done here only to adjust relative frame indices
             //        see GenerateAnimCommands()
-            if(anim->num_anim_commands > 0 && anim->num_anim_commands <= 255)
+            if(anim->animationCommandCount > 0 && anim->animationCommandCount <= 255)
             {
                 // Calculate current animation anim command block offset.
-                BOOST_ASSERT(anim->anim_command < world.anim_commands.size());
-                int16_t *pointer = &world.anim_commands[anim->anim_command];
+                BOOST_ASSERT(anim->animationCommand < world.anim_commands.size());
+                int16_t *pointer = &world.anim_commands[anim->animationCommand];
 
-                for(uint32_t count = 0; count < anim->num_anim_commands; count++)
+                for(size_t count = 0; count < anim->animationCommandCount; count++)
                 {
                     const auto command = static_cast<animation::AnimCommandOpcode>(*pointer);
                     ++pointer;
@@ -3297,7 +3297,7 @@ namespace world
                     }
                     animation::StateChange* sch_p = &anim->stateChanges[static_cast<LaraState>(tr_sch->state_id)];
                     sch_p->id = static_cast<LaraState>(tr_sch->state_id);
-                    sch_p->anim_dispatch.clear();
+                    sch_p->dispatches.clear();
                     for(uint16_t l = 0; l < tr_sch->num_anim_dispatches; l++)
                     {
                         loader::AnimDispatch *tr_adisp = &tr->m_animDispatches[tr_sch->anim_dispatch + l];
@@ -3306,11 +3306,11 @@ namespace world
                         if(next_anim_ind >= model.animations.size())
                             continue;
 
-                        sch_p->anim_dispatch.emplace_back();
+                        sch_p->dispatches.emplace_back();
 
-                        animation::AnimDispatch* adsp = &sch_p->anim_dispatch.back();
+                        animation::AnimationDispatch* adsp = &sch_p->dispatches.back();
                         size_t next_frames_count = model.animations[next_anim - tr_moveable->animation_index].getFrameDuration();
-                        uint16_t next_frame = tr_adisp->next_frame - tr->m_animations[next_anim].frame_start;
+                        size_t next_frame = tr_adisp->next_frame - tr->m_animations[next_anim].frame_start;
 
                         uint16_t low = tr_adisp->low - tr_animation->frame_start;
                         uint16_t high = tr_adisp->high - tr_animation->frame_start;
@@ -3325,8 +3325,9 @@ namespace world
                             //Sys_Warn("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d", anim->id, sch_p->id, low, high);
                             Console::instance().printf("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d, duration: %d, timestretch: %d", anim->id, sch_p->id, low, high, int(anim->getFrameDuration()), int(anim->getStretchFactor()));
                         }
-                        adsp->frame_low = low;
-                        adsp->frame_high = high;
+                        adsp->start = low;
+                        adsp->end = high;
+                        BOOST_ASSERT( next_anim >= tr_moveable->animation_index );
                         adsp->next.animation = next_anim - tr_moveable->animation_index;
                         adsp->next.frame = next_frame % next_frames_count;
 
@@ -3588,7 +3589,7 @@ namespace world
 
                 lara->m_skeleton.copyMeshBinding(lara->m_skeleton.getModel(), true);
 
-                world.character->setAnimation(TR_ANIMATION_LARA_STAY_IDLE, 0);
+                world.character->setAnimation(animation::TR_ANIMATION_LARA_STAY_IDLE, 0);
                 lara->m_skeleton.genRigidBody(*lara);
                 lara->m_skeleton.createGhosts(*lara);
                 lara->m_height = 768.0;

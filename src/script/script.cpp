@@ -720,14 +720,14 @@ void lua_SetStateChangeRange(world::ModelId id, int anim, int state, int dispatc
     world::animation::StateChange* stc = af->findStateChangeByID(static_cast<world::LaraState>(state));
     if(stc != nullptr)
     {
-        if(dispatch >= 0 && dispatch < static_cast<int>(stc->anim_dispatch.size()))
+        if(dispatch >= 0 && dispatch < static_cast<int>(stc->dispatches.size()))
         {
-            stc->anim_dispatch[dispatch].frame_low = frame_low;
-            stc->anim_dispatch[dispatch].frame_high = frame_high;
+            stc->dispatches[dispatch].start = frame_low;
+            stc->dispatches[dispatch].end = frame_high;
             if(!next_anim.is<lua::Nil>() && !next_frame.is<lua::Nil>())
             {
-                stc->anim_dispatch[dispatch].next.animation = next_anim.toInt();
-                stc->anim_dispatch[dispatch].next.frame = next_frame.toInt();
+                stc->dispatches[dispatch].next.animation = next_anim.to<world::animation::AnimationId>();
+                stc->dispatches[dispatch].next.frame = next_frame.to<size_t>();
             }
         }
         else
@@ -781,7 +781,7 @@ void lua_SetAnimEndCommands(world::ModelId id, int anim, lua::Value table)
     }
 }
 
-lua::Any lua_SpawnEntity(world::ModelId model_id, float x, float y, float z, float ax, float ay, float az, int room_id, lua::Value ov_id)
+lua::Any lua_SpawnEntity(world::ModelId model_id, float x, float y, float z, float ax, float ay, float az, world::ObjectId room_id, lua::Value ov_id)
 {
     glm::vec3 position{ x,y,z }, ang{ ax,ay,az };
 
@@ -1340,7 +1340,7 @@ void lua_SetEntitySpeed(world::ObjectId id, float vx, lua::Value vy, lua::Value 
     }
 }
 
-void lua_SetEntityAnim(world::ObjectId id, int anim, lua::Value frame)
+void lua_SetEntityAnim(world::ObjectId id, world::animation::AnimationId anim, lua::Value frame)
 {
     std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(id);
 
@@ -1420,7 +1420,7 @@ lua::Any lua_GetEntityAnim(world::ObjectId id)
     return std::make_tuple(
         ent->m_skeleton.getCurrentAnimation(),
         ent->m_skeleton.getCurrentFrame(),
-        static_cast<int>(ent->m_skeleton.getModel()->animations[ent->m_skeleton.getCurrentAnimation()].getFrameDuration())
+        ent->m_skeleton.getModel()->animations[ent->m_skeleton.getCurrentAnimation()].getFrameDuration()
     );
 }
 
@@ -2267,7 +2267,7 @@ lua::Any lua_GetCharacterCurrentWeapon(world::ObjectId id)
     }
 }
 
-void lua_SetCharacterCurrentWeapon(world::ObjectId id, int weapon)
+void lua_SetCharacterCurrentWeapon(world::ObjectId id, world::ModelId weapon)
 {
     std::shared_ptr<world::Character> ent = engine::engine_world.getCharacterByID(id);
 
@@ -2575,24 +2575,24 @@ void lua_genUVRotateAnimation(world::ModelId id)
     if(model->meshes.front().mesh_base->m_transparencyPolygons.empty())
         return;
     const world::core::Polygon& firstPolygon = model->meshes.front().mesh_base->m_transparencyPolygons.front();
-    if(firstPolygon.anim_id != 0)
+    if(firstPolygon.textureAnimationId)
         return;
 
-    engine::engine_world.anim_sequences.emplace_back();
-    world::animation::AnimSeq* seq = &engine::engine_world.anim_sequences.back();
+    engine::engine_world.textureAnimations.emplace_back();
+    world::animation::TextureAnimationSequence* seq = &engine::engine_world.textureAnimations.back();
 
     // Fill up new sequence with frame list.
 
-    seq->anim_type = world::animation::AnimTextureType::Forward;
+    seq->textureType = world::animation::TextureAnimationType::Forward;
     seq->frame_lock = false;              // by default anim is playing
     seq->uvrotate = true;
-    seq->frames.resize(16);
-    seq->frame_list.resize(16);
-    seq->reverse_direction = false;       // Needed for proper reverse-type start-up.
-    seq->frame_duration = util::MilliSeconds(25);      // Should be passed as 1 / FPS.
-    seq->frame_time = util::Duration::zero();         // Reset frame time to initial state.
-    seq->current_frame     = 0;           // Reset current frame to zero.
-    seq->frame_list[0] = 0;
+    seq->keyFrames.resize(16);
+    seq->textureIndices.resize(16);
+    seq->reverse = false;       // Needed for proper reverse-type start-up.
+    seq->timePerFrame = util::MilliSeconds(25);      // Should be passed as 1 / FPS.
+    seq->frameTime = util::Duration::zero();         // Reset frame time to initial state.
+    seq->currentFrame     = 0;           // Reset current frame to zero.
+    seq->textureIndices[0] = 0;
 
     glm::float_t v_min, v_max;
     v_min = v_max = firstPolygon.vertices[0].tex_coord[1];
@@ -2609,26 +2609,23 @@ void lua_genUVRotateAnimation(world::ModelId id)
         }
     }
 
-    seq->uvrotate_max = 0.5f * (v_max - v_min);
-    seq->uvrotate_speed = seq->uvrotate_max / seq->frames.size();
+    seq->uvrotateMax = 0.5f * (v_max - v_min);
+    seq->uvrotateSpeed = seq->uvrotateMax / seq->keyFrames.size();
 
-    for(size_t j = 0; j < seq->frames.size(); j++)
+    for(size_t j = 0; j < seq->keyFrames.size(); j++)
     {
-        seq->frames[j].tex_ind = firstPolygon.tex_index;
-        seq->frames[j].mat[0] = 1.0;
-        seq->frames[j].mat[1] = 0.0;
-        seq->frames[j].mat[2] = 0.0;
-        seq->frames[j].mat[3] = 1.0;
-        seq->frames[j].move[0] = 0.0;
-        seq->frames[j].move[1] = -seq->uvrotate_speed * j;
+        seq->keyFrames[j].textureIndex = firstPolygon.textureIndex;
+        seq->keyFrames[j].coordinateTransform = glm::mat2(1.0f);
+        seq->keyFrames[j].move.x = 0.0;
+        seq->keyFrames[j].move.y = -seq->uvrotateSpeed * j;
     }
 
     for(world::core::Polygon& p : model->meshes.front().mesh_base->m_transparencyPolygons)
     {
-        p.anim_id = static_cast<uint16_t>( engine::engine_world.anim_sequences.size() );
+        p.textureAnimationId = engine::engine_world.textureAnimations.size();
         for(world::core::Vertex& v : p.vertices)
         {
-            v.tex_coord[1] = v_min + 0.5f * (v.tex_coord[1] - v_min) + seq->uvrotate_max;
+            v.tex_coord[1] = v_min + 0.5f * (v.tex_coord[1] - v_min) + seq->uvrotateMax;
         }
     }
 

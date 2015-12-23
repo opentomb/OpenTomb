@@ -51,7 +51,7 @@ bool Frustum::isVisible(const Portal& portal) const
 
 bool Frustum::isVisible(const Polygon& polygon, const Camera& cam) const
 {
-    if(!polygon.double_side && glm::dot(polygon.plane.normal, cam.getPosition()) < 0.0)
+    if(!polygon.isDoubleSided && glm::dot(polygon.plane.normal, cam.getPosition()) < 0.0)
     {
         return false;
     }

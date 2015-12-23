@@ -138,10 +138,6 @@ public:
     glm::mat4 m_transform{ 1.0f }; // GL transformation matrix
     glm::vec3 m_scaling = { 1,1,1 };
 
-#if 0
-    bool m_lerp_skip = false;
-#endif
-
     core::OrientedBoundingBox m_obb;
 
     RoomSector* m_currentSector = nullptr;
@@ -189,7 +185,7 @@ public:
 
     void doAnimCommand(const animation::AnimCommand& command);
     void processSector();
-    void setAnimation(int animation, int frame = 0);
+    void setAnimation(animation::AnimationId animation, int frame = 0);
     void moveForward(glm::float_t dist);
     void moveStrafe(glm::float_t dist);
     void moveVertical(glm::float_t dist);

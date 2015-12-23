@@ -81,16 +81,16 @@ void SkeletalModel::setSkinnedMeshes(const std::vector<SkeletalModel::MeshRefere
 * \param[in,out]  frameid  reference to frame id, receives found frame
 * \return  true if state is found, false otherwise
 */
-bool SkeletalModel::findStateChange(LaraState stateid, uint16_t& animid_inout, uint16_t& frameid_inout)
+bool SkeletalModel::findStateChange(LaraState stateid, animation::AnimationId& animid_inout, size_t& frameid_inout)
 {
     const animation::StateChange* stc = animations[animid_inout].findStateChangeByID(stateid);
     if(!stc)
         return false;
 
-    for(const animation::AnimDispatch& dispatch : stc->anim_dispatch)
+    for(const animation::AnimationDispatch& dispatch : stc->dispatches)
     {
-        if(   frameid_inout >= dispatch.frame_low
-           && frameid_inout <= dispatch.frame_high)
+        if(   frameid_inout >= dispatch.start
+           && frameid_inout <= dispatch.end)
         {
             animid_inout = dispatch.next.animation;
             frameid_inout = dispatch.next.frame;

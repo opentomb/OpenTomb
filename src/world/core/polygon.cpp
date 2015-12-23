@@ -298,17 +298,17 @@ SplitType Polygon::splitClassify(const util::Plane& plane) const
 void Polygon::split(const util::Plane& n, Polygon& front, Polygon& back)
 {
     front.plane = plane;
-    front.anim_id = anim_id;
-    front.frame_offset = frame_offset;
-    front.double_side = double_side;
-    front.tex_index = tex_index;
+    front.textureAnimationId = textureAnimationId;
+    front.startFrame = startFrame;
+    front.isDoubleSided = isDoubleSided;
+    front.textureIndex = textureIndex;
     front.blendMode = blendMode;
 
     back.plane = plane;
-    back.anim_id = anim_id;
-    back.frame_offset = frame_offset;
-    back.double_side = double_side;
-    back.tex_index = tex_index;
+    back.textureAnimationId = textureAnimationId;
+    back.startFrame = startFrame;
+    back.isDoubleSided = isDoubleSided;
+    back.textureIndex = textureIndex;
     back.blendMode = blendMode;
 
     auto curr_v = &vertices.front();
@@ -381,15 +381,11 @@ bool Polygon::isInsideBBox(const BoundingBox& bb) const
 {
     for(const auto& v : vertices)
     {
-        if(v.position[0] < bb.min[0] || v.position[0] > bb.max[0] ||
-           v.position[1] < bb.min[1] || v.position[1] > bb.max[1] ||
-           v.position[2] < bb.min[2] || v.position[2] > bb.max[2])
-        {
-            return 0;
-        }
+        if(!bb.contains(v.position))
+            return false;
     }
 
-    return 1;
+    return true;
 }
 
 bool Polygon::isInsideBQuad(const BoundingBox& bb) const

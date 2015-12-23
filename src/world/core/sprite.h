@@ -18,12 +18,13 @@ namespace world
 namespace core
 {
 
+using SpriteId = uint32_t;
 /*
  * base sprite structure
  */
 struct Sprite
 {
-    uint32_t            id;
+    SpriteId            id;
     size_t              texture;
     GLfloat             tex_coord[8];
     uint32_t            flag;

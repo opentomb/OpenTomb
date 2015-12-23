@@ -25,9 +25,6 @@ namespace world
 
 void World::prepare()
 {
-    id = 0;
-    name = nullptr;
-    type = 0x00;
     meshes.clear();
     sprites.clear();
     rooms.clear();
@@ -38,7 +35,7 @@ void World::prepare()
     character.reset();
 
     audioEngine.clear();
-    anim_sequences.clear();
+    textureAnimations.clear();
 
     room_boxes.clear();
     cameras_sinks.clear();
@@ -115,7 +112,7 @@ void World::empty()
     textures.clear();
 
     tex_atlas.reset();
-    anim_sequences.clear();
+    textureAnimations.clear();
 }
 
 bool World::deleteEntity(ObjectId id)
@@ -135,7 +132,7 @@ bool World::deleteEntity(ObjectId id)
     }
 }
 
-boost::optional<ObjectId> World::spawnEntity(ModelId model_id, uint32_t room_id, const glm::vec3* pos, const glm::vec3* ang, boost::optional<ObjectId> id)
+boost::optional<ObjectId> World::spawnEntity(ModelId model_id, ObjectId room_id, const glm::vec3* pos, const glm::vec3* ang, boost::optional<ObjectId> id)
 {
     SkeletalModel* model = getModelByID(model_id);
     if(!model)
@@ -447,7 +444,7 @@ SkeletalModel* World::getModelByID(ModelId id)
 // Find sprite by ID.
 // Not a binary search - sprites may be not sorted by ID.
 
-core::Sprite* World::getSpriteByID(unsigned int ID)
+core::Sprite* World::getSpriteByID(core::SpriteId ID)
 {
     for(core::Sprite& sp : sprites)
     {
@@ -464,53 +461,52 @@ BaseItem::~BaseItem() = default;
 
 void World::updateAnimTextures()                                                // This function is used for updating global animated texture frame
 {
-    for(animation::AnimSeq& seq : anim_sequences)
+    for(animation::TextureAnimationSequence& seq : textureAnimations)
     {
         if(seq.frame_lock)
         {
             continue;
         }
 
-        seq.frame_time += engine::engine_frame_time;
-        if(seq.frame_time >= seq.frame_duration)
+        seq.frameTime += engine::engine_frame_time;
+        if(seq.frameTime >= seq.timePerFrame)
         {
-            int j = static_cast<int>(seq.frame_time / seq.frame_duration);
-            seq.frame_time -= j * seq.frame_duration;
+            seq.frameTime -= static_cast<int>(seq.frameTime / seq.timePerFrame) * seq.timePerFrame;
 
-            switch(seq.anim_type)
+            switch(seq.textureType)
             {
-            case animation::AnimTextureType::Reverse:
-                if(seq.reverse_direction)
+            case animation::TextureAnimationType::Reverse:
+                if(seq.reverse)
                 {
-                    if(seq.current_frame == 0)
+                    if(seq.currentFrame == 0)
                     {
-                        seq.current_frame++;
-                        seq.reverse_direction = false;
+                        seq.currentFrame++;
+                        seq.reverse = false;
                     }
-                    else if(seq.current_frame > 0)
+                    else if(seq.currentFrame > 0)
                     {
-                        seq.current_frame--;
+                        seq.currentFrame--;
                     }
                 }
                 else
                 {
-                    if(seq.current_frame == seq.frames.size() - 1)
+                    if(seq.currentFrame == seq.keyFrames.size() - 1)
                     {
-                        seq.current_frame--;
-                        seq.reverse_direction = true;
+                        seq.currentFrame--;
+                        seq.reverse = true;
                     }
-                    else if(seq.current_frame < seq.frames.size() - 1)
+                    else if(seq.currentFrame < seq.keyFrames.size() - 1)
                     {
-                        seq.current_frame++;
+                        seq.currentFrame++;
                     }
-                    seq.current_frame %= seq.frames.size();                ///@PARANOID
+                    seq.currentFrame %= seq.keyFrames.size();                ///@PARANOID
                 }
                 break;
 
-            case animation::AnimTextureType::Forward:                                    // inversed in polygon anim. texture frames
-            case animation::AnimTextureType::Backward:
-                seq.current_frame++;
-                seq.current_frame %= seq.frames.size();
+            case animation::TextureAnimationType::Forward:                                    // inversed in polygon anim. texture frames
+            case animation::TextureAnimationType::Backward:
+                seq.currentFrame++;
+                seq.currentFrame %= seq.keyFrames.size();
                 break;
             };
         }

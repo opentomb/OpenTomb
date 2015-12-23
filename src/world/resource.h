@@ -9,8 +9,6 @@
 namespace world
 {
 
-namespace
-{
 // Metering step and sector size are basic Tomb Raider world metrics.
 // Use these defines at all times, when you're referencing classic TR
 // dimensions and terrain manipulations.
@@ -20,7 +18,6 @@ constexpr glm::float_t MeteringSectorSize = 1024.0f;
 // Wall height is a magical constant which specifies that sector with such
 // height contains impassable wall.
 constexpr int MeteringWallHeight = 32512;
-}
 
 // Penetration configuration specifies collision type for floor and ceiling
 // sectors (squares).
@@ -121,7 +118,7 @@ void Res_AutoexecOpen(loader::Game engine_version);
 
 void TR_GenWorld(World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenMeshes(World& world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenMesh(World& world, size_t mesh_index, std::shared_ptr<core::BaseMesh> mesh, const std::unique_ptr<loader::Level>& tr);
+void TR_GenMesh(World& world, ObjectId mesh_index, std::shared_ptr<core::BaseMesh> mesh, const std::unique_ptr<loader::Level>& tr);
 void TR_GenSkeletalModels(World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenSprites(World& world, const std::unique_ptr<loader::Level>& tr);

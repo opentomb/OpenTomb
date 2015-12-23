@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace world
 {
 namespace animation
@@ -14,10 +16,10 @@ enum class AnimCommandOpcode : int
     PlayEffect = 6,
     Interact = 7
 };
-}
-}
 
 //   ====== ANIMATION EFFECTS FLAGS ======
 
-#define TR_ANIMCOMMAND_CONDITION_LAND  0x4000
-#define TR_ANIMCOMMAND_CONDITION_WATER 0X8000
+constexpr uint16_t TR_ANIMCOMMAND_CONDITION_LAND = 0x4000;
+constexpr uint16_t TR_ANIMCOMMAND_CONDITION_WATER = 0X8000;
+}
+}

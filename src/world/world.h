@@ -30,7 +30,7 @@ struct Light;
 } // namespace core
 namespace animation
 {
-struct AnimSeq;
+struct TextureAnimationSequence;
 } // namespace animation
 
 // Native TR floor data functions
@@ -266,8 +266,6 @@ struct RoomSprite
 
 struct World
 {
-    char                       *name = nullptr;
-    uint32_t                    id = 0;
     loader::Engine              engineVersion;
 
     std::vector< std::shared_ptr<Room> > rooms;
@@ -285,7 +283,7 @@ struct World
     std::unique_ptr<BorderedTextureAtlas> tex_atlas;
     std::vector<GLuint> textures;               // OpenGL textures indexes
 
-    std::vector<animation::AnimSeq> anim_sequences;         // Animated textures
+    std::vector<animation::TextureAnimationSequence> textureAnimations;         // Animated textures
 
     std::vector<std::shared_ptr<core::BaseMesh>> meshes;                 // Base meshes data
 
@@ -300,8 +298,6 @@ struct World
     ObjectId next_entity_id = 0;
     std::map<ObjectId, std::shared_ptr<BaseItem>> items_tree;             // tree of world items
 
-    uint32_t                    type = 0;
-
     std::vector<StatCameraSink> cameras_sinks;          // Cameras and sinks.
 
     std::vector<int16_t> anim_commands;
@@ -314,13 +310,13 @@ struct World
     void addEntity(std::shared_ptr<Entity> entity);
     bool createItem(ModelId item_id, ModelId model_id, ModelId world_model_id, MenuItemType type, uint16_t count, const std::string &name);
     int deleteItem(ObjectId item_id);
-    core::Sprite* getSpriteByID(unsigned int ID);
+    core::Sprite* getSpriteByID(core::SpriteId ID);
     SkeletalModel* getModelByID(ModelId id);           // binary search the model by ID
 
     void prepare();
     void empty();
 
-    boost::optional<ObjectId> spawnEntity(ModelId model_id, uint32_t room_id, const glm::vec3 *pos, const glm::vec3 *ang, boost::optional<ObjectId> id);
+    boost::optional<ObjectId> spawnEntity(ModelId model_id, ObjectId room_id, const glm::vec3 *pos, const glm::vec3 *ang, boost::optional<ObjectId> id);
     bool     deleteEntity(ObjectId id);
 
     std::shared_ptr<Entity>    getEntityByID(ObjectId id);

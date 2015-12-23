@@ -394,7 +394,7 @@ void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
 
     m_mesh = std::make_shared<core::BaseMesh>();
     m_mesh->m_id = getId();
-    m_mesh->m_texturePageCount = static_cast<uint32_t>(world.tex_atlas->getNumAtlasPages()) + 1;
+    m_mesh->m_texturePageCount = world.tex_atlas->getNumAtlasPages() + 1;
     m_mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
 
     m_mesh->m_vertices.resize(tr_room.vertices.size());
@@ -416,7 +416,7 @@ void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
     for(size_t i = 0; i < tr_room.triangles.size(); i++, ++p)
     {
         tr_setupRoomVertices(world, tr, tr_room, m_mesh, 3, tr_room.triangles[i].vertices, tr_room.triangles[i].texture & tex_mask, *p);
-        p->double_side = (tr_room.triangles[i].texture & 0x8000) != 0;
+        p->isDoubleSided = (tr_room.triangles[i].texture & 0x8000) != 0;
     }
 
     /*
@@ -425,7 +425,7 @@ void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
     for(size_t i = 0; i < tr_room.rectangles.size(); i++, ++p)
     {
         tr_setupRoomVertices(world, tr, tr_room, m_mesh, 4, tr_room.rectangles[i].vertices, tr_room.rectangles[i].texture & tex_mask, *p);
-        p->double_side = (tr_room.rectangles[i].texture & 0x8000) != 0;
+        p->isDoubleSided = (tr_room.rectangles[i].texture & 0x8000) != 0;
     }
 
     /*

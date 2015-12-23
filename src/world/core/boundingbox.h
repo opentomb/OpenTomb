@@ -38,9 +38,9 @@ struct BoundingBox
 
     bool contains(const glm::vec3& v) const
     {
-        return v[0] >= min[0] && v[0] < max[0] &&
-               v[1] >= min[1] && v[1] < max[1] &&
-               v[2] >= min[2] && v[2] < max[2];
+        return v[0] >= min[0] && v[0] <= max[0] &&
+               v[1] >= min[1] && v[1] <= max[1] &&
+               v[2] >= min[2] && v[2] <= max[2];
     }
 
     bool overlaps(const BoundingBox& b) const

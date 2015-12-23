@@ -54,7 +54,7 @@ struct SkeletalModel
     void clear();
     void updateTransparencyFlag();
     void fillSkinnedMeshMap();
-    bool findStateChange(LaraState stateid, uint16_t& animid_out, uint16_t& frameid_inout);
+    bool findStateChange(LaraState stateid, animation::AnimationId& animid_out, size_t& frameid_inout);
 
     void setMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount);
     void setSkinnedMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount);
