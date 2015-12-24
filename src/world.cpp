@@ -674,7 +674,7 @@ struct room_s *World_FindRoomByPosCogerrence(world_p world, float pos[3], struct
         return World_FindRoomByPos(world, pos);
     }
 
-    old_room = Room_CheckFlip(old_room);
+    //old_room = Room_CheckFlip(old_room);
 
     if(old_room->active &&
        (pos[0] >= old_room->bb_min[0]) && (pos[0] < old_room->bb_max[0]) &&
@@ -733,7 +733,7 @@ void World_SwapRoomToBase(world_p world, struct room_s *room)
         renderer.CleanList();
         Room_Disable(room);                                         // Disable current room
         Room_Disable(room->base_room);                              // Paranoid
-        //Room_SwapItems(room, room->alternate_room);                 // Update items to match this room
+        //Room_SwapItems(room, room->base_room);                      // Update items to match this room
         Room_Enable(room->base_room);                               // Enable original room
     }
 }
@@ -763,6 +763,24 @@ void World_BuildNearRoomsList(world_p world, struct room_s *room)
     {
         Room_AddToNearRoomsList(room, p->dest_room);
     }
+
+    /*if(room->base_room)
+    {
+        p = room->base_room->portals;
+        for(uint16_t i = 0; i < room->base_room->portals_count; i++, p++)
+        {
+            Room_AddToNearRoomsList(room, p->dest_room);
+        }
+    }
+
+    if(room->alternate_room)
+    {
+        p = room->alternate_room->portals;
+        for(uint16_t i = 0; i < room->alternate_room->portals_count; i++, p++)
+        {
+            Room_AddToNearRoomsList(room, p->dest_room);
+        }
+    }*/
 
     uint16_t nc1 = room->near_room_list_size;
 

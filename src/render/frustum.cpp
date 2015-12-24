@@ -115,7 +115,7 @@ int CFrustumManager::SplitByPlane(frustum_p p, float n[4], float *buf)
         prev_v = p->vertex + 3*(p->vertex_count-1);
         dist[0] = vec3_plane_dist(n, prev_v);
         v = buf;
-        for(uint16_t i=0;i<p->vertex_count;i++)
+        for(uint16_t i = 0; i < p->vertex_count; i++)
         {
             dist[1] = vec3_plane_dist(n, curr_v);
 
@@ -168,7 +168,7 @@ int CFrustumManager::SplitByPlane(frustum_p p, float n[4], float *buf)
         prev_v = buf + 3 * (added - 1);
         v = p->vertex;
         p->vertex_count = 0;
-        for(uint16_t i=0;i<added;i++)
+        for(uint16_t i = 0; i < added; i++)
         {
             if(vec3_dist_sq(prev_v, curr_v) > SPLIT_EPSILON * SPLIT_EPSILON)
             {
@@ -211,7 +211,7 @@ void CFrustumManager::GenClipPlanes(frustum_p p, struct camera_s *cam)
 
         //==========================================================================
 
-        for(uint16_t i=0;i<p->vertex_count;i++,r+=4)
+        for(uint16_t i = 0; i < p->vertex_count; i++, r += 4)
         {
             float t;
             vec3_sub(V1, prev_v, cam->pos);
@@ -236,20 +236,17 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
 {
     if(!m_need_realloc)
     {
+        room_p dest_room = portal->dest_room;
+        int in_dist = 0, in_face = 0;
+        float *n = cam->frustum->norm;
+        float *v = portal->vertex;
+
         if(vec3_plane_dist(portal->norm, cam->pos) < -SPLIT_EPSILON)            // non face or degenerate to the line portal
         {
             return NULL;
         }
 
-        if((portal->dest_room->frustum != NULL) && Frustum_HaveParent(portal->dest_room->frustum, emitter))
-        {
-            return NULL;                                                        // abort infinite cycling!
-        }
-
-        int in_dist = 0, in_face = 0;
-        float *n = cam->frustum->norm;
-        float *v = portal->vertex;
-        for(uint16_t i=0;i<portal->vertex_count;i++,v+=3)
+        for(uint16_t i = 0; i < portal->vertex_count; i++, v += 3)
         {
             if((in_dist == 0) && (vec3_plane_dist(n, v) < cam->dist_far))
             {
@@ -271,13 +268,13 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
          */
         uint32_t original_allocated = m_allocated;
         frustum_p prev = NULL, current_gen = NULL;
-        if(portal->dest_room->frustum == NULL)
+        if(dest_room->frustum == NULL)
         {
-            current_gen = portal->dest_room->frustum = this->CreateFrustum();
+            current_gen = dest_room->frustum = this->CreateFrustum();
         }
         else
         {
-            prev = portal->dest_room->frustum;
+            prev = dest_room->frustum;
             while(prev->next)
             {
                 prev = prev->next;
@@ -299,7 +296,7 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
             }
             else
             {
-                portal->dest_room->frustum = NULL;
+                dest_room->frustum = NULL;
             }
             return NULL;
         }
@@ -309,7 +306,7 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
         if(this->SplitByPlane(current_gen, emitter->norm, tmp))                 // splitting by main frustum clip plane
         {
             n = emitter->planes;
-            for(uint16_t i=0;i<emitter->vertex_count;i++,n+=4)
+            for(uint16_t i = 0; i < emitter->vertex_count; i++, n += 4)
             {
                 if(!this->SplitByPlane(current_gen, n, tmp))
                 {
@@ -319,7 +316,7 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
                     }
                     else
                     {
-                        portal->dest_room->frustum = NULL;
+                        dest_room->frustum = NULL;
                     }
                     Sys_ReturnTempMem(buf_size);
                     m_allocated = original_allocated;
@@ -336,7 +333,7 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
                 }
                 else
                 {
-                    portal->dest_room->frustum = NULL;
+                    dest_room->frustum = NULL;
                 }
                 Sys_ReturnTempMem(buf_size);
                 m_allocated = original_allocated;
@@ -355,7 +352,7 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
         }
         else
         {
-            portal->dest_room->frustum = NULL;
+            dest_room->frustum = NULL;
         }
         m_allocated = original_allocated;
         Sys_ReturnTempMem(buf_size);
@@ -367,15 +364,6 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
 /*
  ************************* END FRUSTUM MANAGER IMPLEMENTATION*******************
  */
-
-int Frustum_GetFrustumsCount(struct frustum_s *f)
-{
-    int i;
-
-    for(i=0;f;f=f->next,i++);
-
-    return i - 1;
-}
 
 /**
  * we need that checking to avoid infinite recursions
@@ -415,13 +403,13 @@ bool Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum, bool 
     curr_n = frustum->planes + 4*(frustum->vertex_count-1);
     prev_n = curr_n - 4;
     ins = 1;
-    for(uint16_t i=0;i<frustum->vertex_count;i++)
+    for(uint16_t i = 0; i < frustum->vertex_count; i++)
     {
         curr_v = p->vertices;
         prev_v = p->vertices + p->vertex_count - 1;
         dist[0] = vec3_plane_dist(curr_n, prev_v->position);
         outs = 1;
-        for(uint16_t j=0;j<p->vertex_count;j++)
+        for(uint16_t j = 0; j < p->vertex_count; j++)
         {
             dist[1] = vec3_plane_dist(curr_n, curr_v->position);
             if(ABS(dist[0]) < SPLIT_EPSILON)
@@ -731,7 +719,7 @@ void Portal_Move(portal_p p, float mv[3])
     float *v = p->vertex;
 
     vec3_add(p->centre, p->centre, mv);
-    for(uint16_t i=0;i<p->vertex_count;i++,v+=3)
+    for(uint16_t i = 0; i < p->vertex_count; i++, v+=3)
     {
         vec3_add(v, v, mv);
     }
@@ -765,7 +753,7 @@ bool Portal_RayIntersect(portal_p p, float dir[3], float dot[3])
     vec3_sub(T, dot, vd)
 
     vec3_sub(E2, vd+3, vd)
-    for(uint16_t i=0;i<p->vertex_count-2;i++,vd+=3)
+    for(uint16_t i = 0; i < p->vertex_count - 2; i++, vd += 3)
     {
         vec3_copy(E1, E2)                                                       // PREV
         vec3_sub(E2, vd+6, p->vertex)                                           // NEXT

@@ -379,10 +379,20 @@ room_sector_p Room_GetSectorXYZ(room_p room, float pos[3])
 
 void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r)
 {
-    if(room && r && !Room_IsInNearRoomsList(room, r) && room->id != r->id && !Room_IsOverlapped(room, r) && room->near_room_list_size < 64)
+    if(room && r && !Room_IsInNearRoomsList(room, r) && room->id != r->id && !Room_IsOverlapped(room, r) && room->near_room_list_size < 31)
     {
         room->near_room_list[room->near_room_list_size] = r;
         room->near_room_list_size++;
+        if(r->base_room && !Room_IsInNearRoomsList(room, r->base_room) && room->near_room_list_size < 31)
+        {
+            room->near_room_list[room->near_room_list_size] = r->base_room;
+            room->near_room_list_size++;
+        }
+        if(r->alternate_room && !Room_IsInNearRoomsList(room, r->alternate_room) && room->near_room_list_size < 31)
+        {
+            room->near_room_list[room->near_room_list_size] = r->alternate_room;
+            room->near_room_list_size++;
+        }
     }
 }
 
@@ -484,13 +494,13 @@ void Room_SwapItems(struct room_s *room, struct room_s *dest_room)
 
 struct room_s *Room_CheckFlip(struct room_s *r)
 {
-    if(r && (r->active == 0))
+    if(r)
     {
-        if((r->base_room != NULL) && (r->base_room->active))
+        if(r->base_room && (r->base_room->active))
         {
             r = r->base_room;
         }
-        else if((r->alternate_room != NULL) && (r->alternate_room->active))
+        else if(r->alternate_room && (r->alternate_room->active))
         {
             r = r->alternate_room;
         }
@@ -652,7 +662,7 @@ int Sectors_Is2SidePortals(struct room_sector_s *s1, struct room_sector_s *s2)
 
 struct room_sector_s *Sector_CheckFlip(struct room_sector_s *rs)
 {
-    if(rs && (rs->owner_room->active == 0))
+    if(rs)
     {
         if(rs->owner_room->base_room && rs->owner_room->base_room->active)
         {

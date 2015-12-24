@@ -44,7 +44,7 @@ inline void Entity_SetSectorStatus(entity_p ent, uint16_t status)
 
 inline uint32_t Entity_GetLock(entity_p ent)
 {
-    return ((ent->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6);      // lock
+    return (ent && (ent->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6);      // lock
 }
 
 
@@ -353,13 +353,14 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     }
                     break;
 
+                    ///@TODO: Fix there conditions!
                 case TR_FD_TRIGFUNC_FLIPON:
                     {
-                        if(!Entity_GetLock(trig_entity))
+                        if(!trig_entity || !Entity_GetLock(trig_entity) && ((trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK) ^ trigger->mask) == 0x1F)
                         {
                             // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
                             // the switch with FLIP_ON trigger, room will remain flipped.
-                            World_SetFlipMap(&engine_world, command->operands, trigger->mask, 1);
+                            //World_SetFlipMap(&engine_world, command->operands, trigger->mask, 1);
                             World_SetFlipState(&engine_world, command->operands, 1);
                         }
                     }
@@ -367,11 +368,11 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                 case TR_FD_TRIGFUNC_FLIPOFF:
                     {
-                        if(!Entity_GetLock(trig_entity))
+                        if(!trig_entity || !Entity_GetLock(trig_entity) && ((trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK) ^ trigger->mask) == 0x1F)
                         {
                             // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
                             // the switch with FLIP_OFF trigger, room will remain unflipped.
-                            World_SetFlipMap(&engine_world, command->operands, trigger->mask, 0);
+                            //World_SetFlipMap(&engine_world, command->operands, trigger->mask, 0);
                             World_SetFlipState(&engine_world, command->operands, 0);
                         }
                     }
