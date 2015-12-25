@@ -239,9 +239,9 @@ typedef struct room_s
     struct room_sector_s       *sectors;
 
     uint16_t                    near_room_list_size;
-    struct room_s              *near_room_list[32];
+    struct room_s             **near_room_list;
     uint16_t                    overlapped_room_list_size;
-    struct room_s              *overlapped_room_list[32];
+    struct room_s             **overlapped_room_list;
     struct room_content_s      *content;
     
     struct engine_container_s  *self;

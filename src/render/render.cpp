@@ -355,7 +355,7 @@ void CRender::DrawList()
         // Add transparency polygons from static meshes (if they exists)
         for(uint16_t j = 0; j < r->content->static_mesh_count; j++)
         {
-            if((r->content->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInFrustumList(r->content->static_mesh[j].obb, (r->frustum)?(r->frustum):(m_camera->frustum)))
+            if((r->content->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInFrustumList(r->content->static_mesh[j].obb, (r->frustum) ? (r->frustum) : (m_camera->frustum)))
             {
                 dynamicBSP->AddNewPolygonList(r->content->static_mesh[j].mesh->transparency_polygons, r->content->static_mesh[j].transform, m_camera->frustum);
             }
@@ -367,7 +367,7 @@ void CRender::DrawList()
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p ent = (entity_p)cont->object;
-                if((ent->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && Frustum_IsOBBVisibleInFrustumList(ent->obb, (r->frustum)?(r->frustum):(m_camera->frustum)))
+                if((ent->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && Frustum_IsOBBVisibleInFrustumList(ent->obb, (r->frustum) ? (r->frustum) : (m_camera->frustum)))
                 {
                     float tr[16];
                     for(uint16_t j = 0; j < ent->bf->bone_tag_count; j++)
@@ -1022,7 +1022,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         {
         case OBJECT_ENTITY:
             ent = (entity_p)cont->object;
-            if(Frustum_IsOBBVisibleInFrustumList(ent->obb, (room->frustum)?(room->frustum):(m_camera->frustum)))
+            if(Frustum_IsOBBVisibleInFrustumList(ent->obb, (room->frustum) ? (room->frustum) : (m_camera->frustum)))
             {
                 this->DrawEntity(ent, modelViewMatrix, modelViewProjectionMatrix);
             }
@@ -1751,7 +1751,7 @@ void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room, struct camera_s
     bool draw_boxes = m_drawFlags & R_DRAW_BOXES;
     for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
     {
-        if(Frustum_IsOBBVisibleInFrustumList(room->content->static_mesh[i].obb, (room->frustum)?(room->frustum):(cam->frustum)) &&
+        if(Frustum_IsOBBVisibleInFrustumList(room->content->static_mesh[i].obb, (room->frustum) ? (room->frustum) : (cam->frustum)) &&
            (!room->content->static_mesh[i].hide || (m_drawFlags & R_DRAW_DUMMY_STATICS)))
         {
             if(draw_boxes)

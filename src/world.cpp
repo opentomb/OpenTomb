@@ -757,30 +757,13 @@ void World_SwapRoomToAlternate(world_p world, struct room_s *room)
 void World_BuildNearRoomsList(world_p world, struct room_s *room)
 {
     room->near_room_list_size = 0;
+    room->near_room_list = (room_t**)Sys_GetTempMem(world->rooms_count * sizeof(room_t*));
 
     portal_p p = room->portals;
     for(uint16_t i = 0; i < room->portals_count; i++, p++)
     {
         Room_AddToNearRoomsList(room, p->dest_room);
     }
-
-    /*if(room->base_room)
-    {
-        p = room->base_room->portals;
-        for(uint16_t i = 0; i < room->base_room->portals_count; i++, p++)
-        {
-            Room_AddToNearRoomsList(room, p->dest_room);
-        }
-    }
-
-    if(room->alternate_room)
-    {
-        p = room->alternate_room->portals;
-        for(uint16_t i = 0; i < room->alternate_room->portals_count; i++, p++)
-        {
-            Room_AddToNearRoomsList(room, p->dest_room);
-        }
-    }*/
 
     uint16_t nc1 = room->near_room_list_size;
 
@@ -793,12 +776,25 @@ void World_BuildNearRoomsList(world_p world, struct room_s *room)
             Room_AddToNearRoomsList(room, p->dest_room);
         }
     }
+
+    if(room->near_room_list_size > 0)
+    {
+        room_t **p = (room_t**)malloc(room->near_room_list_size * sizeof(room_t*));
+        memcpy(p, room->near_room_list, room->near_room_list_size * sizeof(room_t*));
+        room->near_room_list = p;
+    }
+    else
+    {
+        room->near_room_list = NULL;
+    }
+    Sys_ReturnTempMem(world->rooms_count * sizeof(room_t*));
 }
 
 
 void World_BuildOverlappedRoomsList(world_p world, struct room_s *room)
 {
     room->overlapped_room_list_size = 0;
+    room->overlapped_room_list = (room_t**)Sys_GetTempMem(world->rooms_count * sizeof(room_t*));
 
     for(uint32_t i = 0; i < world->rooms_count; i++)
     {
@@ -808,6 +804,18 @@ void World_BuildOverlappedRoomsList(world_p world, struct room_s *room)
             room->overlapped_room_list_size++;
         }
     }
+
+    if(room->overlapped_room_list_size > 0)
+    {
+        room_t **p = (room_t**)malloc(room->overlapped_room_list_size * sizeof(room_t*));
+        memcpy(p, room->overlapped_room_list, room->overlapped_room_list_size * sizeof(room_t*));
+        room->overlapped_room_list = p;
+    }
+    else
+    {
+        room->overlapped_room_list = NULL;
+    }
+    Sys_ReturnTempMem(world->rooms_count * sizeof(room_t*));
 }
 
 /*
@@ -850,7 +858,7 @@ int World_SetFlipState(world_p world, uint32_t flip_index, uint32_t flip_state)
 
 int World_SetFlipMap(world_p world, uint32_t flip_index, uint8_t flip_mask, uint8_t flip_operation)
 {
-    flip_operation = (flip_operation > TRIGGER_OP_XOR)?(TRIGGER_OP_XOR):(TRIGGER_OP_OR);
+    flip_operation = (flip_operation > TRIGGER_OP_XOR) ? (TRIGGER_OP_XOR) : (TRIGGER_OP_OR);
 
     if(flip_index >= engine_world.flip_count)
     {
@@ -1340,8 +1348,8 @@ void World_GenEntityFunctions(world_p world, struct RedBlackNode_s *x)
 void World_GenTextures(struct world_s *world, class VT_Level *tr)
 {
     int border_size = renderer.settings.texture_border;
-    border_size = (border_size < 0)?(0):(border_size);
-    border_size = (border_size > 128)?(128):(border_size);
+    border_size = (border_size < 0) ? (0) : (border_size);
+    border_size = (border_size > 128) ? (128) : (border_size);
     world->tex_atlas = new bordered_texture_atlas(border_size,
                                                   tr->textile32_count,
                                                   tr->textile32,
@@ -2508,7 +2516,7 @@ void World_GenSamples(struct world_s *world, class VT_Level *tr)
             case TR_II:
             case TR_II_DEMO:
             case TR_III:
-                world->audio_map_count = (tr->game_version == TR_III)?(TR_AUDIO_MAP_SIZE_TR3):(TR_AUDIO_MAP_SIZE_TR2);
+                world->audio_map_count = (tr->game_version == TR_III) ? (TR_AUDIO_MAP_SIZE_TR3) : (TR_AUDIO_MAP_SIZE_TR2);
                 ind1 = 0;
                 ind2 = 0;
                 flag = 0;
@@ -2548,7 +2556,7 @@ void World_GenSamples(struct world_s *world, class VT_Level *tr)
             case TR_IV:
             case TR_IV_DEMO:
             case TR_V:
-                world->audio_map_count = (tr->game_version == TR_V)?(TR_AUDIO_MAP_SIZE_TR5):(TR_AUDIO_MAP_SIZE_TR4);
+                world->audio_map_count = (tr->game_version == TR_V) ? (TR_AUDIO_MAP_SIZE_TR5) : (TR_AUDIO_MAP_SIZE_TR4);
 
                 for(i = 0; i < tr->samples_count; i++)
                 {

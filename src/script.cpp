@@ -867,7 +867,7 @@ int lua_print(lua_State * lua)
                break;
 
             case LUA_TBOOLEAN:
-               Con_AddLine(lua_toboolean(lua, i)?("true"):("false"), FONTSTYLE_CONSOLE_EVENT);
+               Con_AddLine(lua_toboolean(lua, i) ? ("true") : ("false"), FONTSTYLE_CONSOLE_EVENT);
                break;
 
             case LUA_TFUNCTION:
@@ -979,10 +979,10 @@ int lua_DumpRoom(lua_State * lua)
     {
         room_sector_p rs = r->sectors;
         Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->id, r->sectors_x, r->sectors_y, r->bb_min[2], r->bb_max[2], r->transform[12 + 0], r->transform[12 + 1]);
-        Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != NULL)?(r->alternate_room->id):(-1), (r->base_room != NULL)?(r->base_room->id):(-1));
+        Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != NULL) ? (r->alternate_room->id) : (-1), (r->base_room != NULL) ? (r->base_room->id) : (-1));
         for(uint32_t i = 0; i < r->sectors_count; i++, rs++)
         {
-            Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, (rs->portal_to_room)?(rs->portal_to_room->id):(-1));
+            Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, (rs->portal_to_room) ? (rs->portal_to_room->id) : (-1));
         }
         for(static_mesh_p sm = r->content->static_mesh; sm < r->content->static_mesh + r->content->static_mesh_count;sm++)
         {
@@ -1396,7 +1396,7 @@ int lua_DropEntity(lua_State * lua)
 
     if(Physics_RayTest(&cb, from, to, ent->self))
     {
-        bool only_room = (top > 2)?(lua_toboolean(lua, 3)):(false);
+        bool only_room = (top > 2) ? (lua_toboolean(lua, 3)) : (false);
 
         if((!only_room) || ((only_room) && (cb.obj) && (cb.obj->object_type == OBJECT_ROOM_BASE)))
         {
@@ -2558,7 +2558,7 @@ int lua_GetSectorHeight(lua_State * lua)
     room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, pos);
     curr_sector = Sector_GetPortalSectorTarget(curr_sector);
     float point[3];
-    (ceiling)?(Sector_LowestCeilingCorner(curr_sector, point)):(Sector_HighestFloorCorner(curr_sector, point));
+    (ceiling) ? (Sector_LowestCeilingCorner(curr_sector, point)) : (Sector_HighestFloorCorner(curr_sector, point));
 
     lua_pushnumber(lua, point[2]);
     return 1;
@@ -2759,7 +2759,7 @@ int lua_MoveEntityToEntity(lua_State * lua)
     ent1->transform[12+1] += speed[1] * t;
 
     ///@FIXME: blood tears
-    bool ignore_z = (top > 3)?(lua_toboolean(lua, 4)):(false);
+    bool ignore_z = (top > 3) ? (lua_toboolean(lua, 4)) : (false);
     if(!ignore_z) ent1->transform[12+2] += speed[2] * t;
 
     if(ent1->character) Character_UpdatePlatformPreStep(ent1);
@@ -3999,7 +3999,7 @@ int lua_SetEntityMeshswap(lua_State * lua)
     ent_dest   = World_GetEntityByID(&engine_world, id_dest);
     model_src  = World_GetModelByID(&engine_world, id_src);
 
-    int meshes_to_copy = (ent_dest->bf->bone_tag_count > model_src->mesh_count)?(model_src->mesh_count):(ent_dest->bf->bone_tag_count);
+    int meshes_to_copy = (ent_dest->bf->bone_tag_count > model_src->mesh_count) ? (model_src->mesh_count) : (ent_dest->bf->bone_tag_count);
 
     for(int i = 0; i < meshes_to_copy; i++)
     {
@@ -4164,7 +4164,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
     entity_p ent = World_GetEntityByID(&engine_world, id);
 
     int body_number = lua_tointeger(lua, 2);
-    body_number = (body_number < 1)?(1):(body_number);
+    body_number = (body_number < 1) ? (1) : (body_number);
 
     if(ent && (ent->bf->bone_tag_count >= body_number))
     {
@@ -4222,7 +4222,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
         if(top >= 3)
         {
             factor[2] = fabs(lua_tonumber(lua, 3));
-            factor[2] = (factor[2] > 1.0)?(1.0):(factor[2]);
+            factor[2] = (factor[2] > 1.0) ? (1.0) : (factor[2]);
         }
         Physics_SetLinearFactor(ent->physics, factor, body_number);
     }

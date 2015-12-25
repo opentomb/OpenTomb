@@ -28,7 +28,7 @@ extern "C" {
 
 inline uint32_t Entity_GetSectorStatus(entity_p ent)
 {
-    return (ent)?((ent->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7):(0);
+    return (ent) ? ((ent->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7) : (0);
 }
 
 
@@ -164,7 +164,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             case TR_FD_TRIGTYPE_MONKEY:
             case TR_FD_TRIGTYPE_CLIMB:
                 // Check move type for triggering entity.
-                header_condition = entity_activator && ((trigger->sub_function == TR_FD_TRIGTYPE_MONKEY)?(entity_activator->move_type == MOVE_MONKEYSWING):(entity_activator->move_type == MOVE_CLIMBING));  // Set additional condition.
+                header_condition = entity_activator && ((trigger->sub_function == TR_FD_TRIGTYPE_MONKEY) ? (entity_activator->move_type == MOVE_MONKEYSWING) : (entity_activator->move_type == MOVE_CLIMBING));  // Set additional condition.
                 break;
 
             case TR_FD_TRIGTYPE_TIGHTROPE:
@@ -313,7 +313,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 Entity_Activate(trig_entity, entity_activator, trigger->mask, mask_mode, trigger->once, trigger->timer);
                             }
                         }
-                        if(entity_activator->bf->animations.model->id != 0)
+                        if(!entity_activator || entity_activator->bf->animations.model->id != 0)
                         {
                             Entity_SetSectorStatus(entity_activator, 1);
                         }
@@ -463,7 +463,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
 
         int activator_type = ( (trigger->sub_function == TR_FD_TRIGTYPE_HEAVY)            ||
                                (trigger->sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER) ||
-                               (trigger->sub_function == TR_FD_TRIGTYPE_HEAVYSWITCH) )     ? TR_ACTIVATORTYPE_MISC : TR_ACTIVATORTYPE_LARA;
+                               (trigger->sub_function == TR_FD_TRIGTYPE_HEAVYSWITCH) ) ? TR_ACTIVATORTYPE_MISC : TR_ACTIVATORTYPE_LARA;
 
         // Table cell header.
 
@@ -530,7 +530,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
             case TR_FD_TRIGTYPE_MONKEY:
             case TR_FD_TRIGTYPE_CLIMB:
                 // Check move type for triggering entity.
-                snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", (trigger->sub_function == TR_FD_TRIGTYPE_MONKEY)?MOVE_MONKEYSWING:MOVE_CLIMBING);
+                snprintf(buf, 128, " if(getEntityMoveType(entity_index) == %d) then \n", (trigger->sub_function == TR_FD_TRIGTYPE_MONKEY) ? MOVE_MONKEYSWING : MOVE_CLIMBING);
                 condition = 1;  // Set additional condition.
                 break;
 

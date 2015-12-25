@@ -129,6 +129,20 @@ void Room_Clear(struct room_s *room)
         room->sectors_y = 0;
     }
 
+    if(room->overlapped_room_list)
+    {
+        room->overlapped_room_list_size = 0;
+        free(room->overlapped_room_list);
+        room->overlapped_room_list = NULL;
+    }
+
+    if(room->near_room_list)
+    {
+        room->near_room_list_size = 0;
+        free(room->near_room_list);
+        room->near_room_list = NULL;
+    }
+
     if(room->obb)
     {
         OBB_Clear(room->obb);
@@ -379,16 +393,18 @@ room_sector_p Room_GetSectorXYZ(room_p room, float pos[3])
 
 void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r)
 {
-    if(room && r && !Room_IsInNearRoomsList(room, r) && room->id != r->id && !Room_IsOverlapped(room, r) && room->near_room_list_size < 31)
+    if(room && r && (room->id != r->id) &&
+       (r != room->base_room) && (r != room->alternate_room) &&
+       !Room_IsInNearRoomsList(room, r) && !Room_IsOverlapped(room, r))
     {
         room->near_room_list[room->near_room_list_size] = r;
         room->near_room_list_size++;
-        if(r->base_room && !Room_IsInNearRoomsList(room, r->base_room) && room->near_room_list_size < 31)
+        if(r->base_room && !Room_IsInNearRoomsList(room, r->base_room))
         {
             room->near_room_list[room->near_room_list_size] = r->base_room;
             room->near_room_list_size++;
         }
-        if(r->alternate_room && !Room_IsInNearRoomsList(room, r->alternate_room) && room->near_room_list_size < 31)
+        if(r->alternate_room && !Room_IsInNearRoomsList(room, r->alternate_room))
         {
             room->near_room_list[room->near_room_list_size] = r->alternate_room;
             room->near_room_list_size++;

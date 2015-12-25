@@ -141,7 +141,7 @@ void Character_Clean(struct entity_s *ent)
 void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
 {
     float t  = ent->anim_linear_speed;
-    float vz = (zeroVz)?(0.0):(ent->speed[2]);
+    float vz = (zeroVz) ? (0.0) : (ent->speed[2]);
 
     t *= (ent->character) ? (ent->character->linear_speed_mult) : (DEFAULT_CHARACTER_SPEED_MULT);
     if(ent->dir_flag & ENT_MOVE_FORWARD)
@@ -259,7 +259,7 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent)
 void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset)
 {
     float from[3], to[3];
-    room_p r = (fc->self)?(fc->self->room):(NULL);
+    room_p r = (fc->self) ? (fc->self->room) : (NULL);
     collision_result_t cb;
     room_sector_p rs;
 
@@ -497,8 +497,8 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     climb->can_hang = 0x00;
     climb->edge_hit = 0x00;
     climb->edge_obj = NULL;
-    climb->floor_limit = (ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point[2]):(-9E10);
-    climb->ceiling_limit = (ent->character->height_info.ceiling_hit)?(ent->character->height_info.ceiling_point[2]):(9E10);
+    climb->floor_limit = (ent->character->height_info.floor_hit) ? (ent->character->height_info.floor_point[2]) : (-9E10);
+    climb->ceiling_limit = (ent->character->height_info.ceiling_hit) ? (ent->character->height_info.ceiling_point[2]) : (9E10);
     vec3_copy(climb->point, ent->character->climb.point);
 
     /*
@@ -517,7 +517,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     from[2] = tmp[2];
     vec3_copy(to, tmp);
 
-    test_height = (test_height >= ent->character->max_step_up_height)?(test_height):(ent->character->max_step_up_height);
+    test_height = (test_height >= ent->character->max_step_up_height) ? (test_height) : (ent->character->max_step_up_height);
     z_min = pos[2] + ent->bf->bb_max[2] - test_height;
 
     tmp[2] = z_min;
@@ -703,8 +703,8 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
     climb->wall_hit = 0x00;
     climb->edge_hit = 0x00;
     climb->edge_obj = NULL;
-    climb->floor_limit = (ent->character->height_info.floor_hit)?(ent->character->height_info.floor_point[2]):(-9E10);
-    climb->ceiling_limit = (ent->character->height_info.ceiling_hit)?(ent->character->height_info.ceiling_point[2]):(9E10);
+    climb->floor_limit = (ent->character->height_info.floor_hit) ? (ent->character->height_info.floor_point[2]) : (-9E10);
+    climb->ceiling_limit = (ent->character->height_info.ceiling_hit) ? (ent->character->height_info.ceiling_point[2]) : (9E10);
     vec3_copy(climb->point, ent->character->climb.point);
 
     if(ent->character->height_info.walls_climb == 0x00)
@@ -789,7 +789,7 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
     if(cb->hasHit())
     {
         point.setInterpolate3(from, to, cb->m_closestHitFraction);
-        climb->ceiling_limit = (climb->ceiling_limit > point.m_floats[2])?(point.m_floats[2]):(climb->ceiling_limit);
+        climb->ceiling_limit = (climb->ceiling_limit > point.m_floats[2]) ? (point.m_floats[2]) : (climb->ceiling_limit);
     }*/
 }
 
@@ -1004,7 +1004,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
             t = ent->character->linear_speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT;
             vec3_mul_scalar(ent->speed, tv, t);                                 // slide down direction
             ang = 180.0 * atan2f(tv[0], -tv[1]) / M_PI;                         // from -180 deg to +180 deg
-            //ang = (ang < 0.0)?(ang + 360.0):(ang);
+            //ang = (ang < 0.0) ? (ang + 360.0) : (ang);
             t = tv[0] * ent->transform[4 + 0] + tv[1] * ent->transform[4 + 1];
             if(t >= 0.0)
             {
@@ -1185,7 +1185,7 @@ int Character_FreeFalling(struct entity_s *ent)
     ent->speed[0] += g[0] * engine_frame_time;
     ent->speed[1] += g[1] * engine_frame_time;
     ent->speed[2] += g[2] * engine_frame_time;
-    ent->speed[2] = (ent->speed[2] < -FREE_FALL_SPEED_MAXIMUM)?(-FREE_FALL_SPEED_MAXIMUM):(ent->speed[2]);
+    ent->speed[2] = (ent->speed[2] < -FREE_FALL_SPEED_MAXIMUM) ? (-FREE_FALL_SPEED_MAXIMUM) : (ent->speed[2]);
     vec3_RotateZ(ent->speed, ent->speed, rot);
 
     if(ent->self->room && (ent->self->room->flags & TR_ROOM_FLAG_WATER))
@@ -2012,7 +2012,7 @@ int Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_val
         return 0;
     }
 
-    max_value = (max_value < 0)?(0):(max_value);    // Clamp max. to at least zero
+    max_value = (max_value < 0) ? (0) : (max_value);    // Clamp max. to at least zero
     ent->character->parameters.maximum[parameter] = max_value;
     return 1;
 }
@@ -2026,8 +2026,8 @@ int Character_SetParam(struct entity_s *ent, int parameter, float value)
 
     float maximum = ent->character->parameters.maximum[parameter];
 
-    value = (value >= 0)?(value):(maximum); // Char params can't be less than zero.
-    value = (value <= maximum)?(value):(maximum);
+    value = (value >= 0) ? (value) : (maximum); // Char params can't be less than zero.
+    value = (value <= maximum) ? (value) : (maximum);
 
     ent->character->parameters.param[parameter] = value;
     return 1;
@@ -2338,7 +2338,7 @@ void Character_DoWeaponFrame(struct entity_s *ent, float time)
                             ss_anim->current_animation = 0;
                             ss_anim->next_animation = ss_anim->current_animation;
                             ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
-                            ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
+                            ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
                             ent->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
                         }
                         break;
@@ -2519,7 +2519,7 @@ void Character_DoWeaponFrame(struct entity_s *ent, float time)
                             ss_anim->current_animation = 0;
                             ss_anim->next_animation = ss_anim->current_animation;
                             ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
-                            ss_anim->next_frame = (ss_anim->current_frame > 0)?(ss_anim->current_frame - 1):(0);
+                            ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
                             ent->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
                         }
                         break;
