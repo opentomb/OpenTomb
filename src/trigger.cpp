@@ -353,27 +353,28 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     }
                     break;
 
-                    ///@TODO: Fix there conditions!
                 case TR_FD_TRIGFUNC_FLIPON:
                     {
-                        if(!trig_entity || !Entity_GetLock(trig_entity) && ((trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK) ^ trigger->mask) == 0x1F)
+                        if(!entity_activator || !Entity_GetSectorStatus(entity_activator))
                         {
                             // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
                             // the switch with FLIP_ON trigger, room will remain flipped.
-                            //World_SetFlipMap(&engine_world, command->operands, trigger->mask, 1);
+                            World_SetFlipMap(&engine_world, command->operands, trigger->mask, 1);
                             World_SetFlipState(&engine_world, command->operands, 1);
+                            Entity_SetSectorStatus(entity_activator, 1);
                         }
                     }
                     break;
 
                 case TR_FD_TRIGFUNC_FLIPOFF:
                     {
-                        if(!trig_entity || !Entity_GetLock(trig_entity) && ((trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK) ^ trigger->mask) == 0x1F)
+                        if(!entity_activator || !Entity_GetSectorStatus(entity_activator))
                         {
                             // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
                             // the switch with FLIP_OFF trigger, room will remain unflipped.
-                            //World_SetFlipMap(&engine_world, command->operands, trigger->mask, 0);
+                            World_SetFlipMap(&engine_world, command->operands, trigger->mask, 0);
                             World_SetFlipState(&engine_world, command->operands, 0);
+                            Entity_SetSectorStatus(entity_activator, 1);
                         }
                     }
                     break;

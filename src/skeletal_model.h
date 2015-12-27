@@ -17,6 +17,11 @@ extern "C" {
 #define ANIM_LOOP_LAST_FRAME            (1)
 #define ANIM_LOCK                       (2)
 
+#define ANIM_TYPE_BASE                  (0x0000)
+#define ANIM_TYPE_WEAPON_LH             (0x0001)
+#define ANIM_TYPE_WEAPON_RH             (0x0002)
+#define ANIM_TYPE_WEAPON_TH             (0x0003)  
+    
 #include <stdint.h>
 
 struct base_mesh_s;
@@ -50,6 +55,7 @@ typedef struct ss_bone_tag_s
 
 typedef struct ss_animation_s
 {
+    int16_t                     type;
     int16_t                     last_state;
     int16_t                     next_state;
     int16_t                     last_animation;

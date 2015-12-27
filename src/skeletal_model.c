@@ -284,6 +284,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     vec3_set_zero(bf->bb_max);
     vec3_set_zero(bf->centre);
     vec3_set_zero(bf->pos);
+    bf->animations.type = ANIM_TYPE_BASE;
     bf->animations.anim_flags = 0x0000;
     bf->animations.frame_time = 0.0;
     bf->animations.period = 1.0 / 30.0;

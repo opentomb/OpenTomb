@@ -2088,14 +2088,12 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
     if((sm != NULL) && (ent->bf->bone_tag_count == sm->mesh_count) && (sm->animation_count >= 4))
     {
         skeletal_model_p bm = ent->bf->animations.model;
-        if(ent->bf->animations.next == NULL)
+        ss_animation_p new_anim = Entity_GetOverrideAnim(ent, ANIM_TYPE_WEAPON_TH);
+        if(!new_anim)
         {
-            Entity_AddOverrideAnim(ent, weapon_model);
+            new_anim = Entity_AddOverrideAnim(ent, weapon_model, ANIM_TYPE_WEAPON_TH);
         }
-        else
-        {
-            ent->bf->animations.next->model = sm;
-        }
+        new_anim->model = sm;
 
         for(uint16_t i = 0; i < bm->mesh_count; i++)
         {
@@ -2138,15 +2136,16 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
     else
     {
         // do unarmed default model
+        ss_animation_p anim = Entity_GetOverrideAnim(ent, ANIM_TYPE_WEAPON_TH);
         skeletal_model_p bm = ent->bf->animations.model;
         for(uint16_t i = 0; i < bm->mesh_count; i++)
         {
             ent->bf->bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
             ent->bf->bone_tags[i].mesh_slot = NULL;
         }
-        if(ent->bf->animations.next != NULL)
+        if(anim)
         {
-            ent->bf->animations.next->model = NULL;
+            anim->model = NULL;
         }
     }
 
@@ -2183,7 +2182,7 @@ void Character_DoWeaponFrame(struct entity_s *ent, float time)
 
         for(ss_animation_p ss_anim=ent->bf->animations.next; ss_anim; ss_anim = ss_anim->next)
         {
-            if((ss_anim->model != NULL) && (ss_anim->model->animation_count > 4))
+            if((ss_anim->type == ANIM_TYPE_WEAPON_TH) && (ss_anim->model != NULL) && (ss_anim->model->animation_count > 4))
             {
                 switch(ent->character->weapon_current_state)
                 {
@@ -2364,7 +2363,7 @@ void Character_DoWeaponFrame(struct entity_s *ent, float time)
                         break;
                 };
             }
-            else if((ss_anim->model != NULL) && (ss_anim->model->animation_count == 4))
+            else if((ss_anim->type == ANIM_TYPE_WEAPON_TH) && (ss_anim->model != NULL) && (ss_anim->model->animation_count == 4))
             {
                 switch(ent->character->weapon_current_state)
                 {

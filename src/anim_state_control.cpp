@@ -1368,21 +1368,23 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(cmd->action == 1)//If Lara is grabbing the block
             {
-                int tf = Character_CheckTraverse(ent, ent->character->traversed_object);
                 ent->dir_flag = ENT_STAY;
                 ss_anim->anim_flags = ANIM_LOOP_LAST_FRAME;                     //We hold it (loop last frame)
-
-                if((cmd->move[0] == 1) && (tf & 0x01))                          //If player press up push
+                if(cmd->move[0] != 0)
                 {
-                    ent->dir_flag = ENT_MOVE_FORWARD;
-                    ss_anim->anim_flags = ANIM_NORMAL_CONTROL;
-                    ss_anim->next_state = TR_STATE_LARA_PUSHABLE_PUSH;
-                }
-                else if((cmd->move[0] == -1) && (tf & 0x02))                    //If player press down pull
-                {
-                    ent->dir_flag = ENT_MOVE_BACKWARD;
-                    ss_anim->anim_flags = ANIM_NORMAL_CONTROL;
-                    ss_anim->next_state = TR_STATE_LARA_PUSHABLE_PULL;
+                    int tf = Character_CheckTraverse(ent, ent->character->traversed_object);
+                    if((cmd->move[0] == 1) && (tf & 0x01))                      //If player press up push
+                    {
+                        ent->dir_flag = ENT_MOVE_FORWARD;
+                        ss_anim->anim_flags = ANIM_NORMAL_CONTROL;
+                        ss_anim->next_state = TR_STATE_LARA_PUSHABLE_PUSH;
+                    }
+                    else if((cmd->move[0] == -1) && (tf & 0x02))                //If player press down pull
+                    {
+                        ent->dir_flag = ENT_MOVE_BACKWARD;
+                        ss_anim->anim_flags = ANIM_NORMAL_CONTROL;
+                        ss_anim->next_state = TR_STATE_LARA_PUSHABLE_PULL;
+                    }
                 }
             }
             else//Lara has let go of the block

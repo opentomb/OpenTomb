@@ -184,7 +184,10 @@ void Room_Enable(struct room_s *room)
         switch(cont->object_type)
         {
             case OBJECT_ENTITY:
-                Entity_Enable((entity_p)cont->object);
+                if(((entity_p)cont->object)->state_flags & ENTITY_STATE_ENABLED)
+                {
+                    Entity_EnableCollision((entity_p)cont->object);
+                }
                 break;
         }
     }
@@ -218,7 +221,10 @@ void Room_Disable(struct room_s *room)
         switch(cont->object_type)
         {
             case OBJECT_ENTITY:
-                Entity_Disable((entity_p)cont->object);
+                if(((entity_p)cont->object)->state_flags & ENTITY_STATE_ENABLED)
+                {
+                    Entity_DisableCollision((entity_p)cont->object);
+                }
                 break;
         }
     }
@@ -490,21 +496,17 @@ int Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1)
 }
 
 
-void Room_SwapItems(struct room_s *room, struct room_s *dest_room)
+void Room_MoveActiveItems(struct room_s *room_to, struct room_s *room_from)
 {
-    engine_container_p t;
+    engine_container_p t = room_from->content->containers;
 
-    for(t = room->content->containers; t; t = t->next)
+    room_from->content->containers = NULL;
+    for(; t; t = t->next)
     {
-        t->room = dest_room;
+        t->room = room_to;
+        t->next = room_to->content->containers;
+        room_to->content->containers = t;
     }
-
-    for(t = dest_room->content->containers; t; t = t->next)
-    {
-        t->room = room;
-    }
-
-    SWAPT(room->content->containers, dest_room->content->containers, t);
 }
 
 

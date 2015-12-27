@@ -271,7 +271,7 @@ void Entity_UpdateTransform(entity_p entity)
 }
 
 
-void Entity_AddOverrideAnim(struct entity_s *ent, int model_id)
+struct ss_animation_s *Entity_AddOverrideAnim(struct entity_s *ent, int model_id, uint16_t anim_type)
 {
     skeletal_model_p sm = World_GetModelByID(&engine_world, model_id);
 
@@ -279,6 +279,7 @@ void Entity_AddOverrideAnim(struct entity_s *ent, int model_id)
     {
         ss_animation_p ss_anim = (ss_animation_p)malloc(sizeof(ss_animation_t));
 
+        ss_anim->type = anim_type;
         ss_anim->model = sm;
         ss_anim->onFrame = NULL;
         ss_anim->next = ent->bf->animations.next;
@@ -291,8 +292,24 @@ void Entity_AddOverrideAnim(struct entity_s *ent, int model_id)
         ss_anim->current_frame = 0;
         ss_anim->next_animation = 0;
         ss_anim->next_frame = 0;
-        ss_anim->period = 1.0 / 30.0;;
+        ss_anim->period = 1.0 / 30.0;
+        return ss_anim;
     }
+
+    return NULL;
+}
+
+
+struct ss_animation_s *Entity_GetOverrideAnim(struct entity_s *ent, uint16_t anim_type)
+{
+    for(ss_animation_p p = &ent->bf->animations; p; p = p->next)
+    {
+        if(p->type == anim_type)
+        {
+            return p;
+        }
+    }
+    return NULL;
 }
 
 

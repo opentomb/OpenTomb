@@ -733,7 +733,6 @@ void World_SwapRoomToBase(world_p world, struct room_s *room)
         renderer.CleanList();
         Room_Disable(room);                                         // Disable current room
         Room_Disable(room->base_room);                              // Paranoid
-        //Room_SwapItems(room, room->base_room);                      // Update items to match this room
         Room_Enable(room->base_room);                               // Enable original room
     }
 }
@@ -748,7 +747,6 @@ void World_SwapRoomToAlternate(world_p world, struct room_s *room)
         renderer.CleanList();
         Room_Disable(room);                                         // Disable current room
         Room_Disable(room->alternate_room);                         // Paranoid
-        //Room_SwapItems(room, room->alternate_room);                 // Update items to match this room
         Room_Enable(room->alternate_room);                          //
     }
 }
