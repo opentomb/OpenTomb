@@ -50,8 +50,11 @@ inline uint32_t Entity_GetLock(entity_p ent)
 
 inline void Entity_SetLock(entity_p ent, uint16_t status)
 {
-    ent->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);
-    ent->trigger_layout ^= ((uint8_t)status) << 6;   // lock  - 01000000
+    if(ent)
+    {
+        ent->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);
+        ent->trigger_layout ^= ((uint8_t)status) << 6;   // lock  - 01000000
+    }
 }
 
 /*

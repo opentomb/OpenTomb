@@ -1811,15 +1811,24 @@ void World_GenRoom(struct world_s *world, struct room_s *room, class VT_Level *t
     room->content->sprites_count = tr_room->num_sprites;
     if(room->content->sprites_count != 0)
     {
+        uint32_t actual_sprites_count = 0;
         room->content->sprites = (room_sprite_p)calloc(room->content->sprites_count, sizeof(room_sprite_t));
         for(uint32_t i = 0; i < room->content->sprites_count; i++)
         {
             if((tr_room->sprites[i].texture >= 0) && ((uint32_t)tr_room->sprites[i].texture < world->sprites_count))
             {
-                room->content->sprites[i].sprite = world->sprites + tr_room->sprites[i].texture;
-                TR_vertex_to_arr(room->content->sprites[i].pos, &tr_room->vertices[tr_room->sprites[i].vertex].vertex);
-                vec3_add(room->content->sprites[i].pos, room->content->sprites[i].pos, room->transform + 12);
+                room_sprite_p rs = room->content->sprites + actual_sprites_count;
+                rs->sprite = world->sprites + tr_room->sprites[i].texture;
+                TR_vertex_to_arr(rs->pos, &tr_room->vertices[tr_room->sprites[i].vertex].vertex);
+                vec3_add(rs->pos, rs->pos, room->transform + 12);
+                actual_sprites_count++;
             }
+        }
+        room->content->sprites_count = actual_sprites_count;
+        if(actual_sprites_count == 0)
+        {
+            free(room->content->sprites);
+            room->content->sprites = NULL;
         }
     }
 

@@ -538,19 +538,22 @@ void Room_GenSpritesBuffer(struct room_s *room)
         for(uint32_t i = 0; i < room->content->sprites_count; i++)
         {
             room_sprite_p s = room->content->sprites + i;
-            vertex_p v = room->content->sprites_vertices + i * 4;
-            vec4_set_one(v[0].color);
-            vec4_set_one(v[1].color);
-            vec4_set_one(v[2].color);
-            vec4_set_one(v[3].color);
-            v[0].tex_coord[0] = s->sprite->tex_coord[0];
-            v[0].tex_coord[1] = s->sprite->tex_coord[1];
-            v[1].tex_coord[0] = s->sprite->tex_coord[2];
-            v[1].tex_coord[1] = s->sprite->tex_coord[3];
-            v[2].tex_coord[0] = s->sprite->tex_coord[4];
-            v[2].tex_coord[1] = s->sprite->tex_coord[5];
-            v[3].tex_coord[0] = s->sprite->tex_coord[6];
-            v[3].tex_coord[1] = s->sprite->tex_coord[7];
+            if(s->sprite)
+            {
+                vertex_p v = room->content->sprites_vertices + i * 4;
+                vec4_set_one(v[0].color);
+                vec4_set_one(v[1].color);
+                vec4_set_one(v[2].color);
+                vec4_set_one(v[3].color);
+                v[0].tex_coord[0] = s->sprite->tex_coord[0];
+                v[0].tex_coord[1] = s->sprite->tex_coord[1];
+                v[1].tex_coord[0] = s->sprite->tex_coord[2];
+                v[1].tex_coord[1] = s->sprite->tex_coord[3];
+                v[2].tex_coord[0] = s->sprite->tex_coord[4];
+                v[2].tex_coord[1] = s->sprite->tex_coord[5];
+                v[3].tex_coord[0] = s->sprite->tex_coord[6];
+                v[3].tex_coord[1] = s->sprite->tex_coord[7];
+            }
         }
     }
 }
