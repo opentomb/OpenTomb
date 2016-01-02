@@ -23,6 +23,7 @@ struct base_mesh_s;
 struct room_s;
 struct room_sector_s;
 struct sector_tween_s;
+struct tr5_room_light_s;
 
 
 void     Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
@@ -30,6 +31,7 @@ bool     Res_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struc
 
 int  Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, struct room_sector_s *sector, class VT_Level *tr);
 int  Res_Sector_In2SideOfPortal(struct room_sector_s *s1, struct room_sector_s *s2, struct portal_s *p);
+void Res_RoomLightCalculate(struct light_s *light, struct tr5_room_light_s *tr_light);
 void Res_RoomSectorsCalculate(struct room_s *rooms, uint32_t rooms_count, uint32_t room_index, class VT_Level *tr);
 
 // Functions generating native OpenTomb structs from legacy TR structs.

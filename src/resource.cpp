@@ -664,6 +664,60 @@ int Res_Sector_In2SideOfPortal(struct room_sector_s *s1, struct room_sector_s *s
 }
 
 
+void Res_RoomLightCalculate(struct light_s *light, struct tr5_room_light_s *tr_light)
+{
+    switch(tr_light->light_type)
+    {
+        case 0:
+            light->light_type = LT_SUN;
+            break;
+
+        case 1:
+            light->light_type = LT_POINT;
+            break;
+
+        case 2:
+            light->light_type = LT_SPOTLIGHT;
+            break;
+
+        case 3:
+            light->light_type = LT_SHADOW;
+            break;
+
+        default:
+            light->light_type = LT_NULL;
+            break;
+    }
+
+    light->pos[0] = tr_light->pos.x;
+    light->pos[1] =-tr_light->pos.z;
+    light->pos[2] = tr_light->pos.y;
+    light->pos[3] = 1.0f;
+
+    if(light->light_type == LT_SHADOW)
+    {
+        light->colour[0] = -(tr_light->color.r / 255.0f) * tr_light->intensity;
+        light->colour[1] = -(tr_light->color.g / 255.0f) * tr_light->intensity;
+        light->colour[2] = -(tr_light->color.b / 255.0f) * tr_light->intensity;
+        light->colour[3] = 1.0f;
+    }
+    else
+    {
+        light->colour[0] = (tr_light->color.r / 255.0f) * tr_light->intensity;
+        light->colour[1] = (tr_light->color.g / 255.0f) * tr_light->intensity;
+        light->colour[2] = (tr_light->color.b / 255.0f) * tr_light->intensity;
+        light->colour[3] = 1.0f;
+    }
+
+    light->inner = tr_light->r_inner;
+    light->outer = tr_light->r_outer;
+    light->length = tr_light->length;
+    light->cutoff = tr_light->cutoff;
+
+    light->falloff = 0.001f / light->outer;
+}
+
+
 void Res_RoomSectorsCalculate(struct room_s *rooms, uint32_t rooms_count, uint32_t room_index, class VT_Level *tr)
 {
     room_sector_p sector;

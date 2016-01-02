@@ -3266,9 +3266,6 @@
 		<Unit filename="src/skeletal_model.h" />
 		<Unit filename="src/trigger.cpp" />
 		<Unit filename="src/trigger.h" />
-		<Unit filename="src/vt/glmath.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="src/vt/l_common.cpp" />
 		<Unit filename="src/vt/l_main.cpp" />
 		<Unit filename="src/vt/l_main.h">

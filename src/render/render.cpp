@@ -1252,7 +1252,7 @@ const lit_shader_description *CRender::SetupEntityLight(struct entity_s *entity,
         memset(innerRadiuses, 0, sizeof(innerRadiuses));
         memset(outerRadiuses, 0, sizeof(outerRadiuses));
 
-        for(uint32_t i = 0; i < room->content->light_count && current_light_number < MAX_NUM_LIGHTS; i++)
+        for(uint32_t i = 0; i < room->content->lights_count && current_light_number < MAX_NUM_LIGHTS; i++)
         {
             current_light = &room->content->lights[i];
 

@@ -76,11 +76,11 @@ void Room_Clear(struct room_s *room)
             room->content->sprites_vertices = NULL;
         }
 
-        if(room->content->light_count)
+        if(room->content->lights_count)
         {
             free(room->content->lights);
             room->content->lights = NULL;
-            room->content->light_count = 0;
+            room->content->lights_count = 0;
         }
 
         free(room->content);

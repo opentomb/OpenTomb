@@ -49,7 +49,7 @@
 #define TR_SECTOR_TWEEN_TYPE_NONE               0   // Degenerated vertical polygon.
 #define TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT     1   // Triangle pointing right (viewed front).
 #define TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT      2   // Triangle pointing left (viewed front).
-#define TR_SECTOR_TWEEN_TYPE_QUAD               3   // 
+#define TR_SECTOR_TWEEN_TYPE_QUAD               3   //
 #define TR_SECTOR_TWEEN_TYPE_2TRIANGLES         4   // it looks like a butterfly
 
 
@@ -128,7 +128,7 @@ typedef struct room_sector_s
 {
     uint32_t                    trig_index; // Trigger function index.
     int32_t                     box_index;
-    
+
     uint32_t                    flags;      // Climbability, death etc.
     uint32_t                    material;   // Footstep sound and footsteps.
 
@@ -140,7 +140,7 @@ typedef struct room_sector_s
     struct room_sector_s       *sector_above;
     struct room_s              *owner_room;    // Room that contain this sector
     struct room_s              *portal_to_room;
-    
+
     int16_t                     index_x;
     int16_t                     index_y;
     float                       pos[3];
@@ -202,14 +202,14 @@ typedef struct room_content_s
     uint32_t                    sprites_count;
     struct room_sprite_s       *sprites;
     struct vertex_s            *sprites_vertices;
-    uint32_t                    light_count;
+    uint32_t                    lights_count;
     struct light_s             *lights;
-    
+
     int16_t                     light_mode;                                     // (present only in TR2: 0 is normal, 1 is flickering(?), 2 and 3 are uncertain)
     uint8_t                     reverb_info;                                    // room reverb type
     uint8_t                     water_scheme;
     uint8_t                     alternate_group;
-    
+
     float                       ambient_lighting[3];
     struct base_mesh_s         *mesh;                                           // room's base mesh
     struct physics_object_s    *physics_body;
@@ -220,7 +220,7 @@ typedef struct room_s
 {
     uint32_t                    id;                                             // room's ID
     uint32_t                    flags;                                          // room's type + water, wind info
-    
+
     int8_t                      is_in_r_list;                                   // is room in render list
     int8_t                      active;
     uint16_t                    portals_count;                                  // number of room portals
@@ -228,7 +228,7 @@ typedef struct room_s
     struct room_s              *alternate_room;                                 // alternative room pointer
     struct room_s              *base_room;                                      // base room == room->alternate_room->base_room
     struct frustum_s           *frustum;
-    
+
     struct obb_s               *obb;
     float                       bb_min[3];                                      // room's bounding box
     float                       bb_max[3];                                      // room's bounding box
@@ -243,7 +243,7 @@ typedef struct room_s
     uint16_t                    overlapped_room_list_size;
     struct room_s             **overlapped_room_list;
     struct room_content_s      *content;
-    
+
     struct engine_container_s  *self;
 }room_t, *room_p;
 

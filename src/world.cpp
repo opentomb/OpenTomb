@@ -1707,6 +1707,7 @@ void World_GenRoom(struct world_s *world, struct room_s *room, class VT_Level *t
     room->content->static_mesh = NULL;
     room->content->sprites = NULL;
     room->content->sprites_vertices = NULL;
+    room->content->lights_count = 0;
     room->content->lights = NULL;
     room->content->light_mode = tr->rooms[room->id].light_mode;
     room->content->reverb_info = tr->rooms[room->id].reverb_info;
@@ -1788,7 +1789,7 @@ void World_GenRoom(struct world_s *world, struct room_s *room, class VT_Level *t
 
         if((tr_static->flags == 3) ||
            ((r_static->cbb_min[0] == r_static->cbb_min[1]) && (r_static->cbb_min[1] == r_static->cbb_min[2]) &&
-            (r_static->cbb_max[0] == r_static->cbb_max[1]) && (r_static->cbb_max[1] == r_static->cbb_max[2])) )
+            (r_static->cbb_max[0] == r_static->cbb_max[1]) && (r_static->cbb_max[1] == r_static->cbb_max[2])))
         {
             r_static->self->collision_type = COLLISION_NONE;
         }
@@ -1874,7 +1875,7 @@ void World_GenRoom(struct world_s *world, struct room_s *room, class VT_Level *t
         else
         {
             sector->box_index = (tr_room->sector_list[i].box_index & 0xFFF0) >> 4;
-            sector->material  =  tr_room->sector_list[i].box_index & 0x000F;
+            sector->material  = (tr_room->sector_list[i].box_index & 0x000F);
         }
 
         if(sector->box_index == 0xFFFF) sector->box_index = -1;
@@ -1971,62 +1972,15 @@ void World_GenRoom(struct world_s *world, struct room_s *room, class VT_Level *t
     /*
      *  load lights
      */
-    room->content->light_count = tr_room->num_lights;
-    if(room->content->light_count)
+    room->content->lights_count = tr_room->num_lights;
+    if(room->content->lights_count > 0)
     {
-        room->content->lights = (light_p)malloc(room->content->light_count * sizeof(light_t));
+        room->content->lights = (light_p)malloc(room->content->lights_count * sizeof(light_t));
+        for(uint16_t i = 0; i < tr_room->num_lights; i++)
+        {
+            Res_RoomLightCalculate(room->content->lights + i, tr_room->lights + i);
+        }
     }
-
-    for(uint16_t i = 0; i < tr_room->num_lights; i++)
-    {
-        struct light_s *light = room->content->lights + i;
-        switch(tr_room->lights[i].light_type)
-        {
-        case 0:
-            light->light_type = LT_SUN;
-            break;
-        case 1:
-            light->light_type = LT_POINT;
-            break;
-        case 2:
-            light->light_type = LT_SPOTLIGHT;
-            break;
-        case 3:
-            light->light_type = LT_SHADOW;
-            break;
-        default:
-            light->light_type = LT_NULL;
-            break;
-        }
-
-        light->pos[0] = tr_room->lights[i].pos.x;
-        light->pos[1] = -tr_room->lights[i].pos.z;
-        light->pos[2] = tr_room->lights[i].pos.y;
-        light->pos[3] = 1.0f;
-
-        if(light->light_type == LT_SHADOW)
-        {
-            light->colour[0] = -(tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
-            light->colour[1] = -(tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
-            light->colour[2] = -(tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
-            light->colour[3] = 1.0f;
-        }
-        else
-        {
-            light->colour[0] = (tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
-            light->colour[1] = (tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
-            light->colour[2] = (tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
-            light->colour[3] = 1.0f;
-        }
-
-        light->inner = tr_room->lights[i].r_inner;
-        light->outer = tr_room->lights[i].r_outer;
-        light->length = tr_room->lights[i].length;
-        light->cutoff = tr_room->lights[i].cutoff;
-
-        light->falloff = 0.001f / light->outer;
-    }
-
 
     /*
      * portals loading / calculation!!!
