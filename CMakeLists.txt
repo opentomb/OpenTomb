@@ -8,8 +8,8 @@ cmake_minimum_required(VERSION 3.2)
 include("cmake/HunterGate.cmake")
 
 HunterGate(
-    URL "https://github.com/stohrendorf/hunter/archive/c08b8a8f9ff046efc1070b0c330cab9340a514cc.zip"
-    SHA1 "cdd715810d6ba32b5cb16b4d06a4d1f54e401059"
+    URL "https://github.com/stohrendorf/hunter/archive/51a1917980f832f400794e29adcc3a03711e915d.zip"
+    SHA1 "98a8b138330aebb3db031cd83b656b54caa2115b"
 )
 
 project(OpenTomb)
@@ -38,6 +38,7 @@ function(GROUP_FILES)
     endforeach()
 endfunction()
 
+
 # Dependency: OpenAL
 find_package(OpenAL)
 add_library(OpenAL INTERFACE)
@@ -57,7 +58,11 @@ if(NOT OPENAL_FOUND)
         GIT_TAG openal-soft-1.17.0
     )
     target_include_directories(OpenAL INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/OpenAL/include)
-    target_link_libraries(OpenAL INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/OpenAL/libopenal.so)
+    if(LINUX OR APPLE)
+        target_link_libraries(OpenAL INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/OpenAL/libopenal.so)
+    else()
+        target_link_libraries(OpenAL INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/OpenAL/lib/OpenAL32.lib)
+    endif()
 else()
     target_include_directories(OpenAL INTERFACE ${OPENAL_INCLUDE_DIR})
     target_link_libraries(OpenAL INTERFACE ${OPENAL_LIBRARY})
@@ -127,18 +132,14 @@ target_include_directories(Lua INTERFACE ${LUA_INCLUDE_DIR})
 
 
 # Dependency: SDL2
-find_package(SDL2 REQUIRED)
+option(SKIP_SYSTEM_SDL2 "Skip the sytem-provided SDL2 installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
+if(SKIP_SYSTEM_LUA)
+    hunter_add_package(SDL2)
+endif()
+find_package(SDL2 MODULE REQUIRED)
 add_library(SDL2 INTERFACE)
-target_include_directories(SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
 target_link_libraries(SDL2 INTERFACE ${SDL2_LIBRARY})
-
-
-# Dependency: SDL2Image
-find_package(SDL2Image REQUIRED)
-add_library(SDL2_IMAGE INTERFACE)
-target_include_directories(SDL2_IMAGE INTERFACE ${SDL2_INCLUDE_DIR})
-target_include_directories(SDL2_IMAGE INTERFACE ${SDL2IMAGE_INCLUDE_DIR})
-target_link_libraries(SDL2_IMAGE INTERFACE ${SDL2IMAGE_LIBRARY})
+target_include_directories(SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
 
 
 # Dependency: GLM
@@ -168,6 +169,11 @@ endif()
 
 target_include_directories(Boost INTERFACE ${Boost_INCLUDE_DIR})
 target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})
+
+
+# Dependency: CImg
+add_library(CImg INTERFACE)
+target_include_directories(CImg INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/CImg)
 
 
 # Dependency: OGG

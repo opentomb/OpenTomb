@@ -6,7 +6,7 @@
 #include "strings.h"
 
 #include <SDL2/SDL_surface.h>
-#include <SDL2/SDL_image.h>
+#include <CImg.h>
 
 #include <boost/filesystem.hpp>
 
@@ -126,42 +126,35 @@ void Fader::SetAspect()
 
 bool Fader::SetTexture(const std::string& texture_path)
 {
-#ifdef __APPLE_CC__
-    // Load the texture file using ImageIO
-    CGDataProviderRef provider = CGDataProviderCreateWithFilename(texture_path.c_str());
-    CFDictionaryRef empty = CFDictionaryCreate(kCFAllocatorDefault, nullptr, nullptr, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-    CGImageSourceRef source = CGImageSourceCreateWithDataProvider(provider, empty);
-    CGDataProviderRelease(provider);
-    CFRelease(empty);
-
-    // Check whether loading succeeded
-    CGImageSourceStatus status = CGImageSourceGetStatus(source);
-    if(status != kCGImageStatusComplete)
+    cimg_library::CImg<uint8_t> surface;
+    try
     {
-        CFRelease(source);
-        Console::instance().warning(SYSWARN_IMAGE_NOT_LOADED, texture_path.c_str(), status);
+        surface.load(texture_path.c_str());
+    }
+    catch(cimg_library::CImgIOException& ex)
+    {
+        Console::instance().warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path.c_str(), SDL_GetError());
         return false;
     }
 
-    // Get the image
-    CGImageRef image = CGImageSourceCreateImageAtIndex(source, 0, nullptr);
-    CFRelease(source);
-    size_t width = CGImageGetWidth(image);
-    size_t height = CGImageGetHeight(image);
-
-    // Prepare the data to write to
-    uint8_t *data = new uint8_t[width * height * 4];
-
-    // Write image to bytes. This is done by drawing it into an off-screen image context using our data as the backing store
-    CGColorSpaceRef deviceRgb = CGColorSpaceCreateDeviceRGB();
-    CGContextRef context = CGBitmapContextCreate(data, width, height, 8, width * 4, deviceRgb, kCGImageAlphaPremultipliedFirst);
-    CGColorSpaceRelease(deviceRgb);
-    BOOST_ASSERT(context);
-
-    CGContextDrawImage(context, CGRectMake(0, 0, width, height), image);
-
-    CGContextRelease(context);
-    CGImageRelease(image);
+    // Get the color depth of the SDL surface
+    GLint color_depth;
+    GLenum texture_format;
+    if(surface.spectrum() == 4)        // Contains an alpha channel
+    {
+        texture_format = GL_RGBA;
+        color_depth = GL_RGBA;
+    }
+    else if(surface.spectrum() == 3)   // No alpha channel
+    {
+        texture_format = GL_RGB;
+        color_depth = GL_RGB;
+    }
+    else
+    {
+        Console::instance().warning(SYSWARN_NOT_TRUECOLOR_IMG, texture_path.c_str());
+        return false;
+    }
 
     // Drop previously assigned texture, if it exists.
     DropTexture();
@@ -176,126 +169,35 @@ bool Fader::SetTexture(const std::string& texture_path)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // Load texture. The weird format works out to ARGB8 in the end
-    // (on little-endian systems), which is what we specified above and what
-    // OpenGL prefers internally.
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, (GLuint)width, (GLuint)height, 0,
-                 GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
+    // Edit the texture object's image data using the information SDL_Surface gives us
+    glTexImage2D(GL_TEXTURE_2D, 0, color_depth, surface.width(), surface.height(), 0,
+                    texture_format, GL_UNSIGNED_BYTE, surface.data());
 
-    // Cleanup
-    delete[] data;
+    // Unbind the texture - is it really necessary?
+    // glBindTexture(GL_TEXTURE_2D, 0);
 
-    // Setup the additional required information
-    mTextureWidth = width;
-    mTextureHeight = height;
+    // Set additional parameters
+    mTextureWidth = surface.width();
+    mTextureHeight = surface.height();
 
     SetAspect();
 
     Console::instance().notify(SYSNOTE_LOADED_FADER, texture_path.c_str());
     return true;
-#else
-    SDL_Surface *surface = IMG_Load(texture_path.c_str());
-    GLenum       texture_format;
-    GLint        color_depth;
-
-    if(surface != nullptr)
-    {
-        // Get the color depth of the SDL surface
-        color_depth = surface->format->BytesPerPixel;
-
-        if(color_depth == 4)        // Contains an alpha channel
-        {
-            if(surface->format->Rmask == 0x000000ff)
-                texture_format = GL_RGBA;
-            else
-                texture_format = GL_BGRA;
-
-            color_depth = GL_RGBA;
-        }
-        else if(color_depth == 3)   // No alpha channel
-        {
-            if(surface->format->Rmask == 0x000000ff)
-                texture_format = GL_RGB;
-            else
-                texture_format = GL_BGR;
-
-            color_depth = GL_RGB;
-        }
-        else
-        {
-            Console::instance().warning(SYSWARN_NOT_TRUECOLOR_IMG, texture_path.c_str());
-            SDL_FreeSurface(surface);
-            return false;
-        }
-
-        // Drop previously assigned texture, if it exists.
-        DropTexture();
-
-        // Have OpenGL generate a texture object handle for us
-        glGenTextures(1, &mTexture);
-
-        // Bind the texture object
-        glBindTexture(GL_TEXTURE_2D, mTexture);
-
-        // Set the texture's stretching properties
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        // Edit the texture object's image data using the information SDL_Surface gives us
-        glTexImage2D(GL_TEXTURE_2D, 0, color_depth, surface->w, surface->h, 0,
-                     texture_format, GL_UNSIGNED_BYTE, surface->pixels);
-    }
-    else
-    {
-        Console::instance().warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path.c_str(), SDL_GetError());
-        return false;
-    }
-
-    // Unbind the texture - is it really necessary?
-    // glBindTexture(GL_TEXTURE_2D, 0);
-
-    // Free the SDL_Surface only if it was successfully created
-    if(surface)
-    {
-        // Set additional parameters
-        mTextureWidth = surface->w;
-        mTextureHeight = surface->h;
-
-        SetAspect();
-
-        Console::instance().notify(SYSNOTE_LOADED_FADER, texture_path.c_str());
-        SDL_FreeSurface(surface);
-        return true;
-    }
-    else
-    {
-        /// if mTexture == 0 then trouble
-        if(glIsTexture(mTexture))
-        {
-            glDeleteTextures(1, &mTexture);
-        }
-        mTexture = 0;
-        return false;
-    }
-#endif
 }
 
 bool Fader::DropTexture()
 {
-    if(mTexture)
-    {
-        /// if mTexture is incorrect then maybe trouble
-        if(glIsTexture(mTexture))
-        {
-            glDeleteTextures(1, &mTexture);
-        }
-        mTexture = 0;
-        return true;
-    }
-    else
-    {
+    if(!mTexture)
         return false;
+
+    /// if mTexture is incorrect then maybe trouble
+    if(glIsTexture(mTexture))
+    {
+        glDeleteTextures(1, &mTexture);
     }
+    mTexture = 0;
+    return true;
 }
 
 void Fader::Engage(FaderDir fade_dir)

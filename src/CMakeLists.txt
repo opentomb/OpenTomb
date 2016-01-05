@@ -211,7 +211,7 @@ target_link_libraries(
     Bullet
     GLEW
     SDL2
-    SDL2_IMAGE
+    CImg
     ZLIB::zlib
     Lua
     freetype
