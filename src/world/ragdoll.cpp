@@ -7,7 +7,7 @@
 namespace world
 {
 
-bool RDSetup::getSetup(int ragdoll_index)
+bool RagdollSetup::getSetup(int ragdoll_index)
 {
     lua::Value rds = engine_lua["getRagdollSetup"](ragdoll_index);
     if(!rds.is<lua::Table>())
@@ -41,7 +41,7 @@ bool RDSetup::getSetup(int ragdoll_index)
     for(size_t i = 0; i < joint_setup.size(); i++)
     {
         joint_setup[i].body_index = rds["joint"][i + 1]["body_index"].toInt();
-        joint_setup[i].joint_type = static_cast<RDJointSetup::Type>(rds["joint"][i + 1]["joint_type"].toInt());
+        joint_setup[i].joint_type = static_cast<RagdollJointSetup::Type>(rds["joint"][i + 1]["joint_type"].toInt());
         if(rds["joint"][i + 1]["body1_offset"].is<lua::Table>())
         {
             for(int j = 0; j < 3; ++j)
@@ -72,7 +72,7 @@ bool RDSetup::getSetup(int ragdoll_index)
     return true;
 }
 
-void RDSetup::clearSetup()
+void RagdollSetup::clearSetup()
 {
     body_setup.clear();
     joint_setup.clear();

@@ -88,7 +88,7 @@ bool Frustum::isVisible(const BoundingBox& bb) const
 {
     // see https://fgiesen.wordpress.com/2010/10/17/view-frustum-culling/, method 5
     const glm::vec3 center = bb.getCenter();
-    const glm::vec3 extent = bb.getDiameter();
+    const glm::vec3 extent = bb.getExtent();
     for(const util::Plane& plane : m_planes)
     {
         glm::vec3 signFlipped = center;

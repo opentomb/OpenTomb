@@ -1282,7 +1282,7 @@ void renderItem(const world::animation::Skeleton& bf, glm::float_t size, const g
 
     if(size != 0.0)
     {
-        auto bb = bf.getBoundingBox().getDiameter();
+        auto bb = bf.getBoundingBox().getExtent();
         size /= glm::max(glm::max(bb[0], bb[1]), bb[2]);
         size *= 0.8f;
 

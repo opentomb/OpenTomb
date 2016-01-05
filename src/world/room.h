@@ -133,7 +133,7 @@ struct Room : public Object
     std::vector<std::shared_ptr<Room>> m_overlappedRooms;
     std::unique_ptr<btRigidBody> m_btBody;
 
-    explicit Room(uint32_t id, Room* room = nullptr)
+    explicit Room(ObjectId id, Room* room = nullptr)
         : Object(id, room)
     {
     }

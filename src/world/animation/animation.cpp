@@ -310,7 +310,7 @@ void Skeleton::updateBoundingBox()
     m_boundingBox = m_bones[0].mesh->m_boundingBox;
     for(const Bone& bone : m_bones)
     {
-        m_boundingBox.adjust(glm::vec3(bone.full_transform[3]), bone.mesh->m_boundingBox.getOuterDiameter() * 0.5f);
+        m_boundingBox.adjust(glm::vec3(bone.full_transform[3]), bone.mesh->m_boundingBox.getMaximumExtent() * 0.5f);
     }
 }
 
@@ -323,7 +323,7 @@ void Skeleton::createGhosts(Entity& entity)
 
     for(world::animation::Bone& bone : m_bones)
     {
-        glm::vec3 box = GhostVolumeCollisionCoefficient * bone.mesh->m_boundingBox.getDiameter();
+        glm::vec3 box = GhostVolumeCollisionCoefficient * bone.mesh->m_boundingBox.getExtent();
         bone.shape = std::make_shared<btBoxShape>(util::convert(box));
         bone.shape->setMargin(COLLISION_MARGIN_DEFAULT);
         bone.mesh->m_radius = std::min(std::min(box.x, box.y), box.z);
@@ -430,7 +430,7 @@ void Skeleton::updateCurrentCollisions(const Entity& entity, const glm::mat4& tr
     }
 }
 
-bool Skeleton::createRagdoll(const RDSetup& setup)
+bool Skeleton::createRagdoll(const RagdollSetup& setup)
 {
     bool result = true;
     for(size_t i = 0; i < setup.body_setup.size(); i++)
@@ -459,11 +459,11 @@ bool Skeleton::createRagdoll(const RDSetup& setup)
         m_bones[i].bt_body->setRestitution(setup.body_setup[i].restitution);
         m_bones[i].bt_body->setFriction(setup.body_setup[i].friction);
 
-        m_bones[i].bt_body->setSleepingThresholds(RD_DEFAULT_SLEEPING_THRESHOLD, RD_DEFAULT_SLEEPING_THRESHOLD);
+        m_bones[i].bt_body->setSleepingThresholds(RagdollDefaultSleepingThreshold, RagdollDefaultSleepingThreshold);
 
         if(!m_bones[i].parent)
         {
-            glm::float_t r = m_bones[i].mesh->m_boundingBox.getInnerDiameter();
+            glm::float_t r = m_bones[i].mesh->m_boundingBox.getMinimumExtent();
             m_bones[i].bt_body->setCcdMotionThreshold(0.8f * r);
             m_bones[i].bt_body->setCcdSweptSphereRadius(r);
         }

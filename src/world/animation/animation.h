@@ -21,7 +21,7 @@ namespace world
 struct Character;
 struct SkeletalModel;
 struct Entity;
-struct RDSetup;
+struct RagdollSetup;
 enum class CollisionShape;
 enum class CollisionType;
 
@@ -505,7 +505,7 @@ class Skeleton
     }
 
     void updateCurrentCollisions(const Entity& entity, const glm::mat4& transform);
-    bool createRagdoll(const RDSetup& setup);
+    bool createRagdoll(const RagdollSetup& setup);
     void initCollisions(const glm::vec3& speed);
     void updateRigidBody(const glm::mat4& transform);
     btCollisionObject* getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t& curr_flag);

@@ -69,7 +69,7 @@ HeightInfo::HeightInfo()
     sp->setMargin(COLLISION_MARGIN_DEFAULT);
 }
 
-Character::Character(uint32_t id) : Entity(id), m_stateController(this)
+Character::Character(ObjectId id) : Entity(id), m_stateController(this)
 {
     m_sphere->setMargin(COLLISION_MARGIN_DEFAULT);
 

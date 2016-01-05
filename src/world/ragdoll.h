@@ -9,12 +9,12 @@
 namespace world
 {
 
-#define RD_DEFAULT_SLEEPING_THRESHOLD 10.0
+constexpr const btScalar RagdollDefaultSleepingThreshold = 10;
 
 // Joint setup struct is used to parse joint script entry to
 // actual joint.
 
-struct RDJointSetup
+struct RagdollJointSetup
 {
     enum Type
     {
@@ -37,7 +37,7 @@ struct RDJointSetup
 
 // Ragdoll body setup is used to modify body properties for ragdoll needs.
 
-struct RDBodySetup
+struct RagdollBodySetup
 {
     btScalar        mass;
 
@@ -49,13 +49,13 @@ struct RDBodySetup
 // Ragdoll setup struct is an unified structure which contains settings
 // for ALL joints and bodies of a given ragdoll.
 
-struct RDSetup
+struct RagdollSetup
 {
     btScalar            joint_cfm = 0;      // Constraint force mixing (joint softness)
     btScalar            joint_erp = 0;      // Error reduction parameter (joint "inertia")
 
-    std::vector<RDJointSetup> joint_setup;
-    std::vector<RDBodySetup> body_setup;
+    std::vector<RagdollJointSetup> joint_setup;
+    std::vector<RagdollBodySetup> body_setup;
 
     std::string hit_func;   // Later to be implemented as hit callback function.
 

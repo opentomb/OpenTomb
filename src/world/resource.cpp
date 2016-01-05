@@ -3450,7 +3450,7 @@ namespace world
 
     void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
     {
-        for(uint32_t i = 0; i < tr->m_items.size(); i++)
+        for(ObjectId i = 0; i < tr->m_items.size(); i++)
         {
             loader::Item *tr_item = &tr->m_items[i];
             std::shared_ptr<Entity> entity = tr_item->object_id == 0 ? std::make_shared<Character>(i) : std::make_shared<Entity>(i);

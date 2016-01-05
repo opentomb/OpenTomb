@@ -11,7 +11,7 @@ namespace core
 
 void OrientedBoundingBox::rebuild(const BoundingBox& boundingBox)
 {
-    extent = boundingBox.getDiameter() * 0.5f;
+    extent = boundingBox.getExtent() * 0.5f;
     base_centre = boundingBox.getCenter();
     radius = glm::length(extent);
 

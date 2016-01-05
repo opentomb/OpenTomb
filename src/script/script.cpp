@@ -483,7 +483,7 @@ void lua_AddEntityRagdoll(world::ObjectId ent_id, int setup_index)
 
     if(ent)
     {
-        world::RDSetup ragdoll_setup;
+        world::RagdollSetup ragdoll_setup;
 
         if(!ragdoll_setup.getSetup(setup_index))
         {

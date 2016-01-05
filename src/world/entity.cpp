@@ -747,7 +747,7 @@ Entity::~Entity()
     }
 }
 
-bool Entity::createRagdoll(RDSetup* setup)
+bool Entity::createRagdoll(RagdollSetup* setup)
 {
     // No entity, setup or body count overflow - bypass function.
 
@@ -807,13 +807,13 @@ bool Entity::createRagdoll(RDSetup* setup)
 
         switch(setup->joint_setup[i].joint_type)
         {
-            case RDJointSetup::Point:
+            case RagdollJointSetup::Point:
             {
                 m_skeleton.model()->bt_joints[i] = std::make_shared<btPoint2PointConstraint>(*m_skeleton.getBones()[btA->index].bt_body, *m_skeleton.getBones()[btB->index].bt_body, localA.getOrigin(), localB.getOrigin());
             }
             break;
 
-            case RDJointSetup::Hinge:
+            case RagdollJointSetup::Hinge:
             {
                 std::shared_ptr<btHingeConstraint> hingeC = std::make_shared<btHingeConstraint>(*m_skeleton.getBones()[btA->index].bt_body, *m_skeleton.getBones()[btB->index].bt_body, localA, localB);
                 hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], 0.9f, 0.3f, 0.3f);
@@ -821,7 +821,7 @@ bool Entity::createRagdoll(RDSetup* setup)
             }
             break;
 
-            case RDJointSetup::Cone:
+            case RagdollJointSetup::Cone:
             {
                 std::shared_ptr<btConeTwistConstraint> coneC = std::make_shared<btConeTwistConstraint>(*m_skeleton.getBones()[btA->index].bt_body, *m_skeleton.getBones()[btB->index].bt_body, localA, localB);
                 coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2], 0.9f, 0.3f, 0.7f);

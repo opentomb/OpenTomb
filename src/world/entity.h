@@ -24,7 +24,7 @@ namespace world
 {
 struct Room;
 struct RoomSector;
-struct RDSetup;
+struct RagdollSetup;
 struct Character;
 
 namespace core
@@ -197,7 +197,7 @@ public:
     {
     }
 
-    bool createRagdoll(RDSetup* setup);
+    bool createRagdoll(RagdollSetup* setup);
     bool deleteRagdoll();
 
     virtual void fixPenetrations(const glm::vec3* move);
