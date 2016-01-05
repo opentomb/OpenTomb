@@ -199,7 +199,7 @@ struct HeightInfo
 
     std::shared_ptr<engine::BtEngineClosestRayResultCallback> cb;
     std::shared_ptr<engine::BtEngineClosestConvexResultCallback> ccb;
-    std::shared_ptr<btConvexShape> sp = std::make_shared<btSphereShape>(16.0);
+    std::shared_ptr<btConvexShape> sp = std::make_shared<btSphereShape>(16);
 
     bool ceiling_climb = false;
     bool walls_climb = false;

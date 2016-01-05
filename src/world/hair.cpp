@@ -337,7 +337,7 @@ void HairSetup::getSetup(int hair_entry_index)
     if(!res.is<lua::Table>())
         return;
 
-    m_model = res["model"].toInt();
+    m_model = res["model"].to<ModelId>();
     m_linkBody = res["link_body"].to<animation::BoneId>();
     m_rootWeight = res["props"]["root_weight"].to<glm::float_t>();
     m_tailWeight = res["props"]["tail_weight"].to<glm::float_t>();

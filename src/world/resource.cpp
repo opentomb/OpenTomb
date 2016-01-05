@@ -1592,7 +1592,7 @@ namespace world
 
         if(pen.is<lua::Integer>())   rs->floor_penetration_config = static_cast<PenetrationConfig>(pen.toInt());
         if(diag.is<lua::Integer>())  rs->floor_diagonal_type = static_cast<DiagonalType>(diag.toInt());
-        if(floor.is<lua::Integer>()) rs->floor = floor.toInt();
+        if(floor.is<int32_t>())      rs->floor = floor.to<int32_t>();
         rs->floor_corners[0] = { z0,z1,z2 };
         rs->floor_corners[0][3] = z3;
     }
@@ -1608,7 +1608,7 @@ namespace world
 
         if(pen.is<lua::Integer>())  rs->ceiling_penetration_config = static_cast<PenetrationConfig>(pen.toInt());
         if(diag.is<lua::Integer>()) rs->ceiling_diagonal_type = static_cast<DiagonalType>(diag.toInt());
-        if(ceil.is<lua::Integer>()) rs->ceiling = ceil.toInt();
+        if(ceil.is<int32_t>())      rs->ceiling = ceil.to<int32_t>();
 
         rs->ceiling_corners[0] = { z0,z1,z2 };
         rs->ceiling_corners[0][3] = z3;

@@ -5,10 +5,10 @@
 #include "engine/system.h"
 #include "strings.h"
 
-#include <SDL2/SDL_surface.h>
 #include <CImg.h>
 
 #include <boost/filesystem.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <map>
 
@@ -133,6 +133,7 @@ bool Fader::SetTexture(const std::string& texture_path)
     }
     catch(cimg_library::CImgIOException& ex)
     {
+        BOOST_LOG_TRIVIAL(warning) << "Failed to load image '" << texture_path << "': " << ex.what();
         Console::instance().warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path.c_str(), SDL_GetError());
         return false;
     }

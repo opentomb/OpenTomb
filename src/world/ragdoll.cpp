@@ -17,10 +17,10 @@ bool RagdollSetup::getSetup(int ragdoll_index)
 
     size_t tmp;
 
-    tmp = rds["joint_count"].toUInt();
+    tmp = rds["joint_count"].to<size_t>();
     joint_setup.resize(tmp);
 
-    tmp = rds["body_count"].toUInt();
+    tmp = rds["body_count"].to<size_t>();
     body_setup.resize(tmp);
 
     joint_cfm = rds["joint_cfm"].toFloat();
@@ -40,7 +40,7 @@ bool RagdollSetup::getSetup(int ragdoll_index)
 
     for(size_t i = 0; i < joint_setup.size(); i++)
     {
-        joint_setup[i].body_index = rds["joint"][i + 1]["body_index"].toInt();
+        joint_setup[i].body_index = rds["joint"][i + 1]["body_index"].to<animation::BoneId>();
         joint_setup[i].joint_type = static_cast<RagdollJointSetup::Type>(rds["joint"][i + 1]["joint_type"].toInt());
         if(rds["joint"][i + 1]["body1_offset"].is<lua::Table>())
         {

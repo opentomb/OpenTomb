@@ -494,7 +494,8 @@ bool StreamTrack::stream(ALuint buffer)
 
         if(samplesRead > 0)
         {
-            size += samplesRead;
+            BOOST_ASSERT(samplesRead <= std::numeric_limits<size_t>::max());
+            size += static_cast<size_t>(samplesRead);
         }
         else
         {

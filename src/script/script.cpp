@@ -65,12 +65,12 @@ void lua_DumpRoom(lua::Value id)
         engine::dumpRoom(engine::engine_camera.getCurrentRoom());
         return;
     }
-    if(id.toUInt() >= engine::engine_world.rooms.size())
+    if(id.to<world::ModelId>() >= engine::engine_world.rooms.size())
     {
-        Console::instance().warning(SYSWARN_WRONG_ROOM, id.toUInt());
+        Console::instance().warning(SYSWARN_WRONG_ROOM, id.to<world::ModelId>());
         return;
     }
-    engine::dumpRoom(engine::engine_world.rooms[id.toUInt()].get());
+    engine::dumpRoom(engine::engine_world.rooms[id.to<world::ModelId>()].get());
 }
 
 void lua_SetRoomEnabled(int id, bool value)
@@ -422,10 +422,10 @@ void lua_ChangeCharacterParam(world::ObjectId id, int parameter, lua::Value valu
         return;
     }
 
-    if(ent && (value.is<lua::Number>() || value.is<lua::Integer>()))
+    if(ent && value.is<float>())
     {
-        if(value.is<lua::Number>())
-            ent->changeParam(parameter, value.toNumber());
+        if(value.is<float>())
+            ent->changeParam(parameter, value.to<float>());
     }
     else
     {
@@ -573,7 +573,7 @@ void script::MainEngine::bindKey(int act, int primary, lua::Value secondary)
     }
     engine::control_mapper.action_map[act].primary = primary;
     if(secondary.is<lua::Integer>())
-        engine::control_mapper.action_map[act].secondary = secondary.toInt();
+        engine::control_mapper.action_map[act].secondary = secondary.to<int>();
 }
 
 void lua_AddFont(int index, const char* path, int size)
@@ -622,7 +622,7 @@ lua::Any lua_AddItem(world::ObjectId entity_id, int item_id, lua::Value count)
 
     if(ent)
     {
-        return ent->addItem(item_id, count.is<lua::Integer>() ? count.toInt() : -1);
+        return ent->addItem(item_id, count.is<int32_t>() ? count.to<int32_t>() : -1);
     }
     else
     {
@@ -1350,8 +1350,8 @@ void lua_SetEntityAnim(world::ObjectId id, world::animation::AnimationId anim, l
         return;
     }
 
-    if(frame.is<lua::Integer>())
-        ent->setAnimation(anim, frame.toInt());
+    if(frame.is<int>())
+        ent->setAnimation(anim, frame.to<int>());
     else
         ent->setAnimation(anim);
 }
@@ -1700,8 +1700,8 @@ void lua_SetEntityFlags(world::ObjectId id, bool active, bool enabled, bool visi
     ent->m_enabled = enabled;
     ent->m_visible = visible;
     ent->m_typeFlags = typeFlags;
-    if(cbFlags.is<lua::Integer>())
-        ent->m_callbackFlags = cbFlags.toInt();
+    if(cbFlags.is<uint32_t>())
+        ent->m_callbackFlags = cbFlags.to<uint32_t>();
 }
 
 lua::Any lua_GetEntityTypeFlag(world::ObjectId id, lua::Value flag)
@@ -2342,7 +2342,7 @@ void lua_PlayStream(int id, lua::Value mask)
 
     if(!mask.is<lua::Nil>())
     {
-        engine::engine_world.audioEngine.streamPlay(id, mask.toInt());
+        engine::engine_world.audioEngine.streamPlay(id, mask.to<uint8_t>());
     }
     else
     {
@@ -2443,8 +2443,8 @@ void lua_SetLevel(int id)
 void lua_SetGame(int gameId, lua::Value levelId)
 {
     engine::Gameflow_Manager.setGameID(gameId);
-    if(!levelId.is<lua::Nil>() && levelId.toInt() >= 0)
-        engine::Gameflow_Manager.setLevelID(levelId.toInt());
+    if(levelId.is<uint32_t>())
+        engine::Gameflow_Manager.setLevelID(levelId.to<uint32_t>());
 
     const char* str = engine_lua["getTitleScreen"](int(engine::Gameflow_Manager.getGameID())).toCStr();
     gui::fadeAssignPic(gui::FaderType::LoadScreen, str);
@@ -2461,13 +2461,13 @@ void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
 
     if(mapName && mapName != engine::Gameflow_Manager.getLevelPath())
     {
-        if(gameId.is<lua::Integer>() && gameId.toInt() >= 0)
+        if(gameId.is<int8_t>() && gameId.to<int8_t>() >= 0)
         {
-            engine::Gameflow_Manager.setGameID(gameId.toInt());
+            engine::Gameflow_Manager.setGameID(gameId.to<int8_t>());
         }
-        if(mapId.is<lua::Integer>() && mapId.toInt() >= 0)
+        if(mapId.is<uint32_t>())
         {
-            engine::Gameflow_Manager.setLevelID(mapId.toInt());
+            engine::Gameflow_Manager.setLevelID(mapId.to<uint32_t>());
         }
         char file_path[MAX_ENGINE_PATH];
         engine_lua.getLoadingScreen(engine::Gameflow_Manager.getLevelID(), file_path);
@@ -3480,17 +3480,17 @@ int script::MainEngine::parseInt(char **ch)
 
 int script::MainEngine::getGlobalSound(int global_sound_id)
 {
-    return call("getGlobalSound", static_cast<int>(engine::engine_world.engineVersion), global_sound_id).toInt();
+    return call("getGlobalSound", static_cast<int>(engine::engine_world.engineVersion), global_sound_id).to<int>();
 }
 
 int script::MainEngine::getSecretTrackNumber()
 {
-    return call("getSecretTrackNumber", static_cast<int>(engine::engine_world.engineVersion)).toInt();
+    return call("getSecretTrackNumber", static_cast<int>(engine::engine_world.engineVersion)).to<int>();
 }
 
 int script::MainEngine::getNumTracks()
 {
-    return call("getNumTracks", static_cast<int>(engine::engine_world.engineVersion)).toInt();
+    return call("getNumTracks", static_cast<int>(engine::engine_world.engineVersion)).to<int>();
 }
 
 bool script::MainEngine::getOverridedSamplesInfo(int& num_samples, int& num_sounds, std::string& sample_name_mask)
@@ -3579,28 +3579,28 @@ void script::ScriptEngine::parseControls(engine::ControlSettings& cs) const
     cs.mouse_scale_x = (*this)["controls"]["mouse_scale_x"].toFloat();
     cs.mouse_scale_y = (*this)["controls"]["mouse_scale_y"].toFloat();
     cs.use_joy = (*this)["controls"]["use_joy"].toBool();
-    cs.joy_number = (*this)["controls"]["joy_number"].toInt();
+    cs.joy_number = (*this)["controls"]["joy_number"].to<int>();
     cs.joy_rumble = (*this)["controls"]["joy_rumble"].toBool();
-    cs.joy_axis_map[engine::AXIS_LOOK_X] = (*this)["controls"]["joy_look_axis_x"].toInt();
-    cs.joy_axis_map[engine::AXIS_LOOK_Y] = (*this)["controls"]["joy_look_axis_y"].toInt();
-    cs.joy_axis_map[engine::AXIS_MOVE_X] = (*this)["controls"]["joy_move_axis_x"].toInt();
-    cs.joy_axis_map[engine::AXIS_MOVE_Y] = (*this)["controls"]["joy_move_axis_y"].toInt();
+    cs.joy_axis_map[engine::AXIS_LOOK_X] = (*this)["controls"]["joy_look_axis_x"].to<int>();
+    cs.joy_axis_map[engine::AXIS_LOOK_Y] = (*this)["controls"]["joy_look_axis_y"].to<int>();
+    cs.joy_axis_map[engine::AXIS_MOVE_X] = (*this)["controls"]["joy_move_axis_x"].to<int>();
+    cs.joy_axis_map[engine::AXIS_MOVE_Y] = (*this)["controls"]["joy_move_axis_y"].to<int>();
     cs.joy_look_invert_x = (*this)["controls"]["joy_look_invert_x"].toBool();
     cs.joy_look_invert_y = (*this)["controls"]["joy_look_invert_y"].toBool();
     cs.joy_look_sensitivity = (*this)["controls"]["joy_look_sensitivity"].toFloat();
-    cs.joy_look_deadzone = (*this)["controls"]["joy_look_deadzone"].toInt();
+    cs.joy_look_deadzone = (*this)["controls"]["joy_look_deadzone"].to<int16_t>();
     cs.joy_move_invert_x = (*this)["controls"]["joy_move_invert_x"].toBool();
     cs.joy_move_invert_y = (*this)["controls"]["joy_move_invert_y"].toBool();
     cs.joy_move_sensitivity = (*this)["controls"]["joy_move_sensitivity"].toFloat();
-    cs.joy_move_deadzone = (*this)["controls"]["joy_move_deadzone"].toInt();
+    cs.joy_move_deadzone = (*this)["controls"]["joy_move_deadzone"].to<int16_t>();
 }
 
 void script::ScriptEngine::parseScreen(engine::ScreenInfo& sc) const
 {
-    sc.x = (*this)["screen"]["x"].toInt();
-    sc.y = (*this)["screen"]["y"].toInt();
-    sc.w = (*this)["screen"]["width"].toInt();
-    sc.h = (*this)["screen"]["height"].toInt();
+    sc.x = (*this)["screen"]["x"].to<int16_t>();
+    sc.y = (*this)["screen"]["y"].to<int16_t>();
+    sc.w = (*this)["screen"]["width"].to<int16_t>();
+    sc.h = (*this)["screen"]["height"].to<int16_t>();
     sc.w_unit = sc.w / gui::ScreenMeteringResolution;
     sc.h_unit = sc.h / gui::ScreenMeteringResolution;
     sc.FS_flag = (*this)["screen"]["fullscreen"].toBool();
@@ -3611,15 +3611,15 @@ void script::ScriptEngine::parseScreen(engine::ScreenInfo& sc) const
 
 void script::ScriptEngine::parseRender(render::RenderSettings& rs) const
 {
-    rs.mipmap_mode = (*this)["render"]["mipmap_mode"].toInt();
-    rs.mipmaps = (*this)["render"]["mipmaps"].toInt();
+    rs.mipmap_mode = (*this)["render"]["mipmap_mode"].to<uint32_t>();
+    rs.mipmaps = (*this)["render"]["mipmaps"].to<uint32_t>();
     rs.lod_bias = (*this)["render"]["lod_bias"].toFloat();
-    rs.anisotropy = (*this)["render"]["anisotropy"].toInt();
+    rs.anisotropy = (*this)["render"]["anisotropy"].to<uint32_t>();
     rs.antialias = (*this)["render"]["antialias"].toBool();
-    rs.antialias_samples = (*this)["render"]["antialias_samples"].toInt();
-    rs.texture_border = (*this)["render"]["texture_border"].toInt();
+    rs.antialias_samples = (*this)["render"]["antialias_samples"].to<int>();
+    rs.texture_border = (*this)["render"]["texture_border"].to<int>();
     rs.save_texture_memory = (*this)["render"]["save_texture_memory"].toBool();
-    rs.z_depth = (*this)["render"]["z_depth"].toInt();
+    rs.z_depth = (*this)["render"]["z_depth"].to<int>();
     rs.fog_enabled = (*this)["render"]["fog_enabled"].toBool();
     rs.fog_start_depth = (*this)["render"]["fog_start_depth"].toFloat();
     rs.fog_end_depth = (*this)["render"]["fog_end_depth"].toFloat();
@@ -3643,7 +3643,7 @@ void script::ScriptEngine::parseAudio(audio::Settings& as) const
     as.sound_volume = (*this)["audio"]["sound_volume"].to<ALfloat>();
     as.use_effects = (*this)["audio"]["use_effects"].toBool();
     as.listener_is_player = (*this)["audio"]["listener_is_player"].toBool();
-    as.stream_buffer_size = (*this)["audio"]["stream_buffer_size"].toInt();
+    as.stream_buffer_size = (*this)["audio"]["stream_buffer_size"].to<int>();
     as.stream_buffer_size *= 1024;
     if(as.stream_buffer_size <= 0)
         as.stream_buffer_size = 128 * 1024;
@@ -3665,26 +3665,26 @@ void script::ScriptEngine::parseConsole(gui::Console& cn) const
     if(tmpF >= CON_MIN_LINE_INTERVAL && tmpF <= CON_MAX_LINE_INTERVAL)
         cn.setSpacing(tmpF);
 
-    int tmpI = (*this)["console"]["line_size"].toInt();
+    int tmpI = (*this)["console"]["line_size"].to<int>();
     if(tmpI >= CON_MIN_LINE_SIZE && tmpI <= CON_MAX_LINE_SIZE)
         cn.setLineSize(tmpI);
 
-    tmpI = (*this)["console"]["showing_lines"].toInt();
+    tmpI = (*this)["console"]["showing_lines"].to<int>();
     if(tmpI >= CON_MIN_LINES && tmpI <= CON_MIN_LINES)
         cn.setVisibleLines(tmpI);
 
-    tmpI = (*this)["console"]["log_size"].toInt();
+    tmpI = (*this)["console"]["log_size"].to<int>();
     if(tmpI >= CON_MIN_LOG && tmpI <= CON_MAX_LOG)
         cn.setHistorySize(tmpI);
 
-    tmpI = (*this)["console"]["lines_count"].toInt();
+    tmpI = (*this)["console"]["lines_count"].to<int>();
     if(tmpI >= CON_MIN_LOG && tmpI <= CON_MAX_LOG)
         cn.setBufferSize(tmpI);
 
     bool tmpB = (*this)["console"]["show"].toBool();
     cn.setVisible(tmpB);
 
-    tmpI = (*this)["console"]["show_cursor_period"].toInt();
+    tmpI = (*this)["console"]["show_cursor_period"].to<int>();
     cn.setShowCursorPeriod(util::MilliSeconds(tmpI));
 }
 
