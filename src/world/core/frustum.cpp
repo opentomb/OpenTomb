@@ -84,120 +84,8 @@ bool Frustum::isVisible(const std::vector<glm::vec3>& vertices) const
     return false;
 }
 
-bool Frustum::isVisible(const BoundingBox& bb, const Camera& cam) const
+bool Frustum::isVisible(const BoundingBox& bb) const
 {
-#if 0
-    Polygon poly;
-    poly.vertices.resize(4);
-    bool inside = true;
-
-    /* X_AXIS */
-
-    poly.plane.normal[1] = 0.0;
-    poly.plane.normal[2] = 0.0;
-    if(cam.getPosition()[0] < bb.min[0])
-    {
-        poly.plane.normal[0] = -1.0;
-        poly.plane.dot = -bb.min[0];
-        poly.vertices[0].position = { bb.min[0], bb.max[1], bb.max[2] };
-        poly.vertices[1].position = { bb.min[0], bb.min[1], bb.max[2] };
-        poly.vertices[2].position = { bb.min[0], bb.min[1], bb.min[2] };
-        poly.vertices[3].position = { bb.min[0], bb.max[1], bb.min[2] };
-
-        if(isVisible(poly, cam))
-        {
-            return true;
-        }
-        inside = false;
-    }
-    else if(cam.getPosition()[0] > bb.max[0])
-    {
-        poly.plane.normal[0] = 1.0;
-        poly.plane.dot = bb.max[0];
-        poly.vertices[0].position = { bb.max[0], bb.max[1], bb.max[2] };
-        poly.vertices[1].position = { bb.max[0], bb.min[1], bb.max[2] };
-        poly.vertices[2].position = { bb.max[0], bb.min[1], bb.min[2] };
-        poly.vertices[3].position = { bb.max[0], bb.max[1], bb.min[2] };
-
-        if(isVisible(poly, cam))
-        {
-            return true;
-        }
-        inside = false;
-    }
-
-    /* Y AXIS */
-
-    poly.plane.normal[0] = 0.0;
-    poly.plane.normal[2] = 0.0;
-    if(cam.getPosition()[1] < bb.min[1])
-    {
-        poly.plane.normal[1] = -1.0;
-        poly.plane.dot = -bb.min[1];
-        poly.vertices[0].position = { bb.max[0], bb.min[1], bb.max[2] };
-        poly.vertices[1].position = { bb.min[0], bb.min[1], bb.max[2] };
-        poly.vertices[2].position = { bb.min[0], bb.min[1], bb.min[2] };
-        poly.vertices[3].position = { bb.max[0], bb.min[1], bb.min[2] };
-
-        if(isVisible(poly, cam))
-        {
-            return true;
-        }
-        inside = false;
-    }
-    else if(cam.getPosition()[1] > bb.max[1])
-    {
-        poly.plane.normal[1] = 1.0;
-        poly.plane.dot = bb.max[1];
-        poly.vertices[0].position = { bb.max[0], bb.max[1], bb.max[2] };
-        poly.vertices[1].position = { bb.min[0], bb.max[1], bb.max[2] };
-        poly.vertices[2].position = { bb.min[0], bb.max[1], bb.min[2] };
-        poly.vertices[3].position = { bb.max[0], bb.max[1], bb.min[2] };
-
-        if(isVisible(poly, cam))
-        {
-            return true;
-        }
-        inside = false;
-    }
-
-    /* Z AXIS */
-
-    poly.plane.normal[0] = 0.0;
-    poly.plane.normal[1] = 0.0;
-    if(cam.getPosition()[2] < bb.min[2])
-    {
-        poly.plane.normal[2] = -1.0;
-        poly.plane.dot = -bb.min[2];
-        poly.vertices[0].position = { bb.max[0], bb.max[1], bb.min[2] };
-        poly.vertices[1].position = { bb.min[0], bb.max[1], bb.min[2] };
-        poly.vertices[2].position = { bb.min[0], bb.min[1], bb.min[2] };
-        poly.vertices[3].position = { bb.max[0], bb.min[1], bb.min[2] };
-
-        if(isVisible(poly, cam))
-        {
-            return true;
-        }
-        inside = false;
-    }
-    else if(cam.getPosition()[2] > bb.max[2])
-    {
-        poly.plane.normal[2] = 1.0;
-        poly.plane.dot = bb.max[2];
-        poly.vertices[0].position = { bb.max[0], bb.max[1], bb.max[2] };
-        poly.vertices[1].position = { bb.min[0], bb.max[1], bb.max[2] };
-        poly.vertices[2].position = { bb.min[0], bb.min[1], bb.max[2] };
-        poly.vertices[3].position = { bb.max[0], bb.min[1], bb.max[2] };
-
-        if(isVisible(poly, cam))
-        {
-            return true;
-        }
-        inside = false;
-    }
-
-    return inside;
-#else
     // see https://fgiesen.wordpress.com/2010/10/17/view-frustum-culling/, method 5
     const glm::vec3 center = bb.getCenter();
     const glm::vec3 extent = bb.getDiameter();
@@ -210,7 +98,6 @@ bool Frustum::isVisible(const BoundingBox& bb, const Camera& cam) const
             return true;
     }
     return false;
-#endif
 }
 
 bool Frustum::isVisible(const OrientedBoundingBox& obb, const Camera& cam) const

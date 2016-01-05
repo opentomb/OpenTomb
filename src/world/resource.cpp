@@ -1900,7 +1900,7 @@ namespace world
         for(size_t i = 0; i < tr_room->sprites.size(); i++)
         {
             room->m_sprites.emplace_back();
-            if(tr_room->sprites[i].texture >= 0 && tr_room->sprites[i].texture < world.sprites.size())
+            if(tr_room->sprites[i].texture >= 0 && static_cast<size_t>(tr_room->sprites[i].texture) < world.sprites.size())
             {
                 room->m_sprites[i].sprite = &world.sprites[tr_room->sprites[i].texture];
                 room->m_sprites[i].pos = util::convert(tr_room->vertices[tr_room->sprites[i].vertex].vertex);
@@ -3267,10 +3267,6 @@ namespace world
                 anim->next_anim = &model.animations[animId];
                 anim->next_frame = tr_animation->next_frame - tr->m_animations[tr_animation->next_animation].frame_start;
                 anim->next_frame %= anim->next_anim->getFrameDuration();
-                if(anim->next_frame < 0)
-                {
-                    anim->next_frame = 0;
-                }
 #ifdef LOG_ANIM_DISPATCHES
                 BOOST_LOG_TRIVIAL(debug) << "ANIM[" << i << "], next_anim = " << anim->next_anim->id << ", next_frame = " << anim->next_frame;
 #endif

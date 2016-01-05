@@ -49,7 +49,7 @@ public:
 
     bool isVisible(const Polygon &polygon, const Camera& cam) const;
     bool isVisible(const std::vector<glm::vec3>& vertices) const;
-    bool isVisible(const BoundingBox& bb, const Camera& cam) const;
+    bool isVisible(const BoundingBox& bb) const;
     bool isVisible(const OrientedBoundingBox &obb, const Camera& cam) const;
     bool isVisible(const Portal &portal) const;
 

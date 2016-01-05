@@ -129,9 +129,6 @@ void Skeleton::copyMeshBinding(const SkeletalModel* model, bool resetMeshSlot)
 
 void Skeleton::setAnimation(AnimationId animation, int frame)
 {
-    // FIXME: is anim < 0 actually happening?
-    animation = animation < 0 ? 0 : animation;
-
     Animation* anim = &m_model->animations[animation];
 
     if(frame < 0)

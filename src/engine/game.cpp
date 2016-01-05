@@ -265,7 +265,7 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
     }
 
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->getId(), ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
-    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->getId(), ent->m_skeleton.getCurrentAnimation(), ent->m_skeleton.getCurrentFrame());
+    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->getId(), ent->m_skeleton.getCurrentAnimation(), static_cast<int>(ent->m_skeleton.getCurrentFrame()));
     fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->getId(), ent->m_skeleton.getCurrentState(), ent->m_skeleton.getPreviousState());
     fprintf(*f, "\nsetEntityCollisionFlags(%d, %ld, %ld);", ent->getId(), static_cast<long>(ent->getCollisionType()), static_cast<long>(ent->getCollisionShape()));
 

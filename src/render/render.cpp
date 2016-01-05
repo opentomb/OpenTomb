@@ -961,7 +961,7 @@ void Render::genWorldList()
     {
         for(auto r : m_world->rooms)
         {
-            if(m_cam->getFrustum().isVisible(r->m_boundingBox, *m_cam))
+            if(m_cam->getFrustum().isVisible(r->m_boundingBox))
             {
                 addRoom(r.get());
             }

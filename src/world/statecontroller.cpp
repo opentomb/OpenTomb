@@ -360,10 +360,10 @@ void StateController::stop()
     m_character->m_command.crouch |= isLowVerticalSpace();
     m_character->lean(0.0);
 
-    if(m_character->m_climb.can_hang &&
-        m_character->m_climb.next_z_space >= m_character->m_height - LaraHangVerticalEpsilon &&
-        m_character->m_moveType == MoveType::Climbing ||
-            (m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_STAY_SOLID))
+    if((   m_character->m_climb.can_hang
+        && m_character->m_climb.next_z_space >= m_character->m_height - LaraHangVerticalEpsilon
+        && m_character->m_moveType == MoveType::Climbing )
+       || m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_STAY_SOLID)
     {
         m_character->m_moveType = MoveType::OnFloor;
     }
@@ -847,8 +847,8 @@ void StateController::turnSlow()
             m_character->m_moveDir = MoveDirection::Forward;
         }
     }
-    else if(m_character->m_skeleton.getPreviousState() == LaraState::TurnLeftSlow && m_character->m_command.move.x == MovementStrafe::Left ||
-            m_character->m_skeleton.getPreviousState() == LaraState::TurnRightSlow && m_character->m_command.move.x == MovementStrafe::Right)
+    else if(   (m_character->m_skeleton.getPreviousState() == LaraState::TurnLeftSlow && m_character->m_command.move.x == MovementStrafe::Left)
+            || (m_character->m_skeleton.getPreviousState() == LaraState::TurnRightSlow && m_character->m_command.move.x == MovementStrafe::Right))
     {
         Substance substance_state = m_character->getSubstanceState();
         if(isLastFrame() &&
@@ -1516,7 +1516,7 @@ void StateController::pushablePush()
     m_character->m_skeleton.onFrame = onFrameStopTraverse;
     m_character->m_command.rot[0] = 0.0;
     m_character->m_camFollowCenter = 64;
-    int i = static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration());
+    const auto i = m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration();
 
     if(!m_character->m_command.action || !(Character::TraverseForward & m_character->checkTraverse(*m_character->m_traversedObject)))   //For TOMB4/5 If Lara is pushing and action let go, don't push
     {
@@ -1604,7 +1604,7 @@ void StateController::pushablePull()
     m_character->m_skeleton.onFrame = onFrameStopTraverse;
     m_character->m_command.rot[0] = 0.0;
     m_character->m_camFollowCenter = 64;
-    int i = static_cast<int>(m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration());
+    const auto i = m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration();
 
     if(!m_character->m_command.action || !(Character::TraverseBackward & m_character->checkTraverse(*m_character->m_traversedObject)))   //For TOMB4/5 If Lara is pulling and action let go, don't pull
     {
