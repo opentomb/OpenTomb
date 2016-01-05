@@ -12,7 +12,7 @@ void BaseMesh::polySortInMesh()
 {
     for(Polygon& p : m_polygons)
     {
-        if(p.textureAnimationId && p.textureAnimationId <= engine::engine_world.textureAnimations.size())
+        if(p.textureAnimationId && *p.textureAnimationId < engine::engine_world.textureAnimations.size())
         {
             animation::TextureAnimationSequence* seq = &engine::engine_world.textureAnimations[*p.textureAnimationId];
             // set tex coordinates to the first frame for correct texture transform in renderer

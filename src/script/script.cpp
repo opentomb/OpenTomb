@@ -2622,7 +2622,8 @@ void lua_genUVRotateAnimation(world::ModelId id)
 
     for(world::core::Polygon& p : model->meshes.front().mesh_base->m_transparencyPolygons)
     {
-        p.textureAnimationId = engine::engine_world.textureAnimations.size();
+        BOOST_ASSERT(!engine::engine_world.textureAnimations.empty());
+        p.textureAnimationId = engine::engine_world.textureAnimations.size() - 1;
         for(world::core::Vertex& v : p.vertices)
         {
             v.tex_coord[1] = v_min + 0.5f * (v.tex_coord[1] - v_min) + seq->uvrotateMax;
