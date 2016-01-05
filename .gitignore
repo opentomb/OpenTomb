@@ -34,5 +34,4 @@ save/
 OpenTomb\.xcodeproj/project\.xcworkspace
 OpenTomb\.xcodeproj/xcuserdata
 
-3rdparty/Boost
-3rdparty/Bullet
+3rdparty/OpenAL
