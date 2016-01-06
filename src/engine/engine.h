@@ -156,7 +156,6 @@ void initDefaultGlobals();
 void initGL();
 void initSDLControls();
 void initSDLVideo();
-void initSDLImage();
 void initBullet();
 
 // Config parser

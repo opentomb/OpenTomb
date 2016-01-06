@@ -10,16 +10,16 @@ namespace core
 struct Light
 {
     glm::vec3 position;
-    float                       colour[4];
+    glm::vec4 color;
 
-    float                       inner;
-    float                       outer;
-    float                       length;
-    float                       cutoff;
+    glm::float_t inner;
+    glm::float_t outer;
+    glm::float_t length;
+    glm::float_t cutoff;
 
-    float                       falloff;
+    glm::float_t falloff;
 
-    loader::LightType           light_type;
+    loader::LightType light_type;
 };
 
 } // namespace core

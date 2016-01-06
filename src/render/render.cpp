@@ -415,19 +415,18 @@ const LitShaderDescription *Render::setupEntityLight(const world::Entity& entity
         ambient_component *= engine::engine_world.calculateWaterTint();
     }
 
-    GLenum current_light_number = 0;
-
     std::array<glm::vec3, EntityShaderLightsLimit> positions;
 
     std::array<glm::vec4, EntityShaderLightsLimit> colors;
-    std::fill(colors.begin(), colors.end(), glm::vec4(0));
+    colors.fill(glm::vec4(0));
 
     std::array<glm::float_t, EntityShaderLightsLimit> innerRadiuses;
-    std::fill(innerRadiuses.begin(), innerRadiuses.end(), 0);
+    innerRadiuses.fill(0);
 
     std::array<glm::float_t, EntityShaderLightsLimit> outerRadiuses;
-    std::fill(outerRadiuses.begin(), outerRadiuses.end(), 0);
+    outerRadiuses.fill(0);
 
+    GLenum current_light_number = 0;
     for(size_t i = 0; i < entity.getRoom()->m_lights.size() && current_light_number < EntityShaderLightsLimit; i++)
     {
         world::core::Light *current_light = &entity.getRoom()->m_lights[i];
@@ -437,10 +436,10 @@ const LitShaderDescription *Render::setupEntityLight(const world::Entity& entity
 
         // Find color
         colors[current_light_number] = {
-            glm::clamp(current_light->colour[0], 0.0f, 1.0f),
-            glm::clamp(current_light->colour[1], 0.0f, 1.0f),
-            glm::clamp(current_light->colour[2], 0.0f, 1.0f),
-            glm::clamp(current_light->colour[3], 0.0f, 1.0f)
+            glm::clamp(current_light->color[0], 0.0f, 1.0f),
+            glm::clamp(current_light->color[1], 0.0f, 1.0f),
+            glm::clamp(current_light->color[2], 0.0f, 1.0f),
+            glm::clamp(current_light->color[3], 0.0f, 1.0f)
         };
 
         if(entity.getRoom()->m_flags & TR_ROOM_FLAG_WATER)

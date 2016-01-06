@@ -15,11 +15,6 @@
 #include "world/camera.h"
 #include "world/character.h"
 
-#ifdef __APPLE_CC__
-#include <ImageIO/ImageIO.h>
-#else
-#endif
-
 namespace engine
 {
 extern SDL_Window  *sdl_window;

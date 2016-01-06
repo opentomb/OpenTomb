@@ -74,7 +74,7 @@ option(SKIP_SYSTEM_BULLET "Skip the sytem-provided Bullet installation and use a
 if(SKIP_SYSTEM_BULLET)
     hunter_add_package(Bullet)
 endif()
-find_package(Bullet MODULE REQUIRED) # Bullet's own BulletConfig.cmake is crap
+include(${CMAKE_SOURCE_DIR}/cmake/FindBullet.cmake) # Bullet's own BulletConfig.cmake is crap, and CMake's version doesn't look for "d" suffixes, only for "_d"
 add_library(Bullet INTERFACE)
 target_include_directories(Bullet INTERFACE ${BULLET_INCLUDE_DIRS})
 target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
@@ -136,9 +136,13 @@ option(SKIP_SYSTEM_SDL2 "Skip the sytem-provided SDL2 installation and use a cus
 if(SKIP_SYSTEM_SDL2)
     hunter_add_package(SDL2)
 endif()
-find_package(SDL2 MODULE REQUIRED)
+find_package(SDL2 REQUIRED)
 add_library(SDL2 INTERFACE)
+if(WIN32)
+    target_link_libraries(SDL2 INTERFACE winmm imm32 version)
+endif()
 target_link_libraries(SDL2 INTERFACE ${SDL2_LIBRARY})
+
 target_include_directories(SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
 
 
@@ -167,6 +171,7 @@ else()
     target_compile_definitions(Boost INTERFACE -DBOOST_LOG_DYN_LINK=0)
 endif()
 
+target_compile_definitions(Boost INTERFACE -DBOOST_ALL_NO_LIB)
 target_include_directories(Boost INTERFACE ${Boost_INCLUDE_DIR})
 target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})
 

@@ -2047,46 +2047,49 @@ namespace world
         /*
          *  load lights
          */
-        room->m_lights.resize(tr_room->lights.size());
+        room->m_lights.reserve(tr_room->lights.size());
 
         for(size_t i = 0; i < tr_room->lights.size(); i++)
         {
-            room->m_lights[i].light_type = tr_room->lights[i].getLightType();
+            core::Light lgt;
+            lgt.light_type = tr_room->lights[i].getLightType();
 
-            room->m_lights[i].position[0] = tr_room->lights[i].position.x;
-            room->m_lights[i].position[1] = -tr_room->lights[i].position.z;
-            room->m_lights[i].position[2] = tr_room->lights[i].position.y;
+            lgt.position[0] = tr_room->lights[i].position.x;
+            lgt.position[1] = -tr_room->lights[i].position.z;
+            lgt.position[2] = tr_room->lights[i].position.y;
 
-            if(room->m_lights[i].light_type == loader::LightType::Shadow)
+            if(lgt.light_type == loader::LightType::Shadow)
             {
-                room->m_lights[i].colour[0] = -(tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
-                room->m_lights[i].colour[1] = -(tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
-                room->m_lights[i].colour[2] = -(tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
-                room->m_lights[i].colour[3] = 1.0f;
+                lgt.color[0] = -(tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
+                lgt.color[1] = -(tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
+                lgt.color[2] = -(tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
+                lgt.color[3] = 1.0f;
             }
             else
             {
-                room->m_lights[i].colour[0] = tr_room->lights[i].color.r / 255.0f * tr_room->lights[i].intensity;
-                room->m_lights[i].colour[1] = tr_room->lights[i].color.g / 255.0f * tr_room->lights[i].intensity;
-                room->m_lights[i].colour[2] = tr_room->lights[i].color.b / 255.0f * tr_room->lights[i].intensity;
-                room->m_lights[i].colour[3] = 1.0f;
+                lgt.color[0] = tr_room->lights[i].color.r / 255.0f * tr_room->lights[i].intensity;
+                lgt.color[1] = tr_room->lights[i].color.g / 255.0f * tr_room->lights[i].intensity;
+                lgt.color[2] = tr_room->lights[i].color.b / 255.0f * tr_room->lights[i].intensity;
+                lgt.color[3] = 1.0f;
             }
 
-            room->m_lights[i].inner = tr_room->lights[i].r_inner;
-            room->m_lights[i].outer = tr_room->lights[i].r_outer;
-            room->m_lights[i].length = tr_room->lights[i].length;
-            room->m_lights[i].cutoff = tr_room->lights[i].cutoff;
+            lgt.inner = tr_room->lights[i].r_inner;
+            lgt.outer = tr_room->lights[i].r_outer;
+            lgt.length = tr_room->lights[i].length;
+            lgt.cutoff = tr_room->lights[i].cutoff;
 
-            room->m_lights[i].falloff = 0.001f / room->m_lights[i].outer;
+            lgt.falloff = 0.001f / lgt.outer;
+
+            room->m_lights.emplace_back(std::move(lgt));
         }
 
         /*
          * portals loading / calculation!!!
          */
-        for(size_t i = 0; i < tr_room->portals.size(); i++)
+        for(const loader::Portal& p : tr_room->portals)
         {
-            std::shared_ptr<Room> r_dest = world.rooms[tr_room->portals[i].adjoining_room];
-            room->m_portals.emplace_back(tr_room->portals[i], room.get(), r_dest.get(), room->m_modelMatrix);
+            std::shared_ptr<Room> r_dest = world.rooms[p.adjoining_room];
+            room->m_portals.emplace_back(p, room.get(), r_dest.get(), room->m_modelMatrix);
         }
 
         /*

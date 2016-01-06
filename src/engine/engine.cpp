@@ -14,10 +14,6 @@
 
 #include <glm/gtx/string_cast.hpp>
 
-#if !defined(__MACOSX__)
-#include <SDL2/SDL_image.h>
-#endif
-
 #if defined(__MACOSX__)
 #include "mac/FindConfigFile.h"
 #endif
@@ -294,19 +290,6 @@ void initSDLVideo()
     Console::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)), gui::FontStyle::ConsoleInfo);
 }
 
-#if !defined(__MACOSX__)
-void initSDLImage()
-{
-    int flags = IMG_INIT_JPG | IMG_INIT_PNG;
-    int init = IMG_Init(flags);
-
-    if((init & flags) != flags)
-    {
-        BOOST_LOG_TRIVIAL(error) << "SDL_Image: failed to initialize JPG and/or PNG support.";
-    }
-}
-#endif
-
 void start()
 {
 #if defined(__MACOSX__)
@@ -322,10 +305,6 @@ void start()
     // Init generic SDL interfaces.
     initSDLControls();
     initSDLVideo();
-
-#if !defined(__MACOSX__)
-    initSDLImage();
-#endif
 
     // Additional OpenGL initialization.
     initGL();
@@ -817,9 +796,6 @@ void shutdown(int val)
     frame_vertex_buffer.clear();
     frame_vertex_buffer_size_left = 0;
 
-#if !defined(__MACOSX__)
-    IMG_Quit();
-#endif
     SDL_Quit();
 
     exit(val);
