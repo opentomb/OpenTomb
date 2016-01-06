@@ -133,7 +133,7 @@ target_include_directories(Lua INTERFACE ${LUA_INCLUDE_DIR})
 
 # Dependency: SDL2
 option(SKIP_SYSTEM_SDL2 "Skip the sytem-provided SDL2 installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
-if(SKIP_SYSTEM_LUA)
+if(SKIP_SYSTEM_SDL2)
     hunter_add_package(SDL2)
 endif()
 find_package(SDL2 MODULE REQUIRED)
