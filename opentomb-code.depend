@@ -6836,9 +6836,8 @@
 	"tr_types.h"
 	"tr_versions.h"
 
-1444498194 d:\dev\opentomb\src\vt\tr_types.h
+1451746739 d:\dev\opentomb\src\vt\tr_types.h
 	<stdint.h>
-	"glmath.h"
 
 1433713938 d:\dev\opentomb\src\vt\glmath.h
 
@@ -7394,7 +7393,7 @@
 	<SDL2/SDL_opengl.h>
 	<stdint.h>
 
-1450602362 d:\dev\opentomb\src\entity.h
+1451218453 d:\dev\opentomb\src\entity.h
 	<stdint.h>
 
 1433713936 d:\dev\opentomb\src\bullet\bulletcollision\collisiondispatch\btghostobject.h
@@ -7418,7 +7417,7 @@
 1450548229 d:\dev\opentomb\src\character_controller.h
 	<stdint.h>
 
-1443031877 d:\dev\opentomb\src\resource.h
+1451746739 d:\dev\opentomb\src\resource.h
 
 1437244868 d:\dev\opentomb\src\core\redblack.h
 	<stdlib.h>
@@ -10970,7 +10969,7 @@
 	"render.h"
 	"world.h"
 
-1449588926 source:d:\dev\opentomb\src\game.cpp
+1450799274 source:d:\dev\opentomb\src\game.cpp
 	<stdlib.h>
 	<stdio.h>
 	<lua.h>
@@ -11566,7 +11565,7 @@
 	"l_main.h"
 	"../core/system.h"
 
-1437317496 source:d:\dev\opentomb\src\vt\l_tr2.cpp
+1450625919 source:d:\dev\opentomb\src\vt\l_tr2.cpp
 	<SDL2/SDL.h>
 	<SDL2/SDL_endian.h>
 	"l_main.h"
@@ -16354,7 +16353,7 @@
 	<stdint.h>
 	"../core/vmath.h"
 
-1446803304 d:\dev\opentomb\src\skeletal_model.h
+1451213082 d:\dev\opentomb\src\skeletal_model.h
 	<stdint.h>
 
 1442739641 source:d:\dev\opentomb\src\mesh.c
@@ -16412,7 +16411,7 @@
 	"camera.h"
 	"frustum.h"
 
-1446363798 source:d:\dev\opentomb\src\render\frustum.cpp
+1450900291 source:d:\dev\opentomb\src\render\frustum.cpp
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL_platform.h>
@@ -16465,7 +16464,7 @@
 	"mesh.h"
 	"skeletal_model.h"
 
-1451060553 d:\dev\opentomb\src\room.h
+1451746739 d:\dev\opentomb\src\room.h
 	<stdint.h>
 
 1445680819 source:d:\dev\opentomb\src\inventory.cpp
@@ -16521,7 +16520,7 @@
 	"anim_state_control.h"
 	"world.h"
 
-1450199435 source:d:\dev\opentomb\src\physics_bullet.cpp
+1450804180 source:d:\dev\opentomb\src\physics_bullet.cpp
 	<stdio.h>
 	<stdlib.h>
 	<lua.h>

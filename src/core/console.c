@@ -376,7 +376,7 @@ void Con_Edit(int key)
         case SDLK_BACKSPACE:
             if(con_base.cursor_pos > 0)
             {
-                for(int16_t i = con_base.cursor_pos; i < oldLength ;i++)
+                for(int16_t i = con_base.cursor_pos; i < oldLength ; i++)
                 {
                     con_base.line_text[0][i-1] = con_base.line_text[0][i];
                 }

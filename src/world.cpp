@@ -2670,7 +2670,7 @@ void World_GenSamples(struct world_s *world, class VT_Level *tr)
 void World_FixRooms(struct world_s *world)
 {
     room_p r = world->rooms;
-    for(uint32_t i = 0;i < world->rooms_count; i++, r++)
+    for(uint32_t i = 0; i < world->rooms_count; i++, r++)
     {
         if(r->base_room != NULL)
         {

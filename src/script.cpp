@@ -4781,6 +4781,29 @@ void Script_LoadConstants(lua_State *lua)
         lua_pushinteger(lua, TR_UNKNOWN);
         lua_setglobal(lua, "TR_UNKNOWN");
 
+        lua_pushinteger(lua, GAME_1);
+        lua_setglobal(lua, "GAME_1");
+        lua_pushinteger(lua, GAME_1_1);
+        lua_setglobal(lua, "GAME_1_1");
+        lua_pushinteger(lua, GAME_1_5);
+        lua_setglobal(lua, "GAME_1_5");
+        lua_pushinteger(lua, GAME_2);
+        lua_setglobal(lua, "GAME_2");
+        lua_pushinteger(lua, GAME_2_1);
+        lua_setglobal(lua, "GAME_2_1");
+        lua_pushinteger(lua, GAME_2_5);
+        lua_setglobal(lua, "GAME_2_5");
+        lua_pushinteger(lua, GAME_3);
+        lua_setglobal(lua, "GAME_3");
+        lua_pushinteger(lua, GAME_3_5);
+        lua_setglobal(lua, "GAME_3_5");
+        lua_pushinteger(lua, GAME_4);
+        lua_setglobal(lua, "GAME_4");
+        lua_pushinteger(lua, GAME_4_1);
+        lua_setglobal(lua, "GAME_4_1");
+        lua_pushinteger(lua, GAME_5);
+        lua_setglobal(lua, "GAME_5");
+
         lua_pushinteger(lua, ENTITY_STATE_ENABLED);
         lua_setglobal(lua, "ENTITY_STATE_ENABLED");
         lua_pushinteger(lua, ENTITY_STATE_ACTIVE);

@@ -5,6 +5,9 @@
 -- Here we'll place any debug routines probably needed for testing in game.
 --------------------------------------------------------------------------------
 
+debug_game = GAME_1;
+debug_level = 1;
+
 function goToEntity(id)
     if(player ~= nil) then
         setEntityPos(player, getEntityPos(id));
@@ -12,6 +15,52 @@ function goToEntity(id)
 end;
 
 function checkDebugKeys()
+    if(checkKey(KEY_RETURN, true)) then
+        setGame(debug_game, debug_level);
+        debug_level = debug_level + 1;
+        if(debug_game == GAME_1) then 
+            if(debug_level == 16) then
+                debug_game = GAME_1_5;
+                debug_level = 1;
+            end;
+        elseif(debug_game == GAME_1_5) then
+            if(debug_level == 5) then
+                debug_game = GAME_2;
+                debug_level = 1;
+            end;
+        elseif(debug_game == GAME_2) then
+            if(debug_level == 19) then
+                debug_game = GAME_2_5;
+                debug_level = 1;
+            end;
+        elseif(debug_game == GAME_2_5) then
+            if(debug_level == 6) then
+                debug_game = GAME_3;
+                debug_level = 1;
+            end;
+        elseif(debug_game == GAME_3) then
+            if(debug_level == 21) then
+                debug_game = GAME_3_5;
+                debug_level = 1;
+            end;
+        elseif(debug_game == GAME_3_5) then
+            if(debug_level == 7) then
+                debug_game = GAME_4;
+                debug_level = 1;
+            end;
+        elseif(debug_game == GAME_4) then
+            if(debug_level == 39) then
+                debug_game = GAME_5;
+                debug_level = 1;
+            end;
+        elseif(debug_game == GAME_5) then
+            if(debug_level == 15) then
+                debug_game = GAME_1;
+                debug_level = 1;
+            end;
+        end;
+    end;
+
     if(checkKey(KEY_R, true)) then
         print("Ragdoll activated!");
         addEntityRagdoll(player, RD_TYPE_LARA);

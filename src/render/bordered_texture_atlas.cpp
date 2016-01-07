@@ -648,9 +648,9 @@ void bordered_texture_atlas::createTextures(GLuint *textureNames)
             GLubyte *mip_data = (GLubyte *) malloc(4 * w * h);
 
             assert(w > 0 && h > 0);
-            for(int i=0;i<h;i++)
+            for(int i = 0; i < h; i++)
             {
-                for(int j=0;j<w;j++)
+                for(int j = 0; j < w; j++)
                 {
                     mip_data[i * w * 4 + j * 4 + 0] = 0.25 * ((int)data[i * w * 16 + j * 8 + 0] + (int)data[i * w * 16 + j * 8 + 4 + 0] + (int)data[i * w * 16 + w * 8 + j * 8 + 0] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 0]);
                     mip_data[i * w * 4 + j * 4 + 1] = 0.25 * ((int)data[i * w * 16 + j * 8 + 1] + (int)data[i * w * 16 + j * 8 + 4 + 1] + (int)data[i * w * 16 + w * 8 + j * 8 + 1] + (int)data[i * w * 16 + w * 8 + j * 8 + 4 + 1]);
@@ -670,9 +670,9 @@ void bordered_texture_atlas::createTextures(GLuint *textureNames)
                 mip_level++;
                 w /= 2; w = (w==0)?1:w;
                 h /= 2; h = (h==0)?1:h;
-                for(int i=0;i<h;i++)
+                for(int i = 0; i < h; i++)
                 {
-                    for(int j=0;j<w;j++)
+                    for(int j = 0; j < w; j++)
                     {
                         mip_data[i * w * 4 + j * 4 + 0] = 0.25 * ((int)mip_data[i * w * 16 + j * 8 + 0] + (int)mip_data[i * w * 16 + j * 8 + 4 + 0] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 0] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 0]);
                         mip_data[i * w * 4 + j * 4 + 1] = 0.25 * ((int)mip_data[i * w * 16 + j * 8 + 1] + (int)mip_data[i * w * 16 + j * 8 + 4 + 1] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 1] + (int)mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 1]);

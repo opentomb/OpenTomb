@@ -90,7 +90,7 @@ void GLText_Destroy()
 {
     int i;
     
-    for(i = 0; i < GLTEXT_MAX_TEMP_LINES ;i++)
+    for(i = 0; i < GLTEXT_MAX_TEMP_LINES ; i++)
     {
         font_data.gl_temp_lines[i].show = 0;
         font_data.gl_temp_lines[i].text_size = 0;

@@ -5,6 +5,18 @@
 #include <stdint.h>
 #include "engine.h"
 
+#define     GAME_1      (0)
+#define     GAME_1_1    (1)
+#define     GAME_1_5    (2)
+#define     GAME_2      (3)
+#define     GAME_2_1    (4)
+#define     GAME_2_5    (5)
+#define     GAME_3      (6)
+#define     GAME_3_5    (7)
+#define     GAME_4      (8)
+#define     GAME_4_1    (9)
+#define     GAME_5      (10)
+
 #define TR_GAMEFLOW_MAX_ACTIONS 32
 #define TR_GAMEFLOW_MAX_SECRETS 256
 

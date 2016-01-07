@@ -18,8 +18,4 @@ freelook(0);
 cam_distance(1024.0);
 noclip(0);
 --loadMap("data/newlevel.tr4");
-setgamef(1, 13);
-
-fgame = 1.5;
-flevel = 1;
-function next() setgamef(fgame, flevel); flevel = flevel + 1; end;
+setgamef(1, 1);

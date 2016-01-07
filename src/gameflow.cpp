@@ -27,7 +27,7 @@ struct gameflow_manager_s gameflow_manager;
 
 void Gameflow_Init()
 {
-    for(int i=0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
+    for(int i = 0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
     {
         gameflow_manager.Actions[i].opcode = TR_GAMEFLOW_NOENTRY;
     }
@@ -40,7 +40,7 @@ void Gameflow_Do()
 
     bool completed = true;
 
-    for(int i=0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
+    for(int i = 0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
     {
         switch(gameflow_manager.Actions[i].opcode)
         {
@@ -83,7 +83,7 @@ void Gameflow_Do()
 
 bool Gameflow_Send(int opcode, int operand)
 {
-    for(int i=0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
+    for(int i = 0; i < TR_GAMEFLOW_MAX_ACTIONS; i++)
     {
         if(gameflow_manager.Actions[i].opcode == opcode) return false;
 

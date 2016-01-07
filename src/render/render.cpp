@@ -250,9 +250,9 @@ void CRender::GenWorldList(struct camera_s *cam)
             frustum_p last_frus = this->frustumManager->PortalFrustumIntersect(p, cam->frustum, cam);
             if(last_frus)
             {
-                this->AddRoom(dest_room);                                   // portal destination room
-                last_frus->parents_count = 1;                               // created by camera
-                this->ProcessRoom(p, last_frus);                            // next start reccursion algorithm
+                this->AddRoom(dest_room);                                       // portal destination room
+                last_frus->parents_count = 1;                                   // created by camera
+                this->ProcessRoom(p, last_frus);                                // next start reccursion algorithm
             }
         }
 

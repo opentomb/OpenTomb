@@ -216,9 +216,9 @@ int Res_Sector_IsWall(struct room_sector_s *wall_sector, struct room_sector_s *n
 ///@TODO: resolve floor >> ceiling case
 void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween)
 {
-    for(uint16_t h = 0; h < room->sectors_y-1; h++)
+    for(uint16_t h = 0; h < room->sectors_y - 1; h++)
     {
-        for(uint16_t w = 0; w < room->sectors_x-1; w++)
+        for(uint16_t w = 0; w < room->sectors_x - 1; w++)
         {
             // Init X-plane tween [ | ]
             room_sector_p current_heightmap = room->sectors + (w * room->sectors_y + h);
@@ -588,8 +588,8 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                 }
             }
             room_tween++;
-        }    ///END for(uint16_t w = 0; w < room->sectors_x-1; w++)
-    }    ///END for(uint16_t h = 0; h < room->sectors_y-1; h++)
+        }    ///END for(uint16_t w = 0; w < room->sectors_x - 1; w++)
+    }    ///END for(uint16_t h = 0; h < room->sectors_y - 1; h++)
 }
 
 
