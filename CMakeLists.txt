@@ -179,6 +179,9 @@ target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})
 # Dependency: CImg
 add_library(CImg INTERFACE)
 target_include_directories(CImg INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/CImg)
+if(UNIX)
+    target_link_libraries(CImg INTERFACE X11)
+endif()
 
 
 # Dependency: OGG

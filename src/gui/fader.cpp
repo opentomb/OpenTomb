@@ -126,10 +126,10 @@ void Fader::SetAspect()
 
 bool Fader::SetTexture(const std::string& texture_path)
 {
-    cimg_library::CImg<uint8_t> surface;
+    cimg_library::CImg<uint8_t> img;
     try
     {
-        surface.load(texture_path.c_str());
+        img.load(texture_path.c_str());
     }
     catch(cimg_library::CImgIOException& ex)
     {
@@ -141,12 +141,12 @@ bool Fader::SetTexture(const std::string& texture_path)
     // Get the color depth of the SDL surface
     GLint color_depth;
     GLenum texture_format;
-    if(surface.spectrum() == 4)        // Contains an alpha channel
+    if(img.spectrum() == 4)        // Contains an alpha channel
     {
         texture_format = GL_RGBA;
         color_depth = GL_RGBA;
     }
-    else if(surface.spectrum() == 3)   // No alpha channel
+    else if(img.spectrum() == 3)   // No alpha channel
     {
         texture_format = GL_RGB;
         color_depth = GL_RGB;
@@ -160,6 +160,12 @@ bool Fader::SetTexture(const std::string& texture_path)
     // Drop previously assigned texture, if it exists.
     DropTexture();
 
+    // Set additional parameters
+    mTextureWidth = img.width();
+    mTextureHeight = img.height();
+    // convert non-interleaved color layers to interleaved pixel color values (see https://www.codefull.org/2014/11/cimg-does-not-store-pixels-in-the-interleaved-format/)
+    img.permute_axes("cxyz");
+
     // Have OpenGL generate a texture object handle for us
     glGenTextures(1, &mTexture);
 
@@ -171,15 +177,11 @@ bool Fader::SetTexture(const std::string& texture_path)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Edit the texture object's image data using the information SDL_Surface gives us
-    glTexImage2D(GL_TEXTURE_2D, 0, color_depth, surface.width(), surface.height(), 0,
-                    texture_format, GL_UNSIGNED_BYTE, surface.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, color_depth, mTextureWidth, mTextureHeight, 0,
+                    texture_format, GL_UNSIGNED_BYTE, img.data());
 
     // Unbind the texture - is it really necessary?
     // glBindTexture(GL_TEXTURE_2D, 0);
-
-    // Set additional parameters
-    mTextureWidth = surface.width();
-    mTextureHeight = surface.height();
 
     SetAspect();
 

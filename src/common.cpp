@@ -5,6 +5,9 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <CImg.h>
+#ifdef None
+#undef None
+#endif
 
 #include "loader/level.h"
 
