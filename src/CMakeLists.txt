@@ -218,10 +218,7 @@ target_link_libraries(
     OpenAL
     GLM
     Boost
-    ${OGG_LIBRARIES}
-    ${VORBIS_LIBRARIES}
-    ${VORBISFILE_LIBRARIES}
-    ${SNDFILE_LIBRARIES}
+    SndFile
     # efence
 )
 

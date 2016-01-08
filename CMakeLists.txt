@@ -8,8 +8,8 @@ cmake_minimum_required(VERSION 3.2)
 include("cmake/HunterGate.cmake")
 
 HunterGate(
-    URL "https://github.com/stohrendorf/hunter/archive/51a1917980f832f400794e29adcc3a03711e915d.zip"
-    SHA1 "98a8b138330aebb3db031cd83b656b54caa2115b"
+    URL "https://github.com/stohrendorf/hunter/archive/94f5109220b6827e70d31993b69348a3142ed35f.zip"
+    SHA1 "f808f462b103f5c613af6bda566ec29e5e875376"
 )
 
 project(OpenTomb)
@@ -40,33 +40,19 @@ endfunction()
 
 
 # Dependency: OpenAL
-find_package(OpenAL)
+option(SKIP_SYSTEM_OPENAL "Skip the sytem-provided OpenAL installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
+if(SKIP_SYSTEM_OPENAL)
+    hunter_add_package(OpenAL)
+endif()
+find_package(OpenAL REQUIRED)
 add_library(OpenAL INTERFACE)
+target_include_directories(OpenAL INTERFACE ${OPENAL_INCLUDE_DIR})
+target_link_libraries(OpenAL INTERFACE ${OPENAL_LIBRARY})
 
 option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions." ON)
-
 if(USE_OPENAL_FLOAT)
     target_compile_definitions(OpenAL INTERFACE -DAUDIO_OPENAL_FLOAT)
 endif(USE_OPENAL_FLOAT)
-
-if(NOT OPENAL_FOUND)
-    ExternalProject_Add(
-        OpenAL-Ext
-        PREFIX ${CMAKE_SOURCE_DIR}/3rdparty/OpenAL
-        CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-        GIT_REPOSITORY git://repo.or.cz/openal-soft.git
-        GIT_TAG openal-soft-1.17.0
-    )
-    target_include_directories(OpenAL INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/OpenAL/include)
-    if(LINUX OR APPLE)
-        target_link_libraries(OpenAL INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/OpenAL/libopenal.so)
-    else()
-        target_link_libraries(OpenAL INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/OpenAL/lib/OpenAL32.lib)
-    endif()
-else()
-    target_include_directories(OpenAL INTERFACE ${OPENAL_INCLUDE_DIR})
-    target_link_libraries(OpenAL INTERFACE ${OPENAL_LIBRARY})
-endif()
 
 
 # Dependency: Bullet
@@ -200,8 +186,14 @@ include_directories(${VORBISFILE_INCLUDE_DIR})
 
 
 # Dependency: SndFile
+option(SKIP_SYSTEM_SNDFILE "Skip the sytem-provided SndFile installation and use a custom built" ON)
+if(SKIP_SYSTEM_SNDFILE)
+    hunter_add_package(SndFile)
+endif()
 find_package(SndFile REQUIRED)
-include_directories(${SNDFILE_INCLUDE_DIR})
+add_library(SndFile INTERFACE)
+target_include_directories(SndFile INTERFACE ${SNDFILE_INCLUDE_DIR})
+target_link_libraries(SndFile INTERFACE ${SNDFILE_LIBRARIES} ${OGG_LIBRARIES} ${VORBIS_LIBRARIES} ${VORBISFILE_LIBRARIES})
 
 
 add_subdirectory(doc)
