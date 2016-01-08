@@ -8,8 +8,8 @@ cmake_minimum_required(VERSION 3.2)
 include("cmake/HunterGate.cmake")
 
 HunterGate(
-    URL "https://github.com/stohrendorf/hunter/archive/94f5109220b6827e70d31993b69348a3142ed35f.zip"
-    SHA1 "f808f462b103f5c613af6bda566ec29e5e875376"
+    URL "https://github.com/stohrendorf/hunter/archive/faff7fb5ef3130ac6ae19d847b2bfcba9629a924.zip"
+    SHA1 "d99599de86bad8ed940c90f9b7e2a1647c4fd37e"
 )
 
 project(OpenTomb)
@@ -162,12 +162,36 @@ target_include_directories(Boost INTERFACE ${Boost_INCLUDE_DIR})
 target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})
 
 
+# Dependency: PNG (for CImg)
+option(SKIP_SYSTEM_PNG "Skip the sytem-provided PNG installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
+if(SKIP_SYSTEM_PNG)
+    hunter_add_package(PNG)
+endif()
+find_package(PNG REQUIRED)
+add_library(PNG INTERFACE)
+target_include_directories(PNG INTERFACE ${PNG_INCLUDE_DIRS})
+target_link_libraries(PNG INTERFACE ${PNG_LIBRARIES})
+
+
+# Dependency: JPEG (for CImg)
+option(SKIP_SYSTEM_JPEG "Skip the sytem-provided libjpeg installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
+if(SKIP_SYSTEM_JPEG)
+    hunter_add_package(JPEG)
+endif()
+find_package(JPEG REQUIRED)
+add_library(JPEG INTERFACE)
+target_include_directories(JPEG INTERFACE ${JPEG_INCLUDE_DIR})
+target_link_libraries(JPEG INTERFACE ${JPEG_LIBRARIES})
+
+
 # Dependency: CImg
 add_library(CImg INTERFACE)
 target_include_directories(CImg INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/CImg)
 if(UNIX)
     target_link_libraries(CImg INTERFACE X11)
 endif()
+target_link_libraries(CImg INTERFACE PNG JPEG)
+target_compile_definitions(CImg INTERFACE -Dcimg_use_png -Dcimg_use_jpeg)
 
 
 # Dependency: OGG
