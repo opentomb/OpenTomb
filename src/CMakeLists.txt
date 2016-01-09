@@ -212,11 +212,11 @@ target_link_libraries(
     GLEW
     SDL2
     CImg
-    ZLIB::zlib
+    ZLIB
     Lua
-    freetype
+    Freetype
     OpenAL
-    GLM
+    glm
     Boost
     SndFile
     # efence
