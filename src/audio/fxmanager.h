@@ -39,7 +39,7 @@ class FxManager
 public:
     explicit FxManager() = default;
     explicit FxManager(bool); // Bool param only used for distinguishing from default constructor
-    ~FxManager();
+    ~FxManager() noexcept;
 
     bool loadReverb(loader::ReverbType effect_index, const EFXEAXREVERBPROPERTIES *reverb);
     void updateListener(world::Camera& cam);

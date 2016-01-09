@@ -12,15 +12,15 @@
 namespace audio
 {
 
-FxManager::~FxManager()
+FxManager::~FxManager() noexcept
 {
-    for(int i = 0; i < FxManager::MaxSlots; i++)
+    for(auto slot : m_slots)
     {
-        if(m_slots[i])
-        {
-            alAuxiliaryEffectSloti(m_slots[i], AL_EFFECTSLOT_EFFECT, AL_EFFECT_NULL);
-            alDeleteAuxiliaryEffectSlots(1, &m_slots[i]);
-        }
+        if(slot == 0)
+            continue;
+
+        alAuxiliaryEffectSloti(slot, AL_EFFECTSLOT_EFFECT, AL_EFFECT_NULL);
+        alDeleteAuxiliaryEffectSlots(1, &slot);
     }
 
     alDeleteFilters(1, &m_filter);
