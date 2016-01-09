@@ -14,8 +14,6 @@ HunterGate(
 
 project(OpenTomb)
 
-include(ExternalProject)
-
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
 
 if(WIN32 OR APPLE)
