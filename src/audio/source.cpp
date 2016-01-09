@@ -156,7 +156,7 @@ void Source::update(const FxManager& manager)
     {
         linkEmitter();
 
-        if(engine::engine_world.audioEngine.getSettings().use_effects && m_isWater != manager.water_state)
+        if(engine::engine_world.audioEngine.getSettings().use_effects && m_underwater != manager.isUnderwater())
         {
             setUnderwater(manager);
         }
@@ -167,7 +167,8 @@ void Source::update(const FxManager& manager)
         // were activated for already destroyed entities to finish (e.g. grenade
         // explosions, ricochets, and so on).
 
-        if(isLooping()) stop();
+        if(isLooping())
+            stop();
     }
 }
 
@@ -237,24 +238,7 @@ void Source::setFX(FxManager& manager)
     // several (2 by default) interchangeable audio sends, which are switched
     // every time current room reverb is changed.
 
-    ALuint slot;
-    if(manager.current_room_type != manager.last_room_type)  // Switch audio send.
-    {
-        manager.last_room_type = manager.current_room_type;
-        manager.current_slot = ++manager.current_slot > FxManager::MaxSlots - 1 ? 0 : manager.current_slot;
-
-        ALuint effect = manager.al_effect[static_cast<int>(manager.current_room_type)];
-        slot = manager.al_slot[manager.current_slot];
-
-        if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
-        {
-            alAuxiliaryEffectSloti(slot, AL_EFFECTSLOT_EFFECT, effect);
-        }
-    }
-    else    // Do not switch audio send.
-    {
-        slot = manager.al_slot[manager.current_slot];
-    }
+    ALuint slot = manager.allocateSlot();
 
     // Assign global reverb FX to channel.
 
@@ -275,15 +259,15 @@ void Source::setUnderwater(const FxManager& fxManager)
     // Note that it is applied directly to channel, i. e. all sources that
     // are underwater will damp, despite of global reverb setting.
 
-    if(fxManager.water_state)
+    if(fxManager.isUnderwater())
     {
-        alSourcei(m_sourceIndex, AL_DIRECT_FILTER, fxManager.al_filter);
-        m_isWater = true;
+        alSourcei(m_sourceIndex, AL_DIRECT_FILTER, fxManager.getFilter());
+        m_underwater = true;
     }
     else
     {
         alSourcei(m_sourceIndex, AL_DIRECT_FILTER, AL_FILTER_NULL);
-        m_isWater = false;
+        m_underwater = false;
     }
 }
 

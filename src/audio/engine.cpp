@@ -949,7 +949,7 @@ void Engine::loadSampleOverrideInfo()
     }
 }
 
-void Engine::init(uint32_t num_Sources)
+void Engine::init(size_t num_Sources)
 {
     // FX should be inited first, as source constructor checks for FX slot to be created.
 
@@ -969,7 +969,7 @@ void Engine::init(uint32_t num_Sources)
 
     // Reset last room type used for assigning reverb.
 
-    m_fxManager->last_room_type = loader::ReverbType::Sentinel;
+    m_fxManager->resetLastRoomType();
 }
 
 void Engine::initDevice()

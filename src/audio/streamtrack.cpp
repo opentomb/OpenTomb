@@ -533,24 +533,7 @@ void StreamTrack::setFX(FxManager& manager)
     // several (2 by default) interchangeable audio sends, which are switched
     // every time current room reverb is changed.
 
-    ALuint slot;
-    if(manager.current_room_type != manager.last_room_type)  // Switch audio send.
-    {
-        manager.last_room_type = manager.current_room_type;
-        manager.current_slot = ++manager.current_slot > FxManager::MaxSlots - 1 ? 0 : manager.current_slot;
-
-        ALuint effect = manager.al_effect[static_cast<int>(manager.current_room_type)];
-        slot = manager.al_slot[manager.current_slot];
-
-        if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
-        {
-            alAuxiliaryEffectSloti(slot, AL_EFFECTSLOT_EFFECT, effect);
-        }
-    }
-    else    // Do not switch audio send.
-    {
-        slot = manager.al_slot[manager.current_slot];
-    }
+    ALuint slot = manager.allocateSlot();
 
     // Assign global reverb FX to channel.
 

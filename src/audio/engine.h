@@ -209,7 +209,7 @@ public:
 
     static constexpr int StreamSourceCount = 6;
 
-    void init(uint32_t num_Sources = MaxChannels);
+    void init(size_t num_Sources = MaxChannels);
     void initDevice();
     void closeDevice();
 

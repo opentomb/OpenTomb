@@ -18,7 +18,7 @@ namespace audio
 
 // FX manager structure.
 // It contains all necessary info to process sample FX (reverb and echo).
-struct FxManager
+class FxManager
 {
     // MAX_SLOTS specifies amount of FX slots used to apply environmental
     // effects to sounds. We need at least two of them to prevent glitches
@@ -28,22 +28,38 @@ struct FxManager
 
     static constexpr int MaxSlots = 2;
 
-    ALuint      al_filter = 0;
-    std::array<ALuint, static_cast<int>(loader::ReverbType::Sentinel)> al_effect;
-    std::array<ALuint,MaxSlots> al_slot;
-    ALuint      current_slot = 0;
-    loader::ReverbType current_room_type = loader::ReverbType::Outside;
-    loader::ReverbType last_room_type = loader::ReverbType::Outside;
-    bool        water_state = false;    // If listener is underwater, all samples will damp.
+    ALuint m_filter = 0;
+    std::array<ALuint, static_cast<int>(loader::ReverbType::Sentinel)> m_effects;
+    std::array<ALuint, MaxSlots> m_slots;
+    ALuint m_currentSlot = 0;
+    loader::ReverbType m_currentRoomType = loader::ReverbType::Outside;
+    loader::ReverbType m_lastRoomType = loader::ReverbType::Outside;
+    bool m_underwater = false;    // If listener is underwater, all samples will damp.
 
+public:
+    explicit FxManager() = default;
+    explicit FxManager(bool); // Bool param only used for distinguishing from default constructor
     ~FxManager();
 
     bool loadReverb(loader::ReverbType effect_index, const EFXEAXREVERBPROPERTIES *reverb);
     void updateListener(world::Camera& cam);
     void updateListener(world::Character& ent);
+    ALuint allocateSlot();
 
-    explicit FxManager() = default;
-    explicit FxManager(bool); // Bool param only used for distinguishing from default constructor
+    bool isUnderwater() const noexcept
+    {
+        return m_underwater;
+    }
+
+    void resetLastRoomType() noexcept
+    {
+        m_lastRoomType = loader::ReverbType::Sentinel;
+    }
+
+    ALuint getFilter() const noexcept
+    {
+        return m_filter;
+    }
 };
 
 } // namespace audio

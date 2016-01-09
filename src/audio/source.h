@@ -61,7 +61,7 @@ public:
 
 private:
     bool        m_active = false;         // Source gets autostopped and destroyed on next frame, if it's not set.
-    bool        m_isWater = false;       // Marker to define if sample is in underwater state or not.
+    bool        m_underwater = false;       // Marker to define if sample is in underwater state or not.
     ALuint      m_sourceIndex = 0;   // Source index. Should be unique for each source.
 
     void linkEmitter();                             // Link source to parent emitter.

@@ -16,21 +16,21 @@ FxManager::~FxManager()
 {
     for(int i = 0; i < FxManager::MaxSlots; i++)
     {
-        if(al_slot[i])
+        if(m_slots[i])
         {
-            alAuxiliaryEffectSloti(al_slot[i], AL_EFFECTSLOT_EFFECT, AL_EFFECT_NULL);
-            alDeleteAuxiliaryEffectSlots(1, &al_slot[i]);
+            alAuxiliaryEffectSloti(m_slots[i], AL_EFFECTSLOT_EFFECT, AL_EFFECT_NULL);
+            alDeleteAuxiliaryEffectSlots(1, &m_slots[i]);
         }
     }
 
-    alDeleteFilters(1, &al_filter);
-    alDeleteEffects(al_effect.size(), al_effect.data());
+    alDeleteFilters(1, &m_filter);
+    alDeleteEffects(m_effects.size(), m_effects.data());
 }
 
 bool FxManager::loadReverb(loader::ReverbType effect_index, const EFXEAXREVERBPROPERTIES *reverb)
 {
     BOOST_ASSERT(effect_index>=loader::ReverbType::Outside && effect_index < loader::ReverbType::Sentinel);
-    ALuint effect = al_effect[static_cast<int>(effect_index)];
+    ALuint effect = m_effects[static_cast<int>(effect_index)];
 
     if(alIsEffect(effect))
     {
@@ -61,15 +61,15 @@ bool FxManager::loadReverb(loader::ReverbType effect_index, const EFXEAXREVERBPR
 
 FxManager::FxManager(bool)
 {
-    al_effect.fill(0);
-    al_slot.fill(0);
-    alGenAuxiliaryEffectSlots(MaxSlots, al_slot.data());
-    alGenEffects(al_effect.size(), al_effect.data());
-    alGenFilters(1, &al_filter);
+    m_effects.fill(0);
+    m_slots.fill(0);
+    alGenAuxiliaryEffectSlots(MaxSlots, m_slots.data());
+    alGenEffects(m_effects.size(), m_effects.data());
+    alGenFilters(1, &m_filter);
 
-    alFilteri(al_filter, AL_FILTER_TYPE, AL_FILTER_LOWPASS);
-    alFilterf(al_filter, AL_LOWPASS_GAIN, 0.7f);      // Low frequencies gain.
-    alFilterf(al_filter, AL_LOWPASS_GAINHF, 0.0f);    // High frequencies gain.
+    alFilteri(m_filter, AL_FILTER_TYPE, AL_FILTER_LOWPASS);
+    alFilterf(m_filter, AL_LOWPASS_GAIN, 0.7f);      // Low frequencies gain.
+    alFilterf(m_filter, AL_LOWPASS_GAINHF, 0.0f);    // High frequencies gain.
 
     // Fill up effects with reverb presets.
 
@@ -117,18 +117,18 @@ void FxManager::updateListener(world::Camera& cam)
 
     if(cam.getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER)
     {
-        current_room_type = loader::ReverbType::Water;
+        m_currentRoomType = loader::ReverbType::Water;
     }
     else
     {
-        current_room_type = cam.getCurrentRoom()->m_reverbType;
+        m_currentRoomType = cam.getCurrentRoom()->m_reverbType;
     }
 
-    if(water_state != static_cast<bool>(cam.getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER))
+    if(m_underwater != static_cast<bool>(cam.getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER))
     {
-        water_state = (cam.getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER) != 0;
+        m_underwater = (cam.getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER) != 0;
 
-        if(water_state)
+        if(m_underwater)
         {
             engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_UNDERWATER);
         }
@@ -142,6 +142,30 @@ void FxManager::updateListener(world::Camera& cam)
 void FxManager::updateListener(world::Character& /*ent*/)
 {
     ///@FIXME: Add entity listener updater here.
+}
+
+ALuint FxManager::allocateSlot()
+{
+    if(m_currentRoomType != m_lastRoomType)  // Switch audio send.
+    {
+        m_lastRoomType = m_currentRoomType;
+        ++m_currentSlot;
+        if(m_currentSlot >= m_slots.size())
+            m_currentSlot = 0;
+
+        ALuint effect = m_effects[static_cast<int>(m_currentRoomType)];
+        ALuint slot = m_slots[m_currentSlot];
+
+        if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
+        {
+            alAuxiliaryEffectSloti(slot, AL_EFFECTSLOT_EFFECT, effect);
+        }
+        return slot;
+    }
+    else    // Do not switch audio send.
+    {
+        return m_slots[m_currentSlot];
+    }
 }
 
 }
