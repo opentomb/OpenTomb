@@ -4,10 +4,11 @@
 #include "io/sdlreader.h"
 #include "util/helpers.h"
 
-#include <iostream>
+#include <array>
 #include <stdexcept>
 #include <vector>
 
+#include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
 
 namespace loader
@@ -174,10 +175,10 @@ struct ByteTexture
 {
     uint8_t pixels[256][256];
 
-    static ByteTexture read(io::SDLReader& reader)
+    static std::unique_ptr<ByteTexture> read(io::SDLReader& reader)
     {
-        ByteTexture textile;
-        reader.readBytes(reinterpret_cast<uint8_t*>(textile.pixels), 256*256);
+        std::unique_ptr<ByteTexture> textile{new ByteTexture()};
+        reader.readBytes(reinterpret_cast<uint8_t*>(textile->pixels), 256*256);
         return textile;
     }
 };
@@ -194,17 +195,17 @@ struct WordTexture
 {
     uint16_t pixels[256][256];
 
-    static WordTexture read(io::SDLReader& reader)
+    static std::unique_ptr<WordTexture> read(io::SDLReader& reader)
     {
-        WordTexture textile;
+        std::unique_ptr<WordTexture> texture{new WordTexture()};
 
         for(int i = 0; i < 256; i++)
         {
             for(int j = 0; j < 256; j++)
-                textile.pixels[i][j] = reader.readU16();
+                texture->pixels[i][j] = reader.readU16();
         }
 
-        return textile;
+        return texture;
     }
 };
 
@@ -212,9 +213,9 @@ struct DWordTexture
 {
     uint32_t pixels[256][256];
 
-    static DWordTexture read(io::SDLReader& reader)
+    static std::unique_ptr<DWordTexture> read(io::SDLReader& reader)
     {
-        DWordTexture textile;
+        std::unique_ptr<DWordTexture> textile{new DWordTexture()};
 
         for(int i = 0; i < 256; i++)
         {
@@ -225,7 +226,7 @@ struct DWordTexture
                 const auto b = tmp & 0x00ff0000;
                 const auto c = tmp & 0x000000ff;
                 tmp = a | (b >> 16) | (c << 16);
-                textile.pixels[i][j] = tmp;
+                textile->pixels[i][j] = tmp;
             }
         }
 
@@ -237,14 +238,14 @@ struct Portal
 {
     uint16_t adjoining_room;     ///< \brief which room this portal leads to.
     Vertex normal;         /**< \brief which way the portal faces.
-                                   * the normal points away from the adjacent room.
+                                   * the normal points away from the adjacent room->
                                    * to be seen through, it must point toward the viewpoint.
                                    */
     Vertex vertices[4];    /**< \brief the corners of this portal.
                                    * the right-hand rule applies with respect to the normal.
                                    * if the right-hand-rule is not followed, the portal will
                                    * contain visual artifacts instead of a viewport to
-                                   * AdjoiningRoom.
+                                   * Adjoiningroom->
                                    */
 
     static Portal read(io::SDLReader& reader)
@@ -469,15 +470,15 @@ struct Light
 
         auto temp = reader.readU8();
         if(temp != 0xCD)
-            std::cerr << "read_tr5_room_light: seperator2 has wrong value\n";
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room Light: seperator2 has wrong value";
 
         temp = reader.readU8();
         if(temp != 0xCD)
-            std::cerr << "read_tr5_room_light: seperator3 has wrong value\n";
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room Light: seperator3 has wrong value";
 
         temp = reader.readU8();
         if(temp != 0xCD)
-            std::cerr << "read_tr5_room_light: seperator4 has wrong value\n";
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room Light: seperator4 has wrong value";
 
         return light;
     }
@@ -534,7 +535,7 @@ struct Layer
         layer.unknown_l3 = reader.readU16();
         layer.unknown_l4 = reader.readU16();
         if(reader.readU16() != 0)
-            std::cerr << "read_tr5_room_layer: filler2 has wrong value\n";
+            BOOST_LOG_TRIVIAL(warning) << "Room Layer: filler2 has wrong value";
 
         layer.bounding_box_x1 = reader.readF();
         layer.bounding_box_y1 = -reader.readF();
@@ -543,7 +544,7 @@ struct Layer
         layer.bounding_box_y2 = -reader.readF();
         layer.bounding_box_z2 = -reader.readF();
         if(reader.readU32() != 0)
-            std::cerr << "read_tr5_room_layer: filler3 has wrong value\n";
+            BOOST_LOG_TRIVIAL(warning) << "Room Layer: filler3 has wrong value";
 
         layer.unknown_l6a = reader.readI16();
         layer.unknown_l6b = reader.readI16();
@@ -762,7 +763,7 @@ struct RoomStaticMesh
 // In TR3-5, there were 5 reverb / echo effect flags for each
 // room, but they were never used in PC versions - however, level
 // files still contain this info, so we now can re-use these flags
-// to assign reverb/echo presets to each room.
+// to assign reverb/echo presets to each room->
 // Also, underwater environment can be considered as additional
 // reverb flag, so overall amount is 6.
 
@@ -777,13 +778,13 @@ enum class ReverbType : uint8_t
     Sentinel
 };
 
-/** \brief Room.
+/** \brief room->
   */
 struct Room
 {
     Vertex offset;            ///< \brief offset of room (world coordinates).
-    float y_bottom;                 ///< \brief indicates lowest point in room.
-    float y_top;                    ///< \brief indicates highest point in room.
+    float y_bottom;                 ///< \brief indicates lowest point in room->
+    float y_top;                    ///< \brief indicates highest point in room->
     std::vector<Layer> layers;       // [NumStaticMeshes]list of static meshes
     std::vector<RoomVertex> vertices;    // [NumVertices] list of vertices (relative coordinates)
     std::vector<QuadFace> rectangles;        // [NumRectangles] list of textured rectangles
@@ -844,539 +845,493 @@ struct Room
       * light_mode is only in TR2 and is set 0 for TR1.
       * light_colour is only in TR3-4 and gets set appropiatly.
       */
-    static Room readTr1(io::SDLReader& reader)
+    static std::unique_ptr<Room> readTr1(io::SDLReader& reader)
     {
-        Room room;
+        std::unique_ptr<Room> room{new Room()};
 
         // read and change coordinate system
-        room.offset.x = static_cast<float>(reader.readI32());
-        room.offset.y = 0;
-        room.offset.z = static_cast<float>(-reader.readI32());
-        room.y_bottom = static_cast<float>(-reader.readI32());
-        room.y_top = static_cast<float>(-reader.readI32());
+        room->offset.x = static_cast<float>(reader.readI32());
+        room->offset.y = 0;
+        room->offset.z = static_cast<float>(-reader.readI32());
+        room->y_bottom = static_cast<float>(-reader.readI32());
+        room->y_top = static_cast<float>(-reader.readI32());
 
         auto num_data_words = reader.readU32();
 
         auto position = reader.tell();
 
-        room.vertices.resize(reader.readU16());
-        for(size_t i = 0; i < room.vertices.size(); i++)
-            room.vertices[i] = RoomVertex::readTr1(reader);
+        room->vertices.resize(reader.readU16());
+        for(size_t i = 0; i < room->vertices.size(); i++)
+            room->vertices[i] = RoomVertex::readTr1(reader);
 
-        room.rectangles.resize(reader.readU16());
-        for(size_t i = 0; i < room.rectangles.size(); i++)
-            room.rectangles[i] = QuadFace::readTr1(reader);
+        room->rectangles.resize(reader.readU16());
+        for(size_t i = 0; i < room->rectangles.size(); i++)
+            room->rectangles[i] = QuadFace::readTr1(reader);
 
-        room.triangles.resize(reader.readU16());
-        for(size_t i = 0; i < room.triangles.size(); i++)
-            room.triangles[i] = Triangle::readTr1(reader);
+        room->triangles.resize(reader.readU16());
+        for(size_t i = 0; i < room->triangles.size(); i++)
+            room->triangles[i] = Triangle::readTr1(reader);
 
-        room.sprites.resize(reader.readU16());
-        for(size_t i = 0; i < room.sprites.size(); i++)
-            room.sprites[i] = Sprite::read(reader);
+        room->sprites.resize(reader.readU16());
+        for(size_t i = 0; i < room->sprites.size(); i++)
+            room->sprites[i] = Sprite::read(reader);
 
         // set to the right position in case that there is some unused data
         reader.seek(position + num_data_words * 2);
 
-        room.portals.resize(reader.readU16());
-        for(size_t i = 0; i < room.portals.size(); i++)
-            room.portals[i] = Portal::read(reader);
+        room->portals.resize(reader.readU16());
+        for(size_t i = 0; i < room->portals.size(); i++)
+            room->portals[i] = Portal::read(reader);
 
-        room.num_zsectors = reader.readU16();
-        room.num_xsectors = reader.readU16();
-        room.sector_list.resize(room.num_zsectors * room.num_xsectors);
-        for(uint32_t i = 0; i < static_cast<uint32_t>(room.num_zsectors * room.num_xsectors); i++)
-            room.sector_list[i] = Sector::read(reader);
+        room->num_zsectors = reader.readU16();
+        room->num_xsectors = reader.readU16();
+        room->sector_list.resize(room->num_zsectors * room->num_xsectors);
+        for(uint32_t i = 0; i < static_cast<uint32_t>(room->num_zsectors * room->num_xsectors); i++)
+            room->sector_list[i] = Sector::read(reader);
 
         // read and make consistent
-        room.intensity1 = (8191 - reader.readI16()) << 2;
+        room->intensity1 = (8191 - reader.readI16()) << 2;
         // only in TR2-TR4
-        room.intensity2 = room.intensity1;
+        room->intensity2 = room->intensity1;
         // only in TR2
-        room.light_mode = 0;
+        room->light_mode = 0;
 
-        room.lights.resize(reader.readU16());
-        for(size_t i = 0; i < room.lights.size(); i++)
-            room.lights[i] = Light::readTr1(reader);
+        room->lights.resize(reader.readU16());
+        for(size_t i = 0; i < room->lights.size(); i++)
+            room->lights[i] = Light::readTr1(reader);
 
-        room.static_meshes.resize(reader.readU16());
-        for(size_t i = 0; i < room.static_meshes.size(); i++)
-            room.static_meshes[i] = RoomStaticMesh::readTr1(reader);
+        room->static_meshes.resize(reader.readU16());
+        for(size_t i = 0; i < room->static_meshes.size(); i++)
+            room->static_meshes[i] = RoomStaticMesh::readTr1(reader);
 
-        room.alternate_room = reader.readI16();
-        room.alternate_group = 0;   // Doesn't exist in TR1-3
+        room->alternate_room = reader.readI16();
+        room->alternate_group = 0;   // Doesn't exist in TR1-3
 
-        room.flags = reader.readU16();
-        room.reverb_info = ReverbType::MediumRoom;
+        room->flags = reader.readU16();
+        room->reverb_info = ReverbType::MediumRoom;
 
-        room.light_colour.r = room.intensity1 / 32767.0f;
-        room.light_colour.g = room.intensity1 / 32767.0f;
-        room.light_colour.b = room.intensity1 / 32767.0f;
-        room.light_colour.a = 1.0f;
+        room->light_colour.r = room->intensity1 / 32767.0f;
+        room->light_colour.g = room->intensity1 / 32767.0f;
+        room->light_colour.b = room->intensity1 / 32767.0f;
+        room->light_colour.a = 1.0f;
         return room;
     }
 
-    static Room readTr2(io::SDLReader& reader)
+    static std::unique_ptr<Room> readTr2(io::SDLReader& reader)
     {
-        Room room;
+        std::unique_ptr<Room> room{new Room()};
         // read and change coordinate system
-        room.offset.x = static_cast<float>(reader.readI32());
-        room.offset.y = 0;
-        room.offset.z = static_cast<float>(-reader.readI32());
-        room.y_bottom = static_cast<float>(-reader.readI32());
-        room.y_top = static_cast<float>(-reader.readI32());
+        room->offset.x = static_cast<float>(reader.readI32());
+        room->offset.y = 0;
+        room->offset.z = static_cast<float>(-reader.readI32());
+        room->y_bottom = static_cast<float>(-reader.readI32());
+        room->y_top = static_cast<float>(-reader.readI32());
 
         auto num_data_words = reader.readU32();
 
         auto position = reader.tell();
 
-        room.vertices.resize(reader.readU16());
-        for(size_t i = 0; i < room.vertices.size(); i++)
-            room.vertices[i] = RoomVertex::readTr2(reader);
+        room->vertices.resize(reader.readU16());
+        for(size_t i = 0; i < room->vertices.size(); i++)
+            room->vertices[i] = RoomVertex::readTr2(reader);
 
-        room.rectangles.resize(reader.readU16());
-        for(size_t i = 0; i < room.rectangles.size(); i++)
-            room.rectangles[i] = QuadFace::readTr1(reader);
+        room->rectangles.resize(reader.readU16());
+        for(size_t i = 0; i < room->rectangles.size(); i++)
+            room->rectangles[i] = QuadFace::readTr1(reader);
 
-        room.triangles.resize(reader.readU16());
-        for(size_t i = 0; i < room.triangles.size(); i++)
-            room.triangles[i] = Triangle::readTr1(reader);
+        room->triangles.resize(reader.readU16());
+        for(size_t i = 0; i < room->triangles.size(); i++)
+            room->triangles[i] = Triangle::readTr1(reader);
 
-        room.sprites.resize(reader.readU16());
-        for(size_t i = 0; i < room.sprites.size(); i++)
-            room.sprites[i] = Sprite::read(reader);
+        room->sprites.resize(reader.readU16());
+        for(size_t i = 0; i < room->sprites.size(); i++)
+            room->sprites[i] = Sprite::read(reader);
 
         // set to the right position in case that there is some unused data
         reader.seek(position + num_data_words * 2);
 
-        room.portals.resize(reader.readU16());
-        for(size_t i = 0; i < room.portals.size(); i++)
-            room.portals[i] = Portal::read(reader);
+        room->portals.resize(reader.readU16());
+        for(size_t i = 0; i < room->portals.size(); i++)
+            room->portals[i] = Portal::read(reader);
 
-        room.num_zsectors = reader.readU16();
-        room.num_xsectors = reader.readU16();
-        room.sector_list.resize(room.num_zsectors * room.num_xsectors);
-        for(size_t i = 0; i < static_cast<uint32_t>(room.num_zsectors * room.num_xsectors); i++)
-            room.sector_list[i] = Sector::read(reader);
+        room->num_zsectors = reader.readU16();
+        room->num_xsectors = reader.readU16();
+        room->sector_list.resize(room->num_zsectors * room->num_xsectors);
+        for(size_t i = 0; i < static_cast<uint32_t>(room->num_zsectors * room->num_xsectors); i++)
+            room->sector_list[i] = Sector::read(reader);
 
         // read and make consistent
-        room.intensity1 = (8191 - reader.readI16()) << 2;
-        room.intensity2 = (8191 - reader.readI16()) << 2;
-        room.light_mode = reader.readI16();
+        room->intensity1 = (8191 - reader.readI16()) << 2;
+        room->intensity2 = (8191 - reader.readI16()) << 2;
+        room->light_mode = reader.readI16();
 
-        room.lights.resize(reader.readU16());
-        for(size_t i = 0; i < room.lights.size(); i++)
-            room.lights[i] = Light::readTr2(reader);
+        room->lights.resize(reader.readU16());
+        for(size_t i = 0; i < room->lights.size(); i++)
+            room->lights[i] = Light::readTr2(reader);
 
-        room.static_meshes.resize(reader.readU16());
-        for(size_t i = 0; i < room.static_meshes.size(); i++)
-            room.static_meshes[i] = RoomStaticMesh::readTr2(reader);
+        room->static_meshes.resize(reader.readU16());
+        for(size_t i = 0; i < room->static_meshes.size(); i++)
+            room->static_meshes[i] = RoomStaticMesh::readTr2(reader);
 
-        room.alternate_room = reader.readI16();
-        room.alternate_group = 0;   // Doesn't exist in TR1-3
+        room->alternate_room = reader.readI16();
+        room->alternate_group = 0;   // Doesn't exist in TR1-3
 
-        room.flags = reader.readU16();
+        room->flags = reader.readU16();
 
-        if(room.flags & 0x0020)
+        if(room->flags & 0x0020)
         {
-            room.reverb_info = ReverbType::Outside;
+            room->reverb_info = ReverbType::Outside;
         }
         else
         {
-            room.reverb_info = ReverbType::MediumRoom;
+            room->reverb_info = ReverbType::MediumRoom;
         }
 
-        room.light_colour.r = room.intensity1 / 16384.0f;
-        room.light_colour.g = room.intensity1 / 16384.0f;
-        room.light_colour.b = room.intensity1 / 16384.0f;
-        room.light_colour.a = 1.0f;
+        room->light_colour.r = room->intensity1 / 16384.0f;
+        room->light_colour.g = room->intensity1 / 16384.0f;
+        room->light_colour.b = room->intensity1 / 16384.0f;
+        room->light_colour.a = 1.0f;
         return room;
     }
 
-    static Room readTr3(io::SDLReader& reader)
+    static std::unique_ptr<Room> readTr3(io::SDLReader& reader)
     {
-        Room room;
+        std::unique_ptr<Room> room{new Room()};
 
         // read and change coordinate system
-        room.offset.x = static_cast<float>(reader.readI32());
-        room.offset.y = 0;
-        room.offset.z = static_cast<float>(-reader.readI32());
-        room.y_bottom = static_cast<float>(-reader.readI32());
-        room.y_top = static_cast<float>(-reader.readI32());
+        room->offset.x = static_cast<float>(reader.readI32());
+        room->offset.y = 0;
+        room->offset.z = static_cast<float>(-reader.readI32());
+        room->y_bottom = static_cast<float>(-reader.readI32());
+        room->y_top = static_cast<float>(-reader.readI32());
 
         auto num_data_words = reader.readU32();
 
         auto position = reader.tell();
 
-        room.vertices.resize(reader.readU16());
-        for(size_t i = 0; i < room.vertices.size(); i++)
-            room.vertices[i] = RoomVertex::readTr3(reader);
+        room->vertices.resize(reader.readU16());
+        for(size_t i = 0; i < room->vertices.size(); i++)
+            room->vertices[i] = RoomVertex::readTr3(reader);
 
-        room.rectangles.resize(reader.readU16());
-        for(size_t i = 0; i < room.rectangles.size(); i++)
-            room.rectangles[i] = QuadFace::readTr1(reader);
+        room->rectangles.resize(reader.readU16());
+        for(size_t i = 0; i < room->rectangles.size(); i++)
+            room->rectangles[i] = QuadFace::readTr1(reader);
 
-        room.triangles.resize(reader.readU16());
-        for(size_t i = 0; i < room.triangles.size(); i++)
-            room.triangles[i] = Triangle::readTr1(reader);
+        room->triangles.resize(reader.readU16());
+        for(size_t i = 0; i < room->triangles.size(); i++)
+            room->triangles[i] = Triangle::readTr1(reader);
 
-        room.sprites.resize(reader.readU16());
-        for(size_t i = 0; i < room.sprites.size(); i++)
-            room.sprites[i] = Sprite::read(reader);
+        room->sprites.resize(reader.readU16());
+        for(size_t i = 0; i < room->sprites.size(); i++)
+            room->sprites[i] = Sprite::read(reader);
 
         // set to the right position in case that there is some unused data
         reader.seek(position + num_data_words * 2);
 
-        room.portals.resize(reader.readU16());
-        for(size_t i = 0; i < room.portals.size(); i++)
-            room.portals[i] = Portal::read(reader);
+        room->portals.resize(reader.readU16());
+        for(size_t i = 0; i < room->portals.size(); i++)
+            room->portals[i] = Portal::read(reader);
 
-        room.num_zsectors = reader.readU16();
-        room.num_xsectors = reader.readU16();
-        room.sector_list.resize(room.num_zsectors * room.num_xsectors);
-        for(size_t i = 0; i < static_cast<uint32_t>(room.num_zsectors * room.num_xsectors); i++)
-            room.sector_list[i] = Sector::read(reader);
+        room->num_zsectors = reader.readU16();
+        room->num_xsectors = reader.readU16();
+        room->sector_list.resize(room->num_zsectors * room->num_xsectors);
+        for(size_t i = 0; i < static_cast<uint32_t>(room->num_zsectors * room->num_xsectors); i++)
+            room->sector_list[i] = Sector::read(reader);
 
-        room.intensity1 = reader.readI16();
-        room.intensity2 = reader.readI16();
+        room->intensity1 = reader.readI16();
+        room->intensity2 = reader.readI16();
 
         // only in TR2
-        room.light_mode = 0;
+        room->light_mode = 0;
 
-        room.lights.resize(reader.readU16());
-        for(size_t i = 0; i < room.lights.size(); i++)
-            room.lights[i] = Light::readTr3(reader);
+        room->lights.resize(reader.readU16());
+        for(size_t i = 0; i < room->lights.size(); i++)
+            room->lights[i] = Light::readTr3(reader);
 
-        room.static_meshes.resize(reader.readU16());
-        for(size_t i = 0; i < room.static_meshes.size(); i++)
-            room.static_meshes[i] = RoomStaticMesh::readTr3(reader);
+        room->static_meshes.resize(reader.readU16());
+        for(size_t i = 0; i < room->static_meshes.size(); i++)
+            room->static_meshes[i] = RoomStaticMesh::readTr3(reader);
 
-        room.alternate_room = reader.readI16();
-        room.alternate_group = 0;   // Doesn't exist in TR1-3
+        room->alternate_room = reader.readI16();
+        room->alternate_group = 0;   // Doesn't exist in TR1-3
 
-        room.flags = reader.readU16();
+        room->flags = reader.readU16();
 
-        if(room.flags & 0x0080)
+        if(room->flags & 0x0080)
         {
-            room.flags |= 0x0002;   // Move quicksand flag to another bit to avoid confusion with NL flag.
-            room.flags ^= 0x0080;
+            room->flags |= 0x0002;   // Move quicksand flag to another bit to avoid confusion with NL flag.
+            room->flags ^= 0x0080;
         }
 
         // Only in TR3-5
 
-        room.water_scheme = reader.readU8();
-        room.reverb_info = static_cast<ReverbType>( reader.readU8() );
+        room->water_scheme = reader.readU8();
+        room->reverb_info = static_cast<ReverbType>( reader.readU8() );
 
         reader.skip(1);   // Alternate_group override?
 
-        room.light_colour.r = room.intensity1 / 65534.0f;
-        room.light_colour.g = room.intensity1 / 65534.0f;
-        room.light_colour.b = room.intensity1 / 65534.0f;
-        room.light_colour.a = 1.0f;
+        room->light_colour.r = room->intensity1 / 65534.0f;
+        room->light_colour.g = room->intensity1 / 65534.0f;
+        room->light_colour.b = room->intensity1 / 65534.0f;
+        room->light_colour.a = 1.0f;
         return room;
     }
 
-    static Room readTr4(io::SDLReader& reader)
+    static std::unique_ptr<Room> readTr4(io::SDLReader& reader)
     {
-        Room room;
+        std::unique_ptr<Room> room{new Room()};
         // read and change coordinate system
-        room.offset.x = static_cast<float>(reader.readI32());
-        room.offset.y = 0;
-        room.offset.z = static_cast<float>(-reader.readI32());
-        room.y_bottom = static_cast<float>(-reader.readI32());
-        room.y_top = static_cast<float>(-reader.readI32());
+        room->offset.x = static_cast<float>(reader.readI32());
+        room->offset.y = 0;
+        room->offset.z = static_cast<float>(-reader.readI32());
+        room->y_bottom = static_cast<float>(-reader.readI32());
+        room->y_top = static_cast<float>(-reader.readI32());
 
         auto num_data_words = reader.readU32();
 
         auto position = reader.tell();
 
-        room.vertices.resize(reader.readU16());
-        for(size_t i = 0; i < room.vertices.size(); i++)
-            room.vertices[i] = RoomVertex::readTr4(reader);
+        room->vertices.resize(reader.readU16());
+        for(size_t i = 0; i < room->vertices.size(); i++)
+            room->vertices[i] = RoomVertex::readTr4(reader);
 
-        room.rectangles.resize(reader.readU16());
-        for(size_t i = 0; i < room.rectangles.size(); i++)
-            room.rectangles[i] = QuadFace::readTr1(reader);
+        room->rectangles.resize(reader.readU16());
+        for(size_t i = 0; i < room->rectangles.size(); i++)
+            room->rectangles[i] = QuadFace::readTr1(reader);
 
-        room.triangles.resize(reader.readU16());
-        for(size_t i = 0; i < room.triangles.size(); i++)
-            room.triangles[i] = Triangle::readTr1(reader);
+        room->triangles.resize(reader.readU16());
+        for(size_t i = 0; i < room->triangles.size(); i++)
+            room->triangles[i] = Triangle::readTr1(reader);
 
-        room.sprites.resize(reader.readU16());
-        for(size_t i = 0; i < room.sprites.size(); i++)
-            room.sprites[i] = Sprite::read(reader);
+        room->sprites.resize(reader.readU16());
+        for(size_t i = 0; i < room->sprites.size(); i++)
+            room->sprites[i] = Sprite::read(reader);
 
         // set to the right position in case that there is some unused data
         reader.seek(position + num_data_words * 2);
 
-        room.portals.resize(reader.readU16());
-        for(size_t i = 0; i < room.portals.size(); i++)
-            room.portals[i] = Portal::read(reader);
+        room->portals.resize(reader.readU16());
+        for(size_t i = 0; i < room->portals.size(); i++)
+            room->portals[i] = Portal::read(reader);
 
-        room.num_zsectors = reader.readU16();
-        room.num_xsectors = reader.readU16();
-        room.sector_list.resize(room.num_zsectors * room.num_xsectors);
-        for(size_t i = 0; i < static_cast<uint32_t>(room.num_zsectors * room.num_xsectors); i++)
-            room.sector_list[i] = Sector::read(reader);
+        room->num_zsectors = reader.readU16();
+        room->num_xsectors = reader.readU16();
+        room->sector_list.resize(room->num_zsectors * room->num_xsectors);
+        for(size_t i = 0; i < static_cast<uint32_t>(room->num_zsectors * room->num_xsectors); i++)
+            room->sector_list[i] = Sector::read(reader);
 
-        room.intensity1 = reader.readI16();
-        room.intensity2 = reader.readI16();
+        room->intensity1 = reader.readI16();
+        room->intensity2 = reader.readI16();
 
         // only in TR2
-        room.light_mode = 0;
+        room->light_mode = 0;
 
-        room.lights.resize(reader.readU16());
-        for(size_t i = 0; i < room.lights.size(); i++)
-            room.lights[i] = Light::readTr4(reader);
+        room->lights.resize(reader.readU16());
+        for(size_t i = 0; i < room->lights.size(); i++)
+            room->lights[i] = Light::readTr4(reader);
 
-        room.static_meshes.resize(reader.readU16());
-        for(size_t i = 0; i < room.static_meshes.size(); i++)
-            room.static_meshes[i] = RoomStaticMesh::readTr4(reader);
+        room->static_meshes.resize(reader.readU16());
+        for(size_t i = 0; i < room->static_meshes.size(); i++)
+            room->static_meshes[i] = RoomStaticMesh::readTr4(reader);
 
-        room.alternate_room = reader.readI16();
-        room.flags = reader.readU16();
+        room->alternate_room = reader.readI16();
+        room->flags = reader.readU16();
 
         // Only in TR3-5
 
-        room.water_scheme = reader.readU8();
-        room.reverb_info = static_cast<ReverbType>( reader.readU8() );
+        room->water_scheme = reader.readU8();
+        room->reverb_info = static_cast<ReverbType>( reader.readU8() );
 
         // Only in TR4-5
 
-        room.alternate_group = reader.readU8();
+        room->alternate_group = reader.readU8();
 
-        room.light_colour.r = (room.intensity2 & 0x00FF) / 255.0f;
-        room.light_colour.g = ((room.intensity1 & 0xFF00) >> 8) / 255.0f;
-        room.light_colour.b = (room.intensity1 & 0x00FF) / 255.0f;
-        room.light_colour.a = ((room.intensity2 & 0xFF00) >> 8) / 255.0f;
+        room->light_colour.r = (room->intensity2 & 0x00FF) / 255.0f;
+        room->light_colour.g = ((room->intensity1 & 0xFF00) >> 8) / 255.0f;
+        room->light_colour.b = (room->intensity1 & 0x00FF) / 255.0f;
+        room->light_colour.a = ((room->intensity2 & 0xFF00) >> 8) / 255.0f;
         return room;
     }
 
-    static Room readTr5(io::SDLReader& reader)
+    static std::unique_ptr<Room> readTr5(io::SDLReader& reader)
     {
         if(reader.readU32() != 0x414C4558)
-            std::cerr << "read_tr5_room: 'XELA' not found\n";
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: 'XELA' not found";
 
         const auto room_data_size = reader.readU32();
         const auto position = reader.tell();
         const auto endPos = position + room_data_size;
 
-        Room room;
-        room.intensity1 = 32767;
-        room.intensity2 = 32767;
-        room.light_mode = 0;
+        std::unique_ptr<Room> room{new Room()};
+        room->intensity1 = 32767;
+        room->intensity2 = 32767;
+        room->light_mode = 0;
 
         if(reader.readU32() != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator1 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator1 has wrong value";
 
         /*portal_offset = */reader.readI32();             // StartPortalOffset?   // endSDOffset
         auto sector_data_offset = reader.readU32();    // StartSDOffset
         auto temp = reader.readU32();
         if(temp != 0 && temp != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator2 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator2 has wrong value";
 
         auto static_meshes_offset = reader.readU32();     // endPortalOffset
                                                         // static_meshes_offset or room_layer_offset
                                                         // read and change coordinate system
-        room.offset.x = static_cast<float>(reader.readI32());
-        room.offset.y = static_cast<float>(reader.readU32());
-        room.offset.z = static_cast<float>(-reader.readI32());
-        room.y_bottom = static_cast<float>(-reader.readI32());
-        room.y_top = static_cast<float>(-reader.readI32());
+        room->offset.x = static_cast<float>(reader.readI32());
+        room->offset.y = static_cast<float>(reader.readU32());
+        room->offset.z = static_cast<float>(-reader.readI32());
+        room->y_bottom = static_cast<float>(-reader.readI32());
+        room->y_top = static_cast<float>(-reader.readI32());
 
-        room.num_zsectors = reader.readU16();
-        room.num_xsectors = reader.readU16();
+        room->num_zsectors = reader.readU16();
+        room->num_xsectors = reader.readU16();
 
-        room.light_colour.b = reader.readU8() / 255.0f;
-        room.light_colour.g = reader.readU8() / 255.0f;
-        room.light_colour.r = reader.readU8() / 255.0f;
-        room.light_colour.a = reader.readU8() / 255.0f;
-        room.light_colour.a = 1.0f;
+        room->light_colour.b = reader.readU8() / 255.0f;
+        room->light_colour.g = reader.readU8() / 255.0f;
+        room->light_colour.r = reader.readU8() / 255.0f;
+        room->light_colour.a = reader.readU8() / 255.0f;
+        room->light_colour.a = 1.0f;
 
-        room.lights.resize(reader.readU16());
-        if(room.lights.size() > 512)
-        {
-            std::cerr << "read_tr5_room: num_lights > 512\n";
-        }
+        room->lights.resize(reader.readU16());
+        if(room->lights.size() > 512)
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: lights.size() > 512";
 
-        room.static_meshes.resize(reader.readU16());
-        if(room.static_meshes.size() > 512)
-        {
-            std::cerr << "read_tr5_room: num_static_meshes > 512\n";
-        }
+        room->static_meshes.resize(reader.readU16());
+        if(room->static_meshes.size() > 512)
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: static_meshes.size() > 512";
 
-        room.reverb_info = static_cast<ReverbType>( reader.readU8() );
-        room.alternate_group = reader.readU8();
-        room.water_scheme = static_cast<uint8_t>(reader.readU16());
+        room->reverb_info = static_cast<ReverbType>( reader.readU8() );
+        room->alternate_group = reader.readU8();
+        room->water_scheme = static_cast<uint8_t>(reader.readU16());
 
         if(reader.readU32() != 0x00007FFF)
-        {
-            std::cerr << "read_tr5_room: filler1 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: filler1 has wrong value";
 
         if(reader.readU32() != 0x00007FFF)
-        {
-            std::cerr << "read_tr5_room: filler2 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: filler2 has wrong value";
 
         if(reader.readU32() != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator4 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator4 has wrong value";
 
         if(reader.readU32() != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator5 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator5 has wrong value";
 
         if(reader.readU32() != 0xFFFFFFFF)
-        {
-            std::cerr << "read_tr5_room: seperator6 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator6 has wrong value";
 
-        room.alternate_room = reader.readI16();
+        room->alternate_room = reader.readI16();
 
-        room.flags = reader.readU16();
+        room->flags = reader.readU16();
 
-        room.unknown_r1 = reader.readU32();
-        room.unknown_r2 = reader.readU32();
-        room.unknown_r3 = reader.readU32();
+        room->unknown_r1 = reader.readU32();
+        room->unknown_r2 = reader.readU32();
+        room->unknown_r3 = reader.readU32();
 
         temp = reader.readU32();
         if(temp != 0 && temp != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator7 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator7 has wrong value";
 
-        room.unknown_r4a = reader.readU16();
-        room.unknown_r4b = reader.readU16();
+        room->unknown_r4a = reader.readU16();
+        room->unknown_r4b = reader.readU16();
 
-        room.room_x = reader.readF();
-        room.unknown_r5 = reader.readU32();
-        room.room_z = -reader.readF();
+        room->room_x = reader.readF();
+        room->unknown_r5 = reader.readU32();
+        room->room_z = -reader.readF();
 
         if(reader.readU32() != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator8 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator8 has wrong value";
 
         if(reader.readU32() != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator9 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator9 has wrong value";
 
         if(reader.readU32() != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator10 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator10 has wrong value";
 
         if(reader.readU32() != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator11 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator11 has wrong value";
 
         temp = reader.readU32();
         if(temp != 0 && temp != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator12 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator12 has wrong value";
 
         if(reader.readU32() != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator13 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator13 has wrong value";
 
         auto num_triangles = reader.readU32();
         if(num_triangles == 0xCDCDCDCD)
             num_triangles = 0;
         if(num_triangles > 512)
-        {
-            std::cerr << "read_tr5_room: num_triangles > 512\n";
-        }
-        room.triangles.resize(num_triangles);
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: triangles.size() > 512";
+        room->triangles.resize(num_triangles);
 
         auto num_rectangles = reader.readU32();
         if(num_rectangles == 0xCDCDCDCD)
             num_rectangles = 0;
         if(num_rectangles > 1024)
-        {
-            std::cerr << "read_tr5_room: num_rectangles > 1024\n";
-        }
-        room.rectangles.resize(num_rectangles);
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: rectangles.size() > 1024";
+        room->rectangles.resize(num_rectangles);
 
         if(reader.readU32() != 0)
-        {
-            std::cerr << "read_tr5_room: seperator14 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator14 has wrong value";
 
         /*light_size = */reader.readU32();
         auto numL2 = reader.readU32();
-        if(numL2 != room.lights.size())
-            BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_room: room.num_lights2 != room.num_lights") );
+        if(numL2 != room->lights.size())
+            BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Room: numLights2 != lights.size()") );
 
-        room.unknown_r6 = reader.readU32();
-        room.room_y_top = -reader.readF();
-        room.room_y_bottom = -reader.readF();
+        room->unknown_r6 = reader.readU32();
+        room->room_y_top = -reader.readF();
+        room->room_y_bottom = -reader.readF();
 
-        room.layers.resize(reader.readU32());
+        room->layers.resize(reader.readU32());
 
         auto layer_offset = reader.readU32();
         auto vertices_offset = reader.readU32();
         auto poly_offset = reader.readU32();
         auto poly_offset2 = reader.readU32();
         if(poly_offset != poly_offset2)
-            BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_room: poly_offset != poly_offset2") );
+            BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Room: poly_offset != poly_offset2") );
 
         auto vertices_size = reader.readU32();
         if(vertices_size % 28 != 0)
-            BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_room: vertices_size has wrong value") );
+            BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Room: vertices_size has wrong value") );
 
         if(reader.readU32() != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator15 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator15 has wrong value";
 
         if(reader.readU32() != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator16 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator16 has wrong value";
 
         if(reader.readU32() != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator17 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator17 has wrong value";
 
         if(reader.readU32() != 0xCDCDCDCD)
-        {
-            std::cerr << "read_tr5_room: seperator18 has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator18 has wrong value";
 
-        for(size_t i = 0; i < room.lights.size(); i++)
-            room.lights[i] = Light::readTr5(reader);
+        for(size_t i = 0; i < room->lights.size(); i++)
+            room->lights[i] = Light::readTr5(reader);
 
         reader.seek(position + 208 + sector_data_offset);
 
-        room.sector_list.resize(room.num_zsectors * room.num_xsectors);
-        for(size_t i = 0; i < static_cast<uint32_t>(room.num_zsectors * room.num_xsectors); i++)
-            room.sector_list[i] = Sector::read(reader);
+        room->sector_list.resize(room->num_zsectors * room->num_xsectors);
+        for(size_t i = 0; i < static_cast<uint32_t>(room->num_zsectors * room->num_xsectors); i++)
+            room->sector_list[i] = Sector::read(reader);
 
-        room.portals.resize(reader.readI16());
-        for(size_t i = 0; i < room.portals.size(); i++)
-            room.portals[i] = Portal::read(reader);
+        room->portals.resize(reader.readI16());
+        for(size_t i = 0; i < room->portals.size(); i++)
+            room->portals[i] = Portal::read(reader);
 
         reader.seek(position + 208 + static_meshes_offset);
 
-        for(size_t i = 0; i < room.static_meshes.size(); i++)
-            room.static_meshes[i] = RoomStaticMesh::readTr4(reader);
+        for(size_t i = 0; i < room->static_meshes.size(); i++)
+            room->static_meshes[i] = RoomStaticMesh::readTr4(reader);
 
         reader.seek(position + 208 + layer_offset);
 
-        for(size_t i = 0; i < room.layers.size(); i++)
-            room.layers[i] = Layer::read(reader);
+        for(size_t i = 0; i < room->layers.size(); i++)
+            room->layers[i] = Layer::read(reader);
 
         reader.seek(position + 208 + poly_offset);
 
@@ -1385,28 +1340,28 @@ struct Room
             uint32_t rectangle_index = 0;
             uint32_t triangle_index = 0;
 
-            for(size_t i = 0; i < room.layers.size(); i++)
+            for(size_t i = 0; i < room->layers.size(); i++)
             {
                 uint32_t j;
 
-                for(j = 0; j < room.layers[i].num_rectangles; j++)
+                for(j = 0; j < room->layers[i].num_rectangles; j++)
                 {
-                    room.rectangles[rectangle_index] = QuadFace::readTr4(reader);
-                    room.rectangles[rectangle_index].vertices[0] += vertex_index;
-                    room.rectangles[rectangle_index].vertices[1] += vertex_index;
-                    room.rectangles[rectangle_index].vertices[2] += vertex_index;
-                    room.rectangles[rectangle_index].vertices[3] += vertex_index;
+                    room->rectangles[rectangle_index] = QuadFace::readTr4(reader);
+                    room->rectangles[rectangle_index].vertices[0] += vertex_index;
+                    room->rectangles[rectangle_index].vertices[1] += vertex_index;
+                    room->rectangles[rectangle_index].vertices[2] += vertex_index;
+                    room->rectangles[rectangle_index].vertices[3] += vertex_index;
                     rectangle_index++;
                 }
-                for(j = 0; j < room.layers[i].num_triangles; j++)
+                for(j = 0; j < room->layers[i].num_triangles; j++)
                 {
-                    room.triangles[triangle_index] = Triangle::readTr4(reader);
-                    room.triangles[triangle_index].vertices[0] += vertex_index;
-                    room.triangles[triangle_index].vertices[1] += vertex_index;
-                    room.triangles[triangle_index].vertices[2] += vertex_index;
+                    room->triangles[triangle_index] = Triangle::readTr4(reader);
+                    room->triangles[triangle_index].vertices[0] += vertex_index;
+                    room->triangles[triangle_index].vertices[1] += vertex_index;
+                    room->triangles[triangle_index].vertices[2] += vertex_index;
                     triangle_index++;
                 }
-                vertex_index += room.layers[i].num_vertices;
+                vertex_index += room->layers[i].num_vertices;
             }
         }
 
@@ -1414,14 +1369,14 @@ struct Room
 
         {
             uint32_t vertex_index = 0;
-            room.vertices.resize(vertices_size / 28);
+            room->vertices.resize(vertices_size / 28);
             //int temp1 = room_data_size - (208 + vertices_offset + vertices_size);
-            for(size_t i = 0; i < room.layers.size(); i++)
+            for(size_t i = 0; i < room->layers.size(); i++)
             {
                 uint32_t j;
 
-                for(j = 0; j < room.layers[i].num_vertices; j++)
-                    room.vertices[vertex_index++] = RoomVertex::readTr5(reader);
+                for(j = 0; j < room->layers[i].num_vertices; j++)
+                    room->vertices[vertex_index++] = RoomVertex::readTr5(reader);
             }
         }
 
@@ -1449,79 +1404,79 @@ struct Mesh
       * The read num_normals value is positive when normals are available and negative when light
       * values are available. The values get set appropiatly.
       */
-    static Mesh readTr1(io::SDLReader& reader)
+    static std::unique_ptr<Mesh> readTr1(io::SDLReader& reader)
     {
-        Mesh mesh;
-        mesh.centre = Vertex::read16(reader);
-        mesh.collision_size = reader.readI32();
+        std::unique_ptr<Mesh> mesh{new Mesh()};
+        mesh->centre = Vertex::read16(reader);
+        mesh->collision_size = reader.readI32();
 
-        mesh.vertices.resize(reader.readI16());
-        for(size_t i = 0; i < mesh.vertices.size(); i++)
-            mesh.vertices[i] = Vertex::read16(reader);
+        mesh->vertices.resize(reader.readI16());
+        for(size_t i = 0; i < mesh->vertices.size(); i++)
+            mesh->vertices[i] = Vertex::read16(reader);
 
         auto num_normals = reader.readI16();
         if(num_normals >= 0)
         {
-            mesh.normals.resize(num_normals);
-            for(size_t i = 0; i < mesh.normals.size(); i++)
-                mesh.normals[i] = Vertex::read16(reader);
+            mesh->normals.resize(num_normals);
+            for(size_t i = 0; i < mesh->normals.size(); i++)
+                mesh->normals[i] = Vertex::read16(reader);
         }
         else
         {
-            mesh.lights.resize(-num_normals);
-            for(size_t i = 0; i < mesh.lights.size(); i++)
-                mesh.lights[i] = reader.readI16();
+            mesh->lights.resize(-num_normals);
+            for(size_t i = 0; i < mesh->lights.size(); i++)
+                mesh->lights[i] = reader.readI16();
         }
 
-        mesh.textured_rectangles.resize(reader.readI16());
-        for(size_t i = 0; i < mesh.textured_rectangles.size(); i++)
-            mesh.textured_rectangles[i] = QuadFace::readTr1(reader);
+        mesh->textured_rectangles.resize(reader.readI16());
+        for(size_t i = 0; i < mesh->textured_rectangles.size(); i++)
+            mesh->textured_rectangles[i] = QuadFace::readTr1(reader);
 
-        mesh.textured_triangles.resize(reader.readI16());
-        for(size_t i = 0; i < mesh.textured_triangles.size(); i++)
-            mesh.textured_triangles[i] = Triangle::readTr1(reader);
+        mesh->textured_triangles.resize(reader.readI16());
+        for(size_t i = 0; i < mesh->textured_triangles.size(); i++)
+            mesh->textured_triangles[i] = Triangle::readTr1(reader);
 
-        mesh.coloured_rectangles.resize(reader.readI16());
-        for(size_t i = 0; i < mesh.coloured_rectangles.size(); i++)
-            mesh.coloured_rectangles[i] = QuadFace::readTr1(reader);
+        mesh->coloured_rectangles.resize(reader.readI16());
+        for(size_t i = 0; i < mesh->coloured_rectangles.size(); i++)
+            mesh->coloured_rectangles[i] = QuadFace::readTr1(reader);
 
-        mesh.coloured_triangles.resize(reader.readI16());
-        for(size_t i = 0; i < mesh.coloured_triangles.size(); i++)
-            mesh.coloured_triangles[i] = Triangle::readTr1(reader);
+        mesh->coloured_triangles.resize(reader.readI16());
+        for(size_t i = 0; i < mesh->coloured_triangles.size(); i++)
+            mesh->coloured_triangles[i] = Triangle::readTr1(reader);
         return mesh;
     }
 
-    static Mesh readTr4(io::SDLReader& reader)
+    static std::unique_ptr<Mesh> readTr4(io::SDLReader& reader)
     {
-        Mesh mesh;
-        mesh.centre = Vertex::read16(reader);
-        mesh.collision_size = reader.readI32();
+        std::unique_ptr<Mesh> mesh{new Mesh()};
+        mesh->centre = Vertex::read16(reader);
+        mesh->collision_size = reader.readI32();
 
-        mesh.vertices.resize(reader.readI16());
-        for(size_t i = 0; i < mesh.vertices.size(); i++)
-            mesh.vertices[i] = Vertex::read16(reader);
+        mesh->vertices.resize(reader.readI16());
+        for(size_t i = 0; i < mesh->vertices.size(); i++)
+            mesh->vertices[i] = Vertex::read16(reader);
 
         auto num_normals = reader.readI16();
         if(num_normals >= 0)
         {
-            mesh.normals.resize(num_normals);
-            for(size_t i = 0; i < mesh.normals.size(); i++)
-                mesh.normals[i] = Vertex::read16(reader);
+            mesh->normals.resize(num_normals);
+            for(size_t i = 0; i < mesh->normals.size(); i++)
+                mesh->normals[i] = Vertex::read16(reader);
         }
         else
         {
-            mesh.lights.resize(-num_normals);
-            for(size_t i = 0; i < mesh.lights.size(); i++)
-                mesh.lights[i] = reader.readI16();
+            mesh->lights.resize(-num_normals);
+            for(size_t i = 0; i < mesh->lights.size(); i++)
+                mesh->lights[i] = reader.readI16();
         }
 
-        mesh.textured_rectangles.resize(reader.readI16());
-        for(size_t i = 0; i < mesh.textured_rectangles.size(); i++)
-            mesh.textured_rectangles[i] = QuadFace::readTr4(reader);
+        mesh->textured_rectangles.resize(reader.readI16());
+        for(size_t i = 0; i < mesh->textured_rectangles.size(); i++)
+            mesh->textured_rectangles[i] = QuadFace::readTr4(reader);
 
-        mesh.textured_triangles.resize(reader.readI16());
-        for(size_t i = 0; i < mesh.textured_triangles.size(); i++)
-            mesh.textured_triangles[i] = Triangle::readTr4(reader);
+        mesh->textured_triangles.resize(reader.readI16());
+        for(size_t i = 0; i < mesh->textured_triangles.size(); i++)
+            mesh->textured_triangles[i] = Triangle::readTr4(reader);
         return mesh;
     }
 };
@@ -1535,27 +1490,27 @@ struct StaticMesh
     uint16_t flags;                 // Meaning uncertain; it is usually 2, and is 3 for objects Lara can travel through,
     // like TR2's skeletons and underwater vegetation
 
-    static StaticMesh read(io::SDLReader& reader)
+    static std::unique_ptr<StaticMesh> read(io::SDLReader& reader)
     {
-        StaticMesh mesh;
-        mesh.object_id = reader.readU32();
-        mesh.mesh = reader.readU16();
+        std::unique_ptr<StaticMesh> mesh{new StaticMesh()};
+        mesh->object_id = reader.readU32();
+        mesh->mesh = reader.readU16();
 
-        mesh.visibility_box[0].x = static_cast<float>(reader.readI16());
-        mesh.visibility_box[1].x = static_cast<float>(reader.readI16());
-        mesh.visibility_box[0].y = static_cast<float>(-reader.readI16());
-        mesh.visibility_box[1].y = static_cast<float>(-reader.readI16());
-        mesh.visibility_box[0].z = static_cast<float>(-reader.readI16());
-        mesh.visibility_box[1].z = static_cast<float>(-reader.readI16());
+        mesh->visibility_box[0].x = static_cast<float>(reader.readI16());
+        mesh->visibility_box[1].x = static_cast<float>(reader.readI16());
+        mesh->visibility_box[0].y = static_cast<float>(-reader.readI16());
+        mesh->visibility_box[1].y = static_cast<float>(-reader.readI16());
+        mesh->visibility_box[0].z = static_cast<float>(-reader.readI16());
+        mesh->visibility_box[1].z = static_cast<float>(-reader.readI16());
 
-        mesh.collision_box[0].x = static_cast<float>(reader.readI16());
-        mesh.collision_box[1].x = static_cast<float>(reader.readI16());
-        mesh.collision_box[0].y = static_cast<float>(-reader.readI16());
-        mesh.collision_box[1].y = static_cast<float>(-reader.readI16());
-        mesh.collision_box[0].z = static_cast<float>(-reader.readI16());
-        mesh.collision_box[1].z = static_cast<float>(-reader.readI16());
+        mesh->collision_box[0].x = static_cast<float>(reader.readI16());
+        mesh->collision_box[1].x = static_cast<float>(reader.readI16());
+        mesh->collision_box[0].y = static_cast<float>(-reader.readI16());
+        mesh->collision_box[1].y = static_cast<float>(-reader.readI16());
+        mesh->collision_box[0].z = static_cast<float>(-reader.readI16());
+        mesh->collision_box[1].z = static_cast<float>(-reader.readI16());
 
-        mesh.flags = reader.readU16();
+        mesh->flags = reader.readU16();
         return mesh;
     }
 };
@@ -1633,26 +1588,23 @@ struct Moveable
       * some sanity checks get done which throw a exception on failure.
       * frame_offset needs to be corrected later in TR_Level::read_tr_level.
       */
-    static Moveable readTr1(io::SDLReader& reader)
+    static std::unique_ptr<Moveable> readTr1(io::SDLReader& reader)
     {
-        Moveable moveable;
-        moveable.object_id = reader.readU32();
-        moveable.num_meshes = reader.readU16();
-        moveable.starting_mesh = reader.readU16();
-        moveable.mesh_tree_index = reader.readU32();
-        moveable.frame_offset = reader.readU32();
-        moveable.animation_index = reader.readU16();
+        std::unique_ptr<Moveable> moveable{new Moveable()};
+        moveable->object_id = reader.readU32();
+        moveable->num_meshes = reader.readU16();
+        moveable->starting_mesh = reader.readU16();
+        moveable->mesh_tree_index = reader.readU32();
+        moveable->frame_offset = reader.readU32();
+        moveable->animation_index = reader.readU16();
         return moveable;
     }
 
-    static Moveable readTr5(io::SDLReader& reader)
+    static std::unique_ptr<Moveable> readTr5(io::SDLReader& reader)
     {
-        Moveable moveable;
-        moveable = readTr1(reader);
+        std::unique_ptr<Moveable> moveable = readTr1(reader);
         if(reader.readU16() != 0xFFEF)
-        {
-            std::cerr << "read_tr5_moveable: filler has wrong value\n";
-        }
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Moveable: filler has wrong value";
         return moveable;
     }
 };
@@ -1681,65 +1633,65 @@ struct Item
     }
 
     /// \brief reads an item definition.
-    static Item readTr1(io::SDLReader& reader)
+    static std::unique_ptr<Item> readTr1(io::SDLReader& reader)
     {
-        Item item;
-        item.object_id = reader.readI16();
-        item.room = reader.readI16();
-        item.position = Vertex::read32(reader);
-        item.rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
-        item.intensity1 = reader.readU16();
-        if(item.intensity1 >= 0)
-            item.intensity1 = (8191 - item.intensity1) << 2;
-        item.intensity2 = item.intensity1;
-        item.ocb = 0;   // Not present in TR1!
-        item.flags = reader.readU16();
+        std::unique_ptr<Item> item{new Item()};
+        item->object_id = reader.readI16();
+        item->room = reader.readI16();
+        item->position = Vertex::read32(reader);
+        item->rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
+        item->intensity1 = reader.readU16();
+        if(item->intensity1 >= 0)
+            item->intensity1 = (8191 - item->intensity1) << 2;
+        item->intensity2 = item->intensity1;
+        item->ocb = 0;   // Not present in TR1!
+        item->flags = reader.readU16();
         return item;
     }
 
-    static Item readTr2(io::SDLReader& reader)
+    static std::unique_ptr<Item> readTr2(io::SDLReader& reader)
     {
-        Item item;
-        item.object_id = reader.readI16();
-        item.room = reader.readI16();
-        item.position = Vertex::read32(reader);
-        item.rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
-        item.intensity1 = reader.readU16();
-        if(item.intensity1 >= 0)
-            item.intensity1 = (8191 - item.intensity1) << 2;
-        item.intensity2 = reader.readU16();
-        if(item.intensity2 >= 0)
-            item.intensity2 = (8191 - item.intensity2) << 2;
-        item.ocb = 0;   // Not present in TR2!
-        item.flags = reader.readU16();
+        std::unique_ptr<Item> item{new Item()};
+        item->object_id = reader.readI16();
+        item->room = reader.readI16();
+        item->position = Vertex::read32(reader);
+        item->rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
+        item->intensity1 = reader.readU16();
+        if(item->intensity1 >= 0)
+            item->intensity1 = (8191 - item->intensity1) << 2;
+        item->intensity2 = reader.readU16();
+        if(item->intensity2 >= 0)
+            item->intensity2 = (8191 - item->intensity2) << 2;
+        item->ocb = 0;   // Not present in TR2!
+        item->flags = reader.readU16();
         return item;
     }
 
-    static Item readTr3(io::SDLReader& reader)
+    static std::unique_ptr<Item> readTr3(io::SDLReader& reader)
     {
-        Item item;
-        item.object_id = reader.readI16();
-        item.room = reader.readI16();
-        item.position = Vertex::read32(reader);
-        item.rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
-        item.intensity1 = reader.readU16();
-        item.intensity2 = reader.readU16();
-        item.ocb = 0;   // Not present in TR3!
-        item.flags = reader.readU16();
+        std::unique_ptr<Item> item{new Item()};
+        item->object_id = reader.readI16();
+        item->room = reader.readI16();
+        item->position = Vertex::read32(reader);
+        item->rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
+        item->intensity1 = reader.readU16();
+        item->intensity2 = reader.readU16();
+        item->ocb = 0;   // Not present in TR3!
+        item->flags = reader.readU16();
         return item;
     }
 
-    static Item readTr4(io::SDLReader& reader)
+    static std::unique_ptr<Item> readTr4(io::SDLReader& reader)
     {
-        Item item;
-        item.object_id = reader.readI16();
-        item.room = reader.readI16();
-        item.position = Vertex::read32(reader);
-        item.rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
-        item.intensity1 = reader.readU16();
-        item.intensity2 = item.intensity1;
-        item.ocb = reader.readU16();
-        item.flags = reader.readU16();
+        std::unique_ptr<Item> item{new Item()};
+        item->object_id = reader.readI16();
+        item->room = reader.readI16();
+        item->position = Vertex::read32(reader);
+        item->rotation = static_cast<float>(reader.readU16()) / 16384.0f * -90;
+        item->intensity1 = reader.readU16();
+        item->intensity2 = item->intensity1;
+        item->ocb = reader.readU16();
+        item->flags = reader.readU16();
         return item;
     }
     
@@ -1762,13 +1714,13 @@ struct SpriteTexture
       *
       * some sanity checks get done and if they fail an exception gets thrown.
       */
-    static SpriteTexture readTr1(io::SDLReader& reader)
+    static std::unique_ptr<SpriteTexture> readTr1(io::SDLReader& reader)
     {
-        SpriteTexture sprite_texture;
+        std::unique_ptr<SpriteTexture> sprite_texture{new SpriteTexture()};
 
-        sprite_texture.tile = reader.readU16();
-        if(sprite_texture.tile > 64)
-            std::cerr << "sprite_texture.tile > 64\n";
+        sprite_texture->tile = reader.readU16();
+        if(sprite_texture->tile > 64)
+            BOOST_LOG_TRIVIAL(warning) << "TR1 Sprite Texture: tile > 64";
 
         int tx = reader.readU8();
         int ty = reader.readU8();
@@ -1781,24 +1733,24 @@ struct SpriteTexture
 
         float w = tw / 256.0f;
         float h = th / 256.0f;
-        sprite_texture.x0 = tx;
-        sprite_texture.y0 = ty;
-        sprite_texture.x1 = static_cast<int16_t>(sprite_texture.x0 + w);
-        sprite_texture.y1 = static_cast<int16_t>(sprite_texture.y0 + h);
+        sprite_texture->x0 = tx;
+        sprite_texture->y0 = ty;
+        sprite_texture->x1 = static_cast<int16_t>(sprite_texture->x0 + w);
+        sprite_texture->y1 = static_cast<int16_t>(sprite_texture->y0 + h);
 
-        sprite_texture.left_side = tleft;
-        sprite_texture.right_side = tright;
-        sprite_texture.top_side = -tbottom;
-        sprite_texture.bottom_side = -ttop;
+        sprite_texture->left_side = tleft;
+        sprite_texture->right_side = tright;
+        sprite_texture->top_side = -tbottom;
+        sprite_texture->bottom_side = -ttop;
         return sprite_texture;
     }
 
-    static SpriteTexture readTr4(io::SDLReader& reader)
+    static std::unique_ptr<SpriteTexture> readTr4(io::SDLReader& reader)
     {
-        SpriteTexture sprite_texture;
-        sprite_texture.tile = reader.readU16();
-        if(sprite_texture.tile > 128)
-            std::cerr << "sprite_texture.tile > 128\n";
+        std::unique_ptr<SpriteTexture> sprite_texture{new SpriteTexture()};
+        sprite_texture->tile = reader.readU16();
+        if(sprite_texture->tile > 128)
+            BOOST_LOG_TRIVIAL(warning) << "TR4 Sprite Texture: tile > 128";
 
         int tx = reader.readU8();
         int ty = reader.readU8();
@@ -1809,15 +1761,15 @@ struct SpriteTexture
         int tright = reader.readI16();
         int tbottom = reader.readI16();
 
-        sprite_texture.x0 = tleft;
-        sprite_texture.x1 = tright;
-        sprite_texture.y0 = tbottom;
-        sprite_texture.y1 = ttop;
+        sprite_texture->x0 = tleft;
+        sprite_texture->x1 = tright;
+        sprite_texture->y0 = tbottom;
+        sprite_texture->y1 = ttop;
 
-        sprite_texture.left_side = tx;
-        sprite_texture.right_side = tx + tw / 256;
-        sprite_texture.bottom_side = ty;
-        sprite_texture.top_side = ty + th / 256;
+        sprite_texture->left_side = tx;
+        sprite_texture->right_side = tx + tw / 256;
+        sprite_texture->bottom_side = ty;
+        sprite_texture->top_side = ty + th / 256;
         return sprite_texture;
     }
 };
@@ -1832,17 +1784,17 @@ struct SpriteSequence
       *
       * length is negative when read and thus gets negated.
       */
-    static SpriteSequence read(io::SDLReader& reader)
+    static std::unique_ptr<SpriteSequence> read(io::SDLReader& reader)
     {
-        SpriteSequence sprite_sequence;
-        sprite_sequence.object_id = reader.readI32();
-        sprite_sequence.length = -reader.readI16();
-        sprite_sequence.offset = reader.readI16();
+        std::unique_ptr<SpriteSequence> sprite_sequence{new SpriteSequence()};
+        sprite_sequence->object_id = reader.readI32();
+        sprite_sequence->length = -reader.readI16();
+        sprite_sequence->offset = reader.readI16();
         return sprite_sequence;
     }
 };
 
-/** \brief Animation.
+/** \brief animation->
   *
   * This describes each individual animation; these may be looped by specifying
   * the next animation to be itself. In TR2 and TR3, one must be careful when
@@ -1874,47 +1826,47 @@ struct Animation
     uint16_t anim_command;          // offset into AnimCommand[]
 
     /// \brief reads an animation definition.
-    static Animation readTr1(io::SDLReader& reader)
+    static std::unique_ptr<Animation> readTr1(io::SDLReader& reader)
     {
         return read(reader, false);
     }
 
-    static Animation readTr4(io::SDLReader& reader)
+    static std::unique_ptr<Animation> readTr4(io::SDLReader& reader)
     {
         return read(reader, true);
     }
 
 private:
-    static Animation read(io::SDLReader& reader, bool withLateral)
+    static std::unique_ptr<Animation> read(io::SDLReader& reader, bool withLateral)
     {
-        Animation animation;
-        animation.frame_offset = reader.readU32();
-        animation.frame_rate = reader.readU8();
-        animation.frame_size = reader.readU8();
-        animation.state_id = reader.readU16();
+        std::unique_ptr<Animation> animation{new Animation()};
+        animation->frame_offset = reader.readU32();
+        animation->frame_rate = reader.readU8();
+        animation->frame_size = reader.readU8();
+        animation->state_id = reader.readU16();
 
-        animation.speed = reader.readI32();
-        animation.accel = reader.readI32();
+        animation->speed = reader.readI32();
+        animation->accel = reader.readI32();
         if(withLateral)
         {
-            animation.speed_lateral = reader.readI32();
-            animation.accel_lateral = reader.readI32();
+            animation->speed_lateral = reader.readI32();
+            animation->accel_lateral = reader.readI32();
         }
         else
         {
-            animation.speed_lateral = 0;
-            animation.accel_lateral = 0;
+            animation->speed_lateral = 0;
+            animation->accel_lateral = 0;
         }
 
-        animation.frame_start = reader.readU16();
-        animation.frame_end = reader.readU16();
-        animation.next_animation = reader.readU16();
-        animation.next_frame = reader.readU16();
+        animation->frame_start = reader.readU16();
+        animation->frame_end = reader.readU16();
+        animation->next_animation = reader.readU16();
+        animation->next_frame = reader.readU16();
 
-        animation.num_state_changes = reader.readU16();
-        animation.state_change_offset = reader.readU16();
-        animation.num_anim_commands = reader.readU16();
-        animation.anim_command = reader.readU16();
+        animation->num_state_changes = reader.readU16();
+        animation->state_change_offset = reader.readU16();
+        animation->num_anim_commands = reader.readU16();
+        animation->anim_command = reader.readU16();
         return animation;
     }
 };
@@ -1932,12 +1884,12 @@ struct StateChange
     uint16_t anim_dispatch;             // Offset into AnimDispatches[]
 
     /// \brief reads an animation state change.
-    static StateChange read(io::SDLReader& reader)
+    static std::unique_ptr<StateChange> read(io::SDLReader& reader)
     {
-        StateChange state_change;
-        state_change.state_id = reader.readU16();
-        state_change.num_anim_dispatches = reader.readU16();
-        state_change.anim_dispatch = reader.readU16();
+        std::unique_ptr<StateChange> state_change{new StateChange()};
+        state_change->state_id = reader.readU16();
+        state_change->num_anim_dispatches = reader.readU16();
+        state_change->anim_dispatch = reader.readU16();
         return state_change;
     }
 };
@@ -1956,13 +1908,13 @@ struct AnimDispatch
     int16_t next_frame;         // Frame offset to dispatch to
 
     /// \brief reads an animation dispatch.
-    static AnimDispatch read(io::SDLReader& reader)
+    static std::unique_ptr<AnimDispatch> read(io::SDLReader& reader)
     {
-        AnimDispatch anim_dispatch;
-        anim_dispatch.low = reader.readI16();
-        anim_dispatch.high = reader.readI16();
-        anim_dispatch.next_animation = reader.readI16();
-        anim_dispatch.next_frame = reader.readI16();
+        std::unique_ptr<AnimDispatch> anim_dispatch{new AnimDispatch()};
+        anim_dispatch->low = reader.readI16();
+        anim_dispatch->high = reader.readI16();
+        anim_dispatch->next_animation = reader.readI16();
+        anim_dispatch->next_frame = reader.readI16();
         return anim_dispatch;
     }
 };
@@ -1977,27 +1929,27 @@ struct Box
     int16_t overlap_index;  // index into Overlaps[]. The high bit is sometimes set; this
     // occurs in front of swinging doors and the like.
 
-    static Box readTr1(io::SDLReader& reader)
+    static std::unique_ptr<Box> readTr1(io::SDLReader& reader)
     {
-        Box box;
-        box.zmax = -reader.readI32();
-        box.zmin = -reader.readI32();
-        box.xmin = reader.readI32();
-        box.xmax = reader.readI32();
-        box.true_floor = -reader.readI16();
-        box.overlap_index = reader.readI16();
+        std::unique_ptr<Box> box{new Box()};
+        box->zmax = -reader.readI32();
+        box->zmin = -reader.readI32();
+        box->xmin = reader.readI32();
+        box->xmax = reader.readI32();
+        box->true_floor = -reader.readI16();
+        box->overlap_index = reader.readI16();
         return box;
     }
 
-    static Box readTr2(io::SDLReader& reader)
+    static std::unique_ptr<Box> readTr2(io::SDLReader& reader)
     {
-        Box box;
-        box.zmax = -1024 * reader.readU8();
-        box.zmin = -1024 * reader.readU8();
-        box.xmin = 1024 * reader.readU8();
-        box.xmax = 1024 * reader.readU8();
-        box.true_floor = -reader.readI16();
-        box.overlap_index = reader.readI16();
+        std::unique_ptr<Box> box{new Box()};
+        box->zmax = -1024 * reader.readU8();
+        box->zmin = -1024 * reader.readU8();
+        box->xmin = 1024 * reader.readU8();
+        box->xmax = 1024 * reader.readU8();
+        box->true_floor = -reader.readI16();
+        box->overlap_index = reader.readI16();
         return box;
     }
 };
@@ -2009,27 +1961,26 @@ struct Zone
     uint16_t flyZoneAlternate;
     std::vector<uint16_t> groundZonesAlternate;
 
-    static Zone readTr1(io::SDLReader& reader)
+    static std::unique_ptr<Zone> readTr1(io::SDLReader& reader)
     {
-        Zone zone;
-        zone.flyZoneNormal = reader.readU16();
-        for(int i=0; i<2; ++i)
-            zone.groundZonesNormal.emplace_back( reader.readU16() );
-        zone.flyZoneAlternate = reader.readU16();
-        for(int i=0; i<2; ++i)
-            zone.groundZonesAlternate.emplace_back( reader.readU16() );
-        return zone;
+        return read(reader, 2);
     }
 
-    static Zone readTr2(io::SDLReader& reader)
+    static std::unique_ptr<Zone> readTr2(io::SDLReader& reader)
     {
-        Zone zone;
-        zone.flyZoneNormal = reader.readU16();
-        for(int i=0; i<4; ++i)
-            zone.groundZonesNormal.emplace_back( reader.readU16() );
-        zone.flyZoneAlternate = reader.readU16();
-        for(int i=0; i<4; ++i)
-            zone.groundZonesAlternate.emplace_back( reader.readU16() );
+        return read(reader, 4);
+    }
+
+private:
+    static std::unique_ptr<Zone> read(io::SDLReader& reader, int n)
+    {
+        std::unique_ptr<Zone> zone{ new Zone() };
+        zone->flyZoneNormal = reader.readU16();
+        for(int i = 0; i<n; ++i)
+            zone->groundZonesNormal.emplace_back(reader.readU16());
+        zone->flyZoneAlternate = reader.readU16();
+        for(int i = 0; i<n; ++i)
+            zone->groundZonesAlternate.emplace_back(reader.readU16());
         return zone;
     }
 };
@@ -2049,15 +2000,15 @@ struct SoundSource
     uint16_t sound_id;      // internal sound index
     uint16_t flags;         // 0x40, 0x80, or 0xc0
 
-    static SoundSource read(io::SDLReader& reader)
+    static std::unique_ptr<SoundSource> read(io::SDLReader& reader)
     {
-        SoundSource sound_source;
-        sound_source.x = reader.readI32();
-        sound_source.y = reader.readI32();
-        sound_source.z = reader.readI32();
+        std::unique_ptr<SoundSource> sound_source{new SoundSource()};
+        sound_source->x = reader.readI32();
+        sound_source->y = reader.readI32();
+        sound_source->z = reader.readI32();
 
-        sound_source.sound_id = reader.readU16();
-        sound_source.flags = reader.readU16();
+        sound_source->sound_id = reader.readU16();
+        sound_source->flags = reader.readU16();
         return sound_source;
     }
 };
@@ -2086,7 +2037,7 @@ enum class LoopType
  */
 struct SoundDetails
 {
-    uint16_t sample;                     // Index into SampleIndices -- NOT USED IN TR4-5!!!
+    size_t sample;                       // Index into SampleIndices -- NOT USED IN TR4-5!!!
     uint16_t volume;                     // Global sample value
     uint16_t sound_range;                // Sound range
     uint16_t chance;                     // Chance to play
@@ -2159,29 +2110,29 @@ struct SoundDetails
     static constexpr const int DefaultRange = 8;
     static constexpr const float DefaultPitch = 1.0f;       // 0.0 - only noise
 
-    static SoundDetails readTr1(io::SDLReader& reader)
+    static std::unique_ptr<SoundDetails> readTr1(io::SDLReader& reader)
     {
-        SoundDetails sound_details;
-        sound_details.sample = reader.readU16();
-        sound_details.volume = reader.readU16();
-        sound_details.chance = reader.readU16();
-        sound_details.num_samples_and_flags_1 = reader.readU8();
-        sound_details.flags_2 = reader.readU8();
-        sound_details.sound_range = DefaultRange;
-        sound_details.pitch = static_cast<int16_t>(DefaultPitch);
+        std::unique_ptr<SoundDetails> sound_details{new SoundDetails()};
+        sound_details->sample = reader.readU16();
+        sound_details->volume = reader.readU16();
+        sound_details->chance = reader.readU16();
+        sound_details->num_samples_and_flags_1 = reader.readU8();
+        sound_details->flags_2 = reader.readU8();
+        sound_details->sound_range = DefaultRange;
+        sound_details->pitch = static_cast<int16_t>(DefaultPitch);
         return sound_details;
     }
 
-    static SoundDetails readTr3(io::SDLReader& reader)
+    static std::unique_ptr<SoundDetails> readTr3(io::SDLReader& reader)
     {
-        SoundDetails sound_details;
-        sound_details.sample = reader.readU16();
-        sound_details.volume = reader.readU8();
-        sound_details.sound_range = reader.readU8();
-        sound_details.chance = static_cast<uint16_t>(reader.readI8());
-        sound_details.pitch = reader.readI8();
-        sound_details.num_samples_and_flags_1 = reader.readU8();
-        sound_details.flags_2 = reader.readU8();
+        std::unique_ptr<SoundDetails> sound_details{new SoundDetails()};
+        sound_details->sample = reader.readU16();
+        sound_details->volume = reader.readU8();
+        sound_details->sound_range = reader.readU8();
+        sound_details->chance = static_cast<uint16_t>(reader.readU8());
+        sound_details->pitch = reader.readI8();
+        sound_details->num_samples_and_flags_1 = reader.readU8();
+        sound_details->flags_2 = reader.readU8();
         return sound_details;
     }
 };
@@ -2258,7 +2209,7 @@ struct ObjectTexture
     // 2 (only in TR3) means that the opacity (alpha) is equal to the intensity;
     // the brighter the colour, the more opaque it is. The intensity is probably calculated
     // as the maximum of the individual color values.
-    uint16_t tile_and_flag;                     // index into textile list
+    uint16_t tileAndFlag;                     // index into textile list
     uint16_t flags;                             // TR4
     ObjectTextureVertex vertices[4];      // the four corners of the texture
     uint32_t unknown1;                          // TR4
@@ -2271,57 +2222,57 @@ struct ObjectTexture
       * some sanity checks get done and if they fail an exception gets thrown.
       * all values introduced in TR4 get set appropiatly.
       */
-    static ObjectTexture readTr1(io::SDLReader& reader)
+    static std::unique_ptr<ObjectTexture> readTr1(io::SDLReader& reader)
     {
-        ObjectTexture object_texture;
-        object_texture.transparency_flags = static_cast<BlendingMode>(reader.readU16());
-        object_texture.tile_and_flag = reader.readU16();
-        if(object_texture.tile_and_flag > 64)
-            std::cerr << "object_texture.tile_and_flags > 64\n";
+        std::unique_ptr<ObjectTexture> object_texture{new ObjectTexture()};
+        object_texture->transparency_flags = static_cast<BlendingMode>(reader.readU16());
+        object_texture->tileAndFlag = reader.readU16();
+        if(object_texture->tileAndFlag > 64)
+            BOOST_LOG_TRIVIAL(warning) << "TR1 Object Texture: tileAndFlag > 64";
 
-        if((object_texture.tile_and_flag & (1 << 15)) != 0)
-            std::cerr << "object_texture.tile_and_flags has top bit set!\n";
+        if((object_texture->tileAndFlag & (1 << 15)) != 0)
+            BOOST_LOG_TRIVIAL(warning) << "TR1 Object Texture: tileAndFlag is flagged";
 
         // only in TR4
-        object_texture.flags = 0;
-        object_texture.vertices[0] = ObjectTextureVertex::readTr1(reader);
-        object_texture.vertices[1] = ObjectTextureVertex::readTr1(reader);
-        object_texture.vertices[2] = ObjectTextureVertex::readTr1(reader);
-        object_texture.vertices[3] = ObjectTextureVertex::readTr1(reader);
+        object_texture->flags = 0;
+        object_texture->vertices[0] = ObjectTextureVertex::readTr1(reader);
+        object_texture->vertices[1] = ObjectTextureVertex::readTr1(reader);
+        object_texture->vertices[2] = ObjectTextureVertex::readTr1(reader);
+        object_texture->vertices[3] = ObjectTextureVertex::readTr1(reader);
         // only in TR4
-        object_texture.unknown1 = 0;
-        object_texture.unknown2 = 0;
-        object_texture.x_size = 0;
-        object_texture.y_size = 0;
+        object_texture->unknown1 = 0;
+        object_texture->unknown2 = 0;
+        object_texture->x_size = 0;
+        object_texture->y_size = 0;
         return object_texture;
     }
 
-    static ObjectTexture readTr4(io::SDLReader& reader)
+    static std::unique_ptr<ObjectTexture> readTr4(io::SDLReader& reader)
     {
-        ObjectTexture object_texture;
-        object_texture.transparency_flags = static_cast<BlendingMode>( reader.readU16() );
-        object_texture.tile_and_flag = reader.readU16();
-        if((object_texture.tile_and_flag & 0x7FFF) > 128)
-            std::cerr << "object_texture.tile > 128\n";
+        std::unique_ptr<ObjectTexture> object_texture{new ObjectTexture()};
+        object_texture->transparency_flags = static_cast<BlendingMode>( reader.readU16() );
+        object_texture->tileAndFlag = reader.readU16();
+        if((object_texture->tileAndFlag & 0x7FFF) > 128)
+            BOOST_LOG_TRIVIAL(warning) << "TR4 Object Texture: tileAndFlag > 128";
 
-        object_texture.flags = reader.readU16();
-        object_texture.vertices[0] = ObjectTextureVertex::readTr4(reader);
-        object_texture.vertices[1] = ObjectTextureVertex::readTr4(reader);
-        object_texture.vertices[2] = ObjectTextureVertex::readTr4(reader);
-        object_texture.vertices[3] = ObjectTextureVertex::readTr4(reader);
-        object_texture.unknown1 = reader.readU32();
-        object_texture.unknown2 = reader.readU32();
-        object_texture.x_size = reader.readU32();
-        object_texture.y_size = reader.readU32();
+        object_texture->flags = reader.readU16();
+        object_texture->vertices[0] = ObjectTextureVertex::readTr4(reader);
+        object_texture->vertices[1] = ObjectTextureVertex::readTr4(reader);
+        object_texture->vertices[2] = ObjectTextureVertex::readTr4(reader);
+        object_texture->vertices[3] = ObjectTextureVertex::readTr4(reader);
+        object_texture->unknown1 = reader.readU32();
+        object_texture->unknown2 = reader.readU32();
+        object_texture->x_size = reader.readU32();
+        object_texture->y_size = reader.readU32();
         return object_texture;
     }
 
-    static ObjectTexture readTr5(io::SDLReader& reader)
+    static std::unique_ptr<ObjectTexture> readTr5(io::SDLReader& reader)
     {
-        ObjectTexture object_texture = readTr4(reader);
+        std::unique_ptr<ObjectTexture> object_texture = readTr4(reader);
         if(reader.readU16() != 0)
         {
-            std::cerr << "read_tr5_level: obj_tex trailing bitu16 != 0\n";
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Object Texture: unexpected value at end of structure";
         }
         return object_texture;
     }
@@ -2340,15 +2291,15 @@ struct Camera
     int16_t room;
     uint16_t unknown1;    // correlates to Boxes[]? Zones[]?
 
-    static Camera read(io::SDLReader& reader)
+    static std::unique_ptr<Camera> read(io::SDLReader& reader)
     {
-        Camera camera;
-        camera.x = reader.readI32();
-        camera.y = reader.readI32();
-        camera.z = reader.readI32();
+        std::unique_ptr<Camera> camera{new Camera()};
+        camera->x = reader.readI32();
+        camera->y = reader.readI32();
+        camera->z = reader.readI32();
 
-        camera.room = reader.readI16();
-        camera.unknown1 = reader.readU16();
+        camera->room = reader.readI16();
+        camera->unknown1 = reader.readU16();
         return camera;
     }
 };
@@ -2370,26 +2321,26 @@ struct FlybyCamera
     uint16_t flags;
     uint32_t room_id;
 
-    static FlybyCamera read(io::SDLReader& reader)
+    static std::unique_ptr<FlybyCamera> read(io::SDLReader& reader)
     {
-        FlybyCamera camera;
-        camera.cam_x = reader.readI32();
-        camera.cam_y = reader.readI32();
-        camera.cam_z = reader.readI32();
-        camera.target_x = reader.readI32();
-        camera.target_y = reader.readI32();
-        camera.target_z = reader.readI32();
+        std::unique_ptr<FlybyCamera> camera{new FlybyCamera()};
+        camera->cam_x = reader.readI32();
+        camera->cam_y = reader.readI32();
+        camera->cam_z = reader.readI32();
+        camera->target_x = reader.readI32();
+        camera->target_y = reader.readI32();
+        camera->target_z = reader.readI32();
 
-        camera.sequence = reader.readI8();
-        camera.index = reader.readI8();
+        camera->sequence = reader.readI8();
+        camera->index = reader.readI8();
 
-        camera.fov = reader.readU16();
-        camera.roll = reader.readU16();
-        camera.timer = reader.readU16();
-        camera.speed = reader.readU16();
-        camera.flags = reader.readU16();
+        camera->fov = reader.readU16();
+        camera->roll = reader.readU16();
+        camera->timer = reader.readU16();
+        camera->speed = reader.readU16();
+        camera->flags = reader.readU16();
 
-        camera.room_id = reader.readU32();
+        camera->room_id = reader.readU32();
         return camera;
     }
 };
@@ -2405,19 +2356,19 @@ struct AIObject
     uint16_t flags;        // The trigger flags (button 1-5, first button has value 2)
     int32_t angle;
 
-    static AIObject read(io::SDLReader& reader)
+    static std::unique_ptr<AIObject> read(io::SDLReader& reader)
     {
-        AIObject object;
-        object.object_id = reader.readU16();
-        object.room = reader.readU16();                        // 4
+        std::unique_ptr<AIObject> object{new AIObject()};
+        object->object_id = reader.readU16();
+        object->room = reader.readU16();                        // 4
 
-        object.x = reader.readI32();
-        object.y = reader.readI32();
-        object.z = reader.readI32();                            // 16
+        object->x = reader.readI32();
+        object->y = reader.readI32();
+        object->z = reader.readI32();                            // 16
 
-        object.ocb = reader.readU16();
-        object.flags = reader.readU16();                       // 20
-        object.angle = reader.readI32();                        // 24
+        object->ocb = reader.readU16();
+        object->flags = reader.readU16();                       // 20
+        object->angle = reader.readI32();                        // 24
         return object;
     }
 };
@@ -2436,55 +2387,54 @@ struct CinematicFrame
     int16_t rotx;        // rotation about X axis, +/- 32767 == +/- 180 degrees
 
     /// \brief reads a cinematic frame
-    static CinematicFrame read(io::SDLReader& reader)
+    static std::unique_ptr<CinematicFrame> read(io::SDLReader& reader)
     {
-        CinematicFrame cf;
-        cf.roty = reader.readI16();         // rotation about Y axis, +/- 32767 == +/- 180 degrees
-        cf.rotz = reader.readI16();         // rotation about Z axis, +/- 32767 == +/- 180 degrees
-        cf.rotz2 = reader.readI16();        // seems to work a lot like rotZ;  I haven't yet been able to
+        std::unique_ptr<CinematicFrame> cf{new CinematicFrame()};
+        cf->roty = reader.readI16();         // rotation about Y axis, +/- 32767 == +/- 180 degrees
+        cf->rotz = reader.readI16();         // rotation about Z axis, +/- 32767 == +/- 180 degrees
+        cf->rotz2 = reader.readI16();        // seems to work a lot like rotZ;  I haven't yet been able to
                                            // differentiate them
-        cf.posz = reader.readI16();         // camera position relative to something (target? Lara? room
+        cf->posz = reader.readI16();         // camera position relative to something (target? Lara? room
                                            // origin?).  pos* are _not_ in world coordinates.
-        cf.posy = reader.readI16();         // camera position relative to something (see posZ)
-        cf.posx = reader.readI16();         // camera position relative to something (see posZ)
-        cf.unknown = reader.readI16();      // changing this can cause a runtime error
-        cf.rotx = reader.readI16();         // rotation about X axis, +/- 32767 == +/- 180 degrees
+        cf->posy = reader.readI16();         // camera position relative to something (see posZ)
+        cf->posx = reader.readI16();         // camera position relative to something (see posZ)
+        cf->unknown = reader.readI16();      // changing this can cause a runtime error
+        cf->rotx = reader.readI16();         // rotation about X axis, +/- 32767 == +/- 180 degrees
         return cf;
     }
 };
 
 struct LightMap
 {
-    uint8_t map[32 * 256];
+    std::array<uint8_t, 32 * 256> map;
 
     /// \brief reads the lightmap.
-    static LightMap read(io::SDLReader& reader)
+    static std::unique_ptr<LightMap> read(io::SDLReader& reader)
     {
-        LightMap lightmap;
-        for(int i = 0; i < 32 * 256; i++)
-            lightmap.map[i] = reader.readU8();
+        std::unique_ptr<LightMap> lightmap{ new LightMap() };
+        reader.readBytes(lightmap->map.data(), lightmap->map.size());
         return lightmap;
     }
 };
 
 struct Palette
 {
-    ByteColor colour[256];
+    ByteColor color[256];
 
     /// \brief reads the 256 colour palette values.
-    static Palette readTr1(io::SDLReader& reader)
+    static std::unique_ptr<Palette> readTr1(io::SDLReader& reader)
     {
-        Palette palette;
+        std::unique_ptr<Palette> palette{new Palette()};
         for(int i = 0; i < 256; i++)
-            palette.colour[i] = ByteColor::readTr1(reader);
+            palette->color[i] = ByteColor::readTr1(reader);
         return palette;
     }
 
-    static Palette readTr2(io::SDLReader& reader)
+    static std::unique_ptr<Palette> readTr2(io::SDLReader& reader)
     {
-        Palette palette;
+        std::unique_ptr<Palette> palette{new Palette()};
         for(int i = 0; i < 256; i++)
-            palette.colour[i] = ByteColor::readTr2(reader);
+            palette->color[i] = ByteColor::readTr2(reader);
         return palette;
     }
 };

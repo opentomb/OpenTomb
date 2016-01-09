@@ -1672,24 +1672,28 @@ int Character::checkTraverse(const Entity& obj)
     // OX move case
     if(m_transform[1][0] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({static_cast<glm::float_t>(obj_s->position[0] + MeteringSectorSize),
-                                                  static_cast<glm::float_t>(obj_s->position[1]), static_cast<glm::float_t>(0.0)});
+        next_s = obj_s->owner_room->getSectorRaw({obj_s->position[0] + MeteringSectorSize,
+                                                  obj_s->position[1],
+                                                  0});
     }
     else if(m_transform[1][0] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({static_cast<glm::float_t>(obj_s->position[0] - MeteringSectorSize),
-                                                  static_cast<glm::float_t>(obj_s->position[1]), static_cast<glm::float_t>(0.0)});
+        next_s = obj_s->owner_room->getSectorRaw({obj_s->position[0] - MeteringSectorSize,
+                                                  obj_s->position[1],
+                                                  0});
     }
     // OY move case
     else if(m_transform[1][1] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({static_cast<glm::float_t>(obj_s->position[0]),
-                                                  static_cast<glm::float_t>(obj_s->position[1] + MeteringSectorSize), static_cast<glm::float_t>(0.0)});
+        next_s = obj_s->owner_room->getSectorRaw({obj_s->position[0],
+                                                  obj_s->position[1] + MeteringSectorSize,
+                                                  0});
     }
     else if(m_transform[1][1] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({static_cast<glm::float_t>(obj_s->position[0]),
-                                                  static_cast<glm::float_t>(obj_s->position[1] - MeteringSectorSize), static_cast<glm::float_t>(0.0)});
+        next_s = obj_s->owner_room->getSectorRaw({obj_s->position[0],
+                                                  obj_s->position[1] - MeteringSectorSize,
+                                                  0});
     }
 
     if(next_s)

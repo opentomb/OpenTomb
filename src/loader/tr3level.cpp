@@ -21,7 +21,6 @@
 
 #include "tr3level.h"
 
-#include <iostream>
 #include <string>
 
 using namespace loader;
@@ -34,7 +33,7 @@ void TR3Level::load()
     uint32_t file_version = m_reader.readU32();
 
     if(file_version != 0xFF080038 && file_version != 0xFF180038 && file_version != 0xFF180034)
-        BOOST_THROW_EXCEPTION( std::runtime_error("Wrong level version") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR3 Level: Wrong level version") );
 
     m_palette = Palette::readTr1(m_reader);
     /*Palette palette16 =*/ Palette::readTr2(m_reader);
@@ -52,7 +51,7 @@ void TR3Level::load()
 
     // Unused
     if(m_reader.readU32() != 0)
-        std::cerr << "Bad value for 'unused'\n";
+        BOOST_LOG_TRIVIAL(warning) << "TR3 Level: Bad value for 'unused'";
 
     m_reader.readVector(m_rooms, m_reader.readU16(), &Room::readTr3);
 
@@ -125,7 +124,7 @@ void TR3Level::load()
     io::SDLReader newsrc(m_sfxPath);
     if(!newsrc.isOpen())
     {
-        std::cerr << "read_tr2_level: failed to open \"" << m_sfxPath << "\"! No samples loaded.\n";
+        BOOST_LOG_TRIVIAL(warning) << "TR3 Level: failed to open '" << m_sfxPath << "', no samples loaded.";
     }
     else
     {

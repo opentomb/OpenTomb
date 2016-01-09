@@ -221,7 +221,7 @@ void BorderedTextureAtlas::addObjectTexture(const loader::ObjectTexture &texture
     {
         CanonicalObjectTexture *canonical_candidate = &m_canonicalObjectTextures[i];
 
-        if(canonical_candidate->original_page == (texture.tile_and_flag & loader::TextureIndexMaskTr4)
+        if(canonical_candidate->original_page == (texture.tileAndFlag & loader::TextureIndexMaskTr4)
            && canonical_candidate->original_x == min[0]
            && canonical_candidate->original_y == min[1]
            && canonical_candidate->width == width
@@ -241,7 +241,7 @@ void BorderedTextureAtlas::addObjectTexture(const loader::ObjectTexture &texture
         CanonicalObjectTexture &canonical = m_canonicalObjectTextures.back();
         canonical.width = width;
         canonical.height = height;
-        canonical.original_page = texture.tile_and_flag & loader::TextureIndexMaskTr4;
+        canonical.original_page = texture.tileAndFlag & loader::TextureIndexMaskTr4;
         canonical.original_x = min[0];
         canonical.original_y = min[1];
     }

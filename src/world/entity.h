@@ -146,7 +146,7 @@ public:
     glm::vec3 m_activationOffset = { 0,256,0 };   // where we can activate object (dx, dy, dz)
     glm::float_t m_activationRadius = 128;
 
-    Entity(ObjectId id);
+    explicit Entity(ObjectId id);
     ~Entity();
 
     void enable();

@@ -45,16 +45,16 @@ void Level::readMeshData(io::SDLReader& reader)
     m_meshes.clear();
 
     uint32_t meshDataPos = 0;
-    for (uint32_t i = 0; i < m_meshIndices.size(); i++)
+    for (size_t i = 0; i < m_meshIndices.size(); i++)
     {
         std::replace(m_meshIndices.begin(), m_meshIndices.end(), meshDataPos, i);
 
         reader.seek(basePos + meshDataPos);
 
         if (m_gameVersion >= Game::TR4)
-            m_meshes.emplace_back( Mesh::readTr4(reader) );
+            m_meshes.emplace_back( *Mesh::readTr4(reader) );
         else
-            m_meshes.emplace_back( Mesh::readTr1(reader) );
+            m_meshes.emplace_back( *Mesh::readTr1(reader) );
 
         for(size_t j = 0; j < m_meshIndices.size(); j++)
         {
@@ -83,9 +83,9 @@ void Level::readFrameMoveableData(io::SDLReader& reader)
         {
             m_moveables[i] = Moveable::readTr1(reader);
             // Disable unused skybox polygons.
-            if(m_gameVersion == Game::TR3 && m_moveables[i].object_id == 355)
+            if(m_gameVersion == Game::TR3 && m_moveables[i]->object_id == 355)
             {
-                m_meshes[m_meshIndices[m_moveables[i].starting_mesh]].coloured_triangles.resize(16);
+                m_meshes[m_meshIndices[m_moveables[i]->starting_mesh]].coloured_triangles.resize(16);
             }
         }
         else
@@ -100,10 +100,10 @@ void Level::readFrameMoveableData(io::SDLReader& reader)
     for (size_t i = 0; i < m_frameData.size(); i++)
     {
         for (size_t j = 0; j < m_moveables.size(); j++)
-            if (m_moveables[j].frame_offset == pos)
+            if (m_moveables[j]->frame_offset == pos)
             {
-                m_moveables[j].frame_index = static_cast<uint32_t>(i);
-                m_moveables[j].frame_offset = 0;
+                m_moveables[j]->frame_index = static_cast<uint32_t>(i);
+                m_moveables[j]->frame_offset = 0;
             }
 
         reader.seek(frameDataPos + pos);
@@ -111,9 +111,9 @@ void Level::readFrameMoveableData(io::SDLReader& reader)
         pos = 0;
         for(size_t j = 0; j < m_moveables.size(); j++)
         {
-            if(m_moveables[j].frame_offset > pos)
+            if(m_moveables[j]->frame_offset > pos)
             {
-                pos = m_moveables[j].frame_offset;
+                pos = m_moveables[j]->frame_offset;
                 break;
             }
         }
@@ -315,8 +315,8 @@ Item *Level::fineItemById(int32_t object_id)
 Moveable *Level::findMoveableById(uint32_t object_id)
 {
     for (size_t i = 0; i < m_moveables.size(); i++)
-        if (m_moveables[i].object_id == object_id)
-            return &m_moveables[i];
+        if (m_moveables[i]->object_id == object_id)
+            return m_moveables[i].get();
 
     return nullptr;
 }
@@ -330,7 +330,7 @@ void Level::convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst)
             int col = tex.pixels[y][x];
 
             if (col > 0)
-                dst.pixels[y][x] = static_cast<int>(pal.colour[col].r) | (static_cast<int>(pal.colour[col].g) << 8) | (static_cast<int>(pal.colour[col].b) << 16) | (0xff << 24);
+                dst.pixels[y][x] = static_cast<int>(pal.color[col].r) | (static_cast<int>(pal.color[col].g) << 8) | (static_cast<int>(pal.color[col].b) << 16) | (0xff << 24);
             else
                 dst.pixels[y][x] = 0x00000000;
         }

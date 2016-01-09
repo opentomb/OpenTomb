@@ -10,7 +10,7 @@
 
 namespace audio
 {
-struct FxManager;
+class FxManager;
 
 // Entity types are used to identify different sound emitter types. Since
 // sounds in TR games could be emitted either by entities, sound sources

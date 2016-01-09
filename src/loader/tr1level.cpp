@@ -21,8 +21,6 @@
 
 #include "tr1level.h"
 
-#include <iostream>
-
 using namespace loader;
 
 #define TR_AUDIO_MAP_SIZE_TR1  256
@@ -33,14 +31,14 @@ void TR1Level::load()
     uint32_t file_version = m_reader.readU32();
 
     if (file_version != 0x00000020)
-        BOOST_THROW_EXCEPTION( std::runtime_error("Wrong level version") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR1 Level: Wrong level version") );
 
     std::vector<ByteTexture> texture8;
     m_reader.readVector(texture8, m_reader.readU32(), &ByteTexture::read);
 
     // Unused
     if (m_reader.readU32() != 0)
-        std::cerr << "Bad value for 'unused'\n";
+        BOOST_LOG_TRIVIAL(warning) << "TR1 Level: Bad value for 'unused'";
 
     m_reader.readVector(m_rooms, m_reader.readU16(), &Room::readTr1);
 
@@ -135,5 +133,5 @@ void TR1Level::load()
 
     m_textures.resize(texture8.size());
     for(size_t i = 0; i < texture8.size(); i++)
-        convertTexture(texture8[i], m_palette, m_textures[i]);
+        convertTexture(texture8[i], *m_palette, m_textures[i]);
 }

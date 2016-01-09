@@ -31,7 +31,7 @@ private:
         FontStyle styleId = FontStyle::Generic;
 
         Line() = default;
-        Line(const std::string& t, FontStyle s = FontStyle::Generic)
+        explicit Line(const std::string& t, FontStyle s = FontStyle::Generic)
             : text(t)
             , styleId(s)
         {

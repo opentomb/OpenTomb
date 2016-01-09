@@ -570,6 +570,7 @@ void script::MainEngine::bindKey(int act, int primary, lua::Value secondary)
     if(act < 0 || act >= engine::ACT_LASTINDEX)
     {
         Console::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
+        return;
     }
     engine::control_mapper.action_map[act].primary = primary;
     if(secondary.is<lua::Integer>())

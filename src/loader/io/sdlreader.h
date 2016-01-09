@@ -66,14 +66,14 @@ namespace io
 
             uLongf size = static_cast<uLongf>(uncompressedSize);
             if(uncompress(uncomp_buffer.data(), &size, compressed.data(), static_cast<uLong>(compressed.size())) != Z_OK)
-                BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: uncompress") );
+                BOOST_THROW_EXCEPTION( std::runtime_error("Decompression failed") );
 
             if(size != uncompressedSize)
-                BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: uncompress size mismatch") );
+                BOOST_THROW_EXCEPTION( std::runtime_error("Decompressed size mismatch") );
 
             io::SDLReader reader(std::move(uncomp_buffer));
             if(!reader.isOpen())
-                BOOST_THROW_EXCEPTION( std::runtime_error("read_tr4_level: SDL_RWFromMem") );
+                BOOST_THROW_EXCEPTION( std::runtime_error("Failed to create reader from decompressed memory") );
 
             return reader;
         }
@@ -114,19 +114,22 @@ namespace io
         }
 
         template<typename T>
-        void readVector(std::vector<T>& elements, size_t count, T function(SDLReader&))
+        using Producer = std::unique_ptr<T>(SDLReader&);
+
+        template<typename T>
+        void readVector(std::vector<T>& elements, size_t count, Producer<T> producer)
         {
             elements.clear();
-            appendVector(elements, count, function);
+            appendVector(elements, count, producer);
         }
 
         template<typename T>
-        void appendVector(std::vector<T>& elements, size_t count, T function(SDLReader&))
+        void appendVector(std::vector<T>& elements, size_t count, Producer<T> producer)
         {
             elements.reserve(elements.size() + count);
             for(size_t i=0; i<count; ++i)
             {
-                elements.emplace_back(function(*this));
+                elements.emplace_back(*producer(*this));
             }
         }
 

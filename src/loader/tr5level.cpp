@@ -21,8 +21,6 @@
 
 #include "tr5level.h"
 
-#include <iostream>
-
 using namespace loader;
 
 #define TR_AUDIO_MAP_SIZE_TR5  450
@@ -33,7 +31,7 @@ void TR5Level::load()
     uint32_t file_version = m_reader.readU32();
 
     if(file_version != 0x00345254)
-        BOOST_THROW_EXCEPTION( std::runtime_error("Wrong level version") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Level: Wrong level version") );
 
     auto numRoomTextiles = m_reader.readU16();
     auto numObjTextiles = m_reader.readU16();
@@ -43,7 +41,7 @@ void TR5Level::load()
 
     auto uncomp_size = m_reader.readU32();
     if(uncomp_size == 0)
-        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_level: textiles32 uncomp_size == 0") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Level: textiles32 is empty") );
 
     auto comp_size = m_reader.readU32();
     if(comp_size > 0)
@@ -57,7 +55,7 @@ void TR5Level::load()
 
     uncomp_size = m_reader.readU32();
     if(uncomp_size == 0)
-        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_level: textiles16 uncomp_size == 0") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Level: textiles16 is empty") );
 
     comp_size = m_reader.readU32();
     std::vector<WordTexture> texture16;
@@ -79,13 +77,13 @@ void TR5Level::load()
 
     uncomp_size = m_reader.readU32();
     if(uncomp_size == 0)
-        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_level: textiles32d uncomp_size == 0") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Level: textiles32d is empty") );
 
     comp_size = m_reader.readU32();
     if(comp_size > 0)
     {
         if(uncomp_size / (256 * 256 * 4) > 3)
-            std::cerr << "read_tr5_level: num_misc_textiles > 3\n";
+            BOOST_LOG_TRIVIAL(warning) << "TR5 Level: number of misc textiles > 3";
 
         std::vector<uint8_t> comp_buffer(comp_size);
         m_reader.readBytes(comp_buffer.data(), comp_size);
@@ -98,25 +96,25 @@ void TR5Level::load()
     m_weatherType = m_reader.readU16();
 
     if(m_reader.readU32() != 0)
-        std::cerr << "Bad value for flags[1]\n";
+        BOOST_LOG_TRIVIAL(warning) << "TR5 Level: Bad value (value 1)";
 
     if(m_reader.readU32() != 0)
-        std::cerr << "Bad value for flags[2]\n";
+        BOOST_LOG_TRIVIAL(warning) << "TR5 Level: Bad value (value 2)";
 
     if(m_reader.readU32() != 0)
-        std::cerr << "Bad value for flags[3]\n";
+        BOOST_LOG_TRIVIAL(warning) << "TR5 Level: Bad value (value 3)";
 
     if(m_reader.readU32() != 0)
-        std::cerr << "Bad value for flags[4]\n";
+        BOOST_LOG_TRIVIAL(warning) << "TR5 Level: Bad value (value 4)";
 
     if(m_reader.readU32() != 0)
-        std::cerr << "Bad value for flags[5]\n";
+        BOOST_LOG_TRIVIAL(warning) << "TR5 Level: Bad value (value 5)";
 
     if(m_reader.readU32() != 0)
-        std::cerr << "Bad value for flags[6]\n";
+        BOOST_LOG_TRIVIAL(warning) << "TR5 Level: Bad value (value 6)";
 
     if(m_reader.readU32() != 0)
-        std::cerr << "Bad value for flags[7]\n";
+        BOOST_LOG_TRIVIAL(warning) << "TR5 Level: Bad value (value 7)";
 
     // LevelDataSize1
     m_reader.readU32();
@@ -125,7 +123,7 @@ void TR5Level::load()
 
     // Unused
     if(m_reader.readU32() != 0)
-        std::cerr << "Bad value for 'unused'\n";
+        BOOST_LOG_TRIVIAL(warning) << "TR5 Level: Bad value for 'unused'";
 
     m_reader.readVector(m_rooms, m_reader.readU32(), &Room::readTr5);
 
@@ -148,16 +146,16 @@ void TR5Level::load()
     m_reader.readVector(m_staticMeshes, m_reader.readU32(), &StaticMesh::read);
 
     if(m_reader.readI8() != 'S')
-        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_level: 'SPR' not found") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Level: 'SPR\\0' not found") );
 
     if(m_reader.readI8() != 'P')
-        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_level: 'SPR' not found") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Level: 'SPR\\0' not found") );
 
     if(m_reader.readI8() != 'R')
-        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_level: 'SPR' not found") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Level: 'SPR\\0' not found") );
 
     if(m_reader.readI8() != 0)
-        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_level: 'SPR' not found") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Level: 'SPR\\0' not found") );
 
     m_reader.readVector(m_spriteTextures, m_reader.readU32(), &SpriteTexture::readTr4);
 
@@ -180,16 +178,16 @@ void TR5Level::load()
     m_animatedTexturesUvCount = m_reader.readU8();
 
     if(m_reader.readI8() != 'T')
-        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_level: '\\0TEX' not found") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Level: 'TEX\\0' not found") );
 
     if(m_reader.readI8() != 'E')
-        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_level: '\\0TEX' not found") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Level: 'TEX\\0' not found") );
 
     if(m_reader.readI8() != 'X')
-        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_level: '\\0TEX' not found") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Level: 'TEX\\0' not found") );
 
     if(m_reader.readI8() != 0)
-        BOOST_THROW_EXCEPTION( std::runtime_error("read_tr5_level: '\\0TEX' not found") );
+        BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Level: 'TEX\\0' not found") );
 
     m_reader.readVector(m_objectTextures, m_reader.readU32(), &ObjectTexture::readTr5);
 

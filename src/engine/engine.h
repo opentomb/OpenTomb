@@ -100,7 +100,7 @@ extern btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
 class BtEngineClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
 {
 public:
-    BtEngineClosestRayResultCallback(const world::Object* obj, bool skipGhost = false)
+    explicit BtEngineClosestRayResultCallback(const world::Object* obj, bool skipGhost = false)
         : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
         , m_object(obj)
         , m_skip_ghost(skipGhost)
@@ -116,7 +116,7 @@ public:
 class BtEngineClosestConvexResultCallback : public btCollisionWorld::ClosestConvexResultCallback
 {
 public:
-    BtEngineClosestConvexResultCallback(const world::Object* obj, bool skipGhost = false)
+    explicit BtEngineClosestConvexResultCallback(const world::Object* obj, bool skipGhost = false)
         : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
         , m_object(obj)
         , m_skip_ghost(skipGhost)

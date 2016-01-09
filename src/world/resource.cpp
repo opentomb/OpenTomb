@@ -2522,9 +2522,9 @@ namespace world
     {
         for(size_t i = 0; i < p.vertices.size(); i++)
         {
-            p.vertices[i].color[0] = tr->m_palette.colour[color].r / 255.0f;
-            p.vertices[i].color[1] = tr->m_palette.colour[color].g / 255.0f;
-            p.vertices[i].color[2] = tr->m_palette.colour[color].b / 255.0f;
+            p.vertices[i].color[0] = tr->m_palette->color[color].r / 255.0f;
+            p.vertices[i].color[1] = tr->m_palette->color[color].g / 255.0f;
+            p.vertices[i].color[2] = tr->m_palette->color[color].b / 255.0f;
             if(tr_mesh.lights.size() == tr_mesh.vertices.size())
             {
                 p.vertices[i].color[0] = p.vertices[i].color[0] * 1.0f - tr_mesh.lights[vertex_indices[i]] / 8192.0f;
@@ -2983,7 +2983,7 @@ namespace world
 
     void TR_GenSkeletalModel(World& world, size_t model_num, SkeletalModel& model, const std::unique_ptr<loader::Level>& tr, size_t meshCount)
     {
-        loader::Moveable *tr_moveable = &tr->m_moveables[model_num];  // original tr structure
+        const std::unique_ptr<loader::Moveable>& tr_moveable = tr->m_moveables[model_num];  // original tr structure
 
         model.collision_map.resize(model.meshes.size());
         std::iota(model.collision_map.begin(), model.collision_map.end(), 0);
@@ -3353,7 +3353,7 @@ namespace world
 
     size_t TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, size_t moveable_ind)
     {
-        loader::Moveable* curr_moveable = &tr->m_moveables[moveable_ind];
+        const std::unique_ptr<loader::Moveable>& curr_moveable = tr->m_moveables[moveable_ind];
 
         if(curr_moveable->animation_index == 0xFFFF)
         {
@@ -3370,12 +3370,12 @@ namespace world
             return tr->m_animations.size() - curr_moveable->animation_index;
         }
 
-        loader::Moveable* next_moveable = &tr->m_moveables[moveable_ind + 1];
+        const loader::Moveable* next_moveable = tr->m_moveables[moveable_ind + 1].get();
         if(next_moveable->animation_index == 0xFFFF)
         {
             if(moveable_ind + 2 < tr->m_moveables.size())                              // I hope there is no two neighboard movables with animation_index'es == 0xFFFF
             {
-                next_moveable = &tr->m_moveables[moveable_ind + 2];
+                next_moveable = tr->m_moveables[moveable_ind + 2].get();
             }
             else
             {
@@ -3443,7 +3443,7 @@ namespace world
 
         for(size_t i = 0; i < tr->m_moveables.size(); i++)
         {
-            const loader::Moveable& tr_moveable = tr->m_moveables[i];
+            const loader::Moveable& tr_moveable = *tr->m_moveables[i];
             SkeletalModel& smodel = world.skeletal_models[i];
             smodel.id = tr_moveable.object_id;
             TR_GenSkeletalModel(world, i, smodel, tr, tr_moveable.num_meshes);

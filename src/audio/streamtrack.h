@@ -9,7 +9,7 @@
 
 namespace audio
 {
-struct FxManager;
+class FxManager;
 
 // Audio stream type defines stream behaviour. While background track
 // loops forever until interrupted by other background track, one-shot
