@@ -9,7 +9,7 @@ namespace render
 
 bool checkOpenGLErrorDetailed(const char *file, int line);
 void printShaderInfoLog(GLuint object);
-int  loadShaderFromBuff(GLuint ShaderObj, char * source);
-int  loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *additionalDefines);
+bool loadShaderFromBuff(GLuint ShaderObj, char * source);
+bool loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *additionalDefines);
 
 } // namespace render

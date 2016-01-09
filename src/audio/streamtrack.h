@@ -51,9 +51,15 @@ public:
     bool unload();
 
     bool play(FxManager &manager, bool fade_in = false);     // Begins to play track.
-    void pause();                        // Pauses track, preserving position.
-    void end();                          // End track with fade-out.
-    void stop();                         // Immediately stop track.
+    //! Pauses track, preserving position.
+    void pause();
+
+    //! End track with fade-out.
+    void fadeOutAndStop();
+
+    //! Immediately stop track.
+    void stop();
+
     bool update();                       // Update track and manage streaming.
 
     bool isTrack(size_t track_index) const; // Checks desired track's index.
@@ -92,7 +98,7 @@ private:
     ALfloat         m_dampedVolume;      //!< Additional damp volume multiplier.
 
     bool            m_active;            //!< If track is active or not.
-    bool            m_ending;            //!< Used when track is being faded by other one.
+    bool            m_fadeoutAndStop;            //!< Used when track is being faded by other one.
     bool            m_dampable;          //!< Specifies if track can be damped by others.
     StreamType      m_streamType;        //!< Either BACKGROUND, ONESHOT or CHAT.
     boost::optional<size_t> m_currentTrack = boost::none;      //!< Needed to prevent same track sending.

@@ -178,6 +178,7 @@ bool loadALbufferFromFile(ALuint buf_number, const std::string& fname)
     if(!file)
     {
         Console::instance().warning(SYSWARN_CANT_OPEN_FILE);
+        BOOST_LOG_TRIVIAL(error) << "SndFile cannot open file '" << fname << "': " << sf_strerror(file);
         return false;
     }
 
@@ -243,7 +244,7 @@ bool Engine::endStreams(StreamType stream_type)
                  track.isType(stream_type)))
         {
             result = true;
-            track.end();
+            track.fadeOutAndStop();
         }
     }
 

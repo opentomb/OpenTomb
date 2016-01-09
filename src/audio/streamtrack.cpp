@@ -66,7 +66,7 @@ StreamTrack::StreamTrack()
         m_currentVolume = 0.0f;
         m_dampedVolume = 0.0f;
         m_active = false;
-        m_ending = false;
+        m_fadeoutAndStop = false;
         m_streamType = StreamType::Oneshot;
 
         // Setting method to -1 at init is required to prevent accidental
@@ -287,7 +287,7 @@ bool StreamTrack::play(FxManager& manager, bool fade_in)
     alSourceQueueBuffers(m_source, buffers_to_play, m_buffers);
     alSourcePlay(m_source);
 
-    m_ending = false;
+    m_fadeoutAndStop = false;
     m_active = true;
     return   true;
 }
@@ -298,16 +298,16 @@ void StreamTrack::pause()
         alSourcePause(m_source);
 }
 
-void StreamTrack::end()     // Smoothly end track with fadeout.
+void StreamTrack::fadeOutAndStop()
 {
-    m_ending = true;
+    m_fadeoutAndStop = true;
 }
 
 void StreamTrack::stop()    // Immediately stop track.
 {
-    if(alIsSource(m_source))  // Stop and unlink all associated buffers.
+    if(alIsSource(m_source) && isPlaying())
     {
-        if(isPlaying()) alSourceStop(m_source);
+        alSourceStop(m_source);
     }
 }
 
@@ -350,7 +350,7 @@ bool StreamTrack::update()
         }
     }
 
-    if(m_ending)     // If track is ending, crossfade it.
+    if(m_fadeoutAndStop)     // If track is ending, crossfade it.
     {
         switch(m_streamType)
         {
