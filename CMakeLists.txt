@@ -39,11 +39,11 @@ function(GROUP_FILES)
 endfunction()
 
 # alternative system-provided package name
-macro(find_dependency_alt depname sysdepname)
+macro(ot_find_dependency_alt depname sysdepname)
     option(SKIP_SYSTEM_${depname} "Skip the sytem-provided ${depname} installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
     if(SKIP_SYSTEM_${depname})
         hunter_add_package(${depname} ${ARGN})
-        find_package(${depname} CONFIG REQUIRED ${ARGN})
+        find_package(${depname} REQUIRED ${ARGN})
     else()
         # temporarily disable Hunter-local Find* modules
         set(_old_cmp ${CMAKE_MODULE_PATH})
@@ -53,16 +53,18 @@ macro(find_dependency_alt depname sysdepname)
         set(CMAKE_MODULE_PATH ${_old_cmp})
         set(_old_cmp)
     endif()
-    add_library(${depname} INTERFACE)
+    if(NOT TARGET ${depname})
+        add_library(${depname} INTERFACE)
+    endif()
 endmacro()
 
-macro(find_dependency depname)
-    find_dependency_alt(${depname} ${depname} ${ARGN})
+macro(ot_find_dependency depname)
+    ot_find_dependency_alt(${depname} ${depname} ${ARGN})
 endmacro()
 
 
 # Dependency: OpenAL
-find_dependency(OpenAL)
+ot_find_dependency(OpenAL)
 target_include_directories(OpenAL INTERFACE ${OPENAL_INCLUDE_DIR})
 target_link_libraries(OpenAL INTERFACE ${OPENAL_LIBRARY})
 
@@ -84,10 +86,10 @@ target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
 
 
 # Dependency: Freetype
-find_dependency(Freetype)
-if(NOT SKIP_SYSTEM_Freetype)
-    target_include_directories(Freetype INTERFACE ${FREETYPE_INCLUDE_DIRS})
-    target_link_libraries(Freetype INTERFACE ${FREETYPE_LIBRARIES})
+ot_find_dependency_alt(freetype Freetype)
+if(NOT SKIP_SYSTEM_freetype)
+    target_include_directories(freetype INTERFACE ${FREETYPE_INCLUDE_DIRS})
+    target_link_libraries(freetype INTERFACE ${FREETYPE_LIBRARIES})
 endif()
 
 
@@ -106,17 +108,13 @@ target_link_libraries(GLEW INTERFACE ${GLEW_LIBRARIES})
 
 
 # Dependency: Lua
-find_dependency(Lua)
-if(SKIP_SYSTEM_Lua)
-    target_link_libraries(Lua INTERFACE Lua::lua_lib)
-else()
-    target_link_libraries(Lua INTERFACE ${LUA_LIBRARIES})
-endif()
+ot_find_dependency(Lua)
+target_link_libraries(Lua INTERFACE ${LUA_LIBRARIES})
 target_include_directories(Lua INTERFACE ${LUA_INCLUDE_DIR})
 
 
 # Dependency: SDL2
-find_dependency(SDL2)
+ot_find_dependency(SDL2)
 if(WIN32)
     target_link_libraries(SDL2 INTERFACE winmm imm32 version)
 endif()
@@ -125,13 +123,14 @@ target_include_directories(SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
 
 
 # Dependency: GLM
-find_dependency_alt(glm GLM)
-target_include_directories(glm INTERFACE ${GLM_INCLUDE_DIR})
-target_compile_definitions(glm INTERFACE -DGLM_FORCE_RADIANS)
+ot_find_dependency_alt(glm GLM)
+add_library(GLM INTERFACE)
+target_include_directories(GLM INTERFACE ${GLM_INCLUDE_DIR})
+target_compile_definitions(GLM INTERFACE -DGLM_FORCE_RADIANS)
 
 
 # Dependency: Boost
-find_dependency(Boost COMPONENTS system log filesystem thread)
+ot_find_dependency(Boost COMPONENTS system log filesystem thread)
 if(NOT SKIP_SYSTEM_Boost)
     target_compile_definitions(Boost INTERFACE -DBOOST_LOG_DYN_LINK=0)
 endif()
@@ -141,20 +140,20 @@ target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})
 
 
 # Dependency: ZLIB
-find_dependency(ZLIB)
+ot_find_dependency(ZLIB)
 target_link_libraries(ZLIB INTERFACE ${ZLIB_LIBRARIES})
 target_include_directories(ZLIB INTERFACE ${ZLIB_INCLUDE_DIR})
 
 
 # Dependency: PNG (for CImg)
 # Make sure to find ZLIB *before* this
-find_dependency(PNG)
+ot_find_dependency(PNG)
 target_include_directories(PNG INTERFACE ${PNG_INCLUDE_DIRS})
 target_link_libraries(PNG INTERFACE ${PNG_LIBRARIES})
 
 
 # Dependency: JPEG (for CImg)
-find_dependency(JPEG)
+ot_find_dependency(JPEG)
 target_include_directories(JPEG INTERFACE ${JPEG_INCLUDE_DIR})
 target_link_libraries(JPEG INTERFACE ${JPEG_LIBRARIES})
 
@@ -185,7 +184,7 @@ include_directories(${VORBISFILE_INCLUDE_DIR})
 
 
 # Dependency: SndFile
-find_dependency(SndFile)
+ot_find_dependency(SndFile)
 target_include_directories(SndFile INTERFACE ${SNDFILE_INCLUDE_DIR})
 target_link_libraries(SndFile INTERFACE ${SNDFILE_LIBRARIES} ${OGG_LIBRARIES} ${VORBIS_LIBRARIES} ${VORBISFILE_LIBRARIES})
 

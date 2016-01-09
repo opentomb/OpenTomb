@@ -214,9 +214,9 @@ target_link_libraries(
     CImg
     ZLIB
     Lua
-    Freetype
+    freetype
     OpenAL
-    glm
+    GLM
     Boost
     SndFile
     # efence
