@@ -2356,26 +2356,23 @@ void lua_StopStreams()
     engine::engine_world.audioEngine.stopStreams();
 }
 
-void lua_PlaySound(int id, lua::Value ent_id)
+void lua_PlaySound(audio::SoundId id, lua::Value ent_id)
 {
-    if(id < 0)
-        return;
-
-    if(static_cast<size_t>(id) >= engine::engine_world.audioEngine.getAudioMapSize())
+    if(id >= engine::engine_world.audioEngine.getSoundIdMapSize())
     {
-        Console::instance().warning(SYSWARN_WRONG_SOUND_ID, engine::engine_world.audioEngine.getAudioMapSize());
+        Console::instance().warning(SYSWARN_WRONG_SOUND_ID, engine::engine_world.audioEngine.getSoundIdMapSize());
         return;
     }
 
-    int eid = -1;
+    boost::optional<world::ObjectId> eid = boost::none;
     if(ent_id.is<world::ObjectId>())
         eid = ent_id.to<world::ObjectId>();
-    if(eid < 0 || !engine::engine_world.getEntityByID(eid))
-        eid = -1;
+    if(!eid || !engine::engine_world.getEntityByID(*eid))
+        eid = boost::none;
 
     audio::Error result;
 
-    if(eid >= 0)
+    if(eid)
     {
         result = engine::engine_world.audioEngine.send(id, audio::EmitterType::Entity, eid);
     }
@@ -2399,23 +2396,23 @@ void lua_PlaySound(int id, lua::Value ent_id)
     }
 }
 
-void lua_StopSound(size_t id, lua::Value ent_id)
+void lua_StopSound(audio::SoundId id, lua::Value ent_id)
 {
-    if(id >= engine::engine_world.audioEngine.getAudioMapSize())
+    if(id >= engine::engine_world.audioEngine.getSoundIdMapSize())
     {
-        Console::instance().warning(SYSWARN_WRONG_SOUND_ID, engine::engine_world.audioEngine.getAudioMapSize());
+        Console::instance().warning(SYSWARN_WRONG_SOUND_ID, engine::engine_world.audioEngine.getSoundIdMapSize());
         return;
     }
 
-    int eid = -1;
+    boost::optional<world::ObjectId> eid = boost::none;
     if(ent_id.is<world::ObjectId>())
         eid = ent_id.to<world::ObjectId>();
-    if(eid < 0 || !engine::engine_world.getEntityByID(eid))
-        eid = -1;
+    if(!eid || !engine::engine_world.getEntityByID(*eid))
+        eid = boost::none;
 
     audio::Error result;
 
-    if(eid == -1)
+    if(!eid)
     {
         result = engine::engine_world.audioEngine.kill(id, audio::EmitterType::Global);
     }
@@ -2688,6 +2685,75 @@ void ScriptEngine::exposeConstants()
     m_state["StreamType"].set("Background", static_cast<int>(audio::StreamType::Background));
     m_state["StreamType"].set("Chat", static_cast<int>(audio::StreamType::Chat));
     m_state["StreamType"].set("Oneshot", static_cast<int>(audio::StreamType::Oneshot));
+
+    m_state.set("GlobalSoundId", lua::Table());
+#define EXPOSE_GLOBAL_SOUND_ID(name) m_state["GlobalSoundId"].set(#name, static_cast<int>(audio::GlobalSoundId::name))
+    EXPOSE_GLOBAL_SOUND_ID(MenuOpen);
+    EXPOSE_GLOBAL_SOUND_ID(MenuClose);
+    EXPOSE_GLOBAL_SOUND_ID(MenuPage);
+    EXPOSE_GLOBAL_SOUND_ID(MenuSelect);
+    EXPOSE_GLOBAL_SOUND_ID(MenuWeapon);
+    EXPOSE_GLOBAL_SOUND_ID(MenuClang);
+    EXPOSE_GLOBAL_SOUND_ID(MovingWall);
+    EXPOSE_GLOBAL_SOUND_ID(SpikeHit);
+#undef EXPOSE_GLOBAL_SOUND_ID
+
+    m_state.set("SoundId", lua::Table());
+#define EXPOSE_SOUND_ID(name) m_state["SoundId"].set(#name, audio::Sound##name)
+    EXPOSE_SOUND_ID(Bubble);
+    EXPOSE_SOUND_ID(CurtainMove);
+    EXPOSE_SOUND_ID(DiscBladeHit);
+    EXPOSE_SOUND_ID(DiscgunShoot);
+    EXPOSE_SOUND_ID(Doorbell);
+    EXPOSE_SOUND_ID(DoorOpen);
+    EXPOSE_SOUND_ID(EagleDying);
+    EXPOSE_SOUND_ID(Explosion);
+    EXPOSE_SOUND_ID(FromWater);
+    EXPOSE_SOUND_ID(GenDeath);
+    EXPOSE_SOUND_ID(Helicopter);
+    EXPOSE_SOUND_ID(HolsterIn);
+    EXPOSE_SOUND_ID(HolsterOut);
+    EXPOSE_SOUND_ID(Landing);
+    EXPOSE_SOUND_ID(LaraBreath);
+    EXPOSE_SOUND_ID(LaraInjury);
+    EXPOSE_SOUND_ID(LaraScream);
+    EXPOSE_SOUND_ID(Medipack);
+    EXPOSE_SOUND_ID(MenuRotate);
+    EXPOSE_SOUND_ID(No);
+    EXPOSE_SOUND_ID(Pushable);
+    EXPOSE_SOUND_ID(Reload);
+    EXPOSE_SOUND_ID(Ricochet);
+    EXPOSE_SOUND_ID(ShotPistols);
+    EXPOSE_SOUND_ID(ShotShotgun);
+    EXPOSE_SOUND_ID(ShotUzi);
+    EXPOSE_SOUND_ID(Sliding);
+    EXPOSE_SOUND_ID(Spike);
+    EXPOSE_SOUND_ID(SpikedMetalDoorSlide);
+    EXPOSE_SOUND_ID(Splash);
+    EXPOSE_SOUND_ID(Swim);
+    EXPOSE_SOUND_ID(TigerGrowl);
+    EXPOSE_SOUND_ID(TR123MenuClose);
+    EXPOSE_SOUND_ID(TR123MenuOpen);
+    EXPOSE_SOUND_ID(TR123MenuPage);
+    EXPOSE_SOUND_ID(TR123MenuWeapon);
+    EXPOSE_SOUND_ID(TR13MenuSelect);
+    EXPOSE_SOUND_ID(TR1DartShoot);
+    EXPOSE_SOUND_ID(TR1MenuClang);
+    EXPOSE_SOUND_ID(TR2345MenuClang);
+    EXPOSE_SOUND_ID(TR2MenuSelect);
+    EXPOSE_SOUND_ID(TR2MovingWall);
+    EXPOSE_SOUND_ID(TR2SpikeHit);
+    EXPOSE_SOUND_ID(TR3DartgunShoot);
+    EXPOSE_SOUND_ID(TR3MovingWall);
+    EXPOSE_SOUND_ID(TR3SpikeHit);
+    EXPOSE_SOUND_ID(TR45MenuOpenClose);
+    EXPOSE_SOUND_ID(TR45MenuPage);
+    EXPOSE_SOUND_ID(TR45MenuSelect);
+    EXPOSE_SOUND_ID(TR45MenuWeapon);
+    EXPOSE_SOUND_ID(Underwater);
+    EXPOSE_SOUND_ID(UseKey);
+    EXPOSE_SOUND_ID(WadeShallow);
+#undef EXPOSE_SOUND_ID
 
 #if 0
     // Unused, but kept here for reference
@@ -3479,9 +3545,13 @@ int script::MainEngine::parseInt(char **ch)
 
 // Specific functions to get specific parameters from script.
 
-int script::MainEngine::getGlobalSound(int global_sound_id)
+boost::optional<audio::SoundId> script::MainEngine::getGlobalSound(audio::GlobalSoundId global_sound_id)
 {
-    return call("getGlobalSound", static_cast<int>(engine::engine_world.engineVersion), global_sound_id).to<int>();
+    auto result = call("getGlobalSound", static_cast<int>(global_sound_id));
+    if(result.is<audio::SoundId>())
+        return result.to<audio::SoundId>();
+    else
+        return boost::none;
 }
 
 int script::MainEngine::getSecretTrackNumber()

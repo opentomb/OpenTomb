@@ -2,6 +2,7 @@
 
 #include "LuaState.h"
 
+#include "audio/audio.h"
 #include "util/helpers.h"
 #include "world/object.h"
 
@@ -205,7 +206,7 @@ namespace script
         bool getOverridedSamplesInfo(int& num_samples, int& num_sounds, std::string& sample_name_mask);
         bool getOverridedSample(int sound_id, int& first_sample_number, int& samples_count);
 
-        int  getGlobalSound(int global_sound_id);
+        boost::optional<audio::SoundId> getGlobalSound(audio::GlobalSoundId global_sound_id);
         int  getSecretTrackNumber();
         int  getNumTracks();
         bool getSoundtrack(int track_index, char *track_path, audio::StreamMethod *load_method, audio::StreamType *stream_type);

@@ -249,7 +249,7 @@ function doorbell_init(id)    -- Lara's Home doorbell (TR2)
     
     entity_funcs[id].onLoop = function(object_id)
         if(getEntityDistance(player, object_id) < 4096.0) then
-            playSound(334, object_id);
+            playSound(SoundId.Doorbell, object_id);
             setEntityActivity(object_id, false);
         end;
     end
@@ -281,7 +281,7 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
         if(not getEntityActivity(object_id)) then
             setEntityActivity(object_id, true);
             setEntityVisibility(id, true);
-            playSound(297, object_id);
+            playSound(SoundId.Helicopter, object_id);
         end;
     end
     
@@ -293,7 +293,7 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
         entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + entity_funcs[object_id].speed;
         moveEntityLocal(object_id, 0.0, entity_funcs[object_id].speed, 0.0);
         if(entity_funcs[object_id].distance_passed > entity_funcs[object_id].distance_to_pass) then
-            stopSound(297, object_id);
+            stopSound(SoundId.Helicopter, object_id);
             disableEntity(object_id);
         end;
     end
@@ -367,7 +367,7 @@ function tallblock_init(id)    -- Tall moving block (TR1)
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(not getEntityActivity(object_id)) then
             setEntityActivity(object_id, true);
-            playSound(64, object_id);
+            playSound(SoundId.DoorOpen, object_id);
         end;
     end
     
@@ -380,7 +380,7 @@ function tallblock_init(id)    -- Tall moving block (TR1)
         entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + move_speed;
         moveEntityLocal(object_id, 0.0, move_speed, 0.0);
         if(math.abs(entity_funcs[object_id].distance_passed) >= 2048.0) then
-            stopSound(64, object_id);
+            stopSound(SoundId.DoorOpen, object_id);
             setEntityActivity(object_id, false);
             entity_funcs[object_id].distance_passed = 0;
         end;
@@ -678,7 +678,7 @@ function dart_init(id)  -- TR1 dart / TR2 flying disks
     entity_funcs[id].speed       = 5120.0;
     entity_funcs[id].damage      = 50.0;
     entity_funcs[id].poison      = 0.0;   -- Poison appeared only in TR3.
-    entity_funcs[id].coll_sound  = -1;
+    entity_funcs[id].coll_sound  = nil;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityModelID(object_id) ~= getEntityModelID(activator_id)) then
@@ -712,7 +712,7 @@ function dartgun_init(id)  -- TR1 dartgun
     setEntityActivity(id, false);
     
     entity_funcs[id].dart_model     = 39;   -- TR1 default, TR2 will override it.
-    entity_funcs[id].shoot_sound    = 151;  -- TR1 default, TR2 will override it.
+    entity_funcs[id].shoot_sound    = SoundId.TR1DartShoot;  -- TR1 default, TR2 will override it.
     entity_funcs[id].shoot_interval = 1;
     entity_funcs[id].current_time   = entity_funcs[id].shoot_interval;  -- To activate first dart.
 
@@ -751,12 +751,12 @@ end
 function discgun_init(id)
     dartgun_init(id);
     entity_funcs[id].dart_model  = 61;
-    entity_funcs[id].shoot_sound = 254;
+    entity_funcs[id].shoot_sound = SoundId.DiscgunShoot;
 end;
 
 function disc_init(id)
     dart_init(id);
-    entity_funcs[id].coll_sound = 258;
+    entity_funcs[id].coll_sound = SoundId.DiscBladeHit;
     entity_funcs[id].speed       = 80.0;
 end;
 
@@ -765,7 +765,7 @@ function dartgun_tr3_init(id)
     rotateEntity(id, 180.0);    -- In TR3, dartguns must be inverted.
     moveEntityLocal(id, 0,-256,0);
     entity_funcs[id].dart_model  = 90;
-    entity_funcs[id].shoot_sound = 325;
+    entity_funcs[id].shoot_sound = SoundId.TR3DartgunShoot;
     entity_funcs[id].shoot_interval = 0.8;
 end;
 
@@ -853,7 +853,7 @@ function crystal_TR3_init(id)   -- "Savegame" crystal (TR3 version)
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(activator_id == player) then
-            playSound(SOUND_MEDIPACK);
+            playSound(SoundId.Medipack);
             changeCharacterParam(player, PARAM_HEALTH, 200);
             disableEntity(object_id);
         end;
@@ -1334,7 +1334,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
             setEntityVisibility(object_id, true);
             setEntityCollision(object_id, true);
             entity_funcs[object_id].curr_timer = 0;
-            playSound(343, object_id);
+            playSound(SoundId.Spike, object_id);
             entity_funcs[object_id].waiting = false;
         end;
         
@@ -1377,7 +1377,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
                 if(sz < -256.0) then
                     addEntityRagdoll(activator_id, RD_TYPE_LARA);
                     setCharacterParam(activator_id, PARAM_HEALTH, 0);
-                    playSound(SOUND_IMPALE, activator_id);
+                    playSound(SoundId.Impale, activator_id);
                 end;
             elseif(ls > 512.0) then
                 changeCharacterParam(activator_id, PARAM_HEALTH, -(ls / 512.0));
@@ -1411,7 +1411,7 @@ function spikewall_init(id)      -- Spike wall
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
-        stopSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
+        stopSound(getGlobalSound(GlobalSoundId.MovingWall), object_id);
     end
     
     entity_funcs[id].onLoop = function(object_id)
@@ -1421,10 +1421,10 @@ function spikewall_init(id)      -- Spike wall
         
         if(similarSector(object_id, 0.0, scan_distance, 0.0, false)) then
             moveEntityLocal(object_id, 0.0, 8.0, 0.0);
-            playSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
+            playSound(getGlobalSound(GlobalSoundId.MovingWall), object_id);
         else
             setEntityActivity(object_id, false);    -- Stop
-            stopSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
+            stopSound(getGlobalSound(GlobalSoundId.MovingWall), object_id);
         end;
     end
     
@@ -1434,21 +1434,21 @@ function spikewall_init(id)      -- Spike wall
             if((curr_st == MOVE_CLIMBING) or (curr_st == MOVE_MONKEYSWING)) then
                 setEntityMoveType(activator_id, MOVE_FREE_FALLING);
                 setEntityAnim(activator_id, 28, 0);
-                playSound(SOUND_LARAINJURY, activator_id);
+                playSound(SoundId.LaraInjury, activator_id);
             elseif(curr_st == MOVE_WALLS_CLIMB) then
                 setEntityMoveType(activator_id, MOVE_FREE_FALLING);
                 setEntityAnim(activator_id, 30, 0);
-                playSound(SOUND_LARAINJURY, activator_id);
+                playSound(SoundId.LaraInjury, activator_id);
             end;
             
             if(getCharacterParam(activator_id, PARAM_HEALTH) > 0) then
                 changeCharacterParam(activator_id, PARAM_HEALTH, -20);
-                playSound(getGlobalSound(getEngineVersion(), GLOBALID_SPIKEHIT), activator_id);
+                playSound(getGlobalSound(GlobalSoundId.SpikeHit), activator_id);
                 if(getCharacterParam(activator_id, PARAM_HEALTH) <= 0) then
                     addEntityRagdoll(activator_id, RD_TYPE_LARA);
-                    playSound(SOUND_GEN_DEATH, activator_id);
+                    playSound(SoundId.GenDeath, activator_id);
                     setEntityActivity(object_id, false);
-                    stopSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
+                    stopSound(getGlobalSound(GlobalSoundId.MovingWall), object_id);
                 end;
             end;
         end;
@@ -1467,7 +1467,7 @@ function spikeceiling_init(id)
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
-        stopSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
+        stopSound(getGlobalSound(GlobalSoundId.MovingWall), object_id);
     end
     
     entity_funcs[id].onLoop = function(object_id)
@@ -1475,10 +1475,10 @@ function spikeceiling_init(id)
 
         if(pz > (getSectorHeight(object_id) + 512.0)) then
             moveEntityLocal(object_id, 0.0, 0.0, -4.0);
-            playSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
+            playSound(getGlobalSound(GlobalSoundId.MovingWall), object_id);
         else
             setEntityActivity(object_id, false);    -- Stop
-            stopSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
+            stopSound(getGlobalSound(GlobalSoundId.MovingWall), object_id);
         end;
     end
     
@@ -1488,11 +1488,11 @@ function spikeceiling_init(id)
             if((curr_st == MOVE_CLIMBING) or (curr_st == MOVE_MONKEYSWING)) then
                 setEntityMoveType(activator_id, MOVE_FREE_FALLING);
                 setEntityAnim(activator_id, 28, 0);
-                playSound(SOUND_LARAINJURY, activator_id);
+                playSound(SoundId.LaraInjury, activator_id);
             elseif(curr_st == MOVE_WALLS_CLIMB) then
                 setEntityMoveType(activator_id, MOVE_FREE_FALLING);
                 setEntityAnim(activator_id, 30, 0);
-                playSound(SOUND_LARAINJURY, activator_id);
+                playSound(SoundId.LaraInjury, activator_id);
             end;
         
             local px,py,pz = getEntityPos(object_id);
@@ -1502,15 +1502,15 @@ function spikeceiling_init(id)
                 if(lz > (pz - 256.0)) then
                     addEntityRagdoll(activator_id, RD_TYPE_LARA);
                     setCharacterParam(activator_id, PARAM_HEALTH, 0);
-                    playSound(SOUND_IMPALE, activator_id);
+                    playSound(SoundId.Impale, activator_id);
                 else
                     changeCharacterParam(activator_id, PARAM_HEALTH, -20);
-                    playSound(getGlobalSound(getEngineVersion(), GLOBALID_SPIKEHIT), activator_id);
+                    playSound(getGlobalSound(GlobalSoundId.SpikeHit), activator_id);
                     if(getCharacterParam(activator_id, PARAM_HEALTH) <= 0) then
                         addEntityRagdoll(activator_id, RD_TYPE_LARA);
-                        playSound(SOUND_GEN_DEATH, activator_id);
+                        playSound(SoundId.GenDeath, activator_id);
                         setEntityActivity(object_id, false);
-                        stopSound(getGlobalSound(getEngineVersion(), GLOBALID_MOVINGWALL), object_id);
+                        stopSound(getGlobalSound(GlobalSoundId.MovingWall), object_id);
                     end;
                 end;
             end;
@@ -1555,14 +1555,14 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
     end    
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        playSound(131, object_id);
-        stopSound(191, object_id);
+        playSound(SoundId.EagleDying, object_id);
+        stopSound(SoundId.CurtainMove, object_id);
         setEntityActivity(object_id, false);
     end
     
     entity_funcs[id].onLoop = function(object_id)
         local px,py,pz,ax = getEntityPos(object_id);
-        playSound(191, object_id);
+        playSound(SoundId.CurtainMove, object_id);
         
         if(entity_funcs[object_id].rotating == 0) then
             if(entity_funcs[object_id].distance_traveled >= 1024.0) then
@@ -1639,18 +1639,18 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 setEntityActivity(object_id, false);
                 addEntityRagdoll(activator_id, RD_TYPE_LARA);
                 setCharacterParam(activator_id, PARAM_HEALTH, 0);
-                stopSound(191, object_id);
-                playSound(SOUND_GEN_DEATH, activator_id);
-                playSound(127, activator_id);
-                playSound(131, object_id);
+                stopSound(SoundId.CurtainMove, object_id);
+                playSound(SoundId.GenDeath, activator_id);
+                playSound(SoundId.SpikedMetalDoorSlide, activator_id);
+                playSound(SoundId.EagleDying, object_id);
             elseif(a_model == 354) then -- Fuse box - DOESN'T WORK FOR A MOMENT! (no collision callback from fusebox).
                 if(not entity_funcs[object_id].dead) then
                     setEntityTypeFlag(object_id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, true);
-                    stopSound(191, object_id);
+                    stopSound(SoundId.CurtainMove, object_id);
                     entity_funcs[object_id].dead = true;
                 elseif(entity_funcs[object_id].dead) then
                     setEntityActivity(object_id, false);
-                    playSound(131, object_id);
+                    playSound(SoundId.EagleDying, object_id);
                     setEntityCallbackFlag(object_id, ENTITY_CALLBACK_COLLISION, false);
                 end;
             end;
@@ -1707,7 +1707,7 @@ function damocles_init(id)      -- Sword of Damocles
                 function()
                     moveEntityToEntity(object_id, player, 32.0, true);
                     if(dropEntity(object_id, FRAME_TIME, true)) then
-                        playSound(103, object_id);
+                        playSound(SoundId.TigerGrowl, object_id);
                         setEntityActivity(object_id, false);
                         entity_funcs[object_id].falling = false;
                         return false;
@@ -1721,8 +1721,8 @@ function damocles_init(id)      -- Sword of Damocles
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if((entity_funcs[object_id].falling == true) and (getEntityModelID(activator_id) == 0) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
             setCharacterParam(activator_id, PARAM_HEALTH, 0);
-            playSound(SOUND_GEN_DEATH, activator_id);
-            playSound(103, object_id);
+            playSound(SoundId.GenDeath, activator_id);
+            playSound(SoundId.TigerGrowl, object_id);
             addEntityRagdoll(activator_id, RD_TYPE_LARA);
             setEntityActivity(object_id, false);
             setEntityBodyMass(object_id, 1, 15.0);

@@ -282,13 +282,13 @@ bool Engine::isTrackPlaying(const boost::optional<int32_t>& track_index) const
     return false;
 }
 
-boost::optional<size_t> Engine::findSource(const boost::optional<uint32_t>& effect_ID, EmitterType entity_type, const boost::optional<world::ObjectId>& entity_ID) const
+boost::optional<size_t> Engine::findSource(const boost::optional<SoundId>& soundId, EmitterType entity_type, const boost::optional<world::ObjectId>& entityId) const
 {
     for(size_t i = 0; i < m_sources.size(); i++)
     {
-        if((entity_type == EmitterType::Any || m_sources[i].m_emitterType == entity_type) &&
-                (!entity_ID                        || m_sources[i].m_emitterID == *entity_ID) &&
-                (!effect_ID                        || m_sources[i].m_effectIndex == *effect_ID))
+        if(   (entity_type == EmitterType::Any || m_sources[i].getEmitterType() == entity_type)
+           && (!entityId                       || m_sources[i].getEmitterId() == *entityId)
+           && (!soundId                        || m_sources[i].getSoundId() == *soundId))
         {
             if(m_sources[i].isPlaying())
                 return i;
@@ -361,7 +361,7 @@ void Engine::updateSources()
 
     for(uint32_t i = 0; i < m_emitters.size(); i++)
     {
-        send(m_emitters[i].sound_index, EmitterType::SoundSource, i);
+        send(m_emitters[i].soundId, EmitterType::SoundSource, i);
     }
 
     for(Source& src : m_sources)
@@ -513,14 +513,14 @@ void Engine::deInitAudio()
     m_buffers.clear();
 
     m_effects.clear();
-    m_effectMap.clear();
+    m_soundIdMap.clear();
 
     m_fxManager.reset();
 }
 
-Error Engine::kill(int effect_ID, EmitterType entity_type, world::ObjectId entity_ID)
+Error Engine::kill(audio::SoundId soundId, EmitterType entityType, const boost::optional<world::ObjectId>& entityId)
 {
-    boost::optional<size_t> playing_sound = findSource(effect_ID, entity_type, entity_ID);
+    boost::optional<size_t> playing_sound = findSource(soundId, entityType, entityId);
 
     if(playing_sound)
     {
@@ -531,35 +531,37 @@ Error Engine::kill(int effect_ID, EmitterType entity_type, world::ObjectId entit
     return Error::Ignored;
 }
 
-bool Engine::isInRange(EmitterType entity_type, world::ObjectId entity_ID, float range, float gain)
+bool Engine::isInRange(EmitterType entityType, const boost::optional<world::ObjectId>& entityId, float range, float gain)
 {
     glm::vec3 vec;
-    switch(entity_type)
+    switch(entityType)
     {
-    case EmitterType::Entity:
-        if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(entity_ID))
-        {
-            vec = glm::vec3(ent->m_transform[3]);
-        }
-        else
-        {
+        case EmitterType::Entity:
+            BOOST_ASSERT(entityId.is_initialized());
+            if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(*entityId))
+            {
+                vec = glm::vec3(ent->m_transform[3]);
+            }
+            else
+            {
+                return false;
+            }
+            break;
+
+        case EmitterType::SoundSource:
+            BOOST_ASSERT(entityId.is_initialized());
+            if(*entityId >= m_emitters.size())
+            {
+                return false;
+            }
+            vec = m_emitters[*entityId].position;
+            break;
+
+        case EmitterType::Global:
+            return true;
+
+        default:
             return false;
-        }
-        break;
-
-    case EmitterType::SoundSource:
-        if(entity_ID >= m_emitters.size())
-        {
-            return false;
-        }
-        vec = m_emitters[entity_ID].position;
-        break;
-
-    case EmitterType::Global:
-        return true;
-
-    default:
-        return false;
     }
 
     glm::float_t dist = glm::distance(m_listenerPosition, vec);
@@ -573,24 +575,21 @@ bool Engine::isInRange(EmitterType entity_type, world::ObjectId entity_ID, float
     return dist < range * range;
 }
 
-Error Engine::send(const boost::optional<uint32_t>& effect_ID, EmitterType entity_type, world::ObjectId entity_ID)
+Error Engine::send(const boost::optional<SoundId>& soundId, EmitterType entityType, const boost::optional<world::ObjectId>& entityId)
 {
-    uint16_t        random_value;
-    ALfloat         random_float;
-
     // If there are no audio buffers or effect index is wrong, don't process.
 
-    if(m_buffers.empty() || !effect_ID)
+    if(m_buffers.empty() || !soundId)
         return Error::Ignored;
 
     // Remap global engine effect ID to local effect ID.
 
-    if(*effect_ID >= m_effectMap.size())
+    if(*soundId >= m_soundIdMap.size())
     {
         return Error::NoSample;  // Sound is out of bounds; stop.
     }
 
-    int real_ID = static_cast<int>(m_effectMap[*effect_ID]);
+    int real_ID = static_cast<int>(m_soundIdMap[*soundId]);
 
     // Pre-step 1: if there is no effect associated with this ID, bypass audio send.
 
@@ -606,8 +605,8 @@ Error Engine::send(const boost::optional<uint32_t>& effect_ID, EmitterType entit
 
     if(effect->loop != loader::LoopType::Forward && effect->chance > 0)
     {
-        random_value = rand() % 0x7FFF;
-        if(effect->chance < random_value)
+        auto randomValue = rand() % 0x7FFF;
+        if(effect->chance < randomValue)
         {
             // Bypass audio send, if chance test is not passed.
             return Error::Ignored;
@@ -618,7 +617,7 @@ Error Engine::send(const boost::optional<uint32_t>& effect_ID, EmitterType entit
     // If it's not, bypass audio send (cause we don't want it to occupy channel, if it's not
     // heard).
 
-    if(isInRange(entity_type, entity_ID, effect->range, effect->gain) == false)
+    if(isInRange(entityType, entityId, effect->range, effect->gain) == false)
     {
         return Error::Ignored;
     }
@@ -628,7 +627,7 @@ Error Engine::send(const boost::optional<uint32_t>& effect_ID, EmitterType entit
     // Otherwise, if W (Wait) or L (Looped) flag is set, and same effect is
     // playing for current entity, don't send it and exit function.
 
-    boost::optional<size_t> source_number = findSource(effect_ID, entity_type, entity_ID);
+    boost::optional<size_t> source_number = findSource(soundId, entityType, entityId);
 
     if(source_number)
     {
@@ -646,79 +645,73 @@ Error Engine::send(const boost::optional<uint32_t>& effect_ID, EmitterType entit
         source_number = getFreeSource();  // Get free source.
     }
 
-    if(source_number)  // Everything is OK, we're sending audio to channel.
+    if(!source_number)
+        return Error::NoChannel;
+
+    int buffer_index;
+
+    // Step 1. Assign buffer to source.
+
+    if(effect->sample_count > 1)
     {
-        int buffer_index;
-
-        // Step 1. Assign buffer to source.
-
-        if(effect->sample_count > 1)
-        {
-            // Select random buffer, if effect info contains more than 1 assigned samples.
-            random_value = rand() % effect->sample_count;
-            buffer_index = random_value + effect->sample_index;
-        }
-        else
-        {
-            // Just assign buffer to source, if there is only one assigned sample.
-            buffer_index = effect->sample_index;
-        }
-
-        Source *source = &m_sources[*source_number];
-
-        source->setBuffer(buffer_index);
-
-        // Step 2. Check looped flag, and if so, set source type to looped.
-
-        if(effect->loop == loader::LoopType::Forward)
-        {
-            source->setLooping(AL_TRUE);
-        }
-        else
-        {
-            source->setLooping(AL_FALSE);
-        }
-
-        // Step 3. Apply internal sound parameters.
-
-        source->m_emitterID = entity_ID;
-        source->m_emitterType = entity_type;
-        source->m_effectIndex = *effect_ID;
-
-        // Step 4. Apply sound effect properties.
-
-        if(effect->rand_pitch)  // Vary pitch, if flag is set.
-        {
-            random_float = static_cast<ALfloat>( rand() % effect->rand_pitch_var );
-            random_float = effect->pitch + (random_float - 25.0f) / 200.0f;
-            source->setPitch(random_float);
-        }
-        else
-        {
-            source->setPitch(effect->pitch);
-        }
-
-        if(effect->rand_gain)   // Vary gain, if flag is set.
-        {
-            random_float = static_cast<ALfloat>( rand() % effect->rand_gain_var );
-            random_float = effect->gain + (random_float - 25.0f) / 200.0f;
-            source->setGain(random_float);
-        }
-        else
-        {
-            source->setGain(effect->gain);
-        }
-
-        source->setRange(effect->range);    // Set audible range.
-
-        source->play(fxManager());                     // Everything is OK, play sound now!
-
-        return Error::Processed;
+        // Select random buffer, if effect info contains more than 1 assigned samples.
+        auto randomValue = rand() % effect->sample_count;
+        buffer_index = randomValue + effect->sample_index;
     }
     else
     {
-        return Error::NoChannel;
+        // Just assign buffer to source, if there is only one assigned sample.
+        buffer_index = effect->sample_index;
     }
+
+    Source *source = &m_sources[*source_number];
+
+    source->setBuffer(buffer_index);
+
+    // Step 2. Check looped flag, and if so, set source type to looped.
+
+    if(effect->loop == loader::LoopType::Forward)
+    {
+        source->setLooping(AL_TRUE);
+    }
+    else
+    {
+        source->setLooping(AL_FALSE);
+    }
+
+    // Step 3. Apply internal sound parameters.
+
+    source->set(*soundId, entityType, entityId);
+
+    // Step 4. Apply sound effect properties.
+
+    if(effect->rand_pitch)  // Vary pitch, if flag is set.
+    {
+        auto random_float = static_cast<ALfloat>( rand() % effect->rand_pitch_var );
+        random_float = effect->pitch + (random_float - 25.0f) / 200.0f;
+        source->setPitch(random_float);
+    }
+    else
+    {
+        source->setPitch(effect->pitch);
+    }
+
+    if(effect->rand_gain)   // Vary gain, if flag is set.
+    {
+        auto random_float = static_cast<ALfloat>( rand() % effect->rand_gain_var );
+        random_float = effect->gain + (random_float - 25.0f) / 200.0f;
+        source->setGain(random_float);
+    }
+    else
+    {
+        source->setGain(effect->gain);
+    }
+
+    source->setRange(effect->range);    // Set audible range.
+
+    source->play(fxManager());                     // Everything is OK, play sound now!
+
+    return Error::Processed;
 }
 
 void Engine::load(const world::World& world, const std::unique_ptr<loader::Level>& tr)
@@ -757,7 +750,7 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
             case loader::Game::TR1:
             case loader::Game::TR1Demo:
             case loader::Game::TR1UnfinishedBusiness:
-                m_effectMap = tr->m_soundmap;
+                m_soundIdMap = tr->m_soundmap;
 
                 for(size_t i = 0; i < tr->m_sampleIndices.size() - 1; i++)
                 {
@@ -771,7 +764,7 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
             case loader::Game::TR2Demo:
             case loader::Game::TR3:
             {
-                m_effectMap = tr->m_soundmap;
+                m_soundIdMap = tr->m_soundmap;
                 size_t ind1 = 0;
                 size_t ind2 = 0;
                 bool flag = false;
@@ -814,7 +807,7 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
             case loader::Game::TR4:
             case loader::Game::TR4Demo:
             case loader::Game::TR5:
-                m_effectMap = tr->m_soundmap;
+                m_soundIdMap = tr->m_soundmap;
 
                 for(size_t i = 0; i < tr->m_samplesCount; i++)
                 {
@@ -834,7 +827,7 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
                 break;
 
             default:
-                m_effectMap.clear();
+                m_soundIdMap.clear();
                 tr->m_samplesData.clear();
                 return;
         }
@@ -888,16 +881,16 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
     {
         case loader::Engine::TR1:
             // Fix for underwater looped sound.
-            if(m_effectMap[TR_AUDIO_SOUND_UNDERWATER] >= 0)
+            if(m_soundIdMap[SoundUnderwater] >= 0)
             {
-                m_effects[m_effectMap[TR_AUDIO_SOUND_UNDERWATER]].loop = loader::LoopType::Forward;
+                m_effects[m_soundIdMap[SoundUnderwater]].loop = loader::LoopType::Forward;
             }
             break;
         case loader::Engine::TR2:
             // Fix for helicopter sound range.
-            if(m_effectMap[297] >= 0)
+            if(m_soundIdMap[297] >= 0)
             {
-                m_effects[m_effectMap[297]].range *= 10.0;
+                m_effects[m_soundIdMap[297]].range *= 10.0;
             }
             break;
         default:
@@ -910,7 +903,7 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
     for(size_t i = 0; i < m_emitters.size(); i++)
     {
         m_emitters[i].emitter_index = static_cast<ALuint>(i);
-        m_emitters[i].sound_index = tr->m_soundSources[i].sound_id;
+        m_emitters[i].soundId = tr->m_soundSources[i].sound_id;
         m_emitters[i].position = glm::vec3( tr->m_soundSources[i].x, tr->m_soundSources[i].z, -tr->m_soundSources[i].y );
         m_emitters[i].flags = tr->m_soundSources[i].flags;
     }

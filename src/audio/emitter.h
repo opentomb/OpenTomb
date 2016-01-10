@@ -1,5 +1,7 @@
 #pragma once
 
+#include "audio.h"
+
 #include <AL/al.h>
 #include <glm/glm.hpp>
 
@@ -10,7 +12,7 @@ namespace audio
 struct Emitter
 {
     ALuint      emitter_index;  // Unique emitter index.
-    ALuint      sound_index;    // Sound index.
+    SoundId     soundId;
     glm::vec3   position;    // Vector coordinate.
     uint16_t    flags;          // Flags - MEANING UNKNOWN!!!
 };

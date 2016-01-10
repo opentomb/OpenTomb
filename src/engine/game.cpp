@@ -467,7 +467,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
             {
                 ch->setParam(world::PARAM_POISON, 0);
                 ch->removeItem(ITEM_SMALL_MEDIPACK, 1);
-                engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_MEDIPACK);
+                engine::engine_world.audioEngine.send(audio::SoundMedipack);
             }
 
             control_states.use_small_medi = !control_states.use_small_medi;
@@ -480,7 +480,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
             {
                 ch->setParam(world::PARAM_POISON, 0);
                 ch->removeItem(ITEM_LARGE_MEDIPACK, 1);
-                engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_MEDIPACK);
+                engine::engine_world.audioEngine.send(audio::SoundMedipack);
             }
 
             control_states.use_big_medi = !control_states.use_big_medi;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "audio.h"
 #include "world/object.h"
 
 #include <AL/al.h>
@@ -30,8 +31,8 @@ enum class EmitterType
 class Source
 {
 public:
-    Source();  // Audio source constructor.
-    ~Source();  // Audio source destructor.
+    Source();
+    ~Source();
 
     void play(FxManager& manager);    // Make source active and play it.
     void pause();   // Pause source (leaving it active).
@@ -47,22 +48,42 @@ public:
     void unsetFX();                         // Remove any reverb FX from source.
     void setUnderwater(const FxManager &fxManager);                   // Apply low-pass underwater filter.
 
-    bool isLooping() const;           // Check if source is looping;
-    bool isPlaying() const;           // Check if source is currently playing.
-    bool isActive() const;            // Check if source is active.
+    bool isLooping() const;
+    bool isPlaying() const;
+    bool isActive() const;
 
-    boost::optional<world::ObjectId> m_emitterID = boost::none;     // Entity of origin. -1 means no entity (hence - empty source).
-    EmitterType m_emitterType = EmitterType::Entity;   // 0 - ordinary entity, 1 - sound source, 2 - global sound.
-    uint32_t    m_effectIndex = 0;   // Effect index. Used to associate effect with entity for R/W flags.
-    uint32_t    m_sampleIndex = 0;   // OpenAL sample (buffer) index. May be the same for different sources.
-    uint32_t    m_sampleCount = 0;   // How many buffers to use, beginning with sample_index.
+    const boost::optional<world::ObjectId>& getEmitterId() const noexcept
+    {
+        return m_emitterId;
+    }
 
-    friend int isEffectPlaying(int effect_ID, int entity_type, int entity_ID);
+    EmitterType getEmitterType() const noexcept
+    {
+        return m_emitterType;
+    }
+
+    SoundId getSoundId() const noexcept
+    {
+        return m_soundId;
+    }
+
+    void set(SoundId effectId, EmitterType emitterType, const boost::optional<world::ObjectId>& emitterId)
+    {
+        m_soundId = effectId;
+        m_emitterType = emitterType;
+        m_emitterId = emitterId;
+    }
 
 private:
     bool        m_active = false;         // Source gets autostopped and destroyed on next frame, if it's not set.
     bool        m_underwater = false;       // Marker to define if sample is in underwater state or not.
     ALuint      m_sourceIndex = 0;   // Source index. Should be unique for each source.
+
+    boost::optional<world::ObjectId> m_emitterId = boost::none;     // Entity of origin. -1 means no entity (hence - empty source).
+    EmitterType m_emitterType = EmitterType::Entity;   // 0 - ordinary entity, 1 - sound source, 2 - global sound.
+    SoundId    m_soundId = 0;   // Effect index. Used to associate effect with entity for R/W flags.
+    uint32_t    m_sampleIndex = 0;   // OpenAL sample (buffer) index. May be the same for different sources.
+    uint32_t    m_sampleCount = 0;   // How many buffers to use, beginning with sample_index.
 
     void linkEmitter();                             // Link source to parent emitter.
     void setPosition(const ALfloat pos_vector[]);   // Set source position.

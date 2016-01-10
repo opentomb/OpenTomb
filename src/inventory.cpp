@@ -248,7 +248,7 @@ void InventoryManager::frame(util::Duration time)
                     break;
 
                 case InventoryState::Closed:
-                    engine::engine_world.audioEngine.send(engine_lua.getGlobalSound(audio::TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+                    engine::engine_world.audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuClose));
                     mLabel_ItemName.show = false;
                     mLabel_Title.show = false;
                     m_currentState = m_nextState;
@@ -256,7 +256,7 @@ void InventoryManager::frame(util::Duration time)
 
                 case InventoryState::RLeft:
                 case InventoryState::RRight:
-                    engine::engine_world.audioEngine.send(TR_AUDIO_SOUND_MENUROTATE);
+                    engine::engine_world.audioEngine.send(audio::SoundMenuRotate);
                     mLabel_ItemName.show = false;
                     m_currentState = m_nextState;
                     m_itemTime = util::Duration(0);
@@ -301,7 +301,7 @@ void InventoryManager::frame(util::Duration time)
             {
                 if(setItemsType(m_currentItemsType) != MenuItemType::Invalid)
                 {
-                    engine::engine_world.audioEngine.send(engine_lua.getGlobalSound(audio::TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+                    engine::engine_world.audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuOpen));
                     m_currentState = InventoryState::Open;
                     m_ringAngle = 180.0f;
                     m_ringVerticalAngle = 180.0f;

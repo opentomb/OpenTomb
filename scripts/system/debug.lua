@@ -30,7 +30,7 @@ function checkDebugKeys()
     
     if(checkKey(KEY_H, true)) then
         setCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
-        playSound(SOUND_MEDIPACK, player);
+        playSound(SoundId.Medipack, player);
     end;
     
     if(checkKey(KEY_Z, true)) then

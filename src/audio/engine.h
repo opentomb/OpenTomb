@@ -26,24 +26,6 @@ class Level;
 
 namespace audio
 {
-// Certain sound effect indexes were changed across different TR
-// versions, despite remaining the same - mostly, it happened with
-// menu sounds and some general sounds. For such effects, we specify
-// additional remap enumeration list, which is fed into Lua script
-// to get actual effect ID for current game version.
-
-enum TR_AUDIO_SOUND_GLOBALID
-{
-    TR_AUDIO_SOUND_GLOBALID_MENUOPEN,
-    TR_AUDIO_SOUND_GLOBALID_MENUCLOSE,
-    TR_AUDIO_SOUND_GLOBALID_MENUROTATE,
-    TR_AUDIO_SOUND_GLOBALID_MENUPAGE,
-    TR_AUDIO_SOUND_GLOBALID_MENUSELECT,
-    TR_AUDIO_SOUND_GLOBALID_MENUWEAPON,
-    TR_AUDIO_SOUND_GLOBALID_MENUCLANG,
-    TR_AUDIO_SOUND_GLOBALID_MENUAUDIOTEST,
-    TR_AUDIO_SOUND_GLOBALID_LASTINDEX
-};
 
 // Possible types of errors returned by Audio_Send / Audio_Kill functions.
 enum class Error
@@ -75,7 +57,7 @@ public:
     bool endStreams(StreamType stream_type = StreamType::Any);
     bool stopStreams(StreamType stream_type = StreamType::Any);
     bool isTrackPlaying(const boost::optional<int32_t>& track_index = boost::none) const;
-    boost::optional<size_t> findSource(const boost::optional<uint32_t>& effect_ID = boost::none, EmitterType entity_type = EmitterType::Any, const boost::optional<world::ObjectId>& entity_ID = boost::none) const;
+    boost::optional<size_t> findSource(const boost::optional<SoundId>& soundId = boost::none, EmitterType entity_type = EmitterType::Any, const boost::optional<world::ObjectId>& entity_ID = boost::none) const;
     boost::optional<size_t> getFreeStream() const;
     // Update routine for all streams. Should be placed into main loop.
     void updateStreams();
@@ -88,9 +70,9 @@ public:
     bool deInitDelay();
     void deInitAudio();
     // If exist, immediately stop and destroy all effects with given parameters.
-    Error kill(int effect_ID, EmitterType entity_type = EmitterType::Global, world::ObjectId entity_ID = 0);
-    bool isInRange(EmitterType entity_type, world::ObjectId entity_ID, float range, float gain);
-    Error send(const boost::optional<uint32_t>& effect_ID, EmitterType entity_type = EmitterType::Global, world::ObjectId entity_ID = 0);
+    Error kill(audio::SoundId soundId, EmitterType entityType = EmitterType::Global, const boost::optional<world::ObjectId>& entityId = 0);
+    bool isInRange(EmitterType entityType, const boost::optional<world::ObjectId>& entityId, float range, float gain);
+    Error send(const boost::optional<SoundId>& soundId, EmitterType entityType = EmitterType::Global, const boost::optional<world::ObjectId>& entityId = boost::none);
 
     ALuint getBuffer(size_t index) const
     {
@@ -152,21 +134,21 @@ public:
         m_trackMap.clear();
     }
 
-    size_t getAudioMapSize() const
+    size_t getSoundIdMapSize() const
     {
-        return m_effectMap.size();
+        return m_soundIdMap.size();
     }
 
     bool isBufferMapped(size_t index) const
     {
-        BOOST_ASSERT( index < m_effectMap.size() );
-        return m_effectMap[index]>=0 && static_cast<size_t>(m_effectMap[index])<m_effects.size();
+        BOOST_ASSERT( index < m_soundIdMap.size() );
+        return m_soundIdMap[index]>=0 && static_cast<size_t>(m_soundIdMap[index])<m_effects.size();
     }
 
     size_t getMappedSampleCount(size_t index) const
     {
         BOOST_ASSERT( isBufferMapped(index) );
-        return m_effects[m_effectMap[index]].sample_count;
+        return m_effects[m_soundIdMap[index]].sample_count;
     }
 
     void load(const world::World& world, const std::unique_ptr<loader::Level>& tr);
@@ -224,7 +206,7 @@ private:
     static constexpr int StreamMapSize = 256;
 
     std::vector<Emitter> m_emitters;        //!< Audio emitters.
-    std::vector<int16_t> m_effectMap;       //!< Effect indexes.
+    std::vector<int16_t> m_soundIdMap;       //!< Effect indexes.
     std::vector<Effect> m_effects;          //!< Effects and their parameters.
 
     std::vector<ALuint> m_buffers;          //!< Samples.

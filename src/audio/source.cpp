@@ -16,32 +16,32 @@ Source::Source()
 {
     alGenSources(1, &m_sourceIndex);
 
-    if(alIsSource(m_sourceIndex))
-    {
-        alSourcef(m_sourceIndex, AL_MIN_GAIN, 0.0);
-        alSourcef(m_sourceIndex, AL_MAX_GAIN, 1.0);
+    if(!alIsSource(m_sourceIndex))
+        return;
 
-        if(engine::engine_world.audioEngine.getSettings().use_effects)
-        {
-            alSourcef(m_sourceIndex, AL_ROOM_ROLLOFF_FACTOR, 1.0);
-            alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO, AL_TRUE);
-            alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
-            alSourcef(m_sourceIndex, AL_AIR_ABSORPTION_FACTOR, 0.1f);
-        }
-        else
-        {
-            alSourcef(m_sourceIndex, AL_AIR_ABSORPTION_FACTOR, 0.0f);
-        }
+    alSourcef(m_sourceIndex, AL_MIN_GAIN, 0.0);
+    alSourcef(m_sourceIndex, AL_MAX_GAIN, 1.0);
+
+    if(engine::engine_world.audioEngine.getSettings().use_effects)
+    {
+        alSourcef(m_sourceIndex, AL_ROOM_ROLLOFF_FACTOR, 1.0);
+        alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO, AL_TRUE);
+        alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
+        alSourcef(m_sourceIndex, AL_AIR_ABSORPTION_FACTOR, 0.1f);
+    }
+    else
+    {
+        alSourcef(m_sourceIndex, AL_AIR_ABSORPTION_FACTOR, 0.0f);
     }
 }
 
 Source::~Source()
 {
-    if(alIsSource(m_sourceIndex))
-    {
-        alSourceStop(m_sourceIndex);
-        alDeleteSources(1, &m_sourceIndex);
-    }
+    if(!alIsSource(m_sourceIndex))
+        return;
+
+    alSourceStop(m_sourceIndex);
+    alDeleteSources(1, &m_sourceIndex);
 }
 
 bool Source::isActive() const
@@ -51,80 +51,72 @@ bool Source::isActive() const
 
 bool Source::isLooping() const
 {
-    if(alIsSource(m_sourceIndex))
-    {
-        ALint looping;
-        alGetSourcei(m_sourceIndex, AL_LOOPING, &looping);
-        return looping != AL_FALSE;
-    }
-    else
-    {
+    if(!alIsSource(m_sourceIndex))
         return false;
-    }
+
+    ALint looping;
+    alGetSourcei(m_sourceIndex, AL_LOOPING, &looping);
+    return looping != AL_FALSE;
 }
 
 bool Source::isPlaying() const
 {
-    if(alIsSource(m_sourceIndex))
-    {
-        ALenum state = AL_STOPPED;
-        alGetSourcei(m_sourceIndex, AL_SOURCE_STATE, &state);
-
-        // Paused state and existing file pointers also counts as playing.
-        return state == AL_PLAYING || state == AL_PAUSED;
-    }
-    else
-    {
+    if(!alIsSource(m_sourceIndex))
         return false;
-    }
+
+    ALenum state = AL_STOPPED;
+    alGetSourcei(m_sourceIndex, AL_SOURCE_STATE, &state);
+
+    // Paused state and existing file pointers also counts as playing.
+    return state == AL_PLAYING || state == AL_PAUSED;
 }
 
 void Source::play(FxManager& manager)
 {
-    if(alIsSource(m_sourceIndex))
+    if(!alIsSource(m_sourceIndex))
+        return;
+
+    if(m_emitterType == EmitterType::Global)
     {
-        if(m_emitterType == EmitterType::Global)
+        alSourcei(m_sourceIndex, AL_SOURCE_RELATIVE, AL_TRUE);
+        alSource3f(m_sourceIndex, AL_POSITION, 0.0f, 0.0f, 0.0f);
+        alSource3f(m_sourceIndex, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
+
+        if(engine::engine_world.audioEngine.getSettings().use_effects)
         {
-            alSourcei(m_sourceIndex, AL_SOURCE_RELATIVE, AL_TRUE);
-            alSource3f(m_sourceIndex, AL_POSITION, 0.0f, 0.0f, 0.0f);
-            alSource3f(m_sourceIndex, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
-
-            if(engine::engine_world.audioEngine.getSettings().use_effects)
-            {
-                unsetFX();
-            }
+            unsetFX();
         }
-        else
-        {
-            alSourcei(m_sourceIndex, AL_SOURCE_RELATIVE, AL_FALSE);
-            linkEmitter();
-
-            if(engine::engine_world.audioEngine.getSettings().use_effects)
-            {
-                setFX(manager);
-                setUnderwater(manager);
-            }
-        }
-
-        alSourcePlay(m_sourceIndex);
-        m_active = true;
     }
+    else
+    {
+        alSourcei(m_sourceIndex, AL_SOURCE_RELATIVE, AL_FALSE);
+        linkEmitter();
+
+        if(engine::engine_world.audioEngine.getSettings().use_effects)
+        {
+            setFX(manager);
+            setUnderwater(manager);
+        }
+    }
+
+    alSourcePlay(m_sourceIndex);
+    m_active = true;
 }
 
 void Source::pause()
 {
-    if(alIsSource(m_sourceIndex))
-    {
-        alSourcePause(m_sourceIndex);
-    }
+    if(!alIsSource(m_sourceIndex))
+        return;
+
+    alSourcePause(m_sourceIndex);
 }
 
 void Source::stop()
 {
-    if(alIsSource(m_sourceIndex))
-    {
-        alSourceStop(m_sourceIndex);
-    }
+    if(!alIsSource(m_sourceIndex))
+        return;
+
+    alSourceStop(m_sourceIndex);
 }
 
 void Source::update(const FxManager& manager)
@@ -152,7 +144,7 @@ void Source::update(const FxManager& manager)
     // Check if source is in listener's range, and if so, update position,
     // else stop and disable it.
 
-    if(engine::engine_world.audioEngine.isInRange(m_emitterType, *m_emitterID, range, gain))
+    if(engine::engine_world.audioEngine.isInRange(m_emitterType, m_emitterId, range, gain))
     {
         linkEmitter();
 
@@ -176,26 +168,26 @@ void Source::setBuffer(ALint buffer)
 {
     ALuint buffer_index = engine::engine_world.audioEngine.getBuffer(buffer);
 
-    if(alIsSource(m_sourceIndex) && alIsBuffer(buffer_index))
+    if(!alIsSource(m_sourceIndex) || !alIsBuffer(buffer_index))
+        return;
+
+    alSourcei(m_sourceIndex, AL_BUFFER, buffer_index);
+
+    // For some reason, OpenAL sometimes produces "Invalid Operation" error here,
+    // so there's extra debug info - maybe it'll help some day.
+
+    /*
+    if(Audio_LogALError(1))
     {
-        alSourcei(m_sourceIndex, AL_BUFFER, buffer_index);
+        int channels, bits, freq;
 
-        // For some reason, OpenAL sometimes produces "Invalid Operation" error here,
-        // so there's extra debug info - maybe it'll help some day.
+        alGetBufferi(buffer_index, AL_CHANNELS,  &channels);
+        alGetBufferi(buffer_index, AL_BITS,      &bits);
+        alGetBufferi(buffer_index, AL_FREQUENCY, &freq);
 
-        /*
-        if(Audio_LogALError(1))
-        {
-            int channels, bits, freq;
-
-            alGetBufferi(buffer_index, AL_CHANNELS,  &channels);
-            alGetBufferi(buffer_index, AL_BITS,      &bits);
-            alGetBufferi(buffer_index, AL_FREQUENCY, &freq);
-
-            Sys_DebugLog(LOG_FILENAME, "Faulty buffer %d info: CH%d, B%d, F%d", buffer_index, channels, bits, freq);
-        }
-        */
+        Sys_DebugLog(LOG_FILENAME, "Faulty buffer %d info: CH%d, B%d, F%d", buffer_index, channels, bits, freq);
     }
+    */
 }
 
 void Source::setLooping(ALboolean is_looping)
@@ -273,7 +265,7 @@ void Source::setUnderwater(const FxManager& fxManager)
 
 void Source::linkEmitter()
 {
-    BOOST_ASSERT(m_emitterID.is_initialized());
+    BOOST_ASSERT(m_emitterId.is_initialized());
 
     switch(m_emitterType)
     {
@@ -285,7 +277,7 @@ void Source::linkEmitter()
             break;
 
         case EmitterType::Entity:
-            if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(*m_emitterID))
+            if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(*m_emitterId))
             {
                 setPosition(glm::value_ptr(ent->m_transform[3]));
                 setVelocity(glm::value_ptr(ent->m_speed));
@@ -293,7 +285,7 @@ void Source::linkEmitter()
             break;
 
         case EmitterType::SoundSource:
-            setPosition(glm::value_ptr(engine::engine_world.audioEngine.getEmitter(*m_emitterID).position));
+            setPosition(glm::value_ptr(engine::engine_world.audioEngine.getEmitter(*m_emitterId).position));
             break;
     }
 }

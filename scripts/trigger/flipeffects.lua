@@ -55,7 +55,7 @@ flipeffects[3] = {  -- Emit bubble particle
     onExec =
     function(caller, operand)
         if((caller >= 0) and (math.random(100) > 60)) then
-            playSound(SOUND_BUBBLE, caller)
+            playSound(SoundId.Bubble, caller)
         end;
     end;
 };
@@ -82,7 +82,7 @@ flipeffects[11] = { -- Play explosion sound and effect
     function(caller, operand)
         flashSetup(255, 255,220,80, 10,600);
         flashStart();
-        playSound(105);
+        playSound(SoundId.Eplosion);
     end;
 };
 fe_Assign(Engine.I, 11,11); fe_Assign(Engine.II, 11,11); fe_Assign(Engine.III, 11,11); fe_Assign(Engine.IV, 11,11); fe_Assign(Engine.V, 11,11);

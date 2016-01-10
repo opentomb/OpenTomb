@@ -466,28 +466,27 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
 
         case animation::AnimCommandOpcode::PlaySound:      // (sndParam)
             {
-                int16_t sound_index = command.param[0] & 0x3FFF;
+                audio::SoundId soundId = command.param[0] & 0x3FFF;
 
                 // Quick workaround for TR3 quicksand.
-                if(getSubstanceState() == Substance::QuicksandConsumed ||
-                   getSubstanceState() == Substance::QuicksandShallow)
+                if(getSubstanceState() == Substance::QuicksandConsumed || getSubstanceState() == Substance::QuicksandShallow)
                 {
-                    sound_index = 18;
+                    soundId = audio::SoundWadeShallow;
                 }
 
                 if(command.param[0] & animation::TR_ANIMCOMMAND_CONDITION_WATER)
                 {
                     if(getSubstanceState() == Substance::WaterShallow)
-                        engine::engine_world.audioEngine.send(sound_index, audio::EmitterType::Entity, getId());
+                        engine::engine_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
                 }
                 else if(command.param[0] & animation::TR_ANIMCOMMAND_CONDITION_LAND)
                 {
                     if(getSubstanceState() != Substance::WaterShallow)
-                        engine::engine_world.audioEngine.send(sound_index, audio::EmitterType::Entity, getId());
+                        engine::engine_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
                 }
                 else
                 {
-                    engine::engine_world.audioEngine.send(sound_index, audio::EmitterType::Entity, getId());
+                    engine::engine_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
                 }
             }
             break;
