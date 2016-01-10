@@ -44,7 +44,7 @@ void Level::readMeshData(io::SDLReader& reader)
 
     m_meshes.clear();
 
-    uint32_t meshDataPos = 0;
+    size_t meshDataPos = 0;
     for (size_t i = 0; i < m_meshIndices.size(); i++)
     {
         std::replace(m_meshIndices.begin(), m_meshIndices.end(), meshDataPos, i);

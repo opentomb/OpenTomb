@@ -33,7 +33,7 @@ public:
     std::vector<Room> m_rooms;
     std::vector<uint16_t> m_floorData;
     std::vector<Mesh> m_meshes;
-    std::vector<size_t> m_meshIndices;
+    std::vector<uint32_t> m_meshIndices;
     std::vector<Animation> m_animations;
     std::vector<StateChange> m_stateChanges;
     std::vector<AnimDispatch> m_animDispatches;

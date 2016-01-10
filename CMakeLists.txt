@@ -85,10 +85,8 @@ target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
 
 # Dependency: Freetype
 ot_find_dependency_alt(freetype Freetype)
-if(SKIP_SYSTEM_freetype)
-    target_include_directories(freetype INTERFACE ${FREETYPE_INCLUDE_DIRS})
-    target_link_libraries(freetype INTERFACE ${FREETYPE_LIBRARIES})
-endif()
+target_include_directories(freetype INTERFACE ${FREETYPE_INCLUDE_DIRS})
+target_link_libraries(freetype INTERFACE ${FREETYPE_LIBRARIES})
 
 
 # Dependency: OpenGL
