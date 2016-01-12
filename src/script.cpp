@@ -2565,6 +2565,136 @@ int lua_GetSectorHeight(lua_State * lua)
 }
 
 
+int lua_SectorTriggerClear(lua_State * lua)
+{
+    int id, sx, sy, top;
+
+    top = lua_gettop(lua);
+
+    if(top < 3)
+    {
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y)", FONTSTYLE_CONSOLE_WARNING);
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
+    sx = lua_tointeger(lua, 2);
+    sy = lua_tointeger(lua, 3);
+    room_sector_p rs = World_GetRoomSector(&engine_world, id, sx, sy);
+    if(rs == NULL)
+    {
+        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        return 0;
+    }
+
+    if(rs->trigger)
+    {
+        for(trigger_command_p current_command = rs->trigger->commands; current_command; )
+        {
+            trigger_command_p next_command = current_command->next;
+            current_command->next = NULL;
+            free(current_command);
+            current_command = next_command;
+        }
+        free(rs->trigger);
+        rs->trigger = NULL;
+    }
+
+    return 0;
+}
+
+
+int lua_SectorAddTrigger(lua_State * lua)
+{
+    int id, sx, sy, top;
+
+    top = lua_gettop(lua);
+
+    if(top < 8)
+    {
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, function, sub_function, mask, once, timer)", FONTSTYLE_CONSOLE_WARNING);
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
+    sx = lua_tointeger(lua, 2);
+    sy = lua_tointeger(lua, 3);
+    room_sector_p rs = World_GetRoomSector(&engine_world, id, sx, sy);
+    if(rs == NULL)
+    {
+        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        return 0;
+    }
+    if(rs->trigger)
+    {
+        Con_AddLine("sector trigger already exists", FONTSTYLE_CONSOLE_WARNING);
+        return 0;
+    }
+
+    rs->trigger = (trigger_header_p)malloc(sizeof(trigger_header_t));
+    rs->trigger->commands = NULL;
+    rs->trigger->function_value = lua_tointeger(lua, 4);
+    rs->trigger->sub_function = lua_tointeger(lua, 5);
+    rs->trigger->mask = lua_tointeger(lua, 6);
+    rs->trigger->once = lua_tointeger(lua, 7);
+    rs->trigger->timer = lua_tointeger(lua, 8);
+
+    return 0;
+}
+
+
+int lua_SectorAddTriggerCommand(lua_State * lua)
+{
+    int id, sx, sy, top;
+
+    top = lua_gettop(lua);
+
+    if(top < 6)
+    {
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, function, operands, once, (cam_index, cam_move, cam_timer))", FONTSTYLE_CONSOLE_WARNING);
+        return 0;
+    }
+
+    id = lua_tointeger(lua, 1);
+    sx = lua_tointeger(lua, 2);
+    sy = lua_tointeger(lua, 3);
+    room_sector_p rs = World_GetRoomSector(&engine_world, id, sx, sy);
+    if(rs == NULL)
+    {
+        Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        return 0;
+    }
+    if(!rs->trigger)
+    {
+        Con_AddLine("sector has no base trigger", FONTSTYLE_CONSOLE_WARNING);
+        return 0;
+    }
+
+    trigger_command_p cmd = (trigger_command_p)malloc(sizeof(trigger_command_t));
+
+    cmd->next = NULL;
+    cmd->function = lua_tointeger(lua, 4);
+    cmd->operands = lua_tointeger(lua, 5);
+    cmd->once = lua_tointeger(lua, 6);
+    cmd->cam_index = 0;
+    cmd->cam_move = 0;
+    cmd->cam_timer = 0;
+
+    if(top >= 9)
+    {
+        cmd->cam_index = lua_tointeger(lua, 7);
+        cmd->cam_move = lua_tointeger(lua, 8);
+        cmd->cam_timer = lua_tointeger(lua, 9);
+    }
+
+    trigger_command_p *last = &rs->trigger->commands;
+    for(; *last; last = &(*last)->next);
+    *last = cmd;
+
+    return 0;
+}
+
+
 int lua_SetEntityPosition(lua_State * lua)
 {
     switch(lua_gettop(lua))
@@ -5045,6 +5175,9 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "newSector", lua_NewSector);
     lua_register(lua, "similarSector", lua_SimilarSector);
     lua_register(lua, "getSectorHeight", lua_GetSectorHeight);
+    lua_register(lua, "sectorTriggerClear", lua_SectorTriggerClear);
+    lua_register(lua, "sectorAddTrigger", lua_SectorAddTrigger);
+    lua_register(lua, "sectorAddTriggerCommand", lua_SectorAddTriggerCommand);
 
     lua_register(lua, "activateEntity", lua_ActivateEntity);
     lua_register(lua, "deactivateEntity", lua_DeactivateEntity);

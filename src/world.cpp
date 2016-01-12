@@ -724,31 +724,18 @@ struct room_s *World_FindRoomByPosCogerrence(world_p world, float pos[3], struct
 }
 
 
-void World_SwapRoomToBase(world_p world, struct room_s *room)
+struct room_sector_s *World_GetRoomSector(world_p world, int room_id, int x, int y)
 {
-    if(room->base_room && room->active)                             // If room is active alternate room
+    if((room_id >= 0) && ((uint32_t)room_id < world->rooms_count))
     {
-        room->frustum = NULL;
-        room->base_room->frustum = NULL;
-        renderer.CleanList();
-        Room_Disable(room);                                         // Disable current room
-        Room_Disable(room->base_room);                              // Paranoid
-        Room_Enable(room->base_room);                               // Enable original room
+        room_p room = world->rooms + room_id;
+        if((x >= 0) && (y >= 0) && (x < room->sectors_x) && (y < room->sectors_y))
+        {
+            return room->sectors + x * room->sectors_y + y;
+        }
     }
-}
 
-
-void World_SwapRoomToAlternate(world_p world, struct room_s *room)
-{
-    if(room->alternate_room && room->active)                        // If room is active base room
-    {
-        room->frustum = NULL;
-        room->alternate_room->frustum = NULL;
-        renderer.CleanList();
-        Room_Disable(room);                                         // Disable current room
-        Room_Disable(room->alternate_room);                         // Paranoid
-        Room_Enable(room->alternate_room);                          //
-    }
+    return NULL;
 }
 
 
@@ -839,11 +826,11 @@ int World_SetFlipState(world_p world, uint32_t flip_index, uint32_t flip_state)
             {
                 if(flip_state)
                 {
-                    World_SwapRoomToAlternate(world, current_room);
+                    Room_SwapRoomToAlternate(current_room);
                 }
                 else
                 {
-                    World_SwapRoomToBase(world, current_room);
+                    Room_SwapRoomToBase(current_room);
                 }
             }
         }
@@ -946,8 +933,7 @@ void RBItemFree(void *x)
 /*
  * Load level functions
  */
-/// that scripts will be enabled after world -> singleton
-/*int lua_SetSectorFloorConfig(lua_State * lua)
+int lua_SetSectorFloorConfig(lua_State * lua)
 {
     int id, sx, sy, top;
 
@@ -962,7 +948,7 @@ void RBItemFree(void *x)
     id = lua_tointeger(lua, 1);
     sx = lua_tointeger(lua, 2);
     sy = lua_tointeger(lua, 3);
-    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    room_sector_p rs = World_GetRoomSector(&engine_world, id, sx, sy);
     if(rs == NULL)
     {
         Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
@@ -980,6 +966,7 @@ void RBItemFree(void *x)
     return 0;
 }
 
+
 int lua_SetSectorCeilingConfig(lua_State * lua)
 {
     int id, sx, sy, top;
@@ -995,7 +982,7 @@ int lua_SetSectorCeilingConfig(lua_State * lua)
     id = lua_tointeger(lua, 1);
     sx = lua_tointeger(lua, 2);
     sy = lua_tointeger(lua, 3);
-    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    room_sector_p rs = World_GetRoomSector(&engine_world, id, sx, sy);
     if(rs == NULL)
     {
         Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
@@ -1013,6 +1000,7 @@ int lua_SetSectorCeilingConfig(lua_State * lua)
     return 0;
 }
 
+
 int lua_SetSectorPortal(lua_State * lua)
 {
     int id, sx, sy, top;
@@ -1028,7 +1016,7 @@ int lua_SetSectorPortal(lua_State * lua)
     id = lua_tointeger(lua, 1);
     sx = lua_tointeger(lua, 2);
     sy = lua_tointeger(lua, 3);
-    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    room_sector_p rs = World_GetRoomSector(&engine_world, id, sx, sy);
     if(rs == NULL)
     {
         Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
@@ -1043,6 +1031,7 @@ int lua_SetSectorPortal(lua_State * lua)
 
     return 0;
 }
+
 
 int lua_SetSectorFlags(lua_State * lua)
 {
@@ -1059,7 +1048,7 @@ int lua_SetSectorFlags(lua_State * lua)
     id = lua_tointeger(lua, 1);
     sx = lua_tointeger(lua, 2);
     sy = lua_tointeger(lua, 3);
-    room_sector_p rs = TR_GetRoomSector(id, sx, sy);
+    room_sector_p rs = World_GetRoomSector(&engine_world, id, sx, sy);
     if(rs == NULL)
     {
         Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
@@ -1072,7 +1061,7 @@ int lua_SetSectorFlags(lua_State * lua)
     if(!lua_isnil(lua, 7))  rs->ceiling_diagonal_type = lua_tointeger(lua, 7);
 
     return 0;
-}*/
+}
 
 
 void World_ScriptsOpen(world_p world)
@@ -1086,10 +1075,10 @@ void World_ScriptsOpen(world_p world)
         luaL_openlibs(world->level_script);
         Script_LoadConstants(world->level_script);
         lua_register(world->level_script, "print", lua_print);
-        //lua_register(world->level_script, "setSectorFloorConfig", lua_SetSectorFloorConfig);
-        //lua_register(world->level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
-        //lua_register(world->level_script, "setSectorPortal", lua_SetSectorPortal);
-        //lua_register(world->level_script, "setSectorFlags", lua_SetSectorFlags);
+        lua_register(world->level_script, "setSectorFloorConfig", lua_SetSectorFloorConfig);
+        lua_register(world->level_script, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
+        lua_register(world->level_script, "setSectorPortal", lua_SetSectorPortal);
+        lua_register(world->level_script, "setSectorFlags", lua_SetSectorFlags);
 
         luaL_dofile(world->level_script, "scripts/staticmesh/staticmesh_script.lua");
 

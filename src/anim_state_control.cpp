@@ -1306,6 +1306,8 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 {
                     ent->speed[0] = -ent->transform[4 + 0] * 128.0;
                     ent->speed[1] = -ent->transform[4 + 1] * 128.0;
+                    ent->transform[12 + 0] -= ent->transform[4 + 0] * 128.0;    ///@HACK!
+                    ent->transform[12 + 1] -= ent->transform[4 + 1] * 128.0;
                 }
 
                 Entity_SetAnimation(ent, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);

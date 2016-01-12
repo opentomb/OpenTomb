@@ -1184,13 +1184,14 @@ int CRender::ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
     for(uint16_t i = 0; i < room->portals_count; i++)
     {
         portal_p p = room->portals + i;
-        if(p->dest_room && (p->dest_room != Room_CheckFlip(src_room)))   // do not go back
+        room_p dest_room = Room_CheckFlip(p->dest_room);
+        if(dest_room && (dest_room != src_room))   // do not go back
         {
             frustum_p gen_frus = frustumManager->PortalFrustumIntersect(p, frus, m_camera);
             if(gen_frus)
             {
                 ret++;
-                this->AddRoom(Room_CheckFlip(p->dest_room));
+                this->AddRoom(dest_room);
                 this->ProcessRoom(p, gen_frus);
             }
         }
@@ -1201,13 +1202,14 @@ int CRender::ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
         for(uint16_t i = 0; i < room->base_room->portals_count; i++)
         {
             portal_p p = room->base_room->portals + i;
-            if(p->dest_room && (p->dest_room != Room_CheckFlip(src_room)))      // do not go back
+            room_p dest_room = Room_CheckFlip(p->dest_room);
+            if(dest_room && (dest_room != src_room))      // do not go back
             {
                 frustum_p gen_frus = frustumManager->PortalFrustumIntersect(p, frus, m_camera);
                 if(gen_frus)
                 {
                     ret++;
-                    this->AddRoom(Room_CheckFlip(p->dest_room));
+                    this->AddRoom(Room_CheckFlip(dest_room));
                     this->ProcessRoom(p, gen_frus);
                 }
             }

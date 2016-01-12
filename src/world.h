@@ -118,10 +118,8 @@ struct skeletal_model_s* World_GetSkybox(world_p world);
 
 struct room_s *World_FindRoomByPos(world_p world, float pos[3]);
 struct room_s *World_FindRoomByPosCogerrence(world_p world, float pos[3], struct room_s *old_room);
+struct room_sector_s *World_GetRoomSector(world_p world, int room_id, int x, int y);
 
-
-void World_SwapRoomToBase(world_p world, struct room_s *room);
-void World_SwapRoomToAlternate(world_p world, struct room_s *room);
 void World_BuildNearRoomsList(world_p world, struct room_s *room);
 void World_BuildOverlappedRoomsList(world_p world, struct room_s *room);
 

@@ -254,6 +254,9 @@ void Room_Disable(struct room_s *room);
 int  Room_AddObject(struct room_s *room, struct engine_container_s *cont);
 int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont);
 
+void Room_SwapRoomToBase(struct room_s *room);
+void Room_SwapRoomToAlternate(struct room_s *room);
+
 struct room_sector_s *Room_GetSectorRaw(struct room_s *room, float pos[3]);
 struct room_sector_s *Room_GetSectorCheckFlip(struct room_s *room, float pos[3]);
 struct room_sector_s *Room_GetSectorXYZ(struct room_s *room, float pos[3]);

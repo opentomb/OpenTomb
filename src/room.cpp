@@ -287,6 +287,32 @@ int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont)
 }
 
 
+void Room_SwapRoomToBase(struct room_s *room)
+{
+    if(room->base_room && room->active)                             // If room is active alternate room
+    {
+        room->frustum = NULL;
+        room->base_room->frustum = NULL;
+        Room_Disable(room);                                         // Disable current room
+        Room_Disable(room->base_room);                              // Paranoid
+        Room_Enable(room->base_room);                               // Enable original room
+    }
+}
+
+
+void Room_SwapRoomToAlternate(struct room_s *room)
+{
+    if(room->alternate_room && room->active)                        // If room is active base room
+    {
+        room->frustum = NULL;
+        room->alternate_room->frustum = NULL;
+        Room_Disable(room);                                         // Disable current room
+        Room_Disable(room->alternate_room);                         // Paranoid
+        Room_Enable(room->alternate_room);                          //
+    }
+}
+
+
 struct room_sector_s *Room_GetSectorRaw(struct room_s *room, float pos[3])
 {
     int x, y;
