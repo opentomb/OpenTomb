@@ -40,6 +40,7 @@ extern "C" {
 #include "engine.h"
 #include "physics.h"
 #include "controls.h"
+#include "trigger.h"
 
 
 static SDL_Window             *sdl_window     = NULL;
@@ -527,6 +528,8 @@ void Engine_Display()
         Cam_Apply(&engine_camera);
         Cam_RecalcClipPlanes(&engine_camera);
         // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
+
+        screen_info.show_debuginfo %= 3;
         if(screen_info.show_debuginfo)
         {
             ShowDebugInfo();
@@ -606,8 +609,8 @@ void Engine_PollSDLEvents()
 
                     if((event.motion.x < ((screen_info.w / 2) - (screen_info.w / 4))) ||
                        (event.motion.x > ((screen_info.w / 2) + (screen_info.w / 4))) ||
-                       (event.motion.y < ((screen_info.h / 2)-(screen_info.h / 4))) ||
-                       (event.motion.y > ((screen_info.h / 2)+(screen_info.h / 4))))
+                       (event.motion.y < ((screen_info.h / 2) - (screen_info.h / 4))) ||
+                       (event.motion.y > ((screen_info.h / 2) + (screen_info.h / 4))))
                     {
                         SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
                     }
@@ -799,48 +802,63 @@ void Engine_MainLoop()
 
 void ShowDebugInfo()
 {
-    entity_p ent;
-    ent = engine_world.Character;
-    if(ent && ent->character)
-    {
-        /*height_info_p fc = &ent->character->height_info
-        txt = GLText_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point.m_floats[2], (int)fc->ceiling_point.m_floats[2], (int)fc->water_level);
-        */
+    float y = (float)screen_info.h / screen_info.scale_factor;
+    const float dy = -24.0f / screen_info.scale_factor;
 
-        GLText_OutTextXY(30.0, 30.0, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf->animations.last_animation, ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.last_state, ent->bf->animations.next_state);
-        //GLText_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.current_frame, ent->bf->animations.next_frame);
-        //GLText_OutTextXY(NULL, 20, 8, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
-    }
-
-    if(last_cont != NULL)
+    if(last_cont)
     {
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                GLText_OutTextXY(30.0, 60.0, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf->animations.model->id);
+                GLText_OutTextXY(30.0f, y += dy, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf->animations.model->id);
                 break;
 
             case OBJECT_STATIC_MESH:
-                GLText_OutTextXY(30.0, 60.0, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
+                GLText_OutTextXY(30.0f, y += dy, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
                 break;
 
             case OBJECT_ROOM_BASE:
-                GLText_OutTextXY(30.0, 60.0, "cont_room: id = %d", ((room_p)last_cont->object)->id);
+                GLText_OutTextXY(30.0f, y += dy, "cont_room: id = %d", ((room_p)last_cont->object)->id);
                 break;
         }
-
     }
 
-    if(engine_camera.current_room != NULL)
+    switch(screen_info.show_debuginfo)
     {
-        room_sector_p rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
-        if(rs != NULL)
-        {
-            GLText_OutTextXY(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.current_room->id, rs->index_x, rs->index_y);
-            GLText_OutTextXY(30.0, 120.0, "room_below = %d, room_above = %d", (rs->sector_below != NULL)?(rs->sector_below->owner_room->id):(-1), (rs->sector_above != NULL)?(rs->sector_above->owner_room->id):(-1));
-        }
-    }
-    GLText_OutTextXY(30.0, 150.0, "cam_pos = (%.1f, %.1f, %.1f)", engine_camera.pos[0], engine_camera.pos[1], engine_camera.pos[2]);
+        case 1:
+            {
+                entity_p ent = engine_world.Character;
+                if(ent && ent->character)
+                {
+                    GLText_OutTextXY(30.0f, y += dy, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf->animations.last_animation, ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.last_state, ent->bf->animations.next_state);
+                    GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.current_frame, ent->bf->animations.next_frame);
+                    GLText_OutTextXY(30.0f, y += dy, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
+                }
+            }
+            break;
+
+        case 2:
+            if(engine_world.Character && engine_world.Character->self->room)
+            {
+                entity_p ent = engine_world.Character;
+                GLText_OutTextXY(30.0f, y += dy, "char_pos = (%.1f, %.1f, %.1f)", ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2]);
+                room_sector_p rs = Room_GetSectorRaw(ent->self->room, ent->transform + 12);
+                if(rs != NULL)
+                {
+                    GLText_OutTextXY(30.0f, y += dy, "room = (id = %d, sx = %d, sy = %d)", rs->owner_room->id, rs->index_x, rs->index_y);
+                    GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->sector_below != NULL) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != NULL) ? (rs->sector_above->owner_room->id) : (-1));
+                    if(rs->trigger)
+                    {
+                        GLText_OutTextXY(30.0f, y += dy, "trig(func = 0x%X, sub = 0x%X, mask = 0x%X)", rs->trigger->function_value, rs->trigger->sub_function, rs->trigger->mask);
+                        for(trigger_command_p cmd = rs->trigger->commands; cmd; cmd = cmd->next)
+                        {
+                            GLText_OutTextXY(30.0f, y += dy, "   cmd(func = 0x%X, op = 0x%X)", cmd->function, cmd->operands);
+                        }
+                    }
+                }
+            }
+            break;
+    };
 }
 
 
@@ -882,34 +900,34 @@ void Engine_GetLevelName(char *name, const char *path)
 }
 
 
-void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix)
+void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix, uint32_t buf_size)
 {
     char level_name[LEVEL_NAME_MAX_LEN];
     Engine_GetLevelName(level_name, gameflow_manager.CurrentLevelPath);
 
     name[0] = 0;
 
-    strcat(name, "scripts/level/");
+    strncat(name, "scripts/level/", buf_size);
 
     if(game_version < TR_II)
     {
-        strcat(name, "tr1/");
+        strncat(name, "tr1/", buf_size);
     }
     else if(game_version < TR_III)
     {
-        strcat(name, "tr2/");
+        strncat(name, "tr2/", buf_size);
     }
     else if(game_version < TR_IV)
     {
-        strcat(name, "tr3/");
+        strncat(name, "tr3/", buf_size);
     }
     else if(game_version < TR_V)
     {
-        strcat(name, "tr4/");
+        strncat(name, "tr4/", buf_size);
     }
     else
     {
-        strcat(name, "tr5/");
+        strncat(name, "tr5/", buf_size);
     }
 
     for(char *ch = level_name; *ch; ch++)
@@ -917,12 +935,12 @@ void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix
         *ch = toupper(*ch);
     }
 
-    strcat(name, level_name);
+    strncat(name, level_name, buf_size);
     if(postfix)
     {
-        strcat(name, postfix);
+        strncat(name, postfix, buf_size);
     }
-    strcat(name, ".lua");
+    strncat(name, ".lua", buf_size);
 }
 
 

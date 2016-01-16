@@ -34,7 +34,6 @@
  *      - cutscenes playing
  *      - enemies AI
  * 42) sound
- *      - AL thread bug fix!
  *      - click removal;
  *      - add ADPCM and CDAUDIO.WAD soundtrack support;
  */

@@ -4531,18 +4531,11 @@ int lua_PlaySound(lua_State *lua)
     }
 
     uint32_t id  = lua_tointeger(lua, 1);           // uint_t can't been less zero, reduce number of comparations
-    if(id >= engine_world.audio_map_count)
-    {
-        Con_Warning("wrong sound id, count = %d", engine_world.audio_map_count);
-        return 0;
-    }
 
     int ent_id = -1;
-
-    if(top >= 2)
+    if((top >= 2) && World_GetEntityByID(&engine_world, ent_id = lua_tointeger(lua, 2)) == NULL)
     {
-        ent_id = lua_tointeger(lua, 2);
-        if(World_GetEntityByID(&engine_world, ent_id) == NULL) ent_id = -1;
+        ent_id = -1;
     }
 
     int result;
@@ -4585,18 +4578,10 @@ int lua_StopSound(lua_State *lua)
     }
 
     uint32_t id  = lua_tointeger(lua, 1);
-    if(id >= engine_world.audio_map_count)
-    {
-        Con_Warning("wrong sound id, count = %d", engine_world.audio_map_count);
-        return 0;
-    }
-
     int ent_id = -1;
-
-    if(top > 1)
+    if((top >= 2) && World_GetEntityByID(&engine_world, ent_id = lua_tointeger(lua, 2)) == NULL)
     {
-        ent_id = lua_tointeger(lua, 2);
-        if(World_GetEntityByID(&engine_world, ent_id) == NULL) ent_id = -1;
+        ent_id = -1;
     }
 
     int result;
