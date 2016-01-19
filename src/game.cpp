@@ -294,17 +294,22 @@ int Game_Save(const char* name)
     fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath, gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
 
     // Save flipmap and flipped room states.
-    for(uint32_t i = 0; i < engine_world.flip_count; i++)
+    uint8_t *flip_map;
+    uint8_t *flip_state;
+    uint32_t flip_count;
+    World_GetFlipInfo(&flip_map, &flip_state, &flip_count);
+    for(uint32_t i = 0; i < flip_count; i++)
     {
-        fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, engine_world.flip_map[i]);
-        fprintf(f, "setFlipState(%d, %d);\n", i, engine_world.flip_state[i]);
+        fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, flip_map[i]);
+        fprintf(f, "setFlipState(%d, %d);\n", i, flip_state[i]);
     }
 
-    Save_Entity(&f, engine_world.Character);    // Save Lara.
+    Save_Entity(&f, World_GetPlayer());    // Save Lara.
 
-    if((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL))
+    RedBlackNode_p root = World_GetEntityTreeRoot();
+    if(root)
     {
-        Save_EntityTree(&f, engine_world.entity_tree->root);
+        Save_EntityTree(&f, root);
     }
     fclose(f);
 
@@ -335,7 +340,7 @@ void Game_ApplyControls(struct entity_s *ent)
     control_states.cam_angles[1] += 2.2 * engine_frame_time * look_logic[1];
     control_states.cam_angles[2] += 2.2 * engine_frame_time * look_logic[2];
 
-    if(engine_world.rooms == NULL)
+    if(!World_GetRoomByID(0))
     {
         if(control_mapper.use_joy)
         {
@@ -394,7 +399,7 @@ void Game_ApplyControls(struct entity_s *ent)
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
-        engine_camera.current_room = World_FindRoomByPosCogerrence(&engine_world, engine_camera.pos, engine_camera.current_room);
+        engine_camera.current_room = World_FindRoomByPosCogerrence(engine_camera.pos, engine_camera.current_room);
     }
     else if(control_states.noclip != 0)
     {
@@ -404,7 +409,7 @@ void Game_ApplyControls(struct entity_s *ent)
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
-        engine_camera.current_room = World_FindRoomByPosCogerrence(&engine_world, engine_camera.pos, engine_camera.current_room);
+        engine_camera.current_room = World_FindRoomByPosCogerrence(engine_camera.pos, engine_camera.current_room);
 
         ent->angles[0] = 180.0 * control_states.cam_angles[0] / M_PI;
         pos[0] = engine_camera.pos[0] + engine_camera.view_dir[0] * control_states.cam_distance;
@@ -508,27 +513,25 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
 {
     float cam_pos[3], cameraFrom[3], cameraTo[3];
     collision_result_t cb;
-    entity_p target = World_GetEntityByID(&engine_world, engine_camera_state.target_id);
+    entity_p target = World_GetEntityByID(engine_camera_state.target_id);
 
     if(target && (engine_camera_state.state == CAMERA_STATE_FIXED))
     {
         cam->pos[0] = engine_camera_state.sink->x;
         cam->pos[1] = engine_camera_state.sink->y;
         cam->pos[2] = engine_camera_state.sink->z;
-        if(engine_camera_state.sink->room_or_strength < engine_world.rooms_count)
-        {
-            cam->current_room = engine_world.rooms + engine_camera_state.sink->room_or_strength;
-        }
+        cam->current_room = World_GetRoomByID(engine_camera_state.sink->room_or_strength);
 
         Cam_LookTo(cam, target->transform + 12);
 
         engine_camera_state.time -= engine_frame_time;
         if(engine_camera_state.time <= 0.0f)
         {
+            entity_p player = World_GetPlayer();
             engine_camera_state.state = CAMERA_STATE_NORMAL;
             engine_camera_state.time = 0.0f;
             engine_camera_state.sink = NULL;
-            engine_camera_state.target_id = (engine_world.Character)?(engine_world.Character->id):(-1);
+            engine_camera_state.target_id = (player) ? (player->id) : (-1);
             Cam_SetFovAspect(cam, screen_info.fov, cam->aspect);
         }
         return;
@@ -665,8 +668,8 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         vec3_copy(cameraFrom, cam_pos);
         if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
         {
-            entity_p target = World_GetEntityByID(&engine_world, engine_camera_state.target_id);
-            if(target && target != engine_world.Character)
+            entity_p target = World_GetEntityByID(engine_camera_state.target_id);
+            if(target && target != World_GetPlayer())
             {
                 float dir2d[2], dist;
                 dir2d[0] = target->transform[12 + 0] - cam->pos[0];
@@ -694,7 +697,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
 
     //Modify cam pos for quicksand rooms
     cam->pos[2] -= 128.0;
-    cam->current_room = World_FindRoomByPosCogerrence(&engine_world, cam->pos, cam->current_room);
+    cam->current_room = World_FindRoomByPosCogerrence(cam->pos, cam->current_room);
     cam->pos[2] += 128.0;
     if((cam->current_room != NULL) && (cam->current_room->flags & TR_ROOM_FLAG_QUICKSAND))
     {
@@ -703,14 +706,14 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
 
     if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
     {
-        entity_p target = World_GetEntityByID(&engine_world, engine_camera_state.target_id);
+        entity_p target = World_GetEntityByID(engine_camera_state.target_id);
         if(target)
         {
             Cam_LookTo(cam, target->transform + 12);
             engine_camera_state.time -= engine_frame_time;
             if(engine_camera_state.time <= 0.0f)
             {
-                engine_camera_state.target_id = (engine_world.Character)?(engine_world.Character->id):(-1);
+                engine_camera_state.target_id = (World_GetPlayer()) ? (World_GetPlayer()->id) : (-1);
                 engine_camera_state.state = CAMERA_STATE_NORMAL;
                 engine_camera_state.time = 0.0f;
                 engine_camera_state.sink = NULL;
@@ -721,7 +724,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
     {
         Cam_SetRotation(cam, control_states.cam_angles);
     }
-    cam->current_room = World_FindRoomByPosCogerrence(&engine_world, cam->pos, cam->current_room);
+    cam->current_room = World_FindRoomByPosCogerrence(cam->pos, cam->current_room);
 }
 
 
@@ -818,7 +821,7 @@ void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
 
 void Game_UpdateCharacters()
 {
-    entity_p ent = engine_world.Character;
+    entity_p ent = World_GetPlayer();
 
     if(ent && ent->character)
     {
@@ -836,17 +839,19 @@ void Game_UpdateCharacters()
         }
     }
 
-    if(engine_world.entity_tree && engine_world.entity_tree->root)
+    RedBlackNode_p root = World_GetEntityTreeRoot();
+    if(root)
     {
-        Game_UpdateCharactersTree(engine_world.entity_tree->root);
+        Game_UpdateCharactersTree(root);
     }
 }
 
 
 void Game_Frame(float time)
 {
-    bool is_entitytree = ((engine_world.entity_tree != NULL) && (engine_world.entity_tree->root != NULL));
-    bool is_character  = (engine_world.Character != NULL);
+    entity_p player = World_GetPlayer();
+    bool is_entitytree = (World_GetEntityTreeRoot() != NULL);
+    bool is_character  = (player != NULL);
 
     // GUI and controls should be updated at all times!
 
@@ -859,7 +864,7 @@ void Game_Frame(float time)
         if((is_character) &&
            (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
         {
-            main_inventory_manager->setInventory(&engine_world.Character->character->inventory);
+            main_inventory_manager->setInventory(&player->character->inventory);
             main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
         }
         if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_IDLE)
@@ -882,45 +887,45 @@ void Game_Frame(float time)
     Game_UpdateAI();
     if(is_character)
     {
-        Entity_ProcessSector(engine_world.Character);
-        Character_UpdateParams(engine_world.Character);
-        Entity_CheckCollisionCallbacks(engine_world.Character);   ///@FIXME: Must do it for ALL interactive entities!
+        Entity_ProcessSector(player);
+        Character_UpdateParams(player);
+        Entity_CheckCollisionCallbacks(player);                                 ///@FIXME: Must do it for ALL interactive entities!
     }
 
     if(is_entitytree)
     {
-        Game_LoopEntities(engine_world.entity_tree->root);
+        Game_LoopEntities(World_GetEntityTreeRoot());
     }
 
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
     if(engine_camera_state.state != CAMERA_STATE_FLYBY)
     {
-        Game_ApplyControls(engine_world.Character);
+        Game_ApplyControls(player);
     }
 
     Cam_PlayFlyBy(time);
 
     if(is_character)
     {
-        if(engine_world.Character->type_flags & ENTITY_TYPE_DYNAMIC)
+        if(player->type_flags & ENTITY_TYPE_DYNAMIC)
         {
-            Entity_UpdateRigidBody(engine_world.Character, 0);
+            Entity_UpdateRigidBody(player, 0);
         }
         if(!control_states.noclip && !control_states.free_look)
         {
-            Character_ApplyCommands(engine_world.Character);
-            Entity_Frame(engine_world.Character, engine_frame_time);
+            Character_ApplyCommands(player);
+            Entity_Frame(player, engine_frame_time);
             if(engine_camera_state.state != CAMERA_STATE_FLYBY)
             {
-                Cam_FollowEntity(&engine_camera, engine_world.Character, 16.0, 128.0);
+                Cam_FollowEntity(&engine_camera, player, 16.0, 128.0);
             }
             if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
             {
-                entity_p target = World_GetEntityByID(&engine_world, engine_camera_state.target_id);
+                entity_p target = World_GetEntityByID(engine_camera_state.target_id);
                 if(target)
                 {
-                    Character_LookAt(engine_world.Character, target->transform + 12);
+                    Character_LookAt(player, target->transform + 12);
                 }
             }
         }
@@ -930,7 +935,7 @@ void Game_Frame(float time)
 
     if(is_entitytree)
     {
-        Game_UpdateAllEntities(engine_world.entity_tree->root);
+        Game_UpdateAllEntities(World_GetEntityTreeRoot());
     }
 
     Physics_StepSimulation(time);
@@ -942,38 +947,42 @@ void Game_Frame(float time)
 
 void Game_Prepare()
 {
-    if(engine_world.Character && engine_world.Character->character)
+    entity_p player = World_GetPlayer();
+    if(player && player->character)
     {
         // Set character values to default.
 
-        Character_SetParamMaximum(engine_world.Character, PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
-        Character_SetParam       (engine_world.Character, PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
-        Character_SetParamMaximum(engine_world.Character, PARAM_AIR    , LARA_PARAM_AIR_MAX    );
-        Character_SetParam       (engine_world.Character, PARAM_AIR    , LARA_PARAM_AIR_MAX    );
-        Character_SetParamMaximum(engine_world.Character, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        Character_SetParam       (engine_world.Character, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        Character_SetParamMaximum(engine_world.Character, PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
-        Character_SetParam       (engine_world.Character, PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
+        Character_SetParamMaximum(player, PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
+        Character_SetParam       (player, PARAM_HEALTH , LARA_PARAM_HEALTH_MAX );
+        Character_SetParamMaximum(player, PARAM_AIR    , LARA_PARAM_AIR_MAX    );
+        Character_SetParam       (player, PARAM_AIR    , LARA_PARAM_AIR_MAX    );
+        Character_SetParamMaximum(player, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        Character_SetParam       (player, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        Character_SetParamMaximum(player, PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
+        Character_SetParam       (player, PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
 
         // Set character statistics to default.
 
-        engine_world.Character->character->statistics.distance       = 0.0;
-        engine_world.Character->character->statistics.ammo_used      = 0;
-        engine_world.Character->character->statistics.hits           = 0;
-        engine_world.Character->character->statistics.kills          = 0;
-        engine_world.Character->character->statistics.medipacks_used = 0;
-        engine_world.Character->character->statistics.saves_used     = 0;
-        engine_world.Character->character->statistics.secrets_game   = 0;
-        engine_world.Character->character->statistics.secrets_level  = 0;
+        player->character->statistics.distance       = 0.0;
+        player->character->statistics.ammo_used      = 0;
+        player->character->statistics.hits           = 0;
+        player->character->statistics.kills          = 0;
+        player->character->statistics.medipacks_used = 0;
+        player->character->statistics.saves_used     = 0;
+        player->character->statistics.secrets_game   = 0;
+        player->character->statistics.secrets_level  = 0;
     }
-    else if(engine_world.rooms_count > 0)
+    else
     {
         // If there is no character present, move default camera position to
         // the first room (useful for TR1-3 cutscene levels).
-
-        engine_camera.pos[0] = engine_world.rooms[0].bb_max[0];
-        engine_camera.pos[1] = engine_world.rooms[0].bb_max[1];
-        engine_camera.pos[2] = engine_world.rooms[0].bb_max[2];
+        room_p room = World_GetRoomByID(0);
+        if(room)
+        {
+            engine_camera.pos[0] = room->bb_max[0];
+            engine_camera.pos[1] = room->bb_max[1];
+            engine_camera.pos[2] = room->bb_max[2];
+        }
     }
 
     // Set gameflow parameters to default.
@@ -986,7 +995,7 @@ void Game_PlayFlyBy(uint32_t sequence_id, int once)
 {
     if(engine_camera_state.state != CAMERA_STATE_FLYBY)
     {
-        for(flyby_camera_sequence_p s = engine_world.flyby_camera_sequences; s; s = s->next)
+        for(flyby_camera_sequence_p s = World_GetFlyBySequences(); s; s = s->next)
         {
             if((s->start->sequence == (int)sequence_id) && (!once || !s->locked))
             {
@@ -1003,7 +1012,7 @@ void Game_PlayFlyBy(uint32_t sequence_id, int once)
 
 void Game_SetCameraTarget(uint32_t entity_id, float timer)
 {
-    entity_p ent = World_GetEntityByID(&engine_world, entity_id);
+    entity_p ent = World_GetEntityByID(entity_id);
     engine_camera_state.target_id = entity_id;
     if(ent && (engine_camera_state.state == CAMERA_STATE_NORMAL))
     {
@@ -1015,12 +1024,13 @@ void Game_SetCameraTarget(uint32_t entity_id, float timer)
 // if timer == 0 then camera set is permanent
 void Game_SetCamera(uint32_t camera_id, int once, int move, float timer)
 {
-    if(camera_id < engine_world.cameras_sinks_count)
+    static_camera_sink_p sink = World_GetstaticCameraSink(camera_id);
+    if(sink)
     {
         if(engine_camera_state.state != CAMERA_STATE_FLYBY)
         {
             engine_camera_state.state = CAMERA_STATE_FIXED;
-            engine_camera_state.sink = engine_world.cameras_sinks + camera_id;
+            engine_camera_state.sink = sink;
             engine_camera_state.time = timer;
             engine_camera_state.move = move;
         }

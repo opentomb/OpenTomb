@@ -39,8 +39,11 @@ void CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour);
  */
 
 CRender::CRender():
-m_world(NULL),
 m_camera(NULL),
+m_rooms(NULL),
+m_rooms_count(0),
+m_anim_sequences(NULL),
+m_anim_sequences_count(0),
 m_active_transparency(0),
 m_active_texture(0),
 r_list_size(0),
@@ -60,7 +63,6 @@ r_flags(0x00)
 
 CRender::~CRender()
 {
-    m_world = NULL;
     m_camera = NULL;
 
     if(r_list)
@@ -122,15 +124,19 @@ void CRender::DoShaders()
     }
 }
 
-void CRender::SetWorld(struct world_s *world)
+void CRender::ResetWorld(struct room_s *rooms, uint32_t rooms_count, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count)
 {
     this->CleanList();
-    m_world = NULL;
     r_flags = 0x00;
 
-    if(world)
+    m_rooms = rooms;
+    m_rooms_count = rooms_count;
+    m_anim_sequences = anim_sequences;
+    m_anim_sequences_count = anim_sequences_count;
+
+    if(m_rooms)
     {
-        uint32_t list_size = world->rooms_count + 128;                          // magick 128 was added for debug and testing
+        uint32_t list_size = rooms_count + 128;                                 // magick 128 was added for debug and testing
         if(r_list)
         {
             free(r_list);
@@ -143,13 +149,12 @@ void CRender::SetWorld(struct world_s *world)
             r_list[i].dist = 0.0;
         }
 
-        m_world = world;
         r_list_size = list_size;
         r_list_active_count = 0;
 
-        for(uint32_t i = 0; i < m_world->rooms_count; i++)
+        for(uint32_t i = 0; i < m_rooms_count; i++)
         {
-            m_world->rooms[i].is_in_r_list = 0;
+            m_rooms[i].is_in_r_list = 0;
         }
     }
 }
@@ -157,10 +162,10 @@ void CRender::SetWorld(struct world_s *world)
 // This function is used for updating global animated texture frame
 void CRender::UpdateAnimTextures()
 {
-    if(m_world)
+    if(m_anim_sequences)
     {
-        anim_seq_p seq = m_world->anim_sequences;
-        for(uint16_t i = 0; i < m_world->anim_sequences_count; i++, seq++)
+        anim_seq_p seq = m_anim_sequences;
+        for(uint16_t i = 0; i < m_anim_sequences_count; i++, seq++)
         {
             if(seq->frame_lock)
             {
@@ -225,18 +230,18 @@ void CRender::UpdateAnimTextures()
  */
 void CRender::GenWorldList(struct camera_s *cam)
 {
-    if(m_world == NULL)
+    if(m_rooms == NULL)
     {
         return;
     }
 
     this->CleanList();                                                          // clear old render list
-    this->dynamicBSP->Reset(m_world->anim_sequences);
+    this->dynamicBSP->Reset(m_anim_sequences);
     this->frustumManager->Reset();
     cam->frustum->next = NULL;
     m_camera = cam;
 
-    room_p curr_room = World_FindRoomByPosCogerrence(&engine_world, cam->pos, cam->current_room);     // find room that contains camera
+    room_p curr_room = World_FindRoomByPosCogerrence(cam->pos, cam->current_room);     // find room that contains camera
 
     cam->current_room = curr_room;                                              // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room
@@ -274,8 +279,8 @@ void CRender::GenWorldList(struct camera_s *cam)
     }
     else                                                                        // camera is out of all rooms
     {
-        curr_room = m_world->rooms;                                             // draw full level. Yes - it is slow, but it is not gameplay - it is debug.
-        for(uint32_t i = 0; i < m_world->rooms_count; i++, curr_room++)
+        curr_room = m_rooms;                                                    // draw full level. Yes - it is slow, but it is not gameplay - it is debug.
+        for(uint32_t i = 0; i < m_rooms_count; i++, curr_room++)
         {
             if(Frustum_IsAABBVisible(curr_room->bb_min, curr_room->bb_max, cam->frustum))
             {
@@ -290,11 +295,6 @@ void CRender::GenWorldList(struct camera_s *cam)
  */
 void CRender::DrawList()
 {
-    if(!m_world)
-    {
-        return;
-    }
-
     if(r_flags & R_DRAW_WIRE)
     {
         qglPolygonMode(GL_FRONT, GL_LINE);
@@ -316,10 +316,11 @@ void CRender::DrawList()
 
     m_active_texture = 0;
     this->DrawSkyBox(m_camera->gl_view_proj_mat);
+    entity_p player = World_GetPlayer();
 
-    if(m_world->Character)
+    if(player)
     {
-        this->DrawEntity(m_world->Character, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
+        this->DrawEntity(player, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
     }
 
     /*
@@ -383,16 +384,15 @@ void CRender::DrawList()
         }
     }
 
-    if((engine_world.Character != NULL) && (engine_world.Character->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
+    if(player && (player->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
     {
         float tr[16];
-        entity_p ent = engine_world.Character;
-        for(uint16_t j = 0; j < ent->bf->bone_tag_count; j++)
+        for(uint16_t j = 0; j < player->bf->bone_tag_count; j++)
         {
-            if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
+            if(player->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
             {
-                Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[j].full_transform);
-                dynamicBSP->AddNewPolygonList(ent->bf->bone_tags[j].mesh_base->transparency_polygons, tr, m_camera->frustum);
+                Mat4_Mat4_mul(tr, player->transform, player->bf->bone_tags[j].full_transform);
+                dynamicBSP->AddNewPolygonList(player->bf->bone_tags[j].mesh_base->transparency_polygons, tr, m_camera->frustum);
             }
         }
     }
@@ -426,28 +426,29 @@ void CRender::DrawList()
 
 void CRender::DrawListDebugLines()
 {
-    if(m_world && (r_flags & (R_DRAW_BOXES | R_DRAW_ROOMBOXES | R_DRAW_PORTALS | R_DRAW_FRUSTUMS | R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_COLL | R_DRAW_FLYBY)))
+    if(r_flags & (R_DRAW_BOXES | R_DRAW_ROOMBOXES | R_DRAW_PORTALS | R_DRAW_FRUSTUMS | R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_COLL | R_DRAW_FLYBY))
     {
         debugDrawer->SetDrawFlags(r_flags);
 
-        if(m_world->Character)
+        if(World_GetPlayer())
         {
-            debugDrawer->DrawEntityDebugLines(m_world->Character);
+            debugDrawer->DrawEntityDebugLines(World_GetPlayer());
         }
 
         /*
          * Render world debug information
          */
-        if((r_flags & R_DRAW_NORMALS) && (m_world->sky_box != NULL))
+        skeletal_model_p skybox = World_GetSkybox();
+        if((r_flags & R_DRAW_NORMALS) && skybox)
         {
             GLfloat tr[16];
             float *p;
             Mat4_E_macro(tr);
-            p = m_world->sky_box->animations->frames->bone_tags->offset;
+            p = skybox->animations->frames->bone_tags->offset;
             vec3_add(tr+12, m_camera->pos, p);
-            p = m_world->sky_box->animations->frames->bone_tags->qrotate;
+            p = skybox->animations->frames->bone_tags->qrotate;
             Mat4_set_qrotation(tr, p);
-            debugDrawer->DrawMeshDebugLines(m_world->sky_box->mesh_tree->mesh_base, tr, NULL, NULL);
+            debugDrawer->DrawMeshDebugLines(skybox->mesh_tree->mesh_base, tr, NULL, NULL);
         }
 
         for(uint32_t i = 0; i < r_list_active_count; i++)
@@ -466,7 +467,7 @@ void CRender::DrawListDebugLines()
             const float color_g[3] = {0.0f, 1.0f, 0.0f};
             float v0[3], v1[3];
 
-            for(flyby_camera_sequence_p s = m_world->flyby_camera_sequences; s; s = s->next)
+            for(flyby_camera_sequence_p s = World_GetFlyBySequences(); s; s = s->next)
             {
                 const float max_s = s->pos_x->base_points_count - 1;
                 const float dt = max_s / 256.0f;
@@ -519,12 +520,12 @@ void CRender::CleanList()
         r_list[i].room = NULL;
     }
 
-    if(m_world)
+    if(m_rooms)
     {
-        for(uint32_t i = 0; i < m_world->rooms_count; i++)
+        for(uint32_t i = 0; i < m_rooms_count; i++)
         {
-            m_world->rooms[i].is_in_r_list = 0;
-            m_world->rooms[i].frustum = NULL;
+            m_rooms[i].is_in_r_list = 0;
+            m_rooms[i].frustum = NULL;
         }
     }
 
@@ -688,7 +689,7 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
 
         for(polygon_p p = mesh->animated_polygons; p; p = p->next)
         {
-            anim_seq_p seq = engine_world.anim_sequences + p->anim_id - 1;
+            anim_seq_p seq = m_anim_sequences + p->anim_id - 1;
             uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
             tex_frame_p tf = seq->frames + frame;
             for(uint16_t i = 0; i < p->vertex_count; i++, data += 2)
@@ -794,16 +795,16 @@ void CRender::DrawSkinMesh(struct base_mesh_s *mesh, struct base_mesh_s *parent_
 
 void CRender::DrawSkyBox(const float modelViewProjectionMatrix[16])
 {
-    float tr[16];
-    float *p;
-
-    if((r_flags & R_DRAW_SKYBOX) && (m_world != NULL) && (m_world->sky_box != NULL))
+    skeletal_model_p skybox;
+    if((r_flags & R_DRAW_SKYBOX) && (skybox = World_GetSkybox()))
     {
+        float tr[16];
+        float *p;
         qglDepthMask(GL_FALSE);
         tr[15] = 1.0;
-        p = m_world->sky_box->animations->frames->bone_tags->offset;
+        p = skybox->animations->frames->bone_tags->offset;
         vec3_add(tr+12, m_camera->pos, p);
-        p = m_world->sky_box->animations->frames->bone_tags->qrotate;
+        p = skybox->animations->frames->bone_tags->qrotate;
         Mat4_set_qrotation(tr, p);
         float fullView[16];
         Mat4_Mat4_mul(fullView, modelViewProjectionMatrix, tr);
@@ -815,7 +816,7 @@ void CRender::DrawSkyBox(const float modelViewProjectionMatrix[16])
         GLfloat tint[] = { 1, 1, 1, 1 };
         qglUniform4fvARB(shader->tint_mult, 1, tint);
 
-        this->DrawMesh(m_world->sky_box->mesh_tree->mesh_base, NULL, NULL);
+        this->DrawMesh(skybox->mesh_tree->mesh_base, NULL, NULL);
         qglDepthMask(GL_TRUE);
     }
 }
@@ -1844,9 +1845,10 @@ void CRenderDebugDrawer::DrawContactPoint(const float pointOnB[3], const float n
  */
 void CalculateWaterTint(GLfloat *tint, uint8_t fixed_colour)
 {
-    if(engine_world.version < TR_IV)  // If water room and level is TR1-3
+    int version = World_GetVersion();
+    if(version < TR_IV)  // If water room and level is TR1-3
     {
-        if(engine_world.version < TR_III)
+        if(version < TR_III)
         {
              // Placeholder, color very similar to TR1 PSX ver.
             if(fixed_colour > 0)

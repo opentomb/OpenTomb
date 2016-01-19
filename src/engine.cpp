@@ -22,6 +22,7 @@ extern "C" {
 #include "core/console.h"
 #include "core/redblack.h"
 #include "core/vmath.h"
+#include "core/polygon.h"
 #include "core/gl_text.h"
 #include "render/camera.h"
 #include "render/render.h"
@@ -65,7 +66,6 @@ float                                   engine_frame_time = 0.0;
 lua_State                              *engine_lua = NULL;
 struct camera_s                         engine_camera;
 struct camera_state_s                   engine_camera_state;
-struct world_s                          engine_world;
 
 
 engine_container_p Container_Create()
@@ -130,7 +130,7 @@ void Engine_Start(const char *config_name)
     Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
 
     // Clearing up memory for initial level loading.
-    World_Prepare(&engine_world);
+    World_Prepare();
 
     // Setting up mouse.
     SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -143,8 +143,8 @@ void Engine_Start(const char *config_name)
 
 void Engine_Shutdown(int val)
 {
-    renderer.SetWorld(NULL);
-    World_Clear(&engine_world);
+    renderer.ResetWorld(NULL, 0, NULL, 0);
+    World_Clear();
 
     if(engine_lua)
     {
@@ -827,32 +827,34 @@ void ShowDebugInfo()
     {
         case 1:
             {
-                entity_p ent = engine_world.Character;
+                entity_p ent = World_GetPlayer();
                 if(ent && ent->character)
                 {
                     GLText_OutTextXY(30.0f, y += dy, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf->animations.last_animation, ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.last_state, ent->bf->animations.next_state);
                     GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.current_frame, ent->bf->animations.next_frame);
-                    GLText_OutTextXY(30.0f, y += dy, "posX = %f, posY = %f, posZ = %f", engine_world.Character->transform[12], engine_world.Character->transform[13], engine_world.Character->transform[14]);
+                    GLText_OutTextXY(30.0f, y += dy, "posX = %f, posY = %f, posZ = %f", ent->transform[12], ent->transform[13], ent->transform[14]);
                 }
             }
             break;
 
         case 2:
-            if(engine_world.Character && engine_world.Character->self->room)
             {
-                entity_p ent = engine_world.Character;
-                GLText_OutTextXY(30.0f, y += dy, "char_pos = (%.1f, %.1f, %.1f)", ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2]);
-                room_sector_p rs = Room_GetSectorRaw(ent->self->room, ent->transform + 12);
-                if(rs != NULL)
+                entity_p ent = World_GetPlayer();
+                if(ent && ent->self->room)
                 {
-                    GLText_OutTextXY(30.0f, y += dy, "room = (id = %d, sx = %d, sy = %d)", rs->owner_room->id, rs->index_x, rs->index_y);
-                    GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->sector_below != NULL) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != NULL) ? (rs->sector_above->owner_room->id) : (-1));
-                    if(rs->trigger)
+                    GLText_OutTextXY(30.0f, y += dy, "char_pos = (%.1f, %.1f, %.1f)", ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2]);
+                    room_sector_p rs = Room_GetSectorRaw(ent->self->room, ent->transform + 12);
+                    if(rs != NULL)
                     {
-                        GLText_OutTextXY(30.0f, y += dy, "trig(func = 0x%X, sub = 0x%X, mask = 0x%X)", rs->trigger->function_value, rs->trigger->sub_function, rs->trigger->mask);
-                        for(trigger_command_p cmd = rs->trigger->commands; cmd; cmd = cmd->next)
+                        GLText_OutTextXY(30.0f, y += dy, "room = (id = %d, sx = %d, sy = %d)", rs->owner_room->id, rs->index_x, rs->index_y);
+                        GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->sector_below != NULL) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != NULL) ? (rs->sector_above->owner_room->id) : (-1));
+                        if(rs->trigger)
                         {
-                            GLText_OutTextXY(30.0f, y += dy, "   cmd(func = 0x%X, op = 0x%X)", cmd->function, cmd->operands);
+                            GLText_OutTextXY(30.0f, y += dy, "trig(func = 0x%X, sub = 0x%X, mask = 0x%X)", rs->trigger->function_value, rs->trigger->sub_function, rs->trigger->mask);
+                            for(trigger_command_p cmd = rs->trigger->commands; cmd; cmd = cmd->next)
+                            {
+                                GLText_OutTextXY(30.0f, y += dy, "   cmd(func = 0x%X, op = 0x%X)", cmd->function, cmd->operands);
+                            }
                         }
                     }
                 }
@@ -954,14 +956,14 @@ bool Engine_LoadPCLevel(const char *name)
         tr_level->prepare_level();
         //tr_level->dump_textures();
 
-        World_Open(&engine_world, tr_level);
+        World_Open(tr_level);
 
         char buf[LEVEL_NAME_MAX_LEN] = {0x00};
         Engine_GetLevelName(buf, name);
 
         Con_Notify("loaded PC level");
         Con_Notify("version = %d, map = \"%s\"", trv, buf);
-        Con_Notify("rooms count = %d", engine_world.rooms_count);
+        Con_Notify("rooms count = %d", tr_level->rooms_count);
 
         delete tr_level;
         return true;
@@ -980,7 +982,7 @@ int Engine_LoadMap(const char *name)
 
     Game_StopFlyBy();
     engine_camera.current_room = NULL;
-    renderer.SetWorld(NULL);
+    renderer.ResetWorld(NULL, 0, NULL, 0);
     Gui_DrawLoadScreen(0);
 
     // it is needed for "not in the game" levels or correct saves loading.
@@ -1016,14 +1018,16 @@ int Engine_LoadMap(const char *name)
     }
 
     Audio_Init();
-
-    engine_world.id   = 0;
-    engine_world.name = 0;
-    engine_world.type = 0;
-
     Game_Prepare();
 
-    renderer.SetWorld(&engine_world);
+    room_p rooms;
+    uint32_t rooms_count;
+    anim_seq_p seq;
+    uint32_t seq_count;
+
+    World_GetRoomInfo(&rooms, &rooms_count);
+    World_GetAnimSeqInfo(&seq, &seq_count);
+    renderer.ResetWorld(rooms, rooms_count, seq, seq_count);
 
     Gui_DrawLoadScreen(1000);
     Gui_NotifierStop();

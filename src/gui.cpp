@@ -232,7 +232,7 @@ void Gui_Render()
     qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     qglDisable(GL_ALPHA_TEST);
 
-    if(engine_world.Character && engine_world.Character->character && main_inventory_manager)
+    if(World_GetPlayer() && main_inventory_manager)
     {
         Gui_DrawInventory();
     }
@@ -425,7 +425,7 @@ int gui_InventoryManager::getItemsTypeCount(int type)
     int ret = 0;
     for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
     {
-        base_item_p bi = World_GetBaseItemByID(&engine_world, i->id);
+        base_item_p bi = World_GetBaseItemByID(i->id);
         if((bi != NULL) && (bi->type == type))
         {
             ret++;
@@ -500,7 +500,7 @@ int gui_InventoryManager::setItemsType(int type)
     {
         for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
         {
-            base_item_p bi = World_GetBaseItemByID(&engine_world, i->id);
+            base_item_p bi = World_GetBaseItemByID(i->id);
             if(bi != NULL)
             {
                 type = bi->type;
@@ -773,7 +773,7 @@ void gui_InventoryManager::render()
         int num = 0;
         for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
         {
-            base_item_p bi = World_GetBaseItemByID(&engine_world, i->id);
+            base_item_p bi = World_GetBaseItemByID(i->id);
             if((bi == NULL) || (bi->type != mCurrentItemsType))
             {
                 continue;
@@ -928,15 +928,18 @@ void Gui_DrawCrosshair()
 
 void Gui_DrawBars()
 {
-    if(engine_world.Character && engine_world.Character->character)
+    entity_p player = World_GetPlayer();
+    if(player && player->character)
     {
-        if(engine_world.Character->character->weapon_current_state > WEAPON_STATE_HIDE_TO_READY)
+        if(player->character->weapon_current_state > WEAPON_STATE_HIDE_TO_READY)
+        {
             Bar[BAR_HEALTH].Forced = true;
+        }
 
-        Bar[BAR_AIR].Show    (Character_GetParam(engine_world.Character, PARAM_AIR    ));
-        Bar[BAR_STAMINA].Show(Character_GetParam(engine_world.Character, PARAM_STAMINA));
-        Bar[BAR_HEALTH].Show (Character_GetParam(engine_world.Character, PARAM_HEALTH ));
-        Bar[BAR_WARMTH].Show (Character_GetParam(engine_world.Character, PARAM_WARMTH ));
+        Bar[BAR_AIR].Show    (Character_GetParam(player, PARAM_AIR    ));
+        Bar[BAR_STAMINA].Show(Character_GetParam(player, PARAM_STAMINA));
+        Bar[BAR_HEALTH].Show (Character_GetParam(player, PARAM_HEALTH ));
+        Bar[BAR_WARMTH].Show (Character_GetParam(player, PARAM_WARMTH ));
     }
 }
 
@@ -1752,7 +1755,7 @@ void gui_ItemNotifier::Draw()
 {
     if(mActive)
     {
-        base_item_p item = World_GetBaseItemByID(&engine_world, mItem);
+        base_item_p item = World_GetBaseItemByID(mItem);
         if(item)
         {
             int anim = item->bf->animations.current_animation;

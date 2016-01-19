@@ -63,7 +63,7 @@ class TR_Level
             this->anim_dispatches_count = 0;    // destroyed
             this->anim_dispatches = NULL;       // destroyed
             this->anim_commands_count = 0;      // destroyed
-            this->anim_commands = NULL;         // destroyeds
+            this->anim_commands = NULL;         // destroyed
             
             this->moveables_count = 0;          // destroyed
             this->moveables = NULL;             // destroyed

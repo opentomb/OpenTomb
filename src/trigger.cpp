@@ -192,7 +192,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
         uint32_t switch_mask = 0;
         for(trigger_command_p command = trigger->commands; command; command = command->next)
         {
-            entity_p trig_entity = World_GetEntityByID(&engine_world, command->operands);
+            entity_p trig_entity = World_GetEntityByID(command->operands);
 
             switch(command->function)
             {
@@ -346,13 +346,13 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     // anti-events array.
                     if(activator == TR_ACTIVATOR_SWITCH)
                     {
-                        World_SetFlipMap(&engine_world, command->operands, switch_mask, 1);
-                        World_SetFlipState(&engine_world, command->operands, 1);
+                        World_SetFlipMap(command->operands, switch_mask, 1);
+                        World_SetFlipState(command->operands, 1);
                     }
                     else
                     {
-                        World_SetFlipMap(&engine_world, command->operands, trigger->mask, 0);
-                        World_SetFlipState(&engine_world, command->operands, 1);
+                        World_SetFlipMap(command->operands, trigger->mask, 0);
+                        World_SetFlipState(command->operands, 1);
                     }
                     break;
 
@@ -362,8 +362,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         {
                             // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
                             // the switch with FLIP_ON trigger, room will remain flipped.
-                            World_SetFlipMap(&engine_world, command->operands, trigger->mask, 1);
-                            World_SetFlipState(&engine_world, command->operands, 1);
+                            World_SetFlipMap(command->operands, trigger->mask, 1);
+                            World_SetFlipState(command->operands, 1);
                             Entity_SetSectorStatus(entity_activator, 1);
                         }
                     }
@@ -375,8 +375,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         {
                             // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
                             // the switch with FLIP_OFF trigger, room will remain unflipped.
-                            World_SetFlipMap(&engine_world, command->operands, trigger->mask, 0);
-                            World_SetFlipState(&engine_world, command->operands, 0);
+                            World_SetFlipMap(command->operands, trigger->mask, 0);
+                            World_SetFlipState(command->operands, 0);
                             Entity_SetSectorStatus(entity_activator, 1);
                         }
                     }

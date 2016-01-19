@@ -2,112 +2,52 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 #include <stdint.h>
 
-extern "C" {
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
-#include "al/AL/alext.h"
-#include "al/AL/efx-presets.h"
-}
-
-class  AudioSource;
-class  StreamTrack;
-class  bordered_texture_atlas;
-struct room_s;
+/*struct room_s;
 struct base_item_s;
-struct base_mesh_s;
 struct entity_s;
-struct skeletal_model_s;
-struct RedBlackHeader_s;
-
-struct lua_State;
+struct skeletal_model_s;*/
 
 
-typedef struct world_s
-{
-    char                           *name;
-    uint32_t                        id;
-    uint32_t                        version;
+void World_Prepare();
+void World_Open(class VT_Level *tr);
+void World_Clear();
+int World_GetVersion();
+uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], float ang[3], int32_t id);
+struct entity_s *World_GetEntityByID(uint32_t id);
+struct entity_s *World_GetPlayer();
+struct RedBlackNode_s *World_GetEntityTreeRoot();
+struct flyby_camera_sequence_s *World_GetFlyBySequences();
+struct base_item_s *World_GetBaseItemByID(uint32_t id);
+struct static_camera_sink_s *World_GetstaticCameraSink(uint32_t id);
+int16_t *World_GetAnimCommands();
 
-    uint32_t                        rooms_count;
-    struct room_s                  *rooms;
+void World_GetRoomInfo(struct room_s **rooms, uint32_t *rooms_count);
+void World_GetAnimSeqInfo(struct anim_seq_s **seq, uint32_t *seq_count);
+void World_GetFlipInfo(uint8_t **flip_map, uint8_t **flip_state, uint32_t *flip_count);
 
-    uint32_t                        room_boxes_count;
-    struct room_box_s              *room_boxes;
-    
-    uint32_t                        flip_count;             // Number of flips
-    uint8_t                        *flip_map;               // Flipped room activity array.
-    uint8_t                        *flip_state;             // Flipped room state array.
+int World_AddAnimSeq(struct anim_seq_s *seq);
+int World_AddEntity(struct entity_s *entity);
+int World_DeleteEntity(struct entity_s *entity);
+int World_CreateItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
+int World_DeleteItem(uint32_t item_id);
+struct sprite_s *World_GetSpriteByID(uint32_t ID);
+struct skeletal_model_s *World_GetModelByID(uint32_t id);        // binary search the model by ID
+struct skeletal_model_s* World_GetSkybox();
 
-    bordered_texture_atlas         *tex_atlas;
-    uint32_t                        tex_count;              // Number of textures
-    GLuint                         *textures;               // OpenGL textures indexes
+struct room_s *World_FindRoomByPos(float pos[3]);
+struct room_s *World_GetRoomByID(uint32_t id);
+struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_room);
+struct room_sector_s *World_GetRoomSector(int room_id, int x, int y);
 
-    uint32_t                        anim_sequences_count;   // Animated texture sequence count
-    struct anim_seq_s              *anim_sequences;         // Animated textures
+void World_BuildNearRoomsList(struct room_s *room);
+void World_BuildOverlappedRoomsList(struct room_s *room);
 
-    uint32_t                        meshes_count;           // Base meshes count
-    struct base_mesh_s             *meshes;                 // Base meshes data
-
-    uint32_t                        sprites_count;          // Base sprites count
-    struct sprite_s                *sprites;                // Base sprites data
-
-    uint32_t                        skeletal_models_count;  // number of base skeletal models
-    struct skeletal_model_s        *skeletal_models;        // base skeletal models data
-
-    struct entity_s                *Character;              // this is an unique Lara's pointer =)
-    struct skeletal_model_s        *sky_box;                // global skybox
-
-    struct RedBlackHeader_s        *entity_tree;            // tree of world active objects
-    struct RedBlackHeader_s        *items_tree;             // tree of world items
-
-    uint32_t                        type;
-    
-    uint32_t                        cameras_sinks_count;    // Amount of cameras and sinks.
-    struct static_camera_sink_s    *cameras_sinks;          // Cameras and sinks. 
-    uint32_t                        flyby_cameras_count;
-    struct flyby_camera_state_s    *flyby_cameras;
-    struct flyby_camera_sequence_s *flyby_camera_sequences;
-    
-    uint32_t                        anim_commands_count;
-    int16_t                        *anim_commands;
-    
-    /// private:
-    struct lua_State               *objects_flags_conf;
-    struct lua_State               *ent_ID_override;
-    struct lua_State               *level_script;
-}world_t, *world_p;
-
-
-void World_Prepare(world_p world);
-void World_Open(world_p world, class VT_Level *tr);
-void World_Clear(world_p world);
-uint32_t World_SpawnEntity(world_p world, uint32_t model_id, uint32_t room_id, float pos[3], float ang[3], int32_t id);
-struct entity_s *World_GetEntityByID(world_p world, uint32_t id);
-struct base_item_s *World_GetBaseItemByID(world_p world, uint32_t id);
-
-int World_AddEntity(world_p world, struct entity_s *entity);
-int World_DeleteEntity(world_p world, struct entity_s *entity);
-int World_CreateItem(world_p world, uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
-int World_DeleteItem(world_p world, uint32_t item_id);
-struct sprite_s *World_GetSpriteByID(world_p world, uint32_t ID);
-struct skeletal_model_s *World_GetModelByID(world_p world, uint32_t id);        // binary search the model by ID
-struct skeletal_model_s* World_GetSkybox(world_p world);
-
-struct room_s *World_FindRoomByPos(world_p world, float pos[3]);
-struct room_s *World_FindRoomByPosCogerrence(world_p world, float pos[3], struct room_s *old_room);
-struct room_sector_s *World_GetRoomSector(world_p world, int room_id, int x, int y);
-
-void World_BuildNearRoomsList(world_p world, struct room_s *room);
-void World_BuildOverlappedRoomsList(world_p world, struct room_s *room);
-
-int World_SetFlipState(world_p world, uint32_t flip_index, uint32_t flip_state);
-int World_SetFlipMap(world_p world, uint32_t flip_index, uint8_t flip_mask, uint8_t flip_operation);
-uint32_t World_GetFlipMap(world_p world, uint32_t flip_index);
-uint32_t World_GetFlipState(world_p world, uint32_t flip_index);
+int World_SetFlipState(uint32_t flip_index, uint32_t flip_state);
+int World_SetFlipMap(uint32_t flip_index, uint8_t flip_mask, uint8_t flip_operation);
+uint32_t World_GetFlipMap(uint32_t flip_index);
+uint32_t World_GetFlipState(uint32_t flip_index);
 
 
 #endif

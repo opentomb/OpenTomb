@@ -1581,7 +1581,7 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
         return NULL;
     }
 
-    skeletal_model_p model = World_GetModelByID(&engine_world, setup->model_id);
+    skeletal_model_p model = World_GetModelByID(setup->model_id);
     if((!model) || (model->mesh_count == 0))
     {
         return NULL;

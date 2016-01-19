@@ -135,7 +135,7 @@ class CRender
         CRender();
        ~CRender();
         void DoShaders();
-        void SetWorld(struct world_s *world);
+        void ResetWorld(struct room_s *rooms, uint32_t rooms_count, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count);
         void UpdateAnimTextures();
 
         void GenWorldList(struct camera_s *cam);
@@ -170,8 +170,12 @@ class CRender
         int  ProcessRoom(struct portal_s *portal, struct frustum_s *frus);
         const lit_shader_description *SetupEntityLight(struct entity_s *entity, const float modelViewMatrix[16]);
         
-        struct world_s             *m_world;
         struct camera_s            *m_camera;
+        
+        struct room_s              *m_rooms;
+        uint32_t                    m_rooms_count;
+        struct anim_seq_s          *m_anim_sequences;
+        uint32_t                    m_anim_sequences_count;
 
         uint16_t                    m_active_transparency;
         GLuint                      m_active_texture;

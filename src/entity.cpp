@@ -98,7 +98,7 @@ void Entity_Clear(entity_p entity)
 {
     if(entity)
     {
-        if((entity->self->room != NULL) && (entity != engine_world.Character))
+        if(entity->self->room && (entity != World_GetPlayer()))
         {
             Room_RemoveObject(entity->self->room, entity->self);
         }
@@ -217,7 +217,7 @@ void Entity_UpdateRoomPos(entity_p ent)
         v[2] /= 2.0;
         Mat4_vec3_mul_macro(pos, ent->transform, v);
     }
-    new_room = World_FindRoomByPosCogerrence(&engine_world, pos, ent->self->room);
+    new_room = World_FindRoomByPosCogerrence(pos, ent->self->room);
     if(new_room)
     {
         new_sector = Room_GetSectorXYZ(new_room, pos);
@@ -273,7 +273,7 @@ void Entity_UpdateTransform(entity_p entity)
 
 struct ss_animation_s *Entity_AddOverrideAnim(struct entity_s *ent, int model_id, uint16_t anim_type)
 {
-    skeletal_model_p sm = World_GetModelByID(&engine_world, model_id);
+    skeletal_model_p sm = World_GetModelByID(model_id);
 
     if((sm != NULL) && (sm->mesh_count == ent->bf->bone_tag_count))
     {
@@ -726,7 +726,7 @@ void Entity_CheckCollisionCallbacks(entity_p ent)
 
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing)
 {
-    if((engine_world.anim_commands_count == 0) || (ss_anim->model == NULL))
+    if((World_GetAnimCommands() == NULL) || (ss_anim->model == NULL))
     {
         return;  // If no anim commands
     }
@@ -735,7 +735,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
     if(af->num_anim_commands <= 255)
     {
         uint32_t count        = af->num_anim_commands;
-        int16_t *pointer      = engine_world.anim_commands + af->anim_command;
+        int16_t *pointer      = World_GetAnimCommands() + af->anim_command;
         int8_t   random_value = 0;
 
         for(uint32_t i = 0; i < count; i++, pointer++)
@@ -812,9 +812,10 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                         switch(*++pointer & 0x3FFF)
                         {
                             case TR_EFFECT_SHAKESCREEN:
-                                if(engine_world.Character)
+                                if(World_GetPlayer())
                                 {
-                                    float dist = vec3_dist(engine_world.Character->transform + 12, entity->transform + 12);
+                                    float *pos = World_GetPlayer()->transform + 12;
+                                    float dist = vec3_dist(pos, entity->transform + 12);
                                     dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
                                     //if(dist > 0)
                                     //    Cam_Shake(&engine_camera, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
@@ -850,7 +851,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                                             break;
 
                                         case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
-                                            if(engine_world.version != TR_IV)
+                                            if(World_GetVersion() != TR_IV)
                                             {
                                                 Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                             }
@@ -865,7 +866,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                                             break;
 
                                         case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
-                                            if(engine_world.version != TR_IV)
+                                            if(World_GetVersion() != TR_IV)
                                             {
                                                 Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                             }
@@ -888,7 +889,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                                             break;
 
                                         case SECTOR_MATERIAL_MARBLE:    // TR4 only
-                                            if(engine_world.version == TR_IV)
+                                            if(World_GetVersion() == TR_IV)
                                             {
                                                 Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                             }
@@ -1053,10 +1054,9 @@ void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
 
 void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
 {
-    if(sink_index < engine_world.cameras_sinks_count)
+    static_camera_sink_p sink = World_GetstaticCameraSink(sink_index);
+    if(sink)
     {
-        static_camera_sink_p sink = &engine_world.cameras_sinks[sink_index];
-
         float sink_pos[3], *ent_pos = entity->transform + 12;
         sink_pos[0] = sink->x;
         sink_pos[1] = sink->y;

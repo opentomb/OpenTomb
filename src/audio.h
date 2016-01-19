@@ -396,7 +396,6 @@ private:
     OggVorbis_File  vorbis_Stream;       // Vorbis file reader needs its own handle.
     
     // General OpenAL fields 
-    ALbyte         *data;
     ALuint          source;
     ALuint          buffers[TR_AUDIO_STREAM_NUMBUFFERS];
     ALenum          format;

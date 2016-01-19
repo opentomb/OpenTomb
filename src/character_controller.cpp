@@ -269,7 +269,7 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
     fc->quicksand = 0x00;
     fc->transition_level = 32512.0;
 
-    r = World_FindRoomByPosCogerrence(&engine_world, pos, r);
+    r = World_FindRoomByPosCogerrence(pos, r);
     r = Room_CheckFlip(r);
     if(r)
     {
@@ -1197,7 +1197,7 @@ int Character_FreeFalling(struct entity_s *ent)
             ent->speed[1] = 0.0;
         }
 
-        if((engine_world.version < TR_II))//Lara cannot wade in < TRII so when floor < transition level she has to swim
+        if((World_GetVersion() < TR_II))//Lara cannot wade in < TRII so when floor < transition level she has to swim
         {
             if(!ent->character->height_info.water || (ent->current_sector->floor <= ent->character->height_info.transition_level))
             {
@@ -2083,7 +2083,7 @@ int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
 ///@TODO: separate mesh replacing control and animation disabling / enabling
 int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
 {
-    skeletal_model_p sm = World_GetModelByID(&engine_world, weapon_model);
+    skeletal_model_p sm = World_GetModelByID(weapon_model);
 
     if((sm != NULL) && (ent->bf->bone_tag_count == sm->mesh_count) && (sm->animation_count >= 4))
     {

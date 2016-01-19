@@ -352,7 +352,7 @@ void AudioSource::LinkEmitter()
     switch(emitter_type)
     {
         case TR_AUDIO_EMITTER_ENTITY:
-            ent = World_GetEntityByID(&engine_world, emitter_ID);
+            ent = World_GetEntityByID(emitter_ID);
             if(ent)
             {
                 ALfloat  vec[3];
@@ -370,16 +370,25 @@ void AudioSource::LinkEmitter()
 }
 
 // ======== STREAMTRACK CLASS IMPLEMENTATION ========
-
-StreamTrack::StreamTrack()
+StreamTrack::StreamTrack() :
+    audio_file(NULL),
+    source(0),
+    format(0x00),
+    rate(0),
+    current_volume(0.0f),
+    damped_volume(0.0f),
+    active(false),
+    dampable(false),
+    stream_type(TR_AUDIO_STREAM_TYPE_ONESHOT),
+    current_track(-1),
+    // Setting method to -1 at init is required to prevent accidental
+    // ov_clear call, which results in crash, if no vorbis file was
+    // associated with given vorbis file structure.
+    method(-1)
 {
     alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);              // Generate all buffers at once.
     alGenSources(1, &source);
-    audio_file = NULL;
-    data       = NULL;
-    format     = 0x00;
-    rate       = 0;
-    dampable   = false;
+    memset(&vorbis_Stream, 0x00, sizeof(OggVorbis_File));
 
     if(alIsSource(source))
     {
@@ -389,18 +398,6 @@ StreamTrack::StreamTrack()
         alSourcef (source, AL_ROLLOFF_FACTOR,  0.0f              );
         alSourcei (source, AL_SOURCE_RELATIVE, AL_TRUE           );
         alSourcei (source, AL_LOOPING,         AL_FALSE          ); // No effect, but just in case...
-
-        current_track  = -1;
-        current_volume =  0.0f;
-        damped_volume  =  0.0f;
-        active         =  false;
-        stream_type    =  TR_AUDIO_STREAM_TYPE_ONESHOT;
-
-        // Setting method to -1 at init is required to prevent accidental
-        // ov_clear call, which results in crash, if no vorbis file was
-        // associated with given vorbis file structure.
-
-        method         = -1;
     }
 }
 
@@ -409,6 +406,14 @@ StreamTrack::~StreamTrack()
 {
 
     Stop(); // In case we haven't stopped yet.
+
+    if(audio_file)
+    {
+        fclose(audio_file);
+        audio_file = NULL;
+    }
+
+    ov_clear(&vorbis_Stream);
 
     alDeleteSources(1, &source);
     alDeleteBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);
@@ -422,6 +427,13 @@ bool StreamTrack::Load(const char *path, const int index, const int type, const 
     {
         return false;   // Do not load, if path, type or method are incorrect.
     }
+
+    if(audio_file)
+    {
+        fclose(audio_file);
+        audio_file = NULL;
+    }
+    ov_clear(&vorbis_Stream);
 
     current_track = index;
     stream_type   = type;
@@ -467,15 +479,10 @@ bool StreamTrack::Load_Ogg(const char *path)
     }
 
     vorbis_Info = ov_info(&vorbis_Stream, -1);
+    format = (vorbis_Info->channels == 1) ? (AL_FORMAT_MONO16) : (AL_FORMAT_STEREO16);
+    rate = vorbis_Info->rate;
 
     Con_Notify("file \"%s\" loaded with rate=%d, bitrate=%.1f", path, vorbis_Info->rate, ((float)vorbis_Info->bitrate_nominal / 1000));
-
-    if(vorbis_Info->channels == 1)
-        format = AL_FORMAT_MONO16;
-    else
-        format = AL_FORMAT_STEREO16;
-
-    rate = vorbis_Info->rate;
 
     return true;    // Success!
 }
@@ -1107,7 +1114,7 @@ bool Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
     switch(entity_type)
     {
         case TR_AUDIO_EMITTER_ENTITY:
-            ent = World_GetEntityByID(&engine_world, entity_ID);
+            ent = World_GetEntityByID(entity_ID);
             if(!ent)
             {
                 return false;
@@ -1806,23 +1813,30 @@ int Audio_DeInit()
 
     if(audio_world_data.audio_sources)
     {
+        audio_world_data.audio_sources_count = 0;
         delete[] audio_world_data.audio_sources;
         audio_world_data.audio_sources = NULL;
-        audio_world_data.audio_sources_count = 0;
+    }
+
+    if(audio_world_data.audio_emitters)
+    {
+        audio_world_data.audio_emitters_count = 0;
+        free(audio_world_data.audio_emitters);
+        audio_world_data.audio_emitters = NULL;
     }
 
     if(audio_world_data.stream_tracks)
     {
+        audio_world_data.stream_tracks_count = 0;
         delete[] audio_world_data.stream_tracks;
         audio_world_data.stream_tracks = NULL;
-        audio_world_data.stream_tracks_count = 0;
     }
 
     if(audio_world_data.stream_track_map)
     {
+        audio_world_data.stream_track_map_count = 0;
         free(audio_world_data.stream_track_map);
         audio_world_data.stream_track_map = NULL;
-        audio_world_data.stream_track_map_count = 0;
     }
 
     ///@CRITICAL: You must delete all sources before buffers deleting!!!
@@ -1830,23 +1844,23 @@ int Audio_DeInit()
     if(audio_world_data.audio_buffers)
     {
         alDeleteBuffers(audio_world_data.audio_buffers_count, audio_world_data.audio_buffers);
+        audio_world_data.audio_buffers_count = 0;
         free(audio_world_data.audio_buffers);
         audio_world_data.audio_buffers = NULL;
-        audio_world_data.audio_buffers_count = 0;
     }
 
     if(audio_world_data.audio_effects)
     {
+        audio_world_data.audio_effects_count = 0;
         free(audio_world_data.audio_effects);
         audio_world_data.audio_effects = NULL;
-        audio_world_data.audio_effects_count = 0;
     }
 
     if(audio_world_data.audio_map)
     {
+        audio_world_data.audio_map_count = 0;
         free(audio_world_data.audio_map);
         audio_world_data.audio_map = NULL;
-        audio_world_data.audio_map_count = 0;
     }
 
     if(audio_settings.use_effects)
