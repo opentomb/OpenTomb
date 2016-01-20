@@ -2,6 +2,8 @@
 
 #include "gui.h"
 
+#include <glm/glm.hpp>
+
 namespace gui
 {
 // These are the bars that are always exist in GUI.
@@ -37,77 +39,82 @@ class ProgressBar
 public:
     ProgressBar();  // Bar constructor.
 
-    void Show(float value);    // Main show bar procedure.
-    void Resize();
+    void show(glm::float_t value);    // Main show bar procedure.
+    void resize();
 
-    void SetColor(BarColorType colType, uint8_t R, uint8_t G, uint8_t B, uint8_t alpha);
-    void SetSize(float width, float height, float borderSize);
-    void SetPosition(HorizontalAnchor anchor_X, float offset_X, VerticalAnchor anchor_Y, float offset_Y);
-    void SetValues(float maxValue, float warnValue);
-    void SetBlink(util::Duration interval);
-    void SetExtrude(bool enabled, uint8_t depth);
-    void SetAutoshow(bool enabled, util::Duration delay, bool fade, util::Duration fadeDelay);
+    void setColor(BarColorType colType, uint8_t R, uint8_t G, uint8_t B, uint8_t alpha);
+    void setSize(glm::float_t width, glm::float_t height, glm::float_t borderSize);
+    void setPosition(HorizontalAnchor anchor_X, glm::float_t offset_X, VerticalAnchor anchor_Y, glm::float_t offset_Y);
+    void setValues(glm::float_t maxValue, glm::float_t warnValue);
+    void setBlink(util::Duration interval);
+    void setExtrude(bool enabled, uint8_t depth);
+    void setAutoshow(bool enabled, util::Duration delay, bool fade, util::Duration fadeDelay);
 
-    bool          Forced;               // Forced flag is set when bar is strictly drawn.
-    bool          Visible;              // Is it visible or not.
-    bool          Alternate;            // Alternate state, in which bar changes color to AltColor.
+    bool          m_forced;               // Forced flag is set when bar is strictly drawn.
+    bool          m_visible;              // Is it visible or not.
+    bool          m_alternate;            // Alternate state, in which bar changes color to AltColor.
 
-    bool          Invert;               // Invert decrease direction flag.
-    bool          Vertical;             // Change bar style to vertical.
+    bool          m_invert;               // Invert decrease direction flag.
+    bool          m_vertical;             // Change bar style to vertical.
 
 private:
-    void          RecalculateSize();    // Recalculate size and position.
-    void          RecalculatePosition();
+    void          recalculateSize();    // Recalculate size and position.
+    void          recalculatePosition();
 
-    float         mX;                   // Horizontal position.
-    float         mY;                   // Vertical position.
-    float         mWidth;               // Real width.
-    float         mHeight;              // Real height.
-    float         mBorderWidth;         // Real border size (horizontal).
-    float         mBorderHeight;        // Real border size (vertical).
+    float         m_x;                   // Horizontal position.
+    float         m_y;                   // Vertical position.
+    float         m_width;               // Real width.
+    float         m_height;              // Real height.
+    float         m_borderWidth;         // Real border size (horizontal).
+    float         m_borderHeight;        // Real border size (vertical).
 
-    HorizontalAnchor mXanchor;          // Horizontal anchoring: left, right or center.
-    VerticalAnchor   mYanchor;          // Vertical anchoring: top, bottom or center.
-    float         mAbsXoffset;          // Absolute (resolution-independent) X offset.
-    float         mAbsYoffset;          // Absolute Y offset.
-    float         mAbsWidth;            // Absolute width.
-    float         mAbsHeight;           // Absolute height.
-    float         mAbsBorderSize;       // Absolute border size (horizontal).
+    HorizontalAnchor m_xAnchor;          // Horizontal anchoring: left, right or center.
+    VerticalAnchor   m_yAnchor;          // Vertical anchoring: top, bottom or center.
+    float         m_absXoffset;          // Absolute (resolution-independent) X offset.
+    float         m_absYoffset;          // Absolute Y offset.
+    float         m_absWidth;            // Absolute width.
+    float         m_absHeight;           // Absolute height.
+    float         m_absBorderSize;       // Absolute border size (horizontal).
 
-    float         mBaseMainColor[5];    // Color at the min. of bar.
-    float         mBaseFadeColor[5];    // Color at the max. of bar.
-    float         mAltMainColor[5];     // Alternate main color.
-    float         mAltFadeColor[5];     // Alternate fade color.
-    float         mBackMainColor[5];    // Background main color.
-    float         mBackFadeColor[5];    // Background fade color.
-    float         mBorderMainColor[5];  // Border main color.
-    float         mBorderFadeColor[5];  // Border fade color.
+    glm::vec4 m_baseMainColor;    // Color at the min. of bar.
+    glm::float_t m_baseMainColorAlpha;
+    glm::vec4 m_baseFadeColor;    // Color at the max. of bar.
+    glm::float_t m_baseFadeColorAlpha;
+    glm::vec4 m_altMainColor;     // Alternate main color.
+    glm::float_t m_altMainColorAlpha;
+    glm::vec4 m_altFadeColor;     // Alternate fade color.
+    glm::float_t m_altFadeColorAlpha;
+    glm::vec4 m_backMainColor;    // Background main color.
+    glm::float_t m_backMainColorAlpha;
+    glm::vec4 m_backFadeColor;    // Background fade color.
+    glm::float_t m_backFadeColorAlpha;
+    glm::vec4 m_borderMainColor;  // Border main color.
+    glm::float_t m_borderMainColorAlpha;
+    glm::vec4 m_borderFadeColor;  // Border fade color.
+    glm::float_t m_borderFadeColorAlpha;
 
-    // int8_t        mBaseBlendingMode;    // Blending modes for all bar parts.
-    // int8_t        mBackBlendingMode;    // Note there is no alt. blending mode, cause
-    // int8_t        mBorderBlendingMode;  // base and alt are actually the same part.
+    bool m_extrude;             // Extrude effect.
+    glm::vec4 m_extrudeDepth;     // Extrude effect depth.
+    glm::float_t m_extrudeDepthAlpha;
 
-    bool          mExtrude;             // Extrude effect.
-    float         mExtrudeDepth[5];     // Extrude effect depth.
+    glm::float_t m_maxValue;            // Maximum possible value.
+    glm::float_t m_warnValue;           // Warning value, at which bar begins to blink.
+    glm::float_t m_lastValue;           // Last value back-up for autoshow on change event.
 
-    float         mMaxValue;            // Maximum possible value.
-    float         mWarnValue;           // Warning value, at which bar begins to blink.
-    float         mLastValue;           // Last value back-up for autoshow on change event.
+    bool m_blink;               // Warning state (blink) flag.
+    util::Duration m_blinkInterval;       // Blink interval (speed).
+    util::Duration m_blinkCnt;            // Blink counter.
 
-    bool          mBlink;               // Warning state (blink) flag.
-    util::Duration mBlinkInterval;       // Blink interval (speed).
-    util::Duration mBlinkCnt;            // Blink counter.
+    bool m_autoShow;            // Autoshow on change flag.
+    util::Duration m_autoShowDelay;       // How long bar will stay on-screen in AutoShow mode.
+    util::Duration m_autoShowCnt;         // Auto-show counter.
+    bool m_autoShowFade;        // Fade flag.
+    util::Duration m_autoShowFadeDelay;   // Fade length.
+    util::Duration m_autoShowFadeLength;     // Fade progress counter.
 
-    bool          mAutoShow;            // Autoshow on change flag.
-    util::Duration mAutoShowDelay;       // How long bar will stay on-screen in AutoShow mode.
-    util::Duration mAutoShowCnt;         // Auto-show counter.
-    bool          mAutoShowFade;        // Fade flag.
-    util::Duration mAutoShowFadeDelay;   // Fade length.
-    util::Duration mAutoShowFadeLength;     // Fade progress counter.
-
-    float         mRangeUnit;           // Range unit used to set base bar size.
-    float         mBaseSize;            // Base bar size.
-    float         mBaseRatio;           // Max. / actual value ratio.
+    glm::float_t m_rangeUnit;           // Range unit used to set base bar size.
+    glm::float_t m_baseSize;            // Base bar size.
+    glm::float_t m_baseRatio;           // Max. / actual value ratio.
 };
 
 void initBars();

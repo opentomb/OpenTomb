@@ -122,10 +122,10 @@ void render();
  *  Draw simple rectangle.
  *  Only state it changes is the blend mode, according to blendMode value.
  */
-void drawRect(const GLfloat &x, const GLfloat &y,
-              const GLfloat &width, const GLfloat &height,
-              const GLfloat colorUpperLeft[], const GLfloat colorUpperRight[],
-              const GLfloat colorLowerLeft[], const GLfloat colorLowerRight[],
+void drawRect(glm::float_t x, glm::float_t y,
+              glm::float_t width, glm::float_t height,
+              const glm::vec4& colorUpperLeft, const glm::vec4& colorUpperRight,
+              const glm::vec4& colorLowerLeft, const glm::vec4& colorLowerRight,
               const loader::BlendingMode blendMode,
               const GLuint texture = 0);
 

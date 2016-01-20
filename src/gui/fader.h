@@ -1,10 +1,12 @@
 #pragma once
 
-#include <cstdint>
+#include "loader/datatypes.h"
+#include "util/helpers.h"
 
+#include <glm/glm.hpp>
 #include <GL/glew.h>
 
-#include "loader/datatypes.h"
+#include <cstdint>
 
 namespace gui
 {
@@ -64,50 +66,50 @@ class Fader
 public:
     Fader();                  // Fader constructor.
 
-    void Show();                  // Shows and updates fader.
-    void Engage(FaderDir fade_dir);    // Resets and starts fader.
-    void Cut();                   // Immediately cuts fader.
+    void show();                  // Shows and updates fader.
+    void engage(FaderDir fade_dir);    // Resets and starts fader.
+    void cut();                   // Immediately cuts fader.
 
     FaderStatus getStatus() const;              // Get current state of the fader.
 
-    void SetScaleMode(FaderScale mode = FaderScale::Zoom);
-    void SetColor(uint8_t R, uint8_t G, uint8_t B, FaderCorner corner = FaderCorner::None);
-    void SetBlendingMode(loader::BlendingMode mode = loader::BlendingMode::Opaque);
-    void SetAlpha(uint8_t alpha = 255);
-    void SetSpeed(util::Duration fade_speed, util::Duration fade_speed_secondary = util::MilliSeconds(200));
-    void SetDelay(util::Duration delay_msec);
+    void setScaleMode(FaderScale mode = FaderScale::Zoom);
+    void setColor(uint8_t R, uint8_t G, uint8_t B, FaderCorner corner = FaderCorner::None);
+    void setBlendingMode(loader::BlendingMode mode = loader::BlendingMode::Opaque);
+    void setAlpha(uint8_t alpha = 255);
+    void setSpeed(util::Duration fade_speed, util::Duration fade_speed_secondary = util::MilliSeconds(200));
+    void setDelay(util::Duration delay_msec);
 
-    bool SetTexture(const std::string &texture_path);
+    bool setTexture(const std::string &texture_path);
 
 private:
-    void SetAspect();
-    bool DropTexture();
+    void setAspect();
+    bool dropTexture();
 
-    GLfloat         mTopLeftColor[4];       // All colors are defined separately, for
-    GLfloat         mTopRightColor[4];      // further possibility of advanced full
-    GLfloat         mBottomLeftColor[4];    // screen effects with gradients.
-    GLfloat         mBottomRightColor[4];
+    glm::vec4 m_topLeftColor;       // All colors are defined separately, for
+    glm::vec4 m_topRightColor;      // further possibility of advanced full
+    glm::vec4 m_bottomLeftColor;    // screen effects with gradients.
+    glm::vec4 m_bottomRightColor;
 
-    loader::BlendingMode mBlendingMode;     // Fader's blending mode.
+    loader::BlendingMode m_blendingMode;     // Fader's blending mode.
 
-    GLfloat         mCurrentAlpha;          // Current alpha value.
-    GLfloat         mMaxAlpha;              // Maximum reachable alpha value.
-    util::Duration  mSpeed;                 // Fade speed.
-    util::Duration  mSpeedSecondary;        // Secondary speed - used with TIMED type.
+    glm::float_t m_currentAlpha;          // Current alpha value.
+    glm::float_t m_maxAlpha;              // Maximum reachable alpha value.
+    util::Duration  m_speed;                 // Fade speed.
+    util::Duration  m_speedSecondary;        // Secondary speed - used with TIMED type.
 
-    GLuint          mTexture;               // Texture (optional).
-    uint16_t        mTextureWidth;
-    uint16_t        mTextureHeight;
-    bool            mTextureWide;           // Set, if texture width is greater than height.
-    float           mTextureAspectRatio;    // Pre-calculated aspect ratio.
-    FaderScale      mTextureScaleMode;      // Fader texture's scale mode.
+    GLuint          m_texture;               // Texture (optional).
+    uint16_t        m_textureWidth;
+    uint16_t        m_textureHeight;
+    bool            m_textureWide;           // Set, if texture width is greater than height.
+    float           m_textureAspectRatio;    // Pre-calculated aspect ratio.
+    FaderScale      m_textureScaleMode;      // Fader texture's scale mode.
 
-    bool            mActive;                // Specifies if fader active or not.
-    bool            mComplete;              // Specifies if fading is complete or not.
-    FaderDir        mDirection;             // Specifies fade direction.
+    bool            m_active;                // Specifies if fader active or not.
+    bool            m_complete;              // Specifies if fading is complete or not.
+    FaderDir        m_direction;             // Specifies fade direction.
 
-    util::Duration mCurrentTime;           // Current fader time.
-    util::Duration mMaxTime;               // Maximum delay time.
+    util::Duration m_currentTime;           // Current fader time.
+    util::Duration m_maxTime;               // Maximum delay time.
 };
 
 void initFaders();

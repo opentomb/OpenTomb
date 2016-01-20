@@ -40,7 +40,7 @@ private:
 
     FontTexture *m_font = nullptr;                       // Texture font renderer
 
-    GLfloat m_backgroundColor[4];
+    glm::vec4 m_backgroundColor;
 
     //! Current log position plus one
     //! @note It's off-by-one, because line 0 is a virtual empty line.

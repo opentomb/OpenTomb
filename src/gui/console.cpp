@@ -125,7 +125,7 @@ void Console::drawBackground()
     /*
          * Draw finalise line
          */
-    GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7f };
+    glm::vec4 white{ 1, 1, 1, 0.7f };
     drawRect(0.0, m_cursorY + m_lineHeight - 8, engine::screen_info.w, 2, white, white, white, white, loader::BlendingMode::Screen);
 }
 
@@ -145,7 +145,7 @@ void Console::drawCursor()
 
     if(m_showCursor)
     {
-        GLfloat white[4] = { 1.0f, 1.0f, 1.0f, 0.7f };
+        glm::vec4 white{ 1, 1, 1, 0.7f };
         drawRect(m_cursorX,
                      y + m_lineHeight * 0.9f,
                      1,

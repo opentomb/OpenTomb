@@ -15,6 +15,8 @@
 #include "world/camera.h"
 #include "world/character.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 namespace engine
 {
 extern SDL_Window  *sdl_window;
@@ -133,12 +135,12 @@ void switchGLMode(bool is_gui)
 {
     if(is_gui)                                                             // set gui coordinate system
     {
-        const GLfloat far_dist = 4096.0f;
-        const GLfloat near_dist = -1.0f;
+        const glm::float_t far_dist = 4096.0f;
+        const glm::float_t near_dist = -1.0f;
 
         guiProjectionMatrix = glm::mat4(1.0f);                                        // identity matrix
-        guiProjectionMatrix[0][0] = 2.0f / static_cast<GLfloat>(engine::screen_info.w);
-        guiProjectionMatrix[1][1] = 2.0f / static_cast<GLfloat>(engine::screen_info.h);
+        guiProjectionMatrix[0][0] = 2.0f / static_cast<glm::float_t>(engine::screen_info.w);
+        guiProjectionMatrix[1][1] = 2.0f / static_cast<glm::float_t>(engine::screen_info.h);
         guiProjectionMatrix[2][2] =-2.0f / (far_dist - near_dist);
         guiProjectionMatrix[3][0] =-1.0f;
         guiProjectionMatrix[3][1] =-1.0f;
@@ -172,18 +174,15 @@ void drawInventory()
 
     // Background
 
-    GLfloat upper_color[4] = {0.0,0.0,0.0,0.45f};
-    GLfloat lower_color[4] = {0.0,0.0,0.0,0.75f};
+    glm::vec4 upper_color{0, 0, 0, 0.45f};
+    glm::vec4 lower_color{0, 0, 0, 0.75f};
 
-    drawRect(0.0, 0.0, static_cast<GLfloat>(engine::screen_info.w), static_cast<GLfloat>(engine::screen_info.h),
+    drawRect(0.0, 0.0, static_cast<glm::float_t>(engine::screen_info.w), static_cast<glm::float_t>(engine::screen_info.h),
                  upper_color, upper_color, lower_color, lower_color,
                  loader::BlendingMode::Opaque);
 
     glDepthMask(GL_TRUE);
     glPopAttrib();
-
-    //GLfloat color[4] = {0,0,0,0.45};
-    //Gui_DrawRect(0,0,(GLfloat)screen_info.w,(GLfloat)screen_info.h, color, color, color, color, GL_SRC_ALPHA + GL_ONE_MINUS_SRC_ALPHA);
 
     switchGLMode(false);
     //main_inventory_menu->Render(); //engine_world.character->character->inventory
@@ -224,12 +223,12 @@ namespace
 /**
  * Draws simple colored rectangle with given parameters.
  */
-void drawRect(const GLfloat &x, const GLfloat &y,
-                  const GLfloat &width, const GLfloat &height,
-                  const float colorUpperLeft[], const float colorUpperRight[],
-                  const float colorLowerLeft[], const float colorLowerRight[],
-                  const loader::BlendingMode blendMode,
-                  const GLuint texture)
+void drawRect(glm::float_t x, glm::float_t y,
+              glm::float_t width, glm::float_t height,
+              const glm::vec4& colorUpperLeft, const glm::vec4& colorUpperRight,
+              const glm::vec4& colorLowerLeft, const glm::vec4& colorLowerRight,
+              const loader::BlendingMode blendMode,
+              const GLuint texture)
 {
     switch(blendMode)
     {
@@ -254,32 +253,34 @@ void drawRect(const GLfloat &x, const GLfloat &y,
     {
         glGenBuffers(1, &rectanglePositionBuffer);
         glBindBuffer(GL_ARRAY_BUFFER, rectanglePositionBuffer);
-        GLfloat rectCoords[8] = { 0, 0,
-            1, 0,
-            1, 1,
-            0, 1 };
+        glm::vec2 rectCoords[4]{
+            {0, 0},
+            {1, 0},
+            {1, 1},
+            {0, 1}
+        };
         glBufferData(GL_ARRAY_BUFFER, sizeof(rectCoords), rectCoords, GL_STATIC_DRAW);
 
         glGenBuffers(1, &rectangleColorBuffer);
 
         render::VertexArrayAttribute attribs[] = {
-            render::VertexArrayAttribute(render::GuiShaderDescription::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(GLfloat[2]), 0),
-            render::VertexArrayAttribute(render::GuiShaderDescription::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(GLfloat[4]), 0),
+            render::VertexArrayAttribute(render::GuiShaderDescription::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(glm::vec2), 0),
+            render::VertexArrayAttribute(render::GuiShaderDescription::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(glm::vec4), 0),
         };
         rectangleArray.reset(new render::VertexArray(0, 2, attribs));
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, rectangleColorBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat[4]) * 4, nullptr, GL_STREAM_DRAW);
-    GLfloat *rectColors = static_cast<GLfloat *>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
-    memcpy(rectColors + 0, colorLowerLeft, sizeof(GLfloat) * 4);
-    memcpy(rectColors + 4, colorLowerRight, sizeof(GLfloat) * 4);
-    memcpy(rectColors + 8, colorUpperRight, sizeof(GLfloat) * 4);
-    memcpy(rectColors + 12, colorUpperLeft, sizeof(GLfloat) * 4);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * 4, nullptr, GL_STREAM_DRAW);
+    glm::vec4* rectColors = static_cast<glm::vec4*>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
+    rectColors[0] = colorLowerLeft;
+    rectColors[1] = colorLowerRight;
+    rectColors[2] = colorUpperRight;
+    rectColors[3] = colorUpperLeft;
     glUnmapBuffer(GL_ARRAY_BUFFER);
 
-    const GLfloat offset[2] = { x / (engine::screen_info.w*0.5f) - 1.f, y / (engine::screen_info.h*0.5f) - 1.f };
-    const GLfloat factor[2] = { width / engine::screen_info.w * 2.0f, height / engine::screen_info.h * 2.0f };
+    const glm::vec2 offset{ x / (engine::screen_info.w*0.5f) - 1.f, y / (engine::screen_info.h*0.5f) - 1.f };
+    const glm::vec2 factor{ width / engine::screen_info.w * 2.0f, height / engine::screen_info.h * 2.0f };
 
     render::GuiShaderDescription *shader = render::renderer.shaderManager()->getGuiShader(texture != 0);
     glUseProgram(shader->program);
@@ -289,8 +290,8 @@ void drawRect(const GLfloat &x, const GLfloat &y,
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
     }
-    glUniform2fv(shader->offset, 1, offset);
-    glUniform2fv(shader->factor, 1, factor);
+    glUniform2fv(shader->offset, 1, glm::value_ptr(offset));
+    glUniform2fv(shader->factor, 1, glm::value_ptr(factor));
 
     rectangleArray->bind();
 
