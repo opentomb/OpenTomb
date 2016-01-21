@@ -8,7 +8,7 @@
 #include "gl_font.h"
 #include "inventory.h"
 #include "itemnotifier.h"
-#include "progressbar.h"
+#include "progressbarmanager.h"
 #include "render/render.h"
 #include "render/shader_description.h"
 #include "render/shader_manager.h"
@@ -26,29 +26,23 @@ extern SDL_Window  *sdl_window;
 namespace gui
 {
 
-std::unique_ptr<FontManager> fontManager = nullptr;
-
 glm::mat4 guiProjectionMatrix = glm::mat4(1.0f);
 
 void init()
 {
-    initBars();
+    ProgressbarManager::instance.reset(new ProgressbarManager());
     FaderManager::instance.reset(new FaderManager());
-    initNotifier();
+    ItemNotifier::instance.reset(new ItemNotifier());
 
     render::fillCrosshairBuffer();
 
     //main_inventory_menu = new gui_InventoryMenu();
-    main_inventory_manager = new InventoryManager();
-}
-
-void initFontManager()
-{
-    fontManager.reset(new FontManager());
+    InventoryManager::instance.reset(new InventoryManager());
 }
 
 void destroy()
 {
+    ItemNotifier::instance.reset();
     FaderManager::instance.reset();
 
     /*if(main_inventory_menu)
@@ -57,37 +51,34 @@ void destroy()
         main_inventory_menu = NULL;
     }*/
 
-    if(main_inventory_manager)
-    {
-        delete main_inventory_manager;
-        main_inventory_manager = nullptr;
-    }
+    InventoryManager::instance.reset();
 
-    fontManager.reset();
+    FontManager::instance.reset();
+    ProgressbarManager::instance.reset();
 }
 
 bool update()
 {
-    if(fontManager != nullptr)
+    if(FontManager::instance != nullptr)
     {
-        fontManager->update();
+        FontManager::instance->update();
     }
 
-    if(!Console::instance().isVisible() && engine::control_states.gui_inventory && main_inventory_manager)
+    if(!Console::instance().isVisible() && engine::control_states.gui_inventory && InventoryManager::instance)
     {
         if(engine::engine_world.character &&
-           main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Disabled)
+           InventoryManager::instance->getCurrentState() == InventoryManager::InventoryState::Disabled)
         {
-            main_inventory_manager->setInventory(&engine::engine_world.character->m_inventory);
-            main_inventory_manager->send(InventoryManager::InventoryState::Open);
+            InventoryManager::instance->setInventory(&engine::engine_world.character->m_inventory);
+            InventoryManager::instance->send(InventoryManager::InventoryState::Open);
         }
-        if(main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Idle)
+        if(InventoryManager::instance->getCurrentState() == InventoryManager::InventoryState::Idle)
         {
-            main_inventory_manager->send(InventoryManager::InventoryState::Closed);
+            InventoryManager::instance->send(InventoryManager::InventoryState::Closed);
         }
     }
 
-    if(Console::instance().isVisible() || main_inventory_manager->getCurrentState() != InventoryManager::InventoryState::Disabled)
+    if(Console::instance().isVisible() || InventoryManager::instance->getCurrentState() != InventoryManager::InventoryState::Disabled)
     {
         return true;
     }
@@ -96,13 +87,13 @@ bool update()
 
 void resize()
 {
-    resizeTextLines();
+    TextLineManager::instance->resizeTextLines();
 
-    resizeProgressBars();
+    ProgressbarManager::instance->resize();
 
-    if(fontManager)
+    if(FontManager::instance)
     {
-        fontManager->resize();
+        FontManager::instance->resize();
     }
 
     /* let us update console too */
@@ -120,9 +111,9 @@ void render()
     glDisable(GL_DEPTH_TEST);
     if(engine::screen_info.show_debuginfo)
         render::drawCrosshair();
-    drawBars();
+    ProgressbarManager::instance->draw();
     FaderManager::instance->drawFaders();
-    renderStrings();
+    TextLineManager::instance->renderStrings();
     Console::instance().draw();
 
     glDepthMask(GL_TRUE);
@@ -156,8 +147,8 @@ void switchGLMode(bool is_gui)
 void drawInventory()
 {
     //if (!main_inventory_menu->IsVisible())
-    main_inventory_manager->frame(engine::engine_frame_time);
-    if(main_inventory_manager->getCurrentState() == InventoryManager::InventoryState::Disabled)
+    InventoryManager::instance->frame(engine::engine_frame_time);
+    if(InventoryManager::instance->getCurrentState() == InventoryManager::InventoryState::Disabled)
     {
         return;
     }
@@ -187,7 +178,7 @@ void drawInventory()
 
     switchGLMode(false);
     //main_inventory_menu->Render(); //engine_world.character->character->inventory
-    main_inventory_manager->render();
+    InventoryManager::instance->render();
     switchGLMode(true);
 }
 
@@ -205,7 +196,7 @@ void drawLoadScreen(int value)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     FaderManager::instance->showLoadScreenFader();
-    showLoadingProgressBar(value);
+    ProgressbarManager::instance->showLoading(value);
 
     glDepthMask(GL_TRUE);
 

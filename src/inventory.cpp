@@ -9,7 +9,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-InventoryManager  *main_inventory_manager = nullptr;
+std::unique_ptr<InventoryManager> InventoryManager::instance = nullptr;
 
 /*
  * GUI RENDEDR CLASS
@@ -38,26 +38,24 @@ InventoryManager::InventoryManager()
 
     m_inventory = nullptr;
 
-    mLabel_Title.X = 0.0f;
-    mLabel_Title.Y = 30.0f;
+    mLabel_Title.position = {0, 30};
     mLabel_Title.Xanchor = gui::HorizontalAnchor::Center;
     mLabel_Title.Yanchor = gui::VerticalAnchor::Top;
 
-    mLabel_Title.font_id = gui::FontType::Primary;
-    mLabel_Title.style_id = gui::FontStyle::MenuTitle;
+    mLabel_Title.fontType = gui::FontType::Primary;
+    mLabel_Title.fontStyle = gui::FontStyle::MenuTitle;
     mLabel_Title.show = false;
 
-    mLabel_ItemName.X = 0.0f;
-    mLabel_ItemName.Y = 50.0f;
+    mLabel_ItemName.position = {0, 50};
     mLabel_ItemName.Xanchor = gui::HorizontalAnchor::Center;
     mLabel_ItemName.Yanchor = gui::VerticalAnchor::Bottom;
 
-    mLabel_ItemName.font_id = gui::FontType::Primary;
-    mLabel_ItemName.style_id = gui::FontStyle::MenuContent;
+    mLabel_ItemName.fontType = gui::FontType::Primary;
+    mLabel_ItemName.fontStyle = gui::FontStyle::MenuContent;
     mLabel_ItemName.show = false;
 
-    gui::addLine(&mLabel_ItemName);
-    gui::addLine(&mLabel_Title);
+    gui::TextLineManager::instance->add(&mLabel_ItemName);
+    gui::TextLineManager::instance->add(&mLabel_Title);
 }
 
 InventoryManager::~InventoryManager()
@@ -67,10 +65,10 @@ InventoryManager::~InventoryManager()
     m_inventory = nullptr;
 
     mLabel_ItemName.show = false;
-    gui::deleteLine(&mLabel_ItemName);
+    gui::TextLineManager::instance->erase(&mLabel_ItemName);
 
     mLabel_Title.show = false;
-    gui::deleteLine(&mLabel_Title);
+    gui::TextLineManager::instance->erase(&mLabel_Title);
 }
 
 int InventoryManager::getItemsTypeCount(MenuItemType type) const
@@ -425,7 +423,7 @@ void InventoryManager::frame(util::Duration time)
 
 void InventoryManager::render()
 {
-    if(m_currentState != InventoryState::Disabled && m_inventory != nullptr && !m_inventory->empty() && gui::fontManager != nullptr)
+    if(m_currentState != InventoryState::Disabled && m_inventory != nullptr && !m_inventory->empty() && gui::FontManager::instance != nullptr)
     {
         int num = 0;
         for(InventoryNode& i : *m_inventory)

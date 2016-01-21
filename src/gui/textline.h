@@ -3,7 +3,7 @@
 #include "fontmanager.h"
 #include "gui.h"
 
-#include <GL/glew.h>
+#include <boost/format.hpp>
 
 namespace gui
 {
@@ -12,32 +12,56 @@ struct TextLine
 {
     std::string                 text;
 
-    FontType                    font_id;
-    FontStyle                   style_id;
+    FontType                    fontType;
+    FontStyle                   fontStyle;
 
-    GLfloat                     X;
+    glm::vec2 position;
+    mutable glm::vec2 offset;
+
     HorizontalAnchor            Xanchor;
-    mutable GLfloat             absXoffset;
-    GLfloat                     Y;
     VerticalAnchor              Yanchor;
-    mutable GLfloat             absYoffset;
 
-    mutable GLfloat             rect[4];    //x0, yo, x1, y1
+    mutable glm::vec2 topLeft;
+    mutable glm::vec2 bottomRight;
 
     bool                        show;
+
+    void move();
 };
 
-void addLine(const TextLine *line);
-void deleteLine(const TextLine* line);
-void moveLine(TextLine* line);
-void renderStringLine(const TextLine* l);
-void renderStrings();
+class TextLineManager
+{
+private:
+    std::list<const TextLine*> m_baseLines;
+    std::list<TextLine> m_tempLines;
 
-/**
- * Draws text using a FontType::Secondary.
- */
-TextLine* drawText(GLfloat x, GLfloat y, const char *fmt, ...);
+public:
+    void add(const TextLine *line)
+    {
+        m_baseLines.push_back(line);
+    }
 
-void resizeTextLines();
+    void erase(const TextLine* line)
+    {
+        m_baseLines.erase(std::find(m_baseLines.begin(), m_baseLines.end(), line));
+    }
+
+    void renderLine(const TextLine& line);
+    void renderStrings();
+
+    /**
+     * Draws text using a FontType::Secondary.
+     */
+    TextLine* drawText(glm::float_t x, glm::float_t y, const std::string& str);
+
+    TextLine* drawText(glm::float_t x, glm::float_t y, const boost::format& str)
+    {
+        return drawText(x, y, str.str());
+    }
+
+    void resizeTextLines();
+
+    static std::unique_ptr<TextLineManager> instance;
+};
 
 } // namespace gui

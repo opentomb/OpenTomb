@@ -580,9 +580,9 @@ void script::MainEngine::bindKey(int act, int primary, lua::Value secondary)
 
 void lua_AddFont(int index, const char* path, int size)
 {
-    if(!gui::fontManager->addFont(static_cast<gui::FontType>(index), size, path))
+    if(!gui::FontManager::instance->addFont(static_cast<gui::FontType>(index), size, path))
     {
-        Console::instance().warning(SYSWARN_CANT_CREATE_FONT, gui::fontManager->getFontCount(), gui::MaxFonts);
+        Console::instance().warning(SYSWARN_CANT_CREATE_FONT, gui::FontManager::instance->getFontCount(), gui::MaxFonts);
     }
 }
 
@@ -592,19 +592,19 @@ void lua_AddFontStyle(int style_index,
                       float rect_R, float rect_G, float rect_B, float rect_A,
                       bool hide)
 {
-    if(!gui::fontManager->addFontStyle(static_cast<gui::FontStyle>(style_index),
+    if(!gui::FontManager::instance->addFontStyle(static_cast<gui::FontStyle>(style_index),
                                        {color_R, color_G, color_B, color_A},
                                        shadowed, fading,
                                        rect, rect_border, {rect_R, rect_G, rect_B, rect_A},
                                        hide))
     {
-        Console::instance().warning(SYSWARN_CANT_CREATE_STYLE, gui::fontManager->getFontStyleCount(), gui::FontStyle::Sentinel);
+        Console::instance().warning(SYSWARN_CANT_CREATE_STYLE, gui::FontManager::instance->getFontStyleCount(), gui::FontStyle::Sentinel);
     }
 }
 
 void lua_DeleteFont(int fontindex)
 {
-    if(!gui::fontManager->removeFont(static_cast<gui::FontType>(fontindex)))
+    if(!gui::FontManager::instance->removeFont(static_cast<gui::FontType>(fontindex)))
     {
         Console::instance().warning(SYSWARN_CANT_REMOVE_FONT);
     }
@@ -612,7 +612,7 @@ void lua_DeleteFont(int fontindex)
 
 void lua_DeleteFontStyle(int styleindex)
 {
-    if(!gui::fontManager->removeFontStyle(static_cast<gui::FontStyle>(styleindex)))
+    if(!gui::FontManager::instance->removeFontStyle(static_cast<gui::FontStyle>(styleindex)))
     {
         Console::instance().warning(SYSWARN_CANT_REMOVE_STYLE);
     }

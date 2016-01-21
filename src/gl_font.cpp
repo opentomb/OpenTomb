@@ -101,10 +101,10 @@ static __inline GLuint NextPowerOf2(GLuint in)
     return in + 1;
 }
 
-static __inline void bbox_add(float *x0, float *x1, float *y0, float *y1,
-                              float *x_min, float *x_max, float *y_min, float *y_max)
+static inline void bbox_add(float *x0, float *x1, float *y0, float *y1,
+                              glm::vec2& topLeft, glm::vec2& bottomRight)
 {
-    float min, max;
+    glm::float_t min, max;
 
     if(*x0 > *x1)
     {
@@ -117,13 +117,13 @@ static __inline void bbox_add(float *x0, float *x1, float *y0, float *y1,
         max = *x1;
     }
 
-    if(*x_min > min)
+    if(topLeft.x > min)
     {
-        *x_min = min;
+        topLeft.x = min;
     }
-    if(*x_max < max)
+    if(bottomRight.x < max)
     {
-        *x_max = max;
+        bottomRight.x = max;
     }
 
     if(*y0 > *y1)
@@ -137,13 +137,13 @@ static __inline void bbox_add(float *x0, float *x1, float *y0, float *y1,
         max = *y1;
     }
 
-    if(*y_min > min)
+    if(topLeft.y > min)
     {
-        *y_min = min;
+        topLeft.y = min;
     }
-    if(*y_max < max)
+    if(bottomRight.y < max)
     {
-        *y_max = max;
+        bottomRight.y = max;
     }
 }
 
@@ -342,12 +342,10 @@ float glf_get_string_len(FontTexture *glf, const char *text, int n)
     return x;
 }
 
-void glf_get_string_bb(FontTexture *glf, const char *text, int n, GLfloat *x0, GLfloat *y0, GLfloat *x1, GLfloat *y1)
+void glf_get_string_bb(FontTexture *glf, const char *text, int n, glm::vec2& topLeft, glm::vec2& bottomRight)
 {
-    *x0 = 0.0;
-    *x1 = 0.0;
-    *y0 = 0.0;
-    *y1 = 0.0;
+    topLeft = {0, 0};
+    bottomRight = {0, 0};
 
     if(glf != nullptr && glf->ft_face != nullptr)
     {
@@ -356,13 +354,12 @@ void glf_get_string_bb(FontTexture *glf, const char *text, int n, GLfloat *x0, G
         float x = 0.0;
         float y = 0.0;
         float xx0, xx1, yy0, yy1;
-        int i;
         uint32_t curr_utf32, next_utf32;
 
         const uint8_t *nch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face.get(), curr_utf32);
 
-        for(i = 0; *ch != 0 && !(n >= 0 && i >= n); i++)
+        for(int i = 0; *ch != 0 && !(n >= 0 && i >= n); i++)
         {
             FT_Vector kern;
             CharInfo* g = &glf->glyphs[curr_utf32];
@@ -380,7 +377,7 @@ void glf_get_string_bb(FontTexture *glf, const char *text, int n, GLfloat *x0, G
             xx1 = xx0 + g->width;
             yy0 = y + g->top;
             yy1 = yy0 - g->height;
-            bbox_add(&xx0, &xx1, &yy0, &yy1, x0, x1, y0, y1);
+            bbox_add(&xx0, &xx1, &yy0, &yy1, topLeft, bottomRight);
 
             x += (kern.x + g->advance_x) / 64.0f;
             y += (kern.y + g->advance_y) / 64.0f;

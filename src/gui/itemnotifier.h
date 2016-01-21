@@ -1,8 +1,11 @@
 #pragma once
 
 #include "util/helpers.h"
+#include "world/object.h"
 
 #include <glm/glm.hpp>
+
+#include <memory>
 
 namespace gui
 {
@@ -12,41 +15,36 @@ class ItemNotifier
 public:
     ItemNotifier();
 
-    void    Start(int item, util::Duration time);
-    void    Reset();
-    void    Animate();
-    void    Draw() const;
+    void    start(world::ObjectId item, util::Duration time = util::Seconds(2));
+    void    reset();
+    void    animate();
+    void    draw() const;
 
-    void    SetPos(float X, float Y);
-    void    SetRot(glm::float_t X, glm::float_t Y);
-    void    SetSize(float size);
-    void    SetRotateTime(float time);
+    void    setPos(glm::float_t X, glm::float_t Y);
+    void    setRotation(glm::float_t X, glm::float_t Y);
+    void    setSize(glm::float_t size);
+    void    setRotateTime(util::Duration time);
 
+    static std::unique_ptr<ItemNotifier> instance;
 private:
-    bool    mActive;
-    int     mItem;
+    bool    m_active = false;
+    world::ObjectId m_item = 0;
 
-    float   mAbsPosY;
-    float   mAbsPosX;
+    glm::vec2 m_absPos;
 
-    float   mPosY;
-    float   mStartPosX;
-    float   mEndPosX;
-    float   mCurrPosX;
+    glm::float_t   m_posY;
+    glm::float_t   m_startPosX;
+    glm::float_t   m_endPosX;
+    glm::float_t   m_currPosX;
 
     glm::vec2 m_rotation{0,0};
-    glm::vec2 m_currentRotation{0,0};
-    glm::float_t m_rotationSpeed = 0;
+    glm::vec2 m_currentAngle{0,0};
+    glm::float_t m_radPerSecond = 0;
 
-    float   mSize;
+    glm::float_t m_size;
 
-    util::Duration mShowTime;
-    util::Duration mCurrTime;
+    util::Duration m_showTime;
+    util::Duration m_currTime;
 };
-
-void initNotifier();
-void notifierStart(int item);
-void notifierStop();
-void drawNotifier();
 
 } // namespace gui

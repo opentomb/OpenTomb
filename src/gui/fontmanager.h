@@ -107,6 +107,7 @@ public:
     void             update(); // Do fading routine here, etc. Put into Gui_Update, maybe...
     void             resize(); // Resize fonts on window resize event.
 
+    static std::unique_ptr<FontManager> instance;
 private:
     Font*            getFontAddress(const FontType index);
 

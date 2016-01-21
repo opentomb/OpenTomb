@@ -29,6 +29,7 @@ list(APPEND PRJ_SRC
     gui/fadermanager.cpp
     gui/itemnotifier.cpp
     gui/progressbar.cpp
+    gui/progressbarmanager.cpp
     gui/textline.cpp
 
     script/script.cpp
@@ -103,6 +104,7 @@ list(APPEND PRJ_HDR
     gui/fadermanager.h
     gui/itemnotifier.h
     gui/progressbar.h
+    gui/progressbarmanager.h
     gui/textline.h
 
     script/script.h

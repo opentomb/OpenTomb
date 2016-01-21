@@ -20,17 +20,16 @@ void Sys_Init()
 {
     system_fps.text.clear();
 
-    system_fps.X = 10.0;
-    system_fps.Y = 10.0;
+    system_fps.position = {10.0, 10.0};
     system_fps.Xanchor = gui::HorizontalAnchor::Right;
     system_fps.Yanchor = gui::VerticalAnchor::Bottom;
 
-    system_fps.font_id = gui::FontType::Primary;
-    system_fps.style_id = gui::FontStyle::MenuTitle;
+    system_fps.fontType = gui::FontType::Primary;
+    system_fps.fontStyle = gui::FontStyle::MenuTitle;
 
     system_fps.show = true;
 
-    gui::addLine(&system_fps);
+    gui::TextLineManager::instance->add(&system_fps);
 }
 
 void Sys_InitGlobals()

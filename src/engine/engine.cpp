@@ -362,8 +362,9 @@ void display()
 
     gui::switchGLMode(true);
     {
-        gui::drawNotifier();
-        if(engine_world.character && main_inventory_manager)
+        gui::ItemNotifier::instance->draw();
+        gui::ItemNotifier::instance->animate();
+        if(engine_world.character && InventoryManager::instance)
         {
             gui::drawInventory();
         }
@@ -447,34 +448,50 @@ void showDebugInfo()
         /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
         */
-        gui::drawText(30.0, 30.0, "prevState = %03d, nextState = %03d, speed = %f",
-                      ent->m_skeleton.getPreviousState(),
-                      ent->m_skeleton.getCurrentState(),
-                      ent->m_currentSpeed
+        gui::TextLineManager::instance->drawText(30.0, 30.0,
+                      boost::format("prevState = %03d, nextState = %03d, speed = %f")
+                      % static_cast<int>(ent->m_skeleton.getPreviousState())
+                      % static_cast<int>(ent->m_skeleton.getCurrentState())
+                      % ent->m_currentSpeed
                       );
-        gui::drawText(30.0, 50.0, "prevAnim = %3d, prevFrame = %3d, currAnim = %3d, currFrame = %3d",
-                ent->m_skeleton.getPreviousAnimation(),
-                ent->m_skeleton.getPreviousFrame(),
-                ent->m_skeleton.getCurrentAnimation(),
-                ent->m_skeleton.getCurrentFrame()
+        gui::TextLineManager::instance->drawText(30.0, 50.0,
+                boost::format("prevAnim = %3d, prevFrame = %3d, currAnim = %3d, currFrame = %3d")
+                % ent->m_skeleton.getPreviousAnimation()
+                % ent->m_skeleton.getPreviousFrame()
+                % ent->m_skeleton.getCurrentAnimation()
+                % ent->m_skeleton.getCurrentFrame()
                 );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
-        gui::drawText(20, 8, "pos = %s, yaw = %f", glm::to_string(ent->m_transform[3]).c_str(), ent->m_angles[0]);
+        gui::TextLineManager::instance->drawText(20, 8,
+                                                 boost::format("pos = %s, yaw = %f")
+                                                 % glm::to_string(ent->m_transform[3])
+                                                 % ent->m_angles[0]
+                                                 );
     }
 
     if(last_object != nullptr)
     {
         if(world::Entity* e = dynamic_cast<world::Entity*>(last_object))
         {
-            gui::drawText(30.0, 60.0, "cont_entity: id = %d, model = %d", e->getId(), e->m_skeleton.getModel()->id);
+            gui::TextLineManager::instance->drawText(30.0, 60.0,
+                                                     boost::format("cont_entity: id = %d, model = %d")
+                                                     % e->getId()
+                                                     % e->m_skeleton.getModel()->id
+                                                     );
         }
         else if(world::StaticMesh* sm = dynamic_cast<world::StaticMesh*>(last_object))
         {
-            gui::drawText(30.0, 60.0, "cont_static: id = %d", sm->getId());
+            gui::TextLineManager::instance->drawText(30.0, 60.0,
+                                                     boost::format("cont_static: id = %d")
+                                                     % sm->getId()
+                                                     );
         }
         else if(world::Room* r = dynamic_cast<world::Room*>(last_object))
         {
-            gui::drawText(30.0, 60.0, "cont_room: id = %d", r->getId());
+            gui::TextLineManager::instance->drawText(30.0, 60.0,
+                                                     boost::format("cont_room: id = %d")
+                                                     % r->getId()
+                                                     );
         }
     }
 
@@ -483,11 +500,23 @@ void showDebugInfo()
         world::RoomSector* rs = engine_camera.getCurrentRoom()->getSectorRaw(engine_camera.getPosition());
         if(rs != nullptr)
         {
-            gui::drawText(30.0, 90.0, "room = (id = %d, sx = %d, sy = %d)", engine_camera.getCurrentRoom()->getId(), rs->index_x, rs->index_y);
-            gui::drawText(30.0, 120.0, "room_below = %d, room_above = %d", rs->sector_below != nullptr ? rs->sector_below->owner_room->getId() : -1, rs->sector_above != nullptr ? rs->sector_above->owner_room->getId() : -1);
+            gui::TextLineManager::instance->drawText(30.0, 90.0,
+                                                     boost::format("room = (id = %d, sx = %d, sy = %d)")
+                                                     % engine_camera.getCurrentRoom()->getId()
+                                                     % rs->index_x
+                                                     % rs->index_y
+                                                     );
+            gui::TextLineManager::instance->drawText(30.0, 120.0,
+                                                     boost::format("room_below = %d, room_above = %d")
+                                                     % (rs->sector_below != nullptr ? rs->sector_below->owner_room->getId() : -1)
+                                                     % (rs->sector_above != nullptr ? rs->sector_above->owner_room->getId() : -1)
+                                                     );
         }
     }
-    gui::drawText(30.0, 150.0, "cam_pos = %s", glm::to_string(engine_camera.getPosition()).c_str());
+    gui::TextLineManager::instance->drawText(30.0, 150.0,
+                                             boost::format("cam_pos = %s")
+                                             % glm::to_string(engine_camera.getPosition())
+                                             );
 }
 
 /**
@@ -636,7 +665,7 @@ void initPre()
     /* Console must be initialized previously! some functions uses ConsoleInfo::instance().addLine before GL initialization!
      * Rendering activation may be done later. */
 
-    gui::initFontManager();
+    gui::FontManager::instance.reset(new gui::FontManager());
     Console::instance().init();
 
     engine_lua["loadscript_pre"]();
@@ -943,7 +972,7 @@ bool loadMap(const std::string& name)
     gui::drawLoadScreen(1000);
 
     gui::FaderManager::instance->start(gui::FaderType::LoadScreen, gui::FaderDir::In);
-    gui::notifierStop();
+    gui::ItemNotifier::instance->reset();
 
     return true;
 }

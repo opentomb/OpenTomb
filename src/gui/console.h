@@ -22,7 +22,7 @@
 namespace gui
 {
 
-struct Console
+class Console
 {
 private:
     struct Line

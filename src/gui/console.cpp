@@ -42,7 +42,7 @@ void Console::init()
 
 void Console::initFonts()
 {
-    m_font = fontManager->getFont(FontType::Console);
+    m_font = FontManager::instance->getFont(FontType::Console);
     setLineInterval(m_spacing);
 }
 
@@ -60,7 +60,7 @@ void Console::initGlobals() {
 
 void Console::setLineInterval(float interval)
 {
-    if(!inited || !fontManager || interval < CON_MIN_LINE_INTERVAL || interval > CON_MAX_LINE_INTERVAL)
+    if(!inited || !FontManager::instance || interval < CON_MIN_LINE_INTERVAL || interval > CON_MAX_LINE_INTERVAL)
     {
         return; // nothing to do
     }
@@ -80,7 +80,7 @@ void Console::setLineInterval(float interval)
 
 void Console::draw()
 {
-    if(!fontManager || !inited || !m_isVisible)
+    if(!FontManager::instance || !inited || !m_isVisible)
         return;
 
     drawBackground();
@@ -102,7 +102,7 @@ void Console::draw()
     size_t n = 0;
     for(const Line& line : m_lines)
     {
-        const glm::vec4& col = fontManager->getFontStyle(line.styleId)->real_color;
+        const glm::vec4& col = FontManager::instance->getFontStyle(line.styleId)->real_color;
         y += m_lineHeight;
         m_font->gl_font_color = col;
         glf_render_str(m_font, static_cast<GLfloat>(x), static_cast<GLfloat>(y), line.text.c_str());
@@ -110,7 +110,7 @@ void Console::draw()
         if(n >= m_visibleLines)
             break;
     }
-    const glm::vec4& col = fontManager->getFontStyle(FontStyle::ConsoleInfo)->real_color;
+    const glm::vec4& col = FontManager::instance->getFontStyle(FontStyle::ConsoleInfo)->real_color;
     m_font->gl_font_color = col;
     glf_render_str(m_font, static_cast<GLfloat>(x), static_cast<GLfloat>(m_cursorY) + m_lineHeight, m_editingLine.c_str());
 }

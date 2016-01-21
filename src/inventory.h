@@ -166,6 +166,6 @@ public:
     void setTitle(MenuItemType items_type);
     void frame(util::Duration time);
     void render();
-};
 
-extern InventoryManager  *main_inventory_manager;
+    static std::unique_ptr<InventoryManager> instance;
+};

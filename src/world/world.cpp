@@ -52,10 +52,10 @@ void World::empty()
 
     audioEngine.deInitAudio(); // De-initialize and destroy all audio objects.
 
-    if(main_inventory_manager != nullptr)
+    if(InventoryManager::instance)
     {
-        main_inventory_manager->setInventory(nullptr);
-        main_inventory_manager->setItemsType(MenuItemType::Supply);  // see base items
+        InventoryManager::instance->setInventory(nullptr);
+        InventoryManager::instance->setItemsType(MenuItemType::Supply);  // see base items
     }
 
     if(character)

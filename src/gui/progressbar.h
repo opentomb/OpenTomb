@@ -51,11 +51,11 @@ public:
     void setAutoshow(bool enabled, util::Duration delay, bool fade, util::Duration fadeDelay);
 
     bool          m_forced;               // Forced flag is set when bar is strictly drawn.
-    bool          m_visible;              // Is it visible or not.
-    bool          m_alternate;            // Alternate state, in which bar changes color to AltColor.
+    bool          m_visible = false;              // Is it visible or not.
+    bool          m_alternate = false;            // Alternate state, in which bar changes color to AltColor.
 
-    bool          m_invert;               // Invert decrease direction flag.
-    bool          m_vertical;             // Change bar style to vertical.
+    bool          m_invert = false;               // Invert decrease direction flag.
+    bool          m_vertical = false;             // Change bar style to vertical.
 
 private:
     void          recalculateSize();    // Recalculate size and position.
@@ -116,10 +116,5 @@ private:
     glm::float_t m_baseSize;            // Base bar size.
     glm::float_t m_baseRatio;           // Max. / actual value ratio.
 };
-
-void initBars();
-void drawBars();
-void showLoadingProgressBar(int value);
-void resizeProgressBars();
 
 } // namespace gui

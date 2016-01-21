@@ -3,94 +3,61 @@
 #include "engine/system.h"
 #include "render/shader_manager.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 namespace gui
 {
+std::unique_ptr<TextLineManager> TextLineManager::instance = std::unique_ptr<TextLineManager>( new TextLineManager() );
 
-namespace
+void TextLine::move()
 {
-std::list<const TextLine*> gui_base_lines;
-std::list<TextLine> gui_temp_lines;
-} // anonymous namespace
-
-void addLine(const TextLine* line)
-{
-    gui_base_lines.push_back(line);
+    offset = position * engine::screen_info.scale_factor;
 }
 
-void deleteLine(const TextLine *line)
+void TextLineManager::renderLine(const TextLine& line)
 {
-    gui_base_lines.erase(std::find(gui_base_lines.begin(), gui_base_lines.end(), line));
-}
+    glm::float_t real_x = 0.0, real_y = 0.0;
 
-void moveLine(TextLine *line)
-{
-    line->absXoffset = line->X * engine::screen_info.scale_factor;
-    line->absYoffset = line->Y * engine::screen_info.scale_factor;
-}
-
-void renderStringLine(const TextLine *l)
-{
-    GLfloat real_x = 0.0, real_y = 0.0;
-
-    if(fontManager == nullptr)
+    if(FontManager::instance == nullptr)
     {
         return;
     }
 
-    FontTexture* gl_font = fontManager->getFont(l->font_id);
-    FontStyleData* style = fontManager->getFontStyle(l->style_id);
+    FontTexture* gl_font = FontManager::instance->getFont(line.fontType);
+    FontStyleData* style = FontManager::instance->getFontStyle(line.fontStyle);
 
-    if(gl_font == nullptr || style == nullptr || !l->show || style->hidden)
+    if(gl_font == nullptr || style == nullptr || !line.show || style->hidden)
     {
         return;
     }
 
-    glf_get_string_bb(gl_font, l->text.c_str(), -1, l->rect + 0, l->rect + 1, l->rect + 2, l->rect + 3);
+    glf_get_string_bb(gl_font, line.text.c_str(), -1, line.topLeft, line.bottomRight);
 
-    switch(l->Xanchor)
+    switch(line.Xanchor)
     {
         case HorizontalAnchor::Left:
-            real_x = l->absXoffset;   // Used with center and right alignments.
+            real_x = line.offset.x;   // Used with center and right alignments.
             break;
         case HorizontalAnchor::Right:
-            real_x = static_cast<float>(engine::screen_info.w) - (l->rect[2] - l->rect[0]) - l->absXoffset;
+            real_x = static_cast<float>(engine::screen_info.w) - (line.bottomRight.x - line.topLeft.x) - line.offset.x;
             break;
         case HorizontalAnchor::Center:
-            real_x = engine::screen_info.w / 2.0f - (l->rect[2] - l->rect[0]) / 2.0f + l->absXoffset;  // Absolute center.
+            real_x = engine::screen_info.w / 2.0f - (line.bottomRight.x - line.topLeft.x) / 2.0f + line.offset.x;  // Absolute center.
             break;
     }
 
-    switch(l->Yanchor)
+    switch(line.Yanchor)
     {
         case VerticalAnchor::Bottom:
-            real_y += l->absYoffset;
+            real_y += line.offset.y;
             break;
         case VerticalAnchor::Top:
-            real_y = static_cast<float>(engine::screen_info.h) - (l->rect[3] - l->rect[1]) - l->absYoffset;
+            real_y = static_cast<float>(engine::screen_info.h) - (line.bottomRight.y - line.topLeft.y) - line.offset.y;
             break;
         case VerticalAnchor::Center:
-            real_y = engine::screen_info.h / 2.0f + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
+            real_y = engine::screen_info.h / 2.0f + (line.bottomRight.y - line.topLeft.y) - line.offset.y;          // Consider the baseline.
             break;
     }
-
-    // missing texture_coord pointer... GL_TEXTURE_COORD_ARRAY state are enabled here!
-    /*if(style->rect)
-    {
-        glBindTexture(GL_TEXTURE_2D, 0);
-        GLfloat x0 = l->rect[0] + real_x - style->rect_border * screen_info.w_unit;
-        GLfloat y0 = l->rect[1] + real_y - style->rect_border * screen_info.h_unit;
-        GLfloat x1 = l->rect[2] + real_x + style->rect_border * screen_info.w_unit;
-        GLfloat y1 = l->rect[3] + real_y + style->rect_border * screen_info.h_unit;
-
-        GLfloat rectCoords[8];
-        rectCoords[0] = x0; rectCoords[1] = y0;
-        rectCoords[2] = x1; rectCoords[3] = y0;
-        rectCoords[4] = x1; rectCoords[5] = y1;
-        rectCoords[6] = x0; rectCoords[7] = y1;
-        color(style->rect_color);
-        glVertexPointer(2, GL_FLOAT, 0, rectCoords);
-        glDrawArrays(GL_POLYGON, 0, 4);
-    }*/
 
     if(style->shadowed)
     {
@@ -101,92 +68,82 @@ void renderStringLine(const TextLine *l)
         glf_render_str(gl_font,
                        real_x + FontShadowHorizontalShift,
                        real_y + FontShadowVerticalShift,
-                       l->text.c_str());
+                       line.text.c_str());
     }
 
     gl_font->gl_font_color = style->real_color;
-    glf_render_str(gl_font, real_x, real_y, l->text.c_str());
+    glf_render_str(gl_font, real_x, real_y, line.text.c_str());
 }
 
 /**
  * For simple temporary lines rendering.
  * Really all strings will be rendered in Gui_Render() function.
  */
-TextLine *drawText(GLfloat x, GLfloat y, const char *fmt, ...)
+TextLine* TextLineManager::drawText(glm::float_t x, glm::float_t y, const std::string& str)
 {
-    if(!fontManager)
+    if(!FontManager::instance)
         return nullptr;
 
-    va_list argptr;
-    gui_temp_lines.emplace_back();
-    TextLine* l = &gui_temp_lines.back();
+    m_tempLines.emplace_back();
+    TextLine* line = &m_tempLines.back();
 
-    l->font_id = FontType::Secondary;
-    l->style_id = FontStyle::Generic;
+    line->text = str;
+    line->fontType = FontType::Secondary;
+    line->fontStyle = FontStyle::Generic;
 
-    va_start(argptr, fmt);
-    char tmpStr[LineDefaultSize];
-    vsnprintf(tmpStr, LineDefaultSize, fmt, argptr);
-    l->text = tmpStr;
-    va_end(argptr);
+    line->position = {x, y};
+    line->Xanchor = HorizontalAnchor::Left;
+    line->Yanchor = VerticalAnchor::Bottom;
 
-    l->X = x;
-    l->Y = y;
-    l->Xanchor = HorizontalAnchor::Left;
-    l->Yanchor = VerticalAnchor::Bottom;
+    line->offset = line->position * engine::screen_info.scale_factor;
 
-    l->absXoffset = l->X * engine::screen_info.scale_factor;
-    l->absYoffset = l->Y * engine::screen_info.scale_factor;
-
-    l->show = true;
-    return l;
+    line->show = true;
+    return line;
 }
 
-void resizeTextLines()
+void TextLineManager::resizeTextLines()
 {
-    for(const TextLine* l : gui_base_lines)
+    for(const TextLine* l : m_baseLines)
     {
-        l->absXoffset = l->X * engine::screen_info.scale_factor;
-        l->absYoffset = l->Y * engine::screen_info.scale_factor;
+        l->offset = l->position * engine::screen_info.scale_factor;
     }
 
-    for(const TextLine& l : gui_temp_lines)
+    for(const TextLine& l : m_tempLines)
     {
-        l.absXoffset = l.X * engine::screen_info.scale_factor;
-        l.absYoffset = l.Y * engine::screen_info.scale_factor;
+        l.offset = l.position * engine::screen_info.scale_factor;
     }
 }
 
-void renderStrings()
+void TextLineManager::renderStrings()
 {
-    if(fontManager == nullptr)
+    if(FontManager::instance == nullptr)
         return;
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     render::TextShaderDescription *shader = render::renderer.shaderManager()->getTextShader();
     glUseProgram(shader->program);
-    GLfloat screenSize[2] = {
-        static_cast<GLfloat>(engine::screen_info.w),
-        static_cast<GLfloat>(engine::screen_info.h)
+    glm::vec2 screenSize{
+        static_cast<glm::float_t>(engine::screen_info.w),
+        static_cast<glm::float_t>(engine::screen_info.h)
     };
-    glUniform2fv(shader->screenSize, 1, screenSize);
+    glUniform2fv(shader->screenSize, 1, glm::value_ptr(screenSize));
     glUniform1i(shader->sampler, 0);
 
-    for(const TextLine* l : gui_base_lines)
+    for(const TextLine* l : m_baseLines)
     {
-        renderStringLine(l);
+        renderLine(*l);
     }
 
-    for(const TextLine& l : gui_temp_lines)
+    for(const TextLine& l : m_tempLines)
     {
         if(l.show)
         {
-            renderStringLine(&l);
+            renderLine(l);
         }
     }
 
-    gui_temp_lines.clear();
+    m_tempLines.clear();
 }
 
 } // namespace gui

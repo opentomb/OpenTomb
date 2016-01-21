@@ -67,7 +67,7 @@ void glf_reface(FontTexture* glf, const char *file_name, uint16_t font_size);
 float    glf_get_string_len(FontTexture* glf, const char *text, int n);
 float    glf_get_ascender(FontTexture* glf);
 uint16_t glf_get_font_size(FontTexture* glf);
-void     glf_get_string_bb(FontTexture* glf, const char *text, int n, GLfloat *x0, GLfloat *y0, GLfloat *x1, GLfloat *y1);
+void     glf_get_string_bb(FontTexture* glf, const char *text, int n, glm::vec2& topLeft, glm::vec2& bottomRight);
 
 void     glf_render_str(FontTexture* glf, GLfloat x, GLfloat y, const char *text);     // UTF-8
 

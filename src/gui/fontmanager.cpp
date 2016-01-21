@@ -6,6 +6,7 @@
 
 namespace gui
 {
+std::unique_ptr<FontManager> FontManager::instance = nullptr;
 
 FontManager::FontManager()
 {

@@ -93,9 +93,9 @@ Character::~Character()
     }
 }
 
-int32_t Character::addItem(uint32_t item_id, int32_t count) // returns items count after in the function's end
+int32_t Character::addItem(ObjectId item_id, int32_t count) // returns items count after in the function's end
 {
-    gui::notifierStart(item_id);
+    gui::ItemNotifier::instance->start(item_id);
 
     auto item = engine::engine_world.getBaseItemByID(item_id);
     if(!item)

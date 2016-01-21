@@ -589,37 +589,37 @@ void Controls_DebugKeys(int button, int state)
         switch(button)
         {
             case SDLK_RETURN:
-                if(main_inventory_manager)
+                if(InventoryManager::instance)
                 {
-                    main_inventory_manager->send(InventoryManager::InventoryState::Activate);
+                    InventoryManager::instance->send(InventoryManager::InventoryState::Activate);
                 }
                 break;
 
             case SDLK_UP:
-                if(main_inventory_manager)
+                if(InventoryManager::instance)
                 {
-                    main_inventory_manager->send(InventoryManager::InventoryState::Up);
+                    InventoryManager::instance->send(InventoryManager::InventoryState::Up);
                 }
                 break;
 
             case SDLK_DOWN:
-                if(main_inventory_manager)
+                if(InventoryManager::instance)
                 {
-                    main_inventory_manager->send(InventoryManager::InventoryState::Down);
+                    InventoryManager::instance->send(InventoryManager::InventoryState::Down);
                 }
                 break;
 
             case SDLK_LEFT:
-                if(main_inventory_manager)
+                if(InventoryManager::instance)
                 {
-                    main_inventory_manager->send(InventoryManager::InventoryState::RLeft);
+                    InventoryManager::instance->send(InventoryManager::InventoryState::RLeft);
                 }
                 break;
 
             case SDLK_RIGHT:
-                if(main_inventory_manager)
+                if(InventoryManager::instance)
                 {
-                    main_inventory_manager->send(InventoryManager::InventoryState::RRight);
+                    InventoryManager::instance->send(InventoryManager::InventoryState::RRight);
                 }
                 break;
 

@@ -422,7 +422,7 @@ struct Character : public Entity
     }
     glm::vec3 camPosForFollowing(glm::float_t dz) override;
 
-    int32_t addItem(uint32_t item_id, int32_t count);    // returns items count after in the function's end
+    int32_t addItem(ObjectId item_id, int32_t count);    // returns items count after in the function's end
     int32_t removeItem(uint32_t item_id, int32_t count); // returns items count after in the function's end
     int32_t removeAllItems();
     int32_t getItemsCount(uint32_t item_id); // returns items count

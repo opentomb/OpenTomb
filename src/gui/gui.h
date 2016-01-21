@@ -74,16 +74,10 @@ constexpr float NotifierOffscreenDivider = 8.0f;
 
 // Notifier show time is a time notifier stays on screen (excluding slide
 // effect). Maybe it's better to move it to script later.
-
-constexpr util::Duration NotifierShowtime = util::Seconds(2);
 } // anonymous namespace
-
-void initFontManager();
 
 void init();
 void destroy();
-
-extern std::unique_ptr<FontManager> fontManager;
 
 /**
  * Helper method to setup OpenGL state for console drawing.
