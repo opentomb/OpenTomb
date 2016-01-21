@@ -26,6 +26,7 @@ list(APPEND PRJ_SRC
     gui/console.cpp
     gui/fontmanager.cpp
     gui/fader.cpp
+    gui/fadermanager.cpp
     gui/itemnotifier.cpp
     gui/progressbar.cpp
     gui/textline.cpp
@@ -99,6 +100,7 @@ list(APPEND PRJ_HDR
     gui/console.h
     gui/fontmanager.h
     gui/fader.h
+    gui/fadermanager.h
     gui/itemnotifier.h
     gui/progressbar.h
     gui/textline.h

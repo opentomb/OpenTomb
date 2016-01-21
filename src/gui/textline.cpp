@@ -37,8 +37,8 @@ void renderStringLine(const TextLine *l)
         return;
     }
 
-    FontTexture* gl_font = fontManager->GetFont(l->font_id);
-    FontStyleData* style = fontManager->GetFontStyle(l->style_id);
+    FontTexture* gl_font = fontManager->getFont(l->font_id);
+    FontStyleData* style = fontManager->getFontStyle(l->style_id);
 
     if(gl_font == nullptr || style == nullptr || !l->show || style->hidden)
     {
@@ -104,7 +104,7 @@ void renderStringLine(const TextLine *l)
                        l->text.c_str());
     }
 
-    std::copy(style->real_color + 0, style->real_color + 4, gl_font->gl_font_color);
+    gl_font->gl_font_color = style->real_color;
     glf_render_str(gl_font, real_x, real_y, l->text.c_str());
 }
 

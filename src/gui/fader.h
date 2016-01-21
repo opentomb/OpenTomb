@@ -13,12 +13,11 @@ namespace gui
 // These faders always exist in engine, and rarely you will need more than these.
 enum class FaderType
 {
-    Effect,       // Effect fader (flashes, etc.)
-    Sun,          // Sun fader (engages on looking at the sun)
-    Vignette,     // Just for fun - death fader.
-    LoadScreen,   // Loading screen
-    Black,        // Classic black fader
-    Sentinel
+    Effect,       //!< Effect fader (flashes, etc.)
+    Sun,          //!< Sun fader (engages on looking at the sun)
+    Vignette,     //!< Just for fun - death fader.
+    LoadScreen,   //!< Loading screen
+    Black         //!< Classic black fader
 };
 
 enum class FaderDir
@@ -85,44 +84,31 @@ private:
     void setAspect();
     bool dropTexture();
 
-    glm::vec4 m_topLeftColor;       // All colors are defined separately, for
-    glm::vec4 m_topRightColor;      // further possibility of advanced full
-    glm::vec4 m_bottomLeftColor;    // screen effects with gradients.
-    glm::vec4 m_bottomRightColor;
+    glm::vec4 m_topLeftColor{0};       // All colors are defined separately, for
+    glm::vec4 m_topRightColor{0};      // further possibility of advanced full
+    glm::vec4 m_bottomLeftColor{0};    // screen effects with gradients.
+    glm::vec4 m_bottomRightColor{0};
 
-    loader::BlendingMode m_blendingMode;     // Fader's blending mode.
+    loader::BlendingMode m_blendingMode = loader::BlendingMode::Opaque;     // Fader's blending mode.
 
     glm::float_t m_currentAlpha;          // Current alpha value.
-    glm::float_t m_maxAlpha;              // Maximum reachable alpha value.
-    util::Duration  m_speed;                 // Fade speed.
-    util::Duration  m_speedSecondary;        // Secondary speed - used with TIMED type.
+    glm::float_t m_maxAlpha{1};              // Maximum reachable alpha value.
+    util::Duration m_speed = util::MilliSeconds(500);                 // Fade speed.
+    util::Duration m_speedSecondary = util::MilliSeconds(200);        // Secondary speed - used with TIMED type.
 
-    GLuint          m_texture;               // Texture (optional).
-    uint16_t        m_textureWidth;
-    uint16_t        m_textureHeight;
-    bool            m_textureWide;           // Set, if texture width is greater than height.
-    float           m_textureAspectRatio;    // Pre-calculated aspect ratio.
-    FaderScale      m_textureScaleMode;      // Fader texture's scale mode.
+    GLuint m_texture = 0;               // Texture (optional).
+    int m_textureWidth;
+    int m_textureHeight;
+    bool m_textureWide;           // Set, if texture width is greater than height.
+    float m_textureAspectRatio;    // Pre-calculated aspect ratio.
+    FaderScale m_textureScaleMode;      // Fader texture's scale mode.
 
-    bool            m_active;                // Specifies if fader active or not.
-    bool            m_complete;              // Specifies if fading is complete or not.
-    FaderDir        m_direction;             // Specifies fade direction.
+    bool m_active = false;                // Specifies if fader active or not.
+    bool m_complete = true;              // Specifies if fading is complete or not.
+    FaderDir m_direction = FaderDir::In;             // Specifies fade direction.
 
     util::Duration m_currentTime;           // Current fader time.
-    util::Duration m_maxTime;               // Maximum delay time.
+    util::Duration m_maxTime{0};               // Maximum delay time.
 };
-
-void initFaders();
-void drawFaders();
-void destroyFaders();
-void showLoadScreenFader();
-
-bool fadeStart(FaderType fader, FaderDir fade_direction);
-bool fadeStop(FaderType fader);
-bool fadeAssignPic(FaderType fader, const std::string &pic_name);
-FaderStatus getFaderStatus(FaderType fader);
-void fadeSetup(FaderType fader,
-               uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
-               util::Duration fadein_speed, util::Duration fadeout_speed);
 
 } // namespace gui

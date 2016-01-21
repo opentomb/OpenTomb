@@ -14,6 +14,7 @@
 #include "gameflow.h"
 #include "gui/console.h"
 #include "gui/fader.h"
+#include "gui/fadermanager.h"
 #include "gui/gui.h"
 #include "inventory.h"
 #include "render/render.h"
@@ -779,8 +780,8 @@ void Game_LevelTransition(uint16_t level_index)
     char file_path[MAX_ENGINE_PATH];
 
     engine_lua.getLoadingScreen(level_index, file_path);
-    gui::fadeAssignPic(gui::FaderType::LoadScreen, file_path);
-    gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::Out);
+    gui::FaderManager::instance->assignPicture(gui::FaderType::LoadScreen, file_path);
+    gui::FaderManager::instance->start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
     engine::engine_world.audioEngine.endStreams();
 }

@@ -27,6 +27,7 @@
 #include "gameflow.h"
 #include "gui/console.h"
 #include "gui/fader.h"
+#include "gui/fadermanager.h"
 #include "gui/gui.h"
 #include "gui/itemnotifier.h"
 #include "inventory.h"
@@ -327,8 +328,8 @@ void start()
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
     // Make splash screen.
-    gui::fadeAssignPic(gui::FaderType::LoadScreen, "resource/graphics/legal.png");
-    gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::Out);
+    gui::FaderManager::instance->assignPicture(gui::FaderType::LoadScreen, "resource/graphics/legal.png");
+    gui::FaderManager::instance->start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
     engine_lua.doFile("autoexec.lua");
 }
@@ -884,12 +885,12 @@ bool loadPCLevel(const std::string& name)
     return true;
 }
 
-int loadMap(const std::string& name)
+bool loadMap(const std::string& name)
 {
     if(!boost::filesystem::is_regular_file(name))
     {
         Console::instance().warning(SYSWARN_FILE_NOT_FOUND, name.c_str());
-        return 0;
+        return false;
     }
 
     gui::drawLoadScreen(0);
@@ -941,10 +942,10 @@ int loadMap(const std::string& name)
 
     gui::drawLoadScreen(1000);
 
-    gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::In);
+    gui::FaderManager::instance->start(gui::FaderType::LoadScreen, gui::FaderDir::In);
     gui::notifierStop();
 
-    return 1;
+    return true;
 }
 
 int execCmd(const char *ch)

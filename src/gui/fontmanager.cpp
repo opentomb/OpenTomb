@@ -21,7 +21,7 @@ FontManager::~FontManager()
     m_fontLibrary = nullptr;
 }
 
-FontTexture *FontManager::GetFont(const FontType index)
+FontTexture *FontManager::getFont(const FontType index)
 {
     for(const Font& current_font : m_fonts)
     {
@@ -34,7 +34,7 @@ FontTexture *FontManager::GetFont(const FontType index)
     return nullptr;
 }
 
-Font *FontManager::GetFontAddress(const FontType index)
+Font *FontManager::getFontAddress(const FontType index)
 {
     for(Font& current_font : m_fonts)
     {
@@ -47,7 +47,7 @@ Font *FontManager::GetFontAddress(const FontType index)
     return nullptr;
 }
 
-FontStyleData *FontManager::GetFontStyle(const FontStyle index)
+FontStyleData *FontManager::getFontStyle(const FontStyle index)
 {
     for(FontStyleData& current_style : m_styles)
     {
@@ -60,14 +60,14 @@ FontStyleData *FontManager::GetFontStyle(const FontStyle index)
     return nullptr;
 }
 
-bool FontManager::AddFont(const FontType index, const uint32_t size, const char* path)
+bool FontManager::addFont(const FontType index, const uint32_t size, const char* path)
 {
     if(size < MinFontSize || size > MaxFontSize)
     {
         return false;
     }
 
-    Font* desired_font = GetFontAddress(index);
+    Font* desired_font = getFontAddress(index);
 
     if(desired_font == nullptr)
     {
@@ -87,14 +87,13 @@ bool FontManager::AddFont(const FontType index, const uint32_t size, const char*
     return true;
 }
 
-bool FontManager::AddFontStyle(const FontStyle index,
-                                   const GLfloat R, const GLfloat G, const GLfloat B, const GLfloat A,
-                                   const bool shadow, const bool fading,
-                                   const bool rect, const GLfloat rect_border,
-                                   const GLfloat rect_R, const GLfloat rect_G, const GLfloat rect_B, const GLfloat rect_A,
-                                   const bool hide)
+bool FontManager::addFontStyle(const FontStyle index, const glm::vec4& color,
+                               const bool shadow, const bool fading,
+                               const bool rect, const glm::float_t rect_border,
+                               const glm::vec4& rectCol,
+                               const bool hide)
 {
-    FontStyleData* desired_style = GetFontStyle(index);
+    FontStyleData* desired_style = getFontStyle(index);
 
     if(desired_style == nullptr)
     {
@@ -109,17 +108,11 @@ bool FontManager::AddFontStyle(const FontStyle index,
     }
 
     desired_style->rect_border = rect_border;
-    desired_style->rect_color[0] = rect_R;
-    desired_style->rect_color[1] = rect_G;
-    desired_style->rect_color[2] = rect_B;
-    desired_style->rect_color[3] = rect_A;
+    desired_style->rect_color = rectCol;
 
-    desired_style->color[0] = R;
-    desired_style->color[1] = G;
-    desired_style->color[2] = B;
-    desired_style->color[3] = A;
+    desired_style->color = color;
 
-    memcpy(desired_style->real_color, desired_style->color, sizeof(GLfloat) * 4);
+    desired_style->real_color = desired_style->color;
 
     desired_style->fading = fading;
     desired_style->shadowed = shadow;
@@ -129,7 +122,7 @@ bool FontManager::AddFontStyle(const FontStyle index,
     return true;
 }
 
-bool FontManager::RemoveFont(const FontType index)
+bool FontManager::removeFont(const FontType index)
 {
     if(m_fonts.empty())
     {
@@ -148,7 +141,7 @@ bool FontManager::RemoveFont(const FontType index)
     return false;
 }
 
-bool FontManager::RemoveFontStyle(const FontStyle index)
+bool FontManager::removeFontStyle(const FontStyle index)
 {
     if(m_styles.empty())
     {
@@ -167,7 +160,7 @@ bool FontManager::RemoveFontStyle(const FontStyle index)
     return false;
 }
 
-void FontManager::Update()
+void FontManager::update()
 {
     const auto fontFadeDelta = util::toSeconds(engine::engine_frame_time) * FontFadeSpeed;
 
@@ -194,20 +187,20 @@ void FontManager::Update()
 
     for(FontStyleData& current_style : m_styles)
     {
+        const auto alpha = current_style.real_color.a;
         if(current_style.fading)
         {
-            current_style.real_color[0] = current_style.color[0] * m_fadeValue;
-            current_style.real_color[1] = current_style.color[1] * m_fadeValue;
-            current_style.real_color[2] = current_style.color[2] * m_fadeValue;
+            current_style.real_color = current_style.color * m_fadeValue;
         }
         else
         {
-            std::copy_n( current_style.color, 3, current_style.real_color );
+            current_style.real_color = current_style.color;
         }
+        current_style.real_color.a = alpha;
     }
 }
 
-void FontManager::Resize()
+void FontManager::resize()
 {
     for(Font& current_font : m_fonts)
     {

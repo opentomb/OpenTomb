@@ -7,14 +7,17 @@
  * Created on January 16, 2015, 10:46 PM
  */
 
-#include <cstdint>
-#include <memory>
-#include <vector>
+#include <glm/glm.hpp>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
 #include <GL/glew.h>
+
+#include <cstdint>
+#include <memory>
+#include <vector>
+
 
 struct CharInfo
 {
@@ -45,7 +48,7 @@ struct FontTexture
     std::vector<GLuint>      gl_tex_indexes;
     GLint                    gl_max_tex_width;
     GLint                    gl_tex_width;
-    GLfloat                  gl_font_color[4];
+    glm::vec4                gl_font_color;
 
     ~FontTexture()
     {

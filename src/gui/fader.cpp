@@ -15,29 +15,11 @@
 
 namespace gui
 {
-namespace
-{
-std::map<FaderType, Fader> faderType;
-} // anonymous namespace
-
-Fader::Fader()
-{
-    setColor(0, 0, 0);
-    setBlendingMode(loader::BlendingMode::Opaque);
-    setAlpha(255);
-    setSpeed(util::MilliSeconds(500));
-    setDelay(util::Duration(0));
-
-    m_active = false;
-    m_complete = true;  // All faders must be initialized as complete to receive proper start-up callbacks.
-    m_direction = FaderDir::In;
-
-    m_texture = 0;
-}
+Fader::Fader() = default;
 
 void Fader::setAlpha(uint8_t alpha)
 {
-    m_maxAlpha = static_cast<float>(alpha) / 255;
+    m_maxAlpha = static_cast<glm::float_t>(alpha) / 255;
 }
 
 void Fader::setScaleMode(FaderScale mode)
@@ -52,30 +34,24 @@ void Fader::setColor(uint8_t R, uint8_t G, uint8_t B, FaderCorner corner)
     // it is completely optional - if you won't specify corner, color will be
     // set for the whole fader.
 
+    glm::vec4* dest = nullptr;
+
     switch(corner)
     {
         case FaderCorner::TopLeft:
-            m_topLeftColor[0] = static_cast<glm::float_t>(R) / 255;
-            m_topLeftColor[1] = static_cast<glm::float_t>(G) / 255;
-            m_topLeftColor[2] = static_cast<glm::float_t>(B) / 255;
+            dest = &m_topLeftColor;
             break;
 
         case FaderCorner::TopRight:
-            m_topRightColor[0] = static_cast<glm::float_t>(R) / 255;
-            m_topRightColor[1] = static_cast<glm::float_t>(G) / 255;
-            m_topRightColor[2] = static_cast<glm::float_t>(B) / 255;
+            dest = &m_topRightColor;
             break;
 
         case FaderCorner::BottomLeft:
-            m_bottomLeftColor[0] = static_cast<glm::float_t>(R) / 255;
-            m_bottomLeftColor[1] = static_cast<glm::float_t>(G) / 255;
-            m_bottomLeftColor[2] = static_cast<glm::float_t>(B) / 255;
+            dest = &m_bottomLeftColor;
             break;
 
         case FaderCorner::BottomRight:
-            m_bottomRightColor[0] = static_cast<glm::float_t>(R) / 255;
-            m_bottomRightColor[1] = static_cast<glm::float_t>(G) / 255;
-            m_bottomRightColor[2] = static_cast<glm::float_t>(B) / 255;
+            dest = &m_bottomRightColor;
             break;
 
         default:
@@ -88,8 +64,14 @@ void Fader::setColor(uint8_t R, uint8_t G, uint8_t B, FaderCorner corner)
             m_topLeftColor = m_topRightColor;
             m_bottomRightColor = m_topRightColor;
             m_bottomLeftColor = m_topRightColor;
-            break;
+            return;
     }
+
+    BOOST_ASSERT(dest != nullptr);
+
+    (*dest)[0] = static_cast<glm::float_t>(R) / 255;
+    (*dest)[1] = static_cast<glm::float_t>(G) / 255;
+    (*dest)[2] = static_cast<glm::float_t>(B) / 255;
 }
 
 void Fader::setBlendingMode(loader::BlendingMode mode)
@@ -135,7 +117,7 @@ bool Fader::setTexture(const std::string& texture_path)
     catch(cimg_library::CImgIOException& ex)
     {
         BOOST_LOG_TRIVIAL(warning) << "Failed to load image '" << texture_path << "': " << ex.what();
-        Console::instance().warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path.c_str(), SDL_GetError());
+        Console::instance().warning(SYSWARN_IMG_NOT_LOADED_SDL, texture_path.c_str(), ex.what());
         return false;
     }
 
@@ -433,140 +415,6 @@ FaderStatus Fader::getStatus() const
     {
         return FaderStatus::Idle;
     }
-}
-
-bool fadeStart(FaderType fader, FaderDir fade_direction)
-{
-    // If fader exists, and is not active, we engage it.
-
-    if(fader < FaderType::Sentinel && faderType[fader].getStatus() != FaderStatus::Fading)
-    {
-        faderType[fader].engage(fade_direction);
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-bool fadeStop(FaderType fader)
-{
-    if(fader < FaderType::Sentinel && faderType[fader].getStatus() != FaderStatus::Idle)
-    {
-        faderType[fader].cut();
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-bool fadeAssignPic(FaderType fader, const std::string& pic_name)
-{
-    if(fader < FaderType::Effect || fader >= FaderType::Sentinel)
-        return false;
-
-    boost::filesystem::path buf = pic_name;
-
-    ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
-    if(!boost::filesystem::is_regular_file(buf))
-    {
-        buf.replace_extension(".bmp");
-        if(!boost::filesystem::is_regular_file(buf))
-        {
-            buf.replace_extension(".jpg");
-            if(!boost::filesystem::is_regular_file(buf))
-            {
-                buf.replace_extension(".png");
-                if(!boost::filesystem::is_regular_file(buf))
-                {
-                    buf.replace_extension(".tga");
-                    if(!boost::filesystem::is_regular_file(buf))
-                    {
-                        return false;
-                    }
-                }
-            }
-        }
-    }
-
-    return faderType[fader].setTexture(buf.string());
-}
-
-void fadeSetup(FaderType fader,
-                   uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
-                   util::Duration fadein_speed, util::Duration fadeout_speed)
-{
-    if(fader >= FaderType::Sentinel) return;
-
-    faderType[fader].setAlpha(alpha);
-    faderType[fader].setColor(R, G, B);
-    faderType[fader].setBlendingMode(blending_mode);
-    faderType[fader].setSpeed(fadein_speed, fadeout_speed);
-}
-
-FaderStatus getFaderStatus(FaderType fader)
-{
-    if(fader >= FaderType::Effect && fader < FaderType::Sentinel)
-    {
-        return faderType[fader].getStatus();
-    }
-    else
-    {
-        return FaderStatus::Invalid;
-    }
-}
-
-void initFaders()
-{
-    {
-        Fader& fader = faderType[FaderType::LoadScreen];
-        fader.setAlpha(255);
-        fader.setColor(0, 0, 0);
-        fader.setBlendingMode(loader::BlendingMode::Opaque);
-        fader.setSpeed(util::MilliSeconds(500));
-        fader.setScaleMode(FaderScale::Zoom);
-    }
-
-    {
-        Fader& fader = faderType[FaderType::Effect];
-        fader.setAlpha(255);
-        fader.setColor(255, 180, 0);
-        fader.setBlendingMode(loader::BlendingMode::Multiply);
-        fader.setSpeed(util::MilliSeconds(10), util::MilliSeconds(800));
-    }
-
-    {
-        Fader& fader = faderType[FaderType::Black];
-        fader.setAlpha(255);
-        fader.setColor(0, 0, 0);
-        fader.setBlendingMode(loader::BlendingMode::Opaque);
-        fader.setSpeed(util::MilliSeconds(500));
-        fader.setScaleMode(FaderScale::Zoom);
-    }
-}
-
-void destroyFaders()
-{
-    for(Fader& fader : faderType | boost::adaptors::map_values)
-    {
-        fader.cut();
-    }
-}
-
-void drawFaders()
-{
-    for(Fader& i : faderType | boost::adaptors::map_values)
-    {
-        i.show();
-    }
-}
-
-void showLoadScreenFader()
-{
-    faderType[FaderType::LoadScreen].show();
 }
 
 } // namespace gui

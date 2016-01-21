@@ -4,6 +4,7 @@
 #include "engine/engine.h"
 #include "engine/system.h"
 #include "fader.h"
+#include "fadermanager.h"
 #include "gl_font.h"
 #include "inventory.h"
 #include "itemnotifier.h"
@@ -32,7 +33,7 @@ glm::mat4 guiProjectionMatrix = glm::mat4(1.0f);
 void init()
 {
     initBars();
-    initFaders();
+    FaderManager::instance.reset(new FaderManager());
     initNotifier();
 
     render::fillCrosshairBuffer();
@@ -48,7 +49,7 @@ void initFontManager()
 
 void destroy()
 {
-    destroyFaders();
+    FaderManager::instance.reset();
 
     /*if(main_inventory_menu)
     {
@@ -69,7 +70,7 @@ bool update()
 {
     if(fontManager != nullptr)
     {
-        fontManager->Update();
+        fontManager->update();
     }
 
     if(!Console::instance().isVisible() && engine::control_states.gui_inventory && main_inventory_manager)
@@ -101,7 +102,7 @@ void resize()
 
     if(fontManager)
     {
-        fontManager->Resize();
+        fontManager->resize();
     }
 
     /* let us update console too */
@@ -120,7 +121,7 @@ void render()
     if(engine::screen_info.show_debuginfo)
         render::drawCrosshair();
     drawBars();
-    drawFaders();
+    FaderManager::instance->drawFaders();
     renderStrings();
     Console::instance().draw();
 
@@ -203,7 +204,7 @@ void drawLoadScreen(int value)
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    showLoadScreenFader();
+    FaderManager::instance->showLoadScreenFader();
     showLoadingProgressBar(value);
 
     glDepthMask(GL_TRUE);
@@ -253,7 +254,7 @@ void drawRect(glm::float_t x, glm::float_t y,
     {
         glGenBuffers(1, &rectanglePositionBuffer);
         glBindBuffer(GL_ARRAY_BUFFER, rectanglePositionBuffer);
-        glm::vec2 rectCoords[4]{
+        static const glm::vec2 rectCoords[4]{
             {0, 0},
             {1, 0},
             {1, 1},

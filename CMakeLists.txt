@@ -157,11 +157,8 @@ target_link_libraries(JPEG INTERFACE ${JPEG_LIBRARIES})
 # Dependency: CImg
 add_library(CImg INTERFACE)
 target_include_directories(CImg INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/CImg)
-if(UNIX)
-    target_link_libraries(CImg INTERFACE X11)
-endif()
 target_link_libraries(CImg INTERFACE PNG JPEG)
-target_compile_definitions(CImg INTERFACE -Dcimg_use_png -Dcimg_use_jpeg)
+target_compile_definitions(CImg INTERFACE -Dcimg_use_png -Dcimg_use_jpeg -Dcimg_display=0)
 
 
 # Dependency: OGG

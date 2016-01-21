@@ -2,6 +2,8 @@
 
 #include "gl_font.h"
 
+#include <glm/glm.hpp>
+
 #include <cstdint>
 #include <list>
 
@@ -45,8 +47,8 @@ enum class FontStyle
 // used to dynamically create or delete fonts.
 struct Font
 {
-    FontType                   index;
-    uint16_t                    size;
+    FontType                     index;
+    uint16_t                     size;
     std::shared_ptr<FontTexture> gl_font;
 };
 
@@ -57,10 +59,10 @@ struct FontStyleData
 {
     FontStyle                  index;          // Unique index which is used to identify style.
 
-    GLfloat                     color[4];
-    GLfloat                     real_color[4];
-    GLfloat                     rect_color[4];
-    GLfloat                     rect_border;
+    glm::vec4 color;
+    glm::vec4 real_color;
+    glm::vec4 rect_color;
+    glm::float_t rect_border;
 
     bool                        shadowed;
     bool                        rect;
@@ -77,37 +79,38 @@ public:
     FontManager();
     ~FontManager();
 
-    bool             AddFont(const FontType index,
+    bool             addFont(const FontType index,
                              const uint32_t size,
                              const char* path);
-    bool             RemoveFont(const FontType index);
-    FontTexture*     GetFont(const FontType index);
+    bool             removeFont(const FontType index);
+    FontTexture*     getFont(const FontType index);
 
-    bool             AddFontStyle(const FontStyle index,
-                                  const GLfloat R, const GLfloat G, const GLfloat B, const GLfloat A,
+    bool             addFontStyle(const FontStyle index,
+                                  const glm::vec4& color,
                                   const bool shadow, const bool fading,
-                                  const bool rect, const GLfloat rect_border,
-                                  const GLfloat rect_R, const GLfloat rect_G, const GLfloat rect_B, const GLfloat rect_A,
+                                  const bool rect, const glm::float_t rect_border,
+                                  const glm::vec4& rectCol,
                                   const bool hide);
-    bool             RemoveFontStyle(const FontStyle index);
-    FontStyleData*  GetFontStyle(const FontStyle index);
+    bool            removeFontStyle(const FontStyle index);
+    FontStyleData*  getFontStyle(const FontStyle index);
 
-    uint32_t getFontCount() const
+    size_t getFontCount() const
     {
-        return static_cast<uint32_t>(m_fonts.size());
-    }
-    uint32_t getFontStyleCount() const
-    {
-        return static_cast<uint32_t>(m_styles.size());
+        return m_fonts.size();
     }
 
-    void             Update(); // Do fading routine here, etc. Put into Gui_Update, maybe...
-    void             Resize(); // Resize fonts on window resize event.
+    size_t getFontStyleCount() const
+    {
+        return m_styles.size();
+    }
+
+    void             update(); // Do fading routine here, etc. Put into Gui_Update, maybe...
+    void             resize(); // Resize fonts on window resize event.
 
 private:
-    Font*            GetFontAddress(const FontType index);
+    Font*            getFontAddress(const FontType index);
 
-    GLfloat          m_fadeValue = 0; // Multiplier used with font RGB values to animate fade.
+    glm::float_t     m_fadeValue = 0; // Multiplier used with font RGB values to animate fade.
     bool             m_fadeDirection = true;
 
     std::list<FontStyleData> m_styles;

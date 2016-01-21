@@ -18,6 +18,7 @@
 #include "engine/system.h"
 #include "gui/console.h"
 #include "gui/fader.h"
+#include "gui/fadermanager.h"
 #include "inventory.h"
 #include "render/render.h"
 #include "strings.h"
@@ -579,7 +580,7 @@ void script::MainEngine::bindKey(int act, int primary, lua::Value secondary)
 
 void lua_AddFont(int index, const char* path, int size)
 {
-    if(!gui::fontManager->AddFont(static_cast<gui::FontType>(index), size, path))
+    if(!gui::fontManager->addFont(static_cast<gui::FontType>(index), size, path))
     {
         Console::instance().warning(SYSWARN_CANT_CREATE_FONT, gui::fontManager->getFontCount(), gui::MaxFonts);
     }
@@ -591,10 +592,10 @@ void lua_AddFontStyle(int style_index,
                       float rect_R, float rect_G, float rect_B, float rect_A,
                       bool hide)
 {
-    if(!gui::fontManager->AddFontStyle(static_cast<gui::FontStyle>(style_index),
-                                       color_R, color_G, color_B, color_A,
+    if(!gui::fontManager->addFontStyle(static_cast<gui::FontStyle>(style_index),
+                                       {color_R, color_G, color_B, color_A},
                                        shadowed, fading,
-                                       rect, rect_border, rect_R, rect_G, rect_B, rect_A,
+                                       rect, rect_border, {rect_R, rect_G, rect_B, rect_A},
                                        hide))
     {
         Console::instance().warning(SYSWARN_CANT_CREATE_STYLE, gui::fontManager->getFontStyleCount(), gui::FontStyle::Sentinel);
@@ -603,7 +604,7 @@ void lua_AddFontStyle(int style_index,
 
 void lua_DeleteFont(int fontindex)
 {
-    if(!gui::fontManager->RemoveFont(static_cast<gui::FontType>(fontindex)))
+    if(!gui::fontManager->removeFont(static_cast<gui::FontType>(fontindex)))
     {
         Console::instance().warning(SYSWARN_CANT_REMOVE_FONT);
     }
@@ -611,7 +612,7 @@ void lua_DeleteFont(int fontindex)
 
 void lua_DeleteFontStyle(int styleindex)
 {
-    if(!gui::fontManager->RemoveFontStyle(static_cast<gui::FontStyle>(styleindex)))
+    if(!gui::fontManager->removeFontStyle(static_cast<gui::FontStyle>(styleindex)))
     {
         Console::instance().warning(SYSWARN_CANT_REMOVE_STYLE);
     }
@@ -2304,7 +2305,7 @@ void lua_CamShake(float power, float time, lua::Value id)
 
 void lua_FlashSetup(int alpha, int R, int G, int B, int fadeinSpeed, int fadeoutSpeed)
 {
-    gui::fadeSetup(gui::FaderType::Effect,
+    gui::FaderManager::instance->setup(gui::FaderType::Effect,
                    alpha,
                    R, G, B,
                    loader::BlendingMode::Multiply,
@@ -2313,22 +2314,22 @@ void lua_FlashSetup(int alpha, int R, int G, int B, int fadeinSpeed, int fadeout
 
 void lua_FlashStart()
 {
-    gui::fadeStart(gui::FaderType::Effect, gui::FaderDir::Timed);
+    gui::FaderManager::instance->start(gui::FaderType::Effect, gui::FaderDir::Timed);
 }
 
 void lua_FadeOut()
 {
-    gui::fadeStart(gui::FaderType::Black, gui::FaderDir::Out);
+    gui::FaderManager::instance->start(gui::FaderType::Black, gui::FaderDir::Out);
 }
 
 void lua_FadeIn()
 {
-    gui::fadeStart(gui::FaderType::Black, gui::FaderDir::In);
+    gui::FaderManager::instance->start(gui::FaderType::Black, gui::FaderDir::In);
 }
 
 bool lua_FadeCheck()
 {
-    return gui::getFaderStatus(gui::FaderType::Black) != gui::FaderStatus::Idle;
+    return gui::FaderManager::instance->getStatus(gui::FaderType::Black) != gui::FaderStatus::Idle;
 }
 
 // General gameplay functions
@@ -2445,8 +2446,8 @@ void lua_SetGame(int gameId, lua::Value levelId)
         engine::Gameflow_Manager.setLevelID(levelId.to<uint32_t>());
 
     const char* str = engine_lua["getTitleScreen"](int(engine::Gameflow_Manager.getGameID())).toCStr();
-    gui::fadeAssignPic(gui::FaderType::LoadScreen, str);
-    gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::Out);
+    gui::FaderManager::instance->assignPicture(gui::FaderType::LoadScreen, str);
+    gui::FaderManager::instance->start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
     Console::instance().notify(SYSNOTE_CHANGING_GAME, engine::Gameflow_Manager.getGameID());
     engine::Game_LevelTransition(engine::Gameflow_Manager.getLevelID());
@@ -2469,8 +2470,8 @@ void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
         }
         char file_path[MAX_ENGINE_PATH];
         engine_lua.getLoadingScreen(engine::Gameflow_Manager.getLevelID(), file_path);
-        gui::fadeAssignPic(gui::FaderType::LoadScreen, file_path);
-        gui::fadeStart(gui::FaderType::LoadScreen, gui::FaderDir::In);
+        gui::FaderManager::instance->assignPicture(gui::FaderType::LoadScreen, file_path);
+        gui::FaderManager::instance->start(gui::FaderType::LoadScreen, gui::FaderDir::In);
         engine::loadMap(mapName);
     }
 }

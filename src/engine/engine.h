@@ -186,7 +186,7 @@ bool loadPCLevel(const std::string &name);
 // General level loading routines.
 
 int  getLevelFormat(const std::string &name);
-int  loadMap(const std::string &name);
+bool loadMap(const std::string &name);
 
 // String getters.
 
