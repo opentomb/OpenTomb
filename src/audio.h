@@ -392,7 +392,7 @@ private:
     bool Stream_Wad(ALuint buffer);      // Wad-specific streaming routine.
     bool Stream_Wav(ALuint buffer);      // Wav-specific streaming routine.
 
-    FILE*           audio_file;          // General handle for opened audio file.
+    FILE           *audio_file;          // General handle for opened audio file.
     OggVorbis_File  vorbis_Stream;       // Vorbis file reader needs its own handle.
     
     // General OpenAL fields 

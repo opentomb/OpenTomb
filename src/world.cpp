@@ -309,36 +309,40 @@ void World_Clear()
 
     for(uint32_t i = 0; i < global_world.rooms_count; i++)
     {
-        Room_Clear(global_world.rooms+i);
+        Room_Clear(global_world.rooms + i);
     }
+    global_world.rooms_count = 0;
     free(global_world.rooms);
     global_world.rooms = NULL;
 
-    free(global_world.flip_map);
-    free(global_world.flip_state);
-    global_world.flip_map = NULL;
-    global_world.flip_state = NULL;
-    global_world.flip_count = 0;
+    if(global_world.flip_count)
+    {
+        global_world.flip_count = 0;
+        free(global_world.flip_map);
+        free(global_world.flip_state);
+        global_world.flip_map = NULL;
+        global_world.flip_state = NULL;
+    }
 
     if(global_world.room_boxes_count)
     {
+        global_world.room_boxes_count = 0;
         free(global_world.room_boxes);
         global_world.room_boxes = NULL;
-        global_world.room_boxes_count = 0;
     }
 
     if(global_world.cameras_sinks_count)
     {
+        global_world.cameras_sinks_count = 0;
         free(global_world.cameras_sinks);
         global_world.cameras_sinks = NULL;
-        global_world.cameras_sinks_count = 0;
     }
 
     if(global_world.flyby_cameras_count)
     {
+        global_world.flyby_cameras_count = 0;
         free(global_world.flyby_cameras);
         global_world.flyby_cameras = NULL;
-        global_world.flyby_cameras_count = 0;
     }
 
     for(flyby_camera_sequence_p s = global_world.flyby_camera_sequences; s;)
@@ -353,9 +357,9 @@ void World_Clear()
     /*sprite empty*/
     if(global_world.sprites_count)
     {
+        global_world.sprites_count = 0;
         free(global_world.sprites);
         global_world.sprites = NULL;
-        global_world.sprites_count = 0;
     }
 
     /*items empty*/
@@ -373,11 +377,11 @@ void World_Clear()
     {
         for(uint32_t i = 0; i < global_world.skeletal_models_count; i++)
         {
-            SkeletalModel_Clear(global_world.skeletal_models+i);
+            SkeletalModel_Clear(global_world.skeletal_models + i);
         }
+        global_world.skeletal_models_count = 0;
         free(global_world.skeletal_models);
         global_world.skeletal_models = NULL;
-        global_world.skeletal_models_count = 0;
     }
 
     /*mesh empty*/
@@ -387,9 +391,9 @@ void World_Clear()
         {
             BaseMesh_Clear(global_world.meshes+i);
         }
+        global_world.meshes_count = 0;
         free(global_world.meshes);
         global_world.meshes = NULL;
-        global_world.meshes_count = 0;
     }
 
     if(global_world.tex_count)
@@ -536,16 +540,16 @@ struct entity_s *World_GetEntityByID(uint32_t id)
     entity_p ent = NULL;
     RedBlackNode_p node;
 
-    if(global_world.entity_tree == NULL)
-    {
-        return NULL;
-    }
-
     if((global_world.Character != NULL) && (global_world.Character->id == id))
     {
         return global_world.Character;
     }
 
+    if(global_world.entity_tree == NULL)
+    {
+        return NULL;
+    }
+    
     node = RB_SearchNode(&id, global_world.entity_tree);
     if(node != NULL)
     {
@@ -789,6 +793,16 @@ struct skeletal_model_s* World_GetSkybox()
 }
 
 
+struct room_s *World_GetRoomByID(uint32_t id)
+{
+    if(id < global_world.rooms_count)
+    {
+        return global_world.rooms + id;
+    }
+    return NULL;
+}
+
+
 struct room_s *World_FindRoomByPos(float pos[3])
 {
     room_p r = global_world.rooms;
@@ -801,16 +815,6 @@ struct room_s *World_FindRoomByPos(float pos[3])
         {
             return r;
         }
-    }
-    return NULL;
-}
-
-
-struct room_s *World_GetRoomByID(uint32_t id)
-{
-    if(id < global_world.rooms_count)
-    {
-        return global_world.rooms + id;
     }
     return NULL;
 }

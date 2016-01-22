@@ -26,7 +26,6 @@
 #include "../character_controller.h"
 #include "../engine.h"
 #include "../physics.h"
-#include "../resource.h"
 
 CRender renderer;
 

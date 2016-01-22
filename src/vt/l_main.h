@@ -120,7 +120,7 @@ class TR_Level
             this->rooms = NULL;                 // destroyed
         }
         
-        ~TR_Level()
+        virtual ~TR_Level()
         {
             uint32_t i;
             

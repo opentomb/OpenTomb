@@ -1124,6 +1124,7 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
         qglTexImage2D(GL_TEXTURE_2D, 0, color_depth, surface->w, surface->h, 0,
                      texture_format, GL_UNSIGNED_BYTE, surface->pixels);
         qglBindTexture(GL_TEXTURE_2D, 0);
+        SDL_FreeSurface(surface);
         return true;
     }
 

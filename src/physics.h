@@ -10,8 +10,6 @@
 
 #include <stdint.h>
 
-struct engine_container_s;
-struct entity_s;
 
 #define DEFAULT_COLLSION_NODE_POOL_SIZE    (128)
 
@@ -32,10 +30,7 @@ typedef struct collision_result_s
     float                       normale[3];
 }collision_result_t, *collision_result_p;
 
-struct lua_State;
 
-struct entity_s;
-struct engine_container_s;
 struct physics_data_s;
 struct physics_object_s;
 

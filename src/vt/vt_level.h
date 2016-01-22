@@ -11,7 +11,8 @@
 
 void WriteTGAfile(const char *filename, const uint8_t *data, const int width, const int height, char invY);
 
-class VT_Level : public TR_Level {
+class VT_Level : public TR_Level 
+{
     public:
     static int get_level_format(const char *name);
     static int get_PC_level_version(const char *name);

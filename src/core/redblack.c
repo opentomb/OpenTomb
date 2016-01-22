@@ -20,7 +20,7 @@ RedBlackNode_p RB_SearchNode(void *key, RedBlackHeader_p header)
 
     while(current != NULL)
     {
-        if(header->rb_compEQ(key, current->key))                                                       //data1 == data2
+        if(header->rb_compEQ(key, current->key))                                //data1 == data2
         {
             header->last_founded = current;
             return (current);
@@ -158,6 +158,7 @@ void RB_EmptyTree(RedBlackNode_p n, RedBlackHeader_p p)
     {
         p->rb_free_data(n->data);
     }
+    free(n);
     p->node_count--;
 }
 
@@ -203,7 +204,7 @@ void insertFixup(RedBlackHeader_p p, RedBlackNode_p x)
                 {
                     /* make x a left child */
                     x = x->parent;
-                    rotateLeft(p, x);                          //rotateLeft(x);
+                    rotateLeft(p, x);                                           //rotateLeft(x);
                 }
 
                 /* recolor and rotate */
@@ -230,7 +231,7 @@ void insertFixup(RedBlackHeader_p p, RedBlackNode_p x)
                 if (x == x->parent->left)
                 {
                     x = x->parent;
-                    rotateRight(p, x);                                 //rotateRight(x);
+                    rotateRight(p, x);                                          //rotateRight(x);
                 }
                 x->parent->color = RBC_BLACK;
                 x->parent->parent->color = RBC_RED;

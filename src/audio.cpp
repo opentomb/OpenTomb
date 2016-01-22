@@ -1980,10 +1980,12 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
 
     if(SDL_LoadWAV_RW(file, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
+        SDL_RWclose(file);
         Con_Warning("file \"%s\" has wrog format", fname);
         return -2;
     }
-
+    SDL_RWclose(file);
+    
     bool result = Audio_FillALBuffer(buf_number, wav_buffer, wav_length, wav_spec);
 
     SDL_FreeWAV(wav_buffer);
