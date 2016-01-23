@@ -397,7 +397,7 @@ void Entity::updateCurrentSpeed(bool zeroVz)
 
 void Entity::addOverrideAnim(ModelId model_id)
 {
-    SkeletalModel* sm = engine::engine_world.getModelByID(model_id);
+    SkeletalModel* sm = engine::Engine::instance.m_world.getModelByID(model_id);
 
     if(!sm || sm->meshes.size() != m_skeleton.getBoneCount())
         return;
@@ -478,16 +478,16 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
                 if(command.param[0] & animation::TR_ANIMCOMMAND_CONDITION_WATER)
                 {
                     if(getSubstanceState() == Substance::WaterShallow)
-                        engine::engine_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
+                        engine::Engine::instance.m_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
                 }
                 else if(command.param[0] & animation::TR_ANIMCOMMAND_CONDITION_LAND)
                 {
                     if(getSubstanceState() != Substance::WaterShallow)
-                        engine::engine_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
+                        engine::Engine::instance.m_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
                 }
                 else
                 {
-                    engine::engine_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
+                    engine::Engine::instance.m_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
                 }
             }
             break;

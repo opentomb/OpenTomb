@@ -1,6 +1,7 @@
 #pragma once
 
 #include "controls.h"
+#include "gui/textline.h"
 #include "world/object.h"
 #include "world/world.h"
 
@@ -33,111 +34,134 @@ namespace engine
 
 struct EngineControlState
 {
-    bool     free_look = false;
-    float    free_look_speed = 0;
+    bool     m_freeLook = false;
+    float    m_freeLookSpeed = 0;
 
-    bool     mouse_look = false;
-    glm::float_t cam_distance = 800;
-    bool     noclip = false;
+    bool     m_mouseLook = false;
+    glm::float_t m_camDistance = 800;
+    bool     m_noClip = false;
 
-    float    look_axis_x = 0;                       // Unified look axis data.
-    float    look_axis_y = 0;
+    float    m_lookAxisX = 0;                       // Unified look axis data.
+    float    m_lookAxisY = 0;
 
-    bool     move_forward = false;                      // Directional movement keys.
-    bool     move_backward = false;
-    bool     move_left = false;
-    bool     move_right = false;
-    bool     move_up = false;                           // These are not typically used.
-    bool     move_down = false;
+    bool     m_moveForward = false;                      // Directional movement keys.
+    bool     m_moveBackward = false;
+    bool     m_moveLeft = false;
+    bool     m_moveRight = false;
+    bool     m_moveUp = false;                           // These are not typically used.
+    bool     m_moveDown = false;
 
-    bool     look_up = false;                           // Look (camera) keys.
-    bool     look_down = false;
-    bool     look_left = false;
-    bool     look_right = false;
-    bool     look_roll_left = false;
-    bool     look_roll_right = false;
+    bool     m_lookUp = false;                           // Look (camera) keys.
+    bool     m_lookDown = false;
+    bool     m_lookLeft = false;
+    bool     m_lookRight = false;
+    bool     m_lookRollLeft = false;
+    bool     m_lookRollRight = false;
 
-    bool     do_jump = false;                          // Eventual actions.
-    bool     do_draw_weapon = false;
-    bool     do_roll = false;
+    bool     m_doJump = false;                          // Eventual actions.
+    bool     m_doDrawWeapon = false;
+    bool     m_doRoll = false;
 
-    bool     state_action = false;                         // Conditional actions.
-    bool     state_walk = false;
-    bool     state_sprint = false;
-    bool     state_crouch = false;
+    bool     m_stateAction = false;                         // Conditional actions.
+    bool     m_stateWalk = false;
+    bool     m_stateSprint = false;
+    bool     m_stateCrouch = false;
 
-    bool     use_big_medi = false;
-    bool     use_small_medi = false;
+    bool     m_useBigMedi = false;
+    bool     m_useSmallMedi = false;
 
-    bool     gui_inventory = false;
+    bool     m_guiInventory = false;
 };
 
-extern EngineControlState            control_states;
-extern ControlSettings                control_mapper;
+struct Engine
+{
+    static Engine instance;
 
+    EngineControlState m_controlState;
 
-extern util::Duration                           engine_frame_time;
-extern world::Camera                            engine_camera;
-extern world::World                             engine_world;
+    util::Duration m_frameTime = util::Duration(0);
+    world::Camera m_camera;
+    world::World m_world;
 
-// Starter and destructor.
+    // Starter and destructor.
 
-void start();
-void destroy();
-#ifdef __GNUC__
-void shutdown(int val) __attribute__((noreturn));
-#else
-void shutdown(int val);
-#endif
+    void start();
+    void destroy();
+    #ifdef __GNUC__
+    void shutdown(int val) __attribute__((noreturn));
+    #else
+    void shutdown(int val);
+    #endif
 
-// Initializers
+    // Initializers
 
-void initPre();     // Initial init
-void initPost();    // Finalizing init
+    void initPre();     // Initial init
+    void initPost();    // Finalizing init
 
-void initDefaultGlobals();
+    void initDefaultGlobals();
 
-void initGL();
-void initSDLControls();
-void initSDLVideo();
+    void initGL();
+    void initSDLControls();
+    void initSDLVideo();
 
-// Config parser
+    // Config parser
 
-void initConfig(const std::string &filename);
+    void initConfig(const std::string &filename);
 
-// Core system routines - display and tick.
+    // Core system routines - display and tick.
 
-void display();
-void frame(util::Duration time);
+    void display();
+    void frame(util::Duration time);
 
-// Resize event.
-// Nominal values are used e.g. to set the size for the console.
-// pixel values are used for glViewport. Both will be the same on
-// normal displays, but on retina displays or similar, pixels will be twice nominal (or more).
+    // Resize event.
+    // Nominal values are used e.g. to set the size for the console.
+    // pixel values are used for glViewport. Both will be the same on
+    // normal displays, but on retina displays or similar, pixels will be twice nominal (or more).
 
-void resize(int nominalW, int nominalH, int pixelsW, int pixelsH);
+    void resize(int nominalW, int nominalH, int pixelsW, int pixelsH);
 
-// Debug functions.
+    // Debug functions.
 
-void showDebugInfo();
-void dumpRoom(world::Room* r);
+    void showDebugInfo();
+    void dumpRoom(world::Room* r);
 
-// PC-specific level loader routines.
+    // PC-specific level loader routines.
 
-bool loadPCLevel(const std::string &name);
+    bool loadPCLevel(const std::string &name);
 
-// General level loading routines.
+    // General level loading routines.
 
-int  getLevelFormat(const std::string &name);
-bool loadMap(const std::string &name);
+    int  getLevelFormat(const std::string &name);
+    bool loadMap(const std::string &name);
 
-// String getters.
+    // String getters.
 
-std::string getLevelName(const std::string &path);
-std::string getAutoexecName(loader::Game game_version, const std::string &postfix = std::string());
+    std::string getLevelName(const std::string &path);
+    std::string getAutoexecName(loader::Game game_version, const std::string &postfix = std::string());
 
-// Console command parser.
+    // Console command parser.
 
-int  execCmd(const char *ch);
+    int execCmd(const char *ch);
+
+    SDL_Window             *m_window = nullptr;
+    SDL_Joystick           *m_joystick = nullptr;
+    SDL_GameController     *m_controller = nullptr;
+    SDL_Haptic             *m_haptic = nullptr;
+    SDL_GLContext           m_glContext = nullptr;
+
+    glm::vec3 m_lightPosition = { 255.0, 255.0, 8.0 };
+    glm::vec3 m_castRay[2]{ {0,0,0}, {0,0,0} };
+
+private:
+    gui::TextLine system_fps;
+
+    void sysInit();
+    void sysDestroy();
+
+    int fpsCycles = 0;
+    util::Duration fpsTime = util::Duration(0);
+
+    void fpsCycle(util::Duration time);
+};
 
 } // namespace engine

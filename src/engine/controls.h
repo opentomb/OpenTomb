@@ -2,6 +2,8 @@
 
 #include <SDL2/SDL.h>
 
+#include <map>
+
 namespace engine
 {
 
@@ -12,70 +14,67 @@ namespace engine
 #define JOY_TRIGGER_DEADZONE 10000
 
 // Action mapper index constants
-enum ACTIONS
+enum class Action
 {
     // Movement directions
-    ACT_UP,                     // 0
-    ACT_DOWN,                   // 1
-    ACT_LEFT,                   // 2
-    ACT_RIGHT,                  // 3
+    Up,                     // 0
+    Down,                   // 1
+    Left,                   // 2
+    Right,                  // 3
     // Functional keys
-    ACT_ACTION,                 // 4
-    ACT_JUMP,                   // 5
-    ACT_ROLL,                   // 6
-    ACT_DRAWWEAPON,             // 7
-    ACT_LOOK,                   // 8
-    ACT_WALK,                   // 9
-    ACT_SPRINT,                 // 10
-    ACT_CROUCH,                 // 11
-    ACT_STEPLEFT,               // 12
-    ACT_STEPRIGHT,              // 13
+    Action,                 // 4
+    Jump,                   // 5
+    Roll,                   // 6
+    DrawWeapon,             // 7
+    Look,                   // 8
+    Walk,                   // 9
+    Sprint,                 // 10
+    Crouch,                 // 11
+    StepLeft,               // 12
+    StepRight,              // 13
     // Free look keys
-    ACT_LOOKUP,                 // 14
-    ACT_LOOKDOWN,               // 15
-    ACT_LOOKLEFT,               // 16
-    ACT_LOOKRIGHT,              // 17
+    LookUp,                 // 14
+    LookDown,               // 15
+    LookLeft,               // 16
+    LookRight,              // 17
     // Weapon scroller
-    ACT_NEXTWEAPON,             // 18
-    ACT_PREVWEAPON,             // 19
+    NextWeapon,             // 18
+    PrevWeapon,             // 19
     // Item hotkeys
-    ACT_FLARE,                  // 20
-    ACT_BIGMEDI,                // 21
-    ACT_SMALLMEDI,              // 22
-    ACT_WEAPON1,                // 23
-    ACT_WEAPON2,                // 24
-    ACT_WEAPON3,                // 25
-    ACT_WEAPON4,                // 26
-    ACT_WEAPON5,                // 27
-    ACT_WEAPON6,                // 28
-    ACT_WEAPON7,                // 29
-    ACT_WEAPON8,                // 30
-    ACT_WEAPON9,                // 31
-    ACT_WEAPON10,               // 32
-    ACT_BINOCULARS,             // 33
-    ACT_PLS,                    // 34 Not in original, reserved for future
+    Flare,                  // 20
+    BigMedi,                // 21
+    SmallMedi,              // 22
+    Weapon1,                // 23
+    Weapon2,                // 24
+    Weapon3,                // 25
+    Weapon4,                // 26
+    Weapon5,                // 27
+    Weapon6,                // 28
+    Weapon7,                // 29
+    Weapon8,                // 30
+    Weapon9,                // 31
+    Weapon10,               // 32
+    Binoculars,             // 33
+    Pls,                    // 34 Not in original, reserved for future
     // Interface keys
-    ACT_PAUSE,                  // 35
-    ACT_INVENTORY,              // 36
-    ACT_DIARY,                  // 37 Not in original, reserved for future
-    ACT_MAP,                    // 38 Not in original, reserved for future
-    ACT_LOADGAME,               // 39
-    ACT_SAVEGAME,               // 40
+    Pause,                  // 35
+    Inventory,              // 36
+    Diary,                  // 37 Not in original, reserved for future
+    Map,                    // 38 Not in original, reserved for future
+    LoadGame,               // 39
+    SaveGame,               // 40
     // Service keys
-    ACT_CONSOLE,                // 41
-    ACT_SCREENSHOT,             // 42
-    // Last action index. This should ALWAYS remain last entry!
-    ACT_LASTINDEX               // 43
+    Console,                // 41
+    Screenshot,             // 42
+    Sentinel
 };
 
-enum AXES
+enum class Axis
 {
-    AXIS_LOOK_X,        // Look axes
-    AXIS_LOOK_Y,
-    AXIS_MOVE_X,        // Move axes
-    AXIS_MOVE_Y,
-    // Last axis index. This should ALWAYS remain last entry!
-    AXIS_LASTINDEX
+    LookX,        // Look axes
+    LookY,
+    MoveX,        // Move axes
+    MoveY
 };
 
 struct ControlAction
@@ -89,6 +88,8 @@ struct ControlAction
 //! @todo Use bool where appropriate.
 struct ControlSettings
 {
+    static ControlSettings instance;
+
     float    mouse_sensitivity = 0;
     float    mouse_scale_x = 0.01f;
     float    mouse_scale_y = 0.01f;
@@ -114,23 +115,24 @@ struct ControlSettings
     float    joy_move_sensitivity = 0;
     int16_t  joy_move_deadzone = 0;
 
-    int      joy_axis_map[AXIS_LASTINDEX+1] = {0};      // Axis array for action mapper.
+    std::map<Axis, int>     joy_axis_map;      // Axis array for action mapper.
 
-    ControlAction  action_map[ACT_LASTINDEX+1]{};         // Actions array for action mapper.
+    std::map<Action, ControlAction> action_map{};         // Actions array for action mapper.
+
+    void joyAxis(int axis, Sint16 value);
+
+    void pollSDLInput();
+    void debugKeys(int button, int state);
+    void primaryMouseDown();
+    void secondaryMouseDown();
+
+    void key(int32_t button, bool state);
+    void wrapGameControllerKey(int button, bool state);
+    void wrapGameControllerAxis(int axis, Sint16 value);
+    void joyHat(int value);
+    void joyRumble(float power, int time);
+    void refreshStates();
+    void initGlobals();
 };
-
-void Controls_PollSDLInput();
-void Controls_DebugKeys(int button, int state);
-void Controls_PrimaryMouseDown();
-void Controls_SecondaryMouseDown();
-
-void Controls_Key(int32_t button, bool state);
-void Controls_WrapGameControllerKey(int button, bool state);
-void Controls_WrapGameControllerAxis(int axis, Sint16 value);
-void Controls_JoyAxis(int axis, Sint16 value);
-void Controls_JoyHat(int value);
-void Controls_JoyRumble(float power, int time);
-void Controls_RefreshStates();
-void Controls_InitGlobals();
 
 } // namespace engine

@@ -10,21 +10,21 @@ namespace gui
 
 struct TextLine
 {
-    std::string                 text;
+    std::string text;
 
-    FontType                    fontType;
-    FontStyle                   fontStyle;
+    FontType  fontType = gui::FontType::Primary;
+    FontStyle fontStyle = gui::FontStyle::MenuTitle;
 
-    glm::vec2 position;
+    glm::vec2 position = {10.0, 10.0};
     mutable glm::vec2 offset;
 
-    HorizontalAnchor            Xanchor;
-    VerticalAnchor              Yanchor;
+    HorizontalAnchor Xanchor = gui::HorizontalAnchor::Right;
+    VerticalAnchor   Yanchor = gui::VerticalAnchor::Bottom;
 
     mutable glm::vec2 topLeft;
     mutable glm::vec2 bottomRight;
 
-    bool                        show;
+    bool show = true;
 
     void move();
 };

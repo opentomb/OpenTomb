@@ -10,27 +10,9 @@ namespace engine
 ScreenInfo     screen_info;
 SystemSettings system_settings;
 
-gui::TextLine system_fps;
-
 // =======================================================================
 // General routines
 // =======================================================================
-
-void Sys_Init()
-{
-    system_fps.text.clear();
-
-    system_fps.position = {10.0, 10.0};
-    system_fps.Xanchor = gui::HorizontalAnchor::Right;
-    system_fps.Yanchor = gui::VerticalAnchor::Bottom;
-
-    system_fps.fontType = gui::FontType::Primary;
-    system_fps.fontStyle = gui::FontStyle::MenuTitle;
-
-    system_fps.show = true;
-
-    gui::TextLineManager::instance->add(&system_fps);
-}
 
 void Sys_InitGlobals()
 {
@@ -43,12 +25,6 @@ void Sys_InitGlobals()
     screen_info.fov = 75.0;
 
     system_settings.logging = false;
-}
-
-void Sys_Destroy()
-{
-    system_fps.show = false;
-    system_fps.text.clear();
 }
 
 } // namespace engine

@@ -12,11 +12,11 @@ void BaseMesh::polySortInMesh()
 {
     for(Polygon& p : m_polygons)
     {
-        if(p.textureAnimationId && *p.textureAnimationId < engine::engine_world.textureAnimations.size())
+        if(p.textureAnimationId && *p.textureAnimationId < engine::Engine::instance.m_world.textureAnimations.size())
         {
-            animation::TextureAnimationSequence* seq = &engine::engine_world.textureAnimations[*p.textureAnimationId];
+            animation::TextureAnimationSequence* seq = &engine::Engine::instance.m_world.textureAnimations[*p.textureAnimationId];
             // set tex coordinates to the first frame for correct texture transform in renderer
-            engine::engine_world.tex_atlas->getCoordinates(seq->textureIndices[0], false, p, 0, seq->uvrotate);
+            engine::Engine::instance.m_world.tex_atlas->getCoordinates(seq->textureIndices[0], false, p, 0, seq->uvrotate);
         }
 
         if(p.blendMode != loader::BlendingMode::Opaque && p.blendMode != loader::BlendingMode::Transparent)

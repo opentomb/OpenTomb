@@ -294,7 +294,7 @@ Room* Room::checkFlip()
 void Room::swapPortals(std::shared_ptr<Room> dest_room)
 {
     //Update portals in room rooms
-    for(std::shared_ptr<Room> r : engine::engine_world.rooms)//For every room in the world itself
+    for(std::shared_ptr<Room> r : engine::Engine::instance.m_world.rooms)//For every room in the world itself
     {
         for(Portal& p : r->m_portals) //For every portal in this room
         {
@@ -372,7 +372,7 @@ void Room::buildOverlappedRoomsList()
 {
     m_overlappedRooms.clear();
 
-    for(auto r : engine::engine_world.rooms)
+    for(auto r : engine::Engine::instance.m_world.rooms)
     {
         if(overlaps(r.get()))
         {
@@ -463,7 +463,7 @@ RoomSector* RoomSector::checkPortalPointerRaw()
 {
     if(portal_to_room)
     {
-        std::shared_ptr<Room> r = engine::engine_world.rooms[*portal_to_room];
+        std::shared_ptr<Room> r = engine::Engine::instance.m_world.rooms[*portal_to_room];
         int ind_x = static_cast<int>((position[0] - r->m_modelMatrix[3][0]) / MeteringSectorSize);
         int ind_y = static_cast<int>((position[1] - r->m_modelMatrix[3][1]) / MeteringSectorSize);
         if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->m_sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->m_sectors.shape()[1])
@@ -479,7 +479,7 @@ RoomSector* RoomSector::checkPortalPointer()
 {
     if(portal_to_room)
     {
-        std::shared_ptr<Room> r = engine::engine_world.rooms[*portal_to_room];
+        std::shared_ptr<Room> r = engine::Engine::instance.m_world.rooms[*portal_to_room];
         if(owner_room->m_baseRoom != nullptr && r->m_alternateRoom != nullptr)
         {
             r = r->m_alternateRoom;

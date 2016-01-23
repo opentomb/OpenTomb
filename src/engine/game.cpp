@@ -52,52 +52,52 @@ void lua_mlook(lua::Value mlook)
 {
     if(!mlook.is<lua::Boolean>())
     {
-        control_states.mouse_look = !control_states.mouse_look;
-        Console::instance().printf("mlook = %d", control_states.mouse_look);
+        Engine::instance.m_controlState.m_mouseLook = !Engine::instance.m_controlState.m_mouseLook;
+        Console::instance().printf("mlook = %d", Engine::instance.m_controlState.m_mouseLook);
         return;
     }
 
-    control_states.mouse_look = mlook.toBool();
-    Console::instance().printf("mlook = %d", control_states.mouse_look);
+    Engine::instance.m_controlState.m_mouseLook = mlook.toBool();
+    Console::instance().printf("mlook = %d", Engine::instance.m_controlState.m_mouseLook);
 }
 
 void lua_freelook(lua::Value free)
 {
     if(!free.is<lua::Boolean>())
     {
-        control_states.free_look = !control_states.free_look;
-        Console::instance().printf("free_look = %d", control_states.free_look);
+        Engine::instance.m_controlState.m_freeLook = !Engine::instance.m_controlState.m_freeLook;
+        Console::instance().printf("free_look = %d", Engine::instance.m_controlState.m_freeLook);
         return;
     }
 
-    control_states.free_look = free.toBool();
-    Console::instance().printf("free_look = %d", control_states.free_look);
+    Engine::instance.m_controlState.m_freeLook = free.toBool();
+    Console::instance().printf("free_look = %d", Engine::instance.m_controlState.m_freeLook);
 }
 
 void lua_cam_distance(lua::Value distance)
 {
     if(!distance.is<lua::Number>())
     {
-        Console::instance().printf("cam_distance = %.2f", control_states.cam_distance);
+        Console::instance().printf("cam_distance = %.2f", Engine::instance.m_controlState.m_camDistance);
         return;
     }
 
-    control_states.cam_distance = distance.toFloat();
-    Console::instance().printf("cam_distance = %.2f", control_states.cam_distance);
+    Engine::instance.m_controlState.m_camDistance = distance.toFloat();
+    Console::instance().printf("cam_distance = %.2f", Engine::instance.m_controlState.m_camDistance);
 }
 
 void lua_noclip(lua::Value noclip)
 {
     if(!noclip.is<lua::Boolean>())
     {
-        control_states.noclip = !control_states.noclip;
+        Engine::instance.m_controlState.m_noClip = !Engine::instance.m_controlState.m_noClip;
     }
     else
     {
-        control_states.noclip = noclip.toBool();
+        Engine::instance.m_controlState.m_noClip = noclip.toBool();
     }
 
-    Console::instance().printf("noclip = %d", control_states.noclip);
+    Console::instance().printf("noclip = %d", Engine::instance.m_controlState.m_noClip);
 }
 
 void lua_debuginfo(lua::Value show)
@@ -137,11 +137,11 @@ void lua_timescale(lua::Value scale)
 
 void Game_InitGlobals()
 {
-    control_states.free_look_speed = 3000.0;
-    control_states.mouse_look = true;
-    control_states.free_look = false;
-    control_states.noclip = false;
-    control_states.cam_distance = 800.0;
+    Engine::instance.m_controlState.m_freeLookSpeed = 3000.0;
+    Engine::instance.m_controlState.m_mouseLook = true;
+    Engine::instance.m_controlState.m_freeLook = false;
+    Engine::instance.m_controlState.m_noClip = false;
+    Engine::instance.m_controlState.m_camDistance = 800.0;
 }
 
 void Game_RegisterLuaFunctions(script::ScriptEngine& state)
@@ -363,12 +363,12 @@ bool Game_Save(const std::string& name)
     }
     else
     {
-        f.open("name", std::ios::binary | std::ios::trunc);
+        f.open(name, std::ios::binary | std::ios::trunc);
     }
 
     if(!f.is_open())
     {
-        BOOST_LOG_TRIVIAL(warning) << "Can not create file " << name;
+        BOOST_LOG_TRIVIAL(warning) << "Cannot create file " << name;
         return false;
     }
 
@@ -379,19 +379,19 @@ bool Game_Save(const std::string& name)
 
     // Save flipmap and flipped room states.
 
-    for(size_t i = 0; i < engine_world.flip_data.size(); i++)
+    for(size_t i = 0; i < Engine::instance.m_world.flip_data.size(); i++)
     {
         f << boost::format("setFlipMap(%d, 0x%02X, 0);\n")
              % i
-             % engine_world.flip_data[i].map;
+             % Engine::instance.m_world.flip_data[i].map;
         f << boost::format("setFlipState(%d, %s);\n")
              % i
-             % (engine_world.flip_data[i].state ? "true" : "false");
+             % (Engine::instance.m_world.flip_data[i].state ? "true" : "false");
     }
 
-    Save_Entity(f, engine_world.character);    // Save Lara.
+    Save_Entity(f, Engine::instance.m_world.character);    // Save Lara.
 
-    Save_EntityTree(f, engine_world.entity_tree);
+    Save_EntityTree(f, Engine::instance.m_world.entity_tree);
 
     return true;
 }
@@ -400,84 +400,94 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 {
     // Keyboard move logic
     world::Movement moveLogic;
-    moveLogic.setX(control_states.move_left, control_states.move_right);
-    moveLogic.setY(control_states.move_up, control_states.move_down);
-    moveLogic.setZ(control_states.move_forward, control_states.move_backward);
+    moveLogic.setX(Engine::instance.m_controlState.m_moveLeft, Engine::instance.m_controlState.m_moveRight);
+    moveLogic.setY(Engine::instance.m_controlState.m_moveUp, Engine::instance.m_controlState.m_moveDown);
+    moveLogic.setZ(Engine::instance.m_controlState.m_moveForward, Engine::instance.m_controlState.m_moveBackward);
 
     // Keyboard look logic
     world::Movement lookLogic;
-    lookLogic.setX(control_states.look_left, control_states.look_right);
-    lookLogic.setY(control_states.look_up, control_states.look_down);
-    lookLogic.setZ(control_states.look_roll_left, control_states.look_roll_right);
+    lookLogic.setX(Engine::instance.m_controlState.m_lookLeft, Engine::instance.m_controlState.m_lookRight);
+    lookLogic.setY(Engine::instance.m_controlState.m_lookUp, Engine::instance.m_controlState.m_lookDown);
+    lookLogic.setZ(Engine::instance.m_controlState.m_lookRollLeft, Engine::instance.m_controlState.m_lookRollRight);
 
     // APPLY CONTROLS
 
-    engine::engine_camera.rotate( lookLogic.getDistance(glm::radians(2.2f) * util::toSeconds(engine_frame_time)) );
+    engine::Engine::instance.m_camera.rotate( lookLogic.getDistance(glm::radians(2.2f) * util::toSeconds(Engine::instance.m_frameTime)) );
 
     // FIXME: Duplicate code - do we need cam control with no world??
     if(!render::renderer.world())
     {
-        if(control_mapper.use_joy)
+        if(ControlSettings::instance.use_joy)
         {
-            if(control_mapper.joy_look_x != 0)
+            if(ControlSettings::instance.joy_look_x != 0)
             {
-                engine::engine_camera.rotate( {-world::CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_x, 0, 0} );
+                engine::Engine::instance.m_camera.rotate( {-world::CameraRotationSpeed * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_look_x, 0, 0} );
             }
-            if(control_mapper.joy_look_y != 0)
+            if(ControlSettings::instance.joy_look_y != 0)
             {
-                engine::engine_camera.rotate( {0, -world::CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_y, 0} );
+                engine::Engine::instance.m_camera.rotate( {0, -world::CameraRotationSpeed * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_look_y, 0} );
             }
         }
 
-        if(control_states.mouse_look)
+        if(Engine::instance.m_controlState.m_mouseLook)
         {
-            engine::engine_camera.rotate({ -world::CameraRotationSpeed * control_states.look_axis_x, -world::CameraRotationSpeed * control_states.look_axis_y, 0 });
-            control_states.look_axis_x = 0.0;
-            control_states.look_axis_y = 0.0;
+            engine::Engine::instance.m_camera.rotate({ -world::CameraRotationSpeed * Engine::instance.m_controlState.m_lookAxisX,
+                                                            -world::CameraRotationSpeed * Engine::instance.m_controlState.m_lookAxisY,
+                                                            0 });
+            Engine::instance.m_controlState.m_lookAxisX = 0.0;
+            Engine::instance.m_controlState.m_lookAxisY = 0.0;
         }
 
         render::renderer.camera()->applyRotation();
-        glm::float_t dist = control_states.state_walk ? control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f : control_states.free_look_speed * util::toSeconds(engine_frame_time);
+        glm::float_t dist = Engine::instance.m_controlState.m_stateWalk
+                          ? Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime) * 0.3f
+                          : Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime);
         render::renderer.camera()->move(moveLogic.getDistance(dist));
 
         return;
     }
 
-    if(control_mapper.use_joy)
+    if(ControlSettings::instance.use_joy)
     {
-        if(control_mapper.joy_look_x != 0)
+        if(ControlSettings::instance.joy_look_x != 0)
         {
-            engine::engine_camera.rotate({ -world::CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_x, 0, 0 });
+            engine::Engine::instance.m_camera.rotate({ -world::CameraRotationSpeed * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_look_x, 0, 0 });
         }
-        if(control_mapper.joy_look_y != 0)
+        if(ControlSettings::instance.joy_look_y != 0)
         {
-            engine::engine_camera.rotate({ 0, -world::CameraRotationSpeed * util::toSeconds(engine_frame_time) * control_mapper.joy_look_y, 0 });
+            engine::Engine::instance.m_camera.rotate({ 0, -world::CameraRotationSpeed * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_look_y, 0 });
         }
     }
 
-    if(control_states.mouse_look)
+    if(Engine::instance.m_controlState.m_mouseLook)
     {
-        engine::engine_camera.rotate({ -world::CameraRotationSpeed * control_states.look_axis_x, -world::CameraRotationSpeed * control_states.look_axis_y, 0 });
-        control_states.look_axis_x = 0.0;
-        control_states.look_axis_y = 0.0;
+        engine::Engine::instance.m_camera.rotate({ -world::CameraRotationSpeed * Engine::instance.m_controlState.m_lookAxisX,
+                                                        -world::CameraRotationSpeed * Engine::instance.m_controlState.m_lookAxisY,
+                                                        0 });
+        Engine::instance.m_controlState.m_lookAxisX = 0.0;
+        Engine::instance.m_controlState.m_lookAxisY = 0.0;
     }
 
-    if(control_states.free_look || !std::dynamic_pointer_cast<world::Character>(ent))
+    if(Engine::instance.m_controlState.m_freeLook || !std::dynamic_pointer_cast<world::Character>(ent))
     {
-        glm::float_t dist = control_states.state_walk ? control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f : control_states.free_look_speed * util::toSeconds(engine_frame_time);
+        glm::float_t dist = Engine::instance.m_controlState.m_stateWalk
+                          ? Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime) * 0.3f
+                          : Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime);
         render::renderer.camera()->applyRotation();
         render::renderer.camera()->move(moveLogic.getDistance(dist));
         render::renderer.camera()->setCurrentRoom( Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()) );
     }
-    else if(control_states.noclip)
+    else if(Engine::instance.m_controlState.m_noClip)
     {
-        glm::float_t dist = control_states.state_walk ? control_states.free_look_speed * util::toSeconds(engine_frame_time) * 0.3f : control_states.free_look_speed * util::toSeconds(engine_frame_time);
+        glm::float_t dist = Engine::instance.m_controlState.m_stateWalk
+                          ? Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime) * 0.3f
+                          : Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime);
         render::renderer.camera()->applyRotation();
         render::renderer.camera()->move(moveLogic.getDistance(dist));
         render::renderer.camera()->setCurrentRoom( Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()) );
 
-        ent->m_angles[0] = glm::degrees(engine::engine_camera.getAngles()[0]);
-        glm::vec3 position = render::renderer.camera()->getPosition() + render::renderer.camera()->getViewDir() * control_states.cam_distance;
+        ent->m_angles[0] = glm::degrees(engine::Engine::instance.m_camera.getAngles()[0]);
+        glm::vec3 position = render::renderer.camera()->getPosition() + render::renderer.camera()->getViewDir() * Engine::instance.m_controlState.m_camDistance;
         position[2] -= 512.0;
         ent->m_transform[3] = glm::vec4(position, 1.0f);
         ent->updateTransform();
@@ -486,58 +496,58 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     {
         std::shared_ptr<world::Character> ch = std::dynamic_pointer_cast<world::Character>(ent);
         // Apply controls to Lara
-        ch->m_command.action = control_states.state_action;
-        ch->m_command.ready_weapon = control_states.do_draw_weapon;
-        ch->m_command.jump = control_states.do_jump;
-        ch->m_command.shift = control_states.state_walk;
+        ch->m_command.action = Engine::instance.m_controlState.m_stateAction;
+        ch->m_command.ready_weapon = Engine::instance.m_controlState.m_doDrawWeapon;
+        ch->m_command.jump = Engine::instance.m_controlState.m_doJump;
+        ch->m_command.shift = Engine::instance.m_controlState.m_stateWalk;
 
-        ch->m_command.roll = (control_states.move_forward && control_states.move_backward) || control_states.do_roll;
+        ch->m_command.roll = (Engine::instance.m_controlState.m_moveForward && Engine::instance.m_controlState.m_moveBackward) || Engine::instance.m_controlState.m_doRoll;
 
         // New commands only for TR3 and above
-        ch->m_command.sprint = control_states.state_sprint;
-        ch->m_command.crouch = control_states.state_crouch;
+        ch->m_command.sprint = Engine::instance.m_controlState.m_stateSprint;
+        ch->m_command.crouch = Engine::instance.m_controlState.m_stateCrouch;
 
-        if(control_states.use_small_medi)
+        if(Engine::instance.m_controlState.m_useSmallMedi)
         {
             if(ch->getItemsCount(ITEM_SMALL_MEDIPACK) > 0 && ch->changeParam(world::PARAM_HEALTH, 250))
             {
                 ch->setParam(world::PARAM_POISON, 0);
                 ch->removeItem(ITEM_SMALL_MEDIPACK, 1);
-                engine::engine_world.audioEngine.send(audio::SoundMedipack);
+                engine::Engine::instance.m_world.audioEngine.send(audio::SoundMedipack);
             }
 
-            control_states.use_small_medi = !control_states.use_small_medi;
+            Engine::instance.m_controlState.m_useSmallMedi = !Engine::instance.m_controlState.m_useSmallMedi;
         }
 
-        if(control_states.use_big_medi)
+        if(Engine::instance.m_controlState.m_useBigMedi)
         {
             if(ch->getItemsCount(ITEM_LARGE_MEDIPACK) > 0 &&
                ch->changeParam(world::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX))
             {
                 ch->setParam(world::PARAM_POISON, 0);
                 ch->removeItem(ITEM_LARGE_MEDIPACK, 1);
-                engine::engine_world.audioEngine.send(audio::SoundMedipack);
+                engine::Engine::instance.m_world.audioEngine.send(audio::SoundMedipack);
             }
 
-            control_states.use_big_medi = !control_states.use_big_medi;
+            Engine::instance.m_controlState.m_useBigMedi = !Engine::instance.m_controlState.m_useBigMedi;
         }
 
-        if(control_mapper.use_joy && control_mapper.joy_move_x != 0)
+        if(ControlSettings::instance.use_joy && ControlSettings::instance.joy_move_x != 0)
         {
-            ch->m_command.rot[0] += glm::degrees(-2 * util::toSeconds(engine_frame_time) * control_mapper.joy_move_x);
+            ch->m_command.rot[0] += glm::degrees(-2 * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_move_x);
         }
         else
         {
-            ch->m_command.rot[0] += moveLogic.getDistanceX( glm::degrees(-2.0f) * util::toSeconds(engine_frame_time) );
+            ch->m_command.rot[0] += moveLogic.getDistanceX( glm::degrees(-2.0f) * util::toSeconds(Engine::instance.m_frameTime) );
         }
 
-        if(control_mapper.use_joy && control_mapper.joy_move_y != 0)
+        if(ControlSettings::instance.use_joy && ControlSettings::instance.joy_move_y != 0)
         {
-            ch->m_command.rot[1] += glm::degrees(-2 * util::toSeconds(engine_frame_time) * control_mapper.joy_move_y);
+            ch->m_command.rot[1] += glm::degrees(-2 * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_move_y);
         }
         else
         {
-            ch->m_command.rot[1] += moveLogic.getDistanceZ( glm::degrees(2.0f) * util::toSeconds(engine_frame_time) );
+            ch->m_command.rot[1] += moveLogic.getDistanceZ( glm::degrees(2.0f) * util::toSeconds(Engine::instance.m_frameTime) );
         }
 
         ch->m_command.move = moveLogic;
@@ -564,9 +574,9 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
     glm::vec3 cam_pos = cam->getPosition();
 
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
-    if(!control_states.mouse_look)//If mouse look is off
+    if(!Engine::instance.m_controlState.m_mouseLook)//If mouse look is off
     {
-        glm::float_t currentAngle = engine::engine_camera.getAngles()[0];  //Current is the current cam angle
+        glm::float_t currentAngle = engine::Engine::instance.m_camera.getAngles()[0];  //Current is the current cam angle
         glm::float_t targetAngle = glm::radians(ent->m_angles[0]); //Target is the target angle which is the entity's angle itself
 
         ///@FIXME
@@ -577,8 +587,8 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
             {
                 glm::vec3 cam_pos2 = cam_pos;
                 cameraFrom.setOrigin(util::convert(cam_pos2));
-                cam_pos2[0] += glm::sin(glm::radians(ent->m_angles[0] - 90.0f)) * control_states.cam_distance;
-                cam_pos2[1] -= glm::cos(glm::radians(ent->m_angles[0] - 90.0f)) * control_states.cam_distance;
+                cam_pos2[0] += glm::sin(glm::radians(ent->m_angles[0] - 90.0f)) * Engine::instance.m_controlState.m_camDistance;
+                cam_pos2[1] -= glm::cos(glm::radians(ent->m_angles[0] - 90.0f)) * Engine::instance.m_controlState.m_camDistance;
                 cameraTo.setOrigin(util::convert(cam_pos2));
 
                 //If collided we want to go right otherwise stay left
@@ -586,8 +596,8 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
                 {
                     cam_pos2 = cam_pos;
                     cameraFrom.setOrigin(util::convert(cam_pos2));
-                    cam_pos2[0] += glm::sin(glm::radians(ent->m_angles[0] + 90.0f)) * control_states.cam_distance;
-                    cam_pos2[1] -= glm::cos(glm::radians(ent->m_angles[0] + 90.0f)) * control_states.cam_distance;
+                    cam_pos2[0] += glm::sin(glm::radians(ent->m_angles[0] + 90.0f)) * Engine::instance.m_controlState.m_camDistance;
+                    cam_pos2[1] -= glm::cos(glm::radians(ent->m_angles[0] + 90.0f)) * Engine::instance.m_controlState.m_camDistance;
                     cameraTo.setOrigin(util::convert(cam_pos2));
 
                     //If collided we want to go to back else right
@@ -633,7 +643,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
                     break;
             }
 
-            engine::engine_camera.shake(currentAngle, targetAngle, engine_frame_time);
+            engine::Engine::instance.m_camera.shake(currentAngle, targetAngle, Engine::instance.m_frameTime);
         }
     }
 
@@ -643,7 +653,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
     if(render::renderer.camera()->getShakeTime().count()>0 && render::renderer.camera()->getShakeValue() > 0.0)
     {
         cam_pos += glm::ballRand(render::renderer.camera()->getShakeValue()/2.0f) * util::toSeconds(render::renderer.camera()->getShakeTime());
-        render::renderer.camera()->setShakeTime( std::max(util::Duration(0), render::renderer.camera()->getShakeTime() - engine_frame_time) );
+        render::renderer.camera()->setShakeTime( std::max(util::Duration(0), render::renderer.camera()->getShakeTime() - Engine::instance.m_frameTime) );
     }
 
     cameraFrom.setOrigin(util::convert(cam_pos));
@@ -669,13 +679,13 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
         cameraFrom.setOrigin(util::convert(cam_pos));
 
         {
-            glm::float_t cos_ay =  glm::cos(engine::engine_camera.getAngles()[1]);
-            glm::float_t cam_dx =  glm::sin(engine::engine_camera.getAngles()[0]) * cos_ay;
-            glm::float_t cam_dy = -glm::cos(engine::engine_camera.getAngles()[0]) * cos_ay;
-            glm::float_t cam_dz = -glm::sin(engine::engine_camera.getAngles()[1]);
-            cam_pos[0] += cam_dx * control_states.cam_distance;
-            cam_pos[1] += cam_dy * control_states.cam_distance;
-            cam_pos[2] += cam_dz * control_states.cam_distance;
+            glm::float_t cos_ay =  glm::cos(engine::Engine::instance.m_camera.getAngles()[1]);
+            glm::float_t cam_dx =  glm::sin(engine::Engine::instance.m_camera.getAngles()[0]) * cos_ay;
+            glm::float_t cam_dy = -glm::cos(engine::Engine::instance.m_camera.getAngles()[0]) * cos_ay;
+            glm::float_t cam_dz = -glm::sin(engine::Engine::instance.m_camera.getAngles()[1]);
+            cam_pos[0] += cam_dx * Engine::instance.m_controlState.m_camDistance;
+            cam_pos[1] += cam_dy * Engine::instance.m_controlState.m_camDistance;
+            cam_pos[2] += cam_dz * Engine::instance.m_controlState.m_camDistance;
         }
 
         cameraTo.setOrigin(util::convert(cam_pos));
@@ -728,20 +738,20 @@ void Game_Frame(util::Duration time)
     if(time > SimulationTime)
     {
         time = SimulationTime;
-        engine_frame_time = time;   // FIXME
+        Engine::instance.m_frameTime = time;   // FIXME
     }
     game_logic_time += time;
 
 
     // GUI and controls should be updated at all times!
-    Controls_PollSDLInput();
+    ControlSettings::instance.pollSDLInput();
 
     // TODO: implement pause mechanism
     if(gui::Gui::instance->update())
     {
         if(game_logic_time >= world::animation::GameLogicFrameTime)
         {
-            engine::engine_world.audioEngine.updateAudio();
+            engine::Engine::instance.m_world.audioEngine.updateAudio();
             Game_Tick(&game_logic_time);
         }
         return;
@@ -749,59 +759,59 @@ void Game_Frame(util::Duration time)
 
     // Translate input to character commands, move camera:
     // TODO: decouple cam movement
-    Game_ApplyControls(engine_world.character);
+    Game_ApplyControls(Engine::instance.m_world.character);
 
     BulletEngine::instance->dynamicsWorld->stepSimulation(util::toSeconds(time), MAX_SIM_SUBSTEPS, util::toSeconds(world::animation::GameLogicFrameTime));
 
-    if(engine_world.character) {
-        engine_world.character->updateInterpolation();
+    if(Engine::instance.m_world.character) {
+        Engine::instance.m_world.character->updateInterpolation();
 
-        if(!control_states.noclip && !control_states.free_look)
-            Cam_FollowEntity(render::renderer.camera(), engine_world.character, 16.0, 128.0);
+        if(!Engine::instance.m_controlState.m_noClip && !Engine::instance.m_controlState.m_freeLook)
+            Cam_FollowEntity(render::renderer.camera(), Engine::instance.m_world.character, 16.0, 128.0);
     }
-    for(const std::shared_ptr<world::Entity>& entity : engine_world.entity_tree | boost::adaptors::map_values)
+    for(const std::shared_ptr<world::Entity>& entity : Engine::instance.m_world.entity_tree | boost::adaptors::map_values)
     {
         entity->updateInterpolation();
     }
 
-    Controls_RefreshStates();
-    engine_world.updateAnimTextures();
+    ControlSettings::instance.refreshStates();
+    Engine::instance.m_world.updateAnimTextures();
 }
 
 void Game_Prepare()
 {
-    if(engine_world.character)
+    if(Engine::instance.m_world.character)
     {
         // Set character values to default.
 
-        engine_world.character->setParamMaximum(world::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
-        engine_world.character->setParam(world::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
-        engine_world.character->setParamMaximum(world::PARAM_AIR, LARA_PARAM_AIR_MAX);
-        engine_world.character->setParam(world::PARAM_AIR, LARA_PARAM_AIR_MAX);
-        engine_world.character->setParamMaximum(world::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        engine_world.character->setParam(world::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        engine_world.character->setParamMaximum(world::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
-        engine_world.character->setParam(world::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
-        engine_world.character->setParamMaximum(world::PARAM_POISON, LARA_PARAM_POISON_MAX);
-        engine_world.character->setParam(world::PARAM_POISON, 0);
+        Engine::instance.m_world.character->setParamMaximum(world::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
+        Engine::instance.m_world.character->setParam(world::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
+        Engine::instance.m_world.character->setParamMaximum(world::PARAM_AIR, LARA_PARAM_AIR_MAX);
+        Engine::instance.m_world.character->setParam(world::PARAM_AIR, LARA_PARAM_AIR_MAX);
+        Engine::instance.m_world.character->setParamMaximum(world::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        Engine::instance.m_world.character->setParam(world::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        Engine::instance.m_world.character->setParamMaximum(world::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
+        Engine::instance.m_world.character->setParam(world::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
+        Engine::instance.m_world.character->setParamMaximum(world::PARAM_POISON, LARA_PARAM_POISON_MAX);
+        Engine::instance.m_world.character->setParam(world::PARAM_POISON, 0);
 
         // Set character statistics to default.
 
-        engine_world.character->m_statistics.distance = 0.0;
-        engine_world.character->m_statistics.ammo_used = 0;
-        engine_world.character->m_statistics.hits = 0;
-        engine_world.character->m_statistics.kills = 0;
-        engine_world.character->m_statistics.medipacks_used = 0;
-        engine_world.character->m_statistics.saves_used = 0;
-        engine_world.character->m_statistics.secrets_game = 0;
-        engine_world.character->m_statistics.secrets_level = 0;
+        Engine::instance.m_world.character->m_statistics.distance = 0.0;
+        Engine::instance.m_world.character->m_statistics.ammo_used = 0;
+        Engine::instance.m_world.character->m_statistics.hits = 0;
+        Engine::instance.m_world.character->m_statistics.kills = 0;
+        Engine::instance.m_world.character->m_statistics.medipacks_used = 0;
+        Engine::instance.m_world.character->m_statistics.saves_used = 0;
+        Engine::instance.m_world.character->m_statistics.secrets_game = 0;
+        Engine::instance.m_world.character->m_statistics.secrets_level = 0;
     }
-    else if(!engine_world.rooms.empty())
+    else if(!Engine::instance.m_world.rooms.empty())
     {
         // If there is no character present, move default camera position to
         // the first room (useful for TR1-3 cutscene levels).
 
-        engine_camera.setPosition(engine_world.rooms[0]->m_boundingBox.max);
+        Engine::instance.m_camera.setPosition(Engine::instance.m_world.rooms[0]->m_boundingBox.max);
     }
 
     // Set gameflow parameters to default.
@@ -815,7 +825,7 @@ void Game_LevelTransition(uint16_t level_index)
     gui::Gui::instance->faders.assignPicture(gui::FaderType::LoadScreen, engine_lua.getLoadingScreen(level_index));
     gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
-    engine::engine_world.audioEngine.endStreams();
+    engine::Engine::instance.m_world.audioEngine.endStreams();
 }
 
 } // namespace engine

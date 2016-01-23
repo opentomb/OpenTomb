@@ -97,19 +97,19 @@ ProgressbarManager::ProgressbarManager()
 
 void ProgressbarManager::draw()
 {
-    if(!engine::engine_world.character)
+    if(!engine::Engine::instance.m_world.character)
         return;
 
-    if(engine::engine_world.character->m_currentWeaponState > world::WeaponState::HideToReady)
+    if(engine::Engine::instance.m_world.character->m_currentWeaponState > world::WeaponState::HideToReady)
         m_progressBars[BarType::Health].m_forced = true;
 
-    if(engine::engine_world.character->getParam(world::PARAM_POISON) > 0.0)
+    if(engine::Engine::instance.m_world.character->getParam(world::PARAM_POISON) > 0.0)
         m_progressBars[BarType::Health].m_alternate = true;
 
-    m_progressBars[BarType::Air].show(engine::engine_world.character->getParam(world::PARAM_AIR));
-    m_progressBars[BarType::Stamina].show(engine::engine_world.character->getParam(world::PARAM_STAMINA));
-    m_progressBars[BarType::Health].show(engine::engine_world.character->getParam(world::PARAM_HEALTH));
-    m_progressBars[BarType::Warmth].show(engine::engine_world.character->getParam(world::PARAM_WARMTH));
+    m_progressBars[BarType::Air].show(engine::Engine::instance.m_world.character->getParam(world::PARAM_AIR));
+    m_progressBars[BarType::Stamina].show(engine::Engine::instance.m_world.character->getParam(world::PARAM_STAMINA));
+    m_progressBars[BarType::Health].show(engine::Engine::instance.m_world.character->getParam(world::PARAM_HEALTH));
+    m_progressBars[BarType::Warmth].show(engine::Engine::instance.m_world.character->getParam(world::PARAM_WARMTH));
 }
 
 void ProgressbarManager::showLoading(int value)

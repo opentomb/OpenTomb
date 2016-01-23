@@ -165,7 +165,7 @@ public:
     bool isPlayer()
     {
         // FIXME: isPlayer()
-        return reinterpret_cast<Entity*>(engine::engine_world.character.get()) == this;
+        return reinterpret_cast<Entity*>(engine::Engine::instance.m_world.character.get()) == this;
     }
 
     void updateInterpolation();

@@ -55,7 +55,7 @@ namespace world
         if(ent->m_skeleton.getModel() != nullptr && engine_lua["getEntityModelProperties"].is<lua::Callable>())
         {
             int collisionType, collisionShape, flg;
-            lua::tie(collisionType, collisionShape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::engine_world.engineVersion), int(ent->m_skeleton.getModel()->id));
+            lua::tie(collisionType, collisionShape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::Engine::instance.m_world.engineVersion), int(ent->m_skeleton.getModel()->id));
             ent->setCollisionType(static_cast<CollisionType>(collisionType));
             ent->setCollisionShape(static_cast<CollisionShape>(collisionShape));
 
@@ -68,7 +68,7 @@ namespace world
     {
         if(ent->m_skeleton.getModel())
         {
-            const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine::engine_world.engineVersion), int(ent->m_skeleton.getModel()->id)).toCStr();
+            const char* funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine::Engine::instance.m_world.engineVersion), int(ent->m_skeleton.getModel()->id)).toCStr();
             if(funcName)
                 Res_CreateEntityFunc(engine_lua, funcName ? funcName : std::string(), ent->getId());
         }
@@ -592,7 +592,7 @@ namespace world
         // Fool-proof check for entity existence. Fixes LOTS of stray non-existent
         // entity #256 occurences in original games (primarily TR4-5).
 
-        if(!engine::engine_world.getEntityByID(entity_index))
+        if(!engine::Engine::instance.m_world.getEntityByID(entity_index))
             return true;
 
         return !lookup_table.insert(entity_index).second;
@@ -637,7 +637,7 @@ namespace world
                 case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
                     if(sub_function == 0x00)
                     {
-                        if(*entry < engine::engine_world.rooms.size())
+                        if(*entry < engine::Engine::instance.m_world.rooms.size())
                         {
                             sector.portal_to_room = *entry;
                             sector.floor_penetration_config = PenetrationConfig::Ghost;
@@ -882,7 +882,7 @@ namespace world
                                             {
                                                 // Switch action type case.
                                                 snprintf(buf, 256, " if((switch_state == 0) and switch_sectorstatus) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
-                                                if(engine::engine_world.engineVersion >= loader::Engine::TR3 && only_once)
+                                                if(engine::Engine::instance.m_world.engineVersion >= loader::Engine::TR3 && only_once)
                                                 {
                                                     // Just lock out activator, no anti-action needed.
                                                     snprintf(buf2, 128, " setEntityLock(%d, true) \n", operands);
@@ -950,7 +950,7 @@ namespace world
                                 entry++;
                                 uint8_t cam_timer = *entry & 0x00FF;
                                 uint8_t cam_once = (*entry & 0x0100) >> 8;
-                                uint8_t cam_zoom = engine::engine_world.engineVersion < loader::Engine::TR2
+                                uint8_t cam_zoom = engine::Engine::instance.m_world.engineVersion < loader::Engine::TR2
                                     ? (*entry & 0x0400) >> 10
                                     : (*entry & 0x1000) >> 12;
                                 cont_bit = (*entry & 0x8000) >> 15;                       // 0b10000000 00000000
@@ -1007,7 +1007,7 @@ namespace world
                             case TR_FD_TRIGFUNC_PLAYTRACK:
                                 // Override for looped BGM tracks in TR1: if there are any sectors
                                 // triggering looped tracks, ignore it, as BGM is always set in script.
-                                if(engine::engine_world.engineVersion < loader::Engine::TR2)
+                                if(engine::Engine::instance.m_world.engineVersion < loader::Engine::TR2)
                                 {
                                     audio::StreamType looped;
                                     engine_lua.getSoundtrack(operands, nullptr, nullptr, &looped);
@@ -1128,7 +1128,7 @@ namespace world
                             if(action_type == ActionType::Switch && activator == ActivatorType::Switch)
                             {
                                 script += buf2;
-                                if(engine::engine_world.engineVersion < loader::Engine::TR3 || !only_once)
+                                if(engine::Engine::instance.m_world.engineVersion < loader::Engine::TR3 || !only_once)
                                 {
                                     script += single_events;
                                     script += anti_events;    // Single/continous events are engaged along with
@@ -1350,7 +1350,7 @@ namespace world
 
     void GenerateAnimCommands(SkeletalModel& model)
     {
-        if(engine::engine_world.anim_commands.empty())
+        if(engine::Engine::instance.m_world.anim_commands.empty())
         {
             return;
         }
@@ -1366,8 +1366,8 @@ namespace world
             if(af->animationCommandCount == 0)
                 continue;
 
-            BOOST_ASSERT(af->animationCommand < engine::engine_world.anim_commands.size());
-            int16_t *pointer = &engine::engine_world.anim_commands[af->animationCommand];
+            BOOST_ASSERT(af->animationCommand < engine::Engine::instance.m_world.anim_commands.size());
+            int16_t *pointer = &engine::Engine::instance.m_world.anim_commands[af->animationCommand];
 
             for(size_t i = 0; i < af->animationCommandCount; i++)
             {
@@ -1554,7 +1554,7 @@ namespace world
                         if(dst == nullptr)
                             continue;
 
-                        RoomSector* orig_dst = engine::engine_world.rooms[*sector.portal_to_room]->getSectorRaw(sector.position);
+                        RoomSector* orig_dst = engine::Engine::instance.m_world.rooms[*sector.portal_to_room]->getSectorRaw(sector.position);
 
                         if(!dst->portal_to_room && dst->floor != MeteringWallHeight && dst->ceiling != MeteringWallHeight && *sector.portal_to_room != p.destination->getId() && dst->floor < orig_dst->floor && TR_IsSectorsIn2SideOfPortal(near_sector, *dst, p))
                         {
@@ -1568,12 +1568,12 @@ namespace world
 
     RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
     {
-        if(room_id >= engine::engine_world.rooms.size())
+        if(room_id >= engine::Engine::instance.m_world.rooms.size())
         {
             return nullptr;
         }
 
-        auto room = engine::engine_world.rooms[room_id];
+        auto room = engine::Engine::instance.m_world.rooms[room_id];
         if(sx < 0 || static_cast<size_t>(sx) >= room->m_sectors.shape()[0] || sy < 0 || static_cast<size_t>(sy) >= room->m_sectors.shape()[1])
         {
             return nullptr;
@@ -1624,7 +1624,7 @@ namespace world
             return;
         }
 
-        if(p < engine::engine_world.rooms.size())
+        if(p < engine::Engine::instance.m_world.rooms.size())
         {
             rs->portal_to_room = p;
         }
@@ -1647,7 +1647,7 @@ namespace world
 
     void Res_AutoexecOpen(loader::Game engine_version)
     {
-        std::string autoexecScript = engine::getAutoexecName(engine_version, std::string());
+        std::string autoexecScript = engine::Engine::instance.getAutoexecName(engine_version, std::string());
 
         if(boost::filesystem::is_regular_file(autoexecScript))
         {
@@ -2395,10 +2395,10 @@ namespace world
                     seq->textureType = animation::TextureAnimationType::Backward;
                 }
 
-                engine::engine_world.tex_atlas->getCoordinates(seq->textureIndices[0], false, uvCoord0, 0, true);
+                engine::Engine::instance.m_world.tex_atlas->getCoordinates(seq->textureIndices[0], false, uvCoord0, 0, true);
                 for(size_t j = 0; j < seq->keyFrames.size(); j++)
                 {
-                    engine::engine_world.tex_atlas->getCoordinates(seq->textureIndices[0], false, uvCoordJ, j * seq->uvrotateSpeed, true);
+                    engine::Engine::instance.m_world.tex_atlas->getCoordinates(seq->textureIndices[0], false, uvCoordJ, j * seq->uvrotateSpeed, true);
                     seq->keyFrames[j].textureIndex = uvCoordJ.textureIndex;
 
                     ///@PARANOID: texture transformation may be not only move
@@ -2424,10 +2424,10 @@ namespace world
             }
             else
             {
-                engine::engine_world.tex_atlas->getCoordinates(seq->textureIndices[0], false, uvCoord0);
+                engine::Engine::instance.m_world.tex_atlas->getCoordinates(seq->textureIndices[0], false, uvCoord0);
                 for(size_t j = 0; j < seq->keyFrames.size(); j++)
                 {
-                    engine::engine_world.tex_atlas->getCoordinates(seq->textureIndices[j], false, uvCoordJ);
+                    engine::Engine::instance.m_world.tex_atlas->getCoordinates(seq->textureIndices[j], false, uvCoordJ);
                     seq->keyFrames[j].textureIndex = uvCoordJ.textureIndex;
 
                     ///@PARANOID: texture transformation may be not only move
@@ -3612,7 +3612,7 @@ namespace world
     {
         for(std::shared_ptr<BaseItem> item : map | boost::adaptors::map_values)
         {
-            for(const std::shared_ptr<Room>& room : engine::engine_world.rooms)
+            for(const std::shared_ptr<Room>& room : engine::Engine::instance.m_world.rooms)
             {
                 for(Object* object : room->m_objects)
                 {

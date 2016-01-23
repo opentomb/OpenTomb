@@ -74,7 +74,7 @@ int InventoryManager::getItemsTypeCount(MenuItemType type) const
     int ret = 0;
     for(const InventoryNode& i : *m_inventory)
     {
-        auto bi = engine::engine_world.getBaseItemByID(i.id);
+        auto bi = engine::Engine::instance.m_world.getBaseItemByID(i.id);
         if(bi && bi->type == type)
         {
             ret++;
@@ -151,7 +151,7 @@ MenuItemType InventoryManager::setItemsType(MenuItemType type)
     {
         for(const InventoryNode& i : *m_inventory)
         {
-            if(auto bi = engine::engine_world.getBaseItemByID(i.id))
+            if(auto bi = engine::Engine::instance.m_world.getBaseItemByID(i.id))
             {
                 type = bi->type;
                 count = this->getItemsTypeCount(m_currentItemsType);
@@ -244,7 +244,7 @@ void InventoryManager::frame(util::Duration time)
                     break;
 
                 case InventoryState::Closed:
-                    engine::engine_world.audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuClose));
+                    engine::Engine::instance.m_world.audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuClose));
                     mLabel_ItemName.show = false;
                     mLabel_Title.show = false;
                     m_currentState = m_nextState;
@@ -252,7 +252,7 @@ void InventoryManager::frame(util::Duration time)
 
                 case InventoryState::RLeft:
                 case InventoryState::RRight:
-                    engine::engine_world.audioEngine.send(audio::SoundMenuRotate);
+                    engine::Engine::instance.m_world.audioEngine.send(audio::SoundMenuRotate);
                     mLabel_ItemName.show = false;
                     m_currentState = m_nextState;
                     m_itemTime = util::Duration(0);
@@ -297,7 +297,7 @@ void InventoryManager::frame(util::Duration time)
             {
                 if(setItemsType(m_currentItemsType) != MenuItemType::Invalid)
                 {
-                    engine::engine_world.audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuOpen));
+                    engine::Engine::instance.m_world.audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuOpen));
                     m_currentState = InventoryState::Open;
                     m_ringAngle = 180.0f;
                     m_ringVerticalAngle = 180.0f;
@@ -426,7 +426,7 @@ void InventoryManager::render()
         int num = 0;
         for(InventoryNode& i : *m_inventory)
         {
-            auto bi = engine::engine_world.getBaseItemByID(i.id);
+            auto bi = engine::Engine::instance.m_world.getBaseItemByID(i.id);
             if(!bi || bi->type != m_currentItemsType)
             {
                 continue;

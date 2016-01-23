@@ -54,15 +54,15 @@ void roomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& di
 
 void storeEntityLerpTransforms()
 {
-    if(engine_world.character && !(engine_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    if(Engine::instance.m_world.character && !(Engine::instance.m_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
         // set bones to next interval step, this keeps the ponytail (bullet's dynamic interpolation) in sync with actor interpolation:
-        engine_world.character->m_skeleton.updatePose();
-        engine_world.character->updateRigidBody(false);
-        engine_world.character->ghostUpdate();
+        Engine::instance.m_world.character->m_skeleton.updatePose();
+        Engine::instance.m_world.character->updateRigidBody(false);
+        Engine::instance.m_world.character->ghostUpdate();
     }
 
-    for(const std::shared_ptr<world::Entity>& entity : engine_world.entity_tree | boost::adaptors::map_values)
+    for(const std::shared_ptr<world::Entity>& entity : Engine::instance.m_world.entity_tree | boost::adaptors::map_values)
     {
         if(!entity->m_enabled)
             continue;
@@ -81,24 +81,24 @@ void storeEntityLerpTransforms()
  */
 void internalPreTickCallback(btDynamicsWorld* /*world*/, float timeStep)
 {
-    util::Duration engine_frame_time_backup = engine_frame_time;
-    engine_frame_time = util::fromSeconds(timeStep);
+    util::Duration engine_frame_time_backup = Engine::instance.m_frameTime;
+    Engine::instance.m_frameTime = util::fromSeconds(timeStep);
 
     engine_lua.doTasks(engine_frame_time_backup);
     Game_UpdateAI();
-    engine_world.audioEngine.updateAudio();
+    Engine::instance.m_world.audioEngine.updateAudio();
 
-    if(engine_world.character)
+    if(Engine::instance.m_world.character)
     {
-        engine_world.character->frame(util::fromSeconds(timeStep));
+        Engine::instance.m_world.character->frame(util::fromSeconds(timeStep));
     }
-    for(const std::shared_ptr<world::Entity>& entity : engine_world.entity_tree | boost::adaptors::map_values)
+    for(const std::shared_ptr<world::Entity>& entity : Engine::instance.m_world.entity_tree | boost::adaptors::map_values)
     {
         entity->frame(util::fromSeconds(timeStep));
     }
 
     storeEntityLerpTransforms();
-    engine_frame_time = engine_frame_time_backup;
+    Engine::instance.m_frameTime = engine_frame_time_backup;
 }
 
 /**
@@ -154,6 +154,69 @@ BulletEngine::BulletEngine()
     render::debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
     dynamicsWorld->setDebugDrawer(&render::debugDrawer);
     //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
+}
+
+btScalar BtEngineClosestRayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
+{
+    const world::Object* c1 = static_cast<const world::Object*>(rayResult.m_collisionObject->getUserPointer());
+
+    if(c1 && (c1 == m_object || (m_skip_ghost && c1->getCollisionType() == world::CollisionType::Ghost)))
+    {
+        return 1.0;
+    }
+
+    const world::Room* r0 = m_object ? m_object->getRoom() : nullptr;
+    const world::Room* r1 = c1 ? c1->getRoom() : nullptr;
+
+    if(!r0 || !r1)
+    {
+        return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
+    }
+
+    if(r0 && r1)
+    {
+        if(r0->isInNearRoomsList(*r1))
+        {
+            return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
+        }
+        else
+        {
+            return 1.0;
+        }
+    }
+
+    return 1.0;
+}
+
+btScalar BtEngineClosestConvexResultCallback::addSingleResult(btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace)
+{
+    const world::Room* r0 = m_object ? m_object->getRoom() : nullptr;
+    const world::Object* c1 = static_cast<const world::Object*>(convexResult.m_hitCollisionObject->getUserPointer());
+    const world::Room* r1 = c1 ? c1->getRoom() : nullptr;
+
+    if(c1 && (c1 == m_object || (m_skip_ghost && c1->getCollisionType() == world::CollisionType::Ghost)))
+    {
+        return 1.0;
+    }
+
+    if(!r0 || !r1)
+    {
+        return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
+    }
+
+    if(r0 && r1)
+    {
+        if(r0->isInNearRoomsList(*r1))
+        {
+            return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
+        }
+        else
+        {
+            return 1.0;
+        }
+    }
+
+    return 1.0;
 }
 
 }

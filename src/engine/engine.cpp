@@ -9,6 +9,7 @@
 #include <SDL2/SDL_haptic.h>
 
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #if defined(__MACOSX__)
 #include "mac/FindConfigFile.h"
@@ -52,20 +53,6 @@ using gui::Console;
 namespace engine
 {
 
-SDL_Window             *sdl_window = nullptr;
-SDL_Joystick           *sdl_joystick = nullptr;
-SDL_GameController     *sdl_controller = nullptr;
-SDL_Haptic             *sdl_haptic = nullptr;
-SDL_GLContext           sdl_gl_context = nullptr;
-
-EngineControlState control_states{};
-ControlSettings    control_mapper{};
-
-util::Duration engine_frame_time = util::Duration(0);
-
-world::Camera             engine_camera;
-world::World              engine_world;
-
 namespace
 {
 std::vector<glm::float_t> frame_vertex_buffer;
@@ -74,12 +61,11 @@ size_t frame_vertex_buffer_size_left = 0;
 
 // Debug globals.
 
-glm::vec3 light_position = { 255.0, 255.0, 8.0 };
-GLfloat cast_ray[6] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-
 world::Object* last_object = nullptr;
 
-void initGL()
+Engine Engine::instance{};
+
+void Engine::initGL()
 {
     glewExperimental = GL_TRUE;
     glewInit();
@@ -104,15 +90,15 @@ void initGL()
     }
 }
 
-void initSDLControls()
+void Engine::initSDLControls()
 {
     Uint32 init_flags = SDL_INIT_VIDEO | SDL_INIT_EVENTS; // These flags are used in any case.
 
-    if(control_mapper.use_joy)
+    if(ControlSettings::instance.use_joy)
     {
         init_flags |= SDL_INIT_GAMECONTROLLER;  // Update init flags for joystick.
 
-        if(control_mapper.joy_rumble)
+        if(ControlSettings::instance.joy_rumble)
         {
             init_flags |= SDL_INIT_HAPTIC;      // Update init flags for force feedback.
         }
@@ -121,57 +107,57 @@ void initSDLControls()
 
         int NumJoysticks = SDL_NumJoysticks();
 
-        if(NumJoysticks < 1 || NumJoysticks - 1 < control_mapper.joy_number)
+        if(NumJoysticks < 1 || NumJoysticks - 1 < ControlSettings::instance.joy_number)
         {
-            BOOST_LOG_TRIVIAL(error) << "There is no joystick #" << control_mapper.joy_number << " present";
+            BOOST_LOG_TRIVIAL(error) << "There is no joystick #" << ControlSettings::instance.joy_number << " present";
             return;
         }
 
-        if(SDL_IsGameController(control_mapper.joy_number))                     // If joystick has mapping (e.g. X360 controller)
+        if(SDL_IsGameController(ControlSettings::instance.joy_number))                     // If joystick has mapping (e.g. X360 controller)
         {
             SDL_GameControllerEventState(SDL_ENABLE);                           // Use GameController API
-            sdl_controller = SDL_GameControllerOpen(control_mapper.joy_number);
+            m_controller = SDL_GameControllerOpen(ControlSettings::instance.joy_number);
 
-            if(!sdl_controller)
+            if(!m_controller)
             {
-                BOOST_LOG_TRIVIAL(error) << "Can't open game controller #d" << control_mapper.joy_number;
+                BOOST_LOG_TRIVIAL(error) << "Can't open game controller #d" << ControlSettings::instance.joy_number;
                 SDL_GameControllerEventState(SDL_DISABLE);                      // If controller init failed, close state.
-                control_mapper.use_joy = false;
+                ControlSettings::instance.use_joy = false;
             }
-            else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
+            else if(ControlSettings::instance.joy_rumble)                                  // Create force feedback interface.
             {
-                sdl_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(sdl_controller));
-                if(!sdl_haptic)
+                m_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(m_controller));
+                if(!m_haptic)
                 {
-                    BOOST_LOG_TRIVIAL(error) << "Can't initialize haptic from game controller #" << control_mapper.joy_number;
+                    BOOST_LOG_TRIVIAL(error) << "Can't initialize haptic from game controller #" << ControlSettings::instance.joy_number;
                 }
             }
         }
         else
         {
             SDL_JoystickEventState(SDL_ENABLE);                                 // If joystick isn't mapped, use generic API.
-            sdl_joystick = SDL_JoystickOpen(control_mapper.joy_number);
+            m_joystick = SDL_JoystickOpen(ControlSettings::instance.joy_number);
 
-            if(!sdl_joystick)
+            if(!m_joystick)
             {
-                BOOST_LOG_TRIVIAL(error) << "Can't open joystick #" << control_mapper.joy_number;
+                BOOST_LOG_TRIVIAL(error) << "Can't open joystick #" << ControlSettings::instance.joy_number;
                 SDL_JoystickEventState(SDL_DISABLE);                            // If joystick init failed, close state.
-                control_mapper.use_joy = false;
+                ControlSettings::instance.use_joy = false;
             }
-            else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
+            else if(ControlSettings::instance.joy_rumble)                                  // Create force feedback interface.
             {
-                sdl_haptic = SDL_HapticOpenFromJoystick(sdl_joystick);
-                if(!sdl_haptic)
+                m_haptic = SDL_HapticOpenFromJoystick(m_joystick);
+                if(!m_haptic)
                 {
-                    BOOST_LOG_TRIVIAL(error) << "Can't initialize haptic from joystick #" << control_mapper.joy_number;
+                    BOOST_LOG_TRIVIAL(error) << "Can't initialize haptic from joystick #" << ControlSettings::instance.joy_number;
                 }
             }
         }
 
-        if(sdl_haptic)                                                          // To check if force feedback is working or not.
+        if(m_haptic)                                                          // To check if force feedback is working or not.
         {
-            SDL_HapticRumbleInit(sdl_haptic);
-            SDL_HapticRumblePlay(sdl_haptic, 1.0, 300);
+            SDL_HapticRumbleInit(m_haptic);
+            SDL_HapticRumblePlay(m_haptic, 1.0, 300);
         }
     }
     else
@@ -180,7 +166,7 @@ void initSDLControls()
     }
 }
 
-void initSDLVideo()
+void Engine::initSDLVideo()
 {
     Uint32 video_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
 
@@ -211,14 +197,14 @@ void initSDLVideo()
 
     // Create temporary SDL window and GL context for checking capabilities.
 
-    sdl_window = SDL_CreateWindow(nullptr, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
-    sdl_gl_context = SDL_GL_CreateContext(sdl_window);
+    m_window = SDL_CreateWindow(nullptr, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+    m_glContext = SDL_GL_CreateContext(m_window);
 
-    if(!sdl_gl_context)
+    if(!m_glContext)
         BOOST_THROW_EXCEPTION(std::runtime_error("Can't create OpenGL context - shutting down. Try to disable use_gl3 option in config."));
 
-    BOOST_ASSERT(sdl_gl_context);
-    SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
+    BOOST_ASSERT(m_glContext);
+    SDL_GL_MakeCurrent(m_window, m_glContext);
 
     // Check for correct number of antialias samples.
 
@@ -254,15 +240,15 @@ void initSDLVideo()
 
     // Remove temporary GL context and SDL window.
 
-    SDL_GL_DeleteContext(sdl_gl_context);
-    SDL_DestroyWindow(sdl_window);
+    SDL_GL_DeleteContext(m_glContext);
+    SDL_DestroyWindow(m_window);
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, render::renderer.settings().z_depth);
 
-    sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
-    sdl_gl_context = SDL_GL_CreateContext(sdl_window);
-    SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
+    m_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
+    m_glContext = SDL_GL_CreateContext(m_window);
+    SDL_GL_MakeCurrent(m_window, m_glContext);
 
     if(SDL_GL_SetSwapInterval(screen_info.vsync))
         BOOST_LOG_TRIVIAL(error) << "Cannot set VSYNC: " << SDL_GetError();
@@ -275,7 +261,7 @@ void initSDLVideo()
     Console::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)), gui::FontStyle::ConsoleInfo);
 }
 
-void start()
+void Engine::start()
 {
 #if defined(__MACOSX__)
     FindConfigFile();
@@ -302,12 +288,12 @@ void start()
     resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
 
     // OpenAL initialization.
-    engine_world.audioEngine.initDevice();
+    m_world.audioEngine.initDevice();
 
     Console::instance().notify(SYSNOTE_ENGINE_INITED);
 
     // Clearing up memory for initial level loading.
-    engine_world.prepare();
+    m_world.prepare();
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
@@ -318,11 +304,11 @@ void start()
     engine_lua.doFile("autoexec.lua");
 }
 
-void display()
+void Engine::display()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT);
 
-    engine_camera.apply();
+    m_camera.apply();
     // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
     if(screen_info.show_debuginfo)
     {
@@ -356,10 +342,10 @@ void display()
 
     render::renderer.drawListDebugLines();
 
-    SDL_GL_SwapWindow(sdl_window);
+    SDL_GL_SwapWindow(m_window);
 }
 
-void resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
+void Engine::resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 {
     screen_info.w = nominalW;
     screen_info.h = nominalH;
@@ -370,61 +356,35 @@ void resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 
     gui::Gui::instance->resize();
 
-    engine_camera.setFovAspect(screen_info.fov, static_cast<glm::float_t>(nominalW) / static_cast<glm::float_t>(nominalH));
-    engine_camera.apply();
+    m_camera.setFovAspect(screen_info.fov, static_cast<glm::float_t>(nominalW) / static_cast<glm::float_t>(nominalH));
+    m_camera.apply();
 
     glViewport(0, 0, pixelsW, pixelsH);
 }
 
-extern gui::TextLine system_fps;
-
-namespace
+void Engine::frame(util::Duration time)
 {
-    int fpsCycles = 0;
-    util::Duration fpsTime = util::Duration(0);
-
-    void fpsCycle(util::Duration time)
-    {
-        if(fpsCycles < 20)
-        {
-            fpsCycles++;
-            fpsTime += time;
-        }
-        else
-        {
-            screen_info.fps = 20.0f / util::toSeconds(fpsTime);
-            char tmp[16];
-            snprintf(tmp, 16, "%.1f", screen_info.fps);
-            system_fps.text = tmp;
-            fpsCycles = 0;
-            fpsTime = util::Duration(0);
-        }
-    }
-}
-
-void frame(util::Duration time)
-{
-    engine_frame_time = time;
+    m_frameTime = time;
     fpsCycle(time);
 
     Game_Frame(time);
     Gameflow::instance.execute();
 }
 
-void showDebugInfo()
+void Engine::showDebugInfo()
 {
     GLfloat color_array[] = { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 };
 
-    light_position = engine_camera.getPosition();
+    m_lightPosition = m_camera.getPosition();
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glLineWidth(2.0);
-    glVertexPointer(3, GL_FLOAT, 0, cast_ray);
+    glVertexPointer(3, GL_FLOAT, 0, glm::value_ptr(m_castRay[0]));
     glColorPointer(3, GL_FLOAT, 0, color_array);
     glDrawArrays(GL_LINES, 0, 2);
 
-    if(std::shared_ptr<world::Character> ent = engine_world.character)
+    if(std::shared_ptr<world::Character> ent = m_world.character)
     {
         /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
@@ -476,14 +436,14 @@ void showDebugInfo()
         }
     }
 
-    if(engine_camera.getCurrentRoom() != nullptr)
+    if(m_camera.getCurrentRoom() != nullptr)
     {
-        world::RoomSector* rs = engine_camera.getCurrentRoom()->getSectorRaw(engine_camera.getPosition());
+        world::RoomSector* rs = m_camera.getCurrentRoom()->getSectorRaw(m_camera.getPosition());
         if(rs != nullptr)
         {
             gui::TextLineManager::instance->drawText(30.0, 90.0,
                                                      boost::format("room = (id = %d, sx = %d, sy = %d)")
-                                                     % engine_camera.getCurrentRoom()->getId()
+                                                     % m_camera.getCurrentRoom()->getId()
                                                      % rs->index_x
                                                      % rs->index_y
                                                      );
@@ -496,22 +456,22 @@ void showDebugInfo()
     }
     gui::TextLineManager::instance->drawText(30.0, 150.0,
                                              boost::format("cam_pos = %s")
-                                             % glm::to_string(engine_camera.getPosition())
+                                             % glm::to_string(m_camera.getPosition())
                                              );
 }
 
-void initDefaultGlobals()
+void Engine::initDefaultGlobals()
 {
     Console::instance().initGlobals();
-    Controls_InitGlobals();
+    ControlSettings::instance.initGlobals();
     Game_InitGlobals();
     render::renderer.initGlobals();
-    engine_world.audioEngine.resetSettings();
+    m_world.audioEngine.resetSettings();
 }
 
 // First stage of initialization.
 
-void initPre()
+void Engine::initPre()
 {
     /* Console must be initialized previously! some functions uses ConsoleInfo::instance().addLine before GL initialization!
      * Rendering activation may be done later. */
@@ -530,24 +490,24 @@ void initPre()
 
     Com_Init();
     render::renderer.init();
-    render::renderer.setCamera(&engine_camera);
+    render::renderer.setCamera(&m_camera);
 
     engine::BulletEngine::instance.reset(new engine::BulletEngine());
 }
 
 // Second stage of initialization.
 
-void initPost()
+void Engine::initPost()
 {
     engine_lua["loadscript_post"]();
 
     Console::instance().initFonts();
 
     gui::Gui::instance.reset(new gui::Gui());
-    Sys_Init();
+    sysInit();
 }
 
-void dumpRoom(world::Room* r)
+void Engine::dumpRoom(world::Room* r)
 {
     if(!r)
         return;
@@ -590,45 +550,45 @@ void dumpRoom(world::Room* r)
     }
 }
 
-void destroy()
+void Engine::destroy()
 {
     render::renderer.empty();
     //ConsoleInfo::instance().destroy();
     Com_Destroy();
-    Sys_Destroy();
+    sysDestroy();
 
     BulletEngine::instance.reset();
 
     gui::Gui::instance.reset();
 }
 
-void shutdown(int val)
+void Engine::shutdown(int val)
 {
     engine_lua.clearTasks();
     render::renderer.empty();
-    engine_world.empty();
+    m_world.empty();
     destroy();
 
     /* no more renderings */
-    SDL_GL_DeleteContext(sdl_gl_context);
-    SDL_DestroyWindow(sdl_window);
+    SDL_GL_DeleteContext(m_glContext);
+    SDL_DestroyWindow(m_window);
 
-    if(sdl_joystick)
+    if(m_joystick)
     {
-        SDL_JoystickClose(sdl_joystick);
+        SDL_JoystickClose(m_joystick);
     }
 
-    if(sdl_controller)
+    if(m_controller)
     {
-        SDL_GameControllerClose(sdl_controller);
+        SDL_GameControllerClose(m_controller);
     }
 
-    if(sdl_haptic)
+    if(m_haptic)
     {
-        SDL_HapticClose(sdl_haptic);
+        SDL_HapticClose(m_haptic);
     }
 
-    engine_world.audioEngine.closeDevice();
+    m_world.audioEngine.closeDevice();
 
     /* free temporary memory */
     frame_vertex_buffer.clear();
@@ -639,14 +599,14 @@ void shutdown(int val)
     exit(val);
 }
 
-int getLevelFormat(const std::string& /*name*/)
+int Engine::getLevelFormat(const std::string& /*name*/)
 {
     // PLACEHOLDER: Currently, only PC levels are supported.
 
     return LEVEL_FORMAT_PC;
 }
 
-std::string getLevelName(const std::string& path)
+std::string Engine::getLevelName(const std::string& path)
 {
     if(path.empty())
     {
@@ -665,31 +625,29 @@ std::string getLevelName(const std::string& path)
     return path.substr(start, ext - start);
 }
 
-std::string getAutoexecName(loader::Game game_version, const std::string& postfix)
+std::string Engine::getAutoexecName(loader::Game game_version, const std::string& postfix)
 {
     std::string level_name = getLevelName(Gameflow::instance.getLevelPath());
 
     std::string name = "scripts/autoexec/";
-
-    if(game_version < loader::Game::TR2)
+    switch(loader::gameToEngine(game_version))
     {
-        name += "tr1/";
-    }
-    else if(game_version < loader::Game::TR3)
-    {
-        name += "tr2/";
-    }
-    else if(game_version < loader::Game::TR4)
-    {
-        name += "tr3/";
-    }
-    else if(game_version < loader::Game::TR5)
-    {
-        name += "tr4/";
-    }
-    else
-    {
-        name += "tr5/";
+        case loader::Engine::TR1:
+            name += "tr1/";
+            break;
+        case loader::Engine::TR2:
+            name += "tr2/";
+            break;
+        case loader::Engine::TR3:
+            name += "tr3/";
+            break;
+        case loader::Engine::TR4:
+            name += "tr4/";
+            break;
+        case loader::Engine::TR5:
+        default:
+            name += "tr5/";
+            break;
     }
 
     for(char& c : level_name)
@@ -703,7 +661,7 @@ std::string getAutoexecName(loader::Game game_version, const std::string& postfi
     return name;
 }
 
-bool loadPCLevel(const std::string& name)
+bool Engine::loadPCLevel(const std::string& name)
 {
     std::unique_ptr<loader::Level> loader = loader::Level::createLoader(name, loader::Game::Unknown);
     if(!loader)
@@ -711,18 +669,18 @@ bool loadPCLevel(const std::string& name)
 
     loader->load();
 
-    TR_GenWorld(engine_world, loader);
+    TR_GenWorld(m_world, loader);
 
     std::string buf = getLevelName(name);
 
     Console::instance().notify(SYSNOTE_LOADED_PC_LEVEL);
     Console::instance().notify(SYSNOTE_ENGINE_VERSION, static_cast<int>(loader->m_gameVersion), buf.c_str());
-    Console::instance().notify(SYSNOTE_NUM_ROOMS, engine_world.rooms.size());
+    Console::instance().notify(SYSNOTE_NUM_ROOMS, m_world.rooms.size());
 
     return true;
 }
 
-bool loadMap(const std::string& name)
+bool Engine::loadMap(const std::string& name)
 {
     if(!boost::filesystem::is_regular_file(name))
     {
@@ -732,7 +690,7 @@ bool loadMap(const std::string& name)
 
     gui::Gui::instance->drawLoadScreen(0);
 
-    engine_camera.setCurrentRoom( nullptr );
+    m_camera.setCurrentRoom( nullptr );
 
     render::renderer.hideSkyBox();
     render::renderer.resetWorld();
@@ -741,12 +699,12 @@ bool loadMap(const std::string& name)
 
     gui::Gui::instance->drawLoadScreen(50);
 
-    engine_world.empty();
-    engine_world.prepare();
+    m_world.empty();
+    m_world.prepare();
 
     engine_lua.clean();
 
-    engine_world.audioEngine.init();
+    m_world.audioEngine.init();
 
     gui::Gui::instance->drawLoadScreen(100);
 
@@ -755,7 +713,8 @@ bool loadMap(const std::string& name)
     switch(getLevelFormat(name))
     {
         case LEVEL_FORMAT_PC:
-            if(loadPCLevel(name) == false) return 0;
+            if(!loadPCLevel(name))
+                return false;
             break;
 
         case LEVEL_FORMAT_PSX:
@@ -775,7 +734,7 @@ bool loadMap(const std::string& name)
 
     engine_lua.prepare();
 
-    render::renderer.setWorld(&engine_world);
+    render::renderer.setWorld(&m_world);
 
     gui::Gui::instance->drawLoadScreen(1000);
 
@@ -785,7 +744,7 @@ bool loadMap(const std::string& name)
     return true;
 }
 
-int execCmd(const char *ch)
+int Engine::execCmd(const char *ch)
 {
     std::vector<char> token(Console::instance().lineSize());
     world::RoomSector* sect;
@@ -805,7 +764,7 @@ int execCmd(const char *ch)
         }
         else if(!strcmp(token.data(), "goto"))
         {
-            control_states.free_look = true;
+            m_controlState.m_freeLook = true;
             const auto x = script::MainEngine::parseFloat(&ch);
             const auto y = script::MainEngine::parseFloat(&ch);
             const auto z = script::MainEngine::parseFloat(&ch);
@@ -975,7 +934,7 @@ int execCmd(const char *ch)
             }
             else
             {
-                Console::instance().addText("Not avaliable =(", gui::FontStyle::ConsoleWarning);
+                Console::instance().addText("Not available =(", gui::FontStyle::ConsoleWarning);
             }
             return 1;
         }
@@ -1001,7 +960,47 @@ int execCmd(const char *ch)
     return 0;
 }
 
-void initConfig(const std::string& filename)
+void Engine::sysInit()
+{
+    system_fps.text.clear();
+
+    system_fps.position = {10.0, 10.0};
+    system_fps.Xanchor = gui::HorizontalAnchor::Right;
+    system_fps.Yanchor = gui::VerticalAnchor::Bottom;
+
+    system_fps.fontType = gui::FontType::Primary;
+    system_fps.fontStyle = gui::FontStyle::MenuTitle;
+
+    system_fps.show = true;
+
+    gui::TextLineManager::instance->add(&system_fps);
+}
+
+void Engine::sysDestroy()
+{
+    system_fps.show = false;
+    system_fps.text.clear();
+}
+
+void Engine::fpsCycle(util::Duration time)
+{
+    if(fpsCycles < 20)
+    {
+        fpsCycles++;
+        fpsTime += time;
+    }
+    else
+    {
+        screen_info.fps = 20.0f / util::toSeconds(fpsTime);
+        char tmp[16];
+        snprintf(tmp, 16, "%.1f", screen_info.fps);
+        Engine::instance.system_fps.text = tmp;
+        fpsCycles = 0;
+        fpsTime = util::Duration(0);
+    }
+}
+
+void Engine::initConfig(const std::string& filename)
 {
     initDefaultGlobals();
 
@@ -1026,78 +1025,15 @@ void initConfig(const std::string& filename)
 
         state.parseScreen(screen_info);
         state.parseRender(render::renderer.settings());
-        state.parseAudio(engine_world.audioEngine.settings());
+        state.parseAudio(m_world.audioEngine.settings());
         state.parseConsole(Console::instance());
-        state.parseControls(control_mapper);
+        state.parseControls(ControlSettings::instance);
         state.parseSystem(system_settings);
     }
     else
     {
         BOOST_LOG_TRIVIAL(error) << "Could not find " << filename;
     }
-}
-
-btScalar BtEngineClosestRayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
-{
-    const world::Object* c1 = static_cast<const world::Object*>(rayResult.m_collisionObject->getUserPointer());
-
-    if(c1 && (c1 == m_object || (m_skip_ghost && c1->getCollisionType() == world::CollisionType::Ghost)))
-    {
-        return 1.0;
-    }
-
-    const world::Room* r0 = m_object ? m_object->getRoom() : nullptr;
-    const world::Room* r1 = c1 ? c1->getRoom() : nullptr;
-
-    if(!r0 || !r1)
-    {
-        return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
-    }
-
-    if(r0 && r1)
-    {
-        if(r0->isInNearRoomsList(*r1))
-        {
-            return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
-        }
-        else
-        {
-            return 1.0;
-        }
-    }
-
-    return 1.0;
-}
-
-btScalar BtEngineClosestConvexResultCallback::addSingleResult(btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace)
-{
-    const world::Room* r0 = m_object ? m_object->getRoom() : nullptr;
-    const world::Object* c1 = static_cast<const world::Object*>(convexResult.m_hitCollisionObject->getUserPointer());
-    const world::Room* r1 = c1 ? c1->getRoom() : nullptr;
-
-    if(c1 && (c1 == m_object || (m_skip_ghost && c1->getCollisionType() == world::CollisionType::Ghost)))
-    {
-        return 1.0;
-    }
-
-    if(!r0 || !r1)
-    {
-        return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
-    }
-
-    if(r0 && r1)
-    {
-        if(r0->isInNearRoomsList(*r1))
-        {
-            return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
-        }
-        else
-        {
-            return 1.0;
-        }
-    }
-
-    return 1.0;
 }
 
 } // namespace engine

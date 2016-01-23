@@ -10,7 +10,7 @@ float time_scale = 1.0;
 
 int main(int /*argc*/, char** /*argv*/)
 {
-    engine::start();
+    engine::Engine::instance.start();
 
     // Entering main loop.
 
@@ -23,12 +23,12 @@ int main(int /*argc*/, char** /*argv*/)
         delta *= time_scale;
         prev_time = now;
 
-        engine::frame(delta);
-        engine::display();
+        engine::Engine::instance.frame(delta);
+        engine::Engine::instance.display();
     }
 
     // Main loop interrupted; shutting down.
 
-    engine::shutdown(EXIT_SUCCESS);
+    engine::Engine::instance.shutdown(EXIT_SUCCESS);
     return EXIT_SUCCESS;
 }

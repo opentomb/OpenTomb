@@ -221,7 +221,7 @@ void Fader::show()
         return;                                 // If fader is not active, don't render it.
     }
 
-    const auto alphaDelta = engine::engine_frame_time / m_speed;
+    const auto alphaDelta = engine::Engine::instance.m_frameTime / m_speed;
 
     if(m_direction == FaderDir::In)          // Fade in case
     {
@@ -259,7 +259,7 @@ void Fader::show()
         {
             if(m_currentAlpha == m_maxAlpha)
             {
-                m_currentTime += engine::engine_frame_time;
+                m_currentTime += engine::Engine::instance.m_frameTime;
             }
             else if(m_currentAlpha < m_maxAlpha)
             {
@@ -274,7 +274,7 @@ void Fader::show()
         {
             if(m_currentAlpha > 0.0)
             {
-                m_currentAlpha -= engine::engine_frame_time / m_speedSecondary;
+                m_currentAlpha -= engine::Engine::instance.m_frameTime / m_speedSecondary;
             }
             else
             {

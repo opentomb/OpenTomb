@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cstdint>
+#include <glm/glm.hpp>
 
-#include <GL/glew.h>
+#include <cstdint>
 
 namespace engine
 {
@@ -13,31 +13,29 @@ namespace engine
 
 struct SystemSettings
 {
-    bool        logging = false;
+    bool logging = false;
 };
 
 struct ScreenInfo
 {
-    int16_t     x;
-    int16_t     y;
-    int16_t     w;  GLfloat w_unit;   // Metering unit.
-    int16_t     h;  GLfloat h_unit;   // Metering unit.
+    int16_t     x = 50;
+    int16_t     y = 20;
+    int16_t     w = 800;
+    glm::float_t w_unit;   // Metering unit.
+    int16_t     h = 600;
+    glm::float_t h_unit;   // Metering unit.
 
     float       fps;
-    float       fov;
+    float       fov = 75.0f;
     float       scale_factor;
-    bool        FS_flag;
-    bool        show_debuginfo;
+    bool        FS_flag = false;
+    bool        show_debuginfo = false;
     bool        vsync;
 };
 
 extern ScreenInfo screen_info;
 extern SystemSettings system_settings;
 
-void Sys_Init();
 void Sys_InitGlobals();
-void Sys_Destroy();
-
-void Sys_Init(void);
 
 } // namespace engine

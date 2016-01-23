@@ -18,11 +18,6 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-namespace engine
-{
-extern SDL_Window  *sdl_window;
-} // namespace engine
-
 namespace gui
 {
 std::unique_ptr<Gui> Gui::instance = nullptr;
@@ -50,12 +45,12 @@ bool Gui::update()
         FontManager::instance->update();
     }
 
-    if(!Console::instance().isVisible() && engine::control_states.gui_inventory)
+    if(!Console::instance().isVisible() && engine::Engine::instance.m_controlState.m_guiInventory)
     {
-        if(engine::engine_world.character &&
+        if(engine::Engine::instance.m_world.character &&
            inventory.getCurrentState() == InventoryManager::InventoryState::Disabled)
         {
-            inventory.setInventory(&engine::engine_world.character->m_inventory);
+            inventory.setInventory(&engine::Engine::instance.m_world.character->m_inventory);
             inventory.send(InventoryManager::InventoryState::Open);
         }
         if(inventory.getCurrentState() == InventoryManager::InventoryState::Idle)
@@ -126,14 +121,14 @@ void Gui::switchGLMode(bool is_gui)
     }
     else                                                                        // set camera coordinate system
     {
-        guiProjectionMatrix = engine::engine_camera.getProjection();
+        guiProjectionMatrix = engine::Engine::instance.m_camera.getProjection();
     }
 }
 
 void Gui::drawInventory()
 {
     //if (!main_inventory_menu->IsVisible())
-    inventory.frame(engine::engine_frame_time);
+    inventory.frame(engine::Engine::instance.m_frameTime);
     if(inventory.getCurrentState() == InventoryManager::InventoryState::Disabled)
     {
         return;
@@ -188,7 +183,7 @@ void Gui::drawLoadScreen(int value)
 
     switchGLMode(false);
 
-    SDL_GL_SwapWindow(engine::sdl_window);
+    SDL_GL_SwapWindow(engine::Engine::instance.m_window);
 }
 
 /**

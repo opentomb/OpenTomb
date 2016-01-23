@@ -285,8 +285,8 @@ void StateController::handle(LaraState state)
 
     if(m_character->m_response.killed)  // Stop any music, if Lara is dead.
     {
-        engine::engine_world.audioEngine.endStreams(audio::StreamType::Oneshot);
-        engine::engine_world.audioEngine.endStreams(audio::StreamType::Chat);
+        engine::Engine::instance.m_world.audioEngine.endStreams(audio::StreamType::Oneshot);
+        engine::Engine::instance.m_world.audioEngine.endStreams(audio::StreamType::Chat);
     }
 
     auto it = m_handlers.find(state);
@@ -385,7 +385,7 @@ void StateController::stop()
     }
     else if(m_character->m_response.slide == MovementWalk::Forward)
     {
-        engine::engine_world.audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
+        engine::Engine::instance.m_world.audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
 
         if(m_character->m_command.jump)
         {
@@ -403,7 +403,7 @@ void StateController::stop()
         {
             m_character->m_moveDir = MoveDirection::Backward;
             m_character->setAnimation(animation::TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
-            engine::engine_world.audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
+            engine::Engine::instance.m_world.audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
         }
         else
         {
@@ -730,7 +730,7 @@ void StateController::jumpBack()
     }
     else if(m_character->m_response.horizontal_collide & 0x01)
     {
-        engine::Controls_JoyRumble(200.0, 200);
+        engine::ControlSettings::instance.joyRumble(200.0, 200);
         m_character->setAnimation(animation::TR_ANIMATION_LARA_SMASH_JUMP, 0);
         m_character->m_moveDir = MoveDirection::Forward;
         m_character->updateCurrentSpeed(true);
@@ -763,7 +763,7 @@ void StateController::jumpLeft()
     }
     else if(m_character->m_response.horizontal_collide & 0x01)
     {
-        engine::Controls_JoyRumble(200.0, 200);
+        engine::ControlSettings::instance.joyRumble(200.0, 200);
         m_character->setAnimation(animation::TR_ANIMATION_LARA_SMASH_JUMP, 0);
         m_character->m_moveDir = MoveDirection::Right;
         m_character->updateCurrentSpeed(true);
@@ -792,7 +792,7 @@ void StateController::jumpRight()
     }
     else if(m_character->m_response.horizontal_collide & 0x01)
     {
-        engine::Controls_JoyRumble(200.0, 200);
+        engine::ControlSettings::instance.joyRumble(200.0, 200);
         m_character->setAnimation(animation::TR_ANIMATION_LARA_SMASH_JUMP, 0);
         m_character->m_moveDir = MoveDirection::Left;
         m_character->updateCurrentSpeed(true);
@@ -937,6 +937,8 @@ void StateController::runForward()
     {
         m_character->m_moveDir = MoveDirection::Stay;
         boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);  // Select correct anim dispatch.
+        if(!i)
+            return;
         if(*i == 0)
         {
             m_character->setAnimation(animation::TR_ANIMATION_LARA_RUN_UP_STEP_RIGHT, 0);
@@ -960,7 +962,7 @@ void StateController::runForward()
         }
         else
         {
-            engine::Controls_JoyRumble(200.0, 200);
+            engine::ControlSettings::instance.joyRumble(200.0, 200);
 
             if(m_character->m_command.move.z == MovementWalk::Forward)
             {
@@ -1056,7 +1058,7 @@ void StateController::sprint()
     }
     else if(m_character->m_response.horizontal_collide & 0x01)
     {
-        engine::Controls_JoyRumble(200.0, 200);
+        engine::ControlSettings::instance.joyRumble(200.0, 200);
 
         boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);
         if(*i == 1)
@@ -1442,7 +1444,7 @@ void StateController::slideBack()
         return;
     }
 
-    engine::engine_world.audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
+    engine::Engine::instance.m_world.audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
 }
 
 void StateController::slideForward()
@@ -1457,7 +1459,7 @@ void StateController::slideForward()
     }
     else if(m_character->m_response.slide == MovementWalk::None)
     {
-        if(m_character->m_command.move.z == MovementWalk::Forward && engine::engine_world.engineVersion >= loader::Engine::TR3)
+        if(m_character->m_command.move.z == MovementWalk::Forward && engine::Engine::instance.m_world.engineVersion >= loader::Engine::TR3)
         {
             setNextState(LaraState::RunForward);
         }
@@ -1475,7 +1477,7 @@ void StateController::slideForward()
         return;
     }
 
-    engine::engine_world.audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
+    engine::Engine::instance.m_world.audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
 }
 
 void StateController::pushableGrab()
@@ -1565,16 +1567,16 @@ void StateController::pushablePush()
             }
         }
 
-        if(engine::engine_world.engineVersion > loader::Engine::TR3)
+        if(engine::Engine::instance.m_world.engineVersion > loader::Engine::TR3)
         {
             if(was_traversed)
             {
-                if(!engine::engine_world.audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    engine::engine_world.audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!engine::Engine::instance.m_world.audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    engine::Engine::instance.m_world.audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
             else
             {
-                engine::engine_world.audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                engine::Engine::instance.m_world.audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
         else
@@ -1583,8 +1585,8 @@ void StateController::pushablePush()
                || m_character->m_skeleton.getCurrentFrame() == 110
                || m_character->m_skeleton.getCurrentFrame() == 142)
             {
-                if(!engine::engine_world.audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    engine::engine_world.audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!engine::Engine::instance.m_world.audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    engine::Engine::instance.m_world.audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
 
@@ -1592,9 +1594,9 @@ void StateController::pushablePush()
     }
     else
     {
-        if(engine::engine_world.engineVersion > loader::Engine::TR3)
+        if(engine::Engine::instance.m_world.engineVersion > loader::Engine::TR3)
         {
-            engine::engine_world.audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+            engine::Engine::instance.m_world.audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
         }
     }
 }
@@ -1653,16 +1655,16 @@ void StateController::pushablePull()
             }
         }
 
-        if(engine::engine_world.engineVersion > loader::Engine::TR3)
+        if(engine::Engine::instance.m_world.engineVersion > loader::Engine::TR3)
         {
             if(was_traversed)
             {
-                if(!engine::engine_world.audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    engine::engine_world.audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!engine::Engine::instance.m_world.audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    engine::Engine::instance.m_world.audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
             else
             {
-                engine::engine_world.audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                engine::Engine::instance.m_world.audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
         else
@@ -1673,8 +1675,8 @@ void StateController::pushablePull()
                || m_character->m_skeleton.getCurrentFrame() == 124
                || m_character->m_skeleton.getCurrentFrame() == 156)
             {
-                if(!engine::engine_world.audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    engine::engine_world.audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!engine::Engine::instance.m_world.audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    engine::Engine::instance.m_world.audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
 
@@ -1682,9 +1684,9 @@ void StateController::pushablePull()
     }
     else
     {
-        if(engine::engine_world.engineVersion > loader::Engine::TR3)
+        if(engine::Engine::instance.m_world.engineVersion > loader::Engine::TR3)
         {
-            engine::engine_world.audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+            engine::Engine::instance.m_world.audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
         }
     }
 }
@@ -1722,7 +1724,7 @@ void StateController::jumpUp()
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
-        global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalEpsilon + util::toSeconds(engine::engine_frame_time) * m_character->m_speed[2];
+        global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalEpsilon + util::toSeconds(engine::Engine::instance.m_frameTime) * m_character->m_speed[2];
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
         if(m_character->m_climb.edge_hit)
@@ -1821,7 +1823,7 @@ void StateController::reach()
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset( m_character->m_transform[1] * t );
-        global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalEpsilon + util::toSeconds(engine::engine_frame_time) * m_character->m_speed[2];
+        global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalEpsilon + util::toSeconds(engine::Engine::instance.m_frameTime) * m_character->m_speed[2];
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
         if(m_character->m_climb.edge_hit && m_character->m_climb.can_hang)
@@ -2352,7 +2354,7 @@ void StateController::freefall()
             int(m_character->m_speed[2]) >= -FREE_FALL_SPEED_CRITICAL - 100)
     {
         m_character->m_speed[2] = -FREE_FALL_SPEED_CRITICAL - 101;
-        engine::engine_world.audioEngine.send(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Scream
+        engine::Engine::instance.m_world.audioEngine.send(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Scream
     }
     else if(m_character->m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
     {
@@ -2367,12 +2369,12 @@ void StateController::freefall()
         m_character->m_command.rot[1] = 0.0;
         m_character->updateTransform();                                     // needed here to fix underwater in wall collision bug
         m_character->setAnimation(animation::TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
-        engine::engine_world.audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Stop scream
+        engine::Engine::instance.m_world.audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Stop scream
 
         // Splash sound is hardcoded, beginning with TR3.
-        if(engine::engine_world.engineVersion > loader::Engine::TR2)
+        if(engine::Engine::instance.m_world.engineVersion > loader::Engine::TR2)
         {
-            engine::engine_world.audioEngine.send(audio::SoundSplash, audio::EmitterType::Entity, m_character->getId());
+            engine::Engine::instance.m_world.audioEngine.send(audio::SoundSplash, audio::EmitterType::Entity, m_character->getId());
         }
     }
     else if((m_character->m_response.vertical_collide & 0x01) || m_character->m_moveType == MoveType::OnFloor)
@@ -2380,7 +2382,7 @@ void StateController::freefall()
         if(m_character->getRoom()->m_flags & TR_ROOM_FLAG_QUICKSAND)
         {
             m_character->setAnimation(animation::TR_ANIMATION_LARA_STAY_IDLE, 0);
-            engine::engine_world.audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
+            engine::Engine::instance.m_world.audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
         }
         else if(m_character->m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
         {
@@ -2388,7 +2390,7 @@ void StateController::freefall()
             {
                 m_character->m_response.killed = true;
                 m_character->setAnimation(animation::TR_ANIMATION_LARA_LANDING_DEATH, 0);
-                engine::Controls_JoyRumble(200.0, 500);
+                engine::ControlSettings::instance.joyRumble(200.0, 500);
             }
             else
             {
@@ -2407,7 +2409,7 @@ void StateController::freefall()
         if(m_character->m_response.killed)
         {
             setNextState(LaraState::Death);
-            engine::engine_world.audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
+            engine::Engine::instance.m_world.audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
         }
     }
     else if(m_character->m_command.action)
@@ -2497,7 +2499,7 @@ void StateController::waterDeath()
 {
     if(m_character->m_moveType != MoveType::OnWater)
     {
-        m_character->m_transform[3][2] += MeteringSectorSize / 4 * util::toSeconds(engine::engine_frame_time);     // go to the air
+        m_character->m_transform[3][2] += MeteringSectorSize / 4 * util::toSeconds(engine::Engine::instance.m_frameTime);     // go to the air
     }
 }
 
@@ -2794,7 +2796,7 @@ void StateController::crouchIdle()
     }
     else
     {
-        if(engine::engine_world.engineVersion > loader::Engine::TR3)
+        if(engine::Engine::instance.m_world.engineVersion > loader::Engine::TR3)
         {
             if(m_character->m_command.move.x == MovementStrafe::Right)
             {

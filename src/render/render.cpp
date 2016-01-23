@@ -132,7 +132,7 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh) cons
                 continue;
             }
 
-            world::animation::TextureAnimationSequence* seq = &engine::engine_world.textureAnimations[*p.textureAnimationId];
+            world::animation::TextureAnimationSequence* seq = &engine::Engine::instance.m_world.textureAnimations[*p.textureAnimationId];
 
             size_t frame = (seq->currentFrame + p.startFrame) % seq->keyFrames.size();
             world::animation::TextureAnimationKeyFrame* tf = &seq->keyFrames[frame];
@@ -230,7 +230,7 @@ void Render::renderPolygonTransparency(loader::BlendingMode currentTransparency,
 
 void Render::renderBSPFrontToBack(loader::BlendingMode currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription& shader)
 {
-    if(root->plane.distance(engine::engine_camera.getPosition()) >= 0)
+    if(root->plane.distance(engine::Engine::instance.m_camera.getPosition()) >= 0)
     {
         if(root->front != nullptr)
         {
@@ -276,7 +276,7 @@ void Render::renderBSPFrontToBack(loader::BlendingMode currentTransparency, cons
 
 void Render::renderBSPBackToFront(loader::BlendingMode currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription& shader)
 {
-    if(root->plane.distance(engine::engine_camera.getPosition()) >= 0)
+    if(root->plane.distance(engine::Engine::instance.m_camera.getPosition()) >= 0)
     {
         if(root->back != nullptr)
         {
@@ -413,7 +413,7 @@ const LitShaderDescription *Render::setupEntityLight(const world::Entity& entity
 
     if(entity.getRoom()->m_flags & TR_ROOM_FLAG_WATER)
     {
-        ambient_component *= engine::engine_world.calculateWaterTint();
+        ambient_component *= engine::Engine::instance.m_world.calculateWaterTint();
     }
 
     std::array<glm::vec3, EntityShaderLightsLimit> positions;
@@ -445,7 +445,7 @@ const LitShaderDescription *Render::setupEntityLight(const world::Entity& entity
 
         if(entity.getRoom()->m_flags & TR_ROOM_FLAG_WATER)
         {
-            colors[current_light_number] *= engine::engine_world.calculateWaterTint();
+            colors[current_light_number] *= engine::Engine::instance.m_world.calculateWaterTint();
         }
 
         // Find position
@@ -606,7 +606,7 @@ void Render::renderRoom(const world::Room& room)
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(room.m_lightMode == 1, room.m_flags & 1);
 
-        glm::vec4 tint = engine::engine_world.calculateWaterTint();
+        glm::vec4 tint = engine::Engine::instance.m_world.calculateWaterTint();
         glUseProgram(shader->program);
 
         glUniform4fv(shader->tint_mult, 1, glm::value_ptr(tint));
@@ -639,7 +639,7 @@ void Render::renderRoom(const world::Room& room)
             //If this static mesh is in a water room
             if(room.m_flags & TR_ROOM_FLAG_WATER)
             {
-                tint *= engine::engine_world.calculateWaterTint();
+                tint *= engine::Engine::instance.m_world.calculateWaterTint();
             }
             glUniform4fv(m_shaderManager->getStaticMeshShader()->tint_mult, 1, glm::value_ptr(tint));
             renderMesh(sm->mesh);
@@ -817,9 +817,9 @@ void Render::drawList()
         }
     }
 
-    if(engine::engine_world.character != nullptr && engine::engine_world.character->m_skeleton.getModel()->has_transparency)
+    if(engine::Engine::instance.m_world.character != nullptr && engine::Engine::instance.m_world.character->m_skeleton.getModel()->has_transparency)
     {
-        world::Entity *ent = engine::engine_world.character.get();
+        world::Entity *ent = engine::Engine::instance.m_world.character.get();
         for(const world::animation::Bone& bone : ent->m_skeleton.getBones())
         {
             if(!bone.mesh->m_transparencyPolygons.empty())
@@ -883,7 +883,7 @@ void Render::drawListDebugLines()
         glUseProgram(shader->program);
         glUniform1i(shader->sampler, 0);
         glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(m_cam->getViewProjection()));
-        glBindTexture(GL_TEXTURE_2D, engine::engine_world.textures.back());
+        glBindTexture(GL_TEXTURE_2D, engine::Engine::instance.m_world.textures.back());
         glPointSize(6.0f);
         glLineWidth(3.0f);
         debugDrawer.render();
@@ -957,7 +957,7 @@ void Render::genWorldList()
         return;
     }
 
-    if(engine::control_states.noclip)  // camera is out of all rooms AND noclip is on
+    if(engine::Engine::instance.m_controlState.m_noClip)  // camera is out of all rooms AND noclip is on
     {
         for(auto r : m_world->rooms)
         {
@@ -990,8 +990,8 @@ void Render::setWorld(world::World *world)
     m_drawSkybox = false;
     m_renderList.clear();
 
-    m_cam = &engine::engine_camera;
-    engine::engine_camera.setCurrentRoom( nullptr );
+    m_cam = &engine::Engine::instance.m_camera;
+    engine::Engine::instance.m_camera.setCurrentRoom( nullptr );
 }
 
 

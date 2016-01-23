@@ -1,12 +1,5 @@
 #include "controls.h"
 
-#include <cstdlib>
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_keycode.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_haptic.h>
-
 #include "common.h"
 #include "engine/bullet.h"
 #include "engine/engine.h"
@@ -15,23 +8,30 @@
 #include "inventory.h"
 #include "script/script.h"
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_keycode.h>
+#include <SDL2/SDL_events.h>
+#include <SDL2/SDL_haptic.h>
+
 #include <glm/gtc/type_ptr.hpp>
+
+#include <boost/range/adaptors.hpp>
+
+#include <cstdlib>
+#include <stdexcept>
 
 extern bool done;
 
 namespace engine
 {
 
-extern SDL_Joystick         *sdl_joystick;
-extern SDL_GameController   *sdl_controller;
-extern SDL_Haptic           *sdl_haptic;
-extern SDL_Window           *sdl_window;
-
 extern world::Object* last_object;
 
 using gui::Console;
 
-void Controls_Key(int32_t button, bool state)
+ControlSettings ControlSettings::instance{};
+
+void ControlSettings::key(int32_t button, bool state)
 {
     // Fill script-driven debug keyboard input.
 
@@ -39,297 +39,296 @@ void Controls_Key(int32_t button, bool state)
 
     // Compare ALL mapped buttons.
 
-    for(int i = 0; i < ACT_LASTINDEX; i++)
+    for(const auto& i : action_map)
     {
-        if(button == control_mapper.action_map[i].primary ||
-           button == control_mapper.action_map[i].secondary)  // If button = mapped action...
+        if(button != i.second.primary && button != i.second.secondary)  // If button = mapped action...
+            continue;
+
+        switch(i.first)                                           // ...Choose corresponding action.
         {
-            switch(i)                                           // ...Choose corresponding action.
-            {
-                case ACT_UP:
-                    control_states.move_forward = state;
-                    break;
+            case Action::Up:
+                Engine::instance.m_controlState.m_moveForward = state;
+                break;
 
-                case ACT_DOWN:
-                    control_states.move_backward = state;
-                    break;
+            case Action::Down:
+                Engine::instance.m_controlState.m_moveBackward = state;
+                break;
 
-                case ACT_LEFT:
-                    control_states.move_left = state;
-                    break;
+            case Action::Left:
+                Engine::instance.m_controlState.m_moveLeft = state;
+                break;
 
-                case ACT_RIGHT:
-                    control_states.move_right = state;
-                    break;
+            case Action::Right:
+                Engine::instance.m_controlState.m_moveRight = state;
+                break;
 
-                case ACT_DRAWWEAPON:
-                    control_states.do_draw_weapon = state;
-                    break;
+            case Action::DrawWeapon:
+                Engine::instance.m_controlState.m_doDrawWeapon = state;
+                break;
 
-                case ACT_ACTION:
-                    control_states.state_action = state;
-                    break;
+            case Action::Action:
+                Engine::instance.m_controlState.m_stateAction = state;
+                break;
 
-                case ACT_JUMP:
-                    control_states.move_up = state;
-                    control_states.do_jump = state;
-                    break;
+            case Action::Jump:
+                Engine::instance.m_controlState.m_moveUp = state;
+                Engine::instance.m_controlState.m_doJump = state;
+                break;
 
-                case ACT_ROLL:
-                    control_states.do_roll = state;
-                    break;
+            case Action::Roll:
+                Engine::instance.m_controlState.m_doRoll = state;
+                break;
 
-                case ACT_WALK:
-                    control_states.state_walk = state;
-                    break;
+            case Action::Walk:
+                Engine::instance.m_controlState.m_stateWalk = state;
+                break;
 
-                case ACT_SPRINT:
-                    control_states.state_sprint = state;
-                    break;
+            case Action::Sprint:
+                Engine::instance.m_controlState.m_stateSprint = state;
+                break;
 
-                case ACT_CROUCH:
-                    control_states.move_down = state;
-                    control_states.state_crouch = state;
-                    break;
+            case Action::Crouch:
+                Engine::instance.m_controlState.m_moveDown = state;
+                Engine::instance.m_controlState.m_stateCrouch = state;
+                break;
 
-                case ACT_LOOKUP:
-                    control_states.look_up = state;
-                    break;
+            case Action::LookUp:
+                Engine::instance.m_controlState.m_lookUp = state;
+                break;
 
-                case ACT_LOOKDOWN:
-                    control_states.look_down = state;
-                    break;
+            case Action::LookDown:
+                Engine::instance.m_controlState.m_lookDown = state;
+                break;
 
-                case ACT_LOOKLEFT:
-                    control_states.look_left = state;
-                    break;
+            case Action::LookLeft:
+                Engine::instance.m_controlState.m_lookLeft = state;
+                break;
 
-                case ACT_LOOKRIGHT:
-                    control_states.look_right = state;
-                    break;
+            case Action::LookRight:
+                Engine::instance.m_controlState.m_lookRight = state;
+                break;
 
-                case ACT_BIGMEDI:
-                    if(!control_mapper.action_map[i].already_pressed)
+            case Action::BigMedi:
+                if(!action_map[i.first].already_pressed)
+                {
+                    Engine::instance.m_controlState.m_useBigMedi = state;
+                }
+                break;
+
+            case Action::SmallMedi:
+                if(!action_map[i.first].already_pressed)
+                {
+                    Engine::instance.m_controlState.m_useSmallMedi = state;
+                }
+                break;
+
+            case Action::Console:
+                if(!state)
+                {
+                    Console::instance().toggleVisibility();
+
+                    if(Console::instance().isVisible())
                     {
-                        control_states.use_big_medi = state;
+                        //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+                        SDL_SetRelativeMouseMode(SDL_FALSE);
+                        SDL_StartTextInput();
                     }
-                    break;
-
-                case ACT_SMALLMEDI:
-                    if(!control_mapper.action_map[i].already_pressed)
+                    else
                     {
-                        control_states.use_small_medi = state;
+                        //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+                        SDL_SetRelativeMouseMode(SDL_TRUE);
+                        SDL_StopTextInput();
                     }
-                    break;
+                }
+                break;
 
-                case ACT_CONSOLE:
-                    if(!state)
-                    {
-                        Console::instance().toggleVisibility();
+            case Action::Screenshot:
+                if(!state)
+                {
+                    Com_TakeScreenShot();
+                }
+                break;
 
-                        if(Console::instance().isVisible())
-                        {
-                            //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
-                            SDL_SetRelativeMouseMode(SDL_FALSE);
-                            SDL_StartTextInput();
-                        }
-                        else
-                        {
-                            //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
-                            SDL_SetRelativeMouseMode(SDL_TRUE);
-                            SDL_StopTextInput();
-                        }
-                    }
-                    break;
+            case Action::Inventory:
+                Engine::instance.m_controlState.m_guiInventory = state;
+                break;
 
-                case ACT_SCREENSHOT:
-                    if(!state)
-                    {
-                        Com_TakeScreenShot();
-                    }
-                    break;
+            case Action::SaveGame:
+                if(!state)
+                {
+                    Game_Save("qsave.lua");
+                }
+                break;
 
-                case ACT_INVENTORY:
-                    control_states.gui_inventory = state;
-                    break;
+            case Action::LoadGame:
+                if(!state)
+                {
+                    Game_Load("qsave.lua");
+                }
+                break;
 
-                case ACT_SAVEGAME:
-                    if(!state)
-                    {
-                        Game_Save("qsave.lua");
-                    }
-                    break;
-
-                case ACT_LOADGAME:
-                    if(!state)
-                    {
-                        Game_Load("qsave.lua");
-                    }
-                    break;
-
-                default:
-                    // control_states.move_forward = state;
-                    return;
-            }
-
-            control_mapper.action_map[i].state = state;
+            default:
+                // control_states.move_forward = state;
+                return;
         }
+
+        action_map[i.first].state = state;
     }
 }
 
-void Controls_JoyAxis(int axis, Sint16 axisValue)
+void ControlSettings::joyAxis(int axis, Sint16 axisValue)
 {
-    for(int i = 0; i < AXIS_LASTINDEX; i++)            // Compare with ALL mapped axes.
+    auto axisFilter = [axis](const std::pair<Axis,int>& entry){
+        return entry.second == axis;
+    };
+    for(Axis i : joy_axis_map | boost::adaptors::filtered(axisFilter) | boost::adaptors::map_keys)            // Compare with ALL mapped axes.
     {
-        if(axis == control_mapper.joy_axis_map[i])      // If mapped = current...
+        switch(i)                                   // ...Choose corresponding action.
         {
-            switch(i)                                   // ...Choose corresponding action.
-            {
-                case AXIS_LOOK_X:
-                    if(axisValue < -control_mapper.joy_look_deadzone || axisValue > control_mapper.joy_look_deadzone)
+            case Axis::LookX:
+                if(axisValue < -joy_look_deadzone || axisValue > joy_look_deadzone)
+                {
+                    if(joy_look_invert_x)
                     {
-                        if(control_mapper.joy_look_invert_x)
+                        joy_look_x = -(axisValue / (32767 / joy_look_sensitivity)); // 32767 is the max./min. axis value.
+                    }
+                    else
+                    {
+                        joy_look_x = axisValue / (32767 / joy_look_sensitivity);
+                    }
+                }
+                else
+                {
+                    joy_look_x = 0;
+                }
+                return;
+
+            case Axis::LookY:
+                if(axisValue < -joy_look_deadzone || axisValue > joy_look_deadzone)
+                {
+                    if(joy_look_invert_y)
+                    {
+                        joy_look_y = -(axisValue / (32767 / joy_look_sensitivity));
+                    }
+                    else
+                    {
+                        joy_look_y = axisValue / (32767 / joy_look_sensitivity);
+                    }
+                }
+                else
+                {
+                    joy_look_y = 0;
+                }
+                return;
+
+            case Axis::MoveX:
+                if(axisValue < -joy_move_deadzone || axisValue > joy_move_deadzone)
+                {
+                    if(joy_move_invert_x)
+                    {
+                        joy_move_x = -(axisValue / (32767 / joy_move_sensitivity));
+
+                        if(axisValue > joy_move_deadzone)
                         {
-                            control_mapper.joy_look_x = -(axisValue / (32767 / control_mapper.joy_look_sensitivity)); // 32767 is the max./min. axis value.
+                            Engine::instance.m_controlState.m_moveLeft = true;
+                            Engine::instance.m_controlState.m_moveRight = false;
                         }
                         else
                         {
-                            control_mapper.joy_look_x = axisValue / (32767 / control_mapper.joy_look_sensitivity);
+                            Engine::instance.m_controlState.m_moveLeft = false;
+                            Engine::instance.m_controlState.m_moveRight = true;
                         }
                     }
                     else
                     {
-                        control_mapper.joy_look_x = 0;
-                    }
-                    return;
-
-                case AXIS_LOOK_Y:
-                    if(axisValue < -control_mapper.joy_look_deadzone || axisValue > control_mapper.joy_look_deadzone)
-                    {
-                        if(control_mapper.joy_look_invert_y)
+                        joy_move_x = axisValue / (32767 / joy_move_sensitivity);
+                        if(axisValue > joy_move_deadzone)
                         {
-                            control_mapper.joy_look_y = -(axisValue / (32767 / control_mapper.joy_look_sensitivity));
+                            Engine::instance.m_controlState.m_moveLeft = false;
+                            Engine::instance.m_controlState.m_moveRight = true;
                         }
                         else
                         {
-                            control_mapper.joy_look_y = axisValue / (32767 / control_mapper.joy_look_sensitivity);
+                            Engine::instance.m_controlState.m_moveLeft = true;
+                            Engine::instance.m_controlState.m_moveRight = false;
+                        }
+                    }
+                }
+                else
+                {
+                    Engine::instance.m_controlState.m_moveLeft = false;
+                    Engine::instance.m_controlState.m_moveRight = false;
+                    joy_move_x = 0;
+                }
+                return;
+
+            case Axis::MoveY:
+                if(axisValue < -joy_move_deadzone || axisValue > joy_move_deadzone)
+                {
+                    if(joy_move_invert_y)
+                    {
+                        joy_move_y = -(axisValue / (32767 / joy_move_sensitivity));
+                        if(axisValue > joy_move_deadzone)
+                        {
+                            Engine::instance.m_controlState.m_moveForward = true;
+                            Engine::instance.m_controlState.m_moveBackward = false;
+                        }
+                        else
+                        {
+                            Engine::instance.m_controlState.m_moveForward = false;
+                            Engine::instance.m_controlState.m_moveBackward = true;
                         }
                     }
                     else
                     {
-                        control_mapper.joy_look_y = 0;
-                    }
-                    return;
-
-                case AXIS_MOVE_X:
-                    if(axisValue < -control_mapper.joy_move_deadzone || axisValue > control_mapper.joy_move_deadzone)
-                    {
-                        if(control_mapper.joy_move_invert_x)
+                        joy_move_y = axisValue / (32767 / joy_move_sensitivity);
+                        if(axisValue > joy_move_deadzone)
                         {
-                            control_mapper.joy_move_x = -(axisValue / (32767 / control_mapper.joy_move_sensitivity));
-
-                            if(axisValue > control_mapper.joy_move_deadzone)
-                            {
-                                control_states.move_left = true;
-                                control_states.move_right = false;
-                            }
-                            else
-                            {
-                                control_states.move_left = false;
-                                control_states.move_right = true;
-                            }
+                            Engine::instance.m_controlState.m_moveForward = false;
+                            Engine::instance.m_controlState.m_moveBackward = true;
                         }
                         else
                         {
-                            control_mapper.joy_move_x = axisValue / (32767 / control_mapper.joy_move_sensitivity);
-                            if(axisValue > control_mapper.joy_move_deadzone)
-                            {
-                                control_states.move_left = false;
-                                control_states.move_right = true;
-                            }
-                            else
-                            {
-                                control_states.move_left = true;
-                                control_states.move_right = false;
-                            }
+                            Engine::instance.m_controlState.m_moveForward = true;
+                            Engine::instance.m_controlState.m_moveBackward = false;
                         }
                     }
-                    else
-                    {
-                        control_states.move_left = false;
-                        control_states.move_right = false;
-                        control_mapper.joy_move_x = 0;
-                    }
-                    return;
+                }
+                else
+                {
+                    Engine::instance.m_controlState.m_moveForward = false;
+                    Engine::instance.m_controlState.m_moveBackward = false;
+                    joy_move_y = 0;
+                }
+                return;
 
-                case AXIS_MOVE_Y:
-                    if(axisValue < -control_mapper.joy_move_deadzone || axisValue > control_mapper.joy_move_deadzone)
-                    {
-                        if(control_mapper.joy_move_invert_y)
-                        {
-                            control_mapper.joy_move_y = -(axisValue / (32767 / control_mapper.joy_move_sensitivity));
-                            if(axisValue > control_mapper.joy_move_deadzone)
-                            {
-                                control_states.move_forward = true;
-                                control_states.move_backward = false;
-                            }
-                            else
-                            {
-                                control_states.move_forward = false;
-                                control_states.move_backward = true;
-                            }
-                        }
-                        else
-                        {
-                            control_mapper.joy_move_y = axisValue / (32767 / control_mapper.joy_move_sensitivity);
-                            if(axisValue > control_mapper.joy_move_deadzone)
-                            {
-                                control_states.move_forward = false;
-                                control_states.move_backward = true;
-                            }
-                            else
-                            {
-                                control_states.move_forward = true;
-                                control_states.move_backward = false;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        control_states.move_forward = false;
-                        control_states.move_backward = false;
-                        control_mapper.joy_move_y = 0;
-                    }
-                    return;
-
-                default:
-                    return;
-            } // end switch(i)
-        } // end if(axis == control_mapper.joy_axis_map[i])
+            default:
+                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid axis"));
+        } // end switch(i)
     } // end for(int i = 0; i < AXIS_LASTINDEX; i++)
 }
 
-void Controls_JoyHat(int value)
+void ControlSettings::joyHat(int value)
 {
     // NOTE: Hat movements emulate keypresses
     // with HAT direction + JOY_HAT_MASK (1100) index.
 
-    Controls_Key(JOY_HAT_MASK + SDL_HAT_UP, false);     // Reset all directions.
-    Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN, false);
-    Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT, false);
-    Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, false);
+    key(JOY_HAT_MASK + SDL_HAT_UP, false);     // Reset all directions.
+    key(JOY_HAT_MASK + SDL_HAT_DOWN, false);
+    key(JOY_HAT_MASK + SDL_HAT_LEFT, false);
+    key(JOY_HAT_MASK + SDL_HAT_RIGHT, false);
 
     if(value & SDL_HAT_UP)
-        Controls_Key(JOY_HAT_MASK + SDL_HAT_UP, true);
+        key(JOY_HAT_MASK + SDL_HAT_UP, true);
     if(value & SDL_HAT_DOWN)
-        Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN, true);
+        key(JOY_HAT_MASK + SDL_HAT_DOWN, true);
     if(value & SDL_HAT_LEFT)
-        Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT, true);
+        key(JOY_HAT_MASK + SDL_HAT_LEFT, true);
     if(value & SDL_HAT_RIGHT)
-        Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, true);
+        key(JOY_HAT_MASK + SDL_HAT_RIGHT, true);
 }
 
-void Controls_WrapGameControllerKey(int button, bool state)
+void ControlSettings::wrapGameControllerKey(int button, bool state)
 {
     // SDL2 Game Controller interface doesn't operate with HAT directions,
     // instead it treats them as button pushes. So, HAT doesn't return
@@ -341,24 +340,24 @@ void Controls_WrapGameControllerKey(int button, bool state)
     switch(button)
     {
         case SDL_CONTROLLER_BUTTON_DPAD_UP:
-            Controls_Key(JOY_HAT_MASK + SDL_HAT_UP, state);
+            key(JOY_HAT_MASK + SDL_HAT_UP, state);
             break;
         case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-            Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN, state);
+            key(JOY_HAT_MASK + SDL_HAT_DOWN, state);
             break;
         case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-            Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT, state);
+            key(JOY_HAT_MASK + SDL_HAT_LEFT, state);
             break;
         case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-            Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, state);
+            key(JOY_HAT_MASK + SDL_HAT_RIGHT, state);
             break;
         default:
-            Controls_Key(JOY_BUTTON_MASK + button, state);
+            key(JOY_BUTTON_MASK + button, state);
             break;
     }
 }
 
-void Controls_WrapGameControllerAxis(int axis, Sint16 value)
+void ControlSettings::wrapGameControllerAxis(int axis, Sint16 value)
 {
     // Since left/right triggers on X360-like controllers are actually axes,
     // and we still need them as buttons, we remap these axes to button events.
@@ -370,93 +369,93 @@ void Controls_WrapGameControllerAxis(int axis, Sint16 value)
     {
         if(value >= JOY_TRIGGER_DEADZONE)
         {
-            Controls_Key(axis + JOY_TRIGGER_MASK, true);
+            key(axis + JOY_TRIGGER_MASK, true);
         }
         else
         {
-            Controls_Key(axis + JOY_TRIGGER_MASK, false);
+            key(axis + JOY_TRIGGER_MASK, false);
         }
     }
     else
     {
-        Controls_JoyAxis(axis, value);
+        joyAxis(axis, value);
     }
 }
 
-void Controls_JoyRumble(float power, int time)
+void ControlSettings::joyRumble(float power, int time)
 {
     // JoyRumble is a simple wrapper for SDL's haptic rumble play.
 
-    if(sdl_haptic)
-        SDL_HapticRumblePlay(sdl_haptic, power, time);
+    if(Engine::instance.m_haptic)
+        SDL_HapticRumblePlay(Engine::instance.m_haptic, power, time);
 }
 
-void Controls_RefreshStates()
+void ControlSettings::refreshStates()
 {
-    for(int i = 0; i < ACT_LASTINDEX; i++)
+    for(ControlAction& action : action_map | boost::adaptors::map_values)
     {
-        if(control_mapper.action_map[i].state)
+        if(action.state)
         {
-            control_mapper.action_map[i].already_pressed = true;
+            action.already_pressed = true;
         }
         else
         {
-            control_mapper.action_map[i].already_pressed = false;
+            action.already_pressed = false;
         }
     }
 }
 
-void Controls_InitGlobals()
+void ControlSettings::initGlobals()
 {
-    control_mapper.mouse_sensitivity = 25.0;
-    control_mapper.use_joy = false;
+    mouse_sensitivity = 25.0;
+    use_joy = false;
 
-    control_mapper.joy_number = 0;              ///@FIXME: Replace with joystick scanner default value when done.
-    control_mapper.joy_rumble = false;              ///@FIXME: Make it according to GetCaps of default joystick.
+    joy_number = 0;              ///@FIXME: Replace with joystick scanner default value when done.
+    joy_rumble = false;              ///@FIXME: Make it according to GetCaps of default joystick.
 
-    control_mapper.joy_axis_map[AXIS_MOVE_X] = 0;
-    control_mapper.joy_axis_map[AXIS_MOVE_Y] = 1;
-    control_mapper.joy_axis_map[AXIS_LOOK_X] = 2;
-    control_mapper.joy_axis_map[AXIS_LOOK_Y] = 3;
+    joy_axis_map[Axis::MoveX] = 0;
+    joy_axis_map[Axis::MoveY] = 1;
+    joy_axis_map[Axis::LookX] = 2;
+    joy_axis_map[Axis::LookY] = 3;
 
-    control_mapper.joy_look_invert_x = false;
-    control_mapper.joy_look_invert_y = false;
-    control_mapper.joy_move_invert_x = false;
-    control_mapper.joy_move_invert_y = false;
+    joy_look_invert_x = false;
+    joy_look_invert_y = false;
+    joy_move_invert_x = false;
+    joy_move_invert_y = false;
 
-    control_mapper.joy_look_deadzone = 1500;
-    control_mapper.joy_move_deadzone = 1500;
+    joy_look_deadzone = 1500;
+    joy_move_deadzone = 1500;
 
-    control_mapper.joy_look_sensitivity = 1.5;
-    control_mapper.joy_move_sensitivity = 1.5;
+    joy_look_sensitivity = 1.5;
+    joy_move_sensitivity = 1.5;
 
-    control_mapper.action_map[ACT_JUMP].primary = SDLK_SPACE;
-    control_mapper.action_map[ACT_ACTION].primary = SDLK_LCTRL;
-    control_mapper.action_map[ACT_ROLL].primary = SDLK_x;
-    control_mapper.action_map[ACT_SPRINT].primary = SDLK_CAPSLOCK;
-    control_mapper.action_map[ACT_CROUCH].primary = SDLK_c;
-    control_mapper.action_map[ACT_WALK].primary = SDLK_LSHIFT;
+    action_map[Action::Jump].primary = SDLK_SPACE;
+    action_map[Action::Action].primary = SDLK_LCTRL;
+    action_map[Action::Roll].primary = SDLK_x;
+    action_map[Action::Sprint].primary = SDLK_CAPSLOCK;
+    action_map[Action::Crouch].primary = SDLK_c;
+    action_map[Action::Walk].primary = SDLK_LSHIFT;
 
-    control_mapper.action_map[ACT_UP].primary = SDLK_w;
-    control_mapper.action_map[ACT_DOWN].primary = SDLK_s;
-    control_mapper.action_map[ACT_LEFT].primary = SDLK_a;
-    control_mapper.action_map[ACT_RIGHT].primary = SDLK_d;
+    action_map[Action::Up].primary = SDLK_w;
+    action_map[Action::Down].primary = SDLK_s;
+    action_map[Action::Left].primary = SDLK_a;
+    action_map[Action::Right].primary = SDLK_d;
 
-    control_mapper.action_map[ACT_STEPLEFT].primary = SDLK_h;
-    control_mapper.action_map[ACT_STEPRIGHT].primary = SDLK_j;
+    action_map[Action::StepLeft].primary = SDLK_h;
+    action_map[Action::StepRight].primary = SDLK_j;
 
-    control_mapper.action_map[ACT_LOOKUP].primary = SDLK_UP;
-    control_mapper.action_map[ACT_LOOKDOWN].primary = SDLK_DOWN;
-    control_mapper.action_map[ACT_LOOKLEFT].primary = SDLK_LEFT;
-    control_mapper.action_map[ACT_LOOKRIGHT].primary = SDLK_RIGHT;
+    action_map[Action::LookUp].primary = SDLK_UP;
+    action_map[Action::LookDown].primary = SDLK_DOWN;
+    action_map[Action::LookLeft].primary = SDLK_LEFT;
+    action_map[Action::LookRight].primary = SDLK_RIGHT;
 
-    control_mapper.action_map[ACT_SCREENSHOT].primary = SDLK_PRINTSCREEN;
-    control_mapper.action_map[ACT_CONSOLE].primary = SDLK_F12;
-    control_mapper.action_map[ACT_SAVEGAME].primary = SDLK_F5;
-    control_mapper.action_map[ACT_LOADGAME].primary = SDLK_F6;
+    action_map[Action::Screenshot].primary = SDLK_PRINTSCREEN;
+    action_map[Action::Console].primary = SDLK_F12;
+    action_map[Action::SaveGame].primary = SDLK_F5;
+    action_map[Action::LoadGame].primary = SDLK_F6;
 }
 
-void Controls_PollSDLInput()
+void ControlSettings::pollSDLInput()
 {
     SDL_Event event;
 
@@ -465,33 +464,33 @@ void Controls_PollSDLInput()
         switch(event.type)
         {
             case SDL_MOUSEMOTION:
-                if(!Console::instance().isVisible() && control_states.mouse_look)
+                if(!Console::instance().isVisible() && Engine::instance.m_controlState.m_mouseLook)
                 {
-                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * control_mapper.mouse_scale_x;
-                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * control_mapper.mouse_scale_y;
+                        Engine::instance.m_controlState.m_lookAxisX = event.motion.xrel * mouse_sensitivity * mouse_scale_x;
+                        Engine::instance.m_controlState.m_lookAxisY = event.motion.yrel * mouse_sensitivity * mouse_scale_y;
                 }
                 break;
 
             case SDL_MOUSEBUTTONDOWN:
                 if(event.button.button == 1) //LM = 1, MM = 2, RM = 3
                 {
-                    Controls_PrimaryMouseDown();
+                    primaryMouseDown();
                 }
                 else if(event.button.button == 3)
                 {
-                    Controls_SecondaryMouseDown();
+                    secondaryMouseDown();
                 }
                 break;
 
                 // Controller events are only invoked when joystick is initialized as
                 // game controller, otherwise, generic joystick event will be used.
             case SDL_CONTROLLERAXISMOTION:
-                Controls_WrapGameControllerAxis(event.caxis.axis, event.caxis.value);
+                wrapGameControllerAxis(event.caxis.axis, event.caxis.value);
                 break;
 
             case SDL_CONTROLLERBUTTONDOWN:
             case SDL_CONTROLLERBUTTONUP:
-                Controls_WrapGameControllerKey(event.cbutton.button, event.cbutton.state == SDL_PRESSED);
+                wrapGameControllerKey(event.cbutton.button, event.cbutton.state == SDL_PRESSED);
                 break;
 
                 // Joystick events are still invoked, even if joystick is initialized as game
@@ -499,20 +498,20 @@ void Controls_PollSDLInput()
                 // duplicate event calls.
 
             case SDL_JOYAXISMOTION:
-                if(sdl_joystick)
-                    Controls_JoyAxis(event.jaxis.axis, event.jaxis.value);
+                if(Engine::instance.m_joystick)
+                    joyAxis(event.jaxis.axis, event.jaxis.value);
                 break;
 
             case SDL_JOYHATMOTION:
-                if(sdl_joystick)
-                    Controls_JoyHat(event.jhat.value);
+                if(Engine::instance.m_joystick)
+                    joyHat(event.jhat.value);
                 break;
 
             case SDL_JOYBUTTONDOWN:
             case SDL_JOYBUTTONUP:
                 // NOTE: Joystick button numbers are passed with added JOY_BUTTON_MASK (1000).
-                if(sdl_joystick)
-                    Controls_Key(event.jbutton.button + JOY_BUTTON_MASK, event.jbutton.state == SDL_PRESSED);
+                if(Engine::instance.m_joystick)
+                    key(event.jbutton.button + JOY_BUTTON_MASK, event.jbutton.state == SDL_PRESSED);
                 break;
 
             case SDL_TEXTINPUT:
@@ -558,9 +557,9 @@ void Controls_PollSDLInput()
                 }
                 else
                 {
-                    Controls_Key(event.key.keysym.sym, event.key.state == SDL_PRESSED);
+                    key(event.key.keysym.sym, event.key.state == SDL_PRESSED);
                     // DEBUG KEYBOARD COMMANDS
-                    Controls_DebugKeys(event.key.keysym.sym, event.key.state);
+                    debugKeys(event.key.keysym.sym, event.key.state);
                 }
                 break;
 
@@ -571,7 +570,7 @@ void Controls_PollSDLInput()
             case SDL_WINDOWEVENT:
                 if(event.window.event == SDL_WINDOWEVENT_RESIZED)
                 {
-                    resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
+                    Engine::instance.resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
                 }
                 break;
 
@@ -583,7 +582,7 @@ void Controls_PollSDLInput()
 
 ///@FIXME: Move to debug.lua script!!!
 
-void Controls_DebugKeys(int button, int state)
+void ControlSettings::debugKeys(int button, int state)
 {
     if(state)
     {
@@ -631,12 +630,11 @@ void Controls_DebugKeys(int button, int state)
     }
 }
 
-
-void Controls_PrimaryMouseDown()
+void ControlSettings::primaryMouseDown()
 {
     glm::float_t dbgR = 128.0;
-    glm::vec3 v = engine_camera.getPosition();
-    glm::vec3 dir = engine_camera.getViewDir();
+    glm::vec3 v = Engine::instance.m_camera.getPosition();
+    glm::vec3 dir = Engine::instance.m_camera.getViewDir();
     btVector3 localInertia(0, 0, 0);
 
     btCollisionShape* cshape = new btSphereShape(dbgR);
@@ -651,31 +649,27 @@ void Controls_PrimaryMouseDown()
     btRigidBody* body = new btRigidBody(12.0, motionState, cshape, localInertia);
     BulletEngine::instance->dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(util::convert(dir) * 6000);
-    world::BulletObject* object = new world::BulletObject(Room_FindPosCogerrence(new_pos, engine_camera.getCurrentRoom()));
+    world::BulletObject* object = new world::BulletObject(Room_FindPosCogerrence(new_pos, Engine::instance.m_camera.getCurrentRoom()));
     body->setUserPointer(object);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
     body->setCcdSweptSphereRadius(dbgR);
 }
 
-void Controls_SecondaryMouseDown()
+void ControlSettings::secondaryMouseDown()
 {
-    glm::vec3 from = engine_camera.getPosition();
-    glm::vec3 to = from + engine_camera.getViewDir() * 32768.0f;
+    glm::vec3 from = Engine::instance.m_camera.getPosition();
+    glm::vec3 to = from + Engine::instance.m_camera.getViewDir() * 32768.0f;
 
-    world::BulletObject* cam_cont = new world::BulletObject(engine_camera.getCurrentRoom());
+    world::BulletObject* cam_cont = new world::BulletObject(Engine::instance.m_camera.getCurrentRoom());
 
     BtEngineClosestRayResultCallback cbc(cam_cont);
     //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     BulletEngine::instance->dynamicsWorld->rayTest(util::convert(from), util::convert(to), cbc);
     if(cbc.hasHit())
     {
-        extern GLfloat cast_ray[6];
-
         glm::vec3 place = glm::mix(from, to, cbc.m_closestHitFraction);
-        std::copy_n(glm::value_ptr(place), 3, cast_ray);
-        cast_ray[3] = cast_ray[0] + 100.0f * cbc.m_hitNormalWorld[0];
-        cast_ray[4] = cast_ray[1] + 100.0f * cbc.m_hitNormalWorld[1];
-        cast_ray[5] = cast_ray[2] + 100.0f * cbc.m_hitNormalWorld[2];
+        Engine::instance.m_castRay[0] = place;
+        Engine::instance.m_castRay[1] = Engine::instance.m_castRay[0] + 100.0f * util::convert(cbc.m_hitNormalWorld);
 
         if(world::Object* c0 = static_cast<world::Object*>(cbc.m_collisionObject->getUserPointer()))
         {

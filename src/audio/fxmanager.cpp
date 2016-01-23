@@ -108,7 +108,7 @@ void FxManager::updateListener(world::Camera& cam)
 
     alListenerfv(AL_POSITION, glm::value_ptr(cam.getPosition()));
 
-    glm::vec3 v2 = cam.getMovement() / util::toSeconds(engine::engine_frame_time);
+    glm::vec3 v2 = cam.getMovement() / util::toSeconds(engine::Engine::instance.m_frameTime);
     alListenerfv(AL_VELOCITY, glm::value_ptr(v2));
     cam.resetMovement();
 
@@ -130,11 +130,11 @@ void FxManager::updateListener(world::Camera& cam)
 
         if(m_underwater)
         {
-            engine::engine_world.audioEngine.send(audio::SoundUnderwater);
+            engine::Engine::instance.m_world.audioEngine.send(audio::SoundUnderwater);
         }
         else
         {
-            engine::engine_world.audioEngine.kill(audio::SoundUnderwater);
+            engine::Engine::instance.m_world.audioEngine.kill(audio::SoundUnderwater);
         }
     }
 }

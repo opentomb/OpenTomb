@@ -270,7 +270,7 @@ Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
 {
     if(room == nullptr)
     {
-        return engine::engine_world.findRoomByPosition(new_pos).get();
+        return engine::Engine::instance.m_world.findRoomByPosition(new_pos).get();
     }
 
     if(room->m_active &&
@@ -302,7 +302,7 @@ Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
     RoomSector* new_sector = room->getSectorRaw(new_pos);
     if(new_sector != nullptr && new_sector->portal_to_room)
     {
-        return engine::engine_world.rooms[*new_sector->portal_to_room]->checkFlip();
+        return engine::Engine::instance.m_world.rooms[*new_sector->portal_to_room]->checkFlip();
     }
 
     for(Room* r : room->m_nearRooms)
@@ -313,7 +313,7 @@ Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
         }
     }
 
-    return engine::engine_world.findRoomByPosition(new_pos).get();
+    return engine::Engine::instance.m_world.findRoomByPosition(new_pos).get();
 }
 
 std::shared_ptr<Room> World::getByID(ObjectId ID)
@@ -469,7 +469,7 @@ void World::updateAnimTextures()                                                
             continue;
         }
 
-        seq.frameTime += engine::engine_frame_time;
+        seq.frameTime += engine::Engine::instance.m_frameTime;
         if(seq.frameTime >= seq.timePerFrame)
         {
             seq.frameTime -= static_cast<int>(seq.frameTime / seq.timePerFrame) * seq.timePerFrame;

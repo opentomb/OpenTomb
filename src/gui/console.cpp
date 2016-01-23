@@ -135,7 +135,7 @@ void Console::drawCursor()
 
     if(m_blinkPeriod.count() > 0)
     {
-        m_blinkTime += engine::engine_frame_time;
+        m_blinkTime += engine::Engine::instance.m_frameTime;
         if(m_blinkTime > m_blinkPeriod)
         {
             m_blinkTime = util::Duration(0);
@@ -189,7 +189,7 @@ void Console::edit(int key, const boost::optional<Uint16>& mod)
     {
         addLog(m_editingLine);
         addLine(std::string("> ") + m_editingLine, FontStyle::ConsoleInfo);
-        engine::execCmd(m_editingLine.c_str());
+        engine::Engine::instance.execCmd(m_editingLine.c_str());
         m_editingLine.clear();
         m_cursorPos = 0;
         m_cursorX = 8 + 1;
@@ -207,7 +207,7 @@ void Console::edit(int key, const boost::optional<Uint16>& mod)
         case SDLK_DOWN:
             if(m_historyLines.empty())
                 break;
-            engine::engine_world.audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuPage));
+            engine::Engine::instance.m_world.audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuPage));
             if(key == SDLK_UP && m_historyPos < m_historyLines.size())
                 ++m_historyPos;
             else if(key == SDLK_DOWN && m_historyPos > 0)

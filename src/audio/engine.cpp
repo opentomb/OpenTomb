@@ -377,7 +377,7 @@ void Engine::updateAudio()
 
     if(m_settings.listener_is_player)
     {
-        m_fxManager->updateListener(*engine::engine_world.character);
+        m_fxManager->updateListener(*engine::Engine::instance.m_world.character);
     }
     else
     {
@@ -538,7 +538,7 @@ bool Engine::isInRange(EmitterType entityType, const boost::optional<world::Obje
     {
         case EmitterType::Entity:
             BOOST_ASSERT(entityId.is_initialized());
-            if(std::shared_ptr<world::Entity> ent = engine::engine_world.getEntityByID(*entityId))
+            if(std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(*entityId))
             {
                 vec = glm::vec3(ent->m_transform[3]);
             }
