@@ -8,6 +8,7 @@
 #include <SDL2/SDL_haptic.h>
 
 #include "common.h"
+#include "engine/bullet.h"
 #include "engine/engine.h"
 #include "engine/game.h"
 #include "gui/console.h"

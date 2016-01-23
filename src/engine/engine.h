@@ -1,17 +1,8 @@
 #pragma once
 
-#include <btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
-
 #include "controls.h"
 #include "world/object.h"
 #include "world/world.h"
-
-class btDefaultCollisionConfiguration;
-class btCollisionDispatcher;
-class btBroadphaseInterface;
-class btSequentialImpulseConstraintSolver;
-class btDiscreteDynamicsWorld;
 
 namespace world
 {
@@ -89,60 +80,6 @@ extern util::Duration                           engine_frame_time;
 extern world::Camera                            engine_camera;
 extern world::World                             engine_world;
 
-struct BulletEngine
-{
-    std::unique_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
-    std::unique_ptr<btCollisionDispatcher> dispatcher;
-    std::unique_ptr<btBroadphaseInterface> overlappingPairCache;
-    std::unique_ptr<btGhostPairCallback> ghostPairCallback;
-    std::unique_ptr<btSequentialImpulseConstraintSolver> solver;
-    std::unique_ptr<btDiscreteDynamicsWorld> dynamicsWorld;
-
-    BulletEngine();
-    ~BulletEngine() = default;
-
-    static std::unique_ptr<BulletEngine> instance;
-};
-
-class BtEngineClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
-{
-public:
-    explicit BtEngineClosestRayResultCallback(const world::Object* obj, bool skipGhost = false)
-        : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
-        , m_object(obj)
-        , m_skip_ghost(skipGhost)
-    {
-    }
-
-    virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override;
-
-    const world::Object* const m_object;
-    const bool m_skip_ghost;
-};
-
-class BtEngineClosestConvexResultCallback : public btCollisionWorld::ClosestConvexResultCallback
-{
-public:
-    explicit BtEngineClosestConvexResultCallback(const world::Object* obj, bool skipGhost = false)
-        : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
-        , m_object(obj)
-        , m_skip_ghost(skipGhost)
-    {
-    }
-
-    virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace) override;
-
-protected:
-    const world::Object* const m_object;
-    const bool m_skip_ghost;
-};
-
-// ? Are they used at all ?
-
-int engine_lua_fputs(const char *str, FILE *f);
-int engine_lua_fprintf(FILE *f, const char *fmt, ...);
-int engine_lua_printf(const char *fmt, ...);
-
 // Starter and destructor.
 
 void start();
@@ -202,11 +139,5 @@ std::string getAutoexecName(loader::Game game_version, const std::string &postfi
 // Console command parser.
 
 int  execCmd(const char *ch);
-
-// Bullet global methods.
-
-void roomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
-void internalTickCallback(btDynamicsWorld *world, float timeStep);
-void internalPreTickCallback(btDynamicsWorld *world, float timeStep);
 
 } // namespace engine

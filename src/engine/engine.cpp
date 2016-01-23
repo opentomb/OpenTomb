@@ -3,10 +3,6 @@
 #include <cctype>
 #include <cstdio>
 
-#include <btBulletCollisionCommon.h>
-#include <btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_events.h>
@@ -22,6 +18,7 @@
 
 #include "common.h"
 #include "controls.h"
+#include "engine/bullet.h"
 #include "engine/game.h"
 #include "engine/system.h"
 #include "gameflow.h"
@@ -51,11 +48,6 @@
 #include <boost/range/adaptors.hpp>
 
 using gui::Console;
-
-namespace render
-{
-RenderDebugDrawer                    debugDrawer;
-} // namespace render
 
 namespace engine
 {
@@ -416,7 +408,7 @@ void frame(util::Duration time)
     fpsCycle(time);
 
     Game_Frame(time);
-    Gameflow_Manager.execute();
+    Gameflow::instance.execute();
 }
 
 void showDebugInfo()
@@ -508,135 +500,6 @@ void showDebugInfo()
                                              );
 }
 
-/**
- * overlapping room collision filter
- */
-void roomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
-{
-    world::Object* c0 = static_cast<world::Object*>(static_cast<btCollisionObject*>(collisionPair.m_pProxy0->m_clientObject)->getUserPointer());
-    world::Room* r0 = c0 ? c0->getRoom() : nullptr;
-    world::Object* c1 = static_cast<world::Object*>(static_cast<btCollisionObject*>(collisionPair.m_pProxy1->m_clientObject)->getUserPointer());
-    world::Room* r1 = c1 ? c1->getRoom() : nullptr;
-
-    if(c1 && c1 == c0)
-    {
-        if(static_cast<btCollisionObject*>(collisionPair.m_pProxy0->m_clientObject)->isStaticOrKinematicObject() ||
-           static_cast<btCollisionObject*>(collisionPair.m_pProxy1->m_clientObject)->isStaticOrKinematicObject())
-        {
-            return;                                                             // No self interaction
-        }
-        dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);
-        return;
-    }
-
-    if(!r0 && !r1)
-    {
-        dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);// Both are out of rooms
-        return;
-    }
-
-    if(r0 && r1 && r0->isInNearRoomsList(*r1))
-    {
-        dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);
-    }
-}
-
-void storeEntityLerpTransforms()
-{
-    if(engine_world.character)
-    {
-        if(!(engine_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC))
-        {
-#if 0
-            if(engine_world.character->m_lerp_skip)
-            {
-                engine_world.character->m_skeleton.setPreviousAnimation(engine_world.character->m_skeleton.getCurrentAnimation());
-                engine_world.character->m_skeleton.setPreviousFrame(engine_world.character->m_skeleton.getCurrentFrame());
-                engine_world.character->m_lerp_skip = false;
-            }
-#endif
-
-            // set bones to next interval step, this keeps the ponytail (bullet's dynamic interpolation) in sync with actor interpolation:
-            engine_world.character->m_skeleton.updatePose();
-            engine_world.character->updateRigidBody(false);
-            engine_world.character->ghostUpdate();
-        }
-    }
-
-    for(const std::shared_ptr<world::Entity>& entity : engine_world.entity_tree | boost::adaptors::map_values)
-    {
-        if(!entity->m_enabled)
-            continue;
-
-        if((entity->m_typeFlags & ENTITY_TYPE_DYNAMIC) != 0)
-            continue;
-
-#if 0
-        if(entity->m_lerp_skip)
-        {
-            entity->m_skeleton.setPreviousAnimation(entity->m_skeleton.getCurrentAnimation());
-            entity->m_skeleton.setPreviousFrame(entity->m_skeleton.getCurrentFrame());
-            entity->m_lerp_skip = false;
-        }
-#endif
-
-        entity->m_skeleton.updatePose();
-        entity->updateRigidBody(false);
-        entity->ghostUpdate();
-    }
-}
-
-
-/**
- * Pre-physics step callback
- */
-void internalPreTickCallback(btDynamicsWorld* /*world*/, float timeStep)
-{
-    util::Duration engine_frame_time_backup = engine_frame_time;
-    engine_frame_time = util::fromSeconds(timeStep);
-
-    engine_lua.doTasks(engine_frame_time_backup);
-    Game_UpdateAI();
-    engine::engine_world.audioEngine.updateAudio();
-
-    if(engine_world.character)
-    {
-        engine_world.character->frame(util::fromSeconds(timeStep));
-    }
-    for(const std::shared_ptr<world::Entity>& entity : engine_world.entity_tree | boost::adaptors::map_values)
-    {
-        entity->frame(util::fromSeconds(timeStep));
-    }
-
-    storeEntityLerpTransforms();
-    engine_frame_time = engine_frame_time_backup;
-    return;
-}
-
-/**
- * Post-physics step callback
- */
-void internalTickCallback(btDynamicsWorld *world, float /*timeStep*/)
-{
-    // Update all physics object's transform/room:
-    for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
-    {
-        BOOST_ASSERT(i >= 0 && i < BulletEngine::instance->dynamicsWorld->getCollisionObjectArray().size());
-        btCollisionObject* obj = BulletEngine::instance->dynamicsWorld->getCollisionObjectArray()[i];
-        btRigidBody* body = btRigidBody::upcast(obj);
-        if(body && !body->isStaticObject() && body->getMotionState())
-        {
-            btTransform trans;
-            body->getMotionState()->getWorldTransform(trans);
-            world::Object* object = static_cast<world::Object*>(body->getUserPointer());
-            if(dynamic_cast<world::BulletObject*>(object))
-            {
-                object->setRoom( Room_FindPosCogerrence(util::convert(trans.getOrigin()), object->getRoom()) );
-            }
-        }
-    }
-}
-
 void initDefaultGlobals()
 {
     Console::instance().initGlobals();
@@ -658,7 +521,7 @@ void initPre()
 
     engine_lua["loadscript_pre"]();
 
-    Gameflow_Manager.init();
+    Gameflow::instance.init();
 
     frame_vertex_buffer.resize(render::InitFrameVertexBufferSize);
     frame_vertex_buffer_size_left = frame_vertex_buffer.size();
@@ -682,36 +545,6 @@ void initPost()
 
     gui::Gui::instance.reset(new gui::Gui());
     Sys_Init();
-}
-
-// Bullet Physics initialization.
-std::unique_ptr<BulletEngine> BulletEngine::instance = nullptr;
-
-BulletEngine::BulletEngine()
-{
-    ///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
-    collisionConfiguration.reset( new btDefaultCollisionConfiguration() );
-
-    ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
-    dispatcher.reset( new btCollisionDispatcher(collisionConfiguration.get()) );
-    dispatcher->setNearCallback(roomNearCallback);
-
-    ///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
-    overlappingPairCache.reset( new btDbvtBroadphase() );
-    ghostPairCallback.reset( new btGhostPairCallback() );
-    overlappingPairCache->getOverlappingPairCache()->setInternalGhostPairCallback(ghostPairCallback.get());
-
-    ///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
-    solver.reset( new btSequentialImpulseConstraintSolver );
-
-    dynamicsWorld.reset( new btDiscreteDynamicsWorld(dispatcher.get(), overlappingPairCache.get(), solver.get(), collisionConfiguration.get()) );
-    dynamicsWorld->setInternalTickCallback(internalTickCallback);
-    dynamicsWorld->setInternalTickCallback(internalPreTickCallback, nullptr, true);
-    dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
-
-    render::debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
-    dynamicsWorld->setDebugDrawer(&render::debugDrawer);
-    //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
 }
 
 void dumpRoom(world::Room* r)
@@ -834,7 +667,7 @@ std::string getLevelName(const std::string& path)
 
 std::string getAutoexecName(loader::Game game_version, const std::string& postfix)
 {
-    std::string level_name = getLevelName(Gameflow_Manager.getLevelPath());
+    std::string level_name = getLevelName(Gameflow::instance.getLevelPath());
 
     std::string name = "scripts/autoexec/";
 
@@ -904,7 +737,7 @@ bool loadMap(const std::string& name)
     render::renderer.hideSkyBox();
     render::renderer.resetWorld();
 
-    Gameflow_Manager.setLevelPath(name);          // it is needed for "not in the game" levels or correct saves loading.
+    Gameflow::instance.setLevelPath(name);          // it is needed for "not in the game" levels or correct saves loading.
 
     gui::Gui::instance->drawLoadScreen(50);
 
@@ -1202,47 +1035,6 @@ void initConfig(const std::string& filename)
     {
         BOOST_LOG_TRIVIAL(error) << "Could not find " << filename;
     }
-}
-
-int engine_lua_fputs(const char *str, FILE* /*f*/)
-{
-    Console::instance().addText(str, gui::FontStyle::ConsoleNotify);
-    return static_cast<int>(strlen(str));
-}
-
-int engine_lua_fprintf(FILE *f, const char *fmt, ...)
-{
-    va_list argptr;
-    char buf[4096];
-    int ret;
-
-    // Create string
-    va_start(argptr, fmt);
-    ret = vsnprintf(buf, 4096, fmt, argptr);
-    va_end(argptr);
-
-    // Write it to target file
-    fwrite(buf, 1, ret, f);
-
-    // Write it to console, too (if it helps) und
-    Console::instance().addText(buf, gui::FontStyle::ConsoleNotify);
-
-    return ret;
-}
-
-int engine_lua_printf(const char *fmt, ...)
-{
-    va_list argptr;
-    char buf[4096];
-    int ret;
-
-    va_start(argptr, fmt);
-    ret = vsnprintf(buf, 4096, fmt, argptr);
-    va_end(argptr);
-
-    Console::instance().addText(buf, gui::FontStyle::ConsoleNotify);
-
-    return ret;
 }
 
 btScalar BtEngineClosestRayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)

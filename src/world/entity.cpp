@@ -3,6 +3,7 @@
 #include "LuaState.h"
 
 #include "character_controller.h"
+#include "engine/bullet.h"
 #include "engine/engine.h"
 #include "ragdoll.h"
 #include "script/script.h"

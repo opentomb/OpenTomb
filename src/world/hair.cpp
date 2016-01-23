@@ -4,6 +4,7 @@
 
 #include "LuaState.h"
 
+#include "engine/bullet.h"
 #include "render/render.h"
 #include "script/script.h"
 #include "world/core/basemesh.h"

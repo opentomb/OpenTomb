@@ -8,7 +8,7 @@
 namespace engine
 {
 
-Gameflow Gameflow_Manager;
+Gameflow Gameflow::instance{};
 
 void Gameflow::init()
 {

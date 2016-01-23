@@ -1,6 +1,7 @@
 #include "character.h"
 
 #include "character_controller.h"
+#include "engine/bullet.h"
 #include "gui/gui.h"
 #include "inventory.h"
 #include "resource.h"

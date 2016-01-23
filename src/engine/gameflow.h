@@ -99,6 +99,8 @@ public:
         m_secretsTriggerMap[secret] = status;
     }
 
+    static Gameflow instance;
+
 private:
     std::string       m_currentLevelPath;       //Level path from script example: DATA/TR1/DATA/LEVEL1.PHD
     std::string       m_currentLevelName;       //Level name from script example: Caves
@@ -109,7 +111,5 @@ private:
     std::array<GameflowAction, 32> m_actions;
     std::array<bool, 256> m_secretsTriggerMap;                     //Info for what secrets have been triggered in a level
 };
-
-extern Gameflow Gameflow_Manager;
 
 } // namespace engine

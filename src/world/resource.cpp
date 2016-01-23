@@ -5,6 +5,7 @@
 
 #include "animation/animids.h"
 #include "bordered_texture_atlas.h"
+#include "engine/bullet.h"
 #include "engine/engine.h"
 #include "engine/gameflow.h"
 #include "gui/console.h"
@@ -3541,7 +3542,7 @@ namespace world
                 switch(loader::gameToEngine(tr->m_gameVersion))
                 {
                     case loader::Engine::TR1:
-                        if(engine::Gameflow_Manager.getLevelID() == 0)
+                        if(engine::Gameflow::instance.getLevelID() == 0)
                         {
                             if(SkeletalModel* LM = world.getModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1))
                             {

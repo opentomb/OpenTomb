@@ -117,6 +117,8 @@ public:
     }
 };
 
+extern RenderDebugDrawer debugDrawer;
+
 struct RenderSettings
 {
     float     lod_bias = 0;

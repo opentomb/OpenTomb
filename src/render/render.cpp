@@ -1,6 +1,7 @@
 #include "render.h"
 
 #include "bsp_tree.h"
+#include "engine/bullet.h"
 #include "engine/engine.h"
 #include "engine/system.h"
 #include "gui/console.h"
@@ -40,7 +41,7 @@ namespace render
 
 Render renderer;
 DynamicBSP render_dBSP;
-extern RenderDebugDrawer debugDrawer;
+RenderDebugDrawer debugDrawer;
 
 using gui::Console;
 

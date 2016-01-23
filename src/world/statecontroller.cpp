@@ -5,6 +5,7 @@
 #include "audio/engine.h"
 #include "character.h"
 #include "character_controller.h"
+#include "engine/bullet.h"
 #include "engine/engine.h"
 #include "resource.h"
 #include "room.h"

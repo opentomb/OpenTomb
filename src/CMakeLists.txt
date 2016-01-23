@@ -75,6 +75,7 @@ list(APPEND PRJ_SRC
     engine/engine.cpp
     engine/controls.cpp
     engine/gameflow.cpp
+    engine/bullet.cpp
 )
 
 list(APPEND PRJ_HDR
@@ -98,6 +99,7 @@ list(APPEND PRJ_HDR
     loader/game.h
 
     gui/gui.h
+    gui/common.h
     gui/console.h
     gui/fontmanager.h
     gui/fader.h
@@ -162,6 +164,7 @@ list(APPEND PRJ_HDR
     engine/engine.h
     engine/controls.h
     engine/gameflow.h
+    engine/bullet.h
 )
 
 if(MINGW)

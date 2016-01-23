@@ -1,5 +1,6 @@
 #include "room.h"
 
+#include "engine/bullet.h"
 #include "engine/engine.h"
 #include "entity.h"
 #include "loader/level.h"

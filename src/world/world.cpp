@@ -3,6 +3,7 @@
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
+#include "engine/bullet.h"
 #include "engine/engine.h"
 #include "entity.h"
 #include "gui/console.h"

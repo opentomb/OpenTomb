@@ -11,6 +11,7 @@
 #include "character_controller.h"
 #include "controls.h"
 #include "engine.h"
+#include "engine/bullet.h"
 #include "gameflow.h"
 #include "gui/console.h"
 #include "gui/fader.h"
@@ -372,9 +373,9 @@ bool Game_Save(const std::string& name)
     }
 
     f << boost::format("loadMap(\"%s\", %d, %d);\n")
-         % Gameflow_Manager.getLevelPath()
-         % Gameflow_Manager.getGameID()
-         % Gameflow_Manager.getLevelID();
+         % Gameflow::instance.getLevelPath()
+         % Gameflow::instance.getGameID()
+         % Gameflow::instance.getLevelID();
 
     // Save flipmap and flipped room states.
 
@@ -806,7 +807,7 @@ void Game_Prepare()
     // Set gameflow parameters to default.
     // Reset secret trigger map.
 
-    Gameflow_Manager.resetSecretStatus();
+    Gameflow::instance.resetSecretStatus();
 }
 
 void Game_LevelTransition(uint16_t level_index)

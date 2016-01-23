@@ -1,5 +1,6 @@
 #include "animation.h"
 
+#include "engine/bullet.h"
 #include "engine/engine.h"
 #include "world/core/basemesh.h"
 #include "world/core/util.h"

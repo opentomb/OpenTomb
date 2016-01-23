@@ -11,6 +11,7 @@
 
 #include "audio/settings.h"
 #include "character_controller.h"
+#include "engine/bullet.h"
 #include "engine/controls.h"
 #include "engine/engine.h"
 #include "engine/game.h"
@@ -527,12 +528,12 @@ void lua_RemoveEntityRagdoll(world::ObjectId ent_id)
 
 bool lua_GetSecretStatus(int secret_number)
 {
-    return engine::Gameflow_Manager.getSecretStatus(secret_number);
+    return engine::Gameflow::instance.getSecretStatus(secret_number);
 }
 
 void lua_SetSecretStatus(int secret_number, bool status)
 {
-    engine::Gameflow_Manager.setSecretStatus(secret_number, status);
+    engine::Gameflow::instance.setSecretStatus(secret_number, status);
 }
 
 lua::Any lua_GetActionState(int act)
@@ -2428,7 +2429,7 @@ void lua_StopSound(audio::SoundId id, lua::Value ent_id)
 
 int lua_GetLevel()
 {
-    return engine::Gameflow_Manager.getLevelID();
+    return engine::Gameflow::instance.getLevelID();
 }
 
 void lua_SetLevel(int id)
@@ -2436,39 +2437,39 @@ void lua_SetLevel(int id)
     Console::instance().notify(SYSNOTE_CHANGING_LEVEL, id);
 
     engine::Game_LevelTransition(id);
-    engine::Gameflow_Manager.send(engine::Opcode::LevelComplete, id);    // Next level
+    engine::Gameflow::instance.send(engine::Opcode::LevelComplete, id);    // Next level
 }
 
 void lua_SetGame(int gameId, lua::Value levelId)
 {
-    engine::Gameflow_Manager.setGameID(gameId);
+    engine::Gameflow::instance.setGameID(gameId);
     if(levelId.is<uint32_t>())
-        engine::Gameflow_Manager.setLevelID(levelId.to<uint32_t>());
+        engine::Gameflow::instance.setLevelID(levelId.to<uint32_t>());
 
-    const char* str = engine_lua["getTitleScreen"](int(engine::Gameflow_Manager.getGameID())).toCStr();
+    const char* str = engine_lua["getTitleScreen"](int(engine::Gameflow::instance.getGameID())).toCStr();
     gui::Gui::instance->faders.assignPicture(gui::FaderType::LoadScreen, str);
     gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
-    Console::instance().notify(SYSNOTE_CHANGING_GAME, engine::Gameflow_Manager.getGameID());
-    engine::Game_LevelTransition(engine::Gameflow_Manager.getLevelID());
-    engine::Gameflow_Manager.send(engine::Opcode::LevelComplete, engine::Gameflow_Manager.getLevelID());
+    Console::instance().notify(SYSNOTE_CHANGING_GAME, engine::Gameflow::instance.getGameID());
+    engine::Game_LevelTransition(engine::Gameflow::instance.getLevelID());
+    engine::Gameflow::instance.send(engine::Opcode::LevelComplete, engine::Gameflow::instance.getLevelID());
 }
 
 void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
 {
     Console::instance().notify(SYSNOTE_LOADING_MAP, mapName);
 
-    if(mapName && mapName != engine::Gameflow_Manager.getLevelPath())
+    if(mapName && mapName != engine::Gameflow::instance.getLevelPath())
     {
         if(gameId.is<int8_t>() && gameId.to<int8_t>() >= 0)
         {
-            engine::Gameflow_Manager.setGameID(gameId.to<int8_t>());
+            engine::Gameflow::instance.setGameID(gameId.to<int8_t>());
         }
         if(mapId.is<uint32_t>())
         {
-            engine::Gameflow_Manager.setLevelID(mapId.to<uint32_t>());
+            engine::Gameflow::instance.setLevelID(mapId.to<uint32_t>());
         }
-        std::string file_path = engine_lua.getLoadingScreen(engine::Gameflow_Manager.getLevelID());
+        std::string file_path = engine_lua.getLoadingScreen(engine::Gameflow::instance.getLevelID());
         gui::Gui::instance->faders.assignPicture(gui::FaderType::LoadScreen, file_path);
         gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::In);
         engine::loadMap(mapName);
@@ -3573,7 +3574,7 @@ bool script::MainEngine::getOverridedSamplesInfo(int& num_samples, int& num_soun
 
 bool script::MainEngine::getOverridedSample(int sound_id, int& first_sample_number, int& samples_count)
 {
-    lua::tie(first_sample_number, samples_count) = call("getOverridedSample", static_cast<int>(engine::engine_world.engineVersion), int(engine::Gameflow_Manager.getLevelID()), sound_id);
+    lua::tie(first_sample_number, samples_count) = call("getOverridedSample", static_cast<int>(engine::engine_world.engineVersion), int(engine::Gameflow::instance.getLevelID()), sound_id);
     return first_sample_number != -1 && samples_count != -1;
 }
 
@@ -3605,7 +3606,7 @@ bool script::MainEngine::getSysNotify(int string_index, size_t string_size, char
 
 std::string script::MainEngine::getLoadingScreen(int level_index)
 {
-    return call("getLoadingScreen", int(engine::Gameflow_Manager.getGameID()), int(engine::Gameflow_Manager.getLevelID()), level_index).toString();
+    return call("getLoadingScreen", int(engine::Gameflow::instance.getGameID()), int(engine::Gameflow::instance.getLevelID()), level_index).toString();
 }
 
 
