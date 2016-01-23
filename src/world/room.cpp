@@ -28,7 +28,7 @@ Room::~Room()
             }
             body->setCollisionShape(nullptr);
 
-            engine::bt_engine_dynamicsWorld->removeRigidBody(body);
+            engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(body);
             delete body;
             mesh->bt_body = nullptr;
         }
@@ -50,7 +50,7 @@ Room::~Room()
             m_btBody->setCollisionShape(nullptr);
         }
 
-        engine::bt_engine_dynamicsWorld->removeRigidBody(m_btBody.get());
+        engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(m_btBody.get());
     }
 }
 
@@ -208,14 +208,14 @@ void Room::enable()
 
     if(m_btBody)
     {
-        engine::bt_engine_dynamicsWorld->addRigidBody(m_btBody.get());
+        engine::BulletEngine::instance->dynamicsWorld->addRigidBody(m_btBody.get());
     }
 
     for(const std::shared_ptr<StaticMesh>& sm : m_staticMeshes)
     {
         if(sm->bt_body != nullptr)
         {
-            engine::bt_engine_dynamicsWorld->addRigidBody(sm->bt_body);
+            engine::BulletEngine::instance->dynamicsWorld->addRigidBody(sm->bt_body);
         }
     }
 
@@ -233,14 +233,14 @@ void Room::disable()
 
     if(m_btBody)
     {
-        engine::bt_engine_dynamicsWorld->removeRigidBody(m_btBody.get());
+        engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(m_btBody.get());
     }
 
     for(auto sm : m_staticMeshes)
     {
         if(sm->bt_body != nullptr)
         {
-            engine::bt_engine_dynamicsWorld->removeRigidBody(sm->bt_body);
+            engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(sm->bt_body);
         }
     }
 

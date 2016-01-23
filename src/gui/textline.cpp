@@ -2,6 +2,7 @@
 
 #include "engine/system.h"
 #include "render/shader_manager.h"
+#include "render/render.h"
 
 #include <glm/gtc/type_ptr.hpp>
 

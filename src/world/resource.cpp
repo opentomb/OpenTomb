@@ -84,8 +84,8 @@ namespace world
     {
         if(entities.empty()) return;
 
-        for(const auto& pair : entities)
-            Res_SetEntityFunction(pair.second);
+        for(const std::shared_ptr<Entity>& entity : entities | boost::adaptors::map_values)
+            Res_SetEntityFunction(entity);
     }
 
     void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
@@ -1671,74 +1671,74 @@ namespace world
 
         Res_AutoexecOpen(tr->m_gameVersion);    // Open and do preload autoexec.
         engine_lua.call("autoexec_PreLoad");
-        gui::drawLoadScreen(150);
+        gui::Gui::instance->drawLoadScreen(150);
 
         Res_GenRBTrees(world);
-        gui::drawLoadScreen(200);
+        gui::Gui::instance->drawLoadScreen(200);
 
         TR_GenTextures(world, tr);
-        gui::drawLoadScreen(300);
+        gui::Gui::instance->drawLoadScreen(300);
 
         TR_GenAnimCommands(world, tr);
-        gui::drawLoadScreen(310);
+        gui::Gui::instance->drawLoadScreen(310);
 
         TR_GenAnimTextures(world, tr);
-        gui::drawLoadScreen(320);
+        gui::Gui::instance->drawLoadScreen(320);
 
         TR_GenMeshes(world, tr);
-        gui::drawLoadScreen(400);
+        gui::Gui::instance->drawLoadScreen(400);
 
         TR_GenSprites(world, tr);
-        gui::drawLoadScreen(420);
+        gui::Gui::instance->drawLoadScreen(420);
 
         TR_GenBoxes(world, tr);
-        gui::drawLoadScreen(440);
+        gui::Gui::instance->drawLoadScreen(440);
 
         TR_GenCameras(world, tr);
-        gui::drawLoadScreen(460);
+        gui::Gui::instance->drawLoadScreen(460);
 
         TR_GenRooms(world, tr);
-        gui::drawLoadScreen(500);
+        gui::Gui::instance->drawLoadScreen(500);
 
         Res_GenRoomFlipMap(world);
-        gui::drawLoadScreen(520);
+        gui::Gui::instance->drawLoadScreen(520);
 
         TR_GenSkeletalModels(world, tr);
-        gui::drawLoadScreen(600);
+        gui::Gui::instance->drawLoadScreen(600);
 
         TR_GenEntities(world, tr);
-        gui::drawLoadScreen(650);
+        gui::Gui::instance->drawLoadScreen(650);
 
         Res_GenBaseItems(world);
-        gui::drawLoadScreen(680);
+        gui::Gui::instance->drawLoadScreen(680);
 
         Res_GenSpritesBuffer(world);        // Should be done ONLY after TR_GenEntities.
-        gui::drawLoadScreen(700);
+        gui::Gui::instance->drawLoadScreen(700);
 
         TR_GenRoomProperties(world, tr);
-        gui::drawLoadScreen(750);
+        gui::Gui::instance->drawLoadScreen(750);
 
         Res_GenRoomCollision(world);
-        gui::drawLoadScreen(800);
+        gui::Gui::instance->drawLoadScreen(800);
 
         world.audioEngine.load(world, tr);
-        gui::drawLoadScreen(850);
+        gui::Gui::instance->drawLoadScreen(850);
 
         world.sky_box = Res_GetSkybox(world);
-        gui::drawLoadScreen(860);
+        gui::Gui::instance->drawLoadScreen(860);
 
         Res_GenEntityFunctions(world.entity_tree);
-        gui::drawLoadScreen(910);
+        gui::Gui::instance->drawLoadScreen(910);
 
         Res_GenVBOs(world);
-        gui::drawLoadScreen(950);
+        gui::Gui::instance->drawLoadScreen(950);
 
         engine_lua.doFile("scripts/autoexec.lua");  // Postload autoexec.
         engine_lua.call("autoexec_PostLoad");
-        gui::drawLoadScreen(960);
+        gui::Gui::instance->drawLoadScreen(960);
 
         Res_FixRooms(world);                        // Fix initial room states
-        gui::drawLoadScreen(970);
+        gui::Gui::instance->drawLoadScreen(970);
     }
 
     void Res_GenRBTrees(World& world)
@@ -1888,7 +1888,7 @@ namespace world
                     btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                     btVector3 localInertia(0, 0, 0);
                     r_static->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-                    engine::bt_engine_dynamicsWorld->addRigidBody(r_static->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+                    engine::BulletEngine::instance->dynamicsWorld->addRigidBody(r_static->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
                     r_static->bt_body->setUserPointer(r_static.get());
                 }
             }
@@ -2143,7 +2143,7 @@ namespace world
             tr.setFromOpenGLMatrix(glm::value_ptr(room->m_modelMatrix));
             btDefaultMotionState* motionState = new btDefaultMotionState(tr);
             room->m_btBody.reset(new btRigidBody(0.0, motionState, cshape, localInertia));
-            engine::bt_engine_dynamicsWorld->addRigidBody(room->m_btBody.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+            engine::BulletEngine::instance->dynamicsWorld->addRigidBody(room->m_btBody.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
             room->m_btBody->setUserPointer(room.get());
             room->m_btBody->setRestitution(1.0);
             room->m_btBody->setFriction(1.0);
@@ -2766,11 +2766,11 @@ namespace world
         int actualSpritesFound = 0;
         for(RoomSprite& sp : room->m_sprites)
         {
-            if(sp.sprite)
-            {
-                actualSpritesFound += 1;
-                highestTexturePageFound = std::max(highestTexturePageFound, sp.sprite->texture);
-            }
+            if(!sp.sprite)
+                continue;
+
+            actualSpritesFound += 1;
+            highestTexturePageFound = std::max(highestTexturePageFound, sp.sprite->texture);
         }
         if(actualSpritesFound == 0)
         {
@@ -2785,60 +2785,60 @@ namespace world
         // First collect indices on a per-texture basis
         std::vector<std::vector<uint16_t>> elements_for_texture(highestTexturePageFound + 1);
 
-        std::vector<GLfloat> spriteData(actualSpritesFound * 4 * 7, 0);
+        std::vector<glm::float_t> spriteData(actualSpritesFound * 4 * 7, 0);
 
         int writeIndex = 0;
         for(const RoomSprite& room_sprite : room->m_sprites)
         {
-            if(room_sprite.sprite)
-            {
-                int vertexStart = writeIndex;
-                // top right
-                std::copy_n(glm::value_ptr(room_sprite.pos), 3, &spriteData[writeIndex * 7 + 0]);
-                std::copy_n(&room_sprite.sprite->tex_coord[0], 2, &spriteData[writeIndex * 7 + 3]);
-                spriteData[writeIndex * 7 + 5] = room_sprite.sprite->right;
-                spriteData[writeIndex * 7 + 6] = room_sprite.sprite->top;
+            if(!room_sprite.sprite)
+                continue;
 
-                writeIndex += 1;
+            int vertexStart = writeIndex;
+            // top right
+            std::copy_n(glm::value_ptr(room_sprite.pos), 3, &spriteData[writeIndex * 7 + 0]);
+            std::copy_n(glm::value_ptr(room_sprite.sprite->tex_coord[0]), 2, &spriteData[writeIndex * 7 + 3]);
+            spriteData[writeIndex * 7 + 5] = room_sprite.sprite->right;
+            spriteData[writeIndex * 7 + 6] = room_sprite.sprite->top;
 
-                // top left
-                std::copy_n(glm::value_ptr(room_sprite.pos), 3, &spriteData[writeIndex * 7 + 0]);
-                std::copy_n(&room_sprite.sprite->tex_coord[2], 2, &spriteData[writeIndex * 7 + 3]);
-                spriteData[writeIndex * 7 + 5] = room_sprite.sprite->left;
-                spriteData[writeIndex * 7 + 6] = room_sprite.sprite->top;
+            writeIndex += 1;
 
-                writeIndex += 1;
+            // top left
+            std::copy_n(glm::value_ptr(room_sprite.pos), 3, &spriteData[writeIndex * 7 + 0]);
+            std::copy_n(glm::value_ptr(room_sprite.sprite->tex_coord[1]), 2, &spriteData[writeIndex * 7 + 3]);
+            spriteData[writeIndex * 7 + 5] = room_sprite.sprite->left;
+            spriteData[writeIndex * 7 + 6] = room_sprite.sprite->top;
 
-                // bottom left
-                std::copy_n(glm::value_ptr(room_sprite.pos), 3, &spriteData[writeIndex * 7 + 0]);
-                std::copy_n(&room_sprite.sprite->tex_coord[4], 2, &spriteData[writeIndex * 7 + 3]);
-                spriteData[writeIndex * 7 + 5] = room_sprite.sprite->left;
-                spriteData[writeIndex * 7 + 6] = room_sprite.sprite->bottom;
+            writeIndex += 1;
 
-                writeIndex += 1;
+            // bottom left
+            std::copy_n(glm::value_ptr(room_sprite.pos), 3, &spriteData[writeIndex * 7 + 0]);
+            std::copy_n(glm::value_ptr(room_sprite.sprite->tex_coord[2]), 2, &spriteData[writeIndex * 7 + 3]);
+            spriteData[writeIndex * 7 + 5] = room_sprite.sprite->left;
+            spriteData[writeIndex * 7 + 6] = room_sprite.sprite->bottom;
 
-                // bottom right
-                std::copy_n(glm::value_ptr(room_sprite.pos), 3, &spriteData[writeIndex * 7 + 0]);
-                std::copy_n(&room_sprite.sprite->tex_coord[6], 2, &spriteData[writeIndex * 7 + 3]);
-                spriteData[writeIndex * 7 + 5] = room_sprite.sprite->right;
-                spriteData[writeIndex * 7 + 6] = room_sprite.sprite->bottom;
+            writeIndex += 1;
 
-                writeIndex += 1;
+            // bottom right
+            std::copy_n(glm::value_ptr(room_sprite.pos), 3, &spriteData[writeIndex * 7 + 0]);
+            std::copy_n(glm::value_ptr(room_sprite.sprite->tex_coord[3]), 2, &spriteData[writeIndex * 7 + 3]);
+            spriteData[writeIndex * 7 + 5] = room_sprite.sprite->right;
+            spriteData[writeIndex * 7 + 6] = room_sprite.sprite->bottom;
 
-                // Assign indices
-                size_t texture = room_sprite.sprite->texture;
-                size_t start = room->m_spriteBuffer->element_count_per_texture[texture];
-                size_t newElementCount = start + 6;
-                room->m_spriteBuffer->element_count_per_texture[texture] = newElementCount;
-                elements_for_texture[texture].resize(newElementCount);
+            writeIndex += 1;
 
-                elements_for_texture[texture][start + 0] = vertexStart + 0;
-                elements_for_texture[texture][start + 1] = vertexStart + 1;
-                elements_for_texture[texture][start + 2] = vertexStart + 2;
-                elements_for_texture[texture][start + 3] = vertexStart + 2;
-                elements_for_texture[texture][start + 4] = vertexStart + 3;
-                elements_for_texture[texture][start + 5] = vertexStart + 0;
-            }
+            // Assign indices
+            size_t texture = room_sprite.sprite->texture;
+            size_t start = room->m_spriteBuffer->element_count_per_texture[texture];
+            size_t newElementCount = start + 6;
+            room->m_spriteBuffer->element_count_per_texture[texture] = newElementCount;
+            elements_for_texture[texture].resize(newElementCount);
+
+            elements_for_texture[texture][start + 0] = vertexStart + 0;
+            elements_for_texture[texture][start + 1] = vertexStart + 1;
+            elements_for_texture[texture][start + 2] = vertexStart + 2;
+            elements_for_texture[texture][start + 3] = vertexStart + 2;
+            elements_for_texture[texture][start + 4] = vertexStart + 3;
+            elements_for_texture[texture][start + 5] = vertexStart + 0;
         }
 
         // Now flatten all these indices to a single array

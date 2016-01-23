@@ -14,7 +14,7 @@
 namespace world
 {
 class Camera;
-struct Entity;
+class Entity;
 struct Room;
 
 namespace core

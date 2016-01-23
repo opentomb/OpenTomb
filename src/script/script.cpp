@@ -258,14 +258,14 @@ lua::Any lua_NewSector(world::ObjectId id)
 
 std::tuple<float, float, float> lua_GetGravity()
 {
-    btVector3 g = engine::bt_engine_dynamicsWorld->getGravity();
+    btVector3 g = engine::BulletEngine::instance->dynamicsWorld->getGravity();
     return std::make_tuple( g[0], g[1], g[2] );
 }
 
 void lua_SetGravity(float x, lua::Value y, lua::Value z)                                             // function to be exported to Lua
 {
     btVector3 g(x, y.is<btScalar>() ? y.to<btScalar>() : 0, z.is<btScalar>() ? z.to<btScalar>() : 0);
-    engine::bt_engine_dynamicsWorld->setGravity(g);
+    engine::BulletEngine::instance->dynamicsWorld->setGravity(g);
     Console::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
 }
 
@@ -285,7 +285,7 @@ bool lua_DropEntity(world::ObjectId id, float time, lua::Value only_room)
     from[2] = ent->m_transform[3][2];
     glm::vec3 to = from + move;
     //to[2] -= (ent->m_bf.bb_max[2] - ent->m_bf.bb_min[2]);
-    engine::bt_engine_dynamicsWorld->rayTest(util::convert(from), util::convert(to), cb);
+    engine::BulletEngine::instance->dynamicsWorld->rayTest(util::convert(from), util::convert(to), cb);
 
     if(cb.hasHit())
     {
@@ -1047,9 +1047,9 @@ void lua_SetEntityScaling(world::ObjectId id, float x, float y, float z)
             if(!bone.bt_body)
                 continue;
 
-            engine::bt_engine_dynamicsWorld->removeRigidBody(bone.bt_body.get());
+            engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(bone.bt_body.get());
             bone.bt_body->getCollisionShape()->setLocalScaling(util::convert(ent->m_scaling));
-            engine::bt_engine_dynamicsWorld->addRigidBody(bone.bt_body.get());
+            engine::BulletEngine::instance->dynamicsWorld->addRigidBody(bone.bt_body.get());
 
             bone.bt_body->activate();
         }
@@ -2160,7 +2160,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
             if(!bone.bt_body)
                 continue;
 
-            engine::bt_engine_dynamicsWorld->removeRigidBody(bone.bt_body.get());
+            engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(bone.bt_body.get());
 
             bone.bt_body->getCollisionShape()->calculateLocalInertia(mass, inertia);
 
@@ -2180,7 +2180,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
             //ent->bt_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
             //ent->bt_body[i]->setCcdSweptSphereRadius(32.0);
 
-            engine::bt_engine_dynamicsWorld->addRigidBody(bone.bt_body.get());
+            engine::BulletEngine::instance->dynamicsWorld->addRigidBody(bone.bt_body.get());
 
             bone.bt_body->activate();
 
@@ -2305,7 +2305,7 @@ void lua_CamShake(float power, float time, lua::Value id)
 
 void lua_FlashSetup(int alpha, int R, int G, int B, int fadeinSpeed, int fadeoutSpeed)
 {
-    gui::FaderManager::instance->setup(gui::FaderType::Effect,
+    gui::Gui::instance->faders.setup(gui::FaderType::Effect,
                    alpha,
                    R, G, B,
                    loader::BlendingMode::Multiply,
@@ -2314,22 +2314,22 @@ void lua_FlashSetup(int alpha, int R, int G, int B, int fadeinSpeed, int fadeout
 
 void lua_FlashStart()
 {
-    gui::FaderManager::instance->start(gui::FaderType::Effect, gui::FaderDir::Timed);
+    gui::Gui::instance->faders.start(gui::FaderType::Effect, gui::FaderDir::Timed);
 }
 
 void lua_FadeOut()
 {
-    gui::FaderManager::instance->start(gui::FaderType::Black, gui::FaderDir::Out);
+    gui::Gui::instance->faders.start(gui::FaderType::Black, gui::FaderDir::Out);
 }
 
 void lua_FadeIn()
 {
-    gui::FaderManager::instance->start(gui::FaderType::Black, gui::FaderDir::In);
+    gui::Gui::instance->faders.start(gui::FaderType::Black, gui::FaderDir::In);
 }
 
 bool lua_FadeCheck()
 {
-    return gui::FaderManager::instance->getStatus(gui::FaderType::Black) != gui::FaderStatus::Idle;
+    return gui::Gui::instance->faders.getStatus(gui::FaderType::Black) != gui::FaderStatus::Idle;
 }
 
 // General gameplay functions
@@ -2446,8 +2446,8 @@ void lua_SetGame(int gameId, lua::Value levelId)
         engine::Gameflow_Manager.setLevelID(levelId.to<uint32_t>());
 
     const char* str = engine_lua["getTitleScreen"](int(engine::Gameflow_Manager.getGameID())).toCStr();
-    gui::FaderManager::instance->assignPicture(gui::FaderType::LoadScreen, str);
-    gui::FaderManager::instance->start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
+    gui::Gui::instance->faders.assignPicture(gui::FaderType::LoadScreen, str);
+    gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
     Console::instance().notify(SYSNOTE_CHANGING_GAME, engine::Gameflow_Manager.getGameID());
     engine::Game_LevelTransition(engine::Gameflow_Manager.getLevelID());
@@ -2468,10 +2468,9 @@ void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
         {
             engine::Gameflow_Manager.setLevelID(mapId.to<uint32_t>());
         }
-        char file_path[MAX_ENGINE_PATH];
-        engine_lua.getLoadingScreen(engine::Gameflow_Manager.getLevelID(), file_path);
-        gui::FaderManager::instance->assignPicture(gui::FaderType::LoadScreen, file_path);
-        gui::FaderManager::instance->start(gui::FaderType::LoadScreen, gui::FaderDir::In);
+        std::string file_path = engine_lua.getLoadingScreen(engine::Gameflow_Manager.getLevelID());
+        gui::Gui::instance->faders.assignPicture(gui::FaderType::LoadScreen, file_path);
+        gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::In);
         engine::loadMap(mapName);
     }
 }
@@ -3604,11 +3603,9 @@ bool script::MainEngine::getSysNotify(int string_index, size_t string_size, char
     return true;
 }
 
-bool script::MainEngine::getLoadingScreen(int level_index, char *pic_path)
+std::string script::MainEngine::getLoadingScreen(int level_index)
 {
-    const char* realPath = call("getLoadingScreen", int(engine::Gameflow_Manager.getGameID()), int(engine::Gameflow_Manager.getLevelID()), level_index).toCStr();
-    strncpy(pic_path, realPath, MAX_ENGINE_PATH);
-    return true;
+    return call("getLoadingScreen", int(engine::Gameflow_Manager.getGameID()), int(engine::Gameflow_Manager.getLevelID()), level_index).toString();
 }
 
 

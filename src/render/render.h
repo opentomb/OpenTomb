@@ -23,7 +23,7 @@ struct World;
 struct Room;
 struct RoomSector;
 class Camera;
-struct Entity;
+class Entity;
 struct Character;
 
 namespace core

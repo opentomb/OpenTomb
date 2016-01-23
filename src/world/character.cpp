@@ -1,7 +1,7 @@
 #include "character.h"
 
 #include "character_controller.h"
-#include "gui/itemnotifier.h"
+#include "gui/gui.h"
 #include "inventory.h"
 #include "resource.h"
 #include "script/script.h"
@@ -46,7 +46,7 @@ bool allowTraverse(const RoomSector& rs, glm::float_t floor, const Object& objec
     engine::BtEngineClosestRayResultCallback cb(&object);
     glm::vec3 from{rs.position[0], rs.position[1], floor + MeteringSectorSize * 0.5f};
     glm::vec3 to = from - glm::vec3{0, 0, MeteringSectorSize};
-    engine::bt_engine_dynamicsWorld->rayTest(util::convert(from), util::convert(to), cb);
+    engine::BulletEngine::instance->dynamicsWorld->rayTest(util::convert(from), util::convert(to), cb);
     if(cb.hasHit())
     {
         glm::vec3 v = glm::mix(from, to, cb.m_closestHitFraction);
@@ -95,7 +95,7 @@ Character::~Character()
 
 int32_t Character::addItem(ObjectId item_id, int32_t count) // returns items count after in the function's end
 {
-    gui::ItemNotifier::instance->start(item_id);
+    gui::Gui::instance->notifier.start(item_id);
 
     auto item = engine::engine_world.getBaseItemByID(item_id);
     if(!item)
@@ -351,7 +351,7 @@ void Character::getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t
     to[2] -= 4096.0;
     cb->m_closestHitFraction = 1.0;
     cb->m_collisionObject = nullptr;
-    engine::bt_engine_dynamicsWorld->rayTest(util::convert(from), util::convert(to), *cb);
+    engine::BulletEngine::instance->dynamicsWorld->rayTest(util::convert(from), util::convert(to), *cb);
     fc->floor.assign(*cb, from, to);
 
     to = from;
@@ -359,7 +359,7 @@ void Character::getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t
     cb->m_closestHitFraction = 1.0;
     cb->m_collisionObject = nullptr;
     // cb->m_flags = btTriangleRaycastCallback::kF_FilterBackfaces;
-    engine::bt_engine_dynamicsWorld->rayTest(util::convert(from), util::convert(to), *cb);
+    engine::BulletEngine::instance->dynamicsWorld->rayTest(util::convert(from), util::convert(to), *cb);
     fc->ceiling.assign(*cb, from, to);
 }
 
@@ -453,7 +453,7 @@ StepType Character::checkNextStep(const glm::vec3& offset, struct HeightInfo* nf
     to[1] = pos[1];
     m_heightInfo.cb->m_closestHitFraction = 1.0;
     m_heightInfo.cb->m_collisionObject = nullptr;
-    engine::bt_engine_dynamicsWorld->rayTest(util::convert(from), util::convert(to), *m_heightInfo.cb);
+    engine::BulletEngine::instance->dynamicsWorld->rayTest(util::convert(from), util::convert(to), *m_heightInfo.cb);
     if(m_heightInfo.cb->hasHit())
     {
         ret = StepType::UpImpossible;
@@ -539,7 +539,7 @@ ClimbInfo Character::checkClimbability(const glm::vec3& offset, struct HeightInf
         t2.setOrigin(util::convert(to));
         nfc->ccb->m_closestHitFraction = 1.0;
         nfc->ccb->m_hitCollisionObject = nullptr;
-        engine::bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
+        engine::BulletEngine::instance->dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
         if(nfc->ccb->hasHit())
         {
             if(nfc->ccb->m_hitNormalWorld[2] >= 0.1)
@@ -568,7 +568,7 @@ ClimbInfo Character::checkClimbability(const glm::vec3& offset, struct HeightInf
             // vec3_copy(cast_ray+3, tmp);
             nfc->ccb->m_closestHitFraction = 1.0;
             nfc->ccb->m_hitCollisionObject = nullptr;
-            engine::bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
+            engine::BulletEngine::instance->dynamicsWorld->convexSweepTest(m_climbSensor.get(), t1, t2, *nfc->ccb);
             if(nfc->ccb->hasHit())
             {
                 up_founded = 1;
@@ -705,7 +705,7 @@ ClimbInfo Character::checkWallsClimbability()
     btTransform tr2 = btTransform::getIdentity();
     tr2.setOrigin(util::convert(to));
 
-    engine::bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
+    engine::BulletEngine::instance->dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
     if(!ccb->hasHit())
     {
         return ret;
@@ -754,7 +754,7 @@ ClimbInfo Character::checkWallsClimbability()
         tr1.setOrigin(util::convert(from));
         tr2.setIdentity();
         tr2.setOrigin(util::convert(to));
-        engine::bt_engine_dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
+        engine::BulletEngine::instance->dynamicsWorld->convexSweepTest(m_climbSensor.get(), tr1, tr2, *ccb);
         if(ccb->hasHit())
         {
             ret.wall_hit = ClimbType::FullBody;
@@ -1652,7 +1652,7 @@ int Character::checkTraverse(const Entity& obj)
     v1[1] = v0[1] = obj_s->position[1];
     v0[2] = floor + MeteringSectorSize * 0.5f;
     v1[2] = floor + MeteringSectorSize * 2.5f;
-    engine::bt_engine_dynamicsWorld->rayTest(v0, v1, cb);
+    engine::BulletEngine::instance->dynamicsWorld->rayTest(v0, v1, cb);
     if(cb.hasHit())
     {
         Object* object = static_cast<Object*>(cb.m_collisionObject->getUserPointer());
@@ -1712,7 +1712,7 @@ int Character::checkTraverse(const Entity& obj)
         btSphereShape sp(CollisionTraverseTestRadius * MeteringSectorSize);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
         engine::BtEngineClosestConvexResultCallback ccb(&obj);
-        engine::bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
+        engine::BulletEngine::instance->dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
 
         if(!ccb.hasHit())
         {
@@ -1759,7 +1759,7 @@ int Character::checkTraverse(const Entity& obj)
         btSphereShape sp(CollisionTraverseTestRadius * MeteringSectorSize);
         sp.setMargin(COLLISION_MARGIN_DEFAULT);
         engine::BtEngineClosestConvexResultCallback ccb(this);
-        engine::bt_engine_dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
+        engine::BulletEngine::instance->dynamicsWorld->convexSweepTest(&sp, from, to, ccb);
 
         if(!ccb.hasHit())
         {

@@ -21,7 +21,7 @@ struct Console;
 
 namespace world
 {
-struct Entity;
+class Entity;
 } // namespace world
 
 namespace audio
@@ -210,7 +210,7 @@ namespace script
         int  getSecretTrackNumber();
         int  getNumTracks();
         bool getSoundtrack(int track_index, char *track_path, audio::StreamMethod *load_method, audio::StreamType *stream_type);
-        bool getLoadingScreen(int level_index, char *pic_path);
+        std::string getLoadingScreen(int level_index);
         bool getString(int string_index, size_t string_size, char *buffer);
         bool getSysNotify(int string_index, size_t string_size, char *buffer);
 

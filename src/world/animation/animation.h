@@ -20,7 +20,7 @@ namespace world
 {
 struct Character;
 struct SkeletalModel;
-struct Entity;
+class Entity;
 struct RagdollSetup;
 enum class CollisionShape;
 enum class CollisionType;

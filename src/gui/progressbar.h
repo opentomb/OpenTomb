@@ -1,6 +1,7 @@
 #pragma once
 
-#include "gui.h"
+#include "gui/common.h"
+#include "util/helpers.h"
 
 #include <glm/glm.hpp>
 

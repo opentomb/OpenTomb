@@ -52,10 +52,10 @@ void World::empty()
 
     audioEngine.deInitAudio(); // De-initialize and destroy all audio objects.
 
-    if(InventoryManager::instance)
+    if(gui::Gui::instance)
     {
-        InventoryManager::instance->setInventory(nullptr);
-        InventoryManager::instance->setItemsType(MenuItemType::Supply);  // see base items
+        gui::Gui::instance->inventory.setInventory(nullptr);
+        gui::Gui::instance->inventory.setItemsType(MenuItemType::Supply);  // see base items
     }
 
     if(character)
@@ -69,11 +69,11 @@ void World::empty()
     // Destroy Bullet's MISC objects (debug spheres etc.)
     ///@FIXME: Hide it somewhere, it is nasty being here.
 
-    if(engine::bt_engine_dynamicsWorld != nullptr)
+    if(engine::BulletEngine::instance->dynamicsWorld != nullptr)
     {
-        for(int i = engine::bt_engine_dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+        for(int i = engine::BulletEngine::instance->dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
         {
-            btCollisionObject* obj = engine::bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
+            btCollisionObject* obj = engine::BulletEngine::instance->dynamicsWorld->getCollisionObjectArray()[i];
             if(btRigidBody* body = btRigidBody::upcast(obj))
             {
                 Object* object = static_cast<Object*>(body->getUserPointer());
@@ -89,7 +89,7 @@ void World::empty()
 
                     body->setCollisionShape(nullptr);
 
-                    engine::bt_engine_dynamicsWorld->removeRigidBody(body);
+                    engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(body);
                     delete object;
                     delete body;
                 }

@@ -48,6 +48,7 @@
 #include <boost/log/trivial.hpp>
 #include <boost/format.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/range/adaptors.hpp>
 
 using gui::Console;
 
@@ -78,15 +79,6 @@ namespace
 std::vector<glm::float_t> frame_vertex_buffer;
 size_t frame_vertex_buffer_size_left = 0;
 }
-
-btDefaultCollisionConfiguration     *bt_engine_collisionConfiguration = nullptr;
-btCollisionDispatcher               *bt_engine_dispatcher = nullptr;
-btGhostPairCallback                 *bt_engine_ghostPairCallback = nullptr;
-btBroadphaseInterface               *bt_engine_overlappingPairCache = nullptr;
-btSequentialImpulseConstraintSolver *bt_engine_solver = nullptr;
-btDiscreteDynamicsWorld             *bt_engine_dynamicsWorld = nullptr;
-btOverlapFilterCallback             *bt_engine_filterCallback = nullptr;
-
 
 // Debug globals.
 
@@ -328,8 +320,8 @@ void start()
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
     // Make splash screen.
-    gui::FaderManager::instance->assignPicture(gui::FaderType::LoadScreen, "resource/graphics/legal.png");
-    gui::FaderManager::instance->start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
+    gui::Gui::instance->faders.assignPicture(gui::FaderType::LoadScreen, "resource/graphics/legal.png");
+    gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
     engine_lua.doFile("autoexec.lua");
 }
@@ -360,18 +352,15 @@ void display()
         glPopMatrix();
     }*/
 
-    gui::switchGLMode(true);
+    gui::Gui::instance->switchGLMode(true);
     {
-        gui::ItemNotifier::instance->draw();
-        gui::ItemNotifier::instance->animate();
-        if(engine_world.character && InventoryManager::instance)
-        {
-            gui::drawInventory();
-        }
+        gui::Gui::instance->notifier.draw();
+        gui::Gui::instance->notifier.animate();
+        gui::Gui::instance->drawInventory();
     }
 
-    gui::render();
-    gui::switchGLMode(false);
+    gui::Gui::instance->render();
+    gui::Gui::instance->switchGLMode(false);
 
     render::renderer.drawListDebugLines();
 
@@ -387,7 +376,7 @@ void resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     screen_info.h_unit = static_cast<float>(nominalH) / gui::ScreenMeteringResolution;
     screen_info.scale_factor = screen_info.w < screen_info.h ? screen_info.h_unit : screen_info.w_unit;
 
-    gui::resize();
+    gui::Gui::instance->resize();
 
     engine_camera.setFovAspect(screen_info.fov, static_cast<glm::float_t>(nominalW) / static_cast<glm::float_t>(nominalH));
     engine_camera.apply();
@@ -574,9 +563,8 @@ void storeEntityLerpTransforms()
         }
     }
 
-    for(auto entityPair : engine_world.entity_tree)
+    for(const std::shared_ptr<world::Entity>& entity : engine_world.entity_tree | boost::adaptors::map_values)
     {
-        std::shared_ptr<world::Entity> entity = entityPair.second;
         if(!entity->m_enabled)
             continue;
 
@@ -615,9 +603,9 @@ void internalPreTickCallback(btDynamicsWorld* /*world*/, float timeStep)
     {
         engine_world.character->frame(util::fromSeconds(timeStep));
     }
-    for(const auto& entPair : engine_world.entity_tree)
+    for(const std::shared_ptr<world::Entity>& entity : engine_world.entity_tree | boost::adaptors::map_values)
     {
-        entPair.second->frame(util::fromSeconds(timeStep));
+        entity->frame(util::fromSeconds(timeStep));
     }
 
     storeEntityLerpTransforms();
@@ -633,8 +621,8 @@ void internalTickCallback(btDynamicsWorld *world, float /*timeStep*/)
     // Update all physics object's transform/room:
     for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
     {
-        BOOST_ASSERT(i >= 0 && i < bt_engine_dynamicsWorld->getCollisionObjectArray().size());
-        btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
+        BOOST_ASSERT(i >= 0 && i < BulletEngine::instance->dynamicsWorld->getCollisionObjectArray().size());
+        btCollisionObject* obj = BulletEngine::instance->dynamicsWorld->getCollisionObjectArray()[i];
         btRigidBody* body = btRigidBody::upcast(obj);
         if(body && !body->isStaticObject() && body->getMotionState())
         {
@@ -681,7 +669,7 @@ void initPre()
     render::renderer.init();
     render::renderer.setCamera(&engine_camera);
 
-    initBullet();
+    engine::BulletEngine::instance.reset(new engine::BulletEngine());
 }
 
 // Second stage of initialization.
@@ -692,36 +680,37 @@ void initPost()
 
     Console::instance().initFonts();
 
-    gui::init();
+    gui::Gui::instance.reset(new gui::Gui());
     Sys_Init();
 }
 
 // Bullet Physics initialization.
+std::unique_ptr<BulletEngine> BulletEngine::instance = nullptr;
 
-void initBullet()
+BulletEngine::BulletEngine()
 {
     ///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
-    bt_engine_collisionConfiguration = new btDefaultCollisionConfiguration();
+    collisionConfiguration.reset( new btDefaultCollisionConfiguration() );
 
     ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
-    bt_engine_dispatcher = new btCollisionDispatcher(bt_engine_collisionConfiguration);
-    bt_engine_dispatcher->setNearCallback(roomNearCallback);
+    dispatcher.reset( new btCollisionDispatcher(collisionConfiguration.get()) );
+    dispatcher->setNearCallback(roomNearCallback);
 
     ///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
-    bt_engine_overlappingPairCache = new btDbvtBroadphase();
-    bt_engine_ghostPairCallback = new btGhostPairCallback();
-    bt_engine_overlappingPairCache->getOverlappingPairCache()->setInternalGhostPairCallback(bt_engine_ghostPairCallback);
+    overlappingPairCache.reset( new btDbvtBroadphase() );
+    ghostPairCallback.reset( new btGhostPairCallback() );
+    overlappingPairCache->getOverlappingPairCache()->setInternalGhostPairCallback(ghostPairCallback.get());
 
     ///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
-    bt_engine_solver = new btSequentialImpulseConstraintSolver;
+    solver.reset( new btSequentialImpulseConstraintSolver );
 
-    bt_engine_dynamicsWorld = new btDiscreteDynamicsWorld(bt_engine_dispatcher, bt_engine_overlappingPairCache, bt_engine_solver, bt_engine_collisionConfiguration);
-    bt_engine_dynamicsWorld->setInternalTickCallback(internalTickCallback);
-    bt_engine_dynamicsWorld->setInternalTickCallback(internalPreTickCallback, nullptr, true);
-    bt_engine_dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
+    dynamicsWorld.reset( new btDiscreteDynamicsWorld(dispatcher.get(), overlappingPairCache.get(), solver.get(), collisionConfiguration.get()) );
+    dynamicsWorld->setInternalTickCallback(internalTickCallback);
+    dynamicsWorld->setInternalTickCallback(internalPreTickCallback, nullptr, true);
+    dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
 
     render::debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
-    bt_engine_dynamicsWorld->setDebugDrawer(&render::debugDrawer);
+    dynamicsWorld->setDebugDrawer(&render::debugDrawer);
     //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
 }
 
@@ -775,23 +764,9 @@ void destroy()
     Com_Destroy();
     Sys_Destroy();
 
-    //delete dynamics world
-    delete bt_engine_dynamicsWorld;
+    BulletEngine::instance.reset();
 
-    //delete solver
-    delete bt_engine_solver;
-
-    //delete broadphase
-    delete bt_engine_overlappingPairCache;
-
-    //delete dispatcher
-    delete bt_engine_dispatcher;
-
-    delete bt_engine_collisionConfiguration;
-
-    delete bt_engine_ghostPairCallback;
-
-    gui::destroy();
+    gui::Gui::instance.reset();
 }
 
 void shutdown(int val)
@@ -922,7 +897,7 @@ bool loadMap(const std::string& name)
         return false;
     }
 
-    gui::drawLoadScreen(0);
+    gui::Gui::instance->drawLoadScreen(0);
 
     engine_camera.setCurrentRoom( nullptr );
 
@@ -931,7 +906,7 @@ bool loadMap(const std::string& name)
 
     Gameflow_Manager.setLevelPath(name);          // it is needed for "not in the game" levels or correct saves loading.
 
-    gui::drawLoadScreen(50);
+    gui::Gui::instance->drawLoadScreen(50);
 
     engine_world.empty();
     engine_world.prepare();
@@ -940,7 +915,7 @@ bool loadMap(const std::string& name)
 
     engine_world.audioEngine.init();
 
-    gui::drawLoadScreen(100);
+    gui::Gui::instance->drawLoadScreen(100);
 
     // Here we can place different platform-specific level loading routines.
 
@@ -969,10 +944,10 @@ bool loadMap(const std::string& name)
 
     render::renderer.setWorld(&engine_world);
 
-    gui::drawLoadScreen(1000);
+    gui::Gui::instance->drawLoadScreen(1000);
 
-    gui::FaderManager::instance->start(gui::FaderType::LoadScreen, gui::FaderDir::In);
-    gui::ItemNotifier::instance->reset();
+    gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::In);
+    gui::Gui::instance->notifier.reset();
 
     return true;
 }

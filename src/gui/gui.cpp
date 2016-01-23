@@ -25,71 +25,57 @@ extern SDL_Window  *sdl_window;
 
 namespace gui
 {
+std::unique_ptr<Gui> Gui::instance = nullptr;
 
-glm::mat4 guiProjectionMatrix = glm::mat4(1.0f);
-
-void init()
+Gui::Gui()
 {
-    ProgressbarManager::instance.reset(new ProgressbarManager());
-    FaderManager::instance.reset(new FaderManager());
-    ItemNotifier::instance.reset(new ItemNotifier());
-
     render::fillCrosshairBuffer();
 
     //main_inventory_menu = new gui_InventoryMenu();
-    InventoryManager::instance.reset(new InventoryManager());
 }
 
-void destroy()
+Gui::~Gui()
 {
-    ItemNotifier::instance.reset();
-    FaderManager::instance.reset();
-
-    /*if(main_inventory_menu)
+    if(rectanglePositionBuffer != 0)
     {
-        delete main_inventory_menu;
-        main_inventory_menu = NULL;
-    }*/
-
-    InventoryManager::instance.reset();
-
-    FontManager::instance.reset();
-    ProgressbarManager::instance.reset();
+        glDeleteBuffers(1, &rectanglePositionBuffer);
+        glDeleteBuffers(1, &rectangleColorBuffer);
+    }
 }
 
-bool update()
+bool Gui::update()
 {
     if(FontManager::instance != nullptr)
     {
         FontManager::instance->update();
     }
 
-    if(!Console::instance().isVisible() && engine::control_states.gui_inventory && InventoryManager::instance)
+    if(!Console::instance().isVisible() && engine::control_states.gui_inventory)
     {
         if(engine::engine_world.character &&
-           InventoryManager::instance->getCurrentState() == InventoryManager::InventoryState::Disabled)
+           inventory.getCurrentState() == InventoryManager::InventoryState::Disabled)
         {
-            InventoryManager::instance->setInventory(&engine::engine_world.character->m_inventory);
-            InventoryManager::instance->send(InventoryManager::InventoryState::Open);
+            inventory.setInventory(&engine::engine_world.character->m_inventory);
+            inventory.send(InventoryManager::InventoryState::Open);
         }
-        if(InventoryManager::instance->getCurrentState() == InventoryManager::InventoryState::Idle)
+        if(inventory.getCurrentState() == InventoryManager::InventoryState::Idle)
         {
-            InventoryManager::instance->send(InventoryManager::InventoryState::Closed);
+            inventory.send(InventoryManager::InventoryState::Closed);
         }
     }
 
-    if(Console::instance().isVisible() || InventoryManager::instance->getCurrentState() != InventoryManager::InventoryState::Disabled)
+    if(Console::instance().isVisible() || inventory.getCurrentState() != InventoryManager::InventoryState::Disabled)
     {
         return true;
     }
     return false;
 }
 
-void resize()
+void Gui::resize()
 {
     TextLineManager::instance->resizeTextLines();
 
-    ProgressbarManager::instance->resize();
+    progressBars.resize();
 
     if(FontManager::instance)
     {
@@ -101,7 +87,7 @@ void resize()
     render::fillCrosshairBuffer();
 }
 
-void render()
+void Gui::render()
 {
     glFrontFace(GL_CCW);
     glEnable(GL_BLEND);
@@ -111,8 +97,8 @@ void render()
     glDisable(GL_DEPTH_TEST);
     if(engine::screen_info.show_debuginfo)
         render::drawCrosshair();
-    ProgressbarManager::instance->draw();
-    FaderManager::instance->drawFaders();
+    progressBars.draw();
+    faders.drawFaders();
     TextLineManager::instance->renderStrings();
     Console::instance().draw();
 
@@ -123,7 +109,7 @@ void render()
 /*
  * Other GUI options
  */
-void switchGLMode(bool is_gui)
+void Gui::switchGLMode(bool is_gui)
 {
     if(is_gui)                                                             // set gui coordinate system
     {
@@ -144,11 +130,11 @@ void switchGLMode(bool is_gui)
     }
 }
 
-void drawInventory()
+void Gui::drawInventory()
 {
     //if (!main_inventory_menu->IsVisible())
-    InventoryManager::instance->frame(engine::engine_frame_time);
-    if(InventoryManager::instance->getCurrentState() == InventoryManager::InventoryState::Disabled)
+    inventory.frame(engine::engine_frame_time);
+    if(inventory.getCurrentState() == InventoryManager::InventoryState::Disabled)
     {
         return;
     }
@@ -178,11 +164,11 @@ void drawInventory()
 
     switchGLMode(false);
     //main_inventory_menu->Render(); //engine_world.character->character->inventory
-    InventoryManager::instance->render();
+    inventory.render();
     switchGLMode(true);
 }
 
-void drawLoadScreen(int value)
+void Gui::drawLoadScreen(int value)
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -195,8 +181,8 @@ void drawLoadScreen(int value)
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    FaderManager::instance->showLoadScreenFader();
-    ProgressbarManager::instance->showLoading(value);
+    faders.showLoadScreenFader();
+    progressBars.showLoading(value);
 
     glDepthMask(GL_TRUE);
 
@@ -205,17 +191,10 @@ void drawLoadScreen(int value)
     SDL_GL_SwapWindow(engine::sdl_window);
 }
 
-namespace
-{
-    GLuint rectanglePositionBuffer = 0;
-    GLuint rectangleColorBuffer = 0;
-    std::unique_ptr<render::VertexArray> rectangleArray = nullptr;
-}
-
 /**
  * Draws simple colored rectangle with given parameters.
  */
-void drawRect(glm::float_t x, glm::float_t y,
+void Gui::drawRect(glm::float_t x, glm::float_t y,
               glm::float_t width, glm::float_t height,
               const glm::vec4& colorUpperLeft, const glm::vec4& colorUpperRight,
               const glm::vec4& colorLowerLeft, const glm::vec4& colorLowerRight,

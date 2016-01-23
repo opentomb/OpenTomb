@@ -381,7 +381,7 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
     }
 }
 
-void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, size_t &outPage, glm::float_t *coordinates) const
+void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, size_t &outPage, glm::vec2* coordinates) const
 {
     BOOST_ASSERT(sprite_texture < m_canonicalTexturesForSpriteTextures.size());
 
@@ -410,8 +410,8 @@ void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, size_t &o
 
     for(int i = 0; i < 4; i++)
     {
-        coordinates[i * 2 + 0] = static_cast<glm::float_t>(pixel_coordinates[i * 2 + 0]) / static_cast<glm::float_t>(m_resultPageWidth);
-        coordinates[i * 2 + 1] = static_cast<glm::float_t>(pixel_coordinates[i * 2 + 1]) / static_cast<glm::float_t>(m_resultPageHeights[canonical.new_page]);
+        coordinates[i][0] = static_cast<glm::float_t>(pixel_coordinates[i * 2 + 0]) / static_cast<glm::float_t>(m_resultPageWidth);
+        coordinates[i][1] = static_cast<glm::float_t>(pixel_coordinates[i * 2 + 1]) / static_cast<glm::float_t>(m_resultPageHeights[canonical.new_page]);
     }
 }
 

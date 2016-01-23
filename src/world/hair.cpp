@@ -111,7 +111,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
         // collide with hair!
 
         m_elements[i].body->setUserPointer(this);
-        engine::bt_engine_dynamicsWorld->addRigidBody(m_elements[i].body.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_KINEMATIC);
+        engine::BulletEngine::instance->dynamicsWorld->addRigidBody(m_elements[i].body.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_KINEMATIC);
 
         m_elements[i].body->activate();
     }
@@ -212,7 +212,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
         // Add constraint to the world.
 
-        engine::bt_engine_dynamicsWorld->addConstraint(m_joints[curr_joint].get(), true);
+        engine::BulletEngine::instance->dynamicsWorld->addConstraint(m_joints[curr_joint].get(), true);
 
         curr_joint++;   // Point to the next joint.
     }
@@ -358,7 +358,7 @@ Hair::~Hair()
     for(auto& joint : m_joints)
     {
         if(joint)
-            engine::bt_engine_dynamicsWorld->removeConstraint(joint.get());
+            engine::BulletEngine::instance->dynamicsWorld->removeConstraint(joint.get());
     }
 
     for(auto& element : m_elements)
@@ -366,7 +366,7 @@ Hair::~Hair()
         if(element.body)
         {
             element.body->setUserPointer(nullptr);
-            engine::bt_engine_dynamicsWorld->removeRigidBody(element.body.get());
+            engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(element.body.get());
         }
     }
 }

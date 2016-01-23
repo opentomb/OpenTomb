@@ -21,7 +21,7 @@ struct Room;
 struct RoomSector;
 struct World;
 class Camera;
-struct Entity;
+class Entity;
 namespace core
 {
 struct Polygon;
@@ -36,7 +36,7 @@ class BtEngineClosestConvexResultCallback;
 void Game_InitGlobals();
 void Game_RegisterLuaFunctions(script::ScriptEngine &state);
 int  Game_Load(const char* name);
-int  Game_Save(const char* name);
+bool Game_Save(const std::string& name);
 
 util::Duration Game_Tick(util::Duration* game_logic_time);
 void     Game_Frame(util::Duration time);

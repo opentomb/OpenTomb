@@ -120,13 +120,13 @@ void Console::drawBackground()
     /*
          * Draw console background to see the text
          */
-    drawRect(0.0, m_cursorY + m_lineHeight - 8, engine::screen_info.w, engine::screen_info.h, m_backgroundColor, m_backgroundColor, m_backgroundColor, m_backgroundColor, loader::BlendingMode::Screen);
+    Gui::instance->drawRect(0.0, m_cursorY + m_lineHeight - 8, engine::screen_info.w, engine::screen_info.h, m_backgroundColor, m_backgroundColor, m_backgroundColor, m_backgroundColor, loader::BlendingMode::Screen);
 
     /*
          * Draw finalise line
          */
     glm::vec4 white{ 1, 1, 1, 0.7f };
-    drawRect(0.0, m_cursorY + m_lineHeight - 8, engine::screen_info.w, 2, white, white, white, white, loader::BlendingMode::Screen);
+    Gui::instance->drawRect(0.0, m_cursorY + m_lineHeight - 8, engine::screen_info.w, 2, white, white, white, white, loader::BlendingMode::Screen);
 }
 
 void Console::drawCursor()
@@ -146,7 +146,7 @@ void Console::drawCursor()
     if(m_showCursor)
     {
         glm::vec4 white{ 1, 1, 1, 0.7f };
-        drawRect(m_cursorX,
+        Gui::instance->drawRect(m_cursorX,
                      y + m_lineHeight * 0.9f,
                      1,
                      m_lineHeight * 0.8f,

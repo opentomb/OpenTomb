@@ -2,6 +2,8 @@
 
 #include "progressbar.h"
 
+#include <map>
+
 namespace gui
 {
 class ProgressbarManager
@@ -11,8 +13,6 @@ public:
     void draw();
     void showLoading(int value);
     void resize();
-
-    static std::unique_ptr<ProgressbarManager> instance;
 private:
     std::map<BarType, ProgressBar> m_progressBars;
 };

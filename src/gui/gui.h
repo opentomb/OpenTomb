@@ -1,140 +1,94 @@
 #pragma once
 
-#include "fontmanager.h"
 #include "gl_font.h"
 #include "render/render.h"
+
+#include "fadermanager.h"
+#include "fontmanager.h"
+#include "inventory.h"
+#include "itemnotifier.h"
+#include "progressbarmanager.h"
 
 namespace gui
 {
 
-namespace
+struct Gui
 {
-constexpr int MaxTempLines = 256;
+    // Notifier show time is a time notifier stays on screen (excluding slide
+    // effect). Maybe it's better to move it to script later.
 
-// Screen metering resolution specifies user-friendly relative dimensions of screen,
-// which are not dependent on screen resolution. They're primarily used to parse
-// bar and string dimensions.
+    Gui();
+    ~Gui();
 
-constexpr float ScreenMeteringResolution = 1000.0f;
+    ProgressbarManager progressBars;
+    FaderManager faders;
+    ItemNotifier notifier;
+    InventoryManager inventory;
 
-constexpr int MaxFonts = 8;     // 8 fonts is PLENTY.
+    /**
+     * Helper method to setup OpenGL state for console drawing.
+     *
+     * Either changes to 2D matrix state (is_gui = 1) or away from it (is_gui = 0). Does not do any drawing.
+     */
+    void switchGLMode(bool is_gui);
 
-constexpr int MinFontSize = 1;
-constexpr int MaxFontSize = 72;
+    /**
+     * Draws wireframe of this frustum.
+     *
+     * Expected state:
+     *  - Vertex array is enabled, color, tex coord, normal disabled
+     *  - No vertex buffer object is bound
+     *  - Texturing is disabled
+     *  - Alpha test is disabled
+     *  - Blending is enabled
+     *  - Lighting is disabled
+     * Ignored state:
+     *  - Currently bound texture.
+     *  - Currently bound element buffer.
+     *  - Depth test enabled (disables it, then restores)
+     *  - Vertex pointer (changes it)
+     *  - Matrices (changes them, restores)
+     *  - Line width (changes it, then restores)
+     *  - Current color (changes it)
+     * Changed state:
+     *  - Current position will be arbitrary.
+     *  - Vertex pointer will be arbitray.
+     *  - Current color will be arbitray (set by console)
+     *  - Blend mode will be SRC_ALPHA, ONE_MINUS_SRC_ALPHA (set by console)
+     */
+    void render();
 
-constexpr float FontFadeSpeed = 1.0f;                 // Global fading style speed.
-constexpr float FontFadeMin   = 0.3f;                 // Minimum fade multiplier.
+    /**
+     *  Draw simple rectangle.
+     *  Only state it changes is the blend mode, according to blendMode value.
+     */
+    void drawRect(glm::float_t x, glm::float_t y,
+                  glm::float_t width, glm::float_t height,
+                  const glm::vec4& colorUpperLeft, const glm::vec4& colorUpperRight,
+                  const glm::vec4& colorLowerLeft, const glm::vec4& colorLowerRight,
+                  const loader::BlendingMode blendMode,
+                  const GLuint texture = 0);
 
-constexpr float FontShadowTransparency    =  0.7f;
-constexpr float FontShadowVerticalShift   = -0.9f;
-constexpr float FontShadowHorizontalShift =  0.7f;
+    /**
+     * General GUI drawing routines.
+     */
+    void drawLoadScreen(int value);
+    void drawInventory();
 
-// Default line size is generally used for static in-game strings. Strings
-// that are created dynamically may have variable string sizes.
+    /**
+     * General GUI update routines.
+     */
+    bool update();
+    void resize();  // Called every resize event.
 
-constexpr int LineDefaultSize = 128;
-} // anonymous namespace
+    glm::mat4 guiProjectionMatrix = glm::mat4(1.0f);
 
-// Anchoring is needed to link specific GUI element to specific screen position,
-// independent of screen resolution and aspect ratio. Vertical and horizontal
-// anchorings are seperated, so you can link element at any place - top, bottom,
-// center, left or right.
-enum class VerticalAnchor
-{
-    Top,
-    Bottom,
-    Center
+    static std::unique_ptr<Gui> instance;
+
+private:
+    GLuint rectanglePositionBuffer = 0;
+    GLuint rectangleColorBuffer = 0;
+    std::unique_ptr<render::VertexArray> rectangleArray = nullptr;
 };
-
-enum class HorizontalAnchor
-{
-    Left,
-    Right,
-    Center
-};
-
-// Fader is a simple full-screen rectangle, which always sits above the scene,
-// and, when activated, either shows or hides gradually - hence, creating illusion
-// of fade in and fade out effects.
-// TR1-3 had only one type of fader - black one, which was activated on level
-// transitions. Since TR4, additional colored fader was introduced to emulate
-// various full-screen effects (flashes, flares, and so on).
-// With OpenTomb, we extend fader functionality to support not only simple dip to
-// color effect, but also various advanced parameters - texture, delay and variable
-// fade-in and fade-out speeds.
-
-namespace
-{
-// Offscreen divider specifies how far item notifier will be placed from
-// the final slide position. Usually it's enough to be 1/8 of the screen
-// width, but if you want to increase or decrease notifier size, you must
-// change this value properly.
-
-constexpr float NotifierOffscreenDivider = 8.0f;
-
-// Notifier show time is a time notifier stays on screen (excluding slide
-// effect). Maybe it's better to move it to script later.
-} // anonymous namespace
-
-void init();
-void destroy();
-
-/**
- * Helper method to setup OpenGL state for console drawing.
- *
- * Either changes to 2D matrix state (is_gui = 1) or away from it (is_gui = 0). Does not do any drawing.
- */
-void switchGLMode(bool is_gui);
-
-/**
- * Draws wireframe of this frustum.
- *
- * Expected state:
- *  - Vertex array is enabled, color, tex coord, normal disabled
- *  - No vertex buffer object is bound
- *  - Texturing is disabled
- *  - Alpha test is disabled
- *  - Blending is enabled
- *  - Lighting is disabled
- * Ignored state:
- *  - Currently bound texture.
- *  - Currently bound element buffer.
- *  - Depth test enabled (disables it, then restores)
- *  - Vertex pointer (changes it)
- *  - Matrices (changes them, restores)
- *  - Line width (changes it, then restores)
- *  - Current color (changes it)
- * Changed state:
- *  - Current position will be arbitrary.
- *  - Vertex pointer will be arbitray.
- *  - Current color will be arbitray (set by console)
- *  - Blend mode will be SRC_ALPHA, ONE_MINUS_SRC_ALPHA (set by console)
- */
-void render();
-
-/**
- *  Draw simple rectangle.
- *  Only state it changes is the blend mode, according to blendMode value.
- */
-void drawRect(glm::float_t x, glm::float_t y,
-              glm::float_t width, glm::float_t height,
-              const glm::vec4& colorUpperLeft, const glm::vec4& colorUpperRight,
-              const glm::vec4& colorLowerLeft, const glm::vec4& colorLowerRight,
-              const loader::BlendingMode blendMode,
-              const GLuint texture = 0);
-
-/**
- * General GUI drawing routines.
- */
-void drawLoadScreen(int value);
-void drawInventory();
-
-/**
- * General GUI update routines.
- */
-bool update();
-void resize();  // Called every resize event.
-
-extern glm::mat4 guiProjectionMatrix;
 
 } // namespace gui

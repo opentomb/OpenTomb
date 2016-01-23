@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 #include <memory>
 
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
@@ -68,16 +69,8 @@ enum class Substance
 #define ENTITY_TLAYOUT_LOCK     0x40    // Activity lock
 #define ENTITY_TLAYOUT_SSTATUS  0x80    // Sector status
 
-// Specific in-game entity structure.
 
-struct BtEntityData
-{
-};
-
-
-/*
- * ENTITY MOVEMENT TYPES
- */
+//! Entity movement types
 enum class MoveType
 {
    StaticPos,
@@ -94,7 +87,9 @@ enum class MoveType
    Dozy
 };
 
-// Surface movement directions
+ENUM_TO_OSTREAM(MoveType)
+
+//! Surface movement directions
 enum class MoveDirection
 {
     Stay,
@@ -106,7 +101,9 @@ enum class MoveDirection
     Crouch
 };
 
-struct Entity : public Object
+ENUM_TO_OSTREAM(MoveDirection)
+
+class Entity : public Object
 {
 public:
     int32_t                             m_OCB = 0;                // Object code bit (since TR4)
@@ -235,8 +232,6 @@ public:
     glm::vec3 applyGravity(util::Duration time);
 
 private:
-//    void doAnimMove(int16_t *anim, int16_t *frame);
-
     static glm::float_t getInnerBBRadius(const core::BoundingBox& bb)
     {
         auto d = bb.max - bb.min;

@@ -8,8 +8,6 @@
 namespace gui
 {
 
-std::unique_ptr<ProgressbarManager> ProgressbarManager::instance = nullptr;
-
 ProgressbarManager::ProgressbarManager()
 {
     {

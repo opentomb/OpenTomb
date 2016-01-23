@@ -32,7 +32,7 @@ class Frustum;
 
 struct StaticMesh;
 struct RoomSprite;
-struct Entity;
+class Entity;
 struct World;
 
 enum class PenetrationConfig;

@@ -60,6 +60,16 @@ enum class FaderCorner
     BottomRight
 };
 
+// Fader is a simple full-screen rectangle, which always sits above the scene,
+// and, when activated, either shows or hides gradually - hence, creating illusion
+// of fade in and fade out effects.
+// TR1-3 had only one type of fader - black one, which was activated on level
+// transitions. Since TR4, additional colored fader was introduced to emulate
+// various full-screen effects (flashes, flares, and so on).
+// With OpenTomb, we extend fader functionality to support not only simple dip to
+// color effect, but also various advanced parameters - texture, delay and variable
+// fade-in and fade-out speeds.
+
 class Fader
 {
 public:

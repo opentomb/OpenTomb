@@ -66,8 +66,8 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject& ghost, btManifoldArr
 
     btVector3 aabb_min, aabb_max;
     ghost.getCollisionShape()->getAabb(ghost.getWorldTransform(), aabb_min, aabb_max);
-    engine::bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost.getBroadphaseHandle(), aabb_min, aabb_max, engine::bt_engine_dynamicsWorld->getDispatcher());
-    engine::bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost.getOverlappingPairCache(), engine::bt_engine_dynamicsWorld->getDispatchInfo(), engine::bt_engine_dynamicsWorld->getDispatcher());
+    engine::BulletEngine::instance->dynamicsWorld->getBroadphase()->setAabb(ghost.getBroadphaseHandle(), aabb_min, aabb_max, engine::BulletEngine::instance->dynamicsWorld->getDispatcher());
+    engine::BulletEngine::instance->dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost.getOverlappingPairCache(), engine::BulletEngine::instance->dynamicsWorld->getDispatchInfo(), engine::BulletEngine::instance->dynamicsWorld->getDispatcher());
 
     correction = {0,0,0};
     int num_pairs = ghost.getOverlappingPairCache()->getNumOverlappingPairs();
@@ -833,7 +833,7 @@ bool Entity::createRagdoll(RagdollSetup* setup)
         m_skeleton.getModel()->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
 
         m_skeleton.getModel()->bt_joints[i]->setDbgDrawSize(64.0);
-        engine::bt_engine_dynamicsWorld->addConstraint(m_skeleton.getModel()->bt_joints[i].get(), true);
+        engine::BulletEngine::instance->dynamicsWorld->addConstraint(m_skeleton.getModel()->bt_joints[i].get(), true);
     }
 
     if(!result)
@@ -856,20 +856,20 @@ bool Entity::deleteRagdoll()
     {
         if(joint)
         {
-            engine::bt_engine_dynamicsWorld->removeConstraint(joint.get());
+            engine::BulletEngine::instance->dynamicsWorld->removeConstraint(joint.get());
             joint.reset();
         }
     }
 
     for(const animation::Bone& bone : m_skeleton.getBones())
     {
-        engine::bt_engine_dynamicsWorld->removeRigidBody(bone.bt_body.get());
+        engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(bone.bt_body.get());
         bone.bt_body->setMassProps(0, btVector3(0.0, 0.0, 0.0));
-        engine::bt_engine_dynamicsWorld->addRigidBody(bone.bt_body.get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
+        engine::BulletEngine::instance->dynamicsWorld->addRigidBody(bone.bt_body.get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
         if(bone.ghostObject)
         {
-            engine::bt_engine_dynamicsWorld->removeCollisionObject(bone.ghostObject.get());
-            engine::bt_engine_dynamicsWorld->addCollisionObject(bone.ghostObject.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
+            engine::BulletEngine::instance->dynamicsWorld->removeCollisionObject(bone.ghostObject.get());
+            engine::BulletEngine::instance->dynamicsWorld->addCollisionObject(bone.ghostObject.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
         }
     }
 
@@ -885,7 +885,7 @@ bool Entity::deleteRagdoll()
 
 glm::vec3 Entity::applyGravity(util::Duration time)
 {
-    const glm::vec3 gravityAccelleration = util::convert(engine::bt_engine_dynamicsWorld->getGravity());
+    const glm::vec3 gravityAccelleration = util::convert(engine::BulletEngine::instance->dynamicsWorld->getGravity());
     const glm::vec3 gravitySpeed = gravityAccelleration * util::toSeconds(time);
     glm::vec3 move = (m_speed + gravitySpeed*0.5f) * util::toSeconds(time);
     m_speed += gravitySpeed;

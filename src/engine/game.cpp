@@ -28,7 +28,11 @@
 #include "world/world.h"
 
 #include <glm/gtc/random.hpp>
+
 #include <boost/log/trivial.hpp>
+#include <boost/range/adaptors.hpp>
+
+#include <fstream>
 
 extern float time_scale;
 extern script::MainEngine engine_lua;
@@ -38,8 +42,8 @@ constexpr float CameraCollisionSphereRadius = 16.0f;
 namespace engine
 {
 
-void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<world::Entity> > &map);
-void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent);
+void Save_EntityTree(std::ostream& f, const std::map<uint32_t, std::shared_ptr<world::Entity> > &map);
+void Save_Entity(std::ostream& f, std::shared_ptr<world::Entity> ent);
 
 using gui::Console;
 
@@ -219,20 +223,18 @@ int Game_Load(const char* name)
     return 1;
 }
 
-void Save_EntityTree(FILE **f, const std::map<uint32_t, std::shared_ptr<world::Entity> >& map)
+void Save_EntityTree(std::ostream& f, const std::map<uint32_t, std::shared_ptr<world::Entity> >& map)
 {
-    for(std::map<uint32_t, std::shared_ptr<world::Entity> >::const_iterator it = map.begin();
-    it != map.end();
-        ++it)
+    for(const std::shared_ptr<world::Entity>& entity : map | boost::adaptors::map_values)
     {
-        Save_Entity(f, it->second);
+        Save_Entity(f, entity);
     }
 }
 
 /**
  * Entity save function, based on engine lua scripts;
  */
-void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
+void Save_Entity(std::ostream& f, std::shared_ptr<world::Entity> ent)
 {
     if(ent == nullptr)
     {
@@ -242,68 +244,106 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
     if(ent->m_typeFlags & ENTITY_TYPE_SPAWNED)
     {
         world::ObjectId room_id = ent->getRoom() ? ent->getRoom()->getId() : 0xFFFFFFFF;
-        fprintf(*f, "\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);",
-                ent->m_skeleton.getModel()->id,
-                ent->m_transform[3][0],
-                ent->m_transform[3][1],
-                ent->m_transform[3][2],
-                ent->m_angles[0],
-                ent->m_angles[1],
-                ent->m_angles[2],
-                room_id,
-                ent->getId());
+        f << boost::format("\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);")
+                % ent->m_skeleton.getModel()->id
+                % ent->m_transform[3][0]
+                % ent->m_transform[3][1]
+                % ent->m_transform[3][2]
+                % ent->m_angles[0]
+                % ent->m_angles[1]
+                % ent->m_angles[2]
+                % room_id
+                % ent->getId();
     }
     else
     {
-        fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);",
-                ent->getId(),
-                ent->m_transform[3][0],
-                ent->m_transform[3][1],
-                ent->m_transform[3][2],
-                ent->m_angles[0],
-                ent->m_angles[1],
-                ent->m_angles[2]);
+        f << boost::format("\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);")
+                % ent->getId()
+                % ent->m_transform[3][0]
+                % ent->m_transform[3][1]
+                % ent->m_transform[3][2]
+                % ent->m_angles[0]
+                % ent->m_angles[1]
+                % ent->m_angles[2];
     }
 
-    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->getId(), ent->m_speed[0], ent->m_speed[1], ent->m_speed[2]);
-    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->getId(), ent->m_skeleton.getCurrentAnimation(), static_cast<int>(ent->m_skeleton.getCurrentFrame()));
-    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->getId(), ent->m_skeleton.getCurrentState(), ent->m_skeleton.getPreviousState());
-    fprintf(*f, "\nsetEntityCollisionFlags(%d, %ld, %ld);", ent->getId(), static_cast<long>(ent->getCollisionType()), static_cast<long>(ent->getCollisionShape()));
+    f << boost::format("\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);")
+         % ent->getId()
+         % ent->m_speed[0]
+         % ent->m_speed[1]
+         % ent->m_speed[2];
+    f << boost::format("\nsetEntityAnim(%d, %d, %d);")
+         % ent->getId()
+         % ent->m_skeleton.getCurrentAnimation()
+         % ent->m_skeleton.getCurrentFrame();
+    f << boost::format("\nsetEntityState(%d, %d, %d);")
+         % ent->getId()
+         % ent->m_skeleton.getCurrentState()
+         % ent->m_skeleton.getPreviousState();
+    f << boost::format("\nsetEntityCollisionFlags(%d, %ld, %ld);")
+         % ent->getId()
+         % ent->getCollisionType()
+         % ent->getCollisionShape();
 
     if(ent->m_enabled)
     {
-        fprintf(*f, "\nenableEntity(%d);", ent->getId());
+        f << boost::format("\nenableEntity(%d);")
+             % ent->getId();
     }
     else
     {
-        fprintf(*f, "\ndisableEntity(%d);", ent->getId());
+        f << boost::format("\ndisableEntity(%d);")
+             % ent->getId();
     }
 
-    fprintf(*f, "\nsetEntityFlags(%d, %d, %d, %d, 0x%.4X, 0x%.8X);", ent->getId(), ent->m_active, ent->m_enabled, ent->m_visible, ent->m_typeFlags, ent->m_callbackFlags);
+    f << boost::format("\nsetEntityFlags(%d, %d, %d, %d, 0x%.4X, 0x%.8X);")
+         % ent->getId()
+         % ent->m_active
+         % ent->m_enabled
+         % ent->m_visible
+         % ent->m_typeFlags
+         % ent->m_callbackFlags;
 
-    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->getId(), ent->m_triggerLayout);
+    f << boost::format("\nsetEntityTriggerLayout(%d, 0x%.2X);")
+         % ent->getId()
+         % ent->m_triggerLayout;
     //setEntityMeshswap()
 
     if(ent->getRoom() != nullptr)
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->getId(), ent->getRoom()->getId(), ent->m_moveType, static_cast<int>(ent->m_moveDir));
+        f << boost::format("\nsetEntityRoomMove(%d, %d, %d, %d);")
+             % ent->getId()
+             % ent->getRoom()->getId()
+             % ent->m_moveType
+             % ent->m_moveDir;
     }
     else
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->getId(), ent->m_moveType, static_cast<int>(ent->m_moveDir));
+        f << boost::format("\nsetEntityRoomMove(%d, nil, %d, %d);")
+             % ent->getId()
+             % ent->m_moveType
+             % ent->m_moveDir;
     }
 
     if(auto ch = std::dynamic_pointer_cast<world::Character>(ent))
     {
-        fprintf(*f, "\nremoveAllItems(%d);", ent->getId());
+        f << boost::format("\nremoveAllItems(%d);")
+             % ent->getId();
         for(const InventoryNode& i : ch->m_inventory)
         {
-            fprintf(*f, "\naddItem(%d, %d, %d);", ent->getId(), i.id, i.count);
+            f << boost::format("\naddItem(%d, %d, %d);")
+                 % ent->getId()
+                 % i.id
+                 % i.count;
         }
 
         for(int i = 0; i < world::PARAM_SENTINEL; i++)
         {
-            fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->getId(), i, ch->m_parameters.param[i], ch->m_parameters.maximum[i]);
+            f << boost::format("\nsetCharacterParam(%d, %d, %.2f, %.2f);")
+                 % ent->getId()
+                 % i
+                 % ch->m_parameters.param[i]
+                 % ch->m_parameters.maximum[i];
         }
     }
 }
@@ -311,54 +351,48 @@ void Save_Entity(FILE **f, std::shared_ptr<world::Entity> ent)
 /**
  * Save current game state
  */
-int Game_Save(const char* name)
+bool Game_Save(const std::string& name)
 {
-    FILE *f;
-    char local, *ch, token[512];
+    const bool local = (name.find_first_of("\\/") == std::string::npos);
 
-    local = 1;
-    for(ch = const_cast<char*>(name); *ch; ch++)
-    {
-        if(*ch == '\\' || *ch == '/')
-        {
-            local = 0;
-            break;
-        }
-    }
-
+    std::ofstream f;
     if(local)
     {
-        snprintf(token, 512, "save/%s", name);
-        f = fopen(token, "wb");
+        f.open("save/" + name, std::ios::binary | std::ios::trunc);
     }
     else
     {
-        f = fopen(name, "wb");
+        f.open("name", std::ios::binary | std::ios::trunc);
     }
 
-    if(!f)
+    if(!f.is_open())
     {
         BOOST_LOG_TRIVIAL(warning) << "Can not create file " << name;
-        return 0;
+        return false;
     }
 
-    fprintf(f, "loadMap(\"%s\", %d, %d);\n", Gameflow_Manager.getLevelPath().c_str(), Gameflow_Manager.getGameID(), Gameflow_Manager.getLevelID());
+    f << boost::format("loadMap(\"%s\", %d, %d);\n")
+         % Gameflow_Manager.getLevelPath()
+         % Gameflow_Manager.getGameID()
+         % Gameflow_Manager.getLevelID();
 
     // Save flipmap and flipped room states.
 
-    for(uint32_t i = 0; i < engine_world.flip_data.size(); i++)
+    for(size_t i = 0; i < engine_world.flip_data.size(); i++)
     {
-        fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, engine_world.flip_data[i].map);
-        fprintf(f, "setFlipState(%d, %s);\n", i, engine_world.flip_data[i].state ? "true" : "false");
+        f << boost::format("setFlipMap(%d, 0x%02X, 0);\n")
+             % i
+             % engine_world.flip_data[i].map;
+        f << boost::format("setFlipState(%d, %s);\n")
+             % i
+             % (engine_world.flip_data[i].state ? "true" : "false");
     }
 
-    Save_Entity(&f, engine_world.character);    // Save Lara.
+    Save_Entity(f, engine_world.character);    // Save Lara.
 
-    Save_EntityTree(&f, engine_world.entity_tree);
+    Save_EntityTree(f, engine_world.entity_tree);
 
-    fclose(f);
-
-    return 1;
+    return true;
 }
 
 void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
@@ -515,7 +549,7 @@ bool Cam_HasHit(std::shared_ptr<BtEngineClosestConvexResultCallback> cb, btTrans
     cameraSphere.setMargin(COLLISION_MARGIN_DEFAULT);
     cb->m_closestHitFraction = 1.0;
     cb->m_hitCollisionObject = nullptr;
-    bt_engine_dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
+    BulletEngine::instance->dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
     return cb->hasHit();
 }
 
@@ -702,7 +736,7 @@ void Game_Frame(util::Duration time)
     Controls_PollSDLInput();
 
     // TODO: implement pause mechanism
-    if(gui::update())
+    if(gui::Gui::instance->update())
     {
         if(game_logic_time >= world::animation::GameLogicFrameTime)
         {
@@ -716,7 +750,7 @@ void Game_Frame(util::Duration time)
     // TODO: decouple cam movement
     Game_ApplyControls(engine_world.character);
 
-    bt_engine_dynamicsWorld->stepSimulation(util::toSeconds(time), MAX_SIM_SUBSTEPS, util::toSeconds(world::animation::GameLogicFrameTime));
+    BulletEngine::instance->dynamicsWorld->stepSimulation(util::toSeconds(time), MAX_SIM_SUBSTEPS, util::toSeconds(world::animation::GameLogicFrameTime));
 
     if(engine_world.character) {
         engine_world.character->updateInterpolation();
@@ -724,9 +758,9 @@ void Game_Frame(util::Duration time)
         if(!control_states.noclip && !control_states.free_look)
             Cam_FollowEntity(render::renderer.camera(), engine_world.character, 16.0, 128.0);
     }
-    for(auto entityPair : engine_world.entity_tree)
+    for(const std::shared_ptr<world::Entity>& entity : engine_world.entity_tree | boost::adaptors::map_values)
     {
-        entityPair.second->updateInterpolation();
+        entity->updateInterpolation();
     }
 
     Controls_RefreshStates();
@@ -777,11 +811,8 @@ void Game_Prepare()
 
 void Game_LevelTransition(uint16_t level_index)
 {
-    char file_path[MAX_ENGINE_PATH];
-
-    engine_lua.getLoadingScreen(level_index, file_path);
-    gui::FaderManager::instance->assignPicture(gui::FaderType::LoadScreen, file_path);
-    gui::FaderManager::instance->start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
+    gui::Gui::instance->faders.assignPicture(gui::FaderType::LoadScreen, engine_lua.getLoadingScreen(level_index));
+    gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
     engine::engine_world.audioEngine.endStreams();
 }

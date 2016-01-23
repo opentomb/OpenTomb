@@ -6,6 +6,12 @@
 #include <cstdint>
 #include <chrono>
 
+#define ENUM_TO_OSTREAM(name) \
+    inline std::ostream& operator<<(std::ostream& str, name e) \
+    { \
+        return str << static_cast<int>(e); \
+    } \
+
 namespace util
 {
 

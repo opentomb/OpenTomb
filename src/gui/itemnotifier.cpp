@@ -8,7 +8,6 @@
 
 namespace gui
 {
-std::unique_ptr<ItemNotifier> ItemNotifier::instance = nullptr;
 
 ItemNotifier::ItemNotifier()
 {
@@ -100,7 +99,7 @@ void ItemNotifier::draw() const
     matrix = glm::translate(matrix, { m_currPosX, m_posY, -2048.0 });
     matrix = glm::rotate(matrix, m_currentAngle.x + m_rotation.x, { 0,1,0 });
     matrix = glm::rotate(matrix, m_currentAngle.y + m_rotation.y, { 1,0,0 });
-    render::renderItem(*item->bf, m_size, matrix, gui::guiProjectionMatrix);
+    render::renderItem(*item->bf, m_size, matrix, gui::Gui::instance->guiProjectionMatrix);
 
     item->bf->setCurrentAnimation(anim);
     item->bf->setCurrentFrame(frame);

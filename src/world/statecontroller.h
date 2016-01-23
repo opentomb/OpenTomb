@@ -1,5 +1,8 @@
 #pragma once
 
+#include "util/helpers.h"
+
+#include <iostream>
 #include <map>
 
 // ====== LARA'S STATES ======
@@ -147,6 +150,8 @@ enum class LaraState
 //    UNUSED16 136
     PickUpFromChest = 137
 };
+
+ENUM_TO_OSTREAM(LaraState)
 
 struct Character;
 struct HeightInfo;

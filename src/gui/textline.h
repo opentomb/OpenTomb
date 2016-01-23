@@ -1,7 +1,7 @@
 #pragma once
 
 #include "fontmanager.h"
-#include "gui.h"
+#include "gui/common.h"
 
 #include <boost/format.hpp>
 

@@ -589,37 +589,37 @@ void Controls_DebugKeys(int button, int state)
         switch(button)
         {
             case SDLK_RETURN:
-                if(InventoryManager::instance)
+                if(gui::Gui::instance)
                 {
-                    InventoryManager::instance->send(InventoryManager::InventoryState::Activate);
+                    gui::Gui::instance->inventory.send(InventoryManager::InventoryState::Activate);
                 }
                 break;
 
             case SDLK_UP:
-                if(InventoryManager::instance)
+                if(gui::Gui::instance)
                 {
-                    InventoryManager::instance->send(InventoryManager::InventoryState::Up);
+                    gui::Gui::instance->inventory.send(InventoryManager::InventoryState::Up);
                 }
                 break;
 
             case SDLK_DOWN:
-                if(InventoryManager::instance)
+                if(gui::Gui::instance)
                 {
-                    InventoryManager::instance->send(InventoryManager::InventoryState::Down);
+                    gui::Gui::instance->inventory.send(InventoryManager::InventoryState::Down);
                 }
                 break;
 
             case SDLK_LEFT:
-                if(InventoryManager::instance)
+                if(gui::Gui::instance)
                 {
-                    InventoryManager::instance->send(InventoryManager::InventoryState::RLeft);
+                    gui::Gui::instance->inventory.send(InventoryManager::InventoryState::RLeft);
                 }
                 break;
 
             case SDLK_RIGHT:
-                if(InventoryManager::instance)
+                if(gui::Gui::instance)
                 {
-                    InventoryManager::instance->send(InventoryManager::InventoryState::RRight);
+                    gui::Gui::instance->inventory.send(InventoryManager::InventoryState::RRight);
                 }
                 break;
 
@@ -648,7 +648,7 @@ void Controls_PrimaryMouseDown()
     cshape->calculateLocalInertia(12.0, localInertia);
     btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
     btRigidBody* body = new btRigidBody(12.0, motionState, cshape, localInertia);
-    bt_engine_dynamicsWorld->addRigidBody(body);
+    BulletEngine::instance->dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(util::convert(dir) * 6000);
     world::BulletObject* object = new world::BulletObject(Room_FindPosCogerrence(new_pos, engine_camera.getCurrentRoom()));
     body->setUserPointer(object);
@@ -665,7 +665,7 @@ void Controls_SecondaryMouseDown()
 
     BtEngineClosestRayResultCallback cbc(cam_cont);
     //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
-    bt_engine_dynamicsWorld->rayTest(util::convert(from), util::convert(to), cbc);
+    BulletEngine::instance->dynamicsWorld->rayTest(util::convert(from), util::convert(to), cbc);
     if(cbc.hasHit())
     {
         extern GLfloat cast_ray[6];
@@ -697,7 +697,7 @@ void Controls_SecondaryMouseDown()
                 }
                 delete c0;
 
-                bt_engine_dynamicsWorld->removeCollisionObject(obj);
+                BulletEngine::instance->dynamicsWorld->removeCollisionObject(obj);
                 delete obj;
             }
             else

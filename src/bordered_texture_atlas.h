@@ -147,7 +147,7 @@ public:
      */
     void getSpriteCoordinates(size_t sprite_texture,
                               size_t &outPage,
-                              glm::float_t *coordinates) const;
+                              glm::vec2* coordinates) const;
 
     /*!
      * Returns the number of texture atlas pages that have been created. Triggers a

@@ -340,7 +340,7 @@ void Skeleton::createGhosts(Entity& entity)
                                             btCollisionObject::CF_CHARACTER_OBJECT);
         bone.ghostObject->setUserPointer(&entity);
         bone.ghostObject->setCollisionShape(bone.shape.get());
-        engine::bt_engine_dynamicsWorld->addCollisionObject(bone.ghostObject.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
+        engine::BulletEngine::instance->dynamicsWorld->addCollisionObject(bone.ghostObject.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
 
         bone.last_collisions.clear();
     }
@@ -353,7 +353,7 @@ Bone::~Bone()
     if(ghostObject)
     {
         ghostObject->setUserPointer(nullptr);
-        engine::bt_engine_dynamicsWorld->removeCollisionObject(ghostObject.get());
+        engine::BulletEngine::instance->dynamicsWorld->removeCollisionObject(ghostObject.get());
     }
 
     if(bt_body)
@@ -365,7 +365,7 @@ Bone::~Bone()
 
         bt_body->setCollisionShape(nullptr);
 
-        engine::bt_engine_dynamicsWorld->removeRigidBody(bt_body.get());
+        engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(bt_body.get());
     }
 }
 
@@ -388,10 +388,10 @@ void Skeleton::updateCurrentCollisions(const Entity& entity, const glm::mat4& tr
         btVector3 aabb_min, aabb_max;
 
         bone.ghostObject->getCollisionShape()->getAabb(bone.ghostObject->getWorldTransform(), aabb_min, aabb_max);
-        engine::bt_engine_dynamicsWorld->getBroadphase()->setAabb(bone.ghostObject->getBroadphaseHandle(), aabb_min, aabb_max,
-                                                                  engine::bt_engine_dynamicsWorld->getDispatcher());
-        engine::bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(
-            bone.ghostObject->getOverlappingPairCache(), engine::bt_engine_dynamicsWorld->getDispatchInfo(), engine::bt_engine_dynamicsWorld->getDispatcher());
+        engine::BulletEngine::instance->dynamicsWorld->getBroadphase()->setAabb(bone.ghostObject->getBroadphaseHandle(), aabb_min, aabb_max,
+                                                                  engine::BulletEngine::instance->dynamicsWorld->getDispatcher());
+        engine::BulletEngine::instance->dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(
+            bone.ghostObject->getOverlappingPairCache(), engine::BulletEngine::instance->dynamicsWorld->getDispatchInfo(), engine::BulletEngine::instance->dynamicsWorld->getDispatcher());
 
         int num_pairs = bone.ghostObject->getOverlappingPairCache()->getNumOverlappingPairs();
         for(int j = 0; j < num_pairs; j++)
@@ -444,7 +444,7 @@ bool Skeleton::createRagdoll(const RagdollSetup& setup)
         btVector3 inertia(0.0, 0.0, 0.0);
         btScalar mass = setup.body_setup[i].mass;
 
-        engine::bt_engine_dynamicsWorld->removeRigidBody(m_bones[i].bt_body.get());
+        engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(m_bones[i].bt_body.get());
 
         m_bones[i].bt_body->getCollisionShape()->calculateLocalInertia(mass, inertia);
         m_bones[i].bt_body->setMassProps(mass, inertia);
@@ -475,13 +475,13 @@ void Skeleton::initCollisions(const glm::vec3& speed)
 {
     for(animation::Bone& bone : m_bones)
     {
-        engine::bt_engine_dynamicsWorld->addRigidBody(bone.bt_body.get());
+        engine::BulletEngine::instance->dynamicsWorld->addRigidBody(bone.bt_body.get());
         bone.bt_body->activate();
         bone.bt_body->setLinearVelocity(util::convert(speed));
         if(bone.ghostObject)
         {
-            engine::bt_engine_dynamicsWorld->removeCollisionObject(bone.ghostObject.get());
-            engine::bt_engine_dynamicsWorld->addCollisionObject(bone.ghostObject.get(), COLLISION_NONE, COLLISION_NONE);
+            engine::BulletEngine::instance->dynamicsWorld->removeCollisionObject(bone.ghostObject.get());
+            engine::BulletEngine::instance->dynamicsWorld->addCollisionObject(bone.ghostObject.get(), COLLISION_NONE, COLLISION_NONE);
         }
     }
 }
@@ -580,7 +580,7 @@ void Skeleton::genRigidBody(Entity& entity)
                 break;
         }
 
-        engine::bt_engine_dynamicsWorld->addRigidBody(bone.bt_body.get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
+        engine::BulletEngine::instance->dynamicsWorld->addRigidBody(bone.bt_body.get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
         bone.bt_body->setUserPointer(&entity);
     }
 }
@@ -590,7 +590,7 @@ void Skeleton::enableCollision()
     for(const world::animation::Bone& bone : m_bones)
     {
         if(bone.bt_body && !bone.bt_body->isInWorld())
-            engine::bt_engine_dynamicsWorld->addRigidBody(bone.bt_body.get());
+            engine::BulletEngine::instance->dynamicsWorld->addRigidBody(bone.bt_body.get());
     }
 }
 
@@ -599,7 +599,7 @@ void Skeleton::disableCollision()
     for(const world::animation::Bone& bone : m_bones)
     {
         if(bone.bt_body && bone.bt_body->isInWorld())
-            engine::bt_engine_dynamicsWorld->removeRigidBody(bone.bt_body.get());
+            engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(bone.bt_body.get());
     }
 }
 

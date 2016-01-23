@@ -2,6 +2,7 @@
 
 #include "character_controller.h"
 #include "engine/system.h"
+#include "gui.h"
 #include "world/character.h"
 
 #include <boost/range/adaptors.hpp>
@@ -326,7 +327,7 @@ void ProgressBar::show(glm::float_t value)
     // Border rect should be rendered first, as it lies beneath actual bar,
     // and additionally, we need to show it in any case, even if bar is in
     // warning state (blinking).
-    drawRect(m_x, m_y, m_width + m_borderWidth * 2, m_height + m_borderHeight * 2,
+    Gui::instance->drawRect(m_x, m_y, m_width + m_borderWidth * 2, m_height + m_borderHeight * 2,
                  m_borderMainColor, m_borderMainColor,
                  m_borderFadeColor, m_borderFadeColor,
                  loader::BlendingMode::Opaque);
@@ -352,7 +353,7 @@ void ProgressBar::show(glm::float_t value)
     if(!value)
     {
         // Draw full-sized background rect (instead of base bar rect)
-        drawRect(m_x + m_borderWidth, m_y + m_borderHeight, m_width, m_height,
+        Gui::instance->drawRect(m_x + m_borderWidth, m_y + m_borderHeight, m_width, m_height,
                      m_backMainColor, m_vertical ? m_backFadeColor : m_backMainColor,
                      m_vertical ? m_backMainColor : m_backFadeColor, m_backFadeColor,
                      loader::BlendingMode::Opaque);
@@ -398,14 +399,14 @@ void ProgressBar::show(glm::float_t value)
         RectAnchor = (m_invert ? m_y + m_height - m_baseSize : m_y) + m_borderHeight;
 
         // Draw actual bar base.
-        drawRect(m_x + m_borderWidth, RectAnchor,
+        Gui::instance->drawRect(m_x + m_borderWidth, RectAnchor,
                      m_width, m_baseSize,
                      RectFirstColor, RectFirstColor,
                      RectSecondColor, RectSecondColor,
                      loader::BlendingMode::Opaque);
 
         // Draw background rect.
-        drawRect(m_x + m_borderWidth,
+        Gui::instance->drawRect(m_x + m_borderWidth,
                      m_invert ? m_y + m_borderHeight : RectAnchor + m_baseSize,
                      m_width, m_height - m_baseSize,
                      m_backMainColor, m_backFadeColor,
@@ -416,12 +417,12 @@ void ProgressBar::show(glm::float_t value)
         {
             glm::vec4 transparentColor{ 0.0f };  // Used to set counter-shade to transparent.
 
-            drawRect(m_x + m_borderWidth, RectAnchor,
+            Gui::instance->drawRect(m_x + m_borderWidth, RectAnchor,
                          m_width / 2, m_baseSize,
                          m_extrudeDepth, transparentColor,
                          m_extrudeDepth, transparentColor,
                          loader::BlendingMode::Opaque);
-            drawRect(m_x + m_borderWidth + m_width / 2, RectAnchor,
+            Gui::instance->drawRect(m_x + m_borderWidth + m_width / 2, RectAnchor,
                          m_width / 2, m_baseSize,
                          transparentColor, m_extrudeDepth,
                          transparentColor, m_extrudeDepth,
@@ -433,14 +434,14 @@ void ProgressBar::show(glm::float_t value)
         RectAnchor = (m_invert ? m_x + m_width - m_baseSize : m_x) + m_borderWidth;
 
         // Draw actual bar base.
-        drawRect(RectAnchor, m_y + m_borderHeight,
+        Gui::instance->drawRect(RectAnchor, m_y + m_borderHeight,
                      m_baseSize, m_height,
                      RectSecondColor, RectFirstColor,
                      RectSecondColor, RectFirstColor,
                      loader::BlendingMode::Opaque);
 
         // Draw background rect.
-        drawRect(m_invert ? m_x + m_borderWidth : RectAnchor + m_baseSize,
+        Gui::instance->drawRect(m_invert ? m_x + m_borderWidth : RectAnchor + m_baseSize,
                      m_y + m_borderHeight,
                      m_width - m_baseSize, m_height,
                      m_backMainColor, m_backMainColor,
@@ -451,12 +452,12 @@ void ProgressBar::show(glm::float_t value)
         {
             glm::vec4 transparentColor{ 0.0f };  // Used to set counter-shade to transparent.
 
-            drawRect(RectAnchor, m_y + m_borderHeight,
+            Gui::instance->drawRect(RectAnchor, m_y + m_borderHeight,
                          m_baseSize, m_height / 2,
                          transparentColor, transparentColor,
                          m_extrudeDepth, m_extrudeDepth,
                          loader::BlendingMode::Opaque);
-            drawRect(RectAnchor, m_y + m_borderHeight + m_height / 2,
+            Gui::instance->drawRect(RectAnchor, m_y + m_borderHeight + m_height / 2,
                          m_baseSize, m_height / 2,
                          m_extrudeDepth, m_extrudeDepth,
                          transparentColor, transparentColor,

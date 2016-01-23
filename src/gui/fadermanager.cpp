@@ -8,8 +8,6 @@
 namespace gui
 {
 
-std::unique_ptr<FaderManager> FaderManager::instance = nullptr;
-
 bool FaderManager::start(FaderType fader, FaderDir fade_direction)
 {
     // If fader exists, and is not active, we engage it.

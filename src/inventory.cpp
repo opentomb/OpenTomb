@@ -9,8 +9,6 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-std::unique_ptr<InventoryManager> InventoryManager::instance = nullptr;
-
 /*
  * GUI RENDEDR CLASS
  */
@@ -468,7 +466,7 @@ void InventoryManager::render()
             }
             matrix = glm::translate(matrix, -0.5f * bi->bf->getBoundingBox().getCenter());
             matrix = glm::scale(matrix, {0.7f, 0.7f, 0.7f});
-            render::renderItem(*bi->bf, 0.0f, matrix, gui::guiProjectionMatrix);
+            render::renderItem(*bi->bf, 0.0f, matrix, gui::Gui::instance->guiProjectionMatrix);
 
             num++;
         }

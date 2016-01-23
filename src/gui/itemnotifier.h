@@ -25,7 +25,6 @@ public:
     void    setSize(glm::float_t size);
     void    setRotateTime(util::Duration time);
 
-    static std::unique_ptr<ItemNotifier> instance;
 private:
     bool    m_active = false;
     world::ObjectId m_item = 0;

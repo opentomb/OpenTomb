@@ -22,8 +22,6 @@ struct Room;
 namespace engine
 {
 
-#define MAX_ENGINE_PATH                         (1024)
-
 #define LEVEL_FORMAT_PC         0
 #define LEVEL_FORMAT_PSX        1
 #define LEVEL_FORMAT_DC         2
@@ -91,11 +89,20 @@ extern util::Duration                           engine_frame_time;
 extern world::Camera                            engine_camera;
 extern world::World                             engine_world;
 
-extern btDefaultCollisionConfiguration         *bt_engine_collisionConfiguration;
-extern btCollisionDispatcher                   *bt_engine_dispatcher;
-extern btBroadphaseInterface                   *bt_engine_overlappingPairCache;
-extern btSequentialImpulseConstraintSolver     *bt_engine_solver;
-extern btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld;
+struct BulletEngine
+{
+    std::unique_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
+    std::unique_ptr<btCollisionDispatcher> dispatcher;
+    std::unique_ptr<btBroadphaseInterface> overlappingPairCache;
+    std::unique_ptr<btGhostPairCallback> ghostPairCallback;
+    std::unique_ptr<btSequentialImpulseConstraintSolver> solver;
+    std::unique_ptr<btDiscreteDynamicsWorld> dynamicsWorld;
+
+    BulletEngine();
+    ~BulletEngine() = default;
+
+    static std::unique_ptr<BulletEngine> instance;
+};
 
 class BtEngineClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
 {
@@ -156,7 +163,6 @@ void initDefaultGlobals();
 void initGL();
 void initSDLControls();
 void initSDLVideo();
-void initBullet();
 
 // Config parser
 

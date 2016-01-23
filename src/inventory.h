@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gui/textline.h"
+#include "util/helpers.h"
 
 #include <list>
 
@@ -166,6 +167,4 @@ public:
     void setTitle(MenuItemType items_type);
     void frame(util::Duration time);
     void render();
-
-    static std::unique_ptr<InventoryManager> instance;
 };

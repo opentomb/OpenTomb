@@ -194,7 +194,7 @@ struct Room;
 class Camera;
 struct Portal;
 class Render;
-struct Entity;
+class Entity;
 struct SkeletalModel;
 
 namespace core
@@ -259,9 +259,9 @@ struct SectorTween
 
 struct RoomSprite
 {
-    core::Sprite* sprite;
-    glm::vec3 pos;
-    mutable bool was_rendered;
+    core::Sprite* sprite = nullptr;
+    glm::vec3 pos{0,0,0};
+    mutable bool was_rendered = false;
 };
 
 struct World

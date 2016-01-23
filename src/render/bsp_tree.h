@@ -43,9 +43,6 @@ struct BSPNode
     std::unique_ptr<BSPNode> back;
 };
 
-/**
- * Warning! that class has too primitive and rough (but fast) memory allocation space check! Maybe I will fix it in future;
- */
 class DynamicBSP
 {
 private:

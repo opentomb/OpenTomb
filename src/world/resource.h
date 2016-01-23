@@ -59,7 +59,7 @@ struct World;
 struct Room;
 struct RoomSector;
 struct SkeletalModel;
-struct Entity;
+class Entity;
 struct StaticMesh;
 struct BaseItem;
 

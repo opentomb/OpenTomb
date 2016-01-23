@@ -873,7 +873,7 @@ void Render::drawListDebugLines()
 
     if(m_drawColl)
     {
-        engine::bt_engine_dynamicsWorld->debugDrawWorld();
+        engine::BulletEngine::instance->dynamicsWorld->debugDrawWorld();
     }
 
     if(!debugDrawer.IsEmpty())

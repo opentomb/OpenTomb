@@ -1,6 +1,9 @@
 #pragma once
 
+#include "util/helpers.h"
+
 #include <cstdint>
+#include <iostream>
 
 namespace world
 {
@@ -15,6 +18,8 @@ enum class CollisionShape
     TriMeshConvex //!< for dynamic objects
 };
 
+ENUM_TO_OSTREAM(CollisionShape)
+
 enum class CollisionType
 {
     None,
@@ -25,6 +30,8 @@ enum class CollisionType
     Vehicle,   //!< car, moto, bike
     Ghost      //!< no fix character position, but works in collision callbacks and interacts with dynamic objects
 };
+
+ENUM_TO_OSTREAM(CollisionType)
 
 using ObjectId = uint32_t;
 
