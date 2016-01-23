@@ -682,6 +682,8 @@ bool Engine::loadPCLevel(const std::string& name)
 
 bool Engine::loadMap(const std::string& name)
 {
+    BOOST_LOG_TRIVIAL(info) << "Loading map: " << name;
+
     if(!boost::filesystem::is_regular_file(name))
     {
         Console::instance().warning(SYSWARN_FILE_NOT_FOUND, name.c_str());

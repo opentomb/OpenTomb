@@ -2459,21 +2459,21 @@ void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
 {
     Console::instance().notify(SYSNOTE_LOADING_MAP, mapName);
 
-    if(mapName && mapName != engine::Gameflow::instance.getLevelPath())
+    if(!mapName || mapName == engine::Gameflow::instance.getLevelPath())
+        return;
+
+    if(gameId.is<int8_t>() && gameId.to<int8_t>() >= 0)
     {
-        if(gameId.is<int8_t>() && gameId.to<int8_t>() >= 0)
-        {
-            engine::Gameflow::instance.setGameID(gameId.to<int8_t>());
-        }
-        if(mapId.is<uint32_t>())
-        {
-            engine::Gameflow::instance.setLevelID(mapId.to<uint32_t>());
-        }
-        std::string file_path = engine_lua.getLoadingScreen(engine::Gameflow::instance.getLevelID());
-        gui::Gui::instance->faders.assignPicture(gui::FaderType::LoadScreen, file_path);
-        gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::In);
-        engine::Engine::instance.loadMap(mapName);
+        engine::Gameflow::instance.setGameID(gameId.to<int8_t>());
     }
+    if(mapId.is<uint32_t>())
+    {
+        engine::Gameflow::instance.setLevelID(mapId.to<uint32_t>());
+    }
+    std::string file_path = engine_lua.getLoadingScreen(engine::Gameflow::instance.getLevelID());
+    gui::Gui::instance->faders.assignPicture(gui::FaderType::LoadScreen, file_path);
+    gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::In);
+    engine::Engine::instance.loadMap(mapName);
 }
 
 // Flipped (alternate) room functions

@@ -160,20 +160,21 @@ target_include_directories(CImg INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/CImg)
 target_link_libraries(CImg INTERFACE PNG JPEG)
 target_compile_definitions(CImg INTERFACE -Dcimg_use_png -Dcimg_use_jpeg -Dcimg_display=0)
 
-
-# Dependency: OGG
-find_package(OGG REQUIRED)
-include_directories(${OGG_INCLUDE_DIR})
-
-
-# Dependency: Vorbis
-find_package(Vorbis REQUIRED)
-include_directories(${VORBIS_INCLUDE_DIR})
+if(WIN32) # FIXME These deps should be handled by Hunter through SndFile, but FLAC is currently missing there
+    # Dependency: OGG
+    find_package(OGG REQUIRED)
+    include_directories(${OGG_INCLUDE_DIR})
 
 
-# Dependency: VorbisFile
-find_package(VorbisFile REQUIRED)
-include_directories(${VORBISFILE_INCLUDE_DIR})
+    # Dependency: Vorbis
+    find_package(Vorbis REQUIRED)
+    include_directories(${VORBIS_INCLUDE_DIR})
+
+
+    # Dependency: VorbisFile
+    find_package(VorbisFile REQUIRED)
+    include_directories(${VORBISFILE_INCLUDE_DIR})
+endif()
 
 
 # Dependency: SndFile
