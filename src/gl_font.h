@@ -18,7 +18,6 @@
 #include <memory>
 #include <vector>
 
-
 struct CharInfo
 {
     GLuint          tex_index;
