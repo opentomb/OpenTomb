@@ -123,7 +123,7 @@ struct Engine
     // Debug functions.
 
     void showDebugInfo();
-    void dumpRoom(world::Room* r);
+    static void dumpRoom(world::Room* r);
 
     // PC-specific level loader routines.
 
@@ -136,7 +136,7 @@ struct Engine
 
     // String getters.
 
-    std::string getLevelName(const std::string &path);
+    static std::string getLevelName(const std::string &path);
     std::string getAutoexecName(loader::Game game_version, const std::string &postfix = std::string());
 
     // Console command parser.

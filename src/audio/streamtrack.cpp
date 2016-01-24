@@ -7,7 +7,6 @@
 #include "gui/console.h"
 #include "settings.h"
 #include "strings.h"
-#include "util/helpers.h"
 
 #include <boost/log/trivial.hpp>
 

@@ -17,8 +17,6 @@
 
 #include "core/basemesh.h"
 
-#include <cmath>
-
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>

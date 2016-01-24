@@ -5,8 +5,6 @@
 
 #include <boost/optional.hpp>
 
-#include <cstdint>
-
 namespace audio
 {
 class FxManager;

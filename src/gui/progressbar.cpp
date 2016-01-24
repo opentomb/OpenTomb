@@ -1,11 +1,8 @@
 #include "progressbar.h"
 
-#include "character_controller.h"
 #include "engine/system.h"
 #include "gui.h"
 #include "world/character.h"
-
-#include <boost/range/adaptors.hpp>
 
 namespace gui
 {

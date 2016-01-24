@@ -1,7 +1,5 @@
 #include "fadermanager.h"
 
-#include <CImg.h>
-
 #include <boost/filesystem.hpp>
 #include <boost/range/adaptors.hpp>
 

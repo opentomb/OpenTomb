@@ -12,8 +12,6 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <boost/log/trivial.hpp>
-
 #include <stack>
 
 constexpr float GhostVolumeCollisionCoefficient = 0.4f;

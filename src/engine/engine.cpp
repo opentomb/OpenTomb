@@ -28,14 +28,12 @@
 #include "gui/fadermanager.h"
 #include "gui/gui.h"
 #include "gui/itemnotifier.h"
-#include "inventory.h"
 #include "loader/level.h"
 #include "render/render.h"
 #include "script/script.h"
 #include "strings.h"
 #include "world/camera.h"
 #include "world/character.h"
-#include "world/core/polygon.h"
 #include "world/entity.h"
 #include "world/resource.h"
 #include "world/room.h"
@@ -541,6 +539,7 @@ void Engine::dumpRoom(world::Room* r)
     {
         BOOST_LOG_TRIVIAL(debug) << "static_mesh = " << sm->getId();
     }
+
     for(world::Object* object : r->m_objects)
     {
         if(world::Entity* ent = dynamic_cast<world::Entity*>(object))
@@ -610,7 +609,7 @@ std::string Engine::getLevelName(const std::string& path)
 {
     if(path.empty())
     {
-        return{};
+        return {};
     }
 
     size_t ext = path.find_last_of(".");

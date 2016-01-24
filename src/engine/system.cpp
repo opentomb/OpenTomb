@@ -1,9 +1,5 @@
 #include "system.h"
 
-#include "gui/console.h"
-#include "gui/gui.h"
-#include "gui/textline.h"
-
 namespace engine
 {
 

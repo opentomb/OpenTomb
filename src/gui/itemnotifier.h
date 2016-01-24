@@ -5,8 +5,6 @@
 
 #include <glm/glm.hpp>
 
-#include <memory>
-
 namespace gui
 {
 

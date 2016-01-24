@@ -1,7 +1,5 @@
 #include "console.h"
 
-#include <cstdio>
-
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_keycode.h>

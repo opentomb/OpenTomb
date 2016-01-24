@@ -1,7 +1,5 @@
 #include "audio.h"
 
-#include <chrono>
-
 #include <SDL2/SDL.h>
 
 #include "engine/engine.h"

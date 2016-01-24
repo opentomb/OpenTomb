@@ -10,7 +10,6 @@
 #include "world/room.h"
 #include "world/skeletalmodel.h"
 
-#include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
 constexpr float CollisionTraverseTestRadius = 0.48f;

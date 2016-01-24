@@ -21,8 +21,6 @@
 
 #include "tr3level.h"
 
-#include <string>
-
 using namespace loader;
 
 #define TR_AUDIO_MAP_SIZE_TR3  370

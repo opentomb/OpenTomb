@@ -7,11 +7,8 @@
 
 #include <CImg.h>
 
-#include <boost/range/adaptors.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
-
-#include <map>
 
 namespace gui
 {

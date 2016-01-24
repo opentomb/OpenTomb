@@ -13,11 +13,8 @@
 #include <SDL2/SDL_events.h>
 #include <SDL2/SDL_haptic.h>
 
-#include <glm/gtc/type_ptr.hpp>
-
 #include <boost/range/adaptors.hpp>
 
-#include <cstdlib>
 #include <stdexcept>
 
 extern bool done;
@@ -584,50 +581,35 @@ void ControlSettings::pollSDLInput()
 
 void ControlSettings::debugKeys(int button, int state)
 {
-    if(state)
+    if(state == 0 || gui::Gui::instance == nullptr)
+        return;
+
+    switch(button)
     {
-        switch(button)
-        {
-            case SDLK_RETURN:
-                if(gui::Gui::instance)
-                {
-                    gui::Gui::instance->inventory.send(InventoryManager::InventoryState::Activate);
-                }
-                break;
+        case SDLK_RETURN:
+            gui::Gui::instance->inventory.send(InventoryManager::InventoryState::Activate);
+            break;
 
-            case SDLK_UP:
-                if(gui::Gui::instance)
-                {
-                    gui::Gui::instance->inventory.send(InventoryManager::InventoryState::Up);
-                }
-                break;
+        case SDLK_UP:
+            gui::Gui::instance->inventory.send(InventoryManager::InventoryState::Up);
+            break;
 
-            case SDLK_DOWN:
-                if(gui::Gui::instance)
-                {
-                    gui::Gui::instance->inventory.send(InventoryManager::InventoryState::Down);
-                }
-                break;
+        case SDLK_DOWN:
+            gui::Gui::instance->inventory.send(InventoryManager::InventoryState::Down);
+            break;
 
-            case SDLK_LEFT:
-                if(gui::Gui::instance)
-                {
-                    gui::Gui::instance->inventory.send(InventoryManager::InventoryState::RLeft);
-                }
-                break;
+        case SDLK_LEFT:
+            gui::Gui::instance->inventory.send(InventoryManager::InventoryState::RLeft);
+            break;
 
-            case SDLK_RIGHT:
-                if(gui::Gui::instance)
-                {
-                    gui::Gui::instance->inventory.send(InventoryManager::InventoryState::RRight);
-                }
-                break;
+        case SDLK_RIGHT:
+            gui::Gui::instance->inventory.send(InventoryManager::InventoryState::RRight);
+            break;
 
-            default:
-                //Con_Printf("key = %d", button);
-                break;
-        };
-    }
+        default:
+            //Con_Printf("key = %d", button);
+            break;
+    };
 }
 
 void ControlSettings::primaryMouseDown()
@@ -665,42 +647,42 @@ void ControlSettings::secondaryMouseDown()
     BtEngineClosestRayResultCallback cbc(cam_cont);
     //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     BulletEngine::instance->dynamicsWorld->rayTest(util::convert(from), util::convert(to), cbc);
-    if(cbc.hasHit())
+    if(!cbc.hasHit())
+        return;
+
+    glm::vec3 place = glm::mix(from, to, cbc.m_closestHitFraction);
+    Engine::instance.m_castRay[0] = place;
+    Engine::instance.m_castRay[1] = Engine::instance.m_castRay[0] + 100.0f * util::convert(cbc.m_hitNormalWorld);
+
+    world::Object* c0 = static_cast<world::Object*>(cbc.m_collisionObject->getUserPointer());
+    if(c0 == nullptr)
+        return;
+
+    if(dynamic_cast<world::BulletObject*>(c0) == nullptr)
     {
-        glm::vec3 place = glm::mix(from, to, cbc.m_closestHitFraction);
-        Engine::instance.m_castRay[0] = place;
-        Engine::instance.m_castRay[1] = Engine::instance.m_castRay[0] + 100.0f * util::convert(cbc.m_hitNormalWorld);
-
-        if(world::Object* c0 = static_cast<world::Object*>(cbc.m_collisionObject->getUserPointer()))
-        {
-            if(dynamic_cast<world::BulletObject*>(c0))
-            {
-                btCollisionObject* obj = const_cast<btCollisionObject*>(cbc.m_collisionObject);
-                btRigidBody* body = btRigidBody::upcast(obj);
-                if(body && body->getMotionState())
-                {
-                    delete body->getMotionState();
-                }
-                if(body && body->getCollisionShape())
-                {
-                    delete body->getCollisionShape();
-                }
-
-                if(body)
-                {
-                    body->setUserPointer(nullptr);
-                }
-                delete c0;
-
-                BulletEngine::instance->dynamicsWorld->removeCollisionObject(obj);
-                delete obj;
-            }
-            else
-            {
-                last_object = c0;
-            }
-        }
+        last_object = c0;
+        return;
     }
+
+    btCollisionObject* obj = const_cast<btCollisionObject*>(cbc.m_collisionObject);
+    btRigidBody* body = btRigidBody::upcast(obj);
+    if(body && body->getMotionState())
+    {
+        delete body->getMotionState();
+    }
+    if(body && body->getCollisionShape())
+    {
+        delete body->getCollisionShape();
+    }
+
+    if(body)
+    {
+        body->setUserPointer(nullptr);
+    }
+    delete c0;
+
+    BulletEngine::instance->dynamicsWorld->removeCollisionObject(obj);
+    delete obj;
 }
 
 } // namespace engine

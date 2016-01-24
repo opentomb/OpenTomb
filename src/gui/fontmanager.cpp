@@ -2,7 +2,6 @@
 
 #include "engine/engine.h"
 #include "engine/system.h"
-#include "gui.h"
 
 namespace gui
 {

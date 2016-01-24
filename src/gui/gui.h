@@ -4,7 +4,6 @@
 #include "render/render.h"
 
 #include "fadermanager.h"
-#include "fontmanager.h"
 #include "inventory.h"
 #include "itemnotifier.h"
 #include "progressbarmanager.h"
