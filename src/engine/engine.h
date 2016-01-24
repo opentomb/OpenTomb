@@ -76,9 +76,28 @@ struct Engine
 {
     static Engine instance;
 
+private:
+    util::Duration m_frameTime = util::Duration(0);
+
+public:
+    util::Duration getFrameTime() const noexcept
+    {
+        return m_frameTime;
+    }
+
+    util::FloatDuration getFrameTimeSecs() const noexcept
+    {
+        return util::toSeconds(m_frameTime);
+    }
+
+    void setFrameTime(util::Duration time)
+    {
+        BOOST_ASSERT(time.count() > 0);
+        m_frameTime = time;
+    }
+
     EngineControlState m_controlState;
 
-    util::Duration m_frameTime = util::Duration(0);
     world::Camera m_camera;
     world::World m_world;
 

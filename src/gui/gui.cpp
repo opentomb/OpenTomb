@@ -126,7 +126,7 @@ void Gui::switchGLMode(bool is_gui)
 void Gui::drawInventory()
 {
     //if (!main_inventory_menu->IsVisible())
-    inventory.frame(engine::Engine::instance.m_frameTime);
+    inventory.frame();
     if(inventory.getCurrentState() == InventoryManager::InventoryState::Disabled)
     {
         return;
@@ -163,6 +163,8 @@ void Gui::drawInventory()
 
 void Gui::drawLoadScreen(int value)
 {
+    BOOST_LOG_TRIVIAL(debug) << "Loading screen progress: " << value;
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     switchGLMode(true);

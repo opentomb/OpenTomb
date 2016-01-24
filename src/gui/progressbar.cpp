@@ -264,7 +264,7 @@ void ProgressBar::show(glm::float_t value)
         if(m_autoShowCnt.count() > 0)
         {
             m_visible = true;
-            m_autoShowCnt -= engine::Engine::instance.m_frameTime;
+            m_autoShowCnt -= engine::Engine::instance.getFrameTime();
 
             if(m_autoShowCnt.count() <= 0)
             {
@@ -286,7 +286,7 @@ void ProgressBar::show(glm::float_t value)
             }
             else
             {
-                m_autoShowFadeLength -= engine::Engine::instance.m_frameTime;
+                m_autoShowFadeLength -= engine::Engine::instance.getFrameTime();
                 if(m_autoShowFadeLength.count() < 0)
                     m_autoShowFadeLength = util::Duration(0);
             }
@@ -297,7 +297,7 @@ void ProgressBar::show(glm::float_t value)
             // increase fade counter, until it's 1 (i. e. fully opaque).
             if(m_autoShowFadeLength < m_autoShowFadeDelay)
             {
-                m_autoShowFadeLength += engine::Engine::instance.m_frameTime;
+                m_autoShowFadeLength += engine::Engine::instance.getFrameTime();
                 if(m_autoShowFadeLength > m_autoShowFadeDelay)
                     m_autoShowFadeLength = m_autoShowFadeDelay;
             }
@@ -334,7 +334,7 @@ void ProgressBar::show(glm::float_t value)
     // We check if bar is in a warning state. If it is, we blink it continously.
     if(m_blink)
     {
-        m_blinkCnt -= engine::Engine::instance.m_frameTime;
+        m_blinkCnt -= engine::Engine::instance.getFrameTime();
         if(m_blinkCnt > m_blinkInterval)
         {
             value = 0; // Force zero value, which results in empty bar.

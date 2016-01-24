@@ -107,7 +107,7 @@ void FxManager::updateListener(world::Camera& cam)
 
     alListenerfv(AL_POSITION, glm::value_ptr(cam.getPosition()));
 
-    glm::vec3 v2 = cam.getMovement() / util::toSeconds(engine::Engine::instance.m_frameTime);
+    glm::vec3 v2 = cam.getMovement() / engine::Engine::instance.getFrameTimeSecs();
     alListenerfv(AL_VELOCITY, glm::value_ptr(v2));
     cam.resetMovement();
 

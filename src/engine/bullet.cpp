@@ -81,8 +81,8 @@ void storeEntityLerpTransforms()
  */
 void internalPreTickCallback(btDynamicsWorld* /*world*/, float timeStep)
 {
-    util::Duration engine_frame_time_backup = Engine::instance.m_frameTime;
-    Engine::instance.m_frameTime = util::fromSeconds(timeStep);
+    util::Duration engine_frame_time_backup = Engine::instance.getFrameTime();
+    Engine::instance.setFrameTime( util::fromSeconds(timeStep) );
 
     engine_lua.doTasks(engine_frame_time_backup);
     Game_UpdateAI();
@@ -98,7 +98,7 @@ void internalPreTickCallback(btDynamicsWorld* /*world*/, float timeStep)
     }
 
     storeEntityLerpTransforms();
-    Engine::instance.m_frameTime = engine_frame_time_backup;
+    Engine::instance.setFrameTime( engine_frame_time_backup );
 }
 
 /**

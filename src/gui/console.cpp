@@ -114,7 +114,7 @@ void Console::drawCursor()
 
     if(m_blinkPeriod.count() > 0)
     {
-        m_blinkTime += engine::Engine::instance.m_frameTime;
+        m_blinkTime += engine::Engine::instance.getFrameTime();
         if(m_blinkTime > m_blinkPeriod)
         {
             m_blinkTime = util::Duration(0);

@@ -770,13 +770,13 @@ void Character::lean(glm::float_t max_lean)
         {
             if(m_angles[2] < 180.0)
             {
-                m_angles[2] -= (glm::abs(m_angles[2]) + lean_coeff) / 2 * util::toSeconds(engine::Engine::instance.m_frameTime);
+                m_angles[2] -= (glm::abs(m_angles[2]) + lean_coeff) / 2 * engine::Engine::instance.getFrameTimeSecs();
                 if(m_angles[2] < 0.0)
                     m_angles[2] = 0.0;
             }
             else
             {
-                m_angles[2] += (360 - glm::abs(m_angles[2]) + lean_coeff) / 2 * util::toSeconds(engine::Engine::instance.m_frameTime);
+                m_angles[2] += (360 - glm::abs(m_angles[2]) + lean_coeff) / 2 * engine::Engine::instance.getFrameTimeSecs();
                 if(m_angles[2] < 180.0)
                     m_angles[2] = 0.0;
             }
@@ -788,19 +788,19 @@ void Character::lean(glm::float_t max_lean)
         {
             if(m_angles[2] < max_lean) // Approaching from center
             {
-                m_angles[2] += (glm::abs(m_angles[2]) + lean_coeff) / 2 * util::toSeconds(engine::Engine::instance.m_frameTime);
+                m_angles[2] += (glm::abs(m_angles[2]) + lean_coeff) / 2 * engine::Engine::instance.getFrameTimeSecs();
                 if(m_angles[2] > max_lean)
                     m_angles[2] = max_lean;
             }
             else if(m_angles[2] > 180.0) // Approaching from left
             {
-                m_angles[2] += (360.0f - glm::abs(m_angles[2]) + (lean_coeff * 2) / 2) * util::toSeconds(engine::Engine::instance.m_frameTime);
+                m_angles[2] += (360.0f - glm::abs(m_angles[2]) + (lean_coeff * 2) / 2) * engine::Engine::instance.getFrameTimeSecs();
                 if(m_angles[2] < 180.0)
                     m_angles[2] = 0.0;
             }
             else // Reduce previous lean
             {
-                m_angles[2] -= (glm::abs(m_angles[2]) + lean_coeff) / 2 * util::toSeconds(engine::Engine::instance.m_frameTime);
+                m_angles[2] -= (glm::abs(m_angles[2]) + lean_coeff) / 2 * engine::Engine::instance.getFrameTimeSecs();
                 if(m_angles[2] < 0.0)
                     m_angles[2] = 0.0;
             }
@@ -812,19 +812,19 @@ void Character::lean(glm::float_t max_lean)
         {
             if(m_angles[2] > neg_lean) // Reduce previous lean
             {
-                m_angles[2] -= (360.0f - glm::abs(m_angles[2]) + lean_coeff) / 2 * util::toSeconds(engine::Engine::instance.m_frameTime);
+                m_angles[2] -= (360.0f - glm::abs(m_angles[2]) + lean_coeff) / 2 * engine::Engine::instance.getFrameTimeSecs();
                 if(m_angles[2] < neg_lean)
                     m_angles[2] = neg_lean;
             }
             else if(m_angles[2] < 180.0) // Approaching from right
             {
-                m_angles[2] -= (glm::abs(m_angles[2]) + (lean_coeff * 2)) / 2 * util::toSeconds(engine::Engine::instance.m_frameTime);
+                m_angles[2] -= (glm::abs(m_angles[2]) + (lean_coeff * 2)) / 2 * engine::Engine::instance.getFrameTimeSecs();
                 if(m_angles[2] < 0.0)
                     m_angles[2] += 360.0;
             }
             else // Approaching from center
             {
-                m_angles[2] += (360.0f - glm::abs(m_angles[2]) + lean_coeff) / 2 * util::toSeconds(engine::Engine::instance.m_frameTime);
+                m_angles[2] += (360.0f - glm::abs(m_angles[2]) + lean_coeff) / 2 * engine::Engine::instance.getFrameTimeSecs();
                 if(m_angles[2] > 360.0)
                     m_angles[2] -= 360.0f;
             }
@@ -855,7 +855,7 @@ glm::float_t Character::inertiaLinear(glm::float_t max_speed, glm::float_t accel
         {
             if(m_inertiaLinear < max_speed)
             {
-                m_inertiaLinear += max_speed * accel * util::toSeconds(engine::Engine::instance.m_frameTime);
+                m_inertiaLinear += max_speed * accel * engine::Engine::instance.getFrameTimeSecs();
                 if(m_inertiaLinear > max_speed)
                     m_inertiaLinear = max_speed;
             }
@@ -864,7 +864,7 @@ glm::float_t Character::inertiaLinear(glm::float_t max_speed, glm::float_t accel
         {
             if(m_inertiaLinear > 0.0)
             {
-                m_inertiaLinear -= max_speed * accel * util::toSeconds(engine::Engine::instance.m_frameTime);
+                m_inertiaLinear -= max_speed * accel * engine::Engine::instance.getFrameTimeSecs();
                 if(m_inertiaLinear < 0.0)
                     m_inertiaLinear = 0.0;
             }
@@ -908,7 +908,7 @@ glm::float_t Character::inertiaAngular(glm::float_t max_angle, glm::float_t acce
                 }
                 else
                 {
-                    m_inertiaAngular[axis] += max_angle * accel * util::toSeconds(engine::Engine::instance.m_frameTime);
+                    m_inertiaAngular[axis] += max_angle * accel * engine::Engine::instance.getFrameTimeSecs();
                     if(m_inertiaAngular[axis] > max_angle)
                         m_inertiaAngular[axis] = max_angle;
                 }
@@ -921,7 +921,7 @@ glm::float_t Character::inertiaAngular(glm::float_t max_angle, glm::float_t acce
                 }
                 else
                 {
-                    m_inertiaAngular[axis] -= max_angle * accel * util::toSeconds(engine::Engine::instance.m_frameTime);
+                    m_inertiaAngular[axis] -= max_angle * accel * engine::Engine::instance.getFrameTimeSecs();
                     if(m_inertiaAngular[axis] < -max_angle)
                         m_inertiaAngular[axis] = -max_angle;
                 }
@@ -1042,7 +1042,7 @@ void Character::moveOnFloor()
     * now move normally
     */
     m_speed = speed;
-    glm::vec3 positionDelta = speed * util::toSeconds(engine::Engine::instance.m_frameTime);
+    glm::vec3 positionDelta = speed * engine::Engine::instance.getFrameTimeSecs();
     const glm::float_t distance = glm::length(positionDelta);
 
     glm::vec3 norm_move_xy(positionDelta[0], positionDelta[1], 0.0);
@@ -1063,7 +1063,7 @@ void Character::moveOnFloor()
     {
         if(m_heightInfo.floor.hitPoint[2] + m_fallDownHeight > m_transform[3][2])
         {
-            glm::float_t dz_to_land = util::toSeconds(engine::Engine::instance.m_frameTime) * 2400.0f; ///@FIXME: magick
+            glm::float_t dz_to_land = engine::Engine::instance.getFrameTimeSecs() * 2400.0f; ///@FIXME: magick
             if(m_transform[3][2] > m_heightInfo.floor.hitPoint[2] + dz_to_land)
             {
                 m_transform[3][2] -= dz_to_land;
@@ -1116,7 +1116,7 @@ int Character::freeFalling()
 
     updateTransform(); // apply rotations
 
-    glm::vec3 move = applyGravity(engine::Engine::instance.m_frameTime);
+    glm::vec3 move = applyGravity(engine::Engine::instance.getFrameTime());
     m_speed[2] = m_speed[2] < -FREE_FALL_SPEED_MAXIMUM ? -FREE_FALL_SPEED_MAXIMUM : m_speed[2];
     m_speed = glm::rotate(m_speed, glm::radians(rot), { 0, 0, 1 });
 
@@ -1252,7 +1252,7 @@ int Character::monkeyClimbing()
         // dir_flag = DirFlag::Forward;
     }
 
-    move = m_speed * util::toSeconds(engine::Engine::instance.m_frameTime);
+    move = m_speed * engine::Engine::instance.getFrameTimeSecs();
     move[2] = 0.0;
 
     ghostUpdate();
@@ -1325,7 +1325,7 @@ int Character::wallsClimbing()
         spd /= t;
     }
     m_speed = spd * m_currentSpeed * animation::AnimationFrameRate;
-    move = m_speed * util::toSeconds(engine::Engine::instance.m_frameTime);
+    move = m_speed * engine::Engine::instance.getFrameTimeSecs();
 
     ghostUpdate();
     updateCurrentHeight();
@@ -1386,7 +1386,7 @@ int Character::climbing()
 
     m_response.slide = MovementWalk::None;
 
-    glm::vec3 move = m_speed * util::toSeconds(engine::Engine::instance.m_frameTime);
+    glm::vec3 move = m_speed * engine::Engine::instance.getFrameTimeSecs();
 
     ghostUpdate();
     m_transform[3] += glm::vec4(move, 0);
@@ -1443,7 +1443,7 @@ int Character::moveUnderWater()
         updateTransform(); // apply rotations
 
         m_speed = glm::vec3(m_transform[1] * t); // OY move only!
-        move = m_speed * util::toSeconds(engine::Engine::instance.m_frameTime);
+        move = m_speed * engine::Engine::instance.getFrameTimeSecs();
     }
     else
     {
@@ -1525,7 +1525,7 @@ int Character::moveOnWater()
     /*
     * Prepare to moving
     */
-    glm::vec3 move = m_speed * util::toSeconds(engine::Engine::instance.m_frameTime);
+    glm::vec3 move = m_speed * engine::Engine::instance.getFrameTimeSecs();
     ghostUpdate();
     m_transform[3] += glm::vec4(move, 0);
     fixPenetrations(&move); // get horizontal collide

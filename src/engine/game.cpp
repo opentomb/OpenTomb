@@ -399,7 +399,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
     // APPLY CONTROLS
 
-    engine::Engine::instance.m_camera.rotate(lookLogic.getDistance(glm::radians(2.2f) * util::toSeconds(Engine::instance.m_frameTime)));
+    engine::Engine::instance.m_camera.rotate(lookLogic.getDistance(glm::radians(2.2f) * Engine::instance.getFrameTimeSecs()));
 
     // FIXME: Duplicate code - do we need cam control with no world??
     if(!render::renderer.world())
@@ -408,11 +408,11 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         {
             if(ControlSettings::instance.joy_look_x != 0)
             {
-                engine::Engine::instance.m_camera.rotate({ -world::CameraRotationSpeed * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_look_x, 0, 0 });
+                engine::Engine::instance.m_camera.rotate({ -world::CameraRotationSpeed * Engine::instance.getFrameTimeSecs() * ControlSettings::instance.joy_look_x, 0, 0 });
             }
             if(ControlSettings::instance.joy_look_y != 0)
             {
-                engine::Engine::instance.m_camera.rotate({ 0, -world::CameraRotationSpeed * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_look_y, 0 });
+                engine::Engine::instance.m_camera.rotate({ 0, -world::CameraRotationSpeed * Engine::instance.getFrameTimeSecs() * ControlSettings::instance.joy_look_y, 0 });
             }
         }
 
@@ -427,8 +427,8 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
         render::renderer.camera()->applyRotation();
         glm::float_t dist = Engine::instance.m_controlState.m_stateWalk
-            ? Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime) * 0.3f
-            : Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime);
+            ? Engine::instance.m_controlState.m_freeLookSpeed * Engine::instance.getFrameTimeSecs() * 0.3f
+            : Engine::instance.m_controlState.m_freeLookSpeed * Engine::instance.getFrameTimeSecs();
         render::renderer.camera()->move(moveLogic.getDistance(dist));
 
         return;
@@ -438,11 +438,11 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     {
         if(ControlSettings::instance.joy_look_x != 0)
         {
-            engine::Engine::instance.m_camera.rotate({ -world::CameraRotationSpeed * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_look_x, 0, 0 });
+            engine::Engine::instance.m_camera.rotate({ -world::CameraRotationSpeed * Engine::instance.getFrameTimeSecs() * ControlSettings::instance.joy_look_x, 0, 0 });
         }
         if(ControlSettings::instance.joy_look_y != 0)
         {
-            engine::Engine::instance.m_camera.rotate({ 0, -world::CameraRotationSpeed * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_look_y, 0 });
+            engine::Engine::instance.m_camera.rotate({ 0, -world::CameraRotationSpeed * Engine::instance.getFrameTimeSecs() * ControlSettings::instance.joy_look_y, 0 });
         }
     }
 
@@ -458,8 +458,8 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     if(Engine::instance.m_controlState.m_freeLook || !std::dynamic_pointer_cast<world::Character>(ent))
     {
         glm::float_t dist = Engine::instance.m_controlState.m_stateWalk
-            ? Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime) * 0.3f
-            : Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime);
+            ? Engine::instance.m_controlState.m_freeLookSpeed * Engine::instance.getFrameTimeSecs() * 0.3f
+            : Engine::instance.m_controlState.m_freeLookSpeed * Engine::instance.getFrameTimeSecs();
         render::renderer.camera()->applyRotation();
         render::renderer.camera()->move(moveLogic.getDistance(dist));
         render::renderer.camera()->setCurrentRoom(Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()));
@@ -467,8 +467,8 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     else if(Engine::instance.m_controlState.m_noClip)
     {
         glm::float_t dist = Engine::instance.m_controlState.m_stateWalk
-            ? Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime) * 0.3f
-            : Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime);
+            ? Engine::instance.m_controlState.m_freeLookSpeed * Engine::instance.getFrameTimeSecs() * 0.3f
+            : Engine::instance.m_controlState.m_freeLookSpeed * Engine::instance.getFrameTimeSecs();
         render::renderer.camera()->applyRotation();
         render::renderer.camera()->move(moveLogic.getDistance(dist));
         render::renderer.camera()->setCurrentRoom(Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()));
@@ -521,20 +521,20 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
         if(ControlSettings::instance.use_joy && ControlSettings::instance.joy_move_x != 0)
         {
-            ch->m_command.rot[0] += glm::degrees(-2 * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_move_x);
+            ch->m_command.rot[0] += glm::degrees(-2 * Engine::instance.getFrameTimeSecs() * ControlSettings::instance.joy_move_x);
         }
         else
         {
-            ch->m_command.rot[0] += moveLogic.getDistanceX(glm::degrees(-2.0f) * util::toSeconds(Engine::instance.m_frameTime));
+            ch->m_command.rot[0] += moveLogic.getDistanceX(glm::degrees(-2.0f) * Engine::instance.getFrameTimeSecs());
         }
 
         if(ControlSettings::instance.use_joy && ControlSettings::instance.joy_move_y != 0)
         {
-            ch->m_command.rot[1] += glm::degrees(-2 * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_move_y);
+            ch->m_command.rot[1] += glm::degrees(-2 * Engine::instance.getFrameTimeSecs() * ControlSettings::instance.joy_move_y);
         }
         else
         {
-            ch->m_command.rot[1] += moveLogic.getDistanceZ(glm::degrees(2.0f) * util::toSeconds(Engine::instance.m_frameTime));
+            ch->m_command.rot[1] += moveLogic.getDistanceZ(glm::degrees(2.0f) * Engine::instance.getFrameTimeSecs());
         }
 
         ch->m_command.move = moveLogic;
@@ -630,7 +630,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
                     break;
             }
 
-            engine::Engine::instance.m_camera.shake(currentAngle, targetAngle, Engine::instance.m_frameTime);
+            engine::Engine::instance.m_camera.shake(currentAngle, targetAngle, Engine::instance.getFrameTime());
         }
     }
 
@@ -640,7 +640,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
     if(render::renderer.camera()->getShakeTime().count() > 0 && render::renderer.camera()->getShakeValue() > 0.0)
     {
         cam_pos += glm::ballRand(render::renderer.camera()->getShakeValue() / 2.0f) * util::toSeconds(render::renderer.camera()->getShakeTime());
-        render::renderer.camera()->setShakeTime(std::max(util::Duration(0), render::renderer.camera()->getShakeTime() - Engine::instance.m_frameTime));
+        render::renderer.camera()->setShakeTime(std::max(util::Duration(0), render::renderer.camera()->getShakeTime() - Engine::instance.getFrameTime()));
     }
 
     cameraFrom.setOrigin(util::convert(cam_pos));
@@ -724,7 +724,7 @@ void Game_Frame(util::Duration time)
     if(time > SimulationTime)
     {
         time = SimulationTime;
-        Engine::instance.m_frameTime = time;   // FIXME
+        Engine::instance.setFrameTime(time);   // FIXME
     }
     game_logic_time += time;
 

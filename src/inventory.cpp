@@ -83,13 +83,13 @@ int InventoryManager::getItemsTypeCount(MenuItemType type) const
     return ret;
 }
 
-void InventoryManager::restoreItemAngle(util::Duration time)
+void InventoryManager::restoreItemAngle()
 {
     if(m_itemAngle > 0.0f)
     {
         if(m_itemAngle <= 180.0f)
         {
-            m_itemAngle -= 180.0f * time / m_ringRotatePeriod;
+            m_itemAngle -= 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
             if(m_itemAngle < 0.0f)
             {
                 m_itemAngle = 0.0f;
@@ -97,7 +97,7 @@ void InventoryManager::restoreItemAngle(util::Duration time)
         }
         else
         {
-            m_itemAngle += 180.0f * time / m_ringRotatePeriod;
+            m_itemAngle += 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
             if(m_itemAngle >= 360.0f)
             {
                 m_itemAngle = 0.0f;
@@ -174,7 +174,7 @@ MenuItemType InventoryManager::setItemsType(MenuItemType type)
     return MenuItemType::Invalid;
 }
 
-void InventoryManager::frame(util::Duration time)
+void InventoryManager::frame()
 {
     if(!m_inventory || m_inventory->empty())
     {
@@ -189,7 +189,7 @@ void InventoryManager::frame(util::Duration time)
             break;
 
         case InventoryState::RLeft:
-            m_ringTime += time;
+            m_ringTime += engine::Engine::instance.getFrameTime();
             m_ringAngle = m_ringAngleStep * m_ringTime / m_ringRotatePeriod;
             m_nextState = InventoryState::RLeft;
             if(m_ringTime >= m_ringRotatePeriod)
@@ -204,11 +204,11 @@ void InventoryManager::frame(util::Duration time)
                     m_itemsOffset = m_currentItemsCount - 1;
                 }
             }
-            restoreItemAngle(time);
+            restoreItemAngle();
             break;
 
         case InventoryState::RRight:
-            m_ringTime += time;
+            m_ringTime += engine::Engine::instance.getFrameTime();
             m_ringAngle = -m_ringAngleStep * m_ringTime / m_ringRotatePeriod;
             m_nextState = InventoryState::RRight;
             if(m_ringTime >= m_ringRotatePeriod)
@@ -223,7 +223,7 @@ void InventoryManager::frame(util::Duration time)
                     m_itemsOffset = 0;
                 }
             }
-            restoreItemAngle(time);
+            restoreItemAngle();
             break;
 
         case InventoryState::Idle:
@@ -232,7 +232,7 @@ void InventoryManager::frame(util::Duration time)
             {
                 default:
                 case InventoryState::Idle:
-                    m_itemTime += time;
+                    m_itemTime += engine::Engine::instance.getFrameTime();
                     m_itemAngle = 360.0f * m_itemTime / m_itemRotatePeriod;
                     if(m_itemTime >= m_itemRotatePeriod)
                     {
@@ -308,17 +308,17 @@ void InventoryManager::frame(util::Duration time)
         case InventoryState::Up:
             m_currentState = InventoryState::Up;
             m_nextState = InventoryState::Up;
-            m_ringTime += time;
+            m_ringTime += engine::Engine::instance.getFrameTime();
             if(m_ringTime < m_ringRotatePeriod)
             {
-                restoreItemAngle(time);
+                restoreItemAngle();
                 m_ringRadius = m_baseRingRadius * (m_ringRotatePeriod - m_ringTime) / m_ringRotatePeriod;
                 m_verticalOffset = -m_baseRingRadius * m_ringTime / m_ringRotatePeriod;
-                m_ringAngle += 180.0f * time / m_ringRotatePeriod;
+                m_ringAngle += 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
             }
             else if(m_ringTime < 2.0f * m_ringRotatePeriod)
             {
-                if(m_ringTime - time <= m_ringRotatePeriod)
+                if(m_ringTime - engine::Engine::instance.getFrameTime() <= m_ringRotatePeriod)
                 {
                     //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     m_ringRadius = 0.0f;
@@ -331,8 +331,8 @@ void InventoryManager::frame(util::Duration time)
                     setTitle(m_currentItemsType);
                 }
                 m_ringRadius = m_baseRingRadius * (m_ringTime - m_ringRotatePeriod) / m_ringRotatePeriod;
-                m_verticalOffset -= m_baseRingRadius * time / m_ringRotatePeriod;
-                m_ringAngle -= 180.0f * time / m_ringRotatePeriod;
+                m_verticalOffset -= m_baseRingRadius * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
+                m_ringAngle -= 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
             }
             else
             {
@@ -346,17 +346,17 @@ void InventoryManager::frame(util::Duration time)
         case InventoryState::Down:
             m_currentState = InventoryState::Down;
             m_nextState = InventoryState::Down;
-            m_ringTime += time;
+            m_ringTime += engine::Engine::instance.getFrameTime();
             if(m_ringTime < m_ringRotatePeriod)
             {
-                restoreItemAngle(time);
+                restoreItemAngle();
                 m_ringRadius = m_baseRingRadius * (m_ringRotatePeriod - m_ringTime) / m_ringRotatePeriod;
                 m_verticalOffset = m_baseRingRadius * m_ringTime / m_ringRotatePeriod;
-                m_ringAngle += 180.0f * time / m_ringRotatePeriod;
+                m_ringAngle += 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
             }
             else if(m_ringTime < 2.0f * m_ringRotatePeriod)
             {
-                if(m_ringTime - time <= m_ringRotatePeriod)
+                if(m_ringTime - engine::Engine::instance.getFrameTime() <= m_ringRotatePeriod)
                 {
                     //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     m_ringRadius = 0.0f;
@@ -369,8 +369,8 @@ void InventoryManager::frame(util::Duration time)
                     setTitle(m_currentItemsType);
                 }
                 m_ringRadius = m_baseRingRadius * (m_ringTime - m_ringRotatePeriod) / m_ringRotatePeriod;
-                m_verticalOffset += m_baseRingRadius * time / m_ringRotatePeriod;
-                m_ringAngle -= 180.0f * time / m_ringRotatePeriod;
+                m_verticalOffset += m_baseRingRadius * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
+                m_ringAngle -= 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
             }
             else
             {
@@ -382,10 +382,10 @@ void InventoryManager::frame(util::Duration time)
             break;
 
         case InventoryState::Open:
-            m_ringTime += time;
+            m_ringTime += engine::Engine::instance.getFrameTime();
             m_ringRadius = m_baseRingRadius * m_ringTime / m_ringRotatePeriod;
-            m_ringAngle -= 180.0f * time / m_ringRotatePeriod;
-            m_ringVerticalAngle -= 180.0f * time / m_ringRotatePeriod;
+            m_ringAngle -= 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
+            m_ringVerticalAngle -= 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
             if(m_ringTime >= m_ringRotatePeriod)
             {
                 m_currentState = InventoryState::Idle;
@@ -401,10 +401,10 @@ void InventoryManager::frame(util::Duration time)
             break;
 
         case InventoryState::Closed:
-            m_ringTime += time;
+            m_ringTime += engine::Engine::instance.getFrameTime();
             m_ringRadius = m_baseRingRadius * (m_ringRotatePeriod - m_ringTime) / m_ringRotatePeriod;
-            m_ringAngle += 180.0f * time / m_ringRotatePeriod;
-            m_ringVerticalAngle += 180.0f * time / m_ringRotatePeriod;
+            m_ringAngle += 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
+            m_ringVerticalAngle += 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
             if(m_ringTime >= m_ringRotatePeriod)
             {
                 m_currentState = InventoryState::Disabled;

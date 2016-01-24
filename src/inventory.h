@@ -133,7 +133,7 @@ private:
     float                       m_itemAngle;
 
     int getItemsTypeCount(MenuItemType type) const;
-    void restoreItemAngle(util::Duration time);
+    void restoreItemAngle();
 
 public:
     gui::TextLine             mLabel_Title;
@@ -165,6 +165,6 @@ public:
     MenuItemType setItemsType(MenuItemType type);
     void setInventory(std::list<InventoryNode> *i);
     void setTitle(MenuItemType items_type);
-    void frame(util::Duration time);
+    void frame();
     void render();
 };

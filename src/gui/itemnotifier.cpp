@@ -37,26 +37,26 @@ void ItemNotifier::animate()
 
     if(!util::fuzzyZero(m_radPerSecond))
     {
-        m_currentAngle.x = glm::mod(m_currentAngle.x + util::toSeconds(engine::Engine::instance.m_frameTime) * m_radPerSecond, glm::radians(360.0f));
+        m_currentAngle.x = glm::mod(m_currentAngle.x + engine::Engine::instance.getFrameTimeSecs() * m_radPerSecond, glm::radians(360.0f));
     }
 
     if(util::fuzzyZero(m_currTime.count()))
     {
-        glm::float_t step = (m_currPosX - m_endPosX) * util::toSeconds(engine::Engine::instance.m_frameTime) * 4.0f;
+        glm::float_t step = (m_currPosX - m_endPosX) * engine::Engine::instance.getFrameTimeSecs() * 4.0f;
         step = std::max(0.5f, step);
 
         m_currPosX = glm::min(m_currPosX - step, m_endPosX);
 
         if(util::fuzzyEqual(m_currPosX, m_endPosX))
-            m_currTime += engine::Engine::instance.m_frameTime;
+            m_currTime += engine::Engine::instance.getFrameTime();
     }
     else if(m_currTime < m_showTime)
     {
-        m_currTime += engine::Engine::instance.m_frameTime;
+        m_currTime += engine::Engine::instance.getFrameTime();
     }
     else
     {
-        glm::float_t step = (m_currPosX - m_endPosX) * util::toSeconds(engine::Engine::instance.m_frameTime * 4);
+        glm::float_t step = (m_currPosX - m_endPosX) * engine::Engine::instance.getFrameTimeSecs() * 4;
         step = std::max(0.5f, step);
 
         m_currPosX = glm::min(m_currPosX + step, m_startPosX);

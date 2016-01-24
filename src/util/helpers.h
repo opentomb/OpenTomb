@@ -52,12 +52,12 @@ using TimePoint = ClockType::time_point;
 
 constexpr inline FloatDuration toSeconds(Duration d) noexcept
 {
-    return std::chrono::duration_cast<Duration>(d).count() * static_cast<FloatDuration>(Duration::period::num) / static_cast<FloatDuration>(Duration::period::den);
+    return d.count() * static_cast<FloatDuration>(Duration::period::num) / static_cast<FloatDuration>(Duration::period::den);
 }
 
 constexpr inline util::Duration fromSeconds(FloatDuration d) noexcept
 {
-    return std::chrono::duration_cast<util::Duration>(Duration(static_cast<Duration::rep>(d * static_cast<FloatDuration>(Duration::period::den) / static_cast<FloatDuration>(Duration::period::num))));
+    return Duration(d * static_cast<FloatDuration>(Duration::period::den) / static_cast<FloatDuration>(Duration::period::num));
 }
 
 inline TimePoint now() noexcept

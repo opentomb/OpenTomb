@@ -467,7 +467,7 @@ void World::updateAnimTextures()                                                
             continue;
         }
 
-        seq.frameTime += engine::Engine::instance.m_frameTime;
+        seq.frameTime += engine::Engine::instance.getFrameTime();
         if(seq.frameTime >= seq.timePerFrame)
         {
             seq.frameTime -= static_cast<int>(seq.frameTime / seq.timePerFrame) * seq.timePerFrame;

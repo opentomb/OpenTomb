@@ -162,7 +162,7 @@ bool FontManager::removeFontStyle(const FontStyle index)
 
 void FontManager::update()
 {
-    const auto fontFadeDelta = util::toSeconds(engine::Engine::instance.m_frameTime) * FontFadeSpeed;
+    const auto fontFadeDelta = engine::Engine::instance.getFrameTimeSecs() * FontFadeSpeed;
 
     if(m_fadeDirection)
     {
