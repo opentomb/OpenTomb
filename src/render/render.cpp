@@ -38,7 +38,6 @@
 
 namespace render
 {
-
 Render renderer;
 DynamicBSP render_dBSP;
 RenderDebugDrawer debugDrawer;
@@ -95,7 +94,7 @@ void Render::renderSkyBox()
     {
         glDepthMask(GL_FALSE);
         glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->sky_box->animations.front().getInitialBoneKeyFrame().offset);
-        tr *= glm::mat4_cast( m_world->sky_box->animations[0].getInitialBoneKeyFrame().qrotate );
+        tr *= glm::mat4_cast(m_world->sky_box->animations[0].getInitialBoneKeyFrame().qrotate);
         const glm::mat4 fullView = m_cam->getViewProjection() * tr;
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getStaticMeshShader();
@@ -409,7 +408,7 @@ const LitShaderDescription *Render::setupEntityLight(const world::Entity& entity
         return shader;
     }
 
-    glm::vec4 ambient_component( entity.getRoom()->m_ambientLighting, 1.0f );
+    glm::vec4 ambient_component(entity.getRoom()->m_ambientLighting, 1.0f);
 
     if(entity.getRoom()->m_flags & TR_ROOM_FLAG_WATER)
     {
@@ -950,7 +949,7 @@ void Render::genWorldList()
     // find room that contains camera
     world::Room* curr_room = Room_FindPosCogerrence(m_cam->getPosition(), m_cam->getCurrentRoom());
 
-    m_cam->setCurrentRoom( curr_room );
+    m_cam->setCurrentRoom(curr_room);
     if(curr_room != nullptr)                  // camera located in some room
     {
         processRoom(*curr_room);
@@ -991,9 +990,8 @@ void Render::setWorld(world::World *world)
     m_renderList.clear();
 
     m_cam = &engine::Engine::instance.m_camera;
-    engine::Engine::instance.m_camera.setCurrentRoom( nullptr );
+    engine::Engine::instance.m_camera.setCurrentRoom(nullptr);
 }
-
 
 // Render debug primitives.
 
@@ -1057,8 +1055,8 @@ void RenderDebugDrawer::render()
         {
             glGenBuffers(1, &m_glbuffer);
             VertexArrayAttribute attribs[] = {
-                VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, m_glbuffer, sizeof(glm::vec3)*2, 0),
-                VertexArrayAttribute(UnlitShaderDescription::Color,    3, GL_FLOAT, false, m_glbuffer, sizeof(glm::vec3)*2, sizeof(glm::vec3))
+                VertexArrayAttribute(UnlitShaderDescription::Position, 3, GL_FLOAT, false, m_glbuffer, sizeof(glm::vec3) * 2, 0),
+                VertexArrayAttribute(UnlitShaderDescription::Color,    3, GL_FLOAT, false, m_glbuffer, sizeof(glm::vec3) * 2, sizeof(glm::vec3))
             };
             m_vertexArray.reset(new VertexArray(0, 2, attribs));
         }
@@ -1074,34 +1072,34 @@ void RenderDebugDrawer::render()
         glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(m_buffer.size() / 2));
     }
 
-    m_color = {0,0,0};
+    m_color = { 0,0,0 };
     m_buffer.clear();
 }
 
 void RenderDebugDrawer::drawAxis(glm::float_t r, const glm::mat4 &transform)
 {
-    glm::vec3 origin{transform[3]};
+    glm::vec3 origin{ transform[3] };
 
     glm::vec4 v = transform[0] * r;
     v += transform[3];
     m_buffer.push_back(origin);
-    m_buffer.push_back({1.0, 0.0, 0.0});
-    m_buffer.push_back({v.x, v.y, v.z});
-    m_buffer.push_back({1.0, 0.0, 0.0});
+    m_buffer.push_back({ 1.0, 0.0, 0.0 });
+    m_buffer.push_back({ v.x, v.y, v.z });
+    m_buffer.push_back({ 1.0, 0.0, 0.0 });
 
     v = transform[1] * r;
     v += transform[3];
     m_buffer.push_back(origin);
-    m_buffer.push_back({0.0, 1.0, 0.0});
-    m_buffer.push_back({v.x, v.y, v.z});
-    m_buffer.push_back({0.0, 1.0, 0.0});
+    m_buffer.push_back({ 0.0, 1.0, 0.0 });
+    m_buffer.push_back({ v.x, v.y, v.z });
+    m_buffer.push_back({ 0.0, 1.0, 0.0 });
 
     v = transform[2] * r;
     v += transform[3];
     m_buffer.push_back(origin);
-    m_buffer.push_back({0.0, 0.0, 1.0});
-    m_buffer.push_back({v.x, v.y, v.z});
-    m_buffer.push_back({0.0, 0.0, 1.0});
+    m_buffer.push_back({ 0.0, 0.0, 1.0 });
+    m_buffer.push_back({ v.x, v.y, v.z });
+    m_buffer.push_back({ 0.0, 0.0, 1.0 });
 }
 
 void RenderDebugDrawer::drawPortal(const world::Portal& p)
@@ -1148,10 +1146,10 @@ void RenderDebugDrawer::drawMeshDebugLines(const std::shared_ptr<world::core::Ba
     for(const world::core::Vertex& v : mesh->m_vertices)
     {
         glm::vec4 tv = transform * glm::vec4(v.position, 1.0f);
-        m_buffer.push_back({tv.x, tv.y, tv.z});
+        m_buffer.push_back({ tv.x, tv.y, tv.z });
         m_buffer.emplace_back(m_color);
         tv += glm::vec4(glm::mat3(transform) * v.normal * 128.0f, 0);
-        m_buffer.push_back({tv.x, tv.y, tv.z});
+        m_buffer.push_back({ tv.x, tv.y, tv.z });
         m_buffer.emplace_back(m_color);
     }
 }
@@ -1356,5 +1354,4 @@ void drawCrosshair()
 
     glDrawArrays(GL_LINES, 0, 4);
 }
-
 } // namespace render

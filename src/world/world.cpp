@@ -23,7 +23,6 @@ using gui::Console;
 
 namespace world
 {
-
 void World::prepare()
 {
     meshes.clear();
@@ -45,7 +44,6 @@ void World::prepare()
     anim_commands.clear();
 }
 
-
 void World::empty()
 {
     engine::last_object = nullptr;
@@ -61,7 +59,7 @@ void World::empty()
 
     if(character)
     {
-        character->setRoom( nullptr );
+        character->setRoom(nullptr);
         character->m_currentSector = nullptr;
     }
 
@@ -147,7 +145,7 @@ boost::optional<ObjectId> World::spawnEntity(ModelId model_id, ObjectId room_id,
     {
         if(pos != nullptr)
         {
-            ent->m_transform[3] = glm::vec4(*pos,1.0f);
+            ent->m_transform[3] = glm::vec4(*pos, 1.0f);
         }
         if(ang != nullptr)
         {
@@ -156,12 +154,12 @@ boost::optional<ObjectId> World::spawnEntity(ModelId model_id, ObjectId room_id,
         }
         if(room_id < rooms.size())
         {
-            ent->setRoom( rooms[room_id].get() );
+            ent->setRoom(rooms[room_id].get());
             ent->m_currentSector = ent->getRoom()->getSectorRaw(glm::vec3(ent->m_transform[3]));
         }
         else
         {
-            ent->setRoom( nullptr );
+            ent->setRoom(nullptr);
         }
 
         return ent->getId();
@@ -182,7 +180,7 @@ boost::optional<ObjectId> World::spawnEntity(ModelId model_id, ObjectId room_id,
 
     if(pos != nullptr)
     {
-        ent->m_transform[3] = glm::vec4(*pos,1.0f);
+        ent->m_transform[3] = glm::vec4(*pos, 1.0f);
     }
     if(ang != nullptr)
     {
@@ -191,12 +189,12 @@ boost::optional<ObjectId> World::spawnEntity(ModelId model_id, ObjectId room_id,
     }
     if(room_id < rooms.size())
     {
-        ent->setRoom( rooms[room_id].get() );
+        ent->setRoom(rooms[room_id].get());
         ent->m_currentSector = ent->getRoom()->getSectorRaw(glm::vec3(ent->m_transform[3]));
     }
     else
     {
-        ent->setRoom( nullptr );
+        ent->setRoom(nullptr);
     }
 
     ent->m_typeFlags = ENTITY_TYPE_SPAWNED;
@@ -476,39 +474,39 @@ void World::updateAnimTextures()                                                
 
             switch(seq.textureType)
             {
-            case animation::TextureAnimationType::Reverse:
-                if(seq.reverse)
-                {
-                    if(seq.currentFrame == 0)
+                case animation::TextureAnimationType::Reverse:
+                    if(seq.reverse)
                     {
-                        seq.currentFrame++;
-                        seq.reverse = false;
+                        if(seq.currentFrame == 0)
+                        {
+                            seq.currentFrame++;
+                            seq.reverse = false;
+                        }
+                        else if(seq.currentFrame > 0)
+                        {
+                            seq.currentFrame--;
+                        }
                     }
-                    else if(seq.currentFrame > 0)
+                    else
                     {
-                        seq.currentFrame--;
+                        if(seq.currentFrame == seq.keyFrames.size() - 1)
+                        {
+                            seq.currentFrame--;
+                            seq.reverse = true;
+                        }
+                        else if(seq.currentFrame < seq.keyFrames.size() - 1)
+                        {
+                            seq.currentFrame++;
+                        }
+                        seq.currentFrame %= seq.keyFrames.size();                ///@PARANOID
                     }
-                }
-                else
-                {
-                    if(seq.currentFrame == seq.keyFrames.size() - 1)
-                    {
-                        seq.currentFrame--;
-                        seq.reverse = true;
-                    }
-                    else if(seq.currentFrame < seq.keyFrames.size() - 1)
-                    {
-                        seq.currentFrame++;
-                    }
-                    seq.currentFrame %= seq.keyFrames.size();                ///@PARANOID
-                }
-                break;
+                    break;
 
-            case animation::TextureAnimationType::Forward:                                    // inversed in polygon anim. texture frames
-            case animation::TextureAnimationType::Backward:
-                seq.currentFrame++;
-                seq.currentFrame %= seq.keyFrames.size();
-                break;
+                case animation::TextureAnimationType::Forward:                                    // inversed in polygon anim. texture frames
+                case animation::TextureAnimationType::Backward:
+                    seq.currentFrame++;
+                    seq.currentFrame %= seq.keyFrames.size();
+                    break;
             };
         }
     }
@@ -521,18 +519,17 @@ glm::vec4 World::calculateWaterTint() const
         if(engineVersion < loader::Engine::TR3)
         {
             // Placeholder, color very similar to TR1 PSX ver.
-            return { 0.585f, 0.9f, 0.9f, 1.0f };
+            return{ 0.585f, 0.9f, 0.9f, 1.0f };
         }
         else
         {
             // TOMB3 - closely matches TOMB3
-            return { 0.275f, 0.45f, 0.5f, 1.0f };
+            return{ 0.275f, 0.45f, 0.5f, 1.0f };
         }
     }
     else
     {
-        return { 1, 1, 1, 1 };
+        return{ 1, 1, 1, 1 };
     }
 }
-
 } // namespace world

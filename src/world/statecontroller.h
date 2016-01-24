@@ -23,7 +23,7 @@ enum class LaraState
     FreeFall = 9,
     Hang = 10,
     Reach = 11,
-//    UNUSED2 12
+    //    UNUSED2 12
     UnderwaterStop = 13,
     GrabToFall = 14,
     JumpPrepare = 15,
@@ -70,17 +70,17 @@ enum class LaraState
     LadderIdle = 56,
     LadderUp = 57,
     LadderLeft = 58,
-//    UNUSED5 59
+    //    UNUSED5 59
     LadderRight = 60,
     LadderDown = 61,
-//    UNUSED6 62
-//    UNUSED7 63
-//    UNUSED8 64
+    //    UNUSED6 62
+    //    UNUSED7 63
+    //    UNUSED8 64
     WadeForward = 65,
     UnderwaterTurnAround = 66,
     FlarePickUp = 67,
     JumpRoll = 68,
-//    UNUSED10 69
+    //    UNUSED10 69
     ZiplineRide = 70,
     CrouchIdle = 71,
     CrouchRoll = 72,
@@ -105,7 +105,7 @@ enum class LaraState
     RopeTurnRight = 91,
     GiantButtonPush = 92,
     TrapdoorFloorOpen = 93,
-//    UNUSED11 94
+    //    UNUSED11 94
     RoundHandle = 95,
     CogWheel = 96,
     LeverSwitchPush = 97,
@@ -141,13 +141,13 @@ enum class LaraState
     TightropeRestoreBalance = 127,
     BarsSwing = 128,
     BarsJump = 129,
-//    UNUSED12 130
+    //    UNUSED12 130
     RadioListening = 131,
     RadioOff = 132,
-//    UNUSED13 133
-//    UNUSED14 134
-//    UNUSED15 135
-//    UNUSED16 136
+    //    UNUSED13 133
+    //    UNUSED14 134
+    //    UNUSED15 135
+    //    UNUSED16 136
     PickUpFromChest = 137
 };
 

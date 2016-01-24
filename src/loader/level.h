@@ -103,5 +103,4 @@ private:
     static Game probeVersion(io::SDLReader& reader, const std::string &filename);
     static std::unique_ptr<Level> createLoader(io::SDLReader&& reader, Game game_version, const std::string& sfxPath);
 };
-
 }

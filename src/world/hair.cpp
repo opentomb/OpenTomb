@@ -14,15 +14,14 @@
 
 namespace world
 {
-
 bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 {
     // No setup or parent to link to - bypass function.
 
-    if(   !parent_entity
+    if(!parent_entity
        || !setup
        || setup->m_linkBody >= parent_entity->m_skeleton.getBoneCount()
-       || !parent_entity->m_skeleton.getBones()[setup->m_linkBody].bt_body )
+       || !parent_entity->m_skeleton.getBones()[setup->m_linkBody].bt_body)
     {
         return false;
     }
@@ -267,19 +266,20 @@ void Hair::createHairMesh(const SkeletalModel& model)
         size_t originalElementsStart = 0;
         for(size_t page = 0; page < original->m_texturePageCount; page++)
         {
-            if (original->m_elementsPerTexture[page] == 0)
-                    continue;
+            if(original->m_elementsPerTexture[page] == 0)
+                continue;
 
             BOOST_ASSERT(originalElementsStart < original->m_elements.size());
-            BOOST_ASSERT(originalElementsStart+original->m_elementsPerTexture[page] <= original->m_elements.size());
+            BOOST_ASSERT(originalElementsStart + original->m_elementsPerTexture[page] <= original->m_elements.size());
 
             BOOST_ASSERT(elementsStartPerTexture[page] < m_mesh->m_elements.size());
             BOOST_ASSERT(elementsStartPerTexture[page] + original->m_elementsPerTexture[page] <= m_mesh->m_elements.size());
 
             std::copy_n(&original->m_elements[originalElementsStart], original->m_elementsPerTexture[page], &m_mesh->m_elements[elementsStartPerTexture[page]]);
 
-            for (size_t j = 0; j < original->m_elementsPerTexture[page]; j++) {
-                m_mesh->m_elements[elementsStartPerTexture[page]] = static_cast<GLuint>( verticesStart + original->m_elements[originalElementsStart] );
+            for(size_t j = 0; j < original->m_elementsPerTexture[page]; j++)
+            {
+                m_mesh->m_elements[elementsStartPerTexture[page]] = static_cast<GLuint>(verticesStart + original->m_elements[originalElementsStart]);
                 originalElementsStart += 1;
                 elementsStartPerTexture[page] += 1;
             }
@@ -371,5 +371,4 @@ Hair::~Hair()
         }
     }
 }
-
 } // namespace world

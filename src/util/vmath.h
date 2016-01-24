@@ -18,12 +18,10 @@ constexpr const float Rad90 = static_cast<float>(0.5*SIMD_PI);
 constexpr const float Rad180 = static_cast<float>(SIMD_PI);
 constexpr const float Rad360 = static_cast<float>(2 * SIMD_PI);
 
-
 // A simple Hesse normal form plane
 
 struct Plane
 {
-
     glm::vec3 normal = { 0,0,0 };   // The plane's normal
     glm::float_t dot = 0;   // The plane's distance to the origin
 
@@ -33,13 +31,13 @@ struct Plane
 
     glm::float_t distance(const glm::vec3& position) const
     {
-        return glm::dot( normal, position ) + dot;
+        return glm::dot(normal, position) + dot;
     }
 
     glm::vec3 rayIntersect(const glm::vec3& rayStart, const glm::vec3& rayDir, glm::float_t& lambda) const
     {
-        lambda = dot + glm::dot( normal, rayStart );
-        lambda /= glm::dot( normal, rayDir );
+        lambda = dot + glm::dot(normal, rayStart);
+        lambda /= glm::dot(normal, rayDir);
         return rayStart - lambda * rayDir;
     }
 
@@ -51,7 +49,7 @@ struct Plane
 
     void assign(const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& position)
     {
-        normal = glm::normalize( glm::cross(v1, v2) );
+        normal = glm::normalize(glm::cross(v1, v2));
         dot = glm::dot(normal, position);
     }
 
@@ -59,7 +57,7 @@ struct Plane
     {
         const glm::float_t len = glm::length(glm::vec3(n));
         dot = n[3] / len;
-        normal = glm::vec3(n)/len;
+        normal = glm::vec3(n) / len;
     }
 
     void mirrorNormal()
@@ -113,25 +111,25 @@ inline glm::vec4 convert(const loader::FloatColor& tr_c)
     return v;
 }
 
-inline bool intersectRayTriangle( const glm::vec3& rayStart, const glm::vec3& rayDir, const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2 )
+inline bool intersectRayTriangle(const glm::vec3& rayStart, const glm::vec3& rayDir, const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2)
 {
     BOOST_ASSERT(!fuzzyZero(glm::length(rayDir)));
     // Check for intersection with each of the portal's 2 front triangles
     // Solve line-plane intersection using parametric form
-    glm::vec3 tuv = glm::inverse(glm::mat3(rayDir, v1-v0, v2-v0)) * (rayStart-v0);
-    if (tuv.y >= 0 && tuv.y <= 1 && tuv.z >= 0 && tuv.z <= 1 && tuv.y + tuv.z <= 1)
+    glm::vec3 tuv = glm::inverse(glm::mat3(rayDir, v1 - v0, v2 - v0)) * (rayStart - v0);
+    if(tuv.y >= 0 && tuv.y <= 1 && tuv.z >= 0 && tuv.z <= 1 && tuv.y + tuv.z <= 1)
         return true;
     else
         return false;
 }
 
-inline bool intersectRayRectangle( const glm::vec3& rayStart, const glm::vec3& rayDir, const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2 )
+inline bool intersectRayRectangle(const glm::vec3& rayStart, const glm::vec3& rayDir, const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2)
 {
     BOOST_ASSERT(!fuzzyZero(glm::length(rayDir)));
-    BOOST_ASSERT(fuzzyZero(glm::dot(v1-v0, v2-v0))); // test if the vertices are perpendicular
+    BOOST_ASSERT(fuzzyZero(glm::dot(v1 - v0, v2 - v0))); // test if the vertices are perpendicular
     // Solve line-plane intersection using parametric form
-    glm::vec3 tuv = glm::inverse(glm::mat3(rayDir, v1-v0, v2-v0)) * (rayStart-v0);
-    if (tuv.y >= 0 && tuv.y <= 1 && tuv.z >= 0 && tuv.z <= 1)
+    glm::vec3 tuv = glm::inverse(glm::mat3(rayDir, v1 - v0, v2 - v0)) * (rayStart - v0);
+    if(tuv.y >= 0 && tuv.y <= 1 && tuv.z >= 0 && tuv.z <= 1)
         return true;
     else
         return false;

@@ -21,7 +21,6 @@ extern bool done;
 
 namespace engine
 {
-
 extern world::Object* last_object;
 
 using gui::Console;
@@ -175,7 +174,7 @@ void ControlSettings::key(int32_t button, bool state)
 
 void ControlSettings::joyAxis(int axis, Sint16 axisValue)
 {
-    auto axisFilter = [axis](const std::pair<Axis,int>& entry){
+    auto axisFilter = [axis](const std::pair<Axis, int>& entry) {
         return entry.second == axis;
     };
     for(Axis i : joy_axis_map | boost::adaptors::filtered(axisFilter) | boost::adaptors::map_keys)            // Compare with ALL mapped axes.
@@ -463,8 +462,8 @@ void ControlSettings::pollSDLInput()
             case SDL_MOUSEMOTION:
                 if(!Console::instance().isVisible() && Engine::instance.m_controlState.m_mouseLook)
                 {
-                        Engine::instance.m_controlState.m_lookAxisX = event.motion.xrel * mouse_sensitivity * mouse_scale_x;
-                        Engine::instance.m_controlState.m_lookAxisY = event.motion.yrel * mouse_sensitivity * mouse_scale_y;
+                    Engine::instance.m_controlState.m_lookAxisX = event.motion.xrel * mouse_sensitivity * mouse_scale_x;
+                    Engine::instance.m_controlState.m_lookAxisY = event.motion.yrel * mouse_sensitivity * mouse_scale_y;
                 }
                 break;
 
@@ -684,5 +683,4 @@ void ControlSettings::secondaryMouseDown()
     BulletEngine::instance->dynamicsWorld->removeCollisionObject(obj);
     delete obj;
 }
-
 } // namespace engine

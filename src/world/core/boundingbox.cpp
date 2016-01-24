@@ -10,7 +10,6 @@ namespace world
 {
 namespace core
 {
-
 btCollisionShape *BT_CSfromBBox(const BoundingBox &boundingBox, bool /*useCompression*/, bool /*buildBvh*/)
 {
     btTriangleMesh *trimesh = new btTriangleMesh;
@@ -46,6 +45,5 @@ btCollisionShape *BT_CSfromBBox(const BoundingBox &boundingBox, bool /*useCompre
 
     return ret;
 }
-
 } // namespace core
 } // namespace world

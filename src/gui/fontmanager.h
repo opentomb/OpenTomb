@@ -120,5 +120,4 @@ private:
 
     FT_Library       m_fontLibrary = nullptr;  // GLF font library unit.
 };
-
 } //namespace gui

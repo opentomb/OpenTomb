@@ -8,7 +8,6 @@
 
 namespace render
 {
-
 void DynamicBSP::addPolygon(std::unique_ptr<BSPNode>& root, const BSPFaceRef& face, const world::core::Polygon& transformed)
 {
     if(!root)
@@ -72,5 +71,4 @@ void DynamicBSP::addNewPolygonList(const std::vector<TransparentPolygonReference
         }
     }
 }
-
 } // namespace render

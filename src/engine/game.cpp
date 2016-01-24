@@ -42,7 +42,6 @@ constexpr float CameraCollisionSphereRadius = 16.0f;
 
 namespace engine
 {
-
 void Save_EntityTree(std::ostream& f, const std::map<uint32_t, std::shared_ptr<world::Entity> > &map);
 void Save_Entity(std::ostream& f, std::shared_ptr<world::Entity> ent);
 
@@ -157,26 +156,14 @@ void Game_RegisterLuaFunctions(script::ScriptEngine& state)
 /**
  * Load game state
  */
-int Game_Load(const char* name)
+bool Game_Load(const std::string& name)
 {
-    FILE *f;
-    char *ch, local;
-
-    local = 1;
-    for(ch = const_cast<char*>(name); *ch; ch++)
-    {
-        if(*ch == '\\' || *ch == '/')
-        {
-            local = 0;
-            break;
-        }
-    }
+    const bool local = (name.find_first_of("\\/") != std::string::npos);
 
     if(local)
     {
-        char token[512];
-        snprintf(token, 512, "save/%s", name);
-        f = fopen(token, "rb");
+        std::string token = "save/" + name;
+        FILE* f = fopen(token.c_str(), "rb");
         if(f == nullptr)
         {
             BOOST_LOG_TRIVIAL(warning) << "Can not read file " << token;
@@ -199,7 +186,7 @@ int Game_Load(const char* name)
     }
     else
     {
-        f = fopen(name, "rb");
+        FILE* f = fopen(name.c_str(), "rb");
         if(f == nullptr)
         {
             BOOST_LOG_TRIVIAL(error) << "Can not read file " << name;
@@ -246,105 +233,105 @@ void Save_Entity(std::ostream& f, std::shared_ptr<world::Entity> ent)
     {
         world::ObjectId room_id = ent->getRoom() ? ent->getRoom()->getId() : 0xFFFFFFFF;
         f << boost::format("\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);")
-                % ent->m_skeleton.getModel()->id
-                % ent->m_transform[3][0]
-                % ent->m_transform[3][1]
-                % ent->m_transform[3][2]
-                % ent->m_angles[0]
-                % ent->m_angles[1]
-                % ent->m_angles[2]
-                % room_id
-                % ent->getId();
+            % ent->m_skeleton.getModel()->id
+            % ent->m_transform[3][0]
+            % ent->m_transform[3][1]
+            % ent->m_transform[3][2]
+            % ent->m_angles[0]
+            % ent->m_angles[1]
+            % ent->m_angles[2]
+            % room_id
+            % ent->getId();
     }
     else
     {
         f << boost::format("\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);")
-                % ent->getId()
-                % ent->m_transform[3][0]
-                % ent->m_transform[3][1]
-                % ent->m_transform[3][2]
-                % ent->m_angles[0]
-                % ent->m_angles[1]
-                % ent->m_angles[2];
+            % ent->getId()
+            % ent->m_transform[3][0]
+            % ent->m_transform[3][1]
+            % ent->m_transform[3][2]
+            % ent->m_angles[0]
+            % ent->m_angles[1]
+            % ent->m_angles[2];
     }
 
     f << boost::format("\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);")
-         % ent->getId()
-         % ent->m_speed[0]
-         % ent->m_speed[1]
-         % ent->m_speed[2];
+        % ent->getId()
+        % ent->m_speed[0]
+        % ent->m_speed[1]
+        % ent->m_speed[2];
     f << boost::format("\nsetEntityAnim(%d, %d, %d);")
-         % ent->getId()
-         % ent->m_skeleton.getCurrentAnimation()
-         % ent->m_skeleton.getCurrentFrame();
+        % ent->getId()
+        % ent->m_skeleton.getCurrentAnimation()
+        % ent->m_skeleton.getCurrentFrame();
     f << boost::format("\nsetEntityState(%d, %d, %d);")
-         % ent->getId()
-         % ent->m_skeleton.getCurrentState()
-         % ent->m_skeleton.getPreviousState();
+        % ent->getId()
+        % ent->m_skeleton.getCurrentState()
+        % ent->m_skeleton.getPreviousState();
     f << boost::format("\nsetEntityCollisionFlags(%d, %ld, %ld);")
-         % ent->getId()
-         % ent->getCollisionType()
-         % ent->getCollisionShape();
+        % ent->getId()
+        % ent->getCollisionType()
+        % ent->getCollisionShape();
 
     if(ent->m_enabled)
     {
         f << boost::format("\nenableEntity(%d);")
-             % ent->getId();
+            % ent->getId();
     }
     else
     {
         f << boost::format("\ndisableEntity(%d);")
-             % ent->getId();
+            % ent->getId();
     }
 
     f << boost::format("\nsetEntityFlags(%d, %d, %d, %d, 0x%.4X, 0x%.8X);")
-         % ent->getId()
-         % ent->m_active
-         % ent->m_enabled
-         % ent->m_visible
-         % ent->m_typeFlags
-         % ent->m_callbackFlags;
+        % ent->getId()
+        % ent->m_active
+        % ent->m_enabled
+        % ent->m_visible
+        % ent->m_typeFlags
+        % ent->m_callbackFlags;
 
     f << boost::format("\nsetEntityTriggerLayout(%d, 0x%.2X);")
-         % ent->getId()
-         % ent->m_triggerLayout;
+        % ent->getId()
+        % ent->m_triggerLayout;
     //setEntityMeshswap()
 
     if(ent->getRoom() != nullptr)
     {
         f << boost::format("\nsetEntityRoomMove(%d, %d, %d, %d);")
-             % ent->getId()
-             % ent->getRoom()->getId()
-             % ent->m_moveType
-             % ent->m_moveDir;
+            % ent->getId()
+            % ent->getRoom()->getId()
+            % ent->m_moveType
+            % ent->m_moveDir;
     }
     else
     {
         f << boost::format("\nsetEntityRoomMove(%d, nil, %d, %d);")
-             % ent->getId()
-             % ent->m_moveType
-             % ent->m_moveDir;
+            % ent->getId()
+            % ent->m_moveType
+            % ent->m_moveDir;
     }
 
     if(auto ch = std::dynamic_pointer_cast<world::Character>(ent))
     {
         f << boost::format("\nremoveAllItems(%d);")
-             % ent->getId();
+            % ent->getId();
         for(const InventoryNode& i : ch->m_inventory)
         {
             f << boost::format("\naddItem(%d, %d, %d);")
-                 % ent->getId()
-                 % i.id
-                 % i.count;
+                % ent->getId()
+                % i.id
+                % i.count;
         }
 
         for(int i = 0; i < world::PARAM_SENTINEL; i++)
         {
             f << boost::format("\nsetCharacterParam(%d, %d, %.2f, %.2f);")
-                 % ent->getId()
-                 % i
-                 % ch->m_parameters.param[i]
-                 % ch->m_parameters.maximum[i];
+                % ent->getId()
+                % i
+                % ch->m_parameters.param[i]
+                % ch->m_parameters.maximum[i];
         }
     }
 }
@@ -373,20 +360,20 @@ bool Game_Save(const std::string& name)
     }
 
     f << boost::format("loadMap(\"%s\", %d, %d);\n")
-         % Gameflow::instance.getLevelPath()
-         % Gameflow::instance.getGameID()
-         % Gameflow::instance.getLevelID();
+        % Gameflow::instance.getLevelPath()
+        % Gameflow::instance.getGameID()
+        % Gameflow::instance.getLevelID();
 
     // Save flipmap and flipped room states.
 
     for(size_t i = 0; i < Engine::instance.m_world.flip_data.size(); i++)
     {
         f << boost::format("setFlipMap(%d, 0x%02X, 0);\n")
-             % i
-             % Engine::instance.m_world.flip_data[i].map;
+            % i
+            % Engine::instance.m_world.flip_data[i].map;
         f << boost::format("setFlipState(%d, %s);\n")
-             % i
-             % (Engine::instance.m_world.flip_data[i].state ? "true" : "false");
+            % i
+            % (Engine::instance.m_world.flip_data[i].state ? "true" : "false");
     }
 
     Save_Entity(f, Engine::instance.m_world.character);    // Save Lara.
@@ -412,7 +399,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
     // APPLY CONTROLS
 
-    engine::Engine::instance.m_camera.rotate( lookLogic.getDistance(glm::radians(2.2f) * util::toSeconds(Engine::instance.m_frameTime)) );
+    engine::Engine::instance.m_camera.rotate(lookLogic.getDistance(glm::radians(2.2f) * util::toSeconds(Engine::instance.m_frameTime)));
 
     // FIXME: Duplicate code - do we need cam control with no world??
     if(!render::renderer.world())
@@ -421,11 +408,11 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         {
             if(ControlSettings::instance.joy_look_x != 0)
             {
-                engine::Engine::instance.m_camera.rotate( {-world::CameraRotationSpeed * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_look_x, 0, 0} );
+                engine::Engine::instance.m_camera.rotate({ -world::CameraRotationSpeed * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_look_x, 0, 0 });
             }
             if(ControlSettings::instance.joy_look_y != 0)
             {
-                engine::Engine::instance.m_camera.rotate( {0, -world::CameraRotationSpeed * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_look_y, 0} );
+                engine::Engine::instance.m_camera.rotate({ 0, -world::CameraRotationSpeed * util::toSeconds(Engine::instance.m_frameTime) * ControlSettings::instance.joy_look_y, 0 });
             }
         }
 
@@ -440,8 +427,8 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
 
         render::renderer.camera()->applyRotation();
         glm::float_t dist = Engine::instance.m_controlState.m_stateWalk
-                          ? Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime) * 0.3f
-                          : Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime);
+            ? Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime) * 0.3f
+            : Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime);
         render::renderer.camera()->move(moveLogic.getDistance(dist));
 
         return;
@@ -471,20 +458,20 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     if(Engine::instance.m_controlState.m_freeLook || !std::dynamic_pointer_cast<world::Character>(ent))
     {
         glm::float_t dist = Engine::instance.m_controlState.m_stateWalk
-                          ? Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime) * 0.3f
-                          : Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime);
+            ? Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime) * 0.3f
+            : Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime);
         render::renderer.camera()->applyRotation();
         render::renderer.camera()->move(moveLogic.getDistance(dist));
-        render::renderer.camera()->setCurrentRoom( Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()) );
+        render::renderer.camera()->setCurrentRoom(Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()));
     }
     else if(Engine::instance.m_controlState.m_noClip)
     {
         glm::float_t dist = Engine::instance.m_controlState.m_stateWalk
-                          ? Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime) * 0.3f
-                          : Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime);
+            ? Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime) * 0.3f
+            : Engine::instance.m_controlState.m_freeLookSpeed * util::toSeconds(Engine::instance.m_frameTime);
         render::renderer.camera()->applyRotation();
         render::renderer.camera()->move(moveLogic.getDistance(dist));
-        render::renderer.camera()->setCurrentRoom( Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()) );
+        render::renderer.camera()->setCurrentRoom(Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()));
 
         ent->m_angles[0] = glm::degrees(engine::Engine::instance.m_camera.getAngles()[0]);
         glm::vec3 position = render::renderer.camera()->getPosition() + render::renderer.camera()->getViewDir() * Engine::instance.m_controlState.m_camDistance;
@@ -538,7 +525,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         }
         else
         {
-            ch->m_command.rot[0] += moveLogic.getDistanceX( glm::degrees(-2.0f) * util::toSeconds(Engine::instance.m_frameTime) );
+            ch->m_command.rot[0] += moveLogic.getDistanceX(glm::degrees(-2.0f) * util::toSeconds(Engine::instance.m_frameTime));
         }
 
         if(ControlSettings::instance.use_joy && ControlSettings::instance.joy_move_y != 0)
@@ -547,7 +534,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         }
         else
         {
-            ch->m_command.rot[1] += moveLogic.getDistanceZ( glm::degrees(2.0f) * util::toSeconds(Engine::instance.m_frameTime) );
+            ch->m_command.rot[1] += moveLogic.getDistanceZ(glm::degrees(2.0f) * util::toSeconds(Engine::instance.m_frameTime));
         }
 
         ch->m_command.move = moveLogic;
@@ -602,23 +589,23 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
 
                     //If collided we want to go to back else right
                     if(Cam_HasHit(cb, cameraFrom, cameraTo))
-                        cam->setTargetDir( world::CameraTarget::Back );
+                        cam->setTargetDir(world::CameraTarget::Back);
                     else
-                        cam->setTargetDir( world::CameraTarget::Right );
+                        cam->setTargetDir(world::CameraTarget::Right);
                 }
                 else
                 {
-                    cam->setTargetDir( world::CameraTarget::Left );
+                    cam->setTargetDir(world::CameraTarget::Left);
                 }
             }
         }
         else if(ent->m_skeleton.getPreviousState() == world::LaraState::JumpBack)
         {
-            cam->setTargetDir( world::CameraTarget::Front );
+            cam->setTargetDir(world::CameraTarget::Front);
         }
         else if(cam->getTargetDir() != world::CameraTarget::Back)
         {
-            cam->setTargetDir( world::CameraTarget::Back );
+            cam->setTargetDir(world::CameraTarget::Back);
         }
 
         //If target mis-matches current we need to update the camera's angle to reach target!
@@ -650,10 +637,10 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
     cam_pos = ent->camPosForFollowing(dz);
 
     //Code to manage screen shaking effects
-    if(render::renderer.camera()->getShakeTime().count()>0 && render::renderer.camera()->getShakeValue() > 0.0)
+    if(render::renderer.camera()->getShakeTime().count() > 0 && render::renderer.camera()->getShakeValue() > 0.0)
     {
-        cam_pos += glm::ballRand(render::renderer.camera()->getShakeValue()/2.0f) * util::toSeconds(render::renderer.camera()->getShakeTime());
-        render::renderer.camera()->setShakeTime( std::max(util::Duration(0), render::renderer.camera()->getShakeTime() - Engine::instance.m_frameTime) );
+        cam_pos += glm::ballRand(render::renderer.camera()->getShakeValue() / 2.0f) * util::toSeconds(render::renderer.camera()->getShakeTime());
+        render::renderer.camera()->setShakeTime(std::max(util::Duration(0), render::renderer.camera()->getShakeTime() - Engine::instance.m_frameTime));
     }
 
     cameraFrom.setOrigin(util::convert(cam_pos));
@@ -679,8 +666,8 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
         cameraFrom.setOrigin(util::convert(cam_pos));
 
         {
-            glm::float_t cos_ay =  glm::cos(engine::Engine::instance.m_camera.getAngles()[1]);
-            glm::float_t cam_dx =  glm::sin(engine::Engine::instance.m_camera.getAngles()[0]) * cos_ay;
+            glm::float_t cos_ay = glm::cos(engine::Engine::instance.m_camera.getAngles()[1]);
+            glm::float_t cam_dx = glm::sin(engine::Engine::instance.m_camera.getAngles()[0]) * cos_ay;
             glm::float_t cam_dy = -glm::cos(engine::Engine::instance.m_camera.getAngles()[0]) * cos_ay;
             glm::float_t cam_dz = -glm::sin(engine::Engine::instance.m_camera.getAngles()[1]);
             cam_pos[0] += cam_dx * Engine::instance.m_controlState.m_camDistance;
@@ -697,10 +684,10 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
     }
 
     //Update cam pos
-    cam->setPosition( cam_pos );
+    cam->setPosition(cam_pos);
 
     //Modify cam pos for quicksand rooms
-    cam->setCurrentRoom( Room_FindPosCogerrence(cam->getPosition() - glm::vec3(0, 0, 128), cam->getCurrentRoom()) );
+    cam->setCurrentRoom(Room_FindPosCogerrence(cam->getPosition() - glm::vec3(0, 0, 128), cam->getCurrentRoom()));
     if(cam->getCurrentRoom() && (cam->getCurrentRoom()->m_flags & TR_ROOM_FLAG_QUICKSAND))
     {
         glm::vec3 position = cam->getPosition();
@@ -709,7 +696,7 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
     }
 
     cam->applyRotation();
-    cam->setCurrentRoom( Room_FindPosCogerrence(cam->getPosition(), cam->getCurrentRoom()) );
+    cam->setCurrentRoom(Room_FindPosCogerrence(cam->getPosition(), cam->getCurrentRoom()));
 }
 
 void Game_UpdateAI()
@@ -728,7 +715,6 @@ inline util::Duration Game_Tick(util::Duration *game_logic_time)
     return dt;
 }
 
-
 void Game_Frame(util::Duration time)
 {
     static util::Duration game_logic_time = util::Duration(0);
@@ -741,7 +727,6 @@ void Game_Frame(util::Duration time)
         Engine::instance.m_frameTime = time;   // FIXME
     }
     game_logic_time += time;
-
 
     // GUI and controls should be updated at all times!
     ControlSettings::instance.pollSDLInput();
@@ -763,7 +748,8 @@ void Game_Frame(util::Duration time)
 
     BulletEngine::instance->dynamicsWorld->stepSimulation(util::toSeconds(time), MAX_SIM_SUBSTEPS, util::toSeconds(world::animation::GameLogicFrameTime));
 
-    if(Engine::instance.m_world.character) {
+    if(Engine::instance.m_world.character)
+    {
         Engine::instance.m_world.character->updateInterpolation();
 
         if(!Engine::instance.m_controlState.m_noClip && !Engine::instance.m_controlState.m_freeLook)
@@ -827,5 +813,4 @@ void Game_LevelTransition(uint16_t level_index)
 
     engine::Engine::instance.m_world.audioEngine.endStreams();
 }
-
 } // namespace engine

@@ -10,7 +10,6 @@
 
 namespace world
 {
-
 #define HAIR_TR1       0
 #define HAIR_TR2       1
 #define HAIR_TR3       2
@@ -89,5 +88,4 @@ struct HairSetup
     // Gets scripted hair set-up to specified hair set-up structure.
     void getSetup(int hair_entry_index);
 };
-
 } // namespace world

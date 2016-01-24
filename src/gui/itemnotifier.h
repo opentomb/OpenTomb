@@ -7,7 +7,6 @@
 
 namespace gui
 {
-
 class ItemNotifier
 {
 public:
@@ -34,8 +33,8 @@ private:
     glm::float_t   m_endPosX;
     glm::float_t   m_currPosX;
 
-    glm::vec2 m_rotation{0,0};
-    glm::vec2 m_currentAngle{0,0};
+    glm::vec2 m_rotation{ 0,0 };
+    glm::vec2 m_currentAngle{ 0,0 };
     glm::float_t m_radPerSecond = 0;
 
     glm::float_t m_size;
@@ -43,5 +42,4 @@ private:
     util::Duration m_showTime;
     util::Duration m_currTime;
 };
-
 } // namespace gui

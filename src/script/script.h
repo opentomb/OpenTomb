@@ -15,9 +15,8 @@
 
 namespace gui
 {
-struct Console;
+class Console;
 } // namespace gui
-
 
 namespace world
 {
@@ -45,185 +44,185 @@ struct RenderSettings;
 
 namespace script
 {
-    class ScriptEngine
+class ScriptEngine
+{
+public:
+    ScriptEngine()
     {
-    public:
-        ScriptEngine()
-        {
-            exposeConstants();
-            registerFunction("print", &ScriptEngine::print);
-            lua_atpanic(m_state.getState(), &ScriptEngine::panic);
-        }
+        exposeConstants();
+        registerFunction("print", &ScriptEngine::print);
+        lua_atpanic(m_state.getState(), &ScriptEngine::panic);
+    }
 
-        virtual ~ScriptEngine() = default;
+    virtual ~ScriptEngine() = default;
 
-        void doFile(const std::string& filename)
-        {
-            m_state.doFile(filename);
-        }
-
-        void doString(const std::string& script)
-        {
-            m_state.doString(script);
-        }
-
-        lua::Value operator[](lua::String key) const
-        {
-            return get(key);
-        }
-
-        lua::Value get(lua::String key) const
-        {
-            return m_state[key];
-        }
-
-        template<typename K, typename V>
-        ScriptEngine& set(const K& key, V&& value)
-        {
-            m_state.set(key, std::forward<V>(value));
-            return *this;
-        }
-
-        template<typename... T>
-        lua::Value call(const std::string& funcName, T&&... args) const
-        {
-            return get(funcName.c_str()).call(std::forward<T>(args)...);
-        }
-
-        // Simple override to register both upper- and lowercase versions of function name.
-        template<typename Function>
-        inline void registerC(const std::string& func_name, std::function<Function> func)
-        {
-            std::string uc, lc;
-            for(char c : func_name)
-            {
-                lc += std::tolower(c);
-                uc += std::toupper(c);
-            }
-
-            std::function<Function> f{func};
-
-            m_state.set(func_name.c_str(), f);
-            m_state.set(lc.c_str(), f);
-            m_state.set(uc.c_str(), f);
-        }
-
-        template<typename Function>
-        inline void registerC(const std::string& func_name, Function* func)
-        {
-            registerC(func_name, std::function<Function>(func));
-        }
-
-        inline void registerC(const std::string& func_name, int(*func)(lua_State*))
-        {
-            std::string uc, lc;
-            for(char c : func_name)
-            {
-                lc += std::tolower(c);
-                uc += std::toupper(c);
-            }
-
-            lua_register(m_state.getState(), func_name.c_str(), func);
-            lua_register(m_state.getState(), lc.c_str(), func);
-            lua_register(m_state.getState(), uc.c_str(), func);
-        }
-
-        inline void registerFunction(const std::string& func_name, int(*func)(lua_State*))
-        {
-            lua_register(m_state.getState(), func_name.c_str(), func);
-        }
-
-        void exposeConstants();
-        std::vector<std::string> getGlobals();
-
-        void parseScreen(engine::ScreenInfo& sc) const;
-        void parseRender(render::RenderSettings& rs) const;
-        void parseAudio(audio::Settings& as) const;
-        void parseConsole(gui::Console& cn) const;
-        void parseControls(engine::ControlSettings& cs) const;
-        void parseSystem(engine::SystemSettings& ss) const;
-
-    protected:
-        void checkStack();
-
-    private:
-        lua::State m_state;
-
-        // Print function override. Puts printed string into console.
-        static int print(lua_State *state);
-        static int panic(lua_State *state);
-    };
-
-    class MainEngine : public ScriptEngine
+    void doFile(const std::string& filename)
     {
-    public:
-        MainEngine() : ScriptEngine()
+        m_state.doFile(filename);
+    }
+
+    void doString(const std::string& script)
+    {
+        m_state.doString(script);
+    }
+
+    lua::Value operator[](lua::String key) const
+    {
+        return get(key);
+    }
+
+    lua::Value get(lua::String key) const
+    {
+        return m_state[key];
+    }
+
+    template<typename K, typename V>
+    ScriptEngine& set(const K& key, V&& value)
+    {
+        m_state.set(key, std::forward<V>(value));
+        return *this;
+    }
+
+    template<typename... T>
+    lua::Value call(const std::string& funcName, T&&... args) const
+    {
+        return get(funcName.c_str()).call(std::forward<T>(args)...);
+    }
+
+    // Simple override to register both upper- and lowercase versions of function name.
+    template<typename Function>
+    inline void registerC(const std::string& func_name, std::function<Function> func)
+    {
+        std::string uc, lc;
+        for(char c : func_name)
         {
-            registerMainFunctions();
-            doFile("scripts/loadscript.lua");
+            lc += std::tolower(c);
+            uc += std::toupper(c);
         }
 
-        void clearTasks() const
+        std::function<Function> f{ func };
+
+        m_state.set(func_name.c_str(), f);
+        m_state.set(lc.c_str(), f);
+        m_state.set(uc.c_str(), f);
+    }
+
+    template<typename Function>
+    inline void registerC(const std::string& func_name, Function* func)
+    {
+        registerC(func_name, std::function<Function>(func));
+    }
+
+    inline void registerC(const std::string& func_name, int(*func)(lua_State*))
+    {
+        std::string uc, lc;
+        for(char c : func_name)
         {
-            call("clearTasks");
+            lc += std::tolower(c);
+            uc += std::toupper(c);
         }
 
-        void prepare()
-        {
-            call("fe_Prepare");
-        }
+        lua_register(m_state.getState(), func_name.c_str(), func);
+        lua_register(m_state.getState(), lc.c_str(), func);
+        lua_register(m_state.getState(), uc.c_str(), func);
+    }
 
-        void clean()
-        {
-            call("st_Clear");
-            call("tlist_Clear");
-            call("entfuncs_Clear");
-            call("fe_Clear");
+    inline void registerFunction(const std::string& func_name, int(*func)(lua_State*))
+    {
+        lua_register(m_state.getState(), func_name.c_str(), func);
+    }
 
-            call("clearAutoexec");
-        }
+    void exposeConstants();
+    std::vector<std::string> getGlobals();
 
-        void doTasks(util::Duration time)
-        {
-            set("FRAME_TIME", static_cast<lua::Number>(util::toSeconds(time)));
+    void parseScreen(engine::ScreenInfo& sc) const;
+    void parseRender(render::RenderSettings& rs) const;
+    void parseAudio(audio::Settings& as) const;
+    void parseConsole(gui::Console& cn) const;
+    void parseControls(engine::ControlSettings& cs) const;
+    void parseSystem(engine::SystemSettings& ss) const;
 
-            call("doTasks");
-            call("clearKeys");
-        }
+protected:
+    void checkStack();
 
-        // System Lua functions. Not directly called from scripts.
+private:
+    lua::State m_state;
 
-        void loopEntity(world::ObjectId object_id);
-        void execEntity(int id_callback, world::ObjectId id_object, const boost::optional<world::ObjectId>& id_activator = boost::none);
-        void execEffect(int id, const boost::optional<world::ObjectId>& caller = boost::none, const boost::optional<world::ObjectId>& operand = boost::none);
+    // Print function override. Puts printed string into console.
+    static int print(lua_State *state);
+    static int panic(lua_State *state);
+};
 
-        void addKey(int keycode, bool state);
+class MainEngine : public ScriptEngine
+{
+public:
+    MainEngine() : ScriptEngine()
+    {
+        registerMainFunctions();
+        doFile("scripts/loadscript.lua");
+    }
 
-        static void bindKey(int act, int primary, lua::Value secondary);
+    void clearTasks() const
+    {
+        call("clearTasks");
+    }
 
-        // Helper Lua functions. Not directly called from scripts.
+    void prepare()
+    {
+        call("fe_Prepare");
+    }
 
-        bool getOverridedSamplesInfo(int& num_samples, int& num_sounds, std::string& sample_name_mask);
-        bool getOverridedSample(int sound_id, int& first_sample_number, int& samples_count);
+    void clean()
+    {
+        call("st_Clear");
+        call("tlist_Clear");
+        call("entfuncs_Clear");
+        call("fe_Clear");
 
-        boost::optional<audio::SoundId> getGlobalSound(audio::GlobalSoundId global_sound_id);
-        int  getSecretTrackNumber();
-        int  getNumTracks();
-        bool getSoundtrack(int track_index, char *track_path, audio::StreamMethod *load_method, audio::StreamType *stream_type);
-        std::string getLoadingScreen(int level_index);
-        bool getString(int string_index, size_t string_size, char *buffer);
-        bool getSysNotify(int string_index, size_t string_size, char *buffer);
+        call("clearAutoexec");
+    }
 
-        // Parsing functions - both native and Lua. Not directly called from scripts.
+    void doTasks(util::Duration time)
+    {
+        set("FRAME_TIME", static_cast<lua::Number>(util::toSeconds(time)));
 
-        static const char *parse_token(const char *data, char *token);
+        call("doTasks");
+        call("clearKeys");
+    }
 
-        static float parseFloat(const char **ch);
-        static int   parseInt(char **ch);
+    // System Lua functions. Not directly called from scripts.
 
-    private:
-        void registerMainFunctions();
-    };
+    void loopEntity(world::ObjectId object_id);
+    void execEntity(int id_callback, world::ObjectId id_object, const boost::optional<world::ObjectId>& id_activator = boost::none);
+    void execEffect(int id, const boost::optional<world::ObjectId>& caller = boost::none, const boost::optional<world::ObjectId>& operand = boost::none);
+
+    void addKey(int keycode, bool state);
+
+    static void bindKey(int act, int primary, lua::Value secondary);
+
+    // Helper Lua functions. Not directly called from scripts.
+
+    bool getOverridedSamplesInfo(int& num_samples, int& num_sounds, std::string& sample_name_mask);
+    bool getOverridedSample(int sound_id, int& first_sample_number, int& samples_count);
+
+    boost::optional<audio::SoundId> getGlobalSound(audio::GlobalSoundId global_sound_id);
+    int  getSecretTrackNumber();
+    int  getNumTracks();
+    bool getSoundtrack(int track_index, char *track_path, audio::StreamMethod *load_method, audio::StreamType *stream_type);
+    std::string getLoadingScreen(int level_index);
+    bool getString(int string_index, size_t string_size, char *buffer);
+    bool getSysNotify(int string_index, size_t string_size, char *buffer);
+
+    // Parsing functions - both native and Lua. Not directly called from scripts.
+
+    static const char *parse_token(const char *data, char *token);
+
+    static float parseFloat(const char **ch);
+    static int   parseInt(char **ch);
+
+private:
+    void registerMainFunctions();
+};
 }
 
 extern script::MainEngine engine_lua;

@@ -7,7 +7,6 @@
 
 namespace audio
 {
-
 // Audio emitter (aka SoundSource) structure.
 struct Emitter
 {
@@ -16,5 +15,4 @@ struct Emitter
     glm::vec3   position;    // Vector coordinate.
     uint16_t    flags;          // Flags - MEANING UNKNOWN!!!
 };
-
 } // namespace audio

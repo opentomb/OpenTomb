@@ -13,7 +13,6 @@
 
 namespace render
 {
-
 ShaderStage::ShaderStage(GLenum type, const char *filename, const char *additionalDefines)
 {
     shader = glCreateShader(type);
@@ -137,5 +136,4 @@ UnlitTintedShaderDescription::UnlitTintedShaderDescription(const ShaderStage &ve
     current_tick = glGetUniformLocation(program, "fCurrentTick");
     tint_mult = glGetUniformLocation(program, "tintMult");
 }
-
 } // namespace render

@@ -34,18 +34,18 @@ static void memset_pattern4(void *b, const void *pattern, const size_t len)
 
 namespace
 {
-    inline uint32_t NextPowerOf2(uint32_t in)
-    {
-        in -= 1;
+inline uint32_t NextPowerOf2(uint32_t in)
+{
+    in -= 1;
 
-        in |= in >> 16;
-        in |= in >> 8;
-        in |= in >> 4;
-        in |= in >> 2;
-        in |= in >> 1;
+    in |= in >> 16;
+    in |= in >> 8;
+    in |= in >> 4;
+    in |= in >> 2;
+    in |= in >> 1;
 
-        return in + 1;
-    }
+    return in + 1;
+}
 }
 
 /*!
@@ -180,7 +180,7 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
         for(const loader::SpriteTexture& t : sprite_textures)
             areaSum += glm::abs((t.x1 - t.x0) * (t.y1 - t.y0));
 
-        m_resultPageWidth = std::min( max_texture_edge_length, static_cast<GLint>(NextPowerOf2(static_cast<GLuint>(std::sqrt(areaSum)*1.41))) );
+        m_resultPageWidth = std::min(max_texture_edge_length, static_cast<GLint>(NextPowerOf2(static_cast<GLuint>(std::sqrt(areaSum)*1.41))));
     }
     else
     {
@@ -337,7 +337,7 @@ void BorderedTextureAtlas::getCoordinates(size_t texture,
     const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[file_object_texture.canonical_texture_index];
 
     poly.textureIndex = canonical.new_page;
-    for (size_t i = 0; i < poly.vertices.size(); i++)
+    for(size_t i = 0; i < poly.vertices.size(); i++)
     {
         unsigned x_coord = 0;
         unsigned y_coord = 0;

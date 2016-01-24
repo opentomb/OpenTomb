@@ -26,7 +26,6 @@ class Level;
 
 namespace audio
 {
-
 // Possible types of errors returned by Audio_Send / Audio_Kill functions.
 enum class Error
 {
@@ -76,7 +75,7 @@ public:
 
     ALuint getBuffer(size_t index) const
     {
-        BOOST_ASSERT( index < m_buffers.size() );
+        BOOST_ASSERT(index < m_buffers.size());
         return m_buffers[index];
     }
 
@@ -87,7 +86,7 @@ public:
 
     const Emitter& getEmitter(size_t index) const
     {
-        BOOST_ASSERT( index < m_emitters.size() );
+        BOOST_ASSERT(index < m_emitters.size());
         return m_emitters[index];
     }
 
@@ -141,13 +140,13 @@ public:
 
     bool isBufferMapped(size_t index) const
     {
-        BOOST_ASSERT( index < m_soundIdMap.size() );
-        return m_soundIdMap[index]>=0 && static_cast<size_t>(m_soundIdMap[index])<m_effects.size();
+        BOOST_ASSERT(index < m_soundIdMap.size());
+        return m_soundIdMap[index] >= 0 && static_cast<size_t>(m_soundIdMap[index]) < m_effects.size();
     }
 
     size_t getMappedSampleCount(size_t index) const
     {
-        BOOST_ASSERT( isBufferMapped(index) );
+        BOOST_ASSERT(isBufferMapped(index));
         return m_effects[m_soundIdMap[index]].sample_count;
     }
 
@@ -173,7 +172,7 @@ public:
     FxManager& fxManager()
     {
         if(!m_fxManager)
-            BOOST_THROW_EXCEPTION( std::runtime_error("FX Manager not initialized") );
+            BOOST_THROW_EXCEPTION(std::runtime_error("FX Manager not initialized"));
         return *m_fxManager;
     }
 
@@ -214,7 +213,7 @@ private:
     std::vector<StreamTrack> m_tracks;      //!< Stream tracks.
     std::vector<uint8_t> m_trackMap;        //!< Stream track flag map.
 
-    glm::vec3 m_listenerPosition = {0,0,0};
+    glm::vec3 m_listenerPosition = { 0,0,0 };
 
     Settings m_settings;
 
@@ -223,5 +222,4 @@ private:
     ALCdevice* m_device = nullptr;
     ALCcontext* m_context = nullptr;
 };
-
 } // namespace audio

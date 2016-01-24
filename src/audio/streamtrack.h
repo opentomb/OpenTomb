@@ -102,5 +102,4 @@ private:
     boost::optional<size_t> m_currentTrack = boost::none;      //!< Needed to prevent same track sending.
     StreamMethod    m_method;            //!< TRACK (TR1-2/4-5) or WAD (TR3).
 };
-
 } // namespace audio

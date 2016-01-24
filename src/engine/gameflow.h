@@ -5,7 +5,6 @@
 
 namespace engine
 {
-
 enum class Opcode
 {
     Picture,         // Unknown possibly TR1?
@@ -42,7 +41,6 @@ struct GameflowAction
 
 class Gameflow
 {
-
 public:
     void init();
     void execute();
@@ -111,5 +109,4 @@ private:
     std::array<GameflowAction, 32> m_actions;
     std::array<bool, 256> m_secretsTriggerMap;                     //Info for what secrets have been triggered in a level
 };
-
 } // namespace engine

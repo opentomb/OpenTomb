@@ -6,7 +6,6 @@
 
 namespace audio
 {
-
 // Effect structure.
 // Contains all global effect parameters.
 struct Effect
@@ -35,5 +34,4 @@ struct Effect
     ALuint      sample_index = 0;       // First (or only) sample (buffer) index.
     ALuint      sample_count = 0;       // Sample amount to randomly select from.
 };
-
 } // namespace audio

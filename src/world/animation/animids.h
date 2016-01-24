@@ -6,7 +6,6 @@ namespace world
 {
 namespace animation
 {
-    
 //  ====== LARA'S ANIMATIONS ======
 //  NOTE: In case of conflicting animations, there will be tr* prefix inside name.
 
@@ -518,6 +517,5 @@ constexpr AnimationId TR_ANIMATION_LARA_VALVE_TURN = 470;
 constexpr AnimationId TR_ANIMATION_LARA_CROWBAR_USE_ON_WALL2 = 471;
 constexpr AnimationId TR_ANIMATION_LARA_LOOT_CHEST = 472;
 constexpr AnimationId TR_ANIMATION_LARA_LADDER_TO_CROUCH = 473;
-
 }
 }

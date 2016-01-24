@@ -30,14 +30,14 @@ void TR1Level::load()
     // Version
     uint32_t file_version = m_reader.readU32();
 
-    if (file_version != 0x00000020)
-        BOOST_THROW_EXCEPTION( std::runtime_error("TR1 Level: Wrong level version") );
+    if(file_version != 0x00000020)
+        BOOST_THROW_EXCEPTION(std::runtime_error("TR1 Level: Wrong level version"));
 
     std::vector<ByteTexture> texture8;
     m_reader.readVector(texture8, m_reader.readU32(), &ByteTexture::read);
 
     // Unused
-    if (m_reader.readU32() != 0)
+    if(m_reader.readU32() != 0)
         BOOST_LOG_TRIVIAL(warning) << "TR1 Level: Bad value for 'unused'";
 
     m_reader.readVector(m_rooms, m_reader.readU16(), &Room::readTr1);
@@ -59,7 +59,7 @@ void TR1Level::load()
     readFrameMoveableData(m_reader);
 
     // try to fix ugly stick
-    for (size_t i = 0; i < m_animations.size(); i++)
+    for(size_t i = 0; i < m_animations.size(); i++)
     {
         uint32_t frame_offset = m_animations[i].frame_offset / 2;
         m_animations[i].frame_size = m_frameData[frame_offset + 9] * 2 + 10;
@@ -93,7 +93,7 @@ void TR1Level::load()
 
     m_lightmap = LightMap::read(m_reader);
 
-    if (!m_demoOrUb)
+    if(!m_demoOrUb)
         m_palette = Palette::readTr1(m_reader);
 
     m_reader.readVector(m_cinematicFrames, m_reader.readU16(), &CinematicFrame::read);
@@ -112,18 +112,18 @@ void TR1Level::load()
 
 #if 0
     m_samplesCount = 0;
-    m_samplesData.resize( m_src.readU32() );
-    for(size_t i=0; i < m_samplesData.size(); i++)
+    m_samplesData.resize(m_src.readU32());
+    for(size_t i = 0; i < m_samplesData.size(); i++)
     {
         m_samplesData[i] = m_src.readU8();
-        if((i >= 4) && (*reinterpret_cast<uint32_t*>(m_samplesData.data()+i-4) == 0x46464952))   /// RIFF
+        if((i >= 4) && (*reinterpret_cast<uint32_t*>(m_samplesData.data() + i - 4) == 0x46464952))   /// RIFF
         {
             m_samplesCount++;
         }
     }
 
-    m_sampleIndices.resize( m_src.readU32() );
-    for(size_t i=0; i < m_sampleIndices.size(); i++)
+    m_sampleIndices.resize(m_src.readU32());
+    for(size_t i = 0; i < m_sampleIndices.size(); i++)
         m_sampleIndices[i] = m_src.readU32();
 #else
     m_reader.readVector(m_samplesData, m_reader.readU32());

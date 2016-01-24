@@ -20,13 +20,12 @@ namespace world
 {
 namespace animation
 {
-
 void Skeleton::fromModel(SkeletalModel* model)
 {
     m_hasSkin = false;
-    m_boundingBox.min = {0, 0, 0};
-    m_boundingBox.max = {0, 0, 0};
-    m_position = {0, 0, 0};
+    m_boundingBox.min = { 0, 0, 0 };
+    m_boundingBox.max = { 0, 0, 0 };
+    m_position = { 0, 0, 0 };
 
     m_model = model;
 
@@ -46,7 +45,7 @@ void Skeleton::fromModel(SkeletalModel* model)
         m_bones[i].body_part = model->meshes[i].body_part;
 
         m_bones[i].offset = model->meshes[i].offset;
-        m_bones[i].qrotate = {0, 0, 0, 0};
+        m_bones[i].qrotate = { 0, 0, 0, 0 };
         m_bones[i].transform = glm::mat4(1.0f);
         m_bones[i].full_transform = glm::mat4(1.0f);
 
@@ -80,8 +79,8 @@ void Skeleton::itemFrame(util::Duration time)
 
 void Skeleton::updatePose()
 {
-    BOOST_ASSERT( m_currentAnimation.animation < m_model->animations.size() );
-    BOOST_ASSERT( m_currentAnimation.frame < m_model->animations[m_currentAnimation.animation].getFrameDuration() );
+    BOOST_ASSERT(m_currentAnimation.animation < m_model->animations.size());
+    BOOST_ASSERT(m_currentAnimation.frame < m_model->animations[m_currentAnimation.animation].getFrameDuration());
     const animation::SkeletonKeyFrame keyFrame = m_model->animations[m_currentAnimation.animation].getInterpolatedFrame(m_currentAnimation.frame);
 
     m_boundingBox = keyFrame.boundingBox;
@@ -388,7 +387,7 @@ void Skeleton::updateCurrentCollisions(const Entity& entity, const glm::mat4& tr
 
         bone.ghostObject->getCollisionShape()->getAabb(bone.ghostObject->getWorldTransform(), aabb_min, aabb_max);
         engine::BulletEngine::instance->dynamicsWorld->getBroadphase()->setAabb(bone.ghostObject->getBroadphaseHandle(), aabb_min, aabb_max,
-                                                                  engine::BulletEngine::instance->dynamicsWorld->getDispatcher());
+                                                                                engine::BulletEngine::instance->dynamicsWorld->getDispatcher());
         engine::BulletEngine::instance->dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(
             bone.ghostObject->getOverlappingPairCache(), engine::BulletEngine::instance->dynamicsWorld->getDispatchInfo(), engine::BulletEngine::instance->dynamicsWorld->getDispatcher());
 
@@ -601,6 +600,5 @@ void Skeleton::disableCollision()
             engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(bone.bt_body.get());
     }
 }
-
 } // namespace animation
 } // namespace world

@@ -10,7 +10,6 @@
 
 namespace render
 {
-
 /*
  * Shaders generation section
  */
@@ -87,7 +86,7 @@ void printShaderInfoLog(GLuint object)
     if(logLength > 0)
     {
         std::vector<GLchar> infoLog(logLength);
-        
+
         GLint charsWritten = 0;
         if(isProgram)
             glGetProgramInfoLog(object, logLength, &charsWritten, infoLog.data());
@@ -175,5 +174,4 @@ bool loadShaderFromFile(GLuint ShaderObj, const char * fileName, const char *add
 
     return compileStatus == GL_TRUE;
 }
-
 } // namespace render

@@ -8,7 +8,6 @@
 
 namespace world
 {
-
 // Metering step and sector size are basic Tomb Raider world metrics.
 // Use these defines at all times, when you're referencing classic TR
 // dimensions and terrain manipulations.
@@ -49,10 +48,10 @@ constexpr ModelId TR_ITEM_SKYBOX_TR5 = 454;
 
 ///@FIXME: Move Lara skin item IDs to script!
 
-constexpr ModelId TR_ITEM_LARA_SKIN_ALTERNATE_TR1 =   5;
-constexpr ModelId TR_ITEM_LARA_SKIN_TR3           = 315;
-constexpr ModelId TR_ITEM_LARA_SKIN_TR45          =   8;
-constexpr ModelId TR_ITEM_LARA_SKIN_JOINTS_TR45   =   9;
+constexpr ModelId TR_ITEM_LARA_SKIN_ALTERNATE_TR1 = 5;
+constexpr ModelId TR_ITEM_LARA_SKIN_TR3 = 315;
+constexpr ModelId TR_ITEM_LARA_SKIN_TR45 = 8;
+constexpr ModelId TR_ITEM_LARA_SKIN_JOINTS_TR45 = 9;
 
 struct SectorTween;
 struct World;
@@ -146,5 +145,4 @@ void     TR_Sector_Calculate(World& world, const std::unique_ptr<loader::Level>&
 
 void tr_setupRoomVertices(World& world, const std::unique_ptr<loader::Level>& tr, loader::Room& tr_room, const std::shared_ptr<core::BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, core::Polygon& p);
 void tr_copyNormals(core::Polygon& polygon, const core::BaseMesh& mesh, const uint16_t *mesh_vertex_indices);
-
 } // namespace world

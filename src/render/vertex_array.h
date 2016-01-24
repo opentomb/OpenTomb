@@ -4,7 +4,6 @@
 
 namespace render
 {
-
 // This class encapsulates a set of vertex state. Depending on whether the
 // current OpenGL context supports it or not (at creation time), this is
 // stored in a VAO, or not.
@@ -37,7 +36,7 @@ struct VertexArrayAttribute
                          GLboolean normalized, GLuint vbo, GLsizei stride, size_t offset)
 
         : m_index(index), m_size(size), m_type(type),
-          m_normalized(normalized), m_vbo(vbo), m_stride(stride), m_offset(offset)
+        m_normalized(normalized), m_vbo(vbo), m_stride(stride), m_offset(offset)
     {
     }
 };
@@ -52,5 +51,4 @@ public:
 
     void bind();
 };
-
 } // namespace render

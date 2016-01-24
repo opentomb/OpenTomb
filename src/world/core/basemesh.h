@@ -10,14 +10,13 @@
 
 namespace render
 {
-    class VertexArray;
+class VertexArray;
 } // namespace render
 
 namespace world
 {
 namespace core
 {
-
 struct BaseMesh
 {
     ObjectId m_id;
@@ -87,6 +86,5 @@ struct BaseMesh
 };
 
 btCollisionShape* BT_CSfromMesh(const std::shared_ptr<BaseMesh> &mesh, bool useCompression, bool buildBvh, bool is_static = true);
-
 } // namespace core
-} // namespace world 
+} // namespace world

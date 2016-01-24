@@ -8,7 +8,6 @@ namespace world
 {
 namespace core
 {
-
 void OrientedBoundingBox::rebuild(const BoundingBox& boundingBox)
 {
     extent = boundingBox.getExtent() * 0.5f;
@@ -301,6 +300,5 @@ bool testOverlap(const Entity& e1, const Entity& e2, glm::float_t overlap)
     /*no separating axis found, the two boxes overlap */
     return true;
 }
-
 } // namespace core
 } // namespace world

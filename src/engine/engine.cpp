@@ -50,7 +50,6 @@ using gui::Console;
 
 namespace engine
 {
-
 namespace
 {
 std::vector<glm::float_t> frame_vertex_buffer;
@@ -388,18 +387,18 @@ void Engine::showDebugInfo()
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
         */
         gui::TextLineManager::instance->drawText(30.0, 30.0,
-                      boost::format("prevState = %03d, nextState = %03d, speed = %f")
-                      % static_cast<int>(ent->m_skeleton.getPreviousState())
-                      % static_cast<int>(ent->m_skeleton.getCurrentState())
-                      % ent->m_currentSpeed
-                      );
+                                                 boost::format("prevState = %03d, nextState = %03d, speed = %f")
+                                                 % static_cast<int>(ent->m_skeleton.getPreviousState())
+                                                 % static_cast<int>(ent->m_skeleton.getCurrentState())
+                                                 % ent->m_currentSpeed
+                                                 );
         gui::TextLineManager::instance->drawText(30.0, 50.0,
-                boost::format("prevAnim = %3d, prevFrame = %3d, currAnim = %3d, currFrame = %3d")
-                % ent->m_skeleton.getPreviousAnimation()
-                % ent->m_skeleton.getPreviousFrame()
-                % ent->m_skeleton.getCurrentAnimation()
-                % ent->m_skeleton.getCurrentFrame()
-                );
+                                                 boost::format("prevAnim = %3d, prevFrame = %3d, currAnim = %3d, currFrame = %3d")
+                                                 % ent->m_skeleton.getPreviousAnimation()
+                                                 % ent->m_skeleton.getPreviousFrame()
+                                                 % ent->m_skeleton.getCurrentAnimation()
+                                                 % ent->m_skeleton.getCurrentFrame()
+                                                 );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
         gui::TextLineManager::instance->drawText(20, 8,
                                                  boost::format("pos = %s, yaw = %f")
@@ -511,27 +510,27 @@ void Engine::dumpRoom(world::Room* r)
         return;
 
     BOOST_LOG_TRIVIAL(debug) << boost::format("ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)")
-                                % r->getId()
-                                % r->m_sectors.shape()[0]
-                                % r->m_sectors.shape()[1]
-                                % r->m_boundingBox.min[2]
-                                % r->m_boundingBox.max[2]
-                                % r->m_modelMatrix[3][0]
-                                % r->m_modelMatrix[3][1];
+        % r->getId()
+        % r->m_sectors.shape()[0]
+        % r->m_sectors.shape()[1]
+        % r->m_boundingBox.min[2]
+        % r->m_boundingBox.max[2]
+        % r->m_modelMatrix[3][0]
+        % r->m_modelMatrix[3][1];
     BOOST_LOG_TRIVIAL(debug) << boost::format("flag = 0x%X, alt_room = %d, base_room = %d")
-                                % r->m_flags
-                                % (r->m_alternateRoom != nullptr ? r->m_alternateRoom->getId() : -1)
-                                % (r->m_baseRoom != nullptr ? r->m_baseRoom->getId() : -1);
+        % r->m_flags
+        % (r->m_alternateRoom != nullptr ? r->m_alternateRoom->getId() : -1)
+        % (r->m_baseRoom != nullptr ? r->m_baseRoom->getId() : -1);
     for(const auto& column : r->m_sectors)
     {
         for(const world::RoomSector& rs : column)
         {
             BOOST_LOG_TRIVIAL(debug) << boost::format("(%d,%d) floor = %d, ceiling = %d, portal = %d")
-                                        % rs.index_x
-                                        % rs.index_y
-                                        % rs.floor
-                                        % rs.ceiling
-                                        % (rs.portal_to_room ? *rs.portal_to_room : -1);
+                % rs.index_x
+                % rs.index_y
+                % rs.floor
+                % rs.ceiling
+                % (rs.portal_to_room ? *rs.portal_to_room : -1);
         }
     }
 
@@ -609,7 +608,7 @@ std::string Engine::getLevelName(const std::string& path)
 {
     if(path.empty())
     {
-        return {};
+        return{};
     }
 
     size_t ext = path.find_last_of(".");
@@ -691,7 +690,7 @@ bool Engine::loadMap(const std::string& name)
 
     gui::Gui::instance->drawLoadScreen(0);
 
-    m_camera.setCurrentRoom( nullptr );
+    m_camera.setCurrentRoom(nullptr);
 
     render::renderer.hideSkyBox();
     render::renderer.resetWorld();
@@ -747,7 +746,7 @@ bool Engine::loadMap(const std::string& name)
 
 int Engine::execCmd(const char *ch)
 {
-    std::vector<char> token(Console::instance().lineSize());
+    std::vector<char> token(Console::instance().lineLength());
     world::RoomSector* sect;
     FILE *f;
 
@@ -808,7 +807,7 @@ int Engine::execCmd(const char *ch)
                 Console::instance().notify(SYSNOTE_CONSOLE_SPACING, Console::instance().spacing());
                 return 1;
             }
-            Console::instance().setLineInterval(std::stof(token.data()));
+            Console::instance().setSpacing(std::stof(token.data()));
             return 1;
         }
         else if(!strcmp(token.data(), "showing_lines"))
@@ -822,7 +821,7 @@ int Engine::execCmd(const char *ch)
             else
             {
                 const auto val = atoi(token.data());
-                if(val >=2 && val <= screen_info.h/Console::instance().lineHeight())
+                if(val >= 2 && val <= screen_info.h / Console::instance().lineHeight())
                 {
                     Console::instance().setVisibleLines(val);
                     Console::instance().setCursorY(screen_info.h - Console::instance().lineHeight() * Console::instance().visibleLines());
@@ -965,7 +964,7 @@ void Engine::sysInit()
 {
     system_fps.text.clear();
 
-    system_fps.position = {10.0, 10.0};
+    system_fps.position = { 10.0, 10.0 };
     system_fps.Xanchor = gui::HorizontalAnchor::Right;
     system_fps.Yanchor = gui::VerticalAnchor::Bottom;
 
@@ -1036,5 +1035,4 @@ void Engine::initConfig(const std::string& filename)
         BOOST_LOG_TRIVIAL(error) << "Could not find " << filename;
     }
 }
-
 } // namespace engine

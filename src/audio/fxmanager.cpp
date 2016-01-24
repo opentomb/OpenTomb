@@ -11,7 +11,6 @@
 
 namespace audio
 {
-
 FxManager::~FxManager() noexcept
 {
     for(auto slot : m_slots)
@@ -29,7 +28,7 @@ FxManager::~FxManager() noexcept
 
 bool FxManager::loadReverb(loader::ReverbType effect_index, const EFXEAXREVERBPROPERTIES *reverb)
 {
-    BOOST_ASSERT(effect_index>=loader::ReverbType::Outside && effect_index < loader::ReverbType::Sentinel);
+    BOOST_ASSERT(effect_index >= loader::ReverbType::Outside && effect_index < loader::ReverbType::Sentinel);
     ALuint effect = m_effects[static_cast<int>(effect_index)];
 
     if(alIsEffect(effect))
@@ -167,5 +166,4 @@ ALuint FxManager::allocateSlot()
         return m_slots[m_currentSlot];
     }
 }
-
 }

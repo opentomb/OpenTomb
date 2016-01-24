@@ -13,13 +13,13 @@ struct Room;
 struct Portal
 {
     Portal(const loader::Portal& portal, Room* src, Room* dest, const glm::mat4& transform)
-        : vertices{{}}
-        , normal{util::convert(portal.normal)}
+        : vertices{ {} }
+        , normal{ util::convert(portal.normal) }
         , center{}
-        , source{src}
-        , destination{dest}
+        , source{ src }
+        , destination{ dest }
     {
-        for(int j=0; j<4; ++j)
+        for(int j = 0; j < 4; ++j)
         {
             vertices[j] = util::convert(portal.vertices[j]) + glm::vec3(transform[3]);
         }
@@ -32,5 +32,4 @@ struct Portal
     Room* source = nullptr;
     Room* destination = nullptr;
 };
-
 } // namespace world

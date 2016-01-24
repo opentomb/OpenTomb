@@ -7,7 +7,6 @@
 
 namespace engine
 {
-
 Gameflow Gameflow::instance{};
 
 void Gameflow::init()
@@ -80,6 +79,4 @@ bool Gameflow::send(Opcode opcode, int operand)
     }
     return false;
 }
-
 } // namespace engine
-

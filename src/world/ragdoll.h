@@ -8,7 +8,6 @@
 
 namespace world
 {
-
 constexpr const btScalar RagdollDefaultSleepingThreshold = 10;
 
 // Joint setup struct is used to parse joint script entry to
@@ -62,5 +61,4 @@ struct RagdollSetup
     bool getSetup(int ragdoll_index);
     void clearSetup();
 };
-
 } // namespace world

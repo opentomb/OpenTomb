@@ -14,11 +14,10 @@
 
 namespace util
 {
-
 inline glm::float_t wrapAngle(const glm::float_t value)
 {
     int i = static_cast<int>(value / 360.0);
-    i = value < 0.0 ? i-1 : i;
+    i = value < 0.0 ? i - 1 : i;
     return value - 360.0f * i;
 }
 
@@ -31,7 +30,7 @@ inline bool fuzzyZero(T value) noexcept
 template<typename T>
 inline bool fuzzyEqual(T a, T b) noexcept
 {
-    return fuzzyZero(a-b);
+    return fuzzyZero(a - b);
 }
 
 template<typename T>
@@ -58,12 +57,11 @@ constexpr inline FloatDuration toSeconds(Duration d) noexcept
 
 constexpr inline util::Duration fromSeconds(FloatDuration d) noexcept
 {
-    return std::chrono::duration_cast<util::Duration>( Duration(static_cast<Duration::rep>(d * static_cast<FloatDuration>(Duration::period::den) / static_cast<FloatDuration>(Duration::period::num))) );
+    return std::chrono::duration_cast<util::Duration>(Duration(static_cast<Duration::rep>(d * static_cast<FloatDuration>(Duration::period::den) / static_cast<FloatDuration>(Duration::period::num))));
 }
 
 inline TimePoint now() noexcept
 {
     return ClockType::now();
 }
-
 } // namespace util

@@ -2,7 +2,6 @@
 
 namespace engine
 {
-
 ScreenInfo     screen_info;
 SystemSettings system_settings;
 
@@ -22,5 +21,4 @@ void Sys_InitGlobals()
 
     system_settings.logging = false;
 }
-
 } // namespace engine

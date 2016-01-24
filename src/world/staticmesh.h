@@ -6,7 +6,6 @@
 
 namespace world
 {
-
 struct StaticMesh : public Object
 {
     explicit StaticMesh(ObjectId id, Room* room = nullptr)
@@ -30,5 +29,4 @@ struct StaticMesh : public Object
     std::shared_ptr<core::BaseMesh> mesh = nullptr;
     btRigidBody* bt_body = nullptr;
 };
-
 } // namespace world

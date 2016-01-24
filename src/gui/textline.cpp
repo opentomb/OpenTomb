@@ -8,7 +8,7 @@
 
 namespace gui
 {
-std::unique_ptr<TextLineManager> TextLineManager::instance = std::unique_ptr<TextLineManager>( new TextLineManager() );
+std::unique_ptr<TextLineManager> TextLineManager::instance = std::unique_ptr<TextLineManager>(new TextLineManager());
 
 void TextLine::move()
 {
@@ -92,7 +92,7 @@ TextLine* TextLineManager::drawText(glm::float_t x, glm::float_t y, const std::s
     line->fontType = FontType::Secondary;
     line->fontStyle = FontStyle::Generic;
 
-    line->position = {x, y};
+    line->position = { x, y };
     line->Xanchor = HorizontalAnchor::Left;
     line->Yanchor = VerticalAnchor::Bottom;
 
@@ -146,5 +146,4 @@ void TextLineManager::renderStrings()
 
     m_tempLines.clear();
 }
-
 } // namespace gui

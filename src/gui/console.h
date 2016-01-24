@@ -7,24 +7,23 @@
 
 #include <boost/optional.hpp>
 
-#define CON_MIN_LOG 16
-#define CON_MAX_LOG 128
-
-#define CON_MIN_LINES 64
-#define CON_MAX_LINES 256
-
-#define CON_MIN_LINE_SIZE 80
-#define CON_MAX_LINE_SIZE 256
-
-#define CON_MIN_LINE_INTERVAL 0.5
-#define CON_MAX_LINE_INTERVAL 4.0
-
 namespace gui
 {
-
 class Console
 {
 private:
+    static constexpr size_t HistorySizeMin = 16;
+    static constexpr size_t HistorySizeMax = 128;
+
+    static constexpr size_t VisibleLinesMin = 64;
+    static constexpr size_t VisibleLinesMax = 256;
+
+    static constexpr size_t LineLengthMin = 80;
+    static constexpr size_t LineLengthMax = 256;
+
+    static constexpr float SpacingMin = 0.5f;
+    static constexpr float SpacingMax = 4.0f;
+
     struct Line
     {
         std::string text{};
@@ -50,13 +49,13 @@ private:
     std::vector<std::string> m_historyLines;
 
     std::list<Line> m_lines;
-    size_t m_visibleLines = 40;
+    size_t m_visibleLines = VisibleLinesMin;
     size_t m_bufferSize = 0;
 
-    uint16_t m_lineSize = CON_MAX_LINE_SIZE;                  // Console line size
+    size_t m_lineLength = LineLengthMax;                  // Console line size
     int16_t m_lineHeight;                // Height, including spacing
 
-    float m_spacing = CON_MIN_LINE_INTERVAL;                    // Line spacing
+    float m_spacing = SpacingMin;                    // Line spacing
 
     int16_t m_cursorPos;                 // Current cursor position, in symbols
     int16_t m_cursorX;                   // Cursor position in pixels
@@ -88,8 +87,6 @@ public:
     void initFonts();
 
     void initGlobals();
-
-    void setLineInterval(float interval);
 
     void draw();
 
@@ -132,12 +129,7 @@ public:
         return m_spacing;
     }
 
-    void setSpacing(float val)
-    {
-        if(val < CON_MIN_LINE_INTERVAL || val > CON_MAX_LINE_INTERVAL)
-            return;
-        m_spacing = val;
-    }
+    void setSpacing(float val);
 
     void setVisible(bool val)
     {
@@ -149,13 +141,19 @@ public:
         m_blinkPeriod = val;
     }
 
-    void setLineSize(uint16_t val)
+    void setLineLength(size_t val)
     {
-        m_lineSize = val;
+        if(val < LineLengthMin || val > LineLengthMax)
+            return;
+
+        m_lineLength = val;
     }
 
     void setVisibleLines(size_t val)
     {
+        if(val < VisibleLinesMin || val > VisibleLinesMax)
+            return;
+
         m_visibleLines = val;
         setCursorY(static_cast<int16_t>(m_visibleLines * m_lineHeight));
     }
@@ -167,17 +165,23 @@ public:
 
     void setBufferSize(size_t val)
     {
+        if(val < HistorySizeMin || val > HistorySizeMax)
+            return;
+
         m_bufferSize = val;
     }
 
     void setHistorySize(size_t val)
     {
+        if(val < HistorySizeMin || val > HistorySizeMax)
+            return;
+
         m_historySize = val;
     }
 
-    uint16_t lineSize() const
+    size_t lineLength() const
     {
-        return m_lineSize;
+        return m_lineLength;
     }
 
     int16_t lineHeight() const
@@ -203,5 +207,4 @@ public:
         m_completionItems = items;
     }
 };
-
 } // namespace gui

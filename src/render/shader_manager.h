@@ -6,13 +6,11 @@
 
 namespace render
 {
-
 namespace
 {
 // Highest number of lights that will show up in the entity shader.
 constexpr int EntityShaderLightsLimit = 8;
 } // anonymous namespace
-
 
 // Class containing all shaders used by OpenTomb. The shader objects
 // are owned by this manager and must not be deleted by anyone.
@@ -85,5 +83,4 @@ public:
         return m_sprites;
     }
 };
-
 } // namespace render

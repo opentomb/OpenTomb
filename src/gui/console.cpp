@@ -20,20 +20,20 @@ Console::Console() = default;
 void Console::init()
 {
     // log size check
-    if(m_historyLines.size() > CON_MAX_LOG)
-        m_historyLines.resize(CON_MAX_LOG);
+    if(m_historyLines.size() > HistorySizeMax)
+        m_historyLines.resize(HistorySizeMax);
 
     // spacing check
-    if(m_spacing < CON_MIN_LINE_INTERVAL)
-        m_spacing = CON_MIN_LINE_INTERVAL;
-    else if(m_spacing > CON_MAX_LINE_INTERVAL)
-        m_spacing = CON_MAX_LINE_INTERVAL;
+    if(m_spacing < SpacingMin)
+        m_spacing = SpacingMin;
+    else if(m_spacing > SpacingMax)
+        m_spacing = SpacingMax;
 
     // linesize check
-    if(m_lineSize < CON_MIN_LINE_SIZE)
-        m_lineSize = CON_MIN_LINE_SIZE;
-    else if(m_lineSize > CON_MAX_LINE_SIZE)
-        m_lineSize = CON_MAX_LINE_SIZE;
+    if(m_lineLength < LineLengthMin)
+        m_lineLength = LineLengthMin;
+    else if(m_lineLength > LineLengthMax)
+        m_lineLength = LineLengthMax;
 
     inited = true;
 }
@@ -41,39 +41,20 @@ void Console::init()
 void Console::initFonts()
 {
     m_font = FontManager::instance->getFont(FontType::Console);
-    setLineInterval(m_spacing);
+    setSpacing(m_spacing);
 }
 
-void Console::initGlobals() {
+void Console::initGlobals()
+{
     m_backgroundColor[0] = 1.0f;
     m_backgroundColor[1] = 0.9f;
     m_backgroundColor[2] = 0.7f;
     m_backgroundColor[3] = 0.4f;
 
-    m_spacing = CON_MIN_LINE_INTERVAL;
-    m_lineSize = CON_MIN_LINE_SIZE;
+    m_spacing = SpacingMin;
+    m_lineLength = LineLengthMin;
 
     m_blinkPeriod = util::MilliSeconds(500);
-}
-
-void Console::setLineInterval(float interval)
-{
-    if(!inited || !FontManager::instance || interval < CON_MIN_LINE_INTERVAL || interval > CON_MAX_LINE_INTERVAL)
-    {
-        return; // nothing to do
-    }
-
-    inited = false;
-    m_spacing = interval;
-    // font->font_size has absolute size (after scaling)
-    m_lineHeight = static_cast<int16_t>( (1 + m_spacing) * m_font->font_size );
-    m_cursorX = 8 + 1;
-    m_cursorY = static_cast<int16_t>( engine::screen_info.h - m_lineHeight * m_visibleLines );
-    if(m_cursorY < 8)
-    {
-        m_cursorY = 8;
-    }
-    inited = true;
 }
 
 void Console::draw()
@@ -86,7 +67,7 @@ void Console::draw()
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    render::TextShaderDescription *shader = render::renderer.shaderManager()->getTextShader();
+    render::TextShaderDescription* shader = render::renderer.shaderManager()->getTextShader();
     glUseProgram(shader->program);
     glUniform1i(shader->sampler, 0);
     GLfloat screenSize[2] = {
@@ -145,15 +126,15 @@ void Console::drawCursor()
     {
         glm::vec4 white{ 1, 1, 1, 0.7f };
         Gui::instance->drawRect(m_cursorX,
-                     y + m_lineHeight * 0.9f,
-                     1,
-                     m_lineHeight * 0.8f,
-                     white, white, white, white,
-                     loader::BlendingMode::Screen);
+                                y + m_lineHeight * 0.9f,
+                                1,
+                                m_lineHeight * 0.8f,
+                                white, white, white, white,
+                                loader::BlendingMode::Screen);
     }
 }
 
-void Console::filter(const std::string &text)
+void Console::filter(const std::string& text)
 {
     for(char c : text)
     {
@@ -197,7 +178,7 @@ void Console::edit(int key, const boost::optional<Uint16>& mod)
     m_blinkTime = util::Duration(0);
     m_showCursor = true;
 
-    int16_t oldLength = utf8_strlen(m_editingLine.c_str());    // int16_t is absolutly enough
+    int16_t oldLength = utf8_strlen(m_editingLine.c_str()); // int16_t is absolutly enough
 
     switch(key)
     {
@@ -255,68 +236,71 @@ void Console::edit(int key, const boost::optional<Uint16>& mod)
             break;
 
         case SDLK_TAB:
+        {
+            std::string needle = m_editingLine.substr(0, m_cursorPos);
+            // find auto-completion terms, case-insensitive
+            std::vector<std::string> found;
+            std::copy_if(m_completionItems.begin(), m_completionItems.end(), std::back_inserter(found),
+                         [needle](const std::string& completion)
             {
-                std::string needle = m_editingLine.substr(0, m_cursorPos);
-                // find auto-completion terms, case-insensitive
-                std::vector<std::string> found;
-                std::copy_if(m_completionItems.begin(), m_completionItems.end(), std::back_inserter(found),
-                             [needle](const std::string& completion){ return startsWithLowercase(completion, needle); });
-                if(found.empty())
+                return startsWithLowercase(completion, needle);
+            });
+            if(found.empty())
+            {
+                // no completion, do nothing
+            }
+            else if(found.size() == 1)
+            {
+                // if we have only one term found, use it!
+                m_editingLine.erase(0, found[0].length());
+                m_editingLine.insert(0, found[0]);
+                m_cursorPos = static_cast<int16_t>(found[0].length());
+            }
+            else
+            {
+                // else we must find the common completion string
+                for(std::string& term : found)
                 {
-                    // no completion, do nothing
+                    // cut off the needle part
+                    term.erase(0, needle.length());
                 }
-                else if(found.size() == 1)
+                // now find a common start
+                std::string common = found[0];
+                for(size_t i = 1; !common.empty() && i < found.size(); ++i)
                 {
-                    // if we have only one term found, use it!
-                    m_editingLine.erase(0, found[0].length());
-                    m_editingLine.insert(0, found[0]);
-                    m_cursorPos = static_cast<int16_t>( found[0].length() );
+                    // cut off from the end that's not common with current
+                    for(size_t j = 0; j < std::min(common.length(), found[i].length()); ++j)
+                    {
+                        if(std::tolower(common[j]) != std::tolower(found[i][j]))
+                        {
+                            common.erase(j);
+                            break;
+                        }
+                    }
+                }
+                if(common.empty())
+                {
+                    // nothing common, print possible completions
+                    addLine("Possible completions:", FontStyle::ConsoleInfo);
+                    for(const std::string& term : found)
+                        addLine(std::string("* ") + needle + term, FontStyle::ConsoleInfo);
                 }
                 else
                 {
-                    // else we must find the common completion string
-                    for(std::string& term : found)
-                    {
-                        // cut off the needle part
-                        term.erase(0, needle.length());
-                    }
-                    // now find a common start
-                    std::string common = found[0];
-                    for(size_t i=1; !common.empty() && i<found.size(); ++i)
-                    {
-                        // cut off from the end that's not common with current
-                        for(size_t j=0; j<std::min(common.length(), found[i].length()); ++j)
-                        {
-                            if(std::tolower(common[j]) != std::tolower(found[i][j]))
-                            {
-                                common.erase(j);
-                                break;
-                            }
-                        }
-                    }
-                    if(common.empty())
-                    {
-                        // nothing common, print possible completions
-                        addLine("Possible completions:", FontStyle::ConsoleInfo);
-                        for(const std::string& term : found)
-                            addLine(std::string("* ") + needle + term, FontStyle::ConsoleInfo);
-                    }
-                    else
-                    {
-                        m_editingLine.insert(m_cursorPos, common);
-                        m_cursorPos += static_cast<int16_t>(common.length());
-                    }
+                    m_editingLine.insert(m_cursorPos, common);
+                    m_cursorPos += static_cast<int16_t>(common.length());
                 }
             }
-            break;
+        }
+        break;
 
         default:
-            if( key == SDLK_v && mod && (*mod & KMOD_CTRL) )
+            if(key == SDLK_v && mod && (*mod & KMOD_CTRL))
             {
                 if(char* clipboard = SDL_GetClipboardText())
                 {
                     const int16_t textLength = utf8_strlen(clipboard);
-                    if(oldLength < m_lineSize - textLength)
+                    if(oldLength < m_lineLength - textLength)
                     {
                         m_editingLine.insert(m_cursorPos, clipboard);
                         m_cursorPos += textLength;
@@ -324,7 +308,7 @@ void Console::edit(int key, const boost::optional<Uint16>& mod)
                     SDL_free(clipboard);
                 }
             }
-            else if(!mod && oldLength < m_lineSize - 1 && key >= SDLK_SPACE)
+            else if(!mod && oldLength < m_lineLength - 1 && key >= SDLK_SPACE)
             {
                 m_editingLine.insert(m_editingLine.begin() + m_cursorPos, char(key));
                 m_cursorPos++;
@@ -339,11 +323,11 @@ void Console::calcCursorPosition()
 {
     if(m_font)
     {
-        m_cursorX = static_cast<int16_t>( 8 + 1 + glf_get_string_len(m_font, m_editingLine.c_str(), m_cursorPos) );
+        m_cursorX = static_cast<int16_t>(8 + 1 + glf_get_string_len(m_font, m_editingLine.c_str(), m_cursorPos));
     }
 }
 
-void Console::addLog(const std::string &text)
+void Console::addLog(const std::string& text)
 {
     if(inited && !text.empty())
     {
@@ -354,7 +338,7 @@ void Console::addLog(const std::string &text)
     }
 }
 
-void Console::addLine(const std::string &text, FontStyle style)
+void Console::addLine(const std::string& text, FontStyle style)
 {
     if(inited && !text.empty())
     {
@@ -364,7 +348,7 @@ void Console::addLine(const std::string &text, FontStyle style)
     }
 }
 
-void Console::addText(const std::string &text, FontStyle style)
+void Console::addText(const std::string& text, FontStyle style)
 {
     size_t position = 0;
     while(position != std::string::npos)
@@ -378,7 +362,7 @@ void Console::addText(const std::string &text, FontStyle style)
     }
 }
 
-void Console::printf(const char *fmt, ...)
+void Console::printf(const char* fmt, ...)
 {
     va_list argptr;
     char buf[4096];
@@ -423,4 +407,28 @@ void Console::notify(int notify_string_index, ...)
 void Console::clean()
 {
     m_lines.clear();
+}
+
+void Console::setSpacing(float val)
+{
+    if(val < SpacingMin || val > SpacingMax)
+        return;
+
+    m_spacing = val;
+
+    if(!inited || !FontManager::instance)
+    {
+        return; // nothing to do
+    }
+
+    inited = false;
+    // font->font_size has absolute size (after scaling)
+    m_lineHeight = static_cast<int16_t>((1 + m_spacing) * m_font->font_size);
+    m_cursorX = 8 + 1;
+    m_cursorY = static_cast<int16_t>(engine::screen_info.h - m_lineHeight * m_visibleLines);
+    if(m_cursorY < 8)
+    {
+        m_cursorY = 8;
+    }
+    inited = true;
 }

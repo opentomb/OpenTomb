@@ -16,7 +16,6 @@ struct InventoryNode;
 
 namespace world
 {
-
 // Lara's character behavior constants
 constexpr int DEFAULT_MAX_MOVE_ITERATIONS = 3;               //!< @fixme magic
 constexpr float DEFAULT_MIN_STEP_UP_HEIGHT = 128.0f;         //!< @fixme check original
@@ -155,7 +154,7 @@ struct Movement final
 
     glm::vec3 getDistance(glm::float_t dist) const noexcept
     {
-        return {
+        return{
             getDistanceX(dist),
             getDistanceY(dist),
             getDistanceZ(dist)
@@ -165,7 +164,7 @@ struct Movement final
 
 struct CharacterCommand
 {
-    glm::vec3 rot = {0, 0, 0};
+    glm::vec3 rot = { 0, 0, 0 };
     Movement move;
 
     bool roll = false;
@@ -209,11 +208,11 @@ struct HeightInfo
     {
         bool hasHit = false;
         glm::vec3 hitNormal;
-        glm::vec3 hitPoint = {0, 0, 0};
+        glm::vec3 hitPoint = { 0, 0, 0 };
         const btCollisionObject* collisionObject = nullptr;
 
         explicit HitObject(glm::float_t normalZComponent) noexcept
-            : hitNormal{0,0,normalZComponent}
+            : hitNormal{ 0,0,normalZComponent }
         {
         }
 
@@ -229,8 +228,8 @@ struct HeightInfo
         }
     };
 
-    HitObject floor{1};
-    HitObject ceiling{-1};
+    HitObject floor{ 1 };
+    HitObject ceiling{ -1 };
 
     glm::float_t transition_level = 0;
     bool water = false;
@@ -253,8 +252,8 @@ enum CharParameters
 
 struct CharacterParam
 {
-    std::array<float, PARAM_SENTINEL> param{{}};
-    std::array<float, PARAM_SENTINEL> maximum{{}};
+    std::array<float, PARAM_SENTINEL> param{ {} };
+    std::array<float, PARAM_SENTINEL> maximum{ {} };
 
     CharacterParam()
     {
@@ -370,7 +369,7 @@ struct Character : public Entity
     glm::float_t m_wadeDepth = DEFAULT_CHARACTER_WADE_DEPTH; // water depth that enable wade walk
     glm::float_t m_swimDepth = DEFAULT_CHARACTER_SWIM_DEPTH; // depth offset for starting to swim
 
-    std::unique_ptr<btSphereShape> m_sphere{new btSphereShape(CHARACTER_BASE_RADIUS)}; // needs to height calculation
+    std::unique_ptr<btSphereShape> m_sphere{ new btSphereShape(CHARACTER_BASE_RADIUS) }; // needs to height calculation
     std::unique_ptr<btSphereShape> m_climbSensor;
 
     HeightInfo m_heightInfo{};
@@ -466,8 +465,7 @@ struct Character : public Entity
 
     bool setWeaponModel(ModelId weapon_model, bool armed);
 
-  private:
+private:
     StateController m_stateController;
 };
-
 } // namespace world

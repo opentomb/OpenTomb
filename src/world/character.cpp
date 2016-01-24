@@ -16,7 +16,6 @@ constexpr float CollisionTraverseTestRadius = 0.48f;
 
 namespace world
 {
-
 namespace
 {
 /**
@@ -39,8 +38,8 @@ bool allowTraverse(const RoomSector& rs, glm::float_t floor, const Object& objec
     }
 
     engine::BtEngineClosestRayResultCallback cb(&object);
-    glm::vec3 from{rs.position[0], rs.position[1], floor + MeteringSectorSize * 0.5f};
-    glm::vec3 to = from - glm::vec3{0, 0, MeteringSectorSize};
+    glm::vec3 from{ rs.position[0], rs.position[1], floor + MeteringSectorSize * 0.5f };
+    glm::vec3 to = from - glm::vec3{ 0, 0, MeteringSectorSize };
     engine::BulletEngine::instance->dynamicsWorld->rayTest(util::convert(from), util::convert(to), cb);
     if(cb.hasHit())
     {
@@ -176,7 +175,7 @@ int32_t Character::getItemsCount(uint32_t item_id) // returns items count
  */
 void Character::updateCurrentHeight()
 {
-    glm::vec4 t{0, 0, m_skeleton.getRootTransform()[3][2], 1};
+    glm::vec4 t{ 0, 0, m_skeleton.getRootTransform()[3][2], 1 };
     auto pos = glm::vec3(m_transform * t);
     Character::getHeightInfo(pos, &m_heightInfo, m_height);
 }
@@ -487,7 +486,7 @@ ClimbInfo Character::checkClimbability(const glm::vec3& offset, struct HeightInf
     auto tmp = glm::vec3(pos) + offset; // tmp = native offset point
 
     ClimbInfo ret;
-    ret.height_info = checkNextStep(offset + glm::vec3{0, 0, 128}, nfc); ///@FIXME: stick for big slant
+    ret.height_info = checkNextStep(offset + glm::vec3{ 0, 0, 128 }, nfc); ///@FIXME: stick for big slant
     ret.can_hang = false;
     ret.edge_hit = false;
     ret.edge_obj = nullptr;
@@ -524,9 +523,9 @@ ClimbInfo Character::checkClimbability(const glm::vec3& offset, struct HeightInf
     test_height = test_height >= m_maxStepUpHeight ? test_height : m_maxStepUpHeight;
     glm::float_t d = pos[2] + m_skeleton.getBoundingBox().max[2] - test_height;
     engine::Engine::instance.m_castRay[0] = to;
-    engine::Engine::instance.m_castRay[1] = from - glm::vec3(0,0,d);
-    glm::vec3 n0{0, 0, 0}, n1{0, 0, 0};
-    glm::float_t n0d{0}, n1d{0};
+    engine::Engine::instance.m_castRay[1] = from - glm::vec3(0, 0, d);
+    glm::vec3 n0{ 0, 0, 0 }, n1{ 0, 0, 0 };
+    glm::float_t n0d{ 0 }, n1d{ 0 };
     do
     {
         t1.setOrigin(util::convert(from));
@@ -681,7 +680,7 @@ ClimbInfo Character::checkWallsClimbability()
         return ret;
     }
 
-    ret.up = {0, 0, 1};
+    ret.up = { 0, 0, 1 };
 
     const glm::vec4& pos = m_transform[3];
     glm::vec3 from = glm::vec3(pos + m_transform[2] * m_skeleton.getBoundingBox().max[2] - m_transform[1] * m_climbR);
@@ -707,7 +706,7 @@ ClimbInfo Character::checkWallsClimbability()
 
     ret.point = util::convert(ccb->m_hitPointWorld);
     ret.n = util::convert(ccb->m_hitNormalWorld);
-    glm::float_t wn2[2] = {ret.n[0], ret.n[1]};
+    glm::float_t wn2[2] = { ret.n[0], ret.n[1] };
     t = sqrt(wn2[0] * wn2[0] + wn2[1] * wn2[1]);
     wn2[0] /= t;
     wn2[1] /= t;
@@ -1054,7 +1053,7 @@ void Character::moveOnFloor()
     }
     else
     {
-        norm_move_xy = {0, 0, 0};
+        norm_move_xy = { 0, 0, 0 };
     }
 
     ghostUpdate();
@@ -1119,7 +1118,7 @@ int Character::freeFalling()
 
     glm::vec3 move = applyGravity(engine::Engine::instance.m_frameTime);
     m_speed[2] = m_speed[2] < -FREE_FALL_SPEED_MAXIMUM ? -FREE_FALL_SPEED_MAXIMUM : m_speed[2];
-    m_speed = glm::rotate(m_speed, glm::radians(rot), {0, 0, 1});
+    m_speed = glm::rotate(m_speed, glm::radians(rot), { 0, 0, 1 });
 
     updateCurrentHeight();
 
@@ -1249,7 +1248,7 @@ int Character::monkeyClimbing()
     }
     else
     {
-        m_speed = {0, 0, 0};
+        m_speed = { 0, 0, 0 };
         // dir_flag = DirFlag::Forward;
     }
 
@@ -1290,7 +1289,7 @@ int Character::wallsClimbing()
     m_response.horizontal_collide = 0x00;
     m_response.vertical_collide = 0x00;
 
-    spd = {0, 0, 0};
+    spd = { 0, 0, 0 };
     *climb = checkWallsClimbability();
     m_climb = *climb;
     if(climb->wall_hit == ClimbType::None)
@@ -1448,7 +1447,7 @@ int Character::moveUnderWater()
     }
     else
     {
-        move = {0, 0, 0};
+        move = { 0, 0, 0 };
     }
 
     ghostUpdate();
@@ -1560,20 +1559,20 @@ int Character::findTraverse()
     RoomSector* obj_s = nullptr;
     if(m_transform[1][0] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ch_s->position[0] + MeteringSectorSize, ch_s->position[1], glm::float_t(0.0)});
+        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] + MeteringSectorSize, ch_s->position[1], glm::float_t(0.0) });
     }
     else if(m_transform[1][0] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ch_s->position[0] - MeteringSectorSize, ch_s->position[1], glm::float_t(0.0)});
+        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] - MeteringSectorSize, ch_s->position[1], glm::float_t(0.0) });
     }
     // OY move case
     else if(m_transform[1][1] > 0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ch_s->position[0], ch_s->position[1] + MeteringSectorSize, glm::float_t(0.0)});
+        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] + MeteringSectorSize, glm::float_t(0.0) });
     }
     else if(m_transform[1][1] < -0.9)
     {
-        obj_s = ch_s->owner_room->getSectorRaw({ch_s->position[0], ch_s->position[1] - MeteringSectorSize, glm::float_t(0.0)});
+        obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] - MeteringSectorSize, glm::float_t(0.0) });
     }
 
     if(obj_s != nullptr)
@@ -1611,20 +1610,20 @@ int Character::checkTraverse(const Entity& obj)
     {
         if(m_transform[1][0] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({obj_s->position[0] - MeteringSectorSize, obj_s->position[1], 0});
+            ch_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0] - MeteringSectorSize, obj_s->position[1], 0 });
         }
         else if(m_transform[1][0] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({obj_s->position[0] + MeteringSectorSize, obj_s->position[1], 0});
+            ch_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0] + MeteringSectorSize, obj_s->position[1], 0 });
         }
         // OY move case
         else if(m_transform[1][1] > 0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({obj_s->position[0], obj_s->position[1] - MeteringSectorSize, 0});
+            ch_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0], obj_s->position[1] - MeteringSectorSize, 0 });
         }
         else if(m_transform[1][1] < -0.8)
         {
-            ch_s = obj_s->owner_room->getSectorRaw({obj_s->position[0], obj_s->position[1] + MeteringSectorSize, 0});
+            ch_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0], obj_s->position[1] + MeteringSectorSize, 0 });
         }
         ch_s = ch_s->checkPortalPointer();
     }
@@ -1666,28 +1665,28 @@ int Character::checkTraverse(const Entity& obj)
     // OX move case
     if(m_transform[1][0] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({obj_s->position[0] + MeteringSectorSize,
+        next_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0] + MeteringSectorSize,
                                                   obj_s->position[1],
-                                                  0});
+                                                  0 });
     }
     else if(m_transform[1][0] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({obj_s->position[0] - MeteringSectorSize,
+        next_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0] - MeteringSectorSize,
                                                   obj_s->position[1],
-                                                  0});
+                                                  0 });
     }
     // OY move case
     else if(m_transform[1][1] > 0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({obj_s->position[0],
+        next_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0],
                                                   obj_s->position[1] + MeteringSectorSize,
-                                                  0});
+                                                  0 });
     }
     else if(m_transform[1][1] < -0.8)
     {
-        next_s = obj_s->owner_room->getSectorRaw({obj_s->position[0],
+        next_s = obj_s->owner_room->getSectorRaw({ obj_s->position[0],
                                                   obj_s->position[1] - MeteringSectorSize,
-                                                  0});
+                                                  0 });
     }
 
     if(next_s)
@@ -1721,20 +1720,20 @@ int Character::checkTraverse(const Entity& obj)
     // OX move case
     if(m_transform[1][0] > 0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ch_s->position[0] - MeteringSectorSize, ch_s->position[1], 0});
+        next_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] - MeteringSectorSize, ch_s->position[1], 0 });
     }
     else if(m_transform[1][0] < -0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ch_s->position[0] + MeteringSectorSize, ch_s->position[1], 0});
+        next_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] + MeteringSectorSize, ch_s->position[1], 0 });
     }
     // OY move case
     else if(m_transform[1][1] > 0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ch_s->position[0], ch_s->position[1] - MeteringSectorSize, 0});
+        next_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] - MeteringSectorSize, 0 });
     }
     else if(m_transform[1][1] < -0.8)
     {
-        next_s = ch_s->owner_room->getSectorRaw({ch_s->position[0], ch_s->position[1] + MeteringSectorSize, 0});
+        next_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0], ch_s->position[1] + MeteringSectorSize, 0 });
     }
 
     if(next_s)
@@ -1813,7 +1812,7 @@ void Character::applyCommands()
             break;
     };
 
-    m_command.rot = {0, 0, 0};
+    m_command.rot = { 0, 0, 0 };
 
     updateRigidBody(true);
     updatePlatformPostStep();
@@ -2264,7 +2263,7 @@ void Character::jump(glm::float_t v_vertical, glm::float_t v_horizontal)
     else
     {
         m_moveDir = MoveDirection::Forward;
-        m_speed = {0, 0, 0};
+        m_speed = { 0, 0, 0 };
     }
 
     m_response.vertical_collide = 0x00;
@@ -2543,5 +2542,4 @@ void Character::doWeaponFrame(util::Duration time)
         };
     }
 }
-
 } // namespace world

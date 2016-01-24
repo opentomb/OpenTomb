@@ -6,17 +6,17 @@
 
 namespace audio
 {
-    inline void loadALExtFunctions(ALCdevice*)
-    {
-        // Nothing to do here
-    }
+inline void loadALExtFunctions(ALCdevice*)
+{
+    // Nothing to do here
+}
 } // namespace audio
 
 #else
 
 namespace audio
 {
-    void loadALExtFunctions(ALCdevice* device);
+void loadALExtFunctions(ALCdevice* device);
 } // namespace audio
 
 // Effect objects

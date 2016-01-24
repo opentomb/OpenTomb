@@ -158,7 +158,7 @@ bool Fader::setTexture(const std::string& texture_path)
 
     // Edit the texture object's image data using the information SDL_Surface gives us
     glTexImage2D(GL_TEXTURE_2D, 0, color_depth, m_textureWidth, m_textureHeight, 0,
-                    texture_format, GL_UNSIGNED_BYTE, img.data());
+                 texture_format, GL_UNSIGNED_BYTE, img.data());
 
     // Unbind the texture - is it really necessary?
     // glBindTexture(GL_TEXTURE_2D, 0);
@@ -305,55 +305,55 @@ void Fader::show()
             {
                 // Draw lower letterbox.
                 Gui::instance->drawRect(0.0,
-                             0.0,
-                             engine::screen_info.w,
-                             (engine::screen_info.h - engine::screen_info.w * m_textureAspectRatio) / 2,
-                             m_bottomLeftColor, m_bottomRightColor, m_bottomLeftColor, m_bottomRightColor,
-                             m_blendingMode);
+                                        0.0,
+                                        engine::screen_info.w,
+                                        (engine::screen_info.h - engine::screen_info.w * m_textureAspectRatio) / 2,
+                                        m_bottomLeftColor, m_bottomRightColor, m_bottomLeftColor, m_bottomRightColor,
+                                        m_blendingMode);
 
                 // Draw texture.
                 Gui::instance->drawRect(0.0,
-                             (engine::screen_info.h - engine::screen_info.w * m_textureAspectRatio) / 2,
-                             engine::screen_info.w,
-                             engine::screen_info.w * m_textureAspectRatio,
-                             tex_color, tex_color, tex_color, tex_color,
-                             m_blendingMode,
-                             m_texture);
+                                        (engine::screen_info.h - engine::screen_info.w * m_textureAspectRatio) / 2,
+                                        engine::screen_info.w,
+                                        engine::screen_info.w * m_textureAspectRatio,
+                                        tex_color, tex_color, tex_color, tex_color,
+                                        m_blendingMode,
+                                        m_texture);
 
                 // Draw upper letterbox.
                 Gui::instance->drawRect(0.0,
-                             engine::screen_info.h - (engine::screen_info.h - engine::screen_info.w * m_textureAspectRatio) / 2,
-                             engine::screen_info.w,
-                             (engine::screen_info.h - engine::screen_info.w * m_textureAspectRatio) / 2,
-                             m_topLeftColor, m_topRightColor, m_topLeftColor, m_topRightColor,
-                             m_blendingMode);
+                                        engine::screen_info.h - (engine::screen_info.h - engine::screen_info.w * m_textureAspectRatio) / 2,
+                                        engine::screen_info.w,
+                                        (engine::screen_info.h - engine::screen_info.w * m_textureAspectRatio) / 2,
+                                        m_topLeftColor, m_topRightColor, m_topLeftColor, m_topRightColor,
+                                        m_blendingMode);
             }
             else        // Texture is taller than the screen... Do pillarbox.
             {
                 // Draw left pillarbox.
                 Gui::instance->drawRect(0.0,
-                             0.0,
-                             (engine::screen_info.w - engine::screen_info.h / m_textureAspectRatio) / 2,
-                             engine::screen_info.h,
-                             m_topLeftColor, m_topLeftColor, m_bottomLeftColor, m_bottomLeftColor,
-                             m_blendingMode);
+                                        0.0,
+                                        (engine::screen_info.w - engine::screen_info.h / m_textureAspectRatio) / 2,
+                                        engine::screen_info.h,
+                                        m_topLeftColor, m_topLeftColor, m_bottomLeftColor, m_bottomLeftColor,
+                                        m_blendingMode);
 
                 // Draw texture.
                 Gui::instance->drawRect((engine::screen_info.w - engine::screen_info.h / m_textureAspectRatio) / 2,
-                             0.0,
-                             engine::screen_info.h / m_textureAspectRatio,
-                             engine::screen_info.h,
-                             tex_color, tex_color, tex_color, tex_color,
-                             m_blendingMode,
-                             m_texture);
+                                        0.0,
+                                        engine::screen_info.h / m_textureAspectRatio,
+                                        engine::screen_info.h,
+                                        tex_color, tex_color, tex_color, tex_color,
+                                        m_blendingMode,
+                                        m_texture);
 
                 // Draw right pillarbox.
                 Gui::instance->drawRect(engine::screen_info.w - (engine::screen_info.w - engine::screen_info.h / m_textureAspectRatio) / 2,
-                             0.0,
-                             (engine::screen_info.w - engine::screen_info.h / m_textureAspectRatio) / 2,
-                             engine::screen_info.h,
-                             m_topRightColor, m_topRightColor, m_bottomRightColor, m_bottomRightColor,
-                             m_blendingMode);
+                                        0.0,
+                                        (engine::screen_info.w - engine::screen_info.h / m_textureAspectRatio) / 2,
+                                        engine::screen_info.h,
+                                        m_topRightColor, m_topRightColor, m_bottomRightColor, m_bottomRightColor,
+                                        m_blendingMode);
             }
         }
         else if(m_textureScaleMode == FaderScale::Zoom)
@@ -361,40 +361,40 @@ void Fader::show()
             if(m_textureWide)    // Texture is wider than the screen - scale vertical.
             {
                 Gui::instance->drawRect(-((engine::screen_info.h / m_textureAspectRatio - engine::screen_info.w) / 2),
-                             0.0,
-                             engine::screen_info.h / m_textureAspectRatio,
-                             engine::screen_info.h,
-                             tex_color, tex_color, tex_color, tex_color,
-                             m_blendingMode,
-                             m_texture);
+                                        0.0,
+                                        engine::screen_info.h / m_textureAspectRatio,
+                                        engine::screen_info.h,
+                                        tex_color, tex_color, tex_color, tex_color,
+                                        m_blendingMode,
+                                        m_texture);
             }
             else                // Texture is taller than the screen - scale horizontal.
             {
                 Gui::instance->drawRect(0.0,
-                             -((engine::screen_info.w / m_textureAspectRatio - engine::screen_info.h) / 2),
-                             engine::screen_info.w,
-                             engine::screen_info.w / m_textureAspectRatio,
-                             tex_color, tex_color, tex_color, tex_color,
-                             m_blendingMode,
-                             m_texture);
+                                        -((engine::screen_info.w / m_textureAspectRatio - engine::screen_info.h) / 2),
+                                        engine::screen_info.w,
+                                        engine::screen_info.w / m_textureAspectRatio,
+                                        tex_color, tex_color, tex_color, tex_color,
+                                        m_blendingMode,
+                                        m_texture);
             }
         }
         else    // Simple stretch!
         {
             Gui::instance->drawRect(0.0,
-                         0.0,
-                         engine::screen_info.w,
-                         engine::screen_info.h,
-                         tex_color, tex_color, tex_color, tex_color,
-                         m_blendingMode,
-                         m_texture);
+                                    0.0,
+                                    engine::screen_info.w,
+                                    engine::screen_info.h,
+                                    tex_color, tex_color, tex_color, tex_color,
+                                    m_blendingMode,
+                                    m_texture);
         }
     }
     else    // No texture, simply draw colored rect.
     {
         Gui::instance->drawRect(0.0, 0.0, engine::screen_info.w, engine::screen_info.h,
-                     m_topLeftColor, m_topRightColor, m_bottomLeftColor, m_bottomRightColor,
-                     m_blendingMode);
+                                m_topLeftColor, m_topRightColor, m_bottomLeftColor, m_bottomRightColor,
+                                m_blendingMode);
     }   // end if(mTexture)
 }
 
@@ -413,5 +413,4 @@ FaderStatus Fader::getStatus() const
         return FaderStatus::Idle;
     }
 }
-
 } // namespace gui

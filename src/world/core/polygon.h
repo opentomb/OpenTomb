@@ -12,7 +12,6 @@ namespace world
 {
 namespace core
 {
-
 enum class SplitType
 {
     Front,
@@ -33,8 +32,8 @@ struct Vertex
 {
     glm::vec3 position = { 0,0,0 };
     glm::vec3 normal = { 0,0,0 };
-    glm::vec4 color = {0,0,0,0};
-    glm::vec2 tex_coord = {0,0};
+    glm::vec4 color = { 0,0,0,0 };
+    glm::vec2 tex_coord = { 0,0 };
 };
 
 struct Polygon
@@ -64,6 +63,5 @@ struct Polygon
     bool isInsideBBox(const BoundingBox& bb) const;
     bool isInsideBQuad(const BoundingBox& bb) const;
 };
-
 } // namespace core
 } // namespace world

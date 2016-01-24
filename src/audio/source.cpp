@@ -11,7 +11,6 @@
 
 namespace audio
 {
-
 Source::Source()
 {
     alGenSources(1, &m_sourceIndex);
@@ -289,5 +288,4 @@ void Source::linkEmitter()
             break;
     }
 }
-
 } // namespace audio

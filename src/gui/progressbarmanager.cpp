@@ -7,7 +7,6 @@
 
 namespace gui
 {
-
 ProgressbarManager::ProgressbarManager()
 {
     {
@@ -124,5 +123,4 @@ void ProgressbarManager::resize()
         bar.resize();
     }
 }
-
 }

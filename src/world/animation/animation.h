@@ -32,7 +32,6 @@ struct BaseMesh;
 
 namespace animation
 {
-
 using AnimationId = uint32_t;
 
 //! Default fixed TR framerate needed for animation calculation
@@ -143,10 +142,9 @@ struct BoneKeyFrame
 struct SkeletonKeyFrame
 {
     std::vector<BoneKeyFrame> boneKeyFrames;
-    glm::vec3 position = {0,0,0};
+    glm::vec3 position = { 0,0,0 };
     core::BoundingBox boundingBox;
 };
-
 
 /**
  * A sequence of keyframes.
@@ -195,17 +193,17 @@ struct Animation
     SkeletonKeyFrame getInterpolatedFrame(size_t frame) const
     {
         BOOST_ASSERT(frame < m_duration);
-        const size_t frameIndex = frame/m_stretchFactor;
+        const size_t frameIndex = frame / m_stretchFactor;
         BOOST_ASSERT(frameIndex < m_keyFrames.size());
         const SkeletonKeyFrame& first = m_keyFrames[frameIndex];
-        const SkeletonKeyFrame& second = frameIndex+1 >= m_keyFrames.size()
-                                       ? m_keyFrames.back()
-                                       : m_keyFrames[frameIndex+1];
+        const SkeletonKeyFrame& second = frameIndex + 1 >= m_keyFrames.size()
+            ? m_keyFrames.back()
+            : m_keyFrames[frameIndex + 1];
 
         BOOST_ASSERT(first.boneKeyFrames.size() == second.boneKeyFrames.size());
 
         const size_t subOffset = frame - frameIndex*m_stretchFactor; // offset between keyframes
-        if( subOffset == 0 )
+        if(subOffset == 0)
             return first; // no need to interpolate
 
         const glm::float_t lerp = static_cast<glm::float_t>(subOffset) / static_cast<glm::float_t>(m_stretchFactor);
@@ -215,7 +213,7 @@ struct Animation
         result.boundingBox.max = glm::mix(first.boundingBox.max, second.boundingBox.max, lerp);
         result.boundingBox.min = glm::mix(first.boundingBox.min, second.boundingBox.min, lerp);
 
-        result.boneKeyFrames.resize( first.boneKeyFrames.size() );
+        result.boneKeyFrames.resize(first.boneKeyFrames.size());
 
         for(size_t k = 0; k < first.boneKeyFrames.size(); k++)
         {
@@ -228,7 +226,7 @@ struct Animation
 
     SkeletonKeyFrame& rawKeyFrame(size_t idx)
     {
-        if( idx >= m_keyFrames.size() )
+        if(idx >= m_keyFrames.size())
             throw std::out_of_range("Keyframe index out of bounds");
         return m_keyFrames[idx];
     }
@@ -308,7 +306,7 @@ struct Bone
 class Skeleton
 {
     std::vector<Bone> m_bones{};
-    glm::vec3 m_position = {0, 0, 0};
+    glm::vec3 m_position = { 0, 0, 0 };
     core::BoundingBox m_boundingBox{};
 
     bool m_hasSkin = false; //!< whether any skinned meshes need rendering
@@ -326,8 +324,8 @@ class Skeleton
 
     util::Duration m_animationTime = util::Duration::zero();
 
-  public:
-    void (*onFrame)(Character& ent, AnimUpdate state) = nullptr;
+public:
+    void(*onFrame)(Character& ent, AnimUpdate state) = nullptr;
 
     const Animation& getCurrentAnimationFrame() const;
     AnimUpdate stepAnimation(util::Duration time, Entity* cmdEntity = nullptr);
@@ -513,6 +511,5 @@ class Skeleton
     void enableCollision();
     void disableCollision();
 };
-
 } // namespace animation
 } // namespace world

@@ -13,7 +13,6 @@ struct Room;
 
 namespace engine
 {
-
 #define LEVEL_FORMAT_PC         0
 #define LEVEL_FORMAT_PSX        1
 #define LEVEL_FORMAT_DC         2
@@ -87,11 +86,11 @@ struct Engine
 
     void start();
     void destroy();
-    #ifdef __GNUC__
+#ifdef __GNUC__
     void shutdown(int val) __attribute__((noreturn));
-    #else
+#else
     void shutdown(int val);
-    #endif
+#endif
 
     // Initializers
 
@@ -163,5 +162,4 @@ private:
 
     void fpsCycle(util::Duration time);
 };
-
 } // namespace engine

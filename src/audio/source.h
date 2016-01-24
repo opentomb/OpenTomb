@@ -89,5 +89,4 @@ private:
     void setPosition(const ALfloat pos_vector[]);   // Set source position.
     void setVelocity(const ALfloat vel_vector[]);   // Set source velocity (speed).
 };
-
 } // namespace audio

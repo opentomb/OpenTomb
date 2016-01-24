@@ -29,7 +29,6 @@
 
 namespace world
 {
-
 void Entity::enable()
 {
     if(!m_enabled)
@@ -68,7 +67,7 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject& ghost, btManifoldArr
     engine::BulletEngine::instance->dynamicsWorld->getBroadphase()->setAabb(ghost.getBroadphaseHandle(), aabb_min, aabb_max, engine::BulletEngine::instance->dynamicsWorld->getDispatcher());
     engine::BulletEngine::instance->dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost.getOverlappingPairCache(), engine::BulletEngine::instance->dynamicsWorld->getDispatchInfo(), engine::BulletEngine::instance->dynamicsWorld->getDispatcher());
 
-    correction = {0,0,0};
+    correction = { 0,0,0 };
     int num_pairs = ghost.getOverlappingPairCache()->getNumOverlappingPairs();
     int ret = 0;
     for(int i = 0; i < num_pairs; i++)
@@ -127,10 +126,9 @@ void Entity::ghostUpdate()
         for(const animation::Bone& bone : m_skeleton.getBones())
         {
             auto tr = m_transform * bone.full_transform;
-            bone.ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr( tr ));
+            bone.ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr));
             auto pos = tr * glm::vec4(bone.mesh->m_center, 1);
             bone.ghostObject->getWorldTransform().setOrigin(util::convert(glm::vec3(pos)));
-
         }
     }
     else
@@ -168,12 +166,12 @@ int Entity::getPenetrationFixVector(glm::vec3& reaction, bool hasMove)
         if(!btag->parent || (hasMove && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
         {
             BOOST_ASSERT(m_skeleton.getBones()[m].ghostObject);
-            from = util::convert( m_skeleton.getBones()[m].ghostObject->getWorldTransform().getOrigin() );
+            from = util::convert(m_skeleton.getBones()[m].ghostObject->getWorldTransform().getOrigin());
             from += glm::vec3(m_transform[3] - orig_pos);
         }
         else
         {
-            glm::vec4 parent_from = btag->parent->full_transform * glm::vec4(btag->parent->mesh->m_center,1);
+            glm::vec4 parent_from = btag->parent->full_transform * glm::vec4(btag->parent->mesh->m_center, 1);
             from = glm::vec3(m_transform * parent_from);
         }
 
@@ -196,7 +194,7 @@ int Entity::getPenetrationFixVector(glm::vec3& reaction, bool hasMove)
             glm::vec3 tmp;
             if(Ghost_GetPenetrationFixVector(*m_skeleton.getBones()[m].ghostObject, m_skeleton.manifoldArray(), tmp))
             {
-                m_transform[3] += glm::vec4(tmp,0);
+                m_transform[3] += glm::vec4(tmp, 0);
                 curr += tmp;
                 from += tmp;
                 ret++;
@@ -314,7 +312,7 @@ void Entity::updateRoomPos()
 
     transferToRoom(new_room);
 
-    setRoom( new_room );
+    setRoom(new_room);
     m_lastSector = m_currentSector;
 
     if(m_currentSector != new_sector)
@@ -336,7 +334,7 @@ void Entity::updateRigidBody(bool force)
     }
     else
     {
-        if(   m_skeleton.getModel() == nullptr
+        if(m_skeleton.getModel() == nullptr
            || (!force && m_skeleton.getModel()->animations.size() == 1 && m_skeleton.getModel()->animations.front().getFrameDuration() == 1))
         {
             return;
@@ -387,7 +385,7 @@ void Entity::updateCurrentSpeed(bool zeroVz)
     }
     else
     {
-        m_speed = {0,0,0};
+        m_speed = { 0,0,0 };
     }
 
     m_speed[2] = vz;
@@ -408,7 +406,6 @@ glm::float_t Entity::findDistance(const Entity& other)
     return glm::distance(m_transform[3], other.m_transform[3]);
 }
 
-
 /**
  * Callback to handle anim commands
  * @param command
@@ -418,35 +415,35 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
     switch(command.cmdId)
     {
         case animation::AnimCommandOpcode::SetPosition:    // (tr_x, tr_y, tr_z)
-            {
-                // x=x, y=z, z=-y
-                const glm::float_t x = glm::float_t(command.param[0]);
-                const glm::float_t y = glm::float_t(command.param[2]);
-                const glm::float_t z = -glm::float_t(command.param[1]);
-                glm::vec3 ofs(x, y, z);
-                m_transform[3] += glm::vec4(glm::mat3(m_transform) * ofs, 0);
+        {
+            // x=x, y=z, z=-y
+            const glm::float_t x = glm::float_t(command.param[0]);
+            const glm::float_t y = glm::float_t(command.param[2]);
+            const glm::float_t z = -glm::float_t(command.param[1]);
+            glm::vec3 ofs(x, y, z);
+            m_transform[3] += glm::vec4(glm::mat3(m_transform) * ofs, 0);
 #if 0
-                m_lerp_skip = true;
+            m_lerp_skip = true;
 #endif
-            }
-            break;
+        }
+        break;
 
         case animation::AnimCommandOpcode::SetVelocity:    // (float vertical, float horizontal)
+        {
+            glm::float_t vert;
+            const glm::float_t horiz = glm::float_t(command.param[1]);
+            if(btFuzzyZero(m_vspeed_override))
             {
-                glm::float_t vert;
-                const glm::float_t horiz = glm::float_t(command.param[1]);
-                if(btFuzzyZero(m_vspeed_override))
-                {
-                    vert  = -glm::float_t(command.param[0]);
-                }
-                else
-                {
-                    vert  = m_vspeed_override;
-                    m_vspeed_override = 0.0f;
-                }
-                jump(vert, horiz);
+                vert = -glm::float_t(command.param[0]);
             }
-            break;
+            else
+            {
+                vert = m_vspeed_override;
+                m_vspeed_override = 0.0f;
+            }
+            jump(vert, horiz);
+        }
+        break;
 
         case animation::AnimCommandOpcode::EmptyHands:
             // This command is used only for Lara.
@@ -464,63 +461,63 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
             break;
 
         case animation::AnimCommandOpcode::PlaySound:      // (sndParam)
+        {
+            audio::SoundId soundId = command.param[0] & 0x3FFF;
+
+            // Quick workaround for TR3 quicksand.
+            if(getSubstanceState() == Substance::QuicksandConsumed || getSubstanceState() == Substance::QuicksandShallow)
             {
-                audio::SoundId soundId = command.param[0] & 0x3FFF;
-
-                // Quick workaround for TR3 quicksand.
-                if(getSubstanceState() == Substance::QuicksandConsumed || getSubstanceState() == Substance::QuicksandShallow)
-                {
-                    soundId = audio::SoundWadeShallow;
-                }
-
-                if(command.param[0] & animation::TR_ANIMCOMMAND_CONDITION_WATER)
-                {
-                    if(getSubstanceState() == Substance::WaterShallow)
-                        engine::Engine::instance.m_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
-                }
-                else if(command.param[0] & animation::TR_ANIMCOMMAND_CONDITION_LAND)
-                {
-                    if(getSubstanceState() != Substance::WaterShallow)
-                        engine::Engine::instance.m_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
-                }
-                else
-                {
-                    engine::Engine::instance.m_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
-                }
+                soundId = audio::SoundWadeShallow;
             }
-            break;
+
+            if(command.param[0] & animation::TR_ANIMCOMMAND_CONDITION_WATER)
+            {
+                if(getSubstanceState() == Substance::WaterShallow)
+                    engine::Engine::instance.m_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
+            }
+            else if(command.param[0] & animation::TR_ANIMCOMMAND_CONDITION_LAND)
+            {
+                if(getSubstanceState() != Substance::WaterShallow)
+                    engine::Engine::instance.m_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
+            }
+            else
+            {
+                engine::Engine::instance.m_world.audioEngine.send(soundId, audio::EmitterType::Entity, getId());
+            }
+        }
+        break;
 
         case animation::AnimCommandOpcode::PlayEffect:     // (flipeffectParam)
+        {
+            const uint16_t effect_id = command.param[0] & 0x3FFF;
+            if(effect_id == 0)  // rollflip
             {
-                const uint16_t effect_id = command.param[0] & 0x3FFF;
-                if(effect_id == 0)  // rollflip
-                {
-                    // FIXME: wrapping angles are bad for quat lerp:
-                    m_angles[0] += 180.0;
+                // FIXME: wrapping angles are bad for quat lerp:
+                m_angles[0] += 180.0;
 
-                    if(m_moveType == MoveType::Underwater)
-                    {
-                        m_angles[1] = -m_angles[1];                         // for underwater case
-                    }
-                    if(m_moveDir == MoveDirection::Backward)
-                    {
-                        m_moveDir = MoveDirection::Forward;
-                    }
-                    else if(m_moveDir == MoveDirection::Forward)
-                    {
-                        m_moveDir = MoveDirection::Backward;
-                    }
-                    updateTransform();
-#if 0
-                    m_lerp_skip = true;
-#endif
-                }
-                else
+                if(m_moveType == MoveType::Underwater)
                 {
-                    engine_lua.execEffect(effect_id, getId());
+                    m_angles[1] = -m_angles[1];                         // for underwater case
                 }
+                if(m_moveDir == MoveDirection::Backward)
+                {
+                    m_moveDir = MoveDirection::Forward;
+                }
+                else if(m_moveDir == MoveDirection::Forward)
+                {
+                    m_moveDir = MoveDirection::Backward;
+                }
+                updateTransform();
+#if 0
+                m_lerp_skip = true;
+#endif
             }
-            break;
+            else
+            {
+                engine_lua.execEffect(effect_id, getId());
+            }
+        }
+        break;
 
         default:
             // Unknown command
@@ -553,10 +550,10 @@ void Entity::processSector()
         // Look up trigger function table and run trigger if it exists.
         try
         {
-            if (engine_lua["tlist_RunTrigger"].is<lua::Callable>())
+            if(engine_lua["tlist_RunTrigger"].is<lua::Callable>())
                 engine_lua["tlist_RunTrigger"].call(int(lowest_sector->trig_index), m_skeleton.getModel()->id == 0 ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC, getId());
         }
-        catch (lua::RuntimeError& error)
+        catch(lua::RuntimeError& error)
         {
             BOOST_LOG_TRIVIAL(error) << error.what();
         }
@@ -571,7 +568,7 @@ void Entity::setAnimation(animation::AnimationId animation, int frame)
 
     // some items (jeep) need this here...
     m_skeleton.updatePose();
-//    updateRigidBody(false);
+    //    updateRigidBody(false);
 }
 
 boost::optional<size_t> Entity::getAnimDispatchCase(LaraState id) const
@@ -585,7 +582,7 @@ boost::optional<size_t> Entity::getAnimDispatchCase(LaraState id) const
     {
         const animation::AnimationDispatch& disp = stc->dispatches[j];
 
-        if(   disp.end >= disp.start
+        if(disp.end >= disp.start
            && m_skeleton.getCurrentFrame() >= disp.start
            && m_skeleton.getCurrentFrame() <= disp.end)
         {
@@ -595,7 +592,6 @@ boost::optional<size_t> Entity::getAnimDispatchCase(LaraState id) const
 
     return boost::none;
 }
-
 
 void Entity::updateInterpolation()
 {
@@ -608,7 +604,7 @@ void Entity::updateInterpolation()
 
 animation::AnimUpdate Entity::stepAnimation(util::Duration time)
 {
-    if(   (m_typeFlags & ENTITY_TYPE_DYNAMIC)
+    if((m_typeFlags & ENTITY_TYPE_DYNAMIC)
        || !m_active
        || !m_enabled
        || m_skeleton.getModel() == nullptr
@@ -621,7 +617,7 @@ animation::AnimUpdate Entity::stepAnimation(util::Duration time)
 
     animation::AnimUpdate stepResult = m_skeleton.stepAnimation(time, this);
 
-//    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
+    //    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
 
     m_skeleton.updatePose();
     fixPenetrations(nullptr);
@@ -635,7 +631,7 @@ animation::AnimUpdate Entity::stepAnimation(util::Duration time)
  */
 void Entity::frame(util::Duration time)
 {
-    if(!m_enabled )
+    if(!m_enabled)
     {
         return;
     }
@@ -663,7 +659,6 @@ void Entity::frame(util::Duration time)
     updateRigidBody(false);
 }
 
-
 /**
  * The function rebuild / renew entity's BV
  */
@@ -678,8 +673,8 @@ void Entity::rebuildBoundingBox()
 
 void Entity::checkActivators()
 {
-    if (getRoom() == nullptr)
-            return;
+    if(getRoom() == nullptr)
+        return;
 
     glm::vec4 ppos = m_transform[3] + m_transform[1] * m_skeleton.getBoundingBox().max[1];
     auto containers = getRoom()->m_objects;
@@ -687,10 +682,10 @@ void Entity::checkActivators()
     {
         Entity* e = dynamic_cast<Entity*>(object);
         if(!e)
-                continue;
+            continue;
 
-        if (!e->m_enabled)
-                continue;
+        if(!e->m_enabled)
+            continue;
 
         if(e->m_typeFlags & ENTITY_TYPE_INTERACTIVE)
         {
@@ -705,10 +700,10 @@ void Entity::checkActivators()
             glm::float_t r = e->m_activationRadius;
             r *= r;
             const glm::vec4& v = e->m_transform[3];
-            if(    e != this
-                && (v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r
-                && v[2] + 32.0 > m_transform[3][2] + m_skeleton.getBoundingBox().min[2]
-                && v[2] - 32.0 < m_transform[3][2] + m_skeleton.getBoundingBox().max[2])
+            if(e != this
+               && (v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r
+               && v[2] + 32.0 > m_transform[3][2] + m_skeleton.getBoundingBox().min[2]
+               && v[2] - 32.0 < m_transform[3][2] + m_skeleton.getBoundingBox().max[2])
             {
                 engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
             }
@@ -890,5 +885,4 @@ glm::vec3 Entity::applyGravity(util::Duration time)
     m_speed += gravitySpeed;
     return move;
 }
-
 } // namespace world

@@ -102,7 +102,7 @@ static __inline GLuint NextPowerOf2(GLuint in)
 }
 
 static inline void bbox_add(float *x0, float *x1, float *y0, float *y1,
-                              glm::vec2& topLeft, glm::vec2& bottomRight)
+                            glm::vec2& topLeft, glm::vec2& bottomRight)
 {
     glm::float_t min, max;
 
@@ -168,7 +168,7 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
         FT_Set_Char_Size(glf->ft_face.get(), font_size << 6, font_size << 6, 0, 0);
 
         // calculate texture atlas size
-        chars_in_row = static_cast<GLint>( 1 + std::sqrt(glf->glyphs.size()) );
+        chars_in_row = static_cast<GLint>(1 + std::sqrt(glf->glyphs.size()));
         glf->gl_tex_width = (font_size + padding) * chars_in_row;
         glf->gl_tex_width = NextPowerOf2(glf->gl_tex_width);
         if(glf->gl_tex_width > glf->gl_max_tex_width)
@@ -178,7 +178,7 @@ void glf_resize(FontTexture *glf, uint16_t font_size)
 
         // create new atlas
         chars_in_row = glf->gl_tex_width / (font_size + padding);
-        chars_in_column = static_cast<GLint>( glf->glyphs.size() / chars_in_row + 1 );
+        chars_in_column = static_cast<GLint>(glf->glyphs.size() / chars_in_row + 1);
         glf->gl_tex_indexes.resize(chars_in_column * (font_size + padding) / glf->gl_tex_width + 1);
         glGenTextures(static_cast<GLsizei>(glf->gl_tex_indexes.size()), glf->gl_tex_indexes.data());
 
@@ -344,8 +344,8 @@ float glf_get_string_len(FontTexture *glf, const char *text, int n)
 
 void glf_get_string_bb(FontTexture *glf, const char *text, int n, glm::vec2& topLeft, glm::vec2& bottomRight)
 {
-    topLeft = {0, 0};
-    bottomRight = {0, 0};
+    topLeft = { 0, 0 };
+    bottomRight = { 0, 0 };
 
     if(glf != nullptr && glf->ft_face != nullptr)
     {

@@ -10,7 +10,6 @@
 
 namespace gui
 {
-
 struct Gui
 {
     // Notifier show time is a time notifier stays on screen (excluding slide
@@ -89,5 +88,4 @@ private:
     GLuint rectangleColorBuffer = 0;
     std::unique_ptr<render::VertexArray> rectangleArray = nullptr;
 };
-
 } // namespace gui

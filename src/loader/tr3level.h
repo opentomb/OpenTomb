@@ -4,7 +4,6 @@
 
 namespace loader
 {
-
 class TR3Level : public Level
 {
 public:
@@ -15,5 +14,4 @@ public:
 
     void load() override;
 };
-
 } // namespace loader

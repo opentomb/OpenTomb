@@ -15,7 +15,6 @@ struct Character;
 
 namespace audio
 {
-
 // FX manager structure.
 // It contains all necessary info to process sample FX (reverb and echo).
 class FxManager
@@ -61,5 +60,4 @@ public:
         return m_filter;
     }
 };
-
 } // namespace audio

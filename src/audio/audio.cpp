@@ -11,7 +11,6 @@ using gui::Console;
 
 namespace audio
 {
-
 // ======== Audio source global methods ========
 
 bool checkALError(const char* error_marker)
@@ -29,5 +28,4 @@ void logSndfileError(int code)
 {
     BOOST_LOG_TRIVIAL(error) << "Sndfile error: " << sf_error_number(code);
 }
-
 } // namespace audio

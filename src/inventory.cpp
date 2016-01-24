@@ -36,7 +36,7 @@ InventoryManager::InventoryManager()
 
     m_inventory = nullptr;
 
-    mLabel_Title.position = {0, 30};
+    mLabel_Title.position = { 0, 30 };
     mLabel_Title.Xanchor = gui::HorizontalAnchor::Center;
     mLabel_Title.Yanchor = gui::VerticalAnchor::Top;
 
@@ -44,7 +44,7 @@ InventoryManager::InventoryManager()
     mLabel_Title.fontStyle = gui::FontStyle::MenuTitle;
     mLabel_Title.show = false;
 
-    mLabel_ItemName.position = {0, 50};
+    mLabel_ItemName.position = { 0, 50 };
     mLabel_ItemName.Xanchor = gui::HorizontalAnchor::Center;
     mLabel_ItemName.Yanchor = gui::VerticalAnchor::Bottom;
 
@@ -433,9 +433,9 @@ void InventoryManager::render()
             }
 
             glm::mat4 matrix(1.0f);
-            matrix = glm::translate(matrix, {0, 0, -m_baseRingRadius * 2.0f});
+            matrix = glm::translate(matrix, { 0, 0, -m_baseRingRadius * 2.0f });
             //Mat4_RotateX(matrix, 25.0);
-            matrix = glm::rotate(matrix, glm::radians(25.0f), {1,0,0});
+            matrix = glm::rotate(matrix, glm::radians(25.0f), { 1,0,0 });
             glm::float_t ang = m_ringAngleStep * (-m_itemsOffset + num) + m_ringAngle;
             matrix = glm::rotate(matrix, glm::radians(ang), { 0,1,0 });
             matrix = glm::translate(matrix, { 0, m_verticalOffset, m_ringRadius });
@@ -465,7 +465,7 @@ void InventoryManager::render()
                 bi->bf->itemFrame(util::Duration(0));
             }
             matrix = glm::translate(matrix, -0.5f * bi->bf->getBoundingBox().getCenter());
-            matrix = glm::scale(matrix, {0.7f, 0.7f, 0.7f});
+            matrix = glm::scale(matrix, { 0.7f, 0.7f, 0.7f });
             render::renderItem(*bi->bf, 0.0f, matrix, gui::Gui::instance->guiProjectionMatrix);
 
             num++;

@@ -45,16 +45,16 @@ void Level::readMeshData(io::SDLReader& reader)
     m_meshes.clear();
 
     size_t meshDataPos = 0;
-    for (size_t i = 0; i < m_meshIndices.size(); i++)
+    for(size_t i = 0; i < m_meshIndices.size(); i++)
     {
         std::replace(m_meshIndices.begin(), m_meshIndices.end(), meshDataPos, i);
 
         reader.seek(basePos + meshDataPos);
 
-        if (m_gameVersion >= Game::TR4)
-            m_meshes.emplace_back( *Mesh::readTr4(reader) );
+        if(m_gameVersion >= Game::TR4)
+            m_meshes.emplace_back(*Mesh::readTr4(reader));
         else
-            m_meshes.emplace_back( *Mesh::readTr1(reader) );
+            m_meshes.emplace_back(*Mesh::readTr1(reader));
 
         for(size_t j = 0; j < m_meshIndices.size(); j++)
         {
@@ -76,8 +76,8 @@ void Level::readFrameMoveableData(io::SDLReader& reader)
     const auto frameDataPos = reader.tell();
     reader.readVector(m_frameData, m_frameData.size());
 
-    m_moveables.resize(reader.readU32() );
-    for (size_t i = 0; i < m_moveables.size(); i++)
+    m_moveables.resize(reader.readU32());
+    for(size_t i = 0; i < m_moveables.size(); i++)
     {
         if(m_gameVersion < Game::TR5)
         {
@@ -97,10 +97,10 @@ void Level::readFrameMoveableData(io::SDLReader& reader)
     const auto endPos = reader.tell();
 
     uint32_t pos = 0;
-    for (size_t i = 0; i < m_frameData.size(); i++)
+    for(size_t i = 0; i < m_frameData.size(); i++)
     {
-        for (size_t j = 0; j < m_moveables.size(); j++)
-            if (m_moveables[j]->frame_offset == pos)
+        for(size_t j = 0; j < m_moveables.size(); j++)
+            if(m_moveables[j]->frame_offset == pos)
             {
                 m_moveables[j]->frame_index = static_cast<uint32_t>(i);
                 m_moveables[j]->frame_offset = 0;
@@ -163,12 +163,12 @@ std::unique_ptr<Level> Level::createLoader(const std::string& filename, Game gam
   */
 std::unique_ptr<Level> Level::createLoader(io::SDLReader&& reader, Game game_version, const std::string& sfxPath)
 {
-    if (!reader.isOpen())
+    if(!reader.isOpen())
         return nullptr;
 
     std::unique_ptr<Level> result;
 
-    switch (game_version)
+    switch(game_version)
     {
         case Game::TR1:
             result.reset(new TR1Level(game_version, std::move(reader)));
@@ -196,7 +196,7 @@ std::unique_ptr<Level> Level::createLoader(io::SDLReader&& reader, Game game_ver
             result.reset(new TR5Level(game_version, std::move(reader)));
             break;
         default:
-            BOOST_THROW_EXCEPTION( std::runtime_error("Invalid game version") );
+            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid game version"));
     }
 
     result->m_sfxPath = sfxPath;
@@ -205,14 +205,14 @@ std::unique_ptr<Level> Level::createLoader(io::SDLReader&& reader, Game game_ver
 
 Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
 {
-    if(!reader.isOpen() || filename.length()<5)
+    if(!reader.isOpen() || filename.length() < 5)
         return Game::Unknown;
 
     std::string ext;
-    ext += filename[filename.length()-4];
-    ext += toupper(filename[filename.length()-3]);
-    ext += toupper(filename[filename.length()-2]);
-    ext += toupper(filename[filename.length()-1]);
+    ext += filename[filename.length() - 4];
+    ext += toupper(filename[filename.length() - 3]);
+    ext += toupper(filename[filename.length() - 2]);
+    ext += toupper(filename[filename.length() - 1]);
 
     reader.seek(0);
     uint8_t check[4];
@@ -296,8 +296,8 @@ Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
 
 StaticMesh *Level::findStaticMeshById(uint32_t object_id)
 {
-    for (size_t i = 0; i < m_staticMeshes.size(); i++)
-        if (m_staticMeshes[i].object_id == object_id && m_meshIndices[m_staticMeshes[i].mesh])
+    for(size_t i = 0; i < m_staticMeshes.size(); i++)
+        if(m_staticMeshes[i].object_id == object_id && m_meshIndices[m_staticMeshes[i].mesh])
             return &m_staticMeshes[i];
 
     return nullptr;
@@ -305,8 +305,8 @@ StaticMesh *Level::findStaticMeshById(uint32_t object_id)
 
 Item *Level::fineItemById(int32_t object_id)
 {
-    for (size_t i = 0; i < m_items.size(); i++)
-        if (m_items[i].object_id == object_id)
+    for(size_t i = 0; i < m_items.size(); i++)
+        if(m_items[i].object_id == object_id)
             return &m_items[i];
 
     return nullptr;
@@ -314,8 +314,8 @@ Item *Level::fineItemById(int32_t object_id)
 
 Moveable *Level::findMoveableById(uint32_t object_id)
 {
-    for (size_t i = 0; i < m_moveables.size(); i++)
-        if (m_moveables[i]->object_id == object_id)
+    for(size_t i = 0; i < m_moveables.size(); i++)
+        if(m_moveables[i]->object_id == object_id)
             return m_moveables[i].get();
 
     return nullptr;
@@ -323,13 +323,13 @@ Moveable *Level::findMoveableById(uint32_t object_id)
 
 void Level::convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst)
 {
-    for (int y = 0; y < 256; y++)
+    for(int y = 0; y < 256; y++)
     {
-        for (int x = 0; x < 256; x++)
+        for(int x = 0; x < 256; x++)
         {
             int col = tex.pixels[y][x];
 
-            if (col > 0)
+            if(col > 0)
                 dst.pixels[y][x] = static_cast<int>(pal.color[col].r) | (static_cast<int>(pal.color[col].g) << 8) | (static_cast<int>(pal.color[col].b) << 16) | (0xff << 24);
             else
                 dst.pixels[y][x] = 0x00000000;
@@ -339,13 +339,13 @@ void Level::convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst)
 
 void Level::convertTexture(WordTexture & tex, DWordTexture & dst)
 {
-    for (int y = 0; y < 256; y++)
+    for(int y = 0; y < 256; y++)
     {
-        for (int x = 0; x < 256; x++)
+        for(int x = 0; x < 256; x++)
         {
             int col = tex.pixels[y][x];
 
-            if (col & 0x8000)
+            if(col & 0x8000)
                 dst.pixels[y][x] = ((col & 0x00007c00) >> 7) | (((col & 0x000003e0) >> 2) << 8) | (((col & 0x0000001f) << 3) << 16) | 0xff000000;
             else
                 dst.pixels[y][x] = 0x00000000;

@@ -44,7 +44,7 @@ void ProgressBar::resize()
 
 // Set specified color.
 void ProgressBar::setColor(BarColorType colType,
-                               uint8_t R, uint8_t G, uint8_t B, uint8_t A)
+                           uint8_t R, uint8_t G, uint8_t B, uint8_t A)
 {
     glm::float_t maxColValue = 255.0;
 
@@ -325,9 +325,9 @@ void ProgressBar::show(glm::float_t value)
     // and additionally, we need to show it in any case, even if bar is in
     // warning state (blinking).
     Gui::instance->drawRect(m_x, m_y, m_width + m_borderWidth * 2, m_height + m_borderHeight * 2,
-                 m_borderMainColor, m_borderMainColor,
-                 m_borderFadeColor, m_borderFadeColor,
-                 loader::BlendingMode::Opaque);
+                            m_borderMainColor, m_borderMainColor,
+                            m_borderFadeColor, m_borderFadeColor,
+                            loader::BlendingMode::Opaque);
 
     // SECTION FOR BASE BAR RECTANGLE.
 
@@ -351,9 +351,9 @@ void ProgressBar::show(glm::float_t value)
     {
         // Draw full-sized background rect (instead of base bar rect)
         Gui::instance->drawRect(m_x + m_borderWidth, m_y + m_borderHeight, m_width, m_height,
-                     m_backMainColor, m_vertical ? m_backFadeColor : m_backMainColor,
-                     m_vertical ? m_backMainColor : m_backFadeColor, m_backFadeColor,
-                     loader::BlendingMode::Opaque);
+                                m_backMainColor, m_vertical ? m_backFadeColor : m_backMainColor,
+                                m_vertical ? m_backMainColor : m_backFadeColor, m_backFadeColor,
+                                loader::BlendingMode::Opaque);
         return;
     }
 
@@ -373,8 +373,8 @@ void ProgressBar::show(glm::float_t value)
 
         // Main-fade gradient is recalculated according to current / maximum value ratio.
         RectSecondColor = m_alternate
-                        ? m_baseRatio * m_altFadeColor + (1 - m_baseRatio) * m_altMainColor
-                        : m_baseRatio * m_baseFadeColor + (1 - m_baseRatio) * m_baseMainColor;
+            ? m_baseRatio * m_altFadeColor + (1 - m_baseRatio) * m_altMainColor
+            : m_baseRatio * m_baseFadeColor + (1 - m_baseRatio) * m_baseMainColor;
     }
     else
     {
@@ -382,8 +382,8 @@ void ProgressBar::show(glm::float_t value)
 
         // Main-fade gradient is recalculated according to current / maximum value ratio.
         RectFirstColor = m_alternate
-                       ? m_baseRatio * m_altFadeColor + (1 - m_baseRatio) * m_altMainColor
-                       : m_baseRatio * m_baseFadeColor + (1 - m_baseRatio) * m_baseMainColor;
+            ? m_baseRatio * m_altFadeColor + (1 - m_baseRatio) * m_altMainColor
+            : m_baseRatio * m_baseFadeColor + (1 - m_baseRatio) * m_baseMainColor;
     } // end if(Invert)
 
     // We need to reset Alternate flag each frame, cause behaviour is immediate.
@@ -397,33 +397,33 @@ void ProgressBar::show(glm::float_t value)
 
         // Draw actual bar base.
         Gui::instance->drawRect(m_x + m_borderWidth, RectAnchor,
-                     m_width, m_baseSize,
-                     RectFirstColor, RectFirstColor,
-                     RectSecondColor, RectSecondColor,
-                     loader::BlendingMode::Opaque);
+                                m_width, m_baseSize,
+                                RectFirstColor, RectFirstColor,
+                                RectSecondColor, RectSecondColor,
+                                loader::BlendingMode::Opaque);
 
         // Draw background rect.
         Gui::instance->drawRect(m_x + m_borderWidth,
-                     m_invert ? m_y + m_borderHeight : RectAnchor + m_baseSize,
-                     m_width, m_height - m_baseSize,
-                     m_backMainColor, m_backFadeColor,
-                     m_backMainColor, m_backFadeColor,
-                     loader::BlendingMode::Opaque);
+                                m_invert ? m_y + m_borderHeight : RectAnchor + m_baseSize,
+                                m_width, m_height - m_baseSize,
+                                m_backMainColor, m_backFadeColor,
+                                m_backMainColor, m_backFadeColor,
+                                loader::BlendingMode::Opaque);
 
         if(m_extrude)    // Draw extrude overlay, if flag is set.
         {
             glm::vec4 transparentColor{ 0.0f };  // Used to set counter-shade to transparent.
 
             Gui::instance->drawRect(m_x + m_borderWidth, RectAnchor,
-                         m_width / 2, m_baseSize,
-                         m_extrudeDepth, transparentColor,
-                         m_extrudeDepth, transparentColor,
-                         loader::BlendingMode::Opaque);
+                                    m_width / 2, m_baseSize,
+                                    m_extrudeDepth, transparentColor,
+                                    m_extrudeDepth, transparentColor,
+                                    loader::BlendingMode::Opaque);
             Gui::instance->drawRect(m_x + m_borderWidth + m_width / 2, RectAnchor,
-                         m_width / 2, m_baseSize,
-                         transparentColor, m_extrudeDepth,
-                         transparentColor, m_extrudeDepth,
-                         loader::BlendingMode::Opaque);
+                                    m_width / 2, m_baseSize,
+                                    transparentColor, m_extrudeDepth,
+                                    transparentColor, m_extrudeDepth,
+                                    loader::BlendingMode::Opaque);
         }
     }
     else
@@ -432,35 +432,34 @@ void ProgressBar::show(glm::float_t value)
 
         // Draw actual bar base.
         Gui::instance->drawRect(RectAnchor, m_y + m_borderHeight,
-                     m_baseSize, m_height,
-                     RectSecondColor, RectFirstColor,
-                     RectSecondColor, RectFirstColor,
-                     loader::BlendingMode::Opaque);
+                                m_baseSize, m_height,
+                                RectSecondColor, RectFirstColor,
+                                RectSecondColor, RectFirstColor,
+                                loader::BlendingMode::Opaque);
 
         // Draw background rect.
         Gui::instance->drawRect(m_invert ? m_x + m_borderWidth : RectAnchor + m_baseSize,
-                     m_y + m_borderHeight,
-                     m_width - m_baseSize, m_height,
-                     m_backMainColor, m_backMainColor,
-                     m_backFadeColor, m_backFadeColor,
-                     loader::BlendingMode::Opaque);
+                                m_y + m_borderHeight,
+                                m_width - m_baseSize, m_height,
+                                m_backMainColor, m_backMainColor,
+                                m_backFadeColor, m_backFadeColor,
+                                loader::BlendingMode::Opaque);
 
         if(m_extrude)    // Draw extrude overlay, if flag is set.
         {
             glm::vec4 transparentColor{ 0.0f };  // Used to set counter-shade to transparent.
 
             Gui::instance->drawRect(RectAnchor, m_y + m_borderHeight,
-                         m_baseSize, m_height / 2,
-                         transparentColor, transparentColor,
-                         m_extrudeDepth, m_extrudeDepth,
-                         loader::BlendingMode::Opaque);
+                                    m_baseSize, m_height / 2,
+                                    transparentColor, transparentColor,
+                                    m_extrudeDepth, m_extrudeDepth,
+                                    loader::BlendingMode::Opaque);
             Gui::instance->drawRect(RectAnchor, m_y + m_borderHeight + m_height / 2,
-                         m_baseSize, m_height / 2,
-                         m_extrudeDepth, m_extrudeDepth,
-                         transparentColor, transparentColor,
-                         loader::BlendingMode::Opaque);
+                                    m_baseSize, m_height / 2,
+                                    m_extrudeDepth, m_extrudeDepth,
+                                    transparentColor, transparentColor,
+                                    loader::BlendingMode::Opaque);
         }
     } // end if(Vertical)
 }
-
 } // namespace gui

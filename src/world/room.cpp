@@ -14,7 +14,6 @@
 
 namespace world
 {
-
 Room::~Room()
 {
     for(std::shared_ptr<StaticMesh>& mesh : m_staticMeshes)
@@ -34,7 +33,7 @@ Room::~Room()
             mesh->bt_body = nullptr;
         }
 
-        mesh->setRoom( nullptr );
+        mesh->setRoom(nullptr);
     }
 
     if(m_btBody)
@@ -65,7 +64,7 @@ void Room::addEntity(Entity* entity)
         }
     }
 
-    entity->setRoom( this );
+    entity->setRoom(this);
     m_objects.emplace_back(entity);
 }
 
@@ -78,7 +77,7 @@ bool Room::removeEntity(Entity* entity)
     if(it != m_objects.end())
     {
         m_objects.erase(it);
-        entity->setRoom( nullptr );
+        entity->setRoom(nullptr);
         return true;
     }
 
@@ -312,12 +311,12 @@ void Room::swapObjects(std::shared_ptr<Room> dest_room)
 {
     for(Object* object : m_objects)
     {
-        object->setRoom( dest_room.get() );
+        object->setRoom(dest_room.get());
     }
 
     for(Object* object : dest_room->m_objects)
     {
-        object->setRoom( this );
+        object->setRoom(this);
     }
 
     std::swap(m_objects, dest_room->m_objects);
@@ -789,7 +788,7 @@ btCollisionShape *BT_CSfromHeightmap(const boost::multi_array<RoomSector, 2>& he
             case TweenType::TwoTriangles:
             {
                 glm::float_t t = glm::abs((tween.ceiling_corners[2][2] - tween.ceiling_corners[3][2]) /
-                                      (tween.ceiling_corners[0][2] - tween.ceiling_corners[1][2]));
+                                          (tween.ceiling_corners[0][2] - tween.ceiling_corners[1][2]));
                 t = 1.0f / (1.0f + t);
                 btVector3 o;
                 o.setInterpolate3(util::convert(tween.ceiling_corners[0]), util::convert(tween.ceiling_corners[2]), t);
@@ -840,7 +839,7 @@ btCollisionShape *BT_CSfromHeightmap(const boost::multi_array<RoomSector, 2>& he
             case TweenType::TwoTriangles:
             {
                 glm::float_t t = glm::abs((tween.floor_corners[2][2] - tween.floor_corners[3][2]) /
-                                      (tween.floor_corners[0][2] - tween.floor_corners[1][2]));
+                                          (tween.floor_corners[0][2] - tween.floor_corners[1][2]));
                 t = 1.0f / (1.0f + t);
                 btVector3 o;
                 o.setInterpolate3(util::convert(tween.floor_corners[0]), util::convert(tween.floor_corners[2]), t);
@@ -894,5 +893,4 @@ btCollisionShape *BT_CSfromHeightmap(const boost::multi_array<RoomSector, 2>& he
     ret->setMargin(COLLISION_MARGIN_RIGIDBODY);
     return ret;
 }
-
 } // namespace world

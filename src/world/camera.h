@@ -71,7 +71,7 @@ private:
     glm::float_t m_height;
 
     glm::float_t m_shakeValue = 0;
-    util::Duration m_shakeTime{0};
+    util::Duration m_shakeTime{ 0 };
 
     CameraTarget m_targetDir = CameraTarget::Front; //Target rotation direction
 
@@ -247,5 +247,4 @@ struct FlybyCamera
 
     uint16_t    flags;      // See TRLE manual
 };
-
 } // namespace world

@@ -119,7 +119,7 @@ void internalTickCallback(btDynamicsWorld *world, float /*timeStep*/)
             world::Object* object = static_cast<world::Object*>(body->getUserPointer());
             if(dynamic_cast<world::BulletObject*>(object))
             {
-                object->setRoom( Room_FindPosCogerrence(util::convert(trans.getOrigin()), object->getRoom()) );
+                object->setRoom(Room_FindPosCogerrence(util::convert(trans.getOrigin()), object->getRoom()));
             }
         }
     }
@@ -132,21 +132,21 @@ std::unique_ptr<BulletEngine> BulletEngine::instance = nullptr;
 BulletEngine::BulletEngine()
 {
     ///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
-    collisionConfiguration.reset( new btDefaultCollisionConfiguration() );
+    collisionConfiguration.reset(new btDefaultCollisionConfiguration());
 
     ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
-    dispatcher.reset( new btCollisionDispatcher(collisionConfiguration.get()) );
+    dispatcher.reset(new btCollisionDispatcher(collisionConfiguration.get()));
     dispatcher->setNearCallback(roomNearCallback);
 
     ///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
-    overlappingPairCache.reset( new btDbvtBroadphase() );
-    ghostPairCallback.reset( new btGhostPairCallback() );
+    overlappingPairCache.reset(new btDbvtBroadphase());
+    ghostPairCallback.reset(new btGhostPairCallback());
     overlappingPairCache->getOverlappingPairCache()->setInternalGhostPairCallback(ghostPairCallback.get());
 
     ///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
-    solver.reset( new btSequentialImpulseConstraintSolver );
+    solver.reset(new btSequentialImpulseConstraintSolver);
 
-    dynamicsWorld.reset( new btDiscreteDynamicsWorld(dispatcher.get(), overlappingPairCache.get(), solver.get(), collisionConfiguration.get()) );
+    dynamicsWorld.reset(new btDiscreteDynamicsWorld(dispatcher.get(), overlappingPairCache.get(), solver.get(), collisionConfiguration.get()));
     dynamicsWorld->setInternalTickCallback(internalTickCallback);
     dynamicsWorld->setInternalTickCallback(internalPreTickCallback, nullptr, true);
     dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
@@ -218,5 +218,4 @@ btScalar BtEngineClosestConvexResultCallback::addSingleResult(btCollisionWorld::
 
     return 1.0;
 }
-
 }

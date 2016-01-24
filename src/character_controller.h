@@ -59,11 +59,11 @@
 #define LEFT_HAND                   (13)
 #define RIGHT_HAND                  (10)
 
-// CHARACTER PARAMETERS DEFAULTS
-constexpr float PARAM_ABSOLUTE_MAX                = -1;
+ // CHARACTER PARAMETERS DEFAULTS
+constexpr float PARAM_ABSOLUTE_MAX = -1;
 
-constexpr float LARA_PARAM_HEALTH_MAX             = 1000.0f;      //!< 1000 HP
-constexpr float LARA_PARAM_AIR_MAX                = 3600.0f;      //!< 60 secs of air
-constexpr float LARA_PARAM_STAMINA_MAX            = 120.0f;       //!< 4  secs of sprint
-constexpr float LARA_PARAM_WARMTH_MAX             = 240.0f;       //!< 8  secs of freeze
-constexpr float LARA_PARAM_POISON_MAX             = 5.0f;
+constexpr float LARA_PARAM_HEALTH_MAX = 1000.0f;      //!< 1000 HP
+constexpr float LARA_PARAM_AIR_MAX = 3600.0f;      //!< 60 secs of air
+constexpr float LARA_PARAM_STAMINA_MAX = 120.0f;       //!< 4  secs of sprint
+constexpr float LARA_PARAM_WARMTH_MAX = 240.0f;       //!< 8  secs of freeze
+constexpr float LARA_PARAM_POISON_MAX = 5.0f;

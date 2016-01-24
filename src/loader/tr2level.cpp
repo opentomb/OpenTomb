@@ -30,8 +30,8 @@ void TR2Level::load()
     // Version
     uint32_t file_version = m_reader.readU32();
 
-    if (file_version != 0x0000002d)
-        BOOST_THROW_EXCEPTION( std::runtime_error("TR2 Level: Wrong level version") );
+    if(file_version != 0x0000002d)
+        BOOST_THROW_EXCEPTION(std::runtime_error("TR2 Level: Wrong level version"));
 
     m_palette = Palette::readTr1(m_reader);
     /*Palette palette16 =*/ Palette::readTr2(m_reader);
@@ -43,7 +43,7 @@ void TR2Level::load()
     m_reader.readVector(texture16, numTextiles, &WordTexture::read);
 
     // Unused
-    if (m_reader.readU32() != 0)
+    if(m_reader.readU32() != 0)
         BOOST_LOG_TRIVIAL(warning) << "TR2 Level: Bad value for 'unused'";
 
     m_reader.readVector(m_rooms, m_reader.readU16(), Room::readTr2);
@@ -71,7 +71,7 @@ void TR2Level::load()
 
     m_reader.readVector(m_spriteSequences, m_reader.readU32(), &SpriteSequence::read);
 
-    if (m_demoOrUb)
+    if(m_demoOrUb)
         m_lightmap = LightMap::read(m_reader);
 
     m_reader.readVector(m_cameras, m_reader.readU32(), &Camera::read);
@@ -89,7 +89,7 @@ void TR2Level::load()
 
     m_reader.readVector(m_items, m_reader.readU32(), &Item::readTr2);
 
-    if (!m_demoOrUb)
+    if(!m_demoOrUb)
         m_lightmap = LightMap::read(m_reader);
 
     m_reader.readVector(m_cinematicFrames, m_reader.readU16(), &CinematicFrame::read);
@@ -125,11 +125,11 @@ void TR2Level::load()
     else
     {
         m_samplesCount = 0;
-        m_samplesData.resize( static_cast<size_t>(newsrc.size()) );
+        m_samplesData.resize(static_cast<size_t>(newsrc.size()));
         for(size_t i = 0; i < m_samplesData.size(); i++)
         {
             m_samplesData[i] = newsrc.readU8();
-            if(i >= 4 && *reinterpret_cast<uint32_t*>(m_samplesData.data()+i-4) == 0x46464952)   /// RIFF
+            if(i >= 4 && *reinterpret_cast<uint32_t*>(m_samplesData.data() + i - 4) == 0x46464952)   /// RIFF
             {
                 m_samplesCount++;
             }

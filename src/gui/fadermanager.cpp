@@ -5,7 +5,6 @@
 
 namespace gui
 {
-
 bool FaderManager::start(FaderType fader, FaderDir fade_direction)
 {
     // If fader exists, and is not active, we engage it.
@@ -64,8 +63,8 @@ bool FaderManager::assignPicture(FaderType fader, const std::string& pic_name)
 }
 
 void FaderManager::setup(FaderType fader,
-                   uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
-                   util::Duration fadein_speed, util::Duration fadeout_speed)
+                         uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
+                         util::Duration fadein_speed, util::Duration fadeout_speed)
 {
     m_faders[fader].setAlpha(alpha);
     m_faders[fader].setColor(R, G, B);
@@ -127,5 +126,4 @@ void FaderManager::showLoadScreenFader()
 {
     m_faders[FaderType::LoadScreen].show();
 }
-
 } // namespace gui

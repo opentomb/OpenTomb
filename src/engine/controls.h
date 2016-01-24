@@ -6,7 +6,6 @@
 
 namespace engine
 {
-
 #define JOY_BUTTON_MASK  1000
 #define JOY_HAT_MASK     1100
 #define JOY_TRIGGER_MASK 1200
@@ -134,5 +133,4 @@ struct ControlSettings
     void refreshStates();
     void initGlobals();
 };
-
 } // namespace engine

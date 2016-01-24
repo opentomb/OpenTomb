@@ -13,7 +13,7 @@
 
 namespace script
 {
-    class ScriptEngine;
+class ScriptEngine;
 }
 
 namespace world
@@ -31,12 +31,11 @@ struct Polygon;
 
 namespace engine
 {
-
 class BtEngineClosestConvexResultCallback;
 
 void Game_InitGlobals();
 void Game_RegisterLuaFunctions(script::ScriptEngine &state);
-int  Game_Load(const char* name);
+bool Game_Load(const std::string& name);
 bool Game_Save(const std::string& name);
 
 util::Duration Game_Tick(util::Duration* game_logic_time);
@@ -48,5 +47,4 @@ void Game_LevelTransition(uint16_t level_index);
 void Game_ApplyControls(std::shared_ptr<world::Entity> ent);
 
 void Game_UpdateAI();
-
 } // namespace engine

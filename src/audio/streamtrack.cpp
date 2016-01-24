@@ -33,13 +33,11 @@ constexpr float StreamDampSpeed = 1 / world::animation::GameLogicFrameRate;
 // CDAUDIO.WAD step size defines CDAUDIO's header stride, on which each track
 // info is placed. Also CDAUDIO count specifies static amount of tracks existing
 // in CDAUDIO.WAD file. Name length specifies maximum string size for trackname.
-constexpr int WADStride     = 268;
+constexpr int WADStride = 268;
 constexpr int WADNameLength = 260;
-constexpr int WADCount      = 130;
-
+constexpr int WADCount = 130;
 
 bool StreamTrack::damp_active = false;
-
 
 StreamTrack::StreamTrack()
 {
@@ -200,7 +198,7 @@ bool StreamTrack::loadWad(uint8_t index, const char* filename)
             fread(static_cast<void*>(&offset), sizeof(uint32_t), 1, m_wadFile);
 
             fseek(m_wadFile, offset, 0);
-            
+
             m_sndFile = sf_open_fd(fileno(m_wadFile), SFM_READ, &m_sfInfo, false);
             if(m_sndFile == nullptr)
             {
@@ -212,7 +210,7 @@ bool StreamTrack::loadWad(uint8_t index, const char* filename)
             {
                 Console::instance().notify(SYSNOTE_WAD_PLAYING, filename, offset, length);
                 Console::instance().notify(SYSNOTE_TRACK_OPENED, track_name,
-                                               m_sfInfo.channels, m_sfInfo.samplerate);
+                                           m_sfInfo.channels, m_sfInfo.samplerate);
             }
 
 #ifdef AUDIO_OPENAL_FLOAT
@@ -337,7 +335,7 @@ bool StreamTrack::update()
 
             // Clamp volume.
             m_dampedVolume = glm::clamp(m_dampedVolume, 0.0f, StreamDampLevel);
-            change_gain   = true;
+            change_gain = true;
         }
         else if(!damp_active && m_dampedVolume > 0)    // If damp is not active, but it's still at low, restore it.
         {
@@ -345,7 +343,7 @@ bool StreamTrack::update()
 
             // Clamp volume.
             m_dampedVolume = glm::clamp(m_dampedVolume, 0.0f, StreamDampLevel);
-            change_gain   = true;
+            change_gain = true;
         }
     }
 
@@ -407,7 +405,7 @@ bool StreamTrack::update()
 
             // Clamp volume.
             m_currentVolume = glm::clamp(m_currentVolume, 0.0f, 1.0f);
-            change_gain    = true;
+            change_gain = true;
         }
     }
 
@@ -546,5 +544,4 @@ void StreamTrack::unsetFX()
     alSourcei(m_source, AL_DIRECT_FILTER, AL_FILTER_NULL);
     alSource3i(m_source, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
 }
-
 } // namespace audio

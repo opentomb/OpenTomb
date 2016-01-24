@@ -7,7 +7,6 @@
 
 namespace gui
 {
-
 struct TextLine
 {
     std::string text;
@@ -15,7 +14,7 @@ struct TextLine
     FontType  fontType = gui::FontType::Primary;
     FontStyle fontStyle = gui::FontStyle::MenuTitle;
 
-    glm::vec2 position = {10.0, 10.0};
+    glm::vec2 position = { 10.0, 10.0 };
     mutable glm::vec2 offset;
 
     HorizontalAnchor Xanchor = gui::HorizontalAnchor::Right;
@@ -63,5 +62,4 @@ public:
 
     static std::unique_ptr<TextLineManager> instance;
 };
-
 } // namespace gui

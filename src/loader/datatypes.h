@@ -13,7 +13,6 @@
 
 namespace loader
 {
-
 namespace
 {
 constexpr const uint16_t TextureIndexMaskTr4 = 0x7FFF;          // in some custom levels we need to use 0x7FFF flag
@@ -177,8 +176,8 @@ struct ByteTexture
 
     static std::unique_ptr<ByteTexture> read(io::SDLReader& reader)
     {
-        std::unique_ptr<ByteTexture> textile{new ByteTexture()};
-        reader.readBytes(reinterpret_cast<uint8_t*>(textile->pixels), 256*256);
+        std::unique_ptr<ByteTexture> textile{ new ByteTexture() };
+        reader.readBytes(reinterpret_cast<uint8_t*>(textile->pixels), 256 * 256);
         return textile;
     }
 };
@@ -197,7 +196,7 @@ struct WordTexture
 
     static std::unique_ptr<WordTexture> read(io::SDLReader& reader)
     {
-        std::unique_ptr<WordTexture> texture{new WordTexture()};
+        std::unique_ptr<WordTexture> texture{ new WordTexture() };
 
         for(int i = 0; i < 256; i++)
         {
@@ -215,7 +214,7 @@ struct DWordTexture
 
     static std::unique_ptr<DWordTexture> read(io::SDLReader& reader)
     {
-        std::unique_ptr<DWordTexture> textile{new DWordTexture()};
+        std::unique_ptr<DWordTexture> textile{ new DWordTexture() };
 
         for(int i = 0; i < 256; i++)
         {
@@ -847,7 +846,7 @@ struct Room
       */
     static std::unique_ptr<Room> readTr1(io::SDLReader& reader)
     {
-        std::unique_ptr<Room> room{new Room()};
+        std::unique_ptr<Room> room{ new Room() };
 
         // read and change coordinate system
         room->offset.x = static_cast<float>(reader.readI32());
@@ -919,7 +918,7 @@ struct Room
 
     static std::unique_ptr<Room> readTr2(io::SDLReader& reader)
     {
-        std::unique_ptr<Room> room{new Room()};
+        std::unique_ptr<Room> room{ new Room() };
         // read and change coordinate system
         room->offset.x = static_cast<float>(reader.readI32());
         room->offset.y = 0;
@@ -996,7 +995,7 @@ struct Room
 
     static std::unique_ptr<Room> readTr3(io::SDLReader& reader)
     {
-        std::unique_ptr<Room> room{new Room()};
+        std::unique_ptr<Room> room{ new Room() };
 
         // read and change coordinate system
         room->offset.x = static_cast<float>(reader.readI32());
@@ -1066,7 +1065,7 @@ struct Room
         // Only in TR3-5
 
         room->water_scheme = reader.readU8();
-        room->reverb_info = static_cast<ReverbType>( reader.readU8() );
+        room->reverb_info = static_cast<ReverbType>(reader.readU8());
 
         reader.skip(1);   // Alternate_group override?
 
@@ -1079,7 +1078,7 @@ struct Room
 
     static std::unique_ptr<Room> readTr4(io::SDLReader& reader)
     {
-        std::unique_ptr<Room> room{new Room()};
+        std::unique_ptr<Room> room{ new Room() };
         // read and change coordinate system
         room->offset.x = static_cast<float>(reader.readI32());
         room->offset.y = 0;
@@ -1140,7 +1139,7 @@ struct Room
         // Only in TR3-5
 
         room->water_scheme = reader.readU8();
-        room->reverb_info = static_cast<ReverbType>( reader.readU8() );
+        room->reverb_info = static_cast<ReverbType>(reader.readU8());
 
         // Only in TR4-5
 
@@ -1162,7 +1161,7 @@ struct Room
         const auto position = reader.tell();
         const auto endPos = position + room_data_size;
 
-        std::unique_ptr<Room> room{new Room()};
+        std::unique_ptr<Room> room{ new Room() };
         room->intensity1 = 32767;
         room->intensity2 = 32767;
         room->light_mode = 0;
@@ -1202,7 +1201,7 @@ struct Room
         if(room->static_meshes.size() > 512)
             BOOST_LOG_TRIVIAL(warning) << "TR5 Room: static_meshes.size() > 512";
 
-        room->reverb_info = static_cast<ReverbType>( reader.readU8() );
+        room->reverb_info = static_cast<ReverbType>(reader.readU8());
         room->alternate_group = reader.readU8();
         room->water_scheme = static_cast<uint8_t>(reader.readU16());
 
@@ -1279,7 +1278,7 @@ struct Room
         /*light_size = */reader.readU32();
         auto numL2 = reader.readU32();
         if(numL2 != room->lights.size())
-            BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Room: numLights2 != lights.size()") );
+            BOOST_THROW_EXCEPTION(std::runtime_error("TR5 Room: numLights2 != lights.size()"));
 
         room->unknown_r6 = reader.readU32();
         room->room_y_top = -reader.readF();
@@ -1292,11 +1291,11 @@ struct Room
         auto poly_offset = reader.readU32();
         auto poly_offset2 = reader.readU32();
         if(poly_offset != poly_offset2)
-            BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Room: poly_offset != poly_offset2") );
+            BOOST_THROW_EXCEPTION(std::runtime_error("TR5 Room: poly_offset != poly_offset2"));
 
         auto vertices_size = reader.readU32();
         if(vertices_size % 28 != 0)
-            BOOST_THROW_EXCEPTION( std::runtime_error("TR5 Room: vertices_size has wrong value") );
+            BOOST_THROW_EXCEPTION(std::runtime_error("TR5 Room: vertices_size has wrong value"));
 
         if(reader.readU32() != 0xCDCDCDCD)
             BOOST_LOG_TRIVIAL(warning) << "TR5 Room: seperator15 has wrong value";
@@ -1406,7 +1405,7 @@ struct Mesh
       */
     static std::unique_ptr<Mesh> readTr1(io::SDLReader& reader)
     {
-        std::unique_ptr<Mesh> mesh{new Mesh()};
+        std::unique_ptr<Mesh> mesh{ new Mesh() };
         mesh->centre = Vertex::read16(reader);
         mesh->collision_size = reader.readI32();
 
@@ -1448,7 +1447,7 @@ struct Mesh
 
     static std::unique_ptr<Mesh> readTr4(io::SDLReader& reader)
     {
-        std::unique_ptr<Mesh> mesh{new Mesh()};
+        std::unique_ptr<Mesh> mesh{ new Mesh() };
         mesh->centre = Vertex::read16(reader);
         mesh->collision_size = reader.readI32();
 
@@ -1492,7 +1491,7 @@ struct StaticMesh
 
     static std::unique_ptr<StaticMesh> read(io::SDLReader& reader)
     {
-        std::unique_ptr<StaticMesh> mesh{new StaticMesh()};
+        std::unique_ptr<StaticMesh> mesh{ new StaticMesh() };
         mesh->object_id = reader.readU32();
         mesh->mesh = reader.readU16();
 
@@ -1590,7 +1589,7 @@ struct Moveable
       */
     static std::unique_ptr<Moveable> readTr1(io::SDLReader& reader)
     {
-        std::unique_ptr<Moveable> moveable{new Moveable()};
+        std::unique_ptr<Moveable> moveable{ new Moveable() };
         moveable->object_id = reader.readU32();
         moveable->num_meshes = reader.readU16();
         moveable->starting_mesh = reader.readU16();
@@ -1635,7 +1634,7 @@ struct Item
     /// \brief reads an item definition.
     static std::unique_ptr<Item> readTr1(io::SDLReader& reader)
     {
-        std::unique_ptr<Item> item{new Item()};
+        std::unique_ptr<Item> item{ new Item() };
         item->object_id = reader.readI16();
         item->room = reader.readI16();
         item->position = Vertex::read32(reader);
@@ -1651,7 +1650,7 @@ struct Item
 
     static std::unique_ptr<Item> readTr2(io::SDLReader& reader)
     {
-        std::unique_ptr<Item> item{new Item()};
+        std::unique_ptr<Item> item{ new Item() };
         item->object_id = reader.readI16();
         item->room = reader.readI16();
         item->position = Vertex::read32(reader);
@@ -1669,7 +1668,7 @@ struct Item
 
     static std::unique_ptr<Item> readTr3(io::SDLReader& reader)
     {
-        std::unique_ptr<Item> item{new Item()};
+        std::unique_ptr<Item> item{ new Item() };
         item->object_id = reader.readI16();
         item->room = reader.readI16();
         item->position = Vertex::read32(reader);
@@ -1683,7 +1682,7 @@ struct Item
 
     static std::unique_ptr<Item> readTr4(io::SDLReader& reader)
     {
-        std::unique_ptr<Item> item{new Item()};
+        std::unique_ptr<Item> item{ new Item() };
         item->object_id = reader.readI16();
         item->room = reader.readI16();
         item->position = Vertex::read32(reader);
@@ -1694,7 +1693,6 @@ struct Item
         item->flags = reader.readU16();
         return item;
     }
-    
 };
 
 struct SpriteTexture
@@ -1716,7 +1714,7 @@ struct SpriteTexture
       */
     static std::unique_ptr<SpriteTexture> readTr1(io::SDLReader& reader)
     {
-        std::unique_ptr<SpriteTexture> sprite_texture{new SpriteTexture()};
+        std::unique_ptr<SpriteTexture> sprite_texture{ new SpriteTexture() };
 
         sprite_texture->tile = reader.readU16();
         if(sprite_texture->tile > 64)
@@ -1747,7 +1745,7 @@ struct SpriteTexture
 
     static std::unique_ptr<SpriteTexture> readTr4(io::SDLReader& reader)
     {
-        std::unique_ptr<SpriteTexture> sprite_texture{new SpriteTexture()};
+        std::unique_ptr<SpriteTexture> sprite_texture{ new SpriteTexture() };
         sprite_texture->tile = reader.readU16();
         if(sprite_texture->tile > 128)
             BOOST_LOG_TRIVIAL(warning) << "TR4 Sprite Texture: tile > 128";
@@ -1786,7 +1784,7 @@ struct SpriteSequence
       */
     static std::unique_ptr<SpriteSequence> read(io::SDLReader& reader)
     {
-        std::unique_ptr<SpriteSequence> sprite_sequence{new SpriteSequence()};
+        std::unique_ptr<SpriteSequence> sprite_sequence{ new SpriteSequence() };
         sprite_sequence->object_id = reader.readI32();
         sprite_sequence->length = -reader.readI16();
         sprite_sequence->offset = reader.readI16();
@@ -1839,7 +1837,7 @@ struct Animation
 private:
     static std::unique_ptr<Animation> read(io::SDLReader& reader, bool withLateral)
     {
-        std::unique_ptr<Animation> animation{new Animation()};
+        std::unique_ptr<Animation> animation{ new Animation() };
         animation->frame_offset = reader.readU32();
         animation->frame_rate = reader.readU8();
         animation->frame_size = reader.readU8();
@@ -1886,7 +1884,7 @@ struct StateChange
     /// \brief reads an animation state change.
     static std::unique_ptr<StateChange> read(io::SDLReader& reader)
     {
-        std::unique_ptr<StateChange> state_change{new StateChange()};
+        std::unique_ptr<StateChange> state_change{ new StateChange() };
         state_change->state_id = reader.readU16();
         state_change->num_anim_dispatches = reader.readU16();
         state_change->anim_dispatch = reader.readU16();
@@ -1910,7 +1908,7 @@ struct AnimDispatch
     /// \brief reads an animation dispatch.
     static std::unique_ptr<AnimDispatch> read(io::SDLReader& reader)
     {
-        std::unique_ptr<AnimDispatch> anim_dispatch{new AnimDispatch()};
+        std::unique_ptr<AnimDispatch> anim_dispatch{ new AnimDispatch() };
         anim_dispatch->low = reader.readI16();
         anim_dispatch->high = reader.readI16();
         anim_dispatch->next_animation = reader.readI16();
@@ -1931,7 +1929,7 @@ struct Box
 
     static std::unique_ptr<Box> readTr1(io::SDLReader& reader)
     {
-        std::unique_ptr<Box> box{new Box()};
+        std::unique_ptr<Box> box{ new Box() };
         box->zmax = -reader.readI32();
         box->zmin = -reader.readI32();
         box->xmin = reader.readI32();
@@ -1943,7 +1941,7 @@ struct Box
 
     static std::unique_ptr<Box> readTr2(io::SDLReader& reader)
     {
-        std::unique_ptr<Box> box{new Box()};
+        std::unique_ptr<Box> box{ new Box() };
         box->zmax = -1024 * reader.readU8();
         box->zmin = -1024 * reader.readU8();
         box->xmin = 1024 * reader.readU8();
@@ -1976,10 +1974,10 @@ private:
     {
         std::unique_ptr<Zone> zone{ new Zone() };
         zone->flyZoneNormal = reader.readU16();
-        for(int i = 0; i<n; ++i)
+        for(int i = 0; i < n; ++i)
             zone->groundZonesNormal.emplace_back(reader.readU16());
         zone->flyZoneAlternate = reader.readU16();
-        for(int i = 0; i<n; ++i)
+        for(int i = 0; i < n; ++i)
             zone->groundZonesAlternate.emplace_back(reader.readU16());
         return zone;
     }
@@ -2002,7 +2000,7 @@ struct SoundSource
 
     static std::unique_ptr<SoundSource> read(io::SDLReader& reader)
     {
-        std::unique_ptr<SoundSource> sound_source{new SoundSource()};
+        std::unique_ptr<SoundSource> sound_source{ new SoundSource() };
         sound_source->x = reader.readI32();
         sound_source->y = reader.readI32();
         sound_source->z = reader.readI32();
@@ -2112,7 +2110,7 @@ struct SoundDetails
 
     static std::unique_ptr<SoundDetails> readTr1(io::SDLReader& reader)
     {
-        std::unique_ptr<SoundDetails> sound_details{new SoundDetails()};
+        std::unique_ptr<SoundDetails> sound_details{ new SoundDetails() };
         sound_details->sample = reader.readU16();
         sound_details->volume = reader.readU16();
         sound_details->chance = reader.readU16();
@@ -2125,7 +2123,7 @@ struct SoundDetails
 
     static std::unique_ptr<SoundDetails> readTr3(io::SDLReader& reader)
     {
-        std::unique_ptr<SoundDetails> sound_details{new SoundDetails()};
+        std::unique_ptr<SoundDetails> sound_details{ new SoundDetails() };
         sound_details->sample = reader.readU16();
         sound_details->volume = reader.readU8();
         sound_details->sound_range = reader.readU8();
@@ -2224,7 +2222,7 @@ struct ObjectTexture
       */
     static std::unique_ptr<ObjectTexture> readTr1(io::SDLReader& reader)
     {
-        std::unique_ptr<ObjectTexture> object_texture{new ObjectTexture()};
+        std::unique_ptr<ObjectTexture> object_texture{ new ObjectTexture() };
         object_texture->transparency_flags = static_cast<BlendingMode>(reader.readU16());
         object_texture->tileAndFlag = reader.readU16();
         if(object_texture->tileAndFlag > 64)
@@ -2249,8 +2247,8 @@ struct ObjectTexture
 
     static std::unique_ptr<ObjectTexture> readTr4(io::SDLReader& reader)
     {
-        std::unique_ptr<ObjectTexture> object_texture{new ObjectTexture()};
-        object_texture->transparency_flags = static_cast<BlendingMode>( reader.readU16() );
+        std::unique_ptr<ObjectTexture> object_texture{ new ObjectTexture() };
+        object_texture->transparency_flags = static_cast<BlendingMode>(reader.readU16());
         object_texture->tileAndFlag = reader.readU16();
         if((object_texture->tileAndFlag & 0x7FFF) > 128)
             BOOST_LOG_TRIVIAL(warning) << "TR4 Object Texture: tileAndFlag > 128";
@@ -2293,7 +2291,7 @@ struct Camera
 
     static std::unique_ptr<Camera> read(io::SDLReader& reader)
     {
-        std::unique_ptr<Camera> camera{new Camera()};
+        std::unique_ptr<Camera> camera{ new Camera() };
         camera->x = reader.readI32();
         camera->y = reader.readI32();
         camera->z = reader.readI32();
@@ -2323,7 +2321,7 @@ struct FlybyCamera
 
     static std::unique_ptr<FlybyCamera> read(io::SDLReader& reader)
     {
-        std::unique_ptr<FlybyCamera> camera{new FlybyCamera()};
+        std::unique_ptr<FlybyCamera> camera{ new FlybyCamera() };
         camera->cam_x = reader.readI32();
         camera->cam_y = reader.readI32();
         camera->cam_z = reader.readI32();
@@ -2358,7 +2356,7 @@ struct AIObject
 
     static std::unique_ptr<AIObject> read(io::SDLReader& reader)
     {
-        std::unique_ptr<AIObject> object{new AIObject()};
+        std::unique_ptr<AIObject> object{ new AIObject() };
         object->object_id = reader.readU16();
         object->room = reader.readU16();                        // 4
 
@@ -2389,7 +2387,7 @@ struct CinematicFrame
     /// \brief reads a cinematic frame
     static std::unique_ptr<CinematicFrame> read(io::SDLReader& reader)
     {
-        std::unique_ptr<CinematicFrame> cf{new CinematicFrame()};
+        std::unique_ptr<CinematicFrame> cf{ new CinematicFrame() };
         cf->roty = reader.readI16();         // rotation about Y axis, +/- 32767 == +/- 180 degrees
         cf->rotz = reader.readI16();         // rotation about Z axis, +/- 32767 == +/- 180 degrees
         cf->rotz2 = reader.readI16();        // seems to work a lot like rotZ;  I haven't yet been able to
@@ -2424,7 +2422,7 @@ struct Palette
     /// \brief reads the 256 colour palette values.
     static std::unique_ptr<Palette> readTr1(io::SDLReader& reader)
     {
-        std::unique_ptr<Palette> palette{new Palette()};
+        std::unique_ptr<Palette> palette{ new Palette() };
         for(int i = 0; i < 256; i++)
             palette->color[i] = ByteColor::readTr1(reader);
         return palette;
@@ -2432,11 +2430,10 @@ struct Palette
 
     static std::unique_ptr<Palette> readTr2(io::SDLReader& reader)
     {
-        std::unique_ptr<Palette> palette{new Palette()};
+        std::unique_ptr<Palette> palette{ new Palette() };
         for(int i = 0; i < 256; i++)
             palette->color[i] = ByteColor::readTr2(reader);
         return palette;
     }
 };
-
 } // namespace loader

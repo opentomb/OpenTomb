@@ -6,7 +6,6 @@ namespace world
 {
 namespace core
 {
-
 struct Light
 {
     glm::vec3 position;
@@ -21,6 +20,5 @@ struct Light
 
     loader::LightType light_type;
 };
-
 } // namespace core
 } // namespace world

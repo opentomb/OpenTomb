@@ -6,7 +6,6 @@
 
 namespace world
 {
-
 bool RagdollSetup::getSetup(int ragdoll_index)
 {
     lua::Value rds = engine_lua["getRagdollSetup"](ragdoll_index);
@@ -78,5 +77,4 @@ void RagdollSetup::clearSetup()
     joint_setup.clear();
     hit_func.clear();
 }
-
 } // namespace world

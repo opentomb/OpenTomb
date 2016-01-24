@@ -19,13 +19,12 @@ struct Room;
 
 namespace core
 {
-
 struct BoundingBox;
 
 struct OrientedBoundingBox
 {
-    std::array<Polygon,6> base_polygons;           // bv base surface
-    std::array<Polygon,6> polygons;                // bv world coordinate surface
+    std::array<Polygon, 6> base_polygons;           // bv base surface
+    std::array<Polygon, 6> polygons;                // bv world coordinate surface
     const glm::mat4* transform = nullptr;          // Object transform matrix
     glm::float_t radius;
 
@@ -43,6 +42,5 @@ constexpr glm::float_t DefaultTestOverlap = 1.2f;
 }
 
 bool testOverlap(const Entity &e1, const Entity &e2, glm::float_t overlap = DefaultTestOverlap);
-
 } // namespace core
 } // namespace world

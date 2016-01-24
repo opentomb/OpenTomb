@@ -4,7 +4,6 @@
 
 namespace render
 {
-
 // A shader stage is a simple wrapper to load an OpenGL shader
 // object more easily.
 
@@ -69,7 +68,6 @@ struct SpriteShaderDescription : public ShaderDescription
     SpriteShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
 
-
 // A shader description for text
 
 struct TextShaderDescription : public ShaderDescription
@@ -130,5 +128,4 @@ struct UnlitTintedShaderDescription : public UnlitShaderDescription
 
     UnlitTintedShaderDescription(const ShaderStage &vertex, const ShaderStage &fragment);
 };
-
 } // namespace render

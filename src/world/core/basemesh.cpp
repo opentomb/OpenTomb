@@ -7,7 +7,6 @@ namespace world
 {
 namespace core
 {
-
 void BaseMesh::polySortInMesh()
 {
     for(Polygon& p : m_polygons)
@@ -429,6 +428,5 @@ btCollisionShape *BT_CSfromMesh(const std::shared_ptr<BaseMesh>& mesh, bool useC
 
     return ret;
 }
-
 } // namespace core
 } // namespace world

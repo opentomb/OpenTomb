@@ -8,7 +8,6 @@
 
 namespace gui
 {
-
 ItemNotifier::ItemNotifier()
 {
     setPos(850, 850);
@@ -71,7 +70,7 @@ void ItemNotifier::reset()
 {
     m_active = false;
     m_currTime = util::Duration(0);
-    m_currentAngle = {0,0};
+    m_currentAngle = { 0,0 };
 
     m_endPosX = static_cast<glm::float_t>(engine::screen_info.w) / ScreenMeteringResolution * m_absPos.x;
     m_posY = static_cast<float>(engine::screen_info.h) / ScreenMeteringResolution * m_absPos.y;
@@ -107,12 +106,12 @@ void ItemNotifier::draw() const
 
 void ItemNotifier::setPos(glm::float_t X, glm::float_t Y)
 {
-    m_absPos = {X, 1000.0f - Y};
+    m_absPos = { X, 1000.0f - Y };
 }
 
 void ItemNotifier::setRotation(glm::float_t X, glm::float_t Y)
 {
-    m_rotation = {X, Y};
+    m_rotation = { X, Y };
 }
 
 void ItemNotifier::setSize(glm::float_t size)
@@ -124,5 +123,4 @@ void ItemNotifier::setRotateTime(util::Duration time)
 {
     m_radPerSecond = util::Seconds(1) / time * glm::radians(360.0f);
 }
-
 } // namespace gui

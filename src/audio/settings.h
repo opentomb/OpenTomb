@@ -4,7 +4,6 @@
 
 namespace audio
 {
-
 // Audio settings structure.
 struct Settings
 {
@@ -14,5 +13,4 @@ struct Settings
     bool        listener_is_player = false; // RESERVED FOR FUTURE USE
     int         stream_buffer_size = 32;
 };
-
 } // namespace audio

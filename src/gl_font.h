@@ -38,7 +38,7 @@ struct CharInfo
 struct FontTexture
 {
     FT_Library               ft_library;
-    std::shared_ptr<std::remove_pointer<FT_Face>::type> ft_face{nullptr, &FT_Done_Face};
+    std::shared_ptr<std::remove_pointer<FT_Face>::type> ft_face{ nullptr, &FT_Done_Face };
     uint16_t                 font_size;
 
     std::vector<CharInfo> glyphs;

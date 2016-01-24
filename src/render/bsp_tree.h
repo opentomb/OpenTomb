@@ -63,5 +63,4 @@ public:
         m_root.reset(new BSPNode());
     }
 };
-
 } // namespace render

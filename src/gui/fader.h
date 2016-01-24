@@ -94,15 +94,15 @@ private:
     void setAspect();
     bool dropTexture();
 
-    glm::vec4 m_topLeftColor{0};       // All colors are defined separately, for
-    glm::vec4 m_topRightColor{0};      // further possibility of advanced full
-    glm::vec4 m_bottomLeftColor{0};    // screen effects with gradients.
-    glm::vec4 m_bottomRightColor{0};
+    glm::vec4 m_topLeftColor{ 0 };       // All colors are defined separately, for
+    glm::vec4 m_topRightColor{ 0 };      // further possibility of advanced full
+    glm::vec4 m_bottomLeftColor{ 0 };    // screen effects with gradients.
+    glm::vec4 m_bottomRightColor{ 0 };
 
     loader::BlendingMode m_blendingMode = loader::BlendingMode::Opaque;     // Fader's blending mode.
 
     glm::float_t m_currentAlpha;          // Current alpha value.
-    glm::float_t m_maxAlpha{1};              // Maximum reachable alpha value.
+    glm::float_t m_maxAlpha{ 1 };              // Maximum reachable alpha value.
     util::Duration m_speed = util::MilliSeconds(500);                 // Fade speed.
     util::Duration m_speedSecondary = util::MilliSeconds(200);        // Secondary speed - used with TIMED type.
 
@@ -118,7 +118,6 @@ private:
     FaderDir m_direction = FaderDir::In;             // Specifies fade direction.
 
     util::Duration m_currentTime;           // Current fader time.
-    util::Duration m_maxTime{0};               // Maximum delay time.
+    util::Duration m_maxTime{ 0 };               // Maximum delay time.
 };
-
 } // namespace gui

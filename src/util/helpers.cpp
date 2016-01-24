@@ -6,10 +6,9 @@
 
 namespace util
 {
-
 void writeTGAfile(const char *filename, const uint8_t *data, const int width, const int height, char invY)
 {
-    std::ofstream st(filename, std::ios::out|std::ios::binary);
+    std::ofstream st(filename, std::ios::out | std::ios::binary);
     if(!st.is_open())
         return;
 
@@ -53,8 +52,8 @@ void writeTGAfile(const char *filename, const uint8_t *data, const int width, co
 
     if(invY)
     {
-        for (int y = 0; y < height; y++)
-            for (int x = 0; x < width; x++)
+        for(int y = 0; y < height; y++)
+            for(int x = 0; x < width; x++)
             {
                 st.write(reinterpret_cast<const char*>(&data[(y * width + x) * 4 + 2]), 1);
                 st.write(reinterpret_cast<const char*>(&data[(y * width + x) * 4 + 1]), 1);
@@ -64,8 +63,8 @@ void writeTGAfile(const char *filename, const uint8_t *data, const int width, co
     }
     else
     {
-        for (int y = height-1; y >= 0; y--)
-            for (int x = 0; x < width; x++)
+        for(int y = height - 1; y >= 0; y--)
+            for(int x = 0; x < width; x++)
             {
                 st.write(reinterpret_cast<const char*>(&data[(y * width + x) * 4 + 2]), 1);
                 st.write(reinterpret_cast<const char*>(&data[(y * width + x) * 4 + 1]), 1);
@@ -74,5 +73,4 @@ void writeTGAfile(const char *filename, const uint8_t *data, const int width, co
             }
     }
 }
-
 } // namespace util

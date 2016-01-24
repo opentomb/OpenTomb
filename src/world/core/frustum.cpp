@@ -11,22 +11,21 @@ namespace world
 {
 namespace core
 {
-
 bool Frustum::intersects(const glm::vec3& a, const glm::vec3& b) const
 {
     uint32_t aOutside = 0, bOutside = 0;
-    for(size_t i=0; i<m_planes.size(); ++i)
+    for(size_t i = 0; i < m_planes.size(); ++i)
     {
         const auto aDist = m_planes[i].distance(a);
         if(aDist < 0)
-            aOutside |= 1<<i;
+            aOutside |= 1 << i;
 
         const auto bDist = m_planes[i].distance(b);
         if(bDist < 0)
-            bOutside |= 1<<i;
+            bOutside |= 1 << i;
     }
 
-    if(aOutside==0 || bOutside==0)
+    if(aOutside == 0 || bOutside == 0)
         return true; // a or b or both are inside the frustum
 
     // if both are outside different planes, chances are high that they cross the frustum;
@@ -92,7 +91,7 @@ bool Frustum::isVisible(const BoundingBox& bb) const
     for(const util::Plane& plane : m_planes)
     {
         glm::vec3 signFlipped = center;
-        for(int i=0; i<3; ++i)
+        for(int i = 0; i < 3; ++i)
             signFlipped[i] += glm::sign(plane.normal[i]) * extent[i];
         if(plane.distance(signFlipped) >= 0)
             return true;
@@ -117,6 +116,5 @@ bool Frustum::isVisible(const OrientedBoundingBox& obb, const Camera& cam) const
 
     return inside;
 }
-
 } // namespace core
 } // namespace world

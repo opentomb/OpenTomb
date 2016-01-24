@@ -4,7 +4,6 @@
 
 namespace world
 {
-
 void SkeletalModel::clear()
 {
     meshes.clear();
@@ -33,13 +32,13 @@ void SkeletalModel::fillSkinnedMeshMap()
         {
             if(const core::Vertex* rv = mesh.mesh_base->findVertex(v.position))
             {
-                mesh.mesh_skin->m_matrixIndices.emplace_back(0,0);
+                mesh.mesh_skin->m_matrixIndices.emplace_back(0, 0);
                 v.position = rv->position;
                 v.normal = rv->normal;
                 continue;
             }
 
-            mesh.mesh_skin->m_matrixIndices.emplace_back(0,1);
+            mesh.mesh_skin->m_matrixIndices.emplace_back(0, 1);
             glm::vec3 tv = v.position + mesh.offset;
             for(const MeshReference& prevMesh : meshes)
             {
@@ -47,7 +46,7 @@ void SkeletalModel::fillSkinnedMeshMap()
                 if(rv == nullptr)
                     continue;
 
-                mesh.mesh_skin->m_matrixIndices.emplace_back(1,1);
+                mesh.mesh_skin->m_matrixIndices.emplace_back(1, 1);
                 v.position = rv->position - mesh.offset;
                 v.normal = rv->normal;
                 break;
@@ -58,7 +57,7 @@ void SkeletalModel::fillSkinnedMeshMap()
 
 void SkeletalModel::setMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount)
 {
-    BOOST_ASSERT( meshCount <= meshes.size() && meshCount <= src.size() );
+    BOOST_ASSERT(meshCount <= meshes.size() && meshCount <= src.size());
     for(size_t i = 0; i < meshCount; i++)
     {
         meshes[i].mesh_base = src[i].mesh_base;
@@ -67,7 +66,7 @@ void SkeletalModel::setMeshes(const std::vector<SkeletalModel::MeshReference>& s
 
 void SkeletalModel::setSkinnedMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount)
 {
-    BOOST_ASSERT( meshCount <= meshes.size() && meshCount <= src.size() );
+    BOOST_ASSERT(meshCount <= meshes.size() && meshCount <= src.size());
     for(size_t i = 0; i < meshCount; i++)
     {
         meshes[i].mesh_skin = src[i].mesh_base;
@@ -89,7 +88,7 @@ bool SkeletalModel::findStateChange(LaraState stateid, animation::AnimationId& a
 
     for(const animation::AnimationDispatch& dispatch : stc->dispatches)
     {
-        if(   frameid_inout >= dispatch.start
+        if(frameid_inout >= dispatch.start
            && frameid_inout <= dispatch.end)
         {
             animid_inout = dispatch.next.animation;
@@ -100,5 +99,4 @@ bool SkeletalModel::findStateChange(LaraState stateid, animation::AnimationId& a
 
     return false;
 }
-
 } // namespace world

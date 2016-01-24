@@ -240,8 +240,8 @@ bool Engine::endStreams(StreamType stream_type)
     for(StreamTrack& track : m_tracks)
     {
         if(stream_type == StreamType::Any ||                              // End ALL streams at once.
-                (track.isPlaying() &&
-                 track.isType(stream_type)))
+           (track.isPlaying() &&
+            track.isType(stream_type)))
         {
             result = true;
             track.fadeOutAndStop();
@@ -258,8 +258,8 @@ bool Engine::stopStreams(StreamType stream_type)
     for(StreamTrack& track : m_tracks)
     {
         if(track.isPlaying() &&
-                (track.isType(stream_type) ||
-                 stream_type == StreamType::Any)) // Stop ALL streams at once.
+           (track.isType(stream_type) ||
+            stream_type == StreamType::Any)) // Stop ALL streams at once.
         {
             result = true;
             track.stop();
@@ -286,9 +286,9 @@ boost::optional<size_t> Engine::findSource(const boost::optional<SoundId>& sound
 {
     for(size_t i = 0; i < m_sources.size(); i++)
     {
-        if(   (entity_type == EmitterType::Any || m_sources[i].getEmitterType() == entity_type)
-           && (!entityId                       || m_sources[i].getEmitterId() == *entityId)
-           && (!soundId                        || m_sources[i].getSoundId() == *soundId))
+        if((entity_type == EmitterType::Any || m_sources[i].getEmitterType() == entity_type)
+           && (!entityId || m_sources[i].getEmitterId() == *entityId)
+           && (!soundId || m_sources[i].getSoundId() == *soundId))
         {
             if(m_sources[i].isPlaying())
                 return i;
@@ -428,7 +428,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
     // in any way.
 
     if(stream_type != StreamType::Background &&
-            trackAlreadyPlayed(track_index, mask))
+       trackAlreadyPlayed(track_index, mask))
     {
         return StreamError::Ignored;
     }
@@ -687,7 +687,7 @@ Error Engine::send(const boost::optional<SoundId>& soundId, EmitterType entityTy
 
     if(effect->rand_pitch)  // Vary pitch, if flag is set.
     {
-        auto random_float = static_cast<ALfloat>( rand() % effect->rand_pitch_var );
+        auto random_float = static_cast<ALfloat>(rand() % effect->rand_pitch_var);
         random_float = effect->pitch + (random_float - 25.0f) / 200.0f;
         source->setPitch(random_float);
     }
@@ -698,7 +698,7 @@ Error Engine::send(const boost::optional<SoundId>& soundId, EmitterType entityTy
 
     if(effect->rand_gain)   // Vary gain, if flag is set.
     {
-        auto random_float = static_cast<ALfloat>( rand() % effect->rand_gain_var );
+        auto random_float = static_cast<ALfloat>(rand() % effect->rand_gain_var);
         random_float = effect->gain + (random_float - 25.0f) / 200.0f;
         source->setGain(random_float);
     }
@@ -904,7 +904,7 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
     {
         m_emitters[i].emitter_index = static_cast<ALuint>(i);
         m_emitters[i].soundId = tr->m_soundSources[i].sound_id;
-        m_emitters[i].position = glm::vec3( tr->m_soundSources[i].x, tr->m_soundSources[i].z, -tr->m_soundSources[i].y );
+        m_emitters[i].position = glm::vec3(tr->m_soundSources[i].x, tr->m_soundSources[i].z, -tr->m_soundSources[i].y);
         m_emitters[i].flags = tr->m_soundSources[i].flags;
     }
 }
@@ -928,7 +928,7 @@ void Engine::loadSampleOverrideInfo()
         {
             for(int j = 0; j < sample_count; j++, buffer_counter++)
             {
-                std::string sampleName = (boost::format(sample_name_mask) % (sample_index+j)).str();
+                std::string sampleName = (boost::format(sample_name_mask) % (sample_index + j)).str();
                 if(!boost::filesystem::is_regular_file(sampleName))
                 {
                     loadALbufferFromFile(getBuffer(buffer_counter), sampleName);
@@ -1050,5 +1050,4 @@ void Engine::closeDevice()
         m_device = nullptr;
     }
 }
-
 } // namespace audio

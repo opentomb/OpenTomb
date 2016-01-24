@@ -9,7 +9,6 @@ namespace world
 {
 namespace core
 {
-
 /*
  * POLYGONS
  */
@@ -31,7 +30,7 @@ bool Polygon::isBroken() const
     for(const auto& v : vertices)
     {
         glm::vec3 dif = v.position - curr_v->position;
-        if(glm::dot(dif,dif) < 0.0001)
+        if(glm::dot(dif, dif) < 0.0001)
         {
             return true;
         }
@@ -74,7 +73,7 @@ void Polygon::transform(const glm::mat4& tr)
     plane.normal = glm::mat3(tr) * plane.normal;
     for(Vertex& vp : vertices)
     {
-        vp.position = glm::vec3( tr * glm::vec4(vp.position, 1.0f) );
+        vp.position = glm::vec3(tr * glm::vec4(vp.position, 1.0f));
         vp.normal = glm::mat3(tr) * vp.normal;
     }
 
@@ -86,7 +85,7 @@ void Polygon::copyTransformed(const Polygon& src, const glm::mat4& tr, bool copy
     plane.normal = glm::mat3(tr) * src.plane.normal;
     for(size_t i = 0; i < src.vertices.size(); i++)
     {
-        vertices[i].position = glm::vec3( tr * glm::vec4(src.vertices[i].position, 1) );
+        vertices[i].position = glm::vec3(tr * glm::vec4(src.vertices[i].position, 1));
         if(copyNormals)
             vertices[i].normal = glm::mat3(tr) * src.vertices[i].normal;
     }
@@ -152,7 +151,7 @@ bool Polygon::intersectPolygon(const Polygon& p2)
             if(dist0 < -SplitEpsilon)
             {
                 result_buf.emplace_back(p2.plane.rayIntersect(prev_v->position,
-                                                               curr_v->position - prev_v->position));
+                                                              curr_v->position - prev_v->position));
             }
         }
         else if(dist1 < -SplitEpsilon)
@@ -160,7 +159,7 @@ bool Polygon::intersectPolygon(const Polygon& p2)
             if(dist0 > SplitEpsilon)
             {
                 result_buf.emplace_back(p2.plane.rayIntersect(prev_v->position,
-                                                               curr_v->position - prev_v->position));
+                                                              curr_v->position - prev_v->position));
             }
         }
         else
@@ -401,6 +400,5 @@ bool Polygon::isInsideBQuad(const BoundingBox& bb) const
 
     return true;
 }
-
 } // namespace core
 } // namespace world

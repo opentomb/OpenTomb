@@ -42,7 +42,6 @@ class Skeleton;
 
 namespace render
 {
-
 struct BSPNode;
 struct BSPFaceRef;
 
@@ -68,7 +67,7 @@ class RenderDebugDrawer : public btIDebugDraw
 {
     uint32_t m_debugMode = 0;
 
-    glm::vec3 m_color = {0,0,0};
+    glm::vec3 m_color = { 0,0,0 };
     std::vector<glm::vec3> m_buffer;
 
     world::core::OrientedBoundingBox m_obb;
@@ -288,5 +287,4 @@ extern Render renderer;
 void fillCrosshairBuffer();
 void drawCrosshair();
 void renderItem(const world::animation::Skeleton& bf, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix);
-
 } // namespace render

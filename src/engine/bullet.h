@@ -18,7 +18,6 @@ class Object;
 
 namespace engine
 {
-
 struct BulletEngine
 {
     std::unique_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
@@ -66,5 +65,4 @@ protected:
     const world::Object* const m_object;
     const bool m_skip_ghost;
 };
-
 }

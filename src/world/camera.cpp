@@ -13,7 +13,7 @@ void Camera::apply()
 {
     m_projection = glm::perspectiveFov(glm::radians(m_fov), m_width, m_height, m_nearClipping, m_farClipping);
 
-    m_view = glm::lookAt(m_position, m_position+getViewDir(), getUpDir());
+    m_view = glm::lookAt(m_position, m_position + getViewDir(), getUpDir());
 
     m_viewProjection = m_projection * m_view;
 

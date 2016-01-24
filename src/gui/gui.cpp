@@ -76,7 +76,7 @@ void Gui::resize()
     }
 
     /* let us update console too */
-    Console::instance().setLineInterval(Console::instance().spacing());
+    Console::instance().setSpacing(Console::instance().spacing());
     render::fillCrosshairBuffer();
 }
 
@@ -112,10 +112,10 @@ void Gui::switchGLMode(bool is_gui)
         guiProjectionMatrix = glm::mat4(1.0f);                                        // identity matrix
         guiProjectionMatrix[0][0] = 2.0f / static_cast<glm::float_t>(engine::screen_info.w);
         guiProjectionMatrix[1][1] = 2.0f / static_cast<glm::float_t>(engine::screen_info.h);
-        guiProjectionMatrix[2][2] =-2.0f / (far_dist - near_dist);
-        guiProjectionMatrix[3][0] =-1.0f;
-        guiProjectionMatrix[3][1] =-1.0f;
-        guiProjectionMatrix[3][2] =-(far_dist + near_dist) / (far_dist - near_dist);
+        guiProjectionMatrix[2][2] = -2.0f / (far_dist - near_dist);
+        guiProjectionMatrix[3][0] = -1.0f;
+        guiProjectionMatrix[3][1] = -1.0f;
+        guiProjectionMatrix[3][2] = -(far_dist + near_dist) / (far_dist - near_dist);
     }
     else                                                                        // set camera coordinate system
     {
@@ -145,12 +145,12 @@ void Gui::drawInventory()
 
     // Background
 
-    glm::vec4 upper_color{0, 0, 0, 0.45f};
-    glm::vec4 lower_color{0, 0, 0, 0.75f};
+    glm::vec4 upper_color{ 0, 0, 0, 0.45f };
+    glm::vec4 lower_color{ 0, 0, 0, 0.75f };
 
     drawRect(0.0, 0.0, static_cast<glm::float_t>(engine::screen_info.w), static_cast<glm::float_t>(engine::screen_info.h),
-                 upper_color, upper_color, lower_color, lower_color,
-                 loader::BlendingMode::Opaque);
+             upper_color, upper_color, lower_color, lower_color,
+             loader::BlendingMode::Opaque);
 
     glDepthMask(GL_TRUE);
     glPopAttrib();
@@ -188,11 +188,11 @@ void Gui::drawLoadScreen(int value)
  * Draws simple colored rectangle with given parameters.
  */
 void Gui::drawRect(glm::float_t x, glm::float_t y,
-              glm::float_t width, glm::float_t height,
-              const glm::vec4& colorUpperLeft, const glm::vec4& colorUpperRight,
-              const glm::vec4& colorLowerLeft, const glm::vec4& colorLowerRight,
-              const loader::BlendingMode blendMode,
-              const GLuint texture)
+                   glm::float_t width, glm::float_t height,
+                   const glm::vec4& colorUpperLeft, const glm::vec4& colorUpperRight,
+                   const glm::vec4& colorLowerLeft, const glm::vec4& colorLowerRight,
+                   const loader::BlendingMode blendMode,
+                   const GLuint texture)
 {
     switch(blendMode)
     {
@@ -261,5 +261,4 @@ void Gui::drawRect(glm::float_t x, glm::float_t y,
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
-
 } // namespace gui

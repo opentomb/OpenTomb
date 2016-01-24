@@ -6,7 +6,6 @@
 
 namespace engine
 {
-
 #define LOG_FILENAME     "debug.log"
 #define LUA_LOG_FILENAME "lua.log"
 #define GL_LOG_FILENAME  "gl.log"
@@ -37,5 +36,4 @@ extern ScreenInfo screen_info;
 extern SystemSettings system_settings;
 
 void Sys_InitGlobals();
-
 } // namespace engine

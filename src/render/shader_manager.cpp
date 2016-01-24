@@ -4,7 +4,6 @@
 
 namespace render
 {
-
 ShaderManager::ShaderManager()
 {
     ShaderStage staticMeshVsh(GL_VERTEX_SHADER, "shaders/static_mesh.vsh");
@@ -64,5 +63,4 @@ ShaderManager::ShaderManager()
     ShaderStage debugFsh(GL_FRAGMENT_SHADER, "shaders/debuglines.fsh");
     m_debugline = new UnlitShaderDescription(debugVsh, debugFsh);
 }
-
 } // namespace render

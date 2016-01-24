@@ -16,7 +16,6 @@ namespace world
 {
 namespace core
 {
-
 using SpriteId = uint32_t;
 /*
  * base sprite structure
@@ -46,6 +45,5 @@ struct SpriteBuffer
     //! The element count for each sub-range.
     std::vector<size_t> element_count_per_texture{};
 };
-
 } // namespace core
 } // namespace world

@@ -40,10 +40,10 @@ public:
 
         const auto m = glm::transpose(mv);
         // assign in order: right, left, top, bottom, near, far
-        for(int i=0; i<3; ++i)
+        for(int i = 0; i < 3; ++i)
         {
-            m_planes[2*i+0].assign(m[3] - m[i]);
-            m_planes[2*i+1].assign(m[3] + m[i]);
+            m_planes[2 * i + 0].assign(m[3] - m[i]);
+            m_planes[2 * i + 1].assign(m[3] + m[i]);
         }
     }
 
@@ -56,6 +56,5 @@ public:
     //! Check if a line intersects with the frustum
     bool intersects(const glm::vec3& a, const glm::vec3& b) const;
 };
-
 } // namespace core
 } // namespace world

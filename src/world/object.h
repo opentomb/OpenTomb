@@ -101,5 +101,4 @@ public:
     {
     }
 };
-
 } // namespace world

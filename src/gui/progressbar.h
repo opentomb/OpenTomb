@@ -117,5 +117,4 @@ private:
     glm::float_t m_baseSize;            // Base bar size.
     glm::float_t m_baseRatio;           // Max. / actual value ratio.
 };
-
 } // namespace gui

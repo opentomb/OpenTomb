@@ -170,5 +170,4 @@ struct Room : public Object
 };
 
 btCollisionShape* BT_CSfromHeightmap(const boost::multi_array<RoomSector, 2>& heightmap, const std::vector<SectorTween> &tweens, bool useCompression, bool buildBvh);
-
 } // namespace world

@@ -69,22 +69,21 @@ enum class Substance
 #define ENTITY_TLAYOUT_LOCK     0x40    // Activity lock
 #define ENTITY_TLAYOUT_SSTATUS  0x80    // Sector status
 
-
 //! Entity movement types
 enum class MoveType
 {
-   StaticPos,
-   Kinematic,
-   OnFloor,
-   Wade,
-   Quicksand,
-   OnWater,
-   Underwater,
-   FreeFalling,
-   Climbing,
-   Monkeyswing,
-   WallsClimb,
-   Dozy
+    StaticPos,
+    Kinematic,
+    OnFloor,
+    Wade,
+    Quicksand,
+    OnWater,
+    Underwater,
+    FreeFalling,
+    Climbing,
+    Monkeyswing,
+    WallsClimb,
+    Dozy
 };
 
 ENUM_TO_OSTREAM(MoveType)
@@ -123,11 +122,11 @@ public:
     mutable bool m_wasRenderedLines = false; // same for debug lines
 
     glm::float_t                        m_currentSpeed = 0;      // current linear speed from animation info
-    glm::vec3                           m_speed = {0,0,0};              // speed of the entity XYZ
+    glm::vec3                           m_speed = { 0,0,0 };              // speed of the entity XYZ
     glm::float_t                        m_vspeed_override = 0;
 
     btScalar                            m_inertiaLinear = 0;     // linear inertia
-    btScalar                            m_inertiaAngular[2] = {0,0}; // angular inertia - X and Y axes
+    btScalar                            m_inertiaAngular[2] = { 0,0 }; // angular inertia - X and Y axes
 
     animation::Skeleton m_skeleton;
 
@@ -240,5 +239,4 @@ private:
 };
 
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject& ghost, btManifoldArray& manifoldArray, glm::vec3& correction);
-
 } // namespace world

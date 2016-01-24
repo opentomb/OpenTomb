@@ -189,7 +189,6 @@ enum class ActivatorType
 #define AMASK_OP_OR  0
 #define AMASK_OP_XOR 1
 
-
 struct Room;
 class Camera;
 struct Portal;
@@ -208,7 +207,6 @@ namespace animation
 {
 class Skeleton;
 } // namespace animation
-
 
 struct BaseItem
 {
@@ -256,11 +254,10 @@ struct SectorTween
     TweenType                   ceiling_tween_type = TweenType::None;
 };
 
-
 struct RoomSprite
 {
     core::Sprite* sprite = nullptr;
-    glm::vec3 pos{0,0,0};
+    glm::vec3 pos{ 0,0,0 };
     mutable bool was_rendered = false;
 };
 
@@ -328,5 +325,4 @@ struct World
 };
 
 Room *Room_FindPosCogerrence(const glm::vec3& new_pos, Room *room);
-
 } // namespace world

@@ -66,7 +66,7 @@ private:
         // test if the ray from the camera to a's vertices crosses b's triangles
         for(const glm::vec3& v : a.vertices)
         {
-            if( util::intersectRayRectangle(camPos, v-camPos, b.vertices[0], b.vertices[1], b.vertices[3]) )
+            if(util::intersectRayRectangle(camPos, v - camPos, b.vertices[0], b.vertices[1], b.vertices[3]))
                 return true;
         }
 

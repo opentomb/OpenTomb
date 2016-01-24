@@ -2,7 +2,6 @@
 
 namespace gui
 {
-
 constexpr int MaxTempLines = 256;
 
 // Screen metering resolution specifies user-friendly relative dimensions of screen,
@@ -17,11 +16,11 @@ constexpr int MinFontSize = 1;
 constexpr int MaxFontSize = 72;
 
 constexpr float FontFadeSpeed = 1.0f;                 // Global fading style speed.
-constexpr float FontFadeMin   = 0.3f;                 // Minimum fade multiplier.
+constexpr float FontFadeMin = 0.3f;                 // Minimum fade multiplier.
 
-constexpr float FontShadowTransparency    =  0.7f;
-constexpr float FontShadowVerticalShift   = -0.9f;
-constexpr float FontShadowHorizontalShift =  0.7f;
+constexpr float FontShadowTransparency = 0.7f;
+constexpr float FontShadowVerticalShift = -0.9f;
+constexpr float FontShadowHorizontalShift = 0.7f;
 
 // Default line size is generally used for static in-game strings. Strings
 // that are created dynamically may have variable string sizes.
@@ -52,5 +51,4 @@ enum class HorizontalAnchor
 // change this value properly.
 
 constexpr float NotifierOffscreenDivider = 8.0f;
-
 } // namespace gui

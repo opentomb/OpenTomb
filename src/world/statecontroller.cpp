@@ -14,10 +14,8 @@
 
 namespace world
 {
-
 namespace
 {
-
 constexpr glm::float_t PenetrationTestOffset = 48.0f;        ///@TODO: tune it!
 constexpr glm::float_t WalkForwardOffset = 96.0f;        ///@FIXME: find real offset
 constexpr glm::float_t WalkBackOffset = 16.0f;
@@ -61,7 +59,7 @@ void onFrameSetOnFloorAfterClimb(Character& ent, animation::AnimUpdate /*state*/
     // FIXME: this is more like an end-of-anim operation
     if(ent.m_skeleton.getCurrentAnimation() != ent.m_skeleton.getPreviousAnimation())
     {
-        ent.m_transform[3] = glm::vec4(ent.m_climb.point,1);
+        ent.m_transform[3] = glm::vec4(ent.m_climb.point, 1);
 
         // FIXME: position adjust after climb
         glm::vec3 climbfix(0, ent.m_climbR, 0);
@@ -124,7 +122,7 @@ void onFrameClimbOutOfWater(Character& ent, animation::AnimUpdate state)
 {
     if(state == animation::AnimUpdate::NewAnim)
     {
-        ent.m_transform[3] = glm::vec4(ent.m_climb.point,0) + ent.m_transform[1] * 48.0f;             // temporary stick
+        ent.m_transform[3] = glm::vec4(ent.m_climb.point, 0) + ent.m_transform[1] * 48.0f;             // temporary stick
         ent.m_transform[3][2] = ent.m_climb.point[2];
         ent.ghostUpdate();
         ent.m_skeleton.onFrame = nullptr;
@@ -199,7 +197,7 @@ void onFrameCrawlToClimb(Character& ent, animation::AnimUpdate state)
 StateController::StateController(Character *c)
     : m_character(c)
 {
-    BOOST_ASSERT( c != nullptr );
+    BOOST_ASSERT(c != nullptr);
 
     on(LaraState::Stop, &StateController::stop);
     on(LaraState::JumpPrepare, &StateController::jumpPrepare);
@@ -280,7 +278,7 @@ StateController::StateController(Character *c)
 
 void StateController::handle(LaraState state)
 {
-    m_character->m_skeleton.setAnimationMode( animation::AnimationMode::NormalControl );
+    m_character->m_skeleton.setAnimationMode(animation::AnimationMode::NormalControl);
     m_character->updateCurrentHeight();
 
     if(m_character->m_response.killed)  // Stop any music, if Lara is dead.
@@ -312,27 +310,27 @@ void StateController::handle(LaraState state)
 
     switch(m_character->m_skeleton.getCurrentAnimation())
     {
-    case animation::TR_ANIMATION_LARA_STAY_JUMP_SIDES:
-        m_character->m_skeleton.model()->no_fix_body_parts |= BODY_PART_HEAD;
-        break;
+        case animation::TR_ANIMATION_LARA_STAY_JUMP_SIDES:
+            m_character->m_skeleton.model()->no_fix_body_parts |= BODY_PART_HEAD;
+            break;
 
-    case animation::TR_ANIMATION_LARA_TRY_HANG_SOLID:
-    case animation::TR_ANIMATION_LARA_FLY_FORWARD_TRY_HANG:
-        if(m_character->m_moveType == MoveType::FreeFalling && m_character->m_command.action &&
-                m_character->m_speed[0] * m_character->m_transform[1][0] + m_character->m_speed[1] * m_character->m_transform[1][1] < 0.0)
-        {
-            m_character->m_speed[0] = -m_character->m_speed[0];
-            m_character->m_speed[1] = -m_character->m_speed[1];
-        }
-        break;
+        case animation::TR_ANIMATION_LARA_TRY_HANG_SOLID:
+        case animation::TR_ANIMATION_LARA_FLY_FORWARD_TRY_HANG:
+            if(m_character->m_moveType == MoveType::FreeFalling && m_character->m_command.action &&
+               m_character->m_speed[0] * m_character->m_transform[1][0] + m_character->m_speed[1] * m_character->m_transform[1][1] < 0.0)
+            {
+                m_character->m_speed[0] = -m_character->m_speed[0];
+                m_character->m_speed[1] = -m_character->m_speed[1];
+            }
+            break;
 
-    case animation::TR_ANIMATION_LARA_AH_BACKWARD:
-    case animation::TR_ANIMATION_LARA_AH_FORWARD:
-    case animation::TR_ANIMATION_LARA_AH_LEFT:
-    case animation::TR_ANIMATION_LARA_AH_RIGHT:
-        if(m_character->m_skeleton.getCurrentFrame() > 12)
-            m_character->setAnimation(animation::TR_ANIMATION_LARA_STAY_SOLID, 0);
-        break;
+        case animation::TR_ANIMATION_LARA_AH_BACKWARD:
+        case animation::TR_ANIMATION_LARA_AH_FORWARD:
+        case animation::TR_ANIMATION_LARA_AH_LEFT:
+        case animation::TR_ANIMATION_LARA_AH_RIGHT:
+            if(m_character->m_skeleton.getCurrentFrame() > 12)
+                m_character->setAnimation(animation::TR_ANIMATION_LARA_STAY_SOLID, 0);
+            break;
     };
 }
 
@@ -340,7 +338,7 @@ void StateController::on(LaraState state, StateController::Handler handler)
 {
     auto it = m_handlers.find(state);
     if(it != m_handlers.end())
-        BOOST_THROW_EXCEPTION( std::runtime_error("State handler already assigned") );
+        BOOST_THROW_EXCEPTION(std::runtime_error("State handler already assigned"));
 
     m_handlers[state] = handler;
 }
@@ -361,9 +359,9 @@ void StateController::stop()
     m_character->m_command.crouch |= isLowVerticalSpace();
     m_character->lean(0.0);
 
-    if((   m_character->m_climb.can_hang
+    if((m_character->m_climb.can_hang
         && m_character->m_climb.next_z_space >= m_character->m_height - LaraHangVerticalEpsilon
-        && m_character->m_moveType == MoveType::Climbing )
+        && m_character->m_moveType == MoveType::Climbing)
        || m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_STAY_SOLID)
     {
         m_character->m_moveType = MoveType::OnFloor;
@@ -460,14 +458,14 @@ void StateController::stop()
     {
         if(m_character->m_command.shift)
         {
-            glm::vec3 move( m_character->m_transform[1] * PenetrationTestOffset );
-            glm::vec3 global_offset( m_character->m_transform[1] * WalkForwardOffset );
+            glm::vec3 move(m_character->m_transform[1] * PenetrationTestOffset);
+            glm::vec3 global_offset(m_character->m_transform[1] * WalkForwardOffset);
             global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
             global_offset += glm::vec3(m_character->m_transform[3]);
             HeightInfo next_fc = initHeightInfo();
             Character::getHeightInfo(global_offset, &next_fc);
             if((m_character->checkNextPenetration(move) == 0 || m_character->m_response.horizontal_collide == 0x00) &&
-                    (next_fc.floor.hasHit && next_fc.floor.hitPoint[2] > m_character->m_transform[3][2] - m_character->m_maxStepUpHeight && next_fc.floor.hitPoint[2] <= m_character->m_transform[3][2] + m_character->m_maxStepUpHeight))
+               (next_fc.floor.hasHit && next_fc.floor.hitPoint[2] > m_character->m_transform[3][2] - m_character->m_maxStepUpHeight && next_fc.floor.hitPoint[2] <= m_character->m_transform[3][2] + m_character->m_maxStepUpHeight))
             {
                 m_character->m_moveType = MoveType::OnFloor;
                 m_character->m_moveDir = MoveDirection::Forward;
@@ -483,8 +481,8 @@ void StateController::stop()
         }       // end IF CMD->SHIFT
         else
         {
-            glm::vec3 move( m_character->m_transform[1] * PenetrationTestOffset );
-            glm::vec3 global_offset( m_character->m_transform[1] * RunForwardOffset );
+            glm::vec3 move(m_character->m_transform[1] * PenetrationTestOffset);
+            glm::vec3 global_offset(m_character->m_transform[1] * RunForwardOffset);
             global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
             HeightInfo next_fc = initHeightInfo();
             m_character->checkNextStep(global_offset, &next_fc);
@@ -504,22 +502,22 @@ void StateController::stop()
         }
 
         if(m_character->m_command.action &&
-                (m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_STAY_IDLE ||
-                 m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_STAY_SOLID ||
-                 m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_WALL_SMASH_LEFT ||
-                 m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_WALL_SMASH_RIGHT))
+           (m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_STAY_IDLE ||
+            m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_STAY_SOLID ||
+            m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_WALL_SMASH_LEFT ||
+            m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_WALL_SMASH_RIGHT))
         {
             glm::float_t t = m_character->m_forwardSize + LaraTryHangWallOffset;
-            glm::vec3 global_offset( m_character->m_transform[1] * t );
+            glm::vec3 global_offset(m_character->m_transform[1] * t);
 
             global_offset[2] += 0.5 * DEFAULT_CLIMB_UP_HEIGHT;
             HeightInfo next_fc = initHeightInfo();
             m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.5 * DEFAULT_CLIMB_UP_HEIGHT);
             if(m_character->m_climb.edge_hit &&
-                    m_character->m_climb.next_z_space >= m_character->m_height - LaraHangVerticalEpsilon &&
-                    m_character->m_transform[3][2] + m_character->m_maxStepUpHeight < next_fc.floor.hitPoint[2] &&
-                    m_character->m_transform[3][2] + 2944.0 >= next_fc.floor.hitPoint[2] &&
-                    next_fc.floor.hitNormal[2] >= m_character->m_criticalSlantZComponent) // trying to climb on
+               m_character->m_climb.next_z_space >= m_character->m_height - LaraHangVerticalEpsilon &&
+               m_character->m_transform[3][2] + m_character->m_maxStepUpHeight < next_fc.floor.hitPoint[2] &&
+               m_character->m_transform[3][2] + 2944.0 >= next_fc.floor.hitPoint[2] &&
+               next_fc.floor.hitNormal[2] >= m_character->m_criticalSlantZComponent) // trying to climb on
             {
                 if(m_character->m_transform[3][2] + 640.0 >= next_fc.floor.hitPoint[2])
                 {
@@ -546,9 +544,9 @@ void StateController::stop()
             global_offset[2] += 0.5 * DEFAULT_CLIMB_UP_HEIGHT;
             m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, DEFAULT_CLIMB_UP_HEIGHT);
             if(m_character->m_climb.edge_hit &&
-                    m_character->m_climb.next_z_space >= m_character->m_height - LaraHangVerticalEpsilon &&
-                    m_character->m_transform[3][2] + m_character->m_maxStepUpHeight < next_fc.floor.hitPoint[2] &&
-                    m_character->m_transform[3][2] + 2944.0 >= next_fc.floor.hitPoint[2])  // Trying to climb on
+               m_character->m_climb.next_z_space >= m_character->m_height - LaraHangVerticalEpsilon &&
+               m_character->m_transform[3][2] + m_character->m_maxStepUpHeight < next_fc.floor.hitPoint[2] &&
+               m_character->m_transform[3][2] + 2944.0 >= next_fc.floor.hitPoint[2])  // Trying to climb on
             {
                 if(m_character->m_transform[3][2] + 1920.0 >= next_fc.floor.hitPoint[2])
                 {
@@ -574,10 +572,10 @@ void StateController::stop()
     {
         if(m_character->m_command.shift)
         {
-            glm::vec3 move( m_character->m_transform[1] * -PenetrationTestOffset );
+            glm::vec3 move(m_character->m_transform[1] * -PenetrationTestOffset);
             if(m_character->checkNextPenetration(move) == 0 || m_character->m_response.horizontal_collide == 0x00)
             {
-                glm::vec3 global_offset( m_character->m_transform[1] * -WalkBackOffset );
+                glm::vec3 global_offset(m_character->m_transform[1] * -WalkBackOffset);
                 global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
                 global_offset += glm::vec3(m_character->m_transform[3]);
                 HeightInfo next_fc = initHeightInfo();
@@ -591,7 +589,7 @@ void StateController::stop()
         }
         else    // RUN BACK
         {
-            glm::vec3 move( m_character->m_transform[1] * -PenetrationTestOffset );
+            glm::vec3 move(m_character->m_transform[1] * -PenetrationTestOffset);
             if(m_character->checkNextPenetration(move) == 0 || m_character->m_response.horizontal_collide == 0x00)
             {
                 m_character->m_moveDir = MoveDirection::Backward;
@@ -610,10 +608,10 @@ void StateController::stop()
     {
         if(m_character->m_command.shift)
         {
-            glm::vec3 move( m_character->m_transform[0] * PenetrationTestOffset );
+            glm::vec3 move(m_character->m_transform[0] * PenetrationTestOffset);
             if(m_character->checkNextPenetration(move) == 0 || m_character->m_response.horizontal_collide == 0x00)
             {
-                glm::vec3 global_offset( m_character->m_transform[0] * RunForwardOffset );
+                glm::vec3 global_offset(m_character->m_transform[0] * RunForwardOffset);
                 global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
                 HeightInfo next_fc = initHeightInfo();
                 if(m_character->m_response.horizontal_collide == 0 && isLittleStep(m_character->checkNextStep(global_offset, &next_fc)))
@@ -633,10 +631,10 @@ void StateController::stop()
     {
         if(m_character->m_command.shift)
         {
-            glm::vec3 move( m_character->m_transform[0] * -PenetrationTestOffset );
+            glm::vec3 move(m_character->m_transform[0] * -PenetrationTestOffset);
             if(m_character->checkNextPenetration(move) == 0 || m_character->m_response.horizontal_collide == 0x00)
             {
-                glm::vec3 global_offset( m_character->m_transform[0] * -RunForwardOffset );
+                glm::vec3 global_offset(m_character->m_transform[0] * -RunForwardOffset);
                 global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
                 HeightInfo next_fc = initHeightInfo();
                 if(m_character->m_response.horizontal_collide == 0 && isLittleStep(m_character->checkNextStep(global_offset, &next_fc)))
@@ -677,7 +675,7 @@ void StateController::jumpPrepare()
     else if(m_character->m_command.move.z == MovementWalk::Forward)
     {
         m_character->m_moveDir = MoveDirection::Forward;
-        glm::vec3 move( m_character->m_transform[1] * PenetrationTestOffset );
+        glm::vec3 move(m_character->m_transform[1] * PenetrationTestOffset);
         if(m_character->checkNextPenetration(move) == 0)
         {
             setNextState(LaraState::JumpForward);  // Jump forward
@@ -686,7 +684,7 @@ void StateController::jumpPrepare()
     else if(m_character->m_command.move.z == MovementWalk::Backward)
     {
         m_character->m_moveDir = MoveDirection::Backward;
-        glm::vec3 move( m_character->m_transform[1] * -PenetrationTestOffset );
+        glm::vec3 move(m_character->m_transform[1] * -PenetrationTestOffset);
         if(m_character->checkNextPenetration(move) == 0)
         {
             setNextState(LaraState::JumpBack);  // Jump backward
@@ -695,7 +693,7 @@ void StateController::jumpPrepare()
     else if(m_character->m_command.move.x == MovementStrafe::Right)
     {
         m_character->m_moveDir = MoveDirection::Right;
-        glm::vec3 move( m_character->m_transform[0] * PenetrationTestOffset );
+        glm::vec3 move(m_character->m_transform[0] * PenetrationTestOffset);
         if(m_character->checkNextPenetration(move) == 0)
         {
             setNextState(LaraState::JumpLeft);  // Jump right
@@ -704,7 +702,7 @@ void StateController::jumpPrepare()
     else if(m_character->m_command.move.x == MovementStrafe::Left)
     {
         m_character->m_moveDir = MoveDirection::Left;
-        glm::vec3 move( m_character->m_transform[0] * -PenetrationTestOffset );
+        glm::vec3 move(m_character->m_transform[0] * -PenetrationTestOffset);
         if(m_character->checkNextPenetration(move) == 0)
         {
             setNextState(LaraState::JumpRight);  // Jump left
@@ -829,7 +827,7 @@ void StateController::turnSlow()
     {
         Substance substance_state = m_character->getSubstanceState();
         if(substance_state == Substance::None ||
-                substance_state == Substance::WaterShallow)
+           substance_state == Substance::WaterShallow)
         {
             if(m_character->m_command.shift)
             {
@@ -848,14 +846,14 @@ void StateController::turnSlow()
             m_character->m_moveDir = MoveDirection::Forward;
         }
     }
-    else if(   (m_character->m_skeleton.getPreviousState() == LaraState::TurnLeftSlow && m_character->m_command.move.x == MovementStrafe::Left)
+    else if((m_character->m_skeleton.getPreviousState() == LaraState::TurnLeftSlow && m_character->m_command.move.x == MovementStrafe::Left)
             || (m_character->m_skeleton.getPreviousState() == LaraState::TurnRightSlow && m_character->m_command.move.x == MovementStrafe::Right))
     {
         Substance substance_state = m_character->getSubstanceState();
         if(isLastFrame() &&
-                substance_state != Substance::WaterWade &&
-                substance_state != Substance::QuicksandConsumed &&
-                substance_state != Substance::QuicksandShallow)
+           substance_state != Substance::WaterWade &&
+           substance_state != Substance::QuicksandConsumed &&
+           substance_state != Substance::QuicksandShallow)
         {
             setNextState(LaraState::TurnFast);
         }
@@ -895,7 +893,7 @@ void StateController::turnFast()
 
 void StateController::runForward()
 {
-    glm::vec3 global_offset( m_character->m_transform[1] * RunForwardOffset );
+    glm::vec3 global_offset(m_character->m_transform[1] * RunForwardOffset);
     global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
     HeightInfo next_fc = initHeightInfo();
     StepType nextStep = m_character->checkNextStep(global_offset, &next_fc);
@@ -1015,7 +1013,7 @@ void StateController::runForward()
 
 void StateController::sprint()
 {
-    glm::vec3 global_offset( m_character->m_transform[1] * RunForwardOffset );
+    glm::vec3 global_offset(m_character->m_transform[1] * RunForwardOffset);
     m_character->lean(12.0);
     global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
     HeightInfo next_fc = initHeightInfo();
@@ -1109,7 +1107,7 @@ void StateController::walkForward()
     m_character->m_command.rot[0] *= 0.4f;
     m_character->lean(0.0);
 
-    glm::vec3 global_offset( m_character->m_transform[1] * WalkForwardOffset );
+    glm::vec3 global_offset(m_character->m_transform[1] * WalkForwardOffset);
     global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
     HeightInfo next_fc = initHeightInfo();
     StepType nextStep = m_character->checkNextStep(global_offset, &next_fc);
@@ -1205,7 +1203,7 @@ void StateController::wadeForward()
 
     if(m_character->m_command.move.z == MovementWalk::Forward)
     {
-        glm::vec3 move( m_character->m_transform[1] * PenetrationTestOffset );
+        glm::vec3 move(m_character->m_transform[1] * PenetrationTestOffset);
         m_character->checkNextPenetration(move);
     }
 
@@ -1280,7 +1278,7 @@ void StateController::walkBack()
         m_character->m_currentSpeed = std::min(m_character->m_currentSpeed, MAX_SPEED_QUICKSAND);
     }
 
-    glm::vec3 global_offset( m_character->m_transform[1] * -WalkBackOffset );
+    glm::vec3 global_offset(m_character->m_transform[1] * -WalkBackOffset);
     global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
     HeightInfo next_fc = initHeightInfo();
     StepType nextStep = m_character->checkNextStep(global_offset, &next_fc);
@@ -1346,7 +1344,7 @@ void StateController::walkLeft()
     }
     else if(m_character->m_command.move.x == MovementStrafe::Left && m_character->m_command.shift)
     {
-        glm::vec3 global_offset( m_character->m_transform[0] * -RunForwardOffset );  // not an error - RUN_... more correct here
+        glm::vec3 global_offset(m_character->m_transform[0] * -RunForwardOffset);  // not an error - RUN_... more correct here
         global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
         global_offset += glm::vec3(m_character->m_transform[3]);
         HeightInfo next_fc = initHeightInfo();
@@ -1386,7 +1384,7 @@ void StateController::walkRight()
     else if(m_character->m_command.move.x == MovementStrafe::Right && m_character->m_command.shift)
     {
         // Not a error - RUN_... constant is more correct here
-        glm::vec3 global_offset( m_character->m_transform[0] * RunForwardOffset );
+        glm::vec3 global_offset(m_character->m_transform[0] * RunForwardOffset);
         global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
         global_offset += glm::vec3(m_character->m_transform[3]);
         HeightInfo next_fc = initHeightInfo();
@@ -1490,25 +1488,25 @@ void StateController::pushableGrab()
     {
         int tf = m_character->checkTraverse(*m_character->m_traversedObject);
         m_character->m_moveDir = MoveDirection::Stay;
-        m_character->m_skeleton.setAnimationMode( animation::AnimationMode::LoopLastFrame );  //We hold it (loop last frame)
+        m_character->m_skeleton.setAnimationMode(animation::AnimationMode::LoopLastFrame);  //We hold it (loop last frame)
 
         if(m_character->m_command.move.z == MovementWalk::Forward && (tf & Character::TraverseForward))  // If player presses up, then push
         {
             m_character->m_moveDir = MoveDirection::Forward;
-            m_character->m_skeleton.setAnimationMode( animation::AnimationMode::NormalControl );
+            m_character->m_skeleton.setAnimationMode(animation::AnimationMode::NormalControl);
             setNextState(LaraState::PushablePush);
         }
         else if(m_character->m_command.move.z == MovementWalk::Backward && (tf & Character::TraverseBackward))  //If player presses down, then pull
         {
             m_character->m_moveDir = MoveDirection::Backward;
-            m_character->m_skeleton.setAnimationMode( animation::AnimationMode::NormalControl );
+            m_character->m_skeleton.setAnimationMode(animation::AnimationMode::NormalControl);
             setNextState(LaraState::PushablePull);
         }
     }
     else  //Lara has let go of the block
     {
         m_character->m_moveDir = MoveDirection::Stay;
-        m_character->m_skeleton.setAnimationMode( animation::AnimationMode::NormalControl );  // We're no longer looping last frame
+        m_character->m_skeleton.setAnimationMode(animation::AnimationMode::NormalControl);  // We're no longer looping last frame
         setNextState(LaraState::Stop);   // Switch to next Lara state
     }
 }
@@ -1581,7 +1579,7 @@ void StateController::pushablePush()
         }
         else
         {
-            if(   m_character->m_skeleton.getCurrentFrame() == 49
+            if(m_character->m_skeleton.getCurrentFrame() == 49
                || m_character->m_skeleton.getCurrentFrame() == 110
                || m_character->m_skeleton.getCurrentFrame() == 142)
             {
@@ -1670,7 +1668,7 @@ void StateController::pushablePull()
         else
         {
             //! @fixme Magick!
-            if(   m_character->m_skeleton.getCurrentFrame() == 40
+            if(m_character->m_skeleton.getCurrentFrame() == 40
                || m_character->m_skeleton.getCurrentFrame() == 92
                || m_character->m_skeleton.getCurrentFrame() == 124
                || m_character->m_skeleton.getCurrentFrame() == 156)
@@ -1723,7 +1721,7 @@ void StateController::jumpUp()
     if(m_character->m_command.action && m_character->m_moveType != MoveType::WallsClimb && m_character->m_moveType != MoveType::Climbing)
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
-        glm::vec3 global_offset( m_character->m_transform[1] * t );
+        glm::vec3 global_offset(m_character->m_transform[1] * t);
         global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalEpsilon + util::toSeconds(engine::Engine::instance.m_frameTime) * m_character->m_speed[2];
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
@@ -1733,7 +1731,7 @@ void StateController::jumpUp()
             m_character->m_angles[0] = m_character->m_climb.edge_z_ang;
             m_character->updateTransform();
             m_character->m_moveType = MoveType::Climbing;                             // hang on
-            m_character->m_speed = {0,0,0};
+            m_character->m_speed = { 0,0,0 };
 
             m_character->m_transform[3][0] = m_character->m_climb.point[0] - LaraHangWallDistance * m_character->m_transform[1][0];
             m_character->m_transform[3][1] = m_character->m_climb.point[1] - LaraHangWallDistance * m_character->m_transform[1][1];
@@ -1743,7 +1741,7 @@ void StateController::jumpUp()
         {
             m_character->m_climb = m_character->checkWallsClimbability();
             if(m_character->m_climb.wall_hit != ClimbType::None &&
-                    m_character->m_speed[2] < 0.0) // Only hang if speed is lower than zero.
+               m_character->m_speed[2] < 0.0) // Only hang if speed is lower than zero.
             {
                 // Fix the position to the TR metering step.
                 m_character->m_transform[3][2] = std::floor(m_character->m_transform[3][2] / MeteringStep) * MeteringStep;
@@ -1822,7 +1820,7 @@ void StateController::reach()
     if(m_character->m_command.action && m_character->m_moveType == MoveType::FreeFalling)
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
-        glm::vec3 global_offset( m_character->m_transform[1] * t );
+        glm::vec3 global_offset(m_character->m_transform[1] * t);
         global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalEpsilon + util::toSeconds(engine::Engine::instance.m_frameTime) * m_character->m_speed[2];
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
@@ -1832,7 +1830,7 @@ void StateController::reach()
             m_character->m_angles[0] = m_character->m_climb.edge_z_ang;
             m_character->updateTransform();
             m_character->m_moveType = MoveType::Climbing;  // Hang on
-            m_character->m_speed = {0,0,0};
+            m_character->m_speed = { 0,0,0 };
         }
 
         // If Lara is moving backwards off the ledge we want to move Lara slightly forwards
@@ -1865,7 +1863,7 @@ void StateController::reach()
 
     if(m_character->m_moveType == MoveType::Climbing)
     {
-        m_character->m_speed = {0,0,0};
+        m_character->m_speed = { 0,0,0 };
         setNextState(LaraState::Hang);
         m_character->m_skeleton.onFrame = onFrameToEdgeClimb;
     }
@@ -1908,7 +1906,7 @@ void StateController::hang()
             }
             else
             {
-                m_character->m_skeleton.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
+                m_character->m_skeleton.setAnimationMode(animation::AnimationMode::LoopLastFrame);  // Disable shake
             }
         }
         else
@@ -1922,7 +1920,7 @@ void StateController::hang()
     if(!m_character->m_response.killed && m_character->m_command.action)  // We have to update climb point every time so entity can move
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
-        glm::vec3 global_offset( m_character->m_transform[1] * t );
+        glm::vec3 global_offset(m_character->m_transform[1] * t);
         global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalEpsilon;
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
@@ -1961,8 +1959,8 @@ void StateController::hang()
                 m_character->m_transform[3][0] = m_character->m_climb.point[0] - LaraHangWallDistance * m_character->m_transform[1][0];
                 m_character->m_transform[3][1] = m_character->m_climb.point[1] - LaraHangWallDistance * m_character->m_transform[1][1];
                 m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalOffset;
-                m_character->m_speed = {0,0,0};
-                m_character->m_skeleton.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
+                m_character->m_speed = { 0,0,0 };
+                m_character->m_skeleton.setAnimationMode(animation::AnimationMode::LoopLastFrame);  // Disable shake
             }
         }
         else if(m_character->m_command.move.z == MovementWalk::Backward)  // Check walls climbing
@@ -1972,11 +1970,11 @@ void StateController::hang()
             {
                 m_character->m_moveType = MoveType::WallsClimb;
             }
-            m_character->m_skeleton.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
+            m_character->m_skeleton.setAnimationMode(animation::AnimationMode::LoopLastFrame);  // Disable shake
         }
         else if(m_character->m_command.move.x == MovementStrafe::Left)
         {
-            glm::vec3 move( m_character->m_transform[0] * -PenetrationTestOffset );
+            glm::vec3 move(m_character->m_transform[0] * -PenetrationTestOffset);
             if(m_character->checkNextPenetration(move) == 0 || m_character->m_response.horizontal_collide == 0x00) //we only want lara to shimmy when last frame is reached!
             {
                 m_character->m_moveDir = MoveDirection::Left;
@@ -1984,12 +1982,12 @@ void StateController::hang()
             }
             else
             {
-                m_character->m_skeleton.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
+                m_character->m_skeleton.setAnimationMode(animation::AnimationMode::LoopLastFrame);  // Disable shake
             }
         }
         else if(m_character->m_command.move.x == MovementStrafe::Right)
         {
-            glm::vec3 move( m_character->m_transform[0] * PenetrationTestOffset );
+            glm::vec3 move(m_character->m_transform[0] * PenetrationTestOffset);
             if(m_character->checkNextPenetration(move) == 0 || m_character->m_response.horizontal_collide == 0x00) //we only want lara to shimmy when last frame is reached!
             {
                 m_character->m_moveDir = MoveDirection::Right;
@@ -1997,16 +1995,16 @@ void StateController::hang()
             }
             else
             {
-                m_character->m_skeleton.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
+                m_character->m_skeleton.setAnimationMode(animation::AnimationMode::LoopLastFrame);  // Disable shake
             }
         }
         else
         {
-            m_character->m_skeleton.setAnimationMode( animation::AnimationMode::LoopLastFrame );  // Disable shake
+            m_character->m_skeleton.setAnimationMode(animation::AnimationMode::LoopLastFrame);  // Disable shake
             m_character->m_transform[3][0] = m_character->m_climb.point[0] - LaraHangWallDistance * m_character->m_transform[1][0];
             m_character->m_transform[3][1] = m_character->m_climb.point[1] - LaraHangWallDistance * m_character->m_transform[1][1];
             m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalOffset;
-            m_character->m_speed = {0,0,0};
+            m_character->m_speed = { 0,0,0 };
         }
     }
     else if(m_character->m_command.action && m_character->m_heightInfo.ceiling_climb && m_character->m_heightInfo.ceiling.hasHit && m_character->m_transform[3][2] + m_character->m_skeleton.getBoundingBox().max[2] > m_character->m_heightInfo.ceiling.hitPoint[2] - 64.0)
@@ -2046,7 +2044,7 @@ void StateController::ladderIdle()
     else if(m_character->m_command.move.z == MovementWalk::Forward)
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
-        glm::vec3 global_offset( m_character->m_transform[1] * t );
+        glm::vec3 global_offset(m_character->m_transform[1] * t);
         global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalEpsilon;
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
@@ -2112,7 +2110,7 @@ void StateController::ladderUp()
     if(m_character->m_command.action && m_character->m_climb.wall_hit != ClimbType::None)
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
-        glm::vec3 global_offset( m_character->m_transform[1] * t );
+        glm::vec3 global_offset(m_character->m_transform[1] * t);
         global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalEpsilon;
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
@@ -2162,7 +2160,7 @@ void StateController::shimmyLeft()
     m_character->m_moveDir = MoveDirection::Left;
     if(!m_character->m_command.action)
     {
-        m_character->m_speed = {0,0,0};
+        m_character->m_speed = { 0,0,0 };
         m_character->m_moveType = MoveType::FreeFalling;
         m_character->setAnimation(animation::TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0); // fall down
         return;
@@ -2179,7 +2177,7 @@ void StateController::shimmyLeft()
     else
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
-        glm::vec3 global_offset( m_character->m_transform[1] * t );
+        glm::vec3 global_offset(m_character->m_transform[1] * t);
         global_offset[2] += LaraHangSensorZ + LaraHangVerticalEpsilon;
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
@@ -2192,7 +2190,7 @@ void StateController::shimmyLeft()
             m_character->m_transform[3][0] = m_character->m_climb.point[0] - LaraHangWallDistance * m_character->m_transform[1][0];
             m_character->m_transform[3][1] = m_character->m_climb.point[1] - LaraHangWallDistance * m_character->m_transform[1][1];
             m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalOffset;
-            m_character->m_speed = {0,0,0};
+            m_character->m_speed = { 0,0,0 };
         }
         else
         {
@@ -2204,7 +2202,7 @@ void StateController::shimmyLeft()
 
     if(m_character->m_command.move.x == MovementStrafe::Left)
     {
-        glm::vec3 move( m_character->m_transform[0] * -PenetrationTestOffset );
+        glm::vec3 move(m_character->m_transform[0] * -PenetrationTestOffset);
         if(m_character->checkNextPenetration(move) > 0 && m_character->m_response.horizontal_collide != 0x00)
         {
             setNextState(LaraState::Hang);
@@ -2224,7 +2222,7 @@ void StateController::shimmyRight()
     m_character->m_moveDir = MoveDirection::Right;
     if(!m_character->m_command.action)
     {
-        m_character->m_speed = {0,0,0};
+        m_character->m_speed = { 0,0,0 };
         m_character->m_moveType = MoveType::FreeFalling;
         m_character->setAnimation(animation::TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0); // fall down
         return;
@@ -2241,7 +2239,7 @@ void StateController::shimmyRight()
     else
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
-        glm::vec3 global_offset( m_character->m_transform[1] * t );
+        glm::vec3 global_offset(m_character->m_transform[1] * t);
         global_offset[2] += LaraHangSensorZ + LaraHangVerticalEpsilon;
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
@@ -2254,7 +2252,7 @@ void StateController::shimmyRight()
             m_character->m_transform[3][0] = m_character->m_climb.point[0] - LaraHangWallDistance * m_character->m_transform[1][0];
             m_character->m_transform[3][1] = m_character->m_climb.point[1] - LaraHangWallDistance * m_character->m_transform[1][1];
             m_character->m_transform[3][2] = m_character->m_climb.point[2] - m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalOffset;
-            m_character->m_speed = {0,0,0};
+            m_character->m_speed = { 0,0,0 };
         }
         else
         {
@@ -2266,7 +2264,7 @@ void StateController::shimmyRight()
 
     if(m_character->m_command.move.x == MovementStrafe::Right)
     {
-        glm::vec3 move( m_character->m_transform[0] * PenetrationTestOffset );
+        glm::vec3 move(m_character->m_transform[0] * PenetrationTestOffset);
         if(m_character->checkNextPenetration(move) > 0 && m_character->m_response.horizontal_collide != 0x00)
         {
             setNextState(LaraState::Hang);
@@ -2351,7 +2349,7 @@ void StateController::freefall()
     m_character->lean(1.0);
 
     if(int(m_character->m_speed[2]) <= -FREE_FALL_SPEED_CRITICAL &&
-            int(m_character->m_speed[2]) >= -FREE_FALL_SPEED_CRITICAL - 100)
+       int(m_character->m_speed[2]) >= -FREE_FALL_SPEED_CRITICAL - 100)
     {
         m_character->m_speed[2] = -FREE_FALL_SPEED_CRITICAL - 101;
         engine::Engine::instance.m_world.audioEngine.send(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Scream
@@ -2636,7 +2634,7 @@ void StateController::onwaterForward()
             if(m_character->m_moveType != MoveType::Climbing)
             {
                 glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
-                glm::vec3 global_offset( m_character->m_transform[1] * t );
+                glm::vec3 global_offset(m_character->m_transform[1] * t);
                 global_offset[2] += LaraHangVerticalEpsilon;                        // inc for water_surf.z
                 HeightInfo next_fc = initHeightInfo();
                 m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
@@ -2664,7 +2662,7 @@ void StateController::onwaterForward()
 
             if(m_character->m_moveType == MoveType::Climbing)
             {
-                m_character->m_speed = {0,0,0};
+                m_character->m_speed = { 0,0,0 };
                 m_character->m_command.rot[0] = 0.0;
                 m_character->m_skeleton.model()->no_fix_all = true;
                 if(low_vertical_space)
@@ -2775,7 +2773,7 @@ void StateController::crouchIdle()
 {
     m_character->m_moveDir = MoveDirection::Forward;
     m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
-    glm::vec3 move( m_character->m_transform[3] );
+    glm::vec3 move(m_character->m_transform[3]);
     move[2] += 0.5f * (m_character->m_skeleton.getBoundingBox().max[2] - m_character->m_skeleton.getBoundingBox().min[2]);
     HeightInfo next_fc = initHeightInfo();
     Character::getHeightInfo(move, &next_fc);
@@ -2825,7 +2823,7 @@ void StateController::roll()
         m_character->setAnimation(animation::TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
     }
 
-    glm::vec3 move( m_character->m_transform[1] * PenetrationTestOffset );
+    glm::vec3 move(m_character->m_transform[1] * PenetrationTestOffset);
     if(m_character->checkNextPenetration(move) > 0 && m_character->m_response.horizontal_collide != 0x00)  // Smash into wall
     {
         setNextState(LaraState::Stop);
@@ -2853,16 +2851,16 @@ void StateController::crawlIdle()
     }
     else if(m_character->m_command.move.z == MovementWalk::Forward)
     {
-        glm::vec3 move( m_character->m_transform[1] * PenetrationTestOffset );
+        glm::vec3 move(m_character->m_transform[1] * PenetrationTestOffset);
         if(m_character->checkNextPenetration(move) == 0 || m_character->m_response.horizontal_collide == 0x00)
         {
-            glm::vec3 global_offset( m_character->m_transform[1] * CrawlForwardOffset );
+            glm::vec3 global_offset(m_character->m_transform[1] * CrawlForwardOffset);
             global_offset[2] += 0.5f * (m_character->m_skeleton.getBoundingBox().max[2] + m_character->m_skeleton.getBoundingBox().min[2]);
             global_offset += glm::vec3(m_character->m_transform[3]);
             HeightInfo next_fc = initHeightInfo();
             Character::getHeightInfo(global_offset, &next_fc);
             if(next_fc.floor.hitPoint[2] < m_character->m_transform[3][2] + m_character->m_minStepUpHeight &&
-                    next_fc.floor.hitPoint[2] > m_character->m_transform[3][2] - m_character->m_minStepUpHeight)
+               next_fc.floor.hitPoint[2] > m_character->m_transform[3][2] - m_character->m_minStepUpHeight)
             {
                 setNextState(LaraState::CrawlForward);           // In TR4+, first state is crawlspace jump
             }
@@ -2870,16 +2868,16 @@ void StateController::crawlIdle()
     }
     else if(m_character->m_command.move.z == MovementWalk::Backward)
     {
-        glm::vec3 move( m_character->m_transform[1] * -PenetrationTestOffset );
+        glm::vec3 move(m_character->m_transform[1] * -PenetrationTestOffset);
         if(m_character->checkNextPenetration(move) == 0 || m_character->m_response.horizontal_collide == 0x00)
         {
-            glm::vec3 global_offset( m_character->m_transform[1] * -CrawlForwardOffset );
+            glm::vec3 global_offset(m_character->m_transform[1] * -CrawlForwardOffset);
             global_offset[2] += 0.5f * (m_character->m_skeleton.getBoundingBox().max[2] + m_character->m_skeleton.getBoundingBox().min[2]);
             global_offset += glm::vec3(m_character->m_transform[3]);
             HeightInfo next_fc = initHeightInfo();
             Character::getHeightInfo(global_offset, &next_fc);
             if(next_fc.floor.hitPoint[2] < m_character->m_transform[3][2] + m_character->m_minStepUpHeight &&
-                    next_fc.floor.hitPoint[2] > m_character->m_transform[3][2] - m_character->m_minStepUpHeight)
+               next_fc.floor.hitPoint[2] > m_character->m_transform[3][2] - m_character->m_minStepUpHeight)
             {
                 m_character->m_moveDir = MoveDirection::Backward;
                 setNextState(LaraState::CrawlBackward);
@@ -2925,14 +2923,14 @@ void StateController::crawlForward()
     m_character->m_moveDir = MoveDirection::Forward;
     m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     m_character->m_command.rot[0] = m_character->m_command.rot[0] * 0.5f;
-    glm::vec3 move( m_character->m_transform[1] * PenetrationTestOffset );
+    glm::vec3 move(m_character->m_transform[1] * PenetrationTestOffset);
     if(m_character->checkNextPenetration(move) > 0 && m_character->m_response.horizontal_collide != 0x00)
     {
         m_character->m_moveDir = MoveDirection::Stay;
         m_character->setAnimation(animation::TR_ANIMATION_LARA_CRAWL_IDLE, 0);
         return;
     }
-    glm::vec3 global_offset( m_character->m_transform[1] * CrawlForwardOffset );
+    glm::vec3 global_offset(m_character->m_transform[1] * CrawlForwardOffset);
     global_offset[2] += 0.5f * (m_character->m_skeleton.getBoundingBox().max[2] + m_character->m_skeleton.getBoundingBox().min[2]);
     global_offset += glm::vec3(m_character->m_transform[3]);
     HeightInfo next_fc = initHeightInfo();
@@ -2955,14 +2953,14 @@ void StateController::crawlBack()
     m_character->m_moveDir = MoveDirection::Forward;   // Absurd? No, Core Design.
     m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     m_character->m_command.rot[0] = m_character->m_command.rot[0] * 0.5f;
-    glm::vec3 move( m_character->m_transform[1] * -PenetrationTestOffset );
+    glm::vec3 move(m_character->m_transform[1] * -PenetrationTestOffset);
     if(m_character->checkNextPenetration(move) > 0 && m_character->m_response.horizontal_collide != 0x00)
     {
         m_character->m_moveDir = MoveDirection::Stay;
         m_character->setAnimation(animation::TR_ANIMATION_LARA_CRAWL_IDLE, 0);
         return;
     }
-    glm::vec3 global_offset( m_character->m_transform[1] * -CrawlForwardOffset );
+    glm::vec3 global_offset(m_character->m_transform[1] * -CrawlForwardOffset);
     global_offset[2] += 0.5f * (m_character->m_skeleton.getBoundingBox().max[2] + m_character->m_skeleton.getBoundingBox().min[2]);
     global_offset += glm::vec3(m_character->m_transform[3]);
     HeightInfo next_fc = initHeightInfo();
@@ -3226,12 +3224,12 @@ void StateController::tightropeBalancingLeft()
         m_character->setAnimation(animation::TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
         m_character->m_transform[3] += m_character->m_transform * glm::vec4(-256.0, 192.0, -640.0, 0);
     }
-    else if(   m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT
+    else if(m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT
             && m_character->m_skeleton.getCurrentFrame() >= m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration() / 2
             && m_character->m_command.move.x == MovementStrafe::Right)
     {
         // MAGIC: mirroring animation offset.
-        m_character->setAnimation(animation::TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration()-m_character->m_skeleton.getCurrentFrame());
+        m_character->setAnimation(animation::TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration() - m_character->m_skeleton.getCurrentFrame());
     }
 }
 
@@ -3245,12 +3243,12 @@ void StateController::tightropeBalancingRight()
         m_character->m_transform[3] += m_character->m_transform * glm::vec4(256.0, 192.0, -640.0, 0);
         m_character->setAnimation(animation::TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
     }
-    else if(   m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT
+    else if(m_character->m_skeleton.getCurrentAnimation() == animation::TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT
             && m_character->m_skeleton.getCurrentFrame() >= m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration() / 2
             && m_character->m_command.move.x == MovementStrafe::Left)
     {
         // MAGIC: mirroring animation offset.
-        m_character->setAnimation(animation::TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration()-m_character->m_skeleton.getCurrentFrame());
+        m_character->setAnimation(animation::TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, m_character->m_skeleton.getCurrentAnimationFrame().getFrameDuration() - m_character->m_skeleton.getCurrentFrame());
     }
 }
 
@@ -3259,7 +3257,6 @@ void StateController::fixEndOfClimbOn()
     // The code here prevents Lara's UGLY move in end of "climb on" states.
     m_character->m_command.rot[0] = 0;
     m_character->m_skeleton.model()->no_fix_all = true;
-
 }
 
 HeightInfo StateController::initHeightInfo() const
@@ -3279,8 +3276,8 @@ HeightInfo StateController::initHeightInfo() const
 bool StateController::isLowVerticalSpace() const
 {
     return m_character->m_heightInfo.floor.hasHit
-            && m_character->m_heightInfo.ceiling.hasHit
-            && m_character->m_heightInfo.ceiling.hitPoint[2] - m_character->m_heightInfo.floor.hitPoint[2] < m_character->m_height - LaraHangVerticalEpsilon;
+        && m_character->m_heightInfo.ceiling.hasHit
+        && m_character->m_heightInfo.ceiling.hitPoint[2] - m_character->m_heightInfo.floor.hitPoint[2] < m_character->m_height - LaraHangVerticalEpsilon;
 }
 
 bool StateController::isLastFrame() const
@@ -3296,7 +3293,6 @@ void StateController::setNextState(LaraState state)
         return;
     }
 
-    m_character->m_skeleton.setCurrentState( state );
+    m_character->m_skeleton.setCurrentState(state);
 }
-
 } // namespace world
