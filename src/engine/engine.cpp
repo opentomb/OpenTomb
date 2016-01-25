@@ -507,8 +507,8 @@ void Engine::initDefaultGlobals()
         self->m_controlState.m_moveForward = dy < 0;
         self->m_controlState.m_moveBackward = dy > 0;
 
-        self->m_world.character->m_command.rot[0] += glm::degrees(-2 * Engine::instance.getFrameTimeSecs() * dx);
-        self->m_world.character->m_command.rot[1] += glm::degrees(-2 * Engine::instance.getFrameTimeSecs() * dy);
+        self->m_world.character->m_command.rot[0] += glm::degrees(-2 * self->getFrameTimeSecs() * dx);
+        self->m_world.character->m_command.rot[1] += glm::degrees(-2 * self->getFrameTimeSecs() * dy);
         glm::vec3 rotation(dx, dy, 0);
         rotation *= -world::CameraRotationSpeed * self->getFrameTimeSecs();
         self->m_camera.rotate(rotation);
@@ -1032,7 +1032,7 @@ void Engine::fpsCycle(util::Duration time)
         screen_info.fps = 20.0f / util::toSeconds(fpsTime);
         char tmp[16];
         snprintf(tmp, 16, "%.1f", screen_info.fps);
-        Engine::instance.system_fps.text = tmp;
+        system_fps.text = tmp;
         fpsCycles = 0;
         fpsTime = util::Duration(0);
     }

@@ -25,8 +25,6 @@ std::unique_ptr<Gui> Gui::instance = nullptr;
 Gui::Gui()
 {
     render::fillCrosshairBuffer();
-
-    //main_inventory_menu = new gui_InventoryMenu();
 }
 
 Gui::~Gui()
