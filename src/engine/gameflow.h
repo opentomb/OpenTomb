@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <queue>
 
 namespace engine
 {
@@ -29,14 +30,19 @@ enum class Opcode
     LaraStartAnim,   // Change Lara's start anim or the state? (Used on levels where Lara starts in water)
     NumSecrets,      // Change the number of secrets?
     KillToComplete,  // Kill to complete, used on levels like IcePalace, Nightmare in Vegas so killing the boss ends the level!
-    RemoveAmmo,      // Remove Ammo
-    Sentinel
+    RemoveAmmo       // Remove Ammo
 };
 
 struct GameflowAction
 {
-    Opcode      opcode = Opcode::Sentinel;
-    uint8_t     operand;
+    GameflowAction(Opcode opc, int oper)
+        : opcode(opc)
+        , operand(oper)
+    {
+    }
+
+    Opcode      opcode;
+    int         operand;
 };
 
 class Gameflow
@@ -44,7 +50,7 @@ class Gameflow
 public:
     void init();
     void execute();
-    bool send(Opcode opcode, int operand = -1);
+    void send(Opcode opcode, int operand = -1);
 
     const std::string& getLevelPath() const
     {
@@ -105,8 +111,7 @@ private:
     uint8_t           m_currentGameID = 0;
     uint32_t          m_currentLevelID = 0;     //Level ID from script example: 1 = Caves.
 
-    bool              m_nextAction = false;     //Should gameflow do next action?
-    std::array<GameflowAction, 32> m_actions;
+    std::queue<GameflowAction> m_actions;
     std::array<bool, 256> m_secretsTriggerMap;                     //Info for what secrets have been triggered in a level
 };
 } // namespace engine

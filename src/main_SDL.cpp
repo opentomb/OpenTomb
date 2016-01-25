@@ -3,8 +3,6 @@
 #include "engine/engine.h"
 #include "util/helpers.h"
 
-#define NO_AUDIO  0
-
 bool done = false;
 float time_scale = 1.0;
 

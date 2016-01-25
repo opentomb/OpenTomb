@@ -967,7 +967,7 @@ void Engine::init(size_t num_Sources)
 
 void Engine::initDevice()
 {
-#if !NO_AUDIO
+#ifndef NO_AUDIO
 
     ALCint paramList[] = {
         ALC_STEREO_SOURCES,  StreamSourceCount,

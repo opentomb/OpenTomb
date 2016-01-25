@@ -11,52 +11,35 @@ Gameflow Gameflow::instance{};
 
 void Gameflow::init()
 {
-    for(GameflowAction& action : m_actions)
-        action.opcode = Opcode::Sentinel;
+    m_actions = std::queue<GameflowAction>();
 }
 
 void Gameflow::execute()
 {
-    if(!m_nextAction)
+    while(!m_actions.empty())
     {
-        return;
-    }
-
-    bool completed = true;
-
-    for(GameflowAction& action : m_actions)
-    {
-        completed = false;
-
-        switch(action.opcode)
+        switch(m_actions.front().opcode)
         {
             case Opcode::LevelComplete:
                 // Switch level only when fade is complete AND all streams / sounds are unloaded!
                 if(gui::Gui::instance->faders.getStatus(gui::FaderType::LoadScreen) == gui::FaderStatus::Complete && !Engine::instance.m_world.audioEngine.isTrackPlaying())
                 {
-                    int id = 0;
-                    lua::tie(m_currentLevelPath, m_currentLevelName, id) = engine_lua["getNextLevel"](m_currentGameID, m_currentLevelID, action.operand);
-                    m_currentLevelID = id;
+                    lua::tie(m_currentLevelPath, m_currentLevelName, m_currentLevelID) = engine_lua["getNextLevel"](m_currentGameID, m_currentLevelID, m_actions.front().operand);
                     engine::Engine::instance.loadMap(m_currentLevelPath);
-                    action.opcode = Opcode::Sentinel;
+                    m_actions.pop();
                 }
                 else
                 {
                     ///@FIXME Gameflow has NOTHING to do with faders! this should all be done elsewhere!
                     // If fadeout is in the process, we block level loading until it is complete.
                     // It is achieved by not resetting action marker and exiting the function instead.
-                    continue;
+                    return;
                 }   // end if(Gui_FadeCheck(FADER_LOADSCREEN))
                 break;
-
             default:
-                action.opcode = Opcode::Sentinel;
-                break;
+                m_actions.pop();
         }   // end switch(gameflow_manager.Operand)
     }
-
-    if(completed)
-        m_nextAction = false;    // Reset action marker!
 }
 
 /*
@@ -65,18 +48,8 @@ void Gameflow::execute()
 */
 
 ///@CRITICAL - The order MUST BE MAINTAINED.
-bool Gameflow::send(Opcode opcode, int operand)
+void Gameflow::send(Opcode opcode, int operand)
 {
-    for(GameflowAction& action : m_actions)///@FIXME But what if [ -1, 2, 3 -1]? We're essentially favouring the first -1 which is WRONG.
-    {
-        if(action.opcode == Opcode::Sentinel)
-        {
-            action.opcode = opcode;
-            action.operand = operand;
-            m_nextAction = true;///@FIXME No, we shouldn't need to modify this here.
-            return true;
-        }
-    }
-    return false;
+    m_actions.emplace(opcode, operand);
 }
 } // namespace engine
