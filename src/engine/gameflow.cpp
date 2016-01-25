@@ -22,7 +22,7 @@ void Gameflow::execute()
         {
             case Opcode::LevelComplete:
                 // Switch level only when fade is complete AND all streams / sounds are unloaded!
-                if(gui::Gui::instance->faders.getStatus(gui::FaderType::LoadScreen) == gui::FaderStatus::Complete && !Engine::instance.m_world.audioEngine.isTrackPlaying())
+                if(gui::Gui::instance->faders.getStatus(gui::FaderType::LoadScreen) == gui::FaderStatus::Complete && !Engine::instance.m_world.m_audioEngine.isTrackPlaying())
                 {
                     lua::tie(m_currentLevelPath, m_currentLevelName, m_currentLevelID) = engine_lua["getNextLevel"](m_currentGameID, m_currentLevelID, m_actions.front().operand);
                     engine::Engine::instance.loadMap(m_currentLevelPath);

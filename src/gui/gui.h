@@ -21,7 +21,6 @@ struct Gui
     ProgressbarManager progressBars;
     FaderManager faders;
     ItemNotifier notifier;
-    InventoryManager inventory;
 
     /**
      * Helper method to setup OpenGL state for console drawing.

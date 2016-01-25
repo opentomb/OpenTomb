@@ -26,7 +26,7 @@ namespace world
 struct Room;
 struct RoomSector;
 struct RagdollSetup;
-struct Character;
+class Character;
 
 namespace core
 {
@@ -164,7 +164,7 @@ public:
     bool isPlayer()
     {
         // FIXME: isPlayer()
-        return reinterpret_cast<Entity*>(engine::Engine::instance.m_world.character.get()) == this;
+        return reinterpret_cast<Entity*>(engine::Engine::instance.m_world.m_character.get()) == this;
     }
 
     void updateInterpolation();

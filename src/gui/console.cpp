@@ -186,7 +186,7 @@ void Console::edit(int key, const boost::optional<Uint16>& mod)
         case SDLK_DOWN:
             if(m_historyLines.empty())
                 break;
-            engine::Engine::instance.m_world.audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuPage));
+            engine::Engine::instance.m_world.m_audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuPage));
             if(key == SDLK_UP && m_historyPos < m_historyLines.size())
                 ++m_historyPos;
             else if(key == SDLK_DOWN && m_historyPos > 0)

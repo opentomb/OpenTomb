@@ -85,8 +85,6 @@ void Res_GenRoomFlipMap(World& world);
 void Res_GenBaseItems(World& world);
 void Res_GenVBOs(World& world);
 
-void     Res_Sector_SetTweenFloorConfig(SectorTween& tween);
-void     Res_Sector_SetTweenCeilingConfig(SectorTween& tween);
 bool     Res_Sector_IsWall(RoomSector* ws, RoomSector* ns);
 void     Res_Sector_FixHeights(RoomSector& sector);
 

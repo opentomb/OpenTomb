@@ -45,19 +45,19 @@ bool Gui::update()
 
     if(!Console::instance().isVisible() && engine::Engine::instance.m_controlState.m_guiInventory)
     {
-        if(engine::Engine::instance.m_world.character &&
-           inventory.getCurrentState() == InventoryManager::InventoryState::Disabled)
+        if(engine::Engine::instance.m_world.m_character &&
+           engine::Engine::instance.m_world.m_character->inventory().getCurrentState() == InventoryManager::InventoryState::Disabled)
         {
-            inventory.setInventory(&engine::Engine::instance.m_world.character->m_inventory);
-            inventory.send(InventoryManager::InventoryState::Open);
+            engine::Engine::instance.m_world.m_character->inventory().disable();
+            engine::Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::Open);
         }
-        if(inventory.getCurrentState() == InventoryManager::InventoryState::Idle)
+        if(engine::Engine::instance.m_world.m_character->inventory().getCurrentState() == InventoryManager::InventoryState::Idle)
         {
-            inventory.send(InventoryManager::InventoryState::Closed);
+            engine::Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::Closed);
         }
     }
 
-    if(Console::instance().isVisible() || inventory.getCurrentState() != InventoryManager::InventoryState::Disabled)
+    if(Console::instance().isVisible() || !engine::Engine::instance.m_world.m_character || engine::Engine::instance.m_world.m_character->inventory().getCurrentState() != InventoryManager::InventoryState::Disabled)
     {
         return true;
     }
@@ -125,9 +125,12 @@ void Gui::switchGLMode(bool is_gui)
 
 void Gui::drawInventory()
 {
+    if(!engine::Engine::instance.m_world.m_character)
+        return;
+
     //if (!main_inventory_menu->IsVisible())
-    inventory.frame();
-    if(inventory.getCurrentState() == InventoryManager::InventoryState::Disabled)
+    engine::Engine::instance.m_world.m_character->inventory().frame();
+    if(engine::Engine::instance.m_world.m_character->inventory().getCurrentState() == InventoryManager::InventoryState::Disabled)
     {
         return;
     }
@@ -157,7 +160,7 @@ void Gui::drawInventory()
 
     switchGLMode(false);
     //main_inventory_menu->Render(); //engine_world.character->character->inventory
-    inventory.render();
+    engine::Engine::instance.m_world.m_character->inventory().render();
     switchGLMode(true);
 }
 

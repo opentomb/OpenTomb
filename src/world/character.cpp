@@ -81,13 +81,75 @@ Character::Character(ObjectId id) : Entity(id), m_stateController(this)
 
 Character::~Character()
 {
-    if(getRoom() && this != engine::Engine::instance.m_world.character.get())
+    if(getRoom() && this != engine::Engine::instance.m_world.m_character.get())
     {
         getRoom()->removeEntity(this);
     }
 }
 
-int32_t Character::addItem(ObjectId item_id, int32_t count) // returns items count after in the function's end
+void Character::saveGame(std::ostream& f) const
+{
+    f << boost::format("\nremoveAllItems(%d);")
+         % getId();
+
+    m_inventory.saveGame(f, getId());
+
+    for(const auto& param : m_parameters)
+    {
+        f << boost::format("\nsetCharacterParam(%d, %d, %.2f, %.2f);")
+             % getId()
+             % param.first
+             % param.second.value
+             % param.second.maximum;
+    }
+}
+
+void Character::applyControls(engine::EngineControlState& controlState, const Movement& moveLogic)
+{
+    // Apply controls to Lara
+    m_command.action = controlState.m_stateAction;
+    m_command.ready_weapon = controlState.m_doDrawWeapon;
+    m_command.jump = controlState.m_doJump;
+    m_command.shift = controlState.m_stateWalk;
+
+    m_command.roll = (controlState.m_moveForward && controlState.m_moveBackward) || controlState.m_doRoll;
+
+    // New commands only for TR3 and above
+    m_command.sprint = controlState.m_stateSprint;
+    m_command.crouch = controlState.m_stateCrouch;
+
+    if(controlState.m_useSmallMedi)
+    {
+        if(getItemsCount(ITEM_SMALL_MEDIPACK) > 0 && changeParam(CharParameterId::PARAM_HEALTH, 250))
+        {
+            setParam(CharParameterId::PARAM_POISON, 0);
+            removeItem(ITEM_SMALL_MEDIPACK, 1);
+            engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundMedipack);
+        }
+
+        controlState.m_useSmallMedi = !controlState.m_useSmallMedi;
+    }
+
+    if(controlState.m_useBigMedi)
+    {
+        if(getItemsCount(ITEM_LARGE_MEDIPACK) > 0 &&
+           changeParam(CharParameterId::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX))
+        {
+            setParam(CharParameterId::PARAM_POISON, 0);
+            removeItem(ITEM_LARGE_MEDIPACK, 1);
+            engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundMedipack);
+        }
+
+        controlState.m_useBigMedi = !controlState.m_useBigMedi;
+    }
+
+    m_command.rot[0] += moveLogic.getDistanceX(glm::degrees(-2.0f) * engine::Engine::instance.getFrameTimeSecs());
+    m_command.rot[1] += moveLogic.getDistanceZ(glm::degrees(2.0f) * engine::Engine::instance.getFrameTimeSecs());
+
+    m_command.move = moveLogic;
+}
+
+size_t Character::addItem(ObjectId item_id, size_t count) // returns items count after in the function's end
 {
     gui::Gui::instance->notifier.start(item_id);
 
@@ -95,78 +157,22 @@ int32_t Character::addItem(ObjectId item_id, int32_t count) // returns items cou
     if(!item)
         return 0;
 
-    count = count < 0 ? item->count : count;
-
-    for(InventoryNode& i : m_inventory)
-    {
-        if(i.id == item_id)
-        {
-            i.count += count;
-            return i.count;
-        }
-    }
-
-    InventoryNode i;
-    i.id = item_id;
-    i.count = count;
-    m_inventory.push_back(i);
-
-    return count;
+    return m_inventory.addItem(item_id, count);
 }
 
-int32_t Character::removeItem(uint32_t item_id, int32_t count) // returns items count after in the function's end
+size_t Character::removeItem(world::ObjectId item_id, size_t count) // returns items count after in the function's end
 {
-    if(m_inventory.empty())
-    {
-        return 0;
-    }
-
-    for(auto it = std::begin(m_inventory); it != std::end(m_inventory); ++it)
-    {
-        if(it->id == item_id)
-        {
-            if(it->count > count)
-            {
-                it->count -= count;
-                return it->count;
-            }
-            else if(it->count == count)
-            {
-                m_inventory.erase(it);
-                return 0;
-            }
-            else // count_to_remove > current_items_count
-            {
-                return it->count - count;
-            }
-        }
-    }
-
-    return -count;
+    return m_inventory.remove(item_id, count);
 }
 
-int32_t Character::removeAllItems()
+void Character::removeAllItems()
 {
-    if(m_inventory.empty())
-    {
-        return 0;
-    }
-    auto ret = m_inventory.size();
     m_inventory.clear();
-    return static_cast<int32_t>(ret);
 }
 
-int32_t Character::getItemsCount(uint32_t item_id) // returns items count
+size_t Character::getItemsCount(world::ObjectId item_id) // returns items count
 {
-    for(const auto& item : m_inventory)
-    {
-        if(item.id == item_id)
-        {
-            return item.count;
-        }
-    }
-
-    return 0;
+    return m_inventory.count(item_id);
 }
 
 /**
@@ -1131,7 +1137,7 @@ int Character::freeFalling()
             m_speed[1] = 0.0;
         }
 
-        if(engine::Engine::instance.m_world.engineVersion < loader::Engine::TR2) // Lara cannot wade in < TRII so when floor < transition level she has to swim
+        if(engine::Engine::instance.m_world.m_engineVersion < loader::Engine::TR2) // Lara cannot wade in < TRII so when floor < transition level she has to swim
         {
             if(!m_heightInfo.water || m_currentSector->floor <= m_heightInfo.transition_level)
             {
@@ -1822,12 +1828,12 @@ void Character::updateParams()
 {
     // Poisoning is always global
 
-    float poison = getParam(PARAM_POISON);
+    float poison = getParam(CharParameterId::PARAM_POISON);
 
     if(poison)
     {
-        changeParam(PARAM_POISON, 0.0001f);
-        changeParam(PARAM_HEALTH, -poison);
+        changeParam(CharParameterId::PARAM_POISON, 0.0001f);
+        changeParam(CharParameterId::PARAM_HEALTH, -poison);
     }
 
     switch(m_moveType)
@@ -1840,37 +1846,37 @@ void Character::updateParams()
 
             if(m_heightInfo.quicksand == QuicksandPosition::Drowning && m_moveType == MoveType::OnFloor)
             {
-                if(!changeParam(PARAM_AIR, -3.0))
-                    changeParam(PARAM_HEALTH, -3.0);
+                if(!changeParam(CharParameterId::PARAM_AIR, -3.0))
+                    changeParam(CharParameterId::PARAM_HEALTH, -3.0);
             }
             else if(m_heightInfo.quicksand == QuicksandPosition::Sinking)
             {
-                changeParam(PARAM_AIR, 3.0);
+                changeParam(CharParameterId::PARAM_AIR, 3.0);
             }
             else
             {
-                setParam(PARAM_AIR, PARAM_ABSOLUTE_MAX);
+                setParam(CharParameterId::PARAM_AIR, PARAM_ABSOLUTE_MAX);
             }
 
             if(m_skeleton.getPreviousState() == LaraState::Sprint || m_skeleton.getPreviousState() == LaraState::SprintRoll)
             {
-                changeParam(PARAM_STAMINA, -0.5);
+                changeParam(CharParameterId::PARAM_STAMINA, -0.5);
             }
             else
             {
-                changeParam(PARAM_STAMINA, 0.5);
+                changeParam(CharParameterId::PARAM_STAMINA, 0.5);
             }
             break;
 
         case MoveType::OnWater:
-            changeParam(PARAM_AIR, 3.0);
+            changeParam(CharParameterId::PARAM_AIR, 3.0);
             ;
             break;
 
         case MoveType::Underwater:
-            if(!changeParam(PARAM_AIR, -1.0))
+            if(!changeParam(CharParameterId::PARAM_AIR, -1.0))
             {
-                if(!changeParam(PARAM_HEALTH, -3.0))
+                if(!changeParam(CharParameterId::PARAM_HEALTH, -3.0))
                 {
                     m_response.killed = true;
                 }
@@ -1882,45 +1888,31 @@ void Character::updateParams()
     }
 }
 
-bool Character::setParamMaximum(int parameter, float max_value)
+void Character::setParamMaximum(CharParameterId parameter, float max_value)
 {
-    if(parameter >= PARAM_SENTINEL)
+    m_parameters[parameter].maximum = std::max(0.0f, max_value);
+}
+
+bool Character::setParam(CharParameterId parameter, float value)
+{
+    if(value == m_parameters[parameter].value)
         return false;
 
-    max_value = max_value < 0 ? 0 : max_value; // Clamp max. to at least zero
-    m_parameters.maximum[parameter] = max_value;
+    float maximum = m_parameters[parameter].maximum;
+
+    m_parameters[parameter].value = glm::clamp(value, 0.0f, maximum);
     return true;
 }
 
-bool Character::setParam(int parameter, float value)
+float Character::getParam(CharParameterId parameter)
 {
-    if(parameter >= PARAM_SENTINEL)
-        return false;
-
-    if(value == m_parameters.param[parameter])
-        return false;
-
-    float maximum = m_parameters.maximum[parameter];
-
-    m_parameters.param[parameter] = glm::clamp(value, 0.0f, maximum);
-    return true;
+    return m_parameters[parameter].value;
 }
 
-float Character::getParam(int parameter)
+bool Character::changeParam(CharParameterId parameter, float value)
 {
-    if(parameter >= PARAM_SENTINEL)
-        return 0;
-
-    return m_parameters.param[parameter];
-}
-
-bool Character::changeParam(int parameter, float value)
-{
-    if(parameter >= PARAM_SENTINEL)
-        return false;
-
-    float maximum = m_parameters.maximum[parameter];
-    float current = m_parameters.param[parameter];
+    float maximum = m_parameters[parameter].maximum;
+    float current = m_parameters[parameter].value;
 
     if(current == maximum && value > 0)
         return false;
@@ -1929,16 +1921,12 @@ bool Character::changeParam(int parameter, float value)
 
     if(current < 0)
     {
-        m_parameters.param[parameter] = 0;
+        m_parameters[parameter].value = 0;
         return false;
-    }
-    else if(current > maximum)
-    {
-        m_parameters.param[parameter] = m_parameters.maximum[parameter];
     }
     else
     {
-        m_parameters.param[parameter] = current;
+        m_parameters[parameter].value = std::min(current, maximum);
     }
 
     return true;
@@ -2121,9 +2109,9 @@ void Character::updateHair()
         if(!hair || hair->m_elements.empty())
             continue;
 
-        if(auto ownerChar = hair->m_ownerChar.lock())
+        if(hair->m_ownerChar != nullptr)
         {
-            hair->setRoom(ownerChar->getRoom());
+            hair->setRoom(hair->m_ownerChar->getRoom());
         }
     }
 }
@@ -2162,7 +2150,7 @@ void Character::frame(util::Duration time)
             checkCollisionCallbacks();
     }
 
-    animation::AnimUpdate animStepResult = stepAnimation(time);
+    auto animStepResult = stepAnimation(time);
     if(m_skeleton.onFrame != nullptr)
     {
         m_skeleton.onFrame(*this, animStepResult);
@@ -2174,7 +2162,7 @@ void Character::frame(util::Duration time)
     {
         checkActivators(); // bbox check f. interact/pickup, lua callbacks
     }
-    if(getParam(PARAM_HEALTH) <= 0.0)
+    if(getParam(CharParameterId::PARAM_HEALTH) <= 0.0)
     {
         m_response.killed = true; // Kill, if no HP.
     }
@@ -2223,14 +2211,14 @@ void Character::processSectorImpl()
 
                 if(dynamic_cast<Room*>(object))
                 {
-                    setParam(PARAM_HEALTH, 0.0);
+                    setParam(CharParameterId::PARAM_HEALTH, 0.0);
                     m_response.killed = true;
                 }
             }
         }
         else if(m_moveType == MoveType::Underwater || m_moveType == MoveType::OnWater)
         {
-            setParam(PARAM_HEALTH, 0.0);
+            setParam(CharParameterId::PARAM_HEALTH, 0.0);
             m_response.killed = true;
         }
     }

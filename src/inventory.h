@@ -3,7 +3,9 @@
 #include "gui/textline.h"
 #include "util/helpers.h"
 
-#include <list>
+#include "world/object.h"
+
+#include <map>
 
 #define ITEM_COMPASS  1     // Aka Watch in TR2-3, Timex in TR5
 #define ITEM_PASSPORT 2     // Exists only in TR1-3, not used in TR4 (diary)
@@ -57,9 +59,8 @@
 
 struct InventoryNode
 {
-    uint32_t id;
-    int32_t count;
-    uint32_t max_count;
+    size_t count = 0;
+    size_t max_count = 0;
 };
 
 enum class MenuItemType
@@ -110,7 +111,7 @@ public:
     };
 
 private:
-    std::list<InventoryNode>*   m_inventory;
+    std::map<world::ObjectId, InventoryNode> m_inventory;
     InventoryState              m_currentState;
     InventoryState              m_nextState;
     int                         m_nextItemsCount;
@@ -163,8 +164,42 @@ public:
     }
 
     MenuItemType setItemsType(MenuItemType type);
-    void setInventory(std::list<InventoryNode> *i);
+    void disable();
     void setTitle(MenuItemType items_type);
     void frame();
     void render();
+
+    size_t addItem(world::ObjectId id, size_t count)
+    {
+        return m_inventory[id].count += count;
+    }
+
+    size_t remove(world::ObjectId id, size_t count)
+    {
+        if(m_inventory[id].count < count)
+        {
+            m_inventory[id].count = 0;
+            return 0;
+        }
+
+        return m_inventory[id].count -= count;
+    }
+
+    void clear()
+    {
+        m_inventory.clear();
+    }
+
+    size_t count(world::ObjectId id) const
+    {
+        auto it = m_inventory.find(id);
+        if(it == m_inventory.end())
+            return 0;
+
+        return it->second.count;
+    }
+
+    void print() const;
+
+    void saveGame(std::ostream& f, world::ObjectId oid) const;
 };

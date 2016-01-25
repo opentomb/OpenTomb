@@ -14,8 +14,6 @@
 
 namespace world
 {
-namespace
-{
 constexpr glm::float_t PenetrationTestOffset = 48.0f;        ///@TODO: tune it!
 constexpr glm::float_t WalkForwardOffset = 96.0f;        ///@FIXME: find real offset
 constexpr glm::float_t WalkBackOffset = 16.0f;
@@ -28,9 +26,11 @@ constexpr glm::float_t LaraHangSensorZ = 800.0f;       // It works more stable t
 
 using animation::Skeleton;
 
-void onFrameStopTraverse(Character& ent, animation::AnimUpdate state)
+using AnimUpdate = animation::AnimUpdate;
+
+void StateController::onFrameStopTraverse(Character& ent, AnimUpdate state)
 {
-    if(state == animation::AnimUpdate::NewAnim)
+    if(state == AnimUpdate::NewAnim)
     {
         glm::vec4& v = ent.m_traversedObject->m_transform[3];
         int i = static_cast<int>(v[0] / MeteringSectorSize);
@@ -43,9 +43,9 @@ void onFrameStopTraverse(Character& ent, animation::AnimUpdate state)
     }
 }
 
-void onFrameSetOnFloor(Character& ent, animation::AnimUpdate state)
+void StateController::onFrameSetOnFloor(Character& ent, AnimUpdate state)
 {
-    if(state == animation::AnimUpdate::NewAnim)
+    if(state == AnimUpdate::NewAnim)
     {
         ent.m_moveType = MoveType::OnFloor;
         ent.m_transform[3][2] = ent.m_heightInfo.floor.hitPoint[2];
@@ -54,7 +54,7 @@ void onFrameSetOnFloor(Character& ent, animation::AnimUpdate state)
     }
 }
 
-void onFrameSetOnFloorAfterClimb(Character& ent, animation::AnimUpdate /*state*/)
+void StateController::onFrameSetOnFloorAfterClimb(Character& ent, AnimUpdate /*state*/)
 {
     // FIXME: this is more like an end-of-anim operation
     if(ent.m_skeleton.getCurrentAnimation() != ent.m_skeleton.getPreviousAnimation())
@@ -70,36 +70,36 @@ void onFrameSetOnFloorAfterClimb(Character& ent, animation::AnimUpdate /*state*/
     }
 }
 
-void onFrameSetUnderwater(Character& ent, animation::AnimUpdate state)
+void StateController::onFrameSetUnderwater(Character& ent, AnimUpdate state)
 {
-    if(state == animation::AnimUpdate::NewAnim)
+    if(state == AnimUpdate::NewAnim)
     {
         ent.m_moveType = MoveType::Underwater;
         ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameSetFreeFalling(Character& ent, animation::AnimUpdate state)
+void StateController::onFrameSetFreeFalling(Character& ent, AnimUpdate state)
 {
-    if(state == animation::AnimUpdate::NewAnim)
+    if(state == AnimUpdate::NewAnim)
     {
         ent.m_moveType = MoveType::FreeFalling;
         ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameSetCmdSlide(Character& ent, animation::AnimUpdate state)
+void StateController::onFrameSetCmdSlide(Character& ent, AnimUpdate state)
 {
-    if(state == animation::AnimUpdate::NewAnim)
+    if(state == AnimUpdate::NewAnim)
     {
         ent.m_response.slide = MovementWalk::Backward;
         ent.m_skeleton.onFrame = nullptr;
     }
 }
 
-void onFrameCorrectDivingAngle(Character& ent, animation::AnimUpdate state)
+void StateController::onFrameCorrectDivingAngle(Character& ent, AnimUpdate state)
 {
-    if(state == animation::AnimUpdate::NewAnim)
+    if(state == AnimUpdate::NewAnim)
     {
         ent.m_angles[1] = -45.0;
         ent.updateTransform();
@@ -107,9 +107,9 @@ void onFrameCorrectDivingAngle(Character& ent, animation::AnimUpdate state)
     }
 }
 
-void onFrameToOnWater(Character& ent, animation::AnimUpdate state)
+void StateController::onFrameToOnWater(Character& ent, AnimUpdate state)
 {
-    if(state == animation::AnimUpdate::NewAnim)
+    if(state == AnimUpdate::NewAnim)
     {
         ent.m_transform[3][2] = ent.m_heightInfo.transition_level;
         ent.ghostUpdate();
@@ -118,9 +118,9 @@ void onFrameToOnWater(Character& ent, animation::AnimUpdate state)
     }
 }
 
-void onFrameClimbOutOfWater(Character& ent, animation::AnimUpdate state)
+void StateController::onFrameClimbOutOfWater(Character& ent, AnimUpdate state)
 {
-    if(state == animation::AnimUpdate::NewAnim)
+    if(state == AnimUpdate::NewAnim)
     {
         ent.m_transform[3] = glm::vec4(ent.m_climb.point, 0) + ent.m_transform[1] * 48.0f;             // temporary stick
         ent.m_transform[3][2] = ent.m_climb.point[2];
@@ -129,9 +129,9 @@ void onFrameClimbOutOfWater(Character& ent, animation::AnimUpdate state)
     }
 }
 
-void onFrameToEdgeClimb(Character& ent, animation::AnimUpdate state)
+void StateController::onFrameToEdgeClimb(Character& ent, AnimUpdate state)
 {
-    if(state == animation::AnimUpdate::NewAnim)
+    if(state == AnimUpdate::NewAnim)
     {
         ent.m_transform[3][0] = ent.m_climb.point[0] - ent.m_transform[1][0] * ent.m_skeleton.getBoundingBox().max[1];
         ent.m_transform[3][1] = ent.m_climb.point[1] - ent.m_transform[1][1] * ent.m_skeleton.getBoundingBox().max[1];
@@ -141,9 +141,9 @@ void onFrameToEdgeClimb(Character& ent, animation::AnimUpdate state)
     }
 }
 
-void onFrameToMonkeyswing(Character& ent, animation::AnimUpdate state)
+void StateController::onFrameToMonkeyswing(Character& ent, AnimUpdate state)
 {
-    if(state == animation::AnimUpdate::NewAnim)
+    if(state == AnimUpdate::NewAnim)
     {
         ent.m_moveType = MoveType::Monkeyswing;
         ent.m_transform[3][2] = ent.m_heightInfo.ceiling.hitPoint[2] - ent.m_skeleton.getBoundingBox().max[2];
@@ -152,9 +152,9 @@ void onFrameToMonkeyswing(Character& ent, animation::AnimUpdate state)
     }
 }
 
-void onFrameToTightrope(Character& ent, animation::AnimUpdate state)
+void StateController::onFrameToTightrope(Character& ent, AnimUpdate state)
 {
-    if(state == animation::AnimUpdate::NewAnim)
+    if(state == AnimUpdate::NewAnim)
     {
         ent.m_moveType = MoveType::Climbing;
         ent.ghostUpdate();
@@ -162,9 +162,9 @@ void onFrameToTightrope(Character& ent, animation::AnimUpdate state)
     }
 }
 
-void onFrameFromTightrope(Character& ent, animation::AnimUpdate state)
+void StateController::onFrameFromTightrope(Character& ent, AnimUpdate state)
 {
-    if(state == animation::AnimUpdate::NewAnim)
+    if(state == AnimUpdate::NewAnim)
     {
         ent.m_moveType = MoveType::OnFloor;
         ent.ghostUpdate();
@@ -172,9 +172,9 @@ void onFrameFromTightrope(Character& ent, animation::AnimUpdate state)
     }
 }
 
-void onFrameCrawlToClimb(Character& ent, animation::AnimUpdate state)
+void StateController::onFrameCrawlToClimb(Character& ent, AnimUpdate state)
 {
-    if(state == animation::AnimUpdate::NewAnim)
+    if(state == AnimUpdate::NewAnim)
     {
         if(!ent.m_command.action)
         {
@@ -192,7 +192,6 @@ void onFrameCrawlToClimb(Character& ent, animation::AnimUpdate state)
         ent.m_skeleton.onFrame = nullptr;
     }
 }
-} // anonymous namespace
 
 StateController::StateController(Character *c)
     : m_character(c)
@@ -283,8 +282,8 @@ void StateController::handle(LaraState state)
 
     if(m_character->m_response.killed)  // Stop any music, if Lara is dead.
     {
-        engine::Engine::instance.m_world.audioEngine.endStreams(audio::StreamType::Oneshot);
-        engine::Engine::instance.m_world.audioEngine.endStreams(audio::StreamType::Chat);
+        engine::Engine::instance.m_world.m_audioEngine.endStreams(audio::StreamType::Oneshot);
+        engine::Engine::instance.m_world.m_audioEngine.endStreams(audio::StreamType::Chat);
     }
 
     auto it = m_handlers.find(state);
@@ -383,7 +382,7 @@ void StateController::stop()
     }
     else if(m_character->m_response.slide == MovementWalk::Forward)
     {
-        engine::Engine::instance.m_world.audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
+        engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
 
         if(m_character->m_command.jump)
         {
@@ -401,7 +400,7 @@ void StateController::stop()
         {
             m_character->m_moveDir = MoveDirection::Backward;
             m_character->setAnimation(animation::TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
-            engine::Engine::instance.m_world.audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
+            engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
         }
         else
         {
@@ -1025,7 +1024,7 @@ void StateController::sprint()
         m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS;
     }
 
-    if(!m_character->getParam(PARAM_STAMINA))
+    if(!m_character->getParam(CharParameterId::PARAM_STAMINA))
     {
         setNextState(LaraState::RunForward);
     }
@@ -1442,7 +1441,7 @@ void StateController::slideBack()
         return;
     }
 
-    engine::Engine::instance.m_world.audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
+    engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
 }
 
 void StateController::slideForward()
@@ -1457,7 +1456,7 @@ void StateController::slideForward()
     }
     else if(m_character->m_response.slide == MovementWalk::None)
     {
-        if(m_character->m_command.move.z == MovementWalk::Forward && engine::Engine::instance.m_world.engineVersion >= loader::Engine::TR3)
+        if(m_character->m_command.move.z == MovementWalk::Forward && engine::Engine::instance.m_world.m_engineVersion >= loader::Engine::TR3)
         {
             setNextState(LaraState::RunForward);
         }
@@ -1475,7 +1474,7 @@ void StateController::slideForward()
         return;
     }
 
-    engine::Engine::instance.m_world.audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
+    engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
 }
 
 void StateController::pushableGrab()
@@ -1565,16 +1564,16 @@ void StateController::pushablePush()
             }
         }
 
-        if(engine::Engine::instance.m_world.engineVersion > loader::Engine::TR3)
+        if(engine::Engine::instance.m_world.m_engineVersion > loader::Engine::TR3)
         {
             if(was_traversed)
             {
-                if(!engine::Engine::instance.m_world.audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    engine::Engine::instance.m_world.audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!engine::Engine::instance.m_world.m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
             else
             {
-                engine::Engine::instance.m_world.audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
         else
@@ -1583,8 +1582,8 @@ void StateController::pushablePush()
                || m_character->m_skeleton.getCurrentFrame() == 110
                || m_character->m_skeleton.getCurrentFrame() == 142)
             {
-                if(!engine::Engine::instance.m_world.audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    engine::Engine::instance.m_world.audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!engine::Engine::instance.m_world.m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
 
@@ -1592,9 +1591,9 @@ void StateController::pushablePush()
     }
     else
     {
-        if(engine::Engine::instance.m_world.engineVersion > loader::Engine::TR3)
+        if(engine::Engine::instance.m_world.m_engineVersion > loader::Engine::TR3)
         {
-            engine::Engine::instance.m_world.audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+            engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
         }
     }
 }
@@ -1653,16 +1652,16 @@ void StateController::pushablePull()
             }
         }
 
-        if(engine::Engine::instance.m_world.engineVersion > loader::Engine::TR3)
+        if(engine::Engine::instance.m_world.m_engineVersion > loader::Engine::TR3)
         {
             if(was_traversed)
             {
-                if(!engine::Engine::instance.m_world.audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    engine::Engine::instance.m_world.audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!engine::Engine::instance.m_world.m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
             else
             {
-                engine::Engine::instance.m_world.audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
         else
@@ -1673,8 +1672,8 @@ void StateController::pushablePull()
                || m_character->m_skeleton.getCurrentFrame() == 124
                || m_character->m_skeleton.getCurrentFrame() == 156)
             {
-                if(!engine::Engine::instance.m_world.audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    engine::Engine::instance.m_world.audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!engine::Engine::instance.m_world.m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
 
@@ -1682,9 +1681,9 @@ void StateController::pushablePull()
     }
     else
     {
-        if(engine::Engine::instance.m_world.engineVersion > loader::Engine::TR3)
+        if(engine::Engine::instance.m_world.m_engineVersion > loader::Engine::TR3)
         {
-            engine::Engine::instance.m_world.audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+            engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
         }
     }
 }
@@ -2352,7 +2351,7 @@ void StateController::freefall()
        int(m_character->m_speed[2]) >= -FREE_FALL_SPEED_CRITICAL - 100)
     {
         m_character->m_speed[2] = -FREE_FALL_SPEED_CRITICAL - 101;
-        engine::Engine::instance.m_world.audioEngine.send(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Scream
+        engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Scream
     }
     else if(m_character->m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
     {
@@ -2367,12 +2366,12 @@ void StateController::freefall()
         m_character->m_command.rot[1] = 0.0;
         m_character->updateTransform();                                     // needed here to fix underwater in wall collision bug
         m_character->setAnimation(animation::TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
-        engine::Engine::instance.m_world.audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Stop scream
+        engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Stop scream
 
         // Splash sound is hardcoded, beginning with TR3.
-        if(engine::Engine::instance.m_world.engineVersion > loader::Engine::TR2)
+        if(engine::Engine::instance.m_world.m_engineVersion > loader::Engine::TR2)
         {
-            engine::Engine::instance.m_world.audioEngine.send(audio::SoundSplash, audio::EmitterType::Entity, m_character->getId());
+            engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundSplash, audio::EmitterType::Entity, m_character->getId());
         }
     }
     else if((m_character->m_response.vertical_collide & 0x01) || m_character->m_moveType == MoveType::OnFloor)
@@ -2380,11 +2379,11 @@ void StateController::freefall()
         if(m_character->getRoom()->m_flags & TR_ROOM_FLAG_QUICKSAND)
         {
             m_character->setAnimation(animation::TR_ANIMATION_LARA_STAY_IDLE, 0);
-            engine::Engine::instance.m_world.audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
+            engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
         }
         else if(m_character->m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
         {
-            if(!m_character->changeParam(PARAM_HEALTH, (m_character->m_speed[2] + FREE_FALL_SPEED_MAXSAFE) / 2))
+            if(!m_character->changeParam(CharParameterId::PARAM_HEALTH, (m_character->m_speed[2] + FREE_FALL_SPEED_MAXSAFE) / 2))
             {
                 m_character->m_response.killed = true;
                 m_character->setAnimation(animation::TR_ANIMATION_LARA_LANDING_DEATH, 0);
@@ -2407,7 +2406,7 @@ void StateController::freefall()
         if(m_character->m_response.killed)
         {
             setNextState(LaraState::Death);
-            engine::Engine::instance.m_world.audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
+            engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
         }
     }
     else if(m_character->m_command.action)
@@ -2447,13 +2446,13 @@ void StateController::swandiveEnd()
         if(m_character->m_heightInfo.quicksand != QuicksandPosition::None)
         {
             m_character->m_response.killed = true;
-            m_character->setParam(PARAM_HEALTH, 0.0);
-            m_character->setParam(PARAM_AIR, 0.0);
+            m_character->setParam(CharParameterId::PARAM_HEALTH, 0.0);
+            m_character->setParam(CharParameterId::PARAM_AIR, 0.0);
             m_character->setAnimation(animation::TR_ANIMATION_LARA_LANDING_DEATH, -1);
         }
         else
         {
-            m_character->setParam(PARAM_HEALTH, 0.0);
+            m_character->setParam(CharParameterId::PARAM_HEALTH, 0.0);
             setNextState(LaraState::Death);
         }
     }
@@ -2673,7 +2672,7 @@ void StateController::onwaterForward()
                 {
                     m_character->setAnimation(animation::TR_ANIMATION_LARA_CLIMB_OUT_OF_WATER, 0);
                 }
-                onFrameClimbOutOfWater(*m_character, world::animation::AnimUpdate::NewAnim);
+                onFrameClimbOutOfWater(*m_character, world::AnimUpdate::NewAnim);
             }
         }
         else if(!m_character->m_heightInfo.floor.hasHit || m_character->m_transform[3][2] - m_character->m_height > m_character->m_heightInfo.floor.hitPoint[2] - m_character->m_swimDepth)
@@ -2794,7 +2793,7 @@ void StateController::crouchIdle()
     }
     else
     {
-        if(engine::Engine::instance.m_world.engineVersion > loader::Engine::TR3)
+        if(engine::Engine::instance.m_world.m_engineVersion > loader::Engine::TR3)
         {
             if(m_character->m_command.move.x == MovementStrafe::Right)
             {

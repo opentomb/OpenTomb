@@ -1,6 +1,7 @@
 #include "inventory.h"
 
 #include "audio/audio.h"
+#include "gui/console.h"
 #include "gui/gui.h"
 #include "script/script.h"
 #include "strings.h"
@@ -8,6 +9,9 @@
 #include "engine/engine.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+
+#include <boost/format.hpp>
+#include <boost/range/adaptors.hpp>
 
 /*
  * GUI RENDEDR CLASS
@@ -34,7 +38,7 @@ InventoryManager::InventoryManager()
     m_itemTime = util::Duration(0);
     m_itemAngle = 0.0f;
 
-    m_inventory = nullptr;
+    m_inventory.clear();
 
     mLabel_Title.position = { 0, 30 };
     mLabel_Title.Xanchor = gui::HorizontalAnchor::Center;
@@ -60,7 +64,6 @@ InventoryManager::~InventoryManager()
 {
     m_currentState = InventoryState::Disabled;
     m_nextState = InventoryState::Disabled;
-    m_inventory = nullptr;
 
     mLabel_ItemName.show = false;
     gui::TextLineManager::instance->erase(&mLabel_ItemName);
@@ -72,9 +75,9 @@ InventoryManager::~InventoryManager()
 int InventoryManager::getItemsTypeCount(MenuItemType type) const
 {
     int ret = 0;
-    for(const InventoryNode& i : *m_inventory)
+    for(world::ObjectId id : m_inventory | boost::adaptors::map_keys)
     {
-        auto bi = engine::Engine::instance.m_world.getBaseItemByID(i.id);
+        auto bi = engine::Engine::instance.m_world.getBaseItemByID(id);
         if(bi && bi->type == type)
         {
             ret++;
@@ -106,9 +109,8 @@ void InventoryManager::restoreItemAngle()
     }
 }
 
-void InventoryManager::setInventory(std::list<InventoryNode> *i)
+void InventoryManager::disable()
 {
-    m_inventory = i;
     m_currentState = InventoryState::Disabled;
     m_nextState = InventoryState::Disabled;
 }
@@ -133,14 +135,12 @@ void InventoryManager::setTitle(MenuItemType items_type)
             break;
     }
 
-    char buffer[gui::LineDefaultSize];
-    engine_lua.getString(string_index, gui::LineDefaultSize, buffer);
-    mLabel_Title.text = buffer;
+    mLabel_Title.text = engine_lua.getString(string_index);
 }
 
 MenuItemType InventoryManager::setItemsType(MenuItemType type)
 {
-    if(!m_inventory || m_inventory->empty())
+    if(m_inventory.empty())
     {
         m_currentItemsType = type;
         return type;
@@ -149,9 +149,9 @@ MenuItemType InventoryManager::setItemsType(MenuItemType type)
     int count = this->getItemsTypeCount(type);
     if(count == 0)
     {
-        for(const InventoryNode& i : *m_inventory)
+        for(world::ObjectId id : m_inventory | boost::adaptors::map_keys)
         {
-            if(auto bi = engine::Engine::instance.m_world.getBaseItemByID(i.id))
+            if(auto bi = engine::Engine::instance.m_world.getBaseItemByID(id))
             {
                 type = bi->type;
                 count = this->getItemsTypeCount(m_currentItemsType);
@@ -176,7 +176,7 @@ MenuItemType InventoryManager::setItemsType(MenuItemType type)
 
 void InventoryManager::frame()
 {
-    if(!m_inventory || m_inventory->empty())
+    if(m_inventory.empty())
     {
         m_currentState = InventoryState::Disabled;
         m_nextState = InventoryState::Disabled;
@@ -244,7 +244,7 @@ void InventoryManager::frame()
                     break;
 
                 case InventoryState::Closed:
-                    engine::Engine::instance.m_world.audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuClose));
+                    engine::Engine::instance.m_world.m_audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuClose));
                     mLabel_ItemName.show = false;
                     mLabel_Title.show = false;
                     m_currentState = m_nextState;
@@ -252,7 +252,7 @@ void InventoryManager::frame()
 
                 case InventoryState::RLeft:
                 case InventoryState::RRight:
-                    engine::Engine::instance.m_world.audioEngine.send(audio::SoundMenuRotate);
+                    engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundMenuRotate);
                     mLabel_ItemName.show = false;
                     m_currentState = m_nextState;
                     m_itemTime = util::Duration(0);
@@ -297,7 +297,7 @@ void InventoryManager::frame()
             {
                 if(setItemsType(m_currentItemsType) != MenuItemType::Invalid)
                 {
-                    engine::Engine::instance.m_world.audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuOpen));
+                    engine::Engine::instance.m_world.m_audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuOpen));
                     m_currentState = InventoryState::Open;
                     m_ringAngle = 180.0f;
                     m_ringVerticalAngle = 180.0f;
@@ -421,54 +421,69 @@ void InventoryManager::frame()
 
 void InventoryManager::render()
 {
-    if(m_currentState != InventoryState::Disabled && m_inventory != nullptr && !m_inventory->empty() && gui::FontManager::instance != nullptr)
+    if(m_currentState == InventoryState::Disabled || m_inventory.empty() || gui::FontManager::instance == nullptr)
+        return;
+
+    int num = 0;
+    for(const auto& i : m_inventory)
     {
-        int num = 0;
-        for(InventoryNode& i : *m_inventory)
+        auto bi = engine::Engine::instance.m_world.getBaseItemByID(i.first);
+        if(!bi || bi->type != m_currentItemsType)
         {
-            auto bi = engine::Engine::instance.m_world.getBaseItemByID(i.id);
-            if(!bi || bi->type != m_currentItemsType)
-            {
-                continue;
-            }
-
-            glm::mat4 matrix(1.0f);
-            matrix = glm::translate(matrix, { 0, 0, -m_baseRingRadius * 2.0f });
-            //Mat4_RotateX(matrix, 25.0);
-            matrix = glm::rotate(matrix, glm::radians(25.0f), { 1,0,0 });
-            glm::float_t ang = m_ringAngleStep * (-m_itemsOffset + num) + m_ringAngle;
-            matrix = glm::rotate(matrix, glm::radians(ang), { 0,1,0 });
-            matrix = glm::translate(matrix, { 0, m_verticalOffset, m_ringRadius });
-            matrix = glm::rotate(matrix, -util::Rad90, { 1,0,0 });
-            matrix = glm::rotate(matrix, util::Rad90, { 0,0,1 });
-            if(num == m_itemsOffset)
-            {
-                if(bi->name[0])
-                {
-                    mLabel_ItemName.text = bi->name;
-
-                    if(i.count > 1)
-                    {
-                        char counter[32];
-                        engine_lua.getString(STR_GEN_MASK_INVHEADER, 32, counter);
-                        char tmp[gui::LineDefaultSize];
-                        snprintf(tmp, gui::LineDefaultSize, static_cast<const char*>(counter), bi->name, i.count);
-                        mLabel_ItemName.text = tmp;
-                    }
-                }
-                matrix = glm::rotate(matrix, glm::radians(90.0f + m_itemAngle - ang), { 0,0,1 });
-                bi->bf->itemFrame(util::Duration(0));                            // here will be time != 0 for using items animation
-            }
-            else
-            {
-                matrix = glm::rotate(matrix, glm::radians(90.0f - ang), { 0,0,1 });
-                bi->bf->itemFrame(util::Duration(0));
-            }
-            matrix = glm::translate(matrix, -0.5f * bi->bf->getBoundingBox().getCenter());
-            matrix = glm::scale(matrix, { 0.7f, 0.7f, 0.7f });
-            render::renderItem(*bi->bf, 0.0f, matrix, gui::Gui::instance->guiProjectionMatrix);
-
-            num++;
+            continue;
         }
+
+        glm::mat4 matrix(1.0f);
+        matrix = glm::translate(matrix, { 0, 0, -m_baseRingRadius * 2.0f });
+        //Mat4_RotateX(matrix, 25.0);
+        matrix = glm::rotate(matrix, glm::radians(25.0f), { 1,0,0 });
+        glm::float_t ang = m_ringAngleStep * (-m_itemsOffset + num) + m_ringAngle;
+        matrix = glm::rotate(matrix, glm::radians(ang), { 0,1,0 });
+        matrix = glm::translate(matrix, { 0, m_verticalOffset, m_ringRadius });
+        matrix = glm::rotate(matrix, -util::Rad90, { 1,0,0 });
+        matrix = glm::rotate(matrix, util::Rad90, { 0,0,1 });
+        if(num == m_itemsOffset)
+        {
+            if(bi->name[0])
+            {
+                mLabel_ItemName.text = bi->name;
+
+                if(i.second.count > 1)
+                {
+                    mLabel_ItemName.text = (boost::format(engine_lua.getString(STR_GEN_MASK_INVHEADER)) % bi->name % i.second.count).str();
+                }
+            }
+            matrix = glm::rotate(matrix, glm::radians(90.0f + m_itemAngle - ang), { 0,0,1 });
+            bi->bf->itemFrame(util::Duration(0));                            // here will be time != 0 for using items animation
+        }
+        else
+        {
+            matrix = glm::rotate(matrix, glm::radians(90.0f - ang), { 0,0,1 });
+            bi->bf->itemFrame(util::Duration(0));
+        }
+        matrix = glm::translate(matrix, -0.5f * bi->bf->getBoundingBox().getCenter());
+        matrix = glm::scale(matrix, { 0.7f, 0.7f, 0.7f });
+        render::renderItem(*bi->bf, 0.0f, matrix, gui::Gui::instance->guiProjectionMatrix);
+
+        num++;
+    }
+}
+
+void InventoryManager::print() const
+{
+    for(const auto& i : m_inventory)
+    {
+        gui::Console::instance().printf("item[id = %d]: count = %d", i.first, i.second.count);
+    }
+}
+
+void InventoryManager::saveGame(std::ostream& f, world::ObjectId oid) const
+{
+    for(const auto& i : m_inventory)
+    {
+        f << boost::format("\naddItem(%d, %d, %d);")
+             % oid
+             % i.first
+             % i.second.count;
     }
 }

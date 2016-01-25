@@ -209,7 +209,7 @@ void Engine::start()
     resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
 
     // OpenAL initialization.
-    m_world.audioEngine.initDevice();
+    m_world.m_audioEngine.initDevice();
 
     Console::instance().notify(SYSNOTE_ENGINE_INITED);
 
@@ -305,7 +305,7 @@ void Engine::showDebugInfo()
     glColorPointer(3, GL_FLOAT, 0, color_array);
     glDrawArrays(GL_LINES, 0, 2);
 
-    if(std::shared_ptr<world::Character> ent = m_world.character)
+    if(std::shared_ptr<world::Character> ent = m_world.m_character)
     {
         /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
@@ -507,8 +507,7 @@ void Engine::initDefaultGlobals()
         self->m_controlState.m_moveForward = dy < 0;
         self->m_controlState.m_moveBackward = dy > 0;
 
-        self->m_world.character->m_command.rot[0] += glm::degrees(-2 * self->getFrameTimeSecs() * dx);
-        self->m_world.character->m_command.rot[1] += glm::degrees(-2 * self->getFrameTimeSecs() * dy);
+        self->m_world.m_character->applyJoystickMove(self->getFrameTimeSecs() * dx, self->getFrameTimeSecs() * dy);
         glm::vec3 rotation(dx, dy, 0);
         rotation *= -world::CameraRotationSpeed * self->getFrameTimeSecs();
         self->m_camera.rotate(rotation);
@@ -516,7 +515,7 @@ void Engine::initDefaultGlobals()
 
     Game_InitGlobals();
     render::renderer.initGlobals();
-    m_world.audioEngine.resetSettings();
+    m_world.m_audioEngine.resetSettings();
 }
 
 // First stage of initialization.
@@ -624,7 +623,7 @@ void Engine::shutdown(int val)
     SDL_GL_DeleteContext(m_glContext);
     SDL_DestroyWindow(m_window);
 
-    m_world.audioEngine.closeDevice();
+    m_world.m_audioEngine.closeDevice();
 
     /* free temporary memory */
     frame_vertex_buffer.clear();
@@ -711,7 +710,7 @@ bool Engine::loadPCLevel(const std::string& name)
 
     Console::instance().notify(SYSNOTE_LOADED_PC_LEVEL);
     Console::instance().notify(SYSNOTE_ENGINE_VERSION, static_cast<int>(loader->m_gameVersion), buf.c_str());
-    Console::instance().notify(SYSNOTE_NUM_ROOMS, m_world.rooms.size());
+    Console::instance().notify(SYSNOTE_NUM_ROOMS, m_world.m_rooms.size());
 
     return true;
 }
@@ -742,7 +741,7 @@ bool Engine::loadMap(const std::string& name)
 
     engine_lua.clean();
 
-    m_world.audioEngine.init();
+    m_world.m_audioEngine.init();
 
     gui::Gui::instance->drawLoadScreen(100);
 
@@ -1063,7 +1062,7 @@ void Engine::initConfig(const std::string& filename)
 
         state.parseScreen(screen_info);
         state.parseRender(render::renderer.settings());
-        state.parseAudio(m_world.audioEngine.settings());
+        state.parseAudio(m_world.m_audioEngine.settings());
         state.parseConsole(Console::instance());
         state.parseControls(m_inputHandler);
         state.parseSystem(system_settings);

@@ -129,11 +129,11 @@ void FxManager::updateListener(world::Camera& cam)
 
         if(m_underwater)
         {
-            engine::Engine::instance.m_world.audioEngine.send(audio::SoundUnderwater);
+            engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundUnderwater);
         }
         else
         {
-            engine::Engine::instance.m_world.audioEngine.kill(audio::SoundUnderwater);
+            engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundUnderwater);
         }
     }
 }

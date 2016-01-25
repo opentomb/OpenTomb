@@ -14,14 +14,13 @@
 
 namespace world
 {
-bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
+bool Hair::create(HairSetup *setup, const Entity& parent_entity)
 {
     // No setup or parent to link to - bypass function.
 
-    if(!parent_entity
-       || !setup
-       || setup->m_linkBody >= parent_entity->m_skeleton.getBoneCount()
-       || !parent_entity->m_skeleton.getBones()[setup->m_linkBody].bt_body)
+    if(   !setup
+       || setup->m_linkBody >= parent_entity.m_skeleton.getBoneCount()
+       || !parent_entity.m_skeleton.getBones()[setup->m_linkBody].bt_body)
     {
         return false;
     }
@@ -35,16 +34,16 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 
     // Setup engine container. FIXME: DOESN'T WORK PROPERLY ATM.
 
-    setRoom(parent_entity->getRoom());
+    setRoom(parent_entity.getRoom());
 
     // Setup initial hair parameters.
 
-    m_ownerChar = parent_entity;       // Entity to refer to.
+    m_ownerChar = &parent_entity;       // Entity to refer to.
     m_ownerBody = setup->m_linkBody;    // Entity body to refer to.
 
     // Setup initial position / angles.
 
-    glm::mat4 owner_body_transform = parent_entity->m_transform * parent_entity->m_skeleton.getBones()[m_ownerBody].full_transform;
+    glm::mat4 owner_body_transform = parent_entity.m_transform * parent_entity.m_skeleton.getBones()[m_ownerBody].full_transform;
     // Number of elements (bodies) is equal to number of hair meshes.
 
     m_elements.clear();
@@ -152,7 +151,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
             localB.setOrigin(btVector3(joint_x, 0.0, joint_y));
             localB.getBasis().setEulerZYX(0, -SIMD_HALF_PI, 0);
 
-            prev_body = parent_entity->m_skeleton.getBones()[m_ownerBody].bt_body;   // Previous body is parent body.
+            prev_body = parent_entity.m_skeleton.getBones()[m_ownerBody].bt_body;   // Previous body is parent body.
         }
         else
         {
@@ -228,7 +227,7 @@ bool Hair::create(HairSetup *setup, std::shared_ptr<Entity> parent_entity)
 void Hair::createHairMesh(const SkeletalModel& model)
 {
     m_mesh = std::make_shared<core::BaseMesh>();
-    m_mesh->m_elementsPerTexture.resize(engine::Engine::instance.m_world.textures.size(), 0);
+    m_mesh->m_elementsPerTexture.resize(engine::Engine::instance.m_world.m_textures.size(), 0);
     size_t totalElements = 0;
 
     // Gather size information

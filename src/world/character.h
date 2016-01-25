@@ -2,6 +2,7 @@
 
 #include "entity.h"
 #include "hair.h"
+#include "inventory.h"
 #include "statecontroller.h"
 
 #include <list>
@@ -236,7 +237,7 @@ struct HeightInfo
     QuicksandPosition quicksand = QuicksandPosition::None;
 };
 
-enum CharParameters
+enum class CharParameterId
 {
     PARAM_HEALTH,
     PARAM_AIR,
@@ -246,32 +247,29 @@ enum CharParameters
     PARAM_EXTRA1,
     PARAM_EXTRA2,
     PARAM_EXTRA3,
-    PARAM_EXTRA4,
-    PARAM_SENTINEL
+    PARAM_EXTRA4
 };
 
-struct CharacterParam
+ENUM_TO_OSTREAM(CharParameterId)
+
+struct CharParameter
 {
-    std::array<float, PARAM_SENTINEL> param{ {} };
-    std::array<float, PARAM_SENTINEL> maximum{ {} };
-
-    CharacterParam()
-    {
-        param.fill(0);
-        maximum.fill(0);
-    }
+    float value = 0;
+    float maximum = std::numeric_limits<float>::max();
 };
+
+using CharacterParam = std::map<CharParameterId, CharParameter>;
 
 struct CharacterStats
 {
-    float distance;
-    uint32_t secrets_level; // Level amount of secrets.
-    uint32_t secrets_game;  // Overall amount of secrets.
-    uint32_t ammo_used;
-    uint32_t hits;
-    uint32_t kills;
-    uint32_t medipacks_used;
-    uint32_t saves_used;
+    float distance = 0;
+    uint32_t secrets_level = 0; // Level amount of secrets.
+    uint32_t secrets_game = 0;  // Overall amount of secrets.
+    uint32_t ammo_used = 0;
+    uint32_t hits = 0;
+    uint32_t kills = 0;
+    uint32_t medipacks_used = 0;
+    uint32_t saves_used = 0;
 };
 
 /**
@@ -341,12 +339,14 @@ enum class WeaponState
     IdleToHide
 };
 
-struct Character : public Entity
+class Character : public Entity
 {
+    friend class StateController;
+private:
     CharacterCommand m_command;   // character control commands
     CharacterResponse m_response; // character response info (collides, slide, next steps, drops, e.t.c.)
 
-    std::list<InventoryNode> m_inventory;
+    InventoryManager m_inventory;
     CharacterParam m_parameters{};
     CharacterStats m_statistics;
 
@@ -380,8 +380,88 @@ struct Character : public Entity
     std::shared_ptr<engine::BtEngineClosestRayResultCallback> m_rayCb;
     std::shared_ptr<engine::BtEngineClosestConvexResultCallback> m_convexCb;
 
+public:
     explicit Character(ObjectId id);
     ~Character();
+
+    InventoryManager& inventory() noexcept
+    {
+        return m_inventory;
+    }
+
+    WeaponState getCurrentWeaponState() const noexcept
+    {
+        return m_currentWeaponState;
+    }
+
+    const std::vector<std::shared_ptr<Hair>>& getHairs() const noexcept
+    {
+        return m_hairs;
+    }
+
+    bool removeHairs()
+    {
+        bool wasEmpty = m_hairs.empty();
+        m_hairs.clear();
+        return wasEmpty;
+    }
+
+    void resetStatistics()
+    {
+        m_statistics = CharacterStats();
+    }
+
+    const CharacterCommand& getCommand() const noexcept
+    {
+        return m_command;
+    }
+
+    const CharacterResponse& getResponse() const noexcept
+    {
+        return m_response;
+    }
+
+    CharacterResponse& response() noexcept
+    {
+        return m_response;
+    }
+
+    ModelId getCurrentWeapon() const noexcept
+    {
+        return m_currentWeapon;
+    }
+
+    void setCurrentWeapon(ModelId w) noexcept
+    {
+        m_currentWeapon = w;
+    }
+
+    bool addHair(HairSetup* setup)
+    {
+        m_hairs.emplace_back(std::make_shared<world::Hair>());
+
+        if(!m_hairs.back()->create(setup, *this))
+        {
+            m_hairs.pop_back();
+            return false;
+        }
+
+        return true;
+    }
+
+    void saveGame(std::ostream& f) const;
+
+    void setHeight(glm::float_t height) noexcept
+    {
+        m_height = height;
+    }
+
+    void applyControls(engine::EngineControlState& controlState, const Movement& moveLogic);
+    void applyJoystickMove(float dx, float dy)
+    {
+        m_command.rot[0] += glm::degrees(-2 * dx);
+        m_command.rot[1] += glm::degrees(-2 * dy);
+    }
 
     int checkNextPenetration(const glm::vec3& move);
 
@@ -421,10 +501,10 @@ struct Character : public Entity
     }
     glm::vec3 camPosForFollowing(glm::float_t dz) override;
 
-    int32_t addItem(ObjectId item_id, int32_t count);    // returns items count after in the function's end
-    int32_t removeItem(uint32_t item_id, int32_t count); // returns items count after in the function's end
-    int32_t removeAllItems();
-    int32_t getItemsCount(uint32_t item_id); // returns items count
+    size_t addItem(ObjectId item_id, size_t count);    // returns items count after in the function's end
+    size_t removeItem(ObjectId item_id, size_t count); // returns items count after in the function's end
+    void removeAllItems();
+    size_t getItemsCount(ObjectId item_id); // returns items count
 
     static void getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t v_offset = 0.0);
     StepType checkNextStep(const glm::vec3& offset, HeightInfo* nfc) const;
@@ -458,10 +538,10 @@ struct Character : public Entity
     void applyCommands();
     void updateParams();
 
-    float getParam(int parameter);
-    bool setParam(int parameter, float value);
-    bool changeParam(int parameter, float value);
-    bool setParamMaximum(int parameter, float max_value);
+    float getParam(CharParameterId parameter);
+    bool setParam(CharParameterId parameter, float value);
+    bool changeParam(CharParameterId parameter, float value);
+    void setParamMaximum(CharParameterId parameter, float max_value);
 
     bool setWeaponModel(ModelId weapon_model, bool armed);
 

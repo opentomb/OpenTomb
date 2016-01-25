@@ -10,7 +10,7 @@
 namespace world
 {
 class Camera;
-struct Character;
+class Character;
 }
 
 namespace audio

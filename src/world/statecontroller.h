@@ -5,10 +5,13 @@
 #include <iostream>
 #include <map>
 
-// ====== LARA'S STATES ======
-
 namespace world
 {
+namespace animation
+{
+enum class AnimUpdate;
+}
+
 enum class LaraState
 {
     WalkForward = 0,
@@ -153,7 +156,7 @@ enum class LaraState
 
 ENUM_TO_OSTREAM(LaraState)
 
-struct Character;
+class Character;
 struct HeightInfo;
 
 constexpr float LaraHangVerticalEpsilon = 64.0f;
@@ -309,6 +312,23 @@ private:
     void tightropeBalancingRight();
 
     void fixEndOfClimbOn();
+
+    // ---------------------------------------
+
+    static void onFrameStopTraverse(Character& ent, animation::AnimUpdate state);
+    static void onFrameSetOnFloor(Character& ent, animation::AnimUpdate state);
+    static void onFrameSetOnFloorAfterClimb(Character& ent, animation::AnimUpdate state);
+    static void onFrameSetUnderwater(Character& ent, animation::AnimUpdate state);
+    static void onFrameSetFreeFalling(Character& ent, animation::AnimUpdate state);
+    static void onFrameSetCmdSlide(Character& ent, animation::AnimUpdate state);
+    static void onFrameCorrectDivingAngle(Character& ent, animation::AnimUpdate state);
+    static void onFrameToOnWater(Character& ent, animation::AnimUpdate state);
+    static void onFrameClimbOutOfWater(Character& ent, animation::AnimUpdate state);
+    static void onFrameToEdgeClimb(Character& ent, animation::AnimUpdate state);
+    static void onFrameToMonkeyswing(Character& ent, animation::AnimUpdate state);
+    static void onFrameToTightrope(Character& ent, animation::AnimUpdate state);
+    static void onFrameFromTightrope(Character& ent, animation::AnimUpdate state);
+    static void onFrameCrawlToClimb(Character& ent, animation::AnimUpdate state);
 
     // ---------------------------------------
 

@@ -18,7 +18,7 @@
 
 namespace world
 {
-struct Character;
+class Character;
 struct SkeletalModel;
 class Entity;
 struct RagdollSetup;

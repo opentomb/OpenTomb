@@ -20,7 +20,7 @@ enum class MenuItemType;
 
 namespace world
 {
-struct Character;
+class Character;
 struct StaticMesh;
 
 namespace core
@@ -247,11 +247,73 @@ enum class TweenType
 
 struct SectorTween
 {
-    glm::vec3                   floor_corners[4];
-    TweenType                   floor_tween_type = TweenType::None;
+    glm::vec3 floor_corners[4];
+    TweenType floor_tween_type = TweenType::None;
 
-    glm::vec3                   ceiling_corners[4];
-    TweenType                   ceiling_tween_type = TweenType::None;
+    glm::vec3 ceiling_corners[4];
+    TweenType ceiling_tween_type = TweenType::None;
+
+    void setCeilingConfig()
+    {
+        if(ceiling_corners[0][2] > ceiling_corners[1][2])
+        {
+            std::swap(ceiling_corners[0][2], ceiling_corners[1][2]);
+            std::swap(ceiling_corners[2][2], ceiling_corners[3][2]);
+        }
+
+        if(ceiling_corners[3][2] > ceiling_corners[2][2])
+        {
+            ceiling_tween_type = TweenType::TwoTriangles;            // like a butterfly
+        }
+        else if(ceiling_corners[0][2] != ceiling_corners[1][2] &&
+                ceiling_corners[2][2] != ceiling_corners[3][2])
+        {
+            ceiling_tween_type = TweenType::Quad;
+        }
+        else if(ceiling_corners[0][2] != ceiling_corners[1][2])
+        {
+            ceiling_tween_type = TweenType::TriangleLeft;
+        }
+        else if(ceiling_corners[2][2] != ceiling_corners[3][2])
+        {
+            ceiling_tween_type = TweenType::TriangleRight;
+        }
+        else
+        {
+            ceiling_tween_type = TweenType::None;
+        }
+    }
+
+    void setFloorConfig()
+    {
+        if(floor_corners[0][2] > floor_corners[1][2])
+        {
+            std::swap(floor_corners[0][2], floor_corners[1][2]);
+            std::swap(floor_corners[2][2], floor_corners[3][2]);
+        }
+
+        if(floor_corners[3][2] > floor_corners[2][2])
+        {
+            floor_tween_type = TweenType::TwoTriangles;              // like a butterfly
+        }
+        else if(floor_corners[0][2] != floor_corners[1][2] &&
+                floor_corners[2][2] != floor_corners[3][2])
+        {
+            floor_tween_type = TweenType::Quad;
+        }
+        else if(floor_corners[0][2] != floor_corners[1][2])
+        {
+            floor_tween_type = TweenType::TriangleLeft;
+        }
+        else if(floor_corners[2][2] != floor_corners[3][2])
+        {
+            floor_tween_type = TweenType::TriangleRight;
+        }
+        else
+        {
+            floor_tween_type = TweenType::None;
+        }
+    }
 };
 
 struct RoomSprite
@@ -263,11 +325,11 @@ struct RoomSprite
 
 struct World
 {
-    loader::Engine              engineVersion;
+    loader::Engine m_engineVersion;
 
-    std::vector< std::shared_ptr<Room> > rooms;
+    std::vector< std::shared_ptr<Room> > m_rooms;
 
-    std::vector<RoomBox> room_boxes;
+    std::vector<RoomBox> m_roomBoxes;
 
     struct FlipInfo
     {
@@ -275,31 +337,31 @@ struct World
         uint8_t state = 0; // Flipped room state
     };
 
-    std::vector<FlipInfo> flip_data;
+    std::vector<FlipInfo> m_flipData;
 
-    std::unique_ptr<BorderedTextureAtlas> tex_atlas;
-    std::vector<GLuint> textures;               // OpenGL textures indexes
+    std::unique_ptr<BorderedTextureAtlas> m_textureAtlas;
+    std::vector<GLuint> m_textures;               // OpenGL textures indexes
 
-    std::vector<animation::TextureAnimationSequence> textureAnimations;         // Animated textures
+    std::vector<animation::TextureAnimationSequence> m_textureAnimations;         // Animated textures
 
-    std::vector<std::shared_ptr<core::BaseMesh>> meshes;                 // Base meshes data
+    std::vector<std::shared_ptr<core::BaseMesh>> m_meshes;                 // Base meshes data
 
-    std::vector<core::Sprite> sprites;                // Base sprites data
+    std::vector<core::Sprite> m_sprites;                // Base sprites data
 
-    std::vector<SkeletalModel> skeletal_models;        // base skeletal models data
+    std::vector<SkeletalModel> m_skeletalModels;        // base skeletal models data
 
-    std::shared_ptr<Character> character;              // this is an unique Lara's pointer =)
-    SkeletalModel* sky_box = nullptr;                // global skybox
+    std::shared_ptr<Character> m_character;              // this is an unique Lara's pointer =)
+    SkeletalModel* m_skyBox = nullptr;                // global skybox
 
-    std::map<ObjectId, std::shared_ptr<Entity>> entity_tree;            // tree of world active objects
-    ObjectId next_entity_id = 0;
-    std::map<ObjectId, std::shared_ptr<BaseItem>> items_tree;             // tree of world items
+    std::map<ObjectId, std::shared_ptr<Entity>> m_entities;            // tree of world active objects
+    ObjectId m_nextEntityId = 0;
+    std::map<ObjectId, std::shared_ptr<BaseItem>> m_items;
 
-    std::vector<StatCameraSink> cameras_sinks;          // Cameras and sinks.
+    std::vector<StatCameraSink> m_camerasAndSinks;
 
-    std::vector<int16_t> anim_commands;
+    std::vector<int16_t> m_animCommands;
 
-    audio::Engine audioEngine;
+    audio::Engine m_audioEngine;
 
     void updateAnimTextures();
     glm::vec4 calculateWaterTint() const;
@@ -314,9 +376,9 @@ struct World
     void empty();
 
     boost::optional<ObjectId> spawnEntity(ModelId model_id, ObjectId room_id, const glm::vec3 *pos, const glm::vec3 *ang, boost::optional<ObjectId> id);
-    bool     deleteEntity(ObjectId id);
+    bool deleteEntity(ObjectId id);
 
-    std::shared_ptr<Entity>    getEntityByID(ObjectId id);
+    std::shared_ptr<Entity> getEntityByID(ObjectId id);
     std::shared_ptr<Character> getCharacterByID(ObjectId id);
 
     std::shared_ptr<BaseItem> getBaseItemByID(ObjectId id);

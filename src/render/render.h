@@ -24,7 +24,7 @@ struct Room;
 struct RoomSector;
 class Camera;
 class Entity;
-struct Character;
+class Character;
 
 namespace core
 {

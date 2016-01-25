@@ -54,15 +54,15 @@ void roomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& di
 
 void storeEntityLerpTransforms()
 {
-    if(Engine::instance.m_world.character && !(Engine::instance.m_world.character->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    if(Engine::instance.m_world.m_character && !(Engine::instance.m_world.m_character->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
         // set bones to next interval step, this keeps the ponytail (bullet's dynamic interpolation) in sync with actor interpolation:
-        Engine::instance.m_world.character->m_skeleton.updatePose();
-        Engine::instance.m_world.character->updateRigidBody(false);
-        Engine::instance.m_world.character->ghostUpdate();
+        Engine::instance.m_world.m_character->m_skeleton.updatePose();
+        Engine::instance.m_world.m_character->updateRigidBody(false);
+        Engine::instance.m_world.m_character->ghostUpdate();
     }
 
-    for(const std::shared_ptr<world::Entity>& entity : Engine::instance.m_world.entity_tree | boost::adaptors::map_values)
+    for(const std::shared_ptr<world::Entity>& entity : Engine::instance.m_world.m_entities | boost::adaptors::map_values)
     {
         if(!entity->m_enabled)
             continue;
@@ -86,13 +86,13 @@ void internalPreTickCallback(btDynamicsWorld* /*world*/, float timeStep)
 
     engine_lua.doTasks(engine_frame_time_backup);
     Game_UpdateAI();
-    Engine::instance.m_world.audioEngine.updateAudio();
+    Engine::instance.m_world.m_audioEngine.updateAudio();
 
-    if(Engine::instance.m_world.character)
+    if(Engine::instance.m_world.m_character)
     {
-        Engine::instance.m_world.character->frame(util::fromSeconds(timeStep));
+        Engine::instance.m_world.m_character->frame(util::fromSeconds(timeStep));
     }
-    for(const std::shared_ptr<world::Entity>& entity : Engine::instance.m_world.entity_tree | boost::adaptors::map_values)
+    for(const std::shared_ptr<world::Entity>& entity : Engine::instance.m_world.m_entities | boost::adaptors::map_values)
     {
         entity->frame(util::fromSeconds(timeStep));
     }

@@ -36,7 +36,7 @@ struct HairSetup;
 
 struct Hair : public Object
 {
-    std::weak_ptr<Entity> m_ownerChar;         // Entity who owns this hair.
+    const Entity* m_ownerChar = nullptr;         // Entity who owns this hair.
     animation::BoneId m_ownerBody = 0;         // Owner entity's body ID.
     glm::mat4 m_ownerBodyHairRoot{ 1.0f }; // transform from owner body to root of hair start
 
@@ -58,7 +58,7 @@ struct Hair : public Object
 
     // Creates hair into allocated hair structure, using previously defined setup and
     // entity index.
-    bool create(HairSetup* setup, std::shared_ptr<Entity> parent_entity);
+    bool create(HairSetup* setup, const Entity& parent_entity);
 
 private:
     void createHairMesh(const SkeletalModel& model);

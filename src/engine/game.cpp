@@ -314,24 +314,7 @@ void Save_Entity(std::ostream& f, std::shared_ptr<world::Entity> ent)
 
     if(auto ch = std::dynamic_pointer_cast<world::Character>(ent))
     {
-        f << boost::format("\nremoveAllItems(%d);")
-            % ent->getId();
-        for(const InventoryNode& i : ch->m_inventory)
-        {
-            f << boost::format("\naddItem(%d, %d, %d);")
-                % ent->getId()
-                % i.id
-                % i.count;
-        }
-
-        for(int i = 0; i < world::PARAM_SENTINEL; i++)
-        {
-            f << boost::format("\nsetCharacterParam(%d, %d, %.2f, %.2f);")
-                % ent->getId()
-                % i
-                % ch->m_parameters.param[i]
-                % ch->m_parameters.maximum[i];
-        }
+        ch->saveGame(f);
     }
 }
 
@@ -365,19 +348,19 @@ bool Game_Save(const std::string& name)
 
     // Save flipmap and flipped room states.
 
-    for(size_t i = 0; i < Engine::instance.m_world.flip_data.size(); i++)
+    for(size_t i = 0; i < Engine::instance.m_world.m_flipData.size(); i++)
     {
         f << boost::format("setFlipMap(%d, 0x%02X, 0);\n")
             % i
-            % Engine::instance.m_world.flip_data[i].map;
+            % Engine::instance.m_world.m_flipData[i].map;
         f << boost::format("setFlipState(%d, %s);\n")
             % i
-            % (Engine::instance.m_world.flip_data[i].state ? "true" : "false");
+            % (Engine::instance.m_world.m_flipData[i].state ? "true" : "false");
     }
 
-    Save_Entity(f, Engine::instance.m_world.character);    // Save Lara.
+    Save_Entity(f, Engine::instance.m_world.m_character);    // Save Lara.
 
-    Save_EntityTree(f, Engine::instance.m_world.entity_tree);
+    Save_EntityTree(f, Engine::instance.m_world.m_entities);
 
     return true;
 }
@@ -457,47 +440,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     else
     {
         std::shared_ptr<world::Character> ch = std::dynamic_pointer_cast<world::Character>(ent);
-        // Apply controls to Lara
-        ch->m_command.action = Engine::instance.m_controlState.m_stateAction;
-        ch->m_command.ready_weapon = Engine::instance.m_controlState.m_doDrawWeapon;
-        ch->m_command.jump = Engine::instance.m_controlState.m_doJump;
-        ch->m_command.shift = Engine::instance.m_controlState.m_stateWalk;
-
-        ch->m_command.roll = (Engine::instance.m_controlState.m_moveForward && Engine::instance.m_controlState.m_moveBackward) || Engine::instance.m_controlState.m_doRoll;
-
-        // New commands only for TR3 and above
-        ch->m_command.sprint = Engine::instance.m_controlState.m_stateSprint;
-        ch->m_command.crouch = Engine::instance.m_controlState.m_stateCrouch;
-
-        if(Engine::instance.m_controlState.m_useSmallMedi)
-        {
-            if(ch->getItemsCount(ITEM_SMALL_MEDIPACK) > 0 && ch->changeParam(world::PARAM_HEALTH, 250))
-            {
-                ch->setParam(world::PARAM_POISON, 0);
-                ch->removeItem(ITEM_SMALL_MEDIPACK, 1);
-                engine::Engine::instance.m_world.audioEngine.send(audio::SoundMedipack);
-            }
-
-            Engine::instance.m_controlState.m_useSmallMedi = !Engine::instance.m_controlState.m_useSmallMedi;
-        }
-
-        if(Engine::instance.m_controlState.m_useBigMedi)
-        {
-            if(ch->getItemsCount(ITEM_LARGE_MEDIPACK) > 0 &&
-               ch->changeParam(world::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX))
-            {
-                ch->setParam(world::PARAM_POISON, 0);
-                ch->removeItem(ITEM_LARGE_MEDIPACK, 1);
-                engine::Engine::instance.m_world.audioEngine.send(audio::SoundMedipack);
-            }
-
-            Engine::instance.m_controlState.m_useBigMedi = !Engine::instance.m_controlState.m_useBigMedi;
-        }
-
-        ch->m_command.rot[0] += moveLogic.getDistanceX(glm::degrees(-2.0f) * Engine::instance.getFrameTimeSecs());
-        ch->m_command.rot[1] += moveLogic.getDistanceZ(glm::degrees(2.0f) * Engine::instance.getFrameTimeSecs());
-
-        ch->m_command.move = moveLogic;
+        ch->applyControls(Engine::instance.m_controlState, moveLogic);
     }
 }
 
@@ -696,7 +639,7 @@ void Game_Frame(util::Duration time)
     {
         if(game_logic_time >= world::animation::GameLogicFrameTime)
         {
-            engine::Engine::instance.m_world.audioEngine.updateAudio();
+            engine::Engine::instance.m_world.m_audioEngine.updateAudio();
             Game_Tick(&game_logic_time);
         }
         return;
@@ -704,18 +647,18 @@ void Game_Frame(util::Duration time)
 
     // Translate input to character commands, move camera:
     // TODO: decouple cam movement
-    Game_ApplyControls(Engine::instance.m_world.character);
+    Game_ApplyControls(Engine::instance.m_world.m_character);
 
     BulletEngine::instance->dynamicsWorld->stepSimulation(util::toSeconds(time), MAX_SIM_SUBSTEPS, util::toSeconds(world::animation::GameLogicFrameTime));
 
-    if(Engine::instance.m_world.character)
+    if(Engine::instance.m_world.m_character)
     {
-        Engine::instance.m_world.character->updateInterpolation();
+        Engine::instance.m_world.m_character->updateInterpolation();
 
         if(!Engine::instance.m_controlState.m_noClip && !Engine::instance.m_controlState.m_freeLook)
-            Cam_FollowEntity(render::renderer.camera(), Engine::instance.m_world.character, 16.0, 128.0);
+            Cam_FollowEntity(render::renderer.camera(), Engine::instance.m_world.m_character, 16.0, 128.0);
     }
-    for(const std::shared_ptr<world::Entity>& entity : Engine::instance.m_world.entity_tree | boost::adaptors::map_values)
+    for(const std::shared_ptr<world::Entity>& entity : Engine::instance.m_world.m_entities | boost::adaptors::map_values)
     {
         entity->updateInterpolation();
     }
@@ -726,38 +669,31 @@ void Game_Frame(util::Duration time)
 
 void Game_Prepare()
 {
-    if(Engine::instance.m_world.character)
+    if(Engine::instance.m_world.m_character)
     {
         // Set character values to default.
 
-        Engine::instance.m_world.character->setParamMaximum(world::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
-        Engine::instance.m_world.character->setParam(world::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
-        Engine::instance.m_world.character->setParamMaximum(world::PARAM_AIR, LARA_PARAM_AIR_MAX);
-        Engine::instance.m_world.character->setParam(world::PARAM_AIR, LARA_PARAM_AIR_MAX);
-        Engine::instance.m_world.character->setParamMaximum(world::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        Engine::instance.m_world.character->setParam(world::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        Engine::instance.m_world.character->setParamMaximum(world::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
-        Engine::instance.m_world.character->setParam(world::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
-        Engine::instance.m_world.character->setParamMaximum(world::PARAM_POISON, LARA_PARAM_POISON_MAX);
-        Engine::instance.m_world.character->setParam(world::PARAM_POISON, 0);
+        Engine::instance.m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
+        Engine::instance.m_world.m_character->setParam(world::CharParameterId::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
+        Engine::instance.m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_AIR, LARA_PARAM_AIR_MAX);
+        Engine::instance.m_world.m_character->setParam(world::CharParameterId::PARAM_AIR, LARA_PARAM_AIR_MAX);
+        Engine::instance.m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        Engine::instance.m_world.m_character->setParam(world::CharParameterId::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        Engine::instance.m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
+        Engine::instance.m_world.m_character->setParam(world::CharParameterId::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
+        Engine::instance.m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_POISON, LARA_PARAM_POISON_MAX);
+        Engine::instance.m_world.m_character->setParam(world::CharParameterId::PARAM_POISON, 0);
 
         // Set character statistics to default.
 
-        Engine::instance.m_world.character->m_statistics.distance = 0.0;
-        Engine::instance.m_world.character->m_statistics.ammo_used = 0;
-        Engine::instance.m_world.character->m_statistics.hits = 0;
-        Engine::instance.m_world.character->m_statistics.kills = 0;
-        Engine::instance.m_world.character->m_statistics.medipacks_used = 0;
-        Engine::instance.m_world.character->m_statistics.saves_used = 0;
-        Engine::instance.m_world.character->m_statistics.secrets_game = 0;
-        Engine::instance.m_world.character->m_statistics.secrets_level = 0;
+        Engine::instance.m_world.m_character->resetStatistics();
     }
-    else if(!Engine::instance.m_world.rooms.empty())
+    else if(!Engine::instance.m_world.m_rooms.empty())
     {
         // If there is no character present, move default camera position to
         // the first room (useful for TR1-3 cutscene levels).
 
-        Engine::instance.m_camera.setPosition(Engine::instance.m_world.rooms[0]->m_boundingBox.max);
+        Engine::instance.m_camera.setPosition(Engine::instance.m_world.m_rooms[0]->m_boundingBox.max);
     }
 
     // Set gameflow parameters to default.
@@ -771,6 +707,6 @@ void Game_LevelTransition(uint16_t level_index)
     gui::Gui::instance->faders.assignPicture(gui::FaderType::LoadScreen, engine_lua.getLoadingScreen(level_index));
     gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
-    engine::Engine::instance.m_world.audioEngine.endStreams();
+    engine::Engine::instance.m_world.m_audioEngine.endStreams();
 }
 } // namespace engine

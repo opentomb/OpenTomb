@@ -25,7 +25,6 @@ struct Sprite
     SpriteId            id;
     size_t              texture;
     glm::vec2           tex_coord[4];
-    uint32_t            flag;
     glm::float_t        left;
     glm::float_t        right;
     glm::float_t        top;

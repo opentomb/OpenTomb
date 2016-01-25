@@ -377,7 +377,7 @@ void Engine::updateAudio()
 
     if(m_settings.listener_is_player)
     {
-        m_fxManager->updateListener(*engine::Engine::instance.m_world.character);
+        m_fxManager->updateListener(*engine::Engine::instance.m_world.m_character);
     }
     else
     {
@@ -877,7 +877,7 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
 
     // Hardcoded version-specific fixes!
 
-    switch(world.engineVersion)
+    switch(world.m_engineVersion)
     {
         case loader::Engine::TR1:
             // Fix for underwater looped sound.

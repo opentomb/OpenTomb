@@ -268,7 +268,7 @@ bool StreamTrack::play(FxManager& manager, bool fade_in)
         m_currentVolume = 1.0;
     }
 
-    if(engine::Engine::instance.m_world.audioEngine.getSettings().use_effects)
+    if(engine::Engine::instance.m_world.m_audioEngine.getSettings().use_effects)
     {
         if(m_streamType == StreamType::Chat)
         {
@@ -280,7 +280,7 @@ bool StreamTrack::play(FxManager& manager, bool fade_in)
         }
     }
 
-    alSourcef(m_source, AL_GAIN, m_currentVolume * engine::Engine::instance.m_world.audioEngine.getSettings().music_volume);
+    alSourcef(m_source, AL_GAIN, m_currentVolume * engine::Engine::instance.m_world.m_audioEngine.getSettings().music_volume);
     alSourceQueueBuffers(m_source, buffers_to_play, m_buffers);
     alSourcePlay(m_source);
 
@@ -413,7 +413,7 @@ bool StreamTrack::update()
     {
         alSourcef(m_source, AL_GAIN, m_currentVolume              *  // Global track volume.
                   (1.0f - m_dampedVolume)       *  // Damp volume.
-                  engine::Engine::instance.m_world.audioEngine.getSettings().music_volume);  // Global music volume setting.
+                  engine::Engine::instance.m_world.m_audioEngine.getSettings().music_volume);  // Global music volume setting.
     }
 
     // Check if any track buffers were already processed.
@@ -470,9 +470,9 @@ bool StreamTrack::isPlaying() const                       // Check if track is p
 
 bool StreamTrack::stream(ALuint buffer)
 {
-    BOOST_ASSERT(engine::Engine::instance.m_world.audioEngine.getSettings().stream_buffer_size >= m_sfInfo.channels - 1);
+    BOOST_ASSERT(engine::Engine::instance.m_world.m_audioEngine.getSettings().stream_buffer_size >= m_sfInfo.channels - 1);
 #ifdef AUDIO_OPENAL_FLOAT
-    std::vector<ALfloat> pcm(engine::Engine::instance.m_world.audioEngine.getSettings().stream_buffer_size);
+    std::vector<ALfloat> pcm(engine::Engine::instance.m_world.m_audioEngine.getSettings().stream_buffer_size);
 #else
     std::vector<ALshort> pcm(engine::engine_world.audioEngine.getSettings().stream_buffer_size);
 #endif
@@ -482,7 +482,7 @@ bool StreamTrack::stream(ALuint buffer)
     while(size < pcm.size() - m_sfInfo.channels + 1)
     {
         // we need to read a multiple of sf_info.channels here
-        const size_t samplesToRead = (engine::Engine::instance.m_world.audioEngine.getSettings().stream_buffer_size - size) / m_sfInfo.channels * m_sfInfo.channels;
+        const size_t samplesToRead = (engine::Engine::instance.m_world.m_audioEngine.getSettings().stream_buffer_size - size) / m_sfInfo.channels * m_sfInfo.channels;
 #ifdef AUDIO_OPENAL_FLOAT
         const sf_count_t samplesRead = sf_read_float(m_sndFile, pcm.data() + size, samplesToRead);
 #else

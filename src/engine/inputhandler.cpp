@@ -4,6 +4,7 @@
 #include "engine/engine.h"
 #include "gui/console.h"
 #include "script/script.h"
+#include "world/character.h"
 
 #include <glm/glm.hpp>
 #include <boost/range/adaptors.hpp>
@@ -414,23 +415,23 @@ void InputHandler::debugKeys(int button, int state)
     switch(button)
     {
         case SDLK_RETURN:
-            gui::Gui::instance->inventory.send(InventoryManager::InventoryState::Activate);
+            Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::Activate);
             break;
 
         case SDLK_UP:
-            gui::Gui::instance->inventory.send(InventoryManager::InventoryState::Up);
+            Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::Up);
             break;
 
         case SDLK_DOWN:
-            gui::Gui::instance->inventory.send(InventoryManager::InventoryState::Down);
+            Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::Down);
             break;
 
         case SDLK_LEFT:
-            gui::Gui::instance->inventory.send(InventoryManager::InventoryState::RLeft);
+            Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::RLeft);
             break;
 
         case SDLK_RIGHT:
-            gui::Gui::instance->inventory.send(InventoryManager::InventoryState::RRight);
+            Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::RRight);
             break;
 
         default:

@@ -210,7 +210,7 @@ public:
     int  getNumTracks();
     bool getSoundtrack(int track_index, char *track_path, audio::StreamMethod *load_method, audio::StreamType *stream_type);
     std::string getLoadingScreen(int level_index);
-    bool getString(int string_index, size_t string_size, char *buffer);
+    std::string getString(int string_index);
     bool getSysNotify(int string_index, size_t string_size, char *buffer);
 
     // Parsing functions - both native and Lua. Not directly called from scripts.

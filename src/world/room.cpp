@@ -293,7 +293,7 @@ Room* Room::checkFlip()
 void Room::swapPortals(std::shared_ptr<Room> dest_room)
 {
     //Update portals in room rooms
-    for(std::shared_ptr<Room> r : engine::Engine::instance.m_world.rooms)//For every room in the world itself
+    for(std::shared_ptr<Room> r : engine::Engine::instance.m_world.m_rooms)//For every room in the world itself
     {
         for(Portal& p : r->m_portals) //For every portal in this room
         {
@@ -371,7 +371,7 @@ void Room::buildOverlappedRoomsList()
 {
     m_overlappedRooms.clear();
 
-    for(auto r : engine::Engine::instance.m_world.rooms)
+    for(auto r : engine::Engine::instance.m_world.m_rooms)
     {
         if(overlaps(r.get()))
         {
@@ -382,7 +382,7 @@ void Room::buildOverlappedRoomsList()
 
 void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
 {
-    const uint32_t tex_mask = world.engineVersion == loader::Engine::TR4 ? loader::TextureIndexMaskTr4 : loader::TextureIndexMask;
+    const uint32_t tex_mask = world.m_engineVersion == loader::Engine::TR4 ? loader::TextureIndexMaskTr4 : loader::TextureIndexMask;
 
     auto& tr_room = tr->m_rooms[getId()];
 
@@ -394,7 +394,7 @@ void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
 
     m_mesh = std::make_shared<core::BaseMesh>();
     m_mesh->m_id = getId();
-    m_mesh->m_texturePageCount = world.tex_atlas->getNumAtlasPages() + 1;
+    m_mesh->m_texturePageCount = world.m_textureAtlas->getNumAtlasPages() + 1;
     m_mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
 
     m_mesh->m_vertices.resize(tr_room.vertices.size());
@@ -462,7 +462,7 @@ RoomSector* RoomSector::checkPortalPointerRaw()
 {
     if(portal_to_room)
     {
-        std::shared_ptr<Room> r = engine::Engine::instance.m_world.rooms[*portal_to_room];
+        std::shared_ptr<Room> r = engine::Engine::instance.m_world.m_rooms[*portal_to_room];
         int ind_x = static_cast<int>((position[0] - r->m_modelMatrix[3][0]) / MeteringSectorSize);
         int ind_y = static_cast<int>((position[1] - r->m_modelMatrix[3][1]) / MeteringSectorSize);
         if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->m_sectors.shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->m_sectors.shape()[1])
@@ -478,7 +478,7 @@ RoomSector* RoomSector::checkPortalPointer()
 {
     if(portal_to_room)
     {
-        std::shared_ptr<Room> r = engine::Engine::instance.m_world.rooms[*portal_to_room];
+        std::shared_ptr<Room> r = engine::Engine::instance.m_world.m_rooms[*portal_to_room];
         if(owner_room->m_baseRoom != nullptr && r->m_alternateRoom != nullptr)
         {
             r = r->m_alternateRoom;
@@ -677,7 +677,6 @@ RoomSector* RoomSector::getHighestSector()
 btCollisionShape *BT_CSfromHeightmap(const boost::multi_array<RoomSector, 2>& heightmap, const std::vector<SectorTween>& tweens, bool useCompression, bool buildBvh)
 {
     uint32_t cnt = 0;
-    std::shared_ptr<Room> r = heightmap.origin()->owner_room;
     btTriangleMesh *trimesh = new btTriangleMesh;
 
     for(const auto& column : heightmap)

@@ -21,7 +21,7 @@ Source::Source()
     alSourcef(m_sourceIndex, AL_MIN_GAIN, 0.0);
     alSourcef(m_sourceIndex, AL_MAX_GAIN, 1.0);
 
-    if(engine::Engine::instance.m_world.audioEngine.getSettings().use_effects)
+    if(engine::Engine::instance.m_world.m_audioEngine.getSettings().use_effects)
     {
         alSourcef(m_sourceIndex, AL_ROOM_ROLLOFF_FACTOR, 1.0);
         alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO, AL_TRUE);
@@ -81,7 +81,7 @@ void Source::play(FxManager& manager)
         alSource3f(m_sourceIndex, AL_POSITION, 0.0f, 0.0f, 0.0f);
         alSource3f(m_sourceIndex, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
 
-        if(engine::Engine::instance.m_world.audioEngine.getSettings().use_effects)
+        if(engine::Engine::instance.m_world.m_audioEngine.getSettings().use_effects)
         {
             unsetFX();
         }
@@ -91,7 +91,7 @@ void Source::play(FxManager& manager)
         alSourcei(m_sourceIndex, AL_SOURCE_RELATIVE, AL_FALSE);
         linkEmitter();
 
-        if(engine::Engine::instance.m_world.audioEngine.getSettings().use_effects)
+        if(engine::Engine::instance.m_world.m_audioEngine.getSettings().use_effects)
         {
             setFX(manager);
             setUnderwater(manager);
@@ -143,11 +143,11 @@ void Source::update(const FxManager& manager)
     // Check if source is in listener's range, and if so, update position,
     // else stop and disable it.
 
-    if(engine::Engine::instance.m_world.audioEngine.isInRange(m_emitterType, m_emitterId, range, gain))
+    if(engine::Engine::instance.m_world.m_audioEngine.isInRange(m_emitterType, m_emitterId, range, gain))
     {
         linkEmitter();
 
-        if(engine::Engine::instance.m_world.audioEngine.getSettings().use_effects && m_underwater != manager.isUnderwater())
+        if(engine::Engine::instance.m_world.m_audioEngine.getSettings().use_effects && m_underwater != manager.isUnderwater())
         {
             setUnderwater(manager);
         }
@@ -165,7 +165,7 @@ void Source::update(const FxManager& manager)
 
 void Source::setBuffer(ALint buffer)
 {
-    ALuint buffer_index = engine::Engine::instance.m_world.audioEngine.getBuffer(buffer);
+    ALuint buffer_index = engine::Engine::instance.m_world.m_audioEngine.getBuffer(buffer);
 
     if(!alIsSource(m_sourceIndex) || !alIsBuffer(buffer_index))
         return;
@@ -196,7 +196,7 @@ void Source::setLooping(ALboolean is_looping)
 
 void Source::setGain(ALfloat gain_value)
 {
-    alSourcef(m_sourceIndex, AL_GAIN, glm::clamp(gain_value, 0.0f, 1.0f) * engine::Engine::instance.m_world.audioEngine.getSettings().sound_volume);
+    alSourcef(m_sourceIndex, AL_GAIN, glm::clamp(gain_value, 0.0f, 1.0f) * engine::Engine::instance.m_world.m_audioEngine.getSettings().sound_volume);
 }
 
 void Source::setPitch(ALfloat pitch_value)
@@ -284,7 +284,7 @@ void Source::linkEmitter()
             break;
 
         case EmitterType::SoundSource:
-            setPosition(glm::value_ptr(engine::Engine::instance.m_world.audioEngine.getEmitter(*m_emitterId).position));
+            setPosition(glm::value_ptr(engine::Engine::instance.m_world.m_audioEngine.getEmitter(*m_emitterId).position));
             break;
     }
 }

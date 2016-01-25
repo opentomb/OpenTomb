@@ -92,11 +92,11 @@ void Render::empty()
 
 void Render::renderSkyBox()
 {
-    if(m_drawSkybox && m_world != nullptr && m_world->sky_box != nullptr)
+    if(m_drawSkybox && m_world != nullptr && m_world->m_skyBox != nullptr)
     {
         glDepthMask(GL_FALSE);
-        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->sky_box->animations.front().getInitialBoneKeyFrame().offset);
-        tr *= glm::mat4_cast(m_world->sky_box->animations[0].getInitialBoneKeyFrame().qrotate);
+        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->animations.front().getInitialBoneKeyFrame().offset);
+        tr *= glm::mat4_cast(m_world->m_skyBox->animations[0].getInitialBoneKeyFrame().qrotate);
         const glm::mat4 fullView = m_cam->getViewProjection() * tr;
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getStaticMeshShader();
@@ -106,7 +106,7 @@ void Render::renderSkyBox()
         glm::vec4 tint = { 1, 1, 1, 1 };
         glUniform4fv(shader->tint_mult, 1, glm::value_ptr(tint));
 
-        renderMesh(m_world->sky_box->meshes[0].mesh_base);
+        renderMesh(m_world->m_skyBox->meshes[0].mesh_base);
         glDepthMask(GL_TRUE);
     }
 }
@@ -133,7 +133,7 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh) cons
                 continue;
             }
 
-            world::animation::TextureAnimationSequence* seq = &engine::Engine::instance.m_world.textureAnimations[*p.textureAnimationId];
+            world::animation::TextureAnimationSequence* seq = &engine::Engine::instance.m_world.m_textureAnimations[*p.textureAnimationId];
 
             size_t frame = (seq->currentFrame + p.startFrame) % seq->keyFrames.size();
             world::animation::TextureAnimationKeyFrame* tf = &seq->keyFrames[frame];
@@ -155,7 +155,7 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh) cons
             mesh->m_animatedVertexArray->bind();
 
             //! @bug textures[0] only works if all animated textures are on the first page
-            glBindTexture(GL_TEXTURE_2D, m_world->textures[0]);
+            glBindTexture(GL_TEXTURE_2D, m_world->m_textures[0]);
             glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->m_animatedElementCount), GL_UNSIGNED_INT, nullptr);
         }
     }
@@ -174,7 +174,7 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh) cons
                 continue;
             }
 
-            glBindTexture(GL_TEXTURE_2D, m_world->textures[texture]);
+            glBindTexture(GL_TEXTURE_2D, m_world->m_textures[texture]);
             glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh->m_elementsPerTexture[texture]), GL_UNSIGNED_INT, elementsbase + offset);
             offset += mesh->m_elementsPerTexture[texture];
         }
@@ -224,7 +224,7 @@ void Render::renderPolygonTransparency(loader::BlendingMode currentTransparency,
     glUniformMatrix4fv(shader.model_view_projection, 1, false, glm::value_ptr(mvp));
 
     bsp_ref.polygon->used_vertex_array->bind();
-    glBindTexture(GL_TEXTURE_2D, m_world->textures[bsp_ref.polygon->polygon->textureIndex]);
+    glBindTexture(GL_TEXTURE_2D, m_world->m_textures[bsp_ref.polygon->polygon->textureIndex]);
 
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(bsp_ref.polygon->count), GL_UNSIGNED_INT, reinterpret_cast<GLvoid *>(sizeof(GLuint) * bsp_ref.polygon->firstIndex));
 }
@@ -537,13 +537,13 @@ void Render::renderDynamicEntity(const LitShaderDescription& shader, const world
 ///@TODO: add joint between hair and head; do Lara's skinning by vertex position copy (no inverse matrices and other) by vertex map;
 void Render::renderHair(std::shared_ptr<world::Character> entity)
 {
-    if(!entity || entity->m_hairs.empty())
+    if(!entity || entity->getHairs().empty())
         return;
 
     // Calculate lighting
     const LitShaderDescription *shader = setupEntityLight(*entity, true);
 
-    for(const std::shared_ptr<world::Hair>& hair : entity->m_hairs)
+    for(const std::shared_ptr<world::Hair>& hair : entity->getHairs())
     {
         // First: Head attachment
         glm::mat4 globalHead(entity->m_transform * entity->m_skeleton.getBones()[hair->m_ownerBody].full_transform);
@@ -679,7 +679,7 @@ void Render::renderRoomSprites(const world::Room& room) const
                 continue;
             }
 
-            glBindTexture(GL_TEXTURE_2D, m_world->textures[texture]);
+            glBindTexture(GL_TEXTURE_2D, m_world->m_textures[texture]);
             glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(room.m_spriteBuffer->element_count_per_texture[texture]), GL_UNSIGNED_SHORT, reinterpret_cast<GLvoid *>(offset * sizeof(uint16_t)));
             offset += room.m_spriteBuffer->element_count_per_texture[texture];
         }
@@ -726,10 +726,10 @@ bool Render::addRoom(const world::Room* room)
 
 void Render::cleanList()
 {
-    if(m_world->character)
+    if(m_world->m_character)
     {
-        m_world->character->m_wasRendered = false;
-        m_world->character->m_wasRenderedLines = false;
+        m_world->m_character->m_wasRendered = false;
+        m_world->m_character->m_wasRenderedLines = false;
     }
 
     m_drawSkybox = false;
@@ -751,10 +751,10 @@ void Render::drawList()
 
     renderSkyBox();
 
-    if(m_world->character)
+    if(m_world->m_character)
     {
-        renderEntity(*m_world->character);
-        renderHair(m_world->character);
+        renderEntity(*m_world->m_character);
+        renderHair(m_world->m_character);
     }
 
     /*
@@ -818,9 +818,9 @@ void Render::drawList()
         }
     }
 
-    if(engine::Engine::instance.m_world.character != nullptr && engine::Engine::instance.m_world.character->m_skeleton.getModel()->has_transparency)
+    if(engine::Engine::instance.m_world.m_character != nullptr && engine::Engine::instance.m_world.m_character->m_skeleton.getModel()->has_transparency)
     {
-        world::Entity *ent = engine::Engine::instance.m_world.character.get();
+        world::Entity *ent = engine::Engine::instance.m_world.m_character.get();
         for(const world::animation::Bone& bone : ent->m_skeleton.getBones())
         {
             if(!bone.mesh->m_transparencyPolygons.empty())
@@ -853,19 +853,19 @@ void Render::drawListDebugLines()
         return;
     }
 
-    if(m_world->character)
+    if(m_world->m_character)
     {
-        debugDrawer.drawEntityDebugLines(*m_world->character, *this);
+        debugDrawer.drawEntityDebugLines(*m_world->m_character, *this);
     }
 
     /*
      * Render world debug information
      */
-    if(m_drawNormals && m_world && m_world->sky_box)
+    if(m_drawNormals && m_world && m_world->m_skyBox)
     {
-        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->sky_box->animations.front().getInitialBoneKeyFrame().offset);
-        tr *= glm::mat4_cast(m_world->sky_box->animations.front().getInitialBoneKeyFrame().qrotate);
-        debugDrawer.drawMeshDebugLines(m_world->sky_box->meshes.front().mesh_base, tr, *this);
+        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->animations.front().getInitialBoneKeyFrame().offset);
+        tr *= glm::mat4_cast(m_world->m_skyBox->animations.front().getInitialBoneKeyFrame().qrotate);
+        debugDrawer.drawMeshDebugLines(m_world->m_skyBox->meshes.front().mesh_base, tr, *this);
     }
 
     for(const world::Room* room : m_renderList)
@@ -884,7 +884,7 @@ void Render::drawListDebugLines()
         glUseProgram(shader->program);
         glUniform1i(shader->sampler, 0);
         glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(m_cam->getViewProjection()));
-        glBindTexture(GL_TEXTURE_2D, engine::Engine::instance.m_world.textures.back());
+        glBindTexture(GL_TEXTURE_2D, engine::Engine::instance.m_world.m_textures.back());
         glPointSize(6.0f);
         glLineWidth(3.0f);
         debugDrawer.render();
@@ -960,7 +960,7 @@ void Render::genWorldList()
 
     if(engine::Engine::instance.m_controlState.m_noClip)  // camera is out of all rooms AND noclip is on
     {
-        for(auto r : m_world->rooms)
+        for(auto r : m_world->m_rooms)
         {
             if(m_cam->getFrustum().isVisible(r->m_boundingBox))
             {
