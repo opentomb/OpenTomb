@@ -1,21 +1,14 @@
 #include "script.h"
 
-#include <cstring>
-
-#include <GL/glew.h>
-#include <glm/gtc/matrix_transform.hpp>
-
-#include <boost/log/trivial.hpp>
-
 #include "LuaState.h"
 
 #include "audio/settings.h"
 #include "character_controller.h"
 #include "engine/bullet.h"
-#include "engine/controls.h"
 #include "engine/engine.h"
 #include "engine/game.h"
 #include "engine/gameflow.h"
+#include "engine/inputhandler.h"
 #include "engine/system.h"
 #include "gui/console.h"
 #include "gui/fader.h"
@@ -33,6 +26,15 @@
 #include "world/room.h"
 #include "world/skeletalmodel.h"
 #include "world/world.h"
+
+#include <GL/glew.h>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <boost/log/trivial.hpp>
+
+#include <SDL2/SDL_keycode.h>
+
+#include <cstring>
 
 // Debug functions
 
@@ -538,27 +540,27 @@ void lua_SetSecretStatus(int secret_number, bool status)
 
 lua::Any lua_GetActionState(int act)
 {
-    if(act < 0 || act >= static_cast<int>(engine::Action::Sentinel))
+    if(act < 0 || act >= static_cast<int>(engine::InputAction::Sentinel))
     {
         Console::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
         return{};
     }
     else
     {
-        return engine::ControlSettings::instance.action_map[static_cast<engine::Action>(act)].state;
+        return engine::Engine::instance.m_inputHandler.getActionState(static_cast<engine::InputAction>(act)).active;
     }
 }
 
 lua::Any lua_GetActionChange(int act)
 {
-    if(act < 0 || act >= static_cast<int>(engine::Action::Sentinel))
+    if(act < 0 || act >= static_cast<int>(engine::InputAction::Sentinel))
     {
         Console::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
         return{};
     }
     else
     {
-        return engine::ControlSettings::instance.action_map[static_cast<engine::Action>(act)].already_pressed;
+        return engine::Engine::instance.m_inputHandler.getActionState(static_cast<engine::InputAction>(act)).wasActive;
     }
 }
 
@@ -569,14 +571,14 @@ int lua_GetEngineVersion()
 
 void script::MainEngine::bindKey(int act, int primary, lua::Value secondary)
 {
-    if(act < 0 || act >= static_cast<int>(engine::Action::Sentinel))
+    if(act < 0 || act >= static_cast<int>(engine::InputAction::Sentinel))
     {
         Console::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
         return;
     }
-    engine::ControlSettings::instance.action_map[static_cast<engine::Action>(act)].primary = primary;
-    if(secondary.is<lua::Integer>())
-        engine::ControlSettings::instance.action_map[static_cast<engine::Action>(act)].secondary = secondary.to<int>();
+    engine::Engine::instance.m_inputHandler.bindKey(primary, static_cast<engine::InputAction>(act));
+    if(secondary.is<int>())
+        engine::Engine::instance.m_inputHandler.bindKey(secondary.to<int>(), static_cast<engine::InputAction>(act));
 }
 
 void lua_AddFont(int index, const char* path, int size)
@@ -2813,7 +2815,7 @@ void ScriptEngine::exposeConstants()
     m_state["AnimMode"].set("WeaponCompat", static_cast<int>(world::animation::AnimationMode::WeaponCompat));
     m_state["AnimMode"].set("Locked", static_cast<int>(world::animation::AnimationMode::Locked));
 
-    const auto ACT_ACTION = engine::Action::Action;
+    const auto ACT_ACTION = engine::InputAction::Action;
     EXPOSE_CC(ACT_ACTION);
 
 #define EXPOSE_KEY(name) m_state.set("KEY_" #name, static_cast<int>(SDLK_##name))
@@ -3635,26 +3637,42 @@ void script::MainEngine::execEffect(int id, const boost::optional<world::ObjectI
 
 // Parsing config file entries.
 
-void script::ScriptEngine::parseControls(engine::ControlSettings& cs) const
+void script::ScriptEngine::parseControls(engine::InputHandler& cs) const
 {
-    cs.mouse_sensitivity = (*this)["controls"]["mouse_sensitivity"].toFloat();
-    cs.mouse_scale_x = (*this)["controls"]["mouse_scale_x"].toFloat();
-    cs.mouse_scale_y = (*this)["controls"]["mouse_scale_y"].toFloat();
-    cs.use_joy = (*this)["controls"]["use_joy"].toBool();
-    cs.joy_number = (*this)["controls"]["joy_number"].to<int>();
-    cs.joy_rumble = (*this)["controls"]["joy_rumble"].toBool();
-    cs.joy_axis_map[engine::Axis::LookX] = (*this)["controls"]["joy_look_axis_x"].to<int>();
-    cs.joy_axis_map[engine::Axis::LookY] = (*this)["controls"]["joy_look_axis_y"].to<int>();
-    cs.joy_axis_map[engine::Axis::MoveX] = (*this)["controls"]["joy_move_axis_x"].to<int>();
-    cs.joy_axis_map[engine::Axis::MoveY] = (*this)["controls"]["joy_move_axis_y"].to<int>();
-    cs.joy_look_invert_x = (*this)["controls"]["joy_look_invert_x"].toBool();
-    cs.joy_look_invert_y = (*this)["controls"]["joy_look_invert_y"].toBool();
-    cs.joy_look_sensitivity = (*this)["controls"]["joy_look_sensitivity"].toFloat();
-    cs.joy_look_deadzone = (*this)["controls"]["joy_look_deadzone"].to<int16_t>();
-    cs.joy_move_invert_x = (*this)["controls"]["joy_move_invert_x"].toBool();
-    cs.joy_move_invert_y = (*this)["controls"]["joy_move_invert_y"].toBool();
-    cs.joy_move_sensitivity = (*this)["controls"]["joy_move_sensitivity"].toFloat();
-    cs.joy_move_deadzone = (*this)["controls"]["joy_move_deadzone"].to<int16_t>();
+    cs.configureMouse(
+                (*this)["controls"]["mouse_scale_x"].toFloat(),
+                (*this)["controls"]["mouse_scale_y"].toFloat(),
+                (*this)["controls"]["mouse_sensitivity"].toFloat()
+                );
+
+    cs.configureControllers(
+                (*this)["controls"]["joy_number"].to<int>(),
+                (*this)["controls"]["use_joy"].toBool(),
+                (*this)["controls"]["joy_rumble"].toBool()
+                );
+
+    cs.configureDeadzones(
+                (*this)["controls"]["joy_look_deadzone"].to<int>(),
+                (*this)["controls"]["joy_move_deadzone"].to<int>()
+                );
+    cs.configureSensitivities(
+                (*this)["controls"]["joy_look_sensitivity"].to<float>(),
+                (*this)["controls"]["joy_move_sensitivity"].to<float>()
+                );
+
+    cs.configureLookAxes(
+                (*this)["controls"]["joy_look_axis_x"].to<int>(),
+                (*this)["controls"]["joy_look_invert_x"].toBool(),
+                (*this)["controls"]["joy_look_axis_y"].to<int>(),
+                (*this)["controls"]["joy_look_invert_y"].toBool()
+                );
+
+    cs.configureMoveAxes(
+                (*this)["controls"]["joy_move_axis_x"].to<int>(),
+                (*this)["controls"]["joy_move_invert_x"].toBool(),
+                (*this)["controls"]["joy_move_axis_y"].to<int>(),
+                (*this)["controls"]["joy_move_invert_y"].toBool()
+                );
 }
 
 void script::ScriptEngine::parseScreen(engine::ScreenInfo& sc) const

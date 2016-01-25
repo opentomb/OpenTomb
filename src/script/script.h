@@ -32,7 +32,7 @@ enum class StreamMethod;
 
 namespace engine
 {
-struct ControlSettings;
+class InputHandler;
 struct SystemSettings;
 struct ScreenInfo;
 } // namespace engine
@@ -139,7 +139,7 @@ public:
     void parseRender(render::RenderSettings& rs) const;
     void parseAudio(audio::Settings& as) const;
     void parseConsole(gui::Console& cn) const;
-    void parseControls(engine::ControlSettings& cs) const;
+    void parseControls(engine::InputHandler& cs) const;
     void parseSystem(engine::SystemSettings& ss) const;
 
 protected:

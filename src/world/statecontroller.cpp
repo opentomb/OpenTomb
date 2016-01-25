@@ -728,7 +728,7 @@ void StateController::jumpBack()
     }
     else if(m_character->m_response.horizontal_collide & 0x01)
     {
-        engine::ControlSettings::instance.joyRumble(200.0, 200);
+        engine::Engine::instance.m_inputHandler.rumble(200.0, util::MilliSeconds(200));
         m_character->setAnimation(animation::TR_ANIMATION_LARA_SMASH_JUMP, 0);
         m_character->m_moveDir = MoveDirection::Forward;
         m_character->updateCurrentSpeed(true);
@@ -761,7 +761,7 @@ void StateController::jumpLeft()
     }
     else if(m_character->m_response.horizontal_collide & 0x01)
     {
-        engine::ControlSettings::instance.joyRumble(200.0, 200);
+        engine::Engine::instance.m_inputHandler.rumble(200.0, util::MilliSeconds(200));
         m_character->setAnimation(animation::TR_ANIMATION_LARA_SMASH_JUMP, 0);
         m_character->m_moveDir = MoveDirection::Right;
         m_character->updateCurrentSpeed(true);
@@ -790,7 +790,7 @@ void StateController::jumpRight()
     }
     else if(m_character->m_response.horizontal_collide & 0x01)
     {
-        engine::ControlSettings::instance.joyRumble(200.0, 200);
+        engine::Engine::instance.m_inputHandler.rumble(200.0, util::MilliSeconds(200));
         m_character->setAnimation(animation::TR_ANIMATION_LARA_SMASH_JUMP, 0);
         m_character->m_moveDir = MoveDirection::Left;
         m_character->updateCurrentSpeed(true);
@@ -960,12 +960,12 @@ void StateController::runForward()
         }
         else
         {
-            engine::ControlSettings::instance.joyRumble(200.0, 200);
+            engine::Engine::instance.m_inputHandler.rumble(200.0, util::MilliSeconds(200));
 
             if(m_character->m_command.move.z == MovementWalk::Forward)
             {
                 boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);
-                if(*i == 1)
+                if(i && *i == 1)
                 {
                     m_character->setAnimation(animation::TR_ANIMATION_LARA_WALL_SMASH_LEFT, 0);
                 }
@@ -1056,7 +1056,7 @@ void StateController::sprint()
     }
     else if(m_character->m_response.horizontal_collide & 0x01)
     {
-        engine::ControlSettings::instance.joyRumble(200.0, 200);
+        engine::Engine::instance.m_inputHandler.rumble(200.0, util::MilliSeconds(200));
 
         boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);
         if(*i == 1)
@@ -2388,7 +2388,7 @@ void StateController::freefall()
             {
                 m_character->m_response.killed = true;
                 m_character->setAnimation(animation::TR_ANIMATION_LARA_LANDING_DEATH, 0);
-                engine::ControlSettings::instance.joyRumble(200.0, 500);
+                engine::Engine::instance.m_inputHandler.rumble(200.0, util::MilliSeconds(500));
             }
             else
             {

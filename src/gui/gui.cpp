@@ -16,6 +16,8 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include <SDL2/SDL_video.h>
+
 namespace gui
 {
 std::unique_ptr<Gui> Gui::instance = nullptr;

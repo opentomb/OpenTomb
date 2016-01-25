@@ -1,7 +1,7 @@
 #pragma once
 
-#include "controls.h"
 #include "gui/textline.h"
+#include "inputhandler.h"
 #include "world/object.h"
 #include "world/world.h"
 
@@ -10,6 +10,8 @@ namespace world
 class Camera;
 struct Room;
 } // namespace world
+
+struct SDL_Window;
 
 namespace engine
 {
@@ -97,6 +99,7 @@ public:
     }
 
     EngineControlState m_controlState;
+    InputHandler m_inputHandler;
 
     world::Camera m_camera;
     world::World m_world;
@@ -119,7 +122,6 @@ public:
     void initDefaultGlobals();
 
     void initGL();
-    void initSDLControls();
     void initSDLVideo();
 
     // Config parser
@@ -161,11 +163,8 @@ public:
 
     int execCmd(const char *ch);
 
-    SDL_Window             *m_window = nullptr;
-    SDL_Joystick           *m_joystick = nullptr;
-    SDL_GameController     *m_controller = nullptr;
-    SDL_Haptic             *m_haptic = nullptr;
-    SDL_GLContext           m_glContext = nullptr;
+    SDL_Window* m_window = nullptr;
+    void* m_glContext = nullptr;
 
     glm::vec3 m_lightPosition = { 255.0, 255.0, 8.0 };
     glm::vec3 m_castRay[2]{ {0,0,0}, {0,0,0} };

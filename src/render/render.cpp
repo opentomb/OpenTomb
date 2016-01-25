@@ -27,14 +27,16 @@
 #include "world/staticmesh.h"
 #include "world/world.h"
 
-#include <array>
-#include <queue>
-#include <set>
-
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <boost/log/trivial.hpp>
+
+#include <SDL2/SDL.h>
+
+#include <array>
+#include <queue>
+#include <set>
 
 namespace render
 {

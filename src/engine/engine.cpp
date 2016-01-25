@@ -18,7 +18,6 @@
 #include "LuaState.h"
 
 #include "common.h"
-#include "controls.h"
 #include "engine/bullet.h"
 #include "engine/game.h"
 #include "engine/system.h"
@@ -87,84 +86,10 @@ void Engine::initGL()
     }
 }
 
-void Engine::initSDLControls()
-{
-    Uint32 init_flags = SDL_INIT_VIDEO | SDL_INIT_EVENTS; // These flags are used in any case.
-
-    if(ControlSettings::instance.use_joy)
-    {
-        init_flags |= SDL_INIT_GAMECONTROLLER;  // Update init flags for joystick.
-
-        if(ControlSettings::instance.joy_rumble)
-        {
-            init_flags |= SDL_INIT_HAPTIC;      // Update init flags for force feedback.
-        }
-
-        SDL_Init(init_flags);
-
-        int NumJoysticks = SDL_NumJoysticks();
-
-        if(NumJoysticks < 1 || NumJoysticks - 1 < ControlSettings::instance.joy_number)
-        {
-            BOOST_LOG_TRIVIAL(error) << "There is no joystick #" << ControlSettings::instance.joy_number << " present";
-            return;
-        }
-
-        if(SDL_IsGameController(ControlSettings::instance.joy_number))                     // If joystick has mapping (e.g. X360 controller)
-        {
-            SDL_GameControllerEventState(SDL_ENABLE);                           // Use GameController API
-            m_controller = SDL_GameControllerOpen(ControlSettings::instance.joy_number);
-
-            if(!m_controller)
-            {
-                BOOST_LOG_TRIVIAL(error) << "Can't open game controller #d" << ControlSettings::instance.joy_number;
-                SDL_GameControllerEventState(SDL_DISABLE);                      // If controller init failed, close state.
-                ControlSettings::instance.use_joy = false;
-            }
-            else if(ControlSettings::instance.joy_rumble)                                  // Create force feedback interface.
-            {
-                m_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(m_controller));
-                if(!m_haptic)
-                {
-                    BOOST_LOG_TRIVIAL(error) << "Can't initialize haptic from game controller #" << ControlSettings::instance.joy_number;
-                }
-            }
-        }
-        else
-        {
-            SDL_JoystickEventState(SDL_ENABLE);                                 // If joystick isn't mapped, use generic API.
-            m_joystick = SDL_JoystickOpen(ControlSettings::instance.joy_number);
-
-            if(!m_joystick)
-            {
-                BOOST_LOG_TRIVIAL(error) << "Can't open joystick #" << ControlSettings::instance.joy_number;
-                SDL_JoystickEventState(SDL_DISABLE);                            // If joystick init failed, close state.
-                ControlSettings::instance.use_joy = false;
-            }
-            else if(ControlSettings::instance.joy_rumble)                                  // Create force feedback interface.
-            {
-                m_haptic = SDL_HapticOpenFromJoystick(m_joystick);
-                if(!m_haptic)
-                {
-                    BOOST_LOG_TRIVIAL(error) << "Can't initialize haptic from joystick #" << ControlSettings::instance.joy_number;
-                }
-            }
-        }
-
-        if(m_haptic)                                                          // To check if force feedback is working or not.
-        {
-            SDL_HapticRumbleInit(m_haptic);
-            SDL_HapticRumblePlay(m_haptic, 1.0, 300);
-        }
-    }
-    else
-    {
-        SDL_Init(init_flags);
-    }
-}
-
 void Engine::initSDLVideo()
 {
+    SDL_InitSubSystem(SDL_INIT_VIDEO);
+
     Uint32 video_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
 
     if(screen_info.FS_flag)
@@ -271,7 +196,6 @@ void Engine::start()
     initPre();
 
     // Init generic SDL interfaces.
-    initSDLControls();
     initSDLVideo();
 
     // Additional OpenGL initialization.
@@ -460,7 +384,136 @@ void Engine::showDebugInfo()
 void Engine::initDefaultGlobals()
 {
     Console::instance().initGlobals();
-    ControlSettings::instance.initGlobals();
+
+    m_inputHandler.clearBindings();
+    m_inputHandler.clearHandlers();
+
+    auto self = this;
+    m_inputHandler.registerMouseMoveHandler([self](float dx, float dy){
+        if(!Console::instance().isVisible() && self->m_controlState.m_mouseLook)
+        {
+            self->m_controlState.m_lookAxisX = dx;
+            self->m_controlState.m_lookAxisY = dy;
+        }
+    });
+    m_inputHandler.registerActionHandler(InputAction::Up, [self](bool pressed){
+        self->m_controlState.m_moveForward = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::Down, [self](bool pressed){
+        self->m_controlState.m_moveBackward = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::Left, [self](bool pressed){
+        self->m_controlState.m_moveLeft = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::Right, [self](bool pressed){
+        self->m_controlState.m_moveRight = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::DrawWeapon, [self](bool pressed){
+        self->m_controlState.m_doDrawWeapon = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::Action, [self](bool pressed){
+        self->m_controlState.m_stateAction = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::Jump, [self](bool pressed){
+        self->m_controlState.m_moveUp = pressed;
+        self->m_controlState.m_doJump = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::Roll, [self](bool pressed){
+        self->m_controlState.m_doRoll = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::Walk, [self](bool pressed){
+        self->m_controlState.m_stateWalk = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::Sprint, [self](bool pressed){
+        self->m_controlState.m_stateSprint = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::Crouch, [self](bool pressed){
+        self->m_controlState.m_moveDown = pressed;
+        self->m_controlState.m_stateCrouch = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::LookUp, [self](bool pressed){
+        self->m_controlState.m_lookUp = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::LookDown, [self](bool pressed){
+        self->m_controlState.m_lookDown = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::LookLeft, [self](bool pressed){
+        self->m_controlState.m_lookLeft = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::LookRight, [self](bool pressed){
+        self->m_controlState.m_lookRight = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::BigMedi, [self](bool pressed){
+        if(!self->m_inputHandler.getActionState(InputAction::BigMedi).wasActive)
+        {
+            self->m_controlState.m_useBigMedi = pressed;
+        }
+    });
+    m_inputHandler.registerActionHandler(InputAction::SmallMedi, [self](bool pressed){
+        if(!self->m_inputHandler.getActionState(InputAction::SmallMedi).wasActive)
+        {
+            self->m_controlState.m_useSmallMedi = pressed;
+        }
+    });
+    m_inputHandler.registerActionHandler(InputAction::Console, [self](bool pressed){
+        if(pressed)
+            return;
+
+        Console::instance().toggleVisibility();
+
+        if(Console::instance().isVisible())
+        {
+            //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+            SDL_StartTextInput();
+        }
+        else
+        {
+            //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+            SDL_SetRelativeMouseMode(SDL_TRUE);
+            SDL_StopTextInput();
+        }
+    });
+    m_inputHandler.registerActionHandler(InputAction::Screenshot, [self](bool pressed){
+        if(!pressed)
+        {
+            Com_TakeScreenShot();
+        }
+    });
+    m_inputHandler.registerActionHandler(InputAction::Inventory, [self](bool pressed){
+        self->m_controlState.m_guiInventory = pressed;
+    });
+    m_inputHandler.registerActionHandler(InputAction::SaveGame, [self](bool pressed){
+        if(!pressed)
+        {
+            Game_Save("qsave.lua");
+        }
+    });
+    m_inputHandler.registerActionHandler(InputAction::LoadGame, [self](bool pressed){
+        if(!pressed)
+        {
+            Game_Load("qsave.lua");
+        }
+    });
+
+    m_inputHandler.registerJoystickLookHandler([self](float dx, float dy){
+        glm::vec3 rotation(dx, dy, 0);
+        rotation *= -world::CameraRotationSpeed * self->getFrameTimeSecs();
+        self->m_camera.rotate(rotation);
+    });
+    m_inputHandler.registerJoystickMoveHandler([self](float dx, float dy){
+        self->m_controlState.m_moveLeft = dx < 0;
+        self->m_controlState.m_moveRight = dx > 0;
+        self->m_controlState.m_moveForward = dy < 0;
+        self->m_controlState.m_moveBackward = dy > 0;
+
+        self->m_world.character->m_command.rot[0] += glm::degrees(-2 * Engine::instance.getFrameTimeSecs() * dx);
+        self->m_world.character->m_command.rot[1] += glm::degrees(-2 * Engine::instance.getFrameTimeSecs() * dy);
+        glm::vec3 rotation(dx, dy, 0);
+        rotation *= -world::CameraRotationSpeed * self->getFrameTimeSecs();
+        self->m_camera.rotate(rotation);
+    });
+
     Game_InitGlobals();
     render::renderer.initGlobals();
     m_world.audioEngine.resetSettings();
@@ -570,21 +623,6 @@ void Engine::shutdown(int val)
     /* no more renderings */
     SDL_GL_DeleteContext(m_glContext);
     SDL_DestroyWindow(m_window);
-
-    if(m_joystick)
-    {
-        SDL_JoystickClose(m_joystick);
-    }
-
-    if(m_controller)
-    {
-        SDL_GameControllerClose(m_controller);
-    }
-
-    if(m_haptic)
-    {
-        SDL_HapticClose(m_haptic);
-    }
 
     m_world.audioEngine.closeDevice();
 
@@ -1027,7 +1065,7 @@ void Engine::initConfig(const std::string& filename)
         state.parseRender(render::renderer.settings());
         state.parseAudio(m_world.audioEngine.settings());
         state.parseConsole(Console::instance());
-        state.parseControls(ControlSettings::instance);
+        state.parseControls(m_inputHandler);
         state.parseSystem(system_settings);
     }
     else

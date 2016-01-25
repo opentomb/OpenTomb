@@ -9,7 +9,6 @@
 
 #include "audio/audio.h"
 #include "character_controller.h"
-#include "controls.h"
 #include "engine.h"
 #include "engine/bullet.h"
 #include "gameflow.h"
@@ -404,23 +403,11 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
     // FIXME: Duplicate code - do we need cam control with no world??
     if(!render::renderer.world())
     {
-        if(ControlSettings::instance.use_joy)
-        {
-            if(ControlSettings::instance.joy_look_x != 0)
-            {
-                engine::Engine::instance.m_camera.rotate({ -world::CameraRotationSpeed * Engine::instance.getFrameTimeSecs() * ControlSettings::instance.joy_look_x, 0, 0 });
-            }
-            if(ControlSettings::instance.joy_look_y != 0)
-            {
-                engine::Engine::instance.m_camera.rotate({ 0, -world::CameraRotationSpeed * Engine::instance.getFrameTimeSecs() * ControlSettings::instance.joy_look_y, 0 });
-            }
-        }
-
         if(Engine::instance.m_controlState.m_mouseLook)
         {
             engine::Engine::instance.m_camera.rotate({ -world::CameraRotationSpeed * Engine::instance.m_controlState.m_lookAxisX,
-                                                            -world::CameraRotationSpeed * Engine::instance.m_controlState.m_lookAxisY,
-                                                            0 });
+                                                       -world::CameraRotationSpeed * Engine::instance.m_controlState.m_lookAxisY,
+                                                       0 });
             Engine::instance.m_controlState.m_lookAxisX = 0.0;
             Engine::instance.m_controlState.m_lookAxisY = 0.0;
         }
@@ -434,23 +421,11 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
         return;
     }
 
-    if(ControlSettings::instance.use_joy)
-    {
-        if(ControlSettings::instance.joy_look_x != 0)
-        {
-            engine::Engine::instance.m_camera.rotate({ -world::CameraRotationSpeed * Engine::instance.getFrameTimeSecs() * ControlSettings::instance.joy_look_x, 0, 0 });
-        }
-        if(ControlSettings::instance.joy_look_y != 0)
-        {
-            engine::Engine::instance.m_camera.rotate({ 0, -world::CameraRotationSpeed * Engine::instance.getFrameTimeSecs() * ControlSettings::instance.joy_look_y, 0 });
-        }
-    }
-
     if(Engine::instance.m_controlState.m_mouseLook)
     {
         engine::Engine::instance.m_camera.rotate({ -world::CameraRotationSpeed * Engine::instance.m_controlState.m_lookAxisX,
-                                                        -world::CameraRotationSpeed * Engine::instance.m_controlState.m_lookAxisY,
-                                                        0 });
+                                                   -world::CameraRotationSpeed * Engine::instance.m_controlState.m_lookAxisY,
+                                                   0 });
         Engine::instance.m_controlState.m_lookAxisX = 0.0;
         Engine::instance.m_controlState.m_lookAxisY = 0.0;
     }
@@ -519,23 +494,8 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
             Engine::instance.m_controlState.m_useBigMedi = !Engine::instance.m_controlState.m_useBigMedi;
         }
 
-        if(ControlSettings::instance.use_joy && ControlSettings::instance.joy_move_x != 0)
-        {
-            ch->m_command.rot[0] += glm::degrees(-2 * Engine::instance.getFrameTimeSecs() * ControlSettings::instance.joy_move_x);
-        }
-        else
-        {
-            ch->m_command.rot[0] += moveLogic.getDistanceX(glm::degrees(-2.0f) * Engine::instance.getFrameTimeSecs());
-        }
-
-        if(ControlSettings::instance.use_joy && ControlSettings::instance.joy_move_y != 0)
-        {
-            ch->m_command.rot[1] += glm::degrees(-2 * Engine::instance.getFrameTimeSecs() * ControlSettings::instance.joy_move_y);
-        }
-        else
-        {
-            ch->m_command.rot[1] += moveLogic.getDistanceZ(glm::degrees(2.0f) * Engine::instance.getFrameTimeSecs());
-        }
+        ch->m_command.rot[0] += moveLogic.getDistanceX(glm::degrees(-2.0f) * Engine::instance.getFrameTimeSecs());
+        ch->m_command.rot[1] += moveLogic.getDistanceZ(glm::degrees(2.0f) * Engine::instance.getFrameTimeSecs());
 
         ch->m_command.move = moveLogic;
     }
@@ -729,7 +689,7 @@ void Game_Frame(util::Duration time)
     game_logic_time += time;
 
     // GUI and controls should be updated at all times!
-    ControlSettings::instance.pollSDLInput();
+    Engine::instance.m_inputHandler.poll();
 
     // TODO: implement pause mechanism
     if(gui::Gui::instance->update())
@@ -760,7 +720,7 @@ void Game_Frame(util::Duration time)
         entity->updateInterpolation();
     }
 
-    ControlSettings::instance.refreshStates();
+    Engine::instance.m_inputHandler.refreshStates();
     Engine::instance.m_world.updateAnimTextures();
 }
 

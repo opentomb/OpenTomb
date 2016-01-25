@@ -73,9 +73,9 @@ list(APPEND PRJ_SRC
     engine/game.cpp
     engine/system.cpp
     engine/engine.cpp
-    engine/controls.cpp
     engine/gameflow.cpp
     engine/bullet.cpp
+    engine/inputhandler.cpp
 )
 
 list(APPEND PRJ_HDR
@@ -162,9 +162,9 @@ list(APPEND PRJ_HDR
     engine/game.h
     engine/system.h
     engine/engine.h
-    engine/controls.h
     engine/gameflow.h
     engine/bullet.h
+    engine/inputhandler.h
 )
 
 if(MINGW)
