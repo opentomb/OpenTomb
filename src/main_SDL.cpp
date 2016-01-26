@@ -1,7 +1,8 @@
-#include <chrono>
-
 #include "engine/engine.h"
 #include "util/helpers.h"
+
+#include <chrono>
+#include <thread>
 
 bool done = false;
 float time_scale = 1.0;
@@ -16,9 +17,18 @@ int main(int /*argc*/, char** /*argv*/)
 
     while(!done)
     {
+        BOOST_ASSERT(time_scale > 0);
+
         util::TimePoint now = util::now();
         util::Duration delta = now - prev_time;
         delta *= time_scale;
+
+        if(delta.count() <= 0)
+        {
+            std::this_thread::sleep_for(std::chrono::microseconds(1));
+            continue;
+        }
+
         prev_time = now;
 
         engine::Engine::instance.frame(delta);
