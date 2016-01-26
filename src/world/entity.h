@@ -171,7 +171,7 @@ public:
 
     virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);
-    void addOverrideAnim(ModelId model_id);
+    void addOverrideAnim(const std::shared_ptr<SkeletalModel>& model);
     void checkActivators();
 
     virtual Substance getSubstanceState() const

@@ -352,7 +352,7 @@ private:
 
     std::vector<std::shared_ptr<Hair>> m_hairs{};
 
-    ModelId m_currentWeapon = 0;
+    std::shared_ptr<SkeletalModel> m_currentWeapon = nullptr;
     WeaponState m_currentWeaponState = WeaponState::Hide;
 
     int8_t m_camFollowCenter = 0;
@@ -426,12 +426,12 @@ public:
         return m_response;
     }
 
-    ModelId getCurrentWeapon() const noexcept
+    std::shared_ptr<SkeletalModel> getCurrentWeapon() const noexcept
     {
         return m_currentWeapon;
     }
 
-    void setCurrentWeapon(ModelId w) noexcept
+    void setCurrentWeapon(const std::shared_ptr<SkeletalModel>& w) noexcept
     {
         m_currentWeapon = w;
     }
@@ -543,7 +543,7 @@ public:
     bool changeParam(CharParameterId parameter, float value);
     void setParamMaximum(CharParameterId parameter, float max_value);
 
-    bool setWeaponModel(ModelId weapon_model, bool armed);
+    bool setWeaponModel(const std::shared_ptr<SkeletalModel>& model, bool armed);
 
 private:
     StateController m_stateController;

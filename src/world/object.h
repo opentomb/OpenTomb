@@ -35,6 +35,13 @@ ENUM_TO_OSTREAM(CollisionType)
 
 using ObjectId = uint32_t;
 
+/**
+ * @brief Everything "physical" in the world.
+ *
+ * @details
+ * Every object in the game world that exists within a room and has a dimension
+ * and a position should derive from this.
+ */
 class Object
 {
     Object(const Object&) = delete;

@@ -56,7 +56,7 @@ void Res_SetEntityProperties(std::shared_ptr<Entity> ent)
         return;
 
     int collisionType, collisionShape, flg;
-    lua::tie(collisionType, collisionShape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::Engine::instance.m_world.m_engineVersion), ent->m_skeleton.getModel()->id);
+    lua::tie(collisionType, collisionShape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::Engine::instance.m_world.m_engineVersion), ent->m_skeleton.getModel()->getId());
     ent->setCollisionType(static_cast<CollisionType>(collisionType));
     ent->setCollisionShape(static_cast<CollisionShape>(collisionShape));
 
@@ -69,7 +69,7 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
     if(!ent->m_skeleton.getModel())
         return;
 
-    auto funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine::Engine::instance.m_world.m_engineVersion), ent->m_skeleton.getModel()->id).toString();
+    auto funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine::Engine::instance.m_world.m_engineVersion), ent->m_skeleton.getModel()->getId()).toString();
     if(!funcName.empty())
         Res_CreateEntityFunc(engine_lua, funcName, ent->getId());
 }
@@ -910,14 +910,14 @@ void GenerateAnimCommands(SkeletalModel& model)
         return;
     }
     //Sys_DebugLog("anim_transform.txt", "MODEL[%d]", model.id);
-    for(size_t anim = 0; anim < model.animations.size(); anim++)
+    for(size_t anim = 0; anim < model.m_animations.size(); anim++)
     {
-        if(model.animations[anim].animationCommandCount > 255)
+        if(model.m_animations[anim].animationCommandCount > 255)
         {
             continue;                                                           // If no anim commands or current anim has more than 255 (according to TRosettaStone).
         }
 
-        animation::Animation* af = &model.animations[anim];
+        animation::Animation* af = &model.m_animations[anim];
         if(af->animationCommandCount == 0)
             continue;
 
@@ -1581,7 +1581,6 @@ void TR_GenMesh(World& world, ObjectId mesh_index, std::shared_ptr<core::BaseMes
      */
 
     const loader::Mesh& tr_mesh = tr->m_meshes[mesh_index];
-    mesh->m_id = mesh_index;
     mesh->m_center[0] = tr_mesh.centre.x;
     mesh->m_center[1] = -tr_mesh.centre.z;
     mesh->m_center[2] = tr_mesh.centre.y;
@@ -1840,7 +1839,7 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, cons
     return tr_animation->frame_offset;
 }
 
-SkeletalModel* Res_GetSkybox(World& world)
+std::shared_ptr<SkeletalModel> Res_GetSkybox(World& world)
 {
     switch(world.m_engineVersion)
     {
@@ -1870,16 +1869,16 @@ void TR_GenSkeletalModel(World& world, size_t model_num, SkeletalModel& model, c
 {
     const std::unique_ptr<loader::Moveable>& tr_moveable = tr->m_moveables[model_num];  // original tr structure
 
-    model.collision_map.resize(model.meshes.size());
-    std::iota(model.collision_map.begin(), model.collision_map.end(), 0);
+    model.m_collisionMap.resize(model.m_meshes.size());
+    std::iota(model.m_collisionMap.begin(), model.m_collisionMap.end(), 0);
 
-    model.meshes.resize(meshCount);
+    model.m_meshes.resize(meshCount);
 
     const uint32_t *mesh_index = &tr->m_meshIndices[tr_moveable->starting_mesh];
 
-    for(size_t k = 0; k < model.meshes.size(); k++)
+    for(size_t k = 0; k < model.m_meshes.size(); k++)
     {
-        SkeletalModel::MeshReference* tree_tag = &model.meshes[k];
+        SkeletalModel::MeshReference* tree_tag = &model.m_meshes[k];
         tree_tag->mesh_base = world.m_meshes[mesh_index[k]];
         if(k == 0)
         {
@@ -1903,22 +1902,22 @@ void TR_GenSkeletalModel(World& world, size_t model_num, SkeletalModel& model, c
         /*
          * model has no start offset and any animation
          */
-        model.animations.resize(1);
-        model.animations.front().setDuration(1, 1, 1);
-        animation::SkeletonKeyFrame& keyFrame = model.animations.front().rawKeyFrame(0);
+        model.m_animations.resize(1);
+        model.m_animations.front().setDuration(1, 1, 1);
+        animation::SkeletonKeyFrame& keyFrame = model.m_animations.front().rawKeyFrame(0);
 
-        model.animations.front().id = 0;
-        model.animations.front().next_anim = nullptr;
-        model.animations.front().next_frame = 0;
-        model.animations.front().stateChanges.clear();
+        model.m_animations.front().id = 0;
+        model.m_animations.front().next_anim = nullptr;
+        model.m_animations.front().next_frame = 0;
+        model.m_animations.front().stateChanges.clear();
 
-        keyFrame.boneKeyFrames.resize(model.meshes.size());
+        keyFrame.boneKeyFrames.resize(model.m_meshes.size());
 
         keyFrame.position = { 0,0,0 };
 
         for(size_t k = 0; k < keyFrame.boneKeyFrames.size(); k++)
         {
-            SkeletalModel::MeshReference* mesh = &model.meshes[k];
+            SkeletalModel::MeshReference* mesh = &model.m_meshes[k];
             animation::BoneKeyFrame& boneKeyFrame = keyFrame.boneKeyFrames[k];
 
             boneKeyFrame.qrotate = util::vec4_SetTRRotations({ 0,0,0 });
@@ -1927,13 +1926,13 @@ void TR_GenSkeletalModel(World& world, size_t model_num, SkeletalModel& model, c
         return;
     }
     //Sys_DebugLog(LOG_FILENAME, "model = %d, anims = %d", tr_moveable->object_id, GetNumAnimationsForMoveable(tr, model_num));
-    model.animations.resize(TR_GetNumAnimationsForMoveable(tr, model_num));
-    if(model.animations.empty())
+    model.m_animations.resize(TR_GetNumAnimationsForMoveable(tr, model_num));
+    if(model.m_animations.empty())
     {
         /*
          * the animation count must be >= 1
          */
-        model.animations.resize(1);
+        model.m_animations.resize(1);
     }
 
     /*
@@ -1945,9 +1944,9 @@ void TR_GenSkeletalModel(World& world, size_t model_num, SkeletalModel& model, c
      * - in the next follows rotation's data. one word - one rotation, if rotation is one-axis (one angle).
      *   two words in 3-axis rotations (3 angles). angles are calculated with bit mask.
      */
-    for(size_t i = 0; i < model.animations.size(); i++)
+    for(size_t i = 0; i < model.m_animations.size(); i++)
     {
-        animation::Animation* anim = &model.animations[i];
+        animation::Animation* anim = &model.m_animations[i];
         loader::Animation *tr_animation = &tr->m_animations[tr_moveable->animation_index + i];
 
         uint32_t frame_offset = tr_animation->frame_offset / 2;
@@ -2039,7 +2038,7 @@ void TR_GenSkeletalModel(World& world, size_t model_num, SkeletalModel& model, c
         {
             animation::SkeletonKeyFrame* keyFrame = &anim->rawKeyFrame(j);
             // !Need bonetags in empty frames:
-            keyFrame->boneKeyFrames.resize(model.meshes.size());
+            keyFrame->boneKeyFrames.resize(model.m_meshes.size());
 
             if(j >= keyFrameCount)
             {
@@ -2056,7 +2055,7 @@ void TR_GenSkeletalModel(World& world, size_t model_num, SkeletalModel& model, c
                 {
                     animation::BoneKeyFrame* boneKeyFrame = &keyFrame->boneKeyFrames[k];
                     boneKeyFrame->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
-                    boneKeyFrame->offset = model.meshes[k].offset;
+                    boneKeyFrame->offset = model.m_meshes[k].offset;
                 }
                 continue;
             }
@@ -2069,7 +2068,7 @@ void TR_GenSkeletalModel(World& world, size_t model_num, SkeletalModel& model, c
             {
                 animation::BoneKeyFrame* bone_tag = &keyFrame->boneKeyFrames[k];
                 bone_tag->qrotate = util::vec4_SetTRRotations({ 0,0,0 });
-                bone_tag->offset = model.meshes[k].offset;
+                bone_tag->offset = model.m_meshes[k].offset;
 
                 if(loader::gameToEngine(tr->m_gameVersion) == loader::Engine::TR1)
                 {
@@ -2140,18 +2139,18 @@ void TR_GenSkeletalModel(World& world, size_t model_num, SkeletalModel& model, c
         BOOST_LOG_TRIVIAL(debug) << "MODEL[" << model_num << "], anims = " << model.animations.size();
     }
 #endif
-    for(size_t i = 0; i < model.animations.size(); i++)
+    for(size_t i = 0; i < model.m_animations.size(); i++)
     {
-        animation::Animation* anim = &model.animations[i];
+        animation::Animation* anim = &model.m_animations[i];
         anim->stateChanges.clear();
 
         loader::Animation *tr_animation = &tr->m_animations[tr_moveable->animation_index + i];
         int16_t animId = tr_animation->next_animation - tr_moveable->animation_index;
         animId &= 0x7fff; // this masks out the sign bit
         BOOST_ASSERT(animId >= 0);
-        if(static_cast<size_t>(animId) < model.animations.size())
+        if(static_cast<size_t>(animId) < model.m_animations.size())
         {
-            anim->next_anim = &model.animations[animId];
+            anim->next_anim = &model.m_animations[animId];
             anim->next_frame = tr_animation->next_frame - tr->m_animations[tr_animation->next_animation].frame_start;
             anim->next_frame %= anim->next_anim->getFrameDuration();
 #ifdef LOG_ANIM_DISPATCHES
@@ -2166,7 +2165,7 @@ void TR_GenSkeletalModel(World& world, size_t model_num, SkeletalModel& model, c
 
         anim->stateChanges.clear();
 
-        if(tr_animation->num_state_changes > 0 && model.animations.size() > 1)
+        if(tr_animation->num_state_changes > 0 && model.m_animations.size() > 1)
         {
 #ifdef LOG_ANIM_DISPATCHES
             BOOST_LOG_TRIVIAL(debug) << "ANIM[" << i << "], next_anim = " << (anim->next_anim ? anim->next_anim->id : -1) << ", next_frame = " << anim->next_frame;
@@ -2186,13 +2185,13 @@ void TR_GenSkeletalModel(World& world, size_t model_num, SkeletalModel& model, c
                     loader::AnimDispatch *tr_adisp = &tr->m_animDispatches[tr_sch->anim_dispatch + l];
                     uint16_t next_anim = tr_adisp->next_animation & 0x7fff;
                     uint16_t next_anim_ind = next_anim - (tr_moveable->animation_index & 0x7fff);
-                    if(next_anim_ind >= model.animations.size())
+                    if(next_anim_ind >= model.m_animations.size())
                         continue;
 
                     sch_p->dispatches.emplace_back();
 
                     animation::AnimationDispatch* adsp = &sch_p->dispatches.back();
-                    size_t next_frames_count = model.animations[next_anim - tr_moveable->animation_index].getFrameDuration();
+                    size_t next_frames_count = model.m_animations[next_anim - tr_moveable->animation_index].getFrameDuration();
                     size_t next_frame = tr_adisp->next_frame - tr->m_animations[next_anim].frame_start;
 
                     uint16_t low = tr_adisp->low - tr_animation->frame_start;
@@ -2323,15 +2322,13 @@ void TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_o
 
 void TR_GenSkeletalModels(World& world, const std::unique_ptr<loader::Level>& tr)
 {
-    world.m_skeletalModels.resize(tr->m_moveables.size());
-
     for(size_t i = 0; i < tr->m_moveables.size(); i++)
     {
         const loader::Moveable& tr_moveable = *tr->m_moveables[i];
-        SkeletalModel& smodel = world.m_skeletalModels[i];
-        smodel.id = tr_moveable.object_id;
-        TR_GenSkeletalModel(world, i, smodel, tr, tr_moveable.num_meshes);
-        smodel.updateTransparencyFlag();
+        std::shared_ptr<SkeletalModel> smodel = std::make_shared<SkeletalModel>(tr_moveable.object_id);
+        TR_GenSkeletalModel(world, i, *smodel, tr, tr_moveable.num_meshes);
+        smodel->updateTransparencyFlag();
+        world.m_skeletalModels[smodel->getId()] = smodel;
     }
 }
 
@@ -2379,10 +2376,10 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
         lua::Value replace_anim_id = engine_lua.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
         if(!replace_anim_id.isNil())
         {
-            SkeletalModel* replace_anim_model = world.getModelByID(replace_anim_id.to<ModelId>());
+            auto replace_anim_model = world.getModelByID(replace_anim_id.to<ModelId>());
             BOOST_ASSERT(replace_anim_model != nullptr);
-            BOOST_ASSERT(entity->m_skeleton.model() != nullptr);
-            std::swap(entity->m_skeleton.model()->animations, replace_anim_model->animations);
+            BOOST_ASSERT(entity->m_skeleton.getModel() != nullptr);
+            std::swap(entity->m_skeleton.getModel()->m_animations, replace_anim_model->m_animations);
         }
 
         if(entity->m_skeleton.getModel() == nullptr)
@@ -2403,7 +2400,7 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
             continue;
         }
 
-        entity->m_skeleton.fromModel(entity->m_skeleton.model());
+        entity->m_skeleton.fromModel(entity->m_skeleton.getModel());
 
         if(tr_item->object_id != 0)                                             // Lara is unical model
         {
@@ -2429,16 +2426,18 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
 
         engine_lua.set("player", lara->getId());
 
+        std::shared_ptr<SkeletalModel> laraModel = world.getModelByID(0);
+
         switch(loader::gameToEngine(tr->m_gameVersion))
         {
             case loader::Engine::TR1:
                 if(engine::Gameflow::instance.getLevelID() == 0)
                 {
-                    if(SkeletalModel* LM = world.getModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1))
+                    if(std::shared_ptr<SkeletalModel> LM = world.getModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1))
                     {
                         // In TR1, Lara has unified head mesh for all her alternate skins.
                         // Hence, we copy all meshes except head, to prevent Potato Raider bug.
-                        world.m_skeletalModels[0].setMeshes(LM->meshes, world.m_skeletalModels[0].meshes.size() - 1);
+                        laraModel->setMeshes(LM->m_meshes, laraModel->m_meshes.size() - 1);
                     }
                 }
                 break;
@@ -2447,13 +2446,13 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
                 break;
 
             case loader::Engine::TR3:
-                if(SkeletalModel* LM = world.getModelByID(TR_ITEM_LARA_SKIN_TR3))
+                if(std::shared_ptr<SkeletalModel> LM = world.getModelByID(TR_ITEM_LARA_SKIN_TR3))
                 {
-                    world.m_skeletalModels[0].setMeshes(LM->meshes, world.m_skeletalModels[0].meshes.size());
+                    laraModel->setMeshes(LM->m_meshes, laraModel->m_meshes.size());
                     auto tmp = world.getModelByID(11);                   // moto / quadro cycle animations
                     if(tmp)
                     {
-                        tmp->setMeshes(LM->meshes, world.m_skeletalModels[0].meshes.size());
+                        tmp->setMeshes(LM->m_meshes, laraModel->m_meshes.size());
                     }
                 }
                 break;
@@ -2461,16 +2460,16 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
             case loader::Engine::TR4:
             case loader::Engine::TR5:
                 // base skeleton meshes
-                if(SkeletalModel* LM = world.getModelByID(TR_ITEM_LARA_SKIN_TR45))
+                if(std::shared_ptr<SkeletalModel> LM = world.getModelByID(TR_ITEM_LARA_SKIN_TR45))
                 {
-                    world.m_skeletalModels[0].setMeshes(LM->meshes, world.m_skeletalModels[0].meshes.size());
+                    laraModel->setMeshes(LM->m_meshes, laraModel->m_meshes.size());
                 }
                 // skin skeleton meshes
-                if(SkeletalModel* LM = world.getModelByID(TR_ITEM_LARA_SKIN_JOINTS_TR45))
+                if(std::shared_ptr<SkeletalModel> LM = world.getModelByID(TR_ITEM_LARA_SKIN_JOINTS_TR45))
                 {
-                    world.m_skeletalModels[0].setSkinnedMeshes(LM->meshes, world.m_skeletalModels[0].meshes.size());
+                    laraModel->setSkinnedMeshes(LM->m_meshes, laraModel->m_meshes.size());
                 }
-                world.m_skeletalModels[0].fillSkinnedMeshMap();
+                laraModel->fillSkinnedMeshMap();
                 break;
 
             case loader::Engine::Unknown:
@@ -2498,7 +2497,7 @@ void Res_EntityToItem(std::map<ObjectId, std::shared_ptr<BaseItem> >& map)
                 if(!ent)
                     continue;
 
-                if(ent->m_skeleton.getModel()->id != item->world_model_id)
+                if(ent->m_skeleton.getModel()->getId() != item->world_model_id)
                     continue;
 
                 if(engine_lua["entity_funcs"][ent->getId()].is<lua::Nil>())

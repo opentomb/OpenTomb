@@ -18,8 +18,14 @@ using ModelId = uint32_t;
  * model -> animation -> frame -> bone
  * thanks to Terry 'Mongoose' Hendrix II
  */
-struct SkeletalModel
+class SkeletalModel
 {
+private:
+    ModelId m_id;
+
+    bool m_hasTransparency = false;
+
+public:
     /*
     * mesh tree base element structure
     */
@@ -34,21 +40,32 @@ struct SkeletalModel
         bool                        replace_anim = false;
     };
 
-    ModelId                     id;
-    bool                        has_transparency = false;
+    std::vector<animation::Animation> m_animations;
 
-    core::BoundingBox boundingBox;
+    std::vector<MeshReference> m_meshes;
 
-    std::vector<animation::Animation> animations;
+    std::vector<size_t> m_collisionMap;
 
-    std::vector<MeshReference> meshes;
+    bool m_noFixAll = false;
+    uint32_t m_noFixBodyParts = 0;
 
-    std::vector<size_t> collision_map;
+    std::vector<std::shared_ptr<btTypedConstraint>> m_btJoints;              // Ragdoll joints
 
-    bool no_fix_all = false;
-    uint32_t no_fix_body_parts = 0;
+public:
+    explicit SkeletalModel(ModelId id)
+        : m_id(id)
+    {
+    }
 
-    std::vector<std::shared_ptr<btTypedConstraint>> bt_joints;              // Ragdoll joints
+    ModelId getId() const noexcept
+    {
+        return m_id;
+    }
+
+    bool hasTransparency() const noexcept
+    {
+        return m_hasTransparency;
+    }
 
     void clear();
     void updateTransparencyFlag();

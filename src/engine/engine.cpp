@@ -338,7 +338,7 @@ void Engine::showDebugInfo()
             gui::TextLineManager::instance->drawText(30.0, 60.0,
                                                      boost::format("cont_entity: id = %d, model = %d")
                                                      % e->getId()
-                                                     % e->m_skeleton.getModel()->id
+                                                     % e->m_skeleton.getModel()->getId()
                                                      );
         }
         else if(world::StaticMesh* sm = dynamic_cast<world::StaticMesh*>(last_object))
@@ -595,7 +595,7 @@ void Engine::dumpRoom(const world::Room* r)
     {
         if(world::Entity* ent = dynamic_cast<world::Entity*>(object))
         {
-            BOOST_LOG_TRIVIAL(debug) << "entity: id = " << ent->getId() << ", model = " << ent->m_skeleton.getModel()->id;
+            BOOST_LOG_TRIVIAL(debug) << "entity: id = " << ent->getId() << ", model = " << ent->m_skeleton.getModel()->getId();
         }
     }
 }

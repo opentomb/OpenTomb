@@ -19,7 +19,6 @@ namespace core
 {
 struct BaseMesh
 {
-    ObjectId m_id;
     bool m_usesVertexColors; //!< does this mesh have prebaked vertex lighting
 
     std::vector<Polygon> m_polygons;

@@ -47,21 +47,6 @@ void script::ScriptEngine::checkStack()
     Console::instance().notify(SYSNOTE_LUA_STACK_INDEX, lua_gettop(m_state.getState()));
 }
 
-void lua_DumpModel(world::ModelId id)
-{
-    world::SkeletalModel* sm = engine::Engine::instance.m_world.getModelByID(id);
-    if(sm == nullptr)
-    {
-        Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id);
-        return;
-    }
-
-    for(size_t i = 0; i < sm->meshes.size(); i++)
-    {
-        Console::instance().printf("mesh[%d] = %d", static_cast<int>(i), sm->meshes[i].mesh_base->m_id);
-    }
-}
-
 void lua_DumpRoom(lua::Value id)
 {
     if(!id.is<lua::Unsigned>())
@@ -98,33 +83,32 @@ void lua_SetRoomEnabled(int id, bool value)
 
 void lua_SetModelCollisionMapSize(world::ModelId id, size_t size)
 {
-    world::SkeletalModel* model = engine::Engine::instance.m_world.getModelByID(id);
+    auto model = engine::Engine::instance.m_world.getModelByID(id);
     if(model == nullptr)
     {
         Console::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
         return;
     }
 
-    if(size < model->meshes.size())
+    if(size < model->m_meshes.size())
     {
-        model->collision_map.resize(size);
+        model->m_collisionMap.resize(size);
     }
 }
 
 void lua_SetModelCollisionMap(world::ModelId id, size_t arg, size_t val)
 {
     /// engine_world.skeletal_models[id] != engine::Engine::instance.engine_world.getModelByID(lua_tointeger(lua, 1));
-    world::SkeletalModel* model = engine::Engine::instance.m_world.getModelByID(id);
+    auto model = engine::Engine::instance.m_world.getModelByID(id);
     if(model == nullptr)
     {
         Console::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
         return;
     }
 
-    if(arg < model->collision_map.size()
-       && val < model->meshes.size())
+    if(arg < model->m_collisionMap.size() && val < model->m_meshes.size())
     {
-        model->collision_map[arg] = val;
+        model->m_collisionMap[arg] = val;
     }
 }
 
@@ -324,7 +308,7 @@ lua::Any lua_GetEntityModelID(world::ObjectId id)
 
     if(ent->m_skeleton.getModel())
     {
-        return ent->m_skeleton.getModel()->id;
+        return ent->m_skeleton.getModel()->getId();
     }
     return{};
 }
@@ -482,7 +466,7 @@ void lua_RemoveEntityRagdoll(world::ObjectId ent_id)
 
     if(ent)
     {
-        if(!ent->m_skeleton.getModel()->bt_joints.empty())
+        if(!ent->m_skeleton.getModel()->m_btJoints.empty())
         {
             ent->deleteRagdoll();
         }
@@ -673,7 +657,7 @@ void lua_PrintItems(world::ObjectId entity_id)
 
 void lua_SetStateChangeRange(world::ModelId id, int anim, int state, int dispatch, int frame_low, int frame_high, lua::Value next_anim, lua::Value next_frame)
 {
-    world::SkeletalModel* model = engine::Engine::instance.m_world.getModelByID(id);
+    auto model = engine::Engine::instance.m_world.getModelByID(id);
 
     if(model == nullptr)
     {
@@ -681,13 +665,13 @@ void lua_SetStateChangeRange(world::ModelId id, int anim, int state, int dispatc
         return;
     }
 
-    if(anim < 0 || anim + 1 > static_cast<int>(model->animations.size()))
+    if(anim < 0 || anim + 1 > static_cast<int>(model->m_animations.size()))
     {
         Console::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return;
     }
 
-    world::animation::Animation* af = &model->animations[anim];
+    world::animation::Animation* af = &model->m_animations[anim];
     world::animation::StateChange* stc = af->findStateChangeByID(static_cast<world::LaraState>(state));
     if(stc != nullptr)
     {
@@ -710,14 +694,14 @@ void lua_SetStateChangeRange(world::ModelId id, int anim, int state, int dispatc
 
 void lua_SetAnimEndCommands(world::ModelId id, int anim, lua::Value table)
 {
-    world::SkeletalModel* model = engine::Engine::instance.m_world.getModelByID(id);
+    auto model = engine::Engine::instance.m_world.getModelByID(id);
     if(model == nullptr)
     {
         Console::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return;
     }
 
-    if(anim < 0 || anim + 1 > static_cast<int>(model->animations.size()))
+    if(anim < 0 || anim + 1 > static_cast<int>(model->m_animations.size()))
     {
         Console::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return;
@@ -729,7 +713,7 @@ void lua_SetAnimEndCommands(world::ModelId id, int anim, lua::Value table)
         return;
     }
 
-    model->animations[anim].finalAnimCommands.clear();
+    model->m_animations[anim].finalAnimCommands.clear();
 
     for(int i = 1; table[i].is<lua::Table>(); i++)
     {
@@ -738,7 +722,7 @@ void lua_SetAnimEndCommands(world::ModelId id, int anim, lua::Value table)
            && table[i][3].is<lua::Number>()
            && table[i][4].is<lua::Number>())
         {
-            model->animations[anim].finalAnimCommands.push_back({
+            model->m_animations[anim].finalAnimCommands.push_back({
                                                                     static_cast<world::animation::AnimCommandOpcode>(table[i][1].to<int>()),
                                                                     table[i][2].to<int>(),
                                                                     table[i][3].to<int>(),
@@ -759,11 +743,11 @@ lua::Any lua_SpawnEntity(world::ModelId model_id, float x, float y, float z, flo
     boost::optional<world::ObjectId> object;
     if(ov_id.is<world::ObjectId>())
         object = ov_id.to<world::ObjectId>();
-    auto id = engine::Engine::instance.m_world.spawnEntity(model_id, room_id, &position, &ang, object);
-    if(!id)
-        return{};
+    auto entity = engine::Engine::instance.m_world.spawnEntity(model_id, room_id, &position, &ang, object);
+    if(!entity)
+        return {};
     else
-        return *id;
+        return entity->getId();
 }
 
 bool lua_DeleteEntity(world::ObjectId id)
@@ -1358,7 +1342,7 @@ void lua_SetEntityBodyPartFlag(world::ObjectId id, int bone_id, int body_part_fl
 
 void lua_SetModelBodyPartFlag(world::ModelId id, int bone_id, int body_part_flag)
 {
-    world::SkeletalModel* model = engine::Engine::instance.m_world.getModelByID(id);
+    auto model = engine::Engine::instance.m_world.getModelByID(id);
 
     if(model == nullptr)
     {
@@ -1366,13 +1350,13 @@ void lua_SetModelBodyPartFlag(world::ModelId id, int bone_id, int body_part_flag
         return;
     }
 
-    if(bone_id < 0 || static_cast<size_t>(bone_id) >= model->meshes.size())
+    if(bone_id < 0 || static_cast<size_t>(bone_id) >= model->m_meshes.size())
     {
         Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return;
     }
 
-    model->meshes[bone_id].body_part = body_part_flag;
+    model->m_meshes[bone_id].body_part = body_part_flag;
 }
 
 lua::Any lua_GetEntityAnim(world::ObjectId id)
@@ -1388,7 +1372,7 @@ lua::Any lua_GetEntityAnim(world::ObjectId id)
     return std::make_tuple(
         ent->m_skeleton.getCurrentAnimation(),
         ent->m_skeleton.getCurrentFrame(),
-        ent->m_skeleton.getModel()->animations[ent->m_skeleton.getCurrentAnimation()].getFrameDuration()
+        ent->m_skeleton.getModel()->m_animations[ent->m_skeleton.getCurrentAnimation()].getFrameDuration()
         );
 }
 
@@ -1916,7 +1900,7 @@ lua::Any lua_GetEntityModel(world::ObjectId id)
         return{};
     }
 
-    return ent->m_skeleton.getModel()->id;
+    return ent->m_skeleton.getModel()->getId();
 }
 
 void lua_SetEntityState(world::ObjectId id, int16_t value, lua::Value next)
@@ -1981,19 +1965,18 @@ lua::Any lua_GetEntityMeshCount(world::ObjectId id)
 void lua_SetEntityMeshswap(world::ObjectId id_dest, world::ModelId id_src)
 {
     std::shared_ptr<world::Entity> ent_dest = engine::Engine::instance.m_world.getEntityByID(id_dest);
-    world::SkeletalModel* model_src = engine::Engine::instance.m_world.getModelByID(id_src);
 
-    ent_dest->m_skeleton.copyMeshBinding(model_src);
+    ent_dest->m_skeleton.copyMeshBinding( engine::Engine::instance.m_world.getModelByID(id_src) );
 }
 
 void lua_SetModelMeshReplaceFlag(world::ModelId id, size_t bone, int flag)
 {
-    world::SkeletalModel* sm = engine::Engine::instance.m_world.getModelByID(id);
+    auto sm = engine::Engine::instance.m_world.getModelByID(id);
     if(sm != nullptr)
     {
-        if(bone < sm->meshes.size())
+        if(bone < sm->m_meshes.size())
         {
-            sm->meshes[bone].replace_mesh = flag;
+            sm->m_meshes[bone].replace_mesh = flag;
         }
         else
         {
@@ -2008,12 +1991,12 @@ void lua_SetModelMeshReplaceFlag(world::ModelId id, size_t bone, int flag)
 
 void lua_SetModelAnimReplaceFlag(world::ModelId id, size_t bone, bool flag)
 {
-    world::SkeletalModel* sm = engine::Engine::instance.m_world.getModelByID(id);
+    auto sm = engine::Engine::instance.m_world.getModelByID(id);
     if(sm != nullptr)
     {
-        if(bone < sm->meshes.size())
+        if(bone < sm->m_meshes.size())
         {
-            sm->meshes[bone].replace_anim = flag;
+            sm->m_meshes[bone].replace_anim = flag;
         }
         else
         {
@@ -2028,23 +2011,23 @@ void lua_SetModelAnimReplaceFlag(world::ModelId id, size_t bone, bool flag)
 
 void lua_CopyMeshFromModelToModel(world::ModelId id1, world::ModelId id2, size_t bone1, size_t bone2)
 {
-    world::SkeletalModel* sm1 = engine::Engine::instance.m_world.getModelByID(id1);
+    auto sm1 = engine::Engine::instance.m_world.getModelByID(id1);
     if(sm1 == nullptr)
     {
         Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id1);
         return;
     }
 
-    world::SkeletalModel* sm2 = engine::Engine::instance.m_world.getModelByID(id2);
+    auto sm2 = engine::Engine::instance.m_world.getModelByID(id2);
     if(sm2 == nullptr)
     {
         Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id2);
         return;
     }
 
-    if(bone1 < sm1->meshes.size() && bone2 < sm2->meshes.size())
+    if(bone1 < sm1->m_meshes.size() && bone2 < sm2->m_meshes.size())
     {
-        sm1->meshes[bone1].mesh_base = sm2->meshes[bone2].mesh_base;
+        sm1->m_meshes[bone1].mesh_base = sm2->m_meshes[bone2].mesh_base;
     }
     else
     {
@@ -2210,7 +2193,7 @@ void lua_SetCharacterWeaponModel(world::ObjectId id, int weaponmodel, int state)
 
     if(ent)
     {
-        ent->setWeaponModel(weaponmodel, state != 0);
+        ent->setWeaponModel( engine::Engine::instance.m_world.getModelByID(weaponmodel), state != 0);
     }
     else
     {
@@ -2228,7 +2211,10 @@ lua::Any lua_GetCharacterCurrentWeapon(world::ObjectId id)
         return{};
     }
 
-    return ent->getCurrentWeapon();
+    if(ent->getCurrentWeapon())
+        return ent->getCurrentWeapon()->getId();
+    else
+        return {};
 }
 
 void lua_SetCharacterCurrentWeapon(world::ObjectId id, world::ModelId weapon)
@@ -2241,7 +2227,7 @@ void lua_SetCharacterCurrentWeapon(world::ObjectId id, world::ModelId weapon)
         return;
     }
 
-    ent->setCurrentWeapon(weapon);
+    ent->setCurrentWeapon( engine::Engine::instance.m_world.getModelByID(weapon) );
 }
 
 // Camera functions
@@ -2526,14 +2512,14 @@ lua::Any lua_GetFlipState(size_t group)
 
 void lua_genUVRotateAnimation(world::ModelId id)
 {
-    world::SkeletalModel* model = engine::Engine::instance.m_world.getModelByID(id);
+    auto model = engine::Engine::instance.m_world.getModelByID(id);
 
     if(!model)
         return;
 
-    if(model->meshes.front().mesh_base->m_transparencyPolygons.empty())
+    if(model->m_meshes.front().mesh_base->m_transparencyPolygons.empty())
         return;
-    const world::core::Polygon& firstPolygon = model->meshes.front().mesh_base->m_transparencyPolygons.front();
+    const world::core::Polygon& firstPolygon = model->m_meshes.front().mesh_base->m_transparencyPolygons.front();
     if(firstPolygon.textureAnimationId)
         return;
 
@@ -2579,7 +2565,7 @@ void lua_genUVRotateAnimation(world::ModelId id)
         seq->keyFrames[j].move.y = -seq->uvrotateSpeed * j;
     }
 
-    for(world::core::Polygon& p : model->meshes.front().mesh_base->m_transparencyPolygons)
+    for(world::core::Polygon& p : model->m_meshes.front().mesh_base->m_transparencyPolygons)
     {
         BOOST_ASSERT(!engine::Engine::instance.m_world.m_textureAnimations.empty());
         p.textureAnimationId = engine::Engine::instance.m_world.m_textureAnimations.size() - 1;
@@ -3229,7 +3215,6 @@ void MainEngine::registerMainFunctions()
 
     auto self = this;
     registerC("checkStack", std::function<void()>([self] {self->checkStack(); }));
-    registerC("dumpModel", lua_DumpModel);
     registerC("dumpRoom", lua_DumpRoom);
     registerC("setRoomEnabled", lua_SetRoomEnabled);
 

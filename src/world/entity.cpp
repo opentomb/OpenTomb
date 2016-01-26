@@ -146,17 +146,17 @@ void Entity::ghostUpdate()
 int Entity::getPenetrationFixVector(glm::vec3& reaction, bool hasMove)
 {
     reaction = { 0,0,0 };
-    if(!m_skeleton.hasGhosts() || m_skeleton.getModel()->no_fix_all)
+    if(!m_skeleton.hasGhosts() || m_skeleton.getModel()->m_noFixAll)
         return 0;
 
     auto orig_pos = m_transform[3];
     int ret = 0;
-    for(size_t i = 0; i < m_skeleton.getModel()->collision_map.size(); i++)
+    for(size_t i = 0; i < m_skeleton.getModel()->m_collisionMap.size(); i++)
     {
-        size_t m = m_skeleton.getModel()->collision_map[i];
+        size_t m = m_skeleton.getModel()->m_collisionMap[i];
         const animation::Bone* btag = &m_skeleton.getBones()[m];
 
-        if(btag->body_part & m_skeleton.getModel()->no_fix_body_parts)
+        if(btag->body_part & m_skeleton.getModel()->m_noFixBodyParts)
         {
             continue;
         }
@@ -218,7 +218,7 @@ void Entity::fixPenetrations(const glm::vec3* move)
         return;
     }
 
-    if(m_skeleton.getModel()->no_fix_all)
+    if(m_skeleton.getModel()->m_noFixAll)
     {
         ghostUpdate();
         return;
@@ -334,7 +334,7 @@ void Entity::updateRigidBody(bool force)
     else
     {
         if(m_skeleton.getModel() == nullptr
-           || (!force && m_skeleton.getModel()->animations.size() == 1 && m_skeleton.getModel()->animations.front().getFrameDuration() == 1))
+           || (!force && m_skeleton.getModel()->m_animations.size() == 1 && m_skeleton.getModel()->m_animations.front().getFrameDuration() == 1))
         {
             return;
         }
@@ -390,14 +390,12 @@ void Entity::updateCurrentSpeed(bool zeroVz)
     m_speed[2] = vz;
 }
 
-void Entity::addOverrideAnim(ModelId model_id)
+void Entity::addOverrideAnim(const std::shared_ptr<SkeletalModel>& model)
 {
-    SkeletalModel* sm = engine::Engine::instance.m_world.getModelByID(model_id);
-
-    if(!sm || sm->meshes.size() != m_skeleton.getBoneCount())
+    if(!model || model->m_meshes.size() != m_skeleton.getBoneCount())
         return;
 
-    m_skeleton.setModel(sm);
+    m_skeleton.setModel(model);
 }
 
 glm::float_t Entity::findDistance(const Entity& other)
@@ -550,7 +548,7 @@ void Entity::processSector()
         try
         {
             if(engine_lua["tlist_RunTrigger"].is<lua::Callable>())
-                engine_lua["tlist_RunTrigger"].call(int(lowest_sector->trig_index), m_skeleton.getModel()->id == 0 ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC, getId());
+                engine_lua["tlist_RunTrigger"].call(int(lowest_sector->trig_index), m_skeleton.getModel()->getId() == 0 ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC, getId());
         }
         catch(lua::RuntimeError& error)
         {
@@ -563,7 +561,7 @@ void Entity::setAnimation(animation::AnimationId animation, int frame)
 {
     m_skeleton.setAnimation(animation, frame);
 
-    m_skeleton.model()->no_fix_all = false;
+    m_skeleton.getModel()->m_noFixAll = false;
 
     // some items (jeep) need this here...
     m_skeleton.updatePose();
@@ -572,7 +570,7 @@ void Entity::setAnimation(animation::AnimationId animation, int frame)
 
 boost::optional<size_t> Entity::getAnimDispatchCase(LaraState id) const
 {
-    const animation::Animation* anim = &m_skeleton.getModel()->animations[m_skeleton.getCurrentAnimation()];
+    const animation::Animation* anim = &m_skeleton.getModel()->m_animations[m_skeleton.getCurrentAnimation()];
     const animation::StateChange* stc = anim->findStateChangeByID(id);
     if(!stc)
         return boost::none;
@@ -607,7 +605,7 @@ animation::AnimUpdate Entity::stepAnimation(util::Duration time)
        || !m_active
        || !m_enabled
        || m_skeleton.getModel() == nullptr
-       || (m_skeleton.getModel()->animations.size() == 1 && m_skeleton.getModel()->animations.front().getFrameDuration() == 1))
+       || (m_skeleton.getModel()->m_animations.size() == 1 && m_skeleton.getModel()->m_animations.front().getFrameDuration() == 1))
     {
         return animation::AnimUpdate::None;
     }
@@ -733,7 +731,7 @@ Entity::Entity(ObjectId id)
 
 Entity::~Entity()
 {
-    if(!m_skeleton.getModel()->bt_joints.empty())
+    if(!m_skeleton.getModel()->m_btJoints.empty())
     {
         deleteRagdoll();
     }
@@ -752,17 +750,17 @@ bool Entity::createRagdoll(RagdollSetup* setup)
 
     // If ragdoll already exists, overwrite it with new one.
 
-    if(!m_skeleton.getModel()->bt_joints.empty())
+    if(!m_skeleton.getModel()->m_btJoints.empty())
     {
         result = deleteRagdoll();
     }
 
     // Setup bodies.
-    m_skeleton.model()->bt_joints.clear();
+    m_skeleton.getModel()->m_btJoints.clear();
     // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
     m_skeleton.updatePose();
-    m_skeleton.model()->no_fix_all = false;
-    m_skeleton.model()->no_fix_body_parts = 0x00000000;
+    m_skeleton.getModel()->m_noFixAll = false;
+    m_skeleton.getModel()->m_noFixBodyParts = 0x00000000;
     fixPenetrations(nullptr);
 
     result &= m_skeleton.createRagdoll(*setup);
@@ -772,7 +770,7 @@ bool Entity::createRagdoll(RagdollSetup* setup)
     m_skeleton.initCollisions(m_speed);
 
     // Setup constraints.
-    m_skeleton.model()->bt_joints.resize(setup->joint_setup.size());
+    m_skeleton.getModel()->m_btJoints.resize(setup->joint_setup.size());
 
     for(size_t i = 0; i < setup->joint_setup.size(); i++)
     {
@@ -801,7 +799,7 @@ bool Entity::createRagdoll(RagdollSetup* setup)
         {
             case RagdollJointSetup::Point:
             {
-                m_skeleton.model()->bt_joints[i] = std::make_shared<btPoint2PointConstraint>(*m_skeleton.getBones()[btA->index].bt_body, *m_skeleton.getBones()[btB->index].bt_body, localA.getOrigin(), localB.getOrigin());
+                m_skeleton.getModel()->m_btJoints[i] = std::make_shared<btPoint2PointConstraint>(*m_skeleton.getBones()[btA->index].bt_body, *m_skeleton.getBones()[btB->index].bt_body, localA.getOrigin(), localB.getOrigin());
             }
             break;
 
@@ -809,7 +807,7 @@ bool Entity::createRagdoll(RagdollSetup* setup)
             {
                 std::shared_ptr<btHingeConstraint> hingeC = std::make_shared<btHingeConstraint>(*m_skeleton.getBones()[btA->index].bt_body, *m_skeleton.getBones()[btB->index].bt_body, localA, localB);
                 hingeC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], 0.9f, 0.3f, 0.3f);
-                m_skeleton.model()->bt_joints[i] = hingeC;
+                m_skeleton.getModel()->m_btJoints[i] = hingeC;
             }
             break;
 
@@ -817,16 +815,16 @@ bool Entity::createRagdoll(RagdollSetup* setup)
             {
                 std::shared_ptr<btConeTwistConstraint> coneC = std::make_shared<btConeTwistConstraint>(*m_skeleton.getBones()[btA->index].bt_body, *m_skeleton.getBones()[btB->index].bt_body, localA, localB);
                 coneC->setLimit(setup->joint_setup[i].joint_limit[0], setup->joint_setup[i].joint_limit[1], setup->joint_setup[i].joint_limit[2], 0.9f, 0.3f, 0.7f);
-                m_skeleton.model()->bt_joints[i] = coneC;
+                m_skeleton.getModel()->m_btJoints[i] = coneC;
             }
             break;
         }
 
-        m_skeleton.getModel()->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, -1);
-        m_skeleton.getModel()->bt_joints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
+        m_skeleton.getModel()->m_btJoints[i]->setParam(BT_CONSTRAINT_STOP_CFM, setup->joint_cfm, -1);
+        m_skeleton.getModel()->m_btJoints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
 
-        m_skeleton.getModel()->bt_joints[i]->setDbgDrawSize(64.0);
-        engine::BulletEngine::instance->dynamicsWorld->addConstraint(m_skeleton.getModel()->bt_joints[i].get(), true);
+        m_skeleton.getModel()->m_btJoints[i]->setDbgDrawSize(64.0);
+        engine::BulletEngine::instance->dynamicsWorld->addConstraint(m_skeleton.getModel()->m_btJoints[i].get(), true);
     }
 
     if(!result)
@@ -842,10 +840,10 @@ bool Entity::createRagdoll(RagdollSetup* setup)
 
 bool Entity::deleteRagdoll()
 {
-    if(m_skeleton.getModel()->bt_joints.empty())
+    if(m_skeleton.getModel()->m_btJoints.empty())
         return false;
 
-    for(std::shared_ptr<btTypedConstraint> joint : m_skeleton.getModel()->bt_joints)
+    for(std::shared_ptr<btTypedConstraint> joint : m_skeleton.getModel()->m_btJoints)
     {
         if(joint)
         {
@@ -866,7 +864,7 @@ bool Entity::deleteRagdoll()
         }
     }
 
-    m_skeleton.model()->bt_joints.clear();
+    m_skeleton.getModel()->m_btJoints.clear();
 
     m_typeFlags &= ~ENTITY_TYPE_DYNAMIC;
 

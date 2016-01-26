@@ -232,7 +232,7 @@ void Save_Entity(std::ostream& f, std::shared_ptr<world::Entity> ent)
     {
         world::ObjectId room_id = ent->getRoom() ? ent->getRoom()->getId() : 0xFFFFFFFF;
         f << boost::format("\nspawnEntity(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d);")
-            % ent->m_skeleton.getModel()->id
+            % ent->m_skeleton.getModel()->getId()
             % ent->m_transform[3][0]
             % ent->m_transform[3][1]
             % ent->m_transform[3][2]

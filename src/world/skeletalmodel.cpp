@@ -1,26 +1,27 @@
 #include "skeletalmodel.h"
 
 #include "core/basemesh.h"
+#include "gui/console.h"
 
 namespace world
 {
 void SkeletalModel::clear()
 {
-    meshes.clear();
-    collision_map.clear();
-    animations.clear();
+    m_meshes.clear();
+    m_collisionMap.clear();
+    m_animations.clear();
 }
 
 void SkeletalModel::updateTransparencyFlag()
 {
-    has_transparency = std::any_of(meshes.begin(), meshes.end(),
+    m_hasTransparency = std::any_of(m_meshes.begin(), m_meshes.end(),
                                    [](const MeshReference& mesh) { return !mesh.mesh_base->m_transparencyPolygons.empty(); }
     );
 }
 
 void SkeletalModel::fillSkinnedMeshMap()
 {
-    for(MeshReference& mesh : meshes)
+    for(MeshReference& mesh : m_meshes)
     {
         if(!mesh.mesh_skin)
         {
@@ -40,7 +41,7 @@ void SkeletalModel::fillSkinnedMeshMap()
 
             mesh.mesh_skin->m_matrixIndices.emplace_back(0, 1);
             glm::vec3 tv = v.position + mesh.offset;
-            for(const MeshReference& prevMesh : meshes)
+            for(const MeshReference& prevMesh : m_meshes)
             {
                 const core::Vertex* rv = prevMesh.mesh_base->findVertex(tv);
                 if(rv == nullptr)
@@ -57,19 +58,19 @@ void SkeletalModel::fillSkinnedMeshMap()
 
 void SkeletalModel::setMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount)
 {
-    BOOST_ASSERT(meshCount <= meshes.size() && meshCount <= src.size());
+    BOOST_ASSERT(meshCount <= m_meshes.size() && meshCount <= src.size());
     for(size_t i = 0; i < meshCount; i++)
     {
-        meshes[i].mesh_base = src[i].mesh_base;
+        m_meshes[i].mesh_base = src[i].mesh_base;
     }
 }
 
 void SkeletalModel::setSkinnedMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount)
 {
-    BOOST_ASSERT(meshCount <= meshes.size() && meshCount <= src.size());
+    BOOST_ASSERT(meshCount <= m_meshes.size() && meshCount <= src.size());
     for(size_t i = 0; i < meshCount; i++)
     {
-        meshes[i].mesh_skin = src[i].mesh_base;
+        m_meshes[i].mesh_skin = src[i].mesh_base;
     }
 }
 
@@ -82,7 +83,7 @@ void SkeletalModel::setSkinnedMeshes(const std::vector<SkeletalModel::MeshRefere
 */
 bool SkeletalModel::findStateChange(LaraState stateid, animation::AnimationId& animid_inout, size_t& frameid_inout)
 {
-    const animation::StateChange* stc = animations[animid_inout].findStateChangeByID(stateid);
+    const animation::StateChange* stc = m_animations[animid_inout].findStateChangeByID(stateid);
     if(!stc)
         return false;
 

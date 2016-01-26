@@ -20,7 +20,7 @@ namespace world
 {
 namespace animation
 {
-void Skeleton::fromModel(SkeletalModel* model)
+void Skeleton::fromModel(const std::shared_ptr<SkeletalModel>& model)
 {
     m_hasSkin = false;
     m_boundingBox.min = { 0, 0, 0 };
@@ -29,7 +29,7 @@ void Skeleton::fromModel(SkeletalModel* model)
 
     m_model = model;
 
-    m_bones.resize(model->meshes.size());
+    m_bones.resize(model->m_meshes.size());
 
     std::stack<Bone*> parents;
     parents.push(nullptr);
@@ -37,14 +37,14 @@ void Skeleton::fromModel(SkeletalModel* model)
     for(size_t i = 0; i < m_bones.size(); i++)
     {
         m_bones[i].index = i;
-        m_bones[i].mesh = model->meshes[i].mesh_base;
-        m_bones[i].mesh_skin = model->meshes[i].mesh_skin;
+        m_bones[i].mesh = model->m_meshes[i].mesh_base;
+        m_bones[i].mesh_skin = model->m_meshes[i].mesh_skin;
         if(m_bones[i].mesh_skin)
             m_hasSkin = true;
         m_bones[i].mesh_slot = nullptr;
-        m_bones[i].body_part = model->meshes[i].body_part;
+        m_bones[i].body_part = model->m_meshes[i].body_part;
 
-        m_bones[i].offset = model->meshes[i].offset;
+        m_bones[i].offset = model->m_meshes[i].offset;
         m_bones[i].qrotate = { 0, 0, 0, 0 };
         m_bones[i].transform = glm::mat4(1.0f);
         m_bones[i].full_transform = glm::mat4(1.0f);
@@ -53,7 +53,7 @@ void Skeleton::fromModel(SkeletalModel* model)
             continue;
 
         m_bones[i].parent = &m_bones[i - 1];
-        if(model->meshes[i].flag & 0x01) // POP
+        if(model->m_meshes[i].flag & 0x01) // POP
         {
             if(!parents.empty())
             {
@@ -61,9 +61,9 @@ void Skeleton::fromModel(SkeletalModel* model)
                 parents.pop();
             }
         }
-        if(model->meshes[i].flag & 0x02) // PUSH
+        if(model->m_meshes[i].flag & 0x02) // PUSH
         {
-            if(parents.size() + 1 < model->meshes.size())
+            if(parents.size() + 1 < model->m_meshes.size())
             {
                 parents.push(m_bones[i].parent);
             }
@@ -79,9 +79,9 @@ void Skeleton::itemFrame(util::Duration time)
 
 void Skeleton::updatePose()
 {
-    BOOST_ASSERT(m_currentAnimation.animation < m_model->animations.size());
-    BOOST_ASSERT(m_currentAnimation.frame < m_model->animations[m_currentAnimation.animation].getFrameDuration());
-    const animation::SkeletonKeyFrame keyFrame = m_model->animations[m_currentAnimation.animation].getInterpolatedFrame(m_currentAnimation.frame);
+    BOOST_ASSERT(m_currentAnimation.animation < m_model->m_animations.size());
+    BOOST_ASSERT(m_currentAnimation.frame < m_model->m_animations[m_currentAnimation.animation].getFrameDuration());
+    const animation::SkeletonKeyFrame keyFrame = m_model->m_animations[m_currentAnimation.animation].getInterpolatedFrame(m_currentAnimation.frame);
 
     m_boundingBox = keyFrame.boundingBox;
     m_position = keyFrame.position;
@@ -112,14 +112,14 @@ void Skeleton::updatePose()
     }
 }
 
-void Skeleton::copyMeshBinding(const SkeletalModel* model, bool resetMeshSlot)
+void Skeleton::copyMeshBinding(const std::shared_ptr<SkeletalModel>& model, bool resetMeshSlot)
 {
-    size_t meshes_to_copy = std::min(m_bones.size(), m_model->meshes.size());
+    size_t meshes_to_copy = std::min(m_bones.size(), m_model->m_meshes.size());
 
     for(size_t i = 0; i < meshes_to_copy; i++)
     {
-        m_bones[i].mesh = model->meshes[i].mesh_base;
-        m_bones[i].mesh_skin = model->meshes[i].mesh_skin;
+        m_bones[i].mesh = model->m_meshes[i].mesh_base;
+        m_bones[i].mesh_skin = model->m_meshes[i].mesh_skin;
         if(resetMeshSlot)
             m_bones[i].mesh_slot = nullptr;
     }
@@ -127,7 +127,7 @@ void Skeleton::copyMeshBinding(const SkeletalModel* model, bool resetMeshSlot)
 
 void Skeleton::setAnimation(AnimationId animation, int frame)
 {
-    Animation* anim = &m_model->animations[animation];
+    Animation* anim = &m_model->m_animations[animation];
 
     if(frame < 0)
         frame = anim->getFrameDuration() - 1 - ((-frame - 1) % anim->getFrameDuration());
@@ -218,32 +218,32 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
     {
         if(m_model->findStateChange(m_currentAnimation.state, anim_id, frame_id))
         {
-            m_previousAnimation.state = m_model->animations[anim_id].state_id;
+            m_previousAnimation.state = m_model->m_animations[anim_id].state_id;
             m_currentAnimation.state = m_previousAnimation.state;
             stepResult = AnimUpdate::NewAnim;
         }
     }
 
     // check end of animation:
-    if(frame_id >= m_model->animations[anim_id].getFrameDuration())
+    if(frame_id >= m_model->m_animations[anim_id].getFrameDuration())
     {
         if(cmdEntity)
         {
-            for(AnimCommand acmd : m_model->animations[anim_id].finalAnimCommands) // end-of-anim cmdlist
+            for(AnimCommand acmd : m_model->m_animations[anim_id].finalAnimCommands) // end-of-anim cmdlist
             {
                 cmdEntity->doAnimCommand(acmd);
             }
         }
 
-        if(m_model->animations[anim_id].next_anim)
+        if(m_model->m_animations[anim_id].next_anim)
         {
-            frame_id = m_model->animations[anim_id].next_frame;
-            anim_id = m_model->animations[anim_id].next_anim->id;
+            frame_id = m_model->m_animations[anim_id].next_frame;
+            anim_id = m_model->m_animations[anim_id].next_anim->id;
 
             // some overlay anims may have invalid nextAnim/nextFrame values:
-            if(anim_id < m_model->animations.size() && frame_id < m_model->animations[anim_id].getFrameDuration())
+            if(anim_id < m_model->m_animations.size() && frame_id < m_model->m_animations[anim_id].getFrameDuration())
             {
-                m_previousAnimation.state = m_model->animations[anim_id].state_id;
+                m_previousAnimation.state = m_model->m_animations[anim_id].state_id;
                 m_currentAnimation.state = m_previousAnimation.state;
             }
             else
@@ -265,7 +265,7 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
 
     if(cmdEntity)
     {
-        for(AnimCommand acmd : m_model->animations[anim_id].animCommands(frame_id))
+        for(AnimCommand acmd : m_model->m_animations[anim_id].animCommands(frame_id))
         {
             cmdEntity->doAnimCommand(acmd);
         }
@@ -276,7 +276,7 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
 
 const Animation& Skeleton::getCurrentAnimationFrame() const
 {
-    return m_model->animations[m_currentAnimation.animation];
+    return m_model->m_animations[m_currentAnimation.animation];
 }
 
 void Skeleton::updateTransform(const glm::mat4& entityTransform)
@@ -314,7 +314,7 @@ void Skeleton::updateBoundingBox()
 
 void Skeleton::createGhosts(Entity& entity)
 {
-    if(!m_model || m_model->meshes.empty())
+    if(!m_model || m_model->m_meshes.empty())
         return;
 
     m_manifoldArray = btManifoldArray();

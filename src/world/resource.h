@@ -57,7 +57,7 @@ struct SectorTween;
 struct World;
 class Room;
 struct RoomSector;
-struct SkeletalModel;
+class SkeletalModel;
 class Entity;
 struct StaticMesh;
 struct BaseItem;
@@ -89,7 +89,7 @@ void     Res_Sector_FixHeights(RoomSector& sector);
 
 void     Res_FixRooms(World& world);   // Fix start-up room states.
 
-SkeletalModel* Res_GetSkybox(World& world);
+std::shared_ptr<SkeletalModel> Res_GetSkybox(World& world);
 
 // Create entity function from script, if exists.
 

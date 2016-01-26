@@ -406,7 +406,6 @@ void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
     }
 
     m_mesh = std::make_shared<core::BaseMesh>();
-    m_mesh->m_id = getId();
     m_mesh->m_texturePageCount = world.m_textureAtlas->getNumAtlasPages() + 1;
     m_mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
 
@@ -729,12 +728,6 @@ void Room::load(world::World& world, const std::unique_ptr<loader::Level>& tr)
         std::shared_ptr<StaticMesh> r_static = m_staticMeshes.back();
         r_static->setRoom(this);
         r_static->mesh = world.m_meshes[tr->m_meshIndices[tr_static->mesh]];
-        r_static->position[0] = tr_room->static_meshes[i].position.x;
-        r_static->position[1] = -tr_room->static_meshes[i].position.z;
-        r_static->position[2] = tr_room->static_meshes[i].position.y;
-        r_static->rotation[0] = tr_room->static_meshes[i].rotation;
-        r_static->rotation[1] = 0.0;
-        r_static->rotation[2] = 0.0;
         r_static->tint[0] = tr_room->static_meshes[i].tint.r * 2;
         r_static->tint[1] = tr_room->static_meshes[i].tint.g * 2;
         r_static->tint[2] = tr_room->static_meshes[i].tint.b * 2;
@@ -757,7 +750,13 @@ void Room::load(world::World& world, const std::unique_ptr<loader::Level>& tr)
 
         r_static->obb.transform = &m_staticMeshes[i]->transform;
         r_static->obb.radius = m_staticMeshes[i]->mesh->m_radius;
-        r_static->transform = glm::rotate(glm::translate(glm::mat4(1.0f), r_static->position), glm::radians(r_static->rotation[0]), { 0,0,1 });
+
+        glm::vec3 position{ tr_room->static_meshes[i].position.x, -tr_room->static_meshes[i].position.z, tr_room->static_meshes[i].position.y};
+
+        r_static->transform = glm::mat4(1.0f);
+        r_static->transform = glm::rotate(r_static->transform, glm::radians(tr_room->static_meshes[i].rotation), { 0,0,1 });
+        r_static->transform = glm::translate(r_static->transform, position);
+
         r_static->was_rendered = false;
         r_static->obb.rebuild(r_static->visibleBoundingBox);
         r_static->obb.doTransform();

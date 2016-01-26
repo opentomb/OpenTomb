@@ -19,7 +19,7 @@
 namespace world
 {
 class Character;
-struct SkeletalModel;
+class SkeletalModel;
 class Entity;
 struct RagdollSetup;
 enum class CollisionShape;
@@ -311,7 +311,7 @@ class Skeleton
 
     bool m_hasSkin = false; //!< whether any skinned meshes need rendering
 
-    SkeletalModel* m_model = nullptr;
+    std::shared_ptr<SkeletalModel> m_model = nullptr;
 
     AnimationState m_previousAnimation;
     AnimationState m_currentAnimation;
@@ -367,15 +367,11 @@ public:
         m_previousAnimation.frame = value;
     }
 
-    const SkeletalModel* getModel() const noexcept
+    const std::shared_ptr<SkeletalModel>& getModel() const noexcept
     {
         return m_model;
     }
-    SkeletalModel* model() const noexcept
-    {
-        return m_model;
-    }
-    void setModel(SkeletalModel* model) noexcept
+    void setModel(const std::shared_ptr<SkeletalModel>& model) noexcept
     {
         m_model = model;
     }
@@ -394,7 +390,7 @@ public:
         return m_hasGhosts;
     }
 
-    void fromModel(SkeletalModel* m_model);
+    void fromModel(const std::shared_ptr<SkeletalModel>& m_model);
 
     /**
      * That function updates item animation and rebuilds skeletal matrices;
@@ -446,7 +442,7 @@ public:
         m_bones[boneId].body_part = flag;
     }
 
-    void copyMeshBinding(const SkeletalModel* model, bool resetMeshSlot = false);
+    void copyMeshBinding(const std::shared_ptr<SkeletalModel>& model, bool resetMeshSlot = false);
 
     void setAnimationMode(AnimationMode mode) noexcept
     {

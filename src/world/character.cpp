@@ -1088,7 +1088,7 @@ void Character::moveOnFloor()
             updateRoomPos();
             return;
         }
-        if(m_transform[3][2] < m_heightInfo.floor.hitPoint[2] && !m_skeleton.getModel()->no_fix_all)
+        if(m_transform[3][2] < m_heightInfo.floor.hitPoint[2] && !m_skeleton.getModel()->m_noFixAll)
         {
             m_transform[3][2] = m_heightInfo.floor.hitPoint[2];
             fixPenetrations(nullptr);
@@ -1938,45 +1938,43 @@ bool Character::changeParam(CharParameterId parameter, float value)
 // overrided == 0x03: overriding mesh in disarmed state;
 // overrided == 0x04: add mesh to slot in disarmed state;
 ///@TODO: separate mesh replacing control and animation disabling / enabling
-bool Character::setWeaponModel(ModelId weapon_model, bool armed)
+bool Character::setWeaponModel(const std::shared_ptr<SkeletalModel>& model, bool armed)
 {
-    SkeletalModel* model = engine::Engine::instance.m_world.getModelByID(weapon_model);
-
-    if(model != nullptr && m_skeleton.getBoneCount() == model->meshes.size() && model->animations.size() >= 4)
+    if(model != nullptr && m_skeleton.getBoneCount() == model->m_meshes.size() && model->m_animations.size() >= 4)
     {
-        addOverrideAnim(weapon_model);
+        addOverrideAnim(model);
 
-        for(size_t i = 0; i < m_skeleton.getModel()->meshes.size(); i++)
+        for(size_t i = 0; i < m_skeleton.getModel()->m_meshes.size(); i++)
         {
-            m_skeleton.bone(i).mesh = m_skeleton.getModel()->meshes[i].mesh_base;
+            m_skeleton.bone(i).mesh = m_skeleton.getModel()->m_meshes[i].mesh_base;
             m_skeleton.bone(i).mesh_slot = nullptr;
         }
 
         if(armed)
         {
-            for(size_t i = 0; i < m_skeleton.getModel()->meshes.size(); i++)
+            for(size_t i = 0; i < m_skeleton.getModel()->m_meshes.size(); i++)
             {
-                if(model->meshes[i].replace_mesh == 0x01)
+                if(model->m_meshes[i].replace_mesh == 0x01)
                 {
-                    m_skeleton.bone(i).mesh = model->meshes[i].mesh_base;
+                    m_skeleton.bone(i).mesh = model->m_meshes[i].mesh_base;
                 }
-                else if(model->meshes[i].replace_mesh == 0x02)
+                else if(model->m_meshes[i].replace_mesh == 0x02)
                 {
-                    m_skeleton.bone(i).mesh_slot = model->meshes[i].mesh_base;
+                    m_skeleton.bone(i).mesh_slot = model->m_meshes[i].mesh_base;
                 }
             }
         }
         else
         {
-            for(size_t i = 0; i < m_skeleton.getModel()->meshes.size(); i++)
+            for(size_t i = 0; i < m_skeleton.getModel()->m_meshes.size(); i++)
             {
-                if(model->meshes[i].replace_mesh == 0x03)
+                if(model->m_meshes[i].replace_mesh == 0x03)
                 {
-                    m_skeleton.bone(i).mesh = model->meshes[i].mesh_base;
+                    m_skeleton.bone(i).mesh = model->m_meshes[i].mesh_base;
                 }
-                else if(model->meshes[i].replace_mesh == 0x04)
+                else if(model->m_meshes[i].replace_mesh == 0x04)
                 {
-                    m_skeleton.bone(i).mesh_slot = model->meshes[i].mesh_base;
+                    m_skeleton.bone(i).mesh_slot = model->m_meshes[i].mesh_base;
                 }
             }
         }
@@ -1986,10 +1984,10 @@ bool Character::setWeaponModel(ModelId weapon_model, bool armed)
     else
     {
         // do unarmed default model
-        const SkeletalModel* bm = m_skeleton.getModel();
-        for(size_t i = 0; i < bm->meshes.size(); i++)
+        const auto bm = m_skeleton.getModel();
+        for(size_t i = 0; i < bm->m_meshes.size(); i++)
         {
-            m_skeleton.bone(i).mesh = bm->meshes[i].mesh_base;
+            m_skeleton.bone(i).mesh = bm->m_meshes[i].mesh_base;
             m_skeleton.bone(i).mesh_slot = nullptr;
         }
     }
@@ -2013,7 +2011,7 @@ void Character::fixPenetrations(const glm::vec3* move)
         return;
     }
 
-    if(m_skeleton.getModel()->no_fix_all)
+    if(m_skeleton.getModel()->m_noFixAll)
     {
         ghostUpdate();
         return;
@@ -2171,7 +2169,7 @@ void Character::frame(util::Duration time)
     doWeaponFrame(time);
 
     // Update acceleration/speed, it is calculated per anim frame index
-    const animation::Animation* af = &m_skeleton.getModel()->animations[m_skeleton.getCurrentAnimation()];
+    const animation::Animation* af = &m_skeleton.getModel()->m_animations[m_skeleton.getCurrentAnimation()];
     m_currentSpeed = (af->speed_x + m_skeleton.getCurrentFrame() * af->accel_x) / float(1 << 16); // Decompiled from TOMB5.EXE
 
     // TODO: check rigidbody update requirements.
@@ -2345,7 +2343,7 @@ void Character::doWeaponFrame(util::Duration time)
         setWeaponModel(m_currentWeapon, true);
     }
 
-    if(m_skeleton.getModel() != nullptr && m_skeleton.getModel()->animations.size() > 4)
+    if(m_skeleton.getModel() != nullptr && m_skeleton.getModel()->m_animations.size() > 4)
     {
         // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
         m_skeleton.setAnimationMode(animation::AnimationMode::NormalControl);
@@ -2437,7 +2435,7 @@ void Character::doWeaponFrame(util::Duration time)
                 break;
         };
     }
-    else if(m_skeleton.getModel() != nullptr && m_skeleton.getModel()->animations.size() == 4)
+    else if(m_skeleton.getModel() != nullptr && m_skeleton.getModel()->m_animations.size() == 4)
     {
         // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
         m_skeleton.setAnimationMode(animation::AnimationMode::WeaponCompat);

@@ -187,7 +187,7 @@ void StateController::onFrameCrawlToClimb(Character& ent, AnimUpdate state)
             ent.setAnimation(animation::TR_ANIMATION_LARA_HANG_IDLE, -1);
         }
 
-        ent.m_skeleton.model()->no_fix_all = false;
+        ent.m_skeleton.getModel()->m_noFixAll = false;
         onFrameToEdgeClimb(ent, state);
         ent.m_skeleton.onFrame = nullptr;
     }
@@ -310,7 +310,7 @@ void StateController::handle(LaraState state)
     switch(m_character->m_skeleton.getCurrentAnimation())
     {
         case animation::TR_ANIMATION_LARA_STAY_JUMP_SIDES:
-            m_character->m_skeleton.model()->no_fix_body_parts |= BODY_PART_HEAD;
+            m_character->m_skeleton.getModel()->m_noFixBodyParts |= BODY_PART_HEAD;
             break;
 
         case animation::TR_ANIMATION_LARA_TRY_HANG_SOLID:
@@ -352,7 +352,7 @@ void StateController::stop()
     }
 
     if(m_character->m_moveType == MoveType::OnFloor)
-        m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS | BODY_PART_LEGS;
+        m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_HANDS | BODY_PART_LEGS;
 
     m_character->m_command.rot[0] = 0;
     m_character->m_command.crouch |= isLowVerticalSpace();
@@ -368,7 +368,7 @@ void StateController::stop()
 
     if(m_character->m_moveType == MoveType::OnFloor)
     {
-        m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+        m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
     }
 
     if(m_character->m_moveType == MoveType::FreeFalling)
@@ -524,7 +524,7 @@ void StateController::stop()
                     m_character->m_transform[3][2] = next_fc.floor.hitPoint[2] - 512.0f;
                     m_character->m_climb.point = next_fc.floor.hitPoint;
                     m_character->setAnimation(animation::TR_ANIMATION_LARA_CLIMB_2CLICK, 0);
-                    m_character->m_skeleton.model()->no_fix_all = true;
+                    m_character->m_skeleton.getModel()->m_noFixAll = true;
                     m_character->m_skeleton.onFrame = onFrameSetOnFloorAfterClimb;
                     return;
                 }
@@ -534,7 +534,7 @@ void StateController::stop()
                     m_character->m_transform[3][2] = next_fc.floor.hitPoint[2] - 768.0f;
                     m_character->m_climb.point = next_fc.floor.hitPoint;
                     m_character->setAnimation(animation::TR_ANIMATION_LARA_CLIMB_3CLICK, 0);
-                    m_character->m_skeleton.model()->no_fix_all = true;
+                    m_character->m_skeleton.getModel()->m_noFixAll = true;
                     m_character->m_skeleton.onFrame = onFrameSetOnFloorAfterClimb;
                     return;
                 }
@@ -653,7 +653,7 @@ void StateController::stop()
 
 void StateController::jumpPrepare()
 {
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
     m_character->m_command.rot[0] = 0;
     m_character->lean(0.0);
 
@@ -711,7 +711,7 @@ void StateController::jumpPrepare()
 
 void StateController::jumpBack()
 {
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
     m_character->m_command.rot[0] = 0.0;
 
     if(m_character->m_response.vertical_collide & 0x01 || m_character->m_moveType == MoveType::OnFloor)
@@ -744,7 +744,7 @@ void StateController::jumpBack()
 
 void StateController::jumpLeft()
 {
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
     m_character->m_command.rot[0] = 0.0;
 
     if(m_character->m_response.vertical_collide & 0x01 || m_character->m_moveType == MoveType::OnFloor)
@@ -773,7 +773,7 @@ void StateController::jumpLeft()
 
 void StateController::jumpRight()
 {
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
     m_character->m_command.rot[0] = 0.0;
 
     if(m_character->m_response.vertical_collide & 0x01 || m_character->m_moveType == MoveType::OnFloor)
@@ -820,7 +820,7 @@ void StateController::turnSlow()
     m_character->m_command.rot[0] *= 0.7f;
     m_character->m_moveDir = MoveDirection::Stay;
     m_character->lean(0.0);
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
 
     if(m_character->m_command.move.z == MovementWalk::Forward)
     {
@@ -867,7 +867,7 @@ void StateController::turnFast()
 {
     // 65 - wade
     m_character->m_moveDir = MoveDirection::Stay;
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
     m_character->lean(0.0);
 
     if(m_character->m_moveType == MoveType::FreeFalling)
@@ -900,7 +900,7 @@ void StateController::runForward()
     m_character->m_command.crouch |= isLowVerticalSpace();
 
     if(m_character->m_moveType == MoveType::OnFloor)
-        m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS | BODY_PART_LEGS;
+        m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_HANDS | BODY_PART_LEGS;
 
     m_character->lean(6.0);
 
@@ -1021,7 +1021,7 @@ void StateController::sprint()
 
     if(m_character->m_moveType == MoveType::OnFloor)
     {
-        m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS;
+        m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_LEGS;
     }
 
     if(!m_character->getParam(CharParameterId::PARAM_STAMINA))
@@ -1114,7 +1114,7 @@ void StateController::walkForward()
 
     if(m_character->m_moveType == MoveType::OnFloor)
     {
-        m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS;
+        m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_LEGS;
     }
 
     if(m_character->m_moveType == MoveType::FreeFalling)
@@ -1298,23 +1298,23 @@ void StateController::walkBack()
     }
     else if(next_fc.floor.hitNormal[2] >= m_character->m_criticalSlantZComponent && nextStep == StepType::DownBig)
     {
-        if(!m_character->m_skeleton.getModel()->no_fix_all)
+        if(!m_character->m_skeleton.getModel()->m_noFixAll)
         {
-            size_t frames_count = m_character->m_skeleton.getModel()->animations[animation::TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].getFrameDuration();
+            size_t frames_count = m_character->m_skeleton.getModel()->m_animations[animation::TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].getFrameDuration();
             size_t frames_count2 = (frames_count + 1) / 2;
             if(m_character->m_skeleton.getCurrentFrame() <= frames_count2)
             {
                 m_character->setAnimation(animation::TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT, m_character->m_skeleton.getCurrentFrame());
                 m_character->m_moveDir = MoveDirection::Backward;
                 m_character->m_transform[3][2] -= m_character->m_heightInfo.floor.hitPoint[2] - next_fc.floor.hitPoint[2];
-                m_character->m_skeleton.model()->no_fix_all = true;
+                m_character->m_skeleton.getModel()->m_noFixAll = true;
             }
             else if(m_character->m_skeleton.getCurrentFrame() >= frames_count && m_character->m_skeleton.getCurrentFrame() <= frames_count + frames_count2)
             {
                 m_character->setAnimation(animation::TR_ANIMATION_LARA_WALK_DOWN_BACK_RIGHT, m_character->m_skeleton.getCurrentFrame() - frames_count);
                 m_character->m_moveDir = MoveDirection::Backward;
                 m_character->m_transform[3][2] -= m_character->m_heightInfo.floor.hitPoint[2] - next_fc.floor.hitPoint[2];
-                m_character->m_skeleton.model()->no_fix_all = true;
+                m_character->m_skeleton.getModel()->m_noFixAll = true;
             }
             else
             {
@@ -1480,7 +1480,7 @@ void StateController::slideForward()
 void StateController::pushableGrab()
 {
     m_character->m_moveType = MoveType::OnFloor;
-    m_character->m_skeleton.model()->no_fix_all = true;
+    m_character->m_skeleton.getModel()->m_noFixAll = true;
     m_character->m_command.rot[0] = 0.0;
 
     if(m_character->m_command.action)  //If Lara is grabbing the block
@@ -1512,7 +1512,7 @@ void StateController::pushableGrab()
 
 void StateController::pushablePush()
 {
-    m_character->m_skeleton.model()->no_fix_all = true;
+    m_character->m_skeleton.getModel()->m_noFixAll = true;
     m_character->m_skeleton.onFrame = onFrameStopTraverse;
     m_character->m_command.rot[0] = 0.0;
     m_character->m_camFollowCenter = 64;
@@ -1600,7 +1600,7 @@ void StateController::pushablePush()
 
 void StateController::pushablePull()
 {
-    m_character->m_skeleton.model()->no_fix_all = true;
+    m_character->m_skeleton.getModel()->m_noFixAll = true;
     m_character->m_skeleton.onFrame = onFrameStopTraverse;
     m_character->m_command.rot[0] = 0.0;
     m_character->m_camFollowCenter = 64;
@@ -1690,12 +1690,12 @@ void StateController::pushablePull()
 
 void StateController::rollForward()
 {
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_LEGS;
 }
 
 void StateController::rollBackward()
 {
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_HANDS;
     if(m_character->m_moveType == MoveType::FreeFalling)
     {
         m_character->setAnimation(animation::TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
@@ -1805,7 +1805,7 @@ void StateController::jumpUp()
 
 void StateController::reach()
 {
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS | BODY_PART_HANDS_1 | BODY_PART_HANDS_2;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_LEGS | BODY_PART_HANDS_1 | BODY_PART_HANDS_2;
     m_character->m_command.rot[0] = 0.0;
     if(m_character->m_moveType == MoveType::Underwater)
     {
@@ -2153,7 +2153,7 @@ void StateController::ladderDown()
 
 void StateController::shimmyLeft()
 {
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_LEGS;
 
     m_character->m_command.rot[0] = 0.0;
     m_character->m_moveDir = MoveDirection::Left;
@@ -2215,7 +2215,7 @@ void StateController::shimmyLeft()
 
 void StateController::shimmyRight()
 {
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_LEGS;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_LEGS;
 
     m_character->m_command.rot[0] = 0.0;
     m_character->m_moveDir = MoveDirection::Right;
@@ -2278,13 +2278,13 @@ void StateController::shimmyRight()
 void StateController::onwaterExit()
 {
     m_character->m_command.rot[0] *= 0.0;
-    m_character->m_skeleton.model()->no_fix_all = true;
+    m_character->m_skeleton.getModel()->m_noFixAll = true;
     m_character->m_skeleton.onFrame = onFrameSetOnFloorAfterClimb;
 }
 
 void StateController::jumpForwardFallBackward()
 {
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS | BODY_PART_LEGS | BODY_PART_HEAD;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_HANDS | BODY_PART_LEGS | BODY_PART_HEAD;
     m_character->lean(4.0);
 
     if((m_character->m_response.vertical_collide & 0x01) || m_character->m_moveType == MoveType::OnFloor)
@@ -2344,7 +2344,7 @@ void StateController::underwaterDiving()
 
 void StateController::freefall()
 {
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS | BODY_PART_LEGS;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_HANDS | BODY_PART_LEGS;
     m_character->lean(1.0);
 
     if(int(m_character->m_speed[2]) <= -FREE_FALL_SPEED_CRITICAL &&
@@ -2608,7 +2608,7 @@ void StateController::onwaterStop()
 
 void StateController::onwaterForward()
 {
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_HANDS;
     m_character->m_moveType = MoveType::OnWater;
 
     if(m_character->m_response.killed)
@@ -2652,7 +2652,7 @@ void StateController::onwaterForward()
                 {
                     m_character->m_moveDir = MoveDirection::Stay;
                     m_character->m_moveType = MoveType::Climbing;
-                    m_character->m_skeleton.model()->no_fix_all = true;
+                    m_character->m_skeleton.getModel()->m_noFixAll = true;
                     m_character->m_angles[0] = m_character->m_climb.edge_z_ang;
                     m_character->updateTransform();
                     m_character->m_climb.point = m_character->m_climb.edge_point;
@@ -2663,7 +2663,7 @@ void StateController::onwaterForward()
             {
                 m_character->m_speed = { 0,0,0 };
                 m_character->m_command.rot[0] = 0.0;
-                m_character->m_skeleton.model()->no_fix_all = true;
+                m_character->m_skeleton.getModel()->m_noFixAll = true;
                 if(low_vertical_space)
                 {
                     m_character->setAnimation(animation::TR_ANIMATION_LARA_ONWATER_TO_LAND_LOW, 0);
@@ -2771,7 +2771,7 @@ void StateController::onwaterRight()
 void StateController::crouchIdle()
 {
     m_character->m_moveDir = MoveDirection::Forward;
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     glm::vec3 move(m_character->m_transform[3]);
     move[2] += 0.5f * (m_character->m_skeleton.getBoundingBox().max[2] - m_character->m_skeleton.getBoundingBox().min[2]);
     HeightInfo next_fc = initHeightInfo();
@@ -2832,7 +2832,7 @@ void StateController::roll()
 void StateController::crawlIdle()
 {
     m_character->m_moveDir = MoveDirection::Forward;
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     if(m_character->m_response.killed)
     {
         m_character->m_moveDir = MoveDirection::Stay;
@@ -2913,14 +2913,14 @@ void StateController::crawlIdle()
 
 void StateController::crawlToClimb()
 {
-    m_character->m_skeleton.model()->no_fix_all = true;
+    m_character->m_skeleton.getModel()->m_noFixAll = true;
     m_character->m_skeleton.onFrame = onFrameCrawlToClimb;
 }
 
 void StateController::crawlForward()
 {
     m_character->m_moveDir = MoveDirection::Forward;
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     m_character->m_command.rot[0] = m_character->m_command.rot[0] * 0.5f;
     glm::vec3 move(m_character->m_transform[1] * PenetrationTestOffset);
     if(m_character->checkNextPenetration(move) > 0 && m_character->m_response.horizontal_collide != 0x00)
@@ -2950,7 +2950,7 @@ void StateController::crawlForward()
 void StateController::crawlBack()
 {
     m_character->m_moveDir = MoveDirection::Forward;   // Absurd? No, Core Design.
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     m_character->m_command.rot[0] = m_character->m_command.rot[0] * 0.5f;
     glm::vec3 move(m_character->m_transform[1] * -PenetrationTestOffset);
     if(m_character->checkNextPenetration(move) > 0 && m_character->m_response.horizontal_collide != 0x00)
@@ -2979,7 +2979,7 @@ void StateController::crawlBack()
 void StateController::crawlTurnLeft()
 {
     m_character->m_moveDir = MoveDirection::Forward;
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     m_character->m_command.rot[0] *= m_character->m_skeleton.getCurrentFrame() > 3 && m_character->m_skeleton.getCurrentFrame() < 14 ? 1.0f : 0.0f;
 
     if(m_character->m_command.move.x != MovementStrafe::Left || m_character->m_response.killed)
@@ -2991,7 +2991,7 @@ void StateController::crawlTurnLeft()
 void StateController::crawlTurnRight()
 {
     m_character->m_moveDir = MoveDirection::Forward;
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     m_character->m_command.rot[0] *= m_character->m_skeleton.getCurrentFrame() > 3 && m_character->m_skeleton.getCurrentFrame() < 14 ? 1.0f : 0.0f;
 
     if(m_character->m_command.move.x != MovementStrafe::Right || m_character->m_response.killed)
@@ -3002,7 +3002,7 @@ void StateController::crawlTurnRight()
 
 void StateController::crouchTurnLeftRight()
 {
-    m_character->m_skeleton.model()->no_fix_body_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+    m_character->m_skeleton.getModel()->m_noFixBodyParts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
     m_character->m_command.rot[0] *= m_character->m_skeleton.getCurrentFrame() > 3 && m_character->m_skeleton.getCurrentFrame() < 23 ? 0.6f : 0.0f;
 
     if(m_character->m_command.move.x == MovementStrafe::None || m_character->m_response.killed)
@@ -3134,7 +3134,7 @@ void StateController::monkeyswingRight()
 void StateController::tightropeEnter()
 {
     m_character->m_command.rot[0] = 0.0;
-    m_character->m_skeleton.model()->no_fix_all = true;
+    m_character->m_skeleton.getModel()->m_noFixAll = true;
     m_character->m_moveDir = MoveDirection::Forward;
     m_character->m_skeleton.onFrame = onFrameToTightrope;
     setNextState(LaraState::TightropeIdle);
@@ -3143,7 +3143,7 @@ void StateController::tightropeEnter()
 void StateController::tightropeExit()
 {
     m_character->m_command.rot[0] = 0.0;
-    m_character->m_skeleton.model()->no_fix_all = true;
+    m_character->m_skeleton.getModel()->m_noFixAll = true;
     m_character->m_moveDir = MoveDirection::Forward;
     m_character->m_skeleton.onFrame = onFrameFromTightrope;
     setNextState(LaraState::Stop);
@@ -3255,7 +3255,7 @@ void StateController::fixEndOfClimbOn()
 {
     // The code here prevents Lara's UGLY move in end of "climb on" states.
     m_character->m_command.rot[0] = 0;
-    m_character->m_skeleton.model()->no_fix_all = true;
+    m_character->m_skeleton.getModel()->m_noFixAll = true;
 }
 
 HeightInfo StateController::initHeightInfo() const

@@ -132,11 +132,11 @@ bool World::deleteEntity(ObjectId id)
     }
 }
 
-boost::optional<ObjectId> World::spawnEntity(ModelId model_id, ObjectId room_id, const glm::vec3* pos, const glm::vec3* ang, boost::optional<ObjectId> id)
+std::shared_ptr<Entity> World::spawnEntity(ModelId model_id, ObjectId room_id, const glm::vec3* pos, const glm::vec3* ang, boost::optional<ObjectId> id)
 {
-    SkeletalModel* model = getModelByID(model_id);
+    std::shared_ptr<SkeletalModel> model = getModelByID(model_id);
     if(!model)
-        return boost::none;
+        return nullptr;
 
     std::shared_ptr<Entity> ent;
     if(id)
@@ -163,7 +163,7 @@ boost::optional<ObjectId> World::spawnEntity(ModelId model_id, ObjectId room_id,
             ent->setRoom(nullptr);
         }
 
-        return ent->getId();
+        return ent;
     }
 
     if(!id)
@@ -224,7 +224,7 @@ boost::optional<ObjectId> World::spawnEntity(ModelId model_id, ObjectId room_id,
     addEntity(ent);
     Res_SetEntityFunction(ent);
 
-    return ent->getId();
+    return ent;
 }
 
 std::shared_ptr<Entity> World::getEntityByID(ObjectId id)
@@ -339,7 +339,7 @@ void World::addEntity(std::shared_ptr<Entity> entity)
 
 bool World::createItem(ModelId item_id, ModelId model_id, ModelId world_model_id, MenuItemType type, uint16_t count, const std::string& name)
 {
-    SkeletalModel* model = getModelByID(model_id);
+    std::shared_ptr<SkeletalModel> model = getModelByID(model_id);
     if(!model)
     {
         return false;
@@ -368,34 +368,13 @@ int World::deleteItem(ObjectId item_id)
     return 1;
 }
 
-SkeletalModel* World::getModelByID(ModelId id)
+std::shared_ptr<SkeletalModel> World::getModelByID(ModelId id)
 {
-    if(m_skeletalModels.front().id == id)
-    {
-        return &m_skeletalModels.front();
-    }
-    if(m_skeletalModels.back().id == id)
-    {
-        return &m_skeletalModels.back();
-    }
-
-    size_t min = 0;
-    size_t max = m_skeletalModels.size() - 1;
-    do
-    {
-        auto i = (min + max) / 2;
-        if(m_skeletalModels[i].id == id)
-        {
-            return &m_skeletalModels[i];
-        }
-
-        if(m_skeletalModels[i].id < id)
-            min = i;
-        else
-            max = i;
-    } while(min < max - 1);
-
-    return nullptr;
+    auto it = m_skeletalModels.find(id);
+    if(it == m_skeletalModels.end())
+        return nullptr;
+    else
+        return it->second;
 }
 
 // Find sprite by ID.

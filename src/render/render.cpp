@@ -95,8 +95,8 @@ void Render::renderSkyBox()
     if(m_drawSkybox && m_world != nullptr && m_world->m_skyBox != nullptr)
     {
         glDepthMask(GL_FALSE);
-        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->animations.front().getInitialBoneKeyFrame().offset);
-        tr *= glm::mat4_cast(m_world->m_skyBox->animations[0].getInitialBoneKeyFrame().qrotate);
+        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->m_animations.front().getInitialBoneKeyFrame().offset);
+        tr *= glm::mat4_cast(m_world->m_skyBox->m_animations[0].getInitialBoneKeyFrame().qrotate);
         const glm::mat4 fullView = m_cam->getViewProjection() * tr;
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getStaticMeshShader();
@@ -106,7 +106,7 @@ void Render::renderSkyBox()
         glm::vec4 tint = { 1, 1, 1, 1 };
         glUniform4fv(shader->tint_mult, 1, glm::value_ptr(tint));
 
-        renderMesh(m_world->m_skyBox->meshes[0].mesh_base);
+        renderMesh(m_world->m_skyBox->m_meshes[0].mesh_base);
         glDepthMask(GL_TRUE);
     }
 }
@@ -485,7 +485,7 @@ void Render::renderEntity(const world::Entity& entity)
     // Calculate lighting
     const LitShaderDescription *shader = setupEntityLight(entity, false);
 
-    if(entity.m_skeleton.getModel() && !entity.m_skeleton.getModel()->animations.empty())
+    if(entity.m_skeleton.getModel() && !entity.m_skeleton.getModel()->m_animations.empty())
     {
         // base frame offset
         if(entity.m_typeFlags & ENTITY_TYPE_DYNAMIC)
@@ -804,7 +804,7 @@ void Render::drawList()
             if(!ent)
                 continue;
 
-            if(!ent->m_skeleton.getModel()->has_transparency || !ent->m_visible)
+            if(!ent->m_skeleton.getModel()->hasTransparency() || !ent->m_visible)
                 continue;
 
             for(const world::animation::Bone& bone : ent->m_skeleton.getBones())
@@ -818,7 +818,7 @@ void Render::drawList()
         }
     }
 
-    if(engine::Engine::instance.m_world.m_character != nullptr && engine::Engine::instance.m_world.m_character->m_skeleton.getModel()->has_transparency)
+    if(engine::Engine::instance.m_world.m_character != nullptr && engine::Engine::instance.m_world.m_character->m_skeleton.getModel()->hasTransparency())
     {
         world::Entity *ent = engine::Engine::instance.m_world.m_character.get();
         for(const world::animation::Bone& bone : ent->m_skeleton.getBones())
@@ -863,9 +863,9 @@ void Render::drawListDebugLines()
      */
     if(m_drawNormals && m_world && m_world->m_skyBox)
     {
-        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->animations.front().getInitialBoneKeyFrame().offset);
-        tr *= glm::mat4_cast(m_world->m_skyBox->animations.front().getInitialBoneKeyFrame().qrotate);
-        debugDrawer.drawMeshDebugLines(m_world->m_skyBox->meshes.front().mesh_base, tr, *this);
+        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->m_animations.front().getInitialBoneKeyFrame().offset);
+        tr *= glm::mat4_cast(m_world->m_skyBox->m_animations.front().getInitialBoneKeyFrame().qrotate);
+        debugDrawer.drawMeshDebugLines(m_world->m_skyBox->m_meshes.front().mesh_base, tr, *this);
     }
 
     for(const world::Room* room : m_renderList)
@@ -1184,7 +1184,7 @@ void RenderDebugDrawer::drawEntityDebugLines(const world::Entity& entity, const 
         debugDrawer.drawAxis(1000.0, entity.m_transform);
     }
 
-    if(entity.m_skeleton.getModel() && !entity.m_skeleton.getModel()->animations.empty())
+    if(entity.m_skeleton.getModel() && !entity.m_skeleton.getModel()->m_animations.empty())
     {
         debugDrawer.drawSkeletalModelDebugLines(entity.m_skeleton, entity.m_transform, render);
     }

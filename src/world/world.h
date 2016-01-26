@@ -194,7 +194,7 @@ class Camera;
 struct Portal;
 class Render;
 class Entity;
-struct SkeletalModel;
+class SkeletalModel;
 
 namespace core
 {
@@ -348,10 +348,10 @@ struct World
 
     std::vector<core::Sprite> m_sprites;                // Base sprites data
 
-    std::vector<SkeletalModel> m_skeletalModels;        // base skeletal models data
+    std::map<ModelId, std::shared_ptr<SkeletalModel>> m_skeletalModels;
 
     std::shared_ptr<Character> m_character;              // this is an unique Lara's pointer =)
-    SkeletalModel* m_skyBox = nullptr;                // global skybox
+    std::shared_ptr<SkeletalModel> m_skyBox = nullptr;                // global skybox
 
     std::map<ObjectId, std::shared_ptr<Entity>> m_entities;            // tree of world active objects
     ObjectId m_nextEntityId = 0;
@@ -370,12 +370,12 @@ struct World
     bool createItem(ModelId item_id, ModelId model_id, ModelId world_model_id, MenuItemType type, uint16_t count, const std::string &name);
     int deleteItem(ObjectId item_id);
     core::Sprite* getSpriteByID(core::SpriteId ID);
-    SkeletalModel* getModelByID(ModelId id);           // binary search the model by ID
+    std::shared_ptr<SkeletalModel> getModelByID(ModelId id);           // binary search the model by ID
 
     void prepare();
     void empty();
 
-    boost::optional<ObjectId> spawnEntity(ModelId model_id, ObjectId room_id, const glm::vec3 *pos, const glm::vec3 *ang, boost::optional<ObjectId> id);
+    std::shared_ptr<Entity> spawnEntity(ModelId model_id, ObjectId room_id, const glm::vec3 *pos, const glm::vec3 *ang, boost::optional<ObjectId> id);
     bool deleteEntity(ObjectId id);
 
     std::shared_ptr<Entity> getEntityByID(ObjectId id);
