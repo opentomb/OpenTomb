@@ -52,6 +52,17 @@ public:
         exposeConstants();
         registerFunction("print", &ScriptEngine::print);
         lua_atpanic(m_state.getState(), &ScriptEngine::panic);
+
+        if((*this)["bit32"].isNil())
+        {
+            set("bit32", lua::Table());
+            (*this)["bit32"].set("rshift", [](int a, int b) { return a >> b; });
+            (*this)["bit32"].set("lshift", [](int a, int b) { return a << b; });
+            (*this)["bit32"].set("band", [](int a, int b) { return a & b; });
+            (*this)["bit32"].set("bor", [](int a, int b) { return a | b; });
+            (*this)["bit32"].set("bxor", [](int a, int b) { return a ^ b; });
+            (*this)["bit32"].set("bnot", [](int a) { return ~a; });
+        }
     }
 
     virtual ~ScriptEngine() = default;
