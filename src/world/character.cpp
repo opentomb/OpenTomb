@@ -262,7 +262,7 @@ void Character::updatePlatformPostStep()
 void Character::getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t v_offset)
 {
     auto cb = fc->cb;
-    Room* r = cb->m_object ? cb->m_object->getRoom() : nullptr;
+    const Room* r = cb->m_object ? cb->m_object->getRoom() : nullptr;
 
     fc->floor.hasHit = false;
     fc->ceiling.hasHit = false;
@@ -270,20 +270,20 @@ void Character::getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t
     fc->quicksand = QuicksandPosition::None;
     fc->transition_level = 32512.0;
 
-    r = Room_FindPosCogerrence(pos, r);
+    r = engine::Engine::instance.m_world.Room_FindPosCogerrence(pos, r);
     if(r)
         r = r->checkFlip();
     if(r)
     {
         const RoomSector* rs = r->getSectorXYZ(pos); // if r != nullptr then rs can not been nullptr!!!
-        if(r->m_flags & TR_ROOM_FLAG_WATER)          // in water - go up
+        if(r->getFlags() & TR_ROOM_FLAG_WATER)          // in water - go up
         {
             while(rs->sector_above)
             {
                 BOOST_ASSERT(rs->sector_above != nullptr);
                 rs = rs->sector_above->checkFlip();
                 BOOST_ASSERT(rs != nullptr && rs->owner_room != nullptr);
-                if((rs->owner_room->m_flags & TR_ROOM_FLAG_WATER) == 0x00) // find air
+                if((rs->owner_room->getFlags() & TR_ROOM_FLAG_WATER) == 0x00) // find air
                 {
                     fc->transition_level = static_cast<glm::float_t>(rs->floor);
                     fc->water = true;
@@ -291,14 +291,14 @@ void Character::getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t
                 }
             }
         }
-        else if(r->m_flags & TR_ROOM_FLAG_QUICKSAND)
+        else if(r->getFlags() & TR_ROOM_FLAG_QUICKSAND)
         {
             while(rs->sector_above)
             {
                 BOOST_ASSERT(rs->sector_above != nullptr);
                 rs = rs->sector_above->checkFlip();
                 BOOST_ASSERT(rs != nullptr && rs->owner_room != nullptr);
-                if((rs->owner_room->m_flags & TR_ROOM_FLAG_QUICKSAND) == 0x00) // find air
+                if((rs->owner_room->getFlags() & TR_ROOM_FLAG_QUICKSAND) == 0x00) // find air
                 {
                     fc->transition_level = static_cast<glm::float_t>(rs->floor);
                     if(fc->transition_level - fc->floor.hitPoint[2] > v_offset)
@@ -320,13 +320,13 @@ void Character::getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t
                 BOOST_ASSERT(rs->sector_below != nullptr);
                 rs = rs->sector_below->checkFlip();
                 BOOST_ASSERT(rs != nullptr && rs->owner_room != nullptr);
-                if((rs->owner_room->m_flags & TR_ROOM_FLAG_WATER) != 0x00) // find water
+                if((rs->owner_room->getFlags() & TR_ROOM_FLAG_WATER) != 0x00) // find water
                 {
                     fc->transition_level = static_cast<glm::float_t>(rs->ceiling);
                     fc->water = true;
                     break;
                 }
-                else if((rs->owner_room->m_flags & TR_ROOM_FLAG_QUICKSAND) != 0x00) // find water
+                else if((rs->owner_room->getFlags() & TR_ROOM_FLAG_QUICKSAND) != 0x00) // find water
                 {
                     fc->transition_level = static_cast<glm::float_t>(rs->ceiling);
                     if(fc->transition_level - fc->floor.hitPoint[2] > v_offset)
@@ -1128,7 +1128,7 @@ int Character::freeFalling()
 
     updateCurrentHeight();
 
-    if(getRoom() && (getRoom()->m_flags & TR_ROOM_FLAG_WATER))
+    if(getRoom() && (getRoom()->getFlags() & TR_ROOM_FLAG_WATER))
     {
         if(m_speed[2] < 0.0)
         {
@@ -1415,7 +1415,7 @@ int Character::moveUnderWater()
 
     // Check current place.
 
-    if(getRoom() && !(getRoom()->m_flags & TR_ROOM_FLAG_WATER))
+    if(getRoom() && !(getRoom()->getFlags() & TR_ROOM_FLAG_WATER))
     {
         m_moveType = MoveType::FreeFalling;
         return 2;
@@ -1562,7 +1562,7 @@ int Character::findTraverse()
     m_traversedObject = nullptr;
 
     // OX move case
-    RoomSector* obj_s = nullptr;
+    const RoomSector* obj_s = nullptr;
     if(m_transform[1][0] > 0.9)
     {
         obj_s = ch_s->owner_room->getSectorRaw({ ch_s->position[0] + MeteringSectorSize, ch_s->position[1], glm::float_t(0.0) });
@@ -1584,7 +1584,7 @@ int Character::findTraverse()
     if(obj_s != nullptr)
     {
         obj_s = obj_s->checkPortalPointer();
-        for(Object* object : obj_s->owner_room->m_objects)
+        for(Object* object : obj_s->owner_room->getObjects())
         {
             if(Entity* e = dynamic_cast<Entity*>(object))
             {
@@ -1609,8 +1609,8 @@ int Character::findTraverse()
  */
 int Character::checkTraverse(const Entity& obj)
 {
-    RoomSector* ch_s = getRoom()->getSectorRaw(glm::vec3(m_transform[3]));
-    RoomSector* obj_s = obj.getRoom()->getSectorRaw(glm::vec3(obj.m_transform[3]));
+    const RoomSector* ch_s = getRoom()->getSectorRaw(glm::vec3(m_transform[3]));
+    const RoomSector* obj_s = obj.getRoom()->getSectorRaw(glm::vec3(obj.m_transform[3]));
 
     if(obj_s == ch_s)
     {
@@ -1663,7 +1663,7 @@ int Character::checkTraverse(const Entity& obj)
     }
 
     int ret = TraverseNone;
-    RoomSector* next_s = nullptr;
+    const RoomSector* next_s = nullptr;
 
     /*
     * PUSH MOVE CHECK
@@ -2184,9 +2184,9 @@ void Character::frame(util::Duration time)
 void Character::processSectorImpl()
 {
     BOOST_ASSERT(m_currentSector != nullptr);
-    RoomSector* highest_sector = m_currentSector->getHighestSector();
+    const RoomSector* highest_sector = m_currentSector->getHighestSector();
     BOOST_ASSERT(highest_sector != nullptr);
-    RoomSector* lowest_sector = m_currentSector->getLowestSector();
+    const RoomSector* lowest_sector = m_currentSector->getLowestSector();
     BOOST_ASSERT(lowest_sector != nullptr);
 
     m_heightInfo.walls_climb_dir = 0;
@@ -2269,7 +2269,7 @@ void Character::jump(glm::float_t v_vertical, glm::float_t v_horizontal)
 
 Substance Character::getSubstanceState() const
 {
-    if(getRoom()->m_flags & TR_ROOM_FLAG_QUICKSAND)
+    if(getRoom()->getFlags() & TR_ROOM_FLAG_QUICKSAND)
     {
         if(m_heightInfo.transition_level > m_transform[3][2] + m_height)
         {

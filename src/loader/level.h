@@ -31,7 +31,7 @@ public:
     std::vector<DWordTexture> m_textures;
     std::unique_ptr<Palette> m_palette;
     std::vector<Room> m_rooms;
-    std::vector<uint16_t> m_floorData;
+    FloorData m_floorData;
     std::vector<Mesh> m_meshes;
     std::vector<uint32_t> m_meshIndices;
     std::vector<Animation> m_animations;

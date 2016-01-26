@@ -40,7 +40,7 @@ void InputHandler::primaryMouseDown()
     btRigidBody* body = new btRigidBody(12.0, motionState, cshape, localInertia);
     BulletEngine::instance->dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(util::convert(dir) * 6000);
-    world::BulletObject* object = new world::BulletObject(Room_FindPosCogerrence(new_pos, Engine::instance.m_camera.getCurrentRoom()));
+    world::BulletObject* object = new world::BulletObject(Engine::instance.m_world.Room_FindPosCogerrence(new_pos, Engine::instance.m_camera.getCurrentRoom()));
     body->setUserPointer(object);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
     body->setCcdSweptSphereRadius(dbgR);

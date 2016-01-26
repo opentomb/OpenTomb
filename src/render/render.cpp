@@ -410,9 +410,9 @@ const LitShaderDescription *Render::setupEntityLight(const world::Entity& entity
         return shader;
     }
 
-    glm::vec4 ambient_component(entity.getRoom()->m_ambientLighting, 1.0f);
+    glm::vec4 ambient_component(entity.getRoom()->getAmbientLighting(), 1.0f);
 
-    if(entity.getRoom()->m_flags & TR_ROOM_FLAG_WATER)
+    if(entity.getRoom()->getFlags() & TR_ROOM_FLAG_WATER)
     {
         ambient_component *= engine::Engine::instance.m_world.calculateWaterTint();
     }
@@ -429,40 +429,40 @@ const LitShaderDescription *Render::setupEntityLight(const world::Entity& entity
     outerRadiuses.fill(0);
 
     GLenum current_light_number = 0;
-    for(size_t i = 0; i < entity.getRoom()->m_lights.size() && current_light_number < EntityShaderLightsLimit; i++)
+    for(size_t i = 0; i < entity.getRoom()->getLights().size() && current_light_number < EntityShaderLightsLimit; i++)
     {
-        world::core::Light *current_light = &entity.getRoom()->m_lights[i];
+        const world::core::Light& current_light = entity.getRoom()->getLights()[i];
 
-        glm::vec3 xyz = glm::vec3(entity.m_transform[3]) - current_light->position;
+        glm::vec3 xyz = glm::vec3(entity.m_transform[3]) - current_light.position;
         glm::float_t distance = glm::length(xyz);
 
         // Find color
         colors[current_light_number] = {
-            glm::clamp(current_light->color[0], 0.0f, 1.0f),
-            glm::clamp(current_light->color[1], 0.0f, 1.0f),
-            glm::clamp(current_light->color[2], 0.0f, 1.0f),
-            glm::clamp(current_light->color[3], 0.0f, 1.0f)
+            glm::clamp(current_light.color[0], 0.0f, 1.0f),
+            glm::clamp(current_light.color[1], 0.0f, 1.0f),
+            glm::clamp(current_light.color[2], 0.0f, 1.0f),
+            glm::clamp(current_light.color[3], 0.0f, 1.0f)
         };
 
-        if(entity.getRoom()->m_flags & TR_ROOM_FLAG_WATER)
+        if(entity.getRoom()->getFlags() & TR_ROOM_FLAG_WATER)
         {
             colors[current_light_number] *= engine::Engine::instance.m_world.calculateWaterTint();
         }
 
         // Find position
-        positions[current_light_number] = glm::vec3(m_cam->getView() * glm::vec4(current_light->position, 1.0f));
+        positions[current_light_number] = glm::vec3(m_cam->getView() * glm::vec4(current_light.position, 1.0f));
 
         // Find fall-off
-        if(current_light->light_type == loader::LightType::Sun)
+        if(current_light.light_type == loader::LightType::Sun)
         {
             innerRadiuses[current_light_number] = 1e20f;
             outerRadiuses[current_light_number] = 1e21f;
             current_light_number++;
         }
-        else if(distance <= current_light->outer + 1024.0f && (current_light->light_type == loader::LightType::Point || current_light->light_type == loader::LightType::Shadow))
+        else if(distance <= current_light.outer + 1024.0f && (current_light.light_type == loader::LightType::Point || current_light.light_type == loader::LightType::Shadow))
         {
-            innerRadiuses[current_light_number] = glm::abs(current_light->inner);
-            outerRadiuses[current_light_number] = glm::abs(current_light->outer);
+            innerRadiuses[current_light_number] = glm::abs(current_light.inner);
+            outerRadiuses[current_light_number] = glm::abs(current_light.outer);
             current_light_number++;
         }
     }
@@ -601,11 +601,11 @@ void Render::renderHair(std::shared_ptr<world::Character> entity)
  */
 void Render::renderRoom(const world::Room& room)
 {
-    if(!m_skipRoom && room.m_mesh)
+    if(!m_skipRoom && room.getMesh())
     {
-        glm::mat4 modelViewProjection = m_cam->getViewProjection() * room.m_modelMatrix;
+        glm::mat4 modelViewProjection = m_cam->getViewProjection() * room.getModelMatrix();
 
-        UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(room.m_lightMode == 1, room.m_flags & 1);
+        UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(room.getLightMode() == 1, room.getFlags() & TR_ROOM_FLAG_WATER);
 
         glm::vec4 tint = engine::Engine::instance.m_world.calculateWaterTint();
         glUseProgram(shader->program);
@@ -614,13 +614,13 @@ void Render::renderRoom(const world::Room& room)
         glUniform1f(shader->current_tick, static_cast<GLfloat>(SDL_GetTicks()));
         glUniform1i(shader->sampler, 0);
         glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(modelViewProjection));
-        renderMesh(room.m_mesh);
+        renderMesh(room.getMesh());
     }
 
-    if(!room.m_staticMeshes.empty())
+    if(!room.getStaticMeshes().empty())
     {
         glUseProgram(m_shaderManager->getStaticMeshShader()->program);
-        for(const std::shared_ptr<world::StaticMesh>& sm : room.m_staticMeshes)
+        for(const std::shared_ptr<world::StaticMesh>& sm : room.getStaticMeshes())
         {
             if(sm->was_rendered)
             {
@@ -638,7 +638,7 @@ void Render::renderRoom(const world::Room& room)
             glm::vec4 tint = sm->tint;
 
             //If this static mesh is in a water room
-            if(room.m_flags & TR_ROOM_FLAG_WATER)
+            if(room.getFlags() & TR_ROOM_FLAG_WATER)
             {
                 tint *= engine::Engine::instance.m_world.calculateWaterTint();
             }
@@ -648,7 +648,7 @@ void Render::renderRoom(const world::Room& room)
         }
     }
 
-    for(world::Object* object : room.m_objects)
+    for(world::Object* object : room.getObjects())
     {
         world::Entity* ent = dynamic_cast<world::Entity*>(object);
         if(!ent || ent->m_wasRendered)
@@ -661,7 +661,7 @@ void Render::renderRoom(const world::Room& room)
 
 void Render::renderRoomSprites(const world::Room& room) const
 {
-    if(!room.m_sprites.empty() && room.m_spriteBuffer)
+    if(!room.getSprites().empty() && room.getSpriteBuffer())
     {
         SpriteShaderDescription *shader = m_shaderManager->getSpriteShader();
         glUseProgram(shader->program);
@@ -669,19 +669,19 @@ void Render::renderRoomSprites(const world::Room& room) const
         glUniformMatrix4fv(shader->projection, 1, GL_FALSE, glm::value_ptr(m_cam->getProjection()));
         glUniform1i(shader->sampler, 0);
 
-        room.m_spriteBuffer->data->bind();
+        room.getSpriteBuffer()->data->bind();
 
         size_t offset = 0;
-        for(uint32_t texture = 0; texture < room.m_spriteBuffer->num_texture_pages; texture++)
+        for(uint32_t texture = 0; texture < room.getSpriteBuffer()->num_texture_pages; texture++)
         {
-            if(room.m_spriteBuffer->element_count_per_texture[texture] == 0)
+            if(room.getSpriteBuffer()->element_count_per_texture[texture] == 0)
             {
                 continue;
             }
 
             glBindTexture(GL_TEXTURE_2D, m_world->m_textures[texture]);
-            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(room.m_spriteBuffer->element_count_per_texture[texture]), GL_UNSIGNED_SHORT, reinterpret_cast<GLvoid *>(offset * sizeof(uint16_t)));
-            offset += room.m_spriteBuffer->element_count_per_texture[texture];
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(room.getSpriteBuffer()->element_count_per_texture[texture]), GL_UNSIGNED_SHORT, reinterpret_cast<GLvoid *>(offset * sizeof(uint16_t)));
+            offset += room.getSpriteBuffer()->element_count_per_texture[texture];
         }
     }
 }
@@ -692,21 +692,21 @@ void Render::renderRoomSprites(const world::Room& room) const
  */
 bool Render::addRoom(const world::Room* room)
 {
-    if(!room->m_active || !m_renderList.insert(room).second)
+    if(!room->isActive() || !m_renderList.insert(room).second)
     {
         return false;
     }
 
-    if(room->m_flags & TR_ROOM_FLAG_SKYBOX)
+    if(room->getFlags() & TR_ROOM_FLAG_SKYBOX)
         m_drawSkybox = true;
 
-    for(std::shared_ptr<world::StaticMesh> sm : room->m_staticMeshes)
+    for(std::shared_ptr<world::StaticMesh> sm : room->getStaticMeshes())
     {
         sm->was_rendered = false;
         sm->was_rendered_lines = false;
     }
 
-    for(world::Object* object : room->m_objects)
+    for(world::Object* object : room->getObjects())
     {
         world::Entity* ent = dynamic_cast<world::Entity*>(object);
         if(!ent)
@@ -716,7 +716,7 @@ bool Render::addRoom(const world::Room* room)
         ent->m_wasRenderedLines = false;
     }
 
-    for(const world::RoomSprite& sp : room->m_sprites)
+    for(const world::RoomSprite& sp : room->getSprites())
     {
         sp.was_rendered = false;
     }
@@ -780,16 +780,16 @@ void Render::drawList()
     /*First generate BSP from base room mesh - it has good for start splitter polygons*/
     for(const world::Room* room : m_renderList)
     {
-        if(room->m_mesh && !room->m_mesh->m_transparencyPolygons.empty())
+        if(room->getMesh() && !room->getMesh()->m_transparencyPolygons.empty())
         {
-            render_dBSP.addNewPolygonList(room->m_mesh->m_transparentPolygons, room->m_modelMatrix, *m_cam);
+            render_dBSP.addNewPolygonList(room->getMesh()->m_transparentPolygons, room->getModelMatrix(), *m_cam);
         }
     }
 
     for(const world::Room* room : m_renderList)
     {
         // Add transparency polygons from static meshes (if they exists)
-        for(auto sm : room->m_staticMeshes)
+        for(auto sm : room->getStaticMeshes())
         {
             if(!sm->mesh->m_transparentPolygons.empty())
             {
@@ -798,7 +798,7 @@ void Render::drawList()
         }
 
         // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
-        for(world::Object* object : room->m_objects)
+        for(world::Object* object : room->getObjects())
         {
             world::Entity* ent = dynamic_cast<world::Entity*>(object);
             if(!ent)
@@ -898,7 +898,7 @@ void Render::processRoom(const world::Room& room)
 
     addRoom(&room);
     // always process direct neighbours
-    for(const world::Portal& portal : room.m_portals)
+    for(const world::Portal& portal : room.getPortals())
     {
         PortalTracer path;
         if(!path.checkVisibility(&portal, m_cam->getPosition(), m_cam->getFrustum()))
@@ -923,7 +923,7 @@ void Render::processRoom(const world::Room& room)
 
         // iterate through the last room's portals and add the destinations if suitable
         world::Room* destRoom = currentPath.getLastDestinationRoom();
-        for(const world::Portal& srcPortal : destRoom->m_portals)
+        for(const world::Portal& srcPortal : destRoom->getPortals())
         {
             PortalTracer newPath = currentPath;
             if(!newPath.checkVisibility(&srcPortal, m_cam->getPosition(), m_cam->getFrustum()))
@@ -949,7 +949,7 @@ void Render::genWorldList()
     //cam->frustum->next = NULL;
 
     // find room that contains camera
-    world::Room* curr_room = Room_FindPosCogerrence(m_cam->getPosition(), m_cam->getCurrentRoom());
+    world::Room* curr_room = engine::Engine::instance.m_world.Room_FindPosCogerrence(m_cam->getPosition(), m_cam->getCurrentRoom());
 
     m_cam->setCurrentRoom(curr_room);
     if(curr_room != nullptr)                  // camera located in some room
@@ -962,7 +962,7 @@ void Render::genWorldList()
     {
         for(auto r : m_world->m_rooms)
         {
-            if(m_cam->getFrustum().isVisible(r->m_boundingBox))
+            if(m_cam->getFrustum().isVisible(r->getBoundingBox()))
             {
                 addRoom(r.get());
             }
@@ -1206,7 +1206,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room& room, const Render
     if(render.m_drawRoomBoxes)
     {
         debugDrawer.setColor(0.0, 0.1f, 0.9f);
-        debugDrawer.drawBBox(room.m_boundingBox, nullptr);
+        debugDrawer.drawBBox(room.getBoundingBox(), nullptr);
         /*for(uint32_t s=0;s<room->sectors_count;s++)
         {
             drawSectorDebugLines(room->sectors + s);
@@ -1216,20 +1216,20 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room& room, const Render
     if(render.m_drawPortals)
     {
         debugDrawer.setColor(1.0, 1.0, 0.0);
-        for(const auto& p : room.m_portals)
+        for(const auto& p : room.getPortals())
             debugDrawer.drawPortal(p);
 
         debugDrawer.setColor(1.0, 1.0, 0.5);
-        for(const auto& p : room.m_portals)
+        for(const auto& p : room.getPortals())
             debugDrawer.addLine(p.center, p.center + p.normal*128.0f);
     }
 
-    if(!render.m_skipRoom && room.m_mesh != nullptr)
+    if(!render.m_skipRoom && room.getMesh() != nullptr)
     {
-        debugDrawer.drawMeshDebugLines(room.m_mesh, room.m_modelMatrix, render);
+        debugDrawer.drawMeshDebugLines(room.getMesh(), room.getModelMatrix(), render);
     }
 
-    for(auto sm : room.m_staticMeshes)
+    for(auto sm : room.getStaticMeshes())
     {
         if(sm->was_rendered_lines || (sm->hide && !render.m_drawDummyStatics))
         {
@@ -1252,7 +1252,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room& room, const Render
         sm->was_rendered_lines = true;
     }
 
-    for(world::Object* object : room.m_objects)
+    for(world::Object* object : room.getObjects())
     {
         world::Entity* ent = dynamic_cast<world::Entity*>(object);
         if(!ent)

@@ -8,7 +8,7 @@
 
 namespace world
 {
-struct Room;
+class Room;
 
 struct Portal
 {

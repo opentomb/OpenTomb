@@ -189,7 +189,7 @@ enum class ActivatorType
 #define AMASK_OP_OR  0
 #define AMASK_OP_XOR 1
 
-struct Room;
+class Room;
 class Camera;
 struct Portal;
 class Render;
@@ -382,9 +382,15 @@ struct World
     std::shared_ptr<Character> getCharacterByID(ObjectId id);
 
     std::shared_ptr<BaseItem> getBaseItemByID(ObjectId id);
-    std::shared_ptr<Room> findRoomByPosition(const glm::vec3& pos);
+    std::shared_ptr<Room> findRoomByPosition(const glm::vec3& pos) const;
     std::shared_ptr<Room> getByID(ObjectId ID);
+
+    Room* Room_FindPosCogerrence(const glm::vec3& new_pos, Room* room) const;
+
+    const Room* Room_FindPosCogerrence(const glm::vec3& new_pos, const Room *room) const
+    {
+        return Room_FindPosCogerrence(new_pos, const_cast<Room*>(room));
+    }
 };
 
-Room *Room_FindPosCogerrence(const glm::vec3& new_pos, Room *room);
 } // namespace world

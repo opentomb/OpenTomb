@@ -420,7 +420,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
             : Engine::instance.m_controlState.m_freeLookSpeed * Engine::instance.getFrameTimeSecs();
         render::renderer.camera()->applyRotation();
         render::renderer.camera()->move(moveLogic.getDistance(dist));
-        render::renderer.camera()->setCurrentRoom(Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()));
+        render::renderer.camera()->setCurrentRoom(engine::Engine::instance.m_world.Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()));
     }
     else if(Engine::instance.m_controlState.m_noClip)
     {
@@ -429,7 +429,7 @@ void Game_ApplyControls(std::shared_ptr<world::Entity> ent)
             : Engine::instance.m_controlState.m_freeLookSpeed * Engine::instance.getFrameTimeSecs();
         render::renderer.camera()->applyRotation();
         render::renderer.camera()->move(moveLogic.getDistance(dist));
-        render::renderer.camera()->setCurrentRoom(Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()));
+        render::renderer.camera()->setCurrentRoom(engine::Engine::instance.m_world.Room_FindPosCogerrence(render::renderer.camera()->getPosition(), render::renderer.camera()->getCurrentRoom()));
 
         ent->m_angles[0] = glm::degrees(engine::Engine::instance.m_camera.getAngles()[0]);
         glm::vec3 position = render::renderer.camera()->getPosition() + render::renderer.camera()->getViewDir() * Engine::instance.m_controlState.m_camDistance;
@@ -590,16 +590,16 @@ void Cam_FollowEntity(world::Camera *cam, std::shared_ptr<world::Entity> ent, gl
     cam->setPosition(cam_pos);
 
     //Modify cam pos for quicksand rooms
-    cam->setCurrentRoom(Room_FindPosCogerrence(cam->getPosition() - glm::vec3(0, 0, 128), cam->getCurrentRoom()));
-    if(cam->getCurrentRoom() && (cam->getCurrentRoom()->m_flags & TR_ROOM_FLAG_QUICKSAND))
+    cam->setCurrentRoom(engine::Engine::instance.m_world.Room_FindPosCogerrence(cam->getPosition() - glm::vec3(0, 0, 128), cam->getCurrentRoom()));
+    if(cam->getCurrentRoom() && (cam->getCurrentRoom()->getFlags() & TR_ROOM_FLAG_QUICKSAND))
     {
         glm::vec3 position = cam->getPosition();
-        position[2] = cam->getCurrentRoom()->m_boundingBox.max[2] + 2.0f * 64.0f;
+        position[2] = cam->getCurrentRoom()->getBoundingBox().max[2] + 2.0f * 64.0f;
         cam->setPosition(position);
     }
 
     cam->applyRotation();
-    cam->setCurrentRoom(Room_FindPosCogerrence(cam->getPosition(), cam->getCurrentRoom()));
+    cam->setCurrentRoom(engine::Engine::instance.m_world.Room_FindPosCogerrence(cam->getPosition(), cam->getCurrentRoom()));
 }
 
 void Game_UpdateAI()
@@ -693,7 +693,7 @@ void Game_Prepare()
         // If there is no character present, move default camera position to
         // the first room (useful for TR1-3 cutscene levels).
 
-        Engine::instance.m_camera.setPosition(Engine::instance.m_world.m_rooms[0]->m_boundingBox.max);
+        Engine::instance.m_camera.setPosition(Engine::instance.m_world.m_rooms[0]->getBoundingBox().max);
     }
 
     // Set gameflow parameters to default.

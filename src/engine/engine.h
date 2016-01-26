@@ -8,7 +8,7 @@
 namespace world
 {
 class Camera;
-struct Room;
+class Room;
 } // namespace world
 
 struct SDL_Window;
@@ -143,7 +143,7 @@ public:
     // Debug functions.
 
     void showDebugInfo();
-    static void dumpRoom(world::Room* r);
+    static void dumpRoom(const world::Room* r);
 
     // PC-specific level loader routines.
 

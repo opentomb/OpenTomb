@@ -55,7 +55,7 @@ constexpr ModelId TR_ITEM_LARA_SKIN_JOINTS_TR45 = 9;
 
 struct SectorTween;
 struct World;
-struct Room;
+class Room;
 struct RoomSector;
 struct SkeletalModel;
 class Entity;
@@ -79,13 +79,12 @@ struct SkeletonKeyFrame;
 
 void Res_GenRBTrees(World& world);
 void Res_GenSpritesBuffer(World& world);
-void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room);
 void Res_GenRoomCollision(World& world);
 void Res_GenRoomFlipMap(World& world);
 void Res_GenBaseItems(World& world);
 void Res_GenVBOs(World& world);
 
-bool     Res_Sector_IsWall(RoomSector* ws, RoomSector* ns);
+bool Res_Sector_IsWall(const RoomSector* ws, const RoomSector* ns);
 void     Res_Sector_FixHeights(RoomSector& sector);
 
 void     Res_FixRooms(World& world);   // Fix start-up room states.
@@ -123,7 +122,6 @@ void TR_GenTextures(World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenAnimCommands(World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenAnimTextures(World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenRooms(World& world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenRoom(std::shared_ptr<Room>& room, World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenRoomProperties(World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenBoxes(World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenCameras(World& world, const std::unique_ptr<loader::Level>& tr);
@@ -138,8 +136,7 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, cons
 // Main functions which are used to translate legacy TR floor data
 // to native OpenTomb structs.
 
-int      TR_Sector_TranslateFloorData(RoomSector* sector, const std::unique_ptr<loader::Level>& tr);
-void     TR_Sector_Calculate(World& world, const std::unique_ptr<loader::Level>& tr, long int room_index);
+int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& floorData, loader::Engine engine);
 
 void tr_setupRoomVertices(World& world, const std::unique_ptr<loader::Level>& tr, loader::Room& tr_room, const std::shared_ptr<core::BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, core::Polygon& p);
 void tr_copyNormals(core::Polygon& polygon, const core::BaseMesh& mesh, const uint16_t *mesh_vertex_indices);

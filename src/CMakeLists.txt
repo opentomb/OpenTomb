@@ -60,6 +60,7 @@ list(APPEND PRJ_SRC
     world/character.cpp
     world/skeletalmodel.cpp
     world/room.cpp
+    world/roomsector.cpp
     world/statecontroller.cpp
 
     world/core/orientedboundingbox.cpp
@@ -144,6 +145,7 @@ list(APPEND PRJ_HDR
     world/staticmesh.h
     world/skeletalmodel.h
     world/room.h
+    world/roomsector.h
     world/statecontroller.h
 
     world/core/sprite.h

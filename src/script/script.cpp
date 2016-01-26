@@ -926,8 +926,8 @@ lua::Any lua_SimilarSector(world::ObjectId id, float dx, float dy, float dz, boo
 
     glm::vec3 next_pos = glm::vec3(ent->m_transform[3] + (dx * ent->m_transform[0] + dy * ent->m_transform[1] + dz * ent->m_transform[2]));
 
-    world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(glm::vec3(ent->m_transform[3]));
-    world::RoomSector* next_sector = ent->getRoom()->getSectorRaw(next_pos);
+    const world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(glm::vec3(ent->m_transform[3]));
+    const world::RoomSector* next_sector = ent->getRoom()->getSectorRaw(next_pos);
 
     curr_sector = curr_sector->checkPortalPointer();
     next_sector = next_sector->checkPortalPointer();
@@ -957,7 +957,7 @@ lua::Any lua_GetSectorHeight(world::ObjectId id, lua::Value ceiling, lua::Value 
     if(dx.is<lua::Number>() && dy.is<lua::Number>() && dz.is<lua::Number>())
         position += dx.toFloat() * ent->m_transform[0] + dy.toFloat() * ent->m_transform[1] + dz.toFloat() * ent->m_transform[2];
 
-    world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(glm::vec3(position));
+    const world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(glm::vec3(position));
     curr_sector = curr_sector->checkPortalPointer();
     glm::vec3 point = ceiling.is<lua::Boolean>() && ceiling.to<bool>()
         ? curr_sector->getCeilingPoint()
@@ -1074,9 +1074,9 @@ void lua_MoveEntityToSink(world::ObjectId id, int sink_index)
     glm::vec3 sink_pos = sink->position + glm::vec3(0, 0, 256.0f);
 
     BOOST_ASSERT(ent->m_currentSector != nullptr);
-    world::RoomSector* ls = ent->m_currentSector->getLowestSector();
+    const world::RoomSector* ls = ent->m_currentSector->getLowestSector();
     BOOST_ASSERT(ls != nullptr);
-    world::RoomSector* hs = ent->m_currentSector->getHighestSector();
+    const world::RoomSector* hs = ent->m_currentSector->getHighestSector();
     BOOST_ASSERT(hs != nullptr);
     if(sink_pos[2] > hs->ceiling || sink_pos[2] < ls->floor)
     {
@@ -2452,7 +2452,7 @@ void lua_SetFlipState(size_t group, bool state)
         {
             for(std::shared_ptr<world::Room> currentRoom : engine::Engine::instance.m_world.m_rooms)
             {
-                if(currentRoom->m_alternateGroup == group)    // Check if group is valid.
+                if(currentRoom->getAlternateGroup() == group)    // Check if group is valid.
                 {
                     if(state)
                         currentRoom->swapToAlternate();

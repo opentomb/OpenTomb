@@ -114,18 +114,18 @@ void FxManager::updateListener(world::Camera& cam)
     if(!cam.getCurrentRoom())
         return;
 
-    if(cam.getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER)
+    if(cam.getCurrentRoom()->getFlags() & TR_ROOM_FLAG_WATER)
     {
         m_currentRoomType = loader::ReverbType::Water;
     }
     else
     {
-        m_currentRoomType = cam.getCurrentRoom()->m_reverbType;
+        m_currentRoomType = cam.getCurrentRoom()->getReverbType();
     }
 
-    if(m_underwater != static_cast<bool>(cam.getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER))
+    if(m_underwater != static_cast<bool>(cam.getCurrentRoom()->getFlags() & TR_ROOM_FLAG_WATER))
     {
-        m_underwater = (cam.getCurrentRoom()->m_flags & TR_ROOM_FLAG_WATER) != 0;
+        m_underwater = (cam.getCurrentRoom()->getFlags() & TR_ROOM_FLAG_WATER) != 0;
 
         if(m_underwater)
         {

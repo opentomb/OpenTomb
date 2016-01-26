@@ -359,7 +359,7 @@ void Engine::showDebugInfo()
 
     if(m_camera.getCurrentRoom() != nullptr)
     {
-        world::RoomSector* rs = m_camera.getCurrentRoom()->getSectorRaw(m_camera.getPosition());
+        const world::RoomSector* rs = m_camera.getCurrentRoom()->getSectorRaw(m_camera.getPosition());
         if(rs != nullptr)
         {
             gui::TextLineManager::instance->drawText(30.0, 90.0,
@@ -556,24 +556,24 @@ void Engine::initPost()
     sysInit();
 }
 
-void Engine::dumpRoom(world::Room* r)
+void Engine::dumpRoom(const world::Room* r)
 {
     if(!r)
         return;
 
     BOOST_LOG_TRIVIAL(debug) << boost::format("ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)")
         % r->getId()
-        % r->m_sectors.shape()[0]
-        % r->m_sectors.shape()[1]
-        % r->m_boundingBox.min[2]
-        % r->m_boundingBox.max[2]
-        % r->m_modelMatrix[3][0]
-        % r->m_modelMatrix[3][1];
+        % r->getSectors().shape()[0]
+        % r->getSectors().shape()[1]
+        % r->getBoundingBox().min[2]
+        % r->getBoundingBox().max[2]
+        % r->getModelMatrix()[3][0]
+        % r->getModelMatrix()[3][1];
     BOOST_LOG_TRIVIAL(debug) << boost::format("flag = 0x%X, alt_room = %d, base_room = %d")
-        % r->m_flags
-        % (r->m_alternateRoom != nullptr ? r->m_alternateRoom->getId() : -1)
-        % (r->m_baseRoom != nullptr ? r->m_baseRoom->getId() : -1);
-    for(const auto& column : r->m_sectors)
+        % r->getFlags()
+        % (r->getAlternateRoom() != nullptr ? r->getAlternateRoom()->getId() : -1)
+        % (r->getBaseRoom() != nullptr ? r->getBaseRoom()->getId() : -1);
+    for(const auto& column : r->getSectors())
     {
         for(const world::RoomSector& rs : column)
         {
@@ -586,12 +586,12 @@ void Engine::dumpRoom(world::Room* r)
         }
     }
 
-    for(auto sm : r->m_staticMeshes)
+    for(auto sm : r->getStaticMeshes())
     {
         BOOST_LOG_TRIVIAL(debug) << "static_mesh = " << sm->getId();
     }
 
-    for(world::Object* object : r->m_objects)
+    for(world::Object* object : r->getObjects())
     {
         if(world::Entity* ent = dynamic_cast<world::Entity*>(object))
         {
@@ -784,7 +784,7 @@ bool Engine::loadMap(const std::string& name)
 int Engine::execCmd(const char *ch)
 {
     std::vector<char> token(Console::instance().lineLength());
-    world::RoomSector* sect;
+    const world::RoomSector* sect;
     FILE *f;
 
     while(ch != nullptr)
@@ -927,10 +927,10 @@ int Engine::execCmd(const char *ch)
         }
         else if(!strcmp(token.data(), "room_info"))
         {
-            if(world::Room* r = render::renderer.camera()->getCurrentRoom())
+            if(const world::Room* r = render::renderer.camera()->getCurrentRoom())
             {
                 sect = r->getSectorXYZ(render::renderer.camera()->getPosition());
-                Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->getId(), static_cast<int>(r->m_sectors.shape()[0]), static_cast<int>(r->m_sectors.shape()[1]));
+                Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->getId(), static_cast<int>(r->getSectors().shape()[0]), static_cast<int>(r->getSectors().shape()[1]));
                 if(sect)
                 {
                     Console::instance().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d",
@@ -938,11 +938,11 @@ int Engine::execCmd(const char *ch)
                                                static_cast<int>(sect->index_y),
                                                static_cast<int>(sect->ceiling == world::MeteringWallHeight || sect->floor == world::MeteringWallHeight),
                                                static_cast<int>(sect->sector_above != nullptr), static_cast<int>(sect->sector_below != nullptr));
-                    for(uint32_t i = 0; i < sect->owner_room->m_staticMeshes.size(); i++)
+                    for(uint32_t i = 0; i < sect->owner_room->getStaticMeshes().size(); i++)
                     {
-                        Console::instance().printf("static[%d].object_id = %d", i, sect->owner_room->m_staticMeshes[i]->getId());
+                        Console::instance().printf("static[%d].object_id = %d", i, sect->owner_room->getStaticMeshes()[i]->getId());
                     }
-                    for(world::Object* object : sect->owner_room->m_objects)
+                    for(world::Object* object : sect->owner_room->getObjects())
                     {
                         if(world::Entity* e = dynamic_cast<world::Entity*>(object))
                         {

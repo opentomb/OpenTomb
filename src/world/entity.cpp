@@ -233,14 +233,13 @@ void Entity::fixPenetrations(const glm::vec3* move)
 
 void Entity::transferToRoom(Room* room)
 {
-    if(getRoom() && !getRoom()->overlaps(room))
-    {
-        if(getRoom())
-            getRoom()->removeEntity(this);
+    if(!getRoom() || getRoom()->overlaps(room))
+        return;
 
-        if(room)
-            room->addEntity(this);
-    }
+    getRoom()->removeEntity(this);
+
+    if(room)
+        room->addEntity(this);
 }
 
 std::shared_ptr<engine::BtEngineClosestConvexResultCallback> Entity::callbackForCamera() const
@@ -297,17 +296,17 @@ bool Entity::wasCollisionBodyParts(uint32_t parts_flags) const
 void Entity::updateRoomPos()
 {
     glm::vec3 pos = getRoomPos();
-    auto new_room = Room_FindPosCogerrence(pos, getRoom());
+    auto new_room = engine::Engine::instance.m_world.Room_FindPosCogerrence(pos, getRoom());
     if(!new_room)
     {
         m_currentSector = nullptr;
         return;
     }
 
-    RoomSector* new_sector = new_room->getSectorXYZ(pos);
-    if(new_room != new_sector->owner_room.get())
+    const RoomSector* new_sector = new_room->getSectorXYZ(pos);
+    if(new_room != new_sector->owner_room)
     {
-        new_room = new_sector->owner_room.get();
+        new_room = new_sector->owner_room;
     }
 
     transferToRoom(new_room);
@@ -537,7 +536,7 @@ void Entity::processSector()
     // Sector above primarily needed for paranoid cases of monkeyswing.
 
     BOOST_ASSERT(m_currentSector != nullptr);
-    RoomSector* lowest_sector = m_currentSector->getLowestSector();
+    const RoomSector* lowest_sector = m_currentSector->getLowestSector();
     BOOST_ASSERT(lowest_sector != nullptr);
 
     processSectorImpl();
@@ -677,7 +676,7 @@ void Entity::checkActivators()
         return;
 
     glm::vec4 ppos = m_transform[3] + m_transform[1] * m_skeleton.getBoundingBox().max[1];
-    auto containers = getRoom()->m_objects;
+    auto containers = getRoom()->getObjects();
     for(Object* object : containers)
     {
         Entity* e = dynamic_cast<Entity*>(object);

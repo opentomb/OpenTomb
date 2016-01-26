@@ -119,7 +119,7 @@ void internalTickCallback(btDynamicsWorld *world, float /*timeStep*/)
             world::Object* object = static_cast<world::Object*>(body->getUserPointer());
             if(dynamic_cast<world::BulletObject*>(object))
             {
-                object->setRoom(Room_FindPosCogerrence(util::convert(trans.getOrigin()), object->getRoom()));
+                object->setRoom(engine::Engine::instance.m_world.Room_FindPosCogerrence(util::convert(trans.getOrigin()), object->getRoom()));
             }
         }
     }

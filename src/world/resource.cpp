@@ -118,7 +118,7 @@ void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
  *  |-------------------> OX       |--------------------> OXY
  */
 
-bool Res_Sector_IsWall(RoomSector* ws, RoomSector* ns)
+bool Res_Sector_IsWall(const RoomSector* ws, const RoomSector* ns)
 {
     BOOST_ASSERT(ws != nullptr);
     BOOST_ASSERT(ns != nullptr);
@@ -140,390 +140,6 @@ bool Res_Sector_IsWall(RoomSector* ws, RoomSector* ns)
     return false;
 }
 
-///@TODO: resolve floor >> ceiling case
-std::vector<SectorTween> Res_Sector_GenTweens(std::shared_ptr<Room> room)
-{
-    std::vector<SectorTween> result;
-    for(size_t h = 0; h < room->m_sectors.shape()[1] - 1; h++)
-    {
-        for(size_t w = 0; w < room->m_sectors.shape()[0] - 1; w++)
-        {
-            result.emplace_back();
-            SectorTween* room_tween = &result.back();
-            // Init X-plane tween [ | ]
-
-            RoomSector* current_heightmap = &room->m_sectors[w][h];
-            RoomSector* next_heightmap = current_heightmap + 1;
-            bool joined_floors = false;
-            bool joined_ceilings = false;
-
-            /* XY corners coordinates must be calculated from native room sector */
-            room_tween->floor_corners[0][1] = current_heightmap->floor_corners[0][1];
-            room_tween->floor_corners[1][1] = room_tween->floor_corners[0][1];
-            room_tween->floor_corners[2][1] = room_tween->floor_corners[0][1];
-            room_tween->floor_corners[3][1] = room_tween->floor_corners[0][1];
-            room_tween->floor_corners[0][0] = current_heightmap->floor_corners[0][0];
-            room_tween->floor_corners[1][0] = room_tween->floor_corners[0][0];
-            room_tween->floor_corners[2][0] = current_heightmap->floor_corners[1][0];
-            room_tween->floor_corners[3][0] = room_tween->floor_corners[2][0];
-
-            room_tween->ceiling_corners[0][1] = current_heightmap->ceiling_corners[0][1];
-            room_tween->ceiling_corners[1][1] = room_tween->ceiling_corners[0][1];
-            room_tween->ceiling_corners[2][1] = room_tween->ceiling_corners[0][1];
-            room_tween->ceiling_corners[3][1] = room_tween->ceiling_corners[0][1];
-            room_tween->ceiling_corners[0][0] = current_heightmap->ceiling_corners[0][0];
-            room_tween->ceiling_corners[1][0] = room_tween->ceiling_corners[0][0];
-            room_tween->ceiling_corners[2][0] = current_heightmap->ceiling_corners[1][0];
-            room_tween->ceiling_corners[3][0] = room_tween->ceiling_corners[2][0];
-
-            if(w > 0)
-            {
-                if(next_heightmap->floor_penetration_config != PenetrationConfig::Wall || current_heightmap->floor_penetration_config != PenetrationConfig::Wall)                                                           // Init X-plane tween [ | ]
-                {
-                    if(Res_Sector_IsWall(next_heightmap, current_heightmap))
-                    {
-                        room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
-                        room_tween->floor_corners[1][2] = current_heightmap->ceiling_corners[0][2];
-                        room_tween->floor_corners[2][2] = current_heightmap->ceiling_corners[1][2];
-                        room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
-                        room_tween->setFloorConfig();
-                        room_tween->ceiling_tween_type = TweenType::None;
-                        joined_floors = true;
-                        joined_ceilings = true;
-                    }
-                    else if(Res_Sector_IsWall(current_heightmap, next_heightmap))
-                    {
-                        room_tween->floor_corners[0][2] = next_heightmap->floor_corners[3][2];
-                        room_tween->floor_corners[1][2] = next_heightmap->ceiling_corners[3][2];
-                        room_tween->floor_corners[2][2] = next_heightmap->ceiling_corners[2][2];
-                        room_tween->floor_corners[3][2] = next_heightmap->floor_corners[2][2];
-                        room_tween->setFloorConfig();
-                        room_tween->ceiling_tween_type = TweenType::None;
-                        joined_floors = true;
-                        joined_ceilings = true;
-                    }
-                    else
-                    {
-                        /************************** SECTION WITH DROPS CALCULATIONS **********************/
-                        if((!current_heightmap->portal_to_room && !next_heightmap->portal_to_room) || current_heightmap->is2SidePortals(next_heightmap))
-                        {
-                            current_heightmap = current_heightmap->checkPortalPointer();
-                            next_heightmap = next_heightmap->checkPortalPointer();
-                            if(!current_heightmap->portal_to_room && !next_heightmap->portal_to_room && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
-                            {
-                                if(current_heightmap->floor_penetration_config == PenetrationConfig::Solid || next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
-                                {
-                                    room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
-                                    room_tween->floor_corners[1][2] = next_heightmap->floor_corners[3][2];
-                                    room_tween->floor_corners[2][2] = next_heightmap->floor_corners[2][2];
-                                    room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
-                                    room_tween->setFloorConfig();
-                                    joined_floors = true;
-                                }
-                                if(current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid || next_heightmap->ceiling_penetration_config == PenetrationConfig::Solid)
-                                {
-                                    room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[0][2];
-                                    room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[3][2];
-                                    room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[2][2];
-                                    room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[1][2];
-                                    room_tween->setCeilingConfig();
-                                    joined_ceilings = true;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                current_heightmap = &room->m_sectors[w][h];
-                next_heightmap = current_heightmap + 1;
-                if(!joined_floors && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
-                {
-                    bool valid = false;
-                    if(next_heightmap->portal_to_room && current_heightmap->sector_above != nullptr && current_heightmap->floor_penetration_config == PenetrationConfig::Solid)
-                    {
-                        next_heightmap = next_heightmap->checkPortalPointer();
-                        if(next_heightmap->owner_room->getId() == current_heightmap->sector_above->owner_room->getId())
-                        {
-                            valid = true;
-                        }
-                        if(!valid)
-                        {
-                            RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->position);
-                            if(rs && *rs->portal_to_room == next_heightmap->owner_room->getId())
-                            {
-                                valid = true;
-                            }
-                        }
-                    }
-
-                    if(current_heightmap->portal_to_room && next_heightmap->sector_above != nullptr && next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
-                    {
-                        current_heightmap = current_heightmap->checkPortalPointer();
-                        if(current_heightmap->owner_room->getId() == next_heightmap->sector_above->owner_room->getId())
-                        {
-                            valid = true;
-                        }
-                        if(!valid)
-                        {
-                            RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->position);
-                            if(rs && *rs->portal_to_room == current_heightmap->owner_room->getId())
-                            {
-                                valid = true;
-                            }
-                        }
-                    }
-
-                    if(valid && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
-                    {
-                        room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
-                        room_tween->floor_corners[1][2] = next_heightmap->floor_corners[3][2];
-                        room_tween->floor_corners[2][2] = next_heightmap->floor_corners[2][2];
-                        room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
-                        room_tween->setFloorConfig();
-                    }
-                }
-
-                current_heightmap = &room->m_sectors[w][h];
-                next_heightmap = current_heightmap + 1;
-                if(!joined_ceilings && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
-                {
-                    bool valid = false;
-                    if(next_heightmap->portal_to_room && current_heightmap->sector_below != nullptr && current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid)
-                    {
-                        next_heightmap = next_heightmap->checkPortalPointer();
-                        if(next_heightmap->owner_room->getId() == current_heightmap->sector_below->owner_room->getId())
-                        {
-                            valid = true;
-                        }
-                        if(!valid)
-                        {
-                            RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->position);
-                            if(rs && *rs->portal_to_room == next_heightmap->owner_room->getId())
-                            {
-                                valid = true;
-                            }
-                        }
-                    }
-
-                    if(current_heightmap->portal_to_room && next_heightmap->sector_below != nullptr && next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
-                    {
-                        current_heightmap = current_heightmap->checkPortalPointer();
-                        if(current_heightmap->owner_room->getId() == next_heightmap->sector_below->owner_room->getId())
-                        {
-                            valid = true;
-                        }
-                        if(valid == 0)
-                        {
-                            RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->position);
-                            if(rs && *rs->portal_to_room == current_heightmap->owner_room->getId())
-                            {
-                                valid = true;
-                            }
-                        }
-                    }
-
-                    if(valid && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
-                    {
-                        room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[0][2];
-                        room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[3][2];
-                        room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[2][2];
-                        room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[1][2];
-                        room_tween->setCeilingConfig();
-                    }
-                }
-            }
-
-            /*****************************************************************************************************
-             ********************************   CENTRE  OF  THE  ALGORITHM   *************************************
-             *****************************************************************************************************/
-
-            result.emplace_back();
-            room_tween = &result.back();
-            current_heightmap = &room->m_sectors[w][h];
-            next_heightmap = &room->m_sectors[w + 1][h];
-            room_tween->floor_corners[0][0] = current_heightmap->floor_corners[1][0];
-            room_tween->floor_corners[1][0] = room_tween->floor_corners[0][0];
-            room_tween->floor_corners[2][0] = room_tween->floor_corners[0][0];
-            room_tween->floor_corners[3][0] = room_tween->floor_corners[0][0];
-            room_tween->floor_corners[0][1] = current_heightmap->floor_corners[1][1];
-            room_tween->floor_corners[1][1] = room_tween->floor_corners[0][1];
-            room_tween->floor_corners[2][1] = current_heightmap->floor_corners[2][1];
-            room_tween->floor_corners[3][1] = room_tween->floor_corners[2][1];
-
-            room_tween->ceiling_corners[0][0] = current_heightmap->ceiling_corners[1][0];
-            room_tween->ceiling_corners[1][0] = room_tween->ceiling_corners[0][0];
-            room_tween->ceiling_corners[2][0] = room_tween->ceiling_corners[0][0];
-            room_tween->ceiling_corners[3][0] = room_tween->ceiling_corners[0][0];
-            room_tween->ceiling_corners[0][1] = current_heightmap->ceiling_corners[1][1];
-            room_tween->ceiling_corners[1][1] = room_tween->ceiling_corners[0][1];
-            room_tween->ceiling_corners[2][1] = current_heightmap->ceiling_corners[2][1];
-            room_tween->ceiling_corners[3][1] = room_tween->ceiling_corners[2][1];
-
-            joined_floors = false;
-            joined_ceilings = false;
-
-            if(h > 0)
-            {
-                if(next_heightmap->floor_penetration_config != PenetrationConfig::Wall || current_heightmap->floor_penetration_config != PenetrationConfig::Wall)
-                {
-                    // Init Y-plane tween  [ - ]
-                    if(Res_Sector_IsWall(next_heightmap, current_heightmap))
-                    {
-                        room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
-                        room_tween->floor_corners[1][2] = current_heightmap->ceiling_corners[1][2];
-                        room_tween->floor_corners[2][2] = current_heightmap->ceiling_corners[2][2];
-                        room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
-                        room_tween->setFloorConfig();
-                        room_tween->ceiling_tween_type = TweenType::None;
-                        joined_floors = true;
-                        joined_ceilings = true;
-                    }
-                    else if(Res_Sector_IsWall(current_heightmap, next_heightmap))
-                    {
-                        room_tween->floor_corners[0][2] = next_heightmap->floor_corners[0][2];
-                        room_tween->floor_corners[1][2] = next_heightmap->ceiling_corners[0][2];
-                        room_tween->floor_corners[2][2] = next_heightmap->ceiling_corners[3][2];
-                        room_tween->floor_corners[3][2] = next_heightmap->floor_corners[3][2];
-                        room_tween->setFloorConfig();
-                        room_tween->ceiling_tween_type = TweenType::None;
-                        joined_floors = true;
-                        joined_ceilings = true;
-                    }
-                    else
-                    {
-                        /************************** BIG SECTION WITH DROPS CALCULATIONS **********************/
-                        if((!current_heightmap->portal_to_room && !next_heightmap->portal_to_room) || current_heightmap->is2SidePortals(next_heightmap))
-                        {
-                            current_heightmap = current_heightmap->checkPortalPointer();
-                            next_heightmap = next_heightmap->checkPortalPointer();
-                            if(!current_heightmap->portal_to_room && !next_heightmap->portal_to_room && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
-                            {
-                                if(current_heightmap->floor_penetration_config == PenetrationConfig::Solid || next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
-                                {
-                                    room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
-                                    room_tween->floor_corners[1][2] = next_heightmap->floor_corners[0][2];
-                                    room_tween->floor_corners[2][2] = next_heightmap->floor_corners[3][2];
-                                    room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
-                                    room_tween->setFloorConfig();
-                                    joined_floors = true;
-                                }
-                                if(current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid || next_heightmap->ceiling_penetration_config == PenetrationConfig::Solid)
-                                {
-                                    room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[1][2];
-                                    room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[0][2];
-                                    room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[3][2];
-                                    room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[2][2];
-                                    room_tween->setCeilingConfig();
-                                    joined_ceilings = true;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                current_heightmap = &room->m_sectors[w][h];
-                next_heightmap = &room->m_sectors[w + 1][h];
-                if(!joined_floors && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
-                {
-                    bool valid = false;
-                    if(next_heightmap->portal_to_room && current_heightmap->sector_above != nullptr && current_heightmap->floor_penetration_config == PenetrationConfig::Solid)
-                    {
-                        next_heightmap = next_heightmap->checkPortalPointer();
-                        if(next_heightmap->owner_room->getId() == current_heightmap->sector_above->owner_room->getId())
-                        {
-                            valid = true;
-                        }
-                        if(!valid)
-                        {
-                            RoomSector* rs = current_heightmap->sector_above->owner_room->getSectorRaw(next_heightmap->position);
-                            if(rs && *rs->portal_to_room == next_heightmap->owner_room->getId())
-                            {
-                                valid = true;
-                            }
-                        }
-                    }
-
-                    if(current_heightmap->portal_to_room && next_heightmap->sector_above != nullptr && next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
-                    {
-                        current_heightmap = current_heightmap->checkPortalPointer();
-                        if(current_heightmap->owner_room->getId() == next_heightmap->sector_above->owner_room->getId())
-                        {
-                            valid = true;
-                        }
-                        if(!valid)
-                        {
-                            RoomSector* rs = next_heightmap->sector_above->owner_room->getSectorRaw(current_heightmap->position);
-                            if(rs && *rs->portal_to_room == current_heightmap->owner_room->getId())
-                            {
-                                valid = true;
-                            }
-                        }
-                    }
-
-                    if(valid && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
-                    {
-                        room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
-                        room_tween->floor_corners[1][2] = next_heightmap->floor_corners[0][2];
-                        room_tween->floor_corners[2][2] = next_heightmap->floor_corners[3][2];
-                        room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
-                        room_tween->setFloorConfig();
-                    }
-                }
-
-                current_heightmap = &room->m_sectors[w][h];
-                next_heightmap = &room->m_sectors[w + 1][h];
-                if(!joined_ceilings && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
-                {
-                    bool valid = false;
-                    if(next_heightmap->portal_to_room && current_heightmap->sector_below != nullptr && current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid)
-                    {
-                        next_heightmap = next_heightmap->checkPortalPointer();
-                        if(next_heightmap->owner_room->getId() == current_heightmap->sector_below->owner_room->getId())
-                        {
-                            valid = true;
-                        }
-                        if(!valid)
-                        {
-                            RoomSector* rs = current_heightmap->sector_below->owner_room->getSectorRaw(next_heightmap->position);
-                            if(rs && *rs->portal_to_room == next_heightmap->owner_room->getId())
-                            {
-                                valid = true;
-                            }
-                        }
-                    }
-
-                    if(current_heightmap->portal_to_room && next_heightmap->sector_below != nullptr && next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
-                    {
-                        current_heightmap = current_heightmap->checkPortalPointer();
-                        if(current_heightmap->owner_room->getId() == next_heightmap->sector_below->owner_room->getId())
-                        {
-                            valid = true;
-                        }
-                        if(!valid)
-                        {
-                            RoomSector* rs = next_heightmap->sector_below->owner_room->getSectorRaw(current_heightmap->position);
-                            if(rs && *rs->portal_to_room == current_heightmap->owner_room->getId())
-                            {
-                                valid = true;
-                            }
-                        }
-                    }
-
-                    if(valid && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
-                    {
-                        room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[1][2];
-                        room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[0][2];
-                        room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[3][2];
-                        room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[2][2];
-                        room_tween->setCeilingConfig();
-                    }
-                }
-            }
-        }    ///END for
-    }    ///END for
-    return result;
-}
-
 // Check if entity index was already processed (needed to remove dublicated activation calls).
 // If entity is not processed, add its index into lookup table.
 bool Res_IsEntityProcessed(std::set<ObjectId>& lookup_table, ObjectId entity_index)
@@ -537,9 +153,9 @@ bool Res_IsEntityProcessed(std::set<ObjectId>& lookup_table, ObjectId entity_ind
     return !lookup_table.insert(entity_index).second;
 }
 
-int TR_Sector_TranslateFloorData(RoomSector& sector, const std::unique_ptr<loader::Level>& tr)
+int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& floorData, loader::Engine engine)
 {
-    if(sector.trig_index <= 0 || sector.trig_index >= tr->m_floorData.size())
+    if(sector.trig_index <= 0 || sector.trig_index >= floorData.size())
     {
         return 0;
     }
@@ -550,8 +166,8 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const std::unique_ptr<loade
      * PARSE FUNCTIONS
      */
 
-    uint16_t *end_p = tr->m_floorData.data() + tr->m_floorData.size() - 1;
-    uint16_t *entry = tr->m_floorData.data() + sector.trig_index;
+    const uint16_t *end_p = floorData.data() + floorData.size() - 1;
+    const uint16_t *entry = floorData.data() + sector.trig_index;
 
     int ret = 0;
     uint16_t end_bit;
@@ -1104,7 +720,7 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const std::unique_ptr<loade
             case TR_FD_FUNC_MINECART_LEFT:
                 // Minecart left (TR3) and trigger triggerer mark (TR4-5) has the same flag value.
                 // We re-parse them properly here.
-                if(tr->m_gameVersion < loader::Game::TR4)
+                if(engine < loader::Engine::TR4)
                 {
                     sector.flags |= SECTOR_FLAG_MINECART_LEFT;
                 }
@@ -1117,7 +733,7 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const std::unique_ptr<loade
             case TR_FD_FUNC_MINECART_RIGHT:
                 // Minecart right (TR3) and beetle mark (TR4-5) has the same flag value.
                 // We re-parse them properly here.
-                if(tr->m_gameVersion < loader::Game::TR4)
+                if(engine < loader::Engine::TR4)
                 {
                     sector.flags |= SECTOR_FLAG_MINECART_RIGHT;
                 }
@@ -1364,147 +980,6 @@ void GenerateAnimCommands(SkeletalModel& model)
     }
 }
 
-bool TR_IsSectorsIn2SideOfPortal(RoomSector& s1, RoomSector& s2, const Portal& p)
-{
-    if(util::fuzzyEqual(s1.position[0], s2.position[0]) && !util::fuzzyEqual(s1.position[1], s2.position[1]) && glm::abs(p.normal[1]) > 0.99)
-    {
-        glm::float_t min_x, max_x, min_y, max_y;
-        max_x = min_x = p.vertices.front().x;
-        for(const auto& v : p.vertices)
-        {
-            if(v.x > max_x)
-            {
-                max_x = v.x;
-            }
-            if(v.x < min_x)
-            {
-                min_x = v.x;
-            }
-        }
-        if(s1.position[1] > s2.position[1])
-        {
-            min_y = s2.position[1];
-            max_y = s1.position[1];
-        }
-        else
-        {
-            min_y = s1.position[1];
-            max_y = s2.position[1];
-        }
-
-        if(s1.position[0] < max_x && s1.position[0] > min_x && p.center[1] < max_y && p.center[1] > min_y)
-        {
-            return true;
-        }
-    }
-    else if(!util::fuzzyEqual(s1.position[0], s2.position[0]) && util::fuzzyEqual(s1.position[1], s2.position[1]) && glm::abs(p.normal[0]) > 0.99)
-    {
-        glm::float_t min_x, max_x, min_y, max_y;
-        max_y = min_y = p.vertices.front().y;
-        for(const auto& v : p.vertices)
-        {
-            if(v.y > max_y)
-            {
-                max_y = v.y;
-            }
-            if(v.y < min_y)
-            {
-                min_y = v.y;
-            }
-        }
-        if(s1.position[0] > s2.position[0])
-        {
-            min_x = s2.position[0];
-            max_x = s1.position[0];
-        }
-        else
-        {
-            min_x = s1.position[0];
-            max_x = s2.position[0];
-        }
-
-        if(p.center[0] < max_x && p.center[0] > min_x && s1.position[1] < max_y && s1.position[1] > min_y)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-void TR_Sector_Calculate(World& world, const std::unique_ptr<loader::Level>& tr, size_t room_index)
-{
-    std::shared_ptr<Room> room = world.m_rooms[room_index];
-    loader::Room *tr_room = &tr->m_rooms[room_index];
-
-    /*
-     * Sectors loading
-     */
-
-    for(size_t i = 0; i < room->m_sectors.num_elements(); i++)
-    {
-        RoomSector& sector = room->m_sectors[i / room->m_sectors.shape()[1]][i%room->m_sectors.shape()[1]];
-        /*
-         * Let us fill pointers to sectors above and sectors below
-         */
-
-        uint8_t rp = tr_room->sector_list[i].room_below;
-        sector.sector_below = nullptr;
-        if(rp < world.m_rooms.size() && rp != 255)
-        {
-            sector.sector_below = world.m_rooms[rp]->getSectorRaw(sector.position);
-        }
-        rp = tr_room->sector_list[i].room_above;
-        sector.sector_above = nullptr;
-        if(rp < world.m_rooms.size() && rp != 255)
-        {
-            sector.sector_above = world.m_rooms[rp]->getSectorRaw(sector.position);
-        }
-
-        int dx = 0, dy = 0;
-        /**** OX *****/
-        if(sector.index_y > 0 && sector.index_y < room->m_sectors.shape()[1] - 1 && sector.index_x == 0)
-        {
-            dx = 1;
-        }
-        if(sector.index_y > 0 && sector.index_y < room->m_sectors.shape()[1] - 1 && sector.index_x == room->m_sectors.shape()[0] - 1)
-        {
-            dx = -1;
-        }
-        /**** OY *****/
-        if(sector.index_x > 0 && sector.index_x < room->m_sectors.shape()[0] - 1 && sector.index_y == 0)
-        {
-            dy = 1;
-        }
-        if(sector.index_x > 0 && sector.index_x < room->m_sectors.shape()[0] - 1 && sector.index_y == room->m_sectors.shape()[1] - 1)
-        {
-            dy = -1;
-        }
-
-        RoomSector& near_sector = room->m_sectors[i / room->m_sectors.shape()[1] + dx][i%room->m_sectors.shape()[1] + dy];
-
-        if(dx != 0 && dy != 0 && sector.portal_to_room)
-        {
-            for(const Portal& p : room->m_portals)
-            {
-                if(util::fuzzyZero(p.normal[2]))
-                {
-                    RoomSector* dst = p.destination ? p.destination->getSectorRaw(sector.position) : nullptr;
-                    if(dst == nullptr)
-                        continue;
-
-                    RoomSector* orig_dst = engine::Engine::instance.m_world.m_rooms[*sector.portal_to_room]->getSectorRaw(sector.position);
-
-                    if(!dst->portal_to_room && dst->floor != MeteringWallHeight && dst->ceiling != MeteringWallHeight && *sector.portal_to_room != p.destination->getId() && dst->floor < orig_dst->floor && TR_IsSectorsIn2SideOfPortal(near_sector, *dst, p))
-                    {
-                        sector.portal_to_room = p.destination->getId();
-                    }
-                }
-            }
-        }
-    }
-}
-
 RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
 {
     if(room_id >= engine::Engine::instance.m_world.m_rooms.size())
@@ -1513,12 +988,7 @@ RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
     }
 
     auto room = engine::Engine::instance.m_world.m_rooms[room_id];
-    if(sx < 0 || static_cast<size_t>(sx) >= room->m_sectors.shape()[0] || sy < 0 || static_cast<size_t>(sy) >= room->m_sectors.shape()[1])
-    {
-        return nullptr;
-    }
-
-    return &room->m_sectors[sx][sy];
+    return room->getSector(sx, sy);
 }
 
 void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::Value pen, lua::Value diag, lua::Value floor, float z0, float z1, float z2, float z3)
@@ -1695,363 +1165,7 @@ void TR_GenRooms(World& world, const std::unique_ptr<loader::Level>& tr)
         world.m_rooms[i] = std::make_shared<Room>(i);
     for(size_t i = 0; i < world.m_rooms.size(); i++)
     {
-        TR_GenRoom(world.m_rooms[i], world, tr);
-    }
-}
-
-void TR_GenRoom(std::shared_ptr<Room>& room, World& world, const std::unique_ptr<loader::Level>& tr)
-{
-    room->m_active = true;
-    room->m_flags = tr->m_rooms[room->getId()].flags;
-    room->m_lightMode = tr->m_rooms[room->getId()].light_mode;
-    room->m_reverbType = tr->m_rooms[room->getId()].reverb_info;
-    room->m_waterScheme = tr->m_rooms[room->getId()].water_scheme;
-    room->m_alternateGroup = tr->m_rooms[room->getId()].alternate_group;
-
-    room->m_modelMatrix = glm::translate(glm::mat4(1.0f), { tr->m_rooms[room->getId()].offset.x, -tr->m_rooms[room->getId()].offset.z, tr->m_rooms[room->getId()].offset.y });
-    room->m_ambientLighting[0] = tr->m_rooms[room->getId()].light_colour.r * 2;
-    room->m_ambientLighting[1] = tr->m_rooms[room->getId()].light_colour.g * 2;
-    room->m_ambientLighting[2] = tr->m_rooms[room->getId()].light_colour.b * 2;
-    room->setRoom(room.get());
-    room->m_nearRooms.clear();
-    room->m_overlappedRooms.clear();
-
-    room->genMesh(world, tr);
-
-    room->m_btBody.reset();
-
-    /*
-     *  let us load static room meshes
-     */
-    room->m_staticMeshes.clear();
-
-    const loader::Room *tr_room = &tr->m_rooms[room->getId()];
-    for(size_t i = 0; i < tr_room->static_meshes.size(); i++)
-    {
-        const loader::StaticMesh* tr_static = tr->findStaticMeshById(tr_room->static_meshes[i].object_id);
-        if(tr_static == nullptr)
-        {
-            continue;
-        }
-        room->m_staticMeshes.emplace_back(std::make_shared<StaticMesh>(tr_room->static_meshes[i].object_id));
-        std::shared_ptr<StaticMesh> r_static = room->m_staticMeshes.back();
-        r_static->setRoom(room.get());
-        r_static->mesh = world.m_meshes[tr->m_meshIndices[tr_static->mesh]];
-        r_static->position[0] = tr_room->static_meshes[i].position.x;
-        r_static->position[1] = -tr_room->static_meshes[i].position.z;
-        r_static->position[2] = tr_room->static_meshes[i].position.y;
-        r_static->rotation[0] = tr_room->static_meshes[i].rotation;
-        r_static->rotation[1] = 0.0;
-        r_static->rotation[2] = 0.0;
-        r_static->tint[0] = tr_room->static_meshes[i].tint.r * 2;
-        r_static->tint[1] = tr_room->static_meshes[i].tint.g * 2;
-        r_static->tint[2] = tr_room->static_meshes[i].tint.b * 2;
-        r_static->tint[3] = tr_room->static_meshes[i].tint.a * 2;
-
-        r_static->collisionBoundingBox.min[0] = tr_static->collision_box[0].x;
-        r_static->collisionBoundingBox.min[1] = -tr_static->collision_box[0].z;
-        r_static->collisionBoundingBox.min[2] = tr_static->collision_box[1].y;
-        r_static->collisionBoundingBox.max[0] = tr_static->collision_box[1].x;
-        r_static->collisionBoundingBox.max[1] = -tr_static->collision_box[1].z;
-        r_static->collisionBoundingBox.max[2] = tr_static->collision_box[0].y;
-
-        r_static->visibleBoundingBox.min[0] = tr_static->visibility_box[0].x;
-        r_static->visibleBoundingBox.min[1] = -tr_static->visibility_box[0].z;
-        r_static->visibleBoundingBox.min[2] = tr_static->visibility_box[1].y;
-
-        r_static->visibleBoundingBox.max[0] = tr_static->visibility_box[1].x;
-        r_static->visibleBoundingBox.max[1] = -tr_static->visibility_box[1].z;
-        r_static->visibleBoundingBox.max[2] = tr_static->visibility_box[0].y;
-
-        r_static->obb.transform = &room->m_staticMeshes[i]->transform;
-        r_static->obb.radius = room->m_staticMeshes[i]->mesh->m_radius;
-        r_static->transform = glm::rotate(glm::translate(glm::mat4(1.0f), r_static->position), glm::radians(r_static->rotation[0]), { 0,0,1 });
-        r_static->was_rendered = false;
-        r_static->obb.rebuild(r_static->visibleBoundingBox);
-        r_static->obb.doTransform();
-
-        r_static->bt_body = nullptr;
-        r_static->hide = false;
-
-        // Disable static mesh collision, if flag value is 3 (TR1) or all bounding box
-        // coordinates are equal (TR2-5).
-
-        if(tr_static->flags == 3 ||
-           (tr_static->collision_box[0].x == -tr_static->collision_box[0].y
-            && tr_static->collision_box[0].y == tr_static->collision_box[0].z
-            && tr_static->collision_box[1].x == -tr_static->collision_box[1].y
-            && tr_static->collision_box[1].y == tr_static->collision_box[1].z))
-        {
-            r_static->setCollisionType(CollisionType::None);
-        }
-        else
-        {
-            r_static->setCollisionType(CollisionType::Static);
-            r_static->setCollisionShape(CollisionShape::Box);
-        }
-
-        // Set additional static mesh properties from level script override.
-
-        Res_SetStaticMeshProperties(r_static);
-
-        // Set static mesh collision.
-        if(r_static->getCollisionType() == CollisionType::None)
-            continue;
-
-        btCollisionShape* cshape;
-        switch(r_static->getCollisionShape())
-        {
-            case CollisionShape::Box:
-                cshape = core::BT_CSfromBBox(r_static->collisionBoundingBox, true, true);
-                break;
-
-            case CollisionShape::BoxBase:
-                cshape = core::BT_CSfromBBox(r_static->mesh->m_boundingBox, true, true);
-                break;
-
-            case CollisionShape::TriMesh:
-                cshape = core::BT_CSfromMesh(r_static->mesh, true, true, true);
-                break;
-
-            case CollisionShape::TriMeshConvex:
-                cshape = core::BT_CSfromMesh(r_static->mesh, true, true, false);
-                break;
-
-            default:
-                cshape = nullptr;
-                break;
-        };
-
-        if(!cshape)
-            continue;
-
-        btTransform startTransform;
-        startTransform.setFromOpenGLMatrix(glm::value_ptr(r_static->transform));
-        btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
-        btVector3 localInertia(0, 0, 0);
-        r_static->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-        engine::BulletEngine::instance->dynamicsWorld->addRigidBody(r_static->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-        r_static->bt_body->setUserPointer(r_static.get());
-    }
-
-    /*
-     * sprites loading section
-     */
-    for(size_t i = 0; i < tr_room->sprites.size(); i++)
-    {
-        room->m_sprites.emplace_back();
-        if(tr_room->sprites[i].texture < 0 || static_cast<size_t>(tr_room->sprites[i].texture) >= world.m_sprites.size())
-            continue;
-
-        room->m_sprites[i].sprite = &world.m_sprites[tr_room->sprites[i].texture];
-        room->m_sprites[i].pos = util::convert(tr_room->vertices[tr_room->sprites[i].vertex].vertex);
-        room->m_sprites[i].pos += glm::vec3(room->m_modelMatrix[3]);
-    }
-
-    /*
-     * let us load sectors
-     */
-    room->m_sectors.resize(boost::extents[tr_room->num_xsectors][tr_room->num_zsectors]);
-
-    /*
-     * base sectors information loading and collisional mesh creation
-     */
-
-     // To avoid manipulating with unnecessary information, we declare simple
-     // heightmap here, which will be operated with sector and floordata parsing,
-     // then vertical inbetween polys will be constructed, and Bullet collisional
-     // object will be created. Afterwards, this heightmap also can be used to
-     // quickly detect slopes for pushable blocks and other entities that rely on
-     // floor level.
-
-    for(size_t i = 0; i < room->m_sectors.num_elements(); i++)
-    {
-        const auto indexX = i / room->m_sectors.shape()[1];
-        const auto indexY = i % room->m_sectors.shape()[1];
-        RoomSector& sector = room->m_sectors[indexX][indexY];
-        // Filling base sectors information.
-
-        sector.index_x = indexX;
-        sector.index_y = indexY;
-
-        sector.position[0] = room->m_modelMatrix[3][0] + sector.index_x * MeteringSectorSize + 0.5f * MeteringSectorSize;
-        sector.position[1] = room->m_modelMatrix[3][1] + sector.index_y * MeteringSectorSize + 0.5f * MeteringSectorSize;
-        sector.position[2] = 0.5f * (tr_room->y_bottom + tr_room->y_top);
-
-        sector.owner_room = room;
-
-        if(tr->m_gameVersion < loader::Game::TR3)
-        {
-            sector.box_index = tr_room->sector_list[i].box_index;
-            sector.material = SECTOR_MATERIAL_STONE;
-        }
-        else
-        {
-            sector.box_index = (tr_room->sector_list[i].box_index & 0xFFF0) >> 4;
-            sector.material = tr_room->sector_list[i].box_index & 0x000F;
-        }
-
-        if(sector.box_index == 0xFFFF)
-            sector.box_index = -1;
-
-        sector.flags = 0;  // Clear sector flags.
-
-        sector.floor = -MeteringStep * static_cast<int>(tr_room->sector_list[i].floor);
-        sector.ceiling = -MeteringStep * static_cast<int>(tr_room->sector_list[i].ceiling);
-        sector.trig_index = tr_room->sector_list[i].fd_index;
-
-        // BUILDING CEILING HEIGHTMAP.
-
-        // Penetration config is used later to build inbetween vertical collision polys.
-        // If sector's penetration config is a wall, we simply build a vertical plane to
-        // isolate this sector from top to bottom. Also, this allows to trick out wall
-        // sectors inside another wall sectors to be ignored completely when building
-        // collisional mesh.
-        // Door penetration config means that we should either ignore sector collision
-        // completely (classic door) or ignore one of the triangular sector parts (TR3+).
-
-        if(sector.ceiling == MeteringWallHeight)
-        {
-            sector.ceiling_penetration_config = PenetrationConfig::Wall;
-        }
-        else if(tr_room->sector_list[i].room_above != 0xFF)
-        {
-            sector.ceiling_penetration_config = PenetrationConfig::Ghost;
-        }
-        else
-        {
-            sector.ceiling_penetration_config = PenetrationConfig::Solid;
-        }
-
-        // Reset some sector parameters to avoid garbaged memory issues.
-
-        sector.portal_to_room = boost::none;
-        sector.ceiling_diagonal_type = DiagonalType::None;
-        sector.floor_diagonal_type = DiagonalType::None;
-
-        // Now, we define heightmap cells position and draft (flat) height.
-        // Draft height is derived from sector's floor and ceiling values, which are
-        // copied into heightmap cells Y coordinates. As result, we receive flat
-        // heightmap cell, which will be operated later with floordata.
-
-        sector.ceiling_corners[0][0] = sector.index_x * MeteringSectorSize;
-        sector.ceiling_corners[0][1] = sector.index_y * MeteringSectorSize + MeteringSectorSize;
-        sector.ceiling_corners[0][2] = sector.ceiling;
-
-        sector.ceiling_corners[1][0] = sector.index_x * MeteringSectorSize + MeteringSectorSize;
-        sector.ceiling_corners[1][1] = sector.index_y * MeteringSectorSize + MeteringSectorSize;
-        sector.ceiling_corners[1][2] = sector.ceiling;
-
-        sector.ceiling_corners[2][0] = sector.index_x * MeteringSectorSize + MeteringSectorSize;
-        sector.ceiling_corners[2][1] = sector.index_y * MeteringSectorSize;
-        sector.ceiling_corners[2][2] = sector.ceiling;
-
-        sector.ceiling_corners[3][0] = sector.index_x * MeteringSectorSize;
-        sector.ceiling_corners[3][1] = sector.index_y * MeteringSectorSize;
-        sector.ceiling_corners[3][2] = sector.ceiling;
-
-        // BUILDING FLOOR HEIGHTMAP.
-
-        // Features same steps as for the ceiling.
-
-        if(sector.floor == MeteringWallHeight)
-        {
-            sector.floor_penetration_config = PenetrationConfig::Wall;
-        }
-        else if(tr_room->sector_list[i].room_below != 0xFF)
-        {
-            sector.floor_penetration_config = PenetrationConfig::Ghost;
-        }
-        else
-        {
-            sector.floor_penetration_config = PenetrationConfig::Solid;
-        }
-
-        sector.floor_corners[0][0] = sector.index_x * MeteringSectorSize;
-        sector.floor_corners[0][1] = sector.index_y * MeteringSectorSize + MeteringSectorSize;
-        sector.floor_corners[0][2] = sector.floor;
-
-        sector.floor_corners[1][0] = sector.index_x * MeteringSectorSize + MeteringSectorSize;
-        sector.floor_corners[1][1] = sector.index_y * MeteringSectorSize + MeteringSectorSize;
-        sector.floor_corners[1][2] = sector.floor;
-
-        sector.floor_corners[2][0] = sector.index_x * MeteringSectorSize + MeteringSectorSize;
-        sector.floor_corners[2][1] = sector.index_y * MeteringSectorSize;
-        sector.floor_corners[2][2] = sector.floor;
-
-        sector.floor_corners[3][0] = sector.index_x * MeteringSectorSize;
-        sector.floor_corners[3][1] = sector.index_y * MeteringSectorSize;
-        sector.floor_corners[3][2] = sector.floor;
-    }
-
-    /*
-     *  load lights
-     */
-    room->m_lights.reserve(tr_room->lights.size());
-
-    for(size_t i = 0; i < tr_room->lights.size(); i++)
-    {
-        core::Light lgt;
-        lgt.light_type = tr_room->lights[i].getLightType();
-
-        lgt.position[0] = tr_room->lights[i].position.x;
-        lgt.position[1] = -tr_room->lights[i].position.z;
-        lgt.position[2] = tr_room->lights[i].position.y;
-
-        if(lgt.light_type == loader::LightType::Shadow)
-        {
-            lgt.color[0] = -(tr_room->lights[i].color.r / 255.0f) * tr_room->lights[i].intensity;
-            lgt.color[1] = -(tr_room->lights[i].color.g / 255.0f) * tr_room->lights[i].intensity;
-            lgt.color[2] = -(tr_room->lights[i].color.b / 255.0f) * tr_room->lights[i].intensity;
-            lgt.color[3] = 1.0f;
-        }
-        else
-        {
-            lgt.color[0] = tr_room->lights[i].color.r / 255.0f * tr_room->lights[i].intensity;
-            lgt.color[1] = tr_room->lights[i].color.g / 255.0f * tr_room->lights[i].intensity;
-            lgt.color[2] = tr_room->lights[i].color.b / 255.0f * tr_room->lights[i].intensity;
-            lgt.color[3] = 1.0f;
-        }
-
-        lgt.inner = tr_room->lights[i].r_inner;
-        lgt.outer = tr_room->lights[i].r_outer;
-        lgt.length = tr_room->lights[i].length;
-        lgt.cutoff = tr_room->lights[i].cutoff;
-
-        lgt.falloff = 0.001f / lgt.outer;
-
-        room->m_lights.emplace_back(std::move(lgt));
-    }
-
-    /*
-     * portals loading / calculation!!!
-     */
-    for(const loader::Portal& p : tr_room->portals)
-    {
-        std::shared_ptr<Room> r_dest = world.m_rooms[p.adjoining_room];
-        room->m_portals.emplace_back(p, room.get(), r_dest.get(), room->m_modelMatrix);
-    }
-
-    /*
-     * room borders calculation
-     */
-    room->m_boundingBox.min[2] = tr_room->y_bottom;
-    room->m_boundingBox.max[2] = tr_room->y_top;
-
-    room->m_boundingBox.min[0] = room->m_modelMatrix[3][0] + MeteringSectorSize;
-    room->m_boundingBox.min[1] = room->m_modelMatrix[3][1] + MeteringSectorSize;
-    room->m_boundingBox.max[0] = room->m_modelMatrix[3][0] + MeteringSectorSize * room->m_sectors.shape()[0] - MeteringSectorSize;
-    room->m_boundingBox.max[1] = room->m_modelMatrix[3][1] + MeteringSectorSize * room->m_sectors.shape()[1] - MeteringSectorSize;
-
-    /*
-     * alternate room pointer calculation if one exists.
-     */
-    room->m_alternateRoom = nullptr;
-    room->m_baseRoom = nullptr;
-
-    if(tr_room->alternate_room >= 0 && static_cast<uint32_t>(tr_room->alternate_room) < tr->m_rooms.size())
-    {
-        room->m_alternateRoom = world.m_rooms[tr_room->alternate_room];
+        world.m_rooms[i]->load(world, tr);
     }
 }
 
@@ -2059,36 +1173,7 @@ void Res_GenRoomCollision(World& world)
 {
     for(std::shared_ptr<Room> room : world.m_rooms)
     {
-        // Inbetween polygons array is later filled by loop which scans adjacent
-        // sector heightmaps and fills the gaps between them, thus creating inbetween
-        // polygon. Inbetweens can be either quad (if all four corner heights are
-        // different), triangle (if one corner height is similar to adjacent) or
-        // ghost (if corner heights are completely similar). In case of quad inbetween,
-        // two triangles are added to collisional trimesh, in case of triangle inbetween,
-        // we add only one, and in case of ghost inbetween, we ignore it.
-
-        // Most difficult task with converting floordata collision to trimesh collision is
-        // building inbetween polygons which will block out gaps between sector heights.
-        std::vector<SectorTween> room_tween = Res_Sector_GenTweens(room);
-
-        // Final step is sending actual sectors to Bullet collision model. We do it here.
-
-        btCollisionShape *cshape = BT_CSfromHeightmap(room->m_sectors, room_tween, true, true);
-
-        if(!cshape)
-            continue;
-
-        btVector3 localInertia(0, 0, 0);
-        btTransform tr;
-        tr.setFromOpenGLMatrix(glm::value_ptr(room->m_modelMatrix));
-        btDefaultMotionState* motionState = new btDefaultMotionState(tr);
-        room->m_btBody.reset(new btRigidBody(0.0, motionState, cshape, localInertia));
-        engine::BulletEngine::instance->dynamicsWorld->addRigidBody(room->m_btBody.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-        room->m_btBody->setUserPointer(room.get());
-        room->m_btBody->setRestitution(1.0);
-        room->m_btBody->setFriction(1.0);
-        room->setCollisionType(CollisionType::Static);                    // meshtree
-        room->setCollisionShape(CollisionShape::TriMesh);
+        room->generateCollisionShape();
     }
 }
 
@@ -2096,29 +1181,7 @@ void TR_GenRoomProperties(World& world, const std::unique_ptr<loader::Level>& tr
 {
     for(size_t i = 0; i < world.m_rooms.size(); i++)
     {
-        std::shared_ptr<Room> r = world.m_rooms[i];
-        if(r->m_alternateRoom != nullptr)
-        {
-            r->m_alternateRoom->m_baseRoom = r;   // Refill base room pointer.
-        }
-
-        // Fill heightmap and translate floordata.
-        for(auto column : r->m_sectors)
-        {
-            for(RoomSector& sector : column)
-            {
-                TR_Sector_TranslateFloorData(sector, tr);
-                Res_Sector_FixHeights(sector);
-            }
-        }
-
-        // Generate links to the near rooms.
-        r->buildNearRoomsList();
-        // Generate links to the overlapped rooms.
-        r->buildOverlappedRoomsList();
-
-        // Basic sector calculations.
-        TR_Sector_Calculate(world, tr, i);
+        world.m_rooms[i]->generateProperties(world, tr->m_rooms[i], tr->m_floorData, loader::gameToEngine(tr->m_gameVersion));
     }
 }
 
@@ -2198,7 +1261,7 @@ void TR_GenSprites(World& world, const std::unique_ptr<loader::Level>& tr)
 void Res_GenSpritesBuffer(World& world)
 {
     for(auto room : world.m_rooms)
-        Res_GenRoomSpritesBuffer(room);
+        room->generateSpritesBuffer();
 }
 
 void TR_GenTextures(World& world, const std::unique_ptr<loader::Level>& tr)
@@ -2698,123 +1761,6 @@ void tr_setupRoomVertices(World& world, const std::unique_ptr<loader::Level>& tr
     world.m_textureAtlas->getCoordinates(masked_texture, 0, p);
 }
 
-void Res_GenRoomSpritesBuffer(std::shared_ptr<Room> room)
-{
-    // Find the number of different texture pages used and the number of non-null sprites
-    size_t highestTexturePageFound = 0;
-    int actualSpritesFound = 0;
-    for(RoomSprite& sp : room->m_sprites)
-    {
-        if(!sp.sprite)
-            continue;
-
-        actualSpritesFound += 1;
-        highestTexturePageFound = std::max(highestTexturePageFound, sp.sprite->texture);
-    }
-    if(actualSpritesFound == 0)
-    {
-        room->m_spriteBuffer = nullptr;
-        return;
-    }
-
-    room->m_spriteBuffer = new core::SpriteBuffer();
-    room->m_spriteBuffer->num_texture_pages = highestTexturePageFound + 1;
-    room->m_spriteBuffer->element_count_per_texture.resize(room->m_spriteBuffer->num_texture_pages, 0);
-
-    // First collect indices on a per-texture basis
-    std::vector<std::vector<uint16_t>> elements_for_texture(highestTexturePageFound + 1);
-
-    std::vector<glm::float_t> spriteData(actualSpritesFound * 4 * 7, 0);
-
-    int writeIndex = 0;
-    for(const RoomSprite& room_sprite : room->m_sprites)
-    {
-        if(!room_sprite.sprite)
-            continue;
-
-        int vertexStart = writeIndex;
-        // top right
-        std::copy_n(glm::value_ptr(room_sprite.pos), 3, &spriteData[writeIndex * 7 + 0]);
-        std::copy_n(glm::value_ptr(room_sprite.sprite->tex_coord[0]), 2, &spriteData[writeIndex * 7 + 3]);
-        spriteData[writeIndex * 7 + 5] = room_sprite.sprite->right;
-        spriteData[writeIndex * 7 + 6] = room_sprite.sprite->top;
-
-        writeIndex += 1;
-
-        // top left
-        std::copy_n(glm::value_ptr(room_sprite.pos), 3, &spriteData[writeIndex * 7 + 0]);
-        std::copy_n(glm::value_ptr(room_sprite.sprite->tex_coord[1]), 2, &spriteData[writeIndex * 7 + 3]);
-        spriteData[writeIndex * 7 + 5] = room_sprite.sprite->left;
-        spriteData[writeIndex * 7 + 6] = room_sprite.sprite->top;
-
-        writeIndex += 1;
-
-        // bottom left
-        std::copy_n(glm::value_ptr(room_sprite.pos), 3, &spriteData[writeIndex * 7 + 0]);
-        std::copy_n(glm::value_ptr(room_sprite.sprite->tex_coord[2]), 2, &spriteData[writeIndex * 7 + 3]);
-        spriteData[writeIndex * 7 + 5] = room_sprite.sprite->left;
-        spriteData[writeIndex * 7 + 6] = room_sprite.sprite->bottom;
-
-        writeIndex += 1;
-
-        // bottom right
-        std::copy_n(glm::value_ptr(room_sprite.pos), 3, &spriteData[writeIndex * 7 + 0]);
-        std::copy_n(glm::value_ptr(room_sprite.sprite->tex_coord[3]), 2, &spriteData[writeIndex * 7 + 3]);
-        spriteData[writeIndex * 7 + 5] = room_sprite.sprite->right;
-        spriteData[writeIndex * 7 + 6] = room_sprite.sprite->bottom;
-
-        writeIndex += 1;
-
-        // Assign indices
-        size_t texture = room_sprite.sprite->texture;
-        size_t start = room->m_spriteBuffer->element_count_per_texture[texture];
-        size_t newElementCount = start + 6;
-        room->m_spriteBuffer->element_count_per_texture[texture] = newElementCount;
-        elements_for_texture[texture].resize(newElementCount);
-
-        elements_for_texture[texture][start + 0] = vertexStart + 0;
-        elements_for_texture[texture][start + 1] = vertexStart + 1;
-        elements_for_texture[texture][start + 2] = vertexStart + 2;
-        elements_for_texture[texture][start + 3] = vertexStart + 2;
-        elements_for_texture[texture][start + 4] = vertexStart + 3;
-        elements_for_texture[texture][start + 5] = vertexStart + 0;
-    }
-
-    // Now flatten all these indices to a single array
-    std::vector<uint16_t> elements;
-    for(uint32_t i = 0; i <= highestTexturePageFound; i++)
-    {
-        if(elements_for_texture[i].empty())
-        {
-            continue;
-        }
-        BOOST_ASSERT(elements_for_texture[i].size() >= room->m_spriteBuffer->element_count_per_texture[i]);
-        std::copy_n(elements_for_texture[i].begin(), room->m_spriteBuffer->element_count_per_texture[i], std::back_inserter(elements));
-        elements_for_texture[i].clear();
-    }
-    elements_for_texture.clear();
-
-    // Now load into OpenGL
-    GLuint arrayBuffer, elementBuffer;
-    glGenBuffers(1, &arrayBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, arrayBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat[7]) * 4 * actualSpritesFound, spriteData.data(), GL_STATIC_DRAW);
-    spriteData.clear();
-
-    glGenBuffers(1, &elementBuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(elements[0]) * elements.size(), elements.data(), GL_STATIC_DRAW);
-    elements.clear();
-
-    render::VertexArrayAttribute attribs[3] = {
-        render::VertexArrayAttribute(render::SpriteShaderDescription::vertex_attribs::position,      3, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat[7]), 0),
-        render::VertexArrayAttribute(render::SpriteShaderDescription::vertex_attribs::tex_coord,     2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat[7]), sizeof(GLfloat[3])),
-        render::VertexArrayAttribute(render::SpriteShaderDescription::vertex_attribs::corner_offset, 2, GL_FLOAT, false, arrayBuffer, sizeof(GLfloat[7]), sizeof(GLfloat[5]))
-    };
-
-    room->m_spriteBuffer->data.reset(new render::VertexArray(elementBuffer, 3, attribs));
-}
-
 void Res_GenVBOs(World& world)
 {
     for(uint32_t i = 0; i < world.m_meshes.size(); i++)
@@ -2827,9 +1773,9 @@ void Res_GenVBOs(World& world)
 
     for(uint32_t i = 0; i < world.m_rooms.size(); i++)
     {
-        if(world.m_rooms[i]->m_mesh && (!world.m_rooms[i]->m_mesh->m_vertices.empty() || !world.m_rooms[i]->m_mesh->m_animatedVertices.empty()))
+        if(world.m_rooms[i]->getMesh() && (!world.m_rooms[i]->getMesh()->m_vertices.empty() || !world.m_rooms[i]->getMesh()->m_animatedVertices.empty()))
         {
-            world.m_rooms[i]->m_mesh->genVBO();
+            world.m_rooms[i]->getMesh()->genVBO();
         }
     }
 }
@@ -2849,7 +1795,7 @@ void Res_FixRooms(World& world)
     for(size_t i = 0; i < world.m_rooms.size(); i++)
     {
         auto r = world.m_rooms[i];
-        if(r->m_baseRoom != nullptr)
+        if(r->getBaseRoom() != nullptr)
         {
             r->disable();    // Disable current room
         }
@@ -3445,11 +2391,7 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
             core::Sprite* sp = world.getSpriteByID(tr_item->object_id);
             if(sp && entity->getRoom())
             {
-                entity->getRoom()->m_sprites.emplace_back();
-                RoomSprite& rsp = entity->getRoom()->m_sprites.back();
-                rsp.sprite = sp;
-                rsp.pos = glm::vec3(entity->m_transform[3]);
-                rsp.was_rendered = false;
+                entity->getRoom()->addSprite(sp, glm::vec3(entity->m_transform[3]));
             }
 
             continue;                                                           // that entity has no model. may be it is a some trigger or look at object
@@ -3550,7 +2492,7 @@ void Res_EntityToItem(std::map<ObjectId, std::shared_ptr<BaseItem> >& map)
     {
         for(const std::shared_ptr<Room>& room : engine::Engine::instance.m_world.m_rooms)
         {
-            for(Object* object : room->m_objects)
+            for(Object* object : room->getObjects())
             {
                 Entity* ent = dynamic_cast<Entity*>(object);
                 if(!ent)

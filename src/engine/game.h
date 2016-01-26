@@ -18,7 +18,7 @@ class ScriptEngine;
 
 namespace world
 {
-struct Room;
+class Room;
 struct RoomSector;
 struct World;
 class Camera;

@@ -23,7 +23,7 @@ class BtEngineClosestConvexResultCallback;
 
 namespace world
 {
-struct Room;
+class Room;
 struct RoomSector;
 struct RagdollSetup;
 class Character;
@@ -136,8 +136,8 @@ public:
 
     core::OrientedBoundingBox m_obb;
 
-    RoomSector* m_currentSector = nullptr;
-    RoomSector* m_lastSector = nullptr;
+    const RoomSector* m_currentSector = nullptr;
+    const RoomSector* m_lastSector = nullptr;
 
     glm::vec3 m_activationOffset = { 0,256,0 };   // where we can activate object (dx, dy, dz)
     glm::float_t m_activationRadius = 128;

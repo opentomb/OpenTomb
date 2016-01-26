@@ -253,11 +253,11 @@ std::shared_ptr<BaseItem> World::getBaseItemByID(ObjectId id)
         return it->second;
 }
 
-std::shared_ptr<Room> World::findRoomByPosition(const glm::vec3& pos)
+std::shared_ptr<Room> World::findRoomByPosition(const glm::vec3& pos) const
 {
     for(auto r : m_rooms)
     {
-        if(r->m_active && r->m_boundingBox.contains(pos))
+        if(r->isActive() && r->getBoundingBox().contains(pos))
         {
             return r;
         }
@@ -265,32 +265,32 @@ std::shared_ptr<Room> World::findRoomByPosition(const glm::vec3& pos)
     return nullptr;
 }
 
-Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
+Room* World::Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room) const
 {
     if(room == nullptr)
     {
-        return engine::Engine::instance.m_world.findRoomByPosition(new_pos).get();
+        return findRoomByPosition(new_pos).get();
     }
 
-    if(room->m_active &&
-       new_pos[0] >= room->m_boundingBox.min[0] && new_pos[0] < room->m_boundingBox.max[0] &&
-       new_pos[1] >= room->m_boundingBox.min[1] && new_pos[1] < room->m_boundingBox.max[1])
+    if(room->isActive() &&
+       new_pos[0] >= room->getBoundingBox().min[0] && new_pos[0] < room->getBoundingBox().max[0] &&
+       new_pos[1] >= room->getBoundingBox().min[1] && new_pos[1] < room->getBoundingBox().max[1])
     {
-        if(new_pos[2] >= room->m_boundingBox.min[2] && new_pos[2] < room->m_boundingBox.max[2])
+        if(new_pos[2] >= room->getBoundingBox().min[2] && new_pos[2] < room->getBoundingBox().max[2])
         {
             return room;
         }
-        else if(new_pos[2] >= room->m_boundingBox.max[2])
+        else if(new_pos[2] >= room->getBoundingBox().max[2])
         {
-            RoomSector* orig_sector = room->getSectorRaw(new_pos);
+            const RoomSector* orig_sector = room->getSectorRaw(new_pos);
             if(orig_sector->sector_above != nullptr)
             {
                 return orig_sector->sector_above->owner_room->checkFlip();
             }
         }
-        else if(new_pos[2] < room->m_boundingBox.min[2])
+        else if(new_pos[2] < room->getBoundingBox().min[2])
         {
-            RoomSector* orig_sector = room->getSectorRaw(new_pos);
+            const RoomSector* orig_sector = room->getSectorRaw(new_pos);
             if(orig_sector->sector_below != nullptr)
             {
                 return orig_sector->sector_below->owner_room->checkFlip();
@@ -298,21 +298,21 @@ Room* Room_FindPosCogerrence(const glm::vec3 &new_pos, Room* room)
         }
     }
 
-    RoomSector* new_sector = room->getSectorRaw(new_pos);
+    const RoomSector* new_sector = room->getSectorRaw(new_pos);
     if(new_sector != nullptr && new_sector->portal_to_room)
     {
-        return engine::Engine::instance.m_world.m_rooms[*new_sector->portal_to_room]->checkFlip();
+        return m_rooms[*new_sector->portal_to_room]->checkFlip();
     }
 
-    for(Room* r : room->m_nearRooms)
+    for(Room* r : room->getNearRooms())
     {
-        if(r->m_active && r->m_boundingBox.contains(new_pos))
+        if(r->isActive() && r->getBoundingBox().contains(new_pos))
         {
             return r;
         }
     }
 
-    return engine::Engine::instance.m_world.findRoomByPosition(new_pos).get();
+    return findRoomByPosition(new_pos).get();
 }
 
 std::shared_ptr<Room> World::getByID(ObjectId ID)
@@ -325,41 +325,6 @@ std::shared_ptr<Room> World::getByID(ObjectId ID)
         }
     }
     return nullptr;
-}
-
-RoomSector* Room_GetSectorCheckFlip(std::shared_ptr<Room> room, const glm::vec3& pos)
-{
-    if(room == nullptr)
-        return nullptr;
-
-    if(!room->m_active)
-    {
-        if(room->m_baseRoom != nullptr && room->m_baseRoom->m_active)
-        {
-            room = room->m_baseRoom;
-        }
-        else if(room->m_alternateRoom != nullptr && room->m_alternateRoom->m_active)
-        {
-            room = room->m_alternateRoom;
-        }
-    }
-
-    if(!room->m_active)
-    {
-        return nullptr;
-    }
-
-    auto x = static_cast<int>(pos[0] - room->m_modelMatrix[3][0]) / 1024;
-    auto y = static_cast<int>(pos[1] - room->m_modelMatrix[3][1]) / 1024;
-    if(x < 0 || static_cast<size_t>(x) >= room->m_sectors.shape()[0] || y < 0 || static_cast<size_t>(y) >= room->m_sectors.shape()[1])
-    {
-        return nullptr;
-    }
-
-    // Column index system
-    // X - column number, Y - string number
-
-    return &room->m_sectors[x][y];
 }
 
 void World::addEntity(std::shared_ptr<Entity> entity)

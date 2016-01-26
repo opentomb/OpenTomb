@@ -2436,4 +2436,6 @@ struct Palette
         return palette;
     }
 };
+
+using FloorData = std::vector<uint16_t>;
 } // namespace loader

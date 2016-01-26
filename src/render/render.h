@@ -20,7 +20,7 @@ namespace world
 {
 struct Portal;
 struct World;
-struct Room;
+class Room;
 struct RoomSector;
 class Camera;
 class Entity;

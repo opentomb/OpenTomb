@@ -25,7 +25,7 @@
 
 namespace world
 {
-struct Room;
+class Room;
 
 namespace core
 {
@@ -131,6 +131,11 @@ public:
     }
 
     Room* getCurrentRoom() noexcept
+    {
+        return m_currentRoom;
+    }
+
+    const Room* getCurrentRoom() const noexcept
     {
         return m_currentRoom;
     }

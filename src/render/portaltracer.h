@@ -12,7 +12,7 @@ struct PortalTracer
 
     bool checkVisibility(const world::Portal* portal, const glm::vec3& cameraPosition, const world::core::Frustum& frustum)
     {
-        if(!portal->destination || !portal->destination->m_active)
+        if(!portal->destination || !portal->destination->isActive())
         {
             return false; // no relevant destination
         }
