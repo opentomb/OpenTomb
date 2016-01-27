@@ -1,7 +1,13 @@
 #pragma once
 
 #include "animation/animation.h"
-#include "core/boundingbox.h"
+
+namespace loader
+{
+class Level;
+struct Moveable;
+enum class Engine;
+}
 
 namespace world
 {
@@ -20,11 +26,6 @@ using ModelId = uint32_t;
  */
 class SkeletalModel
 {
-private:
-    ModelId m_id;
-
-    bool m_hasTransparency = false;
-
 public:
     /*
     * mesh tree base element structure
@@ -40,12 +41,18 @@ public:
         bool                        replace_anim = false;
     };
 
+private:
+    ModelId m_id;
+
+    bool m_hasTransparency = false;
+
     std::vector<animation::Animation> m_animations;
 
-    std::vector<MeshReference> m_meshes;
+    std::vector<MeshReference> m_meshReferences;
 
     std::vector<size_t> m_collisionMap;
 
+public:
     bool m_noFixAll = false;
     uint32_t m_noFixBodyParts = 0;
 
@@ -67,6 +74,51 @@ public:
         return m_hasTransparency;
     }
 
+    const animation::Animation& getAnimation(size_t idx) const
+    {
+        BOOST_ASSERT(idx < m_animations.size());
+        return m_animations[idx];
+    }
+
+    size_t getAnimationCount() const
+    {
+        return m_animations.size();
+    }
+
+    bool isStaticAnimation() const
+    {
+        BOOST_ASSERT(!m_animations.empty());
+
+        if(m_animations.size() != 1)
+            return false;
+
+        if(m_animations[0].getFrameDuration() != 1)
+            return false;
+
+        return true;
+    }
+
+    bool hasAnimations() const
+    {
+        return !m_animations.empty();
+    }
+
+    size_t getMeshReferenceCount() const
+    {
+        return m_meshReferences.size();
+    }
+
+    const MeshReference& getMeshReference(size_t idx) const
+    {
+        BOOST_ASSERT(idx < m_meshReferences.size());
+        return m_meshReferences[idx];
+    }
+
+    bool hasMeshReferences() const
+    {
+        return !m_meshReferences.empty();
+    }
+
     void clear();
     void updateTransparencyFlag();
     void fillSkinnedMeshMap();
@@ -74,5 +126,53 @@ public:
 
     void setMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount);
     void setSkinnedMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount);
+
+    void generateAnimCommands(const World& world);
+    void loadStateChanges(const World& world, const loader::Level& level, const loader::Moveable& moveable);
+    void setStaticAnimation();
+    void loadAnimations(const loader::Level& level, size_t moveable);
+
+    void swapAnimationsWith(SkeletalModel& rhs)
+    {
+        std::swap(m_animations, rhs.m_animations);
+    }
+
+    void patchLaraSkin(World& world, loader::Engine engineVersion);
+
+    void addMeshReference(const MeshReference& mr)
+    {
+        m_meshReferences.emplace_back(mr);
+        m_collisionMap.emplace_back(m_collisionMap.size());
+    }
+
+    void shrinkCollisionMap(size_t size)
+    {
+        if(size < m_collisionMap.size())
+            m_collisionMap.resize(size);
+    }
+
+    void setCollisionMap(size_t idx, size_t val)
+    {
+        if(idx < m_collisionMap.size())
+            m_collisionMap[idx] = val;
+    }
+
+    size_t getCollisionMapSize() const
+    {
+        return m_collisionMap.size();
+    }
+
+    size_t getCollisionMap(size_t idx) const
+    {
+        BOOST_ASSERT(idx < m_collisionMap.size());
+        return m_collisionMap[idx];
+    }
+
+    static void lua_SetModelMeshReplaceFlag(World& world, ModelId id, size_t bone, int flag);
+    static void lua_SetModelAnimReplaceFlag(World& world, ModelId id, size_t bone, bool flag);
+    static void lua_CopyMeshFromModelToModel(World& world, ModelId id1, ModelId id2, size_t bone1, size_t bone2);
+    static void lua_SetModelBodyPartFlag(World& world, ModelId id, int bone_id, int body_part_flag);
+private:
+    static size_t getKeyframeCountForMoveable(const loader::Level& tr, size_t moveable);
 };
 } // namespace world

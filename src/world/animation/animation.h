@@ -16,6 +16,11 @@
 #include <memory>
 #include <vector>
 
+namespace loader
+{
+class Level;
+}
+
 namespace world
 {
 class Character;
@@ -145,6 +150,8 @@ struct SkeletonKeyFrame
     std::vector<BoneKeyFrame> boneKeyFrames;
     glm::vec3 position = { 0,0,0 };
     core::BoundingBox boundingBox;
+
+    void load(const loader::Level& level, size_t frame_offset);
 };
 
 /**
@@ -160,6 +167,7 @@ struct Animation
     size_t animationCommand;
     size_t animationCommandCount;
     LaraState state_id;
+    int frameStart = 0;
 
     boost::container::flat_map<LaraState, StateChange> stateChanges;
 
@@ -259,6 +267,14 @@ struct Animation
     std::vector<AnimCommand>& animCommands(int frame)
     {
         return m_animCommands[frame];
+    }
+
+    const std::vector<AnimCommand>& getAnimCommands(int frame) const
+    {
+        auto it = m_animCommands.find(frame);
+        if(it == m_animCommands.end())
+            throw std::runtime_error("No animation command for frame");
+        return it->second;
     }
 
 private:
@@ -362,6 +378,8 @@ public:
     {
         m_currentAnimation.animation = value;
     }
+
+    const Animation& getCurrentAnimationRef() const;
 
     AnimationId getPreviousAnimation() const noexcept
     {

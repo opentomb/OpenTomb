@@ -63,7 +63,7 @@ public:
     std::vector<uint32_t> m_sampleIndices;
 
     std::vector<int16_t> m_frameData;
-    std::vector<uint32_t> m_meshTreeData;
+    std::vector<int32_t> m_meshTreeData;
 
     std::string m_sfxPath = "MAIN.SFX";
 

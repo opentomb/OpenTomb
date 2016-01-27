@@ -1300,7 +1300,7 @@ void StateController::walkBack()
     {
         if(!m_character->m_skeleton.getModel()->m_noFixAll)
         {
-            size_t frames_count = m_character->m_skeleton.getModel()->m_animations[animation::TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT].getFrameDuration();
+            size_t frames_count = m_character->m_skeleton.getModel()->getAnimation(animation::TR_ANIMATION_LARA_WALK_DOWN_BACK_LEFT).getFrameDuration();
             size_t frames_count2 = (frames_count + 1) / 2;
             if(m_character->m_skeleton.getCurrentFrame() <= frames_count2)
             {

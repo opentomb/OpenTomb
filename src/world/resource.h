@@ -119,7 +119,6 @@ void TR_GenSkeletalModels(World& world, const std::unique_ptr<loader::Level>& tr
 void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenSprites(World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenTextures(World& world, const std::unique_ptr<loader::Level>& tr);
-void TR_GenAnimCommands(World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenAnimTextures(World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenRooms(World& world, const std::unique_ptr<loader::Level>& tr);
 void TR_GenRoomProperties(World& world, const std::unique_ptr<loader::Level>& tr);
@@ -128,8 +127,6 @@ void TR_GenCameras(World& world, const std::unique_ptr<loader::Level>& tr);
 
 // Functions for getting various parameters from legacy TR structs.
 
-void     TR_GetBFrameBB_Pos(const std::unique_ptr<loader::Level>& tr, size_t frame_offset, animation::SkeletonKeyFrame& keyFrame);
-size_t   TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, size_t moveable_ind);
 size_t   TR_GetNumFramesForAnimation(const std::unique_ptr<loader::Level>& tr, size_t animation_ind);
 long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, const std::unique_ptr<loader::Level>& tr);
 

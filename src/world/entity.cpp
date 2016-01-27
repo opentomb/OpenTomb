@@ -151,48 +151,47 @@ int Entity::getPenetrationFixVector(glm::vec3& reaction, bool hasMove)
 
     auto orig_pos = m_transform[3];
     int ret = 0;
-    for(size_t i = 0; i < m_skeleton.getModel()->m_collisionMap.size(); i++)
+    for(size_t boneIndex = 0; boneIndex < m_skeleton.getModel()->getCollisionMapSize(); boneIndex++)
     {
-        size_t m = m_skeleton.getModel()->m_collisionMap[i];
-        const animation::Bone* btag = &m_skeleton.getBones()[m];
+        const animation::Bone& bone = m_skeleton.getBones()[m_skeleton.getModel()->getCollisionMap(boneIndex)];
 
-        if(btag->body_part & m_skeleton.getModel()->m_noFixBodyParts)
+        if(bone.body_part & m_skeleton.getModel()->m_noFixBodyParts)
         {
             continue;
         }
 
         // antitunneling condition for main body parts, needs only in move case: ((move != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER)))
         glm::vec3 from;
-        if(!btag->parent || (hasMove && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
+        if(!bone.parent || (hasMove && (bone.body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
         {
-            BOOST_ASSERT(m_skeleton.getBones()[m].ghostObject);
-            from = util::convert(m_skeleton.getBones()[m].ghostObject->getWorldTransform().getOrigin());
+            BOOST_ASSERT(bone.ghostObject);
+            from = util::convert(bone.ghostObject->getWorldTransform().getOrigin());
             from += glm::vec3(m_transform[3] - orig_pos);
         }
         else
         {
-            glm::vec4 parent_from = btag->parent->full_transform * glm::vec4(btag->parent->mesh->m_center, 1);
+            glm::vec4 parent_from = bone.parent->full_transform * glm::vec4(bone.parent->mesh->m_center, 1);
             from = glm::vec3(m_transform * parent_from);
         }
 
-        auto tr = m_transform * btag->full_transform;
-        auto to = glm::vec3(tr * glm::vec4(btag->mesh->m_center, 1.0f));
+        auto tr = m_transform * bone.full_transform;
+        auto to = glm::vec3(tr * glm::vec4(bone.mesh->m_center, 1.0f));
         auto curr = from;
         auto move = to - from;
         auto move_len = move.length();
-        if(i == 0 && move_len > 1024.0)                                 ///@FIXME: magick const 1024.0!
+        if(boneIndex == 0 && move_len > 1024.0)                                 ///@FIXME: magick const 1024.0!
         {
             break;
         }
-        int iter = static_cast<int>(4.0 * move_len / btag->mesh->m_radius + 1);     ///@FIXME (not a critical): magick const 4.0!
+        int iter = static_cast<int>(4.0 * move_len / bone.mesh->m_radius + 1);     ///@FIXME (not a critical): magick const 4.0!
         move /= static_cast<glm::float_t>(iter);
 
         for(int j = 0; j <= iter; j++)
         {
             tr[3] = glm::vec4(curr, 1.0f);
-            m_skeleton.getBones()[m].ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr));
+            bone.ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr));
             glm::vec3 tmp;
-            if(getPenetrationFixVector(*m_skeleton.getBones()[m].ghostObject, m_skeleton.manifoldArray(), tmp))
+            if(getPenetrationFixVector(*bone.ghostObject, m_skeleton.manifoldArray(), tmp))
             {
                 m_transform[3] += glm::vec4(tmp, 0);
                 curr += tmp;
@@ -333,8 +332,7 @@ void Entity::updateRigidBody(bool force)
     }
     else
     {
-        if(m_skeleton.getModel() == nullptr
-           || (!force && m_skeleton.getModel()->m_animations.size() == 1 && m_skeleton.getModel()->m_animations.front().getFrameDuration() == 1))
+        if(m_skeleton.getModel() == nullptr || (!force && m_skeleton.getModel()->isStaticAnimation()))
         {
             return;
         }
@@ -392,7 +390,7 @@ void Entity::updateCurrentSpeed(bool zeroVz)
 
 void Entity::addOverrideAnim(const std::shared_ptr<SkeletalModel>& model)
 {
-    if(!model || model->m_meshes.size() != m_skeleton.getBoneCount())
+    if(!model || model->getMeshReferenceCount() != m_skeleton.getBoneCount())
         return;
 
     m_skeleton.setModel(model);
@@ -570,8 +568,7 @@ void Entity::setAnimation(animation::AnimationId animation, int frame)
 
 boost::optional<size_t> Entity::getAnimDispatchCase(LaraState id) const
 {
-    const animation::Animation* anim = &m_skeleton.getModel()->m_animations[m_skeleton.getCurrentAnimation()];
-    const animation::StateChange* stc = anim->findStateChangeByID(id);
+    const animation::StateChange* stc = m_skeleton.getCurrentAnimationRef().findStateChangeByID(id);
     if(!stc)
         return boost::none;
 
@@ -605,7 +602,7 @@ animation::AnimUpdate Entity::stepAnimation(util::Duration time)
        || !m_active
        || !m_enabled
        || m_skeleton.getModel() == nullptr
-       || (m_skeleton.getModel()->m_animations.size() == 1 && m_skeleton.getModel()->m_animations.front().getFrameDuration() == 1))
+       || m_skeleton.getModel()->isStaticAnimation())
     {
         return animation::AnimUpdate::None;
     }

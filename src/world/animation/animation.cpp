@@ -2,6 +2,7 @@
 
 #include "engine/bullet.h"
 #include "engine/engine.h"
+#include "loader/level.h"
 #include "world/core/basemesh.h"
 #include "world/core/util.h"
 #include "world/entity.h"
@@ -29,22 +30,24 @@ void Skeleton::fromModel(const std::shared_ptr<SkeletalModel>& model)
 
     m_model = model;
 
-    m_bones.resize(model->m_meshes.size(), Bone(this));
+    m_bones.resize(model->getMeshReferenceCount(), Bone(this));
 
     std::stack<Bone*> parents;
     parents.push(nullptr);
     m_bones[0].parent = nullptr; // root
     for(size_t i = 0; i < m_bones.size(); i++)
     {
+        const auto& meshReference = model->getMeshReference(i);
+
         m_bones[i].index = i;
-        m_bones[i].mesh = model->m_meshes[i].mesh_base;
-        m_bones[i].mesh_skin = model->m_meshes[i].mesh_skin;
+        m_bones[i].mesh = meshReference.mesh_base;
+        m_bones[i].mesh_skin = meshReference.mesh_skin;
         if(m_bones[i].mesh_skin)
             m_hasSkin = true;
         m_bones[i].mesh_slot = nullptr;
-        m_bones[i].body_part = model->m_meshes[i].body_part;
+        m_bones[i].body_part = meshReference.body_part;
 
-        m_bones[i].offset = model->m_meshes[i].offset;
+        m_bones[i].offset = meshReference.offset;
         m_bones[i].qrotate = { 0, 0, 0, 0 };
         m_bones[i].transform = glm::mat4(1.0f);
         m_bones[i].full_transform = glm::mat4(1.0f);
@@ -53,7 +56,7 @@ void Skeleton::fromModel(const std::shared_ptr<SkeletalModel>& model)
             continue;
 
         m_bones[i].parent = &m_bones[i - 1];
-        if(model->m_meshes[i].flag & 0x01) // POP
+        if(meshReference.flag & 0x01) // POP
         {
             if(!parents.empty())
             {
@@ -61,9 +64,9 @@ void Skeleton::fromModel(const std::shared_ptr<SkeletalModel>& model)
                 parents.pop();
             }
         }
-        if(model->m_meshes[i].flag & 0x02) // PUSH
+        if(meshReference.flag & 0x02) // PUSH
         {
-            if(parents.size() + 1 < model->m_meshes.size())
+            if(parents.size() + 1 < model->getMeshReferenceCount())
             {
                 parents.push(m_bones[i].parent);
             }
@@ -79,9 +82,9 @@ void Skeleton::itemFrame(util::Duration time)
 
 void Skeleton::updatePose()
 {
-    BOOST_ASSERT(m_currentAnimation.animation < m_model->m_animations.size());
-    BOOST_ASSERT(m_currentAnimation.frame < m_model->m_animations[m_currentAnimation.animation].getFrameDuration());
-    const animation::SkeletonKeyFrame keyFrame = m_model->m_animations[m_currentAnimation.animation].getInterpolatedFrame(m_currentAnimation.frame);
+    BOOST_ASSERT(m_currentAnimation.animation < m_model->getAnimationCount());
+    BOOST_ASSERT(m_currentAnimation.frame < getCurrentAnimationRef().getFrameDuration());
+    const animation::SkeletonKeyFrame keyFrame = getCurrentAnimationRef().getInterpolatedFrame(m_currentAnimation.frame);
 
     m_boundingBox = keyFrame.boundingBox;
     m_position = keyFrame.position;
@@ -114,12 +117,12 @@ void Skeleton::updatePose()
 
 void Skeleton::copyMeshBinding(const std::shared_ptr<SkeletalModel>& model, bool resetMeshSlot)
 {
-    size_t meshes_to_copy = std::min(m_bones.size(), m_model->m_meshes.size());
+    size_t meshes_to_copy = std::min(m_bones.size(), m_model->getMeshReferenceCount());
 
     for(size_t i = 0; i < meshes_to_copy; i++)
     {
-        m_bones[i].mesh = model->m_meshes[i].mesh_base;
-        m_bones[i].mesh_skin = model->m_meshes[i].mesh_skin;
+        m_bones[i].mesh = model->getMeshReference(i).mesh_base;
+        m_bones[i].mesh_skin = model->getMeshReference(i).mesh_skin;
         if(resetMeshSlot)
             m_bones[i].mesh_slot = nullptr;
     }
@@ -127,17 +130,17 @@ void Skeleton::copyMeshBinding(const std::shared_ptr<SkeletalModel>& model, bool
 
 void Skeleton::setAnimation(AnimationId animation, int frame)
 {
-    Animation* anim = &m_model->m_animations[animation];
+    const Animation& anim = m_model->getAnimation(animation);
 
     if(frame < 0)
-        frame = anim->getFrameDuration() - 1 - ((-frame - 1) % anim->getFrameDuration());
+        frame = anim.getFrameDuration() - 1 - ((-frame - 1) % anim.getFrameDuration());
     else
-        frame %= anim->getFrameDuration();
+        frame %= anim.getFrameDuration();
 
     m_currentAnimation.animation = animation;
     m_currentAnimation.frame = frame;
-    m_currentAnimation.state = anim->state_id;
-    m_previousAnimation.state = anim->state_id;
+    m_currentAnimation.state = anim.state_id;
+    m_previousAnimation.state = anim.state_id;
 }
 
 /**
@@ -218,32 +221,32 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
     {
         if(m_model->findStateChange(m_currentAnimation.state, anim_id, frame_id))
         {
-            m_previousAnimation.state = m_model->m_animations[anim_id].state_id;
+            m_previousAnimation.state = m_model->getAnimation(anim_id).state_id;
             m_currentAnimation.state = m_previousAnimation.state;
             stepResult = AnimUpdate::NewAnim;
         }
     }
 
     // check end of animation:
-    if(frame_id >= m_model->m_animations[anim_id].getFrameDuration())
+    if(frame_id >= m_model->getAnimation(anim_id).getFrameDuration())
     {
         if(cmdEntity)
         {
-            for(AnimCommand acmd : m_model->m_animations[anim_id].finalAnimCommands) // end-of-anim cmdlist
+            for(AnimCommand acmd : m_model->getAnimation(anim_id).finalAnimCommands) // end-of-anim cmdlist
             {
                 cmdEntity->doAnimCommand(acmd);
             }
         }
 
-        if(m_model->m_animations[anim_id].next_anim)
+        if(m_model->getAnimation(anim_id).next_anim)
         {
-            frame_id = m_model->m_animations[anim_id].next_frame;
-            anim_id = m_model->m_animations[anim_id].next_anim->id;
+            frame_id = m_model->getAnimation(anim_id).next_frame;
+            anim_id = m_model->getAnimation(anim_id).next_anim->id;
 
             // some overlay anims may have invalid nextAnim/nextFrame values:
-            if(anim_id < m_model->m_animations.size() && frame_id < m_model->m_animations[anim_id].getFrameDuration())
+            if(anim_id < m_model->getAnimationCount() && frame_id < m_model->getAnimation(anim_id).getFrameDuration())
             {
-                m_previousAnimation.state = m_model->m_animations[anim_id].state_id;
+                m_previousAnimation.state = m_model->getAnimation(anim_id).state_id;
                 m_currentAnimation.state = m_previousAnimation.state;
             }
             else
@@ -265,7 +268,7 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
 
     if(cmdEntity)
     {
-        for(AnimCommand acmd : m_model->m_animations[anim_id].animCommands(frame_id))
+        for(const AnimCommand& acmd : m_model->getAnimation(anim_id).getAnimCommands(frame_id))
         {
             cmdEntity->doAnimCommand(acmd);
         }
@@ -276,7 +279,7 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
 
 const Animation& Skeleton::getCurrentAnimationFrame() const
 {
-    return m_model->m_animations[m_currentAnimation.animation];
+    return m_model->getAnimation(m_currentAnimation.animation);
 }
 
 void Skeleton::updateTransform(const glm::mat4& entityTransform)
@@ -314,7 +317,7 @@ void Skeleton::updateBoundingBox()
 
 void Skeleton::createGhosts(Entity& entity)
 {
-    if(!m_model || m_model->m_meshes.empty())
+    if(!m_model || !m_model->hasMeshReferences())
         return;
 
     m_manifoldArray = btManifoldArray();
@@ -600,5 +603,38 @@ void Skeleton::disableCollision()
             m_world->m_engine->bullet.dynamicsWorld->removeRigidBody(bone.bt_body.get());
     }
 }
+
+const Animation& Skeleton::getCurrentAnimationRef() const
+{
+    return m_model->getAnimation(m_currentAnimation.animation);
+}
+
+void SkeletonKeyFrame::load(const loader::Level& level, size_t frame_offset)
+{
+    if(frame_offset + 9 < level.m_frameData.size())
+    {
+        const int16_t* frame = &level.m_frameData[frame_offset];
+
+        boundingBox.min[0] = frame[0];   // x_min
+        boundingBox.min[1] = frame[4];   // y_min
+        boundingBox.min[2] = -frame[3];  // z_min
+
+        boundingBox.max[0] = frame[1];   // x_max
+        boundingBox.max[1] = frame[5];   // y_max
+        boundingBox.max[2] = -frame[2];  // z_max
+
+        position[0] = frame[6];
+        position[1] = frame[8];
+        position[2] = -frame[7];
+    }
+    else
+    {
+        BOOST_LOG_TRIVIAL(warning) << "Reading animation data beyond end of frame data: offset = " << frame_offset << ", size = " << level.m_frameData.size();
+        boundingBox.min = { 0,0,0 };
+        boundingBox.max = { 0,0,0 };
+        position = { 0,0,0 };
+    }
+}
+
 } // namespace animation
 } // namespace world

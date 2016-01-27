@@ -122,10 +122,7 @@ void lua_SetModelCollisionMapSize(world::World& world, world::ModelId id, size_t
         return;
     }
 
-    if(size < model->m_meshes.size())
-    {
-        model->m_collisionMap.resize(size);
-    }
+    model->shrinkCollisionMap(size);
 }
 
 void lua_SetModelCollisionMap(world::World& world, world::ModelId id, size_t arg, size_t val)
@@ -138,10 +135,7 @@ void lua_SetModelCollisionMap(world::World& world, world::ModelId id, size_t arg
         return;
     }
 
-    if(arg < model->m_collisionMap.size() && val < model->m_meshes.size())
-    {
-        model->m_collisionMap[arg] = val;
-    }
+    model->setCollisionMap(arg, val);
 }
 
 void lua_EnableEntity(world::World& world, world::ObjectId id)
@@ -685,87 +679,6 @@ void lua_PrintItems(world::World& world, world::ObjectId entity_id)
     }
 
     ent->inventory().print();
-}
-
-void lua_SetStateChangeRange(world::World& world, world::ModelId id, int anim, int state, int dispatch, int frame_low, int frame_high, lua::Value next_anim, lua::Value next_frame)
-{
-    auto model = world.m_engine->m_world.getModelByID(id);
-
-    if(model == nullptr)
-    {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_SKELETAL_MODEL, id);
-        return;
-    }
-
-    if(anim < 0 || anim + 1 > static_cast<int>(model->m_animations.size()))
-    {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
-        return;
-    }
-
-    world::animation::Animation* af = &model->m_animations[anim];
-    world::animation::StateChange* stc = af->findStateChangeByID(static_cast<world::LaraState>(state));
-    if(stc != nullptr)
-    {
-        if(dispatch >= 0 && dispatch < static_cast<int>(stc->dispatches.size()))
-        {
-            stc->dispatches[dispatch].start = frame_low;
-            stc->dispatches[dispatch].end = frame_high;
-            if(!next_anim.is<lua::Nil>() && !next_frame.is<lua::Nil>())
-            {
-                stc->dispatches[dispatch].next.animation = next_anim.to<world::animation::AnimationId>();
-                stc->dispatches[dispatch].next.frame = next_frame.to<size_t>();
-            }
-        }
-        else
-        {
-            world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_DISPATCH_NUMBER, dispatch);
-        }
-    }
-}
-
-void lua_SetAnimEndCommands(world::World& world, world::ModelId id, int anim, lua::Value table)
-{
-    auto model = world.m_engine->m_world.getModelByID(id);
-    if(model == nullptr)
-    {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_SKELETAL_MODEL, id);
-        return;
-    }
-
-    if(anim < 0 || anim + 1 > static_cast<int>(model->m_animations.size()))
-    {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
-        return;
-    }
-
-    if(!table.is<lua::Table>())
-    {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ARGS, "entid, anim, {{cmd,p1,p2,p3},{...}}");
-        return;
-    }
-
-    model->m_animations[anim].finalAnimCommands.clear();
-
-    for(int i = 1; table[i].is<lua::Table>(); i++)
-    {
-        if(table[i][1].is<lua::Number>()
-           && table[i][2].is<lua::Number>()
-           && table[i][3].is<lua::Number>()
-           && table[i][4].is<lua::Number>())
-        {
-            model->m_animations[anim].finalAnimCommands.push_back({
-                                                                    static_cast<world::animation::AnimCommandOpcode>(table[i][1].to<int>()),
-                                                                    table[i][2].to<int>(),
-                                                                    table[i][3].to<int>(),
-                                                                    table[i][4].to<int>() });
-        }
-        else
-        {
-            world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ARGS, "entid, anim, {{cmd,p1,p2,p3},{...}}");
-            break;
-        }
-    }
 }
 
 lua::Any lua_SpawnEntity(world::World& world, world::ModelId model_id, float x, float y, float z, float ax, float ay, float az, world::ObjectId room_id, lua::Value ov_id)
@@ -1372,25 +1285,6 @@ void lua_SetEntityBodyPartFlag(world::World& world, world::ObjectId id, int bone
     ent->m_skeleton.setBodyPartFlag(bone_id, body_part_flag);
 }
 
-void lua_SetModelBodyPartFlag(world::World& world, world::ModelId id, int bone_id, int body_part_flag)
-{
-    auto model = world.m_engine->m_world.getModelByID(id);
-
-    if(model == nullptr)
-    {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_SKELETAL_MODEL, id);
-        return;
-    }
-
-    if(bone_id < 0 || static_cast<size_t>(bone_id) >= model->m_meshes.size())
-    {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
-        return;
-    }
-
-    model->m_meshes[bone_id].body_part = body_part_flag;
-}
-
 lua::Any lua_GetEntityAnim(world::World& world, world::ObjectId id)
 {
     std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
@@ -1404,7 +1298,7 @@ lua::Any lua_GetEntityAnim(world::World& world, world::ObjectId id)
     return std::make_tuple(
         ent->m_skeleton.getCurrentAnimation(),
         ent->m_skeleton.getCurrentFrame(),
-        ent->m_skeleton.getModel()->m_animations[ent->m_skeleton.getCurrentAnimation()].getFrameDuration()
+        ent->m_skeleton.getCurrentAnimationRef().getFrameDuration()
         );
 }
 
@@ -2001,72 +1895,6 @@ void lua_SetEntityMeshswap(world::World& world, world::ObjectId id_dest, world::
     ent_dest->m_skeleton.copyMeshBinding( world.m_engine->m_world.getModelByID(id_src) );
 }
 
-void lua_SetModelMeshReplaceFlag(world::World& world, world::ModelId id, size_t bone, int flag)
-{
-    auto sm = world.m_engine->m_world.getModelByID(id);
-    if(sm != nullptr)
-    {
-        if(bone < sm->m_meshes.size())
-        {
-            sm->m_meshes[bone].replace_mesh = flag;
-        }
-        else
-        {
-            world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
-        }
-    }
-    else
-    {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id);
-    }
-}
-
-void lua_SetModelAnimReplaceFlag(world::World& world, world::ModelId id, size_t bone, bool flag)
-{
-    auto sm = world.m_engine->m_world.getModelByID(id);
-    if(sm != nullptr)
-    {
-        if(bone < sm->m_meshes.size())
-        {
-            sm->m_meshes[bone].replace_anim = flag;
-        }
-        else
-        {
-            world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
-        }
-    }
-    else
-    {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id);
-    }
-}
-
-void lua_CopyMeshFromModelToModel(world::World& world, world::ModelId id1, world::ModelId id2, size_t bone1, size_t bone2)
-{
-    auto sm1 = world.m_engine->m_world.getModelByID(id1);
-    if(sm1 == nullptr)
-    {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id1);
-        return;
-    }
-
-    auto sm2 = world.m_engine->m_world.getModelByID(id2);
-    if(sm2 == nullptr)
-    {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id2);
-        return;
-    }
-
-    if(bone1 < sm1->m_meshes.size() && bone2 < sm2->m_meshes.size())
-    {
-        sm1->m_meshes[bone1].mesh_base = sm2->m_meshes[bone2].mesh_base;
-    }
-    else
-    {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_BONE_NUMBER, bone1);
-    }
-}
-
 void lua_CreateEntityGhosts(world::World& world, world::ObjectId id)
 {
     std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
@@ -2551,9 +2379,9 @@ void lua_genUVRotateAnimation(world::World& world, world::ModelId id)
     if(!model)
         return;
 
-    if(model->m_meshes.front().mesh_base->m_transparencyPolygons.empty())
+    if(model->getMeshReference(0).mesh_base->m_transparencyPolygons.empty())
         return;
-    const world::core::Polygon& firstPolygon = model->m_meshes.front().mesh_base->m_transparencyPolygons.front();
+    const world::core::Polygon& firstPolygon = model->getMeshReference(0).mesh_base->m_transparencyPolygons.front();
     if(firstPolygon.textureAnimationId)
         return;
 
@@ -2599,7 +2427,7 @@ void lua_genUVRotateAnimation(world::World& world, world::ModelId id)
         seq->keyFrames[j].move.y = -seq->uvrotateSpeed * j;
     }
 
-    for(world::core::Polygon& p : model->m_meshes.front().mesh_base->m_transparencyPolygons)
+    for(world::core::Polygon& p : model->getMeshReference(0).mesh_base->m_transparencyPolygons)
     {
         BOOST_ASSERT(!world.m_engine->m_world.m_textureAnimations.empty());
         p.textureAnimationId = world.m_engine->m_world.m_textureAnimations.size() - 1;
@@ -3282,8 +3110,6 @@ void MainEngine::registerMainFunctions()
 
     registerC("setModelCollisionMapSize", lua_SetModelCollisionMapSize);
     registerC("setModelCollisionMap", lua_SetModelCollisionMap);
-    registerC("setAnimEndCommands", lua_SetAnimEndCommands);
-    registerC("setStateChangeRange", lua_SetStateChangeRange);
 
     registerC("addItem", lua_AddItem);
     registerC("removeItem", lua_RemoveItem);
@@ -3334,7 +3160,7 @@ void MainEngine::registerMainFunctions()
     registerC("setEntityAnim", lua_SetEntityAnim);
     registerC("setEntityAnimFlag", lua_SetEntityAnimFlag);
     registerC("setEntityBodyPartFlag", lua_SetEntityBodyPartFlag);
-    registerC("setModelBodyPartFlag", lua_SetModelBodyPartFlag);
+    registerC("setModelBodyPartFlag", &world::SkeletalModel::lua_SetModelBodyPartFlag);
     registerC("getEntityModel", lua_GetEntityModel);
     registerC("getEntityVisibility", lua_GetEntityVisibility);
     registerC("setEntityVisibility", lua_SetEntityVisibility);
@@ -3362,9 +3188,9 @@ void MainEngine::registerMainFunctions()
     registerC("setEntityResponse", lua_SetEntityResponse);
     registerC("getEntityMeshCount", lua_GetEntityMeshCount);
     registerC("setEntityMeshswap", lua_SetEntityMeshswap);
-    registerC("setModelMeshReplaceFlag", lua_SetModelMeshReplaceFlag);
-    registerC("setModelAnimReplaceFlag", lua_SetModelAnimReplaceFlag);
-    registerC("copyMeshFromModelToModel", lua_CopyMeshFromModelToModel);
+    registerC("setModelMeshReplaceFlag", &world::SkeletalModel::lua_SetModelMeshReplaceFlag);
+    registerC("setModelAnimReplaceFlag", &world::SkeletalModel::lua_SetModelAnimReplaceFlag);
+    registerC("copyMeshFromModelToModel", &world::SkeletalModel::lua_CopyMeshFromModelToModel);
 
     registerC("createEntityGhosts", lua_CreateEntityGhosts);
     registerRawC("setEntityBodyMass", lua_SetEntityBodyMass);

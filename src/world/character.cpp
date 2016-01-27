@@ -1943,41 +1943,41 @@ bool Character::changeParam(CharParameterId parameter, float value)
 ///@TODO: separate mesh replacing control and animation disabling / enabling
 bool Character::setWeaponModel(const std::shared_ptr<SkeletalModel>& model, bool armed)
 {
-    if(model != nullptr && m_skeleton.getBoneCount() == model->m_meshes.size() && model->m_animations.size() >= 4)
+    if(model != nullptr && m_skeleton.getBoneCount() == model->getMeshReferenceCount() && model->getAnimationCount() >= 4)
     {
         addOverrideAnim(model);
 
-        for(size_t i = 0; i < m_skeleton.getModel()->m_meshes.size(); i++)
+        for(size_t i = 0; i < m_skeleton.getModel()->getMeshReferenceCount(); i++)
         {
-            m_skeleton.bone(i).mesh = m_skeleton.getModel()->m_meshes[i].mesh_base;
+            m_skeleton.bone(i).mesh = m_skeleton.getModel()->getMeshReference(i).mesh_base;
             m_skeleton.bone(i).mesh_slot = nullptr;
         }
 
         if(armed)
         {
-            for(size_t i = 0; i < m_skeleton.getModel()->m_meshes.size(); i++)
+            for(size_t i = 0; i < m_skeleton.getModel()->getMeshReferenceCount(); i++)
             {
-                if(model->m_meshes[i].replace_mesh == 0x01)
+                if(model->getMeshReference(i).replace_mesh == 0x01)
                 {
-                    m_skeleton.bone(i).mesh = model->m_meshes[i].mesh_base;
+                    m_skeleton.bone(i).mesh = model->getMeshReference(i).mesh_base;
                 }
-                else if(model->m_meshes[i].replace_mesh == 0x02)
+                else if(model->getMeshReference(i).replace_mesh == 0x02)
                 {
-                    m_skeleton.bone(i).mesh_slot = model->m_meshes[i].mesh_base;
+                    m_skeleton.bone(i).mesh_slot = model->getMeshReference(i).mesh_base;
                 }
             }
         }
         else
         {
-            for(size_t i = 0; i < m_skeleton.getModel()->m_meshes.size(); i++)
+            for(size_t i = 0; i < m_skeleton.getModel()->getMeshReferenceCount(); i++)
             {
-                if(model->m_meshes[i].replace_mesh == 0x03)
+                if(model->getMeshReference(i).replace_mesh == 0x03)
                 {
-                    m_skeleton.bone(i).mesh = model->m_meshes[i].mesh_base;
+                    m_skeleton.bone(i).mesh = model->getMeshReference(i).mesh_base;
                 }
-                else if(model->m_meshes[i].replace_mesh == 0x04)
+                else if(model->getMeshReference(i).replace_mesh == 0x04)
                 {
-                    m_skeleton.bone(i).mesh_slot = model->m_meshes[i].mesh_base;
+                    m_skeleton.bone(i).mesh_slot = model->getMeshReference(i).mesh_base;
                 }
             }
         }
@@ -1988,9 +1988,9 @@ bool Character::setWeaponModel(const std::shared_ptr<SkeletalModel>& model, bool
     {
         // do unarmed default model
         const auto bm = m_skeleton.getModel();
-        for(size_t i = 0; i < bm->m_meshes.size(); i++)
+        for(size_t i = 0; i < bm->getMeshReferenceCount(); i++)
         {
-            m_skeleton.bone(i).mesh = bm->m_meshes[i].mesh_base;
+            m_skeleton.bone(i).mesh = bm->getMeshReference(i).mesh_base;
             m_skeleton.bone(i).mesh_slot = nullptr;
         }
     }
@@ -2172,8 +2172,8 @@ void Character::frame(util::Duration time)
     doWeaponFrame(time);
 
     // Update acceleration/speed, it is calculated per anim frame index
-    const animation::Animation* af = &m_skeleton.getModel()->m_animations[m_skeleton.getCurrentAnimation()];
-    m_currentSpeed = (af->speed_x + m_skeleton.getCurrentFrame() * af->accel_x) / float(1 << 16); // Decompiled from TOMB5.EXE
+    const animation::Animation& af = m_skeleton.getCurrentAnimationRef();
+    m_currentSpeed = (af.speed_x + m_skeleton.getCurrentFrame() * af.accel_x) / float(1 << 16); // Decompiled from TOMB5.EXE
 
     // TODO: check rigidbody update requirements.
     // if(animStepResult != ENTITY_ANIM_NONE)
@@ -2346,7 +2346,7 @@ void Character::doWeaponFrame(util::Duration time)
         setWeaponModel(m_currentWeapon, true);
     }
 
-    if(m_skeleton.getModel() != nullptr && m_skeleton.getModel()->m_animations.size() > 4)
+    if(m_skeleton.getModel() != nullptr && m_skeleton.getModel()->getAnimationCount() > 4)
     {
         // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
         m_skeleton.setAnimationMode(animation::AnimationMode::NormalControl);
@@ -2438,7 +2438,7 @@ void Character::doWeaponFrame(util::Duration time)
                 break;
         };
     }
-    else if(m_skeleton.getModel() != nullptr && m_skeleton.getModel()->m_animations.size() == 4)
+    else if(m_skeleton.getModel() != nullptr && m_skeleton.getModel()->getAnimationCount() == 4)
     {
         // fixme: set weapon combat flag depending on specific weapon versions (pistols, uzi, revolver)
         m_skeleton.setAnimationMode(animation::AnimationMode::WeaponCompat);
