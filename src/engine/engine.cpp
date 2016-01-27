@@ -24,7 +24,6 @@
 #include "gameflow.h"
 #include "gui/console.h"
 #include "gui/fader.h"
-#include "gui/fadermanager.h"
 #include "gui/gui.h"
 #include "gui/itemnotifier.h"
 #include "loader/level.h"
@@ -59,8 +58,6 @@ size_t frame_vertex_buffer_size_left = 0;
 
 world::Object* last_object = nullptr;
 
-Engine Engine::instance{};
-
 void Engine::initGL()
 {
     glewExperimental = GL_TRUE;
@@ -76,7 +73,7 @@ void Engine::initGL()
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    if(::render::renderer.settings().antialias)
+    if(renderer.settings().antialias)
     {
         glEnable(GL_MULTISAMPLE);
     }
@@ -108,7 +105,7 @@ void Engine::initSDLVideo()
         BOOST_THROW_EXCEPTION(std::runtime_error("Could not init OpenGL driver"));
     }
 
-    if(render::renderer.settings().use_gl3)
+    if(renderer.settings().use_gl3)
     {
         /* Request opengl 3.2 context. */
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -130,29 +127,29 @@ void Engine::initSDLVideo()
 
     // Check for correct number of antialias samples.
 
-    if(render::renderer.settings().antialias)
+    if(renderer.settings().antialias)
     {
         GLint maxSamples = 0;
         glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
         maxSamples = maxSamples > 16 ? 16 : maxSamples;   // Fix for faulty GL max. sample number.
 
-        if(render::renderer.settings().antialias_samples > maxSamples)
+        if(renderer.settings().antialias_samples > maxSamples)
         {
             if(maxSamples == 0)
             {
-                render::renderer.settings().antialias = 0;
-                render::renderer.settings().antialias_samples = 0;
+                renderer.settings().antialias = 0;
+                renderer.settings().antialias_samples = 0;
                 BOOST_LOG_TRIVIAL(error) << "InitSDLVideo: can't use antialiasing";
             }
             else
             {
-                render::renderer.settings().antialias_samples = maxSamples;   // Limit to max.
+                renderer.settings().antialias_samples = maxSamples;   // Limit to max.
                 BOOST_LOG_TRIVIAL(error) << "InitSDLVideo: wrong AA sample number, using " << maxSamples;
             }
         }
 
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, render::renderer.settings().antialias);
-        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, render::renderer.settings().antialias_samples);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings().antialias);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings().antialias_samples);
     }
     else
     {
@@ -166,7 +163,7 @@ void Engine::initSDLVideo()
     SDL_DestroyWindow(m_window);
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, render::renderer.settings().z_depth);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings().z_depth);
 
     m_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
     m_glContext = SDL_GL_CreateContext(m_window);
@@ -175,16 +172,27 @@ void Engine::initSDLVideo()
     if(SDL_GL_SetSwapInterval(screen_info.vsync))
         BOOST_LOG_TRIVIAL(error) << "Cannot set VSYNC: " << SDL_GetError();
 
-    Console::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_VENDOR)), gui::FontStyle::ConsoleInfo);
-    Console::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_RENDERER)), gui::FontStyle::ConsoleInfo);
+    m_gui.getConsole().addLine(reinterpret_cast<const char*>(glGetString(GL_VENDOR)), gui::FontStyle::ConsoleInfo);
+    m_gui.getConsole().addLine(reinterpret_cast<const char*>(glGetString(GL_RENDERER)), gui::FontStyle::ConsoleInfo);
     std::string version = "OpenGL version ";
     version += reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    Console::instance().addLine(version, gui::FontStyle::ConsoleInfo);
-    Console::instance().addLine(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)), gui::FontStyle::ConsoleInfo);
+    m_gui.getConsole().addLine(version, gui::FontStyle::ConsoleInfo);
+    m_gui.getConsole().addLine(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)), gui::FontStyle::ConsoleInfo);
 }
 
-void Engine::start()
+Engine::Engine()
+    : m_gui(this)
+    , m_world(this)
+    , m_inputHandler(this)
+    , renderer(this)
+    , gameflow(this)
+    , bullet(this)
+    , engine_lua(this)
+    , debugDrawer(this)
 {
+    BOOST_LOG_TRIVIAL(info) << "Engine booting...";
+
+    engine_lua.doFile("scripts/loadscript.lua");
 #if defined(__MACOSX__)
     FindConfigFile();
 #endif
@@ -200,7 +208,8 @@ void Engine::start()
 
     // Additional OpenGL initialization.
     initGL();
-    render::renderer.doShaders();
+    renderer.fillCrosshairBuffer();
+    renderer.doShaders();
 
     // Secondary (deferred) initialization.
     initPost();
@@ -211,7 +220,7 @@ void Engine::start()
     // OpenAL initialization.
     m_world.m_audioEngine.initDevice();
 
-    Console::instance().notify(SYSNOTE_ENGINE_INITED);
+    m_gui.getConsole().notify(SYSNOTE_ENGINE_INITED);
 
     // Clearing up memory for initial level loading.
     m_world.prepare();
@@ -219,8 +228,8 @@ void Engine::start()
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
     // Make splash screen.
-    gui::Gui::instance->faders.assignPicture(gui::FaderType::LoadScreen, "resource/graphics/legal.png");
-    gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
+    m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, "resource/graphics/legal.png");
+    m_gui.m_faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
     engine_lua.doFile("autoexec.lua");
 }
@@ -238,8 +247,8 @@ void Engine::display()
 
     glFrontFace(GL_CW);
 
-    render::renderer.genWorldList();
-    render::renderer.drawList();
+    renderer.genWorldList();
+    renderer.drawList();
 
     //glDisable(GL_CULL_FACE);
     //Render_DrawAxis(10000.0);
@@ -251,17 +260,17 @@ void Engine::display()
         glPopMatrix();
     }*/
 
-    gui::Gui::instance->switchGLMode(true);
+    m_gui.switchGLMode(true);
     {
-        gui::Gui::instance->notifier.draw();
-        gui::Gui::instance->notifier.animate();
-        gui::Gui::instance->drawInventory();
+        m_gui.m_notifier.draw();
+        m_gui.m_notifier.animate();
+        m_gui.drawInventory();
     }
 
-    gui::Gui::instance->render();
-    gui::Gui::instance->switchGLMode(false);
+    m_gui.render();
+    m_gui.switchGLMode(false);
 
-    render::renderer.drawListDebugLines();
+    renderer.drawListDebugLines();
 
     SDL_GL_SwapWindow(m_window);
 }
@@ -275,7 +284,7 @@ void Engine::resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     screen_info.h_unit = static_cast<float>(nominalH) / gui::ScreenMeteringResolution;
     screen_info.scale_factor = screen_info.w < screen_info.h ? screen_info.h_unit : screen_info.w_unit;
 
-    gui::Gui::instance->resize();
+    m_gui.resize();
 
     m_camera.setFovAspect(screen_info.fov, static_cast<glm::float_t>(nominalW) / static_cast<glm::float_t>(nominalH));
     m_camera.apply();
@@ -288,8 +297,8 @@ void Engine::frame(util::Duration time)
     m_frameTime = time;
     fpsCycle(time);
 
-    Game_Frame(time);
-    Gameflow::instance.execute();
+    Game_Frame(m_world, time);
+    gameflow.execute();
 }
 
 void Engine::showDebugInfo()
@@ -310,13 +319,13 @@ void Engine::showDebugInfo()
         /*height_info_p fc = &ent->character->height_info
         txt = Gui_OutTextXY(20.0 / screen_info.w, 80.0 / screen_info.w, "Z_min = %d, Z_max = %d, W = %d", (int)fc->floor_point[2], (int)fc->ceiling_point[2], (int)fc->water_level);
         */
-        gui::TextLineManager::instance->drawText(30.0, 30.0,
+        m_gui.m_textlineManager.drawText(30.0, 30.0,
                                                  boost::format("prevState = %03d, nextState = %03d, speed = %f")
                                                  % static_cast<int>(ent->m_skeleton.getPreviousState())
                                                  % static_cast<int>(ent->m_skeleton.getCurrentState())
                                                  % ent->m_currentSpeed
                                                  );
-        gui::TextLineManager::instance->drawText(30.0, 50.0,
+        m_gui.m_textlineManager.drawText(30.0, 50.0,
                                                  boost::format("prevAnim = %3d, prevFrame = %3d, currAnim = %3d, currFrame = %3d")
                                                  % ent->m_skeleton.getPreviousAnimation()
                                                  % ent->m_skeleton.getPreviousFrame()
@@ -324,7 +333,7 @@ void Engine::showDebugInfo()
                                                  % ent->m_skeleton.getCurrentFrame()
                                                  );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);
-        gui::TextLineManager::instance->drawText(20, 8,
+        m_gui.m_textlineManager.drawText(20, 8,
                                                  boost::format("pos = %s, yaw = %f")
                                                  % glm::to_string(ent->m_transform[3])
                                                  % ent->m_angles[0]
@@ -335,7 +344,7 @@ void Engine::showDebugInfo()
     {
         if(world::Entity* e = dynamic_cast<world::Entity*>(last_object))
         {
-            gui::TextLineManager::instance->drawText(30.0, 60.0,
+            m_gui.m_textlineManager.drawText(30.0, 60.0,
                                                      boost::format("cont_entity: id = %d, model = %d")
                                                      % e->getId()
                                                      % e->m_skeleton.getModel()->getId()
@@ -343,14 +352,14 @@ void Engine::showDebugInfo()
         }
         else if(world::StaticMesh* sm = dynamic_cast<world::StaticMesh*>(last_object))
         {
-            gui::TextLineManager::instance->drawText(30.0, 60.0,
+            m_gui.m_textlineManager.drawText(30.0, 60.0,
                                                      boost::format("cont_static: id = %d")
                                                      % sm->getId()
                                                      );
         }
         else if(world::Room* r = dynamic_cast<world::Room*>(last_object))
         {
-            gui::TextLineManager::instance->drawText(30.0, 60.0,
+            m_gui.m_textlineManager.drawText(30.0, 60.0,
                                                      boost::format("cont_room: id = %d")
                                                      % r->getId()
                                                      );
@@ -362,20 +371,20 @@ void Engine::showDebugInfo()
         const world::RoomSector* rs = m_camera.getCurrentRoom()->getSectorRaw(m_camera.getPosition());
         if(rs != nullptr)
         {
-            gui::TextLineManager::instance->drawText(30.0, 90.0,
+            m_gui.m_textlineManager.drawText(30.0, 90.0,
                                                      boost::format("room = (id = %d, sx = %d, sy = %d)")
                                                      % m_camera.getCurrentRoom()->getId()
                                                      % rs->index_x
                                                      % rs->index_y
                                                      );
-            gui::TextLineManager::instance->drawText(30.0, 120.0,
+            m_gui.m_textlineManager.drawText(30.0, 120.0,
                                                      boost::format("room_below = %d, room_above = %d")
                                                      % (rs->sector_below != nullptr ? rs->sector_below->owner_room->getId() : -1)
                                                      % (rs->sector_above != nullptr ? rs->sector_above->owner_room->getId() : -1)
                                                      );
         }
     }
-    gui::TextLineManager::instance->drawText(30.0, 150.0,
+    m_gui.m_textlineManager.drawText(30.0, 150.0,
                                              boost::format("cam_pos = %s")
                                              % glm::to_string(m_camera.getPosition())
                                              );
@@ -383,14 +392,14 @@ void Engine::showDebugInfo()
 
 void Engine::initDefaultGlobals()
 {
-    Console::instance().initGlobals();
+    m_gui.getConsole().initGlobals();
 
     m_inputHandler.clearBindings();
     m_inputHandler.clearHandlers();
 
     auto self = this;
     m_inputHandler.registerMouseMoveHandler([self](float dx, float dy){
-        if(!Console::instance().isVisible() && self->m_controlState.m_mouseLook)
+        if(!self->m_gui.getConsole().isVisible() && self->m_controlState.m_mouseLook)
         {
             self->m_controlState.m_lookAxisX = dx;
             self->m_controlState.m_lookAxisY = dy;
@@ -459,9 +468,9 @@ void Engine::initDefaultGlobals()
         if(pressed)
             return;
 
-        Console::instance().toggleVisibility();
+        self->m_gui.getConsole().toggleVisibility();
 
-        if(Console::instance().isVisible())
+        if(self->m_gui.getConsole().isVisible())
         {
             //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
             SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -486,13 +495,13 @@ void Engine::initDefaultGlobals()
     m_inputHandler.registerActionHandler(InputAction::SaveGame, [self](bool pressed){
         if(!pressed)
         {
-            Game_Save("qsave.lua");
+            Game_Save(self->m_world, "qsave.lua");
         }
     });
     m_inputHandler.registerActionHandler(InputAction::LoadGame, [self](bool pressed){
         if(!pressed)
         {
-            Game_Load("qsave.lua");
+            Game_Load(self->m_world, "qsave.lua");
         }
     });
 
@@ -513,8 +522,8 @@ void Engine::initDefaultGlobals()
         self->m_camera.rotate(rotation);
     });
 
-    Game_InitGlobals();
-    render::renderer.initGlobals();
+    Game_InitGlobals(m_world);
+    renderer.initGlobals();
     m_world.m_audioEngine.resetSettings();
 }
 
@@ -525,23 +534,21 @@ void Engine::initPre()
     /* Console must be initialized previously! some functions uses ConsoleInfo::instance().addLine before GL initialization!
      * Rendering activation may be done later. */
 
-    gui::FontManager::instance.reset(new gui::FontManager());
-    Console::instance().init();
+    // gui::FontManager::instance.reset(new gui::FontManager(this));
+    m_gui.getConsole().init();
 
     engine_lua["loadscript_pre"]();
 
-    Gameflow::instance.init();
+    gameflow.init();
 
     frame_vertex_buffer.resize(render::InitFrameVertexBufferSize);
     frame_vertex_buffer_size_left = frame_vertex_buffer.size();
 
-    Console::instance().setCompletionItems(engine_lua.getGlobals());
+    m_gui.getConsole().setCompletionItems(engine_lua.getGlobals());
 
     Com_Init();
-    render::renderer.init();
-    render::renderer.setCamera(&m_camera);
-
-    engine::BulletEngine::instance.reset(new engine::BulletEngine());
+    renderer.init();
+    renderer.setCamera(&m_camera);
 }
 
 // Second stage of initialization.
@@ -550,9 +557,8 @@ void Engine::initPost()
 {
     engine_lua["loadscript_post"]();
 
-    Console::instance().initFonts();
+    m_gui.getConsole().initFonts();
 
-    gui::Gui::instance.reset(new gui::Gui());
     sysInit();
 }
 
@@ -600,24 +606,13 @@ void Engine::dumpRoom(const world::Room* r)
     }
 }
 
-void Engine::destroy()
-{
-    render::renderer.empty();
-    //ConsoleInfo::instance().destroy();
-    Com_Destroy();
-    sysDestroy();
-
-    BulletEngine::instance.reset();
-
-    gui::Gui::instance.reset();
-}
-
-void Engine::shutdown(int val)
+Engine::~Engine()
 {
     engine_lua.clearTasks();
-    render::renderer.empty();
+    renderer.empty();
     m_world.empty();
-    destroy();
+    Com_Destroy();
+    sysDestroy();
 
     /* no more renderings */
     SDL_GL_DeleteContext(m_glContext);
@@ -630,8 +625,6 @@ void Engine::shutdown(int val)
     frame_vertex_buffer_size_left = 0;
 
     SDL_Quit();
-
-    exit(val);
 }
 
 int Engine::getLevelFormat(const std::string& /*name*/)
@@ -662,7 +655,7 @@ std::string Engine::getLevelName(const std::string& path)
 
 std::string Engine::getAutoexecName(loader::Game game_version, const std::string& postfix)
 {
-    std::string level_name = getLevelName(Gameflow::instance.getLevelPath());
+    std::string level_name = getLevelName(gameflow.getLevelPath());
 
     std::string name = "scripts/autoexec/";
     switch(loader::gameToEngine(game_version))
@@ -708,9 +701,9 @@ bool Engine::loadPCLevel(const std::string& name)
 
     std::string buf = getLevelName(name);
 
-    Console::instance().notify(SYSNOTE_LOADED_PC_LEVEL);
-    Console::instance().notify(SYSNOTE_ENGINE_VERSION, static_cast<int>(loader->m_gameVersion), buf.c_str());
-    Console::instance().notify(SYSNOTE_NUM_ROOMS, m_world.m_rooms.size());
+    m_gui.getConsole().notify(SYSNOTE_LOADED_PC_LEVEL);
+    m_gui.getConsole().notify(SYSNOTE_ENGINE_VERSION, static_cast<int>(loader->m_gameVersion), buf.c_str());
+    m_gui.getConsole().notify(SYSNOTE_NUM_ROOMS, m_world.m_rooms.size());
 
     return true;
 }
@@ -721,20 +714,20 @@ bool Engine::loadMap(const std::string& name)
 
     if(!boost::filesystem::is_regular_file(name))
     {
-        Console::instance().warning(SYSWARN_FILE_NOT_FOUND, name.c_str());
+        m_gui.getConsole().warning(SYSWARN_FILE_NOT_FOUND, name.c_str());
         return false;
     }
 
-    gui::Gui::instance->drawLoadScreen(0);
+    m_gui.drawLoadScreen(0);
 
     m_camera.setCurrentRoom(nullptr);
 
-    render::renderer.hideSkyBox();
-    render::renderer.resetWorld();
+    renderer.hideSkyBox();
+    renderer.resetWorld();
 
-    Gameflow::instance.setLevelPath(name);          // it is needed for "not in the game" levels or correct saves loading.
+    gameflow.setLevelPath(name);          // it is needed for "not in the game" levels or correct saves loading.
 
-    gui::Gui::instance->drawLoadScreen(50);
+    m_gui.drawLoadScreen(50);
 
     m_world.empty();
     m_world.prepare();
@@ -743,7 +736,7 @@ bool Engine::loadMap(const std::string& name)
 
     m_world.m_audioEngine.init();
 
-    gui::Gui::instance->drawLoadScreen(100);
+    m_gui.drawLoadScreen(100);
 
     // Here we can place different platform-specific level loading routines.
 
@@ -767,23 +760,23 @@ bool Engine::loadMap(const std::string& name)
             break;
     }
 
-    Game_Prepare();
+    Game_Prepare(m_world);
 
     engine_lua.prepare();
 
-    render::renderer.setWorld(&m_world);
+    renderer.setWorld(&m_world);
 
-    gui::Gui::instance->drawLoadScreen(1000);
+    m_gui.drawLoadScreen(1000);
 
-    gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::In);
-    gui::Gui::instance->notifier.reset();
+    m_gui.m_faders.start(gui::FaderType::LoadScreen, gui::FaderDir::In);
+    m_gui.m_notifier.reset();
 
     return true;
 }
 
 int Engine::execCmd(const char *ch)
 {
-    std::vector<char> token(Console::instance().lineLength());
+    std::vector<char> token(m_gui.getConsole().lineLength());
     const world::RoomSector* sect;
     FILE *f;
 
@@ -796,7 +789,7 @@ int Engine::execCmd(const char *ch)
         {
             for(int i = SYSNOTE_COMMAND_HELP1; i <= SYSNOTE_COMMAND_HELP15; i++)
             {
-                Console::instance().notify(i);
+                m_gui.getConsole().notify(i);
             }
         }
         else if(!strcmp(token.data(), "goto"))
@@ -805,7 +798,7 @@ int Engine::execCmd(const char *ch)
             const auto x = script::MainEngine::parseFloat(&ch);
             const auto y = script::MainEngine::parseFloat(&ch);
             const auto z = script::MainEngine::parseFloat(&ch);
-            render::renderer.camera()->setPosition({ x, y, z });
+            renderer.camera()->setPosition({ x, y, z });
             return 1;
         }
         else if(!strcmp(token.data(), "save"))
@@ -813,7 +806,7 @@ int Engine::execCmd(const char *ch)
             ch = script::MainEngine::parse_token(ch, token.data());
             if(NULL != ch)
             {
-                Game_Save(token.data());
+                Game_Save(m_world, token.data());
             }
             return 1;
         }
@@ -822,18 +815,18 @@ int Engine::execCmd(const char *ch)
             ch = script::MainEngine::parse_token(ch, token.data());
             if(NULL != ch)
             {
-                Game_Load(token.data());
+                Game_Load(m_world, token.data());
             }
             return 1;
         }
         else if(!strcmp(token.data(), "exit"))
         {
-            shutdown(0);
+            std::exit(0); //! @fixme This is ugly...
             return 1;
         }
         else if(!strcmp(token.data(), "cls"))
         {
-            Console::instance().clean();
+            m_gui.getConsole().clean();
             return 1;
         }
         else if(!strcmp(token.data(), "spacing"))
@@ -841,10 +834,10 @@ int Engine::execCmd(const char *ch)
             ch = script::MainEngine::parse_token(ch, token.data());
             if(NULL == ch)
             {
-                Console::instance().notify(SYSNOTE_CONSOLE_SPACING, Console::instance().spacing());
+                m_gui.getConsole().notify(SYSNOTE_CONSOLE_SPACING, m_gui.getConsole().spacing());
                 return 1;
             }
-            Console::instance().setSpacing(std::stof(token.data()));
+            m_gui.getConsole().setSpacing(std::stof(token.data()));
             return 1;
         }
         else if(!strcmp(token.data(), "showing_lines"))
@@ -852,101 +845,101 @@ int Engine::execCmd(const char *ch)
             ch = script::MainEngine::parse_token(ch, token.data());
             if(NULL == ch)
             {
-                Console::instance().notify(SYSNOTE_CONSOLE_LINECOUNT, Console::instance().visibleLines());
+                m_gui.getConsole().notify(SYSNOTE_CONSOLE_LINECOUNT, m_gui.getConsole().visibleLines());
                 return 1;
             }
             else
             {
                 const auto val = atoi(token.data());
-                if(val >= 2 && val <= screen_info.h / Console::instance().lineHeight())
+                if(val >= 2 && val <= screen_info.h / m_gui.getConsole().lineHeight())
                 {
-                    Console::instance().setVisibleLines(val);
-                    Console::instance().setCursorY(screen_info.h - Console::instance().lineHeight() * Console::instance().visibleLines());
+                    m_gui.getConsole().setVisibleLines(val);
+                    m_gui.getConsole().setCursorY(screen_info.h - m_gui.getConsole().lineHeight() * m_gui.getConsole().visibleLines());
                 }
                 else
                 {
-                    Console::instance().warning(SYSWARN_INVALID_LINECOUNT);
+                    m_gui.getConsole().warning(SYSWARN_INVALID_LINECOUNT);
                 }
             }
             return 1;
         }
         else if(!strcmp(token.data(), "r_wireframe"))
         {
-            render::renderer.toggleWireframe();
+            renderer.toggleWireframe();
             return 1;
         }
         else if(!strcmp(token.data(), "r_points"))
         {
-            render::renderer.toggleDrawPoints();
+            renderer.toggleDrawPoints();
             return 1;
         }
         else if(!strcmp(token.data(), "r_coll"))
         {
-            render::renderer.toggleDrawColl();
+            renderer.toggleDrawColl();
             return 1;
         }
         else if(!strcmp(token.data(), "r_normals"))
         {
-            render::renderer.toggleDrawNormals();
+            renderer.toggleDrawNormals();
             return 1;
         }
         else if(!strcmp(token.data(), "r_portals"))
         {
-            render::renderer.toggleDrawPortals();
+            renderer.toggleDrawPortals();
             return 1;
         }
         else if(!strcmp(token.data(), "r_room_boxes"))
         {
-            render::renderer.toggleDrawRoomBoxes();
+            renderer.toggleDrawRoomBoxes();
             return 1;
         }
         else if(!strcmp(token.data(), "r_boxes"))
         {
-            render::renderer.toggleDrawBoxes();
+            renderer.toggleDrawBoxes();
             return 1;
         }
         else if(!strcmp(token.data(), "r_axis"))
         {
-            render::renderer.toggleDrawAxis();
+            renderer.toggleDrawAxis();
             return 1;
         }
         else if(!strcmp(token.data(), "r_allmodels"))
         {
-            render::renderer.toggleDrawAllModels();
+            renderer.toggleDrawAllModels();
             return 1;
         }
         else if(!strcmp(token.data(), "r_dummy_statics"))
         {
-            render::renderer.toggleDrawDummyStatics();
+            renderer.toggleDrawDummyStatics();
             return 1;
         }
         else if(!strcmp(token.data(), "r_skip_room"))
         {
-            render::renderer.toggleSkipRoom();
+            renderer.toggleSkipRoom();
             return 1;
         }
         else if(!strcmp(token.data(), "room_info"))
         {
-            if(const world::Room* r = render::renderer.camera()->getCurrentRoom())
+            if(const world::Room* r = renderer.camera()->getCurrentRoom())
             {
-                sect = r->getSectorXYZ(render::renderer.camera()->getPosition());
-                Console::instance().printf("ID = %d, x_sect = %d, y_sect = %d", r->getId(), static_cast<int>(r->getSectors().shape()[0]), static_cast<int>(r->getSectors().shape()[1]));
+                sect = r->getSectorXYZ(renderer.camera()->getPosition());
+                m_gui.getConsole().printf("ID = %d, x_sect = %d, y_sect = %d", r->getId(), static_cast<int>(r->getSectors().shape()[0]), static_cast<int>(r->getSectors().shape()[1]));
                 if(sect)
                 {
-                    Console::instance().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d",
+                    m_gui.getConsole().printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d",
                                                static_cast<int>(sect->index_x),
                                                static_cast<int>(sect->index_y),
                                                static_cast<int>(sect->ceiling == world::MeteringWallHeight || sect->floor == world::MeteringWallHeight),
                                                static_cast<int>(sect->sector_above != nullptr), static_cast<int>(sect->sector_below != nullptr));
                     for(uint32_t i = 0; i < sect->owner_room->getStaticMeshes().size(); i++)
                     {
-                        Console::instance().printf("static[%d].object_id = %d", i, sect->owner_room->getStaticMeshes()[i]->getId());
+                        m_gui.getConsole().printf("static[%d].object_id = %d", i, sect->owner_room->getStaticMeshes()[i]->getId());
                     }
                     for(world::Object* object : sect->owner_room->getObjects())
                     {
                         if(world::Entity* e = dynamic_cast<world::Entity*>(object))
                         {
-                            Console::instance().printf("object[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform[3][0]), static_cast<int>(e->m_transform[3][1]), static_cast<int>(e->m_transform[3][2]), e->getId());
+                            m_gui.getConsole().printf("object[entity](%d, %d, %d).object_id = %d", static_cast<int>(e->m_transform[3][0]), static_cast<int>(e->m_transform[3][1]), static_cast<int>(e->m_transform[3][2]), e->getId());
                         }
                     }
                 }
@@ -966,29 +959,29 @@ int Engine::execCmd(const char *ch)
                 fread(buf.data(), size, sizeof(char), f);
                 buf[size] = 0;
                 fclose(f);
-                Console::instance().clean();
-                Console::instance().addText(buf.data(), gui::FontStyle::ConsoleInfo);
+                m_gui.getConsole().clean();
+                m_gui.getConsole().addText(buf.data(), gui::FontStyle::ConsoleInfo);
             }
             else
             {
-                Console::instance().addText("Not available =(", gui::FontStyle::ConsoleWarning);
+                m_gui.getConsole().addText("Not available =(", gui::FontStyle::ConsoleWarning);
             }
             return 1;
         }
         else if(token[0])
         {
-            Console::instance().addLine(pch, gui::FontStyle::ConsoleEvent);
+            m_gui.getConsole().addLine(pch, gui::FontStyle::ConsoleEvent);
             try
             {
                 engine_lua.doString(pch);
             }
             catch(lua::RuntimeError& error)
             {
-                Console::instance().addLine(error.what(), gui::FontStyle::ConsoleWarning);
+                m_gui.getConsole().addLine(error.what(), gui::FontStyle::ConsoleWarning);
             }
             catch(lua::LoadError& error)
             {
-                Console::instance().addLine(error.what(), gui::FontStyle::ConsoleWarning);
+                m_gui.getConsole().addLine(error.what(), gui::FontStyle::ConsoleWarning);
             }
             return 0;
         }
@@ -1010,7 +1003,7 @@ void Engine::sysInit()
 
     system_fps.show = true;
 
-    gui::TextLineManager::instance->add(&system_fps);
+    m_gui.m_textlineManager.add(&system_fps);
 }
 
 void Engine::sysDestroy()
@@ -1043,7 +1036,7 @@ void Engine::initConfig(const std::string& filename)
 
     if(boost::filesystem::is_regular_file(filename))
     {
-        script::ScriptEngine state;
+        script::ScriptEngine state(this);
         state.registerC("bind", &script::MainEngine::bindKey);                             // get and set key bindings
         try
         {
@@ -1061,9 +1054,9 @@ void Engine::initConfig(const std::string& filename)
         }
 
         state.parseScreen(screen_info);
-        state.parseRender(render::renderer.settings());
+        state.parseRender(renderer.settings());
         state.parseAudio(m_world.m_audioEngine.settings());
-        state.parseConsole(Console::instance());
+        state.parseConsole(m_gui.getConsole());
         state.parseControls(m_inputHandler);
         state.parseSystem(system_settings);
     }

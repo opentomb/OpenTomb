@@ -50,7 +50,7 @@ void Entity::disable()
 /**
  * It is from bullet_character_controller
  */
-int Ghost_GetPenetrationFixVector(btPairCachingGhostObject& ghost, btManifoldArray& manifoldArray, glm::vec3& correction)
+bool Entity::getPenetrationFixVector(btPairCachingGhostObject& ghost, btManifoldArray& manifoldArray, glm::vec3& correction) const
 {
     // Here we must refresh the overlapping paircache as the penetrating movement itself or the
     // previous recovery iteration might have used setWorldTransform and pushed us into an object
@@ -64,12 +64,12 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject& ghost, btManifoldArr
 
     btVector3 aabb_min, aabb_max;
     ghost.getCollisionShape()->getAabb(ghost.getWorldTransform(), aabb_min, aabb_max);
-    engine::BulletEngine::instance->dynamicsWorld->getBroadphase()->setAabb(ghost.getBroadphaseHandle(), aabb_min, aabb_max, engine::BulletEngine::instance->dynamicsWorld->getDispatcher());
-    engine::BulletEngine::instance->dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost.getOverlappingPairCache(), engine::BulletEngine::instance->dynamicsWorld->getDispatchInfo(), engine::BulletEngine::instance->dynamicsWorld->getDispatcher());
+    getWorld()->m_engine->bullet.dynamicsWorld->getBroadphase()->setAabb(ghost.getBroadphaseHandle(), aabb_min, aabb_max, getWorld()->m_engine->bullet.dynamicsWorld->getDispatcher());
+    getWorld()->m_engine->bullet.dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost.getOverlappingPairCache(), getWorld()->m_engine->bullet.dynamicsWorld->getDispatchInfo(), getWorld()->m_engine->bullet.dynamicsWorld->getDispatcher());
 
     correction = { 0,0,0 };
     int num_pairs = ghost.getOverlappingPairCache()->getNumOverlappingPairs();
-    int ret = 0;
+    bool ret = false;
     for(int i = 0; i < num_pairs; i++)
     {
         manifoldArray.clear();
@@ -107,7 +107,7 @@ int Ghost_GetPenetrationFixVector(btPairCachingGhostObject& ghost, btManifoldArr
                 {
                     glm::vec3 t = -util::convert(pt.m_normalWorldOnB) * dist;
                     correction += t;
-                    ret++;
+                    ret = true;
                 }
             }
         }
@@ -192,7 +192,7 @@ int Entity::getPenetrationFixVector(glm::vec3& reaction, bool hasMove)
             tr[3] = glm::vec4(curr, 1.0f);
             m_skeleton.getBones()[m].ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr));
             glm::vec3 tmp;
-            if(Ghost_GetPenetrationFixVector(*m_skeleton.getBones()[m].ghostObject, m_skeleton.manifoldArray(), tmp))
+            if(getPenetrationFixVector(*m_skeleton.getBones()[m].ghostObject, m_skeleton.manifoldArray(), tmp))
             {
                 m_transform[3] += glm::vec4(tmp, 0);
                 curr += tmp;
@@ -266,13 +266,13 @@ void Entity::checkCollisionCallbacks()
             if(activator->m_callbackFlags & ENTITY_CALLBACK_COLLISION)
             {
                 // Activator and entity IDs are swapped in case of collision callback.
-                engine_lua.execEntity(ENTITY_CALLBACK_COLLISION, activator->getId(), getId());
+                getWorld()->m_engine->engine_lua.execEntity(ENTITY_CALLBACK_COLLISION, activator->getId(), getId());
                 //ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
             }
         }
         else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) && dynamic_cast<Room*>(object))
         {
-            engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, getId(), object->getId());
+            getWorld()->m_engine->engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, getId(), object->getId());
         }
     }
 }
@@ -296,7 +296,7 @@ bool Entity::wasCollisionBodyParts(uint32_t parts_flags) const
 void Entity::updateRoomPos()
 {
     glm::vec3 pos = getRoomPos();
-    auto new_room = engine::Engine::instance.m_world.Room_FindPosCogerrence(pos, getRoom());
+    auto new_room = getWorld()->Room_FindPosCogerrence(pos, getRoom());
     if(!new_room)
     {
         m_currentSector = nullptr;
@@ -470,16 +470,16 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
             if(command.param[0] & animation::TR_ANIMCOMMAND_CONDITION_WATER)
             {
                 if(getSubstanceState() == Substance::WaterShallow)
-                    engine::Engine::instance.m_world.m_audioEngine.send(soundId, audio::EmitterType::Entity, getId());
+                    getWorld()->m_audioEngine.send(soundId, audio::EmitterType::Entity, getId());
             }
             else if(command.param[0] & animation::TR_ANIMCOMMAND_CONDITION_LAND)
             {
                 if(getSubstanceState() != Substance::WaterShallow)
-                    engine::Engine::instance.m_world.m_audioEngine.send(soundId, audio::EmitterType::Entity, getId());
+                    getWorld()->m_audioEngine.send(soundId, audio::EmitterType::Entity, getId());
             }
             else
             {
-                engine::Engine::instance.m_world.m_audioEngine.send(soundId, audio::EmitterType::Entity, getId());
+                getWorld()->m_audioEngine.send(soundId, audio::EmitterType::Entity, getId());
             }
         }
         break;
@@ -511,7 +511,7 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
             }
             else
             {
-                engine_lua.execEffect(effect_id, getId());
+                getWorld()->m_engine->engine_lua.execEffect(effect_id, getId());
             }
         }
         break;
@@ -547,8 +547,8 @@ void Entity::processSector()
         // Look up trigger function table and run trigger if it exists.
         try
         {
-            if(engine_lua["tlist_RunTrigger"].is<lua::Callable>())
-                engine_lua["tlist_RunTrigger"].call(int(lowest_sector->trig_index), m_skeleton.getModel()->getId() == 0 ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC, getId());
+            if(getWorld()->m_engine->engine_lua["tlist_RunTrigger"].is<lua::Callable>())
+                getWorld()->m_engine->engine_lua["tlist_RunTrigger"].call(int(lowest_sector->trig_index), m_skeleton.getModel()->getId() == 0 ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC, getId());
         }
         catch(lua::RuntimeError& error)
         {
@@ -641,7 +641,7 @@ void Entity::frame(util::Duration time)
 
     fixPenetrations(nullptr);
     processSector();    // triggers
-    engine_lua.loopEntity(getId());
+    getWorld()->m_engine->engine_lua.loopEntity(getId());
 
     if(m_typeFlags & ENTITY_TYPE_COLLCHECK)
         checkCollisionCallbacks();
@@ -689,7 +689,7 @@ void Entity::checkActivators()
             //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
             if(e != this && core::testOverlap(*e, *this)) //(vec3_dist_sq(transform+12, pos) < r))
             {
-                engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
+                getWorld()->m_engine->engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
             }
         }
         else if(e->m_typeFlags & ENTITY_TYPE_PICKABLE)
@@ -702,7 +702,7 @@ void Entity::checkActivators()
                && v[2] + 32.0 > m_transform[3][2] + m_skeleton.getBoundingBox().min[2]
                && v[2] - 32.0 < m_transform[3][2] + m_skeleton.getBoundingBox().max[2])
             {
-                engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
+                getWorld()->m_engine->engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
             }
         }
     }
@@ -723,8 +723,9 @@ void Entity::moveVertical(glm::float_t dist)
     m_transform[3] += m_transform[2] * dist;
 }
 
-Entity::Entity(ObjectId id)
-    : Object(id)
+Entity::Entity(ObjectId id, World* world)
+    : Object(id, world)
+    , m_skeleton(world)
 {
     m_obb.transform = &m_transform;
 }
@@ -824,7 +825,7 @@ bool Entity::createRagdoll(RagdollSetup* setup)
         m_skeleton.getModel()->m_btJoints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
 
         m_skeleton.getModel()->m_btJoints[i]->setDbgDrawSize(64.0);
-        engine::BulletEngine::instance->dynamicsWorld->addConstraint(m_skeleton.getModel()->m_btJoints[i].get(), true);
+        getWorld()->m_engine->bullet.dynamicsWorld->addConstraint(m_skeleton.getModel()->m_btJoints[i].get(), true);
     }
 
     if(!result)
@@ -847,20 +848,20 @@ bool Entity::deleteRagdoll()
     {
         if(joint)
         {
-            engine::BulletEngine::instance->dynamicsWorld->removeConstraint(joint.get());
+            getWorld()->m_engine->bullet.dynamicsWorld->removeConstraint(joint.get());
             joint.reset();
         }
     }
 
     for(const animation::Bone& bone : m_skeleton.getBones())
     {
-        engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(bone.bt_body.get());
+        getWorld()->m_engine->bullet.dynamicsWorld->removeRigidBody(bone.bt_body.get());
         bone.bt_body->setMassProps(0, btVector3(0.0, 0.0, 0.0));
-        engine::BulletEngine::instance->dynamicsWorld->addRigidBody(bone.bt_body.get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
+        getWorld()->m_engine->bullet.dynamicsWorld->addRigidBody(bone.bt_body.get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
         if(bone.ghostObject)
         {
-            engine::BulletEngine::instance->dynamicsWorld->removeCollisionObject(bone.ghostObject.get());
-            engine::BulletEngine::instance->dynamicsWorld->addCollisionObject(bone.ghostObject.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
+            getWorld()->m_engine->bullet.dynamicsWorld->removeCollisionObject(bone.ghostObject.get());
+            getWorld()->m_engine->bullet.dynamicsWorld->addCollisionObject(bone.ghostObject.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
         }
     }
 
@@ -876,7 +877,7 @@ bool Entity::deleteRagdoll()
 
 glm::vec3 Entity::applyGravity(util::Duration time)
 {
-    const glm::vec3 gravityAccelleration = util::convert(engine::BulletEngine::instance->dynamicsWorld->getGravity());
+    const glm::vec3 gravityAccelleration = util::convert(getWorld()->m_engine->bullet.dynamicsWorld->getGravity());
     const glm::vec3 gravitySpeed = gravityAccelleration * util::toSeconds(time);
     glm::vec3 move = (m_speed + gravitySpeed*0.5f) * util::toSeconds(time);
     m_speed += gravitySpeed;

@@ -7,15 +7,15 @@ namespace world
 {
 namespace core
 {
-void BaseMesh::polySortInMesh()
+void BaseMesh::polySortInMesh(const world::World& world)
 {
     for(Polygon& p : m_polygons)
     {
-        if(p.textureAnimationId && *p.textureAnimationId < engine::Engine::instance.m_world.m_textureAnimations.size())
+        if(p.textureAnimationId && *p.textureAnimationId < world.m_textureAnimations.size())
         {
-            animation::TextureAnimationSequence* seq = &engine::Engine::instance.m_world.m_textureAnimations[*p.textureAnimationId];
+            const animation::TextureAnimationSequence* seq = &world.m_textureAnimations[*p.textureAnimationId];
             // set tex coordinates to the first frame for correct texture transform in renderer
-            engine::Engine::instance.m_world.m_textureAtlas->getCoordinates(seq->textureIndices[0], false, p, 0, seq->uvrotate);
+            world.m_textureAtlas->getCoordinates(seq->textureIndices[0], false, p, 0, seq->uvrotate);
         }
 
         if(p.blendMode != loader::BlendingMode::Opaque && p.blendMode != loader::BlendingMode::Transparent)

@@ -54,7 +54,7 @@ constexpr ModelId TR_ITEM_LARA_SKIN_TR45 = 8;
 constexpr ModelId TR_ITEM_LARA_SKIN_JOINTS_TR45 = 9;
 
 struct SectorTween;
-struct World;
+class World;
 class Room;
 struct RoomSector;
 class SkeletalModel;
@@ -84,7 +84,7 @@ void Res_GenRoomFlipMap(World& world);
 void Res_GenBaseItems(World& world);
 void Res_GenVBOs(World& world);
 
-bool Res_Sector_IsWall(const RoomSector* ws, const RoomSector* ns);
+bool Res_Sector_IsWall(World& world, const RoomSector* ws, const RoomSector* ns);
 void     Res_Sector_FixHeights(RoomSector& sector);
 
 void     Res_FixRooms(World& world);   // Fix start-up room states.
@@ -99,7 +99,7 @@ void Res_GenEntityFunctions(std::map<uint32_t, std::shared_ptr<Entity>>& entitie
 
 // Assign pickup functions to previously created base items.
 
-void Res_EntityToItem(std::map<ObjectId, std::shared_ptr<BaseItem> >& map);
+void Res_EntityToItem(World& world);
 
 // Functions setting parameters from configuration scripts.
 
@@ -108,7 +108,7 @@ void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static);
 
 // Open autoexec.
 
-void Res_AutoexecOpen(loader::Game engine_version);
+void Res_AutoexecOpen(World& world, loader::Game engine_version);
 
 // Functions generating native OpenTomb structs from legacy TR structs.
 
@@ -136,7 +136,7 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, cons
 // Main functions which are used to translate legacy TR floor data
 // to native OpenTomb structs.
 
-int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& floorData, loader::Engine engine);
+int TR_Sector_TranslateFloorData(World& world, RoomSector& sector, const loader::FloorData& floorData, loader::Engine engine);
 
 void tr_setupRoomVertices(World& world, const std::unique_ptr<loader::Level>& tr, loader::Room& tr_room, const std::shared_ptr<core::BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, core::Polygon& p);
 void tr_copyNormals(core::Polygon& polygon, const core::BaseMesh& mesh, const uint16_t *mesh_vertex_indices);

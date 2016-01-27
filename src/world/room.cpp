@@ -32,7 +32,7 @@ Room::~Room()
             }
             body->setCollisionShape(nullptr);
 
-            engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(body);
+            getWorld()->m_engine->bullet.dynamicsWorld->removeRigidBody(body);
             delete body;
             mesh->bt_body = nullptr;
         }
@@ -54,7 +54,7 @@ Room::~Room()
             m_btBody->setCollisionShape(nullptr);
         }
 
-        engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(m_btBody.get());
+        getWorld()->m_engine->bullet.dynamicsWorld->removeRigidBody(m_btBody.get());
     }
 }
 
@@ -221,14 +221,14 @@ void Room::enable()
 
     if(m_btBody)
     {
-        engine::BulletEngine::instance->dynamicsWorld->addRigidBody(m_btBody.get());
+        getWorld()->m_engine->bullet.dynamicsWorld->addRigidBody(m_btBody.get());
     }
 
     for(const std::shared_ptr<StaticMesh>& sm : m_staticMeshes)
     {
         if(sm->bt_body != nullptr)
         {
-            engine::BulletEngine::instance->dynamicsWorld->addRigidBody(sm->bt_body);
+            getWorld()->m_engine->bullet.dynamicsWorld->addRigidBody(sm->bt_body);
         }
     }
 
@@ -246,14 +246,14 @@ void Room::disable()
 
     if(m_btBody)
     {
-        engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(m_btBody.get());
+        getWorld()->m_engine->bullet.dynamicsWorld->removeRigidBody(m_btBody.get());
     }
 
     for(auto sm : m_staticMeshes)
     {
         if(sm->bt_body != nullptr)
         {
-            engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(sm->bt_body);
+            getWorld()->m_engine->bullet.dynamicsWorld->removeRigidBody(sm->bt_body);
         }
     }
 
@@ -264,7 +264,7 @@ void Room::swapToBase()
 {
     if(m_baseRoom != nullptr && m_active)                        //If room is active alternate room
     {
-        render::renderer.cleanList();
+        getWorld()->m_engine->renderer.cleanList();
         disable();                             //Disable current room
         m_baseRoom->disable();                  //Paranoid
         swapPortals(m_baseRoom);        //Update portals to match this room
@@ -277,7 +277,7 @@ void Room::swapToAlternate()
 {
     if(m_alternateRoom != nullptr && m_active)              //If room is active base room
     {
-        render::renderer.cleanList();
+        getWorld()->m_engine->renderer.cleanList();
         disable();                             //Disable current room
         m_alternateRoom->disable();             //Paranoid
         swapPortals(m_alternateRoom);   //Update portals to match this room
@@ -306,7 +306,7 @@ Room* Room::checkFlip()
 void Room::swapPortals(Room* dest_room)
 {
     //Update portals in room rooms
-    for(std::shared_ptr<Room> r : engine::Engine::instance.m_world.m_rooms)//For every room in the world itself
+    for(std::shared_ptr<Room> r : getWorld()->m_rooms)//For every room in the *getWorld() itself
     {
         for(Portal& p : r->m_portals) //For every portal in this room
         {
@@ -384,7 +384,7 @@ void Room::buildOverlappedRoomsList()
 {
     m_overlappedRooms.clear();
 
-    for(auto r : engine::Engine::instance.m_world.m_rooms)
+    for(auto r : getWorld()->m_rooms)
     {
         if(overlaps(r.get()))
         {
@@ -393,9 +393,9 @@ void Room::buildOverlappedRoomsList()
     }
 }
 
-void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
+void Room::genMesh(const std::unique_ptr<loader::Level>& tr)
 {
-    const uint32_t tex_mask = world.m_engineVersion == loader::Engine::TR4 ? loader::TextureIndexMaskTr4 : loader::TextureIndexMask;
+    const uint32_t tex_mask = getWorld()->m_engineVersion == loader::Engine::TR4 ? loader::TextureIndexMaskTr4 : loader::TextureIndexMask;
 
     auto& tr_room = tr->m_rooms[getId()];
 
@@ -406,7 +406,7 @@ void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
     }
 
     m_mesh = std::make_shared<core::BaseMesh>();
-    m_mesh->m_texturePageCount = world.m_textureAtlas->getNumAtlasPages() + 1;
+    m_mesh->m_texturePageCount = getWorld()->m_textureAtlas->getNumAtlasPages() + 1;
     m_mesh->m_usesVertexColors = true; // This is implicitly true on room meshes
 
     m_mesh->m_vertices.resize(tr_room.vertices.size());
@@ -427,7 +427,7 @@ void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
     */
     for(size_t i = 0; i < tr_room.triangles.size(); i++, ++p)
     {
-        tr_setupRoomVertices(world, tr, tr_room, m_mesh, 3, tr_room.triangles[i].vertices, tr_room.triangles[i].texture & tex_mask, *p);
+        tr_setupRoomVertices(*getWorld(), tr, tr_room, m_mesh, 3, tr_room.triangles[i].vertices, tr_room.triangles[i].texture & tex_mask, *p);
         p->isDoubleSided = (tr_room.triangles[i].texture & 0x8000) != 0;
     }
 
@@ -436,14 +436,14 @@ void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
     */
     for(size_t i = 0; i < tr_room.rectangles.size(); i++, ++p)
     {
-        tr_setupRoomVertices(world, tr, tr_room, m_mesh, 4, tr_room.rectangles[i].vertices, tr_room.rectangles[i].texture & tex_mask, *p);
+        tr_setupRoomVertices(*getWorld(), tr, tr_room, m_mesh, 4, tr_room.rectangles[i].vertices, tr_room.rectangles[i].texture & tex_mask, *p);
         p->isDoubleSided = (tr_room.rectangles[i].texture & 0x8000) != 0;
     }
 
     /*
     * let us normalise normales %)
     */
-    for(world::core::Vertex& v : m_mesh->m_vertices)
+    for(core::Vertex& v : m_mesh->m_vertices)
     {
         v.normal = glm::normalize(v.normal);
     }
@@ -467,7 +467,7 @@ void Room::genMesh(World& world, const std::unique_ptr<loader::Level>& tr)
 
     m_mesh->m_vertices.clear();
     m_mesh->genFaces();
-    m_mesh->polySortInMesh();
+    m_mesh->polySortInMesh(*getWorld());
 }
 
 ///@TODO: resolve cases with floor >> ceiling (I.E. floor - ceiling >= 2048)
@@ -690,7 +690,7 @@ btCollisionShape *BT_CSfromHeightmap(const Room::SectorArray& heightmap, const s
     return ret;
 }
 
-void Room::load(world::World& world, const std::unique_ptr<loader::Level>& tr)
+void Room::load(const std::unique_ptr<loader::Level>& tr)
 {
     m_active = true;
     m_flags = tr->m_rooms[getId()].flags;
@@ -707,7 +707,7 @@ void Room::load(world::World& world, const std::unique_ptr<loader::Level>& tr)
     m_nearRooms.clear();
     m_overlappedRooms.clear();
 
-    genMesh(world, tr);
+    genMesh(tr);
 
     m_btBody.reset();
 
@@ -724,10 +724,10 @@ void Room::load(world::World& world, const std::unique_ptr<loader::Level>& tr)
         {
             continue;
         }
-        m_staticMeshes.emplace_back(std::make_shared<StaticMesh>(tr_room->static_meshes[i].object_id));
+        m_staticMeshes.emplace_back(std::make_shared<StaticMesh>(tr_room->static_meshes[i].object_id, getWorld()));
         std::shared_ptr<StaticMesh> r_static = m_staticMeshes.back();
         r_static->setRoom(this);
-        r_static->mesh = world.m_meshes[tr->m_meshIndices[tr_static->mesh]];
+        r_static->mesh = getWorld()->m_meshes[tr->m_meshIndices[tr_static->mesh]];
         r_static->tint[0] = tr_room->static_meshes[i].tint.r * 2;
         r_static->tint[1] = tr_room->static_meshes[i].tint.g * 2;
         r_static->tint[2] = tr_room->static_meshes[i].tint.b * 2;
@@ -821,7 +821,7 @@ void Room::load(world::World& world, const std::unique_ptr<loader::Level>& tr)
         btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
         btVector3 localInertia(0, 0, 0);
         r_static->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-        engine::BulletEngine::instance->dynamicsWorld->addRigidBody(r_static->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+        getWorld()->m_engine->bullet.dynamicsWorld->addRigidBody(r_static->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
         r_static->bt_body->setUserPointer(r_static.get());
     }
 
@@ -831,10 +831,10 @@ void Room::load(world::World& world, const std::unique_ptr<loader::Level>& tr)
     for(size_t i = 0; i < tr_room->sprites.size(); i++)
     {
         m_sprites.emplace_back();
-        if(tr_room->sprites[i].texture < 0 || static_cast<size_t>(tr_room->sprites[i].texture) >= world.m_sprites.size())
+        if(tr_room->sprites[i].texture < 0 || static_cast<size_t>(tr_room->sprites[i].texture) >= getWorld()->m_sprites.size())
             continue;
 
-        m_sprites[i].sprite = &world.m_sprites[tr_room->sprites[i].texture];
+        m_sprites[i].sprite = &getWorld()->m_sprites[tr_room->sprites[i].texture];
         m_sprites[i].pos = util::convert(tr_room->vertices[tr_room->sprites[i].vertex].vertex);
         m_sprites[i].pos += glm::vec3(getModelMatrix()[3]);
     }
@@ -1019,7 +1019,7 @@ void Room::load(world::World& world, const std::unique_ptr<loader::Level>& tr)
      */
     for(const loader::Portal& p : tr_room->portals)
     {
-        std::shared_ptr<Room> r_dest = world.m_rooms[p.adjoining_room];
+        std::shared_ptr<Room> r_dest = getWorld()->m_rooms[p.adjoining_room];
         m_portals.emplace_back(p, this, r_dest.get(), getModelMatrix());
     }
 
@@ -1042,7 +1042,7 @@ void Room::load(world::World& world, const std::unique_ptr<loader::Level>& tr)
 
     if(tr_room->alternate_room >= 0 && static_cast<uint32_t>(tr_room->alternate_room) < tr->m_rooms.size())
     {
-        m_alternateRoom = world.m_rooms[tr_room->alternate_room].get();
+        m_alternateRoom = getWorld()->m_rooms[tr_room->alternate_room].get();
     }
 }
 
@@ -1086,7 +1086,7 @@ std::vector<SectorTween> Room::generateTweens() const
             {
                 if(next_heightmap->floor_penetration_config != PenetrationConfig::Wall || current_heightmap->floor_penetration_config != PenetrationConfig::Wall)                                                           // Init X-plane tween [ | ]
                 {
-                    if(Res_Sector_IsWall(next_heightmap, current_heightmap))
+                    if(Res_Sector_IsWall(*getWorld(), next_heightmap, current_heightmap))
                     {
                         room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
                         room_tween->floor_corners[1][2] = current_heightmap->ceiling_corners[0][2];
@@ -1097,7 +1097,7 @@ std::vector<SectorTween> Room::generateTweens() const
                         joined_floors = true;
                         joined_ceilings = true;
                     }
-                    else if(Res_Sector_IsWall(current_heightmap, next_heightmap))
+                    else if(Res_Sector_IsWall(*getWorld(), current_heightmap, next_heightmap))
                     {
                         room_tween->floor_corners[0][2] = next_heightmap->floor_corners[3][2];
                         room_tween->floor_corners[1][2] = next_heightmap->ceiling_corners[3][2];
@@ -1111,10 +1111,10 @@ std::vector<SectorTween> Room::generateTweens() const
                     else
                     {
                         /************************** SECTION WITH DROPS CALCULATIONS **********************/
-                        if((!current_heightmap->portal_to_room && !next_heightmap->portal_to_room) || current_heightmap->is2SidePortals(next_heightmap))
+                        if((!current_heightmap->portal_to_room && !next_heightmap->portal_to_room) || current_heightmap->is2SidePortals(*getWorld(), next_heightmap))
                         {
-                            current_heightmap = current_heightmap->checkPortalPointer();
-                            next_heightmap = next_heightmap->checkPortalPointer();
+                            current_heightmap = current_heightmap->checkPortalPointer(*getWorld());
+                            next_heightmap = next_heightmap->checkPortalPointer(*getWorld());
                             if(!current_heightmap->portal_to_room && !next_heightmap->portal_to_room && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
                             {
                                 if(current_heightmap->floor_penetration_config == PenetrationConfig::Solid || next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
@@ -1147,7 +1147,7 @@ std::vector<SectorTween> Room::generateTweens() const
                     bool valid = false;
                     if(next_heightmap->portal_to_room && current_heightmap->sector_above != nullptr && current_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                     {
-                        next_heightmap = next_heightmap->checkPortalPointer();
+                        next_heightmap = next_heightmap->checkPortalPointer(*getWorld());
                         if(next_heightmap->owner_room->getId() == current_heightmap->sector_above->owner_room->getId())
                         {
                             valid = true;
@@ -1164,7 +1164,7 @@ std::vector<SectorTween> Room::generateTweens() const
 
                     if(current_heightmap->portal_to_room && next_heightmap->sector_above != nullptr && next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                     {
-                        current_heightmap = current_heightmap->checkPortalPointer();
+                        current_heightmap = current_heightmap->checkPortalPointer(*getWorld());
                         if(current_heightmap->owner_room->getId() == next_heightmap->sector_above->owner_room->getId())
                         {
                             valid = true;
@@ -1196,7 +1196,7 @@ std::vector<SectorTween> Room::generateTweens() const
                     bool valid = false;
                     if(next_heightmap->portal_to_room && current_heightmap->sector_below != nullptr && current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid)
                     {
-                        next_heightmap = next_heightmap->checkPortalPointer();
+                        next_heightmap = next_heightmap->checkPortalPointer(*getWorld());
                         if(next_heightmap->owner_room->getId() == current_heightmap->sector_below->owner_room->getId())
                         {
                             valid = true;
@@ -1213,7 +1213,7 @@ std::vector<SectorTween> Room::generateTweens() const
 
                     if(current_heightmap->portal_to_room && next_heightmap->sector_below != nullptr && next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                     {
-                        current_heightmap = current_heightmap->checkPortalPointer();
+                        current_heightmap = current_heightmap->checkPortalPointer(*getWorld());
                         if(current_heightmap->owner_room->getId() == next_heightmap->sector_below->owner_room->getId())
                         {
                             valid = true;
@@ -1273,7 +1273,7 @@ std::vector<SectorTween> Room::generateTweens() const
                 if(next_heightmap->floor_penetration_config != PenetrationConfig::Wall || current_heightmap->floor_penetration_config != PenetrationConfig::Wall)
                 {
                     // Init Y-plane tween  [ - ]
-                    if(Res_Sector_IsWall(next_heightmap, current_heightmap))
+                    if(Res_Sector_IsWall(*getWorld(), next_heightmap, current_heightmap))
                     {
                         room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
                         room_tween->floor_corners[1][2] = current_heightmap->ceiling_corners[1][2];
@@ -1284,7 +1284,7 @@ std::vector<SectorTween> Room::generateTweens() const
                         joined_floors = true;
                         joined_ceilings = true;
                     }
-                    else if(Res_Sector_IsWall(current_heightmap, next_heightmap))
+                    else if(Res_Sector_IsWall(*getWorld(), current_heightmap, next_heightmap))
                     {
                         room_tween->floor_corners[0][2] = next_heightmap->floor_corners[0][2];
                         room_tween->floor_corners[1][2] = next_heightmap->ceiling_corners[0][2];
@@ -1298,10 +1298,10 @@ std::vector<SectorTween> Room::generateTweens() const
                     else
                     {
                         /************************** BIG SECTION WITH DROPS CALCULATIONS **********************/
-                        if((!current_heightmap->portal_to_room && !next_heightmap->portal_to_room) || current_heightmap->is2SidePortals(next_heightmap))
+                        if((!current_heightmap->portal_to_room && !next_heightmap->portal_to_room) || current_heightmap->is2SidePortals(*getWorld(), next_heightmap))
                         {
-                            current_heightmap = current_heightmap->checkPortalPointer();
-                            next_heightmap = next_heightmap->checkPortalPointer();
+                            current_heightmap = current_heightmap->checkPortalPointer(*getWorld());
+                            next_heightmap = next_heightmap->checkPortalPointer(*getWorld());
                             if(!current_heightmap->portal_to_room && !next_heightmap->portal_to_room && current_heightmap->floor_penetration_config != PenetrationConfig::Wall && next_heightmap->floor_penetration_config != PenetrationConfig::Wall)
                             {
                                 if(current_heightmap->floor_penetration_config == PenetrationConfig::Solid || next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
@@ -1334,7 +1334,7 @@ std::vector<SectorTween> Room::generateTweens() const
                     bool valid = false;
                     if(next_heightmap->portal_to_room && current_heightmap->sector_above != nullptr && current_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                     {
-                        next_heightmap = next_heightmap->checkPortalPointer();
+                        next_heightmap = next_heightmap->checkPortalPointer(*getWorld());
                         if(next_heightmap->owner_room->getId() == current_heightmap->sector_above->owner_room->getId())
                         {
                             valid = true;
@@ -1351,7 +1351,7 @@ std::vector<SectorTween> Room::generateTweens() const
 
                     if(current_heightmap->portal_to_room && next_heightmap->sector_above != nullptr && next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                     {
-                        current_heightmap = current_heightmap->checkPortalPointer();
+                        current_heightmap = current_heightmap->checkPortalPointer(*getWorld());
                         if(current_heightmap->owner_room->getId() == next_heightmap->sector_above->owner_room->getId())
                         {
                             valid = true;
@@ -1383,7 +1383,7 @@ std::vector<SectorTween> Room::generateTweens() const
                     bool valid = false;
                     if(next_heightmap->portal_to_room && current_heightmap->sector_below != nullptr && current_heightmap->ceiling_penetration_config == PenetrationConfig::Solid)
                     {
-                        next_heightmap = next_heightmap->checkPortalPointer();
+                        next_heightmap = next_heightmap->checkPortalPointer(*getWorld());
                         if(next_heightmap->owner_room->getId() == current_heightmap->sector_below->owner_room->getId())
                         {
                             valid = true;
@@ -1400,7 +1400,7 @@ std::vector<SectorTween> Room::generateTweens() const
 
                     if(current_heightmap->portal_to_room && next_heightmap->sector_below != nullptr && next_heightmap->floor_penetration_config == PenetrationConfig::Solid)
                     {
-                        current_heightmap = current_heightmap->checkPortalPointer();
+                        current_heightmap = current_heightmap->checkPortalPointer(*getWorld());
                         if(current_heightmap->owner_room->getId() == next_heightmap->sector_below->owner_room->getId())
                         {
                             valid = true;
@@ -1456,7 +1456,7 @@ void Room::generateCollisionShape()
     tr.setFromOpenGLMatrix(glm::value_ptr(getModelMatrix()));
     btDefaultMotionState* motionState = new btDefaultMotionState(tr);
     m_btBody.reset(new btRigidBody(0.0, motionState, cshape, localInertia));
-    engine::BulletEngine::instance->dynamicsWorld->addRigidBody(m_btBody.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+    getWorld()->m_engine->bullet.dynamicsWorld->addRigidBody(m_btBody.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
     m_btBody->setUserPointer(this);
     m_btBody->setRestitution(1.0);
     m_btBody->setFriction(1.0);
@@ -1535,7 +1535,7 @@ bool TR_IsSectorsIn2SideOfPortal(const RoomSector& s1, const RoomSector& s2, con
 }
 } // anonymous namespace
 
-void Room::initVerticalSectorRelations(const world::World& world, const loader::Room& tr)
+void Room::initVerticalSectorRelations(const loader::Room& tr)
 {
     for(size_t i = 0; i < m_sectors.num_elements(); i++)
     {
@@ -1546,15 +1546,15 @@ void Room::initVerticalSectorRelations(const world::World& world, const loader::
 
         uint8_t rp = tr.sector_list[i].room_below;
         sector.sector_below = nullptr;
-        if(rp < world.m_rooms.size() && rp != 255)
+        if(rp < getWorld()->m_rooms.size() && rp != 255)
         {
-            sector.sector_below = world.m_rooms[rp]->getSectorRaw(sector.position);
+            sector.sector_below = getWorld()->m_rooms[rp]->getSectorRaw(sector.position);
         }
         rp = tr.sector_list[i].room_above;
         sector.sector_above = nullptr;
-        if(rp < world.m_rooms.size() && rp != 255)
+        if(rp < getWorld()->m_rooms.size() && rp != 255)
         {
-            sector.sector_above = world.m_rooms[rp]->getSectorRaw(sector.position);
+            sector.sector_above = getWorld()->m_rooms[rp]->getSectorRaw(sector.position);
         }
 
         int dx = 0, dy = 0;
@@ -1591,7 +1591,7 @@ void Room::initVerticalSectorRelations(const world::World& world, const loader::
             if(dst == nullptr)
                 continue;
 
-            const RoomSector* orig_dst = engine::Engine::instance.m_world.m_rooms[*sector.portal_to_room]->getSectorRaw(sector.position);
+            const RoomSector* orig_dst = getWorld()->m_rooms[*sector.portal_to_room]->getSectorRaw(sector.position);
 
             if(!dst->portal_to_room && dst->floor != MeteringWallHeight && dst->ceiling != MeteringWallHeight && *sector.portal_to_room != p.destination->getId() && dst->floor < orig_dst->floor && TR_IsSectorsIn2SideOfPortal(near_sector, *dst, p))
             {
@@ -1718,7 +1718,7 @@ void Room::generateSpritesBuffer()
     m_spriteBuffer->data.reset(new render::VertexArray(elementBuffer, 3, attribs));
 }
 
-void Room::generateProperties(world::World& world, const loader::Room& tr, const loader::FloorData& floorData, loader::Engine engine)
+void Room::generateProperties(const loader::Room& tr, const loader::FloorData& floorData, loader::Engine engine)
 {
     if(m_alternateRoom != nullptr)
     {
@@ -1730,7 +1730,7 @@ void Room::generateProperties(world::World& world, const loader::Room& tr, const
     {
         for(RoomSector& sector : column)
         {
-            TR_Sector_TranslateFloorData(sector, floorData, engine);
+            TR_Sector_TranslateFloorData(*getWorld(), sector, floorData, engine);
             Res_Sector_FixHeights(sector);
         }
     }
@@ -1741,6 +1741,6 @@ void Room::generateProperties(world::World& world, const loader::Room& tr, const
     buildOverlappedRoomsList();
 
     // Basic sector calculations.
-    initVerticalSectorRelations(world, tr);
+    initVerticalSectorRelations(tr);
 }
-} // namespace world
+} // namespace *getWorld()

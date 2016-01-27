@@ -52,17 +52,17 @@ void roomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& di
     }
 }
 
-void storeEntityLerpTransforms()
+void storeEntityLerpTransforms(Engine* engine)
 {
-    if(Engine::instance.m_world.m_character && !(Engine::instance.m_world.m_character->m_typeFlags & ENTITY_TYPE_DYNAMIC))
+    if(engine->m_world.m_character && !(engine->m_world.m_character->m_typeFlags & ENTITY_TYPE_DYNAMIC))
     {
         // set bones to next interval step, this keeps the ponytail (bullet's dynamic interpolation) in sync with actor interpolation:
-        Engine::instance.m_world.m_character->m_skeleton.updatePose();
-        Engine::instance.m_world.m_character->updateRigidBody(false);
-        Engine::instance.m_world.m_character->ghostUpdate();
+        engine->m_world.m_character->m_skeleton.updatePose();
+        engine->m_world.m_character->updateRigidBody(false);
+        engine->m_world.m_character->ghostUpdate();
     }
 
-    for(const std::shared_ptr<world::Entity>& entity : Engine::instance.m_world.m_entities | boost::adaptors::map_values)
+    for(const std::shared_ptr<world::Entity>& entity : engine->m_world.m_entities | boost::adaptors::map_values)
     {
         if(!entity->m_enabled)
             continue;
@@ -79,26 +79,28 @@ void storeEntityLerpTransforms()
 /**
  * Pre-physics step callback
  */
-void internalPreTickCallback(btDynamicsWorld* /*world*/, float timeStep)
+void internalPreTickCallback(btDynamicsWorld* world, float timeStep)
 {
-    util::Duration engine_frame_time_backup = Engine::instance.getFrameTime();
-    Engine::instance.setFrameTime( util::fromSeconds(timeStep) );
+    Engine* engine = static_cast<Engine*>(world->getWorldUserInfo());
 
-    engine_lua.doTasks(engine_frame_time_backup);
+    util::Duration engine_frame_time_backup = engine->getFrameTime();
+    engine->setFrameTime( util::fromSeconds(timeStep) );
+
+    engine->engine_lua.doTasks(engine_frame_time_backup);
     Game_UpdateAI();
-    Engine::instance.m_world.m_audioEngine.updateAudio();
+    engine->m_world.m_audioEngine.updateAudio();
 
-    if(Engine::instance.m_world.m_character)
+    if(engine->m_world.m_character)
     {
-        Engine::instance.m_world.m_character->frame(util::fromSeconds(timeStep));
+        engine->m_world.m_character->frame(util::fromSeconds(timeStep));
     }
-    for(const std::shared_ptr<world::Entity>& entity : Engine::instance.m_world.m_entities | boost::adaptors::map_values)
+    for(const std::shared_ptr<world::Entity>& entity : engine->m_world.m_entities | boost::adaptors::map_values)
     {
         entity->frame(util::fromSeconds(timeStep));
     }
 
-    storeEntityLerpTransforms();
-    Engine::instance.setFrameTime( engine_frame_time_backup );
+    storeEntityLerpTransforms(engine);
+    engine->setFrameTime( engine_frame_time_backup );
 }
 
 /**
@@ -106,11 +108,13 @@ void internalPreTickCallback(btDynamicsWorld* /*world*/, float timeStep)
  */
 void internalTickCallback(btDynamicsWorld *world, float /*timeStep*/)
 {
+    Engine* engine = static_cast<Engine*>(world->getWorldUserInfo());
+
     // Update all physics object's transform/room:
     for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
     {
-        BOOST_ASSERT(i >= 0 && i < BulletEngine::instance->dynamicsWorld->getCollisionObjectArray().size());
-        btCollisionObject* obj = BulletEngine::instance->dynamicsWorld->getCollisionObjectArray()[i];
+        BOOST_ASSERT(i >= 0 && i < engine->bullet.dynamicsWorld->getCollisionObjectArray().size());
+        btCollisionObject* obj = engine->bullet.dynamicsWorld->getCollisionObjectArray()[i];
         btRigidBody* body = btRigidBody::upcast(obj);
         if(body && !body->isStaticObject() && body->getMotionState())
         {
@@ -119,7 +123,7 @@ void internalTickCallback(btDynamicsWorld *world, float /*timeStep*/)
             world::Object* object = static_cast<world::Object*>(body->getUserPointer());
             if(dynamic_cast<world::BulletObject*>(object))
             {
-                object->setRoom(engine::Engine::instance.m_world.Room_FindPosCogerrence(util::convert(trans.getOrigin()), object->getRoom()));
+                object->setRoom(engine->m_world.Room_FindPosCogerrence(util::convert(trans.getOrigin()), object->getRoom()));
             }
         }
     }
@@ -127,10 +131,11 @@ void internalTickCallback(btDynamicsWorld *world, float /*timeStep*/)
 } // anonymous namespace
 
 // Bullet Physics initialization.
-std::unique_ptr<BulletEngine> BulletEngine::instance = nullptr;
 
-BulletEngine::BulletEngine()
+BulletEngine::BulletEngine(Engine* engine)
 {
+    BOOST_LOG_TRIVIAL(info) << "Initializing BulletEngine";
+
     ///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
     collisionConfiguration.reset(new btDefaultCollisionConfiguration());
 
@@ -150,9 +155,10 @@ BulletEngine::BulletEngine()
     dynamicsWorld->setInternalTickCallback(internalTickCallback);
     dynamicsWorld->setInternalTickCallback(internalPreTickCallback, nullptr, true);
     dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
+    dynamicsWorld->setWorldUserInfo(engine);
 
-    render::debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
-    dynamicsWorld->setDebugDrawer(&render::debugDrawer);
+    engine->debugDrawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
+    dynamicsWorld->setDebugDrawer(&engine->debugDrawer);
     //bt_engine_dynamicsWorld->getPairCache()->setInternalGhostPairCallback(bt_engine_filterCallback);
 }
 

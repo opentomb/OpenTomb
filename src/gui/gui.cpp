@@ -20,44 +20,46 @@
 
 namespace gui
 {
-std::unique_ptr<Gui> Gui::instance = nullptr;
-
-Gui::Gui()
+Gui::Gui(engine::Engine* engine)
+    : m_engine(engine)
+    , m_console(engine)
+    , m_notifier(engine)
+    , m_faders(engine)
+    , m_progressBars(engine)
+    , m_textlineManager(engine)
+    , m_fontManager(engine)
 {
-    render::fillCrosshairBuffer();
+    BOOST_LOG_TRIVIAL(info) << "Initializing Gui";
 }
 
 Gui::~Gui()
 {
-    if(rectanglePositionBuffer != 0)
+    if(m_rectanglePositionBuffer != 0)
     {
-        glDeleteBuffers(1, &rectanglePositionBuffer);
-        glDeleteBuffers(1, &rectangleColorBuffer);
+        glDeleteBuffers(1, &m_rectanglePositionBuffer);
+        glDeleteBuffers(1, &m_rectangleColorBuffer);
     }
 }
 
 bool Gui::update()
 {
-    if(FontManager::instance != nullptr)
-    {
-        FontManager::instance->update();
-    }
+    m_fontManager.update();
 
-    if(!Console::instance().isVisible() && engine::Engine::instance.m_controlState.m_guiInventory)
+    if(!m_console.isVisible() && m_engine->m_controlState.m_guiInventory)
     {
-        if(engine::Engine::instance.m_world.m_character &&
-           engine::Engine::instance.m_world.m_character->inventory().getCurrentState() == InventoryManager::InventoryState::Disabled)
+        if(m_engine->m_world.m_character &&
+           m_engine->m_world.m_character->inventory().getCurrentState() == InventoryManager::InventoryState::Disabled)
         {
-            engine::Engine::instance.m_world.m_character->inventory().disable();
-            engine::Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::Open);
+            m_engine->m_world.m_character->inventory().disable();
+            m_engine->m_world.m_character->inventory().send(InventoryManager::InventoryState::Open);
         }
-        if(engine::Engine::instance.m_world.m_character->inventory().getCurrentState() == InventoryManager::InventoryState::Idle)
+        if(m_engine->m_world.m_character->inventory().getCurrentState() == InventoryManager::InventoryState::Idle)
         {
-            engine::Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::Closed);
+            m_engine->m_world.m_character->inventory().send(InventoryManager::InventoryState::Closed);
         }
     }
 
-    if(Console::instance().isVisible() || !engine::Engine::instance.m_world.m_character || engine::Engine::instance.m_world.m_character->inventory().getCurrentState() != InventoryManager::InventoryState::Disabled)
+    if(m_console.isVisible() || !m_engine->m_world.m_character || m_engine->m_world.m_character->inventory().getCurrentState() != InventoryManager::InventoryState::Disabled)
     {
         return true;
     }
@@ -66,18 +68,15 @@ bool Gui::update()
 
 void Gui::resize()
 {
-    TextLineManager::instance->resizeTextLines();
+    m_engine->m_gui.m_textlineManager.resizeTextLines();
 
-    progressBars.resize();
+    m_progressBars.resize();
 
-    if(FontManager::instance)
-    {
-        FontManager::instance->resize();
-    }
+    m_fontManager.resize();
 
     /* let us update console too */
-    Console::instance().setSpacing(Console::instance().spacing());
-    render::fillCrosshairBuffer();
+    m_console.setSpacing(m_console.spacing());
+    m_engine->renderer.fillCrosshairBuffer();
 }
 
 void Gui::render()
@@ -88,12 +87,12 @@ void Gui::render()
     glDepthMask(GL_FALSE);
 
     glDisable(GL_DEPTH_TEST);
-    if(engine::screen_info.show_debuginfo)
-        render::drawCrosshair();
-    progressBars.draw();
-    faders.drawFaders();
-    TextLineManager::instance->renderStrings();
-    Console::instance().draw();
+    if(m_engine->screen_info.show_debuginfo)
+        m_engine->renderer.drawCrosshair();
+    m_progressBars.draw(m_engine->m_world);
+    m_faders.drawFaders();
+    m_engine->m_gui.m_textlineManager.renderStrings();
+    m_console.draw();
 
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
@@ -109,28 +108,28 @@ void Gui::switchGLMode(bool is_gui)
         const glm::float_t far_dist = 4096.0f;
         const glm::float_t near_dist = -1.0f;
 
-        guiProjectionMatrix = glm::mat4(1.0f);                                        // identity matrix
-        guiProjectionMatrix[0][0] = 2.0f / static_cast<glm::float_t>(engine::screen_info.w);
-        guiProjectionMatrix[1][1] = 2.0f / static_cast<glm::float_t>(engine::screen_info.h);
-        guiProjectionMatrix[2][2] = -2.0f / (far_dist - near_dist);
-        guiProjectionMatrix[3][0] = -1.0f;
-        guiProjectionMatrix[3][1] = -1.0f;
-        guiProjectionMatrix[3][2] = -(far_dist + near_dist) / (far_dist - near_dist);
+        m_guiProjectionMatrix = glm::mat4(1.0f);                                        // identity matrix
+        m_guiProjectionMatrix[0][0] = 2.0f / static_cast<glm::float_t>(m_engine->screen_info.w);
+        m_guiProjectionMatrix[1][1] = 2.0f / static_cast<glm::float_t>(m_engine->screen_info.h);
+        m_guiProjectionMatrix[2][2] = -2.0f / (far_dist - near_dist);
+        m_guiProjectionMatrix[3][0] = -1.0f;
+        m_guiProjectionMatrix[3][1] = -1.0f;
+        m_guiProjectionMatrix[3][2] = -(far_dist + near_dist) / (far_dist - near_dist);
     }
     else                                                                        // set camera coordinate system
     {
-        guiProjectionMatrix = engine::Engine::instance.m_camera.getProjection();
+        m_guiProjectionMatrix = m_engine->m_camera.getProjection();
     }
 }
 
 void Gui::drawInventory()
 {
-    if(!engine::Engine::instance.m_world.m_character)
+    if(!m_engine->m_world.m_character)
         return;
 
     //if (!main_inventory_menu->IsVisible())
-    engine::Engine::instance.m_world.m_character->inventory().frame();
-    if(engine::Engine::instance.m_world.m_character->inventory().getCurrentState() == InventoryManager::InventoryState::Disabled)
+    m_engine->m_world.m_character->inventory().frame();
+    if(m_engine->m_world.m_character->inventory().getCurrentState() == InventoryManager::InventoryState::Disabled)
     {
         return;
     }
@@ -151,7 +150,7 @@ void Gui::drawInventory()
     glm::vec4 upper_color{ 0, 0, 0, 0.45f };
     glm::vec4 lower_color{ 0, 0, 0, 0.75f };
 
-    drawRect(0.0, 0.0, static_cast<glm::float_t>(engine::screen_info.w), static_cast<glm::float_t>(engine::screen_info.h),
+    drawRect(0.0, 0.0, static_cast<glm::float_t>(m_engine->screen_info.w), static_cast<glm::float_t>(m_engine->screen_info.h),
              upper_color, upper_color, lower_color, lower_color,
              loader::BlendingMode::Opaque);
 
@@ -160,7 +159,7 @@ void Gui::drawInventory()
 
     switchGLMode(false);
     //main_inventory_menu->Render(); //engine_world.character->character->inventory
-    engine::Engine::instance.m_world.m_character->inventory().render();
+    m_engine->m_world.m_character->inventory().render();
     switchGLMode(true);
 }
 
@@ -179,14 +178,14 @@ void Gui::drawLoadScreen(int value)
     glPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    faders.showLoadScreenFader();
-    progressBars.showLoading(value);
+    m_faders.showLoadScreenFader();
+    m_progressBars.showLoading(value);
 
     glDepthMask(GL_TRUE);
 
     switchGLMode(false);
 
-    SDL_GL_SwapWindow(engine::Engine::instance.m_window);
+    SDL_GL_SwapWindow(m_engine->m_window);
 }
 
 /**
@@ -218,10 +217,10 @@ void Gui::drawRect(glm::float_t x, glm::float_t y,
             break;
     };
 
-    if(rectanglePositionBuffer == 0)
+    if(m_rectanglePositionBuffer == 0)
     {
-        glGenBuffers(1, &rectanglePositionBuffer);
-        glBindBuffer(GL_ARRAY_BUFFER, rectanglePositionBuffer);
+        glGenBuffers(1, &m_rectanglePositionBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, m_rectanglePositionBuffer);
         static const glm::vec2 rectCoords[4]{
             {0, 0},
             {1, 0},
@@ -230,16 +229,16 @@ void Gui::drawRect(glm::float_t x, glm::float_t y,
         };
         glBufferData(GL_ARRAY_BUFFER, sizeof(rectCoords), rectCoords, GL_STATIC_DRAW);
 
-        glGenBuffers(1, &rectangleColorBuffer);
+        glGenBuffers(1, &m_rectangleColorBuffer);
 
         render::VertexArrayAttribute attribs[] = {
-            render::VertexArrayAttribute(render::GuiShaderDescription::position, 2, GL_FLOAT, false, rectanglePositionBuffer, sizeof(glm::vec2), 0),
-            render::VertexArrayAttribute(render::GuiShaderDescription::color, 4, GL_FLOAT, false, rectangleColorBuffer, sizeof(glm::vec4), 0),
+            render::VertexArrayAttribute(render::GuiShaderDescription::position, 2, GL_FLOAT, false, m_rectanglePositionBuffer, sizeof(glm::vec2), 0),
+            render::VertexArrayAttribute(render::GuiShaderDescription::color, 4, GL_FLOAT, false, m_rectangleColorBuffer, sizeof(glm::vec4), 0),
         };
-        rectangleArray.reset(new render::VertexArray(0, 2, attribs));
+        m_rectangleArray.reset(new render::VertexArray(0, 2, attribs));
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, rectangleColorBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, m_rectangleColorBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec4) * 4, nullptr, GL_STREAM_DRAW);
     glm::vec4* rectColors = static_cast<glm::vec4*>(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
     rectColors[0] = colorLowerLeft;
@@ -248,10 +247,10 @@ void Gui::drawRect(glm::float_t x, glm::float_t y,
     rectColors[3] = colorUpperLeft;
     glUnmapBuffer(GL_ARRAY_BUFFER);
 
-    const glm::vec2 offset{ x / (engine::screen_info.w*0.5f) - 1.f, y / (engine::screen_info.h*0.5f) - 1.f };
-    const glm::vec2 factor{ width / engine::screen_info.w * 2.0f, height / engine::screen_info.h * 2.0f };
+    const glm::vec2 offset{ x / (m_engine->screen_info.w*0.5f) - 1.f, y / (m_engine->screen_info.h*0.5f) - 1.f };
+    const glm::vec2 factor{ width / m_engine->screen_info.w * 2.0f, height / m_engine->screen_info.h * 2.0f };
 
-    render::GuiShaderDescription *shader = render::renderer.shaderManager()->getGuiShader(texture != 0);
+    render::GuiShaderDescription *shader = m_engine->renderer.shaderManager()->getGuiShader(texture != 0);
     glUseProgram(shader->program);
     glUniform1i(shader->sampler, 0);
     if(texture)
@@ -262,7 +261,7 @@ void Gui::drawRect(glm::float_t x, glm::float_t y,
     glUniform2fv(shader->offset, 1, glm::value_ptr(offset));
     glUniform2fv(shader->factor, 1, glm::value_ptr(factor));
 
-    rectangleArray->bind();
+    m_rectangleArray->bind();
 
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }

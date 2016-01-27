@@ -7,7 +7,7 @@ namespace gui
 class FaderManager
 {
 public:
-    FaderManager();
+    explicit FaderManager(engine::Engine* engine);
     ~FaderManager();
 
     void drawFaders();
@@ -21,6 +21,7 @@ public:
                uint8_t alpha, uint8_t R, uint8_t G, uint8_t B, loader::BlendingMode blending_mode,
                util::Duration fadein_speed, util::Duration fadeout_speed);
 private:
+    engine::Engine* m_engine;
     std::map<FaderType, Fader> m_faders;
 };
 } // namespace gui

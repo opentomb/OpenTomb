@@ -8,8 +8,8 @@ namespace world
 {
 struct StaticMesh : public Object
 {
-    explicit StaticMesh(ObjectId id, Room* room = nullptr)
-        : Object(id, room)
+    explicit StaticMesh(ObjectId id, World* world, Room* room = nullptr)
+        : Object(id, world, room)
     {
     }
 

@@ -7,7 +7,6 @@
 #include "gui/console.h"
 #include "portaltracer.h"
 #include "shader_description.h"
-#include "shader_manager.h"
 #include "util/vmath.h"
 #include "world/animation/animation.h"
 #include "world/camera.h"
@@ -40,11 +39,15 @@
 
 namespace render
 {
-Render renderer;
-DynamicBSP render_dBSP;
-RenderDebugDrawer debugDrawer;
-
 using gui::Console;
+
+Render::Render(engine::Engine* engine)
+    : m_engine(engine)
+{
+    BOOST_LOG_TRIVIAL(info) << "Initializing Render";
+}
+
+Render::~Render() = default;
 
 void Render::initGlobals()
 {
@@ -133,7 +136,7 @@ void Render::renderMesh(const std::shared_ptr<world::core::BaseMesh>& mesh) cons
                 continue;
             }
 
-            world::animation::TextureAnimationSequence* seq = &engine::Engine::instance.m_world.m_textureAnimations[*p.textureAnimationId];
+            world::animation::TextureAnimationSequence* seq = &m_engine->m_world.m_textureAnimations[*p.textureAnimationId];
 
             size_t frame = (seq->currentFrame + p.startFrame) % seq->keyFrames.size();
             world::animation::TextureAnimationKeyFrame* tf = &seq->keyFrames[frame];
@@ -231,7 +234,7 @@ void Render::renderPolygonTransparency(loader::BlendingMode currentTransparency,
 
 void Render::renderBSPFrontToBack(loader::BlendingMode currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription& shader)
 {
-    if(root->plane.distance(engine::Engine::instance.m_camera.getPosition()) >= 0)
+    if(root->plane.distance(m_engine->m_camera.getPosition()) >= 0)
     {
         if(root->front != nullptr)
         {
@@ -277,7 +280,7 @@ void Render::renderBSPFrontToBack(loader::BlendingMode currentTransparency, cons
 
 void Render::renderBSPBackToFront(loader::BlendingMode currentTransparency, const std::unique_ptr<BSPNode>& root, const UnlitTintedShaderDescription& shader)
 {
-    if(root->plane.distance(engine::Engine::instance.m_camera.getPosition()) >= 0)
+    if(root->plane.distance(m_engine->m_camera.getPosition()) >= 0)
     {
         if(root->back != nullptr)
         {
@@ -414,7 +417,7 @@ const LitShaderDescription *Render::setupEntityLight(const world::Entity& entity
 
     if(entity.getRoom()->getFlags() & TR_ROOM_FLAG_WATER)
     {
-        ambient_component *= engine::Engine::instance.m_world.calculateWaterTint();
+        ambient_component *= m_engine->m_world.calculateWaterTint();
     }
 
     std::array<glm::vec3, EntityShaderLightsLimit> positions;
@@ -446,7 +449,7 @@ const LitShaderDescription *Render::setupEntityLight(const world::Entity& entity
 
         if(entity.getRoom()->getFlags() & TR_ROOM_FLAG_WATER)
         {
-            colors[current_light_number] *= engine::Engine::instance.m_world.calculateWaterTint();
+            colors[current_light_number] *= m_engine->m_world.calculateWaterTint();
         }
 
         // Find position
@@ -607,7 +610,7 @@ void Render::renderRoom(const world::Room& room)
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getRoomShader(room.getLightMode() == 1, room.getFlags() & TR_ROOM_FLAG_WATER);
 
-        glm::vec4 tint = engine::Engine::instance.m_world.calculateWaterTint();
+        glm::vec4 tint = m_engine->m_world.calculateWaterTint();
         glUseProgram(shader->program);
 
         glUniform4fv(shader->tint_mult, 1, glm::value_ptr(tint));
@@ -640,7 +643,7 @@ void Render::renderRoom(const world::Room& room)
             //If this static mesh is in a water room
             if(room.getFlags() & TR_ROOM_FLAG_WATER)
             {
-                tint *= engine::Engine::instance.m_world.calculateWaterTint();
+                tint *= m_engine->m_world.calculateWaterTint();
             }
             glUniform4fv(m_shaderManager->getStaticMeshShader()->tint_mult, 1, glm::value_ptr(tint));
             renderMesh(sm->mesh);
@@ -818,9 +821,9 @@ void Render::drawList()
         }
     }
 
-    if(engine::Engine::instance.m_world.m_character != nullptr && engine::Engine::instance.m_world.m_character->m_skeleton.getModel()->hasTransparency())
+    if(m_engine->m_world.m_character != nullptr && m_engine->m_world.m_character->m_skeleton.getModel()->hasTransparency())
     {
-        world::Entity *ent = engine::Engine::instance.m_world.m_character.get();
+        world::Entity *ent = m_engine->m_world.m_character.get();
         for(const world::animation::Bone& bone : ent->m_skeleton.getBones())
         {
             if(!bone.mesh->m_transparencyPolygons.empty())
@@ -855,7 +858,7 @@ void Render::drawListDebugLines()
 
     if(m_world->m_character)
     {
-        debugDrawer.drawEntityDebugLines(*m_world->m_character, *this);
+        m_world->m_engine->debugDrawer.drawEntityDebugLines(*m_world->m_character, *this);
     }
 
     /*
@@ -865,29 +868,29 @@ void Render::drawListDebugLines()
     {
         glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->m_animations.front().getInitialBoneKeyFrame().offset);
         tr *= glm::mat4_cast(m_world->m_skyBox->m_animations.front().getInitialBoneKeyFrame().qrotate);
-        debugDrawer.drawMeshDebugLines(m_world->m_skyBox->m_meshes.front().mesh_base, tr, *this);
+        m_world->m_engine->debugDrawer.drawMeshDebugLines(m_world->m_skyBox->m_meshes.front().mesh_base, tr, *this);
     }
 
     for(const world::Room* room : m_renderList)
     {
-        debugDrawer.drawRoomDebugLines(*room, *this);
+        m_world->m_engine->debugDrawer.drawRoomDebugLines(*room, *this);
     }
 
     if(m_drawColl)
     {
-        engine::BulletEngine::instance->dynamicsWorld->debugDrawWorld();
+        m_engine->bullet.dynamicsWorld->debugDrawWorld();
     }
 
-    if(!debugDrawer.IsEmpty())
+    if(!m_world->m_engine->debugDrawer.IsEmpty())
     {
         UnlitShaderDescription *shader = m_shaderManager->getDebugLineShader();
         glUseProgram(shader->program);
         glUniform1i(shader->sampler, 0);
         glUniformMatrix4fv(shader->model_view_projection, 1, false, glm::value_ptr(m_cam->getViewProjection()));
-        glBindTexture(GL_TEXTURE_2D, engine::Engine::instance.m_world.m_textures.back());
+        glBindTexture(GL_TEXTURE_2D, m_engine->m_world.m_textures.back());
         glPointSize(6.0f);
         glLineWidth(3.0f);
-        debugDrawer.render();
+        m_world->m_engine->debugDrawer.render();
     }
 }
 
@@ -945,11 +948,11 @@ void Render::genWorldList()
     }
 
     cleanList();                              // clear old render list
-    debugDrawer.reset();
+    m_world->m_engine->debugDrawer.reset();
     //cam->frustum->next = NULL;
 
     // find room that contains camera
-    world::Room* curr_room = engine::Engine::instance.m_world.Room_FindPosCogerrence(m_cam->getPosition(), m_cam->getCurrentRoom());
+    world::Room* curr_room = m_engine->m_world.Room_FindPosCogerrence(m_cam->getPosition(), m_cam->getCurrentRoom());
 
     m_cam->setCurrentRoom(curr_room);
     if(curr_room != nullptr)                  // camera located in some room
@@ -958,7 +961,7 @@ void Render::genWorldList()
         return;
     }
 
-    if(engine::Engine::instance.m_controlState.m_noClip)  // camera is out of all rooms AND noclip is on
+    if(m_engine->m_controlState.m_noClip)  // camera is out of all rooms AND noclip is on
     {
         for(auto r : m_world->m_rooms)
         {
@@ -991,19 +994,19 @@ void Render::setWorld(world::World *world)
     m_drawSkybox = false;
     m_renderList.clear();
 
-    m_cam = &engine::Engine::instance.m_camera;
-    engine::Engine::instance.m_camera.setCurrentRoom(nullptr);
+    m_cam = &m_engine->m_camera;
+    m_engine->m_camera.setCurrentRoom(nullptr);
 }
 
 // Render debug primitives.
 
-RenderDebugDrawer::RenderDebugDrawer()
+RenderDebugDrawer::RenderDebugDrawer(engine::Engine* engine)
+    : m_engine(engine)
 {
+    BOOST_LOG_TRIVIAL(info) << "Initializing RenderDebugDrawer";
 }
 
-RenderDebugDrawer::~RenderDebugDrawer()
-{
-}
+RenderDebugDrawer::~RenderDebugDrawer() = default;
 
 void RenderDebugDrawer::reset()
 {
@@ -1041,7 +1044,7 @@ void RenderDebugDrawer::draw3dText(const btVector3& /*location*/, const char* /*
 
 void RenderDebugDrawer::reportErrorWarning(const char* warningString)
 {
-    Console::instance().addLine(warningString, gui::FontStyle::ConsoleWarning);
+    m_engine->m_gui.getConsole().addLine(warningString, gui::FontStyle::ConsoleWarning);
 }
 
 void RenderDebugDrawer::drawContactPoint(const btVector3& pointOnB, const btVector3& normalOnB, btScalar distance, int /*lifeTime*/, const btVector3& color)
@@ -1174,19 +1177,19 @@ void RenderDebugDrawer::drawEntityDebugLines(const world::Entity& entity, const 
 
     if(render.m_drawBoxes)
     {
-        debugDrawer.setColor(0.0, 0.0, 1.0);
-        debugDrawer.drawOBB(entity.m_obb);
+        setColor(0.0, 0.0, 1.0);
+        drawOBB(entity.m_obb);
     }
 
     if(render.m_drawAxis)
     {
         // If this happens, the lines after this will get drawn with random colors. I don't care.
-        debugDrawer.drawAxis(1000.0, entity.m_transform);
+        drawAxis(1000.0, entity.m_transform);
     }
 
     if(entity.m_skeleton.getModel() && !entity.m_skeleton.getModel()->m_animations.empty())
     {
-        debugDrawer.drawSkeletalModelDebugLines(entity.m_skeleton, entity.m_transform, render);
+        drawSkeletalModelDebugLines(entity.m_skeleton, entity.m_transform, render);
     }
 
     entity.m_wasRenderedLines = true;
@@ -1205,8 +1208,8 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room& room, const Render
 {
     if(render.m_drawRoomBoxes)
     {
-        debugDrawer.setColor(0.0, 0.1f, 0.9f);
-        debugDrawer.drawBBox(room.getBoundingBox(), nullptr);
+        setColor(0.0, 0.1f, 0.9f);
+        drawBBox(room.getBoundingBox(), nullptr);
         /*for(uint32_t s=0;s<room->sectors_count;s++)
         {
             drawSectorDebugLines(room->sectors + s);
@@ -1215,18 +1218,18 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room& room, const Render
 
     if(render.m_drawPortals)
     {
-        debugDrawer.setColor(1.0, 1.0, 0.0);
+        setColor(1.0, 1.0, 0.0);
         for(const auto& p : room.getPortals())
-            debugDrawer.drawPortal(p);
+            drawPortal(p);
 
-        debugDrawer.setColor(1.0, 1.0, 0.5);
+        setColor(1.0, 1.0, 0.5);
         for(const auto& p : room.getPortals())
-            debugDrawer.addLine(p.center, p.center + p.normal*128.0f);
+            addLine(p.center, p.center + p.normal*128.0f);
     }
 
     if(!render.m_skipRoom && room.getMesh() != nullptr)
     {
-        debugDrawer.drawMeshDebugLines(room.getMesh(), room.getModelMatrix(), render);
+        drawMeshDebugLines(room.getMesh(), room.getModelMatrix(), render);
     }
 
     for(auto sm : room.getStaticMeshes())
@@ -1238,16 +1241,16 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room& room, const Render
 
         if(render.m_drawBoxes)
         {
-            debugDrawer.setColor(0.0f, 1.0f, 0.1f);
-            debugDrawer.drawOBB(sm->obb);
+            setColor(0.0f, 1.0f, 0.1f);
+            drawOBB(sm->obb);
         }
 
         if(render.m_drawAxis)
         {
-            debugDrawer.drawAxis(1000.0, sm->transform);
+            drawAxis(1000.0, sm->transform);
         }
 
-        debugDrawer.drawMeshDebugLines(sm->mesh, sm->transform, render);
+        drawMeshDebugLines(sm->mesh, sm->transform, render);
 
         sm->was_rendered_lines = true;
     }
@@ -1261,7 +1264,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room& room, const Render
         if(ent->m_wasRenderedLines)
             continue;
 
-        debugDrawer.drawEntityDebugLines(*ent, render);
+        drawEntityDebugLines(*ent, render);
         ent->m_wasRenderedLines = true;
     }
 }
@@ -1275,7 +1278,7 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room& room, const Render
  */
 void renderItem(const world::animation::Skeleton& bf, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix)
 {
-    const LitShaderDescription *shader = renderer.shaderManager()->getEntityShader(0, false);
+    const LitShaderDescription *shader = bf.getWorld()->m_engine->renderer.shaderManager()->getEntityShader(0, false);
     glUseProgram(shader->program);
     glUniform1i(shader->number_of_lights, 0);
     glUniform4f(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
@@ -1296,25 +1299,19 @@ void renderItem(const world::animation::Skeleton& bf, glm::float_t size, const g
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        renderer.renderSkeletalModel(*shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        bf.getWorld()->m_engine->renderer.renderSkeletalModel(*shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
     else
     {
         glm::mat4 mvpMatrix = guiProjectionMatrix * mvMatrix;
-        renderer.renderSkeletalModel(*shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        bf.getWorld()->m_engine->renderer.renderSkeletalModel(*shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
 
-namespace
+void Render::fillCrosshairBuffer()
 {
-GLuint crosshairBuffer = 0;
-std::unique_ptr<VertexArray> crosshairArray = nullptr;
-}
-
-void fillCrosshairBuffer()
-{
-    if(!crosshairBuffer)
-        glGenBuffers(1, &crosshairBuffer);
+    if(!m_crosshairBuffer)
+        glGenBuffers(1, &m_crosshairBuffer);
 
     struct BufferEntry
     {
@@ -1323,36 +1320,36 @@ void fillCrosshairBuffer()
     };
 
     BufferEntry crosshair_buf[4] = {
-        {{static_cast<glm::float_t>(engine::screen_info.w / 2.0f - 5.f), (static_cast<glm::float_t>(engine::screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
-        {{static_cast<glm::float_t>(engine::screen_info.w / 2.0f + 5.f), (static_cast<glm::float_t>(engine::screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
-        {{static_cast<glm::float_t>(engine::screen_info.w / 2.0f), (static_cast<glm::float_t>(engine::screen_info.h) / 2.0f - 5.f)}, {255, 0, 0, 255}},
-        {{static_cast<glm::float_t>(engine::screen_info.w / 2.0f), (static_cast<glm::float_t>(engine::screen_info.h) / 2.0f + 5.f)}, {255, 0, 0, 255}}
+        {{static_cast<glm::float_t>(m_engine->screen_info.w / 2.0f - 5.f), (static_cast<glm::float_t>(m_engine->screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
+        {{static_cast<glm::float_t>(m_engine->screen_info.w / 2.0f + 5.f), (static_cast<glm::float_t>(m_engine->screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
+        {{static_cast<glm::float_t>(m_engine->screen_info.w / 2.0f), (static_cast<glm::float_t>(m_engine->screen_info.h) / 2.0f - 5.f)}, {255, 0, 0, 255}},
+        {{static_cast<glm::float_t>(m_engine->screen_info.w / 2.0f), (static_cast<glm::float_t>(m_engine->screen_info.h) / 2.0f + 5.f)}, {255, 0, 0, 255}}
     };
 
-    glBindBuffer(GL_ARRAY_BUFFER, crosshairBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, m_crosshairBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(crosshair_buf), crosshair_buf, GL_STATIC_DRAW);
 
     VertexArrayAttribute attribs[] = {
-        VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, crosshairBuffer, sizeof(BufferEntry), offsetof(BufferEntry, position)),
-        VertexArrayAttribute(GuiShaderDescription::color, 4, GL_UNSIGNED_BYTE, true, crosshairBuffer, sizeof(BufferEntry), offsetof(BufferEntry, color))
+        VertexArrayAttribute(GuiShaderDescription::position, 2, GL_FLOAT, false, m_crosshairBuffer, sizeof(BufferEntry), offsetof(BufferEntry, position)),
+        VertexArrayAttribute(GuiShaderDescription::color, 4, GL_UNSIGNED_BYTE, true, m_crosshairBuffer, sizeof(BufferEntry), offsetof(BufferEntry, color))
     };
-    crosshairArray.reset(new VertexArray(0, 2, attribs));
+    m_crosshairArray.reset(new VertexArray(0, 2, attribs));
 }
 
-void drawCrosshair()
+void Render::drawCrosshair()
 {
-    GuiShaderDescription *shader = renderer.shaderManager()->getGuiShader(false);
+    GuiShaderDescription *shader = shaderManager()->getGuiShader(false);
 
     glUseProgram(shader->program);
     glm::vec2 factor = {
-        2.0f / engine::screen_info.w,
-        2.0f / engine::screen_info.h
+        2.0f / m_engine->screen_info.w,
+        2.0f / m_engine->screen_info.h
     };
     glUniform2fv(shader->factor, 1, glm::value_ptr(factor));
     glm::vec2 offset = { -1.f, -1.f };
     glUniform2fv(shader->offset, 1, glm::value_ptr(offset));
 
-    crosshairArray->bind();
+    m_crosshairArray->bind();
 
     glDrawArrays(GL_LINES, 0, 4);
 }

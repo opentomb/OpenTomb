@@ -1,14 +1,14 @@
 #include "ragdoll.h"
 
-#include "LuaState.h"
+#include "engine/engine.h"
 
-#include "script/script.h"
+#include "LuaState.h"
 
 namespace world
 {
-bool RagdollSetup::getSetup(int ragdoll_index)
+bool RagdollSetup::getSetup(engine::Engine& engine, int ragdoll_index)
 {
-    lua::Value rds = engine_lua["getRagdollSetup"](ragdoll_index);
+    lua::Value rds = engine.engine_lua["getRagdollSetup"](ragdoll_index);
     if(!rds.is<lua::Table>())
         return false;
 

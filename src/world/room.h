@@ -35,7 +35,6 @@ struct Sprite;
 struct StaticMesh;
 struct RoomSprite;
 class Entity;
-struct World;
 
 class Room : public Object
 {
@@ -67,8 +66,8 @@ private:
     std::vector<core::Light> m_lights;
 
     std::vector<Portal> m_portals;
-    Room* m_alternateRoom;
-    Room* m_baseRoom; // room->m_alternateRoom->m_baseRoom
+    Room* m_alternateRoom = nullptr;
+    Room* m_baseRoom = nullptr; // room->m_alternateRoom->m_baseRoom
 
     SectorArray m_sectors;
 
@@ -77,8 +76,8 @@ private:
     std::unique_ptr<btRigidBody> m_btBody;
 
 public:
-    explicit Room(ObjectId id, Room* room = nullptr)
-        : Object(id, room)
+    explicit Room(ObjectId id, World* world, Room* room = nullptr)
+        : Object(id, world, room)
     {
     }
 
@@ -181,12 +180,12 @@ public:
 
     void addSprite(core::Sprite* sprite, const glm::vec3& pos);
 
-    void load(world::World& world, const std::unique_ptr<loader::Level>& tr);
+    void load(const std::unique_ptr<loader::Level>& tr);
     std::vector<SectorTween> generateTweens() const;
     void generateCollisionShape();
-    void initVerticalSectorRelations(const World& world, const loader::Room& tr);
+    void initVerticalSectorRelations(const loader::Room& tr);
     void generateSpritesBuffer();
-    void generateProperties(World& world, const loader::Room& tr, const loader::FloorData& floorData, loader::Engine engine);
+    void generateProperties(const loader::Room& tr, const loader::FloorData& floorData, loader::Engine engine);
 
     void enable();
     void disable();
@@ -219,7 +218,7 @@ public:
     const RoomSector* getSectorRaw(const glm::vec3 &pos) const;
     const RoomSector* getSectorXYZ(const glm::vec3 &pos) const;
 
-    void genMesh(World& world, const std::unique_ptr<loader::Level>& tr);
+    void genMesh(const std::unique_ptr<loader::Level>& tr);
 
     RoomSector* getSector(int x, int y)
     {

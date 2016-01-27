@@ -8,6 +8,7 @@
 namespace audio
 {
 class FxManager;
+class Engine;
 
 // Audio stream type defines stream behaviour. While background track
 // loops forever until interrupted by other background track, one-shot
@@ -38,7 +39,7 @@ enum class StreamMethod
 class StreamTrack
 {
 public:
-    StreamTrack();      // Stream track constructor.
+    explicit StreamTrack(audio::Engine* engine);      // Stream track constructor.
     ~StreamTrack();      // Stream track destructor.
 
      // Load routine prepares track for playing. Arguments are track index,
@@ -72,6 +73,8 @@ public:
     static bool damp_active;             // Global flag for damping BGM tracks.
 
 private:
+    audio::Engine* m_audioEngine;
+
     // NUMBUFFERS is a number of buffers cyclically used for each stream.
     // Double is enough, but we use quad for further stability.
 

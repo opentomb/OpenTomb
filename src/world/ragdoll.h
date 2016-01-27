@@ -6,6 +6,11 @@
 
 #include <vector>
 
+namespace engine
+{
+class Engine;
+}
+
 namespace world
 {
 constexpr const btScalar RagdollDefaultSleepingThreshold = 10;
@@ -58,7 +63,7 @@ struct RagdollSetup
 
     std::string hit_func;   // Later to be implemented as hit callback function.
 
-    bool getSetup(int ragdoll_index);
+    bool getSetup(engine::Engine& engine, int ragdoll_index);
     void clearSetup();
 };
 } // namespace world

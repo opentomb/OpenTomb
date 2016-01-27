@@ -40,53 +40,85 @@
 
 using gui::Console;
 
-script::MainEngine engine_lua;
+const char* const script::ScriptEngine::ScriptEngineReferenceVarName = "_SCRIPT_ENGINE_REFERENCE";
+
+script::ScriptEngine::ScriptEngine(engine::Engine* engine)
+    : m_engine(engine)
+{
+    BOOST_LOG_TRIVIAL(info) << "Initializing ScriptEngine";
+
+    exposeConstants();
+    registerRaw("print", &ScriptEngine::print);
+    lua_atpanic(m_state.getState(), &ScriptEngine::panic);
+
+    if((*this)["bit32"].isNil())
+    {
+        set("bit32", lua::Table());
+        (*this)["bit32"].set("rshift", std::function<int(int,int)>([](int a, int b) { return a >> b; }));
+        (*this)["bit32"].set("lshift", std::function<int(int, int)>([](int a, int b) { return a << b; }));
+        (*this)["bit32"].set("band", std::function<int(int, int)>([](int a, int b) { return a & b; }));
+        (*this)["bit32"].set("bor", std::function<int(int, int)>([](int a, int b) { return a | b; }));
+        (*this)["bit32"].set("bxor", std::function<int(int, int)>([](int a, int b) { return a ^ b; }));
+        (*this)["bit32"].set("bnot", std::function<int(int)>([](int a) { return ~a; }));
+    }
+
+    // Save this class' reference in the engine to be retrieved from raw Lua functions later
+    ScriptEngine** ref = static_cast<ScriptEngine**>(lua_newuserdata(m_state.getState(), sizeof(ScriptEngine*)));
+    *ref = this;
+    lua_setglobal(m_state.getState(), ScriptEngineReferenceVarName);
+}
+
+void script::ScriptEngine::doFile(const std::string& filename)
+{
+    BOOST_LOG_TRIVIAL(info) << "Executing " << filename;
+    m_state.doFile(filename);
+}
 
 void script::ScriptEngine::checkStack()
 {
-    Console::instance().notify(SYSNOTE_LUA_STACK_INDEX, lua_gettop(m_state.getState()));
+    m_engine->m_gui.getConsole().notify(SYSNOTE_LUA_STACK_INDEX, lua_gettop(m_state.getState()));
 }
 
-void lua_DumpRoom(lua::Value id)
+void lua_DumpRoom(world::World& world, lua::Value id)
 {
     if(!id.is<lua::Unsigned>())
     {
-        engine::Engine::instance.dumpRoom(engine::Engine::instance.m_camera.getCurrentRoom());
+        world.m_engine->dumpRoom(world.m_engine->m_camera.getCurrentRoom());
         return;
     }
-    if(id.to<world::ModelId>() >= engine::Engine::instance.m_world.m_rooms.size())
+    if(id.to<world::ModelId>() >= world.m_engine->m_world.m_rooms.size())
     {
-        Console::instance().warning(SYSWARN_WRONG_ROOM, id.to<world::ModelId>());
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ROOM, id.to<world::ModelId>());
         return;
     }
-    engine::Engine::instance.dumpRoom(engine::Engine::instance.m_world.m_rooms[id.to<world::ModelId>()].get());
+    world.m_engine->dumpRoom(world.m_engine->m_world.m_rooms[id.to<world::ModelId>()].get());
 }
 
-void lua_SetRoomEnabled(int id, bool value)
+void lua_SetRoomEnabled(world::World& world, int id, bool value)
 {
-    if(id < 0 || id >= static_cast<int>(engine::Engine::instance.m_world.m_rooms.size()))
+    if(id < 0 || id >= static_cast<int>(world.m_engine->m_world.m_rooms.size()))
     {
-        Console::instance().warning(SYSWARN_WRONG_ROOM, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ROOM, id);
     }
 
     if(!value)
     {
-        engine::Engine::instance.m_world.m_rooms[id]->disable();
+        world.m_engine->m_world.m_rooms[id]->disable();
     }
     else
     {
-        engine::Engine::instance.m_world.m_rooms[id]->enable();
+        world.m_engine->m_world.m_rooms[id]->enable();
     }
 }
 
 // Base engine functions
 
-void lua_SetModelCollisionMapSize(world::ModelId id, size_t size)
+void lua_SetModelCollisionMapSize(world::World& world, world::ModelId id, size_t size)
 {
-    auto model = engine::Engine::instance.m_world.getModelByID(id);
+    auto model = world.m_engine->m_world.getModelByID(id);
     if(model == nullptr)
     {
-        Console::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_MODELID_OVERFLOW, id);
         return;
     }
 
@@ -96,13 +128,13 @@ void lua_SetModelCollisionMapSize(world::ModelId id, size_t size)
     }
 }
 
-void lua_SetModelCollisionMap(world::ModelId id, size_t arg, size_t val)
+void lua_SetModelCollisionMap(world::World& world, world::ModelId id, size_t arg, size_t val)
 {
-    /// engine_world.skeletal_models[id] != engine::Engine::instance.engine_world.getModelByID(lua_tointeger(lua, 1));
-    auto model = engine::Engine::instance.m_world.getModelByID(id);
+    /// engine_world.skeletal_models[id] != world.m_engine->engine_world.getModelByID(lua_tointeger(lua, 1));
+    auto model = world.m_engine->m_world.getModelByID(id);
     if(model == nullptr)
     {
-        Console::instance().warning(SYSWARN_MODELID_OVERFLOW, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_MODELID_OVERFLOW, id);
         return;
     }
 
@@ -112,23 +144,23 @@ void lua_SetModelCollisionMap(world::ModelId id, size_t arg, size_t val)
     }
 }
 
-void lua_EnableEntity(world::ObjectId id)
+void lua_EnableEntity(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent)
         ent->enable();
 }
 
-void lua_DisableEntity(world::ObjectId id)
+void lua_DisableEntity(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent)
         ent->disable();
 }
 
-void lua_SetEntityCollision(world::ObjectId id, bool val)
+void lua_SetEntityCollision(world::World& world, world::ObjectId id, bool val)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent)
     {
         if(val)
@@ -138,9 +170,9 @@ void lua_SetEntityCollision(world::ObjectId id, bool val)
     }
 }
 
-void lua_SetEntityCollisionFlags(world::ObjectId id, lua::Value ctype, lua::Value enableCollision, lua::Value cshape)
+void lua_SetEntityCollisionFlags(world::World& world, world::ObjectId id, lua::Value ctype, lua::Value enableCollision, lua::Value cshape)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
         return;
 
@@ -162,9 +194,9 @@ void lua_SetEntityCollisionFlags(world::ObjectId id, lua::Value ctype, lua::Valu
     }
 }
 
-lua::Any lua_GetEntitySectorFlags(world::ObjectId id)
+lua::Any lua_GetEntitySectorFlags(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent != nullptr && ent->m_currentSector)
     {
@@ -173,9 +205,9 @@ lua::Any lua_GetEntitySectorFlags(world::ObjectId id)
     return{};
 }
 
-lua::Any lua_GetEntitySectorIndex(world::ObjectId id)
+lua::Any lua_GetEntitySectorIndex(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent != nullptr && ent->m_currentSector)
     {
@@ -184,9 +216,9 @@ lua::Any lua_GetEntitySectorIndex(world::ObjectId id)
     return{};
 }
 
-lua::Any lua_GetEntitySectorMaterial(world::ObjectId id)
+lua::Any lua_GetEntitySectorMaterial(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent != nullptr && ent->m_currentSector)
     {
@@ -195,9 +227,9 @@ lua::Any lua_GetEntitySectorMaterial(world::ObjectId id)
     return{};
 }
 
-lua::Any lua_GetEntitySubstanceState(world::ObjectId id)
+lua::Any lua_GetEntitySubstanceState(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent != nullptr)
     {
@@ -206,10 +238,10 @@ lua::Any lua_GetEntitySubstanceState(world::ObjectId id)
     return{};
 }
 
-lua::Any lua_SameRoom(world::ObjectId id1, world::ObjectId id2)
+lua::Any lua_SameRoom(world::World& world, world::ObjectId id1, world::ObjectId id2)
 {
-    std::shared_ptr<world::Entity> ent1 = engine::Engine::instance.m_world.getEntityByID(id1);
-    std::shared_ptr<world::Entity> ent2 = engine::Engine::instance.m_world.getEntityByID(id2);
+    std::shared_ptr<world::Entity> ent1 = world.m_engine->m_world.getEntityByID(id1);
+    std::shared_ptr<world::Entity> ent2 = world.m_engine->m_world.getEntityByID(id2);
 
     if(ent1 && ent2)
     {
@@ -219,10 +251,10 @@ lua::Any lua_SameRoom(world::ObjectId id1, world::ObjectId id2)
     return{};
 }
 
-lua::Any lua_SameSector(world::ObjectId id1, world::ObjectId id2)
+lua::Any lua_SameSector(world::World& world, world::ObjectId id1, world::ObjectId id2)
 {
-    std::shared_ptr<world::Entity> ent1 = engine::Engine::instance.m_world.getEntityByID(id1);
-    std::shared_ptr<world::Entity> ent2 = engine::Engine::instance.m_world.getEntityByID(id2);
+    std::shared_ptr<world::Entity> ent1 = world.m_engine->m_world.getEntityByID(id1);
+    std::shared_ptr<world::Entity> ent2 = world.m_engine->m_world.getEntityByID(id2);
 
     if(ent1 && ent2 && ent1->m_currentSector && ent2->m_currentSector)
     {
@@ -232,9 +264,9 @@ lua::Any lua_SameSector(world::ObjectId id1, world::ObjectId id2)
     return{};
 }
 
-lua::Any lua_NewSector(world::ObjectId id)
+lua::Any lua_NewSector(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent != nullptr)
     {
@@ -243,25 +275,25 @@ lua::Any lua_NewSector(world::ObjectId id)
     return{};
 }
 
-std::tuple<float, float, float> lua_GetGravity()
+std::tuple<float, float, float> lua_GetGravity(world::World& world)
 {
-    btVector3 g = engine::BulletEngine::instance->dynamicsWorld->getGravity();
+    btVector3 g = world.m_engine->bullet.dynamicsWorld->getGravity();
     return std::make_tuple(g[0], g[1], g[2]);
 }
 
-void lua_SetGravity(float x, lua::Value y, lua::Value z)                                             // function to be exported to Lua
+void lua_SetGravity(world::World& world, float x, lua::Value y, lua::Value z)                                             // function to be exported to Lua
 {
     btVector3 g(x, y.is<btScalar>() ? y.to<btScalar>() : 0, z.is<btScalar>() ? z.to<btScalar>() : 0);
-    engine::BulletEngine::instance->dynamicsWorld->setGravity(g);
-    Console::instance().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
+    world.m_engine->bullet.dynamicsWorld->setGravity(g);
+    world.m_engine->m_gui.getConsole().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
 }
 
-bool lua_DropEntity(world::ObjectId id, float time, lua::Value only_room)
+bool lua_DropEntity(world::World& world, world::ObjectId id, float time, lua::Value only_room)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return false;
     }
 
@@ -272,7 +304,7 @@ bool lua_DropEntity(world::ObjectId id, float time, lua::Value only_room)
     from[2] = ent->m_transform[3][2];
     glm::vec3 to = from + move;
     //to[2] -= (ent->m_bf.bb_max[2] - ent->m_bf.bb_min[2]);
-    engine::BulletEngine::instance->dynamicsWorld->rayTest(util::convert(from), util::convert(to), cb);
+    world.m_engine->bullet.dynamicsWorld->rayTest(util::convert(from), util::convert(to), cb);
 
     if(cb.hasHit())
     {
@@ -300,9 +332,9 @@ bool lua_DropEntity(world::ObjectId id, float time, lua::Value only_room)
     }
 }
 
-lua::Any lua_GetEntityModelID(world::ObjectId id)
+lua::Any lua_GetEntityModelID(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
         return{};
 
@@ -313,9 +345,9 @@ lua::Any lua_GetEntityModelID(world::ObjectId id)
     return{};
 }
 
-lua::Any lua_GetEntityActivationOffset(world::ObjectId id)
+lua::Any lua_GetEntityActivationOffset(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
         return{};
 
@@ -326,12 +358,12 @@ lua::Any lua_GetEntityActivationOffset(world::ObjectId id)
         ent->m_activationRadius);
 }
 
-void lua_SetEntityActivationOffset(world::ObjectId id, float x, float y, float z, lua::Value r)
+void lua_SetEntityActivationOffset(world::World& world, world::ObjectId id, float x, float y, float z, lua::Value r)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -340,26 +372,26 @@ void lua_SetEntityActivationOffset(world::ObjectId id, float x, float y, float z
         ent->m_activationRadius = r.to<glm::float_t>();
 }
 
-lua::Any lua_GetCharacterParam(world::ObjectId id, int parameter)
+lua::Any lua_GetCharacterParam(world::World& world, world::ObjectId id, int parameter)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(id);
 
     if(!ent)
     {
-        Console::instance().warning(SYSWARN_NO_CHARACTER, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_CHARACTER, id);
         return{};
     }
 
     return ent->getParam(static_cast<world::CharParameterId>(parameter));
 }
 
-void lua_SetCharacterParam(world::ObjectId id, int parameter, float value, lua::Value max_value)
+void lua_SetCharacterParam(world::World& world, world::ObjectId id, int parameter, float value, lua::Value max_value)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(id);
 
     if(!ent)
     {
-        Console::instance().warning(SYSWARN_NO_CHARACTER, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_CHARACTER, id);
         return;
     }
 
@@ -370,9 +402,9 @@ void lua_SetCharacterParam(world::ObjectId id, int parameter, float value, lua::
     }
 }
 
-lua::Any lua_GetCharacterCombatMode(world::ObjectId id)
+lua::Any lua_GetCharacterCombatMode(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(id);
 
     if(ent)
     {
@@ -382,9 +414,9 @@ lua::Any lua_GetCharacterCombatMode(world::ObjectId id)
     return{};
 }
 
-void lua_ChangeCharacterParam(world::ObjectId id, int parameter, lua::Value value)
+void lua_ChangeCharacterParam(world::World& world, world::ObjectId id, int parameter, lua::Value value)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(id);
 
     if(ent && value.is<float>())
     {
@@ -393,76 +425,76 @@ void lua_ChangeCharacterParam(world::ObjectId id, int parameter, lua::Value valu
     }
     else
     {
-        Console::instance().warning(SYSWARN_NO_CHARACTER, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_CHARACTER, id);
     }
 }
 
-void lua_AddCharacterHair(world::ObjectId ent_id, int setup_index)
+void lua_AddCharacterHair(world::World& world, world::ObjectId ent_id, int setup_index)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(ent_id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(ent_id);
 
     if(!ent)
     {
-        Console::instance().warning(SYSWARN_NO_CHARACTER, ent_id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_CHARACTER, ent_id);
         return;
     }
 
     world::HairSetup hair_setup;
 
-    hair_setup.getSetup(setup_index);
+    hair_setup.getSetup(world, setup_index);
 
     if(!ent->addHair(&hair_setup))
     {
-        Console::instance().warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_CANT_CREATE_HAIR, ent_id);
     }
 }
 
-void lua_ResetCharacterHair(world::ObjectId ent_id)
+void lua_ResetCharacterHair(world::World& world, world::ObjectId ent_id)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(ent_id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(ent_id);
 
     if(ent)
     {
         if(!ent->removeHairs())
         {
-            Console::instance().warning(SYSWARN_CANT_RESET_HAIR, ent_id);
+            world.m_engine->m_gui.getConsole().warning(SYSWARN_CANT_RESET_HAIR, ent_id);
         }
     }
     else
     {
-        Console::instance().warning(SYSWARN_NO_CHARACTER, ent_id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_CHARACTER, ent_id);
     }
 }
 
-void lua_AddEntityRagdoll(world::ObjectId ent_id, int setup_index)
+void lua_AddEntityRagdoll(world::World& world, world::ObjectId ent_id, int setup_index)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(ent_id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(ent_id);
 
     if(ent)
     {
         world::RagdollSetup ragdoll_setup;
 
-        if(!ragdoll_setup.getSetup(setup_index))
+        if(!ragdoll_setup.getSetup(*world.m_engine, setup_index))
         {
-            Console::instance().warning(SYSWARN_NO_RAGDOLL_SETUP, setup_index);
+            world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_RAGDOLL_SETUP, setup_index);
         }
         else
         {
             if(!ent->createRagdoll(&ragdoll_setup))
             {
-                Console::instance().warning(SYSWARN_CANT_CREATE_RAGDOLL, ent_id);
+                world.m_engine->m_gui.getConsole().warning(SYSWARN_CANT_CREATE_RAGDOLL, ent_id);
             }
         }
     }
     else
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, ent_id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, ent_id);
     }
 }
 
-void lua_RemoveEntityRagdoll(world::ObjectId ent_id)
+void lua_RemoveEntityRagdoll(world::World& world, world::ObjectId ent_id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(ent_id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(ent_id);
 
     if(ent)
     {
@@ -472,111 +504,111 @@ void lua_RemoveEntityRagdoll(world::ObjectId ent_id)
         }
         else
         {
-            Console::instance().warning(SYSWARN_CANT_REMOVE_RAGDOLL, ent_id);
+            world.m_engine->m_gui.getConsole().warning(SYSWARN_CANT_REMOVE_RAGDOLL, ent_id);
         }
     }
     else
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, ent_id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, ent_id);
     }
 }
 
-bool lua_GetSecretStatus(int secret_number)
+bool lua_GetSecretStatus(world::World& world, int secret_number)
 {
-    return engine::Gameflow::instance.getSecretStatus(secret_number);
+    return world.m_engine->gameflow.getSecretStatus(secret_number);
 }
 
-void lua_SetSecretStatus(int secret_number, bool status)
+void lua_SetSecretStatus(world::World& world, int secret_number, bool status)
 {
-    engine::Gameflow::instance.setSecretStatus(secret_number, status);
+    world.m_engine->gameflow.setSecretStatus(secret_number, status);
 }
 
-lua::Any lua_GetActionState(int act)
+lua::Any lua_GetActionState(world::World& world, int act)
 {
     if(act < 0 || act >= static_cast<int>(engine::InputAction::Sentinel))
     {
-        Console::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ACTION_NUMBER);
         return{};
     }
     else
     {
-        return engine::Engine::instance.m_inputHandler.getActionState(static_cast<engine::InputAction>(act)).active;
+        return world.m_engine->m_inputHandler.getActionState(static_cast<engine::InputAction>(act)).active;
     }
 }
 
-lua::Any lua_GetActionChange(int act)
+lua::Any lua_GetActionChange(world::World& world, int act)
 {
     if(act < 0 || act >= static_cast<int>(engine::InputAction::Sentinel))
     {
-        Console::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ACTION_NUMBER);
         return{};
     }
     else
     {
-        return engine::Engine::instance.m_inputHandler.getActionState(static_cast<engine::InputAction>(act)).wasActive;
+        return world.m_engine->m_inputHandler.getActionState(static_cast<engine::InputAction>(act)).wasActive;
     }
 }
 
-int lua_GetEngineVersion()
+int lua_GetEngineVersion(world::World& world)
 {
-    return static_cast<int>(engine::Engine::instance.m_world.m_engineVersion);
+    return static_cast<int>(world.m_engine->m_world.m_engineVersion);
 }
 
-void script::MainEngine::bindKey(int act, int primary, lua::Value secondary)
+void script::MainEngine::bindKey(world::World& world, int act, int primary, lua::Value secondary)
 {
     if(act < 0 || act >= static_cast<int>(engine::InputAction::Sentinel))
     {
-        Console::instance().warning(SYSWARN_WRONG_ACTION_NUMBER);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ACTION_NUMBER);
         return;
     }
-    engine::Engine::instance.m_inputHandler.bindKey(primary, static_cast<engine::InputAction>(act));
+    world.m_engine->m_inputHandler.bindKey(primary, static_cast<engine::InputAction>(act));
     if(secondary.is<int>())
-        engine::Engine::instance.m_inputHandler.bindKey(secondary.to<int>(), static_cast<engine::InputAction>(act));
+        world.m_engine->m_inputHandler.bindKey(secondary.to<int>(), static_cast<engine::InputAction>(act));
 }
 
-void lua_AddFont(int index, const char* path, int size)
+void lua_AddFont(world::World& world, int index, const char* path, int size)
 {
-    if(!gui::FontManager::instance->addFont(static_cast<gui::FontType>(index), size, path))
+    if(!world.m_engine->m_gui.m_fontManager.addFont(static_cast<gui::FontType>(index), size, path))
     {
-        Console::instance().warning(SYSWARN_CANT_CREATE_FONT, gui::FontManager::instance->getFontCount(), gui::MaxFonts);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_CANT_CREATE_FONT, world.m_engine->m_gui.m_fontManager.getFontCount(), gui::MaxFonts);
     }
 }
 
-void lua_AddFontStyle(int style_index,
+void lua_AddFontStyle(world::World& world, int style_index,
                       float color_R, float color_G, float color_B, float color_A,
                       bool shadowed, bool fading, bool rect, float rect_border,
                       float rect_R, float rect_G, float rect_B, float rect_A,
                       bool hide)
 {
-    if(!gui::FontManager::instance->addFontStyle(static_cast<gui::FontStyle>(style_index),
+    if(!world.m_engine->m_gui.m_fontManager.addFontStyle(static_cast<gui::FontStyle>(style_index),
     { color_R, color_G, color_B, color_A },
                                                  shadowed, fading,
                                                  rect, rect_border, { rect_R, rect_G, rect_B, rect_A },
                                                  hide))
     {
-        Console::instance().warning(SYSWARN_CANT_CREATE_STYLE, gui::FontManager::instance->getFontStyleCount(), gui::FontStyle::Sentinel);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_CANT_CREATE_STYLE, world.m_engine->m_gui.m_fontManager.getFontStyleCount(), gui::FontStyle::Sentinel);
     }
 }
 
-void lua_DeleteFont(int fontindex)
+void lua_DeleteFont(world::World& world, int fontindex)
 {
-    if(!gui::FontManager::instance->removeFont(static_cast<gui::FontType>(fontindex)))
+    if(!world.m_engine->m_gui.m_fontManager.removeFont(static_cast<gui::FontType>(fontindex)))
     {
-        Console::instance().warning(SYSWARN_CANT_REMOVE_FONT);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_CANT_REMOVE_FONT);
     }
 }
 
-void lua_DeleteFontStyle(int styleindex)
+void lua_DeleteFontStyle(world::World& world, int styleindex)
 {
-    if(!gui::FontManager::instance->removeFontStyle(static_cast<gui::FontStyle>(styleindex)))
+    if(!world.m_engine->m_gui.m_fontManager.removeFontStyle(static_cast<gui::FontStyle>(styleindex)))
     {
-        Console::instance().warning(SYSWARN_CANT_REMOVE_STYLE);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_CANT_REMOVE_STYLE);
     }
 }
 
-lua::Any lua_AddItem(world::ObjectId entity_id, int item_id, lua::Value count)
+lua::Any lua_AddItem(world::World& world, world::ObjectId entity_id, int item_id, lua::Value count)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(entity_id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(entity_id);
 
     if(ent)
     {
@@ -584,14 +616,14 @@ lua::Any lua_AddItem(world::ObjectId entity_id, int item_id, lua::Value count)
     }
     else
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, entity_id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, entity_id);
         return{};
     }
 }
 
-lua::Any lua_RemoveItem(world::ObjectId entity_id, int item_id, int count)
+lua::Any lua_RemoveItem(world::World& world, world::ObjectId entity_id, int item_id, int count)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(entity_id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(entity_id);
 
     if(ent)
     {
@@ -599,14 +631,14 @@ lua::Any lua_RemoveItem(world::ObjectId entity_id, int item_id, int count)
     }
     else
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, entity_id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, entity_id);
         return{};
     }
 }
 
-void lua_RemoveAllItems(world::ObjectId entity_id)
+void lua_RemoveAllItems(world::World& world, world::ObjectId entity_id)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(entity_id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(entity_id);
 
     if(ent)
     {
@@ -614,13 +646,13 @@ void lua_RemoveAllItems(world::ObjectId entity_id)
     }
     else
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, entity_id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, entity_id);
     }
 }
 
-lua::Any lua_GetItemsCount(world::ObjectId entity_id, int item_id)
+lua::Any lua_GetItemsCount(world::World& world, world::ObjectId entity_id, int item_id)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(entity_id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(entity_id);
 
     if(ent)
     {
@@ -628,46 +660,46 @@ lua::Any lua_GetItemsCount(world::ObjectId entity_id, int item_id)
     }
     else
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, entity_id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, entity_id);
         return{};
     }
 }
 
-void lua_CreateBaseItem(int item_id, int model_id, int world_model_id, int type, int count, const char* name)
+void lua_CreateBaseItem(world::World& world, int item_id, int model_id, int world_model_id, int type, int count, const char* name)
 {
-    engine::Engine::instance.m_world.createItem(item_id, model_id, world_model_id, static_cast<MenuItemType>(type), count, name ? name : std::string());
+    world.m_engine->m_world.createItem(item_id, model_id, world_model_id, static_cast<MenuItemType>(type), count, name ? name : std::string());
 }
 
-void lua_DeleteBaseItem(int id)
+void lua_DeleteBaseItem(world::World& world, int id)
 {
-    engine::Engine::instance.m_world.deleteItem(id);
+    world.m_engine->m_world.deleteItem(id);
 }
 
-void lua_PrintItems(world::ObjectId entity_id)
+void lua_PrintItems(world::World& world, world::ObjectId entity_id)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(entity_id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(entity_id);
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, entity_id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, entity_id);
         return;
     }
 
     ent->inventory().print();
 }
 
-void lua_SetStateChangeRange(world::ModelId id, int anim, int state, int dispatch, int frame_low, int frame_high, lua::Value next_anim, lua::Value next_frame)
+void lua_SetStateChangeRange(world::World& world, world::ModelId id, int anim, int state, int dispatch, int frame_low, int frame_high, lua::Value next_anim, lua::Value next_frame)
 {
-    auto model = engine::Engine::instance.m_world.getModelByID(id);
+    auto model = world.m_engine->m_world.getModelByID(id);
 
     if(model == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return;
     }
 
     if(anim < 0 || anim + 1 > static_cast<int>(model->m_animations.size()))
     {
-        Console::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return;
     }
 
@@ -687,29 +719,29 @@ void lua_SetStateChangeRange(world::ModelId id, int anim, int state, int dispatc
         }
         else
         {
-            Console::instance().warning(SYSWARN_WRONG_DISPATCH_NUMBER, dispatch);
+            world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_DISPATCH_NUMBER, dispatch);
         }
     }
 }
 
-void lua_SetAnimEndCommands(world::ModelId id, int anim, lua::Value table)
+void lua_SetAnimEndCommands(world::World& world, world::ModelId id, int anim, lua::Value table)
 {
-    auto model = engine::Engine::instance.m_world.getModelByID(id);
+    auto model = world.m_engine->m_world.getModelByID(id);
     if(model == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return;
     }
 
     if(anim < 0 || anim + 1 > static_cast<int>(model->m_animations.size()))
     {
-        Console::instance().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ANIM_NUMBER, anim);
         return;
     }
 
     if(!table.is<lua::Table>())
     {
-        Console::instance().warning(SYSWARN_WRONG_ARGS, "entid, anim, {{cmd,p1,p2,p3},{...}}");
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ARGS, "entid, anim, {{cmd,p1,p2,p3},{...}}");
         return;
     }
 
@@ -730,52 +762,52 @@ void lua_SetAnimEndCommands(world::ModelId id, int anim, lua::Value table)
         }
         else
         {
-            Console::instance().warning(SYSWARN_WRONG_ARGS, "entid, anim, {{cmd,p1,p2,p3},{...}}");
+            world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ARGS, "entid, anim, {{cmd,p1,p2,p3},{...}}");
             break;
         }
     }
 }
 
-lua::Any lua_SpawnEntity(world::ModelId model_id, float x, float y, float z, float ax, float ay, float az, world::ObjectId room_id, lua::Value ov_id)
+lua::Any lua_SpawnEntity(world::World& world, world::ModelId model_id, float x, float y, float z, float ax, float ay, float az, world::ObjectId room_id, lua::Value ov_id)
 {
     glm::vec3 position{ x,y,z }, ang{ ax,ay,az };
 
     boost::optional<world::ObjectId> object;
     if(ov_id.is<world::ObjectId>())
         object = ov_id.to<world::ObjectId>();
-    auto entity = engine::Engine::instance.m_world.spawnEntity(model_id, room_id, &position, &ang, object);
+    auto entity = world.m_engine->m_world.spawnEntity(model_id, room_id, &position, &ang, object);
     if(!entity)
         return {};
     else
         return entity->getId();
 }
 
-bool lua_DeleteEntity(world::ObjectId id)
+bool lua_DeleteEntity(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(!ent)
         return false;
 
     if(ent->getRoom())
         ent->getRoom()->removeEntity(ent.get());
-    engine::Engine::instance.m_world.deleteEntity(id);
+    world.m_engine->m_world.deleteEntity(id);
     return true;
 }
 
 // Moveable script control section
 
-lua::Any lua_GetEntityVector(world::ObjectId id1, world::ObjectId id2)
+lua::Any lua_GetEntityVector(world::World& world, world::ObjectId id1, world::ObjectId id2)
 {
-    std::shared_ptr<world::Entity> e1 = engine::Engine::instance.m_world.getEntityByID(id1);
+    std::shared_ptr<world::Entity> e1 = world.m_engine->m_world.getEntityByID(id1);
     if(e1 == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id1);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id1);
         return{};
     }
-    std::shared_ptr<world::Entity> e2 = engine::Engine::instance.m_world.getEntityByID(id2);
+    std::shared_ptr<world::Entity> e2 = world.m_engine->m_world.getEntityByID(id2);
     if(e2 == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id2);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id2);
         return{};
     }
 
@@ -786,45 +818,45 @@ lua::Any lua_GetEntityVector(world::ObjectId id1, world::ObjectId id2)
         );
 }
 
-lua::Any lua_GetEntityDistance(world::ObjectId id1, world::ObjectId id2)
+lua::Any lua_GetEntityDistance(world::World& world, world::ObjectId id1, world::ObjectId id2)
 {
-    std::shared_ptr<world::Entity> e1 = engine::Engine::instance.m_world.getEntityByID(id1);
+    std::shared_ptr<world::Entity> e1 = world.m_engine->m_world.getEntityByID(id1);
     if(!e1)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id1);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id1);
         return{};
     }
-    std::shared_ptr<world::Entity> e2 = engine::Engine::instance.m_world.getEntityByID(id2);
+    std::shared_ptr<world::Entity> e2 = world.m_engine->m_world.getEntityByID(id2);
     if(!e2)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id2);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id2);
         return{};
     }
 
     return e1->findDistance(*e2);
 }
 
-lua::Any lua_GetEntityDirDot(world::ObjectId id1, world::ObjectId id2)
+lua::Any lua_GetEntityDirDot(world::World& world, world::ObjectId id1, world::ObjectId id2)
 {
-    std::shared_ptr<world::Entity> e1 = engine::Engine::instance.m_world.getEntityByID(id1);
+    std::shared_ptr<world::Entity> e1 = world.m_engine->m_world.getEntityByID(id1);
     if(!e1)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id2);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id2);
         return{};
     }
-    std::shared_ptr<world::Entity> e2 = engine::Engine::instance.m_world.getEntityByID(id2);
+    std::shared_ptr<world::Entity> e2 = world.m_engine->m_world.getEntityByID(id2);
     if(!e2)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id2);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id2);
         return{};
     }
 
     return glm::dot(e1->m_transform[1], e2->m_transform[1]);
 }
 
-bool lua_IsInRoom(world::ObjectId id)
+bool lua_IsInRoom(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent && ent->getRoom())
     {
@@ -843,12 +875,12 @@ bool lua_IsInRoom(world::ObjectId id)
     }
 }
 
-lua::Any lua_GetEntityPosition(world::ObjectId id)
+lua::Any lua_GetEntityPosition(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -864,13 +896,13 @@ lua::Any lua_GetEntityPosition(world::ObjectId id)
             );
 }
 
-lua::Any lua_GetEntityAngles(world::ObjectId id)
+lua::Any lua_GetEntityAngles(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -881,13 +913,13 @@ lua::Any lua_GetEntityAngles(world::ObjectId id)
         );
 }
 
-lua::Any lua_GetEntityScaling(int id)
+lua::Any lua_GetEntityScaling(world::World& world, int id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(!ent)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -898,13 +930,13 @@ lua::Any lua_GetEntityScaling(int id)
         );
 }
 
-lua::Any lua_SimilarSector(world::ObjectId id, float dx, float dy, float dz, bool ignore_doors, lua::Value ceiling)
+lua::Any lua_SimilarSector(world::World& world, world::ObjectId id, float dx, float dy, float dz, bool ignore_doors, lua::Value ceiling)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(!ent)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -913,8 +945,8 @@ lua::Any lua_SimilarSector(world::ObjectId id, float dx, float dy, float dz, boo
     const world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(glm::vec3(ent->m_transform[3]));
     const world::RoomSector* next_sector = ent->getRoom()->getSectorRaw(next_pos);
 
-    curr_sector = curr_sector->checkPortalPointer();
-    next_sector = next_sector->checkPortalPointer();
+    curr_sector = curr_sector->checkPortalPointer(world);
+    next_sector = next_sector->checkPortalPointer(world);
 
     if(ceiling.is<lua::Boolean>() && ceiling.toBool())
     {
@@ -926,13 +958,13 @@ lua::Any lua_SimilarSector(world::ObjectId id, float dx, float dy, float dz, boo
     }
 }
 
-lua::Any lua_GetSectorHeight(world::ObjectId id, lua::Value ceiling, lua::Value dx, lua::Value dy, lua::Value dz)
+lua::Any lua_GetSectorHeight(world::World& world, world::ObjectId id, lua::Value ceiling, lua::Value dx, lua::Value dy, lua::Value dz)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(!ent)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -942,7 +974,7 @@ lua::Any lua_GetSectorHeight(world::ObjectId id, lua::Value ceiling, lua::Value 
         position += dx.toFloat() * ent->m_transform[0] + dy.toFloat() * ent->m_transform[1] + dz.toFloat() * ent->m_transform[2];
 
     const world::RoomSector* curr_sector = ent->getRoom()->getSectorRaw(glm::vec3(position));
-    curr_sector = curr_sector->checkPortalPointer();
+    curr_sector = curr_sector->checkPortalPointer(world);
     glm::vec3 point = ceiling.is<lua::Boolean>() && ceiling.to<bool>()
         ? curr_sector->getCeilingPoint()
         : curr_sector->getFloorPoint();
@@ -950,12 +982,12 @@ lua::Any lua_GetSectorHeight(world::ObjectId id, lua::Value ceiling, lua::Value 
     return point[2];
 }
 
-void lua_SetEntityPosition(world::ObjectId id, float x, float y, float z, lua::Value ax, lua::Value ay, lua::Value az)
+void lua_SetEntityPosition(world::World& world, world::ObjectId id, float x, float y, float z, lua::Value ax, lua::Value ay, lua::Value az)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
     ent->m_transform[3] = { x,y,z,0 };
@@ -965,13 +997,13 @@ void lua_SetEntityPosition(world::ObjectId id, float x, float y, float z, lua::V
     ent->updatePlatformPreStep();
 }
 
-void lua_SetEntityAngles(world::ObjectId id, float x, lua::Value y, lua::Value z)
+void lua_SetEntityAngles(world::World& world, world::ObjectId id, float x, lua::Value y, lua::Value z)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
     }
     else
     {
@@ -983,13 +1015,13 @@ void lua_SetEntityAngles(world::ObjectId id, float x, lua::Value y, lua::Value z
     }
 }
 
-void lua_SetEntityScaling(world::ObjectId id, float x, float y, float z)
+void lua_SetEntityScaling(world::World& world, world::ObjectId id, float x, float y, float z)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(!ent)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
     }
     else
     {
@@ -1000,9 +1032,9 @@ void lua_SetEntityScaling(world::ObjectId id, float x, float y, float z)
             if(!bone.bt_body)
                 continue;
 
-            engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(bone.bt_body.get());
+            world.m_engine->bullet.dynamicsWorld->removeRigidBody(bone.bt_body.get());
             bone.bt_body->getCollisionShape()->setLocalScaling(util::convert(ent->m_scaling));
-            engine::BulletEngine::instance->dynamicsWorld->addRigidBody(bone.bt_body.get());
+            world.m_engine->bullet.dynamicsWorld->addRigidBody(bone.bt_body.get());
 
             bone.bt_body->activate();
         }
@@ -1011,12 +1043,12 @@ void lua_SetEntityScaling(world::ObjectId id, float x, float y, float z)
     }
 }
 
-void lua_MoveEntityGlobal(world::ObjectId id, float x, float y, float z)
+void lua_MoveEntityGlobal(world::World& world, world::ObjectId id, float x, float y, float z)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
     ent->m_transform[3][0] += x;
@@ -1027,13 +1059,13 @@ void lua_MoveEntityGlobal(world::ObjectId id, float x, float y, float z)
     ent->ghostUpdate();
 }
 
-void lua_MoveEntityLocal(world::ObjectId id, float dx, float dy, float dz)
+void lua_MoveEntityLocal(world::World& world, world::ObjectId id, float dx, float dy, float dz)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(!ent)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1043,13 +1075,13 @@ void lua_MoveEntityLocal(world::ObjectId id, float dx, float dy, float dz)
     ent->ghostUpdate();
 }
 
-void lua_MoveEntityToSink(world::ObjectId id, int sink_index)
+void lua_MoveEntityToSink(world::World& world, world::ObjectId id, int sink_index)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
-    if(sink_index < 0 || sink_index > static_cast<int>(engine::Engine::instance.m_world.m_camerasAndSinks.size()))
+    if(sink_index < 0 || sink_index > static_cast<int>(world.m_engine->m_world.m_camerasAndSinks.size()))
         return;
-    world::StatCameraSink* sink = &engine::Engine::instance.m_world.m_camerasAndSinks[sink_index];
+    world::StatCameraSink* sink = &world.m_engine->m_world.m_camerasAndSinks[sink_index];
 
     glm::vec3 ent_pos;  ent_pos[0] = ent->m_transform[3][0];
     ent_pos[1] = ent->m_transform[3][1];
@@ -1079,10 +1111,10 @@ void lua_MoveEntityToSink(world::ObjectId id, int sink_index)
     ent->ghostUpdate();
 }
 
-void lua_MoveEntityToEntity(world::ObjectId id1, world::ObjectId id2, float speed_mult, lua::Value ignore_z)
+void lua_MoveEntityToEntity(world::World& world, world::ObjectId id1, world::ObjectId id2, float speed_mult, lua::Value ignore_z)
 {
-    std::shared_ptr<world::Entity> ent1 = engine::Engine::instance.m_world.getEntityByID(id1);
-    std::shared_ptr<world::Entity> ent2 = engine::Engine::instance.m_world.getEntityByID(id2);
+    std::shared_ptr<world::Entity> ent1 = world.m_engine->m_world.getEntityByID(id1);
+    std::shared_ptr<world::Entity> ent2 = world.m_engine->m_world.getEntityByID(id2);
 
     glm::vec3 ent1_pos; ent1_pos[0] = ent1->m_transform[3][0];
     ent1_pos[1] = ent1->m_transform[3][1];
@@ -1106,13 +1138,13 @@ void lua_MoveEntityToEntity(world::ObjectId id1, world::ObjectId id2, float spee
     ent1->updateRigidBody(true);
 }
 
-void lua_RotateEntity(world::ObjectId id, float rx, lua::Value ry, lua::Value rz)
+void lua_RotateEntity(world::World& world, world::ObjectId id, float rx, lua::Value ry, lua::Value rz)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
     }
     else
     {
@@ -1126,18 +1158,18 @@ void lua_RotateEntity(world::ObjectId id, float rx, lua::Value ry, lua::Value rz
     }
 }
 
-void lua_RotateEntityToEntity(world::ObjectId id1, world::ObjectId id2, int axis, lua::Value speed_, lua::Value /*smooth_*/, lua::Value add_angle_)
+void lua_RotateEntityToEntity(world::World& world, world::ObjectId id1, world::ObjectId id2, int axis, lua::Value speed_, lua::Value /*smooth_*/, lua::Value add_angle_)
 {
-    std::shared_ptr<world::Entity> ent1 = engine::Engine::instance.m_world.getEntityByID(id1);
-    std::shared_ptr<world::Entity> ent2 = engine::Engine::instance.m_world.getEntityByID(id2);
+    std::shared_ptr<world::Entity> ent1 = world.m_engine->m_world.getEntityByID(id1);
+    std::shared_ptr<world::Entity> ent2 = world.m_engine->m_world.getEntityByID(id2);
 
     if(!ent1 || !ent2)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, !ent1 ? id1 : id2);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, !ent1 ? id1 : id2);
     }
     else if(axis < 0 || axis > 2)
     {
-        Console::instance().warning(SYSWARN_WRONG_AXIS, !ent1 ? id1 : id2);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_AXIS, !ent1 ? id1 : id2);
     }
     else
     {
@@ -1222,14 +1254,14 @@ void lua_RotateEntityToEntity(world::ObjectId id1, world::ObjectId id2, int axis
     }
 }
 
-lua::Any lua_GetEntityOrientation(world::ObjectId id1, world::ObjectId id2, lua::Value add_angle_)
+lua::Any lua_GetEntityOrientation(world::World& world, world::ObjectId id1, world::ObjectId id2, lua::Value add_angle_)
 {
-    std::shared_ptr<world::Entity> ent1 = engine::Engine::instance.m_world.getEntityByID(id1);
-    std::shared_ptr<world::Entity> ent2 = engine::Engine::instance.m_world.getEntityByID(id2);
+    std::shared_ptr<world::Entity> ent1 = world.m_engine->m_world.getEntityByID(id1);
+    std::shared_ptr<world::Entity> ent2 = world.m_engine->m_world.getEntityByID(id2);
 
     if(!ent1 || !ent2)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, !ent1 ? id1 : id2);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, !ent1 ? id1 : id2);
         return{};
     }
 
@@ -1244,13 +1276,13 @@ lua::Any lua_GetEntityOrientation(world::ObjectId id1, world::ObjectId id2, lua:
     return util::wrapAngle(ent2->m_angles[0] - theta);
 }
 
-lua::Any lua_GetEntitySpeed(world::ObjectId id)
+lua::Any lua_GetEntitySpeed(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -1261,26 +1293,26 @@ lua::Any lua_GetEntitySpeed(world::ObjectId id)
         );
 }
 
-lua::Any lua_GetEntitySpeedLinear(world::ObjectId id)
+lua::Any lua_GetEntitySpeedLinear(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
     return glm::length(ent->m_speed);
 }
 
-void lua_SetEntitySpeed(world::ObjectId id, float vx, lua::Value vy, lua::Value vz)
+void lua_SetEntitySpeed(world::World& world, world::ObjectId id, float vx, lua::Value vy, lua::Value vz)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
     }
     else
     {
@@ -1292,13 +1324,13 @@ void lua_SetEntitySpeed(world::ObjectId id, float vx, lua::Value vy, lua::Value 
     }
 }
 
-void lua_SetEntityAnim(world::ObjectId id, world::animation::AnimationId anim, lua::Value frame)
+void lua_SetEntityAnim(world::World& world, world::ObjectId id, world::animation::AnimationId anim, lua::Value frame)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1308,64 +1340,64 @@ void lua_SetEntityAnim(world::ObjectId id, world::animation::AnimationId anim, l
         ent->setAnimation(anim);
 }
 
-void lua_SetEntityAnimFlag(world::ObjectId id, int mode)
+void lua_SetEntityAnimFlag(world::World& world, world::ObjectId id, int mode)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
     ent->m_skeleton.setAnimationMode(static_cast<world::animation::AnimationMode>(mode));
 }
 
-void lua_SetEntityBodyPartFlag(world::ObjectId id, int bone_id, int body_part_flag)
+void lua_SetEntityBodyPartFlag(world::World& world, world::ObjectId id, int bone_id, int body_part_flag)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
     if(bone_id < 0 || bone_id >= static_cast<int>(ent->m_skeleton.getBoneCount()))
     {
-        Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return;
     }
 
     ent->m_skeleton.setBodyPartFlag(bone_id, body_part_flag);
 }
 
-void lua_SetModelBodyPartFlag(world::ModelId id, int bone_id, int body_part_flag)
+void lua_SetModelBodyPartFlag(world::World& world, world::ModelId id, int bone_id, int body_part_flag)
 {
-    auto model = engine::Engine::instance.m_world.getModelByID(id);
+    auto model = world.m_engine->m_world.getModelByID(id);
 
     if(model == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return;
     }
 
     if(bone_id < 0 || static_cast<size_t>(bone_id) >= model->m_meshes.size())
     {
-        Console::instance().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return;
     }
 
     model->m_meshes[bone_id].body_part = body_part_flag;
 }
 
-lua::Any lua_GetEntityAnim(world::ObjectId id)
+lua::Any lua_GetEntityAnim(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -1376,15 +1408,15 @@ lua::Any lua_GetEntityAnim(world::ObjectId id)
         );
 }
 
-bool lua_CanTriggerEntity(world::ObjectId id1, world::ObjectId id2, lua::Value rv, lua::Value ofsX, lua::Value ofsY, lua::Value ofsZ)
+bool lua_CanTriggerEntity(world::World& world, world::ObjectId id1, world::ObjectId id2, lua::Value rv, lua::Value ofsX, lua::Value ofsY, lua::Value ofsZ)
 {
-    std::shared_ptr<world::Character> e1 = engine::Engine::instance.m_world.getCharacterByID(id1);
+    std::shared_ptr<world::Character> e1 = world.m_engine->m_world.getCharacterByID(id1);
     if(!e1 || !e1->getCommand().action)
     {
         return false;
     }
 
-    std::shared_ptr<world::Entity> e2 = engine::Engine::instance.m_world.getEntityByID(id2);
+    std::shared_ptr<world::Entity> e2 = world.m_engine->m_world.getEntityByID(id2);
     if(!e2 || e1 == e2)
     {
         return false;
@@ -1412,74 +1444,74 @@ bool lua_CanTriggerEntity(world::ObjectId id1, world::ObjectId id2, lua::Value r
     return false;
 }
 
-lua::Any lua_GetEntityVisibility(world::ObjectId id)
+lua::Any lua_GetEntityVisibility(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
     return ent->m_visible;
 }
 
-void lua_SetEntityVisibility(world::ObjectId id, bool value)
+void lua_SetEntityVisibility(world::World& world, world::ObjectId id, bool value)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
     ent->m_visible = value;
 }
 
-lua::Any lua_GetEntityEnability(world::ObjectId id)
+lua::Any lua_GetEntityEnability(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
     return ent->m_enabled;
 }
 
-lua::Any lua_GetEntityActivity(world::ObjectId id)
+lua::Any lua_GetEntityActivity(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
     return ent->m_active;
 }
 
-void lua_SetEntityActivity(world::ObjectId id, bool value)
+void lua_SetEntityActivity(world::World& world, world::ObjectId id, bool value)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
     ent->m_active = value;
 }
 
-lua::Any lua_GetEntityTriggerLayout(world::ObjectId id)
+lua::Any lua_GetEntityTriggerLayout(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
         return{};   // No entity found - return.
 
@@ -1490,13 +1522,13 @@ lua::Any lua_GetEntityTriggerLayout(world::ObjectId id)
         );
 }
 
-void lua_SetEntityTriggerLayout(world::ObjectId id, int mask, lua::Value eventOrLayout, lua::Value lock)
+void lua_SetEntityTriggerLayout(world::World& world, world::ObjectId id, int mask, lua::Value eventOrLayout, lua::Value lock)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1514,9 +1546,9 @@ void lua_SetEntityTriggerLayout(world::ObjectId id, int mask, lua::Value eventOr
     }
 }
 
-void lua_SetEntityLock(world::ObjectId id, bool lock)
+void lua_SetEntityLock(world::World& world, world::ObjectId id, bool lock)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent != nullptr)
     {
         uint8_t trigger_layout = ent->m_triggerLayout;
@@ -1526,9 +1558,9 @@ void lua_SetEntityLock(world::ObjectId id, bool lock)
     }
 }
 
-lua::Any lua_GetEntityLock(world::ObjectId id)
+lua::Any lua_GetEntityLock(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent != nullptr)
     {
         return (ent->m_triggerLayout & ENTITY_TLAYOUT_LOCK) >> 6 != 0;      // lock
@@ -1536,9 +1568,9 @@ lua::Any lua_GetEntityLock(world::ObjectId id)
     return{};
 }
 
-void lua_SetEntityEvent(world::ObjectId id, bool event)
+void lua_SetEntityEvent(world::World& world, world::ObjectId id, bool event)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent != nullptr)
     {
         uint8_t trigger_layout = ent->m_triggerLayout;
@@ -1547,9 +1579,9 @@ void lua_SetEntityEvent(world::ObjectId id, bool event)
     }
 }
 
-lua::Any lua_GetEntityEvent(world::ObjectId id)
+lua::Any lua_GetEntityEvent(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent != nullptr)
     {
         return (ent->m_triggerLayout & ENTITY_TLAYOUT_EVENT) >> 5 != 0;    // event
@@ -1557,9 +1589,9 @@ lua::Any lua_GetEntityEvent(world::ObjectId id)
     return{};
 }
 
-lua::Any lua_GetEntityMask(world::ObjectId id)
+lua::Any lua_GetEntityMask(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent != nullptr)
     {
         return ent->m_triggerLayout & ENTITY_TLAYOUT_MASK;          // mask
@@ -1567,9 +1599,9 @@ lua::Any lua_GetEntityMask(world::ObjectId id)
     return{};
 }
 
-void lua_SetEntityMask(world::ObjectId id, int mask)
+void lua_SetEntityMask(world::World& world, world::ObjectId id, int mask)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent != nullptr)
     {
         uint8_t trigger_layout = ent->m_triggerLayout;
@@ -1579,9 +1611,9 @@ void lua_SetEntityMask(world::ObjectId id, int mask)
     }
 }
 
-lua::Any lua_GetEntitySectorStatus(world::ObjectId id)
+lua::Any lua_GetEntitySectorStatus(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent != nullptr)
     {
         return (ent->m_triggerLayout & ENTITY_TLAYOUT_SSTATUS) >> 7 != 0;
@@ -1589,9 +1621,9 @@ lua::Any lua_GetEntitySectorStatus(world::ObjectId id)
     return{};
 }
 
-void lua_SetEntitySectorStatus(world::ObjectId id, bool status)
+void lua_SetEntitySectorStatus(world::World& world, world::ObjectId id, bool status)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent != nullptr)
     {
         uint8_t trigger_layout = ent->m_triggerLayout;
@@ -1601,31 +1633,31 @@ void lua_SetEntitySectorStatus(world::ObjectId id, bool status)
     }
 }
 
-lua::Any lua_GetEntityOCB(world::ObjectId id)
+lua::Any lua_GetEntityOCB(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
         return{};   // No entity found - return.
 
     return ent->m_OCB;
 }
 
-void lua_SetEntityOCB(world::ObjectId id, int ocb)
+void lua_SetEntityOCB(world::World& world, world::ObjectId id, int ocb)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
         return;   // No entity found - return.
 
     ent->m_OCB = ocb;
 }
 
-lua::Any lua_GetEntityFlags(world::ObjectId id)
+lua::Any lua_GetEntityFlags(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -1638,13 +1670,13 @@ lua::Any lua_GetEntityFlags(world::ObjectId id)
         );
 }
 
-void lua_SetEntityFlags(world::ObjectId id, bool active, bool enabled, bool visible, int typeFlags, lua::Value cbFlags)
+void lua_SetEntityFlags(world::World& world, world::ObjectId id, bool active, bool enabled, bool visible, int typeFlags, lua::Value cbFlags)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(!ent)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1656,13 +1688,13 @@ void lua_SetEntityFlags(world::ObjectId id, bool active, bool enabled, bool visi
         ent->m_callbackFlags = cbFlags.to<uint32_t>();
 }
 
-lua::Any lua_GetEntityTypeFlag(world::ObjectId id, lua::Value flag)
+lua::Any lua_GetEntityTypeFlag(world::World& world, world::ObjectId id, lua::Value flag)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -1672,13 +1704,13 @@ lua::Any lua_GetEntityTypeFlag(world::ObjectId id, lua::Value flag)
         return ent->m_typeFlags;
 }
 
-void lua_SetEntityTypeFlag(world::ObjectId id, int type_flag, lua::Value value)
+void lua_SetEntityTypeFlag(world::World& world, world::ObjectId id, int type_flag, lua::Value value)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
     if(!value.is<lua::Boolean>())
@@ -1697,13 +1729,13 @@ void lua_SetEntityTypeFlag(world::ObjectId id, int type_flag, lua::Value value)
     }
 }
 
-lua::Any lua_GetEntityStateFlag(world::ObjectId id, const char* whichCstr)
+lua::Any lua_GetEntityStateFlag(world::World& world, world::ObjectId id, const char* whichCstr)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -1718,13 +1750,13 @@ lua::Any lua_GetEntityStateFlag(world::ObjectId id, const char* whichCstr)
         return{};
 }
 
-void lua_SetEntityStateFlag(world::ObjectId id, const char* whichCstr, lua::Value value)
+void lua_SetEntityStateFlag(world::World& world, world::ObjectId id, const char* whichCstr, lua::Value value)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1741,13 +1773,13 @@ void lua_SetEntityStateFlag(world::ObjectId id, const char* whichCstr, lua::Valu
         *flag = !*flag;
 }
 
-lua::Any lua_GetEntityCallbackFlag(world::ObjectId id, lua::Value flag)
+lua::Any lua_GetEntityCallbackFlag(world::World& world, world::ObjectId id, lua::Value flag)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -1757,13 +1789,13 @@ lua::Any lua_GetEntityCallbackFlag(world::ObjectId id, lua::Value flag)
         return ent->m_callbackFlags & flag.toInt();
 }
 
-void lua_SetEntityCallbackFlag(world::ObjectId id, int flag, lua::Value value)
+void lua_SetEntityCallbackFlag(world::World& world, world::ObjectId id, int flag, lua::Value value)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1783,53 +1815,53 @@ void lua_SetEntityCallbackFlag(world::ObjectId id, int flag, lua::Value value)
     }
 }
 
-lua::Any lua_GetEntityTimer(world::ObjectId id)
+lua::Any lua_GetEntityTimer(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
         return{};   // No entity found - return.
 
     return ent->m_timer;
 }
 
-void lua_SetEntityTimer(world::ObjectId id, float timer)
+void lua_SetEntityTimer(world::World& world, world::ObjectId id, float timer)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
         return;   // No entity found - return.
 
     ent->m_timer = timer;
 }
 
-lua::Any lua_GetEntityMoveType(world::ObjectId id)
+lua::Any lua_GetEntityMoveType(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
     return static_cast<int>(ent->m_moveType);
 }
 
-void lua_SetEntityMoveType(world::ObjectId id, int type)
+void lua_SetEntityMoveType(world::World& world, world::ObjectId id, int type)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
         return;
     ent->m_moveType = static_cast<world::MoveType>(type);
 }
 
-lua::Any lua_GetEntityResponse(world::ObjectId id, int response)
+lua::Any lua_GetEntityResponse(world::World& world, world::ObjectId id, int response)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(id);
 
     if(!ent)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -1844,9 +1876,9 @@ lua::Any lua_GetEntityResponse(world::ObjectId id, int response)
     }
 }
 
-void lua_SetEntityResponse(world::ObjectId id, int response, int value)
+void lua_SetEntityResponse(world::World& world, world::ObjectId id, int response, int value)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(id);
 
     if(ent)
     {
@@ -1873,43 +1905,43 @@ void lua_SetEntityResponse(world::ObjectId id, int response, int value)
     }
     else
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
     }
 }
 
-lua::Any lua_GetEntityState(world::ObjectId id)
+lua::Any lua_GetEntityState(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
     return static_cast<int>(ent->m_skeleton.getPreviousState());
 }
 
-lua::Any lua_GetEntityModel(world::ObjectId id)
+lua::Any lua_GetEntityModel(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
     return ent->m_skeleton.getModel()->getId();
 }
 
-void lua_SetEntityState(world::ObjectId id, int16_t value, lua::Value next)
+void lua_SetEntityState(world::World& world, world::ObjectId id, int16_t value, lua::Value next)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
@@ -1918,19 +1950,19 @@ void lua_SetEntityState(world::ObjectId id, int16_t value, lua::Value next)
         ent->m_skeleton.setPreviousState(static_cast<world::LaraState>(next.toInt()));
 }
 
-void lua_SetEntityRoomMove(world::ObjectId id, size_t room, int moveType, int dirFlag)
+void lua_SetEntityRoomMove(world::World& world, world::ObjectId id, size_t room, int moveType, int dirFlag)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
-    if(room < engine::Engine::instance.m_world.m_rooms.size())
+    if(room < world.m_engine->m_world.m_rooms.size())
     {
-        std::shared_ptr<world::Room> r = engine::Engine::instance.m_world.m_rooms[room];
-        if(ent == engine::Engine::instance.m_world.m_character)
+        std::shared_ptr<world::Room> r = world.m_engine->m_world.m_rooms[room];
+        if(ent == world.m_engine->m_world.m_character)
         {
             ent->setRoom(r.get());
         }
@@ -1949,29 +1981,29 @@ void lua_SetEntityRoomMove(world::ObjectId id, size_t room, int moveType, int di
     ent->m_moveDir = static_cast<world::MoveDirection>(dirFlag);
 }
 
-lua::Any lua_GetEntityMeshCount(world::ObjectId id)
+lua::Any lua_GetEntityMeshCount(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent == nullptr)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
     return static_cast<int>(ent->m_skeleton.getBoneCount());
 }
 
-void lua_SetEntityMeshswap(world::ObjectId id_dest, world::ModelId id_src)
+void lua_SetEntityMeshswap(world::World& world, world::ObjectId id_dest, world::ModelId id_src)
 {
-    std::shared_ptr<world::Entity> ent_dest = engine::Engine::instance.m_world.getEntityByID(id_dest);
+    std::shared_ptr<world::Entity> ent_dest = world.m_engine->m_world.getEntityByID(id_dest);
 
-    ent_dest->m_skeleton.copyMeshBinding( engine::Engine::instance.m_world.getModelByID(id_src) );
+    ent_dest->m_skeleton.copyMeshBinding( world.m_engine->m_world.getModelByID(id_src) );
 }
 
-void lua_SetModelMeshReplaceFlag(world::ModelId id, size_t bone, int flag)
+void lua_SetModelMeshReplaceFlag(world::World& world, world::ModelId id, size_t bone, int flag)
 {
-    auto sm = engine::Engine::instance.m_world.getModelByID(id);
+    auto sm = world.m_engine->m_world.getModelByID(id);
     if(sm != nullptr)
     {
         if(bone < sm->m_meshes.size())
@@ -1980,18 +2012,18 @@ void lua_SetModelMeshReplaceFlag(world::ModelId id, size_t bone, int flag)
         }
         else
         {
-            Console::instance().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
+            world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
         }
     }
     else
     {
-        Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id);
     }
 }
 
-void lua_SetModelAnimReplaceFlag(world::ModelId id, size_t bone, bool flag)
+void lua_SetModelAnimReplaceFlag(world::World& world, world::ModelId id, size_t bone, bool flag)
 {
-    auto sm = engine::Engine::instance.m_world.getModelByID(id);
+    auto sm = world.m_engine->m_world.getModelByID(id);
     if(sm != nullptr)
     {
         if(bone < sm->m_meshes.size())
@@ -2000,28 +2032,28 @@ void lua_SetModelAnimReplaceFlag(world::ModelId id, size_t bone, bool flag)
         }
         else
         {
-            Console::instance().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
+            world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
         }
     }
     else
     {
-        Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id);
     }
 }
 
-void lua_CopyMeshFromModelToModel(world::ModelId id1, world::ModelId id2, size_t bone1, size_t bone2)
+void lua_CopyMeshFromModelToModel(world::World& world, world::ModelId id1, world::ModelId id2, size_t bone1, size_t bone2)
 {
-    auto sm1 = engine::Engine::instance.m_world.getModelByID(id1);
+    auto sm1 = world.m_engine->m_world.getModelByID(id1);
     if(sm1 == nullptr)
     {
-        Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id1);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id1);
         return;
     }
 
-    auto sm2 = engine::Engine::instance.m_world.getModelByID(id2);
+    auto sm2 = world.m_engine->m_world.getModelByID(id2);
     if(sm2 == nullptr)
     {
-        Console::instance().warning(SYSWARN_WRONG_MODEL_ID, id2);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id2);
         return;
     }
 
@@ -2031,13 +2063,13 @@ void lua_CopyMeshFromModelToModel(world::ModelId id1, world::ModelId id2, size_t
     }
     else
     {
-        Console::instance().warning(SYSWARN_WRONG_BONE_NUMBER, bone1);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_BONE_NUMBER, bone1);
     }
 }
 
-void lua_CreateEntityGhosts(world::ObjectId id)
+void lua_CreateEntityGhosts(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent && ent->m_skeleton.getBoneCount() > 0)
     {
@@ -2045,9 +2077,9 @@ void lua_CreateEntityGhosts(world::ObjectId id)
     }
 }
 
-void lua_PushEntityBody(world::ObjectId id, size_t body_number, float h_force, float v_force, bool resetFlag)
+void lua_PushEntityBody(world::World& world, world::ObjectId id, size_t body_number, float h_force, float v_force, bool resetFlag)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent
        && body_number < ent->m_skeleton.getBoneCount()
@@ -2069,7 +2101,7 @@ void lua_PushEntityBody(world::ObjectId id, size_t body_number, float h_force, f
     }
     else
     {
-        Console::instance().warning(SYSWARN_CANT_APPLY_FORCE, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_CANT_APPLY_FORCE, id);
     }
 }
 
@@ -2077,14 +2109,16 @@ int lua_SetEntityBodyMass(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
+    world::World& world = script::ScriptEngine::getEngine(lua)->getEngine()->m_world;
+
     if(lua_gettop(lua) < 3)
     {
-        Console::instance().warning(SYSWARN_WRONG_ARGS, "[entity_id, body_number, (mass / each body mass)]");
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ARGS, "[entity_id, body_number, (mass / each body mass)]");
         return 0;
     }
 
     const world::ObjectId id = static_cast<world::ObjectId>(lua_tointeger(lua, 1));
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     size_t body_number = std::max(lua::Integer(1), lua_tointeger(lua, 2));
 
@@ -2107,7 +2141,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
             if(!bone.bt_body)
                 continue;
 
-            engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(bone.bt_body.get());
+            world.m_engine->bullet.dynamicsWorld->removeRigidBody(bone.bt_body.get());
 
             bone.bt_body->getCollisionShape()->calculateLocalInertia(mass, inertia);
 
@@ -2127,7 +2161,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
             //ent->bt_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
             //ent->bt_body[i]->setCcdSweptSphereRadius(32.0);
 
-            engine::BulletEngine::instance->dynamicsWorld->addRigidBody(bone.bt_body.get());
+            world.m_engine->bullet.dynamicsWorld->addRigidBody(bone.bt_body.get());
 
             bone.bt_body->activate();
 
@@ -2154,15 +2188,15 @@ int lua_SetEntityBodyMass(lua_State *lua)
     }
     else
     {
-        Console::instance().warning(SYSWARN_WRONG_ENTITY_OR_BODY, id, body_number);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_ENTITY_OR_BODY, id, body_number);
     }
 
     return 0;
 }
 
-void lua_LockEntityBodyLinearFactor(world::ObjectId id, size_t body_number, lua::Value vfactor)
+void lua_LockEntityBodyLinearFactor(world::World& world, world::ObjectId id, size_t body_number, lua::Value vfactor)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id);
+    std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id);
 
     if(ent
        && body_number < ent->m_skeleton.getBoneCount()
@@ -2183,31 +2217,31 @@ void lua_LockEntityBodyLinearFactor(world::ObjectId id, size_t body_number, lua:
     }
     else
     {
-        Console::instance().warning(SYSWARN_CANT_APPLY_FORCE, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_CANT_APPLY_FORCE, id);
     }
 }
 
-void lua_SetCharacterWeaponModel(world::ObjectId id, int weaponmodel, int state)
+void lua_SetCharacterWeaponModel(world::World& world, world::ObjectId id, int weaponmodel, int state)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(id);
 
     if(ent)
     {
-        ent->setWeaponModel( engine::Engine::instance.m_world.getModelByID(weaponmodel), state != 0);
+        ent->setWeaponModel( world.m_engine->m_world.getModelByID(weaponmodel), state != 0);
     }
     else
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
     }
 }
 
-lua::Any lua_GetCharacterCurrentWeapon(world::ObjectId id)
+lua::Any lua_GetCharacterCurrentWeapon(world::World& world, world::ObjectId id)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(id);
 
     if(!ent)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return{};
     }
 
@@ -2217,28 +2251,28 @@ lua::Any lua_GetCharacterCurrentWeapon(world::ObjectId id)
         return {};
 }
 
-void lua_SetCharacterCurrentWeapon(world::ObjectId id, world::ModelId weapon)
+void lua_SetCharacterCurrentWeapon(world::World& world, world::ObjectId id, world::ModelId weapon)
 {
-    std::shared_ptr<world::Character> ent = engine::Engine::instance.m_world.getCharacterByID(id);
+    std::shared_ptr<world::Character> ent = world.m_engine->m_world.getCharacterByID(id);
 
     if(!ent)
     {
-        Console::instance().warning(SYSWARN_NO_ENTITY, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_ENTITY, id);
         return;
     }
 
-    ent->setCurrentWeapon( engine::Engine::instance.m_world.getModelByID(weapon) );
+    ent->setCurrentWeapon( world.m_engine->m_world.getModelByID(weapon) );
 }
 
 // Camera functions
 
-void lua_CamShake(float power, float time, lua::Value id)
+void lua_CamShake(world::World& world, float power, float time, lua::Value id)
 {
     if(id.is<world::ObjectId>())
     {
-        std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(id.to<world::ObjectId>());
+        std::shared_ptr<world::Entity> ent = world.m_engine->m_world.getEntityByID(id.to<world::ObjectId>());
 
-        glm::vec3 cam_pos = render::renderer.camera()->getPosition();
+        glm::vec3 cam_pos = world.m_engine->renderer.camera()->getPosition();
 
         glm::float_t dist = glm::distance(glm::vec3(ent->m_transform[3]), cam_pos);
         dist = dist > world::MaxShakeDistance ? 0 : 1.0f - dist / world::MaxShakeDistance;
@@ -2247,96 +2281,96 @@ void lua_CamShake(float power, float time, lua::Value id)
     }
 
     if(power > 0.0)
-        render::renderer.camera()->shake(power, util::fromSeconds(time));
+        world.m_engine->renderer.camera()->shake(power, util::fromSeconds(time));
 }
 
-void lua_FlashSetup(int alpha, int R, int G, int B, int fadeinSpeed, int fadeoutSpeed)
+void lua_FlashSetup(world::World& world, int alpha, int R, int G, int B, int fadeinSpeed, int fadeoutSpeed)
 {
-    gui::Gui::instance->faders.setup(gui::FaderType::Effect,
+    world.m_engine->m_gui.m_faders.setup(gui::FaderType::Effect,
                                      alpha,
                                      R, G, B,
                                      loader::BlendingMode::Multiply,
                                      util::fromSeconds(fadeinSpeed / 1000.0f), util::fromSeconds(fadeoutSpeed / 1000.0f));
 }
 
-void lua_FlashStart()
+void lua_FlashStart(world::World& world)
 {
-    gui::Gui::instance->faders.start(gui::FaderType::Effect, gui::FaderDir::Timed);
+    world.m_engine->m_gui.m_faders.start(gui::FaderType::Effect, gui::FaderDir::Timed);
 }
 
-void lua_FadeOut()
+void lua_FadeOut(world::World& world)
 {
-    gui::Gui::instance->faders.start(gui::FaderType::Black, gui::FaderDir::Out);
+    world.m_engine->m_gui.m_faders.start(gui::FaderType::Black, gui::FaderDir::Out);
 }
 
-void lua_FadeIn()
+void lua_FadeIn(world::World& world)
 {
-    gui::Gui::instance->faders.start(gui::FaderType::Black, gui::FaderDir::In);
+    world.m_engine->m_gui.m_faders.start(gui::FaderType::Black, gui::FaderDir::In);
 }
 
-bool lua_FadeCheck()
+bool lua_FadeCheck(world::World& world)
 {
-    return gui::Gui::instance->faders.getStatus(gui::FaderType::Black) != gui::FaderStatus::Idle;
+    return world.m_engine->m_gui.m_faders.getStatus(gui::FaderType::Black) != gui::FaderStatus::Idle;
 }
 
 // General gameplay functions
 
-void lua_PlayStream(int id, lua::Value mask)
+void lua_PlayStream(world::World& world, int id, lua::Value mask)
 {
     if(id < 0)
     {
-        Console::instance().warning(SYSWARN_WRONG_STREAM_ID);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_STREAM_ID);
         return;
     }
 
     if(!mask.is<lua::Nil>())
     {
-        engine::Engine::instance.m_world.m_audioEngine.streamPlay(id, mask.to<uint8_t>());
+        world.m_engine->m_world.m_audioEngine.streamPlay(id, mask.to<uint8_t>());
     }
     else
     {
-        engine::Engine::instance.m_world.m_audioEngine.streamPlay(id, 0);
+        world.m_engine->m_world.m_audioEngine.streamPlay(id, 0);
     }
 }
 
-void lua_StopStreams()
+void lua_StopStreams(world::World& world)
 {
-    engine::Engine::instance.m_world.m_audioEngine.stopStreams();
+    world.m_engine->m_world.m_audioEngine.stopStreams();
 }
 
-void lua_PlaySound(audio::SoundId id, lua::Value ent_id)
+void lua_PlaySound(world::World& world, audio::SoundId id, lua::Value ent_id)
 {
-    if(id >= engine::Engine::instance.m_world.m_audioEngine.getSoundIdMapSize())
+    if(id >= world.m_engine->m_world.m_audioEngine.getSoundIdMapSize())
     {
-        Console::instance().warning(SYSWARN_WRONG_SOUND_ID, engine::Engine::instance.m_world.m_audioEngine.getSoundIdMapSize());
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_SOUND_ID, world.m_engine->m_world.m_audioEngine.getSoundIdMapSize());
         return;
     }
 
     boost::optional<world::ObjectId> eid = boost::none;
     if(ent_id.is<world::ObjectId>())
         eid = ent_id.to<world::ObjectId>();
-    if(!eid || !engine::Engine::instance.m_world.getEntityByID(*eid))
+    if(!eid || !world.m_engine->m_world.getEntityByID(*eid))
         eid = boost::none;
 
     audio::Error result;
 
     if(eid)
     {
-        result = engine::Engine::instance.m_world.m_audioEngine.send(id, audio::EmitterType::Entity, eid);
+        result = world.m_engine->m_world.m_audioEngine.send(id, audio::EmitterType::Entity, eid);
     }
     else
     {
-        result = engine::Engine::instance.m_world.m_audioEngine.send(id, audio::EmitterType::Global);
+        result = world.m_engine->m_world.m_audioEngine.send(id, audio::EmitterType::Global);
     }
 
     switch(result)
     {
         case audio::Error::NoChannel:
-            Console::instance().warning(SYSWARN_AS_NOCHANNEL);
+            world.m_engine->m_gui.getConsole().warning(SYSWARN_AS_NOCHANNEL);
             break;
 
         case audio::Error::NoSample:
-            Console::instance().warning(SYSWARN_AS_NOSAMPLE);
+            world.m_engine->m_gui.getConsole().warning(SYSWARN_AS_NOSAMPLE);
             break;
 
         default:
@@ -2344,99 +2378,99 @@ void lua_PlaySound(audio::SoundId id, lua::Value ent_id)
     }
 }
 
-void lua_StopSound(audio::SoundId id, lua::Value ent_id)
+void lua_StopSound(world::World& world, audio::SoundId id, lua::Value ent_id)
 {
-    if(id >= engine::Engine::instance.m_world.m_audioEngine.getSoundIdMapSize())
+    if(id >= world.m_engine->m_world.m_audioEngine.getSoundIdMapSize())
     {
-        Console::instance().warning(SYSWARN_WRONG_SOUND_ID, engine::Engine::instance.m_world.m_audioEngine.getSoundIdMapSize());
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_SOUND_ID, world.m_engine->m_world.m_audioEngine.getSoundIdMapSize());
         return;
     }
 
     boost::optional<world::ObjectId> eid = boost::none;
     if(ent_id.is<world::ObjectId>())
         eid = ent_id.to<world::ObjectId>();
-    if(!eid || !engine::Engine::instance.m_world.getEntityByID(*eid))
+    if(!eid || !world.m_engine->m_world.getEntityByID(*eid))
         eid = boost::none;
 
     audio::Error result;
 
     if(!eid)
     {
-        result = engine::Engine::instance.m_world.m_audioEngine.kill(id, audio::EmitterType::Global);
+        result = world.m_engine->m_world.m_audioEngine.kill(id, audio::EmitterType::Global);
     }
     else
     {
-        result = engine::Engine::instance.m_world.m_audioEngine.kill(id, audio::EmitterType::Entity, eid);
+        result = world.m_engine->m_world.m_audioEngine.kill(id, audio::EmitterType::Entity, eid);
     }
 
     if(result == audio::Error::NoSample || result == audio::Error::NoChannel)
-        Console::instance().warning(SYSWARN_AK_NOTPLAYED, id);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_AK_NOTPLAYED, id);
 }
 
-int lua_GetLevel()
+int lua_GetLevel(world::World& world)
 {
-    return engine::Gameflow::instance.getLevelID();
+    return world.m_engine->gameflow.getLevelID();
 }
 
-void lua_SetLevel(int id)
+void lua_SetLevel(world::World& world, int id)
 {
-    Console::instance().notify(SYSNOTE_CHANGING_LEVEL, id);
+    world.m_engine->m_gui.getConsole().notify(SYSNOTE_CHANGING_LEVEL, id);
 
-    engine::Game_LevelTransition(id);
-    engine::Gameflow::instance.send(engine::Opcode::LevelComplete, id);    // Next level
+    engine::Game_LevelTransition(world, id);
+    world.m_engine->gameflow.send(engine::Opcode::LevelComplete, id);    // Next level
 }
 
-void lua_SetGame(int gameId, lua::Value levelId)
+void lua_SetGame(world::World& world, int gameId, lua::Value levelId)
 {
-    engine::Gameflow::instance.setGameID(gameId);
+    world.m_engine->gameflow.setGameID(gameId);
     if(levelId.is<uint32_t>())
-        engine::Gameflow::instance.setLevelID(levelId.to<uint32_t>());
+        world.m_engine->gameflow.setLevelID(levelId.to<uint32_t>());
 
-    const char* str = engine_lua["getTitleScreen"](int(engine::Gameflow::instance.getGameID())).toCStr();
-    gui::Gui::instance->faders.assignPicture(gui::FaderType::LoadScreen, str);
-    gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
+    const char* str = world.m_engine->engine_lua["getTitleScreen"](int(world.m_engine->gameflow.getGameID())).toCStr();
+    world.m_engine->m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, str);
+    world.m_engine->m_gui.m_faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
-    Console::instance().notify(SYSNOTE_CHANGING_GAME, engine::Gameflow::instance.getGameID());
-    engine::Game_LevelTransition(engine::Gameflow::instance.getLevelID());
-    engine::Gameflow::instance.send(engine::Opcode::LevelComplete, engine::Gameflow::instance.getLevelID());
+    world.m_engine->m_gui.getConsole().notify(SYSNOTE_CHANGING_GAME, world.m_engine->gameflow.getGameID());
+    engine::Game_LevelTransition(world, boost::none);
+    world.m_engine->gameflow.send(engine::Opcode::LevelComplete, world.m_engine->gameflow.getLevelID());
 }
 
-void lua_LoadMap(const char* mapName, lua::Value gameId, lua::Value mapId)
+void lua_LoadMap(world::World& world, const char* mapName, lua::Value gameId, lua::Value mapId)
 {
-    Console::instance().notify(SYSNOTE_LOADING_MAP, mapName);
+    world.m_engine->m_gui.getConsole().notify(SYSNOTE_LOADING_MAP, mapName);
 
-    if(!mapName || mapName == engine::Gameflow::instance.getLevelPath())
+    if(!mapName || mapName == world.m_engine->gameflow.getLevelPath())
         return;
 
     if(gameId.is<int8_t>() && gameId.to<int8_t>() >= 0)
     {
-        engine::Gameflow::instance.setGameID(gameId.to<int8_t>());
+        world.m_engine->gameflow.setGameID(gameId.to<int8_t>());
     }
     if(mapId.is<uint32_t>())
     {
-        engine::Gameflow::instance.setLevelID(mapId.to<uint32_t>());
+        world.m_engine->gameflow.setLevelID(mapId.to<uint32_t>());
     }
-    std::string file_path = engine_lua.getLoadingScreen(engine::Gameflow::instance.getLevelID());
-    gui::Gui::instance->faders.assignPicture(gui::FaderType::LoadScreen, file_path);
-    gui::Gui::instance->faders.start(gui::FaderType::LoadScreen, gui::FaderDir::In);
-    engine::Engine::instance.loadMap(mapName);
+    std::string file_path = world.m_engine->engine_lua.getLoadingScreen(world.m_engine->gameflow.getLevelID());
+    world.m_engine->m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, file_path);
+    world.m_engine->m_gui.m_faders.start(gui::FaderType::LoadScreen, gui::FaderDir::In);
+    world.m_engine->loadMap(mapName);
 }
 
 // Flipped (alternate) room functions
 
-void lua_SetFlipState(size_t group, bool state)
+void lua_SetFlipState(world::World& world, size_t group, bool state)
 {
-    if(group >= engine::Engine::instance.m_world.m_flipData.size())
+    if(group >= world.m_engine->m_world.m_flipData.size())
     {
-        Console::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
         return;
     }
 
-    if(engine::Engine::instance.m_world.m_flipData[group].map == 0x1F)         // Check flipmap state.
+    if(world.m_engine->m_world.m_flipData[group].map == 0x1F)         // Check flipmap state.
     {
-        if(engine::Engine::instance.m_world.m_engineVersion > loader::Engine::TR3)
+        if(world.m_engine->m_world.m_engineVersion > loader::Engine::TR3)
         {
-            for(std::shared_ptr<world::Room> currentRoom : engine::Engine::instance.m_world.m_rooms)
+            for(std::shared_ptr<world::Room> currentRoom : world.m_engine->m_world.m_rooms)
             {
                 if(currentRoom->getAlternateGroup() == group)    // Check if group is valid.
                 {
@@ -2447,11 +2481,11 @@ void lua_SetFlipState(size_t group, bool state)
                 }
             }
 
-            engine::Engine::instance.m_world.m_flipData[group].state = state;
+            world.m_engine->m_world.m_flipData[group].state = state;
         }
         else
         {
-            for(std::shared_ptr<world::Room> currentRoom : engine::Engine::instance.m_world.m_rooms)
+            for(std::shared_ptr<world::Room> currentRoom : world.m_engine->m_world.m_rooms)
             {
                 if(state)
                     currentRoom->swapToAlternate();
@@ -2459,60 +2493,60 @@ void lua_SetFlipState(size_t group, bool state)
                     currentRoom->swapToBase();
             }
 
-            engine::Engine::instance.m_world.m_flipData[0].state = state;    // In TR1-3, state is always global.
+            world.m_engine->m_world.m_flipData[0].state = state;    // In TR1-3, state is always global.
         }
     }
 }
 
-void lua_SetFlipMap(size_t group, int mask, int /*op*/)
+void lua_SetFlipMap(world::World& world, size_t group, int mask, int /*op*/)
 {
     int op = mask > AMASK_OP_XOR ? AMASK_OP_XOR : AMASK_OP_OR;
 
-    if(group >= engine::Engine::instance.m_world.m_flipData.size())
+    if(group >= world.m_engine->m_world.m_flipData.size())
     {
-        Console::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
         return;
     }
 
     if(op == AMASK_OP_XOR)
     {
-        engine::Engine::instance.m_world.m_flipData[group].map ^= mask;
+        world.m_engine->m_world.m_flipData[group].map ^= mask;
     }
     else
     {
-        engine::Engine::instance.m_world.m_flipData[group].map |= mask;
+        world.m_engine->m_world.m_flipData[group].map |= mask;
     }
 }
 
-lua::Any lua_GetFlipMap(size_t group)
+lua::Any lua_GetFlipMap(world::World& world, size_t group)
 {
-    if(group >= engine::Engine::instance.m_world.m_flipData.size())
+    if(group >= world.m_engine->m_world.m_flipData.size())
     {
-        Console::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
         return{};
     }
 
-    return engine::Engine::instance.m_world.m_flipData[group].map;
+    return world.m_engine->m_world.m_flipData[group].map;
 }
 
-lua::Any lua_GetFlipState(size_t group)
+lua::Any lua_GetFlipState(world::World& world, size_t group)
 {
-    if(group >= engine::Engine::instance.m_world.m_flipData.size())
+    if(group >= world.m_engine->m_world.m_flipData.size())
     {
-        Console::instance().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
+        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_FLIPMAP_INDEX);
         return{};
     }
 
-    return engine::Engine::instance.m_world.m_flipData[group].state;
+    return world.m_engine->m_world.m_flipData[group].state;
 }
 
 /*
  * Generate UV rotate animations
  */
 
-void lua_genUVRotateAnimation(world::ModelId id)
+void lua_genUVRotateAnimation(world::World& world, world::ModelId id)
 {
-    auto model = engine::Engine::instance.m_world.getModelByID(id);
+    auto model = world.m_engine->m_world.getModelByID(id);
 
     if(!model)
         return;
@@ -2523,8 +2557,8 @@ void lua_genUVRotateAnimation(world::ModelId id)
     if(firstPolygon.textureAnimationId)
         return;
 
-    engine::Engine::instance.m_world.m_textureAnimations.emplace_back();
-    world::animation::TextureAnimationSequence* seq = &engine::Engine::instance.m_world.m_textureAnimations.back();
+    world.m_engine->m_world.m_textureAnimations.emplace_back();
+    world::animation::TextureAnimationSequence* seq = &world.m_engine->m_world.m_textureAnimations.back();
 
     // Fill up new sequence with frame list.
 
@@ -2567,8 +2601,8 @@ void lua_genUVRotateAnimation(world::ModelId id)
 
     for(world::core::Polygon& p : model->m_meshes.front().mesh_base->m_transparencyPolygons)
     {
-        BOOST_ASSERT(!engine::Engine::instance.m_world.m_textureAnimations.empty());
-        p.textureAnimationId = engine::Engine::instance.m_world.m_textureAnimations.size() - 1;
+        BOOST_ASSERT(!world.m_engine->m_world.m_textureAnimations.empty());
+        p.textureAnimationId = world.m_engine->m_world.m_textureAnimations.size() - 1;
         for(world::core::Vertex& v : p.vertices)
         {
             v.tex_coord[1] = v_min + 0.5f * (v.tex_coord[1] - v_min) + seq->uvrotateMax;
@@ -3136,7 +3170,7 @@ int ScriptEngine::print(lua_State* state)
 
     if(top == 0)
     {
-        Console::instance().addLine("nil", gui::FontStyle::ConsoleEvent);
+        getEngine(state)->getEngine()->m_gui.getConsole().addLine("nil", gui::FontStyle::ConsoleEvent);
         return 0;
     }
 
@@ -3178,7 +3212,7 @@ int ScriptEngine::print(lua_State* state)
                 break;
         }
 
-        Console::instance().addLine(str, gui::FontStyle::ConsoleEvent);
+        getEngine(state)->getEngine()->m_gui.getConsole().addLine(str, gui::FontStyle::ConsoleEvent);
     }
     return 0;
 }
@@ -3333,7 +3367,7 @@ void MainEngine::registerMainFunctions()
     registerC("copyMeshFromModelToModel", lua_CopyMeshFromModelToModel);
 
     registerC("createEntityGhosts", lua_CreateEntityGhosts);
-    registerC("setEntityBodyMass", lua_SetEntityBodyMass);
+    registerRawC("setEntityBodyMass", lua_SetEntityBodyMass);
     registerC("pushEntityBody", lua_PushEntityBody);
     registerC("lockEntityBodyLinearFactor", lua_LockEntityBodyLinearFactor);
 
@@ -3500,24 +3534,24 @@ boost::optional<audio::SoundId> script::MainEngine::getGlobalSound(audio::Global
 
 int script::MainEngine::getSecretTrackNumber()
 {
-    return call("getSecretTrackNumber", static_cast<int>(engine::Engine::instance.m_world.m_engineVersion)).to<int>();
+    return call("getSecretTrackNumber", static_cast<int>(getEngine()->m_world.m_engineVersion)).to<int>();
 }
 
 int script::MainEngine::getNumTracks()
 {
-    return call("getNumTracks", static_cast<int>(engine::Engine::instance.m_world.m_engineVersion)).to<int>();
+    return call("getNumTracks", static_cast<int>(getEngine()->m_world.m_engineVersion)).to<int>();
 }
 
 bool script::MainEngine::getOverridedSamplesInfo(int& num_samples, int& num_sounds, std::string& sample_name_mask)
 {
-    lua::tie(sample_name_mask, num_sounds, num_samples) = call("getOverridedSamplesInfo", static_cast<int>(engine::Engine::instance.m_world.m_engineVersion));
+    lua::tie(sample_name_mask, num_sounds, num_samples) = call("getOverridedSamplesInfo", static_cast<int>(getEngine()->m_world.m_engineVersion));
 
     return num_sounds != -1 && num_samples != -1 && sample_name_mask != "NONE";
 }
 
 bool script::MainEngine::getOverridedSample(int sound_id, int& first_sample_number, int& samples_count)
 {
-    lua::tie(first_sample_number, samples_count) = call("getOverridedSample", static_cast<int>(engine::Engine::instance.m_world.m_engineVersion), int(engine::Gameflow::instance.getLevelID()), sound_id);
+    lua::tie(first_sample_number, samples_count) = call("getOverridedSample", static_cast<int>(getEngine()->m_world.m_engineVersion), int(getEngine()->m_world.m_engine->gameflow.getLevelID()), sound_id);
     return first_sample_number != -1 && samples_count != -1;
 }
 
@@ -3526,7 +3560,7 @@ bool script::MainEngine::getSoundtrack(int track_index, char *file_path, audio::
     const char* realPath;
     int _load_method, _stream_type;
 
-    lua::tie(realPath, _stream_type, _load_method) = call("getTrackInfo", static_cast<int>(engine::Engine::instance.m_world.m_engineVersion), track_index);
+    lua::tie(realPath, _stream_type, _load_method) = call("getTrackInfo", static_cast<int>(getEngine()->m_world.m_engineVersion), track_index);
     if(file_path) strcpy(file_path, realPath);
     if(load_method) *load_method = static_cast<audio::StreamMethod>(_load_method);
     if(stream_type) *stream_type = static_cast<audio::StreamType>(_stream_type);
@@ -3547,7 +3581,7 @@ bool script::MainEngine::getSysNotify(int string_index, size_t string_size, char
 
 std::string script::MainEngine::getLoadingScreen(int level_index)
 {
-    return call("getLoadingScreen", int(engine::Gameflow::instance.getGameID()), int(engine::Gameflow::instance.getLevelID()), level_index).toString();
+    return call("getLoadingScreen", int(getEngine()->m_world.m_engine->gameflow.getGameID()), int(getEngine()->m_world.m_engine->gameflow.getLevelID()), level_index).toString();
 }
 
 // System lua functions
@@ -3567,7 +3601,7 @@ void script::MainEngine::execEntity(int id_callback, world::ObjectId id_object, 
 
 void script::MainEngine::loopEntity(world::ObjectId object_id)
 {
-    std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(object_id);
+    std::shared_ptr<world::Entity> ent = getEngine()->m_world.getEntityByID(object_id);
     if(ent && ent->m_active)
     {
         call("loopEntity", object_id);

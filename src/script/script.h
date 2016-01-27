@@ -35,6 +35,7 @@ namespace engine
 class InputHandler;
 struct SystemSettings;
 struct ScreenInfo;
+class Engine;
 } // namespace engine
 
 namespace render
@@ -46,31 +47,29 @@ namespace script
 {
 class ScriptEngine
 {
+private:
+    static const char* const ScriptEngineReferenceVarName;
 public:
-    ScriptEngine()
-    {
-        exposeConstants();
-        registerFunction("print", &ScriptEngine::print);
-        lua_atpanic(m_state.getState(), &ScriptEngine::panic);
+    explicit ScriptEngine(engine::Engine* engine);
 
-        if((*this)["bit32"].isNil())
-        {
-            set("bit32", lua::Table());
-            (*this)["bit32"].set("rshift", [](int a, int b) { return a >> b; });
-            (*this)["bit32"].set("lshift", [](int a, int b) { return a << b; });
-            (*this)["bit32"].set("band", [](int a, int b) { return a & b; });
-            (*this)["bit32"].set("bor", [](int a, int b) { return a | b; });
-            (*this)["bit32"].set("bxor", [](int a, int b) { return a ^ b; });
-            (*this)["bit32"].set("bnot", [](int a) { return ~a; });
-        }
+    static ScriptEngine* getEngine(lua_State* L)
+    {
+        lua_getglobal(L, ScriptEngineReferenceVarName);
+        ScriptEngine** ref = static_cast<ScriptEngine**>(lua_touserdata(L, -1));
+        lua_pop(L, 1);
+        if(ref == nullptr)
+            return nullptr;
+        return *ref;
+    }
+
+    engine::Engine* getEngine() const
+    {
+        return m_engine;
     }
 
     virtual ~ScriptEngine() = default;
 
-    void doFile(const std::string& filename)
-    {
-        m_state.doFile(filename);
-    }
+    void doFile(const std::string& filename);
 
     void doString(const std::string& script)
     {
@@ -101,8 +100,16 @@ public:
     }
 
     // Simple override to register both upper- and lowercase versions of function name.
-    template<typename Function>
-    inline void registerC(const std::string& func_name, std::function<Function> func)
+    template<typename R, typename... Args>
+    void registerC(const std::string& func_name, std::function<R(world::World&, Args...)> func)
+    {
+        auto self = this;
+        auto dispatcher = [self, func](Args&&... args) { return func(self->m_engine->m_world, std::forward<Args>(args)...); };
+        registerC(func_name, std::function<R(Args...)>(dispatcher));
+    }
+
+    template<typename R, typename... Args>
+    void registerC(const std::string& func_name, std::function<R(Args...)> func)
     {
         std::string uc, lc;
         for(char c : func_name)
@@ -111,20 +118,18 @@ public:
             uc += std::toupper(c);
         }
 
-        std::function<Function> f{ func };
-
-        m_state.set(func_name.c_str(), f);
-        m_state.set(lc.c_str(), f);
-        m_state.set(uc.c_str(), f);
+        m_state.set(func_name.c_str(), func);
+        m_state.set(lc.c_str(), func);
+        m_state.set(uc.c_str(), func);
     }
 
-    template<typename Function>
-    inline void registerC(const std::string& func_name, Function* func)
+    template<typename R, typename... Args>
+    void registerC(const std::string& func_name, R (*func)(Args...))
     {
-        registerC(func_name, std::function<Function>(func));
+        registerC(func_name, std::function<R(Args...)>(func));
     }
 
-    inline void registerC(const std::string& func_name, int(*func)(lua_State*))
+    void registerRawC(const std::string& func_name, lua_CFunction func)
     {
         std::string uc, lc;
         for(char c : func_name)
@@ -138,7 +143,27 @@ public:
         lua_register(m_state.getState(), uc.c_str(), func);
     }
 
-    inline void registerFunction(const std::string& func_name, int(*func)(lua_State*))
+    template<typename R, typename... Args>
+    void registerFunction(const std::string& func_name, std::function<R(world::World&, Args...)> func)
+    {
+        auto self = this;
+        auto dispatcher = [self, func](Args&&... args) { return func(self->m_engine->m_world, std::forward<Args>(args)...); };
+        registerFunction(func_name, std::function<R(Args&&...)>(dispatcher));
+    }
+
+    template<typename R, typename... Args>
+    void registerFunction(const std::string& func_name, std::function<R(Args...)> func)
+    {
+        m_state.set(func_name.c_str(), func);
+    }
+
+    template<typename R, typename... Args>
+    void registerFunction(const std::string& func_name, R(*func)(Args...))
+    {
+        registerFunction(func_name, std::function<R(Args...)>(func));
+    }
+
+    void registerRaw(const std::string& func_name, lua_CFunction func)
     {
         lua_register(m_state.getState(), func_name.c_str(), func);
     }
@@ -157,6 +182,7 @@ protected:
     void checkStack();
 
 private:
+    engine::Engine* m_engine;
     lua::State m_state;
 
     // Print function override. Puts printed string into console.
@@ -167,10 +193,10 @@ private:
 class MainEngine : public ScriptEngine
 {
 public:
-    MainEngine() : ScriptEngine()
+    explicit MainEngine(engine::Engine* engine)
+        : ScriptEngine(engine)
     {
         registerMainFunctions();
-        doFile("scripts/loadscript.lua");
     }
 
     void clearTasks() const
@@ -209,7 +235,7 @@ public:
 
     void addKey(int keycode, bool state);
 
-    static void bindKey(int act, int primary, lua::Value secondary);
+    static void bindKey(world::World& world, int act, int primary, lua::Value secondary);
 
     // Helper Lua functions. Not directly called from scripts.
 
@@ -235,5 +261,3 @@ private:
     void registerMainFunctions();
 };
 }
-
-extern script::MainEngine engine_lua;

@@ -5,10 +5,11 @@
 
 namespace gui
 {
-std::unique_ptr<FontManager> FontManager::instance = nullptr;
-
-FontManager::FontManager()
+FontManager::FontManager(engine::Engine* engine)
+    : m_engine(engine)
 {
+    BOOST_LOG_TRIVIAL(info) << "Initializing FontManager";
+
     FT_Init_FreeType(&m_fontLibrary);
 }
 
@@ -162,7 +163,7 @@ bool FontManager::removeFontStyle(const FontStyle index)
 
 void FontManager::update()
 {
-    const auto fontFadeDelta = engine::Engine::instance.getFrameTimeSecs() * FontFadeSpeed;
+    const auto fontFadeDelta = m_engine->getFrameTimeSecs() * FontFadeSpeed;
 
     if(m_fadeDirection)
     {
@@ -204,7 +205,7 @@ void FontManager::resize()
 {
     for(Font& current_font : m_fonts)
     {
-        glf_resize(current_font.gl_font.get(), static_cast<uint16_t>(static_cast<float>(current_font.size) * engine::screen_info.scale_factor));
+        glf_resize(current_font.gl_font.get(), static_cast<uint16_t>(static_cast<float>(current_font.size) * m_engine->screen_info.scale_factor));
     }
 }
 } // namespace gui

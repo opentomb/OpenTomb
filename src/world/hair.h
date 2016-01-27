@@ -49,8 +49,8 @@ struct Hair : public Object
 
     std::shared_ptr<core::BaseMesh> m_mesh = nullptr;               // Mesh containing all vertices of all parts of this hair object.
 
-    explicit Hair(Room* room = nullptr)
-        : Object(0, room)
+    explicit Hair(World* world, Room* room = nullptr)
+        : Object(0, world, room)
     {
     }
 
@@ -86,6 +86,6 @@ struct HairSetup
     glm::vec3    m_rootAngle;      // First constraint set angle (to align hair angle)
 
     // Gets scripted hair set-up to specified hair set-up structure.
-    void getSetup(int hair_entry_index);
+    void getSetup(world::World& world, int hair_entry_index);
 };
 } // namespace world

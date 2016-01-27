@@ -7,11 +7,11 @@
 namespace world
 {
 
-const RoomSector* RoomSector::checkPortalPointerRaw()
+const RoomSector* RoomSector::checkPortalPointerRaw(const World& world)
 {
     if(portal_to_room)
     {
-        std::shared_ptr<Room> r = engine::Engine::instance.m_world.m_rooms[*portal_to_room];
+        std::shared_ptr<Room> r = world.m_rooms[*portal_to_room];
         int ind_x = static_cast<int>((position[0] - r->getModelMatrix()[3][0]) / MeteringSectorSize);
         int ind_y = static_cast<int>((position[1] - r->getModelMatrix()[3][1]) / MeteringSectorSize);
         if(ind_x >= 0 && static_cast<size_t>(ind_x) < r->getSectors().shape()[0] && ind_y >= 0 && static_cast<size_t>(ind_y) < r->getSectors().shape()[1])
@@ -23,11 +23,11 @@ const RoomSector* RoomSector::checkPortalPointerRaw()
     return this;
 }
 
-const RoomSector* RoomSector::checkPortalPointer() const
+const RoomSector* RoomSector::checkPortalPointer(const World& world) const
 {
     if(portal_to_room)
     {
-        const Room* r = engine::Engine::instance.m_world.m_rooms[*portal_to_room].get();
+        const Room* r = world.m_rooms[*portal_to_room].get();
         if(owner_room->getBaseRoom() != nullptr && r->getAlternateRoom() != nullptr)
         {
             r = r->getAlternateRoom();
@@ -79,10 +79,10 @@ const RoomSector* RoomSector::checkAlternateRoom() const
     return this;
 }
 
-bool RoomSector::is2SidePortals(const RoomSector* s2) const
+bool RoomSector::is2SidePortals(const World& world, const RoomSector* s2) const
 {
-    const RoomSector* s1 = checkPortalPointer();
-    s2 = s2->checkPortalPointer();
+    const RoomSector* s1 = checkPortalPointer(world);
+    s2 = s2->checkPortalPointer(world);
 
     if(owner_room == s2->owner_room)
     {
@@ -110,8 +110,8 @@ bool RoomSector::is2SidePortals(const RoomSector* s2) const
         }
     }
 
-    if((s1p->checkPortalPointer() == s1->checkBaseRoom() && s2p->checkPortalPointer() == s2->checkBaseRoom()) ||
-       (s1p->checkPortalPointer() == s1->checkAlternateRoom() && s2p->checkPortalPointer() == s2->checkAlternateRoom()))
+    if((s1p->checkPortalPointer(world) == s1->checkBaseRoom() && s2p->checkPortalPointer(world) == s2->checkBaseRoom()) ||
+       (s1p->checkPortalPointer(world) == s1->checkAlternateRoom() && s2p->checkPortalPointer(world) == s2->checkAlternateRoom()))
     {
         return true;
     }

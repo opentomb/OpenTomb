@@ -1,9 +1,11 @@
 #pragma once
 
 #include "gl_font.h"
-#include "gui.h"
+#include "fontmanager.h"
+#include "util/helpers.h"
 
 #include <cstdint>
+#include <list>
 
 #include <boost/optional.hpp>
 
@@ -37,6 +39,8 @@ private:
         }
     };
 
+    engine::Engine* m_engine;
+
     FontTexture *m_font = nullptr;                       // Texture font renderer
 
     glm::vec4 m_backgroundColor;
@@ -57,7 +61,7 @@ private:
 
     float m_spacing = SpacingMin;                    // Line spacing
 
-    int16_t m_cursorPos;                 // Current cursor position, in symbols
+    int16_t m_cursorPos = 0;                 // Current cursor position, in symbols
     int16_t m_cursorX;                   // Cursor position in pixels
     int16_t m_cursorY;
     util::Duration m_blinkTime;                // Current cursor draw time
@@ -71,16 +75,10 @@ private:
 
     std::vector<std::string> m_completionItems;
 
-    Console();
-
 public:
-    void init();
+    explicit Console(engine::Engine* engine);
 
-    static Console& instance()
-    {
-        static Console con_base;
-        return con_base;
-    }
+    void init();
 
     ~Console() = default;
 
@@ -96,7 +94,7 @@ public:
 
     void filter(const std::string& text);
 
-    void edit(int key, const boost::optional<Uint16>& mod = boost::none);
+    void edit(int key, const boost::optional<uint16_t>& mod = boost::none);
 
     void calcCursorPosition();
 

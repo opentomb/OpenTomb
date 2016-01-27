@@ -2,6 +2,8 @@
 
 #include "util/helpers.h"
 
+#include <boost/optional.hpp>
+
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -20,7 +22,7 @@ namespace world
 {
 class Room;
 struct RoomSector;
-struct World;
+class World;
 class Camera;
 class Entity;
 namespace core
@@ -33,18 +35,18 @@ namespace engine
 {
 class BtEngineClosestConvexResultCallback;
 
-void Game_InitGlobals();
+void Game_InitGlobals(world::World& world);
 void Game_RegisterLuaFunctions(script::ScriptEngine &state);
-bool Game_Load(const std::string& name);
-bool Game_Save(const std::string& name);
+bool Game_Load(world::World& world, const std::string& name);
+bool Game_Save(world::World& world, const std::string& name);
 
 util::Duration Game_Tick(util::Duration* game_logic_time);
-void     Game_Frame(util::Duration time);
+void Game_Frame(world::World& world, util::Duration time);
 
-void Game_Prepare();
-void Game_LevelTransition(uint16_t level_index);
+void Game_Prepare(world::World& world);
+void Game_LevelTransition(world::World& world, const boost::optional<int>& level);
 
-void Game_ApplyControls(std::shared_ptr<world::Entity> ent);
+void Game_ApplyControls(world::World& world);
 
 void Game_UpdateAI();
 } // namespace engine

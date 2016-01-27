@@ -8,6 +8,11 @@
 
 #include <cstdint>
 
+namespace engine
+{
+class Engine;
+}
+
 namespace gui
 {
 // These faders always exist in engine, and rarely you will need more than these.
@@ -73,7 +78,7 @@ enum class FaderCorner
 class Fader
 {
 public:
-    Fader();                  // Fader constructor.
+    Fader(engine::Engine* engine);                  // Fader constructor.
 
     void show();                  // Shows and updates fader.
     void engage(FaderDir fade_dir);    // Resets and starts fader.
@@ -93,6 +98,8 @@ public:
 private:
     void setAspect();
     bool dropTexture();
+
+    engine::Engine* m_engine;
 
     glm::vec4 m_topLeftColor{ 0 };       // All colors are defined separately, for
     glm::vec4 m_topRightColor{ 0 };      // further possibility of advanced full

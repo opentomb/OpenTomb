@@ -91,6 +91,11 @@ inline MenuItemType previousItemType(MenuItemType t)
     }
 }
 
+namespace engine
+{
+class Engine;
+}
+
 /*
  * Other inventory renderer class
  */
@@ -111,36 +116,38 @@ public:
     };
 
 private:
-    std::map<world::ObjectId, InventoryNode> m_inventory;
-    InventoryState              m_currentState;
-    InventoryState              m_nextState;
-    int                         m_nextItemsCount;
+    engine::Engine* m_engine;
 
-    MenuItemType                m_currentItemsType;
-    int                         m_currentItemsCount;
-    int                         m_itemsOffset;
+    std::map<world::ObjectId, InventoryNode> m_inventory{};
+    InventoryState              m_currentState = InventoryState::Disabled;
+    InventoryState              m_nextState = InventoryState::Disabled;
+    int                         m_nextItemsCount = 0;
 
-    util::Duration              m_ringRotatePeriod;
-    util::Duration              m_ringTime;
-    float                       m_ringAngle;
-    float                       m_ringVerticalAngle;
-    float                       m_ringAngleStep;
-    float                       m_baseRingRadius;
-    float                       m_ringRadius;
-    float                       m_verticalOffset;
+    MenuItemType                m_currentItemsType = MenuItemType::System;
+    int                         m_currentItemsCount = 0;
+    int                         m_itemsOffset = 0;
 
-    util::Duration              m_itemRotatePeriod;
-    util::Duration              m_itemTime;
-    float                       m_itemAngle;
+    util::Duration              m_ringRotatePeriod = util::MilliSeconds(500);
+    util::Duration              m_ringTime = util::Duration(0);
+    float                       m_ringAngle = 0;
+    float                       m_ringVerticalAngle = 0;
+    float                       m_ringAngleStep = 0;
+    float                       m_baseRingRadius = 600.0f;
+    float                       m_ringRadius = 600.0f;
+    float                       m_verticalOffset = 0;
+
+    util::Duration              m_itemRotatePeriod = util::Seconds(4);
+    util::Duration              m_itemTime = util::Duration(0);
+    float                       m_itemAngle = 0;
 
     int getItemsTypeCount(MenuItemType type) const;
     void restoreItemAngle();
 
 public:
-    gui::TextLine             mLabel_Title;
-    gui::TextLine             mLabel_ItemName;
+    gui::TextLine             m_labelTitle;
+    gui::TextLine             m_labelItemName;
 
-    InventoryManager();
+    InventoryManager(engine::Engine* engine);
     ~InventoryManager();
 
     InventoryState getCurrentState() const

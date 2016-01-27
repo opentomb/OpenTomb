@@ -23,6 +23,13 @@ using gui::Console;
 
 namespace world
 {
+World::World(engine::Engine* engine)
+    : m_engine(engine)
+    , m_audioEngine(engine)
+{
+    BOOST_LOG_TRIVIAL(info) << "Initializing World";
+}
+
 void World::prepare()
 {
     m_meshes.clear();
@@ -47,11 +54,11 @@ void World::prepare()
 void World::empty()
 {
     engine::last_object = nullptr;
-    engine_lua.clearTasks();
+    m_engine->engine_lua.clearTasks();
 
     m_audioEngine.deInitAudio(); // De-initialize and destroy all audio objects.
 
-    if(gui::Gui::instance && m_character)
+    if(m_character)
     {
         m_character->inventory().disable();
         m_character->inventory().setItemsType(MenuItemType::Supply);  // see base items
@@ -68,11 +75,11 @@ void World::empty()
     // Destroy Bullet's MISC objects (debug spheres etc.)
     ///@FIXME: Hide it somewhere, it is nasty being here.
 
-    if(engine::BulletEngine::instance->dynamicsWorld != nullptr)
+    if(m_engine->bullet.dynamicsWorld != nullptr)
     {
-        for(int i = engine::BulletEngine::instance->dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+        for(int i = m_engine->bullet.dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
         {
-            btCollisionObject* obj = engine::BulletEngine::instance->dynamicsWorld->getCollisionObjectArray()[i];
+            btCollisionObject* obj = m_engine->bullet.dynamicsWorld->getCollisionObjectArray()[i];
             btRigidBody* body = btRigidBody::upcast(obj);
             if(body == nullptr)
                 continue;
@@ -91,7 +98,7 @@ void World::empty()
 
             body->setCollisionShape(nullptr);
 
-            engine::BulletEngine::instance->dynamicsWorld->removeRigidBody(body);
+            m_engine->bullet.dynamicsWorld->removeRigidBody(body);
             delete object;
             delete body;
         }
@@ -168,13 +175,13 @@ std::shared_ptr<Entity> World::spawnEntity(ModelId model_id, ObjectId room_id, c
 
     if(!id)
     {
-        ent = std::make_shared<Entity>(m_nextEntityId);
+        ent = std::make_shared<Entity>(m_nextEntityId, this);
         m_entities[m_nextEntityId] = ent;
         ++m_nextEntityId;
     }
     else
     {
-        ent = std::make_shared<Entity>(*id);
+        ent = std::make_shared<Entity>(*id, this);
         if(*id + 1 > m_nextEntityId)
             m_nextEntityId = *id + 1;
     }
@@ -227,7 +234,7 @@ std::shared_ptr<Entity> World::spawnEntity(ModelId model_id, ObjectId room_id, c
     return ent;
 }
 
-std::shared_ptr<Entity> World::getEntityByID(ObjectId id)
+std::shared_ptr<Entity> World::getEntityByID(ObjectId id) const
 {
     if(m_character->getId() == id)
         return m_character;
@@ -345,7 +352,7 @@ bool World::createItem(ModelId item_id, ModelId model_id, ModelId world_model_id
         return false;
     }
 
-    std::unique_ptr<animation::Skeleton> bf(new animation::Skeleton());
+    std::unique_ptr<animation::Skeleton> bf(new animation::Skeleton(&m_engine->m_world));
     bf->fromModel(model);
 
     auto item = std::make_shared<BaseItem>();
@@ -404,7 +411,7 @@ void World::updateAnimTextures()                                                
             continue;
         }
 
-        seq.frameTime += engine::Engine::instance.getFrameTime();
+        seq.frameTime += m_engine->getFrameTime();
         if(seq.frameTime < seq.timePerFrame)
             continue;
 

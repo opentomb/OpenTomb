@@ -80,7 +80,7 @@ struct BaseMesh
     void genFaces();
     size_t addVertex(const Vertex& v);
     size_t addAnimatedVertex(const Vertex& v);
-    void polySortInMesh();
+    void polySortInMesh(const world::World& world);
     Vertex* findVertex(const glm::vec3& v);
 };
 

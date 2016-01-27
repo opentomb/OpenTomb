@@ -6,15 +6,9 @@
 
 namespace gui
 {
-ProgressBar::ProgressBar()
+ProgressBar::ProgressBar(engine::Engine* engine)
+    : m_engine(engine)
 {
-    // Set up some defaults.
-    m_visible = false;
-    m_alternate = false;
-    m_invert = false;
-    m_vertical = false;
-    m_forced = false;
-
     // Initialize parameters.
     // By default, bar is initialized with TR5-like health bar properties.
     setPosition(HorizontalAnchor::Left, 20, VerticalAnchor::Top, 20);
@@ -135,11 +129,11 @@ void ProgressBar::setSize(glm::float_t width, glm::float_t height, glm::float_t 
 // Recalculate size, according to viewport resolution.
 void ProgressBar::recalculateSize()
 {
-    m_width = static_cast<float>(m_absWidth)  * engine::screen_info.scale_factor;
-    m_height = static_cast<float>(m_absHeight) * engine::screen_info.scale_factor;
+    m_width = static_cast<float>(m_absWidth)  * m_engine->screen_info.scale_factor;
+    m_height = static_cast<float>(m_absHeight) * m_engine->screen_info.scale_factor;
 
-    m_borderWidth = static_cast<float>(m_absBorderSize)  * engine::screen_info.scale_factor;
-    m_borderHeight = static_cast<float>(m_absBorderSize)  * engine::screen_info.scale_factor;
+    m_borderWidth = static_cast<float>(m_absBorderSize)  * m_engine->screen_info.scale_factor;
+    m_borderHeight = static_cast<float>(m_absBorderSize)  * m_engine->screen_info.scale_factor;
 
     // Calculate range unit, according to maximum bar value set up.
     // If bar alignment is set to horizontal, calculate it from bar width.
@@ -154,28 +148,28 @@ void ProgressBar::recalculatePosition()
     switch(m_xAnchor)
     {
         case HorizontalAnchor::Left:
-            m_x = static_cast<float>(m_absXoffset + m_absBorderSize) * engine::screen_info.scale_factor;
+            m_x = static_cast<float>(m_absXoffset + m_absBorderSize) * m_engine->screen_info.scale_factor;
             break;
         case HorizontalAnchor::Center:
-            m_x = (static_cast<float>(engine::screen_info.w) - static_cast<float>(m_absWidth + m_absBorderSize * 2) * engine::screen_info.scale_factor) / 2 +
-                static_cast<float>(m_absXoffset) * engine::screen_info.scale_factor;
+            m_x = (static_cast<float>(m_engine->screen_info.w) - static_cast<float>(m_absWidth + m_absBorderSize * 2) * m_engine->screen_info.scale_factor) / 2 +
+                static_cast<float>(m_absXoffset) * m_engine->screen_info.scale_factor;
             break;
         case HorizontalAnchor::Right:
-            m_x = static_cast<float>(engine::screen_info.w) - static_cast<float>(m_absXoffset + m_absWidth + m_absBorderSize * 2) * engine::screen_info.scale_factor;
+            m_x = static_cast<float>(m_engine->screen_info.w) - static_cast<float>(m_absXoffset + m_absWidth + m_absBorderSize * 2) * m_engine->screen_info.scale_factor;
             break;
     }
 
     switch(m_yAnchor)
     {
         case VerticalAnchor::Top:
-            m_y = static_cast<float>(engine::screen_info.h) - static_cast<float>(m_absYoffset + m_absHeight + m_absBorderSize * 2) * engine::screen_info.scale_factor;
+            m_y = static_cast<float>(m_engine->screen_info.h) - static_cast<float>(m_absYoffset + m_absHeight + m_absBorderSize * 2) * m_engine->screen_info.scale_factor;
             break;
         case VerticalAnchor::Center:
-            m_y = (static_cast<float>(engine::screen_info.h) - static_cast<float>(m_absHeight + m_absBorderSize * 2) * engine::screen_info.h_unit) / 2 +
-                static_cast<float>(m_absYoffset) * engine::screen_info.scale_factor;
+            m_y = (static_cast<float>(m_engine->screen_info.h) - static_cast<float>(m_absHeight + m_absBorderSize * 2) * m_engine->screen_info.h_unit) / 2 +
+                static_cast<float>(m_absYoffset) * m_engine->screen_info.scale_factor;
             break;
         case VerticalAnchor::Bottom:
-            m_y = (m_absYoffset + m_absBorderSize) * engine::screen_info.scale_factor;
+            m_y = (m_absYoffset + m_absBorderSize) * m_engine->screen_info.scale_factor;
             break;
     }
 }
@@ -264,7 +258,7 @@ void ProgressBar::show(glm::float_t value)
         if(m_autoShowCnt.count() > 0)
         {
             m_visible = true;
-            m_autoShowCnt -= engine::Engine::instance.getFrameTime();
+            m_autoShowCnt -= m_engine->getFrameTime();
 
             if(m_autoShowCnt.count() <= 0)
             {
@@ -286,7 +280,7 @@ void ProgressBar::show(glm::float_t value)
             }
             else
             {
-                m_autoShowFadeLength -= engine::Engine::instance.getFrameTime();
+                m_autoShowFadeLength -= m_engine->getFrameTime();
                 if(m_autoShowFadeLength.count() < 0)
                     m_autoShowFadeLength = util::Duration(0);
             }
@@ -297,7 +291,7 @@ void ProgressBar::show(glm::float_t value)
             // increase fade counter, until it's 1 (i. e. fully opaque).
             if(m_autoShowFadeLength < m_autoShowFadeDelay)
             {
-                m_autoShowFadeLength += engine::Engine::instance.getFrameTime();
+                m_autoShowFadeLength += m_engine->getFrameTime();
                 if(m_autoShowFadeLength > m_autoShowFadeDelay)
                     m_autoShowFadeLength = m_autoShowFadeDelay;
             }
@@ -324,7 +318,7 @@ void ProgressBar::show(glm::float_t value)
     // Border rect should be rendered first, as it lies beneath actual bar,
     // and additionally, we need to show it in any case, even if bar is in
     // warning state (blinking).
-    Gui::instance->drawRect(m_x, m_y, m_width + m_borderWidth * 2, m_height + m_borderHeight * 2,
+    m_engine->m_gui.drawRect(m_x, m_y, m_width + m_borderWidth * 2, m_height + m_borderHeight * 2,
                             m_borderMainColor, m_borderMainColor,
                             m_borderFadeColor, m_borderFadeColor,
                             loader::BlendingMode::Opaque);
@@ -334,7 +328,7 @@ void ProgressBar::show(glm::float_t value)
     // We check if bar is in a warning state. If it is, we blink it continously.
     if(m_blink)
     {
-        m_blinkCnt -= engine::Engine::instance.getFrameTime();
+        m_blinkCnt -= m_engine->getFrameTime();
         if(m_blinkCnt > m_blinkInterval)
         {
             value = 0; // Force zero value, which results in empty bar.
@@ -350,7 +344,7 @@ void ProgressBar::show(glm::float_t value)
     if(!value)
     {
         // Draw full-sized background rect (instead of base bar rect)
-        Gui::instance->drawRect(m_x + m_borderWidth, m_y + m_borderHeight, m_width, m_height,
+        m_engine->m_gui.drawRect(m_x + m_borderWidth, m_y + m_borderHeight, m_width, m_height,
                                 m_backMainColor, m_vertical ? m_backFadeColor : m_backMainColor,
                                 m_vertical ? m_backMainColor : m_backFadeColor, m_backFadeColor,
                                 loader::BlendingMode::Opaque);
@@ -396,14 +390,14 @@ void ProgressBar::show(glm::float_t value)
         RectAnchor = (m_invert ? m_y + m_height - m_baseSize : m_y) + m_borderHeight;
 
         // Draw actual bar base.
-        Gui::instance->drawRect(m_x + m_borderWidth, RectAnchor,
+        m_engine->m_gui.drawRect(m_x + m_borderWidth, RectAnchor,
                                 m_width, m_baseSize,
                                 RectFirstColor, RectFirstColor,
                                 RectSecondColor, RectSecondColor,
                                 loader::BlendingMode::Opaque);
 
         // Draw background rect.
-        Gui::instance->drawRect(m_x + m_borderWidth,
+        m_engine->m_gui.drawRect(m_x + m_borderWidth,
                                 m_invert ? m_y + m_borderHeight : RectAnchor + m_baseSize,
                                 m_width, m_height - m_baseSize,
                                 m_backMainColor, m_backFadeColor,
@@ -414,12 +408,12 @@ void ProgressBar::show(glm::float_t value)
         {
             glm::vec4 transparentColor{ 0.0f };  // Used to set counter-shade to transparent.
 
-            Gui::instance->drawRect(m_x + m_borderWidth, RectAnchor,
+            m_engine->m_gui.drawRect(m_x + m_borderWidth, RectAnchor,
                                     m_width / 2, m_baseSize,
                                     m_extrudeDepth, transparentColor,
                                     m_extrudeDepth, transparentColor,
                                     loader::BlendingMode::Opaque);
-            Gui::instance->drawRect(m_x + m_borderWidth + m_width / 2, RectAnchor,
+            m_engine->m_gui.drawRect(m_x + m_borderWidth + m_width / 2, RectAnchor,
                                     m_width / 2, m_baseSize,
                                     transparentColor, m_extrudeDepth,
                                     transparentColor, m_extrudeDepth,
@@ -431,14 +425,14 @@ void ProgressBar::show(glm::float_t value)
         RectAnchor = (m_invert ? m_x + m_width - m_baseSize : m_x) + m_borderWidth;
 
         // Draw actual bar base.
-        Gui::instance->drawRect(RectAnchor, m_y + m_borderHeight,
+        m_engine->m_gui.drawRect(RectAnchor, m_y + m_borderHeight,
                                 m_baseSize, m_height,
                                 RectSecondColor, RectFirstColor,
                                 RectSecondColor, RectFirstColor,
                                 loader::BlendingMode::Opaque);
 
         // Draw background rect.
-        Gui::instance->drawRect(m_invert ? m_x + m_borderWidth : RectAnchor + m_baseSize,
+        m_engine->m_gui.drawRect(m_invert ? m_x + m_borderWidth : RectAnchor + m_baseSize,
                                 m_y + m_borderHeight,
                                 m_width - m_baseSize, m_height,
                                 m_backMainColor, m_backMainColor,
@@ -449,12 +443,12 @@ void ProgressBar::show(glm::float_t value)
         {
             glm::vec4 transparentColor{ 0.0f };  // Used to set counter-shade to transparent.
 
-            Gui::instance->drawRect(RectAnchor, m_y + m_borderHeight,
+            m_engine->m_gui.drawRect(RectAnchor, m_y + m_borderHeight,
                                     m_baseSize, m_height / 2,
                                     transparentColor, transparentColor,
                                     m_extrudeDepth, m_extrudeDepth,
                                     loader::BlendingMode::Opaque);
-            Gui::instance->drawRect(RectAnchor, m_y + m_borderHeight + m_height / 2,
+            m_engine->m_gui.drawRect(RectAnchor, m_y + m_borderHeight + m_height / 2,
                                     m_baseSize, m_height / 2,
                                     m_extrudeDepth, m_extrudeDepth,
                                     transparentColor, transparentColor,

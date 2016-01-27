@@ -5,6 +5,11 @@
 
 #include <glm/glm.hpp>
 
+namespace engine
+{
+class Engine;
+}
+
 namespace gui
 {
 // These are the bars that are always exist in GUI.
@@ -38,7 +43,7 @@ enum class BarColorType
 class ProgressBar
 {
 public:
-    ProgressBar();  // Bar constructor.
+    ProgressBar(engine::Engine* engine);  // Bar constructor.
 
     void show(glm::float_t value);    // Main show bar procedure.
     void resize();
@@ -51,7 +56,7 @@ public:
     void setExtrude(bool enabled, uint8_t depth);
     void setAutoshow(bool enabled, util::Duration delay, bool fade, util::Duration fadeDelay);
 
-    bool          m_forced;               // Forced flag is set when bar is strictly drawn.
+    bool          m_forced = false;               // Forced flag is set when bar is strictly drawn.
     bool          m_visible = false;              // Is it visible or not.
     bool          m_alternate = false;            // Alternate state, in which bar changes color to AltColor.
 
@@ -61,6 +66,8 @@ public:
 private:
     void          recalculateSize();    // Recalculate size and position.
     void          recalculatePosition();
+
+    engine::Engine* m_engine;
 
     float         m_x;                   // Horizontal position.
     float         m_y;                   // Vertical position.

@@ -323,9 +323,14 @@ struct RoomSprite
     mutable bool was_rendered = false;
 };
 
-struct World
+class World
 {
-    loader::Engine m_engineVersion;
+public:
+    explicit World(engine::Engine* engine);
+
+    engine::Engine* m_engine;
+
+    loader::Engine m_engineVersion = loader::Engine::Unknown;
 
     std::vector< std::shared_ptr<Room> > m_rooms;
 
@@ -378,7 +383,7 @@ struct World
     std::shared_ptr<Entity> spawnEntity(ModelId model_id, ObjectId room_id, const glm::vec3 *pos, const glm::vec3 *ang, boost::optional<ObjectId> id);
     bool deleteEntity(ObjectId id);
 
-    std::shared_ptr<Entity> getEntityByID(ObjectId id);
+    std::shared_ptr<Entity> getEntityByID(ObjectId id) const;
     std::shared_ptr<Character> getCharacterByID(ObjectId id);
 
     std::shared_ptr<BaseItem> getBaseItemByID(ObjectId id);

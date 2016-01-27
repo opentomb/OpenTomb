@@ -18,6 +18,8 @@ class Object;
 
 namespace engine
 {
+class Engine;
+
 struct BulletEngine
 {
     std::unique_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
@@ -27,10 +29,8 @@ struct BulletEngine
     std::unique_ptr<btSequentialImpulseConstraintSolver> solver;
     std::unique_ptr<btDiscreteDynamicsWorld> dynamicsWorld;
 
-    BulletEngine();
+    explicit BulletEngine(Engine* engine);
     ~BulletEngine() = default;
-
-    static std::unique_ptr<BulletEngine> instance;
 };
 
 class BtEngineClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback

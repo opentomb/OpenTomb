@@ -16,48 +16,29 @@
 /*
  * GUI RENDEDR CLASS
  */
-InventoryManager::InventoryManager()
+InventoryManager::InventoryManager(engine::Engine* engine)
+    : m_engine(engine)
 {
-    m_currentState = InventoryState::Disabled;
-    m_nextState = InventoryState::Disabled;
-    m_currentItemsType = MenuItemType::System;
-    m_currentItemsCount = 0;
-    m_itemsOffset = 0;
-    m_nextItemsCount = 0;
+    BOOST_LOG_TRIVIAL(info) << "Initializing InventoryManager";
 
-    m_ringRotatePeriod = util::MilliSeconds(500);
-    m_ringTime = util::Duration(0);
-    m_ringAngle = 0.0f;
-    m_ringVerticalAngle = 0.0f;
-    m_ringAngleStep = 0.0f;
-    m_baseRingRadius = 600.0f;
-    m_ringRadius = 600.0f;
-    m_verticalOffset = 0.0f;
+    m_labelTitle.position = { 0, 30 };
+    m_labelTitle.Xanchor = gui::HorizontalAnchor::Center;
+    m_labelTitle.Yanchor = gui::VerticalAnchor::Top;
 
-    m_itemRotatePeriod = util::Seconds(4);
-    m_itemTime = util::Duration(0);
-    m_itemAngle = 0.0f;
+    m_labelTitle.fontType = gui::FontType::Primary;
+    m_labelTitle.fontStyle = gui::FontStyle::MenuTitle;
+    m_labelTitle.show = false;
 
-    m_inventory.clear();
+    m_labelItemName.position = { 0, 50 };
+    m_labelItemName.Xanchor = gui::HorizontalAnchor::Center;
+    m_labelItemName.Yanchor = gui::VerticalAnchor::Bottom;
 
-    mLabel_Title.position = { 0, 30 };
-    mLabel_Title.Xanchor = gui::HorizontalAnchor::Center;
-    mLabel_Title.Yanchor = gui::VerticalAnchor::Top;
+    m_labelItemName.fontType = gui::FontType::Primary;
+    m_labelItemName.fontStyle = gui::FontStyle::MenuContent;
+    m_labelItemName.show = false;
 
-    mLabel_Title.fontType = gui::FontType::Primary;
-    mLabel_Title.fontStyle = gui::FontStyle::MenuTitle;
-    mLabel_Title.show = false;
-
-    mLabel_ItemName.position = { 0, 50 };
-    mLabel_ItemName.Xanchor = gui::HorizontalAnchor::Center;
-    mLabel_ItemName.Yanchor = gui::VerticalAnchor::Bottom;
-
-    mLabel_ItemName.fontType = gui::FontType::Primary;
-    mLabel_ItemName.fontStyle = gui::FontStyle::MenuContent;
-    mLabel_ItemName.show = false;
-
-    gui::TextLineManager::instance->add(&mLabel_ItemName);
-    gui::TextLineManager::instance->add(&mLabel_Title);
+    m_engine->m_gui.m_textlineManager.add(&m_labelItemName);
+    m_engine->m_gui.m_textlineManager.add(&m_labelTitle);
 }
 
 InventoryManager::~InventoryManager()
@@ -65,11 +46,11 @@ InventoryManager::~InventoryManager()
     m_currentState = InventoryState::Disabled;
     m_nextState = InventoryState::Disabled;
 
-    mLabel_ItemName.show = false;
-    gui::TextLineManager::instance->erase(&mLabel_ItemName);
+    m_labelItemName.show = false;
+    m_engine->m_gui.m_textlineManager.erase(&m_labelItemName);
 
-    mLabel_Title.show = false;
-    gui::TextLineManager::instance->erase(&mLabel_Title);
+    m_labelTitle.show = false;
+    m_engine->m_gui.m_textlineManager.erase(&m_labelTitle);
 }
 
 int InventoryManager::getItemsTypeCount(MenuItemType type) const
@@ -77,7 +58,7 @@ int InventoryManager::getItemsTypeCount(MenuItemType type) const
     int ret = 0;
     for(world::ObjectId id : m_inventory | boost::adaptors::map_keys)
     {
-        auto bi = engine::Engine::instance.m_world.getBaseItemByID(id);
+        auto bi = m_engine->m_world.getBaseItemByID(id);
         if(bi && bi->type == type)
         {
             ret++;
@@ -92,7 +73,7 @@ void InventoryManager::restoreItemAngle()
     {
         if(m_itemAngle <= 180.0f)
         {
-            m_itemAngle -= 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
+            m_itemAngle -= 180.0f * m_engine->getFrameTime() / m_ringRotatePeriod;
             if(m_itemAngle < 0.0f)
             {
                 m_itemAngle = 0.0f;
@@ -100,7 +81,7 @@ void InventoryManager::restoreItemAngle()
         }
         else
         {
-            m_itemAngle += 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
+            m_itemAngle += 180.0f * m_engine->getFrameTime() / m_ringRotatePeriod;
             if(m_itemAngle >= 360.0f)
             {
                 m_itemAngle = 0.0f;
@@ -135,7 +116,7 @@ void InventoryManager::setTitle(MenuItemType items_type)
             break;
     }
 
-    mLabel_Title.text = engine_lua.getString(string_index);
+    m_labelTitle.text = m_engine->engine_lua.getString(string_index);
 }
 
 MenuItemType InventoryManager::setItemsType(MenuItemType type)
@@ -151,7 +132,7 @@ MenuItemType InventoryManager::setItemsType(MenuItemType type)
     {
         for(world::ObjectId id : m_inventory | boost::adaptors::map_keys)
         {
-            if(auto bi = engine::Engine::instance.m_world.getBaseItemByID(id))
+            if(auto bi = m_engine->m_world.getBaseItemByID(id))
             {
                 type = bi->type;
                 count = this->getItemsTypeCount(m_currentItemsType);
@@ -189,7 +170,7 @@ void InventoryManager::frame()
             break;
 
         case InventoryState::RLeft:
-            m_ringTime += engine::Engine::instance.getFrameTime();
+            m_ringTime += m_engine->getFrameTime();
             m_ringAngle = m_ringAngleStep * m_ringTime / m_ringRotatePeriod;
             m_nextState = InventoryState::RLeft;
             if(m_ringTime >= m_ringRotatePeriod)
@@ -208,7 +189,7 @@ void InventoryManager::frame()
             break;
 
         case InventoryState::RRight:
-            m_ringTime += engine::Engine::instance.getFrameTime();
+            m_ringTime += m_engine->getFrameTime();
             m_ringAngle = -m_ringAngleStep * m_ringTime / m_ringRotatePeriod;
             m_nextState = InventoryState::RRight;
             if(m_ringTime >= m_ringRotatePeriod)
@@ -232,28 +213,28 @@ void InventoryManager::frame()
             {
                 default:
                 case InventoryState::Idle:
-                    m_itemTime += engine::Engine::instance.getFrameTime();
+                    m_itemTime += m_engine->getFrameTime();
                     m_itemAngle = 360.0f * m_itemTime / m_itemRotatePeriod;
                     if(m_itemTime >= m_itemRotatePeriod)
                     {
                         m_itemTime = util::Duration(0);
                         m_itemAngle = 0.0f;
                     }
-                    mLabel_ItemName.show = true;
-                    mLabel_Title.show = true;
+                    m_labelItemName.show = true;
+                    m_labelTitle.show = true;
                     break;
 
                 case InventoryState::Closed:
-                    engine::Engine::instance.m_world.m_audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuClose));
-                    mLabel_ItemName.show = false;
-                    mLabel_Title.show = false;
+                    m_engine->m_world.m_audioEngine.send(m_engine->engine_lua.getGlobalSound(audio::GlobalSoundId::MenuClose));
+                    m_labelItemName.show = false;
+                    m_labelTitle.show = false;
                     m_currentState = m_nextState;
                     break;
 
                 case InventoryState::RLeft:
                 case InventoryState::RRight:
-                    engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundMenuRotate);
-                    mLabel_ItemName.show = false;
+                    m_engine->m_world.m_audioEngine.send(audio::SoundMenuRotate);
+                    m_labelItemName.show = false;
                     m_currentState = m_nextState;
                     m_itemTime = util::Duration(0);
                     break;
@@ -262,7 +243,7 @@ void InventoryManager::frame()
                     m_nextItemsCount = this->getItemsTypeCount(nextItemType(m_currentItemsType));
                     if(m_nextItemsCount > 0)
                     {
-                        //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+                        //Audio_Send(lua_GetGlobalSound(m_engine->engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         m_currentState = m_nextState;
                         m_ringTime = util::Duration(0);
                     }
@@ -270,15 +251,15 @@ void InventoryManager::frame()
                     {
                         m_nextState = InventoryState::Idle;
                     }
-                    mLabel_ItemName.show = false;
-                    mLabel_Title.show = false;
+                    m_labelItemName.show = false;
+                    m_labelTitle.show = false;
                     break;
 
                 case InventoryState::Down:
                     m_nextItemsCount = this->getItemsTypeCount(previousItemType(m_currentItemsType));
                     if(m_nextItemsCount > 0)
                     {
-                        //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+                        //Audio_Send(lua_GetGlobalSound(m_engine->engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         m_currentState = m_nextState;
                         m_ringTime = util::Duration(0);
                     }
@@ -286,8 +267,8 @@ void InventoryManager::frame()
                     {
                         m_nextState = InventoryState::Idle;
                     }
-                    mLabel_ItemName.show = false;
-                    mLabel_Title.show = false;
+                    m_labelItemName.show = false;
+                    m_labelTitle.show = false;
                     break;
             };
             break;
@@ -297,7 +278,7 @@ void InventoryManager::frame()
             {
                 if(setItemsType(m_currentItemsType) != MenuItemType::Invalid)
                 {
-                    engine::Engine::instance.m_world.m_audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuOpen));
+                    m_engine->m_world.m_audioEngine.send(m_engine->engine_lua.getGlobalSound(audio::GlobalSoundId::MenuOpen));
                     m_currentState = InventoryState::Open;
                     m_ringAngle = 180.0f;
                     m_ringVerticalAngle = 180.0f;
@@ -308,19 +289,19 @@ void InventoryManager::frame()
         case InventoryState::Up:
             m_currentState = InventoryState::Up;
             m_nextState = InventoryState::Up;
-            m_ringTime += engine::Engine::instance.getFrameTime();
+            m_ringTime += m_engine->getFrameTime();
             if(m_ringTime < m_ringRotatePeriod)
             {
                 restoreItemAngle();
                 m_ringRadius = m_baseRingRadius * (m_ringRotatePeriod - m_ringTime) / m_ringRotatePeriod;
                 m_verticalOffset = -m_baseRingRadius * m_ringTime / m_ringRotatePeriod;
-                m_ringAngle += 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
+                m_ringAngle += 180.0f * m_engine->getFrameTime() / m_ringRotatePeriod;
             }
             else if(m_ringTime < 2.0f * m_ringRotatePeriod)
             {
-                if(m_ringTime - engine::Engine::instance.getFrameTime() <= m_ringRotatePeriod)
+                if(m_ringTime - m_engine->getFrameTime() <= m_ringRotatePeriod)
                 {
-                    //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+                    //Audio_Send(lua_GetGlobalSound(m_engine->engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     m_ringRadius = 0.0f;
                     m_verticalOffset = m_baseRingRadius;
                     m_ringAngleStep = 360.0f / m_nextItemsCount;
@@ -331,8 +312,8 @@ void InventoryManager::frame()
                     setTitle(m_currentItemsType);
                 }
                 m_ringRadius = m_baseRingRadius * (m_ringTime - m_ringRotatePeriod) / m_ringRotatePeriod;
-                m_verticalOffset -= m_baseRingRadius * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
-                m_ringAngle -= 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
+                m_verticalOffset -= m_baseRingRadius * m_engine->getFrameTime() / m_ringRotatePeriod;
+                m_ringAngle -= 180.0f * m_engine->getFrameTime() / m_ringRotatePeriod;
             }
             else
             {
@@ -346,19 +327,19 @@ void InventoryManager::frame()
         case InventoryState::Down:
             m_currentState = InventoryState::Down;
             m_nextState = InventoryState::Down;
-            m_ringTime += engine::Engine::instance.getFrameTime();
+            m_ringTime += m_engine->getFrameTime();
             if(m_ringTime < m_ringRotatePeriod)
             {
                 restoreItemAngle();
                 m_ringRadius = m_baseRingRadius * (m_ringRotatePeriod - m_ringTime) / m_ringRotatePeriod;
                 m_verticalOffset = m_baseRingRadius * m_ringTime / m_ringRotatePeriod;
-                m_ringAngle += 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
+                m_ringAngle += 180.0f * m_engine->getFrameTime() / m_ringRotatePeriod;
             }
             else if(m_ringTime < 2.0f * m_ringRotatePeriod)
             {
-                if(m_ringTime - engine::Engine::instance.getFrameTime() <= m_ringRotatePeriod)
+                if(m_ringTime - m_engine->getFrameTime() <= m_ringRotatePeriod)
                 {
-                    //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+                    //Audio_Send(lua_GetGlobalSound(m_engine->engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     m_ringRadius = 0.0f;
                     m_verticalOffset = -m_baseRingRadius;
                     m_ringAngleStep = 360.0f / m_nextItemsCount;
@@ -369,8 +350,8 @@ void InventoryManager::frame()
                     setTitle(m_currentItemsType);
                 }
                 m_ringRadius = m_baseRingRadius * (m_ringTime - m_ringRotatePeriod) / m_ringRotatePeriod;
-                m_verticalOffset += m_baseRingRadius * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
-                m_ringAngle -= 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
+                m_verticalOffset += m_baseRingRadius * m_engine->getFrameTime() / m_ringRotatePeriod;
+                m_ringAngle -= 180.0f * m_engine->getFrameTime() / m_ringRotatePeriod;
             }
             else
             {
@@ -382,10 +363,10 @@ void InventoryManager::frame()
             break;
 
         case InventoryState::Open:
-            m_ringTime += engine::Engine::instance.getFrameTime();
+            m_ringTime += m_engine->getFrameTime();
             m_ringRadius = m_baseRingRadius * m_ringTime / m_ringRotatePeriod;
-            m_ringAngle -= 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
-            m_ringVerticalAngle -= 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
+            m_ringAngle -= 180.0f * m_engine->getFrameTime() / m_ringRotatePeriod;
+            m_ringVerticalAngle -= 180.0f * m_engine->getFrameTime() / m_ringRotatePeriod;
             if(m_ringTime >= m_ringRotatePeriod)
             {
                 m_currentState = InventoryState::Idle;
@@ -401,17 +382,17 @@ void InventoryManager::frame()
             break;
 
         case InventoryState::Closed:
-            m_ringTime += engine::Engine::instance.getFrameTime();
+            m_ringTime += m_engine->getFrameTime();
             m_ringRadius = m_baseRingRadius * (m_ringRotatePeriod - m_ringTime) / m_ringRotatePeriod;
-            m_ringAngle += 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
-            m_ringVerticalAngle += 180.0f * engine::Engine::instance.getFrameTime() / m_ringRotatePeriod;
+            m_ringAngle += 180.0f * m_engine->getFrameTime() / m_ringRotatePeriod;
+            m_ringVerticalAngle += 180.0f * m_engine->getFrameTime() / m_ringRotatePeriod;
             if(m_ringTime >= m_ringRotatePeriod)
             {
                 m_currentState = InventoryState::Disabled;
                 m_nextState = InventoryState::Disabled;
                 m_ringVerticalAngle = 180.0f;
                 m_ringTime = util::Duration(0);
-                mLabel_Title.show = false;
+                m_labelTitle.show = false;
                 m_ringRadius = m_baseRingRadius;
                 m_currentItemsType = MenuItemType::Supply;
             }
@@ -421,13 +402,13 @@ void InventoryManager::frame()
 
 void InventoryManager::render()
 {
-    if(m_currentState == InventoryState::Disabled || m_inventory.empty() || gui::FontManager::instance == nullptr)
+    if(m_currentState == InventoryState::Disabled || m_inventory.empty())
         return;
 
     int num = 0;
     for(const auto& i : m_inventory)
     {
-        auto bi = engine::Engine::instance.m_world.getBaseItemByID(i.first);
+        auto bi = m_engine->m_world.getBaseItemByID(i.first);
         if(!bi || bi->type != m_currentItemsType)
         {
             continue;
@@ -446,11 +427,11 @@ void InventoryManager::render()
         {
             if(bi->name[0])
             {
-                mLabel_ItemName.text = bi->name;
+                m_labelItemName.text = bi->name;
 
                 if(i.second.count > 1)
                 {
-                    mLabel_ItemName.text = (boost::format(engine_lua.getString(STR_GEN_MASK_INVHEADER)) % bi->name % i.second.count).str();
+                    m_labelItemName.text = (boost::format(m_engine->engine_lua.getString(STR_GEN_MASK_INVHEADER)) % bi->name % i.second.count).str();
                 }
             }
             matrix = glm::rotate(matrix, glm::radians(90.0f + m_itemAngle - ang), { 0,0,1 });
@@ -463,7 +444,7 @@ void InventoryManager::render()
         }
         matrix = glm::translate(matrix, -0.5f * bi->bf->getBoundingBox().getCenter());
         matrix = glm::scale(matrix, { 0.7f, 0.7f, 0.7f });
-        render::renderItem(*bi->bf, 0.0f, matrix, gui::Gui::instance->guiProjectionMatrix);
+        render::renderItem(*bi->bf, 0.0f, matrix, m_engine->m_gui.m_guiProjectionMatrix);
 
         num++;
     }
@@ -473,7 +454,7 @@ void InventoryManager::print() const
 {
     for(const auto& i : m_inventory)
     {
-        gui::Console::instance().printf("item[id = %d]: count = %d", i.first, i.second.count);
+        m_engine->m_gui.getConsole().printf("item[id = %d]: count = %d", i.first, i.second.count);
     }
 }
 

@@ -11,7 +11,8 @@
 
 namespace audio
 {
-Source::Source()
+Source::Source(audio::Engine* engine)
+    : m_audioEngine(engine)
 {
     alGenSources(1, &m_sourceIndex);
 
@@ -21,7 +22,7 @@ Source::Source()
     alSourcef(m_sourceIndex, AL_MIN_GAIN, 0.0);
     alSourcef(m_sourceIndex, AL_MAX_GAIN, 1.0);
 
-    if(engine::Engine::instance.m_world.m_audioEngine.getSettings().use_effects)
+    if(m_audioEngine->getSettings().use_effects)
     {
         alSourcef(m_sourceIndex, AL_ROOM_ROLLOFF_FACTOR, 1.0);
         alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO, AL_TRUE);
@@ -70,7 +71,7 @@ bool Source::isPlaying() const
     return state == AL_PLAYING || state == AL_PAUSED;
 }
 
-void Source::play(FxManager& manager)
+void Source::play(FxManager& manager, const world::World& world)
 {
     if(!alIsSource(m_sourceIndex))
         return;
@@ -81,7 +82,7 @@ void Source::play(FxManager& manager)
         alSource3f(m_sourceIndex, AL_POSITION, 0.0f, 0.0f, 0.0f);
         alSource3f(m_sourceIndex, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
 
-        if(engine::Engine::instance.m_world.m_audioEngine.getSettings().use_effects)
+        if(m_audioEngine->getSettings().use_effects)
         {
             unsetFX();
         }
@@ -89,9 +90,9 @@ void Source::play(FxManager& manager)
     else
     {
         alSourcei(m_sourceIndex, AL_SOURCE_RELATIVE, AL_FALSE);
-        linkEmitter();
+        linkEmitter(world);
 
-        if(engine::Engine::instance.m_world.m_audioEngine.getSettings().use_effects)
+        if(m_audioEngine->getSettings().use_effects)
         {
             setFX(manager);
             setUnderwater(manager);
@@ -118,7 +119,7 @@ void Source::stop()
     alSourceStop(m_sourceIndex);
 }
 
-void Source::update(const FxManager& manager)
+void Source::update(const FxManager& manager, const world::World& world)
 {
     // Bypass any non-active source.
     if(!m_active)
@@ -143,11 +144,11 @@ void Source::update(const FxManager& manager)
     // Check if source is in listener's range, and if so, update position,
     // else stop and disable it.
 
-    if(engine::Engine::instance.m_world.m_audioEngine.isInRange(m_emitterType, m_emitterId, range, gain))
+    if(m_audioEngine->isInRange(m_emitterType, m_emitterId, range, gain))
     {
-        linkEmitter();
+        linkEmitter(world);
 
-        if(engine::Engine::instance.m_world.m_audioEngine.getSettings().use_effects && m_underwater != manager.isUnderwater())
+        if(m_audioEngine->getSettings().use_effects && m_underwater != manager.isUnderwater())
         {
             setUnderwater(manager);
         }
@@ -165,7 +166,7 @@ void Source::update(const FxManager& manager)
 
 void Source::setBuffer(ALint buffer)
 {
-    ALuint buffer_index = engine::Engine::instance.m_world.m_audioEngine.getBuffer(buffer);
+    ALuint buffer_index = m_audioEngine->getBuffer(buffer);
 
     if(!alIsSource(m_sourceIndex) || !alIsBuffer(buffer_index))
         return;
@@ -196,7 +197,7 @@ void Source::setLooping(ALboolean is_looping)
 
 void Source::setGain(ALfloat gain_value)
 {
-    alSourcef(m_sourceIndex, AL_GAIN, glm::clamp(gain_value, 0.0f, 1.0f) * engine::Engine::instance.m_world.m_audioEngine.getSettings().sound_volume);
+    alSourcef(m_sourceIndex, AL_GAIN, glm::clamp(gain_value, 0.0f, 1.0f) * m_audioEngine->getSettings().sound_volume);
 }
 
 void Source::setPitch(ALfloat pitch_value)
@@ -262,7 +263,7 @@ void Source::setUnderwater(const FxManager& fxManager)
     }
 }
 
-void Source::linkEmitter()
+void Source::linkEmitter(const world::World& world)
 {
     BOOST_ASSERT(m_emitterId.is_initialized());
 
@@ -276,7 +277,7 @@ void Source::linkEmitter()
             break;
 
         case EmitterType::Entity:
-            if(std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(*m_emitterId))
+            if(std::shared_ptr<world::Entity> ent = world.getEntityByID(*m_emitterId))
             {
                 setPosition(glm::value_ptr(ent->m_transform[3]));
                 setVelocity(glm::value_ptr(ent->m_speed));
@@ -284,7 +285,7 @@ void Source::linkEmitter()
             break;
 
         case EmitterType::SoundSource:
-            setPosition(glm::value_ptr(engine::Engine::instance.m_world.m_audioEngine.getEmitter(*m_emitterId).position));
+            setPosition(glm::value_ptr(m_audioEngine->getEmitter(*m_emitterId).position));
             break;
     }
 }

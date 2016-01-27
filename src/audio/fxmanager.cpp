@@ -58,8 +58,17 @@ bool FxManager::loadReverb(loader::ReverbType effect_index, const EFXEAXREVERBPR
     }
 }
 
-FxManager::FxManager(bool)
+FxManager::FxManager(engine::Engine* engine)
+    : m_engine(engine)
 {
+    BOOST_LOG_TRIVIAL(info) << "Initializing FxManager";
+}
+
+FxManager::FxManager(engine::Engine* engine, bool)
+    : m_engine(engine)
+{
+    BOOST_LOG_TRIVIAL(info) << "Initializing FxManager";
+
     m_effects.fill(0);
     m_slots.fill(0);
     alGenAuxiliaryEffectSlots(MaxSlots, m_slots.data());
@@ -107,7 +116,7 @@ void FxManager::updateListener(world::Camera& cam)
 
     alListenerfv(AL_POSITION, glm::value_ptr(cam.getPosition()));
 
-    glm::vec3 v2 = cam.getMovement() / engine::Engine::instance.getFrameTimeSecs();
+    glm::vec3 v2 = cam.getMovement() / m_engine->getFrameTimeSecs();
     alListenerfv(AL_VELOCITY, glm::value_ptr(v2));
     cam.resetMovement();
 
@@ -129,11 +138,11 @@ void FxManager::updateListener(world::Camera& cam)
 
         if(m_underwater)
         {
-            engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundUnderwater);
+            m_engine->m_world.m_audioEngine.send(audio::SoundUnderwater);
         }
         else
         {
-            engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundUnderwater);
+            m_engine->m_world.m_audioEngine.kill(audio::SoundUnderwater);
         }
     }
 }

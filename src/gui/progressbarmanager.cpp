@@ -7,10 +7,13 @@
 
 namespace gui
 {
-ProgressbarManager::ProgressbarManager()
+ProgressbarManager::ProgressbarManager(engine::Engine* engine)
+    : m_engine(engine)
 {
+    BOOST_LOG_TRIVIAL(info) << "Initializing ProgressbarManager";
+
     {
-        ProgressBar& bar = m_progressBars[BarType::Health];
+        ProgressBar& bar = getProgressBar(BarType::Health);
 
         bar.setSize(250, 15, 3);
         bar.setPosition(HorizontalAnchor::Left, 30, VerticalAnchor::Top, 30);
@@ -28,7 +31,7 @@ ProgressbarManager::ProgressbarManager()
         bar.setAutoshow(true, util::MilliSeconds(2000), true, util::MilliSeconds(400));
     }
     {
-        ProgressBar& bar = m_progressBars[BarType::Air];
+        ProgressBar& bar = getProgressBar(BarType::Air);
         bar.m_invert = true;
 
         bar.setSize(250, 15, 3);
@@ -45,7 +48,7 @@ ProgressbarManager::ProgressbarManager()
         bar.setAutoshow(true, util::MilliSeconds(2000), true, util::MilliSeconds(400));
     }
     {
-        ProgressBar& bar = m_progressBars[BarType::Stamina];
+        ProgressBar& bar = getProgressBar(BarType::Stamina);
 
         bar.setSize(250, 15, 3);
         bar.setPosition(HorizontalAnchor::Left, 30, VerticalAnchor::Top, 55);
@@ -60,7 +63,7 @@ ProgressbarManager::ProgressbarManager()
         bar.setAutoshow(true, util::MilliSeconds(500), true, util::MilliSeconds(300));
     }
     {
-        ProgressBar& bar = m_progressBars[BarType::Warmth];
+        ProgressBar& bar = getProgressBar(BarType::Warmth);
         bar.m_invert = true;
 
         bar.setSize(250, 15, 3);
@@ -77,7 +80,7 @@ ProgressbarManager::ProgressbarManager()
         bar.setAutoshow(true, util::MilliSeconds(500), true, util::MilliSeconds(300));
     }
     {
-        ProgressBar& bar = m_progressBars[BarType::Loading];
+        ProgressBar& bar = getProgressBar(BarType::Loading);
         bar.m_visible = true;
 
         bar.setSize(800, 25, 3);
@@ -94,26 +97,26 @@ ProgressbarManager::ProgressbarManager()
     }
 }
 
-void ProgressbarManager::draw()
+void ProgressbarManager::draw(const world::World& world)
 {
-    if(!engine::Engine::instance.m_world.m_character)
+    if(!world.m_character)
         return;
 
-    if(engine::Engine::instance.m_world.m_character->getCurrentWeaponState() > world::WeaponState::HideToReady)
-        m_progressBars[BarType::Health].m_forced = true;
+    if(world.m_character->getCurrentWeaponState() > world::WeaponState::HideToReady)
+        getProgressBar(BarType::Health).m_forced = true;
 
-    if(engine::Engine::instance.m_world.m_character->getParam(world::CharParameterId::PARAM_POISON) > 0.0)
-        m_progressBars[BarType::Health].m_alternate = true;
+    if(world.m_character->getParam(world::CharParameterId::PARAM_POISON) > 0.0)
+        getProgressBar(BarType::Health).m_alternate = true;
 
-    m_progressBars[BarType::Air].show(engine::Engine::instance.m_world.m_character->getParam(world::CharParameterId::PARAM_AIR));
-    m_progressBars[BarType::Stamina].show(engine::Engine::instance.m_world.m_character->getParam(world::CharParameterId::PARAM_STAMINA));
-    m_progressBars[BarType::Health].show(engine::Engine::instance.m_world.m_character->getParam(world::CharParameterId::PARAM_HEALTH));
-    m_progressBars[BarType::Warmth].show(engine::Engine::instance.m_world.m_character->getParam(world::CharParameterId::PARAM_WARMTH));
+    getProgressBar(BarType::Air).show(world.m_character->getParam(world::CharParameterId::PARAM_AIR));
+    getProgressBar(BarType::Stamina).show(world.m_character->getParam(world::CharParameterId::PARAM_STAMINA));
+    getProgressBar(BarType::Health).show(world.m_character->getParam(world::CharParameterId::PARAM_HEALTH));
+    getProgressBar(BarType::Warmth).show(world.m_character->getParam(world::CharParameterId::PARAM_WARMTH));
 }
 
 void ProgressbarManager::showLoading(int value)
 {
-    m_progressBars[BarType::Loading].show(value);
+    getProgressBar(BarType::Loading).show(value);
 }
 
 void ProgressbarManager::resize()

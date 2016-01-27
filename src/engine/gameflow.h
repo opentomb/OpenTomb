@@ -6,6 +6,8 @@
 
 namespace engine
 {
+class Engine;
+
 enum class Opcode
 {
     Picture,         // Unknown possibly TR1?
@@ -48,6 +50,8 @@ struct GameflowAction
 class Gameflow
 {
 public:
+    explicit Gameflow(Engine* engine);
+
     void init();
     void execute();
     void send(Opcode opcode, int operand = -1);
@@ -103,9 +107,9 @@ public:
         m_secretsTriggerMap[secret] = status;
     }
 
-    static Gameflow instance;
-
 private:
+    Engine* m_engine;
+
     std::string       m_currentLevelPath;       //Level path from script example: DATA/TR1/DATA/LEVEL1.PHD
     std::string       m_currentLevelName;       //Level name from script example: Caves
     uint8_t           m_currentGameID = 0;

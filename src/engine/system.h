@@ -32,8 +32,4 @@ struct ScreenInfo
     bool        vsync;
 };
 
-extern ScreenInfo screen_info;
-extern SystemSettings system_settings;
-
-void Sys_InitGlobals();
 } // namespace engine

@@ -22,6 +22,7 @@ class Character;
 class SkeletalModel;
 class Entity;
 struct RagdollSetup;
+class World;
 enum class CollisionShape;
 enum class CollisionType;
 
@@ -277,11 +278,15 @@ enum class AnimationMode
 
 using BoneId = uint32_t;
 
+class Skeleton;
+
 /**
  * @brief A single bone in a @c Skeleton
  */
 struct Bone
 {
+    Skeleton* m_skeleton;
+
     Bone* parent;
     BoneId index;
     std::shared_ptr<core::BaseMesh> mesh; //!< The mesh this bone deforms
@@ -300,11 +305,19 @@ struct Bone
     std::shared_ptr<btCollisionShape> shape;
     std::vector<btCollisionObject*> last_collisions;
 
+    explicit Bone(Skeleton* skeleton)
+        : m_skeleton(skeleton)
+    {
+    }
+
     ~Bone();
 };
 
 class Skeleton
 {
+private:
+    World* m_world;
+
     std::vector<Bone> m_bones{};
     glm::vec3 m_position = { 0, 0, 0 };
     core::BoundingBox m_boundingBox{};
@@ -325,6 +338,16 @@ class Skeleton
     util::Duration m_animationTime = util::Duration::zero();
 
 public:
+    explicit Skeleton(World* world)
+        : m_world(world)
+    {
+    }
+
+    World* getWorld() const
+    {
+        return m_world;
+    }
+
     void(*onFrame)(Character& ent, AnimUpdate state) = nullptr;
 
     const Animation& getCurrentAnimationFrame() const;

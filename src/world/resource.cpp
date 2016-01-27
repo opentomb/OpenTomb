@@ -5,25 +5,20 @@
 
 #include "animation/animids.h"
 #include "bordered_texture_atlas.h"
-#include "engine/bullet.h"
 #include "engine/engine.h"
 #include "engine/gameflow.h"
 #include "gui/console.h"
 #include "gui/gui.h"
 #include "render/render.h"
-#include "render/shader_description.h"
 #include "script/script.h"
-#include "strings.h"
 #include "util/helpers.h"
 #include "util/vmath.h"
 #include "world/animation/animcommands.h"
 #include "world/character.h"
 #include "world/core/basemesh.h"
-#include "world/core/orientedboundingbox.h"
 #include "world/core/polygon.h"
 #include "world/core/sprite.h"
 #include "world/entity.h"
-#include "world/portal.h"
 #include "world/room.h"
 #include "world/skeletalmodel.h"
 #include "world/staticmesh.h"
@@ -34,11 +29,7 @@
 #include <cstdio>
 #include <numeric>
 
-#include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
-
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
@@ -52,11 +43,11 @@ namespace world
 {
 void Res_SetEntityProperties(std::shared_ptr<Entity> ent)
 {
-    if(ent->m_skeleton.getModel() == nullptr || !engine_lua["getEntityModelProperties"].is<lua::Callable>())
+    if(ent->m_skeleton.getModel() == nullptr || !ent->getWorld()->m_engine->engine_lua["getEntityModelProperties"].is<lua::Callable>())
         return;
 
     int collisionType, collisionShape, flg;
-    lua::tie(collisionType, collisionShape, ent->m_visible, flg) = engine_lua.call("getEntityModelProperties", static_cast<int>(engine::Engine::instance.m_world.m_engineVersion), ent->m_skeleton.getModel()->getId());
+    lua::tie(collisionType, collisionShape, ent->m_visible, flg) = ent->getWorld()->m_engine->engine_lua.call("getEntityModelProperties", static_cast<int>(ent->getWorld()->m_engineVersion), ent->m_skeleton.getModel()->getId());
     ent->setCollisionType(static_cast<CollisionType>(collisionType));
     ent->setCollisionShape(static_cast<CollisionShape>(collisionShape));
 
@@ -69,9 +60,9 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
     if(!ent->m_skeleton.getModel())
         return;
 
-    auto funcName = engine_lua.call("getEntityFunction", static_cast<int>(engine::Engine::instance.m_world.m_engineVersion), ent->m_skeleton.getModel()->getId()).toString();
+    auto funcName = ent->getWorld()->m_engine->engine_lua.call("getEntityFunction", static_cast<int>(ent->getWorld()->m_engineVersion), ent->m_skeleton.getModel()->getId()).toString();
     if(!funcName.empty())
-        Res_CreateEntityFunc(engine_lua, funcName, ent->getId());
+        Res_CreateEntityFunc(ent->getWorld()->m_engine->engine_lua, funcName, ent->getId());
 }
 
 void Res_CreateEntityFunc(script::ScriptEngine& state, const std::string& func_name, ObjectId entity_id)
@@ -94,7 +85,7 @@ void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
 {
     int _collision_type, _collision_shape;
     bool _hide;
-    lua::tie(_collision_type, _collision_shape, _hide) = engine_lua.call("getStaticMeshProperties", r_static->getId());
+    lua::tie(_collision_type, _collision_shape, _hide) = r_static->getWorld()->m_engine->engine_lua.call("getStaticMeshProperties", r_static->getId());
 
     if(_collision_type <= 0)
         return;
@@ -118,7 +109,7 @@ void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
  *  |-------------------> OX       |--------------------> OXY
  */
 
-bool Res_Sector_IsWall(const RoomSector* ws, const RoomSector* ns)
+bool Res_Sector_IsWall(World& world, const RoomSector* ws, const RoomSector* ns)
 {
     BOOST_ASSERT(ws != nullptr);
     BOOST_ASSERT(ns != nullptr);
@@ -130,8 +121,8 @@ bool Res_Sector_IsWall(const RoomSector* ws, const RoomSector* ns)
 
     if(!ns->portal_to_room && ns->floor_penetration_config != PenetrationConfig::Wall && ws->portal_to_room)
     {
-        ws = ws->checkPortalPointer();
-        if(ws->floor_penetration_config == PenetrationConfig::Wall || !ns->is2SidePortals(ws))
+        ws = ws->checkPortalPointer(world);
+        if(ws->floor_penetration_config == PenetrationConfig::Wall || !ns->is2SidePortals(world, ws))
         {
             return true;
         }
@@ -142,18 +133,18 @@ bool Res_Sector_IsWall(const RoomSector* ws, const RoomSector* ns)
 
 // Check if entity index was already processed (needed to remove dublicated activation calls).
 // If entity is not processed, add its index into lookup table.
-bool Res_IsEntityProcessed(std::set<ObjectId>& lookup_table, ObjectId entity_index)
+bool Res_IsEntityProcessed(World& world, std::set<ObjectId>& lookup_table, ObjectId entity_index)
 {
     // Fool-proof check for entity existence. Fixes LOTS of stray non-existent
     // entity #256 occurences in original games (primarily TR4-5).
 
-    if(!engine::Engine::instance.m_world.getEntityByID(entity_index))
+    if(!world.getEntityByID(entity_index))
         return true;
 
     return !lookup_table.insert(entity_index).second;
 }
 
-int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& floorData, loader::Engine engine)
+int TR_Sector_TranslateFloorData(World& world, RoomSector& sector, const loader::FloorData& floorData, loader::Engine engine)
 {
     if(sector.trig_index <= 0 || sector.trig_index >= floorData.size())
     {
@@ -192,7 +183,7 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& fl
             case TR_FD_FUNC_PORTALSECTOR:          // PORTAL DATA
                 if(sub_function == 0x00)
                 {
-                    if(*entry < engine::Engine::instance.m_world.m_rooms.size())
+                    if(*entry < world.m_rooms.size())
                     {
                         sector.portal_to_room = *entry;
                         sector.floor_penetration_config = PenetrationConfig::Ghost;
@@ -308,7 +299,7 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& fl
 
                 // Table cell header.
 
-                snprintf(buf, 256, "trigger_list[%d] = {activator_type = %d, func = function(entity_index) \n",
+                snprintf(buf, 256, "trigger_list[%u] = {activator_type = %d, func = function(entity_index) \n",
                          sector.trig_index, activator_type);
 
                 script += buf;
@@ -384,7 +375,9 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& fl
                         break;
                     case TR_FD_TRIGTYPE_CRAWLDUCK:
                         // Check state range for triggering entity.
-                        snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", animation::TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, animation::TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
+                        snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %u) and (state <= %u)) then \n",
+                                 animation::TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN,
+                                 animation::TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
                         condition = true;  // Set additional condition.
                         break;
                 }
@@ -421,7 +414,8 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& fl
                                         if(action_type == ActionType::Switch)
                                         {
                                             // Switch action type case.
-                                            snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", operands, operands, operands);
+                                            snprintf(buf, 256, " local switch_state = getEntityState(%u); \n local switch_sectorstatus = getEntitySectorStatus(%u); \n local switch_mask = getEntityMask(%u); \n\n",
+                                                     operands, operands, operands);
                                         }
                                         else
                                         {
@@ -436,33 +430,34 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& fl
                                         if(action_type == ActionType::Switch)
                                         {
                                             // Switch action type case.
-                                            snprintf(buf, 256, " if((switch_state == 0) and switch_sectorstatus) then \n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, %d); \n", operands, operands, timer_field);
-                                            if(engine::Engine::instance.m_world.m_engineVersion >= loader::Engine::TR3 && only_once)
+                                            snprintf(buf, 256, " if((switch_state == 0) and switch_sectorstatus) then \n   setEntitySectorStatus(%u, false); \n   setEntityTimer(%u, %d); \n",
+                                                     operands, operands, timer_field);
+                                            if(world.m_engineVersion >= loader::Engine::TR3 && only_once)
                                             {
                                                 // Just lock out activator, no anti-action needed.
-                                                snprintf(buf2, 128, " setEntityLock(%d, true) \n", operands);
+                                                snprintf(buf2, 128, " setEntityLock(%u, true) \n", operands);
                                             }
                                             else
                                             {
                                                 // Create statement for antitriggering a switch.
-                                                snprintf(buf2, 256, " elseif((switch_state == 1) and switch_sectorstatus) then\n   setEntitySectorStatus(%d, false); \n   setEntityTimer(%d, 0); \n", operands, operands);
+                                                snprintf(buf2, 256, " elseif((switch_state == 1) and switch_sectorstatus) then\n   setEntitySectorStatus(%u, false); \n   setEntityTimer(%u, 0); \n", operands, operands);
                                             }
                                         }
                                         else
                                         {
                                             // Ordinary type case (e.g. heavy switch).
-                                            snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, %d); \n", operands, mask_mode, only_once ? "true" : "false", timer_field);
+                                            snprintf(buf, 128, "   activateEntity(%u, entity_index, switch_mask, %d, %s, %d); \n", operands, mask_mode, only_once ? "true" : "false", timer_field);
                                             item_events += buf;
                                             snprintf(buf, 128, " if(not switch_sectorstatus) then \n   setEntitySectorStatus(entity_index, true) \n");
                                         }
                                         break;
 
                                     case ActivatorType::Key:
-                                        snprintf(buf, 256, " if((getEntityLock(%d)) and (not getEntitySectorStatus(%d))) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
+                                        snprintf(buf, 256, " if((getEntityLock(%u)) and (not getEntitySectorStatus(%u))) then \n   setEntitySectorStatus(%u, true); \n", operands, operands, operands);
                                         break;
 
                                     case ActivatorType::Pickup:
-                                        snprintf(buf, 256, " if((not getEntityEnability(%d)) and (not getEntitySectorStatus(%d))) then \n   setEntitySectorStatus(%d, true); \n", operands, operands, operands);
+                                        snprintf(buf, 256, " if((not getEntityEnability(%u)) and (not getEntitySectorStatus(%u))) then \n   setEntitySectorStatus(%u, true); \n", operands, operands, operands);
                                         break;
                                 }
 
@@ -474,7 +469,7 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& fl
                                 // This results in setting same activation mask twice, effectively blocking entity from activation.
                                 // To prevent this, a lookup table was implemented to know if entity already had its activation
                                 // command added.
-                                if(!Res_IsEntityProcessed(ent_lookup_table, operands))
+                                if(!Res_IsEntityProcessed(world, ent_lookup_table, operands))
                                 {
                                     // Other item operands are simply parsed as activation functions. Switch case is special, because
                                     // function is fed with activation mask argument derived from activator mask filter (switch_mask),
@@ -482,16 +477,16 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& fl
                                     // field. This is needed for two-way switch combinations (e.g. Palace Midas).
                                     if(activator == ActivatorType::Switch)
                                     {
-                                        snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, %d); \n", operands, mask_mode, only_once ? "true" : "false", timer_field);
+                                        snprintf(buf, 128, "   activateEntity(%u, entity_index, switch_mask, %d, %s, %d); \n", operands, mask_mode, only_once ? "true" : "false", timer_field);
                                         item_events += buf;
-                                        snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %s, 0); \n", operands, mask_mode, only_once ? "true" : "false");
+                                        snprintf(buf, 128, "   activateEntity(%u, entity_index, switch_mask, %d, %s, 0); \n", operands, mask_mode, only_once ? "true" : "false");
                                         anti_events += buf;
                                     }
                                     else
                                     {
-                                        snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %s, %d); \n", operands, trigger_mask, mask_mode, only_once ? "true" : "false", timer_field);
+                                        snprintf(buf, 128, "   activateEntity(%u, entity_index, 0x%02X, %d, %s, %d); \n", operands, trigger_mask, mask_mode, only_once ? "true" : "false", timer_field);
                                         item_events += buf;
-                                        snprintf(buf, 128, "   deactivateEntity(%d, entity_index, %s); \n", operands, only_once ? "true" : "false");
+                                        snprintf(buf, 128, "   deactivateEntity(%u, entity_index, %s); \n", operands, only_once ? "true" : "false");
                                         anti_events += buf;
                                     }
                                 }
@@ -505,18 +500,18 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& fl
                             entry++;
                             uint8_t cam_timer = *entry & 0x00FF;
                             uint8_t cam_once = (*entry & 0x0100) >> 8;
-                            uint8_t cam_zoom = engine::Engine::instance.m_world.m_engineVersion < loader::Engine::TR2
+                            uint8_t cam_zoom = world.m_engineVersion < loader::Engine::TR2
                                 ? (*entry & 0x0400) >> 10
                                 : (*entry & 0x1000) >> 12;
                             cont_bit = (*entry & 0x8000) >> 15;                       // 0b10000000 00000000
 
-                            snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", cam_index, cam_timer, cam_once, cam_zoom);
+                            snprintf(buf, 128, "   setCamera(%u, %u, %u, %u); \n", cam_index, cam_timer, cam_once, cam_zoom);
                             single_events += buf;
                         }
                         break;
 
                         case TR_FD_TRIGFUNC_UWCURRENT:
-                            snprintf(buf, 128, "   moveToSink(entity_index, %d); \n", operands);
+                            snprintf(buf, 128, "   moveToSink(entity_index, %u); \n", operands);
                             cont_events += buf;
                             break;
 
@@ -525,12 +520,12 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& fl
                             // anti-events array.
                             if(activator == ActivatorType::Switch)
                             {
-                                snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, true); \n", operands, operands);
+                                snprintf(buf, 128, "   setFlipMap(%u, switch_mask, 1); \n   setFlipState(%u, true); \n", operands, operands);
                                 single_events += buf;
                             }
                             else
                             {
-                                snprintf(buf, 128, "   setFlipMap(%d, 0x%02X, 0); \n   setFlipState(%d, true); \n", operands, trigger_mask, operands);
+                                snprintf(buf, 128, "   setFlipMap(%u, 0x%02X, 0); \n   setFlipState(%u, true); \n", operands, trigger_mask, operands);
                                 single_events += buf;
                             }
                             break;
@@ -538,49 +533,49 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& fl
                         case TR_FD_TRIGFUNC_FLIPON:
                             // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
                             // the switch with FLIP_ON trigger, room will remain flipped.
-                            snprintf(buf, 128, "   setFlipState(%d, true); \n", operands);
+                            snprintf(buf, 128, "   setFlipState(%u, true); \n", operands);
                             single_events += buf;
                             break;
 
                         case TR_FD_TRIGFUNC_FLIPOFF:
                             // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
                             // the switch with FLIP_OFF trigger, room will remain unflipped.
-                            snprintf(buf, 128, "   setFlipState(%d, false); \n", operands);
+                            snprintf(buf, 128, "   setFlipState(%u, false); \n", operands);
                             single_events += buf;
                             break;
 
                         case TR_FD_TRIGFUNC_LOOKAT:
-                            snprintf(buf, 128, "   setCamTarget(%d, %d); \n", operands, timer_field);
+                            snprintf(buf, 128, "   setCamTarget(%u, %d); \n", operands, timer_field);
                             single_events += buf;
                             break;
 
                         case TR_FD_TRIGFUNC_ENDLEVEL:
-                            snprintf(buf, 128, "   setLevel(%d); \n", operands);
+                            snprintf(buf, 128, "   setLevel(%u); \n", operands);
                             single_events += buf;
                             break;
 
                         case TR_FD_TRIGFUNC_PLAYTRACK:
                             // Override for looped BGM tracks in TR1: if there are any sectors
                             // triggering looped tracks, ignore it, as BGM is always set in script.
-                            if(engine::Engine::instance.m_world.m_engineVersion < loader::Engine::TR2)
+                            if(world.m_engineVersion < loader::Engine::TR2)
                             {
                                 audio::StreamType looped;
-                                engine_lua.getSoundtrack(operands, nullptr, nullptr, &looped);
+                                world.m_engine->engine_lua.getSoundtrack(operands, nullptr, nullptr, &looped);
                                 if(looped == audio::StreamType::Background)
                                     break;
                             }
 
-                            snprintf(buf, 128, "   playStream(%d, 0x%02X); \n", operands, (trigger_mask << 1) + only_once);
+                            snprintf(buf, 128, "   playStream(%u, 0x%02X); \n", operands, (trigger_mask << 1) + only_once);
                             single_events += buf;
                             break;
 
                         case TR_FD_TRIGFUNC_FLIPEFFECT:
-                            snprintf(buf, 128, "   doEffect(%d, entity_index, %d); \n", operands, timer_field);
+                            snprintf(buf, 128, "   doEffect(%u, entity_index, %d); \n", operands, timer_field);
                             cont_events += buf;
                             break;
 
                         case TR_FD_TRIGFUNC_SECRET:
-                            snprintf(buf, 128, "   findSecret(%d); \n", operands);
+                            snprintf(buf, 128, "   findSecret(%u); \n", operands);
                             single_events += buf;
                             break;
 
@@ -595,13 +590,13 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& fl
                             uint8_t flyby_once = (*entry & 0x0100) >> 8;
                             cont_bit = (*entry & 0x8000) >> 15;
 
-                            snprintf(buf, 128, "   playFlyby(%d, %d); \n", operands, flyby_once);
+                            snprintf(buf, 128, "   playFlyby(%u, %u); \n", operands, flyby_once);
                             cont_events += buf;
                         }
                         break;
 
                         case TR_FD_TRIGFUNC_CUTSCENE:
-                            snprintf(buf, 128, "   playCutscene(%d); \n", operands);
+                            snprintf(buf, 128, "   playCutscene(%u); \n", operands);
                             single_events += buf;
                             break;
 
@@ -683,7 +678,7 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& fl
                         if(action_type == ActionType::Switch && activator == ActivatorType::Switch)
                         {
                             script += buf2;
-                            if(engine::Engine::instance.m_world.m_engineVersion < loader::Engine::TR3 || !only_once)
+                            if(world.m_engineVersion < loader::Engine::TR3 || !only_once)
                             {
                                 script += single_events;
                                 script += anti_events;    // Single/continous events are engaged along with
@@ -699,7 +694,7 @@ int TR_Sector_TranslateFloorData(RoomSector& sector, const loader::FloorData& fl
                 if(action_type != ActionType::Bypass)
                 {
                     // Sys_DebugLog("triggers.lua", script);    // Debug!
-                    engine_lua.doString(script);
+                    world.m_engine->engine_lua.doString(script);
                 }
             }
             break;
@@ -903,9 +898,9 @@ void Res_Sector_FixHeights(RoomSector& sector)
     }
 }
 
-void GenerateAnimCommands(SkeletalModel& model)
+void GenerateAnimCommands(World& world, SkeletalModel& model)
 {
-    if(engine::Engine::instance.m_world.m_animCommands.empty())
+    if(world.m_animCommands.empty())
     {
         return;
     }
@@ -921,8 +916,8 @@ void GenerateAnimCommands(SkeletalModel& model)
         if(af->animationCommandCount == 0)
             continue;
 
-        BOOST_ASSERT(af->animationCommand < engine::Engine::instance.m_world.m_animCommands.size());
-        int16_t *pointer = &engine::Engine::instance.m_world.m_animCommands[af->animationCommand];
+        BOOST_ASSERT(af->animationCommand < world.m_animCommands.size());
+        int16_t *pointer = &world.m_animCommands[af->animationCommand];
 
         for(size_t i = 0; i < af->animationCommandCount; i++)
         {
@@ -980,89 +975,15 @@ void GenerateAnimCommands(SkeletalModel& model)
     }
 }
 
-RoomSector* TR_GetRoomSector(uint32_t room_id, int sx, int sy)
+void Res_AutoexecOpen(World& world, loader::Game engine_version)
 {
-    if(room_id >= engine::Engine::instance.m_world.m_rooms.size())
-    {
-        return nullptr;
-    }
-
-    auto room = engine::Engine::instance.m_world.m_rooms[room_id];
-    return room->getSector(sx, sy);
-}
-
-void lua_SetSectorFloorConfig(int id, int sx, int sy, lua::Value pen, lua::Value diag, lua::Value floor, float z0, float z1, float z2, float z3)
-{
-    RoomSector* rs = TR_GetRoomSector(id, sx, sy);
-    if(rs == nullptr)
-    {
-        Console::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
-        return;
-    }
-
-    if(pen.is<lua::Integer>())   rs->floor_penetration_config = static_cast<PenetrationConfig>(pen.toInt());
-    if(diag.is<lua::Integer>())  rs->floor_diagonal_type = static_cast<DiagonalType>(diag.toInt());
-    if(floor.is<int32_t>())      rs->floor = floor.to<int32_t>();
-    rs->floor_corners[0] = { z0,z1,z2 };
-    rs->floor_corners[0][3] = z3;
-}
-
-void lua_SetSectorCeilingConfig(int id, int sx, int sy, lua::Value pen, lua::Value diag, lua::Value ceil, float z0, float z1, float z2, float z3)
-{
-    RoomSector* rs = TR_GetRoomSector(id, sx, sy);
-    if(rs == nullptr)
-    {
-        Console::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
-        return;
-    }
-
-    if(pen.is<lua::Integer>())  rs->ceiling_penetration_config = static_cast<PenetrationConfig>(pen.toInt());
-    if(diag.is<lua::Integer>()) rs->ceiling_diagonal_type = static_cast<DiagonalType>(diag.toInt());
-    if(ceil.is<int32_t>())      rs->ceiling = ceil.to<int32_t>();
-
-    rs->ceiling_corners[0] = { z0,z1,z2 };
-    rs->ceiling_corners[0][3] = z3;
-}
-
-void lua_SetSectorPortal(int id, int sx, int sy, uint32_t p)
-{
-    RoomSector* rs = TR_GetRoomSector(id, sx, sy);
-    if(rs == nullptr)
-    {
-        Console::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
-        return;
-    }
-
-    if(p < engine::Engine::instance.m_world.m_rooms.size())
-    {
-        rs->portal_to_room = p;
-    }
-}
-
-void lua_SetSectorFlags(int id, int sx, int sy, lua::Value fpflag, lua::Value ftflag, lua::Value cpflag, lua::Value ctflag)
-{
-    RoomSector* rs = TR_GetRoomSector(id, sx, sy);
-    if(rs == nullptr)
-    {
-        Console::instance().warning(SYSWARN_WRONG_SECTOR_INFO);
-        return;
-    }
-
-    if(fpflag.is<lua::Integer>())  rs->floor_penetration_config = static_cast<PenetrationConfig>(fpflag.toInt());
-    if(ftflag.is<lua::Integer>())  rs->floor_diagonal_type = static_cast<DiagonalType>(ftflag.toInt());
-    if(cpflag.is<lua::Integer>())  rs->ceiling_penetration_config = static_cast<PenetrationConfig>(cpflag.toInt());
-    if(ctflag.is<lua::Integer>())  rs->ceiling_diagonal_type = static_cast<DiagonalType>(ctflag.toInt());
-}
-
-void Res_AutoexecOpen(loader::Game engine_version)
-{
-    std::string autoexecScript = engine::Engine::instance.getAutoexecName(engine_version, std::string());
+    std::string autoexecScript = world.m_engine->getAutoexecName(engine_version, std::string());
 
     if(boost::filesystem::is_regular_file(autoexecScript))
     {
         try
         {
-            engine_lua.doFile(autoexecScript);
+            world.m_engine->engine_lua.doFile(autoexecScript);
         }
         catch(lua::RuntimeError& error)
         {
@@ -1079,76 +1000,76 @@ void TR_GenWorld(World& world, const std::unique_ptr<loader::Level>& tr)
 {
     world.m_engineVersion = loader::gameToEngine(tr->m_gameVersion);
 
-    Res_AutoexecOpen(tr->m_gameVersion);    // Open and do preload autoexec.
-    engine_lua.call("autoexec_PreLoad");
-    gui::Gui::instance->drawLoadScreen(150);
+    Res_AutoexecOpen(world, tr->m_gameVersion);    // Open and do preload autoexec.
+    world.m_engine->engine_lua.call("autoexec_PreLoad");
+    world.m_engine->m_gui.drawLoadScreen(150);
 
     Res_GenRBTrees(world);
-    gui::Gui::instance->drawLoadScreen(200);
+    world.m_engine->m_gui.drawLoadScreen(200);
 
     TR_GenTextures(world, tr);
-    gui::Gui::instance->drawLoadScreen(300);
+    world.m_engine->m_gui.drawLoadScreen(300);
 
     TR_GenAnimCommands(world, tr);
-    gui::Gui::instance->drawLoadScreen(310);
+    world.m_engine->m_gui.drawLoadScreen(310);
 
     TR_GenAnimTextures(world, tr);
-    gui::Gui::instance->drawLoadScreen(320);
+    world.m_engine->m_gui.drawLoadScreen(320);
 
     TR_GenMeshes(world, tr);
-    gui::Gui::instance->drawLoadScreen(400);
+    world.m_engine->m_gui.drawLoadScreen(400);
 
     TR_GenSprites(world, tr);
-    gui::Gui::instance->drawLoadScreen(420);
+    world.m_engine->m_gui.drawLoadScreen(420);
 
     TR_GenBoxes(world, tr);
-    gui::Gui::instance->drawLoadScreen(440);
+    world.m_engine->m_gui.drawLoadScreen(440);
 
     TR_GenCameras(world, tr);
-    gui::Gui::instance->drawLoadScreen(460);
+    world.m_engine->m_gui.drawLoadScreen(460);
 
     TR_GenRooms(world, tr);
-    gui::Gui::instance->drawLoadScreen(500);
+    world.m_engine->m_gui.drawLoadScreen(500);
 
     Res_GenRoomFlipMap(world);
-    gui::Gui::instance->drawLoadScreen(520);
+    world.m_engine->m_gui.drawLoadScreen(520);
 
     TR_GenSkeletalModels(world, tr);
-    gui::Gui::instance->drawLoadScreen(600);
+    world.m_engine->m_gui.drawLoadScreen(600);
 
     TR_GenEntities(world, tr);
-    gui::Gui::instance->drawLoadScreen(650);
+    world.m_engine->m_gui.drawLoadScreen(650);
 
     Res_GenBaseItems(world);
-    gui::Gui::instance->drawLoadScreen(680);
+    world.m_engine->m_gui.drawLoadScreen(680);
 
     Res_GenSpritesBuffer(world);        // Should be done ONLY after TR_GenEntities.
-    gui::Gui::instance->drawLoadScreen(700);
+    world.m_engine->m_gui.drawLoadScreen(700);
 
     TR_GenRoomProperties(world, tr);
-    gui::Gui::instance->drawLoadScreen(750);
+    world.m_engine->m_gui.drawLoadScreen(750);
 
     Res_GenRoomCollision(world);
-    gui::Gui::instance->drawLoadScreen(800);
+    world.m_engine->m_gui.drawLoadScreen(800);
 
     world.m_audioEngine.load(world, tr);
-    gui::Gui::instance->drawLoadScreen(850);
+    world.m_engine->m_gui.drawLoadScreen(850);
 
     world.m_skyBox = Res_GetSkybox(world);
-    gui::Gui::instance->drawLoadScreen(860);
+    world.m_engine->m_gui.drawLoadScreen(860);
 
     Res_GenEntityFunctions(world.m_entities);
-    gui::Gui::instance->drawLoadScreen(910);
+    world.m_engine->m_gui.drawLoadScreen(910);
 
     Res_GenVBOs(world);
-    gui::Gui::instance->drawLoadScreen(950);
+    world.m_engine->m_gui.drawLoadScreen(950);
 
-    engine_lua.doFile("scripts/autoexec.lua");  // Postload autoexec.
-    engine_lua.call("autoexec_PostLoad");
-    gui::Gui::instance->drawLoadScreen(960);
+    world.m_engine->engine_lua.doFile("scripts/autoexec.lua");  // Postload autoexec.
+    world.m_engine->engine_lua.call("autoexec_PostLoad");
+    world.m_engine->m_gui.drawLoadScreen(960);
 
     Res_FixRooms(world);                        // Fix initial room states
-    gui::Gui::instance->drawLoadScreen(970);
+    world.m_engine->m_gui.drawLoadScreen(970);
 }
 
 void Res_GenRBTrees(World& world)
@@ -1162,10 +1083,10 @@ void TR_GenRooms(World& world, const std::unique_ptr<loader::Level>& tr)
 {
     world.m_rooms.resize(tr->m_rooms.size());
     for(size_t i = 0; i < world.m_rooms.size(); ++i)
-        world.m_rooms[i] = std::make_shared<Room>(i);
+        world.m_rooms[i] = std::make_shared<Room>(i, &world);
     for(size_t i = 0; i < world.m_rooms.size(); i++)
     {
-        world.m_rooms[i]->load(world, tr);
+        world.m_rooms[i]->load(tr);
     }
 }
 
@@ -1181,7 +1102,7 @@ void TR_GenRoomProperties(World& world, const std::unique_ptr<loader::Level>& tr
 {
     for(size_t i = 0; i < world.m_rooms.size(); i++)
     {
-        world.m_rooms[i]->generateProperties(world, tr->m_rooms[i], tr->m_floorData, loader::gameToEngine(tr->m_gameVersion));
+        world.m_rooms[i]->generateProperties(tr->m_rooms[i], tr->m_floorData, loader::gameToEngine(tr->m_gameVersion));
     }
 }
 
@@ -1266,13 +1187,13 @@ void Res_GenSpritesBuffer(World& world)
 
 void TR_GenTextures(World& world, const std::unique_ptr<loader::Level>& tr)
 {
-    int border_size = glm::clamp(render::renderer.settings().texture_border, 0, 64);
+    int border_size = glm::clamp(world.m_engine->renderer.settings().texture_border, 0, 64);
 
     world.m_textureAtlas.reset(new BorderedTextureAtlas(border_size,
-                                                   render::renderer.settings().save_texture_memory,
-                                                   tr->m_textures,
-                                                   tr->m_objectTextures,
-                                                   tr->m_spriteTextures));
+                                                        world.m_engine->renderer.settings().save_texture_memory,
+                                                        tr->m_textures,
+                                                        tr->m_objectTextures,
+                                                        tr->m_spriteTextures));
 
     world.m_textures.resize(world.m_textureAtlas->getNumAtlasPages() + 1);
 
@@ -1287,7 +1208,7 @@ void TR_GenTextures(World& world, const std::unique_ptr<loader::Level>& tr)
                       0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 
     // Select mipmap mode
-    switch(render::renderer.settings().mipmap_mode)
+    switch(world.m_engine->renderer.settings().mipmap_mode)
     {
         case 0:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -1312,13 +1233,13 @@ void TR_GenTextures(World& world, const std::unique_ptr<loader::Level>& tr)
     };
 
     // Set mipmaps number
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, render::renderer.settings().mipmaps);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, world.m_engine->renderer.settings().mipmaps);
 
     // Set anisotropy degree
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, render::renderer.settings().anisotropy);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, world.m_engine->renderer.settings().anisotropy);
 
     // Read lod bias
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, render::renderer.settings().lod_bias);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, world.m_engine->renderer.settings().lod_bias);
 
     glBindTexture(GL_TEXTURE_2D, world.m_textures.back());          // solid color =)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -1373,7 +1294,7 @@ void TR_GenAnimTextures(World& world, const std::unique_ptr<loader::Level>& tr)
         // applied to the same sequence, but there we specify compatibility
         // method for TR4-5.
 
-        engine_lua["UVRotate"].get(uvrotate_script);
+        world.m_engine->engine_lua["UVRotate"].get(uvrotate_script);
 
         if(i < num_uvrotates)
         {
@@ -1397,10 +1318,10 @@ void TR_GenAnimTextures(World& world, const std::unique_ptr<loader::Level>& tr)
                 seq->textureType = animation::TextureAnimationType::Backward;
             }
 
-            engine::Engine::instance.m_world.m_textureAtlas->getCoordinates(seq->textureIndices[0], false, uvCoord0, 0, true);
+            world.m_textureAtlas->getCoordinates(seq->textureIndices[0], false, uvCoord0, 0, true);
             for(size_t j = 0; j < seq->keyFrames.size(); j++)
             {
-                engine::Engine::instance.m_world.m_textureAtlas->getCoordinates(seq->textureIndices[0], false, uvCoordJ, j * seq->uvrotateSpeed, true);
+                world.m_textureAtlas->getCoordinates(seq->textureIndices[0], false, uvCoordJ, j * seq->uvrotateSpeed, true);
                 seq->keyFrames[j].textureIndex = uvCoordJ.textureIndex;
 
                 ///@PARANOID: texture transformation may be not only move
@@ -1426,10 +1347,10 @@ void TR_GenAnimTextures(World& world, const std::unique_ptr<loader::Level>& tr)
         }
         else
         {
-            engine::Engine::instance.m_world.m_textureAtlas->getCoordinates(seq->textureIndices[0], false, uvCoord0);
+            world.m_textureAtlas->getCoordinates(seq->textureIndices[0], false, uvCoord0);
             for(size_t j = 0; j < seq->keyFrames.size(); j++)
             {
-                engine::Engine::instance.m_world.m_textureAtlas->getCoordinates(seq->textureIndices[j], false, uvCoordJ);
+                world.m_textureAtlas->getCoordinates(seq->textureIndices[j], false, uvCoordJ);
                 seq->keyFrames[j].textureIndex = uvCoordJ.textureIndex;
 
                 ///@PARANOID: texture transformation may be not only move
@@ -1733,7 +1654,7 @@ void TR_GenMesh(World& world, ObjectId mesh_index, std::shared_ptr<core::BaseMes
 
     mesh->m_vertices.clear();
     mesh->genFaces();
-    mesh->polySortInMesh();
+    mesh->polySortInMesh(world);
 }
 
 void tr_setupRoomVertices(World& world, const std::unique_ptr<loader::Level>& tr, loader::Room& tr_room, const std::shared_ptr<core::BaseMesh>& mesh, int numCorners, const uint16_t *vertices, uint16_t masked_texture, core::Polygon& p)
@@ -1781,11 +1702,11 @@ void Res_GenVBOs(World& world)
 
 void Res_GenBaseItems(World& world)
 {
-    engine_lua["genBaseItems"]();
+    world.m_engine->engine_lua["genBaseItems"]();
 
     if(!world.m_items.empty())
     {
-        Res_EntityToItem(world.m_items);
+        Res_EntityToItem(world);
     }
 }
 
@@ -2205,7 +2126,7 @@ void TR_GenSkeletalModel(World& world, size_t model_num, SkeletalModel& model, c
                     if(low > anim->getFrameDuration() || high > anim->getFrameDuration())
                     {
                         //Sys_Warn("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d", anim->id, sch_p->id, low, high);
-                        Console::instance().printf("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d, duration: %d, timestretch: %d", anim->id, sch_p->id, low, high, int(anim->getFrameDuration()), int(anim->getStretchFactor()));
+                        world.m_engine->m_gui.getConsole().printf("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d, duration: %d, timestretch: %d", anim->id, sch_p->id, low, high, int(anim->getFrameDuration()), int(anim->getStretchFactor()));
                     }
                     adsp->start = low;
                     adsp->end = high;
@@ -2231,7 +2152,7 @@ void TR_GenSkeletalModel(World& world, size_t model_num, SkeletalModel& model, c
             }
         }
     }
-    GenerateAnimCommands(model);
+    GenerateAnimCommands(world, model);
 }
 
 size_t TR_GetNumAnimationsForMoveable(const std::unique_ptr<loader::Level>& tr, size_t moveable_ind)
@@ -2337,7 +2258,7 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
     for(ObjectId i = 0; i < tr->m_items.size(); i++)
     {
         loader::Item *tr_item = &tr->m_items[i];
-        std::shared_ptr<Entity> entity = tr_item->object_id == 0 ? std::make_shared<Character>(i) : std::make_shared<Entity>(i);
+        std::shared_ptr<Entity> entity = tr_item->object_id == 0 ? std::make_shared<Character>(i, &world) : std::make_shared<Entity>(i, &world);
         entity->m_transform[3][0] = tr_item->position.x;
         entity->m_transform[3][1] = -tr_item->position.z;
         entity->m_transform[3][2] = tr_item->position.y;
@@ -2369,11 +2290,11 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
 
         if(entity->m_skeleton.getModel() == nullptr)
         {
-            ModelId id = engine_lua.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id).to<ModelId>();
+            ModelId id = world.m_engine->engine_lua.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id).to<ModelId>();
             entity->m_skeleton.setModel(world.getModelByID(id));
         }
 
-        lua::Value replace_anim_id = engine_lua.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
+        lua::Value replace_anim_id = world.m_engine->engine_lua.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
         if(!replace_anim_id.isNil())
         {
             auto replace_anim_model = world.getModelByID(replace_anim_id.to<ModelId>());
@@ -2424,14 +2345,14 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
         lara->setCollisionShape(CollisionShape::TriMeshConvex);
         lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
 
-        engine_lua.set("player", lara->getId());
+        world.m_engine->engine_lua.set("player", lara->getId());
 
         std::shared_ptr<SkeletalModel> laraModel = world.getModelByID(0);
 
         switch(loader::gameToEngine(tr->m_gameVersion))
         {
             case loader::Engine::TR1:
-                if(engine::Gameflow::instance.getLevelID() == 0)
+                if(world.m_engine->gameflow.getLevelID() == 0)
                 {
                     if(std::shared_ptr<SkeletalModel> LM = world.getModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1))
                     {
@@ -2485,11 +2406,11 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
     }
 }
 
-void Res_EntityToItem(std::map<ObjectId, std::shared_ptr<BaseItem> >& map)
+void Res_EntityToItem(World& world)
 {
-    for(std::shared_ptr<BaseItem> item : map | boost::adaptors::map_values)
+    for(std::shared_ptr<BaseItem> item : world.m_items | boost::adaptors::map_values)
     {
-        for(const std::shared_ptr<Room>& room : engine::Engine::instance.m_world.m_rooms)
+        for(const std::shared_ptr<Room>& room : world.m_rooms)
         {
             for(Object* object : room->getObjects())
             {
@@ -2500,10 +2421,10 @@ void Res_EntityToItem(std::map<ObjectId, std::shared_ptr<BaseItem> >& map)
                 if(ent->m_skeleton.getModel()->getId() != item->world_model_id)
                     continue;
 
-                if(engine_lua["entity_funcs"][ent->getId()].is<lua::Nil>())
-                    engine_lua["entity_funcs"].set(ent->getId(), lua::Table());
+                if(world.m_engine->engine_lua["entity_funcs"][ent->getId()].is<lua::Nil>())
+                    world.m_engine->engine_lua["entity_funcs"].set(ent->getId(), lua::Table());
 
-                engine_lua["pickup_init"](ent->getId(), item->id);
+                world.m_engine->engine_lua["pickup_init"](ent->getId(), item->id);
 
                 ent->m_skeleton.disableCollision();
             }

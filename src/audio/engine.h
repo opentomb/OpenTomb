@@ -16,7 +16,7 @@
 
 namespace world
 {
-struct World;
+class World;
 } // namespace world
 
 namespace loader
@@ -49,6 +49,13 @@ enum class StreamError
 class Engine
 {
 public:
+    explicit Engine(engine::Engine* engine);
+
+    engine::Engine* getEngine() const
+    {
+        return m_engine;
+    }
+
     void pauseAllSources();
     void stopAllSources();
     void resumeAllSources();
@@ -92,12 +99,12 @@ public:
 
     void setSourceCount(size_t count)
     {
-        m_sources.resize(count);
+        m_sources.resize(count, Source(this));
     }
 
     void setStreamTrackCount(size_t count)
     {
-        m_tracks.resize(count);
+        m_tracks.resize(count, StreamTrack(this));
     }
 
     // General damping update procedure. Constantly checks if damp condition exists, and
@@ -204,6 +211,8 @@ private:
 
     static constexpr int StreamMapSize = 256;
 
+    engine::Engine* m_engine;
+
     std::vector<Emitter> m_emitters;        //!< Audio emitters.
     std::vector<int16_t> m_soundIdMap;       //!< Effect indexes.
     std::vector<Effect> m_effects;          //!< Effects and their parameters.
@@ -217,9 +226,11 @@ private:
 
     Settings m_settings;
 
-    std::unique_ptr<FxManager> m_fxManager{ new FxManager() };
+    std::unique_ptr<FxManager> m_fxManager{ new FxManager(m_engine) };
 
     ALCdevice* m_device = nullptr;
     ALCcontext* m_context = nullptr;
+
+    bool loadALbufferFromFile(ALuint buf_number, const std::string& fname);
 };
 } // namespace audio

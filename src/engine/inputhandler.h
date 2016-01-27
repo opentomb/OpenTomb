@@ -12,6 +12,8 @@ struct _SDL_Joystick;
 
 namespace engine
 {
+class Engine;
+
 //! Action mapper index constants
 enum class InputAction
 {
@@ -77,6 +79,8 @@ constexpr int JOY_TRIGGER_DEADZONE = 10000;
 class InputHandler
 {
 public:
+    explicit InputHandler(Engine* engine);
+
     ~InputHandler();
 
     void poll();
@@ -245,6 +249,8 @@ private:
     void dispatchGameControllerAxis(int axis, int value);
 
     void debugKeys(int button, int state);
+
+    Engine* m_engine;
 
     float m_mouseSensitivity = 25.0f;
     glm::vec2 m_mouseScale = { 0.01f, 0.01f };

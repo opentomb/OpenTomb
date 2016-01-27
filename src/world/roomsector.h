@@ -50,9 +50,9 @@ struct RoomSector
     const RoomSector* checkFlip() const;
     const RoomSector* checkBaseRoom() const;
     const RoomSector* checkAlternateRoom() const;
-    const RoomSector* checkPortalPointerRaw();
-    const RoomSector* checkPortalPointer() const;
-    bool is2SidePortals(const RoomSector* s2) const;
+    const RoomSector* checkPortalPointerRaw(const World& world);
+    const RoomSector* checkPortalPointer(const World& world) const;
+    bool is2SidePortals(const World& world, const RoomSector* s2) const;
     bool similarCeiling(const RoomSector* s2, bool ignore_doors) const;
     bool similarFloor(const RoomSector* s2, bool ignore_doors) const;
     glm::vec3 getFloorPoint() const;

@@ -8,8 +8,11 @@
 
 namespace gui
 {
-ItemNotifier::ItemNotifier()
+ItemNotifier::ItemNotifier(engine::Engine* engine)
+    : m_engine(engine)
 {
+    BOOST_LOG_TRIVIAL(info) << "Initializing ItemNotifier";
+
     setPos(850, 850);
     // SetRot(0, 0);
     setRotation(glm::radians(180.0f), glm::radians(270.0f));
@@ -37,26 +40,26 @@ void ItemNotifier::animate()
 
     if(!util::fuzzyZero(m_radPerSecond))
     {
-        m_currentAngle.x = glm::mod(m_currentAngle.x + engine::Engine::instance.getFrameTimeSecs() * m_radPerSecond, glm::radians(360.0f));
+        m_currentAngle.x = glm::mod(m_currentAngle.x + m_engine->getFrameTimeSecs() * m_radPerSecond, glm::radians(360.0f));
     }
 
     if(util::fuzzyZero(m_currTime.count()))
     {
-        glm::float_t step = (m_currPosX - m_endPosX) * engine::Engine::instance.getFrameTimeSecs() * 4.0f;
+        glm::float_t step = (m_currPosX - m_endPosX) * m_engine->getFrameTimeSecs() * 4.0f;
         step = std::max(0.5f, step);
 
         m_currPosX = glm::min(m_currPosX - step, m_endPosX);
 
         if(util::fuzzyEqual(m_currPosX, m_endPosX))
-            m_currTime += engine::Engine::instance.getFrameTime();
+            m_currTime += m_engine->getFrameTime();
     }
     else if(m_currTime < m_showTime)
     {
-        m_currTime += engine::Engine::instance.getFrameTime();
+        m_currTime += m_engine->getFrameTime();
     }
     else
     {
-        glm::float_t step = (m_currPosX - m_endPosX) * engine::Engine::instance.getFrameTimeSecs() * 4;
+        glm::float_t step = (m_currPosX - m_endPosX) * m_engine->getFrameTimeSecs() * 4;
         step = std::max(0.5f, step);
 
         m_currPosX = glm::min(m_currPosX + step, m_startPosX);
@@ -72,9 +75,9 @@ void ItemNotifier::reset()
     m_currTime = util::Duration(0);
     m_currentAngle = { 0,0 };
 
-    m_endPosX = static_cast<glm::float_t>(engine::screen_info.w) / ScreenMeteringResolution * m_absPos.x;
-    m_posY = static_cast<float>(engine::screen_info.h) / ScreenMeteringResolution * m_absPos.y;
-    m_currPosX = engine::screen_info.w + static_cast<float>(engine::screen_info.w) / NotifierOffscreenDivider * m_size;
+    m_endPosX = static_cast<glm::float_t>(m_engine->screen_info.w) / ScreenMeteringResolution * m_absPos.x;
+    m_posY = static_cast<float>(m_engine->screen_info.h) / ScreenMeteringResolution * m_absPos.y;
+    m_currPosX = m_engine->screen_info.w + static_cast<float>(m_engine->screen_info.w) / NotifierOffscreenDivider * m_size;
     m_startPosX = m_currPosX;    // Equalize current and start positions.
 }
 
@@ -83,7 +86,7 @@ void ItemNotifier::draw() const
     if(!m_active)
         return;
 
-    auto item = engine::Engine::instance.m_world.getBaseItemByID(m_item);
+    auto item = m_engine->m_world.getBaseItemByID(m_item);
     if(!item)
         return;
 
@@ -98,7 +101,7 @@ void ItemNotifier::draw() const
     matrix = glm::translate(matrix, { m_currPosX, m_posY, -2048.0 });
     matrix = glm::rotate(matrix, m_currentAngle.x + m_rotation.x, { 0,1,0 });
     matrix = glm::rotate(matrix, m_currentAngle.y + m_rotation.y, { 1,0,0 });
-    render::renderItem(*item->bf, m_size, matrix, gui::Gui::instance->guiProjectionMatrix);
+    render::renderItem(*item->bf, m_size, matrix, m_engine->m_gui.m_guiProjectionMatrix);
 
     item->bf->setCurrentAnimation(anim);
     item->bf->setCurrentFrame(frame);

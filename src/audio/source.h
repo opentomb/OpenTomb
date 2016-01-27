@@ -12,6 +12,7 @@
 namespace audio
 {
 class FxManager;
+class Engine;
 
 // Entity types are used to identify different sound emitter types. Since
 // sounds in TR games could be emitted either by entities, sound sources
@@ -31,13 +32,13 @@ enum class EmitterType
 class Source
 {
 public:
-    Source();
+    explicit Source(audio::Engine* engine);
     ~Source();
 
-    void play(FxManager& manager);    // Make source active and play it.
+    void play(FxManager& manager, const world::World& world);    // Make source active and play it.
     void pause();   // Pause source (leaving it active).
     void stop();    // Stop and destroy source.
-    void update(const FxManager &manager);  // Update source parameters.
+    void update(const FxManager &manager, const world::World& world);  // Update source parameters.
 
     void setBuffer(ALint buffer);           // Assign buffer to source.
     void setLooping(ALboolean is_looping);  // Set looping flag.
@@ -75,6 +76,8 @@ public:
     }
 
 private:
+    audio::Engine* m_audioEngine;
+
     bool        m_active = false;         // Source gets autostopped and destroyed on next frame, if it's not set.
     bool        m_underwater = false;       // Marker to define if sample is in underwater state or not.
     ALuint      m_sourceIndex = 0;   // Source index. Should be unique for each source.
@@ -85,7 +88,7 @@ private:
     uint32_t    m_sampleIndex = 0;   // OpenAL sample (buffer) index. May be the same for different sources.
     uint32_t    m_sampleCount = 0;   // How many buffers to use, beginning with sample_index.
 
-    void linkEmitter();                             // Link source to parent emitter.
+    void linkEmitter(const world::World& world);                             // Link source to parent emitter.
     void setPosition(const ALfloat pos_vector[]);   // Set source position.
     void setVelocity(const ALfloat vel_vector[]);   // Set source velocity (speed).
 };

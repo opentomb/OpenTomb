@@ -15,7 +15,11 @@
 
 using namespace gui;
 
-Console::Console() = default;
+Console::Console(engine::Engine* engine)
+    : m_engine(engine)
+{
+    BOOST_LOG_TRIVIAL(info) << "Initializing Console";
+}
 
 void Console::init()
 {
@@ -40,7 +44,7 @@ void Console::init()
 
 void Console::initFonts()
 {
-    m_font = FontManager::instance->getFont(FontType::Console);
+    m_font = m_engine->m_gui.m_fontManager.getFont(FontType::Console);
     setSpacing(m_spacing);
 }
 
@@ -59,7 +63,7 @@ void Console::initGlobals()
 
 void Console::draw()
 {
-    if(!FontManager::instance || !inited || !m_isVisible)
+    if(!inited || !m_isVisible)
         return;
 
     drawBackground();
@@ -67,12 +71,12 @@ void Console::draw()
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    render::TextShaderDescription* shader = render::renderer.shaderManager()->getTextShader();
+    render::TextShaderDescription* shader = m_engine->renderer.shaderManager()->getTextShader();
     glUseProgram(shader->program);
     glUniform1i(shader->sampler, 0);
     GLfloat screenSize[2] = {
-        static_cast<GLfloat>(engine::screen_info.w),
-        static_cast<GLfloat>(engine::screen_info.h)
+        static_cast<GLfloat>(m_engine->screen_info.w),
+        static_cast<GLfloat>(m_engine->screen_info.h)
     };
     glUniform2fv(shader->screenSize, 1, screenSize);
 
@@ -81,7 +85,7 @@ void Console::draw()
     size_t n = 0;
     for(const Line& line : m_lines)
     {
-        const glm::vec4& col = FontManager::instance->getFontStyle(line.styleId)->real_color;
+        const glm::vec4& col = m_engine->m_gui.m_fontManager.getFontStyle(line.styleId)->real_color;
         y += m_lineHeight;
         m_font->gl_font_color = col;
         glf_render_str(m_font, static_cast<GLfloat>(x), static_cast<GLfloat>(y), line.text.c_str());
@@ -89,7 +93,7 @@ void Console::draw()
         if(n >= m_visibleLines)
             break;
     }
-    const glm::vec4& col = FontManager::instance->getFontStyle(FontStyle::ConsoleInfo)->real_color;
+    const glm::vec4& col = m_engine->m_gui.m_fontManager.getFontStyle(FontStyle::ConsoleInfo)->real_color;
     m_font->gl_font_color = col;
     glf_render_str(m_font, static_cast<GLfloat>(x), static_cast<GLfloat>(m_cursorY) + m_lineHeight, m_editingLine.c_str());
 }
@@ -99,13 +103,13 @@ void Console::drawBackground()
     /*
          * Draw console background to see the text
          */
-    Gui::instance->drawRect(0.0, m_cursorY + m_lineHeight - 8, engine::screen_info.w, engine::screen_info.h, m_backgroundColor, m_backgroundColor, m_backgroundColor, m_backgroundColor, loader::BlendingMode::Screen);
+    m_engine->m_gui.drawRect(0.0, m_cursorY + m_lineHeight - 8, m_engine->screen_info.w, m_engine->screen_info.h, m_backgroundColor, m_backgroundColor, m_backgroundColor, m_backgroundColor, loader::BlendingMode::Screen);
 
     /*
          * Draw finalise line
          */
     glm::vec4 white{ 1, 1, 1, 0.7f };
-    Gui::instance->drawRect(0.0, m_cursorY + m_lineHeight - 8, engine::screen_info.w, 2, white, white, white, white, loader::BlendingMode::Screen);
+    m_engine->m_gui.drawRect(0.0, m_cursorY + m_lineHeight - 8, m_engine->screen_info.w, 2, white, white, white, white, loader::BlendingMode::Screen);
 }
 
 void Console::drawCursor()
@@ -114,7 +118,7 @@ void Console::drawCursor()
 
     if(m_blinkPeriod.count() > 0)
     {
-        m_blinkTime += engine::Engine::instance.getFrameTime();
+        m_blinkTime += m_engine->getFrameTime();
         if(m_blinkTime > m_blinkPeriod)
         {
             m_blinkTime = util::Duration(0);
@@ -125,7 +129,7 @@ void Console::drawCursor()
     if(m_showCursor)
     {
         glm::vec4 white{ 1, 1, 1, 0.7f };
-        Gui::instance->drawRect(m_cursorX,
+        m_engine->m_gui.drawRect(m_cursorX,
                                 y + m_lineHeight * 0.9f,
                                 1,
                                 m_lineHeight * 0.8f,
@@ -157,7 +161,7 @@ bool startsWithLowercase(const std::string& haystack, const std::string& needle)
 }
 }
 
-void Console::edit(int key, const boost::optional<Uint16>& mod)
+void Console::edit(int key, const boost::optional<uint16_t>& mod)
 {
     if(key == SDLK_UNKNOWN || key == SDLK_BACKQUOTE || key == SDLK_BACKSLASH || !inited)
     {
@@ -168,7 +172,7 @@ void Console::edit(int key, const boost::optional<Uint16>& mod)
     {
         addLog(m_editingLine);
         addLine(std::string("> ") + m_editingLine, FontStyle::ConsoleInfo);
-        engine::Engine::instance.execCmd(m_editingLine.c_str());
+        m_engine->execCmd(m_editingLine.c_str());
         m_editingLine.clear();
         m_cursorPos = 0;
         m_cursorX = 8 + 1;
@@ -186,7 +190,7 @@ void Console::edit(int key, const boost::optional<Uint16>& mod)
         case SDLK_DOWN:
             if(m_historyLines.empty())
                 break;
-            engine::Engine::instance.m_world.m_audioEngine.send(engine_lua.getGlobalSound(audio::GlobalSoundId::MenuPage));
+            m_engine->m_world.m_audioEngine.send(m_engine->engine_lua.getGlobalSound(audio::GlobalSoundId::MenuPage));
             if(key == SDLK_UP && m_historyPos < m_historyLines.size())
                 ++m_historyPos;
             else if(key == SDLK_DOWN && m_historyPos > 0)
@@ -380,7 +384,7 @@ void Console::warning(int warn_string_index, ...)
     char buf[4096];
     char fmt[256];
 
-    engine_lua.getSysNotify(warn_string_index, 256, fmt);
+    m_engine->engine_lua.getSysNotify(warn_string_index, 256, fmt);
 
     va_start(argptr, warn_string_index);
     vsnprintf(buf, 4096, static_cast<const char*>(fmt), argptr);
@@ -395,7 +399,7 @@ void Console::notify(int notify_string_index, ...)
     char buf[4096];
     char fmt[256];
 
-    engine_lua.getSysNotify(notify_string_index, 256, fmt);
+    m_engine->engine_lua.getSysNotify(notify_string_index, 256, fmt);
 
     va_start(argptr, notify_string_index);
     vsnprintf(buf, 4096, static_cast<const char*>(fmt), argptr);
@@ -416,7 +420,7 @@ void Console::setSpacing(float val)
 
     m_spacing = val;
 
-    if(!inited || !FontManager::instance)
+    if(!inited)
     {
         return; // nothing to do
     }
@@ -425,7 +429,7 @@ void Console::setSpacing(float val)
     // font->font_size has absolute size (after scaling)
     m_lineHeight = static_cast<int16_t>((1 + m_spacing) * m_font->font_size);
     m_cursorX = 8 + 1;
-    m_cursorY = static_cast<int16_t>(engine::screen_info.h - m_lineHeight * m_visibleLines);
+    m_cursorY = static_cast<int16_t>(m_engine->screen_info.h - m_lineHeight * m_visibleLines);
     if(m_cursorY < 8)
     {
         m_cursorY = 8;

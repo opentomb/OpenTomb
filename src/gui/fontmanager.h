@@ -7,6 +7,11 @@
 #include <cstdint>
 #include <list>
 
+namespace engine
+{
+class Engine;
+}
+
 namespace gui
 {
 // OpenTomb has three types of fonts - primary, secondary and console
@@ -76,7 +81,7 @@ struct FontStyleData
 class FontManager
 {
 public:
-    FontManager();
+    FontManager(engine::Engine* engine);
     ~FontManager();
 
     bool             addFont(const FontType index,
@@ -107,9 +112,10 @@ public:
     void             update(); // Do fading routine here, etc. Put into Gui_Update, maybe...
     void             resize(); // Resize fonts on window resize event.
 
-    static std::unique_ptr<FontManager> instance;
 private:
     Font*            getFontAddress(const FontType index);
+
+    engine::Engine* m_engine;
 
     glm::float_t     m_fadeValue = 0; // Multiplier used with font RGB values to animate fade.
     bool             m_fadeDirection = true;

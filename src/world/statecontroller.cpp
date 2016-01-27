@@ -282,8 +282,8 @@ void StateController::handle(LaraState state)
 
     if(m_character->m_response.killed)  // Stop any music, if Lara is dead.
     {
-        engine::Engine::instance.m_world.m_audioEngine.endStreams(audio::StreamType::Oneshot);
-        engine::Engine::instance.m_world.m_audioEngine.endStreams(audio::StreamType::Chat);
+        m_character->getWorld()->m_audioEngine.endStreams(audio::StreamType::Oneshot);
+        m_character->getWorld()->m_audioEngine.endStreams(audio::StreamType::Chat);
     }
 
     auto it = m_handlers.find(state);
@@ -382,7 +382,7 @@ void StateController::stop()
     }
     else if(m_character->m_response.slide == MovementWalk::Forward)
     {
-        engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
+        m_character->getWorld()->m_audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
 
         if(m_character->m_command.jump)
         {
@@ -400,7 +400,7 @@ void StateController::stop()
         {
             m_character->m_moveDir = MoveDirection::Backward;
             m_character->setAnimation(animation::TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
-            engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
+            m_character->getWorld()->m_audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
         }
         else
         {
@@ -462,7 +462,7 @@ void StateController::stop()
             global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
             global_offset += glm::vec3(m_character->m_transform[3]);
             HeightInfo next_fc = initHeightInfo();
-            Character::getHeightInfo(global_offset, &next_fc);
+            m_character->getHeightInfo(global_offset, &next_fc);
             if((m_character->checkNextPenetration(move) == 0 || m_character->m_response.horizontal_collide == 0x00) &&
                (next_fc.floor.hasHit && next_fc.floor.hitPoint[2] > m_character->m_transform[3][2] - m_character->m_maxStepUpHeight && next_fc.floor.hitPoint[2] <= m_character->m_transform[3][2] + m_character->m_maxStepUpHeight))
             {
@@ -578,7 +578,7 @@ void StateController::stop()
                 global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
                 global_offset += glm::vec3(m_character->m_transform[3]);
                 HeightInfo next_fc = initHeightInfo();
-                Character::getHeightInfo(global_offset, &next_fc);
+                m_character->getHeightInfo(global_offset, &next_fc);
                 if(next_fc.floor.hasHit && next_fc.floor.hitPoint[2] > m_character->m_transform[3][2] - m_character->m_maxStepUpHeight && next_fc.floor.hitPoint[2] <= m_character->m_transform[3][2] + m_character->m_maxStepUpHeight)
                 {
                     m_character->m_moveDir = MoveDirection::Backward;
@@ -727,7 +727,7 @@ void StateController::jumpBack()
     }
     else if(m_character->m_response.horizontal_collide & 0x01)
     {
-        engine::Engine::instance.m_inputHandler.rumble(200.0, util::MilliSeconds(200));
+        m_character->getWorld()->m_engine->m_inputHandler.rumble(200.0, util::MilliSeconds(200));
         m_character->setAnimation(animation::TR_ANIMATION_LARA_SMASH_JUMP, 0);
         m_character->m_moveDir = MoveDirection::Forward;
         m_character->updateCurrentSpeed(true);
@@ -760,7 +760,7 @@ void StateController::jumpLeft()
     }
     else if(m_character->m_response.horizontal_collide & 0x01)
     {
-        engine::Engine::instance.m_inputHandler.rumble(200.0, util::MilliSeconds(200));
+        m_character->getWorld()->m_engine->m_inputHandler.rumble(200.0, util::MilliSeconds(200));
         m_character->setAnimation(animation::TR_ANIMATION_LARA_SMASH_JUMP, 0);
         m_character->m_moveDir = MoveDirection::Right;
         m_character->updateCurrentSpeed(true);
@@ -789,7 +789,7 @@ void StateController::jumpRight()
     }
     else if(m_character->m_response.horizontal_collide & 0x01)
     {
-        engine::Engine::instance.m_inputHandler.rumble(200.0, util::MilliSeconds(200));
+        m_character->getWorld()->m_engine->m_inputHandler.rumble(200.0, util::MilliSeconds(200));
         m_character->setAnimation(animation::TR_ANIMATION_LARA_SMASH_JUMP, 0);
         m_character->m_moveDir = MoveDirection::Left;
         m_character->updateCurrentSpeed(true);
@@ -959,7 +959,7 @@ void StateController::runForward()
         }
         else
         {
-            engine::Engine::instance.m_inputHandler.rumble(200.0, util::MilliSeconds(200));
+            m_character->getWorld()->m_engine->m_inputHandler.rumble(200.0, util::MilliSeconds(200));
 
             if(m_character->m_command.move.z == MovementWalk::Forward)
             {
@@ -1055,7 +1055,7 @@ void StateController::sprint()
     }
     else if(m_character->m_response.horizontal_collide & 0x01)
     {
-        engine::Engine::instance.m_inputHandler.rumble(200.0, util::MilliSeconds(200));
+        m_character->getWorld()->m_engine->m_inputHandler.rumble(200.0, util::MilliSeconds(200));
 
         boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);
         if(*i == 1)
@@ -1347,7 +1347,7 @@ void StateController::walkLeft()
         global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
         global_offset += glm::vec3(m_character->m_transform[3]);
         HeightInfo next_fc = initHeightInfo();
-        Character::getHeightInfo(global_offset, &next_fc);
+        m_character->getHeightInfo(global_offset, &next_fc);
         if(next_fc.floor.hasHit && next_fc.floor.hitPoint[2] > m_character->m_transform[3][2] - m_character->m_maxStepUpHeight && next_fc.floor.hitPoint[2] <= m_character->m_transform[3][2] + m_character->m_maxStepUpHeight)
         {
             if(!m_character->m_heightInfo.water || m_character->m_heightInfo.floor.hitPoint[2] + m_character->m_height > m_character->m_heightInfo.transition_level) // if (floor_hit == 0) then we went to MoveType::FreeFalling.
@@ -1387,7 +1387,7 @@ void StateController::walkRight()
         global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2];
         global_offset += glm::vec3(m_character->m_transform[3]);
         HeightInfo next_fc = initHeightInfo();
-        Character::getHeightInfo(global_offset, &next_fc);
+        m_character->getHeightInfo(global_offset, &next_fc);
         if(next_fc.floor.hasHit && next_fc.floor.hitPoint[2] > m_character->m_transform[3][2] - m_character->m_maxStepUpHeight && next_fc.floor.hitPoint[2] <= m_character->m_transform[3][2] + m_character->m_maxStepUpHeight)
         {
             if(!m_character->m_heightInfo.water || m_character->m_heightInfo.floor.hitPoint[2] + m_character->m_height > m_character->m_heightInfo.transition_level) // if (floor_hit == 0) then we went to MoveType::FreeFalling.
@@ -1441,7 +1441,7 @@ void StateController::slideBack()
         return;
     }
 
-    engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
+    m_character->getWorld()->m_audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
 }
 
 void StateController::slideForward()
@@ -1456,7 +1456,7 @@ void StateController::slideForward()
     }
     else if(m_character->m_response.slide == MovementWalk::None)
     {
-        if(m_character->m_command.move.z == MovementWalk::Forward && engine::Engine::instance.m_world.m_engineVersion >= loader::Engine::TR3)
+        if(m_character->m_command.move.z == MovementWalk::Forward && m_character->getWorld()->m_engineVersion >= loader::Engine::TR3)
         {
             setNextState(LaraState::RunForward);
         }
@@ -1474,7 +1474,7 @@ void StateController::slideForward()
         return;
     }
 
-    engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
+    m_character->getWorld()->m_audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
 }
 
 void StateController::pushableGrab()
@@ -1564,16 +1564,16 @@ void StateController::pushablePush()
             }
         }
 
-        if(engine::Engine::instance.m_world.m_engineVersion > loader::Engine::TR3)
+        if(m_character->getWorld()->m_engineVersion > loader::Engine::TR3)
         {
             if(was_traversed)
             {
-                if(!engine::Engine::instance.m_world.m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!m_character->getWorld()->m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    m_character->getWorld()->m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
             else
             {
-                engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                m_character->getWorld()->m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
         else
@@ -1582,8 +1582,8 @@ void StateController::pushablePush()
                || m_character->m_skeleton.getCurrentFrame() == 110
                || m_character->m_skeleton.getCurrentFrame() == 142)
             {
-                if(!engine::Engine::instance.m_world.m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!m_character->getWorld()->m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    m_character->getWorld()->m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
 
@@ -1591,9 +1591,9 @@ void StateController::pushablePush()
     }
     else
     {
-        if(engine::Engine::instance.m_world.m_engineVersion > loader::Engine::TR3)
+        if(m_character->getWorld()->m_engineVersion > loader::Engine::TR3)
         {
-            engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+            m_character->getWorld()->m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
         }
     }
 }
@@ -1652,16 +1652,16 @@ void StateController::pushablePull()
             }
         }
 
-        if(engine::Engine::instance.m_world.m_engineVersion > loader::Engine::TR3)
+        if(m_character->getWorld()->m_engineVersion > loader::Engine::TR3)
         {
             if(was_traversed)
             {
-                if(!engine::Engine::instance.m_world.m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!m_character->getWorld()->m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    m_character->getWorld()->m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
             else
             {
-                engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                m_character->getWorld()->m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
         else
@@ -1672,8 +1672,8 @@ void StateController::pushablePull()
                || m_character->m_skeleton.getCurrentFrame() == 124
                || m_character->m_skeleton.getCurrentFrame() == 156)
             {
-                if(!engine::Engine::instance.m_world.m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!m_character->getWorld()->m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    m_character->getWorld()->m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
 
@@ -1681,9 +1681,9 @@ void StateController::pushablePull()
     }
     else
     {
-        if(engine::Engine::instance.m_world.m_engineVersion > loader::Engine::TR3)
+        if(m_character->getWorld()->m_engineVersion > loader::Engine::TR3)
         {
-            engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+            m_character->getWorld()->m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
         }
     }
 }
@@ -1721,7 +1721,7 @@ void StateController::jumpUp()
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset(m_character->m_transform[1] * t);
-        global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalEpsilon + engine::Engine::instance.getFrameTimeSecs() * m_character->m_speed[2];
+        global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalEpsilon + m_character->getWorld()->m_engine->getFrameTimeSecs() * m_character->m_speed[2];
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
         if(m_character->m_climb.edge_hit)
@@ -1820,7 +1820,7 @@ void StateController::reach()
     {
         glm::float_t t = LaraTryHangWallOffset + LaraHangWallDistance;
         glm::vec3 global_offset(m_character->m_transform[1] * t);
-        global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalEpsilon + engine::Engine::instance.getFrameTimeSecs() * m_character->m_speed[2];
+        global_offset[2] += m_character->m_skeleton.getBoundingBox().max[2] + LaraHangVerticalEpsilon + m_character->getWorld()->m_engine->getFrameTimeSecs() * m_character->m_speed[2];
         HeightInfo next_fc = initHeightInfo();
         m_character->m_climb = m_character->checkClimbability(global_offset, &next_fc, 0.0);
         if(m_character->m_climb.edge_hit && m_character->m_climb.can_hang)
@@ -2351,7 +2351,7 @@ void StateController::freefall()
        int(m_character->m_speed[2]) >= -FREE_FALL_SPEED_CRITICAL - 100)
     {
         m_character->m_speed[2] = -FREE_FALL_SPEED_CRITICAL - 101;
-        engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Scream
+        m_character->getWorld()->m_audioEngine.send(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Scream
     }
     else if(m_character->m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
     {
@@ -2366,12 +2366,12 @@ void StateController::freefall()
         m_character->m_command.rot[1] = 0.0;
         m_character->updateTransform();                                     // needed here to fix underwater in wall collision bug
         m_character->setAnimation(animation::TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
-        engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Stop scream
+        m_character->getWorld()->m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Stop scream
 
         // Splash sound is hardcoded, beginning with TR3.
-        if(engine::Engine::instance.m_world.m_engineVersion > loader::Engine::TR2)
+        if(m_character->getWorld()->m_engineVersion > loader::Engine::TR2)
         {
-            engine::Engine::instance.m_world.m_audioEngine.send(audio::SoundSplash, audio::EmitterType::Entity, m_character->getId());
+            m_character->getWorld()->m_audioEngine.send(audio::SoundSplash, audio::EmitterType::Entity, m_character->getId());
         }
     }
     else if((m_character->m_response.vertical_collide & 0x01) || m_character->m_moveType == MoveType::OnFloor)
@@ -2379,7 +2379,7 @@ void StateController::freefall()
         if(m_character->getRoom()->getFlags() & TR_ROOM_FLAG_QUICKSAND)
         {
             m_character->setAnimation(animation::TR_ANIMATION_LARA_STAY_IDLE, 0);
-            engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
+            m_character->getWorld()->m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
         }
         else if(m_character->m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
         {
@@ -2387,7 +2387,7 @@ void StateController::freefall()
             {
                 m_character->m_response.killed = true;
                 m_character->setAnimation(animation::TR_ANIMATION_LARA_LANDING_DEATH, 0);
-                engine::Engine::instance.m_inputHandler.rumble(200.0, util::MilliSeconds(500));
+                m_character->getWorld()->m_engine->m_inputHandler.rumble(200.0, util::MilliSeconds(500));
             }
             else
             {
@@ -2406,7 +2406,7 @@ void StateController::freefall()
         if(m_character->m_response.killed)
         {
             setNextState(LaraState::Death);
-            engine::Engine::instance.m_world.m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
+            m_character->getWorld()->m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
         }
     }
     else if(m_character->m_command.action)
@@ -2496,7 +2496,7 @@ void StateController::waterDeath()
 {
     if(m_character->m_moveType != MoveType::OnWater)
     {
-        m_character->m_transform[3][2] += MeteringSectorSize / 4 * engine::Engine::instance.getFrameTimeSecs();     // go to the air
+        m_character->m_transform[3][2] += MeteringSectorSize / 4 * m_character->getWorld()->m_engine->getFrameTimeSecs();     // go to the air
     }
 }
 
@@ -2619,7 +2619,7 @@ void StateController::onwaterForward()
     {
         glm::float_t t = m_character->m_transform[3][2];
         HeightInfo next_fc = initHeightInfo();
-        Character::getHeightInfo(glm::vec3(m_character->m_transform[3]), &next_fc);
+        m_character->getHeightInfo(glm::vec3(m_character->m_transform[3]), &next_fc);
         m_character->m_transform[3][2] = t;
         setNextState(LaraState::UnderwaterForward);
         m_character->m_skeleton.onFrame = onFrameSetUnderwater;                          // dive
@@ -2775,7 +2775,7 @@ void StateController::crouchIdle()
     glm::vec3 move(m_character->m_transform[3]);
     move[2] += 0.5f * (m_character->m_skeleton.getBoundingBox().max[2] - m_character->m_skeleton.getBoundingBox().min[2]);
     HeightInfo next_fc = initHeightInfo();
-    Character::getHeightInfo(move, &next_fc);
+    m_character->getHeightInfo(move, &next_fc);
 
     m_character->lean(0.0);
 
@@ -2793,7 +2793,7 @@ void StateController::crouchIdle()
     }
     else
     {
-        if(engine::Engine::instance.m_world.m_engineVersion > loader::Engine::TR3)
+        if(m_character->getWorld()->m_engineVersion > loader::Engine::TR3)
         {
             if(m_character->m_command.move.x == MovementStrafe::Right)
             {
@@ -2857,7 +2857,7 @@ void StateController::crawlIdle()
             global_offset[2] += 0.5f * (m_character->m_skeleton.getBoundingBox().max[2] + m_character->m_skeleton.getBoundingBox().min[2]);
             global_offset += glm::vec3(m_character->m_transform[3]);
             HeightInfo next_fc = initHeightInfo();
-            Character::getHeightInfo(global_offset, &next_fc);
+            m_character->getHeightInfo(global_offset, &next_fc);
             if(next_fc.floor.hitPoint[2] < m_character->m_transform[3][2] + m_character->m_minStepUpHeight &&
                next_fc.floor.hitPoint[2] > m_character->m_transform[3][2] - m_character->m_minStepUpHeight)
             {
@@ -2874,7 +2874,7 @@ void StateController::crawlIdle()
             global_offset[2] += 0.5f * (m_character->m_skeleton.getBoundingBox().max[2] + m_character->m_skeleton.getBoundingBox().min[2]);
             global_offset += glm::vec3(m_character->m_transform[3]);
             HeightInfo next_fc = initHeightInfo();
-            Character::getHeightInfo(global_offset, &next_fc);
+            m_character->getHeightInfo(global_offset, &next_fc);
             if(next_fc.floor.hitPoint[2] < m_character->m_transform[3][2] + m_character->m_minStepUpHeight &&
                next_fc.floor.hitPoint[2] > m_character->m_transform[3][2] - m_character->m_minStepUpHeight)
             {
@@ -2933,7 +2933,7 @@ void StateController::crawlForward()
     global_offset[2] += 0.5f * (m_character->m_skeleton.getBoundingBox().max[2] + m_character->m_skeleton.getBoundingBox().min[2]);
     global_offset += glm::vec3(m_character->m_transform[3]);
     HeightInfo next_fc = initHeightInfo();
-    Character::getHeightInfo(global_offset, &next_fc);
+    m_character->getHeightInfo(global_offset, &next_fc);
 
     if(m_character->m_command.move.z != MovementWalk::Forward || m_character->m_response.killed)
     {
@@ -2963,7 +2963,7 @@ void StateController::crawlBack()
     global_offset[2] += 0.5f * (m_character->m_skeleton.getBoundingBox().max[2] + m_character->m_skeleton.getBoundingBox().min[2]);
     global_offset += glm::vec3(m_character->m_transform[3]);
     HeightInfo next_fc = initHeightInfo();
-    Character::getHeightInfo(global_offset, &next_fc);
+    m_character->getHeightInfo(global_offset, &next_fc);
     if(m_character->m_command.move.z != MovementWalk::Backward || m_character->m_response.killed)
     {
         setNextState(LaraState::CrawlIdle); // Stop

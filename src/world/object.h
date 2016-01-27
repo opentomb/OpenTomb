@@ -8,6 +8,7 @@
 namespace world
 {
 class Room;
+class World;
 
 enum class CollisionShape
 {
@@ -85,26 +86,33 @@ public:
         return m_id;
     }
 
+    World* getWorld() const
+    {
+        return m_world;
+    }
+
 protected:
-    explicit Object(ObjectId id, Room* room = nullptr)
+    explicit Object(ObjectId id, World* world, Room* room = nullptr)
         : m_id(id)
         , m_room(room)
+        , m_world(world)
     {
     }
 
 private:
     const ObjectId m_id;                 // Unique entity ID
 
-    world::Room* m_room = nullptr;
+    Room* m_room = nullptr;
     CollisionType m_collisionType = CollisionType::None;
     CollisionShape m_collisionShape = CollisionShape::Box;
+    World* m_world = nullptr;
 };
 
 class BulletObject : public Object
 {
 public:
-    explicit BulletObject(Room* room)
-        : Object(0, room)
+    explicit BulletObject(World* world, Room* room)
+        : Object(0, world, room)
     {
     }
 };

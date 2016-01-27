@@ -2,6 +2,7 @@
 
 #include "vertex_array.h"
 #include "loader/datatypes.h"
+#include "shader_manager.h"
 #include "world/core/orientedboundingbox.h"
 
 #include <cstdint>
@@ -15,11 +16,12 @@
 #include <LinearMath/btIDebugDraw.h>
 
 #include <glm/glm.hpp>
+#include "bsp_tree.h"
 
 namespace world
 {
 struct Portal;
-struct World;
+class World;
 class Room;
 struct RoomSector;
 class Camera;
@@ -39,6 +41,11 @@ namespace animation
 class Skeleton;
 } // namespace animation
 } // namespace world
+
+namespace engine
+{
+class Engine;
+}
 
 namespace render
 {
@@ -65,6 +72,8 @@ class Render;
 
 class RenderDebugDrawer : public btIDebugDraw
 {
+private:
+    engine::Engine* m_engine;
     uint32_t m_debugMode = 0;
 
     glm::vec3 m_color = { 0,0,0 };
@@ -80,7 +89,7 @@ class RenderDebugDrawer : public btIDebugDraw
 
 public:
     // engine debug function
-    RenderDebugDrawer();
+    explicit RenderDebugDrawer(engine::Engine* engine);
     ~RenderDebugDrawer();
     bool IsEmpty() const
     {
@@ -100,9 +109,9 @@ public:
     void drawOBB(const world::core::OrientedBoundingBox& obb);
     void drawMeshDebugLines(const std::shared_ptr<world::core::BaseMesh> &mesh, const glm::mat4& transform, const Render& render);
     void drawSkeletalModelDebugLines(const world::animation::Skeleton &skeleton, const glm::mat4& transform, const Render& render);
-    static void drawEntityDebugLines(const world::Entity& entity, const Render& render);
+    void drawEntityDebugLines(const world::Entity& entity, const Render& render);
     void drawSectorDebugLines(const world::RoomSector& rs);
-    static void drawRoomDebugLines(const world::Room& room, const Render& render);
+    void drawRoomDebugLines(const world::Room& room, const Render& render);
 
     // bullet's debug interface
     virtual void   drawLine(const btVector3& from, const btVector3& to, const btVector3 &color) override;
@@ -115,8 +124,6 @@ public:
         return m_debugMode;
     }
 };
-
-extern RenderDebugDrawer debugDrawer;
 
 struct RenderSettings
 {
@@ -141,13 +148,16 @@ struct RenderSettings
     bool      use_gl3 = false;
 };
 
-class  ShaderManager;
 struct UnlitTintedShaderDescription;
 
 class Render
 {
     friend class RenderDebugDrawer;
 private:
+    engine::Engine* m_engine;
+
+    DynamicBSP render_dBSP;
+
     bool m_blocked = true;
     world::World* m_world = nullptr;
     world::Camera* m_cam = nullptr;
@@ -171,6 +181,9 @@ private:
     bool m_drawSkybox = false;
     bool m_drawPoints = false;
 public:
+    explicit Render(engine::Engine* engine);
+    ~Render();
+
     void cleanList();
     void genWorldList();
     void drawList();
@@ -278,13 +291,15 @@ public:
 
     void processRoom(const world::Room& room);
 
+    void fillCrosshairBuffer();
+    void drawCrosshair();
+
 private:
     const LitShaderDescription *setupEntityLight(const world::Entity& entity, bool skin) const;
+
+    GLuint m_crosshairBuffer = 0;
+    std::unique_ptr<VertexArray> m_crosshairArray = nullptr;
 };
 
-extern Render renderer;
-
-void fillCrosshairBuffer();
-void drawCrosshair();
 void renderItem(const world::animation::Skeleton& bf, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix);
 } // namespace render

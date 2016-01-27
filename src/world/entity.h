@@ -142,7 +142,7 @@ public:
     glm::vec3 m_activationOffset = { 0,256,0 };   // where we can activate object (dx, dy, dz)
     glm::float_t m_activationRadius = 128;
 
-    explicit Entity(ObjectId id);
+    explicit Entity(ObjectId id, World* world);
     ~Entity();
 
     void enable();
@@ -164,7 +164,7 @@ public:
     bool isPlayer()
     {
         // FIXME: isPlayer()
-        return reinterpret_cast<Entity*>(engine::Engine::instance.m_world.m_character.get()) == this;
+        return reinterpret_cast<Entity*>(getWorld()->m_character.get()) == this;
     }
 
     void updateInterpolation();
@@ -236,6 +236,8 @@ private:
         auto d = bb.max - bb.min;
         return glm::min(d[0], glm::min(d[1], d[2]));
     }
+
+    bool getPenetrationFixVector(btPairCachingGhostObject& ghost, btManifoldArray& manifoldArray, glm::vec3& correction) const;
 };
 
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject& ghost, btManifoldArray& manifoldArray, glm::vec3& correction);

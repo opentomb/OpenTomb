@@ -5,12 +5,17 @@
 
 #include <glm/glm.hpp>
 
+namespace engine
+{
+class Engine;
+}
+
 namespace gui
 {
 class ItemNotifier
 {
 public:
-    ItemNotifier();
+    ItemNotifier(engine::Engine* engine);
 
     void    start(world::ObjectId item, util::Duration time = util::Seconds(2));
     void    reset();
@@ -23,6 +28,8 @@ public:
     void    setRotateTime(util::Duration time);
 
 private:
+    engine::Engine* m_engine;
+
     bool    m_active = false;
     world::ObjectId m_item = 0;
 

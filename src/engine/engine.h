@@ -1,9 +1,13 @@
 #pragma once
 
+#include "gameflow.h"
+#include "gui/gui.h"
 #include "gui/textline.h"
 #include "inputhandler.h"
-#include "world/object.h"
+#include "script/script.h"
 #include "world/world.h"
+#include "bullet.h"
+#include "system.h"
 
 namespace world
 {
@@ -74,14 +78,15 @@ struct EngineControlState
     bool     m_guiInventory = false;
 };
 
-struct Engine
+class Engine
 {
-    static Engine instance;
-
 private:
     util::Duration m_frameTime = util::Duration(0);
 
 public:
+    explicit Engine();
+    ~Engine();
+
     util::Duration getFrameTime() const noexcept
     {
         return m_frameTime;
@@ -101,18 +106,21 @@ public:
     EngineControlState m_controlState;
     InputHandler m_inputHandler;
 
+    render::Render renderer;
+    render::RenderDebugDrawer debugDrawer;
+
     world::Camera m_camera;
     world::World m_world;
+    gui::Gui m_gui;
+    Gameflow gameflow;
+    script::MainEngine engine_lua;
+    BulletEngine bullet;
 
-    // Starter and destructor.
-
-    void start();
-    void destroy();
-#ifdef __GNUC__
-    void shutdown(int val) __attribute__((noreturn));
-#else
-    void shutdown(int val);
-#endif
+    float time_scale = 1;
+    bool done = false;
+    ScreenInfo screen_info;
+    SystemSettings system_settings;
+    world::Object* last_object = nullptr;
 
     // Initializers
 

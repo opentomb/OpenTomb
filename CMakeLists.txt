@@ -160,7 +160,7 @@ target_include_directories(CImg INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/CImg)
 target_link_libraries(CImg INTERFACE PNG JPEG)
 target_compile_definitions(CImg INTERFACE -Dcimg_use_png -Dcimg_use_jpeg -Dcimg_display=0)
 
-if(WIN32) # FIXME These deps should be handled by Hunter through SndFile, but FLAC is currently missing there
+if(FALSE) # FIXME These deps should be handled by Hunter through SndFile, but FLAC is currently missing there
     # Dependency: OGG
     find_package(OGG REQUIRED)
     include_directories(${OGG_INCLUDE_DIR})
@@ -182,6 +182,25 @@ ot_find_dependency(SndFile)
 target_include_directories(SndFile INTERFACE ${SNDFILE_INCLUDE_DIR})
 target_link_libraries(SndFile INTERFACE ${SNDFILE_LIBRARIES} ${OGG_LIBRARIES} ${VORBIS_LIBRARIES} ${VORBISFILE_LIBRARIES})
 
+if(MSVC)
+    # C4503: Name too long
+    add_definitions(/wd4503)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
+
+find_package(Git)
+if(NOT GIT_FOUND)
+    set(GIT_SHA "<unknown>")
+else()
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --dirty --tags --long
+        OUTPUT_VARIABLE GIT_SHA
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+endif()
+
+add_definitions(-DGIT_SHA="${GIT_SHA}")
 
 add_subdirectory(doc)
 add_subdirectory(src)

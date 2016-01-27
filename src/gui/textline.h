@@ -25,16 +25,19 @@ struct TextLine
 
     bool show = true;
 
-    void move();
+    void move(float scaleFactor);
 };
 
 class TextLineManager
 {
 private:
+    engine::Engine* m_engine;
     std::list<const TextLine*> m_baseLines;
     std::list<TextLine> m_tempLines;
 
 public:
+    explicit TextLineManager(engine::Engine* engine);
+
     void add(const TextLine *line)
     {
         m_baseLines.push_back(line);
@@ -59,7 +62,5 @@ public:
     }
 
     void resizeTextLines();
-
-    static std::unique_ptr<TextLineManager> instance;
 };
 } // namespace gui

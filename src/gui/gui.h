@@ -3,24 +3,35 @@
 #include "gl_font.h"
 #include "render/render.h"
 
+#include "console.h"
 #include "fadermanager.h"
-#include "inventory.h"
 #include "itemnotifier.h"
 #include "progressbarmanager.h"
+#include "textline.h"
 
 namespace gui
 {
 struct Gui
 {
-    // Notifier show time is a time notifier stays on screen (excluding slide
-    // effect). Maybe it's better to move it to script later.
+private:
+    engine::Engine* m_engine;
+    Console m_console;
 
-    Gui();
+public:
+    explicit Gui(engine::Engine* engine);
     ~Gui();
 
-    ProgressbarManager progressBars;
-    FaderManager faders;
-    ItemNotifier notifier;
+    ProgressbarManager m_progressBars;
+    FaderManager m_faders;
+    ItemNotifier m_notifier;
+    TextLineManager m_textlineManager;
+    FontManager m_fontManager;
+    glm::mat4 m_guiProjectionMatrix = glm::mat4(1.0f);
+
+    Console& getConsole()
+    {
+        return m_console;
+    }
 
     /**
      * Helper method to setup OpenGL state for console drawing.
@@ -78,13 +89,10 @@ struct Gui
     bool update();
     void resize();  // Called every resize event.
 
-    glm::mat4 guiProjectionMatrix = glm::mat4(1.0f);
-
-    static std::unique_ptr<Gui> instance;
-
 private:
-    GLuint rectanglePositionBuffer = 0;
-    GLuint rectangleColorBuffer = 0;
-    std::unique_ptr<render::VertexArray> rectangleArray = nullptr;
+
+    GLuint m_rectanglePositionBuffer = 0;
+    GLuint m_rectangleColorBuffer = 0;
+    std::unique_ptr<render::VertexArray> m_rectangleArray = nullptr;
 };
 } // namespace gui

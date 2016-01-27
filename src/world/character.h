@@ -341,7 +341,7 @@ enum class WeaponState
 
 class Character : public Entity
 {
-    friend class StateController;
+    friend struct StateController;
 private:
     CharacterCommand m_command;   // character control commands
     CharacterResponse m_response; // character response info (collides, slide, next steps, drops, e.t.c.)
@@ -381,7 +381,7 @@ private:
     std::shared_ptr<engine::BtEngineClosestConvexResultCallback> m_convexCb;
 
 public:
-    explicit Character(ObjectId id);
+    explicit Character(ObjectId id, world::World* world);
     ~Character();
 
     InventoryManager& inventory() noexcept
@@ -438,7 +438,7 @@ public:
 
     bool addHair(HairSetup* setup)
     {
-        m_hairs.emplace_back(std::make_shared<world::Hair>());
+        m_hairs.emplace_back(std::make_shared<world::Hair>(getWorld()));
 
         if(!m_hairs.back()->create(setup, *this))
         {
@@ -506,7 +506,7 @@ public:
     void removeAllItems();
     size_t getItemsCount(ObjectId item_id); // returns items count
 
-    static void getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t v_offset = 0.0);
+    void getHeightInfo(const glm::vec3& pos, HeightInfo* fc, glm::float_t v_offset = 0.0) const;
     StepType checkNextStep(const glm::vec3& offset, HeightInfo* nfc) const;
     bool hasStopSlant(const HeightInfo& next_fc);
     ClimbInfo checkClimbability(const glm::vec3& offset, HeightInfo* nfc, glm::float_t test_height);

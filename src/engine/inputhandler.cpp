@@ -12,20 +12,22 @@
 
 #include <SDL2/SDL.h>
 
-extern bool done; // FIXME
-
 namespace engine
 {
 
 using gui::Console;
 
-extern world::Object* last_object;
+InputHandler::InputHandler(Engine* engine)
+    : m_engine(engine)
+{
+    BOOST_LOG_TRIVIAL(info) << "Initializing InputHandler";
+}
 
 void InputHandler::primaryMouseDown()
 {
     glm::float_t dbgR = 128.0;
-    glm::vec3 v = Engine::instance.m_camera.getPosition();
-    glm::vec3 dir = Engine::instance.m_camera.getViewDir();
+    glm::vec3 v = m_engine->m_camera.getPosition();
+    glm::vec3 dir = m_engine->m_camera.getViewDir();
     btVector3 localInertia(0, 0, 0);
 
     btCollisionShape* cshape = new btSphereShape(dbgR);
@@ -38,9 +40,9 @@ void InputHandler::primaryMouseDown()
     cshape->calculateLocalInertia(12.0, localInertia);
     btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
     btRigidBody* body = new btRigidBody(12.0, motionState, cshape, localInertia);
-    BulletEngine::instance->dynamicsWorld->addRigidBody(body);
+    m_engine->bullet.dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(util::convert(dir) * 6000);
-    world::BulletObject* object = new world::BulletObject(Engine::instance.m_world.Room_FindPosCogerrence(new_pos, Engine::instance.m_camera.getCurrentRoom()));
+    world::BulletObject* object = new world::BulletObject(&m_engine->m_world, m_engine->m_world.Room_FindPosCogerrence(new_pos, m_engine->m_camera.getCurrentRoom()));
     body->setUserPointer(object);
     body->setCcdMotionThreshold(dbgR);                          // disable tunneling effect
     body->setCcdSweptSphereRadius(dbgR);
@@ -48,20 +50,20 @@ void InputHandler::primaryMouseDown()
 
 void InputHandler::secondaryMouseDown()
 {
-    glm::vec3 from = Engine::instance.m_camera.getPosition();
-    glm::vec3 to = from + Engine::instance.m_camera.getViewDir() * 32768.0f;
+    glm::vec3 from = m_engine->m_camera.getPosition();
+    glm::vec3 to = from + m_engine->m_camera.getViewDir() * 32768.0f;
 
-    world::BulletObject* cam_cont = new world::BulletObject(Engine::instance.m_camera.getCurrentRoom());
+    world::BulletObject* cam_cont = new world::BulletObject(&m_engine->m_world, m_engine->m_camera.getCurrentRoom());
 
     BtEngineClosestRayResultCallback cbc(cam_cont);
     //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
-    BulletEngine::instance->dynamicsWorld->rayTest(util::convert(from), util::convert(to), cbc);
+    m_engine->bullet.dynamicsWorld->rayTest(util::convert(from), util::convert(to), cbc);
     if(!cbc.hasHit())
         return;
 
     glm::vec3 place = glm::mix(from, to, cbc.m_closestHitFraction);
-    Engine::instance.m_castRay[0] = place;
-    Engine::instance.m_castRay[1] = Engine::instance.m_castRay[0] + 100.0f * util::convert(cbc.m_hitNormalWorld);
+    m_engine->m_castRay[0] = place;
+    m_engine->m_castRay[1] = m_engine->m_castRay[0] + 100.0f * util::convert(cbc.m_hitNormalWorld);
 
     world::Object* c0 = static_cast<world::Object*>(cbc.m_collisionObject->getUserPointer());
     if(c0 == nullptr)
@@ -69,7 +71,7 @@ void InputHandler::secondaryMouseDown()
 
     if(dynamic_cast<world::BulletObject*>(c0) == nullptr)
     {
-        last_object = c0;
+        m_engine->last_object = c0;
         return;
     }
 
@@ -90,7 +92,7 @@ void InputHandler::secondaryMouseDown()
     }
     delete c0;
 
-    BulletEngine::instance->dynamicsWorld->removeCollisionObject(obj);
+    m_engine->bullet.dynamicsWorld->removeCollisionObject(obj);
     delete obj;
 }
 
@@ -238,9 +240,9 @@ void InputHandler::poll()
 
             case SDL_TEXTINPUT:
             case SDL_TEXTEDITING:
-                if(Console::instance().isVisible() && event.key.state)
+                if(m_engine->m_gui.getConsole().isVisible() && event.key.state)
                 {
-                    Console::instance().filter(event.text.text);
+                    m_engine->m_gui.getConsole().filter(event.text.text);
                     return;
                 }
                 break;
@@ -251,11 +253,11 @@ void InputHandler::poll()
                    event.key.state == SDL_PRESSED &&
                    event.key.keysym.mod & KMOD_ALT)
                 {
-                    done = true;
+                    m_engine->done = true;
                     break;
                 }
 
-                if(Console::instance().isVisible() && event.key.state)
+                if(m_engine->m_gui.getConsole().isVisible() && event.key.state)
                 {
                     switch(event.key.keysym.sym)
                     {
@@ -270,7 +272,7 @@ void InputHandler::poll()
                         case SDLK_DELETE:
                         case SDLK_TAB:
                         case SDLK_v: // for Ctrl+V
-                            Console::instance().edit(event.key.keysym.sym, event.key.keysym.mod);
+                            m_engine->m_gui.getConsole().edit(event.key.keysym.sym, event.key.keysym.mod);
                             break;
                         default:
                             break;
@@ -286,13 +288,13 @@ void InputHandler::poll()
                 break;
 
             case SDL_QUIT:
-                done = true;
+                m_engine->done = true;
                 break;
 
             case SDL_WINDOWEVENT:
                 if(event.window.event == SDL_WINDOWEVENT_RESIZED)
                 {
-                    Engine::instance.resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
+                    m_engine->resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
                 }
                 break;
 
@@ -322,7 +324,7 @@ void InputHandler::rumble(float power, util::Duration time)
 void InputHandler::dispatchActionHandler(int key, bool pressed)
 {
     // Fill script-driven debug keyboard input.
-    engine_lua.addKey(key, pressed);
+    m_engine->engine_lua.addKey(key, pressed);
 
     auto it1 = m_keyToAction.find(key);
     if(it1 == m_keyToAction.end())
@@ -409,29 +411,29 @@ void InputHandler::dispatchGameControllerAxis(int axis, int value)
 
 void InputHandler::debugKeys(int button, int state)
 {
-    if(state == 0 || gui::Gui::instance == nullptr)
+    if(state == 0)
         return;
 
     switch(button)
     {
         case SDLK_RETURN:
-            Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::Activate);
+            m_engine->m_world.m_character->inventory().send(InventoryManager::InventoryState::Activate);
             break;
 
         case SDLK_UP:
-            Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::Up);
+            m_engine->m_world.m_character->inventory().send(InventoryManager::InventoryState::Up);
             break;
 
         case SDLK_DOWN:
-            Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::Down);
+            m_engine->m_world.m_character->inventory().send(InventoryManager::InventoryState::Down);
             break;
 
         case SDLK_LEFT:
-            Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::RLeft);
+            m_engine->m_world.m_character->inventory().send(InventoryManager::InventoryState::RLeft);
             break;
 
         case SDLK_RIGHT:
-            Engine::instance.m_world.m_character->inventory().send(InventoryManager::InventoryState::RRight);
+            m_engine->m_world.m_character->inventory().send(InventoryManager::InventoryState::RRight);
             break;
 
         default:

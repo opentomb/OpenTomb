@@ -13,6 +13,11 @@ class Camera;
 class Character;
 }
 
+namespace engine
+{
+class Engine;
+}
+
 namespace audio
 {
 // FX manager structure.
@@ -27,6 +32,7 @@ class FxManager
 
     static constexpr int MaxSlots = 2;
 
+    engine::Engine* m_engine;
     ALuint m_filter = 0;
     std::array<ALuint, static_cast<int>(loader::ReverbType::Sentinel)> m_effects;
     std::array<ALuint, MaxSlots> m_slots;
@@ -36,8 +42,10 @@ class FxManager
     bool m_underwater = false;    // If listener is underwater, all samples will damp.
 
 public:
-    explicit FxManager() = default;
-    explicit FxManager(bool); // Bool param only used for distinguishing from default constructor
+    explicit FxManager(engine::Engine* engine);
+
+    explicit FxManager(engine::Engine* engine, bool); // Bool param only used for distinguishing from default constructor
+    
     ~FxManager() noexcept;
 
     bool loadReverb(loader::ReverbType effect_index, const EFXEAXREVERBPROPERTIES *reverb);

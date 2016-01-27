@@ -4,24 +4,25 @@
 #include <chrono>
 #include <thread>
 
-bool done = false;
-float time_scale = 1.0;
-
 int main(int /*argc*/, char** /*argv*/)
 {
-    engine::Engine::instance.start();
+    BOOST_LOG_TRIVIAL(info) << "*** This is OpenTomb.";
+    BOOST_LOG_TRIVIAL(info) << "*** If you experience problems, report them and include this text:";
+    BOOST_LOG_TRIVIAL(info) << "***    Git Checkout " << GIT_SHA;
+
+    engine::Engine engine{};
 
     // Entering main loop.
 
     util::TimePoint prev_time = util::now();
 
-    while(!done)
+    while(!engine.done)
     {
-        BOOST_ASSERT(time_scale > 0);
+        BOOST_ASSERT(engine.time_scale > 0);
 
         util::TimePoint now = util::now();
         util::Duration delta = now - prev_time;
-        delta *= time_scale;
+        delta *= engine.time_scale;
 
         if(delta.count() <= 0)
         {
@@ -31,12 +32,11 @@ int main(int /*argc*/, char** /*argv*/)
 
         prev_time = now;
 
-        engine::Engine::instance.frame(delta);
-        engine::Engine::instance.display();
+        engine.frame(delta);
+        engine.display();
     }
 
     // Main loop interrupted; shutting down.
 
-    engine::Engine::instance.shutdown(EXIT_SUCCESS);
     return EXIT_SUCCESS;
 }

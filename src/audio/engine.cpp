@@ -149,7 +149,8 @@ bool loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t samp
     // than native wav length, because for some reason many TR5 uncomp sizes
     // are messed up and actually more than actual sample size.
 
-    size_t real_size = sfInfo.frames * sizeof(uint16_t);
+    BOOST_ASSERT(sfInfo.frames >= 0);
+    size_t real_size = static_cast<size_t>( sfInfo.frames * sizeof(uint16_t) );
 
     if(uncomp_sample_size == 0 || real_size < uncomp_sample_size)
     {
@@ -170,14 +171,22 @@ bool loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t samp
     return result;   // Zero means success.
 }
 
-bool loadALbufferFromFile(ALuint buf_number, const std::string& fname)
+} // anonymous namespace
+
+Engine::Engine(engine::Engine* engine)
+    : m_engine(engine)
+{
+    BOOST_LOG_TRIVIAL(info) << "Initializing Audio Engine";
+}
+
+bool Engine::loadALbufferFromFile(ALuint buf_number, const std::string& fname)
 {
     SF_INFO sfInfo;
     SNDFILE* file = sf_open(fname.c_str(), SFM_READ, &sfInfo);
 
     if(!file)
     {
-        Console::instance().warning(SYSWARN_CANT_OPEN_FILE);
+        m_engine->m_gui.getConsole().warning(SYSWARN_CANT_OPEN_FILE);
         BOOST_LOG_TRIVIAL(error) << "SndFile cannot open file '" << fname << "': " << sf_strerror(file);
         return false;
     }
@@ -188,7 +197,6 @@ bool loadALbufferFromFile(ALuint buf_number, const std::string& fname)
 
     return result;   // Zero means success.
 }
-} // anonymous namespace
 
 void Engine::pauseAllSources()
 {
@@ -215,7 +223,7 @@ void Engine::resumeAllSources()
     {
         if(source.isActive())
         {
-            source.play(fxManager());
+            source.play(*m_fxManager, m_engine->m_world);
         }
     }
 }
@@ -366,7 +374,7 @@ void Engine::updateSources()
 
     for(Source& src : m_sources)
     {
-        src.update(fxManager());
+        src.update(*m_fxManager, m_engine->m_world);
     }
 }
 
@@ -377,11 +385,11 @@ void Engine::updateAudio()
 
     if(m_settings.listener_is_player)
     {
-        m_fxManager->updateListener(*engine::Engine::instance.m_world.m_character);
+        m_fxManager->updateListener(*m_engine->m_world.m_character);
     }
     else
     {
-        m_fxManager->updateListener(*render::renderer.camera());
+        m_fxManager->updateListener(*m_engine->renderer.camera());
     }
 }
 
@@ -397,7 +405,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(track_index >= m_trackMap.size())
     {
-        Console::instance().warning(SYSWARN_TRACK_OUT_OF_BOUNDS, track_index);
+        m_engine->m_gui.getConsole().warning(SYSWARN_TRACK_OUT_OF_BOUNDS, track_index);
         return StreamError::WrongTrack;
     }
 
@@ -406,7 +414,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(isTrackPlaying(track_index))
     {
-        Console::instance().warning(SYSWARN_TRACK_ALREADY_PLAYING, track_index);
+        m_engine->m_gui.getConsole().warning(SYSWARN_TRACK_ALREADY_PLAYING, track_index);
         return StreamError::Ignored;
     }
 
@@ -416,9 +424,9 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
     // "load_method" argument. Function itself returns false, if script wasn't found or
     // request was broken; in this case, we quit.
 
-    if(!engine_lua.getSoundtrack(track_index, file_path, &load_method, &stream_type))
+    if(!m_engine->engine_lua.getSoundtrack(track_index, file_path, &load_method, &stream_type))
     {
-        Console::instance().warning(SYSWARN_TRACK_WRONG_INDEX, track_index);
+        m_engine->m_gui.getConsole().warning(SYSWARN_TRACK_WRONG_INDEX, track_index);
         return StreamError::WrongTrack;
     }
 
@@ -445,7 +453,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
 
         if(!target_stream)
         {
-            Console::instance().warning(SYSWARN_NO_FREE_STREAM);
+            m_engine->m_gui.getConsole().warning(SYSWARN_NO_FREE_STREAM);
             return StreamError::NoFreeStream;  // No success, exit and don't play anything.
         }
     }
@@ -463,7 +471,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!m_tracks[*target_stream].load(file_path, track_index, stream_type, load_method))
     {
-        Console::instance().warning(SYSWARN_STREAM_LOAD_ERROR);
+        m_engine->m_gui.getConsole().warning(SYSWARN_STREAM_LOAD_ERROR);
         return StreamError::LoadError;
     }
 
@@ -471,7 +479,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
 
     if(!m_tracks[*target_stream].play(fxManager(), do_fade_in))
     {
-        Console::instance().warning(SYSWARN_STREAM_PLAY_ERROR);
+        m_engine->m_gui.getConsole().warning(SYSWARN_STREAM_PLAY_ERROR);
         return StreamError::PlayError;
     }
 
@@ -538,7 +546,7 @@ bool Engine::isInRange(EmitterType entityType, const boost::optional<world::Obje
     {
         case EmitterType::Entity:
             BOOST_ASSERT(entityId.is_initialized());
-            if(std::shared_ptr<world::Entity> ent = engine::Engine::instance.m_world.getEntityByID(*entityId))
+            if(std::shared_ptr<world::Entity> ent = m_engine->m_world.getEntityByID(*entityId))
             {
                 vec = glm::vec3(ent->m_transform[3]);
             }
@@ -709,7 +717,7 @@ Error Engine::send(const boost::optional<SoundId>& soundId, EmitterType entityTy
 
     source->setRange(effect->range);    // Set audible range.
 
-    source->play(fxManager());                     // Everything is OK, play sound now!
+    source->play(*m_fxManager, m_engine->m_world);                     // Everything is OK, play sound now!
 
     return Error::Processed;
 }
@@ -723,7 +731,7 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
     // Generate stream track map array.
     // We use scripted amount of tracks to define map bounds.
     // If script had no such parameter, we define map bounds by default.
-    m_trackMap.resize(engine_lua.getNumTracks(), 0);
+    m_trackMap.resize(m_engine->engine_lua.getNumTracks(), 0);
     if(m_trackMap.empty())
         m_trackMap.resize(StreamMapSize, 0);
 
@@ -913,7 +921,7 @@ void Engine::loadSampleOverrideInfo()
 {
     int num_samples, num_sounds;
     std::string sample_name_mask;
-    if(!engine_lua.getOverridedSamplesInfo(num_samples, num_sounds, sample_name_mask))
+    if(!m_engine->engine_lua.getOverridedSamplesInfo(num_samples, num_sounds, sample_name_mask))
         return;
 
     size_t buffer_counter = 0;
@@ -924,7 +932,7 @@ void Engine::loadSampleOverrideInfo()
             continue;
 
         int sample_index, sample_count;
-        if(engine_lua.getOverridedSample(i, sample_index, sample_count))
+        if(m_engine->engine_lua.getOverridedSample(i, sample_index, sample_count))
         {
             for(int j = 0; j < sample_count; j++, buffer_counter++)
             {
@@ -948,7 +956,7 @@ void Engine::init(size_t num_Sources)
 
     if(m_settings.use_effects)
     {
-        m_fxManager.reset(new FxManager(true));
+        m_fxManager.reset(new FxManager(m_engine, true));
     }
 
     // Generate new source array.
@@ -1027,7 +1035,7 @@ void Engine::initDevice()
 
     std::string driver = "OpenAL library: ";
     driver += alcGetString(m_device, ALC_DEVICE_SPECIFIER);
-    Console::instance().addLine(driver, gui::FontStyle::ConsoleInfo);
+    m_engine->m_gui.getConsole().addLine(driver, gui::FontStyle::ConsoleInfo);
 
     alSpeedOfSound(330.0 * 512.0);
     alDopplerVelocity(330.0 * 510.0);

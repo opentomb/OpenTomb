@@ -1,11 +1,14 @@
 #include "shader_manager.h"
 
 #include <sstream>
+#include <boost/log/trivial.hpp>
 
 namespace render
 {
 ShaderManager::ShaderManager()
 {
+    BOOST_LOG_TRIVIAL(info) << "Initializing ShaderManager";
+
     ShaderStage staticMeshVsh(GL_VERTEX_SHADER, "shaders/static_mesh.vsh");
     ShaderStage staticMeshFsh(GL_FRAGMENT_SHADER, "shaders/static_mesh.fsh");
     //Color mult prog
