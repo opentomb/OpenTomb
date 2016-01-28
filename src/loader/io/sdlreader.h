@@ -5,7 +5,9 @@
 
 #include <zlib.h>
 
+#include <boost/log/trivial.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/type_index.hpp>
 
 #include <cstdint>
 #include <memory>
@@ -126,6 +128,8 @@ public:
     template<typename T>
     void appendVector(std::vector<T>& elements, size_t count, Producer<T> producer)
     {
+        BOOST_LOG_TRIVIAL(debug) << "Appending " << count << " elements of type `" << boost::typeindex::type_id<T>().pretty_name() << "` (size " << sizeof(T) << ") to a vector of size " << elements.size();
+
         elements.reserve(elements.size() + count);
         for(size_t i = 0; i < count; ++i)
         {
@@ -136,6 +140,8 @@ public:
     template<typename T>
     void readVector(std::vector<T>& elements, size_t count)
     {
+        BOOST_LOG_TRIVIAL(debug) << "Reading " << count << " elements of type `" << boost::typeindex::type_id<T>().pretty_name() << "` (size " << sizeof(T) << ")";
+
         elements.clear();
         elements.reserve(count);
         for(size_t i = 0; i < count; ++i)
@@ -146,6 +152,8 @@ public:
 
     void readVector(std::vector<uint8_t>& elements, size_t count)
     {
+        BOOST_LOG_TRIVIAL(debug) << "Reading " << count << " elements of type `" << boost::typeindex::type_id<uint8_t>().pretty_name() << "` (size " << sizeof(uint8_t) << ")";
+
         elements.clear();
         elements.resize(count);
         readBytes(elements.data(), count);
@@ -153,6 +161,8 @@ public:
 
     void readVector(std::vector<int8_t>& elements, size_t count)
     {
+        BOOST_LOG_TRIVIAL(debug) << "Reading " << count << " elements of type `" << boost::typeindex::type_id<int8_t>().pretty_name() << "` (size " << sizeof(int8_t) << ")";
+
         elements.clear();
         elements.resize(count);
         readBytes(elements.data(), count);
