@@ -9,6 +9,11 @@ struct Moveable;
 enum class Engine;
 }
 
+namespace engine
+{
+class Engine;
+}
+
 namespace world
 {
 namespace core
@@ -168,10 +173,10 @@ public:
         return m_collisionMap[idx];
     }
 
-    static void lua_SetModelMeshReplaceFlag(World& world, ModelId id, size_t bone, int flag);
-    static void lua_SetModelAnimReplaceFlag(World& world, ModelId id, size_t bone, bool flag);
-    static void lua_CopyMeshFromModelToModel(World& world, ModelId id1, ModelId id2, size_t bone1, size_t bone2);
-    static void lua_SetModelBodyPartFlag(World& world, ModelId id, int bone_id, int body_part_flag);
+    static void lua_SetModelMeshReplaceFlag(engine::Engine& engine, ModelId id, size_t bone, int flag);
+    static void lua_SetModelAnimReplaceFlag(engine::Engine& engine, ModelId id, size_t bone, bool flag);
+    static void lua_CopyMeshFromModelToModel(engine::Engine& engine, ModelId id1, ModelId id2, size_t bone1, size_t bone2);
+    static void lua_SetModelBodyPartFlag(engine::Engine& engine, ModelId id, int bone_id, int body_part_flag);
 private:
     static size_t getKeyframeCountForMoveable(const loader::Level& tr, size_t moveable);
 };

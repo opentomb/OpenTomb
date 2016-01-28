@@ -297,7 +297,7 @@ void Engine::frame(util::Duration time)
     m_frameTime = time;
     fpsCycle(time);
 
-    Game_Frame(m_world, time);
+    Game_Frame(*this, time);
     gameflow.execute();
 }
 
@@ -495,13 +495,13 @@ void Engine::initDefaultGlobals()
     m_inputHandler.registerActionHandler(InputAction::SaveGame, [self](bool pressed){
         if(!pressed)
         {
-            Game_Save(self->m_world, "qsave.lua");
+            Game_Save(*self, "qsave.lua");
         }
     });
     m_inputHandler.registerActionHandler(InputAction::LoadGame, [self](bool pressed){
         if(!pressed)
         {
-            Game_Load(self->m_world, "qsave.lua");
+            Game_Load(*self, "qsave.lua");
         }
     });
 
@@ -522,7 +522,7 @@ void Engine::initDefaultGlobals()
         self->m_camera.rotate(rotation);
     });
 
-    Game_InitGlobals(m_world);
+    Game_InitGlobals(*this);
     renderer.initGlobals();
     m_world.m_audioEngine.resetSettings();
 }
@@ -760,7 +760,7 @@ bool Engine::loadMap(const std::string& name)
             break;
     }
 
-    Game_Prepare(m_world);
+    Game_Prepare(*this);
 
     engine_lua.prepare();
 
@@ -806,7 +806,7 @@ int Engine::execCmd(const char *ch)
             ch = script::MainEngine::parse_token(ch, token.data());
             if(NULL != ch)
             {
-                Game_Save(m_world, token.data());
+                Game_Save(*this, token.data());
             }
             return 1;
         }
@@ -815,7 +815,7 @@ int Engine::execCmd(const char *ch)
             ch = script::MainEngine::parse_token(ch, token.data());
             if(NULL != ch)
             {
-                Game_Load(m_world, token.data());
+                Game_Load(*this, token.data());
             }
             return 1;
         }

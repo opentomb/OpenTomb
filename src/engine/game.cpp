@@ -10,14 +10,11 @@
 #include "character_controller.h"
 #include "engine.h"
 #include "engine/bullet.h"
-#include "gameflow.h"
 #include "gui/console.h"
 #include "gui/fader.h"
-#include "gui/fadermanager.h"
 #include "gui/gui.h"
 #include "render/render.h"
 #include "script/script.h"
-#include "system.h"
 #include "util/vmath.h"
 #include "world/camera.h"
 #include "world/character.h"
@@ -41,100 +38,100 @@ void Save_Entity(std::ostream& f, std::shared_ptr<world::Entity> ent);
 
 using gui::Console;
 
-void lua_mlook(world::World& world, lua::Value mlook)
+void lua_mlook(Engine& engine, lua::Value mlook)
 {
     if(!mlook.is<lua::Boolean>())
     {
-        world.m_engine->m_controlState.m_mouseLook = !world.m_engine->m_controlState.m_mouseLook;
-        world.m_engine->m_gui.getConsole().printf("mlook = %d", world.m_engine->m_controlState.m_mouseLook);
+        engine.m_controlState.m_mouseLook = !engine.m_controlState.m_mouseLook;
+        engine.m_gui.getConsole().printf("mlook = %d", engine.m_controlState.m_mouseLook);
         return;
     }
 
-    world.m_engine->m_controlState.m_mouseLook = mlook.toBool();
-    world.m_engine->m_gui.getConsole().printf("mlook = %d", world.m_engine->m_controlState.m_mouseLook);
+    engine.m_controlState.m_mouseLook = mlook.toBool();
+    engine.m_gui.getConsole().printf("mlook = %d", engine.m_controlState.m_mouseLook);
 }
 
-void lua_freelook(world::World& world, lua::Value free)
+void lua_freelook(Engine& engine, lua::Value free)
 {
     if(!free.is<lua::Boolean>())
     {
-        world.m_engine->m_controlState.m_freeLook = !world.m_engine->m_controlState.m_freeLook;
-        world.m_engine->m_gui.getConsole().printf("free_look = %d", world.m_engine->m_controlState.m_freeLook);
+        engine.m_controlState.m_freeLook = !engine.m_controlState.m_freeLook;
+        engine.m_gui.getConsole().printf("free_look = %d", engine.m_controlState.m_freeLook);
         return;
     }
 
-    world.m_engine->m_controlState.m_freeLook = free.toBool();
-    world.m_engine->m_gui.getConsole().printf("free_look = %d", world.m_engine->m_controlState.m_freeLook);
+    engine.m_controlState.m_freeLook = free.toBool();
+    engine.m_gui.getConsole().printf("free_look = %d", engine.m_controlState.m_freeLook);
 }
 
-void lua_cam_distance(world::World& world, lua::Value distance)
+void lua_cam_distance(Engine& engine, lua::Value distance)
 {
     if(!distance.is<lua::Number>())
     {
-        world.m_engine->m_gui.getConsole().printf("cam_distance = %.2f", world.m_engine->m_controlState.m_camDistance);
+        engine.m_gui.getConsole().printf("cam_distance = %.2f", engine.m_controlState.m_camDistance);
         return;
     }
 
-    world.m_engine->m_controlState.m_camDistance = distance.toFloat();
-    world.m_engine->m_gui.getConsole().printf("cam_distance = %.2f", world.m_engine->m_controlState.m_camDistance);
+    engine.m_controlState.m_camDistance = distance.toFloat();
+    engine.m_gui.getConsole().printf("cam_distance = %.2f", engine.m_controlState.m_camDistance);
 }
 
-void lua_noclip(world::World& world, lua::Value noclip)
+void lua_noclip(Engine& engine, lua::Value noclip)
 {
     if(!noclip.is<lua::Boolean>())
     {
-        world.m_engine->m_controlState.m_noClip = !world.m_engine->m_controlState.m_noClip;
+        engine.m_controlState.m_noClip = !engine.m_controlState.m_noClip;
     }
     else
     {
-        world.m_engine->m_controlState.m_noClip = noclip.toBool();
+        engine.m_controlState.m_noClip = noclip.toBool();
     }
 
-    world.m_engine->m_gui.getConsole().printf("noclip = %d", world.m_engine->m_controlState.m_noClip);
+    engine.m_gui.getConsole().printf("noclip = %d", engine.m_controlState.m_noClip);
 }
 
-void lua_debuginfo(world::World& world, lua::Value show)
+void lua_debuginfo(Engine& engine, lua::Value show)
 {
     if(!show.is<lua::Boolean>())
     {
-        world.m_engine->screen_info.show_debuginfo = !world.m_engine->screen_info.show_debuginfo;
+        engine.screen_info.show_debuginfo = !engine.screen_info.show_debuginfo;
     }
     else
     {
-        world.m_engine->screen_info.show_debuginfo = show.toBool();
+        engine.screen_info.show_debuginfo = show.toBool();
     }
 
-    world.m_engine->m_gui.getConsole().printf("debug info = %d", world.m_engine->screen_info.show_debuginfo);
+    engine.m_gui.getConsole().printf("debug info = %d", engine.screen_info.show_debuginfo);
 }
 
-void lua_timescale(world::World& world, lua::Value scale)
+void lua_timescale(Engine& engine, lua::Value scale)
 {
     if(!scale.is<lua::Number>())
     {
-        if(util::fuzzyOne(world.m_engine->time_scale))
+        if(util::fuzzyOne(engine.time_scale))
         {
-            world.m_engine->time_scale = 0.033f;
+            engine.time_scale = 0.033f;
         }
         else
         {
-            world.m_engine->time_scale = 1.0;
+            engine.time_scale = 1.0;
         }
     }
     else
     {
-        world.m_engine->time_scale = scale.toFloat();
+        engine.time_scale = scale.toFloat();
     }
 
-    world.m_engine->m_gui.getConsole().printf("time_scale = %.3f", world.m_engine->time_scale);
+    engine.m_gui.getConsole().printf("time_scale = %.3f", engine.time_scale);
 }
 
-void Game_InitGlobals(world::World& world)
+void Game_InitGlobals(Engine& engine)
 {
-    world.m_engine->m_controlState.m_freeLookSpeed = 3000.0;
-    world.m_engine->m_controlState.m_mouseLook = true;
-    world.m_engine->m_controlState.m_freeLook = false;
-    world.m_engine->m_controlState.m_noClip = false;
-    world.m_engine->m_controlState.m_camDistance = 800.0;
+    engine.m_controlState.m_freeLookSpeed = 3000.0;
+    engine.m_controlState.m_mouseLook = true;
+    engine.m_controlState.m_freeLook = false;
+    engine.m_controlState.m_noClip = false;
+    engine.m_controlState.m_camDistance = 800.0;
 }
 
 void Game_RegisterLuaFunctions(script::ScriptEngine& state)
@@ -150,7 +147,7 @@ void Game_RegisterLuaFunctions(script::ScriptEngine& state)
 /**
  * Load game state
  */
-bool Game_Load(world::World& world, const std::string& name)
+bool Game_Load(Engine& engine, const std::string& name)
 {
     const bool local = (name.find_first_of("\\/") != std::string::npos);
 
@@ -164,10 +161,10 @@ bool Game_Load(world::World& world, const std::string& name)
             return 0;
         }
         fclose(f);
-        world.m_engine->engine_lua.clearTasks();
+        engine.engine_lua.clearTasks();
         try
         {
-            world.m_engine->engine_lua.doFile(token);
+            engine.engine_lua.doFile(token);
         }
         catch(lua::RuntimeError& error)
         {
@@ -187,10 +184,10 @@ bool Game_Load(world::World& world, const std::string& name)
             return 0;
         }
         fclose(f);
-        world.m_engine->engine_lua.clearTasks();
+        engine.engine_lua.clearTasks();
         try
         {
-            world.m_engine->engine_lua.doFile(name);
+            engine.engine_lua.doFile(name);
         }
         catch(lua::RuntimeError& error)
         {
@@ -316,7 +313,7 @@ void Save_Entity(std::ostream& f, std::shared_ptr<world::Entity> ent)
 /**
  * Save current game state
  */
-bool Game_Save(world::World& world, const std::string& name)
+bool Game_Save(Engine& engine, const std::string& name)
 {
     const bool local = (name.find_first_of("\\/") == std::string::npos);
 
@@ -337,155 +334,155 @@ bool Game_Save(world::World& world, const std::string& name)
     }
 
     f << boost::format("loadMap(\"%s\", %d, %d);\n")
-        % world.m_engine->gameflow.getLevelPath()
-        % world.m_engine->gameflow.getGameID()
-        % world.m_engine->gameflow.getLevelID();
+        % engine.gameflow.getLevelPath()
+        % engine.gameflow.getGameID()
+        % engine.gameflow.getLevelID();
 
     // Save flipmap and flipped room states.
 
-    for(size_t i = 0; i < world.m_engine->m_world.m_flipData.size(); i++)
+    for(size_t i = 0; i < engine.m_world.m_flipData.size(); i++)
     {
         f << boost::format("setFlipMap(%d, 0x%02X, 0);\n")
             % i
-            % world.m_engine->m_world.m_flipData[i].map;
+            % engine.m_world.m_flipData[i].map;
         f << boost::format("setFlipState(%d, %s);\n")
             % i
-            % (world.m_engine->m_world.m_flipData[i].state ? "true" : "false");
+            % (engine.m_world.m_flipData[i].state ? "true" : "false");
     }
 
-    Save_Entity(f, world.m_engine->m_world.m_character);    // Save Lara.
+    Save_Entity(f, engine.m_world.m_character);    // Save Lara.
 
-    Save_EntityTree(f, world.m_engine->m_world.m_entities);
+    Save_EntityTree(f, engine.m_world.m_entities);
 
     return true;
 }
 
-void Game_ApplyControls(world::World& world)
+void Game_ApplyControls(Engine& engine)
 {
     // Keyboard move logic
     world::Movement moveLogic;
-    moveLogic.setX(world.m_engine->m_controlState.m_moveLeft, world.m_engine->m_controlState.m_moveRight);
-    moveLogic.setY(world.m_engine->m_controlState.m_moveUp, world.m_engine->m_controlState.m_moveDown);
-    moveLogic.setZ(world.m_engine->m_controlState.m_moveForward, world.m_engine->m_controlState.m_moveBackward);
+    moveLogic.setX(engine.m_controlState.m_moveLeft, engine.m_controlState.m_moveRight);
+    moveLogic.setY(engine.m_controlState.m_moveUp, engine.m_controlState.m_moveDown);
+    moveLogic.setZ(engine.m_controlState.m_moveForward, engine.m_controlState.m_moveBackward);
 
     // Keyboard look logic
     world::Movement lookLogic;
-    lookLogic.setX(world.m_engine->m_controlState.m_lookLeft, world.m_engine->m_controlState.m_lookRight);
-    lookLogic.setY(world.m_engine->m_controlState.m_lookUp, world.m_engine->m_controlState.m_lookDown);
-    lookLogic.setZ(world.m_engine->m_controlState.m_lookRollLeft, world.m_engine->m_controlState.m_lookRollRight);
+    lookLogic.setX(engine.m_controlState.m_lookLeft, engine.m_controlState.m_lookRight);
+    lookLogic.setY(engine.m_controlState.m_lookUp, engine.m_controlState.m_lookDown);
+    lookLogic.setZ(engine.m_controlState.m_lookRollLeft, engine.m_controlState.m_lookRollRight);
 
     // APPLY CONTROLS
 
-    world.m_engine->m_camera.rotate(lookLogic.getDistance(glm::radians(2.2f) * world.m_engine->getFrameTimeSecs()));
+    engine.m_camera.rotate(lookLogic.getDistance(glm::radians(2.2f) * engine.getFrameTimeSecs()));
 
     // FIXME: Duplicate code - do we need cam control with no world??
-    if(!world.m_engine->renderer.world())
+    if(!engine.renderer.world())
     {
-        if(world.m_engine->m_controlState.m_mouseLook)
+        if(engine.m_controlState.m_mouseLook)
         {
-            world.m_engine->m_camera.rotate({ -world::CameraRotationSpeed * world.m_engine->m_controlState.m_lookAxisX,
-                                                       -world::CameraRotationSpeed * world.m_engine->m_controlState.m_lookAxisY,
+            engine.m_camera.rotate({ -world::CameraRotationSpeed * engine.m_controlState.m_lookAxisX,
+                                                       -world::CameraRotationSpeed * engine.m_controlState.m_lookAxisY,
                                                        0 });
-            world.m_engine->m_controlState.m_lookAxisX = 0.0;
-            world.m_engine->m_controlState.m_lookAxisY = 0.0;
+            engine.m_controlState.m_lookAxisX = 0.0;
+            engine.m_controlState.m_lookAxisY = 0.0;
         }
 
-        world.m_engine->renderer.camera()->applyRotation();
-        glm::float_t dist = world.m_engine->m_controlState.m_stateWalk
-            ? world.m_engine->m_controlState.m_freeLookSpeed * world.m_engine->getFrameTimeSecs() * 0.3f
-            : world.m_engine->m_controlState.m_freeLookSpeed * world.m_engine->getFrameTimeSecs();
-        world.m_engine->renderer.camera()->move(moveLogic.getDistance(dist));
+        engine.renderer.camera()->applyRotation();
+        glm::float_t dist = engine.m_controlState.m_stateWalk
+            ? engine.m_controlState.m_freeLookSpeed * engine.getFrameTimeSecs() * 0.3f
+            : engine.m_controlState.m_freeLookSpeed * engine.getFrameTimeSecs();
+        engine.renderer.camera()->move(moveLogic.getDistance(dist));
 
         return;
     }
 
-    if(world.m_engine->m_controlState.m_mouseLook)
+    if(engine.m_controlState.m_mouseLook)
     {
-        world.m_engine->m_camera.rotate({ -world::CameraRotationSpeed * world.m_engine->m_controlState.m_lookAxisX,
-                                                   -world::CameraRotationSpeed * world.m_engine->m_controlState.m_lookAxisY,
+        engine.m_camera.rotate({ -world::CameraRotationSpeed * engine.m_controlState.m_lookAxisX,
+                                                   -world::CameraRotationSpeed * engine.m_controlState.m_lookAxisY,
                                                    0 });
-        world.m_engine->m_controlState.m_lookAxisX = 0.0;
-        world.m_engine->m_controlState.m_lookAxisY = 0.0;
+        engine.m_controlState.m_lookAxisX = 0.0;
+        engine.m_controlState.m_lookAxisY = 0.0;
     }
 
-    if(world.m_engine->m_controlState.m_freeLook || !world.m_character)
+    if(engine.m_controlState.m_freeLook || !engine.m_world.m_character)
     {
-        glm::float_t dist = world.m_engine->m_controlState.m_stateWalk
-            ? world.m_engine->m_controlState.m_freeLookSpeed * world.m_engine->getFrameTimeSecs() * 0.3f
-            : world.m_engine->m_controlState.m_freeLookSpeed * world.m_engine->getFrameTimeSecs();
-        world.m_engine->renderer.camera()->applyRotation();
-        world.m_engine->renderer.camera()->move(moveLogic.getDistance(dist));
-        world.m_engine->renderer.camera()->setCurrentRoom(world.m_engine->m_world.Room_FindPosCogerrence(world.m_engine->renderer.camera()->getPosition(), world.m_engine->renderer.camera()->getCurrentRoom()));
+        glm::float_t dist = engine.m_controlState.m_stateWalk
+            ? engine.m_controlState.m_freeLookSpeed * engine.getFrameTimeSecs() * 0.3f
+            : engine.m_controlState.m_freeLookSpeed * engine.getFrameTimeSecs();
+        engine.renderer.camera()->applyRotation();
+        engine.renderer.camera()->move(moveLogic.getDistance(dist));
+        engine.renderer.camera()->setCurrentRoom(engine.m_world.Room_FindPosCogerrence(engine.renderer.camera()->getPosition(), engine.renderer.camera()->getCurrentRoom()));
     }
-    else if(world.m_engine->m_controlState.m_noClip)
+    else if(engine.m_controlState.m_noClip)
     {
-        glm::float_t dist = world.m_engine->m_controlState.m_stateWalk
-            ? world.m_engine->m_controlState.m_freeLookSpeed * world.m_engine->getFrameTimeSecs() * 0.3f
-            : world.m_engine->m_controlState.m_freeLookSpeed * world.m_engine->getFrameTimeSecs();
-        world.m_engine->renderer.camera()->applyRotation();
-        world.m_engine->renderer.camera()->move(moveLogic.getDistance(dist));
-        world.m_engine->renderer.camera()->setCurrentRoom(world.m_engine->m_world.Room_FindPosCogerrence(world.m_engine->renderer.camera()->getPosition(), world.m_engine->renderer.camera()->getCurrentRoom()));
+        glm::float_t dist = engine.m_controlState.m_stateWalk
+            ? engine.m_controlState.m_freeLookSpeed * engine.getFrameTimeSecs() * 0.3f
+            : engine.m_controlState.m_freeLookSpeed * engine.getFrameTimeSecs();
+        engine.renderer.camera()->applyRotation();
+        engine.renderer.camera()->move(moveLogic.getDistance(dist));
+        engine.renderer.camera()->setCurrentRoom(engine.m_world.Room_FindPosCogerrence(engine.renderer.camera()->getPosition(), engine.renderer.camera()->getCurrentRoom()));
 
-        world.m_character->m_angles[0] = glm::degrees(world.m_engine->m_camera.getAngles()[0]);
-        glm::vec3 position = world.m_engine->renderer.camera()->getPosition() + world.m_engine->renderer.camera()->getViewDir() * world.m_engine->m_controlState.m_camDistance;
+        engine.m_world.m_character->m_angles[0] = glm::degrees(engine.m_camera.getAngles()[0]);
+        glm::vec3 position = engine.renderer.camera()->getPosition() + engine.renderer.camera()->getViewDir() * engine.m_controlState.m_camDistance;
         position[2] -= 512.0;
-        world.m_character->m_transform[3] = glm::vec4(position, 1.0f);
-        world.m_character->updateTransform();
+        engine.m_world.m_character->m_transform[3] = glm::vec4(position, 1.0f);
+        engine.m_world.m_character->updateTransform();
     }
     else
     {
-        world.m_character->applyControls(world.m_engine->m_controlState, moveLogic);
+        engine.m_world.m_character->applyControls(engine.m_controlState, moveLogic);
     }
 }
 
-bool Cam_HasHit(world::World& world, std::shared_ptr<BtEngineClosestConvexResultCallback> cb, btTransform &cameraFrom, btTransform &cameraTo)
+bool Cam_HasHit(Engine& engine, std::shared_ptr<BtEngineClosestConvexResultCallback> cb, btTransform &cameraFrom, btTransform &cameraTo)
 {
     btSphereShape cameraSphere(CameraCollisionSphereRadius);
     cameraSphere.setMargin(COLLISION_MARGIN_DEFAULT);
     cb->m_closestHitFraction = 1.0;
     cb->m_hitCollisionObject = nullptr;
-    world.m_engine->bullet.dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
+    engine.bullet.dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
     return cb->hasHit();
 }
 
-void Cam_FollowEntity(world::World& world, world::Camera *cam, glm::float_t dx, glm::float_t dz)
+void Cam_FollowEntity(Engine& engine, world::Camera *cam, glm::float_t dx, glm::float_t dz)
 {
     btTransform cameraFrom = btTransform::getIdentity();
     btTransform cameraTo = btTransform::getIdentity();
 
-    std::shared_ptr<BtEngineClosestConvexResultCallback> cb = world.m_character->callbackForCamera();
+    std::shared_ptr<BtEngineClosestConvexResultCallback> cb = engine.m_world.m_character->callbackForCamera();
 
     glm::vec3 cam_pos = cam->getPosition();
 
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
-    if(!world.m_engine->m_controlState.m_mouseLook)//If mouse look is off
+    if(!engine.m_controlState.m_mouseLook)//If mouse look is off
     {
-        glm::float_t currentAngle = world.m_engine->m_camera.getAngles()[0];  //Current is the current cam angle
-        glm::float_t targetAngle = glm::radians(world.m_character->m_angles[0]); //Target is the target angle which is the entity's angle itself
+        glm::float_t currentAngle = engine.m_camera.getAngles()[0];  //Current is the current cam angle
+        glm::float_t targetAngle = glm::radians(engine.m_world.m_character->m_angles[0]); //Target is the target angle which is the entity's angle itself
 
         ///@FIXME
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
-        if(world.m_character->m_skeleton.getPreviousState() == world::LaraState::Reach)
+        if(engine.m_world.m_character->m_skeleton.getPreviousState() == world::LaraState::Reach)
         {
             if(cam->getTargetDir() == world::CameraTarget::Back)
             {
                 glm::vec3 cam_pos2 = cam_pos;
                 cameraFrom.setOrigin(util::convert(cam_pos2));
-                cam_pos2[0] += glm::sin(glm::radians(world.m_character->m_angles[0] - 90.0f)) * world.m_engine->m_controlState.m_camDistance;
-                cam_pos2[1] -= glm::cos(glm::radians(world.m_character->m_angles[0] - 90.0f)) * world.m_engine->m_controlState.m_camDistance;
+                cam_pos2[0] += glm::sin(glm::radians(engine.m_world.m_character->m_angles[0] - 90.0f)) * engine.m_controlState.m_camDistance;
+                cam_pos2[1] -= glm::cos(glm::radians(engine.m_world.m_character->m_angles[0] - 90.0f)) * engine.m_controlState.m_camDistance;
                 cameraTo.setOrigin(util::convert(cam_pos2));
 
                 //If collided we want to go right otherwise stay left
-                if(Cam_HasHit(world, cb, cameraFrom, cameraTo))
+                if(Cam_HasHit(engine, cb, cameraFrom, cameraTo))
                 {
                     cam_pos2 = cam_pos;
                     cameraFrom.setOrigin(util::convert(cam_pos2));
-                    cam_pos2[0] += glm::sin(glm::radians(world.m_character->m_angles[0] + 90.0f)) * world.m_engine->m_controlState.m_camDistance;
-                    cam_pos2[1] -= glm::cos(glm::radians(world.m_character->m_angles[0] + 90.0f)) * world.m_engine->m_controlState.m_camDistance;
+                    cam_pos2[0] += glm::sin(glm::radians(engine.m_world.m_character->m_angles[0] + 90.0f)) * engine.m_controlState.m_camDistance;
+                    cam_pos2[1] -= glm::cos(glm::radians(engine.m_world.m_character->m_angles[0] + 90.0f)) * engine.m_controlState.m_camDistance;
                     cameraTo.setOrigin(util::convert(cam_pos2));
 
                     //If collided we want to go to back else right
-                    if(Cam_HasHit(world, cb, cameraFrom, cameraTo))
+                    if(Cam_HasHit(engine, cb, cameraFrom, cameraTo))
                         cam->setTargetDir(world::CameraTarget::Back);
                     else
                         cam->setTargetDir(world::CameraTarget::Right);
@@ -496,7 +493,7 @@ void Cam_FollowEntity(world::World& world, world::Camera *cam, glm::float_t dx, 
                 }
             }
         }
-        else if(world.m_character->m_skeleton.getPreviousState() == world::LaraState::JumpBack)
+        else if(engine.m_world.m_character->m_skeleton.getPreviousState() == world::LaraState::JumpBack)
         {
             cam->setTargetDir(world::CameraTarget::Front);
         }
@@ -511,39 +508,39 @@ void Cam_FollowEntity(world::World& world, world::Camera *cam, glm::float_t dx, 
             switch(cam->getTargetDir())
             {
                 case world::CameraTarget::Back:
-                    targetAngle = glm::radians(world.m_character->m_angles[0]);
+                    targetAngle = glm::radians(engine.m_world.m_character->m_angles[0]);
                     break;
                 case world::CameraTarget::Front:
-                    targetAngle = glm::radians(world.m_character->m_angles[0] - 180.0f);
+                    targetAngle = glm::radians(engine.m_world.m_character->m_angles[0] - 180.0f);
                     break;
                 case world::CameraTarget::Left:
-                    targetAngle = glm::radians(world.m_character->m_angles[0] - 75.0f);
+                    targetAngle = glm::radians(engine.m_world.m_character->m_angles[0] - 75.0f);
                     break;
                 case world::CameraTarget::Right:
-                    targetAngle = glm::radians(world.m_character->m_angles[0] + 75.0f);
+                    targetAngle = glm::radians(engine.m_world.m_character->m_angles[0] + 75.0f);
                     break;
                 default:
-                    targetAngle = glm::radians(world.m_character->m_angles[0]);//Same as TR_CAM_TARG_BACK (default pos)
+                    targetAngle = glm::radians(engine.m_world.m_character->m_angles[0]);//Same as TR_CAM_TARG_BACK (default pos)
                     break;
             }
 
-            world.m_engine->m_camera.shake(currentAngle, targetAngle, world.m_engine->getFrameTime());
+            engine.m_camera.shake(currentAngle, targetAngle, engine.getFrameTime());
         }
     }
 
-    cam_pos = world.m_character->camPosForFollowing(dz);
+    cam_pos = engine.m_world.m_character->camPosForFollowing(dz);
 
     //Code to manage screen shaking effects
-    if(world.m_engine->renderer.camera()->getShakeTime().count() > 0 && world.m_engine->renderer.camera()->getShakeValue() > 0.0)
+    if(engine.renderer.camera()->getShakeTime().count() > 0 && engine.renderer.camera()->getShakeValue() > 0.0)
     {
-        cam_pos += glm::ballRand(world.m_engine->renderer.camera()->getShakeValue() / 2.0f) * util::toSeconds(world.m_engine->renderer.camera()->getShakeTime());
-        world.m_engine->renderer.camera()->setShakeTime(std::max(util::Duration(0), world.m_engine->renderer.camera()->getShakeTime() - world.m_engine->getFrameTime()));
+        cam_pos += glm::ballRand(engine.renderer.camera()->getShakeValue() / 2.0f) * util::toSeconds(engine.renderer.camera()->getShakeTime());
+        engine.renderer.camera()->setShakeTime(std::max(util::Duration(0), engine.renderer.camera()->getShakeTime() - engine.getFrameTime()));
     }
 
     cameraFrom.setOrigin(util::convert(cam_pos));
     cam_pos[2] += dz;
     cameraTo.setOrigin(util::convert(cam_pos));
-    if(Cam_HasHit(world, cb, cameraFrom, cameraTo))
+    if(Cam_HasHit(engine, cb, cameraFrom, cameraTo))
     {
         cam_pos = glm::mix(util::convert(cameraFrom.getOrigin()), util::convert(cameraTo.getOrigin()), cb->m_closestHitFraction);
         cam_pos += util::convert(cb->m_hitNormalWorld * 2.0);
@@ -554,7 +551,7 @@ void Cam_FollowEntity(world::World& world, world::Camera *cam, glm::float_t dx, 
         cameraFrom.setOrigin(util::convert(cam_pos));
         cam_pos += dx * cam->getRightDir();
         cameraTo.setOrigin(util::convert(cam_pos));
-        if(Cam_HasHit(world, cb, cameraFrom, cameraTo))
+        if(Cam_HasHit(engine, cb, cameraFrom, cameraTo))
         {
             cam_pos = glm::mix(util::convert(cameraFrom.getOrigin()), util::convert(cameraTo.getOrigin()), cb->m_closestHitFraction);
             cam_pos += util::convert(cb->m_hitNormalWorld * 2.0);
@@ -563,17 +560,17 @@ void Cam_FollowEntity(world::World& world, world::Camera *cam, glm::float_t dx, 
         cameraFrom.setOrigin(util::convert(cam_pos));
 
         {
-            glm::float_t cos_ay = glm::cos(world.m_engine->m_camera.getAngles()[1]);
-            glm::float_t cam_dx = glm::sin(world.m_engine->m_camera.getAngles()[0]) * cos_ay;
-            glm::float_t cam_dy = -glm::cos(world.m_engine->m_camera.getAngles()[0]) * cos_ay;
-            glm::float_t cam_dz = -glm::sin(world.m_engine->m_camera.getAngles()[1]);
-            cam_pos[0] += cam_dx * world.m_engine->m_controlState.m_camDistance;
-            cam_pos[1] += cam_dy * world.m_engine->m_controlState.m_camDistance;
-            cam_pos[2] += cam_dz * world.m_engine->m_controlState.m_camDistance;
+            glm::float_t cos_ay = glm::cos(engine.m_camera.getAngles()[1]);
+            glm::float_t cam_dx = glm::sin(engine.m_camera.getAngles()[0]) * cos_ay;
+            glm::float_t cam_dy = -glm::cos(engine.m_camera.getAngles()[0]) * cos_ay;
+            glm::float_t cam_dz = -glm::sin(engine.m_camera.getAngles()[1]);
+            cam_pos[0] += cam_dx * engine.m_controlState.m_camDistance;
+            cam_pos[1] += cam_dy * engine.m_controlState.m_camDistance;
+            cam_pos[2] += cam_dz * engine.m_controlState.m_camDistance;
         }
 
         cameraTo.setOrigin(util::convert(cam_pos));
-        if(Cam_HasHit(world, cb, cameraFrom, cameraTo))
+        if(Cam_HasHit(engine, cb, cameraFrom, cameraTo))
         {
             cam_pos = glm::mix(util::convert(cameraFrom.getOrigin()), util::convert(cameraTo.getOrigin()), cb->m_closestHitFraction);
             cam_pos += util::convert(cb->m_hitNormalWorld * 2.0);
@@ -584,7 +581,7 @@ void Cam_FollowEntity(world::World& world, world::Camera *cam, glm::float_t dx, 
     cam->setPosition(cam_pos);
 
     //Modify cam pos for quicksand rooms
-    cam->setCurrentRoom(world.m_engine->m_world.Room_FindPosCogerrence(cam->getPosition() - glm::vec3(0, 0, 128), cam->getCurrentRoom()));
+    cam->setCurrentRoom(engine.m_world.Room_FindPosCogerrence(cam->getPosition() - glm::vec3(0, 0, 128), cam->getCurrentRoom()));
     if(cam->getCurrentRoom() && (cam->getCurrentRoom()->getFlags() & TR_ROOM_FLAG_QUICKSAND))
     {
         glm::vec3 position = cam->getPosition();
@@ -593,7 +590,7 @@ void Cam_FollowEntity(world::World& world, world::Camera *cam, glm::float_t dx, 
     }
 
     cam->applyRotation();
-    cam->setCurrentRoom(world.m_engine->m_world.Room_FindPosCogerrence(cam->getPosition(), cam->getCurrentRoom()));
+    cam->setCurrentRoom(engine.m_world.Room_FindPosCogerrence(cam->getPosition(), cam->getCurrentRoom()));
 }
 
 void Game_UpdateAI()
@@ -612,7 +609,7 @@ inline util::Duration Game_Tick(util::Duration *game_logic_time)
     return dt;
 }
 
-void Game_Frame(world::World& world, util::Duration time)
+void Game_Frame(Engine& engine, util::Duration time)
 {
     static util::Duration game_logic_time = util::Duration(0);
     static const util::Duration SimulationTime = MAX_SIM_SUBSTEPS * world::animation::GameLogicFrameTime;
@@ -621,19 +618,19 @@ void Game_Frame(world::World& world, util::Duration time)
     if(time > SimulationTime)
     {
         time = SimulationTime;
-        world.m_engine->setFrameTime(time);   // FIXME
+        engine.setFrameTime(time);   // FIXME
     }
     game_logic_time += time;
 
     // GUI and controls should be updated at all times!
-    world.m_engine->m_inputHandler.poll();
+    engine.m_inputHandler.poll();
 
     // TODO: implement pause mechanism
-    if(world.m_engine->m_gui.update())
+    if(engine.m_gui.update())
     {
         if(game_logic_time >= world::animation::GameLogicFrameTime)
         {
-            world.m_engine->m_world.m_audioEngine.updateAudio();
+            engine.m_world.m_audioEngine.updateAudio();
             Game_Tick(&game_logic_time);
         }
         return;
@@ -641,69 +638,69 @@ void Game_Frame(world::World& world, util::Duration time)
 
     // Translate input to character commands, move camera:
     // TODO: decouple cam movement
-    Game_ApplyControls(world);
+    Game_ApplyControls(engine);
 
-    world.m_engine->bullet.dynamicsWorld->stepSimulation(util::toSeconds(time), MAX_SIM_SUBSTEPS, util::toSeconds(world::animation::GameLogicFrameTime));
+    engine.bullet.dynamicsWorld->stepSimulation(util::toSeconds(time), MAX_SIM_SUBSTEPS, util::toSeconds(world::animation::GameLogicFrameTime));
 
-    if(world.m_engine->m_world.m_character)
+    if(engine.m_world.m_character)
     {
-        world.m_engine->m_world.m_character->updateInterpolation();
+        engine.m_world.m_character->updateInterpolation();
 
-        if(!world.m_engine->m_controlState.m_noClip && !world.m_engine->m_controlState.m_freeLook)
-            Cam_FollowEntity(world, world.m_engine->renderer.camera(), 16.0, 128.0);
+        if(!engine.m_controlState.m_noClip && !engine.m_controlState.m_freeLook)
+            Cam_FollowEntity(engine, engine.renderer.camera(), 16.0, 128.0);
     }
-    for(const std::shared_ptr<world::Entity>& entity : world.m_engine->m_world.m_entities | boost::adaptors::map_values)
+    for(const std::shared_ptr<world::Entity>& entity : engine.m_world.m_entities | boost::adaptors::map_values)
     {
         entity->updateInterpolation();
     }
 
-    world.m_engine->m_inputHandler.refreshStates();
-    world.m_engine->m_world.updateAnimTextures();
+    engine.m_inputHandler.refreshStates();
+    engine.m_world.updateAnimTextures();
 }
 
-void Game_Prepare(world::World& world)
+void Game_Prepare(Engine& engine)
 {
-    if(world.m_engine->m_world.m_character)
+    if(engine.m_world.m_character)
     {
         // Set character values to default.
 
-        world.m_engine->m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
-        world.m_engine->m_world.m_character->setParam(world::CharParameterId::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
-        world.m_engine->m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_AIR, LARA_PARAM_AIR_MAX);
-        world.m_engine->m_world.m_character->setParam(world::CharParameterId::PARAM_AIR, LARA_PARAM_AIR_MAX);
-        world.m_engine->m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        world.m_engine->m_world.m_character->setParam(world::CharParameterId::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
-        world.m_engine->m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
-        world.m_engine->m_world.m_character->setParam(world::CharParameterId::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
-        world.m_engine->m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_POISON, LARA_PARAM_POISON_MAX);
-        world.m_engine->m_world.m_character->setParam(world::CharParameterId::PARAM_POISON, 0);
+        engine.m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
+        engine.m_world.m_character->setParam(world::CharParameterId::PARAM_HEALTH, LARA_PARAM_HEALTH_MAX);
+        engine.m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_AIR, LARA_PARAM_AIR_MAX);
+        engine.m_world.m_character->setParam(world::CharParameterId::PARAM_AIR, LARA_PARAM_AIR_MAX);
+        engine.m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        engine.m_world.m_character->setParam(world::CharParameterId::PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
+        engine.m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
+        engine.m_world.m_character->setParam(world::CharParameterId::PARAM_WARMTH, LARA_PARAM_WARMTH_MAX);
+        engine.m_world.m_character->setParamMaximum(world::CharParameterId::PARAM_POISON, LARA_PARAM_POISON_MAX);
+        engine.m_world.m_character->setParam(world::CharParameterId::PARAM_POISON, 0);
 
         // Set character statistics to default.
 
-        world.m_engine->m_world.m_character->resetStatistics();
+        engine.m_world.m_character->resetStatistics();
     }
-    else if(!world.m_engine->m_world.m_rooms.empty())
+    else if(!engine.m_world.m_rooms.empty())
     {
         // If there is no character present, move default camera position to
         // the first room (useful for TR1-3 cutscene levels).
 
-        world.m_engine->m_camera.setPosition(world.m_engine->m_world.m_rooms[0]->getBoundingBox().max);
+        engine.m_camera.setPosition(engine.m_world.m_rooms[0]->getBoundingBox().max);
     }
 
     // Set gameflow parameters to default.
     // Reset secret trigger map.
 
-    world.m_engine->gameflow.resetSecretStatus();
+    engine.gameflow.resetSecretStatus();
 }
 
-void Game_LevelTransition(world::World& world, const boost::optional<int>& level)
+void Game_LevelTransition(Engine& engine, const boost::optional<int>& level)
 {
     if(level)
-        world.m_engine->m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, world.m_engine->engine_lua.getLoadingScreen(*level));
+        engine.m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, engine.engine_lua.getLoadingScreen(*level));
     else
-        world.m_engine->m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, world.m_engine->engine_lua.getLoadingScreen(world.m_engine->gameflow.getLevelID()));
-    world.m_engine->m_gui.m_faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
+        engine.m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, engine.engine_lua.getLoadingScreen(engine.gameflow.getLevelID()));
+    engine.m_gui.m_faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
-    world.m_engine->m_world.m_audioEngine.endStreams();
+    engine.m_world.m_audioEngine.endStreams();
 }
 } // namespace engine

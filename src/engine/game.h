@@ -4,10 +4,6 @@
 
 #include <boost/optional.hpp>
 
-#include <cstdint>
-#include <memory>
-#include <string>
-
 // Max. number of game steps that are caught-up between
 // rendering: This limits escalation if the system is too
 // slow to keep up the logic interval.
@@ -34,19 +30,20 @@ struct Polygon;
 namespace engine
 {
 class BtEngineClosestConvexResultCallback;
+class Engine;
 
-void Game_InitGlobals(world::World& world);
+void Game_InitGlobals(Engine& engine);
 void Game_RegisterLuaFunctions(script::ScriptEngine &state);
-bool Game_Load(world::World& world, const std::string& name);
-bool Game_Save(world::World& world, const std::string& name);
+bool Game_Load(Engine& engine, const std::string& name);
+bool Game_Save(Engine& engine, const std::string& name);
 
 util::Duration Game_Tick(util::Duration* game_logic_time);
-void Game_Frame(world::World& world, util::Duration time);
+void Game_Frame(Engine& engine, util::Duration time);
 
-void Game_Prepare(world::World& world);
-void Game_LevelTransition(world::World& world, const boost::optional<int>& level);
+void Game_Prepare(Engine& engine);
+void Game_LevelTransition(Engine& engine, const boost::optional<int>& level);
 
-void Game_ApplyControls(world::World& world);
+void Game_ApplyControls(Engine& engine);
 
 void Game_UpdateAI();
 } // namespace engine

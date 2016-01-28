@@ -566,9 +566,9 @@ void SkeletalModel::patchLaraSkin(World& world, loader::Engine engineVersion)
     };
 }
 
-void SkeletalModel::lua_SetModelMeshReplaceFlag(World& world, ModelId id, size_t bone, int flag)
+void SkeletalModel::lua_SetModelMeshReplaceFlag(engine::Engine& engine, ModelId id, size_t bone, int flag)
 {
-    auto sm = world.m_engine->m_world.getModelByID(id);
+    auto sm = engine.m_world.getModelByID(id);
     if(sm != nullptr)
     {
         if(bone < sm->getMeshReferenceCount())
@@ -577,18 +577,18 @@ void SkeletalModel::lua_SetModelMeshReplaceFlag(World& world, ModelId id, size_t
         }
         else
         {
-            world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
+            engine.m_gui.getConsole().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
         }
     }
     else
     {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id);
+        engine.m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id);
     }
 }
 
-void SkeletalModel::lua_SetModelAnimReplaceFlag(World& world, ModelId id, size_t bone, bool flag)
+void SkeletalModel::lua_SetModelAnimReplaceFlag(engine::Engine& engine, ModelId id, size_t bone, bool flag)
 {
-    auto sm = world.m_engine->m_world.getModelByID(id);
+    auto sm = engine.m_world.getModelByID(id);
     if(sm != nullptr)
     {
         if(bone < sm->getMeshReferenceCount())
@@ -597,28 +597,28 @@ void SkeletalModel::lua_SetModelAnimReplaceFlag(World& world, ModelId id, size_t
         }
         else
         {
-            world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
+            engine.m_gui.getConsole().warning(SYSWARN_WRONG_BONE_NUMBER, bone);
         }
     }
     else
     {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id);
+        engine.m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id);
     }
 }
 
-void SkeletalModel::lua_CopyMeshFromModelToModel(World& world, ModelId id1, ModelId id2, size_t bone1, size_t bone2)
+void SkeletalModel::lua_CopyMeshFromModelToModel(engine::Engine& engine, ModelId id1, ModelId id2, size_t bone1, size_t bone2)
 {
-    auto sm1 = world.m_engine->m_world.getModelByID(id1);
+    auto sm1 = engine.m_world.getModelByID(id1);
     if(sm1 == nullptr)
     {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id1);
+        engine.m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id1);
         return;
     }
 
-    auto sm2 = world.m_engine->m_world.getModelByID(id2);
+    auto sm2 = engine.m_world.getModelByID(id2);
     if(sm2 == nullptr)
     {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id2);
+        engine.m_gui.getConsole().warning(SYSWARN_WRONG_MODEL_ID, id2);
         return;
     }
 
@@ -628,23 +628,23 @@ void SkeletalModel::lua_CopyMeshFromModelToModel(World& world, ModelId id1, Mode
     }
     else
     {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_BONE_NUMBER, bone1);
+        engine.m_gui.getConsole().warning(SYSWARN_WRONG_BONE_NUMBER, bone1);
     }
 }
 
-void SkeletalModel::lua_SetModelBodyPartFlag(World& world, ModelId id, int bone_id, int body_part_flag)
+void SkeletalModel::lua_SetModelBodyPartFlag(engine::Engine& engine, ModelId id, int bone_id, int body_part_flag)
 {
-    auto model = world.m_engine->m_world.getModelByID(id);
+    auto model = engine.m_world.getModelByID(id);
 
     if(model == nullptr)
     {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_NO_SKELETAL_MODEL, id);
+        engine.m_gui.getConsole().warning(SYSWARN_NO_SKELETAL_MODEL, id);
         return;
     }
 
     if(bone_id < 0 || static_cast<size_t>(bone_id) >= model->getMeshReferenceCount())
     {
-        world.m_engine->m_gui.getConsole().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
+        engine.m_gui.getConsole().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return;
     }
 

@@ -101,10 +101,10 @@ public:
 
     // Simple override to register both upper- and lowercase versions of function name.
     template<typename R, typename... Args>
-    void registerC(const std::string& func_name, std::function<R(world::World&, Args...)> func)
+    void registerC(const std::string& func_name, std::function<R(engine::Engine&, Args...)> func)
     {
         auto self = this;
-        auto dispatcher = [self, func](Args&&... args) { return func(self->m_engine->m_world, std::forward<Args>(args)...); };
+        auto dispatcher = [self, func](Args&&... args) { return func(*self->m_engine, std::forward<Args>(args)...); };
         registerC(func_name, std::function<R(Args...)>(dispatcher));
     }
 
@@ -144,10 +144,10 @@ public:
     }
 
     template<typename R, typename... Args>
-    void registerFunction(const std::string& func_name, std::function<R(world::World&, Args...)> func)
+    void registerFunction(const std::string& func_name, std::function<R(engine::Engine&, Args...)> func)
     {
         auto self = this;
-        auto dispatcher = [self, func](Args&&... args) { return func(self->m_engine->m_world, std::forward<Args>(args)...); };
+        auto dispatcher = [self, func](Args&&... args) { return func(*self->m_engine, std::forward<Args>(args)...); };
         registerFunction(func_name, std::function<R(Args&&...)>(dispatcher));
     }
 
@@ -235,7 +235,7 @@ public:
 
     void addKey(int keycode, bool state);
 
-    static void bindKey(world::World& world, int act, int primary, lua::Value secondary);
+    static void bindKey(engine::Engine& engine, int act, int primary, lua::Value secondary);
 
     // Helper Lua functions. Not directly called from scripts.
 
