@@ -34,7 +34,7 @@ void Fader::setColor(uint8_t R, uint8_t G, uint8_t B, FaderCorner corner)
     // it is completely optional - if you won't specify corner, color will be
     // set for the whole fader.
 
-    glm::vec4* dest = nullptr;
+    glm::vec4* dest;
 
     switch(corner)
     {

@@ -4,7 +4,6 @@
 #include "polygon.h"
 #include "render/render.h"
 #include "world/animation/animation.h"
-#include "world/object.h"
 
 #include <vector>
 

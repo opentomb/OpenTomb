@@ -72,7 +72,6 @@ list(APPEND PRJ_SRC
     world/animation/animation.cpp
 
     engine/game.cpp
-    engine/system.cpp
     engine/engine.cpp
     engine/gameflow.cpp
     engine/bullet.cpp

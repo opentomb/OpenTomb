@@ -1,15 +1,16 @@
 #pragma once
 
-#include <cstdint>
-#include <stdexcept>
-#include <vector>
-
 #include <SDL2/SDL_rwops.h>
 #include <SDL2/SDL_endian.h>
 
 #include <zlib.h>
 
-#include <boost/exception/all.hpp>
+#include <boost/throw_exception.hpp>
+
+#include <cstdint>
+#include <memory>
+#include <stdexcept>
+#include <vector>
 
 namespace loader
 {

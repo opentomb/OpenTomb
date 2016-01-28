@@ -1,17 +1,16 @@
 #pragma once
 
-#include <cstdint>
-#include <iostream>
-#include <memory>
+#include "animation/animation.h"
+#include "core/orientedboundingbox.h"
+#include "engine/engine.h"
+#include "object.h"
 
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
-#include "animation/animation.h"
-#include "core/orientedboundingbox.h"
-#include "engine/engine.h"
-#include "engine/game.h"
-#include "object.h"
+#include <cstdint>
+#include <iostream>
+#include <memory>
 
 class btCollisionShape;
 class btRigidBody;

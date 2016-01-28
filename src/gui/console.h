@@ -43,14 +43,14 @@ private:
 
     FontTexture *m_font = nullptr;                       // Texture font renderer
 
-    glm::vec4 m_backgroundColor;
+    glm::vec4 m_backgroundColor{0};
 
     //! Current log position plus one
     //! @note It's off-by-one, because line 0 is a virtual empty line.
     size_t m_historyPos = 0;
     size_t m_historySize = 1000;
     //! The most recent entry is at the front.
-    std::vector<std::string> m_historyLines;
+    std::vector<std::string> m_historyLines {};
 
     std::list<Line> m_lines;
     size_t m_visibleLines = VisibleLinesMin;
@@ -62,18 +62,18 @@ private:
     float m_spacing = SpacingMin;                    // Line spacing
 
     int16_t m_cursorPos = 0;                 // Current cursor position, in symbols
-    int16_t m_cursorX;                   // Cursor position in pixels
-    int16_t m_cursorY;
-    util::Duration m_blinkTime;                // Current cursor draw time
-    util::Duration m_blinkPeriod;
-    bool m_showCursor;                // Cursor visibility flag
+    int16_t m_cursorX = 0;                   // Cursor position in pixels
+    int16_t m_cursorY = 0;
+    util::Duration m_blinkTime = util::Duration(0);                // Current cursor draw time
+    util::Duration m_blinkPeriod = util::Duration(0);
+    bool m_showCursor = false;                // Cursor visibility flag
 
     bool inited = false;                     // Ready-to-use flag
-    bool m_isVisible;                       // Visibility flag
+    bool m_isVisible = false;                       // Visibility flag
 
-    std::string m_editingLine;
+    std::string m_editingLine{};
 
-    std::vector<std::string> m_completionItems;
+    std::vector<std::string> m_completionItems{};
 
 public:
     explicit Console(engine::Engine* engine);

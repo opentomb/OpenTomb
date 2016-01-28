@@ -15,7 +15,7 @@ namespace gui
 class ItemNotifier
 {
 public:
-    ItemNotifier(engine::Engine* engine);
+    explicit ItemNotifier(engine::Engine* engine);
 
     void    start(world::ObjectId item, util::Duration time = util::Seconds(2));
     void    reset();

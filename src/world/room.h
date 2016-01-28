@@ -11,7 +11,6 @@
 #include <vector>
 
 #include <boost/multi_array.hpp>
-#include <boost/optional.hpp>
 
 class btRigidBody;
 

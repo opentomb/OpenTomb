@@ -2,6 +2,8 @@
 
 #include "fader.h"
 
+#include <map>
+
 namespace gui
 {
 class FaderManager

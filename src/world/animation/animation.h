@@ -303,23 +303,23 @@ struct Bone
 {
     Skeleton* m_skeleton;
 
-    Bone* parent;
-    BoneId index;
+    Bone* parent = nullptr;
+    BoneId index = 0;
     std::shared_ptr<core::BaseMesh> mesh; //!< The mesh this bone deforms
     std::shared_ptr<core::BaseMesh> mesh_skin;
     std::shared_ptr<core::BaseMesh> mesh_slot; //!< Optional additional mesh
-    glm::vec3 offset;
+    glm::vec3 offset{0};
 
     glm::quat qrotate;
-    glm::mat4 transform;      //!< Local transformation matrix
-    glm::mat4 full_transform; //!< Global transformation matrix
+    glm::mat4 transform{1};      //!< Local transformation matrix
+    glm::mat4 full_transform{1}; //!< Global transformation matrix
 
-    uint32_t body_part; //!< flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
+    uint32_t body_part = 0; //!< flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 
     std::shared_ptr<btRigidBody> bt_body;
     std::shared_ptr<btPairCachingGhostObject> ghostObject; // like Bullet character controller for penetration resolving.
     std::shared_ptr<btCollisionShape> shape;
-    std::vector<btCollisionObject*> last_collisions;
+    std::vector<btCollisionObject*> last_collisions{};
 
     explicit Bone(Skeleton* skeleton)
         : m_skeleton(skeleton)

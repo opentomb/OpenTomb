@@ -43,7 +43,7 @@ enum class BarColorType
 class ProgressBar
 {
 public:
-    ProgressBar(engine::Engine* engine);  // Bar constructor.
+    explicit ProgressBar(engine::Engine* engine);  // Bar constructor.
 
     void show(glm::float_t value);    // Main show bar procedure.
     void resize();

@@ -108,17 +108,17 @@ private:
 
     loader::BlendingMode m_blendingMode = loader::BlendingMode::Opaque;     // Fader's blending mode.
 
-    glm::float_t m_currentAlpha;          // Current alpha value.
+    glm::float_t m_currentAlpha = 0;          // Current alpha value.
     glm::float_t m_maxAlpha{ 1 };              // Maximum reachable alpha value.
     util::Duration m_speed = util::MilliSeconds(500);                 // Fade speed.
     util::Duration m_speedSecondary = util::MilliSeconds(200);        // Secondary speed - used with TIMED type.
 
     GLuint m_texture = 0;               // Texture (optional).
-    int m_textureWidth;
-    int m_textureHeight;
-    bool m_textureWide;           // Set, if texture width is greater than height.
-    float m_textureAspectRatio;    // Pre-calculated aspect ratio.
-    FaderScale m_textureScaleMode;      // Fader texture's scale mode.
+    int m_textureWidth = 0;
+    int m_textureHeight = 0;
+    bool m_textureWide = false;           // Set, if texture width is greater than height.
+    float m_textureAspectRatio = 0;    // Pre-calculated aspect ratio.
+    FaderScale m_textureScaleMode = FaderScale::Zoom;      // Fader texture's scale mode.
 
     bool m_active = false;                // Specifies if fader active or not.
     bool m_complete = true;              // Specifies if fading is complete or not.
