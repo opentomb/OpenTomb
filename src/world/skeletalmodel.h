@@ -178,6 +178,6 @@ public:
     static void lua_CopyMeshFromModelToModel(engine::Engine& engine, ModelId id1, ModelId id2, size_t bone1, size_t bone2);
     static void lua_SetModelBodyPartFlag(engine::Engine& engine, ModelId id, int bone_id, int body_part_flag);
 private:
-    static size_t getKeyframeCountForMoveable(const loader::Level& tr, size_t moveable);
+    static size_t getAnimationCountForMoveable(const loader::Level& tr, size_t moveable);
 };
 } // namespace world

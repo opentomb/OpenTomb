@@ -3425,6 +3425,39 @@ void script::MainEngine::execEntity(int id_callback, world::ObjectId id_object, 
         call("execEntity", id_callback, id_object);
 }
 
+void script::MainEngine::clean()
+{
+    try
+    {
+        call("st_Clear");
+        call("tlist_Clear");
+        call("entfuncs_Clear");
+        call("fe_Clear");
+
+        call("clearAutoexec");
+    }
+    catch(lua::RuntimeError& ex)
+    {
+        BOOST_LOG_TRIVIAL(error) << "Lua Engine cleanup failed: " << ex.what();
+    }
+}
+
+void script::MainEngine::doTasks(util::Duration time)
+{
+    try
+    {
+        set("FRAME_TIME", static_cast<lua::Number>(util::toSeconds(time)));
+
+        call("doTasks");
+        call("clearKeys");
+    }
+    catch(lua::RuntimeError& ex)
+    {
+        BOOST_LOG_TRIVIAL(error) << "Lua Task execution failed: " << ex.what();
+        throw;
+    }
+}
+
 void script::MainEngine::loopEntity(world::ObjectId object_id)
 {
     std::shared_ptr<world::Entity> ent = getEngine()->m_world.getEntityByID(object_id);

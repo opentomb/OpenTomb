@@ -209,23 +209,9 @@ public:
         call("fe_Prepare");
     }
 
-    void clean()
-    {
-        call("st_Clear");
-        call("tlist_Clear");
-        call("entfuncs_Clear");
-        call("fe_Clear");
+    void clean();
 
-        call("clearAutoexec");
-    }
-
-    void doTasks(util::Duration time)
-    {
-        set("FRAME_TIME", static_cast<lua::Number>(util::toSeconds(time)));
-
-        call("doTasks");
-        call("clearKeys");
-    }
+    void doTasks(util::Duration time);
 
     // System Lua functions. Not directly called from scripts.
 

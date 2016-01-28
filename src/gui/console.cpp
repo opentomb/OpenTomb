@@ -182,7 +182,7 @@ void Console::edit(int key, const boost::optional<uint16_t>& mod)
     m_blinkTime = util::Duration(0);
     m_showCursor = true;
 
-    int16_t oldLength = utf8_strlen(m_editingLine.c_str()); // int16_t is absolutly enough
+    const auto oldLength = utf8_strlen(m_editingLine.c_str()); // int16_t is absolutly enough
 
     switch(key)
     {
@@ -303,7 +303,7 @@ void Console::edit(int key, const boost::optional<uint16_t>& mod)
             {
                 if(char* clipboard = SDL_GetClipboardText())
                 {
-                    const int16_t textLength = utf8_strlen(clipboard);
+                    const auto textLength = utf8_strlen(clipboard);
                     if(oldLength < m_lineLength - textLength)
                     {
                         m_editingLine.insert(m_cursorPos, clipboard);
@@ -312,7 +312,7 @@ void Console::edit(int key, const boost::optional<uint16_t>& mod)
                     SDL_free(clipboard);
                 }
             }
-            else if(!mod && oldLength < m_lineLength - 1 && key >= SDLK_SPACE)
+            else if(!mod && oldLength + 1 < m_lineLength && key >= SDLK_SPACE)
             {
                 m_editingLine.insert(m_editingLine.begin() + m_cursorPos, char(key));
                 m_cursorPos++;

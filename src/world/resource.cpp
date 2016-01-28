@@ -1703,13 +1703,16 @@ std::shared_ptr<SkeletalModel> Res_GetSkybox(World& world)
 
 void TR_GenSkeletalModel(const World& world, size_t model_num, SkeletalModel& model, const std::unique_ptr<loader::Level>& tr, size_t meshCount)
 {
+    BOOST_ASSERT(model_num < tr->m_moveables.size());
     const std::unique_ptr<loader::Moveable>& tr_moveable = tr->m_moveables[model_num];  // original tr structure
 
+    BOOST_ASSERT(tr_moveable->starting_mesh < tr->m_meshIndices.size());
     const uint32_t *mesh_index = &tr->m_meshIndices[tr_moveable->starting_mesh];
 
     for(size_t k = 0; k < meshCount; k++)
     {
         SkeletalModel::MeshReference meshReference;
+        BOOST_ASSERT(mesh_index[k] < world.m_meshes.size());
         meshReference.mesh_base = world.m_meshes[mesh_index[k]];
         if(k == 0)
         {
@@ -1717,7 +1720,8 @@ void TR_GenSkeletalModel(const World& world, size_t model_num, SkeletalModel& mo
             continue;
         }
 
-        const int32_t *tr_mesh_tree = tr->m_meshTreeData.data() + tr_moveable->mesh_tree_index + (k - 1) * 4;
+        BOOST_ASSERT(tr_moveable->mesh_tree_index + k * 4 <= tr->m_meshTreeData.size());
+        const int32_t *tr_mesh_tree = &tr->m_meshTreeData[ tr_moveable->mesh_tree_index + (k - 1) * 4 ];
         meshReference.flag = tr_mesh_tree[0] & 0xFF;
         meshReference.offset[0] = static_cast<float>(tr_mesh_tree[1]);
         meshReference.offset[1] = static_cast<float>(tr_mesh_tree[3]);

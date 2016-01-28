@@ -57,7 +57,7 @@ private:
     size_t m_bufferSize = 0;
 
     size_t m_lineLength = LineLengthMax;                  // Console line size
-    int16_t m_lineHeight;                // Height, including spacing
+    int16_t m_lineHeight = 0;                // Height, including spacing
 
     float m_spacing = SpacingMin;                    // Line spacing
 

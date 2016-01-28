@@ -38,29 +38,30 @@ void Skeleton::fromModel(const std::shared_ptr<SkeletalModel>& model)
     for(size_t i = 0; i < m_bones.size(); i++)
     {
         const auto& meshReference = model->getMeshReference(i);
+        Bone& bone = m_bones[i];
 
-        m_bones[i].index = i;
-        m_bones[i].mesh = meshReference.mesh_base;
-        m_bones[i].mesh_skin = meshReference.mesh_skin;
-        if(m_bones[i].mesh_skin)
+        bone.index = i;
+        bone.mesh = meshReference.mesh_base;
+        bone.mesh_skin = meshReference.mesh_skin;
+        if(bone.mesh_skin)
             m_hasSkin = true;
-        m_bones[i].mesh_slot = nullptr;
-        m_bones[i].body_part = meshReference.body_part;
+        bone.mesh_slot = nullptr;
+        bone.body_part = meshReference.body_part;
 
-        m_bones[i].offset = meshReference.offset;
-        m_bones[i].qrotate = { 0, 0, 0, 0 };
-        m_bones[i].transform = glm::mat4(1.0f);
-        m_bones[i].full_transform = glm::mat4(1.0f);
+        bone.offset = meshReference.offset;
+        bone.qrotate = { 0, 0, 0, 0 };
+        bone.transform = glm::mat4(1.0f);
+        bone.full_transform = glm::mat4(1.0f);
 
         if(i == 0)
             continue;
 
-        m_bones[i].parent = &m_bones[i - 1];
+        bone.parent = &m_bones[i - 1];
         if(meshReference.flag & 0x01) // POP
         {
             if(!parents.empty())
             {
-                m_bones[i].parent = parents.top();
+                bone.parent = parents.top();
                 parents.pop();
             }
         }
@@ -68,7 +69,7 @@ void Skeleton::fromModel(const std::shared_ptr<SkeletalModel>& model)
         {
             if(parents.size() + 1 < model->getMeshReferenceCount())
             {
-                parents.push(m_bones[i].parent);
+                parents.push(bone.parent);
             }
         }
     }
