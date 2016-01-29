@@ -871,7 +871,7 @@ void Room::load(const std::unique_ptr<loader::Level>& tr)
 
         sector.owner_room = this;
 
-        if(tr->m_gameVersion < loader::Game::TR3)
+        if(loader::gameToEngine(tr->m_gameVersion) < loader::Engine::TR2)
         {
             sector.box_index = tr_room->sector_list[i].box_index;
             sector.material = SECTOR_MATERIAL_STONE;

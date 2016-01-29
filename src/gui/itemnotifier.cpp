@@ -3,6 +3,7 @@
 #include "engine/engine.h"
 #include "engine/system.h"
 #include "gui.h"
+#include "world/entity.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -90,21 +91,21 @@ void ItemNotifier::draw() const
     if(!item)
         return;
 
-    const world::animation::AnimationId anim = item->bf->getCurrentAnimation();
-    const auto frame = item->bf->getCurrentFrame();
+    const world::animation::AnimationId anim = item->getSkeleton().getCurrentAnimation();
+    const auto frame = item->getSkeleton().getCurrentFrame();
 
-    item->bf->setCurrentAnimation(0);
-    item->bf->setCurrentFrame(0);
+    item->getSkeleton().setCurrentAnimation(0);
+    item->getSkeleton().setCurrentFrame(0);
 
-    item->bf->itemFrame(util::Duration(0));
+    item->getSkeleton().itemFrame(util::Duration(0));
     glm::mat4 matrix(1.0f);
     matrix = glm::translate(matrix, { m_currPosX, m_posY, -2048.0 });
     matrix = glm::rotate(matrix, m_currentAngle.x + m_rotation.x, { 0,1,0 });
     matrix = glm::rotate(matrix, m_currentAngle.y + m_rotation.y, { 1,0,0 });
-    render::renderItem(*item->bf, m_size, matrix, m_engine->m_gui.m_guiProjectionMatrix);
+    render::renderItem(item->getSkeleton(), m_size, matrix, m_engine->m_gui.m_guiProjectionMatrix);
 
-    item->bf->setCurrentAnimation(anim);
-    item->bf->setCurrentFrame(frame);
+    item->getSkeleton().setCurrentAnimation(anim);
+    item->getSkeleton().setCurrentFrame(frame);
 }
 
 void ItemNotifier::setPos(glm::float_t X, glm::float_t Y)

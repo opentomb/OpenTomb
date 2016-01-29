@@ -301,5 +301,5 @@ private:
     std::unique_ptr<VertexArray> m_crosshairArray = nullptr;
 };
 
-void renderItem(const world::animation::Skeleton& bf, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix);
+void renderItem(const world::animation::Skeleton& skeleton, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix);
 } // namespace render

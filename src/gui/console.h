@@ -61,7 +61,7 @@ private:
 
     float m_spacing = SpacingMin;                    // Line spacing
 
-    int16_t m_cursorPos = 0;                 // Current cursor position, in symbols
+    size_t m_cursorPos = 0;                 // Current cursor position, in symbols
     int16_t m_cursorX = 0;                   // Cursor position in pixels
     int16_t m_cursorY = 0;
     util::Duration m_blinkTime = util::Duration(0);                // Current cursor draw time

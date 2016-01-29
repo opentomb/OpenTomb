@@ -185,7 +185,7 @@ void SkeletalModel::generateAnimCommands(const World& world)
     }
 }
 
-void SkeletalModel::loadStateChanges(const World& world, const loader::Level& level, const loader::Moveable& moveable)
+void SkeletalModel::loadStateChanges(const World& world, const loader::Level& level, const loader::AnimatedModel& moveable)
 {
 #ifdef LOG_ANIM_DISPATCHES
     if(animations.size() > 1)
@@ -207,8 +207,8 @@ void SkeletalModel::loadStateChanges(const World& world, const loader::Level& le
         if(static_cast<size_t>(animId) < m_animations.size())
         {
             anim->next_anim = &m_animations[animId];
-            BOOST_ASSERT(level.m_animations[trAnimation.next_animation].frame_start <= trAnimation.next_frame);
-            anim->next_frame = trAnimation.next_frame - level.m_animations[trAnimation.next_animation].frame_start;
+            BOOST_ASSERT(level.m_animations[trAnimation.next_animation].firstFrame <= trAnimation.next_frame);
+            anim->next_frame = trAnimation.next_frame - level.m_animations[trAnimation.next_animation].firstFrame;
             anim->next_frame %= anim->next_anim->getFrameDuration();
 #ifdef LOG_ANIM_DISPATCHES
             BOOST_LOG_TRIVIAL(debug) << "ANIM[" << i << "], next_anim = " << anim->next_anim->id << ", next_frame = " << anim->next_frame;
@@ -254,10 +254,10 @@ void SkeletalModel::loadStateChanges(const World& world, const loader::Level& le
                     BOOST_ASSERT(next_anim - moveable.animation_index < m_animations.size());
                     size_t next_frames_count = m_animations[next_anim - moveable.animation_index].getFrameDuration();
                     BOOST_ASSERT(next_anim < level.m_animations.size());
-                    size_t next_frame = tr_adisp->next_frame - level.m_animations[next_anim].frame_start;
+                    size_t next_frame = tr_adisp->next_frame - level.m_animations[next_anim].firstFrame;
 
-                    uint16_t low = tr_adisp->low - trAnimation.frame_start;
-                    uint16_t high = tr_adisp->high - trAnimation.frame_start;
+                    uint16_t low = tr_adisp->low - trAnimation.lastFrame;
+                    uint16_t high = tr_adisp->high - trAnimation.lastFrame;
 
                     // this is not good: frame_high can be frame_end+1 (for last-frame-loop statechanges,
                     // secifically fall anims (75,77 etc), which may fail to change state),
@@ -341,10 +341,10 @@ void SkeletalModel::loadAnimations(const loader::Level& level, size_t moveable)
     */
     for(size_t i = 0; i < m_animations.size(); i++)
     {
-        BOOST_ASSERT(level.m_moveables[moveable]->animation_index + i < level.m_animations.size());
+        BOOST_ASSERT(level.m_animatedModels[moveable]->animation_index + i < level.m_animations.size());
         animation::Animation* anim = &m_animations[i];
-        const loader::Animation& trAnimation = level.m_animations[level.m_moveables[moveable]->animation_index + i];
-        anim->frameStart = trAnimation.frame_start;
+        const loader::Animation& trAnimation = level.m_animations[level.m_animatedModels[moveable]->animation_index + i];
+        anim->frameStart = trAnimation.lastFrame;
 
         uint32_t frame_offset = trAnimation.frame_offset / 2;
         uint16_t l_start = 0x09;
@@ -355,7 +355,7 @@ void SkeletalModel::loadAnimations(const loader::Level& level, size_t moveable)
         }
 
         anim->id = i;
-        BOOST_LOG_TRIVIAL(debug) << "Anim " << i << " stretch factor = " << int(trAnimation.frame_rate) << ", frame count = " << (trAnimation.frame_end - trAnimation.frame_start + 1);
+        BOOST_LOG_TRIVIAL(debug) << "Anim " << i << " stretch factor = " << int(trAnimation.stretchFactor) << ", frame count = " << (trAnimation.firstFrame - trAnimation.lastFrame + 1);
 
         anim->speed_x = trAnimation.speed;
         anim->accel_x = trAnimation.accel;
@@ -374,12 +374,12 @@ void SkeletalModel::loadAnimations(const loader::Level& level, size_t moveable)
         // (I haven't seen this for framerate==1 animation, but it would be possible,
         //  also, resizing now saves re-allocations in interpolateFrames later)
 
-        BOOST_ASSERT(trAnimation.frame_start <= trAnimation.frame_end);
+        BOOST_ASSERT(trAnimation.lastFrame <= trAnimation.firstFrame);
         // const size_t keyFrameCount = getAnimationCountForMoveable(level, level.m_moveables[moveable]->animation_index + i);
-        const size_t keyFrameCount = (trAnimation.frame_end - trAnimation.frame_start + trAnimation.frame_rate) / trAnimation.frame_rate;
+        const size_t keyFrameCount = (trAnimation.firstFrame - trAnimation.lastFrame + trAnimation.stretchFactor) / trAnimation.stretchFactor;
         BOOST_ASSERT(keyFrameCount > 0);
-        BOOST_ASSERT(keyFrameCount*trAnimation.frame_rate >= trAnimation.frame_end - trAnimation.frame_start + 1);
-        anim->setDuration(trAnimation.frame_end - trAnimation.frame_start + 1, keyFrameCount, trAnimation.frame_rate);
+        BOOST_ASSERT(keyFrameCount*trAnimation.stretchFactor >= trAnimation.firstFrame - trAnimation.lastFrame + 1u);
+        anim->setDuration(trAnimation.firstFrame - trAnimation.lastFrame + 1, keyFrameCount, trAnimation.stretchFactor);
 
         //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index));
 
@@ -394,7 +394,7 @@ void SkeletalModel::loadAnimations(const loader::Level& level, size_t moveable)
         /*
         * let us begin to load animations
         */
-        for(size_t j = 0; j < anim->getKeyFrameCount(); ++j, frame_offset += trAnimation.frame_size)
+        for(size_t j = 0; j < anim->getKeyFrameCount(); ++j, frame_offset += trAnimation.poseDataSize)
         {
             animation::SkeletonKeyFrame* keyFrame = &anim->rawKeyFrame(j);
             // !Need bonetags in empty frames:
@@ -447,7 +447,7 @@ void SkeletalModel::loadAnimations(const loader::Level& level, size_t moveable)
                 {
                     temp1 = level.m_frameData[frame_offset + l];
                     l++;
-                    if(level.m_gameVersion >= loader::Game::TR4)
+                    if(loader::gameToEngine(level.m_gameVersion) >= loader::Engine::TR4)
                     {
                         ang = static_cast<float>(temp1 & 0x0fff);
                         ang *= 360.0 / 4096.0;
@@ -493,15 +493,15 @@ void SkeletalModel::loadAnimations(const loader::Level& level, size_t moveable)
 
 size_t SkeletalModel::getAnimationCountForMoveable(const loader::Level& level, size_t moveable)
 {
-    BOOST_ASSERT(moveable < level.m_moveables.size());
-    const std::unique_ptr<loader::Moveable>& curr_moveable = level.m_moveables[moveable];
+    BOOST_ASSERT(moveable < level.m_animatedModels.size());
+    const std::unique_ptr<loader::AnimatedModel>& curr_moveable = level.m_animatedModels[moveable];
 
     if(curr_moveable->animation_index == 0xFFFF)
     {
         return 0;
     }
 
-    if(moveable == level.m_moveables.size() - 1)
+    if(moveable == level.m_animatedModels.size() - 1)
     {
         if(level.m_animations.size() < curr_moveable->animation_index)
         {
@@ -511,12 +511,12 @@ size_t SkeletalModel::getAnimationCountForMoveable(const loader::Level& level, s
         return level.m_animations.size() - curr_moveable->animation_index;
     }
 
-    const loader::Moveable* next_moveable = level.m_moveables[moveable + 1].get();
+    const loader::AnimatedModel* next_moveable = level.m_animatedModels[moveable + 1].get();
     if(next_moveable->animation_index == 0xFFFF)
     {
-        if(moveable + 2 < level.m_moveables.size())                              // I hope there is no two neighboard movables with animation_index'es == 0xFFFF
+        if(moveable + 2 < level.m_animatedModels.size())                              // I hope there is no two neighboard movables with animation_index'es == 0xFFFF
         {
-            next_moveable = level.m_moveables[moveable + 2].get();
+            next_moveable = level.m_animatedModels[moveable + 2].get();
         }
         else
         {

@@ -38,7 +38,7 @@ public:
     std::vector<StateChange> m_stateChanges;
     std::vector<AnimDispatch> m_animDispatches;
     std::vector<int16_t> m_animCommands;
-    std::vector<std::unique_ptr<Moveable>> m_moveables;
+    std::vector<std::unique_ptr<AnimatedModel>> m_animatedModels;
     std::vector<StaticMesh> m_staticMeshes;
     std::vector<ObjectTexture> m_objectTextures;
     std::vector<uint16_t> m_animatedTextures;
@@ -87,7 +87,7 @@ public:
 
     StaticMesh *findStaticMeshById(uint32_t object_id);
     Item *fineItemById(int32_t object_id);
-    Moveable *findMoveableById(uint32_t object_id);
+    AnimatedModel *findMoveableById(uint32_t object_id);
 
 protected:
     io::SDLReader m_reader;

@@ -332,7 +332,7 @@ struct Bone
 class Skeleton
 {
 private:
-    World* m_world;
+    Entity* m_entity;
 
     std::vector<Bone> m_bones{};
     glm::vec3 m_position = { 0, 0, 0 };
@@ -354,14 +354,14 @@ private:
     util::Duration m_animationTime = util::Duration::zero();
 
 public:
-    explicit Skeleton(World* world)
-        : m_world(world)
+    explicit Skeleton(Entity* entity)
+        : m_entity(entity)
     {
     }
 
-    World* getWorld() const
+    Entity* getEntity() const
     {
-        return m_world;
+        return m_entity;
     }
 
     void(*onFrame)(Character& ent, AnimUpdate state) = nullptr;

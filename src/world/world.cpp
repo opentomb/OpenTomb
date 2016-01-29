@@ -251,7 +251,7 @@ std::shared_ptr<Character> World::getCharacterByID(ObjectId id)
     return std::dynamic_pointer_cast<Character>(getEntityByID(id));
 }
 
-std::shared_ptr<BaseItem> World::getBaseItemByID(ObjectId id)
+std::shared_ptr<InventoryItem> World::getBaseItemByID(ObjectId id)
 {
     auto it = m_items.find(id);
     if(it == m_items.end())
@@ -344,7 +344,7 @@ void World::addEntity(std::shared_ptr<Entity> entity)
         m_nextEntityId = entity->getId() + 1;
 }
 
-bool World::createItem(ModelId item_id, ModelId model_id, ModelId world_model_id, MenuItemType type, uint16_t count, const std::string& name)
+bool World::createInventoryItem(ObjectId item_id, ModelId model_id, ModelId world_model_id, MenuItemType type, size_t count, const std::string& name)
 {
     std::shared_ptr<SkeletalModel> model = getModelByID(model_id);
     if(!model)
@@ -352,19 +352,14 @@ bool World::createItem(ModelId item_id, ModelId model_id, ModelId world_model_id
         return false;
     }
 
-    std::unique_ptr<animation::Skeleton> bf(new animation::Skeleton(&m_engine->m_world));
-    bf->fromModel(model);
-
-    auto item = std::make_shared<BaseItem>();
-    item->id = item_id;
+    std::shared_ptr<InventoryItem> item = std::make_shared<InventoryItem>(item_id, &m_engine->m_world);
+    item->getSkeleton().fromModel(model);
     item->world_model_id = world_model_id;
     item->type = type;
     item->count = count;
-    item->name[0] = 0;
-    strncpy(item->name, name.c_str(), 64);
-    item->bf = std::move(bf);
+    item->name = name;
 
-    m_items[item->id] = item;
+    m_items[item->getId()] = item;
 
     return true;
 }
@@ -400,7 +395,7 @@ core::Sprite* World::getSpriteByID(core::SpriteId ID)
     return nullptr;
 }
 
-BaseItem::~BaseItem() = default;
+InventoryItem::~InventoryItem() = default;
 
 void World::updateAnimTextures()                                                // This function is used for updating global animated texture frame
 {

@@ -22,6 +22,7 @@ namespace world
 {
 class Character;
 struct StaticMesh;
+struct InventoryItem;
 
 namespace core
 {
@@ -208,18 +209,6 @@ namespace animation
 class Skeleton;
 } // namespace animation
 
-struct BaseItem
-{
-    ObjectId                    id;
-    ModelId                     world_model_id;
-    MenuItemType                type;
-    uint16_t                    count;
-    char                        name[64];
-    std::unique_ptr<animation::Skeleton> bf;
-
-    ~BaseItem();
-};
-
 struct RoomBox
 {
     int32_t     x_min;
@@ -360,7 +349,7 @@ public:
 
     std::map<ObjectId, std::shared_ptr<Entity>> m_entities;            // tree of world active objects
     ObjectId m_nextEntityId = 0;
-    std::map<ObjectId, std::shared_ptr<BaseItem>> m_items;
+    std::map<ObjectId, std::shared_ptr<InventoryItem>> m_items;
 
     std::vector<StatCameraSink> m_camerasAndSinks;
 
@@ -372,7 +361,7 @@ public:
     glm::vec4 calculateWaterTint() const;
 
     void addEntity(std::shared_ptr<Entity> entity);
-    bool createItem(ModelId item_id, ModelId model_id, ModelId world_model_id, MenuItemType type, uint16_t count, const std::string &name);
+    bool createInventoryItem(ObjectId item_id, ModelId model_id, ModelId world_model_id, MenuItemType type, size_t count, const std::string &name);
     int deleteItem(ObjectId item_id);
     core::Sprite* getSpriteByID(core::SpriteId ID);
     std::shared_ptr<SkeletalModel> getModelByID(ModelId id);           // binary search the model by ID
@@ -386,7 +375,7 @@ public:
     std::shared_ptr<Entity> getEntityByID(ObjectId id) const;
     std::shared_ptr<Character> getCharacterByID(ObjectId id);
 
-    std::shared_ptr<BaseItem> getBaseItemByID(ObjectId id);
+    std::shared_ptr<InventoryItem> getBaseItemByID(ObjectId id);
     std::shared_ptr<Room> findRoomByPosition(const glm::vec3& pos) const;
     std::shared_ptr<Room> getByID(ObjectId ID);
 

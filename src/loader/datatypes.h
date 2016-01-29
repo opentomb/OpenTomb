@@ -1572,13 +1572,13 @@ struct MeshTree
   } tr_frame_t;
   typedef prtl::array < tr_frame_t > tr_frame_array_t;*/
 
-struct Moveable
+struct AnimatedModel
 {
     uint32_t object_id;         // Item Identifier (matched in Items[])
     uint16_t num_meshes;        // number of meshes in this object
-    uint16_t starting_mesh;     // stating mesh (offset into MeshPointers[])
+    uint16_t starting_mesh;     // starting mesh (offset into MeshPointers[])
     uint32_t mesh_tree_index;   // offset into MeshTree[]
-    uint32_t frame_offset;      // byte offset into Frames[] (divide by 2 for Frames[i])
+    uint32_t poseDataOffset;      // byte offset into Frames[] (divide by 2 for Frames[i])
     uint32_t frame_index;
     uint16_t animation_index;   // offset into Animations[]
 
@@ -1587,21 +1587,21 @@ struct Moveable
       * some sanity checks get done which throw a exception on failure.
       * frame_offset needs to be corrected later in TR_Level::read_tr_level.
       */
-    static std::unique_ptr<Moveable> readTr1(io::SDLReader& reader)
+    static std::unique_ptr<AnimatedModel> readTr1(io::SDLReader& reader)
     {
-        std::unique_ptr<Moveable> moveable{ new Moveable() };
+        std::unique_ptr<AnimatedModel> moveable{ new AnimatedModel() };
         moveable->object_id = reader.readU32();
         moveable->num_meshes = reader.readU16();
         moveable->starting_mesh = reader.readU16();
         moveable->mesh_tree_index = reader.readU32();
-        moveable->frame_offset = reader.readU32();
+        moveable->poseDataOffset = reader.readU32();
         moveable->animation_index = reader.readU16();
         return moveable;
     }
 
-    static std::unique_ptr<Moveable> readTr5(io::SDLReader& reader)
+    static std::unique_ptr<AnimatedModel> readTr5(io::SDLReader& reader)
     {
-        std::unique_ptr<Moveable> moveable = readTr1(reader);
+        std::unique_ptr<AnimatedModel> moveable = readTr1(reader);
         if(reader.readU16() != 0xFFEF)
             BOOST_LOG_TRIVIAL(warning) << "TR5 Moveable: filler has wrong value";
         return moveable;
@@ -1803,8 +1803,8 @@ struct SpriteSequence
 struct Animation
 {
     uint32_t frame_offset;      // byte offset into Frames[] (divide by 2 for Frames[i])
-    uint8_t frame_rate;         // Engine ticks per frame
-    uint8_t frame_size;         // number of bit16's in Frames[] used by this animation
+    uint8_t stretchFactor;      // Slowdown factor of this animation
+    uint8_t poseDataSize;         // number of bit16's in Frames[] used by this animation
     uint16_t state_id;
 
     int32_t   speed;
@@ -1813,8 +1813,8 @@ struct Animation
     int32_t   speed_lateral;      // new in TR4 -->
     int32_t   accel_lateral;      // lateral speed and acceleration.
 
-    uint16_t frame_start;           // first frame in this animation
-    uint16_t frame_end;             // last frame in this animation (numframes = (End - Start) + 1)
+    uint16_t lastFrame;           // first frame in this animation
+    uint16_t firstFrame;             // last frame in this animation (numframes = (End - Start) + 1)
     uint16_t next_animation;
     uint16_t next_frame;
 
@@ -1839,8 +1839,8 @@ private:
     {
         std::unique_ptr<Animation> animation{ new Animation() };
         animation->frame_offset = reader.readU32();
-        animation->frame_rate = reader.readU8();
-        animation->frame_size = reader.readU8();
+        animation->stretchFactor = reader.readU8();
+        animation->poseDataSize = reader.readU8();
         animation->state_id = reader.readU16();
 
         animation->speed = reader.readI32();
@@ -1856,8 +1856,8 @@ private:
             animation->accel_lateral = 0;
         }
 
-        animation->frame_start = reader.readU16();
-        animation->frame_end = reader.readU16();
+        animation->lastFrame = reader.readU16();
+        animation->firstFrame = reader.readU16();
         animation->next_animation = reader.readU16();
         animation->next_frame = reader.readU16();
 

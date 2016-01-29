@@ -60,7 +60,7 @@ struct RoomSector;
 class SkeletalModel;
 class Entity;
 struct StaticMesh;
-struct BaseItem;
+struct InventoryItem;
 
 namespace core
 {

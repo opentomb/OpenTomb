@@ -5,7 +5,7 @@
 namespace loader
 {
 class Level;
-struct Moveable;
+struct AnimatedModel;
 enum class Engine;
 }
 
@@ -133,7 +133,7 @@ public:
     void setSkinnedMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount);
 
     void generateAnimCommands(const World& world);
-    void loadStateChanges(const World& world, const loader::Level& level, const loader::Moveable& moveable);
+    void loadStateChanges(const World& world, const loader::Level& level, const loader::AnimatedModel& moveable);
     void setStaticAnimation();
     void loadAnimations(const loader::Level& level, size_t moveable);
 

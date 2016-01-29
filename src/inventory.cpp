@@ -7,6 +7,7 @@
 #include "strings.h"
 #include "util/vmath.h"
 #include "engine/engine.h"
+#include "world/entity.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -435,16 +436,16 @@ void InventoryManager::render()
                 }
             }
             matrix = glm::rotate(matrix, glm::radians(90.0f + m_itemAngle - ang), { 0,0,1 });
-            bi->bf->itemFrame(util::Duration(0));                            // here will be time != 0 for using items animation
+            bi->getSkeleton().itemFrame(util::Duration(0));                            // here will be time != 0 for using items animation
         }
         else
         {
             matrix = glm::rotate(matrix, glm::radians(90.0f - ang), { 0,0,1 });
-            bi->bf->itemFrame(util::Duration(0));
+            bi->getSkeleton().itemFrame(util::Duration(0));
         }
-        matrix = glm::translate(matrix, -0.5f * bi->bf->getBoundingBox().getCenter());
+        matrix = glm::translate(matrix, -0.5f * bi->getSkeleton().getBoundingBox().getCenter());
         matrix = glm::scale(matrix, { 0.7f, 0.7f, 0.7f });
-        render::renderItem(*bi->bf, 0.0f, matrix, m_engine->m_gui.m_guiProjectionMatrix);
+        render::renderItem(bi->getSkeleton(), 0.0f, matrix, m_engine->m_gui.m_guiProjectionMatrix);
 
         num++;
     }

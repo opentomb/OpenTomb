@@ -258,7 +258,7 @@ void Console::edit(int key, const boost::optional<uint16_t>& mod)
                 // if we have only one term found, use it!
                 m_editingLine.erase(0, found[0].length());
                 m_editingLine.insert(0, found[0]);
-                m_cursorPos = static_cast<int16_t>(found[0].length());
+                m_cursorPos = found[0].length();
             }
             else
             {
@@ -292,7 +292,7 @@ void Console::edit(int key, const boost::optional<uint16_t>& mod)
                 else
                 {
                     m_editingLine.insert(m_cursorPos, common);
-                    m_cursorPos += static_cast<int16_t>(common.length());
+                    m_cursorPos += common.length();
                 }
             }
         }

@@ -722,7 +722,7 @@ void Entity::moveVertical(glm::float_t dist)
 
 Entity::Entity(ObjectId id, World* world)
     : Object(id, world)
-    , m_skeleton(world)
+    , m_skeleton(this)
 {
     m_obb.transform = &m_transform;
 }

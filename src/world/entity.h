@@ -229,6 +229,16 @@ public:
 
     glm::vec3 applyGravity(util::Duration time);
 
+    animation::Skeleton& getSkeleton()
+    {
+        return m_skeleton;
+    }
+
+    const animation::Skeleton& getSkeleton() const
+    {
+        return m_skeleton;
+    }
+
 private:
     static glm::float_t getInnerBBRadius(const core::BoundingBox& bb)
     {
@@ -237,6 +247,21 @@ private:
     }
 
     bool getPenetrationFixVector(btPairCachingGhostObject& ghost, btManifoldArray& manifoldArray, glm::vec3& correction) const;
+};
+
+struct InventoryItem : public Entity
+{
+    explicit InventoryItem(ObjectId id, World* world)
+        : Entity(id, world)
+    {
+    }
+
+    ModelId                     world_model_id;
+    MenuItemType                type;
+    size_t                      count;
+    std::string name;
+
+    ~InventoryItem();
 };
 
 int Ghost_GetPenetrationFixVector(btPairCachingGhostObject& ghost, btManifoldArray& manifoldArray, glm::vec3& correction);

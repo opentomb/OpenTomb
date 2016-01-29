@@ -1276,16 +1276,16 @@ void RenderDebugDrawer::drawRoomDebugLines(const world::Room& room, const Render
  * @param size - the item size on the screen;
  * @param str - item description - shows near / under item model;
  */
-void renderItem(const world::animation::Skeleton& bf, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix)
+void renderItem(const world::animation::Skeleton& skeleton, glm::float_t size, const glm::mat4& mvMatrix, const glm::mat4& guiProjectionMatrix)
 {
-    const LitShaderDescription *shader = bf.getWorld()->m_engine->renderer.shaderManager()->getEntityShader(0, false);
+    const LitShaderDescription *shader = skeleton.getEntity()->getWorld()->m_engine->renderer.shaderManager()->getEntityShader(0, false);
     glUseProgram(shader->program);
     glUniform1i(shader->number_of_lights, 0);
     glUniform4f(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
 
     if(size != 0.0)
     {
-        auto bb = bf.getBoundingBox().getExtent();
+        auto bb = skeleton.getBoundingBox().getExtent();
         size /= glm::max(glm::max(bb[0], bb[1]), bb[2]);
         size *= 0.8f;
 
@@ -1299,12 +1299,12 @@ void renderItem(const world::animation::Skeleton& bf, glm::float_t size, const g
 
         // Render with scaled model view projection matrix
         // Use original modelview matrix, as that is used for normals whose size shouldn't change.
-        bf.getWorld()->m_engine->renderer.renderSkeletalModel(*shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        skeleton.getEntity()->getWorld()->m_engine->renderer.renderSkeletalModel(*shader, skeleton, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
     else
     {
         glm::mat4 mvpMatrix = guiProjectionMatrix * mvMatrix;
-        bf.getWorld()->m_engine->renderer.renderSkeletalModel(*shader, bf, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
+        skeleton.getEntity()->getWorld()->m_engine->renderer.renderSkeletalModel(*shader, skeleton, mvMatrix, mvpMatrix/*, guiProjectionMatrix*/);
     }
 }
 

@@ -753,11 +753,9 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
     if(!tr->m_samplesData.empty())
     {
         auto pointer = tr->m_samplesData.data();
-        switch(tr->m_gameVersion)
+        switch(loader::gameToEngine(tr->m_gameVersion))
         {
-            case loader::Game::TR1:
-            case loader::Game::TR1Demo:
-            case loader::Game::TR1UnfinishedBusiness:
+            case loader::Engine::TR1:
                 m_soundIdMap = tr->m_soundmap;
 
                 for(size_t i = 0; i < tr->m_sampleIndices.size() - 1; i++)
@@ -768,9 +766,8 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
                 }
                 break;
 
-            case loader::Game::TR2:
-            case loader::Game::TR2Demo:
-            case loader::Game::TR3:
+            case loader::Engine::TR2:
+            case loader::Engine::TR3:
             {
                 m_soundIdMap = tr->m_soundmap;
                 size_t ind1 = 0;
@@ -812,9 +809,8 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
                 break;
             }
 
-            case loader::Game::TR4:
-            case loader::Game::TR4Demo:
-            case loader::Game::TR5:
+            case loader::Engine::TR4:
+            case loader::Engine::TR5:
                 m_soundIdMap = tr->m_soundmap;
 
                 for(size_t i = 0; i < tr->m_samplesCount; i++)
@@ -845,12 +841,12 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
     // audio effects structure.
     for(size_t i = 0; i < m_effects.size(); i++)
     {
-        if(tr->m_gameVersion < loader::Game::TR3)
+        if(loader::gameToEngine(tr->m_gameVersion) < loader::Engine::TR3)
         {
             m_effects[i].gain = tr->m_soundDetails[i].volume / 32767.0f; // Max. volume in TR1/TR2 is 32767.
             m_effects[i].chance = tr->m_soundDetails[i].chance;
         }
-        else if(tr->m_gameVersion > loader::Game::TR3)
+        else if(loader::gameToEngine(tr->m_gameVersion) > loader::Engine::TR3)
         {
             m_effects[i].gain = tr->m_soundDetails[i].volume / 255.0f; // Max. volume in TR3 is 255.
             m_effects[i].chance = tr->m_soundDetails[i].chance * 255;

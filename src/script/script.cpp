@@ -659,9 +659,9 @@ lua::Any lua_GetItemsCount(engine::Engine& engine, world::ObjectId entity_id, in
     }
 }
 
-void lua_CreateBaseItem(engine::Engine& engine, int item_id, int model_id, int world_model_id, int type, int count, const char* name)
+void lua_createInventoryItem(engine::Engine& engine, int item_id, int model_id, int world_model_id, int type, int count, const std::string& name)
 {
-    engine.m_world.createItem(item_id, model_id, world_model_id, static_cast<MenuItemType>(type), count, name ? name : std::string());
+    engine.m_world.createInventoryItem(item_id, model_id, world_model_id, static_cast<MenuItemType>(type), count, name);
 }
 
 void lua_DeleteBaseItem(engine::Engine& engine, int id)
@@ -3115,7 +3115,7 @@ void MainEngine::registerMainFunctions()
     registerC("removeItem", lua_RemoveItem);
     registerC("removeAllItems", lua_RemoveAllItems);
     registerC("getItemsCount", lua_GetItemsCount);
-    registerC("createBaseItem", lua_CreateBaseItem);
+    registerC("createInventoryItem", lua_createInventoryItem);
     registerC("deleteBaseItem", lua_DeleteBaseItem);
     registerC("printItems", lua_PrintItems);
 

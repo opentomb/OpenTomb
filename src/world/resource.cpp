@@ -1703,8 +1703,8 @@ std::shared_ptr<SkeletalModel> Res_GetSkybox(World& world)
 
 void TR_GenSkeletalModel(const World& world, size_t model_num, SkeletalModel& model, const std::unique_ptr<loader::Level>& tr, size_t meshCount)
 {
-    BOOST_ASSERT(model_num < tr->m_moveables.size());
-    const std::unique_ptr<loader::Moveable>& tr_moveable = tr->m_moveables[model_num];  // original tr structure
+    BOOST_ASSERT(model_num < tr->m_animatedModels.size());
+    const std::unique_ptr<loader::AnimatedModel>& tr_moveable = tr->m_animatedModels[model_num];  // original tr structure
 
     BOOST_ASSERT(tr_moveable->starting_mesh < tr->m_meshIndices.size());
     const uint32_t *mesh_index = &tr->m_meshIndices[tr_moveable->starting_mesh];
@@ -1758,7 +1758,7 @@ void TR_GenSkeletalModel(const World& world, size_t model_num, SkeletalModel& mo
 size_t TR_GetNumFramesForAnimation(const std::unique_ptr<loader::Level>& tr, size_t animation_ind)
 {
     loader::Animation* curr_anim = &tr->m_animations[animation_ind];
-    if(curr_anim->frame_size <= 0)
+    if(curr_anim->poseDataSize <= 0)
     {
         return 1;                                                               // impossible!
     }
@@ -1766,22 +1766,22 @@ size_t TR_GetNumFramesForAnimation(const std::unique_ptr<loader::Level>& tr, siz
     if(animation_ind == tr->m_animations.size() - 1)
     {
         size_t ret = 2 * tr->m_frameData.size() - curr_anim->frame_offset;
-        ret /= curr_anim->frame_size * 2;                                       /// it is fully correct!
+        ret /= curr_anim->poseDataSize * 2;                                       /// it is fully correct!
         return ret;
     }
 
     loader::Animation* next_anim = &tr->m_animations[animation_ind + 1];
     size_t ret = next_anim->frame_offset - curr_anim->frame_offset;
-    ret /= curr_anim->frame_size * 2;
+    ret /= curr_anim->poseDataSize * 2;
 
     return ret;
 }
 
 void TR_GenSkeletalModels(World& world, const std::unique_ptr<loader::Level>& tr)
 {
-    for(size_t i = 0; i < tr->m_moveables.size(); i++)
+    for(size_t i = 0; i < tr->m_animatedModels.size(); i++)
     {
-        const loader::Moveable& tr_moveable = *tr->m_moveables[i];
+        const loader::AnimatedModel& tr_moveable = *tr->m_animatedModels[i];
         std::shared_ptr<SkeletalModel> smodel = std::make_shared<SkeletalModel>(tr_moveable.object_id);
         TR_GenSkeletalModel(world, i, *smodel, tr, tr_moveable.num_meshes);
         smodel->updateTransparencyFlag();
@@ -1851,7 +1851,7 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
             continue;                                                           // that entity has no model. may be it is a some trigger or look at object
         }
 
-        if(tr->m_gameVersion < loader::Game::TR2 && tr_item->object_id == 83)                ///@FIXME: brutal magick hardcode! ;-)
+        if(loader::gameToEngine(tr->m_gameVersion) == loader::Engine::TR1 && tr_item->object_id == 83)                ///@FIXME: brutal magick hardcode! ;-)
         {
             // skip PSX save model
             continue;
@@ -1897,7 +1897,7 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
 
 void Res_EntityToItem(World& world)
 {
-    for(std::shared_ptr<BaseItem> item : world.m_items | boost::adaptors::map_values)
+    for(std::shared_ptr<InventoryItem> item : world.m_items | boost::adaptors::map_values)
     {
         for(const std::shared_ptr<Room>& room : world.m_rooms)
         {
@@ -1913,7 +1913,7 @@ void Res_EntityToItem(World& world)
                 if(world.m_engine->engine_lua["entity_funcs"][ent->getId()].is<lua::Nil>())
                     world.m_engine->engine_lua["entity_funcs"].set(ent->getId(), lua::Table());
 
-                world.m_engine->engine_lua["pickup_init"](ent->getId(), item->id);
+                world.m_engine->engine_lua["pickup_init"](ent->getId(), item->getId());
 
                 ent->m_skeleton.disableCollision();
             }

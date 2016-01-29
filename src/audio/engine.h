@@ -76,7 +76,7 @@ public:
     bool deInitDelay();
     void deInitAudio();
     // If exist, immediately stop and destroy all effects with given parameters.
-    Error kill(audio::SoundId soundId, EmitterType entityType = EmitterType::Global, const boost::optional<world::ObjectId>& entityId = 0);
+    Error kill(audio::SoundId soundId, EmitterType entityType = EmitterType::Global, const boost::optional<world::ObjectId>& entityId = boost::none);
     bool isInRange(EmitterType entityType, const boost::optional<world::ObjectId>& entityId, float range, float gain);
     Error send(const boost::optional<SoundId>& soundId, EmitterType entityType = EmitterType::Global, const boost::optional<world::ObjectId>& entityId = boost::none);
 
