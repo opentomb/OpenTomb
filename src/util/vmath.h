@@ -73,7 +73,7 @@ struct Plane
     }
 };
 
-inline glm::quat vec4_SetTRRotations(const glm::vec3& rotation)
+inline glm::quat trRotationToQuat(const glm::vec3& rotation)
 {
     glm::quat v = glm::quat(1, 0, 0, 0);
     v = glm::rotate(v, glm::radians(rotation[2]), { 0,0,1 });

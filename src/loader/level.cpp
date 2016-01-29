@@ -72,9 +72,9 @@ void Level::readMeshData(io::SDLReader& reader)
 /// \brief reads frame and moveable data.
 void Level::readFrameMoveableData(io::SDLReader& reader)
 {
-    m_frameData.resize(reader.readU32());
+    m_poseData.resize(reader.readU32());
     const auto frameDataPos = reader.tell();
-    reader.readVector(m_frameData, m_frameData.size());
+    reader.readVector(m_poseData, m_poseData.size());
 
     m_animatedModels.resize(reader.readU32());
     for(size_t i = 0; i < m_animatedModels.size(); i++)
@@ -85,7 +85,7 @@ void Level::readFrameMoveableData(io::SDLReader& reader)
             // Disable unused skybox polygons.
             if(gameToEngine(m_gameVersion) == Engine::TR3 && m_animatedModels[i]->object_id == 355)
             {
-                m_meshes[m_meshIndices[m_animatedModels[i]->starting_mesh]].coloured_triangles.resize(16);
+                m_meshes[m_meshIndices[m_animatedModels[i]->firstMesh]].coloured_triangles.resize(16);
             }
         }
         else
@@ -97,7 +97,7 @@ void Level::readFrameMoveableData(io::SDLReader& reader)
     const auto endPos = reader.tell();
 
     uint32_t pos = 0;
-    for(size_t i = 0; i < m_frameData.size(); i++)
+    for(size_t i = 0; i < m_poseData.size(); i++)
     {
         for(size_t j = 0; j < m_animatedModels.size(); j++)
             if(m_animatedModels[j]->poseDataOffset == pos)

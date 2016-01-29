@@ -37,10 +37,18 @@ public:
     */
     struct MeshReference
     {
+        enum StackOperation
+        {
+            UsePredecessor,
+            Pop,
+            Push,
+            Top
+        };
+
         std::shared_ptr<core::BaseMesh> mesh_base; //!< pointer to the first mesh in array
         std::shared_ptr<core::BaseMesh> mesh_skin = nullptr; //!< base skinned mesh for TR4+
-        glm::vec3 offset = { 0,0,0 }; //!< model position offset
-        uint16_t                    flag = 0;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = RESET
+        glm::vec3 position = { 0,0,0 }; //!< model position offset
+        StackOperation stackOperation = UsePredecessor;
         uint32_t                    body_part = 0;
         uint8_t                     replace_mesh = 0;                                   // flag for shoot / guns animations (0x00, 0x01, 0x02, 0x03)
         bool                        replace_anim = false;

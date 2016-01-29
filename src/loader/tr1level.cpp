@@ -75,8 +75,8 @@ void TR1Level::load()
     // try to fix ugly stick
     for(size_t i = 0; i < m_animations.size(); i++)
     {
-        uint32_t frame_offset = m_animations[i].frame_offset / 2;
-        m_animations[i].poseDataSize = m_frameData[frame_offset + 9] * 2 + 10;
+        uint32_t frame_offset = m_animations[i].poseDataOffset / 2;
+        m_animations[i].poseDataSize = m_poseData[frame_offset + 9] * 2 + 10;
     }
 
     BOOST_LOG_TRIVIAL(debug) << "Reading static meshes";

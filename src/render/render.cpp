@@ -98,8 +98,8 @@ void Render::renderSkyBox()
     if(m_drawSkybox && m_world != nullptr && m_world->m_skyBox != nullptr)
     {
         glDepthMask(GL_FALSE);
-        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->getAnimation(0).getInitialBoneKeyFrame().offset);
-        tr *= glm::mat4_cast(m_world->m_skyBox->getAnimation(0).getInitialBoneKeyFrame().qrotate);
+        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->getAnimation(0).getInitialBoneKeyFrame().position);
+        tr *= glm::mat4_cast(m_world->m_skyBox->getAnimation(0).getInitialBoneKeyFrame().rotation);
         const glm::mat4 fullView = m_cam->getViewProjection() * tr;
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getStaticMeshShader();
@@ -331,9 +331,9 @@ void Render::renderSkeletalModel(const LitShaderDescription& shader, const world
 {
     for(const world::animation::Bone& bone : skeleton.getBones())
     {
-        glUniformMatrix4fv(shader.model_view, 1, false, glm::value_ptr(mvMatrix * bone.full_transform));
+        glUniformMatrix4fv(shader.model_view, 1, false, glm::value_ptr(mvMatrix * bone.globalTransform));
 
-        glUniformMatrix4fv(shader.model_view_projection, 1, false, glm::value_ptr(mvpMatrix * bone.full_transform));
+        glUniformMatrix4fv(shader.model_view_projection, 1, false, glm::value_ptr(mvpMatrix * bone.globalTransform));
 
         renderMesh(bone.mesh);
         if(bone.mesh_slot)
@@ -350,12 +350,12 @@ void Render::renderSkeletalModelSkin(const LitShaderDescription& shader, const w
     for(const world::animation::Bone& bone : ent.m_skeleton.getBones())
     {
         glm::mat4 transforms[2];
-        transforms[0] = mvMatrix * bone.full_transform;
+        transforms[0] = mvMatrix * bone.globalTransform;
 
         // Calculate parent transform
-        const glm::mat4& parentTransform = bone.parent ? bone.parent->full_transform : ent.m_transform;
+        const glm::mat4& parentTransform = bone.parent ? bone.parent->globalTransform : ent.m_transform;
 
-        glm::mat4 secondTransform = parentTransform * glm::translate(glm::mat4(1.0f), bone.offset);
+        glm::mat4 secondTransform = parentTransform * glm::translate(glm::mat4(1.0f), bone.position);
 
         transforms[1] = mvMatrix * secondTransform;
         glUniformMatrix4fv(shader.model_view, 2, false, glm::value_ptr(transforms[0]));
@@ -387,7 +387,7 @@ void Render::renderDynamicEntitySkin(const LitShaderDescription& shader, const w
         else
             tr1 = ent.m_transform;
 
-        glm::mat4 secondTransform = glm::translate(tr1, bone.offset);
+        glm::mat4 secondTransform = glm::translate(tr1, bone.position);
         mvTransforms[1] = m_cam->getView() * secondTransform;
 
         glUniformMatrix4fv(shader.model_view, 2, false, glm::value_ptr(mvTransforms[0]));
@@ -549,7 +549,7 @@ void Render::renderHair(std::shared_ptr<world::Character> entity)
     for(const std::shared_ptr<world::Hair>& hair : entity->getHairs())
     {
         // First: Head attachment
-        glm::mat4 globalHead(entity->m_transform * entity->m_skeleton.getBones()[hair->m_ownerBody].full_transform);
+        glm::mat4 globalHead(entity->m_transform * entity->m_skeleton.getBones()[hair->m_ownerBody].globalTransform);
         glm::mat4 globalAttachment = globalHead * hair->m_ownerBodyHairRoot;
 
         static constexpr int MatrixCount = 10;
@@ -814,7 +814,7 @@ void Render::drawList()
             {
                 if(!bone.mesh->m_transparencyPolygons.empty())
                 {
-                    auto tr = ent->m_transform * bone.full_transform;
+                    auto tr = ent->m_transform * bone.globalTransform;
                     render_dBSP.addNewPolygonList(bone.mesh->m_transparentPolygons, tr, *m_cam);
                 }
             }
@@ -828,7 +828,7 @@ void Render::drawList()
         {
             if(!bone.mesh->m_transparencyPolygons.empty())
             {
-                auto tr = ent->m_transform * bone.full_transform;
+                auto tr = ent->m_transform * bone.globalTransform;
                 render_dBSP.addNewPolygonList(bone.mesh->m_transparentPolygons, tr, *m_cam);
             }
         }
@@ -866,8 +866,8 @@ void Render::drawListDebugLines()
      */
     if(m_drawNormals && m_world && m_world->m_skyBox)
     {
-        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->getAnimation(0).getInitialBoneKeyFrame().offset);
-        tr *= glm::mat4_cast(m_world->m_skyBox->getAnimation(0).getInitialBoneKeyFrame().qrotate);
+        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->getAnimation(0).getInitialBoneKeyFrame().position);
+        tr *= glm::mat4_cast(m_world->m_skyBox->getAnimation(0).getInitialBoneKeyFrame().rotation);
         m_world->m_engine->debugDrawer.drawMeshDebugLines(m_world->m_skyBox->getMeshReference(0).mesh_base, tr, *this);
     }
 
@@ -1165,7 +1165,7 @@ void RenderDebugDrawer::drawSkeletalModelDebugLines(const world::animation::Skel
         return;
 
     for(const world::animation::Bone& bone : skeleton.getBones())
-        drawMeshDebugLines(bone.mesh, transform * bone.full_transform, render);
+        drawMeshDebugLines(bone.mesh, transform * bone.globalTransform, render);
 }
 
 void RenderDebugDrawer::drawEntityDebugLines(const world::Entity& entity, const Render& render)

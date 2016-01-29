@@ -135,23 +135,25 @@ struct StateChange
 
 /**
  * Defines position and rotation in the parent's coordinate system
+ *
+ * @remark A parent is either another BonePose, or a SkeletonPose.
  */
-struct BoneKeyFrame
+struct BonePose
 {
-    glm::vec3 offset;
-    glm::quat qrotate;
+    glm::vec3 position;
+    glm::quat rotation;
 };
 
 /**
- * Collection of @c BoneKeyFrame and @c AnimCommand
+ * Defines a full pose of a @c Skeleton.
  */
-struct SkeletonKeyFrame
+struct SkeletonPose
 {
-    std::vector<BoneKeyFrame> boneKeyFrames;
+    std::vector<BonePose> bonePoses;
     glm::vec3 position = { 0,0,0 };
     core::BoundingBox boundingBox;
 
-    void load(const loader::Level& level, size_t frame_offset);
+    void load(const loader::Level& level, size_t poseDataOffset);
 };
 
 /**
@@ -167,12 +169,12 @@ struct Animation
     size_t animationCommand;
     size_t animationCommandCount;
     LaraState state_id;
-    int frameStart = 0;
+    int firstFrame = 0;
 
     boost::container::flat_map<LaraState, StateChange> stateChanges;
 
     Animation* next_anim = nullptr; // Next default animation
-    size_t next_frame;                 // Next default frame
+    size_t nextFrame;                 // Next default frame
 
     std::vector<AnimCommand> finalAnimCommands; // cmds for end-of-anim
 
@@ -194,22 +196,22 @@ struct Animation
         return &it->second;
     }
 
-    const BoneKeyFrame& getInitialBoneKeyFrame() const
+    const BonePose& getInitialBoneKeyFrame() const
     {
-        return m_keyFrames.front().boneKeyFrames.front();
+        return m_poses.front().bonePoses.front();
     }
 
-    SkeletonKeyFrame getInterpolatedFrame(size_t frame) const
+    SkeletonPose getInterpolatedPose(size_t frame) const
     {
         BOOST_ASSERT(frame < m_duration);
         const size_t frameIndex = frame / m_stretchFactor;
-        BOOST_ASSERT(frameIndex < m_keyFrames.size());
-        const SkeletonKeyFrame& first = m_keyFrames[frameIndex];
-        const SkeletonKeyFrame& second = frameIndex + 1 >= m_keyFrames.size()
-            ? m_keyFrames.back()
-            : m_keyFrames[frameIndex + 1];
+        BOOST_ASSERT(frameIndex < m_poses.size());
+        const SkeletonPose& first = m_poses[frameIndex];
+        const SkeletonPose& second = frameIndex + 1 >= m_poses.size()
+            ? m_poses.back()
+            : m_poses[frameIndex + 1];
 
-        BOOST_ASSERT(first.boneKeyFrames.size() == second.boneKeyFrames.size());
+        BOOST_ASSERT(first.bonePoses.size() == second.bonePoses.size());
 
         const size_t subOffset = frame - frameIndex*m_stretchFactor; // offset between keyframes
         if(subOffset == 0)
@@ -217,27 +219,27 @@ struct Animation
 
         const glm::float_t lerp = static_cast<glm::float_t>(subOffset) / static_cast<glm::float_t>(m_stretchFactor);
 
-        SkeletonKeyFrame result;
+        SkeletonPose result;
         result.position = glm::mix(first.position, second.position, lerp);
         result.boundingBox.max = glm::mix(first.boundingBox.max, second.boundingBox.max, lerp);
         result.boundingBox.min = glm::mix(first.boundingBox.min, second.boundingBox.min, lerp);
 
-        result.boneKeyFrames.resize(first.boneKeyFrames.size());
+        result.bonePoses.resize(first.bonePoses.size());
 
-        for(size_t k = 0; k < first.boneKeyFrames.size(); k++)
+        for(size_t k = 0; k < first.bonePoses.size(); k++)
         {
-            result.boneKeyFrames[k].offset = glm::mix(first.boneKeyFrames[k].offset, second.boneKeyFrames[k].offset, lerp);
-            result.boneKeyFrames[k].qrotate = glm::slerp(first.boneKeyFrames[k].qrotate, second.boneKeyFrames[k].qrotate, lerp);
+            result.bonePoses[k].position = glm::mix(first.bonePoses[k].position, second.bonePoses[k].position, lerp);
+            result.bonePoses[k].rotation = glm::slerp(first.bonePoses[k].rotation, second.bonePoses[k].rotation, lerp);
         }
 
         return result;
     }
 
-    SkeletonKeyFrame& rawKeyFrame(size_t idx)
+    SkeletonPose& rawPose(size_t idx)
     {
-        if(idx >= m_keyFrames.size())
+        if(idx >= m_poses.size())
             throw std::out_of_range("Keyframe index out of bounds");
-        return m_keyFrames[idx];
+        return m_poses[idx];
     }
 
     size_t getFrameDuration() const
@@ -249,14 +251,14 @@ struct Animation
     {
         BOOST_ASSERT(stretchFactor > 0);
         BOOST_ASSERT(frames > 0);
-        m_keyFrames.resize(keyFrames);
+        m_poses.resize(keyFrames);
         m_duration = frames;
         m_stretchFactor = stretchFactor;
     }
 
     size_t getKeyFrameCount() const noexcept
     {
-        return m_keyFrames.size();
+        return m_poses.size();
     }
 
     uint8_t getStretchFactor() const
@@ -271,14 +273,15 @@ struct Animation
 
     const std::vector<AnimCommand>& getAnimCommands(int frame) const
     {
+        static const std::vector<AnimCommand> empty{};
         auto it = m_animCommands.find(frame);
         if(it == m_animCommands.end())
-            throw std::runtime_error("No animation command for frame");
+            return empty;
         return it->second;
     }
 
 private:
-    std::vector<SkeletonKeyFrame> m_keyFrames;
+    std::vector<SkeletonPose> m_poses;
     uint8_t m_stretchFactor = 1; //!< Time scale (>1 means slowdown)
     std::map<int, std::vector<AnimCommand>> m_animCommands; //!< Maps from real frame index to commands
     size_t m_duration = 1; //!< Real frame duration
@@ -298,6 +301,10 @@ class Skeleton;
 
 /**
  * @brief A single bone in a @c Skeleton
+ *
+ * @remark If not stated otherwise, local transformations are relative to the
+ *         parent bone, or the owner skeleton if the bone doesn't have a parent;
+ *         global transformations are in world space.
  */
 struct Bone
 {
@@ -308,11 +315,11 @@ struct Bone
     std::shared_ptr<core::BaseMesh> mesh; //!< The mesh this bone deforms
     std::shared_ptr<core::BaseMesh> mesh_skin;
     std::shared_ptr<core::BaseMesh> mesh_slot; //!< Optional additional mesh
-    glm::vec3 offset{0};
 
-    glm::quat qrotate;
-    glm::mat4 transform{1};      //!< Local transformation matrix
-    glm::mat4 full_transform{1}; //!< Global transformation matrix
+    glm::vec3 position{0};
+
+    glm::mat4 localTransform{1};
+    glm::mat4 globalTransform{1};
 
     uint32_t body_part = 0; //!< flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 
@@ -451,7 +458,7 @@ public:
     const glm::mat4& getRootTransform() const
     {
         BOOST_ASSERT(!m_bones.empty());
-        return m_bones.front().full_transform;
+        return m_bones.front().globalTransform;
     }
 
     size_t getBoneCount() const noexcept

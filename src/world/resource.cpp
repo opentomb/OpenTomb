@@ -1664,20 +1664,20 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, cons
     tr_animation = &tr->m_animations[anim];
     if(anim + 1 == tr->m_animations.size())
     {
-        if(offset < tr_animation->frame_offset)
+        if(offset < tr_animation->poseDataOffset)
         {
             return -2;
         }
     }
     else
     {
-        if(offset < tr_animation->frame_offset && offset >= (tr_animation + 1)->frame_offset)
+        if(offset < tr_animation->poseDataOffset && offset >= (tr_animation + 1)->poseDataOffset)
         {
             return -2;
         }
     }
 
-    return tr_animation->frame_offset;
+    return tr_animation->poseDataOffset;
 }
 
 std::shared_ptr<SkeletalModel> Res_GetSkybox(World& world)
@@ -1704,28 +1704,29 @@ std::shared_ptr<SkeletalModel> Res_GetSkybox(World& world)
 void TR_GenSkeletalModel(const World& world, size_t model_num, SkeletalModel& model, const std::unique_ptr<loader::Level>& tr, size_t meshCount)
 {
     BOOST_ASSERT(model_num < tr->m_animatedModels.size());
-    const std::unique_ptr<loader::AnimatedModel>& tr_moveable = tr->m_animatedModels[model_num];  // original tr structure
+    const std::unique_ptr<loader::AnimatedModel>& animatedModel = tr->m_animatedModels[model_num];  // original tr structure
 
-    BOOST_ASSERT(tr_moveable->starting_mesh < tr->m_meshIndices.size());
-    const uint32_t *mesh_index = &tr->m_meshIndices[tr_moveable->starting_mesh];
+    BOOST_ASSERT(animatedModel->firstMesh < tr->m_meshIndices.size());
+    const uint32_t *meshIndices = &tr->m_meshIndices[animatedModel->firstMesh];
 
     for(size_t k = 0; k < meshCount; k++)
     {
         SkeletalModel::MeshReference meshReference;
-        BOOST_ASSERT(mesh_index[k] < world.m_meshes.size());
-        meshReference.mesh_base = world.m_meshes[mesh_index[k]];
+        BOOST_ASSERT(meshIndices[k] < world.m_meshes.size());
+        meshReference.mesh_base = world.m_meshes[meshIndices[k]];
         if(k == 0)
         {
-            meshReference.flag = 0x02;
+            meshReference.stackOperation = SkeletalModel::MeshReference::Push;
+            model.addMeshReference(meshReference);
             continue;
         }
 
-        BOOST_ASSERT(tr_moveable->mesh_tree_index + k * 4 <= tr->m_meshTreeData.size());
-        const int32_t *tr_mesh_tree = &tr->m_meshTreeData[ tr_moveable->mesh_tree_index + (k - 1) * 4 ];
-        meshReference.flag = tr_mesh_tree[0] & 0xFF;
-        meshReference.offset[0] = static_cast<float>(tr_mesh_tree[1]);
-        meshReference.offset[1] = static_cast<float>(tr_mesh_tree[3]);
-        meshReference.offset[2] = -static_cast<float>(tr_mesh_tree[2]);
+        BOOST_ASSERT(animatedModel->mesh_tree_index + k * 4 <= tr->m_meshTreeData.size());
+        const int32_t *meshTreeData = &tr->m_meshTreeData[ animatedModel->mesh_tree_index + (k - 1) * 4 ];
+        meshReference.stackOperation = static_cast<SkeletalModel::MeshReference::StackOperation>(meshTreeData[0]);
+        meshReference.position[0] = static_cast<float>(meshTreeData[1]);
+        meshReference.position[1] = static_cast<float>(meshTreeData[3]);
+        meshReference.position[2] = -static_cast<float>(meshTreeData[2]);
 
         model.addMeshReference(meshReference);
     }
@@ -1734,7 +1735,7 @@ void TR_GenSkeletalModel(const World& world, size_t model_num, SkeletalModel& mo
      * =================    now, animation loading    ========================
      */
 
-    if(tr_moveable->animation_index >= tr->m_animations.size())
+    if(animatedModel->animation_index >= tr->m_animations.size())
     {
         /*
          * model has no start offset and any animation
@@ -1748,7 +1749,7 @@ void TR_GenSkeletalModel(const World& world, size_t model_num, SkeletalModel& mo
     /*
      * state change's loading
      */
-    model.loadStateChanges(world, *tr, *tr_moveable);
+    model.loadStateChanges(world, *tr, *animatedModel);
 
     model.generateAnimCommands(world);
 }
@@ -1765,13 +1766,13 @@ size_t TR_GetNumFramesForAnimation(const std::unique_ptr<loader::Level>& tr, siz
 
     if(animation_ind == tr->m_animations.size() - 1)
     {
-        size_t ret = 2 * tr->m_frameData.size() - curr_anim->frame_offset;
+        size_t ret = 2 * tr->m_poseData.size() - curr_anim->poseDataOffset;
         ret /= curr_anim->poseDataSize * 2;                                       /// it is fully correct!
         return ret;
     }
 
     loader::Animation* next_anim = &tr->m_animations[animation_ind + 1];
-    size_t ret = next_anim->frame_offset - curr_anim->frame_offset;
+    size_t ret = next_anim->poseDataOffset - curr_anim->poseDataOffset;
     ret /= curr_anim->poseDataSize * 2;
 
     return ret;

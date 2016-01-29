@@ -125,7 +125,7 @@ void Entity::ghostUpdate()
     {
         for(const animation::Bone& bone : m_skeleton.getBones())
         {
-            auto tr = m_transform * bone.full_transform;
+            auto tr = m_transform * bone.globalTransform;
             bone.ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr));
             auto pos = tr * glm::vec4(bone.mesh->m_center, 1);
             bone.ghostObject->getWorldTransform().setOrigin(util::convert(glm::vec3(pos)));
@@ -170,11 +170,11 @@ int Entity::getPenetrationFixVector(glm::vec3& reaction, bool hasMove)
         }
         else
         {
-            glm::vec4 parent_from = bone.parent->full_transform * glm::vec4(bone.parent->mesh->m_center, 1);
+            glm::vec4 parent_from = bone.parent->globalTransform * glm::vec4(bone.parent->mesh->m_center, 1);
             from = glm::vec3(m_transform * parent_from);
         }
 
-        auto tr = m_transform * bone.full_transform;
+        auto tr = m_transform * bone.globalTransform;
         auto to = glm::vec3(tr * glm::vec4(bone.mesh->m_center, 1.0f));
         auto curr = from;
         auto move = to - from;
@@ -417,9 +417,6 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
             const glm::float_t z = -glm::float_t(command.param[1]);
             glm::vec3 ofs(x, y, z);
             m_transform[3] += glm::vec4(glm::mat3(m_transform) * ofs, 0);
-#if 0
-            m_lerp_skip = true;
-#endif
         }
         break;
 
@@ -503,9 +500,6 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
                     m_moveDir = MoveDirection::Backward;
                 }
                 updateTransform();
-#if 0
-                m_lerp_skip = true;
-#endif
             }
             else
             {
@@ -787,7 +781,7 @@ bool Entity::createRagdoll(RagdollSetup* setup)
         }
         btTransform localA;
         localA.getBasis().setEulerZYX(setup->joint_setup[i].body1_angle[0], setup->joint_setup[i].body1_angle[1], setup->joint_setup[i].body1_angle[2]);
-        localA.setOrigin(util::convert(glm::vec3(btB->transform[3])));
+        localA.setOrigin(util::convert(glm::vec3(btB->localTransform[3])));
 
         btTransform localB;
         localB.getBasis().setEulerZYX(setup->joint_setup[i].body2_angle[0], setup->joint_setup[i].body2_angle[1], setup->joint_setup[i].body2_angle[2]);

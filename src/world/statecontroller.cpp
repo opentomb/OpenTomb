@@ -5,7 +5,6 @@
 #include "audio/engine.h"
 #include "character.h"
 #include "character_controller.h"
-#include "engine/bullet.h"
 #include "engine/engine.h"
 #include "resource.h"
 #include "room.h"
@@ -1081,11 +1080,11 @@ void StateController::sprint()
     }
     else
     {
-        if(m_character->m_command.jump == 1)
+        if(m_character->m_command.jump)
         {
             setNextState(LaraState::SprintRoll);
         }
-        else if(m_character->m_command.roll == 1)
+        else if(m_character->m_command.roll)
         {
             m_character->m_moveDir = MoveDirection::Forward;
             m_character->setAnimation(animation::TR_ANIMATION_LARA_ROLL_BEGIN, 0);

@@ -33,8 +33,6 @@ void Skeleton::fromModel(const std::shared_ptr<SkeletalModel>& model)
     m_bones.resize(model->getMeshReferenceCount(), Bone(this));
 
     std::stack<Bone*> parents;
-    parents.push(nullptr);
-    m_bones[0].parent = nullptr; // root
     for(size_t i = 0; i < m_bones.size(); i++)
     {
         const auto& meshReference = model->getMeshReference(i);
@@ -48,30 +46,42 @@ void Skeleton::fromModel(const std::shared_ptr<SkeletalModel>& model)
         bone.mesh_slot = nullptr;
         bone.body_part = meshReference.body_part;
 
-        bone.offset = meshReference.offset;
-        bone.qrotate = { 0, 0, 0, 0 };
-        bone.transform = glm::mat4(1.0f);
-        bone.full_transform = glm::mat4(1.0f);
+        bone.position = meshReference.position;
+        bone.localTransform = glm::mat4(1.0f);
+        bone.globalTransform = glm::mat4(1.0f);
 
-        if(i == 0)
-            continue;
+        if(i > 0)
+            bone.parent = &m_bones[i - 1];
 
-        bone.parent = &m_bones[i - 1];
-        if(meshReference.flag & 0x01) // POP
+        switch(meshReference.stackOperation)
         {
-            if(!parents.empty())
-            {
+            case SkeletalModel::MeshReference::UsePredecessor:
+                if(i == 0)
+                    throw std::runtime_error("Invalid skeleton stack operation: trying to use predecessor of first bone");
+                break;
+            case SkeletalModel::MeshReference::Push:
+                parents.push(bone.parent);
+                break;
+            case SkeletalModel::MeshReference::Pop:
+                if(parents.empty())
+                    throw std::runtime_error("Invalid skeleton stack operation: cannot pop from empty stack");
                 bone.parent = parents.top();
                 parents.pop();
-            }
+                break;
+            case SkeletalModel::MeshReference::Top:
+                if(parents.empty())
+                    throw std::runtime_error("Invalid skeleton stack operation: cannot take top of empty stack");
+                bone.parent = parents.top();
+                break;
+            default:
+                throw std::runtime_error("Invalid skeleton stack operation");
         }
-        if(meshReference.flag & 0x02) // PUSH
-        {
-            if(parents.size() + 1 < model->getMeshReferenceCount())
-            {
-                parents.push(bone.parent);
-            }
-        }
+
+#ifndef NDEBUG
+        BOOST_LOG_TRIVIAL(debug) << " - Bone #" << bone.index << " op " << (int)meshReference.stackOperation;
+        if(bone.parent != nullptr)
+            BOOST_LOG_TRIVIAL(debug) << "    parent #" << bone.parent->index;
+#endif
     }
 }
 
@@ -85,34 +95,28 @@ void Skeleton::updatePose()
 {
     BOOST_ASSERT(m_currentAnimation.animation < m_model->getAnimationCount());
     BOOST_ASSERT(m_currentAnimation.frame < getCurrentAnimationRef().getFrameDuration());
-    const animation::SkeletonKeyFrame keyFrame = getCurrentAnimationRef().getInterpolatedFrame(m_currentAnimation.frame);
+    const animation::SkeletonPose skeletonPose = getCurrentAnimationRef().getInterpolatedPose(m_currentAnimation.frame);
 
-    m_boundingBox = keyFrame.boundingBox;
-    m_position = keyFrame.position;
+    m_boundingBox = skeletonPose.boundingBox;
+    m_position = skeletonPose.position;
 
-    BOOST_ASSERT(keyFrame.boneKeyFrames.size() <= m_bones.size());
+    BOOST_ASSERT(skeletonPose.bonePoses.size() <= m_bones.size());
 
-    for(size_t k = 0; k < keyFrame.boneKeyFrames.size(); k++)
+    for(size_t k = 0; k < skeletonPose.bonePoses.size(); k++)
     {
-        m_bones[k].offset = keyFrame.boneKeyFrames[k].offset;
-        m_bones[k].transform = glm::translate(glm::mat4(1.0f), m_bones[k].offset);
-        if(k == 0)
+        Bone& bone = m_bones[k];
+
+        bone.position = skeletonPose.bonePoses[k].position;
+        if(bone.parent == nullptr)
         {
-            m_bones[k].transform = glm::translate(m_bones[k].transform, m_position);
+            bone.localTransform = glm::translate(glm::mat4(1.0f), m_position + bone.position) * glm::mat4_cast(skeletonPose.bonePoses[k].rotation);
+            bone.globalTransform = bone.localTransform;
         }
-
-        m_bones[k].qrotate = keyFrame.boneKeyFrames[k].qrotate;
-        m_bones[k].transform *= glm::mat4_cast(m_bones[k].qrotate);
-    }
-
-    /*
-     * build absolute coordinate matrix system
-     */
-    m_bones[0].full_transform = m_bones[0].transform;
-    for(size_t k = 1; k < keyFrame.boneKeyFrames.size(); k++)
-    {
-        BOOST_ASSERT(m_bones[k].parent != nullptr);
-        m_bones[k].full_transform = m_bones[k].parent->full_transform * m_bones[k].transform;
+        else
+        {
+            bone.localTransform = glm::translate(glm::mat4(1.0f), bone.position) * glm::mat4_cast(skeletonPose.bonePoses[k].rotation);
+            bone.globalTransform = bone.parent->globalTransform * bone.localTransform;
+        }
     }
 }
 
@@ -241,7 +245,7 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
 
         if(m_model->getAnimation(anim_id).next_anim)
         {
-            frame_id = m_model->getAnimation(anim_id).next_frame;
+            frame_id = m_model->getAnimation(anim_id).nextFrame;
             anim_id = m_model->getAnimation(anim_id).next_anim->id;
 
             // some overlay anims may have invalid nextAnim/nextFrame values:
@@ -290,7 +294,7 @@ void Skeleton::updateTransform(const glm::mat4& entityTransform)
     {
         glm::mat4 tr;
         bone.bt_body->getWorldTransform().getOpenGLMatrix(glm::value_ptr(tr));
-        bone.full_transform = inverseTransform * tr;
+        bone.globalTransform = inverseTransform * tr;
     }
 
     // that cycle is necessary only for skinning models;
@@ -298,11 +302,11 @@ void Skeleton::updateTransform(const glm::mat4& entityTransform)
     {
         if(bone.parent != nullptr)
         {
-            bone.transform = glm::inverse(bone.parent->full_transform) * bone.full_transform;
+            bone.localTransform = glm::inverse(bone.parent->globalTransform) * bone.globalTransform;
         }
         else
         {
-            bone.transform = bone.full_transform;
+            bone.localTransform = bone.globalTransform;
         }
     }
 }
@@ -312,7 +316,7 @@ void Skeleton::updateBoundingBox()
     m_boundingBox = m_bones[0].mesh->m_boundingBox;
     for(const Bone& bone : m_bones)
     {
-        m_boundingBox.adjust(glm::vec3(bone.full_transform[3]), bone.mesh->m_boundingBox.getMaximumExtent() * 0.5f);
+        m_boundingBox.adjust(glm::vec3(bone.globalTransform[3]), bone.mesh->m_boundingBox.getMaximumExtent() * 0.5f);
     }
 }
 
@@ -334,7 +338,7 @@ void Skeleton::createGhosts(Entity& entity)
 
         bone.ghostObject->setIgnoreCollisionCheck(bone.bt_body.get(), true);
 
-        glm::mat4 gltr = entity.m_transform * bone.full_transform;
+        glm::mat4 gltr = entity.m_transform * bone.globalTransform;
         gltr[3] = glm::vec4(glm::mat3(gltr) * bone.mesh->m_center, 1.0f);
 
         bone.ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(gltr));
@@ -381,7 +385,7 @@ void Skeleton::updateCurrentCollisions(const Entity& entity, const glm::mat4& tr
         auto v = bone.mesh->m_center;
 
         bone.last_collisions.clear();
-        auto tr = transform * bone.full_transform;
+        auto tr = transform * bone.globalTransform;
         auto orig_tr = bone.ghostObject->getWorldTransform();
         bone.ghostObject->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(tr));
         bone.ghostObject->getWorldTransform().setOrigin(util::convert(glm::vec3(tr * glm::vec4(v, 1.0f))));
@@ -494,7 +498,7 @@ void Skeleton::updateRigidBody(const glm::mat4& transform)
     {
         if(bone.bt_body)
         {
-            bone.bt_body->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(transform * bone.full_transform));
+            bone.bt_body->getWorldTransform().setFromOpenGLMatrix(glm::value_ptr(transform * bone.globalTransform));
         }
     }
 }
@@ -558,7 +562,7 @@ void Skeleton::genRigidBody(Entity& entity)
             cshape->calculateLocalInertia(0.0, localInertia);
 
         btTransform startTransform;
-        startTransform.setFromOpenGLMatrix(glm::value_ptr(entity.m_transform * bone.full_transform));
+        startTransform.setFromOpenGLMatrix(glm::value_ptr(entity.m_transform * bone.globalTransform));
         bone.bt_body = std::make_shared<btRigidBody>(0, new btDefaultMotionState(startTransform), cshape, localInertia);
 
         switch(entity.getCollisionType())
@@ -610,11 +614,11 @@ const Animation& Skeleton::getCurrentAnimationRef() const
     return m_model->getAnimation(m_currentAnimation.animation);
 }
 
-void SkeletonKeyFrame::load(const loader::Level& level, size_t frame_offset)
+void SkeletonPose::load(const loader::Level& level, size_t poseDataOffset)
 {
-    if(frame_offset + 9 < level.m_frameData.size())
+    if(poseDataOffset + 9 < level.m_poseData.size())
     {
-        const int16_t* frame = &level.m_frameData[frame_offset];
+        const int16_t* frame = &level.m_poseData[poseDataOffset];
 
         boundingBox.min[0] = frame[0];   // x_min
         boundingBox.min[1] = frame[4];   // y_min
@@ -630,7 +634,7 @@ void SkeletonKeyFrame::load(const loader::Level& level, size_t frame_offset)
     }
     else
     {
-        BOOST_LOG_TRIVIAL(warning) << "Reading animation data beyond end of frame data: offset = " << frame_offset << ", size = " << level.m_frameData.size();
+        BOOST_LOG_TRIVIAL(warning) << "Reading animation data beyond end of frame data: offset = " << poseDataOffset << ", size = " << level.m_poseData.size();
         boundingBox.min = { 0,0,0 };
         boundingBox.max = { 0,0,0 };
         position = { 0,0,0 };

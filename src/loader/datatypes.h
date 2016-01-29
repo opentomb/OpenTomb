@@ -1576,7 +1576,7 @@ struct AnimatedModel
 {
     uint32_t object_id;         // Item Identifier (matched in Items[])
     uint16_t num_meshes;        // number of meshes in this object
-    uint16_t starting_mesh;     // starting mesh (offset into MeshPointers[])
+    uint16_t firstMesh;     // starting mesh (offset into MeshPointers[])
     uint32_t mesh_tree_index;   // offset into MeshTree[]
     uint32_t poseDataOffset;      // byte offset into Frames[] (divide by 2 for Frames[i])
     uint32_t frame_index;
@@ -1592,7 +1592,7 @@ struct AnimatedModel
         std::unique_ptr<AnimatedModel> moveable{ new AnimatedModel() };
         moveable->object_id = reader.readU32();
         moveable->num_meshes = reader.readU16();
-        moveable->starting_mesh = reader.readU16();
+        moveable->firstMesh = reader.readU16();
         moveable->mesh_tree_index = reader.readU32();
         moveable->poseDataOffset = reader.readU32();
         moveable->animation_index = reader.readU16();
@@ -1802,7 +1802,7 @@ struct SpriteSequence
   */
 struct Animation
 {
-    uint32_t frame_offset;      // byte offset into Frames[] (divide by 2 for Frames[i])
+    uint32_t poseDataOffset;      // byte offset into Frames[] (divide by 2 for Frames[i])
     uint8_t stretchFactor;      // Slowdown factor of this animation
     uint8_t poseDataSize;         // number of bit16's in Frames[] used by this animation
     uint16_t state_id;
@@ -1813,10 +1813,10 @@ struct Animation
     int32_t   speed_lateral;      // new in TR4 -->
     int32_t   accel_lateral;      // lateral speed and acceleration.
 
-    uint16_t lastFrame;           // first frame in this animation
-    uint16_t firstFrame;             // last frame in this animation (numframes = (End - Start) + 1)
+    uint16_t firstFrame;           // first frame in this animation
+    uint16_t lastFrame;             // last frame in this animation (numframes = (End - Start) + 1)
     uint16_t next_animation;
-    uint16_t next_frame;
+    uint16_t nextFrame;
 
     uint16_t num_state_changes;
     uint16_t state_change_offset;   // offset into StateChanges[]
@@ -1838,7 +1838,7 @@ private:
     static std::unique_ptr<Animation> read(io::SDLReader& reader, bool withLateral)
     {
         std::unique_ptr<Animation> animation{ new Animation() };
-        animation->frame_offset = reader.readU32();
+        animation->poseDataOffset = reader.readU32();
         animation->stretchFactor = reader.readU8();
         animation->poseDataSize = reader.readU8();
         animation->state_id = reader.readU16();
@@ -1856,10 +1856,10 @@ private:
             animation->accel_lateral = 0;
         }
 
-        animation->lastFrame = reader.readU16();
         animation->firstFrame = reader.readU16();
+        animation->lastFrame = reader.readU16();
         animation->next_animation = reader.readU16();
-        animation->next_frame = reader.readU16();
+        animation->nextFrame = reader.readU16();
 
         animation->num_state_changes = reader.readU16();
         animation->state_change_offset = reader.readU16();
@@ -1903,7 +1903,7 @@ struct AnimDispatch
     int16_t low;                // Lowest frame that uses this range
     int16_t high;               // Highest frame (+1?) that uses this range
     int16_t next_animation;     // Animation to dispatch to
-    int16_t next_frame;         // Frame offset to dispatch to
+    int16_t nextFrame;         // Frame offset to dispatch to
 
     /// \brief reads an animation dispatch.
     static std::unique_ptr<AnimDispatch> read(io::SDLReader& reader)
@@ -1912,7 +1912,7 @@ struct AnimDispatch
         anim_dispatch->low = reader.readI16();
         anim_dispatch->high = reader.readI16();
         anim_dispatch->next_animation = reader.readI16();
-        anim_dispatch->next_frame = reader.readI16();
+        anim_dispatch->nextFrame = reader.readI16();
         return anim_dispatch;
     }
 };

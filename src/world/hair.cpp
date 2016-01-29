@@ -43,7 +43,7 @@ bool Hair::create(HairSetup *setup, const Entity& parent_entity)
 
     // Setup initial position / angles.
 
-    glm::mat4 owner_body_transform = parent_entity.m_transform * parent_entity.m_skeleton.getBones()[m_ownerBody].full_transform;
+    glm::mat4 owner_body_transform = parent_entity.m_transform * parent_entity.m_skeleton.getBones()[m_ownerBody].globalTransform;
     // Number of elements (bodies) is equal to number of hair meshes.
 
     m_elements.clear();
@@ -290,7 +290,7 @@ void Hair::createHairMesh(const SkeletalModel& model)
          * (i.e. as one big rope). The shader and matrix then transform it
          * correctly.
          */
-        m_elements[i].position = model.getMeshReference(i).offset;
+        m_elements[i].position = model.getMeshReference(i).position;
         if(i > 0)
         {
             // TODO: This assumes the parent is always the preceding mesh.

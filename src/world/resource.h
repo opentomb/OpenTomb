@@ -70,7 +70,7 @@ struct Polygon;
 
 namespace animation
 {
-struct SkeletonKeyFrame;
+struct SkeletonPose;
 } // namespace animation
 
 // NOTE: Functions which take native TR level structures as argument will have
