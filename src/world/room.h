@@ -26,7 +26,7 @@ struct SectorTween;
 namespace core
 {
 struct SpriteBuffer;
-struct BaseMesh;
+class BaseMesh;
 class Frustum;
 struct Sprite;
 } // namespace core

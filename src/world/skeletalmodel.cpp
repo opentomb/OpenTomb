@@ -87,17 +87,17 @@ void SkeletalModel::setSkinnedMeshes(const std::vector<SkeletalModel::MeshRefere
 */
 bool SkeletalModel::findStateChange(LaraState stateid, animation::AnimationId& animid_inout, size_t& frameid_inout)
 {
-    const animation::StateChange* stc = m_animations[animid_inout].findStateChangeByID(stateid);
-    if(!stc)
+    const animation::Transition* transition = m_animations[animid_inout].findTransitionById(stateid);
+    if(!transition)
         return false;
 
-    for(const animation::AnimationDispatch& dispatch : stc->dispatches)
+    for(const animation::TransitionCase& transitionCase : transition->cases)
     {
-        if(frameid_inout >= dispatch.start
-           && frameid_inout <= dispatch.end)
+        if(frameid_inout >= transitionCase.firstFrame
+           && frameid_inout <= transitionCase.lastFrame)
         {
-            animid_inout = dispatch.next.animation;
-            frameid_inout = dispatch.next.frame;
+            animid_inout = transitionCase.target.animation;
+            frameid_inout = transitionCase.target.frame;
             return true;
         }
     }
@@ -198,7 +198,7 @@ void SkeletalModel::loadStateChanges(const World& world, const loader::Level& le
         BOOST_ASSERT(moveable.animation_index + i < level.m_animations.size());
 
         animation::Animation* anim = &m_animations[i];
-        anim->stateChanges.clear();
+        anim->m_transitions.clear();
 
         const loader::Animation& trAnimation = level.m_animations[moveable.animation_index + i];
         int16_t animId = trAnimation.next_animation - moveable.animation_index;
@@ -221,7 +221,7 @@ void SkeletalModel::loadStateChanges(const World& world, const loader::Level& le
             anim->nextFrame = 0;
         }
 
-        anim->stateChanges.clear();
+        anim->m_transitions.clear();
 
         if(trAnimation.num_state_changes > 0 && m_animations.size() > 1)
         {
@@ -232,13 +232,13 @@ void SkeletalModel::loadStateChanges(const World& world, const loader::Level& le
             {
                 BOOST_ASSERT(j + trAnimation.state_change_offset < level.m_stateChanges.size());
                 const loader::StateChange *tr_sch = &level.m_stateChanges[j + trAnimation.state_change_offset];
-                if(anim->findStateChangeByID(static_cast<LaraState>(tr_sch->state_id)) != nullptr)
+                if(anim->findTransitionById(static_cast<LaraState>(tr_sch->state_id)) != nullptr)
                 {
                     BOOST_LOG_TRIVIAL(warning) << "Multiple state changes for id " << tr_sch->state_id;
                 }
-                animation::StateChange* sch_p = &anim->stateChanges[static_cast<LaraState>(tr_sch->state_id)];
-                sch_p->id = static_cast<LaraState>(tr_sch->state_id);
-                sch_p->dispatches.clear();
+                animation::Transition* transition = &anim->m_transitions[static_cast<LaraState>(tr_sch->state_id)];
+                transition->id = static_cast<LaraState>(tr_sch->state_id);
+                transition->cases.clear();
                 for(uint16_t l = 0; l < tr_sch->num_anim_dispatches; l++)
                 {
                     BOOST_ASSERT(tr_sch->anim_dispatch + l < level.m_animDispatches.size());
@@ -248,8 +248,8 @@ void SkeletalModel::loadStateChanges(const World& world, const loader::Level& le
                     if(next_anim_ind >= m_animations.size())
                         continue;
 
-                    sch_p->dispatches.emplace_back();
-                    animation::AnimationDispatch* adsp = &sch_p->dispatches.back();
+                    transition->cases.emplace_back();
+                    animation::TransitionCase* transitionCase = &transition->cases.back();
 
                     BOOST_ASSERT(moveable.animation_index <= next_anim);
                     BOOST_ASSERT(next_anim - moveable.animation_index < m_animations.size());
@@ -268,13 +268,13 @@ void SkeletalModel::loadStateChanges(const World& world, const loader::Level& le
                     if(low > anim->getFrameDuration() || high > anim->getFrameDuration())
                     {
                         //Sys_Warn("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d", anim->id, sch_p->id, low, high);
-                        world.m_engine->m_gui.getConsole().printf("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d, duration: %d, timestretch: %d", anim->id, sch_p->id, low, high, int(anim->getFrameDuration()), int(anim->getStretchFactor()));
+                        world.m_engine->m_gui.getConsole().printf("State range out of bounds: anim: %d, stid: %d, low: %d, high: %d, duration: %d, timestretch: %d", anim->id, transition->id, low, high, int(anim->getFrameDuration()), int(anim->getStretchFactor()));
                     }
-                    adsp->start = low;
-                    adsp->end = high;
+                    transitionCase->firstFrame = low;
+                    transitionCase->lastFrame = high;
                     BOOST_ASSERT(next_anim >= moveable.animation_index);
-                    adsp->next.animation = next_anim - moveable.animation_index;
-                    adsp->next.frame = next_frame % next_frames_count;
+                    transitionCase->target.animation = next_anim - moveable.animation_index;
+                    transitionCase->target.frame = next_frame % next_frames_count;
 
 #ifdef LOG_ANIM_DISPATCHES
                     BOOST_LOG_TRIVIAL(debug) << "anim_disp["
@@ -305,7 +305,7 @@ void SkeletalModel::setStaticAnimation()
     m_animations.front().id = 0;
     m_animations.front().next_anim = nullptr;
     m_animations.front().nextFrame = 0;
-    m_animations.front().stateChanges.clear();
+    m_animations.front().m_transitions.clear();
 
     skeletonPose.bonePoses.resize(m_meshReferences.size());
 

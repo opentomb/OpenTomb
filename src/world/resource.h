@@ -64,7 +64,7 @@ struct InventoryItem;
 
 namespace core
 {
-struct BaseMesh;
+class BaseMesh;
 struct Polygon;
 } // namespace core
 

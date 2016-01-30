@@ -2,24 +2,29 @@
 
 #include "animation/animation.h"
 
-namespace loader
-{
-class Level;
-struct AnimatedModel;
-enum class Engine;
-}
+#include <memory>
+
+class btTypedConstraint;
 
 namespace engine
 {
 class Engine;
 }
 
+namespace loader
+{
+struct AnimatedModel;
+enum class Engine;
+}
+
 namespace world
 {
 namespace core
 {
-struct BaseMesh;
+class BaseMesh;
 }
+
+class World;
 
 using ModelId = uint32_t;
 

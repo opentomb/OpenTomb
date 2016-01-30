@@ -1,8 +1,6 @@
 #include "world.h"
 
-#include <btBulletCollisionCommon.h>
-#include <btBulletDynamicsCommon.h>
-
+#include "animation/texture.h"
 #include "engine/bullet.h"
 #include "engine/engine.h"
 #include "entity.h"
@@ -13,6 +11,9 @@
 #include "world/character.h"
 #include "world/core/sprite.h"
 #include "world/room.h"
+
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
 
 namespace engine
 {

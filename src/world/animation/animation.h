@@ -1,71 +1,22 @@
 #pragma once
 
 #include "animcommands.h"
-#include "util/helpers.h"
-#include "world/core/boundingbox.h"
+#include "common.h"
+#include "pose.h"
+#include "transition.h"
 #include "world/statecontroller.h"
 
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
-
-#include <BulletDynamics/btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
-
-#include <boost/container/flat_map.hpp>
-
-#include <memory>
-#include <vector>
-
-namespace loader
-{
-class Level;
-}
+#include <boost/assert.hpp>
 
 namespace world
 {
-class Character;
-class SkeletalModel;
-class Entity;
-struct RagdollSetup;
-class World;
-enum class CollisionShape;
-enum class CollisionType;
-
-namespace core
-{
-struct BaseMesh;
-} // namespace core
-
 namespace animation
 {
-using AnimationId = uint32_t;
-
-//! Default fixed TR framerate needed for animation calculation
-constexpr float AnimationFrameRate = 30;
-constexpr util::Duration AnimationFrameTime = util::fromSeconds(1.0f / AnimationFrameRate);
-
-// This is the global game logic refresh interval (physics timestep)
-// All game logic should be refreshed at this rate, including
-// enemy AI, values processing and audio update.
-// This should be a multiple of animation::FrameRate (1/30,60,90,120,...)
-constexpr float GameLogicFrameRate = 2 * AnimationFrameRate;
-constexpr util::Duration GameLogicFrameTime = util::fromSeconds(1.0f / GameLogicFrameRate);
-
-enum class AnimUpdate
-{
-    None,
-    NewFrame,
-    NewAnim
-};
-
-struct AnimCommand
-{
-    AnimCommandOpcode cmdId;
-    int param[3];
-};
 
 /*
- * Animated version of vertex. Does not contain texture coordinate, because that is in a different VBO.
+ * Animated version of vertex.
+ *
+ * Does not contain texture coordinate, because that is in a different VBO.
  */
 struct AnimatedVertex
 {
@@ -74,90 +25,8 @@ struct AnimatedVertex
     glm::vec3 normal;
 };
 
-// Animated texture types
-enum class TextureAnimationType
-{
-    Forward,
-    Backward,
-    Reverse
-};
-
-/*
- *  Animated sequence. Used globally with animated textures to refer its parameters and frame numbers.
- */
-struct TextureAnimationKeyFrame
-{
-    glm::mat2 coordinateTransform;
-    glm::vec2 move;
-    size_t textureIndex;
-};
-
-struct TextureAnimationSequence
-{
-    bool uvrotate = false;   //!< UVRotate mode flag.
-    glm::float_t uvrotateSpeed;   // Speed of UVRotation, in seconds.
-    glm::float_t uvrotateMax;     // Reference value used to restart rotation.
-
-    bool frame_lock = false; //!< Single frame mode. Needed for TR4-5 compatible UVRotate.
-
-    TextureAnimationType textureType = TextureAnimationType::Forward;
-    bool reverse = false;    // Used only with type 2 to identify current animation direction.
-    util::Duration frameTime = util::Duration::zero(); // Time passed since last frame update.
-    size_t currentFrame = 0;    // Current frame for this sequence.
-    util::Duration timePerFrame = util::MilliSeconds(50); // For types 0-1, specifies framerate, for type 3, should specify rotation speed.
-
-    std::vector<TextureAnimationKeyFrame> keyFrames;
-    std::vector<size_t> textureIndices; // Offset into anim textures frame list.
-};
-
-struct AnimationState
-{
-    AnimationId animation = 0;
-    size_t frame = 0;
-    LaraState state = LaraState::WalkForward;
-};
-
-/*
- * animation switching control structure
- */
-struct AnimationDispatch
-{
-    AnimationState next;  //!< "switch to" animation
-    size_t start;  //!< low border of state change condition
-    size_t end; //!< high border of state change condition
-};
-
-struct StateChange
-{
-    LaraState id;
-    std::vector<AnimationDispatch> dispatches;
-};
-
 /**
- * Defines position and rotation in the parent's coordinate system
- *
- * @remark A parent is either another BonePose, or a SkeletonPose.
- */
-struct BonePose
-{
-    glm::vec3 position;
-    glm::quat rotation;
-};
-
-/**
- * Defines a full pose of a @c Skeleton.
- */
-struct SkeletonPose
-{
-    std::vector<BonePose> bonePoses;
-    glm::vec3 position = { 0,0,0 };
-    core::BoundingBox boundingBox;
-
-    void load(const loader::Level& level, size_t poseDataOffset);
-};
-
-/**
- * A sequence of keyframes.
+ * A sequence of poses.
  */
 struct Animation
 {
@@ -171,26 +40,26 @@ struct Animation
     LaraState state_id;
     int firstFrame = 0;
 
-    boost::container::flat_map<LaraState, StateChange> stateChanges;
+    std::map<LaraState, Transition> m_transitions;
 
     Animation* next_anim = nullptr; // Next default animation
     size_t nextFrame;                 // Next default frame
 
     std::vector<AnimCommand> finalAnimCommands; // cmds for end-of-anim
 
-    const StateChange* findStateChangeByID(LaraState id) const noexcept
+    const Transition* findTransitionById(LaraState id) const noexcept
     {
-        auto it = stateChanges.find(id);
-        if(it == stateChanges.end())
+        auto it = m_transitions.find(id);
+        if(it == m_transitions.end())
             return nullptr;
 
         return &it->second;
     }
 
-    StateChange* findStateChangeByID(LaraState id) noexcept
+    Transition* findTransitionById(LaraState id) noexcept
     {
-        auto it = stateChanges.find(id);
-        if(it == stateChanges.end())
+        auto it = m_transitions.find(id);
+        if(it == m_transitions.end())
             return nullptr;
 
         return &it->second;
@@ -201,39 +70,7 @@ struct Animation
         return m_poses.front().bonePoses.front();
     }
 
-    SkeletonPose getInterpolatedPose(size_t frame) const
-    {
-        BOOST_ASSERT(frame < m_duration);
-        const size_t frameIndex = frame / m_stretchFactor;
-        BOOST_ASSERT(frameIndex < m_poses.size());
-        const SkeletonPose& first = m_poses[frameIndex];
-        const SkeletonPose& second = frameIndex + 1 >= m_poses.size()
-            ? m_poses.back()
-            : m_poses[frameIndex + 1];
-
-        BOOST_ASSERT(first.bonePoses.size() == second.bonePoses.size());
-
-        const size_t subOffset = frame - frameIndex*m_stretchFactor; // offset between keyframes
-        if(subOffset == 0)
-            return first; // no need to interpolate
-
-        const glm::float_t lerp = static_cast<glm::float_t>(subOffset) / static_cast<glm::float_t>(m_stretchFactor);
-
-        SkeletonPose result;
-        result.position = glm::mix(first.position, second.position, lerp);
-        result.boundingBox.max = glm::mix(first.boundingBox.max, second.boundingBox.max, lerp);
-        result.boundingBox.min = glm::mix(first.boundingBox.min, second.boundingBox.min, lerp);
-
-        result.bonePoses.resize(first.bonePoses.size());
-
-        for(size_t k = 0; k < first.bonePoses.size(); k++)
-        {
-            result.bonePoses[k].position = glm::mix(first.bonePoses[k].position, second.bonePoses[k].position, lerp);
-            result.bonePoses[k].rotation = glm::slerp(first.bonePoses[k].rotation, second.bonePoses[k].rotation, lerp);
-        }
-
-        return result;
-    }
+    SkeletonPose getInterpolatedPose(size_t frame) const;
 
     SkeletonPose& rawPose(size_t idx)
     {
@@ -287,273 +124,5 @@ private:
     size_t m_duration = 1; //!< Real frame duration
 };
 
-enum class AnimationMode
-{
-    NormalControl,
-    LoopLastFrame,
-    WeaponCompat,
-    Locked
-};
-
-using BoneId = uint32_t;
-
-class Skeleton;
-
-/**
- * @brief A single bone in a @c Skeleton
- *
- * @remark If not stated otherwise, local transformations are relative to the
- *         parent bone, or the owner skeleton if the bone doesn't have a parent;
- *         global transformations are in world space.
- */
-struct Bone
-{
-    Skeleton* m_skeleton;
-
-    Bone* parent = nullptr;
-    BoneId index = 0;
-    std::shared_ptr<core::BaseMesh> mesh; //!< The mesh this bone deforms
-    std::shared_ptr<core::BaseMesh> mesh_skin;
-    std::shared_ptr<core::BaseMesh> mesh_slot; //!< Optional additional mesh
-
-    glm::vec3 position{0};
-
-    glm::mat4 localTransform{1};
-    glm::mat4 globalTransform{1};
-
-    uint32_t body_part = 0; //!< flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
-
-    std::shared_ptr<btRigidBody> bt_body;
-    std::shared_ptr<btPairCachingGhostObject> ghostObject; // like Bullet character controller for penetration resolving.
-    std::shared_ptr<btCollisionShape> shape;
-    std::vector<btCollisionObject*> last_collisions{};
-
-    explicit Bone(Skeleton* skeleton)
-        : m_skeleton(skeleton)
-    {
-    }
-
-    ~Bone();
-};
-
-class Skeleton
-{
-private:
-    Entity* m_entity;
-
-    std::vector<Bone> m_bones{};
-    glm::vec3 m_position = { 0, 0, 0 };
-    core::BoundingBox m_boundingBox{};
-
-    bool m_hasSkin = false; //!< whether any skinned meshes need rendering
-
-    std::shared_ptr<SkeletalModel> m_model = nullptr;
-
-    AnimationState m_previousAnimation;
-    AnimationState m_currentAnimation;
-
-    AnimationMode m_mode = AnimationMode::NormalControl;
-
-    btManifoldArray m_manifoldArray;
-
-    bool m_hasGhosts = false;
-
-    util::Duration m_animationTime = util::Duration::zero();
-
-public:
-    explicit Skeleton(Entity* entity)
-        : m_entity(entity)
-    {
-    }
-
-    Entity* getEntity() const
-    {
-        return m_entity;
-    }
-
-    void(*onFrame)(Character& ent, AnimUpdate state) = nullptr;
-
-    const Animation& getCurrentAnimationFrame() const;
-    AnimUpdate stepAnimation(util::Duration time, Entity* cmdEntity = nullptr);
-    void setAnimation(AnimationId animation, int frame = 0);
-
-    AnimationId getCurrentAnimation() const noexcept
-    {
-        return m_currentAnimation.animation;
-    }
-    void setCurrentAnimation(AnimationId value) noexcept
-    {
-        m_currentAnimation.animation = value;
-    }
-
-    const Animation& getCurrentAnimationRef() const;
-
-    AnimationId getPreviousAnimation() const noexcept
-    {
-        return m_previousAnimation.animation;
-    }
-    void setPreviousAnimation(AnimationId value) noexcept
-    {
-        m_previousAnimation.animation = value;
-    }
-
-    size_t getCurrentFrame() const noexcept
-    {
-        return m_currentAnimation.frame;
-    }
-    void setCurrentFrame(size_t value) noexcept
-    {
-        m_currentAnimation.frame = value;
-    }
-
-    size_t getPreviousFrame() const noexcept
-    {
-        return m_previousAnimation.frame;
-    }
-    void setPreviousFrame(size_t value) noexcept
-    {
-        m_previousAnimation.frame = value;
-    }
-
-    const std::shared_ptr<SkeletalModel>& getModel() const noexcept
-    {
-        return m_model;
-    }
-    void setModel(const std::shared_ptr<SkeletalModel>& model) noexcept
-    {
-        m_model = model;
-    }
-
-    LaraState getCurrentState() const noexcept
-    {
-        return m_currentAnimation.state;
-    }
-    LaraState getPreviousState() const noexcept
-    {
-        return m_previousAnimation.state;
-    }
-
-    bool hasGhosts() const noexcept
-    {
-        return m_hasGhosts;
-    }
-
-    void fromModel(const std::shared_ptr<SkeletalModel>& m_model);
-
-    /**
-     * That function updates item animation and rebuilds skeletal matrices;
-     */
-    void itemFrame(util::Duration time);
-
-    /**
-     * @brief Update bone transformations from key frame interpolation.
-     */
-    void updatePose();
-
-    const core::BoundingBox& getBoundingBox() const noexcept
-    {
-        return m_boundingBox;
-    }
-
-    const glm::mat4& getRootTransform() const
-    {
-        BOOST_ASSERT(!m_bones.empty());
-        return m_bones.front().globalTransform;
-    }
-
-    size_t getBoneCount() const noexcept
-    {
-        return m_bones.size();
-    }
-
-    const std::vector<Bone>& getBones() const noexcept
-    {
-        return m_bones;
-    }
-
-    std::vector<Bone>& bones() noexcept
-    {
-        return m_bones;
-    }
-
-    Bone& bone(size_t i)
-    {
-        BOOST_ASSERT(i < m_bones.size());
-        return m_bones[i];
-    }
-
-    void setBodyPartFlag(size_t boneId, uint32_t flag)
-    {
-        if(boneId >= m_bones.size())
-            return;
-
-        m_bones[boneId].body_part = flag;
-    }
-
-    void copyMeshBinding(const std::shared_ptr<SkeletalModel>& model, bool resetMeshSlot = false);
-
-    void setAnimationMode(AnimationMode mode) noexcept
-    {
-        m_mode = mode;
-    }
-    AnimationMode getAnimationMode() const noexcept
-    {
-        return m_mode;
-    }
-
-    void setCurrentState(LaraState state) noexcept
-    {
-        m_currentAnimation.state = state;
-    }
-
-    void setPreviousState(LaraState state) noexcept
-    {
-        m_previousAnimation.state = state;
-    }
-
-    const btManifoldArray& getManifoldArray() const noexcept
-    {
-        return m_manifoldArray;
-    }
-
-    btManifoldArray& manifoldArray() noexcept
-    {
-        return m_manifoldArray;
-    }
-
-    void updateTransform(const glm::mat4& entityTransform);
-
-    void updateBoundingBox();
-
-    void createGhosts(Entity& entity);
-
-    void cleanCollisionBodyParts(uint32_t parts_flags)
-    {
-        for(Bone& bone : m_bones)
-        {
-            if(bone.body_part & parts_flags)
-            {
-                bone.last_collisions.clear();
-            }
-        }
-    }
-
-    void cleanCollisionAllBodyParts()
-    {
-        for(Bone& bone : m_bones)
-        {
-            bone.last_collisions.clear();
-        }
-    }
-
-    void updateCurrentCollisions(const Entity& entity, const glm::mat4& transform);
-    bool createRagdoll(const RagdollSetup& setup);
-    void initCollisions(const glm::vec3& speed);
-    void updateRigidBody(const glm::mat4& transform);
-    btCollisionObject* getRemoveCollisionBodyParts(uint32_t parts_flags, uint32_t& curr_flag);
-    void genRigidBody(Entity& entity);
-    void enableCollision();
-    void disableCollision();
-};
 } // namespace animation
 } // namespace world

@@ -1,31 +1,12 @@
 #include "entity.h"
 
-#include "LuaState.h"
-
 #include "character_controller.h"
-#include "engine/bullet.h"
-#include "engine/engine.h"
 #include "ragdoll.h"
-#include "script/script.h"
-#include "util/helpers.h"
-#include "util/vmath.h"
-#include "world.h"
-#include "world/animation/animcommands.h"
-#include "world/core/orientedboundingbox.h"
-#include "world/room.h"
-#include "world/skeletalmodel.h"
-
-#include "core/basemesh.h"
-
-#include <btBulletCollisionCommon.h>
-#include <btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionDispatch/btCollisionObject.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
-
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/euler_angles.hpp>
+#include "room.h"
 
 #include <boost/log/trivial.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 namespace world
 {
@@ -560,19 +541,19 @@ void Entity::setAnimation(animation::AnimationId animation, int frame)
     //    updateRigidBody(false);
 }
 
-boost::optional<size_t> Entity::getAnimDispatchCase(LaraState id) const
+boost::optional<size_t> Entity::findTransitionCase(LaraState id) const
 {
-    const animation::StateChange* stc = m_skeleton.getCurrentAnimationRef().findStateChangeByID(id);
-    if(!stc)
+    const animation::Transition* transition = m_skeleton.getCurrentAnimationRef().findTransitionById(id);
+    if(!transition)
         return boost::none;
 
-    for(size_t j = 0; j < stc->dispatches.size(); j++)
+    for(size_t j = 0; j < transition->cases.size(); j++)
     {
-        const animation::AnimationDispatch& disp = stc->dispatches[j];
+        const animation::TransitionCase& transitionCase = transition->cases[j];
 
-        if(disp.end >= disp.start
-           && m_skeleton.getCurrentFrame() >= disp.start
-           && m_skeleton.getCurrentFrame() <= disp.end)
+        if(transitionCase.lastFrame >= transitionCase.firstFrame
+           && m_skeleton.getCurrentFrame() >= transitionCase.firstFrame
+           && m_skeleton.getCurrentFrame() <= transitionCase.lastFrame)
         {
             return j;
         }

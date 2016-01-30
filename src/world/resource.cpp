@@ -1,17 +1,17 @@
 #include "resource.h"
 
-#include "LuaState.h"
-#include "loader/level.h"
-
 #include "animation/animids.h"
 #include "bordered_texture_atlas.h"
 #include "engine/engine.h"
 #include "gui/console.h"
 #include "gui/gui.h"
+#include "loader/level.h"
+#include "LuaState.h"
 #include "render/render.h"
 #include "script/script.h"
 #include "util/helpers.h"
 #include "util/vmath.h"
+#include "world/animation/texture.h"
 #include "world/character.h"
 #include "world/core/basemesh.h"
 #include "world/core/polygon.h"
@@ -22,15 +22,13 @@
 #include "world/staticmesh.h"
 #include "world/world.h"
 
-#include <algorithm>
-#include <cstdint>
-#include <cstdio>
-
-#include <btBulletDynamicsCommon.h>
-
 #include <boost/filesystem.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/range/adaptors.hpp>
+
+#include <algorithm>
+#include <cstdint>
+#include <cstdio>
 
 // #define LOG_ANIM_DISPATCHES
 

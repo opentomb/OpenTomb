@@ -1,6 +1,6 @@
 #pragma once
 
-#include "animation/animation.h"
+#include "animation/skeleton.h"
 #include "core/orientedboundingbox.h"
 #include "engine/engine.h"
 #include "object.h"
@@ -9,7 +9,6 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <cstdint>
-#include <iostream>
 #include <memory>
 
 class btCollisionShape;
@@ -155,7 +154,7 @@ public:
     void updateRigidBody(bool force);
     void rebuildBoundingBox();
 
-    boost::optional<size_t> getAnimDispatchCase(LaraState id) const;
+    boost::optional<size_t> findTransitionCase(LaraState id) const;
 
     animation::AnimUpdate stepAnimation(util::Duration time);
     virtual void frame(util::Duration time);  // entity frame step
@@ -256,9 +255,9 @@ struct InventoryItem : public Entity
     {
     }
 
-    ModelId                     world_model_id;
+    ModelId                     world_model_id = 0;
     MenuItemType                type;
-    size_t                      count;
+    size_t                      count = 0;
     std::string name;
 
     ~InventoryItem();

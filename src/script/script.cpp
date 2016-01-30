@@ -1,7 +1,5 @@
 #include "script.h"
 
-#include "LuaState.h"
-
 #include "audio/settings.h"
 #include "character_controller.h"
 #include "engine/bullet.h"
@@ -18,6 +16,7 @@
 #include "strings.h"
 #include "util/helpers.h"
 #include "util/vmath.h"
+#include "world/animation/texture.h"
 #include "world/character.h"
 #include "world/core/basemesh.h"
 #include "world/entity.h"

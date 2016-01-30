@@ -468,13 +468,7 @@ public:
     void doWeaponFrame(util::Duration time);
 
     void fixPenetrations(const glm::vec3* move) override;
-    glm::vec3 getRoomPos() const override
-    {
-        glm::vec4 pos = m_transform * m_skeleton.getRootTransform()[3];
-        pos[0] = m_transform[3][0];
-        pos[1] = m_transform[3][1];
-        return glm::vec3(pos);
-    }
+    glm::vec3 getRoomPos() const override;
     void transferToRoom(Room* /*room*/) override
     {
     }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "animation/animation.h"
+#include "animation/bone.h"
 
 #include <LinearMath/btVector3.h>
 

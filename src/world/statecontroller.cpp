@@ -932,7 +932,7 @@ void StateController::runForward()
     else if(m_character->m_command.move.z == MovementWalk::Forward && !m_character->m_command.crouch && next_fc.floor.hitNormal[2] >= m_character->m_criticalSlantZComponent && nextStep == StepType::UpBig)
     {
         m_character->m_moveDir = MoveDirection::Stay;
-        boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);  // Select correct anim dispatch.
+        boost::optional<size_t> i = m_character->findTransitionCase(LaraState::Stop);  // Select correct anim dispatch.
         if(!i)
             return;
         if(*i == 0)
@@ -962,7 +962,7 @@ void StateController::runForward()
 
             if(m_character->m_command.move.z == MovementWalk::Forward)
             {
-                boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);
+                boost::optional<size_t> i = m_character->findTransitionCase(LaraState::Stop);
                 if(i && *i == 1)
                 {
                     m_character->setAnimation(animation::TR_ANIMATION_LARA_WALL_SMASH_LEFT, 0);
@@ -1056,7 +1056,7 @@ void StateController::sprint()
     {
         m_character->getWorld()->m_engine->m_inputHandler.rumble(200.0, util::MilliSeconds(200));
 
-        boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);
+        boost::optional<size_t> i = m_character->findTransitionCase(LaraState::Stop);
         if(*i == 1)
         {
             m_character->setAnimation(animation::TR_ANIMATION_LARA_WALL_SMASH_LEFT, 0);
@@ -1129,7 +1129,7 @@ void StateController::walkForward()
         // Climb up
 
         m_character->m_moveDir = MoveDirection::Stay;
-        boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);
+        boost::optional<size_t> i = m_character->findTransitionCase(LaraState::Stop);
         if(*i == 1)
         {
             m_character->setAnimation(animation::TR_ANIMATION_LARA_WALK_UP_STEP_RIGHT, 0);
@@ -1150,7 +1150,7 @@ void StateController::walkForward()
         // Climb down
 
         m_character->m_moveDir = MoveDirection::Stay;
-        boost::optional<size_t> i = m_character->getAnimDispatchCase(LaraState::Stop);
+        boost::optional<size_t> i = m_character->findTransitionCase(LaraState::Stop);
         if(*i == 1)
         {
             m_character->setAnimation(animation::TR_ANIMATION_LARA_WALK_DOWN_RIGHT, 0);

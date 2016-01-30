@@ -1,5 +1,6 @@
 #pragma once
 
+#include "animation/texture.h"
 #include "audio/engine.h"
 #include "bordered_texture_atlas.h"
 #include "camera.h"
@@ -9,7 +10,6 @@
 
 #include <boost/optional.hpp>
 
-#include <cstdint>
 #include <map>
 #include <memory>
 #include <vector>
@@ -29,10 +29,6 @@ namespace core
 struct SpriteBuffer;
 struct Light;
 } // namespace core
-namespace animation
-{
-struct TextureAnimationSequence;
-} // namespace animation
 
 // Native TR floor data functions
 
@@ -199,7 +195,7 @@ class SkeletalModel;
 
 namespace core
 {
-struct BaseMesh;
+class BaseMesh;
 class Frustum;
 struct Polygon;
 } // namespace core

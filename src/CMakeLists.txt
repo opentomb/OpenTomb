@@ -70,6 +70,9 @@ list(APPEND PRJ_SRC
     world/core/boundingbox.cpp
 
     world/animation/animation.cpp
+    world/animation/skeleton.cpp
+    world/animation/bone.cpp
+    world/animation/pose.cpp
 
     engine/game.cpp
     engine/engine.cpp
@@ -159,6 +162,12 @@ list(APPEND PRJ_HDR
     world/animation/animids.h
     world/animation/animcommands.h
     world/animation/animeffects.h
+    world/animation/skeleton.h
+    world/animation/bone.h
+    world/animation/pose.h
+    world/animation/texture.h
+    world/animation/common.h
+    world/animation/transition.h
 
     engine/game.h
     engine/system.h

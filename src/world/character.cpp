@@ -1,14 +1,9 @@
 #include "character.h"
 
+#include "animation/skeleton.h"
 #include "character_controller.h"
-#include "engine/bullet.h"
-#include "gui/gui.h"
-#include "inventory.h"
 #include "resource.h"
-#include "script/script.h"
-#include "world/core/basemesh.h"
-#include "world/room.h"
-#include "world/skeletalmodel.h"
+#include "room.h"
 
 #include <glm/gtx/rotate_vector.hpp>
 
@@ -2062,6 +2057,14 @@ void Character::fixPenetrations(const glm::vec3* move)
     }
 
     ghostUpdate();
+}
+
+glm::vec3 Character::getRoomPos() const
+{
+    glm::vec4 pos = m_transform * m_skeleton.getRootTransform()[3];
+    pos[0] = m_transform[3][0];
+    pos[1] = m_transform[3][1];
+    return glm::vec3(pos);
 }
 
 /**

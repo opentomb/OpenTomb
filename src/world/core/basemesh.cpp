@@ -2,6 +2,7 @@
 
 #include "engine/engine.h"
 #include "render/shader_description.h"
+#include "world/animation/texture.h"
 
 namespace world
 {

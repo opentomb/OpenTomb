@@ -16,8 +16,9 @@ namespace world
 {
 namespace core
 {
-struct BaseMesh
+class BaseMesh
 {
+public:
     bool m_usesVertexColors; //!< does this mesh have prebaked vertex lighting
 
     std::vector<Polygon> m_polygons;

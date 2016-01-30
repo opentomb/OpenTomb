@@ -9,6 +9,7 @@
 #include "shader_description.h"
 #include "util/vmath.h"
 #include "world/animation/animation.h"
+#include "world/animation/texture.h"
 #include "world/camera.h"
 #include "world/character.h"
 #include "world/core/basemesh.h"

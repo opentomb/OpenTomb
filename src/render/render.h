@@ -33,7 +33,7 @@ namespace core
 class Frustum;
 struct OrientedBoundingBox;
 struct Sprite;
-struct BaseMesh;
+class BaseMesh;
 } // namespace core
 
 namespace animation

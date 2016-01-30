@@ -17,6 +17,12 @@ enum class AnimCommandOpcode : int
     Interact = 7
 };
 
+struct AnimCommand
+{
+    AnimCommandOpcode cmdId;
+    int param[3];
+};
+
 //   ====== ANIMATION EFFECTS FLAGS ======
 
 constexpr uint16_t TR_ANIMCOMMAND_CONDITION_LAND = 0x4000;
