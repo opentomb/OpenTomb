@@ -825,3 +825,147 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
         }
     }
 }
+
+
+void Trigger_TrigTypeToStr(char *buf, uint32_t size, uint32_t func)
+{
+    buf[0] = 0;
+    switch(func)
+    {
+        case TR_FD_TRIGTYPE_TRIGGER:
+            strncat(buf, "TRIGGER", size);
+            break;
+
+        case TR_FD_TRIGTYPE_PAD:
+            strncat(buf, "PAD", size);
+            break;
+
+        case TR_FD_TRIGTYPE_SWITCH:
+            strncat(buf, "SWITCH", size);
+            break;
+
+        case TR_FD_TRIGTYPE_KEY:
+            strncat(buf, "KEY", size);
+            break;
+
+        case TR_FD_TRIGTYPE_PICKUP:
+            strncat(buf, "PICKUP", size);
+            break;
+
+        case TR_FD_TRIGTYPE_HEAVY:
+            strncat(buf, "HEAVY", size);
+            break;
+
+        case TR_FD_TRIGTYPE_ANTIPAD:
+            strncat(buf, "ANTIPAD", size);
+            break;
+
+        case TR_FD_TRIGTYPE_COMBAT:
+            strncat(buf, "COMBAT", size);
+            break;
+
+        case TR_FD_TRIGTYPE_DUMMY:
+            strncat(buf, "DUMMY", size);
+            break;
+
+        case TR_FD_TRIGTYPE_ANTITRIGGER:
+            strncat(buf, "ANTITRIGGER", size);
+            break;
+
+        case TR_FD_TRIGTYPE_HEAVYSWITCH:
+            strncat(buf, "HEAVYSWITCH", size);
+            break;
+
+        case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
+            strncat(buf, "HEAVYANTITRIGGER", size);
+            break;
+
+        case TR_FD_TRIGTYPE_MONKEY:
+            strncat(buf, "MONKEY", size);
+            break;
+
+        case TR_FD_TRIGTYPE_SKELETON:
+            strncat(buf, "SKELETON", size);
+            break;
+
+        case TR_FD_TRIGTYPE_TIGHTROPE:
+            strncat(buf, "TIGHTROPE", size);
+            break;
+
+        case TR_FD_TRIGTYPE_CRAWLDUCK:
+            strncat(buf, "CRAWLDUCK", size);
+            break;
+
+        case TR_FD_TRIGTYPE_CLIMB:
+            strncat(buf, "CLIMB", size);
+            break;
+    };
+}
+
+
+void Trigger_TrigCmdToStr(char *buf, uint32_t size, uint32_t func)
+{
+    buf[0] = 0;
+    switch(func)
+    {
+        case TR_FD_TRIGFUNC_OBJECT:
+            strncat(buf, "OBJECT", size);
+            break;
+
+        case TR_FD_TRIGFUNC_SET_CAMERA:
+            strncat(buf, "SET_CAMERA", size);
+            break;
+
+        case TR_FD_TRIGFUNC_UWCURRENT:
+            strncat(buf, "UWCURRENT", size);
+            break;
+
+        case TR_FD_TRIGFUNC_FLIPMAP:
+            strncat(buf, "FLIPMAP", size);
+            break;
+
+        case TR_FD_TRIGFUNC_FLIPON:
+            strncat(buf, "FLIPON", size);
+            break;
+
+        case TR_FD_TRIGFUNC_FLIPOFF:
+            strncat(buf, "FLIPOFF", size);
+            break;
+
+        case TR_FD_TRIGFUNC_SET_TARGET:
+            strncat(buf, "SET_TARGET", size);
+            break;
+
+        case TR_FD_TRIGFUNC_ENDLEVEL:
+            strncat(buf, "ENDLEVEL", size);
+            break;
+
+        case TR_FD_TRIGFUNC_PLAYTRACK:
+            strncat(buf, "PLAYTRACK", size);
+            break;
+
+        case TR_FD_TRIGFUNC_FLIPEFFECT:
+            strncat(buf, "FLIPEFFECT", size);
+            break;
+
+        case TR_FD_TRIGFUNC_SECRET:
+            strncat(buf, "SECRET", size);
+            break;
+
+        case TR_FD_TRIGFUNC_CLEARBODIES:
+            strncat(buf, "CLEARBODIES", size);
+            break;
+
+        case TR_FD_TRIGFUNC_FLYBY:
+            strncat(buf, "FLYBY", size);
+            break;
+
+        case TR_FD_TRIGFUNC_CUTSCENE:
+            strncat(buf, "CUTSCENE", size);
+            break;
+
+        default:
+            snprintf(buf, size, "0x%X", func);
+            break;
+    };
+}

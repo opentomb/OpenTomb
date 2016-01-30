@@ -427,26 +427,41 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
                 comp_buffer = new uint8_t[comp_size];
 
                 if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
+                {
+                    delete [] comp_buffer;
+                    delete [] uncomp_buffer;
                     Sys_extError("read_tr4_level: textiles16");
+                }
 
                 size = uncomp_size;
                 if (uncompress(uncomp_buffer, &size, comp_buffer, comp_size) != Z_OK)
+                {
+                    delete [] comp_buffer;
+                    delete [] uncomp_buffer;
                     Sys_extError("read_tr4_level: uncompress");
+                }
+
+                delete [] comp_buffer;
+                comp_buffer = NULL;
 
                 if (size != uncomp_size)
+                {
+                    delete [] uncomp_buffer;
                     Sys_extError("read_tr4_level: uncompress size mismatch");
-                delete [] comp_buffer;
+                }
 
-                comp_buffer = NULL;
                 if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
+                {
+                    delete [] uncomp_buffer;
                     Sys_extError("read_tr4_level: SDL_RWFromMem");
+                }
 
                 for (i = 0; i < (this->num_textiles - this->num_misc_textiles); i++)
                     read_tr2_textile16(newsrc, this->textile16[i]);
+
                 SDL_RWclose(newsrc);
                 newsrc = NULL;
                 delete [] uncomp_buffer;
-
                 uncomp_buffer = NULL;
             }
             else
@@ -475,26 +490,40 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
             comp_buffer = new uint8_t[comp_size];
 
             if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
+            {
+                delete [] uncomp_buffer;
+                delete [] comp_buffer;
                 Sys_extError("read_tr4_level: misc_textiles");
+            }
 
             size = uncomp_size;
             if (uncompress(uncomp_buffer, &size, comp_buffer, comp_size) != Z_OK)
+            {
+                delete [] uncomp_buffer;
+                delete [] comp_buffer;
                 Sys_extError("read_tr4_level: uncompress");
+            }
 
-            if (size != uncomp_size)
-                Sys_extError("read_tr4_level: uncompress size mismatch");
             delete [] comp_buffer;
-
             comp_buffer = NULL;
+            if (size != uncomp_size)
+            {
+                delete [] uncomp_buffer;
+                Sys_extError("read_tr4_level: uncompress size mismatch");
+            }
+
             if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
+            {
+                delete [] uncomp_buffer;
                 Sys_extError("read_tr4_level: SDL_RWFromMem");
+            }
 
             for (i = (this->num_textiles - this->num_misc_textiles); i < this->num_textiles; i++)
                 read_tr4_textile32(newsrc, this->textile32[i]);
+
             SDL_RWclose(newsrc);
             newsrc = NULL;
             delete [] uncomp_buffer;
-
             uncomp_buffer = NULL;
         }
 
@@ -511,19 +540,33 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         comp_buffer = new uint8_t[comp_size];
 
         if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
+        {
+            delete [] uncomp_buffer;
+            delete [] comp_buffer;
             Sys_extError("read_tr4_level: packed geometry");
+        }
 
         size = uncomp_size;
         if (uncompress(uncomp_buffer, &size, comp_buffer, comp_size) != Z_OK)
+        {
+            delete [] uncomp_buffer;
+            delete [] comp_buffer;
             Sys_extError("read_tr4_level: uncompress");
+        }
 
-        if (size != uncomp_size)
-            Sys_extError("read_tr4_level: uncompress size mismatch");
         delete [] comp_buffer;
-
         comp_buffer = NULL;
+        if (size != uncomp_size)
+        {
+            delete [] uncomp_buffer;
+            Sys_extError("read_tr4_level: uncompress size mismatch");
+        }
+
         if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
+        {
+            delete [] uncomp_buffer;
             Sys_extError("read_tr4_level: SDL_RWFromMem");
+        }
     }
 
     // Unused
@@ -745,7 +788,6 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
 
     SDL_RWclose(newsrc);
     newsrc = NULL;
-
     delete [] uncomp_buffer;
     uncomp_buffer = NULL;
 

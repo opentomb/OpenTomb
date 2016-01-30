@@ -138,7 +138,10 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
         Sys_extError("read_tr5_room: room_data");
 
     if ((newsrc = SDL_RWFromMem(buffer, room_data_size)) == NULL)
+    {
+        delete [] buffer;
         Sys_extError("read_tr5_room: SDL_RWFromMem");
+    }
 
     room.intensity1 = 32767;
     room.intensity2 = 32767;
@@ -253,7 +256,11 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
 
     /*light_size = */read_bitu32(newsrc);
     if (read_bitu32(newsrc) != room.num_lights)
+    {
+        SDL_RWclose(newsrc);
+        delete [] buffer;
         Sys_extError("read_tr5_room: room.num_lights2 != room.num_lights");
+    }
 
     room.unknown_r6 = read_bitu32(newsrc);
     room.room_y_top = -read_float(newsrc);
@@ -262,16 +269,17 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     room.num_layers = read_bitu32(newsrc);
 
     /*
-       if (room.num_layers != 0) {
-       if (room.x != room.room_x)
-       throw TR_ReadError("read_tr5_room: x != room_x");
-       if (room.z != room.room_z)
-       throw TR_ReadError("read_tr5_room: z != room_z");
-       if (room.y_top != room.room_y_top)
-       throw TR_ReadError("read_tr5_room: y_top != room_y_top");
-       if (room.y_bottom != room.room_y_bottom)
-       throw TR_ReadError("read_tr5_room: y_bottom != room_y_bottom");
-       }
+        if (room.num_layers != 0)
+        {
+            if (room.x != room.room_x)
+                throw TR_ReadError("read_tr5_room: x != room_x");
+            if (room.z != room.room_z)
+                throw TR_ReadError("read_tr5_room: z != room_z");
+            if (room.y_top != room.room_y_top)
+                throw TR_ReadError("read_tr5_room: y_top != room_y_top");
+            if (room.y_bottom != room.room_y_bottom)
+                throw TR_ReadError("read_tr5_room: y_bottom != room_y_bottom");
+        }
      */
 
     layer_offset = read_bitu32(newsrc);
@@ -279,11 +287,19 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     poly_offset = read_bitu32(newsrc);
     poly_offset2 = read_bitu32(newsrc);
     if (poly_offset != poly_offset2)
+    {
+        SDL_RWclose(newsrc);
+        delete [] buffer;
         Sys_extError("read_tr5_room: poly_offset != poly_offset2");
+    }
 
     vertices_size = read_bitu32(newsrc);
     if ((vertices_size % 28) != 0)
+    {
+        SDL_RWclose(newsrc);
+        delete [] buffer;
         Sys_extError("read_tr5_room: vertices_size has wrong value");
+    }
 
     if (read_bitu32(newsrc) != 0xCDCDCDCD)
         Sys_extWarn("read_tr5_room: seperator15 has wrong value");
@@ -308,12 +324,12 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
         read_tr_room_sector(newsrc, room.sector_list[i]);
 
     /*
-       if (room.portal_offset != 0xFFFFFFFF) {
-       if (room.portal_offset != (room.sector_data_offset + (room.num_zsectors * room.num_xsectors * 8)))
-       throw TR_ReadError("read_tr5_room: portal_offset has wrong value");
-
-       SDL_RWseek(newsrc, 208 + room.portal_offset, SEEK_SET);
-       }
+        if (room.portal_offset != 0xFFFFFFFF)
+        {
+            if (room.portal_offset != (room.sector_data_offset + (room.num_zsectors * room.num_xsectors * 8)))
+            throw TR_ReadError("read_tr5_room: portal_offset has wrong value");
+            SDL_RWseek(newsrc, 208 + room.portal_offset, SEEK_SET);
+        }
      */
 
     room.num_portals = read_bit16(newsrc);
@@ -428,35 +444,49 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         Sys_extError("read_tr5_level: textiles32 uncomp_size == 0");
 
     comp_size = read_bitu32(src);
-    if (comp_size > 0) {
-        uncomp_buffer = new uint8_t[uncomp_size];
-
+    if (comp_size > 0)
+    {
+        comp_buffer = new uint8_t[comp_size];
         this->textile32_count = this->num_textiles;
         this->textile32 = (tr4_textile32_t*)malloc(this->textile32_count * sizeof(tr4_textile32_t));
-        comp_buffer = new uint8_t[comp_size];
 
         if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
+        {
+            delete [] comp_buffer;
             Sys_extError("read_tr5_level: textiles32");
+        }
 
+        uncomp_buffer = new uint8_t[uncomp_size];
         size = uncomp_size;
         if (uncompress(uncomp_buffer, &size, comp_buffer, comp_size) != Z_OK)
+        {
+            delete [] comp_buffer;
+            delete [] uncomp_buffer;
             Sys_extError("read_tr5_level: uncompress");
+        }
 
-        if (size != uncomp_size)
-            Sys_extError("read_tr5_level: uncompress size mismatch");
         delete [] comp_buffer;
-
         comp_buffer = NULL;
+        if (size != uncomp_size)
+        {
+            delete [] uncomp_buffer;
+            Sys_extError("read_tr5_level: uncompress size mismatch");
+        }
+
         if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
+        {
+            delete [] uncomp_buffer;
             Sys_extError("read_tr5_level: SDL_RWFromMem");
+        }
 
         for (i = 0; i < (this->num_textiles - this->num_misc_textiles); i++)
             read_tr4_textile32(newsrc, this->textile32[i]);
+
         SDL_RWclose(newsrc);
         newsrc = NULL;
         delete [] uncomp_buffer;
-
         uncomp_buffer = NULL;
+
         this->read_32bit_textiles = true;
     }
 
@@ -465,37 +495,53 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         Sys_extError("read_tr5_level: textiles16 uncomp_size == 0");
 
     comp_size = read_bitu32(src);
-    if (comp_size > 0) {
-        if (this->textile32_count == 0) {
-            uncomp_buffer = new uint8_t[uncomp_size];
-
+    if (comp_size > 0)
+    {
+        if (this->textile32_count == 0)
+        {
+            comp_buffer = new uint8_t[comp_size];
             this->textile16_count = this->num_textiles;
             this->textile16 = (tr2_textile16_t*)malloc(this->textile16_count * sizeof(tr2_textile16_t));
-            comp_buffer = new uint8_t[comp_size];
 
             if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
+            {
+                delete [] comp_buffer;
                 Sys_extError("read_tr5_level: textiles16");
+            }
 
+            uncomp_buffer = new uint8_t[uncomp_size];
             size = uncomp_size;
             if (uncompress(uncomp_buffer, &size, comp_buffer, comp_size) != Z_OK)
+            {
+                delete [] comp_buffer;
+                delete [] uncomp_buffer;
                 Sys_extError("read_tr5_level: uncompress");
+            }
+            delete [] comp_buffer;
+            comp_buffer = NULL;
 
             if (size != uncomp_size)
+            {
+                delete [] uncomp_buffer;
                 Sys_extError("read_tr5_level: uncompress size mismatch");
-            delete [] comp_buffer;
+            }
 
-            comp_buffer = NULL;
             if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
+            {
+                delete [] uncomp_buffer;
                 Sys_extError("read_tr5_level: SDL_RWFromMem");
+            }
 
             for (i = 0; i < (this->num_textiles - this->num_misc_textiles); i++)
                 read_tr2_textile16(newsrc, this->textile16[i]);
+
             SDL_RWclose(newsrc);
             newsrc = NULL;
             delete [] uncomp_buffer;
-
             uncomp_buffer = NULL;
-        } else {
+        }
+        else
+        {
             SDL_RWseek(src, comp_size, SEEK_CUR);
         }
     }
@@ -505,9 +551,8 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         Sys_extError("read_tr5_level: textiles32d uncomp_size == 0");
 
     comp_size = read_bitu32(src);
-    if (comp_size > 0) {
-        uncomp_buffer = new uint8_t[uncomp_size];
-
+    if (comp_size > 0)
+    {
         if ((uncomp_size / (256 * 256 * 4)) > 3)
             Sys_extWarn("read_tr5_level: num_misc_textiles > 3");
 
@@ -518,28 +563,41 @@ void TR_Level::read_tr5_level(SDL_RWops * const src)
         }
 
         comp_buffer = new uint8_t[comp_size];
-
         if (SDL_RWread(src, comp_buffer, 1, comp_size) < comp_size)
+        {
+            delete [] comp_buffer;
             Sys_extError("read_tr5_level: misc_textiles");
+        }
 
+        uncomp_buffer = new uint8_t[uncomp_size];
         size = uncomp_size;
         if (uncompress(uncomp_buffer, &size, comp_buffer, comp_size) != Z_OK)
+        {
+            delete [] uncomp_buffer;
+            delete [] comp_buffer;
             Sys_extError("read_tr5_level: uncompress");
+        }
+        delete [] comp_buffer;
+        comp_buffer = NULL;
 
         if (size != uncomp_size)
+        {
+            delete [] uncomp_buffer;
             Sys_extError("read_tr5_level: uncompress size mismatch");
-        delete [] comp_buffer;
+        }
 
-        comp_buffer = NULL;
         if ((newsrc = SDL_RWFromMem(uncomp_buffer, uncomp_size)) == NULL)
+        {
+            delete [] uncomp_buffer;
             Sys_extError("read_tr5_level: SDL_RWFromMem");
+        }
 
         for (i = (this->num_textiles - this->num_misc_textiles); i < this->num_textiles; i++)
             read_tr4_textile32(newsrc, this->textile32[i]);
+
         SDL_RWclose(newsrc);
         newsrc = NULL;
         delete [] uncomp_buffer;
-
         uncomp_buffer = NULL;
     }
 

@@ -47,7 +47,7 @@ public:
         m_skip_ghost = skip_ghost;
     }
 
-    virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
+    virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace) override
     {
         room_p r0 = NULL, r1 = NULL;
         engine_container_p c1;
@@ -162,38 +162,38 @@ public:
     CBulletDebugDrawer(){}
    ~CBulletDebugDrawer(){}
 
-    virtual void   drawLine(const btVector3& from,const btVector3& to,const btVector3& color)
+    virtual void   drawLine(const btVector3& from,const btVector3& to,const btVector3& color) override
     {
         renderer.debugDrawer->DrawLine(from.m_floats, to.m_floats, color.m_floats, color.m_floats);
     }
 
-    virtual void   drawLine(const btVector3& from,const btVector3& to, const btVector3& fromColor, const btVector3& toColor)
+    virtual void   drawLine(const btVector3& from,const btVector3& to, const btVector3& fromColor, const btVector3& toColor) override
     {
         renderer.debugDrawer->DrawLine(from.m_floats, to.m_floats, fromColor.m_floats, toColor.m_floats);
     }
 
-    virtual void   drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color)
+    virtual void   drawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,btScalar distance,int lifeTime,const btVector3& color) override
     {
 
     }
 
-    virtual void   reportErrorWarning(const char* warningString)
+    virtual void   reportErrorWarning(const char* warningString) override
     {
         Con_AddLine(warningString, FONTSTYLE_CONSOLE_WARNING);
     }
 
-    virtual void   draw3dText(const btVector3& location, const char* textString)
+    virtual void   draw3dText(const btVector3& location, const char* textString) override
     {
         //glRasterPos3f(location.x(),  location.y(),  location.z());
         //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),textString);
     }
 
-    virtual void   setDebugMode(int debugMode)
+    virtual void   setDebugMode(int debugMode) override
     {
         m_debugMode = debugMode;
     }
 
-    virtual int    getDebugMode() const
+    virtual int    getDebugMode() const override
     {
         return m_debugMode;
     }
@@ -292,6 +292,7 @@ void Physics_Destroy()
 
 void Physics_StepSimulation(float time)
 {
+    time = (time < 0.1f) ? (time) : (0.0f);
     bt_engine_dynamicsWorld->stepSimulation(time, 0);
     collision_nodes_pool_used = 0;
 }

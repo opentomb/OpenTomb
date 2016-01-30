@@ -443,168 +443,167 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, 
 
 void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 {
-    uint8_t *nch, *ch = (uint8_t*)text;
-    FT_Vector kern;
-
-    if((glf == NULL) || (glf->ft_face == NULL) || (text == NULL))
+    if(glf && glf->ft_face && text && (text[0] != 0))
     {
-        return;
-    }
-
-    if(glf->gl_real_tex_indexes_count == 1)
-    {
-        GLuint elements_count = 0;
-        uint32_t curr_utf32, next_utf32;
-        GLfloat *p, buffer[48 * utf8_strlen(text) * sizeof(GLfloat)];
-        nch = utf8_to_utf32(ch, &curr_utf32);
-        curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
-
-        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        for(p = buffer; *ch;)
+        uint8_t *nch, *ch = (uint8_t*)text;
+        FT_Vector kern;
+        if(glf->gl_real_tex_indexes_count == 1)
         {
-            char_info_p g;
-            uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
+            GLuint elements_count = 0;
+            uint32_t curr_utf32, next_utf32;
+            GLfloat *p, *buffer;
 
-            next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
-            ch = nch;
-            nch = nch2;
+            buffer = (GLfloat*)malloc(48 * utf8_strlen(text) * sizeof(GLfloat));
+            nch = utf8_to_utf32(ch, &curr_utf32);
+            curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
 
-            g = glf->glyphs + curr_utf32;
-            FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
-            curr_utf32 = next_utf32;
-
-            if(g->tex_index != 0)
+            qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+            for(p = buffer; *ch;)
             {
-                GLfloat x0 = x  + g->left;
-                GLfloat x1 = x0 + g->width;
-                GLfloat y0 = y  + g->top;
-                GLfloat y1 = y0 - g->height;
+                char_info_p g;
+                uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
 
-                *p = x0;            p++;
-                *p = y0;            p++;
-                *p = g->tex_x0;     p++;
-                *p = g->tex_y0;     p++;
-                vec4_copy(p, glf->gl_font_color);   p += 4;
+                next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
+                ch = nch;
+                nch = nch2;
 
-                *p = x1;            p++;
-                *p = y0;            p++;
-                *p = g->tex_x1;     p++;
-                *p = g->tex_y0;     p++;
-                vec4_copy(p, glf->gl_font_color);   p += 4;
+                g = glf->glyphs + curr_utf32;
+                FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
+                curr_utf32 = next_utf32;
 
-                *p = x1;            p++;
-                *p = y1;            p++;
-                *p = g->tex_x1;     p++;
-                *p = g->tex_y1;     p++;
-                vec4_copy(p, glf->gl_font_color);   p += 4;
-                elements_count++;
-
-                *p = x0;            p++;
-                *p = y0;            p++;
-                *p = g->tex_x0;     p++;
-                *p = g->tex_y0;     p++;
-                vec4_copy(p, glf->gl_font_color);   p += 4;
-
-                *p = x1;            p++;
-                *p = y1;            p++;
-                *p = g->tex_x1;     p++;
-                *p = g->tex_y1;     p++;
-                vec4_copy(p, glf->gl_font_color);   p += 4;
-
-                *p = x0;            p++;
-                *p = y1;            p++;
-                *p = g->tex_x0;     p++;
-                *p = g->tex_y1;     p++;
-                vec4_copy(p, glf->gl_font_color);   p += 4;
-                elements_count++;
-            }
-            x += (GLfloat)(kern.x + g->advance_x) / 64.0;
-            y += (GLfloat)(kern.y + g->advance_y) / 64.0;
-        }
-        ///RENDER
-        if(elements_count != 0)
-        {
-            qglBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[0]);
-            qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+0);
-            qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+2);
-            qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), buffer+4);
-            qglDrawArrays(GL_TRIANGLES, 0, elements_count * 3);
-        }
-        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    }
-    else
-    {
-        GLfloat *p, buffer[32];
-        GLuint active_texture = 0;
-        uint32_t curr_utf32, next_utf32;
-        nch = utf8_to_utf32(ch, &curr_utf32);
-        curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
-        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        for(; *ch;)
-        {
-            char_info_p g;
-            uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
-
-            next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
-            ch = nch;
-            nch = nch2;
-
-            g = glf->glyphs + curr_utf32;
-            FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
-            curr_utf32 = next_utf32;
-
-            if(g->tex_index != 0)
-            {
-                if(active_texture != g->tex_index)
+                if(g->tex_index != 0)
                 {
-                    qglBindTexture(GL_TEXTURE_2D, g->tex_index);
-                    active_texture = g->tex_index;
+                    GLfloat x0 = x  + g->left;
+                    GLfloat x1 = x0 + g->width;
+                    GLfloat y0 = y  + g->top;
+                    GLfloat y1 = y0 - g->height;
+
+                    *p = x0;            p++;
+                    *p = y0;            p++;
+                    *p = g->tex_x0;     p++;
+                    *p = g->tex_y0;     p++;
+                    vec4_copy(p, glf->gl_font_color);   p += 4;
+
+                    *p = x1;            p++;
+                    *p = y0;            p++;
+                    *p = g->tex_x1;     p++;
+                    *p = g->tex_y0;     p++;
+                    vec4_copy(p, glf->gl_font_color);   p += 4;
+
+                    *p = x1;            p++;
+                    *p = y1;            p++;
+                    *p = g->tex_x1;     p++;
+                    *p = g->tex_y1;     p++;
+                    vec4_copy(p, glf->gl_font_color);   p += 4;
+                    elements_count++;
+
+                    *p = x0;            p++;
+                    *p = y0;            p++;
+                    *p = g->tex_x0;     p++;
+                    *p = g->tex_y0;     p++;
+                    vec4_copy(p, glf->gl_font_color);   p += 4;
+
+                    *p = x1;            p++;
+                    *p = y1;            p++;
+                    *p = g->tex_x1;     p++;
+                    *p = g->tex_y1;     p++;
+                    vec4_copy(p, glf->gl_font_color);   p += 4;
+
+                    *p = x0;            p++;
+                    *p = y1;            p++;
+                    *p = g->tex_x0;     p++;
+                    *p = g->tex_y1;     p++;
+                    vec4_copy(p, glf->gl_font_color);   p += 4;
+                    elements_count++;
                 }
-                ///RENDER
-                GLfloat x0 = x  + g->left;
-                GLfloat x1 = x0 + g->width;
-                GLfloat y0 = y  + g->top;
-                GLfloat y1 = y0 - g->height;
-
-                p = buffer;
-                *p = x0;            p++;
-                *p = y0;            p++;
-                *p = g->tex_x0;     p++;
-                *p = g->tex_y0;     p++;
-                vec4_copy(p, glf->gl_font_color);   p += 4;
-
-                *p = x1;            p++;
-                *p = y0;            p++;
-                *p = g->tex_x1;     p++;
-                *p = g->tex_y0;     p++;
-                vec4_copy(p, glf->gl_font_color);   p += 4;
-
-                *p = x1;            p++;
-                *p = y1;            p++;
-                *p = g->tex_x1;     p++;
-                *p = g->tex_y1;     p++;
-                vec4_copy(p, glf->gl_font_color);   p += 4;
-
-                *p = x0;            p++;
-                *p = y1;            p++;
-                *p = g->tex_x0;     p++;
-                *p = g->tex_y1;     p++;
-                vec4_copy(p, glf->gl_font_color);
-
+                x += (GLfloat)(kern.x + g->advance_x) / 64.0;
+                y += (GLfloat)(kern.y + g->advance_y) / 64.0;
+            }
+            ///RENDER
+            if(elements_count != 0)
+            {
+                qglBindTexture(GL_TEXTURE_2D, glf->gl_tex_indexes[0]);
                 qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+0);
                 qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+2);
                 qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), buffer+4);
-                qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+                qglDrawArrays(GL_TRIANGLES, 0, elements_count * 3);
             }
-            x += (GLfloat)(kern.x + g->advance_x) / 64.0;
-            y += (GLfloat)(kern.y + g->advance_y) / 64.0;
+            qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+            free(buffer);
+        }
+        else
+        {
+            GLfloat *p, buffer[32];
+            GLuint active_texture = 0;
+            uint32_t curr_utf32, next_utf32;
+            nch = utf8_to_utf32(ch, &curr_utf32);
+            curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
+            qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+            for(; *ch;)
+            {
+                char_info_p g;
+                uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
+
+                next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
+                ch = nch;
+                nch = nch2;
+
+                g = glf->glyphs + curr_utf32;
+                FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
+                curr_utf32 = next_utf32;
+
+                if(g->tex_index != 0)
+                {
+                    if(active_texture != g->tex_index)
+                    {
+                        qglBindTexture(GL_TEXTURE_2D, g->tex_index);
+                        active_texture = g->tex_index;
+                    }
+                    ///RENDER
+                    GLfloat x0 = x  + g->left;
+                    GLfloat x1 = x0 + g->width;
+                    GLfloat y0 = y  + g->top;
+                    GLfloat y1 = y0 - g->height;
+
+                    p = buffer;
+                    *p = x0;            p++;
+                    *p = y0;            p++;
+                    *p = g->tex_x0;     p++;
+                    *p = g->tex_y0;     p++;
+                    vec4_copy(p, glf->gl_font_color);   p += 4;
+
+                    *p = x1;            p++;
+                    *p = y0;            p++;
+                    *p = g->tex_x1;     p++;
+                    *p = g->tex_y0;     p++;
+                    vec4_copy(p, glf->gl_font_color);   p += 4;
+
+                    *p = x1;            p++;
+                    *p = y1;            p++;
+                    *p = g->tex_x1;     p++;
+                    *p = g->tex_y1;     p++;
+                    vec4_copy(p, glf->gl_font_color);   p += 4;
+
+                    *p = x0;            p++;
+                    *p = y1;            p++;
+                    *p = g->tex_x0;     p++;
+                    *p = g->tex_y1;     p++;
+                    vec4_copy(p, glf->gl_font_color);
+
+                    qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+0);
+                    qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+2);
+                    qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), buffer+4);
+                    qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+                }
+                x += (GLfloat)(kern.x + g->advance_x) / 64.0;
+                y += (GLfloat)(kern.y + g->advance_y) / 64.0;
+            }
         }
     }
 }
-
 /** Additional functions */
 
-static uint8_t* utf8_next_symbol(uint8_t *utf8)
+static uint8_t *utf8_next_symbol(uint8_t *utf8)
 {
     uint8_t b = *utf8;
 
@@ -639,7 +638,7 @@ uint32_t utf8_strlen(const char *str)
 }
 
 
-uint8_t* utf8_to_utf32(uint8_t *utf8, uint32_t *utf32)
+uint8_t *utf8_to_utf32(uint8_t *utf8, uint32_t *utf32)
 {
     uint8_t *u_utf8 = utf8;
     uint8_t b = *u_utf8++;

@@ -132,5 +132,7 @@ typedef struct trigger_header_s
 void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, const char *file_name);
 void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent);
 
+void Trigger_TrigTypeToStr(char *buf, uint32_t size, uint32_t func);
+void Trigger_TrigCmdToStr(char *buf, uint32_t size, uint32_t func);
 
 #endif //TRIGGER_H

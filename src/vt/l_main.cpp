@@ -90,13 +90,9 @@ void TR_Level::read_mesh_data(SDL_RWops * const src)
 void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
 {
     uint32_t i;
-    //uint32_t frame_data_size = read_bitu32(src) * 2;
-    //uint8_t *buffer = NULL;
     SDL_RWops *newsrc = NULL;
     uint32_t pos = 0;
     uint32_t frame = 0;
-
-    //buffer = new bitu8[frame_data_size];
 
     this->frame_data_size = read_bitu32(src);
     this->frame_data = (uint16_t*)malloc(this->frame_data_size * sizeof(uint16_t));
@@ -117,7 +113,6 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
             read_tr5_moveable(src, this->moveables[i]);
     }
 
-    //this->frames.reserve(this->moveables.size());
     for (i = 0; i < this->moveables_count; i++)
     {
         uint32_t j;
@@ -131,14 +126,6 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
 
         SDL_RWseek(newsrc, pos, RW_SEEK_SET);
 
-        /*
-        if (this->game_version < TR_II)
-            read_tr_frame(newsrc, tr_frame, this->moveables[i].num_meshes);
-        else
-            read_tr2_frame(newsrc, tr_frame, this->moveables[i].num_meshes);
-        tr_frame.byte_offset = pos;
-        this->frames.push_back(tr_frame);
-        */
         frame++;
 
         pos = 0;
@@ -152,12 +139,17 @@ void TR_Level::read_frame_moveable_data(SDL_RWops * const src)
 
     SDL_RWclose(newsrc);
     newsrc = NULL;
-    //delete [] buffer;
 }
 
 void TR_Level::read_level(const char *filename, int32_t game_version)
 {
     int len, i, len2;
+    SDL_RWops *src = SDL_RWFromFile(filename, "rb");
+
+    if(src == NULL)
+    {
+        return;
+    }
 
     len = strlen(filename);
     len2 = 0;
@@ -169,14 +161,15 @@ void TR_Level::read_level(const char *filename, int32_t game_version)
         }
     }
 
-    if(len2 > 0)
+    if((len2 > 0) && (len2 < 256))
     {
         memcpy(this->sfx_path, filename, len2 + 1);
         this->sfx_path[len2+1] = 0;
-        strcat(this->sfx_path, "MAIN.SFX");
+        strncat(this->sfx_path, "MAIN.SFX", 256);
     }
 
-    this->read_level(SDL_RWFromFile(filename, "rb"), game_version);
+    this->read_level(src, game_version);
+    SDL_RWclose(src);
 }
 
 /** \brief reads the level.
@@ -219,6 +212,4 @@ void TR_Level::read_level(SDL_RWops * const src, int32_t game_version)
             Sys_extError("Invalid game version");
             break;
     }
-
-    SDL_RWclose(src);
 }

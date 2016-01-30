@@ -850,10 +850,14 @@ void ShowDebugInfo()
                         GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->sector_below != NULL) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != NULL) ? (rs->sector_above->owner_room->id) : (-1));
                         if(rs->trigger)
                         {
-                            GLText_OutTextXY(30.0f, y += dy, "trig(func = 0x%X, sub = 0x%X, mask = 0x%X)", rs->trigger->function_value, rs->trigger->sub_function, rs->trigger->mask);
+                            char trig_type[64];
+                            char trig_func[64];
+                            Trigger_TrigTypeToStr(trig_type, 64, rs->trigger->sub_function);
+                            GLText_OutTextXY(30.0f, y += dy, "trig(sub = %s, val = 0x%X, mask = 0x%X)", trig_type, rs->trigger->function_value, rs->trigger->mask);
                             for(trigger_command_p cmd = rs->trigger->commands; cmd; cmd = cmd->next)
                             {
-                                GLText_OutTextXY(30.0f, y += dy, "   cmd(func = 0x%X, op = 0x%X)", cmd->function, cmd->operands);
+                                Trigger_TrigCmdToStr(trig_func, 64, cmd->function);
+                                GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X)", trig_func, cmd->operands);
                             }
                         }
                     }
