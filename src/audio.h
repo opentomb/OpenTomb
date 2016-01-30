@@ -242,7 +242,7 @@ typedef struct audio_settings_s
     ALfloat     sound_volume;
     ALboolean   use_effects;
     ALboolean   listener_is_player; // RESERVED FOR FUTURE USE
-    int         stream_buffer_size;
+    uint32_t    stream_buffer_size;
 }audio_settings_t, *audio_settings_p;
 
 // FX manager structure.
@@ -387,14 +387,11 @@ private:
     bool Load_Wad(const char *path);     // Wad file loading routine.
     bool Load_Wav(const char *path);     // Wav file loading routine.
     
-    bool Stream(ALuint buffer);          // General stream routine.
-    bool Stream_Ogg(ALuint buffer);      // Ogg-specific streaming routine.
-    bool Stream_Wad(ALuint buffer);      // Wad-specific streaming routine.
-    bool Stream_Wav(ALuint buffer);      // Wav-specific streaming routine.
+    bool Stream(ALuint al_buffer);       // General stream routine.
 
-    FILE           *audio_file;          // General handle for opened audio file.
-    OggVorbis_File  vorbis_Stream;       // Vorbis file reader needs its own handle.
-    
+    uint32_t        buffer_size;
+    uint32_t        buffer_offset;
+    uint8_t        *buffer;
     // General OpenAL fields 
     ALuint          source;
     ALuint          buffers[TR_AUDIO_STREAM_NUMBUFFERS];
