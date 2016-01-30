@@ -112,15 +112,15 @@ public:
     world::Camera m_camera;
     world::World m_world;
     gui::Gui m_gui;
-    Gameflow gameflow;
-    script::MainEngine engine_lua;
-    BulletEngine bullet;
+    Gameflow m_gameflow;
+    script::MainEngine m_scriptEngine;
+    BulletEngine m_bullet;
 
-    float time_scale = 1;
-    bool done = false;
-    ScreenInfo screen_info;
-    SystemSettings system_settings;
-    world::Object* last_object = nullptr;
+    float m_timeScale = 1;
+    bool m_done = false;
+    ScreenInfo m_screenInfo;
+    SystemSettings m_systemSettings;
+    world::Object* m_lastObject = nullptr;
 
     // Initializers
 

@@ -94,7 +94,7 @@ void Fader::setAspect()
 {
     if(m_texture)
     {
-        if(static_cast<float>(m_textureWidth) / static_cast<float>(m_engine->screen_info.w) >= static_cast<float>(m_textureHeight) / static_cast<float>(m_engine->screen_info.h))
+        if(static_cast<float>(m_textureWidth) / static_cast<float>(m_engine->m_screenInfo.w) >= static_cast<float>(m_textureHeight) / static_cast<float>(m_engine->m_screenInfo.h))
         {
             m_textureWide = true;
             m_textureAspectRatio = static_cast<float>(m_textureHeight) / static_cast<float>(m_textureWidth);
@@ -309,25 +309,25 @@ void Fader::show()
                 // Draw lower letterbox.
                 m_engine->m_gui.drawRect(0.0,
                                         0.0,
-                                        m_engine->screen_info.w,
-                                        (m_engine->screen_info.h - m_engine->screen_info.w * m_textureAspectRatio) / 2,
+                                        m_engine->m_screenInfo.w,
+                                        (m_engine->m_screenInfo.h - m_engine->m_screenInfo.w * m_textureAspectRatio) / 2,
                                         m_bottomLeftColor, m_bottomRightColor, m_bottomLeftColor, m_bottomRightColor,
                                         m_blendingMode);
 
                 // Draw texture.
                 m_engine->m_gui.drawRect(0.0,
-                                        (m_engine->screen_info.h - m_engine->screen_info.w * m_textureAspectRatio) / 2,
-                                        m_engine->screen_info.w,
-                                        m_engine->screen_info.w * m_textureAspectRatio,
+                                        (m_engine->m_screenInfo.h - m_engine->m_screenInfo.w * m_textureAspectRatio) / 2,
+                                        m_engine->m_screenInfo.w,
+                                        m_engine->m_screenInfo.w * m_textureAspectRatio,
                                         tex_color, tex_color, tex_color, tex_color,
                                         m_blendingMode,
                                         m_texture);
 
                 // Draw upper letterbox.
                 m_engine->m_gui.drawRect(0.0,
-                                        m_engine->screen_info.h - (m_engine->screen_info.h - m_engine->screen_info.w * m_textureAspectRatio) / 2,
-                                        m_engine->screen_info.w,
-                                        (m_engine->screen_info.h - m_engine->screen_info.w * m_textureAspectRatio) / 2,
+                                        m_engine->m_screenInfo.h - (m_engine->m_screenInfo.h - m_engine->m_screenInfo.w * m_textureAspectRatio) / 2,
+                                        m_engine->m_screenInfo.w,
+                                        (m_engine->m_screenInfo.h - m_engine->m_screenInfo.w * m_textureAspectRatio) / 2,
                                         m_topLeftColor, m_topRightColor, m_topLeftColor, m_topRightColor,
                                         m_blendingMode);
             }
@@ -336,25 +336,25 @@ void Fader::show()
                 // Draw left pillarbox.
                 m_engine->m_gui.drawRect(0.0,
                                         0.0,
-                                        (m_engine->screen_info.w - m_engine->screen_info.h / m_textureAspectRatio) / 2,
-                                        m_engine->screen_info.h,
+                                        (m_engine->m_screenInfo.w - m_engine->m_screenInfo.h / m_textureAspectRatio) / 2,
+                                        m_engine->m_screenInfo.h,
                                         m_topLeftColor, m_topLeftColor, m_bottomLeftColor, m_bottomLeftColor,
                                         m_blendingMode);
 
                 // Draw texture.
-                m_engine->m_gui.drawRect((m_engine->screen_info.w - m_engine->screen_info.h / m_textureAspectRatio) / 2,
+                m_engine->m_gui.drawRect((m_engine->m_screenInfo.w - m_engine->m_screenInfo.h / m_textureAspectRatio) / 2,
                                         0.0,
-                                        m_engine->screen_info.h / m_textureAspectRatio,
-                                        m_engine->screen_info.h,
+                                        m_engine->m_screenInfo.h / m_textureAspectRatio,
+                                        m_engine->m_screenInfo.h,
                                         tex_color, tex_color, tex_color, tex_color,
                                         m_blendingMode,
                                         m_texture);
 
                 // Draw right pillarbox.
-                m_engine->m_gui.drawRect(m_engine->screen_info.w - (m_engine->screen_info.w - m_engine->screen_info.h / m_textureAspectRatio) / 2,
+                m_engine->m_gui.drawRect(m_engine->m_screenInfo.w - (m_engine->m_screenInfo.w - m_engine->m_screenInfo.h / m_textureAspectRatio) / 2,
                                         0.0,
-                                        (m_engine->screen_info.w - m_engine->screen_info.h / m_textureAspectRatio) / 2,
-                                        m_engine->screen_info.h,
+                                        (m_engine->m_screenInfo.w - m_engine->m_screenInfo.h / m_textureAspectRatio) / 2,
+                                        m_engine->m_screenInfo.h,
                                         m_topRightColor, m_topRightColor, m_bottomRightColor, m_bottomRightColor,
                                         m_blendingMode);
             }
@@ -363,10 +363,10 @@ void Fader::show()
         {
             if(m_textureWide)    // Texture is wider than the screen - scale vertical.
             {
-                m_engine->m_gui.drawRect(-((m_engine->screen_info.h / m_textureAspectRatio - m_engine->screen_info.w) / 2),
+                m_engine->m_gui.drawRect(-((m_engine->m_screenInfo.h / m_textureAspectRatio - m_engine->m_screenInfo.w) / 2),
                                         0.0,
-                                        m_engine->screen_info.h / m_textureAspectRatio,
-                                        m_engine->screen_info.h,
+                                        m_engine->m_screenInfo.h / m_textureAspectRatio,
+                                        m_engine->m_screenInfo.h,
                                         tex_color, tex_color, tex_color, tex_color,
                                         m_blendingMode,
                                         m_texture);
@@ -374,9 +374,9 @@ void Fader::show()
             else                // Texture is taller than the screen - scale horizontal.
             {
                 m_engine->m_gui.drawRect(0.0,
-                                        -((m_engine->screen_info.w / m_textureAspectRatio - m_engine->screen_info.h) / 2),
-                                        m_engine->screen_info.w,
-                                        m_engine->screen_info.w / m_textureAspectRatio,
+                                        -((m_engine->m_screenInfo.w / m_textureAspectRatio - m_engine->m_screenInfo.h) / 2),
+                                        m_engine->m_screenInfo.w,
+                                        m_engine->m_screenInfo.w / m_textureAspectRatio,
                                         tex_color, tex_color, tex_color, tex_color,
                                         m_blendingMode,
                                         m_texture);
@@ -386,8 +386,8 @@ void Fader::show()
         {
             m_engine->m_gui.drawRect(0.0,
                                     0.0,
-                                    m_engine->screen_info.w,
-                                    m_engine->screen_info.h,
+                                    m_engine->m_screenInfo.w,
+                                    m_engine->m_screenInfo.h,
                                     tex_color, tex_color, tex_color, tex_color,
                                     m_blendingMode,
                                     m_texture);
@@ -395,7 +395,7 @@ void Fader::show()
     }
     else    // No texture, simply draw colored rect.
     {
-        m_engine->m_gui.drawRect(0.0, 0.0, m_engine->screen_info.w, m_engine->screen_info.h,
+        m_engine->m_gui.drawRect(0.0, 0.0, m_engine->m_screenInfo.w, m_engine->m_screenInfo.h,
                                 m_topLeftColor, m_topRightColor, m_bottomLeftColor, m_bottomRightColor,
                                 m_blendingMode);
     }   // end if(mTexture)

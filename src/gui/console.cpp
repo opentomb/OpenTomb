@@ -75,8 +75,8 @@ void Console::draw()
     glUseProgram(shader->program);
     glUniform1i(shader->sampler, 0);
     GLfloat screenSize[2] = {
-        static_cast<GLfloat>(m_engine->screen_info.w),
-        static_cast<GLfloat>(m_engine->screen_info.h)
+        static_cast<GLfloat>(m_engine->m_screenInfo.w),
+        static_cast<GLfloat>(m_engine->m_screenInfo.h)
     };
     glUniform2fv(shader->screenSize, 1, screenSize);
 
@@ -103,13 +103,13 @@ void Console::drawBackground()
     /*
          * Draw console background to see the text
          */
-    m_engine->m_gui.drawRect(0.0, m_cursorY + m_lineHeight - 8, m_engine->screen_info.w, m_engine->screen_info.h, m_backgroundColor, m_backgroundColor, m_backgroundColor, m_backgroundColor, loader::BlendingMode::Screen);
+    m_engine->m_gui.drawRect(0.0, m_cursorY + m_lineHeight - 8, m_engine->m_screenInfo.w, m_engine->m_screenInfo.h, m_backgroundColor, m_backgroundColor, m_backgroundColor, m_backgroundColor, loader::BlendingMode::Screen);
 
     /*
          * Draw finalise line
          */
     glm::vec4 white{ 1, 1, 1, 0.7f };
-    m_engine->m_gui.drawRect(0.0, m_cursorY + m_lineHeight - 8, m_engine->screen_info.w, 2, white, white, white, white, loader::BlendingMode::Screen);
+    m_engine->m_gui.drawRect(0.0, m_cursorY + m_lineHeight - 8, m_engine->m_screenInfo.w, 2, white, white, white, white, loader::BlendingMode::Screen);
 }
 
 void Console::drawCursor()
@@ -190,7 +190,7 @@ void Console::edit(int key, const boost::optional<uint16_t>& mod)
         case SDLK_DOWN:
             if(m_historyLines.empty())
                 break;
-            m_engine->m_world.m_audioEngine.send(m_engine->engine_lua.getGlobalSound(audio::GlobalSoundId::MenuPage));
+            m_engine->m_world.m_audioEngine.send(m_engine->m_scriptEngine.getGlobalSound(audio::GlobalSoundId::MenuPage));
             if(key == SDLK_UP && m_historyPos < m_historyLines.size())
                 ++m_historyPos;
             else if(key == SDLK_DOWN && m_historyPos > 0)
@@ -384,7 +384,7 @@ void Console::warning(int warn_string_index, ...)
     char buf[4096];
     char fmt[256];
 
-    m_engine->engine_lua.getSysNotify(warn_string_index, 256, fmt);
+    m_engine->m_scriptEngine.getSysNotify(warn_string_index, 256, fmt);
 
     va_start(argptr, warn_string_index);
     vsnprintf(buf, 4096, static_cast<const char*>(fmt), argptr);
@@ -399,7 +399,7 @@ void Console::notify(int notify_string_index, ...)
     char buf[4096];
     char fmt[256];
 
-    m_engine->engine_lua.getSysNotify(notify_string_index, 256, fmt);
+    m_engine->m_scriptEngine.getSysNotify(notify_string_index, 256, fmt);
 
     va_start(argptr, notify_string_index);
     vsnprintf(buf, 4096, static_cast<const char*>(fmt), argptr);
@@ -429,7 +429,7 @@ void Console::setSpacing(float val)
     // font->font_size has absolute size (after scaling)
     m_lineHeight = static_cast<int16_t>((1 + m_spacing) * m_font->font_size);
     m_cursorX = 8 + 1;
-    m_cursorY = static_cast<int16_t>(m_engine->screen_info.h - m_lineHeight * m_visibleLines);
+    m_cursorY = static_cast<int16_t>(m_engine->m_screenInfo.h - m_lineHeight * m_visibleLines);
     if(m_cursorY < 8)
     {
         m_cursorY = 8;

@@ -32,7 +32,7 @@ Room::~Room()
             }
             body->setCollisionShape(nullptr);
 
-            getWorld()->m_engine->bullet.dynamicsWorld->removeRigidBody(body);
+            getWorld()->m_engine->m_bullet.dynamicsWorld->removeRigidBody(body);
             delete body;
             mesh->bt_body = nullptr;
         }
@@ -54,7 +54,7 @@ Room::~Room()
             m_btBody->setCollisionShape(nullptr);
         }
 
-        getWorld()->m_engine->bullet.dynamicsWorld->removeRigidBody(m_btBody.get());
+        getWorld()->m_engine->m_bullet.dynamicsWorld->removeRigidBody(m_btBody.get());
     }
 }
 
@@ -221,14 +221,14 @@ void Room::enable()
 
     if(m_btBody)
     {
-        getWorld()->m_engine->bullet.dynamicsWorld->addRigidBody(m_btBody.get());
+        getWorld()->m_engine->m_bullet.dynamicsWorld->addRigidBody(m_btBody.get());
     }
 
     for(const std::shared_ptr<StaticMesh>& sm : m_staticMeshes)
     {
         if(sm->bt_body != nullptr)
         {
-            getWorld()->m_engine->bullet.dynamicsWorld->addRigidBody(sm->bt_body);
+            getWorld()->m_engine->m_bullet.dynamicsWorld->addRigidBody(sm->bt_body);
         }
     }
 
@@ -246,14 +246,14 @@ void Room::disable()
 
     if(m_btBody)
     {
-        getWorld()->m_engine->bullet.dynamicsWorld->removeRigidBody(m_btBody.get());
+        getWorld()->m_engine->m_bullet.dynamicsWorld->removeRigidBody(m_btBody.get());
     }
 
     for(auto sm : m_staticMeshes)
     {
         if(sm->bt_body != nullptr)
         {
-            getWorld()->m_engine->bullet.dynamicsWorld->removeRigidBody(sm->bt_body);
+            getWorld()->m_engine->m_bullet.dynamicsWorld->removeRigidBody(sm->bt_body);
         }
     }
 
@@ -821,7 +821,7 @@ void Room::load(const std::unique_ptr<loader::Level>& tr)
         btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
         btVector3 localInertia(0, 0, 0);
         r_static->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-        getWorld()->m_engine->bullet.dynamicsWorld->addRigidBody(r_static->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+        getWorld()->m_engine->m_bullet.dynamicsWorld->addRigidBody(r_static->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
         r_static->bt_body->setUserPointer(r_static.get());
     }
 
@@ -1456,7 +1456,7 @@ void Room::generateCollisionShape()
     tr.setFromOpenGLMatrix(glm::value_ptr(getModelMatrix()));
     btDefaultMotionState* motionState = new btDefaultMotionState(tr);
     m_btBody.reset(new btRigidBody(0.0, motionState, cshape, localInertia));
-    getWorld()->m_engine->bullet.dynamicsWorld->addRigidBody(m_btBody.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+    getWorld()->m_engine->m_bullet.dynamicsWorld->addRigidBody(m_btBody.get(), COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
     m_btBody->setUserPointer(this);
     m_btBody->setRestitution(1.0);
     m_btBody->setFriction(1.0);

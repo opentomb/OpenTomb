@@ -55,8 +55,6 @@ size_t frame_vertex_buffer_size_left = 0;
 
 // Debug globals.
 
-world::Object* last_object = nullptr;
-
 void Engine::initGL()
 {
     glewExperimental = GL_TRUE;
@@ -88,7 +86,7 @@ void Engine::initSDLVideo()
 
     Uint32 video_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
 
-    if(screen_info.FS_flag)
+    if(m_screenInfo.FS_flag)
     {
         video_flags |= SDL_WINDOW_FULLSCREEN;
     }
@@ -115,7 +113,7 @@ void Engine::initSDLVideo()
 
     // Create temporary SDL window and GL context for checking capabilities.
 
-    m_window = SDL_CreateWindow(nullptr, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+    m_window = SDL_CreateWindow(nullptr, m_screenInfo.x, m_screenInfo.y, m_screenInfo.w, m_screenInfo.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
     m_glContext = SDL_GL_CreateContext(m_window);
 
     if(!m_glContext)
@@ -164,11 +162,11 @@ void Engine::initSDLVideo()
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings().z_depth);
 
-    m_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
+    m_window = SDL_CreateWindow("OpenTomb", m_screenInfo.x, m_screenInfo.y, m_screenInfo.w, m_screenInfo.h, video_flags);
     m_glContext = SDL_GL_CreateContext(m_window);
     SDL_GL_MakeCurrent(m_window, m_glContext);
 
-    if(SDL_GL_SetSwapInterval(screen_info.vsync))
+    if(SDL_GL_SetSwapInterval(m_screenInfo.vsync))
         BOOST_LOG_TRIVIAL(error) << "Cannot set VSYNC: " << SDL_GetError();
 
     m_gui.getConsole().addLine(reinterpret_cast<const char*>(glGetString(GL_VENDOR)), gui::FontStyle::ConsoleInfo);
@@ -184,14 +182,14 @@ Engine::Engine()
     , m_world(this)
     , m_inputHandler(this)
     , renderer(this)
-    , gameflow(this)
-    , bullet(this)
-    , engine_lua(this)
+    , m_gameflow(this)
+    , m_bullet(this)
+    , m_scriptEngine(this)
     , debugDrawer(this)
 {
     BOOST_LOG_TRIVIAL(info) << "Engine booting...";
 
-    engine_lua.doFile("scripts/loadscript.lua");
+    m_scriptEngine.doFile("scripts/loadscript.lua");
 #if defined(__MACOSX__)
     FindConfigFile();
 #endif
@@ -214,7 +212,7 @@ Engine::Engine()
     initPost();
 
     // Initial window resize.
-    resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
+    resize(m_screenInfo.w, m_screenInfo.h, m_screenInfo.w, m_screenInfo.h);
 
     // OpenAL initialization.
     m_world.m_audioEngine.initDevice();
@@ -230,7 +228,7 @@ Engine::Engine()
     m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, "resource/graphics/legal.png");
     m_gui.m_faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
-    engine_lua.doFile("autoexec.lua");
+    m_scriptEngine.doFile("autoexec.lua");
 }
 
 void Engine::display()
@@ -239,7 +237,7 @@ void Engine::display()
 
     m_camera.apply();
     // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
-    if(screen_info.show_debuginfo)
+    if(m_screenInfo.show_debuginfo)
     {
         showDebugInfo();
     }
@@ -276,16 +274,16 @@ void Engine::display()
 
 void Engine::resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 {
-    screen_info.w = nominalW;
-    screen_info.h = nominalH;
+    m_screenInfo.w = nominalW;
+    m_screenInfo.h = nominalH;
 
-    screen_info.w_unit = static_cast<float>(nominalW) / gui::ScreenMeteringResolution;
-    screen_info.h_unit = static_cast<float>(nominalH) / gui::ScreenMeteringResolution;
-    screen_info.scale_factor = screen_info.w < screen_info.h ? screen_info.h_unit : screen_info.w_unit;
+    m_screenInfo.w_unit = static_cast<float>(nominalW) / gui::ScreenMeteringResolution;
+    m_screenInfo.h_unit = static_cast<float>(nominalH) / gui::ScreenMeteringResolution;
+    m_screenInfo.scale_factor = m_screenInfo.w < m_screenInfo.h ? m_screenInfo.h_unit : m_screenInfo.w_unit;
 
     m_gui.resize();
 
-    m_camera.setFovAspect(screen_info.fov, static_cast<glm::float_t>(nominalW) / static_cast<glm::float_t>(nominalH));
+    m_camera.setFovAspect(m_screenInfo.fov, static_cast<glm::float_t>(nominalW) / static_cast<glm::float_t>(nominalH));
     m_camera.apply();
 
     glViewport(0, 0, pixelsW, pixelsH);
@@ -297,7 +295,7 @@ void Engine::frame(util::Duration time)
     fpsCycle(time);
 
     Game_Frame(*this, time);
-    gameflow.execute();
+    m_gameflow.execute();
 }
 
 void Engine::showDebugInfo()
@@ -339,9 +337,9 @@ void Engine::showDebugInfo()
                                                  );
     }
 
-    if(last_object != nullptr)
+    if(m_lastObject != nullptr)
     {
-        if(world::Entity* e = dynamic_cast<world::Entity*>(last_object))
+        if(world::Entity* e = dynamic_cast<world::Entity*>(m_lastObject))
         {
             m_gui.m_textlineManager.drawText(30.0, 60.0,
                                                      boost::format("cont_entity: id = %d, model = %d")
@@ -349,14 +347,14 @@ void Engine::showDebugInfo()
                                                      % e->m_skeleton.getModel()->getId()
                                                      );
         }
-        else if(world::StaticMesh* sm = dynamic_cast<world::StaticMesh*>(last_object))
+        else if(world::StaticMesh* sm = dynamic_cast<world::StaticMesh*>(m_lastObject))
         {
             m_gui.m_textlineManager.drawText(30.0, 60.0,
                                                      boost::format("cont_static: id = %d")
                                                      % sm->getId()
                                                      );
         }
-        else if(world::Room* r = dynamic_cast<world::Room*>(last_object))
+        else if(world::Room* r = dynamic_cast<world::Room*>(m_lastObject))
         {
             m_gui.m_textlineManager.drawText(30.0, 60.0,
                                                      boost::format("cont_room: id = %d")
@@ -536,14 +534,14 @@ void Engine::initPre()
     // gui::FontManager::instance.reset(new gui::FontManager(this));
     m_gui.getConsole().init();
 
-    engine_lua["loadscript_pre"]();
+    m_scriptEngine["loadscript_pre"]();
 
-    gameflow.init();
+    m_gameflow.init();
 
     frame_vertex_buffer.resize(render::InitFrameVertexBufferSize);
     frame_vertex_buffer_size_left = frame_vertex_buffer.size();
 
-    m_gui.getConsole().setCompletionItems(engine_lua.getGlobals());
+    m_gui.getConsole().setCompletionItems(m_scriptEngine.getGlobals());
 
     Com_Init();
     renderer.init();
@@ -554,7 +552,7 @@ void Engine::initPre()
 
 void Engine::initPost()
 {
-    engine_lua["loadscript_post"]();
+    m_scriptEngine["loadscript_post"]();
 
     m_gui.getConsole().initFonts();
 
@@ -607,7 +605,7 @@ void Engine::dumpRoom(const world::Room* r)
 
 Engine::~Engine()
 {
-    engine_lua.clearTasks();
+    m_scriptEngine.clearTasks();
     renderer.empty();
     m_world.empty();
     Com_Destroy();
@@ -654,7 +652,7 @@ std::string Engine::getLevelName(const std::string& path)
 
 std::string Engine::getAutoexecName(loader::Game game_version, const std::string& postfix)
 {
-    std::string level_name = getLevelName(gameflow.getLevelPath());
+    std::string level_name = getLevelName(m_gameflow.getLevelPath());
 
     std::string name = "scripts/autoexec/";
     switch(loader::gameToEngine(game_version))
@@ -724,14 +722,14 @@ bool Engine::loadMap(const std::string& name)
     renderer.hideSkyBox();
     renderer.resetWorld();
 
-    gameflow.setLevelPath(name);          // it is needed for "not in the game" levels or correct saves loading.
+    m_gameflow.setLevelPath(name);          // it is needed for "not in the game" levels or correct saves loading.
 
     m_gui.drawLoadScreen(50);
 
     m_world.empty();
     m_world.prepare();
 
-    engine_lua.clean();
+    m_scriptEngine.clean();
 
     m_world.m_audioEngine.init();
 
@@ -761,7 +759,7 @@ bool Engine::loadMap(const std::string& name)
 
     Game_Prepare(*this);
 
-    engine_lua.prepare();
+    m_scriptEngine.prepare();
 
     renderer.setWorld(&m_world);
 
@@ -850,10 +848,10 @@ int Engine::execCmd(const char *ch)
             else
             {
                 const auto val = atoi(token.data());
-                if(val >= 2 && val <= screen_info.h / m_gui.getConsole().lineHeight())
+                if(val >= 2 && val <= m_screenInfo.h / m_gui.getConsole().lineHeight())
                 {
                     m_gui.getConsole().setVisibleLines(val);
-                    m_gui.getConsole().setCursorY(screen_info.h - m_gui.getConsole().lineHeight() * m_gui.getConsole().visibleLines());
+                    m_gui.getConsole().setCursorY(m_screenInfo.h - m_gui.getConsole().lineHeight() * m_gui.getConsole().visibleLines());
                 }
                 else
                 {
@@ -972,7 +970,7 @@ int Engine::execCmd(const char *ch)
             m_gui.getConsole().addLine(pch, gui::FontStyle::ConsoleEvent);
             try
             {
-                engine_lua.doString(pch);
+                m_scriptEngine.doString(pch);
             }
             catch(lua::RuntimeError& error)
             {
@@ -1020,9 +1018,9 @@ void Engine::fpsCycle(util::Duration time)
     }
     else
     {
-        screen_info.fps = 20.0f / util::toSeconds(fpsTime);
+        m_screenInfo.fps = 20.0f / util::toSeconds(fpsTime);
         char tmp[16];
-        snprintf(tmp, 16, "%.1f", screen_info.fps);
+        snprintf(tmp, 16, "%.1f", m_screenInfo.fps);
         system_fps.text = tmp;
         fpsCycles = 0;
         fpsTime = util::Duration(0);
@@ -1052,12 +1050,12 @@ void Engine::initConfig(const std::string& filename)
             return;
         }
 
-        state.parseScreen(screen_info);
+        state.parseScreen(m_screenInfo);
         state.parseRender(renderer.settings());
         state.parseAudio(m_world.m_audioEngine.settings());
         state.parseConsole(m_gui.getConsole());
         state.parseControls(m_inputHandler);
-        state.parseSystem(system_settings);
+        state.parseSystem(m_systemSettings);
     }
     else
     {

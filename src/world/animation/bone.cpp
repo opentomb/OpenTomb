@@ -12,7 +12,7 @@ Bone::~Bone()
     if(ghostObject)
     {
         ghostObject->setUserPointer(nullptr);
-        m_skeleton->getEntity()->getWorld()->m_engine->bullet.dynamicsWorld->removeCollisionObject(ghostObject.get());
+        m_skeleton->getEntity()->getWorld()->m_engine->m_bullet.dynamicsWorld->removeCollisionObject(ghostObject.get());
     }
 
     if(bt_body)
@@ -24,7 +24,7 @@ Bone::~Bone()
 
         bt_body->setCollisionShape(nullptr);
 
-        m_skeleton->getEntity()->getWorld()->m_engine->bullet.dynamicsWorld->removeRigidBody(bt_body.get());
+        m_skeleton->getEntity()->getWorld()->m_engine->m_bullet.dynamicsWorld->removeRigidBody(bt_body.get());
     }
 }
 

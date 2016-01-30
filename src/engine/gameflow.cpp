@@ -28,7 +28,7 @@ void Gameflow::execute()
                 // Switch level only when fade is complete AND all streams / sounds are unloaded!
                 if(m_engine->m_gui.m_faders.getStatus(gui::FaderType::LoadScreen) == gui::FaderStatus::Complete && !m_engine->m_world.m_audioEngine.isTrackPlaying())
                 {
-                    lua::tie(m_currentLevelPath, m_currentLevelName, m_currentLevelID) = m_engine->engine_lua["getNextLevel"](m_currentGameID, m_currentLevelID, m_actions.front().operand);
+                    lua::tie(m_currentLevelPath, m_currentLevelName, m_currentLevelID) = m_engine->m_scriptEngine["getNextLevel"](m_currentGameID, m_currentLevelID, m_actions.front().operand);
                     m_engine->loadMap(m_currentLevelPath);
                     m_actions.pop();
                 }

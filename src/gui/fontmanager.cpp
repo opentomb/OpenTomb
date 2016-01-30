@@ -205,7 +205,7 @@ void FontManager::resize()
 {
     for(Font& current_font : m_fonts)
     {
-        glf_resize(current_font.gl_font.get(), static_cast<uint16_t>(static_cast<float>(current_font.size) * m_engine->screen_info.scale_factor));
+        glf_resize(current_font.gl_font.get(), static_cast<uint16_t>(static_cast<float>(current_font.size) * m_engine->m_screenInfo.scale_factor));
     }
 }
 } // namespace gui

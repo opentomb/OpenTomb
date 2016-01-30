@@ -45,8 +45,8 @@ bool Entity::getPenetrationFixVector(btPairCachingGhostObject& ghost, btManifold
 
     btVector3 aabb_min, aabb_max;
     ghost.getCollisionShape()->getAabb(ghost.getWorldTransform(), aabb_min, aabb_max);
-    getWorld()->m_engine->bullet.dynamicsWorld->getBroadphase()->setAabb(ghost.getBroadphaseHandle(), aabb_min, aabb_max, getWorld()->m_engine->bullet.dynamicsWorld->getDispatcher());
-    getWorld()->m_engine->bullet.dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost.getOverlappingPairCache(), getWorld()->m_engine->bullet.dynamicsWorld->getDispatchInfo(), getWorld()->m_engine->bullet.dynamicsWorld->getDispatcher());
+    getWorld()->m_engine->m_bullet.dynamicsWorld->getBroadphase()->setAabb(ghost.getBroadphaseHandle(), aabb_min, aabb_max, getWorld()->m_engine->m_bullet.dynamicsWorld->getDispatcher());
+    getWorld()->m_engine->m_bullet.dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost.getOverlappingPairCache(), getWorld()->m_engine->m_bullet.dynamicsWorld->getDispatchInfo(), getWorld()->m_engine->m_bullet.dynamicsWorld->getDispatcher());
 
     correction = { 0,0,0 };
     int num_pairs = ghost.getOverlappingPairCache()->getNumOverlappingPairs();
@@ -246,13 +246,13 @@ void Entity::checkCollisionCallbacks()
             if(activator->m_callbackFlags & ENTITY_CALLBACK_COLLISION)
             {
                 // Activator and entity IDs are swapped in case of collision callback.
-                getWorld()->m_engine->engine_lua.execEntity(ENTITY_CALLBACK_COLLISION, activator->getId(), getId());
+                getWorld()->m_engine->m_scriptEngine.execEntity(ENTITY_CALLBACK_COLLISION, activator->getId(), getId());
                 //ConsoleInfo::instance().printf("char_body_flag = 0x%X, collider_type = %d", curr_flag, type);
             }
         }
         else if((m_callbackFlags & ENTITY_CALLBACK_ROOMCOLLISION) && dynamic_cast<Room*>(object))
         {
-            getWorld()->m_engine->engine_lua.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, getId(), object->getId());
+            getWorld()->m_engine->m_scriptEngine.execEntity(ENTITY_CALLBACK_ROOMCOLLISION, getId(), object->getId());
         }
     }
 }
@@ -484,7 +484,7 @@ void Entity::doAnimCommand(const animation::AnimCommand& command)
             }
             else
             {
-                getWorld()->m_engine->engine_lua.execEffect(effect_id, getId());
+                getWorld()->m_engine->m_scriptEngine.execEffect(effect_id, getId());
             }
         }
         break;
@@ -520,8 +520,8 @@ void Entity::processSector()
         // Look up trigger function table and run trigger if it exists.
         try
         {
-            if(getWorld()->m_engine->engine_lua["tlist_RunTrigger"].is<lua::Callable>())
-                getWorld()->m_engine->engine_lua["tlist_RunTrigger"].call(int(lowest_sector->trig_index), m_skeleton.getModel()->getId() == 0 ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC, getId());
+            if(getWorld()->m_engine->m_scriptEngine["tlist_RunTrigger"].is<lua::Callable>())
+                getWorld()->m_engine->m_scriptEngine["tlist_RunTrigger"].call(int(lowest_sector->trig_index), m_skeleton.getModel()->getId() == 0 ? TR_ACTIVATORTYPE_LARA : TR_ACTIVATORTYPE_MISC, getId());
         }
         catch(lua::RuntimeError& error)
         {
@@ -613,7 +613,7 @@ void Entity::frame(util::Duration time)
 
     fixPenetrations(nullptr);
     processSector();    // triggers
-    getWorld()->m_engine->engine_lua.loopEntity(getId());
+    getWorld()->m_engine->m_scriptEngine.loopEntity(getId());
 
     if(m_typeFlags & ENTITY_TYPE_COLLCHECK)
         checkCollisionCallbacks();
@@ -661,7 +661,7 @@ void Entity::checkActivators()
             //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
             if(e != this && core::testOverlap(*e, *this)) //(vec3_dist_sq(transform+12, pos) < r))
             {
-                getWorld()->m_engine->engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
+                getWorld()->m_engine->m_scriptEngine.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
             }
         }
         else if(e->m_typeFlags & ENTITY_TYPE_PICKABLE)
@@ -674,7 +674,7 @@ void Entity::checkActivators()
                && v[2] + 32.0 > m_transform[3][2] + m_skeleton.getBoundingBox().min[2]
                && v[2] - 32.0 < m_transform[3][2] + m_skeleton.getBoundingBox().max[2])
             {
-                getWorld()->m_engine->engine_lua.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
+                getWorld()->m_engine->m_scriptEngine.execEntity(ENTITY_CALLBACK_ACTIVATE, e->getId(), getId());
             }
         }
     }
@@ -797,7 +797,7 @@ bool Entity::createRagdoll(RagdollSetup* setup)
         m_skeleton.getModel()->m_btJoints[i]->setParam(BT_CONSTRAINT_STOP_ERP, setup->joint_erp, -1);
 
         m_skeleton.getModel()->m_btJoints[i]->setDbgDrawSize(64.0);
-        getWorld()->m_engine->bullet.dynamicsWorld->addConstraint(m_skeleton.getModel()->m_btJoints[i].get(), true);
+        getWorld()->m_engine->m_bullet.dynamicsWorld->addConstraint(m_skeleton.getModel()->m_btJoints[i].get(), true);
     }
 
     if(!result)
@@ -820,20 +820,20 @@ bool Entity::deleteRagdoll()
     {
         if(joint)
         {
-            getWorld()->m_engine->bullet.dynamicsWorld->removeConstraint(joint.get());
+            getWorld()->m_engine->m_bullet.dynamicsWorld->removeConstraint(joint.get());
             joint.reset();
         }
     }
 
     for(const animation::Bone& bone : m_skeleton.getBones())
     {
-        getWorld()->m_engine->bullet.dynamicsWorld->removeRigidBody(bone.bt_body.get());
+        getWorld()->m_engine->m_bullet.dynamicsWorld->removeRigidBody(bone.bt_body.get());
         bone.bt_body->setMassProps(0, btVector3(0.0, 0.0, 0.0));
-        getWorld()->m_engine->bullet.dynamicsWorld->addRigidBody(bone.bt_body.get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
+        getWorld()->m_engine->m_bullet.dynamicsWorld->addRigidBody(bone.bt_body.get(), COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
         if(bone.ghostObject)
         {
-            getWorld()->m_engine->bullet.dynamicsWorld->removeCollisionObject(bone.ghostObject.get());
-            getWorld()->m_engine->bullet.dynamicsWorld->addCollisionObject(bone.ghostObject.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
+            getWorld()->m_engine->m_bullet.dynamicsWorld->removeCollisionObject(bone.ghostObject.get());
+            getWorld()->m_engine->m_bullet.dynamicsWorld->addCollisionObject(bone.ghostObject.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
         }
     }
 
@@ -849,7 +849,7 @@ bool Entity::deleteRagdoll()
 
 glm::vec3 Entity::applyGravity(util::Duration time)
 {
-    const glm::vec3 gravityAccelleration = util::convert(getWorld()->m_engine->bullet.dynamicsWorld->getGravity());
+    const glm::vec3 gravityAccelleration = util::convert(getWorld()->m_engine->m_bullet.dynamicsWorld->getGravity());
     const glm::vec3 gravitySpeed = gravityAccelleration * util::toSeconds(time);
     glm::vec3 move = (m_speed + gravitySpeed*0.5f) * util::toSeconds(time);
     m_speed += gravitySpeed;

@@ -475,7 +475,7 @@ bool StreamTrack::stream(ALuint buffer)
 #ifdef AUDIO_OPENAL_FLOAT
     std::vector<ALfloat> pcm(m_audioEngine->getSettings().stream_buffer_size);
 #else
-    std::vector<ALshort> pcm(engine::engine_world.audioEngine.getSettings().stream_buffer_size);
+    std::vector<ALshort> pcm(m_audioEngine->getSettings().stream_buffer_size);
 #endif
     size_t size = 0;
 
@@ -494,26 +494,23 @@ bool StreamTrack::stream(ALuint buffer)
         {
             BOOST_ASSERT(samplesRead <= std::numeric_limits<size_t>::max());
             size += static_cast<size_t>(samplesRead);
+            continue;
+        }
+
+        int error = sf_error(m_sndFile);
+        if(error != SF_ERR_NO_ERROR)
+        {
+            logSndfileError(error);
+            return false;
+        }
+
+        if(m_streamType == StreamType::Background)
+        {
+            sf_seek(m_sndFile, 0, SEEK_SET);
         }
         else
         {
-            int error = sf_error(m_sndFile);
-            if(error != SF_ERR_NO_ERROR)
-            {
-                logSndfileError(error);
-                return false;
-            }
-            else
-            {
-                if(m_streamType == StreamType::Background)
-                {
-                    sf_seek(m_sndFile, 0, SEEK_SET);
-                }
-                else
-                {
-                    break;   // Stream is ending - do nothing.
-                }
-            }
+            break;   // Stream is ending - do nothing.
         }
     }
 

@@ -879,7 +879,7 @@ void Render::drawListDebugLines()
 
     if(m_drawColl)
     {
-        m_engine->bullet.dynamicsWorld->debugDrawWorld();
+        m_engine->m_bullet.dynamicsWorld->debugDrawWorld();
     }
 
     if(!m_world->m_engine->debugDrawer.IsEmpty())
@@ -1321,10 +1321,10 @@ void Render::fillCrosshairBuffer()
     };
 
     BufferEntry crosshair_buf[4] = {
-        {{static_cast<glm::float_t>(m_engine->screen_info.w / 2.0f - 5.f), (static_cast<glm::float_t>(m_engine->screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
-        {{static_cast<glm::float_t>(m_engine->screen_info.w / 2.0f + 5.f), (static_cast<glm::float_t>(m_engine->screen_info.h) / 2.0f)}, {255, 0, 0, 255}},
-        {{static_cast<glm::float_t>(m_engine->screen_info.w / 2.0f), (static_cast<glm::float_t>(m_engine->screen_info.h) / 2.0f - 5.f)}, {255, 0, 0, 255}},
-        {{static_cast<glm::float_t>(m_engine->screen_info.w / 2.0f), (static_cast<glm::float_t>(m_engine->screen_info.h) / 2.0f + 5.f)}, {255, 0, 0, 255}}
+        {{static_cast<glm::float_t>(m_engine->m_screenInfo.w / 2.0f - 5.f), (static_cast<glm::float_t>(m_engine->m_screenInfo.h) / 2.0f)}, {255, 0, 0, 255}},
+        {{static_cast<glm::float_t>(m_engine->m_screenInfo.w / 2.0f + 5.f), (static_cast<glm::float_t>(m_engine->m_screenInfo.h) / 2.0f)}, {255, 0, 0, 255}},
+        {{static_cast<glm::float_t>(m_engine->m_screenInfo.w / 2.0f), (static_cast<glm::float_t>(m_engine->m_screenInfo.h) / 2.0f - 5.f)}, {255, 0, 0, 255}},
+        {{static_cast<glm::float_t>(m_engine->m_screenInfo.w / 2.0f), (static_cast<glm::float_t>(m_engine->m_screenInfo.h) / 2.0f + 5.f)}, {255, 0, 0, 255}}
     };
 
     glBindBuffer(GL_ARRAY_BUFFER, m_crosshairBuffer);
@@ -1343,8 +1343,8 @@ void Render::drawCrosshair()
 
     glUseProgram(shader->program);
     glm::vec2 factor = {
-        2.0f / m_engine->screen_info.w,
-        2.0f / m_engine->screen_info.h
+        2.0f / m_engine->m_screenInfo.w,
+        2.0f / m_engine->m_screenInfo.h
     };
     glUniform2fv(shader->factor, 1, glm::value_ptr(factor));
     glm::vec2 offset = { -1.f, -1.f };

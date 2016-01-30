@@ -270,14 +270,14 @@ lua::Any lua_NewSector(engine::Engine& engine, world::ObjectId id)
 
 std::tuple<float, float, float> lua_GetGravity(engine::Engine& engine)
 {
-    btVector3 g = engine.bullet.dynamicsWorld->getGravity();
+    btVector3 g = engine.m_bullet.dynamicsWorld->getGravity();
     return std::make_tuple(g[0], g[1], g[2]);
 }
 
 void lua_SetGravity(engine::Engine& engine, float x, lua::Value y, lua::Value z)                                             // function to be exported to Lua
 {
     btVector3 g(x, y.is<btScalar>() ? y.to<btScalar>() : 0, z.is<btScalar>() ? z.to<btScalar>() : 0);
-    engine.bullet.dynamicsWorld->setGravity(g);
+    engine.m_bullet.dynamicsWorld->setGravity(g);
     engine.m_gui.getConsole().printf("gravity = (%.3f, %.3f, %.3f)", g[0], g[1], g[2]);
 }
 
@@ -297,7 +297,7 @@ bool lua_DropEntity(engine::Engine& engine, world::ObjectId id, float time, lua:
     from[2] = ent->m_transform[3][2];
     glm::vec3 to = from + move;
     //to[2] -= (ent->m_bf.bb_max[2] - ent->m_bf.bb_min[2]);
-    engine.bullet.dynamicsWorld->rayTest(util::convert(from), util::convert(to), cb);
+    engine.m_bullet.dynamicsWorld->rayTest(util::convert(from), util::convert(to), cb);
 
     if(cb.hasHit())
     {
@@ -508,12 +508,12 @@ void lua_RemoveEntityRagdoll(engine::Engine& engine, world::ObjectId ent_id)
 
 bool lua_GetSecretStatus(engine::Engine& engine, int secret_number)
 {
-    return engine.gameflow.getSecretStatus(secret_number);
+    return engine.m_gameflow.getSecretStatus(secret_number);
 }
 
 void lua_SetSecretStatus(engine::Engine& engine, int secret_number, bool status)
 {
-    engine.gameflow.setSecretStatus(secret_number, status);
+    engine.m_gameflow.setSecretStatus(secret_number, status);
 }
 
 lua::Any lua_GetActionState(engine::Engine& engine, int act)
@@ -944,9 +944,9 @@ void lua_SetEntityScaling(engine::Engine& engine, world::ObjectId id, float x, f
             if(!bone.bt_body)
                 continue;
 
-            engine.bullet.dynamicsWorld->removeRigidBody(bone.bt_body.get());
+            engine.m_bullet.dynamicsWorld->removeRigidBody(bone.bt_body.get());
             bone.bt_body->getCollisionShape()->setLocalScaling(util::convert(ent->m_scaling));
-            engine.bullet.dynamicsWorld->addRigidBody(bone.bt_body.get());
+            engine.m_bullet.dynamicsWorld->addRigidBody(bone.bt_body.get());
 
             bone.bt_body->activate();
         }
@@ -1968,7 +1968,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
             if(!bone.bt_body)
                 continue;
 
-            engine.bullet.dynamicsWorld->removeRigidBody(bone.bt_body.get());
+            engine.m_bullet.dynamicsWorld->removeRigidBody(bone.bt_body.get());
 
             bone.bt_body->getCollisionShape()->calculateLocalInertia(mass, inertia);
 
@@ -1988,7 +1988,7 @@ int lua_SetEntityBodyMass(lua_State *lua)
             //ent->bt_body[i]->setCcdMotionThreshold(32.0);   // disable tunneling effect
             //ent->bt_body[i]->setCcdSweptSphereRadius(32.0);
 
-            engine.bullet.dynamicsWorld->addRigidBody(bone.bt_body.get());
+            engine.m_bullet.dynamicsWorld->addRigidBody(bone.bt_body.get());
 
             bone.bt_body->activate();
 
@@ -2236,7 +2236,7 @@ void lua_StopSound(engine::Engine& engine, audio::SoundId id, lua::Value ent_id)
 
 int lua_GetLevel(engine::Engine& engine)
 {
-    return engine.gameflow.getLevelID();
+    return engine.m_gameflow.getLevelID();
 }
 
 void lua_SetLevel(engine::Engine& engine, int id)
@@ -2244,40 +2244,40 @@ void lua_SetLevel(engine::Engine& engine, int id)
     engine.m_gui.getConsole().notify(SYSNOTE_CHANGING_LEVEL, id);
 
     engine::Game_LevelTransition(engine, id);
-    engine.gameflow.send(engine::Opcode::LevelComplete, id);    // Next level
+    engine.m_gameflow.send(engine::Opcode::LevelComplete, id);    // Next level
 }
 
 void lua_SetGame(engine::Engine& engine, int gameId, lua::Value levelId)
 {
-    engine.gameflow.setGameID(gameId);
+    engine.m_gameflow.setGameID(gameId);
     if(levelId.is<uint32_t>())
-        engine.gameflow.setLevelID(levelId.to<uint32_t>());
+        engine.m_gameflow.setLevelID(levelId.to<uint32_t>());
 
-    const char* str = engine.engine_lua["getTitleScreen"](int(engine.gameflow.getGameID())).toCStr();
+    const char* str = engine.m_scriptEngine["getTitleScreen"](int(engine.m_gameflow.getGameID())).toCStr();
     engine.m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, str);
     engine.m_gui.m_faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
-    engine.m_gui.getConsole().notify(SYSNOTE_CHANGING_GAME, engine.gameflow.getGameID());
+    engine.m_gui.getConsole().notify(SYSNOTE_CHANGING_GAME, engine.m_gameflow.getGameID());
     engine::Game_LevelTransition(engine, boost::none);
-    engine.gameflow.send(engine::Opcode::LevelComplete, engine.gameflow.getLevelID());
+    engine.m_gameflow.send(engine::Opcode::LevelComplete, engine.m_gameflow.getLevelID());
 }
 
 void lua_LoadMap(engine::Engine& engine, const char* mapName, lua::Value gameId, lua::Value mapId)
 {
     engine.m_gui.getConsole().notify(SYSNOTE_LOADING_MAP, mapName);
 
-    if(!mapName || mapName == engine.gameflow.getLevelPath())
+    if(!mapName || mapName == engine.m_gameflow.getLevelPath())
         return;
 
     if(gameId.is<int8_t>() && gameId.to<int8_t>() >= 0)
     {
-        engine.gameflow.setGameID(gameId.to<int8_t>());
+        engine.m_gameflow.setGameID(gameId.to<int8_t>());
     }
     if(mapId.is<uint32_t>())
     {
-        engine.gameflow.setLevelID(mapId.to<uint32_t>());
+        engine.m_gameflow.setLevelID(mapId.to<uint32_t>());
     }
-    std::string file_path = engine.engine_lua.getLoadingScreen(engine.gameflow.getLevelID());
+    std::string file_path = engine.m_scriptEngine.getLoadingScreen(engine.m_gameflow.getLevelID());
     engine.m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, file_path);
     engine.m_gui.m_faders.start(gui::FaderType::LoadScreen, gui::FaderDir::In);
     engine.loadMap(mapName);
@@ -3376,7 +3376,7 @@ bool script::MainEngine::getOverridedSamplesInfo(int& num_samples, int& num_soun
 
 bool script::MainEngine::getOverridedSample(int sound_id, int& first_sample_number, int& samples_count)
 {
-    lua::tie(first_sample_number, samples_count) = call("getOverridedSample", static_cast<int>(getEngine()->m_world.m_engineVersion), int(getEngine()->gameflow.getLevelID()), sound_id);
+    lua::tie(first_sample_number, samples_count) = call("getOverridedSample", static_cast<int>(getEngine()->m_world.m_engineVersion), int(getEngine()->m_gameflow.getLevelID()), sound_id);
     return first_sample_number != -1 && samples_count != -1;
 }
 
@@ -3406,7 +3406,7 @@ bool script::MainEngine::getSysNotify(int string_index, size_t string_size, char
 
 std::string script::MainEngine::getLoadingScreen(int level_index)
 {
-    return call("getLoadingScreen", int(getEngine()->gameflow.getGameID()), int(getEngine()->gameflow.getLevelID()), level_index).toString();
+    return call("getLoadingScreen", int(getEngine()->m_gameflow.getGameID()), int(getEngine()->m_gameflow.getLevelID()), level_index).toString();
 }
 
 // System lua functions

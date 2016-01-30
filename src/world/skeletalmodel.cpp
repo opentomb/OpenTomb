@@ -535,7 +535,7 @@ void SkeletalModel::patchLaraSkin(World& world, loader::Engine engineVersion)
     switch(engineVersion)
     {
         case loader::Engine::TR1:
-            if(world.m_engine->gameflow.getLevelID() == 0)
+            if(world.m_engine->m_gameflow.getLevelID() == 0)
             {
                 if(std::shared_ptr<SkeletalModel> skinModel = world.getModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1))
                 {

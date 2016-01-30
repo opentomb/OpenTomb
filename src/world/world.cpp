@@ -15,11 +15,6 @@
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 
-namespace engine
-{
-extern world::Object* last_object;
-} // namespace engine
-
 using gui::Console;
 
 namespace world
@@ -54,8 +49,8 @@ void World::prepare()
 
 void World::empty()
 {
-    engine::last_object = nullptr;
-    m_engine->engine_lua.clearTasks();
+    m_engine->m_lastObject = nullptr;
+    m_engine->m_scriptEngine.clearTasks();
 
     m_audioEngine.deInitAudio(); // De-initialize and destroy all audio objects.
 
@@ -76,11 +71,11 @@ void World::empty()
     // Destroy Bullet's MISC objects (debug spheres etc.)
     ///@FIXME: Hide it somewhere, it is nasty being here.
 
-    if(m_engine->bullet.dynamicsWorld != nullptr)
+    if(m_engine->m_bullet.dynamicsWorld != nullptr)
     {
-        for(int i = m_engine->bullet.dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+        for(int i = m_engine->m_bullet.dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--)
         {
-            btCollisionObject* obj = m_engine->bullet.dynamicsWorld->getCollisionObjectArray()[i];
+            btCollisionObject* obj = m_engine->m_bullet.dynamicsWorld->getCollisionObjectArray()[i];
             btRigidBody* body = btRigidBody::upcast(obj);
             if(body == nullptr)
                 continue;
@@ -99,7 +94,7 @@ void World::empty()
 
             body->setCollisionShape(nullptr);
 
-            m_engine->bullet.dynamicsWorld->removeRigidBody(body);
+            m_engine->m_bullet.dynamicsWorld->removeRigidBody(body);
             delete object;
             delete body;
         }

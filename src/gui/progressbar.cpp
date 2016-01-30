@@ -129,11 +129,11 @@ void ProgressBar::setSize(glm::float_t width, glm::float_t height, glm::float_t 
 // Recalculate size, according to viewport resolution.
 void ProgressBar::recalculateSize()
 {
-    m_width = static_cast<float>(m_absWidth)  * m_engine->screen_info.scale_factor;
-    m_height = static_cast<float>(m_absHeight) * m_engine->screen_info.scale_factor;
+    m_width = static_cast<float>(m_absWidth)  * m_engine->m_screenInfo.scale_factor;
+    m_height = static_cast<float>(m_absHeight) * m_engine->m_screenInfo.scale_factor;
 
-    m_borderWidth = static_cast<float>(m_absBorderSize)  * m_engine->screen_info.scale_factor;
-    m_borderHeight = static_cast<float>(m_absBorderSize)  * m_engine->screen_info.scale_factor;
+    m_borderWidth = static_cast<float>(m_absBorderSize)  * m_engine->m_screenInfo.scale_factor;
+    m_borderHeight = static_cast<float>(m_absBorderSize)  * m_engine->m_screenInfo.scale_factor;
 
     // Calculate range unit, according to maximum bar value set up.
     // If bar alignment is set to horizontal, calculate it from bar width.
@@ -148,28 +148,28 @@ void ProgressBar::recalculatePosition()
     switch(m_xAnchor)
     {
         case HorizontalAnchor::Left:
-            m_x = static_cast<float>(m_absXoffset + m_absBorderSize) * m_engine->screen_info.scale_factor;
+            m_x = static_cast<float>(m_absXoffset + m_absBorderSize) * m_engine->m_screenInfo.scale_factor;
             break;
         case HorizontalAnchor::Center:
-            m_x = (static_cast<float>(m_engine->screen_info.w) - static_cast<float>(m_absWidth + m_absBorderSize * 2) * m_engine->screen_info.scale_factor) / 2 +
-                static_cast<float>(m_absXoffset) * m_engine->screen_info.scale_factor;
+            m_x = (static_cast<float>(m_engine->m_screenInfo.w) - static_cast<float>(m_absWidth + m_absBorderSize * 2) * m_engine->m_screenInfo.scale_factor) / 2 +
+                static_cast<float>(m_absXoffset) * m_engine->m_screenInfo.scale_factor;
             break;
         case HorizontalAnchor::Right:
-            m_x = static_cast<float>(m_engine->screen_info.w) - static_cast<float>(m_absXoffset + m_absWidth + m_absBorderSize * 2) * m_engine->screen_info.scale_factor;
+            m_x = static_cast<float>(m_engine->m_screenInfo.w) - static_cast<float>(m_absXoffset + m_absWidth + m_absBorderSize * 2) * m_engine->m_screenInfo.scale_factor;
             break;
     }
 
     switch(m_yAnchor)
     {
         case VerticalAnchor::Top:
-            m_y = static_cast<float>(m_engine->screen_info.h) - static_cast<float>(m_absYoffset + m_absHeight + m_absBorderSize * 2) * m_engine->screen_info.scale_factor;
+            m_y = static_cast<float>(m_engine->m_screenInfo.h) - static_cast<float>(m_absYoffset + m_absHeight + m_absBorderSize * 2) * m_engine->m_screenInfo.scale_factor;
             break;
         case VerticalAnchor::Center:
-            m_y = (static_cast<float>(m_engine->screen_info.h) - static_cast<float>(m_absHeight + m_absBorderSize * 2) * m_engine->screen_info.h_unit) / 2 +
-                static_cast<float>(m_absYoffset) * m_engine->screen_info.scale_factor;
+            m_y = (static_cast<float>(m_engine->m_screenInfo.h) - static_cast<float>(m_absHeight + m_absBorderSize * 2) * m_engine->m_screenInfo.h_unit) / 2 +
+                static_cast<float>(m_absYoffset) * m_engine->m_screenInfo.scale_factor;
             break;
         case VerticalAnchor::Bottom:
-            m_y = (m_absYoffset + m_absBorderSize) * m_engine->screen_info.scale_factor;
+            m_y = (m_absYoffset + m_absBorderSize) * m_engine->m_screenInfo.scale_factor;
             break;
     }
 }

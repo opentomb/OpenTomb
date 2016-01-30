@@ -110,7 +110,7 @@ bool Hair::create(HairSetup *setup, const Entity& parent_entity)
         // collide with hair!
 
         m_elements[i].body->setUserPointer(this);
-        getWorld()->m_engine->bullet.dynamicsWorld->addRigidBody(m_elements[i].body.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_KINEMATIC);
+        getWorld()->m_engine->m_bullet.dynamicsWorld->addRigidBody(m_elements[i].body.get(), COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_KINEMATIC);
 
         m_elements[i].body->activate();
     }
@@ -211,7 +211,7 @@ bool Hair::create(HairSetup *setup, const Entity& parent_entity)
 
         // Add constraint to the world.
 
-        getWorld()->m_engine->bullet.dynamicsWorld->addConstraint(m_joints[curr_joint].get(), true);
+        getWorld()->m_engine->m_bullet.dynamicsWorld->addConstraint(m_joints[curr_joint].get(), true);
 
         curr_joint++;   // Point to the next joint.
     }
@@ -333,7 +333,7 @@ void Hair::createHairMesh(const SkeletalModel& model)
 
 void HairSetup::getSetup(world::World& world, int hair_entry_index)
 {
-    lua::Value res = world.m_engine->engine_lua["getHairSetup"](hair_entry_index);
+    lua::Value res = world.m_engine->m_scriptEngine["getHairSetup"](hair_entry_index);
     if(!res.is<lua::Table>())
         return;
 
@@ -358,7 +358,7 @@ Hair::~Hair()
     for(auto& joint : m_joints)
     {
         if(joint)
-            getWorld()->m_engine->bullet.dynamicsWorld->removeConstraint(joint.get());
+            getWorld()->m_engine->m_bullet.dynamicsWorld->removeConstraint(joint.get());
     }
 
     for(auto& element : m_elements)
@@ -366,7 +366,7 @@ Hair::~Hair()
         if(element.body)
         {
             element.body->setUserPointer(nullptr);
-            getWorld()->m_engine->bullet.dynamicsWorld->removeRigidBody(element.body.get());
+            getWorld()->m_engine->m_bullet.dynamicsWorld->removeRigidBody(element.body.get());
         }
     }
 }

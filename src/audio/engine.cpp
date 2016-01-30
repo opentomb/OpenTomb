@@ -424,7 +424,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
     // "load_method" argument. Function itself returns false, if script wasn't found or
     // request was broken; in this case, we quit.
 
-    if(!m_engine->engine_lua.getSoundtrack(track_index, file_path, &load_method, &stream_type))
+    if(!m_engine->m_scriptEngine.getSoundtrack(track_index, file_path, &load_method, &stream_type))
     {
         m_engine->m_gui.getConsole().warning(SYSWARN_TRACK_WRONG_INDEX, track_index);
         return StreamError::WrongTrack;
@@ -731,7 +731,7 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
     // Generate stream track map array.
     // We use scripted amount of tracks to define map bounds.
     // If script had no such parameter, we define map bounds by default.
-    m_trackMap.resize(m_engine->engine_lua.getNumTracks(), 0);
+    m_trackMap.resize(m_engine->m_scriptEngine.getNumTracks(), 0);
     if(m_trackMap.empty())
         m_trackMap.resize(StreamMapSize, 0);
 
@@ -917,7 +917,7 @@ void Engine::loadSampleOverrideInfo()
 {
     int num_samples, num_sounds;
     std::string sample_name_mask;
-    if(!m_engine->engine_lua.getOverridedSamplesInfo(num_samples, num_sounds, sample_name_mask))
+    if(!m_engine->m_scriptEngine.getOverridedSamplesInfo(num_samples, num_sounds, sample_name_mask))
         return;
 
     size_t buffer_counter = 0;
@@ -928,7 +928,7 @@ void Engine::loadSampleOverrideInfo()
             continue;
 
         int sample_index, sample_count;
-        if(m_engine->engine_lua.getOverridedSample(i, sample_index, sample_count))
+        if(m_engine->m_scriptEngine.getOverridedSample(i, sample_index, sample_count))
         {
             for(int j = 0; j < sample_count; j++, buffer_counter++)
             {

@@ -40,10 +40,10 @@ void TextLineManager::renderLine(const TextLine& line)
             real_x = line.offset.x;   // Used with center and right alignments.
             break;
         case HorizontalAnchor::Right:
-            real_x = static_cast<float>(m_engine->screen_info.w) - (line.bottomRight.x - line.topLeft.x) - line.offset.x;
+            real_x = static_cast<float>(m_engine->m_screenInfo.w) - (line.bottomRight.x - line.topLeft.x) - line.offset.x;
             break;
         case HorizontalAnchor::Center:
-            real_x = m_engine->screen_info.w / 2.0f - (line.bottomRight.x - line.topLeft.x) / 2.0f + line.offset.x;  // Absolute center.
+            real_x = m_engine->m_screenInfo.w / 2.0f - (line.bottomRight.x - line.topLeft.x) / 2.0f + line.offset.x;  // Absolute center.
             break;
     }
 
@@ -53,10 +53,10 @@ void TextLineManager::renderLine(const TextLine& line)
             real_y += line.offset.y;
             break;
         case VerticalAnchor::Top:
-            real_y = static_cast<float>(m_engine->screen_info.h) - (line.bottomRight.y - line.topLeft.y) - line.offset.y;
+            real_y = static_cast<float>(m_engine->m_screenInfo.h) - (line.bottomRight.y - line.topLeft.y) - line.offset.y;
             break;
         case VerticalAnchor::Center:
-            real_y = m_engine->screen_info.h / 2.0f + (line.bottomRight.y - line.topLeft.y) - line.offset.y;          // Consider the baseline.
+            real_y = m_engine->m_screenInfo.h / 2.0f + (line.bottomRight.y - line.topLeft.y) - line.offset.y;          // Consider the baseline.
             break;
     }
 
@@ -93,7 +93,7 @@ TextLine* TextLineManager::drawText(glm::float_t x, glm::float_t y, const std::s
     line->Xanchor = HorizontalAnchor::Left;
     line->Yanchor = VerticalAnchor::Bottom;
 
-    line->offset = line->position * m_engine->screen_info.scale_factor;
+    line->offset = line->position * m_engine->m_screenInfo.scale_factor;
 
     line->show = true;
     return line;
@@ -103,12 +103,12 @@ void TextLineManager::resizeTextLines()
 {
     for(const TextLine* l : m_baseLines)
     {
-        l->offset = l->position * m_engine->screen_info.scale_factor;
+        l->offset = l->position * m_engine->m_screenInfo.scale_factor;
     }
 
     for(const TextLine& l : m_tempLines)
     {
-        l.offset = l.position * m_engine->screen_info.scale_factor;
+        l.offset = l.position * m_engine->m_screenInfo.scale_factor;
     }
 }
 
@@ -119,8 +119,8 @@ void TextLineManager::renderStrings()
     render::TextShaderDescription *shader = m_engine->renderer.shaderManager()->getTextShader();
     glUseProgram(shader->program);
     glm::vec2 screenSize{
-        static_cast<glm::float_t>(m_engine->screen_info.w),
-        static_cast<glm::float_t>(m_engine->screen_info.h)
+        static_cast<glm::float_t>(m_engine->m_screenInfo.w),
+        static_cast<glm::float_t>(m_engine->m_screenInfo.h)
     };
     glUniform2fv(shader->screenSize, 1, glm::value_ptr(screenSize));
     glUniform1i(shader->sampler, 0);

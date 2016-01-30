@@ -40,7 +40,7 @@ void InputHandler::primaryMouseDown()
     cshape->calculateLocalInertia(12.0, localInertia);
     btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
     btRigidBody* body = new btRigidBody(12.0, motionState, cshape, localInertia);
-    m_engine->bullet.dynamicsWorld->addRigidBody(body);
+    m_engine->m_bullet.dynamicsWorld->addRigidBody(body);
     body->setLinearVelocity(util::convert(dir) * 6000);
     world::BulletObject* object = new world::BulletObject(&m_engine->m_world, m_engine->m_world.Room_FindPosCogerrence(new_pos, m_engine->m_camera.getCurrentRoom()));
     body->setUserPointer(object);
@@ -57,7 +57,7 @@ void InputHandler::secondaryMouseDown()
 
     BtEngineClosestRayResultCallback cbc(cam_cont);
     //cbc.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
-    m_engine->bullet.dynamicsWorld->rayTest(util::convert(from), util::convert(to), cbc);
+    m_engine->m_bullet.dynamicsWorld->rayTest(util::convert(from), util::convert(to), cbc);
     if(!cbc.hasHit())
         return;
 
@@ -71,7 +71,7 @@ void InputHandler::secondaryMouseDown()
 
     if(dynamic_cast<world::BulletObject*>(c0) == nullptr)
     {
-        m_engine->last_object = c0;
+        m_engine->m_lastObject = c0;
         return;
     }
 
@@ -92,7 +92,7 @@ void InputHandler::secondaryMouseDown()
     }
     delete c0;
 
-    m_engine->bullet.dynamicsWorld->removeCollisionObject(obj);
+    m_engine->m_bullet.dynamicsWorld->removeCollisionObject(obj);
     delete obj;
 }
 
@@ -253,7 +253,7 @@ void InputHandler::poll()
                    event.key.state == SDL_PRESSED &&
                    event.key.keysym.mod & KMOD_ALT)
                 {
-                    m_engine->done = true;
+                    m_engine->m_done = true;
                     break;
                 }
 
@@ -288,7 +288,7 @@ void InputHandler::poll()
                 break;
 
             case SDL_QUIT:
-                m_engine->done = true;
+                m_engine->m_done = true;
                 break;
 
             case SDL_WINDOWEVENT:
@@ -324,7 +324,7 @@ void InputHandler::rumble(float power, util::Duration time)
 void InputHandler::dispatchActionHandler(int key, bool pressed)
 {
     // Fill script-driven debug keyboard input.
-    m_engine->engine_lua.addKey(key, pressed);
+    m_engine->m_scriptEngine.addKey(key, pressed);
 
     auto it1 = m_keyToAction.find(key);
     if(it1 == m_keyToAction.end())

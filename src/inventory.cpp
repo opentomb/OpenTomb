@@ -117,7 +117,7 @@ void InventoryManager::setTitle(MenuItemType items_type)
             break;
     }
 
-    m_labelTitle.text = m_engine->engine_lua.getString(string_index);
+    m_labelTitle.text = m_engine->m_scriptEngine.getString(string_index);
 }
 
 MenuItemType InventoryManager::setItemsType(MenuItemType type)
@@ -226,7 +226,7 @@ void InventoryManager::frame()
                     break;
 
                 case InventoryState::Closed:
-                    m_engine->m_world.m_audioEngine.send(m_engine->engine_lua.getGlobalSound(audio::GlobalSoundId::MenuClose));
+                    m_engine->m_world.m_audioEngine.send(m_engine->m_scriptEngine.getGlobalSound(audio::GlobalSoundId::MenuClose));
                     m_labelItemName.show = false;
                     m_labelTitle.show = false;
                     m_currentState = m_nextState;
@@ -279,7 +279,7 @@ void InventoryManager::frame()
             {
                 if(setItemsType(m_currentItemsType) != MenuItemType::Invalid)
                 {
-                    m_engine->m_world.m_audioEngine.send(m_engine->engine_lua.getGlobalSound(audio::GlobalSoundId::MenuOpen));
+                    m_engine->m_world.m_audioEngine.send(m_engine->m_scriptEngine.getGlobalSound(audio::GlobalSoundId::MenuOpen));
                     m_currentState = InventoryState::Open;
                     m_ringAngle = 180.0f;
                     m_ringVerticalAngle = 180.0f;
@@ -432,7 +432,7 @@ void InventoryManager::render()
 
                 if(i.second.count > 1)
                 {
-                    m_labelItemName.text = (boost::format(m_engine->engine_lua.getString(STR_GEN_MASK_INVHEADER)) % bi->name % i.second.count).str();
+                    m_labelItemName.text = (boost::format(m_engine->m_scriptEngine.getString(STR_GEN_MASK_INVHEADER)) % bi->name % i.second.count).str();
                 }
             }
             matrix = glm::rotate(matrix, glm::radians(90.0f + m_itemAngle - ang), { 0,0,1 });

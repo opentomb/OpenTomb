@@ -76,9 +76,9 @@ void ItemNotifier::reset()
     m_currTime = util::Duration(0);
     m_currentAngle = { 0,0 };
 
-    m_endPosX = static_cast<glm::float_t>(m_engine->screen_info.w) / ScreenMeteringResolution * m_absPos.x;
-    m_posY = static_cast<float>(m_engine->screen_info.h) / ScreenMeteringResolution * m_absPos.y;
-    m_currPosX = m_engine->screen_info.w + static_cast<float>(m_engine->screen_info.w) / NotifierOffscreenDivider * m_size;
+    m_endPosX = static_cast<glm::float_t>(m_engine->m_screenInfo.w) / ScreenMeteringResolution * m_absPos.x;
+    m_posY = static_cast<float>(m_engine->m_screenInfo.h) / ScreenMeteringResolution * m_absPos.y;
+    m_currPosX = m_engine->m_screenInfo.w + static_cast<float>(m_engine->m_screenInfo.w) / NotifierOffscreenDivider * m_size;
     m_startPosX = m_currPosX;    // Equalize current and start positions.
 }
 

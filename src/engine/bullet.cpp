@@ -86,7 +86,7 @@ void internalPreTickCallback(btDynamicsWorld* world, float timeStep)
     util::Duration engine_frame_time_backup = engine->getFrameTime();
     engine->setFrameTime( util::fromSeconds(timeStep) );
 
-    engine->engine_lua.doTasks(engine_frame_time_backup);
+    engine->m_scriptEngine.doTasks(engine_frame_time_backup);
     Game_UpdateAI();
     engine->m_world.m_audioEngine.updateAudio();
 
@@ -113,8 +113,8 @@ void internalTickCallback(btDynamicsWorld *world, float /*timeStep*/)
     // Update all physics object's transform/room:
     for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
     {
-        BOOST_ASSERT(i >= 0 && i < engine->bullet.dynamicsWorld->getCollisionObjectArray().size());
-        btCollisionObject* obj = engine->bullet.dynamicsWorld->getCollisionObjectArray()[i];
+        BOOST_ASSERT(i >= 0 && i < engine->m_bullet.dynamicsWorld->getCollisionObjectArray().size());
+        btCollisionObject* obj = engine->m_bullet.dynamicsWorld->getCollisionObjectArray()[i];
         btRigidBody* body = btRigidBody::upcast(obj);
         if(body && !body->isStaticObject() && body->getMotionState())
         {

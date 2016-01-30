@@ -8,7 +8,7 @@ namespace world
 {
 bool RagdollSetup::getSetup(engine::Engine& engine, int ragdoll_index)
 {
-    lua::Value rds = engine.engine_lua["getRagdollSetup"](ragdoll_index);
+    lua::Value rds = engine.m_scriptEngine["getRagdollSetup"](ragdoll_index);
     if(!rds.is<lua::Table>())
         return false;
 

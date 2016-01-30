@@ -38,11 +38,11 @@ namespace world
 {
 void Res_SetEntityProperties(std::shared_ptr<Entity> ent)
 {
-    if(ent->m_skeleton.getModel() == nullptr || !ent->getWorld()->m_engine->engine_lua["getEntityModelProperties"].is<lua::Callable>())
+    if(ent->m_skeleton.getModel() == nullptr || !ent->getWorld()->m_engine->m_scriptEngine["getEntityModelProperties"].is<lua::Callable>())
         return;
 
     int collisionType, collisionShape, flg;
-    lua::tie(collisionType, collisionShape, ent->m_visible, flg) = ent->getWorld()->m_engine->engine_lua.call("getEntityModelProperties", static_cast<int>(ent->getWorld()->m_engineVersion), ent->m_skeleton.getModel()->getId());
+    lua::tie(collisionType, collisionShape, ent->m_visible, flg) = ent->getWorld()->m_engine->m_scriptEngine.call("getEntityModelProperties", static_cast<int>(ent->getWorld()->m_engineVersion), ent->m_skeleton.getModel()->getId());
     ent->setCollisionType(static_cast<CollisionType>(collisionType));
     ent->setCollisionShape(static_cast<CollisionShape>(collisionShape));
 
@@ -55,9 +55,9 @@ void Res_SetEntityFunction(std::shared_ptr<Entity> ent)
     if(!ent->m_skeleton.getModel())
         return;
 
-    auto funcName = ent->getWorld()->m_engine->engine_lua.call("getEntityFunction", static_cast<int>(ent->getWorld()->m_engineVersion), ent->m_skeleton.getModel()->getId()).toString();
+    auto funcName = ent->getWorld()->m_engine->m_scriptEngine.call("getEntityFunction", static_cast<int>(ent->getWorld()->m_engineVersion), ent->m_skeleton.getModel()->getId()).toString();
     if(!funcName.empty())
-        Res_CreateEntityFunc(ent->getWorld()->m_engine->engine_lua, funcName, ent->getId());
+        Res_CreateEntityFunc(ent->getWorld()->m_engine->m_scriptEngine, funcName, ent->getId());
 }
 
 void Res_CreateEntityFunc(script::ScriptEngine& state, const std::string& func_name, ObjectId entity_id)
@@ -80,7 +80,7 @@ void Res_SetStaticMeshProperties(std::shared_ptr<StaticMesh> r_static)
 {
     int _collision_type, _collision_shape;
     bool _hide;
-    lua::tie(_collision_type, _collision_shape, _hide) = r_static->getWorld()->m_engine->engine_lua.call("getStaticMeshProperties", r_static->getId());
+    lua::tie(_collision_type, _collision_shape, _hide) = r_static->getWorld()->m_engine->m_scriptEngine.call("getStaticMeshProperties", r_static->getId());
 
     if(_collision_type <= 0)
         return;
@@ -555,7 +555,7 @@ int TR_Sector_TranslateFloorData(World& world, RoomSector& sector, const loader:
                             if(world.m_engineVersion < loader::Engine::TR2)
                             {
                                 audio::StreamType looped;
-                                world.m_engine->engine_lua.getSoundtrack(operands, nullptr, nullptr, &looped);
+                                world.m_engine->m_scriptEngine.getSoundtrack(operands, nullptr, nullptr, &looped);
                                 if(looped == audio::StreamType::Background)
                                     break;
                             }
@@ -689,7 +689,7 @@ int TR_Sector_TranslateFloorData(World& world, RoomSector& sector, const loader:
                 if(action_type != ActionType::Bypass)
                 {
                     // Sys_DebugLog("triggers.lua", script);    // Debug!
-                    world.m_engine->engine_lua.doString(script);
+                    world.m_engine->m_scriptEngine.doString(script);
                 }
             }
             break;
@@ -901,7 +901,7 @@ void Res_AutoexecOpen(World& world, loader::Game engine_version)
     {
         try
         {
-            world.m_engine->engine_lua.doFile(autoexecScript);
+            world.m_engine->m_scriptEngine.doFile(autoexecScript);
         }
         catch(lua::RuntimeError& error)
         {
@@ -919,7 +919,7 @@ void TR_GenWorld(World& world, const std::unique_ptr<loader::Level>& tr)
     world.m_engineVersion = loader::gameToEngine(tr->m_gameVersion);
 
     Res_AutoexecOpen(world, tr->m_gameVersion);    // Open and do preload autoexec.
-    world.m_engine->engine_lua.call("autoexec_PreLoad");
+    world.m_engine->m_scriptEngine.call("autoexec_PreLoad");
     world.m_engine->m_gui.drawLoadScreen(150);
 
     Res_GenRBTrees(world);
@@ -982,8 +982,8 @@ void TR_GenWorld(World& world, const std::unique_ptr<loader::Level>& tr)
     Res_GenVBOs(world);
     world.m_engine->m_gui.drawLoadScreen(950);
 
-    world.m_engine->engine_lua.doFile("scripts/autoexec.lua");  // Postload autoexec.
-    world.m_engine->engine_lua.call("autoexec_PostLoad");
+    world.m_engine->m_scriptEngine.doFile("scripts/autoexec.lua");  // Postload autoexec.
+    world.m_engine->m_scriptEngine.call("autoexec_PostLoad");
     world.m_engine->m_gui.drawLoadScreen(960);
 
     Res_FixRooms(world);                        // Fix initial room states
@@ -1212,7 +1212,7 @@ void TR_GenAnimTextures(World& world, const std::unique_ptr<loader::Level>& tr)
         // applied to the same sequence, but there we specify compatibility
         // method for TR4-5.
 
-        world.m_engine->engine_lua["UVRotate"].get(uvrotate_script);
+        world.m_engine->m_scriptEngine["UVRotate"].get(uvrotate_script);
 
         if(i < num_uvrotates)
         {
@@ -1620,7 +1620,7 @@ void Res_GenVBOs(World& world)
 
 void Res_GenBaseItems(World& world)
 {
-    world.m_engine->engine_lua["genBaseItems"]();
+    world.m_engine->m_scriptEngine["genBaseItems"]();
 
     if(!world.m_items.empty())
     {
@@ -1825,11 +1825,11 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
 
         if(entity->m_skeleton.getModel() == nullptr)
         {
-            ModelId id = world.m_engine->engine_lua.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id).to<ModelId>();
+            ModelId id = world.m_engine->m_scriptEngine.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id).to<ModelId>();
             entity->m_skeleton.setModel(world.getModelByID(id));
         }
 
-        lua::Value replace_anim_id = world.m_engine->engine_lua.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
+        lua::Value replace_anim_id = world.m_engine->m_scriptEngine.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
         if(!replace_anim_id.isNil())
         {
             auto replace_anim_model = world.getModelByID(replace_anim_id.to<ModelId>());
@@ -1880,7 +1880,7 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
         lara->setCollisionShape(CollisionShape::TriMeshConvex);
         lara->m_typeFlags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
 
-        world.m_engine->engine_lua.set("player", lara->getId());
+        world.m_engine->m_scriptEngine.set("player", lara->getId());
 
         std::shared_ptr<SkeletalModel> laraModel = world.getModelByID(0);
         laraModel->patchLaraSkin(world, loader::gameToEngine(tr->m_gameVersion));
@@ -1909,10 +1909,10 @@ void Res_EntityToItem(World& world)
                 if(ent->m_skeleton.getModel()->getId() != item->world_model_id)
                     continue;
 
-                if(world.m_engine->engine_lua["entity_funcs"][ent->getId()].is<lua::Nil>())
-                    world.m_engine->engine_lua["entity_funcs"].set(ent->getId(), lua::Table());
+                if(world.m_engine->m_scriptEngine["entity_funcs"][ent->getId()].is<lua::Nil>())
+                    world.m_engine->m_scriptEngine["entity_funcs"].set(ent->getId(), lua::Table());
 
-                world.m_engine->engine_lua["pickup_init"](ent->getId(), item->getId());
+                world.m_engine->m_scriptEngine["pickup_init"](ent->getId(), item->getId());
 
                 ent->m_skeleton.disableCollision();
             }

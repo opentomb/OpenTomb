@@ -16,13 +16,13 @@ int main(int /*argc*/, char** /*argv*/)
 
     util::TimePoint prev_time = util::now();
 
-    while(!engine.done)
+    while(!engine.m_done)
     {
-        BOOST_ASSERT(engine.time_scale > 0);
+        BOOST_ASSERT(engine.m_timeScale > 0);
 
         util::TimePoint now = util::now();
         util::Duration delta = now - prev_time;
-        delta *= engine.time_scale;
+        delta *= engine.m_timeScale;
 
         if(delta.count() <= 0)
         {

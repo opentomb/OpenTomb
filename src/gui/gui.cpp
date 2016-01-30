@@ -87,7 +87,7 @@ void Gui::render()
     glDepthMask(GL_FALSE);
 
     glDisable(GL_DEPTH_TEST);
-    if(m_engine->screen_info.show_debuginfo)
+    if(m_engine->m_screenInfo.show_debuginfo)
         m_engine->renderer.drawCrosshair();
     m_progressBars.draw(m_engine->m_world);
     m_faders.drawFaders();
@@ -109,8 +109,8 @@ void Gui::switchGLMode(bool is_gui)
         const glm::float_t near_dist = -1.0f;
 
         m_guiProjectionMatrix = glm::mat4(1.0f);                                        // identity matrix
-        m_guiProjectionMatrix[0][0] = 2.0f / static_cast<glm::float_t>(m_engine->screen_info.w);
-        m_guiProjectionMatrix[1][1] = 2.0f / static_cast<glm::float_t>(m_engine->screen_info.h);
+        m_guiProjectionMatrix[0][0] = 2.0f / static_cast<glm::float_t>(m_engine->m_screenInfo.w);
+        m_guiProjectionMatrix[1][1] = 2.0f / static_cast<glm::float_t>(m_engine->m_screenInfo.h);
         m_guiProjectionMatrix[2][2] = -2.0f / (far_dist - near_dist);
         m_guiProjectionMatrix[3][0] = -1.0f;
         m_guiProjectionMatrix[3][1] = -1.0f;
@@ -150,7 +150,7 @@ void Gui::drawInventory()
     glm::vec4 upper_color{ 0, 0, 0, 0.45f };
     glm::vec4 lower_color{ 0, 0, 0, 0.75f };
 
-    drawRect(0.0, 0.0, static_cast<glm::float_t>(m_engine->screen_info.w), static_cast<glm::float_t>(m_engine->screen_info.h),
+    drawRect(0.0, 0.0, static_cast<glm::float_t>(m_engine->m_screenInfo.w), static_cast<glm::float_t>(m_engine->m_screenInfo.h),
              upper_color, upper_color, lower_color, lower_color,
              loader::BlendingMode::Opaque);
 
@@ -247,8 +247,8 @@ void Gui::drawRect(glm::float_t x, glm::float_t y,
     rectColors[3] = colorUpperLeft;
     glUnmapBuffer(GL_ARRAY_BUFFER);
 
-    const glm::vec2 offset{ x / (m_engine->screen_info.w*0.5f) - 1.f, y / (m_engine->screen_info.h*0.5f) - 1.f };
-    const glm::vec2 factor{ width / m_engine->screen_info.w * 2.0f, height / m_engine->screen_info.h * 2.0f };
+    const glm::vec2 offset{ x / (m_engine->m_screenInfo.w*0.5f) - 1.f, y / (m_engine->m_screenInfo.h*0.5f) - 1.f };
+    const glm::vec2 factor{ width / m_engine->m_screenInfo.w * 2.0f, height / m_engine->m_screenInfo.h * 2.0f };
 
     render::GuiShaderDescription *shader = m_engine->renderer.shaderManager()->getGuiShader(texture != 0);
     glUseProgram(shader->program);

@@ -66,7 +66,7 @@ ot_find_dependency(OpenAL)
 target_include_directories(OpenAL INTERFACE ${OPENAL_INCLUDE_DIR})
 target_link_libraries(OpenAL INTERFACE ${OPENAL_LIBRARY})
 
-option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions." ON)
+option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions (not generally available)." OFF)
 if(USE_OPENAL_FLOAT)
     target_compile_definitions(OpenAL INTERFACE -DAUDIO_OPENAL_FLOAT)
 endif(USE_OPENAL_FLOAT)

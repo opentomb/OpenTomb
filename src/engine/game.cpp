@@ -94,35 +94,35 @@ void lua_debuginfo(Engine& engine, lua::Value show)
 {
     if(!show.is<lua::Boolean>())
     {
-        engine.screen_info.show_debuginfo = !engine.screen_info.show_debuginfo;
+        engine.m_screenInfo.show_debuginfo = !engine.m_screenInfo.show_debuginfo;
     }
     else
     {
-        engine.screen_info.show_debuginfo = show.toBool();
+        engine.m_screenInfo.show_debuginfo = show.toBool();
     }
 
-    engine.m_gui.getConsole().printf("debug info = %d", engine.screen_info.show_debuginfo);
+    engine.m_gui.getConsole().printf("debug info = %d", engine.m_screenInfo.show_debuginfo);
 }
 
 void lua_timescale(Engine& engine, lua::Value scale)
 {
     if(!scale.is<lua::Number>())
     {
-        if(util::fuzzyOne(engine.time_scale))
+        if(util::fuzzyOne(engine.m_timeScale))
         {
-            engine.time_scale = 0.033f;
+            engine.m_timeScale = 0.033f;
         }
         else
         {
-            engine.time_scale = 1.0;
+            engine.m_timeScale = 1.0;
         }
     }
     else
     {
-        engine.time_scale = scale.toFloat();
+        engine.m_timeScale = scale.toFloat();
     }
 
-    engine.m_gui.getConsole().printf("time_scale = %.3f", engine.time_scale);
+    engine.m_gui.getConsole().printf("time_scale = %.3f", engine.m_timeScale);
 }
 
 void Game_InitGlobals(Engine& engine)
@@ -161,10 +161,10 @@ bool Game_Load(Engine& engine, const std::string& name)
             return 0;
         }
         fclose(f);
-        engine.engine_lua.clearTasks();
+        engine.m_scriptEngine.clearTasks();
         try
         {
-            engine.engine_lua.doFile(token);
+            engine.m_scriptEngine.doFile(token);
         }
         catch(lua::RuntimeError& error)
         {
@@ -184,10 +184,10 @@ bool Game_Load(Engine& engine, const std::string& name)
             return 0;
         }
         fclose(f);
-        engine.engine_lua.clearTasks();
+        engine.m_scriptEngine.clearTasks();
         try
         {
-            engine.engine_lua.doFile(name);
+            engine.m_scriptEngine.doFile(name);
         }
         catch(lua::RuntimeError& error)
         {
@@ -334,9 +334,9 @@ bool Game_Save(Engine& engine, const std::string& name)
     }
 
     f << boost::format("loadMap(\"%s\", %d, %d);\n")
-        % engine.gameflow.getLevelPath()
-        % engine.gameflow.getGameID()
-        % engine.gameflow.getLevelID();
+        % engine.m_gameflow.getLevelPath()
+        % engine.m_gameflow.getGameID()
+        % engine.m_gameflow.getLevelID();
 
     // Save flipmap and flipped room states.
 
@@ -441,7 +441,7 @@ bool Cam_HasHit(Engine& engine, std::shared_ptr<BtEngineClosestConvexResultCallb
     cameraSphere.setMargin(COLLISION_MARGIN_DEFAULT);
     cb->m_closestHitFraction = 1.0;
     cb->m_hitCollisionObject = nullptr;
-    engine.bullet.dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
+    engine.m_bullet.dynamicsWorld->convexSweepTest(&cameraSphere, cameraFrom, cameraTo, *cb);
     return cb->hasHit();
 }
 
@@ -640,7 +640,7 @@ void Game_Frame(Engine& engine, util::Duration time)
     // TODO: decouple cam movement
     Game_ApplyControls(engine);
 
-    engine.bullet.dynamicsWorld->stepSimulation(util::toSeconds(time), MAX_SIM_SUBSTEPS, util::toSeconds(world::animation::GameLogicFrameTime));
+    engine.m_bullet.dynamicsWorld->stepSimulation(util::toSeconds(time), MAX_SIM_SUBSTEPS, util::toSeconds(world::animation::GameLogicFrameTime));
 
     if(engine.m_world.m_character)
     {
@@ -690,15 +690,15 @@ void Game_Prepare(Engine& engine)
     // Set gameflow parameters to default.
     // Reset secret trigger map.
 
-    engine.gameflow.resetSecretStatus();
+    engine.m_gameflow.resetSecretStatus();
 }
 
 void Game_LevelTransition(Engine& engine, const boost::optional<int>& level)
 {
     if(level)
-        engine.m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, engine.engine_lua.getLoadingScreen(*level));
+        engine.m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, engine.m_scriptEngine.getLoadingScreen(*level));
     else
-        engine.m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, engine.engine_lua.getLoadingScreen(engine.gameflow.getLevelID()));
+        engine.m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, engine.m_scriptEngine.getLoadingScreen(engine.m_gameflow.getLevelID()));
     engine.m_gui.m_faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
     engine.m_world.m_audioEngine.endStreams();
