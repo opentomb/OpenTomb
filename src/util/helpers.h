@@ -5,6 +5,7 @@
 
 #include <boost/log/trivial.hpp>
 #include <boost/type_index.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include <cstdint>
 #include <chrono>
@@ -66,6 +67,24 @@ constexpr inline util::Duration fromSeconds(FloatDuration d) noexcept
 inline TimePoint now() noexcept
 {
     return ClockType::now();
+}
+
+template<typename T>
+inline T getSetting(boost::property_tree::ptree& ptree, const char* path, const T& defaultValue)
+{
+    T result = ptree.get<T>(path, defaultValue);
+    ptree.put(path, defaultValue);
+    return result;
+}
+
+inline boost::property_tree::ptree& getSettingChild(boost::property_tree::ptree& ptree, const char* path)
+{
+    if(!ptree.get_child_optional(path))
+    {
+        ptree.add_child(path, boost::property_tree::ptree());
+    }
+
+    return ptree.get_child(path);
 }
 
 class LifetimeTracker final

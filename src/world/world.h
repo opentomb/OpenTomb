@@ -353,8 +353,6 @@ public:
 
     std::vector<int16_t> m_animCommands;
 
-    audio::Engine m_audioEngine;
-
     void updateAnimTextures();
     glm::vec4 calculateWaterTint() const;
 

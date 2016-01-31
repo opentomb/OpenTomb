@@ -147,6 +147,30 @@ struct RenderSettings
     float     fog_end_depth = 16000;
 
     bool      use_gl3 = false;
+
+    explicit RenderSettings(boost::property_tree::ptree& config)
+    {
+        lod_bias = util::getSetting(config, "lodBias", 0.0f);
+        mipmap_mode = util::getSetting(config, "mipmapMode", 3);
+        mipmaps = util::getSetting(config, "mipmaps", 3);
+        anisotropy = util::getSetting(config, "anisotropy", 0);
+        antialias = util::getSetting(config, "antialias", false);
+        antialias_samples = util::getSetting(config, "antialiasSamples", 0);
+        texture_border = util::getSetting(config, "textureBorder", 8);
+        save_texture_memory = util::getSetting(config, "saveTextureMemory", false);
+        z_depth = util::getSetting(config, "zDepth", 16);
+        fog_enabled = util::getSetting(config, "fogEnabled", true);
+        fog_color.r = util::getSetting(config, "fogColor.r", 0.0f);
+        fog_color.g = util::getSetting(config, "fogColor.g", 0.0f);
+        fog_color.b = util::getSetting(config, "fogColor.b", 0.0f);
+        fog_color.a = util::getSetting(config, "fogColor.a", 1.0f);
+        fog_start_depth = util::getSetting(config, "fogStartDepth", 10000.0f);
+        fog_end_depth = util::getSetting(config, "fogEndDepth", 16000.0f);
+        use_gl3 = util::getSetting(config, "useGl3", false);
+
+        if(z_depth != 8 && z_depth != 16 && z_depth != 24)
+            z_depth = 24;
+    }
 };
 
 struct UnlitTintedShaderDescription;
@@ -184,7 +208,7 @@ class Render
     bool m_drawSkybox = false;
     bool m_drawPoints = false;
 public:
-    explicit Render(engine::Engine* engine);
+    explicit Render(engine::Engine* engine, boost::property_tree::ptree& config);
     ~Render();
 
     void cleanList();
@@ -192,7 +216,6 @@ public:
     void drawList();
     void drawListDebugLines();
     void doShaders();
-    void initGlobals();
     void init();
     void empty();
     bool addRoom(const world::Room *room);

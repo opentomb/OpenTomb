@@ -21,7 +21,6 @@ namespace world
 {
 World::World(engine::Engine* engine)
     : m_engine(engine)
-    , m_audioEngine(engine)
 {
 }
 
@@ -36,7 +35,6 @@ void World::prepare()
     m_items.clear();
     m_character.reset();
 
-    m_audioEngine.clear();
     m_textureAnimations.clear();
 
     m_roomBoxes.clear();
@@ -50,8 +48,6 @@ void World::empty()
 {
     m_engine->m_lastObject = nullptr;
     m_engine->m_scriptEngine.clearTasks();
-
-    m_audioEngine.deInitAudio(); // De-initialize and destroy all audio objects.
 
     if(m_character)
     {

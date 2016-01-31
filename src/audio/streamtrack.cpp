@@ -9,6 +9,7 @@
 #include "strings.h"
 
 #include <boost/log/trivial.hpp>
+#include <boost/current_function.hpp>
 
 using gui::Console;
 
@@ -55,7 +56,7 @@ StreamTrack::StreamTrack(audio::Engine* engine)
 
     if(!alIsSource(m_source))
     {
-        BOOST_LOG_TRIVIAL(error) << __FUNCTION__ ": Could not create source";
+        BOOST_LOG_TRIVIAL(error) << BOOST_CURRENT_FUNCTION << ": Could not create source";
         return;
     }
 
@@ -161,11 +162,11 @@ bool StreamTrack::loadTrack(const char *path)
     m_sndFile = sf_open(path, SFM_READ, &m_sfInfo);
     if(m_sndFile == nullptr)
     {
-        BOOST_LOG_TRIVIAL(debug) << __FUNCTION__ ": Couldn't open '" << path << "': " << sf_strerror(nullptr);
+        BOOST_LOG_TRIVIAL(debug) << BOOST_CURRENT_FUNCTION << ": Couldn't open '" << path << "': " << sf_strerror(nullptr);
 #ifndef NDEBUG
         char buffer[1024];
         buffer[sf_command(nullptr, SFC_GET_LOG_INFO, buffer, 1023)] = 0;
-        BOOST_LOG_TRIVIAL(debug) << __FUNCTION__ ": SndFile log: " << buffer;
+        BOOST_LOG_TRIVIAL(debug) << BOOST_CURRENT_FUNCTION << ": SndFile log: " << buffer;
 #endif
         m_method = StreamMethod::Any;    // T4Larson <t4larson@gmail.com>: stream is uninitialised, avoid clear.
         return false;
@@ -270,7 +271,7 @@ bool StreamTrack::play(FxManager& manager, bool fade_in)
         {
             if(i == 0)
             {
-                BOOST_LOG_TRIVIAL(debug) << __FUNCTION__ ": error preparing buffers";
+                BOOST_LOG_TRIVIAL(debug) << BOOST_CURRENT_FUNCTION << ": error preparing buffers";
                 return false;
             }
             else

@@ -9,6 +9,8 @@
 #include "bullet.h"
 #include "system.h"
 
+#include <boost/property_tree/ptree.hpp>
+
 namespace world
 {
 class Camera;
@@ -76,6 +78,15 @@ struct EngineControlState
     bool     m_useSmallMedi = false;
 
     bool     m_guiInventory = false;
+
+    explicit EngineControlState(boost::property_tree::ptree& config)
+    {
+        m_freeLookSpeed = util::getSetting(config, "freeLookSpeed", 3000.0f);
+        m_mouseLook = util::getSetting(config, "mouseLook", true);
+        m_freeLook = util::getSetting(config, "freeLook", false);
+        m_noClip = util::getSetting(config, "noClip", false);
+        m_camDistance = util::getSetting(config, "camDistance", 800.0f);
+    }
 };
 
 class Engine
@@ -85,7 +96,7 @@ class Engine
     util::Duration m_frameTime = util::Duration(0);
 
 public:
-    explicit Engine();
+    explicit Engine(boost::property_tree::ptree& config);
     ~Engine();
 
     util::Duration getFrameTime() const noexcept
@@ -123,19 +134,17 @@ public:
     SystemSettings m_systemSettings;
     world::Object* m_lastObject = nullptr;
 
+    audio::Engine m_audioEngine;
+
     // Initializers
 
     void initPre();     // Initial init
     void initPost();    // Finalizing init
 
-    void initDefaultGlobals();
+    void registerInputHandlers();
 
     void initGL();
     void initSDLVideo();
-
-    // Config parser
-
-    void initConfig(const std::string &filename);
 
     // Core system routines - display and tick.
 

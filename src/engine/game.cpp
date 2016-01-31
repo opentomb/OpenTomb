@@ -125,15 +125,6 @@ void lua_timescale(Engine& engine, lua::Value scale)
     engine.m_gui.getConsole().printf("time_scale = %.3f", engine.m_timeScale);
 }
 
-void Game_InitGlobals(Engine& engine)
-{
-    engine.m_controlState.m_freeLookSpeed = 3000.0;
-    engine.m_controlState.m_mouseLook = true;
-    engine.m_controlState.m_freeLook = false;
-    engine.m_controlState.m_noClip = false;
-    engine.m_controlState.m_camDistance = 800.0;
-}
-
 void Game_RegisterLuaFunctions(script::ScriptEngine& state)
 {
     state.registerFunction("debuginfo", lua_debuginfo);
@@ -630,7 +621,7 @@ void Game_Frame(Engine& engine, util::Duration time)
     {
         if(game_logic_time >= world::animation::GameLogicFrameTime)
         {
-            engine.m_world.m_audioEngine.updateAudio();
+            engine.m_audioEngine.updateAudio();
             Game_Tick(&game_logic_time);
         }
         return;
@@ -701,6 +692,6 @@ void Game_LevelTransition(Engine& engine, const boost::optional<int>& level)
         engine.m_gui.m_faders.assignPicture(gui::FaderType::LoadScreen, engine.m_scriptEngine.getLoadingScreen(engine.m_gameflow.getLevelID()));
     engine.m_gui.m_faders.start(gui::FaderType::LoadScreen, gui::FaderDir::Out);
 
-    engine.m_world.m_audioEngine.endStreams();
+    engine.m_audioEngine.endStreams();
 }
 } // namespace engine

@@ -122,7 +122,7 @@ void Character::applyControls(engine::EngineControlState& controlState, const Mo
         {
             setParam(CharParameterId::PARAM_POISON, 0);
             removeItem(ITEM_SMALL_MEDIPACK, 1);
-            getWorld()->m_audioEngine.send(audio::SoundMedipack);
+            getWorld()->m_engine->m_audioEngine.send(audio::SoundMedipack);
         }
 
         controlState.m_useSmallMedi = !controlState.m_useSmallMedi;
@@ -135,7 +135,7 @@ void Character::applyControls(engine::EngineControlState& controlState, const Mo
         {
             setParam(CharParameterId::PARAM_POISON, 0);
             removeItem(ITEM_LARGE_MEDIPACK, 1);
-            getWorld()->m_audioEngine.send(audio::SoundMedipack);
+            getWorld()->m_engine->m_audioEngine.send(audio::SoundMedipack);
         }
 
         controlState.m_useBigMedi = !controlState.m_useBigMedi;

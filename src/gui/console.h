@@ -8,6 +8,7 @@
 #include <list>
 
 #include <boost/optional.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 namespace gui
 {
@@ -77,15 +78,13 @@ class Console
     std::vector<std::string> m_completionItems{};
 
 public:
-    explicit Console(engine::Engine* engine);
+    explicit Console(engine::Engine* engine, boost::property_tree::ptree& config);
 
     void init();
 
     ~Console() = default;
 
     void initFonts();
-
-    void initGlobals();
 
     void draw();
 

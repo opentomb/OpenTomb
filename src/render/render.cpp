@@ -42,17 +42,13 @@ namespace render
 {
 using gui::Console;
 
-Render::Render(engine::Engine* engine)
+Render::Render(engine::Engine* engine, boost::property_tree::ptree& config)
     : m_engine(engine)
+    , m_settings(config)
 {
 }
 
 Render::~Render() = default;
-
-void Render::initGlobals()
-{
-    m_settings = RenderSettings();
-}
 
 void Render::doShaders()
 {

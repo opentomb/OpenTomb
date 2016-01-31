@@ -356,7 +356,7 @@ void SkeletalModel::loadAnimations(const loader::Level& level, size_t moveable)
         }
 
         anim->id = i;
-        BOOST_LOG_TRIVIAL(debug) << "Anim " << i << " stretch factor = " << int(trAnimation.stretchFactor) << ", frame count = " << (trAnimation.lastFrame - trAnimation.firstFrame + 1);
+        // BOOST_LOG_TRIVIAL(debug) << "Anim " << i << " stretch factor = " << int(trAnimation.stretchFactor) << ", frame count = " << (trAnimation.lastFrame - trAnimation.firstFrame + 1);
 
         anim->speed_x = trAnimation.speed;
         anim->accel_x = trAnimation.accel;
@@ -492,32 +492,32 @@ void SkeletalModel::loadAnimations(const loader::Level& level, size_t moveable)
     }
 }
 
-size_t SkeletalModel::getAnimationCountForMoveable(const loader::Level& level, size_t moveable)
+size_t SkeletalModel::getAnimationCountForMoveable(const loader::Level& level, size_t modelIndex)
 {
-    BOOST_ASSERT(moveable < level.m_animatedModels.size());
-    const std::unique_ptr<loader::AnimatedModel>& curr_moveable = level.m_animatedModels[moveable];
+    BOOST_ASSERT(modelIndex < level.m_animatedModels.size());
+    const std::unique_ptr<loader::AnimatedModel>& currModel = level.m_animatedModels[modelIndex];
 
-    if(curr_moveable->animation_index == 0xFFFF)
+    if(currModel->animation_index == 0xFFFF)
     {
         return 0;
     }
 
-    if(moveable == level.m_animatedModels.size() - 1)
+    if(modelIndex == level.m_animatedModels.size() - 1)
     {
-        if(level.m_animations.size() < curr_moveable->animation_index)
+        if(level.m_animations.size() < currModel->animation_index)
         {
             return 1;
         }
 
-        return level.m_animations.size() - curr_moveable->animation_index;
+        return level.m_animations.size() - currModel->animation_index;
     }
 
-    const loader::AnimatedModel* next_moveable = level.m_animatedModels[moveable + 1].get();
-    if(next_moveable->animation_index == 0xFFFF)
+    const loader::AnimatedModel* nextModel = level.m_animatedModels[modelIndex + 1].get();
+    if(nextModel->animation_index == 0xFFFF)
     {
-        if(moveable + 2 < level.m_animatedModels.size())                              // I hope there is no two neighboard movables with animation_index'es == 0xFFFF
+        if(modelIndex + 2 < level.m_animatedModels.size())                              // I hope there is no two neighboard movables with animation_index'es == 0xFFFF
         {
-            next_moveable = level.m_animatedModels[moveable + 2].get();
+            nextModel = level.m_animatedModels[modelIndex + 2].get();
         }
         else
         {
@@ -525,7 +525,7 @@ size_t SkeletalModel::getAnimationCountForMoveable(const loader::Level& level, s
         }
     }
 
-    return std::min(static_cast<size_t>(next_moveable->animation_index), level.m_animations.size()) - curr_moveable->animation_index;
+    return std::min(static_cast<size_t>(nextModel->animation_index), level.m_animations.size()) - currModel->animation_index;
 }
 
 void SkeletalModel::patchLaraSkin(World& world, loader::Engine engineVersion)

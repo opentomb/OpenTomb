@@ -15,6 +15,7 @@ namespace engine
 class Engine;
 
 //! Action mapper index constants
+//! @todo Expose to Lua and remove scripts/config/control_constants.lua
 enum class InputAction
 {
     // Movement directions
@@ -80,7 +81,7 @@ class InputHandler
 {
     TRACK_LIFETIME();
 public:
-    explicit InputHandler(Engine* engine);
+    explicit InputHandler(Engine* engine, boost::property_tree::ptree& config);
 
     ~InputHandler();
 
@@ -142,41 +143,7 @@ public:
         return m_actionStates[action];
     }
 
-    void configureMouse(float scaleX = 0.01f, float scaleY = 0.01f, float sensitivity = 25.0f)
-    {
-        m_mouseSensitivity = sensitivity;
-        m_mouseScale = { scaleX, scaleY };
-    }
-
     void configureControllers(int controllerId, bool useJoystick, bool useHaptic);
-
-    void configureDeadzones(int look, int move)
-    {
-        m_joystickLookConfig.deadzone = look;
-        m_joystickMoveConfig.deadzone = move;
-    }
-
-    void configureSensitivities(float look, float move)
-    {
-        m_joystickLookConfig.sensitivity = look;
-        m_joystickMoveConfig.sensitivity = move;
-    }
-
-    void configureLookAxes(int xAxis, bool invertX, int yAxis, bool invertY)
-    {
-        m_joystickLookConfig.xAxis = xAxis;
-        m_joystickLookConfig.invertX = invertX;
-        m_joystickLookConfig.yAxis = yAxis;
-        m_joystickLookConfig.invertY = invertY;
-    }
-
-    void configureMoveAxes(int xAxis, bool invertX, int yAxis, bool invertY)
-    {
-        m_joystickMoveConfig.xAxis = xAxis;
-        m_joystickMoveConfig.invertX = invertX;
-        m_joystickMoveConfig.yAxis = yAxis;
-        m_joystickMoveConfig.invertY = invertY;
-    }
 
     void rumble(float power, util::Duration time);
 

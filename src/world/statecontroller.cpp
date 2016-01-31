@@ -281,8 +281,8 @@ void StateController::handle(LaraState state)
 
     if(m_character->m_response.killed)  // Stop any music, if Lara is dead.
     {
-        m_character->getWorld()->m_audioEngine.endStreams(audio::StreamType::Oneshot);
-        m_character->getWorld()->m_audioEngine.endStreams(audio::StreamType::Chat);
+        m_character->getWorld()->m_engine->m_audioEngine.endStreams(audio::StreamType::Oneshot);
+        m_character->getWorld()->m_engine->m_audioEngine.endStreams(audio::StreamType::Chat);
     }
 
     auto it = m_handlers.find(state);
@@ -381,7 +381,7 @@ void StateController::stop()
     }
     else if(m_character->m_response.slide == MovementWalk::Forward)
     {
-        m_character->getWorld()->m_audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
+        m_character->getWorld()->m_engine->m_audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
 
         if(m_character->m_command.jump)
         {
@@ -399,7 +399,7 @@ void StateController::stop()
         {
             m_character->m_moveDir = MoveDirection::Backward;
             m_character->setAnimation(animation::TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
-            m_character->getWorld()->m_audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
+            m_character->getWorld()->m_engine->m_audioEngine.send(audio::SoundLanding, audio::EmitterType::Entity, m_character->getId());
         }
         else
         {
@@ -1440,7 +1440,7 @@ void StateController::slideBack()
         return;
     }
 
-    m_character->getWorld()->m_audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
+    m_character->getWorld()->m_engine->m_audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
 }
 
 void StateController::slideForward()
@@ -1473,7 +1473,7 @@ void StateController::slideForward()
         return;
     }
 
-    m_character->getWorld()->m_audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
+    m_character->getWorld()->m_engine->m_audioEngine.kill(audio::SoundSliding, audio::EmitterType::Entity, m_character->getId());
 }
 
 void StateController::pushableGrab()
@@ -1567,12 +1567,12 @@ void StateController::pushablePush()
         {
             if(was_traversed)
             {
-                if(!m_character->getWorld()->m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    m_character->getWorld()->m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!m_character->getWorld()->m_engine->m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    m_character->getWorld()->m_engine->m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
             else
             {
-                m_character->getWorld()->m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                m_character->getWorld()->m_engine->m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
         else
@@ -1581,8 +1581,8 @@ void StateController::pushablePush()
                || m_character->m_skeleton.getCurrentFrame() == 110
                || m_character->m_skeleton.getCurrentFrame() == 142)
             {
-                if(!m_character->getWorld()->m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    m_character->getWorld()->m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!m_character->getWorld()->m_engine->m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    m_character->getWorld()->m_engine->m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
 
@@ -1592,7 +1592,7 @@ void StateController::pushablePush()
     {
         if(m_character->getWorld()->m_engineVersion > loader::Engine::TR3)
         {
-            m_character->getWorld()->m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+            m_character->getWorld()->m_engine->m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
         }
     }
 }
@@ -1655,12 +1655,12 @@ void StateController::pushablePull()
         {
             if(was_traversed)
             {
-                if(!m_character->getWorld()->m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    m_character->getWorld()->m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!m_character->getWorld()->m_engine->m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    m_character->getWorld()->m_engine->m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
             else
             {
-                m_character->getWorld()->m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                m_character->getWorld()->m_engine->m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
         else
@@ -1671,8 +1671,8 @@ void StateController::pushablePull()
                || m_character->m_skeleton.getCurrentFrame() == 124
                || m_character->m_skeleton.getCurrentFrame() == 156)
             {
-                if(!m_character->getWorld()->m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
-                    m_character->getWorld()->m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+                if(!m_character->getWorld()->m_engine->m_audioEngine.findSource(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId()))
+                    m_character->getWorld()->m_engine->m_audioEngine.send(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
             }
         }
 
@@ -1682,7 +1682,7 @@ void StateController::pushablePull()
     {
         if(m_character->getWorld()->m_engineVersion > loader::Engine::TR3)
         {
-            m_character->getWorld()->m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
+            m_character->getWorld()->m_engine->m_audioEngine.kill(audio::SoundPushable, audio::EmitterType::Entity, m_character->getId());
         }
     }
 }
@@ -2350,7 +2350,7 @@ void StateController::freefall()
        int(m_character->m_speed[2]) >= -FREE_FALL_SPEED_CRITICAL - 100)
     {
         m_character->m_speed[2] = -FREE_FALL_SPEED_CRITICAL - 101;
-        m_character->getWorld()->m_audioEngine.send(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Scream
+        m_character->getWorld()->m_engine->m_audioEngine.send(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Scream
     }
     else if(m_character->m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
     {
@@ -2365,12 +2365,12 @@ void StateController::freefall()
         m_character->m_command.rot[1] = 0.0;
         m_character->updateTransform();                                     // needed here to fix underwater in wall collision bug
         m_character->setAnimation(animation::TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
-        m_character->getWorld()->m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Stop scream
+        m_character->getWorld()->m_engine->m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());       // Stop scream
 
         // Splash sound is hardcoded, beginning with TR3.
         if(m_character->getWorld()->m_engineVersion > loader::Engine::TR2)
         {
-            m_character->getWorld()->m_audioEngine.send(audio::SoundSplash, audio::EmitterType::Entity, m_character->getId());
+            m_character->getWorld()->m_engine->m_audioEngine.send(audio::SoundSplash, audio::EmitterType::Entity, m_character->getId());
         }
     }
     else if((m_character->m_response.vertical_collide & 0x01) || m_character->m_moveType == MoveType::OnFloor)
@@ -2378,7 +2378,7 @@ void StateController::freefall()
         if(m_character->getRoom()->getFlags() & TR_ROOM_FLAG_QUICKSAND)
         {
             m_character->setAnimation(animation::TR_ANIMATION_LARA_STAY_IDLE, 0);
-            m_character->getWorld()->m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
+            m_character->getWorld()->m_engine->m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
         }
         else if(m_character->m_speed[2] <= -FREE_FALL_SPEED_MAXSAFE)
         {
@@ -2405,7 +2405,7 @@ void StateController::freefall()
         if(m_character->m_response.killed)
         {
             setNextState(LaraState::Death);
-            m_character->getWorld()->m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
+            m_character->getWorld()->m_engine->m_audioEngine.kill(audio::SoundLaraScream, audio::EmitterType::Entity, m_character->getId());
         }
     }
     else if(m_character->m_command.action)

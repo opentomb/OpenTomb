@@ -173,13 +173,6 @@ public:
     void exposeConstants();
     std::vector<std::string> getGlobals();
 
-    void parseScreen(engine::ScreenInfo& sc) const;
-    void parseRender(render::RenderSettings& rs) const;
-    void parseAudio(audio::Settings& as) const;
-    void parseConsole(gui::Console& cn) const;
-    void parseControls(engine::InputHandler& cs) const;
-    void parseSystem(engine::SystemSettings& ss) const;
-
 protected:
     void checkStack();
 

@@ -19,7 +19,7 @@ struct Gui
     Console m_console;
 
 public:
-    explicit Gui(engine::Engine* engine);
+    explicit Gui(engine::Engine* engine, boost::property_tree::ptree& config);
     ~Gui();
 
     ProgressbarManager m_progressBars;

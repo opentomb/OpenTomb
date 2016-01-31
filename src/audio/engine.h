@@ -52,8 +52,23 @@ enum class StreamError
 class Engine
 {
     TRACK_LIFETIME();
+
+    struct DeviceManager
+    {
+        TRACK_LIFETIME();
+
+        explicit DeviceManager(Engine* engine);
+        ~DeviceManager();
+
+    private:
+        Engine* m_engine;
+        ALCdevice* m_device = nullptr;
+        ALCcontext* m_context = nullptr;
+    };
+
 public:
-    explicit Engine(engine::Engine* engine);
+    explicit Engine(engine::Engine* engine, boost::property_tree::ptree& config);
+    ~Engine();
 
     engine::Engine* getEngine() const
     {
@@ -78,7 +93,6 @@ public:
     // call this one.
     StreamError streamPlay(const uint32_t track_index, const uint8_t mask);
     bool deInitDelay();
-    void deInitAudio();
     // If exist, immediately stop and destroy all effects with given parameters.
     Error kill(audio::SoundId soundId, EmitterType entityType = EmitterType::Global, const boost::optional<world::ObjectId>& entityId = boost::none);
     bool isInRange(EmitterType entityType, const boost::optional<world::ObjectId>& entityId, float range, float gain);
@@ -173,19 +187,7 @@ public:
         return m_settings;
     }
 
-    void resetSettings()
-    {
-        m_settings = Settings();
-    }
-
     void loadSampleOverrideInfo();
-
-    FxManager& fxManager()
-    {
-        if(!m_fxManager)
-            BOOST_THROW_EXCEPTION(std::runtime_error("FX Manager not initialized"));
-        return *m_fxManager;
-    }
 
     // MAX_CHANNELS defines maximum amount of sound sources (channels)
     // that can play at the same time. Contemporary devices can play
@@ -202,8 +204,6 @@ public:
     static constexpr int StreamSourceCount = 6;
 
     void init(size_t num_Sources = MaxChannels);
-    void initDevice();
-    void closeDevice();
 
 private:
     // MAP_SIZE is similar to sound map size, but it is used to mark
@@ -216,6 +216,11 @@ private:
     static constexpr int StreamMapSize = 256;
 
     engine::Engine* m_engine;
+    Settings m_settings; // Must be initialized *before* m_fxManager
+    DeviceManager m_deviceManager;
+
+
+    FxManager m_fxManager; // Must be initialized *after* m_settings
 
     std::vector<Emitter> m_emitters;        //!< Audio emitters.
     std::vector<int16_t> m_soundIdMap;       //!< Effect indexes.
@@ -227,13 +232,6 @@ private:
     std::vector<uint8_t> m_trackMap;        //!< Stream track flag map.
 
     glm::vec3 m_listenerPosition = { 0,0,0 };
-
-    Settings m_settings;
-
-    std::unique_ptr<FxManager> m_fxManager{ new FxManager(m_engine) };
-
-    ALCdevice* m_device = nullptr;
-    ALCcontext* m_context = nullptr;
 
     bool loadALbufferFromFile(ALuint buf_number, const std::string& fname);
 };

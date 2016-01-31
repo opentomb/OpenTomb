@@ -2150,24 +2150,24 @@ void lua_PlayStream(engine::Engine& engine, int id, lua::Value mask)
 
     if(!mask.is<lua::Nil>())
     {
-        engine.m_world.m_audioEngine.streamPlay(id, mask.to<uint8_t>());
+        engine.m_audioEngine.streamPlay(id, mask.to<uint8_t>());
     }
     else
     {
-        engine.m_world.m_audioEngine.streamPlay(id, 0);
+        engine.m_audioEngine.streamPlay(id, 0);
     }
 }
 
 void lua_StopStreams(engine::Engine& engine)
 {
-    engine.m_world.m_audioEngine.stopStreams();
+    engine.m_audioEngine.stopStreams();
 }
 
 void lua_PlaySound(engine::Engine& engine, audio::SoundId id, lua::Value ent_id)
 {
-    if(id >= engine.m_world.m_audioEngine.getSoundIdMapSize())
+    if(id >= engine.m_audioEngine.getSoundIdMapSize())
     {
-        engine.m_gui.getConsole().warning(SYSWARN_WRONG_SOUND_ID, engine.m_world.m_audioEngine.getSoundIdMapSize());
+        engine.m_gui.getConsole().warning(SYSWARN_WRONG_SOUND_ID, engine.m_audioEngine.getSoundIdMapSize());
         return;
     }
 
@@ -2181,11 +2181,11 @@ void lua_PlaySound(engine::Engine& engine, audio::SoundId id, lua::Value ent_id)
 
     if(eid)
     {
-        result = engine.m_world.m_audioEngine.send(id, audio::EmitterType::Entity, eid);
+        result = engine.m_audioEngine.send(id, audio::EmitterType::Entity, eid);
     }
     else
     {
-        result = engine.m_world.m_audioEngine.send(id, audio::EmitterType::Global);
+        result = engine.m_audioEngine.send(id, audio::EmitterType::Global);
     }
 
     switch(result)
@@ -2205,9 +2205,9 @@ void lua_PlaySound(engine::Engine& engine, audio::SoundId id, lua::Value ent_id)
 
 void lua_StopSound(engine::Engine& engine, audio::SoundId id, lua::Value ent_id)
 {
-    if(id >= engine.m_world.m_audioEngine.getSoundIdMapSize())
+    if(id >= engine.m_audioEngine.getSoundIdMapSize())
     {
-        engine.m_gui.getConsole().warning(SYSWARN_WRONG_SOUND_ID, engine.m_world.m_audioEngine.getSoundIdMapSize());
+        engine.m_gui.getConsole().warning(SYSWARN_WRONG_SOUND_ID, engine.m_audioEngine.getSoundIdMapSize());
         return;
     }
 
@@ -2221,11 +2221,11 @@ void lua_StopSound(engine::Engine& engine, audio::SoundId id, lua::Value ent_id)
 
     if(!eid)
     {
-        result = engine.m_world.m_audioEngine.kill(id, audio::EmitterType::Global);
+        result = engine.m_audioEngine.kill(id, audio::EmitterType::Global);
     }
     else
     {
-        result = engine.m_world.m_audioEngine.kill(id, audio::EmitterType::Entity, eid);
+        result = engine.m_audioEngine.kill(id, audio::EmitterType::Entity, eid);
     }
 
     if(result == audio::Error::NoSample || result == audio::Error::NoChannel)
@@ -3467,130 +3467,4 @@ void script::MainEngine::loopEntity(world::ObjectId object_id)
 void script::MainEngine::execEffect(int id, const boost::optional<world::ObjectId>& caller, const boost::optional<world::ObjectId>& operand)
 {
     call("execFlipeffect", id, caller ? *caller : -1, operand ? *operand : -1);
-}
-
-// Parsing config file entries.
-
-void script::ScriptEngine::parseControls(engine::InputHandler& cs) const
-{
-    cs.configureMouse(
-                (*this)["controls"]["mouse_scale_x"].toFloat(),
-                (*this)["controls"]["mouse_scale_y"].toFloat(),
-                (*this)["controls"]["mouse_sensitivity"].toFloat()
-                );
-
-    cs.configureControllers(
-                (*this)["controls"]["joy_number"].to<int>(),
-                (*this)["controls"]["use_joy"].toBool(),
-                (*this)["controls"]["joy_rumble"].toBool()
-                );
-
-    cs.configureDeadzones(
-                (*this)["controls"]["joy_look_deadzone"].to<int>(),
-                (*this)["controls"]["joy_move_deadzone"].to<int>()
-                );
-    cs.configureSensitivities(
-                (*this)["controls"]["joy_look_sensitivity"].to<float>(),
-                (*this)["controls"]["joy_move_sensitivity"].to<float>()
-                );
-
-    cs.configureLookAxes(
-                (*this)["controls"]["joy_look_axis_x"].to<int>(),
-                (*this)["controls"]["joy_look_invert_x"].toBool(),
-                (*this)["controls"]["joy_look_axis_y"].to<int>(),
-                (*this)["controls"]["joy_look_invert_y"].toBool()
-                );
-
-    cs.configureMoveAxes(
-                (*this)["controls"]["joy_move_axis_x"].to<int>(),
-                (*this)["controls"]["joy_move_invert_x"].toBool(),
-                (*this)["controls"]["joy_move_axis_y"].to<int>(),
-                (*this)["controls"]["joy_move_invert_y"].toBool()
-                );
-}
-
-void script::ScriptEngine::parseScreen(engine::ScreenInfo& sc) const
-{
-    sc.x = (*this)["screen"]["x"].to<int16_t>();
-    sc.y = (*this)["screen"]["y"].to<int16_t>();
-    sc.w = (*this)["screen"]["width"].to<int16_t>();
-    sc.h = (*this)["screen"]["height"].to<int16_t>();
-    sc.w_unit = sc.w / gui::ScreenMeteringResolution;
-    sc.h_unit = sc.h / gui::ScreenMeteringResolution;
-    sc.FS_flag = (*this)["screen"]["fullscreen"].toBool();
-    sc.show_debuginfo = (*this)["screen"]["debug_info"].toBool();
-    sc.fov = (*this)["screen"]["fov"].toFloat();
-    sc.vsync = (*this)["screen"]["vsync"].toBool();
-}
-
-void script::ScriptEngine::parseRender(render::RenderSettings& rs) const
-{
-    rs.mipmap_mode = (*this)["render"]["mipmap_mode"].to<uint32_t>();
-    rs.mipmaps = (*this)["render"]["mipmaps"].to<uint32_t>();
-    rs.lod_bias = (*this)["render"]["lod_bias"].toFloat();
-    rs.anisotropy = (*this)["render"]["anisotropy"].to<uint32_t>();
-    rs.antialias = (*this)["render"]["antialias"].toBool();
-    rs.antialias_samples = (*this)["render"]["antialias_samples"].to<int>();
-    rs.texture_border = (*this)["render"]["texture_border"].to<int>();
-    rs.save_texture_memory = (*this)["render"]["save_texture_memory"].toBool();
-    rs.z_depth = (*this)["render"]["z_depth"].to<int>();
-    rs.fog_enabled = (*this)["render"]["fog_enabled"].toBool();
-    rs.fog_start_depth = (*this)["render"]["fog_start_depth"].toFloat();
-    rs.fog_end_depth = (*this)["render"]["fog_end_depth"].toFloat();
-    rs.fog_color[0] = (*this)["render"]["fog_color"]["r"].toFloat();
-    rs.fog_color[0] /= 255.0;
-    rs.fog_color[1] = (*this)["render"]["fog_color"]["g"].toFloat();
-    rs.fog_color[1] /= 255.0;
-    rs.fog_color[2] = (*this)["render"]["fog_color"]["b"].toFloat();
-    rs.fog_color[2] /= 255.0;
-    rs.fog_color[3] = 1;
-
-    rs.use_gl3 = (*this)["render"]["use_gl3"].toBool();
-
-    if(rs.z_depth != 8 && rs.z_depth != 16 && rs.z_depth != 24)
-        rs.z_depth = 24;
-}
-
-void script::ScriptEngine::parseAudio(audio::Settings& as) const
-{
-    as.music_volume = (*this)["audio"]["music_volume"].to<ALfloat>();
-    as.sound_volume = (*this)["audio"]["sound_volume"].to<ALfloat>();
-    as.use_effects = (*this)["audio"]["use_effects"].toBool();
-    as.listener_is_player = (*this)["audio"]["listener_is_player"].toBool();
-    as.stream_buffer_size = (*this)["audio"]["stream_buffer_size"].to<int>();
-    as.stream_buffer_size *= 1024;
-    if(as.stream_buffer_size <= 0)
-        as.stream_buffer_size = 128 * 1024;
-    as.music_volume = (*this)["audio"]["music_volume"].to<ALfloat>();
-    as.music_volume = (*this)["audio"]["music_volume"].to<ALfloat>();
-}
-
-void script::ScriptEngine::parseConsole(gui::Console& cn) const
-{
-    {
-        float r = (*this)["console"]["background_color"]["r"].toFloat();
-        float g = (*this)["console"]["background_color"]["g"].toFloat();
-        float b = (*this)["console"]["background_color"]["b"].toFloat();
-        float a = (*this)["console"]["background_color"]["a"].toFloat();
-        cn.setBackgroundColor(r / 255, g / 255, b / 255, a / 255);
-    }
-
-    cn.setSpacing((*this)["console"]["spacing"].toFloat());
-
-    cn.setLineLength((*this)["console"]["line_size"].to<size_t>());
-
-    cn.setVisibleLines((*this)["console"]["showing_lines"].to<size_t>());
-
-    cn.setHistorySize((*this)["console"]["log_size"].to<size_t>());
-
-    cn.setBufferSize((*this)["console"]["lines_count"].to<size_t>());
-
-    cn.setVisible((*this)["console"]["show"].toBool());
-
-    cn.setShowCursorPeriod(util::MilliSeconds((*this)["console"]["show_cursor_period"].to<int>()));
-}
-
-void script::ScriptEngine::parseSystem(engine::SystemSettings& ss) const
-{
-    ss.logging = (*this)["system"]["logging"].toBool();
 }

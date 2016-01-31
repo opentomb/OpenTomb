@@ -10,6 +10,8 @@
 #include <cstdlib>
 
 #include <boost/assert.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/exception/all.hpp>
 
 namespace render
 {
@@ -17,7 +19,10 @@ ShaderStage::ShaderStage(GLenum type, const char *filename, const char *addition
 {
     shader = glCreateShader(type);
     if(!loadShaderFromFile(shader, filename, additionalDefines))
-        abort();
+    {
+        BOOST_LOG_TRIVIAL(error) << "Failed to load shader from " << filename;
+        BOOST_THROW_EXCEPTION(std::runtime_error("Shader compilation failed"));
+    }
 }
 
 ShaderStage::~ShaderStage()

@@ -88,7 +88,7 @@ void internalPreTickCallback(btDynamicsWorld* world, float timeStep)
 
     engine->m_scriptEngine.doTasks(engine_frame_time_backup);
     Game_UpdateAI();
-    engine->m_world.m_audioEngine.updateAudio();
+    engine->m_audioEngine.updateAudio();
 
     if(engine->m_world.m_character)
     {

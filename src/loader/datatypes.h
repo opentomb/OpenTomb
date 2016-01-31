@@ -1579,7 +1579,6 @@ struct AnimatedModel
     uint16_t firstMesh;     // starting mesh (offset into MeshPointers[])
     uint32_t mesh_tree_index;   // offset into MeshTree[]
     uint32_t poseDataOffset;      // byte offset into Frames[] (divide by 2 for Frames[i])
-    uint32_t frame_index;
     uint16_t animation_index;   // offset into Animations[]
 
     /** \brief reads a moveable definition.

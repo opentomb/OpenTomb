@@ -970,7 +970,7 @@ void TR_GenWorld(World& world, const std::unique_ptr<loader::Level>& tr)
     Res_GenRoomCollision(world);
     world.m_engine->m_gui.drawLoadScreen(800);
 
-    world.m_audioEngine.load(world, tr);
+    world.m_engine->m_audioEngine.load(world, tr);
     world.m_engine->m_gui.drawLoadScreen(850);
 
     world.m_skyBox = Res_GetSkybox(world);

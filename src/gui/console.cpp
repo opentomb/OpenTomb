@@ -15,9 +15,27 @@
 
 using namespace gui;
 
-Console::Console(engine::Engine* engine)
+Console::Console(engine::Engine* engine, boost::property_tree::ptree& config)
     : m_engine(engine)
 {
+    m_backgroundColor[0] = util::getSetting(config, "backgroundColor.r", 0.0f);
+    m_backgroundColor[1] = util::getSetting(config, "backgroundColor.g", 0.0f);
+    m_backgroundColor[2] = util::getSetting(config, "backgroundColor.b", 0.0f);
+    m_backgroundColor[3] = util::getSetting(config, "backgroundColor.a", 0.8f);
+
+    setShowCursorPeriod(util::MilliSeconds( util::getSetting(config, "blinkPeriod", 500) ));
+
+    setSpacing(util::getSetting(config, "spacing", 0.5f));
+
+    setLineLength(util::getSetting(config, "lineLength", 72));
+
+    setVisibleLines(util::getSetting(config, "visibleLines", 40));
+
+    setHistorySize(util::getSetting(config, "historySize", 16));
+
+    setBufferSize(util::getSetting(config, "bufferSize", 128));
+
+    setVisible(util::getSetting(config, "show", false));
 }
 
 void Console::init()
@@ -45,19 +63,6 @@ void Console::initFonts()
 {
     m_font = m_engine->m_gui.m_fontManager.getFont(FontType::Console);
     setSpacing(m_spacing);
-}
-
-void Console::initGlobals()
-{
-    m_backgroundColor[0] = 1.0f;
-    m_backgroundColor[1] = 0.9f;
-    m_backgroundColor[2] = 0.7f;
-    m_backgroundColor[3] = 0.4f;
-
-    m_spacing = SpacingMin;
-    m_lineLength = LineLengthMin;
-
-    m_blinkPeriod = util::MilliSeconds(500);
 }
 
 void Console::draw()
@@ -189,7 +194,7 @@ void Console::edit(int key, const boost::optional<uint16_t>& mod)
         case SDLK_DOWN:
             if(m_historyLines.empty())
                 break;
-            m_engine->m_world.m_audioEngine.send(m_engine->m_scriptEngine.getGlobalSound(audio::GlobalSoundId::MenuPage));
+            m_engine->m_audioEngine.send(m_engine->m_scriptEngine.getGlobalSound(audio::GlobalSoundId::MenuPage));
             if(key == SDLK_UP && m_historyPos < m_historyLines.size())
                 ++m_historyPos;
             else if(key == SDLK_DOWN && m_historyPos > 0)

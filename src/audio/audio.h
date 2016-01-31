@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/current_function.hpp>
+
 #include <cstdint>
 
 namespace audio
@@ -85,7 +87,7 @@ enum class GlobalSoundId
 bool checkALError(const char* func, int line);    // AL-specific error handler.
 void logSndfileError(int code);           // Sndfile-specific error handler.
 
-#define CHECK_AL_ERROR() checkALError(__FUNCTION__, __LINE__)
+#define CHECK_AL_ERROR() checkALError(BOOST_CURRENT_FUNCTION, __LINE__)
 
 #ifndef NDEBUG
 #define DEBUG_CHECK_AL_ERROR() CHECK_AL_ERROR()

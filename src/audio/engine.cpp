@@ -173,8 +173,11 @@ bool loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t samp
 
 } // anonymous namespace
 
-Engine::Engine(engine::Engine* engine)
+Engine::Engine(engine::Engine* engine, boost::property_tree::ptree& config)
     : m_engine(engine)
+    , m_settings(config)
+    , m_deviceManager(this)
+    , m_fxManager(this)
 {
 }
 
@@ -222,7 +225,7 @@ void Engine::resumeAllSources()
     {
         if(source.isActive())
         {
-            source.play(*m_fxManager, m_engine->m_world);
+            source.play(m_fxManager, m_engine->m_world);
         }
     }
 }
@@ -373,7 +376,7 @@ void Engine::updateSources()
 
     for(Source& src : m_sources)
     {
-        src.update(*m_fxManager, m_engine->m_world);
+        src.update(m_fxManager, m_engine->m_world);
     }
 }
 
@@ -384,11 +387,11 @@ void Engine::updateAudio()
 
     if(m_settings.listener_is_player)
     {
-        m_fxManager->updateListener(*m_engine->m_world.m_character);
+        m_fxManager.updateListener(*m_engine->m_world.m_character);
     }
     else
     {
-        m_fxManager->updateListener(*m_engine->renderer.camera());
+        m_fxManager.updateListener(*m_engine->renderer.camera());
     }
 }
 
@@ -476,7 +479,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
 
     // Try to play newly assigned and loaded track.
 
-    if(!m_tracks[*target_stream].play(fxManager(), do_fade_in))
+    if(!m_tracks[*target_stream].play(m_fxManager, do_fade_in))
     {
         m_engine->m_gui.getConsole().warning(SYSWARN_STREAM_PLAY_ERROR);
         return StreamError::PlayError;
@@ -496,14 +499,14 @@ bool Engine::deInitDelay()
         if(curr_time > AudioDeinitDelay)
         {
             BOOST_LOG_TRIVIAL(error) << "Audio deinit timeout reached! Something is wrong with audio driver.";
-            break;
+            return false;
         }
     }
 
     return true;
 }
 
-void Engine::deInitAudio()
+Engine::~Engine()
 {
     stopAllSources();
     stopStreams();
@@ -521,8 +524,6 @@ void Engine::deInitAudio()
 
     m_effects.clear();
     m_soundIdMap.clear();
-
-    m_fxManager.reset();
 }
 
 Error Engine::kill(audio::SoundId soundId, EmitterType entityType, const boost::optional<world::ObjectId>& entityId)
@@ -716,7 +717,7 @@ Error Engine::send(const boost::optional<SoundId>& soundId, EmitterType entityTy
 
     source->setRange(effect->range);    // Set audible range.
 
-    source->play(*m_fxManager, m_engine->m_world);                     // Everything is OK, play sound now!
+    source->play(m_fxManager, m_engine->m_world);                     // Everything is OK, play sound now!
 
     return Error::Processed;
 }
@@ -948,13 +949,6 @@ void Engine::loadSampleOverrideInfo()
 
 void Engine::init(size_t num_Sources)
 {
-    // FX should be inited first, as source constructor checks for FX slot to be created.
-
-    if(m_settings.use_effects)
-    {
-        m_fxManager.reset(new FxManager(m_engine, true));
-    }
-
     // Generate new source array.
 
     num_Sources -= StreamSourceCount;          // Subtract sources reserved for music.
@@ -966,13 +960,29 @@ void Engine::init(size_t num_Sources)
 
     // Reset last room type used for assigning reverb.
 
-    m_fxManager->resetLastRoomType();
+    m_fxManager.resetLastRoomType();
 }
 
-void Engine::initDevice()
+Engine::DeviceManager::~DeviceManager()
 {
-#ifndef NO_AUDIO
+    if(m_context)  // T4Larson <t4larson@gmail.com>: fixed
+    {
+        alcMakeContextCurrent(nullptr);
+        DEBUG_CHECK_AL_ERROR();
+        alcDestroyContext(m_context);
+        DEBUG_CHECK_AL_ERROR();
+    }
 
+    if(m_device)
+    {
+        alcCloseDevice(m_device);
+        DEBUG_CHECK_AL_ERROR();
+    }
+}
+
+Engine::DeviceManager::DeviceManager(Engine* engine)
+    : m_engine(engine)
+{
     ALCint paramList[] = {
         ALC_STEREO_SOURCES,  StreamSourceCount,
         ALC_MONO_SOURCES,   (MaxChannels - StreamSourceCount),
@@ -993,7 +1003,7 @@ void Engine::initDevice()
         BOOST_LOG_TRIVIAL(info) << " Device: " << devlist;
         ALCdevice* dev = alcOpenDevice(devlist);
 
-        if(m_settings.use_effects)
+        if(engine->getSettings().use_effects)
         {
             if(alcIsExtensionPresent(dev, ALC_EXT_EFX_NAME) == ALC_TRUE)
             {
@@ -1031,31 +1041,12 @@ void Engine::initDevice()
 
     std::string driver = "OpenAL library: ";
     driver += alcGetString(m_device, ALC_DEVICE_SPECIFIER);
-    m_engine->m_gui.getConsole().addLine(driver, gui::FontStyle::ConsoleInfo);
+    m_engine->m_engine->m_gui.getConsole().addLine(driver, gui::FontStyle::ConsoleInfo);
 
     alSpeedOfSound(330.0 * 512.0);
     alDopplerVelocity(330.0 * 510.0);
     alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
     DEBUG_CHECK_AL_ERROR();
-#endif
 }
 
-void Engine::closeDevice()
-{
-    if(m_context)  // T4Larson <t4larson@gmail.com>: fixed
-    {
-        alcMakeContextCurrent(nullptr);
-        DEBUG_CHECK_AL_ERROR();
-        alcDestroyContext(m_context);
-        DEBUG_CHECK_AL_ERROR();
-        m_context = nullptr;
-    }
-
-    if(m_device)
-    {
-        alcCloseDevice(m_device);
-        DEBUG_CHECK_AL_ERROR();
-        m_device = nullptr;
-    }
-}
 } // namespace audio

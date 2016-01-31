@@ -32,7 +32,6 @@ namespace engine
 class BtEngineClosestConvexResultCallback;
 class Engine;
 
-void Game_InitGlobals(Engine& engine);
 void Game_RegisterLuaFunctions(script::ScriptEngine &state);
 bool Game_Load(Engine& engine, const std::string& name);
 bool Game_Save(Engine& engine, const std::string& name);

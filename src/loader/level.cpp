@@ -73,52 +73,25 @@ void Level::readMeshData(io::SDLReader& reader)
 void Level::readFrameMoveableData(io::SDLReader& reader)
 {
     m_poseData.resize(reader.readU32());
-    const auto frameDataPos = reader.tell();
     reader.readVector(m_poseData, m_poseData.size());
 
     m_animatedModels.resize(reader.readU32());
-    for(size_t i = 0; i < m_animatedModels.size(); i++)
+    for(std::unique_ptr<AnimatedModel>& model : m_animatedModels)
     {
         if(gameToEngine(m_gameVersion) < Engine::TR5)
         {
-            m_animatedModels[i] = AnimatedModel::readTr1(reader);
+            model = AnimatedModel::readTr1(reader);
             // Disable unused skybox polygons.
-            if(gameToEngine(m_gameVersion) == Engine::TR3 && m_animatedModels[i]->object_id == 355)
+            if(gameToEngine(m_gameVersion) == Engine::TR3 && model->object_id == 355)
             {
-                m_meshes[m_meshIndices[m_animatedModels[i]->firstMesh]].coloured_triangles.resize(16);
+                m_meshes[m_meshIndices[model->firstMesh]].coloured_triangles.resize(16);
             }
         }
         else
         {
-            m_animatedModels[i] = AnimatedModel::readTr5(reader);
+            model = AnimatedModel::readTr5(reader);
         }
     }
-
-    const auto endPos = reader.tell();
-
-    uint32_t pos = 0;
-    for(size_t i = 0; i < m_poseData.size(); i++)
-    {
-        for(size_t j = 0; j < m_animatedModels.size(); j++)
-            if(m_animatedModels[j]->poseDataOffset == pos)
-            {
-                m_animatedModels[j]->frame_index = static_cast<uint32_t>(i);
-                m_animatedModels[j]->poseDataOffset = 0;
-            }
-
-        reader.seek(frameDataPos + pos);
-
-        pos = 0;
-        for(size_t j = 0; j < m_animatedModels.size(); j++)
-        {
-            if(m_animatedModels[j]->poseDataOffset > pos)
-            {
-                pos = m_animatedModels[j]->poseDataOffset;
-                break;
-            }
-        }
-    }
-    reader.seek(endPos);
 }
 
 std::unique_ptr<Level> Level::createLoader(const std::string& filename, Game game_version)

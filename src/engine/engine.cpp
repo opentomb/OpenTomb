@@ -177,23 +177,27 @@ void Engine::initSDLVideo()
     m_gui.getConsole().addLine(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)), gui::FontStyle::ConsoleInfo);
 }
 
-Engine::Engine()
-    : m_gui(this)
+Engine::Engine(boost::property_tree::ptree& config)
+    : m_gui(this, util::getSettingChild(config, "gui"))
     , m_world(this)
-    , m_inputHandler(this)
-    , renderer(this)
+    , m_inputHandler(this, util::getSettingChild(config, "input"))
+    , renderer(this, util::getSettingChild(config, "renderer"))
     , m_gameflow(this)
     , m_bullet(this)
     , m_scriptEngine(this)
     , debugDrawer(this)
+    , m_audioEngine(this, util::getSettingChild(config, "audio"))
+    , m_controlState(util::getSettingChild(config, "controlState"))
+    , m_screenInfo(util::getSettingChild(config, "screen"))
+    , m_systemSettings(util::getSettingChild(config, "system"))
 {
+    m_scriptEngine.doFile("config.lua");
     m_scriptEngine.doFile("scripts/loadscript.lua");
 #if defined(__MACOSX__)
     FindConfigFile();
 #endif
 
-    // Set defaults parameters and load config file.
-    initConfig("config.lua");
+    registerInputHandlers();
 
     // Primary initialization.
     initPre();
@@ -212,13 +216,11 @@ Engine::Engine()
     // Initial window resize.
     resize(m_screenInfo.w, m_screenInfo.h, m_screenInfo.w, m_screenInfo.h);
 
-    // OpenAL initialization.
-    m_world.m_audioEngine.initDevice();
-
     m_gui.getConsole().notify(SYSNOTE_ENGINE_INITED);
 
     // Clearing up memory for initial level loading.
     m_world.prepare();
+    m_audioEngine.clear();
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
 
@@ -385,13 +387,8 @@ void Engine::showDebugInfo()
                                              );
 }
 
-void Engine::initDefaultGlobals()
+void Engine::registerInputHandlers()
 {
-    m_gui.getConsole().initGlobals();
-
-    m_inputHandler.clearBindings();
-    m_inputHandler.clearHandlers();
-
     auto self = this;
     m_inputHandler.registerMouseMoveHandler([self](float dx, float dy){
         if(!self->m_gui.getConsole().isVisible() && self->m_controlState.m_mouseLook)
@@ -516,10 +513,6 @@ void Engine::initDefaultGlobals()
         rotation *= -world::CameraRotationSpeed * self->getFrameTimeSecs();
         self->m_camera.rotate(rotation);
     });
-
-    Game_InitGlobals(*this);
-    renderer.initGlobals();
-    m_world.m_audioEngine.resetSettings();
 }
 
 // First stage of initialization.
@@ -612,8 +605,6 @@ Engine::~Engine()
     /* no more renderings */
     SDL_GL_DeleteContext(m_glContext);
     SDL_DestroyWindow(m_window);
-
-    m_world.m_audioEngine.closeDevice();
 
     /* free temporary memory */
     frame_vertex_buffer.clear();
@@ -726,10 +717,11 @@ bool Engine::loadMap(const std::string& name)
 
     m_world.empty();
     m_world.prepare();
+    m_audioEngine.clear();
 
     m_scriptEngine.clean();
 
-    m_world.m_audioEngine.init();
+    m_audioEngine.init();
 
     m_gui.drawLoadScreen(100);
 
@@ -1022,42 +1014,6 @@ void Engine::fpsCycle(util::Duration time)
         system_fps.text = tmp;
         fpsCycles = 0;
         fpsTime = util::Duration(0);
-    }
-}
-
-void Engine::initConfig(const std::string& filename)
-{
-    initDefaultGlobals();
-
-    if(boost::filesystem::is_regular_file(filename))
-    {
-        script::ScriptEngine state(this);
-        state.registerC("bind", &script::MainEngine::bindKey);                             // get and set key bindings
-        try
-        {
-            state.doFile(filename);
-        }
-        catch(lua::RuntimeError& error)
-        {
-            BOOST_LOG_TRIVIAL(error) << error.what();
-            return;
-        }
-        catch(lua::LoadError& error)
-        {
-            BOOST_LOG_TRIVIAL(error) << error.what();
-            return;
-        }
-
-        state.parseScreen(m_screenInfo);
-        state.parseRender(renderer.settings());
-        state.parseAudio(m_world.m_audioEngine.settings());
-        state.parseConsole(m_gui.getConsole());
-        state.parseControls(m_inputHandler);
-        state.parseSystem(m_systemSettings);
-    }
-    else
-    {
-        BOOST_LOG_TRIVIAL(error) << "Could not find " << filename;
     }
 }
 } // namespace engine

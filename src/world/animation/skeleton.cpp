@@ -72,12 +72,6 @@ void Skeleton::fromModel(const std::shared_ptr<SkeletalModel>& model)
             default:
                 throw std::runtime_error("Invalid skeleton stack operation");
         }
-
-#ifndef NDEBUG
-        BOOST_LOG_TRIVIAL(debug) << " - Bone #" << bone.index << " op " << (int)meshReference.stackOperation;
-        if(bone.parent != nullptr)
-            BOOST_LOG_TRIVIAL(debug) << "    parent #" << bone.parent->index;
-#endif
     }
 }
 

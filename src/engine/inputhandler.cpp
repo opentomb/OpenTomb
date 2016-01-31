@@ -17,9 +17,33 @@ namespace engine
 
 using gui::Console;
 
-InputHandler::InputHandler(Engine* engine)
+InputHandler::InputHandler(Engine* engine, boost::property_tree::ptree& config)
     : m_engine(engine)
 {
+    m_mouseSensitivity = util::getSetting(config, "mouse.sensitivity", 25.0f);
+    m_mouseScale = { util::getSetting(config, "mouse.scale.x", 0.01f), util::getSetting(config, "mouse.scale.y", 0.01f) };
+
+    m_joystickLookConfig.deadzone = util::getSetting(config, "joystick.deadzones.look", 1500);
+    m_joystickMoveConfig.deadzone = util::getSetting(config, "joystick.deadzones.move", 1500);
+
+    m_joystickLookConfig.sensitivity = util::getSetting(config, "joystick.sensitivities.look", 1.5f);
+    m_joystickMoveConfig.sensitivity = util::getSetting(config, "joystick.sensitivities.move", 1.5f);
+
+    m_joystickLookConfig.xAxis = util::getSetting(config, "joystick.axes.look.x", 2);
+    m_joystickLookConfig.invertX = util::getSetting(config, "joystick.axes.look.xInvert", false);
+    m_joystickLookConfig.yAxis = util::getSetting(config, "joystick.axes.look.y", 3);
+    m_joystickLookConfig.invertY = util::getSetting(config, "joystick.axes.look.yInvert", true);
+
+    m_joystickMoveConfig.xAxis = util::getSetting(config, "joystick.axes.move.x", 0);
+    m_joystickMoveConfig.invertX = util::getSetting(config, "joystick.axes.move.xInvert", false);
+    m_joystickMoveConfig.yAxis = util::getSetting(config, "joystick.axes.move.y", 1);
+    m_joystickMoveConfig.invertY = util::getSetting(config, "joystick.axes.move.yInvert", false);
+
+    configureControllers(
+                util::getSetting(config, "joystick.id", 0),
+                util::getSetting(config, "joystick.enabled", true),
+                util::getSetting(config, "joystick.rumble", true)
+                );
 }
 
 void InputHandler::primaryMouseDown()
