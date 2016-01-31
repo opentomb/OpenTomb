@@ -146,7 +146,12 @@ bool StreamTrack::loadTrack(const char *path)
     m_sndFile = sf_open(path, SFM_READ, &m_sfInfo);
     if(m_sndFile == nullptr)
     {
-        BOOST_LOG_TRIVIAL(debug) << "Load_Track: Couldn't open file: " << path;
+        BOOST_LOG_TRIVIAL(debug) << __FUNCTION__ ": Couldn't open '" << path << "': " << sf_strerror(nullptr);
+#ifndef NDEBUG
+        char buffer[1024];
+        buffer[sf_command(nullptr, SFC_GET_LOG_INFO, buffer, 1023)] = 0;
+        BOOST_LOG_TRIVIAL(debug) << __FUNCTION__ ": SndFile log: " << buffer;
+#endif
         m_method = StreamMethod::Any;    // T4Larson <t4larson@gmail.com>: stream is uninitialised, avoid clear.
         return false;
     }

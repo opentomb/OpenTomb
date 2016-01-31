@@ -1019,7 +1019,7 @@ void Engine::initDevice()
 
     if(!m_context)
     {
-        BOOST_LOG_TRIVIAL(warning) << " Failed to create OpenAL context.";
+        BOOST_LOG_TRIVIAL(warning) << "Failed to create OpenAL context.";
         alcCloseDevice(m_device);
         m_device = nullptr;
         return;
