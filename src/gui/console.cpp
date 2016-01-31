@@ -18,7 +18,6 @@ using namespace gui;
 Console::Console(engine::Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing Console";
 }
 
 void Console::init()

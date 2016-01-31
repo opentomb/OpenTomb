@@ -24,6 +24,8 @@ namespace audio
 // It contains all necessary info to process sample FX (reverb and echo).
 class FxManager
 {
+    TRACK_LIFETIME();
+
     // MAX_SLOTS specifies amount of FX slots used to apply environmental
     // effects to sounds. We need at least two of them to prevent glitches
     // at environment transition (slots are cyclically changed, leaving

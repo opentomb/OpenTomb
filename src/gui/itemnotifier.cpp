@@ -12,8 +12,6 @@ namespace gui
 ItemNotifier::ItemNotifier(engine::Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing ItemNotifier";
-
     setPos(850, 850);
     // SetRot(0, 0);
     setRotation(glm::radians(180.0f), glm::radians(270.0f));

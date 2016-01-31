@@ -8,8 +8,6 @@ namespace gui
 FontManager::FontManager(engine::Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing FontManager";
-
     FT_Init_FreeType(&m_fontLibrary);
 }
 

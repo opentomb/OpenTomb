@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util/helpers.h"
+
 #include <array>
 #include <cstdint>
 #include <queue>
@@ -49,6 +51,8 @@ struct GameflowAction
 
 class Gameflow
 {
+    TRACK_LIFETIME();
+
 public:
     explicit Gameflow(Engine* engine);
 

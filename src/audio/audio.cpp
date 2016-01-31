@@ -13,12 +13,16 @@ namespace audio
 {
 // ======== Audio source global methods ========
 
-bool checkALError(const char* error_marker)
+bool checkALError(const char* func, int line)
 {
     ALenum err = alGetError();
     if(err != AL_NO_ERROR)
     {
-        BOOST_LOG_TRIVIAL(warning) << "OpenAL error: " << alGetString(err) << " (" << error_marker << ")";
+        const char* errStr = alGetString(err);
+        if(errStr == nullptr)
+            errStr = "<unknown>";
+
+        BOOST_LOG_TRIVIAL(warning) << "OpenAL error (in " << func << ":" << line << "): " << errStr;
         return true;
     }
     return false;

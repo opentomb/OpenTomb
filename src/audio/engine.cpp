@@ -47,7 +47,7 @@ bool fillALBuffer(ALuint buf_number, SNDFILE *wavFile, Uint32 frameCount, SF_INF
 
     alBufferData(buf_number, AL_FORMAT_MONO16, &frames.front(), frameCount * sizeof(frames[0]), sfInfo->samplerate);
 #endif
-    checkALError(__FUNCTION__);
+    CHECK_AL_ERROR();
     return true;
 }
 
@@ -176,7 +176,6 @@ bool loadALbufferFromMem(ALuint buf_number, uint8_t *sample_pointer, size_t samp
 Engine::Engine(engine::Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing Audio Engine";
 }
 
 bool Engine::loadALbufferFromFile(ALuint buf_number, const std::string& fname)
@@ -727,6 +726,7 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
     // Generate new buffer array.
     m_buffers.resize(tr->m_samplesCount, 0);
     alGenBuffers(static_cast<ALsizei>(m_buffers.size()), m_buffers.data());
+    DEBUG_CHECK_AL_ERROR();
 
     // Generate stream track map array.
     // We use scripted amount of tracks to define map bounds.
@@ -1036,6 +1036,7 @@ void Engine::initDevice()
     alSpeedOfSound(330.0 * 512.0);
     alDopplerVelocity(330.0 * 510.0);
     alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+    DEBUG_CHECK_AL_ERROR();
 #endif
 }
 
@@ -1044,13 +1045,16 @@ void Engine::closeDevice()
     if(m_context)  // T4Larson <t4larson@gmail.com>: fixed
     {
         alcMakeContextCurrent(nullptr);
+        DEBUG_CHECK_AL_ERROR();
         alcDestroyContext(m_context);
+        DEBUG_CHECK_AL_ERROR();
         m_context = nullptr;
     }
 
     if(m_device)
     {
         alcCloseDevice(m_device);
+        DEBUG_CHECK_AL_ERROR();
         m_device = nullptr;
     }
 }

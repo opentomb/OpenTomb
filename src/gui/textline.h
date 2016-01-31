@@ -2,6 +2,7 @@
 
 #include "fontmanager.h"
 #include "gui/common.h"
+#include "util/helpers.h"
 
 #include <boost/format.hpp>
 
@@ -30,7 +31,8 @@ struct TextLine
 
 class TextLineManager
 {
-private:
+    TRACK_LIFETIME();
+
     engine::Engine* m_engine;
     std::list<const TextLine*> m_baseLines;
     std::list<TextLine> m_tempLines;

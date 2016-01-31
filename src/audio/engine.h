@@ -6,13 +6,16 @@
 #include "settings.h"
 #include "source.h"
 #include "streamtrack.h"
+#include "util/helpers.h"
 #include "world/object.h"
 
-#include <memory>
 
 #include <AL/alc.h>
+
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
+
+#include <memory>
 
 namespace world
 {
@@ -48,6 +51,7 @@ enum class StreamError
 
 class Engine
 {
+    TRACK_LIFETIME();
 public:
     explicit Engine(engine::Engine* engine);
 

@@ -72,7 +72,8 @@ class Render;
 
 class RenderDebugDrawer : public btIDebugDraw
 {
-private:
+    TRACK_LIFETIME();
+
     engine::Engine* m_engine;
     uint32_t m_debugMode = 0;
 
@@ -153,7 +154,9 @@ struct UnlitTintedShaderDescription;
 class Render
 {
     friend class RenderDebugDrawer;
-private:
+
+    TRACK_LIFETIME();
+
     engine::Engine* m_engine;
 
     DynamicBSP render_dBSP;

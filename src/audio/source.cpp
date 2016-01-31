@@ -15,23 +15,31 @@ Source::Source(audio::Engine* engine)
     : m_audioEngine(engine)
 {
     alGenSources(1, &m_sourceIndex);
+    DEBUG_CHECK_AL_ERROR();
 
     if(!alIsSource(m_sourceIndex))
         return;
 
     alSourcef(m_sourceIndex, AL_MIN_GAIN, 0.0);
+    DEBUG_CHECK_AL_ERROR();
     alSourcef(m_sourceIndex, AL_MAX_GAIN, 1.0);
+    DEBUG_CHECK_AL_ERROR();
 
     if(m_audioEngine->getSettings().use_effects)
     {
         alSourcef(m_sourceIndex, AL_ROOM_ROLLOFF_FACTOR, 1.0);
+        DEBUG_CHECK_AL_ERROR();
         alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAIN_AUTO, AL_TRUE);
+        DEBUG_CHECK_AL_ERROR();
         alSourcei(m_sourceIndex, AL_AUXILIARY_SEND_FILTER_GAINHF_AUTO, AL_TRUE);
+        DEBUG_CHECK_AL_ERROR();
         alSourcef(m_sourceIndex, AL_AIR_ABSORPTION_FACTOR, 0.1f);
+        DEBUG_CHECK_AL_ERROR();
     }
     else
     {
         alSourcef(m_sourceIndex, AL_AIR_ABSORPTION_FACTOR, 0.0f);
+        DEBUG_CHECK_AL_ERROR();
     }
 }
 
@@ -41,7 +49,9 @@ Source::~Source()
         return;
 
     alSourceStop(m_sourceIndex);
+    DEBUG_CHECK_AL_ERROR();
     alDeleteSources(1, &m_sourceIndex);
+    DEBUG_CHECK_AL_ERROR();
 }
 
 bool Source::isActive() const
@@ -56,6 +66,7 @@ bool Source::isLooping() const
 
     ALint looping;
     alGetSourcei(m_sourceIndex, AL_LOOPING, &looping);
+    DEBUG_CHECK_AL_ERROR();
     return looping != AL_FALSE;
 }
 
@@ -66,6 +77,7 @@ bool Source::isPlaying() const
 
     ALenum state = AL_STOPPED;
     alGetSourcei(m_sourceIndex, AL_SOURCE_STATE, &state);
+    DEBUG_CHECK_AL_ERROR();
 
     // Paused state and existing file pointers also counts as playing.
     return state == AL_PLAYING || state == AL_PAUSED;
@@ -79,8 +91,11 @@ void Source::play(FxManager& manager, const world::World& world)
     if(m_emitterType == EmitterType::Global)
     {
         alSourcei(m_sourceIndex, AL_SOURCE_RELATIVE, AL_TRUE);
+        DEBUG_CHECK_AL_ERROR();
         alSource3f(m_sourceIndex, AL_POSITION, 0.0f, 0.0f, 0.0f);
+        DEBUG_CHECK_AL_ERROR();
         alSource3f(m_sourceIndex, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
+        DEBUG_CHECK_AL_ERROR();
 
         if(m_audioEngine->getSettings().use_effects)
         {
@@ -90,6 +105,7 @@ void Source::play(FxManager& manager, const world::World& world)
     else
     {
         alSourcei(m_sourceIndex, AL_SOURCE_RELATIVE, AL_FALSE);
+        DEBUG_CHECK_AL_ERROR();
         linkEmitter(world);
 
         if(m_audioEngine->getSettings().use_effects)
@@ -100,6 +116,7 @@ void Source::play(FxManager& manager, const world::World& world)
     }
 
     alSourcePlay(m_sourceIndex);
+    DEBUG_CHECK_AL_ERROR();
     m_active = true;
 }
 
@@ -109,6 +126,7 @@ void Source::pause()
         return;
 
     alSourcePause(m_sourceIndex);
+    DEBUG_CHECK_AL_ERROR();
 }
 
 void Source::stop()
@@ -117,6 +135,7 @@ void Source::stop()
         return;
 
     alSourceStop(m_sourceIndex);
+    DEBUG_CHECK_AL_ERROR();
 }
 
 void Source::update(const FxManager& manager, const world::World& world)
@@ -139,7 +158,9 @@ void Source::update(const FxManager& manager, const world::World& world)
     ALfloat range, gain;
 
     alGetSourcef(m_sourceIndex, AL_GAIN, &gain);
+    DEBUG_CHECK_AL_ERROR();
     alGetSourcef(m_sourceIndex, AL_MAX_DISTANCE, &range);
+    DEBUG_CHECK_AL_ERROR();
 
     // Check if source is in listener's range, and if so, update position,
     // else stop and disable it.
@@ -172,6 +193,7 @@ void Source::setBuffer(ALint buffer)
         return;
 
     alSourcei(m_sourceIndex, AL_BUFFER, buffer_index);
+    DEBUG_CHECK_AL_ERROR();
 
     // For some reason, OpenAL sometimes produces "Invalid Operation" error here,
     // so there's extra debug info - maybe it'll help some day.
@@ -193,34 +215,41 @@ void Source::setBuffer(ALint buffer)
 void Source::setLooping(ALboolean is_looping)
 {
     alSourcei(m_sourceIndex, AL_LOOPING, is_looping);
+    DEBUG_CHECK_AL_ERROR();
 }
 
 void Source::setGain(ALfloat gain_value)
 {
     alSourcef(m_sourceIndex, AL_GAIN, glm::clamp(gain_value, 0.0f, 1.0f) * m_audioEngine->getSettings().sound_volume);
+    DEBUG_CHECK_AL_ERROR();
 }
 
 void Source::setPitch(ALfloat pitch_value)
 {
     // Clamp pitch value, as OpenAL tends to hang with incorrect ones.
     alSourcef(m_sourceIndex, AL_PITCH, glm::clamp(pitch_value, 0.1f, 2.0f));
+    DEBUG_CHECK_AL_ERROR();
 }
 
 void Source::setRange(ALfloat range_value)
 {
     // Source will become fully audible on 1/6 of overall position.
     alSourcef(m_sourceIndex, AL_REFERENCE_DISTANCE, range_value / 6.0f);
+    DEBUG_CHECK_AL_ERROR();
     alSourcef(m_sourceIndex, AL_MAX_DISTANCE, range_value);
+    DEBUG_CHECK_AL_ERROR();
 }
 
 void Source::setPosition(const ALfloat pos_vector[])
 {
     alSourcefv(m_sourceIndex, AL_POSITION, pos_vector);
+    DEBUG_CHECK_AL_ERROR();
 }
 
 void Source::setVelocity(const ALfloat vel_vector[])
 {
     alSourcefv(m_sourceIndex, AL_VELOCITY, vel_vector);
+    DEBUG_CHECK_AL_ERROR();
 }
 
 void Source::setFX(FxManager& manager)
@@ -235,6 +264,7 @@ void Source::setFX(FxManager& manager)
     // Assign global reverb FX to channel.
 
     alSource3i(m_sourceIndex, AL_AUXILIARY_SEND_FILTER, slot, 0, AL_FILTER_NULL);
+    DEBUG_CHECK_AL_ERROR();
 }
 
 void Source::unsetFX()
@@ -242,7 +272,9 @@ void Source::unsetFX()
     // Remove any audio sends and direct filters from channel.
 
     alSourcei(m_sourceIndex, AL_DIRECT_FILTER, AL_FILTER_NULL);
+    DEBUG_CHECK_AL_ERROR();
     alSource3i(m_sourceIndex, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
+    DEBUG_CHECK_AL_ERROR();
 }
 
 void Source::setUnderwater(const FxManager& fxManager)
@@ -254,11 +286,13 @@ void Source::setUnderwater(const FxManager& fxManager)
     if(fxManager.isUnderwater())
     {
         alSourcei(m_sourceIndex, AL_DIRECT_FILTER, fxManager.getFilter());
+        DEBUG_CHECK_AL_ERROR();
         m_underwater = true;
     }
     else
     {
         alSourcei(m_sourceIndex, AL_DIRECT_FILTER, AL_FILTER_NULL);
+        DEBUG_CHECK_AL_ERROR();
         m_underwater = false;
     }
 }

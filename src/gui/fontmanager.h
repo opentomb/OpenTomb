@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gl_font.h"
+#include "util/helpers.h"
 
 #include <glm/glm.hpp>
 
@@ -80,8 +81,9 @@ struct FontStyleData
 // functions should be used.
 class FontManager
 {
+    TRACK_LIFETIME();
 public:
-    FontManager(engine::Engine* engine);
+    explicit FontManager(engine::Engine* engine);
     ~FontManager();
 
     bool             addFont(const FontType index,

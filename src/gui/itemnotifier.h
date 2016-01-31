@@ -14,6 +14,8 @@ namespace gui
 {
 class ItemNotifier
 {
+    TRACK_LIFETIME();
+
 public:
     explicit ItemNotifier(engine::Engine* engine);
 

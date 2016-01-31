@@ -10,7 +10,6 @@ namespace engine
 Gameflow::Gameflow(Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing Gameflow";
 }
 
 void Gameflow::init()

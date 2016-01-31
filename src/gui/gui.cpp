@@ -29,7 +29,6 @@ Gui::Gui(engine::Engine* engine)
     , m_textlineManager(engine)
     , m_fontManager(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing Gui";
 }
 
 Gui::~Gui()

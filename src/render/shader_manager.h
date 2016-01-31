@@ -1,6 +1,7 @@
 #pragma once
 
 #include "shader_description.h"
+#include "util/helpers.h"
 
 #include <boost/assert.hpp>
 
@@ -17,7 +18,8 @@ constexpr int EntityShaderLightsLimit = 8;
 
 class ShaderManager
 {
-private:
+    TRACK_LIFETIME();
+
     UnlitTintedShaderDescription    *m_roomShaders[2][2];
     UnlitTintedShaderDescription    *m_staticMeshShader;
     UnlitShaderDescription          *m_stencil;

@@ -78,6 +78,7 @@ constexpr int JOY_TRIGGER_DEADZONE = 10000;
 
 class InputHandler
 {
+    TRACK_LIFETIME();
 public:
     explicit InputHandler(Engine* engine);
 

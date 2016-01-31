@@ -45,7 +45,6 @@ using gui::Console;
 Render::Render(engine::Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing Render";
 }
 
 Render::~Render() = default;
@@ -1004,7 +1003,6 @@ void Render::setWorld(world::World *world)
 RenderDebugDrawer::RenderDebugDrawer(engine::Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing RenderDebugDrawer";
 }
 
 RenderDebugDrawer::~RenderDebugDrawer() = default;

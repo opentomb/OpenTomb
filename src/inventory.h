@@ -101,6 +101,8 @@ class Engine;
  */
 class InventoryManager
 {
+    TRACK_LIFETIME();
+
 public:
     enum class InventoryState
     {

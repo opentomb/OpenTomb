@@ -10,8 +10,6 @@ namespace gui
 ProgressbarManager::ProgressbarManager(engine::Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing ProgressbarManager";
-
     {
         ProgressBar& bar = getProgressBar(BarType::Health);
 

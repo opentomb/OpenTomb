@@ -134,8 +134,6 @@ void internalTickCallback(btDynamicsWorld *world, float /*timeStep*/)
 
 BulletEngine::BulletEngine(Engine* engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing BulletEngine";
-
     ///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
     collisionConfiguration.reset(new btDefaultCollisionConfiguration());
 

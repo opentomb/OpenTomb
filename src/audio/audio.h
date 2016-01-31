@@ -82,6 +82,15 @@ enum class GlobalSoundId
 
 // Error handling routines.
 
-bool checkALError(const char *error_marker = "");    // AL-specific error handler.
+bool checkALError(const char* func, int line);    // AL-specific error handler.
 void logSndfileError(int code);           // Sndfile-specific error handler.
+
+#define CHECK_AL_ERROR() checkALError(__FUNCTION__, __LINE__)
+
+#ifndef NDEBUG
+#define DEBUG_CHECK_AL_ERROR() CHECK_AL_ERROR()
+#else
+#define DEBUG_CHECK_AL_ERROR() false
+#endif
+
 } // namespace audio

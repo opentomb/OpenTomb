@@ -17,7 +17,6 @@ void TextLine::move(float scaleFactor)
 TextLineManager::TextLineManager(engine::Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing TextLineManager";
 }
 
 void TextLineManager::renderLine(const TextLine& line)

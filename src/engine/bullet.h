@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util/helpers.h"
+
 #include <btBulletDynamicsCommon.h>
 
 #include <memory>
@@ -22,6 +24,8 @@ class Engine;
 
 struct BulletEngine
 {
+    TRACK_LIFETIME();
+
     std::unique_ptr<btDefaultCollisionConfiguration> collisionConfiguration;
     std::unique_ptr<btCollisionDispatcher> dispatcher;
     std::unique_ptr<btBroadphaseInterface> overlappingPairCache;

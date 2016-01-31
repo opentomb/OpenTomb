@@ -310,6 +310,8 @@ struct RoomSprite
 
 class World
 {
+    TRACK_LIFETIME();
+
 public:
     explicit World(engine::Engine* engine);
 

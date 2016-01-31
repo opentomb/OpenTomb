@@ -166,8 +166,6 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
     , m_canonicalTexturesForSpriteTextures()
     , m_canonicalObjectTextures()
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing BorderedTextureAtlas";
-
     int max_texture_edge_length = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);
     if(max_texture_edge_length > 4096)

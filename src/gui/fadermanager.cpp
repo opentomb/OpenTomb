@@ -88,7 +88,6 @@ FaderStatus FaderManager::getStatus(FaderType fader)
 FaderManager::FaderManager(engine::Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing FaderManager";
     {
         Fader fader(m_engine);
         fader.setAlpha(255);

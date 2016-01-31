@@ -13,7 +13,8 @@ namespace gui
 {
 struct Gui
 {
-private:
+    TRACK_LIFETIME();
+
     engine::Engine* m_engine;
     Console m_console;
 

@@ -8,6 +8,7 @@ namespace gui
 {
 class FaderManager
 {
+    TRACK_LIFETIME();
 public:
     explicit FaderManager(engine::Engine* engine);
     ~FaderManager();

@@ -13,7 +13,8 @@ namespace gui
 {
 class Console
 {
-private:
+    TRACK_LIFETIME();
+
     static constexpr size_t HistorySizeMin = 16;
     static constexpr size_t HistorySizeMax = 128;
 

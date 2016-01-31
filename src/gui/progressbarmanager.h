@@ -13,6 +13,8 @@ namespace gui
 {
 class ProgressbarManager
 {
+    TRACK_LIFETIME();
+
 public:
     explicit ProgressbarManager(engine::Engine* engine);
     void draw(const world::World& world);

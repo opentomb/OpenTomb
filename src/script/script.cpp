@@ -44,8 +44,6 @@ const char* const script::ScriptEngine::ScriptEngineReferenceVarName = "_SCRIPT_
 script::ScriptEngine::ScriptEngine(engine::Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing ScriptEngine";
-
     exposeConstants();
     registerRaw("print", &ScriptEngine::print);
     lua_atpanic(m_state.getState(), &ScriptEngine::panic);

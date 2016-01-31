@@ -43,7 +43,9 @@ StreamTrack::StreamTrack(audio::Engine* engine)
     : m_audioEngine(engine)
 {
     alGenBuffers(StreamBufferCount, m_buffers);              // Generate all buffers at once.
+    DEBUG_CHECK_AL_ERROR();
     alGenSources(1, &m_source);
+    DEBUG_CHECK_AL_ERROR();
     m_format = 0x00;
     m_rate = 0;
     m_dampable = false;
@@ -51,28 +53,37 @@ StreamTrack::StreamTrack(audio::Engine* engine)
     m_wadFile = nullptr;
     m_sndFile = nullptr;
 
-    if(alIsSource(m_source))
+    if(!alIsSource(m_source))
     {
-        alSource3f(m_source, AL_POSITION, 0.0f, 0.0f, -1.0f); // OpenAL tut says this.
-        alSource3f(m_source, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
-        alSource3f(m_source, AL_DIRECTION, 0.0f, 0.0f, 0.0f);
-        alSourcef(m_source, AL_ROLLOFF_FACTOR, 0.0f);
-        alSourcei(m_source, AL_SOURCE_RELATIVE, AL_TRUE);
-        alSourcei(m_source, AL_LOOPING, AL_FALSE); // No effect, but just in case...
-
-        m_currentTrack = boost::none;
-        m_currentVolume = 0.0f;
-        m_dampedVolume = 0.0f;
-        m_active = false;
-        m_fadeoutAndStop = false;
-        m_streamType = StreamType::Oneshot;
-
-        // Setting method to -1 at init is required to prevent accidental
-        // ov_clear call, which results in crash, if no vorbis file was
-        // associated with given vorbis file structure.
-
-        m_method = StreamMethod::Any;
+        BOOST_LOG_TRIVIAL(error) << __FUNCTION__ ": Could not create source";
+        return;
     }
+
+    alSource3f(m_source, AL_POSITION, 0.0f, 0.0f, -1.0f); // OpenAL tut says this.
+    DEBUG_CHECK_AL_ERROR();
+    alSource3f(m_source, AL_VELOCITY, 0.0f, 0.0f, 0.0f);
+    DEBUG_CHECK_AL_ERROR();
+    alSource3f(m_source, AL_DIRECTION, 0.0f, 0.0f, 0.0f);
+    DEBUG_CHECK_AL_ERROR();
+    alSourcef(m_source, AL_ROLLOFF_FACTOR, 0.0f);
+    DEBUG_CHECK_AL_ERROR();
+    alSourcei(m_source, AL_SOURCE_RELATIVE, AL_TRUE);
+    DEBUG_CHECK_AL_ERROR();
+    alSourcei(m_source, AL_LOOPING, AL_FALSE); // No effect, but just in case...
+    DEBUG_CHECK_AL_ERROR();
+
+    m_currentTrack = boost::none;
+    m_currentVolume = 0.0f;
+    m_dampedVolume = 0.0f;
+    m_active = false;
+    m_fadeoutAndStop = false;
+    m_streamType = StreamType::Oneshot;
+
+    // Setting method to -1 at init is required to prevent accidental
+    // ov_clear call, which results in crash, if no vorbis file was
+    // associated with given vorbis file structure.
+
+    m_method = StreamMethod::Any;
 }
 
 StreamTrack::~StreamTrack()
@@ -80,7 +91,9 @@ StreamTrack::~StreamTrack()
     stop(); // In case we haven't stopped yet.
 
     alDeleteSources(1, &m_source);
+    DEBUG_CHECK_AL_ERROR();
     alDeleteBuffers(StreamBufferCount, m_buffers);
+    DEBUG_CHECK_AL_ERROR();
 }
 
 bool StreamTrack::load(const char *path, size_t index, const StreamType type, const StreamMethod load_method)
@@ -115,11 +128,13 @@ bool StreamTrack::unload()
     {
         int queued;
         alGetSourcei(m_source, AL_BUFFERS_QUEUED, &queued);
+        DEBUG_CHECK_AL_ERROR();
 
         while(queued--)
         {
             ALuint buffer;
             alSourceUnqueueBuffers(m_source, 1, &buffer);
+            DEBUG_CHECK_AL_ERROR();
         }
     }
 
@@ -253,9 +268,9 @@ bool StreamTrack::play(FxManager& manager, bool fade_in)
     {
         if(!stream(m_buffers[i]))
         {
-            if(!i)
+            if(i == 0)
             {
-                BOOST_LOG_TRIVIAL(debug) << "StreamTrack: error preparing buffers";
+                BOOST_LOG_TRIVIAL(debug) << __FUNCTION__ ": error preparing buffers";
                 return false;
             }
             else
@@ -287,8 +302,11 @@ bool StreamTrack::play(FxManager& manager, bool fade_in)
     }
 
     alSourcef(m_source, AL_GAIN, m_currentVolume * m_audioEngine->getSettings().music_volume);
+    DEBUG_CHECK_AL_ERROR();
     alSourceQueueBuffers(m_source, buffers_to_play, m_buffers);
+    DEBUG_CHECK_AL_ERROR();
     alSourcePlay(m_source);
+    DEBUG_CHECK_AL_ERROR();
 
     m_fadeoutAndStop = false;
     m_active = true;
@@ -299,6 +317,7 @@ void StreamTrack::pause()
 {
     if(alIsSource(m_source))
         alSourcePause(m_source);
+    DEBUG_CHECK_AL_ERROR();
 }
 
 void StreamTrack::fadeOutAndStop()
@@ -311,6 +330,7 @@ void StreamTrack::stop()    // Immediately stop track.
     if(alIsSource(m_source) && isPlaying())
     {
         alSourceStop(m_source);
+        DEBUG_CHECK_AL_ERROR();
     }
 }
 
@@ -420,6 +440,7 @@ bool StreamTrack::update()
         alSourcef(m_source, AL_GAIN, m_currentVolume              *  // Global track volume.
                   (1.0f - m_dampedVolume)       *  // Damp volume.
                   m_audioEngine->getSettings().music_volume);  // Global music volume setting.
+        DEBUG_CHECK_AL_ERROR();
     }
 
     // Check if any track buffers were already processed.
@@ -430,9 +451,13 @@ bool StreamTrack::update()
     {
         ALuint buffer;
         alSourceUnqueueBuffers(m_source, 1, &buffer);     // Unlink processed buffer.
+        DEBUG_CHECK_AL_ERROR();
         buffered = stream(buffer);                      // Refill processed buffer.
         if(buffered)
+        {
             alSourceQueueBuffers(m_source, 1, &buffer);   // Relink processed buffer.
+            DEBUG_CHECK_AL_ERROR();
+        }
     }
 
     return buffered;
@@ -464,6 +489,7 @@ bool StreamTrack::isPlaying() const                       // Check if track is p
     {
         ALenum state = AL_STOPPED;
         alGetSourcei(m_source, AL_SOURCE_STATE, &state);
+        DEBUG_CHECK_AL_ERROR();
 
         // Paused state and existing file pointers also counts as playing.
         return state == AL_PLAYING || state == AL_PAUSED;
@@ -523,6 +549,7 @@ bool StreamTrack::stream(ALuint buffer)
         return false;
 
     alBufferData(buffer, m_format, pcm.data(), static_cast<ALsizei>(size * sizeof(pcm[0])), m_rate);
+    DEBUG_CHECK_AL_ERROR();
     return true;
 }
 
@@ -538,6 +565,7 @@ void StreamTrack::setFX(FxManager& manager)
     // Assign global reverb FX to channel.
 
     alSource3i(m_source, AL_AUXILIARY_SEND_FILTER, slot, 0, AL_FILTER_NULL);
+    DEBUG_CHECK_AL_ERROR();
 }
 
 void StreamTrack::unsetFX()
@@ -545,6 +573,8 @@ void StreamTrack::unsetFX()
     // Remove any audio sends and direct filters from channel.
 
     alSourcei(m_source, AL_DIRECT_FILTER, AL_FILTER_NULL);
+    DEBUG_CHECK_AL_ERROR();
     alSource3i(m_source, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
+    DEBUG_CHECK_AL_ERROR();
 }
 } // namespace audio

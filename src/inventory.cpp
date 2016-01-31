@@ -20,8 +20,6 @@
 InventoryManager::InventoryManager(engine::Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing InventoryManager";
-
     m_labelTitle.position = { 0, 30 };
     m_labelTitle.Xanchor = gui::HorizontalAnchor::Center;
     m_labelTitle.Yanchor = gui::VerticalAnchor::Top;

@@ -34,6 +34,8 @@
 
 class BorderedTextureAtlas
 {
+    TRACK_LIFETIME();
+
     struct TextureSizeComparator;
 
     /*!

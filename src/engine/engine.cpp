@@ -187,8 +187,6 @@ Engine::Engine()
     , m_scriptEngine(this)
     , debugDrawer(this)
 {
-    BOOST_LOG_TRIVIAL(info) << "Engine booting...";
-
     m_scriptEngine.doFile("scripts/loadscript.lua");
 #if defined(__MACOSX__)
     FindConfigFile();

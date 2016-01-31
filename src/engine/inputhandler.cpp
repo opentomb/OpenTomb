@@ -20,7 +20,6 @@ using gui::Console;
 InputHandler::InputHandler(Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing InputHandler";
 }
 
 void InputHandler::primaryMouseDown()
@@ -116,8 +115,6 @@ InputHandler::~InputHandler()
 
 void InputHandler::configureControllers(int controllerId, bool useJoystick, bool useHaptic)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing input handler";
-
     SDL_InitSubSystem(SDL_INIT_EVENTS);
     if(!useJoystick)
         return;

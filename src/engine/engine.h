@@ -80,7 +80,8 @@ struct EngineControlState
 
 class Engine
 {
-private:
+    TRACK_LIFETIME();
+
     util::Duration m_frameTime = util::Duration(0);
 
 public:

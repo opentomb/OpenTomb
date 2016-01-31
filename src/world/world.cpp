@@ -23,7 +23,6 @@ World::World(engine::Engine* engine)
     : m_engine(engine)
     , m_audioEngine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing World";
 }
 
 void World::prepare()

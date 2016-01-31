@@ -3,6 +3,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/constants.hpp>
 
+#include <boost/log/trivial.hpp>
+#include <boost/type_index.hpp>
+
 #include <cstdint>
 #include <chrono>
 
@@ -64,4 +67,33 @@ inline TimePoint now() noexcept
 {
     return ClockType::now();
 }
+
+class LifetimeTracker final
+{
+private:
+    const std::string m_objectName;
+    const uintptr_t m_id;
+
+public:
+    explicit LifetimeTracker(const std::string& name, const void* ptr)
+        : m_objectName(name)
+        , m_id(reinterpret_cast<const uintptr_t>(ptr))
+    {
+        BOOST_LOG_TRIVIAL(debug) << "Initializing: " << m_objectName << " @ " << std::hex << m_id << std::dec;
+    }
+    explicit LifetimeTracker(std::string&& name, const void* ptr)
+        : m_objectName(std::move(name))
+        , m_id(reinterpret_cast<const uintptr_t>(ptr))
+    {
+        BOOST_LOG_TRIVIAL(debug) << "Initializing: " << m_objectName << " @ " << std::hex << m_id << std::dec;
+    }
+    ~LifetimeTracker()
+    {
+        BOOST_LOG_TRIVIAL(debug) << "Shut down complete: " << m_objectName << " @ " << std::hex << m_id << std::dec;
+    }
+};
+
+#define TRACK_LIFETIME() \
+    ::util::LifetimeTracker _S_lifetimeTracker{ boost::typeindex::type_id<decltype(*this)>().pretty_name(), this }
+
 } // namespace util

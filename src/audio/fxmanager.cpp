@@ -19,11 +19,15 @@ FxManager::~FxManager() noexcept
             continue;
 
         alAuxiliaryEffectSloti(slot, AL_EFFECTSLOT_EFFECT, AL_EFFECT_NULL);
+        DEBUG_CHECK_AL_ERROR();
         alDeleteAuxiliaryEffectSlots(1, &slot);
+        DEBUG_CHECK_AL_ERROR();
     }
 
     alDeleteFilters(1, &m_filter);
+    DEBUG_CHECK_AL_ERROR();
     alDeleteEffects(m_effects.size(), m_effects.data());
+    DEBUG_CHECK_AL_ERROR();
 }
 
 bool FxManager::loadReverb(loader::ReverbType effect_index, const EFXEAXREVERBPROPERTIES *reverb)
@@ -34,20 +38,34 @@ bool FxManager::loadReverb(loader::ReverbType effect_index, const EFXEAXREVERBPR
     if(alIsEffect(effect))
     {
         alEffecti(effect, AL_EFFECT_TYPE, AL_EFFECT_REVERB);
+        DEBUG_CHECK_AL_ERROR();
 
         alEffectf(effect, AL_REVERB_DENSITY, reverb->flDensity);
+        DEBUG_CHECK_AL_ERROR();
         alEffectf(effect, AL_REVERB_DIFFUSION, reverb->flDiffusion);
+        DEBUG_CHECK_AL_ERROR();
         alEffectf(effect, AL_REVERB_GAIN, reverb->flGain);
+        DEBUG_CHECK_AL_ERROR();
         alEffectf(effect, AL_REVERB_GAINHF, reverb->flGainHF);
+        DEBUG_CHECK_AL_ERROR();
         alEffectf(effect, AL_REVERB_DECAY_TIME, reverb->flDecayTime);
+        DEBUG_CHECK_AL_ERROR();
         alEffectf(effect, AL_REVERB_DECAY_HFRATIO, reverb->flDecayHFRatio);
+        DEBUG_CHECK_AL_ERROR();
         alEffectf(effect, AL_REVERB_REFLECTIONS_GAIN, reverb->flReflectionsGain);
+        DEBUG_CHECK_AL_ERROR();
         alEffectf(effect, AL_REVERB_REFLECTIONS_DELAY, reverb->flReflectionsDelay);
+        DEBUG_CHECK_AL_ERROR();
         alEffectf(effect, AL_REVERB_LATE_REVERB_GAIN, reverb->flLateReverbGain);
+        DEBUG_CHECK_AL_ERROR();
         alEffectf(effect, AL_REVERB_LATE_REVERB_DELAY, reverb->flLateReverbDelay);
+        DEBUG_CHECK_AL_ERROR();
         alEffectf(effect, AL_REVERB_AIR_ABSORPTION_GAINHF, reverb->flAirAbsorptionGainHF);
+        DEBUG_CHECK_AL_ERROR();
         alEffectf(effect, AL_REVERB_ROOM_ROLLOFF_FACTOR, reverb->flRoomRolloffFactor);
+        DEBUG_CHECK_AL_ERROR();
         alEffecti(effect, AL_REVERB_DECAY_HFLIMIT, reverb->iDecayHFLimit);
+        DEBUG_CHECK_AL_ERROR();
 
         return true;
     }
@@ -61,23 +79,26 @@ bool FxManager::loadReverb(loader::ReverbType effect_index, const EFXEAXREVERBPR
 FxManager::FxManager(engine::Engine* engine)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing FxManager";
 }
 
 FxManager::FxManager(engine::Engine* engine, bool)
     : m_engine(engine)
 {
-    BOOST_LOG_TRIVIAL(info) << "Initializing FxManager";
-
     m_effects.fill(0);
     m_slots.fill(0);
     alGenAuxiliaryEffectSlots(MaxSlots, m_slots.data());
+    DEBUG_CHECK_AL_ERROR();
     alGenEffects(m_effects.size(), m_effects.data());
+    DEBUG_CHECK_AL_ERROR();
     alGenFilters(1, &m_filter);
+    DEBUG_CHECK_AL_ERROR();
 
     alFilteri(m_filter, AL_FILTER_TYPE, AL_FILTER_LOWPASS);
+    DEBUG_CHECK_AL_ERROR();
     alFilterf(m_filter, AL_LOWPASS_GAIN, 0.7f);      // Low frequencies gain.
+    DEBUG_CHECK_AL_ERROR();
     alFilterf(m_filter, AL_LOWPASS_GAINHF, 0.0f);    // High frequencies gain.
+    DEBUG_CHECK_AL_ERROR();
 
     // Fill up effects with reverb presets.
 
@@ -113,11 +134,14 @@ void FxManager::updateListener(world::Camera& cam)
     };
 
     alListenerfv(AL_ORIENTATION, v);
+    DEBUG_CHECK_AL_ERROR();
 
     alListenerfv(AL_POSITION, glm::value_ptr(cam.getPosition()));
+    DEBUG_CHECK_AL_ERROR();
 
     glm::vec3 v2 = cam.getMovement() / m_engine->getFrameTimeSecs();
     alListenerfv(AL_VELOCITY, glm::value_ptr(v2));
+    DEBUG_CHECK_AL_ERROR();
     cam.resetMovement();
 
     if(!cam.getCurrentRoom())
@@ -167,6 +191,7 @@ ALuint FxManager::allocateSlot()
         if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
         {
             alAuxiliaryEffectSloti(slot, AL_EFFECTSLOT_EFFECT, effect);
+            DEBUG_CHECK_AL_ERROR();
         }
         return slot;
     }

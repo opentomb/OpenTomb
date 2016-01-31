@@ -47,8 +47,10 @@ namespace script
 {
 class ScriptEngine
 {
-private:
     static const char* const ScriptEngineReferenceVarName;
+
+    TRACK_LIFETIME();
+
 public:
     explicit ScriptEngine(engine::Engine* engine);
 
