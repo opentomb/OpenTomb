@@ -8,8 +8,8 @@ cmake_minimum_required(VERSION 3.2)
 include("cmake/HunterGate.cmake")
 
 HunterGate(
-    URL "https://github.com/stohrendorf/hunter/archive/faff7fb5ef3130ac6ae19d847b2bfcba9629a924.zip"
-    SHA1 "d99599de86bad8ed940c90f9b7e2a1647c4fd37e"
+    URL "https://github.com/stohrendorf/hunter/archive/3b5ddd4e70cb96e089e4ff98f60addedfb34a4c2.zip"
+    SHA1 "793706a63f7df16b2c23774da12d2193383d16f9"
 )
 
 project(OpenTomb)
@@ -160,25 +160,10 @@ target_include_directories(CImg INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/CImg)
 target_link_libraries(CImg INTERFACE PNG JPEG)
 target_compile_definitions(CImg INTERFACE -Dcimg_use_png -Dcimg_use_jpeg -Dcimg_display=0)
 
-if(FALSE) # FIXME These deps should be handled by Hunter through SndFile, but FLAC is currently missing there
-    # Dependency: OGG
-    find_package(OGG REQUIRED)
-    include_directories(${OGG_INCLUDE_DIR})
-
-
-    # Dependency: Vorbis
-    find_package(Vorbis REQUIRED)
-    include_directories(${VORBIS_INCLUDE_DIR})
-
-
-    # Dependency: VorbisFile
-    find_package(VorbisFile REQUIRED)
-    include_directories(${VORBISFILE_INCLUDE_DIR})
-endif()
-
-
 # Dependency: SndFile
-ot_find_dependency(SndFile)
+ot_find_dependency(OGG)
+ot_find_dependency(Vorbis) # requires OGG
+ot_find_dependency(SndFile) # requires OGG and Vorbis
 target_include_directories(SndFile INTERFACE ${SNDFILE_INCLUDE_DIR})
 target_link_libraries(SndFile INTERFACE ${SNDFILE_LIBRARIES} ${OGG_LIBRARIES} ${VORBIS_LIBRARIES} ${VORBISFILE_LIBRARIES})
 
