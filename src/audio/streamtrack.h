@@ -5,6 +5,8 @@
 
 #include <boost/optional.hpp>
 
+#include <array>
+
 namespace audio
 {
 class FxManager;
@@ -49,7 +51,7 @@ public:
     bool load(const char *path, size_t index, const StreamType type, const StreamMethod load_method);
     bool unload();
 
-    bool play(FxManager &manager, bool fade_in = false);     // Begins to play track.
+    bool play(bool fade_in = false);     // Begins to play track.
     //! Pauses track, preserving position.
     void pause();
 
@@ -67,7 +69,7 @@ public:
     bool isActive() const;                     // Checks if track is still active.
     bool isDampable() const;                   // Checks if track is dampable.
 
-    void setFX(FxManager& manager);                        // Set reverb FX, according to room flag.
+    void setFX();                        // Set reverb FX, according to room flag.
     void unsetFX();                      // Remove any reverb FX from source.
 
     static bool damp_active;             // Global flag for damping BGM tracks.
@@ -92,7 +94,7 @@ private:
     // General OpenAL fields
 
     ALuint          m_source;
-    ALuint          m_buffers[StreamBufferCount];
+    std::array<ALuint, StreamBufferCount> m_buffers;
     ALenum          m_format;
     ALsizei         m_rate;
     ALfloat         m_currentVolume;     //!< Stream volume, considering fades.

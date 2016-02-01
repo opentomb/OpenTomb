@@ -35,19 +35,19 @@ public:
     explicit Source(audio::Engine* engine);
     ~Source();
 
-    void play(FxManager& manager, const world::World& world);    // Make source active and play it.
+    void play(const world::World& world);    // Make source active and play it.
     void pause();   // Pause source (leaving it active).
     void stop();    // Stop and destroy source.
-    void update(const FxManager &manager, const world::World& world);  // Update source parameters.
+    void update(const world::World& world);  // Update source parameters.
 
     void setBuffer(ALint buffer);           // Assign buffer to source.
     void setLooping(ALboolean is_looping);  // Set looping flag.
     void setPitch(ALfloat pitch_value);     // Set pitch shift.
     void setGain(ALfloat gain_value);       // Set gain (volume).
     void setRange(ALfloat range_value);     // Set max. audible distance.
-    void setFX(FxManager &manager);                           // Set reverb FX, according to room flag.
+    void setFX();                           // Set reverb FX, according to room flag.
     void unsetFX();                         // Remove any reverb FX from source.
-    void setUnderwater(const FxManager &fxManager);                   // Apply low-pass underwater filter.
+    void setUnderwater();                   // Apply low-pass underwater filter.
 
     bool isLooping() const;
     bool isPlaying() const;

@@ -83,7 +83,7 @@ bool Source::isPlaying() const
     return state == AL_PLAYING || state == AL_PAUSED;
 }
 
-void Source::play(FxManager& manager, const world::World& world)
+void Source::play(const world::World& world)
 {
     if(!alIsSource(m_sourceIndex))
         return;
@@ -110,8 +110,8 @@ void Source::play(FxManager& manager, const world::World& world)
 
         if(m_audioEngine->getSettings().use_effects)
         {
-            setFX(manager);
-            setUnderwater(manager);
+            setFX();
+            setUnderwater();
         }
     }
 
@@ -138,7 +138,7 @@ void Source::stop()
     DEBUG_CHECK_AL_ERROR();
 }
 
-void Source::update(const FxManager& manager, const world::World& world)
+void Source::update(const world::World& world)
 {
     // Bypass any non-active source.
     if(!m_active)
@@ -169,9 +169,9 @@ void Source::update(const FxManager& manager, const world::World& world)
     {
         linkEmitter(world);
 
-        if(m_audioEngine->getSettings().use_effects && m_underwater != manager.isUnderwater())
+        if(m_audioEngine->getSettings().use_effects && m_underwater != m_audioEngine->getFxManager().isUnderwater())
         {
-            setUnderwater(manager);
+            setUnderwater();
         }
     }
     else
@@ -252,14 +252,14 @@ void Source::setVelocity(const ALfloat vel_vector[])
     DEBUG_CHECK_AL_ERROR();
 }
 
-void Source::setFX(FxManager& manager)
+void Source::setFX()
 {
     // Reverb FX is applied globally through audio send. Since player can
     // jump between adjacent rooms with different reverb info, we assign
     // several (2 by default) interchangeable audio sends, which are switched
     // every time current room reverb is changed.
 
-    ALuint slot = manager.allocateSlot();
+    ALuint slot = m_audioEngine->getFxManager().allocateSlot();
 
     // Assign global reverb FX to channel.
 
@@ -277,15 +277,15 @@ void Source::unsetFX()
     DEBUG_CHECK_AL_ERROR();
 }
 
-void Source::setUnderwater(const FxManager& fxManager)
+void Source::setUnderwater()
 {
     // Water low-pass filter is applied when source's is_water flag is set.
     // Note that it is applied directly to channel, i. e. all sources that
     // are underwater will damp, despite of global reverb setting.
 
-    if(fxManager.isUnderwater())
+    if(m_audioEngine->getFxManager().isUnderwater())
     {
-        alSourcei(m_sourceIndex, AL_DIRECT_FILTER, fxManager.getFilter());
+        alSourcei(m_sourceIndex, AL_DIRECT_FILTER, m_audioEngine->getFxManager().getFilter());
         DEBUG_CHECK_AL_ERROR();
         m_underwater = true;
     }

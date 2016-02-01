@@ -2148,7 +2148,7 @@ void lua_PlayStream(engine::Engine& engine, int id, lua::Value mask)
         return;
     }
 
-    if(!mask.is<lua::Nil>())
+    if(mask.is<uint8_t>())
     {
         engine.m_audioEngine.streamPlay(id, mask.to<uint8_t>());
     }

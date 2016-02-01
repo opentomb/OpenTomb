@@ -176,26 +176,22 @@ void FxManager::updateListener(world::Character& /*ent*/)
 
 ALuint FxManager::allocateSlot()
 {
-    if(m_currentRoomType != m_lastRoomType)  // Switch audio send.
-    {
-        m_lastRoomType = m_currentRoomType;
-        ++m_currentSlot;
-        if(m_currentSlot >= m_slots.size())
-            m_currentSlot = 0;
-
-        ALuint effect = m_effects[static_cast<int>(m_currentRoomType)];
-        ALuint slot = m_slots[m_currentSlot];
-
-        if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
-        {
-            alAuxiliaryEffectSloti(slot, AL_EFFECTSLOT_EFFECT, effect);
-            DEBUG_CHECK_AL_ERROR();
-        }
-        return slot;
-    }
-    else    // Do not switch audio send.
-    {
+    if(m_currentRoomType == m_lastRoomType)  // Switch audio send.
         return m_slots[m_currentSlot];
+
+    m_lastRoomType = m_currentRoomType;
+    ++m_currentSlot;
+    if(m_currentSlot >= m_slots.size())
+        m_currentSlot = 0;
+
+    ALuint effect = m_effects[static_cast<int>(m_currentRoomType)];
+    ALuint slot = m_slots[m_currentSlot];
+
+    if(alIsAuxiliaryEffectSlot(slot) && alIsEffect(effect))
+    {
+        alAuxiliaryEffectSloti(slot, AL_EFFECTSLOT_EFFECT, effect);
+        DEBUG_CHECK_AL_ERROR();
     }
+    return slot;
 }
 }

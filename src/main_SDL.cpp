@@ -27,7 +27,7 @@ int main(int /*argc*/, char** /*argv*/)
 
     engine::Engine engine{config};
 
-    boost::property_tree::write_xml("config.xml", config);
+    boost::property_tree::write_xml("config.xml", config, std::locale(), boost::property_tree::xml_writer_settings<std::string>(' ', 4));
 
     // Entering main loop.
 

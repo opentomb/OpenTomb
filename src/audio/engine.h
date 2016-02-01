@@ -115,16 +115,6 @@ public:
         return m_emitters[index];
     }
 
-    void setSourceCount(size_t count)
-    {
-        m_sources.resize(count, Source(this));
-    }
-
-    void setStreamTrackCount(size_t count)
-    {
-        m_tracks.resize(count, StreamTrack(this));
-    }
-
     // General damping update procedure. Constantly checks if damp condition exists, and
     // if so, it lowers the volume of tracks which are dampable.
     // FIXME Should be moved to engine
@@ -151,10 +141,13 @@ public:
 
     void clear()
     {
-        m_sources.clear();
-        m_buffers.clear();
+        if(!m_buffers.empty())
+        {
+            alDeleteBuffers(m_buffers.size(), m_buffers.data());
+            DEBUG_CHECK_AL_ERROR();
+            m_buffers.clear();
+        }
         m_effects.clear();
-        m_tracks.clear();
         m_trackMap.clear();
     }
 
@@ -203,7 +196,15 @@ public:
 
     static constexpr int StreamSourceCount = 6;
 
-    void init(size_t num_Sources = MaxChannels);
+    const FxManager& getFxManager() const
+    {
+        return m_fxManager;
+    }
+
+    FxManager& getFxManager()
+    {
+        return m_fxManager;
+    }
 
 private:
     // MAP_SIZE is similar to sound map size, but it is used to mark
@@ -216,9 +217,8 @@ private:
     static constexpr int StreamMapSize = 256;
 
     engine::Engine* m_engine;
-    Settings m_settings; // Must be initialized *before* m_fxManager
-    DeviceManager m_deviceManager;
-
+    Settings m_settings; // Must be initialized *before* anything else
+    DeviceManager m_deviceManager; // ... and this must be initialized *after* the settings, but *before* any other things
 
     FxManager m_fxManager; // Must be initialized *after* m_settings
 

@@ -125,7 +125,6 @@ public:
     world::World m_world;
     gui::Gui m_gui;
     Gameflow m_gameflow;
-    script::MainEngine m_scriptEngine;
     BulletEngine m_bullet;
 
     float m_timeScale = 1;
@@ -135,6 +134,8 @@ public:
     world::Object* m_lastObject = nullptr;
 
     audio::Engine m_audioEngine;
+
+    script::MainEngine m_scriptEngine;
 
     // Initializers
 

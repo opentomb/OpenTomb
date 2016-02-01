@@ -721,8 +721,6 @@ bool Engine::loadMap(const std::string& name)
 
     m_scriptEngine.clean();
 
-    m_audioEngine.init();
-
     m_gui.drawLoadScreen(100);
 
     // Here we can place different platform-specific level loading routines.

@@ -43,7 +43,7 @@ bool StreamTrack::damp_active = false;
 StreamTrack::StreamTrack(audio::Engine* engine)
     : m_audioEngine(engine)
 {
-    alGenBuffers(StreamBufferCount, m_buffers);              // Generate all buffers at once.
+    alGenBuffers(StreamBufferCount, m_buffers.data());              // Generate all buffers at once.
     DEBUG_CHECK_AL_ERROR();
     alGenSources(1, &m_source);
     DEBUG_CHECK_AL_ERROR();
@@ -93,7 +93,7 @@ StreamTrack::~StreamTrack()
 
     alDeleteSources(1, &m_source);
     DEBUG_CHECK_AL_ERROR();
-    alDeleteBuffers(StreamBufferCount, m_buffers);
+    alDeleteBuffers(StreamBufferCount, m_buffers.data());
     DEBUG_CHECK_AL_ERROR();
 }
 
@@ -254,8 +254,10 @@ bool StreamTrack::loadWad(uint8_t index, const char* filename)
     }
 }
 
-bool StreamTrack::play(FxManager& manager, bool fade_in)
+bool StreamTrack::play(bool fade_in)
 {
+    BOOST_ASSERT(alIsSource(m_source) == AL_TRUE);
+
     int buffers_to_play = 0;
 
     // At start-up, we fill all available buffers.
@@ -265,7 +267,7 @@ bool StreamTrack::play(FxManager& manager, bool fade_in)
     // allocating them as long as Stream() routine returns false. Later, we use
     // this number for queuing buffers to source.
 
-    for(int i = 0; i < StreamBufferCount; i++, buffers_to_play++)
+    for(size_t i = 0; i < m_buffers.size(); i++, buffers_to_play++)
     {
         if(!stream(m_buffers[i]))
         {
@@ -294,7 +296,7 @@ bool StreamTrack::play(FxManager& manager, bool fade_in)
     {
         if(m_streamType == StreamType::Chat)
         {
-            setFX(manager);
+            setFX();
         }
         else
         {
@@ -304,7 +306,7 @@ bool StreamTrack::play(FxManager& manager, bool fade_in)
 
     alSourcef(m_source, AL_GAIN, m_currentVolume * m_audioEngine->getSettings().music_volume);
     DEBUG_CHECK_AL_ERROR();
-    alSourceQueueBuffers(m_source, buffers_to_play, m_buffers);
+    alSourceQueueBuffers(m_source, buffers_to_play, m_buffers.data());
     DEBUG_CHECK_AL_ERROR();
     alSourcePlay(m_source);
     DEBUG_CHECK_AL_ERROR();
@@ -341,7 +343,8 @@ bool StreamTrack::update()
     bool buffered = true;
     bool change_gain = false;
 
-    if(!m_active) return true; // Nothing to do here.
+    if(!m_active)
+        return true; // Nothing to do here.
 
     if(!isPlaying())
     {
@@ -486,19 +489,15 @@ bool StreamTrack::isDampable() const                      // Check if track is d
 
 bool StreamTrack::isPlaying() const                       // Check if track is playing.
 {
-    if(alIsSource(m_source))
-    {
-        ALenum state = AL_STOPPED;
-        alGetSourcei(m_source, AL_SOURCE_STATE, &state);
-        DEBUG_CHECK_AL_ERROR();
-
-        // Paused state and existing file pointers also counts as playing.
-        return state == AL_PLAYING || state == AL_PAUSED;
-    }
-    else
-    {
+    if(!alIsSource(m_source))
         return false;
-    }
+
+    ALenum state = AL_STOPPED;
+    alGetSourcei(m_source, AL_SOURCE_STATE, &state);
+    DEBUG_CHECK_AL_ERROR();
+
+    // Paused state and existing file pointers also counts as playing.
+    return state == AL_PLAYING || state == AL_PAUSED;
 }
 
 bool StreamTrack::stream(ALuint buffer)
@@ -554,14 +553,14 @@ bool StreamTrack::stream(ALuint buffer)
     return true;
 }
 
-void StreamTrack::setFX(FxManager& manager)
+void StreamTrack::setFX()
 {
     // Reverb FX is applied globally through audio send. Since player can
     // jump between adjacent rooms with different reverb info, we assign
     // several (2 by default) interchangeable audio sends, which are switched
     // every time current room reverb is changed.
 
-    ALuint slot = manager.allocateSlot();
+    ALuint slot = m_audioEngine->getFxManager().allocateSlot();
 
     // Assign global reverb FX to channel.
 

@@ -17,8 +17,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 
-using gui::Console;
-
 namespace audio
 {
 // Audio de-initialization delay gives some time to OpenAL to shut down its
@@ -179,11 +177,19 @@ Engine::Engine(engine::Engine* engine, boost::property_tree::ptree& config)
     , m_deviceManager(this)
     , m_fxManager(this)
 {
+    m_sources.reserve(MaxChannels - StreamSourceCount); // Subtract sources reserved for music.
+    for(size_t i = 0; i < MaxChannels - StreamSourceCount; ++i)
+        m_sources.emplace_back(this);
+    m_tracks.reserve(StreamSourceCount);
+    for(size_t i = 0; i < StreamSourceCount; ++i)
+        m_tracks.emplace_back(this);
+    m_fxManager.resetLastRoomType();
 }
 
 bool Engine::loadALbufferFromFile(ALuint buf_number, const std::string& fname)
 {
     SF_INFO sfInfo;
+    memset(&sfInfo, 0, sizeof(sfInfo));
     SNDFILE* file = sf_open(fname.c_str(), SFM_READ, &sfInfo);
 
     if(!file)
@@ -225,7 +231,7 @@ void Engine::resumeAllSources()
     {
         if(source.isActive())
         {
-            source.play(m_fxManager, m_engine->m_world);
+            source.play(m_engine->m_world);
         }
     }
 }
@@ -310,8 +316,9 @@ boost::optional<size_t> Engine::findSource(const boost::optional<SoundId>& sound
 
 boost::optional<size_t> Engine::getFreeStream() const
 {
-    for(uint32_t i = 0; i < m_tracks.size(); i++)
+    for(size_t i = 0; i < m_tracks.size(); i++)
     {
+        BOOST_LOG_TRIVIAL(debug) << "Track #" << i << " playing=" << m_tracks[i].isPlaying() << ", active=" << m_tracks[i].isActive();
         if(!m_tracks[i].isPlaying() && !m_tracks[i].isActive())
         {
             return i;
@@ -376,7 +383,7 @@ void Engine::updateSources()
 
     for(Source& src : m_sources)
     {
-        src.update(m_fxManager, m_engine->m_world);
+        src.update(m_engine->m_world);
     }
 }
 
@@ -479,7 +486,7 @@ StreamError Engine::streamPlay(const uint32_t track_index, const uint8_t mask)
 
     // Try to play newly assigned and loaded track.
 
-    if(!m_tracks[*target_stream].play(m_fxManager, do_fade_in))
+    if(!m_tracks[*target_stream].play(do_fade_in))
     {
         m_engine->m_gui.getConsole().warning(SYSWARN_STREAM_PLAY_ERROR);
         return StreamError::PlayError;
@@ -717,7 +724,7 @@ Error Engine::send(const boost::optional<SoundId>& soundId, EmitterType entityTy
 
     source->setRange(effect->range);    // Set audible range.
 
-    source->play(m_fxManager, m_engine->m_world);                     // Everything is OK, play sound now!
+    source->play(m_engine->m_world);                     // Everything is OK, play sound now!
 
     return Error::Processed;
 }
@@ -947,22 +954,6 @@ void Engine::loadSampleOverrideInfo()
     }
 }
 
-void Engine::init(size_t num_Sources)
-{
-    // Generate new source array.
-
-    num_Sources -= StreamSourceCount;          // Subtract sources reserved for music.
-    setSourceCount(num_Sources);
-
-    // Generate stream tracks array.
-
-    setStreamTrackCount(StreamSourceCount);
-
-    // Reset last room type used for assigning reverb.
-
-    m_fxManager.resetLastRoomType();
-}
-
 Engine::DeviceManager::~DeviceManager()
 {
     if(m_context)  // T4Larson <t4larson@gmail.com>: fixed
@@ -994,20 +985,20 @@ Engine::DeviceManager::DeviceManager(Engine* engine)
 
     if(!devlist)
     {
-        BOOST_LOG_TRIVIAL(warning) << "InitAL: No AL audio devices";
+        BOOST_LOG_TRIVIAL(warning) << BOOST_CURRENT_FUNCTION << ": No audio devices";
         return;
     }
 
     while(*devlist)
     {
-        BOOST_LOG_TRIVIAL(info) << " Device: " << devlist;
+        BOOST_LOG_TRIVIAL(info) << "Probing device " << devlist;
         ALCdevice* dev = alcOpenDevice(devlist);
 
         if(engine->getSettings().use_effects)
         {
             if(alcIsExtensionPresent(dev, ALC_EXT_EFX_NAME) == ALC_TRUE)
             {
-                BOOST_LOG_TRIVIAL(info) << " EFX supported!";
+                BOOST_LOG_TRIVIAL(info) << "Device supports EFX";
                 m_device = dev;
                 m_context = alcCreateContext(m_device, paramList);
                 // fails e.g. with Rapture3D, where EFX is supported
@@ -1029,7 +1020,7 @@ Engine::DeviceManager::DeviceManager(Engine* engine)
 
     if(!m_context)
     {
-        BOOST_LOG_TRIVIAL(warning) << "Failed to create OpenAL context.";
+        BOOST_LOG_TRIVIAL(warning) << BOOST_CURRENT_FUNCTION << ": Failed to create OpenAL context.";
         alcCloseDevice(m_device);
         m_device = nullptr;
         return;
@@ -1039,9 +1030,7 @@ Engine::DeviceManager::DeviceManager(Engine* engine)
 
     loadALExtFunctions(m_device);
 
-    std::string driver = "OpenAL library: ";
-    driver += alcGetString(m_device, ALC_DEVICE_SPECIFIER);
-    m_engine->m_engine->m_gui.getConsole().addLine(driver, gui::FontStyle::ConsoleInfo);
+    BOOST_LOG_TRIVIAL(info) << "Using OpenAL device " << alcGetString(m_device, ALC_DEVICE_SPECIFIER);
 
     alSpeedOfSound(330.0 * 512.0);
     alDopplerVelocity(330.0 * 510.0);
