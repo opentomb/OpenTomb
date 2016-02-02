@@ -61,7 +61,7 @@ public:
     //! Immediately stop track.
     void stop();
 
-    bool update();                       // Update track and manage streaming.
+    void update();                       // Update track and manage streaming.
 
     bool isTrack(size_t track_index) const; // Checks desired track's index.
     bool isType(const StreamType track_type) const;   // Checks desired track's type.

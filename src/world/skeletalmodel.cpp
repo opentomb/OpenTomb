@@ -126,8 +126,8 @@ void SkeletalModel::generateAnimCommands(const World& world)
         if(anim.animationCommandCount == 0)
             continue;
 
-        BOOST_ASSERT(anim.animationCommand < world.m_animCommands.size());
-        const int16_t *pointer = &world.m_animCommands[anim.animationCommand];
+        BOOST_ASSERT(anim.animationCommandIndex < world.m_animCommands.size());
+        const int16_t *pointer = &world.m_animCommands[anim.animationCommandIndex];
 
         for(size_t i = 0; i < anim.animationCommandCount; i++)
         {
@@ -185,7 +185,7 @@ void SkeletalModel::generateAnimCommands(const World& world)
     }
 }
 
-void SkeletalModel::loadStateChanges(const World& world, const loader::Level& level, const loader::AnimatedModel& moveable)
+void SkeletalModel::loadStateChanges(const World& world, const loader::Level& level, const loader::AnimatedModel& animatedModel)
 {
 #ifdef LOG_ANIM_DISPATCHES
     if(animations.size() > 1)
@@ -195,21 +195,21 @@ void SkeletalModel::loadStateChanges(const World& world, const loader::Level& le
 #endif
     for(size_t i = 0; i < m_animations.size(); i++)
     {
-        BOOST_ASSERT(moveable.animation_index + i < level.m_animations.size());
+        BOOST_ASSERT(animatedModel.animation_index + i < level.m_animations.size());
 
         animation::Animation* anim = &m_animations[i];
         anim->m_transitions.clear();
 
-        const loader::Animation& trAnimation = level.m_animations[moveable.animation_index + i];
-        int16_t animId = trAnimation.next_animation - moveable.animation_index;
+        const loader::Animation& trAnimation = level.m_animations[animatedModel.animation_index + i];
+        int16_t animId = trAnimation.nextAnimation - animatedModel.animation_index;
         animId &= 0x7fff; // this masks out the sign bit
         BOOST_ASSERT(animId >= 0);
         if(static_cast<size_t>(animId) < m_animations.size())
         {
             anim->next_anim = &m_animations[animId];
-            BOOST_ASSERT(level.m_animations[trAnimation.next_animation].firstFrame <= trAnimation.nextFrame);
-            BOOST_ASSERT(level.m_animations[trAnimation.next_animation].lastFrame >= trAnimation.nextFrame);
-            anim->nextFrame = trAnimation.nextFrame - level.m_animations[trAnimation.next_animation].firstFrame;
+            BOOST_ASSERT(level.m_animations[trAnimation.nextAnimation].firstFrame <= trAnimation.nextFrame);
+            BOOST_ASSERT(level.m_animations[trAnimation.nextAnimation].lastFrame >= trAnimation.nextFrame);
+            anim->nextFrame = trAnimation.nextFrame - level.m_animations[trAnimation.nextAnimation].firstFrame;
             anim->nextFrame %= anim->next_anim->getFrameDuration(); //!< @todo Paranoid?
 #ifdef LOG_ANIM_DISPATCHES
             BOOST_LOG_TRIVIAL(debug) << "ANIM[" << i << "], next_anim = " << anim->next_anim->id << ", next_frame = " << anim->next_frame;
@@ -223,42 +223,42 @@ void SkeletalModel::loadStateChanges(const World& world, const loader::Level& le
 
         anim->m_transitions.clear();
 
-        if(trAnimation.num_state_changes > 0 && m_animations.size() > 1)
+        if(trAnimation.transitionsCount > 0 && m_animations.size() > 1)
         {
 #ifdef LOG_ANIM_DISPATCHES
             BOOST_LOG_TRIVIAL(debug) << "ANIM[" << i << "], next_anim = " << (anim->next_anim ? anim->next_anim->id : -1) << ", next_frame = " << anim->next_frame;
 #endif
-            for(uint16_t j = 0; j < trAnimation.num_state_changes; j++)
+            for(uint16_t j = 0; j < trAnimation.transitionsCount; j++)
             {
-                BOOST_ASSERT(j + trAnimation.state_change_offset < level.m_stateChanges.size());
-                const loader::StateChange *tr_sch = &level.m_stateChanges[j + trAnimation.state_change_offset];
-                if(anim->findTransitionById(static_cast<LaraState>(tr_sch->state_id)) != nullptr)
+                BOOST_ASSERT(j + trAnimation.transitionsIndex < level.m_transitions.size());
+                const loader::Transitions *tr_sch = &level.m_transitions[j + trAnimation.transitionsIndex];
+                if(anim->findTransitionById(static_cast<LaraState>(tr_sch->stateId)) != nullptr)
                 {
-                    BOOST_LOG_TRIVIAL(warning) << "Multiple state changes for id " << tr_sch->state_id;
+                    BOOST_LOG_TRIVIAL(warning) << "Multiple state changes for id " << tr_sch->stateId;
                 }
-                animation::Transition* transition = &anim->m_transitions[static_cast<LaraState>(tr_sch->state_id)];
-                transition->id = static_cast<LaraState>(tr_sch->state_id);
+                animation::Transition* transition = &anim->m_transitions[static_cast<LaraState>(tr_sch->stateId)];
+                transition->id = static_cast<LaraState>(tr_sch->stateId);
                 transition->cases.clear();
-                for(uint16_t l = 0; l < tr_sch->num_anim_dispatches; l++)
+                for(uint16_t l = 0; l < tr_sch->transitionCaseCount; l++)
                 {
-                    BOOST_ASSERT(tr_sch->anim_dispatch + l < level.m_animDispatches.size());
-                    const loader::AnimDispatch *tr_adisp = &level.m_animDispatches[tr_sch->anim_dispatch + l];
-                    uint16_t next_anim = tr_adisp->next_animation & 0x7fff;
-                    uint16_t next_anim_ind = next_anim - (moveable.animation_index & 0x7fff);
+                    BOOST_ASSERT(tr_sch->firstTransitionCase + l < level.m_transitionCases.size());
+                    const loader::TransitionCase *tr_adisp = &level.m_transitionCases[tr_sch->firstTransitionCase + l];
+                    uint16_t next_anim = tr_adisp->targetAnimation & 0x7fff;
+                    uint16_t next_anim_ind = next_anim - (animatedModel.animation_index & 0x7fff);
                     if(next_anim_ind >= m_animations.size())
                         continue;
 
                     transition->cases.emplace_back();
                     animation::TransitionCase* transitionCase = &transition->cases.back();
 
-                    BOOST_ASSERT(moveable.animation_index <= next_anim);
-                    BOOST_ASSERT(next_anim - moveable.animation_index < m_animations.size());
-                    size_t next_frames_count = m_animations[next_anim - moveable.animation_index].getFrameDuration();
+                    BOOST_ASSERT(animatedModel.animation_index <= next_anim);
+                    BOOST_ASSERT(next_anim - animatedModel.animation_index < m_animations.size());
+                    size_t next_frames_count = m_animations[next_anim - animatedModel.animation_index].getFrameDuration();
                     BOOST_ASSERT(next_anim < level.m_animations.size());
-                    size_t next_frame = tr_adisp->nextFrame - level.m_animations[next_anim].firstFrame;
+                    size_t next_frame = tr_adisp->targetFrame - level.m_animations[next_anim].firstFrame;
 
-                    uint16_t low = tr_adisp->low - trAnimation.firstFrame;
-                    uint16_t high = tr_adisp->high - trAnimation.firstFrame;
+                    uint16_t low = tr_adisp->firstFrame - trAnimation.firstFrame;
+                    uint16_t high = tr_adisp->lastFrame - trAnimation.firstFrame;
 
                     // this is not good: frame_high can be frame_end+1 (for last-frame-loop statechanges,
                     // secifically fall anims (75,77 etc), which may fail to change state),
@@ -272,8 +272,8 @@ void SkeletalModel::loadStateChanges(const World& world, const loader::Level& le
                     }
                     transitionCase->firstFrame = low;
                     transitionCase->lastFrame = high;
-                    BOOST_ASSERT(next_anim >= moveable.animation_index);
-                    transitionCase->target.animation = next_anim - moveable.animation_index;
+                    BOOST_ASSERT(next_anim >= animatedModel.animation_index);
+                    transitionCase->target.animation = next_anim - animatedModel.animation_index;
                     transitionCase->target.frame = next_frame % next_frames_count;
 
 #ifdef LOG_ANIM_DISPATCHES
@@ -359,12 +359,12 @@ void SkeletalModel::loadAnimations(const loader::Level& level, size_t moveable)
         // BOOST_LOG_TRIVIAL(debug) << "Anim " << i << " stretch factor = " << int(trAnimation.stretchFactor) << ", frame count = " << (trAnimation.lastFrame - trAnimation.firstFrame + 1);
 
         anim->speed_x = trAnimation.speed;
-        anim->accel_x = trAnimation.accel;
-        anim->speed_y = trAnimation.accel_lateral;
-        anim->accel_y = trAnimation.speed_lateral;
+        anim->accel_x = trAnimation.accelleration;
+        anim->speed_y = trAnimation.lateralAccelleration;
+        anim->accel_y = trAnimation.lateralSpeed;
 
-        anim->animationCommand = trAnimation.anim_command;
-        anim->animationCommandCount = trAnimation.num_anim_commands;
+        anim->animationCommandIndex = trAnimation.animCommandIndex;
+        anim->animationCommandCount = trAnimation.animCommandCount;
         anim->state_id = static_cast<LaraState>(trAnimation.state_id);
 
         //        anim->frames.resize(TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i));

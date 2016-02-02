@@ -1611,7 +1611,7 @@ struct Item
 {
     int16_t object_id;     // Object Identifier (matched in Moveables[], or SpriteSequences[], as appropriate)
     int16_t room;          // which room contains this item
-    Vertex position;      // world coords
+    Vertex position;       // world coords
     float rotation;        // ((0xc000 >> 14) * 90) degrees
     int16_t intensity1;    // (constant lighting; -1 means use mesh lighting)
     int16_t intensity2;    // Like Intensity1, and almost always with the same value. [absent from TR1 data files]
@@ -1806,21 +1806,21 @@ struct Animation
     uint8_t poseDataSize;         // number of bit16's in Frames[] used by this animation
     uint16_t state_id;
 
-    int32_t   speed;
-    int32_t   accel;
+    int32_t speed;
+    int32_t accelleration;
 
-    int32_t   speed_lateral;      // new in TR4 -->
-    int32_t   accel_lateral;      // lateral speed and acceleration.
+    int32_t lateralSpeed;      // new in TR4 -->
+    int32_t lateralAccelleration;      // lateral speed and acceleration.
 
     uint16_t firstFrame;           // first frame in this animation
     uint16_t lastFrame;             // last frame in this animation (numframes = (End - Start) + 1)
-    uint16_t next_animation;
+    uint16_t nextAnimation;
     uint16_t nextFrame;
 
-    uint16_t num_state_changes;
-    uint16_t state_change_offset;   // offset into StateChanges[]
-    uint16_t num_anim_commands;     // How many of them to use.
-    uint16_t anim_command;          // offset into AnimCommand[]
+    uint16_t transitionsCount;
+    uint16_t transitionsIndex;   // offset into StateChanges[]
+    uint16_t animCommandCount;     // How many of them to use.
+    uint16_t animCommandIndex;          // offset into AnimCommand[]
 
     /// \brief reads an animation definition.
     static std::unique_ptr<Animation> readTr1(io::SDLReader& reader)
@@ -1843,27 +1843,27 @@ private:
         animation->state_id = reader.readU16();
 
         animation->speed = reader.readI32();
-        animation->accel = reader.readI32();
+        animation->accelleration = reader.readI32();
         if(withLateral)
         {
-            animation->speed_lateral = reader.readI32();
-            animation->accel_lateral = reader.readI32();
+            animation->lateralSpeed = reader.readI32();
+            animation->lateralAccelleration = reader.readI32();
         }
         else
         {
-            animation->speed_lateral = 0;
-            animation->accel_lateral = 0;
+            animation->lateralSpeed = 0;
+            animation->lateralAccelleration = 0;
         }
 
         animation->firstFrame = reader.readU16();
         animation->lastFrame = reader.readU16();
-        animation->next_animation = reader.readU16();
+        animation->nextAnimation = reader.readU16();
         animation->nextFrame = reader.readU16();
 
-        animation->num_state_changes = reader.readU16();
-        animation->state_change_offset = reader.readU16();
-        animation->num_anim_commands = reader.readU16();
-        animation->anim_command = reader.readU16();
+        animation->transitionsCount = reader.readU16();
+        animation->transitionsIndex = reader.readU16();
+        animation->animCommandCount = reader.readU16();
+        animation->animCommandIndex = reader.readU16();
         return animation;
     }
 };
@@ -1874,19 +1874,19 @@ private:
   * to use; there may be more than one, with each separate one covering a different
   * range of frames.
   */
-struct StateChange
+struct Transitions
 {
-    uint16_t state_id;
-    uint16_t num_anim_dispatches;       // number of ranges (seems to always be 1..5)
-    uint16_t anim_dispatch;             // Offset into AnimDispatches[]
+    uint16_t stateId;
+    uint16_t transitionCaseCount;       // number of ranges (seems to always be 1..5)
+    uint16_t firstTransitionCase;       // Offset into AnimDispatches[]
 
     /// \brief reads an animation state change.
-    static std::unique_ptr<StateChange> read(io::SDLReader& reader)
+    static std::unique_ptr<Transitions> read(io::SDLReader& reader)
     {
-        std::unique_ptr<StateChange> state_change{ new StateChange() };
-        state_change->state_id = reader.readU16();
-        state_change->num_anim_dispatches = reader.readU16();
-        state_change->anim_dispatch = reader.readU16();
+        std::unique_ptr<Transitions> state_change{ new Transitions() };
+        state_change->stateId = reader.readU16();
+        state_change->transitionCaseCount = reader.readU16();
+        state_change->firstTransitionCase = reader.readU16();
         return state_change;
     }
 };
@@ -1897,21 +1897,21 @@ struct StateChange
   * with some range of frames. This makes possible such specificity as one
   * animation for left foot forward and another animation for right foot forward.
   */
-struct AnimDispatch
+struct TransitionCase
 {
-    int16_t low;                // Lowest frame that uses this range
-    int16_t high;               // Highest frame (+1?) that uses this range
-    int16_t next_animation;     // Animation to dispatch to
-    int16_t nextFrame;         // Frame offset to dispatch to
+    int16_t firstFrame;          // Lowest frame that uses this range
+    int16_t lastFrame;           // Highest frame (+1?) that uses this range
+    int16_t targetAnimation;     // Animation to dispatch to
+    int16_t targetFrame;         // Frame offset to dispatch to
 
     /// \brief reads an animation dispatch.
-    static std::unique_ptr<AnimDispatch> read(io::SDLReader& reader)
+    static std::unique_ptr<TransitionCase> read(io::SDLReader& reader)
     {
-        std::unique_ptr<AnimDispatch> anim_dispatch{ new AnimDispatch() };
-        anim_dispatch->low = reader.readI16();
-        anim_dispatch->high = reader.readI16();
-        anim_dispatch->next_animation = reader.readI16();
-        anim_dispatch->nextFrame = reader.readI16();
+        std::unique_ptr<TransitionCase> anim_dispatch{ new TransitionCase() };
+        anim_dispatch->firstFrame = reader.readI16();
+        anim_dispatch->lastFrame = reader.readI16();
+        anim_dispatch->targetAnimation = reader.readI16();
+        anim_dispatch->targetFrame = reader.readI16();
         return anim_dispatch;
     }
 };

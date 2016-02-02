@@ -35,7 +35,7 @@ struct Animation
     int32_t accel_x; // Forward-backward accel
     int32_t speed_y; // Left-right speed
     int32_t accel_y; // Left-right accel
-    size_t animationCommand;
+    size_t animationCommandIndex;
     size_t animationCommandCount;
     LaraState state_id;
     int firstFrame = 0;

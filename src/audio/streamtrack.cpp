@@ -337,24 +337,21 @@ void StreamTrack::stop()    // Immediately stop track.
     }
 }
 
-bool StreamTrack::update()
+void StreamTrack::update()
 {
-    int  processed = 0;
-    bool buffered = true;
-    bool change_gain = false;
-
     if(!m_active)
-        return true; // Nothing to do here.
+        return; // Nothing to do here.
 
     if(!isPlaying())
     {
         unload();
         m_active = false;
-        return true;
+        return;
     }
 
     // Update damping, if track supports it.
 
+    bool change_gain = false;
     if(m_dampable)
     {
         // We check if damp condition is active, and if so, is it already at low-level or not.
@@ -402,7 +399,7 @@ bool StreamTrack::update()
         if(m_currentVolume <= 0.0)
         {
             stop();
-            return true;    // Stop track, although return success, as everything is normal.
+            return;    // Stop track, although return success, as everything is normal.
         }
         else
         {
@@ -449,6 +446,7 @@ bool StreamTrack::update()
 
     // Check if any track buffers were already processed.
 
+    ALint processed = 0;
     alGetSourcei(m_source, AL_BUFFERS_PROCESSED, &processed);
 
     while(processed--)  // Manage processed buffers.
@@ -456,15 +454,13 @@ bool StreamTrack::update()
         ALuint buffer;
         alSourceUnqueueBuffers(m_source, 1, &buffer);     // Unlink processed buffer.
         DEBUG_CHECK_AL_ERROR();
-        buffered = stream(buffer);                      // Refill processed buffer.
+        bool buffered = stream(buffer);                      // Refill processed buffer.
         if(buffered)
         {
             alSourceQueueBuffers(m_source, 1, &buffer);   // Relink processed buffer.
             DEBUG_CHECK_AL_ERROR();
         }
     }
-
-    return buffered;
 }
 
 bool StreamTrack::isTrack(size_t track_index) const    // Check if track has specific index.

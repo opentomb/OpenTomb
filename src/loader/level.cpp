@@ -70,7 +70,7 @@ void Level::readMeshData(io::SDLReader& reader)
 }
 
 /// \brief reads frame and moveable data.
-void Level::readFrameMoveableData(io::SDLReader& reader)
+void Level::readPoseDataAndModels(io::SDLReader& reader)
 {
     m_poseData.resize(reader.readU32());
     reader.readVector(m_poseData, m_poseData.size());
@@ -276,7 +276,7 @@ StaticMesh *Level::findStaticMeshById(uint32_t object_id)
     return nullptr;
 }
 
-Item *Level::fineItemById(int32_t object_id)
+Item *Level::findItemById(int32_t object_id)
 {
     for(size_t i = 0; i < m_items.size(); i++)
         if(m_items[i].object_id == object_id)
@@ -285,7 +285,7 @@ Item *Level::fineItemById(int32_t object_id)
     return nullptr;
 }
 
-AnimatedModel *Level::findMoveableById(uint32_t object_id)
+AnimatedModel* Level::findModelById(uint32_t object_id)
 {
     for(size_t i = 0; i < m_animatedModels.size(); i++)
         if(m_animatedModels[i]->object_id == object_id)

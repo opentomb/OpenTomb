@@ -59,15 +59,15 @@ void TR3Level::load()
 
     m_reader.readVector(m_animations, m_reader.readU32(), &Animation::readTr1);
 
-    m_reader.readVector(m_stateChanges, m_reader.readU32(), &StateChange::read);
+    m_reader.readVector(m_transitions, m_reader.readU32(), &Transitions::read);
 
-    m_reader.readVector(m_animDispatches, m_reader.readU32(), &AnimDispatch::read);
+    m_reader.readVector(m_transitionCases, m_reader.readU32(), &TransitionCase::read);
 
     m_reader.readVector(m_animCommands, m_reader.readU32());
 
     m_reader.readVector(m_meshTreeData, m_reader.readU32());
 
-    readFrameMoveableData(m_reader);
+    readPoseDataAndModels(m_reader);
 
     m_reader.readVector(m_staticMeshes, m_reader.readU32(), &StaticMesh::read);
 

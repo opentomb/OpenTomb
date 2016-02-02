@@ -57,11 +57,11 @@ void TR1Level::load()
     BOOST_LOG_TRIVIAL(debug) << "Reading animations";
     m_reader.readVector(m_animations, m_reader.readU32(), &Animation::readTr1);
 
-    BOOST_LOG_TRIVIAL(debug) << "Reading state changes";
-    m_reader.readVector(m_stateChanges, m_reader.readU32(), &StateChange::read);
+    BOOST_LOG_TRIVIAL(debug) << "Reading transitions";
+    m_reader.readVector(m_transitions, m_reader.readU32(), &Transitions::read);
 
-    BOOST_LOG_TRIVIAL(debug) << "Reading animation dispatches";
-    m_reader.readVector(m_animDispatches, m_reader.readU32(), &AnimDispatch::read);
+    BOOST_LOG_TRIVIAL(debug) << "Reading transition cases";
+    m_reader.readVector(m_transitionCases, m_reader.readU32(), &TransitionCase::read);
 
     BOOST_LOG_TRIVIAL(debug) << "Reading animation commands";
     m_reader.readVector(m_animCommands, m_reader.readU32());
@@ -69,8 +69,8 @@ void TR1Level::load()
     BOOST_LOG_TRIVIAL(debug) << "Reading mesh tree";
     m_reader.readVector(m_meshTreeData, m_reader.readU32());
 
-    BOOST_LOG_TRIVIAL(debug) << "Reading moveables";
-    readFrameMoveableData(m_reader);
+    BOOST_LOG_TRIVIAL(debug) << "Reading pose data and models";
+    readPoseDataAndModels(m_reader);
 
     // try to fix ugly stick
     for(size_t i = 0; i < m_animations.size(); i++)

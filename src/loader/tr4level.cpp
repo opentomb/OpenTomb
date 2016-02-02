@@ -134,15 +134,15 @@ void TR4Level::load()
 
     newsrc.readVector(m_animations, newsrc.readU32(), &Animation::readTr4);
 
-    newsrc.readVector(m_stateChanges, newsrc.readU32(), &StateChange::read);
+    newsrc.readVector(m_transitions, newsrc.readU32(), &Transitions::read);
 
-    newsrc.readVector(m_animDispatches, newsrc.readU32(), AnimDispatch::read);
+    newsrc.readVector(m_transitionCases, newsrc.readU32(), TransitionCase::read);
 
     newsrc.readVector(m_animCommands, newsrc.readU32());
 
     newsrc.readVector(m_meshTreeData, newsrc.readU32());
 
-    readFrameMoveableData(newsrc);
+    readPoseDataAndModels(newsrc);
 
     newsrc.readVector(m_staticMeshes, newsrc.readU32(), &StaticMesh::read);
 

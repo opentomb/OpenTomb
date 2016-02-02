@@ -35,8 +35,8 @@ public:
     std::vector<Mesh> m_meshes;
     std::vector<uint32_t> m_meshIndices;
     std::vector<Animation> m_animations;
-    std::vector<StateChange> m_stateChanges;
-    std::vector<AnimDispatch> m_animDispatches;
+    std::vector<Transitions> m_transitions;
+    std::vector<TransitionCase> m_transitionCases;
     std::vector<int16_t> m_animCommands;
     std::vector<std::unique_ptr<AnimatedModel>> m_animatedModels;
     std::vector<StaticMesh> m_staticMeshes;
@@ -86,15 +86,15 @@ public:
     virtual void load() = 0;
 
     StaticMesh *findStaticMeshById(uint32_t object_id);
-    Item *fineItemById(int32_t object_id);
-    AnimatedModel *findMoveableById(uint32_t object_id);
+    Item* findItemById(int32_t object_id);
+    AnimatedModel* findModelById(uint32_t object_id);
 
 protected:
     io::SDLReader m_reader;
     bool m_demoOrUb = false;
 
     void readMeshData(io::SDLReader& reader);
-    void readFrameMoveableData(io::SDLReader& reader);
+    void readPoseDataAndModels(io::SDLReader& reader);
 
     static void convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst);
     static void convertTexture(WordTexture & tex, DWordTexture & dst);
