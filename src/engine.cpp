@@ -60,7 +60,6 @@ engine_container_p      last_cont = NULL;
 
 struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_mapper = {0};
-struct audio_settings_s                 audio_settings = {0};
 float                                   engine_frame_time = 0.0;
 
 lua_State                              *engine_lua = NULL;
@@ -572,7 +571,7 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 
     screen_info.w_unit = (float)nominalW / SYS_SCREEN_METERING_RESOLUTION;
     screen_info.h_unit = (float)nominalH / SYS_SCREEN_METERING_RESOLUTION;
-    screen_info.scale_factor = (screen_info.w < screen_info.h)?(screen_info.h_unit):(screen_info.w_unit);
+    screen_info.scale_factor = (screen_info.w < screen_info.h) ? (screen_info.h_unit) : (screen_info.w_unit);
 
     GLText_UpdateResize(screen_info.scale_factor);
     Con_UpdateResize();
