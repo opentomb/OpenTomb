@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util/helpers.h"
+
 #include <sndfile.h>
 #include <AL/al.h>
 
@@ -40,9 +42,45 @@ enum class StreamMethod
 // player with automatic channel and crossfade management.
 class StreamTrack
 {
+    DISABLE_COPY(StreamTrack);
 public:
-    explicit StreamTrack(audio::Engine* engine);      // Stream track constructor.
-    ~StreamTrack();      // Stream track destructor.
+    explicit StreamTrack(audio::Engine* engine);
+    ~StreamTrack();
+
+    explicit StreamTrack(StreamTrack&& rhs)
+        : m_audioEngine(rhs.m_audioEngine)
+        , m_wadFile(rhs.m_wadFile)
+        , m_sndFile(rhs.m_sndFile)
+        , m_sfInfo(std::move(rhs.m_sfInfo))
+        , m_source(rhs.m_source)
+        , m_buffers(rhs.m_buffers)
+        , m_format(rhs.m_format)
+        , m_rate(rhs.m_rate)
+        , m_currentVolume(rhs.m_currentVolume)
+        , m_dampedVolume(rhs.m_dampedVolume)
+        , m_active(rhs.m_active)
+        , m_fadeoutAndStop(rhs.m_fadeoutAndStop)
+        , m_dampable(rhs.m_dampable)
+        , m_streamType(rhs.m_streamType)
+        , m_currentTrack(rhs.m_currentTrack)
+        , m_method(rhs.m_method)
+    {
+        rhs.m_audioEngine = nullptr;
+        rhs.m_wadFile = nullptr;
+        rhs.m_sndFile = nullptr;
+        rhs.m_source = 0;
+        rhs.m_buffers.fill(0);
+        rhs.m_format = 0;
+        rhs.m_rate = 0;
+        rhs.m_currentVolume = 0;
+        rhs.m_dampedVolume = 0;
+        rhs.m_active = false;
+        rhs.m_fadeoutAndStop = false;
+        rhs.m_dampable = false;
+        rhs.m_streamType = StreamType::Oneshot;
+        rhs.m_currentTrack = boost::none;
+        rhs.m_method = StreamMethod::Any;
+    }
 
      // Load routine prepares track for playing. Arguments are track index,
      // stream type (background, one-shot or chat) and load method, which
@@ -87,24 +125,24 @@ private:
 
     bool stream(ALuint buffer);          // General stream routine.
 
-    FILE*           m_wadFile;   //!< General handle for opened wad file.
-    SNDFILE*        m_sndFile;   //!< Sndfile file reader needs its own handle.
+    FILE*           m_wadFile = nullptr;   //!< General handle for opened wad file.
+    SNDFILE*        m_sndFile = nullptr;   //!< Sndfile file reader needs its own handle.
     SF_INFO         m_sfInfo;
 
     // General OpenAL fields
 
-    ALuint          m_source;
+    ALuint          m_source = 0;
     std::array<ALuint, StreamBufferCount> m_buffers;
-    ALenum          m_format;
-    ALsizei         m_rate;
-    ALfloat         m_currentVolume;     //!< Stream volume, considering fades.
-    ALfloat         m_dampedVolume;      //!< Additional damp volume multiplier.
+    ALenum          m_format = 0;
+    ALsizei         m_rate = 0;
+    ALfloat         m_currentVolume = 0;     //!< Stream volume, considering fades.
+    ALfloat         m_dampedVolume = 0;      //!< Additional damp volume multiplier.
 
-    bool            m_active;            //!< If track is active or not.
-    bool            m_fadeoutAndStop;            //!< Used when track is being faded by other one.
-    bool            m_dampable;          //!< Specifies if track can be damped by others.
-    StreamType      m_streamType;        //!< Either BACKGROUND, ONESHOT or CHAT.
+    bool            m_active = false;            //!< If track is active or not.
+    bool            m_fadeoutAndStop = false;            //!< Used when track is being faded by other one.
+    bool            m_dampable = false;          //!< Specifies if track can be damped by others.
+    StreamType      m_streamType = StreamType::Oneshot;        //!< Either BACKGROUND, ONESHOT or CHAT.
     boost::optional<size_t> m_currentTrack = boost::none;      //!< Needed to prevent same track sending.
-    StreamMethod    m_method;            //!< TRACK (TR1-2/4-5) or WAD (TR3).
+    StreamMethod    m_method = StreamMethod::Any;            //!< TRACK (TR1-2/4-5) or WAD (TR3).
 };
 } // namespace audio

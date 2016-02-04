@@ -51,10 +51,12 @@ enum class StreamError
 
 class Engine
 {
+    DISABLE_COPY(Engine);
     TRACK_LIFETIME();
 
     struct DeviceManager
     {
+        DISABLE_COPY(DeviceManager);
         TRACK_LIFETIME();
 
         explicit DeviceManager(Engine* engine);

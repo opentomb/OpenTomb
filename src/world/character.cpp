@@ -60,8 +60,8 @@ HeightInfo::HeightInfo()
 
 Character::Character(ObjectId id, world::World* world)
     : Entity(id, world)
-    , m_stateController(this)
     , m_inventory(world->m_engine)
+    , m_stateController(this)
 {
     m_sphere->setMargin(COLLISION_MARGIN_DEFAULT);
 

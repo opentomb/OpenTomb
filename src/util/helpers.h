@@ -16,6 +16,10 @@
         return str << static_cast<int>(e); \
     } \
 
+#define DISABLE_COPY(classname) \
+    classname(const classname&) = delete; \
+    classname& operator=(const classname&) = delete;
+
 namespace util
 {
 inline glm::float_t wrapAngle(const glm::float_t value)
@@ -89,6 +93,7 @@ inline boost::property_tree::ptree& getSettingChild(boost::property_tree::ptree&
 
 class LifetimeTracker final
 {
+    DISABLE_COPY(LifetimeTracker);
 private:
     const std::string m_objectName;
     const uintptr_t m_id;

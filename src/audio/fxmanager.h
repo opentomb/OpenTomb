@@ -26,6 +26,7 @@ class Engine;
 // It contains all necessary info to process sample FX (reverb and echo).
 class FxManager
 {
+    DISABLE_COPY(FxManager);
     TRACK_LIFETIME();
 
     // MAX_SLOTS specifies amount of FX slots used to apply environmental

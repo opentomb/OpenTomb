@@ -242,8 +242,8 @@ void SkeletalModel::loadStateChanges(const World& world, const loader::Level& le
                 for(uint16_t l = 0; l < tr_sch->transitionCaseCount; l++)
                 {
                     BOOST_ASSERT(tr_sch->firstTransitionCase + l < level.m_transitionCases.size());
-                    const loader::TransitionCase *tr_adisp = &level.m_transitionCases[tr_sch->firstTransitionCase + l];
-                    uint16_t next_anim = tr_adisp->targetAnimation & 0x7fff;
+                    const loader::TransitionCase *trTransitionCase = &level.m_transitionCases[tr_sch->firstTransitionCase + l];
+                    uint16_t next_anim = trTransitionCase->targetAnimation & 0x7fff;
                     uint16_t next_anim_ind = next_anim - (animatedModel.animation_index & 0x7fff);
                     if(next_anim_ind >= m_animations.size())
                         continue;
@@ -252,13 +252,13 @@ void SkeletalModel::loadStateChanges(const World& world, const loader::Level& le
                     animation::TransitionCase* transitionCase = &transition->cases.back();
 
                     BOOST_ASSERT(animatedModel.animation_index <= next_anim);
-                    BOOST_ASSERT(next_anim - animatedModel.animation_index < m_animations.size());
+                    BOOST_ASSERT(static_cast<size_t>(next_anim - animatedModel.animation_index) < m_animations.size());
                     size_t next_frames_count = m_animations[next_anim - animatedModel.animation_index].getFrameDuration();
                     BOOST_ASSERT(next_anim < level.m_animations.size());
-                    size_t next_frame = tr_adisp->targetFrame - level.m_animations[next_anim].firstFrame;
+                    size_t next_frame = trTransitionCase->targetFrame - level.m_animations[next_anim].firstFrame;
 
-                    uint16_t low = tr_adisp->firstFrame - trAnimation.firstFrame;
-                    uint16_t high = tr_adisp->lastFrame - trAnimation.firstFrame;
+                    uint16_t low = trTransitionCase->firstFrame - trAnimation.firstFrame;
+                    uint16_t high = trTransitionCase->lastFrame - trAnimation.firstFrame;
 
                     // this is not good: frame_high can be frame_end+1 (for last-frame-loop statechanges,
                     // secifically fall anims (75,77 etc), which may fail to change state),

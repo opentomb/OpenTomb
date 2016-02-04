@@ -178,18 +178,18 @@ void Engine::initSDLVideo()
 }
 
 Engine::Engine(boost::property_tree::ptree& config)
-    : m_gui(this, util::getSettingChild(config, "gui"))
-    , m_world(this)
+    : m_controlState(util::getSettingChild(config, "controlState"))
     , m_inputHandler(this, util::getSettingChild(config, "input"))
     , renderer(this, util::getSettingChild(config, "renderer"))
+    , debugDrawer(this)
+    , m_world(this)
+    , m_gui(this, util::getSettingChild(config, "gui"))
     , m_gameflow(this)
     , m_bullet(this)
-    , m_scriptEngine(this)
-    , debugDrawer(this)
-    , m_audioEngine(this, util::getSettingChild(config, "audio"))
-    , m_controlState(util::getSettingChild(config, "controlState"))
     , m_screenInfo(util::getSettingChild(config, "screen"))
     , m_systemSettings(util::getSettingChild(config, "system"))
+    , m_audioEngine(this, util::getSettingChild(config, "audio"))
+    , m_scriptEngine(this)
 {
     m_scriptEngine.doFile("config.lua");
     m_scriptEngine.doFile("scripts/loadscript.lua");

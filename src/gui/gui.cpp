@@ -23,9 +23,9 @@ namespace gui
 Gui::Gui(engine::Engine* engine, boost::property_tree::ptree& config)
     : m_engine(engine)
     , m_console(engine, util::getSettingChild(config, "console"))
-    , m_notifier(engine)
-    , m_faders(engine)
     , m_progressBars(engine)
+    , m_faders(engine)
+    , m_notifier(engine)
     , m_textlineManager(engine)
     , m_fontManager(engine)
 {

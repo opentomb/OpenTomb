@@ -10,7 +10,7 @@ namespace audio
 // Audio emitter (aka SoundSource) structure.
 struct Emitter
 {
-    ALuint      emitter_index;  // Unique emitter index.
+    size_t      emitter_index;  // Unique emitter index.
     SoundId     soundId;
     glm::vec3   position;    // Vector coordinate.
     uint16_t    flags;          // Flags - MEANING UNKNOWN!!!

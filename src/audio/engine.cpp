@@ -620,7 +620,7 @@ Error Engine::send(const boost::optional<SoundId>& soundId, EmitterType entityTy
 
     if(effect->loop != loader::LoopType::Forward && effect->chance > 0)
     {
-        auto randomValue = rand() % 0x7FFF;
+        uint16_t randomValue = static_cast<uint16_t>(rand()) & 0x7FFF;
         if(effect->chance < randomValue)
         {
             // Bypass audio send, if chance test is not passed.
@@ -914,7 +914,7 @@ void Engine::load(const world::World& world, const std::unique_ptr<loader::Level
 
     for(size_t i = 0; i < m_emitters.size(); i++)
     {
-        m_emitters[i].emitter_index = static_cast<ALuint>(i);
+        m_emitters[i].emitter_index = i;
         m_emitters[i].soundId = tr->m_soundSources[i].sound_id;
         m_emitters[i].position = glm::vec3(tr->m_soundSources[i].x, tr->m_soundSources[i].z, -tr->m_soundSources[i].y);
         m_emitters[i].flags = tr->m_soundSources[i].flags;

@@ -31,9 +31,32 @@ enum class EmitterType
 // MAX_CHANNELS global constant.
 class Source
 {
+    DISABLE_COPY(Source);
 public:
     explicit Source(audio::Engine* engine);
     ~Source();
+
+    explicit Source(Source&& rhs)
+        : m_audioEngine(rhs.m_audioEngine)
+        , m_active(rhs.m_active)
+        , m_underwater(rhs.m_underwater)
+        , m_sourceIndex(rhs.m_sourceIndex)
+        , m_emitterId(std::move(rhs.m_emitterId))
+        , m_emitterType(rhs.m_emitterType)
+        , m_soundId(rhs.m_soundId)
+        , m_sampleIndex(rhs.m_sampleIndex)
+        , m_sampleCount(rhs.m_sampleCount)
+    {
+        rhs.m_audioEngine = nullptr;
+        rhs.m_active = false;
+        rhs.m_underwater = false;
+        rhs.m_sourceIndex = 0;
+        rhs.m_emitterId = boost::none;
+        rhs.m_emitterType = EmitterType::Entity;
+        rhs.m_soundId = 0;
+        rhs.m_sampleIndex = 0;
+        rhs.m_sampleCount = 0;
+    }
 
     void play(const world::World& world);    // Make source active and play it.
     void pause();   // Pause source (leaving it active).

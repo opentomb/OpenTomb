@@ -43,16 +43,10 @@ bool StreamTrack::damp_active = false;
 StreamTrack::StreamTrack(audio::Engine* engine)
     : m_audioEngine(engine)
 {
-    alGenBuffers(StreamBufferCount, m_buffers.data());              // Generate all buffers at once.
+    alGenBuffers(m_buffers.size(), m_buffers.data());              // Generate all buffers at once.
     DEBUG_CHECK_AL_ERROR();
     alGenSources(1, &m_source);
     DEBUG_CHECK_AL_ERROR();
-    m_format = 0x00;
-    m_rate = 0;
-    m_dampable = false;
-
-    m_wadFile = nullptr;
-    m_sndFile = nullptr;
 
     if(!alIsSource(m_source))
     {
@@ -72,29 +66,20 @@ StreamTrack::StreamTrack(audio::Engine* engine)
     DEBUG_CHECK_AL_ERROR();
     alSourcei(m_source, AL_LOOPING, AL_FALSE); // No effect, but just in case...
     DEBUG_CHECK_AL_ERROR();
-
-    m_currentTrack = boost::none;
-    m_currentVolume = 0.0f;
-    m_dampedVolume = 0.0f;
-    m_active = false;
-    m_fadeoutAndStop = false;
-    m_streamType = StreamType::Oneshot;
-
-    // Setting method to -1 at init is required to prevent accidental
-    // ov_clear call, which results in crash, if no vorbis file was
-    // associated with given vorbis file structure.
-
-    m_method = StreamMethod::Any;
 }
 
 StreamTrack::~StreamTrack()
 {
     stop(); // In case we haven't stopped yet.
 
-    alDeleteSources(1, &m_source);
-    DEBUG_CHECK_AL_ERROR();
-    alDeleteBuffers(StreamBufferCount, m_buffers.data());
-    DEBUG_CHECK_AL_ERROR();
+    if(m_source > 0)
+    {
+        alDeleteSources(1, &m_source);
+        DEBUG_CHECK_AL_ERROR();
+
+        alDeleteBuffers(m_buffers.size(), m_buffers.data());
+        DEBUG_CHECK_AL_ERROR();
+    }
 }
 
 bool StreamTrack::load(const char *path, size_t index, const StreamType type, const StreamMethod load_method)
@@ -519,7 +504,7 @@ bool StreamTrack::stream(ALuint buffer)
 
         if(samplesRead > 0)
         {
-            BOOST_ASSERT(samplesRead <= std::numeric_limits<size_t>::max());
+            BOOST_ASSERT(static_cast<std::make_unsigned<sf_count_t>::type>(samplesRead) <= std::numeric_limits<size_t>::max());
             size += static_cast<size_t>(samplesRead);
             continue;
         }
