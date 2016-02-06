@@ -19,7 +19,7 @@ and once in Greek. By translating the Greek, comparisons could be made
 with the demotic and hieroglyphic versions, providing an invaluable lexicon
 with which to translate other hieroglyphic works. The efforts that went
 into making the document you are now reading could be likened to a form
-of digital archæology, and hopefully this document will provide sufficient
+of digital archï¿½ology, and hopefully this document will provide sufficient
 information for others to decipher and create their own "TR-hieroglyphic"
 works.</font></i></p></center>
 
@@ -64,7 +64,7 @@ makes for a clean final product ;-)
 
 </p><p>Tomb Raider, Tomb Raider Gold, Unfinished Business, Tomb Raider II,
 Tomb Raider III, Lara Croft, and all images and data within the data files
-and game engine are Copyright © Core Design and/or Eidos PLC.&nbsp;
+and game engine are Copyright ï¿½ Core Design and/or Eidos PLC.&nbsp;
 Modification and/or distribution of any part of a Tomb Raider data file
 (any version) is almost certainly a copyright violation.
 
@@ -120,7 +120,7 @@ is driven by two sets of files. The script file, TOMBPC.DAT, contains all
 the text strings describing the various elements in the game (e.g. the
 game engine knows about "Key 1"; it looks in TOMBPC.DAT to determine the
 name to be displayed in Lara's inventory, such as "Rusty Key" or "Taste
-rostige" or "Clé Rouillée"), the level and cut-scene filenames
+rostige" or "Clï¿½ Rouillï¿½e"), the level and cut-scene filenames
 (e.g. WALL.TR2, CUT3.TR2), the order in which they are to be played, and
 various per-level and per-game configuration options (e.g. what weapons
 and objects Lara starts the level with, whether or not the "cheat" codes
@@ -149,7 +149,7 @@ the following are assumed:
     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; specifies a 32-bit signed integer (range -2147483648..2147483647)
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>bitu32</b>
     &nbsp;&nbsp; specifies a 32-bit unsigned integer (range 0..4294967295)
-    
+
 <br>&nbsp;&nbsp;&nbsp; All multi-byte integers (bit{u}16, bit{u}32) are
 stored in little-endian (Intel-x86, etc.) format, with the least significant
 byte stored first and the most significant byte stored last. When using
@@ -280,7 +280,7 @@ colours are specified.</li>
 bytes; one must either read and write 3 bytes explicitly, or else use a
 simple array of bytes instead of this structure.)
 
-<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 And as mentioned earlier, the 16-bit palette uses a similar structure:
 
 </p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; typedef struct { // 4 bytes
@@ -517,7 +517,7 @@ camera cannot "see" through it.</li>
 </ul>
 
 <dir>
-<dir>typedef struct 
+<dir>typedef struct
 {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  32 bytes
@@ -556,7 +556,7 @@ the floor is a collisional portal to that room.</li>
 
 <dir>
 <dir>&nbsp;
-<br>typedef struct 
+<br>typedef struct
 {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  8 bytes
@@ -676,29 +676,29 @@ in that the arrays are sized by the NumXXX elements that precede them.</li>
 </ul>
 
 <dir>
-<dir>typedef struct 
+<dir>typedef struct
 {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  (variable length)
-<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
 NumVertices;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  number of vertices in the following list
 <br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_vertex">tr2_vertex_room</a>
 Vertices[NumVertices];&nbsp; // list of vertices (relative coordinates)
-<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
 NumRectangles;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  number of textured rectangles
 <br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face4">tr2_face4</a> Rectangles[NumRectangles];&nbsp;&nbsp;&nbsp;&nbsp;
 // list of textured rectangles
-<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
 NumTriangles;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  number of textured triangles
 <br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face3">tr2_face3</a> Triangles[NumTriangles];&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 // list of textured triangles
-<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
 NumSprites;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  number of sprites
@@ -752,7 +752,7 @@ this is not a "real" C/C++ structure, in that the arrays are sized by the
 NumXXX elements that precede them.</li>
 </ul>
 
-<blockquote>typedef struct 
+<blockquote>typedef struct
 {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  (variable length)
@@ -769,17 +769,17 @@ info;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb
 <br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_data">tr2_room_data</a>
 RoomData;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 // the room mesh
-<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> 
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
 NumPortals;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  number of visibility portals to other rooms
 <br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_portal">tr2_room_portal</a>
 Portals[NumPortals]; // list of visibility portals
-<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> 
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
 NumZsectors;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  "width" of sector list
-<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> 
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
 NumXsectors;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  "height" of sector list
@@ -794,13 +794,13 @@ SectorList[NumXsectors * NumZsectors];&nbsp;&nbsp;&nbsp; // list of sectors
 <br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> AmbientIntensity2;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 // Almost always the same value as AmbientIntensity1 [absent from TR1 data
 files]
-<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
 LightMode;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  (present only in TR2: 0 is normal, 1 is
 <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
  flickering(?), 2 and 3 are uncertain)
-<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> 
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
 NumLights;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  number of point lights in this room
@@ -810,7 +810,7 @@ Lights[NumLights]; // list of point lights
 // number of static meshes
 <br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_staticmesh">tr2_room_staticmesh</a>
 StaticMeshes[NumStaticMeshes]; // list of static meshes
-<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
 AlternateRoom;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  number of the room that this room can alternate
@@ -1435,11 +1435,11 @@ Offset into AnimDispatches[]
 <br>&nbsp;* animation for left foot forward and another animation for right foot forward.
 <br>&nbsp;*/
 <br><a name="struct_tr2_range"></a>typedef struct { // 8 bytes
-<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
 Low;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  Lowest frame that uses this range
-<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
 High;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  Highest frame (+1?) that uses this range
@@ -2589,11 +2589,11 @@ file, and use essentially the same format of it, but TR1 has this file's
 contents embedded in the app, which explains why there are separate TR1
 and Unfinished Business apps. What follows is a description of the contents
 of the binary TOMBPC.DAT file.
-</p><p><a href="#Data_Types">bitu32</a> 
+</p><p><a href="#Data_Types">bitu32</a>
 Version;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  seems to be 3 for TR2
-<br><a href="#Data_Types">bitu8</a> 
+<br><a href="#Data_Types">bitu8</a>
 Info[256];&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  null-terminated string describing this game, copyright info, etc.&nbsp;
@@ -2636,22 +2636,22 @@ for some reason)
 // filler
 <br>//
 <br>// The Flags word below uses the following bit assignments:
-<br>//&nbsp;&nbsp;&nbsp; 0x0001:&nbsp;&nbsp;&nbsp; 
+<br>//&nbsp;&nbsp;&nbsp; 0x0001:&nbsp;&nbsp;&nbsp;
 DemoVersion&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 (1
  ::= demo, 0 ::= normal game)
-<br>//&nbsp;&nbsp;&nbsp; 0x0002:&nbsp;&nbsp;&nbsp; 
+<br>//&nbsp;&nbsp;&nbsp; 0x0002:&nbsp;&nbsp;&nbsp;
 Title_Disabled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 (1
  ::= no title screen, 0 ::= normal title screen)
 <br>//&nbsp;&nbsp;&nbsp; 0x0004:&nbsp;&nbsp;&nbsp; CheatModeCheck_Disabled&nbsp;
 (1 ::= no cheat mode, 0 ::= cheat mode enabled)
-<br>//&nbsp;&nbsp;&nbsp; 0x0008:&nbsp;&nbsp;&nbsp; 
+<br>//&nbsp;&nbsp;&nbsp; 0x0008:&nbsp;&nbsp;&nbsp;
 NoInputTimeout&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 (1
  ::= wait forever if no input, 0 ::= enter demo
 <br>// mode if no input timeout)
-<br>//&nbsp;&nbsp;&nbsp; 0x0010:&nbsp;&nbsp;&nbsp; 
+<br>//&nbsp;&nbsp;&nbsp; 0x0010:&nbsp;&nbsp;&nbsp;
 LoadSave_Disabled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 (1
  ::= load/save game disabled, 0 ::= load/save
@@ -2659,25 +2659,25 @@ LoadSave_Disabled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nb
 <br>//&nbsp;&nbsp;&nbsp; 0x0020:&nbsp;&nbsp;&nbsp; ScreenSizing_Disabled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 (1 ::= no screen re-sizing allowed, 0 ::= screen
 <br>// re-sizing allowed)
-<br>//&nbsp;&nbsp;&nbsp; 0x0040:&nbsp;&nbsp;&nbsp; 
+<br>//&nbsp;&nbsp;&nbsp; 0x0040:&nbsp;&nbsp;&nbsp;
 LockOutOptionRing&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 (1
  ::= ???, 0 ::= normal option ring)
-<br>//&nbsp;&nbsp;&nbsp; 0x0080:&nbsp;&nbsp;&nbsp; 
+<br>//&nbsp;&nbsp;&nbsp; 0x0080:&nbsp;&nbsp;&nbsp;
 DozyCheat_Enabled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 (???)
-<br>//&nbsp;&nbsp;&nbsp; 0x0100:&nbsp;&nbsp;&nbsp; 
+<br>//&nbsp;&nbsp;&nbsp; 0x0100:&nbsp;&nbsp;&nbsp;
 Use_Encryption&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 (1
  ::= XOR all StringData with XORbyte, 0 ::= leave
 <br>// StringData as-is)
-<br>//&nbsp;&nbsp;&nbsp; 0x0400:&nbsp;&nbsp;&nbsp; 
+<br>//&nbsp;&nbsp;&nbsp; 0x0400:&nbsp;&nbsp;&nbsp;
 SelectAnyLevel&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 (1
  ::= allow player to select any level, 0 ::= no
 <br>// level selection)
 <br>//
-<br><a href="#Data_Types">bitu16</a> 
+<br><a href="#Data_Types">bitu16</a>
 Flags;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  Various flags (see above)
@@ -2685,7 +2685,7 @@ Flags;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&n
 // filler
 <br><a href="#Data_Types">bitu8</a> XORbyte;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 // For encryption ("cipher code")
-<br><a href="#Data_Types">bitu8</a> 
+<br><a href="#Data_Types">bitu8</a>
 Unused4;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  High byte of a short?
@@ -2699,7 +2699,7 @@ contain String Arrays.&nbsp; These are of the following pseudo-structure:
 <br>// struct {
 <br>//&nbsp;&nbsp;&nbsp;&nbsp; bitu16 StringOffsets[NumStrings];&nbsp;&nbsp;&nbsp;&nbsp;
 // offsets (into StringData[]) of each string
-<br>//&nbsp;&nbsp;&nbsp;&nbsp; bitu16 
+<br>//&nbsp;&nbsp;&nbsp;&nbsp; bitu16
 StringDataSize;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 //
  number of bytes of raw string data to follow
