@@ -28,19 +28,10 @@ class World;
 
 using ModelId = uint32_t;
 
-/*
- * skeletal model with animations data.
- * Animated skeletal model. Taken from openraider.
- * model -> animation -> frame -> bone
- * thanks to Terry 'Mongoose' Hendrix II
- */
 class SkeletalModel
 {
 public:
-    /*
-    * mesh tree base element structure
-    */
-    struct MeshReference
+    struct SkinnedBone
     {
         enum StackOperation
         {
@@ -66,7 +57,7 @@ private:
 
     std::vector<animation::Animation> m_animations;
 
-    std::vector<MeshReference> m_meshReferences;
+    std::vector<SkinnedBone> m_skinnedBones;
 
     std::vector<size_t> m_collisionMap;
 
@@ -121,32 +112,32 @@ public:
         return !m_animations.empty();
     }
 
-    size_t getMeshReferenceCount() const
+    size_t getBoneCount() const
     {
-        return m_meshReferences.size();
+        return m_skinnedBones.size();
     }
 
-    const MeshReference& getMeshReference(size_t idx) const
+    const SkinnedBone& getSkinnedBone(size_t idx) const
     {
-        BOOST_ASSERT(idx < m_meshReferences.size());
-        return m_meshReferences[idx];
+        BOOST_ASSERT(idx < m_skinnedBones.size());
+        return m_skinnedBones[idx];
     }
 
-    bool hasMeshReferences() const
+    bool hasSkinnedBones() const
     {
-        return !m_meshReferences.empty();
+        return !m_skinnedBones.empty();
     }
 
     void clear();
     void updateTransparencyFlag();
-    void fillSkinnedMeshMap();
+    void fillSkinnedBoneMap();
     bool findStateChange(LaraState stateid, animation::AnimationId& animid_out, size_t& frameid_inout);
 
-    void setMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount);
-    void setSkinnedMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount);
+    void assignBoneBaseSkins(const std::vector<SkeletalModel::SkinnedBone>& src, size_t meshCount);
+    void assignBoneSkins(const std::vector<SkeletalModel::SkinnedBone>& src, size_t meshCount);
 
     void generateAnimCommands(const World& world);
-    void loadStateChanges(const World& world, const loader::Level& level, const loader::AnimatedModel& animatedModel);
+    void loadTransitions(const World& world, const loader::Level& level, const loader::AnimatedModel& animatedModel);
     void setStaticAnimation();
     void loadAnimations(const loader::Level& level, size_t moveable);
 
@@ -157,9 +148,9 @@ public:
 
     void patchLaraSkin(World& world, loader::Engine engineVersion);
 
-    void addMeshReference(const MeshReference& mr)
+    void addSkinnedBone(const SkinnedBone& bone)
     {
-        m_meshReferences.emplace_back(mr);
+        m_skinnedBones.emplace_back(bone);
         m_collisionMap.emplace_back(m_collisionMap.size());
     }
 

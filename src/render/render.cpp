@@ -94,8 +94,8 @@ void Render::renderSkyBox()
     if(m_drawSkybox && m_world != nullptr && m_world->m_skyBox != nullptr)
     {
         glDepthMask(GL_FALSE);
-        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->getAnimation(0).getInitialBoneKeyFrame().position);
-        tr *= glm::mat4_cast(m_world->m_skyBox->getAnimation(0).getInitialBoneKeyFrame().rotation);
+        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->getAnimation(0).getInitialRootBonePose().position);
+        tr *= glm::mat4_cast(m_world->m_skyBox->getAnimation(0).getInitialRootBonePose().rotation);
         const glm::mat4 fullView = m_cam->getViewProjection() * tr;
 
         UnlitTintedShaderDescription *shader = m_shaderManager->getStaticMeshShader();
@@ -105,7 +105,7 @@ void Render::renderSkyBox()
         glm::vec4 tint = { 1, 1, 1, 1 };
         glUniform4fv(shader->tint_mult, 1, glm::value_ptr(tint));
 
-        renderMesh(m_world->m_skyBox->getMeshReference(0).mesh_base);
+        renderMesh(m_world->m_skyBox->getSkinnedBone(0).mesh_base);
         glDepthMask(GL_TRUE);
     }
 }
@@ -862,9 +862,9 @@ void Render::drawListDebugLines()
      */
     if(m_drawNormals && m_world && m_world->m_skyBox)
     {
-        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->getAnimation(0).getInitialBoneKeyFrame().position);
-        tr *= glm::mat4_cast(m_world->m_skyBox->getAnimation(0).getInitialBoneKeyFrame().rotation);
-        m_world->m_engine->debugDrawer.drawMeshDebugLines(m_world->m_skyBox->getMeshReference(0).mesh_base, tr, *this);
+        glm::mat4 tr = glm::translate(glm::mat4(1.0f), m_cam->getPosition() + m_world->m_skyBox->getAnimation(0).getInitialRootBonePose().position);
+        tr *= glm::mat4_cast(m_world->m_skyBox->getAnimation(0).getInitialRootBonePose().rotation);
+        m_world->m_engine->debugDrawer.drawMeshDebugLines(m_world->m_skyBox->getSkinnedBone(0).mesh_base, tr, *this);
     }
 
     for(const world::Room* room : m_renderList)

@@ -28,8 +28,8 @@ private:
 
     std::shared_ptr<SkeletalModel> m_model = nullptr;
 
-    TransitionTarget m_previousTarget;
-    TransitionTarget m_currentTarget;
+    AnimationState m_previousState;
+    AnimationState m_currentState;
 
     AnimationMode m_mode = AnimationMode::NormalControl;
 
@@ -50,48 +50,46 @@ public:
         return m_entity;
     }
 
-    void(*onFrame)(Character& ent, AnimUpdate state) = nullptr;
+    void (*onFrame)(Character& ent, AnimUpdate state) = nullptr;
 
-    const Animation& getCurrentAnimationFrame() const;
+    const Animation& getCurrentAnimation() const;
     AnimUpdate stepAnimation(util::Duration time, Entity* cmdEntity = nullptr);
     void setAnimation(AnimationId animation, int frame = 0);
 
-    AnimationId getCurrentAnimation() const noexcept
+    AnimationId getCurrentAnimationId() const noexcept
     {
-        return m_currentTarget.animation;
+        return m_currentState.animation;
     }
-    void setCurrentAnimation(AnimationId value) noexcept
+    void setCurrentAnimationId(AnimationId value) noexcept
     {
-        m_currentTarget.animation = value;
+        m_currentState.animation = value;
     }
 
-    const Animation& getCurrentAnimationRef() const;
-
-    AnimationId getPreviousAnimation() const noexcept
+    AnimationId getPreviousAnimationId() const noexcept
     {
-        return m_previousTarget.animation;
+        return m_previousState.animation;
     }
-    void setPreviousAnimation(AnimationId value) noexcept
+    void setPreviousAnimationId(AnimationId value) noexcept
     {
-        m_previousTarget.animation = value;
+        m_previousState.animation = value;
     }
 
     size_t getCurrentFrame() const noexcept
     {
-        return m_currentTarget.frame;
+        return m_currentState.frame;
     }
     void setCurrentFrame(size_t value) noexcept
     {
-        m_currentTarget.frame = value;
+        m_currentState.frame = value;
     }
 
     size_t getPreviousFrame() const noexcept
     {
-        return m_previousTarget.frame;
+        return m_previousState.frame;
     }
     void setPreviousFrame(size_t value) noexcept
     {
-        m_previousTarget.frame = value;
+        m_previousState.frame = value;
     }
 
     const std::shared_ptr<SkeletalModel>& getModel() const noexcept
@@ -105,11 +103,11 @@ public:
 
     LaraState getCurrentState() const noexcept
     {
-        return m_currentTarget.state;
+        return m_currentState.state;
     }
     LaraState getPreviousState() const noexcept
     {
-        return m_previousTarget.state;
+        return m_previousState.state;
     }
 
     bool hasGhosts() const noexcept
@@ -117,7 +115,7 @@ public:
         return m_hasGhosts;
     }
 
-    void fromModel(const std::shared_ptr<SkeletalModel>& m_model);
+    void fromModel(const std::shared_ptr<SkeletalModel>& model);
 
     /**
     * That function updates item animation and rebuilds skeletal matrices;
@@ -182,12 +180,12 @@ public:
 
     void setCurrentState(LaraState state) noexcept
     {
-        m_currentTarget.state = state;
+        m_currentState.state = state;
     }
 
     void setPreviousState(LaraState state) noexcept
     {
-        m_previousTarget.state = state;
+        m_previousState.state = state;
     }
 
     const btManifoldArray& getManifoldArray() const noexcept

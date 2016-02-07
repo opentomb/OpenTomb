@@ -1938,41 +1938,41 @@ bool Character::changeParam(CharParameterId parameter, float value)
 ///@TODO: separate mesh replacing control and animation disabling / enabling
 bool Character::setWeaponModel(const std::shared_ptr<SkeletalModel>& model, bool armed)
 {
-    if(model != nullptr && m_skeleton.getBoneCount() == model->getMeshReferenceCount() && model->getAnimationCount() >= 4)
+    if(model != nullptr && m_skeleton.getBoneCount() == model->getBoneCount() && model->getAnimationCount() >= 4)
     {
         addOverrideAnim(model);
 
-        for(size_t i = 0; i < m_skeleton.getModel()->getMeshReferenceCount(); i++)
+        for(size_t i = 0; i < m_skeleton.getModel()->getBoneCount(); i++)
         {
-            m_skeleton.bone(i).mesh = m_skeleton.getModel()->getMeshReference(i).mesh_base;
+            m_skeleton.bone(i).mesh = m_skeleton.getModel()->getSkinnedBone(i).mesh_base;
             m_skeleton.bone(i).mesh_slot = nullptr;
         }
 
         if(armed)
         {
-            for(size_t i = 0; i < m_skeleton.getModel()->getMeshReferenceCount(); i++)
+            for(size_t i = 0; i < m_skeleton.getModel()->getBoneCount(); i++)
             {
-                if(model->getMeshReference(i).replace_mesh == 0x01)
+                if(model->getSkinnedBone(i).replace_mesh == 0x01)
                 {
-                    m_skeleton.bone(i).mesh = model->getMeshReference(i).mesh_base;
+                    m_skeleton.bone(i).mesh = model->getSkinnedBone(i).mesh_base;
                 }
-                else if(model->getMeshReference(i).replace_mesh == 0x02)
+                else if(model->getSkinnedBone(i).replace_mesh == 0x02)
                 {
-                    m_skeleton.bone(i).mesh_slot = model->getMeshReference(i).mesh_base;
+                    m_skeleton.bone(i).mesh_slot = model->getSkinnedBone(i).mesh_base;
                 }
             }
         }
         else
         {
-            for(size_t i = 0; i < m_skeleton.getModel()->getMeshReferenceCount(); i++)
+            for(size_t i = 0; i < m_skeleton.getModel()->getBoneCount(); i++)
             {
-                if(model->getMeshReference(i).replace_mesh == 0x03)
+                if(model->getSkinnedBone(i).replace_mesh == 0x03)
                 {
-                    m_skeleton.bone(i).mesh = model->getMeshReference(i).mesh_base;
+                    m_skeleton.bone(i).mesh = model->getSkinnedBone(i).mesh_base;
                 }
-                else if(model->getMeshReference(i).replace_mesh == 0x04)
+                else if(model->getSkinnedBone(i).replace_mesh == 0x04)
                 {
-                    m_skeleton.bone(i).mesh_slot = model->getMeshReference(i).mesh_base;
+                    m_skeleton.bone(i).mesh_slot = model->getSkinnedBone(i).mesh_base;
                 }
             }
         }
@@ -1983,9 +1983,9 @@ bool Character::setWeaponModel(const std::shared_ptr<SkeletalModel>& model, bool
     {
         // do unarmed default model
         const auto bm = m_skeleton.getModel();
-        for(size_t i = 0; i < bm->getMeshReferenceCount(); i++)
+        for(size_t i = 0; i < bm->getBoneCount(); i++)
         {
-            m_skeleton.bone(i).mesh = bm->getMeshReference(i).mesh_base;
+            m_skeleton.bone(i).mesh = bm->getSkinnedBone(i).mesh_base;
             m_skeleton.bone(i).mesh_slot = nullptr;
         }
     }
@@ -2175,7 +2175,7 @@ void Character::frame(util::Duration time)
     doWeaponFrame(time);
 
     // Update acceleration/speed, it is calculated per anim frame index
-    const animation::Animation& af = m_skeleton.getCurrentAnimationRef();
+    const animation::Animation& af = m_skeleton.getCurrentAnimation();
     m_currentSpeed = (af.speed_x + m_skeleton.getCurrentFrame() * af.accel_x) / float(1 << 16); // Decompiled from TOMB5.EXE
 
     // TODO: check rigidbody update requirements.
@@ -2360,7 +2360,7 @@ void Character::doWeaponFrame(util::Duration time)
                 {
                     m_skeleton.setAnimation(1); // draw from holster
                                                 // fixme: reset lerp:
-                    m_skeleton.setPreviousAnimation(m_skeleton.getCurrentAnimation());
+                    m_skeleton.setPreviousAnimationId(m_skeleton.getCurrentAnimationId());
                     m_skeleton.setPreviousFrame(m_skeleton.getCurrentFrame());
                     m_currentWeaponState = WeaponState::HideToReady;
                 }
@@ -2452,7 +2452,7 @@ void Character::doWeaponFrame(util::Duration time)
                 {
                     m_skeleton.setAnimation(2); // draw from holster
                                                 // fixme: reset lerp:
-                    m_skeleton.setPreviousAnimation(m_skeleton.getCurrentAnimation());
+                    m_skeleton.setPreviousAnimationId(m_skeleton.getCurrentAnimationId());
                     m_skeleton.setPreviousFrame(m_skeleton.getCurrentFrame());
                     m_currentWeaponState = WeaponState::HideToReady;
                 }

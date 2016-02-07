@@ -1575,9 +1575,9 @@ struct MeshTree
 struct AnimatedModel
 {
     uint32_t object_id;         // Item Identifier (matched in Items[])
-    uint16_t num_meshes;        // number of meshes in this object
+    uint16_t meshCount;        // number of meshes in this object
     uint16_t firstMesh;     // starting mesh (offset into MeshPointers[])
-    uint32_t mesh_tree_index;   // offset into MeshTree[]
+    uint32_t boneTreeIndex;   // offset into MeshTree[]
     uint32_t poseDataOffset;      // byte offset into Frames[] (divide by 2 for Frames[i])
     uint16_t animation_index;   // offset into Animations[]
 
@@ -1590,9 +1590,9 @@ struct AnimatedModel
     {
         std::unique_ptr<AnimatedModel> moveable{ new AnimatedModel() };
         moveable->object_id = reader.readU32();
-        moveable->num_meshes = reader.readU16();
+        moveable->meshCount = reader.readU16();
         moveable->firstMesh = reader.readU16();
-        moveable->mesh_tree_index = reader.readU32();
+        moveable->boneTreeIndex = reader.readU32();
         moveable->poseDataOffset = reader.readU32();
         moveable->animation_index = reader.readU16();
         return moveable;

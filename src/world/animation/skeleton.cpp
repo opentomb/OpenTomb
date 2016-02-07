@@ -26,12 +26,12 @@ void Skeleton::fromModel(const std::shared_ptr<SkeletalModel>& model)
 
     m_model = model;
 
-    m_bones.resize(model->getMeshReferenceCount(), Bone(this));
+    m_bones.resize(model->getBoneCount(), Bone(this));
 
     std::stack<Bone*> parents;
     for(size_t i = 0; i < m_bones.size(); i++)
     {
-        const auto& meshReference = model->getMeshReference(i);
+        const auto& meshReference = model->getSkinnedBone(i);
         Bone& bone = m_bones[i];
 
         bone.index = i;
@@ -51,20 +51,20 @@ void Skeleton::fromModel(const std::shared_ptr<SkeletalModel>& model)
 
         switch(meshReference.stackOperation)
         {
-            case SkeletalModel::MeshReference::UsePredecessor:
+            case SkeletalModel::SkinnedBone::UsePredecessor:
                 if(i == 0)
                     throw std::runtime_error("Invalid skeleton stack operation: trying to use predecessor of first bone");
                 break;
-            case SkeletalModel::MeshReference::Push:
+            case SkeletalModel::SkinnedBone::Push:
                 parents.push(bone.parent);
                 break;
-            case SkeletalModel::MeshReference::Pop:
+            case SkeletalModel::SkinnedBone::Pop:
                 if(parents.empty())
                     throw std::runtime_error("Invalid skeleton stack operation: cannot pop from empty stack");
                 bone.parent = parents.top();
                 parents.pop();
                 break;
-            case SkeletalModel::MeshReference::Top:
+            case SkeletalModel::SkinnedBone::Top:
                 if(parents.empty())
                     throw std::runtime_error("Invalid skeleton stack operation: cannot take top of empty stack");
                 bone.parent = parents.top();
@@ -83,9 +83,9 @@ void Skeleton::itemFrame(util::Duration time)
 
 void Skeleton::updatePose()
 {
-    BOOST_ASSERT(m_currentTarget.animation < m_model->getAnimationCount());
-    BOOST_ASSERT(m_currentTarget.frame < getCurrentAnimationRef().getFrameDuration());
-    const animation::SkeletonPose skeletonPose = getCurrentAnimationRef().getInterpolatedPose(m_currentTarget.frame);
+    BOOST_ASSERT(m_currentState.animation < m_model->getAnimationCount());
+    BOOST_ASSERT(m_currentState.frame < getCurrentAnimation().getFrameDuration());
+    const animation::SkeletonPose skeletonPose = getCurrentAnimation().getInterpolatedPose(m_currentState.frame);
 
     m_boundingBox = skeletonPose.boundingBox;
     m_position = skeletonPose.position;
@@ -112,12 +112,12 @@ void Skeleton::updatePose()
 
 void Skeleton::copyMeshBinding(const std::shared_ptr<SkeletalModel>& model, bool resetMeshSlot)
 {
-    size_t meshes_to_copy = std::min(m_bones.size(), m_model->getMeshReferenceCount());
+    size_t meshes_to_copy = std::min(m_bones.size(), m_model->getBoneCount());
 
     for(size_t i = 0; i < meshes_to_copy; i++)
     {
-        m_bones[i].mesh = model->getMeshReference(i).mesh_base;
-        m_bones[i].mesh_skin = model->getMeshReference(i).mesh_skin;
+        m_bones[i].mesh = model->getSkinnedBone(i).mesh_base;
+        m_bones[i].mesh_skin = model->getSkinnedBone(i).mesh_skin;
         if(resetMeshSlot)
             m_bones[i].mesh_slot = nullptr;
     }
@@ -132,10 +132,10 @@ void Skeleton::setAnimation(AnimationId animation, int frame)
     else
         frame %= anim.getFrameDuration();
 
-    m_currentTarget.animation = animation;
-    m_currentTarget.frame = frame;
-    m_currentTarget.state = anim.state_id;
-    m_previousTarget.state = anim.state_id;
+    m_currentState.animation = animation;
+    m_currentState.frame = frame;
+    m_currentState.state = anim.state_id;
+    m_previousState.state = anim.state_id;
 }
 
 /**
@@ -155,17 +155,17 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
             return AnimUpdate::None;
         }
 
-        m_previousTarget.animation = m_currentTarget.animation;
-        m_previousTarget.frame = m_currentTarget.frame;
+        m_previousState.animation = m_currentState.animation;
+        m_previousState.frame = m_currentState.frame;
         m_animationTime += AnimationFrameTime;
-        if(m_currentTarget.frame > 0)
+        if(m_currentState.frame > 0)
         {
-            m_currentTarget.frame--;
+            m_currentState.frame--;
             return AnimUpdate::NewFrame;
         }
         else
         {
-            m_currentTarget.frame = getCurrentAnimationFrame().getFrameDuration() - 1;
+            m_currentState.frame = getCurrentAnimation().getFrameDuration() - 1;
             return AnimUpdate::NewAnim;
         }
     }
@@ -176,48 +176,48 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
         return AnimUpdate::None;
     }
 
-    m_previousTarget.animation = m_currentTarget.animation;
-    m_previousTarget.frame = m_currentTarget.frame;
+    m_previousState.animation = m_currentState.animation;
+    m_previousState.frame = m_currentState.frame;
     m_animationTime -= AnimationFrameTime;
 
-    size_t frame_id = m_currentTarget.frame + 1;
+    size_t frame_id = m_currentState.frame + 1;
 
     // check anim flags:
     if(m_mode == AnimationMode::LoopLastFrame)
     {
-        if(frame_id >= getCurrentAnimationFrame().getFrameDuration())
+        if(frame_id >= getCurrentAnimation().getFrameDuration())
         {
-            m_currentTarget.frame = getCurrentAnimationFrame().getFrameDuration() - 1;
+            m_currentState.frame = getCurrentAnimation().getFrameDuration() - 1;
             return AnimUpdate::NewFrame; // period time has passed so it's a new frame, or should this be none?
         }
     }
     else if(m_mode == AnimationMode::Locked)
     {
-        m_currentTarget.frame = 0;
+        m_currentState.frame = 0;
         return AnimUpdate::NewFrame;
     }
     else if(m_mode == AnimationMode::WeaponCompat)
     {
-        if(frame_id >= getCurrentAnimationFrame().getFrameDuration())
+        if(frame_id >= getCurrentAnimation().getFrameDuration())
         {
             return AnimUpdate::NewAnim;
         }
         else
         {
-            m_currentTarget.frame = frame_id;
+            m_currentState.frame = frame_id;
             return AnimUpdate::NewFrame;
         }
     }
 
     // check state change:
     AnimUpdate stepResult = AnimUpdate::NewFrame;
-    AnimationId anim_id = m_currentTarget.animation;
-    if(m_currentTarget.state != m_previousTarget.state)
+    AnimationId anim_id = m_currentState.animation;
+    if(m_currentState.state != m_previousState.state)
     {
-        if(m_model->findStateChange(m_currentTarget.state, anim_id, frame_id))
+        if(m_model->findStateChange(m_currentState.state, anim_id, frame_id))
         {
-            m_previousTarget.state = m_model->getAnimation(anim_id).state_id;
-            m_currentTarget.state = m_previousTarget.state;
+            m_previousState.state = m_model->getAnimation(anim_id).state_id;
+            m_currentState.state = m_previousState.state;
             stepResult = AnimUpdate::NewAnim;
         }
     }
@@ -241,13 +241,13 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
             // some overlay anims may have invalid nextAnim/nextFrame values:
             if(anim_id < m_model->getAnimationCount() && frame_id < m_model->getAnimation(anim_id).getFrameDuration())
             {
-                m_previousTarget.state = m_model->getAnimation(anim_id).state_id;
-                m_currentTarget.state = m_previousTarget.state;
+                m_previousState.state = m_model->getAnimation(anim_id).state_id;
+                m_currentState.state = m_previousState.state;
             }
             else
             {
                 // invalid values:
-                anim_id = m_currentTarget.animation;
+                anim_id = m_currentState.animation;
                 frame_id = 0;
             }
         }
@@ -258,8 +258,8 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
         stepResult = AnimUpdate::NewAnim;
     }
 
-    m_currentTarget.animation = anim_id;
-    m_currentTarget.frame = frame_id;
+    m_currentState.animation = anim_id;
+    m_currentState.frame = frame_id;
 
     if(cmdEntity)
     {
@@ -272,9 +272,9 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
     return stepResult;
 }
 
-const Animation& Skeleton::getCurrentAnimationFrame() const
+const Animation& Skeleton::getCurrentAnimation() const
 {
-    return m_model->getAnimation(m_currentTarget.animation);
+    return m_model->getAnimation(m_currentState.animation);
 }
 
 void Skeleton::updateTransform(const glm::mat4& entityTransform)
@@ -312,7 +312,7 @@ void Skeleton::updateBoundingBox()
 
 void Skeleton::createGhosts(Entity& entity)
 {
-    if(!m_model || !m_model->hasMeshReferences())
+    if(!m_model || !m_model->hasSkinnedBones())
         return;
 
     m_manifoldArray = btManifoldArray();
@@ -578,9 +578,5 @@ void Skeleton::disableCollision()
     }
 }
 
-const Animation& Skeleton::getCurrentAnimationRef() const
-{
-    return m_model->getAnimation(m_currentTarget.animation);
-}
 }
 }

@@ -89,10 +89,10 @@ void ItemNotifier::draw() const
     if(!item)
         return;
 
-    const world::animation::AnimationId anim = item->getSkeleton().getCurrentAnimation();
+    const world::animation::AnimationId anim = item->getSkeleton().getCurrentAnimationId();
     const auto frame = item->getSkeleton().getCurrentFrame();
 
-    item->getSkeleton().setCurrentAnimation(0);
+    item->getSkeleton().setCurrentAnimationId(0);
     item->getSkeleton().setCurrentFrame(0);
 
     item->getSkeleton().itemFrame(util::Duration(0));
@@ -102,7 +102,7 @@ void ItemNotifier::draw() const
     matrix = glm::rotate(matrix, m_currentAngle.y + m_rotation.y, { 1,0,0 });
     render::renderItem(item->getSkeleton(), m_size, matrix, m_engine->m_gui.m_guiProjectionMatrix);
 
-    item->getSkeleton().setCurrentAnimation(anim);
+    item->getSkeleton().setCurrentAnimationId(anim);
     item->getSkeleton().setCurrentFrame(frame);
 }
 

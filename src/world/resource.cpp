@@ -1709,24 +1709,24 @@ void TR_GenSkeletalModel(const World& world, size_t model_num, SkeletalModel& mo
 
     for(size_t k = 0; k < meshCount; k++)
     {
-        SkeletalModel::MeshReference meshReference;
+        SkeletalModel::SkinnedBone skinnedBone;
         BOOST_ASSERT(meshIndices[k] < world.m_meshes.size());
-        meshReference.mesh_base = world.m_meshes[meshIndices[k]];
+        skinnedBone.mesh_base = world.m_meshes[meshIndices[k]];
         if(k == 0)
         {
-            meshReference.stackOperation = SkeletalModel::MeshReference::Push;
-            model.addMeshReference(meshReference);
+            skinnedBone.stackOperation = SkeletalModel::SkinnedBone::Push;
+            model.addSkinnedBone(skinnedBone);
             continue;
         }
 
-        BOOST_ASSERT(animatedModel->skeletonTreeIndex + k * 4 <= tr->m_skeletonTrees.size());
-        const int32_t *meshTreeData = &tr->m_skeletonTrees[ animatedModel->skeletonTreeIndex + (k - 1) * 4 ];
-        meshReference.stackOperation = static_cast<SkeletalModel::MeshReference::StackOperation>(meshTreeData[0]);
-        meshReference.position[0] = static_cast<float>(meshTreeData[1]);
-        meshReference.position[1] = static_cast<float>(meshTreeData[3]);
-        meshReference.position[2] = -static_cast<float>(meshTreeData[2]);
+        BOOST_ASSERT(animatedModel->boneTreeIndex + k * 4 <= tr->m_boneTrees.size());
+        const int32_t *boneTreeData = &tr->m_boneTrees[ animatedModel->boneTreeIndex + (k - 1) * 4 ];
+        skinnedBone.stackOperation = static_cast<SkeletalModel::SkinnedBone::StackOperation>(boneTreeData[0]);
+        skinnedBone.position[0] = static_cast<float>(boneTreeData[1]);
+        skinnedBone.position[1] = static_cast<float>(boneTreeData[3]);
+        skinnedBone.position[2] = -static_cast<float>(boneTreeData[2]);
 
-        model.addMeshReference(meshReference);
+        model.addSkinnedBone(skinnedBone);
     }
 
     /*
@@ -1747,7 +1747,7 @@ void TR_GenSkeletalModel(const World& world, size_t model_num, SkeletalModel& mo
     /*
      * state change's loading
      */
-    model.loadStateChanges(world, *tr, *animatedModel);
+    model.loadTransitions(world, *tr, *animatedModel);
 
     model.generateAnimCommands(world);
 }

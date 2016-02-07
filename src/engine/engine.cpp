@@ -324,9 +324,9 @@ void Engine::showDebugInfo()
                                                  );
         m_gui.m_textlineManager.drawText(30.0, 50.0,
                                                  boost::format("prevAnim = %3d, prevFrame = %3d, currAnim = %3d, currFrame = %3d")
-                                                 % ent->m_skeleton.getPreviousAnimation()
+                                                 % ent->m_skeleton.getPreviousAnimationId()
                                                  % ent->m_skeleton.getPreviousFrame()
-                                                 % ent->m_skeleton.getCurrentAnimation()
+                                                 % ent->m_skeleton.getCurrentAnimationId()
                                                  % ent->m_skeleton.getCurrentFrame()
                                                  );
         //Gui_OutTextXY(30.0, 30.0, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf.animations.current_animation, ent->bf.animations.next_animation, ent->bf.animations.current_frame, ent->bf.animations.next_frame);

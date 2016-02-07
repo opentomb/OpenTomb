@@ -47,7 +47,7 @@ struct Animation
 
     std::vector<AnimCommand> finalAnimCommands; // cmds for end-of-anim
 
-    const Transition* findTransitionById(LaraState id) const noexcept
+    const Transition* findTransitionForState(LaraState id) const noexcept
     {
         auto it = m_transitions.find(id);
         if(it == m_transitions.end())
@@ -56,7 +56,7 @@ struct Animation
         return &it->second;
     }
 
-    Transition* findTransitionById(LaraState id) noexcept
+    Transition* findTransitionForState(LaraState id) noexcept
     {
         auto it = m_transitions.find(id);
         if(it == m_transitions.end())
@@ -65,14 +65,14 @@ struct Animation
         return &it->second;
     }
 
-    const BonePose& getInitialBoneKeyFrame() const
+    const BonePose& getInitialRootBonePose() const
     {
         return m_poses.front().bonePoses.front();
     }
 
     SkeletonPose getInterpolatedPose(size_t frame) const;
 
-    SkeletonPose& rawPose(size_t idx)
+    SkeletonPose& getRawPose(size_t idx)
     {
         if(idx >= m_poses.size())
             throw std::out_of_range("Keyframe index out of bounds");
@@ -93,7 +93,7 @@ struct Animation
         m_stretchFactor = stretchFactor;
     }
 
-    size_t getKeyFrameCount() const noexcept
+    size_t getPoseCount() const noexcept
     {
         return m_poses.size();
     }
@@ -103,7 +103,7 @@ struct Animation
         return m_stretchFactor;
     }
 
-    std::vector<AnimCommand>& animCommands(int frame)
+    std::vector<AnimCommand>& getAnimCommands(int frame)
     {
         return m_animCommands[frame];
     }
@@ -119,7 +119,7 @@ struct Animation
 
 private:
     std::vector<SkeletonPose> m_poses;
-    uint8_t m_stretchFactor = 1; //!< Time scale (>1 means slowdown)
+    uint8_t m_stretchFactor = 1;
     std::map<int, std::vector<AnimCommand>> m_animCommands; //!< Maps from real frame index to commands
     size_t m_duration = 1; //!< Real frame duration
 };

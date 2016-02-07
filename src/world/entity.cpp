@@ -371,7 +371,7 @@ void Entity::updateCurrentSpeed(bool zeroVz)
 
 void Entity::addOverrideAnim(const std::shared_ptr<SkeletalModel>& model)
 {
-    if(!model || model->getMeshReferenceCount() != m_skeleton.getBoneCount())
+    if(!model || model->getBoneCount() != m_skeleton.getBoneCount())
         return;
 
     m_skeleton.setModel(model);
@@ -543,7 +543,7 @@ void Entity::setAnimation(animation::AnimationId animation, int frame)
 
 boost::optional<size_t> Entity::findTransitionCase(LaraState id) const
 {
-    const animation::Transition* transition = m_skeleton.getCurrentAnimationRef().findTransitionById(id);
+    const animation::Transition* transition = m_skeleton.getCurrentAnimation().findTransitionForState(id);
     if(!transition)
         return boost::none;
 

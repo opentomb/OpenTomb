@@ -244,7 +244,7 @@ void Save_Entity(std::ostream& f, std::shared_ptr<world::Entity> ent)
         % ent->m_speed[2];
     f << boost::format("\nsetEntityAnim(%d, %d, %d);")
         % ent->getId()
-        % ent->m_skeleton.getCurrentAnimation()
+        % ent->m_skeleton.getCurrentAnimationId()
         % ent->m_skeleton.getCurrentFrame();
     f << boost::format("\nsetEntityState(%d, %d, %d);")
         % ent->getId()

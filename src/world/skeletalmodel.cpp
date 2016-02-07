@@ -11,48 +11,48 @@ namespace world
 {
 void SkeletalModel::clear()
 {
-    m_meshReferences.clear();
+    m_skinnedBones.clear();
     m_collisionMap.clear();
     m_animations.clear();
 }
 
 void SkeletalModel::updateTransparencyFlag()
 {
-    m_hasTransparency = std::any_of(m_meshReferences.begin(), m_meshReferences.end(),
-                                   [](const MeshReference& mesh) { return !mesh.mesh_base->m_transparencyPolygons.empty(); }
+    m_hasTransparency = std::any_of(m_skinnedBones.begin(), m_skinnedBones.end(),
+                                   [](const SkinnedBone& bone) { return !bone.mesh_base->m_transparencyPolygons.empty(); }
     );
 }
 
-void SkeletalModel::fillSkinnedMeshMap()
+void SkeletalModel::fillSkinnedBoneMap()
 {
-    for(MeshReference& mesh : m_meshReferences)
+    for(SkinnedBone& bone : m_skinnedBones)
     {
-        if(!mesh.mesh_skin)
+        if(!bone.mesh_skin)
         {
             continue;
         }
 
-        mesh.mesh_skin->m_matrixIndices.clear();
-        for(core::Vertex& v : mesh.mesh_skin->m_vertices)
+        bone.mesh_skin->m_matrixIndices.clear();
+        for(core::Vertex& v : bone.mesh_skin->m_vertices)
         {
-            if(const core::Vertex* rv = mesh.mesh_base->findVertex(v.position))
+            if(const core::Vertex* rv = bone.mesh_base->findVertex(v.position))
             {
-                mesh.mesh_skin->m_matrixIndices.emplace_back(0, 0);
+                bone.mesh_skin->m_matrixIndices.emplace_back(0, 0);
                 v.position = rv->position;
                 v.normal = rv->normal;
                 continue;
             }
 
-            mesh.mesh_skin->m_matrixIndices.emplace_back(0, 1);
-            glm::vec3 tv = v.position + mesh.position;
-            for(const MeshReference& prevMesh : m_meshReferences)
+            bone.mesh_skin->m_matrixIndices.emplace_back(0, 1);
+            glm::vec3 tv = v.position + bone.position;
+            for(const SkinnedBone& prevBone : m_skinnedBones)
             {
-                const core::Vertex* rv = prevMesh.mesh_base->findVertex(tv);
+                const core::Vertex* rv = prevBone.mesh_base->findVertex(tv);
                 if(rv == nullptr)
                     continue;
 
-                mesh.mesh_skin->m_matrixIndices.emplace_back(1, 1);
-                v.position = rv->position - mesh.position;
+                bone.mesh_skin->m_matrixIndices.emplace_back(1, 1);
+                v.position = rv->position - bone.position;
                 v.normal = rv->normal;
                 break;
             }
@@ -60,21 +60,21 @@ void SkeletalModel::fillSkinnedMeshMap()
     }
 }
 
-void SkeletalModel::setMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount)
+void SkeletalModel::assignBoneBaseSkins(const std::vector<SkeletalModel::SkinnedBone>& src, size_t meshCount)
 {
-    BOOST_ASSERT(meshCount <= m_meshReferences.size() && meshCount <= src.size());
+    BOOST_ASSERT(meshCount <= m_skinnedBones.size() && meshCount <= src.size());
     for(size_t i = 0; i < meshCount; i++)
     {
-        m_meshReferences[i].mesh_base = src[i].mesh_base;
+        m_skinnedBones[i].mesh_base = src[i].mesh_base;
     }
 }
 
-void SkeletalModel::setSkinnedMeshes(const std::vector<SkeletalModel::MeshReference>& src, size_t meshCount)
+void SkeletalModel::assignBoneSkins(const std::vector<SkeletalModel::SkinnedBone>& src, size_t meshCount)
 {
-    BOOST_ASSERT(meshCount <= m_meshReferences.size() && meshCount <= src.size());
+    BOOST_ASSERT(meshCount <= m_skinnedBones.size() && meshCount <= src.size());
     for(size_t i = 0; i < meshCount; i++)
     {
-        m_meshReferences[i].mesh_skin = src[i].mesh_base;
+        m_skinnedBones[i].mesh_skin = src[i].mesh_base;
     }
 }
 
@@ -87,7 +87,7 @@ void SkeletalModel::setSkinnedMeshes(const std::vector<SkeletalModel::MeshRefere
 */
 bool SkeletalModel::findStateChange(LaraState stateid, animation::AnimationId& animid_inout, size_t& frameid_inout)
 {
-    const animation::Transition* transition = m_animations[animid_inout].findTransitionById(stateid);
+    const animation::Transition* transition = m_animations[animid_inout].findTransitionForState(stateid);
     if(!transition)
         return false;
 
@@ -166,7 +166,7 @@ void SkeletalModel::generateAnimCommands(const World& world)
                 case animation::AnimCommandOpcode::PlaySound:
                     if(pointer[0] >= anim.firstFrame && pointer[0] - anim.firstFrame < static_cast<int>(anim.getFrameDuration()))
                     {
-                        anim.animCommands(pointer[0] - anim.firstFrame).push_back({ command, pointer[1], 0, 0 });
+                        anim.getAnimCommands(pointer[0] - anim.firstFrame).push_back({ command, pointer[1], 0, 0 });
                     }
                     // ConsoleInfo::instance().printf("ACmd PLAYSOUND: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
                     pointer += 2;
@@ -175,7 +175,7 @@ void SkeletalModel::generateAnimCommands(const World& world)
                 case animation::AnimCommandOpcode::PlayEffect:
                     if(pointer[0] >= anim.firstFrame && pointer[0] - anim.firstFrame < static_cast<int>(anim.getFrameDuration()))
                     {
-                        anim.animCommands(pointer[0] - anim.firstFrame).push_back({ command, pointer[1], 0, 0 });
+                        anim.getAnimCommands(pointer[0] - anim.firstFrame).push_back({ command, pointer[1], 0, 0 });
                     }
                     //                    ConsoleInfo::instance().printf("ACmd FLIPEFFECT: anim = %d, frame = %d of %d", static_cast<int>(anim), pointer[0], static_cast<int>(af->frames.size()));
                     pointer += 2;
@@ -185,7 +185,7 @@ void SkeletalModel::generateAnimCommands(const World& world)
     }
 }
 
-void SkeletalModel::loadStateChanges(const World& world, const loader::Level& level, const loader::AnimatedModel& animatedModel)
+void SkeletalModel::loadTransitions(const World& world, const loader::Level& level, const loader::AnimatedModel& animatedModel)
 {
 #ifdef LOG_ANIM_DISPATCHES
     if(animations.size() > 1)
@@ -232,7 +232,7 @@ void SkeletalModel::loadStateChanges(const World& world, const loader::Level& le
             {
                 BOOST_ASSERT(j + trAnimation.transitionsIndex < level.m_transitions.size());
                 const loader::Transitions *tr_sch = &level.m_transitions[j + trAnimation.transitionsIndex];
-                if(anim->findTransitionById(static_cast<LaraState>(tr_sch->stateId)) != nullptr)
+                if(anim->findTransitionForState(static_cast<LaraState>(tr_sch->stateId)) != nullptr)
                 {
                     BOOST_LOG_TRIVIAL(warning) << "Multiple state changes for id " << tr_sch->stateId;
                 }
@@ -300,14 +300,14 @@ void SkeletalModel::setStaticAnimation()
 {
     m_animations.resize(1);
     m_animations.front().setDuration(1, 1, 1);
-    animation::SkeletonPose& skeletonPose = m_animations.front().rawPose(0);
+    animation::SkeletonPose& skeletonPose = m_animations.front().getRawPose(0);
 
     m_animations.front().id = 0;
     m_animations.front().next_anim = nullptr;
     m_animations.front().nextFrame = 0;
     m_animations.front().m_transitions.clear();
 
-    skeletonPose.bonePoses.resize(m_meshReferences.size());
+    skeletonPose.bonePoses.resize(m_skinnedBones.size());
 
     skeletonPose.position = { 0,0,0 };
 
@@ -316,7 +316,7 @@ void SkeletalModel::setStaticAnimation()
         animation::BonePose& bonePose = skeletonPose.bonePoses[k];
 
         bonePose.rotation = util::trRotationToQuat({ 0,0,0 });
-        bonePose.position = m_meshReferences[k].position;
+        bonePose.position = m_skinnedBones[k].position;
     }
 }
 
@@ -395,15 +395,15 @@ void SkeletalModel::loadAnimations(const loader::Level& level, size_t moveable)
         /*
         * let us begin to load animations
         */
-        for(size_t j = 0; j < anim->getKeyFrameCount(); ++j, poseDataOffset += trAnimation.poseDataSize)
+        for(size_t j = 0; j < anim->getPoseCount(); ++j, poseDataOffset += trAnimation.poseDataSize)
         {
-            animation::SkeletonPose* skeletonPose = &anim->rawPose(j);
+            animation::SkeletonPose* skeletonPose = &anim->getRawPose(j);
             // !Need bonetags in empty frames:
-            skeletonPose->bonePoses.resize(m_meshReferences.size());
+            skeletonPose->bonePoses.resize(m_skinnedBones.size());
 
             if(j >= keyFrameCount)
             {
-                BOOST_LOG_TRIVIAL(warning) << "j=" << j << ", keyFrameCount=" << keyFrameCount << ", anim->getKeyFrameCount()=" << anim->getKeyFrameCount();
+                BOOST_LOG_TRIVIAL(warning) << "j=" << j << ", keyFrameCount=" << keyFrameCount << ", anim->getKeyFrameCount()=" << anim->getPoseCount();
                 continue;
             }
 
@@ -416,7 +416,7 @@ void SkeletalModel::loadAnimations(const loader::Level& level, size_t moveable)
                 {
                     animation::BonePose* bonePose = &skeletonPose->bonePoses[k];
                     bonePose->rotation = util::trRotationToQuat({ 0,0,0 });
-                    bonePose->position = m_meshReferences[k].position;
+                    bonePose->position = m_skinnedBones[k].position;
                 }
                 continue;
             }
@@ -429,7 +429,7 @@ void SkeletalModel::loadAnimations(const loader::Level& level, size_t moveable)
             {
                 animation::BonePose* bonePose = &skeletonPose->bonePoses[k];
                 bonePose->rotation = util::trRotationToQuat({ 0,0,0 });
-                bonePose->position = m_meshReferences[k].position;
+                bonePose->position = m_skinnedBones[k].position;
 
                 if(loader::gameToEngine(level.m_gameVersion) == loader::Engine::TR1)
                 {
@@ -541,7 +541,7 @@ void SkeletalModel::patchLaraSkin(World& world, loader::Engine engineVersion)
                 {
                     // In TR1, Lara has unified head mesh for all her alternate skins.
                     // Hence, we copy all meshes except head, to prevent Potato Raider bug.
-                    setMeshes(skinModel->m_meshReferences, m_meshReferences.size() - 1);
+                    assignBoneBaseSkins(skinModel->m_skinnedBones, m_skinnedBones.size() - 1);
                 }
             }
             break;
@@ -552,11 +552,11 @@ void SkeletalModel::patchLaraSkin(World& world, loader::Engine engineVersion)
         case loader::Engine::TR3:
             if(std::shared_ptr<SkeletalModel> skinModel = world.getModelByID(TR_ITEM_LARA_SKIN_TR3))
             {
-                setMeshes(skinModel->m_meshReferences, m_meshReferences.size());
+                assignBoneBaseSkins(skinModel->m_skinnedBones, m_skinnedBones.size());
                 auto tmp = world.getModelByID(11);                   // moto / quadro cycle animations
                 if(tmp)
                 {
-                    tmp->setMeshes(skinModel->m_meshReferences, m_meshReferences.size());
+                    tmp->assignBoneBaseSkins(skinModel->m_skinnedBones, m_skinnedBones.size());
                 }
             }
             break;
@@ -566,14 +566,14 @@ void SkeletalModel::patchLaraSkin(World& world, loader::Engine engineVersion)
             // base skeleton meshes
             if(std::shared_ptr<SkeletalModel> skinModel = world.getModelByID(TR_ITEM_LARA_SKIN_TR45))
             {
-                setMeshes(skinModel->m_meshReferences, m_meshReferences.size());
+                assignBoneBaseSkins(skinModel->m_skinnedBones, m_skinnedBones.size());
             }
             // skin skeleton meshes
             if(std::shared_ptr<SkeletalModel> skinModel = world.getModelByID(TR_ITEM_LARA_SKIN_JOINTS_TR45))
             {
-                setSkinnedMeshes(skinModel->m_meshReferences, m_meshReferences.size());
+                assignBoneSkins(skinModel->m_skinnedBones, m_skinnedBones.size());
             }
-            fillSkinnedMeshMap();
+            fillSkinnedBoneMap();
             break;
 
         case loader::Engine::Unknown:
@@ -586,9 +586,9 @@ void SkeletalModel::lua_SetModelMeshReplaceFlag(engine::Engine& engine, ModelId 
     auto sm = engine.m_world.getModelByID(id);
     if(sm != nullptr)
     {
-        if(bone < sm->getMeshReferenceCount())
+        if(bone < sm->getBoneCount())
         {
-            sm->m_meshReferences[bone].replace_mesh = flag;
+            sm->m_skinnedBones[bone].replace_mesh = flag;
         }
         else
         {
@@ -606,9 +606,9 @@ void SkeletalModel::lua_SetModelAnimReplaceFlag(engine::Engine& engine, ModelId 
     auto sm = engine.m_world.getModelByID(id);
     if(sm != nullptr)
     {
-        if(bone < sm->getMeshReferenceCount())
+        if(bone < sm->getBoneCount())
         {
-            sm->m_meshReferences[bone].replace_anim = flag;
+            sm->m_skinnedBones[bone].replace_anim = flag;
         }
         else
         {
@@ -637,9 +637,9 @@ void SkeletalModel::lua_CopyMeshFromModelToModel(engine::Engine& engine, ModelId
         return;
     }
 
-    if(bone1 < sm1->getMeshReferenceCount() && bone2 < sm2->getMeshReferenceCount())
+    if(bone1 < sm1->getBoneCount() && bone2 < sm2->getBoneCount())
     {
-        sm1->m_meshReferences[bone1].mesh_base = sm2->m_meshReferences[bone2].mesh_base;
+        sm1->m_skinnedBones[bone1].mesh_base = sm2->m_skinnedBones[bone2].mesh_base;
     }
     else
     {
@@ -657,12 +657,12 @@ void SkeletalModel::lua_SetModelBodyPartFlag(engine::Engine& engine, ModelId id,
         return;
     }
 
-    if(bone_id < 0 || static_cast<size_t>(bone_id) >= model->getMeshReferenceCount())
+    if(bone_id < 0 || static_cast<size_t>(bone_id) >= model->getBoneCount())
     {
         engine.m_gui.getConsole().warning(SYSWARN_WRONG_OPTION_INDEX, bone_id);
         return;
     }
 
-    model->m_meshReferences[bone_id].body_part = body_part_flag;
+    model->m_skinnedBones[bone_id].body_part = body_part_flag;
 }
 } // namespace world

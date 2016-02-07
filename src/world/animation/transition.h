@@ -12,7 +12,7 @@ namespace animation
 /**
  * Describes the target of an animation transition.
  */
-struct TransitionTarget
+struct AnimationState
 {
     AnimationId animation = 0;
     size_t frame = 0;
@@ -26,7 +26,7 @@ struct TransitionCase
 {
     size_t firstFrame;
     size_t lastFrame;
-    TransitionTarget target;
+    AnimationState target;
 };
 
 /**

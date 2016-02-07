@@ -1293,9 +1293,9 @@ lua::Any lua_GetEntityAnim(engine::Engine& engine, world::ObjectId id)
     }
 
     return std::make_tuple(
-        ent->m_skeleton.getCurrentAnimation(),
+        ent->m_skeleton.getCurrentAnimationId(),
         ent->m_skeleton.getCurrentFrame(),
-        ent->m_skeleton.getCurrentAnimationRef().getFrameDuration()
+        ent->m_skeleton.getCurrentAnimation().getFrameDuration()
         );
 }
 
@@ -2376,9 +2376,9 @@ void lua_genUVRotateAnimation(engine::Engine& engine, world::ModelId id)
     if(!model)
         return;
 
-    if(model->getMeshReference(0).mesh_base->m_transparencyPolygons.empty())
+    if(model->getSkinnedBone(0).mesh_base->m_transparencyPolygons.empty())
         return;
-    const world::core::Polygon& firstPolygon = model->getMeshReference(0).mesh_base->m_transparencyPolygons.front();
+    const world::core::Polygon& firstPolygon = model->getSkinnedBone(0).mesh_base->m_transparencyPolygons.front();
     if(firstPolygon.textureAnimationId)
         return;
 
@@ -2424,7 +2424,7 @@ void lua_genUVRotateAnimation(engine::Engine& engine, world::ModelId id)
         seq->keyFrames[j].move.y = -seq->uvrotateSpeed * j;
     }
 
-    for(world::core::Polygon& p : model->getMeshReference(0).mesh_base->m_transparencyPolygons)
+    for(world::core::Polygon& p : model->getSkinnedBone(0).mesh_base->m_transparencyPolygons)
     {
         BOOST_ASSERT(!engine.m_world.m_textureAnimations.empty());
         p.textureAnimationId = engine.m_world.m_textureAnimations.size() - 1;

@@ -5355,7 +5355,7 @@ in other ways (text). Some sequences have only one member; this is done so as to
 </div>
 </div>
 <div class="sect1">
-<h2 id="_mesh_construction_and_animation">6. Mesh Construction and Animation</h2>
+<h2 id="_animation_system">6. Animation System</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_concepts">6.1. Concepts</h3>
@@ -5392,7 +5392,7 @@ If bone 1 describes a movement of, say, 45 degrees around the X axis, the childr
 their movement is relative to their parent. If bone 2 would also have a rotation of 45 degrees around X, it would end up
 with a global rotation of 90 degrees, as its local rotation sums up with its parent&#8217;s rotation.</p></div>
 </div></div>
-<div class="imageblock" id="lara_meshtree" style="float:right;">
+<div class="imageblock" id="lara_skeleton" style="float:right;">
 <div class="content">
 <img src="images/illustrations/meshtree.png" alt="images/illustrations/meshtree.png" width="450">
 </div>
@@ -5405,7 +5405,7 @@ Skeleton
 <dd>
 <p>
     A skeleton is a tree of bones, with its own movement. You could say that a skeleton is a &#8220;virtual root bone&#8221;.
-    <a href="#lara_meshtree">The image to the right</a> shows Lara&#8217;s skeleton.<br>
+    <a href="#lara_skeleton">The image to the right</a> shows Lara&#8217;s skeleton.<br>
     Please note that a skeleton is only a concept that only makes sense in combination with a <em>mesh</em> which it deforms;
     skeletons can be used with multiple (different) meshes, resulting in the meshes having all the same pose. This has
     been commonly used to create a &#8220;doppelganger effect&#8221;, where the doppelganger of the player does the exact same
@@ -5901,7 +5901,7 @@ and <a href="#BoneTree"><span class="monospaced">BoneTree[]</span></a>. A given 
 <p style="margin-top: 0;">
     <span class="image">
 <img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
-</span> Number of angle sets to follow; these start with the first mesh, and meshes without angles get zero angles.<br>
+</span> Number of angle sets to follow; these start with the first bone, and bones without angles get zero angles.<br>
     <span class="image">
 <img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
 </span><span class="image">
@@ -5910,7 +5910,7 @@ and <a href="#BoneTree"><span class="monospaced">BoneTree[]</span></a>. A given 
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> <span class="monospaced">angleSetCount</span> is implicitly <span class="monospaced">meshCount</span> (from model).
+</span> From TR2 on, <span class="monospaced">angleSetCount</span> is implicitly <span class="monospaced">meshCount</span> (from model).
 </p>
 </td>
 </tr>
@@ -5921,7 +5921,7 @@ and <a href="#BoneTree"><span class="monospaced">BoneTree[]</span></a>. A given 
 </td>
 <td class="hdlist2">
 <p style="margin-top: 0;">
-    Sets of rotation angles for all the meshes with respect to their parent meshes.
+    Sets of rotation angles for all the bones with respect to their parent bones.
 </p>
 </td>
 </tr>
