@@ -53,7 +53,7 @@ public:
     void (*onFrame)(Character& ent, AnimUpdate state) = nullptr;
 
     const Animation& getCurrentAnimation() const;
-    AnimUpdate stepAnimation(util::Duration time, Entity* cmdEntity = nullptr);
+    AnimUpdate advanceTime(util::Duration time, Entity* cmdEntity = nullptr);
     void setAnimation(AnimationId animation, int frame = 0);
 
     AnimationId getCurrentAnimationId() const noexcept

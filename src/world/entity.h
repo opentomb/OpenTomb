@@ -156,7 +156,7 @@ public:
 
     boost::optional<size_t> findTransitionCase(LaraState id) const;
 
-    animation::AnimUpdate stepAnimation(util::Duration time);
+    animation::AnimUpdate advanceTime(util::Duration time);
     virtual void frame(util::Duration time);  // entity frame step
 
     bool isPlayer()

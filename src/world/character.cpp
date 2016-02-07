@@ -2154,7 +2154,7 @@ void Character::frame(util::Duration time)
             checkCollisionCallbacks();
     }
 
-    auto animStepResult = stepAnimation(time);
+    auto animStepResult = advanceTime(time);
     if(m_skeleton.onFrame != nullptr)
     {
         m_skeleton.onFrame(*this, animStepResult);
@@ -2367,7 +2367,7 @@ void Character::doWeaponFrame(util::Duration time)
                 break;
 
             case WeaponState::HideToReady:
-                if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                if(m_skeleton.advanceTime(time, this) == animation::AnimUpdate::NewAnim)
                 {
                     m_skeleton.setAnimation(0); // hold drawn weapon to aim at target transition
                     m_currentWeaponState = WeaponState::Idle;
@@ -2394,7 +2394,7 @@ void Character::doWeaponFrame(util::Duration time)
             case WeaponState::FireToIdle:
                 // reverse stepping:
                 // (there is a separate animation (4) for this, hence the original shotgun/bow don't reverse mid-anim)
-                if(m_skeleton.stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
+                if(m_skeleton.advanceTime(-time, this) == animation::AnimUpdate::NewAnim)
                 {
                     m_skeleton.setAnimation(0); // hold drawn weapon to aim at target transition
                     m_currentWeaponState = WeaponState::Idle;
@@ -2404,7 +2404,7 @@ void Character::doWeaponFrame(util::Duration time)
             case WeaponState::IdleToFire:
                 if(m_command.action)
                 {
-                    if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                    if(m_skeleton.advanceTime(time, this) == animation::AnimUpdate::NewAnim)
                     {
                         m_skeleton.setAnimation(2); // shooting cycle
                         m_currentWeaponState = WeaponState::Fire;
@@ -2419,7 +2419,7 @@ void Character::doWeaponFrame(util::Duration time)
             case WeaponState::Fire:
                 if(m_command.action)
                 {
-                    if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                    if(m_skeleton.advanceTime(time, this) == animation::AnimUpdate::NewAnim)
                     {
                         m_skeleton.setAnimation(2); // shooting cycle
                                                     // bang
@@ -2433,7 +2433,7 @@ void Character::doWeaponFrame(util::Duration time)
                 break;
 
             case WeaponState::IdleToHide:
-                if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                if(m_skeleton.advanceTime(time, this) == animation::AnimUpdate::NewAnim)
                 {
                     m_currentWeaponState = WeaponState::Hide;
                     setWeaponModel(m_currentWeapon, false);
@@ -2459,7 +2459,7 @@ void Character::doWeaponFrame(util::Duration time)
                 break;
 
             case WeaponState::HideToReady:
-                if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                if(m_skeleton.advanceTime(time, this) == animation::AnimUpdate::NewAnim)
                 {
                     m_skeleton.setAnimation(0); // hold drawn weapon to aim at target transition
                     m_currentWeaponState = WeaponState::Idle;
@@ -2485,7 +2485,7 @@ void Character::doWeaponFrame(util::Duration time)
 
             case WeaponState::FireToIdle:
                 // reverse stepping:
-                if(m_skeleton.stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
+                if(m_skeleton.advanceTime(-time, this) == animation::AnimUpdate::NewAnim)
                 {
                     m_skeleton.setAnimation(0); // hold drawn weapon to aim at target transition
                     m_currentWeaponState = WeaponState::Idle;
@@ -2495,7 +2495,7 @@ void Character::doWeaponFrame(util::Duration time)
             case WeaponState::IdleToFire:
                 if(m_command.action)
                 {
-                    if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                    if(m_skeleton.advanceTime(time, this) == animation::AnimUpdate::NewAnim)
                     {
                         m_skeleton.setAnimation(3); // shooting cycle
                         m_currentWeaponState = WeaponState::Fire;
@@ -2510,7 +2510,7 @@ void Character::doWeaponFrame(util::Duration time)
             case WeaponState::Fire:
                 if(m_command.action)
                 {
-                    if(m_skeleton.stepAnimation(time, this) == animation::AnimUpdate::NewAnim)
+                    if(m_skeleton.advanceTime(time, this) == animation::AnimUpdate::NewAnim)
                     {
                         m_skeleton.setAnimation(3); // shooting cycle
                                                     // bang
@@ -2525,7 +2525,7 @@ void Character::doWeaponFrame(util::Duration time)
 
             case WeaponState::IdleToHide:
                 // reverse stepping:
-                if(m_skeleton.stepAnimation(-time, this) == animation::AnimUpdate::NewAnim)
+                if(m_skeleton.advanceTime(-time, this) == animation::AnimUpdate::NewAnim)
                 {
                     m_currentWeaponState = WeaponState::Hide;
                     setWeaponModel(m_currentWeapon, false);

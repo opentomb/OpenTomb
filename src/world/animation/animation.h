@@ -37,12 +37,12 @@ struct Animation
     int32_t accel_y; // Left-right accel
     size_t animationCommandIndex;
     size_t animationCommandCount;
-    LaraState state_id;
+    LaraState m_stateId;
     int firstFrame = 0;
 
     std::map<LaraState, Transition> m_transitions;
 
-    Animation* next_anim = nullptr; // Next default animation
+    Animation* nextAnimation = nullptr; // Next default animation
     size_t nextFrame;                 // Next default frame
 
     std::vector<AnimCommand> finalAnimCommands; // cmds for end-of-anim

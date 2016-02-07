@@ -571,7 +571,7 @@ void Entity::updateInterpolation()
     m_skeleton.updatePose();
 }
 
-animation::AnimUpdate Entity::stepAnimation(util::Duration time)
+animation::AnimUpdate Entity::advanceTime(util::Duration time)
 {
     if((m_typeFlags & ENTITY_TYPE_DYNAMIC)
        || !m_active
@@ -584,7 +584,7 @@ animation::AnimUpdate Entity::stepAnimation(util::Duration time)
     if(m_skeleton.getAnimationMode() == animation::AnimationMode::Locked)
         return animation::AnimUpdate::NewFrame;  // penetration fix will be applyed in Character_Move... functions
 
-    animation::AnimUpdate stepResult = m_skeleton.stepAnimation(time, this);
+    animation::AnimUpdate stepResult = m_skeleton.advanceTime(time, this);
 
     //    setAnimation(m_bf.animations.current_animation, m_bf.animations.current_frame);
 
@@ -618,7 +618,7 @@ void Entity::frame(util::Duration time)
     if(m_typeFlags & ENTITY_TYPE_COLLCHECK)
         checkCollisionCallbacks();
 
-    stepAnimation(time);
+    advanceTime(time);
 
     // TODO: check rigidbody update requirements.
     //       If m_transform changes, rigid body must be updated regardless of anim frame change...

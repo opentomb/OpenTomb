@@ -87,19 +87,19 @@ void SkeletalModel::assignBoneSkins(const std::vector<SkeletalModel::SkinnedBone
 * \param[in,out]  frameid  reference to frame id, receives found frame
 * \return  true if state is found, false otherwise
 */
-bool SkeletalModel::findStateChange(LaraState stateid, animation::AnimationId& animid_inout, size_t& frameid_inout)
+bool SkeletalModel::findTransition(LaraState stateid, animation::AnimationId& animationId, size_t& frame)
 {
-    const animation::Transition* transition = m_animations[animid_inout].findTransitionForState(stateid);
+    BOOST_ASSERT( animationId < m_animations.size() );
+    const animation::Transition* transition = m_animations[animationId].findTransitionForState(stateid);
     if(!transition)
         return false;
 
     for(const animation::TransitionCase& transitionCase : transition->cases)
     {
-        if(frameid_inout >= transitionCase.firstFrame
-           && frameid_inout <= transitionCase.lastFrame)
+        if(frame >= transitionCase.firstFrame && frame <= transitionCase.lastFrame)
         {
-            animid_inout = transitionCase.target.animation;
-            frameid_inout = transitionCase.target.frame;
+            animationId = transitionCase.target.animation;
+            frame = transitionCase.target.frame;
             return true;
         }
     }
@@ -208,18 +208,18 @@ void SkeletalModel::loadTransitions(const World& world, const loader::Level& lev
         BOOST_ASSERT(animId >= 0);
         if(static_cast<size_t>(animId) < m_animations.size())
         {
-            anim->next_anim = &m_animations[animId];
+            anim->nextAnimation = &m_animations[animId];
             BOOST_ASSERT(level.m_animations[trAnimation.nextAnimation].firstFrame <= trAnimation.nextFrame);
             BOOST_ASSERT(level.m_animations[trAnimation.nextAnimation].lastFrame >= trAnimation.nextFrame);
             anim->nextFrame = trAnimation.nextFrame - level.m_animations[trAnimation.nextAnimation].firstFrame;
-            anim->nextFrame %= anim->next_anim->getFrameDuration(); //!< @todo Paranoid?
+            anim->nextFrame %= anim->nextAnimation->getFrameDuration(); //!< @todo Paranoid?
 #ifdef LOG_ANIM_DISPATCHES
             BOOST_LOG_TRIVIAL(debug) << "ANIM[" << i << "], next_anim = " << anim->next_anim->id << ", next_frame = " << anim->next_frame;
 #endif
         }
         else
         {
-            anim->next_anim = nullptr;
+            anim->nextAnimation = nullptr;
             anim->nextFrame = 0;
         }
 
@@ -305,7 +305,7 @@ void SkeletalModel::setStaticAnimation()
     animation::SkeletonPose& skeletonPose = m_animations.front().getRawPose(0);
 
     m_animations.front().id = 0;
-    m_animations.front().next_anim = nullptr;
+    m_animations.front().nextAnimation = nullptr;
     m_animations.front().nextFrame = 0;
     m_animations.front().m_transitions.clear();
 
@@ -367,7 +367,7 @@ void SkeletalModel::loadAnimations(const loader::Level& level, size_t moveable)
 
         anim->animationCommandIndex = trAnimation.animCommandIndex;
         anim->animationCommandCount = trAnimation.animCommandCount;
-        anim->state_id = static_cast<LaraState>(trAnimation.state_id);
+        anim->m_stateId = static_cast<LaraState>(trAnimation.state_id);
 
         //        anim->frames.resize(TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i));
         // FIXME: number of frames is always (frame_end - frame_start + 1)

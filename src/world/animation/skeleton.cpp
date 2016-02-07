@@ -77,7 +77,7 @@ void Skeleton::fromModel(const std::shared_ptr<SkeletalModel>& model)
 
 void Skeleton::itemFrame(util::Duration time)
 {
-    stepAnimation(time, nullptr);
+    advanceTime(time, nullptr);
     updatePose();
 }
 
@@ -134,8 +134,8 @@ void Skeleton::setAnimation(AnimationId animation, int frame)
 
     m_currentState.animation = animation;
     m_currentState.frame = frame;
-    m_currentState.state = anim.state_id;
-    m_previousState.state = anim.state_id;
+    m_currentState.state = anim.m_stateId;
+    m_previousState.state = anim.m_stateId;
 }
 
 /**
@@ -144,8 +144,13 @@ void Skeleton::setAnimation(AnimationId animation, int frame)
 * @param cmdEntity     optional entity for which doAnimCommand is called
 * @return  ENTITY_ANIM_NONE if frame is unchanged (time<rate), ENTITY_ANIM_NEWFRAME or ENTITY_ANIM_NEWANIM
 */
-AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
+AnimUpdate Skeleton::advanceTime(util::Duration time, Entity* cmdEntity)
 {
+    if(time > AnimationFrameTime || time < -AnimationFrameTime)
+    {
+        BOOST_LOG_TRIVIAL(error) << "More than 1 frame since last animation update";
+    }
+
     // FIXME: hack for reverse framesteps (weaponanims):
     if(time.count() < 0)
     {
@@ -175,17 +180,17 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
     {
         return AnimUpdate::None;
     }
-
+    
     m_previousState.animation = m_currentState.animation;
     m_previousState.frame = m_currentState.frame;
     m_animationTime -= AnimationFrameTime;
 
-    size_t frame_id = m_currentState.frame + 1;
+    size_t frame = m_currentState.frame + 1;
 
     // check anim flags:
     if(m_mode == AnimationMode::LoopLastFrame)
     {
-        if(frame_id >= getCurrentAnimation().getFrameDuration())
+        if(frame >= getCurrentAnimation().getFrameDuration())
         {
             m_currentState.frame = getCurrentAnimation().getFrameDuration() - 1;
             return AnimUpdate::NewFrame; // period time has passed so it's a new frame, or should this be none?
@@ -198,72 +203,70 @@ AnimUpdate Skeleton::stepAnimation(util::Duration time, Entity* cmdEntity)
     }
     else if(m_mode == AnimationMode::WeaponCompat)
     {
-        if(frame_id >= getCurrentAnimation().getFrameDuration())
+        if(frame >= getCurrentAnimation().getFrameDuration())
         {
             return AnimUpdate::NewAnim;
         }
         else
         {
-            m_currentState.frame = frame_id;
+            m_currentState.frame = frame;
             return AnimUpdate::NewFrame;
         }
     }
 
-    // check state change:
+    // check transitions
     AnimUpdate stepResult = AnimUpdate::NewFrame;
-    AnimationId anim_id = m_currentState.animation;
-    if(m_currentState.state != m_previousState.state)
+    AnimationId animationId = m_currentState.animation;
+    if(m_currentState.state != m_previousState.state && m_model->findTransition(m_currentState.state, animationId, frame))
     {
-        if(m_model->findStateChange(m_currentState.state, anim_id, frame_id))
-        {
-            m_previousState.state = m_model->getAnimation(anim_id).state_id;
-            m_currentState.state = m_previousState.state;
-            stepResult = AnimUpdate::NewAnim;
-        }
+        const auto newState = m_model->getAnimation(animationId).m_stateId;
+        m_previousState.state = newState;
+        m_currentState.state = newState;
+        stepResult = AnimUpdate::NewAnim;
     }
 
     // check end of animation:
-    if(frame_id >= m_model->getAnimation(anim_id).getFrameDuration())
+    if(frame >= m_model->getAnimation(animationId).getFrameDuration())
     {
         if(cmdEntity)
         {
-            for(AnimCommand acmd : m_model->getAnimation(anim_id).finalAnimCommands) // end-of-anim cmdlist
+            for(AnimCommand acmd : m_model->getAnimation(animationId).finalAnimCommands) // end-of-anim cmdlist
             {
                 cmdEntity->doAnimCommand(acmd);
             }
         }
 
-        if(m_model->getAnimation(anim_id).next_anim)
+        if(m_model->getAnimation(animationId).nextAnimation)
         {
-            frame_id = m_model->getAnimation(anim_id).nextFrame;
-            anim_id = m_model->getAnimation(anim_id).next_anim->id;
+            frame = m_model->getAnimation(animationId).nextFrame;
+            animationId = m_model->getAnimation(animationId).nextAnimation->id;
 
             // some overlay anims may have invalid nextAnim/nextFrame values:
-            if(anim_id < m_model->getAnimationCount() && frame_id < m_model->getAnimation(anim_id).getFrameDuration())
+            if(animationId < m_model->getAnimationCount() && frame < m_model->getAnimation(animationId).getFrameDuration())
             {
-                m_previousState.state = m_model->getAnimation(anim_id).state_id;
+                m_previousState.state = m_model->getAnimation(animationId).m_stateId;
                 m_currentState.state = m_previousState.state;
             }
             else
             {
                 // invalid values:
-                anim_id = m_currentState.animation;
-                frame_id = 0;
+                animationId = m_currentState.animation;
+                frame = 0;
             }
         }
         else
         {
-            frame_id = 0;
+            frame = 0;
         }
         stepResult = AnimUpdate::NewAnim;
     }
 
-    m_currentState.animation = anim_id;
-    m_currentState.frame = frame_id;
+    m_currentState.animation = animationId;
+    m_currentState.frame = frame;
 
     if(cmdEntity)
     {
-        for(const AnimCommand& acmd : m_model->getAnimation(anim_id).getAnimCommands(frame_id))
+        for(const AnimCommand& acmd : m_model->getAnimation(animationId).getAnimCommands(frame))
         {
             cmdEntity->doAnimCommand(acmd);
         }

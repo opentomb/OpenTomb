@@ -133,7 +133,7 @@ public:
     void clear();
     void updateTransparencyFlag();
     void fillSkinnedBoneMap();
-    bool findStateChange(LaraState stateid, animation::AnimationId& animid_out, size_t& frameid_inout);
+    bool findTransition(LaraState stateid, animation::AnimationId& animationId, size_t& frame);
 
     void assignBoneBaseSkins(const std::vector<SkeletalModel::SkinnedBone>& src, size_t meshCount);
     void assignBoneSkins(const std::vector<SkeletalModel::SkinnedBone>& src, size_t meshCount);
