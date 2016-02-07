@@ -70,7 +70,7 @@ struct Animation
         return m_poses.front().bonePoses.front();
     }
 
-    SkeletonPose getInterpolatedPose(size_t frame) const;
+    SkeletonPose getInterpolatedPose(size_t frame, util::Duration time) const;
 
     SkeletonPose& getRawPose(size_t idx)
     {

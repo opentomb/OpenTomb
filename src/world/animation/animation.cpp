@@ -4,8 +4,10 @@ namespace world
 {
 namespace animation
 {
-SkeletonPose Animation::getInterpolatedPose(size_t frame) const
+SkeletonPose Animation::getInterpolatedPose(size_t frame, util::Duration time) const
 {
+    const util::FloatDuration frameBias = std::fmod(util::toSeconds(time), util::toSeconds(AnimationFrameTime)) / util::toSeconds(AnimationFrameTime);
+
     BOOST_ASSERT(frame < m_duration);
     const size_t frameIndex = frame / m_stretchFactor;
     BOOST_ASSERT(frameIndex < m_poses.size());
@@ -16,11 +18,11 @@ SkeletonPose Animation::getInterpolatedPose(size_t frame) const
 
     BOOST_ASSERT(first.bonePoses.size() == second.bonePoses.size());
 
-    const size_t subOffset = frame - frameIndex*m_stretchFactor; // offset between keyframes
-    if(subOffset == 0)
-        return first; // no need to interpolate
+    const size_t subOffset = frame % m_stretchFactor; // offset between keyframes
+    const glm::float_t lerp = (frameBias + subOffset) / m_stretchFactor;
 
-    const glm::float_t lerp = static_cast<glm::float_t>(subOffset) / static_cast<glm::float_t>(m_stretchFactor);
+    if(util::fuzzyZero(lerp))
+        return first; // no need to interpolate
 
     SkeletonPose result;
     result.position = glm::mix(first.position, second.position, lerp);

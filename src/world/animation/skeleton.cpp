@@ -85,7 +85,7 @@ void Skeleton::updatePose()
 {
     BOOST_ASSERT(m_currentState.animation < m_model->getAnimationCount());
     BOOST_ASSERT(m_currentState.frame < getCurrentAnimation().getFrameDuration());
-    const animation::SkeletonPose skeletonPose = getCurrentAnimation().getInterpolatedPose(m_currentState.frame);
+    const animation::SkeletonPose skeletonPose = getCurrentAnimation().getInterpolatedPose(m_currentState.frame, m_animationTime);
 
     m_boundingBox = skeletonPose.boundingBox;
     m_position = skeletonPose.position;
