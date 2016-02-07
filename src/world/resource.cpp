@@ -1719,8 +1719,8 @@ void TR_GenSkeletalModel(const World& world, size_t model_num, SkeletalModel& mo
             continue;
         }
 
-        BOOST_ASSERT(animatedModel->mesh_tree_index + k * 4 <= tr->m_meshTreeData.size());
-        const int32_t *meshTreeData = &tr->m_meshTreeData[ animatedModel->mesh_tree_index + (k - 1) * 4 ];
+        BOOST_ASSERT(animatedModel->skeletonTreeIndex + k * 4 <= tr->m_skeletonTrees.size());
+        const int32_t *meshTreeData = &tr->m_skeletonTrees[ animatedModel->skeletonTreeIndex + (k - 1) * 4 ];
         meshReference.stackOperation = static_cast<SkeletalModel::MeshReference::StackOperation>(meshTreeData[0]);
         meshReference.position[0] = static_cast<float>(meshTreeData[1]);
         meshReference.position[1] = static_cast<float>(meshTreeData[3]);
@@ -1780,11 +1780,11 @@ void TR_GenSkeletalModels(World& world, const std::unique_ptr<loader::Level>& tr
 {
     for(size_t i = 0; i < tr->m_animatedModels.size(); i++)
     {
-        const loader::AnimatedModel& tr_moveable = *tr->m_animatedModels[i];
-        std::shared_ptr<SkeletalModel> smodel = std::make_shared<SkeletalModel>(tr_moveable.object_id);
-        TR_GenSkeletalModel(world, i, *smodel, tr, tr_moveable.num_meshes);
-        smodel->updateTransparencyFlag();
-        world.m_skeletalModels[smodel->getId()] = smodel;
+        const loader::AnimatedModel& trAnimatedModel = *tr->m_animatedModels[i];
+        std::shared_ptr<SkeletalModel> skeletalModel = std::make_shared<SkeletalModel>(trAnimatedModel.object_id);
+        TR_GenSkeletalModel(world, i, *skeletalModel, tr, trAnimatedModel.meshCount);
+        skeletalModel->updateTransparencyFlag();
+        world.m_skeletalModels[skeletalModel->getId()] = skeletalModel;
     }
 }
 

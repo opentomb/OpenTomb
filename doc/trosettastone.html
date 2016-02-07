@@ -2066,7 +2066,7 @@ else
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
-<div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-02-06)</strong></p></div>
+<div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-02-07)</strong></p></div>
 <div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
 <div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div>
 <div class="paragraph"><p><span class="image">
@@ -5358,82 +5358,155 @@ in other ways (text). Some sequences have only one member; this is done so as to
 <h2 id="_mesh_construction_and_animation">6. Mesh Construction and Animation</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_overview_4">6.1. Overview</h3>
-<div class="paragraph"><p>The animated mesh objects in the Tomb Raider series are sets of meshes that are moved relative to each other, as defined
-by <span class="monospaced">Entities[]</span> entries. Each entry describes which meshes to be used (a contiguous set of them referred to in
-<span class="monospaced">MeshPointers[]</span>), what hierarchy and relative offsets they have (contents of <span class="monospaced">MeshTree[]</span> pointed to), and what
-animations are to be used (contents of <span class="monospaced">Animations[]</span> pointed to).</p></div>
-<div class="paragraph"><p>The hierarchy used is a branching one, with the meshes being at the nodes, and with the first mesh being the root node.
-The <span class="monospaced">MeshTree[]</span> values are applied to each of the child meshes in sequence; they are sets of four <span class="monospaced">int32_t</span>s, the
-first being a hierarchy operator, and the remaining three being the coordinates in the parent mesh&#8217;s system. A hierarchy
-example is that for the Lara meshes:</p></div>
+<h3 id="_concepts">6.1. Concepts</h3>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Local Space, Object Space and World Space
+</dt>
+<dd>
+<p>
+    When talking about coordinates, they are (especially in the context of animations) usually <em>in parent space</em> or
+    <em>local</em>. Both terms have the same meaning, which is that an object&#8217;s movement is relative to some other object
+    called its <em>parent</em>.  When talking about <em>Object Space</em>, the movements are considered to be relative to an
+    indirect parent; for example, a tree of objects&#8201;&#8212;&#8201;all with local movements&#8201;&#8212;&#8201;can be calculated so that their
+    movements can be expressed relative to their ultimate grandparent (the object they all belong to).<br>
+    Finally, all movements can be calculated to be <em>global</em> or in <em>world space</em>, so that they are independent of any
+    object they might be relative to.
+</p>
+</dd>
+<dt class="hdlist1">
+Bone
+</dt>
+<dd>
+<p>
+    A bone describes movement (rotational and positional), relative to its <em>parent</em>. Bones are usually organized as a
+    tree, where multiple bones may have one single parent. Bones are used to deform models.
+</p>
+</dd>
+</dl></div>
+<div class="exampleblock">
+<div class="title">Example 1. Bone Spaces</div>
+<div class="content">
+<div class="paragraph"><p>Consider a simple tree of three bones, with bone 1 at the root of it, and bones 2 and 3 attached as children to bone 1.
+If bone 1 describes a movement of, say, 45 degrees around the X axis, the children are implicitly moved, too, because
+their movement is relative to their parent. If bone 2 would also have a rotation of 45 degrees around X, it would end up
+with a global rotation of 90 degrees, as its local rotation sums up with its parent&#8217;s rotation.</p></div>
+</div></div>
 <div class="imageblock" id="lara_meshtree" style="float:right;">
 <div class="content">
 <img src="images/illustrations/meshtree.png" alt="images/illustrations/meshtree.png" width="450">
 </div>
-<div class="title">Figure 1. Lara's MeshTree</div>
+<div class="title">Figure 1. Lara's Skeleton</div>
 </div>
-<div class="paragraph"><p><a href="#lara_meshtree">The image to the right</a> shows a top-down hierarchy of Lara&#8217;s MeshTree. <em>Hips</em> is a root mesh; the
-ponytail is not listed, as it is a separate object.</p></div>
-<div class="paragraph"><p>This is implemented by using a stack of meshes and &#8220;push&#8221; and &#8220;pop&#8221; operations in <span class="monospaced">MeshTree[]</span>. Normally, each
-mesh&#8217;s parent is the previous mesh in series. But such meshes can be &#8220;remembered&#8221; by adding them to a stack of meshes
-with a &#8220;push&#8221; operation. This remembered mesh can then be used as the parent mesh with a &#8220;pop&#8221; operation.
-<span class="footnote"><br>[It is not clear what the maximum stack depth is; most TR mesh stacks do not extend beyond 2 or 3 meshes.]<br></span></p></div>
-<div class="paragraph"><p>The animations for each mesh object are selected with some ingenious techniques. Which animations to use are not
-hardcoded; instead, each entity has some states it can be in, and these states are used to select which animation is to
-be played. For example, locks have only one state (they just sit there), doors have two states (open and closed), and
-Lara has numerous states, such as standing, walking, running, jumping, falling, being hurt, dying, etc. Each animation
-has a state ID, which can be used to select it; however, state transitions might seem to require a large number of
-intermediate states (opening, closing, starting to jump, landing, etc.). The alternative used in the Tomb Raider engine
-is for each animation to have bridge animations to other states' animations, which are selected using the ID of which
-state to change to. These bridge animations then lead to the animation with the appropriate state. Thus, a closed door
-will run a looped closed-door animation as long as its state stays &#8220;closed&#8221;, but when its state becomes &#8220;open&#8221;, it
-will change to an opening-door bridge animation, which will end in a looped open-door animation. Likewise, closing a
-door will make it use a closing-door bridge animation. Some bridge animations are chosen with a finer grain of
-selectivity, however, such as using one for left foot forward and one for right foot forward.</p></div>
-<div class="paragraph"><p>Thus, each animation references a set of <span class="monospaced">StateChange</span> structures, each one of which references an <span class="monospaced">AnimDispatch</span>
-structure (called a &#8220;range&#8221; in some documentation). Each <span class="monospaced">StateChange</span> structure contains a new state and which
-<span class="monospaced">AnimDispatch</span> structures to use. When an entity goes into a new state, the <span class="monospaced">StateChange</span> structures are scanned for
-that state&#8217;s ID, and if one matches, then that <span class="monospaced">StateChange</span>'s <span class="monospaced">AnimDispatch</span> es are then scanned for a range of frames
-that contains the ID of the current frame. If such an <span class="monospaced">AnimDispatch</span> is found, the animation and the frame are changed
-to those listed in it.</p></div>
-<div class="paragraph"><p>The ultimate unit of animation is, of course, the pose, and each pose consists of a bounding box, the offset of the
-root mesh, and rotation angles for all the meshes with respect to their parent meshes. The root mesh is also rotated,
-but relative to the object&#8217;s overall coordinates. All rotations are performed around the meshes' origins, and are in
-order Y, X, Z (yaw, pitch, roll). The reason for the root mesh&#8217;s displacement is because entities traveling on solid
-surfaces are likely tracked by having their locations be at ground level, and Lara&#8217;s hips, for example, are well above
-the ground. Finally, some of the angles are not specified explicitly, when they are not, they are zero.</p></div>
-<div class="paragraph"><p>Poses are referenced in two ways, either by an offset into the <span class="monospaced">Poses[]</span> array that contains them, or by a pose index.
-The values of the latter appear to be unique to each kind of entity, but not between entities; the first pose for each
-kind is numbered 0. This is likely a convenience when constructing the animations, since the list of animation poses
-for each entity can be constructed separately. However, using these indices is fairly simple. Each Animation structure
-has a first-pose index; this index is subtracted from the index of the desired pose in order to find out its index
-relative to the animation&#8217;s first pose.</p></div>
-<div class="paragraph"><p>There are also some special <em>AnimCommands</em> for doing various additional things. Some of them are for moving entities in
-absolute coordinates, for example to position Lara at climb location, or specifying jump momentum. Some others define
-actions per frame, like playing sounds, emitting bubbles, and so forth.</p></div>
-<div class="paragraph"><p>Finally, some entities appear to have incomplete set of animations; their complete animations are &#8220;borrowed&#8221; from
-similar entities. Such setup is mostly used in TR2&#8217;s Venice levels&#8201;&#8212;&#8201;some of Venice goons them have a full set of
-animations, while some others have only the standing animation. The ones with only the standing animation borrow their
-other animations from the fully-animated ones.</p></div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Skeleton
+</dt>
+<dd>
+<p>
+    A skeleton is a tree of bones, with its own movement. You could say that a skeleton is a &#8220;virtual root bone&#8221;.
+    <a href="#lara_meshtree">The image to the right</a> shows Lara&#8217;s skeleton.<br>
+    Please note that a skeleton is only a concept that only makes sense in combination with a <em>mesh</em> which it deforms;
+    skeletons can be used with multiple (different) meshes, resulting in the meshes having all the same pose. This has
+    been commonly used to create a &#8220;doppelganger effect&#8221;, where the doppelganger of the player does the exact same
+    movement of the player, because it&#8217;s simply using the player&#8217;s skeleton.
+</p>
+</dd>
+<dt class="hdlist1">
+Pose
+</dt>
+<dd>
+<p>
+    A pose describes the&#8201;&#8212;&#8201;well, pose of a skeleton. If you have a skeleton which models the layout of a human statue,
+    the bone movements in sum are the pose of that statue.
+</p>
+</dd>
+<dt class="hdlist1">
+Animation
+</dt>
+<dd>
+<p>
+    An animation is a series of poses, describing the movement of a skeleton over time.  Usually, these poses are
+    interpolated to be smoother, because poses only contain distinct positions and rotations, but not the speed or
+    direction at which the bones move at that specific time point.
+</p>
+</dd>
+<dt class="hdlist1">
+Model
+</dt>
+<dd>
+<p>
+    A model (or <em>animated model</em>) combines a skeleton, a mesh, and its animation system.
+</p>
+</dd>
+</dl></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="icons/note.png" alt="Note">
+</td>
+<td class="content">Rotations are performed in Y, X, Z order.</td>
+</tr></table>
+</div>
+<div class="sect3">
+<h4 id="_animation_system_concepts">6.1.1. Animation System Concepts</h4>
+<div class="paragraph"><p>Each model has an internal <em>state</em>; for example, Lara may be standing idle, running, jumping, rolling, etc., and a door
+may have the states <em>opened</em> and <em>closed</em>. Every state has animations attached to it; the door has two &#8220;animations&#8221;,
+one (static) animation loop showing it closed, the other one showing it opened.</p></div>
+<div class="paragraph"><p>Now, if the door is closed and should show the &#8220;opening&#8221; animation, it plays a <a href="#TransitionCases"><em>transition animation</em></a>. A transition animation is not looped and only used to smoothly switch between animation loops. Especially
+in the case of Lara&#8217;s animations, there are many transition animations, and the system to decide which transition
+animation to play is quite elaborate. It depends on two things:</p></div>
+<div class="olist arabic"><ol class="arabic">
+<li>
+<p>
+<strong>The current internal and target states.</strong>
+  For example, if Lara is running and starts to jump, it doesn&#8217;t make sense to show the transition animation from
+  standing to rolling.
+</p>
+</li>
+<li>
+<p>
+<strong>The current animation frame.</strong>
+  To have a sensible, smooth animation, there <em>must</em> be a decision between several intermediate animations. If Lara is
+  running, and her right foot currently touches the ground, it doesn&#8217;t make any sense to show how she pushes herself up
+  to jump with her left leg.
+</p>
+</li>
+</ol></div>
+<div class="paragraph"><p>Such <em>transition cases</em> not only define the target animation, but also the <em>target frame</em> of that animation, to have it
+start to play somewhere in the middle of the animation. This is useful especially in cases where the transition between
+two fast or complex animations would otherwise lead to some sort of &#8220;warp effect&#8221;.</p></div>
+<div class="paragraph"><p>Each animation may also contain <a href="#AnimationCommand"><em>animation commands</em></a>, which are bound to specific frames. Such
+commands may be used, for example, to play sounds (like the &#8220;uh&#8221; when Lara jumps up) or to give skeletons an
+additional speed (like when jumping forward).</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="icons/note.png" alt="Note">
+</td>
+<td class="content">The actual animation frame rate is always locked to 30 FPS. All engine internal counters, including animation
+frame counters, are also using 30 FPS timebase.</td>
+</tr></table>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_data_structures">6.2. Data Structures</h3>
 <div class="sect3">
-<h4 id="_mesh_tree_structure">6.2.1. Mesh Tree Structure</h4>
+<h4 id="BoneTree">6.2.1. Bone Tree Structure</h4>
 <div class="listingblock">
-<a id="tr_meshtree_node"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_meshtree_node</span> <span class="c1">// 4 bytes</span>
+<a id="tr_bonenode"></a>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">BoneNode</span> <span class="c1">// 16 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">stackOperation</span><span class="p">;</span>
-     <span class="kt">int32_t</span> <span class="n">Offset_X</span><span class="p">;</span>
-     <span class="kt">int32_t</span> <span class="n">Offset_Y</span><span class="p">;</span>
-     <span class="kt">int32_t</span> <span class="n">Offset_Z</span><span class="p">;</span>
+     <span class="kt">int32_t</span> <span class="n">positionX</span><span class="p">;</span>
+     <span class="kt">int32_t</span> <span class="n">positionY</span><span class="p">;</span>
+     <span class="kt">int32_t</span> <span class="n">positionZ</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p><span class="monospaced">MeshTree[]</span> array consists of meshtree nodes.</p></div>
-<div class="paragraph"><p>By default, the meshes' parents are always initialized to their predecessors; for the first mesh, this is implicitly its
-skeleton. Also, the first mesh&#8217;s <span class="monospaced">stackOperation</span> should <em>always</em> be considered to be &#8220;Push&#8221;.</p></div>
+<div class="paragraph"><p>The <span class="monospaced">BoneTree[]</span> array consists of +BoneNode+s.</p></div>
+<div class="paragraph"><p>By default, the bones' parents are always initialized to their predecessors; for the first bone, this is implicitly its
+skeleton. Also, the first bones&#8217;s <span class="monospaced">stackOperation</span> should <em>always</em> be considered to be &#8220;Push&#8221;.</p></div>
 <div class="paragraph"><p>After initializing the parents to their defaults, the stack operations are applied:</p></div>
 <div class="hdlist"><div class="title">Stack operations</div><table>
 <tr>
@@ -5443,7 +5516,7 @@ Use Predecessor (0)
 </td>
 <td class="hdlist2">
 <p style="margin-top: 0;">
-    The most recently processed mesh is the parent of the current mesh.  This operation is invalid if the current mesh
+    The most recently processed bone is the parent of the current bone.  This operation is invalid if the current bone
     is the first being processed.
 </p>
 </td>
@@ -5455,7 +5528,7 @@ Push (1)
 </td>
 <td class="hdlist2">
 <p style="margin-top: 0;">
-    Push the current mesh&#8217;s parent onto the stack.
+    Push the current bone&#8217;s parent onto the stack.
 </p>
 </td>
 </tr>
@@ -5466,7 +5539,7 @@ Pop (2)
 </td>
 <td class="hdlist2">
 <p style="margin-top: 0;">
-    Pop a mesh from the stack and assign it as the current mesh&#8217;s parent. This operation is invalid if the stack is
+    Pop a bone from the stack and assign it as the current bone&#8217;s parent. This operation is invalid if the stack is
     empty.
 </p>
 </td>
@@ -5478,15 +5551,15 @@ Top (3)
 </td>
 <td class="hdlist2">
 <p style="margin-top: 0;">
-    Same as &#8220;Pop&#8221;, but do not pop the mesh from the stack.
+    Same as &#8220;Pop&#8221;, but do not pop the bone from the stack.
 </p>
 </td>
 </tr>
 </table></div>
-<div class="paragraph"><p><span class="monospaced">Offset_X</span>, <span class="monospaced">Offset_Y</span> and <span class="monospaced">Offset_Z</span> are offsets of the mesh&#8217;s origin from the parent mesh&#8217;s origin.</p></div>
+<div class="paragraph"><p><span class="monospaced">positionX</span>, <span class="monospaced">positionY</span> and <span class="monospaced">positionZ</span> are in parent space.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_tr1_3_animation_structure">6.2.2. TR1-3 Animation Structure</h4>
+<h4 id="Animation">6.2.2. TR1-3 Animation Structure</h4>
 <div class="paragraph"><p>This describes each individual animation. These may be looped by specifying the next animation to be itself.</p></div>
 <div class="admonitionblock">
 <table><tr>
@@ -5497,9 +5570,9 @@ Top (3)
 <img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
 </span> <span class="image">
 <img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
-</span> In TR2 and TR3, one must be careful when parsing poses using the <span class="monospaced">poseDataSize</span> as the size of each pose, since
-an animation&#8217;s pose data may extend into the next animation&#8217;s pose data, and that may have a different <span class="monospaced">poseDataSize</span>
-value.</td>
+</span> In TR2 and TR3, one must be careful when parsing poses using the <span class="monospaced">poseDataSize</span> as the size of each
+pose, since an animation&#8217;s pose data may extend into the next animation&#8217;s pose data, and that may have a different
+<span class="monospaced">poseDataSize</span> value.</td>
 </tr></table>
 </div>
 <div class="listingblock">
@@ -5520,8 +5593,8 @@ value.</td>
     <span class="kt">uint16_t</span>  <span class="n">nextAnimation</span><span class="p">;</span>
     <span class="kt">uint16_t</span>  <span class="n">nextFrame</span><span class="p">;</span>
 
-    <span class="kt">uint16_t</span>  <span class="n">NumStateChanges</span><span class="p">;</span>
-    <span class="kt">uint16_t</span>  <span class="n">StateChangeOffset</span><span class="p">;</span> <span class="c1">// Offset into StateChanges[]</span>
+    <span class="kt">uint16_t</span>  <span class="n">transitionCaseCount</span><span class="p">;</span>
+    <span class="kt">uint16_t</span>  <span class="n">transitionCaseOffset</span><span class="p">;</span> <span class="c1">// Offset into TransitionCases[]</span>
 
     <span class="kt">uint16_t</span>  <span class="n">animationCommandCount</span><span class="p">;</span>   <span class="c1">// How many of them to use.</span>
     <span class="kt">uint16_t</span>  <span class="n">animationCommandsOffset</span><span class="p">;</span> <span class="c1">// Offset into AnimationCommand[]</span>
@@ -5548,7 +5621,7 @@ value.</td>
 <p style="margin-top: 0;">
     Multiplier value which defines how many <em>game frames</em> will be spent for each actual animation frame. For example, if
     it is 1, then each animation frame belongs to a single game frame. If the value is 2, then each animation frame
-    lasts two game frames, and so on. In the latter case, animation frames will be interpolated between game frames
+    lasts two game frames, and so on. If it is stretched, animation frames will be interpolated between game frames
     using the <em>slerp</em> function. <span class="footnote"><br>[See <a href="https://en.wikipedia.org/wiki/Slerp">https://en.wikipedia.org/wiki/Slerp</a> for a mathematical explanation.]<br></span>
 </p>
 </td>
@@ -5561,7 +5634,7 @@ value.</td>
 <td class="hdlist2">
 <p style="margin-top: 0;">
     Identifies current state type to be used with this animation. The Engine uses the current <span class="monospaced">stateId</span> not only to
-    solve state changes, but also to define Lara&#8217;s current behaviour&#8201;&#8212;&#8201;like collisional routines to be used, controls
+    solve transitions, but also to define Lara&#8217;s current behaviour&#8201;&#8212;&#8201;like collisional routines to be used, controls
     to be checked, health/air/sprint points to be drained, and so on.
 </p>
 </td>
@@ -5590,7 +5663,7 @@ value.</td>
     Defines which animation should be played after the current one is finished. When the current animation ends, the
     engine will switch to <span class="monospaced">nextAnimation</span>, not regarding current <span class="monospaced">stateId</span> value. If the <span class="monospaced">nextAnimation</span> value is the
     same as the animation number itself, it means that the animation will be looped until the loop is broken by some
-    state change.
+    transition.
 </p>
 </td>
 </tr>
@@ -5612,15 +5685,6 @@ value.</td>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="icons/note.png" alt="Note">
-</td>
-<td class="content">The actual game frame rate is always locked to 30 FPS. All engine internal counters, including animation frame
-counters, are also using 30 FPS timebase.</td>
-</tr></table>
-</div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
 <img src="icons/tip.png" alt="Tip">
 </td>
 <td class="content">The animation length in frames is equal to <span class="monospaced">length = (lastFrame - firstFrame) + 1</span>.</td>
@@ -5633,7 +5697,7 @@ counters, are also using 30 FPS timebase.</td>
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span> <span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> For TR4 and TR5, an extended version of <a href="#tr_animation"><span class="monospaced">Animation</span></a> is used. In addition to <span class="monospaced">speed</span> and
+</span> For TR4 and TR5, an extended version of <a href="#Animation"><span class="monospaced">Animation</span></a> is used. In addition to <span class="monospaced">speed</span> and
 <span class="monospaced">accelleration</span> values, TR4 introduced <em>lateral</em> values, which are used to move the entity to the sides, rather than
 forward or backward. However, these values are only used for <em>any entity but Lara</em>&#8201;&#8212;&#8201;the engine ignores them in such a
 case.</p></div>
@@ -5664,7 +5728,7 @@ TR4 can roll or jump aside.</p></div>
 to use; there may be more than one, with each separate one covering a different range of frames.</p></div>
 <div class="listingblock">
 <a id="tr_transitions"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">Transitions</span> <span class="c1">// 6 bytes</span>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">TransitionCases</span> <span class="c1">// 6 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">stateId</span><span class="p">;</span>
     <span class="kt">uint16_t</span> <span class="n">transitionCaseCount</span><span class="p">;</span> <span class="c1">// number of transition cases (seems to always be 1..5)</span>
@@ -5673,8 +5737,8 @@ to use; there may be more than one, with each separate one covering a different 
 </pre></div></div></div>
 </div>
 <div class="sect3">
-<h4 id="_transition_cases">6.2.5. Transition Cases</h4>
-<div class="paragraph"><p>This specifies the next <a href="#tr_animation">animation</a> and frame to use; these are associated with some range of frames.
+<h4 id="TransitionCases">6.2.5. Transition Cases</h4>
+<div class="paragraph"><p>This specifies the next <a href="#Animation">animation</a> and frame to use; these are associated with some range of frames.
 This allows, for example, to specify different target animations depending on which of Lara&#8217;s feet is currently in
 front.</p></div>
 <div class="listingblock">
@@ -5689,11 +5753,12 @@ front.</p></div>
 </pre></div></div></div>
 </div>
 <div class="sect3">
-<h4 id="_animationcommand_structure">6.2.6. AnimationCommand Structure</h4>
+<h4 id="AnimationCommand">6.2.6. AnimationCommand Structure</h4>
 <div class="paragraph"><p>These are various commands associated with each animation. They are varying numbers of <span class="monospaced">int16_t</span>s packed into an
 array. Just like the <a href="#tr_floordata">FloorData</a>, AnimationCommands must be parsed sequentially, one by one.</p></div>
 <div class="paragraph"><p>The first AnimationCommand entry is the <em>opcode</em>, which also determines how many parameters follow (i.e., how many
-<span class="monospaced">int16_t</span> values must be parsed without switching to the next AnimationCommand). For a given <a href="#tr_animation">animation</a>, there are <span class="monospaced">Animation::animationCommandCount</span> commands.</p></div>
+<span class="monospaced">int16_t</span> values must be parsed without switching to the next AnimationCommand). For a given <a href="#Animation">animation</a>,
+there are <span class="monospaced">Animation::animationCommandCount</span> commands.</p></div>
 <div class="paragraph"><p>Some of commands refer to the whole animation (jump speed, position change and empty hands commands), while others are
 associated with specific frames (sound, bubbles, etc.).</p></div>
 <div class="listingblock">
@@ -5803,7 +5868,8 @@ associated with specific frames (sound, bubbles, etc.).</p></div>
 </div>
 <div class="sect3">
 <h4 id="_pose_structure">6.2.7. Pose Structure</h4>
-<div class="paragraph"><p>Poses indicate how composite meshes are positioned and rotated. They work in conjunction with <a href="#tr_animation"><span class="monospaced">Animations[]</span></a> and <span class="monospaced">MeshTree[]</span>. A given pose has the following format:</p></div>
+<div class="paragraph"><p>Poses indicate how bones are positioned and rotated. They work in conjunction with <a href="#Animation"><span class="monospaced">Animations[]</span></a>
+and <a href="#BoneTree"><span class="monospaced">BoneTree[]</span></a>. A given pose has the following format:</p></div>
 <div class="listingblock">
 <a id="tr_pose"></a>
 <div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">Vertex</span>
@@ -5913,14 +5979,6 @@ instead of 10 bits, with the value range $[0; 4096[$ mapped to $[0; 360[$ degree
 </td>
 </tr></table>
 </div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="icons/note.png" alt="Note">
-</td>
-<td class="content">Rotations are performed in Y, X, Z order.</td>
-</tr></table>
-</div>
 </div>
 </div>
 </div>
@@ -5929,7 +5987,7 @@ instead of 10 bits, with the value range $[0; 4096[$ mapped to $[0; 360[$ degree
 <h2 id="non-player-character-behaviour">7. Non-Player Character Behaviour</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_overview_5">7.1. Overview</h3>
+<h3 id="_overview_4">7.1. Overview</h3>
 <div class="paragraph"><p>All the Tomb Raider game physics and entity behaviour is hardcoded, with each type ID being associated with some specific sort of behaviour (as Lara,
 as a boat, as a tiger, as a door, as a boulder, as a lock, etc.). That is, each model refer two internal engine routines&#8201;&#8212;&#8201;<em>collisional</em> one and <em>control</em> one. For static entities (like flame emitters), <em>collisional</em> routine may contain no functional code, while <em>control</em> routine is present. On contrary, &#8220;decorative&#8221; entities (usually called <em>animatings</em> in TRLE) may lack <em>control</em> code, while retaining <em>collisional</em> code.</p></div>
 <div class="paragraph"><p>Several entity types may share the same collisional and/or control routines&#8201;&#8212;&#8201;for example, there is one generic collisional routine for almost all enemies, another generic routine for doors, and another one for <em>standable</em> entities, like bridge or platform objects.</p></div>
@@ -7701,7 +7759,7 @@ That demo also has its own version of <span class="monospaced">TOMBPC.DAT</span>
 <h2 id="_scripting_in_tr2_tr3_for_pc_psx">11. Scripting in TR2/TR3 for PC/PSX</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_overview_6">11.1. Overview</h3>
+<h3 id="_overview_5">11.1. Overview</h3>
 <div class="paragraph"><p>The internal gameflow, which levels come in what order, what item(s) Lara has at the beginning of each level, the filenames of the level and cut-scene files,
 all the visible text (e.g. &#8220;Save Game,&#8221; &#8220;Rusty Key,&#8221; etc.), and various other options are controlled by a script file called <span class="monospaced">TOMBPC.DAT</span>/<span class="monospaced">TOMBPSX.DAT</span>. The
 scripts were compiled using a utility known as <span class="monospaced">GAMEFLOW.EXE</span> which was distributed by Eidos in the German release of Tomb Raider II Gold. Both TR2 and TR3 use
@@ -8762,7 +8820,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-02-06 19:27:34 CET
+Last updated 2016-02-07 12:51:47 CET
 </div>
 </div>
 </body>

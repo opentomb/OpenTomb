@@ -140,7 +140,7 @@ void TR4Level::load()
 
     newsrc.readVector(m_animCommands, newsrc.readU32());
 
-    newsrc.readVector(m_meshTreeData, newsrc.readU32());
+    newsrc.readVector(m_boneTrees, newsrc.readU32());
 
     readPoseDataAndModels(newsrc);
 

@@ -59,7 +59,7 @@ void TR2Level::load()
 
     m_reader.readVector(m_animCommands, m_reader.readU32());
 
-    m_reader.readVector(m_meshTreeData, m_reader.readU32());
+    m_reader.readVector(m_boneTrees, m_reader.readU32());
 
     readPoseDataAndModels(m_reader);
 

@@ -66,8 +66,8 @@ void TR1Level::load()
     BOOST_LOG_TRIVIAL(debug) << "Reading animation commands";
     m_reader.readVector(m_animCommands, m_reader.readU32());
 
-    BOOST_LOG_TRIVIAL(debug) << "Reading mesh tree";
-    m_reader.readVector(m_meshTreeData, m_reader.readU32());
+    BOOST_LOG_TRIVIAL(debug) << "Reading bone trees";
+    m_reader.readVector(m_boneTrees, m_reader.readU32());
 
     BOOST_LOG_TRIVIAL(debug) << "Reading pose data and models";
     readPoseDataAndModels(m_reader);
