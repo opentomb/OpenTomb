@@ -16,6 +16,7 @@
 #include "strings.h"
 #include "util/helpers.h"
 #include "util/vmath.h"
+#include "world/animation/skeletalmodel.h"
 #include "world/animation/texture.h"
 #include "world/character.h"
 #include "world/core/basemesh.h"
@@ -23,7 +24,6 @@
 #include "world/hair.h"
 #include "world/ragdoll.h"
 #include "world/room.h"
-#include "world/skeletalmodel.h"
 #include "world/world.h"
 
 #include <GL/glew.h>
@@ -83,12 +83,12 @@ void lua_DumpRoom(engine::Engine& engine, lua::Value id)
         engine.dumpRoom(engine.m_camera.getCurrentRoom());
         return;
     }
-    if(id.to<world::ModelId>() >= engine.m_world.m_rooms.size())
+    if(id.to<world::animation::ModelId>() >= engine.m_world.m_rooms.size())
     {
-        engine.m_gui.getConsole().warning(SYSWARN_WRONG_ROOM, id.to<world::ModelId>());
+        engine.m_gui.getConsole().warning(SYSWARN_WRONG_ROOM, id.to<world::animation::ModelId>());
         return;
     }
-    engine.dumpRoom(engine.m_world.m_rooms[id.to<world::ModelId>()].get());
+    engine.dumpRoom(engine.m_world.m_rooms[id.to<world::animation::ModelId>()].get());
 }
 
 void lua_SetRoomEnabled(engine::Engine& engine, int id, bool value)
@@ -110,7 +110,7 @@ void lua_SetRoomEnabled(engine::Engine& engine, int id, bool value)
 
 // Base engine functions
 
-void lua_SetModelCollisionMapSize(engine::Engine& engine, world::ModelId id, size_t size)
+void lua_SetModelCollisionMapSize(engine::Engine& engine, world::animation::ModelId id, size_t size)
 {
     auto model = engine.m_world.getModelByID(id);
     if(model == nullptr)
@@ -122,7 +122,7 @@ void lua_SetModelCollisionMapSize(engine::Engine& engine, world::ModelId id, siz
     model->shrinkCollisionMap(size);
 }
 
-void lua_SetModelCollisionMap(engine::Engine& engine, world::ModelId id, size_t arg, size_t val)
+void lua_SetModelCollisionMap(engine::Engine& engine, world::animation::ModelId id, size_t arg, size_t val)
 {
     /// engine_world.skeletal_models[id] != engine.engine_world.getModelByID(lua_tointeger(lua, 1));
     auto model = engine.m_world.getModelByID(id);
@@ -678,7 +678,7 @@ void lua_PrintItems(engine::Engine& engine, world::ObjectId entity_id)
     ent->inventory().print();
 }
 
-lua::Any lua_SpawnEntity(engine::Engine& engine, world::ModelId model_id, float x, float y, float z, float ax, float ay, float az, world::ObjectId room_id, lua::Value ov_id)
+lua::Any lua_SpawnEntity(engine::Engine& engine, world::animation::ModelId model_id, float x, float y, float z, float ax, float ay, float az, world::ObjectId room_id, lua::Value ov_id)
 {
     glm::vec3 position{ x,y,z }, ang{ ax,ay,az };
 
@@ -1885,7 +1885,7 @@ lua::Any lua_GetEntityMeshCount(engine::Engine& engine, world::ObjectId id)
     return static_cast<int>(ent->m_skeleton.getBoneCount());
 }
 
-void lua_SetEntityMeshswap(engine::Engine& engine, world::ObjectId id_dest, world::ModelId id_src)
+void lua_SetEntityMeshswap(engine::Engine& engine, world::ObjectId id_dest, world::animation::ModelId id_src)
 {
     std::shared_ptr<world::Entity> ent_dest = engine.m_world.getEntityByID(id_dest);
 
@@ -2076,7 +2076,7 @@ lua::Any lua_GetCharacterCurrentWeapon(engine::Engine& engine, world::ObjectId i
         return {};
 }
 
-void lua_SetCharacterCurrentWeapon(engine::Engine& engine, world::ObjectId id, world::ModelId weapon)
+void lua_SetCharacterCurrentWeapon(engine::Engine& engine, world::ObjectId id, world::animation::ModelId weapon)
 {
     std::shared_ptr<world::Character> ent = engine.m_world.getCharacterByID(id);
 
@@ -2369,7 +2369,7 @@ lua::Any lua_GetFlipState(engine::Engine& engine, size_t group)
  * Generate UV rotate animations
  */
 
-void lua_genUVRotateAnimation(engine::Engine& engine, world::ModelId id)
+void lua_genUVRotateAnimation(engine::Engine& engine, world::animation::ModelId id)
 {
     auto model = engine.m_world.getModelByID(id);
 
@@ -3157,7 +3157,7 @@ void MainEngine::registerMainFunctions()
     registerC("setEntityAnim", lua_SetEntityAnim);
     registerC("setEntityAnimFlag", lua_SetEntityAnimFlag);
     registerC("setEntityBodyPartFlag", lua_SetEntityBodyPartFlag);
-    registerC("setModelBodyPartFlag", &world::SkeletalModel::lua_SetModelBodyPartFlag);
+    registerC("setModelBodyPartFlag", &world::animation::SkeletalModel::lua_SetModelBodyPartFlag);
     registerC("getEntityModel", lua_GetEntityModel);
     registerC("getEntityVisibility", lua_GetEntityVisibility);
     registerC("setEntityVisibility", lua_SetEntityVisibility);
@@ -3185,9 +3185,9 @@ void MainEngine::registerMainFunctions()
     registerC("setEntityResponse", lua_SetEntityResponse);
     registerC("getEntityMeshCount", lua_GetEntityMeshCount);
     registerC("setEntityMeshswap", lua_SetEntityMeshswap);
-    registerC("setModelMeshReplaceFlag", &world::SkeletalModel::lua_SetModelMeshReplaceFlag);
-    registerC("setModelAnimReplaceFlag", &world::SkeletalModel::lua_SetModelAnimReplaceFlag);
-    registerC("copyMeshFromModelToModel", &world::SkeletalModel::lua_CopyMeshFromModelToModel);
+    registerC("setModelMeshReplaceFlag", &world::animation::SkeletalModel::lua_SetModelMeshReplaceFlag);
+    registerC("setModelAnimReplaceFlag", &world::animation::SkeletalModel::lua_SetModelAnimReplaceFlag);
+    registerC("copyMeshFromModelToModel", &world::animation::SkeletalModel::lua_CopyMeshFromModelToModel);
 
     registerC("createEntityGhosts", lua_CreateEntityGhosts);
     registerRawC("setEntityBodyMass", lua_SetEntityBodyMass);

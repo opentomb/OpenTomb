@@ -58,7 +58,6 @@ list(APPEND PRJ_SRC
     world/resource.cpp
     world/ragdoll.cpp
     world/character.cpp
-    world/skeletalmodel.cpp
     world/room.cpp
     world/roomsector.cpp
     world/statecontroller.cpp
@@ -73,6 +72,7 @@ list(APPEND PRJ_SRC
     world/animation/skeleton.cpp
     world/animation/bone.cpp
     world/animation/pose.cpp
+    world/animation/skeletalmodel.cpp
 
     engine/game.cpp
     engine/engine.cpp
@@ -145,7 +145,6 @@ list(APPEND PRJ_HDR
     world/ragdoll.h
     world/character.h
     world/staticmesh.h
-    world/skeletalmodel.h
     world/room.h
     world/roomsector.h
     world/statecontroller.h
@@ -168,6 +167,7 @@ list(APPEND PRJ_HDR
     world/animation/texture.h
     world/animation/common.h
     world/animation/transition.h
+    world/animation/skeletalmodel.h
 
     engine/game.h
     engine/system.h

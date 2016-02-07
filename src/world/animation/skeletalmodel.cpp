@@ -1,13 +1,15 @@
 #include "skeletalmodel.h"
 
-#include "core/basemesh.h"
 #include "engine/engine.h"
 #include "loader/level.h"
-#include "resource.h"
 #include "strings.h"
-#include "world.h"
+#include "world/core/basemesh.h"
+#include "world/resource.h"
+#include "world/world.h"
 
 namespace world
+{
+namespace animation
 {
 void SkeletalModel::clear()
 {
@@ -665,4 +667,5 @@ void SkeletalModel::lua_SetModelBodyPartFlag(engine::Engine& engine, ModelId id,
 
     model->m_skinnedBones[bone_id].body_part = body_part_flag;
 }
+} // namespace animation
 } // namespace world

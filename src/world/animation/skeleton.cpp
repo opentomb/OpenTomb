@@ -1,10 +1,10 @@
 #include "skeleton.h"
 
 #include "pose.h"
+#include "skeletalmodel.h"
 #include "world/core/util.h"
 #include "world/entity.h"
 #include "world/ragdoll.h"
-#include "world/skeletalmodel.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>

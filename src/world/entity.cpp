@@ -369,7 +369,7 @@ void Entity::updateCurrentSpeed(bool zeroVz)
     m_speed[2] = vz;
 }
 
-void Entity::addOverrideAnim(const std::shared_ptr<SkeletalModel>& model)
+void Entity::addOverrideAnim(const std::shared_ptr<animation::SkeletalModel>& model)
 {
     if(!model || model->getBoneCount() != m_skeleton.getBoneCount())
         return;

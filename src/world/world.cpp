@@ -130,9 +130,9 @@ bool World::deleteEntity(ObjectId id)
     }
 }
 
-std::shared_ptr<Entity> World::spawnEntity(ModelId model_id, ObjectId room_id, const glm::vec3* pos, const glm::vec3* ang, boost::optional<ObjectId> id)
+std::shared_ptr<Entity> World::spawnEntity(animation::ModelId model_id, ObjectId room_id, const glm::vec3* pos, const glm::vec3* ang, boost::optional<ObjectId> id)
 {
-    std::shared_ptr<SkeletalModel> model = getModelByID(model_id);
+    std::shared_ptr<animation::SkeletalModel> model = getModelByID(model_id);
     if(!model)
         return nullptr;
 
@@ -335,9 +335,9 @@ void World::addEntity(std::shared_ptr<Entity> entity)
         m_nextEntityId = entity->getId() + 1;
 }
 
-bool World::createInventoryItem(ObjectId item_id, ModelId model_id, ModelId world_model_id, MenuItemType type, size_t count, const std::string& name)
+bool World::createInventoryItem(ObjectId item_id, animation::ModelId model_id, animation::ModelId world_model_id, MenuItemType type, size_t count, const std::string& name)
 {
-    std::shared_ptr<SkeletalModel> model = getModelByID(model_id);
+    std::shared_ptr<animation::SkeletalModel> model = getModelByID(model_id);
     if(!model)
     {
         return false;
@@ -361,7 +361,7 @@ int World::deleteItem(ObjectId item_id)
     return 1;
 }
 
-std::shared_ptr<SkeletalModel> World::getModelByID(ModelId id)
+std::shared_ptr<animation::SkeletalModel> World::getModelByID(animation::ModelId id)
 {
     auto it = m_skeletalModels.find(id);
     if(it == m_skeletalModels.end())

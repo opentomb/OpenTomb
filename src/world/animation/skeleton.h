@@ -1,8 +1,8 @@
 #pragma once
 
 #include "bone.h"
+#include "skeletalmodel.h"
 #include "transition.h"
-#include "world/skeletalmodel.h"
 
 #include <BulletCollision/btBulletCollisionCommon.h>
 

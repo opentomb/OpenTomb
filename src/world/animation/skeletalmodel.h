@@ -1,6 +1,6 @@
 #pragma once
 
-#include "animation/animation.h"
+#include "animation.h"
 
 #include <memory>
 
@@ -26,6 +26,8 @@ class BaseMesh;
 
 class World;
 
+namespace animation
+{
 using ModelId = uint32_t;
 
 class SkeletalModel
@@ -184,4 +186,5 @@ public:
 private:
     static size_t getAnimationCountForMoveable(const loader::Level& tr, size_t modelIndex);
 };
+} // namespace animation
 } // namespace world

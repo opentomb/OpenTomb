@@ -1936,7 +1936,7 @@ bool Character::changeParam(CharParameterId parameter, float value)
 // overrided == 0x03: overriding mesh in disarmed state;
 // overrided == 0x04: add mesh to slot in disarmed state;
 ///@TODO: separate mesh replacing control and animation disabling / enabling
-bool Character::setWeaponModel(const std::shared_ptr<SkeletalModel>& model, bool armed)
+bool Character::setWeaponModel(const std::shared_ptr<animation::SkeletalModel>& model, bool armed)
 {
     if(model != nullptr && m_skeleton.getBoneCount() == model->getBoneCount() && model->getAnimationCount() >= 4)
     {

@@ -1,6 +1,7 @@
 #include "resource.h"
 
 #include "animation/animids.h"
+#include "animation/skeletalmodel.h"
 #include "bordered_texture_atlas.h"
 #include "engine/engine.h"
 #include "gui/console.h"
@@ -18,7 +19,6 @@
 #include "world/core/sprite.h"
 #include "world/entity.h"
 #include "world/room.h"
-#include "world/skeletalmodel.h"
 #include "world/staticmesh.h"
 #include "world/world.h"
 
@@ -1678,7 +1678,7 @@ long int TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, cons
     return tr_animation->poseDataOffset;
 }
 
-std::shared_ptr<SkeletalModel> Res_GetSkybox(World& world)
+std::shared_ptr<animation::SkeletalModel> Res_GetSkybox(World& world)
 {
     switch(world.m_engineVersion)
     {
@@ -1699,7 +1699,7 @@ std::shared_ptr<SkeletalModel> Res_GetSkybox(World& world)
     }
 }
 
-void TR_GenSkeletalModel(const World& world, size_t model_num, SkeletalModel& model, const std::unique_ptr<loader::Level>& tr, size_t meshCount)
+void TR_GenSkeletalModel(const World& world, size_t model_num, animation::SkeletalModel& model, const std::unique_ptr<loader::Level>& tr, size_t meshCount)
 {
     BOOST_ASSERT(model_num < tr->m_animatedModels.size());
     const std::unique_ptr<loader::AnimatedModel>& animatedModel = tr->m_animatedModels[model_num];  // original tr structure
@@ -1709,19 +1709,19 @@ void TR_GenSkeletalModel(const World& world, size_t model_num, SkeletalModel& mo
 
     for(size_t k = 0; k < meshCount; k++)
     {
-        SkeletalModel::SkinnedBone skinnedBone;
+        animation::SkeletalModel::SkinnedBone skinnedBone;
         BOOST_ASSERT(meshIndices[k] < world.m_meshes.size());
         skinnedBone.mesh_base = world.m_meshes[meshIndices[k]];
         if(k == 0)
         {
-            skinnedBone.stackOperation = SkeletalModel::SkinnedBone::Push;
+            skinnedBone.stackOperation = animation::SkeletalModel::SkinnedBone::Push;
             model.addSkinnedBone(skinnedBone);
             continue;
         }
 
         BOOST_ASSERT(animatedModel->boneTreeIndex + k * 4 <= tr->m_boneTrees.size());
         const int32_t *boneTreeData = &tr->m_boneTrees[ animatedModel->boneTreeIndex + (k - 1) * 4 ];
-        skinnedBone.stackOperation = static_cast<SkeletalModel::SkinnedBone::StackOperation>(boneTreeData[0]);
+        skinnedBone.stackOperation = static_cast<animation::SkeletalModel::SkinnedBone::StackOperation>(boneTreeData[0]);
         skinnedBone.position[0] = static_cast<float>(boneTreeData[1]);
         skinnedBone.position[1] = static_cast<float>(boneTreeData[3]);
         skinnedBone.position[2] = -static_cast<float>(boneTreeData[2]);
@@ -1781,7 +1781,7 @@ void TR_GenSkeletalModels(World& world, const std::unique_ptr<loader::Level>& tr
     for(size_t i = 0; i < tr->m_animatedModels.size(); i++)
     {
         const loader::AnimatedModel& trAnimatedModel = *tr->m_animatedModels[i];
-        std::shared_ptr<SkeletalModel> skeletalModel = std::make_shared<SkeletalModel>(trAnimatedModel.object_id);
+        std::shared_ptr<animation::SkeletalModel> skeletalModel = std::make_shared<animation::SkeletalModel>(trAnimatedModel.object_id);
         TR_GenSkeletalModel(world, i, *skeletalModel, tr, trAnimatedModel.meshCount);
         skeletalModel->updateTransparencyFlag();
         world.m_skeletalModels[skeletalModel->getId()] = skeletalModel;
@@ -1821,18 +1821,18 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
         entity->m_inertiaAngular[0] = 0.0;
         entity->m_inertiaAngular[1] = 0.0;
 
-        entity->m_skeleton.setModel(world.getModelByID(static_cast<ModelId>(tr_item->object_id)));
+        entity->m_skeleton.setModel(world.getModelByID(static_cast<animation::ModelId>(tr_item->object_id)));
 
         if(entity->m_skeleton.getModel() == nullptr)
         {
-            ModelId id = world.m_engine->m_scriptEngine.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id).to<ModelId>();
+            animation::ModelId id = world.m_engine->m_scriptEngine.call("getOverridedID", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id).to<animation::ModelId>();
             entity->m_skeleton.setModel(world.getModelByID(id));
         }
 
         lua::Value replace_anim_id = world.m_engine->m_scriptEngine.call("getOverridedAnim", static_cast<int>(loader::gameToEngine(tr->m_gameVersion)), tr_item->object_id);
         if(!replace_anim_id.isNil())
         {
-            auto replace_anim_model = world.getModelByID(replace_anim_id.to<ModelId>());
+            auto replace_anim_model = world.getModelByID(replace_anim_id.to<animation::ModelId>());
             BOOST_ASSERT(replace_anim_model != nullptr);
             BOOST_ASSERT(entity->m_skeleton.getModel() != nullptr);
             entity->m_skeleton.getModel()->swapAnimationsWith(*replace_anim_model);
@@ -1882,7 +1882,7 @@ void TR_GenEntities(World& world, const std::unique_ptr<loader::Level>& tr)
 
         world.m_engine->m_scriptEngine.set("player", lara->getId());
 
-        std::shared_ptr<SkeletalModel> laraModel = world.getModelByID(0);
+        std::shared_ptr<animation::SkeletalModel> laraModel = world.getModelByID(0);
         laraModel->patchLaraSkin(world, loader::gameToEngine(tr->m_gameVersion));
 
         lara->m_skeleton.copyMeshBinding(lara->m_skeleton.getModel(), true);

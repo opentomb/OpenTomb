@@ -4,11 +4,11 @@
 
 #include "LuaState.h"
 
+#include "animation/skeletalmodel.h"
+#include "core/basemesh.h"
 #include "engine/bullet.h"
 #include "render/render.h"
 #include "script/script.h"
-#include "world/core/basemesh.h"
-#include "world/skeletalmodel.h"
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -224,7 +224,7 @@ bool Hair::create(HairSetup *setup, const Entity& parent_entity)
 // Internal utility function:
 // Creates a single mesh out of all the parts of the given model.
 // This assumes that Mesh_GenFaces was already called on the parts of model.
-void Hair::createHairMesh(const SkeletalModel& model)
+void Hair::createHairMesh(const animation::SkeletalModel& model)
 {
     m_mesh = std::make_shared<core::BaseMesh>();
     m_mesh->m_elementsPerTexture.resize(getWorld()->m_textures.size(), 0);
@@ -337,7 +337,7 @@ void HairSetup::getSetup(world::World& world, int hair_entry_index)
     if(!res.is<lua::Table>())
         return;
 
-    m_model = res["model"].to<ModelId>();
+    m_model = res["model"].to<animation::ModelId>();
     m_linkBody = res["link_body"].to<animation::BoneId>();
     m_rootWeight = res["props"]["root_weight"].to<glm::float_t>();
     m_tailWeight = res["props"]["tail_weight"].to<glm::float_t>();

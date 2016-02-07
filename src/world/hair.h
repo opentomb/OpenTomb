@@ -61,12 +61,12 @@ struct Hair : public Object
     bool create(HairSetup* setup, const Entity& parent_entity);
 
 private:
-    void createHairMesh(const SkeletalModel& model);
+    void createHairMesh(const animation::SkeletalModel& model);
 };
 
 struct HairSetup
 {
-    ModelId      m_model;              // Hair model ID
+    animation::ModelId m_model;              // Hair model ID
     animation::BoneId m_linkBody;          // Lara's head mesh index
 
     glm::float_t     m_rootWeight;        // Root and tail hair body weight. Intermediate body

@@ -41,23 +41,22 @@ enum class DiagonalType
 
 ///@FIXME: Move skybox item IDs to script!
 
-constexpr ModelId TR_ITEM_SKYBOX_TR2 = 254;
-constexpr ModelId TR_ITEM_SKYBOX_TR3 = 355;
-constexpr ModelId TR_ITEM_SKYBOX_TR4 = 459;
-constexpr ModelId TR_ITEM_SKYBOX_TR5 = 454;
+constexpr animation::ModelId TR_ITEM_SKYBOX_TR2 = 254;
+constexpr animation::ModelId TR_ITEM_SKYBOX_TR3 = 355;
+constexpr animation::ModelId TR_ITEM_SKYBOX_TR4 = 459;
+constexpr animation::ModelId TR_ITEM_SKYBOX_TR5 = 454;
 
 ///@FIXME: Move Lara skin item IDs to script!
 
-constexpr ModelId TR_ITEM_LARA_SKIN_ALTERNATE_TR1 = 5;
-constexpr ModelId TR_ITEM_LARA_SKIN_TR3 = 315;
-constexpr ModelId TR_ITEM_LARA_SKIN_TR45 = 8;
-constexpr ModelId TR_ITEM_LARA_SKIN_JOINTS_TR45 = 9;
+constexpr animation::ModelId TR_ITEM_LARA_SKIN_ALTERNATE_TR1 = 5;
+constexpr animation::ModelId TR_ITEM_LARA_SKIN_TR3 = 315;
+constexpr animation::ModelId TR_ITEM_LARA_SKIN_TR45 = 8;
+constexpr animation::ModelId TR_ITEM_LARA_SKIN_JOINTS_TR45 = 9;
 
 struct SectorTween;
 class World;
 class Room;
 struct RoomSector;
-class SkeletalModel;
 class Entity;
 struct StaticMesh;
 struct InventoryItem;
@@ -70,6 +69,7 @@ struct Polygon;
 
 namespace animation
 {
+class SkeletalModel;
 struct SkeletonPose;
 } // namespace animation
 
@@ -89,7 +89,7 @@ void     Res_Sector_FixHeights(RoomSector& sector);
 
 void     Res_FixRooms(World& world);   // Fix start-up room states.
 
-std::shared_ptr<SkeletalModel> Res_GetSkybox(World& world);
+std::shared_ptr<animation::SkeletalModel> Res_GetSkybox(World& world);
 
 // Create entity function from script, if exists.
 

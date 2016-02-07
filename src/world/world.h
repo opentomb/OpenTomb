@@ -1,12 +1,12 @@
 #pragma once
 
+#include "animation/skeletalmodel.h"
 #include "animation/texture.h"
 #include "audio/engine.h"
 #include "bordered_texture_atlas.h"
 #include "camera.h"
-#include "world/core/sprite.h"
-#include "world/object.h"
-#include "world/skeletalmodel.h"
+#include "core/sprite.h"
+#include "object.h"
 
 #include <boost/optional.hpp>
 
@@ -191,7 +191,6 @@ class Camera;
 struct Portal;
 class Render;
 class Entity;
-class SkeletalModel;
 
 namespace core
 {
@@ -203,6 +202,7 @@ struct Polygon;
 namespace animation
 {
 class Skeleton;
+class SkeletalModel;
 } // namespace animation
 
 struct RoomBox
@@ -340,10 +340,10 @@ public:
 
     std::vector<core::Sprite> m_sprites;                // Base sprites data
 
-    std::map<ModelId, std::shared_ptr<SkeletalModel>> m_skeletalModels;
+    std::map<animation::ModelId, std::shared_ptr<animation::SkeletalModel>> m_skeletalModels;
 
     std::shared_ptr<Character> m_character;              // this is an unique Lara's pointer =)
-    std::shared_ptr<SkeletalModel> m_skyBox = nullptr;                // global skybox
+    std::shared_ptr<animation::SkeletalModel> m_skyBox = nullptr;                // global skybox
 
     std::map<ObjectId, std::shared_ptr<Entity>> m_entities;            // tree of world active objects
     ObjectId m_nextEntityId = 0;
@@ -357,15 +357,15 @@ public:
     glm::vec4 calculateWaterTint() const;
 
     void addEntity(std::shared_ptr<Entity> entity);
-    bool createInventoryItem(ObjectId item_id, ModelId model_id, ModelId world_model_id, MenuItemType type, size_t count, const std::string &name);
+    bool createInventoryItem(ObjectId item_id, animation::ModelId model_id, animation::ModelId world_model_id, MenuItemType type, size_t count, const std::string &name);
     int deleteItem(ObjectId item_id);
     core::Sprite* getSpriteByID(core::SpriteId ID);
-    std::shared_ptr<SkeletalModel> getModelByID(ModelId id);           // binary search the model by ID
+    std::shared_ptr<animation::SkeletalModel> getModelByID(animation::ModelId id);           // binary search the model by ID
 
     void prepare();
     void empty();
 
-    std::shared_ptr<Entity> spawnEntity(ModelId model_id, ObjectId room_id, const glm::vec3 *pos, const glm::vec3 *ang, boost::optional<ObjectId> id);
+    std::shared_ptr<Entity> spawnEntity(animation::ModelId model_id, ObjectId room_id, const glm::vec3 *pos, const glm::vec3 *ang, boost::optional<ObjectId> id);
     bool deleteEntity(ObjectId id);
 
     std::shared_ptr<Entity> getEntityByID(ObjectId id) const;

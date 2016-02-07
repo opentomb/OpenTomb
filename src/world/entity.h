@@ -169,7 +169,7 @@ public:
 
     virtual void updateTransform();
     void updateCurrentSpeed(bool zeroVz = 0);
-    void addOverrideAnim(const std::shared_ptr<SkeletalModel>& model);
+    void addOverrideAnim(const std::shared_ptr<animation::SkeletalModel>& model);
     void checkActivators();
 
     virtual Substance getSubstanceState() const
@@ -255,7 +255,7 @@ struct InventoryItem : public Entity
     {
     }
 
-    ModelId                     world_model_id = 0;
+    animation::ModelId          world_model_id = 0;
     MenuItemType                type;
     size_t                      count = 0;
     std::string name;

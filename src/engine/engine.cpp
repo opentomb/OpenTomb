@@ -29,12 +29,12 @@
 #include "render/render.h"
 #include "script/script.h"
 #include "strings.h"
+#include "world/animation/skeletalmodel.h"
 #include "world/camera.h"
 #include "world/character.h"
 #include "world/entity.h"
 #include "world/resource.h"
 #include "world/room.h"
-#include "world/skeletalmodel.h"
 #include "world/staticmesh.h"
 #include "world/world.h"
 
