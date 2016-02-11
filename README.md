@@ -198,7 +198,7 @@ from this list!
 * Lwmte: state fix-ups, controls, GUI and audio modules, trigger and entity scripts.
 * Nickotte: interface programming, ring inventory implementation, camera fix-ups.
 * pmatulka: Linux port and testing.
-* Richard_trle: Github migration, Github repo maintenance, website design.
+* richard_ba: Github migration, Github repo maintenance, website design.
 * Saracen: room and static mesh lighting.
 * stltomb: general code maintenance, enhancements and bugfixes.
 * stohrendorf: CXX-fication, general code refactoring and optimizing.
