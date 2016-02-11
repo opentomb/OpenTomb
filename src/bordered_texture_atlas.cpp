@@ -8,19 +8,17 @@
 
 #include "bordered_texture_atlas.h"
 
+#include "bsp_tree_2d.h"
+#include "world/core/polygon.h"
+
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <cstdint>
-#include <cstdio>
-#include <cstring>
 
-#include "loader/level.h"
-
-#include "bsp_tree_2d.h"
-#include "polygon.h"
+#include <boost/assert.hpp>
 
 #ifndef __APPLE__
+
 /*!
  * Fills an area of memory with a four-byte pattern pointed to.
  * This is a standard library function on Mac OS X, but sadly not anywhere else, so I'm redefining it here. Because I know where it will be called, I can add additional requirements: len must be a multiple of four, and pattern and b both must be four-byte aligned.
@@ -36,18 +34,18 @@ static void memset_pattern4(void *b, const void *pattern, const size_t len)
 
 namespace
 {
-    inline GLuint NextPowerOf2(GLuint in)
-    {
-        in -= 1;
+inline uint32_t NextPowerOf2(uint32_t in)
+{
+    in -= 1;
 
-        in |= in >> 16;
-        in |= in >> 8;
-        in |= in >> 4;
-        in |= in >> 2;
-        in |= in >> 1;
+    in |= in >> 16;
+    in |= in >> 8;
+    in |= in >> 4;
+    in |= in >> 2;
+    in |= in >> 1;
 
-        return in + 1;
-    }
+    return in + 1;
+}
 }
 
 /*!
@@ -119,13 +117,13 @@ void BorderedTextureAtlas::layOutTextures()
         {
             found_place = result_pages[page].findSpaceFor(canonical.width + 2 * m_borderWidth,
                                                           canonical.height + 2 * m_borderWidth,
-                                                          &canonical.new_x_with_border,
-                                                          &canonical.new_y_with_border);
+                                                          canonical.new_x_with_border,
+                                                          canonical.new_y_with_border);
             if(found_place)
             {
                 canonical.new_page = page;
 
-                size_t highest_y = canonical.new_y_with_border + canonical.height + m_borderWidth * 2;
+                uint32_t highest_y = canonical.new_y_with_border + canonical.height + m_borderWidth * 2;
                 if(highest_y + 1 > m_resultPageHeights[page])
                     m_resultPageHeights[page] = highest_y;
 
@@ -141,8 +139,8 @@ void BorderedTextureAtlas::layOutTextures()
 
             result_pages.back().findSpaceFor(canonical.width + 2 * m_borderWidth,
                                              canonical.height + 2 * m_borderWidth,
-                                             &canonical.new_x_with_border,
-                                             &canonical.new_y_with_border);
+                                             canonical.new_x_with_border,
+                                             canonical.new_y_with_border);
 
             m_resultPageHeights.emplace_back(canonical.new_y_with_border + canonical.height + m_borderWidth * 2);
         }
@@ -168,7 +166,7 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
     , m_canonicalTexturesForSpriteTextures()
     , m_canonicalObjectTextures()
 {
-    GLint max_texture_edge_length = 0;
+    int max_texture_edge_length = 0;
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_edge_length);
     if(max_texture_edge_length > 4096)
         max_texture_edge_length = 4096; // That is already 64 MB and covers up to 256 pages.
@@ -180,9 +178,9 @@ BorderedTextureAtlas::BorderedTextureAtlas(int border,
         for(const loader::ObjectTexture& t : object_textures)
             areaSum += t.x_size * t.y_size;
         for(const loader::SpriteTexture& t : sprite_textures)
-            areaSum += std::abs((t.x1 - t.x0) * (t.y1 - t.y0));
+            areaSum += glm::abs((t.x1 - t.x0) * (t.y1 - t.y0));
 
-        m_resultPageWidth = std::min( max_texture_edge_length, static_cast<GLint>(NextPowerOf2(static_cast<GLuint>(std::sqrt(areaSum)*1.41))) );
+        m_resultPageWidth = std::min(max_texture_edge_length, static_cast<GLint>(NextPowerOf2(static_cast<GLuint>(std::sqrt(areaSum)*1.41))));
     }
     else
     {
@@ -223,7 +221,7 @@ void BorderedTextureAtlas::addObjectTexture(const loader::ObjectTexture &texture
     {
         CanonicalObjectTexture *canonical_candidate = &m_canonicalObjectTextures[i];
 
-        if(canonical_candidate->original_page == (texture.tile_and_flag & loader::TextureIndexMaskTr4)
+        if(canonical_candidate->original_page == (texture.tileAndFlag & loader::TextureIndexMaskTr4)
            && canonical_candidate->original_x == min[0]
            && canonical_candidate->original_y == min[1]
            && canonical_candidate->width == width
@@ -243,7 +241,7 @@ void BorderedTextureAtlas::addObjectTexture(const loader::ObjectTexture &texture
         CanonicalObjectTexture &canonical = m_canonicalObjectTextures.back();
         canonical.width = width;
         canonical.height = height;
-        canonical.original_page = texture.tile_and_flag & loader::TextureIndexMaskTr4;
+        canonical.original_page = texture.tileAndFlag & loader::TextureIndexMaskTr4;
         canonical.original_x = min[0];
         canonical.original_y = min[1];
     }
@@ -317,7 +315,7 @@ void BorderedTextureAtlas::addSpriteTexture(const loader::SpriteTexture &texture
 
 size_t BorderedTextureAtlas::getTextureHeight(size_t texture) const
 {
-    assert(texture < m_fileObjectTextures.size());
+    BOOST_ASSERT(texture < m_fileObjectTextures.size());
 
     const FileObjectTexture &file_object_texture = m_fileObjectTextures[texture];
     const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[file_object_texture.canonical_texture_index];
@@ -328,18 +326,18 @@ size_t BorderedTextureAtlas::getTextureHeight(size_t texture) const
 ///@FIXME - use Polygon* to replace vertex and numCoordinates (maybe texture in / out))
 void BorderedTextureAtlas::getCoordinates(size_t texture,
                                           bool reverse,
-struct Polygon *poly,
-    int shift,
-    bool split)  const
+                                          world::core::Polygon& poly,
+                                          int shift,
+                                          bool split) const
 {
-    assert(poly->vertices.size() <= 4);
+    BOOST_ASSERT(poly.vertices.size() <= 4);
 
-    assert(texture < m_fileObjectTextures.size());
+    BOOST_ASSERT(texture < m_fileObjectTextures.size());
     const FileObjectTexture& file_object_texture = m_fileObjectTextures[texture];
     const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[file_object_texture.canonical_texture_index];
 
-    poly->tex_index = static_cast<uint16_t>( canonical.new_page );
-    for (size_t i = 0; i < poly->vertices.size(); i++)
+    poly.textureIndex = canonical.new_page;
+    for(size_t i = 0; i < poly.vertices.size(); i++)
     {
         unsigned x_coord = 0;
         unsigned y_coord = 0;
@@ -352,7 +350,7 @@ struct Polygon *poly,
 
                 if(split)
                 {
-                    y_coord += (canonical.height / 2);
+                    y_coord += canonical.height / 2;
                 }
                 break;
             case TOP_RIGHT:
@@ -361,7 +359,7 @@ struct Polygon *poly,
 
                 if(split)
                 {
-                    y_coord += (canonical.height / 2);
+                    y_coord += canonical.height / 2;
                 }
                 break;
             case BOTTOM_LEFT:
@@ -373,19 +371,19 @@ struct Polygon *poly,
                 y_coord = canonical.new_y_with_border + m_borderWidth + canonical.height - shift;
                 break;
             default:
-                assert(false);
+                BOOST_ASSERT(false);
         }
 
-        size_t index = reverse ? (poly->vertices.size() - i - 1) : i;
+        size_t index = reverse ? poly.vertices.size() - i - 1 : i;
 
-        poly->vertices[index].tex_coord[0] = static_cast<GLfloat>(x_coord) / static_cast<GLfloat>(m_resultPageWidth);
-        poly->vertices[index].tex_coord[1] = static_cast<GLfloat>(y_coord) / static_cast<GLfloat>(m_resultPageHeights[canonical.new_page]);
+        poly.vertices[index].tex_coord[0] = static_cast<glm::float_t>(x_coord) / static_cast<glm::float_t>(m_resultPageWidth);
+        poly.vertices[index].tex_coord[1] = static_cast<glm::float_t>(y_coord) / static_cast<glm::float_t>(m_resultPageHeights[canonical.new_page]);
     }
 }
 
-void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, uint32_t &outPage, GLfloat *coordinates) const
+void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, size_t &outPage, glm::vec2* coordinates) const
 {
-    assert(sprite_texture < m_canonicalTexturesForSpriteTextures.size());
+    BOOST_ASSERT(sprite_texture < m_canonicalTexturesForSpriteTextures.size());
 
     const size_t canonical_index = m_canonicalTexturesForSpriteTextures[sprite_texture];
     const CanonicalObjectTexture &canonical = m_canonicalObjectTextures[canonical_index];
@@ -412,8 +410,8 @@ void BorderedTextureAtlas::getSpriteCoordinates(size_t sprite_texture, uint32_t 
 
     for(int i = 0; i < 4; i++)
     {
-        coordinates[i * 2 + 0] = static_cast<GLfloat>(pixel_coordinates[i * 2 + 0]) / static_cast<GLfloat>(m_resultPageWidth);
-        coordinates[i * 2 + 1] = static_cast<GLfloat>(pixel_coordinates[i * 2 + 1]) / static_cast<GLfloat>(m_resultPageHeights[canonical.new_page]);
+        coordinates[i][0] = static_cast<glm::float_t>(pixel_coordinates[i * 2 + 0]) / static_cast<glm::float_t>(m_resultPageWidth);
+        coordinates[i][1] = static_cast<glm::float_t>(pixel_coordinates[i * 2 + 1]) / static_cast<glm::float_t>(m_resultPageHeights[canonical.new_page]);
     }
 }
 
@@ -440,10 +438,10 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
             // Add top border
             for(int border = 0; border < m_borderWidth; border++)
             {
-                unsigned x = canonical.new_x_with_border;
-                unsigned y = canonical.new_y_with_border + border;
-                unsigned old_x = canonical.original_x;
-                unsigned old_y = canonical.original_y;
+                auto x = canonical.new_x_with_border;
+                auto y = canonical.new_y_with_border + border;
+                auto old_x = canonical.original_x;
+                auto old_y = canonical.original_y;
 
                 // expand top-left pixel
                 memset_pattern4(&data[(y*m_resultPageWidth + x) * 4],
@@ -517,15 +515,17 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
             int h = m_resultPageHeights[page] / 2;
             std::vector<GLubyte> mip_data(4 * w * h);
 
-            assert(w > 0 && h > 0);
+            BOOST_ASSERT(w > 0 && h > 0);
             for(int i = 0; i < h; i++)
             {
                 for(int j = 0; j < w; j++)
                 {
-                    mip_data[i * w * 4 + j * 4 + 0] = 0.25 * (static_cast<int>(data[i * w * 16 + j * 8 + 0]) + static_cast<int>(data[i * w * 16 + j * 8 + 4 + 0]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 0]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 4 + 0]));
-                    mip_data[i * w * 4 + j * 4 + 1] = 0.25 * (static_cast<int>(data[i * w * 16 + j * 8 + 1]) + static_cast<int>(data[i * w * 16 + j * 8 + 4 + 1]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 1]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 4 + 1]));
-                    mip_data[i * w * 4 + j * 4 + 2] = 0.25 * (static_cast<int>(data[i * w * 16 + j * 8 + 2]) + static_cast<int>(data[i * w * 16 + j * 8 + 4 + 2]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 2]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 4 + 2]));
-                    mip_data[i * w * 4 + j * 4 + 3] = 0.25 * (static_cast<int>(data[i * w * 16 + j * 8 + 3]) + static_cast<int>(data[i * w * 16 + j * 8 + 4 + 3]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 3]) + static_cast<int>(data[i * w * 16 + w * 8 + j * 8 + 4 + 3]));
+                    const GLubyte* const ptr1 = &data[i * w * 16 + j * 8];
+                    const GLubyte* const ptr2 = ptr1 + w * 8;
+                    for(int k = 0; k < 3; ++k)
+                    {
+                        mip_data[i * w * 4 + j * 4 + k] = (static_cast<int>(ptr1[k]) + static_cast<int>(ptr1[4 + k]) + static_cast<int>(ptr2[k]) + static_cast<int>(ptr2[4 + k])) / 4;
+                    }
                 }
             }
 
@@ -535,19 +535,23 @@ void BorderedTextureAtlas::createTextures(GLuint *textureNames, GLuint additiona
             //WriteTGAfile(tgan, mip_data, w, h, 0);
             glTexImage2D(GL_TEXTURE_2D, mip_level, GL_RGBA, static_cast<GLsizei>(w), static_cast<GLsizei>(h), 0, GL_RGBA, GL_UNSIGNED_BYTE, mip_data.data());
 
-            while((w > 1) && (h > 1) /*&& (mip_level < 4)*/)
+            while(w > 1 && h > 1 /*&& (mip_level < 4)*/)
             {
                 mip_level++;
-                w /= 2; w = (w == 0) ? 1 : w;
-                h /= 2; h = (h == 0) ? 1 : h;
+                w /= 2;
+                w = w == 0 ? 1 : w;
+                h /= 2;
+                h = h == 0 ? 1 : h;
                 for(int i = 0; i < h; i++)
                 {
                     for(int j = 0; j < w; j++)
                     {
-                        mip_data[i * w * 4 + j * 4 + 0] = 0.25 * (static_cast<int>(mip_data[i * w * 16 + j * 8 + 0]) + static_cast<int>(mip_data[i * w * 16 + j * 8 + 4 + 0]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 0]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 0]));
-                        mip_data[i * w * 4 + j * 4 + 1] = 0.25 * (static_cast<int>(mip_data[i * w * 16 + j * 8 + 1]) + static_cast<int>(mip_data[i * w * 16 + j * 8 + 4 + 1]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 1]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 1]));
-                        mip_data[i * w * 4 + j * 4 + 2] = 0.25 * (static_cast<int>(mip_data[i * w * 16 + j * 8 + 2]) + static_cast<int>(mip_data[i * w * 16 + j * 8 + 4 + 2]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 2]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 2]));
-                        mip_data[i * w * 4 + j * 4 + 3] = 0.25 * (static_cast<int>(mip_data[i * w * 16 + j * 8 + 3]) + static_cast<int>(mip_data[i * w * 16 + j * 8 + 4 + 3]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 3]) + static_cast<int>(mip_data[i * w * 16 + w * 8 + j * 8 + 4 + 3]));
+                        const GLubyte* const ptr1 = &data[i * w * 16 + j * 8];
+                        const GLubyte* const ptr2 = ptr1 + w * 8;
+                        for(int k = 0; k < 3; ++k)
+                        {
+                            mip_data[i * w * 4 + j * 4 + k] = (static_cast<int>(ptr1[k]) + static_cast<int>(ptr1[4 + k]) + static_cast<int>(ptr2[k]) + static_cast<int>(ptr2[4 + k])) / 4;
+                        }
                     }
                 }
                 //sprintf(tgan, "mip_%0.2d.tga", mip_level);

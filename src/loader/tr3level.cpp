@@ -21,8 +21,6 @@
 
 #include "tr3level.h"
 
-#include <iostream>
-
 using namespace loader;
 
 #define TR_AUDIO_MAP_SIZE_TR3  370
@@ -32,8 +30,8 @@ void TR3Level::load()
     // Version
     uint32_t file_version = m_reader.readU32();
 
-    if((file_version != 0xFF080038) && (file_version != 0xFF180038) && (file_version != 0xFF180034))
-        throw std::runtime_error("Wrong level version");
+    if(file_version != 0xFF080038 && file_version != 0xFF180038 && file_version != 0xFF180034)
+        BOOST_THROW_EXCEPTION(std::runtime_error("TR3 Level: Wrong level version"));
 
     m_palette = Palette::readTr1(m_reader);
     /*Palette palette16 =*/ Palette::readTr2(m_reader);
@@ -51,7 +49,7 @@ void TR3Level::load()
 
     // Unused
     if(m_reader.readU32() != 0)
-        std::cerr << "Bad value for 'unused'\n";
+        BOOST_LOG_TRIVIAL(warning) << "TR3 Level: Bad value for 'unused'";
 
     m_reader.readVector(m_rooms, m_reader.readU16(), &Room::readTr3);
 
@@ -61,15 +59,15 @@ void TR3Level::load()
 
     m_reader.readVector(m_animations, m_reader.readU32(), &Animation::readTr1);
 
-    m_reader.readVector(m_stateChanges, m_reader.readU32(), &StateChange::read);
+    m_reader.readVector(m_transitions, m_reader.readU32(), &Transitions::read);
 
-    m_reader.readVector(m_animDispatches, m_reader.readU32(), &AnimDispatch::read);
+    m_reader.readVector(m_transitionCases, m_reader.readU32(), &TransitionCase::read);
 
     m_reader.readVector(m_animCommands, m_reader.readU32());
 
-    m_reader.readVector(m_meshTreeData, m_reader.readU32());
+    m_reader.readVector(m_boneTrees, m_reader.readU32());
 
-    readFrameMoveableData(m_reader);
+    readPoseDataAndModels(m_reader);
 
     m_reader.readVector(m_staticMeshes, m_reader.readU32(), &StaticMesh::read);
 
@@ -124,16 +122,16 @@ void TR3Level::load()
     io::SDLReader newsrc(m_sfxPath);
     if(!newsrc.isOpen())
     {
-        std::cerr << "read_tr2_level: failed to open \"" << m_sfxPath << "\"! No samples loaded.\n";
+        BOOST_LOG_TRIVIAL(warning) << "TR3 Level: failed to open '" << m_sfxPath << "', no samples loaded.";
     }
     else
     {
-        m_samplesData.resize( static_cast<size_t>(newsrc.size()) );
+        m_samplesData.resize(static_cast<size_t>(newsrc.size()));
         m_samplesCount = 0;
         for(size_t i = 0; i < m_samplesData.size(); i++)
         {
             m_samplesData[i] = newsrc.readU8();
-            if((i >= 4) && (*reinterpret_cast<uint32_t*>(m_samplesData.data() + i - 4) == 0x46464952))   /// RIFF
+            if(i >= 4 && *reinterpret_cast<uint32_t*>(m_samplesData.data() + i - 4) == 0x46464952)   /// RIFF
             {
                 m_samplesCount++;
             }

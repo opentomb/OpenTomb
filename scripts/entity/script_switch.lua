@@ -336,7 +336,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
         if(key ~= nil) then
             if(getItemsCount(player, key) <= 0) then
                 if(not getActionChange(act.action)) then
-                    playSound(SOUND_NO);
+                    playSound(SoundId.No);
                 end;
                 return false;
             else

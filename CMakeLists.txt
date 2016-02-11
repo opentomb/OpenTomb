@@ -3,106 +3,189 @@
 #   $ mkdir build && cd build
 #   $ cmake .. && make
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.2)
+ 
+include("cmake/HunterGate.cmake")
+
+HunterGate(
+    URL "https://github.com/stohrendorf/hunter/archive/3b5ddd4e70cb96e089e4ff98f60addedfb34a4c2.zip"
+    SHA1 "793706a63f7df16b2c23774da12d2193383d16f9"
+)
 
 project(OpenTomb)
 
-if(APPLE)
-    file(GLOB OPENAL_SRC
-        3rdparty/al/*.c
-        3rdparty/al/*/*.c
-        3rdparty/al/*/*/*.c
-    )
-    file(GLOB OPENAL_HDR
-        3rdparty/al/*.h
-        3rdparty/al/*/*.h
-        3rdparty/al/*/*/*.h
-    )
-    add_library(OpenAL STATIC ${OPENAL_HDR} ${OPENAL_SRC})
-    # Don’t attempt to find AL anywhere, just use ours directly.
-    target_include_directories(OpenAL INTERFACE 3rdparty/al/)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
+
+if(WIN32 OR APPLE)
+    option(DEFAULT_EXTERNAL_HUNTER "Always ignore system-provided libraries." ON)
 else()
-    find_package(OpenAL REQUIRED)
-    add_library(OpenAL INTERFACE)
-    target_include_directories(OpenAL INTERFACE ${OPENAL_INCLUDE_DIR})
-    target_link_libraries(OpenAL INTERFACE ${OPENAL_LIBRARY})
+    option(DEFAULT_EXTERNAL_HUNTER "Always ignore system-provided libraries." OFF)
 endif()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+message(STATUS "Always ignore system-provided libraries: ${DEFAULT_EXTERNAL_HUNTER}")
 
-find_package(Bullet)
-if(BULLET_FOUND)
-    add_library(Bullet INTERFACE)
-    target_include_directories(Bullet INTERFACE ${BULLET_INCLUDE_DIRS})
-    target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
-else()
-    set(BULLET_DIR 3rdparty/bullet/src)
 
-    file(GLOB BULLET_FILES
-        ${BULLET_DIR}/*.h
-        ${BULLET_DIR}/*/*.h
-        ${BULLET_DIR}/*/*/*.h
-        ${BULLET_DIR}/*.cpp
-        ${BULLET_DIR}/*/*.cpp
-        ${BULLET_DIR}/*/*/*.cpp
-    )
+function(GROUP_FILES)
+    foreach(fn ${ARGV}) 
+        get_filename_component(parentDir "${fn}" PATH)
 
-    add_library(Bullet ${BULLET_FILES})
-    target_compile_options(Bullet PRIVATE -O2)
-    target_include_directories(Bullet PUBLIC ${BULLET_DIR})
+        # change /'s to \\'s, and reduce redundant // or \\.
+        string(REGEX REPLACE "[\\/]+" "\\\\" grp "${parentDir}")
+
+        source_group("${grp}" FILES "${fn}")
+    endforeach()
+endfunction()
+
+# alternative system-provided package name
+macro(ot_find_dependency_alt depname sysdepname)
+    option(SKIP_SYSTEM_${depname} "Skip the sytem-provided ${depname} installation and use a custom built" ${DEFAULT_EXTERNAL_HUNTER})
+    if(SKIP_SYSTEM_${depname})
+        hunter_add_package(${depname} ${ARGN})
+        find_package(${depname} REQUIRED ${ARGN})
+    else()
+        # temporarily disable Hunter-local Find* modules
+        set(_old_cmp ${CMAKE_MODULE_PATH})
+        set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/")
+        find_package(${sysdepname} MODULE REQUIRED ${ARGN})
+        # restore module path
+        set(CMAKE_MODULE_PATH ${_old_cmp})
+        set(_old_cmp)
+    endif()
+    if(NOT TARGET ${depname})
+        add_library(${depname} INTERFACE)
+    endif()
+endmacro()
+
+macro(ot_find_dependency depname)
+    ot_find_dependency_alt(${depname} ${depname} ${ARGN})
+endmacro()
+
+
+# Dependency: OpenAL
+ot_find_dependency(OpenAL)
+target_include_directories(OpenAL INTERFACE ${OPENAL_INCLUDE_DIR})
+target_link_libraries(OpenAL INTERFACE ${OPENAL_LIBRARY})
+
+option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions (not generally available)." OFF)
+if(USE_OPENAL_FLOAT)
+    target_compile_definitions(OpenAL INTERFACE -DAUDIO_OPENAL_FLOAT)
+endif(USE_OPENAL_FLOAT)
+
+
+# Dependency: Bullet
+option(SKIP_SYSTEM_BULLET "Skip the sytem-provided Bullet installation and use a custom built 2.83.6." ON)
+if(SKIP_SYSTEM_BULLET)
+    hunter_add_package(Bullet)
 endif()
+include(${CMAKE_SOURCE_DIR}/cmake/FindBullet.cmake) # Bullet's own BulletConfig.cmake is crap, and CMake's version doesn't look for "d" suffixes, only for "_d"
+add_library(Bullet INTERFACE)
+target_include_directories(Bullet INTERFACE ${BULLET_INCLUDE_DIRS})
+target_link_libraries(Bullet INTERFACE ${BULLET_LIBRARIES})
 
-find_package(Freetype REQUIRED)
-add_library(Freetype INTERFACE)
-target_include_directories(Freetype INTERFACE ${FREETYPE_INCLUDE_DIRS})
-target_link_libraries(Freetype INTERFACE ${FREETYPE_LIBRARIES})
 
+# Dependency: Freetype
+ot_find_dependency_alt(freetype Freetype)
+target_include_directories(freetype INTERFACE ${FREETYPE_INCLUDE_DIRS})
+target_link_libraries(freetype INTERFACE ${FREETYPE_LIBRARIES})
+
+
+# Dependency: OpenGL
 find_package(OpenGL REQUIRED)
 add_library(OpenGL INTERFACE)
 target_include_directories(OpenGL INTERFACE ${OPENGL_INCLUDE_DIR})
 target_link_libraries(OpenGL INTERFACE ${OPENGL_LIBRARIES})
 
+
+# Dependency: GLEW
 find_package(GLEW REQUIRED)
 add_library(GLEW INTERFACE)
 target_include_directories(GLEW INTERFACE ${GLEW_INCLUDE_DIRS})
 target_link_libraries(GLEW INTERFACE ${GLEW_LIBRARIES})
 
-find_package(ZLIB REQUIRED)
-add_library(ZLIB INTERFACE)
-target_include_directories(ZLIB INTERFACE ${ZLIB_INCLUDE_DIR})
-target_link_libraries(ZLIB INTERFACE ${ZLIB_LIBRARY})
 
-find_package(Lua REQUIRED)
-add_library(Lua INTERFACE)
-target_include_directories(Lua INTERFACE ${LUA_INCLUDE_DIR})
-target_compile_definitions(Lua INTERFACE -DLUA_COMPAT_APIINTCASTS)
+# Dependency: Lua
+ot_find_dependency(Lua)
 target_link_libraries(Lua INTERFACE ${LUA_LIBRARIES})
+target_include_directories(Lua INTERFACE ${LUA_INCLUDE_DIR})
 
-find_package(SDL2 REQUIRED)
-add_library(SDL2 INTERFACE)
-target_include_directories(SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
+
+# Dependency: SDL2
+ot_find_dependency(SDL2)
+if(WIN32)
+    target_link_libraries(SDL2 INTERFACE winmm imm32 version)
+endif()
 target_link_libraries(SDL2 INTERFACE ${SDL2_LIBRARY})
-        
-find_package(SDL2Image REQUIRED)
-add_library(SDL2_IMAGE INTERFACE)
-target_include_directories(SDL2_IMAGE INTERFACE ${SDL2_INCLUDE_DIR})
-target_include_directories(SDL2_IMAGE INTERFACE ${SDL2IMAGE_INCLUDE_DIR})
-target_link_libraries(SDL2_IMAGE INTERFACE ${SDL2IMAGE_LIBRARY})
+target_include_directories(SDL2 INTERFACE ${SDL2_INCLUDE_DIR})
 
-option(USE_OPENAL_FLOAT "Use OpenAL Soft floating-point extensions." ON)
 
-if(USE_OPENAL_FLOAT)
-    target_compile_definitions(OpenAL INTERFACE -DAUDIO_OPENAL_FLOAT)
-endif(USE_OPENAL_FLOAT)
+# Dependency: GLM
+ot_find_dependency_alt(glm GLM)
+add_library(GLM INTERFACE)
+target_include_directories(GLM INTERFACE ${GLM_INCLUDE_DIR})
+target_compile_definitions(GLM INTERFACE -DGLM_FORCE_RADIANS)
 
-find_package(OGG REQUIRED)
-include_directories(${OGG_INCLUDE_DIR})
-find_package(Vorbis REQUIRED)
-include_directories(${VORBIS_INCLUDE_DIR})
-find_package(VorbisFile REQUIRED)
-include_directories(${VORBISFILE_INCLUDE_DIR})
-find_package(SndFile REQUIRED)
-include_directories(${SNDFILE_INCLUDE_DIR})
+
+# Dependency: Boost
+ot_find_dependency(Boost COMPONENTS system log filesystem thread)
+if(NOT SKIP_SYSTEM_Boost)
+    target_compile_definitions(Boost INTERFACE -DBOOST_LOG_DYN_LINK=0)
+endif()
+target_compile_definitions(Boost INTERFACE -DBOOST_ALL_NO_LIB)
+target_include_directories(Boost INTERFACE ${Boost_INCLUDE_DIR})
+target_link_libraries(Boost INTERFACE ${Boost_LIBRARIES})
+
+
+# Dependency: ZLIB
+ot_find_dependency(ZLIB)
+target_link_libraries(ZLIB INTERFACE ${ZLIB_LIBRARIES})
+target_include_directories(ZLIB INTERFACE ${ZLIB_INCLUDE_DIR})
+
+
+# Dependency: PNG (for CImg)
+# Make sure to find ZLIB *before* this
+ot_find_dependency(PNG)
+target_include_directories(PNG INTERFACE ${PNG_INCLUDE_DIRS})
+target_link_libraries(PNG INTERFACE ${PNG_LIBRARIES})
+
+
+# Dependency: JPEG (for CImg)
+ot_find_dependency(JPEG)
+target_include_directories(JPEG INTERFACE ${JPEG_INCLUDE_DIR})
+target_link_libraries(JPEG INTERFACE ${JPEG_LIBRARIES})
+
+
+# Dependency: CImg
+add_library(CImg INTERFACE)
+target_include_directories(CImg INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty/CImg)
+target_link_libraries(CImg INTERFACE PNG JPEG)
+target_compile_definitions(CImg INTERFACE -Dcimg_use_png -Dcimg_use_jpeg -Dcimg_display=0)
+
+# Dependency: SndFile
+ot_find_dependency(OGG)
+ot_find_dependency(Vorbis) # requires OGG
+ot_find_dependency(SndFile) # requires OGG and Vorbis
+target_include_directories(SndFile INTERFACE ${SNDFILE_INCLUDE_DIR})
+target_link_libraries(SndFile INTERFACE ${SNDFILE_LIBRARIES} ${OGG_LIBRARIES} ${VORBIS_LIBRARIES} ${VORBISFILE_LIBRARIES})
+
+if(MSVC)
+    # C4503: Name too long
+    add_definitions(/wd4503)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
+
+find_package(Git)
+if(NOT GIT_FOUND)
+    set(GIT_SHA "<unknown>")
+else()
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} describe --dirty --tags --long
+        OUTPUT_VARIABLE GIT_SHA
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
+endif()
+
+add_definitions(-DGIT_SHA="${GIT_SHA}")
 
 add_subdirectory(doc)
 add_subdirectory(src)

@@ -231,7 +231,7 @@ function combineItems(a, b, oneway)
             if(map[i].result2 ~= nil) then
                 addItem(player, map[i].result2, 1);
             end;
-            playSound(getGlobalSound(ver, GLOBALID_MENUCLANG));
+            playSound(getGlobalSound(ver, GlobalSoundId.MenuClang));
             print("Combine: items successfully combined!");
             return;
         end;
@@ -268,7 +268,7 @@ function separateItems(a)
             addItem(player, map[i].a, 1);
             addItem(player, map[i].b, 1);
             removeItem(player, a, 1);
-            playSound(getGlobalSound(ver, GLOBALID_MENUCLANG));
+            playSound(getGlobalSound(ver, GlobalSoundId.MenuClang));
             print("Separate: items successfully separated!");
             return;
         end;

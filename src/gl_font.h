@@ -7,14 +7,16 @@
  * Created on January 16, 2015, 10:46 PM
  */
 
-#include <cstdint>
-#include <vector>
-#include <memory>
+#include <glm/glm.hpp>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
 #include <GL/glew.h>
+
+#include <cstdint>
+#include <memory>
+#include <vector>
 
 struct CharInfo
 {
@@ -36,7 +38,7 @@ struct CharInfo
 struct FontTexture
 {
     FT_Library               ft_library;
-    std::shared_ptr<std::remove_pointer<FT_Face>::type> ft_face{nullptr, &FT_Done_Face};
+    std::shared_ptr<std::remove_pointer<FT_Face>::type> ft_face{ nullptr, &FT_Done_Face };
     uint16_t                 font_size;
 
     std::vector<CharInfo> glyphs;
@@ -45,13 +47,13 @@ struct FontTexture
     std::vector<GLuint>      gl_tex_indexes;
     GLint                    gl_max_tex_width;
     GLint                    gl_tex_width;
-    GLfloat                  gl_font_color[4];
+    glm::vec4                gl_font_color;
 
     ~FontTexture()
     {
         if(!gl_tex_indexes.empty())
         {
-            glDeleteTextures(gl_tex_indexes.size(), gl_tex_indexes.data());
+            glDeleteTextures(static_cast<GLsizei>(gl_tex_indexes.size()), gl_tex_indexes.data());
         }
     }
 };
@@ -64,7 +66,7 @@ void glf_reface(FontTexture* glf, const char *file_name, uint16_t font_size);
 float    glf_get_string_len(FontTexture* glf, const char *text, int n);
 float    glf_get_ascender(FontTexture* glf);
 uint16_t glf_get_font_size(FontTexture* glf);
-void     glf_get_string_bb(FontTexture* glf, const char *text, int n, GLfloat *x0, GLfloat *y0, GLfloat *x1, GLfloat *y1);
+void     glf_get_string_bb(FontTexture* glf, const char *text, int n, glm::vec2& topLeft, glm::vec2& bottomRight);
 
 void     glf_render_str(FontTexture* glf, GLfloat x, GLfloat y, const char *text);     // UTF-8
 

@@ -25,13 +25,17 @@
  * </ol>
  */
 
-#include <cstdint>
-
 #include "loader/datatypes.h"
-#include "polygon.h"
+#include "world/core/polygon.h"
+
+#include <GL/glew.h>
+
+#include <cstdint>
 
 class BorderedTextureAtlas
 {
+    TRACK_LIFETIME();
+
     struct TextureSizeComparator;
 
     /*!
@@ -71,8 +75,8 @@ class BorderedTextureAtlas
 
         // New origin
         size_t new_page;
-        size_t new_x_with_border; // Where the adjusted data starts. The start of the actual data is this plus the atlas's border size.
-        size_t new_y_with_border; // See above.
+        uint32_t new_x_with_border; // Where the adjusted data starts. The start of the actual data is this plus the atlas's border size.
+        uint32_t new_y_with_border; // See above.
     };
 
     // How much border to add.
@@ -136,16 +140,16 @@ public:
      */
     void getCoordinates(size_t texture,
                         bool reverse,
-    struct Polygon* poly,
-        int shift = 0,
-        bool split = false) const;
+                        world::core::Polygon& poly,
+                        int shift = 0,
+                        bool split = false) const;
 
     /*!
      * Same as above, but for sprite textures. This always returns four coordinates (eight float values), in the order top right, top left, bottom left, bottom right.
      */
     void getSpriteCoordinates(size_t sprite_texture,
-                              uint32_t &outPage,
-                              GLfloat *coordinates) const;
+                              size_t &outPage,
+                              glm::vec2* coordinates) const;
 
     /*!
      * Returns the number of texture atlas pages that have been created. Triggers a

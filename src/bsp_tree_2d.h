@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include <boost/assert.hpp>
+
 /**
  * @brief A Binary Space Partition Tree for 2D space.
  */
@@ -15,16 +17,16 @@ struct BSPTree2DNode
     bool isFilled = false;
 
     //! The X coordinate of this node in 2D space.
-    size_t x = 0;
+    uint32_t x = 0;
     //! The Y coordinate of this node in 2D space.
-    size_t y = 0;
+    uint32_t y = 0;
     //! The width of this node in 2D space.
-    size_t width = 0;
+    uint32_t width = 0;
     //! The height of this node in 2D space.
-    size_t height = 0;
+    uint32_t height = 0;
 
     BSPTree2DNode() = default;
-    BSPTree2DNode(size_t x_, size_t y_, size_t w, size_t h)
+    BSPTree2DNode(uint32_t x_, uint32_t y_, uint32_t w, uint32_t h)
         : x(x_)
         , y(y_)
         , width(w)
@@ -41,9 +43,9 @@ struct BSPTree2DNode
      * @brief Split this node along its Y axis (X is split).
      * @param splitLocation Local X coordinate of the split point
      */
-    void splitHorizontally(size_t splitLocation)
+    void splitHorizontally(uint32_t splitLocation)
     {
-        assert(splitLocation < width);
+        BOOST_ASSERT(splitLocation < width);
         left.reset(new BSPTree2DNode(x, y, splitLocation, height));
         right.reset(new BSPTree2DNode(x + splitLocation, y, width - splitLocation, height));
     }
@@ -52,14 +54,14 @@ struct BSPTree2DNode
      * @brief Split this node along its X axis (Y is split).
      * @param splitLocation Local Y coordinate of the split point
      */
-    void splitVertically(size_t splitLocation)
+    void splitVertically(uint32_t splitLocation)
     {
-        assert(splitLocation < height);
+        BOOST_ASSERT(splitLocation < height);
         left.reset(new BSPTree2DNode(x, y, width, splitLocation));
         right.reset(new BSPTree2DNode(x, y + splitLocation, width, height - splitLocation));
     }
 
-    bool fits(size_t w, size_t h) const noexcept
+    bool fits(uint32_t w, uint32_t h) const noexcept
     {
         return !isFilled && (w <= width && h <= height);
     }
@@ -72,7 +74,7 @@ struct BSPTree2DNode
      * @param destY
      * @return
      */
-    bool findSpaceFor(size_t needleWidth, size_t needleHeight, size_t *destX, size_t *destY)
+    bool findSpaceFor(uint32_t needleWidth, uint32_t needleHeight, uint32_t& destX, uint32_t& destY)
     {
         // Could this possibly fit?
         if(!fits(needleWidth, needleHeight))
@@ -108,8 +110,8 @@ struct BSPTree2DNode
         {
             // Perfect match
             isFilled = true;
-            *destX = x;
-            *destY = y;
+            destX = x;
+            destY = y;
             return true;
         }
         else if(height == needleHeight)
@@ -119,8 +121,8 @@ struct BSPTree2DNode
 
             // height already fits, width fits too now, so this is the result
             left->isFilled = true;
-            *destX = left->x;
-            *destY = left->y;
+            destX = left->x;
+            destY = left->y;
             return true;
         }
         else

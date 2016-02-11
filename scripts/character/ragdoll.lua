@@ -256,7 +256,7 @@ ragdoll[RD_TYPE_LARA] = {
 
 ragdoll_hit_callback["lara"] = function(id)
     if(math.random(100000) > 99500) then
-        playSound(4, id)                    -- Replace 4 with something more appropriate!
+        playSound(SoundId.Landing, id)                    -- Replace 4 with something more appropriate!
     end
 end;
 

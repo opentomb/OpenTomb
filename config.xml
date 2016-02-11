@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<controlState>
+    <freeLookSpeed>3000</freeLookSpeed>
+    <mouseLook>true</mouseLook>
+    <freeLook>false</freeLook>
+    <noClip>false</noClip>
+    <camDistance>800</camDistance>
+</controlState>
+<input>
+    <mouse>
+        <sensitivity>25</sensitivity>
+        <scale>
+            <y>0.00999999978</y>
+            <x>0.00999999978</x>
+        </scale>
+    </mouse>
+    <joystick>
+        <deadzones>
+            <look>1500</look>
+            <move>1500</move>
+        </deadzones>
+        <sensitivities>
+            <look>1.5</look>
+            <move>1.5</move>
+        </sensitivities>
+        <axes>
+            <look>
+                <x>2</x>
+                <xInvert>false</xInvert>
+                <y>3</y>
+                <yInvert>true</yInvert>
+            </look>
+            <move>
+                <x>0</x>
+                <xInvert>false</xInvert>
+                <y>1</y>
+                <yInvert>false</yInvert>
+            </move>
+        </axes>
+        <rumble>true</rumble>
+        <enabled>true</enabled>
+        <id>0</id>
+    </joystick>
+</input>
+<renderer>
+    <lodBias>0</lodBias>
+    <mipmapMode>3</mipmapMode>
+    <mipmaps>3</mipmaps>
+    <anisotropy>0</anisotropy>
+    <antialias>false</antialias>
+    <antialiasSamples>0</antialiasSamples>
+    <textureBorder>8</textureBorder>
+    <saveTextureMemory>false</saveTextureMemory>
+    <zDepth>16</zDepth>
+    <fogEnabled>true</fogEnabled>
+    <fogColor>
+        <r>0</r>
+        <g>0</g>
+        <b>0</b>
+        <a>1</a>
+    </fogColor>
+    <fogStartDepth>10000</fogStartDepth>
+    <fogEndDepth>16000</fogEndDepth>
+    <useGl3>false</useGl3>
+</renderer>
+<gui>
+    <console>
+        <backgroundColor>
+            <r>0</r>
+            <g>0</g>
+            <b>0</b>
+            <a>0.800000012</a>
+        </backgroundColor>
+        <blinkPeriod>500</blinkPeriod>
+        <spacing>0.5</spacing>
+        <lineLength>72</lineLength>
+        <visibleLines>40</visibleLines>
+        <historySize>16</historySize>
+        <bufferSize>128</bufferSize>
+        <show>false</show>
+    </console>
+</gui>
+<screen>
+    <x>50</x>
+    <y>20</y>
+    <w>800</w>
+    <h>600</h>
+    <fov>75</fov>
+    <fullscreen>false</fullscreen>
+    <showDebugInfo>false</showDebugInfo>
+    <vsync>true</vsync>
+</screen>
+<system>
+    <logging>false</logging>
+</system>
+<audio>
+    <musicVolume>0.699999988</musicVolume>
+    <soundVolume>0.800000012</soundVolume>
+    <useEffects>true</useEffects>
+    <listenerIsPlayer>false</listenerIsPlayer>
+    <streamBufferSize>32</streamBufferSize>
+</audio>

@@ -1,34 +1,59 @@
+#include "engine/engine.h"
+#include "util/helpers.h"
+
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+
 #include <chrono>
-#include <cstdlib>
-
-#include "engine.h"
-#include "system.h"
-
-#define NO_AUDIO  0
-
-bool done = false;
-btScalar time_scale = 1.0;
+#include <thread>
 
 int main(int /*argc*/, char** /*argv*/)
 {
-    Engine_Start();
+    BOOST_LOG_TRIVIAL(info) << "*** This is OpenTomb.";
+    BOOST_LOG_TRIVIAL(info) << "*** If you experience problems, report them and include this text:";
+    BOOST_LOG_TRIVIAL(info) << "***    Git Checkout " << GIT_SHA;
+
+    boost::property_tree::ptree config;
+    try
+    {
+        boost::property_tree::read_xml("config.xml", config);
+    }
+    catch(boost::property_tree::xml_parser_error& ex)
+    {
+        BOOST_LOG_TRIVIAL(error) << "Cannot load configuration: " << ex.what();
+        BOOST_LOG_TRIVIAL(info) << "Engine configuration will be initialized with defaults";
+        config = boost::property_tree::ptree();
+    }
+
+    engine::Engine engine{config};
+
+    boost::property_tree::write_xml("config.xml", config, std::locale(), boost::property_tree::xml_writer_settings<std::string>(' ', 4));
 
     // Entering main loop.
 
-    std::chrono::high_resolution_clock::time_point prev_time = std::chrono::high_resolution_clock::now();
+    util::TimePoint prev_time = util::now();
 
-    while(!done)
+    while(!engine.m_done)
     {
-        std::chrono::high_resolution_clock::time_point now = std::chrono::high_resolution_clock::now();
-        auto delta = std::chrono::duration_cast<std::chrono::microseconds>(now - prev_time).count() / 1.0e6;
+        BOOST_ASSERT(engine.m_timeScale > 0);
+
+        util::TimePoint now = util::now();
+        util::Duration delta = now - prev_time;
+        delta *= engine.m_timeScale;
+
+        if(delta.count() <= 0)
+        {
+            std::this_thread::sleep_for(std::chrono::microseconds(1));
+            continue;
+        }
+
         prev_time = now;
 
-        Engine_Frame(delta * time_scale);
-        Engine_Display();
+        engine.frame(delta);
+        engine.display();
     }
 
     // Main loop interrupted; shutting down.
 
-    Engine_Shutdown(EXIT_SUCCESS);
-    return(EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }

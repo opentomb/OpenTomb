@@ -30,12 +30,12 @@ setHumanoidBodyParts(player);
 
 -- creates map for left and right hands
 function setDefaultModelAnimReplaceFlag(m_id)
-    setModelAnimReplaceFlag(m_id, 8, 0x01);
-    setModelAnimReplaceFlag(m_id, 9, 0x01);
-    setModelAnimReplaceFlag(m_id, 10, 0x01);
-    setModelAnimReplaceFlag(m_id, 11, 0x01);
-    setModelAnimReplaceFlag(m_id, 12, 0x01);
-    setModelAnimReplaceFlag(m_id, 13, 0x01);
+    setModelAnimReplaceFlag(m_id, 8, true);
+    setModelAnimReplaceFlag(m_id, 9, true);
+    setModelAnimReplaceFlag(m_id, 10, true);
+    setModelAnimReplaceFlag(m_id, 11, true);
+    setModelAnimReplaceFlag(m_id, 12, true);
+    setModelAnimReplaceFlag(m_id, 13, true);
 end
 
 if (getEngineVersion() == Engine.I) then
@@ -112,10 +112,10 @@ elseif (getEngineVersion() < Engine.II) then
     setModelMeshReplaceFlag(8, 14, 0x04);      -- 0x04 slot mesh model: draws with original mesh
 
     -- flare
-    setModelAnimReplaceFlag(9, 11, 0x01);
-    setModelAnimReplaceFlag(9, 12, 0x01);
-    setModelAnimReplaceFlag(9, 13, 0x01);
-    setModelMeshReplaceFlag(9, 13, 0x01);
+    setModelAnimReplaceFlag(9, 11, true);
+    setModelAnimReplaceFlag(9, 12, true);
+    setModelAnimReplaceFlag(9, 13, true);
+    setModelMeshReplaceFlag(9, 13, true);
 elseif (getEngineVersion() < Engine.III) then
     -- pistols
     setDefaultModelAnimReplaceFlag(1);
@@ -163,10 +163,10 @@ elseif (getEngineVersion() < Engine.III) then
     setModelMeshReplaceFlag(9, 14, 0x04);
 
     -- flare
-    setModelAnimReplaceFlag(10, 11, 0x01);
-    setModelAnimReplaceFlag(10, 12, 0x01);
-    setModelAnimReplaceFlag(10, 13, 0x01);
-    setModelMeshReplaceFlag(10, 13, 0x01);
+    setModelAnimReplaceFlag(10, 11, true);
+    setModelAnimReplaceFlag(10, 12, true);
+    setModelAnimReplaceFlag(10, 13, true);
+    setModelMeshReplaceFlag(10, 13, true);
 
 elseif (getEngineVersion() == Engine.IV or getEngineVersion() == Engine.V) then
     -- pistols
@@ -209,9 +209,9 @@ elseif (getEngineVersion() == Engine.IV or getEngineVersion() == Engine.V) then
     setModelMeshReplaceFlag(6, 4, 0x04);
 
     -- flare
-    setModelAnimReplaceFlag(7, 11, 0x01);
-    setModelAnimReplaceFlag(7, 12, 0x01);
-    setModelAnimReplaceFlag(7, 13, 0x01);
+    setModelAnimReplaceFlag(7, 11, true);
+    setModelAnimReplaceFlag(7, 12, true);
+    setModelAnimReplaceFlag(7, 13, true);
     setModelMeshReplaceFlag(7, 13, 0x01);
 end
 
@@ -234,18 +234,6 @@ setModelCollisionMap(0, 11, 3);             -- boots 3
 setModelCollisionMap(0, 12, 6);
 setModelCollisionMap(0, 13, 10);            -- braces 3
 setModelCollisionMap(0, 14, 13);
-
-setAnimCommandTransform(0, 147,  0, 0x00);   -- roll animation smooth fix 
-setAnimCommandTransform(0, 146, -2, 0x03);
-
-if(getEngineVersion() >= Engine.II) then
-    setAnimCommandTransform(0, 205,  1, 0x00);
-    setAnimCommandTransform(0, 203, -2, 0x03);
-end
-
--- Fix for reach jump height (was hardcoded in originals)
-
-setAnimVerticalSpeed(0, 26, -1, -116);
 
 -- Generate UV rotation texture animations for waterfalls in TR4+ versions
 

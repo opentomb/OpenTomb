@@ -1,12 +1,10 @@
 #pragma once
 
-#include <SDL2/SDL_rwops.h>
-#include <vector>
-#include <string>
-#include <memory>
-
 #include "datatypes.h"
 #include "game.h"
+
+#include <memory>
+#include <vector>
 
 namespace loader
 {
@@ -31,20 +29,20 @@ public:
     const Game m_gameVersion;
 
     std::vector<DWordTexture> m_textures;
-    Palette m_palette;
+    std::unique_ptr<Palette> m_palette;
     std::vector<Room> m_rooms;
-    std::vector<uint16_t> m_floorData;
+    FloorData m_floorData;
     std::vector<Mesh> m_meshes;
     std::vector<uint32_t> m_meshIndices;
     std::vector<Animation> m_animations;
-    std::vector<StateChange> m_stateChanges;
-    std::vector<AnimDispatch> m_animDispatches;
+    std::vector<Transitions> m_transitions;
+    std::vector<TransitionCase> m_transitionCases;
     std::vector<int16_t> m_animCommands;
-    std::vector<Moveable> m_moveables;
+    std::vector<std::unique_ptr<AnimatedModel>> m_animatedModels;
     std::vector<StaticMesh> m_staticMeshes;
     std::vector<ObjectTexture> m_objectTextures;
     std::vector<uint16_t> m_animatedTextures;
-    uint32_t m_animatedTexturesUvCount = 0;
+    size_t m_animatedTexturesUvCount = 0;
     std::vector<SpriteTexture> m_spriteTextures;
     std::vector<SpriteSequence> m_spriteSequences;
     std::vector<Camera> m_cameras;
@@ -54,7 +52,7 @@ public:
     std::vector<uint16_t> m_overlaps;
     std::vector<Zone> m_zones;
     std::vector<Item> m_items;
-    LightMap m_lightmap;
+    std::unique_ptr<LightMap> m_lightmap;
     std::vector<AIObject> m_aiObjects;
     std::vector<CinematicFrame> m_cinematicFrames;
     std::vector<uint8_t> m_demoData;
@@ -64,8 +62,8 @@ public:
     std::vector<uint8_t> m_samplesData;
     std::vector<uint32_t> m_sampleIndices;
 
-    std::vector<uint16_t> m_frameData;
-    std::vector<uint32_t> m_meshTreeData;
+    std::vector<int16_t> m_poseData;
+    std::vector<int32_t> m_boneTrees;
 
     std::string m_sfxPath = "MAIN.SFX";
 
@@ -88,15 +86,15 @@ public:
     virtual void load() = 0;
 
     StaticMesh *findStaticMeshById(uint32_t object_id);
-    Item *fineItemById(int32_t object_id);
-    Moveable *findMoveableById(uint32_t object_id);
+    Item* findItemById(int32_t object_id);
+    AnimatedModel* findModelById(uint32_t object_id);
 
 protected:
     io::SDLReader m_reader;
     bool m_demoOrUb = false;
 
     void readMeshData(io::SDLReader& reader);
-    void readFrameMoveableData(io::SDLReader& reader);
+    void readPoseDataAndModels(io::SDLReader& reader);
 
     static void convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst);
     static void convertTexture(WordTexture & tex, DWordTexture & dst);
@@ -105,5 +103,4 @@ private:
     static Game probeVersion(io::SDLReader& reader, const std::string &filename);
     static std::unique_ptr<Level> createLoader(io::SDLReader&& reader, Game game_version, const std::string& sfxPath);
 };
-
 }

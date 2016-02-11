@@ -110,36 +110,36 @@ tr2_anim_override[18] = 16;             -- Masked goon (black mask)
 function getOverridedAnim(ver, id)
     if(ver == Engine.I) then
         if((tr1_anim_override == nil) or (tr1_anim_override[id] == nil)) then
-            return -1;
+            return nil;
         else
             return tr1_anim_override[id];
         end;
     elseif(ver == Engine.II) then
         if((tr2_anim_override == nil) or (tr2_anim_override[id] == nil)) then
-            return -1;
+            return nil;
         else
             return tr2_anim_override[id];
         end
     elseif(ver == Engine.III) then
         if((tr3_anim_override == nil) or (tr3_anim_override[id] == nil)) then
-            return -1;
+            return nil;
         else
             return tr3_anim_override[id];
         end
     elseif(ver == Engine.IV) then
         if((tr4_anim_override == nil) or (tr4_anim_override[id] == nil)) then
-            return -1;
+            return nil;
         else
             return tr4_anim_override[id];
         end
     elseif(ver == Engine.V) then
         if((tr5_anim_override == nil) or (tr5_anim_override[id] == nil)) then
-            return -1;
+            return nil;
         else
             return tr5_anim_override[id];
         end
     else
-        return -1;
+        return nil;
     end;
 end;
 

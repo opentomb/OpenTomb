@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta name="generator" content="AsciiDoc 8.6.9">
+<meta name="generator" content="AsciiDoc 8.6.8">
 <title>Tomb Raider Data Formats (TRosettaStone)</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -93,9 +93,7 @@ ul > li > * { color: black; }
   padding: 0;
   margin: 0;
 }
-pre {
-  white-space: pre-wrap;
-}
+
 
 #author {
   color: #527bbd;
@@ -224,7 +222,7 @@ div.exampleblock > div.content {
 }
 
 div.imageblock div.content { padding-left: 0; }
-span.image img { border-style: none; vertical-align: text-bottom; }
+span.image img { border-style: none; }
 a.image:visited { color: white; }
 
 dl {
@@ -510,9 +508,6 @@ th.tableblock.valign-bottom, td.tableblock.valign-bottom {
   vertical-align: bottom;
 }
 
-th.tableblock.grid-none, td.tableblock.grid-none {
-  border-style: hidden;
-}
 
 /*
  * manpage specific
@@ -535,16 +530,19 @@ body.manpage div.sectionbody {
 @media print {
   body.manpage div#toc { display: none; }
 }
+/*
+  pygmentize filter
+*/
 .highlight .hll { background-color: #ffffcc }
-.highlight  { background: #f8f8f8; }
-.highlight .c { color: #408080; font-style: italic } /* Comment */
+.highlight  { background: #f4f4f4; }
+.highlight .c { color: #008800; font-style: italic } /* Comment */
 .highlight .err { border: 1px solid #FF0000 } /* Error */
-.highlight .k { color: #008000; font-weight: bold } /* Keyword */
+.highlight .k { color: #AA22FF; font-weight: bold } /* Keyword */
 .highlight .o { color: #666666 } /* Operator */
-.highlight .cm { color: #408080; font-style: italic } /* Comment.Multiline */
-.highlight .cp { color: #BC7A00 } /* Comment.Preproc */
-.highlight .c1 { color: #408080; font-style: italic } /* Comment.Single */
-.highlight .cs { color: #408080; font-style: italic } /* Comment.Special */
+.highlight .cm { color: #008800; font-style: italic } /* Comment.Multiline */
+.highlight .cp { color: #008800 } /* Comment.Preproc */
+.highlight .c1 { color: #008800; font-style: italic } /* Comment.Single */
+.highlight .cs { color: #008800; font-weight: bold } /* Comment.Special */
 .highlight .gd { color: #A00000 } /* Generic.Deleted */
 .highlight .ge { font-style: italic } /* Generic.Emph */
 .highlight .gr { color: #FF0000 } /* Generic.Error */
@@ -555,48 +553,49 @@ body.manpage div.sectionbody {
 .highlight .gs { font-weight: bold } /* Generic.Strong */
 .highlight .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
 .highlight .gt { color: #0040D0 } /* Generic.Traceback */
-.highlight .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
-.highlight .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
-.highlight .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
-.highlight .kp { color: #008000 } /* Keyword.Pseudo */
-.highlight .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
-.highlight .kt { color: #B00040 } /* Keyword.Type */
+.highlight .kc { color: #AA22FF; font-weight: bold } /* Keyword.Constant */
+.highlight .kd { color: #AA22FF; font-weight: bold } /* Keyword.Declaration */
+.highlight .kn { color: #AA22FF; font-weight: bold } /* Keyword.Namespace */
+.highlight .kp { color: #AA22FF } /* Keyword.Pseudo */
+.highlight .kr { color: #AA22FF; font-weight: bold } /* Keyword.Reserved */
+.highlight .kt { color: #00BB00; font-weight: bold } /* Keyword.Type */
 .highlight .m { color: #666666 } /* Literal.Number */
-.highlight .s { color: #BA2121 } /* Literal.String */
-.highlight .na { color: #7D9029 } /* Name.Attribute */
-.highlight .nb { color: #008000 } /* Name.Builtin */
-.highlight .nc { color: #0000FF; font-weight: bold } /* Name.Class */
+.highlight .s { color: #BB4444 } /* Literal.String */
+.highlight .na { color: #BB4444 } /* Name.Attribute */
+.highlight .nb { color: #AA22FF } /* Name.Builtin */
+.highlight .nc { color: #0000FF } /* Name.Class */
 .highlight .no { color: #880000 } /* Name.Constant */
 .highlight .nd { color: #AA22FF } /* Name.Decorator */
 .highlight .ni { color: #999999; font-weight: bold } /* Name.Entity */
 .highlight .ne { color: #D2413A; font-weight: bold } /* Name.Exception */
-.highlight .nf { color: #0000FF } /* Name.Function */
+.highlight .nf { color: #00A000 } /* Name.Function */
 .highlight .nl { color: #A0A000 } /* Name.Label */
 .highlight .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
 .highlight .nt { color: #008000; font-weight: bold } /* Name.Tag */
-.highlight .nv { color: #19177C } /* Name.Variable */
+.highlight .nv { color: #B8860B } /* Name.Variable */
 .highlight .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
 .highlight .w { color: #bbbbbb } /* Text.Whitespace */
 .highlight .mf { color: #666666 } /* Literal.Number.Float */
 .highlight .mh { color: #666666 } /* Literal.Number.Hex */
 .highlight .mi { color: #666666 } /* Literal.Number.Integer */
 .highlight .mo { color: #666666 } /* Literal.Number.Oct */
-.highlight .sb { color: #BA2121 } /* Literal.String.Backtick */
-.highlight .sc { color: #BA2121 } /* Literal.String.Char */
-.highlight .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
-.highlight .s2 { color: #BA2121 } /* Literal.String.Double */
+.highlight .sb { color: #BB4444 } /* Literal.String.Backtick */
+.highlight .sc { color: #BB4444 } /* Literal.String.Char */
+.highlight .sd { color: #BB4444; font-style: italic } /* Literal.String.Doc */
+.highlight .s2 { color: #BB4444 } /* Literal.String.Double */
 .highlight .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
-.highlight .sh { color: #BA2121 } /* Literal.String.Heredoc */
+.highlight .sh { color: #BB4444 } /* Literal.String.Heredoc */
 .highlight .si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
 .highlight .sx { color: #008000 } /* Literal.String.Other */
 .highlight .sr { color: #BB6688 } /* Literal.String.Regex */
-.highlight .s1 { color: #BA2121 } /* Literal.String.Single */
-.highlight .ss { color: #19177C } /* Literal.String.Symbol */
-.highlight .bp { color: #008000 } /* Name.Builtin.Pseudo */
-.highlight .vc { color: #19177C } /* Name.Variable.Class */
-.highlight .vg { color: #19177C } /* Name.Variable.Global */
-.highlight .vi { color: #19177C } /* Name.Variable.Instance */
+.highlight .s1 { color: #BB4444 } /* Literal.String.Single */
+.highlight .ss { color: #B8860B } /* Literal.String.Symbol */
+.highlight .bp { color: #AA22FF } /* Name.Builtin.Pseudo */
+.highlight .vc { color: #B8860B } /* Name.Variable.Class */
+.highlight .vg { color: #B8860B } /* Name.Variable.Global */
+.highlight .vi { color: #B8860B } /* Name.Variable.Instance */
 .highlight .il { color: #666666 } /* Literal.Number.Integer.Long */
+
 
 
 @media screen {
@@ -2067,23 +2066,12 @@ else
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
-<table class="tableblock frame-none grid-none"
-style="
-width:100%;
-">
-<col style="width:99%;">
-<col style="width:1%;">
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2015-08-17)</strong></p></div>
+<div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-02-07)</strong></p></div>
 <div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
-<div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div></div></td>
-<td class="tableblock halign-right valign-middle" ><div><div class="paragraph"><p><span class="image">
-<img src="images/logo/trosej-mid.png" alt="logo/trosej-mid.png">
-</span></p></div></div></td>
-</tr>
-</tbody>
-</table>
+<div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/logo/trosej-mid.png" alt="images/logo/trosej-mid.png">
+</span></p></div>
 </div>
 </div>
 <div class="sect1">
@@ -2149,11 +2137,11 @@ leaked Tomb Raider Chronicles PSX SDK.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">As level formats are concerned, <strong>TR4</strong> usually applies not only to original game, but to <em>custom levels</em> built by fans using <em>Tomb Raider Level Editor</em>
 (<span class="monospaced">winroomedit.exe</span>) version <span class="monospaced">.49</span>, used to work with TR4-specific level file format. This level editor version is the only one level editor officially released
-by Eidos / Core, along with TR5.</td>
+by Eidos/Core, along with TR5.</td>
 </tr></table>
 </div>
 <div class="paragraph"><p>When we provide some version-specific info about certain structures or methods, this information will be marked with special bullet images, defining engine
@@ -2400,7 +2388,7 @@ width:100%;
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p>The reason why such complicated setup was invented is to avoid using floating-point numbers. In 90% of all cases, Tomb Raider engines use integer numbers, even
@@ -2656,10 +2644,10 @@ width:80%;
 <tbody>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/illustrations/face_blend.jpg" alt="illustrations/face_blend.jpg" title="Bit 0 set">
+<img src="images/illustrations/face_blend.jpg" alt="images/illustrations/face_blend.jpg" title="Bit 0 set">
 </span></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/illustrations/face_noblend.jpg" alt="illustrations/face_noblend.jpg" title="Bit 0 not set">
+<img src="images/illustrations/face_noblend.jpg" alt="images/illustrations/face_noblend.jpg" title="Bit 0 not set">
 </span></p></td>
 </tr>
 <tr>
@@ -2686,10 +2674,10 @@ width:40%;
 <tbody>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/illustrations/shine-on.jpg" alt="illustrations/shine-on.jpg" title="Bit 0 set">
+<img src="images/illustrations/shine-on.jpg" alt="images/illustrations/shine-on.jpg" title="Bit 0 set">
 </span></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/illustrations/shine-off.jpg" alt="illustrations/shine-off.jpg" title="Bit 0 not set">
+<img src="images/illustrations/shine-off.jpg" alt="images/illustrations/shine-off.jpg" title="Bit 0 not set">
 </span></p></td>
 </tr>
 <tr>
@@ -2808,7 +2796,7 @@ construction can make these &#8220;squares&#8221; almost invisible.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p>Each room has two types of surface geometry&#8201;&#8212;&#8201;<em>rendered</em> and <em>collisional</em>. The former are what is <em>seen</em>, while the latter control how objects <em>collide</em> and
@@ -2895,7 +2883,7 @@ dimensions, on which Lara can stand and grab, are 1024 x 1024 as well.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">This implies that, while $X$ and $Z$ can be quite large, $Y$ is constrained to -32768..32512.</td>
 </tr></table>
@@ -3005,7 +2993,7 @@ versions, this index was also used to determine if footprint textures should be 
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">TR engines always used static room lights only for processing lighting on entities (such as Lara, enemies, doors, and others). This is called <em>external
 lighting</em>. For room meshes, they used so-called internal, or <em>pre-baked</em> lighting, which is done on level building stage: lights are calculated and applied to
@@ -3116,7 +3104,7 @@ unknown.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p><em>Fog bulb</em> is a special case of room light, which actually don&#8217;t work as usual light. It serves as a point in space, where a kind of <em>volumetric fog</em> effect is
@@ -3143,127 +3131,127 @@ width:80%;
 <tbody>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/00.png" alt="fe-palette/00.png" width="16" height="16">
+<img src="images/fe-palette/00.png" alt="images/fe-palette/00.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced"> 0</span> = 0,0,0</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/07.png" alt="fe-palette/07.png" width="16" height="16">
+<img src="images/fe-palette/07.png" alt="images/fe-palette/07.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced"> 7</span> = 0,64,192</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/14.png" alt="fe-palette/14.png" width="16" height="16">
+<img src="images/fe-palette/14.png" alt="images/fe-palette/14.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">14</span> = 111,255,223</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/21.png" alt="fe-palette/21.png" width="16" height="16">
+<img src="images/fe-palette/21.png" alt="images/fe-palette/21.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">21</span> = 0,30,16</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/01.png" alt="fe-palette/01.png" width="16" height="16">
+<img src="images/fe-palette/01.png" alt="images/fe-palette/01.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced"> 1</span> = 245,200,60</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/08.png" alt="fe-palette/08.png" width="16" height="16">
+<img src="images/fe-palette/08.png" alt="images/fe-palette/08.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced"> 8</span> = 0,128,0</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/15.png" alt="fe-palette/15.png" width="16" height="16">
+<img src="images/fe-palette/15.png" alt="images/fe-palette/15.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">15</span> = 244,216,152</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/22.png" alt="fe-palette/22.png" width="16" height="16">
+<img src="images/fe-palette/22.png" alt="images/fe-palette/22.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">22</span> = 250,222,167</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/02.png" alt="fe-palette/02.png" width="16" height="16">
+<img src="images/fe-palette/02.png" alt="images/fe-palette/02.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced"> 2</span> = 120,196,112</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/09.png" alt="fe-palette/09.png" width="16" height="16">
+<img src="images/fe-palette/09.png" alt="images/fe-palette/09.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced"> 9</span> = 150,172,157</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/16.png" alt="fe-palette/16.png" width="16" height="16">
+<img src="images/fe-palette/16.png" alt="images/fe-palette/16.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">16</span> = 248,192,60</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/23.png" alt="fe-palette/23.png" width="16" height="16">
+<img src="images/fe-palette/23.png" alt="images/fe-palette/23.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">23</span> = 218,175,117</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/03.png" alt="fe-palette/03.png" width="16" height="16">
+<img src="images/fe-palette/03.png" alt="images/fe-palette/03.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced"> 3</span> = 202,204,230</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/10.png" alt="fe-palette/10.png" width="16" height="16">
+<img src="images/fe-palette/10.png" alt="images/fe-palette/10.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">10</span> = 128,128,128</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/17.png" alt="fe-palette/17.png" width="16" height="16">
+<img src="images/fe-palette/17.png" alt="images/fe-palette/17.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">17</span> = 252,0,0</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/24.png" alt="fe-palette/24.png" width="16" height="16">
+<img src="images/fe-palette/24.png" alt="images/fe-palette/24.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">24</span> = 225,191,78</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/04.png" alt="fe-palette/04.png" width="16" height="16">
+<img src="images/fe-palette/04.png" alt="images/fe-palette/04.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced"> 4</span> = 128,64,0</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/11.png" alt="fe-palette/11.png" width="16" height="16">
+<img src="images/fe-palette/11.png" alt="images/fe-palette/11.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">11</span> = 204,163,123</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/18.png" alt="fe-palette/18.png" width="16" height="16">
+<img src="images/fe-palette/18.png" alt="images/fe-palette/18.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">18</span> = 198,95,87</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/25.png" alt="fe-palette/25.png" width="16" height="16">
+<img src="images/fe-palette/25.png" alt="images/fe-palette/25.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">25</span> = 77,140,141</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/05.png" alt="fe-palette/05.png" width="16" height="16">
+<img src="images/fe-palette/05.png" alt="images/fe-palette/05.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced"> 5</span> = 64,64,64</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/12.png" alt="fe-palette/12.png" width="16" height="16">
+<img src="images/fe-palette/12.png" alt="images/fe-palette/12.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">12</span> = 177,162,140</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/19.png" alt="fe-palette/19.png" width="16" height="16">
+<img src="images/fe-palette/19.png" alt="images/fe-palette/19.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">19</span> = 226,151,118</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/26.png" alt="fe-palette/26.png" width="16" height="16">
+<img src="images/fe-palette/26.png" alt="images/fe-palette/26.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">26</span> = 4,181,154</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/06.png" alt="fe-palette/06.png" width="16" height="16">
+<img src="images/fe-palette/06.png" alt="images/fe-palette/06.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced"> 6</span> = 243,232,236</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/13.png" alt="fe-palette/13.png" width="16" height="16">
+<img src="images/fe-palette/13.png" alt="images/fe-palette/13.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">13</span> = 0,223,191</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/20.png" alt="fe-palette/20.png" width="16" height="16">
+<img src="images/fe-palette/20.png" alt="images/fe-palette/20.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">20</span> = 248,235,206</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/fe-palette/27.png" alt="fe-palette/27.png" width="16" height="16">
+<img src="images/fe-palette/27.png" alt="images/fe-palette/27.png" width="16" height="16">
 </span></p></td>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">27</span> = 255,174,0</p></td>
 </tr>
@@ -3404,7 +3392,7 @@ we&#8217;ll define vertex structure for TR1-2, TR3-4 and TR5 independently.</p><
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">The amplitude of the &#8220;wave&#8221; effect depends on <span class="monospaced">WaterScheme</span> value specified in room structure.</td>
 </tr></table>
@@ -3465,7 +3453,7 @@ interact with (keyholes, moveable blocks, moveable doors, etc.), neither does it
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/caution.png" alt="Caution">
+<img src="icons/caution.png" alt="Caution">
 </td>
 <td class="content">This is not a &#8220;real&#8221; C/C++ structure, in that the arrays are sized by the <span class="monospaced">NumXXX</span> elements that precede them. Also <a href="#tr_room_vertex">[tr_room_vertex]</a> could be
 replaced by any other version-specific room vertex type (<span class="monospaced">tr3_room_vertex</span>, etc.).</td>
@@ -3800,7 +3788,7 @@ concept of <span class="monospaced">tr_room_data</span> structure, shuffles nume
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">The one possible reason for such ridiculous structure change is an attempt to <em>crypt file format</em>, so it won&#8217;t be accessed by unofficial level editing
 tools, which received major development by that time. Another possible reason is whole TR5 development process was rushed, as the team developed <em>Tomb Raider:
@@ -3927,7 +3915,7 @@ each of these values will be <span class="monospaced">0xCDCDCDCD</span>.</p></di
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content"><span class="monospaced">Faces</span> array is strictly linked with <span class="monospaced">NumLayers</span> value. The data is sequentially structured for each layer&#8201;&#8212;&#8201;at first it lists first layer&#8217;s rectangles
 then triangles, followed by the second layer&#8217;s rectangles and triangles, and so on, until all layers are done.</td>
@@ -4154,7 +4142,7 @@ switches (if there are any). If there are no any special conditions for a given 
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/tip.png" alt="Tip">
+<img src="icons/tip.png" alt="Tip">
 </td>
 <td class="content">When parsing <span class="monospaced">FDSetup</span> for TR3, use only the lower 5 bits (0..4) to find the <span class="monospaced">Function</span> value, because some of TR3 <em>triangulation functions</em> use the upper
 3 bits of the lower byte for other purpose. However, this will also work correctly in TR1 and TR2.</td>
@@ -4165,7 +4153,7 @@ stopped.  Otherwise, the following <span class="monospaced">uint16_t</span> shou
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">Even if <span class="monospaced">EndData</span> is set, it doesn&#8217;t specifically mean that there are no more <span class="monospaced">uint16_t</span> following the current one at all. As we will see, some FloorData
 functions and subfunctions require to parse additional entries with their own rules. In programming terms, <span class="monospaced">EndData</span> just indicates that parsing loop must be
@@ -4175,7 +4163,7 @@ broken&#8201;&#8212;&#8201;however, there may be following code which reads addi
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">While <span class="monospaced">FloorData</span> index 0 means the sector does not use floordata, there is still a &#8220;dummy&#8221; entry for index 0. This dummy entry doesn&#8217;t contain any
 useful information.</td>
@@ -4184,7 +4172,7 @@ useful information.</td>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">Several of the functions indicate adjustments to the sector&#8217;s <em>corner heights</em>. The corners will be denoted as <span class="monospaced">00</span>, <span class="monospaced">01</span>, <span class="monospaced">10</span>, and <span class="monospaced">11</span>, where the first
 digit is the corner&#8217;s X coordinate and the second digit is the corner&#8217;s Z coordinate, with both given as multiples of 1024.</td>
@@ -4210,7 +4198,7 @@ width:70%;
 <tbody>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/illustrations/doors.png" alt="illustrations/doors.png" title="Floor sector triangulation types">
+<img src="images/illustrations/doors.png" alt="images/illustrations/doors.png" title="Floor sector triangulation types">
 </span></p></td>
 </tr>
 <tr>
@@ -4231,7 +4219,7 @@ from the floor heights of corners <span class="monospaced">01</span> and <span c
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">This function is never combined with <em>triangulation</em> functions present in TR3 onwards (see further).</td>
 </tr></table>
@@ -4248,7 +4236,7 @@ corners <span class="monospaced">01</span> and <span class="monospaced">11</span
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">This function is never combined with <em>triangulation</em> functions present in TR3 onwards (see further).</td>
 </tr></table>
@@ -4287,7 +4275,7 @@ as a general-purpose numerical field to specify particular trigger behaviour. We
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">Since TR4, <span class="monospaced">Timer</span> field became <em>signed</em>, i.e. it may contain <em>negative values</em>. Effectively, it means that entities activated with such trigger won&#8217;t be
 immediately activated and then deactivated after given amount of time, but <em>wait for a given time before being activated</em>. Most prominent example is timed spike
@@ -4299,7 +4287,7 @@ activated triggers to achieve certain result. A good example of trigger mask use
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p>Each entity in Tomb Raider has a similar field in its structure called <em>activation mask</em>. Activation of entity happens <em>only when all bits of activation mask
@@ -4316,7 +4304,7 @@ activated. However, it doesn&#8217;t mean that entity couldn&#8217;t be deactiva
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">All other trigger actions, except activation of entities, are <em>performed continuously</em>. It&#8217;s not obvious, because engine uses various workarounds for
 specific trigger actions to prevent &#8220;repeated&#8221; execution, like playing same soundtracks over and over again. Such workarounds will be specifically mentioned.</td>
@@ -4358,7 +4346,7 @@ width and depth of 1024 units), but also complicated things a lot, introducing t
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content"><em>Triangulation</em> functions are never combined with <em>slant</em> functions present in TR1 and TR2. Each sector has either <em>slant</em> or <em>triangulation</em> function
 assigned to it, and <em>never both of them</em>. If there ever will be a paradoxical case of combination, most likely, only <em>older</em> function (i.e. <em>slant</em>) will be
@@ -4454,10 +4442,10 @@ width:80%;
 <tbody>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/illustrations/tri-notshared.png" alt="illustrations/tri-notshared.png" title="Corner heights are not shared">
+<img src="images/illustrations/tri-notshared.png" alt="images/illustrations/tri-notshared.png" title="Corner heights are not shared">
 </span></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/illustrations/tri-shared.png" alt="illustrations/tri-shared.png" title="Corner heights are shared">
+<img src="images/illustrations/tri-shared.png" alt="images/illustrations/tri-shared.png" title="Corner heights are shared">
 </span></p></td>
 </tr>
 <tr>
@@ -4483,7 +4471,7 @@ width:100%;
 <tbody>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/illustrations/tri-types.png" alt="illustrations/tri-types.png" title="Floor sector triangulation types">
+<img src="images/illustrations/tri-types.png" alt="images/illustrations/tri-types.png" title="Floor sector triangulation types">
 </span></p></td>
 </tr>
 <tr>
@@ -4642,7 +4630,7 @@ In TR4, this function is used together with special entity called <em>Mapper</em
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">If Lara places beetle at the very same sector where beetle was already used, it will shake and explode. It happens because beetle checks if <em>Mapper</em>
 entity is active or not, and if it was already activated, it explodes instead of rolling.</td>
@@ -4658,7 +4646,7 @@ specific state of activator, specific trigger action (activate or deactivate), a
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">Trigger type names are directly borrowed from TRLE.</td>
 </tr></table>
@@ -4810,7 +4798,7 @@ width:50%;
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">If <span class="monospaced">ActionList</span>'s parent trigger type is either <em>Switch</em> or <em>Key</em>, first entry of <span class="monospaced">ActionList</span> is used to get reference entity (switch or keyhole) index.
 Hence, it is ignored here, as by the time engine reaches <span class="monospaced">ActionList</span> offset, its first entry is already parsed by preceding code.</td>
@@ -4819,7 +4807,7 @@ Hence, it is ignored here, as by the time engine reaches <span class="monospaced
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content"><span class="monospaced">ContBit</span> flag is <em>not the same</em> as <span class="monospaced">EndData</span> flag! When writing a parser, do not overwrite one with another.</td>
 </tr></table>
@@ -4834,7 +4822,7 @@ Hence, it is ignored here, as by the time engine reaches <span class="monospaced
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">Camera trigger action <em>uses one extra <span class="monospaced">uint16_t</span> entry</em> after its own entry! Its format is:</td>
 </tr></table>
@@ -4872,7 +4860,7 @@ trigger is active.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content"><span class="monospaced">ContBit</span> flag <em>overwrites</em> the same flag from the preceding <span class="monospaced">ActionList</span> entry.</td>
 </tr></table>
@@ -4886,7 +4874,7 @@ prevents Lara from surfacing the water.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">While it may look like <span class="monospaced">Cameras[]</span> array was mentioned here by mistake, it is not. TR engines <em>share the same structure for both cameras and sinks</em>. The
 way engine treats it in either case will be discussed in corresponding section.</td>
@@ -4905,7 +4893,7 @@ not. If FlipMap entry is set, then it immediately switches rooms to alternate mo
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">From TR1 to TR3, <span class="monospaced">FlipMap</span> array was merely used as a &#8220;hint table&#8221; to tell the engine if it should flip <em>all rooms at once</em>. That is, to check and apply
 another FlipMap entry, alternate rooms should have been reverted to previous state before&#8201;&#8212;&#8201;that&#8217;s the purpose of next two listed trigger actions. However, in
@@ -4950,7 +4938,7 @@ will be blocked.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p>In TR1, soundtrack playback is more complicated. For some reason, in PC version programmers completely disabled playback for majority of soundtracks, leaving
@@ -4973,7 +4961,7 @@ seperately defined</em>. This workaround was implemented because TR engines lack
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">The list of <em>effects</em> differs across game versions. These will be listed in a separate section noting changes from version to version.</td>
 </tr></table>
@@ -4997,7 +4985,7 @@ specified in their parameters (see further). <span class="monospaced">Parameter<
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">This trigger action caused significant confusion in TRLE community. In level editor, action is called <em>BODYBAG</em>, and makes no visible effect in game, so
 various speculations were made regarding action&#8217;s true purpose. Some people thought it is used to attach a backpack to Lara in &#8220;Angkor Wat&#8221; cutscene, another
@@ -5044,7 +5032,7 @@ locations inside of <span class="monospaced">Meshes[]</span>, inside of which th
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/tip.png" alt="Tip">
+<img src="icons/tip.png" alt="Tip">
 </td>
 <td class="content">
 <div class="paragraph"><p>Pointer indexing system allows engine to share same mesh for numerous different models, and also easily implement a feature called <em>meshswap</em>&#8201;&#8212;&#8201;used when a
@@ -5064,7 +5052,7 @@ vertex lighting is used, using the data included with the mesh.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">This is not a &#8220;real&#8221; C/C++ structure, in that the arrays are sized by the <span class="monospaced">NumXXX</span> elements that precede them.</td>
 </tr></table>
@@ -5141,7 +5129,7 @@ mesh is completely non-interactive, i.e. all it does is sitting there in place s
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content"><span class="image">
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
@@ -5367,261 +5355,463 @@ in other ways (text). Some sequences have only one member; this is done so as to
 </div>
 </div>
 <div class="sect1">
-<h2 id="_mesh_construction_and_animation">6. Mesh Construction and Animation</h2>
+<h2 id="_animation_system">6. Animation System</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_overview_4">6.1. Overview</h3>
-<div class="paragraph"><p>The animated mesh objects in the Tomb Raider series are sets of meshes that are moved relative to each other, as defined by <span class="monospaced">Entities[]</span> entries. Each entry
-describes which meshes to be used (a contiguous set of them referred to in <span class="monospaced">MeshPointers[]</span>), what hierarchy and relative offsets they have (contents of
-<span class="monospaced">MeshTree[]</span> pointed to), and what animations are to be used (contents of <span class="monospaced">Animations[]</span> pointed to).</p></div>
-<div class="paragraph"><p>The hierarchy used is a branching one, with the meshes being at the nodes, and with the first mesh being the root node. The <span class="monospaced">MeshTree[]</span> values are applied to each of the child meshes in sequence; they are sets of four <span class="monospaced">int32_t</span>s, the first being a hierarchy operator,
-and the remaining three being the coordinates in the parent mesh&#8217;s system. A hierarchy example is that for the Lara meshes:</p></div>
-<table class="tableblock frame-none grid-all"
-style="
-margin-left:auto; margin-right:auto;
-width:70%;
-">
-<col style="width:100%;">
-<tbody>
-<tr>
-<td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/illustrations/meshtree.png" alt="illustrations/meshtree.png" width="450" height="446" title="Lara&#8217;s MeshTree">
-</span></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-center valign-top" ><p class="tableblock"><em>Top-down hierarchy of Lara&#8217;s MeshTree. Hips is a root mesh. Ponytail is not listed, as it is a separate object.</em></p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph"><p>This is implemented by using a stack of meshes and &#8220;push&#8221; and &#8220;pop&#8221; operations in <span class="monospaced">MeshTree[]</span>. Normally, each mesh&#8217;s parent is the previous mesh in series.
-But such meshes can be &#8220;remembered&#8221; by adding them to a stack of meshes with a &#8220;push&#8221; operation. This remembered mesh can then be used as the parent mesh
-with a &#8220;pop&#8221; operation. It is not clear what the maximum stack depth is; most TR mesh stacks do not extend beyond 2 or 3 meshes.</p></div>
-<div class="paragraph"><p>The animations for each mesh object are selected with some ingenious techniques. Which animations to use are not hardcoded; instead, each entity has some states
-it can be in, and these states are used to select which animation. For example, locks have only one state (they just sit there), doors have two states (open and
-closed), and Lara has numerous states, such as standing, walking, running, jumping, falling, being hurt, dying, etc. Each animation has a state ID, which can be
-used to select it; however, state transitions might seem to require a large number of intermediate states (opening, closing, starting to jump, landing, etc.).
-The alternative used in the Tomb Raider engine is for each animation to have bridge animations to other states' animations, which are selected using the ID of
-which state to change to. These bridge animations then lead to the animation with the appropriate state. Thus, a closed door will run a looped closed-door
-animation as long as its state stays &#8220;closed&#8221;, but when its state becomes &#8220;open&#8221;, it will change to an opening-door bridge animation, which will end in a
-looped open-door animation. Likewise, closing a door will make it use a closing-door bridge animation. Some bridge animations are chosen with a finer grain of
-selectivity, however, such as using one for left foot forward and one for right foot forward.</p></div>
-<div class="paragraph"><p>Thus, each animation references a set of <span class="monospaced">StateChange</span> structures, each one of which references an <span class="monospaced">AnimDispatch</span> structure (called a &#8220;range&#8221; in some
-documentation). Each <span class="monospaced">StateChange</span> structure contains a new state and which <span class="monospaced">AnimDispatch</span> structures to use. When an entity goes into a new state, the
-<span class="monospaced">StateChange</span> structures are scanned for that state&#8217;s ID, and if one matches, then that <span class="monospaced">StateChange</span>'s <span class="monospaced">AnimDispatch</span> es are then scanned for a range of frames
-that contains the ID of the current frame. If such an <span class="monospaced">AnimDispatch</span> is found, the animation and the frame are changed to those listed in it.</p></div>
-<div class="paragraph"><p>The ultimate unit of animation is, of course, the frame, and each frame consists of a bounding box, the offset of the root mesh, and rotation angles for all the
-meshes with respect to their parent meshes. The root mesh is also rotated, but relative to the object&#8217;s overall coordinates. All rotations are performed around
-the meshes' origins, and are in order Y, X, Z (yaw, pitch, roll). The reason for the root mesh&#8217;s displacement is because entities traveling on solid surfaces
-are likely tracked by having their locations be at ground level, and Lara&#8217;s hips, for example, are well above the ground. Finally, some of the angles are not
-specified explicitly, when they are not, they are zero.</p></div>
-<div class="paragraph"><p>Frames are referenced in two ways, either by an offset into the <span class="monospaced">Frames[]</span> array that contains them, or by frame index. The values of the latter appear to be
-unique to each kind of entity, but not between entities; the first frame for each kind is numbered 0. This is likely a convenience when constructing the
-animations, since the list of animation frames for each entity can be constructed separately. However, using these indices is fairly simple. Each Animation
-structure has a first-frame index; this index is subtracted from the index of the desired frame in order to find out its index relative to the animation&#8217;s first
-frame.</p></div>
-<div class="paragraph"><p>There are also some special <em>AnimCommands</em> for doing various additional things. Some of them are for moving entities in absolute coordinates, for example to
-position Lara at climb location, or specifying jump momentum. Some others define actions per frame, like playing sounds, emitting bubbles, and so forth.</p></div>
-<div class="paragraph"><p>Finally, some entities appear to have incomplete set of animations; their complete animations are &#8220;borrowed&#8221; from similar entities. Such setup is mostly used
-in TR2&#8217;s Venice levels&#8201;&#8212;&#8201;some of Venice goons them have a full set of animations, while some others have only the standing animation. The ones with only the
-standing animation borrow their other animations from the fully-animated ones.</p></div>
+<h3 id="_concepts">6.1. Concepts</h3>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Local Space, Object Space and World Space
+</dt>
+<dd>
+<p>
+    When talking about coordinates, they are (especially in the context of animations) usually <em>in parent space</em> or
+    <em>local</em>. Both terms have the same meaning, which is that an object&#8217;s movement is relative to some other object
+    called its <em>parent</em>.  When talking about <em>Object Space</em>, the movements are considered to be relative to an
+    indirect parent; for example, a tree of objects&#8201;&#8212;&#8201;all with local movements&#8201;&#8212;&#8201;can be calculated so that their
+    movements can be expressed relative to their ultimate grandparent (the object they all belong to).<br>
+    Finally, all movements can be calculated to be <em>global</em> or in <em>world space</em>, so that they are independent of any
+    object they might be relative to.
+</p>
+</dd>
+<dt class="hdlist1">
+Bone
+</dt>
+<dd>
+<p>
+    A bone describes movement (rotational and positional), relative to its <em>parent</em>. Bones are usually organized as a
+    tree, where multiple bones may have one single parent. Bones are used to deform models.
+</p>
+</dd>
+</dl></div>
+<div class="exampleblock">
+<div class="title">Example 1. Bone Spaces</div>
+<div class="content">
+<div class="paragraph"><p>Consider a simple tree of three bones, with bone 1 at the root of it, and bones 2 and 3 attached as children to bone 1.
+If bone 1 describes a movement of, say, 45 degrees around the X axis, the children are implicitly moved, too, because
+their movement is relative to their parent. If bone 2 would also have a rotation of 45 degrees around X, it would end up
+with a global rotation of 90 degrees, as its local rotation sums up with its parent&#8217;s rotation.</p></div>
+</div></div>
+<div class="imageblock" id="lara_skeleton" style="float:right;">
+<div class="content">
+<img src="images/illustrations/meshtree.png" alt="images/illustrations/meshtree.png" width="450">
+</div>
+<div class="title">Figure 1. Lara's Skeleton</div>
+</div>
+<div class="dlist"><dl>
+<dt class="hdlist1">
+Skeleton
+</dt>
+<dd>
+<p>
+    A skeleton is a tree of bones, with its own movement. You could say that a skeleton is a &#8220;virtual root bone&#8221;.
+    <a href="#lara_skeleton">The image to the right</a> shows Lara&#8217;s skeleton.<br>
+    Please note that a skeleton is only a concept that only makes sense in combination with a <em>mesh</em> which it deforms;
+    skeletons can be used with multiple (different) meshes, resulting in the meshes having all the same pose. This has
+    been commonly used to create a &#8220;doppelganger effect&#8221;, where the doppelganger of the player does the exact same
+    movement of the player, because it&#8217;s simply using the player&#8217;s skeleton.
+</p>
+</dd>
+<dt class="hdlist1">
+Pose
+</dt>
+<dd>
+<p>
+    A pose describes the&#8201;&#8212;&#8201;well, pose of a skeleton. If you have a skeleton which models the layout of a human statue,
+    the bone movements in sum are the pose of that statue.
+</p>
+</dd>
+<dt class="hdlist1">
+Animation
+</dt>
+<dd>
+<p>
+    An animation is a series of poses, describing the movement of a skeleton over time.  Usually, these poses are
+    interpolated to be smoother, because poses only contain distinct positions and rotations, but not the speed or
+    direction at which the bones move at that specific time point.
+</p>
+</dd>
+<dt class="hdlist1">
+Model
+</dt>
+<dd>
+<p>
+    A model (or <em>animated model</em>) combines a skeleton, a mesh, and its animation system.
+</p>
+</dd>
+</dl></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="icons/note.png" alt="Note">
+</td>
+<td class="content">Rotations are performed in Y, X, Z order.</td>
+</tr></table>
+</div>
+<div class="sect3">
+<h4 id="_animation_system_concepts">6.1.1. Animation System Concepts</h4>
+<div class="paragraph"><p>Each model has an internal <em>state</em>; for example, Lara may be standing idle, running, jumping, rolling, etc., and a door
+may have the states <em>opened</em> and <em>closed</em>. Every state has animations attached to it; the door has two &#8220;animations&#8221;,
+one (static) animation loop showing it closed, the other one showing it opened.</p></div>
+<div class="paragraph"><p>Now, if the door is closed and should show the &#8220;opening&#8221; animation, it plays a <a href="#TransitionCases"><em>transition animation</em></a>. A transition animation is not looped and only used to smoothly switch between animation loops. Especially
+in the case of Lara&#8217;s animations, there are many transition animations, and the system to decide which transition
+animation to play is quite elaborate. It depends on two things:</p></div>
+<div class="olist arabic"><ol class="arabic">
+<li>
+<p>
+<strong>The current internal and target states.</strong>
+  For example, if Lara is running and starts to jump, it doesn&#8217;t make sense to show the transition animation from
+  standing to rolling.
+</p>
+</li>
+<li>
+<p>
+<strong>The current animation frame.</strong>
+  To have a sensible, smooth animation, there <em>must</em> be a decision between several intermediate animations. If Lara is
+  running, and her right foot currently touches the ground, it doesn&#8217;t make any sense to show how she pushes herself up
+  to jump with her left leg.
+</p>
+</li>
+</ol></div>
+<div class="paragraph"><p>Such <em>transition cases</em> not only define the target animation, but also the <em>target frame</em> of that animation, to have it
+start to play somewhere in the middle of the animation. This is useful especially in cases where the transition between
+two fast or complex animations would otherwise lead to some sort of &#8220;warp effect&#8221;.</p></div>
+<div class="paragraph"><p>Each animation may also contain <a href="#AnimationCommand"><em>animation commands</em></a>, which are bound to specific frames. Such
+commands may be used, for example, to play sounds (like the &#8220;uh&#8221; when Lara jumps up) or to give skeletons an
+additional speed (like when jumping forward).</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="icons/note.png" alt="Note">
+</td>
+<td class="content">The actual animation frame rate is always locked to 30 FPS. All engine internal counters, including animation
+frame counters, are also using 30 FPS timebase.</td>
+</tr></table>
+</div>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_data_structures">6.2. Data Structures</h3>
 <div class="sect3">
-<h4 id="_mesh_tree_structure">6.2.1. Mesh Tree Structure</h4>
+<h4 id="BoneTree">6.2.1. Bone Tree Structure</h4>
 <div class="listingblock">
-<a id="tr_meshtree_node"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_meshtree_node</span> <span class="c1">// 4 bytes</span>
+<a id="tr_bonenode"></a>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">BoneNode</span> <span class="c1">// 16 bytes</span>
 <span class="p">{</span>
-    <span class="kt">uint32_t</span> <span class="n">Flags</span><span class="p">;</span>
-     <span class="kt">int32_t</span> <span class="n">Offset_X</span><span class="p">;</span>
-     <span class="kt">int32_t</span> <span class="n">Offset_Y</span><span class="p">;</span>
-     <span class="kt">int32_t</span> <span class="n">Offset_Z</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">stackOperation</span><span class="p">;</span>
+     <span class="kt">int32_t</span> <span class="n">positionX</span><span class="p">;</span>
+     <span class="kt">int32_t</span> <span class="n">positionY</span><span class="p">;</span>
+     <span class="kt">int32_t</span> <span class="n">positionZ</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p><span class="monospaced">MeshTree[]</span> array consists of meshtree nodes.</p></div>
-<div class="paragraph"><p>In &#8216;Flags` field, two bytes are used:
-* Bit 0 (<span class="monospaced">0x0001</span>) indicates <em>``take the top mesh off of the mesh stack and use as the parent mesh&#8217;' when set</em>, otherwise <em><span class="monospaced">&#8216;use the previous mesh as the parent mesh&#8217;'</em>.
-* Bit 1 (</span>0x0002`) indicates &#8220;put the parent mesh on the mesh stack&#8221;.</p></div>
-<div class="paragraph"><p>When both bits are set, the <em>Bit 0</em> operation is always done before the <em>Bit 1</em> operation. In effect, <em>read the stack but do not change it</em>.</p></div>
-<div class="paragraph"><p><span class="monospaced">Offset_X</span>, <span class="monospaced">Offset_Y</span> and <span class="monospaced">Offset_Z</span> are offsets of the mesh&#8217;s origin from the parent mesh&#8217;s origin.</p></div>
+<div class="paragraph"><p>The <span class="monospaced">BoneTree[]</span> array consists of +BoneNode+s.</p></div>
+<div class="paragraph"><p>By default, the bones' parents are always initialized to their predecessors; for the first bone, this is implicitly its
+skeleton. Also, the first bones&#8217;s <span class="monospaced">stackOperation</span> should <em>always</em> be considered to be &#8220;Push&#8221;.</p></div>
+<div class="paragraph"><p>After initializing the parents to their defaults, the stack operations are applied:</p></div>
+<div class="hdlist"><div class="title">Stack operations</div><table>
+<tr>
+<td class="hdlist1">
+Use Predecessor (0)
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    The most recently processed bone is the parent of the current bone.  This operation is invalid if the current bone
+    is the first being processed.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+Push (1)
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    Push the current bone&#8217;s parent onto the stack.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+Pop (2)
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    Pop a bone from the stack and assign it as the current bone&#8217;s parent. This operation is invalid if the stack is
+    empty.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+Top (3)
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    Same as &#8220;Pop&#8221;, but do not pop the bone from the stack.
+</p>
+</td>
+</tr>
+</table></div>
+<div class="paragraph"><p><span class="monospaced">positionX</span>, <span class="monospaced">positionY</span> and <span class="monospaced">positionZ</span> are in parent space.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_tr1_3_animation_structure">6.2.2. TR1-3 Animation Structure</h4>
-<div class="paragraph"><p>This describes each individual animation. These may be looped by specifying the next animation to be itself. In TR2 and TR3, one must be careful when parsing
-frames using the FrameSize value as the size of each frame, since an animation&#8217;s frame range may extend into the next animation&#8217;s frame range, and that may have
-a different FrameSize value.</p></div>
-<div class="listingblock">
-<a id="tr_animation"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_animation</span> <span class="c1">// 32 bytes</span>
-<span class="p">{</span>
-    <span class="kt">uint32_t</span>  <span class="n">FrameOffset</span><span class="p">;</span> <span class="c1">// Byte offset into Frames[] (divide by 2 for Frames[i])</span>
-     <span class="kt">uint8_t</span>  <span class="n">FrameRate</span><span class="p">;</span>   <span class="c1">// Engine ticks per frame</span>
-     <span class="kt">uint8_t</span>  <span class="n">FrameSize</span><span class="p">;</span>   <span class="c1">// Number of int16_t&#39;s in Frames[] used by this animation</span>
-
-    <span class="kt">uint16_t</span>  <span class="n">State_ID</span><span class="p">;</span>
-
-       <span class="n">fixed</span>  <span class="n">Speed</span><span class="p">;</span>
-       <span class="n">fixed</span>  <span class="n">Accel</span><span class="p">;</span>
-
-    <span class="kt">uint16_t</span>  <span class="n">FrameStart</span><span class="p">;</span>  <span class="c1">// First frame in this animation</span>
-    <span class="kt">uint16_t</span>  <span class="n">FrameEnd</span><span class="p">;</span>    <span class="c1">// Last frame in this animation</span>
-    <span class="kt">uint16_t</span>  <span class="n">NextAnimation</span><span class="p">;</span>
-    <span class="kt">uint16_t</span>  <span class="n">NextFrame</span><span class="p">;</span>
-
-    <span class="kt">uint16_t</span>  <span class="n">NumStateChanges</span><span class="p">;</span>
-    <span class="kt">uint16_t</span>  <span class="n">StateChangeOffset</span><span class="p">;</span> <span class="c1">// Offset into StateChanges[]</span>
-
-    <span class="kt">uint16_t</span>  <span class="n">NumAnimCommands</span><span class="p">;</span>   <span class="c1">// How many of them to use.</span>
-    <span class="kt">uint16_t</span>  <span class="n">AnimCommand</span><span class="p">;</span>       <span class="c1">// Offset into AnimCommand[]</span>
-<span class="p">};</span>
-</pre></div></div></div>
-<div class="paragraph"><p><span class="monospaced">FrameOffset</span> is a byte offset into Frames[] (divide by 2 for Frames[i]).</p></div>
-<div class="paragraph"><p><span class="monospaced">FrameRate</span> is a multiplier value which defines how many <em>game frames</em> will be spent for each actual animation frame. For example, if value is 1, then each
-animation frame belongs to single game frame. If value is 2, then each animation frame belongs to two game frames, and so on. In latter case, animation frames
-will be interpolated between game frames using <em>slerp</em> function.</p></div>
+<h4 id="Animation">6.2.2. TR1-3 Animation Structure</h4>
+<div class="paragraph"><p>This describes each individual animation. These may be looped by specifying the next animation to be itself.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/caution.png" alt="Caution">
 </td>
-<td class="content">
-<div class="paragraph"><p>Actual game frame rate is always locked to 30 FPS. All engine internal counters, including animation frame counters, are also using 30 FPS timebase.</p></div>
-</td>
+<td class="content"><span class="image">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
+</span> <span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span> In TR2 and TR3, one must be careful when parsing poses using the <span class="monospaced">poseDataSize</span> as the size of each
+pose, since an animation&#8217;s pose data may extend into the next animation&#8217;s pose data, and that may have a different
+<span class="monospaced">poseDataSize</span> value.</td>
 </tr></table>
 </div>
-<div class="paragraph"><p><span class="monospaced">State_ID</span> identifies current state type to be used with this animation. Engine uses current <span class="monospaced">State_ID</span> not only to solve state changes, but also to define
-current Lara behaviour&#8201;&#8212;&#8201;like collisional routines to be used, controls to be checked, health/air/sprint points to be drained, and so on.</p></div>
-<div class="paragraph"><p><span class="monospaced">Speed</span> and <span class="monospaced">Accel</span> values are used to set a specific momentum to a given entity. That is, entity will be accelerated with <span class="monospaced">Accel</span> value, until <span class="monospaced">Speed</span> value is
-reached. If <span class="monospaced">Accel</span> is negative, speed will be decreased to fit <span class="monospaced">Speed</span> value. The direction in which entity is moved using speed value is hardcoded, and mostly
-is forward.</p></div>
-<div class="paragraph"><p><span class="monospaced">NextAnimation</span> defines which animation should be played after current one is finished. When current animation ends, engine will switch it to <span class="monospaced">NextAnimation</span>,
-not regarding current <span class="monospaced">State_ID</span> value. If <span class="monospaced">NextAnimation</span> value is the same as animation number itself, it means animation will be looped until loop is broken
-by state change.</p></div>
-<div class="paragraph"><p><span class="monospaced">NextFrame</span> specifies the frame number to be used when switching to next animation. That is, if <span class="monospaced">NextFrame</span> is 5 and <span class="monospaced">NextAnimation</span> is 20, it basically means
-that at the end of current animation engine will switch right to frame 5 of animation 20. If animation is looped, <span class="monospaced">NextFrame</span> defines to which frame animation
-should be rewound. It allows to &#8220;eat up&#8221; certain start-up frames of some animations and re-use them as looped.</p></div>
+<div class="listingblock">
+<a id="tr_animation"></a>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">Animation</span> <span class="c1">// 32 bytes</span>
+<span class="p">{</span>
+    <span class="kt">uint32_t</span>  <span class="n">poseDataOffset</span><span class="p">;</span>
+     <span class="kt">uint8_t</span>  <span class="n">stretchFactor</span><span class="p">;</span>
+     <span class="kt">uint8_t</span>  <span class="n">poseDataSize</span><span class="p">;</span>   <span class="c1">// Number of int16_t&#39;s in PoseData[] used by this animation</span>
+
+    <span class="kt">uint16_t</span>  <span class="n">stateId</span><span class="p">;</span>
+
+       <span class="n">fixed</span>  <span class="n">speed</span><span class="p">;</span>
+       <span class="n">fixed</span>  <span class="n">accelleration</span><span class="p">;</span>
+
+    <span class="kt">uint16_t</span>  <span class="n">firstFrame</span><span class="p">;</span>   <span class="c1">// First frame in this animation</span>
+    <span class="kt">uint16_t</span>  <span class="n">lastFrame</span><span class="p">;</span>    <span class="c1">// Last frame in this animation</span>
+    <span class="kt">uint16_t</span>  <span class="n">nextAnimation</span><span class="p">;</span>
+    <span class="kt">uint16_t</span>  <span class="n">nextFrame</span><span class="p">;</span>
+
+    <span class="kt">uint16_t</span>  <span class="n">transitionCaseCount</span><span class="p">;</span>
+    <span class="kt">uint16_t</span>  <span class="n">transitionCaseOffset</span><span class="p">;</span> <span class="c1">// Offset into TransitionCases[]</span>
+
+    <span class="kt">uint16_t</span>  <span class="n">animationCommandCount</span><span class="p">;</span>   <span class="c1">// How many of them to use.</span>
+    <span class="kt">uint16_t</span>  <span class="n">animationCommandsOffset</span><span class="p">;</span> <span class="c1">// Offset into AnimationCommand[]</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="hdlist"><table>
+<tr>
+<td class="hdlist1">
+<span class="monospaced">poseDataOffset</span>
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    Byte offset into <span class="monospaced">PoseData[]</span> (divide by 2 for <span class="monospaced">PoseData[i]</span>).
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<span class="monospaced">stretchFactor</span>
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    Multiplier value which defines how many <em>game frames</em> will be spent for each actual animation frame. For example, if
+    it is 1, then each animation frame belongs to a single game frame. If the value is 2, then each animation frame
+    lasts two game frames, and so on. If it is stretched, animation frames will be interpolated between game frames
+    using the <em>slerp</em> function. <span class="footnote"><br>[See <a href="https://en.wikipedia.org/wiki/Slerp">https://en.wikipedia.org/wiki/Slerp</a> for a mathematical explanation.]<br></span>
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<span class="monospaced">stateId</span>
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    Identifies current state type to be used with this animation. The Engine uses the current <span class="monospaced">stateId</span> not only to
+    solve transitions, but also to define Lara&#8217;s current behaviour&#8201;&#8212;&#8201;like collisional routines to be used, controls
+    to be checked, health/air/sprint points to be drained, and so on.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<span class="monospaced">speed</span> and <span class="monospaced">accelleration</span>
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    Used to set a specific momentum to a given entity. That is, the entity will be accelerated with the <span class="monospaced">accelleration</span>
+    value, until the <span class="monospaced">speed</span> value is reached. If <span class="monospaced">accelleration</span> is negative, the speed will be decreased to fit the
+    <span class="monospaced">speed</span> value. The direction in which the entity is moved using the <span class="monospaced">speed</span> value is hardcoded, and is mostly
+    forward.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<span class="monospaced">nextAnimation</span>
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    Defines which animation should be played after the current one is finished. When the current animation ends, the
+    engine will switch to <span class="monospaced">nextAnimation</span>, not regarding current <span class="monospaced">stateId</span> value. If the <span class="monospaced">nextAnimation</span> value is the
+    same as the animation number itself, it means that the animation will be looped until the loop is broken by some
+    transition.
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<span class="monospaced">nextFrame</span>
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    Specifies the frame number to be used when switching to the next animation. For example, if <span class="monospaced">nextFrame</span> is 5 and
+    <span class="monospaced">nextAnimation</span> is 20, it basically means that at the end of the current animation the engine will switch right to
+    frame 5 of animation 20. If the animation is looped, <span class="monospaced">nextFrame</span> defines to which frame the animation should be
+    rewound. It allows to &#8220;eat up&#8221; certain start-up frames of some animations and re-use them as loops.
+</p>
+</td>
+</tr>
+</table></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/tip.png" alt="Tip">
+<img src="icons/tip.png" alt="Tip">
 </td>
-<td class="content">To get number of frames for current animation, use this formula: <span class="monospaced">NumFrames = (FrameEnd - FrameStart) + 1</span>.</td>
+<td class="content">The animation length in frames is equal to <span class="monospaced">length = (lastFrame - firstFrame) + 1</span>.</td>
 </tr></table>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_tr4_5_animation_structure">6.2.3. TR4-5 Animation Structure</h4>
-<div class="paragraph"><p>For TR4 and TR5, extended version of <span class="monospaced">tr_animation</span> is used:</p></div>
-<div class="listingblock">
-<a id="tr4_animation"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_animation</span> <span class="c1">// 40 bytes</span>
-<span class="p">{</span>
-    <span class="kt">uint32_t</span>  <span class="n">FrameOffset</span><span class="p">;</span>
-     <span class="kt">uint8_t</span>  <span class="n">FrameRate</span><span class="p">;</span>
-     <span class="kt">uint8_t</span>  <span class="n">FrameSize</span><span class="p">;</span>
-
-    <span class="kt">uint16_t</span>  <span class="n">State_ID</span><span class="p">;</span>
-
-       <span class="n">fixed</span>  <span class="n">Speed</span><span class="p">;</span>
-       <span class="n">fixed</span>  <span class="n">Accel</span><span class="p">;</span>
-       <span class="n">fixed</span>  <span class="n">SpeedLateral</span><span class="p">;</span> <span class="c1">// New field</span>
-       <span class="n">fixed</span>  <span class="n">AccelLateral</span><span class="p">;</span> <span class="c1">// New field</span>
-
-    <span class="kt">uint16_t</span>  <span class="n">FrameStart</span><span class="p">;</span>
-    <span class="kt">uint16_t</span>  <span class="n">FrameEnd</span><span class="p">;</span>
-    <span class="kt">uint16_t</span>  <span class="n">NextAnimation</span><span class="p">;</span>
-    <span class="kt">uint16_t</span>  <span class="n">NextFrame</span><span class="p">;</span>
-
-    <span class="kt">uint16_t</span>  <span class="n">NumStateChanges</span><span class="p">;</span>
-    <span class="kt">uint16_t</span>  <span class="n">StateChangeOffset</span><span class="p">;</span>
-
-    <span class="kt">uint16_t</span>  <span class="n">NumAnimCommands</span><span class="p">;</span>
-    <span class="kt">uint16_t</span>  <span class="n">AnimCommand</span><span class="p">;</span>
-<span class="p">};</span>
-</pre></div></div></div>
 <div class="paragraph"><p><span class="image">
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span> <span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> In addition to <span class="monospaced">Speed</span> and <span class="monospaced">Accel</span> values, TR4 introduced <span class="monospaced">LateralSpeed</span> and <span class="monospaced">LateralAccel</span> values, which are used to move entity to the sides,
-rather than forward or backward. However, these values are only used for <em>any entity but Lara</em>&#8201;&#8212;&#8201;engine ignores them in such case.</p></div>
-<div class="paragraph"><p>Lateral speed and acceleration primarily used for &#8220;start-up&#8221; animations of NPCs&#8201;&#8212;&#8201;for example, armed baddies in TR4 can roll or jump aside.</p></div>
-</div>
-<div class="sect3">
-<h4 id="_state_change_structure">6.2.4. State Change Structure</h4>
-<div class="paragraph"><p>Each state change entry contains the state to change to and which animation dispatches to use; there may be more than one, with each separate one covering a
-different range of frames.</p></div>
+</span> For TR4 and TR5, an extended version of <a href="#Animation"><span class="monospaced">Animation</span></a> is used. In addition to <span class="monospaced">speed</span> and
+<span class="monospaced">accelleration</span> values, TR4 introduced <em>lateral</em> values, which are used to move the entity to the sides, rather than
+forward or backward. However, these values are only used for <em>any entity but Lara</em>&#8201;&#8212;&#8201;the engine ignores them in such a
+case.</p></div>
+<div class="paragraph"><p>Lateral speed and acceleration are primarily used for &#8220;start-up&#8221; animations of NPCs&#8201;&#8212;&#8201;for example, armed baddies in
+TR4 can roll or jump aside.</p></div>
 <div class="listingblock">
-<a id="tr_state_change"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_state_change</span> <span class="c1">// 6 bytes</span>
+<a id="tr4_animation"></a>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">TR4Animation</span> <span class="c1">// 40 bytes</span>
 <span class="p">{</span>
-    <span class="kt">uint16_t</span> <span class="n">StateID</span><span class="p">;</span>
-    <span class="kt">uint16_t</span> <span class="n">NumAnimDispatches</span><span class="p">;</span> <span class="c1">// number of ranges (seems to always be 1..5)</span>
-    <span class="kt">uint16_t</span> <span class="n">AnimDispatch</span><span class="p">;</span>      <span class="c1">// Offset into AnimDispatches[]</span>
+    <span class="c1">// ... same as before ...</span>
+       <span class="n">fixed</span>  <span class="n">speed</span><span class="p">;</span>
+       <span class="n">fixed</span>  <span class="n">accelleration</span><span class="p">;</span>
+
+    <span class="c1">// New fields</span>
+       <span class="n">fixed</span>  <span class="n">lateralSpeed</span><span class="p">;</span>
+       <span class="n">fixed</span>  <span class="n">lateralAccelleration</span><span class="p">;</span>
+
+    <span class="kt">uint16_t</span>  <span class="n">firstFrame</span><span class="p">;</span>
+    <span class="kt">uint16_t</span>  <span class="n">lastFrame</span><span class="p">;</span>
+
+    <span class="c1">// ... same as before ...</span>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
 <div class="sect3">
-<h4 id="_animation_dispatch_structure">6.2.5. Animation Dispatch Structure</h4>
-<div class="paragraph"><p>This specifies the next animation and frame to use; these are associated with some range of frames. This makes possible such specificity as one animation for
-left foot forward and another animation for right foot forward.</p></div>
+<h4 id="_transitions">6.2.4. Transitions</h4>
+<div class="paragraph"><p>Each transition case collection entry contains the state to change to and which <a href="#tr_transitioncase">transition cases</a>
+to use; there may be more than one, with each separate one covering a different range of frames.</p></div>
 <div class="listingblock">
-<a id="tr_anim_dispatch"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_anim_dispatch</span>    <span class="c1">// 8 bytes</span>
+<a id="tr_transitions"></a>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">TransitionCases</span> <span class="c1">// 6 bytes</span>
 <span class="p">{</span>
-    <span class="kt">int16_t</span> <span class="n">Low</span><span class="p">;</span>           <span class="c1">// Lowest frame that uses this range</span>
-    <span class="kt">int16_t</span> <span class="n">High</span><span class="p">;</span>          <span class="c1">// Highest frame that uses this range</span>
-    <span class="kt">int16_t</span> <span class="n">NextAnimation</span><span class="p">;</span> <span class="c1">// Animation to dispatch to</span>
-    <span class="kt">int16_t</span> <span class="n">NextFrame</span><span class="p">;</span>     <span class="c1">// Frame offset to dispatch to</span>
+    <span class="kt">uint16_t</span> <span class="n">stateId</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">transitionCaseCount</span><span class="p">;</span> <span class="c1">// number of transition cases (seems to always be 1..5)</span>
+    <span class="kt">uint16_t</span> <span class="n">firstTransitionCase</span><span class="p">;</span> <span class="c1">// Offset into TransitionCases[]</span>
 <span class="p">};</span>
 </pre></div></div></div>
 </div>
 <div class="sect3">
-<h4 id="_animcommand_structure">6.2.6. AnimCommand Structure</h4>
-<div class="paragraph"><p>These are various commands associated with each animation. They are varying numbers of <span class="monospaced">int16_t</span>s packed into an array. As the <em>FloorData</em>, AnimCommands must be
-parsed sequentially, one by one.</p></div>
-<div class="paragraph"><p>The first AnimCommand entry is the <em>type</em>, which also determines how many <span class="monospaced">int16_t</span> arguments (operands) follow it (i.e. how many <span class="monospaced">int16_t</span> values must be
-parsed after current one without switching to next AnimCommand). For a given animation, AnimCommands are parsed until <span class="monospaced">NumAnimCommands</span> value is reached.</p></div>
-<div class="paragraph"><p>Some of commands refer to the whole animation (jump speed, position change and empty hands commands), while others of them are associated with specific frames (sound, bubbles, etc.).</p></div>
+<h4 id="TransitionCases">6.2.5. Transition Cases</h4>
+<div class="paragraph"><p>This specifies the next <a href="#Animation">animation</a> and frame to use; these are associated with some range of frames.
+This allows, for example, to specify different target animations depending on which of Lara&#8217;s feet is currently in
+front.</p></div>
 <div class="listingblock">
-<a id="tr_anim_command"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_anim_command</span> <span class="c1">// 2 bytes</span>
+<a id="tr_transitioncase"></a>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">TransitionCase</span> <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
-    <span class="kt">int16_t</span> <span class="n">Value</span><span class="p">;</span>
+    <span class="kt">int16_t</span> <span class="n">firstFrame</span><span class="p">;</span>      <span class="c1">// Frame range this case applies to</span>
+    <span class="kt">int16_t</span> <span class="n">lastFrame</span><span class="p">;</span>
+    <span class="kt">int16_t</span> <span class="n">targetAnimation</span><span class="p">;</span> <span class="c1">// Animation to dispatch to</span>
+    <span class="kt">int16_t</span> <span class="n">targetFrame</span><span class="p">;</span>     <span class="c1">// Frame offset to dispatch to</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p>Here are all the <span class="monospaced">AnimCommand</span> types and their arguments.</p></div>
-<div class="olist arabic"><ol class="arabic">
-<li>
+</div>
+<div class="sect3">
+<h4 id="AnimationCommand">6.2.6. AnimationCommand Structure</h4>
+<div class="paragraph"><p>These are various commands associated with each animation. They are varying numbers of <span class="monospaced">int16_t</span>s packed into an
+array. Just like the <a href="#tr_floordata">FloorData</a>, AnimationCommands must be parsed sequentially, one by one.</p></div>
+<div class="paragraph"><p>The first AnimationCommand entry is the <em>opcode</em>, which also determines how many parameters follow (i.e., how many
+<span class="monospaced">int16_t</span> values must be parsed without switching to the next AnimationCommand). For a given <a href="#Animation">animation</a>,
+there are <span class="monospaced">Animation::animationCommandCount</span> commands.</p></div>
+<div class="paragraph"><p>Some of commands refer to the whole animation (jump speed, position change and empty hands commands), while others are
+associated with specific frames (sound, bubbles, etc.).</p></div>
+<div class="listingblock">
+<a id="tr_animationcommand"></a>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">AnimationCommand</span> <span class="c1">// 2 bytes</span>
+<span class="p">{</span>
+    <span class="kt">int16_t</span> <span class="n">value</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="dlist"><div class="title">AnimationCommand opcodes</div><dl>
+<dt class="hdlist1">
+<span class="monospaced">1</span>&#8201;&#8212;&#8201;Set Position (3 parameters)
+</dt>
+<dd>
 <p>
-<strong>Set Position</strong> (3 arguments). Sets relative entity position (x, y, z); found in grab and block-move animations.
+    Sets relative entity position (x, y, z); found in grab and block-move animations.
 </p>
-</li>
-<li>
+</dd>
+<dt class="hdlist1">
+<span class="monospaced">2</span>&#8201;&#8212;&#8201;Set Velocity (2 parameters)
+</dt>
+<dd>
 <p>
-<strong>Jump Distance</strong> (2 arguments). Vertical and horizontal speed for jumping.
+    Vertical and horizontal speed for jumping.
 </p>
-</li>
-<li>
+</dd>
+<dt class="hdlist1">
+<span class="monospaced">3</span>&#8201;&#8212;&#8201;Empty Hands (no parameters)
+</dt>
+<dd>
 <p>
-<strong>Empty Hands</strong> (No arguments). This command is performed in the end of animation of Lara pulling a switch, inserting a key, grabbing a pushable block, and
-  so on. It is needed because engine &#8220;locks&#8221; Lara&#8217;s ability to draw weapons or ignite a flare when such action is performed, and only way to unlock it is to
-  call this command.
+    This command is performed in the end of animation of Lara pulling a switch, inserting a key, grabbing a pushable
+    block, and so on. It is needed because engine &#8220;locks&#8221; Lara&#8217;s ability to draw weapons or ignite a flare when such
+    action is performed, and only way to unlock it is to call this command.
 </p>
-</li>
-<li>
+</dd>
+<dt class="hdlist1">
+<span class="monospaced">4</span>&#8201;&#8212;&#8201;Kill (no parameters)
+</dt>
+<dd>
 <p>
-<strong>Kill</strong> (No arguments). Kill entity. This effectively disables entity and removes it from the world.
+    Kill entity. This effectively disables the entity and removes it from the world.
 </p>
-</li>
-<li>
+</dd>
+<dt class="hdlist1">
+<span class="monospaced">5</span>&#8201;&#8212;&#8201;Play Sound (2 parameters)
+</dt>
+<dd>
 <p>
-<strong>Play Sound</strong> (2 arguments). The first argument is a frame number, and the second one is the ID of the sound to play at that frame (internal sound index).
-</p>
-<div class="openblock">
-<div class="content">
-<div class="paragraph"><p><span class="image">
+    The first argument is a frame number, and the second one is the ID of the sound to play at that frame (internal
+    sound index).
+   <br>
+    <span class="image">
 <img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
 </span><span class="image">
 <img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
@@ -5629,64 +5819,166 @@ parsed after current one without switching to next AnimCommand). For a given ani
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> Besides Sound ID, second argument may contain two &#8220;packed&#8221; bit flags. Their meanings are:</p></div>
-</div></div>
-<div class="ulist"><ul>
+</span> In TR2 and above, besides Sound ID, the second parameter may contain two
+    &#8220;packed&#8221; bit flags (see below).
+</p>
+</dd>
+<dt class="hdlist1">
+<span class="monospaced">6</span>&#8201;&#8212;&#8201;Play Effect (2 parameters)
+</dt>
+<dd>
+<p>
+    The first parameter is a frame number, and the second one is the effect number. Note that <em>effect</em> here is the very
+    same kind of effect used in <em>trigger action</em> with the same name. The effect meanings will be listed separately.
+</p>
+</dd>
+<dt class="hdlist1">
+<span class="monospaced">7</span>&#8201;&#8212;&#8201;Interact (?? parameters)
+</dt>
+<dd>
+<p>
+    ??
+</p>
+</dd>
+</dl></div>
+<div class="hdlist"><div class="title">&#8220;Play Sound&#8221; Sound ID bitflags</div><table>
+<tr>
+<td class="hdlist1">
+<span class="monospaced">0x4000</span>
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    play this sound when on dry land (example: footsteps)
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<span class="monospaced">0x8000</span>
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    play this sound when in water (example: running through shallow water)
+</p>
+</td>
+</tr>
+</table></div>
+</div>
+<div class="sect3">
+<h4 id="_pose_structure">6.2.7. Pose Structure</h4>
+<div class="paragraph"><p>Poses indicate how bones are positioned and rotated. They work in conjunction with <a href="#Animation"><span class="monospaced">Animations[]</span></a>
+and <a href="#BoneTree"><span class="monospaced">BoneTree[]</span></a>. A given pose has the following format:</p></div>
+<div class="listingblock">
+<a id="tr_pose"></a>
+<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">Vertex</span>
+<span class="p">{</span>
+    <span class="kt">int16_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">BoundingBox</span>
+<span class="p">{</span>
+    <span class="n">Vertex</span> <span class="n">first</span><span class="p">;</span>
+    <span class="n">Vertex</span> <span class="n">second</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">virtual</span> <span class="k">struct</span> <span class="n">Pose</span>
+<span class="p">{</span>
+  <span class="n">BoundingBox</span>  <span class="n">boundingBox</span><span class="p">;</span>
+       <span class="n">Vertex</span>  <span class="n">offset</span><span class="p">;</span> <span class="c1">// Starting offset for this model</span>
+      <span class="kt">int16_t</span>  <span class="n">angleSetCount</span><span class="p">;</span>
+     <span class="kt">uint16_t</span>  <span class="n">values</span><span class="p">[];</span> <span class="c1">// variable size</span>
+<span class="p">};</span>
+</pre></div></div></div>
+<div class="hdlist"><table>
+<tr>
+<td class="hdlist1">
+<span class="monospaced">angleSetCount</span>
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    <span class="image">
+<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
+</span> Number of angle sets to follow; these start with the first bone, and bones without angles get zero angles.<br>
+    <span class="image">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
+</span><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> From TR2 on, <span class="monospaced">angleSetCount</span> is implicitly <span class="monospaced">meshCount</span> (from model).
+</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<span class="monospaced">values</span>
+<br>
+</td>
+<td class="hdlist2">
+<p style="margin-top: 0;">
+    Sets of rotation angles for all the bones with respect to their parent bones.
+</p>
+</td>
+</tr>
+</table></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="icons/tip.png" alt="Tip">
+</td>
+<td class="content">Since TR2, an angleset can specify either one or all three axes of rotation. The highest two bits of the first
+angleset value are the <em>axis selector</em>; for TR1, this selector should <em>always</em> be considered 0.</td>
+</tr></table>
+</div>
+<div class="ulist"><div class="title">Angleset axis selector values</div><ul>
 <li>
 <p>
-<span class="monospaced">0x4000</span>&#8201;&#8212;&#8201;play this sound when on dry land (example: footsteps)
+<span class="monospaced">0</span>&#8201;&#8212;&#8201;All axes, in compressed format (see below).
 </p>
 </li>
 <li>
 <p>
-<span class="monospaced">0x8000</span>&#8201;&#8212;&#8201;play this sound when in water (example: running through shallow water)
+<span class="monospaced">1</span>&#8201;&#8212;&#8201;X only
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">2</span>&#8201;&#8212;&#8201;Y only
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">3</span>&#8201;&#8212;&#8201;Z only
 </p>
 </li>
 </ul></div>
-</li>
-<li>
-<p>
-<strong>Effect</strong> (2 operands). The first one is a frame number, and the second one is effect number. Note that <em>effect</em> here is the very same kind of effect used
-  in <em>trigger action</em> with the same name. Effect meaning will be listed separately.
-</p>
-</li>
-</ol></div>
-</div>
-<div class="sect3">
-<h4 id="_frame_structure">6.2.7. Frame Structure</h4>
-<div class="paragraph"><p>Frames indicate how composite meshes are positioned and rotated. They work in conjunction with Animations[] and MeshTree[]. A given frame has the following
-format:</p></div>
-<div class="listingblock">
-<a id="tr_anim_frame"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_anim_frame</span>    <span class="c1">// Variable size</span>
-<span class="p">{</span>
-     <span class="kt">int16_t</span> <span class="n">BB1x</span><span class="p">,</span> <span class="n">BB1y</span><span class="p">,</span> <span class="n">BB1z</span><span class="p">;</span> <span class="c1">// Bounding box (low)</span>
-     <span class="kt">int16_t</span> <span class="n">BB2x</span><span class="p">,</span> <span class="n">BB2y</span><span class="p">,</span> <span class="n">BB2z</span><span class="p">;</span> <span class="c1">// Bounding box (high)</span>
-     <span class="kt">int16_t</span> <span class="n">OffsetX</span><span class="p">,</span> <span class="n">OffsetY</span><span class="p">,</span> <span class="n">OffsetZ</span><span class="p">;</span> <span class="c1">// Starting offset for this model</span>
-     <span class="kt">int16_t</span> <span class="n">NumValues</span><span class="p">;</span>
-    <span class="kt">uint16_t</span> <span class="n">AngleSets</span><span class="p">[];</span>   <span class="c1">// Variable size</span>
-<span class="p">}</span>
-</pre></div></div></div>
-<div class="paragraph"><p><span class="monospaced">NumValues</span>: <span class="image">
+<div class="paragraph"><p>For single-axis angles, the lower 10 bits of the first angleset value indicate a rotation with a value range
+$ [0; 1024[ $, which is scaled to $ [0; 360[ $ degrees. The compressed three-axis rotation
+mentioned above uses one more angleset element, using the full $10 \cdot 3$ bits available. The binary
+layout of the two <span class="monospaced">uint16_t</span>'s is: <span class="monospaced">**xx xxxx xxxx yyyy | yyyy yyzz zzzz zzzz</span>.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="icons/caution.png" alt="Caution">
+</td>
+<td class="content">
+<div class="paragraph"><p><span class="image">
 <img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
-</span> Number of angle sets to follow; these start with the first mesh, and meshes without angles get zero angles. <span class="image">
-<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
-</span><span class="image">
-<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
-</span><span class="image">
+</span> In TR1, the word order of the angleset values is reversed: <span class="monospaced">yyyy yyzz zzzz zzzz | **xx xxxx xxxx yyyy</span></p></div>
+<div class="paragraph"><p><span class="image">
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> NumValues is implicitly NumMeshes (from model).</p></div>
-<div class="paragraph"><p><span class="monospaced">AngleSets</span> are sets of rotation angles for all the meshes with respect to their parent meshes. In TR2/3, an angle set can specify either one or three axes of
-rotation.</p></div>
-<div class="paragraph"><p>If either of the high two bits (<span class="monospaced">0xC000</span>) of the first angle <span class="monospaced">uint16_t</span> are set, it&#8217;s one axis: only one <span class="monospaced">uint16_t</span>, low 10 bits (<span class="monospaced">0x03FF</span>), scale is <span class="monospaced">0x0100</span>&#8201;&#8212;&#8201;90 degrees; the high two bits are interpreted as follows: <span class="monospaced">0x4000</span>&#8201;&#8212;&#8201;X only, <span class="monospaced">0x8000</span>&#8201;&#8212;&#8201;Y only, <span class="monospaced">0xC000</span>&#8201;&#8212;&#8201;Z only.</p></div>
-<div class="paragraph"><p>If neither of the high bits are set, it&#8217;s a three-axis rotation. The next 10 bits (<span class="monospaced">0x3FF0</span>) are the X rotation, the next 10 (including the following
-<span class="monospaced">uint16_t</span>) (<span class="monospaced">0x000F</span>, <span class="monospaced">0xFC00</span>) are the Y rotation, the next 10 (<span class="monospaced">0x03FF</span>) are the Z rotation, same scale as before (<span class="monospaced">0x0100</span>&#8201;&#8212;&#8201;90 degrees).</p></div>
-<div class="paragraph"><p>Rotations are performed in Y, X, Z order.</p></div>
-<div class="paragraph"><p><span class="image">
-<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
-</span> All angle sets are two words and interpreted like the two-word sets in TR2/3, <em>except</em> that the word order is reversed.</p></div>
+</span> In TR4 and above, single-axis angles (where the axis selector is not zero) have a higher precision of 12 bits
+instead of 10 bits, with the value range $[0; 4096[$ mapped to $[0; 360[$ degrees.</p></div>
+</td>
+</tr></table>
+</div>
 </div>
 </div>
 </div>
@@ -5695,7 +5987,7 @@ rotation.</p></div>
 <h2 id="non-player-character-behaviour">7. Non-Player Character Behaviour</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_overview_5">7.1. Overview</h3>
+<h3 id="_overview_4">7.1. Overview</h3>
 <div class="paragraph"><p>All the Tomb Raider game physics and entity behaviour is hardcoded, with each type ID being associated with some specific sort of behaviour (as Lara,
 as a boat, as a tiger, as a door, as a boulder, as a lock, etc.). That is, each model refer two internal engine routines&#8201;&#8212;&#8201;<em>collisional</em> one and <em>control</em> one. For static entities (like flame emitters), <em>collisional</em> routine may contain no functional code, while <em>control</em> routine is present. On contrary, &#8220;decorative&#8221; entities (usually called <em>animatings</em> in TRLE) may lack <em>control</em> code, while retaining <em>collisional</em> code.</p></div>
 <div class="paragraph"><p>Several entity types may share the same collisional and/or control routines&#8201;&#8212;&#8201;for example, there is one generic collisional routine for almost all enemies, another generic routine for doors, and another one for <em>standable</em> entities, like bridge or platform objects.</p></div>
@@ -5703,7 +5995,7 @@ as a boat, as a tiger, as a door, as a boulder, as a lock, etc.). That is, each 
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p>In original Tomb Raider source code, notation for collisional and state routines follows two different schemes. For Lara, collisional and control routines are called <span class="monospaced">lara_col_STATE</span> and <span class="monospaced">lara_as_STATE</span>, where <span class="monospaced">STATE</span> is the name of the state, like <em>walk, run, reach</em>, and so on.</p></div>
@@ -5722,7 +6014,7 @@ can be ported, behaviour cannot be.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/tip.png" alt="Tip">
+<img src="icons/tip.png" alt="Tip">
 </td>
 <td class="content">
 <div class="paragraph"><p>For list of valid entity OCBs in TR4, you may refer to TRLE User&#8217;s Manual, although it was written in a big rush, and thus it lacks many existing OCBs for many entities. There are also fan-made OCB lists which are much more comprehensive.</p></div>
@@ -5734,7 +6026,7 @@ can be ported, behaviour cannot be.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p>Recent patches for TR4 game engine (used to play custom levels), like <em>TREP</em> and <em>TRNG</em>, feature some kind of basic scripting functionality. However, there&#8217;s still no sign of <em>real scripting language</em> in them, and such scripting is basically specifying pre-defined variables to alter entity behaviour, just like OCB does.</p></div>
@@ -5835,7 +6127,7 @@ and the second half is for the <em>alternate</em> (flipped) room state. TR1 has 
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p>Not every NPC is &#8220;taught&#8221; to work with AI objects&#8201;&#8212;&#8201;usually, only &#8220;smart&#8221; human enemies or friends can take advantage of them. Analyzing level files with utilities like <em>FexInspect</em> may help understanding particular AI object setup and learn which NPCs can actually work with them.</p></div>
@@ -5873,7 +6165,7 @@ and the second half is for the <em>alternate</em> (flipped) room state. TR1 has 
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p>If there is a HEAVYTRIGGER under an AI_AMBUSH or AI_PATROL object, the enemy will activate it only when he gets there.</p></div>
@@ -6002,7 +6294,7 @@ MP3 player, which takes place of deprecated CD-Audio player.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">In the Macintosh versions, the CD audio tracks are separate files in AIFF format.</td>
 </tr></table>
@@ -6026,7 +6318,7 @@ needed track from <span class="monospaced">CDAUDIO.WAD</span> header, and then g
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">In the Macintosh version of TR3, these tracks are separate files in <em>WAV</em> format. The Macintosh version of TR3 contains an additional file, <span class="monospaced">CDAudio.db</span>, which
 contains the names of all the track files as 32-byte zero-padded C strings with no extra contents.</td>
@@ -6060,7 +6352,7 @@ Thus, if the number of samples is 4, then the TR engine looks in <span class="mo
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p>Wave format used in TR1/TR2 and TR3/TR4/TR5 is different. While TR1 and TR2 used 8-bit 11 kHz data, TR3 onwards switched to 16-bit 22 kHz data. However,
@@ -6076,7 +6368,7 @@ the beginning of that embedded block. In TR4 and TR5, way to access sample data 
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p>While <em>compressed size</em> defines the whole size of embedded <span class="monospaced">.WAV</span> file, <em>uncompressed size</em> defines the size of raw PCM data size in <em>16-bit, 22050 kHz, mono</em>
@@ -6179,7 +6471,7 @@ file itself is a set of concatenated sound files with no catalogue info present.
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p>Sample indices are not used in TR4 and TR5, and this data block is missing from level file, replaced by six zero bytes, which finalize <em>zlib compressed level
@@ -6234,7 +6526,7 @@ and the game engine version.  More generally, it can be used to determine what s
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">Early TR4 demos (e.g. <em>September 15 demo</em>) have whole level file packed into a single zlib chunk. Therefore, there is no header.</td>
 </tr></table>
@@ -6242,7 +6534,7 @@ and the game engine version.  More generally, it can be used to determine what s
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">TR5 version header is equal to TR4 version header.  So there is no way to tell TR4 level from TR5 level judging only by this header&#8201;&#8212;&#8201;you need to check
 filename extension as well.</td>
@@ -6251,7 +6543,7 @@ filename extension as well.</td>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">As it was noted, <em>retail</em> version of TR4 expects to load sound samples compressed in MS-ADPCM format, while <em>TRLE</em> version of TR4 loads uncompressed
 samples only. There is no way to tell <em>retail</em> version from <em>TRLE</em> version, as their version numbers are equal.</td>
@@ -6339,7 +6631,7 @@ then the fourth vertex&#8217;s values will all be zero.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p>While blending modes 0, 1 and 2 were the only ones directly available for implementation in original level and animation editors, and therefore, only ones which
@@ -6399,10 +6691,10 @@ width:70%;
 <tbody>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/illustrations/bump-no.jpg" alt="illustrations/bump-no.jpg" title="Without bump mapping">
+<img src="images/illustrations/bump-no.jpg" alt="images/illustrations/bump-no.jpg" title="Without bump mapping">
 </span></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/illustrations/bump-yes.jpg" alt="illustrations/bump-yes.jpg" title="With bump mapping">
+<img src="images/illustrations/bump-yes.jpg" alt="images/illustrations/bump-yes.jpg" title="With bump mapping">
 </span></p></td>
 </tr>
 <tr>
@@ -6501,7 +6793,7 @@ width:70%;
 <tbody>
 <tr>
 <td class="tableblock halign-center valign-top" ><p class="tableblock"><span class="image">
-<img src="images/illustrations/uvrotate.jpg" alt="illustrations/uvrotate.jpg" title="UVRotate texture animation in action">
+<img src="images/illustrations/uvrotate.jpg" alt="images/illustrations/uvrotate.jpg" title="UVRotate texture animation in action">
 </span></p></td>
 </tr>
 <tr>
@@ -6517,7 +6809,7 @@ rotating texture.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">
 <div class="paragraph"><p>There is also special case when UVRotate texture mode is engaged. When a texture is applied to a model with specific ID (so-called <em>waterfall objects</em>), then it
@@ -6740,7 +7032,7 @@ brightness and greater values being darker.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/caution.png" alt="Caution">
+<img src="icons/caution.png" alt="Caution">
 </td>
 <td class="content">This is not a &#8220;real&#8221; C/C++ structure, in that some arrays are variable-length, with the length being defined by another element of the structure.</td>
 </tr></table>
@@ -6862,7 +7154,7 @@ brightness and greater values being darker.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/caution.png" alt="Caution">
+<img src="icons/caution.png" alt="Caution">
 </td>
 <td class="content">This is not a &#8220;real&#8221; C/C++ structure, in that some arrays are variable-length, with the length being defined by another element of the structure.</td>
 </tr></table>
@@ -6981,7 +7273,7 @@ brightness and greater values being darker.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/caution.png" alt="Caution">
+<img src="icons/caution.png" alt="Caution">
 </td>
 <td class="content">This is not a &#8220;real&#8221; C/C++ structure, in that some arrays are variable-length, with the length being defined by another element of the structure.</td>
 </tr></table>
@@ -7099,7 +7391,7 @@ brightness and greater values being darker.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">Needs to be written.</td>
 </tr></table>
@@ -7110,7 +7402,7 @@ brightness and greater values being darker.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">Needs to be written.</td>
 </tr></table>
@@ -7467,7 +7759,7 @@ That demo also has its own version of <span class="monospaced">TOMBPC.DAT</span>
 <h2 id="_scripting_in_tr2_tr3_for_pc_psx">11. Scripting in TR2/TR3 for PC/PSX</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_overview_6">11.1. Overview</h3>
+<h3 id="_overview_5">11.1. Overview</h3>
 <div class="paragraph"><p>The internal gameflow, which levels come in what order, what item(s) Lara has at the beginning of each level, the filenames of the level and cut-scene files,
 all the visible text (e.g. &#8220;Save Game,&#8221; &#8220;Rusty Key,&#8221; etc.), and various other options are controlled by a script file called <span class="monospaced">TOMBPC.DAT</span>/<span class="monospaced">TOMBPSX.DAT</span>. The
 scripts were compiled using a utility known as <span class="monospaced">GAMEFLOW.EXE</span> which was distributed by Eidos in the German release of Tomb Raider II Gold. Both TR2 and TR3 use
@@ -7941,7 +8233,7 @@ then runs the next sequence.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content"><span class="blue">TR2 only information here. These lists are virtually colored blue.</span></td>
 </tr></table>
@@ -8231,7 +8523,7 @@ byte of <span class="monospaced">SCRIPT.DAT</span> must always be the null-termi
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">This setup is valid only for standard TR4 scripts generated by original TRLE script utility. <em>TRNG</em> scripts have their own special footer and data block
 appended to the bottom of the file, which contain all the extra information it needs.</td>
@@ -8480,7 +8772,7 @@ above situation, the <em>language file listing block</em> at the end of <span cl
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">Offsets in the offset table themselves <em>are not</em> relative to the file address 0! They are actually relative to the first string&#8217;s starting byte address!</td>
 </tr></table>
@@ -8498,7 +8790,7 @@ defined. This, however, is <em>not</em> a limit nor rule of any kind.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
-<img src="./images/icons/note.png" alt="Note">
+<img src="icons/note.png" alt="Note">
 </td>
 <td class="content">The null-termination byte is <em>not</em> being XOR-ed!</td>
 </tr></table>
@@ -8528,7 +8820,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-31 13:08:00 MSK
+Last updated 2016-02-07 12:51:47 CET
 </div>
 </div>
 </body>

@@ -19,16 +19,14 @@
  *
  */
 
-#include <SDL2/SDL.h>
-#include <GL/glew.h>
-#include <algorithm>
-
 #include "level.h"
 #include "tr1level.h"
 #include "tr2level.h"
 #include "tr3level.h"
 #include "tr4level.h"
 #include "tr5level.h"
+
+#include <algorithm>
 
 using namespace loader;
 
@@ -46,17 +44,17 @@ void Level::readMeshData(io::SDLReader& reader)
 
     m_meshes.clear();
 
-    uint32_t meshDataPos = 0;
-    for (uint32_t i = 0; i < m_meshIndices.size(); i++)
+    size_t meshDataPos = 0;
+    for(size_t i = 0; i < m_meshIndices.size(); i++)
     {
         std::replace(m_meshIndices.begin(), m_meshIndices.end(), meshDataPos, i);
 
         reader.seek(basePos + meshDataPos);
 
-        if (m_gameVersion >= Game::TR4)
-            m_meshes.emplace_back( Mesh::readTr4(reader) );
+        if(gameToEngine(m_gameVersion) >= Engine::TR4)
+            m_meshes.emplace_back(*Mesh::readTr4(reader));
         else
-            m_meshes.emplace_back( Mesh::readTr1(reader) );
+            m_meshes.emplace_back(*Mesh::readTr1(reader));
 
         for(size_t j = 0; j < m_meshIndices.size(); j++)
         {
@@ -72,55 +70,28 @@ void Level::readMeshData(io::SDLReader& reader)
 }
 
 /// \brief reads frame and moveable data.
-void Level::readFrameMoveableData(io::SDLReader& reader)
+void Level::readPoseDataAndModels(io::SDLReader& reader)
 {
-    m_frameData.resize(reader.readU32());
-    const auto frameDataPos = reader.tell();
-    reader.readVector(m_frameData, m_frameData.size());
+    m_poseData.resize(reader.readU32());
+    reader.readVector(m_poseData, m_poseData.size());
 
-    m_moveables.resize(reader.readU32() );
-    for (size_t i = 0; i < m_moveables.size(); i++)
+    m_animatedModels.resize(reader.readU32());
+    for(std::unique_ptr<AnimatedModel>& model : m_animatedModels)
     {
-        if(m_gameVersion < Game::TR5)
+        if(gameToEngine(m_gameVersion) < Engine::TR5)
         {
-            m_moveables[i] = Moveable::readTr1(reader);
+            model = AnimatedModel::readTr1(reader);
             // Disable unused skybox polygons.
-            if((m_gameVersion == Game::TR3) && (m_moveables[i].object_id == 355))
+            if(gameToEngine(m_gameVersion) == Engine::TR3 && model->object_id == 355)
             {
-                m_meshes[m_meshIndices[m_moveables[i].starting_mesh]].coloured_triangles.resize(16);
+                m_meshes[m_meshIndices[model->firstMesh]].coloured_triangles.resize(16);
             }
         }
         else
         {
-            m_moveables[i] = Moveable::readTr5(reader);
+            model = AnimatedModel::readTr5(reader);
         }
     }
-
-    const auto endPos = reader.tell();
-
-    uint32_t pos = 0;
-    for (size_t i = 0; i < m_frameData.size(); i++)
-    {
-        for (size_t j = 0; j < m_moveables.size(); j++)
-            if (m_moveables[j].frame_offset == pos)
-            {
-                m_moveables[j].frame_index = static_cast<uint32_t>(i);
-                m_moveables[j].frame_offset = 0;
-            }
-
-        reader.seek(frameDataPos + pos);
-
-        pos = 0;
-        for(size_t j = 0; j < m_moveables.size(); j++)
-        {
-            if(m_moveables[j].frame_offset > pos)
-            {
-                pos = m_moveables[j].frame_offset;
-                break;
-            }
-        }
-    }
-    reader.seek(endPos);
 }
 
 std::unique_ptr<Level> Level::createLoader(const std::string& filename, Game game_version)
@@ -129,7 +100,7 @@ std::unique_ptr<Level> Level::createLoader(const std::string& filename, Game gam
 
     for(size_t i = 0; i < filename.length(); i++)
     {
-        if((filename[i] == '/') || (filename[i] == '\\'))
+        if(filename[i] == '/' || filename[i] == '\\')
         {
             len2 = i;
         }
@@ -165,12 +136,12 @@ std::unique_ptr<Level> Level::createLoader(const std::string& filename, Game gam
   */
 std::unique_ptr<Level> Level::createLoader(io::SDLReader&& reader, Game game_version, const std::string& sfxPath)
 {
-    if (!reader.isOpen())
+    if(!reader.isOpen())
         return nullptr;
 
     std::unique_ptr<Level> result;
 
-    switch (game_version)
+    switch(game_version)
     {
         case Game::TR1:
             result.reset(new TR1Level(game_version, std::move(reader)));
@@ -198,8 +169,7 @@ std::unique_ptr<Level> Level::createLoader(io::SDLReader&& reader, Game game_ver
             result.reset(new TR5Level(game_version, std::move(reader)));
             break;
         default:
-            throw std::runtime_error("Invalid game version");
-            break;
+            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid game version"));
     }
 
     result->m_sfxPath = sfxPath;
@@ -208,14 +178,14 @@ std::unique_ptr<Level> Level::createLoader(io::SDLReader&& reader, Game game_ver
 
 Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
 {
-    if(!reader.isOpen() || filename.length()<5)
+    if(!reader.isOpen() || filename.length() < 5)
         return Game::Unknown;
 
     std::string ext;
-    ext += filename[filename.length()-4];
-    ext += toupper(filename[filename.length()-3]);
-    ext += toupper(filename[filename.length()-2]);
-    ext += toupper(filename[filename.length()-1]);
+    ext += filename[filename.length() - 4];
+    ext += toupper(filename[filename.length() - 3]);
+    ext += toupper(filename[filename.length() - 2]);
+    ext += toupper(filename[filename.length() - 1]);
 
     reader.seek(0);
     uint8_t check[4];
@@ -252,9 +222,9 @@ Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
             ret = loader::Game::TR2;
         }
         else if((check[0] == 0x38 || check[0] == 0x34) &&
-                (check[1] == 0x00) &&
+                check[1] == 0x00 &&
                 (check[2] == 0x18 || check[2] == 0x08) &&
-                (check[3] == 0xFF))
+                check[3] == 0xFF)
         {
             ret = loader::Game::TR3;
         }
@@ -299,41 +269,41 @@ Game Level::probeVersion(io::SDLReader& reader, const std::string& filename)
 
 StaticMesh *Level::findStaticMeshById(uint32_t object_id)
 {
-    for (size_t i = 0; i < m_staticMeshes.size(); i++)
-        if ((m_staticMeshes[i].object_id == object_id) && (m_meshIndices[m_staticMeshes[i].mesh]))
+    for(size_t i = 0; i < m_staticMeshes.size(); i++)
+        if(m_staticMeshes[i].object_id == object_id && m_meshIndices[m_staticMeshes[i].mesh])
             return &m_staticMeshes[i];
 
     return nullptr;
 }
 
-Item *Level::fineItemById(int32_t object_id)
+Item *Level::findItemById(int32_t object_id)
 {
-    for (size_t i = 0; i < m_items.size(); i++)
-        if (m_items[i].object_id == object_id)
+    for(size_t i = 0; i < m_items.size(); i++)
+        if(m_items[i].object_id == object_id)
             return &m_items[i];
 
     return nullptr;
 }
 
-Moveable *Level::findMoveableById(uint32_t object_id)
+AnimatedModel* Level::findModelById(uint32_t object_id)
 {
-    for (size_t i = 0; i < m_moveables.size(); i++)
-        if (m_moveables[i].object_id == object_id)
-            return &m_moveables[i];
+    for(size_t i = 0; i < m_animatedModels.size(); i++)
+        if(m_animatedModels[i]->object_id == object_id)
+            return m_animatedModels[i].get();
 
     return nullptr;
 }
 
 void Level::convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst)
 {
-    for (int y = 0; y < 256; y++)
+    for(int y = 0; y < 256; y++)
     {
-        for (int x = 0; x < 256; x++)
+        for(int x = 0; x < 256; x++)
         {
             int col = tex.pixels[y][x];
 
-            if (col > 0)
-                dst.pixels[y][x] = static_cast<int>(pal.colour[col].r) | (static_cast<int>(pal.colour[col].g) << 8) | (static_cast<int>(pal.colour[col].b) << 16) | (0xff << 24);
+            if(col > 0)
+                dst.pixels[y][x] = static_cast<int>(pal.color[col].r) | (static_cast<int>(pal.color[col].g) << 8) | (static_cast<int>(pal.color[col].b) << 16) | (0xff << 24);
             else
                 dst.pixels[y][x] = 0x00000000;
         }
@@ -342,13 +312,13 @@ void Level::convertTexture(ByteTexture & tex, Palette & pal, DWordTexture & dst)
 
 void Level::convertTexture(WordTexture & tex, DWordTexture & dst)
 {
-    for (int y = 0; y < 256; y++)
+    for(int y = 0; y < 256; y++)
     {
-        for (int x = 0; x < 256; x++)
+        for(int x = 0; x < 256; x++)
         {
             int col = tex.pixels[y][x];
 
-            if (col & 0x8000)
+            if(col & 0x8000)
                 dst.pixels[y][x] = ((col & 0x00007c00) >> 7) | (((col & 0x000003e0) >> 2) << 8) | (((col & 0x0000001f) << 3) << 16) | 0xff000000;
             else
                 dst.pixels[y][x] = 0x00000000;

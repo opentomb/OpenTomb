@@ -23,6 +23,8 @@ else (SNDFILE_LIBRARIES AND SNDFILE_INCLUDE_DIRS)
   find_path(SNDFILE_INCLUDE_DIR
     NAMES
       sndfile.h
+    HINTS
+      ${SNDFILE_ROOT}
     PATHS
       /usr/include
       /usr/local/include
@@ -33,6 +35,8 @@ else (SNDFILE_LIBRARIES AND SNDFILE_INCLUDE_DIRS)
   find_library(SNDFILE_LIBRARY
     NAMES
       sndfile
+    HINTS
+      ${SNDFILE_ROOT}
     PATHS
       /usr/lib
       /usr/local/lib

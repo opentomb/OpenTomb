@@ -1,8 +1,11 @@
 #pragma once
 
-#include <list>
+#include "gui/textline.h"
+#include "util/helpers.h"
 
-#include "gui.h"
+#include "world/object.h"
+
+#include <map>
 
 #define ITEM_COMPASS  1     // Aka Watch in TR2-3, Timex in TR5
 #define ITEM_PASSPORT 2     // Exists only in TR1-3, not used in TR4 (diary)
@@ -54,8 +57,11 @@
 #define ITEM_SECRET_2 121
 #define ITEM_SECRET_3 122
 
-
-struct InventoryNode; ///????
+struct InventoryNode
+{
+    size_t count = 0;
+    size_t max_count = 0;
+};
 
 enum class MenuItemType
 {
@@ -85,11 +91,18 @@ inline MenuItemType previousItemType(MenuItemType t)
     }
 }
 
+namespace engine
+{
+class Engine;
+}
+
 /*
  * Other inventory renderer class
  */
 class InventoryManager
 {
+    TRACK_LIFETIME();
+
 public:
     enum class InventoryState
     {
@@ -105,44 +118,46 @@ public:
     };
 
 private:
-    std::list<InventoryNode>*   m_inventory;
-    InventoryState              m_currentState;
-    InventoryState              m_nextState;
-    int                         m_nextItemsCount;
+    engine::Engine* m_engine;
 
-    MenuItemType                m_currentItemsType;
-    int                         m_currentItemsCount;
-    int                         m_itemsOffset;
+    std::map<world::ObjectId, InventoryNode> m_inventory{};
+    InventoryState              m_currentState = InventoryState::Disabled;
+    InventoryState              m_nextState = InventoryState::Disabled;
+    int                         m_nextItemsCount = 0;
 
-    float                       m_ringRotatePeriod;
-    float                       m_ringTime;
-    float                       m_ringAngle;
-    float                       m_ringVerticalAngle;
-    float                       m_ringAngleStep;
-    float                       m_baseRingRadius;
-    float                       m_ringRadius;
-    float                       m_verticalOffset;
+    MenuItemType                m_currentItemsType = MenuItemType::System;
+    int                         m_currentItemsCount = 0;
+    int                         m_itemsOffset = 0;
 
-    float                       m_itemRotatePeriod;
-    float                       m_itemTime;
-    float                       m_itemAngle;
+    util::Duration              m_ringRotatePeriod = util::MilliSeconds(500);
+    util::Duration              m_ringTime = util::Duration(0);
+    float                       m_ringAngle = 0;
+    float                       m_ringVerticalAngle = 0;
+    float                       m_ringAngleStep = 0;
+    float                       m_baseRingRadius = 600.0f;
+    float                       m_ringRadius = 600.0f;
+    float                       m_verticalOffset = 0;
 
-    int getItemsTypeCount(MenuItemType type);
-    void restoreItemAngle(float time);
+    util::Duration              m_itemRotatePeriod = util::Seconds(4);
+    util::Duration              m_itemTime = util::Duration(0);
+    float                       m_itemAngle = 0;
+
+    int getItemsTypeCount(MenuItemType type) const;
+    void restoreItemAngle();
 
 public:
-    TextLine             mLabel_Title;
-    TextLine             mLabel_ItemName;
+    gui::TextLine             m_labelTitle;
+    gui::TextLine             m_labelItemName;
 
-    InventoryManager();
+    InventoryManager(engine::Engine* engine);
     ~InventoryManager();
 
-    InventoryState getCurrentState()
+    InventoryState getCurrentState() const
     {
         return m_currentState;
     }
 
-    InventoryState getNextState()
+    InventoryState getNextState() const
     {
         return m_nextState;
     }
@@ -152,16 +167,48 @@ public:
         m_nextState = state;
     }
 
-    MenuItemType getItemsType()
+    MenuItemType getItemsType() const
     {
         return m_currentItemsType;
     }
 
     MenuItemType setItemsType(MenuItemType type);
-    void setInventory(std::list<InventoryNode> *i);
+    void disable();
     void setTitle(MenuItemType items_type);
-    void frame(float time);
+    void frame();
     void render();
-};
 
-extern InventoryManager  *main_inventory_manager;
+    size_t addItem(world::ObjectId id, size_t count)
+    {
+        return m_inventory[id].count += count;
+    }
+
+    size_t remove(world::ObjectId id, size_t count)
+    {
+        if(m_inventory[id].count < count)
+        {
+            m_inventory[id].count = 0;
+            return 0;
+        }
+
+        return m_inventory[id].count -= count;
+    }
+
+    void clear()
+    {
+        m_inventory.clear();
+    }
+
+    size_t count(world::ObjectId id) const
+    {
+        auto it = m_inventory.find(id);
+        if(it == m_inventory.end())
+            return 0;
+
+        return it->second.count;
+    }
+
+    void print() const;
+
+    void saveGame(std::ostream& f, world::ObjectId oid) const;
+};

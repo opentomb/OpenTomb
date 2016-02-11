@@ -26,11 +26,11 @@ tr5_flipeffects = {};
 
 function fe_Assign(ver, fe, id)
     if((fe) and (id) and (ver > 0) and (ver < 5)) then
-        if(ver == 1) then tr1_flipeffects[id] = flipeffects[fe] end;
-        if(ver == 2) then tr2_flipeffects[id] = flipeffects[fe] end;
-        if(ver == 3) then tr3_flipeffects[id] = flipeffects[fe] end;
-        if(ver == 4) then tr4_flipeffects[id] = flipeffects[fe] end;
-        if(ver == 5) then tr5_flipeffects[id] = flipeffects[fe] end;
+        if(ver == Engine.I) then tr1_flipeffects[id] = flipeffects[fe] end;
+        if(ver == Engine.II) then tr2_flipeffects[id] = flipeffects[fe] end;
+        if(ver == Engine.III) then tr3_flipeffects[id] = flipeffects[fe] end;
+        if(ver == Engine.IV) then tr4_flipeffects[id] = flipeffects[fe] end;
+        if(ver == Engine.V) then tr5_flipeffects[id] = flipeffects[fe] end;
     end;
 end;
 
@@ -48,18 +48,18 @@ flipeffects[1] = {  -- Shake camera
         end;
     end;
 };
-fe_Assign(1, 1,1); fe_Assign(2, 1,1); fe_Assign(3, 1,1); fe_Assign(4, 1,1); fe_Assign(5, 1,1);
+fe_Assign(Engine.I, 1,1); fe_Assign(Engine.II, 1,1); fe_Assign(Engine.III, 1,1); fe_Assign(Engine.IV, 1,1); fe_Assign(Engine.V, 1,1);
 
 flipeffects[3] = {  -- Emit bubble particle
 
     onExec =
     function(caller, operand)
         if((caller >= 0) and (math.random(100) > 60)) then
-            playSound(SOUND_BUBBLE, caller)
+            playSound(SoundId.Bubble, caller)
         end;
     end;
 };
-fe_Assign(1, 3,3); fe_Assign(2, 3,3); fe_Assign(3, 3,3); fe_Assign(4, 3,3); fe_Assign(5, 3,3);
+fe_Assign(Engine.I, 3,3); fe_Assign(Engine.II, 3,3); fe_Assign(Engine.III, 3,3); fe_Assign(Engine.IV, 3,3); fe_Assign(Engine.V, 3,3);
 
 flipeffects[10] = { -- Play desired sound ID
 
@@ -73,8 +73,8 @@ flipeffects[10] = { -- Play desired sound ID
         end;
     end;
 };
---fe_Assign(1, 10,10); fe_Assign(2, 10,10); -- Not sure if this is used in TR1-2.
-fe_Assign(3, 10,10); fe_Assign(4, 10,10); fe_Assign(5, 10,10);
+--fe_Assign(Engine.I, 10,10); fe_Assign(Engine.II, 10,10); -- Not sure if this is used in TR1-2.
+fe_Assign(Engine.III, 10,10); fe_Assign(Engine.IV, 10,10); fe_Assign(Engine.V, 10,10);
 
 flipeffects[11] = { -- Play explosion sound and effect
 
@@ -82,10 +82,10 @@ flipeffects[11] = { -- Play explosion sound and effect
     function(caller, operand)
         flashSetup(255, 255,220,80, 10,600);
         flashStart();
-        playSound(105);
+        playSound(SoundId.Eplosion);
     end;
 };
-fe_Assign(1, 11,11); fe_Assign(2, 11,11); fe_Assign(3, 11,11); fe_Assign(4, 11,11); fe_Assign(5, 11,11);
+fe_Assign(Engine.I, 11,11); fe_Assign(Engine.II, 11,11); fe_Assign(Engine.III, 11,11); fe_Assign(Engine.IV, 11,11); fe_Assign(Engine.V, 11,11);
 
 flipeffects[23] = { -- Hide caller
 
@@ -95,7 +95,7 @@ flipeffects[23] = { -- Hide caller
         setEntityVisibility(caller, false);
     end;
 };
-fe_Assign(1, 23,23); fe_Assign(2, 23,23); fe_Assign(3, 23,23); fe_Assign(4, 23,23); fe_Assign(5, 23,23);
+fe_Assign(Engine.I, 23,23); fe_Assign(Engine.II, 23,23); fe_Assign(Engine.III, 23,23); fe_Assign(Engine.IV, 23,23); fe_Assign(Engine.V, 23,23);
 
 flipeffects[24] = { -- Show caller
 
@@ -105,7 +105,7 @@ flipeffects[24] = { -- Show caller
         setEntityVisibility(caller, true);
     end;
 };
-fe_Assign(1, 24,24); fe_Assign(2, 24,24); fe_Assign(3, 24,24); fe_Assign(4, 24,24); fe_Assign(5, 24,24);
+fe_Assign(Engine.I, 24,24); fe_Assign(Engine.II, 24,24); fe_Assign(Engine.III, 24,24); fe_Assign(Engine.IV, 24,24); fe_Assign(Engine.V, 24,24);
 
 flipeffects[32] = { -- Play footprint and overlay it on floor.
 
@@ -134,7 +134,7 @@ flipeffects[32] = { -- Play footprint and overlay it on floor.
                     if(material == SECTOR_MATERIAL_SNOW) then sound_id = 293;
                 elseif(material == SECTOR_MATERIAL_ICE ) then sound_id = 289; end;
                 
-            elseif(getEngineVersion() == Engine.IV) then
+            elseif(getEngineVersion() == Engine.V) then
                     
                     if(material == SECTOR_MATERIAL_MARBLE) then sound_id = 293; end;
                 
@@ -144,7 +144,7 @@ flipeffects[32] = { -- Play footprint and overlay it on floor.
         end;
     end;
 };
-fe_Assign(3, 32,32); fe_Assign(4, 32,32); fe_Assign(5, 32,32);
+fe_Assign(Engine.III, 32,32); fe_Assign(Engine.IV, 32,32); fe_Assign(Engine.V, 32,32);
 
 
 

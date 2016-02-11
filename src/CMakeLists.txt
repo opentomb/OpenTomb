@@ -1,24 +1,96 @@
-# -std-gnu++11 is needed for picky fileno function in streaming track code.
-# I'm not sure it will work on other platforms this way, but on Windows, it does perfect job.
-
 if(APPLE)
-    file(GLOB PRJ_SRC *.cpp mac/*.m)
-    file(GLOB PRJ_HDR *.h   mac/*.h)
-else()
-    file(GLOB PRJ_SRC *.cpp)
-    file(GLOB PRJ_HDR *.h)
+    list(APPEND PRJ_SRC
+        mac/FindConfigFile.m
+    )
+    list(APPEND PRJ_HDR
+        mac/FindConfigFile.h
+    )
 endif()
 
 list(APPEND PRJ_SRC
+    bordered_texture_atlas.cpp
+    common.cpp
+    gl_font.cpp
+    gl_font_buffer.cpp
+    inventory.cpp
+    main_SDL.cpp
+
     loader/level.cpp
     loader/tr1level.cpp
     loader/tr2level.cpp
     loader/tr3level.cpp
     loader/tr4level.cpp
     loader/tr5level.cpp
+
+    gui/gui.cpp
+    gui/console.cpp
+    gui/fontmanager.cpp
+    gui/fader.cpp
+    gui/fadermanager.cpp
+    gui/itemnotifier.cpp
+    gui/progressbar.cpp
+    gui/progressbarmanager.cpp
+    gui/textline.cpp
+
+    script/script.cpp
+
+    util/helpers.cpp
+    util/vmath.cpp
+
+    audio/audio.cpp
+    audio/streamtrack.cpp
+    audio/source.cpp
+    audio/fxmanager.cpp
+    audio/alext.cpp
+    audio/engine.cpp
+
+    render/gl_util.cpp
+    render/render.cpp
+    render/shader_description.cpp
+    render/shader_manager.cpp
+    render/vertex_array.cpp
+    render/bsp_tree.cpp
+
+    world/entity.cpp
+    world/world.cpp
+    world/camera.cpp
+    world/hair.cpp
+    world/resource.cpp
+    world/ragdoll.cpp
+    world/character.cpp
+    world/room.cpp
+    world/roomsector.cpp
+    world/statecontroller.cpp
+
+    world/core/orientedboundingbox.cpp
+    world/core/polygon.cpp
+    world/core/frustum.cpp
+    world/core/basemesh.cpp
+    world/core/boundingbox.cpp
+
+    world/animation/animation.cpp
+    world/animation/skeleton.cpp
+    world/animation/bone.cpp
+    world/animation/pose.cpp
+    world/animation/skeletalmodel.cpp
+
+    engine/game.cpp
+    engine/engine.cpp
+    engine/gameflow.cpp
+    engine/bullet.cpp
+    engine/inputhandler.cpp
 )
 
 list(APPEND PRJ_HDR
+    bordered_texture_atlas.h
+    bsp_tree_2d.h
+    character_controller.h
+    common.h
+    gl_font.h
+    gl_font_buffer.h
+    inventory.h
+    strings.h
+
     loader/io/sdlreader.h
     loader/datatypes.h
     loader/level.h
@@ -28,6 +100,81 @@ list(APPEND PRJ_HDR
     loader/tr4level.h
     loader/tr5level.h
     loader/game.h
+
+    gui/gui.h
+    gui/common.h
+    gui/console.h
+    gui/fontmanager.h
+    gui/fader.h
+    gui/fadermanager.h
+    gui/itemnotifier.h
+    gui/progressbar.h
+    gui/progressbarmanager.h
+    gui/textline.h
+
+    script/script.h
+
+    util/helpers.h
+    util/vmath.h
+
+    audio/audio.h
+    audio/streamtrack.h
+    audio/source.h
+    audio/effect.h
+    audio/settings.h
+    audio/emitter.h
+    audio/fxmanager.h
+    audio/alext.h
+    audio/engine.h
+
+    render/gl_util.h
+    render/portaltracer.h
+    render/render.h
+    render/shader_description.h
+    render/shader_manager.h
+    render/vertex_array.h
+    render/bsp_tree.h
+
+    world/entity.h
+    world/object.h
+    world/portal.h
+    world/world.h
+    world/camera.h
+    world/hair.h
+    world/resource.h
+    world/ragdoll.h
+    world/character.h
+    world/staticmesh.h
+    world/room.h
+    world/roomsector.h
+    world/statecontroller.h
+
+    world/core/sprite.h
+    world/core/orientedboundingbox.h
+    world/core/polygon.h
+    world/core/frustum.h
+    world/core/boundingbox.h
+    world/core/basemesh.h
+    world/core/light.h
+
+    world/animation/animation.h
+    world/animation/animids.h
+    world/animation/animcommands.h
+    world/animation/animeffects.h
+    world/animation/skeleton.h
+    world/animation/bone.h
+    world/animation/pose.h
+    world/animation/texture.h
+    world/animation/common.h
+    world/animation/transition.h
+    world/animation/skeletalmodel.h
+
+    engine/game.h
+    engine/system.h
+    engine/engine.h
+    engine/gameflow.h
+    engine/bullet.h
+    engine/inputhandler.h
 )
 
 if(MINGW)
@@ -70,28 +217,30 @@ else()
     add_executable(${PROJECT_NAME} ${PRJ_HDR} ${PRJ_SRC})
 endif()
 
+GROUP_FILES(${PRJ_SRC})
+GROUP_FILES(${PRJ_HDR})
+
+target_include_directories(${PROJECT_NAME} PRIVATE .)
+
 target_link_libraries(
     ${PROJECT_NAME}
     OpenGL
     Bullet
     GLEW
     SDL2
-    SDL2_IMAGE
+    CImg
     ZLIB
     Lua
-    Freetype
+    freetype
     OpenAL
-    ${OGG_LIBRARIES}
-    ${VORBIS_LIBRARIES}
-    ${VORBISFILE_LIBRARIES}
-    ${SNDFILE_LIBRARIES}
+    GLM
+    Boost
+    SndFile
     # efence
 )
 
 if(CMAKE_COMPILER_IS_GNUCC)
     target_compile_options(${PROJECT_NAME} PRIVATE -std=gnu++11 -Wall -Wextra -msse3)
-elseif(MSVC)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE -D_USE_MATH_DEFINES)
 endif()
 
 if( CMAKE_CXX_COMPILER_ID STREQUAL "Clang" )

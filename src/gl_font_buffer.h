@@ -7,7 +7,6 @@
 //  Contains code to manage VBO and VAO for the font renderer, presenting
 //  a standard C interface.
 
-
 #include <GL/glew.h>
 
 /*!
