@@ -85,7 +85,7 @@ end
 ///@TODO: move here TickEntity with Inversing entity state... see carefully heavy irregular cases
 void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activator)
 {
-    if(trigger)
+    if(trigger && entity_activator)
     {
         int activator           = TR_ACTIVATOR_NORMAL;      // Activator is normal by default.
         int action_type         = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
@@ -96,16 +96,16 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
         // some specific entity classes.
         // entity_activator_type  == TR_ACTIVATORTYPE_LARA and
         // trigger_activator_type == TR_ACTIVATORTYPE_MISC
-        if(((trigger->sub_function == TR_FD_TRIGTYPE_HEAVY)            ||
-            (trigger->sub_function == TR_FD_TRIGTYPE_HEAVYANTITRIGGER) ||
-            (trigger->sub_function == TR_FD_TRIGTYPE_HEAVYSWITCH)))
+        switch(trigger->sub_function)
         {
-            if(entity_activator && (entity_activator->bf->animations.model->id == 0))
-            return;
-        }
-        else if(!entity_activator)
-        {
-            return;
+            case TR_FD_TRIGTYPE_HEAVY:
+            case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
+            case TR_FD_TRIGTYPE_HEAVYSWITCH:
+                if((entity_activator->type_flags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR) == 0)
+                {
+                    return;
+                }
+                break;
         }
 
         switch(trigger->sub_function)
@@ -122,7 +122,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     action_type = TR_ACTIONTYPE_ANTI;
                 }
                 // Check move type for triggering entity.
-                header_condition = entity_activator && (entity_activator->move_type == MOVE_ON_FLOOR);  // Set additional condition.
+                header_condition = (entity_activator->move_type == MOVE_ON_FLOOR);  // Set additional condition.
                 break;
 
             case TR_FD_TRIGTYPE_SWITCH:
@@ -150,7 +150,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
             case TR_FD_TRIGTYPE_COMBAT:
                 // Check weapon status for triggering entity.
-                header_condition = entity_activator && entity_activator->character && (entity_activator->character->weapon_current_state > 0);
+                header_condition = entity_activator->character && (entity_activator->character->weapon_current_state > 0);
                 break;
 
             case TR_FD_TRIGTYPE_DUMMY:
@@ -167,17 +167,17 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             case TR_FD_TRIGTYPE_MONKEY:
             case TR_FD_TRIGTYPE_CLIMB:
                 // Check move type for triggering entity.
-                header_condition = entity_activator && ((trigger->sub_function == TR_FD_TRIGTYPE_MONKEY) ? (entity_activator->move_type == MOVE_MONKEYSWING) : (entity_activator->move_type == MOVE_CLIMBING));  // Set additional condition.
+                header_condition = ((trigger->sub_function == TR_FD_TRIGTYPE_MONKEY) ? (entity_activator->move_type == MOVE_MONKEYSWING) : (entity_activator->move_type == MOVE_CLIMBING));  // Set additional condition.
                 break;
 
             case TR_FD_TRIGTYPE_TIGHTROPE:
                 // Check state range for triggering entity.
-                header_condition = entity_activator && ((entity_activator->state_flags >= TR_STATE_LARA_TIGHTROPE_IDLE) && (entity_activator->state_flags <= TR_STATE_LARA_TIGHTROPE_EXIT));
+                header_condition = ((entity_activator->state_flags >= TR_STATE_LARA_TIGHTROPE_IDLE) && (entity_activator->state_flags <= TR_STATE_LARA_TIGHTROPE_EXIT));
                 break;
 
             case TR_FD_TRIGTYPE_CRAWLDUCK:
                 // Check state range for triggering entity.
-                header_condition = entity_activator && ((entity_activator->state_flags >= TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN) && (entity_activator->state_flags <= TR_ANIMATION_LARA_CRAWL_SMASH_LEFT));
+                header_condition = ((entity_activator->state_flags >= TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN) && (entity_activator->state_flags <= TR_ANIMATION_LARA_CRAWL_SMASH_LEFT));
                 break;
         }
 
@@ -244,8 +244,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 else    /// end if (action_type == TR_ACTIONTYPE_SWITCH)
                                 {
                                     // Ordinary type case (e.g. heavy switch).
-                                    switch_sectorstatus = (entity_activator) ? ((entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7) : (0);
-                                    switch_mask = (entity_activator) ? (entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK) : (0);
+                                    switch_sectorstatus = (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
+                                    switch_mask = (entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK);
                                     // Trigger activation mask is here filtered through activator's own mask.
                                     switch_mask = (switch_mask == 0) ? (0x1F & trigger->mask) : (switch_mask & trigger->mask);
 
@@ -290,7 +290,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     }
                     else
                     {
-                        if(entity_activator && (entity_activator->bf->animations.model->id != 0) && (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS))
+                        bool IsPlayer = World_GetPlayer() == entity_activator;
+                        if(!IsPlayer && (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS))
                         {
                             return;
                         }
@@ -316,7 +317,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 Entity_Activate(trig_entity, entity_activator, trigger->mask, mask_mode, trigger->once, trigger->timer);
                             }
                         }
-                        if(!entity_activator || entity_activator->bf->animations.model->id != 0)
+                        if(!IsPlayer)
                         {
                             Entity_SetSectorStatus(entity_activator, 1);
                         }
@@ -358,7 +359,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                 case TR_FD_TRIGFUNC_FLIPON:
                     {
-                        if(!entity_activator || !Entity_GetSectorStatus(entity_activator))
+                        if(!Entity_GetSectorStatus(entity_activator))
                         {
                             // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
                             // the switch with FLIP_ON trigger, room will remain flipped.
@@ -371,7 +372,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                 case TR_FD_TRIGFUNC_FLIPOFF:
                     {
-                        if(!entity_activator || !Entity_GetSectorStatus(entity_activator))
+                        if(!Entity_GetSectorStatus(entity_activator))
                         {
                             // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
                             // the switch with FLIP_OFF trigger, room will remain unflipped.
@@ -833,71 +834,71 @@ void Trigger_TrigTypeToStr(char *buf, uint32_t size, uint32_t func)
     switch(func)
     {
         case TR_FD_TRIGTYPE_TRIGGER:
-            strncat(buf, "TRIGGER", size);
+            strncpy(buf, "TRIGGER", size);
             break;
 
         case TR_FD_TRIGTYPE_PAD:
-            strncat(buf, "PAD", size);
+            strncpy(buf, "PAD", size);
             break;
 
         case TR_FD_TRIGTYPE_SWITCH:
-            strncat(buf, "SWITCH", size);
+            strncpy(buf, "SWITCH", size);
             break;
 
         case TR_FD_TRIGTYPE_KEY:
-            strncat(buf, "KEY", size);
+            strncpy(buf, "KEY", size);
             break;
 
         case TR_FD_TRIGTYPE_PICKUP:
-            strncat(buf, "PICKUP", size);
+            strncpy(buf, "PICKUP", size);
             break;
 
         case TR_FD_TRIGTYPE_HEAVY:
-            strncat(buf, "HEAVY", size);
+            strncpy(buf, "HEAVY", size);
             break;
 
         case TR_FD_TRIGTYPE_ANTIPAD:
-            strncat(buf, "ANTIPAD", size);
+            strncpy(buf, "ANTIPAD", size);
             break;
 
         case TR_FD_TRIGTYPE_COMBAT:
-            strncat(buf, "COMBAT", size);
+            strncpy(buf, "COMBAT", size);
             break;
 
         case TR_FD_TRIGTYPE_DUMMY:
-            strncat(buf, "DUMMY", size);
+            strncpy(buf, "DUMMY", size);
             break;
 
         case TR_FD_TRIGTYPE_ANTITRIGGER:
-            strncat(buf, "ANTITRIGGER", size);
+            strncpy(buf, "ANTITRIGGER", size);
             break;
 
         case TR_FD_TRIGTYPE_HEAVYSWITCH:
-            strncat(buf, "HEAVYSWITCH", size);
+            strncpy(buf, "HEAVYSWITCH", size);
             break;
 
         case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
-            strncat(buf, "HEAVYANTITRIGGER", size);
+            strncpy(buf, "HEAVYANTITRIGGER", size);
             break;
 
         case TR_FD_TRIGTYPE_MONKEY:
-            strncat(buf, "MONKEY", size);
+            strncpy(buf, "MONKEY", size);
             break;
 
         case TR_FD_TRIGTYPE_SKELETON:
-            strncat(buf, "SKELETON", size);
+            strncpy(buf, "SKELETON", size);
             break;
 
         case TR_FD_TRIGTYPE_TIGHTROPE:
-            strncat(buf, "TIGHTROPE", size);
+            strncpy(buf, "TIGHTROPE", size);
             break;
 
         case TR_FD_TRIGTYPE_CRAWLDUCK:
-            strncat(buf, "CRAWLDUCK", size);
+            strncpy(buf, "CRAWLDUCK", size);
             break;
 
         case TR_FD_TRIGTYPE_CLIMB:
-            strncat(buf, "CLIMB", size);
+            strncpy(buf, "CLIMB", size);
             break;
     };
 }
@@ -909,59 +910,59 @@ void Trigger_TrigCmdToStr(char *buf, uint32_t size, uint32_t func)
     switch(func)
     {
         case TR_FD_TRIGFUNC_OBJECT:
-            strncat(buf, "OBJECT", size);
+            strncpy(buf, "OBJECT", size);
             break;
 
         case TR_FD_TRIGFUNC_SET_CAMERA:
-            strncat(buf, "SET_CAMERA", size);
+            strncpy(buf, "SET_CAMERA", size);
             break;
 
         case TR_FD_TRIGFUNC_UWCURRENT:
-            strncat(buf, "UWCURRENT", size);
+            strncpy(buf, "UWCURRENT", size);
             break;
 
         case TR_FD_TRIGFUNC_FLIPMAP:
-            strncat(buf, "FLIPMAP", size);
+            strncpy(buf, "FLIPMAP", size);
             break;
 
         case TR_FD_TRIGFUNC_FLIPON:
-            strncat(buf, "FLIPON", size);
+            strncpy(buf, "FLIPON", size);
             break;
 
         case TR_FD_TRIGFUNC_FLIPOFF:
-            strncat(buf, "FLIPOFF", size);
+            strncpy(buf, "FLIPOFF", size);
             break;
 
         case TR_FD_TRIGFUNC_SET_TARGET:
-            strncat(buf, "SET_TARGET", size);
+            strncpy(buf, "SET_TARGET", size);
             break;
 
         case TR_FD_TRIGFUNC_ENDLEVEL:
-            strncat(buf, "ENDLEVEL", size);
+            strncpy(buf, "ENDLEVEL", size);
             break;
 
         case TR_FD_TRIGFUNC_PLAYTRACK:
-            strncat(buf, "PLAYTRACK", size);
+            strncpy(buf, "PLAYTRACK", size);
             break;
 
         case TR_FD_TRIGFUNC_FLIPEFFECT:
-            strncat(buf, "FLIPEFFECT", size);
+            strncpy(buf, "FLIPEFFECT", size);
             break;
 
         case TR_FD_TRIGFUNC_SECRET:
-            strncat(buf, "SECRET", size);
+            strncpy(buf, "SECRET", size);
             break;
 
         case TR_FD_TRIGFUNC_CLEARBODIES:
-            strncat(buf, "CLEARBODIES", size);
+            strncpy(buf, "CLEARBODIES", size);
             break;
 
         case TR_FD_TRIGFUNC_FLYBY:
-            strncat(buf, "FLYBY", size);
+            strncpy(buf, "FLYBY", size);
             break;
 
         case TR_FD_TRIGFUNC_CUTSCENE:
-            strncat(buf, "CUTSCENE", size);
+            strncpy(buf, "CUTSCENE", size);
             break;
 
         default:

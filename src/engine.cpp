@@ -52,7 +52,7 @@ static SDL_GLContext           sdl_gl_context = 0;
 static ALCdevice              *al_device      = NULL;
 static ALCcontext             *al_context     = NULL;
 
-static int                      engine_done   = 0;
+static volatile int             engine_done   = 0;
 static int                      engine_set_sero_time = 0;
 float time_scale = 1.0f;
 
