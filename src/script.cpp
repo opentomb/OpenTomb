@@ -462,30 +462,27 @@ bool Script_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_aft
 int Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator)
 {
     int top = lua_gettop(lua);
+    int ret = -1;
 
     lua_getglobal(lua, "execEntity");
-    if (!lua_isfunction(lua, -1))
+    if(lua_isfunction(lua, -1))
     {
-        lua_settop(lua, top);
-        //Sys_Warn("Broken \"execEntity\" script function");
-        return -1;
+        int argn = 0;
+        lua_pushinteger(lua, id_callback);  argn++;
+        lua_pushinteger(lua, id_object);    argn++;
+
+        if(id_activator >= 0)
+        {
+            lua_pushinteger(lua, id_activator);
+            argn++;
+        }
+
+        lua_CallAndLog(lua, argn, 0, 0);
+        ret = 1;
     }
-
-    int argn = 0;
-
-    lua_pushinteger(lua, id_callback);  argn++;
-    lua_pushinteger(lua, id_object);    argn++;
-
-    if(id_activator >= 0)
-    {
-        lua_pushinteger(lua, id_activator);
-        argn++;
-    }
-
-    lua_CallAndLog(lua, argn, 0, 0);
-
     lua_settop(lua, top);
-    return 1;
+    //Sys_Warn("Broken \"execEntity\" script function");
+    return ret;
 }
 
 void Script_LoopEntity(lua_State *lua, int object_id)

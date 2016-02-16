@@ -1076,7 +1076,7 @@ void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
         float t = vec3_abs(speed);
         if(t > 0.001)
         {
-            t = 120.0f * engine_frame_time * ((float)(sink->room_or_strength)) / t;
+            t = 240.0f * engine_frame_time * ((float)(sink->room_or_strength)) / t;
 
             ent_pos[0] += speed[0] * t;
             ent_pos[1] += speed[1] * t;
@@ -1244,7 +1244,6 @@ void Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
 {
     if(!((entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6))           // Ignore activation, if activity lock is set.
     {
-        int top = lua_gettop(engine_lua);
         int activator_id = (entity_activator) ? (entity_activator->id) : (-1);
         // Get current trigger layout.
         uint16_t mask = entity_object->trigger_layout & ENTITY_TLAYOUT_MASK;
@@ -1283,8 +1282,6 @@ void Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
         entity_object->trigger_layout ^= ((uint8_t)trigger_lock) << 6;
 
         entity_object->timer = trigger_timer;                                   // Engage timer.
-
-        lua_settop(engine_lua, top);
     }
 }
 

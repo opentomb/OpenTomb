@@ -181,8 +181,30 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                 break;
         }
 
-        if(!header_condition || ((activator == TR_ACTIVATOR_NORMAL) && (Entity_GetSectorStatus(entity_activator) == 1)))
+        if(!header_condition)
         {
+            return;
+        }
+        if((activator == TR_ACTIVATOR_NORMAL) && (Entity_GetSectorStatus(entity_activator) == 1))
+        {
+            for(trigger_command_p command = trigger->commands; command; command = command->next)
+            {
+                if(command->function == TR_FD_TRIGFUNC_UWCURRENT)
+                {
+                    if(entity_activator->move_type == MOVE_ON_WATER)
+                    {
+                        if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
+                        {
+                            Entity_SetAnimation(entity_activator, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
+                            entity_activator->move_type = MOVE_UNDERWATER;
+                        }
+                    }
+                    else if(entity_activator->move_type == MOVE_UNDERWATER)
+                    {
+                        Entity_MoveToSink(entity_activator, command->operands);
+                    }
+                }
+            }
             return;
         }
 
@@ -325,20 +347,17 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_UWCURRENT:
-                    if(entity_activator)
+                    if(entity_activator->move_type == MOVE_ON_WATER)
                     {
-                        if(entity_activator->move_type == MOVE_ON_WATER)
+                        if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
                         {
-                            if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
-                            {
-                                Entity_SetAnimation(entity_activator, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
-                                entity_activator->move_type = MOVE_UNDERWATER;
-                            }
+                            Entity_SetAnimation(entity_activator, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
+                            entity_activator->move_type = MOVE_UNDERWATER;
                         }
-                        else if(entity_activator->move_type == MOVE_UNDERWATER)
-                        {
-                            Entity_MoveToSink(entity_activator, command->operands);
-                        }
+                    }
+                    else if(entity_activator->move_type == MOVE_UNDERWATER)
+                    {
+                        Entity_MoveToSink(entity_activator, command->operands);
                     }
                     break;
 
@@ -358,28 +377,24 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGFUNC_FLIPON:
+                    if(!Entity_GetSectorStatus(entity_activator))
                     {
-                        if(!Entity_GetSectorStatus(entity_activator))
-                        {
-                            // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
-                            // the switch with FLIP_ON trigger, room will remain flipped.
-                            World_SetFlipMap(command->operands, trigger->mask, 1);
-                            World_SetFlipState(command->operands, 1);
-                            Entity_SetSectorStatus(entity_activator, 1);
-                        }
+                        // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
+                        // the switch with FLIP_ON trigger, room will remain flipped.
+                        World_SetFlipMap(command->operands, trigger->mask, 1);
+                        World_SetFlipState(command->operands, 1);
+                        Entity_SetSectorStatus(entity_activator, 1);
                     }
                     break;
 
                 case TR_FD_TRIGFUNC_FLIPOFF:
+                    if(!Entity_GetSectorStatus(entity_activator))
                     {
-                        if(!Entity_GetSectorStatus(entity_activator))
-                        {
-                            // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
-                            // the switch with FLIP_OFF trigger, room will remain unflipped.
-                            World_SetFlipMap(command->operands, trigger->mask, 0);
-                            World_SetFlipState(command->operands, 0);
-                            Entity_SetSectorStatus(entity_activator, 1);
-                        }
+                        // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
+                        // the switch with FLIP_OFF trigger, room will remain unflipped.
+                        World_SetFlipMap(command->operands, trigger->mask, 0);
+                        World_SetFlipState(command->operands, 0);
+                        Entity_SetSectorStatus(entity_activator, 1);
                     }
                     break;
 

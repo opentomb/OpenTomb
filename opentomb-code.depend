@@ -6749,7 +6749,7 @@
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 
-1444472061 d:\dev\opentomb\src\core\gl_font.h
+1453563720 d:\dev\opentomb\src\core\gl_font.h
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
@@ -6774,31 +6774,15 @@
 	<SDL2/SDL_opengl.h>
 	"vmath.h"
 
-1450282175 d:\dev\opentomb\src\engine.h
+1453132748 d:\dev\opentomb\src\engine.h
 	<SDL2/SDL.h>
 	<stdint.h>
 
-1452623334 d:\dev\opentomb\src\world.h
-	<SDL2/SDL_platform.h>
-	<SDL2/SDL_opengl.h>
+1453483381 d:\dev\opentomb\src\world.h
 	<stdint.h>
-	"al/AL/al.h"
-	"al/AL/alc.h"
-	"al/AL/alext.h"
-	"al/AL/efx-presets.h"
 
-1446824591 d:\dev\opentomb\src\audio.h
-	<SDL2/SDL_audio.h>
-	<stdio.h>
-	<stdlib.h>
-	"al/AL/al.h"
-	"al/AL/alc.h"
-	"al/AL/alext.h"
-	"al/AL/efx-presets.h"
-	"ogg/codec.h"
-	"ogg/ogg.h"
-	"ogg/os_types.h"
-	"ogg/vorbisfile.h"
+1454428909 d:\dev\opentomb\src\audio.h
+	<stdint.h>
 
 1433713938 d:\dev\opentomb\src\ogg\codec.h
 	"ogg.h"
@@ -6825,10 +6809,10 @@
 	<stdio.h>
 	"codec.h"
 
-1450282789 d:\dev\opentomb\src\vt\vt_level.h
+1453311544 d:\dev\opentomb\src\vt\vt_level.h
 	"l_main.h"
 
-1450282675 d:\dev\opentomb\src\vt\l_main.h
+1453311820 d:\dev\opentomb\src\vt\l_main.h
 	<SDL2/SDL_rwops.h>
 	<stdlib.h>
 	<stdio.h>
@@ -9113,7 +9097,7 @@
 	<stdio.h>
 	<string.h>
 
-1449588715 source:d:\dev\opentomb\src\core\console.c
+1451766751 source:d:\dev\opentomb\src\core\console.c
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL_platform.h>
@@ -11003,7 +10987,7 @@
 
 1440791764 d:\dev\opentomb\src\inventory.h
 
-1449588943 source:d:\dev\opentomb\src\gameflow.cpp
+1451766162 source:d:\dev\opentomb\src\gameflow.cpp
 	<SDL2/SDL.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
@@ -11464,7 +11448,7 @@
 	"shader_description.h"
 	"shader_manager.h"
 
-1449588989 source:d:\dev\opentomb\src\resource.cpp
+1451766343 source:d:\dev\opentomb\src\resource.cpp
 	<algorithm>
 	<assert.h>
 	<stdio.h>
@@ -16315,7 +16299,7 @@
 1442143158 d:\dev\opentomb\src\engine_physics.h
 	<stdint.h>
 
-1445694334 d:\dev\opentomb\src\render\render.h
+1453224824 d:\dev\opentomb\src\render\render.h
 	<stdint.h>
 	<SDL2/SDL.h>
 	<SDL2/SDL_opengl.h>
@@ -16363,7 +16347,7 @@
 	"core/polygon.h"
 	"mesh.h"
 
-1442653717 source:d:\dev\opentomb\src\render\bordered_texture_atlas.cpp
+1451766907 source:d:\dev\opentomb\src\render\bordered_texture_atlas.cpp
 	"bordered_texture_atlas.h"
 	<assert.h>
 	<math.h>
@@ -16473,7 +16457,7 @@
 	"engine.h"
 	"world.h"
 
-1447059192 source:d:\dev\opentomb\src\room.cpp
+1452623456 source:d:\dev\opentomb\src\room.cpp
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL.h>
@@ -16491,10 +16475,10 @@
 	"trigger.h"
 	"room.h"
 
-1447058611 d:\dev\opentomb\src\trigger.h
+1454150844 d:\dev\opentomb\src\trigger.h
 	<stdint.h>
 
-1450020183 d:\dev\opentomb\src\physics.h
+1453394294 d:\dev\opentomb\src\physics.h
 	<stdint.h>
 
 1451328821 source:d:\dev\opentomb\src\trigger.cpp
@@ -16556,7 +16540,7 @@
 	<SDL2/SDL_opengl.h>
 	"gl_font.h"
 
-1449596029 source:d:\dev\opentomb\src\core\gl_text.c
+1451766660 source:d:\dev\opentomb\src\core\gl_text.c
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>

@@ -43,12 +43,6 @@ function tlist_Clear()
 end;
 
 
--- Set current camera.
-
-function setCamera(camera_index, timer, once, zoom)
-    print("CAMERA: index = " .. camera_index .. ", timer = " .. timer .. ", once = " .. once .. ", zoom = " .. zoom);
-end
-
 
 -- Moves desired entity to specified sink.
 
@@ -62,13 +56,6 @@ function moveToSink(entity_index, sink_index)
     elseif(movetype == 6) then
         moveEntityToSink(entity_index, sink_index);
     end;
-end
-
-
--- Specifies an entity to look at (with player camera)
-
-function setCamTarget(entity_index, timer)
-    print("CAMERA TARGET: index = " .. entity_index .. ", timer = " .. timer);
 end
 
 
@@ -99,15 +86,6 @@ end
 function clearBodies()
     print("CLEAR BODIES");
 end
-
-
--- Plays specified flyby. Only valid in TR4-5.
-
-function playFlyby(flyby_index, once)
-    if(getLevelVersion() < TR_IV) then return 0 end;
-    print("FLYBY: index = " .. flyby_index .. " once = " .. once);
-end
-
 
 -- Plays specified cutscene. Only valid in retail TR4-5.
 

@@ -286,7 +286,7 @@ void CRender::GenWorldList(struct camera_s *cam)
         if(curr_room->base_room)
         {
             p = curr_room->base_room->portals;
-            for(uint16_t i = 0; i < curr_room->base_room->portals_count; i++, p++)             // go through all start room portals
+            for(uint16_t i = 0; i < curr_room->base_room->portals_count; i++, p++)// go through all start room portals
             {
                 room_p dest_room = Room_CheckFlip(p->dest_room);
                 frustum_p last_frus = this->frustumManager->PortalFrustumIntersect(p, cam->frustum, cam);
@@ -302,8 +302,8 @@ void CRender::GenWorldList(struct camera_s *cam)
                     (cam->pos[2] <= dest_room->bb_max[2] + eps) && (cam->pos[2] >= dest_room->bb_min[2] - eps))
                 {
                     portal_p np = dest_room->portals;
-                    dest_room->frustum = NULL;                                      // room with camera inside has no frustums!
-                    if(this->AddRoom(dest_room))                                    // room with camera inside adds to the render list immediately
+                    dest_room->frustum = NULL;                                  // room with camera inside has no frustums!
+                    if(this->AddRoom(dest_room))                                // room with camera inside adds to the render list immediately
                     {
                         for(uint16_t ii = 0; ii < dest_room->portals_count; ii++, np++)// go through all start room portals
                         {
@@ -311,9 +311,9 @@ void CRender::GenWorldList(struct camera_s *cam)
                             frustum_p last_frus = this->frustumManager->PortalFrustumIntersect(np, cam->frustum, cam);
                             if(last_frus)
                             {
-                                this->AddRoom(ndest_room);                          // portal destination room
-                                last_frus->parents_count = 1;                       // created by camera
-                                this->ProcessRoom(np, last_frus);                   // next start reccursion algorithm
+                                this->AddRoom(ndest_room);                      // portal destination room
+                                last_frus->parents_count = 1;                   // created by camera
+                                this->ProcessRoom(np, last_frus);               // next start reccursion algorithm
                             }
                         }
                     }

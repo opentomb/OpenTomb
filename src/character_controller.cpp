@@ -533,7 +533,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         else
         {
             from[2] = to[2] = cb.point[2] + 2.0f * ent->character->climb_r;
-            z_min = cb.point[2] - 0.5f * ent->character->climb_r;
+            z_min = cb.point[2] - 1.5f * ent->character->climb_r;
         }
     }
     else

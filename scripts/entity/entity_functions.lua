@@ -344,7 +344,7 @@ function tallblock_init(id)    -- Tall moving block (TR1)
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
     entity_funcs[id].onLoop = function(object_id)
-        local move_speed = 32.0;
+        local move_speed = 32.0 * 60.0 * frame_time;;
         if(not getEntityEvent(object_id)) then move_speed = 0 - move_speed end;
         
         entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + move_speed;
@@ -1303,7 +1303,7 @@ function spikewall_init(id)      -- Spike wall
         if(ver < TR_II) then scan_distance = 1536.0 end; -- TR1's lava mass has different floor scan distance.
         
         if(similarSector(object_id, 0.0, scan_distance, 0.0, false)) then
-            moveEntityLocal(object_id, 0.0, 8.0, 0.0);
+            moveEntityLocal(object_id, 0.0, 8.0 * 60.0 * frame_time, 0.0);
             playSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
         else
             setEntityActivity(object_id, 0);    -- Stop
@@ -1358,7 +1358,7 @@ function spikeceiling_init(id)
         local px, py, pz = getEntityPos(object_id);
 
         if(pz > (getSectorHeight(object_id) + 512.0)) then
-            moveEntityLocal(object_id, 0.0, 0.0, -4.0);
+            moveEntityLocal(object_id, 0.0, 0.0, -4.0 * 60.0 * frame_time);
             playSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
         else
             setEntityActivity(object_id, 0);    -- Stop
