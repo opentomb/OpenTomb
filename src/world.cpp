@@ -549,7 +549,7 @@ struct entity_s *World_GetEntityByID(uint32_t id)
     {
         return NULL;
     }
-    
+
     node = RB_SearchNode(&id, global_world.entity_tree);
     if(node != NULL)
     {
@@ -2433,7 +2433,10 @@ void World_GenEntities(class VT_Level *tr)
             Character_Create(entity);
             entity->character->Height = 768.0;
             entity->character->state_func = State_Control_Lara;
-
+            entity->character->height_info.leg_l_index = LEFT_LEG;
+            entity->character->height_info.leg_r_index = RIGHT_LEG;
+            //entity->character->height_info.hand_l_index = LEFT_HAND;
+            //entity->character->height_info.hand_r_index = RIGHT_HAND;
             continue;
         }
 

@@ -85,6 +85,15 @@ void Character_Create(struct entity_s *ent)
     ret->height_info.floor_hit = 0x00;
     ret->height_info.water = 0x00;
 
+    ret->height_info.leg_l_floor = 0.0f;
+    ret->height_info.leg_r_floor = 0.0f;
+    ret->height_info.hand_l_floor = 0.0f;
+    ret->height_info.hand_r_floor = 0.0f;
+    ret->height_info.leg_l_index = -1;
+    ret->height_info.leg_r_index = -1;
+    ret->height_info.hand_l_index = - 1;
+    ret->height_info.hand_r_index = -1;
+
     ret->climb.edge_obj = NULL;
     ret->climb.edge_z_ang = 0.0f;
     ret->climb.can_hang = 0x00;
@@ -174,12 +183,68 @@ void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
  */
 void Character_UpdateCurrentHeight(struct entity_s *ent)
 {
-    float pos[3], t[3];
-    t[0] = 0.0;
-    t[1] = 0.0;
-    t[2] = ent->bf->bone_tags[0].transform[12+2];
-    Mat4_vec3_mul_macro(pos, ent->transform, t);
-    Character_GetHeightInfo(pos, &ent->character->height_info, ent->character->Height);
+    float from[3], to[3], base_z;
+    height_info_p hi = &ent->character->height_info;
+    collision_result_t cb;
+
+    to[0] = 0.0;
+    to[1] = 0.0;
+    to[2] = ent->bf->bone_tags[0].transform[12 + 2];
+    Mat4_vec3_mul_macro(from, ent->transform, to);
+    base_z = from[2];
+    Character_GetHeightInfo(from, hi, ent->character->Height);
+
+    if((hi->leg_l_index >= 0) && (hi->leg_l_index < ent->bf->bone_tag_count))
+    {
+        Mat4_vec3_mul(from, ent->transform, ent->bf->bone_tags[hi->leg_l_index].full_transform + 12);
+        from[2] = base_z;
+        vec3_copy(to, from);
+        to[2] -= 4096.0f;
+        hi->leg_l_floor = to[2];
+        if(Physics_RayTest(&cb, from ,to, ent->self))
+        {
+            hi->leg_l_floor = cb.point[2];
+        }
+    }
+
+    if((hi->leg_r_index >= 0) && (hi->leg_r_index < ent->bf->bone_tag_count))
+    {
+        Mat4_vec3_mul(from, ent->transform, ent->bf->bone_tags[hi->leg_r_index].full_transform + 12);
+        from[2] = base_z;
+        vec3_copy(to, from);
+        to[2] -= 4096.0f;
+        hi->leg_r_floor = to[2];
+        if(Physics_RayTest(&cb, from ,to, ent->self))
+        {
+            hi->leg_r_floor = cb.point[2];
+        }
+    }
+
+    if((hi->hand_l_index >= 0) && (hi->hand_l_index < ent->bf->bone_tag_count))
+    {
+        Mat4_vec3_mul(from, ent->transform, ent->bf->bone_tags[hi->hand_l_index].full_transform + 12);
+        from[2] = base_z;
+        vec3_copy(to, from);
+        to[2] -= 4096.0f;
+        hi->hand_l_floor = to[2];
+        if(Physics_RayTest(&cb, from ,to, ent->self))
+        {
+            hi->hand_l_floor = cb.point[2];
+        }
+    }
+
+    if((hi->hand_r_index >= 0) && (hi->hand_r_index < ent->bf->bone_tag_count))
+    {
+        Mat4_vec3_mul(from, ent->transform, ent->bf->bone_tags[hi->hand_r_index].full_transform + 12);
+        from[2] = base_z;
+        vec3_copy(to, from);
+        to[2] -= 4096.0f;
+        hi->hand_r_floor = to[2];
+        if(Physics_RayTest(&cb, from ,to, ent->self))
+        {
+            hi->hand_r_floor = cb.point[2];
+        }
+    }
 }
 
 /*
@@ -968,22 +1033,37 @@ int Character_MoveOnFloor(struct entity_s *ent)
      */
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
-    if(ent->character->height_info.floor_hit && (ent->character->height_info.floor_point[2] + 1.0 >= ent->transform[12+2] + ent->bf->bb_min[2]))
-    {
-        engine_container_p cont = ent->character->height_info.floor_obj;
-        if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
-        {
-            entity_p e = (entity_p)cont->object;
-            if(e->callback_flags & ENTITY_CALLBACK_STAND)
-            {
-                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_STAND, e->id, ent->id);
-            }
-        }
-    }
-
     /*
      * check move type
      */
+
+    if(!ent->character->height_info.floor_hit || (ent->character->height_info.floor_point[2] + ent->character->fall_down_height < pos[2]))
+    {
+        int added = 0;
+        if((ent->character->height_info.leg_r_floor >= pos[2] - ent->character->fall_down_height) &&
+           (ent->character->height_info.leg_r_floor <= pos[2] + ent->character->max_step_up_height))   // disable corner jump bug (really impossible because height calcilates under character base_z!)
+        {
+            ent->character->height_info.floor_point[2] = ent->character->height_info.leg_r_floor;
+            added++;
+        }
+        if((ent->character->height_info.leg_l_floor >= pos[2] - ent->character->fall_down_height) &&
+           (ent->character->height_info.leg_l_floor <= pos[2] + ent->character->max_step_up_height))   // same
+        {
+            if(added == 0)
+            {
+                ent->character->height_info.floor_point[2] = ent->character->height_info.leg_l_floor;
+                added++;
+            }
+            else
+            {
+                ent->character->height_info.floor_point[2] += ent->character->height_info.leg_l_floor;
+                ent->character->height_info.floor_point[2] /= 2.0f;
+            }
+        }
+
+        ent->character->height_info.floor_hit = added;
+    }
+
     if(ent->character->height_info.floor_hit || (ent->character->resp.vertical_collide & 0x01))
     {
         if(ent->character->height_info.floor_point[2] + ent->character->fall_down_height < pos[2])
@@ -1066,6 +1146,19 @@ int Character_MoveOnFloor(struct entity_s *ent)
     /*
      * now move normally
      */
+    if(ent->character->height_info.floor_hit && (ent->character->height_info.floor_point[2] + 1.0 >= ent->transform[12+2] + ent->bf->bb_min[2]))
+    {
+        engine_container_p cont = ent->character->height_info.floor_obj;
+        if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
+        {
+            entity_p e = (entity_p)cont->object;
+            if(e->callback_flags & ENTITY_CALLBACK_STAND)
+            {
+                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_STAND, e->id, ent->id);
+            }
+        }
+    }
+
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
     t = vec3_abs(move);
 

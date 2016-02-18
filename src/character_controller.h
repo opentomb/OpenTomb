@@ -217,6 +217,15 @@ typedef struct height_info_s
     float                                    transition_level;
     int16_t                                  water;
     int16_t                                  quicksand;
+    
+    float                                    leg_l_floor;
+    float                                    leg_r_floor;
+    float                                    hand_l_floor;
+    float                                    hand_r_floor;
+    int16_t                                  leg_l_index;
+    int16_t                                  leg_r_index;
+    int16_t                                  hand_l_index;
+    int16_t                                  hand_r_index;
 }height_info_t, *height_info_p;
 
 typedef struct character_command_s
