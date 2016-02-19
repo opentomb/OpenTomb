@@ -645,12 +645,12 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3])
                 }
             }
 
-            if(ent->character->height_info.ceiling_hit && (reaction[2] < -0.1))
+            if(ent->character->height_info.ceiling_hit.hit && (reaction[2] < -0.1))
             {
                 ent->character->resp.vertical_collide |= 0x02;
             }
 
-            if(ent->character->height_info.floor_hit && (reaction[2] > 0.1))
+            if(ent->character->height_info.floor_hit.hit && (reaction[2] > 0.1))
             {
                 ent->character->resp.vertical_collide |= 0x01;
             }

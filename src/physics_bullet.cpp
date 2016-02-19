@@ -521,11 +521,13 @@ int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[
     cb.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     if(result)
     {
+        result->hit = 0x00;
         result->obj = NULL;
         bt_engine_dynamicsWorld->rayTest(vFrom, vTo, cb);
         if(cb.hasHit())
         {
             result->obj      = (struct engine_container_s *)cb.m_collisionObject->getUserPointer();
+            result->hit      = 0x01;
             result->bone_num = cb.m_collisionObject->getUserIndex();
             vec3_copy(result->normale, cb.m_hitNormalWorld.m_floats);
             vFrom.setInterpolate3(vFrom, vTo, cb.m_closestHitFraction);
@@ -559,10 +561,12 @@ int  Physics_SphereTest(struct collision_result_s *result, float from[3], float 
     if(result)
     {
         result->obj = NULL;
+        result->hit = 0x00;
         bt_engine_dynamicsWorld->convexSweepTest(&sphere, tFrom, tTo, cb);
         if(cb.hasHit())
         {
             result->obj      = (struct engine_container_s *)cb.m_hitCollisionObject->getUserPointer();
+            result->hit      = 0x01;
             result->bone_num = cb.m_hitCollisionObject->getUserIndex();
             vec3_copy(result->normale, cb.m_hitNormalWorld.m_floats);
             vec3_copy(result->point, cb.m_hitPointWorld.m_floats);

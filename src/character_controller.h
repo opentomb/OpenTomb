@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 
+#include "physics.h"
 
 /*------ Lara's model-------
              .=.
@@ -204,24 +205,18 @@ typedef struct height_info_s
     int8_t                                   walls_climb_dir;
     struct engine_container_s               *self;
 
-    float                                    floor_normale[3];
-    float                                    floor_point[3];
-    int16_t                                  floor_hit;
-    struct engine_container_s               *floor_obj;
+    struct collision_result_s                floor_hit;
+    struct collision_result_s                ceiling_hit;
 
-    float                                    ceiling_normale[3];
-    float                                    ceiling_point[3];
-    int16_t                                  ceiling_hit;
-    struct engine_container_s               *ceiling_obj;
-
+    struct collision_result_s                leg_l_floor;
+    struct collision_result_s                leg_r_floor;
+    struct collision_result_s                hand_l_floor;
+    struct collision_result_s                hand_r_floor;
+    
     float                                    transition_level;
     int16_t                                  water;
     int16_t                                  quicksand;
     
-    float                                    leg_l_floor;
-    float                                    leg_r_floor;
-    float                                    hand_l_floor;
-    float                                    hand_r_floor;
     int16_t                                  leg_l_index;
     int16_t                                  leg_r_index;
     int16_t                                  hand_l_index;
@@ -320,6 +315,7 @@ void Character_Clean(struct entity_s *ent);
 void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);
 int  Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height_info_s *nfc);
 int  Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
+void Character_FixPosByFloorLegs(struct entity_s *ent);
 void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float offset[3], struct height_info_s *nfc, float test_height);
 void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s *climb);
 

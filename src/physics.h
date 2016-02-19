@@ -26,6 +26,7 @@ typedef struct collision_result_s
 {
     struct engine_container_s  *obj;
     uint16_t                    bone_num;
+    uint16_t                    hit;
     float                       point[3];
     float                       normale[3];
 }collision_result_t, *collision_result_p;

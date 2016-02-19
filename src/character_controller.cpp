@@ -23,90 +23,89 @@
 
 void Character_Create(struct entity_s *ent)
 {
-    character_p ret;
-
-    if(ent == NULL || ent->character != NULL)
+    if(ent && !ent->character)
     {
-        return;
+        character_p ret;
+        const collision_result_t zero_result = {0};
+
+        ret = (character_p)malloc(sizeof(character_t));
+        //ret->platform = NULL;
+        ret->state_func = NULL;
+        ret->inventory = NULL;
+        ret->ent = ent;
+        ent->character = ret;
+        ret->height_info.self = ent->self;
+        ent->dir_flag = ENT_STAY;
+
+        ret->hair_count = 0;
+        ret->hairs = NULL;
+
+        ret->weapon_current_state = 0x00;
+        ret->current_weapon = 0;
+
+        ret->resp.vertical_collide = 0x00;
+        ret->resp.horizontal_collide = 0x00;
+        ret->resp.kill = 0x00;
+        ret->resp.burn = 0x00;
+        ret->resp.slide = 0x00;
+
+        ret->cmd.action = 0x00;
+        ret->cmd.crouch = 0x00;
+        ret->cmd.flags = 0x00;
+        ret->cmd.jump = 0x00;
+        ret->cmd.roll = 0x00;
+        ret->cmd.shift = 0x00;
+        vec3_set_zero(ret->cmd.move);
+        vec3_set_zero(ret->cmd.rot);
+
+        ret->cam_follow_center = 0x00;
+        ret->linear_speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
+        ret->rotate_speed_mult = 1.0f;
+        ret->min_step_up_height = DEFAULT_MIN_STEP_UP_HEIGHT;
+        ret->max_climb_height = DEFAULT_CLIMB_UP_HEIGHT;
+        ret->max_step_up_height = DEFAULT_MAX_STEP_UP_HEIGHT;
+        ret->fall_down_height = DEFAULT_FALL_DOWN_HEIGHT;
+        ret->critical_slant_z_component = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
+        ret->critical_wall_component = DEFAULT_CRITICAL_WALL_COMPONENT;
+        ret->climb_r = DEFAULT_CHARACTER_CLIMB_R;
+        ret->wade_depth = DEFAULT_CHARACTER_WADE_DEPTH;
+        ret->swim_depth = DEFAULT_CHARACTER_SWIM_DEPTH;
+
+        for(int i = 0; i < PARAM_LASTINDEX; i++)
+        {
+            ret->parameters.param[i] = 0.0;
+            ret->parameters.maximum[i] = 0.0;
+        }
+
+        ret->sphere = CHARACTER_BASE_RADIUS;
+        ret->climb_sensor = ent->character->climb_r;
+        ret->height_info.ceiling_hit = zero_result;
+        ret->height_info.floor_hit = zero_result;
+        ret->height_info.leg_l_floor = zero_result;
+        ret->height_info.leg_r_floor = zero_result;
+        ret->height_info.hand_l_floor = zero_result;
+        ret->height_info.hand_r_floor = zero_result;
+        ret->height_info.water = 0x00;
+
+        ret->height_info.leg_l_index = -1;
+        ret->height_info.leg_r_index = -1;
+        ret->height_info.hand_l_index = -1;
+        ret->height_info.hand_r_index = -1;
+
+        ret->climb.edge_obj = NULL;
+        ret->climb.edge_z_ang = 0.0f;
+        ret->climb.can_hang = 0x00;
+        ret->climb.next_z_space = 0.0;
+        ret->climb.height_info = 0x00;
+        ret->climb.edge_hit = 0x00;
+        ret->climb.wall_hit = 0x00;
+        ret->forvard_size = 48.0;                                                   ///@FIXME: magick number
+        ret->Height = CHARACTER_BASE_HEIGHT;
+
+        ret->traversed_object = NULL;
+
+        Physics_CreateGhosts(ent->physics, ent->bf, ent->transform);
     }
-
-    ret = (character_p)malloc(sizeof(character_t));
-    //ret->platform = NULL;
-    ret->state_func = NULL;
-    ret->inventory = NULL;
-    ret->ent = ent;
-    ent->character = ret;
-    ret->height_info.self = ent->self;
-    ent->dir_flag = ENT_STAY;
-
-    ret->hair_count = 0;
-    ret->hairs = NULL;
-
-    ret->weapon_current_state = 0x00;
-    ret->current_weapon = 0;
-
-    ret->resp.vertical_collide = 0x00;
-    ret->resp.horizontal_collide = 0x00;
-    ret->resp.kill = 0x00;
-    ret->resp.burn = 0x00;
-    ret->resp.slide = 0x00;
-
-    ret->cmd.action = 0x00;
-    ret->cmd.crouch = 0x00;
-    ret->cmd.flags = 0x00;
-    ret->cmd.jump = 0x00;
-    ret->cmd.roll = 0x00;
-    ret->cmd.shift = 0x00;
-    vec3_set_zero(ret->cmd.move);
-    vec3_set_zero(ret->cmd.rot);
-
-    ret->cam_follow_center = 0x00;
-    ret->linear_speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
-    ret->rotate_speed_mult = 1.0f;
-    ret->min_step_up_height = DEFAULT_MIN_STEP_UP_HEIGHT;
-    ret->max_climb_height = DEFAULT_CLIMB_UP_HEIGHT;
-    ret->max_step_up_height = DEFAULT_MAX_STEP_UP_HEIGHT;
-    ret->fall_down_height = DEFAULT_FALL_DOWN_HEIGHT;
-    ret->critical_slant_z_component = DEFAULT_CRITICAL_SLANT_Z_COMPONENT;
-    ret->critical_wall_component = DEFAULT_CRITICAL_WALL_COMPONENT;
-    ret->climb_r = DEFAULT_CHARACTER_CLIMB_R;
-    ret->wade_depth = DEFAULT_CHARACTER_WADE_DEPTH;
-    ret->swim_depth = DEFAULT_CHARACTER_SWIM_DEPTH;
-
-    for(int i = 0; i < PARAM_LASTINDEX; i++)
-    {
-        ret->parameters.param[i] = 0.0;
-        ret->parameters.maximum[i] = 0.0;
-    }
-
-    ret->sphere = CHARACTER_BASE_RADIUS;
-    ret->climb_sensor = ent->character->climb_r;
-    ret->height_info.ceiling_hit = 0x00;
-    ret->height_info.floor_hit = 0x00;
-    ret->height_info.water = 0x00;
-
-    ret->height_info.leg_l_floor = 0.0f;
-    ret->height_info.leg_r_floor = 0.0f;
-    ret->height_info.hand_l_floor = 0.0f;
-    ret->height_info.hand_r_floor = 0.0f;
-    ret->height_info.leg_l_index = -1;
-    ret->height_info.leg_r_index = -1;
-    ret->height_info.hand_l_index = - 1;
-    ret->height_info.hand_r_index = -1;
-
-    ret->climb.edge_obj = NULL;
-    ret->climb.edge_z_ang = 0.0f;
-    ret->climb.can_hang = 0x00;
-    ret->climb.next_z_space = 0.0;
-    ret->climb.height_info = 0x00;
-    ret->climb.edge_hit = 0x00;
-    ret->climb.wall_hit = 0x00;
-    ret->forvard_size = 48.0;                                                   ///@FIXME: magick number
-    ret->Height = CHARACTER_BASE_HEIGHT;
-
-    ret->traversed_object = NULL;
-
-    Physics_CreateGhosts(ent->physics, ent->bf, ent->transform);
 }
 
 void Character_Clean(struct entity_s *ent)
@@ -134,8 +133,6 @@ void Character_Clean(struct entity_s *ent)
         actor->hair_count = 0;
     }
 
-    actor->height_info.ceiling_hit = 0x00;
-    actor->height_info.floor_hit = 0x00;
     actor->height_info.water = 0x00;
     actor->climb.edge_hit = 0x00;
 
@@ -185,8 +182,11 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
 {
     float from[3], to[3], base_z;
     height_info_p hi = &ent->character->height_info;
-    collision_result_t cb;
 
+    hi->leg_l_floor.hit = 0x00;
+    hi->leg_r_floor.hit = 0x00;
+    hi->hand_l_floor.hit = 0x00;
+    hi->hand_r_floor.hit = 0x00;
     to[0] = 0.0;
     to[1] = 0.0;
     to[2] = ent->bf->bone_tags[0].transform[12 + 2];
@@ -200,11 +200,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         from[2] = base_z;
         vec3_copy(to, from);
         to[2] -= 4096.0f;
-        hi->leg_l_floor = to[2];
-        if(Physics_RayTest(&cb, from ,to, ent->self))
-        {
-            hi->leg_l_floor = cb.point[2];
-        }
+        Physics_RayTest(&hi->leg_l_floor, from ,to, ent->self);
     }
 
     if((hi->leg_r_index >= 0) && (hi->leg_r_index < ent->bf->bone_tag_count))
@@ -213,11 +209,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         from[2] = base_z;
         vec3_copy(to, from);
         to[2] -= 4096.0f;
-        hi->leg_r_floor = to[2];
-        if(Physics_RayTest(&cb, from ,to, ent->self))
-        {
-            hi->leg_r_floor = cb.point[2];
-        }
+        Physics_RayTest(&hi->leg_r_floor, from ,to, ent->self);
     }
 
     if((hi->hand_l_index >= 0) && (hi->hand_l_index < ent->bf->bone_tag_count))
@@ -226,11 +218,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         from[2] = base_z;
         vec3_copy(to, from);
         to[2] -= 4096.0f;
-        hi->hand_l_floor = to[2];
-        if(Physics_RayTest(&cb, from ,to, ent->self))
-        {
-            hi->hand_l_floor = cb.point[2];
-        }
+        Physics_RayTest(&hi->hand_l_floor, from ,to, ent->self);
     }
 
     if((hi->hand_r_index >= 0) && (hi->hand_r_index < ent->bf->bone_tag_count))
@@ -239,11 +227,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         from[2] = base_z;
         vec3_copy(to, from);
         to[2] -= 4096.0f;
-        hi->hand_r_floor = to[2];
-        if(Physics_RayTest(&cb, from ,to, ent->self))
-        {
-            hi->hand_r_floor = cb.point[2];
-        }
+        Physics_RayTest(&hi->hand_r_floor, from ,to, ent->self);
     }
 }
 
@@ -325,11 +309,10 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
 {
     float from[3], to[3];
     room_p r = (fc->self) ? (fc->self->room) : (NULL);
-    collision_result_t cb;
     room_sector_p rs;
 
-    fc->floor_hit = 0x00;
-    fc->ceiling_hit = 0x00;
+    fc->floor_hit.hit = 0x00;
+    fc->ceiling_hit.hit = 0x00;
     fc->water = 0x00;
     fc->quicksand = 0x00;
     fc->transition_level = 32512.0;
@@ -360,7 +343,7 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
                 if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)    // find air
                 {
                     fc->transition_level = (float)rs->floor;
-                    if(fc->transition_level - fc->floor_point[2] > v_offset)
+                    if(fc->transition_level - fc->floor_hit.point[2] > v_offset)
                     {
                         fc->quicksand = 0x02;
                     }
@@ -383,10 +366,10 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
                     fc->water = 0x01;
                     break;
                 }
-                else if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) != 0x00)        // find water
+                else if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) != 0x00)// find water
                 {
                     fc->transition_level = (float)rs->ceiling;
-                    if(fc->transition_level - fc->floor_point[2] > v_offset)
+                    if(fc->transition_level - fc->floor_hit.point[2] > v_offset)
                     {
                         fc->quicksand = 0x02;
                     }
@@ -408,22 +391,10 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
     to[1] = from[1];
     to[2] = from[2] - 4096.0f;
 
-    fc->floor_hit = Physics_RayTest(&cb, from ,to, fc->self);
-    if(fc->floor_hit)
-    {
-        vec3_copy(fc->floor_normale, cb.normale);
-        vec3_copy(fc->floor_point, cb.point);
-        fc->floor_obj = cb.obj;
-    }
+    Physics_RayTest(&fc->floor_hit, from ,to, fc->self);
 
     to[2] = from[2] + 4096.0f;
-    fc->ceiling_hit = Physics_RayTest(&cb, from ,to, fc->self);
-    if(fc->ceiling_hit)
-    {
-        vec3_copy(fc->ceiling_normale, cb.normale);
-        vec3_copy(fc->ceiling_point, cb.point);
-        fc->ceiling_obj = cb.obj;
-    }
+    Physics_RayTest(&fc->ceiling_hit, from ,to, fc->self);
 }
 
 /**
@@ -440,18 +411,18 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
     vec3_add(pos, ent->transform + 12, offset);
     Character_GetHeightInfo(pos, nfc);
 
-    if(fc->floor_hit && nfc->floor_hit)
+    if(fc->floor_hit.hit && nfc->floor_hit.hit)
     {
-        delta = nfc->floor_point[2] - fc->floor_point[2];
+        delta = nfc->floor_hit.point[2] - fc->floor_hit.point[2];
         if(fabs(delta) < SPLIT_EPSILON)
         {
-            from[2] = fc->floor_point[2];
+            from[2] = fc->floor_hit.point[2];
             ret = CHARACTER_STEP_HORIZONTAL;                                    // horizontal
         }
         else if(delta < 0.0)                                                    // down way
         {
             delta = -delta;
-            from[2] = fc->floor_point[2];
+            from[2] = fc->floor_hit.point[2];
             if(delta <= ent->character->min_step_up_height)
             {
                 ret = CHARACTER_STEP_DOWN_LITTLE;
@@ -471,7 +442,7 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
         }
         else                                                                    // up way
         {
-            from[2] = nfc->floor_point[2];
+            from[2] = nfc->floor_hit.point[2];
             if(delta <= ent->character->min_step_up_height)
             {
                 ret = CHARACTER_STEP_UP_LITTLE;
@@ -490,19 +461,19 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
             }
         }
     }
-    else if(!fc->floor_hit && !nfc->floor_hit)
+    else if(!fc->floor_hit.hit && !nfc->floor_hit.hit)
     {
         from[2] = pos[2];
         ret = CHARACTER_STEP_HORIZONTAL;                                        // horizontal? yes no maybe...
     }
-    else if(!fc->floor_hit && nfc->floor_hit)                                   // strange case
+    else if(!fc->floor_hit.hit && nfc->floor_hit.hit)                           // strange case
     {
-        from[2] = nfc->floor_point[2];
+        from[2] = nfc->floor_hit.point[2];
         ret = 0x00;
     }
     else //if(fc->floor_hit && !nfc->floor_hit)                                 // bottomless
     {
-        from[2] = fc->floor_point[2];
+        from[2] = fc->floor_hit.point[2];
         ret = CHARACTER_STEP_DOWN_CAN_HANG;
     }
 
@@ -533,11 +504,36 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
  */
 int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
 {
-    float *pos = ent->transform + 12, *v1 = ent->transform + 4, *v2 = next_fc->floor_normale;
+    float *pos = ent->transform + 12, *v1 = ent->transform + 4, *v2 = next_fc->floor_hit.normale;
 
-    return (next_fc->floor_point[2] > pos[2]) && (next_fc->floor_normale[2] < ent->character->critical_slant_z_component) &&
+    return (next_fc->floor_hit.point[2] > pos[2]) && (next_fc->floor_hit.normale[2] < ent->character->critical_slant_z_component) &&
            (v1[0] * v2[0] + v1[1] * v2[1] < 0.0);
 }
+
+
+void Character_FixPosByFloorLegs(struct entity_s *ent)
+{
+    /*height_info_p hi = &ent->character->height_info;
+    bool valid_l = hi->leg_l_floor.hit &&
+        (hi->leg_l_floor.point[2] >= ent->transform[12 + 2] - ent->character->fall_down_height) &&
+        (hi->leg_l_floor.point[2] <= ent->transform[12 + 2] + ent->character->max_step_up_height);
+
+    bool valid_r = hi->leg_r_floor.hit &&
+        (hi->leg_r_floor.point[2] >= ent->transform[12 + 2] - ent->character->fall_down_height) &&
+        (hi->leg_r_floor.point[2] <= ent->transform[12 + 2] + ent->character->max_step_up_height);
+
+    if(valid_l && !valid_r)
+    {
+        ent->transform[12 + 0] -= engine_frame_time * 25.0f * 60.0 * ent->transform[0 + 0];
+        ent->transform[12 + 1] -= engine_frame_time * 25.0f * 60.0 * ent->transform[0 + 1];
+    }
+    else if(!valid_l && valid_r)
+    {
+        ent->transform[12 + 0] += engine_frame_time * 25.0f * 60.0 * ent->transform[0 + 0];
+        ent->transform[12 + 1] += engine_frame_time * 25.0f * 60.0 * ent->transform[0 + 1];
+    }*/
+}
+
 
 /**
  * @param ent - entity
@@ -555,23 +551,23 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     const float color[3] = {1.0, 0.0, 0.0};
 
     vec3_add(tmp, pos, offset);                                                 // tmp = native offset point
-    nfc->floor_hit = 0x00;
-    nfc->ceiling_hit = 0x00;
+    nfc->floor_hit.hit = 0x00;
+    nfc->ceiling_hit.hit = 0x00;
 
     climb->height_info = CHARACTER_STEP_HORIZONTAL;
     climb->can_hang = 0x00;
     climb->edge_hit = 0x00;
     climb->edge_obj = NULL;
-    climb->floor_limit = (ent->character->height_info.floor_hit) ? (ent->character->height_info.floor_point[2]) : (-9E10);
-    climb->ceiling_limit = (ent->character->height_info.ceiling_hit) ? (ent->character->height_info.ceiling_point[2]) : (9E10);
+    climb->floor_limit = (ent->character->height_info.floor_hit.hit) ? (ent->character->height_info.floor_hit.point[2]) : (-9E10);
+    climb->ceiling_limit = (ent->character->height_info.ceiling_hit.hit) ? (ent->character->height_info.ceiling_hit.point[2]) : (9E10);
     vec3_copy(climb->point, ent->character->climb.point);
 
     /*
      * check max height
      */
-    if(ent->character->height_info.ceiling_hit && (tmp[2] > ent->character->height_info.ceiling_point[2] - ent->character->climb_r - 1.0))
+    if(ent->character->height_info.ceiling_hit.hit && (tmp[2] > ent->character->height_info.ceiling_hit.point[2] - ent->character->climb_r - 1.0))
     {
-        tmp[2] = ent->character->height_info.ceiling_point[2] - ent->character->climb_r - 1.0;
+        tmp[2] = ent->character->height_info.ceiling_hit.point[2] - ent->character->climb_r - 1.0;
     }
 
     /*
@@ -737,20 +733,20 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         vec3_sub(tmp, climb->edge_point, ent->transform + 12);
         tmp[2] += 2.0 * ent->character->climb_r;
         climb->height_info = Character_CheckNextStep(ent, tmp, nfc);
-        if(nfc->ceiling_hit && (nfc->ceiling_point[2] < climb->ceiling_limit))
+        if(nfc->ceiling_hit.hit && (nfc->ceiling_hit.point[2] < climb->ceiling_limit))
         {
-            climb->ceiling_limit = nfc->ceiling_point[2];
+            climb->ceiling_limit = nfc->ceiling_hit.point[2];
         }
 
-        if(!ent->character->height_info.floor_hit || (climb->edge_point[2] - ent->character->height_info.floor_point[2] >= ent->character->Height))
+        if(!ent->character->height_info.floor_hit.hit || (climb->edge_point[2] - ent->character->height_info.floor_hit.point[2] >= ent->character->Height))
         {
             climb->can_hang = 0x01;
         }
 
         climb->next_z_space = 2.0 * ent->character->Height;
-        if(nfc->floor_hit && nfc->ceiling_hit)
+        if(nfc->floor_hit.hit && nfc->ceiling_hit.hit)
         {
-            climb->next_z_space = nfc->ceiling_point[2] - nfc->floor_point[2];
+            climb->next_z_space = nfc->ceiling_hit.point[2] - nfc->floor_hit.point[2];
         }
     }
 
@@ -768,8 +764,8 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
     climb->wall_hit = 0x00;
     climb->edge_hit = 0x00;
     climb->edge_obj = NULL;
-    climb->floor_limit = (ent->character->height_info.floor_hit) ? (ent->character->height_info.floor_point[2]) : (-9E10);
-    climb->ceiling_limit = (ent->character->height_info.ceiling_hit) ? (ent->character->height_info.ceiling_point[2]) : (9E10);
+    climb->floor_limit = (ent->character->height_info.floor_hit.hit) ? (ent->character->height_info.floor_hit.point[2]) : (-9E10);
+    climb->ceiling_limit = (ent->character->height_info.ceiling_hit.hit) ? (ent->character->height_info.ceiling_hit.point[2]) : (9E10);
     vec3_copy(climb->point, ent->character->climb.point);
 
     if(ent->character->height_info.walls_climb == 0x00)
@@ -1037,36 +1033,38 @@ int Character_MoveOnFloor(struct entity_s *ent)
      * check move type
      */
 
-    if(!ent->character->height_info.floor_hit || (ent->character->height_info.floor_point[2] + ent->character->fall_down_height < pos[2]))
+    if(!ent->character->height_info.floor_hit.hit || (ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height < pos[2]))
     {
         int added = 0;
-        if((ent->character->height_info.leg_r_floor >= pos[2] - ent->character->fall_down_height) &&
-           (ent->character->height_info.leg_r_floor <= pos[2] + ent->character->max_step_up_height))   // disable corner jump bug (really impossible because height calcilates under character base_z!)
+        if(ent->character->height_info.leg_r_floor.hit &&
+           (ent->character->height_info.leg_r_floor.point[2] >= pos[2] - ent->character->fall_down_height) &&
+           (ent->character->height_info.leg_r_floor.point[2] <= pos[2] + ent->character->max_step_up_height))   // disable corner jump bug (really impossible because height calcilates under character base_z!)
         {
-            ent->character->height_info.floor_point[2] = ent->character->height_info.leg_r_floor;
+            ent->character->height_info.floor_hit.point[2] = ent->character->height_info.leg_r_floor.point[2];
             added++;
         }
-        if((ent->character->height_info.leg_l_floor >= pos[2] - ent->character->fall_down_height) &&
-           (ent->character->height_info.leg_l_floor <= pos[2] + ent->character->max_step_up_height))   // same
+        if(ent->character->height_info.leg_l_floor.hit &&
+           (ent->character->height_info.leg_l_floor.point[2] >= pos[2] - ent->character->fall_down_height) &&
+           (ent->character->height_info.leg_l_floor.point[2] <= pos[2] + ent->character->max_step_up_height))   // same
         {
             if(added == 0)
             {
-                ent->character->height_info.floor_point[2] = ent->character->height_info.leg_l_floor;
+                ent->character->height_info.floor_hit.point[2] = ent->character->height_info.leg_l_floor.point[2];
                 added++;
             }
             else
             {
-                ent->character->height_info.floor_point[2] += ent->character->height_info.leg_l_floor;
-                ent->character->height_info.floor_point[2] /= 2.0f;
+                ent->character->height_info.floor_hit.point[2] += ent->character->height_info.leg_l_floor.point[2];
+                ent->character->height_info.floor_hit.point[2] /= 2.0f;
             }
         }
 
-        ent->character->height_info.floor_hit = added;
+        ent->character->height_info.floor_hit.hit = added;
     }
 
-    if(ent->character->height_info.floor_hit || (ent->character->resp.vertical_collide & 0x01))
+    if(ent->character->height_info.floor_hit.hit || (ent->character->resp.vertical_collide & 0x01))
     {
-        if(ent->character->height_info.floor_point[2] + ent->character->fall_down_height < pos[2])
+        if(ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height < pos[2])
         {
             ent->move_type = MOVE_FREE_FALLING;
             ent->speed[2] = 0.0;
@@ -1077,7 +1075,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
             ent->character->resp.vertical_collide |= 0x01;
         }
 
-        vec3_copy(tv, ent->character->height_info.floor_normale);
+        vec3_copy(tv, ent->character->height_info.floor_hit.normale);
         if(tv[2] > 0.02 && tv[2] < ent->character->critical_slant_z_component)
         {
             tv[2] = -tv[2];
@@ -1146,9 +1144,9 @@ int Character_MoveOnFloor(struct entity_s *ent)
     /*
      * now move normally
      */
-    if(ent->character->height_info.floor_hit && (ent->character->height_info.floor_point[2] + 1.0 >= ent->transform[12+2] + ent->bf->bb_min[2]))
+    if(ent->character->height_info.floor_hit.hit && (ent->character->height_info.floor_hit.point[2] + 1.0 >= ent->transform[12+2] + ent->bf->bb_min[2]))
     {
-        engine_container_p cont = ent->character->height_info.floor_obj;
+        engine_container_p cont = ent->character->height_info.floor_hit.obj;
         if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
         {
             entity_p e = (entity_p)cont->object;
@@ -1180,19 +1178,19 @@ int Character_MoveOnFloor(struct entity_s *ent)
     Entity_GhostUpdate(ent);
     vec3_add(pos, pos, move);
     Entity_FixPenetrations(ent, move);
-    if(ent->character->height_info.floor_hit)
+    if(ent->character->height_info.floor_hit.hit)
     {
-        if(ent->character->height_info.floor_point[2] + ent->character->fall_down_height > pos[2])
+        if(ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height > pos[2])
         {
-            float dz_to_land = engine_frame_time * 2400.0;                   ///@FIXME: magick
-            if(pos[2] > ent->character->height_info.floor_point[2] + dz_to_land)
+            float dz_to_land = engine_frame_time * 2400.0;                      ///@FIXME: magick
+            if(pos[2] > ent->character->height_info.floor_hit.point[2] + dz_to_land)
             {
                 pos[2] -= dz_to_land;
                 Entity_FixPenetrations(ent, NULL);
             }
-            else if(pos[2] > ent->character->height_info.floor_point[2])
+            else if(pos[2] > ent->character->height_info.floor_hit.point[2])
             {
-                pos[2] = ent->character->height_info.floor_point[2];
+                pos[2] = ent->character->height_info.floor_hit.point[2];
                 Entity_FixPenetrations(ent, NULL);
             }
         }
@@ -1203,9 +1201,9 @@ int Character_MoveOnFloor(struct entity_s *ent)
             Entity_UpdateRoomPos(ent);
             return 2;
         }
-        if((pos[2] < ent->character->height_info.floor_point[2]) && (ent->no_fix_all == 0x00))
+        if((pos[2] < ent->character->height_info.floor_hit.point[2]) && (ent->no_fix_all == 0x00))
         {
-            pos[2] = ent->character->height_info.floor_point[2];
+            pos[2] = ent->character->height_info.floor_hit.point[2];
             Entity_FixPenetrations(ent, NULL);
             ent->character->resp.vertical_collide |= 0x01;
         }
@@ -1309,22 +1307,22 @@ int Character_FreeFalling(struct entity_s *ent)
     }
 
     Entity_GhostUpdate(ent);
-    if(ent->character->height_info.ceiling_hit && ent->speed[2] > 0.0)
+    if(ent->character->height_info.ceiling_hit.hit && ent->speed[2] > 0.0)
     {
-        if(ent->character->height_info.ceiling_point[2] < ent->bf->bb_max[2] + pos[2])
+        if(ent->character->height_info.ceiling_hit.point[2] < ent->bf->bb_max[2] + pos[2])
         {
-            pos[2] = ent->character->height_info.ceiling_point[2] - ent->bf->bb_max[2];
+            pos[2] = ent->character->height_info.ceiling_hit.point[2] - ent->bf->bb_max[2];
             ent->speed[2] = 0.0;
             ent->character->resp.vertical_collide |= 0x02;
             Entity_FixPenetrations(ent, NULL);
             Entity_UpdateRoomPos(ent);
         }
     }
-    if(ent->character->height_info.floor_hit && ent->speed[2] < 0.0)   // move down
+    if(ent->character->height_info.floor_hit.hit && ent->speed[2] < 0.0)        // move down
     {
-        if(ent->character->height_info.floor_point[2] >= pos[2] + ent->bf->bb_min[2] + move[2])
+        if(ent->character->height_info.floor_hit.point[2] >= pos[2] + ent->bf->bb_min[2] + move[2])
         {
-            pos[2] = ent->character->height_info.floor_point[2];
+            pos[2] = ent->character->height_info.floor_hit.point[2];
             //ent->speed.m_floats[2] = 0.0;
             ent->move_type = MOVE_ON_FLOOR;
             ent->character->resp.vertical_collide |= 0x01;
@@ -1337,20 +1335,20 @@ int Character_FreeFalling(struct entity_s *ent)
     vec3_add(pos, pos, move);
     Entity_FixPenetrations(ent, move);                                          // get horizontal collide
 
-    if(ent->character->height_info.ceiling_hit && ent->speed[2] > 0.0)
+    if(ent->character->height_info.ceiling_hit.hit && ent->speed[2] > 0.0)
     {
-        if(ent->character->height_info.ceiling_point[2] < ent->bf->bb_max[2] + pos[2])
+        if(ent->character->height_info.ceiling_hit.point[2] < ent->bf->bb_max[2] + pos[2])
         {
-            pos[2] = ent->character->height_info.ceiling_point[2] - ent->bf->bb_max[2];
+            pos[2] = ent->character->height_info.ceiling_hit.point[2] - ent->bf->bb_max[2];
             ent->speed[2] = 0.0;
             ent->character->resp.vertical_collide |= 0x02;
         }
     }
-    if(ent->character->height_info.floor_hit && ent->speed[2] < 0.0)   // move down
+    if(ent->character->height_info.floor_hit.hit && ent->speed[2] < 0.0)        // move down
     {
-        if(ent->character->height_info.floor_point[2] >= pos[2] + ent->bf->bb_min[2] + move[2])
+        if(ent->character->height_info.floor_hit.point[2] >= pos[2] + ent->bf->bb_min[2] + move[2])
         {
-            pos[2] = ent->character->height_info.floor_point[2];
+            pos[2] = ent->character->height_info.floor_hit.point[2];
             //ent->speed.m_floats[2] = 0.0;
             ent->move_type = MOVE_ON_FLOOR;
             ent->character->resp.vertical_collide |= 0x01;
@@ -1413,9 +1411,9 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     vec3_add(pos, pos, move);
     Entity_FixPenetrations(ent, move);                                          // get horizontal collide
     ///@FIXME: rewrite conditions! or add fixer to update_entity_rigid_body func
-    if(ent->character->height_info.ceiling_hit && (pos[2] + ent->bf->bb_max[2] - ent->character->height_info.ceiling_point[2] > - 0.33 * ent->character->min_step_up_height))
+    if(ent->character->height_info.ceiling_hit.hit && (pos[2] + ent->bf->bb_max[2] - ent->character->height_info.ceiling_hit.point[2] > - 0.33 * ent->character->min_step_up_height))
     {
-        pos[2] = ent->character->height_info.ceiling_point[2] - ent->bf->bb_max[2];
+        pos[2] = ent->character->height_info.ceiling_hit.point[2] - ent->bf->bb_max[2];
     }
     else
     {
@@ -1630,7 +1628,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
             //pos[2] = fc.transition_level;
             return 2;
         }
-        if(!ent->character->height_info.floor_hit || (ent->character->height_info.transition_level - ent->character->height_info.floor_point[2] >= ent->character->Height))
+        if(!ent->character->height_info.floor_hit.hit || (ent->character->height_info.transition_level - ent->character->height_info.floor_hit.point[2] >= ent->character->Height))
         {
             pos[2] = ent->character->height_info.transition_level - ent->bf->bb_max[2];
         }
