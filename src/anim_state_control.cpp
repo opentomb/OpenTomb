@@ -548,7 +548,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     ss_anim->next_state = TR_STATE_LARA_TURN_LEFT_SLOW;
                 }
             }       // end MOVE LEFT
-            Character_FixPosByFloorLegs(ent);
+            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
         case TR_STATE_LARA_JUMP_PREPARE:
@@ -751,7 +751,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorLegs(ent);
+            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
         case TR_STATE_LARA_TURN_FAST:
@@ -778,7 +778,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorLegs(ent);
+            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
             /*
@@ -1078,6 +1078,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_RUN_FORWARD;
             }
+            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
 
@@ -1155,7 +1156,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     ss_anim->next_state = TR_STATE_LARA_STOP;
                 }
             }
-            Character_FixPosByFloorLegs(ent);
+            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
         case TR_STATE_LARA_WALK_BACK:
@@ -1220,7 +1221,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorLegs(ent);
+            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
         case TR_STATE_LARA_WALK_LEFT:
@@ -1259,7 +1260,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorLegs(ent);
+            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
         case TR_STATE_LARA_WALK_RIGHT:
@@ -1298,7 +1299,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorLegs(ent);
+            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
             /*

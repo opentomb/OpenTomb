@@ -200,6 +200,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         from[2] = base_z;
         vec3_copy(to, from);
         to[2] -= 4096.0f;
+        vec3_copy(hi->leg_l_floor.point, from);
         Physics_RayTest(&hi->leg_l_floor, from ,to, ent->self);
     }
 
@@ -209,6 +210,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         from[2] = base_z;
         vec3_copy(to, from);
         to[2] -= 4096.0f;
+        vec3_copy(hi->leg_r_floor.point, from);
         Physics_RayTest(&hi->leg_r_floor, from ,to, ent->self);
     }
 
@@ -219,6 +221,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         vec3_copy(to, from);
         to[2] -= 4096.0f;
         Physics_RayTest(&hi->hand_l_floor, from ,to, ent->self);
+        vec3_copy(hi->hand_l_floor.point, from);
     }
 
     if((hi->hand_r_index >= 0) && (hi->hand_r_index < ent->bf->bone_tag_count))
@@ -228,6 +231,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         vec3_copy(to, from);
         to[2] -= 4096.0f;
         Physics_RayTest(&hi->hand_r_floor, from ,to, ent->self);
+        vec3_copy(hi->hand_r_floor.point, from);
     }
 }
 
@@ -511,27 +515,48 @@ int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
 }
 
 
-void Character_FixPosByFloorLegs(struct entity_s *ent)
+void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
 {
-    /*height_info_p hi = &ent->character->height_info;
-    bool valid_l = hi->leg_l_floor.hit &&
-        (hi->leg_l_floor.point[2] >= ent->transform[12 + 2] - ent->character->fall_down_height) &&
-        (hi->leg_l_floor.point[2] <= ent->transform[12 + 2] + ent->character->max_step_up_height);
-
-    bool valid_r = hi->leg_r_floor.hit &&
-        (hi->leg_r_floor.point[2] >= ent->transform[12 + 2] - ent->character->fall_down_height) &&
-        (hi->leg_r_floor.point[2] <= ent->transform[12 + 2] + ent->character->max_step_up_height);
-
-    if(valid_l && !valid_r)
+    height_info_p hi = &ent->character->height_info;
+    if((hi->leg_l_index >= 0) && (hi->leg_r_index >= 0))
     {
-        ent->transform[12 + 0] -= engine_frame_time * 25.0f * 60.0 * ent->transform[0 + 0];
-        ent->transform[12 + 1] -= engine_frame_time * 25.0f * 60.0 * ent->transform[0 + 1];
+        bool valid_l = hi->leg_l_floor.hit &&
+            (hi->leg_l_floor.point[2] >= ent->transform[12 + 2] - ent->character->fall_down_height) &&
+            (hi->leg_l_floor.point[2] <= ent->transform[12 + 2] + ent->character->max_step_up_height);
+
+        bool valid_r = hi->leg_r_floor.hit &&
+            (hi->leg_r_floor.point[2] >= ent->transform[12 + 2] - ent->character->fall_down_height) &&
+            (hi->leg_r_floor.point[2] <= ent->transform[12 + 2] + ent->character->max_step_up_height);
+
+        if(!valid_r)
+        {
+            collision_result_t cb;
+            float from[3], to[3];
+            from[0] = hi->leg_r_floor.point[0];
+            from[1] = hi->leg_r_floor.point[1];
+            from[2] = ent->transform[12 + 2] + 12.0f;
+            vec3_copy(to, ent->transform + 12);
+            if(Physics_SphereTest(&cb, from, to, 24.0f, ent->self))
+            {
+                ent->transform[12 + 0] += (cb.point[0] - from[0]);
+                ent->transform[12 + 1] += (cb.point[1] - from[1]);
+            }
+        }
+        if(!valid_l)
+        {
+            collision_result_t cb;
+            float from[3], to[3];
+            from[0] = hi->leg_l_floor.point[0];
+            from[1] = hi->leg_l_floor.point[1];
+            from[2] = ent->transform[12 + 2] + 12.0f;
+            vec3_copy(to, ent->transform + 12);
+            if(Physics_SphereTest(&cb, from, to, 24.0f, ent->self))
+            {
+                ent->transform[12 + 0] += (cb.point[0] - from[0]);
+                ent->transform[12 + 1] += (cb.point[1] - from[1]);
+            }
+        }
     }
-    else if(!valid_l && valid_r)
-    {
-        ent->transform[12 + 0] += engine_frame_time * 25.0f * 60.0 * ent->transform[0 + 0];
-        ent->transform[12 + 1] += engine_frame_time * 25.0f * 60.0 * ent->transform[0 + 1];
-    }*/
 }
 
 

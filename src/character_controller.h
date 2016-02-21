@@ -315,7 +315,7 @@ void Character_Clean(struct entity_s *ent);
 void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);
 int  Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height_info_s *nfc);
 int  Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
-void Character_FixPosByFloorLegs(struct entity_s *ent);
+void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent);
 void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float offset[3], struct height_info_s *nfc, float test_height);
 void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s *climb);
 
