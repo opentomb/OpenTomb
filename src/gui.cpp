@@ -420,13 +420,13 @@ gui_InventoryManager::~gui_InventoryManager()
     GLText_DeleteLine(&mLabel_Title);
 }
 
-int gui_InventoryManager::getItemsTypeCount(int type)
+int gui_InventoryManager::getItemElementsCountByType(int type)
 {
     int ret = 0;
-    for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
+    for(inventory_node_p i = *mInventory; i; i = i->next)
     {
         base_item_p bi = World_GetBaseItemByID(i->id);
-        if((bi != NULL) && (bi->type == type))
+        if(bi && (bi->type == type))
         {
             ret++;
         }
@@ -495,16 +495,16 @@ int gui_InventoryManager::setItemsType(int type)
         return type;
     }
 
-    int count = this->getItemsTypeCount(type);
+    int count = this->getItemElementsCountByType(type);
     if(count == 0)
     {
-        for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
+        for(inventory_node_p i = *mInventory; i; i = i->next)
         {
             base_item_p bi = World_GetBaseItemByID(i->id);
-            if(bi != NULL)
+            if(bi)
             {
                 type = bi->type;
-                count = this->getItemsTypeCount(mCurrentItemsType);
+                count = this->getItemElementsCountByType(mCurrentItemsType);
                 break;
             }
         }
@@ -606,10 +606,10 @@ void gui_InventoryManager::frame(float time)
                     break;
 
                 case INVENTORY_UP:
-                    mNextItemsCount = this->getItemsTypeCount(mCurrentItemsType + 1);
+                    mNextItemsCount = this->getItemElementsCountByType(mCurrentItemsType + 1);
                     if(mNextItemsCount > 0)
                     {
-                        //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+                        //Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         mCurrentState = mNextState;
                         mRingTime = 0.0;
                     }
@@ -622,10 +622,10 @@ void gui_InventoryManager::frame(float time)
                     break;
 
                 case INVENTORY_DOWN:
-                    mNextItemsCount = this->getItemsTypeCount(mCurrentItemsType - 1);
+                    mNextItemsCount = this->getItemElementsCountByType(mCurrentItemsType - 1);
                     if(mNextItemsCount > 0)
                     {
-                        //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+                        //Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         mCurrentState = mNextState;
                         mRingTime = 0.0;
                     }
@@ -770,8 +770,9 @@ void gui_InventoryManager::render()
 {
     if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL) && (*mInventory != NULL))
     {
+        float matrix[16], offset[3], ang;
         int num = 0;
-        for(inventory_node_p i=*mInventory;i!=NULL;i=i->next)
+        for(inventory_node_p i = *mInventory; i; i = i->next)
         {
             base_item_p bi = World_GetBaseItemByID(i->id);
             if((bi == NULL) || (bi->type != mCurrentItemsType))
@@ -779,12 +780,11 @@ void gui_InventoryManager::render()
                 continue;
             }
 
-            float matrix[16], offset[3];
             Mat4_E_macro(matrix);
             matrix[12 + 2] = - mBaseRingRadius * 2.0;
             //Mat4_RotateX(matrix, 25.0);
             Mat4_RotateX(matrix, 25.0 + mRingVerticalAngle);
-            float ang = mRingAngleStep * (-mItemsOffset + num) + mRingAngle;
+            ang = mRingAngleStep * (-mItemsOffset + num) + mRingAngle;
             Mat4_RotateY(matrix, ang);
             offset[0] = 0.0;
             offset[1] = mVerticalOffset;
@@ -796,17 +796,21 @@ void gui_InventoryManager::render()
             {
                 if(bi->name[0])
                 {
-                    strncpy(mLabel_ItemName_text, bi->name, GUI_LINE_DEFAULTSIZE);
-
-                    if(i->count > 1)
+                    if(i->count == 1)
                     {
-                        char counter[32];
-                        Script_GetString(engine_lua, STR_GEN_MASK_INVHEADER, 32, counter);
-                        snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, (const char*)counter, bi->name, i->count);
+                        strncpy(mLabel_ItemName_text, bi->name, GUI_LINE_DEFAULTSIZE);
+                    }
+                    else
+                    {
+                        snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, "%s (%d)", bi->name, i->count);
                     }
                 }
+                else
+                {
+                    snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, "ITEM_ID_%d (%d)", i->id, i->count);
+                }
                 Mat4_RotateZ(matrix, 90.0 + mItemAngle - ang);
-                Item_Frame(bi->bf, 0.0);                            // here will be time != 0 for using items animation
+                Item_Frame(bi->bf, 0.0);                                        // here will be time != 0 for using items animation
             }
             else
             {
@@ -819,7 +823,6 @@ void gui_InventoryManager::render()
             Mat4_Translate(matrix, offset);
             Mat4_Scale(matrix, 0.7, 0.7, 0.7);
             Gui_RenderItem(bi->bf, 0.0, matrix);
-
             num++;
         }
     }
@@ -845,7 +848,7 @@ void Gui_SwitchGLMode(char is_gui)
     }
     else                                                                        // set camera coordinate system
     {
-        memcpy(guiProjectionMatrix, engine_camera.gl_proj_mat, sizeof(float [16]));
+        memcpy(guiProjectionMatrix, engine_camera.gl_proj_mat, sizeof(GLfloat[16]));
     }
 }
 
@@ -1042,7 +1045,7 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
     strncpy(buf, pic_name, MAX_ENGINE_PATH);
     if(!Sys_FileFound(buf, 0))
     {
-        for(;ext_len+1<len;ext_len++)
+        for(; ext_len + 1 < len; ext_len++)
         {
             if(buf[len-ext_len-1] == '.')
             {

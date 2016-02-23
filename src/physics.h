@@ -12,6 +12,8 @@
 
 
 #define DEFAULT_COLLSION_NODE_POOL_SIZE    (128)
+#define COLLISION_MARGIN_DEFAULT           (2.0f)
+
 
 typedef struct collision_node_s
 {

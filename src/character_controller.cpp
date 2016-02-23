@@ -199,7 +199,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         Mat4_vec3_mul(from, ent->transform, ent->bf->bone_tags[hi->leg_l_index].full_transform + 12);
         from[2] = base_z;
         vec3_copy(to, from);
-        to[2] -= 4096.0f;
+        to[2] -= ent->character->Height;
         vec3_copy(hi->leg_l_floor.point, from);
         Physics_RayTest(&hi->leg_l_floor, from ,to, ent->self);
     }
@@ -209,7 +209,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         Mat4_vec3_mul(from, ent->transform, ent->bf->bone_tags[hi->leg_r_index].full_transform + 12);
         from[2] = base_z;
         vec3_copy(to, from);
-        to[2] -= 4096.0f;
+        to[2] -= ent->character->Height;
         vec3_copy(hi->leg_r_floor.point, from);
         Physics_RayTest(&hi->leg_r_floor, from ,to, ent->self);
     }
@@ -219,7 +219,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         Mat4_vec3_mul(from, ent->transform, ent->bf->bone_tags[hi->hand_l_index].full_transform + 12);
         from[2] = base_z;
         vec3_copy(to, from);
-        to[2] -= 4096.0f;
+        to[2] -= ent->character->Height;
         Physics_RayTest(&hi->hand_l_floor, from ,to, ent->self);
         vec3_copy(hi->hand_l_floor.point, from);
     }
@@ -229,7 +229,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         Mat4_vec3_mul(from, ent->transform, ent->bf->bone_tags[hi->hand_r_index].full_transform + 12);
         from[2] = base_z;
         vec3_copy(to, from);
-        to[2] -= 4096.0f;
+        to[2] -= ent->character->Height;
         Physics_RayTest(&hi->hand_r_floor, from ,to, ent->self);
         vec3_copy(hi->hand_r_floor.point, from);
     }
@@ -518,28 +518,43 @@ int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
 void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
 {
     height_info_p hi = &ent->character->height_info;
+    float *pos = ent->transform + 12;
     if((hi->leg_l_index >= 0) && (hi->leg_r_index >= 0))
     {
         bool valid_l = hi->leg_l_floor.hit &&
-            (hi->leg_l_floor.point[2] >= ent->transform[12 + 2] - ent->character->fall_down_height) &&
-            (hi->leg_l_floor.point[2] <= ent->transform[12 + 2] + ent->character->max_step_up_height);
+            (hi->leg_l_floor.point[2] >= pos[2] - ent->character->fall_down_height) &&
+            (hi->leg_l_floor.point[2] <= pos[2] + ent->character->max_step_up_height);
 
         bool valid_r = hi->leg_r_floor.hit &&
-            (hi->leg_r_floor.point[2] >= ent->transform[12 + 2] - ent->character->fall_down_height) &&
-            (hi->leg_r_floor.point[2] <= ent->transform[12 + 2] + ent->character->max_step_up_height);
+            (hi->leg_r_floor.point[2] >= pos[2] - ent->character->fall_down_height) &&
+            (hi->leg_r_floor.point[2] <= pos[2] + ent->character->max_step_up_height);
 
+        float fix[2] = {0.0f, 0.0f};
+        const float red[3] = {1.0f, 0.0f, 0.0f};
+        const float R = 16.0f;
         if(!valid_r)
         {
             collision_result_t cb;
             float from[3], to[3];
             from[0] = hi->leg_r_floor.point[0];
             from[1] = hi->leg_r_floor.point[1];
-            from[2] = ent->transform[12 + 2] + 12.0f;
-            vec3_copy(to, ent->transform + 12);
-            if(Physics_SphereTest(&cb, from, to, 24.0f, ent->self))
+            from[2] = pos[2] + ent->character->max_step_up_height;
+            to[0] = from[0];
+            to[1] = from[1];
+            to[2] = pos[2] - ent->character->max_step_up_height;
+            renderer.debugDrawer->DrawLine(from, to, red, red);
+            while((from[0] + 4.0f *R * ent->transform[0 + 0] - pos[0]) * ent->transform[0 + 0] + (from[1] + 4.0f *R * ent->transform[0 + 1] - pos[1]) * ent->transform[0 + 1] > 0.0f)
             {
-                ent->transform[12 + 0] += (cb.point[0] - from[0]);
-                ent->transform[12 + 1] += (cb.point[1] - from[1]);
+                if(Physics_SphereTest(&cb, from, to, R, ent->self))
+                {
+                    fix[0] += (cb.point[0] - hi->leg_r_floor.point[0]);
+                    fix[1] += (cb.point[1] - hi->leg_r_floor.point[1]);
+                    break;
+                }
+                from[0] -= 1.5f * R * ent->transform[0 + 0];
+                from[1] -= 1.5f * R * ent->transform[0 + 1];
+                to[0] = from[0];
+                to[1] = from[1];
             }
         }
         if(!valid_l)
@@ -548,14 +563,27 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
             float from[3], to[3];
             from[0] = hi->leg_l_floor.point[0];
             from[1] = hi->leg_l_floor.point[1];
-            from[2] = ent->transform[12 + 2] + 12.0f;
-            vec3_copy(to, ent->transform + 12);
-            if(Physics_SphereTest(&cb, from, to, 24.0f, ent->self))
+            from[2] = ent->transform[12 + 2] + ent->character->max_step_up_height;
+            to[0] = from[0];
+            to[1] = from[1];
+            to[2] = ent->transform[12 + 2] - ent->character->max_step_up_height;
+            renderer.debugDrawer->DrawLine(from, to, red, red);
+            while((from[0] - 4.0f *R * ent->transform[0 + 0] - pos[0]) * ent->transform[0 + 0] + (from[1] - 4.0f *R * ent->transform[0 + 1] - pos[1]) * ent->transform[0 + 1] < 0.0f)
             {
-                ent->transform[12 + 0] += (cb.point[0] - from[0]);
-                ent->transform[12 + 1] += (cb.point[1] - from[1]);
+                if(Physics_SphereTest(&cb, from, to, R, ent->self))
+                {
+                    fix[0] += (cb.point[0] - hi->leg_l_floor.point[0]);
+                    fix[1] += (cb.point[1] - hi->leg_l_floor.point[1]);
+                    break;
+                }
+                from[0] += 1.5f * R * ent->transform[0 + 0];
+                from[1] += 1.5f * R * ent->transform[0 + 1];
+                to[0] = from[0];
+                to[1] = from[1];
             }
         }
+        ent->transform[12 + 0] += fix[0];
+        ent->transform[12 + 1] += fix[1];
     }
 }
 

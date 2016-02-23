@@ -58,11 +58,6 @@
 
 #define STR_GEN_PRESSTOSKIP         50
 
-#define STR_GEN_MASK_INVHEADER      90
-#define STR_GEN_MASK_AMMOHEADER     91
-#define STR_GEN_MASK_TIMER          92
-#define STR_GEN_MASK_TIMECOUNT      93
-
 #define STR_GEN_GAMENAME_TR1        100
 #define STR_GEN_GAMENAME_TR1GOLD    101
 #define STR_GEN_GAMENAME_TR2        200

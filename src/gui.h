@@ -273,7 +273,7 @@ private:
     float                       mItemTime;
     float                       mItemAngle;
     
-    int getItemsTypeCount(int type);
+    int getItemElementsCountByType(int type);
     void restoreItemAngle(float time);
 };
 

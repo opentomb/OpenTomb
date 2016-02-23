@@ -1098,11 +1098,14 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
 
                 cshape = BT_CSfromBBox(bf->bb_min, bf->bb_max);
                 cshape->calculateLocalInertia(0.0, localInertia);
+                cshape->setMargin(COLLISION_MARGIN_DEFAULT);
                 startTransform.setFromOpenGLMatrix(transform);
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                 physics->bt_body[0] = new btRigidBody(0.0, motionState, cshape, localInertia);
                 physics->bt_body[0]->setUserPointer(physics->cont);
                 physics->bt_body[0]->setUserIndex(0);
+                physics->bt_body[0]->setRestitution(1.0);
+                physics->bt_body[0]->setFriction(1.0);
                 bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[0], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
             }
             break;
@@ -1114,6 +1117,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
 
                 cshape = new btSphereShape(getInnerBBRadius(bf->bb_min, bf->bb_max));
                 cshape->calculateLocalInertia(0.0, localInertia);
+                cshape->setMargin(COLLISION_MARGIN_DEFAULT);
                 btVector3 offset, centre(0.5f * (bf->bb_min[0] + bf->bb_max[0]), 0.5f * (bf->bb_min[1] + bf->bb_max[1]), 0.5f * (bf->bb_min[2] + bf->bb_max[2]));
                 Mat4_vec3_rot_macro(offset.m_floats, transform, centre);
                 startTransform.setFromOpenGLMatrix(transform);
@@ -1122,6 +1126,8 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                 physics->bt_body[0] = new btRigidBody(0.0, motionState, cshape, localInertia);
                 physics->bt_body[0]->setUserPointer(physics->cont);
                 physics->bt_body[0]->setUserIndex(0);
+                physics->bt_body[0]->setRestitution(1.0);
+                physics->bt_body[0]->setFriction(1.0);
                 bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[0], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
             }
             break;
@@ -1160,6 +1166,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                     if(cshape)
                     {
                         cshape->calculateLocalInertia(0.0, localInertia);
+                        cshape->setMargin(COLLISION_MARGIN_DEFAULT);
 
                         Mat4_Mat4_mul(tr, transform, bf->bone_tags[i].full_transform);
                         startTransform.setFromOpenGLMatrix(tr);
@@ -1167,6 +1174,8 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                         physics->bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
                         physics->bt_body[i]->setUserPointer(physics->cont);
                         physics->bt_body[i]->setUserIndex(i);
+                        physics->bt_body[i]->setRestitution(1.0);
+                        physics->bt_body[i]->setFriction(1.0);
                         bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i], COLLISION_GROUP_KINEMATIC, COLLISION_MASK_ALL);
                     }
                 }
@@ -1201,6 +1210,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghost_objects[0]->setUserPointer(physics->cont);
                     physics->ghost_objects[0]->setUserIndex(-1);
                     physics->ghost_objects[0]->setCollisionShape(BT_CSfromBBox(bf->bb_min, bf->bb_max));
+                    physics->ghost_objects[0]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
                     bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[0], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
                 }
                 break;
@@ -1219,6 +1229,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghost_objects[0]->setUserPointer(physics->cont);
                     physics->ghost_objects[0]->setUserIndex(-1);
                     physics->ghost_objects[0]->setCollisionShape(new btSphereShape(getInnerBBRadius(bf->bb_min, bf->bb_max)));
+                    physics->ghost_objects[0]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
                     bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[0], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
                 }
                 break;
@@ -1246,6 +1257,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                         physics->ghost_objects[i]->setUserPointer(physics->cont);
                         physics->ghost_objects[i]->setUserIndex(i);
                         physics->ghost_objects[i]->setCollisionShape(new btBoxShape(box));
+                        physics->ghost_objects[i]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
                         bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[i], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
                     }
                 }
@@ -1295,6 +1307,9 @@ void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh)
         smesh->physics_body = (struct physics_object_s*)malloc(sizeof(struct physics_object_s));
         btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
         smesh->physics_body->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
+        cshape->setMargin(COLLISION_MARGIN_DEFAULT);
+        smesh->physics_body->bt_body->setRestitution(1.0);
+        smesh->physics_body->bt_body->setFriction(1.0);
         bt_engine_dynamicsWorld->addRigidBody(smesh->physics_body->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
         smesh->physics_body->bt_body->setUserPointer(smesh->self);
     }
@@ -1313,6 +1328,7 @@ void Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens
         tr.setFromOpenGLMatrix(room->transform);
         room->content->physics_body = (struct physics_object_s*)malloc(sizeof(struct physics_object_s));
         btDefaultMotionState* motionState = new btDefaultMotionState(tr);
+        cshape->setMargin(COLLISION_MARGIN_DEFAULT);
         room->content->physics_body->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
         bt_engine_dynamicsWorld->addRigidBody(room->content->physics_body->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
         room->content->physics_body->bt_body->setUserPointer(room->self);
