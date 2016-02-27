@@ -12,7 +12,9 @@
 
 
 #define DEFAULT_COLLSION_NODE_POOL_SIZE    (128)
-#define COLLISION_MARGIN_DEFAULT           (2.0f)
+// non zero value prevents to "smooth" normales calculations near edges, 
+// that is wrong for slide state checking.
+#define COLLISION_MARGIN_DEFAULT           (0.0f)
 
 
 typedef struct collision_node_s

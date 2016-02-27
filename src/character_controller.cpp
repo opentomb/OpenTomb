@@ -393,7 +393,7 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
     vec3_copy(from, pos);
     to[0] = from[0];
     to[1] = from[1];
-    to[2] = from[2] - 4096.0f;
+    to[2] = from[2] - 8192.0f;
 
     Physics_RayTest(&fc->floor_hit, from ,to, fc->self);
 
@@ -508,10 +508,12 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
  */
 int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
 {
-    float *pos = ent->transform + 12, *v1 = ent->transform + 4, *v2 = next_fc->floor_hit.normale;
+    float *pos = ent->transform + 12;
+    float *v1 = ent->transform + 4;
+    float *v2 = next_fc->floor_hit.normale;
 
-    return (next_fc->floor_hit.point[2] > pos[2]) && (next_fc->floor_hit.normale[2] < ent->character->critical_slant_z_component) &&
-           (v1[0] * v2[0] + v1[1] * v2[1] < 0.0);
+    return next_fc->floor_hit.hit && (next_fc->floor_hit.point[2] > pos[2]) && (next_fc->floor_hit.normale[2] < ent->character->critical_slant_z_component) &&
+           (v1[0] * v2[0] + v1[1] * v2[1] < 0.0f);
 }
 
 
@@ -547,8 +549,12 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
             {
                 if(Physics_SphereTest(&cb, from, to, R, ent->self))
                 {
-                    fix[0] += (cb.point[0] - hi->leg_r_floor.point[0]);
-                    fix[1] += (cb.point[1] - hi->leg_r_floor.point[1]);
+                    //if((cb.obj->object_type == OBJECT_ROOM_BASE) ||
+                    //   (cb.obj->object_type == OBJECT_STATIC_MESH))
+                    {
+                        fix[0] += (cb.point[0] - hi->leg_r_floor.point[0]);
+                        fix[1] += (cb.point[1] - hi->leg_r_floor.point[1]);
+                    }
                     break;
                 }
                 from[0] -= 1.5f * R * ent->transform[0 + 0];
@@ -572,8 +578,12 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
             {
                 if(Physics_SphereTest(&cb, from, to, R, ent->self))
                 {
-                    fix[0] += (cb.point[0] - hi->leg_l_floor.point[0]);
-                    fix[1] += (cb.point[1] - hi->leg_l_floor.point[1]);
+                    //if((cb.obj->object_type == OBJECT_ROOM_BASE) ||
+                    //   (cb.obj->object_type == OBJECT_STATIC_MESH))
+                    {
+                        fix[0] += (cb.point[0] - hi->leg_l_floor.point[0]);
+                        fix[1] += (cb.point[1] - hi->leg_l_floor.point[1]);
+                    }
                     break;
                 }
                 from[0] += 1.5f * R * ent->transform[0 + 0];
@@ -601,7 +611,8 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     float n0[4], n1[4];                                                         // planes equations
     char up_founded;
     collision_result_t cb;
-    const float color[3] = {1.0, 0.0, 0.0};
+    const float critical_z_normale = 0.15f;
+    //const float color[3] = {1.0, 0.0, 0.0};
 
     vec3_add(tmp, pos, offset);                                                 // tmp = native offset point
     nfc->floor_hit.hit = 0x00;
@@ -635,7 +646,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     z_min = pos[2] + ent->bf->bb_max[2] - test_height;
 
     tmp[2] = z_min;
-    renderer.debugDrawer->DrawLine(to, tmp, color, color);
+    //renderer.debugDrawer->DrawLine(to, tmp, color, color);
     if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self))
     {
         from[2] = to[2] = cb.point[2];
@@ -664,17 +675,17 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     z_step = -0.66 * ent->character->climb_r;
     for(; to[2] >= z_min; from[2] += z_step, to[2] += z_step)                   // we can't climb under floor!
     {
-        renderer.debugDrawer->DrawLine(from, to, color, color);
+        //renderer.debugDrawer->DrawLine(from, to, color, color);
         if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self))
         {
-            if(cb.normale[2] >= 0.1)
+            if(cb.normale[2] >= critical_z_normale)
             {
                 up_founded = 1;
                 vec3_copy(n0, cb.normale);
                 n0[3] = -vec3_dot(n0, cb.point);
                 continue;
             }
-            if(up_founded && (cb.normale[2] < 0.001))
+            if(up_founded && (cb.normale[2] < 0.001f))
             {
                 vec3_copy(n1, cb.normale);
                 n1[3] = -vec3_dot(n1, cb.point);
@@ -688,8 +699,8 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             tmp[0] = to[0];
             tmp[1] = to[1];
             tmp[2] = z_min;
-            renderer.debugDrawer->DrawLine(to, tmp, color, color);
-            if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self))
+            //renderer.debugDrawer->DrawLine(to, tmp, color, color);
+            if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self) && (cb.normale[2] >= critical_z_normale))
             {
                 up_founded = 1;
                 vec3_copy(n0, cb.normale);
@@ -743,7 +754,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
                                n2[0] * (n0[1] * n1[3] - n0[3] * n1[1]);
         climb->edge_point[2] /= d;
         vec3_copy(climb->point, climb->edge_point);
-        renderer.debugDrawer->DrawLine(to, climb->point, color, color);
+        //renderer.debugDrawer->DrawLine(to, climb->point, color, color);
         /*
          * unclimbable edge slant %)
          */
@@ -1088,31 +1099,16 @@ int Character_MoveOnFloor(struct entity_s *ent)
 
     if(!ent->character->height_info.floor_hit.hit || (ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height < pos[2]))
     {
-        int added = 0;
-        if(ent->character->height_info.leg_r_floor.hit &&
-           (ent->character->height_info.leg_r_floor.point[2] >= pos[2] - ent->character->fall_down_height) &&
-           (ent->character->height_info.leg_r_floor.point[2] <= pos[2] + ent->character->max_step_up_height))   // disable corner jump bug (really impossible because height calcilates under character base_z!)
-        {
-            ent->character->height_info.floor_hit.point[2] = ent->character->height_info.leg_r_floor.point[2];
-            added++;
-        }
-        if(ent->character->height_info.leg_l_floor.hit &&
-           (ent->character->height_info.leg_l_floor.point[2] >= pos[2] - ent->character->fall_down_height) &&
-           (ent->character->height_info.leg_l_floor.point[2] <= pos[2] + ent->character->max_step_up_height))   // same
-        {
-            if(added == 0)
-            {
-                ent->character->height_info.floor_hit.point[2] = ent->character->height_info.leg_l_floor.point[2];
-                added++;
-            }
-            else
-            {
-                ent->character->height_info.floor_hit.point[2] += ent->character->height_info.leg_l_floor.point[2];
-                ent->character->height_info.floor_hit.point[2] /= 2.0f;
-            }
-        }
-
-        ent->character->height_info.floor_hit.hit = added;
+        tv[0] = pos[0];
+        tv[1] = pos[1];
+        tv[2] = pos[2] - ent->character->max_step_up_height;
+        move[0] = pos[0];
+        move[1] = pos[1];
+        move[2] = pos[2] + 24.0f;
+        Physics_SphereTest(&ent->character->height_info.floor_hit, move, tv, 16.0f, ent->self);
+        ent->character->height_info.floor_hit.normale[0] = 0.0f;
+        ent->character->height_info.floor_hit.normale[1] = 0.0f;
+        ent->character->height_info.floor_hit.normale[2] = 1.0f;
     }
 
     if(ent->character->height_info.floor_hit.hit || (ent->character->resp.vertical_collide & 0x01))
@@ -1129,7 +1125,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         }
 
         vec3_copy(tv, ent->character->height_info.floor_hit.normale);
-        if(tv[2] > 0.02 && tv[2] < ent->character->critical_slant_z_component)
+        if(ent->character->height_info.floor_hit.hit && tv[2] > 0.02 && tv[2] < ent->character->critical_slant_z_component)
         {
             tv[2] = -tv[2];
             t = ent->character->linear_speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT;
