@@ -54,6 +54,7 @@ entity_p Entity_Create()
     ret->obb->transform = ret->transform;
 
     ret->no_fix_all = 0x00;
+    ret->no_fix_z = 0x00;
     ret->no_fix_skeletal_parts = 0x00000000;
     ret->physics = Physics_CreatePhysicsData(ret->self);
 
@@ -82,13 +83,13 @@ entity_p Entity_Create()
     vec3_set_zero(ret->speed);
     vec3_set_one(ret->scaling);
 
-    ret->linear_speed = 0.0;
-    ret->anim_linear_speed = 0.0;
+    ret->linear_speed = 0.0f;
+    ret->anim_linear_speed = 0.0f;
 
-    ret->activation_offset[0] = 0.0;
-    ret->activation_offset[1] = 256.0;
-    ret->activation_offset[2] = 0.0;
-    ret->activation_offset[3] = 128.0;
+    ret->activation_offset[0] = 0.0f;
+    ret->activation_offset[1] = 256.0f;
+    ret->activation_offset[2] = 0.0f;
+    ret->activation_offset[3] = 128.0f;
 
     return ret;
 }

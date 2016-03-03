@@ -415,7 +415,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     vec3_mul_scalar(global_offset, ent->transform + 4, t);
 
                     global_offset[2] += 0.5 * DEFAULT_CLIMB_UP_HEIGHT;
-                    Character_CheckClimbability(ent, climb, global_offset, &next_fc, 0.5 * DEFAULT_CLIMB_UP_HEIGHT);
+                    Character_CheckClimbability(ent, climb, global_offset, &next_fc, DEFAULT_CLIMB_UP_HEIGHT);
                     if(  climb->edge_hit                                                                &&
                         (climb->next_z_space >= ent->character->Height - LARA_HANG_VERTICAL_EPSILON)    &&
                         (pos[2] + ent->character->max_step_up_height < next_fc.floor_hit.point[2])      &&
@@ -445,7 +445,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     }   // end IF MOVE_LITTLE_CLIMBING
 
                     global_offset[2] += 0.5 * DEFAULT_CLIMB_UP_HEIGHT;
-                    Character_CheckClimbability(ent, climb, global_offset, &next_fc, DEFAULT_CLIMB_UP_HEIGHT);
+                    Character_CheckClimbability(ent, climb, global_offset, &next_fc, 1.5 * DEFAULT_CLIMB_UP_HEIGHT);
                     if(climb->edge_hit                                                                &&
                        (climb->next_z_space >= ent->character->Height - LARA_HANG_VERTICAL_EPSILON)   &&
                        (pos[2] + ent->character->max_step_up_height < next_fc.floor_hit.point[2])     &&
