@@ -15,8 +15,10 @@ extern "C" {
  */
 #define ANIM_NORMAL_CONTROL             (0)
 #define ANIM_LOOP_LAST_FRAME            (1)
-#define ANIM_LOCK                       (2)
+#define ANIM_FRAME_LOCK                 (2)
 
+#define ANIM_EXT_OVERRIDE_FRAME         (1)
+    
 #define ANIM_TYPE_BASE                  (0x0000)
 #define ANIM_TYPE_WEAPON_LH             (0x0001)
 #define ANIM_TYPE_WEAPON_RH             (0x0002)
@@ -64,13 +66,15 @@ typedef struct ss_animation_s
     int16_t                     current_frame;                                  //
     int16_t                     next_frame;                                     //
 
-    uint16_t                    anim_flags;                                     // additional animation control param
-
+    uint16_t                    anim_frame_flags;                               // base animation control flags
+    uint16_t                    anim_ext_flags;                                 // additional animation control flags
+    float                       target[3];
+    
     float                       period;                                         // one frame change period
     float                       frame_time;                                     // current time
     float                       lerp;
 
-    void                      (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state);
+    void                      (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state, float time);
 
     struct skeletal_model_s    *model;                                          // pointer to the base model
     struct ss_animation_s      *next;
@@ -213,7 +217,7 @@ void Anim_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame);
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
 int  Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id);
-void Anim_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
+void Anim_GetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
 
 
 #ifdef	__cplusplus

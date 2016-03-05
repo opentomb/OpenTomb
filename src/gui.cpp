@@ -269,7 +269,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, float time)
 
     bf->animations.lerp = 0.0;
     stc = Anim_FindStateChangeByID(bf->animations.model->animations + bf->animations.current_animation, bf->animations.next_state);
-    Anim_GetNextFrame(bf, time, stc, &frame, &anim, 0x00);
+    Anim_GetNextFrame(&bf->animations, time, stc, &frame, &anim, 0x00);
     if(anim != bf->animations.current_animation)
     {
         bf->animations.last_animation = bf->animations.current_animation;
@@ -299,7 +299,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, float time)
     dt = bf->animations.frame_time - (float)t * bf->animations.period;
     bf->animations.frame_time = (float)frame * bf->animations.period + dt;
     bf->animations.lerp = dt / bf->animations.period;
-    Anim_GetNextFrame(bf, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
+    Anim_GetNextFrame(&bf->animations, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
     Anim_UpdateCurrentBoneFrame(bf, NULL);
 }
 

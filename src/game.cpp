@@ -751,16 +751,8 @@ void Game_LoopEntities(struct RedBlackNode_s *x)
 
 void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
-    entity_p entity = (entity_p)x->data;
-
-    if(entity->type_flags & ENTITY_TYPE_DYNAMIC)
-    {
-        Entity_UpdateRigidBody(entity, 0);
-    }
-    else if(Entity_Frame(entity, engine_frame_time))
-    {
-        Entity_UpdateRigidBody(entity, 0);
-    }
+    Entity_Frame((entity_p)x->data, engine_frame_time);
+    Entity_UpdateRigidBody((entity_p)x->data, 0);
 
     if(x->left != NULL)
     {

@@ -626,7 +626,7 @@ end
 function boulder_init(id)
 
     setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
-    setEntityAnimFlag(id, ANIM_LOCK);
+    setEntityAnimFlag(id, ANIM_FRAME_LOCK);
     setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)

@@ -285,7 +285,8 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     vec3_set_zero(bf->centre);
     vec3_set_zero(bf->pos);
     bf->animations.type = ANIM_TYPE_BASE;
-    bf->animations.anim_flags = 0x0000;
+    bf->animations.anim_frame_flags = 0x0000;
+    bf->animations.anim_ext_flags = 0x0000;
     bf->animations.frame_time = 0.0;
     bf->animations.period = 1.0 / 30.0;
     bf->animations.next_state = 0;
@@ -511,13 +512,13 @@ int Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id)
 /*
  * Next frame and next anim calculation function.
  */
-void Anim_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
+void Anim_GetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
 {
-    animation_frame_p curr_anim = bf->animations.model->animations + bf->animations.current_animation;
+    animation_frame_p curr_anim = ss_anim->model->animations + ss_anim->current_animation;
 
-    *frame = (bf->animations.frame_time + time) / bf->animations.period;
+    *frame = (ss_anim->frame_time + time) / ss_anim->period;
     *frame = (*frame >= 0.0)?(*frame):(0.0);                                    // paranoid checking
-    *anim  = bf->animations.current_animation;
+    *anim  = ss_anim->current_animation;
 
     /*
      * Flag has a highest priority
@@ -527,14 +528,14 @@ void Anim_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_chan
         if(*frame >= curr_anim->frames_count - 1)
         {
             *frame = curr_anim->frames_count - 1;
-            *anim  = bf->animations.current_animation;                          // paranoid dublicate
+            *anim  = ss_anim->current_animation;                                // paranoid dublicate
         }
         return;
     }
-    else if(anim_flags == ANIM_LOCK)
+    else if(anim_flags == ANIM_FRAME_LOCK)
     {
         *frame = 0;
-        *anim  = bf->animations.current_animation;
+        *anim  = ss_anim->current_animation;
         return;
     }
 
@@ -546,11 +547,11 @@ void Anim_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_chan
         anim_dispatch_p disp = stc->anim_dispatch;
         for(uint16_t i = 0; i < stc->anim_dispatch_count; i++, disp++)
         {
-            if((disp->frame_high >= disp->frame_low) && ((*frame >= disp->frame_low) && (*frame <= disp->frame_high) || (bf->animations.current_frame < disp->frame_low) && (*frame > disp->frame_high)))
+            if((disp->frame_high >= disp->frame_low) && ((*frame >= disp->frame_low) && (*frame <= disp->frame_high) || (ss_anim->current_frame < disp->frame_low) && (*frame > disp->frame_high)))
             {
                 *anim  = disp->next_anim;
                 *frame = disp->next_frame;
-                return;                                                         // anim was changed
+                return;
             }
         }
     }
@@ -568,7 +569,6 @@ void Anim_GetNextFrame(struct ss_bone_frame_s *bf, float time, struct state_chan
         }
 
         *frame %= curr_anim->frames_count;
-        *anim   = bf->animations.current_animation;                             // paranoid dublicate
-        return;
+        *anim   = ss_anim->current_animation;                                   // paranoid dublicate
     }
 }

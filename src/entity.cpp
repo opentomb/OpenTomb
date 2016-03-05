@@ -1092,97 +1092,102 @@ void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
 /**
  * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
  */
-///@TODO: rewrite as a cycle through all bf.animations list
-int Entity_Frame(entity_p entity, float time)
+void Entity_Frame(entity_p entity, float time)
 {
-    int16_t frame, anim, ret = 0x00;
-    long int t;
-    float dt;
-    animation_frame_p af;
-    state_change_p stc;
-    ss_animation_p ss_anim;
-
-    if((entity == NULL) || (entity->type_flags & ENTITY_TYPE_DYNAMIC) || !(entity->state_flags & ENTITY_STATE_ACTIVE)  || !(entity->state_flags & ENTITY_STATE_ENABLED) ||
-       (entity->bf->animations.model == NULL) || ((entity->bf->animations.model->animation_count == 1) && (entity->bf->animations.model->animations->frames_count == 1)))
+    if(entity && !(entity->type_flags & ENTITY_TYPE_DYNAMIC) && (entity->state_flags & ENTITY_STATE_ACTIVE)  && (entity->state_flags & ENTITY_STATE_ENABLED))
     {
-        return 0;
-    }
+        int16_t frame, anim;
+        long int t;
+        float dt;
+        animation_frame_p af;
+        state_change_p stc;
+        ss_animation_p ss_anim = &entity->bf->animations;
+        uint16_t is_base_anim = 1;
 
-    if(entity->bf->animations.anim_flags & ANIM_LOCK) return 1;                 // penetration fix will be applyed in Character_Move... functions
+        Entity_GhostUpdate(entity);
 
-    ss_anim = &entity->bf->animations;
-
-    Entity_GhostUpdate(entity);
-
-    entity->bf->animations.lerp = 0.0;
-    stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
-    Anim_GetNextFrame(entity->bf, time, stc, &frame, &anim, ss_anim->anim_flags);
-    if(ss_anim->current_animation != anim)
-    {
-        ss_anim->last_animation = ss_anim->current_animation;
-
-        ret = 0x02;
-        Entity_DoAnimCommands(entity, &entity->bf->animations, ret);
-        Entity_DoAnimMove(entity, &anim, &frame);
-
-        Entity_SetAnimation(entity, anim, frame);
-        stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
-    }
-    else if(ss_anim->current_frame != frame)
-    {
-        if(ss_anim->current_frame == 0)
+        while(ss_anim)
         {
-            ss_anim->last_animation = ss_anim->current_animation;
+            if(ss_anim->model && (ss_anim->anim_ext_flags & ANIM_EXT_OVERRIDE_FRAME))
+            {
+                if(ss_anim->onFrame != NULL)
+                {
+                    ss_anim->onFrame(entity, ss_anim, 0x00, time);
+                }
+            }
+            else if(ss_anim->model && !(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK) &&
+                    ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->frames_count > 1)))
+            {
+                uint16_t frame_switch_state = 0x00;
+                ss_anim->lerp = 0.0;
+                stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
+                Anim_GetNextFrame(ss_anim, time, stc, &frame, &anim, ss_anim->anim_frame_flags);
+                if(ss_anim->current_animation != anim)
+                {
+                    ss_anim->last_animation = ss_anim->current_animation;
+
+                    frame_switch_state = 0x02;
+                    Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
+                    Entity_DoAnimMove(entity, &anim, &frame);
+
+                    Entity_SetAnimation(entity, anim, frame);
+                    stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
+                }
+                else if(ss_anim->current_frame != frame)
+                {
+                    if(ss_anim->current_frame == 0)
+                    {
+                        ss_anim->last_animation = ss_anim->current_animation;
+                    }
+
+                    frame_switch_state = 0x01;
+                    Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
+                    Entity_DoAnimMove(entity, &anim, &frame);
+                }
+
+                af = ss_anim->model->animations + ss_anim->current_animation;
+                ss_anim->frame_time += time;
+
+                t = (ss_anim->frame_time) / ss_anim->period;
+                dt = ss_anim->frame_time - (float)t * ss_anim->period;
+                ss_anim->frame_time = (float)frame * ss_anim->period + dt;
+                ss_anim->lerp = dt / ss_anim->period;
+                Anim_GetNextFrame(ss_anim, ss_anim->period, stc, &ss_anim->next_frame, &ss_anim->next_animation, ss_anim->anim_frame_flags);
+
+                // Update acceleration.
+                // With variable framerate, we don't know when we'll reach final
+                // frame for sure, so we use native frame number check to increase acceleration.
+
+                if(is_base_anim && (entity->character) && (ss_anim->current_frame != frame))
+                {
+                    // NB!!! For Lara, we update ONLY X-axis speed/accel.
+                    if((af->accel_x == 0) || (frame < ss_anim->current_frame))
+                    {
+                        entity->anim_linear_speed  = af->speed_x;
+                    }
+                    else
+                    {
+                        entity->anim_linear_speed += af->accel_x;
+                    }
+                }
+
+                ss_anim->current_frame = frame;
+
+                if(ss_anim->onFrame != NULL)
+                {
+                    ss_anim->onFrame(entity, ss_anim, frame_switch_state, time);
+                }
+            }
+            is_base_anim = 0;
+            ss_anim = ss_anim->next;
         }
 
-        ret = 0x01;
-        Entity_DoAnimCommands(entity, &entity->bf->animations, ret);
-        Entity_DoAnimMove(entity, &anim, &frame);
-    }
-
-    af = entity->bf->animations.model->animations + entity->bf->animations.current_animation;
-    entity->bf->animations.frame_time += time;
-
-    t = (entity->bf->animations.frame_time) / entity->bf->animations.period;
-    dt = entity->bf->animations.frame_time - (float)t * entity->bf->animations.period;
-    entity->bf->animations.frame_time = (float)frame * entity->bf->animations.period + dt;
-    entity->bf->animations.lerp = dt / entity->bf->animations.period;
-    Anim_GetNextFrame(entity->bf, entity->bf->animations.period, stc, &entity->bf->animations.next_frame, &entity->bf->animations.next_animation, ss_anim->anim_flags);
-
-    // Update acceleration.
-    // With variable framerate, we don't know when we'll reach final
-    // frame for sure, so we use native frame number check to increase acceleration.
-
-    if((entity->character) && (ss_anim->current_frame != frame))
-    {
-        // NB!!! For Lara, we update ONLY X-axis speed/accel.
-        if((af->accel_x == 0) || (frame < entity->bf->animations.current_frame))
+        Anim_UpdateCurrentBoneFrame(entity->bf, entity->transform);
+        if(entity->character != NULL)
         {
-            entity->anim_linear_speed  = af->speed_x;
-        }
-        else
-        {
-            entity->anim_linear_speed += af->accel_x;
+            Entity_FixPenetrations(entity, NULL);
         }
     }
-
-    entity->bf->animations.current_frame = frame;
-
-
-    Character_DoWeaponFrame(entity, time);
-
-    if(entity->bf->animations.onFrame != NULL)
-    {
-        entity->bf->animations.onFrame(entity, &entity->bf->animations, ret);
-    }
-
-    Anim_UpdateCurrentBoneFrame(entity->bf, entity->transform);
-    if(entity->character != NULL)
-    {
-        Entity_FixPenetrations(entity, NULL);
-    }
-
-    return ret;
 }
 
 /**
@@ -1190,7 +1195,7 @@ int Entity_Frame(entity_p entity, float time)
  */
 void Entity_RebuildBV(entity_p ent)
 {
-    if((ent != NULL) && (ent->bf->animations.model != NULL))
+    if(ent)
     {
         /*
          * get current BB from animation

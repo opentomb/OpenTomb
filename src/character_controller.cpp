@@ -2046,6 +2046,11 @@ void Character_ApplyCommands(struct entity_s *ent)
     Character_UpdateCurrentHeight(ent);
     Character_UpdatePlatformPreStep(ent);
 
+    if((ent->character->cmd.ready_weapon != 0x00) && (ent->character->current_weapon > 0) && (ent->character->weapon_current_state == WEAPON_STATE_HIDE))
+    {
+        Character_SetWeaponModel(ent, ent->character->current_weapon, 1);
+    }
+
     if(ent->character->state_func)
     {
         ent->character->state_func(ent, &ent->bf->animations);
@@ -2237,6 +2242,8 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
             new_anim = Entity_AddOverrideAnim(ent, weapon_model, ANIM_TYPE_WEAPON_TH);
         }
         new_anim->model = sm;
+        new_anim->onFrame = Character_DoTwoHandWeponFrame;
+        new_anim->anim_ext_flags = ANIM_EXT_OVERRIDE_FRAME;
 
         for(uint16_t i = 0; i < bm->mesh_count; i++)
         {
@@ -2296,7 +2303,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
 }
 
 
-void Character_DoOneHandWeponFrame(struct entity_s *ent, struct ss_animation_s *ss_anim, float time)
+void Character_DoOneHandWeponFrame(struct entity_s *ent, struct ss_animation_s *ss_anim, int state, float time)
 {
    /* anims (TR_I - TR_V):
     * pistols:
@@ -2493,7 +2500,7 @@ void Character_DoOneHandWeponFrame(struct entity_s *ent, struct ss_animation_s *
 }
 
 
-void Character_DoTwoHandWeponFrame(struct entity_s *ent, struct ss_animation_s *ss_anim, float time)
+void Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, int state, float time)
 {
    /* anims (TR_I - TR_V):
     * shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons):
@@ -2685,41 +2692,5 @@ void Character_DoTwoHandWeponFrame(struct entity_s *ent, struct ss_animation_s *
                 }
                 break;
         };
-    }
-}
-
-/* There are stick code for multianimation (weapon mode) testing
- * Model replacing will be upgraded too, I have to add override
- * flags to model manually in the script*/
-void Character_DoWeaponFrame(struct entity_s *ent, float time)
-{
-    if(ent->character)
-    {
-        if((ent->character->cmd.ready_weapon != 0x00) && (ent->character->current_weapon > 0) && (ent->character->weapon_current_state == WEAPON_STATE_HIDE))
-        {
-            Character_SetWeaponModel(ent, ent->character->current_weapon, 1);
-        }
-
-        for(ss_animation_p ss_anim = ent->bf->animations.next; ss_anim; ss_anim = ss_anim->next)
-        {
-            if(ss_anim->model)
-            {
-                switch(ss_anim->type)
-                {
-                    case ANIM_TYPE_WEAPON_TH:
-                        Character_DoTwoHandWeponFrame(ent, ss_anim, time);
-                        break;
-
-                    case ANIM_TYPE_WEAPON_LH:
-                        Character_DoOneHandWeponFrame(ent, ss_anim, time);
-                        break;
-
-                    case ANIM_TYPE_WEAPON_RH:
-                        Character_DoOneHandWeponFrame(ent, ss_anim, time);
-                        break;
-                };
-                Entity_DoAnimCommands(ent, ss_anim, 0);
-            }
-        }
     }
 }

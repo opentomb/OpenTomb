@@ -349,6 +349,7 @@ int   Character_ChangeParam(struct entity_s *ent, int parameter, float value);
 int   Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value);
 
 int   Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed);
-void  Character_DoWeaponFrame(struct entity_s *ent, float time);
+void  Character_DoOneHandWeponFrame(struct entity_s *ent, struct ss_animation_s *ss_anim, int state, float time);
+void  Character_DoTwoHandWeponFrame(struct entity_s *ent, struct ss_animation_s *ss_anim, int state, float time);
 
 #endif  // CHARACTER_CONTROLLER_H

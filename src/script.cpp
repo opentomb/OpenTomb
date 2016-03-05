@@ -3064,7 +3064,7 @@ int lua_SetEntityAnimFlag(lua_State * lua)
         return 0;
     }
 
-    ent->bf->animations.anim_flags = lua_tointeger(lua,2);
+    ent->bf->animations.anim_frame_flags = lua_tointeger(lua,2);
 
     return 0;
 }
@@ -4974,8 +4974,8 @@ void Script_LoadConstants(lua_State *lua)
         lua_setglobal(lua, "ANIM_NORMAL_CONTROL");
         lua_pushinteger(lua, ANIM_LOOP_LAST_FRAME);
         lua_setglobal(lua, "ANIM_LOOP_LAST_FRAME");
-        lua_pushinteger(lua, ANIM_LOCK);
-        lua_setglobal(lua, "ANIM_LOCK");
+        lua_pushinteger(lua, ANIM_FRAME_LOCK);
+        lua_setglobal(lua, "ANIM_FRAME_LOCK");
 
         lua_pushinteger(lua, MOVE_STATIC_POS);
         lua_setglobal(lua, "MOVE_STATIC_POS");

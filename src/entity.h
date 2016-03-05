@@ -104,7 +104,7 @@ void Entity_EnableCollision(entity_p ent);
 void Entity_DisableCollision(entity_p ent);
 void Entity_UpdateRoomPos(entity_p ent);
 
-int  Entity_Frame(entity_p entity, float time);  // process frame + trying to change state
+void Entity_Frame(entity_p entity, float time);  // process frame + trying to change state
 
 void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateTransform(entity_p entity);
