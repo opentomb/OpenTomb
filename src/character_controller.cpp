@@ -1040,43 +1040,16 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
 
 void Character_LookAt(struct entity_s *ent, float target[3])
 {
-    ss_bone_tag_p b_tag = NULL;
-    uint16_t start_bone;
-    for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
-    {
-        if(ent->bf->bone_tags[i].body_part == BODY_PART_HEAD)
-        {
-            b_tag = ent->bf->bone_tags + i;
-            start_bone = i;
-            break;
-        }
-    }
-
-    if(b_tag)
-    {
-        //const float head_amp = 75.0f * M_PI / 180.0;
-        float q[4], dir[3], target_local[3];
-
-        Mat4_vec3_mul_inv(target_local, ent->transform, target);
-        Mat4_vec3_mul_inv(dir, b_tag->full_transform, target_local);
-        vec4_GetQuaternionRotation(q, b_tag->transform + 4, dir);
-        vec4_ClampQuaternionRotation(q, 0.77f);
-
-        Mat4_RotateQuaternion(b_tag->transform, q);
-        for(uint16_t i = start_bone; i < ent->bf->bone_tag_count; i++)
-        {
-            ss_bone_tag_p btag = ent->bf->bone_tags + i;
-            if(btag->parent)
-            {
-                Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
-            }
-            else
-            {
-                Mat4_Copy(btag->full_transform, btag->transform);
-            }
-        }
-    }
+    ent->bf->animations.onTarget = Character_OnLookAt;
+    ent->bf->animations.anim_ext_flags |= ANIM_EXT_TARGET_TO;
+    vec3_copy(ent->bf->animations.target, target);
 }
+
+void Character_ClearLookAt(struct entity_s *ent)
+{
+    ent->bf->animations.anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
+}
+
 
 /*
  * MOVE IN DIFFERENCE CONDITIONS
@@ -2242,8 +2215,13 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
             new_anim = Entity_AddOverrideAnim(ent, weapon_model, ANIM_TYPE_WEAPON_TH);
         }
         new_anim->model = sm;
+        new_anim->onEndFrame = NULL;
+        new_anim->onTarget = NULL;
         new_anim->onFrame = Character_DoTwoHandWeponFrame;
-        new_anim->anim_ext_flags = ANIM_EXT_OVERRIDE_FRAME;
+        if(sm->animation_count == 4)
+        {
+            new_anim->onFrame = Character_DoOneHandWeponFrame;
+        }
 
         for(uint16_t i = 0; i < bm->mesh_count; i++)
         {
@@ -2303,7 +2281,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
 }
 
 
-void Character_DoOneHandWeponFrame(struct entity_s *ent, struct ss_animation_s *ss_anim, int state, float time)
+int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, float time)
 {
    /* anims (TR_I - TR_V):
     * pistols:
@@ -2497,10 +2475,11 @@ void Character_DoOneHandWeponFrame(struct entity_s *ent, struct ss_animation_s *
                 break;
         };
     }
+    return 1;
 }
 
 
-void Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, int state, float time)
+int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, float time)
 {
    /* anims (TR_I - TR_V):
     * shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons):
@@ -2692,5 +2671,47 @@ void Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s 
                 }
                 break;
         };
+    }
+    return 1;
+}
+
+
+void  Character_OnLookAt(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+{
+    ss_bone_tag_p b_tag = NULL;
+    uint16_t start_bone;
+    for(uint16_t i = 0; i < bf->bone_tag_count; i++)
+    {
+        if(bf->bone_tags[i].body_part == BODY_PART_HEAD)
+        {
+            b_tag = bf->bone_tags + i;
+            start_bone = i;
+            break;
+        }
+    }
+
+    if(b_tag)
+    {
+        float q[4], dir[3], target_local[3];
+
+        Mat4_vec3_mul_inv(target_local, bf->transform, ss_anim->target);
+        Mat4_vec3_mul_inv(dir, b_tag->full_transform, target_local);
+        vec4_GetQuaternionRotation(q, b_tag->transform + 4, dir);
+        if(q[3] >= 0.77f)
+        {
+            Mat4_RotateQuaternion(b_tag->transform, q);
+            for(uint16_t i = start_bone; i < bf->bone_tag_count; i++)
+            {
+                ss_bone_tag_p btag = bf->bone_tags + i;
+                if(btag->parent)
+                {
+                    Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
+                }
+                else
+                {
+                    Mat4_Copy(btag->full_transform, btag->transform);
+                }
+            }
+        }
     }
 }

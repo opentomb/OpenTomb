@@ -492,11 +492,11 @@ void Cam_PlayFlyBy(float time)
         {
             room_sector_p rs = NULL;
             FlyBySequence_SetCamera(engine_camera_state.flyby, &engine_camera, engine_camera_state.time);
-            rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
+            /*rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
             if(rs && rs->trigger)
             {
                 Trigger_DoCommands(rs->trigger, NULL);
-            }
+            }*/
         }
         else
         {
@@ -919,6 +919,10 @@ void Game_Frame(float time)
                 {
                     Character_LookAt(player, target->transform + 12);
                 }
+            }
+            else
+            {
+                Character_ClearLookAt(player);
             }
         }
     }

@@ -212,11 +212,11 @@ typedef struct height_info_s
     struct collision_result_s                leg_r_floor;
     struct collision_result_s                hand_l_floor;
     struct collision_result_s                hand_r_floor;
-    
+
     float                                    transition_level;
     int16_t                                  water;
     int16_t                                  quicksand;
-    
+
     int16_t                                  leg_l_index;
     int16_t                                  leg_r_index;
     int16_t                                  hand_l_index;
@@ -327,6 +327,7 @@ void Character_UpdatePlatformPostStep(struct entity_s *ent);
 void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizontal);
 void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lean);
 void Character_LookAt(struct entity_s *ent, float target[3]);
+void Character_ClearLookAt(struct entity_s *ent);
 
 int Character_MoveOnFloor(struct entity_s *ent);
 int Character_FreeFalling(struct entity_s *ent);
@@ -349,7 +350,13 @@ int   Character_ChangeParam(struct entity_s *ent, int parameter, float value);
 int   Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value);
 
 int   Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed);
-void  Character_DoOneHandWeponFrame(struct entity_s *ent, struct ss_animation_s *ss_anim, int state, float time);
-void  Character_DoTwoHandWeponFrame(struct entity_s *ent, struct ss_animation_s *ss_anim, int state, float time);
+
+/*
+ * ss_animation callbacks
+ */
+int   Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, float time);
+int   Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, float time);
+
+void  Character_OnLookAt(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
 
 #endif  // CHARACTER_CONTROLLER_H

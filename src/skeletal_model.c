@@ -298,6 +298,8 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
 
     bf->animations.next = NULL;
     bf->animations.onFrame = NULL;
+    bf->animations.onEndFrame = NULL;
+    bf->transform = NULL;
     bf->animations.model = model;
     bf->bone_tag_count = model->mesh_count;
     bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
@@ -423,6 +425,14 @@ void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16])
     {
         Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
     }
+
+    for(ss_animation_p ss_anim = &bf->animations; ss_anim; ss_anim = ss_anim->next)
+    {
+        if(ss_anim->onTarget && ss_anim->model && (ss_anim->anim_ext_flags & ANIM_EXT_TARGET_TO))
+        {
+            ss_anim->onTarget(bf, ss_anim);
+        }
+    }
 }
 
 
@@ -436,7 +446,7 @@ void Anim_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame)
 
     bf->animations.last_state = anim->state_id;
     bf->animations.next_state = anim->state_id;
-    
+
     bf->animations.current_animation = animation;
     bf->animations.current_frame = frame;
     bf->animations.next_animation = animation;

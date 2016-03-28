@@ -1160,6 +1160,8 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
     char   file_path[256];          // Should be enough, and this is not the full path...
 
+    return TR_AUDIO_STREAMPLAY_WRONGTRACK;
+
     // Don't even try to do anything with track, if its index is greater than overall amount of
     // soundtracks specified in a stream track map count (which is derived from script).
 

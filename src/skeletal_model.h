@@ -16,14 +16,15 @@ extern "C" {
 #define ANIM_NORMAL_CONTROL             (0)
 #define ANIM_LOOP_LAST_FRAME            (1)
 #define ANIM_FRAME_LOCK                 (2)
+#define ANIM_FRAME_REVERSE              (4)
 
-#define ANIM_EXT_OVERRIDE_FRAME         (1)
-    
+#define ANIM_EXT_TARGET_TO              (1)
+
 #define ANIM_TYPE_BASE                  (0x0000)
 #define ANIM_TYPE_WEAPON_LH             (0x0001)
 #define ANIM_TYPE_WEAPON_RH             (0x0002)
-#define ANIM_TYPE_WEAPON_TH             (0x0003)  
-    
+#define ANIM_TYPE_WEAPON_TH             (0x0003)
+
 #include <stdint.h>
 
 struct base_mesh_s;
@@ -69,13 +70,14 @@ typedef struct ss_animation_s
     uint16_t                    anim_frame_flags;                               // base animation control flags
     uint16_t                    anim_ext_flags;                                 // additional animation control flags
     float                       target[3];
-    
+
     float                       period;                                         // one frame change period
     float                       frame_time;                                     // current time
     float                       lerp;
 
-    void                      (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state, float time);
-
+    int                       (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, float time);
+    void                      (*onEndFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state);
+    void                      (*onTarget)(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
     struct skeletal_model_s    *model;                                          // pointer to the base model
     struct ss_animation_s      *next;
 }ss_animation_t, *ss_animation_p;
@@ -91,6 +93,7 @@ typedef struct ss_bone_frame_s
     float                       bb_min[3];                                      // bounding box min coordinates
     float                       bb_max[3];                                      // bounding box max coordinates
     float                       centre[3];                                      // bounding box centre
+    float                      *transform;
 
     struct ss_animation_s       animations;                                     // animations list
 }ss_bone_frame_t, *ss_bone_frame_p;

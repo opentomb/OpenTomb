@@ -517,6 +517,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             entity->move_type          = 0;
 
             SSBoneFrame_CreateFromModel(entity->bf, model);
+            entity->bf->transform = entity->transform;
             Entity_SetAnimation(entity, 0, 0);
             Physics_GenRigidBody(entity->physics, entity->bf, entity->transform);
 
@@ -2359,6 +2360,7 @@ void World_GenEntities(class VT_Level *tr)
         }
 
         SSBoneFrame_CreateFromModel(entity->bf, entity->bf->animations.model);
+        entity->bf->transform = entity->transform;
 
         if(0 == tr_item->object_id)                                             // Lara is an unical model
         {

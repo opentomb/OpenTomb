@@ -247,7 +247,7 @@ void Entity_UpdateRoomPos(entity_p ent)
 
         if(ent->current_sector != new_sector)
         {
-            ent->trigger_layout &= (uint8_t)(~ENTITY_TLAYOUT_SSTATUS); // Reset sector status.
+            ent->trigger_layout &= (uint8_t)(~ENTITY_TLAYOUT_SSTATUS);          // Reset sector status.
             ent->current_sector = new_sector;
         }
     }
@@ -972,7 +972,7 @@ void Entity_ProcessSector(entity_p ent)
         if(lowest_sector->flags & SECTOR_FLAG_DEATH)
         {
             if((ent->move_type == MOVE_ON_FLOOR)    ||
-               (ent->move_type == MOVE_UNDERWATER) ||
+               (ent->move_type == MOVE_UNDERWATER)  ||
                (ent->move_type == MOVE_WADE)        ||
                (ent->move_type == MOVE_ON_WATER)    ||
                (ent->move_type == MOVE_QUICKSAND))
@@ -1108,11 +1108,12 @@ void Entity_Frame(entity_p entity, float time)
 
         while(ss_anim)
         {
-            if(ss_anim->model && (ss_anim->anim_ext_flags & ANIM_EXT_OVERRIDE_FRAME))
+            if(ss_anim->model && ss_anim->onFrame)
             {
-                if(ss_anim->onFrame != NULL)
+                int frame_switch_state = ss_anim->onFrame(entity, ss_anim, time);
+                if(ss_anim->onEndFrame != NULL)
                 {
-                    ss_anim->onFrame(entity, ss_anim, 0x00, time);
+                    ss_anim->onEndFrame(entity, ss_anim, frame_switch_state);
                 }
             }
             else if(ss_anim->model && !(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK) &&
@@ -1173,9 +1174,9 @@ void Entity_Frame(entity_p entity, float time)
 
                 ss_anim->current_frame = frame;
 
-                if(ss_anim->onFrame != NULL)
+                if(ss_anim->onEndFrame != NULL)
                 {
-                    ss_anim->onFrame(entity, ss_anim, frame_switch_state, time);
+                    ss_anim->onEndFrame(entity, ss_anim, frame_switch_state);
                 }
             }
             is_base_anim = 0;
