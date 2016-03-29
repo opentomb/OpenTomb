@@ -295,7 +295,10 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     bf->animations.current_frame = 0;
     bf->animations.next_animation = 0;
     bf->animations.next_frame = 0;
-
+    vec3_set_zero(bf->animations.target);
+    bf->animations.targeting_bone = 0x00;
+    bf->animations.targeting_axis_offset = 0x00;
+            
     bf->animations.next = NULL;
     bf->animations.onFrame = NULL;
     bf->animations.onEndFrame = NULL;
@@ -428,9 +431,34 @@ void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16])
 
     for(ss_animation_p ss_anim = &bf->animations; ss_anim; ss_anim = ss_anim->next)
     {
-        if(ss_anim->onTarget && ss_anim->model && (ss_anim->anim_ext_flags & ANIM_EXT_TARGET_TO))
+        if(ss_anim->anim_ext_flags & ANIM_EXT_TARGET_TO)
         {
-            ss_anim->onTarget(bf, ss_anim);
+            Anim_TargetBoneTo(bf, ss_anim);
+        }
+    }
+}
+
+
+void Anim_TargetBoneTo(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+{
+    ss_bone_tag_p b_tag = b_tag = bf->bone_tags + ss_anim->targeting_bone;
+    float q[4], dir[3], target_local[3];
+
+    Mat4_vec3_mul_inv(target_local, bf->transform, ss_anim->target);
+    Mat4_vec3_mul_inv(dir, b_tag->full_transform, target_local);
+    vec4_GetQuaternionRotation(q, b_tag->transform + ss_anim->targeting_axis_offset, dir);
+
+    Mat4_RotateQuaternion(b_tag->transform, q);
+    for(uint16_t i = ss_anim->targeting_bone; i < bf->bone_tag_count; i++)
+    {
+        ss_bone_tag_p btag = bf->bone_tags + i;
+        if(btag->parent)
+        {
+            Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
+        }
+        else
+        {
+            Mat4_Copy(btag->full_transform, btag->transform);
         }
     }
 }
@@ -557,7 +585,7 @@ void Anim_GetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_
         anim_dispatch_p disp = stc->anim_dispatch;
         for(uint16_t i = 0; i < stc->anim_dispatch_count; i++, disp++)
         {
-            if((disp->frame_high >= disp->frame_low) && ((*frame >= disp->frame_low) && (*frame <= disp->frame_high) || (ss_anim->current_frame < disp->frame_low) && (*frame > disp->frame_high)))
+            if((disp->frame_high >= disp->frame_low) && (((*frame >= disp->frame_low) && (*frame <= disp->frame_high)) || ((ss_anim->current_frame < disp->frame_low) && (*frame > disp->frame_high))))
             {
                 *anim  = disp->next_anim;
                 *frame = disp->next_frame;

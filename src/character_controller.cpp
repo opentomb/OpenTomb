@@ -20,6 +20,7 @@
 #include "engine_string.h"
 #include "inventory.h"
 #include "game.h"
+#include "controls.h"
 
 void Character_Create(struct entity_s *ent)
 {
@@ -1040,7 +1041,8 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
 
 void Character_LookAt(struct entity_s *ent, float target[3])
 {
-    ent->bf->animations.onTarget = Character_OnLookAt;
+    ent->bf->animations.targeting_bone = 14;
+    ent->bf->animations.targeting_axis_offset = 4;
     ent->bf->animations.anim_ext_flags |= ANIM_EXT_TARGET_TO;
     vec3_copy(ent->bf->animations.target, target);
 }
@@ -2216,7 +2218,6 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
         }
         new_anim->model = sm;
         new_anim->onEndFrame = NULL;
-        new_anim->onTarget = NULL;
         new_anim->onFrame = Character_DoTwoHandWeponFrame;
         if(sm->animation_count == 4)
         {
@@ -2673,45 +2674,4 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
         };
     }
     return 1;
-}
-
-
-void  Character_OnLookAt(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
-{
-    ss_bone_tag_p b_tag = NULL;
-    uint16_t start_bone;
-    for(uint16_t i = 0; i < bf->bone_tag_count; i++)
-    {
-        if(bf->bone_tags[i].body_part == BODY_PART_HEAD)
-        {
-            b_tag = bf->bone_tags + i;
-            start_bone = i;
-            break;
-        }
-    }
-
-    if(b_tag)
-    {
-        float q[4], dir[3], target_local[3];
-
-        Mat4_vec3_mul_inv(target_local, bf->transform, ss_anim->target);
-        Mat4_vec3_mul_inv(dir, b_tag->full_transform, target_local);
-        vec4_GetQuaternionRotation(q, b_tag->transform + 4, dir);
-        if(q[3] >= 0.77f)
-        {
-            Mat4_RotateQuaternion(b_tag->transform, q);
-            for(uint16_t i = start_bone; i < bf->bone_tag_count; i++)
-            {
-                ss_bone_tag_p btag = bf->bone_tags + i;
-                if(btag->parent)
-                {
-                    Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
-                }
-                else
-                {
-                    Mat4_Copy(btag->full_transform, btag->transform);
-                }
-            }
-        }
-    }
 }

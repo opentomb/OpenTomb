@@ -69,6 +69,9 @@ typedef struct ss_animation_s
 
     uint16_t                    anim_frame_flags;                               // base animation control flags
     uint16_t                    anim_ext_flags;                                 // additional animation control flags
+    
+    uint16_t                    targeting_bone;
+    uint16_t                    targeting_axis_offset;
     float                       target[3];
 
     float                       period;                                         // one frame change period
@@ -77,7 +80,6 @@ typedef struct ss_animation_s
 
     int                       (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, float time);
     void                      (*onEndFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state);
-    void                      (*onTarget)(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
     struct skeletal_model_s    *model;                                          // pointer to the base model
     struct ss_animation_s      *next;
 }ss_animation_t, *ss_animation_p;
@@ -216,6 +218,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);
 void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
 
 void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16]);
+void Anim_TargetBoneTo(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
 void Anim_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame);
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);

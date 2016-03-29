@@ -357,6 +357,4 @@ int   Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed
 int   Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, float time);
 int   Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, float time);
 
-void  Character_OnLookAt(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
-
 #endif  // CHARACTER_CONTROLLER_H
