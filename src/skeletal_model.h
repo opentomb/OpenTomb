@@ -71,7 +71,8 @@ typedef struct ss_animation_s
     uint16_t                    anim_ext_flags;                                 // additional animation control flags
     
     uint16_t                    targeting_bone;
-    uint16_t                    targeting_axis_offset;
+    uint16_t                    targeting_base;
+    float                       bone_direction[3];
     float                       target[3];
 
     float                       period;                                         // one frame change period

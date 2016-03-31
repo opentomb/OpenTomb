@@ -1042,7 +1042,10 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
 void Character_LookAt(struct entity_s *ent, float target[3])
 {
     ent->bf->animations.targeting_bone = 14;
-    ent->bf->animations.targeting_axis_offset = 4;
+    ent->bf->animations.targeting_base = 0x00;
+    ent->bf->animations.bone_direction[0] = 0.0f;
+    ent->bf->animations.bone_direction[1] = 1.0f;
+    ent->bf->animations.bone_direction[2] = 0.0f;
     ent->bf->animations.anim_ext_flags |= ANIM_EXT_TARGET_TO;
     vec3_copy(ent->bf->animations.target, target);
 }
@@ -2441,6 +2444,17 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                         ss_anim->current_frame = 0;
                         ss_anim->next_frame = 1;
                     }
+
+                    if(ent->bf->animations.anim_ext_flags & ANIM_EXT_TARGET_TO)
+                    {
+                        ss_anim->targeting_bone = 8;
+                        ss_anim->targeting_base = 0x01;
+                        ss_anim->bone_direction[0] = 0.0f;
+                        ss_anim->bone_direction[1] = 1.0f;
+                        ss_anim->bone_direction[2] = 0.0f;
+                        ss_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
+                        vec3_copy(ss_anim->target, ent->bf->animations.target);
+                    }
                 }
                 else
                 {
@@ -2450,6 +2464,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
                     ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
                     ent->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
+                    ss_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
                 }
                 break;
 
@@ -2473,6 +2488,8 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ent->character->weapon_current_state = WEAPON_STATE_HIDE;
                     Character_SetWeaponModel(ent, ent->character->current_weapon, 0);
                 }
+
+                ss_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
                 break;
         };
     }
@@ -2670,6 +2687,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ent->character->weapon_current_state = WEAPON_STATE_HIDE;
                     Character_SetWeaponModel(ent, ent->character->current_weapon, 0);
                 }
+                ss_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
                 break;
         };
     }

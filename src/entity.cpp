@@ -280,9 +280,17 @@ struct ss_animation_s *Entity_AddOverrideAnim(struct entity_s *ent, int model_id
     {
         ss_animation_p ss_anim = (ss_animation_p)malloc(sizeof(ss_animation_t));
 
+        ss_anim->anim_ext_flags = 0x00;
+        ss_anim->anim_frame_flags = 0x00;
         ss_anim->type = anim_type;
         ss_anim->model = sm;
         ss_anim->onFrame = NULL;
+        ss_anim->onEndFrame = NULL;
+        ss_anim->targeting_bone = 0;
+        ss_anim->targeting_base = 0;
+        vec3_set_zero(ss_anim->target);
+        vec3_set_zero(ss_anim->bone_direction);
+        ss_anim->bone_direction[1] = 1.0f;
         ss_anim->next = ent->bf->animations.next;
         ent->bf->animations.next = ss_anim;
 
@@ -293,7 +301,7 @@ struct ss_animation_s *Entity_AddOverrideAnim(struct entity_s *ent, int model_id
         ss_anim->current_frame = 0;
         ss_anim->next_animation = 0;
         ss_anim->next_frame = 0;
-        ss_anim->period = 1.0 / 30.0;
+        ss_anim->period = 1.0f / 30.0f;
         return ss_anim;
     }
 

@@ -296,8 +296,10 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     bf->animations.next_animation = 0;
     bf->animations.next_frame = 0;
     vec3_set_zero(bf->animations.target);
+    vec3_set_zero(bf->animations.bone_direction);
+    bf->animations.bone_direction[1] = 1.0f;
     bf->animations.targeting_bone = 0x00;
-    bf->animations.targeting_axis_offset = 0x00;
+    bf->animations.targeting_base = 0x00;
             
     bf->animations.next = NULL;
     bf->animations.onFrame = NULL;
@@ -442,11 +444,24 @@ void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16])
 void Anim_TargetBoneTo(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
 {
     ss_bone_tag_p b_tag = b_tag = bf->bone_tags + ss_anim->targeting_bone;
-    float q[4], dir[3], target_local[3];
+    float q[4], target_dir[3], target_local[3], bone_dir[3];
 
     Mat4_vec3_mul_inv(target_local, bf->transform, ss_anim->target);
-    Mat4_vec3_mul_inv(dir, b_tag->full_transform, target_local);
-    vec4_GetQuaternionRotation(q, b_tag->transform + ss_anim->targeting_axis_offset, dir);
+    if(b_tag->parent)
+    {
+        Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
+    }
+    vec3_sub(target_dir, target_local, b_tag->transform + 12);
+    
+    if(ss_anim->targeting_base == 0)
+    {
+        Mat4_vec3_rot_macro(bone_dir, b_tag->transform, ss_anim->bone_direction);
+    }
+    else
+    {
+        vec3_copy(bone_dir, ss_anim->bone_direction);
+    }
+    vec4_GetQuaternionRotation(q, bone_dir, target_dir);
 
     Mat4_RotateQuaternion(b_tag->transform, q);
     for(uint16_t i = ss_anim->targeting_bone; i < bf->bone_tag_count; i++)
