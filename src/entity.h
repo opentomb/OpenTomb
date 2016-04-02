@@ -11,6 +11,8 @@ struct ss_animation_s;
 struct ss_bone_frame_s;
 struct physics_data_s;
 
+#define ENTITY_ID_NONE                              (0xFFFFFFFF)
+
 #define ENTITY_STATE_ENABLED                        (0x0001)    // Entity is enabled.
 #define ENTITY_STATE_ACTIVE                         (0x0002)    // Entity is animated.
 #define ENTITY_STATE_VISIBLE                        (0x0004)    // Entity is visible.

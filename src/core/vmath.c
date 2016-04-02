@@ -834,5 +834,3 @@ int ThreePlanesIntersection(float v[3], float n0[4], float n1[4], float n2[4])
 
     return 1;
 }
-
-

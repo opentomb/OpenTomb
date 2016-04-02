@@ -276,15 +276,16 @@ typedef struct character_s
     struct character_param_s    parameters;
     struct character_stats_s    statistics;
 
+    uint32_t                    target_id;
+    int8_t                      cam_follow_center;
     int8_t                      hair_count;
     struct hair_s             **hairs;
 
-    int                         current_weapon;
-    int                         weapon_current_state;
+    int16_t                     current_weapon;
+    int16_t                     weapon_current_state;
 
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
 
-    int8_t                      cam_follow_center;
     float                       linear_speed_mult;
     float                       rotate_speed_mult;
     float                       min_step_up_height;

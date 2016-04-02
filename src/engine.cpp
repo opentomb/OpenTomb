@@ -42,6 +42,7 @@ extern "C" {
 #include "physics.h"
 #include "controls.h"
 #include "trigger.h"
+#include "character_controller.h"
 
 
 static SDL_Window             *sdl_window     = NULL;
@@ -625,6 +626,14 @@ void Engine_PollSDLEvents()
                 else if(event.button.button == 3)
                 {
                     Controls_SecondaryMouseDown(&last_cont);
+                    if(last_cont && last_cont->object_type == OBJECT_ENTITY)
+                    {
+                        entity_p player = World_GetPlayer();
+                        if(player && player->character)
+                        {
+                            player->character->target_id = ((entity_p)last_cont->object)->id;
+                        }
+                    }
                 }
                 break;
 

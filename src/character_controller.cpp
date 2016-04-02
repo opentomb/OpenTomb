@@ -38,6 +38,7 @@ void Character_Create(struct entity_s *ent)
         ret->height_info.self = ent->self;
         ent->dir_flag = ENT_STAY;
 
+        ret->target_id = ENTITY_ID_NONE;
         ret->hair_count = 0;
         ret->hairs = NULL;
 
@@ -1041,13 +1042,8 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
 
 void Character_LookAt(struct entity_s *ent, float target[3])
 {
-    ent->bf->animations.targeting_bone = 14;
-    ent->bf->animations.targeting_base = 0x00;
-    ent->bf->animations.bone_direction[0] = 0.0f;
-    ent->bf->animations.bone_direction[1] = 1.0f;
-    ent->bf->animations.bone_direction[2] = 0.0f;
-    ent->bf->animations.anim_ext_flags |= ANIM_EXT_TARGET_TO;
-    vec3_copy(ent->bf->animations.target, target);
+    const float bone_dir[] = {0.0f, 1.0f, 0.0f};
+    Anim_SetTargetToAnimation(&ent->bf->animations, target, bone_dir, 14, 0x00);
 }
 
 void Character_ClearLookAt(struct entity_s *ent)
@@ -2298,6 +2294,9 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
     {
         float dt;
         int32_t t;
+        entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
+
+        ss_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
         switch(ent->character->weapon_current_state)
         {
             case WEAPON_STATE_HIDE:
@@ -2354,7 +2353,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->frame_time = 0.0;
                     ent->character->weapon_current_state = WEAPON_STATE_IDLE_TO_HIDE;
                 }
-                else if(ent->character->cmd.action)
+                else if(ent->character->cmd.action || target)
                 {
                     ent->character->weapon_current_state = WEAPON_STATE_IDLE_TO_FIRE;
                 }
@@ -2392,6 +2391,30 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 ss_anim->lerp = dt / ss_anim->period;
                 t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
 
+                if(ent->character->cmd.ready_weapon)
+                {
+                    ss_anim->current_animation = 2;
+                    ss_anim->next_animation = 2;
+                    ss_anim->frame_time = 0.0;
+                    ent->character->weapon_current_state = WEAPON_STATE_IDLE_TO_HIDE;
+                    break;
+                }
+
+                if(target)
+                {
+                    const float bone_dir[] = {0.0f, 1.0f, 0.0f};
+                    Anim_SetTargetToAnimation(ss_anim, target->transform + 12, bone_dir, 8, 0x01);
+                    if(!ent->character->cmd.action && !ent->character->cmd.ready_weapon)
+                    {
+                        float max_time = (float)ss_anim->current_frame * ss_anim->period;
+                        ss_anim->current_frame = t - 1;
+                        if(ss_anim->frame_time > max_time)
+                        {
+                            ss_anim->frame_time = max_time;
+                        }
+                    }
+                }
+
                 if(ss_anim->current_frame < t - 1)
                 {
                     ss_anim->next_frame = ss_anim->current_frame + 1;
@@ -2419,6 +2442,11 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 break;
 
             case WEAPON_STATE_FIRE:
+                if(target)
+                {
+                    const float bone_dir[] = {0.0f, 1.0f, 0.0f};
+                    Anim_SetTargetToAnimation(ss_anim, target->transform + 12, bone_dir, 8, 0x01);
+                }
                 if(ent->character->cmd.action)
                 {
                     // inc time, loop;
@@ -2444,17 +2472,6 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                         ss_anim->current_frame = 0;
                         ss_anim->next_frame = 1;
                     }
-
-                    if(ent->bf->animations.anim_ext_flags & ANIM_EXT_TARGET_TO)
-                    {
-                        ss_anim->targeting_bone = 8;
-                        ss_anim->targeting_base = 0x01;
-                        ss_anim->bone_direction[0] = 0.0f;
-                        ss_anim->bone_direction[1] = 1.0f;
-                        ss_anim->bone_direction[2] = 0.0f;
-                        ss_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
-                        vec3_copy(ss_anim->target, ent->bf->animations.target);
-                    }
                 }
                 else
                 {
@@ -2464,7 +2481,6 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
                     ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
                     ent->character->weapon_current_state = WEAPON_STATE_FIRE_TO_IDLE;
-                    ss_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
                 }
                 break;
 
@@ -2488,8 +2504,6 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ent->character->weapon_current_state = WEAPON_STATE_HIDE;
                     Character_SetWeaponModel(ent, ent->character->current_weapon, 0);
                 }
-
-                ss_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
                 break;
         };
     }
@@ -2567,7 +2581,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->frame_time = 0.0;
                     ent->character->weapon_current_state = WEAPON_STATE_IDLE_TO_HIDE;
                 }
-                else if(ent->character->cmd.action)
+                else if(ent->character->cmd.action || (ss_anim->anim_ext_flags & ANIM_EXT_TARGET_TO))
                 {
                     ent->character->weapon_current_state = WEAPON_STATE_IDLE_TO_FIRE;
                 }
@@ -2604,6 +2618,16 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                 ss_anim->lerp = dt / ss_anim->period;
                 t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+
+                if(!ent->character->cmd.action && (ss_anim->anim_ext_flags & ANIM_EXT_TARGET_TO))
+                {
+                    float max_time = (float)ss_anim->current_frame * ss_anim->period;
+                    ss_anim->current_frame = t - 1;
+                    if(ss_anim->frame_time > max_time)
+                    {
+                        ss_anim->frame_time = max_time;
+                    }
+                }
 
                 if(ss_anim->current_frame < t - 1)
                 {

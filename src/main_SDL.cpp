@@ -10,9 +10,7 @@
  * 2) LUA enngine global script:
  *      - reorganize script system... too heavy!!!
  * 3) Skeletal models functionality:
- *      - add multianimation system: weapon animations (not a car / byke case: it is two entities
- *        with the same coordinates / orientation);
- *      - add head, torso rotation for actor->look_at (additional and final multianimation);
+ *      - tune multi animation system; fix bone targeting using;
  *      - add mesh replace system (I.E. Lara's head with emotion / speek);
  *      - fix animation interpolation in animations switch case;
  * 6) Menu (create own menu)

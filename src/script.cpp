@@ -1482,6 +1482,31 @@ int lua_SetEntityActivationOffset(lua_State * lua)
 }
 
 
+int lua_SetCharacterTarget(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top == 0)
+    {
+        Con_Warning("expecting arguments (entity_id, (target_id))");
+        return 0;
+    }
+
+    uint32_t character_id = lua_tointeger(lua, 1);
+    entity_p ent     = World_GetEntityByID(character_id);
+
+    if(!ent || !ent->character)
+    {
+        Con_Warning("no character with id = %d", character_id);
+        return 0;
+    }
+
+    ent->character->target_id = (top > 1) ? (lua_tointeger(lua, 2)) : (ENTITY_ID_NONE);
+
+    return 0;
+}
+
+
 int lua_GetCharacterParam(lua_State * lua)
 {
     if(lua_gettop(lua) < 2)
@@ -5261,6 +5286,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "addEntityRagdoll", lua_AddEntityRagdoll);
     lua_register(lua, "removeEntityRagdoll", lua_RemoveEntityRagdoll);
 
+    lua_register(lua, "setCharacterTarget", lua_SetCharacterTarget);
     lua_register(lua, "getCharacterParam", lua_GetCharacterParam);
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);
     lua_register(lua, "changeCharacterParam", lua_ChangeCharacterParam);

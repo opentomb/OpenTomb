@@ -502,6 +502,16 @@ void Anim_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame)
 }
 
 
+void Anim_SetTargetToAnimation(struct ss_animation_s *ss_anim, const float target[3], const float bone_dir[3], uint16_t bone, uint16_t use_parent)
+{
+    vec3_copy(ss_anim->target, target);
+    vec3_copy(ss_anim->bone_direction, bone_dir);
+    ss_anim->targeting_bone = bone;
+    ss_anim->targeting_base = use_parent;
+    ss_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
+}
+
+
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim)
 {
     if(state_change_anim >= 0)
