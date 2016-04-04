@@ -316,6 +316,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
         bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
         bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
         bf->bone_tags[i].mesh_slot = NULL;
+        bf->bone_tags[i].alt_anim = NULL;
         bf->bone_tags[i].body_part = model->mesh_tree[i].body_part;
 
         vec3_copy(bf->bone_tags[i].offset, model->mesh_tree[i].offset);
@@ -403,17 +404,13 @@ void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16])
             bone_tag_p ov_src_btag = src_btag;
             bone_tag_p ov_next_btag = next_btag;
             float ov_lerp = bf->animations.lerp;
-            for(ss_animation_p ov_anim = bf->animations.next; ov_anim; ov_anim = ov_anim->next)
+            if(btag->alt_anim && btag->alt_anim->model && (btag->alt_anim->model->mesh_tree[k].replace_anim != 0))
             {
-                if((ov_anim->model != NULL) && (ov_anim->model->mesh_tree[k].replace_anim != 0))
-                {
-                    bone_frame_p ov_curr_bf = ov_anim->model->animations[ov_anim->current_animation].frames + ov_anim->current_frame;
-                    bone_frame_p ov_next_bf = ov_anim->model->animations[ov_anim->next_animation].frames + ov_anim->next_frame;
-                    ov_src_btag = ov_curr_bf->bone_tags + k;
-                    ov_next_btag = ov_next_bf->bone_tags + k;
-                    ov_lerp = ov_anim->lerp;
-                    break;
-                }
+                bone_frame_p ov_curr_bf = btag->alt_anim->model->animations[btag->alt_anim->current_animation].frames + btag->alt_anim->current_frame;
+                bone_frame_p ov_next_bf = btag->alt_anim->model->animations[btag->alt_anim->next_animation].frames + btag->alt_anim->next_frame;
+                ov_src_btag = ov_curr_bf->bone_tags + k;
+                ov_next_btag = ov_next_bf->bone_tags + k;
+                ov_lerp = btag->alt_anim->lerp;
             }
             vec4_slerp(btag->qrotate, ov_src_btag->qrotate, ov_next_btag->qrotate, ov_lerp);
         }
@@ -499,6 +496,31 @@ void Anim_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame)
     //long int t = (bf->animations.frame_time) / bf->animations.period;
     //float dt = bf->animations.frame_time - (float)t * bf->animations.period;
     bf->animations.frame_time = (float)frame * bf->animations.period;// + dt;
+}
+
+
+void Anim_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+{
+    for(uint16_t i = 0; i < bf->bone_tag_count; i++)
+    {
+        mesh_tree_tag_p mtag = ss_anim->model->mesh_tree + i;
+        if(mtag->replace_anim != 0)
+        {
+            bf->bone_tags[i].alt_anim = ss_anim;
+        }
+    }
+}
+
+
+void Anim_DisableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+{
+    for(uint16_t i = 0; i < bf->bone_tag_count; i++)
+    {
+        if(bf->bone_tags[i].alt_anim == ss_anim)
+        {
+            bf->bone_tags[i].alt_anim = NULL;;
+        }
+    }
 }
 
 

@@ -46,6 +46,7 @@ typedef struct ss_bone_tag_s
     struct base_mesh_s     *mesh_base;                                          // base mesh - pointer to the first mesh in array
     struct base_mesh_s     *mesh_skin;                                          // base skinned mesh for ТР4+
     struct base_mesh_s     *mesh_slot;
+    struct ss_animation_s  *alt_anim;
     float                   offset[3];                                          // model position offset
 
     float                   qrotate[4];                                         // quaternion rotation
@@ -221,6 +222,8 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
 void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16]);
 void Anim_TargetBoneTo(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
 void Anim_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame);
+void Anim_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
+void Anim_DisableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
 void Anim_SetTargetToAnimation(struct ss_animation_s *ss_anim, const float target[3], const float bone_dir[3], uint16_t bone, uint16_t use_parent);
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
