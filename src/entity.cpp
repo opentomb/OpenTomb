@@ -272,56 +272,6 @@ void Entity_UpdateTransform(entity_p entity)
 }
 
 
-struct ss_animation_s *Entity_AddOverrideAnim(struct entity_s *ent, int model_id, uint16_t anim_type)
-{
-    skeletal_model_p sm = World_GetModelByID(model_id);
-
-    if((sm != NULL) && (sm->mesh_count == ent->bf->bone_tag_count))
-    {
-        ss_animation_p ss_anim = (ss_animation_p)malloc(sizeof(ss_animation_t));
-
-        ss_anim->anim_ext_flags = 0x00;
-        ss_anim->anim_frame_flags = 0x00;
-        ss_anim->type = anim_type;
-        ss_anim->model = sm;
-        ss_anim->onFrame = NULL;
-        ss_anim->onEndFrame = NULL;
-        ss_anim->targeting_bone = 0;
-        ss_anim->targeting_base = 0;
-        vec3_set_zero(ss_anim->target);
-        vec3_set_zero(ss_anim->bone_direction);
-        ss_anim->bone_direction[1] = 1.0f;
-        ss_anim->next = ent->bf->animations.next;
-        ent->bf->animations.next = ss_anim;
-
-        ss_anim->frame_time = 0.0;
-        ss_anim->next_state = 0;
-        ss_anim->lerp = 0.0;
-        ss_anim->current_animation = 0;
-        ss_anim->current_frame = 0;
-        ss_anim->next_animation = 0;
-        ss_anim->next_frame = 0;
-        ss_anim->period = 1.0f / 30.0f;
-        return ss_anim;
-    }
-
-    return NULL;
-}
-
-
-struct ss_animation_s *Entity_GetOverrideAnim(struct entity_s *ent, uint16_t anim_type)
-{
-    for(ss_animation_p p = &ent->bf->animations; p; p = p->next)
-    {
-        if(p->type == anim_type)
-        {
-            return p;
-        }
-    }
-    return NULL;
-}
-
-
 void Entity_UpdateRigidBody(struct entity_s *ent, int force)
 {
     if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
@@ -1255,7 +1205,7 @@ void Entity_CheckActivators(struct entity_s *ent)
 }
 
 
-void Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer)
+int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer)
 {
     if(!((entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6))           // Ignore activation, if activity lock is set.
     {
@@ -1298,10 +1248,11 @@ void Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
 
         entity_object->timer = trigger_timer;                                   // Engage timer.
     }
+    return 0;
 }
 
 
-void Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_activator)
+int  Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_activator)
 {
     if(!((entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6))           // Ignore activation, if activity lock is set.
     {
@@ -1324,6 +1275,7 @@ void Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_a
 
         lua_settop(engine_lua, top);
     }
+    return 0;
 }
 
 

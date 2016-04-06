@@ -82,30 +82,31 @@ end
 function execEntity(callback_id, object_id, activator_id)
     
     if((object_id == nil) or (callback_id == nil)) then -- Activator may be nil, in case of flyby camera heavy triggering!
-        return;
+        return -1;
     end
 
     if(entity_funcs[object_id] ~= nil) then
         if((bit32.band(callback_id, ENTITY_CALLBACK_ACTIVATE) ~= 0) and (entity_funcs[object_id].onActivate ~= nil)) then
-            entity_funcs[object_id].onActivate(object_id, activator_id);
+            return entity_funcs[object_id].onActivate(object_id, activator_id);
         end;
         
         if((bit32.band(callback_id, ENTITY_CALLBACK_DEACTIVATE) ~= 0) and (entity_funcs[object_id].onDeactivate ~= nil)) then
-            entity_funcs[object_id].onDeactivate(object_id, activator_id);
+            return entity_funcs[object_id].onDeactivate(object_id, activator_id);
         end;
 
         if((bit32.band(callback_id, ENTITY_CALLBACK_COLLISION) ~= 0) and (entity_funcs[object_id].onCollide ~= nil)) then
-            entity_funcs[object_id].onCollide(object_id, activator_id);
+            return entity_funcs[object_id].onCollide(object_id, activator_id);
         end;
 
         if((bit32.band(callback_id, ENTITY_CALLBACK_STAND) ~= 0) and (entity_funcs[object_id].onStand ~= nil)) then
-            entity_funcs[object_id].onStand(object_id, activator_id);
+            return entity_funcs[object_id].onStand(object_id, activator_id);
         end;
 
         if((bit32.band(callback_id, ENTITY_CALLBACK_HIT) ~= 0) and (entity_funcs[object_id].onHit ~= nil)) then
-            entity_funcs[object_id].onHit(object_id, activator_id);
+            return entity_funcs[object_id].onHit(object_id, activator_id);
         end;
     end;
+    return -1;
 end
 
 function loopEntity(object_id)

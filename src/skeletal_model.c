@@ -499,6 +499,74 @@ void Anim_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame)
 }
 
 
+struct ss_animation_s *Anim_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type)
+{
+    if(sm && (sm->mesh_count == bf->bone_tag_count))
+    {
+        ss_animation_p ss_anim = (ss_animation_p)malloc(sizeof(ss_animation_t));
+
+        ss_anim->anim_ext_flags = 0x00;
+        ss_anim->anim_frame_flags = 0x00;
+        ss_anim->type = anim_type;
+        ss_anim->model = sm;
+        ss_anim->onFrame = NULL;
+        ss_anim->onEndFrame = NULL;
+        ss_anim->targeting_bone = 0;
+        ss_anim->targeting_base = 0;
+        vec3_set_zero(ss_anim->target);
+        vec3_set_zero(ss_anim->bone_direction);
+        ss_anim->bone_direction[1] = 1.0f;
+        ss_anim->next = bf->animations.next;
+        bf->animations.next = ss_anim;
+
+        ss_anim->frame_time = 0.0;
+        ss_anim->next_state = 0;
+        ss_anim->lerp = 0.0;
+        ss_anim->current_animation = 0;
+        ss_anim->current_frame = 0;
+        ss_anim->next_animation = 0;
+        ss_anim->next_frame = 0;
+        ss_anim->period = 1.0f / 30.0f;
+        return ss_anim;
+    }
+
+    return NULL;
+}
+
+
+struct ss_animation_s *Anim_GetOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type)
+{
+    for(ss_animation_p p = &bf->animations; p; p = p->next)
+    {
+        if(p->type == anim_type)
+        {
+            return p;
+        }
+    }
+    return NULL;
+}
+
+
+void Anim_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_type)
+{
+    for(ss_animation_p ss_anim = &bf->animations; ss_anim; ss_anim = ss_anim->next)
+    {
+        if(ss_anim->type == anim_type)
+        {
+            for(uint16_t i = 0; i < bf->bone_tag_count; i++)
+            {
+                mesh_tree_tag_p mtag = ss_anim->model->mesh_tree + i;
+                if(mtag->replace_anim != 0)
+                {
+                    bf->bone_tags[i].alt_anim = ss_anim;
+                }
+            }
+            break;
+        }
+    }
+}
+
+
 void Anim_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
 {
     for(uint16_t i = 0; i < bf->bone_tag_count; i++)
@@ -512,13 +580,13 @@ void Anim_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *
 }
 
 
-void Anim_DisableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+void Anim_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type)
 {
     for(uint16_t i = 0; i < bf->bone_tag_count; i++)
     {
-        if(bf->bone_tags[i].alt_anim == ss_anim)
+        if(bf->bone_tags[i].alt_anim && bf->bone_tags[i].alt_anim->type == anim_type)
         {
-            bf->bone_tags[i].alt_anim = NULL;;
+            bf->bone_tags[i].alt_anim = NULL;
         }
     }
 }

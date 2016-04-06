@@ -477,8 +477,10 @@ int Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_act
             argn++;
         }
 
-        lua_CallAndLog(lua, argn, 0, 0);
-        ret = 1;
+        if(lua_pcall(lua, argn, 1, 0) == LUA_OK)
+        {
+            ret = lua_tointeger(lua, -1);
+        }
     }
     lua_settop(lua, top);
     //Sys_Warn("Broken \"execEntity\" script function");
@@ -819,18 +821,16 @@ bool lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, con
 {
     if(lua_pcall(lua, nargs, nresults, errfunc) != LUA_OK)
     {
-        char errormessage[4096];
         if (lua_gettop(lua) > 0 && lua_isstring(lua, -1))
         {
             const char *luaErrorDescription = lua_tostring(lua, -1);
-            snprintf(errormessage, sizeof(errormessage), "Lua error: %s (called from %s:%d)", luaErrorDescription, cfile, cline);
+            Con_Warning("Lua error: %s (called from %s:%d)", luaErrorDescription, cfile, cline);
             lua_pop(lua, 1);
         }
         else
         {
-            snprintf(errormessage, sizeof(errormessage), "Lua error without message (called from %s:%d)", cfile, cline);
+            Con_Warning("Lua error without message (called from %s:%d)", cfile, cline);
         }
-        Con_AddLine(errormessage, FONTSTYLE_CONSOLE_WARNING);
         return false;
     }
     return true;

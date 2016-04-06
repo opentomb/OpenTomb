@@ -2212,10 +2212,10 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
         skeletal_model_p bm = ent->bf->animations.model;
         if(sm->animation_count == 4)
         {
-            ss_animation_p anim_rh = Entity_GetOverrideAnim(ent, ANIM_TYPE_WEAPON_RH);
+            ss_animation_p anim_rh = Anim_GetOverrideAnim(ent->bf, ANIM_TYPE_WEAPON_RH);
             if(!anim_rh)
             {
-                anim_rh = Entity_AddOverrideAnim(ent, weapon_model, ANIM_TYPE_WEAPON_RH);
+                anim_rh = Anim_AddOverrideAnim(ent->bf, World_GetModelByID(weapon_model), ANIM_TYPE_WEAPON_RH);
             }
             anim_rh->model = sm;
             anim_rh->onEndFrame = NULL;
@@ -2223,10 +2223,10 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
             anim_rh->last_state = WEAPON_STATE_HIDE;
             anim_rh->next_state = WEAPON_STATE_HIDE;
 
-            ss_animation_p anim_lh = Entity_GetOverrideAnim(ent, ANIM_TYPE_WEAPON_LH);
+            ss_animation_p anim_lh = Anim_GetOverrideAnim(ent->bf, ANIM_TYPE_WEAPON_LH);
             if(!anim_lh)
             {
-                anim_lh = Entity_AddOverrideAnim(ent, weapon_model, ANIM_TYPE_WEAPON_LH);
+                anim_lh = Anim_AddOverrideAnim(ent->bf, World_GetModelByID(weapon_model), ANIM_TYPE_WEAPON_LH);
             }
             anim_lh->model = sm;
             anim_lh->onEndFrame = NULL;
@@ -2243,10 +2243,10 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
         }
         else
         {
-            ss_animation_p anim_th = Entity_GetOverrideAnim(ent, ANIM_TYPE_WEAPON_TH);
+            ss_animation_p anim_th = Anim_GetOverrideAnim(ent->bf, ANIM_TYPE_WEAPON_TH);
             if(!anim_th)
             {
-                anim_th = Entity_AddOverrideAnim(ent, weapon_model, ANIM_TYPE_WEAPON_TH);
+                anim_th = Anim_AddOverrideAnim(ent->bf, World_GetModelByID(weapon_model), ANIM_TYPE_WEAPON_TH);
             }
             anim_th->model = sm;
             anim_th->onEndFrame = NULL;
