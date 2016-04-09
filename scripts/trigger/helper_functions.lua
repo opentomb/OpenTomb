@@ -19,11 +19,10 @@ end;
 function swapEntityState(object_id, state_1, state_2)
     local current_state = getEntityState(object_id);
     if(current_state == state_1) then 
-        current_state = state_2; 
-    else 
-        current_state = state_1;
+        setEntityState(object_id, state_2); 
+    elseif(current_state == state_2) then
+        setEntityState(object_id, state_1);
     end;
-    setEntityState(object_id, current_state);
 end;
 
 function swapEntityEvent(object_id)

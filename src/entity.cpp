@@ -1156,9 +1156,7 @@ void Entity_RebuildBV(entity_p ent)
 {
     if(ent)
     {
-        /*
-         * get current BB from animation
-         */
+        //get current BB from animation
         OBB_Rebuild(ent->obb, ent->bf->bb_min, ent->bf->bb_max);
         OBB_Transform(ent->obb);
     }

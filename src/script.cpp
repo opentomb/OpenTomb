@@ -4041,7 +4041,8 @@ int lua_GetEntityModel(lua_State * lua)
 
 int lua_SetEntityState(lua_State * lua)
 {
-    if(lua_gettop(lua) < 2)
+    int top = lua_gettop(lua);
+    if(top < 2)
     {
         Con_Warning("expecting arguments (entity_id, value)");
         return 0;
@@ -4057,7 +4058,7 @@ int lua_SetEntityState(lua_State * lua)
     }
 
     ent->bf->animations.next_state = lua_tointeger(lua, 2);
-    if(!lua_isnil(lua, 3))
+    if(top >= 3)
     {
         ent->bf->animations.last_state = lua_tointeger(lua, 3);
     }
@@ -5077,6 +5078,9 @@ void Script_LoadConstants(lua_State *lua)
         lua_setglobal(lua, "COLLISION_TYPE_VEHICLE");
         lua_pushinteger(lua, COLLISION_TYPE_GHOST);
         lua_setglobal(lua, "COLLISION_TYPE_GHOST");
+
+        lua_pushinteger(lua, ENTITY_TRIGGERING_NOT_READY);
+        lua_setglobal(lua, "ENTITY_TRIGGERING_NOT_READY");
 
         lua_settop(lua, top);
     }

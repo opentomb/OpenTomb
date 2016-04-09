@@ -6,7 +6,6 @@ struct screen_info_s;
 struct entity_s;
 struct lua_State;
 
-#define CVAR_NAME_SIZE 32
 #define CVAR_LUA_TABLE_NAME "cvars"
 
 

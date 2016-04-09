@@ -104,6 +104,9 @@
 #define TRIGGER_OP_OR  0
 #define TRIGGER_OP_XOR 1
 
+// Entity activation response
+#define ENTITY_TRIGGERING_NOT_READY    (2)
+
 struct lua_State;
 
 typedef struct trigger_command_s

@@ -489,7 +489,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
 
         snprintf(buf, 256, "trigger_list[%d] = {activator_type = %d, func = function(entity_index) \n", trigger_index, activator_type);
 
-        strcat(script, buf);
+        strncat(script, buf, 8192);
         buf[0] = 0;     // Zero out buffer to prevent further trashing.
 
         switch(trigger->sub_function)
@@ -566,7 +566,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                 break;
         }
 
-        strcat(header, buf);    // Add condition to header.
+        strncat(header, buf, 128);    // Add condition to header.
 
         // Now parse operand chain for trigger function!
         int argn = 0;
@@ -593,11 +593,11 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                                     // Ordinary type case (e.g. heavy switch).
                                     snprintf(buf, 256, " local switch_sectorstatus = getEntitySectorStatus(entity_index); \n local switch_mask = getEntityMask(entity_index); \n\n");
                                 }
-                                strcat(script, buf);
+                                strncat(script, buf, 8192);
 
                                 // Trigger activation mask is here filtered through activator's own mask.
                                 snprintf(buf, 256, " if(switch_mask == 0) then switch_mask = 0x1F end; \n switch_mask = bit32.band(switch_mask, 0x%02X); \n\n", trigger->mask);
-                                strcat(script, buf);
+                                strncat(script, buf, 8192);
                                 if(action_type == TR_ACTIONTYPE_SWITCH)
                                 {
                                     // Switch action type case.
@@ -617,7 +617,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                                 {
                                     // Ordinary type case (e.g. heavy switch).
                                     snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", command->operands, mask_mode, trigger->once, trigger->timer);
-                                    strcat(item_events, buf);
+                                    strncat(item_events, buf, 4096);
                                     snprintf(buf, 128, " if(switch_sectorstatus == 0) then \n   setEntitySectorStatus(entity_index, 1) \n");
                                 }
                                 break;
@@ -631,7 +631,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                                 break;
                         }
 
-                        strcat(script, buf);
+                        strncat(script, buf, 8192);
                     }
                     else if(!prev_command || (prev_command->operands != command->operands))
                     {
@@ -645,16 +645,16 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                         if(activator == TR_ACTIVATOR_SWITCH)
                         {
                             snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, %d); \n", command->operands, mask_mode, trigger->once, trigger->timer);
-                            strcat(item_events, buf);
+                            strncat(item_events, buf, 4096);
                             snprintf(buf, 128, "   activateEntity(%d, entity_index, switch_mask, %d, %d, 0); \n", command->operands, mask_mode, trigger->once);
-                            strcat(anti_events, buf);
+                            strncat(anti_events, buf, 4096);
                         }
                         else
                         {
                             snprintf(buf, 128, "   activateEntity(%d, entity_index, 0x%02X, %d, %d, %d); \n", command->operands, trigger->mask, mask_mode, trigger->once, trigger->timer);
-                            strcat(item_events, buf);
+                            strncat(item_events, buf, 4096);
                             snprintf(buf, 128, "   deactivateEntity(%d, entity_index); \n", command->operands);
-                            strcat(anti_events, buf);
+                            strncat(anti_events, buf, 4096);
                         }
                     }
                     argn++;
@@ -663,13 +663,13 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                 case TR_FD_TRIGFUNC_SET_CAMERA:
                     {
                         snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", command->cam_index, command->cam_timer, command->once, command->cam_move);
-                        strcat(single_events, buf);
+                        strncat(single_events, buf, 4096);
                     }
                     break;
 
                 case TR_FD_TRIGFUNC_UWCURRENT:
                     snprintf(buf, 128, "   moveToSink(entity_index, %d); \n", command->operands);
-                    strcat(cont_events, buf);
+                    strncat(cont_events, buf, 4096);
                     break;
 
                 case TR_FD_TRIGFUNC_FLIPMAP:
@@ -678,12 +678,12 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                     if(activator == TR_ACTIVATOR_SWITCH)
                     {
                         snprintf(buf, 128, "   setFlipMap(%d, switch_mask, 1); \n   setFlipState(%d, 1); \n", command->operands, command->operands);
-                        strcat(single_events, buf);
+                        strncat(single_events, buf, 4096);
                     }
                     else
                     {
                         snprintf(buf, 128, "   setFlipMap(%d, 0x%02X, 0); \n   setFlipState(%d, 1); \n", command->operands, trigger->mask, command->operands);
-                        strcat(single_events, buf);
+                        strncat(single_events, buf, 4096);
                     }
                     break;
 
@@ -691,54 +691,54 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                     // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
                     // the switch with FLIP_ON trigger, room will remain flipped.
                     snprintf(buf, 128, "   setFlipState(%d, 1); \n", command->operands);
-                    strcat(single_events, buf);
+                    strncat(single_events, buf, 4096);
                     break;
 
                 case TR_FD_TRIGFUNC_FLIPOFF:
                     // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
                     // the switch with FLIP_OFF trigger, room will remain unflipped.
                     snprintf(buf, 128, "   setFlipState(%d, 0); \n", command->operands);
-                    strcat(single_events, buf);
+                    strncat(single_events, buf, 4096);
                     break;
 
                 case TR_FD_TRIGFUNC_SET_TARGET:
                     snprintf(buf, 128, "   setCamTarget(%d, %d); \n", command->operands, trigger->timer);
-                    strcat(single_events, buf);
+                    strncat(single_events, buf, 4096);
                     break;
 
                 case TR_FD_TRIGFUNC_ENDLEVEL:
                     snprintf(buf, 128, "   setLevel(%d); \n", command->operands);
-                    strcat(single_events, buf);
+                    strncat(single_events, buf, 4096);
                     break;
 
                 case TR_FD_TRIGFUNC_PLAYTRACK:
                     snprintf(buf, 128, "   playStream(%d, 0x%02X); \n", command->operands, ((uint16_t)trigger->mask << 1) + trigger->once);
-                    strcat(single_events, buf);
+                    strncat(single_events, buf, 4096);
                     break;
 
                 case TR_FD_TRIGFUNC_FLIPEFFECT:
                     snprintf(buf, 128, "   doEffect(%d, %d); \n", command->operands, trigger->timer);
-                    strcat(cont_events, buf);
+                    strncat(cont_events, buf, 4096);
                     break;
 
                 case TR_FD_TRIGFUNC_SECRET:
                     snprintf(buf, 128, "   findSecret(%d); \n", command->operands);
-                    strcat(single_events, buf);
+                    strncat(single_events, buf, 4096);
                     break;
 
                 case TR_FD_TRIGFUNC_CLEARBODIES:
                     snprintf(buf, 128, "   clearBodies(); \n");
-                    strcat(single_events, buf);
+                    strncat(single_events, buf, 4096);
                     break;
 
                 case TR_FD_TRIGFUNC_FLYBY:
                     snprintf(buf, 128, "   playFlyby(%d, %d); \n", command->operands, command->once);
-                    strcat(cont_events, buf);
+                    strncat(cont_events, buf, 4096);
                     break;
 
                 case TR_FD_TRIGFUNC_CUTSCENE:
                     snprintf(buf, 128, "   playCutscene(%d); \n", command->operands);
-                    strcat(single_events, buf);
+                    strncat(single_events, buf, 4096);
                     break;
 
                 default: // UNKNOWN!
@@ -749,7 +749,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
 
         if(script[0])
         {
-            strcat(script, header);
+            strncat(script, header, 8192);
 
             // Heavy trigger and antitrigger item events are engaged ONLY
             // once, when triggering item is approaching sector. Hence, we
@@ -762,11 +762,11 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
             {
                 if(action_type == TR_ACTIONTYPE_ANTI)
                 {
-                    strcat(single_events, anti_events);
+                    strncat(single_events, anti_events, 4096);
                 }
                 else
                 {
-                    strcat(single_events, item_events);
+                    strncat(single_events, item_events, 4096);
                 }
 
                 anti_events[0] = 0;
@@ -777,19 +777,19 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
             {
                 if(single_events[0])
                 {
-                    if(condition) strcat(once_condition, " ");
-                    strcat(once_condition, " if(getEntitySectorStatus(entity_index) == 0) then \n");
-                    strcat(script, once_condition);
-                    strcat(script, single_events);
-                    strcat(script, "   setEntitySectorStatus(entity_index, 1); \n");
+                    if(condition) strncat(once_condition, " ", 128);
+                    strncat(once_condition, " if(getEntitySectorStatus(entity_index) == 0) then \n", 128);
+                    strncat(script, once_condition, 8192);
+                    strncat(script, single_events, 8192);
+                    strncat(script, "   setEntitySectorStatus(entity_index, 1); \n", 8192);
 
                     if(condition)
                     {
-                        strcat(script, "  end;\n"); // First ENDIF is tabbed for extra condition.
+                        strncat(script, "  end;\n", 8192); // First ENDIF is tabbed for extra condition.
                     }
                     else
                     {
-                        strcat(script, " end;\n");
+                        strncat(script, " end;\n", 8192);
                     }
                 }
 
@@ -800,35 +800,35 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
 
                 if(action_type == TR_ACTIONTYPE_ANTI)
                 {
-                    strcat(script, anti_events);
+                    strncat(script, anti_events, 8192);
                 }
                 else
                 {
-                    strcat(script, item_events);
+                    strncat(script, item_events, 8192);
                 }
 
-                strcat(script, cont_events);
-                if(condition) strcat(script, " end;\n"); // Additional ENDIF for extra condition.
+                strncat(script, cont_events, 8192);
+                if(condition) strncat(script, " end;\n", 8192); // Additional ENDIF for extra condition.
             }
             else    // SWITCH, KEY and ITEM cases.
             {
-                strcat(script, single_events);
-                strcat(script, item_events);
-                strcat(script, cont_events);
+                strncat(script, single_events, 8192);
+                strncat(script, item_events, 8192);
+                strncat(script, cont_events, 8192);
                 if((action_type == TR_ACTIONTYPE_SWITCH) && (activator == TR_ACTIVATOR_SWITCH))
                 {
-                    strcat(script, buf2);
+                    strncat(script, buf2, 8192);
                     if(!trigger->once)
                     {
-                        strcat(script, single_events);
-                        strcat(script, anti_events);    // Single/continous events are engaged along with
-                        strcat(script, cont_events);    // antitriggered items, as described above.
+                        strncat(script, single_events, 8192);
+                        strncat(script, anti_events, 8192);    // Single/continous events are engaged along with
+                        strncat(script, cont_events, 8192);    // antitriggered items, as described above.
                     }
                 }
-                strcat(script, " end;\n");
+                strncat(script, " end;\n", 8192);
             }
 
-            strcat(script, "return 1;\nend }\n\n");  // Finalize the entry.
+            strncat(script, "return 1;\nend }\n\n", 8192);  // Finalize the entry.
         }
 
         if(file_dump)
