@@ -278,6 +278,29 @@ void SkeletalModel_CopyMeshesToSkinned(mesh_tree_tag_p dst, mesh_tree_tag_p src,
 }
 
 
+void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
+{
+    if(dst->bone_tag_count < src->bone_tag_count)
+    {
+        dst->bone_tags = (bone_tag_p)realloc(dst->bone_tags, src->bone_tag_count * sizeof(bone_tag_t));
+    }
+    dst->bone_tag_count = src->bone_tag_count;
+    vec3_copy(dst->pos, src->pos);
+    vec3_copy(dst->centre, src->centre);
+    vec3_copy(dst->bb_max, src->bb_max);
+    vec3_copy(dst->bb_min, src->bb_min);
+
+    dst->command = src->command;
+    vec3_copy(dst->move, src->move);
+
+    for(uint16_t i = 0; i < dst->bone_tag_count; i++)
+    {
+        vec4_copy(dst->bone_tags[i].qrotate, src->bone_tags[i].qrotate);
+        vec3_copy(dst->bone_tags[i].offset, src->bone_tags[i].offset);
+    }
+}
+
+
 void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
 {
     vec3_set_zero(bf->bb_min);
@@ -332,30 +355,27 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
 }
 
 
-void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
+void SSBoneFrame_Clear(ss_bone_frame_p bf)
 {
-    if(dst->bone_tag_count < src->bone_tag_count)
+    if(bf && bf->bone_tag_count)
     {
-        dst->bone_tags = (bone_tag_p)realloc(dst->bone_tags, src->bone_tag_count * sizeof(bone_tag_t));
+        free(bf->bone_tags);
+        bf->bone_tag_count = 0;
+        bf->bone_tags = NULL;
     }
-    dst->bone_tag_count = src->bone_tag_count;
-    vec3_copy(dst->pos, src->pos);
-    vec3_copy(dst->centre, src->centre);
-    vec3_copy(dst->bb_max, src->bb_max);
-    vec3_copy(dst->bb_min, src->bb_min);
 
-    dst->command = src->command;
-    vec3_copy(dst->move, src->move);
-
-    for(uint16_t i = 0; i < dst->bone_tag_count; i++)
+    for(ss_animation_p ss_anim = bf->animations.next; ss_anim;)
     {
-        vec4_copy(dst->bone_tags[i].qrotate, src->bone_tags[i].qrotate);
-        vec3_copy(dst->bone_tags[i].offset, src->bone_tags[i].offset);
+        ss_animation_p ss_anim_next = ss_anim->next;
+        ss_anim->next = NULL;
+        free(ss_anim);
+        ss_anim = ss_anim_next;
     }
+    bf->animations.next = NULL;
 }
 
 
-void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16])
+void SSBoneFrame_Update(struct ss_bone_frame_s *bf)
 {
     float cmd_tr[3], tr[3], t;
     ss_bone_tag_p btag = bf->bone_tags;
@@ -367,9 +387,9 @@ void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16])
     curr_bf = model->animations[bf->animations.current_animation].frames + bf->animations.current_frame;
 
     t = 1.0 - bf->animations.lerp;
-    if(etr && (curr_bf->command & ANIM_CMD_MOVE))
+    if(bf->transform && (curr_bf->command & ANIM_CMD_MOVE))
     {
-        Mat4_vec3_rot_macro(tr, etr, curr_bf->move);
+        Mat4_vec3_rot_macro(tr, bf->transform, curr_bf->move);
         vec3_mul_scalar(cmd_tr, tr, bf->animations.lerp);
     }
     else
@@ -432,13 +452,13 @@ void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16])
     {
         if(ss_anim->anim_ext_flags & ANIM_EXT_TARGET_TO)
         {
-            Anim_TargetBoneTo(bf, ss_anim);
+            SSBoneFrame_TargetBoneTo(bf, ss_anim);
         }
     }
 }
 
 
-void Anim_TargetBoneTo(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+void SSBoneFrame_TargetBoneTo(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
 {
     ss_bone_tag_p b_tag = b_tag = bf->bone_tags + ss_anim->targeting_bone;
     float q[4], target_dir[3], target_local[3], bone_dir[3];
@@ -476,7 +496,7 @@ void Anim_TargetBoneTo(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_ani
 }
 
 
-void Anim_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame)
+void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame)
 {
     animation_frame_p anim = &bf->animations.model->animations[animation];
     bf->animations.lerp = 0.0;
@@ -499,7 +519,7 @@ void Anim_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame)
 }
 
 
-struct ss_animation_s *Anim_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type)
+struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type)
 {
     if(sm && (sm->mesh_count == bf->bone_tag_count))
     {
@@ -534,7 +554,7 @@ struct ss_animation_s *Anim_AddOverrideAnim(struct ss_bone_frame_s *bf, struct s
 }
 
 
-struct ss_animation_s *Anim_GetOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type)
+struct ss_animation_s *SSBoneFrame_GetOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type)
 {
     for(ss_animation_p p = &bf->animations; p; p = p->next)
     {
@@ -547,7 +567,7 @@ struct ss_animation_s *Anim_GetOverrideAnim(struct ss_bone_frame_s *bf, uint16_t
 }
 
 
-void Anim_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_type)
+void SSBoneFrame_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_type)
 {
     for(ss_animation_p ss_anim = &bf->animations; ss_anim; ss_anim = ss_anim->next)
     {
@@ -567,7 +587,7 @@ void Anim_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_typ
 }
 
 
-void Anim_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+void SSBoneFrame_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
 {
     for(uint16_t i = 0; i < bf->bone_tag_count; i++)
     {
@@ -580,7 +600,7 @@ void Anim_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *
 }
 
 
-void Anim_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type)
+void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type)
 {
     for(uint16_t i = 0; i < bf->bone_tag_count; i++)
     {
@@ -592,7 +612,7 @@ void Anim_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type)
 }
 
 
-void Anim_SetTargetToAnimation(struct ss_animation_s *ss_anim, const float target[3], const float bone_dir[3], uint16_t bone, uint16_t use_parent)
+void SSBoneFrame_SetTargetToAnimation(struct ss_animation_s *ss_anim, const float target[3], const float bone_dir[3], uint16_t bone, uint16_t use_parent)
 {
     vec3_copy(ss_anim->target, target);
     vec3_copy(ss_anim->bone_direction, bone_dir);
@@ -602,6 +622,10 @@ void Anim_SetTargetToAnimation(struct ss_animation_s *ss_anim, const float targe
 }
 
 
+
+/*
+ *******************************************************************************
+ */
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim)
 {
     if(state_change_anim >= 0)

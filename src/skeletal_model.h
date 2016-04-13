@@ -215,24 +215,24 @@ void SkeletalModel_FillTransparency(skeletal_model_p model);
 void SkeletalModel_FillSkinnedMeshMap(skeletal_model_p model);
 void SkeletalModel_CopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
 void SkeletalModel_CopyMeshesToSkinned(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
-
-void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);
 void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
 
-void Anim_UpdateCurrentBoneFrame(struct ss_bone_frame_s *bf, float etr[16]);
-void Anim_TargetBoneTo(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
-void Anim_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame);
-struct ss_animation_s *Anim_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type);
-struct ss_animation_s *Anim_GetOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
-void Anim_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_type);
-void Anim_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
-void Anim_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
-void Anim_SetTargetToAnimation(struct ss_animation_s *ss_anim, const float target[3], const float bone_dir[3], uint16_t bone, uint16_t use_parent);
+void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);
+void SSBoneFrame_Clear(ss_bone_frame_p bf);
+void SSBoneFrame_Update(struct ss_bone_frame_s *bf);
+void SSBoneFrame_TargetBoneTo(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
+void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame);
+struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type);
+struct ss_animation_s *SSBoneFrame_GetOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
+void SSBoneFrame_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_type);
+void SSBoneFrame_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
+void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
+void SSBoneFrame_SetTargetToAnimation(struct ss_animation_s *ss_anim, const float target[3], const float bone_dir[3], uint16_t bone, uint16_t use_parent);
+
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
 int  Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id);
 void Anim_GetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
-
 
 #ifdef	__cplusplus
 }

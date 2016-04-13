@@ -130,21 +130,7 @@ void Entity_Clear(entity_p entity)
 
         if(entity->bf)
         {
-            if(entity->bf->bone_tag_count)
-            {
-                free(entity->bf->bone_tags);
-                entity->bf->bone_tags = NULL;
-                entity->bf->bone_tag_count = 0;
-            }
-
-            for(ss_animation_p ss_anim = entity->bf->animations.next; ss_anim;)
-            {
-                ss_animation_p ss_anim_next = ss_anim->next;
-                ss_anim->next = NULL;
-                free(ss_anim);
-                ss_anim = ss_anim_next;
-            }
-            entity->bf->animations.next = NULL;
+            SSBoneFrame_Clear(entity->bf);
             free(entity->bf);
             entity->bf = NULL;
         }
@@ -182,7 +168,7 @@ void Entity_EnableCollision(entity_p ent)
     else
     {
         ent->self->collision_type = COLLISION_TYPE_KINEMATIC;
-        Physics_GenRigidBody(ent->physics, ent->bf, ent->transform);
+        Physics_GenRigidBody(ent->physics, ent->bf);
     }
 }
 
@@ -963,8 +949,8 @@ void Entity_SetAnimation(entity_p entity, int animation, int frame)
     entity->no_fix_all = 0x00;
 
     entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
-    Anim_SetAnimation(entity->bf, animation, frame);
-    Anim_UpdateCurrentBoneFrame(entity->bf, entity->transform);
+    SSBoneFrame_SetAnimation(entity->bf, animation, frame);
+    SSBoneFrame_Update(entity->bf);
     Entity_UpdateRigidBody(entity, 0);
 }
 
@@ -1141,7 +1127,7 @@ void Entity_Frame(entity_p entity, float time)
             ss_anim = ss_anim->next;
         }
 
-        Anim_UpdateCurrentBoneFrame(entity->bf, entity->transform);
+        SSBoneFrame_Update(entity->bf);
         if(entity->character != NULL)
         {
             Entity_FixPenetrations(entity, NULL);

@@ -43,6 +43,7 @@ extern "C" {
 #include "controls.h"
 #include "trigger.h"
 #include "character_controller.h"
+#include "render/bsp_tree.h"
 
 
 static SDL_Window             *sdl_window     = NULL;
@@ -529,7 +530,7 @@ void Engine_Display()
         Cam_RecalcClipPlanes(&engine_camera);
         // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
 
-        screen_info.show_debuginfo %= 3;
+        screen_info.show_debuginfo %= 4;
         if(screen_info.show_debuginfo)
         {
             ShowDebugInfo();
@@ -870,6 +871,14 @@ void ShowDebugInfo()
                         }
                     }
                 }
+            }
+            break;
+
+        case 3:
+            if(renderer.dynamicBSP)
+            {
+                GLText_OutTextXY(30.0f, y += dy, "input polygons = %07d", renderer.dynamicBSP->GetInputPolygonsCount());
+                GLText_OutTextXY(30.0f, y += dy, "added polygons = %07d", renderer.dynamicBSP->GetAddedPolygonsCount());
             }
             break;
     };

@@ -1082,7 +1082,7 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
  * =============================================================================
  */
 
-void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s *bf, float transform[16])
+void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s *bf)
 {
     btScalar tr[16];
     btVector3 localInertia(0, 0, 0);
@@ -1099,7 +1099,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                 cshape = BT_CSfromBBox(bf->bb_min, bf->bb_max);
                 cshape->calculateLocalInertia(0.0, localInertia);
                 cshape->setMargin(COLLISION_MARGIN_DEFAULT);
-                startTransform.setFromOpenGLMatrix(transform);
+                startTransform.setFromOpenGLMatrix(bf->transform);
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                 physics->bt_body[0] = new btRigidBody(0.0, motionState, cshape, localInertia);
                 physics->bt_body[0]->setUserPointer(physics->cont);
@@ -1119,8 +1119,8 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                 cshape->calculateLocalInertia(0.0, localInertia);
                 cshape->setMargin(COLLISION_MARGIN_DEFAULT);
                 btVector3 offset, centre(0.5f * (bf->bb_min[0] + bf->bb_max[0]), 0.5f * (bf->bb_min[1] + bf->bb_max[1]), 0.5f * (bf->bb_min[2] + bf->bb_max[2]));
-                Mat4_vec3_rot_macro(offset.m_floats, transform, centre);
-                startTransform.setFromOpenGLMatrix(transform);
+                Mat4_vec3_rot_macro(offset.m_floats, bf->transform, centre);
+                startTransform.setFromOpenGLMatrix(bf->transform);
                 startTransform.getOrigin() += offset;
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                 physics->bt_body[0] = new btRigidBody(0.0, motionState, cshape, localInertia);
@@ -1168,7 +1168,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                         cshape->calculateLocalInertia(0.0, localInertia);
                         cshape->setMargin(COLLISION_MARGIN_DEFAULT);
 
-                        Mat4_Mat4_mul(tr, transform, bf->bone_tags[i].full_transform);
+                        Mat4_Mat4_mul(tr, bf->transform, bf->bone_tags[i].full_transform);
                         startTransform.setFromOpenGLMatrix(tr);
                         btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                         physics->bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
@@ -1188,7 +1188,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
  * DO something with sticky 80% boxes!!!
  * first of all: convex offsetted boxes to avoid every frame offsets calculation.
  */
-void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, float transform[16])
+void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf)
 {
     if(physics->objects_count > 0)
     {
@@ -1204,7 +1204,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghost_objects = (btPairCachingGhostObject**)malloc(bf->bone_tag_count * sizeof(btPairCachingGhostObject*));
                     physics->ghost_objects[0] = new btPairCachingGhostObject();
                     physics->ghost_objects[0]->setIgnoreCollisionCheck(physics->bt_body[0], true);
-                    tr.setFromOpenGLMatrix(transform);
+                    tr.setFromOpenGLMatrix(bf->transform);
                     physics->ghost_objects[0]->setWorldTransform(tr);
                     physics->ghost_objects[0]->setCollisionFlags(physics->ghost_objects[0]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
                     physics->ghost_objects[0]->setUserPointer(physics->cont);
@@ -1221,8 +1221,8 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghost_objects[0] = new btPairCachingGhostObject();
                     physics->ghost_objects[0]->setIgnoreCollisionCheck(physics->bt_body[0], true);
                     btVector3 offset, centre(0.5f * (bf->bb_min[0] + bf->bb_max[0]), 0.5f * (bf->bb_min[1] + bf->bb_max[1]), 0.5f * (bf->bb_min[2] + bf->bb_max[2]));
-                    Mat4_vec3_rot_macro(offset.m_floats, transform, centre);
-                    tr.setFromOpenGLMatrix(transform);
+                    Mat4_vec3_rot_macro(offset.m_floats, bf->transform, centre);
+                    tr.setFromOpenGLMatrix(bf->transform);
                     tr.getOrigin() += offset;
                     physics->ghost_objects[0]->setWorldTransform(tr);
                     physics->ghost_objects[0]->setCollisionFlags(physics->ghost_objects[0]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
@@ -1248,7 +1248,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
 
                         physics->ghost_objects[i] = new btPairCachingGhostObject();
                         physics->ghost_objects[i]->setIgnoreCollisionCheck(physics->bt_body[i], true);
-                        Mat4_Mat4_mul(gltr, transform, bf->bone_tags[i].full_transform);
+                        Mat4_Mat4_mul(gltr, bf->transform, bf->bone_tags[i].full_transform);
                         Mat4_vec3_mul(v, gltr, bf->bone_tags[i].mesh_base->centre);
                         vec3_copy(gltr+12, v);
                         tr.setFromOpenGLMatrix(gltr);

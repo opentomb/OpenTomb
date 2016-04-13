@@ -74,6 +74,7 @@ void CDynamicBSP::AddBSPPolygon(struct bsp_node_s *leaf, struct polygon_s *p)
         bp->next = leaf->polygons_back;
         leaf->polygons_back = bp;
     }
+    m_added_polygons++;
 }
 
 
@@ -187,6 +188,9 @@ CDynamicBSP::CDynamicBSP(uint32_t size)
     m_vertex_buffer_size = size;
     m_vertex_allocated = 0;
 
+    m_input_polygons = 0;
+    m_added_polygons = 0;
+
     m_vbo = 0;
     m_anim_seq = NULL;
     m_realloc_state = 0;
@@ -231,7 +235,7 @@ CDynamicBSP::~CDynamicBSP()
 
 void CDynamicBSP::AddNewPolygonList(struct polygon_s *p, float transform[16], struct frustum_s *f)
 {
-    for(;p && (!m_realloc_state); p = p->next)
+    for( ; p && (!m_realloc_state); p = p->next)
     {
         m_temp_allocated = 0;
         polygon_p np = this->CreatePolygon(p->vertex_count);
@@ -293,6 +297,7 @@ void CDynamicBSP::AddNewPolygonList(struct polygon_s *p, float transform[16], st
                     dst_v->tex_coord[1] = src_v->tex_coord[1];
                 }
             }
+            m_input_polygons++;
             this->AddPolygon(m_root, np);
         }
     }
@@ -353,5 +358,7 @@ void CDynamicBSP::Reset(struct anim_seq_s *seq)
     m_tree_allocated = 0;
     m_vertex_allocated = 0;
     m_realloc_state = 0;
+    m_input_polygons = 0;
+    m_added_polygons = 0;
     m_root = this->CreateBSPNode();
 }

@@ -101,12 +101,12 @@ void Character_Create(struct entity_s *ent)
         ret->climb.height_info = 0x00;
         ret->climb.edge_hit = 0x00;
         ret->climb.wall_hit = 0x00;
-        ret->forvard_size = 48.0;                                                   ///@FIXME: magick number
+        ret->forvard_size = 48.0;                                               ///@FIXME: magick number
         ret->Height = CHARACTER_BASE_HEIGHT;
 
         ret->traversed_object = NULL;
 
-        Physics_CreateGhosts(ent->physics, ent->bf, ent->transform);
+        Physics_CreateGhosts(ent->physics, ent->bf);
     }
 }
 
@@ -536,11 +536,11 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
                 (hi->leg_r_floor.point[2] <= pos[2] + ent->character->max_step_up_height);
 
             float fix[2] = {0.0f, 0.0f};
-            const float red[3] = {1.0f, 0.0f, 0.0f};
+            //const float red[3] = {1.0f, 0.0f, 0.0f};
             const float R = 16.0f;
             if(!valid_r)
             {
-                collision_result_t cb;
+                collision_result_t cb, ncb;
                 float from[3], to[3];
                 from[0] = hi->leg_r_floor.point[0];
                 from[1] = hi->leg_r_floor.point[1];
@@ -548,17 +548,13 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
                 to[0] = from[0];
                 to[1] = from[1];
                 to[2] = pos[2] - ent->character->max_step_up_height;
-                renderer.debugDrawer->DrawLine(from, to, red, red);
-                while((from[0] + 4.0f *R * ent->transform[0 + 0] - pos[0]) * ent->transform[0 + 0] + (from[1] + 4.0f *R * ent->transform[0 + 1] - pos[1]) * ent->transform[0 + 1] > 0.0f)
+                //renderer.debugDrawer->DrawLine(from, to, red, red);
+                while((from[0] + 4.0f * R * ent->transform[0 + 0] - pos[0]) * ent->transform[0 + 0] + (from[1] + 4.0f *R * ent->transform[0 + 1] - pos[1]) * ent->transform[0 + 1] > 0.0f)
                 {
                     if(Physics_SphereTest(&cb, from, to, R, ent->self))
                     {
-                        //if((cb.obj->object_type == OBJECT_ROOM_BASE) ||
-                        //   (cb.obj->object_type == OBJECT_STATIC_MESH))
-                        {
-                            fix[0] += (cb.point[0] - hi->leg_r_floor.point[0]);
-                            fix[1] += (cb.point[1] - hi->leg_r_floor.point[1]);
-                        }
+                        fix[0] += (cb.point[0] - hi->leg_r_floor.point[0]);
+                        fix[1] += (cb.point[1] - hi->leg_r_floor.point[1]);
                         break;
                     }
                     from[0] -= 1.5f * R * ent->transform[0 + 0];
@@ -569,7 +565,7 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
             }
             if(!valid_l)
             {
-                collision_result_t cb;
+                collision_result_t cb, ncb;
                 float from[3], to[3];
                 from[0] = hi->leg_l_floor.point[0];
                 from[1] = hi->leg_l_floor.point[1];
@@ -577,17 +573,13 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
                 to[0] = from[0];
                 to[1] = from[1];
                 to[2] = ent->transform[12 + 2] - ent->character->max_step_up_height;
-                renderer.debugDrawer->DrawLine(from, to, red, red);
-                while((from[0] - 4.0f *R * ent->transform[0 + 0] - pos[0]) * ent->transform[0 + 0] + (from[1] - 4.0f *R * ent->transform[0 + 1] - pos[1]) * ent->transform[0 + 1] < 0.0f)
+                //renderer.debugDrawer->DrawLine(from, to, red, red);
+                while((from[0] - 4.0f * R * ent->transform[0 + 0] - pos[0]) * ent->transform[0 + 0] + (from[1] - 4.0f *R * ent->transform[0 + 1] - pos[1]) * ent->transform[0 + 1] < 0.0f)
                 {
                     if(Physics_SphereTest(&cb, from, to, R, ent->self))
                     {
-                        //if((cb.obj->object_type == OBJECT_ROOM_BASE) ||
-                        //   (cb.obj->object_type == OBJECT_STATIC_MESH))
-                        {
-                            fix[0] += (cb.point[0] - hi->leg_l_floor.point[0]);
-                            fix[1] += (cb.point[1] - hi->leg_l_floor.point[1]);
-                        }
+                        fix[0] += (cb.point[0] - hi->leg_l_floor.point[0]);
+                        fix[1] += (cb.point[1] - hi->leg_l_floor.point[1]);
                         break;
                     }
                     from[0] += 1.5f * R * ent->transform[0 + 0];
@@ -1043,7 +1035,7 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
 void Character_LookAt(struct entity_s *ent, float target[3])
 {
     const float bone_dir[] = {0.0f, 1.0f, 0.0f};
-    Anim_SetTargetToAnimation(&ent->bf->animations, target, bone_dir, 14, 0x00);
+    SSBoneFrame_SetTargetToAnimation(&ent->bf->animations, target, bone_dir, 14, 0x00);
 }
 
 void Character_ClearLookAt(struct entity_s *ent)
@@ -2212,10 +2204,10 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
         skeletal_model_p bm = ent->bf->animations.model;
         if(sm->animation_count == 4)
         {
-            ss_animation_p anim_rh = Anim_GetOverrideAnim(ent->bf, ANIM_TYPE_WEAPON_RH);
+            ss_animation_p anim_rh = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_WEAPON_RH);
             if(!anim_rh)
             {
-                anim_rh = Anim_AddOverrideAnim(ent->bf, World_GetModelByID(weapon_model), ANIM_TYPE_WEAPON_RH);
+                anim_rh = SSBoneFrame_AddOverrideAnim(ent->bf, World_GetModelByID(weapon_model), ANIM_TYPE_WEAPON_RH);
             }
             anim_rh->model = sm;
             anim_rh->onEndFrame = NULL;
@@ -2223,10 +2215,10 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
             anim_rh->last_state = WEAPON_STATE_HIDE;
             anim_rh->next_state = WEAPON_STATE_HIDE;
 
-            ss_animation_p anim_lh = Anim_GetOverrideAnim(ent->bf, ANIM_TYPE_WEAPON_LH);
+            ss_animation_p anim_lh = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_WEAPON_LH);
             if(!anim_lh)
             {
-                anim_lh = Anim_AddOverrideAnim(ent->bf, World_GetModelByID(weapon_model), ANIM_TYPE_WEAPON_LH);
+                anim_lh = SSBoneFrame_AddOverrideAnim(ent->bf, World_GetModelByID(weapon_model), ANIM_TYPE_WEAPON_LH);
             }
             anim_lh->model = sm;
             anim_lh->onEndFrame = NULL;
@@ -2243,17 +2235,17 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
         }
         else
         {
-            ss_animation_p anim_th = Anim_GetOverrideAnim(ent->bf, ANIM_TYPE_WEAPON_TH);
+            ss_animation_p anim_th = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_WEAPON_TH);
             if(!anim_th)
             {
-                anim_th = Anim_AddOverrideAnim(ent->bf, World_GetModelByID(weapon_model), ANIM_TYPE_WEAPON_TH);
+                anim_th = SSBoneFrame_AddOverrideAnim(ent->bf, World_GetModelByID(weapon_model), ANIM_TYPE_WEAPON_TH);
             }
             anim_th->model = sm;
             anim_th->onEndFrame = NULL;
             anim_th->onFrame = Character_DoTwoHandWeponFrame;
             anim_th->last_state = WEAPON_STATE_HIDE;
             anim_th->next_state = WEAPON_STATE_HIDE;
-            Anim_EnableOverrideAnim(ent->bf, anim_th);
+            SSBoneFrame_EnableOverrideAnim(ent->bf, anim_th);
         }
 
         for(uint16_t i = 0; i < bm->mesh_count; i++)
@@ -2442,7 +2434,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 if(target)
                 {
                     const float bone_dir[] = {0.0f, 1.0f, 0.0f};
-                    Anim_SetTargetToAnimation(ss_anim, target->transform + 12, bone_dir, targeted_bone, 0x01);
+                    SSBoneFrame_SetTargetToAnimation(ss_anim, target->transform + 12, bone_dir, targeted_bone, 0x01);
                     if(!ent->character->cmd.action && !ent->character->cmd.ready_weapon)
                     {
                         float max_time = (float)ss_anim->current_frame * ss_anim->period;
@@ -2484,7 +2476,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 if(target)
                 {
                     const float bone_dir[] = {0.0f, 1.0f, 0.0f};
-                    Anim_SetTargetToAnimation(ss_anim, target->transform + 12, bone_dir, targeted_bone, 0x01);
+                    SSBoneFrame_SetTargetToAnimation(ss_anim, target->transform + 12, bone_dir, targeted_bone, 0x01);
                 }
                 if(ent->character->cmd.action)
                 {

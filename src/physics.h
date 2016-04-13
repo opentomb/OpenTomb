@@ -66,8 +66,8 @@ void Physics_SetGhostWorldTransform(struct physics_data_s *physics, float tr[16]
 int  Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_t index, float correction[3]);
 
 // Bullet entity rigid body generating.
-void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s *bf, float transform[16]);
-void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, float transform[16]);
+void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s *bf);
+void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf);
 void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh);
 void Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens, int num_tweens);
 void Physics_DeleteObject(struct physics_object_s *obj);

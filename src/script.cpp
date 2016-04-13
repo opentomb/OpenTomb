@@ -3539,24 +3539,29 @@ int lua_SetEntitySectorStatus(lua_State *lua)
 
 int lua_GetEntityOCB(lua_State * lua)
 {
-    if(lua_gettop(lua) < 1) return 0;   // No argument provided - return.
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent == NULL) return 0;   // No entity found - return.
-
-    lua_pushinteger(lua, ent->OCB);
-    return 1;
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            lua_pushinteger(lua, ent->OCB);
+            return 1;
+        }
+    }
+    return 0;   // No entity found - return.
 }
 
 
 int lua_SetEntityOCB(lua_State * lua)
 {
-    if(lua_gettop(lua) < 2) return 0;   // No arguments provided - return.
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent == NULL) return 0;   // No entity found - return.
-
-    ent->OCB = lua_tointeger(lua, 2);
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            ent->OCB = lua_tointeger(lua, 2);
+        }
+    }
     return 0;
 }
 
@@ -4465,13 +4470,12 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
  */
 int lua_CamShake(lua_State *lua)
 {
-    if(lua_gettop(lua) >= 2)
+    /*if(lua_gettop(lua) >= 2)
     {
         float power = lua_tonumber(lua, 1);
         float time  = lua_tonumber(lua, 2);
-        //Cam_Shake(&engine_camera, power, time);
-    }
-
+        Cam_Shake(&engine_camera, power, time);
+    }*/
     return 0;
 }
 
@@ -4669,7 +4673,7 @@ int lua_SetGame(lua_State *lua)
     if(lua_isfunction(lua, -1))
     {
         lua_pushnumber(lua, gameflow_manager.CurrentGameID);
-        if (lua_CallAndLog(lua, 1, 1, 0))
+        if(lua_CallAndLog(lua, 1, 1, 0))
         {
             //Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
             lua_pop(lua, 1);
@@ -4893,7 +4897,7 @@ int lua_genUVRotateAnimation(lua_State *lua)
 // the output to the internal console is not an option.
 static int lua_LuaPanic(lua_State *lua)
 {
-    if (lua_gettop(lua) < 1)
+    if(lua_gettop(lua) < 1)
     {
         fprintf(stderr, "Fatal lua error (no details provided).\n");
     }

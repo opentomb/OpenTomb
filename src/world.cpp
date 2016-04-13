@@ -519,7 +519,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             SSBoneFrame_CreateFromModel(entity->bf, model);
             entity->bf->transform = entity->transform;
             Entity_SetAnimation(entity, 0, 0);
-            Physics_GenRigidBody(entity->physics, entity->bf, entity->transform);
+            Physics_GenRigidBody(entity->physics, entity->bf);
 
             Entity_RebuildBV(entity);
             if(entity->self->room != NULL)
@@ -2431,7 +2431,7 @@ void World_GenEntities(class VT_Level *tr)
                 entity->bf->bone_tags[j].mesh_slot = NULL;
             }
             Entity_SetAnimation(global_world.Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
-            Physics_GenRigidBody(entity->physics, entity->bf, entity->transform);
+            Physics_GenRigidBody(entity->physics, entity->bf);
             Character_Create(entity);
             entity->character->Height = 768.0;
             entity->character->state_func = State_Control_Lara;
@@ -2447,7 +2447,7 @@ void World_GenEntities(class VT_Level *tr)
         Room_AddObject(entity->self->room, entity->self);
         World_AddEntity(entity);
         World_SetEntityModelProperties(entity);
-        Physics_GenRigidBody(entity->physics, entity->bf, entity->transform);
+        Physics_GenRigidBody(entity->physics, entity->bf);
 
         if(!(entity->state_flags & ENTITY_STATE_ENABLED) || !(entity->self->collision_type & 0x0001))
         {
