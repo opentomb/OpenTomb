@@ -1078,7 +1078,7 @@ void RBEntityFree(void *x)
 
 void RBItemFree(void *x)
 {
-    free(((base_item_p)x)->bf->bone_tags);
+    SSBoneFrame_Clear(((base_item_p)x)->bf);
     free(((base_item_p)x)->bf);
     free(x);
 }
