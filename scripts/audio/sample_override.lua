@@ -197,7 +197,7 @@ end;
 
 function getOverridedSamplesInfo(ver)
     if(tr_sound_info[ver] ~= nil) then
-        return tr_sound_info[ver].sample_name_mask, tr_sound_info[ver].num_samples, tr_sound_info[ver].num_sounds;
+        return tr_sound_info[ver].num_samples, tr_sound_info[ver].num_sounds, tr_sound_info[ver].sample_name_mask;
     else
         return -1, -1, "NONE";
     end;
