@@ -31,6 +31,7 @@ typedef struct collision_result_s
     struct engine_container_s  *obj;
     uint16_t                    bone_num;
     uint16_t                    hit;
+    float                       fraction;
     float                       point[3];
     float                       normale[3];
 }collision_result_t, *collision_result_p;
@@ -53,6 +54,7 @@ void Physics_GetGravity(float g[3]);
 void Physics_SetGravity(float g[3]);
 
 int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont);
+int  Physics_RayTestFiltered(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont);
 int  Physics_SphereTest(struct collision_result_s *result, float from[3], float to[3], float R, struct engine_container_s *cont);
 
 /* Physics object manipulation functions */

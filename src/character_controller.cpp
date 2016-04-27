@@ -644,7 +644,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
 
     tmp[2] = z_min;
     //renderer.debugDrawer->DrawLine(to, tmp, color, color);
-    if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self))
+    if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self) && (cb.fraction > 0.0f))
     {
         from[2] = to[2] = cb.point[2];
         if(ent->transform[4 + 0] * cb.normale[0] + ent->transform[4 + 1] * cb.normale[1] <= 0.0)
@@ -673,7 +673,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     for(; to[2] >= z_min; from[2] += z_step, to[2] += z_step)                   // we can't climb under floor!
     {
         //renderer.debugDrawer->DrawLine(from, to, color, color);
-        if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self))
+        if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (cb.fraction > 0.0f))
         {
             if(cb.normale[2] >= critical_z_normale)
             {
@@ -697,7 +697,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             tmp[1] = to[1];
             tmp[2] = z_min;
             //renderer.debugDrawer->DrawLine(to, tmp, color, color);
-            if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self) && (cb.normale[2] >= critical_z_normale))
+            if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self) && (cb.fraction > 0.0f) && (cb.normale[2] >= critical_z_normale))
             {
                 up_founded = 1;
                 vec3_copy(n0, cb.normale);

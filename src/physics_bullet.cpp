@@ -8,7 +8,6 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-///@TODO: USE FACE CULLING RAY TESTING!!!!!!!!!!!!!! SO... CHECK ALL TWEENS, CEILINGS AND FLOORS GENERATION!!!!
 
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/btBulletDynamicsCommon.h"
@@ -17,6 +16,7 @@ extern "C" {
 #include "bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h"
 #include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
 #include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
+#include "bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 
 #include "core/gl_util.h"
 #include "core/gl_font.h"
@@ -523,6 +523,7 @@ int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[
     {
         result->hit = 0x00;
         result->obj = NULL;
+        result->fraction = 1.0f;
         bt_engine_dynamicsWorld->rayTest(vFrom, vTo, cb);
         if(cb.hasHit())
         {
@@ -532,6 +533,43 @@ int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[
             vec3_copy(result->normale, cb.m_hitNormalWorld.m_floats);
             vFrom.setInterpolate3(vFrom, vTo, cb.m_closestHitFraction);
             vec3_copy(result->point, vFrom.m_floats);
+            result->fraction = cb.m_closestHitFraction;
+            return 1;
+        }
+    }
+    else
+    {
+        bt_engine_dynamicsWorld->rayTest(vFrom, vTo, cb);
+        return cb.hasHit();
+    }
+
+    return 0;
+}
+
+
+int  Physics_RayTestFiltered(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont)
+{
+    bt_engine_ClosestRayResultCallback cb(cont, true);
+    btVector3 vFrom(from[0], from[1], from[2]), vTo(to[0], to[1], to[2]);
+
+    cb.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
+    //cb.m_flags |= btTriangleRaycastCallback::kF_KeepUnflippedNormal;
+    cb.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
+    if(result)
+    {
+        result->hit = 0x00;
+        result->obj = NULL;
+        result->fraction = 1.0f;
+        bt_engine_dynamicsWorld->rayTest(vFrom, vTo, cb);
+        if(cb.hasHit())
+        {
+            result->obj      = (struct engine_container_s *)cb.m_collisionObject->getUserPointer();
+            result->hit      = 0x01;
+            result->bone_num = cb.m_collisionObject->getUserIndex();
+            vec3_copy(result->normale, cb.m_hitNormalWorld.m_floats);
+            vFrom.setInterpolate3(vFrom, vTo, cb.m_closestHitFraction);
+            vec3_copy(result->point, vFrom.m_floats);
+            result->fraction = cb.m_closestHitFraction;
             return 1;
         }
     }
@@ -562,6 +600,7 @@ int  Physics_SphereTest(struct collision_result_s *result, float from[3], float 
     {
         result->obj = NULL;
         result->hit = 0x00;
+        result->fraction = 1.0f;
         bt_engine_dynamicsWorld->convexSweepTest(&sphere, tFrom, tTo, cb);
         if(cb.hasHit())
         {
@@ -570,6 +609,7 @@ int  Physics_SphereTest(struct collision_result_s *result, float from[3], float 
             result->bone_num = cb.m_hitCollisionObject->getUserIndex();
             vec3_copy(result->normale, cb.m_hitNormalWorld.m_floats);
             vec3_copy(result->point, cb.m_hitPointWorld.m_floats);
+            result->fraction = cb.m_closestHitFraction;
             return 1;
         }
     }
