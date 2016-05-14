@@ -186,8 +186,6 @@ typedef struct climb_info_s
     float                       n[3];
     float                       t[3];
     float                       up[3];
-    float                       floor_limit;
-    float                       ceiling_limit;
     float                       next_z_space;
 
     float                       edge_point[3];

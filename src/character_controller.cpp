@@ -611,14 +611,14 @@ void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
  * @param ent - entity
  * @param climb - returned climb information
  * @param test_from - where we start check height (i.e. middle hands position)
- * @param test_to - test area size parameters
+ * @param test_to - test area parameters (next pos xy, z_min)
  */
 void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float test_from[3], float test_to[3])
 {
     float from[3], to[3], tmp[3];
     float z_step, *pos = ent->transform + 12;
     float n0[4], n1[4];                                                         // planes equations
-    char up_founded;
+    char up_founded = 0;
     collision_result_t cb;
     const float color[3] = {1.0, 0.0, 0.0};
 
@@ -626,8 +626,6 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     climb->can_hang = 0x00;
     climb->edge_hit = 0x00;
     climb->edge_obj = NULL;
-    climb->floor_limit = (ent->character->height_info.floor_hit.hit) ? (ent->character->height_info.floor_hit.point[2]) : (-9E10);
-    climb->ceiling_limit = (ent->character->height_info.ceiling_hit.hit) ? (ent->character->height_info.ceiling_hit.point[2]) : (9E10);
 
     from[0] = test_from[0];
     from[1] = test_from[1];
@@ -702,7 +700,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         }
     }
 
-    if(up_founded == 2 && ((n0[2] > 0.0f) || (n1[2] > 0.0f)))
+    if((up_founded == 2) && ((n0[2] > 0.0f) || (n1[2] > 0.0f)))
     {
         float d, n2[4];
         // get the character plane equation
@@ -769,7 +767,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         climb->up[0] = 0.0;
         climb->up[1] = 0.0;
         climb->up[2] = 1.0;
-        climb->edge_z_ang = 180.0 * atan2f(n2[0], -n2[1]) / M_PI;
+        climb->edge_z_ang = 180.0f * atan2f(n2[0], -n2[1]) / M_PI;
         climb->edge_tan_xy[0] = -n2[1];
         climb->edge_tan_xy[1] = n2[0];
         d = sqrt(n2[0] * n2[0] + n2[1] * n2[1]);
@@ -779,15 +777,13 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         climb->t[1] = climb->edge_tan_xy[1];
 
         // Calc hang info
-        climb->ceiling_limit = 32512;
         climb->next_z_space = 2.0 * ent->character->Height;
         vec3_copy(from, climb->edge_point);
         vec3_copy(to, from);
         to[2] += climb->next_z_space;
         if(Physics_RayTestFiltered(&cb, from, to, ent->self))
         {
-            climb->ceiling_limit = cb.point[2];
-            climb->next_z_space = climb->ceiling_limit - climb->edge_point[2];
+            climb->next_z_space = cb.point[2] - climb->edge_point[2];
         }
 
         from[0] = to[0] = test_from[0];
@@ -809,8 +805,6 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
     climb->wall_hit = 0x00;
     climb->edge_hit = 0x00;
     climb->edge_obj = NULL;
-    climb->floor_limit = (ent->character->height_info.floor_hit.hit) ? (ent->character->height_info.floor_hit.point[2]) : (-9E10);
-    climb->ceiling_limit = (ent->character->height_info.ceiling_hit.hit) ? (ent->character->height_info.ceiling_hit.point[2]) : (9E10);
     vec3_copy(climb->point, ent->character->climb.point);
 
     if(ent->character->height_info.walls_climb == 0x00)
@@ -1490,12 +1484,6 @@ int Character_WallsClimbing(struct entity_s *ent)
     vec3_add(pos, pos, move);
     Entity_FixPenetrations(ent, move);                                          // get horizontal collide
     Entity_UpdateRoomPos(ent);
-
-    Character_CheckWallsClimbability(ent, climb);
-    if(pos[2] + ent->bf->bb_max[2] > climb->ceiling_limit)
-    {
-        pos[2] = climb->ceiling_limit - ent->bf->bb_max[2];
-    }
 
     return 1;
 }
