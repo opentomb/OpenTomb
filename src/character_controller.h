@@ -317,7 +317,8 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
 int  Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height_info_s *nfc);
 int  Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
 void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent);
-void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float offset[3], struct height_info_s *nfc, float test_height);
+void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3]);
+void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float test_from[3], float test_to[3]);
 void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s *climb);
 
 void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz = 0);

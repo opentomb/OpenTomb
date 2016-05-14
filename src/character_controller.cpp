@@ -540,7 +540,7 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
             const float R = 16.0f;
             if(!valid_r)
             {
-                collision_result_t cb, ncb;
+                collision_result_t cb;
                 float from[3], to[3];
                 from[0] = hi->leg_r_floor.point[0];
                 from[1] = hi->leg_r_floor.point[1];
@@ -565,7 +565,7 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
             }
             if(!valid_l)
             {
-                collision_result_t cb, ncb;
+                collision_result_t cb;
                 float from[3], to[3];
                 from[0] = hi->leg_l_floor.point[0];
                 from[1] = hi->leg_l_floor.point[1];
@@ -595,25 +595,32 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
 }
 
 
+void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
+{
+    float temp[3];
+    const float *v1 = ent->bf->bone_tags[10].full_transform + 12;
+    const float *v2 = ent->bf->bone_tags[13].full_transform + 12;
+
+    vec3_add(temp, v1, v2);
+    vec3_mul_scalar(temp, temp, 0.5f);
+    Mat4_vec3_mul_macro(pos, ent->transform, temp);
+}
+
+
 /**
  * @param ent - entity
  * @param climb - returned climb information
- * @param offset - offset, when we check height
- * @param nfc - height info (floor / ceiling)
+ * @param test_from - where we start check height (i.e. middle hands position)
+ * @param test_to - test area size parameters
  */
-void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float offset[3], struct height_info_s *nfc, float test_height)
+void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float test_from[3], float test_to[3])
 {
     float from[3], to[3], tmp[3];
-    float z_min, z_step, *pos = ent->transform + 12;
+    float z_step, *pos = ent->transform + 12;
     float n0[4], n1[4];                                                         // planes equations
     char up_founded;
     collision_result_t cb;
-    const float critical_z_normale = 0.15f;
-    //const float color[3] = {1.0, 0.0, 0.0};
-
-    vec3_add(tmp, pos, offset);                                                 // tmp = native offset point
-    nfc->floor_hit.hit = 0x00;
-    nfc->ceiling_hit.hit = 0x00;
+    const float color[3] = {1.0, 0.0, 0.0};
 
     climb->height_info = CHARACTER_STEP_HORIZONTAL;
     climb->can_hang = 0x00;
@@ -621,101 +628,81 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     climb->edge_obj = NULL;
     climb->floor_limit = (ent->character->height_info.floor_hit.hit) ? (ent->character->height_info.floor_hit.point[2]) : (-9E10);
     climb->ceiling_limit = (ent->character->height_info.ceiling_hit.hit) ? (ent->character->height_info.ceiling_hit.point[2]) : (9E10);
-    vec3_copy(climb->point, ent->character->climb.point);
 
-    /*
-     * check max height
-     */
-    if(ent->character->height_info.ceiling_hit.hit && (tmp[2] > ent->character->height_info.ceiling_hit.point[2] - ent->character->climb_r - 1.0))
+    from[0] = test_from[0];
+    from[1] = test_from[1];
+    from[2] = test_from[2];
+    to[0] = test_to[0];
+    to[1] = test_to[1];
+    to[2] = test_from[2];
+    renderer.debugDrawer->DrawLine(from, to, color, color);
+    if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self))
     {
-        tmp[2] = ent->character->height_info.ceiling_hit.point[2] - ent->character->climb_r - 1.0;
-    }
-
-    /*
-    * Let us calculate EDGE
-    */
-    from[0] = pos[0] + ent->transform[4 + 0] * (ent->bf->bb_max[1] - ent->character->climb_r * 2.0);
-    from[1] = pos[1] + ent->transform[4 + 1] * (ent->bf->bb_max[1] - ent->character->climb_r * 2.0);
-    from[2] = tmp[2];
-    vec3_copy(to, tmp);
-
-    test_height = (test_height >= ent->character->max_step_up_height) ? (test_height) : (ent->character->max_step_up_height);
-    z_min = pos[2] + ent->bf->bb_max[2] - test_height;
-
-    tmp[2] = z_min;
-    //renderer.debugDrawer->DrawLine(to, tmp, color, color);
-    if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self) && (cb.fraction > 0.0f))
-    {
-        from[2] = to[2] = cb.point[2];
-        if(ent->transform[4 + 0] * cb.normale[0] + ent->transform[4 + 1] * cb.normale[1] <= 0.0)
+        // NEAR WALL CASE
+        if(cb.fraction > 0.0f)
         {
-            from[2] = to[2] = cb.point[2] + 0.5f * ent->character->climb_r;
-            z_min = cb.point[2] - 5.0f * ent->character->climb_r;
-        }
-        else
-        {
-            from[2] = to[2] = cb.point[2] + 2.0f * ent->character->climb_r;
-            z_min = cb.point[2] - 1.5f * ent->character->climb_r;
+            climb->edge_obj = cb.obj;
+            vec3_copy(n0, cb.normale);
+            n0[3] = -vec3_dot(n0, cb.point);
+            tmp[0] = from[0] = to[0] = cb.point[0] - cb.normale[0];
+            tmp[1] = from[1] = to[1] = cb.point[1] - cb.normale[1];
+            from[2] = cb.point[2];
+            tmp[2] = to[2] = cb.point[2] + ent->character->max_step_up_height;
+            if(Physics_RayTestFiltered(&cb, from, to, ent->self))
+            {
+                tmp[2] = cb.point[2];
+            }
+            to[2] = test_to[2];
+            renderer.debugDrawer->DrawLine(tmp, to, color, color);
+            if(Physics_RayTestFiltered(&cb, tmp, to, ent->self))
+            {
+                vec3_copy(n1, cb.normale);
+                n1[3] = -vec3_dot(n1, cb.point);
+                up_founded = 2;
+            }
         }
     }
     else
     {
-        return;
-    }
-
-    tmp[2] = to[2];
-    // mult 0.66 is magick, but it must be less than 1.0 and greater than 0.0;
-    // close to 1.0 - bad precision, good speed;
-    // close to 0.0 - bad speed, bad precision;
-    // close to 0.5 - middle speed, good precision
-    up_founded = 0;
-    z_step = -0.66 * ent->character->climb_r;
-    for(; to[2] >= z_min; from[2] += z_step, to[2] += z_step)                   // we can't climb under floor!
-    {
-        //renderer.debugDrawer->DrawLine(from, to, color, color);
+        // IN FLY CASE
+        from[0] = to[0] = test_to[0];
+        from[1] = to[1] = test_to[1];
+        from[2] = test_from[2];
+        to[2] = test_to[2];
+        renderer.debugDrawer->DrawLine(from, to, color, color);
         if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (cb.fraction > 0.0f))
         {
-            if(cb.normale[2] >= critical_z_normale)
+            vec3_copy(n0, cb.normale);
+            n0[3] = -vec3_dot(n0, cb.point);
+            up_founded = 1;
+
+            // mult 0.66 is magick, but it must be less than 1.0 and greater than 0.0;
+            // close to 1.0 - bad precision, good speed;
+            // close to 0.0 - bad speed, bad precision;
+            // close to 0.5 - middle speed, good precision
+            from[0] = test_from[0];
+            from[1] = test_from[1];
+            from[2] = to[2] = cb.point[2];
+            z_step = -0.66 * ent->character->climb_r;
+            for(; to[2] >= test_to[2]; from[2] += z_step, to[2] += z_step)      // we can't climb under floor!
             {
-                up_founded = 1;
-                vec3_copy(n0, cb.normale);
-                n0[3] = -vec3_dot(n0, cb.point);
-                continue;
-            }
-            if(up_founded && (cb.normale[2] < 0.001f))
-            {
-                vec3_copy(n1, cb.normale);
-                n1[3] = -vec3_dot(n1, cb.point);
-                climb->edge_obj = cb.obj;
-                up_founded = 2;
-                break;
-            }
-        }
-        else if(up_founded == 0)
-        {
-            tmp[0] = to[0];
-            tmp[1] = to[1];
-            tmp[2] = z_min;
-            //renderer.debugDrawer->DrawLine(to, tmp, color, color);
-            if(Physics_SphereTest(&cb, to, tmp, ent->character->climb_r, ent->self) && (cb.fraction > 0.0f) && (cb.normale[2] >= critical_z_normale))
-            {
-                up_founded = 1;
-                vec3_copy(n0, cb.normale);
-                n0[3] = -vec3_dot(n0, cb.point);
-                from[2] = to[2] = cb.point[2];
-                if(cb.point[2] + z_step < z_min)
+                renderer.debugDrawer->DrawLine(from, to, color, color);
+                if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (cb.fraction > 0.0f))
                 {
-                    from[2] = to[2] = z_min - z_step + 0.5 * ent->character->climb_r;
+                    if(up_founded && (vec3_dist_sq(cb.normale, n0) > 0.05f))
+                    {
+                        vec3_copy(n1, cb.normale);
+                        n1[3] = -vec3_dot(n1, cb.point);
+                        climb->edge_obj = cb.obj;
+                        up_founded = 2;
+                        break;
+                    }
                 }
-            }
-            else
-            {
-                return;
             }
         }
     }
 
-    if(up_founded == 2)
+    if(up_founded == 2 && ((n0[2] > 0.0f) || (n1[2] > 0.0f)))
     {
         float d, n2[4];
         // get the character plane equation
@@ -791,27 +778,24 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         climb->t[0] = climb->edge_tan_xy[0];
         climb->t[1] = climb->edge_tan_xy[1];
 
-        vec3_sub(tmp, climb->edge_point, ent->transform + 12);
-        tmp[2] += 2.0 * ent->character->climb_r;
-        climb->height_info = Character_CheckNextStep(ent, tmp, nfc);
-        if(nfc->ceiling_hit.hit && (nfc->ceiling_hit.point[2] < climb->ceiling_limit))
-        {
-            climb->ceiling_limit = nfc->ceiling_hit.point[2];
-        }
-
-        if(!ent->character->height_info.floor_hit.hit || (climb->edge_point[2] - ent->character->height_info.floor_hit.point[2] >= ent->character->Height))
-        {
-            climb->can_hang = 0x01;
-        }
-
+        // Calc hang info
+        climb->ceiling_limit = 32512;
         climb->next_z_space = 2.0 * ent->character->Height;
-        if(nfc->floor_hit.hit && nfc->ceiling_hit.hit)
+        vec3_copy(from, climb->edge_point);
+        vec3_copy(to, from);
+        to[2] += climb->next_z_space;
+        if(Physics_RayTestFiltered(&cb, from, to, ent->self))
         {
-            climb->next_z_space = nfc->ceiling_hit.point[2] - nfc->floor_hit.point[2];
+            climb->ceiling_limit = cb.point[2];
+            climb->next_z_space = climb->ceiling_limit - climb->edge_point[2];
         }
-    }
 
-    return;
+        from[0] = to[0] = test_from[0];
+        from[1] = to[1] = test_from[1];
+        from[2] = climb->edge_point[2];
+        to[2] = from[2] - ent->character->Height;
+        climb->can_hang = Physics_RayTestFiltered(NULL, from, to, ent->self) ? (0x00) : (0x01);
+    }
 }
 
 
