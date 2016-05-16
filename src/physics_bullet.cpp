@@ -553,7 +553,7 @@ int  Physics_RayTestFiltered(struct collision_result_s *result, float from[3], f
     btVector3 vFrom(from[0], from[1], from[2]), vTo(to[0], to[1], to[2]);
 
     cb.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
-    //cb.m_flags |= btTriangleRaycastCallback::kF_KeepUnflippedNormal;
+    cb.m_flags |= btTriangleRaycastCallback::kF_KeepUnflippedNormal;
     cb.m_collisionFilterMask = btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter;
     if(result)
     {

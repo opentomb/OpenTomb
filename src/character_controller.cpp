@@ -615,7 +615,7 @@ void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
  */
 void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float test_from[3], float test_to[3])
 {
-    float from[3], to[3], tmp[3];
+    float from[3], to[3];
     float z_step, *pos = ent->transform + 12;
     float n0[4], n1[4];                                                         // planes equations
     char up_founded = 0;
@@ -642,17 +642,12 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             climb->edge_obj = cb.obj;
             vec3_copy(n0, cb.normale);
             n0[3] = -vec3_dot(n0, cb.point);
-            tmp[0] = from[0] = to[0] = cb.point[0] - cb.normale[0];
-            tmp[1] = from[1] = to[1] = cb.point[1] - cb.normale[1];
-            from[2] = cb.point[2];
-            tmp[2] = to[2] = cb.point[2] + ent->character->max_step_up_height;
-            if(Physics_RayTestFiltered(&cb, from, to, ent->self))
-            {
-                tmp[2] = cb.point[2];
-            }
+            from[0] = to[0] = cb.point[0] - cb.normale[0];
+            from[1] = to[1] = cb.point[1] - cb.normale[1];
+            from[2] = cb.point[2] + ent->character->max_step_up_height;
             to[2] = test_to[2];
-            renderer.debugDrawer->DrawLine(tmp, to, color, color);
-            if(Physics_RayTestFiltered(&cb, tmp, to, ent->self))
+            renderer.debugDrawer->DrawLine(from, to, color, color);
+            if(Physics_RayTestFiltered(&cb, from, to, ent->self))
             {
                 vec3_copy(n1, cb.normale);
                 n1[3] = -vec3_dot(n1, cb.point);
