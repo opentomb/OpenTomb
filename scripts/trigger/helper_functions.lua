@@ -12,7 +12,7 @@ function prepareEntity(object_id)
     local object_mask = getEntityMask(object_id);
     if(object_mask == 0x1F) then
         activateEntity(object_id, 0, 0, 0, false, 0);
-        setEntityTriggerLayout(object_id, 0x00, 0, 0); -- Reset activation mask and event.
+        setEntityTriggerLayout(object_id, 0x00, false, false); -- Reset activation mask and event.
     end;
 end;
 
