@@ -452,16 +452,16 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf)
     {
         if(ss_anim->anim_ext_flags & ANIM_EXT_TARGET_TO)
         {
-            SSBoneFrame_TargetBoneTo(bf, ss_anim);
+            SSBoneFrame_TargetBoneToSlerp(bf, ss_anim);
         }
     }
 }
 
 
-void SSBoneFrame_TargetBoneTo(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
 {
     ss_bone_tag_p b_tag = b_tag = bf->bone_tags + ss_anim->targeting_bone;
-    float q[4], target_dir[3], target_local[3], bone_dir[3];
+    float tr[16], q[4], target_dir[3], target_local[3], bone_dir[3];
 
     Mat4_vec3_mul_inv(target_local, bf->transform, ss_anim->target);
     if(b_tag->parent)
@@ -480,7 +480,59 @@ void SSBoneFrame_TargetBoneTo(struct ss_bone_frame_s *bf, struct ss_animation_s 
     }
     vec4_GetQuaternionRotation(q, bone_dir, target_dir);
 
-    Mat4_RotateQuaternion(b_tag->transform, q);
+    Mat4_E(tr);
+    Mat4_RotateQuaternion(tr, q);
+    vec4_copy(q, b_tag->transform + 12);
+    Mat4_Mat4_mul(b_tag->transform, tr, b_tag->transform);
+    vec4_copy(b_tag->transform + 12, q);
+    for(uint16_t i = ss_anim->targeting_bone; i < bf->bone_tag_count; i++)
+    {
+        ss_bone_tag_p btag = bf->bone_tags + i;
+        if(btag->parent)
+        {
+            Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
+        }
+        else
+        {
+            Mat4_Copy(btag->full_transform, btag->transform);
+        }
+    }
+}
+
+
+void SSBoneFrame_TargetBoneToZX(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+{
+    ss_bone_tag_p b_tag = b_tag = bf->bone_tags + ss_anim->targeting_bone;
+    float tr[16], target_dir[3], target_local[3], bone_dir[3], sincos[2], q[4];
+
+    Mat4_vec3_mul_inv(target_local, bf->transform, ss_anim->target);
+    if(b_tag->parent)
+    {
+        Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
+    }
+    vec3_sub(target_dir, target_local, b_tag->transform + 12);
+    
+    if(ss_anim->targeting_base == 0)
+    {
+        Mat4_vec3_rot_macro(bone_dir, b_tag->transform, ss_anim->bone_direction);
+    }
+    else
+    {
+        vec3_copy(bone_dir, ss_anim->bone_direction);
+    }
+    
+    Mat4_E(tr);
+    vec3_GetOZsincos(sincos, bone_dir, target_dir);
+    Mat4_RotateZ_SinCos(tr, sincos[0], sincos[1]);
+    q[0] = bone_dir[0] * sincos[0] + bone_dir[1] * sincos[1];
+    bone_dir[0] = bone_dir[0] * sincos[1] - bone_dir[1] * sincos[0];
+    bone_dir[1] = q[0];
+    vec3_GetOXsincos(sincos, bone_dir, target_dir);
+    Mat4_RotateX_SinCos(tr, sincos[0], sincos[1]);
+    
+    vec4_copy(q, b_tag->transform + 12);
+    Mat4_Mat4_mul(b_tag->transform, tr, b_tag->transform);
+    vec4_copy(b_tag->transform + 12, q);
     for(uint16_t i = ss_anim->targeting_bone; i < bf->bone_tag_count; i++)
     {
         ss_bone_tag_p btag = bf->bone_tags + i;

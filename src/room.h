@@ -159,9 +159,11 @@ typedef struct sector_tween_s
 {
     float                       floor_corners[4][3];
     uint8_t                     floor_tween_type;
+    uint8_t                     floor_tween_inverted;
 
     float                       ceiling_corners[4][3];
     uint8_t                     ceiling_tween_type;
+    uint8_t                     ceiling_tween_inverted;
 }sector_tween_t, *sector_tween_p;
 
 

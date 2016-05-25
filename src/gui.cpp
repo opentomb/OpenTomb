@@ -790,8 +790,8 @@ void gui_InventoryManager::render()
             offset[1] = mVerticalOffset;
             offset[2] = mRingRadius;
             Mat4_Translate(matrix, offset);
-            Mat4_RotateX(matrix, -90.0);
-            Mat4_RotateZ(matrix, 90.0);
+            Mat4_RotateX_SinCos(matrix,-1.0f, 0.0f);  //-90.0
+            Mat4_RotateZ_SinCos(matrix, 1.0f, 0.0f);  //90.0
             if(num == mItemsOffset)
             {
                 if(bi->name[0])

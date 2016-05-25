@@ -94,6 +94,10 @@ float    Spline_Get(spline_p spline, float t);
                    (dot)[1] = (p)[1] + (t) * (v)[1]; \
                    (dot)[2] = (p)[2] + (t) * (v)[2]; }
 
+void vec3_GetOZsincos(float sincos[2], const float v0[3], const float v1[3]);
+void vec3_GetOYsincos(float sincos[2], const float v0[3], const float v1[3]);
+void vec3_GetOXsincos(float sincos[2], const float v0[3], const float v1[3]);
+
 void vec3_GetPlaneEquation(float eq[4], float v0[3], float v1[3], float v2[3]);
 void vec3_RotateX(float res[3], float src[3], float ang);
 void vec3_RotateY(float res[3], float src[3], float ang);
@@ -227,10 +231,14 @@ void Mat4_Scale(float mat[16], float x, float y, float z);
 void Mat4_RotateX(float mat[16], float ang);
 void Mat4_RotateY(float mat[16], float ang);
 void Mat4_RotateZ(float mat[16], float ang);
+void Mat4_RotateX_SinCos(float mat[16], float sina, float cosa);
+void Mat4_RotateY_SinCos(float mat[16], float sina, float cosa);
+void Mat4_RotateZ_SinCos(float mat[16], float sina, float cosa);
 void Mat4_RotateAxis(float mat[16], float axis[3], float ang);
 void Mat4_RotateQuaternion(float mat[16], float q[4]);
 void Mat4_T(float mat[16]);
 void Mat4_affine_inv(float mat[16]);
+int  Mat4_inv(float mat[16], float inv[16]);
 void Mat4_Mat4_mul(float result[16], const float src1[16], const float src2[16]);
 void Mat4_inv_Mat4_affine_mul(float result[16], float src1[16], float src2[16]);
 void Mat4_vec3_mul(float v[3], const float mat[16], const float src[3]);

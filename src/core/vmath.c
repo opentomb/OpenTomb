@@ -126,11 +126,89 @@ float Spline_Get(spline_p spline, float t)
         return summ;
     }
 }
-    
+   
+
+// Fast reciprocal square root (Quake 3 game code)
+__inline float RSqrt(float number)
+{
+    int32_t i;
+    float x2, y;
+    const float threehalfs = 1.5f;
+
+    x2 = number * 0.5f;
+    y  = number;
+    i  = *(int32_t *)&y;                    // evil floating point bit level hacking
+    i  = 0x5f3759df - (i >> 1);             // what the fuck?
+    y  = *(float *)&i;
+    y  = y * (threehalfs - (x2 * y * y));   // 1st iteration
+
+    return y;
+}
+
 
 /*
  * VECTOR FUNCTIONS
  */
+void vec3_GetOZsincos(float sincos[2], const float v0[3], const float v1[3])
+{
+    float t = v0[0] * v0[0] + v0[1] * v0[1];
+    t *= v1[0] * v1[0] + v1[1] * v1[1];
+    if(t > 0.0001f)
+    {
+        t = 1.0f / sqrtf(t);
+        sincos[0] = v0[0] * v1[1] - v0[1] * v1[0];
+        sincos[0] *= t;
+        sincos[1] = v0[0] * v1[0] + v0[1] * v1[1];
+        sincos[1] *= t;
+    }
+    else
+    {
+        sincos[0] = 0.0f;
+        sincos[1] = 1.0f;
+    }
+}
+
+
+void vec3_GetOYsincos(float sincos[2], const float v0[3], const float v1[3])
+{
+    float t = v0[0] * v0[0] + v0[2] * v0[2];
+    t *= v1[0] * v1[0] + v1[2] * v1[2];
+    if(t > 0.0001f)
+    {
+        t = 1.0f / sqrtf(t);
+        sincos[0] =-v0[0] * v1[2] + v0[2] * v1[0];
+        sincos[0] *= t;
+        sincos[1] = v0[0] * v1[0] + v0[2] * v1[2];
+        sincos[1] *= t;
+    }
+    else
+    {
+        sincos[0] = 0.0f;
+        sincos[1] = 1.0f;
+    }
+}
+
+
+void vec3_GetOXsincos(float sincos[2], const float v0[3], const float v1[3])
+{
+    float t = v0[1] * v0[1] + v0[2] * v0[2];
+    t *= v1[1] * v1[1] + v1[2] * v1[2];
+    if(t > 0.0001f)
+    {
+        t = 1.0f / sqrtf(t);
+        sincos[0] = v0[1] * v1[2] - v0[2] * v1[1];
+        sincos[0] *= t;
+        sincos[1] = v0[1] * v1[1] + v0[2] * v1[2];
+        sincos[1] *= t;
+    }
+    else
+    {
+        sincos[0] = 0.0f;
+        sincos[1] = 1.0f;
+    }
+}
+
+
 void vec4_rev(float rev[4], float src[4])
 {
     float module = vec4_abs(src);
@@ -541,6 +619,69 @@ void Mat4_RotateZ(float mat[16], float ang)
     vec3_copy(mat+8, R+6);
 }
 
+void Mat4_RotateX_SinCos(float mat[16], float sina, float cosa)
+{
+    float R[9];
+
+    R[0] = mat[0];
+    R[1] = mat[1];
+    R[2] = mat[2];
+
+    R[3] = mat[4] * cosa + mat[8] * sina;
+    R[4] = mat[5] * cosa + mat[9] * sina;
+    R[5] = mat[6] * cosa + mat[10] * sina;
+
+    R[6] =-mat[4] * sina + mat[8] * cosa;
+    R[7] =-mat[5] * sina + mat[9] * cosa;
+    R[8] =-mat[6] * sina + mat[10] * cosa;
+
+    vec3_copy(mat, R);
+    vec3_copy(mat+4, R+3);
+    vec3_copy(mat+8, R+6);
+}
+
+void Mat4_RotateY_SinCos(float mat[16], float sina, float cosa)
+{
+    float R[9];
+
+    R[0] = mat[0] * cosa - mat[8] * sina;
+    R[1] = mat[1] * cosa - mat[9] * sina;
+    R[2] = mat[2] * cosa - mat[10] * sina;
+
+    R[3] = mat[4];
+    R[4] = mat[5];
+    R[5] = mat[6];
+
+    R[6] = mat[0] * sina + mat[8] * cosa;
+    R[7] = mat[1] * sina + mat[9] * cosa;
+    R[8] = mat[2] * sina + mat[10] * cosa;
+
+    vec3_copy(mat, R);
+    vec3_copy(mat+4, R+3);
+    vec3_copy(mat+8, R+6);
+}
+
+void Mat4_RotateZ_SinCos(float mat[16], float sina, float cosa)
+{
+    float R[9];
+
+    R[0] = mat[0] * cosa +  mat[4] * sina;
+    R[1] = mat[1] * cosa +  mat[5] * sina;
+    R[2] = mat[2] * cosa +  mat[6] * sina;
+
+    R[3] =-mat[0] * sina +  mat[4] * cosa;
+    R[4] =-mat[1] * sina +  mat[5] * cosa;
+    R[5] =-mat[2] * sina +  mat[6] * cosa;
+
+    R[6] = mat[8];
+    R[7] = mat[9];
+    R[8] = mat[10];
+
+    vec3_copy(mat, R);
+    vec3_copy(mat+4, R+3);
+    vec3_copy(mat+8, R+6);
+}
+
 void Mat4_RotateAxis(float mat[16], float axis[3], float ang)
 {
     if(ang != 0.0)
@@ -628,6 +769,91 @@ void Mat4_affine_inv(float mat[16])
     mat[14] = -v[2];
 }
 
+// Gauss method
+int Mat4_inv(float mat[16], float inv[16])
+{
+    register int i, j, s, k;
+    float f, r;
+
+    Mat4_E_macro(inv);
+    for(j = 0; j < 4 - 1; j++)      //direct run
+    {
+        f = fabs(mat[j * 4 + j]);   // f - max
+        k = j;                      // k - index of max
+        for(s = j + 1; s < 4; s++)
+        {
+            r = fabs(mat[s * 4 + j]);
+            if(f < r)               // max < a[s, j]
+            {
+                f = r;
+                k = s;
+            }
+        }
+        s = k;
+        if(s != j)
+        {
+            for(k = j; k < 4; k++)
+            {
+                SWAPT(mat[s * 4 + k], mat[j * 4 + k], r);
+            }
+            for(k = 0; k < 4; k++)
+            {
+                SWAPT(inv[s * 4 + k], inv[j * 4 + k], r);
+            }
+        }
+
+        if(f < 0.000001f)
+        {
+            return 0;
+        }
+
+        for(i = j + 1; i < 4; i++)                                              //make  matrix a high triangle matrix - zero down elements
+        {
+            if(mat[i * 4 + j] == 0.0f)
+            {
+                continue;
+            }
+            f = mat[i * 4 + j] / mat[j * 4 + j];
+            for(k = j + 1; k < 4; k++)                                          //sub matrix strings
+            {
+                mat[i * 4 + k] -= f * mat[j * 4 + k];
+            }
+            for(k = 0; k < 4; k++)                                              //sub extend strings
+            {
+                inv[i * 4 + k] -= f * inv[j * 4 + k];
+            }
+            mat[i * 4 + j] = 0.0f;
+        }
+    }
+
+    /*for(i = 0; i < 4; i++)
+    {
+        if(mat[i * 4 + i] == 0.0f)
+        {
+            return 0;
+        }
+    }*/
+
+    for(j = 4 - 1; j >=0 ; j--)                                                 //run back
+    {
+        for(k = 0; k < 4; k++)
+        {
+            inv[j * 4 + k] /= mat[j * 4 + j];
+        }
+        mat[j * 4 + j] = 1.0f;
+        for(i = j - 1; i >= 0; i--)
+        {
+            f = mat[i * 4 + j] / mat[j * 4 + j];
+            for(k = 0; k < 4; k++)
+            {
+                inv[i * 4 + k] -= f * inv[j * 4 + k];
+            }
+            mat[i * 4 + j] = 0.0f;
+        }
+    }
+    
+    return 1;
+}
 
 /**
  * Matrix multiplication. serult = src1 x src2.

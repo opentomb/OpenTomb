@@ -131,14 +131,10 @@ uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_
 
 void Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
 {
-    if(tween->floor_corners[0][2] > tween->floor_corners[1][2])
-    {
-        float t;
-        SWAPT(tween->floor_corners[0][2], tween->floor_corners[1][2], t);
-        SWAPT(tween->floor_corners[2][2], tween->floor_corners[3][2], t);
-    }
+    tween->floor_tween_inverted = 0x00;
 
-    if(tween->floor_corners[3][2] > tween->floor_corners[2][2])
+    if(((tween->floor_corners[1][2] > tween->floor_corners[0][2]) && (tween->floor_corners[3][2] > tween->floor_corners[2][2])) ||
+       ((tween->floor_corners[1][2] < tween->floor_corners[0][2]) && (tween->floor_corners[3][2] < tween->floor_corners[2][2])))
     {
         tween->floor_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;              // like a butterfly
     }
@@ -163,14 +159,10 @@ void Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween)
 
 void Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween)
 {
-    if(tween->ceiling_corners[0][2] > tween->ceiling_corners[1][2])
-    {
-        float t;
-        SWAPT(tween->ceiling_corners[0][2], tween->ceiling_corners[1][2], t);
-        SWAPT(tween->ceiling_corners[2][2], tween->ceiling_corners[3][2], t);
-    }
+    tween->ceiling_tween_inverted = 0x00;
 
-    if(tween->ceiling_corners[3][2] > tween->ceiling_corners[2][2])
+    if(((tween->ceiling_corners[1][2] > tween->ceiling_corners[0][2]) && (tween->ceiling_corners[3][2] > tween->ceiling_corners[2][2])) ||
+       ((tween->ceiling_corners[1][2] < tween->ceiling_corners[0][2]) && (tween->ceiling_corners[3][2] < tween->ceiling_corners[2][2])))
     {
         tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_2TRIANGLES;            // like a butterfly
     }
@@ -256,6 +248,7 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                         room_tween->floor_corners[2][2] = current_heightmap->ceiling_corners[1][2];
                         room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
+                        room_tween->floor_tween_inverted = 0x01;
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
                         joined_ceilings = 1;
@@ -287,6 +280,7 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                                     room_tween->floor_corners[2][2] = next_heightmap->floor_corners[2][2];
                                     room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
                                     Res_Sector_SetTweenFloorConfig(room_tween);
+                                    room_tween->floor_tween_inverted = 0x01;
                                     joined_floors = 1;
                                 }
                                 if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -349,6 +343,7 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                         room_tween->floor_corners[2][2] = next_heightmap->floor_corners[2][2];
                         room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
+                        room_tween->floor_tween_inverted = 0x01;
                     }
                 }
 
@@ -442,6 +437,7 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                         room_tween->floor_corners[2][2] = current_heightmap->ceiling_corners[2][2];
                         room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
+                        room_tween->floor_tween_inverted = 0x01;
                         room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
                         joined_floors = 1;
                         joined_ceilings = 1;
@@ -473,6 +469,7 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                                     room_tween->floor_corners[2][2] = next_heightmap->floor_corners[3][2];
                                     room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
                                     Res_Sector_SetTweenFloorConfig(room_tween);
+                                    room_tween->floor_tween_inverted = 0x01;
                                     joined_floors = 1;
                                 }
                                 if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -535,6 +532,7 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                         room_tween->floor_corners[2][2] = next_heightmap->floor_corners[3][2];
                         room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
+                        room_tween->floor_tween_inverted = 0x01;
                     }
                 }
 

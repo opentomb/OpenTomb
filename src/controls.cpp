@@ -514,15 +514,15 @@ void Controls_DebugKeys(int button, int state)
 
 void Controls_PrimaryMouseDown(float from[3], float to[3])
 {
-    /*float test_to[3];
+    float test_to[3];
     collision_result_t cb;
 
     vec3_add_mul(test_to, engine_camera.pos, engine_camera.view_dir, 32768.0f);
-    if(Physics_RayTest(&cb, engine_camera.pos, test_to, NULL))
+    if(Physics_RayTestFiltered(&cb, engine_camera.pos, test_to, NULL))
     {
         vec3_copy(from, cb.point);
         vec3_add_mul(to, cb.point, cb.normale, 256.0);
-    }*/
+    }
 }
 
 

@@ -590,8 +590,8 @@ void Engine_PollSDLEvents()
 {
     SDL_Event event;
     static int mouse_setup = 0;
-    //const float color[3] = {1.0f, 0.0f, 0.0f};
-    float from[3], to[3];
+    const float color[3] = {1.0f, 0.0f, 0.0f};
+    static float from[3], to[3];
 
     while(SDL_PollEvent(&event))
     {
@@ -738,7 +738,7 @@ void Engine_PollSDLEvents()
                 break;
         }
     }
-    //renderer.debugDrawer->DrawLine(from, to, color, color);
+    renderer.debugDrawer->DrawLine(from, to, color, color);
 }
 
 

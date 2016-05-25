@@ -836,6 +836,42 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
     return ret;
 }
 
+inline void GetVertexFromFloorTveen(struct sector_tween_s *tween ,float **v0, float **v1, float **v2, float **v3)
+{
+    if(tween->floor_tween_inverted == 0x00)
+    {
+        *v0 = tween->floor_corners[0];
+        *v1 = tween->floor_corners[1];
+        *v2 = tween->floor_corners[2];
+        *v3 = tween->floor_corners[3];
+    }
+    else
+    {
+        *v0 = tween->floor_corners[0];
+        *v1 = tween->floor_corners[3];
+        *v2 = tween->floor_corners[2];
+        *v3 = tween->floor_corners[1];
+    }
+}
+
+inline void GetVertexFromCeilingTveen(struct sector_tween_s *tween ,float **v0, float **v1, float **v2, float **v3)
+{
+    if(tween->ceiling_tween_inverted == 0x00)
+    {
+        *v0 = tween->ceiling_corners[0];
+        *v1 = tween->ceiling_corners[1];
+        *v2 = tween->ceiling_corners[2];
+        *v3 = tween->ceiling_corners[3];
+    }
+    else
+    {
+        *v0 = tween->ceiling_corners[0];
+        *v1 = tween->ceiling_corners[3];
+        *v2 = tween->ceiling_corners[2];
+        *v3 = tween->ceiling_corners[1];
+    }
+}
+
 ///@TODO: resolve cases with floor >> ceiling (I.E. floor - ceiling >= 2048)
 btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
 {
@@ -843,9 +879,14 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
     room_p r = heightmap->owner_room;
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret = NULL;
+    float *v0, *v1, *v2, *v3;
 
     for(uint32_t i = 0; i < r->sectors_count; i++)
     {
+        v0 = heightmap[i].floor_corners[0];
+        v1 = heightmap[i].floor_corners[1];
+        v2 = heightmap[i].floor_corners[2];
+        v3 = heightmap[i].floor_corners[3];
         if( (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
             (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
         {
@@ -854,24 +895,18 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
             {
                 if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
                 {
-                    btScalar *v0 = heightmap[i].floor_corners[3];
-                    btScalar *v1 = heightmap[i].floor_corners[2];
-                    btScalar *v2 = heightmap[i].floor_corners[0];
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
+                    trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
                                          btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(v0[0], v0[1], v0[2]),
                                          true);
                     cnt++;
                 }
 
                 if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
                 {
-                    btScalar *v0 = heightmap[i].floor_corners[2];
-                    btScalar *v1 = heightmap[i].floor_corners[1];
-                    btScalar *v2 = heightmap[i].floor_corners[0];
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                    trimesh->addTriangle(btVector3(v2[0], v2[1], v2[2]),
                                          btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(v0[0], v0[1], v0[2]),
                                          true);
                     cnt++;
                 }
@@ -880,30 +915,28 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
             {
                 if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
                 {
-                    btScalar *v0 = heightmap[i].floor_corners[3];
-                    btScalar *v1 = heightmap[i].floor_corners[2];
-                    btScalar *v2 = heightmap[i].floor_corners[1];
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
+                    trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
                                          btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(v1[0], v1[1], v1[2]),
                                          true);
                     cnt++;
                 }
 
                 if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
                 {
-                    btScalar *v0 = heightmap[i].floor_corners[3];
-                    btScalar *v1 = heightmap[i].floor_corners[1];
-                    btScalar *v2 = heightmap[i].floor_corners[0];
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                    trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
                                          btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(v0[0], v0[1], v0[2]),
                                          true);
                     cnt++;
                 }
             }
         }
 
+        v0 = heightmap[i].ceiling_corners[0];
+        v1 = heightmap[i].ceiling_corners[1];
+        v2 = heightmap[i].ceiling_corners[2];
+        v3 = heightmap[i].ceiling_corners[3];
         if( (heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
             (heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
         {
@@ -912,21 +945,15 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
             {
                 if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
                 {
-                    btScalar *v0 = heightmap[i].ceiling_corners[0];
-                    btScalar *v1 = heightmap[i].ceiling_corners[2];
-                    btScalar *v2 = heightmap[i].ceiling_corners[3];
                     trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
                                          btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(v3[0], v3[1], v3[2]),
                                          true);
                     cnt++;
                 }
 
                 if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
                 {
-                    btScalar *v0 = heightmap[i].ceiling_corners[0];
-                    btScalar *v1 = heightmap[i].ceiling_corners[1];
-                    btScalar *v2 = heightmap[i].ceiling_corners[2];
                     trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
                                          btVector3(v1[0], v1[1], v1[2]),
                                          btVector3(v2[0], v2[1], v2[2]),
@@ -938,24 +965,18 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
             {
                 if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
                 {
-                    btScalar *v0 = heightmap[i].ceiling_corners[0];
-                    btScalar *v1 = heightmap[i].ceiling_corners[1];
-                    btScalar *v2 = heightmap[i].ceiling_corners[3];
                     trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
                                          btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(v3[0], v3[1], v3[2]),
                                          true);
                     cnt++;
                 }
 
                 if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
                 {
-                    btScalar *v0 = heightmap[i].ceiling_corners[1];
-                    btScalar *v1 = heightmap[i].ceiling_corners[2];
-                    btScalar *v2 = heightmap[i].ceiling_corners[3];
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
+                    trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
                                          btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(v3[0], v3[1], v3[2]),
                                          true);
                     cnt++;
                 }
@@ -965,6 +986,7 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
 
     for(int i = 0; i < tweens_size; i++)
     {
+        GetVertexFromCeilingTveen(tweens + i, &v0, &v1, &v2, &v3);
         switch(tweens[i].ceiling_tween_type)
         {
             case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
@@ -973,10 +995,6 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
                                       (tweens[i].ceiling_corners[0][2] - tweens[i].ceiling_corners[1][2]));
                     t = 1.0 / (1.0 + t);
                     btScalar o[3], t1 = 1.0 - t;
-                    btScalar *v0 = tweens[i].ceiling_corners[0];
-                    btScalar *v1 = tweens[i].ceiling_corners[1];
-                    btScalar *v2 = tweens[i].ceiling_corners[2];
-                    btScalar *v3 = tweens[i].ceiling_corners[3];
                     vec3_interpolate_macro(o, v0, v2, t, t1);
 
                     trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
@@ -993,12 +1011,9 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
 
             case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
                 {
-                    btScalar *v0 = tweens[i].ceiling_corners[0];
-                    btScalar *v1 = tweens[i].ceiling_corners[1];
-                    btScalar *v2 = tweens[i].ceiling_corners[3];
                     trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
                                          btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(v3[0], v3[1], v3[2]),
                                          true);
                     cnt++;
                 }
@@ -1006,12 +1021,9 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
 
             case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
                 {
-                    btScalar *v0 = tweens[i].ceiling_corners[2];
-                    btScalar *v1 = tweens[i].ceiling_corners[1];
-                    btScalar *v2 = tweens[i].ceiling_corners[3];
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
+                    trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
                                          btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(v3[0], v3[1], v3[2]),
                                          true);
                     cnt++;
                 }
@@ -1019,16 +1031,12 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
 
             case TR_SECTOR_TWEEN_TYPE_QUAD:
                 {
-                    btScalar *v0 = tweens[i].ceiling_corners[0];
-                    btScalar *v1 = tweens[i].ceiling_corners[1];
-                    btScalar *v2 = tweens[i].ceiling_corners[2];
-                    btScalar *v3 = tweens[i].ceiling_corners[3];
                     trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
                                          btVector3(v1[0], v1[1], v1[2]),
                                          btVector3(v3[0], v3[1], v3[2]),
                                          true);
-                    trimesh->addTriangle(btVector3(v2[0], v2[1], v2[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
+                    trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
                                          btVector3(v3[0], v3[1], v3[2]),
                                          true);
                     cnt += 2;
@@ -1036,6 +1044,7 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
                 break;
         };
 
+        GetVertexFromFloorTveen(tweens + i, &v0, &v1, &v2, &v3);
         switch(tweens[i].floor_tween_type)
         {
             case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
@@ -1044,10 +1053,6 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
                                       (tweens[i].floor_corners[0][2] - tweens[i].floor_corners[1][2]));
                     t = 1.0 / (1.0 + t);
                     btScalar o[3], t1 = 1.0 - t;
-                    btScalar *v0 = tweens[i].floor_corners[0];
-                    btScalar *v1 = tweens[i].floor_corners[1];
-                    btScalar *v2 = tweens[i].floor_corners[2];
-                    btScalar *v3 = tweens[i].floor_corners[3];
                     vec3_interpolate_macro(o, v0, v2, t, t1);
 
                     trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
@@ -1064,12 +1069,9 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
 
             case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
                 {
-                    btScalar *v0 = tweens[i].floor_corners[0];
-                    btScalar *v1 = tweens[i].floor_corners[1];
-                    btScalar *v2 = tweens[i].floor_corners[3];
                     trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
                                          btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(v3[0], v3[1], v3[2]),
                                          true);
                     cnt++;
                 }
@@ -1077,12 +1079,9 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
 
             case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
                 {
-                    btScalar *v0 = tweens[i].floor_corners[2];
-                    btScalar *v1 = tweens[i].floor_corners[1];
-                    btScalar *v2 = tweens[i].floor_corners[3];
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
+                    trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
                                          btVector3(v2[0], v2[1], v2[2]),
+                                         btVector3(v3[0], v3[1], v3[2]),
                                          true);
                     cnt++;
                 }
@@ -1090,16 +1089,12 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
 
             case TR_SECTOR_TWEEN_TYPE_QUAD:
                 {
-                    btScalar *v0 = tweens[i].floor_corners[0];
-                    btScalar *v1 = tweens[i].floor_corners[1];
-                    btScalar *v2 = tweens[i].floor_corners[2];
-                    btScalar *v3 = tweens[i].floor_corners[3];
                     trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
                                          btVector3(v1[0], v1[1], v1[2]),
                                          btVector3(v3[0], v3[1], v3[2]),
                                          true);
-                    trimesh->addTriangle(btVector3(v2[0], v2[1], v2[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
+                    trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
+                                         btVector3(v2[0], v2[1], v2[2]),
                                          btVector3(v3[0], v3[1], v3[2]),
                                          true);
                     cnt += 2;
