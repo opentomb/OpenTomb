@@ -225,6 +225,10 @@ btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max);
 btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
 btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
 
+uint32_t BT_AddFloorAndCeilingToTrimesh(btTriangleMesh *trimesh, struct room_sector_s *sector);
+uint32_t BT_AddSectorTweenToTrimesh(btTriangleMesh *trimesh, struct sector_tween_s *tween);
+
+
 btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
 {
     btScalar r = bb_max[0] - bb_min[0];
@@ -836,41 +840,268 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
     return ret;
 }
 
-inline void GetVertexFromFloorTveen(struct sector_tween_s *tween ,float **v0, float **v1, float **v2, float **v3)
+
+uint32_t BT_AddFloorAndCeilingToTrimesh(btTriangleMesh *trimesh, struct room_sector_s *sector)
 {
-    if(tween->floor_tween_inverted == 0x00)
+    uint32_t cnt = 0;
+    float *v0, *v1, *v2, *v3;
+
+    v0 = sector->floor_corners[0];
+    v1 = sector->floor_corners[1];
+    v2 = sector->floor_corners[2];
+    v3 = sector->floor_corners[3];
+    if( (sector->floor_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
+        (sector->floor_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
     {
-        *v0 = tween->floor_corners[0];
-        *v1 = tween->floor_corners[1];
-        *v2 = tween->floor_corners[2];
-        *v3 = tween->floor_corners[3];
+        if( (sector->floor_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NONE) ||
+            (sector->floor_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NW  )  )
+        {
+            if(sector->floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
+            {
+                trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
+                                     btVector3(v2[0], v2[1], v2[2]),
+                                     btVector3(v0[0], v0[1], v0[2]),
+                                     true);
+                cnt++;
+            }
+
+            if(sector->floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
+            {
+                trimesh->addTriangle(btVector3(v2[0], v2[1], v2[2]),
+                                     btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(v0[0], v0[1], v0[2]),
+                                     true);
+                cnt++;
+            }
+        }
+        else
+        {
+            if(sector->floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
+            {
+                trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
+                                     btVector3(v2[0], v2[1], v2[2]),
+                                     btVector3(v1[0], v1[1], v1[2]),
+                                     true);
+                cnt++;
+            }
+
+            if(sector->floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
+            {
+                trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
+                                     btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(v0[0], v0[1], v0[2]),
+                                     true);
+                cnt++;
+            }
+        }
     }
-    else
+
+    v0 = sector->ceiling_corners[0];
+    v1 = sector->ceiling_corners[1];
+    v2 = sector->ceiling_corners[2];
+    v3 = sector->ceiling_corners[3];
+    if( (sector->ceiling_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
+        (sector->ceiling_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
     {
-        *v0 = tween->floor_corners[0];
-        *v1 = tween->floor_corners[3];
-        *v2 = tween->floor_corners[2];
-        *v3 = tween->floor_corners[1];
+        if( (sector->ceiling_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NONE) ||
+            (sector->ceiling_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NW  )  )
+        {
+            if(sector->ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
+            {
+                trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                     btVector3(v2[0], v2[1], v2[2]),
+                                     btVector3(v3[0], v3[1], v3[2]),
+                                     true);
+                cnt++;
+            }
+
+            if(sector->ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
+            {
+                trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                     btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(v2[0], v2[1], v2[2]),
+                                     true);
+                cnt++;
+            }
+        }
+        else
+        {
+            if(sector->ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
+            {
+                trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                     btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(v3[0], v3[1], v3[2]),
+                                     true);
+                cnt++;
+            }
+
+            if(sector->ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
+            {
+                trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(v2[0], v2[1], v2[2]),
+                                     btVector3(v3[0], v3[1], v3[2]),
+                                     true);
+                cnt++;
+            }
+        }
     }
+
+    return cnt;
 }
 
-inline void GetVertexFromCeilingTveen(struct sector_tween_s *tween ,float **v0, float **v1, float **v2, float **v3)
+
+uint32_t BT_AddSectorTweenToTrimesh(btTriangleMesh *trimesh, struct sector_tween_s *tween)
 {
+    uint32_t cnt = 0;
+    float *v0, *v1, *v2, *v3;
+
     if(tween->ceiling_tween_inverted == 0x00)
     {
-        *v0 = tween->ceiling_corners[0];
-        *v1 = tween->ceiling_corners[1];
-        *v2 = tween->ceiling_corners[2];
-        *v3 = tween->ceiling_corners[3];
+        v0 = tween->ceiling_corners[0];
+        v1 = tween->ceiling_corners[1];
+        v2 = tween->ceiling_corners[2];
+        v3 = tween->ceiling_corners[3];
     }
     else
     {
-        *v0 = tween->ceiling_corners[0];
-        *v1 = tween->ceiling_corners[3];
-        *v2 = tween->ceiling_corners[2];
-        *v3 = tween->ceiling_corners[1];
+        v0 = tween->ceiling_corners[0];
+        v1 = tween->ceiling_corners[3];
+        v2 = tween->ceiling_corners[2];
+        v3 = tween->ceiling_corners[1];
     }
+
+    switch(tween->ceiling_tween_type)
+    {
+        case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
+            {
+                btScalar t = fabs((tween->ceiling_corners[2][2] - tween->ceiling_corners[3][2]) /
+                                  (tween->ceiling_corners[0][2] - tween->ceiling_corners[1][2]));
+                t = 1.0 / (1.0 + t);
+                btScalar o[3], t1 = 1.0 - t;
+                vec3_interpolate_macro(o, v0, v2, t, t1);
+
+                trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                     btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(o[0], o[1], o[2]),
+                                     true);
+                trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
+                                     btVector3(v2[0], v2[1], v2[2]),
+                                     btVector3(o[0], o[1], o[2]),
+                                     true);
+                cnt += 2;
+            }
+            break;
+
+        case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
+            {
+                trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                     btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(v3[0], v3[1], v3[2]),
+                                     true);
+                cnt++;
+            }
+            break;
+
+        case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
+            {
+                trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(v2[0], v2[1], v2[2]),
+                                     btVector3(v3[0], v3[1], v3[2]),
+                                     true);
+                cnt++;
+            }
+            break;
+
+        case TR_SECTOR_TWEEN_TYPE_QUAD:
+            {
+                trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                     btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(v3[0], v3[1], v3[2]),
+                                     true);
+                trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(v2[0], v2[1], v2[2]),
+                                     btVector3(v3[0], v3[1], v3[2]),
+                                     true);
+                cnt += 2;
+            }
+            break;
+    };
+
+    if(tween->floor_tween_inverted == 0x00)
+    {
+        v0 = tween->floor_corners[0];
+        v1 = tween->floor_corners[1];
+        v2 = tween->floor_corners[2];
+        v3 = tween->floor_corners[3];
+    }
+    else
+    {
+        v0 = tween->floor_corners[0];
+        v1 = tween->floor_corners[3];
+        v2 = tween->floor_corners[2];
+        v3 = tween->floor_corners[1];
+    }
+
+    switch(tween->floor_tween_type)
+    {
+        case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
+            {
+                btScalar t = fabs((tween->floor_corners[2][2] - tween->floor_corners[3][2]) /
+                                  (tween->floor_corners[0][2] - tween->floor_corners[1][2]));
+                t = 1.0 / (1.0 + t);
+                btScalar o[3], t1 = 1.0 - t;
+                vec3_interpolate_macro(o, v0, v2, t, t1);
+
+                trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                     btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(o[0], o[1], o[2]),
+                                     true);
+                trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
+                                     btVector3(v2[0], v2[1], v2[2]),
+                                     btVector3(o[0], o[1], o[2]),
+                                     true);
+                cnt += 2;
+            }
+            break;
+
+        case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
+            {
+                trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                     btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(v3[0], v3[1], v3[2]),
+                                     true);
+                cnt++;
+            }
+            break;
+
+        case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
+            {
+                trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(v2[0], v2[1], v2[2]),
+                                     btVector3(v3[0], v3[1], v3[2]),
+                                     true);
+                cnt++;
+            }
+            break;
+
+        case TR_SECTOR_TWEEN_TYPE_QUAD:
+            {
+                trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
+                                     btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(v3[0], v3[1], v3[2]),
+                                     true);
+                trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
+                                     btVector3(v2[0], v2[1], v2[2]),
+                                     btVector3(v3[0], v3[1], v3[2]),
+                                     true);
+                cnt += 2;
+            }
+            break;
+    };
+
+    return cnt;
 }
+
 
 ///@TODO: resolve cases with floor >> ceiling (I.E. floor - ceiling >= 2048)
 btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
@@ -879,228 +1110,15 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
     room_p r = heightmap->owner_room;
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret = NULL;
-    float *v0, *v1, *v2, *v3;
 
     for(uint32_t i = 0; i < r->sectors_count; i++)
     {
-        v0 = heightmap[i].floor_corners[0];
-        v1 = heightmap[i].floor_corners[1];
-        v2 = heightmap[i].floor_corners[2];
-        v3 = heightmap[i].floor_corners[3];
-        if( (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
-            (heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
-        {
-            if( (heightmap[i].floor_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NONE) ||
-                (heightmap[i].floor_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NW  )  )
-            {
-                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
-                {
-                    trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
-                                         btVector3(v0[0], v0[1], v0[2]),
-                                         true);
-                    cnt++;
-                }
-
-                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
-                {
-                    trimesh->addTriangle(btVector3(v2[0], v2[1], v2[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v0[0], v0[1], v0[2]),
-                                         true);
-                    cnt++;
-                }
-            }
-            else
-            {
-                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
-                {
-                    trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
-                                         true);
-                    cnt++;
-                }
-
-                if(heightmap[i].floor_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
-                {
-                    trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v0[0], v0[1], v0[2]),
-                                         true);
-                    cnt++;
-                }
-            }
-        }
-
-        v0 = heightmap[i].ceiling_corners[0];
-        v1 = heightmap[i].ceiling_corners[1];
-        v2 = heightmap[i].ceiling_corners[2];
-        v3 = heightmap[i].ceiling_corners[3];
-        if( (heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_GHOST) &&
-            (heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_WALL )  )
-        {
-            if( (heightmap[i].ceiling_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NONE) ||
-                (heightmap[i].ceiling_diagonal_type == TR_SECTOR_DIAGONAL_TYPE_NW  )  )
-            {
-                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
-                {
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
-                                         btVector3(v3[0], v3[1], v3[2]),
-                                         true);
-                    cnt++;
-                }
-
-                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
-                {
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
-                                         true);
-                    cnt++;
-                }
-            }
-            else
-            {
-                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_A)
-                {
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v3[0], v3[1], v3[2]),
-                                         true);
-                    cnt++;
-                }
-
-                if(heightmap[i].ceiling_penetration_config != TR_PENETRATION_CONFIG_DOOR_VERTICAL_B)
-                {
-                    trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
-                                         btVector3(v3[0], v3[1], v3[2]),
-                                         true);
-                    cnt++;
-                }
-            }
-        }
+        cnt += BT_AddFloorAndCeilingToTrimesh(trimesh, heightmap + i);
     }
 
     for(int i = 0; i < tweens_size; i++)
     {
-        GetVertexFromCeilingTveen(tweens + i, &v0, &v1, &v2, &v3);
-        switch(tweens[i].ceiling_tween_type)
-        {
-            case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
-                {
-                    btScalar t = fabs((tweens[i].ceiling_corners[2][2] - tweens[i].ceiling_corners[3][2]) /
-                                      (tweens[i].ceiling_corners[0][2] - tweens[i].ceiling_corners[1][2]));
-                    t = 1.0 / (1.0 + t);
-                    btScalar o[3], t1 = 1.0 - t;
-                    vec3_interpolate_macro(o, v0, v2, t, t1);
-
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(o[0], o[1], o[2]),
-                                         true);
-                    trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
-                                         btVector3(o[0], o[1], o[2]),
-                                         true);
-                    cnt += 2;
-                }
-                break;
-
-            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
-                {
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v3[0], v3[1], v3[2]),
-                                         true);
-                    cnt++;
-                }
-                break;
-
-            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
-                {
-                    trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
-                                         btVector3(v3[0], v3[1], v3[2]),
-                                         true);
-                    cnt++;
-                }
-                break;
-
-            case TR_SECTOR_TWEEN_TYPE_QUAD:
-                {
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v3[0], v3[1], v3[2]),
-                                         true);
-                    trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
-                                         btVector3(v3[0], v3[1], v3[2]),
-                                         true);
-                    cnt += 2;
-                }
-                break;
-        };
-
-        GetVertexFromFloorTveen(tweens + i, &v0, &v1, &v2, &v3);
-        switch(tweens[i].floor_tween_type)
-        {
-            case TR_SECTOR_TWEEN_TYPE_2TRIANGLES:
-                {
-                    btScalar t = fabs((tweens[i].floor_corners[2][2] - tweens[i].floor_corners[3][2]) /
-                                      (tweens[i].floor_corners[0][2] - tweens[i].floor_corners[1][2]));
-                    t = 1.0 / (1.0 + t);
-                    btScalar o[3], t1 = 1.0 - t;
-                    vec3_interpolate_macro(o, v0, v2, t, t1);
-
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(o[0], o[1], o[2]),
-                                         true);
-                    trimesh->addTriangle(btVector3(v3[0], v3[1], v3[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
-                                         btVector3(o[0], o[1], o[2]),
-                                         true);
-                    cnt += 2;
-                }
-                break;
-
-            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_LEFT:
-                {
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v3[0], v3[1], v3[2]),
-                                         true);
-                    cnt++;
-                }
-                break;
-
-            case TR_SECTOR_TWEEN_TYPE_TRIANGLE_RIGHT:
-                {
-                    trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
-                                         btVector3(v3[0], v3[1], v3[2]),
-                                         true);
-                    cnt++;
-                }
-                break;
-
-            case TR_SECTOR_TWEEN_TYPE_QUAD:
-                {
-                    trimesh->addTriangle(btVector3(v0[0], v0[1], v0[2]),
-                                         btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v3[0], v3[1], v3[2]),
-                                         true);
-                    trimesh->addTriangle(btVector3(v1[0], v1[1], v1[2]),
-                                         btVector3(v2[0], v2[1], v2[2]),
-                                         btVector3(v3[0], v3[1], v3[2]),
-                                         true);
-                    cnt += 2;
-                }
-                break;
-        };
+        cnt += BT_AddSectorTweenToTrimesh(trimesh, tweens + i);
     }
 
     if(cnt == 0)
