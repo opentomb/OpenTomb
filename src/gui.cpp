@@ -86,6 +86,7 @@ void Gui_InitBars()
                     Bar[i].SetAutoshow(true, 2000, true, 400);
                 }
                 break;
+                
             case BAR_AIR:
                 {
                     Bar[i].Visible =      false;
@@ -107,6 +108,7 @@ void Gui_InitBars()
                     Bar[i].SetAutoshow(true, 2000, true, 400);
                 }
                 break;
+
             case BAR_STAMINA:
                 {
                     Bar[i].Visible =      false;
@@ -127,6 +129,7 @@ void Gui_InitBars()
                     Bar[i].SetAutoshow(true, 500, true, 300);
                 }
                 break;
+
             case BAR_WARMTH:
                 {
                     Bar[i].Visible =      false;

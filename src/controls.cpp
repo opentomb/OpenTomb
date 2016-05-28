@@ -526,7 +526,7 @@ void Controls_PrimaryMouseDown(float from[3], float to[3])
 }
 
 
-void Controls_SecondaryMouseDown(struct engine_container_s **cont)
+void Controls_SecondaryMouseDown(struct engine_container_s **cont, float dot[3])
 {
     float from[3], to[3];
     engine_container_t cam_cont;
@@ -545,6 +545,7 @@ void Controls_SecondaryMouseDown(struct engine_container_s **cont)
         if(cb.obj && cb.obj->object_type != OBJECT_BULLET_MISC)
         {
             *cont = cb.obj;
+            vec3_copy(dot, cb.point);
         }
     }
 }

@@ -59,6 +59,7 @@ static int                      engine_set_sero_time = 0;
 float time_scale = 1.0f;
 
 engine_container_p      last_cont = NULL;
+static float            ray_test_point[3] = {0.0f, 0.0f, 0.0f};
 
 struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_mapper = {0};
@@ -626,7 +627,7 @@ void Engine_PollSDLEvents()
                 }
                 else if(event.button.button == 3)
                 {
-                    Controls_SecondaryMouseDown(&last_cont);
+                    Controls_SecondaryMouseDown(&last_cont, ray_test_point);
                     if(last_cont && last_cont->object_type == OBJECT_ENTITY)
                     {
                         entity_p player = World_GetPlayer();
@@ -827,7 +828,27 @@ void ShowDebugInfo()
                 break;
 
             case OBJECT_ROOM_BASE:
-                GLText_OutTextXY(30.0f, y += dy, "cont_room: id = %d", ((room_p)last_cont->object)->id);
+                {
+                    room_sector_p rs = Room_GetSectorRaw((room_p)last_cont->object, ray_test_point);
+                    if(rs != NULL)
+                    {
+                        renderer.debugDrawer->DrawSectorDebugLines(rs);
+                        GLText_OutTextXY(30.0f, y += dy, "cont_room: (id = %d, sx = %d, sy = %d)", rs->owner_room->id, rs->index_x, rs->index_y);
+                        GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->sector_below != NULL) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != NULL) ? (rs->sector_above->owner_room->id) : (-1));
+                        if(rs->trigger)
+                        {
+                            char trig_type[64];
+                            char trig_func[64];
+                            Trigger_TrigTypeToStr(trig_type, 64, rs->trigger->sub_function);
+                            GLText_OutTextXY(30.0f, y += dy, "trig(sub = %s, val = 0x%X, mask = 0x%X)", trig_type, rs->trigger->function_value, rs->trigger->mask);
+                            for(trigger_command_p cmd = rs->trigger->commands; cmd; cmd = cmd->next)
+                            {
+                                Trigger_TrigCmdToStr(trig_func, 64, cmd->function);
+                                GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X)", trig_func, cmd->operands);
+                            }
+                        }
+                    }
+                }
                 break;
         }
     }
@@ -855,6 +876,8 @@ void ShowDebugInfo()
                     room_sector_p rs = Room_GetSectorRaw(ent->self->room, ent->transform + 12);
                     if(rs != NULL)
                     {
+                        renderer.debugDrawer->SetColor(0.0, 1.0, 0.0);
+                        renderer.debugDrawer->DrawSectorDebugLines(rs);
                         GLText_OutTextXY(30.0f, y += dy, "room = (id = %d, sx = %d, sy = %d)", rs->owner_room->id, rs->index_x, rs->index_y);
                         GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->sector_below != NULL) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != NULL) ? (rs->sector_above->owner_room->id) : (-1));
                         if(rs->trigger)
@@ -865,6 +888,12 @@ void ShowDebugInfo()
                             GLText_OutTextXY(30.0f, y += dy, "trig(sub = %s, val = 0x%X, mask = 0x%X)", trig_type, rs->trigger->function_value, rs->trigger->mask);
                             for(trigger_command_p cmd = rs->trigger->commands; cmd; cmd = cmd->next)
                             {
+                                entity_p trig_obj = World_GetEntityByID(cmd->operands);
+                                if(trig_obj)
+                                {
+                                    renderer.debugDrawer->SetColor(0.0, 0.0, 1.0);
+                                    renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform);
+                                }
                                 Trigger_TrigCmdToStr(trig_func, 64, cmd->function);
                                 GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X)", trig_func, cmd->operands);
                             }
