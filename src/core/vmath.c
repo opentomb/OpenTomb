@@ -282,30 +282,6 @@ void vec4_GetEilerOrientationTransform(float R[4], float ang[3])
     vec4_mul(R, T, Rt)
 }
 
-void vec4_GetPlaneEquation(float eq[4], float poly[12])
-{
-    float v1[3], v2[3], t;
-
-    v1[0] = poly[1*4+0] - poly[0*4+0];                                          // get the first vector inside the plane
-    v1[1] = poly[1*4+1] - poly[0*4+1];
-    v1[2] = poly[1*4+2] - poly[0*4+2];
-
-    v2[0] = poly[0*4+0] - poly[2*4+0];                                          // get the second vector inside the plane
-    v2[1] = poly[0*4+1] - poly[2*4+1];
-    v2[2] = poly[0*4+2] - poly[2*4+2];
-
-    eq[0] = v1[1]*v2[2] - v1[2]*v2[1];                                          // get the normal vector to the plane
-    eq[0] = v1[2]*v2[0] - v1[0]*v2[2];
-    eq[2] = v1[0]*v2[1] - v1[1]*v2[0];
-
-    t = sqrtf(eq[0]*eq[0] + eq[1]*eq[1] + eq[2]*eq[2]);                         // normalize vector
-    eq[0] /= t;
-    eq[1] /= t;
-    eq[2] /= t;
-
-    eq[3] = -(poly[0]*eq[0] + poly[1]*eq[1] + poly[2]*eq[2]);                   // distance from the plane to (0, 0, 0)
-}
-
 void vec4_GetQuaternionRotation(float q[4], float v0[3], float v1[3])
 {
     float t;
@@ -544,81 +520,6 @@ void Mat4_Scale(float mat[16], float x, float y, float z)
     mat[ 10] *= z;
 }
 
-void Mat4_RotateX(float mat[16], float ang)
-{
-    float sina, cosa, R[9];
-
-    R[0] = ang * M_PI / 180.0;
-    sina = sinf(R[0]);
-    cosa = cosf(R[0]);
-
-    R[0] = mat[0];
-    R[1] = mat[1];
-    R[2] = mat[2];
-
-    R[3] = mat[4] * cosa + mat[8] * sina;
-    R[4] = mat[5] * cosa + mat[9] * sina;
-    R[5] = mat[6] * cosa + mat[10] * sina;
-
-    R[6] =-mat[4] * sina + mat[8] * cosa;
-    R[7] =-mat[5] * sina + mat[9] * cosa;
-    R[8] =-mat[6] * sina + mat[10] * cosa;
-
-    vec3_copy(mat, R);
-    vec3_copy(mat+4, R+3);
-    vec3_copy(mat+8, R+6);
-}
-
-void Mat4_RotateY(float mat[16], float ang)
-{
-    float sina, cosa, R[9];
-
-    R[0] = ang * M_PI / 180.0;
-    sina = sinf(R[0]);
-    cosa = cosf(R[0]);
-
-    R[0] = mat[0] * cosa - mat[8] * sina;
-    R[1] = mat[1] * cosa - mat[9] * sina;
-    R[2] = mat[2] * cosa - mat[10] * sina;
-
-    R[3] = mat[4];
-    R[4] = mat[5];
-    R[5] = mat[6];
-
-    R[6] = mat[0] * sina + mat[8] * cosa;
-    R[7] = mat[1] * sina + mat[9] * cosa;
-    R[8] = mat[2] * sina + mat[10] * cosa;
-
-    vec3_copy(mat, R);
-    vec3_copy(mat+4, R+3);
-    vec3_copy(mat+8, R+6);
-}
-
-void Mat4_RotateZ(float mat[16], float ang)
-{
-    float sina, cosa, R[9];
-
-    R[0] = ang * M_PI / 180.0;
-    sina = sinf(R[0]);
-    cosa = cosf(R[0]);
-
-    R[0] = mat[0] * cosa +  mat[4] * sina;
-    R[1] = mat[1] * cosa +  mat[5] * sina;
-    R[2] = mat[2] * cosa +  mat[6] * sina;
-
-    R[3] =-mat[0] * sina +  mat[4] * cosa;
-    R[4] =-mat[1] * sina +  mat[5] * cosa;
-    R[5] =-mat[2] * sina +  mat[6] * cosa;
-
-    R[6] = mat[8];
-    R[7] = mat[9];
-    R[8] = mat[10];
-
-    vec3_copy(mat, R);
-    vec3_copy(mat+4, R+3);
-    vec3_copy(mat+8, R+6);
-}
-
 void Mat4_RotateX_SinCos(float mat[16], float sina, float cosa)
 {
     float R[9];
@@ -826,16 +727,12 @@ int Mat4_inv(float mat[16], float inv[16])
         }
     }
 
-    /*for(i = 0; i < 4; i++)
+    for(j = 4 - 1; j >=0 ; j--)                                                 //run back
     {
-        if(mat[i * 4 + i] == 0.0f)
+        if(mat[j * 4 + j] == 0.0f)
         {
             return 0;
         }
-    }*/
-
-    for(j = 4 - 1; j >=0 ; j--)                                                 //run back
-    {
         for(k = 0; k < 4; k++)
         {
             inv[j * 4 + k] /= mat[j * 4 + j];
@@ -843,7 +740,7 @@ int Mat4_inv(float mat[16], float inv[16])
         mat[j * 4 + j] = 1.0f;
         for(i = j - 1; i >= 0; i--)
         {
-            f = mat[i * 4 + j] / mat[j * 4 + j];
+            f = mat[i * 4 + j];
             for(k = 0; k < 4; k++)
             {
                 inv[i * 4 + k] -= f * inv[j * 4 + k];
@@ -856,7 +753,7 @@ int Mat4_inv(float mat[16], float inv[16])
 }
 
 /**
- * Matrix multiplication. serult = src1 x src2.
+ * Matrix multiplication. result = src1 x src2.
  */
 void Mat4_Mat4_mul(float result[16], const float src1[16], const float src2[16])
 {

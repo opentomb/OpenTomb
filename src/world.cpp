@@ -1920,7 +1920,8 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
         r_static->obb->r = r_static->mesh->R;
         Mat4_E(r_static->transform);
         Mat4_Translate(r_static->transform, r_static->pos);
-        Mat4_RotateZ(r_static->transform, r_static->rot[0]);
+        float ang = r_static->rot[0] * M_PI / 180.0f;
+        Mat4_RotateZ_SinCos(r_static->transform, sinf(ang), cosf(ang));
         OBB_Rebuild(r_static->obb, r_static->vbb_min, r_static->vbb_max);
         OBB_Transform(r_static->obb);
 

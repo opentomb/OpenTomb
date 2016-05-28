@@ -782,10 +782,10 @@ void gui_InventoryManager::render()
 
             Mat4_E_macro(matrix);
             matrix[12 + 2] = - mBaseRingRadius * 2.0;
-            //Mat4_RotateX(matrix, 25.0);
-            Mat4_RotateX(matrix, 25.0 + mRingVerticalAngle);
-            ang = mRingAngleStep * (-mItemsOffset + num) + mRingAngle;
-            Mat4_RotateY(matrix, ang);
+            ang = (25.0f + mRingVerticalAngle) * M_PI / 180.0f;
+            Mat4_RotateX_SinCos(matrix, sinf(ang), cosf(ang));
+            ang = (mRingAngleStep * (-mItemsOffset + num) + mRingAngle) * M_PI / 180.0f;
+            Mat4_RotateY_SinCos(matrix, sinf(ang), cosf(ang));
             offset[0] = 0.0;
             offset[1] = mVerticalOffset;
             offset[2] = mRingRadius;
@@ -809,12 +809,14 @@ void gui_InventoryManager::render()
                 {
                     snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, "ITEM_ID_%d (%d)", i->id, i->count);
                 }
-                Mat4_RotateZ(matrix, 90.0 + mItemAngle - ang);
+                ang = M_PI_2 + M_PI * mItemAngle / 180.0f - ang;
+                Mat4_RotateZ_SinCos(matrix, sinf(ang), cosf(ang));
                 Item_Frame(bi->bf, 0.0);                                        // here will be time != 0 for using items animation
             }
             else
             {
-                Mat4_RotateZ(matrix, 90.0 - ang);
+                ang = M_PI_2 - ang;
+                Mat4_RotateZ_SinCos(matrix, sinf(ang), cosf(ang));
                 Item_Frame(bi->bf, 0.0);
             }
             offset[0] = -0.5 * bi->bf->centre[0];
@@ -1776,8 +1778,10 @@ void gui_ItemNotifier::Draw()
             matrix[12 + 0] = mCurrPosX;
             matrix[12 + 1] = mPosY;
             matrix[12 + 2] = -2048.0;
-            Mat4_RotateY(matrix, mCurrRotX + mRotX);
-            Mat4_RotateX(matrix, mCurrRotY + mRotY);
+            float ang = (mCurrRotX + mRotX) * M_PI / 180.0f;
+            Mat4_RotateY_SinCos(matrix, sinf(ang), cosf(ang));
+            ang = (mCurrRotY + mRotY) * M_PI / 180.0f;
+            Mat4_RotateX_SinCos(matrix, sinf(ang), cosf(ang));
             Gui_RenderItem(item->bf, mSize, matrix);
 
             item->bf->animations.current_animation = anim;

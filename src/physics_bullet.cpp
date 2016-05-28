@@ -1495,11 +1495,6 @@ void Physics_SetBodyMass(struct physics_data_s *physics, float mass, uint16_t in
         physics->bt_body[index]->setLinearFactor (factor);
         physics->bt_body[index]->setAngularFactor(factor);
 
-        //physics_body[index]->forceActivationState(DISABLE_DEACTIVATION);
-
-        //physics_body[index]->setCcdMotionThreshold(32.0);   // disable tunneling effect
-        //physics_body[index]->setCcdSweptSphereRadius(32.0);
-
     bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[index]);
 
     physics->bt_body[index]->activate();
@@ -2156,14 +2151,6 @@ bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, 
     // Setup bodies.
     physics->bt_joint_count = 0;
     // update current character animation and full fix body to avoid starting ragdoll partially inside the wall or floor...
-    /*Entity_UpdateCurrentBoneFrame(entity->bf, entity->transform);
-    entity->no_fix_all = 0x00;
-    entity->no_fix_skeletal_parts = 0x00000000;
-    int map_size = entity->bf->animations.model->collision_map_size;             // does not works, strange...
-    entity->bf->animations.model->collision_map_size = entity->bf->animations.model->mesh_count;
-    Entity_FixPenetrations(entity, NULL);
-    entity->bf->animations.model->collision_map_size = map_size;*/
-
     for(uint32_t i = 0; i < setup->body_count; i++)
     {
         if(physics->bt_body[i] == NULL)

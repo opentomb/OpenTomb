@@ -872,20 +872,6 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
             climb->wall_hit = 0x02;
         }
     }
-
-    // now check ceiling limit (and floor too... may be later)
-    /*vec3_add(from.m_floats, point.m_floats, ent->transform+4);
-    to = from;
-    from.m_floats[2] += 520.0;                                                  ///@FIXME: magick;
-    to.m_floats[2] -= 520.0;                                                    ///@FIXME: magick... again...
-    cb->m_closestHitFraction = 1.0;
-    cb->m_collisionObject = NULL;
-    bt_engine_dynamicsWorld->rayTest(from, to, *cb);
-    if(cb->hasHit())
-    {
-        point.setInterpolate3(from, to, cb->m_closestHitFraction);
-        climb->ceiling_limit = (climb->ceiling_limit > point.m_floats[2]) ? (point.m_floats[2]) : (climb->ceiling_limit);
-    }*/
 }
 
 
