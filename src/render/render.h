@@ -24,6 +24,7 @@
 #define R_DRAW_SKYBOX           0x00002000      // Draw skybox
 #define R_DRAW_POINTS           0x00004000      // Points rendering
 #define R_DRAW_FLYBY            0x00008000      // FlyBy cameras spline rendering
+#define R_DRAW_TRIGGERS         0x00010000      // Trigger sectors drawing
 
 #define STENCIL_FRUSTUM 1
 
@@ -157,6 +158,8 @@ class CRender
         void DrawRoom(struct room_s *room, const float matrix[16], const float modelViewProjectionMatrix[16]);
         void DrawRoomSprites(struct room_s *room);
 
+        struct gl_text_line_s *OutTextXYZ(GLfloat x, GLfloat y, GLfloat z, const char *fmt, ...);
+        
     private:
         struct render_list_s
         {

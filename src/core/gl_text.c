@@ -36,6 +36,7 @@ static struct
     struct gl_font_cont_s   *fonts;
 } font_data;
 
+
 void GLText_Init()
 {
     int i;
@@ -122,8 +123,6 @@ void GLText_Destroy()
 
 void GLText_UpdateResize(float scale)
 {
-    gl_text_line_p l = font_data.gl_base_lines;
-
     if(font_data.max_fonts > 0)
     {
         for(uint16_t i = 0; i < font_data.max_fonts; i++)
@@ -133,19 +132,6 @@ void GLText_UpdateResize(float scale)
                 glf_resize(font_data.fonts[i].gl_font, (uint16_t)(((float)font_data.fonts[i].font_size) * scale));
             }
         }
-    }
-    
-    for(; l; l = l->next)
-    {
-        l->absXoffset = l->x * screen_info.scale_factor;
-        l->absYoffset = l->y * screen_info.scale_factor;
-    }
-
-    l = font_data.gl_temp_lines;
-    for(uint16_t i = 0; i < font_data.temp_lines_used; i++, l++)
-    {
-        l->absXoffset = l->x * screen_info.scale_factor;
-        l->absYoffset = l->y * screen_info.scale_factor;
     }
 }
 
@@ -167,26 +153,26 @@ void GLText_RenderStringLine(gl_text_line_p l)
     switch(l->x_align)
     {
         case GLTEXT_ALIGN_LEFT:
-            real_x = l->absXoffset;   // Used with center and right alignments.
+            real_x = l->x;   // Used with center and right alignments.
             break;
         case GLTEXT_ALIGN_RIGHT:
-            real_x = (float)screen_info.w - (l->rect[2] - l->rect[0]) - l->absXoffset;
+            real_x = (float)screen_info.w - (l->rect[2] - l->rect[0]) - l->x;
             break;
         case GLTEXT_ALIGN_CENTER:
-            real_x = ((float)screen_info.w / 2.0) - ((l->rect[2] - l->rect[0]) / 2.0) + l->absXoffset;  // Absolute center.
+            real_x = ((float)screen_info.w / 2.0) - ((l->rect[2] - l->rect[0]) / 2.0) + l->x;  // Absolute center.
             break;
     }
 
     switch(l->y_align)
     {
         case GLTEXT_ALIGN_BOTTOM:
-            real_y += l->absYoffset;
+            real_y += l->y;
             break;
         case GLTEXT_ALIGN_TOP:
-            real_y = (float)screen_info.h - (l->rect[3] - l->rect[1]) - l->absYoffset;
+            real_y = (float)screen_info.h - (l->rect[3] - l->rect[1]) - l->y;
             break;
         case GLTEXT_ALIGN_CENTER:
-            real_y = ((float)screen_info.h / 2.0) + (l->rect[3] - l->rect[1]) - l->absYoffset;          // Consider the baseline.
+            real_y = ((float)screen_info.h / 2.0) + (l->rect[3] - l->rect[1]) - l->y;          // Consider the baseline.
             break;
     }
 
@@ -307,29 +293,33 @@ void GLText_DeleteLine(gl_text_line_p line)
     }
 }
 
-void GLText_MoveLine(gl_text_line_p line)
-{
-    line->absXoffset = line->x * screen_info.scale_factor;
-    line->absYoffset = line->y * screen_info.scale_factor;
-}
-
 /**
  * For simple temporary lines rendering.
  * Really all strings will be rendered in Gui_Render() function.
  */
 gl_text_line_p GLText_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 {
+    gl_text_line_p ret = NULL;
+    va_list argptr;
+    
+    va_start(argptr, fmt);
+    ret = GLText_VOutTextXY(x, y, fmt, argptr);
+    va_end(argptr);
+
+    return ret;
+}
+
+
+gl_text_line_p GLText_VOutTextXY(GLfloat x, GLfloat y, const char *fmt, va_list argptr)
+{
     if(font_data.temp_lines_used < GLTEXT_MAX_TEMP_LINES - 1)
     {
-        va_list argptr;
         gl_text_line_p l = font_data.gl_temp_lines + font_data.temp_lines_used;
 
         l->font_id = FONT_SECONDARY;
         l->style_id = FONTSTYLE_GENERIC;
 
-        va_start(argptr, fmt);
         vsnprintf(l->text, GUI_LINE_DEFAULTSIZE, fmt, argptr);
-        va_end(argptr);
 
         l->next = NULL;
         l->prev = NULL;
@@ -340,9 +330,6 @@ gl_text_line_p GLText_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
         l->y = y;
         l->x_align = GLTEXT_ALIGN_LEFT;
         l->y_align = GLTEXT_ALIGN_BOTTOM;
-
-        l->absXoffset = l->x * screen_info.scale_factor;
-        l->absYoffset = l->y * screen_info.scale_factor;
 
         l->show = 1;
         return l;

@@ -55,7 +55,6 @@ gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint
     return NULL;
 }
 
-
 /**
  * Creates gl texture font from true type font;
  * @param ft_library: base font library;

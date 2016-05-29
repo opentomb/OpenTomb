@@ -78,20 +78,17 @@ typedef struct gl_text_line_s
 {
     char                       *text;
     uint16_t                    text_size;
-
+    uint8_t                     x_align;
+    uint8_t                     y_align;
+    
     uint16_t                    font_id;
     uint16_t                    style_id;
 
+    uint32_t                    show : 1;
+    
     GLfloat                     x;
-    uint8_t                     x_align;
-    GLfloat                     absXoffset;
     GLfloat                     y;
-    uint8_t                     y_align;
-    GLfloat                     absYoffset;
-
-    GLfloat                     rect[4];    //x0, yo, x1, y1
-
-    int8_t                      show;
+    GLfloat                     rect[4];    //x0, y0, x1, y1
 
     struct gl_text_line_s     *next;
     struct gl_text_line_s     *prev;
@@ -110,8 +107,8 @@ void GLText_RenderStrings();
 
 void GLText_AddLine(gl_text_line_p line);
 void GLText_DeleteLine(gl_text_line_p line);
-void GLText_MoveLine(gl_text_line_p line);
 gl_text_line_p GLText_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...);
+gl_text_line_p GLText_VOutTextXY(GLfloat x, GLfloat y, const char *fmt, va_list argptr);
 
 
 int  GLText_AddFont(uint16_t index, uint16_t size, const char* path);

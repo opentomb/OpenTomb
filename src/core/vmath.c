@@ -218,6 +218,7 @@ void vec4_rev(float rev[4], float src[4])
     rev[2] = - src[2] / module;                                                 // z
 }
 
+
 void vec4_div(float ret[4], float a[4], float b[4])
 {
     float temp[4];
@@ -231,6 +232,7 @@ void vec4_div(float ret[4], float a[4], float b[4])
     ret[2] = temp[2] / module;
     ret[3] = temp[3] / module;
 }
+
 
 void vec4_rotate(float rot[4], float vec[4], float angle)
 {
@@ -257,6 +259,7 @@ void vec4_rotate(float rot[4], float vec[4], float angle)
     vec4_mul(rot, t, t2);
 }
 
+
 void vec4_GetEilerOrientationTransform(float R[4], float ang[3])
 {
     float t, Rt[4], T[4];
@@ -282,6 +285,7 @@ void vec4_GetEilerOrientationTransform(float R[4], float ang[3])
     vec4_mul(R, T, Rt)
 }
 
+
 void vec4_GetQuaternionRotation(float q[4], float v0[3], float v1[3])
 {
     float t;
@@ -296,6 +300,7 @@ void vec4_GetQuaternionRotation(float q[4], float v0[3], float v1[3])
     q[3] /= t;
 }
 
+
 void vec4_ClampQuaternionRotation(float q[4], float cos_abs)
 {
     if(q[3] < cos_abs)
@@ -307,6 +312,7 @@ void vec4_ClampQuaternionRotation(float q[4], float cos_abs)
         q[3] = cos_abs;
     }
 }
+
 
 void vec3_GetPlaneEquation(float eq[4], float v0[3], float v1[3], float v2[3])
 {
@@ -324,6 +330,7 @@ void vec3_GetPlaneEquation(float eq[4], float v0[3], float v1[3], float v2[3])
     eq[3] = -(v0[0]*eq[0] + v0[1]*eq[1] + v0[2]*eq[2]);                         // distance from the plane to (0, 0, 0)
 }
 
+
 void vec3_RotateX(float res[3], float src[3], float ang)
 {
     float t[2], sint, cost;
@@ -338,6 +345,7 @@ void vec3_RotateX(float res[3], float src[3], float ang)
     res[1] = t[0];
     res[2] = t[1];
 }
+
 
 void vec3_RotateY(float res[3], float src[3], float ang)
 {
@@ -354,6 +362,7 @@ void vec3_RotateY(float res[3], float src[3], float ang)
     res[2] = t[1];
 }
 
+
 void vec3_RotateZ(float res[3], float src[3], float ang)
 {
     float t[2], sint, cost;
@@ -368,6 +377,7 @@ void vec3_RotateZ(float res[3], float src[3], float ang)
     res[0] = t[0];
     res[1] = t[1];
 }
+
 
 void vec4_GetRotationOperators(float t1[4], float t2[4], const float v[3], float ang)
 {
@@ -392,6 +402,7 @@ void vec4_GetRotationOperators(float t1[4], float t2[4], const float v[3], float
     t2[1] = -t1[1];
     t2[2] = -t1[2];
 }
+
 
 void vec4_slerp(float ret[4], float q1[4], float q2[4], float t)
 {
@@ -423,6 +434,7 @@ void vec4_slerp(float ret[4], float q1[4], float q2[4], float t)
     ret[2] /= fi;
     ret[3] /= fi;
 }
+
 
 void vec4_SetZXYRotations(float v[4], float rot[3])
 {
@@ -490,6 +502,7 @@ void Mat4_E(float mat[16])
     mat[15] = 1.0;
 }
 
+
 void Mat4_Copy(float dst[16], const float src[16])
 {
     vec4_copy(dst,    src);
@@ -498,12 +511,14 @@ void Mat4_Copy(float dst[16], const float src[16])
     vec4_copy(dst+12, src+12);
 }
 
+
 void Mat4_Translate(float mat[16], const float v[3])
 {
     mat[12] += mat[0] * v[0] + mat[4] * v[1] + mat[8]  * v[2];
     mat[13] += mat[1] * v[0] + mat[5] * v[1] + mat[9]  * v[2];
     mat[14] += mat[2] * v[0] + mat[6] * v[1] + mat[10] * v[2];
 }
+
 
 void Mat4_Scale(float mat[16], float x, float y, float z)
 {
@@ -519,6 +534,7 @@ void Mat4_Scale(float mat[16], float x, float y, float z)
     mat[ 9] *= z;
     mat[ 10] *= z;
 }
+
 
 void Mat4_RotateX_SinCos(float mat[16], float sina, float cosa)
 {
@@ -541,6 +557,7 @@ void Mat4_RotateX_SinCos(float mat[16], float sina, float cosa)
     vec3_copy(mat+8, R+6);
 }
 
+
 void Mat4_RotateY_SinCos(float mat[16], float sina, float cosa)
 {
     float R[9];
@@ -562,6 +579,7 @@ void Mat4_RotateY_SinCos(float mat[16], float sina, float cosa)
     vec3_copy(mat+8, R+6);
 }
 
+
 void Mat4_RotateZ_SinCos(float mat[16], float sina, float cosa)
 {
     float R[9];
@@ -582,6 +600,7 @@ void Mat4_RotateZ_SinCos(float mat[16], float sina, float cosa)
     vec3_copy(mat+4, R+3);
     vec3_copy(mat+8, R+6);
 }
+
 
 void Mat4_RotateAxis(float mat[16], float axis[3], float ang)
 {
@@ -615,6 +634,7 @@ void Mat4_RotateAxis(float mat[16], float axis[3], float ang)
     }
 }
 
+
 void Mat4_RotateQuaternion(float mat[16], float q[4])
 {
     float qt[4], *v, buf[4];
@@ -635,6 +655,7 @@ void Mat4_RotateQuaternion(float mat[16], float q[4])
     vec4_mul(v, buf, qt);
     mat[8 + 3] = 0.0f;
 }
+
 
 void Mat4_T(float mat[16])
 {
@@ -815,6 +836,7 @@ void Mat4_inv_Mat4_affine_mul(float result[16], float src1[16], float src2[16])
     vec4_copy(result+12, t_res+12);
 }
 
+
 void Mat4_vec3_mul(float v[3], const float mat[16], const float src[3])
 {
     float ret[3];
@@ -824,6 +846,7 @@ void Mat4_vec3_mul(float v[3], const float mat[16], const float src[3])
     ret[2] = mat[2] * src[0] + mat[6] * src[1] + mat[10] * src[2] + mat[14];
     vec3_copy(v, ret);
 }
+
 
 void Mat4_vec3_mul_inv(float v[3], float mat[16], float src[3])
 {
@@ -837,6 +860,7 @@ void Mat4_vec3_mul_inv(float v[3], float mat[16], float src[3])
     ret[2] -= mat[8] * mat[12]+ mat[9] * mat[13]+ mat[10] * mat[14];            // -= (M^-1 * mov).z
     vec3_copy(v, ret);
 }
+
 
 void Mat4_vec3_mul_T(float v[3], float mat[16], float src[3])
 {
@@ -921,6 +945,7 @@ void Mat4_SetSelfOrientation(float mat[16], float ang[3])
         mat[11] = 0.0;
     }
 }
+
 
 int ThreePlanesIntersection(float v[3], float n0[4], float n1[4], float n2[4])
 {

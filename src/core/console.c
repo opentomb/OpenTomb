@@ -620,6 +620,7 @@ void Con_Draw(float time)
     }
 }
 
+
 void Con_FillBackgroundBuffer()
 {
     if(backgroundBuffer)
@@ -655,6 +656,7 @@ void Con_FillBackgroundBuffer()
     }
 }
 
+
 void Con_DrawBackground()
 {
     if(backgroundBuffer)
@@ -666,6 +668,7 @@ void Con_DrawBackground()
         qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
 }
+
 
 void Con_DrawCursor()
 {
@@ -688,10 +691,12 @@ void Con_DrawCursor()
     }
 }
 
+
 int  Con_IsShown()
 {
     return con_base.show_console;
 }
+
 
 void Con_SetShown(int value)
 {

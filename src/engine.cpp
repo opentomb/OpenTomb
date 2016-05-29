@@ -797,7 +797,6 @@ void Engine_MainLoop()
         fps->y_align    = GLTEXT_ALIGN_BOTTOM;
         fps->font_id    = FONT_PRIMARY;
         fps->style_id   = FONTSTYLE_MENU_TITLE;
-        fps->show       = 1;
 
         Sys_ResetTempMem();
         Engine_PollSDLEvents();
@@ -812,8 +811,8 @@ void Engine_MainLoop()
 
 void ShowDebugInfo()
 {
-    float y = (float)screen_info.h / screen_info.scale_factor;
-    const float dy = -24.0f / screen_info.scale_factor;
+    float y = (float)screen_info.h;
+    const float dy = -18.0f * screen_info.scale_factor;
 
     if(last_cont)
     {
@@ -832,6 +831,7 @@ void ShowDebugInfo()
                     room_sector_p rs = Room_GetSectorRaw((room_p)last_cont->object, ray_test_point);
                     if(rs != NULL)
                     {
+                        renderer.debugDrawer->SetColor(0.0, 1.0, 0.0);
                         renderer.debugDrawer->DrawSectorDebugLines(rs);
                         GLText_OutTextXY(30.0f, y += dy, "cont_room: (id = %d, sx = %d, sy = %d)", rs->owner_room->id, rs->index_x, rs->index_y);
                         GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->sector_below != NULL) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != NULL) ? (rs->sector_above->owner_room->id) : (-1));
@@ -843,6 +843,13 @@ void ShowDebugInfo()
                             GLText_OutTextXY(30.0f, y += dy, "trig(sub = %s, val = 0x%X, mask = 0x%X)", trig_type, rs->trigger->function_value, rs->trigger->mask);
                             for(trigger_command_p cmd = rs->trigger->commands; cmd; cmd = cmd->next)
                             {
+                                entity_p trig_obj = World_GetEntityByID(cmd->operands);
+                                if(trig_obj)
+                                {
+                                    renderer.debugDrawer->SetColor(0.0, 0.0, 1.0);
+                                    renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform);
+                                    renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = %d)", trig_obj->id);
+                                }
                                 Trigger_TrigCmdToStr(trig_func, 64, cmd->function);
                                 GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X)", trig_func, cmd->operands);
                             }
@@ -893,6 +900,7 @@ void ShowDebugInfo()
                                 {
                                     renderer.debugDrawer->SetColor(0.0, 0.0, 1.0);
                                     renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform);
+                                    renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = %d)", trig_obj->id);
                                 }
                                 Trigger_TrigCmdToStr(trig_func, 64, cmd->function);
                                 GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X)", trig_func, cmd->operands);
@@ -1109,7 +1117,7 @@ int Engine_ExecCmd(char *ch)
             Con_AddLine("cvars - lua's table of cvar's, to see them type: show_table(cvars)\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("free_look - switch camera mode\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("cam_distance - camera distance to actor\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room, r_flyby - render modes\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room, r_flyby, r_triggers - render modes\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("playsound(id) - play specified sound\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("stopsound(id) - stop specified sound\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("Watch out for case sensitive commands!\0", FONTSTYLE_CONSOLE_WARNING);
@@ -1238,6 +1246,11 @@ int Engine_ExecCmd(char *ch)
         else if(!strcmp(token, "r_flyby"))
         {
             renderer.r_flags ^= R_DRAW_FLYBY;
+            return 1;
+        }
+        else if(!strcmp(token, "r_triggers"))
+        {
+            renderer.r_flags ^= R_DRAW_TRIGGERS;
             return 1;
         }
         else if(!strcmp(token, "room_info"))

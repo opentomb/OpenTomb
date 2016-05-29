@@ -184,8 +184,7 @@ public:
 
     virtual void   draw3dText(const btVector3& location, const char* textString) override
     {
-        //glRasterPos3f(location.x(),  location.y(),  location.z());
-        //BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),textString);
+        renderer.OutTextXYZ(location.m_floats[0], location.m_floats[1], location.m_floats[2], textString);
     }
 
     virtual void   setDebugMode(int debugMode) override

@@ -85,11 +85,10 @@ void OBB_Rebuild(obb_p obb, float bb_min[3], float bb_max[3])
     v->position[1] = bb_min[1];
     v->position[2] = bb_max[2];
 
-    //p->plane[0] = 0.0;
-    //p->plane[1] = 0.0;
-    //p->plane[2] = 1.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->plane[0] = 0.0;
+    p->plane[1] = 0.0;
+    p->plane[2] = 1.0;
+    p->plane[3] =-bb_max[2];
     p++;
 
     // DOWN
@@ -122,11 +121,10 @@ void OBB_Rebuild(obb_p obb, float bb_min[3], float bb_max[3])
     v->position[1] = bb_max[1];
     v->position[2] = bb_min[2];
 
-    //p->plane[0] = 0.0;
-    //p->plane[1] = 0.0;
-    //p->plane[2] =-1.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->plane[0] = 0.0;
+    p->plane[1] = 0.0;
+    p->plane[2] =-1.0;
+    p->plane[3] = bb_min[2];
     p++;
 
     // RIGHT: OX+
@@ -136,11 +134,10 @@ void OBB_Rebuild(obb_p obb, float bb_min[3], float bb_max[3])
     vec3_copy(v[2].position, p_down->vertices[1].position);                     // 1 0  down
     vec3_copy(v[3].position, p_down->vertices[0].position);                     // 0 1  down
 
-    //p->plane[0] = 1.0;
-    //p->plane[1] = 0.0;
-    //p->plane[2] = 0.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->plane[0] = 1.0;
+    p->plane[1] = 0.0;
+    p->plane[2] = 0.0;
+    p->plane[3] =-bb_max[0];
     p++;
 
 
@@ -151,11 +148,10 @@ void OBB_Rebuild(obb_p obb, float bb_min[3], float bb_max[3])
     vec3_copy(v[2].position, p_down->vertices[2].position);                     // 1 0  down
     vec3_copy(v[1].position, p_down->vertices[3].position);                     // 0 1  down
 
-    //p->plane[0] =-1.0;
-    //p->plane[1] = 0.0;
-    //p->plane[2] = 0.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->plane[0] =-1.0;
+    p->plane[1] = 0.0;
+    p->plane[2] = 0.0;
+    p->plane[3] = bb_min[0];
     p++;
 
 
@@ -166,11 +162,10 @@ void OBB_Rebuild(obb_p obb, float bb_min[3], float bb_max[3])
     vec3_copy(v[2].position, p_down->vertices[3].position);                     // 1 0  down
     vec3_copy(v[1].position, p_down->vertices[0].position);                     // 0 1  down
 
-    //p->plane[0] = 0.0;
-    //p->plane[1] = 1.0;
-    //p->plane[2] = 0.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->plane[0] = 0.0;
+    p->plane[1] = 1.0;
+    p->plane[2] = 0.0;
+    p->plane[3] =-bb_max[1];
     p++;
 
     // BACKWARD: OY-
@@ -180,11 +175,10 @@ void OBB_Rebuild(obb_p obb, float bb_min[3], float bb_max[3])
     vec3_copy(v[2].position, p_down->vertices[2].position);                     // 1 0  down
     vec3_copy(v[3].position, p_down->vertices[1].position);                     // 0 1  down
 
-    //p->plane[0] = 0.0;
-    //p->plane[1] = 1.0;
-    //p->plane[2] = 0.0;
-    //p->plane[3] = -vec3_dot(p->plane, v);
-    Polygon_FindNormale(p);
+    p->plane[0] = 0.0;
+    p->plane[1] =-1.0;
+    p->plane[2] = 0.0;
+    p->plane[3] = bb_min[1];
 }
 
 

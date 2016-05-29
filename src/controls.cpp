@@ -501,6 +501,10 @@ void Controls_DebugKeys(int button, int state)
                 }
                 break;
 
+            case SDLK_l:
+                control_states.free_look = !control_states.free_look;
+                break;
+
             case SDLK_n:
                 control_states.noclip = !control_states.noclip;
                 break;

@@ -440,8 +440,9 @@ void InitGLExtFuncs()
     qglInterleavedArrays = (PFNGLINTERLEAVEDARRAYSPROC)SDL_GL_GetProcAddress("glInterleavedArrays");
     
     const char* buf = (const char*)qglGetString(GL_EXTENSIONS);
-    engine_gl_ext_str = (char*)malloc(strlen(buf) + 1);
-    strcpy(engine_gl_ext_str, buf);
+    size_t buf_size = strlen(buf) + 1;
+    engine_gl_ext_str = (char*)malloc(buf_size);
+    strncpy(engine_gl_ext_str, buf, buf_size);
     
     qglGenTextures(1, &whiteTexture);
     qglBindTexture(GL_TEXTURE_2D, whiteTexture);
@@ -651,6 +652,7 @@ int checkOpenGLError()
     return ret;
 }
 
+
 void printInfoLog (GLhandleARB object)
 {
     GLint       logLength     = 0;
@@ -669,6 +671,7 @@ void printInfoLog (GLhandleARB object)
         free(infoLog);
     }
 }
+
 
 int loadShaderFromBuff(GLhandleARB ShaderObj, const char *source, const char *additionalDefines)
 {
@@ -698,6 +701,7 @@ int loadShaderFromBuff(GLhandleARB ShaderObj, const char *source, const char *ad
     }
     return compileStatus != 0;
 }
+
 
 int loadShaderFromFile(GLhandleARB ShaderObj, const char *fileName, const char *additionalDefines)
 {
@@ -734,6 +738,7 @@ int loadShaderFromFile(GLhandleARB ShaderObj, const char *fileName, const char *
     free(buf);
     return ret;
 }
+
 
 void BindWhiteTexture()
 {

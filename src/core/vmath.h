@@ -153,6 +153,14 @@ void vec4_SetZXYRotations(float v[4], float rot[3]);
     (ret)[2] = (tr)[2] * (src)[0] + (tr)[6] * (src)[1] + (tr)[10] * (src)[2] + (tr)[14];\
 }
 
+#define Mat4_vec4_mul_macro(ret, tr, src)\
+{ \
+    (ret)[0] = (tr)[0] * (src)[0] + (tr)[4] * (src)[1] + (tr)[8]  * (src)[2] + (tr)[12] * (src)[3];\
+    (ret)[1] = (tr)[1] * (src)[0] + (tr)[5] * (src)[1] + (tr)[9]  * (src)[2] + (tr)[13] * (src)[3];\
+    (ret)[2] = (tr)[2] * (src)[0] + (tr)[6] * (src)[1] + (tr)[10] * (src)[2] + (tr)[14] * (src)[3];\
+    (ret)[3] = (tr)[3] * (src)[0] + (tr)[7] * (src)[1] + (tr)[11] * (src)[2] + (tr)[15] * (src)[3];\
+}
+
 #define Mat4_vec3_mul_inv_macro(ret, tr, src)\
 { \
     (ret)[0]  = (tr)[0] * (src)[0] + (tr)[1] * (src)[1] + (tr)[2]  * (src)[2];  /* (M^-1 * src).x*/\

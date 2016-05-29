@@ -5,6 +5,7 @@
 #include <SDL2/SDL_opengl.h>
 
 #include "../core/gl_util.h"
+#include "../core/gl_text.h"
 #include "../core/system.h"
 #include "../core/console.h"
 #include "../core/vmath.h"
@@ -470,7 +471,7 @@ void CRender::DrawList()
 
 void CRender::DrawListDebugLines()
 {
-    if(r_flags & (R_DRAW_BOXES | R_DRAW_ROOMBOXES | R_DRAW_PORTALS | R_DRAW_FRUSTUMS | R_DRAW_AXIS | R_DRAW_NORMALS | R_DRAW_COLL | R_DRAW_FLYBY))
+    if(r_flags)
     {
         debugDrawer->SetDrawFlags(r_flags);
 
@@ -1182,6 +1183,32 @@ void CRender::DrawRoomSprites(struct room_s *room)
     }
 }
 
+
+struct gl_text_line_s *CRender::OutTextXYZ(GLfloat x, GLfloat y, GLfloat z, const char *fmt, ...)
+{
+    gl_text_line_p ret = NULL;
+    if(m_camera)
+    {
+        float v[4] = {x, y, z, 1.0f};
+        float result[4];
+        Mat4_vec4_mul_macro(result, m_camera->gl_view_proj_mat, v);
+        result[0] = result[0] * 0.5f / result[3] + 0.5f;
+        result[0] *= (float)screen_info.w;
+        result[1] = result[1] * 0.5f / result[3] + 0.5f;
+        result[1] *= (float)screen_info.h;
+
+        if(result[2] >= 0.0)
+        {
+            va_list argptr;
+            va_start(argptr, fmt);
+            ret = GLText_VOutTextXY(result[0], result[1], fmt, argptr);
+            va_end(argptr);
+        }
+    }
+    return ret;
+}
+
+
 int  CRender::AddRoom(struct room_s *room)
 {
     int ret = 0;
@@ -1795,13 +1822,24 @@ void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room, struct camera_s
         this->DrawMeshDebugLines(room->content->mesh, room->transform, NULL, NULL);
     }
 
-    bool draw_boxes = m_drawFlags & R_DRAW_BOXES;
+    if(m_drawFlags & R_DRAW_TRIGGERS)
+    {
+        this->SetColor(1.0, 0.0, 1.0);
+        for(uint32_t i = 0; i < room->sectors_count; i++)
+        {
+            if(room->sectors[i].trigger)
+            {
+                this->DrawSectorDebugLines(room->sectors + i);
+            }
+        }
+    }
+
     for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
     {
         if(Frustum_IsOBBVisibleInFrustumList(room->content->static_mesh[i].obb, (room->frustum) ? (room->frustum) : (cam->frustum)) &&
            (!room->content->static_mesh[i].hide || (m_drawFlags & R_DRAW_DUMMY_STATICS)))
         {
-            if(draw_boxes)
+            if(m_drawFlags & R_DRAW_BOXES)
             {
                 this->SetColor(0.0, 1.0, 0.1);
                 this->DrawOBB(room->content->static_mesh[i].obb);

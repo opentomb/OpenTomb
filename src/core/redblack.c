@@ -76,6 +76,7 @@ void rotateLeft(RedBlackHeader_p header, RedBlackNode_p x)
     }
 }
 
+
 void rotateRight(RedBlackHeader_p header, RedBlackNode_p x)
 {
 
@@ -119,6 +120,7 @@ void rotateRight(RedBlackHeader_p header, RedBlackNode_p x)
     if (x != NULL) x->parent = y;
 }
 
+
 RedBlackHeader_p RB_Init()
 {
     RedBlackHeader_p p = (RedBlackHeader_p)malloc(sizeof(struct RedBlackHeader_s));
@@ -138,11 +140,13 @@ RedBlackHeader_p RB_Init()
     return p;
 }
 
+
 void RB_Free(RedBlackHeader_p p)
 {
     RB_MakeEmpty(p);
     free(p);
 }
+
 
 void RB_EmptyTree(RedBlackNode_p n, RedBlackHeader_p p)
 {
@@ -162,6 +166,7 @@ void RB_EmptyTree(RedBlackNode_p n, RedBlackHeader_p p)
     p->node_count--;
 }
 
+
 void RB_MakeEmpty(RedBlackHeader_p header)
 {
     if(header != NULL)
@@ -173,6 +178,7 @@ void RB_MakeEmpty(RedBlackHeader_p header)
         }
     }
 }
+
 
 void insertFixup(RedBlackHeader_p p, RedBlackNode_p x)
 {
@@ -242,6 +248,7 @@ void insertFixup(RedBlackHeader_p p, RedBlackNode_p x)
     p->root->color = RBC_BLACK;
 }
 
+
 RedBlackNode_p RB_InsertIgnore(void *key, void *data, RedBlackHeader_p header)
 {
     RedBlackNode_p current, parent, x;
@@ -294,9 +301,10 @@ RedBlackNode_p RB_InsertIgnore(void *key, void *data, RedBlackHeader_p header)
     }
 
     insertFixup(header, x);
-    header->node_count ++;
+    header->node_count++;
     return(x);
 }
+
 
 RedBlackNode_p RB_InsertReplace(void *key, void *data, RedBlackHeader_p header)
 {
@@ -484,7 +492,10 @@ void RB_Delete(RedBlackHeader_p header, RedBlackNode_p z)
     {
         /* find tree successor with a NULL node as a child */
         y = z->right;
-        while (y->left != NULL) y = y->left;
+        while (y->left != NULL) 
+        {
+            y = y->left;
+        }
     }
 
     /* x is y's only child */
