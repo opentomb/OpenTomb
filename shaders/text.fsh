@@ -14,6 +14,6 @@ uniform float colorReplace;
 void main(void)
 {
     vec4 texColor = texture2D(color_map, varying_texCoord);
-    texColor.rgb = texColor.rgb * (1 - colorReplace) + vec3(colorReplace, colorReplace, colorReplace);
+    texColor.rgb = texColor.rgb * (1.0 - colorReplace) + vec3(colorReplace, colorReplace, colorReplace);
     gl_FragColor = varying_color * texColor;
 }

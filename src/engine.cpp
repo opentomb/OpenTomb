@@ -848,7 +848,7 @@ void ShowDebugInfo()
                                 {
                                     renderer.debugDrawer->SetColor(0.0, 0.0, 1.0);
                                     renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform);
-                                    renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = %d)", trig_obj->id);
+                                    renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = 0x%X)", trig_obj->id);
                                 }
                                 Trigger_TrigCmdToStr(trig_func, 64, cmd->function);
                                 GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X)", trig_func, cmd->operands);
@@ -900,7 +900,7 @@ void ShowDebugInfo()
                                 {
                                     renderer.debugDrawer->SetColor(0.0, 0.0, 1.0);
                                     renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform);
-                                    renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = %d)", trig_obj->id);
+                                    renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = 0x%X)", trig_obj->id);
                                 }
                                 Trigger_TrigCmdToStr(trig_func, 64, cmd->function);
                                 GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X)", trig_func, cmd->operands);

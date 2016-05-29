@@ -77,14 +77,12 @@ enum font_Style
 typedef struct gl_text_line_s
 {
     char                       *text;
-    uint16_t                    text_size;
-    uint8_t                     x_align;
-    uint8_t                     y_align;
-    
     uint16_t                    font_id;
     uint16_t                    style_id;
-
-    uint32_t                    show : 1;
+    uint16_t                    text_size;
+    uint16_t                    x_align : 4;
+    uint16_t                    y_align : 4;
+    uint16_t                    show : 1;
     
     GLfloat                     x;
     GLfloat                     y;

@@ -312,7 +312,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     }
                     else
                     {
-                        bool IsPlayer = World_GetPlayer() == entity_activator;
+                        bool IsPlayer = (World_GetPlayer() == entity_activator);
                         if(!IsPlayer && (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS))
                         {
                             return;

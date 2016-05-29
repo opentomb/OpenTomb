@@ -86,7 +86,7 @@ void Gui_InitBars()
                     Bar[i].SetAutoshow(true, 2000, true, 400);
                 }
                 break;
-                
+
             case BAR_AIR:
                 {
                     Bar[i].Visible =      false;
@@ -223,7 +223,7 @@ void Gui_Render()
     qglUseProgramObjectARB(shader->program);
     qglUniform1iARB(shader->sampler, 0);
     qglUniform2fvARB(shader->screenSize, 1, screenSize);
-    qglUniform1fARB(shader->colorReplace, 0.0);
+    qglUniform1fARB(shader->colorReplace, 0.0f);
 
     qglPushAttrib(GL_ENABLE_BIT | GL_PIXEL_MODE_BIT | GL_COLOR_BUFFER_BIT);
     qglPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT | GL_CLIENT_VERTEX_ARRAY_BIT);
@@ -249,11 +249,11 @@ void Gui_Render()
     Gui_DrawCrosshair();
     Gui_DrawBars();
 
-    qglUniform1fARB(shader->colorReplace, 1.0);
+    qglUniform1fARB(shader->colorReplace, 1.0f);
     GLText_RenderStrings();
     Con_Draw(engine_frame_time);
 
-    qglUniform1fARB(shader->colorReplace, 0.0);
+    qglUniform1fARB(shader->colorReplace, 0.0f);
     qglDepthMask(GL_TRUE);
     qglPopClientAttrib();
     qglPopAttrib();
@@ -319,7 +319,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatri
     const lit_shader_description *shader = renderer.shaderManager->getEntityShader(0);
     qglUseProgramObjectARB(shader->program);
     qglUniform1iARB(shader->number_of_lights, 0);
-    qglUniform4fARB(shader->light_ambient, 1.f, 1.f, 1.f, 1.f);
+    qglUniform4fARB(shader->light_ambient, 1.0f, 1.0f, 1.0f, 1.0f);
 
     if(size != 0.0)
     {
