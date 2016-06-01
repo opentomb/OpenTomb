@@ -522,7 +522,25 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         cam->pos[2] = engine_camera_state.sink->z;
         cam->current_room = World_GetRoomByID(engine_camera_state.sink->room_or_strength);
 
-        Cam_LookTo(cam, target->transform + 12);
+        if(target->character)
+        {
+            ss_bone_tag_p btag = target->bf->bone_tags;
+            float target_pos[3];
+            for(uint16_t i = 0; i < target->bf->bone_tag_count; i++)
+            {
+                if(target->bf->bone_tags[i].body_part & BODY_PART_HEAD)
+                {
+                    btag = target->bf->bone_tags + i;
+                    break;
+                }
+            }
+            Mat4_vec3_mul(target_pos, target->transform, btag->full_transform + 12);
+            Cam_LookTo(cam, target_pos);
+        }
+        else
+        {
+            Cam_LookTo(cam, target->transform + 12);
+        }
 
         engine_camera_state.time -= engine_frame_time;
         if(engine_camera_state.time <= 0.0f)

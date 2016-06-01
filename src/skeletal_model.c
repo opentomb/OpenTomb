@@ -746,7 +746,7 @@ void Anim_GetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_
     animation_frame_p curr_anim = ss_anim->model->animations + ss_anim->current_animation;
 
     *frame = (ss_anim->frame_time + time) / ss_anim->period;
-    *frame = (*frame >= 0.0)?(*frame):(0.0);                                    // paranoid checking
+    *frame = (*frame >= 0.0) ? (*frame) : (0.0);                                    // paranoid checking
     *anim  = ss_anim->current_animation;
 
     /*

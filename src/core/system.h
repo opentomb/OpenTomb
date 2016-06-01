@@ -46,7 +46,6 @@ void Sys_ResetTempMem();
 float Sys_FloatTime(void);
 void Sys_Strtime(char *buf, size_t buf_size);
 
-void Sys_Printf(char *fmt, ...);
 void Sys_Init(void);
 void Sys_Error(const char *error, ...);
 void Sys_Warn(const char *warning, ...);

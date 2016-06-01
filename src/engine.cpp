@@ -698,7 +698,7 @@ void Engine_PollSDLEvents()
 
                 if(Con_IsShown() && event.key.state)
                 {
-                    switch (event.key.keysym.sym)
+                    switch(event.key.keysym.sym)
                     {
                         case SDLK_RETURN:
                         case SDLK_UP:
@@ -711,6 +711,7 @@ void Engine_PollSDLEvents()
                         case SDLK_DELETE:
                             Con_Edit(event.key.keysym.sym);
                             break;
+                            
                         default:
                             break;
                     }

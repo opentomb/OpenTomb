@@ -45,9 +45,7 @@ void Spline_BuildCubic(spline_p spline)
     const float h = 1.0f;
 
     k = 3.0f / (h * h);
-
     spline->b[0] = 0.0f;
-    //============================================================================================
 
     for(i = 1; i <= n; i++)
     {
@@ -212,10 +210,10 @@ void vec3_GetOXsincos(float sincos[2], const float v0[3], const float v1[3])
 void vec4_rev(float rev[4], float src[4])
 {
     float module = vec4_abs(src);
-    rev[3] = src[3] / module;                                                   // w
-    rev[0] = - src[0] / module;                                                 // x
-    rev[1] = - src[1] / module;                                                 // y
-    rev[2] = - src[2] / module;                                                 // z
+    rev[3] = src[3] / module;
+    rev[0] = - src[0] / module;
+    rev[1] = - src[1] / module;
+    rev[2] = - src[2] / module;
 }
 
 
@@ -780,19 +778,26 @@ void Mat4_Mat4_mul(float result[16], const float src1[16], const float src2[16])
 {
     // Store in temporary matrix so we don't overwrite anything if src1,2 alias result
     float t_res[16];
-    int i, j, k;
+
+    t_res[0 * 4 + 0] = src1[0 * 4 + 0] * src2[0 * 4 + 0] + src1[1 * 4 + 0] * src2[0 * 4 + 1] + src1[2 * 4 + 0] * src2[0 * 4 + 2] + src1[3 * 4 + 0] * src2[0 * 4 + 3];
+    t_res[0 * 4 + 1] = src1[0 * 4 + 1] * src2[0 * 4 + 0] + src1[1 * 4 + 1] * src2[0 * 4 + 1] + src1[2 * 4 + 1] * src2[0 * 4 + 2] + src1[3 * 4 + 1] * src2[0 * 4 + 3];
+    t_res[0 * 4 + 2] = src1[0 * 4 + 2] * src2[0 * 4 + 0] + src1[1 * 4 + 2] * src2[0 * 4 + 1] + src1[2 * 4 + 2] * src2[0 * 4 + 2] + src1[3 * 4 + 2] * src2[0 * 4 + 3];
+    t_res[0 * 4 + 3] = src1[0 * 4 + 3] * src2[0 * 4 + 0] + src1[1 * 4 + 3] * src2[0 * 4 + 1] + src1[2 * 4 + 3] * src2[0 * 4 + 2] + src1[3 * 4 + 3] * src2[0 * 4 + 3];
     
-    for (i = 0; i < 4; i++)
-    {
-        for (j = 0; j < 4; j++)
-        {
-            t_res[i*4 + j] = 0;
-            for (k = 0; k < 4; k++)
-            {
-                t_res[i*4 + j] += src1[k*4+j] * src2[i*4 + k];
-            }
-        }
-    }
+    t_res[1 * 4 + 0] = src1[0 * 4 + 0] * src2[1 * 4 + 0] + src1[1 * 4 + 0] * src2[1 * 4 + 1] + src1[2 * 4 + 0] * src2[1 * 4 + 2] + src1[3 * 4 + 0] * src2[1 * 4 + 3];
+    t_res[1 * 4 + 1] = src1[0 * 4 + 1] * src2[1 * 4 + 0] + src1[1 * 4 + 1] * src2[1 * 4 + 1] + src1[2 * 4 + 1] * src2[1 * 4 + 2] + src1[3 * 4 + 1] * src2[1 * 4 + 3];
+    t_res[1 * 4 + 2] = src1[0 * 4 + 2] * src2[1 * 4 + 0] + src1[1 * 4 + 2] * src2[1 * 4 + 1] + src1[2 * 4 + 2] * src2[1 * 4 + 2] + src1[3 * 4 + 2] * src2[1 * 4 + 3];
+    t_res[1 * 4 + 3] = src1[0 * 4 + 3] * src2[1 * 4 + 0] + src1[1 * 4 + 3] * src2[1 * 4 + 1] + src1[2 * 4 + 3] * src2[1 * 4 + 2] + src1[3 * 4 + 3] * src2[1 * 4 + 3];
+    
+    t_res[2 * 4 + 0] = src1[0 * 4 + 0] * src2[2 * 4 + 0] + src1[1 * 4 + 0] * src2[2 * 4 + 1] + src1[2 * 4 + 0] * src2[2 * 4 + 2] + src1[3 * 4 + 0] * src2[2 * 4 + 3];
+    t_res[2 * 4 + 1] = src1[0 * 4 + 1] * src2[2 * 4 + 0] + src1[1 * 4 + 1] * src2[2 * 4 + 1] + src1[2 * 4 + 1] * src2[2 * 4 + 2] + src1[3 * 4 + 1] * src2[2 * 4 + 3];
+    t_res[2 * 4 + 2] = src1[0 * 4 + 2] * src2[2 * 4 + 0] + src1[1 * 4 + 2] * src2[2 * 4 + 1] + src1[2 * 4 + 2] * src2[2 * 4 + 2] + src1[3 * 4 + 2] * src2[2 * 4 + 3];
+    t_res[2 * 4 + 3] = src1[0 * 4 + 3] * src2[2 * 4 + 0] + src1[1 * 4 + 3] * src2[2 * 4 + 1] + src1[2 * 4 + 3] * src2[2 * 4 + 2] + src1[3 * 4 + 3] * src2[2 * 4 + 3];
+    
+    t_res[3 * 4 + 0] = src1[0 * 4 + 0] * src2[3 * 4 + 0] + src1[1 * 4 + 0] * src2[3 * 4 + 1] + src1[2 * 4 + 0] * src2[3 * 4 + 2] + src1[3 * 4 + 0] * src2[3 * 4 + 3];
+    t_res[3 * 4 + 1] = src1[0 * 4 + 1] * src2[3 * 4 + 0] + src1[1 * 4 + 1] * src2[3 * 4 + 1] + src1[2 * 4 + 1] * src2[3 * 4 + 2] + src1[3 * 4 + 1] * src2[3 * 4 + 3];
+    t_res[3 * 4 + 2] = src1[0 * 4 + 2] * src2[3 * 4 + 0] + src1[1 * 4 + 2] * src2[3 * 4 + 1] + src1[2 * 4 + 2] * src2[3 * 4 + 2] + src1[3 * 4 + 2] * src2[3 * 4 + 3];
+    t_res[3 * 4 + 3] = src1[0 * 4 + 3] * src2[3 * 4 + 0] + src1[1 * 4 + 3] * src2[3 * 4 + 1] + src1[2 * 4 + 3] * src2[3 * 4 + 2] + src1[3 * 4 + 3] * src2[3 * 4 + 3];
     
     memcpy(result, t_res, sizeof(t_res));
 }

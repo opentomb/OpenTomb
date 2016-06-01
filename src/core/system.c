@@ -136,20 +136,6 @@ void Sys_Strtime(char *buf, size_t buf_size)
 SYS PRINT FUNCTIONS
 ===============================================================================
 */
-void Sys_Printf(char *fmt, ...)
-{
-    va_list     argptr;
-    char        text[4096];
-
-    va_start (argptr,fmt);
-    vsnprintf (text, 4096, fmt,argptr);
-    va_end (argptr);
-    fprintf(stderr, "%s", text);
-
-    //Con_Print (text);
-}
-
-
 void Sys_Error(const char *error, ...)
 {
     va_list     argptr;
@@ -186,7 +172,7 @@ void Sys_DebugLog(const char *file, const char *fmt, ...)
 
     va_start(argptr, fmt);
     data[0] = '\n';
-    vsnprintf(&data[1], 4095, fmt, argptr);
+    vsnprintf(data, sizeof(data), fmt, argptr);
     va_end(argptr);
     fp = fopen(file, "a");
     if(fp == NULL)
@@ -249,13 +235,10 @@ int Sys_FileFound(const char *name, int checkWrite)
         ff = SDL_RWFromFile(name, "rb");
     }
 
-    if(!ff)
-    {
-        return 0;
-    }
-    else
+    if(ff)
     {
         SDL_RWclose(ff);
         return 1;
     }
+    return 0;
 }

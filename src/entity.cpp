@@ -1232,6 +1232,7 @@ int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
 
         entity_object->timer = trigger_timer;                                   // Engage timer.
     }
+
     return 0;
 }
 
