@@ -67,9 +67,9 @@ typedef struct camera_s
     GLfloat                     right_dir[4];           // strafe vector
     GLfloat                     ang[3];                 // camera orientation
 
-    GLfloat                     gl_view_mat[16];
-    GLfloat                     gl_proj_mat[16];
-    GLfloat                     gl_view_proj_mat[16];
+    GLfloat                     gl_view_mat[16] __attribute__((packed, aligned(16)));
+    GLfloat                     gl_proj_mat[16] __attribute__((packed, aligned(16)));
+    GLfloat                     gl_view_proj_mat[16] __attribute__((packed, aligned(16)));
 
     GLfloat                     clip_planes[16];        // frustum side clip planes
     struct frustum_s           *frustum;                // camera frustum structure

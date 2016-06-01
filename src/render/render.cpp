@@ -230,16 +230,16 @@ void CRender::UpdateAnimTextures()
  */
 void CRender::GenWorldList(struct camera_s *cam)
 {
-    if(m_rooms == NULL)
-    {
-        return;
-    }
-
     this->CleanList();                                                          // clear old render list
     this->dynamicBSP->Reset(m_anim_sequences);
     this->frustumManager->Reset();
     cam->frustum->next = NULL;
     m_camera = cam;
+
+    if(m_rooms == NULL)
+    {
+        return;
+    }
 
     room_p curr_room = World_FindRoomByPosCogerrence(cam->pos, cam->current_room);     // find room that contains camera
 
@@ -340,138 +340,141 @@ void CRender::GenWorldList(struct camera_s *cam)
  */
 void CRender::DrawList()
 {
-    if(r_flags & R_DRAW_WIRE)
+    if(m_camera)
     {
-        qglPolygonMode(GL_FRONT, GL_LINE);
-    }
-    else if(r_flags & R_DRAW_POINTS)
-    {
-        qglEnable(GL_POINT_SMOOTH);
-        qglPointSize(4);
-        qglPolygonMode(GL_FRONT, GL_POINT);
-    }
-    else
-    {
-        qglPolygonMode(GL_FRONT, GL_FILL);
-    }
-
-    qglEnable(GL_CULL_FACE);
-    qglDisable(GL_BLEND);
-    qglEnable(GL_ALPHA_TEST);
-
-    m_active_texture = 0;
-    this->DrawSkyBox(m_camera->gl_view_proj_mat);
-    entity_p player = World_GetPlayer();
-
-    if(player)
-    {
-        this->DrawEntity(player, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
-    }
-
-    /*
-     * room rendering
-     */
-    for(uint32_t i = 0; i < r_list_active_count; i++)
-    {
-        this->DrawRoom(r_list[i].room, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
-    }
-
-    qglDisable(GL_CULL_FACE);
-    for(uint32_t i = 0; i < r_list_active_count; i++)
-    {
-        this->DrawRoomSprites(r_list[i].room);
-    }
-
-    /*
-     * NOW render transparency polygons
-     */
-    /*First generate BSP from base room mesh - it has good for start splitter polygons*/
-    for(uint32_t i = 0; i < r_list_active_count; i++)
-    {
-        room_p r = r_list[i].room;
-        if((r->content->mesh != NULL) && (r->content->mesh->transparency_polygons != NULL))
+        if(r_flags & R_DRAW_WIRE)
         {
-            dynamicBSP->AddNewPolygonList(r->content->mesh->transparency_polygons, r->transform, m_camera->frustum);
+            qglPolygonMode(GL_FRONT, GL_LINE);
         }
-    }
-
-    for(uint32_t i = 0; i < r_list_active_count; i++)
-    {
-        room_p r = r_list[i].room;
-        // Add transparency polygons from static meshes (if they exists)
-        for(uint16_t j = 0; j < r->content->static_mesh_count; j++)
+        else if(r_flags & R_DRAW_POINTS)
         {
-            if((r->content->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInFrustumList(r->content->static_mesh[j].obb, (r->frustum) ? (r->frustum) : (m_camera->frustum)))
+            qglEnable(GL_POINT_SMOOTH);
+            qglPointSize(4);
+            qglPolygonMode(GL_FRONT, GL_POINT);
+        }
+        else
+        {
+            qglPolygonMode(GL_FRONT, GL_FILL);
+        }
+
+        qglEnable(GL_CULL_FACE);
+        qglDisable(GL_BLEND);
+        qglEnable(GL_ALPHA_TEST);
+
+        m_active_texture = 0;
+        this->DrawSkyBox(m_camera->gl_view_proj_mat);
+        entity_p player = World_GetPlayer();
+
+        if(player)
+        {
+            this->DrawEntity(player, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
+        }
+
+        /*
+         * room rendering
+         */
+        for(uint32_t i = 0; i < r_list_active_count; i++)
+        {
+            this->DrawRoom(r_list[i].room, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
+        }
+
+        qglDisable(GL_CULL_FACE);
+        for(uint32_t i = 0; i < r_list_active_count; i++)
+        {
+            this->DrawRoomSprites(r_list[i].room);
+        }
+
+        /*
+         * NOW render transparency polygons
+         */
+        /*First generate BSP from base room mesh - it has good for start splitter polygons*/
+        for(uint32_t i = 0; i < r_list_active_count; i++)
+        {
+            room_p r = r_list[i].room;
+            if((r->content->mesh != NULL) && (r->content->mesh->transparency_polygons != NULL))
             {
-                dynamicBSP->AddNewPolygonList(r->content->static_mesh[j].mesh->transparency_polygons, r->content->static_mesh[j].transform, m_camera->frustum);
+                dynamicBSP->AddNewPolygonList(r->content->mesh->transparency_polygons, r->transform, m_camera->frustum);
             }
         }
 
-        // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
-        for(engine_container_p cont = r->content->containers; cont; cont = cont->next)
+        for(uint32_t i = 0; i < r_list_active_count; i++)
         {
-            if(cont->object_type == OBJECT_ENTITY)
+            room_p r = r_list[i].room;
+            // Add transparency polygons from static meshes (if they exists)
+            for(uint16_t j = 0; j < r->content->static_mesh_count; j++)
             {
-                entity_p ent = (entity_p)cont->object;
-                if((ent->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && Frustum_IsOBBVisibleInFrustumList(ent->obb, (r->frustum) ? (r->frustum) : (m_camera->frustum)))
+                if((r->content->static_mesh[j].mesh->transparency_polygons != NULL) && Frustum_IsOBBVisibleInFrustumList(r->content->static_mesh[j].obb, (r->frustum) ? (r->frustum) : (m_camera->frustum)))
                 {
-                    float tr[16];
-                    for(uint16_t j = 0; j < ent->bf->bone_tag_count; j++)
+                    dynamicBSP->AddNewPolygonList(r->content->static_mesh[j].mesh->transparency_polygons, r->content->static_mesh[j].transform, m_camera->frustum);
+                }
+            }
+
+            // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
+            for(engine_container_p cont = r->content->containers; cont; cont = cont->next)
+            {
+                if(cont->object_type == OBJECT_ENTITY)
+                {
+                    entity_p ent = (entity_p)cont->object;
+                    if((ent->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && Frustum_IsOBBVisibleInFrustumList(ent->obb, (r->frustum) ? (r->frustum) : (m_camera->frustum)))
                     {
-                        if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
+                        float tr[16];
+                        for(uint16_t j = 0; j < ent->bf->bone_tag_count; j++)
                         {
-                            Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[j].full_transform);
-                            dynamicBSP->AddNewPolygonList(ent->bf->bone_tags[j].mesh_base->transparency_polygons, tr, m_camera->frustum);
+                            if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
+                            {
+                                Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[j].full_transform);
+                                dynamicBSP->AddNewPolygonList(ent->bf->bone_tags[j].mesh_base->transparency_polygons, tr, m_camera->frustum);
+                            }
                         }
                     }
                 }
             }
         }
-    }
 
-    if(player && (player->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
-    {
-        float tr[16];
-        for(uint16_t j = 0; j < player->bf->bone_tag_count; j++)
+        if(player && (player->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
         {
-            if(player->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
+            float tr[16];
+            for(uint16_t j = 0; j < player->bf->bone_tag_count; j++)
             {
-                Mat4_Mat4_mul(tr, player->transform, player->bf->bone_tags[j].full_transform);
-                dynamicBSP->AddNewPolygonList(player->bf->bone_tags[j].mesh_base->transparency_polygons, tr, m_camera->frustum);
+                if(player->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
+                {
+                    Mat4_Mat4_mul(tr, player->transform, player->bf->bone_tags[j].full_transform);
+                    dynamicBSP->AddNewPolygonList(player->bf->bone_tags[j].mesh_base->transparency_polygons, tr, m_camera->frustum);
+                }
             }
         }
-    }
 
-    if(dynamicBSP->m_root->polygons_front && (dynamicBSP->m_vbo != 0))
-    {
-        const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(false, false);
-        qglUseProgramObjectARB(shader->program);
-        qglUniform1iARB(shader->sampler, 0);
-        qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, m_camera->gl_view_proj_mat);
-        qglDepthMask(GL_FALSE);
-        qglDisable(GL_ALPHA_TEST);
-        qglEnable(GL_BLEND);
-        m_active_transparency = 0;
-        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, dynamicBSP->m_vbo);
-        qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-        qglBufferDataARB(GL_ARRAY_BUFFER_ARB, dynamicBSP->GetActiveVertexCount() * sizeof(vertex_t), dynamicBSP->GetVertexArray(), GL_DYNAMIC_DRAW);
-        qglVertexPointer(3, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
-        qglColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
-        qglNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
-        qglTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
-        this->DrawBSPBackToFront(dynamicBSP->m_root);
-        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        qglDepthMask(GL_TRUE);
-        qglDisable(GL_BLEND);
+        if(dynamicBSP->m_root->polygons_front && (dynamicBSP->m_vbo != 0))
+        {
+            const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(false, false);
+            qglUseProgramObjectARB(shader->program);
+            qglUniform1iARB(shader->sampler, 0);
+            qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, m_camera->gl_view_proj_mat);
+            qglDepthMask(GL_FALSE);
+            qglDisable(GL_ALPHA_TEST);
+            qglEnable(GL_BLEND);
+            m_active_transparency = 0;
+            qglBindBufferARB(GL_ARRAY_BUFFER_ARB, dynamicBSP->m_vbo);
+            qglBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+            qglBufferDataARB(GL_ARRAY_BUFFER_ARB, dynamicBSP->GetActiveVertexCount() * sizeof(vertex_t), dynamicBSP->GetVertexArray(), GL_DYNAMIC_DRAW);
+            qglVertexPointer(3, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, position));
+            qglColorPointer(4, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, color));
+            qglNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, normal));
+            qglTexCoordPointer(2, GL_FLOAT, sizeof(vertex_t), (void*)offsetof(vertex_t, tex_coord));
+            this->DrawBSPBackToFront(dynamicBSP->m_root);
+            qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+            qglDepthMask(GL_TRUE);
+            qglDisable(GL_BLEND);
+        }
+        //Reset polygon draw mode
+        qglPolygonMode(GL_FRONT, GL_FILL);
+        m_active_texture = 0;
     }
-    //Reset polygon draw mode
-    qglPolygonMode(GL_FRONT, GL_FILL);
-    m_active_texture = 0;
 }
 
 void CRender::DrawListDebugLines()
 {
-    if(r_flags)
+    if(r_flags && m_camera)
     {
         debugDrawer->SetDrawFlags(r_flags);
 
@@ -538,7 +541,7 @@ void CRender::DrawListDebugLines()
         }
     }
 
-    if(!debugDrawer->IsEmpty())
+    if(!debugDrawer->IsEmpty() && m_camera)
     {
         const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(false, false);
         qglDisableClientState(GL_TEXTURE_COORD_ARRAY);

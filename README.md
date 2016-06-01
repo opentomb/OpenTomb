@@ -128,7 +128,7 @@ On Linux, just download the source code and run in terminal:
 
     cmake . && make
     
-Necessary dependencies are development headers for SDL2, SDL2 Image, GLU, ZLIB. You can install
+Necessary dependencies are development headers for SDL2, SDL2 Image, ZLIB. You can install
 them in Ubuntu-based distro with this command:
 
     sudo apt-get install libsdl2-dev libsdl2-image-dev libglu1-mesa-dev zlib1g-dev
@@ -139,7 +139,7 @@ On Mac, use XCode project, which is also available in source code.
 NB: Please note that OpenTomb requires C++11 (-std=c++11) flag to compile properly!
 You may use CPU-specific optimization flags (-march=prescott, -march=i486, -march=core2),
 as well as general optimization flags (-O1 and -O2), but DON'T USE -O3 flag, as Bullet tends to
-crash with this optimization level.
+crash with this optimization level (GCC 5.1+ may compile it without errors).
 
 8. Licensing
 ------------
