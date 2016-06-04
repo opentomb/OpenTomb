@@ -490,13 +490,7 @@ void Cam_PlayFlyBy(float time)
         engine_camera_state.time += time * speed / (1024.0f + 512.0f);
         if(engine_camera_state.time <= max_time)
         {
-            room_sector_p rs = NULL;
             FlyBySequence_SetCamera(engine_camera_state.flyby, &engine_camera, engine_camera_state.time);
-            /*rs = Room_GetSectorRaw(engine_camera.current_room, engine_camera.pos);
-            if(rs && rs->trigger)
-            {
-                Trigger_DoCommands(rs->trigger, NULL);
-            }*/
         }
         else
         {

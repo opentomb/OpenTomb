@@ -319,8 +319,13 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     bf->animations.next_animation = 0;
     bf->animations.next_frame = 0;
     vec3_set_zero(bf->animations.target);
-    vec3_set_zero(bf->animations.bone_direction);
+    bf->animations.bone_direction[0] = 0.0f;
     bf->animations.bone_direction[1] = 1.0f;
+    bf->animations.bone_direction[2] = 0.0f;
+    bf->animations.targeting_limit[0] = 0.0f;
+    bf->animations.targeting_limit[1] = 1.0f;
+    bf->animations.targeting_limit[2] = 0.0f;
+    bf->animations.targeting_limit[3] =-1.0f;
     bf->animations.targeting_bone = 0x00;
     bf->animations.targeting_base = 0x00;
             
@@ -458,6 +463,37 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf)
 }
 
 
+int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+{
+    ss_bone_tag_p b_tag = b_tag = bf->bone_tags + ss_anim->targeting_bone;
+    float target_dir[3], target_local[3], limit_dir[3];
+
+    Mat4_vec3_mul_inv(target_local, bf->transform, ss_anim->target);
+    if(b_tag->parent)
+    {
+        Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
+    }
+    vec3_sub(target_dir, target_local, b_tag->transform + 12);
+    
+    if(ss_anim->targeting_base == 0)
+    {
+        Mat4_vec3_rot_macro(limit_dir, b_tag->transform, ss_anim->targeting_limit);
+    }
+    else
+    {
+        vec3_copy(limit_dir, ss_anim->targeting_limit);
+    }
+    
+    if((ss_anim->targeting_limit[3] == -1.0f) || 
+       (vec3_dot(limit_dir, target_dir) > ss_anim->targeting_limit[3]))
+    {
+        return 1;
+    }
+    
+    return 0;
+}
+
+
 void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
 {
     ss_bone_tag_p b_tag = b_tag = bf->bone_tags + ss_anim->targeting_bone;
@@ -473,63 +509,27 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animati
     if(ss_anim->targeting_base == 0)
     {
         Mat4_vec3_rot_macro(bone_dir, b_tag->transform, ss_anim->bone_direction);
+        //Mat4_vec3_rot_macro(limit_dir, b_tag->transform, ss_anim->targeting_limit);
     }
     else
     {
         vec3_copy(bone_dir, ss_anim->bone_direction);
+        //vec3_copy(limit_dir, ss_anim->targeting_limit);
     }
+    
+    /*if(ss_anim->targeting_limit[3] >-1.0f)
+    {
+        if(vec3_dot(limit_dir, target_dir) < ss_anim->targeting_limit[3])
+        {
+            return;
+        }
+    }*/
+    
+    
     vec4_GetQuaternionRotation(q, bone_dir, target_dir);
 
     Mat4_E(tr);
     Mat4_RotateQuaternion(tr, q);
-    vec4_copy(q, b_tag->transform + 12);
-    Mat4_Mat4_mul(b_tag->transform, tr, b_tag->transform);
-    vec4_copy(b_tag->transform + 12, q);
-    for(uint16_t i = ss_anim->targeting_bone; i < bf->bone_tag_count; i++)
-    {
-        ss_bone_tag_p btag = bf->bone_tags + i;
-        if(btag->parent)
-        {
-            Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
-        }
-        else
-        {
-            Mat4_Copy(btag->full_transform, btag->transform);
-        }
-    }
-}
-
-
-void SSBoneFrame_TargetBoneToZX(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
-{
-    ss_bone_tag_p b_tag = b_tag = bf->bone_tags + ss_anim->targeting_bone;
-    float tr[16], target_dir[3], target_local[3], bone_dir[3], sincos[2], q[4];
-
-    Mat4_vec3_mul_inv(target_local, bf->transform, ss_anim->target);
-    if(b_tag->parent)
-    {
-        Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
-    }
-    vec3_sub(target_dir, target_local, b_tag->transform + 12);
-    
-    if(ss_anim->targeting_base == 0)
-    {
-        Mat4_vec3_rot_macro(bone_dir, b_tag->transform, ss_anim->bone_direction);
-    }
-    else
-    {
-        vec3_copy(bone_dir, ss_anim->bone_direction);
-    }
-    
-    Mat4_E(tr);
-    vec3_GetOZsincos(sincos, bone_dir, target_dir);
-    Mat4_RotateZ_SinCos(tr, sincos[0], sincos[1]);
-    q[0] = bone_dir[0] * sincos[0] + bone_dir[1] * sincos[1];
-    bone_dir[0] = bone_dir[0] * sincos[1] - bone_dir[1] * sincos[0];
-    bone_dir[1] = q[0];
-    vec3_GetOXsincos(sincos, bone_dir, target_dir);
-    Mat4_RotateX_SinCos(tr, sincos[0], sincos[1]);
-    
     vec4_copy(q, b_tag->transform + 12);
     Mat4_Mat4_mul(b_tag->transform, tr, b_tag->transform);
     vec4_copy(b_tag->transform + 12, q);
@@ -586,8 +586,13 @@ struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, s
         ss_anim->targeting_bone = 0;
         ss_anim->targeting_base = 0;
         vec3_set_zero(ss_anim->target);
-        vec3_set_zero(ss_anim->bone_direction);
+        ss_anim->bone_direction[0] = 0.0f;
         ss_anim->bone_direction[1] = 1.0f;
+        ss_anim->bone_direction[2] = 0.0f;
+        ss_anim->targeting_limit[0] = 0.0f;
+        ss_anim->targeting_limit[1] = 1.0f;
+        ss_anim->targeting_limit[2] = 0.0f;
+        ss_anim->targeting_limit[3] =-1.0f;
         ss_anim->next = bf->animations.next;
         bf->animations.next = ss_anim;
 
@@ -662,17 +667,6 @@ void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_t
         }
     }
 }
-
-
-void SSBoneFrame_SetTargetToAnimation(struct ss_animation_s *ss_anim, const float target[3], const float bone_dir[3], uint16_t bone, uint16_t use_parent)
-{
-    vec3_copy(ss_anim->target, target);
-    vec3_copy(ss_anim->bone_direction, bone_dir);
-    ss_anim->targeting_bone = bone;
-    ss_anim->targeting_base = use_parent;
-    ss_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
-}
-
 
 
 /*

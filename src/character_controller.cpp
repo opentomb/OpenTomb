@@ -994,7 +994,23 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
 void Character_LookAt(struct entity_s *ent, float target[3])
 {
     const float bone_dir[] = {0.0f, 1.0f, 0.0f};
-    SSBoneFrame_SetTargetToAnimation(&ent->bf->animations, target, bone_dir, 14, 0x00);
+    ent->bf->animations.targeting_bone = 14;
+    vec3_copy(ent->bf->animations.target, target);
+    vec3_copy(ent->bf->animations.bone_direction, bone_dir);
+    ent->bf->animations.targeting_base = 0x00;
+    ent->bf->animations.targeting_limit[0] = 0.0f;
+    ent->bf->animations.targeting_limit[1] = 1.0f;
+    ent->bf->animations.targeting_limit[2] = 0.0f;
+    ent->bf->animations.targeting_limit[3] = 0.774f;
+
+    if(SSBoneFrame_CheckTargetBoneLimit(ent->bf, &ent->bf->animations))
+    {
+        ent->bf->animations.anim_ext_flags |= ANIM_EXT_TARGET_TO;
+    }
+    else
+    {
+        ent->bf->animations.anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
+    }
 }
 
 void Character_ClearLookAt(struct entity_s *ent)
@@ -2274,10 +2290,38 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
     */
     if(ss_anim->model->animation_count == 4)
     {
+        const float bone_dir[] = {0.0f, 1.0f, 0.0f};
         float dt;
         int32_t t;
         uint16_t targeted_bone = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (11) : (8);
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
+        bool silent = false;
+        if(target)
+        {
+            ss_anim->targeting_bone = targeted_bone;
+            vec3_copy(ss_anim->target, target->transform + 12);
+            vec3_copy(ss_anim->bone_direction, bone_dir);
+            ss_anim->targeting_base = 0x01;
+            ss_anim->targeting_limit[0] = 0.0f;
+            ss_anim->targeting_limit[1] = 1.0f;
+            ss_anim->targeting_limit[2] = 0.0f;
+            ss_anim->targeting_limit[3] = 0.774f;
+
+            if(ss_anim->type == ANIM_TYPE_WEAPON_LH)
+            {
+                vec3_RotateZ(ss_anim->targeting_limit, ss_anim->targeting_limit, 45.0f);
+            }
+            else
+            {
+                vec3_RotateZ(ss_anim->targeting_limit, ss_anim->targeting_limit, -45.0f);
+            }
+
+            if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, ss_anim))
+            {
+                target = NULL;
+                silent = true;
+            }
+        }
 
         ss_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
         switch(ss_anim->last_state)
@@ -2337,7 +2381,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->frame_time = 0.0;
                     ss_anim->last_state = WEAPON_STATE_IDLE_TO_HIDE;
                 }
-                else if(ent->character->cmd.action || target)
+                else if((!silent && ent->character->cmd.action) || target)
                 {
                     ss_anim->last_state = WEAPON_STATE_IDLE_TO_FIRE;
                 }
@@ -2386,8 +2430,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
 
                 if(target)
                 {
-                    const float bone_dir[] = {0.0f, 1.0f, 0.0f};
-                    SSBoneFrame_SetTargetToAnimation(ss_anim, target->transform + 12, bone_dir, targeted_bone, 0x01);
+                    ss_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
                     if(!ent->character->cmd.action && !ent->character->cmd.ready_weapon)
                     {
                         float max_time = (float)ss_anim->current_frame * ss_anim->period;
@@ -2409,7 +2452,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->next_frame = 0;
                     ss_anim->next_animation = 3;
                 }
-                else if(ent->character->cmd.action)
+                else if(!silent && ent->character->cmd.action)
                 {
                     ss_anim->current_frame = 0;
                     ss_anim->next_frame = 1;
@@ -2428,10 +2471,9 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
             case WEAPON_STATE_FIRE:
                 if(target)
                 {
-                    const float bone_dir[] = {0.0f, 1.0f, 0.0f};
-                    SSBoneFrame_SetTargetToAnimation(ss_anim, target->transform + 12, bone_dir, targeted_bone, 0x01);
+                    ss_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
                 }
-                if(ent->character->cmd.action)
+                if(!silent && ent->character->cmd.action)
                 {
                     // inc time, loop;
                     ss_anim->frame_time += time;

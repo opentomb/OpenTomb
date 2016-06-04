@@ -269,7 +269,7 @@ void vec4_GetEilerOrientationTransform(float R[4], float ang[3])
     R[3] = cosf(t);
 
     t = ang[0] / 2.0;                                                           // PITCH
-    Rt[0] = sinf(t);                                                             // OX
+    Rt[0] = sinf(t);                                                            // OX
     Rt[1] = 0.0;
     Rt[2] = 0.0;
     Rt[3] = cosf(t);

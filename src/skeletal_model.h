@@ -74,6 +74,7 @@ typedef struct ss_animation_s
     uint16_t                    targeting_bone;
     uint16_t                    targeting_base;
     float                       bone_direction[3];
+    float                       targeting_limit[4];                             // x, y, z, cos(alpha_limit)
     float                       target[3];
 
     float                       period;                                         // one frame change period
@@ -220,15 +221,14 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
 void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);
 void SSBoneFrame_Clear(ss_bone_frame_p bf);
 void SSBoneFrame_Update(struct ss_bone_frame_s *bf);
+int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
 void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
-void SSBoneFrame_TargetBoneToZX(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
 void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame);
 struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type);
 struct ss_animation_s *SSBoneFrame_GetOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
 void SSBoneFrame_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_type);
 void SSBoneFrame_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
 void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
-void SSBoneFrame_SetTargetToAnimation(struct ss_animation_s *ss_anim, const float target[3], const float bone_dir[3], uint16_t bone, uint16_t use_parent);
 
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
