@@ -2305,15 +2305,15 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
             ss_anim->targeting_limit[0] = 0.0f;
             ss_anim->targeting_limit[1] = 1.0f;
             ss_anim->targeting_limit[2] = 0.0f;
-            ss_anim->targeting_limit[3] = 0.774f;
+            ss_anim->targeting_limit[3] = 0.782f;
 
             if(ss_anim->type == ANIM_TYPE_WEAPON_LH)
             {
-                vec3_RotateZ(ss_anim->targeting_limit, ss_anim->targeting_limit, 45.0f);
+                vec3_RotateZ(ss_anim->targeting_limit, ss_anim->targeting_limit, 40.0f);
             }
             else
             {
-                vec3_RotateZ(ss_anim->targeting_limit, ss_anim->targeting_limit, -45.0f);
+                vec3_RotateZ(ss_anim->targeting_limit, ss_anim->targeting_limit, -40.0f);
             }
 
             if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, ss_anim))

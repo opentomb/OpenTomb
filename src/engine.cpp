@@ -636,6 +636,14 @@ void Engine_PollSDLEvents()
                             player->character->target_id = ((entity_p)last_cont->object)->id;
                         }
                     }
+                    else
+                    {
+                        entity_p player = World_GetPlayer();
+                        if(player && player->character)
+                        {
+                            player->character->target_id = ENTITY_ID_NONE;
+                        }
+                    }
                 }
                 break;
 
@@ -711,7 +719,7 @@ void Engine_PollSDLEvents()
                         case SDLK_DELETE:
                             Con_Edit(event.key.keysym.sym);
                             break;
-                            
+
                         default:
                             break;
                     }
@@ -820,11 +828,11 @@ void ShowDebugInfo()
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
-                GLText_OutTextXY(30.0f, y += dy, "cont_entity: id = %d, model = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf->animations.model->id);
+                GLText_OutTextXY(30.0f, y += dy, "cont_entity: id = %d, model = %d, room = %d", ((entity_p)last_cont->object)->id, ((entity_p)last_cont->object)->bf->animations.model->id, (last_cont->room) ? (last_cont->room->id) : (-1));
                 break;
 
             case OBJECT_STATIC_MESH:
-                GLText_OutTextXY(30.0f, y += dy, "cont_static: id = %d", ((static_mesh_p)last_cont->object)->object_id);
+                GLText_OutTextXY(30.0f, y += dy, "cont_static: id = %d, room = %d", ((static_mesh_p)last_cont->object)->object_id, (last_cont->room) ? (last_cont->room->id) : (-1));
                 break;
 
             case OBJECT_ROOM_BASE:
