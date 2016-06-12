@@ -410,7 +410,50 @@ void vec4_slerp(float ret[4], float q1[4], float q2[4], float t)
     fi = acosf(sign * cos_fi);
     sin_fi = sinf(fi);
 
-    if((fabs(sin_fi) > 0.00001f) && (t > 0.0001f))
+    if((fabs(sin_fi) > 0.00001f) && (t > 0.0001f) && (t < 1.0f))
+    {
+        k1 = sinf(fi * (1.0f - t)) / sin_fi;
+        k2 = sinf(fi * t * sign) / sin_fi;
+    }
+    else
+    {
+        k1 = 1.0f - t;
+        k2 = t;
+    }
+
+    ret[0] = k1 * q1[0] + k2 * q2[0];
+    ret[1] = k1 * q1[1] + k2 * q2[1];
+    ret[2] = k1 * q1[2] + k2 * q2[2];
+    ret[3] = k1 * q1[3] + k2 * q2[3];
+
+    fi = 1.0f / vec4_abs(ret);
+    ret[0] *= fi;
+    ret[1] *= fi;
+    ret[2] *= fi;
+    ret[3] *= fi;
+}
+
+
+void vec4_slerp_to(float ret[4], float q1[4], float q2[4], float max_step_rad)
+{
+    float cos_fi, sin_fi, fi, k1, k2, sign;
+    float t = 1.0f;
+    cos_fi = q1[3] * q2[3] + q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2];
+    sign = (cos_fi < 0.0f) ? (-1.0f) : (1.0f);
+    fi = acosf(sign * cos_fi);
+    sin_fi = sinf(fi);
+    
+    t = fabs(fi);
+    if((t > max_step_rad) && (t > 0.00001f))
+    {
+        t = max_step_rad / fabs(fi);
+    }
+    else
+    {
+        t = 1.0f;
+    }
+    
+    if((fabs(sin_fi) > 0.00001f) && (t > 0.0001f) && (t < 1.0f))
     {
         k1 = sinf(fi * (1.0f - t)) / sin_fi;
         k2 = sinf(fi * t * sign) / sin_fi;

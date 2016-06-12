@@ -50,7 +50,6 @@ typedef struct ss_bone_tag_s
     float                   offset[3];                                          // model position offset
 
     float                   qrotate[4];                                         // quaternion rotation
-    float                   qcurrent_mod[4];
     float                   transform[16]      __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for stack usage
     float                   full_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
 
@@ -76,6 +75,7 @@ typedef struct ss_animation_s
     uint16_t                    targeting_base;
     float                       bone_direction[3];
     float                       targeting_limit[4];                             // x, y, z, cos(alpha_limit)
+    float                       current_mod[4];
     float                       target[3];
 
     float                       period;                                         // one frame change period
@@ -222,6 +222,7 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
 void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);
 void SSBoneFrame_Clear(ss_bone_frame_p bf);
 void SSBoneFrame_Update(struct ss_bone_frame_s *bf);
+void SSBoneFrame_RotateBone(struct ss_bone_frame_s *bf, const float q_rotate[4], int bone);
 int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
 void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
 void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame);

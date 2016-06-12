@@ -329,6 +329,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     bf->animations.targeting_bone = 0x00;
     bf->animations.targeting_base = 0x00;
 
+    vec4_set_zero_angle(bf->animations.current_mod);
     bf->animations.next = NULL;
     bf->animations.onFrame = NULL;
     bf->animations.onEndFrame = NULL;
@@ -349,7 +350,6 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
 
         vec3_copy(bf->bone_tags[i].offset, model->mesh_tree[i].offset);
         vec4_set_zero(bf->bone_tags[i].qrotate);
-        vec4_set_zero_angle(bf->bone_tags[i].qcurrent_mod);
         Mat4_E_macro(bf->bone_tags[i].transform);
         Mat4_E_macro(bf->bone_tags[i].full_transform);
 
@@ -456,9 +456,32 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf)
 
     for(ss_animation_p ss_anim = &bf->animations; ss_anim; ss_anim = ss_anim->next)
     {
-        if(ss_anim->anim_ext_flags & ANIM_EXT_TARGET_TO)
+        SSBoneFrame_TargetBoneToSlerp(bf, ss_anim);
+    }
+}
+
+
+void SSBoneFrame_RotateBone(struct ss_bone_frame_s *bf, const float q_rotate[4], int bone)
+{
+    float tr[16], q[4];
+    ss_bone_tag_p b_tag = b_tag = bf->bone_tags + bone;
+    
+    vec4_copy(q, q_rotate);
+    Mat4_E(tr);
+    Mat4_RotateQuaternion(tr, q);
+    vec4_copy(q, b_tag->transform + 12);
+    Mat4_Mat4_mul(b_tag->transform, tr, b_tag->transform);
+    vec4_copy(b_tag->transform + 12, q);
+    for(uint16_t i = bone; i < bf->bone_tag_count; i++)
+    {
+        ss_bone_tag_p btag = bf->bone_tags + i;
+        if(btag->parent)
         {
-            SSBoneFrame_TargetBoneToSlerp(bf, ss_anim);
+            Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
+        }
+        else
+        {
+            Mat4_Copy(btag->full_transform, btag->transform);
         }
     }
 }
@@ -497,42 +520,48 @@ int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_anim
 
 void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
 {
-    ss_bone_tag_p b_tag = b_tag = bf->bone_tags + ss_anim->targeting_bone;
-    float tr[16], q[4], target_dir[3], target_local[3], bone_dir[3];
-
-    Mat4_vec3_mul_inv(target_local, bf->transform, ss_anim->target);
-    if(b_tag->parent)
+    extern float engine_frame_time;
+    if(ss_anim->anim_ext_flags & ANIM_EXT_TARGET_TO)
     {
-        Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
-    }
-    vec3_sub(target_dir, target_local, b_tag->transform + 12);
+        ss_bone_tag_p b_tag = bf->bone_tags + ss_anim->targeting_bone;
+        float clamped_q[4], q[4], target_dir[3], target_local[3], bone_dir[3];
 
-    if(ss_anim->targeting_base == 0)
-    {
-        Mat4_vec3_rot_macro(bone_dir, b_tag->transform, ss_anim->bone_direction);
-    }
-    else
-    {
-        vec3_copy(bone_dir, ss_anim->bone_direction);
-    }
-
-    vec4_GetQuaternionRotation(q, bone_dir, target_dir);
-
-    Mat4_E(tr);
-    Mat4_RotateQuaternion(tr, q);
-    vec4_copy(q, b_tag->transform + 12);
-    Mat4_Mat4_mul(b_tag->transform, tr, b_tag->transform);
-    vec4_copy(b_tag->transform + 12, q);
-    for(uint16_t i = ss_anim->targeting_bone; i < bf->bone_tag_count; i++)
-    {
-        ss_bone_tag_p btag = bf->bone_tags + i;
-        if(btag->parent)
+        Mat4_vec3_mul_inv(target_local, bf->transform, ss_anim->target);
+        if(b_tag->parent)
         {
-            Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
+            Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
+        }
+        vec3_sub(target_dir, target_local, b_tag->transform + 12);
+
+        if(ss_anim->targeting_base == 0)
+        {
+            Mat4_vec3_rot_macro(bone_dir, b_tag->transform, ss_anim->bone_direction);
         }
         else
         {
-            Mat4_Copy(btag->full_transform, btag->transform);
+            vec3_copy(bone_dir, ss_anim->bone_direction);
+        }
+
+        vec4_GetQuaternionRotation(q, bone_dir, target_dir);
+        
+        vec4_slerp_to(clamped_q, ss_anim->current_mod, q, engine_frame_time * M_PI / 1.3f);
+
+        vec4_copy(ss_anim->current_mod, clamped_q);
+        SSBoneFrame_RotateBone(bf, ss_anim->current_mod, ss_anim->targeting_bone);
+    }
+    else if(ss_anim->current_mod[3] < 1.0f)
+    {       
+        if(ss_anim->current_mod[3] < 0.99f)
+        {
+            float zero_ang[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+            float clamped_q[4];
+            vec4_slerp_to(clamped_q, ss_anim->current_mod, zero_ang, engine_frame_time * M_PI / 1.3f);
+            vec4_copy(ss_anim->current_mod, clamped_q);
+            SSBoneFrame_RotateBone(bf, ss_anim->current_mod, ss_anim->targeting_bone);
+        }
+        else
+        {
+            vec4_set_zero_angle(ss_anim->current_mod);
         }
     }
 }
@@ -576,6 +605,7 @@ struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, s
         ss_anim->targeting_bone = 0;
         ss_anim->targeting_base = 0;
         vec3_set_zero(ss_anim->target);
+        vec4_set_zero_angle(ss_anim->current_mod);
         ss_anim->bone_direction[0] = 0.0f;
         ss_anim->bone_direction[1] = 1.0f;
         ss_anim->bone_direction[2] = 0.0f;

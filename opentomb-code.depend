@@ -6739,7 +6739,7 @@
 	"resource.h"
 	"controls.h"
 
-1445679466 d:\dev\opentomb\src\core\system.h
+1464624514 d:\dev\opentomb\src\core\system.h
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
@@ -6764,7 +6764,7 @@
 1433713936 d:\dev\opentomb\src\freetype2\include\freetype.h
 	<ft2build.h>
 
-1464429206 d:\dev\opentomb\src\core\vmath.h
+1465754061 d:\dev\opentomb\src\core\vmath.h
 	<math.h>
 	<stdint.h>
 
@@ -7363,7 +7363,7 @@
 	"vt/tr_types.h"
 	"core/polygon.h"
 
-1441822949 d:\dev\opentomb\src\controls.h
+1464461482 d:\dev\opentomb\src\controls.h
 	<SDL2/SDL.h>
 	<stdint.h>
 
@@ -7408,19 +7408,19 @@
 	<stdlib.h>
 	<stdint.h>
 
-1459186174 source:d:\dev\opentomb\src\audio.cpp
+1465725000 source:d:\dev\opentomb\src\audio.cpp
 	<SDL2/SDL.h>
 	<SDL2/SDL_audio.h>
 	<math.h>
-	"al/AL/al.h"
-	"al/AL/alc.h"
-	"al/AL/alext.h"
-	"al/AL/efx.h"
-	"al/AL/efx-presets.h"
-	"ogg/codec.h"
-	"ogg/ogg.h"
-	"ogg/os_types.h"
-	"ogg/vorbisfile.h"
+	<AL/al.h>
+	<AL/alc.h>
+	<AL/alext.h>
+	<AL/efx.h>
+	<AL/efx-presets.h>
+	<codec.h>
+	<ogg.h>
+	<os_types.h>
+	<vorbisfile.h>
 	"core/system.h"
 	"core/gl_text.h"
 	"core/console.h"
@@ -9022,7 +9022,7 @@
 	"camera.h"
 	"frustum.h"
 
-1450460645 source:d:\dev\opentomb\src\character_controller.cpp
+1465065141 source:d:\dev\opentomb\src\character_controller.cpp
 	"core/vmath.h"
 	"core/console.h"
 	"core/polygon.h"
@@ -9043,6 +9043,7 @@
 	"engine_string.h"
 	"inventory.h"
 	"game.h"
+	"controls.h"
 
 1450603995 d:\dev\opentomb\src\core\obb.h
 	<stdint.h>
@@ -9067,7 +9068,7 @@
 	"script.h"
 	"world.h"
 
-1443463445 source:d:\dev\opentomb\src\controls.cpp
+1464503505 source:d:\dev\opentomb\src\controls.cpp
 	<stdlib.h>
 	<SDL2/SDL.h>
 	<SDL2/SDL_platform.h>
@@ -9099,7 +9100,7 @@
 	<stdio.h>
 	<string.h>
 
-1451766751 source:d:\dev\opentomb\src\core\console.c
+1464507143 source:d:\dev\opentomb\src\core\console.c
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL_platform.h>
@@ -9115,7 +9116,7 @@
 	"vmath.h"
 	"gl_text.h"
 
-1453563796 source:d:\dev\opentomb\src\core\gl_font.c
+1464507172 source:d:\dev\opentomb\src\core\gl_font.c
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
@@ -9133,7 +9134,7 @@
 1433713936 d:\dev\opentomb\src\freetype2\include\ftmodapi.h
 	<ft2build.h>
 
-1441651798 source:d:\dev\opentomb\src\core\gl_util.c
+1464507393 source:d:\dev\opentomb\src\core\gl_util.c
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_video.h>
 	<SDL2/SDL_opengl.h>
@@ -9143,7 +9144,7 @@
 	"gl_util.h"
 	"system.h"
 
-1445702551 source:d:\dev\opentomb\src\core\obb.c
+1464509846 source:d:\dev\opentomb\src\core\obb.c
 	<math.h>
 	<stdlib.h>
 	"vmath.h"
@@ -9159,13 +9160,13 @@
 	"vmath.h"
 	"polygon.h"
 
-1453484135 source:d:\dev\opentomb\src\core\redblack.c
+1464510361 source:d:\dev\opentomb\src\core\redblack.c
 	<stdio.h>
 	<stdlib.h>
 	"redblack.h"
 	"system.h"
 
-1445702417 source:d:\dev\opentomb\src\core\system.c
+1464624605 source:d:\dev\opentomb\src\core\system.c
 	<stdio.h>
 	<stdlib.h>
 	<sys/time.h>
@@ -9182,13 +9183,13 @@
 	"console.h"
 	"gl_util.h"
 
-1450457435 source:d:\dev\opentomb\src\core\vmath.c
+1465759876 source:d:\dev\opentomb\src\core\vmath.c
 	<math.h>
 	<string.h>
 	<stdlib.h>
 	"vmath.h"
 
-1450553992 source:d:\dev\opentomb\src\engine.cpp
+1465725000 source:d:\dev\opentomb\src\engine.cpp
 	<SDL2/SDL.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_image.h>
@@ -9200,14 +9201,15 @@
 	<lua.h>
 	<lualib.h>
 	<lauxlib.h>
-	"al/AL/al.h"
-	"al/AL/alc.h"
+	<AL/al.h>
+	<AL/alc.h>
 	"core/system.h"
 	"core/gl_util.h"
 	"core/gl_font.h"
 	"core/console.h"
 	"core/redblack.h"
 	"core/vmath.h"
+	"core/polygon.h"
 	"core/gl_text.h"
 	"render/camera.h"
 	"render/render.h"
@@ -9226,6 +9228,9 @@
 	"engine.h"
 	"physics.h"
 	"controls.h"
+	"trigger.h"
+	"character_controller.h"
+	"render/bsp_tree.h"
 
 1452171926 d:\dev\opentomb\src\gameflow.h
 	<stdint.h>
@@ -9305,7 +9310,7 @@
 	"engine.h"
 	"entity.h"
 
-1460563358 source:d:\dev\opentomb\src\entity.cpp
+1464624125 source:d:\dev\opentomb\src\entity.cpp
 	<stdlib.h>
 	<math.h>
 	<lua.h>
@@ -10955,7 +10960,7 @@
 	"render.h"
 	"world.h"
 
-1459186459 source:d:\dev\opentomb\src\game.cpp
+1465039040 source:d:\dev\opentomb\src\game.cpp
 	<stdlib.h>
 	<stdio.h>
 	<lua.h>
@@ -10989,7 +10994,7 @@
 
 1460735688 d:\dev\opentomb\src\inventory.h
 
-1451766162 source:d:\dev\opentomb\src\gameflow.cpp
+1465725000 source:d:\dev\opentomb\src\gameflow.cpp
 	<SDL2/SDL.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
@@ -11000,8 +11005,6 @@
 	<lua.h>
 	<lualib.h>
 	<lauxlib.h>
-	"al/AL/al.h"
-	"al/AL/alc.h"
 	"core/gl_text.h"
 	"core/console.h"
 	"engine.h"
@@ -11011,7 +11014,7 @@
 	"anim_state_control.h"
 	"world.h"
 
-1446285670 source:d:\dev\opentomb\src\gui.cpp
+1464532497 source:d:\dev\opentomb\src\gui.cpp
 	<stdint.h>
 	<SDL2/SDL_image.h>
 	"core/gl_util.h"
@@ -11450,7 +11453,7 @@
 	"shader_description.h"
 	"shader_manager.h"
 
-1451766343 source:d:\dev\opentomb\src\resource.cpp
+1464195760 source:d:\dev\opentomb\src\resource.cpp
 	<algorithm>
 	<assert.h>
 	<stdio.h>
@@ -11487,15 +11490,15 @@
 	"inventory.h"
 	"resource.h"
 
-1460221693 source:d:\dev\opentomb\src\script.cpp
+1465725000 source:d:\dev\opentomb\src\script.cpp
 	<stdio.h>
 	<stdlib.h>
 	<string.h>
 	<lua.h>
 	<lualib.h>
 	<lauxlib.h>
-	"al/AL/al.h"
-	"al/AL/alc.h"
+	<AL/al.h>
+	<AL/alc.h>
 	"core/system.h"
 	"core/gl_text.h"
 	"core/console.h"
@@ -11586,7 +11589,7 @@
 	"tr_versions.h"
 	"vt_level.h"
 
-1450459479 source:d:\dev\opentomb\src\world.cpp
+1465151530 source:d:\dev\opentomb\src\world.cpp
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL.h>
@@ -16301,7 +16304,7 @@
 1442143158 d:\dev\opentomb\src\engine_physics.h
 	<stdint.h>
 
-1453224824 d:\dev\opentomb\src\render\render.h
+1464511570 d:\dev\opentomb\src\render\render.h
 	<stdint.h>
 	<SDL2/SDL.h>
 	<SDL2/SDL_opengl.h>
@@ -16331,7 +16334,7 @@
 1446136555 d:\dev\opentomb\src\render\shader_manager.h
 	"shader_description.h"
 
-1448216514 d:\dev\opentomb\src\render\camera.h
+1464801424 d:\dev\opentomb\src\render\camera.h
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 
@@ -16339,7 +16342,7 @@
 	<stdint.h>
 	"../core/vmath.h"
 
-1463920932 d:\dev\opentomb\src\skeletal_model.h
+1465751112 d:\dev\opentomb\src\skeletal_model.h
 	<stdint.h>
 
 1442739641 source:d:\dev\opentomb\src\mesh.c
@@ -16411,12 +16414,13 @@
 	"camera.h"
 	"../room.h"
 
-1455452952 source:d:\dev\opentomb\src\render\render.cpp
+1464802151 source:d:\dev\opentomb\src\render\render.cpp
 	<cmath>
 	<stdlib.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 	"../core/gl_util.h"
+	"../core/gl_text.h"
 	"../core/system.h"
 	"../core/console.h"
 	"../core/vmath.h"
@@ -16439,7 +16443,7 @@
 	"../engine.h"
 	"../physics.h"
 
-1451212964 source:d:\dev\opentomb\src\skeletal_model.c
+1465760371 source:d:\dev\opentomb\src\skeletal_model.c
 	<stdlib.h>
 	"core/system.h"
 	"core/gl_util.h"
@@ -16482,7 +16486,7 @@
 1461521078 d:\dev\opentomb\src\physics.h
 	<stdint.h>
 
-1460136359 source:d:\dev\opentomb\src\trigger.cpp
+1464543394 source:d:\dev\opentomb\src\trigger.cpp
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL.h>
@@ -16505,19 +16509,20 @@
 	"anim_state_control.h"
 	"world.h"
 
-1450804180 source:d:\dev\opentomb\src\physics_bullet.cpp
+1465725000 source:d:\dev\opentomb\src\physics_bullet.cpp
 	<stdio.h>
 	<stdlib.h>
 	<lua.h>
 	<lualib.h>
 	<lauxlib.h>
-	"bullet/btBulletCollisionCommon.h"
-	"bullet/btBulletDynamicsCommon.h"
-	"bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
-	"bullet/BulletCollision/CollisionShapes/btCollisionShape.h"
-	"bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h"
-	"bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
-	"bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
+	<btBulletCollisionCommon.h>
+	<btBulletDynamicsCommon.h>
+	<BulletCollision/CollisionDispatch/btCollisionWorld.h>
+	<BulletCollision/CollisionShapes/btCollisionShape.h>
+	<BulletDynamics/ConstraintSolver/btTypedConstraint.h>
+	<BulletCollision/CollisionDispatch/btGhostObject.h>
+	<BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
+	<BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 	"core/gl_util.h"
 	"core/gl_font.h"
 	"core/gl_text.h"
@@ -16535,13 +16540,13 @@
 	"world.h"
 	"physics.h"
 
-1449588794 d:\dev\opentomb\src\core\gl_text.h
+1464529066 d:\dev\opentomb\src\core\gl_text.h
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 	"gl_font.h"
 
-1451766660 source:d:\dev\opentomb\src\core\gl_text.c
+1464519119 source:d:\dev\opentomb\src\core\gl_text.c
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
@@ -17833,4 +17838,591 @@
 	"resource.h"
 	"inventory.h"
 	"trigger.h"
+
+1465724968 d:\dev\opentomb\extern\al\al\al.h
+
+1465724968 d:\dev\opentomb\extern\al\al\alc.h
+
+1465724968 d:\dev\opentomb\extern\al\al\alext.h
+	<stddef.h>
+	<stdint.h>
+	"alc.h"
+	"al.h"
+	"efx.h"
+
+1465724969 d:\dev\opentomb\extern\al\al\efx.h
+	"alc.h"
+	"al.h"
+
+1465724968 d:\dev\opentomb\extern\al\al\efx-presets.h
+
+1465724997 d:\dev\opentomb\extern\ogg\codec.h
+	"ogg.h"
+
+1465725000 d:\dev\opentomb\extern\ogg\ogg.h
+	<stddef.h>
+	"os_types.h"
+
+1465725000 d:\dev\opentomb\extern\ogg\os_types.h
+	<stdint.h>
+	<sys/types.h>
+	<sys/types.h>
+	<inttypes.h>
+	<sys/types.h>
+	<inttypes.h>
+	"config_types.h"
+
+1465724997 d:\dev\opentomb\extern\ogg\config_types.h
+	<inttypes.h>
+	<stdint.h>
+	<sys/types.h>
+
+1465725000 d:\dev\opentomb\extern\ogg\vorbisfile.h
+	<stdio.h>
+	"codec.h"
+
+1465724986 d:\dev\opentomb\extern\freetype2\include\ft2build.h
+	<config/ftheader.h>
+
+1465724986 d:\dev\opentomb\extern\freetype2\include\config\ftheader.h
+
+1465724986 d:\dev\opentomb\extern\freetype2\include\freetype.h
+	<ft2build.h>
+
+1465724987 d:\dev\opentomb\extern\freetype2\include\ftglyph.h
+	<ft2build.h>
+
+1465724987 d:\dev\opentomb\extern\freetype2\include\ftmodapi.h
+	<ft2build.h>
+
+1465724986 d:\dev\opentomb\extern\bullet\btbulletcollisioncommon.h
+	"BulletCollision/CollisionDispatch/btCollisionWorld.h"
+	"BulletCollision/CollisionDispatch/btCollisionObject.h"
+	"BulletCollision/CollisionShapes/btBoxShape.h"
+	"BulletCollision/CollisionShapes/btSphereShape.h"
+	"BulletCollision/CollisionShapes/btCapsuleShape.h"
+	"BulletCollision/CollisionShapes/btCylinderShape.h"
+	"BulletCollision/CollisionShapes/btConeShape.h"
+	"BulletCollision/CollisionShapes/btStaticPlaneShape.h"
+	"BulletCollision/CollisionShapes/btConvexHullShape.h"
+	"BulletCollision/CollisionShapes/btTriangleMesh.h"
+	"BulletCollision/CollisionShapes/btConvexTriangleMeshShape.h"
+	"BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h"
+	"BulletCollision/CollisionShapes/btScaledBvhTriangleMeshShape.h"
+	"BulletCollision/CollisionShapes/btTriangleMeshShape.h"
+	"BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h"
+	"BulletCollision/CollisionShapes/btCompoundShape.h"
+	"BulletCollision/CollisionShapes/btTetrahedronShape.h"
+	"BulletCollision/CollisionShapes/btEmptyShape.h"
+	"BulletCollision/CollisionShapes/btMultiSphereShape.h"
+	"BulletCollision/CollisionShapes/btUniformScalingShape.h"
+	"BulletCollision/CollisionDispatch/btSphereSphereCollisionAlgorithm.h"
+	"BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h"
+	"BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
+	"BulletCollision/BroadphaseCollision/btSimpleBroadphase.h"
+	"BulletCollision/BroadphaseCollision/btAxisSweep3.h"
+	"BulletCollision/BroadphaseCollision/btMultiSapBroadphase.h"
+	"BulletCollision/BroadphaseCollision/btDbvtBroadphase.h"
+	"LinearMath/btQuaternion.h"
+	"LinearMath/btTransform.h"
+	"LinearMath/btDefaultMotionState.h"
+	"LinearMath/btQuickprof.h"
+	"LinearMath/btIDebugDraw.h"
+	"LinearMath/btSerializer.h"
+
+1465724973 d:\dev\opentomb\extern\bullet\bulletcollision\collisiondispatch\btcollisionworld.h
+	"LinearMath/btVector3.h"
+	"LinearMath/btTransform.h"
+	"btCollisionObject.h"
+	"btCollisionDispatcher.h"
+	"BulletCollision/BroadphaseCollision/btOverlappingPairCache.h"
+	"LinearMath/btAlignedObjectArray.h"
+
+1465724986 d:\dev\opentomb\extern\bullet\linearmath\btvector3.h
+	"btScalar.h"
+	"btMinMax.h"
+	"btAlignedAllocator.h"
+
+1465724985 d:\dev\opentomb\extern\bullet\linearmath\btscalar.h
+	<math.h>
+	<stdlib.h>
+	<float.h>
+	<ppcintrinsics.h>
+	<emmintrin.h>
+	<stdio.h>
+	<assert.h>
+	<assert.h>
+	<spu_printf.h>
+	<assert.h>
+	<smmintrin.h>
+	<tmmintrin.h>
+	<pmmintrin.h>
+	<emmintrin.h>
+	<arm_neon.h>
+	<assert.h>
+	<stdio.h>
+	<assert.h>
+	<arm_neon.h>
+	<arm_neon.h>
+
+1465724985 d:\dev\opentomb\extern\bullet\linearmath\btminmax.h
+	"btScalar.h"
+
+1465724984 d:\dev\opentomb\extern\bullet\linearmath\btalignedallocator.h
+	"btScalar.h"
+
+1465724985 d:\dev\opentomb\extern\bullet\linearmath\bttransform.h
+	"btMatrix3x3.h"
+
+1465724985 d:\dev\opentomb\extern\bullet\linearmath\btmatrix3x3.h
+	"btVector3.h"
+	"btQuaternion.h"
+	<stdio.h>
+
+1465724985 d:\dev\opentomb\extern\bullet\linearmath\btquaternion.h
+	"btVector3.h"
+	"btQuadWord.h"
+
+1465724985 d:\dev\opentomb\extern\bullet\linearmath\btquadword.h
+	"btScalar.h"
+	"btMinMax.h"
+	<altivec.h>
+
+1465724973 d:\dev\opentomb\extern\bullet\bulletcollision\collisiondispatch\btcollisionobject.h
+	"LinearMath/btTransform.h"
+	"LinearMath/btMotionState.h"
+	"LinearMath/btAlignedAllocator.h"
+	"LinearMath/btAlignedObjectArray.h"
+
+1465724985 d:\dev\opentomb\extern\bullet\linearmath\btmotionstate.h
+	"btTransform.h"
+
+1465724984 d:\dev\opentomb\extern\bullet\linearmath\btalignedobjectarray.h
+	"btScalar.h"
+	"btAlignedAllocator.h"
+	<memory.h>
+	<string.h>
+	<new>
+
+1465724973 d:\dev\opentomb\extern\bullet\bulletcollision\collisiondispatch\btcollisiondispatcher.h
+	"BulletCollision/BroadphaseCollision/btDispatcher.h"
+	"BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
+	"BulletCollision/CollisionDispatch/btManifoldResult.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+	"LinearMath/btAlignedObjectArray.h"
+	"btCollisionCreateFunc.h"
+
+1465724972 d:\dev\opentomb\extern\bullet\bulletcollision\broadphasecollision\btdispatcher.h
+	"LinearMath/btScalar.h"
+
+1465724979 d:\dev\opentomb\extern\bullet\bulletcollision\narrowphasecollision\btpersistentmanifold.h
+	"LinearMath/btVector3.h"
+	"LinearMath/btTransform.h"
+	"btManifoldPoint.h"
+	"LinearMath/btAlignedAllocator.h"
+
+1465724979 d:\dev\opentomb\extern\bullet\bulletcollision\narrowphasecollision\btmanifoldpoint.h
+	"LinearMath/btVector3.h"
+	"LinearMath/btTransformUtil.h"
+	"physics_effects/base_level/solver/pfx_constraint_row.h"
+
+1465724985 d:\dev\opentomb\extern\bullet\linearmath\bttransformutil.h
+	"btTransform.h"
+
+1465724974 d:\dev\opentomb\extern\bullet\bulletcollision\collisiondispatch\btmanifoldresult.h
+	"BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
+	"BulletCollision/NarrowPhaseCollision/btDiscreteCollisionDetectorInterface.h"
+	"LinearMath/btTransform.h"
+	"BulletCollision/CollisionDispatch/btCollisionObjectWrapper.h"
+	"BulletCollision/CollisionDispatch/btCollisionObject.h"
+
+1465724979 d:\dev\opentomb\extern\bullet\bulletcollision\narrowphasecollision\btdiscretecollisiondetectorinterface.h
+	"LinearMath/btTransform.h"
+	"LinearMath/btVector3.h"
+
+1465724973 d:\dev\opentomb\extern\bullet\bulletcollision\collisiondispatch\btcollisionobjectwrapper.h
+	"LinearMath/btScalar.h"
+
+1465724972 d:\dev\opentomb\extern\bullet\bulletcollision\broadphasecollision\btbroadphaseproxy.h
+	"LinearMath/btScalar.h"
+	"LinearMath/btVector3.h"
+	"LinearMath/btAlignedAllocator.h"
+
+1465724973 d:\dev\opentomb\extern\bullet\bulletcollision\collisiondispatch\btcollisioncreatefunc.h
+	"LinearMath/btAlignedObjectArray.h"
+
+1465724972 d:\dev\opentomb\extern\bullet\bulletcollision\broadphasecollision\btoverlappingpaircache.h
+	"btBroadphaseInterface.h"
+	"btBroadphaseProxy.h"
+	"btOverlappingPairCallback.h"
+	"LinearMath/btAlignedObjectArray.h"
+
+1465724971 d:\dev\opentomb\extern\bullet\bulletcollision\broadphasecollision\btbroadphaseinterface.h
+	"btBroadphaseProxy.h"
+	"LinearMath/btVector3.h"
+
+1465724972 d:\dev\opentomb\extern\bullet\bulletcollision\broadphasecollision\btoverlappingpaircallback.h
+
+1465724974 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btboxshape.h
+	"btPolyhedralConvexShape.h"
+	"btCollisionMargin.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+	"LinearMath/btVector3.h"
+	"LinearMath/btMinMax.h"
+
+1465724976 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btpolyhedralconvexshape.h
+	"LinearMath/btMatrix3x3.h"
+	"btConvexInternalShape.h"
+
+1465724975 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btconvexinternalshape.h
+	"btConvexShape.h"
+	"LinearMath/btAabbUtil2.h"
+
+1465724975 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btconvexshape.h
+	"btCollisionShape.h"
+	"LinearMath/btVector3.h"
+	"LinearMath/btTransform.h"
+	"LinearMath/btMatrix3x3.h"
+	"btCollisionMargin.h"
+	"LinearMath/btAlignedAllocator.h"
+
+1465724975 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btcollisionshape.h
+	"LinearMath/btTransform.h"
+	"LinearMath/btVector3.h"
+	"LinearMath/btMatrix3x3.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+
+1465724974 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btcollisionmargin.h
+
+1465724984 d:\dev\opentomb\extern\bullet\linearmath\btaabbutil2.h
+	"btTransform.h"
+	"btVector3.h"
+	"btMinMax.h"
+
+1465724976 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btsphereshape.h
+	"btConvexInternalShape.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+
+1465724974 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btcapsuleshape.h
+	"btConvexInternalShape.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+
+1465724976 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btcylindershape.h
+	"btBoxShape.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+	"LinearMath/btVector3.h"
+
+1465724975 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btconeshape.h
+	"btConvexInternalShape.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+
+1465724976 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btstaticplaneshape.h
+	"btConcaveShape.h"
+
+1465724975 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btconcaveshape.h
+	"btCollisionShape.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+	"btTriangleCallback.h"
+
+1465724977 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\bttrianglecallback.h
+	"LinearMath/btVector3.h"
+
+1465724975 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btconvexhullshape.h
+	"btPolyhedralConvexShape.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+	"LinearMath/btAlignedObjectArray.h"
+
+1465724977 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\bttrianglemesh.h
+	"btTriangleIndexVertexArray.h"
+	"LinearMath/btVector3.h"
+	"LinearMath/btAlignedObjectArray.h"
+
+1465724977 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\bttriangleindexvertexarray.h
+	"btStridingMeshInterface.h"
+	"LinearMath/btAlignedObjectArray.h"
+	"LinearMath/btScalar.h"
+
+1465724977 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btstridingmeshinterface.h
+	"LinearMath/btVector3.h"
+	"btTriangleCallback.h"
+	"btConcaveShape.h"
+
+1465724975 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btconvextrianglemeshshape.h
+	"btPolyhedralConvexShape.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+
+1465724974 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btbvhtrianglemeshshape.h
+	"btTriangleMeshShape.h"
+	"btOptimizedBvh.h"
+	"LinearMath/btAlignedAllocator.h"
+	"btTriangleInfoMap.h"
+
+1465724977 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\bttrianglemeshshape.h
+	"btConcaveShape.h"
+	"btStridingMeshInterface.h"
+
+1465724976 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btoptimizedbvh.h
+	"BulletCollision/BroadphaseCollision/btQuantizedBvh.h"
+
+1465724972 d:\dev\opentomb\extern\bullet\bulletcollision\broadphasecollision\btquantizedbvh.h
+	<stdio.h>
+	<stdlib.h>
+	"LinearMath/btVector3.h"
+	"LinearMath/btAlignedAllocator.h"
+	"LinearMath/btAlignedAllocator.h"
+	"LinearMath/btAlignedObjectArray.h"
+
+1465724977 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\bttriangleinfomap.h
+	"LinearMath/btHashMap.h"
+	"LinearMath/btSerializer.h"
+
+1465724985 d:\dev\opentomb\extern\bullet\linearmath\bthashmap.h
+	"btAlignedObjectArray.h"
+
+1465724985 d:\dev\opentomb\extern\bullet\linearmath\btserializer.h
+	"btScalar.h"
+	"btHashMap.h"
+	<memory.h>
+	<string.h>
+
+1465724976 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btscaledbvhtrianglemeshshape.h
+	"BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h"
+
+1465724975 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btcompoundshape.h
+	"btCollisionShape.h"
+	"LinearMath/btVector3.h"
+	"LinearMath/btTransform.h"
+	"LinearMath/btMatrix3x3.h"
+	"btCollisionMargin.h"
+	"LinearMath/btAlignedObjectArray.h"
+
+1465724977 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\bttetrahedronshape.h
+	"btPolyhedralConvexShape.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+
+1465724976 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btemptyshape.h
+	"btConcaveShape.h"
+	"LinearMath/btVector3.h"
+	"LinearMath/btTransform.h"
+	"LinearMath/btMatrix3x3.h"
+	"btCollisionMargin.h"
+
+1465724976 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btmultisphereshape.h
+	"btConvexInternalShape.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+	"LinearMath/btAlignedObjectArray.h"
+	"LinearMath/btAabbUtil2.h"
+
+1465724977 d:\dev\opentomb\extern\bullet\bulletcollision\collisionshapes\btuniformscalingshape.h
+	"btConvexShape.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+
+1465724974 d:\dev\opentomb\extern\bullet\bulletcollision\collisiondispatch\btspherespherecollisionalgorithm.h
+	"btActivatingCollisionAlgorithm.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+	"BulletCollision/CollisionDispatch/btCollisionCreateFunc.h"
+	"btCollisionDispatcher.h"
+
+1465724973 d:\dev\opentomb\extern\bullet\bulletcollision\collisiondispatch\btactivatingcollisionalgorithm.h
+	"BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
+
+1465724972 d:\dev\opentomb\extern\bullet\bulletcollision\broadphasecollision\btcollisionalgorithm.h
+	"LinearMath/btScalar.h"
+	"LinearMath/btAlignedObjectArray.h"
+
+1465724973 d:\dev\opentomb\extern\bullet\bulletcollision\collisiondispatch\btdefaultcollisionconfiguration.h
+	"btCollisionConfiguration.h"
+
+1465724973 d:\dev\opentomb\extern\bullet\bulletcollision\collisiondispatch\btcollisionconfiguration.h
+
+1465724972 d:\dev\opentomb\extern\bullet\bulletcollision\broadphasecollision\btsimplebroadphase.h
+	"btOverlappingPairCache.h"
+
+1465724971 d:\dev\opentomb\extern\bullet\bulletcollision\broadphasecollision\btaxissweep3.h
+	"LinearMath/btVector3.h"
+	"btOverlappingPairCache.h"
+	"btBroadphaseInterface.h"
+	"btBroadphaseProxy.h"
+	"btOverlappingPairCallback.h"
+	"btDbvtBroadphase.h"
+	<stdio.h>
+
+1465724972 d:\dev\opentomb\extern\bullet\bulletcollision\broadphasecollision\btdbvtbroadphase.h
+	"BulletCollision/BroadphaseCollision/btDbvt.h"
+	"BulletCollision/BroadphaseCollision/btOverlappingPairCache.h"
+	"LinearMath/btQuickprof.h"
+
+1465724972 d:\dev\opentomb\extern\bullet\bulletcollision\broadphasecollision\btdbvt.h
+	"LinearMath/btAlignedObjectArray.h"
+	"LinearMath/btVector3.h"
+	"LinearMath/btTransform.h"
+	"LinearMath/btAabbUtil2.h"
+	<emmintrin.h>
+	<memory.h>
+	<string.h>
+
+1465724985 d:\dev\opentomb\extern\bullet\linearmath\btquickprof.h
+	<stdio.h>
+	"btScalar.h"
+	"btAlignedAllocator.h"
+	<new>
+
+1465724972 d:\dev\opentomb\extern\bullet\bulletcollision\broadphasecollision\btmultisapbroadphase.h
+	"btBroadphaseInterface.h"
+	"LinearMath/btAlignedObjectArray.h"
+	"btOverlappingPairCache.h"
+
+1465724984 d:\dev\opentomb\extern\bullet\linearmath\btdefaultmotionstate.h
+	"btMotionState.h"
+
+1465724985 d:\dev\opentomb\extern\bullet\linearmath\btidebugdraw.h
+	"btVector3.h"
+	"btTransform.h"
+
+1465724986 d:\dev\opentomb\extern\bullet\btbulletdynamicscommon.h
+	"btBulletCollisionCommon.h"
+	"BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h"
+	"BulletDynamics/Dynamics/btSimpleDynamicsWorld.h"
+	"BulletDynamics/Dynamics/btRigidBody.h"
+	"BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h"
+	"BulletDynamics/ConstraintSolver/btHingeConstraint.h"
+	"BulletDynamics/ConstraintSolver/btConeTwistConstraint.h"
+	"BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.h"
+	"BulletDynamics/ConstraintSolver/btSliderConstraint.h"
+	"BulletDynamics/ConstraintSolver/btGeneric6DofSpringConstraint.h"
+	"BulletDynamics/ConstraintSolver/btUniversalConstraint.h"
+	"BulletDynamics/ConstraintSolver/btHinge2Constraint.h"
+	"BulletDynamics/ConstraintSolver/btGearConstraint.h"
+	"BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h"
+	"BulletDynamics/Vehicle/btRaycastVehicle.h"
+
+1465724981 d:\dev\opentomb\extern\bullet\bulletdynamics\dynamics\btdiscretedynamicsworld.h
+	"btDynamicsWorld.h"
+	"LinearMath/btAlignedObjectArray.h"
+
+1465724981 d:\dev\opentomb\extern\bullet\bulletdynamics\dynamics\btdynamicsworld.h
+	"BulletCollision/CollisionDispatch/btCollisionWorld.h"
+	"BulletDynamics/ConstraintSolver/btContactSolverInfo.h"
+
+1465724980 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btcontactsolverinfo.h
+	"LinearMath/btScalar.h"
+
+1465724982 d:\dev\opentomb\extern\bullet\bulletdynamics\dynamics\btsimpledynamicsworld.h
+	"btDynamicsWorld.h"
+
+1465724982 d:\dev\opentomb\extern\bullet\bulletdynamics\dynamics\btrigidbody.h
+	"LinearMath/btAlignedObjectArray.h"
+	"LinearMath/btTransform.h"
+	"BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+	"BulletCollision/CollisionDispatch/btCollisionObject.h"
+
+1465724981 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btpoint2pointconstraint.h
+	"LinearMath/btVector3.h"
+	"btJacobianEntry.h"
+	"btTypedConstraint.h"
+
+1465724980 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btjacobianentry.h
+	"LinearMath/btMatrix3x3.h"
+
+1465724981 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\bttypedconstraint.h
+	"LinearMath/btScalar.h"
+	"btSolverConstraint.h"
+	"BulletDynamics/Dynamics/btRigidBody.h"
+
+1465724981 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btsolverconstraint.h
+	"LinearMath/btVector3.h"
+	"LinearMath/btMatrix3x3.h"
+	"btJacobianEntry.h"
+	"LinearMath/btAlignedObjectArray.h"
+	"btSolverBody.h"
+
+1465724981 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btsolverbody.h
+	"LinearMath/btVector3.h"
+	"LinearMath/btMatrix3x3.h"
+	"LinearMath/btAlignedAllocator.h"
+	"LinearMath/btTransformUtil.h"
+
+1465724980 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\bthingeconstraint.h
+	"LinearMath/btVector3.h"
+	"btJacobianEntry.h"
+	"btTypedConstraint.h"
+
+1465724980 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btconetwistconstraint.h
+	"LinearMath/btVector3.h"
+	"btJacobianEntry.h"
+	"btTypedConstraint.h"
+
+1465724980 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btgeneric6dofconstraint.h
+	"LinearMath/btVector3.h"
+	"btJacobianEntry.h"
+	"btTypedConstraint.h"
+
+1465724981 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btsliderconstraint.h
+	"LinearMath/btVector3.h"
+	"btJacobianEntry.h"
+	"btTypedConstraint.h"
+
+1465724980 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btgeneric6dofspringconstraint.h
+	"LinearMath/btVector3.h"
+	"btTypedConstraint.h"
+	"btGeneric6DofConstraint.h"
+
+1465724981 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btuniversalconstraint.h
+	"LinearMath/btVector3.h"
+	"btTypedConstraint.h"
+	"btGeneric6DofConstraint.h"
+
+1465724980 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\bthinge2constraint.h
+	"LinearMath/btVector3.h"
+	"btTypedConstraint.h"
+	"btGeneric6DofSpring2Constraint.h"
+
+1465724980 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btgeneric6dofspring2constraint.h
+	"LinearMath/btVector3.h"
+	"btJacobianEntry.h"
+	"btTypedConstraint.h"
+
+1465724980 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btgearconstraint.h
+	"BulletDynamics/ConstraintSolver/btTypedConstraint.h"
+
+1465724981 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btsequentialimpulseconstraintsolver.h
+	"BulletDynamics/ConstraintSolver/btTypedConstraint.h"
+	"BulletDynamics/ConstraintSolver/btContactSolverInfo.h"
+	"BulletDynamics/ConstraintSolver/btSolverBody.h"
+	"BulletDynamics/ConstraintSolver/btSolverConstraint.h"
+	"BulletCollision/NarrowPhaseCollision/btManifoldPoint.h"
+	"BulletDynamics/ConstraintSolver/btConstraintSolver.h"
+
+1465724980 d:\dev\opentomb\extern\bullet\bulletdynamics\constraintsolver\btconstraintsolver.h
+	"LinearMath/btScalar.h"
+
+1465724983 d:\dev\opentomb\extern\bullet\bulletdynamics\vehicle\btraycastvehicle.h
+	"BulletDynamics/Dynamics/btRigidBody.h"
+	"BulletDynamics/ConstraintSolver/btTypedConstraint.h"
+	"btVehicleRaycaster.h"
+	"LinearMath/btAlignedObjectArray.h"
+	"btWheelInfo.h"
+	"BulletDynamics/Dynamics/btActionInterface.h"
+
+1465724983 d:\dev\opentomb\extern\bullet\bulletdynamics\vehicle\btvehicleraycaster.h
+	"LinearMath/btVector3.h"
+
+1465724983 d:\dev\opentomb\extern\bullet\bulletdynamics\vehicle\btwheelinfo.h
+	"LinearMath/btVector3.h"
+	"LinearMath/btTransform.h"
+
+1465724981 d:\dev\opentomb\extern\bullet\bulletdynamics\dynamics\btactioninterface.h
+	"LinearMath/btScalar.h"
+	"btRigidBody.h"
+
+1465724973 d:\dev\opentomb\extern\bullet\bulletcollision\collisiondispatch\btghostobject.h
+	"btCollisionObject.h"
+	"BulletCollision/BroadphaseCollision/btOverlappingPairCallback.h"
+	"LinearMath/btAlignedAllocator.h"
+	"BulletCollision/BroadphaseCollision/btOverlappingPairCache.h"
+	"btCollisionWorld.h"
+
+1465724979 d:\dev\opentomb\extern\bullet\bulletcollision\narrowphasecollision\btraycastcallback.h
+	"BulletCollision/CollisionShapes/btTriangleCallback.h"
+	"LinearMath/btTransform.h"
 

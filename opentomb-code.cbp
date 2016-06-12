@@ -44,8 +44,10 @@
 			<Add option="-Wall" />
 			<Add option="-m32" />
 			<Add option="-DOV_EXCLUDE_STATIC_CALLBACKS" />
-			<Add directory="src/bullet" />
-			<Add directory="src/freetype2/include" />
+			<Add directory="extern/al" />
+			<Add directory="extern/ogg" />
+			<Add directory="extern/bullet" />
+			<Add directory="extern/freetype2/include" />
 		</Compiler>
 		<Linker>
 			<Add option="-static -m32 -lmingw32 -llua -limage -lSDL2main -lSDL2.dll -lz -lpthread" />
@@ -56,6 +58,1213 @@
 		<Unit filename="config.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="extern/al/AL/al.h" />
+		<Unit filename="extern/al/AL/alc.h" />
+		<Unit filename="extern/al/AL/alext.h" />
+		<Unit filename="extern/al/AL/efx-creative.h" />
+		<Unit filename="extern/al/AL/efx-presets.h" />
+		<Unit filename="extern/al/AL/efx.h" />
+		<Unit filename="extern/al/Alc/ALc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/ALu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/alcConfig.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/alcRing.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/alstring.h" />
+		<Unit filename="extern/al/Alc/backends/backend.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/backends/base.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/backends/base.h" />
+		<Unit filename="extern/al/Alc/backends/loopback.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/backends/null.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/backends/wave.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/bs2b.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/compat.h" />
+		<Unit filename="extern/al/Alc/effects/autowah.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/effects/chorus.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/effects/compressor.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/effects/dedicated.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/effects/distortion.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/effects/echo.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/effects/equalizer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/effects/flanger.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/effects/modulator.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/effects/null.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/effects/reverb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/evtqueue.h" />
+		<Unit filename="extern/al/Alc/helpers.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/hrtf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/hrtf.h" />
+		<Unit filename="extern/al/Alc/midi/base.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/midi/base.h" />
+		<Unit filename="extern/al/Alc/midi/dummy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/midi/fluidsynth.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/midi/sf2load.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/midi/soft.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/mixer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/mixer_c.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/mixer_defs.h" />
+		<Unit filename="extern/al/Alc/mixer_inc.hpp" />
+		<Unit filename="extern/al/Alc/mixer_neon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/mixer_sse.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/mixer_sse2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/mixer_sse41.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/panning.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/Alc/vector.h" />
+		<Unit filename="extern/al/OpenAL32/alAuxEffectSlot.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/alBuffer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/alEffect.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/alError.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/alExtension.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/alFilter.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/alFontsound.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/alListener.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/alMidi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/alPreset.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/alSoundfont.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/alSource.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/alState.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/alThunk.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/OpenAL32/sample_cvt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/alAuxEffectSlot.h" />
+		<Unit filename="extern/al/alBuffer.h" />
+		<Unit filename="extern/al/alEffect.h" />
+		<Unit filename="extern/al/alError.h" />
+		<Unit filename="extern/al/alFilter.h" />
+		<Unit filename="extern/al/alListener.h" />
+		<Unit filename="extern/al/alMain.h" />
+		<Unit filename="extern/al/alMidi.h" />
+		<Unit filename="extern/al/alSource.h" />
+		<Unit filename="extern/al/alThunk.h" />
+		<Unit filename="extern/al/align.h" />
+		<Unit filename="extern/al/alu.h" />
+		<Unit filename="extern/al/atomic.h" />
+		<Unit filename="extern/al/bool.h" />
+		<Unit filename="extern/al/bs2b.h" />
+		<Unit filename="extern/al/common/atomic.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/common/rwlock.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/common/threads.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/common/uintmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/al/config.h" />
+		<Unit filename="extern/al/rwlock.h" />
+		<Unit filename="extern/al/sample_cvt.h" />
+		<Unit filename="extern/al/static_assert.h" />
+		<Unit filename="extern/al/threads.h" />
+		<Unit filename="extern/al/uintmap.h" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.h" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btBroadphaseInterface.h" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btBroadphaseProxy.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btDbvt.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btDbvt.h" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btDbvtBroadphase.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btDbvtBroadphase.h" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btDispatcher.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btDispatcher.h" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btMultiSapBroadphase.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btMultiSapBroadphase.h" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btOverlappingPairCache.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btOverlappingPairCache.h" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btOverlappingPairCallback.h" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btQuantizedBvh.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btQuantizedBvh.h" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btSimpleBroadphase.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btSimpleBroadphase.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/SphereTriangleDetector.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/SphereTriangleDetector.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btActivatingCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btActivatingCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btBox2dBox2dCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btBox2dBox2dCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btBoxBoxCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btBoxBoxCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btBoxBoxDetector.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btBoxBoxDetector.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCollisionConfiguration.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCollisionCreateFunc.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCollisionDispatcher.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCollisionDispatcher.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCollisionObject.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCollisionObject.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCollisionObjectWrapper.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCollisionWorld.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCollisionWorldImporter.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCollisionWorldImporter.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCompoundCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCompoundCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCompoundCompoundCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btCompoundCompoundCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btConvex2dConvex2dAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btConvex2dConvex2dAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btConvexConcaveCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btConvexConcaveCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btConvexConvexAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btConvexConvexAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btConvexPlaneCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btConvexPlaneCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btEmptyCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btEmptyCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btGhostObject.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btGhostObject.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btHashedSimplePairCache.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btHashedSimplePairCache.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btInternalEdgeUtility.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btInternalEdgeUtility.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btManifoldResult.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btManifoldResult.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btSimulationIslandManager.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btSimulationIslandManager.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btSphereBoxCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btSphereBoxCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btSphereSphereCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btSphereSphereCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btSphereTriangleCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btSphereTriangleCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btUnionFind.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionDispatch/btUnionFind.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btBox2dShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btBox2dShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btBoxShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btBoxShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btBvhTriangleMeshShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btCapsuleShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btCapsuleShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btCollisionMargin.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btCollisionShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btCollisionShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btCompoundShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btCompoundShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConcaveShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConcaveShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConeShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConeShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvex2dShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvex2dShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvexHullShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvexHullShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvexInternalShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvexInternalShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvexPointCloudShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvexPointCloudShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvexPolyhedron.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvexPolyhedron.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvexShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvexShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvexTriangleMeshShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btConvexTriangleMeshShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btCylinderShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btCylinderShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btEmptyShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btEmptyShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btHeightfieldTerrainShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btMaterial.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btMinkowskiSumShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btMinkowskiSumShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btMultiSphereShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btMultimaterialTriangleMeshShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btMultimaterialTriangleMeshShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btOptimizedBvh.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btOptimizedBvh.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btPolyhedralConvexShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btPolyhedralConvexShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btScaledBvhTriangleMeshShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btScaledBvhTriangleMeshShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btShapeHull.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btShapeHull.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btSphereShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btSphereShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btStaticPlaneShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btStaticPlaneShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btStridingMeshInterface.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btStridingMeshInterface.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTetrahedronShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTetrahedronShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleBuffer.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleBuffer.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleCallback.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleCallback.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleIndexVertexArray.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleIndexVertexMaterialArray.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleIndexVertexMaterialArray.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleInfoMap.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleMesh.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleMesh.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleMeshShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleMeshShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btTriangleShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btUniformScalingShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/CollisionShapes/btUniformScalingShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btBoxCollision.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btClipPolygon.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btCompoundFromGimpact.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btContactProcessing.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btContactProcessing.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btGImpactBvh.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btGImpactBvh.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btGImpactCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btGImpactMassUtil.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btGImpactQuantizedBvh.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btGImpactQuantizedBvh.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btGImpactShape.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btGImpactShape.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btGenericPoolAllocator.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btGenericPoolAllocator.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btGeometryOperations.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btQuantization.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btTriangleShapeEx.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/btTriangleShapeEx.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_array.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_basic_geometry_operations.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_bitset.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_box_collision.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_box_set.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_box_set.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_clip_polygon.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_contact.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_contact.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_geom_types.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_geometry.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_hash_table.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_linear_math.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_math.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_memory.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_memory.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_radixsort.h" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_tri_collision.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/Gimpact/gim_tri_collision.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btComputeGjkEpaPenetration.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btContinuousConvexCollision.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btContinuousConvexCollision.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btConvexCast.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btConvexCast.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btConvexPenetrationDepthSolver.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btDiscreteCollisionDetectorInterface.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btGjkCollisionDescription.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btGjkConvexCast.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btGjkConvexCast.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btGjkEpa2.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btGjkEpa2.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btGjkEpa3.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btGjkEpaPenetrationDepthSolver.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btGjkEpaPenetrationDepthSolver.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btGjkPairDetector.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btGjkPairDetector.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btManifoldPoint.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btMinkowskiPenetrationDepthSolver.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btMinkowskiPenetrationDepthSolver.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btMprPenetration.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btPersistentManifold.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btPersistentManifold.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btPointCollector.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btPolyhedralContactClipping.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btPolyhedralContactClipping.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btSimplexSolverInterface.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.h" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.cpp" />
+		<Unit filename="extern/bullet/BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Character/btCharacterControllerInterface.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Character/btKinematicCharacterController.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/Character/btKinematicCharacterController.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btConeTwistConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btConeTwistConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btConstraintSolver.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btContactConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btContactConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btContactSolverInfo.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btFixedConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btFixedConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btGearConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btGearConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btGeneric6DofSpring2Constraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btGeneric6DofSpring2Constraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btGeneric6DofSpringConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btGeneric6DofSpringConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btHinge2Constraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btHinge2Constraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btHingeConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btHingeConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btJacobianEntry.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btNNCGConstraintSolver.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btNNCGConstraintSolver.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btPoint2PointConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btSliderConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btSliderConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btSolve2LinearConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btSolve2LinearConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btSolverBody.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btSolverConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btUniversalConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/ConstraintSolver/btUniversalConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Dynamics/btActionInterface.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Dynamics/btDiscreteDynamicsWorld.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Dynamics/btDynamicsWorld.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Dynamics/btRigidBody.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/Dynamics/btRigidBody.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Dynamics/btSimpleDynamicsWorld.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/Dynamics/btSimpleDynamicsWorld.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBody.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBody.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyConstraintSolver.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyJointMotor.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyJointMotor.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyLink.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyLinkCollider.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyPoint2Point.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodyPoint2Point.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Featherstone/btMultiBodySolverConstraint.h" />
+		<Unit filename="extern/bullet/BulletDynamics/MLCPSolvers/btDantzigLCP.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/MLCPSolvers/btDantzigLCP.h" />
+		<Unit filename="extern/bullet/BulletDynamics/MLCPSolvers/btDantzigSolver.h" />
+		<Unit filename="extern/bullet/BulletDynamics/MLCPSolvers/btLemkeAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/MLCPSolvers/btLemkeAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletDynamics/MLCPSolvers/btLemkeSolver.h" />
+		<Unit filename="extern/bullet/BulletDynamics/MLCPSolvers/btMLCPSolver.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/MLCPSolvers/btMLCPSolver.h" />
+		<Unit filename="extern/bullet/BulletDynamics/MLCPSolvers/btMLCPSolverInterface.h" />
+		<Unit filename="extern/bullet/BulletDynamics/MLCPSolvers/btPATHSolver.h" />
+		<Unit filename="extern/bullet/BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Vehicle/btRaycastVehicle.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/Vehicle/btRaycastVehicle.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Vehicle/btVehicleRaycaster.h" />
+		<Unit filename="extern/bullet/BulletDynamics/Vehicle/btWheelInfo.cpp" />
+		<Unit filename="extern/bullet/BulletDynamics/Vehicle/btWheelInfo.h" />
+		<Unit filename="extern/bullet/BulletSoftBody/btDefaultSoftBodySolver.cpp" />
+		<Unit filename="extern/bullet/BulletSoftBody/btDefaultSoftBodySolver.h" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftBody.cpp" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftBody.h" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftBodyConcaveCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftBodyConcaveCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftBodyData.h" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftBodyHelpers.cpp" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftBodyHelpers.h" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftBodyInternals.h" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.cpp" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftBodySolverVertexBuffer.h" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftBodySolvers.h" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftRigidCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftRigidCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftRigidDynamicsWorld.cpp" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftRigidDynamicsWorld.h" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftSoftCollisionAlgorithm.cpp" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSoftSoftCollisionAlgorithm.h" />
+		<Unit filename="extern/bullet/BulletSoftBody/btSparseSDF.h" />
+		<Unit filename="extern/bullet/LinearMath/btAabbUtil2.h" />
+		<Unit filename="extern/bullet/LinearMath/btAlignedAllocator.cpp" />
+		<Unit filename="extern/bullet/LinearMath/btAlignedAllocator.h" />
+		<Unit filename="extern/bullet/LinearMath/btAlignedObjectArray.h" />
+		<Unit filename="extern/bullet/LinearMath/btConvexHull.cpp" />
+		<Unit filename="extern/bullet/LinearMath/btConvexHull.h" />
+		<Unit filename="extern/bullet/LinearMath/btConvexHullComputer.cpp" />
+		<Unit filename="extern/bullet/LinearMath/btConvexHullComputer.h" />
+		<Unit filename="extern/bullet/LinearMath/btCpuFeatureUtility.h" />
+		<Unit filename="extern/bullet/LinearMath/btDefaultMotionState.h" />
+		<Unit filename="extern/bullet/LinearMath/btGeometryUtil.cpp" />
+		<Unit filename="extern/bullet/LinearMath/btGeometryUtil.h" />
+		<Unit filename="extern/bullet/LinearMath/btGrahamScan2dConvexHull.h" />
+		<Unit filename="extern/bullet/LinearMath/btHashMap.h" />
+		<Unit filename="extern/bullet/LinearMath/btIDebugDraw.h" />
+		<Unit filename="extern/bullet/LinearMath/btList.h" />
+		<Unit filename="extern/bullet/LinearMath/btMatrix3x3.h" />
+		<Unit filename="extern/bullet/LinearMath/btMatrixX.h" />
+		<Unit filename="extern/bullet/LinearMath/btMinMax.h" />
+		<Unit filename="extern/bullet/LinearMath/btMotionState.h" />
+		<Unit filename="extern/bullet/LinearMath/btPolarDecomposition.cpp" />
+		<Unit filename="extern/bullet/LinearMath/btPolarDecomposition.h" />
+		<Unit filename="extern/bullet/LinearMath/btPoolAllocator.h" />
+		<Unit filename="extern/bullet/LinearMath/btQuadWord.h" />
+		<Unit filename="extern/bullet/LinearMath/btQuaternion.h" />
+		<Unit filename="extern/bullet/LinearMath/btQuickprof.cpp" />
+		<Unit filename="extern/bullet/LinearMath/btQuickprof.h" />
+		<Unit filename="extern/bullet/LinearMath/btRandom.h" />
+		<Unit filename="extern/bullet/LinearMath/btScalar.h" />
+		<Unit filename="extern/bullet/LinearMath/btSerializer.cpp" />
+		<Unit filename="extern/bullet/LinearMath/btSerializer.h" />
+		<Unit filename="extern/bullet/LinearMath/btSpatialAlgebra.h" />
+		<Unit filename="extern/bullet/LinearMath/btStackAlloc.h" />
+		<Unit filename="extern/bullet/LinearMath/btTransform.h" />
+		<Unit filename="extern/bullet/LinearMath/btTransformUtil.h" />
+		<Unit filename="extern/bullet/LinearMath/btVector3.cpp" />
+		<Unit filename="extern/bullet/LinearMath/btVector3.h" />
+		<Unit filename="extern/bullet/btBulletCollisionCommon.h" />
+		<Unit filename="extern/bullet/btBulletDynamicsCommon.h" />
+		<Unit filename="extern/freetype2/include/config/ftconfig.h" />
+		<Unit filename="extern/freetype2/include/config/ftheader.h" />
+		<Unit filename="extern/freetype2/include/config/ftmodule.h" />
+		<Unit filename="extern/freetype2/include/config/ftoption.h" />
+		<Unit filename="extern/freetype2/include/config/ftstdlib.h" />
+		<Unit filename="extern/freetype2/include/freetype.h" />
+		<Unit filename="extern/freetype2/include/ft2build.h" />
+		<Unit filename="extern/freetype2/include/ftadvanc.h" />
+		<Unit filename="extern/freetype2/include/ftautoh.h" />
+		<Unit filename="extern/freetype2/include/ftbbox.h" />
+		<Unit filename="extern/freetype2/include/ftbdf.h" />
+		<Unit filename="extern/freetype2/include/ftbitmap.h" />
+		<Unit filename="extern/freetype2/include/ftbzip2.h" />
+		<Unit filename="extern/freetype2/include/ftcache.h" />
+		<Unit filename="extern/freetype2/include/ftcffdrv.h" />
+		<Unit filename="extern/freetype2/include/ftchapters.h" />
+		<Unit filename="extern/freetype2/include/ftcid.h" />
+		<Unit filename="extern/freetype2/include/fterrdef.h" />
+		<Unit filename="extern/freetype2/include/fterrors.h" />
+		<Unit filename="extern/freetype2/include/ftgasp.h" />
+		<Unit filename="extern/freetype2/include/ftglyph.h" />
+		<Unit filename="extern/freetype2/include/ftgxval.h" />
+		<Unit filename="extern/freetype2/include/ftgzip.h" />
+		<Unit filename="extern/freetype2/include/ftimage.h" />
+		<Unit filename="extern/freetype2/include/ftincrem.h" />
+		<Unit filename="extern/freetype2/include/ftlcdfil.h" />
+		<Unit filename="extern/freetype2/include/ftlist.h" />
+		<Unit filename="extern/freetype2/include/ftlzw.h" />
+		<Unit filename="extern/freetype2/include/ftmac.h" />
+		<Unit filename="extern/freetype2/include/ftmm.h" />
+		<Unit filename="extern/freetype2/include/ftmodapi.h" />
+		<Unit filename="extern/freetype2/include/ftmoderr.h" />
+		<Unit filename="extern/freetype2/include/ftotval.h" />
+		<Unit filename="extern/freetype2/include/ftoutln.h" />
+		<Unit filename="extern/freetype2/include/ftpfr.h" />
+		<Unit filename="extern/freetype2/include/ftrender.h" />
+		<Unit filename="extern/freetype2/include/ftsizes.h" />
+		<Unit filename="extern/freetype2/include/ftsnames.h" />
+		<Unit filename="extern/freetype2/include/ftstroke.h" />
+		<Unit filename="extern/freetype2/include/ftsynth.h" />
+		<Unit filename="extern/freetype2/include/ftsystem.h" />
+		<Unit filename="extern/freetype2/include/fttrigon.h" />
+		<Unit filename="extern/freetype2/include/ftttdrv.h" />
+		<Unit filename="extern/freetype2/include/fttypes.h" />
+		<Unit filename="extern/freetype2/include/ftwinfnt.h" />
+		<Unit filename="extern/freetype2/include/ftxf86.h" />
+		<Unit filename="extern/freetype2/include/internal/autohint.h" />
+		<Unit filename="extern/freetype2/include/internal/ftcalc.h" />
+		<Unit filename="extern/freetype2/include/internal/ftdebug.h" />
+		<Unit filename="extern/freetype2/include/internal/ftdriver.h" />
+		<Unit filename="extern/freetype2/include/internal/ftgloadr.h" />
+		<Unit filename="extern/freetype2/include/internal/ftmemory.h" />
+		<Unit filename="extern/freetype2/include/internal/ftobjs.h" />
+		<Unit filename="extern/freetype2/include/internal/ftpic.h" />
+		<Unit filename="extern/freetype2/include/internal/ftrfork.h" />
+		<Unit filename="extern/freetype2/include/internal/ftserv.h" />
+		<Unit filename="extern/freetype2/include/internal/ftstream.h" />
+		<Unit filename="extern/freetype2/include/internal/fttrace.h" />
+		<Unit filename="extern/freetype2/include/internal/ftvalid.h" />
+		<Unit filename="extern/freetype2/include/internal/internal.h" />
+		<Unit filename="extern/freetype2/include/internal/psaux.h" />
+		<Unit filename="extern/freetype2/include/internal/pshints.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svbdf.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svcid.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svgldict.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svgxval.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svkern.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svmm.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svotval.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svpfr.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svpostnm.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svprop.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svpscmap.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svpsinfo.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svsfnt.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svttcmap.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svtteng.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svttglyf.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svwinfnt.h" />
+		<Unit filename="extern/freetype2/include/internal/services/svxf86nm.h" />
+		<Unit filename="extern/freetype2/include/internal/sfnt.h" />
+		<Unit filename="extern/freetype2/include/internal/t1types.h" />
+		<Unit filename="extern/freetype2/include/internal/tttypes.h" />
+		<Unit filename="extern/freetype2/include/t1tables.h" />
+		<Unit filename="extern/freetype2/include/ttnameid.h" />
+		<Unit filename="extern/freetype2/include/tttables.h" />
+		<Unit filename="extern/freetype2/include/tttags.h" />
+		<Unit filename="extern/freetype2/include/ttunpat.h" />
+		<Unit filename="extern/freetype2/src/autofit/afangles.h" />
+		<Unit filename="extern/freetype2/src/autofit/afangles.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/afblue.h" />
+		<Unit filename="extern/freetype2/src/autofit/afblue.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/afcjk.h" />
+		<Unit filename="extern/freetype2/src/autofit/afcjk.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/afcover.h" />
+		<Unit filename="extern/freetype2/src/autofit/afdummy.h" />
+		<Unit filename="extern/freetype2/src/autofit/afdummy.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/aferrors.h" />
+		<Unit filename="extern/freetype2/src/autofit/afglobal.h" />
+		<Unit filename="extern/freetype2/src/autofit/afglobal.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/afhints.h" />
+		<Unit filename="extern/freetype2/src/autofit/afhints.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/afindic.h" />
+		<Unit filename="extern/freetype2/src/autofit/afindic.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/aflatin.h" />
+		<Unit filename="extern/freetype2/src/autofit/aflatin.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/aflatin2.h" />
+		<Unit filename="extern/freetype2/src/autofit/aflatin2.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/afloader.h" />
+		<Unit filename="extern/freetype2/src/autofit/afloader.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/afmodule.h" />
+		<Unit filename="extern/freetype2/src/autofit/afmodule.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/afpic.h" />
+		<Unit filename="extern/freetype2/src/autofit/afpic.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/afranges.h" />
+		<Unit filename="extern/freetype2/src/autofit/afranges.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/afscript.h" />
+		<Unit filename="extern/freetype2/src/autofit/afstyles.h" />
+		<Unit filename="extern/freetype2/src/autofit/aftypes.h" />
+		<Unit filename="extern/freetype2/src/autofit/afwarp.h" />
+		<Unit filename="extern/freetype2/src/autofit/afwarp.hpp" />
+		<Unit filename="extern/freetype2/src/autofit/afwrtsys.h" />
+		<Unit filename="extern/freetype2/src/autofit/autofit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/autofit/hbshim.h" />
+		<Unit filename="extern/freetype2/src/autofit/hbshim.hpp" />
+		<Unit filename="extern/freetype2/src/base/basepic.h" />
+		<Unit filename="extern/freetype2/src/base/basepic.hpp" />
+		<Unit filename="extern/freetype2/src/base/ftadvanc.hpp" />
+		<Unit filename="extern/freetype2/src/base/ftapi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftbase.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftbase.h" />
+		<Unit filename="extern/freetype2/src/base/ftbbox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftbdf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftbitmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftcalc.hpp" />
+		<Unit filename="extern/freetype2/src/base/ftcid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftdbgmem.hpp" />
+		<Unit filename="extern/freetype2/src/base/ftdebug.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftfstype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftgasp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftgloadr.hpp" />
+		<Unit filename="extern/freetype2/src/base/ftglyph.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftgxval.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftinit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftlcdfil.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftmac.hpp" />
+		<Unit filename="extern/freetype2/src/base/ftmm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftobjs.hpp" />
+		<Unit filename="extern/freetype2/src/base/ftotval.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftoutln.hpp" />
+		<Unit filename="extern/freetype2/src/base/ftpatent.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftpfr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftpic.hpp" />
+		<Unit filename="extern/freetype2/src/base/ftrfork.hpp" />
+		<Unit filename="extern/freetype2/src/base/ftsnames.hpp" />
+		<Unit filename="extern/freetype2/src/base/ftstream.hpp" />
+		<Unit filename="extern/freetype2/src/base/ftstroke.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftsynth.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftsystem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/fttrigon.hpp" />
+		<Unit filename="extern/freetype2/src/base/fttype1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftutil.hpp" />
+		<Unit filename="extern/freetype2/src/base/ftwinfnt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/ftxf86.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/md5.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/base/md5.h" />
+		<Unit filename="extern/freetype2/src/bdf/bdf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/bdf/bdf.h" />
+		<Unit filename="extern/freetype2/src/bdf/bdfdrivr.h" />
+		<Unit filename="extern/freetype2/src/bdf/bdfdrivr.hpp" />
+		<Unit filename="extern/freetype2/src/bdf/bdferror.h" />
+		<Unit filename="extern/freetype2/src/bdf/bdflib.hpp" />
+		<Unit filename="extern/freetype2/src/bzip2/ftbzip2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/cache/ftcache.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/cache/ftcbasic.hpp" />
+		<Unit filename="extern/freetype2/src/cache/ftccache.h" />
+		<Unit filename="extern/freetype2/src/cache/ftccache.hpp" />
+		<Unit filename="extern/freetype2/src/cache/ftccback.h" />
+		<Unit filename="extern/freetype2/src/cache/ftccmap.hpp" />
+		<Unit filename="extern/freetype2/src/cache/ftcerror.h" />
+		<Unit filename="extern/freetype2/src/cache/ftcglyph.h" />
+		<Unit filename="extern/freetype2/src/cache/ftcglyph.hpp" />
+		<Unit filename="extern/freetype2/src/cache/ftcimage.h" />
+		<Unit filename="extern/freetype2/src/cache/ftcimage.hpp" />
+		<Unit filename="extern/freetype2/src/cache/ftcmanag.h" />
+		<Unit filename="extern/freetype2/src/cache/ftcmanag.hpp" />
+		<Unit filename="extern/freetype2/src/cache/ftcmru.h" />
+		<Unit filename="extern/freetype2/src/cache/ftcmru.hpp" />
+		<Unit filename="extern/freetype2/src/cache/ftcsbits.h" />
+		<Unit filename="extern/freetype2/src/cache/ftcsbits.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cf2arrst.h" />
+		<Unit filename="extern/freetype2/src/cff/cf2arrst.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cf2blues.h" />
+		<Unit filename="extern/freetype2/src/cff/cf2blues.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cf2error.h" />
+		<Unit filename="extern/freetype2/src/cff/cf2error.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cf2fixed.h" />
+		<Unit filename="extern/freetype2/src/cff/cf2font.h" />
+		<Unit filename="extern/freetype2/src/cff/cf2font.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cf2ft.h" />
+		<Unit filename="extern/freetype2/src/cff/cf2ft.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cf2glue.h" />
+		<Unit filename="extern/freetype2/src/cff/cf2hints.h" />
+		<Unit filename="extern/freetype2/src/cff/cf2hints.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cf2intrp.h" />
+		<Unit filename="extern/freetype2/src/cff/cf2intrp.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cf2read.h" />
+		<Unit filename="extern/freetype2/src/cff/cf2read.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cf2stack.h" />
+		<Unit filename="extern/freetype2/src/cff/cf2stack.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cf2types.h" />
+		<Unit filename="extern/freetype2/src/cff/cff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/cff/cffcmap.h" />
+		<Unit filename="extern/freetype2/src/cff/cffcmap.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cffdrivr.h" />
+		<Unit filename="extern/freetype2/src/cff/cffdrivr.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cfferrs.h" />
+		<Unit filename="extern/freetype2/src/cff/cffgload.h" />
+		<Unit filename="extern/freetype2/src/cff/cffgload.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cffload.h" />
+		<Unit filename="extern/freetype2/src/cff/cffload.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cffobjs.h" />
+		<Unit filename="extern/freetype2/src/cff/cffobjs.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cffparse.h" />
+		<Unit filename="extern/freetype2/src/cff/cffparse.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cffpic.h" />
+		<Unit filename="extern/freetype2/src/cff/cffpic.hpp" />
+		<Unit filename="extern/freetype2/src/cff/cfftoken.h" />
+		<Unit filename="extern/freetype2/src/cff/cfftypes.h" />
+		<Unit filename="extern/freetype2/src/cid/ciderrs.h" />
+		<Unit filename="extern/freetype2/src/cid/cidgload.h" />
+		<Unit filename="extern/freetype2/src/cid/cidgload.hpp" />
+		<Unit filename="extern/freetype2/src/cid/cidload.h" />
+		<Unit filename="extern/freetype2/src/cid/cidload.hpp" />
+		<Unit filename="extern/freetype2/src/cid/cidobjs.h" />
+		<Unit filename="extern/freetype2/src/cid/cidobjs.hpp" />
+		<Unit filename="extern/freetype2/src/cid/cidparse.h" />
+		<Unit filename="extern/freetype2/src/cid/cidparse.hpp" />
+		<Unit filename="extern/freetype2/src/cid/cidriver.h" />
+		<Unit filename="extern/freetype2/src/cid/cidriver.hpp" />
+		<Unit filename="extern/freetype2/src/cid/cidtoken.h" />
+		<Unit filename="extern/freetype2/src/cid/type1cid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/gxvalid/gxvalid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/gxvalid/gxvalid.h" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvbsln.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvcommn.h" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvcommn.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxverror.h" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvfeat.h" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvfeat.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvjust.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvkern.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvlcar.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmod.h" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmod.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmort.h" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmort.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmort0.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmort1.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmort2.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmort4.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmort5.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmorx.h" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmorx.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmorx0.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmorx1.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmorx2.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmorx4.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvmorx5.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvopbd.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvprop.hpp" />
+		<Unit filename="extern/freetype2/src/gxvalid/gxvtrak.hpp" />
+		<Unit filename="extern/freetype2/src/gzip/ftgzip.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/gzip/inffixed.h" />
+		<Unit filename="extern/freetype2/src/lzw/ftlzw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/lzw/ftzopen.h" />
+		<Unit filename="extern/freetype2/src/lzw/ftzopen.hpp" />
+		<Unit filename="extern/freetype2/src/otvalid/otvalid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/otvalid/otvalid.h" />
+		<Unit filename="extern/freetype2/src/otvalid/otvbase.hpp" />
+		<Unit filename="extern/freetype2/src/otvalid/otvcommn.h" />
+		<Unit filename="extern/freetype2/src/otvalid/otvcommn.hpp" />
+		<Unit filename="extern/freetype2/src/otvalid/otverror.h" />
+		<Unit filename="extern/freetype2/src/otvalid/otvgdef.hpp" />
+		<Unit filename="extern/freetype2/src/otvalid/otvgpos.h" />
+		<Unit filename="extern/freetype2/src/otvalid/otvgpos.hpp" />
+		<Unit filename="extern/freetype2/src/otvalid/otvgsub.hpp" />
+		<Unit filename="extern/freetype2/src/otvalid/otvjstf.hpp" />
+		<Unit filename="extern/freetype2/src/otvalid/otvmath.hpp" />
+		<Unit filename="extern/freetype2/src/otvalid/otvmod.h" />
+		<Unit filename="extern/freetype2/src/otvalid/otvmod.hpp" />
+		<Unit filename="extern/freetype2/src/pcf/pcf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/pcf/pcf.h" />
+		<Unit filename="extern/freetype2/src/pcf/pcfdrivr.h" />
+		<Unit filename="extern/freetype2/src/pcf/pcfdrivr.hpp" />
+		<Unit filename="extern/freetype2/src/pcf/pcferror.h" />
+		<Unit filename="extern/freetype2/src/pcf/pcfread.h" />
+		<Unit filename="extern/freetype2/src/pcf/pcfread.hpp" />
+		<Unit filename="extern/freetype2/src/pcf/pcfutil.h" />
+		<Unit filename="extern/freetype2/src/pcf/pcfutil.hpp" />
+		<Unit filename="extern/freetype2/src/pfr/pfr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/pfr/pfrcmap.h" />
+		<Unit filename="extern/freetype2/src/pfr/pfrcmap.hpp" />
+		<Unit filename="extern/freetype2/src/pfr/pfrdrivr.h" />
+		<Unit filename="extern/freetype2/src/pfr/pfrdrivr.hpp" />
+		<Unit filename="extern/freetype2/src/pfr/pfrerror.h" />
+		<Unit filename="extern/freetype2/src/pfr/pfrgload.h" />
+		<Unit filename="extern/freetype2/src/pfr/pfrgload.hpp" />
+		<Unit filename="extern/freetype2/src/pfr/pfrload.h" />
+		<Unit filename="extern/freetype2/src/pfr/pfrload.hpp" />
+		<Unit filename="extern/freetype2/src/pfr/pfrobjs.h" />
+		<Unit filename="extern/freetype2/src/pfr/pfrobjs.hpp" />
+		<Unit filename="extern/freetype2/src/pfr/pfrsbit.h" />
+		<Unit filename="extern/freetype2/src/pfr/pfrsbit.hpp" />
+		<Unit filename="extern/freetype2/src/pfr/pfrtypes.h" />
+		<Unit filename="extern/freetype2/src/psaux/afmparse.h" />
+		<Unit filename="extern/freetype2/src/psaux/afmparse.hpp" />
+		<Unit filename="extern/freetype2/src/psaux/psaux.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/psaux/psauxerr.h" />
+		<Unit filename="extern/freetype2/src/psaux/psauxmod.h" />
+		<Unit filename="extern/freetype2/src/psaux/psauxmod.hpp" />
+		<Unit filename="extern/freetype2/src/psaux/psconv.h" />
+		<Unit filename="extern/freetype2/src/psaux/psconv.hpp" />
+		<Unit filename="extern/freetype2/src/psaux/psobjs.h" />
+		<Unit filename="extern/freetype2/src/psaux/psobjs.hpp" />
+		<Unit filename="extern/freetype2/src/psaux/t1cmap.h" />
+		<Unit filename="extern/freetype2/src/psaux/t1cmap.hpp" />
+		<Unit filename="extern/freetype2/src/psaux/t1decode.h" />
+		<Unit filename="extern/freetype2/src/psaux/t1decode.hpp" />
+		<Unit filename="extern/freetype2/src/pshinter/pshalgo.h" />
+		<Unit filename="extern/freetype2/src/pshinter/pshalgo.hpp" />
+		<Unit filename="extern/freetype2/src/pshinter/pshglob.h" />
+		<Unit filename="extern/freetype2/src/pshinter/pshglob.hpp" />
+		<Unit filename="extern/freetype2/src/pshinter/pshinter.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/pshinter/pshmod.h" />
+		<Unit filename="extern/freetype2/src/pshinter/pshmod.hpp" />
+		<Unit filename="extern/freetype2/src/pshinter/pshnterr.h" />
+		<Unit filename="extern/freetype2/src/pshinter/pshpic.h" />
+		<Unit filename="extern/freetype2/src/pshinter/pshpic.hpp" />
+		<Unit filename="extern/freetype2/src/pshinter/pshrec.h" />
+		<Unit filename="extern/freetype2/src/pshinter/pshrec.hpp" />
+		<Unit filename="extern/freetype2/src/psnames/psmodule.h" />
+		<Unit filename="extern/freetype2/src/psnames/psmodule.hpp" />
+		<Unit filename="extern/freetype2/src/psnames/psnamerr.h" />
+		<Unit filename="extern/freetype2/src/psnames/psnames.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/psnames/pspic.h" />
+		<Unit filename="extern/freetype2/src/psnames/pspic.hpp" />
+		<Unit filename="extern/freetype2/src/psnames/pstables.h" />
+		<Unit filename="extern/freetype2/src/raster/ftmisc.h" />
+		<Unit filename="extern/freetype2/src/raster/ftraster.h" />
+		<Unit filename="extern/freetype2/src/raster/ftraster.hpp" />
+		<Unit filename="extern/freetype2/src/raster/ftrend1.h" />
+		<Unit filename="extern/freetype2/src/raster/ftrend1.hpp" />
+		<Unit filename="extern/freetype2/src/raster/raster.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/raster/rasterrs.h" />
+		<Unit filename="extern/freetype2/src/raster/rastpic.h" />
+		<Unit filename="extern/freetype2/src/raster/rastpic.hpp" />
+		<Unit filename="extern/freetype2/src/sfnt/pngshim.h" />
+		<Unit filename="extern/freetype2/src/sfnt/pngshim.hpp" />
+		<Unit filename="extern/freetype2/src/sfnt/sfdriver.h" />
+		<Unit filename="extern/freetype2/src/sfnt/sfdriver.hpp" />
+		<Unit filename="extern/freetype2/src/sfnt/sferrors.h" />
+		<Unit filename="extern/freetype2/src/sfnt/sfnt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/sfnt/sfntpic.h" />
+		<Unit filename="extern/freetype2/src/sfnt/sfntpic.hpp" />
+		<Unit filename="extern/freetype2/src/sfnt/sfobjs.h" />
+		<Unit filename="extern/freetype2/src/sfnt/sfobjs.hpp" />
+		<Unit filename="extern/freetype2/src/sfnt/ttbdf.h" />
+		<Unit filename="extern/freetype2/src/sfnt/ttbdf.hpp" />
+		<Unit filename="extern/freetype2/src/sfnt/ttcmap.h" />
+		<Unit filename="extern/freetype2/src/sfnt/ttcmap.hpp" />
+		<Unit filename="extern/freetype2/src/sfnt/ttcmapc.h" />
+		<Unit filename="extern/freetype2/src/sfnt/ttkern.h" />
+		<Unit filename="extern/freetype2/src/sfnt/ttkern.hpp" />
+		<Unit filename="extern/freetype2/src/sfnt/ttload.h" />
+		<Unit filename="extern/freetype2/src/sfnt/ttload.hpp" />
+		<Unit filename="extern/freetype2/src/sfnt/ttmtx.h" />
+		<Unit filename="extern/freetype2/src/sfnt/ttmtx.hpp" />
+		<Unit filename="extern/freetype2/src/sfnt/ttpost.h" />
+		<Unit filename="extern/freetype2/src/sfnt/ttpost.hpp" />
+		<Unit filename="extern/freetype2/src/sfnt/ttsbit.h" />
+		<Unit filename="extern/freetype2/src/sfnt/ttsbit.hpp" />
+		<Unit filename="extern/freetype2/src/smooth/ftgrays.h" />
+		<Unit filename="extern/freetype2/src/smooth/ftgrays.hpp" />
+		<Unit filename="extern/freetype2/src/smooth/ftsmerrs.h" />
+		<Unit filename="extern/freetype2/src/smooth/ftsmooth.h" />
+		<Unit filename="extern/freetype2/src/smooth/ftsmooth.hpp" />
+		<Unit filename="extern/freetype2/src/smooth/ftspic.h" />
+		<Unit filename="extern/freetype2/src/smooth/ftspic.hpp" />
+		<Unit filename="extern/freetype2/src/smooth/smooth.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/truetype/truetype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/truetype/ttdriver.h" />
+		<Unit filename="extern/freetype2/src/truetype/ttdriver.hpp" />
+		<Unit filename="extern/freetype2/src/truetype/tterrors.h" />
+		<Unit filename="extern/freetype2/src/truetype/ttgload.h" />
+		<Unit filename="extern/freetype2/src/truetype/ttgload.hpp" />
+		<Unit filename="extern/freetype2/src/truetype/ttgxvar.h" />
+		<Unit filename="extern/freetype2/src/truetype/ttgxvar.hpp" />
+		<Unit filename="extern/freetype2/src/truetype/ttinterp.h" />
+		<Unit filename="extern/freetype2/src/truetype/ttinterp.hpp" />
+		<Unit filename="extern/freetype2/src/truetype/ttobjs.h" />
+		<Unit filename="extern/freetype2/src/truetype/ttobjs.hpp" />
+		<Unit filename="extern/freetype2/src/truetype/ttpic.h" />
+		<Unit filename="extern/freetype2/src/truetype/ttpic.hpp" />
+		<Unit filename="extern/freetype2/src/truetype/ttpload.h" />
+		<Unit filename="extern/freetype2/src/truetype/ttpload.hpp" />
+		<Unit filename="extern/freetype2/src/truetype/ttsubpix.h" />
+		<Unit filename="extern/freetype2/src/truetype/ttsubpix.hpp" />
+		<Unit filename="extern/freetype2/src/type1/t1afm.h" />
+		<Unit filename="extern/freetype2/src/type1/t1afm.hpp" />
+		<Unit filename="extern/freetype2/src/type1/t1driver.h" />
+		<Unit filename="extern/freetype2/src/type1/t1driver.hpp" />
+		<Unit filename="extern/freetype2/src/type1/t1errors.h" />
+		<Unit filename="extern/freetype2/src/type1/t1gload.h" />
+		<Unit filename="extern/freetype2/src/type1/t1gload.hpp" />
+		<Unit filename="extern/freetype2/src/type1/t1load.h" />
+		<Unit filename="extern/freetype2/src/type1/t1load.hpp" />
+		<Unit filename="extern/freetype2/src/type1/t1objs.h" />
+		<Unit filename="extern/freetype2/src/type1/t1objs.hpp" />
+		<Unit filename="extern/freetype2/src/type1/t1parse.h" />
+		<Unit filename="extern/freetype2/src/type1/t1parse.hpp" />
+		<Unit filename="extern/freetype2/src/type1/t1tokens.h" />
+		<Unit filename="extern/freetype2/src/type1/type1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/type42/t42drivr.h" />
+		<Unit filename="extern/freetype2/src/type42/t42drivr.hpp" />
+		<Unit filename="extern/freetype2/src/type42/t42error.h" />
+		<Unit filename="extern/freetype2/src/type42/t42objs.h" />
+		<Unit filename="extern/freetype2/src/type42/t42objs.hpp" />
+		<Unit filename="extern/freetype2/src/type42/t42parse.h" />
+		<Unit filename="extern/freetype2/src/type42/t42parse.hpp" />
+		<Unit filename="extern/freetype2/src/type42/t42types.h" />
+		<Unit filename="extern/freetype2/src/type42/type42.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/winfonts/fnterrs.h" />
+		<Unit filename="extern/freetype2/src/winfonts/winfnt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/freetype2/src/winfonts/winfnt.h" />
+		<Unit filename="extern/ogg/codec.h" />
+		<Unit filename="extern/ogg/config_types.h" />
+		<Unit filename="extern/ogg/libogg/bitwise.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libogg/framing.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/analysis.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/backends.h" />
+		<Unit filename="extern/ogg/libvorbis/bitrate.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/bitrate.h" />
+		<Unit filename="extern/ogg/libvorbis/block.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/books/coupled/res_books_51.h" />
+		<Unit filename="extern/ogg/libvorbis/books/coupled/res_books_stereo.h" />
+		<Unit filename="extern/ogg/libvorbis/books/floor/floor_books.h" />
+		<Unit filename="extern/ogg/libvorbis/books/uncoupled/res_books_uncoupled.h" />
+		<Unit filename="extern/ogg/libvorbis/codebook.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/codebook.h" />
+		<Unit filename="extern/ogg/libvorbis/codec_internal.h" />
+		<Unit filename="extern/ogg/libvorbis/envelope.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/envelope.h" />
+		<Unit filename="extern/ogg/libvorbis/floor0.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/floor1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/highlevel.h" />
+		<Unit filename="extern/ogg/libvorbis/info.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/lookup.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/lookup.h" />
+		<Unit filename="extern/ogg/libvorbis/lookup_data.h" />
+		<Unit filename="extern/ogg/libvorbis/lpc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/lpc.h" />
+		<Unit filename="extern/ogg/libvorbis/lsp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/lsp.h" />
+		<Unit filename="extern/ogg/libvorbis/mapping0.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/masking.h" />
+		<Unit filename="extern/ogg/libvorbis/mdct.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/mdct.h" />
+		<Unit filename="extern/ogg/libvorbis/misc.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/floor_all.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/psych_11.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/psych_16.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/psych_44.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/psych_8.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/residue_16.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/residue_44.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/residue_44p51.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/residue_44u.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/residue_8.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/setup_11.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/setup_16.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/setup_22.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/setup_32.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/setup_44.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/setup_44p51.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/setup_44u.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/setup_8.h" />
+		<Unit filename="extern/ogg/libvorbis/modes/setup_X.h" />
+		<Unit filename="extern/ogg/libvorbis/os.h" />
+		<Unit filename="extern/ogg/libvorbis/psy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/psy.h" />
+		<Unit filename="extern/ogg/libvorbis/registry.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/registry.h" />
+		<Unit filename="extern/ogg/libvorbis/res0.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/scales.h" />
+		<Unit filename="extern/ogg/libvorbis/sharedbook.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/smallft.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/smallft.h" />
+		<Unit filename="extern/ogg/libvorbis/synthesis.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/vorbisfile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/window.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="extern/ogg/libvorbis/window.h" />
+		<Unit filename="extern/ogg/ogg.h" />
+		<Unit filename="extern/ogg/os_types.h" />
+		<Unit filename="extern/ogg/vorbisfile.h" />
 		<Unit filename="scripts/audio/common_sounds.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
@@ -603,1022 +1812,12 @@
 		<Unit filename="shaders/text.vsh">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/al/AL/al.h" />
-		<Unit filename="src/al/AL/alc.h" />
-		<Unit filename="src/al/AL/alext.h" />
-		<Unit filename="src/al/AL/efx-creative.h" />
-		<Unit filename="src/al/AL/efx-presets.h" />
-		<Unit filename="src/al/AL/efx.h" />
-		<Unit filename="src/al/Alc/ALc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/ALu.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/alcConfig.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/alcRing.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/alstring.h" />
-		<Unit filename="src/al/Alc/backends/backend.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/backends/base.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/backends/base.h" />
-		<Unit filename="src/al/Alc/backends/loopback.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/backends/null.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/backends/wave.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/bs2b.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/compat.h" />
-		<Unit filename="src/al/Alc/effects/autowah.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/effects/chorus.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/effects/compressor.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/effects/dedicated.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/effects/distortion.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/effects/echo.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/effects/equalizer.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/effects/flanger.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/effects/modulator.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/effects/null.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/effects/reverb.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/evtqueue.h" />
-		<Unit filename="src/al/Alc/helpers.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/hrtf.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/hrtf.h" />
-		<Unit filename="src/al/Alc/midi/base.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/midi/base.h" />
-		<Unit filename="src/al/Alc/midi/dummy.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/midi/fluidsynth.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/midi/sf2load.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/midi/soft.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/mixer.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/mixer_c.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/mixer_defs.h" />
-		<Unit filename="src/al/Alc/mixer_inc.hpp" />
-		<Unit filename="src/al/Alc/mixer_neon.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/mixer_sse.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/mixer_sse2.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/mixer_sse41.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/panning.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/Alc/vector.h" />
-		<Unit filename="src/al/OpenAL32/alAuxEffectSlot.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/alBuffer.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/alEffect.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/alError.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/alExtension.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/alFilter.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/alFontsound.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/alListener.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/alMidi.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/alPreset.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/alSoundfont.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/alSource.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/alState.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/alThunk.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/OpenAL32/sample_cvt.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/alAuxEffectSlot.h" />
-		<Unit filename="src/al/alBuffer.h" />
-		<Unit filename="src/al/alEffect.h" />
-		<Unit filename="src/al/alError.h" />
-		<Unit filename="src/al/alFilter.h" />
-		<Unit filename="src/al/alListener.h" />
-		<Unit filename="src/al/alMain.h" />
-		<Unit filename="src/al/alMidi.h" />
-		<Unit filename="src/al/alSource.h" />
-		<Unit filename="src/al/alThunk.h" />
-		<Unit filename="src/al/align.h" />
-		<Unit filename="src/al/alu.h" />
-		<Unit filename="src/al/atomic.h" />
-		<Unit filename="src/al/bool.h" />
-		<Unit filename="src/al/bs2b.h" />
-		<Unit filename="src/al/common/atomic.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/common/rwlock.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/common/threads.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/common/uintmap.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/al/config.h" />
-		<Unit filename="src/al/rwlock.h" />
-		<Unit filename="src/al/sample_cvt.h" />
-		<Unit filename="src/al/static_assert.h" />
-		<Unit filename="src/al/threads.h" />
-		<Unit filename="src/al/uintmap.h" />
 		<Unit filename="src/anim_state_control.cpp" />
 		<Unit filename="src/anim_state_control.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/audio.cpp" />
 		<Unit filename="src/audio.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.cpp" />
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btBroadphaseInterface.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btBroadphaseProxy.cpp" />
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btBroadphaseProxy.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btDbvt.cpp" />
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btDbvt.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btDbvtBroadphase.cpp" />
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btDbvtBroadphase.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btDispatcher.cpp" />
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btDispatcher.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btMultiSapBroadphase.cpp" />
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btMultiSapBroadphase.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btOverlappingPairCache.cpp" />
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btOverlappingPairCache.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btOverlappingPairCallback.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btQuantizedBvh.cpp" />
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btQuantizedBvh.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btSimpleBroadphase.cpp" />
-		<Unit filename="src/bullet/BulletCollision/BroadphaseCollision/btSimpleBroadphase.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/SphereTriangleDetector.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/SphereTriangleDetector.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btActivatingCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btActivatingCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btBox2dBox2dCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btBox2dBox2dCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btBoxBoxCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btBoxBoxCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btBoxBoxDetector.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btBoxBoxDetector.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCollisionConfiguration.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCollisionCreateFunc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCollisionDispatcher.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCollisionDispatcher.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCollisionObject.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCollisionObject.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCollisionObjectWrapper.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCollisionWorld.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCollisionWorldImporter.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCollisionWorldImporter.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCompoundCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCompoundCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCompoundCompoundCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btCompoundCompoundCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btConvex2dConvex2dAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btConvex2dConvex2dAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btConvexConcaveCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btConvexConcaveCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btConvexConvexAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btConvexConvexAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btConvexPlaneCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btConvexPlaneCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btEmptyCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btEmptyCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btGhostObject.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btGhostObject.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btHashedSimplePairCache.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btHashedSimplePairCache.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btInternalEdgeUtility.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btInternalEdgeUtility.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btManifoldResult.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btManifoldResult.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btSimulationIslandManager.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btSimulationIslandManager.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btSphereBoxCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btSphereBoxCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btSphereSphereCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btSphereSphereCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btSphereTriangleCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btSphereTriangleCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btUnionFind.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionDispatch/btUnionFind.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btBox2dShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btBox2dShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btBoxShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btBoxShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btBvhTriangleMeshShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btCapsuleShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btCapsuleShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btCollisionMargin.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btCollisionShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btCollisionShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btCompoundShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btCompoundShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConcaveShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConcaveShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConeShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConeShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvex2dShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvex2dShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvexHullShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvexHullShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvexInternalShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvexInternalShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvexPointCloudShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvexPointCloudShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvexPolyhedron.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvexPolyhedron.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvexShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvexShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvexTriangleMeshShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btConvexTriangleMeshShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btCylinderShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btCylinderShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btEmptyShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btEmptyShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btHeightfieldTerrainShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btHeightfieldTerrainShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btMaterial.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btMinkowskiSumShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btMinkowskiSumShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btMultiSphereShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btMultiSphereShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btMultimaterialTriangleMeshShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btMultimaterialTriangleMeshShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btOptimizedBvh.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btOptimizedBvh.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btPolyhedralConvexShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btPolyhedralConvexShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btScaledBvhTriangleMeshShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btScaledBvhTriangleMeshShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btShapeHull.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btShapeHull.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btSphereShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btSphereShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btStaticPlaneShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btStaticPlaneShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btStridingMeshInterface.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btStridingMeshInterface.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTetrahedronShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTetrahedronShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleBuffer.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleBuffer.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleCallback.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleCallback.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleIndexVertexArray.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleIndexVertexMaterialArray.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleIndexVertexMaterialArray.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleInfoMap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleMesh.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleMesh.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleMeshShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleMeshShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btTriangleShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btUniformScalingShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/CollisionShapes/btUniformScalingShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btBoxCollision.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btClipPolygon.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btCompoundFromGimpact.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btContactProcessing.cpp" />
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btContactProcessing.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btGImpactBvh.cpp" />
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btGImpactBvh.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btGImpactCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btGImpactMassUtil.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btGImpactQuantizedBvh.cpp" />
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btGImpactQuantizedBvh.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btGImpactShape.cpp" />
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btGImpactShape.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btGenericPoolAllocator.cpp" />
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btGenericPoolAllocator.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btGeometryOperations.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btQuantization.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btTriangleShapeEx.cpp" />
-		<Unit filename="src/bullet/BulletCollision/Gimpact/btTriangleShapeEx.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_array.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_basic_geometry_operations.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_bitset.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_box_collision.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_box_set.cpp" />
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_box_set.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_clip_polygon.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_contact.cpp" />
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_contact.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_geom_types.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_geometry.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_hash_table.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_linear_math.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_math.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_memory.cpp" />
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_memory.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_radixsort.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_tri_collision.cpp" />
-		<Unit filename="src/bullet/BulletCollision/Gimpact/gim_tri_collision.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btComputeGjkEpaPenetration.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btContinuousConvexCollision.cpp" />
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btContinuousConvexCollision.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btConvexCast.cpp" />
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btConvexCast.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btConvexPenetrationDepthSolver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btDiscreteCollisionDetectorInterface.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btGjkCollisionDescription.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btGjkConvexCast.cpp" />
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btGjkConvexCast.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btGjkEpa2.cpp" />
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btGjkEpa2.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btGjkEpa3.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btGjkEpaPenetrationDepthSolver.cpp" />
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btGjkEpaPenetrationDepthSolver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btGjkPairDetector.cpp" />
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btGjkPairDetector.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btManifoldPoint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btMinkowskiPenetrationDepthSolver.cpp" />
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btMinkowskiPenetrationDepthSolver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btMprPenetration.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btPersistentManifold.cpp" />
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btPersistentManifold.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btPointCollector.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btPolyhedralContactClipping.cpp" />
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btPolyhedralContactClipping.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.cpp" />
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btSimplexSolverInterface.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.cpp" />
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.cpp" />
-		<Unit filename="src/bullet/BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Character/btCharacterControllerInterface.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Character/btKinematicCharacterController.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/Character/btKinematicCharacterController.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btConeTwistConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btConeTwistConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btConstraintSolver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btContactConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btContactConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btContactSolverInfo.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btFixedConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btFixedConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btGearConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btGearConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btGeneric6DofSpring2Constraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btGeneric6DofSpring2Constraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btGeneric6DofSpringConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btGeneric6DofSpringConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btHinge2Constraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btHinge2Constraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btHingeConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btHingeConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btJacobianEntry.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btNNCGConstraintSolver.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btNNCGConstraintSolver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btPoint2PointConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btSliderConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btSliderConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btSolve2LinearConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btSolve2LinearConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btSolverBody.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btSolverConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btUniversalConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/ConstraintSolver/btUniversalConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Dynamics/btActionInterface.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Dynamics/btDiscreteDynamicsWorld.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Dynamics/btDynamicsWorld.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Dynamics/btRigidBody.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/Dynamics/btRigidBody.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Dynamics/btSimpleDynamicsWorld.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/Dynamics/btSimpleDynamicsWorld.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBody.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBody.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyConstraintSolver.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyConstraintSolver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyDynamicsWorld.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyJointMotor.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyJointMotor.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyLink.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyLinkCollider.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyPoint2Point.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodyPoint2Point.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Featherstone/btMultiBodySolverConstraint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/MLCPSolvers/btDantzigLCP.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/MLCPSolvers/btDantzigLCP.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/MLCPSolvers/btDantzigSolver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/MLCPSolvers/btLemkeAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/MLCPSolvers/btLemkeAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/MLCPSolvers/btLemkeSolver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/MLCPSolvers/btMLCPSolver.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/MLCPSolvers/btMLCPSolver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/MLCPSolvers/btMLCPSolverInterface.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/MLCPSolvers/btPATHSolver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/MLCPSolvers/btSolveProjectedGaussSeidel.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Vehicle/btRaycastVehicle.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/Vehicle/btRaycastVehicle.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Vehicle/btVehicleRaycaster.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletDynamics/Vehicle/btWheelInfo.cpp" />
-		<Unit filename="src/bullet/BulletDynamics/Vehicle/btWheelInfo.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletSoftBody/btDefaultSoftBodySolver.cpp" />
-		<Unit filename="src/bullet/BulletSoftBody/btDefaultSoftBodySolver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletSoftBody/btSoftBody.cpp" />
-		<Unit filename="src/bullet/BulletSoftBody/btSoftBody.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletSoftBody/btSoftBodyConcaveCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletSoftBody/btSoftBodyConcaveCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletSoftBody/btSoftBodyData.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletSoftBody/btSoftBodyHelpers.cpp" />
-		<Unit filename="src/bullet/BulletSoftBody/btSoftBodyHelpers.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletSoftBody/btSoftBodyInternals.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.cpp" />
-		<Unit filename="src/bullet/BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletSoftBody/btSoftBodySolverVertexBuffer.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletSoftBody/btSoftBodySolvers.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletSoftBody/btSoftRigidCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletSoftBody/btSoftRigidCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletSoftBody/btSoftRigidDynamicsWorld.cpp" />
-		<Unit filename="src/bullet/BulletSoftBody/btSoftRigidDynamicsWorld.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletSoftBody/btSoftSoftCollisionAlgorithm.cpp" />
-		<Unit filename="src/bullet/BulletSoftBody/btSoftSoftCollisionAlgorithm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/BulletSoftBody/btSparseSDF.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btAabbUtil2.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btAlignedAllocator.cpp" />
-		<Unit filename="src/bullet/LinearMath/btAlignedAllocator.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btAlignedObjectArray.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btConvexHull.cpp" />
-		<Unit filename="src/bullet/LinearMath/btConvexHull.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btConvexHullComputer.cpp" />
-		<Unit filename="src/bullet/LinearMath/btConvexHullComputer.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btCpuFeatureUtility.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btDefaultMotionState.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btGeometryUtil.cpp" />
-		<Unit filename="src/bullet/LinearMath/btGeometryUtil.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btGrahamScan2dConvexHull.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btHashMap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btIDebugDraw.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btList.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btMatrix3x3.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btMatrixX.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btMinMax.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btMotionState.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btPolarDecomposition.cpp" />
-		<Unit filename="src/bullet/LinearMath/btPolarDecomposition.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btPoolAllocator.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btQuadWord.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btQuaternion.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btQuickprof.cpp" />
-		<Unit filename="src/bullet/LinearMath/btQuickprof.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btRandom.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btScalar.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btSerializer.cpp" />
-		<Unit filename="src/bullet/LinearMath/btSerializer.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btSpatialAlgebra.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btStackAlloc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btTransform.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btTransformUtil.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/LinearMath/btVector3.cpp" />
-		<Unit filename="src/bullet/LinearMath/btVector3.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/btBulletCollisionCommon.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/bullet/btBulletDynamicsCommon.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/character_controller.cpp" />
@@ -1692,1311 +1891,6 @@
 		<Unit filename="src/entity.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="src/freetype2/include/config/ftconfig.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/config/ftheader.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/config/ftmodule.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/config/ftoption.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/config/ftstdlib.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/freetype.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ft2build.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftadvanc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftautoh.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftbbox.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftbdf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftbitmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftbzip2.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftcache.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftcffdrv.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftchapters.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftcid.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/fterrdef.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/fterrors.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftgasp.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftglyph.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftgxval.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftgzip.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftimage.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftincrem.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftlcdfil.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftlist.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftlzw.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftmac.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftmm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftmodapi.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftmoderr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftotval.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftoutln.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftpfr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftrender.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftsizes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftsnames.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftstroke.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftsynth.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftsystem.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/fttrigon.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftttdrv.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/fttypes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftwinfnt.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ftxf86.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/autohint.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/ftcalc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/ftdebug.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/ftdriver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/ftgloadr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/ftmemory.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/ftobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/ftpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/ftrfork.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/ftserv.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/ftstream.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/fttrace.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/ftvalid.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/internal.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/psaux.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/pshints.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svbdf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svcid.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svgldict.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svgxval.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svkern.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svmm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svotval.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svpfr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svpostnm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svprop.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svpscmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svpsinfo.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svsfnt.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svttcmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svtteng.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svttglyf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svwinfnt.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/services/svxf86nm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/sfnt.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/t1types.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/internal/tttypes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/t1tables.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ttnameid.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/tttables.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/tttags.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/include/ttunpat.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afangles.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afangles.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afblue.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afblue.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afcjk.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afcjk.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afcover.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afdummy.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afdummy.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/aferrors.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afglobal.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afglobal.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afhints.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afhints.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afindic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afindic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/aflatin.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/aflatin.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/aflatin2.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/aflatin2.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afloader.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afloader.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afmodule.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afmodule.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afranges.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afranges.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afscript.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afstyles.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/aftypes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afwarp.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afwarp.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/afwrtsys.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/autofit.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/hbshim.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/autofit/hbshim.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/basepic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/basepic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftadvanc.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftapi.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftbase.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftbase.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftbbox.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftbdf.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftbitmap.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftcalc.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftcid.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftdbgmem.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftdebug.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftfstype.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftgasp.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftgloadr.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftglyph.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftgxval.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftinit.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftlcdfil.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftmac.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftmm.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftotval.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftoutln.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftpatent.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftpfr.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftrfork.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftsnames.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftstream.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftstroke.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftsynth.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftsystem.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/fttrigon.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/fttype1.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftutil.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftwinfnt.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/ftxf86.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/md5.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/base/md5.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/bdf/bdf.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/bdf/bdf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/bdf/bdfdrivr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/bdf/bdfdrivr.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/bdf/bdferror.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/bdf/bdflib.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/bzip2/ftbzip2.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcache.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcbasic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftccache.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftccache.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftccback.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftccmap.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcerror.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcglyph.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcglyph.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcimage.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcimage.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcmanag.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcmanag.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcmru.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcmru.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcsbits.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cache/ftcsbits.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2arrst.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2arrst.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2blues.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2blues.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2error.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2error.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2fixed.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2font.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2font.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2ft.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2ft.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2glue.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2hints.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2hints.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2intrp.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2intrp.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2read.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2read.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2stack.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2stack.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cf2types.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cff.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffcmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffcmap.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffdrivr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffdrivr.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cfferrs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffgload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffgload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffparse.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffparse.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cffpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cfftoken.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cff/cfftypes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/ciderrs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidgload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidgload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidparse.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidparse.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidriver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidriver.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/cidtoken.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/cid/type1cid.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvalid.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvalid.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvbsln.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvcommn.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvcommn.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxverror.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvfeat.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvfeat.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvjust.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvkern.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvlcar.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmod.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmod.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmort.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmort.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmort0.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmort1.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmort2.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmort4.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmort5.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmorx.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmorx.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmorx0.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmorx1.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmorx2.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmorx4.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvmorx5.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvopbd.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvprop.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gxvalid/gxvtrak.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gzip/ftgzip.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/gzip/inffixed.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/lzw/ftlzw.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/lzw/ftzopen.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/lzw/ftzopen.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvalid.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvalid.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvbase.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvcommn.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvcommn.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otverror.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvgdef.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvgpos.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvgpos.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvgsub.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvjstf.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvmath.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvmod.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/otvalid/otvmod.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcf.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcfdrivr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcfdrivr.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcferror.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcfread.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcfread.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcfutil.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pcf/pcfutil.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfr.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrcmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrcmap.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrdrivr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrdrivr.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrerror.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrgload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrgload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrsbit.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrsbit.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pfr/pfrtypes.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/afmparse.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/afmparse.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psaux.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psauxerr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psauxmod.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psauxmod.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psconv.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psconv.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/psobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/t1cmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/t1cmap.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/t1decode.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psaux/t1decode.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshalgo.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshalgo.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshglob.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshglob.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshinter.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshmod.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshmod.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshnterr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshrec.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/pshinter/pshrec.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psnames/psmodule.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psnames/psmodule.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psnames/psnamerr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psnames/psnames.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psnames/pspic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psnames/pspic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/psnames/pstables.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/ftmisc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/ftraster.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/ftraster.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/ftrend1.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/ftrend1.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/raster.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/rasterrs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/rastpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/raster/rastpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/pngshim.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/pngshim.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sfdriver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sfdriver.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sferrors.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sfnt.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sfntpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sfntpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sfobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/sfobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttbdf.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttbdf.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttcmap.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttcmap.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttcmapc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttkern.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttkern.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttmtx.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttmtx.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttpost.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttpost.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttsbit.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/sfnt/ttsbit.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftgrays.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftgrays.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftsmerrs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftsmooth.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftsmooth.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftspic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/ftspic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/smooth/smooth.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/truetype.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttdriver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttdriver.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/tterrors.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttgload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttgload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttgxvar.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttgxvar.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttinterp.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttinterp.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttobjs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttobjs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttpic.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttpic.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttpload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttpload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttsubpix.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/truetype/ttsubpix.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1afm.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1afm.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1driver.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1driver.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1errors.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1gload.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1gload.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1load.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1load.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1objs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1objs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1parse.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1parse.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/t1tokens.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type1/type1.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42drivr.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42drivr.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42error.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42objs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42objs.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42parse.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42parse.hpp">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/t42types.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/type42/type42.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/winfonts/fnterrs.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/freetype2/src/winfonts/winfnt.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/freetype2/src/winfonts/winfnt.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
 		<Unit filename="src/game.cpp" />
 		<Unit filename="src/game.h">
 			<Option target="&lt;{~None~}&gt;" />
@@ -3018,216 +1912,6 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/mesh.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/codec.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/config_types.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libogg/bitwise.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libogg/framing.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/analysis.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/backends.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/bitrate.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/bitrate.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/block.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/books/coupled/res_books_51.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/books/coupled/res_books_stereo.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/books/floor/floor_books.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/books/uncoupled/res_books_uncoupled.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/codebook.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/codebook.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/codec_internal.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/envelope.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/envelope.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/floor0.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/floor1.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/highlevel.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/info.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/lookup.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/lookup.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/lookup_data.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/lpc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/lpc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/lsp.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/lsp.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/mapping0.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/masking.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/mdct.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/mdct.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/misc.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/floor_all.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/psych_11.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/psych_16.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/psych_44.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/psych_8.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/residue_16.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/residue_44.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/residue_44p51.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/residue_44u.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/residue_8.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_11.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_16.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_22.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_32.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_44.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_44p51.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_44u.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_8.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/modes/setup_X.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/os.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/psy.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/psy.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/registry.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/registry.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/res0.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/scales.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/sharedbook.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/smallft.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/smallft.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/synthesis.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/vorbisfile.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/window.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="src/ogg/libvorbis/window.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/ogg.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/os_types.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
-		<Unit filename="src/ogg/vorbisfile.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="src/physics.h" />

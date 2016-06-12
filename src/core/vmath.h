@@ -141,6 +141,7 @@ void vec4_GetQuaternionRotation(float q[4], float v0[3], float v1[3]);
 void vec4_ClampQuaternionRotation(float q[4], float cos_abs);
 void vec4_GetRotationOperators(float t1[4], float t2[4], const float v[3], float ang);
 void vec4_slerp(float ret[4], float q1[4], float q2[4], float t);
+void vec4_slerp_to(float ret[4], float q1[4], float q2[4], float max_step_rad);
 void vec4_SetZXYRotations(float v[4], float rot[3]);
 
 
