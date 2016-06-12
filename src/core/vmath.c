@@ -8,7 +8,7 @@
 spline_p Spline_Create(uint32_t base_points_count)
 {
     spline_p ret = NULL;
-    
+
     if(base_points_count >= 2)
     {
         ret = (spline_p)malloc(sizeof(spline_t));
@@ -19,7 +19,7 @@ spline_p Spline_Create(uint32_t base_points_count)
         ret->c = (float*)malloc(base_points_count * sizeof(float));
         ret->d = (float*)malloc(base_points_count * sizeof(float));
     }
-    
+
     return ret;
 }
 
@@ -87,7 +87,7 @@ void Spline_BuildLine(spline_p spline)
 {
     uint32_t i;
     const float h = 1.0f;
-    
+
     for(i = 0; i < spline->base_points_count - 1; i++)
     {
         spline->a[i] = 0.0f;
@@ -113,18 +113,18 @@ float Spline_Get(spline_p spline, float t)
     {
         float x = t - i;
         float summ = spline->d[i];
-        
+
         t = x;
         summ += spline->c[i] * t;
         t *= x;
         summ += spline->b[i] * t;
         t *= x;
         summ += spline->a[i] * t;
-        
+
         return summ;
     }
 }
-   
+
 
 // Fast reciprocal square root (Quake 3 game code)
 __inline float RSqrt(float number)
@@ -287,7 +287,7 @@ void vec4_GetEilerOrientationTransform(float R[4], float ang[3])
 void vec4_GetQuaternionRotation(float q[4], float v0[3], float v1[3])
 {
     float t;
-    
+
     vec3_cross(q, v0, v1);
     q[3] = vec3_dot(v0, v1);
     q[3] += sqrtf(vec3_sqabs(v0) * vec3_sqabs(v1));
@@ -394,7 +394,7 @@ void vec4_GetRotationOperators(float t1[4], float t2[4], const float v[3], float
     t1[1] /= module;
     t1[2] /= module;
     t1[3] /= module;
-    
+
     t2[3] = t1[3];
     t2[0] = -t1[0];
     t2[1] = -t1[1];
@@ -406,18 +406,18 @@ void vec4_slerp(float ret[4], float q1[4], float q2[4], float t)
 {
     float cos_fi, sin_fi, fi, k1, k2, sign;
     cos_fi = q1[3] * q2[3] + q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2];
-    sign = (cos_fi < 0.0)?(-1.0):(1.0);
+    sign = (cos_fi < 0.0f) ? (-1.0f) : (1.0f);
     fi = acosf(sign * cos_fi);
     sin_fi = sinf(fi);
 
-    if((fabs(sin_fi) > 0.00001) && (t > 0.0001))
+    if((fabs(sin_fi) > 0.00001f) && (t > 0.0001f))
     {
-        k1 = sinf(fi * (1.0 - t)) / sin_fi;
+        k1 = sinf(fi * (1.0f - t)) / sin_fi;
         k2 = sinf(fi * t * sign) / sin_fi;
     }
     else
     {
-        k1 = 1.0 - t;
+        k1 = 1.0f - t;
         k2 = t;
     }
 
@@ -426,11 +426,11 @@ void vec4_slerp(float ret[4], float q1[4], float q2[4], float t)
     ret[2] = k1 * q1[2] + k2 * q2[2];
     ret[3] = k1 * q1[3] + k2 * q2[3];
 
-    fi = vec4_abs(ret);
-    ret[0] /= fi;
-    ret[1] /= fi;
-    ret[2] /= fi;
-    ret[3] /= fi;
+    fi = 1.0f / vec4_abs(ret);
+    ret[0] *= fi;
+    ret[1] *= fi;
+    ret[2] *= fi;
+    ret[3] *= fi;
 }
 
 
@@ -523,11 +523,11 @@ void Mat4_Scale(float mat[16], float x, float y, float z)
     mat[ 0] *= x;
     mat[ 1] *= x;
     mat[ 2] *= x;
-    
+
     mat[ 4] *= y;
     mat[ 5] *= y;
     mat[ 6] *= y;
-    
+
     mat[ 8] *= z;
     mat[ 9] *= z;
     mat[ 10] *= z;
@@ -608,7 +608,7 @@ void Mat4_RotateAxis(float mat[16], float axis[3], float ang)
         float sin_t2 = sinf(t);
         float cos_t2 = cosf(t);
         float R[4], Rt[4], *v, buf[4];
-        
+
         R[0] = axis[0] * sin_t2;
         R[1] = axis[1] * sin_t2;
         R[2] = axis[2] * sin_t2;
@@ -619,12 +619,12 @@ void Mat4_RotateAxis(float mat[16], float axis[3], float ang)
         vec4_mul(buf, R, v);
         vec4_mul(v, buf, Rt);
         mat[0 + 3] = 0.0f;
-        
+
         v = mat + 4;
         vec4_mul(buf, R, v);
         vec4_mul(v, buf, Rt);
         mat[4 + 3] = 0.0f;
-        
+
         v = mat + 8;
         vec4_mul(buf, R, v);
         vec4_mul(v, buf, Rt);
@@ -767,7 +767,7 @@ int Mat4_inv(float mat[16], float inv[16])
             mat[i * 4 + j] = 0.0f;
         }
     }
-    
+
     return 1;
 }
 
@@ -783,22 +783,22 @@ void Mat4_Mat4_mul(float result[16], const float src1[16], const float src2[16])
     t_res[0 * 4 + 1] = src1[0 * 4 + 1] * src2[0 * 4 + 0] + src1[1 * 4 + 1] * src2[0 * 4 + 1] + src1[2 * 4 + 1] * src2[0 * 4 + 2] + src1[3 * 4 + 1] * src2[0 * 4 + 3];
     t_res[0 * 4 + 2] = src1[0 * 4 + 2] * src2[0 * 4 + 0] + src1[1 * 4 + 2] * src2[0 * 4 + 1] + src1[2 * 4 + 2] * src2[0 * 4 + 2] + src1[3 * 4 + 2] * src2[0 * 4 + 3];
     t_res[0 * 4 + 3] = src1[0 * 4 + 3] * src2[0 * 4 + 0] + src1[1 * 4 + 3] * src2[0 * 4 + 1] + src1[2 * 4 + 3] * src2[0 * 4 + 2] + src1[3 * 4 + 3] * src2[0 * 4 + 3];
-    
+
     t_res[1 * 4 + 0] = src1[0 * 4 + 0] * src2[1 * 4 + 0] + src1[1 * 4 + 0] * src2[1 * 4 + 1] + src1[2 * 4 + 0] * src2[1 * 4 + 2] + src1[3 * 4 + 0] * src2[1 * 4 + 3];
     t_res[1 * 4 + 1] = src1[0 * 4 + 1] * src2[1 * 4 + 0] + src1[1 * 4 + 1] * src2[1 * 4 + 1] + src1[2 * 4 + 1] * src2[1 * 4 + 2] + src1[3 * 4 + 1] * src2[1 * 4 + 3];
     t_res[1 * 4 + 2] = src1[0 * 4 + 2] * src2[1 * 4 + 0] + src1[1 * 4 + 2] * src2[1 * 4 + 1] + src1[2 * 4 + 2] * src2[1 * 4 + 2] + src1[3 * 4 + 2] * src2[1 * 4 + 3];
     t_res[1 * 4 + 3] = src1[0 * 4 + 3] * src2[1 * 4 + 0] + src1[1 * 4 + 3] * src2[1 * 4 + 1] + src1[2 * 4 + 3] * src2[1 * 4 + 2] + src1[3 * 4 + 3] * src2[1 * 4 + 3];
-    
+
     t_res[2 * 4 + 0] = src1[0 * 4 + 0] * src2[2 * 4 + 0] + src1[1 * 4 + 0] * src2[2 * 4 + 1] + src1[2 * 4 + 0] * src2[2 * 4 + 2] + src1[3 * 4 + 0] * src2[2 * 4 + 3];
     t_res[2 * 4 + 1] = src1[0 * 4 + 1] * src2[2 * 4 + 0] + src1[1 * 4 + 1] * src2[2 * 4 + 1] + src1[2 * 4 + 1] * src2[2 * 4 + 2] + src1[3 * 4 + 1] * src2[2 * 4 + 3];
     t_res[2 * 4 + 2] = src1[0 * 4 + 2] * src2[2 * 4 + 0] + src1[1 * 4 + 2] * src2[2 * 4 + 1] + src1[2 * 4 + 2] * src2[2 * 4 + 2] + src1[3 * 4 + 2] * src2[2 * 4 + 3];
     t_res[2 * 4 + 3] = src1[0 * 4 + 3] * src2[2 * 4 + 0] + src1[1 * 4 + 3] * src2[2 * 4 + 1] + src1[2 * 4 + 3] * src2[2 * 4 + 2] + src1[3 * 4 + 3] * src2[2 * 4 + 3];
-    
+
     t_res[3 * 4 + 0] = src1[0 * 4 + 0] * src2[3 * 4 + 0] + src1[1 * 4 + 0] * src2[3 * 4 + 1] + src1[2 * 4 + 0] * src2[3 * 4 + 2] + src1[3 * 4 + 0] * src2[3 * 4 + 3];
     t_res[3 * 4 + 1] = src1[0 * 4 + 1] * src2[3 * 4 + 0] + src1[1 * 4 + 1] * src2[3 * 4 + 1] + src1[2 * 4 + 1] * src2[3 * 4 + 2] + src1[3 * 4 + 1] * src2[3 * 4 + 3];
     t_res[3 * 4 + 2] = src1[0 * 4 + 2] * src2[3 * 4 + 0] + src1[1 * 4 + 2] * src2[3 * 4 + 1] + src1[2 * 4 + 2] * src2[3 * 4 + 2] + src1[3 * 4 + 2] * src2[3 * 4 + 3];
     t_res[3 * 4 + 3] = src1[0 * 4 + 3] * src2[3 * 4 + 0] + src1[1 * 4 + 3] * src2[3 * 4 + 1] + src1[2 * 4 + 3] * src2[3 * 4 + 2] + src1[3 * 4 + 3] * src2[3 * 4 + 3];
-    
+
     memcpy(result, t_res, sizeof(t_res));
 }
 

@@ -9,14 +9,14 @@ extern "C" {
 }
 
 
-#include "bullet/btBulletCollisionCommon.h"
-#include "bullet/btBulletDynamicsCommon.h"
-#include "bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
-#include "bullet/BulletCollision/CollisionShapes/btCollisionShape.h"
-#include "bullet/BulletDynamics/ConstraintSolver/btTypedConstraint.h"
-#include "bullet/BulletCollision/CollisionDispatch/btGhostObject.h"
-#include "bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
-#include "bullet/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
+#include <BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <BulletDynamics/ConstraintSolver/btTypedConstraint.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
+#include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 
 #include "core/gl_util.h"
 #include "core/gl_font.h"

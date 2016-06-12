@@ -10,8 +10,6 @@ extern "C" {
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
 }
 
 #include "core/gl_text.h"

@@ -50,6 +50,7 @@ typedef struct ss_bone_tag_s
     float                   offset[3];                                          // model position offset
 
     float                   qrotate[4];                                         // quaternion rotation
+    float                   qcurrent_mod[4];
     float                   transform[16]      __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for stack usage
     float                   full_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
 
@@ -70,7 +71,7 @@ typedef struct ss_animation_s
 
     uint16_t                    anim_frame_flags;                               // base animation control flags
     uint16_t                    anim_ext_flags;                                 // additional animation control flags
-    
+
     uint16_t                    targeting_bone;
     uint16_t                    targeting_base;
     float                       bone_direction[3];

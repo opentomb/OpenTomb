@@ -69,7 +69,7 @@ float    Spline_Get(spline_p spline, float t);
                    (tmp)[0] = (x)[1]*(y)[2] - (x)[2]*(y)[1]; \
                    (tmp)[1] = (x)[2]*(y)[0] - (x)[0]*(y)[2]; \
                    (tmp)[2] = (x)[0]*(y)[1] - (x)[1]*(y)[0]; \
-                   vec3_copy(res, tmp)} 
+                   vec3_copy(res, tmp)}
 
 #define vec3_interpolate_macro(res, x, y, lerp, t) {\
                    (res)[0] = (x)[0] * (t) + (y)[0] * (lerp);\
@@ -107,6 +107,7 @@ void vec3_RotateZ(float res[3], float src[3], float ang);
 
 #define vec4_set_one(x) {(x)[0] = 1.0; (x)[1] = 1.0; (x)[2] = 1.0; (x)[3] = 1.0;}
 #define vec4_set_zero(x) {(x)[0] = 0.0; (x)[1] = 0.0; (x)[2] = 0.0; (x)[3] = 0.0;}
+#define vec4_set_zero_angle(x) {(x)[0] = 0.0; (x)[1] = 0.0; (x)[2] = 0.0; (x)[3] = 1.0;}
 #define vec4_copy(x, y) {(x)[0] = (y)[0]; (x)[1] = (y)[1]; (x)[2] = (y)[2]; (x)[3] = (y)[3];}
 #define vec4_copy_inv(x, y) {(x)[0] =-(y)[0]; (x)[1] =-(y)[1]; (x)[2] =-(y)[2]; (x)[3] =-(y)[3];}
 #define vec4_add(r, x, y) {(r)[0] = (x)[0] + (y)[0]; (r)[1] = (x)[1] + (y)[1]; (r)[2] = (x)[2] + (y)[2]; (r)[3] = (x)[3] + (y)[3];}
@@ -121,14 +122,14 @@ void vec3_RotateZ(float res[3], float src[3], float ang);
                    (res)[0] = (x)[3]*(y)[0] + (x)[0]*(y)[3] + (x)[1]*(y)[2] - (x)[2]*(y)[1]; \
                    (res)[1] = (x)[3]*(y)[1] + (x)[1]*(y)[3] + (x)[2]*(y)[0] - (x)[0]*(y)[2]; \
                    (res)[2] = (x)[3]*(y)[2] + (x)[2]*(y)[3] + (x)[0]*(y)[1] - (x)[1]*(y)[0]; \
-                   (res)[3] = (x)[3]*(y)[3] - (x)[0]*(y)[0] - (x)[1]*(y)[1] - (x)[2]*(y)[2];} 
+                   (res)[3] = (x)[3]*(y)[3] - (x)[0]*(y)[0] - (x)[1]*(y)[1] - (x)[2]*(y)[2];}
 
 #define vec4_mul_safe(res, x, y, tmp) {\
                    (tmp)[0] = (x)[3]*(y)[0] + (x)[0]*(y)[3] + (x)[1]*(y)[2] - (x)[2]*(y)[1]; \
                    (tmp)[1] = (x)[3]*(y)[1] + (x)[1]*(y)[3] + (x)[2]*(y)[0] - (x)[0]*(y)[2]; \
                    (tmp)[2] = (x)[3]*(y)[2] + (x)[2]*(y)[3] + (x)[0]*(y)[1] - (x)[1]*(y)[0]; \
                    (tmp)[3] = (x)[3]*(y)[3] - (x)[0]*(y)[0] - (x)[1]*(y)[1] - (x)[2]*(y)[2]; \
-                   vec4_copy(res, tmp)} 
+                   vec4_copy(res, tmp)}
 
 #define vec4_dot(x, y) ((x)[0]*(y)[0] + (x)[1]*(y)[1] + (x)[2]*(y)[2] + (x)[3]*(y)[3])
 

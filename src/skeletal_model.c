@@ -328,7 +328,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     bf->animations.targeting_limit[3] =-1.0f;
     bf->animations.targeting_bone = 0x00;
     bf->animations.targeting_base = 0x00;
-            
+
     bf->animations.next = NULL;
     bf->animations.onFrame = NULL;
     bf->animations.onEndFrame = NULL;
@@ -349,6 +349,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
 
         vec3_copy(bf->bone_tags[i].offset, model->mesh_tree[i].offset);
         vec4_set_zero(bf->bone_tags[i].qrotate);
+        vec4_set_zero_angle(bf->bone_tags[i].qcurrent_mod);
         Mat4_E_macro(bf->bone_tags[i].transform);
         Mat4_E_macro(bf->bone_tags[i].full_transform);
 
@@ -474,7 +475,7 @@ int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_anim
         Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
     }
     vec3_sub(target_dir, target_local, b_tag->transform + 12);
-    
+
     if(ss_anim->targeting_base == 0)
     {
         Mat4_vec3_rot_macro(limit_dir, b_tag->transform, ss_anim->targeting_limit);
@@ -483,13 +484,13 @@ int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_anim
     {
         vec3_copy(limit_dir, ss_anim->targeting_limit);
     }
-    
-    if((ss_anim->targeting_limit[3] == -1.0f) || 
+
+    if((ss_anim->targeting_limit[3] == -1.0f) ||
        (vec3_dot(limit_dir, target_dir) > ss_anim->targeting_limit[3]))
     {
         return 1;
     }
-    
+
     return 0;
 }
 
@@ -505,27 +506,16 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animati
         Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
     }
     vec3_sub(target_dir, target_local, b_tag->transform + 12);
-    
+
     if(ss_anim->targeting_base == 0)
     {
         Mat4_vec3_rot_macro(bone_dir, b_tag->transform, ss_anim->bone_direction);
-        //Mat4_vec3_rot_macro(limit_dir, b_tag->transform, ss_anim->targeting_limit);
     }
     else
     {
         vec3_copy(bone_dir, ss_anim->bone_direction);
-        //vec3_copy(limit_dir, ss_anim->targeting_limit);
     }
-    
-    /*if(ss_anim->targeting_limit[3] >-1.0f)
-    {
-        if(vec3_dot(limit_dir, target_dir) < ss_anim->targeting_limit[3])
-        {
-            return;
-        }
-    }*/
-    
-    
+
     vec4_GetQuaternionRotation(q, bone_dir, target_dir);
 
     Mat4_E(tr);

@@ -5,16 +5,16 @@
 #include <math.h>
 
 extern "C" {
-#include "al/AL/al.h"
-#include "al/AL/alc.h"
-#include "al/AL/alext.h"
-#include "al/AL/efx.h"
-#include "al/AL/efx-presets.h"
+#include <AL/al.h>
+#include <AL/alc.h>
+#include <AL/alext.h>
+#include <AL/efx.h>
+#include <AL/efx-presets.h>
 
-#include "ogg/codec.h"
-#include "ogg/ogg.h"
-#include "ogg/os_types.h"
-#include "ogg/vorbisfile.h"
+#include <codec.h>
+#include <ogg.h>
+#include <os_types.h>
+#include <vorbisfile.h>
 }
 
 #include "core/system.h"
