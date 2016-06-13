@@ -1001,7 +1001,7 @@ void Character_LookAt(struct entity_s *ent, float target[3])
     ent->bf->animations.targeting_limit[0] = 0.0f;
     ent->bf->animations.targeting_limit[1] = 1.0f;
     ent->bf->animations.targeting_limit[2] = 0.0f;
-    ent->bf->animations.targeting_limit[3] = 0.774f;
+    ent->bf->animations.targeting_limit[3] = 0.273f;
 
     if(SSBoneFrame_CheckTargetBoneLimit(ent->bf, &ent->bf->animations))
     {
@@ -2305,7 +2305,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
             ss_anim->targeting_limit[0] = 0.0f;
             ss_anim->targeting_limit[1] = 1.0f;
             ss_anim->targeting_limit[2] = 0.0f;
-            ss_anim->targeting_limit[3] = 0.782f;
+            ss_anim->targeting_limit[3] = 0.224f;
 
             if(ss_anim->type == ANIM_TYPE_WEAPON_LH)
             {

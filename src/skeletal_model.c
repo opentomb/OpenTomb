@@ -490,7 +490,7 @@ void SSBoneFrame_RotateBone(struct ss_bone_frame_s *bf, const float q_rotate[4],
 int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
 {
     ss_bone_tag_p b_tag = b_tag = bf->bone_tags + ss_anim->targeting_bone;
-    float target_dir[3], target_local[3], limit_dir[3];
+    float target_dir[3], target_local[3], limit_dir[3], t;
 
     Mat4_vec3_mul_inv(target_local, bf->transform, ss_anim->target);
     if(b_tag->parent)
@@ -498,15 +498,8 @@ int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_anim
         Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
     }
     vec3_sub(target_dir, target_local, b_tag->transform + 12);
-
-    if(ss_anim->targeting_base == 0)
-    {
-        Mat4_vec3_rot_macro(limit_dir, b_tag->transform, ss_anim->targeting_limit);
-    }
-    else
-    {
-        vec3_copy(limit_dir, ss_anim->targeting_limit);
-    }
+    vec3_norm(target_dir, t);
+    vec3_copy(limit_dir, ss_anim->targeting_limit);
 
     if((ss_anim->targeting_limit[3] == -1.0f) ||
        (vec3_dot(limit_dir, target_dir) > ss_anim->targeting_limit[3]))
@@ -543,9 +536,7 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animati
         }
 
         vec4_GetQuaternionRotation(q, bone_dir, target_dir);
-        
         vec4_slerp_to(clamped_q, ss_anim->current_mod, q, engine_frame_time * M_PI / 1.3f);
-
         vec4_copy(ss_anim->current_mod, clamped_q);
         SSBoneFrame_RotateBone(bf, ss_anim->current_mod, ss_anim->targeting_bone);
     }

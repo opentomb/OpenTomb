@@ -442,17 +442,17 @@ void vec4_slerp_to(float ret[4], float q1[4], float q2[4], float max_step_rad)
     sign = (cos_fi < 0.0f) ? (-1.0f) : (1.0f);
     fi = acosf(sign * cos_fi);
     sin_fi = sinf(fi);
-    
+
     t = fabs(fi);
-    if((t > max_step_rad) && (t > 0.00001f))
+    if(t > max_step_rad)
     {
-        t = max_step_rad / fabs(fi);
+        t = max_step_rad / t;
     }
     else
     {
         t = 1.0f;
     }
-    
+
     if((fabs(sin_fi) > 0.00001f) && (t > 0.0001f) && (t < 1.0f))
     {
         k1 = sinf(fi * (1.0f - t)) / sin_fi;
