@@ -286,10 +286,12 @@ void Con_Filter(char *text)
 {
     if(text != NULL)
     {
-        while(*text != '\0')
+        uint8_t *utf8 = (uint8_t*)text;
+        uint32_t utf32;
+        while(*utf8)
         {
-            Con_Edit(*text);
-            text++;
+            utf8 = utf8_to_utf32(utf8, &utf32);
+            Con_Edit(utf32);
         }
     }
 }
@@ -376,36 +378,23 @@ void Con_Edit(int key)
         case SDLK_BACKSPACE:
             if(con_base.cursor_pos > 0)
             {
-                for(int16_t i = con_base.cursor_pos; i < oldLength ; i++)
-                {
-                    con_base.line_text[0][i-1] = con_base.line_text[0][i];
-                }
-                con_base.line_text[0][oldLength-1] = 0;
-                con_base.line_text[0][oldLength] = 0;
                 con_base.cursor_pos--;
+                utf8_delete_char((uint8_t*)con_base.line_text[0], con_base.cursor_pos);
             }
             break;
 
         case SDLK_DELETE:
             if(/*(con_base.cursor_pos > 0) && */(con_base.cursor_pos < oldLength))
             {
-                for(int16_t i = con_base.cursor_pos; i < oldLength - 1; i++)
-                {
-                    con_base.line_text[0][i] = con_base.line_text[0][i+1];
-                }
-                con_base.line_text[0][oldLength-1] = 0;
+                utf8_delete_char((uint8_t*)con_base.line_text[0], con_base.cursor_pos);
             }
             break;
 
         default:
             if((oldLength < con_base.line_size-1) && (key >= SDLK_SPACE))
             {
-                for(int16_t i = oldLength; i > con_base.cursor_pos; i--)
-                {
-                    con_base.line_text[0][i] = con_base.line_text[0][i-1];
-                }
-                con_base.line_text[0][con_base.cursor_pos] = key;
-                con_base.line_text[0][++oldLength] = 0;
+                utf8_insert_char((uint8_t*)con_base.line_text[0], key, con_base.cursor_pos, con_base.line_size);
+                ++oldLength;
                 con_base.cursor_pos++;
             }
             break;
