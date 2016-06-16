@@ -822,12 +822,6 @@ void ShowDebugInfo()
 {
     float y = (float)screen_info.h;
     const float dy = -18.0f * screen_info.scale_factor;
-    char test_str[1024] = "Проверка UTF8 ёё хыхы мюоны";
-    GLText_OutTextXY(30.0f, y += dy, test_str);
-    utf8_delete_char((uint8_t*)test_str, 3);
-    utf8_delete_char((uint8_t*)test_str, 8);
-    utf8_insert_char((uint8_t*)test_str, 0x20AC, 1, 1024);
-    GLText_OutTextXY(30.0f, y += dy, test_str);
 
     if(last_cont)
     {

@@ -21,9 +21,10 @@ extern "C" {
 #define ANIM_EXT_TARGET_TO              (1)
 
 #define ANIM_TYPE_BASE                  (0x0000)
-#define ANIM_TYPE_WEAPON_LH             (0x0001)
-#define ANIM_TYPE_WEAPON_RH             (0x0002)
-#define ANIM_TYPE_WEAPON_TH             (0x0003)
+#define ANIM_TYPE_HEAD_TRACK            (0x0001)
+#define ANIM_TYPE_WEAPON_LH             (0x0002)
+#define ANIM_TYPE_WEAPON_RH             (0x0003)
+#define ANIM_TYPE_WEAPON_TH             (0x0004)
 
 #include <stdint.h>
 

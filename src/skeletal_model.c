@@ -583,7 +583,7 @@ void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int animation, int fra
 
 struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type)
 {
-    if(sm && (sm->mesh_count == bf->bone_tag_count))
+    if(!sm || (sm->mesh_count == bf->bone_tag_count))
     {
         ss_animation_p ss_anim = (ss_animation_p)malloc(sizeof(ss_animation_t));
 

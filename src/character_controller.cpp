@@ -994,28 +994,38 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
 void Character_LookAt(struct entity_s *ent, float target[3])
 {
     const float bone_dir[] = {0.0f, 1.0f, 0.0f};
-    ent->bf->animations.targeting_bone = 14;
-    vec3_copy(ent->bf->animations.target, target);
-    vec3_copy(ent->bf->animations.bone_direction, bone_dir);
-    ent->bf->animations.targeting_base = 0x00;
-    ent->bf->animations.targeting_limit[0] = 0.0f;
-    ent->bf->animations.targeting_limit[1] = 1.0f;
-    ent->bf->animations.targeting_limit[2] = 0.0f;
-    ent->bf->animations.targeting_limit[3] = 0.273f;
-
-    if(SSBoneFrame_CheckTargetBoneLimit(ent->bf, &ent->bf->animations))
+    ss_animation_p anim_head_track = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_HEAD_TRACK);
+    if(!anim_head_track)
     {
-        ent->bf->animations.anim_ext_flags |= ANIM_EXT_TARGET_TO;
+        anim_head_track = SSBoneFrame_AddOverrideAnim(ent->bf, NULL, ANIM_TYPE_HEAD_TRACK);
+    }
+
+    anim_head_track->targeting_bone = 14;
+    vec3_copy(anim_head_track->target, target);
+    vec3_copy(anim_head_track->bone_direction, bone_dir);
+    anim_head_track->targeting_base = 0x00;
+    anim_head_track->targeting_limit[0] = 0.0f;
+    anim_head_track->targeting_limit[1] = 1.0f;
+    anim_head_track->targeting_limit[2] = 0.0f;
+    anim_head_track->targeting_limit[3] = 0.273f;
+
+    if(SSBoneFrame_CheckTargetBoneLimit(ent->bf, anim_head_track))
+    {
+        anim_head_track->anim_ext_flags |= ANIM_EXT_TARGET_TO;
     }
     else
     {
-        ent->bf->animations.anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
+        anim_head_track->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
     }
 }
 
 void Character_ClearLookAt(struct entity_s *ent)
 {
-    ent->bf->animations.anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
+    ss_animation_p anim_head_track = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_HEAD_TRACK);
+    if(anim_head_track)
+    {
+        anim_head_track->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
+    }
 }
 
 
