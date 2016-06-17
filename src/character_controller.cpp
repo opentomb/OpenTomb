@@ -995,6 +995,10 @@ void Character_LookAt(struct entity_s *ent, float target[3])
 {
     const float bone_dir[] = {0.0f, 1.0f, 0.0f};
     ss_animation_p anim_head_track = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_HEAD_TRACK);
+    ss_animation_p  base_anim = &ent->bf->animations;
+
+    base_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
+
     if(!anim_head_track)
     {
         anim_head_track = SSBoneFrame_AddOverrideAnim(ent->bf, NULL, ANIM_TYPE_HEAD_TRACK);
@@ -1012,6 +1016,18 @@ void Character_LookAt(struct entity_s *ent, float target[3])
     if(SSBoneFrame_CheckTargetBoneLimit(ent->bf, anim_head_track))
     {
         anim_head_track->anim_ext_flags |= ANIM_EXT_TARGET_TO;
+        if((ent->move_type == MOVE_ON_FLOOR) || (ent->move_type == MOVE_FREE_FALLING))
+        {
+            base_anim->targeting_bone = 7;
+            vec3_copy(base_anim->target, target);
+            vec3_copy(base_anim->bone_direction, bone_dir);
+            base_anim->targeting_base = 0x01;
+            base_anim->targeting_limit[0] = 0.0f;
+            base_anim->targeting_limit[1] = 1.0f;
+            base_anim->targeting_limit[2] = 0.0f;
+            base_anim->targeting_limit[3] = 0.873f;
+            base_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
+        }
     }
     else
     {
@@ -1022,6 +1038,7 @@ void Character_LookAt(struct entity_s *ent, float target[3])
 void Character_ClearLookAt(struct entity_s *ent)
 {
     ss_animation_p anim_head_track = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_HEAD_TRACK);
+    ent->bf->animations.anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
     if(anim_head_track)
     {
         anim_head_track->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
@@ -2044,6 +2061,19 @@ void Character_UpdateParams(struct entity_s *ent)
 {
     float speed = engine_frame_time / GAME_LOGIC_REFRESH_INTERVAL;
 
+    if(ent->character->weapon_current_state != WEAPON_STATE_HIDE)
+    {
+        entity_p target = World_GetEntityByID(ent->character->target_id);
+        if(target)
+        {
+            Character_LookAt(ent, target->transform + 12);
+        }
+        else
+        {
+            Character_ClearLookAt(ent);
+        }
+    }
+
     switch(ent->move_type)
     {
         case MOVE_ON_FLOOR:
@@ -2167,6 +2197,16 @@ int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
 
     return 1;
 }
+
+
+void  Character_SetTarget(struct entity_s *ent, uint32_t target_id)
+{
+    if(ent && ent->character)
+    {
+        ent->character->target_id = target_id;
+    }
+}
+
 
 // overrided == 0x00: no overriding;
 // overrided == 0x01: overriding mesh in armed state;

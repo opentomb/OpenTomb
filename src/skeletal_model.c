@@ -536,6 +536,10 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animati
         }
 
         vec4_GetQuaternionRotation(q, bone_dir, target_dir);
+        if(q[3] < ss_anim->targeting_limit[3])
+        {
+            vec4_clampw(q, ss_anim->targeting_limit[3]);
+        }
         vec4_slerp_to(clamped_q, ss_anim->current_mod, q, engine_frame_time * M_PI / 1.3f);
         vec4_copy(ss_anim->current_mod, clamped_q);
         SSBoneFrame_RotateBone(bf, ss_anim->current_mod, ss_anim->targeting_bone);

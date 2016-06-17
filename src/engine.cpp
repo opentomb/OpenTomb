@@ -633,7 +633,7 @@ void Engine_PollSDLEvents()
                         entity_p player = World_GetPlayer();
                         if(player && player->character)
                         {
-                            player->character->target_id = ((entity_p)last_cont->object)->id;
+                            Character_SetTarget(player, ((entity_p)last_cont->object)->id);
                         }
                     }
                     else
@@ -641,7 +641,7 @@ void Engine_PollSDLEvents()
                         entity_p player = World_GetPlayer();
                         if(player && player->character)
                         {
-                            player->character->target_id = ENTITY_ID_NONE;
+                            Character_SetTarget(player, ENTITY_ID_NONE);
                         }
                     }
                 }

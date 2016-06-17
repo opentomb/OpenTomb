@@ -349,6 +349,7 @@ int   Character_SetParam(struct entity_s *ent, int parameter, float value);
 int   Character_ChangeParam(struct entity_s *ent, int parameter, float value);
 int   Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value);
 
+void  Character_SetTarget(struct entity_s *ent, uint32_t target_id);
 int   Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed);
 
 /*

@@ -477,6 +477,25 @@ void vec4_slerp_to(float ret[4], float q1[4], float q2[4], float max_step_rad)
 }
 
 
+void vec4_clampw(float q[4], float w)
+{
+    if((fabs(w) < 0.999f) && (fabs(q[3]) < 0.999f))
+    {
+        float k = 1.0f - w * w;
+        k /= (vec3_sqabs(q));
+        k = sqrtf(k);
+        q[0] *= k;
+        q[1] *= k;
+        q[2] *= k;
+        q[3] = w;
+    }
+    else
+    {
+        vec4_set_zero_angle(q);
+    }
+}
+
+
 void vec4_SetZXYRotations(float v[4], float rot[3])
 {
     float angle, sin_t2, cos_t2, qt[4], qX[4], qY[4], qZ[4];
