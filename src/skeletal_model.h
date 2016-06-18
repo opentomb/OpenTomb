@@ -19,6 +19,8 @@ extern "C" {
 #define ANIM_FRAME_REVERSE              (4)
 
 #define ANIM_EXT_TARGET_TO              (1)
+    
+#define ANIM_TARGET_USE_AXIS_MOD        (0x0001)
 
 #define ANIM_TYPE_BASE                  (0x0000)
 #define ANIM_TYPE_HEAD_TRACK            (0x0001)
@@ -73,9 +75,10 @@ typedef struct ss_animation_s
     uint16_t                    anim_ext_flags;                                 // additional animation control flags
 
     uint16_t                    targeting_bone;
-    uint16_t                    targeting_base;
+    uint16_t                    targeting_flags;
     float                       bone_direction[3];
     float                       targeting_limit[4];                             // x, y, z, cos(alpha_limit)
+    float                       targeting_axis_mod[3];
     float                       current_mod[4];
     float                       target[3];
 

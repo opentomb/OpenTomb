@@ -883,10 +883,6 @@ void Game_Frame(float time)
         return;
     }
 
-
-    // We're going to update main logic with a fixed step.
-    // This allows to conserve CPU resources and keep everything in sync!
-
     Script_DoTasks(engine_lua, time);
     Game_UpdateAI();
     if(is_character)
@@ -929,7 +925,7 @@ void Game_Frame(float time)
                 entity_p target = World_GetEntityByID(engine_camera_state.target_id);
                 if(target)
                 {
-                    Character_LookAt(player, target->transform + 12);
+                    Character_LookAt(player, target->obb->centre);
                 }
             }
             else

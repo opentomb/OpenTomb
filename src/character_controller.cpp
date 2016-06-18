@@ -1007,7 +1007,7 @@ void Character_LookAt(struct entity_s *ent, float target[3])
     anim_head_track->targeting_bone = 14;
     vec3_copy(anim_head_track->target, target);
     vec3_copy(anim_head_track->bone_direction, bone_dir);
-    anim_head_track->targeting_base = 0x00;
+    anim_head_track->targeting_flags = 0x0000;
     anim_head_track->targeting_limit[0] = 0.0f;
     anim_head_track->targeting_limit[1] = 1.0f;
     anim_head_track->targeting_limit[2] = 0.0f;
@@ -1021,11 +1021,16 @@ void Character_LookAt(struct entity_s *ent, float target[3])
             base_anim->targeting_bone = 7;
             vec3_copy(base_anim->target, target);
             vec3_copy(base_anim->bone_direction, bone_dir);
-            base_anim->targeting_base = 0x01;
+            base_anim->targeting_flags = 0x0000;
             base_anim->targeting_limit[0] = 0.0f;
             base_anim->targeting_limit[1] = 1.0f;
             base_anim->targeting_limit[2] = 0.0f;
-            base_anim->targeting_limit[3] = 0.873f;
+            base_anim->targeting_limit[3] = 0.883f;
+
+            base_anim->targeting_axis_mod[0] = 0.0f;
+            base_anim->targeting_axis_mod[1] = 0.0f;
+            base_anim->targeting_axis_mod[2] = 1.0f;
+            base_anim->targeting_flags |= ANIM_TARGET_USE_AXIS_MOD;
             base_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
         }
     }
@@ -2066,7 +2071,7 @@ void Character_UpdateParams(struct entity_s *ent)
         entity_p target = World_GetEntityByID(ent->character->target_id);
         if(target)
         {
-            Character_LookAt(ent, target->transform + 12);
+            Character_LookAt(ent, target->obb->centre);
         }
         else
         {
@@ -2349,9 +2354,9 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
         if(target)
         {
             ss_anim->targeting_bone = targeted_bone;
-            vec3_copy(ss_anim->target, target->transform + 12);
+            vec3_copy(ss_anim->target, target->obb->centre);
             vec3_copy(ss_anim->bone_direction, bone_dir);
-            ss_anim->targeting_base = 0x01;
+            ss_anim->targeting_flags = 0x0000;
             ss_anim->targeting_limit[0] = 0.0f;
             ss_anim->targeting_limit[1] = 1.0f;
             ss_anim->targeting_limit[2] = 0.0f;
