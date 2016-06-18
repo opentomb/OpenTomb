@@ -1874,6 +1874,10 @@
 		<Unit filename="src/core/system.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/core/utf8_32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/utf8_32.h" />
 		<Unit filename="src/core/vmath.c">
 			<Option compilerVar="CC" />
 		</Unit>

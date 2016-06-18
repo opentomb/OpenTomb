@@ -97,12 +97,6 @@ void     glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *
 
 void     glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text);     // UTF-8
 
-uint32_t utf8_strlen(const char *str);
-uint8_t *utf8_to_utf32(uint8_t *utf8, uint32_t *utf32);
-uint32_t utf32_to_utf8(uint8_t utf8[6], uint32_t utf32);
-void     utf8_delete_char(uint8_t *utf8, uint32_t pos);
-void     utf8_insert_char(uint8_t *utf8, uint32_t utf32, uint32_t pos, uint32_t size);
-
 
 #ifdef	__cplusplus
 }

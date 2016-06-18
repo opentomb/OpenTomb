@@ -9,6 +9,7 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
+#include "utf8_32.h"
 #include "gl_font.h"
 #include "gl_util.h"
 #include "console.h"

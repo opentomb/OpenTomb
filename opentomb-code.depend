@@ -6714,7 +6714,7 @@
 	"../alMain.h"
 	"../alThunk.h"
 
-1463309374 source:d:\dev\opentomb\src\anim_state_control.cpp
+1466182811 source:d:\dev\opentomb\src\anim_state_control.cpp
 	<stdlib.h>
 	<stdio.h>
 	"core/system.h"
@@ -6749,7 +6749,7 @@
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
 
-1453563720 d:\dev\opentomb\src\core\gl_font.h
+1466242890 d:\dev\opentomb\src\core\gl_font.h
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
@@ -6764,7 +6764,7 @@
 1433713936 d:\dev\opentomb\src\freetype2\include\freetype.h
 	<ft2build.h>
 
-1465754061 d:\dev\opentomb\src\core\vmath.h
+1466186480 d:\dev\opentomb\src\core\vmath.h
 	<math.h>
 	<stdint.h>
 
@@ -7398,7 +7398,7 @@
 
 1440848652 d:\dev\opentomb\src\anim_state_control.h
 
-1463241417 d:\dev\opentomb\src\character_controller.h
+1466183205 d:\dev\opentomb\src\character_controller.h
 	<stdint.h>
 	"physics.h"
 
@@ -9022,7 +9022,7 @@
 	"camera.h"
 	"frustum.h"
 
-1465065141 source:d:\dev\opentomb\src\character_controller.cpp
+1466187015 source:d:\dev\opentomb\src\character_controller.cpp
 	"core/vmath.h"
 	"core/console.h"
 	"core/polygon.h"
@@ -9100,7 +9100,7 @@
 	<stdio.h>
 	<string.h>
 
-1464507143 source:d:\dev\opentomb\src\core\console.c
+1466243140 source:d:\dev\opentomb\src\core\console.c
 	<stdio.h>
 	<stdlib.h>
 	<SDL2/SDL_platform.h>
@@ -9109,6 +9109,7 @@
 	<lua.h>
 	<lualib.h>
 	<lauxlib.h>
+	"utf8_32.h"
 	"gl_font.h"
 	"gl_util.h"
 	"console.h"
@@ -9116,7 +9117,7 @@
 	"vmath.h"
 	"gl_text.h"
 
-1464507172 source:d:\dev\opentomb\src\core\gl_font.c
+1466243153 source:d:\dev\opentomb\src\core\gl_font.c
 	<stdint.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_opengl.h>
@@ -9125,6 +9126,7 @@
 	<freetype.h>
 	<ftglyph.h>
 	<ftmodapi.h>
+	"utf8_32.h"
 	"gl_font.h"
 	"gl_util.h"
 
@@ -9183,13 +9185,13 @@
 	"console.h"
 	"gl_util.h"
 
-1465759876 source:d:\dev\opentomb\src\core\vmath.c
+1466186595 source:d:\dev\opentomb\src\core\vmath.c
 	<math.h>
 	<string.h>
 	<stdlib.h>
 	"vmath.h"
 
-1465725000 source:d:\dev\opentomb\src\engine.cpp
+1466183266 source:d:\dev\opentomb\src\engine.cpp
 	<SDL2/SDL.h>
 	<SDL2/SDL_platform.h>
 	<SDL2/SDL_image.h>
@@ -10960,7 +10962,7 @@
 	"render.h"
 	"world.h"
 
-1465039040 source:d:\dev\opentomb\src\game.cpp
+1465818594 source:d:\dev\opentomb\src\game.cpp
 	<stdlib.h>
 	<stdio.h>
 	<lua.h>
@@ -16342,7 +16344,7 @@
 	<stdint.h>
 	"../core/vmath.h"
 
-1465751112 d:\dev\opentomb\src\skeletal_model.h
+1466090702 d:\dev\opentomb\src\skeletal_model.h
 	<stdint.h>
 
 1442739641 source:d:\dev\opentomb\src\mesh.c
@@ -16443,7 +16445,7 @@
 	"../engine.h"
 	"../physics.h"
 
-1465760371 source:d:\dev\opentomb\src\skeletal_model.c
+1466186716 source:d:\dev\opentomb\src\skeletal_model.c
 	<stdlib.h>
 	"core/system.h"
 	"core/gl_util.h"
@@ -22613,4 +22615,7 @@
 	"os.h"
 	"misc.h"
 	"window.h"
+
+1466242758 d:\dev\opentomb\src\core\utf8_32.h
+	<stdint.h>
 
