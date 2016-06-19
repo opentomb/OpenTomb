@@ -1027,8 +1027,8 @@ void Character_LookAt(struct entity_s *ent, float target[3])
             base_anim->targeting_limit[2] = 0.0f;
             base_anim->targeting_limit[3] = 0.883f;
 
-            base_anim->targeting_axis_mod[0] = 0.0f;
-            base_anim->targeting_axis_mod[1] = 0.0f;
+            base_anim->targeting_axis_mod[0] = 0.5f;
+            base_anim->targeting_axis_mod[1] = 0.5f;
             base_anim->targeting_axis_mod[2] = 1.0f;
             base_anim->targeting_flags |= ANIM_TARGET_USE_AXIS_MOD;
             base_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;

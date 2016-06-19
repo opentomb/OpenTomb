@@ -326,7 +326,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     bf->animations.targeting_limit[1] = 1.0f;
     bf->animations.targeting_limit[2] = 0.0f;
     bf->animations.targeting_limit[3] =-1.0f;
-    vec3_set_zero(bf->animations.targeting_axis_mod);
+    vec3_set_one(bf->animations.targeting_axis_mod);
     bf->animations.targeting_bone = 0x00;
     bf->animations.targeting_flags = 0x0000;
 
@@ -531,8 +531,11 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animati
         vec4_GetQuaternionRotation(q, bone_dir, target_dir);
         if(ss_anim->targeting_flags & ANIM_TARGET_USE_AXIS_MOD)
         {
-            vec3_add(q, q, ss_anim->targeting_axis_mod);
-            vec4_clampw(q, q[3]);
+            q[0] *= ss_anim->targeting_axis_mod[0];
+            q[1] *= ss_anim->targeting_axis_mod[1];
+            q[2] *= ss_anim->targeting_axis_mod[2];
+            q[3] = 1.0f - vec3_sqabs(q);
+            q[3] = sqrtf(q[3]);
         }
         if(q[3] < ss_anim->targeting_limit[3])
         {
@@ -606,7 +609,7 @@ struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, s
         ss_anim->targeting_limit[1] = 1.0f;
         ss_anim->targeting_limit[2] = 0.0f;
         ss_anim->targeting_limit[3] =-1.0f;
-        vec4_set_zero(ss_anim->targeting_axis_mod);
+        vec3_set_one(ss_anim->targeting_axis_mod);
         ss_anim->next = bf->animations.next;
         bf->animations.next = ss_anim;
 
