@@ -21,6 +21,7 @@ extern "C" {
 #define ANIM_EXT_TARGET_TO              (1)
     
 #define ANIM_TARGET_USE_AXIS_MOD        (0x0001)
+#define ANIM_TARGET_OWERRIDE_ANIM       (0x0002)
 
 #define ANIM_TYPE_BASE                  (0x0000)
 #define ANIM_TYPE_HEAD_TRACK            (0x0001)

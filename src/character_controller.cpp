@@ -633,7 +633,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     to[0] = test_to[0];
     to[1] = test_to[1];
     to[2] = test_from[2];
-    renderer.debugDrawer->DrawLine(from, to, color, color);
+    //renderer.debugDrawer->DrawLine(from, to, color, color);
     if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self))
     {
         // NEAR WALL CASE
@@ -646,7 +646,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             from[1] = to[1] = cb.point[1] - cb.normale[1];
             from[2] = cb.point[2] + ent->character->max_step_up_height;
             to[2] = test_to[2];
-            renderer.debugDrawer->DrawLine(from, to, color, color);
+            //renderer.debugDrawer->DrawLine(from, to, color, color);
             if(Physics_RayTestFiltered(&cb, from, to, ent->self))
             {
                 vec3_copy(n1, cb.normale);
@@ -662,7 +662,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         from[1] = to[1] = test_to[1];
         from[2] = test_from[2];
         to[2] = test_to[2];
-        renderer.debugDrawer->DrawLine(from, to, color, color);
+        //renderer.debugDrawer->DrawLine(from, to, color, color);
         if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (cb.fraction > 0.0f))
         {
             vec3_copy(n0, cb.normale);
@@ -783,9 +783,9 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
 
         from[0] = to[0] = test_from[0];
         from[1] = to[1] = test_from[1];
-        from[2] = climb->edge_point[2];
-        to[2] = from[2] - ent->character->Height;
-        climb->can_hang = Physics_RayTestFiltered(NULL, from, to, ent->self) ? (0x00) : (0x01);
+        from[2] = test_from[2];
+        to[2] = climb->edge_point[2] - ent->character->Height;
+        climb->can_hang = (Physics_RayTestFiltered(NULL, from, to, ent->self) ? (0x00) : (0x01));
     }
 }
 

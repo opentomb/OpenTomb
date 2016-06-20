@@ -526,7 +526,14 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animati
             Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
         }
         vec3_sub(target_dir, target_local, b_tag->transform + 12);
-        vec3_copy(bone_dir, ss_anim->bone_direction);
+        if(ss_anim->targeting_flags & ANIM_TARGET_OWERRIDE_ANIM)
+        {
+            Mat4_vec3_rot_macro(bone_dir, b_tag->transform, ss_anim->bone_direction);
+        }
+        else
+        {
+            vec3_copy(bone_dir, ss_anim->bone_direction);
+        }
 
         vec4_GetQuaternionRotation(q, bone_dir, target_dir);
         if(ss_anim->targeting_flags & ANIM_TARGET_USE_AXIS_MOD)
