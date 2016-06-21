@@ -27,6 +27,9 @@ float    Spline_Get(spline_p spline, float t);
 
 #ifndef M_PI
 #define M_PI        3.14159265358979323846
+#endif
+
+#ifndef M_PI_2
 #define M_PI_2      1.57079632679489661923
 #endif
 
@@ -238,9 +241,6 @@ void Mat4_E(float mat[16]);
 void Mat4_Copy(float dst[16], const float src[16]);
 void Mat4_Translate(float mat[16], const float v[3]);
 void Mat4_Scale(float mat[16], float x, float y, float z);
-/*void Mat4_RotateX(float mat[16], float ang);
-void Mat4_RotateY(float mat[16], float ang);
-void Mat4_RotateZ(float mat[16], float ang);*/
 void Mat4_RotateX_SinCos(float mat[16], float sina, float cosa);
 void Mat4_RotateY_SinCos(float mat[16], float sina, float cosa);
 void Mat4_RotateZ_SinCos(float mat[16], float sina, float cosa);
