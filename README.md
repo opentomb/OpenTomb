@@ -121,6 +121,8 @@ from /src directory, and adding these libraries in Linker Settings under Project
 * libopengl32.a
 * libSDL2main.a
 * libSDL2.a
+* liblua.a
+* libSDLimage.a
 * libz.a
 * libpthread.a
 
@@ -128,7 +130,7 @@ On Linux, just download the source code and run in terminal:
 
     cmake . && make
     
-Necessary dependencies are development headers for SDL2, SDL2 Image, ZLIB. You can install
+Necessary dependencies are development headers for SDL2, SDL2 Image, LUA 5.2, ZLIB. You can install
 them in Ubuntu-based distro with this command:
 
     sudo apt-get install libsdl2-dev libsdl2-image-dev libglu1-mesa-dev zlib1g-dev
