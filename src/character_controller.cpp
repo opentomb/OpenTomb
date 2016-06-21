@@ -1,4 +1,6 @@
 
+#include <stdlib.h>
+
 #include "core/vmath.h"
 #include "core/console.h"
 #include "core/polygon.h"
