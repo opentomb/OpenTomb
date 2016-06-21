@@ -1,0 +1,2925 @@
+<!DOCTYPE html PUBLIC "-//w3c//dtd html 4.0 transitional//en">
+<html><head>
+   <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+   <meta name="GENERATOR" content="Mozilla/4.6 [en] (Win98; I) [Netscape]">
+   <title>Tomb Raider II Data Formats</title>
+</head>
+<body link="#0000FF" vlink="#800080">
+
+<center><b><i><u><font size="+3">TRosettaStone</font></u></i></b>
+<p><b>Tomb Raider II .TR2 Data File Format</b>
+<br><font size="-1">(Including Tomb Raider .PHD/.TUB and Tomb Raider III .TR2 information, where available)</font>
+<br><font size="-1">(Also includes TOMBPC.DAT script information)</font>
+<br><font size="-2">Document Version 1.00 (991108)</font>
+
+</p><p><i><font size="-2">The Rosetta Stone was the key that unlocked the mysteries
+of Egyptian hieroglyphics. It contains an inscription praising King Ptolemy
+V, which is repeated three times - once in hieroglyphic, once in demotic,
+and once in Greek. By translating the Greek, comparisons could be made
+with the demotic and hieroglyphic versions, providing an invaluable lexicon
+with which to translate other hieroglyphic works. The efforts that went
+into making the document you are now reading could be likened to a form
+of digital archæology, and hopefully this document will provide sufficient
+information for others to decipher and create their own "TR-hieroglyphic"
+works.</font></i></p></center>
+
+<p>&nbsp;&nbsp;&nbsp; This document contains detailed descriptions of the
+Tomb Raider II data file formats ({Level-name}.TR2 and TOMBPC.DAT). It
+is assumed that the reader has knowledge and experience programming in
+C or C++, and has at least a passing familiarity with graphics programming.
+This document is self-contained; all hyperlinks refer only to itself. All
+information in this document was derived independently, without the aid
+or assistance of anyone at Core Design or Eidos. As such, the information
+in this document may contain errors or omissions, and all structure and
+variable names were deduced from the interpretation of the data (and therefore
+could be misleading or completely wrong). All the information in this document
+was tested and is therefore plausible, but could also be a misinterpretation.
+All information herein is provided as is - you get what you pay for, and
+this one's free. This was a spare-time project that set out to document
+the Tomb Raider 2 file format; along the way, additional information about
+Tomb Raider 1 / Gold (.PHD, .TUB) and Tomb Raider 3 (.TR2) files became
+available, and that information is provided in context. Where applicable,
+Tomb Raider I, Tomb Raider Unfinished Business, and Tomb Raider Gold are
+all referred to as TR1, and if the information specific to TR1 is interspersed
+with TR2 information, the <font color="#FF0000">TR1 information is highlighted
+in RED</font>. Likewise, Tomb Raider III is referred to as TR3, and <font color="#008000">information
+specific to TR3 is highlighted in GREEN</font>.&nbsp; In the few places
+where there is such information, <font color="#000080">information specific
+to TR2 ONLY is highlighted in BLUE</font>.&nbsp; Everything else is assumed
+to pertain to TR2 only, or to all three games. [Late note: as this document
+was being prepared for release, the Tomb Raider: Last Revelation demo was
+released.&nbsp; .TR4 files will be hopefully be addressed in a future revision
+of this document.]
+
+</p><p>&nbsp;&nbsp;&nbsp; Because of Core/Eidos' position on Tomb Raider level
+editing tools, it is suggested that any tools that you develop be released
+in source code form, anonymously, using Usenet newsgroups.&nbsp; Anonymity
+can protect you from legal action, wide distribution via Usenet prevents
+Core/Eidos from attempting to recall or control the distribution of your
+software, and distributing source code both allows multi-platform development
+(e.g. let others port it to the Mac or Linux for you) and encourages others
+to write utilities, since they can learn and benefit from your source code.&nbsp;
+Also, Linux has taught us that 40,000 people debugging a single application
+makes for a clean final product ;-)
+
+</p><p>Tomb Raider, Tomb Raider Gold, Unfinished Business, Tomb Raider II,
+Tomb Raider III, Lara Croft, and all images and data within the data files
+and game engine are Copyright © Core Design and/or Eidos PLC.&nbsp;
+Modification and/or distribution of any part of a Tomb Raider data file
+(any version) is almost certainly a copyright violation.
+
+</p><p>This document was composed at a screen resolution of 1024x768, and is
+best viewed at that resolution.&nbsp; It contains many links, but all of
+them refer only to this document;&nbsp; no link from this page will take
+you to another web site, and this document can be viewed offline (not connected
+to the Internet).&nbsp; Use your browser's <b>BACK</b> button to return
+from a link, e.g. if you click on a structure declaration to see its definition,
+clicking <b>BACK</b> will return you to your point of origin after you've
+examined the structure definition.
+
+</p><p>
+</p><hr>
+<center>
+<p><b><u><font size="+2">Table of Contents</font></u></b></p></center>
+
+<p>&nbsp;<a href="#Fundamentals">I. The Fundamentals</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#Fundamentals_Overview">Overview</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#Fundamentals_Coordinates">Coordinates</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#Fundamentals_Colours">Colours</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#Fundamentals_Objects">Objects</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#Fundamentals_Animations">Animations</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#Fundamentals_Lighting">Lighting</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#Fundamentals_BasicDataStructures">Basic Data Structures</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#Fundamentals_Textures">Textures</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#Fundamentals_Sounds">Sounds</a>
+</p><p>&nbsp;<a href="#RoomGeometry">II. Room Geometry</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#RoomGeometry_Overview">Overview</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#RoomGeometry_RoomStructures">Room Structures</a>
+</p><p>&nbsp;<a href="#FloorData">III. FloorData</a>
+</p><p>&nbsp;<a href="#MeshGeometry">IV. Mesh Geometry</a>
+</p><p>&nbsp;<a href="#MeshConstructionAndAnimation">V. Mesh Construction and Animation</a>
+</p><p>&nbsp;<a href="#NonPlayerCharacterBehaviour">VI. Non-Player Character Behaviour</a>
+</p><p>&nbsp;<a href="#Sound">VII. Sound</a>
+</p><p>&nbsp;<a href="#Miscellany">VIII. Miscellany</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#Miscellany_Version">Version</a>
+</p><p>&nbsp;<a href="#EntireTR2level">IX. The Entire TR2 Level Format</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#EntireLevelFormat_TR2">Tomb Raider II</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#EntireLevelFormat_TR1">Tomb Raider I</a>
+<br>&nbsp;&nbsp;&nbsp; <a href="#EntireFileFormat_TR3">Tomb Raider III</a>
+</p><p>&nbsp;<a href="#ItemizedDifferencesBetweenTR1andTR2">Itemized Differences between TRI and TRII</a>
+</p><p>&nbsp;<a href="#ItemizedDifferencesBetweenTR2andTR3">Itemized Differences between TRII and TRIII</a>
+</p><p>&nbsp;<a href="#ItemizedDifferencesBetweenTRandDemos">Itemized Differences between "normal" TRs and Demos</a>
+</p><p><a href="#ScriptingWithTOMBPC_DAT">X. Scripting with TOMBPC.DAT</a>
+</p><p>
+</p><hr>
+<center>
+<p><a name="Fundamentals"></a><b><u><font size="+1">I. The Fundamentals</font></u></b></p></center>
+
+<p><a name="Fundamentals_Overview"></a><b>Overview:</b> Tomb Raider II
+is driven by two sets of files. The script file, TOMBPC.DAT, contains all
+the text strings describing the various elements in the game (e.g. the
+game engine knows about "Key 1"; it looks in TOMBPC.DAT to determine the
+name to be displayed in Lara's inventory, such as "Rusty Key" or "Taste
+rostige" or "Clé Rouillée"), the level and cut-scene filenames
+(e.g. WALL.TR2, CUT3.TR2), the order in which they are to be played, and
+various per-level and per-game configuration options (e.g. what weapons
+and objects Lara starts the level with, whether or not the "cheat" codes
+work, etc.). The level files, {level-name}.TR2, contain everything about
+the level, including the geographical geometry, the geometry (meshes) of
+all animate and inanimate objects in the level, all the textures and colour
+data, all animation data, index information (and, in TR1, the actual sound
+sample data) for all sounds, accessibility maps - everything necessary
+to run the game. For whatever reason, Core has included everything in one
+file instead of breaking it up into logical groupings; this means that
+every level contains all the meshes, textures, sound information, and animation
+data for Lara and all of her weapons. There are a fair number of other
+redundancies, too.
+
+</p><p><a name="Data_Types"></a>&nbsp;&nbsp; For the purposes of further discussion,
+the following are assumed:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>bit8</b>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; specifies an 8-bit signed integer (range -128..127)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>bitu8</b>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; specifies an 8-bit unsigned integer (range 0..255)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>bit16</b>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; specifies a 16-bit signed integer (range -32768..32767)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>bitu16</b>
+    &nbsp;&nbsp; specifies a 16-bit unsigned integer (range 0..65535)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>bit32</b>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; specifies a 32-bit signed integer (range -2147483648..2147483647)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>bitu32</b>
+    &nbsp;&nbsp; specifies a 32-bit unsigned integer (range 0..4294967295)
+    
+<br>&nbsp;&nbsp;&nbsp; All multi-byte integers (bit{u}16, bit{u}32) are
+stored in little-endian (Intel-x86, etc.) format, with the least significant
+byte stored first and the most significant byte stored last. When using
+this data in platforms with big-endian (PowerPC, etc.) number format, be
+sure to reverse the order of bytes.
+</p><p>Data alignment is something one has to be careful about. When some entity
+gets an address that is a multiple of n, it is said to be n-byte aligned.
+The reason it is important here is that some systems prefer multibyte alignment
+for multibyte quantities, and compilers for such systems may pad the data
+to get the "correct" alignments, thus making the in-memory structures out
+of sync with their file counterparts. However, a compiler may be commanded
+to use a lower level of alignment, one that will not cause padding. And
+for TR's data structures, 2-byte alignment should be successful in nearly
+all cases, with exceptions noted below.
+
+</p><p>To set single-byte alignment in <u>Microsoft Visual C++</u>, use the following compiler directive:
+</p><pre>#pragma pack(push, tr2, 1)</pre>
+To return to the project's default alignment, use the following directive:
+<pre>#pragma pack(pop, tr2)</pre>
+
+<p>To achieve 2-byte alignment in <u>Metrowerks CodeWarrior</u>, widely used in
+the MacOS, use this compiler directive:
+</p><pre>#pragma options align=mac68k</pre>
+To return to the project's default alignment, use this directive:
+<pre>#pragma options align=reset</pre>
+Similar options exist for other compilers.
+
+<p><a name="Fundamentals_Coordinates"></a><b>Coordinates:</b> The world
+coordinate system is oriented with the X-Z plane horizontal and Y vertical,
+with -Y being "up" (e.g. decreasing Y values indicate increasing altitude).
+The world coordinate system is specified using bit32 values; however, the
+geography is limited to the +X/+Z quadrant for reasons that are explained
+below. Mesh coordinates are relative and are specified using <a href="#Data_Types">bit16</a>s.&nbsp;
+There are some additional coordinate values used, such as "the number of
+1024-unit blocks between points A and B";&nbsp; these are simply scaled
+versions of more conventional coordinates.
+</p><p><a name="Fundamentals_Colours"></a><b>Colours:</b> All colours in TR2
+are specified either explicitly (using either the <a href="#struct_tr2_colour">tr2_colour</a>
+structure, described below, or the 16-bit ARGB structure) or implicitly,
+by indexing one of the palettes.&nbsp; If, for some reason, 16-bit textures
+are turned off, all colours and textures use an 8-bit palette that is stored
+in the .TR2 file.&nbsp; This palette consists of a 256-element array of
+<a href="#struct_tr2_colour">tr2_colour</a>
+structures, each designating some colour;&nbsp; textures and other elements
+that need to reference a colour specify an index (0..255) into the Palette[]
+array.&nbsp; There is also a 16-bit palette, which is used for identifying
+colours of solid polygons.&nbsp; The 16-bit palette contains up to 256
+four-byte entries;&nbsp; the first three bytes are a <a href="#struct_tr2_colour">tr2_colour</a>,
+while the last byte is ignored (set to 0).
+<br>The 16-bit textile array, which contains <a href="#struct_tr2_textile16">tr2_textile16</a>
+structures, specifies colours using 16-bit ARGB, where the highest bit
+(0x8000) is a crude alpha channel (really just simple transparency - 0
+::= transparent, 1 ::= opaque).&nbsp; The next 5 bits (0x7c00) specify
+the red channel, the next 5 bits (0x03e0) specify the green channel, and
+the last 5 bits (0x001f) specify the blue channel, each on a scale from
+0..31.
+</p><p><a name="Fundamentals_Objects"></a><b>Objects:</b> There are two basic
+types of objects in TR2 - meshes and sprites. <b>Meshes</b> are collections
+of textured or coloured polygons that are assembled to form a three-dimensional
+object (such as a tree, a tiger, or Lara herself). The "rooms" themselves
+are also composed of meshes. Mesh objects may contain more than one mesh;
+though these meshes are moved relative to each other, each mesh is rigid.
+<b>Sprites</b>
+are two-dimensional images that are inserted into three-dimensional space,
+such as the "secret" dragons, ammunition, medi-packs, etc. There are also
+animated sprite sequences, such as the fire at the end of "The Great Wall."
+Core had presumably used this method to reduce CPU utilization on the PlayStation
+and/or the earlier PCs. Sprites become less and less abundant; TR2 has
+very few scenery sprites, and TR3's pickups are models instead of sprites.
+Objects are referenced in one of two ways - as an offset into an array
+(e.g. Moveables[i]) or using an identifying tag (ObjectID). In the latter
+case, the related array (Items[], Moveables[], etc.) is searched until
+a matching ObjectID is found.
+</p><p><a name="Fundamentals_Animations"></a><b>Animations:</b> There are three
+basic types of animations in TR2, two corresponding directly with meshes
+and sprites, and a third type, animated textures. Sprite animation (sprite
+sequences) consists simply of a series of sprites that are to be displayed
+one after another, e.g. grenade explosions. Mesh animations are much more
+complex, done by what is essentially a skeletal-modeling scheme. These
+involve some arrays (Frames[] and MeshTree[]) of offsets and rotations
+for each element of a composite mesh. Frames are then grouped into an array
+(Animations[]) that describes discrete "movements," e.g. Lara taking a
+step or a tiger striking with its paw. The animations are "sewn together"
+by a state change array and an animation dispatch array, which, together
+with state information about the character, ensure that the animation is
+fluid (e.g. if Lara is running and the player releases the RUN key, she
+will stop; depending upon which of her feet was down at the time, either
+her left or right foot will strike the floor as part of the "stop" animation.
+The correct animation (left foot stop vs. right foot stop) is selected
+using these structures and the state information). Animated textures are
+simply a list of textures that are cycled through in an endless loop; they
+are normally used as geographic elements of the levels (e.g. water surface,
+bubbling lava, Atlantean plasma walls).
+</p><p><a name="Fundamentals_Lighting"></a><b>Lighting:</b> There are two main
+types of lighting in Tomb Raider, constant and vertex. Constant lighting
+means that all parts of an object have the same illumination, while in
+vertex lighting, each polygon vertex has its own light value, and the illumination
+of the polygon interiors is interpolated from the vertex values. Furthermore,
+lighting can be either internal or external. Internal lighting is specified
+in an object's data, external lighting is calculated using the room's light
+sources (ambient light, point light sources, flares, gunshots). Light intensities
+are described with a single value in TR1 and a pair of values in TR2 and
+TR3; the paired values are almost always equal, and the pairing may reflect
+some feature that was only imperfectly implemented, such as off/on or minimum/maximum
+values. In TR1 and TR2, the light values go from 0 (maximum light) to 8192
+(minimum light), while in TR3, the light values go from 0 (minimum light)
+to 32767 (maximum light).
+</p><p><a name="Fundamentals_BasicDataStructures"></a><b>Basic Data Structures:</b>
+Much of the .TR2 file is comprised of structures based on a few fundamental
+data structures, described below.
+</p><ul>
+<li>
+<a name="struct_tr2_colour"></a><b>Colour structure</b> - this is how most
+colours are specified.</li>
+</ul>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; typedef struct {&nbsp;&nbsp;&nbsp; // 3 bytes
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#Data_Types">bitu8</a> Red;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Red component (0 ::= darkest, 255 ::= brightest)
+
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#Data_Types">bitu8</a> Green;&nbsp;&nbsp;&nbsp;&nbsp; // Green component (0 ::= darkest, 255 ::= brightest)
+
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#Data_Types">bitu8</a> Blue;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Blue component (0 ::= darkest, 255 ::= brightest)
+
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } <b>tr2_colour</b>;
+<br>(Some compilers, like CodeWarrior, will pad this structure to make 4
+bytes; one must either read and write 3 bytes explicitly, or else use a
+simple array of bytes instead of this structure.)
+
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 
+And as mentioned earlier, the 16-bit palette uses a similar structure:
+
+</p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; typedef struct { // 4 bytes
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Data_Types">bitu8</a> Red;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Data_Types">bitu8</a> Green;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Data_Types">bitu8</a> Blue;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="#Data_Types">bitu8</a> Unused;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} <b>tr2_colour4</b>;
+<ul>
+<li>
+<a name="struct_tr2_vertex"></a><b>Vertex structure</b> - this is how vertices
+are specified, using relative coordinates.&nbsp; They are generally formed
+into lists, such that other entities (such as quads or triangles) can refer
+to them by simply using their index in the list.</li>
+</ul>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; typedef
+struct {&nbsp;&nbsp;&nbsp; // 6 bytes
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+<a href="#Data_Types">bit16</a> x;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+<a href="#Data_Types">bit16</a> y;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+<a href="#Data_Types">bit16</a> z;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} <b>tr2_vertex</b>;
+<ul>
+<li>
+<a name="struct_tr2_face4"></a><b>Rectangular (quad) face definition</b>.
+Four vertices (the values are indices into the appropriate vertex list)
+and a texture (an index into the object-texture list) or colour (index
+into 8-bit palette or 16-bit palette).&nbsp; If the rectangle is a coloured
+polygon (not textured), the .Texture element contains two indices: the
+low byte (.Texture &amp; 0xff) is an index into the 256-colour palette,
+while the high byte (.Texture &gt;&gt; 8) is in index into the 16-bit palette,
+when present. A textured rectangle will have its vertices mapped onto all
+4 vertices of an object texture, in appropriate correspondence.</li>
+</ul>
+
+<dir>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; typedef struct {&nbsp;&nbsp;&nbsp;
+// 10 bytes
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+Vertices[4];
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+Texture;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } <b>tr2_face4</b>;</dir>
+
+<ul>
+<li>
+<a name="struct_tr2_face3"></a><b>Triangular face definition</b>. Three
+vertices (the values are indices into the appropriate vertex list) and
+a texture (an index into the object-texture list) or colour (index into
+8-bit palette or 16-bit palette).&nbsp; If the triangle is a coloured polygon
+(not textured), the .Texture element contains two indices: the low byte
+(.Texture &amp; 0xff) is an index into the 256-colour palette, while the
+high byte (.Texture &gt;&gt; 8) is in index into the 16-bit palette, when present.
+A textured triangle will have its vertices mapped onto the first 3 vertices
+of an object texture, in appropriate correspondence.</li>
+</ul>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; typedef
+struct {&nbsp;&nbsp;&nbsp; // 8 bytes
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+<a href="#Data_Types">bitu16</a> Vertices[3];
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+<a href="#Data_Types">bitu16</a> Texture;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} <b>tr2_face3</b>;
+<br>&nbsp;
+<ul>
+<li>
+<a name="struct_tr2_textile8"></a><b>8-bit texture tile</b> (65536 bytes).
+Each <a href="#Data_Types">bitu8</a> represents a pixel whose colour is
+in the 8-bit palette.</li>
+</ul>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; typedef
+struct {&nbsp;&nbsp;&nbsp; // 65536 bytes
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+<a href="#Data_Types">bitu8</a> Tile[256 * 256];
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} <b>tr2_textile8</b>;
+<ul>
+<li>
+<a name="struct_tr2_textile16"></a><b>16-bit texture tile</b> (131072 bytes).
+Each <a href="#Data_Types">bitu16</a> represents a pixel whose colour is
+of the form ARGB, MSB-to-LSB:</li>
+</ul>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+1-bit transparency (0 ::= transparent, 1 ::= opaque) (0x8000)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+5-bit red channel (0x7c00)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+5-bit green channel (0x03e0)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+5-bit blue channel (0x001f)
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; typedef
+struct {&nbsp;&nbsp;&nbsp; // 131072 bytes
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+<a href="#Data_Types">bitu16</a> Tile[256 * 256];
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+} <b>tr2_textile16</b>;
+<br>&nbsp;
+</p><p><a name="Fundamentals_Textures"></a><b>Textures:</b> All mesh surfaces
+are either <b>coloured</b> or <b>textured</b>.&nbsp; Coloured surfaces
+are "painted" with a single colour that is either specified explicitly
+or using an index into the palette.&nbsp; Textured surfaces map textures
+(bitmapped images) from the texture tiles (textiles) to each point on the
+mesh surface.&nbsp; This is done using conventional UV mapping, which is
+specified in "Object Textures" below; each object texture specifies a mapping
+from a set of vertices to locations in the textile, and these texture vertices
+are associated with position vertices specified here.
+</p><p><a name="Fundamentals_Sounds"></a>
+</p><p>
+</p><hr>
+<p><b>Sounds:</b> There are several sorts of sounds, which can be classified
+as either continuous or triggered. Continuous sounds are level-background
+sounds (such as the blowing wind in "The Great Wall") and sound sources
+(such as waterfalls; these are in SoundSources[]). Triggered sounds are
+sounds played when some event happens, such as at certain animation frames
+(footsteps and other Lara sounds), when doors open and close, and when
+weapons are fired. Sounds are stored in two places: the game-data files
+and the CD audio tracks (the latter are separate soundfiles in the MacOS
+version). The latter kind of sound is referred to straightforwardly, by
+index, while the former kind of sound is referred to using a three-layer
+indexing scheme, to provide a maximum amount of abstraction. An internal
+sound index references SoundMap[], which points to a SoundDetails[] record,
+which in turn points to a SampleIndices[] entry, which in turn points to
+a sound sample. SoundDetails[] contains such features as sound intensity,
+how many sound samples to choose from, among others. The sound samples
+themselves are in Microsoft WAVE format, and they are embedded either in
+the data files (TR1, some later TR demos) or in a separate file (MAIN.SFX)
+in TR2 and TR3.
+<br>&nbsp;
+<br>&nbsp;
+<br>
+</p><center>
+<p><a name="RoomGeometry"></a><b><u><font size="+1">II. Room Geometry</font></u></b></p></center>
+
+<p><a name="RoomGeometry_Overview"></a><b>Overview: </b>A <b>room</b> in
+TR2 is simply a rectangular three-dimensional area. A room may be "indoors"
+or "outdoors," may or may not be enclosed, may be accessible or inaccessible
+to Lara, may or may not contain doors or objects. All rooms have "portals,"
+called "doors" in some documentation, which are pathways to adjacent rooms.
+There are two kinds of portals, visibility portals and collisional portals.
+Visibility portals are for determining how much of a room (if any) is visible
+from another room, while collisional portals are for enabling an object
+to travel from one room to another. The visibility portals are most likely
+for doing "portal rendering", which is a visibility-calculation scheme
+that goes as follows: The viewpoint is a member of some room, which is
+then listed as visible from it. This room's portals are checked for visibility
+from that viewpoint, and visible portals have their opposite-side rooms
+marked as visible. These rooms are then checked for portals that are visible
+from the viewpoint through the viewpoint's room's portals, and visible
+ones have their opposite-side rooms marked as visible. This operation is
+repeated, with viewing through intermediate portals, until all visible
+portals have been found. The result is a tree of rooms, starting from the
+viewpoint's room; only those rooms and their contents need be rendered.
+It is clear that both visibility and collision calculations require that
+objects have room memberships given for them, and indeed we shall find
+that most map objects have room memberships.
+</p><p>Rooms may overlap; as we shall see, this is involved in how horizontal
+collisional portals are implemented. However, different rooms may overlap
+without either being directly accessible from the other; there are several
+inadvertent examples of such "5D space" in the Tomb Raider series.  The
+only possibly deliberate example I know of is the flying saucer in "Area
+51" in TR3, whose interior is bigger than its exterior.
+</p><p>A room can have an "alternate room" specified for it; that means that
+that room can be replaced by that alternate as the game is running. This
+trick is used to produce such tricks as empty rooms vs. rooms full of water,
+scenery rearrangements (for example, the dynamited house in "Bartoli's
+Hideout" in TR2), and so forth. An empty room is first created, and then
+a full room is created at its location from a copy of it. The empty room
+then has that full room set as its alternate, and when that room is made
+to alternate, one sees a full room rather than an empty one.
+</p><p>The rooms are stored sequentially in an array, and "Room Numbers" are
+simply indices into this array (e.g. "Room Number 5" is simply Rooms[5];
+the first room is Rooms[0]).
+</p><p>Rooms are divided into <b>Sectors</b>, which are 1024x1024 unit squares
+that form a grid on the X-Z plane.&nbsp; Sectors are the defining area
+for floor/ceiling height and various actions (e.g. a tiger appears and
+attacks when Lara steps on a given square);&nbsp; the various attributes
+of each sector are stored in the Sector Data (described in this section)
+and the <a href="#FloorData">FloorData</a>.&nbsp; As an aside, Sectors
+correspond to the "squares," easily visible in all of the Tomb Raider games,
+that experienced players count when gauging jumps;&nbsp; they also account
+for some of the game's less-appealing graphic artifacts. Careful tiling
+and texture construction can make these "squares" almost invisible.
+</p><p>Rooms have two kinds of surfaces, rendered and collisional, much like
+the two kinds of portals. The former are what is seen, while the latter
+control how objects interact with the world geometry. Furthermore, these
+two types are specified separately in the room data.
+</p><p>Rooms are defined with a complex structure, which is described below
+"inside-out," meaning that the smaller component structures are described
+first, followed by the larger structures that are built using the smaller
+structures.
+</p><p><a name="RoomGeometry_RoomStructures"></a><b>Room Structures:</b>
+</p><ul>
+<li>
+<a name="struct_tr2_room_info"></a><b>Room header.</b>&nbsp; X/Z indicate
+the base position of the room mesh in world coordinates (Y is always zero-relative)</li>
+</ul>
+
+<dir>&nbsp;&nbsp;&nbsp;&nbsp; typedef struct {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// 16 bytes
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a>
+x;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// X-offset of room (world coordinates)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a>
+z;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Z-offset of room (world coordinates)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a>
+yBottom;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // (actually largest value,
+but indicates lowest point in room)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a>
+yTop;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// (actually smallest value, but indicates highest point in room)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } <b>tr2_room_info</b>;</dir>
+
+<ul>
+<li>
+<a name="struct_tr2_room_door"></a><b>Portal structure.</b>&nbsp; These
+portals, sometimes called "doors", define the view from a room into another
+room. This can be through a "real" door, a window, or even some open area
+that makes the rooms look like one big room. Note that "rooms" here are
+really just areas; they aren't necessarily enclosed.&nbsp; The portal structure
+below defines visibility portals, not an actual moveable door mesh, texture,
+or action (if any).&nbsp; And if the portal is not properly oriented, the
+camera cannot "see" through it.</li>
+</ul>
+
+<dir>
+<dir>typedef struct 
+{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ 32 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> AdjoiningRoom;&nbsp;&nbsp;&nbsp;&nbsp;
+// which room this portal leads to
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Normal;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// which way the portal faces (the normal
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // points <i>away</i> from the adjacent room; to be seen through, it
+must point <i>toward</i> the viewpoint).
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Vertices[4];&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// the corners of this portal (the right-hand rule applies with respect
+to the normal)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // if the right-hand-rule is not followed, the portal will
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // contain visual artifacts instead of a viewport to
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // AdjoiningRoom
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_room_portal</b>;</dir>
+</dir>
+
+<ul>
+<li>
+<a name="struct_tr2_room_sector"></a><b>Room Sector structure.&nbsp; All
+the geometry specified here is collisional geometry.</b> Sectors are 1024
+* 1024 (world coordinates). Floor and Ceiling are signed numbers of 256
+units of height (relative to 0), e.g. Floor 0x04 corresponds to Y = 1024
+in world coordinates. Note: this implies that, while X and Z can be quite
+large, Y is constrained to -32768..32512. Floor/Ceiling value of 0x81 is
+used to indicate impenetrable walls around the sector. Floor values are
+used by the game engine to determine what objects Lara can traverse and
+how. Relative steps of 1 (-256) can be walked up; steps of 2..7 (-512..-1792)
+can/must be jumped up; steps larger than 7 (-2048..-32768) cannot be jumped
+up (too tall). RoomAbove and RoomBelow indicate what neighboring rooms
+are in these directions; if RoomAbove is not "none", then the ceiling is
+a collisional portal to that room, while if RoomBelow is not "none", then
+the floor is a collisional portal to that room.</li>
+</ul>
+
+<dir>
+<dir>&nbsp;
+<br>typedef struct 
+{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ 8 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> FDindex;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Index into FloorData[]
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> BoxIndex;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Index into Boxes[]/Zones[] (-1 if none)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a>&nbsp;&nbsp; RoomBelow;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// The number of the room below this one (-1 or 255 if none)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit8</a>&nbsp;&nbsp;&nbsp;&nbsp;
+Floor;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Absolute height of floor (multiply by 256 for world coordinates)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a>&nbsp;&nbsp; RoomAbove;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// The number of the room above this one (-1 or 255 if none)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit8</a>&nbsp;&nbsp;&nbsp;&nbsp;
+Ceiling;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Absolute height of ceiling (multiply by 256 for world coordinates)
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_room_sector</b>;
+<p><font color="#008000">In TR3, BoxIndex is more complicated. Only bits
+4-14 are the "real" index; bits 0-3 are most likely some kind of flag,
+such as what kind of footstep sound to make (wood, metal, snow). Furthermore,
+there is a special value of the "real" index, 2047, or 0x7ff.</font></p></dir>
+</dir>
+
+<ul>
+<li>
+<a name="struct_tr2_room_light"></a><b>Room Lighting structure.</b>&nbsp;
+X/Y/Z are in world coordinates.&nbsp; Intensity1/Intensity2 are almost
+always equal. This lighting only affects externally-lit objects. Tomb Raider
+1 has only the first of the paired Intensity and Fade values.</li>
+</ul>
+
+<dir>&nbsp;&nbsp;&nbsp; typedef struct {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// 24 bytes [TR1: 18 bytes]
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a>&nbsp;&nbsp;
+x;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// X-position of light, in world coordinates
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a>&nbsp;&nbsp;
+y;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Y-position of light, in world coordinates
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a>&nbsp;&nbsp;
+z;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Z-position of light, in world coordinates
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+Intensity1;&nbsp;&nbsp;&nbsp; // Light intensity
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+Intensity2;&nbsp;&nbsp;&nbsp; // Almost always equal to Intensity1 [absent
+from TR1 data files]
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a>
+Fade1;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Falloff value
+1
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a>
+Fade2;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Falloff value
+2 [absent from TR1 data files]
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } <b>tr2_room_light</b>;</dir>
+
+<ul>
+<li>
+<a name="struct_tr2_room_vertex"></a><b>Room Vertex structure.</b>&nbsp;
+This defines the vertices within a room. Room lighting is internal vertex
+lighting, except for necessarily external sources like flares; room ambient
+lights and point sources are ignored. Tomb Raider 1 has only the first
+of the two light values and lacks the rendering attributes.</li>
+</ul>
+
+<dir>
+<dir>typedef struct {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// 12 bytes [TR1: 8 bytes]
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Vertex;
+// where this vertex lies (relative to tr2_room_info::x/z)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Lighting1;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Attributes;&nbsp;&nbsp;&nbsp;
+// A set of flags for special rendering effects [absent from TR1 data files]
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ 0x8000 something to do with water surface
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ 0x4000 under water lighting modulation and
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ movement if viewed from above water surface
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ 0x2000 water/quicksand surface movement
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ 0x0010 "normal"
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Lighting2;&nbsp;&nbsp;&nbsp;&nbsp;
+// Almost always equal to Lighting1 [absent from TR1 data files]
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_vertex_room</b>;</dir>
+</dir>
+
+<ul>
+<li>
+<a name="struct_tr2_room_sprite"></a><b>Room Sprite structure.</b> This
+indicates a point in space (Room.Vertices[room_sprite.Vertex]) and a sprite
+to display there (.Texture is an index into the sprite texture list).</li>
+</ul>
+
+<dir>
+<dir>typedef struct {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
+4 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Vertex;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// offset into vertex list
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Texture;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// offset into sprite texture list
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_room_sprite</b>;</dir>
+</dir>
+
+<ul>
+<li>
+<a name="struct_tr2_room_data"></a><b>Room Data structure.</b>&nbsp; This
+is the geometry of the "room," including walls, floors, rocks, water, etc.
+It does <i><u>not</u></i> include objects that Lara can interact with (keyboxes,
+moveable blocks, moveable doors, etc.) The surfaces specified here are
+rendered surfaces.&nbsp; <b>NOTE</b> that this is not a "real" C/C++ structure,
+in that the arrays are sized by the NumXXX elements that precede them.</li>
+</ul>
+
+<dir>
+<dir>typedef struct 
+{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ (variable length)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+NumVertices;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ number of vertices in the following list
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_vertex">tr2_vertex_room</a>
+Vertices[NumVertices];&nbsp; // list of vertices (relative coordinates)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+NumRectangles;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ number of textured rectangles
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face4">tr2_face4</a> Rectangles[NumRectangles];&nbsp;&nbsp;&nbsp;&nbsp;
+// list of textured rectangles
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+NumTriangles;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ number of textured triangles
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face3">tr2_face3</a> Triangles[NumTriangles];&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// list of textured triangles
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+NumSprites;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ number of sprites
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_sprite">tr2_room_sprite</a>
+Sprites[NumSprites];&nbsp;&nbsp;&nbsp;&nbsp; // list of sprites
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_room_data</b>;</dir>
+</dir>
+
+<ul>
+<li>
+<a name="struct_tr2_room_staticmesh"></a><b>Room Static Mesh structure.</b>&nbsp;
+Positions and IDs of static meshes (e.g. skeletons, spiderwebs, furniture,
+trees). This is comparable to the <a href="#struct_tr2_item">tr2_item</a>
+structure, except that static meshes typically have no animations and are
+confined to a single room.</li>
+</ul>
+
+<dir>
+<dir>typedef struct {&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // 20 bytes
+<font color="#800000">[TR1: 18 bytes]</font>
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a> x;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// absolute X position in world coordinates
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a> y;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// absolute Y position in world coordinates
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a> z;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// absolute Z position in world coordinates
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Rotation;&nbsp;&nbsp;
+// high two bits (0xC000) indicate steps of
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ 90 degrees (e.g. (Rotation &gt;&gt; 14) * 90)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Intensity1; //
+Constant lighting; -1 means use mesh lighting
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Intensity2; //
+Like Intensity 1, and almost always the same value [absent from TR1 data
+files]
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> ObjectID;&nbsp;
+// which StaticMesh item to draw
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_room_staticmesh</b>;</dir>
+</dir>
+
+<ul>
+<li>
+<a name="struct_tr2_room"></a><b>Room structure.</b>&nbsp; Here's where
+all the room data come together.&nbsp; As it's stored in the file, the
+<a href="#struct_tr2_room_info">tr2_room_info</a>
+structure comes first, followed by a <a href="#Data_Types">bitu32</a> NumDataWords,
+which specifies the number of 16-bit words to follow.&nbsp; Those data
+words must be parsed in order to interpret and construct the variable-length
+arrays of vertices, meshes, doors, and sectors.&nbsp; <b>NOTE</b> that
+this is not a "real" C/C++ structure, in that the arrays are sized by the
+NumXXX elements that precede them.</li>
+</ul>
+
+<blockquote>typedef struct 
+{&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ (variable length)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_info">tr2_room_info</a>
+info;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ where the room exists, in world coordinates
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a> NumDataWords;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// number of data words (bitu16s)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Data[NumDataWords];&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// the raw data from which the rest of
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ this is derived
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_data">tr2_room_data</a>
+RoomData;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// the room mesh
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> 
+NumPortals;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ number of visibility portals to other rooms
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_portal">tr2_room_portal</a>
+Portals[NumPortals]; // list of visibility portals
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> 
+NumZsectors;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ "width" of sector list
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> 
+NumXsectors;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ "height" of sector list
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_sector">tr2_room_sector</a>
+SectorList[NumXsectors * NumZsectors];&nbsp;&nbsp;&nbsp; // list of sectors
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ in this room
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> AmbientIntensity1;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// This and the next one only affect
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ externally-lit objects
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> AmbientIntensity2;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Almost always the same value as AmbientIntensity1 [absent from TR1 data
+files]
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+LightMode;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ (present only in TR2: 0 is normal, 1 is
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ flickering(?), 2 and 3 are uncertain)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> 
+NumLights;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ number of point lights in this room
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_light">tr2_room_light</a>
+Lights[NumLights]; // list of point lights
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> NumStaticMeshes;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// number of static meshes
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_staticmesh">tr2_room_staticmesh</a>
+StaticMeshes[NumStaticMeshes]; // list of static meshes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+AlternateRoom;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ number of the room that this room can alternate
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ with (e.g. empty/filled with water is implemented as an empty room
+that alternates with a full room)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Flags;&nbsp;&nbsp;
+// flag bits: 0x0001 - room is filled with water,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ 0x0020 - Lara's ponytail gets blown
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ by the wind;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ <font color="#FF0000">TR1 has only the water flag and the extra</font>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ <font color="#FF0000">unknown flag 0x0100.</font>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ <font color="#008000">TR3 most likely has flags for "is raining",
+"is snowing", "water is cold", and "is</font>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ <font color="#008000">filled by quicksand", among others.</font>
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_colour">tr2_colour</a><font color="#008000">
+RoomLightColour; // Present in TR3 only; absent from TR1/TR2.</font>
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_room</b>;</blockquote>
+
+<hr>
+<center>
+<p><a name="FloorData"></a><b><u><font size="+1">III. FloorData</font></u></b></p></center>
+
+<p>The <b>FloorData</b> defines special sector attributes such as floor
+and ceiling slopes, collisional portals to other rooms, climbability of
+walls, and all the various types of triggering. It is referenced by the
+sectors as an array of 16-bit unsigned integers, e.g. the current sector
+is calculated as (((CurrentX - tr2_room_info.x) / 1024) * tr2_room.NumZsectors)
++ ((CurrentZ - tr2_room_info.z) / 1024), which is then used as an offset
+into tr2_room:: SectorList[]; tr2_room_sector::FDindex is an offset into
+the FloorData[] array.
+</p><p>The FloorData consists of opcodes and operands.&nbsp; Opcodes are 16
+bits, as follows:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Function</b>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+bits 0..7 (0x00FF)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>SubFunction</b>:&nbsp;&nbsp;&nbsp;
+bits 8..14 (0x7F00)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>EndData</b>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+bit 15 (0x8000)
+<br>If <i>EndData</i> is set, there are no more opcodes (after the current
+one) in this section of FloorData;&nbsp; otherwise, the next opcode in
+FloorData should be interpreted after the current one.
+</p><p>Some functions reference an <b>FDlist</b>, which is a separate list
+of opcodes and operands that immediately follows the current FloorData
+opcode.&nbsp; FDlist opcodes and operands are different from the base FloorData
+opcodes and operands:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>FDfunction:&nbsp; </b>bits
+10-13 (0x3C00)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>Operands:&nbsp; </b>bits
+0-9 (0x03FF) vary, depending on FDfunction
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>FDcontinue:&nbsp; </b>bit
+15 (0x8000)
+</p><p>Several of the functions indicate adjustments to the sector's floor
+and ceiling heights; these are specified by adjusting the corner heights.
+The corners will be denoted as 00, 01, 10, and 11; the first is the corner's
+X coordinate and the second is the corner's Z coordinate, with both given
+as multiples of 1024.
+</p><p><font color="#008000">When parsing functions for TR3, use only the lower
+5 bits to find the function value, because some of TR3's functions use
+the upper 3 bits of the lower byte as part of the operand. However, this
+will also work correctly in TR1 and TR2.</font>
+</p><p><b><u><font size="+1">FloorData Functions are described below.</font></u></b>
+<br>&nbsp;&nbsp;&nbsp; Function 0x01: <b>Portal Sector</b>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubFunction 0x00: Room Portal:
+the next FloorData element (the operand) is the number of the room that
+this sector is a collisional portal to.
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; An entity that arrives in
+a sector with this function present will gets its room membership changed
+to this function's operand, without any change in position.
+</p><p>&nbsp;&nbsp;&nbsp; Function 0x02: <b>Floor Slant</b>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubFunction 0x00: Floor
+Slant: The next FloorData element contains the slant values for the floor
+of this sector.&nbsp; Slant values are specified in increments of 256 units.
+The high byte (bit8) is the Z slope, while the low byte (bit8) is the X
+slope. If the X slope is greater than zero, then its value is added to
+the floor heights of corners 00 and 01. If it is less than zero, then its
+value is subtracted from the floor heights of corners 10 and 11. If the
+Z slope is greater than zero, then its value is added to the floor heights
+of corners 00 and 10. If it is less than zero, then its value is subtracted
+from the floor heights of corners 01 and 11.
+</p><p>&nbsp;&nbsp;&nbsp; Function 0x03: <b>Ceiling Slant</b>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubFunction 0x00: Ceiling
+Slant: The next FloorData element contains the slant values for the ceiling
+of this sector.&nbsp; Slant values are specified in increments of 256 units.
+The high byte (bit8) is the Z slope, while the low byte (bit8) is the X
+slope. If the X slope is greater than zero, then its value is subtracted
+from the ceiling heights of corners 10 and 11. If it is less than zero,
+then its value is added to the ceiling heights of corners 00 and 01. If
+the Z slope is greater than zero, then its value is subtracted from the
+ceiling heights of corners 00 and 10. If it is less than zero, then its
+value is added to the ceiling heights of corners 01 and 11.
+</p><p>&nbsp;&nbsp;&nbsp; Function 0x04: <b>Trigger</b> items, switch cameras,
+end the level and much more.
+<br>As used below, "run FDlist(activate or deactivate)" means go through
+each element in FDlist and perform its function ("run FDlist+1" just means
+start at FDlist[1] rather than FDlist[0]).&nbsp; Activate/deactivate is
+only used for the activate/deactivate item function.
+<br>There are two states for each item, active/inactive (the meaning depends
+on the item, e.g. a tiger must be active to be seen, if a door is active
+it is open, if it is inactive it is closed, etc.) and on/off (keyholes
+and switches).
+<br>The <b>bitu16</b> immediately following the 0x04 FloorData opcode contains
+flags; the bits at 0x3e00 are the Activation Mask (which is XORed with
+any appropriate item flags), the bit at 0x0100 indicates "state change
+occurs only once". A good example of activation-mask use is the multiple-switch
+room of "Palace Midas" in TR1.
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubFunction 0x00: Run FDlist(activate)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubFunction 0x01: If Lara
+is on the ground, run FDlist(activate)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubFunction 0x02: If item
+at FDlist[0] is on, run FDlist+1(activate), else run FDlist+1(deactivate)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubFunction 0x03: If item
+at FDlist[0] is on, run FDlist+1(activate)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubFunction 0x04: If item
+at FDlist[0] is picked up, run FDlist+1(activate)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubFunction 0x05: If item
+at FDlist[0] is in this sector, run FDlist+1(activate), else run FDlist+1(deactivate)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubFunction 0x06: If Lara
+is on the ground, run FDlist(deactivate)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubFunction 0x07: unknown
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubFunction 0x08: If Lara
+is not on the ground, run FDlist(activate)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(mainly used for activating collision detection with such objects as footbridges)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SubFunction 0x09: Run FDlist(deactivate)
+</p><p>&nbsp;&nbsp;&nbsp; Function 0x05: <b>Kills Lara</b>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Any SubFunction: If Lara
+is on the ground, it kills Lara with fire.
+</p><p>&nbsp;&nbsp;&nbsp; Function 0x06: <b>Climbable Walls</b>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; This subfunction indicates
+climbability of walls; its value is the bitwise OR of the values associated
+with all the climbable-wall directions (0x01 ::= +Z, 0x02 ::= +X, 0x04
+::= -Z, 0x08 ::= -X), e.g. SubFunction 0x09 indicates that the walls on
+both the +Z and -X sides of this sector are climbable.
+</p><p><font color="#008000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Functions 0x07
+to 0x12: (only in TR3) These specify the floor and ceiling slopes, which
+are more complicated here, since these functions specify dividing up the
+floors and ceilings into triangles along either of the two diagonals. Also,
+one of the triangles may be a collisional portal to the room above (if
+in the ceiling) or to the room below (if in the floor). The function word
+must be parsed as follows:</font>
+</p><p><font color="#008000">Bit 15: Continuation bit</font>
+<br><font color="#008000">Bits 10-14: value t01</font>
+<br><font color="#008000">Bits 5-9: value t00</font>
+<br><font color="#008000">Bits 0-4 function value</font>
+</p><p><font color="#008000">where t00 and t01 are signed.</font>
+</p><p><font color="#008000">It is followed by one operand, to be parsed as
+follows:</font>
+</p><p><font color="#008000">Bits 12-15: value t13</font>
+<br><font color="#008000">Bits 8-11: value t12</font>
+<br><font color="#008000">Bits 4-7: value t11</font>
+<br><font color="#008000">Bits 0-3: value t10</font>
+</p><p><font color="#008000">where t10, t11, t12, and t13 are unsigned.</font>
+</p><p><font color="#008000">Here are the triangulations and vertex adjustments;
+for some of the functions, one of the triangles is a portal to another
+room:</font>
+</p><p><font color="#008000">Functions 0x07, 0x0b, 0x0c:</font>
+</p><p><font color="#008000">Triangle 1: 00-01-10 (function 0x0b: is a portal)</font>
+<br><font color="#008000">Triangle 2: 11-10-01 (function 0x0c: is a portal)</font>
+</p><p><font color="#008000">Overall adjustment: adj = t00 + t01 + t10 + t12</font>
+</p><p><font color="#008000">Add these quantities to these vertex floor heights:</font>
+</p><p><font color="#008000">00: (adj - t11)</font>
+<br><font color="#008000">01: (adj - t12)</font>
+<br><font color="#008000">10: (adj - t10)</font>
+<br><font color="#008000">11: (adj - t13)</font>
+</p><p><font color="#008000">Functions 0x08, 0x0d, 0x0e:</font>
+</p><p><font color="#008000">Triangle 1: 01-11-00 (function 0x0d: is a portal)</font>
+<br><font color="#008000">Triangle 2: 10-00-11 (function 0x0e: is a portal)</font>
+</p><p><font color="#008000">Overall adjustment: adj = t00 + t01 + t11 + t13</font>
+</p><p><font color="#008000">Add these quantities to these vertex floor heights:</font>
+</p><p><font color="#008000">00: (adj - t11)</font>
+<br><font color="#008000">01: (adj - t12)</font>
+<br><font color="#008000">10: (adj - t10)</font>
+<br><font color="#008000">11: (adj - t13)</font>
+</p><p><font color="#008000">Functions 0x09, 0x0f, 0x10:</font>
+</p><p><font color="#008000">Triangle 1: 00-10-01 (function 0x0f: is a portal)</font>
+<br><font color="#008000">Triangle 2: 11-01-10 (function 0x10: is a portal)</font>
+</p><p><font color="#008000">Overall adjustment: adj = t10 + t12</font>
+</p><p><font color="#008000">Subtract these quantities from these vertex ceiling
+heights:</font>
+</p><p><font color="#008000">00: (adj - t12)</font>
+<br><font color="#008000">01: (adj - t11)</font>
+<br><font color="#008000">10: (adj - t13)</font>
+<br><font color="#008000">11: (adj - t10)</font>
+</p><p><font color="#008000">Functions 0x0a, 0x10, 0x11:</font>
+</p><p><font color="#008000">Triangle 1: 01-00-11 (function 0x11: is a portal)</font>
+<br><font color="#008000">Triangle 2: 10-11-00 (function 0x12: is a portal)</font>
+</p><p><font color="#008000">Overall adjustment: adj = t11 + t13</font>
+</p><p><font color="#008000">Subtract these quantities from these vertex ceiling
+heights:</font>
+</p><p><font color="#008000">00: (adj - t12)</font>
+<br><font color="#008000">01: (adj - t11)</font>
+<br><font color="#008000">10: (adj - t13)</font>
+<br><font color="#008000">11: (adj - t10)</font>
+<br>&nbsp;
+</p><p><font color="#008000">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Function 0x13:
+has subfunction 0x00 and no operand. Unknown, but is possibly monkey-swingability
+of the ceiling.</font>
+<br>&nbsp;
+<br>&nbsp;
+</p><p><b><u><font size="+1">FloorData FDlist functions are described below:</font></u></b>
+<br>&nbsp;&nbsp;&nbsp; FDfunction 0x00: <b>Activate or deactivate item</b>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operand (bits 0..9): Item
+index
+</p><p>&nbsp;&nbsp;&nbsp; FDfunction 0x01: <b>Switch to camera</b> (also uses
+the bitu16 immediately following)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operand (bits 0..6): Index
+in Cameras[]
+<br>&nbsp;&nbsp; The bitu16 immediately following <b>specifies delay and
+repeatability for switched camera</b>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operand (bits 0..7 (0xff)):
+Camera Delay
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Number
+of seconds to wait before automatically switching back to the normal camera.
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0x00 never switches back to the normal camera.
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operand (bit 8 (0x100)):
+If set, only switch to camera once; otherwise, switch to
+<br>camera every time
+</p><p>&nbsp;&nbsp;&nbsp; FDfunction 0x02: <b>Underwater Current</b>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operand (bits 0..9 (0x3ff)):
+direction and intensity of flow
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0, 1, 2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -Z direction
+in decreasing intensity (0 is strongest)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+3, 4, 5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -X direction
+in decreasing intensity
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+6, 7, 8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +Z direction
+in decreasing intensity
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+9, 10, 11&nbsp;&nbsp;&nbsp;&nbsp; +X direction in decreasing intensity
+</p><p>&nbsp;&nbsp;&nbsp; FDfunction 0x03:: <b>Set AlternateRoom Variable</b>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operand (bit 0 (0x01)):
+AlternateRoom Flag value (0/1)
+</p><p>&nbsp;&nbsp;&nbsp; FDfunction 0x04:&nbsp; <b>Alter Room Flags</b> this
+affects (enhances/negates) roomflags (always paired with 0x05)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operand: not sure, range
+0 - 5
+</p><p>&nbsp;&nbsp;&nbsp; FDfunction 0x05: <b>Alter Room Flags</b> this affects
+(enhances/negates) roomflags (always paired with 0x04)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operand: not sure, range
+0 - 5
+</p><p>&nbsp;&nbsp;&nbsp; FDfunction 0x06: <b>Look at Item</b> (if a camera
+change is also desired, this should come first)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operand (bits 0..9 (0x3ff)):
+Item index
+</p><p>&nbsp;&nbsp;&nbsp; FDfunction 0x07: <b>End Level</b>
+</p><p>&nbsp;&nbsp;&nbsp; FDfunction 0x08: <b>Play CD Track</b>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operand (bits 0..9 (0x3ff)):
+CD track ID (<font color="#FF0000">TR1: Internal Sound Index</font>)
+</p><p>&nbsp;&nbsp;&nbsp; FDfunction 0x09: <b>Assault Course Clock Control</b>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operand (bits 0..9 (0x3ff)):
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x1c ::= clear clock
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x1d ::= stop clock
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x1e ::= clock reset and displayed
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; This opcode is also associated with switches; other values of its operand
+appear to indicate switch sounds.
+</p><p>&nbsp;&nbsp;&nbsp; FDfunction 0x0a: <b>Play "Found Secret" Sound</b>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Operand (bits 0..9 (0x3ff)):
+Which secret (0..NumSecrets-1)
+</p><p>&nbsp;&nbsp;&nbsp; FDfunction 0x0b: <b>Unknown</b>
+</p><p>While FloorData index 0 means the sector does not use floordata, there
+is still a "dummy" entry for index 0.&nbsp; This dummy entry doesn't contain
+any useful information.
+</p><p>
+</p><hr>
+<center>
+<p><a name="MeshGeometry"></a><b><u><font size="+1">IV. Mesh Geometry</font></u></b></p></center>
+
+<p><b>Overview: </b>Nearly all of the non-geographic visual elements in
+TR2 (as well as a few parts of the landscape) are specified as <b>meshes</b>.&nbsp;
+A <b>mesh</b> is simply a list of vertices and how they're arranged.&nbsp;
+The TR2 mesh structure includes a list of vertices as relative coordinates
+(which allows meshes to easily be placed anywhere in the world geometry),
+a list of normals (to indicate which side of each face is visible), and
+lists of Rectangles and Triangles, both Textured and Coloured.&nbsp; The
+elements of each <a href="#struct_tr2_face4">tr2_face4</a> or <a href="#struct_tr2_face3">tr2_face3</a>
+structure (Rectangles and Triangles) contain an offset into the Vertices[]
+array for the mesh. Other arrays (Moveables[], StaticMeshes[]) do not reference
+the array Meshes[] directly, but instead reference the array MeshPointers[],
+which points to locations inside of Meshes[], inside of which the meshes
+are stored in packed fashion.
+</p><p><b>Meshes:</b>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; The sign of the number of normals specifies
+which sort of lighting to use. If the sign is positive, then external vertex
+lighting is used, with the lighting calculated from the room's ambient
+and point-source lighting values. The latter appears to use a simple Lambert
+law for directionality: intensity is proportional to max((normal direction).(direction
+to source), 0). If the sign is negative, then internal vertex lighting
+is used, using the data included with the mesh.<a name="struct_tr2_mesh"></a><b>NOTE</b>
+that this is not a "real" C/C++ structure, in that the arrays are sized
+by the NumXXX elements that precede them.
+</p><p>typedef struct {
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Centre;
+// This is usually close to the mesh's centroid, and appears to be the
+center of a sphere used for collision testing.
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a> CollisionSize; //
+This appears to be the radius of that aforementioned collisional sphere.
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumVertices; //
+number of vertices in this mesh
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Vertices[NumVertices];
+// list of vertices (relative coordinates)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumNormals; // If
+positive, number of normals in this mesh.
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ // If negative, number of vertex lighting elements (* (-1))
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Normals[NumNormals];
+// list of normals (if NumNormals is positive)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Lights[-NumNormals];
+// list of light values (if NumNormals is negative)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumTexturedRectangles;
+// number of textured rectangles in this mesh
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face4">tr2_face4</a> TexturedRectangles[NumTexturedRectangles];
+// list of textured rectangles
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumTexturedTriangles;
+// number of textured triangles in this mesh
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face3">tr2_face3</a> TexturedTriangles[NumTexturedTriangles];
+// list of textured triangles
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumColouredRectangles;
+// number of coloured rectangles in this mesh
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face4">tr2_face4</a> ColouredRectangles[NumColouredRectangles];
+// list of coloured rectangles
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumColouredTriangles;
+// number of coloured triangles in this mesh
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face3">tr2_face3</a> ColouredTriangles[NumColouredTriangles];
+// list of coloured triangles
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_mesh</b>;
+<br>&nbsp;
+<br>&nbsp;
+</p><p><b>Static Meshes:</b>
+</p><p>/*
+<br>&nbsp;* StaticMesh structure. This defines meshes that don't move (e.g. skeletons
+<br>&nbsp;* lying on the floor, spiderwebs, trees, statues, etc.)
+<br>&nbsp;* StaticMeshes have two bounding boxes; it is not clear why they have more than
+<br>&nbsp;* one. One could be the visibililty box, and one could be the collisional
+<br>&nbsp;* box, for instance; the former being used for visibility testing, and the
+<br>&nbsp;* latter for collision testing.
+<br>&nbsp;*/
+<br><a name="struct_tr2_staticmesh"></a>typedef struct { // 32 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a> ObjectID; // Object
+Identifier (matched in Items[])
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Mesh; // mesh (offset
+into MeshPointers[])
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">tr2_vertex</a> BoundingBox[2][2];
+// First index is which one; second index is opposite corners
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Flags; // Meaning
+uncertain; it is usually 2, and is 3 for objects Lara can travel through,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ // like TR2's skeletons and underwater vegetation
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_staticmesh</b>;
+<br>&nbsp;
+<br>&nbsp;
+</p><p><b>Moveables:</b>
+</p><p>/*
+<br>&nbsp;* Moveable structure. This defines a list of contiguous meshes that
+<br>&nbsp;* comprise one object.
+<br>&nbsp;* This structure also points to the hierarchy and offsets of the meshes
+<br>&nbsp;* (MeshTree), and also to the animations used (Animation); these will be
+<br>&nbsp;* described in detail below. If the Animation index is -1, that means that
+<br>&nbsp;* the entity's animations are all generated by the engine; an example is
+<br>&nbsp;* Lara's ponytail. Some movables are really stationary, such as locks and
+<br>&nbsp;* the sky, and some are not rendered, such as "look at me" points to aim
+<br>&nbsp;* the camera at.
+<br>&nbsp;*/
+<br><a name="struct_tr2_moveable"></a>typedef struct { // 18 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a> ObjectID; // Item
+Identifier (matched in Items[])
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> NumMeshes; // number
+of meshes in this object
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> StartingMesh; //
+stating mesh (offset into MeshPointers[])
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a> MeshTree; // offset
+into MeshTree[]
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a> FrameOffset; //
+byte offset into Frames[] (divide by 2 for Frames[i])
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Animation; // offset
+into Animations[]
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_moveable</b>;
+<br>&nbsp;
+<br>&nbsp;
+</p><p><b>Items:</b> Items are instances of objects, which can be sprite sequences
+or movables. For an object to appear in a level, it must be referenced
+in the Items[] array. Multiple instances are possible (e.g. two identical
+tigers in different rooms are represented using two entries in Items[],
+one for each). The object ID is used to locate the appropriate sprite sequence
+or movable for the item.
+</p><p><a name="struct_tr2_item"></a>typedef struct {&nbsp;&nbsp;&nbsp;&nbsp;
+// 24 bytes [TR1: 22 bytes]
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> ObjectID; // Object
+Identifier (matched in Moveables[], or SpriteSequences[], as appropriate)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Room; // which room
+contains this item
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a> x; // item position
+in world coordinates
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a> y;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a> z;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Angle; // ((0xc000
+&gt;&gt; 14) * 90) degrees
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Intensity1; // (constant
+lighting; -1 means use mesh lighting)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Intensity2; // Like
+Intensity1, and almost always with the same value. [absent from TR1 data
+files]
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Flags; // 0x0100
+indicates "initially invisible", 0x3e00 is Activation Mask
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ // 0x3e00 indicates "open" or "activated";&nbsp;
+these can be XORed with
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ related FloorData::FDlist fields (e.g. for switches)
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_item</b>;
+</p><p><b>Sprites:</b>
+</p><p>These are "billboard" objects that are always rendered perpendicular
+to the view direction. These are used for text and explosion effects and
+similar things; they are also used for some scenery objects and pickup
+items, though this use gets less as one goes from TR1 to TR3. The various
+"Sides" below are the positions of the sprite sides relative to the sprite's
+overall position, measured in TR's world-coordinate units.
+</p><p><a name="struct_tr2_sprite_texture"></a>typedef struct { // 16 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Tile;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> x;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> y;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Width;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// actually (Width * 256) + 255
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Height;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// actually (Height * 256) + 255
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> LeftSide;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> TopSide;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> RightSide;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> BottomSide;
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_sprite_texture</b>;
+<br>&nbsp;
+<br>&nbsp;
+</p><p><b>Sprite Sequences:</b>
+<br>These are collections of sprites that are referred to as a group. The
+members of this group can be cycled through (animated sprites such as flames)
+or selected in other ways (text). Some sequences have only one member;
+this is done so as to access all the sprites in the same way.
+</p><p><a name="struct_tr2_sprite_sequence"></a>typedef struct { // 8 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a> ObjectID; // Item
+identifier (matched in Items[])
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NegativeLength;
+// negative of "how many sprites are in this sequence"
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Offset; // where
+(in sprite texture list) this sequence starts
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_sprite_sequence</b>;
+</p><p>
+</p><hr>
+<center>
+<p><a name="MeshConstructionAndAnimation"></a><b><u><font size="+1">V. Mesh
+Construction and Animation</font></u></b></p></center>
+
+<p><b>Overview:</b>
+<br>The animated mesh objects in the Tomb Raider series are sets of meshes
+that are moved relative to each other, as defined by Moveables[] entries.
+Each entry describes which meshes to be used (a contiguous set of them
+referred to in MeshPointers[]), what hierarchy and relative offsets they
+have (contents of MeshTree[] pointed to), and what animations are to be
+used (contents of Animations[] pointed to).
+</p><p>The hierarchy used is a branching one, with the meshes being at the
+nodes, and with the first mesh being the root node. The MeshTree[] values,
+called "Bone2" in some documentation, are applied to each of the child
+meshes in sequence; they are sets of four <a href="#Data_Types">bit32</a>'s, the first being a hierarchy
+operator, and the remaining three being the coordinates in the parent mesh's
+system. A hierarchy example is that for the Lara meshes:
+</p><pre>Hips
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Left thigh
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Left shin
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Left foot
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Right thigh
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Right shin
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Right foot
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Torso
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Left inner arm
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Left outer arm
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Left hand
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Right inner arm
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Right outer arm
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Right hand
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Head
+(Ponytail is a separate object)</pre>
+This is implemented by using a stack of meshes and "push" and "pop" operations
+in MeshTree[]. Normally, each mesh's parent is the previous mesh in series.
+But such meshes can be "remembered" by adding them to a stack of meshes
+with a "push" operation. This remembered mesh can then be used as the parent
+mesh with a "pop" operation. It is not clear what the maximum stack depth
+is; most TR mesh stacks do not extend beyond 2 or 3 meshes.
+<p>The animations for each mesh object are selected with some ingenious
+techniques. Which animations to use are not hardcoded; instead, each entity
+has some states it can be in, and these states are used to select which
+animation. For example, locks have only one state (they just sit there),
+doors have two states (open and closed), and Lara has numerous states,
+such as standing, walking, running, jumping, falling, being hurt, dying,
+etc. Each animation has a state ID, which can be used to select it; however,
+state transitions might seem to require a large number of intermediate
+states (opening, closing, starting to jump, landing, etc.). The alternative
+used in the Tomb Raider engine is for each animation to have bridge animations
+to other states' animations, which are selected using the ID of which state
+to change to. These bridge animations then lead to the animation with the
+appropriate state. Thus, a closed door will run a looped closed-door animation
+as long as its state stays "closed", but when its state becomes "open",
+it will change to an opening-door bridge animation, which will end in a
+looped open-door animation. Likewise, closing a door will make it use a
+closing-door bridge animation. Some bridge animations are chosen with a
+finer grain of selectivity, however, such as using one for left foot forward
+and one for right foot forward.
+</p><p>Thus, each animation references a set of StateChange structures (called
+simply a "structure" in some documentation), each one of which references
+an AnimDispatch structure (called a "range" in some documentation). Each
+StateChange structure contains a new state and which AnimDispatch structures
+to use. When an entity goes into a new state, the StateChange structures
+are scanned for that state's ID, and if one matches, then that StateChange's
+AnimDispatches are then scanned for a range of frames that contains the
+ID of the current frame. If such an AnimDispatch is found, the animation
+and the frame are changed to those listed in it.
+</p><p>The ultimate unit of animation is, of course, the frame, and each frame
+consists of a bounding box, the offset of the root mesh, and rotation angles
+for all the meshes with respect to their parent meshes. The root mesh is
+also rotated, but relative to the object's overall coordinates. All rotations
+are performed around the meshes' origins, and are in order Y, X, Z (yaw,
+pitch, roll). The reason for the root mesh's displacement is because entities
+traveling on solid surfaces are likely tracked by having their locations
+be at ground level, and Lara's hips, for example, are well above the ground.
+Finally, some of the angles are not specified explicitly, when they are
+not, they are zero.
+</p><p>Frames are referenced in two ways, either by an offset into the Frames[]
+array that contains them, or by frame index. The values of the latter appear
+to be unique to each kind of entity, but not between entities; the first
+frame for each kind is numbered 0. This is likely a convenience when constructing
+the animations, since the list of animation frames for each entity can
+be constructed separately. However, using these indices is fairly simple.
+Each Animation structure has a first-frame index; this index is subtracted
+from the index of the desired frame in order to find out its index relative
+to the animation's first frame.
+</p><p>There are also some special AnimCommands (called "Bone1" in some documentation)
+for doing various additional things. Some of them are for setting reference
+points; these may either be 3D ones, for example for grab locations, or
+2D ones, for jumps from surface. Some others define actions per frame,
+like playing sounds, emitting bubbles, and so forth.
+</p><p>Finally, some entities appear to have very incomplete animations; their
+complete animations are "borrowed" from similar entities. One example of
+this is the various goons in TR2's Venice levels -- some of them have a
+full set of animations, while some others have only the standing animation.
+The ones with only the standing animation borrow their other animations
+from the fully-animated ones.
+</p><p><b>Data Structures:</b>
+</p><p>/*
+<br>&nbsp;* MeshTree structure
+<br>&nbsp;*
+<br>&nbsp;* MeshTree[] is actually groups of four bit32s. The first one is a
+<br>&nbsp;* "flags" word;
+<br>&nbsp;* &nbsp;&nbsp;&nbsp;bit 1 (0x0002) indicates "put the parent mesh on the mesh stack";
+<br>&nbsp;* &nbsp;&nbsp;&nbsp;bit 0 (0x0001) indicates "take the top mesh off of the mesh stack and
+use as the parent mesh"
+<br>&nbsp;* when set, otherwise "use the previous mesh are
+the parent mesh".
+<br>&nbsp;* When both are present, the bit-0 operation is always done before the
+bit-1 operation; in effect, read the stack but do not change it.
+<br>&nbsp;* The next three bit32s are X, Y, Z offsets of the mesh's origin from
+the parent mesh's origin.
+<br>&nbsp;*/
+<br><a name="struct_tr2_meshtree"></a>typedef struct { // 4 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a> Coord;
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_meshtree</b>;
+<br>&nbsp;
+</p><p>/*
+<br>&nbsp;* Animation structure.
+<br>&nbsp;* This describes each individual animation; these may be looped by specifying
+<br>&nbsp;* the next animation to be itself. In TR2 and TR3, one must be careful when
+<br>&nbsp;* parsing frames using the FrameSize value as the size of each frame, since
+<br>&nbsp;* an animation's frame range may extend into the next animation's frame range,
+<br>&nbsp;* and that may have a different FrameSize value.
+<br>&nbsp;*/
+<br><a name="struct_tr2_animation"></a>typedef struct { // 32 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a> FrameOffset; //
+byte offset into Frames[] (divide by 2 for Frames[i])
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> FrameRate;&nbsp;&nbsp;&nbsp;
+// Engine ticks per frame
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> FrameSize; // number
+of bit16's in Frames[] used by this animation
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> StateID;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> Unknown2[8];
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> FrameStart; //
+first frame in this animation
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> FrameEnd; // last
+frame in this animation (numframes = (End - Start) + 1)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> NextAnimation;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> NextFrame;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> NumStateChanges;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> StateChangeOffset;
+// offset into StateChanges[]
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> NumAnimCommands;
+// How many of them to use.
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> AnimCommand; //
+offset into AnimCommand[]
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_animation</b>;
+</p><p>/*
+<br>&nbsp;* State Change structure
+<br>&nbsp;* Each one contains the state to change to and which animation dispatches
+<br>&nbsp;* to use; there may be more than one, with each separate one covering a different
+<br>&nbsp;* range of frames.
+<br>&nbsp;*/
+<br><a name="struct_tr2_state_change"></a>typedef struct { // 6 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> StateID;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> NumAnimDispatches;
+// number of ranges (seems to always be 1..5)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> AnimDispatch; //
+Offset into AnimDispatches[]
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_state_change</b>;
+</p><p>/*
+<br>&nbsp;* Animation Dispatch structure
+<br>&nbsp;* This specifies the next animation and frame to use; these are associated
+<br>&nbsp;* with some range of frames. This makes possible such specificity as one
+<br>&nbsp;* animation for left foot forward and another animation for right foot forward.
+<br>&nbsp;*/
+<br><a name="struct_tr2_range"></a>typedef struct { // 8 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+Low;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ Lowest frame that uses this range
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> 
+High;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ Highest frame (+1?) that uses this range
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NextAnimation;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Animation to dispatch to
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NextFrame;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Frame offset to dispatch to
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_anim_dispatch</b>;
+</p><p>/*
+<br>&nbsp;* AnimCommand structure
+<br>&nbsp;* These are various commands associated with each animation; they are
+<br>&nbsp;* called "Bone1" in some documentation. They are varying numbers of bit16's
+<br>&nbsp;* packed into an array; the first of each set is the opcode, which determines
+<br>&nbsp;* how operand bit16's follow it. Some of them refer to the whole animation
+<br>&nbsp;* (jump and grab points, etc.), while others of them are associated with
+<br>&nbsp;* specific frames (sound, bubbles, etc.).
+<br>&nbsp;*/
+<br><a name="struct_tr2_anim_command"></a>typedef struct { // 2 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Value;
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_anim_command</b>;
+</p><p>Here are all the AnimCommand opcodes and their operands:
+<br>// 1: 3 operands. Position reference: (x,y,z); found in grab and block-move
+animations
+<br>// 2: 2 operands. Position reference on surface for jumping: (x,z)
+for horizontal and (y,z) for vertical surfaces(?)
+<br>// 3: No operands. Not clear; occurs in animations that are "slaved"
+to other animations, such as Lara throwing switches or moving blocks.
+<br>// 4: No operands. Not clear; occurs in some death and settling-down
+animations, but not all.
+<br>// 5: 2 operands. The first one is a frame number, and the second one
+is the ID of the sound to play at that frame (internal sound index).
+<br>In TR2 and TR3, one of the sound indices two highest bits may be set;
+when they are, their meanings are
+</p><p>0x4000 -- play this sound when on dry land (example: footsteps)
+<br>0x8000 -- play this sound when in water (example: running through shallow
+water)
+</p><p>// 6: 2 operands. The first one is a frame number, and the second one
+is some miscellaneous action.
+<br>//&nbsp;&nbsp;&nbsp;&nbsp; 0: Occurs in flipping-over animations; freeze
+camera at current position until end of animation?
+<br>//&nbsp;&nbsp;&nbsp;&nbsp; 3: Make bubble
+<br>//&nbsp;&nbsp;&nbsp;&nbsp; 12: Temporarily stop responding to controls?
+<br>//&nbsp;&nbsp;&nbsp;&nbsp; etc.
+<br>14 and 15: Some kind of camera control?
+<br>18: ?
+<br>19: ?
+<br>20: Lara changing clothes (using a different Lara model)
+<br>21: ?
+<br>22: ?
+<br>23: Hide object
+<br>24: Show object
+<br>26: Some kind of camera control?
+<br>TR3 has additional ones, such as
+<br>-32736 = 0x8000 + 32
+<br>32
+<br>16416 = 0x4000 + 32
+<br>
+</p><p>/*
+<br>&nbsp;* Frame structure.
+<br>&nbsp;*
+<br>&nbsp;* Frames indicate how composite meshes are positioned and rotated.
+They work
+<br>&nbsp;* in conjunction with Animations[] and MeshTree[]. A given frame has
+the following
+<br>&nbsp;* format:
+<br>&nbsp;* bit16 BB1x, BB1y, BB1z // bounding box (low)
+<br>&nbsp;* bit16 BB2x, BB2y, BB2z // bounding box (high)
+<br>&nbsp;* bit16 OffsetX, OffsetY, OffsetZ // starting offset for this moveable
+<br>&nbsp;* (<font color="#FF0000">TR1 ONLY: bit16 NumValues // number of angle
+sets to follow; these start with the first mesh, and meshes without angles
+get zero angles.</font>)
+<br>&nbsp;* (TR2/3: NumValues is implicitly NumMeshes (from moveable))
+<br>&nbsp;* What follows next is a list of angle sets. In TR2/3, an angle set
+can
+<br>&nbsp;* specify either one or three axes of rotation. If either of the high
+two
+<br>&nbsp;* bits (0xc000) of the first angle bitu16 are set, it's one axis: only
+one
+<br>&nbsp;* bitu16, low 10 bits (0x03ff), scale is 0x100 ::= 90 degrees; the
+high two
+<br>&nbsp;* bits are interpreted as follows: 0x4000 ::= X only, 0x8000 ::= Y
+only,
+<br>&nbsp;* 0xC000 ::= Z only.
+<br>&nbsp;* If neither of the high bits are set, it's a three-axis rotation.
+The next
+<br>&nbsp;* 10 bits (0x3ff0) are the X rotation, the next 10 (including the following
+<br>&nbsp;* bitu16) (0x000f, 0xfc00) are the Y rotation, the next 10 (0x03ff)
+are the
+<br>&nbsp;* Z rotation, same scale as before (0x100 ::= 90 degrees).
+<br>&nbsp;* Rotations are performed in Y, X, Z order.
+<br>&nbsp;* <font color="#FF0000">TR1 ONLY: All angle sets are two words and
+interpreted like the two-word</font>
+<br>&nbsp;* <font color="#FF0000">sets in TR2/3, EXCEPT that the word order is
+reversed</font>.
+<br>&nbsp;*/
+</p><p>
+</p><hr>
+<br>&nbsp;
+<br>&nbsp;
+<br>
+<br>
+<br>
+<center>
+<p><a name="NonPlayerCharacterBehaviour"></a><b><u><font size="+1">VI. Non-Player
+Character Behaviour</font></u></b></p></center>
+
+<p><b>Overview:</b>
+<br>All the Tomb Raider game physics and entity behavior appears to be
+hardcoded, with each type ID being associated with some specific sort of
+behavior (as Lara, as a boat, as a tiger, as a door, as a boulder, as a
+lock, etc.). There is no sign of the sorts of schemes used by some other
+game engines for specifying this behavior in data files. One scheme is
+to use generic characters, generic projectiles, and so forth, and to specialize
+them by reading in appropriate records from data files. Another scheme is to use interpreted pseudocode; this
+is used by id's Quake. This hardcoding makes it difficult to port the earlier
+Tomb Raider scenarios to the engines of the later games, which could be
+desirable with their improved 3D-card and sound-card support. While textures,
+models, and animations can be ported, behavior cannot be.
+</p><p>However, there is a hint that TR3 may have some such information. Some
+of its characters are hostile in some levels, and not in others (the India-level
+monkeys, the Antarctica-level flamethrower wielders); there may be some
+flag in Items[] that determines whether a character is hostile or not.
+But the hostile and non-hostile versions of these characters may have separate
+type ID's.
+</p><p>Despite that lack, the Tomb Raider series does have navigation hints
+for the Non-Player Characters; those entities that move freely across the
+maps under the command of the game AI. One of the NPC's is the camera,
+since only Lara (and the vehicles she rides) is under the direct control
+of the player; the game AI makes the camera follow Lara. The camera uses
+the navigation hints used by the flying NPC's; these can be constructed
+so as to help the camera out of tight spots.
+</p><p>The navigation hints are three data structures: boxes, overlaps, and
+zones. Most sectors point to some box, the main exceptions being horizontal-portal
+sectors. Several neighbring sectors may point to the same box. A box is
+a horizontal rectangle, with corners and height specified; each box also
+has a pointer into the list of overlaps. Each segment in that list is the
+list of accessible neighboring boxes for some box; the NPC's apparently
+select from this list to decide where to go next. This selection is done
+with the help of the zones. These structures of <font color="#FF0000">6 (TR1)</font>
+or 10 (TR2, TR3)
+<a href="#Data_Types">bit16</a>'s that act as zone ID's; their overall indexing is the same as the
+boxes, meaning that each box will have an associated set of zone ID's.
+An NPC will select one of this set to use, and will prefer to go into the
+overlaps-list boxes that have the same zone value as the box it is currently
+in. For example, one can create guard paths by making chains of zone-ID-sharing
+boxes, with their overlaps pointing to the next boxes in those chains.
+</p><p><b>Data Structures:</b>
+</p><p><b>Boxes:</b>
+</p><p><a name="struct_tr2_box"></a>typedef struct { // 8 bytes [TR1: 20 bytes]
+<font color="#FF0000">In
+TR1, the first four are bit32's instead of bitu8's, and are not scaled.</font>
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> Zmin;&nbsp;&nbsp;&nbsp;&nbsp;
+// sectors (* 1024 units)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> Zmax;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> Xmin;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> Xmax;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> TrueFloor; // Y
+value (no scaling)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> OverlapIndex; //
+index into Overlaps[]. The high bit is sometimes set; this
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ // occurs in front of swinging doors and the like.
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_box</b>;
+</p><p><b>Overlaps:</b>
+</p><p>This is a set of lists of neighboring boxes for each box, each member
+being a bitu16; the highest bit being set marks the end of each list. NPC's
+apparently use this list to decide where to go next.
+</p><p><b>Zones:</b>
+</p><p>This is a set of bit16's, <font color="#FF0000">6 for TR1</font> and
+10 for TR2 and TR3. NPCs prefer to travel to a box with the same zone ID
+as the one they are currently at. Which of these zone ID's it uses depends
+on the kind of the NPC and its current state. The first half of the Zones
+structure is for the "normal" room state, and the second half is for the
+"alternate" room state. TR1, for example, has 2 sets of ground zones and
+1 set of fly zones; its zones are
+</p><p>ground zone 1 (normal)
+<br>ground zone 2 (normal)
+<br>fly zone (normal)
+<br>ground zone 1 (alternate)
+<br>ground zone 2 (alternate)
+<br>fly zone (alternate)
+</p><p>The ground zones are for NPC's that travel on the ground, while the
+fly zones are for flying or swimming NPC's. TR2 and TR3 have similar breakdowns,
+though they have 4 ground zones.
+<br>&nbsp;
+</p><p>
+</p><hr>
+<center>
+<p><a name="Sound"></a><b><u><font size="+1">VII. Sound</font></u></b></p></center>
+
+<p><b>Overview:</b>
+<br>The Tomb Raider series makes abundant use of sound, which appears in
+a variety of contexts. Sounds can be either continuous or triggered. Continuous
+ones can be for the whole level or produced by some sound-source object.
+The whole-level sound is a CD-track sound, which is played continuously,
+thus the blowing-wind sounds in the underground parts of "The Great Wall".
+Sound-source objects make sound in a range around some specific point.
+Likewise, triggered ones can be triggered by a variety of events. The triggering
+can be hardcoded in the engine (gunshots, switch pulls) or by reaching
+some animation frame (footsteps, Lara's somewhat unladylike sounds). Switch
+pulls and/or door sounds may be specified with operand of FDFunction 0x09;
+operand values lower than those used for assault-course clock control may
+specify which sounds to use.
+</p><p>Though CD-track sounds are referred to by track index, game-data sounds
+are referred to by an internal sound index; this is translated into which
+sound sample with the help of three layers of indexing, to allow for a
+suitable degree of abstraction. Internal sound indices for various sounds
+appear to be consistent across all the level files in a game; a gunshot
+or a passport opening in one level file will have the same internal sound
+index as in all the others. The highest level of these is the SoundMap[]
+array, which translates the internal sound index into an index into SoundDetails[].
+Each SoundDetails record contains such details as the sound intensity,
+how many samples to select from, and an index into SampleIndices[]. This
+allows for selecting among multiple samples to produce variety; that index
+is the index to the SampleIndices[] value of first of these, with the rest
+of them being having the next indices in series of that array. Thus, if
+the number of samples is 4, then the TR engine looks in SampleIndices[]
+locations Index, Index+1, Index+2, and Index+3. Finally, the SampleIndices[]
+array references some arrays of sound samples. In TR1, these samples are
+embedded in the level files, and SampleIndices[] contains the displacements
+of each one in bytes from the beginning of that embedded block. In TR2
+and TR3, these samples are concatenated in the file "MAIN.SFX" with no
+additional information; SampleIndices[] contains sequence numbers (0, 1,
+2, 3, ...) in MAIN.SFX. Finally , the samples themselves are all in Microsoft
+WAVE format.
+</p><p>The CD-audio tracks are stored in different fashions in the various
+versions of the TR series. <font color="#008000">In the PC version of TR3, they are all stored
+in the file CDAUDIO.WAD, which has the format (source: Sven, BachmannS@gmx.net,
+http://wotsit.org/cgi-bin/download.cgi?tr3audio): a series of header records
+with this format:
+</font></p><pre><font color="#008000">{ // 0x108 bytes
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bit32 SampleLength;&nbsp;&nbsp;&nbsp;&nbsp; // how many bytes
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bit32 SampleOffset;&nbsp;&nbsp;&nbsp;&nbsp; // offset in file
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bit8 Name[256];&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // C string; the length is a guess, because Sven's sizes are inconsistent.
+};</font></pre><font color="#008000">
+followed by embedded samples in the Microsoft WAVE format.</font>
+<p>In the Macintosh versions of TR1 and TR2, the CD audio tracks are separate
+files in AIFF format, while in the Macintosh version of TR3, these tracks
+are separate files in Microsoft WAVE format. The Macintosh version of TR3
+contains an additional file, CDAudio.db, which contains the names of all
+the track files as 32-byte zero-padded C strings with no extra contents.
+</p><p><b>Data Structures:</b>
+</p><p>/*
+<br>&nbsp;* SoundSource structure
+<br>&nbsp;* This structure contains the details of continuous-sound sources. Although
+<br>&nbsp;* a SoundSource object has a position, it has no room membership; the sound
+<br>&nbsp;* seems to propagate omnidirectionally for about 10 horizontal-grid sizes
+<br>&nbsp;* without regard for the presence of walls.
+<br>&nbsp;*/
+<br><a name="struct_tr2_sound_source"></a>typedef struct {
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a> x;&nbsp;&nbsp;&nbsp;&nbsp;
+// absolute X position of sound source (world coordinates)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a> y;&nbsp;&nbsp;&nbsp;&nbsp;
+// absolute Y position of sound source (world coordinates)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a> z;&nbsp;&nbsp;&nbsp;&nbsp;
+// absolute Z position of sound source (world coordinates)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> SoundID; // internal
+sound index
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Flags; // 0x40,
+0x80, or 0xc0
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_sound_source</b>;
+</p><p>SoundMap is for mapping from internal-sound index to SoundDetails index;
+it is 370 bit16s in TR2 and TR3 and <font color="#FF0000">256 bit16s in
+TR1</font>. A value of -1 indicates "none".
+</p><p>/*
+<br>&nbsp;* Sound-sample details (SoundDetails)
+<br>&nbsp;*/
+<br><a name="struct_tr2_sound_details"></a>typedef struct { // 8 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Sample; // (index
+into SampleIndices)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Volume;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Unknown1; // sound
+range? (distance at which this sound can be heard?)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Unknown2; // Bits
+8-15: priority?, Bits 2-7: number of sound
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ // samples in this group, Bits 0-1: channel number?
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_sound_details</b>;
+</p><p><b>SampleIndices:</b> <font color="#FF0000">In TR1, this is a list of
+indices into the embedded sound-samples object, which precedes this object
+in the level file.</font> In TR2 and TR3, this is a list of indices into
+the file "MAIN.SFX"; the indices are the index numbers of that file's embedded
+sound samples, rather than the samples' starting locations. That file itself
+is a set of concatenated soundfiles with no catalogue info present. In
+all the TR series, the sound format used is Microsoft WAVE (.wav).
+<br>&nbsp;
+</p><p>
+</p><hr>
+<center>
+<p><a name="Miscellany"></a><b><u><font size="+1">VIII. Miscellany</font></u></b></p></center>
+<p><b><u>These are various odds and ends that do not fit into
+the earlier categories.</u></b>
+</p><p><a name="Miscellany_Version"></a><b>Version:</b> Every level file (.PHD,
+.TUB, .TR2) begins with a <a href="#Data_Types">bitu32</a> version number.&nbsp;
+This seems to be used by the engine to guarantee compatibility between
+various level editor versions and the game engine version.&nbsp; More generally,
+it can be used to determine what sort of level is being read.&nbsp; Here
+are the known (observed) values for the version header:
+</p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x00000020&nbsp;&nbsp;&nbsp;
+Tomb Raider 1, Gold, Unfinished Business
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0x0000002d&nbsp;&nbsp;&nbsp;
+Tomb Raider 2
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0xFF080038&nbsp;&nbsp;&nbsp;
+Tomb Raider 3
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0xFF180038&nbsp;&nbsp;&nbsp;
+Tomb Raider 3
+</p><p><b>Palette:</b> This consists of 256 <a href="#Data_Types">tr2_colour</a>
+structs, one for each palette entry. However, the individual colour values
+range from 0 to 63; they must be multiplied by 4 to get the correct values.
+</p><p>This used for all 8-bit colour, such as 8-bit textures.
+</p><p><b>Object Textures:</b>
+</p><p>/*
+<br>&nbsp;* Object-texture vertex structure. It specifies a vertex location in
+textile coordinates.
+<br>&nbsp;* The Xpixel and Ypixel are the actual coordinates of the vertex's pixel.
+<br>&nbsp;* The Xcoordinate and Ycoordinate values depend on where the other vertices
+<br>&nbsp;* are in the object texture. And if the object texture is used to specify
+<br>&nbsp;* a triangle, then the fourth vertex's values will all be zero.
+<br>&nbsp;*/
+<br><a name="struct_tr2_object_texture_vert"></a>typedef struct { // 4
+bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> Xcoordinate; //
+1 if Xpixel is the low value, 255 if Xpixel is the high value in the object
+texture
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> Xpixel;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> Ycoordinate; //
+1 if Ypixel is the low value, 255 if Ypixel is the high value in the object
+texture
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> Ypixel;
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_object_texture_vert</b>;
+</p><p>/*
+<br>&nbsp;* Object texture structure.
+<br>&nbsp;* These, thee contents of ObjectTextures[], are used for specifying texture
+<br>&nbsp;* mapping for the world geometry and for mesh objects.
+<br>&nbsp;*/
+<br><a name="struct_tr2_object_texture"></a>typedef struct { // 20 bytes
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Attribute;&nbsp;
+// 0 means that a texture is all-opaque, and that transparency
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ // information is ignored.
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ 1 means that transparency information is used. In 8-bit colour,
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ index 0 is the transparent colour, while in 16-bit colour, the
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ top bit (0x8000) is the alpha channel (1 = opaque, 0 = transparent).
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ <font color="#008000">2 (only in TR3) means that the opacity (alpha)
+is equal to the intensity;</font>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ <font color="#008000">the brighter the colour, the more opaque it
+is. The intensity is probably calculated
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//
+ as the maximum of the individual
+color values.</font>
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Tile; // index
+into textile list
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_object_texture_vert">tr2_object_texture_vert</a>
+Vertices[4]; // the four corners of the texture
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_object_texture</b>;
+</p><p><b>Animated Textures:</b>
+</p><p><a name="struct_tr2_animated_texture"></a>Animated textures describe
+sets of object textures that are cycled through to produce texture animations;
+they are a set of bit16's with the following format (not a "real" C/C++
+structure):
+</p><p><a href="#Data_Types">bit16</a> NumAnimatedTextures
+<br>struct {
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumTextureIDs; // Actually, this is
+the number of texture ID's - 1.
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> TextureIDs[NumTextureIDs + 1]; // offsets
+into ObjectTextures[], in animation order.
+<br>&nbsp;&nbsp;&nbsp; } AnimatedTextures[NumAnimatedTextures];
+</p><p>If a texture belongs to an animated-texture group, it will automatically
+be animated by the engine. The animation framerate is most likely hardcoded.
+<br>&nbsp;
+</p><p><b>Cameras:</b>
+<br>These are positions to switch the camera to; the camera gets switched
+to one of these as specified in the floordata, which also specify what
+to look at, how long to switch, and whether to do so only once.
+</p><p><a name="struct_tr2_camera"></a>typedef struct {
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a> x;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a> y;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit32</a> z;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> Room;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> Unknown1; // correlates
+to Boxes[]? Zones[]?
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_camera</b>;
+<br>&nbsp;
+<br>&nbsp;
+</p><p><b>Cinematic Frames:</b>
+<br>These are camera positionings for cutscenes. All the entity animations
+are specified separately, and it is not clear where there is any syncing
+between these frames and any of the animations.
+</p><p><a name="struct_tr2_cinematic_frame"></a>typedef struct {
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> rotY;&nbsp;&nbsp;
+// rotation about Y axis, +/- 32767 == +/- 180 degrees
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> rotZ;&nbsp;&nbsp;&nbsp;
+// rotation about Z axis, +/- 32767 == +/- 180 degrees
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> rotZ2;&nbsp; //
+seems to work a lot like rotZ;&nbsp; I haven't yet been able to
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ differentiate them
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> posZ;&nbsp;&nbsp;
+// camera position relative to something (target? Lara? room
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ origin?).&nbsp; pos* are _not_ in world coordinates.
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> posY;&nbsp;&nbsp;
+// camera position relative to something (see posZ)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> posX;&nbsp;&nbsp;
+// camera position relative to something (see posZ)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> unknown; // changing
+this can cause a runtime error
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> rotX;&nbsp;&nbsp;
+// rotation about X axis, +/- 32767 == +/- 180 degrees
+<br>&nbsp;&nbsp;&nbsp; } <b>tr2_cinematic_frame</b>;
+<br>&nbsp;
+</p><p><b>LightMap:</b>
+<br>A 32*256 array of <a href="#Data_Types">bitu8</a>'s which is apparently for applying light to
+8-bit colour, in some documentation called "ColourMap". The current palette
+index and lighting value are used to calcuate an index to this table, which
+is a table of palette indices.
+</p><p>The Tomb Raider series' software rendering, like that of most real-time-3D
+games, uses 8-bit colour for speed and low bulk; however, there is the
+serious problem of how to do lighting with 8-bit colour, because doing
+it directly is computationally expensive. The usual solution is to arrange
+the palettes' colours in ramps, which the engine then follows in the appropriate
+directions. However, the TR series' palettes generally lack such neat ramps.
+</p><p>But the TR series has a more general solution, one that does not require
+palettes to have colour ramps. It uses precalculated lighting tables, the
+"ColourMap" objects. These contain translations of a colour value and a
+lighting value, listed by palette index. The translation goes as follows:
+</p><p>n = ColourMap[256 * k + i];
+</p><p>where i is the original palette index, k is determined from the lighting
+value, and n is the new palette index. The lighting index k varies from
+0 to 31, and the corresponding lighting value is, <font color="#FF0000">for TR1,
+</font></p><p><font color="#FF0000">2 - k / 16</font>
+</p><p>and for TR2 and TR3,
+</p><p>2 - (k + 1) / 16
+</p><p>This may be associated with the curious fact of the lighting values
+in the data files increasing in the "wrong" direction in TR1 and TR2, with
+0 being full brightness and greater values being darker.
+<br>&nbsp;
+</p><p>
+</p><hr>
+<center>
+<p><a name="EntireTR2level"></a><b><u><font size="+1">IX. The Entire TR2
+Level Format</font></u></b></p></center>
+
+<p><a name="EntireLevelFormat_TR2"></a>
+<br>What follows is the physical .TR2 file layout, byte for byte. Note
+that this is not a "real" C/C++ structure, in that some arrays are variable-length,
+with the length being defined by another element of the structure.
+</p><p><a href="#Data_Types">bitu32</a> Version; // version (4 bytes)
+<br><a href="#struct_tr2_colour">tr2_colour</a> Palette[256]; // 8-bit
+palette (768 bytes)
+<br><a href="#struct_tr2_colour">tr2_colour4</a> Palette16[256]; //&nbsp;
+(1024 bytes)
+<br><a href="#Data_Types">bitu32</a> NumTextiles; // number of texture
+tiles (4 bytes)
+<br><a href="#struct_tr2_textile8">tr2_textile8</a> Textile8[NumTextiles];
+// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)
+<br><a href="#struct_tr2_textile16">tr2_textile16</a> Textile16[NumTextiles];
+// 16-bit (ARGB) textiles (NumTextiles * 131072 bytes)
+<br><a href="#Data_Types">bitu32</a> Unused; // 32-bit unused value (4
+bytes)
+<br><a href="#Data_Types">bitu16</a> NumRooms; // number of rooms (2 bytes)
+<br>struct {
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_info">tr2_room_info</a>
+RoomInfo; // room header (16 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a> NumData; // number
+of data bitu16's to follow (=RoomData) (4 bytes)
+<br>&nbsp;&nbsp;&nbsp; struct {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumVertices; // number of vertices to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_vertex">tr2_vertex_room</a>
+Vertices[NumVertices]; // vertex list (NumVertices * 12 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumRectangles; // number of rectangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face4">tr2_face4</a>
+Rectangles[NumRectangles]; // rectangle list (NumRectangles * 10 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumTriangles; // number of triangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face3">tr2_face3</a>
+Triangles[NumTriangles]; // triangle list (NumTriangles * 8 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumSprites; // number of sprites to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_sprite">tr2_room_sprite</a>
+Sprites[NumSprites]; // room sprite list (NumSprites * 4 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumDoors; // number of doors to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_door">tr2_room_door</a>
+Doors[NumDoors]; // door list (NumDoors * 32 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumZsector; // sector table width (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumXsector; // sector table height (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_sector">tr2_room_sector</a>
+SectorData[NumZsector * NumXsector]; // sector table (NumZsector * NumXsector
+* 8 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
+Intensity1;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
+Intensity2;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
+LightMode;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumLights; // number of lights to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_light">tr2_room_light</a>
+Lights[NumLights]; // light list (NumLights * 24 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumStaticMeshes; // number of static mesh records to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_struct_tr2_room_staticmesh">tr2_room_staticmesh</a>
+StaticMeshes[NumStaticMeshes]; // static mesh data (NumStaticMeshes * 20
+bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
+AlternateRoom; // (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+Flags; // (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } RoomData;
+<br>&nbsp;&nbsp;&nbsp; } Rooms[NumRooms];
+<br><a href="#Data_Types">bitu32</a> NumFloorData; // number of floor data
+bitu16's to follow (4 bytes)
+<br><a href="#Data_Types">bitu16</a> FloorData[NumFloorData]; // floor
+data (NumFloorData * 2 bytes)
+<br><a href="#Data_Types">bitu32</a> NumMeshData; // number of bitu16's
+of mesh data to follow (=Meshes[]) (4 bytes)
+<br>struct {
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Centre;
+// relative coordinates of mesh centre (6 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> Unknown1[4]; //
+unknown (4 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumVertices; //
+number of vertices to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Vertices[NumVertices];
+// list of vertices (NumVertices * 6 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumNormals; // number
+of normals to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Normals[NumNormals];
+// list of normals (NumNormals * 6 bytes) (becomes Lights if NumNormals
+&lt; 0; 2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumTexturedRectangles;
+// number of textured rectangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face4">tr2_face4</a> TexturedRectangles[NumTexturedRectangles];
+// list of textured rectangles (NumTexturedRectangles * 10 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumTexturedTriangles;
+// number of textured triangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face3">tr2_face3</a> TexturedTriangles[NumTexturedTriangles];
+// list of textured triangles (NumTexturedTriangles * 8 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumColouredRectangles;
+// number of coloured rectangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face4">tr2_face4</a> ColouredRectangles[NumColouredRectangles];
+// list of coloured rectangles (NumColouredRectangles * 10 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumColouredTriangles;
+// number of coloured triangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face3">tr2_face3</a> ColouredTriangles[NumColouredTriangles];
+// list of coloured triangles (NumColouredTriangles * 8 bytes)
+<br>&nbsp;&nbsp;&nbsp; } Meshes[NumMeshPointers]; // note that NumMeshPointers
+comes <u>AFTER</u> Meshes[]
+<br><a href="#Data_Types">bitu32</a> NumMeshPointers; // number of mesh
+pointers to follow (4 bytes)
+<br><a href="#Data_Types">bitu32</a> MeshPointers[NumMeshPointers]; //
+mesh pointer list (NumMeshPointers * 4 bytes)
+<br><a href="#Data_Types">bitu32</a> NumAnimations; // number of animations
+to follow (4 bytes)
+<br><a href="#struct_tr2_animation">tr2_animation</a> Animations[NumAnimations];
+// animation list (NumAnimations * 32 bytes)
+<br><a href="#Data_Types">bitu32</a> NumStateChanges; // number of state
+changes to follow (4 bytes)
+<br><a href="#struct_tr2_state_change">tr2_state_change</a> StateChanges[NumStateChanges];
+// state-change list (NumStructures * 6 bytes)
+<br><a href="#Data_Types">bitu32</a> NumAnimDispatches; // number of animation
+dispatches to follow (4 bytes)
+<br><a href="#struct_tr2_anim_dispatch">tr2_anim_dispatch</a> AnimDispatches[NumAnimDispatches];
+// animation-dispatch list list (NumAnimDispatches * 8 bytes)
+<br><a href="#Data_Types">bitu32</a> NumAnimCommands; // number of animation
+commands to follow (4 bytes)
+<br><a href="#struct_tr2_anim_command">tr2_anim_command</a> AnimCommands[NumAnimCommands];
+// animation-command list (NumAnimCommands * 2 bytes)
+<br><a href="#Data_Types">bitu32</a> NumMeshTrees; // number of MeshTrees
+to follow (4 bytes)
+<br><a href="#struct_tr2_meshtree">tr2_meshtree</a> MeshTrees[NumMeshTrees];
+// MeshTree list (NumMeshTrees * 4 bytes)
+<br><a href="#Data_Types">bitu32</a> NumFrames; // number of words of frame
+data to follow (4 bytes)
+<br><a href="#Data_Types">bitu16</a> Frames[NumFrames]; // frame data (NumFrames
+* 2 bytes)
+<br><a href="#Data_Types">bitu32</a> NumMoveables; // number of moveables
+to follow (4 bytes)
+<br><a href="#struct_tr2_moveable">tr2_moveable</a> Moveables[NumMoveables];
+// moveable list (NumMoveables * 18 bytes)
+<br><a href="#Data_Types">bitu32</a> NumStaticMeshes; // number of StaticMesh
+data records to follow (4 bytes)
+<br><a href="#struct_tr2_staticmesh">tr2_staticmesh</a> StaticMeshes[NumStaticMeshes];
+// StaticMesh data (NumStaticMesh * 32 bytes)
+<br><a href="#Data_Types">bitu32</a> NumObjectTextures; // number of object
+textures to follow (4 bytes)
+<br><a href="#struct_tr2_object_texture">tr2_object_texture</a> ObjectTextures[NumObjectTextures];
+// object texture list (NumObjectTextures * 20 bytes) (after AnimatedTextures
+in TR3)
+<br><a href="#Data_Types">bitu32</a> NumSpriteTextures; // number of sprite
+textures to follow (4 bytes)
+<br><a href="#struct_tr2_sprite_texture">tr2_sprite_texture</a> SpriteTextures[NumSpriteTextures];
+// sprite texture list (NumSpriteTextures * 16 bytes)
+<br><a href="#Data_Types">bitu32</a> NumSpriteSequences; // number of sprite
+sequences records to follow (4 bytes)
+<br><a href="#struct_tr2_sprite_sequence">tr2_sprite_sequence</a> SpriteSequences[NumSpriteSequences];
+// sprite sequence data (NumSpriteSequences * 8 bytes)
+<br><a href="#Data_Types">bitu32</a> NumCameras; // number of camera data
+records to follow (4 bytes)
+<br><a href="#struct_tr2_camera">tr2_camera</a> Cameras[NumCameras]; //
+camera data (NumCameras * 16 bytes)
+<br><a href="#Data_Types">bitu32</a> NumSoundSources; // number of sound
+source data records to follow (4 bytes)
+<br><a href="#struct_tr2_sound_source">tr2_sound_source</a> SoundSources[NumSoundSources];
+// sound source data (NumSoundSources * 16 bytes)
+<br><a href="#Data_Types">bitu32</a> NumBoxes; // number of box data records
+to follow (4 bytes)
+<br><a href="#struct_tr2_box">tr2_box</a> Boxes[NumBoxes]; // box data
+(NumBoxes * 8 bytes)
+<br><a href="#Data_Types">bitu32</a> NumOverlaps; // number of overlap
+records to follow (4 bytes)
+<br><a href="#Data_Types">bitu16</a> Overlaps[NumOverlaps]; // overlap
+data (NumOverlaps * 2 bytes)
+<br><a href="#Data_Types">10*bit16</a> Zones[NumBoxes]; // zone data (NumBoxes
+* 20 bytes)
+<br><a href="#Data_Types">bitu32</a> NumAnimatedTextures; // number of
+animated texture records to follow (4 bytes)
+<br><a href="#Data_Types">bitu16</a> AnimatedTextures[NumAnimatedTextures];
+// animated texture data (NumAnimatedTextures * 2 bytes)
+<br><a href="#Data_Types">bitu32</a> NumItems; // number of items to follow
+(4 bytes)
+<br><a href="#struct_tr2_item">tr2_item</a> Items[NumItems]; // item list
+(NumItems * 24 bytes)
+<br><a href="#Data_Types">bitu8</a> LightMap[32 * 256]; // light map (8192
+bytes)
+<br><a href="#Data_Types">bitu16</a> NumCinematicFrames; // number of cinematic
+frame records to follow (2 bytes)
+<br><a href="#struct_tr2_cinematic_frame">tr2_cinematic_frame</a> CinematicFrames[NumCinematicFrames];
+// (NumCinematicFrames * 16 bytes)
+<br><a href="#Data_Types">bitu16</a> NumDemoData; // number of demo data
+records to follow (2 bytes)
+<br><a href="#Data_Types">bitu8</a> DemoData[NumDemoData]; // demo data
+(NumDemoData bytes)
+<br><a href="#Data_Types">bit16</a> SoundMap[370]; // sound map (740 bytes)
+<br><a href="#Data_Types">bitu32</a> NumSoundDetails; // number of sound-detail
+records to follow (4 bytes)
+<br><a href="#struct_tr2_sound_details">tr2_sample_info</a> SoundDetails[NumSoundDetails];
+// sound-detail list (NumSoundDetails * 8 bytes)
+<br><a href="#Data_Types">bitu32</a> NumSampleIndices; // number of sample
+indices to follow (4 bytes)
+<br><a href="#Data_Types">bitu32</a> SampleIndices[NumSampleIndices]; //
+sample indices (NumSampleIndices * 4 bytes)
+</p><p>
+</p><hr>
+<center>
+<p><a name="EntireTR2level"></a><b><u><font size="+1">The Entire TR1 Level
+Format</font></u></b></p></center>
+
+<p><a name="EntireLevelFormat_TR2"></a>
+<br>What follows is the physical .PHD file layout, byte for byte. Note
+that this is not a "real" C/C++ structure, in that some arrays are variable-length,
+with the length being defined by another element of the structure.
+</p><p><a href="#Data_Types">bitu32</a> Version; // version (4 bytes)
+<br><a href="#Data_Types">bitu32</a> NumTextiles; // number of texture
+tiles (4 bytes)
+<br><a href="#struct_tr2_textile8">tr2_textile8</a> Textile8[NumTextiles];
+// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)
+<br><a href="#Data_Types">bitu32</a> Unused; // 32-bit unused value (4
+bytes)
+<br><a href="#Data_Types">bitu16</a> NumRooms; // number of rooms (2 bytes)
+<br>struct {
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_info">tr2_room_info</a>
+RoomInfo; // room header (16 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a> NumData; // number
+of data bitu16's to follow (=RoomData) (4 bytes)
+<br>&nbsp;&nbsp;&nbsp; struct {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumVertices; // number of vertices to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_vertex">tr2_vertex_room</a>
+Vertices[NumVertices]; // vertex list (NumVertices * 8 bytes [TR1 version])
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumRectangles; // number of rectangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face4">tr2_face4</a>
+Rectangles[NumRectangles]; // rectangle list (NumRectangles * 10 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumTriangles; // number of triangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face3">tr2_face3</a>
+Triangles[NumTriangles]; // triangle list (NumTriangles * 8 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumSprites; // number of sprites to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_sprite">tr2_room_sprite</a>
+Sprites[NumSprites]; // room sprite list (NumSprites * 4 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumDoors; // number of doors to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_door">tr2_room_door</a>
+Doors[NumDoors]; // door list (NumDoors * 32 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumZsector; // sector table width (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumXsector; // sector table height (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_sector">tr2_room_sector</a>
+SectorData[NumZsector * NumXsector]; // sector table (NumZsector * NumXsector
+* 8 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
+Intensity1;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumLights; // number of lights to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_light">tr2_room_light</a>
+Lights[NumLights]; // light list (NumLights * 18 bytes [TR1 version])
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumStaticMeshes; // number of static mesh records to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_struct_tr2_room_staticmesh">tr2_room_staticmesh</a>
+StaticMeshes[NumStaticMeshes]; // static mesh data (NumStaticMeshes * 18
+bytes [TR1 version])
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
+AlternateRoom; // (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+Flags; // (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } RoomData;
+<br>&nbsp;&nbsp;&nbsp; } Rooms[NumRooms];
+<br><a href="#Data_Types">bitu32</a> NumFloorData; // number of floor data
+bitu16's to follow (4 bytes)
+<br><a href="#Data_Types">bitu16</a> FloorData[NumFloorData]; // floor
+data (NumFloorData * 2 bytes)
+<br><a href="#Data_Types">bitu32</a> NumMeshData; // number of bitu16's
+of mesh data to follow (=Meshes[]) (4 bytes)
+<br>struct {
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Centre;
+// relative coordinates of mesh centre (6 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> Unknown1[4]; //
+unknown (4 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumVertices; //
+number of vertices to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Vertices[NumVertices];
+// list of vertices (NumVertices * 6 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumNormals; // number
+of normals to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Normals[NumNormals];
+// list of normals (NumNormals * 6 bytes) (becomes Lights if NumNormals
+&lt; 0; 2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumTexturedRectangles;
+// number of textured rectangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face4">tr2_face4</a> TexturedRectangles[NumTexturedRectangles];
+// list of textured rectangles (NumTexturedRectangles * 10 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumTexturedTriangles;
+// number of textured triangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face3">tr2_face3</a> TexturedTriangles[NumTexturedTriangles];
+// list of textured triangles (NumTexturedTriangles * 8 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumColouredRectangles;
+// number of coloured rectangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face4">tr2_face4</a> ColouredRectangles[NumColouredRectangles];
+// list of coloured rectangles (NumColouredRectangles * 10 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumColouredTriangles;
+// number of coloured triangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face3">tr2_face3</a> ColouredTriangles[NumColouredTriangles];
+// list of coloured triangles (NumColouredTriangles * 8 bytes)
+<br>&nbsp;&nbsp;&nbsp; } Meshes[NumMeshPointers]; // note that NumMeshPointers
+comes <u>AFTER</u> Meshes[]
+<br><a href="#Data_Types">bitu32</a> NumMeshPointers; // number of mesh
+pointers to follow (4 bytes)
+<br><a href="#Data_Types">bitu32</a> MeshPointers[NumMeshPointers]; //
+mesh pointer list (NumMeshPointers * 4 bytes)
+<br><a href="#Data_Types">bitu32</a> NumAnimations; // number of animations
+to follow (4 bytes)
+<br><a href="#struct_tr2_animation">tr2_animation</a> Animations[NumAnimations];
+// animation list (NumAnimations * 32 bytes)
+<br><a href="#Data_Types">bitu32</a> NumStateChanges; // number of state
+changes to follow (4 bytes)
+<br><a href="#struct_tr2_state_change">tr2_state_change</a> StateChanges[NumStateChanges];
+// state-change list (NumStructures * 6 bytes)
+<br><a href="#Data_Types">bitu32</a> NumAnimDispatches; // number of animation
+dispatches to follow (4 bytes)
+<br><a href="#struct_tr2_anim_dispatch">tr2_anim_dispatch</a> AnimDispatches[NumAnimDispatches];
+// animation-dispatch list list (NumAnimDispatches * 8 bytes)
+<br><a href="#Data_Types">bitu32</a> NumAnimCommands; // number of animation
+commands to follow (4 bytes)
+<br><a href="#struct_tr2_anim_command">tr2_anim_command</a> AnimCommands[NumAnimCommands];
+// animation-command list (NumAnimCommands * 2 bytes)
+<br><a href="#Data_Types">bitu32</a> NumMeshTrees; // number of MeshTrees
+to follow (4 bytes)
+<br><a href="#struct_tr2_meshtree">tr2_meshtree</a> MeshTrees[NumMeshTrees];
+// MeshTree list (NumMeshTrees * 4 bytes)
+<br><a href="#Data_Types">bitu32</a> NumFrames; // number of words of frame
+data to follow (4 bytes)
+<br><a href="#Data_Types">bitu16</a> Frames[NumFrames]; // frame data (NumFrames
+* 2 bytes)
+<br><a href="#Data_Types">bitu32</a> NumMoveables; // number of moveables
+to follow (4 bytes)
+<br><a href="#struct_tr2_moveable">tr2_moveable</a> Moveables[NumMoveables];
+// moveable list (NumMoveables * 18 bytes)
+<br><a href="#Data_Types">bitu32</a> NumStaticMeshes; // number of StaticMesh
+data records to follow (4 bytes)
+<br><a href="#struct_tr2_staticmesh">tr2_staticmesh</a> StaticMeshes[NumStaticMeshes];
+// StaticMesh data (NumStaticMesh * 32 bytes)
+<br><a href="#Data_Types">bitu32</a> NumObjectTextures; // number of object
+textures to follow (4 bytes) (after AnimatedTextures in TR3)
+<br><a href="#struct_tr2_object_texture">tr2_object_texture</a> ObjectTextures[NumObjectTextures];
+// object texture list (NumObjectTextures * 20 bytes) (after AnimatedTextures
+in TR3)
+<br><a href="#Data_Types">bitu32</a> NumSpriteTextures; // number of sprite
+textures to follow (4 bytes)
+<br><a href="#struct_tr2_sprite_texture">tr2_sprite_texture</a> SpriteTextures[NumSpriteTextures];
+// sprite texture list (NumSpriteTextures * 16 bytes)
+<br><a href="#Data_Types">bitu32</a> NumSpriteSequences; // number of sprite
+sequences records to follow (4 bytes)
+<br><a href="#struct_tr2_sprite_sequence">tr2_sprite_sequence</a> SpriteSequences[NumSpriteSequences];
+// sprite sequence data (NumSpriteSequences * 8 bytes)
+<br><a href="#Data_Types">bitu32</a> NumCameras; // number of camera data
+records to follow (4 bytes)
+<br><a href="#struct_tr2_camera">tr2_camera</a> Cameras[NumCameras]; //
+camera data (NumCameras * 16 bytes)
+<br><a href="#Data_Types">bitu32</a> NumSoundSources; // number of sound
+source data records to follow (4 bytes)
+<br><a href="#struct_tr2_sound_source">tr2_sound_source</a> SoundSources[NumSoundSources];
+// sound source data (NumSoundSources * 16 bytes)
+<br><a href="#Data_Types">bitu32</a> NumBoxes; // number of box data records
+to follow (4 bytes)
+<br><a href="#struct_tr2_box">tr2_box</a> Boxes[NumBoxes]; // box data
+(NumBoxes * 20 bytes [TR1 version])
+<br><a href="#Data_Types">bitu32</a> NumOverlaps; // number of overlap
+records to follow (4 bytes)
+<br><a href="#Data_Types">bitu16</a> Overlaps[NumOverlaps]; // overlap
+data (NumOverlaps * 2 bytes)
+<br><a href="#Data_Types">6*bit16</a> Zones[NumBoxes]; // zone data (NumBoxes
+* 12 bytes [TR1 version])
+<br><a href="#Data_Types">bitu32</a> NumAnimatedTextures; // number of
+animated texture records to follow (4 bytes)
+<br><a href="#Data_Types">bitu16</a> AnimatedTextures[NumAnimatedTextures];
+// animated texture data (NumAnimatedTextures * 2 bytes)
+<br><a href="#Data_Types">bitu32</a> NumItems; // number of items to follow
+(4 bytes)
+<br><a href="#struct_tr2_item">tr2_item</a> Items[NumItems]; // item list
+(NumItems * 22 bytes [TR1 version])
+<br><a href="#Data_Types">bitu8</a> LightMap[32 * 256]; // light map (8192
+bytes)
+<br><a href="#struct_tr2_colour">tr2_colour</a> Palette[256]; // 8-bit
+palette (768 bytes)
+<br><a href="#Data_Types">bitu16</a> NumCinematicFrames; // number of cinematic
+frame records to follow (2 bytes)
+<br><a href="#struct_tr2_cinematic_frame">tr2_cinematic_frame</a> CinematicFrames[NumCinematicFrames];
+// (NumCinematicFrames * 16 bytes)
+<br><a href="#Data_Types">bitu16</a> NumDemoData; // number of demo data
+records to follow (2 bytes)
+<br><a href="#Data_Types">bitu8</a> DemoData[NumDemoData]; // demo data
+(NumDemoData bytes)
+<br><a href="#Data_Types">bit16</a> SoundMap[256]; // sound map (512 bytes)
+<br><a href="#Data_Types">bitu32</a> NumSoundDetails; // number of sound-detail
+records to follow (4 bytes)
+<br><a href="#struct_tr2_sound_details">tr2_sample_info</a> SoundDetails[NumSoundDetails];
+// sound-detail list (NumSoundDetails * 8 bytes)
+<br><a href="#Data_Types">bitu32</a> NumSamples (number of bitu8's in Samples)
+<br><a href="#Data_Types">bitu8</a> Samples (array of bitu8's -- embedded
+sound samples in Microsoft WAVE format)
+<br><a href="#Data_Types">bitu32</a> NumSampleIndices; // number of sample
+indices to follow (4 bytes)
+<br><a href="#Data_Types">bitu32</a> SampleIndices[NumSampleIndices]; //
+sample indices (NumSampleIndices * 4 bytes)
+</p><p>
+</p><hr>
+<center>
+<p><a name="EntireTR3level"></a><b><u><font size="+1">The Entire TR3 Level
+Format</font></u></b></p></center>
+
+<p><a name="EntireLevelFormat_TR2"></a>
+<br>What follows is the physical Tomb Raider III .TR2 file layout, byte for byte. Note
+that this is not a "real" C/C++ structure, in that some arrays are variable-length,
+with the length being defined by another element of the structure.
+</p><p><a href="#Data_Types">bitu32</a> Version; // version (4 bytes)
+<br><a href="#struct_tr2_colour">tr2_colour</a> Palette[256]; // 8-bit
+palette (768 bytes)
+<br><a href="#struct_tr2_colour">tr2_colour4</a> Palette16[256]; //&nbsp;
+(1024 bytes)
+<br><a href="#Data_Types">bitu32</a> NumTextiles; // number of texture
+tiles (4 bytes)
+<br><a href="#struct_tr2_textile8">tr2_textile8</a> Textile8[NumTextiles];
+// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)
+<br><a href="#struct_tr2_textile16">tr2_textile16</a> Textile16[NumTextiles];
+// 16-bit (ARGB) textiles (NumTextiles * 131072 bytes) (absent from TR1)
+<br><a href="#Data_Types">bitu32</a> Unused; // 32-bit unused value (4
+bytes)
+<br><a href="#Data_Types">bitu16</a> NumRooms; // number of rooms (2 bytes)
+<br>struct {
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_info">tr2_room_info</a>
+RoomInfo; // room header (16 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu32</a> NumData; // number
+of data bitu16's to follow (=RoomData) (4 bytes)
+<br>&nbsp;&nbsp;&nbsp; struct {
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumVertices; // number of vertices to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_vertex">tr2_vertex_room</a>
+Vertices[NumVertices]; // vertex list (NumVertices * 12 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumRectangles; // number of rectangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face4">tr2_face4</a>
+Rectangles[NumRectangles]; // rectangle list (NumRectangles * 10 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumTriangles; // number of triangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face3">tr2_face3</a>
+Triangles[NumTriangles]; // triangle list (NumTriangles * 8 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumSprites; // number of sprites to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_sprite">tr2_room_sprite</a>
+Sprites[NumSprites]; // room sprite list (NumSprites * 4 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumDoors; // number of doors to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_door">tr2_room_door</a>
+Doors[NumDoors]; // door list (NumDoors * 32 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumZsector; // sector table width (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumXsector; // sector table height (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_sector">tr2_room_sector</a>
+SectorData[NumZsector * NumXsector]; // sector table (NumZsector * NumXsector
+* 8 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
+Intensity1;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
+Intensity2;
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumLights; // number of lights to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_room_light">tr2_room_light</a>
+Lights[NumLights]; // light list (NumLights * 24 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+NumStaticMeshes; // number of static mesh records to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_struct_tr2_room_staticmesh">tr2_room_staticmesh</a>
+StaticMeshes[NumStaticMeshes]; // static mesh data (NumStaticMeshes * 20
+bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a>
+AlternateRoom; // (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a>
+Flags; // (2 bytes)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_colour">tr2_colour</a>
+RoomLightColour // 3 bytes
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } RoomData;
+<br>&nbsp;&nbsp;&nbsp; } Rooms[NumRooms];
+<br><a href="#Data_Types">bitu32</a> NumFloorData; // number of floor data
+bitu16's to follow (4 bytes)
+<br><a href="#Data_Types">bitu16</a> FloorData[NumFloorData]; // floor
+data (NumFloorData * 2 bytes)
+<br><a href="#Data_Types">bitu32</a> NumMeshData; // number of bitu16's
+of mesh data to follow (=Meshes[]) (4 bytes)
+<br>struct {
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Centre;
+// relative coordinates of mesh centre (6 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a> Unknown1[4]; //
+unknown (4 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumVertices; //
+number of vertices to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Vertices[NumVertices];
+// list of vertices (NumVertices * 6 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumNormals; // number
+of normals to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_vertex">tr2_vertex</a> Normals[NumNormals];
+// list of normals (NumNormals * 6 bytes) (becomes Lights if NumNormals
+&lt; 0; 2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumTexturedRectangles;
+// number of textured rectangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face4">tr2_face4</a> TexturedRectangles[NumTexturedRectangles];
+// list of textured rectangles (NumTexturedRectangles * 10 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumTexturedTriangles;
+// number of textured triangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face3">tr2_face3</a> TexturedTriangles[NumTexturedTriangles];
+// list of textured triangles (NumTexturedTriangles * 8 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumColouredRectangles;
+// number of coloured rectangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face4">tr2_face4</a> ColouredRectangles[NumColouredRectangles];
+// list of coloured rectangles (NumColouredRectangles * 10 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bit16</a> NumColouredTriangles;
+// number of coloured triangles to follow (2 bytes)
+<br>&nbsp;&nbsp;&nbsp; <a href="#struct_tr2_face3">tr2_face3</a> ColouredTriangles[NumColouredTriangles];
+// list of coloured triangles (NumColouredTriangles * 8 bytes)
+<br>&nbsp;&nbsp;&nbsp; } Meshes[NumMeshPointers]; // note that NumMeshPointers
+comes <u>AFTER</u> Meshes[]
+<br><a href="#Data_Types">bitu32</a> NumMeshPointers; // number of mesh
+pointers to follow (4 bytes)
+<br><a href="#Data_Types">bitu32</a> MeshPointers[NumMeshPointers]; //
+mesh pointer list (NumMeshPointers * 4 bytes)
+<br><a href="#Data_Types">bitu32</a> NumAnimations; // number of animations
+to follow (4 bytes)
+<br><a href="#struct_tr2_animation">tr2_animation</a> Animations[NumAnimations];
+// animation list (NumAnimations * 32 bytes)
+<br><a href="#Data_Types">bitu32</a> NumStateChanges; // number of state
+changes to follow (4 bytes)
+<br><a href="#struct_tr2_state_change">tr2_state_change</a> StateChanges[NumStateChanges];
+// state-change list (NumStructures * 6 bytes)
+<br><a href="#Data_Types">bitu32</a> NumAnimDispatches; // number of animation
+dispatches to follow (4 bytes)
+<br><a href="#struct_tr2_anim_dispatch">tr2_anim_dispatch</a> AnimDispatches[NumAnimDispatches];
+// animation-dispatch list list (NumAnimDispatches * 8 bytes)
+<br><a href="#Data_Types">bitu32</a> NumAnimCommands; // number of animation
+commands to follow (4 bytes)
+<br><a href="#struct_tr2_anim_command">tr2_anim_command</a> AnimCommands[NumAnimCommands];
+// animation-command list (NumAnimCommands * 2 bytes)
+<br><a href="#Data_Types">bitu32</a> NumMeshTrees; // number of MeshTrees
+to follow (4 bytes)
+<br><a href="#struct_tr2_meshtree">tr2_meshtree</a> MeshTrees[NumMeshTrees];
+// MeshTree list (NumMeshTrees * 4 bytes)
+<br><a href="#Data_Types">bitu32</a> NumFrames; // number of words of frame
+data to follow (4 bytes)
+<br><a href="#Data_Types">bitu16</a> Frames[NumFrames]; // frame data (NumFrames
+* 2 bytes)
+<br><a href="#Data_Types">bitu32</a> NumMoveables; // number of moveables
+to follow (4 bytes)
+<br><a href="#struct_tr2_moveable">tr2_moveable</a> Moveables[NumMoveables];
+// moveable list (NumMoveables * 18 bytes)
+<br><a href="#Data_Types">bitu32</a> NumStaticMeshes; // number of StaticMesh
+data records to follow (4 bytes)
+<br><a href="#struct_tr2_staticmesh">tr2_staticmesh</a> StaticMeshes[NumStaticMeshes];
+// StaticMesh data (NumStaticMesh * 32 bytes)
+<br><a href="#Data_Types">bitu32</a> NumSpriteTextures; // number of sprite
+textures to follow (4 bytes)
+<br><a href="#struct_tr2_sprite_texture">tr2_sprite_texture</a> SpriteTextures[NumSpriteTextures];
+// sprite texture list (NumSpriteTextures * 16 bytes)
+<br><a href="#Data_Types">bitu32</a> NumSpriteSequences; // number of sprite
+sequences records to follow (4 bytes)
+<br><a href="#struct_tr2_sprite_sequence">tr2_sprite_sequence</a> SpriteSequences[NumSpriteSequences];
+// sprite sequence data (NumSpriteSequences * 8 bytes)
+<br><a href="#Data_Types">bitu32</a> NumCameras; // number of camera data
+records to follow (4 bytes)
+<br><a href="#struct_tr2_camera">tr2_camera</a> Cameras[NumCameras]; //
+camera data (NumCameras * 16 bytes)
+<br><a href="#Data_Types">bitu32</a> NumSoundSources; // number of sound
+source data records to follow (4 bytes)
+<br><a href="#struct_tr2_sound_source">tr2_sound_source</a> SoundSources[NumSoundSources];
+// sound source data (NumSoundSources * 16 bytes)
+<br><a href="#Data_Types">bitu32</a> NumBoxes; // number of box data records
+to follow (4 bytes)
+<br><a href="#struct_tr2_box">tr2_box</a> Boxes[NumBoxes]; // box data
+(NumBoxes * 8 bytes)
+<br><a href="#Data_Types">bitu32</a> NumOverlaps; // number of overlap
+records to follow (4 bytes)
+<br><a href="#Data_Types">bitu16</a> Overlaps[NumOverlaps]; // overlap
+data (NumOverlaps * 2 bytes)
+<br><a href="#Data_Types">10*bit16</a> Zones[NumBoxes]; // zone data (NumBoxes
+* 20 bytes)
+<br><a href="#Data_Types">bitu32</a> NumAnimatedTextures; // number of
+animated texture records to follow (4 bytes)
+<br><a href="#Data_Types">bitu16</a> AnimatedTextures[NumAnimatedTextures];
+// animated texture data (NumAnimatedTextures * 2 bytes)
+<br><a href="#Data_Types">bitu32</a> NumObjectTextures; // number of object
+textures to follow (4 bytes) (after AnimatedTextures in TR3)
+<br><a href="#struct_tr2_object_texture">tr2_object_texture</a> ObjectTextures[NumObjectTextures];
+// object texture list (NumObjectTextures * 20 bytes)
+<br><a href="#Data_Types">bitu32</a> NumItems; // number of items to follow
+(4 bytes)
+<br><a href="#struct_tr2_item">tr2_item</a> Items[NumItems]; // item list
+(NumItems * 24 bytes)
+<br><a href="#Data_Types">bitu8</a> LightMap[32 * 256]; // light map (8192
+bytes)
+<br><a href="#Data_Types">bitu16</a> NumCinematicFrames; // number of cinematic
+frame records to follow (2 bytes)
+<br><a href="#struct_tr2_cinematic_frame">tr2_cinematic_frame</a> CinematicFrames[NumCinematicFrames];
+// (NumCinematicFrames * 16 bytes)
+<br><a href="#Data_Types">bitu16</a> NumDemoData; // number of demo data
+records to follow (2 bytes)
+<br><a href="#Data_Types">bitu8</a> DemoData[NumDemoData]; // demo data
+(NumDemoData bytes)
+<br><a href="#Data_Types">bit16</a> SoundMap[370]; // sound map (740 bytes)
+<br><a href="#Data_Types">bitu32</a> NumSoundDetails; // number of sound-detail
+records to follow (4 bytes)
+<br><a href="#struct_tr2_sound_details">tr2_sample_info</a> SoundDetails[NumSoundDetails];
+// sound-detail list (NumSoundDetails * 8 bytes)
+<br><a href="#Data_Types">bitu32</a> NumSampleIndices; // number of sample
+indices to follow (4 bytes)
+<br><a href="#Data_Types">bitu32</a> SampleIndices[NumSampleIndices]; //
+sample indices (NumSampleIndices * 4 bytes)
+<br>&nbsp;
+<br>&nbsp;
+<br>
+</p><center>
+<p><a name="ItemizedDifferencesBetweenTR1andTR2"></a><b><u><font size="+2">Itemized
+Differences between TRI and TRII</font></u></b></p></center>
+
+<p>TR1 has no colour table or 16-bit palette before the start of the textures;
+it also lacks 16-bit textures.
+</p><p>In TR1, tr2_vertex_room_struct has after its tr2_vertex struct only
+the first light intensity, and not the attributes or the second intensity.
+</p><p>In TR1, after SectorData, there is only the first light intensity, and
+not the second one or the lighting mode.
+</p><p>In TR1, tr2_room_light_struct has only one of:
+</p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bitu16 Diffuse1/2
+</p><p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; bitu32 Unknown1/2
+</p><p>In TR1, tr2_room_static does not have two light intensities, but only
+one.
+</p><p>"Boxes" objects are rectangles whose four horizontal-coordinate values
+are bitu8's in TR2 and bit32's in TR1.
+</p><p>"Zones" objects have 10 bit16's in TR2, but 6 bit16's in TR1
+</p><p>In TR1, tr2_item_struct is like the TR2 version, but with only one light
+intensity.
+</p><p>The TR1 colour table has the same format as the TR2 colour table, but
+it is located between the LightMap and the cinematic frames.
+</p><p>SoundMap is 370 bit16's in TR2, but 256 bit16's in TR1.
+</p><p>Between SoundDetails and SampleIndices, TR1 has all the level's sound
+samples, in the form of embedded Microsoft WAVE files. Just before these
+samples is the total number of bytes in those sound samples, which is a
+bit32.
+<br>&nbsp;
+<br>&nbsp;
+<br>
+</p><center>
+<p><a name="ItemizedDifferencesBetweenTR2andTR3"></a><b><u><font size="+2">Itemized
+Differences between TRII and TRIII</font></u></b></p></center>
+
+<p>After the two room-light intensities, TR2 has a lighting-mode value,
+which TR3 lacks.
+</p><p>Also in tr2_room_struct, TR3 has 3 extra bytes at the end, which appears
+to be the room-light color.
+</p><p>Finally, in TR2, the tr2_object_texture data is before the tr2_sprite_texture
+data. In TR3, it is before the tr2_item data.
+<br>&nbsp;
+<br>&nbsp;
+<br>
+</p><center>
+<p><a name="ItemizedDifferencesBetweenTRandDemos"></a><b><u><font size="+2">Itemized
+Differences between "normal" TRs and Demos</font></u></b></p></center>
+
+<p>Presumably as a form of copy protection, the demo versions of some of
+the TR games use levels that are slightly different from those in the retail
+versions. However, those that have been found are all data rearrangements,
+as explained below.
+</p><p>The TR1 and Unfinished Business (.TUB) demos have their palettes moved
+to between the SpriteSequences and the Cameras.
+</p><p>The TR2 "Wall" demo, and maybe also its "Venice" demo, has its LightMap
+(8K) moved to between the SpriteSequences and the Cameras. It also has
+its SampleIndices content replaced by the soundfiles, though the associated
+number of them remains unchanged (the number of indices becomes the number
+of samples).
+</p><p>That demo also has its own version of TOMBPC.DAT, called DEMOPC.DAT,
+which appears to have the exact same format as TOMBPC.DAT.
+</p><p>No rearrangements are known for the TR3 demos.
+</p><p>
+</p><hr>
+<center>
+<p><a name="ScriptingWithTOMBPC_DAT"></a><b><u><font size="+1">X. Scripting
+with TOMBPC.DAT</font></u></b></p></center>
+
+<p><b>Overview: </b>The flow of the game, which levels come in what order,
+what item(s) Lara has at the beginning of each level, the filenames of
+the level and cut-scene files, all the visible text (e.g. "Save Game,"
+"Rusty Key," etc.), and various other options are controlled using a file
+called TOMBPC.DAT. This file is normally compiled using a utility called
+GAMEFLOW.EXE, which was (apparently) accidentally distributed by Eidos
+in the German distribution of Tomb Raider II Gold. TR2 and TR3 use this
+file, and use essentially the same format of it, but TR1 has this file's
+contents embedded in the app, which explains why there are separate TR1
+and Unfinished Business apps. What follows is a description of the contents
+of the binary TOMBPC.DAT file.
+</p><p><a href="#Data_Types">bitu32</a> 
+Version;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ seems to be 3 for TR2
+<br><a href="#Data_Types">bitu8</a> 
+Info[256];&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ null-terminated string describing this game, copyright info, etc.&nbsp;
+NOT ENCRYPTED
+<br><a href="#Data_Types">bit32</a> FirstOption;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Level to go to when that happens (0x500 is exit-to-title) ??? when WHAT
+happens?
+<br><a href="#Data_Types">bit32</a> TitleReplace;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//&nbsp; Level to go to when that happens (-1 is NONE) ??? when WHAT happens?
+<br><a href="#Data_Types">bit32</a> OnDeathDemoMode; // Level to go to
+when Lara dies during demo mode (0x500 is exit-to-title)
+<br><a href="#Data_Types">bit32</a> OnDeathInGame;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Level to go to when Lara dies during the game (0 is exit-to-title)
+<br><a href="#Data_Types">bit32</a> DemoTime;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// time in game ticks (1/30th of a second?) to wait before starting a demo
+<br><a href="#Data_Types">bit32</a> OnDemoInterrupt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Level to go to when demo mode is interrupted (0x500 is exit-to-title)
+<br><a href="#Data_Types">bit32</a> OnDemoEnd;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Level to go to when the demo ends (0x500 is exit-to-title)
+<br><a href="#Data_Types">bitu8</a> Unused1[36];&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// filler
+<br><a href="#Data_Types">bit16</a> NumLevels;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// number of levels in the game (some level files are used more than once
+for some reason)
+<br><a href="#Data_Types">bit16</a> NumChapterScreens; // chapter screens
+(Present in TR2, first used in TR3)
+<br><a href="#Data_Types">bit16</a> NumTitles;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// only one, TITLE.TR2
+<br><a href="#Data_Types">bit16</a> NumRPLs;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// number of FMV cutscenes (*.RPL)
+<br><a href="#Data_Types">bit16</a> NumCutScenes;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// number of in-game (engine-rendered) cutscenes (CUT*.TR2)
+<br><a href="#Data_Types">bit16</a> NumDemoLevels;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Number of demo levels
+<br><a href="#Data_Types">bit16</a> TitleSoundID;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// ID of title soundtrack
+<br><a href="#Data_Types">bit16</a> SingleLevel;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// If doing only a single level
+<br><a href="#Data_Types">bitu8</a> Unused2[32];&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// filler
+<br>//
+<br>// The Flags word below uses the following bit assignments:
+<br>//&nbsp;&nbsp;&nbsp; 0x0001:&nbsp;&nbsp;&nbsp; 
+DemoVersion&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(1
+ ::= demo, 0 ::= normal game)
+<br>//&nbsp;&nbsp;&nbsp; 0x0002:&nbsp;&nbsp;&nbsp; 
+Title_Disabled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(1
+ ::= no title screen, 0 ::= normal title screen)
+<br>//&nbsp;&nbsp;&nbsp; 0x0004:&nbsp;&nbsp;&nbsp; CheatModeCheck_Disabled&nbsp;
+(1 ::= no cheat mode, 0 ::= cheat mode enabled)
+<br>//&nbsp;&nbsp;&nbsp; 0x0008:&nbsp;&nbsp;&nbsp; 
+NoInputTimeout&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(1
+ ::= wait forever if no input, 0 ::= enter demo
+<br>// mode if no input timeout)
+<br>//&nbsp;&nbsp;&nbsp; 0x0010:&nbsp;&nbsp;&nbsp; 
+LoadSave_Disabled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(1
+ ::= load/save game disabled, 0 ::= load/save
+<br>// game enabled)
+<br>//&nbsp;&nbsp;&nbsp; 0x0020:&nbsp;&nbsp;&nbsp; ScreenSizing_Disabled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(1 ::= no screen re-sizing allowed, 0 ::= screen
+<br>// re-sizing allowed)
+<br>//&nbsp;&nbsp;&nbsp; 0x0040:&nbsp;&nbsp;&nbsp; 
+LockOutOptionRing&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(1
+ ::= ???, 0 ::= normal option ring)
+<br>//&nbsp;&nbsp;&nbsp; 0x0080:&nbsp;&nbsp;&nbsp; 
+DozyCheat_Enabled&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(???)
+<br>//&nbsp;&nbsp;&nbsp; 0x0100:&nbsp;&nbsp;&nbsp; 
+Use_Encryption&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(1
+ ::= XOR all StringData with XORbyte, 0 ::= leave
+<br>// StringData as-is)
+<br>//&nbsp;&nbsp;&nbsp; 0x0400:&nbsp;&nbsp;&nbsp; 
+SelectAnyLevel&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(1
+ ::= allow player to select any level, 0 ::= no
+<br>// level selection)
+<br>//
+<br><a href="#Data_Types">bitu16</a> 
+Flags;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ Various flags (see above)
+<br><a href="#Data_Types">bitu8</a> Unused3[6];&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// filler
+<br><a href="#Data_Types">bitu8</a> XORbyte;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// For encryption ("cipher code")
+<br><a href="#Data_Types">bitu8</a> 
+Unused4;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ High byte of a short?
+<br><a href="#Data_Types">bit16</a> SecretSoundID;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// ID of "found a secret" soundtrack
+<br><a href="#Data_Types">bitu8</a> Unused5[4];&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// filler
+<br>//
+<br><a name="struct_Script_StringArray"></a>// The sections that follow
+contain String Arrays.&nbsp; These are of the following pseudo-structure:
+<br>// struct {
+<br>//&nbsp;&nbsp;&nbsp;&nbsp; bitu16 StringOffsets[NumStrings];&nbsp;&nbsp;&nbsp;&nbsp;
+// offsets (into StringData[]) of each string
+<br>//&nbsp;&nbsp;&nbsp;&nbsp; bitu16 
+StringDataSize;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//
+ number of bytes of raw string data to follow
+<br>//&nbsp;&nbsp;&nbsp;&nbsp; bitu8&nbsp;&nbsp; StringData[StringDataSize];&nbsp;&nbsp;&nbsp;
+// if Flags &amp; 0x0100, this entire array is XORed with
+<br>// // XORbyte
+<br>//&nbsp;&nbsp;&nbsp;&nbsp; } StringArray;
+<br>//
+<br>// While it is not correct C/C++, the following are specified as StringArray[NumStrings],
+<br>// where <i>NumStrings</i> indicates the number of StringOffsets in
+the structure.
+<br>//
+<br><a href="#struct_Script_StringArray">StringArray</a> LevelDisplayNames[NumLevels];
+<br><a href="#struct_Script_StringArray">StringArray</a> ChapterScreens[NumChapterScreens];
+<br><a href="#struct_Script_StringArray">StringArray</a> TitleFileNames[NumTitles];
+<br><a href="#struct_Script_StringArray">StringArray</a> RPLFileNames[NumRPLs];
+<br><a href="#struct_Script_StringArray">StringArray</a> LevelFileNames[NumLevels];
+<br><a href="#struct_Script_StringArray">StringArray</a> CutSceneFileNames[NumCutScenes];
+<br>//
+<br>// The LevelScript contains interpreted data (opcodes and operands)
+that specify
+<br>// actions to take for each level (e.g. play cut scene, take away weapons,
+etc).&nbsp; The
+<br>// details of this data are discussed below, after the structure descriptions.
+<br>//
+<br>struct {
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> LevelScriptOffsets[NumLevels
++ 1];&nbsp;&nbsp;&nbsp; // offsets (into LevelScriptData[])
+<br>// of each level's script data
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu16</a> NumLevelScriptData;
+<br>&nbsp;&nbsp;&nbsp; <a href="#Data_Types">bitu8</a>&nbsp;&nbsp; LevelScriptData[NumLevelScriptData];
+<br>&nbsp;&nbsp;&nbsp; } LevelScript;
+<br><a href="#Data_Types">bitu16</a> DemoLevelList[NumDemoLevels];
+<br>//
+<br>// GameStrings 1 and 2 are the level-independent strings that are displayed
+when interacting
+<br>// with the game menus (e.g. "Inventory," "Load Game," "Jump" (control
+setup), "Shotgun"
+<br>// (weapon in inventory), etc.)
+<br>//
+<br><a href="#Data_Types">bit16</a> NumGameStrings1;
+<br><a href="#struct_Script_StringArray">StringArray</a> GameStrings1[NumGameStrings1];
+<br><a href="#struct_Script_StringArray">StringArray</a> GameStrings2[41];
+<br>//
+<br>// KeyStrings1..10 are the level-specific printable strings for the
+various pickups in each level,
+<br>// not including level-independent pickups (e.g. Shotgun Shells, Medi
+Packs).&nbsp; These pickups
+<br>// are all "active" at some point, e.g. they are used as keys or are
+prerequisites for advancing
+<br>// through the game.&nbsp; Examples include "Rusty Key," "Green Pass
+Card," "Circuit Breaker," "The
+<br>// Seraph," "Talion," etc. Each level of TR2 can contain up to 10 pickups.&nbsp;
+The following arrays
+<br>// are arranged longitudinally, meaning that each array contains all
+of the Nth-pickup strings for
+<br>// each level.&nbsp; For example, KeyStrings1 contains the printable
+names for the "first" pickup in
+<br>// each level, KeyStrings2 contains the names for the "second" pickup,
+etc.&nbsp; Note that "first"
+<br>// and "second" have nothing to do with the order these objects are
+encountered in the game;
+<br>// they are simply indices used by the game engine (Key 1, Key 2, etc.)
+<br>//
+<br><a href="#struct_Script_StringArray">StringArray</a> KeyStrings1[NumLevels];
+// Puzzle 1
+<br><a href="#struct_Script_StringArray">StringArray</a> KeyStrings2[NumLevels];
+// Puzzle 2
+<br><a href="#struct_Script_StringArray">StringArray</a> KeyStrings3[NumLevels];
+// Puzzle 3
+<br><a href="#struct_Script_StringArray">StringArray</a> KeyStrings4[NumLevels];
+// Puzzle 4
+<br><a href="#struct_Script_StringArray">StringArray</a> KeyStrings5[NumLevels];
+// Pickup 1
+<br><a href="#struct_Script_StringArray">StringArray</a> KeyStrings6[NumLevels];
+// Pickup 2
+<br><a href="#struct_Script_StringArray">StringArray</a> KeyStrings7[NumLevels];
+// Key 1
+<br><a href="#struct_Script_StringArray">StringArray</a> KeyStrings8[NumLevels];
+// Key 2
+<br><a href="#struct_Script_StringArray">StringArray</a> KeyStrings9[NumLevels];
+// Key 3
+<br><a href="#struct_Script_StringArray">StringArray</a> KeyStrings10[NumLevels];
+// Key 4
+</p><p><b>LevelScript Description</b>:
+<br>In LevelScript, Opcodes and Operands are all <a href="#Data_Types">bitu16</a>.&nbsp;
+Note that if a level is a demo level, its level ID will be 1024 higher
+than a "normal" level ID.
+</p><p>Opcodes:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3 -- Play FMV (prerendered cutscene):
+operand is RPL ID
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4 -- Play (interactive) game level:
+operand is level's ID
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5 -- Play engine-rendered cutscene:
+operand is cutscene ID
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6 -- Do level-completion display (no
+operands)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 7 -- Play demo level: operand is level
+ID
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 9 -- End of set (no operands)
+<br>&nbsp;&nbsp;&nbsp; 10 -- Play soundtrack: operand is soundtrack ID
+(it precedes opcodes of associated levels)
+<br>&nbsp;&nbsp;&nbsp; 11 -- (Lara starts out in motorboat? -- TR2, "Bartoli's
+Hideout") (no operands?)
+<br>&nbsp;&nbsp;&nbsp; 12 -- Chapter screen: operand is chapter ID
+<br>&nbsp;&nbsp;&nbsp; 14 -- Lose your weapons (no operands)
+<br>&nbsp;&nbsp;&nbsp; 15 -- End of game (no operands)
+<br>&nbsp;&nbsp;&nbsp; 16 -- Associated with cutscenes; a viewpoint control?
+(one operand?)
+<br>&nbsp;&nbsp;&nbsp; 17 -- (one operand?)
+<br>&nbsp;&nbsp;&nbsp; 18 -- Give item; operand is item type
+<br>&nbsp;&nbsp;&nbsp; 19 -- Item-type 12 state to start level in: operand
+is state number
+<br>&nbsp;&nbsp;&nbsp; 20 -- Number of secrets (overrides engine's hardcoded
+count of them?): operand is that number
+<br>&nbsp;&nbsp;&nbsp; 21 -- (no operands?)
+<br>&nbsp;&nbsp;&nbsp; 22 -- Lose your ammo and medipacks? (no operands?)
+</p><p>Opcode-18 stuff to give (repeat means give another):
+</p><p>After finding all the secrets in a level (Tomb Raider 2)
+</p><p>&nbsp;&nbsp; 0 Pistols
+<br>&nbsp;&nbsp; 1 Shotgun
+<br>&nbsp;&nbsp; 2 Automatic pistols
+<br>&nbsp;&nbsp; 3 Uzis
+<br>&nbsp;&nbsp; 4 Harpoon gun
+<br>&nbsp;&nbsp; 5 M-16
+<br>&nbsp;&nbsp; 6 Grenade launcher
+<br>&nbsp;&nbsp; 7 Pistol clip
+<br>&nbsp;&nbsp; 8 Shotgun-shell box
+<br>&nbsp;&nbsp; 9 Automatic-pistol clip
+<br>&nbsp; 10 Uzi clip
+<br>&nbsp; 11 Harpoon bundle
+<br>&nbsp; 12 M-16 clip
+<br>&nbsp; 13 Grenade pack
+<br>&nbsp; 14 Flare box
+<br>&nbsp; 15 Small medipack
+<br>&nbsp; 16 Big medipack
+<br>&nbsp; 17 Pickup 1
+<br>&nbsp; 18 Pickup 2
+<br>&nbsp; 19 Puzzle 1
+<br>&nbsp; 20 Puzzle 2
+<br>&nbsp; 21 Puzzle 3
+<br>&nbsp; 22 Puzzle 4
+<br>&nbsp; 23 Key 1
+<br>&nbsp; 24 Key 2
+<br>&nbsp; 25 Key 3
+<br>&nbsp; 26 Key 4
+</p><p>When a level starts (Tomb Raider 2)
+</p><p>1000 Pistols
+<br>1001 Shotgun
+<br>1002 Automatic pistols
+<br>1003 Uzis
+<br>1004 Harpoon gun
+<br>1005 M16
+<br>1006 Grenade launcher
+<br>1007 Pistol clip
+<br>1008 Shotgun-shell box
+<br>1009 Automatic-pistol clip
+<br>1010 Uzi clip
+<br>1011 Harpoon bundle
+<br>1012 M16 clip
+<br>1013 Grenade pack
+<br>1014 Flare box
+<br>1015 Small medipack
+<br>1016 Big medipack
+<br>1017 Pickup 1
+<br>1018 Pickup 2
+<br>1019 Puzzle 1
+<br>1020 Puzzle 2
+<br>1021 Puzzle 3
+<br>1022 Puzzle 4
+<br>1023 Key 1
+<br>1024 Key 2
+<br>1025 Key 3
+<br>1026 Key 4
+</p><p><u><font color="#000080">Tomb Raider 2 identifications</font>:</u>
+</p><p><font color="#000080">FMV IDs:</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 0 -- LOGO (everybody's corporate
+logos)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 1 -- ANCIENT (monks vs. dragon)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 2 -- MODERN (Lara drops in
+from helicopter)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 3 -- LANDING (Seaplane lands
+at rig)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 4 -- MS (Lara hitchhikes on
+a minisub)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 5 -- CRASH (Lara goes to Tibet
+and has a rough landing there)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 6 -- JEEP (Lara steals it
+and outruns Bartoli's goons)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 7 -- END (Lara escaping the
+collapsing lair)</font>
+</p><p><font color="#000080">Cutscene IDs:</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 0 -- CUT1 (At the end of the
+Great Wall)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 1 -- CUT2 (Lara the stowaway)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 2 -- CUT3 (Bartoli vs. goon)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 3 -- CUT4 (Bartoli stabs himself)</font>
+</p><p><font color="#000080">Soundtrack IDs:</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp;&nbsp; 0 -- BLANK (no sound)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp;&nbsp; 3 -- CUT1 ("at the fancy
+door" soundtrack)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp;&nbsp; 4 -- CUT2 ("Lara the
+stowaway" soundtrack)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp;&nbsp; 5 -- CUT3 ("Bartoli
+vs. goon" soundtrack)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 30 -- CUT4 ("Bartoli stabs
+himself" soundtrack)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 31 -- DERELICT (eerie choppy/echo-y
+synths)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 32 -- WATER (dripping/pouring
+water sounds)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 33 -- WIND (Blowing wind)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 34 -- HEARTBT (musical embellishment
+of one)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 52 -- SHOWER (that infamous
+shower scene)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 58 -- MACHINES (in the offshore
+rig)</font>
+<br><font color="#000080">&nbsp;&nbsp;&nbsp; 59 -- FLOATING (wispy synths)</font>
+</p><p>
+
+
+</p></body></html>
