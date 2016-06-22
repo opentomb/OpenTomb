@@ -1,4 +1,5 @@
 
+#include <cstdlib>
 #include <stdint.h>
 
 #include "inventory.h"
@@ -9,7 +10,7 @@ int32_t Inventory_AddItem(struct inventory_node_s **root, uint32_t item_id, int3
 {
     if(!root)
     {
-        return 0; 
+        return 0;
     }
 
     base_item_p item = World_GetBaseItemByID(item_id);

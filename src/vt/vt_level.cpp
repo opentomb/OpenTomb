@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "tr_versions.h"
 #include "vt_level.h"
+#include <ctype.h>
 
 //#define RCSID "$Id: vt_level.cpp,v 1.1 2002/09/20 15:59:02 crow Exp $"
 
