@@ -23,8 +23,9 @@
 	-	1. in project folder with GIT repo make feature branch: "git checkout -b feature_branch_name"; (or make repo by github web ui);
 	-	2. make feature; commit change "git add -u", "git commit"; if you use vim, press i, enter message, escape button, :wq enter;
 	-	3. merge change "git merge master"; resolve conflicts (try to rebuild project); commit changes;
-	-	4. push feature branch to feature branch on github;
-	-	5. do merge request;
+	-	4. push feature branch to feature branch on github "git push origin feature_branch_name";
+	-	5. do merge request by github web ui;
+	-	6. after merging delete feature_branch_name;
 		
 	-	src/core folder: only by TeslaRus, make request if you want to change something;
 	-	other folders: by merge requests to TeslaRus or after code review (by merge request) by command (more details will be discussed); I will make some commits after merge request too (number of errors will be decreased significantly in review case);
