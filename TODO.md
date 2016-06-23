@@ -12,6 +12,7 @@ OpenTomb — TODO list for high-priority bugs / tasks
 7. Animation control
 8. Camera control
 9. Scripting
+10. Audio
 
 1. The main plan
 ----------------
@@ -72,6 +73,7 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 	* Fix moving in some floor slant cases in `Character_FixPosByFloorInfoUnderLegs(...)`
 	* Fix jammed (or slowly stopping) rolling boulders, where it is critical (optional roll by path (not yet implemented), or roll by physics (implemented))
 	* Check room tween butterfly normals
+	* Wrong fail check climbability in TR3, level 1, acute edge (side view like <>) and some other instances of such geometry
 
 6. Character controller
 -----------------------
@@ -104,3 +106,13 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 	* Add function like `lua_SaveTable(...)` that recursively print to file/buffer/clay tablets lua code with table content (i.e. `table_name = { red = 1; green = 0; blue = 0; name = "name"; is_u = true; in_tbl = { p1 = "inner"; val = 32.45 } }`)
 	* In all scripts that may change game state, data must be stored in special global table (that will be saved in save game) - needed for game save/load functions to correctly work
 	* `Activate_Entity` script function must returns state (no duplication of activation e.t.c. + better state control)
+
+10. Audio
+---------
+* Current situation:
+	* Sound tracks playing was disabled
+	* AL build-in library works on Windows and MacOS, but under Linux native AL library are required
+* Todo:
+	* In `audio.cpp` implement class for sound track data manipulation (e.g. `result GetBufferData(track_id, buffer, size, offset, flag)`)
+	* Implement own audio routine thread (APIs like `Audio_Send(...)` allow that)
+	* Use something else instead of Vorbis (it can't read _OGG_ from memory, and uses default functions for files opening, so engine can't precache tracks in memory or use `SDL_rwops`)
