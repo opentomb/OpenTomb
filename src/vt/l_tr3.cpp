@@ -32,13 +32,19 @@ void TR_Level::read_tr3_room_light(SDL_RWops * const src, tr5_room_light_t & lig
     light.color.g = read_bitu8(src);
     light.color.b = read_bitu8(src);
     light.color.a = read_bitu8(src);
-    light.fade1 = read_bitu32(src);
-    light.fade2 = read_bitu32(src);
+    light.intensity1 = read_bitu16(src);
+    light.intensity2 = read_bitu16(src);
+    light.fade1 = read_bitu16(src);
+    light.fade2 = read_bitu16(src);
 
-    light.intensity = 1.0f;
+    light.intensity = light.intensity1;
+    light.intensity /= 4096.0f;
 
-    light.r_outer = (float)light.fade1;
-    light.r_inner = (float)light.fade1 / 2.0;
+    if(light.intensity > 1.0f)
+        light.intensity = 1.0f;
+
+    light.r_outer = light.fade1;
+    light.r_inner = light.fade1 / 2;
 
     light.light_type = 0x01; // Point light
 }
@@ -139,7 +145,7 @@ void TR_Level::read_tr3_room(SDL_RWops * const src, tr5_room_t & room)
     room.num_lights = read_bitu16(src);
     room.lights = (tr5_room_light_t*)malloc(room.num_lights * sizeof(tr5_room_light_t));
     for (i = 0; i < room.num_lights; i++)
-        read_tr2_room_light(src, room.lights[i]);
+        read_tr3_room_light(src, room.lights[i]);
 
     room.num_static_meshes = read_bitu16(src);
     room.static_meshes = (tr2_room_staticmesh_t*)malloc(room.num_static_meshes * sizeof(tr2_room_staticmesh_t));
