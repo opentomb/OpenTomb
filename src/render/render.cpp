@@ -1329,15 +1329,17 @@ const lit_shader_description *CRender::SetupEntityLight(struct entity_s *entity,
         memset(innerRadiuses, 0, sizeof(innerRadiuses));
         memset(outerRadiuses, 0, sizeof(outerRadiuses));
 
-        for(uint32_t i = 0; i < room->content->lights_count && current_light_number < MAX_NUM_LIGHTS; i++)
+        float *entity_pos = entity->transform + 12;
+
+        for(uint32_t i = 0; (i < room->content->lights_count) && (current_light_number < MAX_NUM_LIGHTS); i++)
         {
             current_light = &room->content->lights[i];
 
-            float x = entity->transform[12] - current_light->pos[0];
-            float y = entity->transform[13] - current_light->pos[1];
-            float z = entity->transform[14] - current_light->pos[2];
+            float x = entity_pos[0] - current_light->pos[0];
+            float y = entity_pos[1] - current_light->pos[1];
+            float z = entity_pos[2] - current_light->pos[2];
 
-            float distance = sqrt(x * x + y * y + z * z);
+            float distance = sqrtf(x * x + y * y + z * z);
 
             // Find color
             colors[current_light_number*4 + 0] = std::fmin(std::fmax(current_light->colour[0], 0.0), 1.0);
@@ -1365,6 +1367,38 @@ const lit_shader_description *CRender::SetupEntityLight(struct entity_s *entity,
                 innerRadiuses[current_light_number] = std::fabs(current_light->inner);
                 outerRadiuses[current_light_number] = std::fabs(current_light->outer);
                 current_light_number++;
+            }
+        }
+
+        for(uint32_t room_index = 0; (current_light_number < MAX_NUM_LIGHTS) && (room_index < room->near_room_list_size); room_index++)
+        {
+            room_p near_room = room->near_room_list[room_index];
+            for(uint32_t i = 0; (i < near_room->content->lights_count) && (current_light_number < MAX_NUM_LIGHTS); i++)
+            {
+                current_light = &near_room->content->lights[i];
+
+                float x = entity_pos[0] - current_light->pos[0];
+                float y = entity_pos[1] - current_light->pos[1];
+                float z = entity_pos[2] - current_light->pos[2];
+
+                float distance = sqrtf(x * x + y * y + z * z);
+
+                // Find color
+                colors[current_light_number*4 + 0] = std::fmin(std::fmax(current_light->colour[0], 0.0), 1.0);
+                colors[current_light_number*4 + 1] = std::fmin(std::fmax(current_light->colour[1], 0.0), 1.0);
+                colors[current_light_number*4 + 2] = std::fmin(std::fmax(current_light->colour[2], 0.0), 1.0);
+                colors[current_light_number*4 + 3] = std::fmin(std::fmax(current_light->colour[3], 0.0), 1.0);
+
+                // Find position
+                Mat4_vec3_mul(&positions[3*current_light_number], modelViewMatrix, current_light->pos);
+
+                // Find fall-off
+                if(distance <= current_light->outer + 1024.0f && (current_light->light_type == LT_POINT || current_light->light_type == LT_SHADOW))
+                {
+                    innerRadiuses[current_light_number] = std::fabs(current_light->inner);
+                    outerRadiuses[current_light_number] = std::fabs(current_light->outer);
+                    current_light_number++;
+                }
             }
         }
 
