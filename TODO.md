@@ -14,6 +14,7 @@ OpenTomb — TODO list for high-priority bugs / tasks
 9. Scripting
 10. Audio
 
+
 1. The main plan
 ----------------
 First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher priority over TR4/TR5 functions. The first objective is to make a simple, but stable and working version, then extend functionality to it step by step.
