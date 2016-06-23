@@ -49,7 +49,7 @@
 		-	7. fix mowing in some floor slant cases in Character_FixPosByFloorInfoUnderLegs(...);
 		-	8. *fix jammed (or slows and stopped) rolling stones, where it is critical (optional roll by path(not implemented), or roll by physics (implemented));
 		-	9. check room tween butterfly normales;
-			
+		-	10.*wrong fail check climbability in TR3, map1, acute edge (side view like <>);
 -	Character controller:
 		todo:
 		-	1. *wepon control system needed to be refactored / fixed; (2 handed weapon model switches in wrong frame);
@@ -77,3 +77,13 @@
 		-	1. *add function like lua_SaveTable(...) - that recursively print to file / buffer / clay tablets lua code with table content (i.e. table_name = { red = 1; green = 0; blue = 0; name = "name"; is_u = true; in_tbl = { p1 = "inner"; val = 32.45 }};
 		-	2. *in all scripts that may change game state, data must be stored in special global table (that will be saved in save game); it is necessary for correct save / load game working;
 		-	3. *activate_Entity script function must returns state (no duplication of activation e.t.c. + better state control);
+		
+-	Audio:
+	-	current situation:
+		-	1. sound tracks playing was disabled;
+		-	2. AL build-in library works on Windows and MacOS, but under Linux native AL library are required;
+	-	todo:
+		-	1. *in audio.cpp implement class for sound track data manipulation (I.E. result GetBufferData(track_id, buffer, size, offset, flag));
+		-	2. *implement own audio routine thread (api like Audio_Send... allows that);
+		-	3. *use something instead vorbis (it can't read ogg from mem, and uses default functions for files opening, so engine can't precache tracks in memory or uses SDL_rwops);
+	

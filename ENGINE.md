@@ -2,10 +2,10 @@
 --------------
 -	extern
 	Contains build in libraries:
-	-	al - OpenAL 1.16 or 1.17... do not remember exactly... modified: used custom SDL2 backend;
+	-	al - OpenAL 1.16 or 1.17... do not remember exactly... modified: used custom SDL2 backend; AL build-in library works on Windows and MacOS, but under Linux native AL library are required;
 	-	bullet 2.83 - no changes;
 	-	freetype2 - no changes
-	-	ogg - no changes
+	-	ogg - no changes, configured for build under Windows, under other platforms native libs are required;
 
 -	src
 	Contains engine code:
@@ -19,8 +19,8 @@
 		-	gl_font - here implements true type font rendering in OpenGL context;
 		-	redblack - red black tree for build-in data storage;
 		-	system - basic debug print and error functions, file found function and screenshot making function;
-		
-		*for files manipulation use SDL_rwops module: it works everywhere SDL works...
+	-	notes:
+		-	*for files manipulation use SDL_rwops module: it works everywhere SDL works...
 	
 	-	vt - external trosettastone Tomb Raider resource loader project, rewritten and updated :-)
 	
@@ -46,7 +46,7 @@
 	-	mesh - base item for rendering, contains vertices and VBO;
 	-	physics - contains abstract engine interface for working with physics - use only it in engine code! here ray / sphere test functions, multimesh models for skeletal models;
 	-	physics_bullet - stores all engine physics geometry; contains all physics code implementation with bullet library; creates own physics geometry from level resources;
-	-	resource - simple layer for conversion level data from VT format to engine format;
+	-	resource - simple layer for conversion level data from VT format to engine format; here are floor data to collision geometry parser;
 	-	room - contains room structure and objects ownership manipulation (entity a contains in room c and moved to room d);
 	-	script - contains LUA script functions, engine constants loading to LUA;
 	-	skeletal_model - contains base model animation representation structures, and in game usage unique skeletel model structure; implemented smoothed skeletal model update algorithm, multi animation system algoritm and multi targeting bone mutators algorithm (head tracking, weapons targeting);
