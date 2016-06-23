@@ -32,13 +32,19 @@ void TR_Level::read_tr3_room_light(SDL_RWops * const src, tr5_room_light_t & lig
     light.color.g = read_bitu8(src);
     light.color.b = read_bitu8(src);
     light.color.a = read_bitu8(src);
-    light.fade1 = read_bitu32(src);
-    light.fade2 = read_bitu32(src);
+    light.intensity1 = read_bitu16(src);
+    light.intensity2 = read_bitu16(src);
+    light.fade1 = read_bitu16(src);
+    light.fade2 = read_bitu16(src);
 
-    light.intensity = 1.0f;
+    light.intensity = light.intensity1;
+    light.intensity /= 4096.0f;
 
-    light.r_outer = (float)light.fade1;
-    light.r_inner = (float)light.fade1 / 2.0;
+    if(light.intensity > 1.0f)
+        light.intensity = 1.0f;
+
+    light.r_outer = light.fade1;
+    light.r_inner = light.fade1 / 2;
 
     light.light_type = 0x01; // Point light
 }
