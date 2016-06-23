@@ -1,0 +1,17 @@
+language: cpp
+compiler:
+  - clang
+  - gcc
+sudo: required
+dist: trusty
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y cmake libopenal-dev libsdl2-dev libsdl2-image-dev liblua5.2-dev zlib1g-dev
+install: true
+script:
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
+
+
