@@ -367,20 +367,20 @@ set(OPENAL_SRCS
 )
 
 add_library(bullet STATIC ${BULLET_SRCS})
+target_include_directories(bullet PUBLIC extern/bullet)
 target_link_libraries(OpenTomb bullet)
-target_include_directories(OpenTomb PRIVATE extern/bullet)
 
 add_library(ogg STATIC ${OGG_SRCS})
+target_include_directories(ogg PUBLIC extern/ogg)
 target_link_libraries(OpenTomb ogg)
-target_include_directories(OpenTomb PRIVATE extern/ogg)
 
 add_library(freetype2 STATIC ${FREETYPE_SRCS})
+target_include_directories(freetype2 PUBLIC extern/freetype2/include)
 target_link_libraries(OpenTomb freetype2)
-target_include_directories(OpenTomb PRIVATE extern/freetype2/include)
 
 if(WIN32 OR APPLE)
     add_library(OpenAL STATIC ${OPENAL_SRCS})
-    target_include_directories(OpenTomb PRIVATE extern/al)
+    target_include_directories(OpenAL PUBLIC extern/al)
     target_link_libraries(OpenTomb OpenAL)
 else()
     find_package(OpenAL REQUIRED)
