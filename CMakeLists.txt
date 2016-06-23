@@ -79,7 +79,7 @@ find_package(ZLIB REQUIRED)
 find_package(Lua REQUIRED)
 
 target_include_directories(
-    OpenTomb
+    OpenTomb PRIVATE
     ${SDL2_INCLUDE_DIR}
     ${SDL2_IMAGE_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIR}
