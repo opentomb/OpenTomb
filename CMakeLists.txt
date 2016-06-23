@@ -69,7 +69,7 @@ add_executable(OpenTomb ${OPENTOMB_SRCS})
 
 if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_COMPILER_IS_GNUCC)
   message(STATUS "GNU C++-like compiler detected")
-  target_compile_definitions(OpenTomb "-std=c++11 -std=c99 -Wall -Wextra")
+  target_compile_definitions(OpenTomb PRIVATE "-std=c++11 -std=c99 -Wall -Wextra")
 endif()
 
 include(FindPkgConfig)
