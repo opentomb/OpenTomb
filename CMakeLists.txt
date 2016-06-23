@@ -13,18 +13,20 @@ add_subdirectory(doc)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   message(STATUS "GNU C++-like compiler detected")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra -Weffc++")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
   message(STATUS "GNU C-like compiler detected")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -Wextra")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 endif()
 
 # cat opentomb-code.cbp | grep Unit | grep -e 'filename=".\+\.\(c\|cpp\)"' | sed -e 's/.*filename="\([^"]\+\)".*/\1/g'
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+include(FindPkgConfig)
+pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
 find_package(SDL2 REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Lua REQUIRED)
@@ -359,13 +361,14 @@ include_directories(
     extern/bullet
     extern/freetype2/include
     ${SDL2_INCLUDE_DIR}
+    ${SDL2_IMAGE_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIR}
     ${LUA_INCLUDE_DIR}
 )
 
 add_executable(OpenTomb ${OPENTOMB_SRCS})
 
-target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${ZLIB_LIBRARY} ${LUA_LIBRARY})
+target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES} ${ZLIB_LIBRARY} ${LUA_LIBRARY})
 
 if(DEFINED OPENAL_LIBRARY)
     target_link_libraries(OpenTomb ${OPENAL_LIBRARY})
