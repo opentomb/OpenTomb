@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/opentomb/OpenTomb.svg?branch=master)](https://travis-ci.org/opentomb/OpenTomb)
+
 OpenTomb — an open-source Tomb Raider 1-5 engine remake
 -------------------------------------------------------
 
