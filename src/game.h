@@ -32,6 +32,7 @@ void Game_LoopEntities(struct RedBlackNode_s *x);
 void Game_UpdateAI();
 void Game_UpdateCharacters();
 
+int Cam_CheckCollision(struct camera_s *cam, entity_s *ent, float angle);
 void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, float dz);
 void Game_PlayFlyBy(uint32_t sequence_id, int once);
 void Game_SetCameraTarget(uint32_t entity_id, float timer);

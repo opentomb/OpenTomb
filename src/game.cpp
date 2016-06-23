@@ -503,6 +503,25 @@ void Cam_PlayFlyBy(float time)
 }
 
 
+int Cam_CheckCollision(struct camera_s *cam, entity_s *ent, float angle)
+{
+    float cameraFrom[3], cameraTo[3];
+
+    vec3_copy(cameraFrom, cam->pos);
+    cameraTo[0] = cameraFrom[0] + sinf((ent->angles[0] + angle) * (M_PI / 180.0)) * control_states.cam_distance;
+    cameraTo[1] = cameraFrom[1] - cosf((ent->angles[0] + angle) * (M_PI / 180.0)) * control_states.cam_distance;
+    cameraTo[2] = cameraFrom[2];
+
+    //Collision check
+    if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self))
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+
 void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, float dz)
 {
     float cam_pos[3], cameraFrom[3], cameraTo[3];
@@ -563,29 +582,13 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         {
             if(cam->target_dir == TR_CAM_TARG_BACK)
             {
-                vec3_copy(cameraFrom, cam_pos);
-                cameraTo[0] = cameraFrom[0] + sinf((ent->angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                cameraTo[1] = cameraFrom[1] - cosf((ent->angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                cameraTo[2] = cameraFrom[2];
-
-                //If collided we want to go right otherwise stay left
-                if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self))
+                //We hit left and not right check right
+                if(Cam_CheckCollision(cam, ent, -90.0f))
                 {
-                    cameraTo[0] = cameraFrom[0] + sinf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                    cameraTo[1] = cameraFrom[1] - cosf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                    cameraTo[2] = cameraFrom[2];
-
-                    //If collided we want to go to back else right
-                    if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self))
-                    {
-                        cam->target_dir = TR_CAM_TARG_BACK;
-                    }
-                    else
-                    {
-                        cam->target_dir = TR_CAM_TARG_RIGHT;
-                    }
+                    cam->target_dir = TR_CAM_TARG_RIGHT;
                 }
-                else
+
+                if(Cam_CheckCollision(cam, ent, 90.0f))
                 {
                     cam->target_dir = TR_CAM_TARG_LEFT;
                 }
@@ -597,7 +600,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         }
         else if(cam->target_dir != TR_CAM_TARG_BACK)
         {
-            cam->target_dir = TR_CAM_TARG_BACK;//Reset to back
+            cam->target_dir = TR_CAM_TARG_BACK;
         }
 
         //If target mis-matches current we need to update the camera's angle to reach target!
