@@ -7,23 +7,70 @@ cmake_minimum_required(VERSION 2.8)
 
 project(OpenTomb)
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
 message(WARNING "This CMakeLists.txt does not generate usable executables, it is only used to process the documentation and test compilability.")
 
 add_subdirectory(doc)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
+set(OPENTOMB_SRCS
+    src/anim_state_control.cpp
+    src/audio.cpp
+    src/character_controller.cpp
+    src/controls.cpp
+    src/core/console.c
+    src/core/gl_font.c
+    src/core/gl_text.c
+    src/core/gl_util.c
+    src/core/obb.c
+    src/core/polygon.c
+    src/core/redblack.c
+    src/core/system.c
+    src/core/utf8_32.c
+    src/core/vmath.c
+    src/engine.cpp
+    src/entity.cpp
+    src/game.cpp
+    src/gameflow.cpp
+    src/gui.cpp
+    src/inventory.cpp
+    src/main_SDL.cpp
+    src/mesh.c
+    src/physics_bullet.cpp
+    src/render/bordered_texture_atlas.cpp
+    src/render/bsp_tree.cpp
+    src/render/bsp_tree_2d.c
+    src/render/camera.cpp
+    src/render/frustum.cpp
+    src/render/render.cpp
+    src/render/shader_description.cpp
+    src/render/shader_manager.cpp
+    src/resource.cpp
+    src/room.cpp
+    src/script.cpp
+    src/skeletal_model.c
+    src/trigger.cpp
+    src/vt/l_common.cpp
+    src/vt/l_main.cpp
+    src/vt/l_tr1.cpp
+    src/vt/l_tr2.cpp
+    src/vt/l_tr3.cpp
+    src/vt/l_tr4.cpp
+    src/vt/l_tr5.cpp
+    src/vt/scaler.cpp
+    src/vt/vt_level.cpp
+    src/world.cpp
+)
+
+# TODO Where is this needed?
+add_definitions(-DOV_EXCLUDE_STATIC_CALLBACKS)
+
+add_executable(OpenTomb ${OPENTOMB_SRCS})
+
+if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_COMPILER_IS_GNUCC)
   message(STATUS "GNU C++-like compiler detected")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  target_compile_definitions(OpenTomb "-std=c++11 -std=c99 -Wall -Wextra")
 endif()
-
-if(CMAKE_COMPILER_IS_GNUCC)
-  message(STATUS "GNU C-like compiler detected")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-endif()
-
-# cat opentomb-code.cbp | grep Unit | grep -e 'filename=".\+\.\(c\|cpp\)"' | sed -e 's/.*filename="\([^"]\+\)".*/\1/g'
-
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 include(FindPkgConfig)
 pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
@@ -31,7 +78,17 @@ find_package(SDL2 REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Lua REQUIRED)
 
-set(OPENTOMB_SRCS
+target_include_directories(
+    OpenTomb
+    ${SDL2_INCLUDE_DIR}
+    ${SDL2_IMAGE_INCLUDE_DIRS}
+    ${ZLIB_INCLUDE_DIR}
+    ${LUA_INCLUDE_DIR}
+)
+
+target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES} ${ZLIB_LIBRARY} ${LUA_LIBRARY})
+
+set(BULLET_SRCS
     extern/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.cpp
     extern/bullet/BulletCollision/BroadphaseCollision/btBroadphaseProxy.cpp
     extern/bullet/BulletCollision/BroadphaseCollision/btCollisionAlgorithm.cpp
@@ -175,6 +232,9 @@ set(OPENTOMB_SRCS
     extern/bullet/LinearMath/btQuickprof.cpp
     extern/bullet/LinearMath/btSerializer.cpp
     extern/bullet/LinearMath/btVector3.cpp
+)
+
+set(FREETYPE_SRCS
     extern/freetype2/src/autofit/autofit.c
     extern/freetype2/src/base/ftapi.c
     extern/freetype2/src/base/ftbase.c
@@ -221,6 +281,9 @@ set(OPENTOMB_SRCS
     extern/freetype2/src/type1/type1.c
     extern/freetype2/src/type42/type42.c
     extern/freetype2/src/winfonts/winfnt.c
+)
+
+set(OGG_SRCS
     extern/ogg/libogg/bitwise.c
     extern/ogg/libogg/framing.c
     extern/ogg/libvorbis/analysis.c
@@ -244,132 +307,83 @@ set(OPENTOMB_SRCS
     extern/ogg/libvorbis/synthesis.c
     extern/ogg/libvorbis/vorbisfile.c
     extern/ogg/libvorbis/window.c
-    src/anim_state_control.cpp
-    src/audio.cpp
-    src/character_controller.cpp
-    src/controls.cpp
-    src/core/console.c
-    src/core/gl_font.c
-    src/core/gl_text.c
-    src/core/gl_util.c
-    src/core/obb.c
-    src/core/polygon.c
-    src/core/redblack.c
-    src/core/system.c
-    src/core/utf8_32.c
-    src/core/vmath.c
-    src/engine.cpp
-    src/entity.cpp
-    src/game.cpp
-    src/gameflow.cpp
-    src/gui.cpp
-    src/inventory.cpp
-    src/main_SDL.cpp
-    src/mesh.c
-    src/physics_bullet.cpp
-    src/render/bordered_texture_atlas.cpp
-    src/render/bsp_tree.cpp
-    src/render/bsp_tree_2d.c
-    src/render/camera.cpp
-    src/render/frustum.cpp
-    src/render/render.cpp
-    src/render/shader_description.cpp
-    src/render/shader_manager.cpp
-    src/resource.cpp
-    src/room.cpp
-    src/script.cpp
-    src/skeletal_model.c
-    src/trigger.cpp
-    src/vt/l_common.cpp
-    src/vt/l_main.cpp
-    src/vt/l_tr1.cpp
-    src/vt/l_tr2.cpp
-    src/vt/l_tr3.cpp
-    src/vt/l_tr4.cpp
-    src/vt/l_tr5.cpp
-    src/vt/scaler.cpp
-    src/vt/vt_level.cpp
-    src/world.cpp
 )
+
+set(OPENAL_SRCS
+    extern/al/Alc/ALc.c
+    extern/al/Alc/ALu.c
+    extern/al/Alc/alcConfig.c
+    extern/al/Alc/alcRing.c
+    extern/al/Alc/backends/backend.c
+    extern/al/Alc/backends/base.c
+    extern/al/Alc/backends/loopback.c
+    extern/al/Alc/backends/null.c
+    extern/al/Alc/backends/wave.c
+    extern/al/Alc/bs2b.c
+    extern/al/Alc/effects/autowah.c
+    extern/al/Alc/effects/chorus.c
+    extern/al/Alc/effects/compressor.c
+    extern/al/Alc/effects/dedicated.c
+    extern/al/Alc/effects/distortion.c
+    extern/al/Alc/effects/echo.c
+    extern/al/Alc/effects/equalizer.c
+    extern/al/Alc/effects/flanger.c
+    extern/al/Alc/effects/modulator.c
+    extern/al/Alc/effects/null.c
+    extern/al/Alc/effects/reverb.c
+    extern/al/Alc/helpers.c
+    extern/al/Alc/hrtf.c
+    extern/al/Alc/midi/base.c
+    extern/al/Alc/midi/dummy.c
+    extern/al/Alc/midi/fluidsynth.c
+    extern/al/Alc/midi/sf2load.c
+    extern/al/Alc/midi/soft.c
+    extern/al/Alc/mixer.c
+    extern/al/Alc/mixer_c.c
+    extern/al/Alc/mixer_neon.c
+    extern/al/Alc/mixer_sse.c
+    extern/al/Alc/mixer_sse2.c
+    extern/al/Alc/mixer_sse41.c
+    extern/al/Alc/panning.c
+    extern/al/OpenAL32/alAuxEffectSlot.c
+    extern/al/OpenAL32/alBuffer.c
+    extern/al/OpenAL32/alEffect.c
+    extern/al/OpenAL32/alError.c
+    extern/al/OpenAL32/alExtension.c
+    extern/al/OpenAL32/alFilter.c
+    extern/al/OpenAL32/alFontsound.c
+    extern/al/OpenAL32/alListener.c
+    extern/al/OpenAL32/alMidi.c
+    extern/al/OpenAL32/alPreset.c
+    extern/al/OpenAL32/alSoundfont.c
+    extern/al/OpenAL32/alSource.c
+    extern/al/OpenAL32/alState.c
+    extern/al/OpenAL32/alThunk.c
+    extern/al/OpenAL32/sample_cvt.c
+    extern/al/common/atomic.c
+    extern/al/common/rwlock.c
+    extern/al/common/threads.c
+    extern/al/common/uintmap.c
+)
+
+add_library(bullet STATIC ${BULLET_SRCS})
+target_link_libraries(OpenTomb bullet)
+target_include_directories(OpenTomb extern/bullet)
+
+add_library(ogg STATIC ${OGG_SRCS})
+target_link_libraries(OpenTomb ogg)
+target_include_directories(OpenTomb extern/ogg)
+
+add_library(freetype2 STATIC ${FREETYPE_SRCS})
+target_link_libraries(OpenTomb freetype2)
+target_include_directories(OpenTomb extern/freetype2/include)
 
 if(WIN32 OR APPLE)
-    list(APPEND OPENTOMB_SRCS
-        extern/al/Alc/ALc.c
-        extern/al/Alc/ALu.c
-        extern/al/Alc/alcConfig.c
-        extern/al/Alc/alcRing.c
-        extern/al/Alc/backends/backend.c
-        extern/al/Alc/backends/base.c
-        extern/al/Alc/backends/loopback.c
-        extern/al/Alc/backends/null.c
-        extern/al/Alc/backends/wave.c
-        extern/al/Alc/bs2b.c
-        extern/al/Alc/effects/autowah.c
-        extern/al/Alc/effects/chorus.c
-        extern/al/Alc/effects/compressor.c
-        extern/al/Alc/effects/dedicated.c
-        extern/al/Alc/effects/distortion.c
-        extern/al/Alc/effects/echo.c
-        extern/al/Alc/effects/equalizer.c
-        extern/al/Alc/effects/flanger.c
-        extern/al/Alc/effects/modulator.c
-        extern/al/Alc/effects/null.c
-        extern/al/Alc/effects/reverb.c
-        extern/al/Alc/helpers.c
-        extern/al/Alc/hrtf.c
-        extern/al/Alc/midi/base.c
-        extern/al/Alc/midi/dummy.c
-        extern/al/Alc/midi/fluidsynth.c
-        extern/al/Alc/midi/sf2load.c
-        extern/al/Alc/midi/soft.c
-        extern/al/Alc/mixer.c
-        extern/al/Alc/mixer_c.c
-        extern/al/Alc/mixer_neon.c
-        extern/al/Alc/mixer_sse.c
-        extern/al/Alc/mixer_sse2.c
-        extern/al/Alc/mixer_sse41.c
-        extern/al/Alc/panning.c
-        extern/al/OpenAL32/alAuxEffectSlot.c
-        extern/al/OpenAL32/alBuffer.c
-        extern/al/OpenAL32/alEffect.c
-        extern/al/OpenAL32/alError.c
-        extern/al/OpenAL32/alExtension.c
-        extern/al/OpenAL32/alFilter.c
-        extern/al/OpenAL32/alFontsound.c
-        extern/al/OpenAL32/alListener.c
-        extern/al/OpenAL32/alMidi.c
-        extern/al/OpenAL32/alPreset.c
-        extern/al/OpenAL32/alSoundfont.c
-        extern/al/OpenAL32/alSource.c
-        extern/al/OpenAL32/alState.c
-        extern/al/OpenAL32/alThunk.c
-        extern/al/OpenAL32/sample_cvt.c
-        extern/al/common/atomic.c
-        extern/al/common/rwlock.c
-        extern/al/common/threads.c
-        extern/al/common/uintmap.c
-    )
+    add_library(OpenAL STATIC ${OPENAL_SRCS})
+    target_include_directories(OpenTomb extern/al)
+    target_link_libraries(OpenTomb OpenAL)
 else()
     find_package(OpenAL REQUIRED)
-    include_directories(${OPENAL_INCLUDE_DIR})
-endif()
-
-add_definitions(-DOV_EXCLUDE_STATIC_CALLBACKS)
-include_directories(
-    extern/al
-    extern/ogg
-    extern/bullet
-    extern/freetype2/include
-    ${SDL2_INCLUDE_DIR}
-    ${SDL2_IMAGE_INCLUDE_DIRS}
-    ${ZLIB_INCLUDE_DIR}
-    ${LUA_INCLUDE_DIR}
-)
-
-add_executable(OpenTomb ${OPENTOMB_SRCS})
-
-target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES} ${ZLIB_LIBRARY} ${LUA_LIBRARY})
-
-if(DEFINED OPENAL_LIBRARY)
+    target_include_directories(OpenTomb ${OPENAL_INCLUDE_DIR})
     target_link_libraries(OpenTomb ${OPENAL_LIBRARY})
 endif()
