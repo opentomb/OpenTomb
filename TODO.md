@@ -93,7 +93,7 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 -----------------
 * Todo:
 	* Fix camera targeting to correct body part or OBB center
-	* Implement camera flags usage (i.e. "flyby")
+	* Implement camera flags and their function (e.g. "flyby", "once")
 	* Add special `camera_entity`, store it in world module, access by `engine_camera_p World_GetCameraEntity();` - needed for heavy triggers
 
 9. Scripting
