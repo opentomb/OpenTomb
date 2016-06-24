@@ -376,7 +376,7 @@ set(CORE_SRCS
 )
 
 add_library(core OBJECT ${CORE_SRCS})
-target_include_directories(core PUBLIC extern/freetype2/include)
+target_include_directories(core PUBLIC extern/freetype2/include ${LUA_INCLUDE_DIR})
 target_compile_options(core PUBLIC "-std=c99")
 
 add_library(bullet STATIC ${BULLET_SRCS})
