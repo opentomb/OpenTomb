@@ -36,7 +36,8 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 	* Independent resources updates
 
 * Creating feature branches and committing to them is free
-
+* Special merge requests, not for merging or with delayed time for merging must contain the `[NOT_FOR_MERGING]` prefix; such requests may be merged only after request's author writes comment `[CAN_BE_MERGED_NOW]`
+* 
 * How to submit a feature branch to `master`:
 	1. Install GIT bash and launch the terminal (or use your own GUI)
 	2. Create a local feature branch by issuing: `git checkout -b feature_branch_name` (or make one in the repo with GitHub's web UI)
@@ -53,7 +54,7 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 4. Code in main
 ---------------
 * Todo:
-	* `game.cpp`: many different logic in one place, needs to be refactored
+	* `game.cpp`: many different logics in one place, needs to be refactored
 
 5. Collision system
 -------------------
@@ -91,6 +92,14 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 	* Skeletal model `ss_anim` control: implement a functional interface to control it, instead of a complex direct access to flags and structures
 	* Update documentation about `ss_animation` structure and functions
 	* Fix incorrect smoothing if there are _move_ or _rotate_ anim commands
+	* Fix dive-rolls:
+		* Roll is not commencing immediately while moving forward
+		* Rolls distance too great (e.g. falling off 1x1m ledges when on opposite edge)
+	* Fix forward and backward consecutive jump rolls (mid-air rolls) not concatenating correctly on keypress (TR2+)
+	* Fix swan dive not doable when jumping off of irregular (diamond shaped <>) slopes
+	* Fix edge climbing:
+		* Climbability distance threshold too high when jumping (i.e. reaching heights that shouldn't be reached)
+		* Reduce height correction when Lara lets go the hold on an edge (let go hold button)
 
 8. Camera control
 -----------------
