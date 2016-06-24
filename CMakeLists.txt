@@ -60,7 +60,7 @@ add_executable(OpenTomb ${OPENTOMB_SRCS} $<TARGET_OBJECTS:core>)
 if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_COMPILER_IS_GNUCC)
     message(STATUS "GNU-like compilers detected")
     # Trimming the string may result in a compilation error
-    target_compile_options(OpenTomb PRIVATE "-std=c++11")
+    target_compile_options(OpenTomb PRIVATE -std=c++11 -std=c99)
 endif()
 
 include(FindPkgConfig)
