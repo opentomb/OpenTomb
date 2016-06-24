@@ -51,7 +51,7 @@ typedef struct camera_state_s
     uint32_t                        target_id;
     struct flyby_camera_sequence_s *flyby;
     struct static_camera_sink_s    *sink;
-    
+
     GLfloat                         shake_value;
     GLfloat                         time;
     int                             move;
@@ -113,7 +113,7 @@ typedef struct flyby_camera_state_s
     float                       roll;
     float                       timer;
     float                       speed;
-    
+
     int8_t                      sequence;
     int8_t                      index;
     struct camera_flags_s       flags;
@@ -124,7 +124,7 @@ typedef struct flyby_camera_sequence_s
 {
     struct flyby_camera_state_s    *start;
     uint32_t                        locked : 1;
-    
+
     struct spline_s                *pos_x;
     struct spline_s                *pos_y;
     struct spline_s                *pos_z;
@@ -134,7 +134,7 @@ typedef struct flyby_camera_sequence_s
     struct spline_s                *fov;
     struct spline_s                *roll;
     struct spline_s                *speed;
-    
+
     struct flyby_camera_sequence_s *next;
 }flyby_camera_sequence_t, *flyby_camera_sequence_p;
 
