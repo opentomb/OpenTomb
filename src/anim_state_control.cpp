@@ -1853,6 +1853,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 climb_to[0] = climb_from[0] + t * ent->transform[4 + 0];
                 climb_to[1] = climb_from[1] + t * ent->transform[4 + 1];
                 climb_to[2] = climb_from[2] - ent->character->max_step_up_height;
+                climb_from[2] += ent->character->max_step_up_height;
                 Character_CheckClimbability(ent, climb, climb_from, climb_to);
                 if(climb->can_hang)
                 {
@@ -2111,6 +2112,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 climb_to[0] = climb_from[0] + t * ent->transform[4 + 0];
                 climb_to[1] = climb_from[1] + t * ent->transform[4 + 1];
                 climb_to[2] = climb_from[2] - ent->character->max_step_up_height;
+                climb_from[2] += ent->character->max_step_up_height;
                 Character_CheckClimbability(ent, climb, climb_from, climb_to);
                 if(climb->edge_hit)
                 {
@@ -2175,6 +2177,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 climb_to[0] = climb_from[0] + t * ent->transform[4 + 0];
                 climb_to[1] = climb_from[1] + t * ent->transform[4 + 1];
                 climb_to[2] = climb_from[2] - ent->character->max_step_up_height;
+                climb_from[2] += ent->character->max_step_up_height;
                 Character_CheckClimbability(ent, climb, climb_from, climb_to);
                 if(climb->edge_hit)
                 {
