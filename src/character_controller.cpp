@@ -605,6 +605,7 @@ void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
 
     vec3_add(temp, v1, v2);
     vec3_mul_scalar(temp, temp, 0.5f);
+    temp[2] = ((v1[2] > v2[2]) ? (v1[2]) : (v2[2]));
     Mat4_vec3_mul_macro(pos, ent->transform, temp);
 }
 
