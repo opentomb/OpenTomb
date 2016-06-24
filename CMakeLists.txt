@@ -66,6 +66,7 @@ endif()
 include(FindPkgConfig)
 pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
 find_package(SDL2 REQUIRED)
+find_package(OpenAL REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Lua REQUIRED)
 
@@ -75,9 +76,13 @@ target_include_directories(
     ${SDL2_IMAGE_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIR}
     ${LUA_INCLUDE_DIR}
+    # this is a workaround
+    # system headers are incompatible because OpenTomb expects it in a different place
+    # it need to be fixed in OpenTomb first
+    extern/al
 )
 
-target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES} ${ZLIB_LIBRARY} ${LUA_LIBRARY})
+target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES} ${ZLIB_LIBRARY} ${LUA_LIBRARY} ${OPENAL_LIBRARY})
 
 set(BULLET_SRCS
     extern/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.cpp
@@ -385,7 +390,3 @@ target_link_libraries(OpenTomb ogg)
 add_library(freetype2 STATIC ${FREETYPE_SRCS})
 target_include_directories(freetype2 PUBLIC extern/freetype2/include)
 target_link_libraries(OpenTomb freetype2)
-
-add_library(OpenAL STATIC ${OPENAL_SRCS})
-target_include_directories(OpenAL PUBLIC extern/al)
-target_link_libraries(OpenTomb OpenAL)
