@@ -4,7 +4,7 @@
 	Contains build in libraries:
 	-	al - OpenAL 1.16 or 1.17... do not remember exactly... modified: used custom SDL2 backend; AL build-in library works on Windows and MacOS, but under Linux native AL library are required;
 	-	bullet 2.83 - no changes;
-	-	freetype2 - no changes
+	-	freetype2 - no changes;
 	-	ogg - no changes, configured for build under Windows, under other platforms native libs are required;
 
 -	src
@@ -15,8 +15,8 @@
 		-	obb - oriented bounding box module; 
 		-	utf8_32 - ut8 - 32 string manipulation functions; 
 		-	console - console implementation (allows utf-8 string inputing); 
-		-	gl_utils - module uses only SDL_opengl and SDL_GL_GetProcAdress(...), so use ONLY gl_ulils.h as gl header and only qgl* functions;
-		-	gl_font - here implements true type font rendering in OpenGL context;
+		-	gl_utils - contains OpenGL functions pointers and base shader loading functions; module uses only SDL_opengl and SDL_GL_GetProcAdress(...), so use ONLY gl_ulils.h as gl header and only qgl* functions;
+		-	gl_font - here implements true type font rendering in OpenGL context (works with utf-8 strings);
 		-	redblack - red black tree for build-in data storage;
 		-	system - basic debug print and error functions, file found function and screenshot making function;
 	-	notes:

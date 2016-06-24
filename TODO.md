@@ -1,4 +1,4 @@
-OpenTomb â€” TODO list for high-priority bugs / tasks
+OpenTomb — TODO list for high-priority bugs / tasks
 ---------------------------------------------------
 
 ### Table of contents ###
@@ -55,6 +55,7 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 ---------------
 * Todo:
 	* `game.cpp`: many different logics in one place, needs to be refactored
+	* make some modules (not all!) interface more abstract (hide internal realisation, like `physics.h`/`physics_bullet.cpp`) 
 
 5. Collision system
 -------------------
@@ -104,9 +105,9 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 8. Camera control
 -----------------
 * Todo:
-	* Fix camera targeting to correct body part or OBB center
+	* Fix camera targeting to correct body part or OBB center (add special function to get targeting pos by target entity id)
 	* Implement camera flags and their function (e.g. "flyby", "once")
-	* Add special `camera_entity`, store it in world module, access by `engine_camera_p World_GetCameraEntity();` - needed for heavy triggers
+	* Add special `camera_entity`, store it in world module, access by `entity_p World_GetCameraEntity();` - needed for heavy triggers
 
 9. Scripting
 ------------
