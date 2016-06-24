@@ -62,7 +62,8 @@ if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_COMPILER_IS_GNUCC)
     # Trimming the string may result in a compilation error
 endif()
 
-target_compile_options(OpenTomb PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-std=c++11> $<$<COMPILE_LANGUAGE:C>:-std=c99>)
+#target_compile_options(OpenTomb PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-std=c++11> $<$<COMPILE_LANGUAGE:C>:-std=c99>)
+set_target_properties(OpenTomb PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
 
 include(FindPkgConfig)
 pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
@@ -378,7 +379,8 @@ set(CORE_SRCS
 
 add_library(core OBJECT ${CORE_SRCS})
 target_include_directories(core PUBLIC extern/freetype2/include ${LUA_INCLUDE_DIR})
-target_compile_options(core PUBLIC $<$<COMPILE_LANGUAGE:C>:-std=c99>)
+#target_compile_options(core PUBLIC $<$<COMPILE_LANGUAGE:C>:-std=c99>)
+set_target_properties(core PROPERTIES C_STANDARD 99)
 
 add_library(bullet STATIC ${BULLET_SRCS})
 target_include_directories(bullet PUBLIC extern/bullet)
