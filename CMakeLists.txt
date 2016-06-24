@@ -18,16 +18,6 @@ set(OPENTOMB_SRCS
     src/audio.cpp
     src/character_controller.cpp
     src/controls.cpp
-    src/core/console.c
-    src/core/gl_font.c
-    src/core/gl_text.c
-    src/core/gl_util.c
-    src/core/obb.c
-    src/core/polygon.c
-    src/core/redblack.c
-    src/core/system.c
-    src/core/utf8_32.c
-    src/core/vmath.c
     src/engine.cpp
     src/entity.cpp
     src/game.cpp
@@ -65,12 +55,12 @@ set(OPENTOMB_SRCS
 # TODO Where is this needed?
 add_definitions(-DOV_EXCLUDE_STATIC_CALLBACKS)
 
-add_executable(OpenTomb ${OPENTOMB_SRCS})
+add_executable(OpenTomb ${OPENTOMB_SRCS} $<TARGET_OBJECTS:core>)
 
 if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_COMPILER_IS_GNUCC)
     message(STATUS "GNU-like compilers detected")
     # Trimming the string may result in a compilation error
-    set_property( TARGET OpenTomb APPEND_STRING PROPERTY COMPILE_FLAGS " -std=c++11 -std=c99 -Wall -Wextra ")
+    target_compile_options(OpenTomb PRIVATE "-std=c++11")
 endif()
 
 include(FindPkgConfig)
@@ -366,6 +356,23 @@ set(OPENAL_SRCS
     extern/al/common/threads.c
     extern/al/common/uintmap.c
 )
+
+set(CORE_SRCS
+    src/core/console.c
+    src/core/gl_font.c
+    src/core/gl_text.c
+    src/core/gl_util.c
+    src/core/obb.c
+    src/core/polygon.c
+    src/core/redblack.c
+    src/core/system.c
+    src/core/utf8_32.c
+    src/core/vmath.c
+)
+
+add_library(core OBJECT ${CORE_SRCS})
+target_include_directories(core PUBLIC extern/freetype2/include)
+target_compile_options(core PUBLIC "-std=c99")
 
 add_library(bullet STATIC ${BULLET_SRCS})
 target_include_directories(bullet PUBLIC extern/bullet)
