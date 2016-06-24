@@ -861,39 +861,6 @@ void Gui_SwitchGLMode(char is_gui)
     }
 }
 
-void Gui_FillCrosshairBuffer()
-{
-    GLfloat x0 = screen_info.w / 2.0f;
-    GLfloat y0 = screen_info.h / 2.0f;
-    GLfloat *v, crosshairArray[32];
-    const GLfloat size = 5.0f;
-    const GLfloat color[4] = {1.0, 0.0, 0.0, 1.0};
-
-    v = crosshairArray;
-   *v++ = x0; *v++ = y0 - size;
-    vec4_copy(v, color);
-    v += 4;
-   *v++ = 0.0; *v++ = 0.0;
-
-   *v++ = x0; *v++ = y0 + size;
-    vec4_copy(v, color);
-    v += 4;
-   *v++ = 0.0; *v++ = 0.0;
-
-   *v++ = x0 - size; *v++ = y0;
-    vec4_copy(v, color);
-    v += 4;
-   *v++ = 0.0; *v++ = 0.0;
-
-   *v++ = x0 + size; *v++ = y0;
-    vec4_copy(v, color);
-    v += 4;
-   *v++ = 0.0; *v++ = 0.0;
-
-    qglBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
-    qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), crosshairArray, GL_STATIC_DRAW);
-}
-
 void Gui_FillBackgroundBuffer()
 {
     GLfloat x0 = 0.0f;
@@ -926,6 +893,40 @@ void Gui_FillBackgroundBuffer()
 
     qglBindBufferARB(GL_ARRAY_BUFFER, backgroundBuffer);
     qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), backgroundArray, GL_STATIC_DRAW);
+}
+
+void Gui_FillCrosshairBuffer()
+{
+    GLfloat x = screen_info.w / 2.0f;
+    GLfloat y = screen_info.h / 2.0f;
+    GLfloat *v, crosshairArray[32];
+    const GLfloat size = 15.0f;
+    const GLfloat color[4] = {1.0, 0.0, 0.0, 1.0};
+
+    v = crosshairArray;
+   *v++ = x; *v++ = y - size;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+
+   *v++ = x; *v++ = y + size;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+
+   *v++ = x - size; *v++ = y;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+
+   *v++ = x + size; *v++ = y;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+
+    // copy vertices into GL buffer
+    qglBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
+    qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), crosshairArray, GL_STATIC_DRAW);
 }
 
 void Gui_DrawDebugCrosshair()
