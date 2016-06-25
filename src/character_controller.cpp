@@ -605,6 +605,7 @@ void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
 
     vec3_add(temp, v1, v2);
     vec3_mul_scalar(temp, temp, 0.5f);
+    temp[2] = ((v1[2] > v2[2]) ? (v1[2]) : (v2[2]));
     Mat4_vec3_mul_macro(pos, ent->transform, temp);
 }
 
@@ -617,12 +618,13 @@ void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
  */
 void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float test_from[3], float test_to[3])
 {
+    const float z_step = -0.66 * ent->character->climb_r;
     float from[3], to[3];
-    float z_step, *pos = ent->transform + 12;
+    float *pos = ent->transform + 12;
     float n0[4], n1[4];                                                         // planes equations
     char up_founded = 0;
     collision_result_t cb;
-    const float color[3] = {1.0, 0.0, 0.0};
+    //const float color[3] = {1.0, 0.0, 0.0};
 
     climb->height_info = CHARACTER_STEP_HORIZONTAL;
     climb->can_hang = 0x00;
@@ -636,7 +638,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     to[1] = test_to[1];
     to[2] = test_from[2];
     //renderer.debugDrawer->DrawLine(from, to, color, color);
-    if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self))
+    if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (cb.fraction > 0))
     {
         // NEAR WALL CASE
         if(cb.fraction > 0.0f)
@@ -654,6 +656,26 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
                 vec3_copy(n1, cb.normale);
                 n1[3] = -vec3_dot(n1, cb.point);
                 up_founded = 2;
+                if(vec3_dot(n0, n1) >= 0.98f)
+                {
+                    from[0] = test_from[0];
+                    from[1] = test_from[1];
+                    from[2] = cb.point[2];
+                    to[0] = test_to[0];
+                    to[1] = test_to[1];
+                    to[2] = from[2];
+                    while(to[2] > test_to[2])
+                    {
+                        if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (vec3_dot(cb.normale, n1) < 0.98f))
+                        {
+                            vec3_copy(n0, cb.normale);
+                            n0[3] = -vec3_dot(n0, cb.point);
+                            break;
+                        }
+                        from[2] += z_step;
+                        to[2] += z_step;
+                    }
+                }
             }
         }
     }
@@ -678,10 +700,9 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             from[0] = test_from[0];
             from[1] = test_from[1];
             from[2] = to[2] = cb.point[2];
-            z_step = -0.66 * ent->character->climb_r;
             for(; to[2] >= test_to[2]; from[2] += z_step, to[2] += z_step)      // we can't climb under floor!
             {
-                renderer.debugDrawer->DrawLine(from, to, color, color);
+                //renderer.debugDrawer->DrawLine(from, to, color, color);
                 if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (cb.fraction > 0.0f))
                 {
                     if(up_founded && (vec3_dist_sq(cb.normale, n0) > 0.05f))
@@ -774,13 +795,22 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         climb->t[1] = climb->edge_tan_xy[1];
 
         // Calc hang info
-        climb->next_z_space = 2.0 * ent->character->Height;
+        climb->next_z_space = 2.0f * ent->character->Height;
         vec3_copy(from, climb->edge_point);
         vec3_copy(to, from);
         to[2] += climb->next_z_space;
         if(Physics_RayTestFiltered(&cb, from, to, ent->self))
         {
             climb->next_z_space = cb.point[2] - climb->edge_point[2];
+            if(climb->next_z_space < 0.01f)
+            {
+                climb->next_z_space = 2.0 * ent->character->Height;
+                from[2] += fabs(climb->next_z_space);
+                if(Physics_RayTestFiltered(&cb, from, to, ent->self))
+                {
+                    climb->next_z_space = cb.point[2] - climb->edge_point[2];
+                }
+            }
         }
 
         from[0] = to[0] = test_from[0];
