@@ -65,9 +65,8 @@ endif()
 #target_compile_options(OpenTomb PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-std=c++11> $<$<COMPILE_LANGUAGE:C>:-std=c99>)
 set_target_properties(OpenTomb PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
 
-include(FindPkgConfig)
-pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
 find_package(SDL2 REQUIRED)
+find_package(SDL2_image REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Lua REQUIRED)
@@ -75,7 +74,7 @@ find_package(Lua REQUIRED)
 target_include_directories(
     OpenTomb PRIVATE
     ${SDL2_INCLUDE_DIR}
-    ${SDL2_IMAGE_INCLUDE_DIRS}
+    ${SDL2_IMAGE_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIR}
     ${LUA_INCLUDE_DIR}
     # this is a workaround
@@ -84,7 +83,7 @@ target_include_directories(
     extern/al
 )
 
-target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES} ${ZLIB_LIBRARY} ${LUA_LIBRARY} ${OPENAL_LIBRARY})
+target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARY} ${ZLIB_LIBRARY} ${LUA_LIBRARY} ${OPENAL_LIBRARY})
 
 set(BULLET_SRCS
     extern/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.cpp
