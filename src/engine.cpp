@@ -99,10 +99,6 @@ void ShowDebugInfo();
 
 void Engine_Start(const char *config_name)
 {
-#if defined(__MACOSX__)
-    FindConfigFile();
-#endif
-
     Engine_InitDefaultGlobals();
     Engine_LoadConfig(config_name);
 
@@ -114,9 +110,7 @@ void Engine_Start(const char *config_name)
     Engine_InitSDLVideo();
     Engine_InitAL();
 
-#if !defined(__MACOSX__)
     Engine_InitSDLImage();
-#endif
 
     // Additional OpenGL initialization.
     Engine_InitGL();
@@ -315,7 +309,6 @@ void Engine_InitAL()
 }
 
 
-#if !defined(__MACOSX__)
 void Engine_InitSDLImage()
 {
     int flags = IMG_INIT_JPG | IMG_INIT_PNG;
@@ -326,7 +319,6 @@ void Engine_InitSDLImage()
         Sys_DebugLog(SYS_LOG_FILENAME, "SDL_Image error: failed to initialize JPG and/or PNG support.");
     }
 }
-#endif
 
 
 void Engine_InitSDLVideo()
