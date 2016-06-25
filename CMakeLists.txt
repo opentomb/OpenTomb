@@ -60,12 +60,15 @@ add_executable(OpenTomb ${OPENTOMB_SRCS} $<TARGET_OBJECTS:core>)
 if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_COMPILER_IS_GNUCC)
     message(STATUS "GNU-like compilers detected")
     # Trimming the string may result in a compilation error
-    target_compile_options(OpenTomb PRIVATE "-std=c++11")
 endif()
+
+#target_compile_options(OpenTomb PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-std=c++11> $<$<COMPILE_LANGUAGE:C>:-std=c99>)
+set_target_properties(OpenTomb PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
 
 include(FindPkgConfig)
 pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
 find_package(SDL2 REQUIRED)
+find_package(OpenAL REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Lua REQUIRED)
 
@@ -75,9 +78,13 @@ target_include_directories(
     ${SDL2_IMAGE_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIR}
     ${LUA_INCLUDE_DIR}
+    # this is a workaround
+    # system headers are incompatible because OpenTomb expects it in a different place
+    # it need to be fixed in OpenTomb first
+    extern/al
 )
 
-target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES} ${ZLIB_LIBRARY} ${LUA_LIBRARY})
+target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES} ${ZLIB_LIBRARY} ${LUA_LIBRARY} ${OPENAL_LIBRARY})
 
 set(BULLET_SRCS
     extern/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.cpp
@@ -371,8 +378,9 @@ set(CORE_SRCS
 )
 
 add_library(core OBJECT ${CORE_SRCS})
-target_include_directories(core PUBLIC extern/freetype2/include)
-target_compile_options(core PUBLIC "-std=c99")
+target_include_directories(core PUBLIC extern/freetype2/include ${LUA_INCLUDE_DIR})
+#target_compile_options(core PUBLIC $<$<COMPILE_LANGUAGE:C>:-std=c99>)
+set_target_properties(core PROPERTIES C_STANDARD 99)
 
 add_library(bullet STATIC ${BULLET_SRCS})
 target_include_directories(bullet PUBLIC extern/bullet)
@@ -385,7 +393,3 @@ target_link_libraries(OpenTomb ogg)
 add_library(freetype2 STATIC ${FREETYPE_SRCS})
 target_include_directories(freetype2 PUBLIC extern/freetype2/include)
 target_link_libraries(OpenTomb freetype2)
-
-add_library(OpenAL STATIC ${OPENAL_SRCS})
-target_include_directories(OpenAL PUBLIC extern/al)
-target_link_libraries(OpenTomb OpenAL)
