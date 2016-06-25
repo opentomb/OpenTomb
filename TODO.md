@@ -56,6 +56,7 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 * Todo:
 	* `game.cpp`: many different logics in one place, needs to be refactored
 	* make some modules (not all!) interface more abstract (hide internal realisation, like `physics.h`/`physics_bullet.cpp`) 
+	* create little module for image loading / saving with simple abstract interface like Image_Load(file_name, format, **buffer, *w, *h, *bpp); Image_Save(file_name, format, *buffer, w, h, bpp);
 
 5. Collision system
 -------------------
