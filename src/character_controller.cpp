@@ -638,7 +638,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     to[1] = test_to[1];
     to[2] = test_from[2];
     //renderer.debugDrawer->DrawLine(from, to, color, color);
-    if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (cb.fraction > 0))
+    if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self))
     {
         // NEAR WALL CASE
         if(cb.fraction > 0.0f)
@@ -1026,6 +1026,7 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
 void Character_LookAt(struct entity_s *ent, float target[3])
 {
     const float bone_dir[] = {0.0f, 1.0f, 0.0f};
+    const float head_target_limit[4] = {0.0f, 1.0f, 0.0f, 0.273f};
     ss_animation_p anim_head_track = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_HEAD_TRACK);
     ss_animation_p  base_anim = &ent->bf->animations;
 
@@ -1040,29 +1041,21 @@ void Character_LookAt(struct entity_s *ent, float target[3])
     vec3_copy(anim_head_track->target, target);
     vec3_copy(anim_head_track->bone_direction, bone_dir);
     anim_head_track->targeting_flags = 0x0000;
-    anim_head_track->targeting_limit[0] = 0.0f;
-    anim_head_track->targeting_limit[1] = 1.0f;
-    anim_head_track->targeting_limit[2] = 0.0f;
-    anim_head_track->targeting_limit[3] = 0.273f;
+    SSBoneFrame_SetTargetingLimit(anim_head_track, head_target_limit);
 
     if(SSBoneFrame_CheckTargetBoneLimit(ent->bf, anim_head_track))
     {
         anim_head_track->anim_ext_flags |= ANIM_EXT_TARGET_TO;
         if((ent->move_type == MOVE_ON_FLOOR) || (ent->move_type == MOVE_FREE_FALLING))
         {
+            const float axis_mod[3] = {0.5f, 0.5f, 1.0f};
+            const float target_limit[4] = {0.0f, 1.0f, 0.0f, 0.883f};
             base_anim->targeting_bone = 7;
             vec3_copy(base_anim->target, target);
             vec3_copy(base_anim->bone_direction, bone_dir);
             base_anim->targeting_flags = 0x0000;
-            base_anim->targeting_limit[0] = 0.0f;
-            base_anim->targeting_limit[1] = 1.0f;
-            base_anim->targeting_limit[2] = 0.0f;
-            base_anim->targeting_limit[3] = 0.883f;
-
-            base_anim->targeting_axis_mod[0] = 0.5f;
-            base_anim->targeting_axis_mod[1] = 0.5f;
-            base_anim->targeting_axis_mod[2] = 1.0f;
-            base_anim->targeting_flags |= ANIM_TARGET_USE_AXIS_MOD;
+            SSBoneFrame_SetTargetingLimit(base_anim, target_limit);
+            SSBoneFrame_SetTargetingAxisMod(base_anim, axis_mod);
             base_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
         }
     }
@@ -2282,6 +2275,8 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
             anim_lh->last_state = WEAPON_STATE_HIDE;
             anim_lh->next_state = WEAPON_STATE_HIDE;
 
+            anim_rh->enabled = 1;
+            anim_lh->enabled = 1;
             ent->bf->bone_tags[8].alt_anim = anim_rh;
             ent->bf->bone_tags[9].alt_anim = anim_rh;
             ent->bf->bone_tags[10].alt_anim = anim_rh;
@@ -2342,6 +2337,13 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
                     ent->bf->bone_tags[i].alt_anim = NULL;
                 }
             }
+            for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
+            {
+                if((ss_anim->type == ANIM_TYPE_WEAPON_TH) || (ss_anim->type == ANIM_TYPE_WEAPON_LH) || (ss_anim->type == ANIM_TYPE_WEAPON_RH))
+                {
+                    ss_anim->enabled = 0;
+                }
+            }
         }
 
         return 1;
@@ -2385,23 +2387,18 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
         bool silent = false;
         if(target)
         {
-            ss_anim->targeting_bone = targeted_bone;
-            vec3_copy(ss_anim->target, target->obb->centre);
-            vec3_copy(ss_anim->bone_direction, bone_dir);
+            float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.224f};
             ss_anim->targeting_flags = 0x0000;
-            ss_anim->targeting_limit[0] = 0.0f;
-            ss_anim->targeting_limit[1] = 1.0f;
-            ss_anim->targeting_limit[2] = 0.0f;
-            ss_anim->targeting_limit[3] = 0.224f;
-
+            SSBoneFrame_SetTrget(ss_anim, targeted_bone, target->obb->centre, bone_dir);
             if(ss_anim->type == ANIM_TYPE_WEAPON_LH)
             {
-                vec3_RotateZ(ss_anim->targeting_limit, ss_anim->targeting_limit, 40.0f);
+                vec3_RotateZ(targeting_limit, targeting_limit, 40.0f);
             }
             else
             {
-                vec3_RotateZ(ss_anim->targeting_limit, ss_anim->targeting_limit, -40.0f);
+                vec3_RotateZ(targeting_limit, targeting_limit, -40.0f);
             }
+            SSBoneFrame_SetTargetingLimit(ss_anim, targeting_limit);
 
             if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, ss_anim))
             {
@@ -2643,15 +2640,11 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
         if(target)
         {
-            const float bone_dir[] = {0.0f, 1.0f, 0.0f};
-            ss_anim->targeting_bone = targeted_bone;
-            vec3_copy(ss_anim->target, target->obb->centre);
-            vec3_copy(ss_anim->bone_direction, bone_dir);
+            const float bone_dir[3] = {0.0f, 1.0f, 0.0f};
+            const float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.624f};
             ss_anim->targeting_flags = 0x0000;
-            ss_anim->targeting_limit[0] = 0.0f;
-            ss_anim->targeting_limit[1] = 1.0f;
-            ss_anim->targeting_limit[2] = 0.0f;
-            ss_anim->targeting_limit[3] = 0.624f;
+            SSBoneFrame_SetTrget(ss_anim, targeted_bone, target->obb->centre, bone_dir);
+            SSBoneFrame_SetTargetingLimit(ss_anim, targeting_limit);
 
             if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, ss_anim))
             {
