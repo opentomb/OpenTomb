@@ -4,6 +4,8 @@
 
 #include <math.h>
 
+#include "config-opentomb.h"
+
 extern "C" {
 #include <al.h>
 #include <alc.h>
