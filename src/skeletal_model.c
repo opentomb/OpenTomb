@@ -308,6 +308,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     vec3_set_zero(bf->centre);
     vec3_set_zero(bf->pos);
     bf->animations.type = ANIM_TYPE_BASE;
+    bf->animations.enabled = 1;
     bf->animations.anim_frame_flags = 0x0000;
     bf->animations.anim_ext_flags = 0x0000;
     bf->animations.frame_time = 0.0;
@@ -431,7 +432,7 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf)
             bone_tag_p ov_src_btag = src_btag;
             bone_tag_p ov_next_btag = next_btag;
             float ov_lerp = bf->animations.lerp;
-            if(btag->alt_anim && btag->alt_anim->model && (btag->alt_anim->model->mesh_tree[k].replace_anim != 0))
+            if(btag->alt_anim && btag->alt_anim->model && btag->alt_anim->enabled && (btag->alt_anim->model->mesh_tree[k].replace_anim != 0))
             {
                 bone_frame_p ov_curr_bf = btag->alt_anim->model->animations[btag->alt_anim->current_animation].frames + btag->alt_anim->current_frame;
                 bone_frame_p ov_next_bf = btag->alt_anim->model->animations[btag->alt_anim->next_animation].frames + btag->alt_anim->next_frame;
@@ -570,6 +571,42 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animati
 }
 
 
+void SSBoneFrame_SetTrget(struct ss_animation_s *ss_anim, uint16_t targeted_bone, const float target_pos[3], const float bone_dir[3])
+{
+    ss_anim->targeting_bone = targeted_bone;
+    vec3_copy(ss_anim->target, target_pos);
+    vec3_copy(ss_anim->bone_direction, bone_dir);
+}
+
+
+void SSBoneFrame_SetTargetingAxisMod(struct ss_animation_s *ss_anim, const float mod[3])
+{
+    if(mod)
+    {
+        vec3_copy(ss_anim->targeting_axis_mod, mod);
+        ss_anim->targeting_flags |= ANIM_TARGET_USE_AXIS_MOD;
+    }
+    else
+    {
+        vec3_set_one(ss_anim->targeting_axis_mod);
+        ss_anim->targeting_flags &= ~ANIM_TARGET_USE_AXIS_MOD;
+    }
+}
+
+
+void SSBoneFrame_SetTargetingLimit(struct ss_animation_s *ss_anim, const float limit[4])
+{
+    if(limit)
+    {
+        vec4_copy(ss_anim->targeting_limit, limit);
+    }
+    else
+    {
+        ss_anim->targeting_limit[3] = -1.0f;
+    }
+}
+
+
 void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame)
 {
     animation_frame_p anim = &bf->animations.model->animations[animation];
@@ -602,6 +639,7 @@ struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, s
         ss_anim->anim_ext_flags = 0x00;
         ss_anim->anim_frame_flags = 0x00;
         ss_anim->type = anim_type;
+        ss_anim->enabled = 1;
         ss_anim->model = sm;
         ss_anim->onFrame = NULL;
         ss_anim->onEndFrame = NULL;
@@ -654,6 +692,7 @@ void SSBoneFrame_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t a
     {
         if(ss_anim->type == anim_type)
         {
+            ss_anim->enabled = 1;
             for(uint16_t i = 0; i < bf->bone_tag_count; i++)
             {
                 mesh_tree_tag_p mtag = ss_anim->model->mesh_tree + i;
@@ -670,6 +709,7 @@ void SSBoneFrame_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t a
 
 void SSBoneFrame_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
 {
+    ss_anim->enabled = 1;
     for(uint16_t i = 0; i < bf->bone_tag_count; i++)
     {
         mesh_tree_tag_p mtag = ss_anim->model->mesh_tree + i;
@@ -683,6 +723,15 @@ void SSBoneFrame_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animat
 
 void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type)
 {
+    for(ss_animation_p ss_anim = &bf->animations; ss_anim; ss_anim = ss_anim->next)
+    {
+        if(ss_anim->type == anim_type)
+        {
+            ss_anim->enabled = 0;
+            break;
+        }
+    }
+    
     for(uint16_t i = 0; i < bf->bone_tag_count; i++)
     {
         if(bf->bone_tags[i].alt_anim && bf->bone_tags[i].alt_anim->type == anim_type)
