@@ -77,11 +77,19 @@ target_include_directories(
     ${SDL2_IMAGE_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIR}
     ${LUA_INCLUDE_DIR}
-    # this is a workaround
-    # system headers are incompatible because OpenTomb expects it in a different place
-    # it need to be fixed in OpenTomb first
-    extern/al
+    ${OPENAL_INCLUDE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
+
+# Check for optional OpenAL include files that are not present in all implementations of the library
+include(CheckIncludeFiles)
+SET(CMAKE_REQUIRED_INCLUDES
+    ${OPENAL_INCLUDE_DIR})
+CHECK_INCLUDE_FILES(alext.h HAVE_ALC_H)
+CHECK_INCLUDE_FILES(efx.h HAVE_EFX_H)
+CHECK_INCLUDE_FILES("efx-presets.h" HAVE_EFX_PRESETS_H)
+
+CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/config-opentomb.h.in ${CMAKE_CURRENT_BINARY_DIR}/config-opentomb.h)
 
 target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARY} ${ZLIB_LIBRARY} ${LUA_LIBRARY} ${OPENAL_LIBRARY})
 

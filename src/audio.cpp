@@ -5,11 +5,17 @@
 #include <math.h>
 
 extern "C" {
-#include <AL/al.h>
-#include <AL/alc.h>
-#include <AL/alext.h>
-#include <AL/efx.h>
-#include <AL/efx-presets.h>
+#include <al.h>
+#include <alc.h>
+#ifdef HAVE_ALEXT_H
+#include <alext.h>
+#endif
+#ifdef HAVE_EFX_H
+#include <efx.h>
+#endif
+#ifdef HAVE_EFX_PRESETS_H
+#include <efx-presets.h>
+#endif
 
 #include <codec.h>
 #include <ogg.h>
@@ -229,7 +235,9 @@ struct audio_world_data_s
 
 // ======== PRIVATE PROTOTYPES =============
 void Audio_InitFX();
+#ifdef HAVE_ALEXT_H
 int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
+#endif
 bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, SDL_AudioSpec wav_spec, bool use_SDL_resampler = false);
 int  Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
 int  Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname);
@@ -275,6 +283,7 @@ AudioSource::AudioSource()
         alSourcef(source_index, AL_MIN_GAIN, 0.0);
         alSourcef(source_index, AL_MAX_GAIN, 1.0);
 
+#ifdef HAVE_ALEXT_H
         if(audio_settings.use_effects)
         {
             alSourcef(source_index, AL_ROOM_ROLLOFF_FACTOR, 1.0);
@@ -286,6 +295,7 @@ AudioSource::AudioSource()
         {
             alSourcef(source_index, AL_AIR_ABSORPTION_FACTOR, 0.0);
         }
+#endif
     }
 }
 
@@ -481,6 +491,7 @@ void AudioSource::SetVelocity(const ALfloat vel_vector[])
 
 void AudioSource::SetFX()
 {
+#ifdef HAVE_ALEXT_H
     ALuint effect;
     ALuint slot;
 
@@ -510,18 +521,22 @@ void AudioSource::SetFX()
     // Assign global reverb FX to channel.
 
     alSource3i(source_index, AL_AUXILIARY_SEND_FILTER, slot, 0, AL_FILTER_NULL);
+#endif
 }
 
 
 void AudioSource::UnsetFX()
 {
+#ifdef HAVE_ALEXT_H
     // Remove any audio sends and direct filters from channel.
     alSourcei(source_index, AL_DIRECT_FILTER, AL_FILTER_NULL);
     alSource3i(source_index, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
+#endif
 }
 
 void AudioSource::SetUnderwater()
 {
+#ifdef HAVE_ALEXT_H
     // Water low-pass filter is applied when source's is_water flag is set.
     // Note that it is applied directly to channel, i. e. all sources that
     // are underwater will damp, despite of global reverb setting.
@@ -536,6 +551,7 @@ void AudioSource::SetUnderwater()
         alSourcei(source_index, AL_DIRECT_FILTER, AL_FILTER_NULL);
         is_water = false;
     }
+#endif
 }
 
 
@@ -748,73 +764,50 @@ bool StreamTrack::Load_Wav(const char *path)
         return false;
     }
 
-    if(false)//use_SDL_resampler
+    // Standard OpenAL sample loading process.
+    format = 0x00;
+
+    if(wav_spec.channels == 1)
     {
-        int FrameSize = wav_spec.channels * 4; // sizeof(float);
-        SDL_AudioCVT cvt;
-        SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, wav_spec.channels, 44100);
-
-        cvt.len = wav_length;
-        buffer_size = wav_length * cvt.len_mult;
-        if(buffer_size % FrameSize)
+        switch(sample_bitsize)
         {
-            buffer_size += FrameSize - (buffer_size % FrameSize);   // make align
+            case 8:
+                format = AL_FORMAT_MONO8;
+                break;
+            case 16:
+                format = AL_FORMAT_MONO16;
+                break;
+#ifdef HAVE_ALEXT_H
+            case 32:
+                format = AL_FORMAT_MONO_FLOAT32;
+                break;
+#endif
         }
-
-        buffer_offset = 0;
-        buffer = (uint8_t*)calloc(buffer_size, 1);
-        cvt.buf = buffer;
-        memcpy(cvt.buf, wav_buffer, cvt.len);
-
-        if(cvt.needed)
-        {
-            SDL_ConvertAudio(&cvt);
-        }
-
-        format = (wav_spec.channels == 1) ? (AL_FORMAT_MONO_FLOAT32) : (AL_FORMAT_STEREO_FLOAT32);
-        rate = 44100;
     }
-    else    // Standard OpenAL sample loading process.
+    else
     {
-        format = 0x00;
-
-        if(wav_spec.channels == 1)
+        switch(sample_bitsize)
         {
-            switch(sample_bitsize)
-            {
-                case 8:
-                    format = AL_FORMAT_MONO8;
-                    break;
-                case 16:
-                    format = AL_FORMAT_MONO16;
-                    break;
-                case 32:
-                    format = AL_FORMAT_MONO_FLOAT32;
-                    break;
-            }
+            case 8:
+                format = AL_FORMAT_STEREO8;
+                break;
+            case 16:
+                format = AL_FORMAT_STEREO16;
+                break;
+#ifdef HAVE_ALEXT_H
+            case 32:
+                format = AL_FORMAT_STEREO_FLOAT32;
+                break;
+#endif
         }
-        else
-        {
-            switch(sample_bitsize)
-            {
-                case 8:
-                    format = AL_FORMAT_STEREO8;
-                    break;
-                case 16:
-                    format = AL_FORMAT_STEREO16;
-                    break;
-                case 32:
-                    format = AL_FORMAT_STEREO_FLOAT32;
-                    break;
-            }
-        }
-
-        buffer_size = wav_length;
-        buffer_offset = 0;
-        buffer = (uint8_t*)calloc(buffer_size, 1);
-        rate = wav_spec.freq;
-        memcpy(buffer, wav_buffer, buffer_size);
     }
+
+    buffer_size = wav_length;
+    buffer_offset = 0;
+    buffer = (uint8_t*)calloc(buffer_size, 1);
+    rate = wav_spec.freq;
+    memcpy(buffer, wav_buffer, buffer_size);
+    
 
     SDL_FreeWAV(wav_buffer);
     return true;
@@ -1105,6 +1098,7 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
 
 void StreamTrack::SetFX()
 {
+#ifdef HAVE_ALEXT_H
     ALuint effect;
     ALuint slot;
 
@@ -1134,15 +1128,18 @@ void StreamTrack::SetFX()
     // Assign global reverb FX to channel.
 
     alSource3i(source, AL_AUXILIARY_SEND_FILTER, slot, 0, AL_FILTER_NULL);
+#endif
 }
 
 
 void StreamTrack::UnsetFX()
 {
+#ifdef HAVE_ALEXT_H
     // Remove any audio sends and direct filters from channel.
 
     alSourcei(source, AL_DIRECT_FILTER, AL_FILTER_NULL);
     alSource3i(source, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
+#endif
 }
 
 // ======== END STREAMTRACK CLASS IMPLEMENTATION ========
@@ -1757,6 +1754,7 @@ void Audio_InitGlobals()
 
 void Audio_InitFX()
 {
+#ifdef HAVE_ALEXT_H
     memset(&fxManager, 0, sizeof(audio_fxmanager_s));
 
     // Set up effect slots, effects and filters.
@@ -1788,9 +1786,11 @@ void Audio_InitFX()
 
     EFXEAXREVERBPROPERTIES reverb6 = EFX_REVERB_PRESET_UNDERWATER;
     Audio_LoadReverbToFX(TR_AUDIO_FX_WATER, &reverb6);
+#endif
 }
 
 
+#ifdef HAVE_ALEXT_H
 int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb)
 {
     ALuint effect = fxManager.al_effect[effect_index];
@@ -1821,6 +1821,7 @@ int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *r
 
     return 1;
 }
+#endif
 
 
 void Audio_Init(uint32_t num_Sources)
@@ -2160,6 +2161,7 @@ int Audio_DeInit()
         audio_world_data.audio_map = NULL;
     }
 
+#ifdef HAVE_ALEXT_H
     for(int i = 0; i < TR_AUDIO_MAX_SLOTS; i++)
     {
         if(alIsAuxiliaryEffectSlot(fxManager.al_slot[i]))
@@ -2174,6 +2176,7 @@ int Audio_DeInit()
         alDeleteFilters(1, &fxManager.al_filter);
         alDeleteEffects(TR_AUDIO_FX_LASTINDEX, fxManager.al_effect);
     }
+#endif
 
     return 1;
 }
@@ -2309,42 +2312,7 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
         return false;
     }
 
-    // SDL resampler (SDL_ConvertAudio) is actually not needed, as OpenAL works
-    // normally with samples of different formats. Also, it breaks with non-standard
-    // sample rates, ruining whole audio engine in the process. Hence, SDL resampler
-    // is silently ignored by default, but you still can enable it by passing additional
-    // boolean "true" argument to the function.
-
-    if(use_SDL_resampler)
-    {
-        SDL_AudioCVT cvt;
-        SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, wav_spec.channels, 44100);
-
-        int    FrameSize = wav_spec.channels * 4;           // channels * sizeof(float32)
-        Uint32 new_len = buffer_size * cvt.len_mult;
-
-        cvt.len = buffer_size;
-
-        if(new_len % FrameSize)
-        {
-            new_len += FrameSize - (new_len % FrameSize);   // make align
-        }
-
-        cvt.buf = (Uint8*)calloc(new_len, 1);
-        memcpy(cvt.buf, buffer_data, cvt.len);
-
-        if(cvt.needed)
-        {
-            SDL_ConvertAudio(&cvt);
-        }
-
-        ALenum buffer_format = (wav_spec.channels == 1)?(AL_FORMAT_MONO_FLOAT32):(AL_FORMAT_STEREO_FLOAT32);
-
-        alBufferData(buf_number, buffer_format, cvt.buf, new_len, 44100);
-        free(cvt.buf);
-    }
-    else    // Standard OpenAL sample loading process.
-    {
+    // Standard OpenAL sample loading process.
         ALenum sample_format = 0x00;
 
         if(wav_spec.channels == 1)
@@ -2357,9 +2325,11 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
                 case 16:
                     sample_format = AL_FORMAT_MONO16;
                     break;
+#ifdef HAVE_ALEXT_H
                 case 32:
                     sample_format = AL_FORMAT_MONO_FLOAT32;
                     break;
+#endif
             }
         }
         else
@@ -2372,14 +2342,15 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
                 case 16:
                     sample_format = AL_FORMAT_STEREO16;
                     break;
+#ifdef HAVE_ALEXT_H
                 case 32:
                     sample_format = AL_FORMAT_STEREO_FLOAT32;
                     break;
+#endif
             }
         }
 
         alBufferData(buf_number, sample_format, buffer_data, buffer_size, wav_spec.freq);
-    }
 
     return true;
 }
