@@ -1,6 +1,6 @@
 
 #include <stdint.h>
-#include <SDL2/SDL_image.h>
+#include <string.h>
 
 #include "core/gl_util.h"
 #include "core/gl_font.h"
@@ -13,6 +13,7 @@
 #include "render/render.h"
 #include "render/shader_description.h"
 #include "render/shader_manager.h"
+#include "image.h"
 #include "gui.h"
 #include "mesh.h"
 #include "skeletal_model.h"
@@ -1040,84 +1041,57 @@ void Gui_DrawLoadScreen(int value)
     Engine_GLSwapWindow();
 }
 
+inline bool ext_compare(const char s1[3], const char s2[3])
+{
+    return (tolower(s1[0]) == tolower(s2[0])) &&
+        (tolower(s1[1]) == tolower(s2[1])) &&
+        (tolower(s1[2]) == tolower(s2[2]));
+}
+
 bool Gui_LoadScreenAssignPic(const char* pic_name)
 {
-    char buf[MAX_ENGINE_PATH];
     size_t len = strlen(pic_name);
-    size_t ext_len = 0;
-
-    ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
-    strncpy(buf, pic_name, MAX_ENGINE_PATH);
-    if(!Sys_FileFound(buf, 0))
+    int image_format = 0;
+    
+    if(len > 3)
     {
-        for(; ext_len + 1 < len; ext_len++)
+        const char *ext = pic_name + len - 3;
+        if(ext_compare(ext, "png"))
         {
-            if(buf[len-ext_len-1] == '.')
-            {
-                break;
-            }
+            image_format = IMAGE_FORMAT_PNG;
         }
-
-        if(ext_len + 1 == len)
+        else if(ext_compare(ext, "pcx"))
         {
-            return false;
+            image_format = IMAGE_FORMAT_PCX;
         }
-
-        buf[len - ext_len + 0] = 'b';
-        buf[len - ext_len + 1] = 'm';
-        buf[len - ext_len + 2] = 'p';
-        buf[len - ext_len + 3] = 0;
-        if(!Sys_FileFound(buf, 0))
+        else if(ext_compare(ext, "tga"))
         {
-            buf[len - ext_len + 0] = 'j';
-            buf[len - ext_len + 1] = 'p';
-            buf[len - ext_len + 2] = 'g';
-            if(!Sys_FileFound(buf, 0))
-            {
-                buf[len - ext_len + 0] = 'p';
-                buf[len - ext_len + 1] = 'n';
-                buf[len - ext_len + 2] = 'g';
-                if(!Sys_FileFound(buf, 0))
-                {
-                    buf[len - ext_len + 0] = 't';
-                    buf[len - ext_len + 1] = 'g';
-                    buf[len - ext_len + 2] = 'a';
-                    if(!Sys_FileFound(buf, 0))
-                    {
-                        return false;
-                    }
-                }
-            }
+            image_format = IMAGE_FORMAT_TGA;
         }
     }
 
-    SDL_Surface *surface = IMG_Load(buf);
-    if(surface != NULL)
+    uint8_t *img_pixels = NULL;
+    uint32_t img_w = 0;
+    uint32_t img_h = 0;
+    uint32_t img_bpp = 32;
+    if(Image_Load(pic_name, image_format, &img_pixels, &img_w, &img_h, &img_bpp))
     {
         GLenum       texture_format;
         GLuint       color_depth;
 
-        if(surface->format->BytesPerPixel == 4)        // Contains an alpha channel
+        if(img_bpp == 32)        // Contains an alpha channel
         {
-            if(surface->format->Rmask == 0x000000ff)
-                texture_format = GL_RGBA;
-            else
-                texture_format = GL_BGRA;
-
+            texture_format = GL_RGBA;
             color_depth = GL_RGBA;
         }
-        else if(surface->format->BytesPerPixel == 3)   // No alpha channel
+        else if(img_bpp == 24)   // No alpha channel
         {
-            if(surface->format->Rmask == 0x000000ff)
-                texture_format = GL_RGB;
-            else
-                texture_format = GL_BGR;
-
+            texture_format = GL_RGB;
             color_depth = GL_RGB;
         }
         else
         {
-            SDL_FreeSurface(surface);
+            free(img_pixels);
             return false;
         }
 
@@ -1129,10 +1103,10 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
         qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         // Edit the texture object's image data using the information SDL_Surface gives us
-        qglTexImage2D(GL_TEXTURE_2D, 0, color_depth, surface->w, surface->h, 0,
-                     texture_format, GL_UNSIGNED_BYTE, surface->pixels);
+        qglTexImage2D(GL_TEXTURE_2D, 0, color_depth, img_w, img_h, 0,
+                     texture_format, GL_UNSIGNED_BYTE, img_pixels);
         qglBindTexture(GL_TEXTURE_2D, 0);
-        SDL_FreeSurface(surface);
+        free(img_pixels);
         return true;
     }
 
