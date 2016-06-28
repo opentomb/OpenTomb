@@ -79,6 +79,8 @@ set(OPENTOMB_SRCS
     src/vt/scaler.h
     src/vt/vt_level.cpp
     src/vt/vt_level.h
+    src/vt/tr_types.h
+    src/vt/tr_versions.h
     src/world.cpp
     src/world.h
 )
