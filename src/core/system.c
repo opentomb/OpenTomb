@@ -169,11 +169,21 @@ void Sys_DebugLog(const char *file, const char *fmt, ...)
     va_list argptr;
     static char data[4096];
     FILE *fp;
+    size_t len;
 
     va_start(argptr, fmt);
-    data[0] = '\n';
     vsnprintf(data, sizeof(data), fmt, argptr);
     va_end(argptr);
+    
+    // Add newline at end (if possible)
+    len = strlen(data);
+    if ((len + 1) < sizeof(data))
+    {
+        data[len + 0] = '\n';
+        data[len + 1] = 0;
+        len += 1;
+    }
+    
     fp = fopen(file, "a");
     if(fp == NULL)
     {
@@ -181,10 +191,10 @@ void Sys_DebugLog(const char *file, const char *fmt, ...)
     }
     if(fp != NULL)
     {
-        fwrite(data, strlen(data), 1, fp);
+        fwrite(data, len, 1, fp);
         fclose(fp);
     }
-    fwrite(data, strlen(data), 1, stderr);
+    fwrite(data, len, 1, stderr);
 }
 
 
