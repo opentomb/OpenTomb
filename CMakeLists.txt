@@ -35,7 +35,7 @@ set(OPENTOMB_SRCS
     src/gui.h
     src/inventory.cpp
     src/inventory.h
-	src/image.cpp
+    src/image.cpp
     src/image.h
     src/main_SDL.cpp
     src/mesh.c
