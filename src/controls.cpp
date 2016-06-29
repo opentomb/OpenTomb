@@ -143,7 +143,7 @@ void Controls_Key(int32_t button, int state)
                 case ACT_SCREENSHOT:
                     if(!state)
                     {
-                        Sys_TakeScreenShot();
+                        Engine_TakeScreenShot();
                     }
                     break;
 

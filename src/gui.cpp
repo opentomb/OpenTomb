@@ -1052,7 +1052,7 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
 {
     size_t len = strlen(pic_name);
     int image_format = 0;
-    
+
     if(len > 3)
     {
         const char *ext = pic_name + len - 3;
@@ -1063,10 +1063,6 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
         else if(ext_compare(ext, "pcx"))
         {
             image_format = IMAGE_FORMAT_PCX;
-        }
-        else if(ext_compare(ext, "tga"))
-        {
-            image_format = IMAGE_FORMAT_TGA;
         }
     }
 

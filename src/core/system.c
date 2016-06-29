@@ -26,7 +26,6 @@ extern lua_State       *engine_lua;
 static uint8_t         *engine_mem_buffer             = NULL;
 static size_t           engine_mem_buffer_size        = 0;
 static size_t           engine_mem_buffer_size_left   = 0;
-static int              screenshot_cnt                = 0;
 
 // =======================================================================
 // General routines
@@ -168,33 +167,23 @@ void Sys_DebugLog(const char *file, const char *fmt, ...)
 {
     va_list argptr;
     static char data[4096];
-    FILE *fp;
-    size_t len;
+    SDL_RWops *fp;
 
     va_start(argptr, fmt);
+    data[0] = '\n';
     vsnprintf(data, sizeof(data), fmt, argptr);
     va_end(argptr);
-    
-    // Add newline at end (if possible)
-    len = strlen(data);
-    if ((len + 1) < sizeof(data))
-    {
-        data[len + 0] = '\n';
-        data[len + 1] = 0;
-        len += 1;
-    }
-    
-    fp = fopen(file, "a");
+    fp = SDL_RWFromFile(file, "a");
     if(fp == NULL)
     {
-        fp = fopen(file, "w");
+        fp = SDL_RWFromFile(file, "w");
     }
     if(fp != NULL)
     {
-        fwrite(data, len, 1, fp);
-        fclose(fp);
+        SDL_RWwrite(fp, data, strlen(data), 1);
+        SDL_RWclose(fp);
     }
-    fwrite(data, len, 1, stderr);
+    fwrite(data, strlen(data), 1, stderr);
 }
 
 
@@ -268,6 +257,7 @@ void WriteTGAfile(const char *filename, const uint8_t *data, const int width, co
 
 void Sys_TakeScreenShot()
 {
+    static int screenshot_cnt = 0;
     GLint ViewPort[4];
     char fname[128];
     GLubyte *pixels;

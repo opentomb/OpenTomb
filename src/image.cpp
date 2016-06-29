@@ -449,8 +449,111 @@ int Image_Load(const char *file_name, int format, uint8_t **buffer, uint32_t *w,
     }
 }
 
+//------------------------------------------------------------------------------
+//int IMG_SavePNG_RW(SDL_Surface *surface, SDL_RWops *dst, int freedst)
+
+/*PNG_EXPORT(77, void, png_set_write_fn, (png_structrp png_ptr, png_voidp io_ptr,
+    png_rw_ptr write_data_fn, png_flush_ptr output_flush_fn));*/
+
+/*typedef PNG_CALLBACK(void, *png_rw_ptr, (png_structp, png_bytep, png_size_t));
+typedef PNG_CALLBACK(void, *png_flush_ptr, (png_structp));*/
+
+static void png_write_data(png_structp ctx, png_bytep area, png_size_t size)
+{
+    SDL_RWops *dst = (SDL_RWops *)png_get_io_ptr(ctx);
+    SDL_RWwrite(dst, area, size, 1);
+}
+
+
+static void png_flush_data(png_structp ctx)
+{
+}
+
+
+static int Image_SavePNG(const char *file_name, uint8_t *buffer, uint32_t w, uint32_t h, uint32_t bpp)
+{
+    SDL_RWops *dst = SDL_RWFromFile(file_name, "wb");
+    int cell_size;
+    int png_color_type;
+
+    if(!dst)
+    {
+        return 0;
+    }
+
+    if(bpp == 24)
+    {
+        png_color_type = PNG_COLOR_TYPE_RGB;
+        cell_size = 3;
+    }
+    else if(bpp == 32)
+    {
+        png_color_type = PNG_COLOR_TYPE_RGBA;
+        cell_size = 4;
+    }
+    else
+    {
+        SDL_RWclose(dst);
+        return 0;
+    }
+
+    png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if(png_ptr == NULL)
+    {
+        SDL_RWclose(dst);
+        return 0;
+    }
+
+    png_infop info_ptr = png_create_info_struct(png_ptr);
+    if(info_ptr == NULL)
+    {
+        png_destroy_write_struct(&png_ptr, NULL);
+        SDL_RWclose(dst);
+        return 0;
+    }
+
+    if(setjmp(png_jmpbuf(png_ptr)))
+    {
+        png_destroy_write_struct(&png_ptr, &info_ptr);
+        SDL_RWclose(dst);
+        return 0;
+    }
+
+    //png_set_compression_level(png_ptr, 9);
+    png_set_write_fn(png_ptr, dst, png_write_data, png_flush_data);
+
+    png_set_IHDR(png_ptr, info_ptr, w, h,
+         8, png_color_type, PNG_INTERLACE_NONE,
+         PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+
+    png_write_info(png_ptr, info_ptr);
+
+    // Write image data
+    for(uint32_t y = 0 ; y < h ; y++)
+    {
+        png_bytep row = (png_bytep)(buffer + (h - y - 1) * w * cell_size);
+        png_write_row(png_ptr, row);
+    }
+
+    // End write
+    png_write_end(png_ptr, NULL);
+    SDL_RWclose(dst);
+
+    png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
+    png_destroy_write_struct(&png_ptr, &info_ptr);
+
+    return 1;
+}
+
 
 int Image_Save(const char *file_name, int format, uint8_t *buffer, uint32_t w, uint32_t h, uint32_t bpp)
 {
-    return 0;
+    switch(format)
+    {
+        case IMAGE_FORMAT_PNG:
+            return Image_SavePNG(file_name, buffer, w, h, bpp);
+
+        default:
+            return 0;
+    }
 }

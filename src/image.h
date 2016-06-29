@@ -8,9 +8,8 @@ extern "C" {
 
 #include <stdint.h>
 
-#define IMAGE_FORMAT_TGA    (1)
-#define IMAGE_FORMAT_PCX    (2)
-#define IMAGE_FORMAT_PNG    (3)
+#define IMAGE_FORMAT_PCX    (1)
+#define IMAGE_FORMAT_PNG    (2)
 
 
 int Image_Load(const char *file_name, int format, uint8_t **buffer, uint32_t *w, uint32_t *h, uint32_t *bpp); 

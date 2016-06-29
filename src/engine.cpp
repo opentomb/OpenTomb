@@ -43,6 +43,7 @@ extern "C" {
 #include "trigger.h"
 #include "character_controller.h"
 #include "render/bsp_tree.h"
+#include "image.h"
 
 
 static SDL_Window             *sdl_window     = NULL;
@@ -909,6 +910,26 @@ void ShowDebugInfo()
 /*
  * MISC ENGINE FUNCTIONALITY
  */
+
+void Engine_TakeScreenShot()
+{
+    static int screenshot_cnt = 0;
+    GLint ViewPort[4];
+    char fname[128];
+    GLubyte *pixels;
+    uint32_t str_size;
+
+    qglGetIntegerv(GL_VIEWPORT, ViewPort);
+    snprintf(fname, 128, "screen_%.5d.png", screenshot_cnt);
+    str_size = ViewPort[2] * 4;
+    pixels = (GLubyte*)malloc(str_size * ViewPort[3]);
+    qglReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    Image_Save(fname, IMAGE_FORMAT_PNG, (uint8_t*)pixels, ViewPort[2], ViewPort[3], 32);
+
+    free(pixels);
+    screenshot_cnt++;
+}
+
 
 void Engine_GetLevelName(char *name, const char *path)
 {
