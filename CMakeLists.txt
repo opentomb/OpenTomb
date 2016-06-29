@@ -35,6 +35,8 @@ set(OPENTOMB_SRCS
     src/gui.h
     src/inventory.cpp
     src/inventory.h
+    src/image.cpp
+    src/image.h
     src/main_SDL.cpp
     src/mesh.c
     src/mesh.h
@@ -85,7 +87,7 @@ set(OPENTOMB_SRCS
     src/world.h
 )
 
-# TODO Where is this needed?
+# TODO Where is this needed? in internal AL or vorbis (maybe used inside libs headers)
 add_definitions(-DOV_EXCLUDE_STATIC_CALLBACKS)
 
 add_executable(OpenTomb ${OPENTOMB_SRCS} $<TARGET_OBJECTS:core>)
@@ -99,7 +101,7 @@ endif()
 set_target_properties(OpenTomb PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
 
 find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
+find_package(PNG REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Lua REQUIRED)
@@ -107,7 +109,7 @@ find_package(Lua REQUIRED)
 target_include_directories(
     OpenTomb PRIVATE
     ${SDL2_INCLUDE_DIR}
-    ${SDL2_IMAGE_INCLUDE_DIR}
+    ${PNG_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIR}
     ${LUA_INCLUDE_DIR}
     # this is a workaround
@@ -116,7 +118,7 @@ target_include_directories(
     extern/al
 )
 
-target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARY} ${ZLIB_LIBRARY} ${LUA_LIBRARY} ${OPENAL_LIBRARY})
+target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${PNG_LIBRARY} ${ZLIB_LIBRARY} ${LUA_LIBRARY} ${OPENAL_LIBRARY})
 
 set(BULLET_SRCS
     extern/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.cpp

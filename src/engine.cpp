@@ -1,7 +1,6 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_image.h>
 #include <SDL2/SDL_opengl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -44,6 +43,7 @@ extern "C" {
 #include "trigger.h"
 #include "character_controller.h"
 #include "render/bsp_tree.h"
+#include "image.h"
 
 
 static SDL_Window             *sdl_window     = NULL;
@@ -86,7 +86,6 @@ void Engine_Init_Pre();
 void Engine_Init_Post();
 void Engine_InitGL();
 void Engine_InitAL();
-void Engine_InitSDLImage();
 void Engine_InitSDLVideo();
 void Engine_InitSDLControls();
 void Engine_InitDefaultGlobals();
@@ -109,8 +108,6 @@ void Engine_Start(const char *config_name)
     Engine_InitSDLControls();
     Engine_InitSDLVideo();
     Engine_InitAL();
-
-    Engine_InitSDLImage();
 
     // Additional OpenGL initialization.
     Engine_InitGL();
@@ -192,7 +189,6 @@ void Engine_Shutdown(int val)
     }
 
     Sys_Destroy();
-    IMG_Quit();
     SDL_Quit();
 
     exit(val);
@@ -306,18 +302,6 @@ void Engine_InitAL()
     alSpeedOfSound(330.0 * 512.0);
     alDopplerVelocity(330.0 * 510.0);
     alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
-}
-
-
-void Engine_InitSDLImage()
-{
-    int flags = IMG_INIT_JPG | IMG_INIT_PNG;
-    int init  = IMG_Init(flags);
-
-    if((init & flags) != flags)
-    {
-        Sys_DebugLog(SYS_LOG_FILENAME, "SDL_Image error: failed to initialize JPG and/or PNG support.");
-    }
 }
 
 
@@ -926,6 +910,26 @@ void ShowDebugInfo()
 /*
  * MISC ENGINE FUNCTIONALITY
  */
+
+void Engine_TakeScreenShot()
+{
+    static int screenshot_cnt = 0;
+    GLint ViewPort[4];
+    char fname[128];
+    GLubyte *pixels;
+    uint32_t str_size;
+
+    qglGetIntegerv(GL_VIEWPORT, ViewPort);
+    snprintf(fname, 128, "screen_%.5d.png", screenshot_cnt);
+    str_size = ViewPort[2] * 4;
+    pixels = (GLubyte*)malloc(str_size * ViewPort[3]);
+    qglReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    Image_Save(fname, IMAGE_FORMAT_PNG, (uint8_t*)pixels, ViewPort[2], ViewPort[3], 32);
+
+    free(pixels);
+    screenshot_cnt++;
+}
+
 
 void Engine_GetLevelName(char *name, const char *path)
 {

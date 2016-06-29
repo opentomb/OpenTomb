@@ -131,6 +131,7 @@ bool Engine_LoadPCLevel(const char *name);
 
 // General level loading routines.
 
+void Engine_TakeScreenShot();
 void Engine_GetLevelName(char *name, const char *path);
 void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix, uint32_t buf_size);
 int  Engine_LoadMap(const char *name);
