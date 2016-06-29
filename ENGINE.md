@@ -41,6 +41,7 @@
 	-	game - contains main game frame function; also contains save / load functions, low-level game effects (flyby camera, look at control, load screen updater...);
 	-	gameflow - contains levels loading order control functions and allows to get load screen info;
 	-	gui - renders all debug strings, bars, load screen, inventory menu;
+	-	image - layer module for reading pcx and png and saving png images; bpp = 24 or 32 only (RGB or RGBA only);
 	-	inventory - only item structure and simplest add / remove item functions;
 	-	main_SDL - only main function and engine start (+ todo list in comment);
 	-	mesh - base item for rendering, contains vertices and VBO;

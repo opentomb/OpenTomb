@@ -86,7 +86,6 @@ static int Image_LoadPNG(const char *file_name, uint8_t **buffer, uint32_t *w, u
     /* For images with a single "transparent colour", set colour key;
        if more than one index has transparency, or if partially transparent
        entries exist, use full alpha channel */
-#if 1
     if(png_get_valid(png_ptr, read_info_ptr, PNG_INFO_tRNS))
     {
         png_color_16 *transv = NULL;
@@ -119,7 +118,6 @@ static int Image_LoadPNG(const char *file_name, uint8_t **buffer, uint32_t *w, u
             }
         }
     }
-#endif
 
     if(color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
     {
@@ -414,9 +412,18 @@ static int Image_LoadPCX(const char *file_name, uint8_t **buffer, uint32_t *w, u
         {
             for(uint32_t x = 0; x < *w; x++)
             {
-                dst_row[x * 3 + 0] = colors[src_row[x]].r;
-                dst_row[x * 3 + 1] = colors[src_row[x]].g;
-                dst_row[x * 3 + 2] = colors[src_row[x]].b;
+                if(src_row[x] < nc)
+                {
+                    dst_row[x * 3 + 0] = colors[src_row[x]].r;
+                    dst_row[x * 3 + 1] = colors[src_row[x]].g;
+                    dst_row[x * 3 + 2] = colors[src_row[x]].b;
+                }
+                else
+                {
+                    dst_row[x * 3 + 0] = 0;
+                    dst_row[x * 3 + 1] = 0;
+                    dst_row[x * 3 + 2] = 0;
+                }
             }
             src_row += bpl;
             dst_row += (*w) * 3;
