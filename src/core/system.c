@@ -167,23 +167,35 @@ void Sys_DebugLog(const char *file, const char *fmt, ...)
 {
     va_list argptr;
     static char data[4096];
-    SDL_RWops *fp;
+    int32_t written;
 
     va_start(argptr, fmt);
-    data[0] = '\n';
-    vsnprintf(data, sizeof(data), fmt, argptr);
+    written = vsnprintf(data, sizeof(data), fmt, argptr);
     va_end(argptr);
-    fp = SDL_RWFromFile(file, "a");
-    if(fp == NULL)
+
+    if(written > 0)
     {
-        fp = SDL_RWFromFile(file, "w");
+        SDL_RWops *fp;
+        // Add newline at end (if possible)
+        if((written + 1) < sizeof(data))
+        {
+            data[written + 0] = '\n';
+            data[written + 1] = 0;
+            written += 1;
+        }
+
+        fp = SDL_RWFromFile(file, "a");
+        if(fp == NULL)
+        {
+            fp = SDL_RWFromFile(file, "w");
+        }
+        if(fp != NULL)
+        {
+            SDL_RWwrite(fp, data, written, 1);
+            SDL_RWclose(fp);
+        }
+        fwrite(data, written, 1, stderr);
     }
-    if(fp != NULL)
-    {
-        SDL_RWwrite(fp, data, strlen(data), 1);
-        SDL_RWclose(fp);
-    }
-    fwrite(data, strlen(data), 1, stderr);
 }
 
 
