@@ -611,17 +611,20 @@ int Script_ParseScreen(lua_State *lua, struct screen_info_s *sc)
         sc->w_unit = (GLfloat)sc->w / SYS_SCREEN_METERING_RESOLUTION;
         sc->h_unit = (GLfloat)sc->h / SYS_SCREEN_METERING_RESOLUTION;
         lua_getfield(lua, -1, "fullscreen");
-        sc->FS_flag = (int8_t)lua_tonumber(lua, -1);
+        sc->fullscreen = (int8_t)lua_tonumber(lua, -1);
         lua_pop(lua, 1);
 
-        lua_getfield(lua, -1, "debug_info");
-        sc->show_debuginfo = (int8_t)lua_tonumber(lua, -1);
+        lua_getfield(lua, -1, "debug_view_state");
+        sc->debug_view_state = (int8_t)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_getfield(lua, -1, "crosshair");
+        sc->crosshair = (int8_t)lua_tonumber(lua, -1);
         lua_pop(lua, 1);
 
         lua_getfield(lua, -1, "fov");
         sc->fov = (float)lua_tonumber(lua, -1);
         lua_pop(lua, 1);
-
 
         lua_settop(lua, top);
         return 1;

@@ -310,7 +310,7 @@ void Engine_InitSDLVideo()
     Uint32 video_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
     PFNGLGETSTRINGPROC lglGetString = NULL;
 
-    if(screen_info.FS_flag)
+    if(screen_info.fullscreen)
     {
         video_flags |= SDL_WINDOW_FULLSCREEN;
     }
@@ -507,8 +507,8 @@ void Engine_Display()
         Cam_RecalcClipPlanes(&engine_camera);
         // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
 
-        screen_info.show_debuginfo %= 4;
-        if(screen_info.show_debuginfo)
+        screen_info.debug_view_state %= 4;
+        if(screen_info.debug_view_state)
         {
             ShowDebugInfo();
         }
@@ -844,7 +844,7 @@ void ShowDebugInfo()
         }
     }
 
-    switch(screen_info.show_debuginfo)
+    switch(screen_info.debug_view_state)
     {
         case 1:
             {

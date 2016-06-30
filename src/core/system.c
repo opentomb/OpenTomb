@@ -45,8 +45,9 @@ void Sys_InitGlobals()
     screen_info.y = 20;
     screen_info.w = 800;
     screen_info.h = 600;
-    screen_info.FS_flag = 0;
-    screen_info.show_debuginfo = 0;
+    screen_info.debug_view_state = 0;
+    screen_info.fullscreen = 0;
+    screen_info.crosshair = 0;
     screen_info.fov = 75.0;
 }
 

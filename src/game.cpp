@@ -105,11 +105,11 @@ int lua_debuginfo(lua_State * lua)
 {
     if(lua_gettop(lua) == 0)
     {
-        screen_info.show_debuginfo++;
+        screen_info.debug_view_state++;
     }
     else
     {
-        screen_info.show_debuginfo = lua_tointeger(lua, 1);
+        screen_info.debug_view_state = lua_tointeger(lua, 1);
     }
     return 0;
 }
