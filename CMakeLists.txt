@@ -29,7 +29,7 @@ set(OPENTOMB_SRCS
     src/entity.h
     src/game.cpp
     src/game.h
-	src/game_camera.cpp
+    src/game_camera.cpp
     src/gameflow.cpp
     src/gameflow.h
     src/gui.cpp
