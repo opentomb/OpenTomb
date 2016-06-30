@@ -248,7 +248,7 @@ void Gui_Render()
     qglPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     qglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    if (screen_info.show_debuginfo != 0)
+    if(screen_info.show_debuginfo != 0)
     {
         Gui_DrawDebugCrosshair();
     }
