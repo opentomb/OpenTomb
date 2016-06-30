@@ -457,13 +457,6 @@ int Image_Load(const char *file_name, int format, uint8_t **buffer, uint32_t *w,
 }
 
 //------------------------------------------------------------------------------
-//int IMG_SavePNG_RW(SDL_Surface *surface, SDL_RWops *dst, int freedst)
-
-/*PNG_EXPORT(77, void, png_set_write_fn, (png_structrp png_ptr, png_voidp io_ptr,
-    png_rw_ptr write_data_fn, png_flush_ptr output_flush_fn));*/
-
-/*typedef PNG_CALLBACK(void, *png_rw_ptr, (png_structp, png_bytep, png_size_t));
-typedef PNG_CALLBACK(void, *png_flush_ptr, (png_structp));*/
 
 static void png_write_data(png_structp ctx, png_bytep area, png_size_t size)
 {
