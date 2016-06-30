@@ -1,6 +1,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "core/gl_util.h"
 #include "core/gl_font.h"

@@ -9,20 +9,11 @@ extern "C" {
 }
 
 #include "core/system.h"
-//#include "core/console.h"
-//#include "core/vmath.h"
-//#include "core/redblack.h"
-//#include "core/polygon.h"
 #include "core/obb.h"
 #include "render/camera.h"
-//#include "render/frustum.h"
-//#include "render/render.h"
-//#include "engine.h"
-//#include "physics.h"
 #include "controls.h"
 #include "room.h"
 #include "world.h"
-//#include "audio.h"
 #include "skeletal_model.h"
 #include "entity.h"
 //#include "script.h"
@@ -31,7 +22,6 @@ extern "C" {
 #include "character_controller.h"
 #include "gameflow.h"
 //#include "gui.h"
-//#include "inventory.h"
 
 
 void Cam_PlayFlyBy(float time)
