@@ -251,9 +251,8 @@ void Gui_Render()
 
     if(screen_info.crosshair != 0)
     {
-        Gui_DrawDebugCrosshair();
+        Gui_DrawCrosshair();
     }
-    Gui_DrawCrosshair();
     Gui_DrawBars();
 
     qglUniform1fARB(shader->colorReplace, 1.0f);
@@ -932,20 +931,16 @@ void Gui_FillCrosshairBuffer()
     qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), crosshairArray, GL_STATIC_DRAW);
 }
 
-void Gui_DrawDebugCrosshair()
+void Gui_DrawCrosshair()
 {
+    // TBI: actual ingame crosshair
+
     BindWhiteTexture();
     qglBindBufferARB(GL_ARRAY_BUFFER_ARB, crosshairBuffer);
     qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
     qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[2]));
     qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[6]));
     qglDrawArrays(GL_LINES, 0, 4);
-}
-
-void Gui_DrawCrosshair()
-{
-    // Moved to Gui_DrawDebugCrosshair()
-    // TBI: actual ingame crosshair
 }
 
 void Gui_DrawBars()

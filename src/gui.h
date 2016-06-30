@@ -333,7 +333,6 @@ void Gui_NotifierStop();
 /**
  * General GUI drawing routines.
  */
-void Gui_DrawDebugCrosshair();
 void Gui_DrawCrosshair();
 void Gui_DrawBars();
 void Gui_DrawLoadScreen(int value);
