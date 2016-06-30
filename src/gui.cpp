@@ -241,6 +241,7 @@ void Gui_Render()
     {
         Gui_DrawInventory();
     }
+    Gui_DrawNotifier();
     qglUseProgramObjectARB(shader->program);
 
     qglDepthMask(GL_FALSE);
@@ -248,7 +249,7 @@ void Gui_Render()
     qglPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     qglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    if(screen_info.show_debuginfo != 0)
+    if(screen_info.crosshair != 0)
     {
         Gui_DrawDebugCrosshair();
     }
