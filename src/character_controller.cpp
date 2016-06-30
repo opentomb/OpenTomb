@@ -605,6 +605,7 @@ void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
 
     vec3_add(temp, v1, v2);
     vec3_mul_scalar(temp, temp, 0.5f);
+    temp[2] = ((v1[2] > v2[2]) ? (v1[2]) : (v2[2]));
     Mat4_vec3_mul_macro(pos, ent->transform, temp);
 }
 
@@ -617,12 +618,13 @@ void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
  */
 void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float test_from[3], float test_to[3])
 {
+    const float z_step = -0.66 * ent->character->climb_r;
     float from[3], to[3];
-    float z_step, *pos = ent->transform + 12;
+    float *pos = ent->transform + 12;
     float n0[4], n1[4];                                                         // planes equations
     char up_founded = 0;
     collision_result_t cb;
-    const float color[3] = {1.0, 0.0, 0.0};
+    //const float color[3] = {1.0, 0.0, 0.0};
 
     climb->height_info = CHARACTER_STEP_HORIZONTAL;
     climb->can_hang = 0x00;
@@ -654,6 +656,26 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
                 vec3_copy(n1, cb.normale);
                 n1[3] = -vec3_dot(n1, cb.point);
                 up_founded = 2;
+                if(vec3_dot(n0, n1) >= 0.98f)
+                {
+                    from[0] = test_from[0];
+                    from[1] = test_from[1];
+                    from[2] = cb.point[2];
+                    to[0] = test_to[0];
+                    to[1] = test_to[1];
+                    to[2] = from[2];
+                    while(to[2] > test_to[2])
+                    {
+                        if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (vec3_dot(cb.normale, n1) < 0.98f))
+                        {
+                            vec3_copy(n0, cb.normale);
+                            n0[3] = -vec3_dot(n0, cb.point);
+                            break;
+                        }
+                        from[2] += z_step;
+                        to[2] += z_step;
+                    }
+                }
             }
         }
     }
@@ -678,10 +700,9 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             from[0] = test_from[0];
             from[1] = test_from[1];
             from[2] = to[2] = cb.point[2];
-            z_step = -0.66 * ent->character->climb_r;
             for(; to[2] >= test_to[2]; from[2] += z_step, to[2] += z_step)      // we can't climb under floor!
             {
-                renderer.debugDrawer->DrawLine(from, to, color, color);
+                //renderer.debugDrawer->DrawLine(from, to, color, color);
                 if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (cb.fraction > 0.0f))
                 {
                     if(up_founded && (vec3_dist_sq(cb.normale, n0) > 0.05f))
@@ -774,13 +795,22 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         climb->t[1] = climb->edge_tan_xy[1];
 
         // Calc hang info
-        climb->next_z_space = 2.0 * ent->character->Height;
+        climb->next_z_space = 2.0f * ent->character->Height;
         vec3_copy(from, climb->edge_point);
         vec3_copy(to, from);
         to[2] += climb->next_z_space;
         if(Physics_RayTestFiltered(&cb, from, to, ent->self))
         {
             climb->next_z_space = cb.point[2] - climb->edge_point[2];
+            if(climb->next_z_space < 0.01f)
+            {
+                climb->next_z_space = 2.0 * ent->character->Height;
+                from[2] += fabs(climb->next_z_space);
+                if(Physics_RayTestFiltered(&cb, from, to, ent->self))
+                {
+                    climb->next_z_space = cb.point[2] - climb->edge_point[2];
+                }
+            }
         }
 
         from[0] = to[0] = test_from[0];
@@ -995,7 +1025,8 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
 
 void Character_LookAt(struct entity_s *ent, float target[3])
 {
-    const float bone_dir[] = {0.0f, 1.0f, 0.0f};
+    const float bone_dir[3] = {0.0f, 1.0f, 0.0f};
+    const float head_target_limit[4] = {0.0f, 1.0f, 0.0f, 0.273f};
     ss_animation_p anim_head_track = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_HEAD_TRACK);
     ss_animation_p  base_anim = &ent->bf->animations;
 
@@ -1006,33 +1037,22 @@ void Character_LookAt(struct entity_s *ent, float target[3])
         anim_head_track = SSBoneFrame_AddOverrideAnim(ent->bf, NULL, ANIM_TYPE_HEAD_TRACK);
     }
 
-    anim_head_track->targeting_bone = 14;
-    vec3_copy(anim_head_track->target, target);
-    vec3_copy(anim_head_track->bone_direction, bone_dir);
     anim_head_track->targeting_flags = 0x0000;
-    anim_head_track->targeting_limit[0] = 0.0f;
-    anim_head_track->targeting_limit[1] = 1.0f;
-    anim_head_track->targeting_limit[2] = 0.0f;
-    anim_head_track->targeting_limit[3] = 0.273f;
+    SSBoneFrame_SetTrget(anim_head_track, 14, target, bone_dir);
+    SSBoneFrame_SetTargetingLimit(anim_head_track, head_target_limit);
 
     if(SSBoneFrame_CheckTargetBoneLimit(ent->bf, anim_head_track))
     {
         anim_head_track->anim_ext_flags |= ANIM_EXT_TARGET_TO;
         if((ent->move_type == MOVE_ON_FLOOR) || (ent->move_type == MOVE_FREE_FALLING))
         {
-            base_anim->targeting_bone = 7;
-            vec3_copy(base_anim->target, target);
-            vec3_copy(base_anim->bone_direction, bone_dir);
-            base_anim->targeting_flags = 0x0000;
-            base_anim->targeting_limit[0] = 0.0f;
-            base_anim->targeting_limit[1] = 1.0f;
-            base_anim->targeting_limit[2] = 0.0f;
-            base_anim->targeting_limit[3] = 0.883f;
+            const float axis_mod[3] = {0.5f, 0.5f, 1.0f};
+            const float target_limit[4] = {0.0f, 1.0f, 0.0f, 0.883f};
 
-            base_anim->targeting_axis_mod[0] = 0.5f;
-            base_anim->targeting_axis_mod[1] = 0.5f;
-            base_anim->targeting_axis_mod[2] = 1.0f;
-            base_anim->targeting_flags |= ANIM_TARGET_USE_AXIS_MOD;
+            base_anim->targeting_flags = 0x0000;
+            SSBoneFrame_SetTrget(base_anim, 7, target, bone_dir);
+            SSBoneFrame_SetTargetingLimit(base_anim, target_limit);
+            SSBoneFrame_SetTargetingAxisMod(base_anim, axis_mod);
             base_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
         }
     }
@@ -2252,6 +2272,8 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
             anim_lh->last_state = WEAPON_STATE_HIDE;
             anim_lh->next_state = WEAPON_STATE_HIDE;
 
+            anim_rh->enabled = 1;
+            anim_lh->enabled = 1;
             ent->bf->bone_tags[8].alt_anim = anim_rh;
             ent->bf->bone_tags[9].alt_anim = anim_rh;
             ent->bf->bone_tags[10].alt_anim = anim_rh;
@@ -2312,6 +2334,13 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
                     ent->bf->bone_tags[i].alt_anim = NULL;
                 }
             }
+            for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
+            {
+                if((ss_anim->type == ANIM_TYPE_WEAPON_TH) || (ss_anim->type == ANIM_TYPE_WEAPON_LH) || (ss_anim->type == ANIM_TYPE_WEAPON_RH))
+                {
+                    ss_anim->enabled = 0;
+                }
+            }
         }
 
         return 1;
@@ -2355,23 +2384,18 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
         bool silent = false;
         if(target)
         {
-            ss_anim->targeting_bone = targeted_bone;
-            vec3_copy(ss_anim->target, target->obb->centre);
-            vec3_copy(ss_anim->bone_direction, bone_dir);
+            float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.224f};
             ss_anim->targeting_flags = 0x0000;
-            ss_anim->targeting_limit[0] = 0.0f;
-            ss_anim->targeting_limit[1] = 1.0f;
-            ss_anim->targeting_limit[2] = 0.0f;
-            ss_anim->targeting_limit[3] = 0.224f;
-
+            SSBoneFrame_SetTrget(ss_anim, targeted_bone, target->obb->centre, bone_dir);
             if(ss_anim->type == ANIM_TYPE_WEAPON_LH)
             {
-                vec3_RotateZ(ss_anim->targeting_limit, ss_anim->targeting_limit, 40.0f);
+                vec3_RotateZ(targeting_limit, targeting_limit, 40.0f);
             }
             else
             {
-                vec3_RotateZ(ss_anim->targeting_limit, ss_anim->targeting_limit, -40.0f);
+                vec3_RotateZ(targeting_limit, targeting_limit, -40.0f);
             }
+            SSBoneFrame_SetTargetingLimit(ss_anim, targeting_limit);
 
             if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, ss_anim))
             {
@@ -2613,15 +2637,11 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
         if(target)
         {
-            const float bone_dir[] = {0.0f, 1.0f, 0.0f};
-            ss_anim->targeting_bone = targeted_bone;
-            vec3_copy(ss_anim->target, target->obb->centre);
-            vec3_copy(ss_anim->bone_direction, bone_dir);
+            const float bone_dir[3] = {0.0f, 1.0f, 0.0f};
+            const float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.624f};
             ss_anim->targeting_flags = 0x0000;
-            ss_anim->targeting_limit[0] = 0.0f;
-            ss_anim->targeting_limit[1] = 1.0f;
-            ss_anim->targeting_limit[2] = 0.0f;
-            ss_anim->targeting_limit[3] = 0.624f;
+            SSBoneFrame_SetTrget(ss_anim, targeted_bone, target->obb->centre, bone_dir);
+            SSBoneFrame_SetTargetingLimit(ss_anim, targeting_limit);
 
             if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, ss_anim))
             {

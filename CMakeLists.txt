@@ -15,44 +15,79 @@ add_subdirectory(doc)
 
 set(OPENTOMB_SRCS
     src/anim_state_control.cpp
+    src/anim_state_control.h
     src/audio.cpp
+    src/audio.h
     src/character_controller.cpp
+    src/character_controller.h
     src/controls.cpp
+    src/controls.h
     src/engine.cpp
+    src/engine.h
+    src/engine_string.h
     src/entity.cpp
+    src/entity.h
     src/game.cpp
+    src/game.h
     src/gameflow.cpp
+    src/gameflow.h
     src/gui.cpp
+    src/gui.h
     src/inventory.cpp
+    src/inventory.h
+    src/image.cpp
+    src/image.h
     src/main_SDL.cpp
     src/mesh.c
+    src/mesh.h
+    src/physics.h
     src/physics_bullet.cpp
     src/render/bordered_texture_atlas.cpp
+    src/render/bordered_texture_atlas.h
     src/render/bsp_tree.cpp
+    src/render/bsp_tree.h
     src/render/bsp_tree_2d.c
+    src/render/bsp_tree_2d.h
     src/render/camera.cpp
+    src/render/camera.h
     src/render/frustum.cpp
+    src/render/frustum.h
     src/render/render.cpp
+    src/render/render.h
     src/render/shader_description.cpp
+    src/render/shader_description.h
     src/render/shader_manager.cpp
+    src/render/bsp_tree_2d.c
+    src/render/shader_manager.h
     src/resource.cpp
+    src/resource.h
     src/room.cpp
+    src/room.h
     src/script.cpp
+    src/script.h
+    src/skeletal_model.h
     src/skeletal_model.c
     src/trigger.cpp
+    src/trigger.h
     src/vt/l_common.cpp
     src/vt/l_main.cpp
+    src/vt/l_main.h
     src/vt/l_tr1.cpp
     src/vt/l_tr2.cpp
     src/vt/l_tr3.cpp
     src/vt/l_tr4.cpp
     src/vt/l_tr5.cpp
     src/vt/scaler.cpp
+    src/vt/scaler.h
     src/vt/vt_level.cpp
+    src/vt/vt_level.h
+    src/vt/tr_types.h
+    src/vt/tr_versions.h
     src/world.cpp
+    src/world.h
 )
 
-# TODO Where is this needed?
+# TODO Where is this needed? in internal AL or vorbis (maybe used inside libs headers)
 add_definitions(-DOV_EXCLUDE_STATIC_CALLBACKS)
 
 add_executable(OpenTomb ${OPENTOMB_SRCS} $<TARGET_OBJECTS:core>)
@@ -60,24 +95,30 @@ add_executable(OpenTomb ${OPENTOMB_SRCS} $<TARGET_OBJECTS:core>)
 if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_COMPILER_IS_GNUCC)
     message(STATUS "GNU-like compilers detected")
     # Trimming the string may result in a compilation error
-    target_compile_options(OpenTomb PRIVATE "-std=c++11")
 endif()
 
-include(FindPkgConfig)
-pkg_search_module(SDL2_IMAGE REQUIRED SDL2_image)
+#target_compile_options(OpenTomb PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-std=c++11> $<$<COMPILE_LANGUAGE:C>:-std=c99>)
+set_target_properties(OpenTomb PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
+
 find_package(SDL2 REQUIRED)
+find_package(PNG REQUIRED)
+find_package(OpenAL REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(Lua REQUIRED)
 
 target_include_directories(
     OpenTomb PRIVATE
     ${SDL2_INCLUDE_DIR}
-    ${SDL2_IMAGE_INCLUDE_DIRS}
+    ${PNG_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIR}
     ${LUA_INCLUDE_DIR}
+    # this is a workaround
+    # system headers are incompatible because OpenTomb expects it in a different place
+    # it need to be fixed in OpenTomb first
+    extern/al
 )
 
-target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${SDL2_IMAGE_LIBRARIES} ${ZLIB_LIBRARY} ${LUA_LIBRARY})
+target_link_libraries(OpenTomb ${SDL2_LIBRARY} ${PNG_LIBRARY} ${ZLIB_LIBRARY} ${LUA_LIBRARY} ${OPENAL_LIBRARY})
 
 set(BULLET_SRCS
     extern/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.cpp
@@ -359,20 +400,31 @@ set(OPENAL_SRCS
 
 set(CORE_SRCS
     src/core/console.c
+    src/core/console.h
     src/core/gl_font.c
+    src/core/gl_font.h
     src/core/gl_text.c
+    src/core/gl_text.h
     src/core/gl_util.c
+    src/core/gl_util.h
     src/core/obb.c
+    src/core/obb.h
     src/core/polygon.c
+    src/core/polygon.h
     src/core/redblack.c
+    src/core/redblack.h
     src/core/system.c
+    src/core/system.h
     src/core/utf8_32.c
+    src/core/utf8_32.h
     src/core/vmath.c
+    src/core/vmath.h
 )
 
 add_library(core OBJECT ${CORE_SRCS})
-target_include_directories(core PUBLIC extern/freetype2/include)
-target_compile_options(core PUBLIC "-std=c99")
+target_include_directories(core PUBLIC extern/freetype2/include ${LUA_INCLUDE_DIR})
+#target_compile_options(core PUBLIC $<$<COMPILE_LANGUAGE:C>:-std=c99>)
+set_target_properties(core PROPERTIES C_STANDARD 99)
 
 add_library(bullet STATIC ${BULLET_SRCS})
 target_include_directories(bullet PUBLIC extern/bullet)
@@ -385,7 +437,3 @@ target_link_libraries(OpenTomb ogg)
 add_library(freetype2 STATIC ${FREETYPE_SRCS})
 target_include_directories(freetype2 PUBLIC extern/freetype2/include)
 target_link_libraries(OpenTomb freetype2)
-
-add_library(OpenAL STATIC ${OPENAL_SRCS})
-target_include_directories(OpenAL PUBLIC extern/al)
-target_link_libraries(OpenTomb OpenAL)

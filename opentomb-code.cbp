@@ -50,7 +50,7 @@
 			<Add directory="extern/freetype2/include" />
 		</Compiler>
 		<Linker>
-			<Add option="-static -m32 -lmingw32 -llua -limage -lSDL2main -lSDL2.dll -lz -lpthread" />
+			<Add option="-static -m32 -lmingw32 -llua -lpng -lSDL2main -lSDL2.dll -lz -lpthread" />
 		</Linker>
 		<Unit filename="autoexec.lua">
 			<Option target="&lt;{~None~}&gt;" />
@@ -1907,6 +1907,8 @@
 		<Unit filename="src/gui.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/image.cpp" />
+		<Unit filename="src/image.h" />
 		<Unit filename="src/inventory.cpp" />
 		<Unit filename="src/inventory.h">
 			<Option target="&lt;{~None~}&gt;" />
