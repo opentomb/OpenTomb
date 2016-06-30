@@ -240,6 +240,7 @@ void Gui_Render()
     {
         Gui_DrawInventory();
     }
+    Gui_DrawNotifier();
     qglUseProgramObjectARB(shader->program);
 
     qglDepthMask(GL_FALSE);

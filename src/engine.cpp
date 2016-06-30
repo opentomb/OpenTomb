@@ -525,7 +525,6 @@ void Engine_Display()
         Gui_SwitchGLMode(1);
         qglEnable(GL_ALPHA_TEST);
 
-        Gui_DrawNotifier();
         qglPopClientAttrib();        ///@POP -> GL_VERTEX_ARRAY | GL_COLOR_ARRAY
         Gui_Render();
         Gui_SwitchGLMode(0);
