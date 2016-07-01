@@ -238,18 +238,18 @@ public:
     {
         return mCurrentItemsType;
     }
-    
+
     int setItemsType(int type);
     void setInventory(struct inventory_node_s **i);
     void setTitle(int items_type);
     void frame(float time);
     void render();
-    
+
     gl_text_line_t              mLabel_Title;
     char                        mLabel_Title_text[GUI_LINE_DEFAULTSIZE];
     gl_text_line_t              mLabel_ItemName;
     char                        mLabel_ItemName_text[GUI_LINE_DEFAULTSIZE];
-    
+
 private:
     struct inventory_node_s   **mInventory;
     int                         mCurrentState;
@@ -259,7 +259,7 @@ private:
     int                         mCurrentItemsType;
     int                         mCurrentItemsCount;
     int                         mItemsOffset;
-    
+
     float                       mRingRotatePeriod;
     float                       mRingTime;
     float                       mRingAngle;
@@ -268,11 +268,11 @@ private:
     float                       mBaseRingRadius;
     float                       mRingRadius;
     float                       mVerticalOffset;
-    
+
     float                       mItemRotatePeriod;
     float                       mItemTime;
     float                       mItemAngle;
-    
+
     int getItemElementsCountByType(int type);
     void restoreItemAngle(float time);
 };

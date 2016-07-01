@@ -17,10 +17,10 @@ struct RedBlackNode_s;
 
 void Game_InitGlobals();
 void Game_RegisterLuaFunctions(lua_State *lua);
-int  Game_Load(const char* name);
-int  Game_Save(const char* name);
+int Game_Load(const char* name);
+int Game_Save(const char* name);
 
-void  Game_Frame(float time);
+void Game_Frame(float time);
 
 void Game_Prepare();
 void Game_LevelTransition(uint16_t level_index);
@@ -32,11 +32,14 @@ void Game_LoopEntities(struct RedBlackNode_s *x);
 void Game_UpdateAI();
 void Game_UpdateCharacters();
 
-void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, float dz);
 void Game_PlayFlyBy(uint32_t sequence_id, int once);
 void Game_SetCameraTarget(uint32_t entity_id, float timer);
 void Game_SetCamera(uint32_t camera_id, int once, int move, float timer);
 void Game_StopFlyBy();
+
+void Cam_PlayFlyBy(float time);
+int Cam_CheckCollision(struct camera_s *cam, entity_s *ent, float angle);
+void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, float dz);
 
 #endif
 
