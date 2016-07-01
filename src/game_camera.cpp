@@ -2,26 +2,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
-
-#include "core/system.h"
+#include "core/vmath.h"
 #include "core/obb.h"
+#include "core/system.h"
 #include "render/camera.h"
+#include "engine.h"
 #include "controls.h"
 #include "room.h"
 #include "world.h"
+#include "physics.h"
 #include "skeletal_model.h"
 #include "entity.h"
-//#include "script.h"
-//#include "trigger.h"
-#include "anim_state_control.h"
 #include "character_controller.h"
-#include "gameflow.h"
-//#include "gui.h"
+#include "anim_state_control.h"
 
 
 void Cam_PlayFlyBy(float time)
@@ -43,25 +36,6 @@ void Cam_PlayFlyBy(float time)
             Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
         }
     }
-}
-
-
-int Cam_CheckCollision(struct camera_s *cam, entity_s *ent, float angle)
-{
-    float cameraFrom[3], cameraTo[3];
-
-    vec3_copy(cameraFrom, cam->pos);
-    cameraTo[0] = cameraFrom[0] + sinf((ent->angles[0] + angle) * (M_PI / 180.0)) * control_states.cam_distance;
-    cameraTo[1] = cameraFrom[1] - cosf((ent->angles[0] + angle) * (M_PI / 180.0)) * control_states.cam_distance;
-    cameraTo[2] = cameraFrom[2];
-
-    //Collision check
-    if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self))
-    {
-        return 1;
-    }
-
-    return 0;
 }
 
 

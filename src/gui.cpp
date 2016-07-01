@@ -899,11 +899,11 @@ void Gui_FillBackgroundBuffer()
 
 void Gui_FillCrosshairBuffer()
 {
-    GLfloat x = screen_info.w / 2.0f;
-    GLfloat y = screen_info.h / 2.0f;
+    GLfloat x = (GLfloat)screen_info.w / 2.0f;
+    GLfloat y = (GLfloat)screen_info.h / 2.0f;
     GLfloat *v, crosshairArray[32];
-    const GLfloat size = 15.0f;
-    const GLfloat color[4] = {1.0, 0.0, 0.0, 1.0};
+    const GLfloat size = 8.0f;
+    const GLfloat color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
 
     v = crosshairArray;
    *v++ = x; *v++ = y - size;
@@ -934,7 +934,6 @@ void Gui_FillCrosshairBuffer()
 void Gui_DrawCrosshair()
 {
     // TBI: actual ingame crosshair
-
     BindWhiteTexture();
     qglBindBufferARB(GL_ARRAY_BUFFER_ARB, crosshairBuffer);
     qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
