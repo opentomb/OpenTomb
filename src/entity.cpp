@@ -951,7 +951,7 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
             entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
         }
         SSBoneFrame_SetAnimation(entity->bf, anim_type, animation, frame);
-        SSBoneFrame_Update(entity->bf);
+        SSBoneFrame_Update(entity->bf, 0.0f);
         Entity_UpdateRigidBody(entity, 0);
     }
 }
@@ -1132,7 +1132,7 @@ void Entity_Frame(entity_p entity, float time)
             ss_anim = ss_anim->next;
         }
 
-        SSBoneFrame_Update(entity->bf);
+        SSBoneFrame_Update(entity->bf, time);
         if(entity->character != NULL)
         {
             Entity_FixPenetrations(entity, NULL);

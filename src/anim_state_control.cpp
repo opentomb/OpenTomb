@@ -97,7 +97,7 @@ void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim, int stat
         vec3_sub(move, move, p);
         vec3_add(ent->transform+12, ent->transform+12, move);
         ent->transform[12 + 2] = ent->character->climb.point[2];
-        SSBoneFrame_Update(ent->bf);
+        SSBoneFrame_Update(ent->bf, 0.0f);
         Entity_UpdateRigidBody(ent, 0);
         Entity_GhostUpdate(ent);
         ent->move_type = MOVE_ON_FLOOR;

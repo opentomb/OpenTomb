@@ -3215,7 +3215,7 @@ int lua_GetEntityAnim(lua_State * lua)
 }
 
 
-int lua_EntityEnsureSSAnimExists(lua_State * lua)
+int lua_EntitySSAnimEnsureExists(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
@@ -3243,6 +3243,171 @@ int lua_EntityEnsureSSAnimExists(lua_State * lua)
         {
             SSBoneFrame_AddOverrideAnim(ent->bf, NULL, anim_type_id);
         }
+    }
+
+    return 0;
+}
+
+
+int lua_EntitySSAnimSetTarget(lua_State * lua)
+{
+    if(lua_gettop(lua) < 9)
+    {
+        Con_Warning("entitySSAnimSetTarget: expecting arguments (entity_id, anim_type_id, targeted_bone, target_x, target_y, target_z, bone_dir_x, bone_dir_y, bone_dir_z)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+
+    if(ent == NULL)
+    {
+        Con_Warning("no entity with id = %d", id);
+        return 0;
+    }
+
+    int anim_type_id = lua_tointeger(lua, 2);
+    ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
+    if(ss_anim)
+    {
+        float pos[3], dir[3];
+        uint16_t targeted_bone = lua_tointeger(lua, 3);
+        pos[0] = lua_tonumber(lua, 4);
+        pos[1] = lua_tonumber(lua, 5);
+        pos[2] = lua_tonumber(lua, 6);
+        dir[0] = lua_tonumber(lua, 7);
+        dir[1] = lua_tonumber(lua, 8);
+        dir[2] = lua_tonumber(lua, 9);
+
+        SSBoneFrame_SetTrget(ss_anim, targeted_bone, pos, dir);
+    }
+
+    return 0;
+}
+
+
+int lua_EntitySSAnimSetAxisMod(lua_State * lua)
+{
+    if(lua_gettop(lua) < 5)
+    {
+        Con_Warning("entitySSAnimSetAxisMod: expecting arguments (entity_id, anim_type_id, mod_x, mod_y, mod_z)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+
+    if(ent == NULL)
+    {
+        Con_Warning("no entity with id = %d", id);
+        return 0;
+    }
+
+    int anim_type_id = lua_tointeger(lua, 2);
+    ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
+    if(ss_anim)
+    {
+        float mod[3];
+        mod[0] = lua_tonumber(lua, 3);
+        mod[1] = lua_tonumber(lua, 4);
+        mod[2] = lua_tonumber(lua, 5);
+        SSBoneFrame_SetTargetingAxisMod(ss_anim, mod);
+    }
+
+    return 0;
+}
+
+
+int lua_EntitySSAnimSetTargetingLimit(lua_State * lua)
+{
+    if(lua_gettop(lua) < 6)
+    {
+        Con_Warning("entitySSAnimSetTargetingLimit: expecting arguments (entity_id, anim_type_id, q_x, q_y, q_z, q_w)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+
+    if(ent == NULL)
+    {
+        Con_Warning("no entity with id = %d", id);
+        return 0;
+    }
+
+    int anim_type_id = lua_tointeger(lua, 2);
+    ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
+    if(ss_anim)
+    {
+        float q[4];
+        q[0] = lua_tonumber(lua, 3);
+        q[1] = lua_tonumber(lua, 4);
+        q[2] = lua_tonumber(lua, 5);
+        q[3] = lua_tonumber(lua, 6);
+        SSBoneFrame_SetTargetingLimit(ss_anim, q);
+    }
+
+    return 0;
+}
+
+
+int lua_EntitySSAnimSetCurrentRotation(lua_State * lua)
+{
+    if(lua_gettop(lua) < 6)
+    {
+        Con_Warning("entitySSAnimSetCurrentRotation: expecting arguments (entity_id, anim_type_id, q_x, q_y, q_z, q_w)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+
+    if(ent == NULL)
+    {
+        Con_Warning("no entity with id = %d", id);
+        return 0;
+    }
+
+    int anim_type_id = lua_tointeger(lua, 2);
+    ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
+    if(ss_anim)
+    {
+        float q[4];
+        q[0] = lua_tonumber(lua, 3);
+        q[1] = lua_tonumber(lua, 4);
+        q[2] = lua_tonumber(lua, 5);
+        q[3] = lua_tonumber(lua, 6);
+        vec4_copy(ss_anim->current_mod, q);
+    }
+
+    return 0;
+}
+
+
+int lua_EntitySSAnimSetExtFlags(lua_State * lua)
+{
+    if(lua_gettop(lua) < 5)
+    {
+        Con_Warning("entitySSAnimSetCurrentRotation: expecting arguments (entity_id, anim_type_id, enabled, anim_ext_flags, anim_targeting_flags)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+
+    if(ent == NULL)
+    {
+        Con_Warning("no entity with id = %d", id);
+        return 0;
+    }
+
+    int anim_type_id = lua_tointeger(lua, 2);
+    ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
+    if(ss_anim)
+    {
+        ss_anim->enabled = 0x01 & (lua_tointeger(lua, 3));
+        ss_anim->anim_ext_flags = lua_tointeger(lua, 4);
+        ss_anim->targeting_flags = lua_tointeger(lua, 5);
     }
 
     return 0;
@@ -5325,7 +5490,12 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
-    lua_register(lua, "entityEnsureSSAnimExists", lua_EntityEnsureSSAnimExists);
+    lua_register(lua, "entitySSAnimEnsureExists", lua_EntitySSAnimEnsureExists);
+    lua_register(lua, "entitySSAnimSetTarget", lua_EntitySSAnimSetTarget);
+    lua_register(lua, "entitySSAnimSetAxisMod", lua_EntitySSAnimSetAxisMod);
+    lua_register(lua, "entitySSAnimSetTargetingLimit", lua_EntitySSAnimSetTargetingLimit);
+    lua_register(lua, "entitySSAnimSetCurrentRotation", lua_EntitySSAnimSetCurrentRotation);
+    lua_register(lua, "entitySSAnimSetExtFlags", lua_EntitySSAnimSetExtFlags);
     lua_register(lua, "setEntityAnimFlag", lua_SetEntityAnimFlag);
     lua_register(lua, "setEntityBodyPartFlag", lua_SetEntityBodyPartFlag);
     lua_register(lua, "setModelBodyPartFlag", lua_SetModelBodyPartFlag);

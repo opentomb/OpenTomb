@@ -383,7 +383,7 @@ void SSBoneFrame_Clear(ss_bone_frame_p bf)
 }
 
 
-void SSBoneFrame_Update(struct ss_bone_frame_s *bf)
+void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
 {
     float cmd_tr[3], tr[3], t;
     ss_bone_tag_p btag = bf->bone_tags;
@@ -458,7 +458,7 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf)
 
     for(ss_animation_p ss_anim = &bf->animations; ss_anim; ss_anim = ss_anim->next)
     {
-        SSBoneFrame_TargetBoneToSlerp(bf, ss_anim);
+        SSBoneFrame_TargetBoneToSlerp(bf, ss_anim, time);
     }
 }
 
@@ -513,9 +513,8 @@ int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_anim
 }
 
 
-void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim, float time)
 {
-    extern float engine_frame_time;
     if(ss_anim->anim_ext_flags & ANIM_EXT_TARGET_TO)
     {
         ss_bone_tag_p b_tag = bf->bone_tags + ss_anim->targeting_bone;
@@ -549,7 +548,7 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animati
         {
             vec4_clampw(q, ss_anim->targeting_limit[3]);
         }
-        vec4_slerp_to(clamped_q, ss_anim->current_mod, q, engine_frame_time * M_PI / 1.3f);
+        vec4_slerp_to(clamped_q, ss_anim->current_mod, q, time * M_PI / 1.3f);
         vec4_copy(ss_anim->current_mod, clamped_q);
         SSBoneFrame_RotateBone(bf, ss_anim->current_mod, ss_anim->targeting_bone);
     }
@@ -559,7 +558,7 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animati
         {
             float zero_ang[4] = {0.0f, 0.0f, 0.0f, 1.0f};
             float clamped_q[4];
-            vec4_slerp_to(clamped_q, ss_anim->current_mod, zero_ang, engine_frame_time * M_PI / 1.3f);
+            vec4_slerp_to(clamped_q, ss_anim->current_mod, zero_ang, time * M_PI / 1.3f);
             vec4_copy(ss_anim->current_mod, clamped_q);
             SSBoneFrame_RotateBone(bf, ss_anim->current_mod, ss_anim->targeting_bone);
         }

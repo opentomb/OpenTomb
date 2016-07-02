@@ -228,15 +228,26 @@ void Save_Entity(FILE **f, entity_p ent)
         {
             if(ss_anim->model)
             {
-                fprintf(*f, "\nentityEnsureSSAnimExists(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->model->id);
+                fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->model->id);
             }
             else
             {
-                fprintf(*f, "\nentityEnsureSSAnimExists(%d, %d, nil);", ent->id, ss_anim->type);
+                fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, nil);", ent->id, ss_anim->type);
             }
         }
         fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->current_animation, ss_anim->current_frame);
         fprintf(*f, "\nsetEntityAnimState(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state, ss_anim->last_state);
+        fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id, ss_anim->type, ss_anim->targeting_bone,
+            ss_anim->target[0], ss_anim->target[1], ss_anim->target[2],
+            ss_anim->bone_direction[0], ss_anim->bone_direction[1], ss_anim->bone_direction[2]);
+        fprintf(*f, "\nentitySSAnimSetAxisMod(%d, %d, %.2f, %.2f, %.2f);", ent->id, ss_anim->type,
+            ss_anim->targeting_axis_mod[0], ss_anim->targeting_axis_mod[1], ss_anim->targeting_axis_mod[2]);
+        fprintf(*f, "\nentitySSAnimSetTargetingLimit(%d, %d, %.2f, %.2f, %.2f, %.2f);", ent->id, ss_anim->type,
+            ss_anim->targeting_limit[0], ss_anim->targeting_limit[1], ss_anim->targeting_limit[2], ss_anim->targeting_limit[3]);
+        fprintf(*f, "\nentitySSAnimSetCurrentRotation(%d, %d, %.2f, %.2f, %.2f, %.2f);", ent->id, ss_anim->type,
+            ss_anim->current_mod[0], ss_anim->current_mod[1], ss_anim->current_mod[2], ss_anim->current_mod[3]);
+        fprintf(*f, "\nentitySSAnimSetExtFlags(%d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled,
+            ss_anim->anim_ext_flags, ss_anim->targeting_flags);
     }
     fprintf(*f, "\nsetEntityLinearSpeed(%d, %.2f);", ent->id, ent->linear_speed);
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed[0], ent->speed[1], ent->speed[2]);
