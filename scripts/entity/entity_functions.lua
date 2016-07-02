@@ -102,7 +102,7 @@ function switch_init(id)     -- Ordinary switches
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
-            setEntityState(object_id, 1);
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
             setEntitySectorStatus(object_id, 1);
         end;
     end;
@@ -124,7 +124,7 @@ function anim_init(id)      -- Ordinary animatings
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
-            setEntityState(object_id, 0);
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, 0);
             setEntityActivity(object_id, 0);
         end;
     end
@@ -288,8 +288,8 @@ function heli_rig_TR2_init(id)    -- Helicopter in Offshore Rig (TR2)
     
     entity_funcs[id].onLoop = function(object_id)
         if(getEntityLock(object_id)) then
-            if(getEntityState(object_id) ~= 2) then
-                setEntityState(object_id, 2);
+            if(getEntityAnimState(object_id, ANIM_TYPE_BASE) ~= 2) then
+                setEntityAnimState(object_id, ANIM_TYPE_BASE, 2);
             else
                 local anim, frame, count = getEntityAnim(object_id);
                 if(frame == count-1) then disableEntity(object_id) end;
@@ -308,15 +308,15 @@ function swingblade_init(id)        -- Swinging blades (TR1)
     setEntityActivity(id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityState(object_id, 2);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, 2);
     end    
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityState(object_id, 0);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, 0);
     end
     
     entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
+        if(tickEntity(object_id) == TICK_STOPPED) then setEntityAnimState(object_id, ANIM_TYPE_BASE, 0) end;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
@@ -377,11 +377,11 @@ function gen_trap_init(id)      -- Generic traps (TR1-TR2)
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate
     
     entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
+        if(tickEntity(object_id) == TICK_STOPPED) then setEntityAnimState(object_id, ANIM_TYPE_BASE, 0) end;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if(getEntityState(object_id) == 1) then changeCharacterParam(activator_id, PARAM_HEALTH, -35) end;
+        if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 1) then changeCharacterParam(activator_id, PARAM_HEALTH, -35) end;
     end
     
     prepareEntity(id);
@@ -402,13 +402,13 @@ function sethblade_init(id)      -- Seth blades (TR4)
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
-            setEntityState(object_id, 2)
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, 2)
             setEntityActivity(object_id, 0);
         end;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if(getEntityState(object_id) == 1) then setCharacterParam(activator_id, PARAM_HEALTH, 0) end;
+        if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 1) then setCharacterParam(activator_id, PARAM_HEALTH, 0) end;
     end
     
     prepareEntity(id);
@@ -553,11 +553,11 @@ function propeller_init(id)      -- Generic propeller (TR1-TR2)
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
     entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then setEntityState(object_id, 0) end;
+        if(tickEntity(object_id) == TICK_STOPPED) then setEntityAnimState(object_id, ANIM_TYPE_BASE, 0) end;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if(getEntityState(object_id) == 0) then changeCharacterParam(activator_id, PARAM_HEALTH, -100 * 60.0 * frame_time) end;
+        if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 0) then changeCharacterParam(activator_id, PARAM_HEALTH, -100 * 60.0 * frame_time) end;
     end
     
     prepareEntity(id);
@@ -581,9 +581,9 @@ function wallblade_init(id)     -- Wall blade (TR1-TR3)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
         local anim_number = getEntityAnim(object_id);
         if(anim_number == 2) then
-            setEntityAnim(object_id, 3);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 3);
         elseif(anim_number == 1) then
-            setEntityAnim(object_id, 0);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 0);
         end;
     end
     
@@ -626,7 +626,7 @@ end
 function boulder_init(id)
 
     setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
-    setEntityAnimFlag(id, ANIM_FRAME_LOCK);
+    setEntityAnimFlag(id, ANIM_TYPE_BASE, ANIM_FRAME_LOCK);
     setEntityActivity(id, 0);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -662,17 +662,17 @@ function pickup_init(id, item_id)    -- Pick-ups
             local dx, dy, dz = getEntityVector(object_id, activator_id);
             if(dz < -256.0) then
                 need_set_pos = false;
-                setEntityAnim(activator_id, 425); -- Standing pickup, test version
+                setEntityAnim(activator_id, ANIM_TYPE_BASE, 425); -- Standing pickup, test version
                 --noFixEntityCollision(activator_id);
             else
-                setEntityAnim(activator_id, 135); -- Stay pickup
+                setEntityAnim(activator_id, ANIM_TYPE_BASE, 135); -- Stay pickup
             end;
         elseif(curr_anim == 222) then             -- Crouch idle
-            setEntityAnim(activator_id, 291);     -- Crouch pickup
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 291);     -- Crouch pickup
         elseif(curr_anim == 263) then             -- Crawl idle
-            setEntityAnim(activator_id, 292);     -- Crawl pickup
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 292);     -- Crawl pickup
         elseif(curr_anim == 108) then             -- Swim idle
-            setEntityAnim(activator_id, 130);     -- Swim pickup
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 130);     -- Swim pickup
         else
             return;     -- Disable picking up, if Lara isn't idle.
         end;
@@ -742,7 +742,7 @@ function fallblock_init(id)  -- Falling block (TR1-3)
 
         local anim = getEntityAnim(object_id);
         if(anim == 0) then
-            setEntityAnim(object_id, 1);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 1);
             -- print("you trapped to id = "..object_id);
             local once = true;
             addTask(
@@ -756,7 +756,7 @@ function fallblock_init(id)  -- Falling block (TR1-3)
                     once = false;
                 end;
                 if(dropEntity(object_id, frame_time, nil)) then
-                    setEntityAnim(object_id, 3);
+                    setEntityAnim(object_id, ANIM_TYPE_BASE, 3);
                     return false;
                 end;
                 return true;
@@ -781,12 +781,12 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
         
         local anim = getEntityAnim(object_id);
         if(anim == 0) then
-            setEntityAnim(object_id, 1);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 1);
             setEntityVisibility(object_id, 1);
             addTask(
             function()
                 if(dropEntity(object_id, frame_time, nil)) then
-                    setEntityAnim(object_id, 2);
+                    setEntityAnim(object_id, ANIM_TYPE_BASE, 2);
                     setEntityCollision(object_id, 0);
                     return false;
                 end;
@@ -820,7 +820,7 @@ function pushdoor_init(id)   -- Pushdoors (TR4)
             moveEntityLocal(activator_id, 0.0, 256.0, 0.0);
             -- floor door 317 anim
             -- vertical door 412 anim
-            setEntityAnim(activator_id, 412);
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 412);
         end;
     end;
 end
@@ -838,7 +838,7 @@ function midastouch_init(id)    -- Midas gold touch
             
             if((lara_sector == hand_sector) and (getEntityMoveType(player) == MOVE_ON_FLOOR) and (getEntityAnim(player) ~= 50)) then
                 setCharacterParam(player, PARAM_HEALTH, 0);
-                setEntityAnim(player, 1, 0, 5);
+                setEntityAnim(player, ANIM_TYPE_BASE, 1, 0, 5); -- TODO: use here new anim control functions
                 disableEntity(object_id);
             end;
         end;
@@ -1085,7 +1085,7 @@ function oldspike_init(id)  -- Teeth spikes
                 local sx,sy,sz = getEntitySpeed(activator_id);
                 if(sz < -256.0) then
                     setEntityCollision(object_id, 0);
-                    setEntityAnim(activator_id, 149, 0);
+                    setEntityAnim(activator_id, ANIM_TYPE_BASE, 149, 0);
                     setEntityPos(activator_id, lx, ly, pz);
                     setCharacterParam(activator_id, PARAM_HEALTH, 0);
                 end;
@@ -1239,7 +1239,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
             -- Lara being "impaled" into thin air.
             
             if(entity_funcs[object_id].curr_timer <= 10) then
-                setEntityAnim(activator_id, 149, 0);
+                setEntityAnim(activator_id, ANIM_TYPE_BASE, 149, 0);
                 setCharacterParam(activator_id, PARAM_HEALTH, 0);
                 entity_funcs[object_id].mode = 1;
                 return;
@@ -1316,11 +1316,11 @@ function spikewall_init(id)      -- Spike wall
             local curr_st = getEntityMoveType(activator_id);
             if((curr_st == MOVE_CLIMBING) or (curr_st == MOVE_MONKEYSWING)) then
                 setEntityMoveType(activator_id, MOVE_FREE_FALLING);
-                setEntityAnim(activator_id, 28, 0);
+                setEntityAnim(activator_id, ANIM_TYPE_BASE, 28, 0);
                 playSound(SOUND_LARAINJURY, activator_id);
             elseif(curr_st == MOVE_WALLS_CLIMB) then
                 setEntityMoveType(activator_id, MOVE_FREE_FALLING);
-                setEntityAnim(activator_id, 30, 0);
+                setEntityAnim(activator_id, ANIM_TYPE_BASE, 30, 0);
                 playSound(SOUND_LARAINJURY, activator_id);
             end;
             
@@ -1371,11 +1371,11 @@ function spikeceiling_init(id)
             local curr_st = getEntityMoveType(activator_id);
             if((curr_st == MOVE_CLIMBING) or (curr_st == MOVE_MONKEYSWING)) then
                 setEntityMoveType(activator_id, MOVE_FREE_FALLING);
-                setEntityAnim(activator_id, 28, 0);
+                setEntityAnim(activator_id, ANIM_TYPE_BASE, 28, 0);
                 playSound(SOUND_LARAINJURY, activator_id);
             elseif(curr_st == MOVE_WALLS_CLIMB) then
                 setEntityMoveType(activator_id, MOVE_FREE_FALLING);
-                setEntityAnim(activator_id, 30, 0);
+                setEntityAnim(activator_id, ANIM_TYPE_BASE, 30, 0);
                 playSound(SOUND_LARAINJURY, activator_id);
             end;
         

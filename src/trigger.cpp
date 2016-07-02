@@ -556,12 +556,12 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
 
             case TR_FD_TRIGTYPE_TIGHTROPE:
                 // Check state range for triggering entity.
-                snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
+                snprintf(buf, 128, " local state = getEntityAnimState(entity_index, ANIM_TYPE_BASE) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
                 condition = 1;  // Set additional condition.
                 break;
             case TR_FD_TRIGTYPE_CRAWLDUCK:
                 // Check state range for triggering entity.
-                snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
+                snprintf(buf, 128, " local state = getEntityAnimState(entity_index, ANIM_TYPE_BASE) \n if((state >= %d) and (state <= %d)) then \n", TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
                 condition = 1;  // Set additional condition.
                 break;
         }
@@ -586,7 +586,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                                 if(action_type == TR_ACTIONTYPE_SWITCH)
                                 {
                                     // Switch action type case.
-                                    snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", command->operands, command->operands, command->operands);
+                                    snprintf(buf, 256, " local switch_state = getEntityAnimState(%d, ANIM_TYPE_BASE); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", command->operands, command->operands, command->operands);
                                 }
                                 else
                                 {

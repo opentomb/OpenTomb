@@ -222,9 +222,13 @@ void Save_Entity(FILE **f, entity_p ent)
                 ent->angles[0], ent->angles[1], ent->angles[2]);
     }
 
+    for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
+    {
+        fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->current_animation, ss_anim->current_frame);
+        fprintf(*f, "\nsetEntityAnimState(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state, ss_anim->last_state);
+    }
+    fprintf(*f, "\nsetEntityLinearSpeed(%d, %.2f);", ent->id, ent->linear_speed);
     fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed[0], ent->speed[1], ent->speed[2]);
-    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf->animations.current_animation, ent->bf->animations.current_frame);
-    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf->animations.next_state, ent->bf->animations.last_state);
 
     fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
     fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->id, ent->self->collision_type, ent->self->collision_shape);

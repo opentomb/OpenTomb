@@ -17,11 +17,11 @@ function prepareEntity(object_id)
 end;
 
 function swapEntityState(object_id, state_1, state_2)
-    local current_state = getEntityState(object_id);
+    local current_state = getEntityAnimState(object_id, ANIM_TYPE_BASE);
     if(current_state == state_1) then 
-        setEntityState(object_id, state_2); 
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_2); 
     elseif(current_state == state_2) then
-        setEntityState(object_id, state_1);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_1);
     end;
 end;
 

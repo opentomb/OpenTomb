@@ -3013,7 +3013,7 @@ int lua_SetEntitySpeed(lua_State * lua)
 
     if(top < 2)
     {
-        Con_Warning("expecting arguments (id, speed_x, (speed_y, speed_z))");
+        Con_Warning("setEntitySpeed: expecting arguments (id, speed_x, (speed_y, speed_z))");
         return 0;
     }
 
@@ -3033,8 +3033,32 @@ int lua_SetEntitySpeed(lua_State * lua)
             ent->speed[1] = lua_tonumber(lua, 3);
             ent->speed[2] = lua_tonumber(lua, 4);
         }
+    }
 
-        Character_UpdateCurrentSpeed(ent);
+    return 0;
+}
+
+
+int lua_SetEntityLinearSpeed(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 2)
+    {
+        Con_Warning("setEntityLinearSpeed: expecting arguments (id, speed");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+
+    if(ent)
+    {
+        ent->linear_speed = lua_tonumber(lua, 2);
+    }
+    else
+    {
+        Con_Warning("no entity with id = %d", id);
     }
 
     return 0;
@@ -3047,7 +3071,7 @@ int lua_SetEntityAnim(lua_State * lua)
 
     if(top < 2)
     {
-        Con_Warning("expecting arguments (entity_id, anim_type_id, anim_num, (frame_number))");
+        Con_Warning("setEntityAnim: expecting arguments (entity_id, anim_type_id, anim_num, (frame_number))");
         return 0;
     }
 
@@ -3077,9 +3101,9 @@ int lua_SetEntityAnimFlag(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
-    if(top != 2)
+    if(top < 3)
     {
-        Con_Warning("expecting arguments (entity_id, anim_type_id, anim_flag)");
+        Con_Warning("setEntityAnimFlag: expecting arguments (entity_id, anim_type_id, anim_flag)");
         return 0;
     }
 
@@ -4009,11 +4033,11 @@ int lua_SetEntityResponse(lua_State * lua)
 }
 
 
-int lua_GetEntityState(lua_State * lua)
+int lua_GetEntityAnimState(lua_State * lua)
 {
-    if(lua_gettop(lua) < 1)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Warning("expecting arguments (entity_id)");
+        Con_Warning("getEntityAnimState: expecting arguments (entity_id, anim_type_id)");
         return 0;
     }
 
@@ -4026,9 +4050,17 @@ int lua_GetEntityState(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->bf->animations.last_state);
+    int anim_type_id = lua_tointeger(lua, 2);
+    for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
+    {
+        if(ss_anim->type == anim_type_id)
+        {
+            lua_pushinteger(lua, ent->bf->animations.last_state);
+            return 1;
+        }
+    }
 
-    return 1;
+    return 0;
 }
 
 
@@ -4055,12 +4087,12 @@ int lua_GetEntityModel(lua_State * lua)
 }
 
 
-int lua_SetEntityState(lua_State * lua)
+int lua_SetEntityAnimState(lua_State * lua)
 {
     int top = lua_gettop(lua);
-    if(top < 2)
+    if(top < 3)
     {
-        Con_Warning("expecting arguments (entity_id, value)");
+        Con_Warning("setEntityAnimState: expecting arguments (entity_id, anim_type_id, value)");
         return 0;
     }
 
@@ -4073,10 +4105,18 @@ int lua_SetEntityState(lua_State * lua)
         return 0;
     }
 
-    ent->bf->animations.next_state = lua_tointeger(lua, 2);
-    if(top >= 3)
+    int anim_type_id = lua_tointeger(lua, 2);
+    for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
     {
-        ent->bf->animations.last_state = lua_tointeger(lua, 3);
+        if(ss_anim->type == anim_type_id)
+        {
+            ent->bf->animations.next_state = lua_tointeger(lua, 3);
+            if(top >= 3)
+            {
+                ent->bf->animations.last_state = lua_tointeger(lua, 4);
+            }
+            break;
+        }
     }
 
     return 0;
@@ -5018,6 +5058,17 @@ void Script_LoadConstants(lua_State *lua)
         lua_pushinteger(lua, ANIM_FRAME_LOCK);
         lua_setglobal(lua, "ANIM_FRAME_LOCK");
 
+        lua_pushinteger(lua, ANIM_TYPE_BASE);
+        lua_setglobal(lua, "ANIM_TYPE_BASE");
+        lua_pushinteger(lua, ANIM_TYPE_HEAD_TRACK);
+        lua_setglobal(lua, "ANIM_TYPE_HEAD_TRACK");
+        lua_pushinteger(lua, ANIM_TYPE_WEAPON_LH);
+        lua_setglobal(lua, "ANIM_TYPE_WEAPON_LH");
+        lua_pushinteger(lua, ANIM_TYPE_WEAPON_RH);
+        lua_setglobal(lua, "ANIM_TYPE_WEAPON_RH");
+        lua_pushinteger(lua, ANIM_TYPE_WEAPON_TH);
+        lua_setglobal(lua, "ANIM_TYPE_WEAPON_TH");
+
         lua_pushinteger(lua, MOVE_STATIC_POS);
         lua_setglobal(lua, "MOVE_STATIC_POS");
         lua_pushinteger(lua, MOVE_KINEMATIC);
@@ -5242,6 +5293,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityScaling", lua_SetEntityScaling);
     lua_register(lua, "getEntitySpeed", lua_GetEntitySpeed);
     lua_register(lua, "setEntitySpeed", lua_SetEntitySpeed);
+    lua_register(lua, "setEntityLinearSpeed", lua_SetEntityLinearSpeed);
     lua_register(lua, "getEntitySpeedLinear", lua_GetEntitySpeedLinear);
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
     lua_register(lua, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
@@ -5268,8 +5320,8 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityStateFlag", lua_SetEntityStateFlag);
     lua_register(lua, "getEntityCallbackFlag", lua_GetEntityCallbackFlag);
     lua_register(lua, "setEntityCallbackFlag", lua_SetEntityCallbackFlag);
-    lua_register(lua, "getEntityState", lua_GetEntityState);
-    lua_register(lua, "setEntityState", lua_SetEntityState);
+    lua_register(lua, "getEntityAnimState", lua_GetEntityAnimState);
+    lua_register(lua, "setEntityAnimState", lua_SetEntityAnimState);
     lua_register(lua, "setEntityRoomMove", lua_SetEntityRoomMove);
     lua_register(lua, "getEntityMoveType", lua_GetEntityMoveType);
     lua_register(lua, "setEntityMoveType", lua_SetEntityMoveType);
