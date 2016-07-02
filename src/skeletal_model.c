@@ -607,26 +607,39 @@ void SSBoneFrame_SetTargetingLimit(struct ss_animation_s *ss_anim, const float l
 }
 
 
-void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame)
+void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int anim_type, int animation, int frame)
 {
-    animation_frame_p anim = &bf->animations.model->animations[animation];
-    bf->animations.lerp = 0.0;
-    frame %= anim->frames_count;
-    frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
-    bf->animations.period = 1.0 / 30.0;
+    ss_animation_p ss_anim = NULL;
+    for(ss_animation_p  ss_anim_it = &bf->animations; ss_anim_it; ss_anim_it = ss_anim_it->next)
+    {
+        if(ss_anim_it->type == anim_type)
+        {
+            ss_anim = ss_anim_it;
+            break;
+        }
+    }
+    
+    if(ss_anim && ss_anim->model && (animation < ss_anim->model->animation_count))
+    {
+        animation_frame_p anim = &ss_anim->model->animations[animation];
+        ss_anim->lerp = 0.0;
+        frame %= anim->frames_count;
+        frame = (frame >= 0) ? (frame) : (anim->frames_count - 1 + frame);
+        ss_anim->period = 1.0 / 30.0;
 
-    bf->animations.last_state = anim->state_id;
-    bf->animations.next_state = anim->state_id;
+        ss_anim->last_state = anim->state_id;
+        ss_anim->next_state = anim->state_id;
 
-    bf->animations.current_animation = animation;
-    bf->animations.current_frame = frame;
-    bf->animations.next_animation = animation;
-    bf->animations.next_frame = frame;
+        ss_anim->current_animation = animation;
+        ss_anim->current_frame = frame;
+        ss_anim->next_animation = animation;
+        ss_anim->next_frame = frame;
 
-    bf->animations.frame_time = (float)frame * bf->animations.period;
-    //long int t = (bf->animations.frame_time) / bf->animations.period;
-    //float dt = bf->animations.frame_time - (float)t * bf->animations.period;
-    bf->animations.frame_time = (float)frame * bf->animations.period;// + dt;
+        ss_anim->frame_time = (float)frame * ss_anim->period;
+        //long int t = (ss_anim->frame_time) / ss_anim->period;
+        //float dt = ss_anim->frame_time - (float)t * ss_anim->period;
+        ss_anim->frame_time = (float)frame * ss_anim->period;// + dt;
+    }
 }
 
 

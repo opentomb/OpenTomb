@@ -62,6 +62,7 @@ entity_p Entity_Create()
     ret->current_sector = NULL;
 
     ret->bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
+    ret->bf->animations.type = ANIM_TYPE_BASE;
     ret->bf->animations.model = NULL;
     ret->bf->animations.onFrame = NULL;
     ret->bf->animations.frame_time = 0.0;
@@ -937,21 +938,22 @@ void Entity_ProcessSector(entity_p ent)
     }
 }
 
-
-void Entity_SetAnimation(entity_p entity, int animation, int frame)
+///@FIXME: function did much more things than it's name describes;
+void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int frame)
 {
-    if(!entity || !entity->bf->animations.model || (animation >= entity->bf->animations.model->animation_count))
+    if(entity)
     {
-        return;
+        animation = (animation < 0) ? (0) : (animation);
+        entity->no_fix_all = 0x00;
+
+        if(anim_type == ANIM_TYPE_BASE)
+        {
+            entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
+        }
+        SSBoneFrame_SetAnimation(entity->bf, anim_type, animation, frame);
+        SSBoneFrame_Update(entity->bf);
+        Entity_UpdateRigidBody(entity, 0);
     }
-
-    animation = (animation < 0)?(0):(animation);
-    entity->no_fix_all = 0x00;
-
-    entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
-    SSBoneFrame_SetAnimation(entity->bf, animation, frame);
-    SSBoneFrame_Update(entity->bf);
-    Entity_UpdateRigidBody(entity, 0);
 }
 
 
@@ -983,7 +985,7 @@ void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
                 entity->dir_flag = ENT_MOVE_BACKWARD;
             }
             Entity_UpdateTransform(entity);
-            Entity_SetAnimation(entity, curr_af->next_anim->id, curr_af->next_frame);
+            Entity_SetAnimation(entity, ANIM_TYPE_BASE, curr_af->next_anim->id, curr_af->next_frame);
             *anim = entity->bf->animations.current_animation;
             *frame = entity->bf->animations.current_frame;
         }
@@ -1077,7 +1079,7 @@ void Entity_Frame(entity_p entity, float time)
                         Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
                         Entity_DoAnimMove(entity, &anim, &frame);
 
-                        Entity_SetAnimation(entity, anim, frame);
+                        Entity_SetAnimation(entity, ANIM_TYPE_BASE, anim, frame);
                         stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
                     }
                     else if(ss_anim->current_frame != frame)

@@ -3047,7 +3047,7 @@ int lua_SetEntityAnim(lua_State * lua)
 
     if(top < 2)
     {
-        Con_Warning("expecting arguments (entity_id, anim_id, (frame_number, another_model))");
+        Con_Warning("expecting arguments (entity_id, anim_type_id, anim_num, (frame_number))");
         return 0;
     }
 
@@ -3060,13 +3060,13 @@ int lua_SetEntityAnim(lua_State * lua)
         return 0;
     }
 
-    if(top >= 3)
+    if(top >= 4)
     {
-        Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
+        Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3), lua_tointeger(lua, 4));
     }
-    else if(top == 2)
+    else if(top == 3)
     {
-        Entity_SetAnimation(ent, lua_tointeger(lua, 2), 0);
+        Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3), 0);
     }
 
     return 0;
@@ -3079,7 +3079,7 @@ int lua_SetEntityAnimFlag(lua_State * lua)
 
     if(top != 2)
     {
-        Con_Warning("expecting arguments (entity_id, anim_flag)");
+        Con_Warning("expecting arguments (entity_id, anim_type_id, anim_flag)");
         return 0;
     }
 
@@ -3092,7 +3092,15 @@ int lua_SetEntityAnimFlag(lua_State * lua)
         return 0;
     }
 
-    ent->bf->animations.anim_frame_flags = lua_tointeger(lua,2);
+    int anim_type_id = lua_tointeger(lua, 2);
+    for(ss_animation_p  ss_anim_it = &ent->bf->animations; ss_anim_it; ss_anim_it = ss_anim_it->next)
+    {
+        if(ss_anim_it->type == anim_type_id)
+        {
+            ss_anim_it->anim_frame_flags = lua_tointeger(lua, 3);
+            break;
+        }
+    }
 
     return 0;
 }

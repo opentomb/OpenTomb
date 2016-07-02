@@ -195,7 +195,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     {
                         if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
                         {
-                            Entity_SetAnimation(entity_activator, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
+                            Entity_SetAnimation(entity_activator, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
                             entity_activator->move_type = MOVE_UNDERWATER;
                         }
                     }
@@ -351,7 +351,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     {
                         if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
                         {
-                            Entity_SetAnimation(entity_activator, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
+                            Entity_SetAnimation(entity_activator, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
                             entity_activator->move_type = MOVE_UNDERWATER;
                         }
                     }
