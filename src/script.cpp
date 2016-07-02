@@ -3215,6 +3215,40 @@ int lua_GetEntityAnim(lua_State * lua)
 }
 
 
+int lua_EntityEnsureSSAnimExists(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1)
+    {
+        Con_Warning("entityEnsureSSAnimExists: expecting arguments (entity_id, anim_type_id, model_id)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+
+    if(ent == NULL)
+    {
+        Con_Warning("no entity with id = %d", id);
+        return 0;
+    }
+
+    int anim_type_id = lua_tointeger(lua, 2);
+    if(!SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id))
+    {
+        if(!lua_isnil(lua, 3))
+        {
+            SSBoneFrame_AddOverrideAnim(ent->bf, World_GetModelByID(lua_tointeger(lua, 3)), anim_type_id);
+        }
+        else
+        {
+            SSBoneFrame_AddOverrideAnim(ent->bf, NULL, anim_type_id);
+        }
+    }
+
+    return 0;
+}
+
+
 int lua_CanTriggerEntity(lua_State * lua)
 {
     int id;
@@ -5291,6 +5325,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
+    lua_register(lua, "entityEnsureSSAnimExists", lua_EntityEnsureSSAnimExists);
     lua_register(lua, "setEntityAnimFlag", lua_SetEntityAnimFlag);
     lua_register(lua, "setEntityBodyPartFlag", lua_SetEntityBodyPartFlag);
     lua_register(lua, "setModelBodyPartFlag", lua_SetModelBodyPartFlag);

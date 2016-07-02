@@ -224,6 +224,17 @@ void Save_Entity(FILE **f, entity_p ent)
 
     for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
     {
+        if(ss_anim->type != ANIM_TYPE_BASE)
+        {
+            if(ss_anim->model)
+            {
+                fprintf(*f, "\nentityEnsureSSAnimExists(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->model->id);
+            }
+            else
+            {
+                fprintf(*f, "\nentityEnsureSSAnimExists(%d, %d, nil);", ent->id, ss_anim->type);
+            }
+        }
         fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->current_animation, ss_anim->current_frame);
         fprintf(*f, "\nsetEntityAnimState(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state, ss_anim->last_state);
     }
@@ -233,7 +244,6 @@ void Save_Entity(FILE **f, entity_p ent)
     fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
     fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->id, ent->self->collision_type, ent->self->collision_shape);
     fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
-    //setEntityMeshswap()
 
     if(ent->self->room != NULL)
     {
@@ -244,8 +254,19 @@ void Save_Entity(FILE **f, entity_p ent)
         fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id, ent->move_type, ent->dir_flag);
     }
 
-    if(ent->character != NULL)
+    if(ent->character)
     {
+        if(ent->character->target_id != ENTITY_ID_NONE)
+        {
+            fprintf(*f, "\nsetCharacterTarget(%d, %d);", ent->id, ent->character->target_id);
+        }
+        else
+        {
+            fprintf(*f, "\nsetCharacterTarget(%d);", ent->id);
+        }
+
+        fprintf(*f, "\nsetCharacterWeaponModel(%d, %d, %d);", ent->id, ent->character->current_weapon, ent->character->weapon_current_state);
+
         fprintf(*f, "\nremoveAllItems(%d);", ent->id);
         for(inventory_node_p i = ent->character->inventory; i; i = i->next)
         {
