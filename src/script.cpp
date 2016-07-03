@@ -3065,9 +3065,9 @@ int lua_SetEntityAnim(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
-    if(top < 2)
+    if(top < 4)
     {
-        Con_Warning("setEntityAnim: expecting arguments (entity_id, anim_type_id, anim_num, (frame_number))");
+        Con_Warning("setEntityAnim: expecting arguments (entity_id, anim_type_id, anim_num, frame_number, (next_anim_num, next_frame_num))");
         return 0;
     }
 
@@ -3080,13 +3080,16 @@ int lua_SetEntityAnim(lua_State * lua)
         return 0;
     }
 
-    if(top >= 4)
+    uint16_t anim_type_id = lua_tointeger(lua, 2);
+    ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
+    if(ss_anim)
     {
-        Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3), lua_tointeger(lua, 4));
-    }
-    else if(top == 3)
-    {
-        Entity_SetAnimation(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3), 0);
+        SSBoneFrame_SetAnimation(ent->bf, anim_type_id, lua_tointeger(lua, 3), lua_tointeger(lua, 4));
+        if(top >= 6)
+        {
+            ss_anim->next_animation = lua_tointeger(lua, 5);
+            ss_anim->next_frame = lua_tointeger(lua, 6);
+        }
     }
 
     return 0;
@@ -4287,7 +4290,7 @@ int lua_SetEntityAnimState(lua_State * lua)
     int top = lua_gettop(lua);
     if(top < 3)
     {
-        Con_Warning("setEntityAnimState: expecting arguments (entity_id, anim_type_id, value)");
+        Con_Warning("setEntityAnimState: expecting arguments (entity_id, anim_type_id, next_state, (last_state))");
         return 0;
     }
 
@@ -4305,10 +4308,10 @@ int lua_SetEntityAnimState(lua_State * lua)
     {
         if(ss_anim->type == anim_type_id)
         {
-            ent->bf->animations.next_state = lua_tointeger(lua, 3);
-            if(top >= 3)
+            ss_anim->next_state = lua_tointeger(lua, 3);
+            if(top >= 4)
             {
-                ent->bf->animations.last_state = lua_tointeger(lua, 4);
+                ss_anim->last_state = lua_tointeger(lua, 4);
             }
             break;
         }

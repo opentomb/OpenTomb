@@ -63,8 +63,8 @@ typedef struct ss_bone_tag_s
 
 typedef struct ss_animation_s
 {
-    int16_t                     type : 15;
-    int16_t                     enabled : 1;
+    uint16_t                    type : 15;
+    uint16_t                    enabled : 1;
     int16_t                     last_state;
     int16_t                     next_state;
     int16_t                     last_animation;

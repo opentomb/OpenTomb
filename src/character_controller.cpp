@@ -2247,7 +2247,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
 
     if(sm && (ent->bf->bone_tag_count == sm->mesh_count) && (sm->animation_count >= 4))
     {
-        skeletal_model_p bm = ent->bf->animations.model;
+        skeletal_model_p base_model = ent->bf->animations.model;
         ent->character->weapon_current_state = weapon_state;
         ent->character->current_weapon = weapon_model;
         if(sm->animation_count == 4)
@@ -2298,15 +2298,15 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
             SSBoneFrame_EnableOverrideAnim(ent->bf, anim_th);
         }
 
-        for(uint16_t i = 0; i < bm->mesh_count; i++)
+        for(uint16_t i = 0; i < base_model->mesh_count; i++)
         {
-            ent->bf->bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
+            ent->bf->bone_tags[i].mesh_base = base_model->mesh_tree[i].mesh_base;
             ent->bf->bone_tags[i].mesh_slot = NULL;
         }
 
         if(weapon_state != WEAPON_STATE_HIDE)
         {
-            for(uint16_t i = 0; i < bm->mesh_count; i++)
+            for(uint16_t i = 0; i < base_model->mesh_count; i++)
             {
                 if(sm->mesh_tree[i].replace_mesh == 0x01)
                 {
@@ -2320,7 +2320,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
         }
         else
         {
-            for(uint16_t i = 0; i < bm->mesh_count; i++)
+            for(uint16_t i = 0; i < base_model->mesh_count; i++)
             {
                 ss_animation_p alt_anim = ent->bf->bone_tags[i].alt_anim;
                 if(sm->mesh_tree[i].replace_mesh == 0x03)
