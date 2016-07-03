@@ -2037,7 +2037,7 @@ void Character_ApplyCommands(struct entity_s *ent)
 
     if((ent->character->cmd.ready_weapon != 0x00) && (ent->character->current_weapon > 0) && (ent->character->weapon_current_state == WEAPON_STATE_HIDE))
     {
-        Character_SetWeaponModel(ent, ent->character->current_weapon, 1);
+        Character_SetWeaponModel(ent, ent->character->current_weapon, WEAPON_STATE_HIDE_TO_READY);
     }
 
     if(ent->character->state_func)
@@ -2241,13 +2241,15 @@ void  Character_SetTarget(struct entity_s *ent, uint32_t target_id)
 // overrided == 0x03: overriding mesh in disarmed state;
 // overrided == 0x04: add mesh to slot in disarmed state;
 ///@TODO: separate mesh replacing control and animation disabling / enabling
-int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
+int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state)
 {
     skeletal_model_p sm = World_GetModelByID(weapon_model);
 
-    if((sm != NULL) && (ent->bf->bone_tag_count == sm->mesh_count) && (sm->animation_count >= 4))
+    if(sm && (ent->bf->bone_tag_count == sm->mesh_count) && (sm->animation_count >= 4))
     {
         skeletal_model_p bm = ent->bf->animations.model;
+        ent->character->weapon_current_state = weapon_state;
+        ent->character->current_weapon = weapon_model;
         if(sm->animation_count == 4)
         {
             ss_animation_p anim_rh = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_WEAPON_RH);
@@ -2302,7 +2304,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int armed)
             ent->bf->bone_tags[i].mesh_slot = NULL;
         }
 
-        if(armed != 0)
+        if(weapon_state != WEAPON_STATE_HIDE)
         {
             for(uint16_t i = 0; i < bm->mesh_count; i++)
             {
@@ -2610,7 +2612,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->next_animation = ss_anim->current_animation;
                     ss_anim->last_state = WEAPON_STATE_HIDE;
                     ent->character->weapon_current_state = WEAPON_STATE_HIDE;
-                    Character_SetWeaponModel(ent, ent->character->current_weapon, 0);
+                    Character_SetWeaponModel(ent, ent->character->current_weapon, WEAPON_STATE_HIDE);
                 }
                 break;
         };
@@ -2854,7 +2856,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->next_animation = ss_anim->current_animation;
                     ss_anim->last_state = WEAPON_STATE_HIDE;
                     ent->character->weapon_current_state = WEAPON_STATE_HIDE;
-                    Character_SetWeaponModel(ent, ent->character->current_weapon, 0);
+                    Character_SetWeaponModel(ent, ent->character->current_weapon, WEAPON_STATE_HIDE);
                 }
                 ss_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
                 break;

@@ -288,6 +288,17 @@ void Save_Entity(FILE **f, entity_p ent)
         {
             fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
         }
+
+        for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
+        {
+            if(ss_anim->type != ANIM_TYPE_BASE)
+            {
+                fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->current_animation, ss_anim->current_frame);
+                fprintf(*f, "\nsetEntityAnimState(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state, ss_anim->last_state);
+                fprintf(*f, "\nentitySSAnimSetExtFlags(%d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled,
+                    ss_anim->anim_ext_flags, ss_anim->targeting_flags);
+            }
+        }
     }
 }
 
