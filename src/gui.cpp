@@ -309,7 +309,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, float time)
     bf->animations.frame_time = (float)frame * bf->animations.period + dt;
     bf->animations.lerp = dt / bf->animations.period;
     Anim_GetNextFrame(&bf->animations, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
-    SSBoneFrame_Update(bf);
+    SSBoneFrame_Update(bf, time);
 }
 
 

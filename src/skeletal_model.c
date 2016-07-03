@@ -383,7 +383,7 @@ void SSBoneFrame_Clear(ss_bone_frame_p bf)
 }
 
 
-void SSBoneFrame_Update(struct ss_bone_frame_s *bf)
+void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
 {
     float cmd_tr[3], tr[3], t;
     ss_bone_tag_p btag = bf->bone_tags;
@@ -458,7 +458,7 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf)
 
     for(ss_animation_p ss_anim = &bf->animations; ss_anim; ss_anim = ss_anim->next)
     {
-        SSBoneFrame_TargetBoneToSlerp(bf, ss_anim);
+        SSBoneFrame_TargetBoneToSlerp(bf, ss_anim, time);
     }
 }
 
@@ -513,9 +513,8 @@ int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_anim
 }
 
 
-void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim, float time)
 {
-    extern float engine_frame_time;
     if(ss_anim->anim_ext_flags & ANIM_EXT_TARGET_TO)
     {
         ss_bone_tag_p b_tag = bf->bone_tags + ss_anim->targeting_bone;
@@ -549,7 +548,7 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animati
         {
             vec4_clampw(q, ss_anim->targeting_limit[3]);
         }
-        vec4_slerp_to(clamped_q, ss_anim->current_mod, q, engine_frame_time * M_PI / 1.3f);
+        vec4_slerp_to(clamped_q, ss_anim->current_mod, q, time * M_PI / 1.3f);
         vec4_copy(ss_anim->current_mod, clamped_q);
         SSBoneFrame_RotateBone(bf, ss_anim->current_mod, ss_anim->targeting_bone);
     }
@@ -559,7 +558,7 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animati
         {
             float zero_ang[4] = {0.0f, 0.0f, 0.0f, 1.0f};
             float clamped_q[4];
-            vec4_slerp_to(clamped_q, ss_anim->current_mod, zero_ang, engine_frame_time * M_PI / 1.3f);
+            vec4_slerp_to(clamped_q, ss_anim->current_mod, zero_ang, time * M_PI / 1.3f);
             vec4_copy(ss_anim->current_mod, clamped_q);
             SSBoneFrame_RotateBone(bf, ss_anim->current_mod, ss_anim->targeting_bone);
         }
@@ -607,26 +606,39 @@ void SSBoneFrame_SetTargetingLimit(struct ss_animation_s *ss_anim, const float l
 }
 
 
-void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame)
+void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int anim_type, int animation, int frame)
 {
-    animation_frame_p anim = &bf->animations.model->animations[animation];
-    bf->animations.lerp = 0.0;
-    frame %= anim->frames_count;
-    frame = (frame >= 0)?(frame):(anim->frames_count - 1 + frame);
-    bf->animations.period = 1.0 / 30.0;
+    ss_animation_p ss_anim = NULL;
+    for(ss_animation_p  ss_anim_it = &bf->animations; ss_anim_it; ss_anim_it = ss_anim_it->next)
+    {
+        if(ss_anim_it->type == anim_type)
+        {
+            ss_anim = ss_anim_it;
+            break;
+        }
+    }
+    
+    if(ss_anim && ss_anim->model && (animation < ss_anim->model->animation_count))
+    {
+        animation_frame_p anim = &ss_anim->model->animations[animation];
+        ss_anim->lerp = 0.0;
+        frame %= anim->frames_count;
+        frame = (frame >= 0) ? (frame) : (anim->frames_count - 1 + frame);
+        ss_anim->period = 1.0 / 30.0;
 
-    bf->animations.last_state = anim->state_id;
-    bf->animations.next_state = anim->state_id;
+        ss_anim->last_state = anim->state_id;
+        ss_anim->next_state = anim->state_id;
 
-    bf->animations.current_animation = animation;
-    bf->animations.current_frame = frame;
-    bf->animations.next_animation = animation;
-    bf->animations.next_frame = frame;
+        ss_anim->current_animation = animation;
+        ss_anim->current_frame = frame;
+        ss_anim->next_animation = animation;
+        ss_anim->next_frame = frame;
 
-    bf->animations.frame_time = (float)frame * bf->animations.period;
-    //long int t = (bf->animations.frame_time) / bf->animations.period;
-    //float dt = bf->animations.frame_time - (float)t * bf->animations.period;
-    bf->animations.frame_time = (float)frame * bf->animations.period;// + dt;
+        ss_anim->frame_time = (float)frame * ss_anim->period;
+        //long int t = (ss_anim->frame_time) / ss_anim->period;
+        //float dt = ss_anim->frame_time - (float)t * ss_anim->period;
+        ss_anim->frame_time = (float)frame * ss_anim->period;// + dt;
+    }
 }
 
 

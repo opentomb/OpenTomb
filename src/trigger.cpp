@@ -195,7 +195,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     {
                         if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
                         {
-                            Entity_SetAnimation(entity_activator, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
+                            Entity_SetAnimation(entity_activator, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
                             entity_activator->move_type = MOVE_UNDERWATER;
                         }
                     }
@@ -351,7 +351,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     {
                         if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
                         {
-                            Entity_SetAnimation(entity_activator, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
+                            Entity_SetAnimation(entity_activator, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
                             entity_activator->move_type = MOVE_UNDERWATER;
                         }
                     }
@@ -556,12 +556,12 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
 
             case TR_FD_TRIGTYPE_TIGHTROPE:
                 // Check state range for triggering entity.
-                snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
+                snprintf(buf, 128, " local state = getEntityAnimState(entity_index, ANIM_TYPE_BASE) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
                 condition = 1;  // Set additional condition.
                 break;
             case TR_FD_TRIGTYPE_CRAWLDUCK:
                 // Check state range for triggering entity.
-                snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
+                snprintf(buf, 128, " local state = getEntityAnimState(entity_index, ANIM_TYPE_BASE) \n if((state >= %d) and (state <= %d)) then \n", TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
                 condition = 1;  // Set additional condition.
                 break;
         }
@@ -586,7 +586,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                                 if(action_type == TR_ACTIONTYPE_SWITCH)
                                 {
                                     // Switch action type case.
-                                    snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", command->operands, command->operands, command->operands);
+                                    snprintf(buf, 256, " local switch_state = getEntityAnimState(%d, ANIM_TYPE_BASE); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", command->operands, command->operands, command->operands);
                                 }
                                 else
                                 {

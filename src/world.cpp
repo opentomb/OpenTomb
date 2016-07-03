@@ -518,7 +518,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
 
             SSBoneFrame_CreateFromModel(entity->bf, model);
             entity->bf->transform = entity->transform;
-            Entity_SetAnimation(entity, 0, 0);
+            Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);
             Physics_GenRigidBody(entity->physics, entity->bf);
 
             Entity_RebuildBV(entity);
@@ -2431,7 +2431,7 @@ void World_GenEntities(class VT_Level *tr)
                 entity->bf->bone_tags[j].mesh_skin = entity->bf->animations.model->mesh_tree[j].mesh_skin;
                 entity->bf->bone_tags[j].mesh_slot = NULL;
             }
-            Entity_SetAnimation(global_world.Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
+            Entity_SetAnimation(global_world.Character, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STAY_IDLE, 0);
             Physics_GenRigidBody(entity->physics, entity->bf);
             Character_Create(entity);
             entity->character->Height = 768.0;
@@ -2443,7 +2443,7 @@ void World_GenEntities(class VT_Level *tr)
             continue;
         }
 
-        Entity_SetAnimation(entity, 0, 0);                                      // Set zero animation and zero frame
+        Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);                      // Set zero animation and zero frame
         Entity_RebuildBV(entity);
         Room_AddObject(entity->self->room, entity->self);
         World_AddEntity(entity);

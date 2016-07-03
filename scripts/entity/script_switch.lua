@@ -342,8 +342,8 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             end;
         end;
         
-        setEntityAnim(object_id, on.trig_anim, 0);
-        setEntityAnim(actor_id, on.actor_anim, 0);
+        setEntityAnim(object_id, ANIM_TYPE_BASE, on.trig_anim, 0);
+        setEntityAnim(actor_id, ANIM_TYPE_BASE, on.actor_anim, 0);
         setEntityActivity(object_id, 1);
         addTask(
         function()
@@ -365,8 +365,8 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             return true;
         end);
     elseif(off.ready_anim == t and getEntityLock(object_id) ~= 1) then  -- Locked switches doesn't flip back!
-        setEntityAnim(object_id, off.trig_anim, 0);
-        setEntityAnim(actor_id, off.actor_anim, 0);
+        setEntityAnim(object_id, ANIM_TYPE_BASE, off.trig_anim, 0);
+        setEntityAnim(actor_id, ANIM_TYPE_BASE, off.actor_anim, 0);
         setEntityActivity(object_id, 1);
         addTask(
         function()

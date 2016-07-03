@@ -222,26 +222,19 @@ void Save_Entity(FILE **f, entity_p ent)
                 ent->angles[0], ent->angles[1], ent->angles[2]);
     }
 
-    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed[0], ent->speed[1], ent->speed[2]);
-    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf->animations.current_animation, ent->bf->animations.current_frame);
-    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf->animations.next_state, ent->bf->animations.last_state);
-
-    fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
-    fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->id, ent->self->collision_type, ent->self->collision_shape);
-    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
-    //setEntityMeshswap()
-
-    if(ent->self->room != NULL)
+    if(ent->character)
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id, ent->self->room->id, ent->move_type, ent->dir_flag);
-    }
-    else
-    {
-        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id, ent->move_type, ent->dir_flag);
-    }
+        if(ent->character->target_id != ENTITY_ID_NONE)
+        {
+            fprintf(*f, "\nsetCharacterTarget(%d, %d);", ent->id, ent->character->target_id);
+        }
+        else
+        {
+            fprintf(*f, "\nsetCharacterTarget(%d);", ent->id);
+        }
 
-    if(ent->character != NULL)
-    {
+        fprintf(*f, "\nsetCharacterWeaponModel(%d, %d, %d);", ent->id, ent->character->current_weapon, ent->character->weapon_current_state);
+
         fprintf(*f, "\nremoveAllItems(%d);", ent->id);
         for(inventory_node_p i = ent->character->inventory; i; i = i->next)
         {
@@ -252,6 +245,50 @@ void Save_Entity(FILE **f, entity_p ent)
         {
             fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
         }
+    }
+
+    fprintf(*f, "\nsetEntityLinearSpeed(%d, %.2f);", ent->id, ent->linear_speed);
+    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed[0], ent->speed[1], ent->speed[2]);
+
+    fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
+    fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->id, ent->self->collision_type, ent->self->collision_shape);
+    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
+
+    if(ent->self->room != NULL)
+    {
+        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id, ent->self->room->id, ent->move_type, ent->dir_flag);
+    }
+    else
+    {
+        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id, ent->move_type, ent->dir_flag);
+    }
+
+    for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
+    {
+        if(ss_anim->type != ANIM_TYPE_BASE)
+        {
+            if(ss_anim->model)
+            {
+                fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->model->id);
+            }
+            else
+            {
+                fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, nil);", ent->id, ss_anim->type);
+            }
+        }
+        fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->current_animation, ss_anim->current_frame, ss_anim->next_animation, ss_anim->next_frame);
+        fprintf(*f, "\nsetEntityAnimState(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state, ss_anim->last_state);
+        fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %d, %.2f, %.2f, %.2f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type, ss_anim->targeting_bone,
+            ss_anim->target[0], ss_anim->target[1], ss_anim->target[2],
+            ss_anim->bone_direction[0], ss_anim->bone_direction[1], ss_anim->bone_direction[2]);
+        fprintf(*f, "\nentitySSAnimSetAxisMod(%d, %d, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
+            ss_anim->targeting_axis_mod[0], ss_anim->targeting_axis_mod[1], ss_anim->targeting_axis_mod[2]);
+        fprintf(*f, "\nentitySSAnimSetTargetingLimit(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
+            ss_anim->targeting_limit[0], ss_anim->targeting_limit[1], ss_anim->targeting_limit[2], ss_anim->targeting_limit[3]);
+        fprintf(*f, "\nentitySSAnimSetCurrentRotation(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
+            ss_anim->current_mod[0], ss_anim->current_mod[1], ss_anim->current_mod[2], ss_anim->current_mod[3]);
+        fprintf(*f, "\nentitySSAnimSetExtFlags(%d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled,
+            ss_anim->anim_ext_flags, ss_anim->targeting_flags);
     }
 }
 
