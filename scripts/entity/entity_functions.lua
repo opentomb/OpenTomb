@@ -581,9 +581,9 @@ function wallblade_init(id)     -- Wall blade (TR1-TR3)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
         local anim_number = getEntityAnim(object_id);
         if(anim_number == 2) then
-            setEntityAnim(object_id, ANIM_TYPE_BASE, 3);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
         elseif(anim_number == 1) then
-            setEntityAnim(object_id, ANIM_TYPE_BASE, 0);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
         end;
     end
     
@@ -662,17 +662,17 @@ function pickup_init(id, item_id)    -- Pick-ups
             local dx, dy, dz = getEntityVector(object_id, activator_id);
             if(dz < -256.0) then
                 need_set_pos = false;
-                setEntityAnim(activator_id, ANIM_TYPE_BASE, 425); -- Standing pickup, test version
+                setEntityAnim(activator_id, ANIM_TYPE_BASE, 425, 0); -- Standing pickup, test version
                 --noFixEntityCollision(activator_id);
             else
-                setEntityAnim(activator_id, ANIM_TYPE_BASE, 135); -- Stay pickup
+                setEntityAnim(activator_id, ANIM_TYPE_BASE, 135, 0); -- Stay pickup
             end;
         elseif(curr_anim == 222) then             -- Crouch idle
-            setEntityAnim(activator_id, ANIM_TYPE_BASE, 291);     -- Crouch pickup
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 291, 0);     -- Crouch pickup
         elseif(curr_anim == 263) then             -- Crawl idle
-            setEntityAnim(activator_id, ANIM_TYPE_BASE, 292);     -- Crawl pickup
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 292, 0);     -- Crawl pickup
         elseif(curr_anim == 108) then             -- Swim idle
-            setEntityAnim(activator_id, ANIM_TYPE_BASE, 130);     -- Swim pickup
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 130, 0);     -- Swim pickup
         else
             return;     -- Disable picking up, if Lara isn't idle.
         end;
@@ -742,7 +742,7 @@ function fallblock_init(id)  -- Falling block (TR1-3)
 
         local anim = getEntityAnim(object_id);
         if(anim == 0) then
-            setEntityAnim(object_id, ANIM_TYPE_BASE, 1);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
             -- print("you trapped to id = "..object_id);
             local once = true;
             addTask(
@@ -756,7 +756,7 @@ function fallblock_init(id)  -- Falling block (TR1-3)
                     once = false;
                 end;
                 if(dropEntity(object_id, frame_time, nil)) then
-                    setEntityAnim(object_id, ANIM_TYPE_BASE, 3);
+                    setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
                     return false;
                 end;
                 return true;
@@ -781,12 +781,12 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
         
         local anim = getEntityAnim(object_id);
         if(anim == 0) then
-            setEntityAnim(object_id, ANIM_TYPE_BASE, 1);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
             setEntityVisibility(object_id, 1);
             addTask(
             function()
                 if(dropEntity(object_id, frame_time, nil)) then
-                    setEntityAnim(object_id, ANIM_TYPE_BASE, 2);
+                    setEntityAnim(object_id, ANIM_TYPE_BASE, 2, 0);
                     setEntityCollision(object_id, 0);
                     return false;
                 end;
@@ -820,7 +820,7 @@ function pushdoor_init(id)   -- Pushdoors (TR4)
             moveEntityLocal(activator_id, 0.0, 256.0, 0.0);
             -- floor door 317 anim
             -- vertical door 412 anim
-            setEntityAnim(activator_id, ANIM_TYPE_BASE, 412);
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 412, 0);
         end;
     end;
 end
@@ -838,7 +838,8 @@ function midastouch_init(id)    -- Midas gold touch
             
             if((lara_sector == hand_sector) and (getEntityMoveType(player) == MOVE_ON_FLOOR) and (getEntityAnim(player) ~= 50)) then
                 setCharacterParam(player, PARAM_HEALTH, 0);
-                setEntityAnim(player, ANIM_TYPE_BASE, 1, 0, 5); -- TODO: use here new anim control functions
+                --entityEnsureSSAnimExists(player, ANIM_TYPE_MISK_1, 5); --ANIM_TYPE_MISK_1 - add const
+                --setEntityAnim(player, ANIM_TYPE_MISK_1, 1, 0); -- TODO: add here additional model activation
                 disableEntity(object_id);
             end;
         end;

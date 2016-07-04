@@ -82,9 +82,9 @@ function checkDebugKeys()
     
     if(checkKey(KEY_Z, true)) then
         if(getEntityMoveType(player) == MOVE_UNDERWATER) then
-            setEntityAnim(player, ANIM_TYPE_BASE, 103);
+            setEntityAnim(player, ANIM_TYPE_BASE, 103, 0);
         else
-            setEntityAnim(player, ANIM_TYPE_BASE, 108);
+            setEntityAnim(player, ANIM_TYPE_BASE, 108, 0);
         end;
         
         setEntityCollision(player, 1);
