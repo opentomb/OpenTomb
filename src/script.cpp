@@ -3222,7 +3222,7 @@ int lua_EntitySSAnimEnsureExists(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
     {
-        Con_Warning("entityEnsureSSAnimExists: expecting arguments (entity_id, anim_type_id, model_id)");
+        Con_Warning("entitySSAnimEnsureExists: expecting arguments (entity_id, anim_type_id, model_id)");
         return 0;
     }
 
@@ -3413,6 +3413,36 @@ int lua_EntitySSAnimSetExtFlags(lua_State * lua)
         ss_anim->targeting_flags = lua_tointeger(lua, 5);
     }
 
+    return 0;
+}
+
+
+int lua_EntitySSAnimSetEnable(lua_State * lua)
+{
+    if(lua_gettop(lua) < 3)
+    {
+        Con_Warning("entitySSAnimEnable: expecting arguments (entity_id, anim_type_id, enabled)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+
+    if(ent == NULL)
+    {
+        Con_Warning("no entity with id = %d", id);
+        return 0;
+    }
+
+    int anim_type_id = lua_tointeger(lua, 2);
+    if(lua_tointeger(lua, 3))
+    {
+        SSBoneFrame_EnableOverrideAnimByType(ent->bf, anim_type_id);
+    }
+    else
+    {
+        SSBoneFrame_DisableOverrideAnim(ent->bf, anim_type_id);
+    }
     return 0;
 }
 
@@ -5262,6 +5292,14 @@ void Script_LoadConstants(lua_State *lua)
         lua_setglobal(lua, "ANIM_TYPE_WEAPON_RH");
         lua_pushinteger(lua, ANIM_TYPE_WEAPON_TH);
         lua_setglobal(lua, "ANIM_TYPE_WEAPON_TH");
+        lua_pushinteger(lua, ANIM_TYPE_MISK_1);
+        lua_setglobal(lua, "ANIM_TYPE_MISK_1");
+        lua_pushinteger(lua, ANIM_TYPE_MISK_2);
+        lua_setglobal(lua, "ANIM_TYPE_MISK_2");
+        lua_pushinteger(lua, ANIM_TYPE_MISK_3);
+        lua_setglobal(lua, "ANIM_TYPE_MISK_3");
+        lua_pushinteger(lua, ANIM_TYPE_MISK_4);
+        lua_setglobal(lua, "ANIM_TYPE_MISK_4");
 
         lua_pushinteger(lua, MOVE_STATIC_POS);
         lua_setglobal(lua, "MOVE_STATIC_POS");
@@ -5499,6 +5537,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "entitySSAnimSetTargetingLimit", lua_EntitySSAnimSetTargetingLimit);
     lua_register(lua, "entitySSAnimSetCurrentRotation", lua_EntitySSAnimSetCurrentRotation);
     lua_register(lua, "entitySSAnimSetExtFlags", lua_EntitySSAnimSetExtFlags);
+    lua_register(lua, "entitySSAnimSetEnable", lua_EntitySSAnimSetEnable);
     lua_register(lua, "setEntityAnimFlag", lua_SetEntityAnimFlag);
     lua_register(lua, "setEntityBodyPartFlag", lua_SetEntityBodyPartFlag);
     lua_register(lua, "setModelBodyPartFlag", lua_SetModelBodyPartFlag);

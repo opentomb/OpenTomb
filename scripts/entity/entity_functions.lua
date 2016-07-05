@@ -838,8 +838,10 @@ function midastouch_init(id)    -- Midas gold touch
             
             if((lara_sector == hand_sector) and (getEntityMoveType(player) == MOVE_ON_FLOOR) and (getEntityAnim(player) ~= 50)) then
                 setCharacterParam(player, PARAM_HEALTH, 0);
-                --entityEnsureSSAnimExists(player, ANIM_TYPE_MISK_1, 5); --ANIM_TYPE_MISK_1 - add const
-                --setEntityAnim(player, ANIM_TYPE_MISK_1, 1, 0); -- TODO: add here additional model activation
+                entitySSAnimEnsureExists(player, ANIM_TYPE_MISK_1, 5); --ANIM_TYPE_MISK_1 - add const
+                setEntityAnim(player, ANIM_TYPE_MISK_1, 1, 0);
+                entitySSAnimSetEnable(player, ANIM_TYPE_MISK_1, 1);
+                entitySSAnimSetEnable(player, ANIM_TYPE_BASE, 0);
                 disableEntity(object_id);
             end;
         end;
