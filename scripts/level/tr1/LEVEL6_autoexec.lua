@@ -1,5 +1,20 @@
 moveEntityLocal(player,0,0,256);
 setEntityMoveType(player, MOVE_UNDERWATER);
 setEntityAnim(player, ANIM_TYPE_BASE, 108, 0);
-
+--enable Midas teath anim
+setModelAnimReplaceFlag(5, 0, 0x01);
+setModelAnimReplaceFlag(5, 1, 0x01);
+setModelAnimReplaceFlag(5, 2, 0x01);
+setModelAnimReplaceFlag(5, 3, 0x01);
+setModelAnimReplaceFlag(5, 4, 0x01);
+setModelAnimReplaceFlag(5, 5, 0x01);
+setModelAnimReplaceFlag(5, 6, 0x01);
+setModelAnimReplaceFlag(5, 7, 0x01);
+setModelAnimReplaceFlag(5, 8, 0x01);
+setModelAnimReplaceFlag(5, 9, 0x01);
+setModelAnimReplaceFlag(5, 10, 0x01);
+setModelAnimReplaceFlag(5, 11, 0x01);
+setModelAnimReplaceFlag(5, 12, 0x01);
+setModelAnimReplaceFlag(5, 13, 0x01);
+setModelAnimReplaceFlag(5, 14, 0x01);
 print("LEVEL6_autoexec loaded");

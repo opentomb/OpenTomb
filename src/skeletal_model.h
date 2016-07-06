@@ -28,6 +28,10 @@ extern "C" {
 #define ANIM_TYPE_WEAPON_LH             (0x0002)
 #define ANIM_TYPE_WEAPON_RH             (0x0003)
 #define ANIM_TYPE_WEAPON_TH             (0x0004)
+#define ANIM_TYPE_MISK_1                (0x0100)
+#define ANIM_TYPE_MISK_2                (0x0101)
+#define ANIM_TYPE_MISK_3                (0x0102)
+#define ANIM_TYPE_MISK_4                (0x0103)
 
 #include <stdint.h>
 
