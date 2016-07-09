@@ -58,6 +58,7 @@ void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim, int state)
         v[0] = i * TR_METERING_SECTORSIZE + 512.0;
         i = v[1] / TR_METERING_SECTORSIZE;
         v[1] = i * TR_METERING_SECTORSIZE + 512.0;
+        SSBoneFrame_Update(ent->bf, 0.0f);
         Entity_UpdateRigidBody(ent->character->traversed_object, 1);
         ent->character->traversed_object = NULL;
         ss_anim->onEndFrame = NULL;
@@ -70,6 +71,8 @@ void ent_set_on_floor(entity_p ent, ss_animation_p ss_anim, int state)
     {
         ent->move_type = MOVE_ON_FLOOR;
         ent->transform[12 + 2] = ent->character->height_info.floor_hit.point[2];
+        SSBoneFrame_Update(ent->bf, 0.0f);
+        Entity_UpdateRigidBody(ent, 1);
         Entity_GhostUpdate(ent);
         ss_anim->onEndFrame = NULL;
     }
@@ -98,7 +101,7 @@ void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim, int stat
         vec3_add(ent->transform+12, ent->transform+12, move);
         ent->transform[12 + 2] = ent->character->climb.point[2];
         SSBoneFrame_Update(ent->bf, 0.0f);
-        Entity_UpdateRigidBody(ent, 0);
+        Entity_UpdateRigidBody(ent, 1);
         Entity_GhostUpdate(ent);
         ent->move_type = MOVE_ON_FLOOR;
         ss_anim->onEndFrame = NULL;
@@ -161,6 +164,8 @@ void ent_climb_out_of_water(entity_p ent, ss_animation_p ss_anim, int state)
 
         vec3_add_mul(ent->transform+12, v, ent->transform+4, 48.0);             // temporary stick
         ent->transform[12 + 2] = v[2];
+        SSBoneFrame_Update(ent->bf, 0.0f);
+        Entity_UpdateRigidBody(ent, 1);
         Entity_GhostUpdate(ent);
         ss_anim->onEndFrame = NULL;
     }
@@ -174,6 +179,8 @@ void ent_to_edge_climb(entity_p ent, ss_animation_p ss_anim, int state)
         ent->transform[12 + 0] = v[0] - ent->transform[4 + 0] * ent->bf->bb_max[1];
         ent->transform[12 + 1] = v[1] - ent->transform[4 + 1] * ent->bf->bb_max[1];
         ent->transform[12 + 2] = v[2] - ent->bf->bb_max[2];
+        SSBoneFrame_Update(ent->bf, 0.0f);
+        Entity_UpdateRigidBody(ent, 1);
         Entity_GhostUpdate(ent);
         ss_anim->onEndFrame = NULL;
     }

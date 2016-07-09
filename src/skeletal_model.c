@@ -385,7 +385,7 @@ void SSBoneFrame_Clear(ss_bone_frame_p bf)
 
 void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
 {
-    float cmd_tr[3], tr[3], t;
+    float cmd_local_move[3], t;
     ss_bone_tag_p btag = bf->bone_tags;
     bone_tag_p src_btag, next_btag;
     skeletal_model_p model = bf->animations.model;
@@ -394,34 +394,32 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
     next_bf = model->animations[bf->animations.next_animation].frames + bf->animations.next_frame;
     curr_bf = model->animations[bf->animations.current_animation].frames + bf->animations.current_frame;
 
-    t = 1.0 - bf->animations.lerp;
+    t = 1.0f - bf->animations.lerp;
     if(bf->transform && (curr_bf->command & ANIM_CMD_MOVE))
     {
-        Mat4_vec3_rot_macro(tr, bf->transform, curr_bf->move);
-        vec3_mul_scalar(cmd_tr, tr, bf->animations.lerp);
+        vec3_mul_scalar(cmd_local_move, curr_bf->move, bf->animations.lerp);
     }
     else
     {
-        vec3_set_zero(tr);
-        vec3_set_zero(cmd_tr);
+        vec3_set_zero(cmd_local_move);
     }
 
     vec3_interpolate_macro(bf->bb_max, curr_bf->bb_max, next_bf->bb_max, bf->animations.lerp, t);
-    vec3_add(bf->bb_max, bf->bb_max, cmd_tr);
+    vec3_add(bf->bb_max, bf->bb_max, cmd_local_move);
     vec3_interpolate_macro(bf->bb_min, curr_bf->bb_min, next_bf->bb_min, bf->animations.lerp, t);
-    vec3_add(bf->bb_min, bf->bb_min, cmd_tr);
+    vec3_add(bf->bb_min, bf->bb_min, cmd_local_move);
     vec3_interpolate_macro(bf->centre, curr_bf->centre, next_bf->centre, bf->animations.lerp, t);
-    vec3_add(bf->centre, bf->centre, cmd_tr);
+    vec3_add(bf->centre, bf->centre, cmd_local_move);
 
     vec3_interpolate_macro(bf->pos, curr_bf->pos, next_bf->pos, bf->animations.lerp, t);
-    vec3_add(bf->pos, bf->pos, cmd_tr);
+    vec3_add(bf->pos, bf->pos, cmd_local_move);
     next_btag = next_bf->bone_tags;
     src_btag = curr_bf->bone_tags;
     for(uint16_t k = 0; k < curr_bf->bone_tag_count; k++, btag++, src_btag++, next_btag++)
     {
         vec3_interpolate_macro(btag->offset, src_btag->offset, next_btag->offset, bf->animations.lerp, t);
         vec3_copy(btag->transform+12, btag->offset);
-        btag->transform[15] = 1.0;
+        btag->transform[15] = 1.0f;
         if(k == 0)
         {
             vec3_add(btag->transform+12, btag->transform+12, bf->pos);

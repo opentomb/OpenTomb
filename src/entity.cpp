@@ -938,7 +938,7 @@ void Entity_ProcessSector(entity_p ent)
     }
 }
 
-///@FIXME: function did much more things than it's name describes;
+///@FIXME: function did more things than it's name describes;
 void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int frame)
 {
     if(entity)
@@ -952,7 +952,6 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
         }
         SSBoneFrame_SetAnimation(entity->bf, anim_type, animation, frame);
         SSBoneFrame_Update(entity->bf, 0.0f);
-        Entity_UpdateRigidBody(entity, 0);
     }
 }
 
