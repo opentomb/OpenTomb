@@ -1048,26 +1048,21 @@ void Gui_DrawLoadScreen(int value)
     Engine_GLSwapWindow();
 }
 
-inline bool ext_compare(const char s1[3], const char s2[3])
-{
-    return (tolower(s1[0]) == tolower(s2[0])) &&
-        (tolower(s1[1]) == tolower(s2[1])) &&
-        (tolower(s1[2]) == tolower(s2[2]));
-}
 
 bool Gui_LoadScreenAssignPic(const char* pic_name)
 {
     size_t len = strlen(pic_name);
+    char image_name_buf[len + 5];
     int image_format = 0;
 
+    strncpy(image_name_buf, pic_name, len + 1);
     if(len > 3)
     {
-        const char *ext = pic_name + len - 3;
-        if(ext_compare(ext, "png"))
+        char *ext = image_name_buf + len;
+        if(strncpy(ext, ".png", 5) && Sys_FileFound(image_name_buf, 0))
         {
             image_format = IMAGE_FORMAT_PNG;
-        }
-        else if(ext_compare(ext, "pcx"))
+        }else if(strncpy(ext, ".pcx", 5) && Sys_FileFound(image_name_buf, 0))
         {
             image_format = IMAGE_FORMAT_PCX;
         }
@@ -1077,7 +1072,7 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
     uint32_t img_w = 0;
     uint32_t img_h = 0;
     uint32_t img_bpp = 32;
-    if(Image_Load(pic_name, image_format, &img_pixels, &img_w, &img_h, &img_bpp))
+    if(Image_Load(image_name_buf, image_format, &img_pixels, &img_w, &img_h, &img_bpp))
     {
         GLenum       texture_format;
         GLuint       color_depth;

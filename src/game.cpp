@@ -839,7 +839,7 @@ void Game_LevelTransition(uint16_t level_index)
     Script_GetLoadingScreen(engine_lua, level_index, file_path);
     if(!Gui_LoadScreenAssignPic(file_path))
     {
-        Gui_LoadScreenAssignPic("resource/graphics/legal.png");
+        Gui_LoadScreenAssignPic("resource/graphics/legal");
     }
     Audio_EndStreams();
 }

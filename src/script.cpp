@@ -4989,7 +4989,7 @@ int lua_LoadMap(lua_State *lua)
             Script_GetLoadingScreen(lua, gameflow_manager.CurrentLevelID, file_path);
             if(!Gui_LoadScreenAssignPic(file_path))
             {
-                Gui_LoadScreenAssignPic("resource/graphics/legal.png");
+                Gui_LoadScreenAssignPic("resource/graphics/legal");
             }
             Engine_LoadMap(s);
         }

@@ -117,7 +117,7 @@ void Engine_Start(const char *config_name)
     Engine_Init_Post();
 
     // Make splash screen.
-    Gui_LoadScreenAssignPic("resource/graphics/legal.png");
+    Gui_LoadScreenAssignPic("resource/graphics/legal");
 
     // Initial window resize.
     Engine_Resize(screen_info.w, screen_info.h, screen_info.w, screen_info.h);
