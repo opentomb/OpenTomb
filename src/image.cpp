@@ -329,15 +329,16 @@ static int Image_LoadPCX(const char *file_name, uint8_t **buffer, uint32_t *w, u
             int plane;
             for(plane = 0; plane < pcxh.NPlanes; plane++)
             {
-                uint32_t j, k, x = 0;
+                uint32_t j, x = 0;
                 for(j = 0; j < pcxh.BytesPerLine; j++)
                 {
                     uint8_t byte = *innerSrc++;
-                    for(k = 7; k >= 0; k--)
+                    int sk = 7;
+                    for(; sk >= 0; sk--)
                     {
-                        unsigned bit = (byte >> k) & 1;
+                        unsigned bit = (byte >> sk) & 1;
                         /* skip padding bits */
-                        if(j * 8 + k >= (*w))
+                        if(j * 8 + sk >= (*w))
                         {
                             continue;
                         }

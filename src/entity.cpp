@@ -62,24 +62,7 @@ entity_p Entity_Create()
     ret->current_sector = NULL;
 
     ret->bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
-    ret->bf->animations.type = ANIM_TYPE_BASE;
-    ret->bf->animations.model = NULL;
-    ret->bf->animations.onFrame = NULL;
-    ret->bf->animations.frame_time = 0.0;
-    ret->bf->animations.last_state = 0;
-    ret->bf->animations.next_state = 0;
-    ret->bf->animations.lerp = 0.0;
-    ret->bf->animations.current_animation = 0;
-    ret->bf->animations.current_frame = 0;
-    ret->bf->animations.next_animation = 0;
-    ret->bf->animations.next_frame = 0;
-    ret->bf->animations.next = NULL;
-    ret->bf->bone_tag_count = 0;
-    ret->bf->bone_tags = 0;
-    vec3_set_zero(ret->bf->bb_max);
-    vec3_set_zero(ret->bf->bb_min);
-    vec3_set_zero(ret->bf->centre);
-    vec3_set_zero(ret->bf->pos);
+    SSBoneFrame_CreateFromModel(ret->bf, NULL);
     vec3_set_zero(ret->angles);
     vec3_set_zero(ret->speed);
     vec3_set_one(ret->scaling);

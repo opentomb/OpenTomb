@@ -10,6 +10,8 @@
 #include "skeletal_model.h"
 
 
+void SSBoneFrame_InitSSAnim(struct ss_animation_s *ss_anim, uint32_t anim_type_id);
+
 void SkeletalModel_Clear(skeletal_model_p model)
 {
     if(model != NULL)
@@ -307,59 +309,73 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     vec3_set_zero(bf->bb_max);
     vec3_set_zero(bf->centre);
     vec3_set_zero(bf->pos);
-    bf->animations.type = ANIM_TYPE_BASE;
-    bf->animations.enabled = 1;
-    bf->animations.anim_frame_flags = 0x0000;
-    bf->animations.anim_ext_flags = 0x0000;
-    bf->animations.frame_time = 0.0;
-    bf->animations.period = 1.0 / 30.0;
-    bf->animations.next_state = 0;
-    bf->animations.lerp = 0.0;
-    bf->animations.current_animation = 0;
-    bf->animations.current_frame = 0;
-    bf->animations.next_animation = 0;
-    bf->animations.next_frame = 0;
-    vec3_set_zero(bf->animations.target);
-    bf->animations.bone_direction[0] = 0.0f;
-    bf->animations.bone_direction[1] = 1.0f;
-    bf->animations.bone_direction[2] = 0.0f;
-    bf->animations.targeting_limit[0] = 0.0f;
-    bf->animations.targeting_limit[1] = 1.0f;
-    bf->animations.targeting_limit[2] = 0.0f;
-    bf->animations.targeting_limit[3] =-1.0f;
-    vec3_set_one(bf->animations.targeting_axis_mod);
-    bf->animations.targeting_bone = 0x00;
-    bf->animations.targeting_flags = 0x0000;
-
-    vec4_set_zero_angle(bf->animations.current_mod);
-    bf->animations.next = NULL;
-    bf->animations.onFrame = NULL;
-    bf->animations.onEndFrame = NULL;
     bf->transform = NULL;
+    bf->bone_tag_count = 0;
+    bf->bone_tags = NULL;
+    
+    SSBoneFrame_InitSSAnim(&bf->animations, ANIM_TYPE_BASE);
     bf->animations.model = model;
-    bf->bone_tag_count = model->mesh_count;
-    bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
-
-    bf->bone_tags[0].parent = NULL;                                             // root
-    for(uint16_t i = 0; i < bf->bone_tag_count; i++)
+    if(model)
     {
-        bf->bone_tags[i].index = i;
-        bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
-        bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
-        bf->bone_tags[i].mesh_slot = NULL;
-        bf->bone_tags[i].alt_anim = NULL;
-        bf->bone_tags[i].body_part = model->mesh_tree[i].body_part;
-
-        vec3_copy(bf->bone_tags[i].offset, model->mesh_tree[i].offset);
-        vec4_set_zero(bf->bone_tags[i].qrotate);
-        Mat4_E_macro(bf->bone_tags[i].transform);
-        Mat4_E_macro(bf->bone_tags[i].full_transform);
-
-        if(i > 0)
+        bf->bone_tag_count = model->mesh_count;
+        bf->bone_tags = (ss_bone_tag_p)malloc(bf->bone_tag_count * sizeof(ss_bone_tag_t));
+        bf->bone_tags[0].parent = NULL;                                         // root
+        for(uint16_t i = 0; i < bf->bone_tag_count; i++)
         {
-            bf->bone_tags[i].parent = bf->bone_tags + model->mesh_tree[i].parent;
+            bf->bone_tags[i].index = i;
+            bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
+            bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
+            bf->bone_tags[i].mesh_slot = NULL;
+            bf->bone_tags[i].alt_anim = NULL;
+            bf->bone_tags[i].body_part = model->mesh_tree[i].body_part;
+
+            vec3_copy(bf->bone_tags[i].offset, model->mesh_tree[i].offset);
+            vec4_set_zero(bf->bone_tags[i].qrotate);
+            Mat4_E_macro(bf->bone_tags[i].transform);
+            Mat4_E_macro(bf->bone_tags[i].full_transform);
+
+            if(i > 0)
+            {
+                bf->bone_tags[i].parent = bf->bone_tags + model->mesh_tree[i].parent;
+            }
         }
     }
+}
+
+
+void SSBoneFrame_InitSSAnim(struct ss_animation_s *ss_anim, uint32_t anim_type_id)
+{
+    ss_anim->anim_ext_flags = 0x00;
+    ss_anim->anim_frame_flags = 0x00;
+    ss_anim->type = anim_type_id;
+    ss_anim->enabled = 1;
+    ss_anim->model = NULL;
+    ss_anim->onFrame = NULL;
+    ss_anim->onEndFrame = NULL;
+    ss_anim->targeting_bone = 0x00;
+    ss_anim->targeting_flags = 0x0000;
+    vec3_set_zero(ss_anim->target);
+    vec4_set_zero_angle(ss_anim->current_mod);
+    ss_anim->bone_direction[0] = 0.0f;
+    ss_anim->bone_direction[1] = 1.0f;
+    ss_anim->bone_direction[2] = 0.0f;
+    ss_anim->targeting_limit[0] = 0.0f;
+    ss_anim->targeting_limit[1] = 1.0f;
+    ss_anim->targeting_limit[2] = 0.0f;
+    ss_anim->targeting_limit[3] =-1.0f;
+    vec3_set_one(ss_anim->targeting_axis_mod);
+
+    ss_anim->frame_time = 0.0f;
+    ss_anim->next_state = 0;
+    ss_anim->lerp = 0.0;
+    ss_anim->current_animation = 0;
+    ss_anim->current_frame = 0;
+    ss_anim->next_animation = 0;
+    ss_anim->next_frame = 0;
+    ss_anim->period = 1.0f / 30.0f;
+
+    ss_anim->next = NULL;
+    ss_anim->prev = NULL;
 }
 
 
@@ -395,7 +411,7 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
     curr_bf = model->animations[bf->animations.current_animation].frames + bf->animations.current_frame;
 
     t = 1.0f - bf->animations.lerp;
-    if(bf->transform && (curr_bf->command & ANIM_CMD_MOVE))
+    if(curr_bf->command & ANIM_CMD_MOVE)
     {
         vec3_mul_scalar(cmd_local_move, curr_bf->move, bf->animations.lerp);
     }
@@ -640,42 +656,21 @@ void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int anim_type, int ani
 }
 
 
-struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type)
+struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type_id)
 {
     if(!sm || (sm->mesh_count == bf->bone_tag_count))
     {
         ss_animation_p ss_anim = (ss_animation_p)malloc(sizeof(ss_animation_t));
-
-        ss_anim->anim_ext_flags = 0x00;
-        ss_anim->anim_frame_flags = 0x00;
-        ss_anim->type = anim_type;
-        ss_anim->enabled = 1;
+        SSBoneFrame_InitSSAnim(ss_anim, anim_type_id);
         ss_anim->model = sm;
-        ss_anim->onFrame = NULL;
-        ss_anim->onEndFrame = NULL;
-        ss_anim->targeting_bone = 0;
-        ss_anim->targeting_flags = 0x0000;
-        vec3_set_zero(ss_anim->target);
-        vec4_set_zero_angle(ss_anim->current_mod);
-        ss_anim->bone_direction[0] = 0.0f;
-        ss_anim->bone_direction[1] = 1.0f;
-        ss_anim->bone_direction[2] = 0.0f;
-        ss_anim->targeting_limit[0] = 0.0f;
-        ss_anim->targeting_limit[1] = 1.0f;
-        ss_anim->targeting_limit[2] = 0.0f;
-        ss_anim->targeting_limit[3] =-1.0f;
-        vec3_set_one(ss_anim->targeting_axis_mod);
-        ss_anim->next = bf->animations.next;
-        bf->animations.next = ss_anim;
 
-        ss_anim->frame_time = 0.0;
-        ss_anim->next_state = 0;
-        ss_anim->lerp = 0.0;
-        ss_anim->current_animation = 0;
-        ss_anim->current_frame = 0;
-        ss_anim->next_animation = 0;
-        ss_anim->next_frame = 0;
-        ss_anim->period = 1.0f / 30.0f;
+        ss_anim->next = bf->animations.next;
+        if(bf->animations.next)
+        {
+            bf->animations.next->prev = ss_anim;
+        }
+        bf->animations.next = ss_anim;
+        
         return ss_anim;
     }
 
@@ -823,7 +818,7 @@ void Anim_GetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_
     animation_frame_p curr_anim = ss_anim->model->animations + ss_anim->current_animation;
 
     *frame = (ss_anim->frame_time + time) / ss_anim->period;
-    *frame = (*frame >= 0.0) ? (*frame) : (0.0);                                    // paranoid checking
+    *frame = (*frame >= 0.0) ? (*frame) : (0.0);                                // paranoid checking
     *anim  = ss_anim->current_animation;
 
     /*

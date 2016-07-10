@@ -222,6 +222,24 @@ void Save_Entity(FILE **f, entity_p ent)
                 ent->angles[0], ent->angles[1], ent->angles[2]);
     }
 
+    ss_animation_p ss_anim = &ent->bf->animations;
+    for(; ss_anim->next; ss_anim = ss_anim->next);
+
+    for(; ss_anim; ss_anim = ss_anim->prev)
+    {
+        if(ss_anim->type != ANIM_TYPE_BASE)
+        {
+            if(ss_anim->model)
+            {
+                fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->model->id);
+            }
+            else
+            {
+                fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, nil);", ent->id, ss_anim->type);
+            }
+        }
+    }
+
     if(ent->character)
     {
         if(ent->character->target_id != ENTITY_ID_NONE)
@@ -263,19 +281,8 @@ void Save_Entity(FILE **f, entity_p ent)
         fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id, ent->move_type, ent->dir_flag);
     }
 
-    for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
+    for(ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
     {
-        if(ss_anim->type != ANIM_TYPE_BASE)
-        {
-            if(ss_anim->model)
-            {
-                fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->model->id);
-            }
-            else
-            {
-                fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, nil);", ent->id, ss_anim->type);
-            }
-        }
         fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->current_animation, ss_anim->current_frame, ss_anim->next_animation, ss_anim->next_frame);
         fprintf(*f, "\nsetEntityAnimState(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state, ss_anim->last_state);
         fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %d, %.2f, %.2f, %.2f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type, ss_anim->targeting_bone,
