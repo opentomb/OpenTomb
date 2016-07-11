@@ -58,7 +58,7 @@ public:
 
         if(c1 && ((c1 == m_cont) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
-            return 1.0;
+            return 1.0f;
         }
 
         if(!r0 || !r1)
@@ -72,21 +72,21 @@ public:
             if((m_cont->object_type == OBJECT_ENTITY) && (m_cont->object))
             {
                 entity_p ent = (entity_p)m_cont->object;
-                rs = Room_GetSectorRaw(r0, ent->transform + 12);
+                rs = ent->current_sector;
             }
             if(Room_IsInNearRoomsList(r0, r1) ||
-               (rs && rs->sector_above && Room_IsInNearRoomsList(r0, rs->sector_above->owner_room)) ||
-               (rs && rs->sector_below && Room_IsInNearRoomsList(r0, rs->sector_below->owner_room)))
+               (rs && rs->sector_above && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_above->owner_room))) ||
+               (rs && rs->sector_below && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_below->owner_room))))
             {
                 return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
             }
             else
             {
-                return 1.0;
+                return 1.0f;
             }
         }
 
-        return 1.0;
+        return 1.0f;
     }
 
     bool               m_skip_ghost;
@@ -114,7 +114,7 @@ public:
 
         if(c1 && ((c1 == m_cont) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
-            return 1.0;
+            return 1.0f;
         }
 
         if(!r0 || !r1)
@@ -124,17 +124,25 @@ public:
 
         if(r0 && r1)
         {
-            if(Room_IsInNearRoomsList(r0, r1))
+            room_sector_p rs = NULL;
+            if((m_cont->object_type == OBJECT_ENTITY) && (m_cont->object))
+            {
+                entity_p ent = (entity_p)m_cont->object;
+                rs = ent->current_sector;
+            }
+            if(Room_IsInNearRoomsList(r0, r1) ||
+               (rs && rs->sector_above && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_above->owner_room))) ||
+               (rs && rs->sector_below && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_below->owner_room))))
             {
                 return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
             }
             else
             {
-                return 1.0;
+                return 1.0f;
             }
         }
 
-        return 1.0;
+        return 1.0f;
     }
 
 private:
