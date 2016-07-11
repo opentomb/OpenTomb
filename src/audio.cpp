@@ -204,6 +204,35 @@ struct audio_fxmanager_s    fxManager = {0};
 bool                        StreamTrack::damp_active = false;
 
 
+size_t sdl_ov_fread(void *data, size_t size, size_t n, void *ctx)
+{
+    return SDL_RWread((SDL_RWops*)ctx, data, size, n);
+}
+
+int sdl_ov_fseek(void *ctx, ogg_int64_t offset, int whence)
+{
+    return SDL_RWseek((SDL_RWops*)ctx, offset, whence);
+}
+
+int sdl_ov_fclose(void *ctx)
+{
+    return SDL_RWclose((SDL_RWops*)ctx);
+}
+
+long sdl_ov_ftell(void *ctx)
+{
+    return SDL_RWtell((SDL_RWops*)ctx);
+}
+
+static ov_callbacks ov_sdl_callbacks =
+{
+    sdl_ov_fread,
+    sdl_ov_fseek,
+    sdl_ov_fclose,
+    sdl_ov_ftell
+};
+
+
 struct audio_world_data_s
 {
     uint32_t                        audio_emitters_count;   // Amount of audio emitters in level.
@@ -654,7 +683,7 @@ bool StreamTrack::Load(const char *path, const int index, const int type, const 
 bool StreamTrack::Load_Ogg(const char *path)
 {
     vorbis_info    *vorbis_Info;
-    FILE           *audio_file = fopen(path, "rb");
+    SDL_RWops      *audio_file = SDL_RWFromFile(path, "rb");
     OggVorbis_File  vorbis_Stream;
 
     if(!audio_file)
@@ -666,9 +695,9 @@ bool StreamTrack::Load_Ogg(const char *path)
 
     memset(&vorbis_Stream, 0x00, sizeof(OggVorbis_File));
 
-    if(ov_open(audio_file, &vorbis_Stream, NULL, 0) < 0)
+    if(ov_open_callbacks(audio_file, &vorbis_Stream, NULL, 0, ov_sdl_callbacks) < 0)
     {
-        fclose(audio_file);
+        SDL_RWclose(audio_file);
         Sys_DebugLog(SYS_LOG_FILENAME, "OGG: Couldn't open Ogg stream.");
         method = -1;
         return false;
@@ -694,7 +723,7 @@ bool StreamTrack::Load_Ogg(const char *path)
     if(buffer_size == 0)
     {
         ov_clear(&vorbis_Stream);
-        fclose(audio_file);
+        SDL_RWclose(audio_file);
         return false;
     }
 
@@ -1159,8 +1188,6 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     int    stream_type   =  0;
 
     char   file_path[256];          // Should be enough, and this is not the full path...
-
-    return TR_AUDIO_STREAMPLAY_WRONGTRACK;
 
     // Don't even try to do anything with track, if its index is greater than overall amount of
     // soundtracks specified in a stream track map count (which is derived from script).
@@ -1716,7 +1743,7 @@ void Audio_LoadOverridedSamples()
                 {
                     for(int j = 0; j < sample_count; j++, buffer_counter++)
                     {
-                        sprintf(sample_name, sample_name_mask, (sample_index + j));
+                        snprintf(sample_name, sizeof(sample_name), sample_name_mask, (sample_index + j));
                         if(Sys_FileFound(sample_name, 0))
                         {
                             Audio_LoadALbufferFromWAV_File(audio_world_data.audio_buffers[buffer_counter], sample_name);
