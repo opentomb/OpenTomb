@@ -108,7 +108,7 @@ void Character_Create(struct entity_s *ent)
 
         ret->traversed_object = NULL;
 
-        Physics_CreateGhosts(ent->physics, ent->bf);
+        Physics_CreateGhosts(ent->physics, ent->bf, NULL);
     }
 }
 

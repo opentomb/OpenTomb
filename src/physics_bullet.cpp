@@ -1256,14 +1256,17 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
  * DO something with sticky 80% boxes!!!
  * first of all: convex offsetted boxes to avoid every frame offsets calculation.
  */
-void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf)
+void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, struct ghost_shape_s *boxes)
 {
     if(physics->objects_count > 0)
     {
         btTransform tr;
-        btScalar gltr[16], v[3];
+        btScalar gltr[16];
 
-        physics->manifoldArray = new btManifoldArray();
+        if(!physics->manifoldArray)
+        {
+            physics->manifoldArray = new btManifoldArray();
+        }
 
         switch(physics->cont->collision_shape)
         {
@@ -1307,24 +1310,35 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghost_objects = (btPairCachingGhostObject**)malloc(bf->bone_tag_count * sizeof(btPairCachingGhostObject*));
                     for(uint32_t i = 0; i < physics->objects_count; i++)
                     {
-                        btVector3 box;
-                        box.m_floats[0] = 0.40 * (bf->bone_tags[i].mesh_base->bb_max[0] - bf->bone_tags[i].mesh_base->bb_min[0]);
-                        box.m_floats[1] = 0.40 * (bf->bone_tags[i].mesh_base->bb_max[1] - bf->bone_tags[i].mesh_base->bb_min[1]);
-                        box.m_floats[2] = 0.40 * (bf->bone_tags[i].mesh_base->bb_max[2] - bf->bone_tags[i].mesh_base->bb_min[2]);
-                        bf->bone_tags[i].mesh_base->R = (box.m_floats[0] < box.m_floats[1])?(box.m_floats[0]):(box.m_floats[1]);
-                        bf->bone_tags[i].mesh_base->R = (bf->bone_tags[i].mesh_base->R < box.m_floats[2])?(bf->bone_tags[i].mesh_base->R):(box.m_floats[2]);
+                        ss_bone_tag_p b_tag = bf->bone_tags + i;
 
                         physics->ghost_objects[i] = new btPairCachingGhostObject();
                         physics->ghost_objects[i]->setIgnoreCollisionCheck(physics->bt_body[i], true);
-                        Mat4_Mat4_mul(gltr, bf->transform, bf->bone_tags[i].full_transform);
-                        Mat4_vec3_mul(v, gltr, bf->bone_tags[i].mesh_base->centre);
-                        vec3_copy(gltr+12, v);
+                        Mat4_Mat4_mul(gltr, bf->transform, b_tag->full_transform);
                         tr.setFromOpenGLMatrix(gltr);
                         physics->ghost_objects[i]->setWorldTransform(tr);
                         physics->ghost_objects[i]->setCollisionFlags(physics->ghost_objects[i]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
                         physics->ghost_objects[i]->setUserPointer(physics->cont);
                         physics->ghost_objects[i]->setUserIndex(i);
-                        physics->ghost_objects[i]->setCollisionShape(new btBoxShape(box));
+                        if(boxes)
+                        {
+                            physics->ghost_objects[i]->setCollisionShape(BT_CSfromBBox(boxes[i].bb_min, boxes[i].bb_max));
+                        }
+                        else
+                        {
+                            float bb_min[3], bb_max[3], t;
+                            t = 0.40 * (b_tag->mesh_base->bb_max[0] - b_tag->mesh_base->bb_min[0]);
+                            bb_min[0] = b_tag->mesh_base->centre[0] - t;
+                            bb_max[0] = b_tag->mesh_base->centre[0] + t;
+                            t = 0.40 * (b_tag->mesh_base->bb_max[1] - b_tag->mesh_base->bb_min[1]);
+                            bb_min[1] = b_tag->mesh_base->centre[1] - t;
+                            bb_max[1] = b_tag->mesh_base->centre[1] + t;
+                            t = 0.40 * (b_tag->mesh_base->bb_max[2] - b_tag->mesh_base->bb_min[2]);
+                            bb_min[2] = b_tag->mesh_base->centre[2] - t;
+                            bb_max[2] = b_tag->mesh_base->centre[2] + t;
+
+                            physics->ghost_objects[i]->setCollisionShape(BT_CSfromBBox(bb_min, bb_max));
+                        }
                         physics->ghost_objects[i]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
                         bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[i], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
                     }
