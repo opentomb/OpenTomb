@@ -60,7 +60,8 @@ typedef struct ss_bone_tag_s
     float                   qrotate[4];                                         // quaternion rotation
     float                   transform[16]      __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for stack usage
     float                   full_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
-
+    float                   orig_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage (no targeting modifications)
+    
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 }ss_bone_tag_t, *ss_bone_tag_p;
 

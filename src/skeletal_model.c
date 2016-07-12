@@ -464,10 +464,12 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
      */
     btag = bf->bone_tags;
     Mat4_Copy(btag->full_transform, btag->transform);
+    Mat4_Copy(btag->orig_transform, btag->transform);
     btag++;
     for(uint16_t k = 1; k < curr_bf->bone_tag_count; k++, btag++)
     {
         Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
+        Mat4_Copy(btag->orig_transform, btag->full_transform);
     }
 
     for(ss_animation_p ss_anim = &bf->animations; ss_anim; ss_anim = ss_anim->next)
