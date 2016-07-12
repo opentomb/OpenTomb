@@ -1195,6 +1195,37 @@ int lua_SetEntityCollision(lua_State * lua)
 }
 
 
+int lua_SetEntityGhostCollisionShape(lua_State * lua)
+{
+    if(lua_gettop(lua) < 8)
+    {
+        Con_Warning("setEntityGhostCollisionShape: expecting arguments (entity_id, shape_index, min_x, min_y, min_z, max_x, max_y, max_z)");
+        return 0;
+    }
+
+    uint32_t id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+    if(ent == NULL)
+    {
+        Con_Warning("no entity with id = %d", id);
+        return 0;
+    }
+
+    uint16_t ghost_index = lua_tointeger(lua, 2);
+    ghost_shape_t shape;
+    shape.bb_min[0] = lua_tonumber(lua, 3);
+    shape.bb_min[1] = lua_tonumber(lua, 4);
+    shape.bb_min[2] = lua_tonumber(lua, 5);
+    shape.bb_max[0] = lua_tonumber(lua, 6);
+    shape.bb_max[1] = lua_tonumber(lua, 7);
+    shape.bb_max[2] = lua_tonumber(lua, 8);
+
+    Physics_SetGhostCollisionShape(ent->physics, ghost_index, &shape);
+
+    return 0;
+}
+
+
 int lua_SetEntityCollisionFlags(lua_State * lua)
 {
     if(lua_gettop(lua) < 3)
@@ -5528,6 +5559,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityLinearSpeed", lua_SetEntityLinearSpeed);
     lua_register(lua, "getEntitySpeedLinear", lua_GetEntitySpeedLinear);
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
+    lua_register(lua, "setEntityGhostCollisionShape", lua_SetEntityGhostCollisionShape);
     lua_register(lua, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);

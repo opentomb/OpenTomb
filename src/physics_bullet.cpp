@@ -1253,8 +1253,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
 }
 
 /*
- * DO something with sticky 80% boxes!!!
- * first of all: convex offsetted boxes to avoid every frame offsets calculation.
+ * 80% boxes hack now is default, but may be rewritten;
  */
 void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, struct ghost_shape_s *boxes)
 {
@@ -1344,6 +1343,21 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     }
                 }
         };
+    }
+}
+
+
+void Physics_SetGhostCollisionShape(struct physics_data_s *physics, uint16_t index, struct ghost_shape_s *shape_info)
+{
+    if(physics->ghost_objects)
+    {
+        btCollisionShape *old_shape = physics->ghost_objects[index]->getCollisionShape();
+        physics->ghost_objects[index]->setCollisionShape(BT_CSfromBBox(shape_info->bb_min, shape_info->bb_max));
+        physics->ghost_objects[index]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
+        if(old_shape)
+        {
+            delete old_shape;
+        }
     }
 }
 

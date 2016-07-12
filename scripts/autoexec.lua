@@ -26,6 +26,10 @@
 -- 0x03: overriding mesh in disarmed state;
 -- 0x04: add mesh to slot in disarmed state;
 
+setEntityGhostCollisionShape(player, 7, -46.0, -54.0, 10.0, 46.0, 32.0, 160.0);
+setEntityGhostCollisionShape(player, 1, -32.0, -26.1, -176.0, 32.0, 29.1, -2.7);
+setEntityGhostCollisionShape(player, 4, -32.0, -27.1, -175.3, 32.0, 28.1, 1.7);
+
 setHumanoidBodyParts(player);
 
 -- creates map for left and right hands

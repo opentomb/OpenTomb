@@ -268,9 +268,12 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
                 return;
         };
         Mat4_E(ent->bf->bone_tags[0].full_transform);
+        Physics_GetBodyWorldTransform(ent->physics, tr, 0);
+        Physics_SetGhostWorldTransform(ent->physics, tr, 0);
         for(uint16_t i = 1; i < ent->bf->bone_tag_count; i++)
         {
             Physics_GetBodyWorldTransform(ent->physics, tr, i);
+            Physics_SetGhostWorldTransform(ent->physics, tr, i);
             Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].full_transform, ent->transform, tr);
         }
 
