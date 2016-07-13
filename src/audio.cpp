@@ -241,7 +241,6 @@ private:
     bool            dampable;           // Specifies if track can be damped by others.
     int             stream_type;        // Either BACKGROUND, ONESHOT or CHAT.
     int             current_track;      // Needed to prevent same track sending.
-    //int             method;             // OGG (TR1-2), WAD (TR3) or WAV (TR4-5).
 };
 
 
@@ -1269,7 +1268,6 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     // "load_method" argument. Function itself returns false, if script wasn't found or
     // request was broken; in this case, we quit.
 
-    //if(!Script_GetSoundtrack(engine_lua, track_index, file_path, &load_method, &stream_type))
     StreamTrackBuffer *stb = audio_world_data.stream_buffers[track_index];
     if(stb == NULL)
     {
@@ -1310,16 +1308,10 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
         // Additionally check if track type is looped. If it is, force fade in in any case.
         // This is needed to smooth out possible pop with gapless looped track at a start-up.
-
         do_fade_in |= (stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND);
     }
 
     // Finally - load our track.
-    if(!stb->Load(track_index))
-    {
-        Con_AddLine("StreamPlay: CANCEL, stream load error.", FONTSTYLE_CONSOLE_WARNING);
-        return TR_AUDIO_STREAMPLAY_LOADERROR;
-    }
     audio_world_data.stream_tracks[target_stream].SetTrackInfo(track_index, stb->GetType());
 
     // Try to play newly assigned and loaded track.
