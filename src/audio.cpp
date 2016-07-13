@@ -683,13 +683,15 @@ bool StreamTrackBuffer::Load(int track_index)
         {
             case TR_AUDIO_STREAM_METHOD_OGG:
                 return Load_Ogg(file_path);
-                break;
 
             case TR_AUDIO_STREAM_METHOD_WAD:
                 return Load_Wad(file_path);
 
             case TR_AUDIO_STREAM_METHOD_WAV:
                 return Load_Wav(file_path);
+
+            default:
+                return false;
         }
     }
 
