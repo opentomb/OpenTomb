@@ -1908,7 +1908,10 @@ void Audio_Init(uint32_t num_Sources)
 {
     // FX should be inited first, as source constructor checks for FX slot to be created.
 
-    if(audio_settings.use_effects) Audio_InitFX();
+    if(audio_settings.use_effects)
+    {
+        Audio_InitFX();
+    }
 
     // Generate new source array.
 
