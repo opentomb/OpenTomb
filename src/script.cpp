@@ -317,7 +317,9 @@ bool Script_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int 
                 strncpy(file_path, real_path, 255);
 
                 if(*stream_type != -1)
+                {
                     result = true;
+                }
             }
         }
         lua_settop(lua, top);

@@ -36,7 +36,7 @@ CHAT = 0x0002;  -- Voice (Lara chatting, etc.)
 
 OGG  = 0x0000;  -- OGG Vorbis tracks
 WAD  = 0x0001;  -- WAD file (CDAUDIO.WAD), not yet supported.
-WAV  = 0x0002;  -- MS-ADPCM WAV tracks, not yet supported.
+WAV  = 0x0002;  -- MS-ADPCM WAV tracks.
 
 -- Secret track constants(used with SECRET trigger):
 

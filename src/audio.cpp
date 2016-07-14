@@ -33,6 +33,7 @@ extern "C" {
 #include "engine_string.h"
 #include "room.h"
 #include "world.h"
+#include "trigger.h"
 
 
 // FX manager structure.
@@ -136,6 +137,53 @@ private:
 };
 
 
+class StreamTrackBuffer
+{
+public:
+    StreamTrackBuffer();
+   ~StreamTrackBuffer();
+
+    bool Load(int track_index);
+
+    uint8_t *GetBuffer()
+    {
+        return buffer;
+    }
+
+    size_t GetBufferSize()
+    {
+        return buffer_size;
+    }
+
+    ALenum GetFormat()
+    {
+        return format;
+    }
+
+    ALsizei GetRate()
+    {
+        return rate;
+    }
+
+    int GetType()
+    {
+        return stream_type;
+    }
+
+private:
+    bool Load_Ogg(const char *path);     // Ogg file loading routine.
+    bool Load_Wad(const char *path);     // Wad file loading routine.
+    bool Load_Wav(const char *path);     // Wav file loading routine.
+
+    int             track_index;
+    uint32_t        buffer_size;
+    uint8_t        *buffer;
+    int             stream_type;         // Either BACKGROUND, ONESHOT or CHAT.
+    ALenum          format;
+    ALsizei         rate;
+};
+
+
 // Main stream track class is used to create multi-channel soundtrack player,
 // which differs from classic TR scheme, where each new soundtrack interrupted
 // previous one. With flexible class handling, we now can implement multitrack
@@ -151,8 +199,13 @@ public:
     // stream type (background, one-shot or chat) and load method, which
     // differs for TR1-2, TR3 and TR4-5.
 
-    bool Load(const char *path, const int index, const int type, const int load_method);
-
+    void SetTrackInfo(int track_index, int stream_type_in)
+    {
+        current_track = track_index;
+        stream_type   = stream_type_in;
+        dampable      = (stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND);       // Damp only looped (BGM) tracks.
+        buffer_offset = 0;
+    }
     bool Play(bool fade_in = false);     // Begins to play track.
     void Pause();                        // Pauses track, preserving position.
     void End();                          // End track with fade-out.
@@ -177,14 +230,10 @@ private:
 
     bool Stream(ALuint al_buffer);       // General stream routine.
 
-    uint32_t        buffer_size;
     uint32_t        buffer_offset;
-    uint8_t        *buffer;
     // General OpenAL fields
     ALuint          source;
     ALuint          buffers[TR_AUDIO_STREAM_NUMBUFFERS];
-    ALenum          format;
-    ALsizei         rate;
     ALfloat         current_volume;     // Stream volume, considering fades.
     ALfloat         damped_volume;      // Additional damp volume multiplier.
 
@@ -192,7 +241,6 @@ private:
     bool            dampable;           // Specifies if track can be damped by others.
     int             stream_type;        // Either BACKGROUND, ONESHOT or CHAT.
     int             current_track;      // Needed to prevent same track sending.
-    int             method;             // OGG (TR1-2), WAD (TR3) or WAV (TR4-5).
 };
 
 
@@ -250,6 +298,9 @@ struct audio_world_data_s
 
     uint32_t                        stream_tracks_count;    // Amount of stream track channels.
     StreamTrack                    *stream_tracks;          // Stream tracks.
+
+    uint32_t                        stream_buffers_count;    // Amount of stream track source buffers.
+    StreamTrackBuffer             **stream_buffers;
 
     uint32_t                        stream_track_map_count; // Stream track flag map count.
     uint8_t                        *stream_track_map;       // Stream track flag map.
@@ -592,95 +643,63 @@ void AudioSource::LinkEmitter()
     }
 }
 
-// ======== STREAMTRACK CLASS IMPLEMENTATION ========
-StreamTrack::StreamTrack() :
+// ==== STREAMTRACK BUFFER CLASS IMPLEMENTATION =====
+StreamTrackBuffer::StreamTrackBuffer() :
+    track_index(-1),
     buffer_size(0),
-    buffer_offset(0),
     buffer(NULL),
-    source(0),
-    format(0x00),
-    rate(0),
-    current_volume(0.0f),
-    damped_volume(0.0f),
-    active(false),
-    dampable(false),
     stream_type(TR_AUDIO_STREAM_TYPE_ONESHOT),
-    current_track(-1),
-    // Setting method to -1 at init is required to prevent accidental
-    // ov_clear call, which results in crash, if no vorbis file was
-    // associated with given vorbis file structure.
-    method(-1)
+    format(0),
+    rate(0)
 {
-    alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);              // Generate all buffers at once.
-    alGenSources(1, &source);
-
-    if(alIsSource(source))
-    {
-        alSource3f(source, AL_POSITION,        0.0f,  0.0f, -1.0f); // OpenAL tut says this.
-        alSource3f(source, AL_VELOCITY,        0.0f,  0.0f,  0.0f);
-        alSource3f(source, AL_DIRECTION,       0.0f,  0.0f,  0.0f);
-        alSourcef (source, AL_ROLLOFF_FACTOR,  0.0f              );
-        alSourcei (source, AL_SOURCE_RELATIVE, AL_TRUE           );
-        alSourcei (source, AL_LOOPING,         AL_FALSE          ); // No effect, but just in case...
-    }
 }
 
 
-StreamTrack::~StreamTrack()
+StreamTrackBuffer::~StreamTrackBuffer()
 {
-
-    Stop(); // In case we haven't stopped yet.
-
     if(buffer)
     {
         buffer_size = 0;
-        buffer_offset = 0;
         free(buffer);
         buffer = NULL;
     }
-
-    alDeleteSources(1, &source);
-    alDeleteBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);
 }
 
 
-bool StreamTrack::Load(const char *path, const int index, const int type, const int load_method)
+bool StreamTrackBuffer::Load(int track_index)
 {
-    if(path && (load_method < TR_AUDIO_STREAM_METHOD_LASTINDEX) && (type < TR_AUDIO_STREAM_TYPE_LASTINDEX))
+    if(this->track_index < 0)
     {
-        current_track = index;
-        stream_type   = type;
-        method        = load_method;
-        dampable      = (stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND);       // Damp only looped (BGM) tracks.
+        this->track_index = track_index;
+        char file_path[1024];
+        int load_method = 0;
 
-        if(buffer)
+        if(!Script_GetSoundtrack(engine_lua, track_index, file_path, &load_method, &stream_type))
         {
-            buffer_size = 0;
-            buffer_offset = 0;
-            free(buffer);
-            buffer = NULL;
+            return false;
         }
 
-        // Select corresponding stream loading method.
-        // Currently, only OGG streaming is available, everything else is a placeholder.
-
-        switch(method)
+        switch(load_method)
         {
             case TR_AUDIO_STREAM_METHOD_OGG:
-                return (Load_Ogg(path));
+                return Load_Ogg(file_path);
 
             case TR_AUDIO_STREAM_METHOD_WAD:
-                return (Load_Wad(path));
+                return Load_Wad(file_path);
 
             case TR_AUDIO_STREAM_METHOD_WAV:
-                return (Load_Wav(path));
+                return Load_Wav(file_path);
+
+            default:
+                return false;
         }
     }
-    return false;   // No success.
+
+    return (this->buffer != NULL);
 }
 
 
-bool StreamTrack::Load_Ogg(const char *path)
+bool StreamTrackBuffer::Load_Ogg(const char *path)
 {
     vorbis_info    *vorbis_Info;
     SDL_RWops      *audio_file = SDL_RWFromFile(path, "rb");
@@ -689,7 +708,6 @@ bool StreamTrack::Load_Ogg(const char *path)
     if(!audio_file)
     {
         Sys_DebugLog(SYS_LOG_FILENAME, "OGG: Couldn't open file: %s.", path);
-        method = -1;    // T4Larson <t4larson@gmail.com>: vorbis_Stream is uninitialised, avoid ov_clear()
         return false;
     }
 
@@ -699,7 +717,6 @@ bool StreamTrack::Load_Ogg(const char *path)
     {
         SDL_RWclose(audio_file);
         Sys_DebugLog(SYS_LOG_FILENAME, "OGG: Couldn't open Ogg stream.");
-        method = -1;
         return false;
     }
 
@@ -729,7 +746,6 @@ bool StreamTrack::Load_Ogg(const char *path)
 
     ov_pcm_seek(&vorbis_Stream, 0);
     buffer = (uint8_t*)malloc(buffer_size);
-    buffer_offset = 0;
     uint32_t local_offset = 0;
     do
     {
@@ -743,13 +759,13 @@ bool StreamTrack::Load_Ogg(const char *path)
 }
 
 
-bool StreamTrack::Load_Wad(const char *path)
+bool StreamTrackBuffer::Load_Wad(const char *path)
 {
     return false;   ///@FIXME: PLACEHOLDER!!!
 }
 
 
-bool StreamTrack::Load_Wav(const char *path)
+bool StreamTrackBuffer::Load_Wav(const char *path)
 {
     SDL_AudioSpec wav_spec;
     uint8_t      *wav_buffer;
@@ -790,7 +806,6 @@ bool StreamTrack::Load_Wav(const char *path)
             buffer_size += FrameSize - (buffer_size % FrameSize);   // make align
         }
 
-        buffer_offset = 0;
         buffer = (uint8_t*)calloc(buffer_size, 1);
         cvt.buf = buffer;
         memcpy(cvt.buf, wav_buffer, cvt.len);
@@ -839,7 +854,6 @@ bool StreamTrack::Load_Wav(const char *path)
         }
 
         buffer_size = wav_length;
-        buffer_offset = 0;
         buffer = (uint8_t*)calloc(buffer_size, 1);
         rate = wav_spec.freq;
         memcpy(buffer, wav_buffer, buffer_size);
@@ -847,6 +861,47 @@ bool StreamTrack::Load_Wav(const char *path)
 
     SDL_FreeWAV(wav_buffer);
     return true;
+}
+
+
+// ======== STREAMTRACK CLASS IMPLEMENTATION ========
+StreamTrack::StreamTrack() :
+    buffer_offset(0),
+    source(0),
+    current_volume(0.0f),
+    damped_volume(0.0f),
+    active(false),
+    dampable(false),
+    stream_type(TR_AUDIO_STREAM_TYPE_ONESHOT),
+    current_track(-1)
+    // Setting method to -1 at init is required to prevent accidental
+    // ov_clear call, which results in crash, if no vorbis file was
+    // associated with given vorbis file structure.
+{
+    alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);              // Generate all buffers at once.
+    alGenSources(1, &source);
+
+    if(alIsSource(source))
+    {
+        alSource3f(source, AL_POSITION,        0.0f,  0.0f, -1.0f); // OpenAL tut says this.
+        alSource3f(source, AL_VELOCITY,        0.0f,  0.0f,  0.0f);
+        alSource3f(source, AL_DIRECTION,       0.0f,  0.0f,  0.0f);
+        alSourcef (source, AL_ROLLOFF_FACTOR,  0.0f              );
+        alSourcei (source, AL_SOURCE_RELATIVE, AL_TRUE           );
+        alSourcei (source, AL_LOOPING,         AL_FALSE          ); // No effect, but just in case...
+    }
+}
+
+
+StreamTrack::~StreamTrack()
+{
+
+    Stop(); // In case we haven't stopped yet.
+
+    buffer_offset = 0;
+
+    alDeleteSources(1, &source);
+    alDeleteBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);
 }
 
 
@@ -910,7 +965,9 @@ bool StreamTrack::Play(bool fade_in)
 void StreamTrack::Pause()
 {
     if(alIsSource(source))
+    {
         alSourcePause(source);
+    }
 }
 
 
@@ -938,13 +995,6 @@ void StreamTrack::Stop()    // Immediately stop track.
             ALuint buffer;
             alSourceUnqueueBuffers(source, 1, &buffer);
         }
-    }
-
-    if(buffer)
-    {
-        buffer_size = 0;
-        free(buffer);
-        buffer = NULL;
     }
 }
 
@@ -1098,11 +1148,22 @@ bool StreamTrack::IsPlaying()                       // Check if track is playing
 
 bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
 {
+    uint8_t *buffer = NULL;
+    StreamTrackBuffer *stb = NULL;
+    size_t buffer_size = 0;
+
+    if((current_track >= 0) && (current_track < audio_world_data.stream_buffers_count) && audio_world_data.stream_buffers[current_track])
+    {
+        stb = audio_world_data.stream_buffers[current_track];
+        buffer = stb->GetBuffer();
+        buffer_size = stb->GetBufferSize();
+    }
+
     if(buffer)
     {
         if(buffer_offset + audio_settings.stream_buffer_size < buffer_size)
         {
-            alBufferData(al_buffer, format, buffer + buffer_offset, audio_settings.stream_buffer_size, rate);
+            alBufferData(al_buffer, stb->GetFormat(), buffer + buffer_offset, audio_settings.stream_buffer_size, stb->GetRate());
             buffer_offset += audio_settings.stream_buffer_size;
         }
         else if(stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND)
@@ -1117,11 +1178,11 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
                     buffer_offset = 0;
                 }
             }
-            alBufferData(al_buffer, format, pcm, audio_settings.stream_buffer_size, rate);
+            alBufferData(al_buffer, stb->GetFormat(), pcm, audio_settings.stream_buffer_size, stb->GetRate());
         }
         else
         {
-            alBufferData(al_buffer, format, buffer + buffer_offset, buffer_size - buffer_offset, rate);
+            alBufferData(al_buffer, stb->GetFormat(), buffer + buffer_offset, buffer_size - buffer_offset, stb->GetRate());
             buffer_offset = buffer_size - 1;
             this->Stop();
         }
@@ -1184,10 +1245,6 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 {
     int    target_stream = -1;
     bool   do_fade_in    =  false;
-    int    load_method   =  0;
-    int    stream_type   =  0;
-
-    char   file_path[256];          // Should be enough, and this is not the full path...
 
     // Don't even try to do anything with track, if its index is greater than overall amount of
     // soundtracks specified in a stream track map count (which is derived from script).
@@ -1213,10 +1270,11 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     // "load_method" argument. Function itself returns false, if script wasn't found or
     // request was broken; in this case, we quit.
 
-    if(!Script_GetSoundtrack(engine_lua, track_index, file_path, &load_method, &stream_type))
+    StreamTrackBuffer *stb = audio_world_data.stream_buffers[track_index];
+    if(stb == NULL)
     {
         Con_AddLine("StreamPlay: CANCEL, wrong track index or broken script.", FONTSTYLE_CONSOLE_WARNING);
-        return TR_AUDIO_STREAMPLAY_WRONGTRACK;
+        return TR_AUDIO_STREAMPLAY_LOADERROR;
     }
 
     // Don't try to play track, if it was already played by specified bit mask.
@@ -1224,6 +1282,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     // Also, bit mask is valid only for non-looped tracks, since looped tracks are played
     // in any way.
 
+    int stream_type = stb->GetType();
     if((stream_type != TR_AUDIO_STREAM_TYPE_BACKGROUND) &&
         Audio_TrackAlreadyPlayed(track_index, mask))
     {
@@ -1240,8 +1299,10 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
         target_stream = Audio_GetFreeStream();        // Try again to assign free stream.
 
         if(target_stream == -1)
+        {
             Con_AddLine("StreamPlay: CANCEL, no free stream.", FONTSTYLE_CONSOLE_WARNING);
             return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // No success, exit and don't play anything.
+        }
     }
     else
     {
@@ -1249,20 +1310,13 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
 
         // Additionally check if track type is looped. If it is, force fade in in any case.
         // This is needed to smooth out possible pop with gapless looped track at a start-up.
-
-        do_fade_in = (stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND)?(true):(false);
+        do_fade_in |= (stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND);
     }
 
     // Finally - load our track.
-
-    if(!audio_world_data.stream_tracks[target_stream].Load(file_path, track_index, stream_type, load_method))
-    {
-        Con_AddLine("StreamPlay: CANCEL, stream load error.", FONTSTYLE_CONSOLE_WARNING);
-        return TR_AUDIO_STREAMPLAY_LOADERROR;
-    }
+    audio_world_data.stream_tracks[target_stream].SetTrackInfo(track_index, stb->GetType());
 
     // Try to play newly assigned and loaded track.
-
     if(!(audio_world_data.stream_tracks[target_stream].Play(do_fade_in)))
     {
         Con_AddLine("StreamPlay: CANCEL, stream play error.", FONTSTYLE_CONSOLE_WARNING);
@@ -1873,6 +1927,34 @@ void Audio_Init(uint32_t num_Sources)
 }
 
 
+bool Audio_IsTrackUsedInTriggers(int track_index)
+{
+    room_p rooms = NULL;
+    uint32_t rooms_count = 0;
+    World_GetRoomInfo(&rooms, &rooms_count);
+    for(uint32_t room_index = 0; room_index < rooms_count; room_index++)
+    {
+        room_p r = rooms + room_index;
+        for(uint32_t sector_index = 0; sector_index < r->sectors_count; sector_index++)
+        {
+            room_sector_p rs = r->sectors + sector_index;
+            if(rs->trigger)
+            {
+                for(trigger_command_p cmd = rs->trigger->commands; cmd; cmd = cmd->next)
+                {
+                    if((cmd->function == TR_FD_TRIGFUNC_PLAYTRACK) && (cmd->operands == track_index))
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+
 void Audio_GenSamples(class VT_Level *tr)
 {
     uint8_t      *pointer = tr->samples_data;
@@ -1880,6 +1962,31 @@ void Audio_GenSamples(class VT_Level *tr)
     uint32_t      ind1, ind2;
     uint32_t      comp_size, uncomp_size;
     uint32_t      i;
+
+    // Generate stream tracks buffers
+    audio_world_data.stream_buffers = NULL;
+    audio_world_data.stream_buffers_count = Script_GetNumTracks(engine_lua);
+    if(audio_world_data.stream_buffers_count > 0)
+    {
+        int secret_track_index = Script_GetSecretTrackNumber(engine_lua);
+        audio_world_data.stream_buffers = (StreamTrackBuffer**)malloc(audio_world_data.stream_buffers_count * sizeof(StreamTrackBuffer));
+        for(uint32_t i = 0; i < audio_world_data.stream_buffers_count; i++)
+        {
+            audio_world_data.stream_buffers[i] = NULL;
+            if((i == secret_track_index) || Audio_IsTrackUsedInTriggers(i))
+            {
+                StreamTrackBuffer *stb = new StreamTrackBuffer();
+                if(stb->Load(i))
+                {
+                    audio_world_data.stream_buffers[i] = stb;
+                }
+                else
+                {
+                    delete stb;
+                }
+            }
+        }
+    }
 
     // Generate new buffer array.
     audio_world_data.audio_buffers_count = tr->samples_count;
@@ -2200,6 +2307,21 @@ int Audio_DeInit()
     {
         alDeleteFilters(1, &fxManager.al_filter);
         alDeleteEffects(TR_AUDIO_FX_LASTINDEX, fxManager.al_effect);
+    }
+
+    if(audio_world_data.stream_buffers)
+    {
+        for(uint32_t i = 0; i < audio_world_data.stream_buffers_count; i++)
+        {
+            if(audio_world_data.stream_buffers[i])
+            {
+                delete audio_world_data.stream_buffers[i];
+            }
+            audio_world_data.stream_buffers[i] = NULL;
+        }
+        audio_world_data.stream_buffers_count = 0;
+        free(audio_world_data.stream_buffers);
+        audio_world_data.stream_buffers = NULL;
     }
 
     return 1;
