@@ -695,7 +695,7 @@ bool StreamTrackBuffer::Load(int track_index)
         }
     }
 
-    return true;
+    return (this->buffer != NULL);
 }
 
 
@@ -1274,7 +1274,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     if(stb == NULL)
     {
         Con_AddLine("StreamPlay: CANCEL, wrong track index or broken script.", FONTSTYLE_CONSOLE_WARNING);
-        return TR_AUDIO_STREAMPLAY_WRONGTRACK;
+        return TR_AUDIO_STREAMPLAY_LOADERROR;
     }
 
     // Don't try to play track, if it was already played by specified bit mask.
