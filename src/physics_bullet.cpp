@@ -687,7 +687,7 @@ void Physics_GetGhostWorldTransform(struct physics_data_s *physics, float tr[16]
 
 void Physics_SetGhostWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index)
 {
-    if(physics->ghost_objects[index])
+    if(physics->ghost_objects && physics->ghost_objects[index])
     {
         physics->ghost_objects[index]->getWorldTransform().setFromOpenGLMatrix(tr);
     }
