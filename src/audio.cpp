@@ -701,9 +701,10 @@ bool StreamTrackBuffer::Load(int track_index)
 
 bool StreamTrackBuffer::Load_Ogg(const char *path)
 {
-    vorbis_info    *vorbis_Info;
+    vorbis_info    *vorbis_Info = NULL;
     SDL_RWops      *audio_file = SDL_RWFromFile(path, "rb");
     OggVorbis_File  vorbis_Stream;
+    bool            ret = false;
 
     if(!audio_file)
     {
@@ -712,7 +713,6 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
     }
 
     memset(&vorbis_Stream, 0x00, sizeof(OggVorbis_File));
-
     if(ov_open_callbacks(audio_file, &vorbis_Stream, NULL, 0, ov_sdl_callbacks) < 0)
     {
         SDL_RWclose(audio_file);
@@ -723,39 +723,40 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
     vorbis_Info = ov_info(&vorbis_Stream, -1);
     format = (vorbis_Info->channels == 1) ? (AL_FORMAT_MONO16) : (AL_FORMAT_STEREO16);
     rate = vorbis_Info->rate;
-
-    //
-    char temp_buff[4096];
-    buffer_size = 0;
-    for(int32_t readed = 1; readed > 0; )
+    
     {
-        int section;
-        readed = ov_read(&vorbis_Stream, temp_buff, 4096, 0, 2, 1, &section);
-        if(readed > 0)
+        const size_t temp_buf_size = 64 * 1024 * 1024;
+        long int bitrate_nominal = vorbis_Info->bitrate_nominal;
+        char *temp_buff = (char*)malloc(temp_buf_size);
+        size_t readed = 0;
+        buffer_size = 0;
+        do
         {
+            int section;
+            readed = ov_read(&vorbis_Stream, temp_buff + buffer_size, 32768, 0, 2, 1, &section);
             buffer_size += readed;
+            if(buffer_size + 32768 >= temp_buf_size)
+            {
+                buffer_size = 0;
+                break;
+            }
         }
-    }
+        while(readed > 0);
 
-    if(buffer_size == 0)
-    {
         ov_clear(&vorbis_Stream);
         SDL_RWclose(audio_file);
-        return false;
+
+        if(buffer_size > 0)
+        {
+            buffer = (uint8_t*)malloc(buffer_size);
+            memcpy(buffer, temp_buff, buffer_size);
+            Con_Notify("file \"%s\" loaded with rate=%d, bitrate=%.1f", path, rate, ((float)bitrate_nominal / 1000));
+            ret = true;
+        }
+        free(temp_buff);
     }
 
-    ov_pcm_seek(&vorbis_Stream, 0);
-    buffer = (uint8_t*)malloc(buffer_size);
-    uint32_t local_offset = 0;
-    do
-    {
-        int section;
-        local_offset += ov_read(&vorbis_Stream, (char*)buffer + local_offset, buffer_size - local_offset, 0, 2, 1, &section);
-    }while(local_offset < buffer_size);
-
-    Con_Notify("file \"%s\" loaded with rate=%d, bitrate=%.1f", path, vorbis_Info->rate, ((float)vorbis_Info->bitrate_nominal / 1000));
-
-    return true;    // Success!
+    return ret;
 }
 
 
