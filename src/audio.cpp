@@ -740,7 +740,7 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
         while(readed > 0);
 
         ov_clear(&vorbis_Stream);
-        //SDL_RWclose(audio_file);   //ov_clear closes (vorbis_Stream->datasource == audio_file;
+        //SDL_RWclose(audio_file);   //ov_clear closes (vorbis_Stream->datasource == audio_file);
 
         if(buffer_size > 0)
         {
@@ -892,7 +892,6 @@ StreamTrack::StreamTrack() :
 
 StreamTrack::~StreamTrack()
 {
-
     Stop(); // In case we haven't stopped yet.
 
     buffer_offset = 0;
@@ -917,7 +916,7 @@ bool StreamTrack::Play(bool fade_in)
     {
         if(!Stream(buffers[i]))
         {
-            if(!i)
+            if(i == 0)
             {
                 Sys_DebugLog(SYS_LOG_FILENAME, "StreamTrack: error preparing buffers.");
                 return false;
@@ -976,22 +975,20 @@ void StreamTrack::End()     // Smoothly end track with fadeout.
 
 void StreamTrack::Stop()    // Immediately stop track.
 {
-    int queued;
-
     active = false;         // Clear activity flag.
-
+    buffer_offset = 0;
     if(alIsSource(source))  // Stop and unlink all associated buffers.
     {
         if(IsPlaying())
-            alSourceStop(source);
-
-        alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
-
-        while(queued--)
         {
-            ALuint buffer;
-            alSourceUnqueueBuffers(source, 1, &buffer);
+            alSourceStop(source);
         }
+
+        ALint queued = 0;
+        alGetSourcei(source, /*AL_BUFFERS_QUEUED*/AL_BUFFERS_PROCESSED, &queued);
+        alSourceUnqueueBuffers(source, queued, buffers);
+        alDeleteBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);
+        alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);
     }
 }
 
@@ -1002,19 +999,16 @@ bool StreamTrack::Update()
     bool buffered      = true;
     bool change_gain   = false;
 
-
     // Update damping, if track supports it.
-
     if(dampable)
     {
         // We check if damp condition is active, and if so, is it already at low-level or not.
-
         if(damp_active && (damped_volume < TR_AUDIO_STREAM_DAMP_LEVEL))
         {
             damped_volume += TR_AUDIO_STREAM_DAMP_SPEED;
 
             // Clamp volume.
-            damped_volume = (damped_volume > TR_AUDIO_STREAM_DAMP_LEVEL)?(TR_AUDIO_STREAM_DAMP_LEVEL):(damped_volume);
+            damped_volume = (damped_volume > TR_AUDIO_STREAM_DAMP_LEVEL) ? (TR_AUDIO_STREAM_DAMP_LEVEL) : (damped_volume);
             change_gain   = true;
         }
         else if(!damp_active && (damped_volume > 0))    // If damp is not active, but it's still at low, restore it.
@@ -1022,7 +1016,7 @@ bool StreamTrack::Update()
             damped_volume -= TR_AUDIO_STREAM_DAMP_SPEED;
 
             // Clamp volume.
-            damped_volume = (damped_volume < 0.0)?(0.0):(damped_volume);
+            damped_volume = (damped_volume < 0.0f) ? (0.0f) : (damped_volume);
             change_gain   = true;
         }
     }
@@ -1076,7 +1070,7 @@ bool StreamTrack::Update()
             }
 
             // Clamp volume.
-            current_volume = (current_volume > 1.0) ? (1.0) : (current_volume);
+            current_volume = (current_volume > 1.0f) ? (1.0f) : (current_volume);
             change_gain    = true;
         }
     }
@@ -1084,7 +1078,7 @@ bool StreamTrack::Update()
     if(change_gain) // If any condition which modify track gain was met, call AL gain change.
     {
         alSourcef(source, AL_GAIN, current_volume              *  // Global track volume.
-                                   (1.0 - damped_volume)       *  // Damp volume.
+                                   (1.0f - damped_volume)      *  // Damp volume.
                                    audio_settings.music_volume);  // Global music volume setting.
     }
 
@@ -1098,7 +1092,9 @@ bool StreamTrack::Update()
         alSourceUnqueueBuffers(source, 1, &buffer);     // Unlink processed buffer.
         buffered = Stream(buffer);                      // Refill processed buffer.
         if(buffered)
+        {
             alSourceQueueBuffers(source, 1, &buffer);   // Relink processed buffer.
+        }
     }
 
     return buffered;
