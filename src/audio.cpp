@@ -224,10 +224,6 @@ public:
     static bool damp_active;             // Global flag for damping BGM tracks.
 
 private:
-    bool Load_Ogg(const char *path);     // Ogg file loading routine.
-    bool Load_Wad(const char *path);     // Wad file loading routine.
-    bool Load_Wav(const char *path);     // Wav file loading routine.
-
     bool Stream(ALuint al_buffer);       // General stream routine.
 
     uint32_t        buffer_offset;
@@ -723,7 +719,7 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
     vorbis_Info = ov_info(&vorbis_Stream, -1);
     format = (vorbis_Info->channels == 1) ? (AL_FORMAT_MONO16) : (AL_FORMAT_STEREO16);
     rate = vorbis_Info->rate;
-    
+
     {
         const size_t temp_buf_size = 64 * 1024 * 1024;
         long int bitrate_nominal = vorbis_Info->bitrate_nominal;
@@ -744,7 +740,7 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
         while(readed > 0);
 
         ov_clear(&vorbis_Stream);
-        SDL_RWclose(audio_file);
+        //SDL_RWclose(audio_file);   //ov_clear closes (vorbis_Stream->datasource == audio_file;
 
         if(buffer_size > 0)
         {
@@ -855,7 +851,7 @@ bool StreamTrackBuffer::Load_Wav(const char *path)
         }
 
         buffer_size = wav_length;
-        buffer = (uint8_t*)calloc(buffer_size, 1);
+        buffer = (uint8_t*)malloc(buffer_size);
         rate = wav_spec.freq;
         memcpy(buffer, wav_buffer, buffer_size);
     }
