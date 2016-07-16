@@ -1144,6 +1144,7 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
     uint8_t *buffer = NULL;
     StreamTrackBuffer *stb = NULL;
     size_t buffer_size = 0;
+    bool ret = false;
 
     if((current_track >= 0) && (current_track < audio_world_data.stream_buffers_count) && audio_world_data.stream_buffers[current_track])
     {
@@ -1152,12 +1153,13 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
         buffer_size = stb->GetBufferSize();
     }
 
-    if(buffer)
+    if(buffer && (buffer_offset + 1 < buffer_size))
     {
         if(buffer_offset + audio_settings.stream_buffer_size < buffer_size)
         {
             alBufferData(al_buffer, stb->GetFormat(), buffer + buffer_offset, audio_settings.stream_buffer_size, stb->GetRate());
             buffer_offset += audio_settings.stream_buffer_size;
+            ret = true;
         }
         else if(stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND)
         {
@@ -1172,17 +1174,17 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
                 }
             }
             alBufferData(al_buffer, stb->GetFormat(), pcm, audio_settings.stream_buffer_size, stb->GetRate());
+            ret = true;
         }
         else
         {
             alBufferData(al_buffer, stb->GetFormat(), buffer + buffer_offset, buffer_size - buffer_offset, stb->GetRate());
             buffer_offset = buffer_size - 1;
-            this->Stop();
+            ret = false;
         }
-        return true;
     }
 
-    return false;
+    return ret;
 }
 
 
