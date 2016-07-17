@@ -1179,6 +1179,7 @@ void Entity_CheckActivators(struct entity_s *ent)
 
 int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer)
 {
+    int activation_state = 0;
     if(!((entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6))           // Ignore activation, if activity lock is set.
     {
         int activator_id = (entity_activator) ? (entity_activator->id) : (-1);
@@ -1201,27 +1202,29 @@ int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
 
         if((mask == 0x1F) && (event == 0))
         {
-            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, entity_object->id, activator_id);
+            activation_state = Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, entity_object->id, activator_id);
             event = 1;
         }
         else if((mask != 0x1F) && (event == 1))
         {
-            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_DEACTIVATE, entity_object->id, activator_id);
+            activation_state = Script_ExecEntity(engine_lua, ENTITY_CALLBACK_DEACTIVATE, entity_object->id, activator_id);
             event = 0;
         }
 
-        // Update trigger layout.
-        entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);       // mask  - 00011111
-        entity_object->trigger_layout ^= (uint8_t)mask;
-        entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT);      // event - 00100000
-        entity_object->trigger_layout ^= ((uint8_t)event) << 5;
-        entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);       // lock  - 01000000
-        entity_object->trigger_layout ^= ((uint8_t)trigger_lock) << 6;
-
+        if(activation_state != ENTITY_TRIGGERING_NOT_READY)
+        {
+            // Update trigger layout.
+            entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);   // mask  - 00011111
+            entity_object->trigger_layout ^= (uint8_t)mask;
+            entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT);  // event - 00100000
+            entity_object->trigger_layout ^= ((uint8_t)event) << 5;
+            entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);   // lock  - 01000000
+            entity_object->trigger_layout ^= ((uint8_t)trigger_lock) << 6;
+        }
         entity_object->timer = trigger_timer;                                   // Engage timer.
     }
 
-    return 0;
+    return activation_state;
 }
 
 

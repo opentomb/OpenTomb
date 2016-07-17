@@ -17,5 +17,5 @@ mlook(1);
 freelook(0);
 cam_distance(1024.0);
 noclip(0);
---loadMap("data/newlevel.tr4");
-setgamef(1, 5);
+loadMap("data/LEVEL1.PHD");
+--setgamef(1, 99);

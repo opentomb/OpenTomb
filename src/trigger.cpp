@@ -215,6 +215,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
         for(trigger_command_p command = trigger->commands; command; command = command->next)
         {
             entity_p trig_entity = World_GetEntityByID(command->operands);
+            entity_p switch_entity = NULL;
 
             switch(command->function)
             {
@@ -236,6 +237,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 if(action_type == TR_ACTIONTYPE_SWITCH)
                                 {
                                     // Switch action type case.
+                                    switch_entity = trig_entity;
                                     switch_anim_state = trig_entity->bf->animations.last_state;
                                     switch_sectorstatus = (trig_entity->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
                                     switch_mask = (trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK);
@@ -246,11 +248,6 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                     {
                                         Entity_SetSectorStatus(trig_entity, 0);
                                         trig_entity->timer = trigger->timer;
-                                        if(trigger->once)
-                                        {
-                                            // Just lock out activator, no anti-action needed.
-                                            Entity_SetLock(trig_entity, 1);
-                                        }
                                     }
                                     else if((switch_anim_state == 1) && (switch_sectorstatus == 1))
                                     {
@@ -273,8 +270,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                                     if(switch_sectorstatus == 0)
                                     {
-                                        Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
-                                        if(trigger->once)
+                                        int activation_state = Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
+                                        if(trigger->once && (activation_state != ENTITY_TRIGGERING_NOT_READY))
                                         {
                                             Entity_SetSectorStatus(entity_activator, 1);
                                             switch_sectorstatus = 1;
@@ -312,6 +309,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     }
                     else
                     {
+                        int activation_state = 0;
                         bool IsPlayer = (World_GetPlayer() == entity_activator);
                         if(!IsPlayer && (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS))
                         {
@@ -321,27 +319,31 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         {
                             if(action_type == TR_ACTIONTYPE_ANTI)
                             {
-                                Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, 0.0f);
+                                activation_state = Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, 0.0f);
                             }
                             else
                             {
-                                Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
+                                activation_state = Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
                             }
                         }
                         else
                         {
                             if(action_type == TR_ACTIONTYPE_ANTI)
                             {
-                                Entity_Deactivate(trig_entity, entity_activator);
+                                activation_state = Entity_Deactivate(trig_entity, entity_activator);
                             }
                             else
                             {
-                                Entity_Activate(trig_entity, entity_activator, trigger->mask, mask_mode, trigger->once, trigger->timer);
+                                activation_state = Entity_Activate(trig_entity, entity_activator, trigger->mask, mask_mode, trigger->once, trigger->timer);
                             }
                         }
                         if(!IsPlayer)
                         {
                             Entity_SetSectorStatus(entity_activator, 1);
+                            if(trigger->once && (activation_state != ENTITY_TRIGGERING_NOT_READY))
+                            {
+                                Entity_SetLock(trig_entity, 1);
+                            }
                         }
                     }
                     break;

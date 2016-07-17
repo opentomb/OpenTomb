@@ -871,9 +871,6 @@ StreamTrack::StreamTrack() :
     dampable(false),
     stream_type(TR_AUDIO_STREAM_TYPE_ONESHOT),
     current_track(-1)
-    // Setting method to -1 at init is required to prevent accidental
-    // ov_clear call, which results in crash, if no vorbis file was
-    // associated with given vorbis file structure.
 {
     alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);              // Generate all buffers at once.
     alGenSources(1, &source);
@@ -977,6 +974,7 @@ void StreamTrack::Stop()    // Immediately stop track.
 {
     active = false;         // Clear activity flag.
     buffer_offset = 0;
+    current_track = -1;
     if(alIsSource(source))  // Stop and unlink all associated buffers.
     {
         if(IsPlaying())
@@ -1146,7 +1144,7 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
     size_t buffer_size = 0;
     bool ret = false;
 
-    if((current_track >= 0) && (current_track < audio_world_data.stream_buffers_count) && audio_world_data.stream_buffers[current_track])
+    if(current_track >= 0)
     {
         stb = audio_world_data.stream_buffers[current_track];
         buffer = stb->GetBuffer();
