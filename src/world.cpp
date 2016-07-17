@@ -275,6 +275,8 @@ void World_Open(class VT_Level *tr)
         delete global_world.tex_atlas;
         global_world.tex_atlas = NULL;
     }
+
+    Audio_Init();
 }
 
 

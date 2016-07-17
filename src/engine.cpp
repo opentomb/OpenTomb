@@ -1079,7 +1079,6 @@ int Engine_LoadMap(const char *name)
             return 0;
     }
 
-    Audio_Init();
     Game_Prepare();
 
     room_p rooms;
