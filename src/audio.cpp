@@ -224,10 +224,6 @@ public:
     static bool damp_active;             // Global flag for damping BGM tracks.
 
 private:
-    bool Load_Ogg(const char *path);     // Ogg file loading routine.
-    bool Load_Wad(const char *path);     // Wad file loading routine.
-    bool Load_Wav(const char *path);     // Wav file loading routine.
-
     bool Stream(ALuint al_buffer);       // General stream routine.
 
     uint32_t        buffer_offset;
@@ -701,9 +697,10 @@ bool StreamTrackBuffer::Load(int track_index)
 
 bool StreamTrackBuffer::Load_Ogg(const char *path)
 {
-    vorbis_info    *vorbis_Info;
+    vorbis_info    *vorbis_Info = NULL;
     SDL_RWops      *audio_file = SDL_RWFromFile(path, "rb");
     OggVorbis_File  vorbis_Stream;
+    bool            ret = false;
 
     if(!audio_file)
     {
@@ -712,7 +709,6 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
     }
 
     memset(&vorbis_Stream, 0x00, sizeof(OggVorbis_File));
-
     if(ov_open_callbacks(audio_file, &vorbis_Stream, NULL, 0, ov_sdl_callbacks) < 0)
     {
         SDL_RWclose(audio_file);
@@ -724,38 +720,39 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
     format = (vorbis_Info->channels == 1) ? (AL_FORMAT_MONO16) : (AL_FORMAT_STEREO16);
     rate = vorbis_Info->rate;
 
-    //
-    char temp_buff[4096];
-    buffer_size = 0;
-    for(int32_t readed = 1; readed > 0; )
     {
-        int section;
-        readed = ov_read(&vorbis_Stream, temp_buff, 4096, 0, 2, 1, &section);
-        if(readed > 0)
+        const size_t temp_buf_size = 64 * 1024 * 1024;
+        long int bitrate_nominal = vorbis_Info->bitrate_nominal;
+        char *temp_buff = (char*)malloc(temp_buf_size);
+        size_t readed = 0;
+        buffer_size = 0;
+        do
         {
+            int section;
+            readed = ov_read(&vorbis_Stream, temp_buff + buffer_size, 32768, 0, 2, 1, &section);
             buffer_size += readed;
+            if(buffer_size + 32768 >= temp_buf_size)
+            {
+                buffer_size = 0;
+                break;
+            }
         }
-    }
+        while(readed > 0);
 
-    if(buffer_size == 0)
-    {
         ov_clear(&vorbis_Stream);
-        SDL_RWclose(audio_file);
-        return false;
+        //SDL_RWclose(audio_file);   //ov_clear closes (vorbis_Stream->datasource == audio_file);
+
+        if(buffer_size > 0)
+        {
+            buffer = (uint8_t*)malloc(buffer_size);
+            memcpy(buffer, temp_buff, buffer_size);
+            Con_Notify("file \"%s\" loaded with rate=%d, bitrate=%.1f", path, rate, ((float)bitrate_nominal / 1000));
+            ret = true;
+        }
+        free(temp_buff);
     }
 
-    ov_pcm_seek(&vorbis_Stream, 0);
-    buffer = (uint8_t*)malloc(buffer_size);
-    uint32_t local_offset = 0;
-    do
-    {
-        int section;
-        local_offset += ov_read(&vorbis_Stream, (char*)buffer + local_offset, buffer_size - local_offset, 0, 2, 1, &section);
-    }while(local_offset < buffer_size);
-
-    Con_Notify("file \"%s\" loaded with rate=%d, bitrate=%.1f", path, vorbis_Info->rate, ((float)vorbis_Info->bitrate_nominal / 1000));
-
-    return true;    // Success!
+    return ret;
 }
 
 
@@ -854,7 +851,7 @@ bool StreamTrackBuffer::Load_Wav(const char *path)
         }
 
         buffer_size = wav_length;
-        buffer = (uint8_t*)calloc(buffer_size, 1);
+        buffer = (uint8_t*)malloc(buffer_size);
         rate = wav_spec.freq;
         memcpy(buffer, wav_buffer, buffer_size);
     }
@@ -895,7 +892,6 @@ StreamTrack::StreamTrack() :
 
 StreamTrack::~StreamTrack()
 {
-
     Stop(); // In case we haven't stopped yet.
 
     buffer_offset = 0;
@@ -920,7 +916,7 @@ bool StreamTrack::Play(bool fade_in)
     {
         if(!Stream(buffers[i]))
         {
-            if(!i)
+            if(i == 0)
             {
                 Sys_DebugLog(SYS_LOG_FILENAME, "StreamTrack: error preparing buffers.");
                 return false;
@@ -979,22 +975,20 @@ void StreamTrack::End()     // Smoothly end track with fadeout.
 
 void StreamTrack::Stop()    // Immediately stop track.
 {
-    int queued;
-
     active = false;         // Clear activity flag.
-
+    buffer_offset = 0;
     if(alIsSource(source))  // Stop and unlink all associated buffers.
     {
         if(IsPlaying())
-            alSourceStop(source);
-
-        alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
-
-        while(queued--)
         {
-            ALuint buffer;
-            alSourceUnqueueBuffers(source, 1, &buffer);
+            alSourceStop(source);
         }
+
+        ALint queued = 0;
+        alGetSourcei(source, /*AL_BUFFERS_QUEUED*/AL_BUFFERS_PROCESSED, &queued);
+        alSourceUnqueueBuffers(source, queued, buffers);
+        alDeleteBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);
+        alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);
     }
 }
 
@@ -1005,19 +999,16 @@ bool StreamTrack::Update()
     bool buffered      = true;
     bool change_gain   = false;
 
-
     // Update damping, if track supports it.
-
     if(dampable)
     {
         // We check if damp condition is active, and if so, is it already at low-level or not.
-
         if(damp_active && (damped_volume < TR_AUDIO_STREAM_DAMP_LEVEL))
         {
             damped_volume += TR_AUDIO_STREAM_DAMP_SPEED;
 
             // Clamp volume.
-            damped_volume = (damped_volume > TR_AUDIO_STREAM_DAMP_LEVEL)?(TR_AUDIO_STREAM_DAMP_LEVEL):(damped_volume);
+            damped_volume = (damped_volume > TR_AUDIO_STREAM_DAMP_LEVEL) ? (TR_AUDIO_STREAM_DAMP_LEVEL) : (damped_volume);
             change_gain   = true;
         }
         else if(!damp_active && (damped_volume > 0))    // If damp is not active, but it's still at low, restore it.
@@ -1025,7 +1016,7 @@ bool StreamTrack::Update()
             damped_volume -= TR_AUDIO_STREAM_DAMP_SPEED;
 
             // Clamp volume.
-            damped_volume = (damped_volume < 0.0)?(0.0):(damped_volume);
+            damped_volume = (damped_volume < 0.0f) ? (0.0f) : (damped_volume);
             change_gain   = true;
         }
     }
@@ -1079,7 +1070,7 @@ bool StreamTrack::Update()
             }
 
             // Clamp volume.
-            current_volume = (current_volume > 1.0) ? (1.0) : (current_volume);
+            current_volume = (current_volume > 1.0f) ? (1.0f) : (current_volume);
             change_gain    = true;
         }
     }
@@ -1087,7 +1078,7 @@ bool StreamTrack::Update()
     if(change_gain) // If any condition which modify track gain was met, call AL gain change.
     {
         alSourcef(source, AL_GAIN, current_volume              *  // Global track volume.
-                                   (1.0 - damped_volume)       *  // Damp volume.
+                                   (1.0f - damped_volume)      *  // Damp volume.
                                    audio_settings.music_volume);  // Global music volume setting.
     }
 
@@ -1101,7 +1092,9 @@ bool StreamTrack::Update()
         alSourceUnqueueBuffers(source, 1, &buffer);     // Unlink processed buffer.
         buffered = Stream(buffer);                      // Refill processed buffer.
         if(buffered)
+        {
             alSourceQueueBuffers(source, 1, &buffer);   // Relink processed buffer.
+        }
     }
 
     return buffered;
@@ -1151,6 +1144,7 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
     uint8_t *buffer = NULL;
     StreamTrackBuffer *stb = NULL;
     size_t buffer_size = 0;
+    bool ret = false;
 
     if((current_track >= 0) && (current_track < audio_world_data.stream_buffers_count) && audio_world_data.stream_buffers[current_track])
     {
@@ -1159,12 +1153,13 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
         buffer_size = stb->GetBufferSize();
     }
 
-    if(buffer)
+    if(buffer && (buffer_offset + 1 < buffer_size))
     {
         if(buffer_offset + audio_settings.stream_buffer_size < buffer_size)
         {
             alBufferData(al_buffer, stb->GetFormat(), buffer + buffer_offset, audio_settings.stream_buffer_size, stb->GetRate());
             buffer_offset += audio_settings.stream_buffer_size;
+            ret = true;
         }
         else if(stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND)
         {
@@ -1179,17 +1174,17 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
                 }
             }
             alBufferData(al_buffer, stb->GetFormat(), pcm, audio_settings.stream_buffer_size, stb->GetRate());
+            ret = true;
         }
         else
         {
             alBufferData(al_buffer, stb->GetFormat(), buffer + buffer_offset, buffer_size - buffer_offset, stb->GetRate());
             buffer_offset = buffer_size - 1;
-            this->Stop();
+            ret = false;
         }
-        return true;
     }
 
-    return false;
+    return ret;
 }
 
 
