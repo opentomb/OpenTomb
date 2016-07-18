@@ -105,6 +105,8 @@
 #define TRIGGER_OP_XOR 1
 
 // Entity activation response
+#define ENTITY_TRIGGERING_ACTIVATED    (0)
+#define ENTITY_TRIGGERING_DEACTIVATED  (1)
 #define ENTITY_TRIGGERING_NOT_READY    (2)
 
 struct lua_State;

@@ -19,3 +19,4 @@ cam_distance(1024.0);
 noclip(0);
 loadMap("data/LEVEL1.PHD");
 --setgamef(1, 99);
+--dofile("save/qsave.lua");

@@ -309,7 +309,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     }
                     else
                     {
-                        int activation_state = 0;
+                        int activation_state = ENTITY_TRIGGERING_NOT_READY;
                         bool IsPlayer = (World_GetPlayer() == entity_activator);
                         if(!IsPlayer && (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS))
                         {
@@ -340,9 +340,10 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         if(!IsPlayer)
                         {
                             Entity_SetSectorStatus(entity_activator, 1);
-                            if(trigger->once && (activation_state != ENTITY_TRIGGERING_NOT_READY))
+                            if(trigger->once && (activation_state == ENTITY_TRIGGERING_ACTIVATED))
                             {
                                 Entity_SetLock(trig_entity, 1);
+                                ///@QUESTION: Lock switch_entity here?
                             }
                         }
                     }

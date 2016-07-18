@@ -5410,9 +5410,13 @@ void Script_LoadConstants(lua_State *lua)
         lua_pushinteger(lua, COLLISION_TYPE_GHOST);
         lua_setglobal(lua, "COLLISION_TYPE_GHOST");
 
+        lua_pushinteger(lua, ENTITY_TRIGGERING_ACTIVATED);
+        lua_setglobal(lua, "ENTITY_TRIGGERING_ACTIVATED");
+        lua_pushinteger(lua, ENTITY_TRIGGERING_DEACTIVATED);
+        lua_setglobal(lua, "ENTITY_TRIGGERING_DEACTIVATED");
         lua_pushinteger(lua, ENTITY_TRIGGERING_NOT_READY);
         lua_setglobal(lua, "ENTITY_TRIGGERING_NOT_READY");
-
+        
         lua_settop(lua, top);
     }
 }
