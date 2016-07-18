@@ -464,7 +464,7 @@ bool Script_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_aft
 int Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator)
 {
     int top = lua_gettop(lua);
-    int ret = -1;
+    int ret = ENTITY_TRIGGERING_NOT_READY;
 
     lua_getglobal(lua, "execEntity");
     if(lua_isfunction(lua, -1))
@@ -5416,7 +5416,7 @@ void Script_LoadConstants(lua_State *lua)
         lua_setglobal(lua, "ENTITY_TRIGGERING_DEACTIVATED");
         lua_pushinteger(lua, ENTITY_TRIGGERING_NOT_READY);
         lua_setglobal(lua, "ENTITY_TRIGGERING_NOT_READY");
-        
+
         lua_settop(lua, top);
     }
 }
