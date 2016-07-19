@@ -2208,7 +2208,7 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     room->alternate_room = NULL;
     room->base_room = NULL;
 
-    if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count))
+    if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count) && (room->id < tr_room->alternate_room))
     {
         room->alternate_room = global_world.rooms + tr_room->alternate_room;
     }
