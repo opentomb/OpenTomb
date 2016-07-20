@@ -359,6 +359,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
                     setEntityLock(object_id, 1);        -- lock filled hole
                 else
                     setEntitySectorStatus(object_id, 1);        -- only for switches - turn on
+                    setEntityEvent(object_id, 1);
                 end
                 return false;
             end
@@ -376,6 +377,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             end
             if(f >= c - 1) then   -- check the end of animation
                 setEntitySectorStatus(object_id, 1);  -- only for switches - turn off
+                setEntityEvent(object_id, 0);
                 return false;
             end
             return true;

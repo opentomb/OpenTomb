@@ -356,7 +356,9 @@ function tallblock_init(id)    -- Tall moving block (TR1)
     
     entity_funcs[id].onLoop = function(object_id)
         local move_speed = 32.0 * 60.0 * frame_time;;
-        if(not getEntityEvent(object_id)) then move_speed = 0 - move_speed end;
+        if(not getEntityEvent(object_id)) then 
+            move_speed = 0.0 - move_speed;
+        end;
         
         entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + move_speed;
         moveEntityLocal(object_id, 0.0, move_speed, 0.0);

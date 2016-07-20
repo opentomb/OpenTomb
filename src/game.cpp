@@ -812,10 +812,11 @@ void Game_SetCameraTarget(uint32_t entity_id, float timer)
 void Game_SetCamera(uint32_t camera_id, int once, int move, float timer)
 {
     static_camera_sink_p sink = World_GetstaticCameraSink(camera_id);
-    if(sink)
+    if(sink && !sink->locked)
     {
         if(engine_camera_state.state != CAMERA_STATE_FLYBY)
         {
+            sink->locked |= 0x01 & once;
             engine_camera_state.state = CAMERA_STATE_FIXED;
             engine_camera_state.sink = sink;
             engine_camera_state.time = timer;

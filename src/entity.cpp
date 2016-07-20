@@ -40,7 +40,7 @@ entity_p Entity_Create()
     ret->callback_flags = 0x00000000;               // no callbacks by default
 
     ret->OCB = 0;
-    ret->trigger_layout = 0x00;
+    ret->trigger_layout = 0x00U;
     ret->timer = 0.0;
 
     ret->self = (engine_container_p)malloc(sizeof(engine_container_t));
@@ -1180,6 +1180,12 @@ void Entity_CheckActivators(struct entity_s *ent)
 int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer)
 {
     int activation_state = ENTITY_TRIGGERING_NOT_READY;
+    if((trigger_timer > 0) && (entity_object->timer > 0.0f))
+    {
+        entity_object->timer = trigger_timer;                                   // Engage timer.
+        return activation_state;
+    }
+
     if(!((entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6))           // Ignore activation, if activity lock is set.
     {
         int activator_id = (entity_activator) ? (entity_activator->id) : (-1);
@@ -1212,10 +1218,15 @@ int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
         }
 
         // Update trigger layout.
-        entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT);      // event - 00100000
-        entity_object->trigger_layout ^= ((uint8_t)event) << 5;
         entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);       // mask  - 00011111
         entity_object->trigger_layout ^= (uint8_t)mask;
+
+        if(activation_state != ENTITY_TRIGGERING_NOT_READY)
+        {
+            entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT);  // event - 00100000
+            entity_object->trigger_layout ^= ((uint8_t)event) << 5;
+        }
+
         if(activation_state == ENTITY_TRIGGERING_ACTIVATED)
         {
             entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);   // lock  - 01000000
@@ -1233,7 +1244,6 @@ int  Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_a
     int activation_state = ENTITY_TRIGGERING_NOT_READY;
     if(!((entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6))           // Ignore deactivation, if activity lock is set.
     {
-        int top = lua_gettop(engine_lua);
         int activator_id = (entity_activator) ? (entity_activator->id) : (-1);
         // Get current trigger layout.
         uint16_t event = (entity_object->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5;
@@ -1252,8 +1262,6 @@ int  Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_a
             }
             entity_object->timer = 0.0f;
         }
-
-        lua_settop(engine_lua, top);
     }
 
     return activation_state;

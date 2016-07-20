@@ -100,8 +100,9 @@ typedef struct static_camera_sink_s
     GLfloat                     x;
     GLfloat                     y;
     GLfloat                     z;
-    uint16_t                    room_or_strength;   // Room for camera, strength for sink.
-    uint16_t                    flag_or_zone;       // Flag for camera, zone for sink.
+    uint16_t                    locked : 1;
+    uint16_t                    room_or_strength : 15;   // Room for camera, strength for sink.
+    uint16_t                    flag_or_zone;            // Flag for camera, zone for sink.
 }static_camera_sink_t, *static_camera_sink_p;
 
 typedef struct flyby_camera_state_s

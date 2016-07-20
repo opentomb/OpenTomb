@@ -1746,6 +1746,7 @@ void World_GenCameras(class VT_Level *tr)
             global_world.cameras_sinks[i].x                   =  tr->cameras[i].x;
             global_world.cameras_sinks[i].y                   =  tr->cameras[i].z;
             global_world.cameras_sinks[i].z                   = -tr->cameras[i].y;
+            global_world.cameras_sinks[i].locked              = 0;
             global_world.cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
             global_world.cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;
         }
