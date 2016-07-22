@@ -53,13 +53,21 @@ function door_init(id)   -- NORMAL doors only!
     setEntityActivity(object_id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        return swapEntityState(object_id, 0, 1);
+        local a, f, c = getEntityAnim(object_id);
+        if(c == 1) then
+            return swapEntityState(object_id, 0, 1);
+        end;
+        return ENTITY_TRIGGERING_NOT_READY;
     end;
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;    -- Same function.
     
     entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then
+        if(getEntityEvent(object_id) == 0) then
+            setEntityTimer(object_id, 0.0);
+        end;
+
+        if((tickEntity(object_id) == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
             swapEntityState(object_id, 0, 1);
             setEntityEvent(object_id, 0);
         end;
