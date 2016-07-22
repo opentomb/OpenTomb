@@ -836,7 +836,10 @@ void ShowDebugInfo()
                                     renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform);
                                     Trigger_TrigMaskToStr(trig_mask, trig_obj->trigger_layout);
                                     gl_text_line_p text = renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = 0x%X, layout = 0b%s)", trig_obj->id, trig_mask);
-                                    text->x_align = GLTEXT_ALIGN_CENTER;
+                                    if(text)
+                                    {
+                                        text->x_align = GLTEXT_ALIGN_CENTER;
+                                    }
                                 }
                                 Trigger_TrigCmdToStr(trig_func, 64, cmd->function);
                                 if(cmd->function == TR_FD_TRIGFUNC_SET_CAMERA)
@@ -899,7 +902,10 @@ void ShowDebugInfo()
                                     renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform);
                                     Trigger_TrigMaskToStr(trig_mask, trig_obj->trigger_layout);
                                     gl_text_line_p text = renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = 0x%X, layout = 0b%s)", trig_obj->id, trig_mask);
-                                    text->x_align = GLTEXT_ALIGN_CENTER;
+                                    if(text)
+                                    {
+                                        text->x_align = GLTEXT_ALIGN_CENTER;
+                                    }
                                 }
                                 Trigger_TrigCmdToStr(trig_func, 64, cmd->function);
                                 if(cmd->function == TR_FD_TRIGFUNC_SET_CAMERA)
