@@ -823,8 +823,10 @@ void ShowDebugInfo()
                         {
                             char trig_type[64];
                             char trig_func[64];
+                            char trig_mask[16];
                             Trigger_TrigTypeToStr(trig_type, 64, rs->trigger->sub_function);
-                            GLText_OutTextXY(30.0f, y += dy, "trig(sub = %s, val = 0x%X, mask = 0x%X)", trig_type, rs->trigger->function_value, rs->trigger->mask);
+                            Trigger_TrigMaskToStr(trig_mask, rs->trigger->mask);
+                            GLText_OutTextXY(30.0f, y += dy, "trig(sub = %s, val = 0x%X, mask = 0b%s, timer = %d)", trig_type, rs->trigger->function_value, trig_mask, rs->trigger->timer);
                             for(trigger_command_p cmd = rs->trigger->commands; cmd; cmd = cmd->next)
                             {
                                 entity_p trig_obj = World_GetEntityByID(cmd->operands);
@@ -832,10 +834,19 @@ void ShowDebugInfo()
                                 {
                                     renderer.debugDrawer->SetColor(0.0, 0.0, 1.0);
                                     renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform);
-                                    renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = 0x%X)", trig_obj->id);
+                                    Trigger_TrigMaskToStr(trig_mask, trig_obj->trigger_layout);
+                                    gl_text_line_p text = renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = 0x%X, layout = 0b%s)", trig_obj->id, trig_mask);
+                                    text->x_align = GLTEXT_ALIGN_CENTER;
                                 }
                                 Trigger_TrigCmdToStr(trig_func, 64, cmd->function);
-                                GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X)", trig_func, cmd->operands);
+                                if(cmd->function == TR_FD_TRIGFUNC_SET_CAMERA)
+                                {
+                                    GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X, cam_id = 0x%X, cam_move = %d, cam_timer = %d)", trig_func, cmd->operands, cmd->cam_index, cmd->cam_move, cmd->cam_timer);
+                                }
+                                else
+                                {
+                                    GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X)", trig_func, cmd->operands);
+                                }
                             }
                         }
                     }
@@ -875,8 +886,10 @@ void ShowDebugInfo()
                         {
                             char trig_type[64];
                             char trig_func[64];
+                            char trig_mask[16];
                             Trigger_TrigTypeToStr(trig_type, 64, rs->trigger->sub_function);
-                            GLText_OutTextXY(30.0f, y += dy, "trig(sub = %s, val = 0x%X, mask = 0x%X, timer = %d)", trig_type, rs->trigger->function_value, rs->trigger->mask, rs->trigger->timer);
+                            Trigger_TrigMaskToStr(trig_mask, rs->trigger->mask);
+                            GLText_OutTextXY(30.0f, y += dy, "trig(sub = %s, val = 0x%X, mask = 0b%s, timer = %d)", trig_type, rs->trigger->function_value, trig_mask, rs->trigger->timer);
                             for(trigger_command_p cmd = rs->trigger->commands; cmd; cmd = cmd->next)
                             {
                                 entity_p trig_obj = World_GetEntityByID(cmd->operands);
@@ -884,7 +897,9 @@ void ShowDebugInfo()
                                 {
                                     renderer.debugDrawer->SetColor(0.0, 0.0, 1.0);
                                     renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform);
-                                    renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = 0x%X)", trig_obj->id);
+                                    Trigger_TrigMaskToStr(trig_mask, trig_obj->trigger_layout);
+                                    gl_text_line_p text = renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = 0x%X, layout = 0b%s)", trig_obj->id, trig_mask);
+                                    text->x_align = GLTEXT_ALIGN_CENTER;
                                 }
                                 Trigger_TrigCmdToStr(trig_func, 64, cmd->function);
                                 if(cmd->function == TR_FD_TRIGFUNC_SET_CAMERA)

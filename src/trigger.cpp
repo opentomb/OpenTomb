@@ -838,6 +838,17 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
 }
 
 
+void Trigger_TrigMaskToStr(char buf[9], uint8_t flag)
+{
+    for(int i = 7; i >= 0; --i)
+    {
+        buf[i] = ((flag & 0x01) != 0) ? ('1') : ('0');
+        flag >>= 1;
+    }
+    buf[8] = 0;
+}
+
+
 void Trigger_TrigTypeToStr(char *buf, uint32_t size, uint32_t func)
 {
     buf[0] = 0;
