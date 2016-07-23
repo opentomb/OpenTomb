@@ -964,18 +964,21 @@ void World_BuildOverlappedRoomsList(struct room_s *room)
  */
 int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
 {
-    flip_state &= 0x01;  // State is always boolean.
-
     if(flip_index >= global_world.flip_count)
     {
         Con_Warning("wrong flipmap index");
         return 0;
     }
 
-    if((global_world.flip_map[flip_index] == 0x1F) || (flip_state == 0))        // Check flipmap state.
+    if((global_world.flip_map[flip_index] == 0x1F) || (flip_state & 0x02))      // Check flipmap state.
     {
         room_p current_room = global_world.rooms;
         bool is_global_flip = global_world.version < TR_IV;
+        if(global_world.flip_map[flip_index] != 0x1F)
+        {
+            flip_state = 0;
+        }
+
         for(uint32_t i = 0; i < global_world.rooms_count; i++, current_room++)
         {
             if(is_global_flip || (current_room->content->alternate_group == flip_index))
@@ -990,7 +993,7 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
                 }
             }
         }
-        global_world.flip_state[flip_index] = flip_state;
+        global_world.flip_state[flip_index] = flip_state & 0x01;
     }
 
     return 0;
