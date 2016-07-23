@@ -999,8 +999,6 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
 
 int World_SetFlipMap(uint32_t flip_index, uint8_t flip_mask, uint8_t flip_operation)
 {
-    flip_operation = (flip_operation > TRIGGER_OP_XOR) ? (TRIGGER_OP_XOR) : (TRIGGER_OP_OR);
-
     if(flip_index >= global_world.flip_count)
     {
         Con_Warning("wrong flipmap index");

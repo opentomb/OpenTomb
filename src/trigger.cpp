@@ -365,8 +365,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     }
                     else
                     {
-                        World_SetFlipMap(command->operands, trigger->mask, TRIGGER_OP_XOR);
-                        World_SetFlipState(command->operands, 0);
+                        World_SetFlipMap(command->operands, trigger->mask, TRIGGER_OP_OR);
+                        World_SetFlipState(command->operands, 1);
                     }
                     break;
 
