@@ -972,7 +972,7 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
         return 0;
     }
 
-    if(global_world.flip_map[flip_index] == 0x1F)         // Check flipmap state.
+    if((global_world.flip_map[flip_index] == 0x1F) || (flip_state == 0))        // Check flipmap state.
     {
         room_p current_room = global_world.rooms;
         bool is_global_flip = global_world.version < TR_IV;
