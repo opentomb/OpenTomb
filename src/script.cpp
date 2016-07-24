@@ -5045,7 +5045,9 @@ int lua_SetFlipState(lua_State *lua)
 
     uint32_t flip_index = (uint32_t)lua_tointeger(lua, 1);
     uint32_t flip_state = (uint32_t)lua_tointeger(lua, 2);
-    return World_SetFlipState(flip_index, flip_state);
+    World_SetFlipState(flip_index, flip_state);
+    
+    return 0;
 }
 
 
@@ -5060,8 +5062,9 @@ int lua_SetFlipMap(lua_State *lua)
     uint32_t flip_index = (uint32_t)lua_tointeger(lua, 1);
     uint8_t  flip_mask = (uint32_t)lua_tointeger(lua, 2);
     uint8_t  flip_operation = (uint32_t)lua_tointeger(lua, 3);
+    World_SetFlipMap(flip_index, flip_mask, flip_operation);
 
-    return World_SetFlipMap(flip_index, flip_mask, flip_operation);
+    return 0;
 }
 
 
