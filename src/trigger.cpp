@@ -136,7 +136,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             int action_type         = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
             int mask_mode           = TRIGGER_OP_OR;            // Activation mask by default.
             int activator_sector_status = Entity_GetSectorStatus(entity_activator);
-            bool header_condition   = (activator_sector_status == 0);
+            bool header_condition   = true;
 
             // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
             // some specific entity classes.
@@ -208,9 +208,11 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     break;
 
                 case TR_FD_TRIGTYPE_MONKEY:
+                    header_condition = header_condition && (entity_activator->move_type == MOVE_MONKEYSWING);
+                    break;
+
                 case TR_FD_TRIGTYPE_CLIMB:
-                    // Check move type for triggering entity.
-                    header_condition = header_condition && ((trigger->sub_function == TR_FD_TRIGTYPE_MONKEY) ? (entity_activator->move_type == MOVE_MONKEYSWING) : (entity_activator->move_type == MOVE_CLIMBING));  // Set additional condition.
+                    header_condition = header_condition && (entity_activator->move_type == MOVE_CLIMBING);
                     break;
 
                 case TR_FD_TRIGTYPE_TIGHTROPE:
@@ -230,8 +232,9 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             }
 
             // Now execute operand chain for trigger function!
-            int first_command = 1;
+            bool first_command = false;
             int switch_sectorstatus = 0;
+            int switch_event_state = -1;
             uint32_t switch_mask = 0;
             entity_p trig_entity = NULL;
             entity_p switch_entity = NULL;
@@ -250,8 +253,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                         if(first_command && (activator != TR_ACTIVATOR_NORMAL))
                         {
-                            int switch_event_state = 0;
-                            first_command = 0;
+                            first_command = false;
                             switch(activator)
                             {
                                 case TR_ACTIVATOR_SWITCH:
@@ -337,7 +339,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 {
                                     activation_state = Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, 0.0f);
                                 }
-                                else
+                                else// if((activator != TR_ACTIVATOR_SWITCH) || (Entity_GetLayoutEvent(trig_entity) != switch_event_state))
                                 {
                                     activation_state = Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
                                 }
@@ -348,7 +350,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 {
                                     activation_state = Entity_Deactivate(trig_entity, entity_activator);
                                 }
-                                else
+                                else if((activator_sector_status == 0) || (trigger->timer > 0))
                                 {
                                     activation_state = Entity_Activate(trig_entity, entity_activator, trigger->mask, mask_mode, trigger->once, trigger->timer);
                                 }
@@ -400,10 +402,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         break;
 
                     case TR_FD_TRIGFUNC_SET_CAMERA:
-                        if(activator_sector_status == 0)
-                        {
-                            Game_SetCamera(command->cam_index, command->once, command->cam_move, command->cam_timer);
-                        }
+                        Game_SetCamera(command->cam_index, command->once, command->cam_move, command->cam_timer);
                         break;
 
                     case TR_FD_TRIGFUNC_FLYBY:
