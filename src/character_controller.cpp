@@ -603,8 +603,8 @@ void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
     const float *v1 = ent->bf->bone_tags[10].full_transform + 12;
     const float *v2 = ent->bf->bone_tags[13].full_transform + 12;
 
-    vec3_add(temp, v1, v2);
-    vec3_mul_scalar(temp, temp, 0.5f);
+    temp[0] = 0.0f;
+    temp[1] = 0.5f * (v1[1] + v2[1]);
     temp[2] = ((v1[2] > v2[2]) ? (v1[2]) : (v2[2]));
     Mat4_vec3_mul_macro(pos, ent->transform, temp);
 }

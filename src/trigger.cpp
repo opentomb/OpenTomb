@@ -232,7 +232,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             }
 
             // Now execute operand chain for trigger function!
-            bool first_command = false;
+            bool first_command = true;
             int switch_sectorstatus = 0;
             int switch_event_state = -1;
             uint32_t switch_mask = 0;
@@ -339,7 +339,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                 {
                                     activation_state = Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, 0.0f);
                                 }
-                                else// if((activator != TR_ACTIVATOR_SWITCH) || (Entity_GetLayoutEvent(trig_entity) != switch_event_state))
+                                else// if(Entity_GetLayoutEvent(trig_entity) != switch_event_state)
                                 {
                                     activation_state = Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
                                 }
@@ -361,7 +361,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     case TR_FD_TRIGFUNC_FLIPMAP:
                         // FLIPMAP trigger acts two-way for switch cases, so we add FLIPMAP off event to
                         // anti-events array.
-                        if(activator_sector_status == 0)
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
                         {
                             if(activator == TR_ACTIVATOR_SWITCH)
                             {
@@ -377,7 +377,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         break;
 
                     case TR_FD_TRIGFUNC_FLIPON:
-                        if(activator_sector_status == 0)
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
                         {
                             // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
                             // the switch with FLIP_ON trigger, room will remain flipped.
@@ -386,7 +386,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         break;
 
                     case TR_FD_TRIGFUNC_FLIPOFF:
-                        if(activator_sector_status == 0)
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
                         {
                             // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
                             // the switch with FLIP_OFF trigger, room will remain unflipped.
@@ -395,7 +395,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         break;
 
                     case TR_FD_TRIGFUNC_SET_TARGET:
-                        if(activator_sector_status == 0)
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
                         {
                             Game_SetCameraTarget(command->operands, trigger->timer);
                         }
@@ -406,14 +406,14 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         break;
 
                     case TR_FD_TRIGFUNC_FLYBY:
-                        if(activator_sector_status == 0)
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
                         {
                             Game_PlayFlyBy(command->operands, command->once);
                         }
                         break;
 
                     case TR_FD_TRIGFUNC_CUTSCENE:
-                        if(activator_sector_status == 0)
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
                         {
                             ///snprintf(buf, 128, "   playCutscene(%d); \n", command->operands);
                         }
@@ -426,14 +426,14 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         break;
 
                     case TR_FD_TRIGFUNC_PLAYTRACK:
-                        if(activator_sector_status == 0)
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
                         {
                             Audio_StreamPlay(command->operands, (trigger->mask << 1) + trigger->once);
                         }
                         break;
 
                     case TR_FD_TRIGFUNC_FLIPEFFECT:
-                        if(activator_sector_status == 0)
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
                         {
                             //snprintf(buf, 128, "   doEffect(%d, %d); \n", command->operands, trigger->timer);
                         }
