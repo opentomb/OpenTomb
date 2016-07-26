@@ -1,0 +1,1 @@
+This test demonstrates the implementation details of the room swap algorithm. The starting room contains the trigger pad in the center and another pad adjacent to it. Activating these pads should produce an effect of cycling through three different rooms. This ability was never suspected to exist in TR engine.
