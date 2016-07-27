@@ -159,20 +159,20 @@ void GLText_RenderStringLine(gl_text_line_p l)
             real_x = (float)screen_info.w - (l->rect[2] - l->rect[0]) - l->x;
             break;
         case GLTEXT_ALIGN_CENTER:
-            real_x = ((float)screen_info.w / 2.0) - ((l->rect[2] - l->rect[0]) / 2.0) + l->x;  // Absolute center.
+            real_x = l->x - 0.5f * (l->rect[2] - l->rect[0]);
             break;
     }
 
     switch(l->y_align)
     {
         case GLTEXT_ALIGN_BOTTOM:
-            real_y += l->y;
+            real_y = l->y;
             break;
         case GLTEXT_ALIGN_TOP:
             real_y = (float)screen_info.h - (l->rect[3] - l->rect[1]) - l->y;
             break;
         case GLTEXT_ALIGN_CENTER:
-            real_y = ((float)screen_info.h / 2.0) + (l->rect[3] - l->rect[1]) - l->y;          // Consider the baseline.
+            real_y = l->y - 0.5f * (l->rect[3] - l->rect[1]);
             break;
     }
 

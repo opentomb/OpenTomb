@@ -964,18 +964,21 @@ void World_BuildOverlappedRoomsList(struct room_s *room)
  */
 int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
 {
-    flip_state &= 0x01;  // State is always boolean.
-
     if(flip_index >= global_world.flip_count)
     {
         Con_Warning("wrong flipmap index");
         return 0;
     }
 
-    if(global_world.flip_map[flip_index] == 0x1F)         // Check flipmap state.
+    if((global_world.flip_map[flip_index] == 0x1F) || (flip_state & 0x02))      // Check flipmap state.
     {
         room_p current_room = global_world.rooms;
         bool is_global_flip = global_world.version < TR_IV;
+        if(global_world.flip_map[flip_index] != 0x1F)
+        {
+            flip_state = 0;
+        }
+
         for(uint32_t i = 0; i < global_world.rooms_count; i++, current_room++)
         {
             if(is_global_flip || (current_room->content->alternate_group == flip_index))
@@ -990,7 +993,7 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
                 }
             }
         }
-        global_world.flip_state[flip_index] = flip_state;
+        global_world.flip_state[flip_index] = flip_state & 0x01;
     }
 
     return 0;
@@ -999,8 +1002,6 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
 
 int World_SetFlipMap(uint32_t flip_index, uint8_t flip_mask, uint8_t flip_operation)
 {
-    flip_operation = (flip_operation > TRIGGER_OP_XOR) ? (TRIGGER_OP_XOR) : (TRIGGER_OP_OR);
-
     if(flip_index >= global_world.flip_count)
     {
         Con_Warning("wrong flipmap index");
@@ -1746,6 +1747,7 @@ void World_GenCameras(class VT_Level *tr)
             global_world.cameras_sinks[i].x                   =  tr->cameras[i].x;
             global_world.cameras_sinks[i].y                   =  tr->cameras[i].z;
             global_world.cameras_sinks[i].z                   = -tr->cameras[i].y;
+            global_world.cameras_sinks[i].locked              = 0;
             global_world.cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
             global_world.cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;
         }
@@ -2208,7 +2210,7 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     room->alternate_room = NULL;
     room->base_room = NULL;
 
-    if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count))
+    if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count) && (room->id < tr_room->alternate_room))
     {
         room->alternate_room = global_world.rooms + tr_room->alternate_room;
     }
