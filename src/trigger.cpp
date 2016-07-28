@@ -137,7 +137,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             int mask_mode           = TRIGGER_OP_OR;            // Activation mask by default.
             int activator_sector_status = Entity_GetSectorStatus(entity_activator);
             bool header_condition   = true;
-
+            bool is_heavy           = false;
             // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
             // some specific entity classes.
             // entity_activator_type  == TR_ACTIVATORTYPE_LARA and
@@ -147,6 +147,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                 case TR_FD_TRIGTYPE_HEAVY:
                 case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
                 case TR_FD_TRIGTYPE_HEAVYSWITCH:
+                    is_heavy = true;
                     if((entity_activator->type_flags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR) == 0)
                     {
                         return;
@@ -395,7 +396,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         break;
 
                     case TR_FD_TRIGFUNC_SET_TARGET:
-                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
+                        if(!is_heavy || (activator_sector_status == 0))
                         {
                             Game_SetCameraTarget(command->operands, trigger->timer);
                         }
