@@ -1157,9 +1157,9 @@ int Engine_ExecCmd(char *ch)
         else if(!strcmp(token, "goto"))
         {
             control_states.free_look = 1;
-            engine_camera.pos[0] = SC_ParseFloat(&ch);
-            engine_camera.pos[1] = SC_ParseFloat(&ch);
-            engine_camera.pos[2] = SC_ParseFloat(&ch);
+            engine_camera.gl_transform[12 + 0] = SC_ParseFloat(&ch);
+            engine_camera.gl_transform[12 + 1] = SC_ParseFloat(&ch);
+            engine_camera.gl_transform[12 + 2] = SC_ParseFloat(&ch);
             return 1;
         }
         else if(!strcmp(token, "save"))
@@ -1295,7 +1295,7 @@ int Engine_ExecCmd(char *ch)
             room_p r = engine_camera.current_room;
             if(r)
             {
-                room_sector_p sect = Room_GetSectorXYZ(r, engine_camera.pos);
+                room_sector_p sect = Room_GetSectorXYZ(r, engine_camera.gl_transform + 12);
                 Con_Printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
                 if(sect)
                 {

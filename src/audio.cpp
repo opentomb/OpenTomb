@@ -2539,18 +2539,18 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
 {
     ALfloat v[6];       // vec3 - forvard, vec3 - up
 
-    vec3_copy(v+0, cam->view_dir);
-    vec3_copy(v+3, cam->up_dir);
+    vec3_copy(v + 0, cam->gl_transform + 8);   // cam_OZ
+    vec3_copy(v + 3, cam->gl_transform + 4);   // cam_OY
     alListenerfv(AL_ORIENTATION, v);
 
-    vec3_copy(v, cam->pos);
+    vec3_copy(v, cam->gl_transform + 12);
     alListenerfv(AL_POSITION, v);
 
-    vec3_sub(v, cam->pos, cam->prev_pos);
+    vec3_sub(v, cam->gl_transform + 12, cam->prev_pos);
     v[3] = 1.0 / engine_frame_time;
     vec3_mul_scalar(v, v, v[3]);
     alListenerfv(AL_VELOCITY, v);
-    vec3_copy(cam->prev_pos, cam->pos);
+    vec3_copy(cam->prev_pos, cam->gl_transform + 12);
 
     if(cam->current_room)
     {

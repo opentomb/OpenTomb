@@ -441,7 +441,7 @@ void Game_ApplyControls(struct entity_s *ent)
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
-        engine_camera.current_room = World_FindRoomByPosCogerrence(engine_camera.pos, engine_camera.current_room);
+        engine_camera.current_room = World_FindRoomByPosCogerrence(engine_camera.gl_transform + 12, engine_camera.current_room);
     }
     else if(control_states.noclip != 0)
     {
@@ -451,12 +451,12 @@ void Game_ApplyControls(struct entity_s *ent)
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
-        engine_camera.current_room = World_FindRoomByPosCogerrence(engine_camera.pos, engine_camera.current_room);
+        engine_camera.current_room = World_FindRoomByPosCogerrence(engine_camera.gl_transform + 12, engine_camera.current_room);
 
         ent->angles[0] = 180.0 * control_states.cam_angles[0] / M_PI;
-        pos[0] = engine_camera.pos[0] + engine_camera.view_dir[0] * control_states.cam_distance;
-        pos[1] = engine_camera.pos[1] + engine_camera.view_dir[1] * control_states.cam_distance;
-        pos[2] = engine_camera.pos[2] + engine_camera.view_dir[2] * control_states.cam_distance - 512.0;
+        pos[0] = engine_camera.gl_transform[12 + 0] + engine_camera.gl_transform[8 + 0] * control_states.cam_distance;
+        pos[1] = engine_camera.gl_transform[12 + 1] + engine_camera.gl_transform[8 + 1] * control_states.cam_distance;
+        pos[2] = engine_camera.gl_transform[12 + 2] + engine_camera.gl_transform[8 + 2] * control_states.cam_distance - 512.0;
         vec3_copy(ent->transform+12, pos);
         Entity_UpdateTransform(ent);
         Entity_UpdateRigidBody(ent, 1);
@@ -766,9 +766,9 @@ void Game_Prepare()
         room_p room = World_GetRoomByID(0);
         if(room)
         {
-            engine_camera.pos[0] = room->bb_max[0];
-            engine_camera.pos[1] = room->bb_max[1];
-            engine_camera.pos[2] = room->bb_max[2];
+            engine_camera.gl_transform[12 + 0] = room->bb_max[0];
+            engine_camera.gl_transform[12 + 1] = room->bb_max[1];
+            engine_camera.gl_transform[12 + 2] = room->bb_max[2];
         }
     }
 
