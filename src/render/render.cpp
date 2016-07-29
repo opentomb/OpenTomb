@@ -241,8 +241,8 @@ void CRender::GenWorldList(struct camera_s *cam)
         return;
     }
 
-    room_p curr_room = World_FindRoomByPosCogerrence(cam->pos, cam->current_room);     // find room that contains camera
-
+    room_p curr_room = World_FindRoomByPosCogerrence(cam->gl_transform + 12, cam->current_room);     // find room that contains camera
+    GLfloat *cam_pos = cam->gl_transform + 12;
     cam->current_room = curr_room;                                              // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room
     {
@@ -260,10 +260,10 @@ void CRender::GenWorldList(struct camera_s *cam)
                 last_frus->parents_count = 1;                                   // created by camera
                 this->ProcessRoom(p, last_frus);                                // next start reccursion algorithm
             }
-            else if(fabs((vec3_plane_dist(p->norm, cam->pos)) <= eps) &&
-                (cam->pos[0] <= dest_room->bb_max[0] + eps) && (cam->pos[0] >= dest_room->bb_min[0] - eps) &&
-                (cam->pos[1] <= dest_room->bb_max[1] + eps) && (cam->pos[1] >= dest_room->bb_min[1] - eps) &&
-                (cam->pos[2] <= dest_room->bb_max[2] + eps) && (cam->pos[2] >= dest_room->bb_min[2] - eps))
+            else if(fabs((vec3_plane_dist(p->norm, cam->gl_transform + 12)) <= eps) &&
+                (cam_pos[0] <= dest_room->bb_max[0] + eps) && (cam_pos[0] >= dest_room->bb_min[0] - eps) &&
+                (cam_pos[1] <= dest_room->bb_max[1] + eps) && (cam_pos[1] >= dest_room->bb_min[1] - eps) &&
+                (cam_pos[2] <= dest_room->bb_max[2] + eps) && (cam_pos[2] >= dest_room->bb_min[2] - eps))
             {
                 portal_p np = dest_room->portals;
                 dest_room->frustum = NULL;                                      // room with camera inside has no frustums!
@@ -297,10 +297,10 @@ void CRender::GenWorldList(struct camera_s *cam)
                     last_frus->parents_count = 1;                               // created by camera
                     this->ProcessRoom(p, last_frus);                            // next start reccursion algorithm
                 }
-                else if(fabs((vec3_plane_dist(p->norm, cam->pos)) <= eps) &&
-                    (cam->pos[0] <= dest_room->bb_max[0] + eps) && (cam->pos[0] >= dest_room->bb_min[0] - eps) &&
-                    (cam->pos[1] <= dest_room->bb_max[1] + eps) && (cam->pos[1] >= dest_room->bb_min[1] - eps) &&
-                    (cam->pos[2] <= dest_room->bb_max[2] + eps) && (cam->pos[2] >= dest_room->bb_min[2] - eps))
+                else if(fabs((vec3_plane_dist(p->norm, cam->gl_transform + 12)) <= eps) &&
+                    (cam_pos[0] <= dest_room->bb_max[0] + eps) && (cam_pos[0] >= dest_room->bb_min[0] - eps) &&
+                    (cam_pos[1] <= dest_room->bb_max[1] + eps) && (cam_pos[1] >= dest_room->bb_min[1] - eps) &&
+                    (cam_pos[2] <= dest_room->bb_max[2] + eps) && (cam_pos[2] >= dest_room->bb_min[2] - eps))
                 {
                     portal_p np = dest_room->portals;
                     dest_room->frustum = NULL;                                  // room with camera inside has no frustums!
@@ -493,7 +493,7 @@ void CRender::DrawListDebugLines()
             float *p;
             Mat4_E_macro(tr);
             p = skybox->animations->frames->bone_tags->offset;
-            vec3_add(tr+12, m_camera->pos, p);
+            vec3_add(tr + 12, m_camera->gl_transform + 12, p);
             p = skybox->animations->frames->bone_tags->qrotate;
             Mat4_set_qrotation(tr, p);
             debugDrawer->DrawMeshDebugLines(skybox->mesh_tree->mesh_base, tr, NULL, NULL);
@@ -630,7 +630,7 @@ void CRender::DrawBSPPolygon(struct bsp_polygon_s *p)
 
 void CRender::DrawBSPFrontToBack(struct bsp_node_s *root)
 {
-    float d = vec3_plane_dist(root->plane, engine_camera.pos);
+    float d = vec3_plane_dist(root->plane, engine_camera.gl_transform + 12);
 
     if(d >= 0)
     {
@@ -678,7 +678,7 @@ void CRender::DrawBSPFrontToBack(struct bsp_node_s *root)
 
 void CRender::DrawBSPBackToFront(struct bsp_node_s *root)
 {
-    float d = vec3_plane_dist(root->plane, engine_camera.pos);
+    float d = vec3_plane_dist(root->plane, engine_camera.gl_transform + 12);
 
     if(d >= 0)
     {
@@ -851,7 +851,7 @@ void CRender::DrawSkyBox(const float modelViewProjectionMatrix[16])
         qglDepthMask(GL_FALSE);
         tr[15] = 1.0;
         p = skybox->animations->frames->bone_tags->offset;
-        vec3_add(tr+12, m_camera->pos, p);
+        vec3_add(tr + 12, m_camera->gl_transform + 12, p);
         p = skybox->animations->frames->bone_tags->qrotate;
         Mat4_set_qrotation(tr, p);
         float fullView[16];
@@ -995,10 +995,10 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
                 v=buf;
                 for(int16_t i = f->vertex_count - 1; i >= 0; i--)
                 {
-                    vec3_copy(v, f->vertex+3*i);                    v+=3;
-                    vec3_copy_inv(v, engine_camera.view_dir);       v+=3;
-                    vec4_set_one(v);                                v+=4;
-                    v[0] = v[1] = 0.0;                              v+=2;
+                    vec3_copy(v, f->vertex + 3 * i);                    v+=3;
+                    vec3_copy_inv(v, engine_camera.gl_transform + 8);   v+=3;
+                    vec4_set_one(v);                                    v+=4;
+                    v[0] = v[1] = 0.0;                                  v+=2;
                 }
 
                 m_active_texture = 0;
@@ -1143,8 +1143,9 @@ void CRender::DrawRoomSprites(struct room_s *room)
     if (room->content->sprites_count > 0)
     {
         const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(false, false);
-        GLfloat *up = m_camera->up_dir;
-        GLfloat *right = m_camera->right_dir;
+        GLfloat *view = m_camera->gl_transform + 8;
+        GLfloat *up = m_camera->gl_transform + 4;
+        GLfloat *right = m_camera->gl_transform + 0;
 
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         qglUseProgramObjectARB(shader->program);
@@ -1155,10 +1156,10 @@ void CRender::DrawRoomSprites(struct room_s *room)
         {
             room_sprite_p s = room->content->sprites + i;
             vertex_p v = room->content->sprites_vertices + i * 4;
-            vec3_copy_inv(v[0].normal, m_camera->view_dir);
-            vec3_copy_inv(v[1].normal, m_camera->view_dir);
-            vec3_copy_inv(v[2].normal, m_camera->view_dir);
-            vec3_copy_inv(v[3].normal, m_camera->view_dir);
+            vec3_copy_inv(v[0].normal, view);
+            vec3_copy_inv(v[1].normal, view);
+            vec3_copy_inv(v[2].normal, view);
+            vec3_copy_inv(v[3].normal, view);
 
             v[0].position[0] = s->pos[0] + s->sprite->right * right[0] + s->sprite->top * up[0];
             v[0].position[1] = s->pos[1] + s->sprite->right * right[1] + s->sprite->top * up[1];
@@ -1222,7 +1223,7 @@ int  CRender::AddRoom(struct room_s *room)
         centre[0] = (room->bb_min[0] + room->bb_max[0]) / 2;
         centre[1] = (room->bb_min[1] + room->bb_max[1]) / 2;
         centre[2] = (room->bb_min[2] + room->bb_max[2]) / 2;
-        dist = vec3_dist(m_camera->pos, centre);
+        dist = vec3_dist(m_camera->gl_transform + 12, centre);
 
         if(r_list_active_count < r_list_size)
         {

@@ -47,9 +47,9 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
 
     if(target && (engine_camera_state.state == CAMERA_STATE_FIXED))
     {
-        cam->pos[0] = engine_camera_state.sink->x;
-        cam->pos[1] = engine_camera_state.sink->y;
-        cam->pos[2] = engine_camera_state.sink->z;
+        cam->gl_transform[12 + 0] = engine_camera_state.sink->x;
+        cam->gl_transform[12 + 1] = engine_camera_state.sink->y;
+        cam->gl_transform[12 + 2] = engine_camera_state.sink->z;
         cam->current_room = World_GetRoomByID(engine_camera_state.sink->room_or_strength);
 
         if(target->character)
@@ -85,7 +85,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         return;
     }
 
-    vec3_copy(cam_pos, cam->pos);
+    vec3_copy(cam_pos, cam->gl_transform + 12);
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
     if(control_states.mouse_look == 0)//If mouse look is off
     {
@@ -203,9 +203,9 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
     if (dx != 0.0)
     {
         vec3_copy(cameraFrom, cam_pos);
-        cam_pos[0] += dx * cam->right_dir[0];
-        cam_pos[1] += dx * cam->right_dir[1];
-        cam_pos[2] += dx * cam->right_dir[2];
+        cam_pos[0] += dx * cam->gl_transform[0 + 0];
+        cam_pos[1] += dx * cam->gl_transform[0 + 1];
+        cam_pos[2] += dx * cam->gl_transform[0 + 2];
         vec3_copy(cameraTo, cam_pos);
 
         if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self))
@@ -220,8 +220,8 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
             if(target && target != World_GetPlayer())
             {
                 float dir2d[2], dist;
-                dir2d[0] = target->transform[12 + 0] - cam->pos[0];
-                dir2d[1] = target->transform[12 + 1] - cam->pos[1];
+                dir2d[0] = target->transform[12 + 0] - cam->gl_transform[12 + 0];
+                dir2d[1] = target->transform[12 + 1] - cam->gl_transform[12 + 1];
                 dist = control_states.cam_distance / sqrtf(dir2d[0] * dir2d[0] + dir2d[1] * dir2d[1]);
                 cam_pos[0] -= dir2d[0] * dist;
                 cam_pos[1] -= dir2d[1] * dist;
@@ -241,15 +241,15 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
     }
 
     //Update cam pos
-    vec3_copy(cam->pos, cam_pos);
+    vec3_copy(cam->gl_transform + 12, cam_pos);
 
     //Modify cam pos for quicksand rooms
-    cam->pos[2] -= 128.0;
-    cam->current_room = World_FindRoomByPosCogerrence(cam->pos, cam->current_room);
-    cam->pos[2] += 128.0;
+    cam->gl_transform[12 + 2] -= 128.0;
+    cam->current_room = World_FindRoomByPosCogerrence(cam->gl_transform + 12, cam->current_room);
+    cam->gl_transform[12 + 2] += 128.0;
     if((cam->current_room != NULL) && (cam->current_room->flags & TR_ROOM_FLAG_QUICKSAND))
     {
-        cam->pos[2] = cam->current_room->bb_max[2] + 2.0 * 64.0;
+        cam->gl_transform[12 + 2] = cam->current_room->bb_max[2] + 2.0 * 64.0;
     }
 
     if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
@@ -272,5 +272,5 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
     {
         Cam_SetRotation(cam, control_states.cam_angles);
     }
-    cam->current_room = World_FindRoomByPosCogerrence(cam->pos, cam->current_room);
+    cam->current_room = World_FindRoomByPosCogerrence(cam->gl_transform + 12, cam->current_room);
 }

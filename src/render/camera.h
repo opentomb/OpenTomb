@@ -60,20 +60,15 @@ typedef struct camera_state_s
 
 typedef struct camera_s
 {
-    GLfloat                     pos[3];                 // camera position
-    GLfloat                     prev_pos[3];            // previous camera position
-    GLfloat                     view_dir[4];            // view cameradirection
-    GLfloat                     up_dir[4];              // up vector
-    GLfloat                     right_dir[4];           // strafe vector
-    GLfloat                     ang[3];                 // camera orientation
-
+    GLfloat                     gl_transform[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_view_mat[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_proj_mat[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_view_proj_mat[16] __attribute__((packed, aligned(16)));
 
     GLfloat                     clip_planes[16];        // frustum side clip planes
+    GLfloat                     prev_pos[3];            // previous camera position
+    GLfloat                     ang[3];                 // camera orientation
     struct frustum_s           *frustum;                // camera frustum structure
-
     GLfloat                     dist_near;
     GLfloat                     dist_far;
 
