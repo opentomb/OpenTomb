@@ -287,8 +287,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                     else    /// end if (action_type == TR_ACTIONTYPE_SWITCH)
                                     {
                                         // Ordinary type case (e.g. heavy switch).
-                                        switch_sectorstatus = (trig_entity->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;  ///@CHECK: vas entity_activator instead trig_entity
-                                        switch_mask = (trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK);                  ///@CHECK: vas entity_activator instead trig_entity
+                                        switch_sectorstatus = (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
+                                        switch_mask = (entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK);
                                         // Trigger activation mask is here filtered through activator's own mask.
                                         switch_mask = (switch_mask == 0) ? (0x1F & trigger->mask) : (switch_mask & trigger->mask);
 
@@ -403,7 +403,10 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         break;
 
                     case TR_FD_TRIGFUNC_SET_CAMERA:
-                        Game_SetCamera(command->cam_index, command->once, command->cam_move, command->cam_timer);
+                        if(!is_heavy || (activator_sector_status == 0))
+                        {
+                            Game_SetCamera(command->cam_index, command->once, command->cam_move, command->cam_timer);
+                        }
                         break;
 
                     case TR_FD_TRIGFUNC_FLYBY:
@@ -441,7 +444,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         break;
 
                     case TR_FD_TRIGFUNC_SECRET:
-                        if((command->operands < TR_GAMEFLOW_MAX_SECRETS) && (gameflow_manager.SecretsTriggerMap[command->operands] == 0))
+                        if((activator_sector_status == 0) && (command->operands < TR_GAMEFLOW_MAX_SECRETS) && (gameflow_manager.SecretsTriggerMap[command->operands] == 0))
                         {
                             gameflow_manager.SecretsTriggerMap[command->operands] = 1;
                             Audio_StreamPlay(Script_GetSecretTrackNumber(engine_lua));
