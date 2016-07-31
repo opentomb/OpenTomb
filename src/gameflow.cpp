@@ -1,11 +1,3 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-
 extern "C" {
 #include <lua.h>
 #include <lualib.h>
@@ -14,12 +6,8 @@ extern "C" {
 
 #include "core/gl_text.h"
 #include "core/console.h"
-#include "engine.h"
 #include "gameflow.h"
-#include "engine.h"
 #include "script.h"
-#include "anim_state_control.h"
-#include "world.h"
 
 struct gameflow_manager_s gameflow_manager;
 
