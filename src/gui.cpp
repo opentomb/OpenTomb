@@ -781,6 +781,8 @@ void gui_InventoryManager::render()
     {
         float matrix[16], offset[3], ang;
         int num = 0;
+        mLabel_Title.x = screen_info.w / 2;
+        mLabel_ItemName.x = screen_info.w / 2;
         for(inventory_node_p i = *mInventory; i; i = i->next)
         {
             base_item_p bi = World_GetBaseItemByID(i->id);
