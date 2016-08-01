@@ -4316,7 +4316,7 @@ int lua_GetEntityAnimState(lua_State * lua)
     {
         if(ss_anim->type == anim_type_id)
         {
-            lua_pushinteger(lua, ent->bf->animations.last_state);
+            lua_pushinteger(lua, ent->bf->animations.current_state);
             return 1;
         }
     }
@@ -4353,7 +4353,7 @@ int lua_SetEntityAnimState(lua_State * lua)
     int top = lua_gettop(lua);
     if(top < 3)
     {
-        Con_Warning("setEntityAnimState: expecting arguments (entity_id, anim_type_id, next_state, (last_state))");
+        Con_Warning("setEntityAnimState: expecting arguments (entity_id, anim_type_id, next_state, (current_state))");
         return 0;
     }
 
@@ -4374,7 +4374,7 @@ int lua_SetEntityAnimState(lua_State * lua)
             ss_anim->next_state = lua_tointeger(lua, 3);
             if(top >= 4)
             {
-                ss_anim->last_state = lua_tointeger(lua, 4);
+                ss_anim->current_state = lua_tointeger(lua, 4);
             }
             break;
         }
@@ -5046,7 +5046,7 @@ int lua_SetFlipState(lua_State *lua)
     uint32_t flip_index = (uint32_t)lua_tointeger(lua, 1);
     uint32_t flip_state = (uint32_t)lua_tointeger(lua, 2);
     World_SetFlipState(flip_index, flip_state);
-    
+
     return 0;
 }
 
