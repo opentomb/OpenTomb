@@ -552,16 +552,16 @@ void TR_Level::read_tr_item(SDL_RWops * const src, tr2_item_t & item)
 /// \brief reads a cinematic frame
 void TR_Level::read_tr_cinematic_frame(SDL_RWops * const src, tr_cinematic_frame_t & cf)
 {
-    cf.roty = read_bit16(src);         // rotation about Y axis, +/- 32767 == +/- 180 degrees
-    cf.rotz = read_bit16(src);         // rotation about Z axis, +/- 32767 == +/- 180 degrees
-    cf.rotz2 = read_bit16(src);        // seems to work a lot like rotZ;  I haven't yet been able to
-    // differentiate them
-    cf.posz = read_bit16(src);         // camera position relative to something (target? Lara? room
-    // origin?).  pos* are _not_ in world coordinates.
-    cf.posy = read_bit16(src);         // camera position relative to something (see posZ)
-    cf.posx = read_bit16(src);         // camera position relative to something (see posZ)
-    cf.unknown = read_bit16(src);      // changing this can cause a runtime error
-    cf.rotx = read_bit16(src);         // rotation about X axis, +/- 32767 == +/- 180 degrees
+    //Camera look at position
+    cf.targetx = read_bit16(src);
+    cf.targety = read_bit16(src);
+    cf.targetz = read_bit16(src);
+    //Camera position
+    cf.posx = read_bit16(src);
+    cf.posy = read_bit16(src);
+    cf.posz = read_bit16(src);
+    cf.fov = read_bit16(src);
+    cf.roll = read_bit16(src);
 }
 
 /// \brief reads a static mesh definition.
