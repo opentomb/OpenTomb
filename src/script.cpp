@@ -1814,7 +1814,7 @@ int lua_GetSecretStatus(lua_State *lua)
     if(lua_gettop(lua) < 1) return 0;   // No parameter specified - return
 
     int secret_number = lua_tointeger(lua, 1);
-    if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0)) return 0;   // No such secret - return
+    if((secret_number > GF_MAX_SECRETS) || (secret_number < 0)) return 0;   // No such secret - return
 
     lua_pushinteger(lua, (int)gameflow.getSecretStateAtIndex(secret_number));
     return 1;
@@ -1826,7 +1826,7 @@ int lua_SetSecretStatus(lua_State *lua)
     if(lua_gettop(lua) < 2) return 0;   // No parameter specified - return
 
     int secret_number = lua_tointeger(lua, 1);
-    if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0)) return 0;   // No such secret - return
+    if((secret_number > GF_MAX_SECRETS) || (secret_number < 0)) return 0;   // No such secret - return
 
     gameflow.setSecretStateAtIndex(secret_number, lua_tointeger(lua, 2));
     return 0;
@@ -4956,7 +4956,10 @@ int lua_SetLevel(lua_State *lua)
     Con_Notify("level was changed to %d", id);
 
     Game_LevelTransition(id);
-    gameflow.Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, id);    // Next level
+    if(!gameflow.Send(GF_OP_LEVELCOMPLETE, id))
+    {
+        Con_Warning("setLevel: Failed to add opcode to gameflow action list");
+    }
 
     return 0;
 }
@@ -4991,7 +4994,11 @@ int lua_SetGame(lua_State *lua)
 
     Con_Notify("level was changed to %d", gameflow.getCurrentGameID());
     Game_LevelTransition(gameflow.getCurrentLevelID());
-    gameflow.Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, gameflow.getCurrentLevelID());
+
+    if(!gameflow.Send(GF_OP_LEVELCOMPLETE, gameflow.getCurrentLevelID()))
+    {
+        Con_Warning("setGame: Failed to add opcode to gameflow action list");
+    }
 
     return 0;
 }
