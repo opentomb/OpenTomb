@@ -134,6 +134,48 @@ void Engine_Start(const char *config_name)
 }
 
 
+void Engine_ParseArgs(int argc, char **argv)
+{
+    //No arguments to process so let's exit
+    if(argc <= 0)
+    {
+        return;
+    }
+
+    //Note: first argument is always executable filepath so we start to iterate from 1
+    for(int32_t i = 1; i < argc; i++)
+    {
+        char* currentArg = argv[i];
+
+        //Check delimiter
+        if(currentArg[0] == '-')
+        {
+            //Increment pointer char pointer by 1 so we can simply compare "config="
+            currentArg++;
+            if(!strncmp(currentArg, "config=", 6))
+            {
+                ///@FIXME probably best to strlen arg then check the final size to prevent 0 length paths
+                currentArg += 6;
+
+                Sys_DebugLog(SYS_LOG_FILENAME, "Config path override: %s\n", currentArg);
+
+                //Check if the config file exists or not
+                if(Sys_FileFound(currentArg, 0))
+                {
+                    ///@TODO Attempt to load config from custom file, if fail load default.
+                    Sys_DebugLog(SYS_LOG_FILENAME, "Config exists!");
+                }
+                else
+                {
+                    ///@TODO Should load default config
+                    Sys_DebugLog(SYS_LOG_FILENAME, "Config doesn't exist!");
+                }
+            }
+        }
+    }
+}
+
+
 void Engine_Shutdown(int val)
 {
     renderer.ResetWorld(NULL, 0, NULL, 0);

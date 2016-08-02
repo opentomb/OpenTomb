@@ -40,7 +40,7 @@ typedef struct camera_flags_s
     uint16_t        enable_controls : 1;
     uint16_t        fade_in : 1;
     uint16_t        fade_out : 1;
-    uint16_t        heawy_triggering : 1;
+    uint16_t        heavy_triggering : 1;
     uint16_t        : 1;
     //Bit 15 —  TR5 only TRLE for TR5 says this flag is used to make camera one-shot, but it’s not true. Actual one-shot flag is placed in extra uint16_t field at 0x0100 for flyby camera TrigAction.*/
 }camera_flags_t, *camera_flags_p;
