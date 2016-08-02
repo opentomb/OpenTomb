@@ -865,8 +865,8 @@ void ShowDebugInfo()
                 entity_p ent = World_GetPlayer();
                 if(ent && ent->character)
                 {
-                    GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, next_anim = %03d, curr_st = %03d, next_st = %03d", ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.current_state, ent->bf->animations.next_state);
-                    GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.current_frame, ent->bf->animations.next_frame);
+                    GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, curr_st = %03d, next_st = %03d", ent->bf->animations.current_animation, ent->bf->animations.current_state, ent->bf->animations.next_state);
+                    GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, curr_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.current_frame);
                     GLText_OutTextXY(30.0f, y += dy, "posX = %f, posY = %f, posZ = %f", ent->transform[12], ent->transform[13], ent->transform[14]);
                 }
             }

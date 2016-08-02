@@ -2204,15 +2204,14 @@ int lua_SetStateChangeRange(lua_State * lua)
 
 int lua_GetAnimCommandTransform(lua_State * lua)
 {
-    if(lua_gettop(lua) < 3)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Warning("getAnimCommandTransform: expecting arguments (model_id, anim_num, frame_num)");
+        Con_Warning("getAnimCommandTransform: expecting arguments (model_id, anim_num)");
         return 0;
     }
 
     int id = lua_tointeger(lua, 1);
     int anim = lua_tointeger(lua, 2);
-    int frame = lua_tointeger(lua, 3);
     skeletal_model_p model = World_GetModelByID(id);
     if(model == NULL)
     {
@@ -2226,21 +2225,10 @@ int lua_GetAnimCommandTransform(lua_State * lua)
         return 0;
     }
 
-    if(frame < 0)                                                               // it is convenient to use -1 as a last frame number
-    {
-        frame = (int)model->animations[anim].frames_count + frame;
-    }
-
-    if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
-    {
-        Con_Warning("wrong anim frame number = %d", frame);
-        return 0;
-    }
-
-    lua_pushinteger(lua, model->animations[anim].frames[frame].command);
-    lua_pushnumber(lua, model->animations[anim].frames[frame].move[0]);
-    lua_pushnumber(lua, model->animations[anim].frames[frame].move[1]);
-    lua_pushnumber(lua, model->animations[anim].frames[frame].move[2]);
+    lua_pushinteger(lua, model->animations[anim].anim_command);
+    lua_pushnumber(lua, model->animations[anim].move[0]);
+    lua_pushnumber(lua, model->animations[anim].move[1]);
+    lua_pushnumber(lua, model->animations[anim].move[2]);
 
     return 4;
 }
@@ -2250,15 +2238,14 @@ int lua_SetAnimCommandTransform(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
-    if(top < 4)
+    if(top < 3)
     {
-        Con_Warning("setAnimCommandTransform: expecting arguments (model_id, anim_num, frame_num, flag, (dx, dy, dz))");
+        Con_Warning("setAnimCommandTransform: expecting arguments (model_id, anim_num, flag, (dx, dy, dz))");
         return 0;
     }
 
     int id = lua_tointeger(lua, 1);
     int anim = lua_tointeger(lua, 2);
-    int frame = lua_tointeger(lua, 3);
     skeletal_model_p model = World_GetModelByID(id);
     if(model == NULL)
     {
@@ -2272,23 +2259,12 @@ int lua_SetAnimCommandTransform(lua_State * lua)
         return 0;
     }
 
-    if(frame < 0)                                                               // it is convenient to use -1 as a last frame number
-    {
-        frame = (int)model->animations[anim].frames_count + frame;
-    }
-
-    if((frame < 0) || (frame + 1 > model->animations[anim].frames_count))
-    {
-        Con_Warning("wrong frame number = %d", frame);
-        return 0;
-    }
-
-    model->animations[anim].frames[frame].command = 0x00ff & lua_tointeger(lua, 4);
+    model->animations[anim].anim_command = 0x00ff & lua_tointeger(lua, 4);
     if(top >= 7)
     {
-        model->animations[anim].frames[frame].move[0] = lua_tonumber(lua, 5);
-        model->animations[anim].frames[frame].move[1] = lua_tonumber(lua, 6);
-        model->animations[anim].frames[frame].move[2] = lua_tonumber(lua, 7);
+        model->animations[anim].move[0] = lua_tonumber(lua, 5);
+        model->animations[anim].move[1] = lua_tonumber(lua, 6);
+        model->animations[anim].move[2] = lua_tonumber(lua, 7);
     }
 
     return 0;
@@ -3100,7 +3076,7 @@ int lua_SetEntityAnim(lua_State * lua)
 
     if(top < 4)
     {
-        Con_Warning("setEntityAnim: expecting arguments (entity_id, anim_type_id, anim_num, frame_number, (next_anim_num, next_frame_num))");
+        Con_Warning("setEntityAnim: expecting arguments (entity_id, anim_type_id, anim_num, frame_number)");
         return 0;
     }
 
@@ -3118,11 +3094,6 @@ int lua_SetEntityAnim(lua_State * lua)
     if(ss_anim)
     {
         SSBoneFrame_SetAnimation(ent->bf, anim_type_id, lua_tointeger(lua, 3), lua_tointeger(lua, 4));
-        if(top >= 6)
-        {
-            ss_anim->next_animation = lua_tointeger(lua, 5);
-            ss_anim->next_frame = lua_tointeger(lua, 6);
-        }
     }
 
     return 0;

@@ -1174,17 +1174,17 @@ void GenerateAnimCommandsTransform(skeletal_model_p model, int16_t *base_anim_co
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
                     // This command executes ONLY at the end of animation.
-                    af->frames[af->frames_count-1].move[0] = (float)(*++pointer);                          // x = x;
-                    af->frames[af->frames_count-1].move[2] =-(float)(*++pointer);                          // z =-y
-                    af->frames[af->frames_count-1].move[1] = (float)(*++pointer);                          // y = z
-                    af->frames[af->frames_count-1].command |= ANIM_CMD_MOVE;
+                    af->move[0] = (float)(*++pointer);                          // x = x;
+                    af->move[2] =-(float)(*++pointer);                          // z =-y
+                    af->move[1] = (float)(*++pointer);                          // y = z
+                    af->command_flags |= ANIM_CMD_MOVE;
                     //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames_count-1, af->frames_count);
                     break;
 
                 case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    af->frames[af->frames_count-1].v_Vertical   = *++pointer;
-                    af->frames[af->frames_count-1].v_Horizontal = *++pointer;
-                    af->frames[af->frames_count-1].command |= ANIM_CMD_JUMP;
+                    af->v_Vertical   = *++pointer;
+                    af->v_Horizontal = *++pointer;
+                    af->command_flags |= ANIM_CMD_JUMP;
                     break;
 
                 case TR_ANIMCOMMAND_EMPTYHANDS:
@@ -1204,7 +1204,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model, int16_t *base_anim_co
                         switch(*++pointer & 0x3FFF)
                         {
                             case TR_EFFECT_CHANGEDIRECTION:
-                                af->frames[frame].command |= ANIM_CMD_CHANGE_DIRECTION;
+                                af->command_flags |= ANIM_CMD_CHANGE_DIRECTION;
                                 //Con_Printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames_count);
                                 //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames_count);
                                 break;
@@ -1705,15 +1705,15 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         model->animations->state_change = NULL;
         model->animations->state_change_count = 0;
         model->animations->original_frame_rate = 1;
+        model->animations->command_flags = 0x0000;
+        vec3_set_zero(model->animations->move);
+        model->animations->v_Horizontal = 0.0;
+        model->animations->v_Vertical = 0.0;
 
         bone_frame->bone_tag_count = model->mesh_count;
         bone_frame->bone_tags = (bone_tag_p)malloc(bone_frame->bone_tag_count * sizeof(bone_tag_t));
-
         vec3_set_zero(bone_frame->pos);
-        vec3_set_zero(bone_frame->move);
-        bone_frame->v_Horizontal = 0.0;
-        bone_frame->v_Vertical = 0.0;
-        bone_frame->command = 0x00;
+
         for(uint16_t k = 0; k < bone_frame->bone_tag_count; k++)
         {
             tree_tag = model->mesh_tree + k;
@@ -1761,11 +1761,15 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
 
         anim->id = i;
         anim->original_frame_rate = tr_animation->frame_rate;
+        anim->command_flags = 0x0000;
 
         anim->speed_x = tr_animation->speed;
         anim->accel_x = tr_animation->accel;
         anim->speed_y = tr_animation->accel_lateral;
         anim->accel_y = tr_animation->speed_lateral;
+        vec3_set_zero(anim->move);
+        anim->v_Horizontal = 0.0f;
+        anim->v_Vertical = 0.0f;
 
         anim->anim_command = tr_animation->anim_command;
         anim->num_anim_commands = tr_animation->num_anim_commands;
@@ -1832,7 +1836,6 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
             bone_frame->bone_tag_count = model->mesh_count;
             bone_frame->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
             vec3_set_zero(bone_frame->pos);
-            vec3_set_zero(bone_frame->move);
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
             if(frame_offset >= tr->frame_data_size)

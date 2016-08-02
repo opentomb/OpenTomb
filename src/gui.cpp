@@ -271,14 +271,14 @@ void Gui_Render()
  */
 void Item_Frame(struct ss_bone_frame_s *bf, float time)
 {
-    int16_t frame, anim;
+    int16_t frame, anim, was_last_anim;
     long int t;
     float dt;
     state_change_p stc;
 
     bf->animations.lerp = 0.0;
     stc = Anim_FindStateChangeByID(bf->animations.model->animations + bf->animations.current_animation, bf->animations.next_state);
-    Anim_GetNextFrame(&bf->animations, time, stc, &frame, &anim, 0x00);
+    Anim_GetNextFrame(&bf->animations, time, stc, &frame, &anim, &was_last_anim);
     if(anim != bf->animations.current_animation)
     {
         /*frame %= bf->model->animations[anim].frames_count;
@@ -303,7 +303,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, float time)
     dt = bf->animations.frame_time - (float)t * bf->animations.period;
     bf->animations.frame_time = (float)frame * bf->animations.period + dt;
     bf->animations.lerp = dt / bf->animations.period;
-    Anim_GetNextFrame(&bf->animations, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
+    //Anim_GetNextFrame(&bf->animations, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, &was_last_anim);
     SSBoneFrame_Update(bf, time);
 }
 

@@ -73,9 +73,7 @@ typedef struct ss_animation_s
     int16_t                     current_state;
     int16_t                     next_state;
     int16_t                     current_animation;                              //
-    int16_t                     next_animation;                                 //
     int16_t                     current_frame;                                  //
-    int16_t                     next_frame;                                     //
 
     uint16_t                    anim_frame_flags;                               // base animation control flags
     uint16_t                    anim_ext_flags;                                 // additional animation control flags
@@ -130,15 +128,12 @@ typedef struct bone_tag_s
 typedef struct bone_frame_s
 {
     uint16_t            bone_tag_count;                                         // number of bones
-    uint16_t            command;                                                // & 0x01 - move need, &0x02 - 180 rotate need
+    uint16_t            unused;                                                
     struct bone_tag_s  *bone_tags;                                              // bones data
     float               pos[3];                                                 // position (base offset)
     float               bb_min[3];                                              // bounding box min coordinates
     float               bb_max[3];                                              // bounding box max coordinates
     float               centre[3];                                              // bounding box centre
-    float               move[3];                                                // move command data
-    float               v_Vertical;                                             // jump command data
-    float               v_Horizontal;                                           // jump command data
 }bone_frame_t, *bone_frame_p ;
 
 /*
@@ -180,11 +175,15 @@ typedef struct state_change_s
 typedef struct animation_frame_s
 {
     uint32_t                    id;
-    uint8_t                     original_frame_rate;
+    uint16_t                    original_frame_rate;
+    uint16_t                    command_flags;          // & 0x01 - move need, &0x02 - 180 rotate need
     float                       speed_x;                // Forward-backward speed
     float                       accel_x;                // Forward-backward accel
     float                       speed_y;                // Left-right speed
     float                       accel_y;                // Left-right accel
+    float                       move[3];                // move command data
+    float                       v_Vertical;             // jump command data
+    float                       v_Horizontal;           // jump command data
     uint32_t                    anim_command;
     uint32_t                    num_anim_commands;
     uint16_t                    state_id;
@@ -249,7 +248,7 @@ void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_t
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
 int  Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id);
-void Anim_GetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
+void Anim_GetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, int16_t *was_last_anim);
 
 #ifdef	__cplusplus
 }

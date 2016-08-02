@@ -940,18 +940,17 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
 }
 
 
-void Entity_DoAnimTransformCommand(entity_p entity, int16_t *anim, int16_t *frame)
+void Entity_DoAnimTransformCommand(entity_p entity)
 {
     if(entity->bf->animations.model != NULL)
     {
         animation_frame_p curr_af = entity->bf->animations.model->animations + entity->bf->animations.current_animation;
-        bone_frame_p curr_bf = curr_af->frames + entity->bf->animations.current_frame;
 
-        if(curr_bf->command & ANIM_CMD_JUMP)
+        if(curr_af->anim_command & ANIM_CMD_JUMP)
         {
-            Character_SetToJump(entity, -curr_bf->v_Vertical, curr_bf->v_Horizontal);
+            Character_SetToJump(entity, -curr_af->v_Vertical, curr_af->v_Horizontal);
         }
-        if(curr_bf->command & ANIM_CMD_CHANGE_DIRECTION)
+        /*if(curr_af->anim_command & ANIM_CMD_CHANGE_DIRECTION)
         {
             //Con_Printf("ROTATED: anim = %d, frame = %d of %d", entity->bf->animations.current_animation, entity->bf->animations.current_frame, entity->bf->animations.model->animations[entity->bf->animations.current_animation].frames_count);
             entity->angles[0] += 180.0f;
@@ -967,16 +966,14 @@ void Entity_DoAnimTransformCommand(entity_p entity, int16_t *anim, int16_t *fram
             {
                 entity->dir_flag = ENT_MOVE_BACKWARD;
             }
-            Entity_UpdateTransform(entity);
             Entity_SetAnimation(entity, ANIM_TYPE_BASE, curr_af->next_anim->id, curr_af->next_frame);
-            *anim = entity->bf->animations.current_animation;
-            *frame = entity->bf->animations.current_frame;
-        }
-        if(curr_bf->command & ANIM_CMD_MOVE)
+            Entity_UpdateTransform(entity);
+        }*/
+        if(curr_af->anim_command & ANIM_CMD_MOVE)
         {
             float tr[3];
-            Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
-            vec3_add(entity->transform+12, entity->transform+12, tr);
+            Mat4_vec3_rot_macro(tr, entity->transform, curr_af->move);
+            vec3_add(entity->transform + 12, entity->transform + 12, tr);
         }
     }
 }
@@ -1048,16 +1045,19 @@ void Entity_Frame(entity_p entity, float time)
                 else if(ss_anim->model && !(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK) &&
                         ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->frames_count > 1)))
                 {
-                    int16_t new_frame, new_anim;
+                    int16_t new_frame, new_anim, was_last_anim;
                     uint16_t frame_switch_state = 0x00;
                     ss_anim->lerp = 0.0;
                     stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
-                    Anim_GetNextFrame(ss_anim, time, stc, &new_frame, &new_anim, ss_anim->anim_frame_flags);
+                    Anim_GetNextFrame(ss_anim, time, stc, &new_frame, &new_anim, &was_last_anim);
                     if(ss_anim->current_animation != new_anim)
                     {
                         frame_switch_state = 0x02;
                         Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
-                        Entity_DoAnimTransformCommand(entity, &new_anim, &new_frame);
+                        if(was_last_anim)
+                        {
+                            Entity_DoAnimTransformCommand(entity);
+                        }
 
                         Entity_SetAnimation(entity, ss_anim->type, new_anim, new_frame);
                         stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
@@ -1066,7 +1066,10 @@ void Entity_Frame(entity_p entity, float time)
                     {
                         frame_switch_state = 0x01;
                         Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
-                        Entity_DoAnimTransformCommand(entity, &new_anim, &new_frame);
+                        if(was_last_anim)
+                        {
+                            Entity_DoAnimTransformCommand(entity);
+                        }
                     }
 
                     af = ss_anim->model->animations + ss_anim->current_animation;
@@ -1076,7 +1079,7 @@ void Entity_Frame(entity_p entity, float time)
                     dt = ss_anim->frame_time - (float)t * ss_anim->period;
                     ss_anim->frame_time = (float)new_frame * ss_anim->period + dt;
                     ss_anim->lerp = dt / ss_anim->period;
-                    Anim_GetNextFrame(ss_anim, ss_anim->period, stc, &ss_anim->next_frame, &ss_anim->next_animation, ss_anim->anim_frame_flags);
+                    //Anim_GetNextFrame(ss_anim, ss_anim->period, stc, &ss_anim->next_frame, &ss_anim->next_animation, &was_last_anim);
 
                     // Update acceleration.
                     // With variable framerate, we don't know when we'll reach final
@@ -1096,7 +1099,6 @@ void Entity_Frame(entity_p entity, float time)
                     }
 
                     ss_anim->current_frame = new_frame;
-
                     if(ss_anim->onEndFrame != NULL)
                     {
                         ss_anim->onEndFrame(entity, ss_anim, frame_switch_state);

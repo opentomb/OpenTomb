@@ -122,8 +122,6 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
             bf->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
             bf->bone_tag_count = model->mesh_count;
             vec3_set_zero(bf->pos);
-            vec3_set_zero(bf->move);
-            bf->command = 0x00;
             vec3_copy(bf->centre, anim->frames[0].centre);
             vec3_copy(bf->pos, anim->frames[0].pos);
             vec3_copy(bf->bb_max, anim->frames[0].bb_max);
@@ -140,10 +138,8 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
                 for(uint16_t lerp_index = 1; lerp_index <= anim->original_frame_rate; lerp_index++)
                 {
                     vec3_set_zero(bf->pos);
-                    vec3_set_zero(bf->move);
-                    bf->command = 0x00;
                     lerp = ((float)lerp_index) / (float)anim->original_frame_rate;
-                    t = 1.0 - lerp;
+                    t = 1.0f - lerp;
 
                     bf->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
                     bf->bone_tag_count = model->mesh_count;
@@ -292,9 +288,6 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src)
     vec3_copy(dst->bb_max, src->bb_max);
     vec3_copy(dst->bb_min, src->bb_min);
 
-    dst->command = src->command;
-    vec3_copy(dst->move, src->move);
-
     for(uint16_t i = 0; i < dst->bone_tag_count; i++)
     {
         vec4_copy(dst->bone_tags[i].qrotate, src->bone_tags[i].qrotate);
@@ -370,8 +363,6 @@ void SSBoneFrame_InitSSAnim(struct ss_animation_s *ss_anim, uint32_t anim_type_i
     ss_anim->lerp = 0.0;
     ss_anim->current_animation = 0;
     ss_anim->current_frame = 0;
-    ss_anim->next_animation = 0;
-    ss_anim->next_frame = 0;
     ss_anim->period = 1.0f / 30.0f;
 
     ss_anim->next = NULL;
@@ -401,34 +392,30 @@ void SSBoneFrame_Clear(ss_bone_frame_p bf)
 
 void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
 {
-    float cmd_local_move[3], t;
+    float t;
     ss_bone_tag_p btag = bf->bone_tags;
     bone_tag_p src_btag, next_btag;
     skeletal_model_p model = bf->animations.model;
     bone_frame_p curr_bf, next_bf;
 
-    next_bf = model->animations[bf->animations.next_animation].frames + bf->animations.next_frame;
     curr_bf = model->animations[bf->animations.current_animation].frames + bf->animations.current_frame;
-
-    t = 1.0f - bf->animations.lerp;
-    if(curr_bf->command & ANIM_CMD_MOVE)
+    next_bf = curr_bf;
+    if(bf->animations.current_frame + 1 < model->animations[bf->animations.current_animation].frames_count)
     {
-        vec3_mul_scalar(cmd_local_move, curr_bf->move, bf->animations.lerp);
+        next_bf++;
     }
     else
     {
-        vec3_set_zero(cmd_local_move);
+        bf->animations.lerp = 0.0f;
     }
+    
+    t = 1.0f - bf->animations.lerp;
 
     vec3_interpolate_macro(bf->bb_max, curr_bf->bb_max, next_bf->bb_max, bf->animations.lerp, t);
-    vec3_add(bf->bb_max, bf->bb_max, cmd_local_move);
     vec3_interpolate_macro(bf->bb_min, curr_bf->bb_min, next_bf->bb_min, bf->animations.lerp, t);
-    vec3_add(bf->bb_min, bf->bb_min, cmd_local_move);
     vec3_interpolate_macro(bf->centre, curr_bf->centre, next_bf->centre, bf->animations.lerp, t);
-    vec3_add(bf->centre, bf->centre, cmd_local_move);
-
     vec3_interpolate_macro(bf->pos, curr_bf->pos, next_bf->pos, bf->animations.lerp, t);
-    vec3_add(bf->pos, bf->pos, cmd_local_move);
+    
     next_btag = next_bf->bone_tags;
     src_btag = curr_bf->bone_tags;
     for(uint16_t k = 0; k < curr_bf->bone_tag_count; k++, btag++, src_btag++, next_btag++)
@@ -449,7 +436,15 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
             if(btag->alt_anim && btag->alt_anim->model && btag->alt_anim->enabled && (btag->alt_anim->model->mesh_tree[k].replace_anim != 0))
             {
                 bone_frame_p ov_curr_bf = btag->alt_anim->model->animations[btag->alt_anim->current_animation].frames + btag->alt_anim->current_frame;
-                bone_frame_p ov_next_bf = btag->alt_anim->model->animations[btag->alt_anim->next_animation].frames + btag->alt_anim->next_frame;
+                bone_frame_p ov_next_bf = ov_curr_bf;
+                if(btag->alt_anim->current_frame + 1 < btag->alt_anim->model->animations[btag->alt_anim->current_animation].frames_count)
+                {
+                    ov_next_bf++;
+                }
+                else
+                {
+                    btag->alt_anim->lerp = 0.0f;
+                }
                 ov_src_btag = ov_curr_bf->bone_tags + k;
                 ov_next_btag = ov_next_bf->bone_tags + k;
                 ov_lerp = btag->alt_anim->lerp;
@@ -647,8 +642,6 @@ void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int anim_type, int ani
 
         ss_anim->current_animation = animation;
         ss_anim->current_frame = frame;
-        ss_anim->next_animation = animation;
-        ss_anim->next_frame = frame;
 
         ss_anim->frame_time = (float)frame * ss_anim->period;
         //long int t = (ss_anim->frame_time) / ss_anim->period;
@@ -815,27 +808,29 @@ int Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id)
 /*
  * Next frame and next anim calculation function.
  */
-void Anim_GetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags)
+void Anim_GetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, int16_t *was_last_anim)
 {
     animation_frame_p curr_anim = ss_anim->model->animations + ss_anim->current_animation;
 
     *frame = (ss_anim->frame_time + time) / ss_anim->period;
     *frame = (*frame >= 0.0) ? (*frame) : (0.0);                                // paranoid checking
     *anim  = ss_anim->current_animation;
-
+    *was_last_anim = 0;
+    
     /*
      * Flag has a highest priority
      */
-    if(anim_flags == ANIM_LOOP_LAST_FRAME)
+    if(ss_anim->anim_frame_flags == ANIM_LOOP_LAST_FRAME)
     {
-        if(*frame >= curr_anim->frames_count - 1)
+        if(*frame + 2 >= curr_anim->frames_count)
         {
+            //*was_last_anim = 1;
             *frame = curr_anim->frames_count - 1;
             *anim  = ss_anim->current_animation;                                // paranoid dublicate
         }
         return;
     }
-    else if(anim_flags == ANIM_FRAME_LOCK)
+    else if(ss_anim->anim_frame_flags == ANIM_FRAME_LOCK)
     {
         *frame = 0;
         *anim  = ss_anim->current_animation;
@@ -862,10 +857,11 @@ void Anim_GetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_
     /*
      * Check next anim if frame >= frames_count
      */
-    if(*frame >= curr_anim->frames_count)
+    if(*frame >= curr_anim->frames_count - 1)
     {
         if(curr_anim->next_anim)
         {
+            *was_last_anim = 1;
             *frame = curr_anim->next_frame;
             *anim  = curr_anim->next_anim->id;
             return;
