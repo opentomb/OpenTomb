@@ -440,22 +440,22 @@ int gui_InventoryManager::getItemElementsCountByType(int type)
 
 void gui_InventoryManager::restoreItemAngle(float time)
 {
-    if(mItemAngle > 0.0)
+    if(mItemAngle > 0.0f)
     {
-        if(mItemAngle <= 180)
+        if(mItemAngle <= 180.0f)
         {
-            mItemAngle -= 180.0 * time / mRingRotatePeriod;
-            if(mItemAngle < 0.0)
+            mItemAngle -= 180.0f * time / mRingRotatePeriod;
+            if(mItemAngle < 0.0f)
             {
-                mItemAngle = 0.0;
+                mItemAngle = 0.0f;
             }
         }
         else
         {
-            mItemAngle += 180.0 * time / mRingRotatePeriod;
-            if(mItemAngle >= 360.0)
+            mItemAngle += 180.0f * time / mRingRotatePeriod;
+            if(mItemAngle >= 360.0f)
             {
-                mItemAngle = 0.0;
+                mItemAngle = 0.0f;
             }
         }
     }
@@ -466,6 +466,8 @@ void gui_InventoryManager::setInventory(struct inventory_node_s **i)
     mInventory = i;
     mCurrentState = INVENTORY_DISABLED;
     mNextState = INVENTORY_DISABLED;
+    mLabel_ItemName.show = 0;
+    mLabel_Title.show = 0;
 }
 
 void gui_InventoryManager::setTitle(int items_type)
