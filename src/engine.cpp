@@ -224,7 +224,6 @@ void Engine_Init_Pre()
 
     Script_CallVoidFunc(engine_lua, "loadscript_pre", true);
 
-    Gameflow_Init();
     Cam_Init(&engine_camera);
     engine_camera_state.state = CAMERA_STATE_NORMAL;
     engine_camera_state.flyby = NULL;
@@ -785,7 +784,7 @@ void Engine_MainLoop()
         Sys_ResetTempMem();
         Engine_PollSDLEvents();
         Game_Frame(time);
-        Gameflow_Do();
+        gameflow.Do();
 
         Audio_Update(time);
         Engine_Display();
@@ -995,7 +994,7 @@ void Engine_GetLevelName(char *name, const char *path)
 void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix, uint32_t buf_size)
 {
     char level_name[LEVEL_NAME_MAX_LEN];
-    Engine_GetLevelName(level_name, gameflow_manager.CurrentLevelPath);
+    Engine_GetLevelName(level_name, gameflow.getCurrentLevelPath());
 
     name[0] = 0;
 
@@ -1076,7 +1075,7 @@ int Engine_LoadMap(const char *name)
     Gui_DrawLoadScreen(0);
 
     // it is needed for "not in the game" levels or correct saves loading.
-    strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);
+    gameflow.setCurrentLevelPath(name);
 
     Gui_DrawLoadScreen(100);
 

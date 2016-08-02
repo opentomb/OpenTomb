@@ -2,7 +2,6 @@
 #ifndef GAMEFLOW_H
 #define GAMEFLOW_H
 
-#include <stdint.h>
 #include "engine.h"
 
 #define     GAME_1      (0)
@@ -22,25 +21,49 @@
 
 #define TR_GAMEFLOW_NOENTRY     -1
 
-typedef struct gameflow_action_s
+struct gameflow_action
 {
-    int8_t      opcode;
-    uint8_t     operand;
-} gameflow_action_t, *gameflow_action_p;
+    int8_t      m_opcode;
+    uint8_t     m_operand;
+};
 
-typedef struct gameflow_manager_s
+class CGameflow
 {
-    char                CurrentLevelName[LEVEL_NAME_MAX_LEN];
-    char                CurrentLevelPath[MAX_ENGINE_PATH];
-    uint8_t             CurrentGameID;
-    uint8_t             CurrentLevelID;
 
-    bool                NextAction;
-    gameflow_action_s   Actions[TR_GAMEFLOW_MAX_ACTIONS];
+public:
 
-    char                SecretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS];                     //Info for what secrets have been triggered in a level
-    
-} gameflow_manager_t, *gameflow_manager_p;
+    CGameflow();
+    ~CGameflow();
+
+    void                Do();
+    bool                Send(int opcode, int operand = -1);
+
+    uint8_t             getCurrentGameID();
+    uint8_t             getCurrentLevelID();
+    const char*         getCurrentLevelName();
+    const char*         getCurrentLevelPath();
+    char                getSecretStateAtIndex(int index);
+
+    void                setCurrentGameID(int gameID);
+    void                setCurrentLevelID(int levelID);
+    void                setCurrentLevelName(const char* levelName);
+    void                setCurrentLevelPath(const char* filePath);
+    void                setSecretStateAtIndex(int index, int value);
+
+    void                resetSecrets();
+
+private:
+
+    uint8_t             m_currentGameID;
+    uint8_t             m_currentLevelID;
+
+    char                m_currentLevelName[LEVEL_NAME_MAX_LEN];
+    char                m_currentLevelPath[MAX_ENGINE_PATH];
+
+    bool                m_nextAction;
+    gameflow_action     m_actions[TR_GAMEFLOW_MAX_ACTIONS];
+    char                m_secretsTriggerMap[TR_GAMEFLOW_MAX_SECRETS];
+};
 
 enum TR_GAMEFLOW_OP
 {
@@ -70,10 +93,6 @@ enum TR_GAMEFLOW_OP
     TR_GAMEFLOW_OP_LASTINDEX
 };
 
-extern struct gameflow_manager_s gameflow_manager;
-
-void Gameflow_Init();
-void Gameflow_Do();
-bool Gameflow_Send(int opcode, int operand = -1);
+extern class CGameflow gameflow;
 
 #endif //GAMEFLOW_H

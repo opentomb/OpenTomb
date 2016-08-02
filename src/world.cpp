@@ -2387,7 +2387,7 @@ void World_GenEntities(class VT_Level *tr)
             switch(tr->game_version)
             {
                 case TR_I:
-                    if(gameflow_manager.CurrentLevelID == 0)
+                    if(gameflow.getCurrentLevelID() == 0)
                     {
                         LM = World_GetModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
                         if(LM)
