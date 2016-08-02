@@ -74,7 +74,7 @@ void CGameflow::Do()
             case GF_NOENTRY:
                 continue;
             default:
-                Con_Printf("Unimplemented gameflow opcode: %i", this->m_actions[i].m_opcode);
+                //Con_Printf("Unimplemented gameflow opcode: %i", this->m_actions[i].m_opcode);
                 break;
         };   // end switch(gameflow_manager.Operand)
     }
