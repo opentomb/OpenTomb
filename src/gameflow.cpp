@@ -30,7 +30,7 @@ CGameflow::~CGameflow()
     memset(this->m_currentLevelPath, 0, MAX_ENGINE_PATH);
     this->m_currentGameID = 0;
     this->m_currentLevelID = 0;
-    memset(this->m_actions, GF_NOENTRY, GF_MAX_SECRETS);
+    memset(this->m_actions, 0, GF_MAX_SECRETS);
     memset(this->m_secretsTriggerMap, 0, GF_MAX_SECRETS);
 }
 
