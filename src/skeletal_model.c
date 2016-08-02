@@ -642,7 +642,7 @@ void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int anim_type, int ani
         frame = (frame >= 0) ? (frame) : (anim->frames_count - 1 + frame);
         ss_anim->period = 1.0 / 30.0;
 
-        ss_anim->last_state = anim->state_id;
+        ss_anim->current_state = anim->state_id;
         ss_anim->next_state = anim->state_id;
 
         ss_anim->current_animation = animation;

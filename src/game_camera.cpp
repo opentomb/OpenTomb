@@ -95,7 +95,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
 
         ///@FIXME
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
-        if(ent->bf->animations.last_state == TR_STATE_LARA_REACH)
+        if(ent->bf->animations.current_state == TR_STATE_LARA_REACH)
         {
             if(cam->target_dir == TR_CAM_TARG_BACK)
             {
@@ -127,7 +127,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
                 }
             }
         }
-        else if(ent->bf->animations.last_state == TR_STATE_LARA_JUMP_BACK)
+        else if(ent->bf->animations.current_state == TR_STATE_LARA_JUMP_BACK)
         {
             cam->target_dir = TR_CAM_TARG_FRONT;
         }

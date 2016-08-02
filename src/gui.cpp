@@ -281,7 +281,6 @@ void Item_Frame(struct ss_bone_frame_s *bf, float time)
     Anim_GetNextFrame(&bf->animations, time, stc, &frame, &anim, 0x00);
     if(anim != bf->animations.current_animation)
     {
-        bf->animations.last_animation = bf->animations.current_animation;
         /*frame %= bf->model->animations[anim].frames_count;
         frame = (frame >= 0)?(frame):(bf->model->animations[anim].frames_count - 1 + frame);
 
@@ -295,10 +294,6 @@ void Item_Frame(struct ss_bone_frame_s *bf, float time)
     }
     else if(bf->animations.current_frame != frame)
     {
-        if(bf->animations.current_frame == 0)
-        {
-            bf->animations.last_animation = bf->animations.current_animation;
-        }
         bf->animations.current_frame = frame;
     }
 

@@ -1055,8 +1055,6 @@ void Entity_Frame(entity_p entity, float time)
                     Anim_GetNextFrame(ss_anim, time, stc, &new_frame, &new_anim, ss_anim->anim_frame_flags);
                     if(ss_anim->current_animation != new_anim)
                     {
-                        ss_anim->last_animation = ss_anim->current_animation;
-
                         frame_switch_state = 0x02;
                         Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
                         Entity_DoAnimTransformCommand(entity, &new_anim, &new_frame);
@@ -1066,11 +1064,6 @@ void Entity_Frame(entity_p entity, float time)
                     }
                     else if(ss_anim->current_frame != new_frame)
                     {
-                        if(ss_anim->current_frame == 0)
-                        {
-                            ss_anim->last_animation = ss_anim->current_animation;
-                        }
-
                         frame_switch_state = 0x01;
                         Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
                         Entity_DoAnimTransformCommand(entity, &new_anim, &new_frame);
