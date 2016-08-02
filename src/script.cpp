@@ -271,7 +271,7 @@ bool Script_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_n
         if(lua_isfunction(lua, -1))
         {
             lua_pushinteger(lua, World_GetVersion());
-            lua_pushinteger(lua, gameflow_manager.CurrentLevelID);
+            lua_pushinteger(lua, gameflow.getCurrentLevelID());
             lua_pushinteger(lua, sound_id);
             if(lua_CallAndLog(lua, 3, 2, 0))
             {
@@ -377,8 +377,8 @@ bool Script_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
         lua_getglobal(lua, "getLoadingScreen");
         if(lua_isfunction(lua, -1))
         {
-            lua_pushinteger(lua, gameflow_manager.CurrentGameID);
-            lua_pushinteger(lua, gameflow_manager.CurrentLevelID);
+            lua_pushinteger(lua, gameflow.getCurrentGameID());
+            lua_pushinteger(lua, gameflow.getCurrentLevelID());
             lua_pushinteger(lua, level_index);
             if (lua_CallAndLog(lua, 3, 1, 0))
             {
@@ -1816,7 +1816,7 @@ int lua_GetSecretStatus(lua_State *lua)
     int secret_number = lua_tointeger(lua, 1);
     if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0)) return 0;   // No such secret - return
 
-    lua_pushinteger(lua, (int)gameflow_manager.SecretsTriggerMap[secret_number]);
+    lua_pushinteger(lua, (int)gameflow.getSecretStateAtIndex(secret_number));
     return 1;
 }
 
@@ -1828,7 +1828,7 @@ int lua_SetSecretStatus(lua_State *lua)
     int secret_number = lua_tointeger(lua, 1);
     if((secret_number > TR_GAMEFLOW_MAX_SECRETS) || (secret_number < 0)) return 0;   // No such secret - return
 
-    gameflow_manager.SecretsTriggerMap[secret_number] = lua_tointeger(lua, 2);
+    gameflow.setSecretStateAtIndex(secret_number, lua_tointeger(lua, 2));
     return 0;
 }
 
@@ -4939,7 +4939,7 @@ int lua_StopSound(lua_State *lua)
 
 int lua_GetLevel(lua_State *lua)
 {
-    lua_pushinteger(lua, gameflow_manager.CurrentLevelID);
+    lua_pushinteger(lua, gameflow.getCurrentLevelID());
     return 1;
 }
 
@@ -4956,7 +4956,7 @@ int lua_SetLevel(lua_State *lua)
     Con_Notify("level was changed to %d", id);
 
     Game_LevelTransition(id);
-    Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, id);    // Next level
+    gameflow.Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, id);    // Next level
 
     return 0;
 }
@@ -4971,16 +4971,16 @@ int lua_SetGame(lua_State *lua)
         return 0;
     }
 
-    gameflow_manager.CurrentGameID = lua_tointeger(lua, 1);
+    gameflow.setCurrentGameID(lua_tointeger(lua, 1));
     if(!lua_isnil(lua, 2))
     {
-        gameflow_manager.CurrentLevelID = lua_tointeger(lua, 2);
+        gameflow.setCurrentLevelID(lua_tointeger(lua, 2));
     }
 
     lua_getglobal(lua, "getTitleScreen");
     if(lua_isfunction(lua, -1))
     {
-        lua_pushnumber(lua, gameflow_manager.CurrentGameID);
+        lua_pushnumber(lua, gameflow.getCurrentGameID());
         if(lua_CallAndLog(lua, 1, 1, 0))
         {
             //Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
@@ -4989,9 +4989,9 @@ int lua_SetGame(lua_State *lua)
     }
     lua_settop(lua, top);
 
-    Con_Notify("level was changed to %d", gameflow_manager.CurrentGameID);
-    Game_LevelTransition(gameflow_manager.CurrentLevelID);
-    Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, gameflow_manager.CurrentLevelID);
+    Con_Notify("level was changed to %d", gameflow.getCurrentGameID());
+    Game_LevelTransition(gameflow.getCurrentLevelID());
+    gameflow.Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, gameflow.getCurrentLevelID());
 
     return 0;
 }
@@ -5012,14 +5012,14 @@ int lua_LoadMap(lua_State *lua)
         {
             if(!lua_isnil(lua, 2))
             {
-                gameflow_manager.CurrentGameID = lua_tointeger(lua, 2);
+                gameflow.setCurrentGameID(lua_tointeger(lua, 2));
             }
             if(!lua_isnil(lua, 3))
             {
-                gameflow_manager.CurrentLevelID = lua_tointeger(lua, 3);
+                gameflow.setCurrentLevelID(lua_tointeger(lua, 3));
             }
             char file_path[MAX_ENGINE_PATH];
-            Script_GetLoadingScreen(lua, gameflow_manager.CurrentLevelID, file_path);
+            Script_GetLoadingScreen(lua, gameflow.getCurrentLevelID(), file_path);
             if(!Gui_LoadScreenAssignPic(file_path))
             {
                 Gui_LoadScreenAssignPic("resource/graphics/legal");
