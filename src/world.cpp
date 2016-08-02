@@ -2521,6 +2521,11 @@ void World_GenRoomCollision()
 {
     room_p r = global_world.rooms;
 
+    if(r == NULL)
+    {
+        return;
+    }
+
     /*
     if(level_script != NULL)
     {
@@ -2565,6 +2570,12 @@ void World_GenRoomCollision()
 void World_FixRooms()
 {
     room_p r = global_world.rooms;
+
+    if(r == NULL)
+    {
+        return;
+    }
+
     for(uint32_t i = 0; i < global_world.rooms_count; i++, r++)
     {
         if(r->base_room != NULL)
@@ -2588,6 +2599,11 @@ void World_FixRooms()
 void World_MakeEntityItems(struct RedBlackNode_s *n)
 {
     base_item_p item = (base_item_p)n->data;
+
+    if(item == NULL)
+    {
+        return;
+    }
 
     for(uint32_t i = 0; i < global_world.rooms_count; i++)
     {
