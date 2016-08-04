@@ -58,7 +58,7 @@ typedef struct engine_control_state_s
     float       cam_angles[3];
     float       look_axis_x;                       // Unified look axis data.
     float       look_axis_y;
-    
+
     int8_t      free_look;
     int8_t      mouse_look;
     int8_t      noclip;
@@ -116,6 +116,7 @@ engine_container_p Container_Create();
 
 
 void Engine_Start(const char *config_name);
+void Engine_ParseArgs(int argc, char **argv);
 void Engine_Shutdown(int val) __attribute__((noreturn));
 void Engine_SetDone();
 void Engine_LoadConfig(const char *filename);

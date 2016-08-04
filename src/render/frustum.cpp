@@ -1,8 +1,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 
 #include "../core/system.h"
 #include "../core/vmath.h"
@@ -22,6 +20,7 @@ CFrustumManager::CFrustumManager(uint32_t buffer_size)
     m_buffer_size = buffer_size;
     m_allocated = 0;
     m_buffer = (uint8_t*)malloc(buffer_size * sizeof(uint8_t));
+    memset(m_buffer, 0, (buffer_size * sizeof(uint8_t)));
     m_need_realloc = false;
 }
 

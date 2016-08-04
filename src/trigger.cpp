@@ -422,7 +422,10 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     case TR_FD_TRIGFUNC_ENDLEVEL:
                         Con_Notify("level was changed to %d", command->operands);
                         Game_LevelTransition(command->operands);
-                        Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, command->operands);
+                        if(!gameflow.Send(GF_OP_LEVELCOMPLETE, command->operands))
+                        {
+                            Con_Warning("TR_FD_TRIGFUNC_ENDLEVEL: Failed to add opcode to gameflow action list");
+                        }
                         break;
 
                     case TR_FD_TRIGFUNC_PLAYTRACK:
@@ -440,9 +443,9 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         break;
 
                     case TR_FD_TRIGFUNC_SECRET:
-                        if((command->operands < TR_GAMEFLOW_MAX_SECRETS) && (gameflow_manager.SecretsTriggerMap[command->operands] == 0))
+                        if((command->operands < GF_MAX_SECRETS) && (gameflow.getSecretStateAtIndex(command->operands) == 0))
                         {
-                            gameflow_manager.SecretsTriggerMap[command->operands] = 1;
+                            gameflow.setSecretStateAtIndex(command->operands, 1);
                             Audio_StreamPlay(Script_GetSecretTrackNumber(engine_lua));
                         }
                         break;
