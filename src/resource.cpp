@@ -1200,7 +1200,7 @@ void GenerateAnimCommandsTransform(skeletal_model_p model, int16_t *base_anim_co
 
                 case TR_ANIMCOMMAND_PLAYEFFECT:
                     {
-                        int frame = *++pointer;
+                        af->condition_frame = *++pointer;
                         switch(*++pointer & 0x3FFF)
                         {
                             case TR_EFFECT_CHANGEDIRECTION:
@@ -1706,6 +1706,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         model->animations->state_change_count = 0;
         model->animations->original_frame_rate = 1;
         model->animations->command_flags = 0x0000;
+        model->animations->condition_frame = 0xFFFF;
         vec3_set_zero(model->animations->move);
         model->animations->v_Horizontal = 0.0;
         model->animations->v_Vertical = 0.0;
@@ -1762,6 +1763,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         anim->id = i;
         anim->original_frame_rate = tr_animation->frame_rate;
         anim->command_flags = 0x0000;
+        anim->condition_frame = 0xFFFF;
 
         anim->speed_x = tr_animation->speed;
         anim->accel_x = tr_animation->accel;
@@ -1959,7 +1961,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         anim->state_change_count = 0;
         anim->state_change = NULL;
 
-        tr_animation = &tr->animations[tr_moveable->animation_index+i];
+        tr_animation = &tr->animations[tr_moveable->animation_index + i];
         int16_t j = tr_animation->next_animation - tr_moveable->animation_index;
         j &= 0x7fff;
         if((j >= 0) && (j < model->animation_count))

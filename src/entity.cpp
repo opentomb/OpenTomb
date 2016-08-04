@@ -1022,10 +1022,7 @@ void Entity_Frame(entity_p entity, float time)
 {
     if(entity && !(entity->type_flags & ENTITY_TYPE_DYNAMIC) && (entity->state_flags & ENTITY_STATE_ACTIVE)  && (entity->state_flags & ENTITY_STATE_ENABLED))
     {
-        long int t;
-        float dt;
         animation_frame_p af;
-        state_change_p stc;
         ss_animation_p ss_anim = &entity->bf->animations;
 
         Entity_GhostUpdate(entity);
@@ -1045,50 +1042,23 @@ void Entity_Frame(entity_p entity, float time)
                 else if(ss_anim->model && !(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK) &&
                         ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->frames_count > 1)))
                 {
-                    int16_t new_frame, new_anim, was_last_anim;
-                    uint16_t frame_switch_state = 0x00;
-                    ss_anim->lerp = 0.0;
-                    stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
-                    Anim_GetNextFrame(ss_anim, time, stc, &new_frame, &new_anim, &was_last_anim);
-                    if(ss_anim->current_animation != new_anim)
+                    state_change_p stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
+                    uint16_t frame_switch_state = Anim_SetNextFrame(ss_anim, time, stc);
+                    if(frame_switch_state > 0)
                     {
-                        frame_switch_state = 0x02;
-                        Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
-                        if(was_last_anim)
-                        {
-                            Entity_DoAnimTransformCommand(entity);
-                        }
-
-                        Entity_SetAnimation(entity, ss_anim->type, new_anim, new_frame);
-                        stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
+                        entity->no_fix_all = 0x00;
+                        //Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
+                        //Entity_DoAnimTransformCommand(entity);
                     }
-                    else if(ss_anim->current_frame != new_frame)
-                    {
-                        frame_switch_state = 0x01;
-                        Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
-                        if(was_last_anim)
-                        {
-                            Entity_DoAnimTransformCommand(entity);
-                        }
-                    }
-
-                    af = ss_anim->model->animations + ss_anim->current_animation;
-                    ss_anim->frame_time += time;
-
-                    t = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - (float)t * ss_anim->period;
-                    ss_anim->frame_time = (float)new_frame * ss_anim->period + dt;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    //Anim_GetNextFrame(ss_anim, ss_anim->period, stc, &ss_anim->next_frame, &ss_anim->next_animation, &was_last_anim);
 
                     // Update acceleration.
                     // With variable framerate, we don't know when we'll reach final
                     // frame for sure, so we use native frame number check to increase acceleration.
-
-                    if((ss_anim->type == ANIM_TYPE_BASE) && (entity->character) && (ss_anim->current_frame != new_frame))
+                    af = ss_anim->model->animations + ss_anim->current_animation;
+                    if((ss_anim->type == ANIM_TYPE_BASE) && (entity->character) && (frame_switch_state > 0))
                     {
                         // NB!!! For Lara, we update ONLY X-axis speed/accel.
-                        if((af->accel_x == 0) || (new_frame < ss_anim->current_frame))
+                        if((af->accel_x == 0) || (frame_switch_state > 1))
                         {
                             entity->anim_linear_speed  = af->speed_x;
                         }
@@ -1098,7 +1068,6 @@ void Entity_Frame(entity_p entity, float time)
                         }
                     }
 
-                    ss_anim->current_frame = new_frame;
                     if(ss_anim->onEndFrame != NULL)
                     {
                         ss_anim->onEndFrame(entity, ss_anim, frame_switch_state);

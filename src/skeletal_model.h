@@ -177,6 +177,9 @@ typedef struct animation_frame_s
     uint32_t                    id;
     uint16_t                    original_frame_rate;
     uint16_t                    command_flags;          // & 0x01 - move need, &0x02 - 180 rotate need
+    uint16_t                    condition_frame;
+    uint16_t                    state_id;
+    
     float                       speed_x;                // Forward-backward speed
     float                       accel_x;                // Forward-backward accel
     float                       speed_y;                // Left-right speed
@@ -186,15 +189,14 @@ typedef struct animation_frame_s
     float                       v_Horizontal;           // jump command data
     uint32_t                    anim_command;
     uint32_t                    num_anim_commands;
-    uint16_t                    state_id;
+    
     uint16_t                    frames_count;           // Number of frames
-    struct bone_frame_s        *frames;                 // Frame data
-
     uint16_t                    state_change_count;     // Number of animation statechanges
+    struct bone_frame_s        *frames;                 // Frame data
     struct state_change_s      *state_change;           // Animation statechanges data
 
     struct animation_frame_s   *next_anim;              // Next default animation
-    int                         next_frame;             // Next default frame
+    int32_t                     next_frame;             // Next default frame
 }animation_frame_t, *animation_frame_p;
 
 /*
@@ -248,7 +250,7 @@ void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_t
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
 int  Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id);
-void Anim_GetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, int16_t *was_last_anim);
+int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_change_s *stc);
 
 #ifdef	__cplusplus
 }
