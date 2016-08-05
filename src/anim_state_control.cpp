@@ -55,9 +55,9 @@ void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim, int state)
     {
         float *v = ent->character->traversed_object->transform + 12;
         int i = v[0] / TR_METERING_SECTORSIZE;
-        v[0] = i * TR_METERING_SECTORSIZE + 512.0;
+        v[0] = i * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE / 2;
         i = v[1] / TR_METERING_SECTORSIZE;
-        v[1] = i * TR_METERING_SECTORSIZE + 512.0;
+        v[1] = i * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE / 2;
         SSBoneFrame_Update(ent->bf, 0.0f);
         Entity_UpdateRigidBody(ent->character->traversed_object, 1);
         ent->character->traversed_object = NULL;
@@ -98,7 +98,7 @@ void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim, int stat
         Entity_SetAnimation(ent, ANIM_TYPE_BASE, af->next_anim->id, af->next_frame);
         Mat4_vec3_mul(p, ent->transform, ent->bf->bone_tags[0].full_transform + 12);
         vec3_sub(move, move, p);
-        vec3_add(ent->transform+12, ent->transform+12, move);
+        vec3_add(ent->transform+12, ent->transform + 12, move);
         ent->transform[12 + 2] = ent->character->climb.point[2];
         SSBoneFrame_Update(ent->bf, 0.0f);
         Entity_UpdateRigidBody(ent, 1);

@@ -656,7 +656,7 @@ void Entity_CheckCollisionCallbacks(entity_p ent)
 
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing)
 {
-    if((World_GetAnimCommands() == NULL) || (ss_anim->model == NULL))
+    if((World_GetAnimCommands() == NULL) || (ss_anim->model == NULL) || (changing == 0x00))
     {
         return;  // If no anim commands
     }
@@ -688,19 +688,14 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
 
                 case TR_ANIMCOMMAND_KILL:
                     // This command executes ONLY at the end of animation.
-                    if(ss_anim->current_frame == af->frames_count - 1)
+                    if((changing >= 0x02) && (entity->character))
                     {
-                        if(entity->character)
-                        {
-                            entity->character->resp.kill = 1;
-                        }
+                        entity->character->resp.kill = 1;
                     }
-
                     break;
 
                 case TR_ANIMCOMMAND_PLAYSOUND:
                     int16_t sound_index;
-
                     if(ss_anim->current_frame == *++pointer)
                     {
                         sound_index = *++pointer & 0x3FFF;
@@ -739,14 +734,15 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                     // however, and currently only these are supported.
                     if(ss_anim->current_frame == *++pointer)
                     {
+                        entity_p player = World_GetPlayer();
                         switch(*++pointer & 0x3FFF)
                         {
                             case TR_EFFECT_SHAKESCREEN:
-                                if(World_GetPlayer())
+                                if(player)
                                 {
-                                    float *pos = World_GetPlayer()->transform + 12;
+                                    float *pos = player->transform + 12;
                                     float dist = vec3_dist(pos, entity->transform + 12);
-                                    dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
+                                    dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE) ? (0) : ((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0f);
                                     //if(dist > 0)
                                     //    Cam_Shake(&engine_camera, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
                                 }
@@ -940,19 +936,19 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
 }
 
 
-void Entity_DoAnimTransformCommand(entity_p entity)
+void Entity_DoAnimTransformCommand(entity_p entity, int16_t prev_anim, int16_t prev_frame, int changing)
 {
     if(entity->bf->animations.model != NULL)
     {
         animation_frame_p curr_af = entity->bf->animations.model->animations + entity->bf->animations.current_animation;
+        animation_frame_p prev_af = entity->bf->animations.model->animations + prev_anim;
 
-        if(curr_af->anim_command & ANIM_CMD_JUMP)
+        if((changing >= 2) && (curr_af->command_flags & ANIM_CMD_JUMP))
         {
             Character_SetToJump(entity, -curr_af->v_Vertical, curr_af->v_Horizontal);
         }
-        /*if(curr_af->anim_command & ANIM_CMD_CHANGE_DIRECTION)
+        if((changing >= 1) && (curr_af->condition_frame == entity->bf->animations.current_frame) && (curr_af->command_flags & ANIM_CMD_CHANGE_DIRECTION))
         {
-            //Con_Printf("ROTATED: anim = %d, frame = %d of %d", entity->bf->animations.current_animation, entity->bf->animations.current_frame, entity->bf->animations.model->animations[entity->bf->animations.current_animation].frames_count);
             entity->angles[0] += 180.0f;
             if(entity->move_type == MOVE_UNDERWATER)
             {
@@ -966,13 +962,19 @@ void Entity_DoAnimTransformCommand(entity_p entity)
             {
                 entity->dir_flag = ENT_MOVE_BACKWARD;
             }
-            Entity_SetAnimation(entity, ANIM_TYPE_BASE, curr_af->next_anim->id, curr_af->next_frame);
+
+            /*if(curr_af->condition_frame > 0)
+            {
+                Entity_SetAnimation(entity, ANIM_TYPE_BASE, curr_af->next_anim->id, curr_af->next_frame);
+            }*/
             Entity_UpdateTransform(entity);
-        }*/
-        if(curr_af->anim_command & ANIM_CMD_MOVE)
+            Entity_UpdateRigidBody(entity, 1);
+        }
+        if((changing >= 2) && (prev_af->command_flags & ANIM_CMD_MOVE))
         {
             float tr[3];
-            Mat4_vec3_rot_macro(tr, entity->transform, curr_af->move);
+            entity->no_fix_all = 0x01;
+            Mat4_vec3_rot_macro(tr, entity->transform, prev_af->move);
             vec3_add(entity->transform + 12, entity->transform + 12, tr);
         }
     }
@@ -1015,9 +1017,6 @@ void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
 }
 
 
-/**
- * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
- */
 void Entity_Frame(entity_p entity, float time)
 {
     if(entity && !(entity->type_flags & ENTITY_TYPE_DYNAMIC) && (entity->state_flags & ENTITY_STATE_ACTIVE)  && (entity->state_flags & ENTITY_STATE_ENABLED))
@@ -1043,12 +1042,17 @@ void Entity_Frame(entity_p entity, float time)
                         ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->frames_count > 1)))
                 {
                     state_change_p stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
+                    int16_t old_anim = ss_anim->current_animation;
+                    int16_t old_frame = ss_anim->current_frame;
                     uint16_t frame_switch_state = Anim_SetNextFrame(ss_anim, time, stc);
                     if(frame_switch_state > 0)
                     {
-                        entity->no_fix_all = 0x00;
-                        //Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
-                        //Entity_DoAnimTransformCommand(entity);
+                        if(frame_switch_state >= 2)
+                        {
+                            entity->no_fix_all = 0x00;
+                        }
+                        Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
+                        Entity_DoAnimTransformCommand(entity, old_anim, old_frame, frame_switch_state);
                     }
 
                     // Update acceleration.

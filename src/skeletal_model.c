@@ -404,17 +404,12 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
     {
         next_bf = curr_bf + 1;
     }
-    else if(curr_anim->next_anim)
+    else
     {
         next_bf = curr_anim->next_anim->frames + curr_anim->next_frame;
     }
-    else
-    {
-        next_bf = curr_bf;
-        bf->animations.lerp = 0.0f;
-    }
+    
     t = 1.0f - bf->animations.lerp;
-
     vec3_interpolate_macro(bf->bb_max, curr_bf->bb_max, next_bf->bb_max, bf->animations.lerp, t);
     vec3_interpolate_macro(bf->bb_min, curr_bf->bb_min, next_bf->bb_min, bf->animations.lerp, t);
     vec3_interpolate_macro(bf->centre, curr_bf->centre, next_bf->centre, bf->animations.lerp, t);
@@ -447,14 +442,9 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
                 {
                     ov_next_bf = ov_curr_bf + 1;
                 }
-                else if(curr_anim->next_anim)
-                {
-                    ov_next_bf = curr_anim->next_anim->frames + curr_anim->next_frame;
-                }
                 else
                 {
-                    ov_next_bf = ov_curr_bf;
-                    ov_lerp = 0.0f;
+                    ov_next_bf = curr_anim->next_anim->frames + curr_anim->next_frame;
                 }
                 ov_src_btag = ov_curr_bf->bone_tags + k;
                 ov_next_btag = ov_next_bf->bone_tags + k;
@@ -856,8 +846,7 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_
         anim_dispatch_p disp = stc->anim_dispatch;
         for(uint16_t i = 0; i < stc->anim_dispatch_count; i++, disp++)
         {
-            if((disp->frame_high >= disp->frame_low) && ((new_frame >= disp->frame_low) && (new_frame <= disp->frame_high) || 
-               (disp->frame_high <  disp->frame_low) && ((new_frame <  disp->frame_low) && (new_frame >  disp->frame_high))))
+            if((disp->frame_high >= disp->frame_low) && ((new_frame >= disp->frame_low) && (new_frame <= disp->frame_high)))
             {
                 ss_anim->lerp = 0.0f;
                 ss_anim->current_animation  = disp->next_anim;
@@ -865,7 +854,7 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_
                 ss_anim->frame_time = (float)ss_anim->current_frame * ss_anim->period + dt;
                 ss_anim->current_state = ss_anim->model->animations[ss_anim->current_animation].state_id;
                 ss_anim->next_state = ss_anim->current_state;
-                return 0x02;
+                return 0x03;
             }
         }
     }
@@ -873,27 +862,21 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_
     /*
      * Check next anim if frame >= frames_count
      */
-    if(curr_anim->next_anim && (new_frame + 1 >= curr_anim->frames_count))
+    if(new_frame + 1 >= curr_anim->frames_count)
     {
             ss_anim->current_frame = curr_anim->next_frame;
             ss_anim->current_animation  = curr_anim->next_anim->id;
             ss_anim->frame_time = (float)ss_anim->current_frame * ss_anim->period + dt;
             ss_anim->current_state = ss_anim->model->animations[ss_anim->current_animation].state_id;
             ss_anim->next_state = ss_anim->current_state;
-            return ((curr_anim->next_anim->id == curr_anim->id) ? (0x01) : (0x02));
+            return 0x02;//((curr_anim->next_anim->id == curr_anim->id) ? (0x01) : (0x02));
     }
     
-    if(new_frame + 1 >= curr_anim->frames_count)
+    if(ss_anim->current_frame != new_frame)
     {
-        ss_anim->current_frame = 0;
-        ss_anim->frame_time = dt;
+        ss_anim->current_frame = new_frame;
         return 0x01;
     }
     
-    if(ss_anim->current_frame == new_frame)
-    {
-        return 0x00;
-    }
-    ss_anim->current_frame = new_frame;
-    return 0x01;
+    return 0x00;
 }

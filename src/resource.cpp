@@ -1700,7 +1700,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         bone_frame = model->animations->frames;
 
         model->animations->id = 0;
-        model->animations->next_anim = NULL;
+        model->animations->next_anim = model->animations->next_anim;
         model->animations->next_frame = 0;
         model->animations->state_change = NULL;
         model->animations->state_change_count = 0;
@@ -1960,7 +1960,8 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
     {
         anim->state_change_count = 0;
         anim->state_change = NULL;
-
+        anim->next_anim = anim;
+        anim->next_frame = 0;
         tr_animation = &tr->animations[tr_moveable->animation_index + i];
         int16_t j = tr_animation->next_animation - tr_moveable->animation_index;
         j &= 0x7fff;
@@ -1976,11 +1977,6 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
 #if LOG_ANIM_DISPATCHES
             Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, anim->next_anim->id, anim->next_frame);
 #endif
-        }
-        else
-        {
-            anim->next_anim = NULL;
-            anim->next_frame = 0;
         }
 
         anim->state_change_count = 0;
