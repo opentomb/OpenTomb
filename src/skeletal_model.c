@@ -11,6 +11,7 @@
 
 
 void SSBoneFrame_InitSSAnim(struct ss_animation_s *ss_anim, uint32_t anim_type_id);
+void Anim_SetNextAnimFrame(struct ss_animation_s *ss_anim, int32_t new_frame);
 
 void SkeletalModel_Clear(skeletal_model_p model)
 {
@@ -792,7 +793,7 @@ int Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id)
 /*
  * Next frame and next anim calculation function.
  */
-inline void Anim_SetNextAnimFrame(struct ss_animation_s *ss_anim, int32_t new_frame)
+void Anim_SetNextAnimFrame(struct ss_animation_s *ss_anim, int32_t new_frame)
 {
     animation_frame_p curr_anim = ss_anim->model->animations + ss_anim->current_animation;
     if(new_frame + 1 < curr_anim->frames_count)
