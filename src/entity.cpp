@@ -943,7 +943,7 @@ void Entity_DoAnimTransformCommand(entity_p entity, int16_t prev_anim, int16_t p
         animation_frame_p curr_af = entity->bf->animations.model->animations + entity->bf->animations.current_animation;
         animation_frame_p prev_af = entity->bf->animations.model->animations + prev_anim;
 
-        if((changing >= 2) && (curr_af->command_flags & ANIM_CMD_JUMP))
+        if((entity->bf->animations.current_frame == 1) && (prev_frame == 0) && (curr_af->command_flags & ANIM_CMD_JUMP))
         {
             Character_SetToJump(entity, -curr_af->v_Vertical, curr_af->v_Horizontal);
         }
