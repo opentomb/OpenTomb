@@ -621,7 +621,7 @@ void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int anim_type, int ani
         ss_anim->lerp = 0.0;
         frame %= anim->frames_count;
         frame = (frame >= 0) ? (frame) : (anim->frames_count - 1 + frame);
-        ss_anim->period = 1.0 / 30.0;
+        ss_anim->period = 1.0f / 30.0f;
 
         ss_anim->current_state = anim->state_id;
         ss_anim->next_state = anim->state_id;
@@ -630,9 +630,7 @@ void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int anim_type, int ani
         ss_anim->current_frame = frame;
 
         ss_anim->frame_time = (float)frame * ss_anim->period;
-        //long int t = (ss_anim->frame_time) / ss_anim->period;
-        //float dt = ss_anim->frame_time - (float)t * ss_anim->period;
-        ss_anim->frame_time = (float)frame * ss_anim->period;// + dt;
+        ss_anim->frame_time = (float)frame * ss_anim->period;
     }
 }
 
@@ -794,7 +792,7 @@ int Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id)
 /*
  * Next frame and next anim calculation function.
  */
-void inline Anim_SetNextAnimFrame(struct ss_animation_s *ss_anim, int32_t new_frame)
+inline void Anim_SetNextAnimFrame(struct ss_animation_s *ss_anim, int32_t new_frame)
 {
     animation_frame_p curr_anim = ss_anim->model->animations + ss_anim->current_animation;
     if(new_frame + 1 < curr_anim->frames_count)

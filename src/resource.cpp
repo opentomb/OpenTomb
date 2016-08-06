@@ -838,8 +838,8 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->floor_corners[0][2] -= (abs((float)raw_x_slant) * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= (abs((float)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= (fabs((float)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (fabs((float)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
@@ -849,8 +849,8 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->floor_corners[1][2] -= (abs((float)raw_y_slant) * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= (abs((float)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (fabs((float)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= (fabs((float)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -874,8 +874,8 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->ceiling_corners[1][2] += (abs((float)raw_x_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[0][2] += (abs((float)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += (fabs((float)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (fabs((float)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
@@ -885,8 +885,8 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->ceiling_corners[0][2] += (abs((float)raw_y_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += (abs((float)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (fabs((float)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += (fabs((float)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;

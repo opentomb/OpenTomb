@@ -99,7 +99,7 @@ void Spline_BuildLine(spline_p spline)
 
 float Spline_Get(spline_p spline, float t)
 {
-    uint32_t i = t;
+    int32_t i = t;
 
     if((i < 0) || (i + 1 > spline->base_points_count))
     {
