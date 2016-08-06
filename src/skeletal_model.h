@@ -70,11 +70,14 @@ typedef struct ss_animation_s
 {
     uint16_t                    type : 15;
     uint16_t                    enabled : 1;
+    uint16_t                    unused;
     int16_t                     current_state;
     int16_t                     next_state;
-    int16_t                     current_animation;                              //
-    int16_t                     current_frame;                                  //
-
+    int16_t                     current_animation;
+    int16_t                     current_frame;
+    int16_t                     next_animation;
+    int16_t                     next_frame;
+    
     uint16_t                    anim_frame_flags;                               // base animation control flags
     uint16_t                    anim_ext_flags;                                 // additional animation control flags
 

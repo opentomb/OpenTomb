@@ -2429,20 +2429,20 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
 
                 if(ss_anim->current_frame < t - 1)
                 {
-                    //ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
+                    ss_anim->next_animation = ss_anim->current_animation;
                 }
                 else if(ss_anim->current_frame < t)
                 {
-                    //ss_anim->next_frame = 0;
-                    //ss_anim->next_animation = 0;
+                    ss_anim->next_frame = 0;
+                    ss_anim->next_animation = 0;
                 }
                 else
                 {
                     ss_anim->current_frame = 0;
                     ss_anim->current_animation = 0;
-                    //ss_anim->next_frame = 0;
-                    //ss_anim->next_animation = 0;
+                    ss_anim->next_frame = 0;
+                    ss_anim->next_animation = 0;
                     ss_anim->frame_time = 0.0;
                     ss_anim->current_state = WEAPON_STATE_IDLE;
                 }
@@ -2451,14 +2451,14 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
             case WEAPON_STATE_IDLE:
                 ss_anim->current_frame = 0;
                 ss_anim->current_animation = 0;
-                //ss_anim->next_frame = 0;
-                //ss_anim->next_animation = 0;
+                ss_anim->next_frame = 0;
+                ss_anim->next_animation = 0;
                 ss_anim->frame_time = 0.0;
                 if(ent->character->cmd.ready_weapon)
                 {
                     ss_anim->current_animation = 2;
-                    //ss_anim->next_animation = 2;
-                    //ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                    ss_anim->next_animation = 2;
+                    ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
                     ss_anim->frame_time = 0.0;
                     ss_anim->current_state = WEAPON_STATE_IDLE_TO_HIDE;
                 }
@@ -2482,13 +2482,13 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                 if(ss_anim->current_frame > 0)
                 {
-                    //ss_anim->next_frame = ss_anim->current_frame - 1;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_frame = ss_anim->current_frame - 1;
+                    ss_anim->next_animation = ss_anim->current_animation;
                 }
                 else
                 {
-                    //ss_anim->next_frame = ss_anim->current_frame = 0;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_frame = ss_anim->current_frame = 0;
+                    ss_anim->next_animation = ss_anim->current_animation;
                     ss_anim->current_state = WEAPON_STATE_IDLE;
                 }
                 break;
@@ -2503,7 +2503,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 if(ent->character->cmd.ready_weapon)
                 {
                     ss_anim->current_animation = 2;
-                    //ss_anim->next_animation = 2;
+                    ss_anim->next_animation = 2;
                     ss_anim->frame_time = 0.0;
                     ss_anim->current_state = WEAPON_STATE_IDLE_TO_HIDE;
                     break;
@@ -2525,20 +2525,20 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
 
                 if(ss_anim->current_frame < t - 1)
                 {
-                    //ss_anim->next_frame = ss_anim->current_frame + 1;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_frame = ss_anim->current_frame + 1;
+                    ss_anim->next_animation = ss_anim->current_animation;
                 }
                 else if(ss_anim->current_frame < t)
                 {
-                    //ss_anim->next_frame = 0;
-                    //ss_anim->next_animation = 3;
+                    ss_anim->next_frame = 0;
+                    ss_anim->next_animation = 3;
                 }
                 else if(!silent && ent->character->cmd.action)
                 {
                     ss_anim->current_frame = 0;
-                    //ss_anim->next_frame = 1;
+                    ss_anim->next_frame = 1;
                     ss_anim->current_animation = 3;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_animation = ss_anim->current_animation;
                     ss_anim->current_state = WEAPON_STATE_FIRE;
                 }
                 else
@@ -2565,28 +2565,28 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
 
                     if(ss_anim->current_frame < t - 1)
                     {
-                        //ss_anim->next_frame = ss_anim->current_frame + 1;
-                        //ss_anim->next_animation = ss_anim->current_animation;
+                        ss_anim->next_frame = ss_anim->current_frame + 1;
+                        ss_anim->next_animation = ss_anim->current_animation;
                     }
                     else if(ss_anim->current_frame < t)
                     {
-                        //ss_anim->next_frame = 0;
-                        //ss_anim->next_animation = ss_anim->current_animation;
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
                     }
                     else
                     {
                         ss_anim->frame_time = dt;
                         ss_anim->current_frame = 0;
-                        //ss_anim->next_frame = 1;
+                        ss_anim->next_frame = 1;
                     }
                 }
                 else
                 {
                     ss_anim->frame_time = 0.0;
                     ss_anim->current_animation = 0;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_animation = ss_anim->current_animation;
                     ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
-                    //ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
+                    ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
                     ss_anim->current_state = WEAPON_STATE_FIRE_TO_IDLE;
                 }
                 break;
@@ -2601,13 +2601,13 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                 if(ss_anim->current_frame > 0)
                 {
-                    //ss_anim->next_frame = ss_anim->current_frame - 1;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_frame = ss_anim->current_frame - 1;
+                    ss_anim->next_animation = ss_anim->current_animation;
                 }
                 else
                 {
-                    //ss_anim->next_frame = ss_anim->current_frame = 0;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_frame = ss_anim->current_frame = 0;
+                    ss_anim->next_animation = ss_anim->current_animation;
                     ss_anim->current_state = WEAPON_STATE_HIDE;
                     ent->character->weapon_current_state = WEAPON_STATE_HIDE;
                     Character_SetWeaponModel(ent, ent->character->current_weapon, WEAPON_STATE_HIDE);
@@ -2657,9 +2657,9 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 if(ent->character->cmd.ready_weapon)   // ready weapon
                 {
                     ss_anim->current_animation = 1;
-                    //ss_anim->next_animation = 1;
+                    ss_anim->next_animation = 1;
                     ss_anim->current_frame = 0;
-                    //ss_anim->next_frame = 0;
+                    ss_anim->next_frame = 0;
                     ss_anim->frame_time = 0.0;
                     ss_anim->current_state = WEAPON_STATE_HIDE_TO_READY;
                     ent->character->weapon_current_state = WEAPON_STATE_IDLE;
@@ -2675,20 +2675,20 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
 
                 if(ss_anim->current_frame < t - 1)
                 {
-                    //ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_frame = (ss_anim->current_frame + 1) % t;
+                    ss_anim->next_animation = ss_anim->current_animation;
                 }
                 else if(ss_anim->current_frame < t)
                 {
-                    //ss_anim->next_frame = 0;
-                    //ss_anim->next_animation = 0;
+                    ss_anim->next_frame = 0;
+                    ss_anim->next_animation = 0;
                 }
                 else
                 {
                     ss_anim->current_frame = 0;
                     ss_anim->current_animation = 0;
-                    //ss_anim->next_frame = 0;
-                    //ss_anim->next_animation = 0;
+                    ss_anim->next_frame = 0;
+                    ss_anim->next_animation = 0;
                     ss_anim->frame_time = 0.0;
                     ss_anim->current_state = WEAPON_STATE_IDLE;
                 }
@@ -2697,13 +2697,13 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
             case WEAPON_STATE_IDLE:
                 ss_anim->current_frame = 0;
                 ss_anim->current_animation = 0;
-                //ss_anim->next_frame = 0;
-                //ss_anim->next_animation = 0;
+                ss_anim->next_frame = 0;
+                ss_anim->next_animation = 0;
                 ss_anim->frame_time = 0.0;
                 if(ent->character->cmd.ready_weapon)
                 {
                     ss_anim->current_animation = 3;
-                    //ss_anim->next_animation = 3;
+                    ss_anim->next_animation = 3;
                     //ss_anim->current_frame = ss_anim->next_frame = 0;
                     ss_anim->frame_time = 0.0;
                     ss_anim->current_state = WEAPON_STATE_IDLE_TO_HIDE;
@@ -2728,13 +2728,13 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 ss_anim->current_frame = t - 1 - ss_anim->current_frame;
                 if(ss_anim->current_frame > 0)
                 {
-                    //ss_anim->next_frame = ss_anim->current_frame - 1;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_frame = ss_anim->current_frame - 1;
+                    ss_anim->next_animation = ss_anim->current_animation;
                 }
                 else
                 {
-                    //ss_anim->next_frame = ss_anim->current_frame = 0;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_frame = ss_anim->current_frame = 0;
+                    ss_anim->next_animation = ss_anim->current_animation;
                     ss_anim->current_state = WEAPON_STATE_IDLE;
                 }
                 break;
@@ -2749,7 +2749,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 if(ent->character->cmd.ready_weapon)
                 {
                     ss_anim->current_animation = 3;
-                    //ss_anim->next_animation = 3;
+                    ss_anim->next_animation = 3;
                     ss_anim->frame_time = 0.0;
                     ss_anim->current_state = WEAPON_STATE_IDLE_TO_HIDE;
                     break;
@@ -2771,20 +2771,20 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
 
                 if(ss_anim->current_frame < t - 1)
                 {
-                    //ss_anim->next_frame = ss_anim->current_frame + 1;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_frame = ss_anim->current_frame + 1;
+                    ss_anim->next_animation = ss_anim->current_animation;
                 }
                 else if(ss_anim->current_frame < t)
                 {
-                    //ss_anim->next_frame = 0;
-                    //ss_anim->next_animation = 2;
+                    ss_anim->next_frame = 0;
+                    ss_anim->next_animation = 2;
                 }
                 else if(ent->character->cmd.action)
                 {
                     ss_anim->current_frame = 0;
-                    //ss_anim->next_frame = 1;
+                    ss_anim->next_frame = 1;
                     ss_anim->current_animation = 2;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_animation = ss_anim->current_animation;
                     ss_anim->current_state = WEAPON_STATE_FIRE;
                 }
                 else
@@ -2811,28 +2811,28 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
 
                     if(ss_anim->current_frame < t - 1)
                     {
-                        //ss_anim->next_frame = ss_anim->current_frame + 1;
-                        //ss_anim->next_animation = ss_anim->current_animation;
+                        ss_anim->next_frame = ss_anim->current_frame + 1;
+                        ss_anim->next_animation = ss_anim->current_animation;
                     }
                     else if(ss_anim->current_frame < t)
                     {
-                        //ss_anim->next_frame = 0;
-                        //ss_anim->next_animation = ss_anim->current_animation;
+                        ss_anim->next_frame = 0;
+                        ss_anim->next_animation = ss_anim->current_animation;
                     }
                     else
                     {
                         ss_anim->frame_time = dt;
                         ss_anim->current_frame = 0;
-                        //ss_anim->next_frame = 1;
+                        ss_anim->next_frame = 1;
                     }
                 }
                 else
                 {
                     ss_anim->frame_time = 0.0;
                     ss_anim->current_animation = 0;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_animation = ss_anim->current_animation;
                     ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
-                    //ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
+                    ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
                     ss_anim->current_state = WEAPON_STATE_FIRE_TO_IDLE;
                 }
                 break;
@@ -2845,13 +2845,13 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 ss_anim->lerp = dt / ss_anim->period;
                 if(ss_anim->current_frame < t - 1)
                 {
-                    //ss_anim->next_frame = ss_anim->current_frame + 1;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_frame = ss_anim->current_frame + 1;
+                    ss_anim->next_animation = ss_anim->current_animation;
                 }
                 else
                 {
-                    //ss_anim->next_frame = ss_anim->current_frame = 0;
-                    //ss_anim->next_animation = ss_anim->current_animation;
+                    ss_anim->next_frame = ss_anim->current_frame = 0;
+                    ss_anim->next_animation = ss_anim->current_animation;
                     ss_anim->current_state = WEAPON_STATE_HIDE;
                     ent->character->weapon_current_state = WEAPON_STATE_HIDE;
                     Character_SetWeaponModel(ent, ent->character->current_weapon, WEAPON_STATE_HIDE);

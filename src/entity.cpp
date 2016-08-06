@@ -936,18 +936,18 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
 }
 
 
-void Entity_DoAnimTransformCommand(entity_p entity, int16_t prev_anim, int16_t prev_frame, int changing)
+void Entity_DoAnimTransformCommand(entity_p entity, struct ss_animation_s *ss_anim, int16_t prev_anim, int16_t prev_frame, int changing)
 {
-    if(entity->bf->animations.model != NULL)
+    if(ss_anim->model != NULL)
     {
-        animation_frame_p curr_af = entity->bf->animations.model->animations + entity->bf->animations.current_animation;
-        animation_frame_p prev_af = entity->bf->animations.model->animations + prev_anim;
+        animation_frame_p curr_af = ss_anim->model->animations + ss_anim->current_animation;
+        animation_frame_p prev_af = ss_anim->model->animations + prev_anim;
 
-        if((entity->bf->animations.current_frame == 1) && (prev_frame == 0) && (curr_af->command_flags & ANIM_CMD_JUMP))
+        if((ss_anim->current_frame == 1) && (prev_frame == 0) && (curr_af->command_flags & ANIM_CMD_JUMP))
         {
             Character_SetToJump(entity, -curr_af->v_Vertical, curr_af->v_Horizontal);
         }
-        if((changing >= 1) && (curr_af->condition_frame == entity->bf->animations.current_frame) && (curr_af->command_flags & ANIM_CMD_CHANGE_DIRECTION))
+        if((changing >= 1) && (curr_af->condition_frame == ss_anim->current_frame) && (curr_af->command_flags & ANIM_CMD_CHANGE_DIRECTION))
         {
             entity->angles[0] += 180.0f;
             if(entity->move_type == MOVE_UNDERWATER)
@@ -1052,7 +1052,7 @@ void Entity_Frame(entity_p entity, float time)
                             entity->no_fix_all = 0x00;
                         }
                         Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
-                        Entity_DoAnimTransformCommand(entity, old_anim, old_frame, frame_switch_state);
+                        Entity_DoAnimTransformCommand(entity, ss_anim, old_anim, old_frame, frame_switch_state);
                     }
 
                     // Update acceleration.
