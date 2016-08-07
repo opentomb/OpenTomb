@@ -11,7 +11,6 @@
 
 
 void SSBoneFrame_InitSSAnim(struct ss_animation_s *ss_anim, uint32_t anim_type_id);
-void Anim_SetNextAnimFrame(struct ss_animation_s *ss_anim, int32_t new_frame);
 
 void SkeletalModel_Clear(skeletal_model_p model)
 {
@@ -627,10 +626,11 @@ void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int anim_type, int ani
         ss_anim->current_state = anim->state_id;
         ss_anim->next_state = anim->state_id;
 
+        ss_anim->next_animation = animation;
+        ss_anim->next_frame = frame;
         ss_anim->current_animation = animation;
         ss_anim->current_frame = frame;
 
-        ss_anim->frame_time = (float)frame * ss_anim->period;
         ss_anim->frame_time = (float)frame * ss_anim->period;
     }
 }
@@ -793,27 +793,11 @@ int Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id)
 /*
  * Next frame and next anim calculation function.
  */
-void Anim_SetNextAnimFrame(struct ss_animation_s *ss_anim, int32_t new_frame)
-{
-    animation_frame_p curr_anim = ss_anim->model->animations + ss_anim->current_animation;
-    if(new_frame + 1 < curr_anim->frames_count)
-    {
-        ss_anim->next_frame = new_frame + 1;
-        ss_anim->next_animation = ss_anim->current_animation;
-    }
-    else
-    {
-        ss_anim->next_frame = curr_anim->next_frame;
-        ss_anim->next_animation = curr_anim->next_anim->id;
-    }
-}
-
-
 int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_change_s *stc)
 {
     float dt;
     int32_t new_frame;
-    animation_frame_p curr_anim = ss_anim->model->animations + ss_anim->current_animation;
+    animation_frame_p next_anim = ss_anim->model->animations + ss_anim->next_animation;
     
     ss_anim->frame_time = (ss_anim->frame_time >= 0.0f) ? (ss_anim->frame_time) : (0.0f);
     ss_anim->frame_time += time;
@@ -824,20 +808,20 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_
     /*
      * Flag has a highest priority
      */
-    if((new_frame + 1 >= curr_anim->frames_count) && (ss_anim->anim_frame_flags == ANIM_LOOP_LAST_FRAME))
+    if((new_frame + 1 >= next_anim->frames_count) && (ss_anim->anim_frame_flags == ANIM_LOOP_LAST_FRAME))
     {
-        ss_anim->current_frame = curr_anim->frames_count - 1;
-        ss_anim->next_frame = ss_anim->current_frame;
-        ss_anim->next_animation = ss_anim->current_animation;
+        ss_anim->next_frame = next_anim->frames_count - 1;
+        ss_anim->current_frame = ss_anim->next_frame;
+        ss_anim->current_animation = ss_anim->next_animation;
         ss_anim->lerp = 0.0f;
-        ss_anim->frame_time = (float)ss_anim->current_frame * ss_anim->period;
+        ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period;
         return 0x00;
     }
     else if(ss_anim->anim_frame_flags == ANIM_FRAME_LOCK)
     {
         ss_anim->current_frame = 0;
-        ss_anim->next_frame = ss_anim->current_frame;
-        ss_anim->next_animation = ss_anim->current_animation;
+        ss_anim->current_frame = ss_anim->next_frame;
+        ss_anim->current_animation = ss_anim->next_animation;
         ss_anim->lerp = 0.0f;
         ss_anim->frame_time = 0.0f;
         return 0x00;
@@ -853,35 +837,38 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_
         {
             if((disp->frame_high >= disp->frame_low) && ((new_frame >= disp->frame_low) && (new_frame <= disp->frame_high)))
             {
-                ss_anim->lerp = 0.0f;
-                ss_anim->current_animation  = disp->next_anim;
-                ss_anim->current_frame = disp->next_frame;
-                Anim_SetNextAnimFrame(ss_anim, disp->next_frame);
-                ss_anim->frame_time = (float)ss_anim->current_frame * ss_anim->period + dt;
+                ss_anim->current_animation = ss_anim->next_animation;
+                ss_anim->current_frame = ss_anim->next_frame;
+                ss_anim->next_animation = disp->next_anim;
+                ss_anim->next_frame = disp->next_frame;
+                ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
                 ss_anim->current_state = ss_anim->model->animations[ss_anim->current_animation].state_id;
                 ss_anim->next_state = ss_anim->current_state;
                 return 0x03;
             }
         }
     }
-    Anim_SetNextAnimFrame(ss_anim, new_frame);
     
     /*
      * Check next anim if frame >= frames_count
      */
-    if(new_frame + 1 >= curr_anim->frames_count)
+    if(new_frame + 1 > next_anim->frames_count)
     {
-        ss_anim->current_frame = curr_anim->next_frame;
-        ss_anim->current_animation  = curr_anim->next_anim->id;
-        ss_anim->frame_time = (float)ss_anim->current_frame * ss_anim->period + dt;
+        ss_anim->current_animation = ss_anim->next_animation;
+        ss_anim->current_frame = ss_anim->next_frame;
+        ss_anim->next_frame = next_anim->next_frame;
+        ss_anim->next_animation  = next_anim->next_anim->id;
+        ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
         ss_anim->current_state = ss_anim->model->animations[ss_anim->current_animation].state_id;
         ss_anim->next_state = ss_anim->current_state;
         return 0x02;
     }
     
-    if(ss_anim->current_frame != new_frame)
+    if(ss_anim->next_frame != new_frame)
     {
-        ss_anim->current_frame = new_frame;
+        ss_anim->current_animation = ss_anim->next_animation;
+        ss_anim->current_frame = ss_anim->next_frame;
+        ss_anim->next_frame = new_frame;
         return 0x01;
     }
     

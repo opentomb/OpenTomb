@@ -940,14 +940,14 @@ void Entity_DoAnimTransformCommand(entity_p entity, struct ss_animation_s *ss_an
 {
     if(ss_anim->model != NULL)
     {
+        animation_frame_p next_af = ss_anim->model->animations + ss_anim->next_animation;
         animation_frame_p curr_af = ss_anim->model->animations + ss_anim->current_animation;
-        animation_frame_p prev_af = ss_anim->model->animations + prev_anim;
 
-        if((ss_anim->current_frame == 1) && (prev_frame == 0) && (curr_af->command_flags & ANIM_CMD_JUMP))
+        if((ss_anim->current_frame == 0) && (next_af->command_flags & ANIM_CMD_JUMP))
         {
-            Character_SetToJump(entity, -curr_af->v_Vertical, curr_af->v_Horizontal);
+            Character_SetToJump(entity, -next_af->v_Vertical, next_af->v_Horizontal);
         }
-        if((changing >= 1) && (curr_af->condition_frame == ss_anim->current_frame) && (curr_af->command_flags & ANIM_CMD_CHANGE_DIRECTION))
+        if((changing >= 1) && (next_af->condition_frame == ss_anim->next_frame) && (next_af->command_flags & ANIM_CMD_CHANGE_DIRECTION))
         {
             entity->angles[0] += 180.0f;
             if(entity->move_type == MOVE_UNDERWATER)
@@ -963,18 +963,17 @@ void Entity_DoAnimTransformCommand(entity_p entity, struct ss_animation_s *ss_an
                 entity->dir_flag = ENT_MOVE_BACKWARD;
             }
 
-            /*if(curr_af->condition_frame > 0)
-            {
-                Entity_SetAnimation(entity, ANIM_TYPE_BASE, curr_af->next_anim->id, curr_af->next_frame);
-            }*/
+            //ss_anim->current_animation = ss_anim->next_animation;
+            //ss_anim->current_frame = ss_anim->next_frame;
+            Anim_SetNextFrame(ss_anim, ss_anim->period, NULL);
             Entity_UpdateTransform(entity);
             Entity_UpdateRigidBody(entity, 1);
         }
-        if((changing >= 2) && (prev_af->command_flags & ANIM_CMD_MOVE))
+        if((changing >= 2) && (curr_af->command_flags & ANIM_CMD_MOVE))
         {
             float tr[3];
             entity->no_fix_all = 0x01;
-            Mat4_vec3_rot_macro(tr, entity->transform, prev_af->move);
+            Mat4_vec3_rot_macro(tr, entity->transform, curr_af->move);
             vec3_add(entity->transform + 12, entity->transform + 12, tr);
         }
     }
@@ -1047,7 +1046,7 @@ void Entity_Frame(entity_p entity, float time)
                     uint16_t frame_switch_state = Anim_SetNextFrame(ss_anim, time, stc);
                     if(frame_switch_state > 0)
                     {
-                        if(frame_switch_state >= 2)
+                        if(frame_switch_state >= 0x02)
                         {
                             entity->no_fix_all = 0x00;
                         }
