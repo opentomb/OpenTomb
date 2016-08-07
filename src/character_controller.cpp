@@ -656,25 +656,22 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
                 vec3_copy(n1, cb.normale);
                 n1[3] = -vec3_dot(n1, cb.point);
                 up_founded = 2;
-                if(vec3_dot(n0, n1) >= 0.98f)
+                from[0] = test_from[0];
+                from[1] = test_from[1];
+                from[2] = cb.point[2];
+                to[0] = test_to[0];
+                to[1] = test_to[1];
+                to[2] = from[2];
+                while(to[2] > test_to[2])
                 {
-                    from[0] = test_from[0];
-                    from[1] = test_from[1];
-                    from[2] = cb.point[2];
-                    to[0] = test_to[0];
-                    to[1] = test_to[1];
-                    to[2] = from[2];
-                    while(to[2] > test_to[2])
+                    if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (vec3_dot(cb.normale, n1) < 0.98f))
                     {
-                        if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (vec3_dot(cb.normale, n1) < 0.98f))
-                        {
-                            vec3_copy(n0, cb.normale);
-                            n0[3] = -vec3_dot(n0, cb.point);
-                            break;
-                        }
-                        from[2] += z_step;
-                        to[2] += z_step;
+                        vec3_copy(n0, cb.normale);
+                        n0[3] = -vec3_dot(n0, cb.point);
+                        break;
                     }
+                    from[2] += z_step;
+                    to[2] += z_step;
                 }
             }
         }
