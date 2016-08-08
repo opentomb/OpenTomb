@@ -134,6 +134,48 @@ void Engine_Start(const char *config_name)
 }
 
 
+void Engine_ParseArgs(int argc, char **argv)
+{
+    //No arguments to process so let's exit
+    if(argc <= 0)
+    {
+        return;
+    }
+
+    //Note: first argument is always executable filepath so we start to iterate from 1
+    for(int32_t i = 1; i < argc; i++)
+    {
+        char* currentArg = argv[i];
+
+        //Check delimiter
+        if(currentArg[0] == '-')
+        {
+            //Increment pointer char pointer by 1 so we can simply compare "config="
+            currentArg++;
+            if(!strncmp(currentArg, "config=", 6))
+            {
+                ///@FIXME probably best to strlen arg then check the final size to prevent 0 length paths
+                currentArg += 6;
+
+                Sys_DebugLog(SYS_LOG_FILENAME, "Config path override: %s\n", currentArg);
+
+                //Check if the config file exists or not
+                if(Sys_FileFound(currentArg, 0))
+                {
+                    ///@TODO Attempt to load config from custom file, if fail load default.
+                    Sys_DebugLog(SYS_LOG_FILENAME, "Config exists!");
+                }
+                else
+                {
+                    ///@TODO Should load default config
+                    Sys_DebugLog(SYS_LOG_FILENAME, "Config doesn't exist!");
+                }
+            }
+        }
+    }
+}
+
+
 void Engine_Shutdown(int val)
 {
     renderer.ResetWorld(NULL, 0, NULL, 0);
@@ -224,7 +266,6 @@ void Engine_Init_Pre()
 
     Script_CallVoidFunc(engine_lua, "loadscript_pre", true);
 
-    Gameflow_Init();
     Cam_Init(&engine_camera);
     engine_camera_state.state = CAMERA_STATE_NORMAL;
     engine_camera_state.flyby = NULL;
@@ -785,7 +826,7 @@ void Engine_MainLoop()
         Sys_ResetTempMem();
         Engine_PollSDLEvents();
         Game_Frame(time);
-        Gameflow_Do();
+        gameflow.Do();
 
         Audio_Update(time);
         Engine_Display();
@@ -865,7 +906,7 @@ void ShowDebugInfo()
                 entity_p ent = World_GetPlayer();
                 if(ent && ent->character)
                 {
-                    GLText_OutTextXY(30.0f, y += dy, "last_anim = %03d, curr_anim = %03d, next_anim = %03d, last_st = %03d, next_st = %03d", ent->bf->animations.last_animation, ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.last_state, ent->bf->animations.next_state);
+                    GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, next_anim = %03d, curr_st = %03d, next_st = %03d", ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.current_state, ent->bf->animations.next_state);
                     GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, next_anim = %03d, curr_frame = %03d, next_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.next_animation, ent->bf->animations.current_frame, ent->bf->animations.next_frame);
                     GLText_OutTextXY(30.0f, y += dy, "posX = %f, posY = %f, posZ = %f", ent->transform[12], ent->transform[13], ent->transform[14]);
                 }
@@ -995,7 +1036,7 @@ void Engine_GetLevelName(char *name, const char *path)
 void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix, uint32_t buf_size)
 {
     char level_name[LEVEL_NAME_MAX_LEN];
-    Engine_GetLevelName(level_name, gameflow_manager.CurrentLevelPath);
+    Engine_GetLevelName(level_name, gameflow.getCurrentLevelPath());
 
     name[0] = 0;
 
@@ -1076,7 +1117,7 @@ int Engine_LoadMap(const char *name)
     Gui_DrawLoadScreen(0);
 
     // it is needed for "not in the game" levels or correct saves loading.
-    strncpy(gameflow_manager.CurrentLevelPath, name, MAX_ENGINE_PATH);
+    gameflow.setCurrentLevelPath(name);
 
     Gui_DrawLoadScreen(100);
 

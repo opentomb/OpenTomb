@@ -70,9 +70,8 @@ typedef struct ss_animation_s
 {
     uint16_t                    type : 15;
     uint16_t                    enabled : 1;
-    int16_t                     last_state;
+    int16_t                     current_state;
     int16_t                     next_state;
-    int16_t                     last_animation;
     int16_t                     current_animation;                              //
     int16_t                     next_animation;                                 //
     int16_t                     current_frame;                                  //

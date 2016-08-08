@@ -257,7 +257,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
  * - Free fall animations
  * - Water animations
  */
-    switch(ss_anim->last_state)
+    switch(ss_anim->current_state)
     {
         /*
          * Base onfloor animations
@@ -755,8 +755,8 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }
 
             }
-            else if(((ss_anim->last_state == TR_STATE_LARA_TURN_LEFT_SLOW ) && (cmd->move[1] == -1)) ||
-                    ((ss_anim->last_state == TR_STATE_LARA_TURN_RIGHT_SLOW) && (cmd->move[1] ==  1))  )
+            else if(((ss_anim->current_state == TR_STATE_LARA_TURN_LEFT_SLOW ) && (cmd->move[1] == -1)) ||
+                    ((ss_anim->current_state == TR_STATE_LARA_TURN_RIGHT_SLOW) && (cmd->move[1] ==  1))  )
             {
                 int substance_state = Entity_GetSubstanceState(ent);
                 if((last_frame) &&
@@ -901,7 +901,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 {
                     ss_anim->next_state = TR_STATE_LARA_WALK_FORWARD;
                 }
-                else if((cmd->jump == 1) && (ss_anim->last_animation != TR_ANIMATION_LARA_STAY_TO_RUN))
+                else if((cmd->jump == 1) && (ss_anim->current_animation != TR_ANIMATION_LARA_STAY_TO_RUN))
                 {
                     ss_anim->next_state = TR_STATE_LARA_JUMP_FORWARD;
                 }
@@ -2614,7 +2614,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 if(!curr_fc->floor_hit.hit || (pos[2] - ent->character->Height > curr_fc->floor_hit.point[2]- ent->character->swim_depth))
                 {
-                    //ent->last_state = ent->last_state;                          // swim forward
+                    //ent->current_state = ent->current_state;                          // swim forward
                 }
                 else
                 {

@@ -284,7 +284,7 @@ void Save_Entity(FILE **f, entity_p ent)
     for(ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
     {
         fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->current_animation, ss_anim->current_frame, ss_anim->next_animation, ss_anim->next_frame);
-        fprintf(*f, "\nsetEntityAnimState(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state, ss_anim->last_state);
+        fprintf(*f, "\nsetEntityAnimState(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state, ss_anim->current_state);
         fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %d, %.2f, %.2f, %.2f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type, ss_anim->targeting_bone,
             ss_anim->target[0], ss_anim->target[1], ss_anim->target[2],
             ss_anim->bone_direction[0], ss_anim->bone_direction[1], ss_anim->bone_direction[2]);
@@ -333,7 +333,7 @@ int Game_Save(const char* name)
         return 0;
     }
 
-    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath, gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
+    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow.getCurrentLevelPath(), gameflow.getCurrentGameID(), gameflow.getCurrentLevelID());
 
     // Save flipmap and flipped room states.
     uint8_t *flip_map;
@@ -774,7 +774,7 @@ void Game_Prepare()
 
     // Set gameflow parameters to default.
     // Reset secret trigger map.
-    memset(gameflow_manager.SecretsTriggerMap, 0, sizeof(gameflow_manager.SecretsTriggerMap));
+    gameflow.resetSecrets();///@UNIMPLEMENTED We should save the secrets to a save file prior to resetting!
 }
 
 

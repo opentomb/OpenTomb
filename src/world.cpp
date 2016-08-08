@@ -2209,8 +2209,8 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
      */
     room->alternate_room = NULL;
     room->base_room = NULL;
-
-    if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count) && (room->id < tr_room->alternate_room))
+    // condition vas commented because heavy glitches in TR3+
+    if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count) /*&& (room->id < tr_room->alternate_room)*/)
     {
         room->alternate_room = global_world.rooms + tr_room->alternate_room;
     }
@@ -2387,7 +2387,7 @@ void World_GenEntities(class VT_Level *tr)
             switch(tr->game_version)
             {
                 case TR_I:
-                    if(gameflow_manager.CurrentLevelID == 0)
+                    if(gameflow.getCurrentLevelID() == 0)
                     {
                         LM = World_GetModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
                         if(LM)
@@ -2521,6 +2521,11 @@ void World_GenRoomCollision()
 {
     room_p r = global_world.rooms;
 
+    if(r == NULL)
+    {
+        return;
+    }
+
     /*
     if(level_script != NULL)
     {
@@ -2565,6 +2570,12 @@ void World_GenRoomCollision()
 void World_FixRooms()
 {
     room_p r = global_world.rooms;
+
+    if(r == NULL)
+    {
+        return;
+    }
+
     for(uint32_t i = 0; i < global_world.rooms_count; i++, r++)
     {
         if(r->base_room != NULL)
@@ -2588,6 +2599,11 @@ void World_FixRooms()
 void World_MakeEntityItems(struct RedBlackNode_s *n)
 {
     base_item_p item = (base_item_p)n->data;
+
+    if(item == NULL)
+    {
+        return;
+    }
 
     for(uint32_t i = 0; i < global_world.rooms_count; i++)
     {

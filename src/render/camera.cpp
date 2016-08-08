@@ -1,12 +1,7 @@
 
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 #include <stdlib.h>
 #include <math.h>
 
-#include "../core/gl_util.h"
-#include "../core/vmath.h"
-#include "../core/polygon.h"
 #include "camera.h"
 #include "frustum.h"
 
