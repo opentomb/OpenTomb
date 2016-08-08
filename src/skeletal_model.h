@@ -179,17 +179,12 @@ typedef struct animation_frame_s
 {
     uint32_t                    id;
     uint16_t                    original_frame_rate;
-    uint16_t                    command_flags;          // & 0x01 - move need, &0x02 - 180 rotate need
-    uint16_t                    condition_frame;
     uint16_t                    state_id;
     
     float                       speed_x;                // Forward-backward speed
     float                       accel_x;                // Forward-backward accel
     float                       speed_y;                // Left-right speed
     float                       accel_y;                // Left-right accel
-    float                       move[3];                // move command data
-    float                       v_Vertical;             // jump command data
-    float                       v_Horizontal;           // jump command data
     uint32_t                    anim_command;
     uint32_t                    num_anim_commands;
     
@@ -253,7 +248,7 @@ void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_t
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
 int  Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id);
-int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_change_s *stc);
+int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time);
 
 #ifdef	__cplusplus
 }

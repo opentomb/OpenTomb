@@ -1149,73 +1149,6 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
     return ret;
 }
 
-
-void GenerateAnimCommandsTransform(skeletal_model_p model, int16_t *base_anim_commands_array)
-{
-    if(!base_anim_commands_array)
-    {
-        return;
-    }
-
-    //Sys_DebugLog("anim_transform.txt", "MODEL[%d]", model->id);
-    for(uint16_t anim = 0; anim < model->animation_count; anim++)
-    {
-        if(model->animations[anim].num_anim_commands > 255)
-        {
-            continue;                                                           // If no anim commands or current anim has more than 255 (according to TRosettaStone).
-        }
-
-        animation_frame_p af  = model->animations + anim;
-        int16_t *pointer      = base_anim_commands_array + af->anim_command;
-
-        for(uint32_t i = 0; i < af->num_anim_commands; i++, pointer++)
-        {
-            switch(*pointer)
-            {
-                case TR_ANIMCOMMAND_SETPOSITION:
-                    // This command executes ONLY at the end of animation.
-                    af->move[0] = (float)(*++pointer);                          // x = x;
-                    af->move[2] =-(float)(*++pointer);                          // z =-y
-                    af->move[1] = (float)(*++pointer);                          // y = z
-                    af->command_flags |= ANIM_CMD_MOVE;
-                    //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames_count-1, af->frames_count);
-                    break;
-
-                case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    af->v_Vertical   = *++pointer;
-                    af->v_Horizontal = *++pointer;
-                    af->command_flags |= ANIM_CMD_JUMP;
-                    break;
-
-                case TR_ANIMCOMMAND_EMPTYHANDS:
-                    break;
-
-                case TR_ANIMCOMMAND_KILL:
-                    break;
-
-                case TR_ANIMCOMMAND_PLAYSOUND:
-                    ++pointer;
-                    ++pointer;
-                    break;
-
-                case TR_ANIMCOMMAND_PLAYEFFECT:
-                    {
-                        af->condition_frame = *++pointer;
-                        switch(*++pointer & 0x3FFF)
-                        {
-                            case TR_EFFECT_CHANGEDIRECTION:
-                                af->command_flags |= ANIM_CMD_CHANGE_DIRECTION;
-                                //Con_Printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames_count);
-                                //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames_count);
-                                break;
-                        }
-                    }
-                    break;
-            }
-        }
-    }
-}
-
 /**   Assign animated texture to a polygon.
   *   While in original TRs we had TexInfo abstraction layer to refer texture,
   *   in OpenTomb we need to re-think animated texture concept to work on a
@@ -1705,11 +1638,6 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         model->animations->state_change = NULL;
         model->animations->state_change_count = 0;
         model->animations->original_frame_rate = 1;
-        model->animations->command_flags = 0x0000;
-        model->animations->condition_frame = 0xFFFF;
-        vec3_set_zero(model->animations->move);
-        model->animations->v_Horizontal = 0.0;
-        model->animations->v_Vertical = 0.0;
 
         bone_frame->bone_tag_count = model->mesh_count;
         bone_frame->bone_tags = (bone_tag_p)malloc(bone_frame->bone_tag_count * sizeof(bone_tag_t));
@@ -1762,17 +1690,11 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
 
         anim->id = i;
         anim->original_frame_rate = tr_animation->frame_rate;
-        anim->command_flags = 0x0000;
-        anim->condition_frame = 0xFFFF;
 
         anim->speed_x = tr_animation->speed;
         anim->accel_x = tr_animation->accel;
         anim->speed_y = tr_animation->accel_lateral;
         anim->accel_y = tr_animation->speed_lateral;
-        vec3_set_zero(anim->move);
-        anim->v_Horizontal = 0.0f;
-        anim->v_Vertical = 0.0f;
-
         anim->anim_command = tr_animation->anim_command;
         anim->num_anim_commands = tr_animation->num_anim_commands;
         anim->state_id = tr_animation->state_id;
@@ -2030,8 +1952,6 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
             }
         }
     }
-
-    GenerateAnimCommandsTransform(model, base_anim_commands_array);
 }
 
 

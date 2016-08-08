@@ -2202,75 +2202,6 @@ int lua_SetStateChangeRange(lua_State * lua)
 }
 
 
-int lua_GetAnimCommandTransform(lua_State * lua)
-{
-    if(lua_gettop(lua) < 2)
-    {
-        Con_Warning("getAnimCommandTransform: expecting arguments (model_id, anim_num)");
-        return 0;
-    }
-
-    int id = lua_tointeger(lua, 1);
-    int anim = lua_tointeger(lua, 2);
-    skeletal_model_p model = World_GetModelByID(id);
-    if(model == NULL)
-    {
-        Con_Warning("no skeletal model with id = %d", id);
-        return 0;
-    }
-
-    if((anim < 0) || (anim + 1 > model->animation_count))
-    {
-        Con_Warning("wrong anim number = %d", anim);
-        return 0;
-    }
-
-    lua_pushinteger(lua, model->animations[anim].anim_command);
-    lua_pushnumber(lua, model->animations[anim].move[0]);
-    lua_pushnumber(lua, model->animations[anim].move[1]);
-    lua_pushnumber(lua, model->animations[anim].move[2]);
-
-    return 4;
-}
-
-
-int lua_SetAnimCommandTransform(lua_State * lua)
-{
-    int top = lua_gettop(lua);
-
-    if(top < 3)
-    {
-        Con_Warning("setAnimCommandTransform: expecting arguments (model_id, anim_num, flag, (dx, dy, dz))");
-        return 0;
-    }
-
-    int id = lua_tointeger(lua, 1);
-    int anim = lua_tointeger(lua, 2);
-    skeletal_model_p model = World_GetModelByID(id);
-    if(model == NULL)
-    {
-        Con_Warning("no skeletal model with id = %d", id);
-        return 0;
-    }
-
-    if((anim < 0) || (anim + 1 > model->animation_count))
-    {
-        Con_Warning("wrong anim number = %d", anim);
-        return 0;
-    }
-
-    model->animations[anim].anim_command = 0x00ff & lua_tointeger(lua, 4);
-    if(top >= 7)
-    {
-        model->animations[anim].move[0] = lua_tonumber(lua, 5);
-        model->animations[anim].move[1] = lua_tonumber(lua, 6);
-        model->animations[anim].move[2] = lua_tonumber(lua, 7);
-    }
-
-    return 0;
-}
-
-
 int lua_SpawnEntity(lua_State * lua)
 {
     if(lua_gettop(lua) < 5)
@@ -5500,8 +5431,6 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getFlipState", lua_GetFlipState);
 
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
-    lua_register(lua, "getAnimCommandTransform", lua_GetAnimCommandTransform);
-    lua_register(lua, "setAnimCommandTransform", lua_SetAnimCommandTransform);
     lua_register(lua, "setStateChangeRange", lua_SetStateChangeRange);
 
     lua_register(lua, "addItem", lua_AddItem);

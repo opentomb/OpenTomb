@@ -656,209 +656,245 @@ void Entity_CheckCollisionCallbacks(entity_p ent)
 
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing)
 {
-    if((World_GetAnimCommands() == NULL) || (ss_anim->model == NULL) || (changing == 0x00))
+    if(World_GetAnimCommands() && ss_anim->model && (changing >= 0x01))
     {
-        return;  // If no anim commands
-    }
-
-    animation_frame_p af  = ss_anim->model->animations + ss_anim->current_animation;
-    if(af->num_anim_commands <= 255)
-    {
-        uint32_t count        = af->num_anim_commands;
-        int16_t *pointer      = World_GetAnimCommands() + af->anim_command;
-        int8_t   random_value = 0;
-
-        for(uint32_t i = 0; i < count; i++, pointer++)
+        animation_frame_p next_af = ss_anim->model->animations + ss_anim->next_animation;
+        if(next_af->num_anim_commands <= 255)
         {
-            switch(*pointer)
+            float params[3];
+            uint32_t count        = next_af->num_anim_commands;
+            int16_t *pointer      = World_GetAnimCommands() + next_af->anim_command;
+            int8_t   random_value = 0;
+
+            for(uint32_t i = 0; i < count; i++, pointer++)
             {
-                case TR_ANIMCOMMAND_SETPOSITION:
-                    // This command executes ONLY at the end of animation.
-                    pointer += 3; // Parse through 3 operands.
-                    break;
-
-                case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    // This command executes ONLY at the end of animation.
-                    pointer += 2; // Parse through 2 operands.
-                    break;
-
-                case TR_ANIMCOMMAND_EMPTYHANDS:
-                    ///@FIXME: Behaviour is yet to be discovered.
-                    break;
-
-                case TR_ANIMCOMMAND_KILL:
-                    // This command executes ONLY at the end of animation.
-                    if((changing >= 0x02) && (entity->character))
-                    {
-                        entity->character->resp.kill = 1;
-                    }
-                    break;
-
-                case TR_ANIMCOMMAND_PLAYSOUND:
-                    int16_t sound_index;
-                    if(ss_anim->current_frame == *++pointer)
-                    {
-                        sound_index = *++pointer & 0x3FFF;
-
-                        // Quick workaround for TR3 quicksand.
-                        if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
-                           (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
+                switch(*pointer)
+                {
+                    case TR_ANIMCOMMAND_SETPOSITION:
+                        if(changing >= 2)// This command executes ONLY at the end of animation.
                         {
-                            sound_index = 18;
+                            float tr[3];
+                            entity->no_fix_all = 0x01;
+                            params[0] = (float)(*++pointer);                    // x = x;
+                            params[2] =-(float)(*++pointer);                    // z =-y
+                            params[1] = (float)(*++pointer);                    // y = z
+                            Mat4_vec3_rot_macro(tr, entity->transform, params);
+                            vec3_add(entity->transform + 12, entity->transform + 12, tr);
+                            Anim_SetNextFrame(ss_anim, ss_anim->period);
+                            Entity_UpdateTransform(entity);
+                            Entity_UpdateRigidBody(entity, 1);
                         }
+                        break;
 
-                        if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
+                    case TR_ANIMCOMMAND_JUMPDISTANCE:
+                        if(ss_anim->current_frame == 0)    // This command executes ONLY at the end of animation.
                         {
-                            if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_WATER_SHALLOW)
-                                Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                            params[0] = *++pointer;
+                            params[1] = *++pointer;
+                            Character_SetToJump(entity, -params[0], params[1]);
                         }
-                        else if(*pointer & TR_ANIMCOMMAND_CONDITION_LAND)
+                        break;
+
+                    case TR_ANIMCOMMAND_EMPTYHANDS:
+                        ///@FIXME: Behaviour is yet to be discovered.
+                        break;
+
+                    case TR_ANIMCOMMAND_KILL:
+                        // This command executes ONLY at the end of animation.
+                        if((changing >= 0x02) && (entity->character))
                         {
-                            if(Entity_GetSubstanceState(entity) != ENTITY_SUBSTANCE_WATER_SHALLOW)
+                            entity->character->resp.kill = 1;
+                        }
+                        break;
+
+                    case TR_ANIMCOMMAND_PLAYSOUND:
+                        int16_t sound_index;
+                        if(ss_anim->next_frame == *++pointer)
+                        {
+                            sound_index = *++pointer & 0x3FFF;
+
+                            // Quick workaround for TR3 quicksand.
+                            if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
+                               (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
+                            {
+                                sound_index = 18;
+                            }
+
+                            if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
+                            {
+                                if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_WATER_SHALLOW)
+                                    Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                            }
+                            else if(*pointer & TR_ANIMCOMMAND_CONDITION_LAND)
+                            {
+                                if(Entity_GetSubstanceState(entity) != ENTITY_SUBSTANCE_WATER_SHALLOW)
+                                    Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                            }
+                            else
+                            {
                                 Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                            }
                         }
                         else
                         {
-                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                            pointer++;
                         }
-                    }
-                    else
-                    {
-                        pointer++;
-                    }
-                    break;
+                        break;
 
-                case TR_ANIMCOMMAND_PLAYEFFECT:
-                    // Effects (flipeffects) are various non-typical actions which vary
-                    // across different TR game engine versions. There are common ones,
-                    // however, and currently only these are supported.
-                    if(ss_anim->current_frame == *++pointer)
-                    {
-                        entity_p player = World_GetPlayer();
-                        switch(*++pointer & 0x3FFF)
+                    case TR_ANIMCOMMAND_PLAYEFFECT:
+                        // Effects (flipeffects) are various non-typical actions which vary
+                        // across different TR game engine versions. There are common ones,
+                        // however, and currently only these are supported.
+                        if(ss_anim->next_frame == *++pointer)
                         {
-                            case TR_EFFECT_SHAKESCREEN:
-                                if(player)
-                                {
-                                    float *pos = player->transform + 12;
-                                    float dist = vec3_dist(pos, entity->transform + 12);
-                                    dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE) ? (0) : ((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0f);
-                                    //if(dist > 0)
-                                    //    Cam_Shake(&engine_camera, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
-                                }
-                                break;
-
-                            case TR_EFFECT_CHANGEDIRECTION:
-                                break;
-
-                            case TR_EFFECT_HIDEOBJECT:
-                                entity->state_flags &= ~ENTITY_STATE_VISIBLE;
-                                break;
-
-                            case TR_EFFECT_SHOWOBJECT:
-                                entity->state_flags |= ENTITY_STATE_VISIBLE;
-                                break;
-
-                            case TR_EFFECT_PLAYSTEPSOUND:
-                                // Please note that we bypass land/water mask, as TR3-5 tends to ignore
-                                // this flag and play step sound in any case on land, ignoring it
-                                // completely in water rooms.
-                                if(!Entity_GetSubstanceState(entity))
-                                {
-                                    // TR3-5 footstep map.
-                                    // We define it here as a magic numbers array, because TR3-5 versions
-                                    // fortunately have no differences in footstep sounds order.
-                                    // Also note that some footstep types mutually share same sound IDs
-                                    // across different TR versions.
-                                    switch(entity->current_sector->material)
+                            entity_p player = World_GetPlayer();
+                            switch(*++pointer & 0x3FFF)
+                            {
+                                case TR_EFFECT_SHAKESCREEN:
+                                    if(player)
                                     {
-                                        case SECTOR_MATERIAL_MUD:
-                                            Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
-                                            if(World_GetVersion() != TR_IV)
-                                            {
-                                                Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            }
-                                            break;
-
-                                        case SECTOR_MATERIAL_SAND:  // Same as grass
-                                            Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_GRAVEL:
-                                            Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
-                                            if(World_GetVersion() != TR_IV)
-                                            {
-                                                Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            }
-                                            break;
-
-                                        case SECTOR_MATERIAL_WATER: // BYPASS!
-                                            // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
-                                            // Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_WOOD:
-                                            Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_METAL:
-                                            Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_MARBLE:    // TR4 only
-                                            if(World_GetVersion() == TR_IV)
-                                            {
-                                                Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            }
-                                            break;
-
-                                        case SECTOR_MATERIAL_GRASS:     // Same as sand
-                                            Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_CONCRETE:  // DEFAULT SOUND, BYPASS!
-                                            Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_OLDWOOD:   // Same as wood
-                                            Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_OLDMETAL:  // Same as metal
-                                            Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
+                                        float *pos = player->transform + 12;
+                                        float dist = vec3_dist(pos, entity->transform + 12);
+                                        dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE) ? (0) : ((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0f);
+                                        //if(dist > 0)
+                                        //    Cam_Shake(&engine_camera, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
                                     }
-                                }
-                                break;
+                                    break;
 
-                            case TR_EFFECT_BUBBLE:
-                                ///@FIXME: Spawn bubble particle here, when particle system is developed.
-                                random_value = rand() % 100;
-                                if(random_value > 60)
-                                {
-                                    Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                }
-                                break;
+                                case TR_EFFECT_CHANGEDIRECTION:
+                                    if(changing >= 1)
+                                    {
+                                        entity->angles[0] += 180.0f;
+                                        if(entity->move_type == MOVE_UNDERWATER)
+                                        {
+                                            entity->angles[1] = -entity->angles[1]; // for underwater case
+                                        }
+                                        if(entity->dir_flag == ENT_MOVE_BACKWARD)
+                                        {
+                                            entity->dir_flag = ENT_MOVE_FORWARD;
+                                        }
+                                        else if(entity->dir_flag == ENT_MOVE_FORWARD)
+                                        {
+                                            entity->dir_flag = ENT_MOVE_BACKWARD;
+                                        }
 
-                            default:
-                                ///@FIXME: TODO ALL OTHER EFFECTS!
-                                break;
+                                        //ss_anim->current_animation = ss_anim->next_animation;
+                                        //ss_anim->current_frame = ss_anim->next_frame;
+                                        Anim_SetNextFrame(ss_anim, ss_anim->period);
+                                        Entity_UpdateTransform(entity);
+                                        Entity_UpdateRigidBody(entity, 1);
+                                    }
+                                    break;
+
+                                case TR_EFFECT_HIDEOBJECT:
+                                    entity->state_flags &= ~ENTITY_STATE_VISIBLE;
+                                    break;
+
+                                case TR_EFFECT_SHOWOBJECT:
+                                    entity->state_flags |= ENTITY_STATE_VISIBLE;
+                                    break;
+
+                                case TR_EFFECT_PLAYSTEPSOUND:
+                                    // Please note that we bypass land/water mask, as TR3-5 tends to ignore
+                                    // this flag and play step sound in any case on land, ignoring it
+                                    // completely in water rooms.
+                                    if(!Entity_GetSubstanceState(entity))
+                                    {
+                                        // TR3-5 footstep map.
+                                        // We define it here as a magic numbers array, because TR3-5 versions
+                                        // fortunately have no differences in footstep sounds order.
+                                        // Also note that some footstep types mutually share same sound IDs
+                                        // across different TR versions.
+                                        switch(entity->current_sector->material)
+                                        {
+                                            case SECTOR_MATERIAL_MUD:
+                                                Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                break;
+
+                                            case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
+                                                if(World_GetVersion() != TR_IV)
+                                                {
+                                                    Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                }
+                                                break;
+
+                                            case SECTOR_MATERIAL_SAND:  // Same as grass
+                                                Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                break;
+
+                                            case SECTOR_MATERIAL_GRAVEL:
+                                                Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                break;
+
+                                            case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
+                                                if(World_GetVersion() != TR_IV)
+                                                {
+                                                    Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                }
+                                                break;
+
+                                            case SECTOR_MATERIAL_WATER: // BYPASS!
+                                                // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                break;
+
+                                            case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
+                                                // Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                break;
+
+                                            case SECTOR_MATERIAL_WOOD:
+                                                Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                break;
+
+                                            case SECTOR_MATERIAL_METAL:
+                                                Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                break;
+
+                                            case SECTOR_MATERIAL_MARBLE:    // TR4 only
+                                                if(World_GetVersion() == TR_IV)
+                                                {
+                                                    Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                }
+                                                break;
+
+                                            case SECTOR_MATERIAL_GRASS:     // Same as sand
+                                                Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                break;
+
+                                            case SECTOR_MATERIAL_CONCRETE:  // DEFAULT SOUND, BYPASS!
+                                                Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                break;
+
+                                            case SECTOR_MATERIAL_OLDWOOD:   // Same as wood
+                                                Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                break;
+
+                                            case SECTOR_MATERIAL_OLDMETAL:  // Same as metal
+                                                Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                                break;
+                                        }
+                                    }
+                                    break;
+
+                                case TR_EFFECT_BUBBLE:
+                                    ///@FIXME: Spawn bubble particle here, when particle system is developed.
+                                    random_value = rand() % 100;
+                                    if(random_value > 60)
+                                    {
+                                        Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    }
+                                    break;
+
+                                default:
+                                    ///@FIXME: TODO ALL OTHER EFFECTS!
+                                    break;
+                            }
                         }
-                    }
-                    else
-                    {
-                        pointer++;
-                    }
-                    break;
+                        else
+                        {
+                            pointer++;
+                        }
+                        break;
+                }
             }
         }
     }
@@ -936,50 +972,6 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
 }
 
 
-void Entity_DoAnimTransformCommand(entity_p entity, struct ss_animation_s *ss_anim, int16_t prev_anim, int16_t prev_frame, int changing)
-{
-    if(ss_anim->model != NULL)
-    {
-        animation_frame_p next_af = ss_anim->model->animations + ss_anim->next_animation;
-        animation_frame_p curr_af = ss_anim->model->animations + ss_anim->current_animation;
-
-        if((ss_anim->current_frame == 0) && (next_af->command_flags & ANIM_CMD_JUMP))
-        {
-            Character_SetToJump(entity, -next_af->v_Vertical, next_af->v_Horizontal);
-        }
-        if((changing >= 1) && (next_af->condition_frame == ss_anim->next_frame) && (next_af->command_flags & ANIM_CMD_CHANGE_DIRECTION))
-        {
-            entity->angles[0] += 180.0f;
-            if(entity->move_type == MOVE_UNDERWATER)
-            {
-                entity->angles[1] = -entity->angles[1];                         // for underwater case
-            }
-            if(entity->dir_flag == ENT_MOVE_BACKWARD)
-            {
-                entity->dir_flag = ENT_MOVE_FORWARD;
-            }
-            else if(entity->dir_flag == ENT_MOVE_FORWARD)
-            {
-                entity->dir_flag = ENT_MOVE_BACKWARD;
-            }
-
-            //ss_anim->current_animation = ss_anim->next_animation;
-            //ss_anim->current_frame = ss_anim->next_frame;
-            Anim_SetNextFrame(ss_anim, ss_anim->period, NULL);
-            Entity_UpdateTransform(entity);
-            Entity_UpdateRigidBody(entity, 1);
-        }
-        if((changing >= 2) && (curr_af->command_flags & ANIM_CMD_MOVE))
-        {
-            float tr[3];
-            entity->no_fix_all = 0x01;
-            Mat4_vec3_rot_macro(tr, entity->transform, curr_af->move);
-            vec3_add(entity->transform + 12, entity->transform + 12, tr);
-        }
-    }
-}
-
-
 void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
 {
     static_camera_sink_p sink = World_GetstaticCameraSink(sink_index);
@@ -1040,10 +1032,7 @@ void Entity_Frame(entity_p entity, float time)
                 else if(ss_anim->model && !(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK) &&
                         ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->frames_count > 1)))
                 {
-                    state_change_p stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
-                    int16_t old_anim = ss_anim->current_animation;
-                    int16_t old_frame = ss_anim->current_frame;
-                    uint16_t frame_switch_state = Anim_SetNextFrame(ss_anim, time, stc);
+                    uint16_t frame_switch_state = Anim_SetNextFrame(ss_anim, time);
                     if(frame_switch_state > 0)
                     {
                         if(frame_switch_state >= 0x02)
@@ -1051,7 +1040,6 @@ void Entity_Frame(entity_p entity, float time)
                             entity->no_fix_all = 0x00;
                         }
                         Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
-                        Entity_DoAnimTransformCommand(entity, ss_anim, old_anim, old_frame, frame_switch_state);
                     }
 
                     // Update acceleration.
