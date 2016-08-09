@@ -1633,7 +1633,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         bone_frame = model->animations->frames;
 
         model->animations->id = 0;
-        model->animations->next_anim = model->animations->next_anim;
+        model->animations->next_anim = model->animations;
         model->animations->next_frame = 0;
         model->animations->state_change = NULL;
         model->animations->state_change_count = 0;

@@ -959,15 +959,19 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
 {
     if(entity)
     {
-        animation = (animation < 0) ? (0) : (animation);
-        entity->no_fix_all = 0x00;
-
-        if(anim_type == ANIM_TYPE_BASE)
+        ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(entity->bf, anim_type);
+        if(ss_anim)
         {
-            entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
+            animation = (animation < 0) ? (0) : (animation);
+            entity->no_fix_all = 0x00;
+
+            if(anim_type == ANIM_TYPE_BASE)
+            {
+                entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
+            }
+            SSBoneFrame_SetAnimation(ss_anim, animation, frame);
+            SSBoneFrame_Update(entity->bf, 0.0f);
         }
-        SSBoneFrame_SetAnimation(entity->bf, anim_type, animation, frame);
-        SSBoneFrame_Update(entity->bf, 0.0f);
     }
 }
 

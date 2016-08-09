@@ -603,18 +603,8 @@ void SSBoneFrame_SetTargetingLimit(struct ss_animation_s *ss_anim, const float l
 }
 
 
-void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int anim_type, int animation, int frame)
+void SSBoneFrame_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame)
 {
-    ss_animation_p ss_anim = NULL;
-    for(ss_animation_p  ss_anim_it = &bf->animations; ss_anim_it; ss_anim_it = ss_anim_it->next)
-    {
-        if(ss_anim_it->type == anim_type)
-        {
-            ss_anim = ss_anim_it;
-            break;
-        }
-    }
-    
     if(ss_anim && ss_anim->model && (animation < ss_anim->model->animation_count))
     {
         animation_frame_p anim = &ss_anim->model->animations[animation];
@@ -843,7 +833,7 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
                 ss_anim->next_animation = disp->next_anim;
                 ss_anim->next_frame = disp->next_frame;
                 ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
-                ss_anim->current_state = ss_anim->model->animations[ss_anim->current_animation].state_id;
+                ss_anim->current_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
                 ss_anim->next_state = ss_anim->current_state;
                 return 0x03;
             }
@@ -860,7 +850,7 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
         ss_anim->next_frame = next_anim->next_frame;
         ss_anim->next_animation  = next_anim->next_anim->id;
         ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
-        ss_anim->current_state = ss_anim->model->animations[ss_anim->current_animation].state_id;
+        ss_anim->current_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
         ss_anim->next_state = ss_anim->current_state;
         return 0x02;
     }

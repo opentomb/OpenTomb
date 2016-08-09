@@ -3024,7 +3024,7 @@ int lua_SetEntityAnim(lua_State * lua)
     ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
     if(ss_anim)
     {
-        SSBoneFrame_SetAnimation(ent->bf, anim_type_id, lua_tointeger(lua, 3), lua_tointeger(lua, 4));
+        SSBoneFrame_SetAnimation(ss_anim, lua_tointeger(lua, 3), lua_tointeger(lua, 4));
         if(top >= 6)
         {
             ss_anim->next_animation = lua_tointeger(lua, 5);
