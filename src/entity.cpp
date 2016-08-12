@@ -661,7 +661,6 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
         animation_frame_p next_af = ss_anim->model->animations + ss_anim->next_animation;
         if(next_af->num_anim_commands <= 255)
         {
-            float params[3];
             uint32_t count        = next_af->num_anim_commands;
             int16_t *pointer      = World_GetAnimCommands() + next_af->anim_command;
             int8_t   random_value = 0;
@@ -675,10 +674,11 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                         {
                             float tr[3];
                             entity->no_fix_all = 0x01;
-                            params[0] = (float)(*++pointer);                    // x = x;
-                            params[2] =-(float)(*++pointer);                    // z =-y
-                            params[1] = (float)(*++pointer);                    // y = z
-                            Mat4_vec3_rot_macro(tr, entity->transform, params);
+                            entity->bf->move_cmd = 0x01;
+                            entity->bf->move_data[0] = (float)(*++pointer);     // x = x;
+                            entity->bf->move_data[2] =-(float)(*++pointer);     // z =-y
+                            entity->bf->move_data[1] = (float)(*++pointer);     // y = z
+                            Mat4_vec3_rot_macro(tr, entity->transform, entity->bf->move_data);
                             vec3_add(entity->transform + 12, entity->transform + 12, tr);
                             Anim_SetNextFrame(ss_anim, ss_anim->period);
                             Entity_UpdateTransform(entity);
@@ -687,11 +687,11 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                         break;
 
                     case TR_ANIMCOMMAND_JUMPDISTANCE:
-                        if(changing >= 2)   // This command executes ONLY at the end of animation.
+                        if(changing >= 0x02)   // This command executes ONLY at the end of animation.
                         {
-                            params[0] = *++pointer;
-                            params[1] = *++pointer;
-                            Character_SetToJump(entity, -params[0], params[1]);
+                            float vz = *++pointer;
+                            float vh = *++pointer;
+                            Character_SetToJump(entity, -vz, vh);
                         }
                         break;
 
@@ -708,10 +708,9 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                         break;
 
                     case TR_ANIMCOMMAND_PLAYSOUND:
-                        int16_t sound_index;
                         if(ss_anim->next_frame == *++pointer)
                         {
-                            sound_index = *++pointer & 0x3FFF;
+                             int16_t sound_index = (*++pointer) & 0x3FFF;
 
                             // Quick workaround for TR3 quicksand.
                             if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
@@ -762,8 +761,9 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                                     break;
 
                                 case TR_EFFECT_CHANGEDIRECTION:
-                                    if(changing >= 1)
+                                    if(changing >= 0x01)
                                     {
+                                        entity->bf->change_dir_cmd = 0x01;
                                         entity->angles[0] += 180.0f;
                                         if(entity->move_type == MOVE_UNDERWATER)
                                         {
@@ -1037,7 +1037,7 @@ void Entity_Frame(entity_p entity, float time)
                         ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->frames_count > 1)))
                 {
                     frame_switch_state = Anim_SetNextFrame(ss_anim, time);
-                    if(frame_switch_state > 0x01)
+                    if(frame_switch_state >= 0x01)
                     {
                         if(frame_switch_state >= 0x02)
                         {
@@ -1055,7 +1055,7 @@ void Entity_Frame(entity_p entity, float time)
                         // NB!!! For Lara, we update ONLY X-axis speed / accel.
                         if((af->accel_x == 0) || (frame_switch_state >= 0x02))
                         {
-                            entity->anim_linear_speed  = af->speed_x;
+                            entity->anim_linear_speed = af->speed_x;
                         }
                         else
                         {

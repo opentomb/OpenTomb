@@ -118,7 +118,7 @@ void ent_correct_diving_angle(entity_p ent, ss_animation_p ss_anim, int state)
 {
     if(state >= 0x02)
     {
-        ent->angles[1] = -45.0;
+        ent->angles[1] = -45.0f;
         Entity_UpdateTransform(ent);
         ss_anim->onEndFrame = NULL;
     }
@@ -140,7 +140,7 @@ void ent_climb_out_of_water(entity_p ent, ss_animation_p ss_anim, int state)
     if(state >= 0x02)
     {
         float *v = ent->character->climb.point;
-        vec3_add_mul(ent->transform + 12, v, ent->transform + 4, 48.0);           // temporary stick
+        vec3_add_mul(ent->transform + 12, v, ent->transform + 4, 48.0f);        // temporary stick
         ent->transform[12 + 2] = v[2];
         SSBoneFrame_Update(ent->bf, 0.0f);
         Entity_UpdateRigidBody(ent, 1);
