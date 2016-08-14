@@ -70,7 +70,8 @@ typedef struct ss_animation_s
 {
     uint16_t                    type : 15;
     uint16_t                    enabled : 1;
-    uint16_t                    unused;
+    uint16_t                    changing_next : 8;
+    uint16_t                    changing_curr : 8;
     int16_t                     current_state;
     int16_t                     next_state;
     int16_t                     current_animation;
@@ -94,7 +95,7 @@ typedef struct ss_animation_s
     float                       lerp;
 
     int                       (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, float time);
-    void                      (*onEndFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state);
+    void                      (*onEndFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     struct skeletal_model_s    *model;                                          // pointer to the base model
     struct ss_animation_s      *next;
     struct ss_animation_s      *prev;

@@ -654,11 +654,13 @@ void Entity_CheckCollisionCallbacks(entity_p ent)
 }
 
 
-void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing)
+void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
 {
-    if(World_GetAnimCommands() && ss_anim->model && (changing >= 0x01))
+    if(World_GetAnimCommands() && ss_anim->model)
     {
         animation_frame_p next_af = ss_anim->model->animations + ss_anim->next_animation;
+        entity->bf->move_cmd = 0x00;
+        entity->bf->change_dir_cmd = 0x00;
         if(next_af->num_anim_commands <= 255)
         {
             uint32_t count        = next_af->num_anim_commands;
@@ -670,7 +672,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                 switch(*pointer)
                 {
                     case TR_ANIMCOMMAND_SETPOSITION:
-                        if(changing >= 0x2)   // This command executes ONLY at the end of animation.
+                        if(ss_anim->changing_next >= 0x02)   // This command executes ONLY at the end of animation.
                         {
                             float tr[3];
                             entity->no_fix_all = 0x01;
@@ -687,7 +689,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                         break;
 
                     case TR_ANIMCOMMAND_JUMPDISTANCE:
-                        if(changing >= 0x02)   // This command executes ONLY at the end of animation.
+                        if(ss_anim->changing_next >= 0x02)   // This command executes ONLY at the end of animation.
                         {
                             float vz = *++pointer;
                             float vh = *++pointer;
@@ -701,7 +703,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
 
                     case TR_ANIMCOMMAND_KILL:
                         // This command executes ONLY at the end of animation.
-                        if((changing >= 0x02) && (entity->character))
+                        if((ss_anim->changing_next >= 0x02) && (entity->character))
                         {
                             entity->character->resp.kill = 1;
                         }
@@ -711,7 +713,6 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                         if(ss_anim->next_frame == *++pointer)
                         {
                              int16_t sound_index = (*++pointer) & 0x3FFF;
-
                             // Quick workaround for TR3 quicksand.
                             if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
                                (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
@@ -761,7 +762,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                                     break;
 
                                 case TR_EFFECT_CHANGEDIRECTION:
-                                    if(changing >= 0x01)
+                                    if(ss_anim->changing_next >= 0x01)
                                     {
                                         entity->bf->change_dir_cmd = 0x01;
                                         entity->angles[0] += 180.0f;
@@ -1030,7 +1031,7 @@ void Entity_Frame(entity_p entity, float time)
                     frame_switch_state = ss_anim->onFrame(entity, ss_anim, time);
                     if(ss_anim->onEndFrame != NULL)
                     {
-                        ss_anim->onEndFrame(entity, ss_anim, frame_switch_state);
+                        ss_anim->onEndFrame(entity, ss_anim);
                     }
                 }
                 else if(ss_anim->model && !(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK) &&
@@ -1043,7 +1044,7 @@ void Entity_Frame(entity_p entity, float time)
                         {
                             entity->no_fix_all = 0x00;
                         }
-                        Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
+                        Entity_DoAnimCommands(entity, ss_anim);
                     }
 
                     // Update acceleration.
@@ -1065,7 +1066,7 @@ void Entity_Frame(entity_p entity, float time)
 
                     if(ss_anim->onEndFrame != NULL)
                     {
-                        ss_anim->onEndFrame(entity, ss_anim, frame_switch_state);
+                        ss_anim->onEndFrame(entity, ss_anim);
                     }
                 }
             }

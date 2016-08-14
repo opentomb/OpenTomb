@@ -49,9 +49,9 @@
 
 #define OSCILLATE_HANG_USE 0
 
-void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state >= 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         float *v = ent->character->traversed_object->transform + 12;
         int i = v[0] / TR_METERING_SECTORSIZE;
@@ -65,9 +65,9 @@ void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim, int state)
     }
 }
 
-void ent_set_on_floor(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_set_on_floor(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state >= 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         ent->move_type = MOVE_ON_FLOOR;
         ent->transform[12 + 2] = ent->character->height_info.floor_hit.point[2];
@@ -78,45 +78,45 @@ void ent_set_on_floor(entity_p ent, ss_animation_p ss_anim, int state)
     }
 }
 
-void ent_set_turn_fast(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_set_turn_fast(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state == 0x02)
+    if(ss_anim->changing_next == 0x02)
     {
         ent->bf->animations.next_state = TR_STATE_LARA_TURN_FAST;
         ss_anim->onEndFrame = NULL;
     }
 }
 
-void ent_set_underwater(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_set_underwater(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state >= 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         ent->move_type = MOVE_UNDERWATER;
         ss_anim->onEndFrame = NULL;
     }
 }
 
-void ent_set_free_falling(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_set_free_falling(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state >= 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         ent->move_type = MOVE_FREE_FALLING;
         ss_anim->onEndFrame = NULL;
     }
 }
 
-void ent_set_cmd_slide(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_set_cmd_slide(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state >= 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         ent->character->resp.slide = 0x01;
         ss_anim->onEndFrame = NULL;
     }
 }
 
-void ent_correct_diving_angle(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_correct_diving_angle(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state >= 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         ent->angles[1] = -45.0f;
         Entity_UpdateTransform(ent);
@@ -124,9 +124,9 @@ void ent_correct_diving_angle(entity_p ent, ss_animation_p ss_anim, int state)
     }
 }
 
-void ent_to_on_water(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_to_on_water(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state >= 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         ent->transform[12 + 2] = ent->character->height_info.transition_level;
         Entity_GhostUpdate(ent);
@@ -135,9 +135,9 @@ void ent_to_on_water(entity_p ent, ss_animation_p ss_anim, int state)
     }
 }
 
-void ent_climb_out_of_water(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_climb_out_of_water(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state >= 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         float *v = ent->character->climb.point;
         vec3_add_mul(ent->transform + 12, v, ent->transform + 4, 48.0f);        // temporary stick
@@ -149,9 +149,9 @@ void ent_climb_out_of_water(entity_p ent, ss_animation_p ss_anim, int state)
     }
 }
 
-void ent_to_edge_climb(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_to_edge_climb(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state >= 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         float *v = ent->character->climb.point;
         ent->transform[12 + 0] = v[0] - ent->transform[4 + 0] * ent->bf->bb_max[1];
@@ -164,9 +164,9 @@ void ent_to_edge_climb(entity_p ent, ss_animation_p ss_anim, int state)
     }
 }
 
-void ent_to_monkey_swing(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_to_monkey_swing(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state >= 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         ent->move_type = MOVE_MONKEYSWING;
         ent->transform[12 + 2] = ent->character->height_info.ceiling_hit.point[2] - ent->bf->bb_max[2];
@@ -175,9 +175,9 @@ void ent_to_monkey_swing(entity_p ent, ss_animation_p ss_anim, int state)
     }
 }
 
-void ent_crawl_to_climb(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_crawl_to_climb(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state >= 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         character_command_p cmd = &ent->character->cmd;
 
@@ -193,7 +193,7 @@ void ent_crawl_to_climb(entity_p ent, ss_animation_p ss_anim, int state)
         }
 
         ent->no_fix_all = 0x01;
-        ent_to_edge_climb(ent, ss_anim, state);
+        ent_to_edge_climb(ent, ss_anim);
         ss_anim->onEndFrame = NULL;
     }
 }
@@ -2516,7 +2516,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 if(low_vertical_space)
                 {
                     Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_TO_LAND_LOW, 0);
-                    ent_climb_out_of_water(ent, ss_anim, 0x02);
+                    ent_climb_out_of_water(ent, ss_anim);
                 }
                 else
                 {

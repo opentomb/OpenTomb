@@ -613,6 +613,9 @@ void SSBoneFrame_SetAnimation(struct ss_animation_s *ss_anim, int animation, int
         frame = (frame >= 0) ? (frame) : (anim->frames_count - 1 + frame);
         ss_anim->period = 1.0f / 30.0f;
 
+        ss_anim->changing_curr = 0x03;
+        ss_anim->changing_next = 0x03;
+        
         ss_anim->current_state = anim->state_id;
         ss_anim->next_state = anim->state_id;
 
@@ -796,6 +799,9 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
     dt = ss_anim->frame_time - (float)new_frame * ss_anim->period;
     ss_anim->lerp = dt / ss_anim->period;
     
+    ss_anim->changing_next = 0x00;
+    ss_anim->changing_curr = 0x00;
+    
     /*
      * Flag has a highest priority
      */
@@ -835,6 +841,8 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
                 ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
                 ss_anim->current_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
                 ss_anim->next_state = ss_anim->current_state;
+                ss_anim->changing_curr = ss_anim->changing_next;
+                ss_anim->changing_next = 0x03;
                 return 0x03;
             }
         }
@@ -852,6 +860,8 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
         ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
         ss_anim->current_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
         ss_anim->next_state = ss_anim->current_state;
+        ss_anim->changing_curr = ss_anim->changing_next;
+        ss_anim->changing_next = 0x02;
         return 0x02;
     }
     
@@ -860,6 +870,8 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
         ss_anim->current_animation = ss_anim->next_animation;
         ss_anim->current_frame = ss_anim->next_frame;
         ss_anim->next_frame = new_frame;
+        ss_anim->changing_curr = ss_anim->changing_next;
+        ss_anim->changing_next = 0x01;
         return 0x01;
     }
     
