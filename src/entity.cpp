@@ -672,7 +672,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                 switch(*pointer)
                 {
                     case TR_ANIMCOMMAND_SETPOSITION:
-                        if(ss_anim->changing_next >= 0x02)   // This command executes ONLY at the end of animation.
+                        if((ss_anim->changing_next >= 0x02) && (ss_anim->onEndFrame == NULL))   // This command executes ONLY at the end of animation.
                         {
                             float tr[3];
                             entity->no_fix_all = 0x01;
@@ -686,6 +686,10 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                             Entity_UpdateTransform(entity);
                             Entity_UpdateRigidBody(entity, 1);
                         }
+                        else
+                        {
+                            pointer += 3;
+                        }
                         break;
 
                     case TR_ANIMCOMMAND_JUMPDISTANCE:
@@ -694,6 +698,10 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                             float vz = *++pointer;
                             float vh = *++pointer;
                             Character_SetToJump(entity, -vz, vh);
+                        }
+                        else
+                        {
+                            pointer += 2;
                         }
                         break;
 
@@ -895,7 +903,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                             pointer++;
                         }
                         break;
-                }
+                };
             }
         }
     }
@@ -1029,7 +1037,13 @@ void Entity_Frame(entity_p entity, float time)
                 if(ss_anim->model && ss_anim->onFrame)
                 {
                     frame_switch_state = ss_anim->onFrame(entity, ss_anim, time);
-                    if(ss_anim->onEndFrame != NULL)
+
+                    if(frame_switch_state >= 0x01)
+                    {
+                        Entity_DoAnimCommands(entity, ss_anim);
+                    }
+
+                    if(ss_anim->onEndFrame)
                     {
                         ss_anim->onEndFrame(entity, ss_anim);
                     }
@@ -1064,7 +1078,7 @@ void Entity_Frame(entity_p entity, float time)
                         }
                     }
 
-                    if(ss_anim->onEndFrame != NULL)
+                    if(ss_anim->onEndFrame)
                     {
                         ss_anim->onEndFrame(entity, ss_anim);
                     }

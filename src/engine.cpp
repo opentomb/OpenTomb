@@ -55,7 +55,7 @@ static ALCdevice              *al_device      = NULL;
 static ALCcontext             *al_context     = NULL;
 
 static volatile int             engine_done   = 0;
-static int                      engine_set_sero_time = 0;
+static int                      engine_set_zero_time = 0;
 float time_scale = 1.0f;
 
 engine_container_p      last_cont = NULL;
@@ -796,9 +796,9 @@ void Engine_MainLoop()
         oldtime = newtime;
         time *= time_scale;
 
-        if(engine_set_sero_time)
+        if(engine_set_zero_time)
         {
-            engine_set_sero_time = 0;
+            engine_set_zero_time = 0;
             time = 0.0f;
         }
 
@@ -908,7 +908,8 @@ void ShowDebugInfo()
                 {
                     animation_frame_p anim = ent->bf->animations.model->animations + ent->bf->animations.current_animation;
                     GLText_OutTextXY(30.0f, y += dy, "curr_st = %03d, next_st = %03d", ent->bf->animations.current_state, ent->bf->animations.next_state);
-                    GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, curr_frame = %03d, next_anim = %03d", ent->bf->animations.current_animation, ent->bf->animations.current_frame, anim->next_anim->id);
+                    GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, curr_frame = %03d, next_anim = %03d, next_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.current_frame, ent->bf->animations.next_animation, ent->bf->animations.next_frame);
+                    GLText_OutTextXY(30.0f, y += dy, "anim_next_anim = %03d, anim_next_frame = %03d", anim->next_anim->id, anim->next_frame);
                     GLText_OutTextXY(30.0f, y += dy, "posX = %f, posY = %f, posZ = %f", ent->transform[12], ent->transform[13], ent->transform[14]);
                 }
             }
@@ -1162,7 +1163,7 @@ int Engine_LoadMap(const char *name)
 
     Gui_DrawLoadScreen(1000);
     Gui_NotifierStop();
-    engine_set_sero_time = 1;
+    engine_set_zero_time = 1;
 
     return 1;
 }

@@ -1154,19 +1154,19 @@ int Character_MoveOnFloor(struct entity_s *ent)
 
             if(ent->dir_flag & ENT_MOVE_FORWARD)
             {
-                vec3_mul_scalar(ent->speed, ent->transform+4, t);
+                vec3_mul_scalar(ent->speed, ent->transform + 4, t);
             }
             else if(ent->dir_flag & ENT_MOVE_BACKWARD)
             {
-                vec3_mul_scalar(ent->speed, ent->transform+4,-t);
+                vec3_mul_scalar(ent->speed, ent->transform + 4,-t);
             }
             else if(ent->dir_flag & ENT_MOVE_LEFT)
             {
-                vec3_mul_scalar(ent->speed, ent->transform+0,-t);
+                vec3_mul_scalar(ent->speed, ent->transform + 0,-t);
             }
             else if(ent->dir_flag & ENT_MOVE_RIGHT)
             {
-                vec3_mul_scalar(ent->speed, ent->transform+0, t);
+                vec3_mul_scalar(ent->speed, ent->transform + 0, t);
             }
             else
             {
@@ -2373,6 +2373,9 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
     * 2: draw weapon (full);
     * 3: fire process;
     */
+    int16_t old_anim = ss_anim->next_animation;
+    int16_t old_frame = ss_anim->next_frame;
+
     if(ss_anim->model->animation_count == 4)
     {
         const float bone_dir[] = {0.0f, 1.0f, 0.0f};
@@ -2612,7 +2615,16 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 break;
         };
     }
-    return 1;
+
+    if(old_anim != ss_anim->next_animation)
+    {
+        return 0x03;
+    }
+    if(old_frame != ss_anim->next_frame)
+    {
+        return 0x01;
+    }
+    return 0x00;
 }
 
 
@@ -2626,6 +2638,9 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
     * 3: hide weapon;
     * 4: idle to fire (targeted);
     */
+    int16_t old_anim = ss_anim->next_animation;
+    int16_t old_frame = ss_anim->next_frame;
+    
     if(ss_anim->model->animation_count > 4)
     {
         float dt;
@@ -2857,5 +2872,14 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 break;
         };
     }
-    return 1;
+
+    if(old_anim != ss_anim->next_animation)
+    {
+        return 0x03;
+    }
+    if(old_frame != ss_anim->next_frame)
+    {
+        return 0x01;
+    }
+    return 0x00;
 }

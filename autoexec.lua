@@ -20,5 +20,5 @@ noclip(0);
 --loadMap("data/LEVEL1.PHD");
 --loadMap("tests/altroom1/LEVEL1.PHD");
 --loadMap("tests/heavy1/LEVEL1.PHD");
-setgamef(4, 1);
---dofile("save/pad");
+--setgamef(4, 1);
+dofile("save/qsave.lua");
