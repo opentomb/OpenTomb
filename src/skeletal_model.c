@@ -791,7 +791,7 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
     float dt;
     int32_t new_frame;
     animation_frame_p next_anim = ss_anim->model->animations + ss_anim->next_animation;
-    state_change_p stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
+    state_change_p stc = Anim_FindStateChangeByID(next_anim, ss_anim->next_state);
     
     ss_anim->frame_time = (ss_anim->frame_time >= 0.0f) ? (ss_anim->frame_time) : (0.0f);
     ss_anim->frame_time += time;
@@ -827,7 +827,7 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
     /*
      * State change check
      */
-    if(stc != NULL)
+    if(stc)
     {
         anim_dispatch_p disp = stc->anim_dispatch;
         for(uint16_t i = 0; i < stc->anim_dispatch_count; i++, disp++)

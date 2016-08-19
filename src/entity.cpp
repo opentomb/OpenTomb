@@ -659,8 +659,6 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
     if(World_GetAnimCommands() && ss_anim->model)
     {
         animation_frame_p next_af = ss_anim->model->animations + ss_anim->next_animation;
-        entity->bf->move_cmd = 0x00;
-        entity->bf->change_dir_cmd = 0x00;
         if(next_af->num_anim_commands <= 255)
         {
             uint32_t count        = next_af->num_anim_commands;
@@ -674,13 +672,12 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                     case TR_ANIMCOMMAND_SETPOSITION:
                         if((ss_anim->changing_next >= 0x02) && (ss_anim->onEndFrame == NULL))   // This command executes ONLY at the end of animation.
                         {
-                            float tr[3];
+                            float tr[3], move[3];
                             entity->no_fix_all = 0x01;
-                            entity->bf->move_cmd = 0x01;
-                            entity->bf->move_data[0] = (float)(*++pointer);     // x = x;
-                            entity->bf->move_data[2] =-(float)(*++pointer);     // z =-y
-                            entity->bf->move_data[1] = (float)(*++pointer);     // y = z
-                            Mat4_vec3_rot_macro(tr, entity->transform, entity->bf->move_data);
+                            move[0] = (float)(*++pointer);     // x = x;
+                            move[2] =-(float)(*++pointer);     // z =-y
+                            move[1] = (float)(*++pointer);     // y = z
+                            Mat4_vec3_rot_macro(tr, entity->transform, move);
                             vec3_add(entity->transform + 12, entity->transform + 12, tr);
                             Anim_SetNextFrame(ss_anim, ss_anim->period);
                             Entity_UpdateTransform(entity);
@@ -693,7 +690,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                         break;
 
                     case TR_ANIMCOMMAND_JUMPDISTANCE:
-                        if(ss_anim->changing_next >= 0x02)   // This command executes ONLY at the end of animation.
+                        if(ss_anim->next_frame + 1 == next_af->frames_count)    // This command executes ONLY at the end of animation.
                         {
                             float vz = *++pointer;
                             float vh = *++pointer;
@@ -772,7 +769,6 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                                 case TR_EFFECT_CHANGEDIRECTION:
                                     if(ss_anim->changing_next >= 0x01)
                                     {
-                                        entity->bf->change_dir_cmd = 0x01;
                                         entity->angles[0] += 180.0f;
                                         if(entity->move_type == MOVE_UNDERWATER)
                                         {

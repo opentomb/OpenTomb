@@ -107,9 +107,7 @@ typedef struct ss_animation_s
 typedef struct ss_bone_frame_s
 {
     uint16_t                    bone_tag_count;                                 // number of bones
-    uint16_t                    change_dir_cmd : 1;
-    uint16_t                    move_cmd : 1;
-    float                       move_data[3];
+    uint16_t                    unused;
     
     struct ss_bone_tag_s       *bone_tags;                                      // array of bones
     float                       pos[3];                                         // position (base offset)
