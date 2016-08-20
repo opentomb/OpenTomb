@@ -767,9 +767,9 @@ void Anim_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame)
         frame = (frame >= 0) ? (frame) : (anim->frames_count - 1 + frame);
         ss_anim->period = 1.0f / 30.0f;
 
-        ss_anim->changing_curr = 0x03;
-        ss_anim->changing_next = 0x03;
-        
+        ss_anim->changing_curr = 0x04;
+        ss_anim->changing_next = 0x04;
+
         ss_anim->current_state = anim->state_id;
         ss_anim->next_state = anim->state_id;
 

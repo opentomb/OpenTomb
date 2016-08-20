@@ -81,7 +81,7 @@ void ent_set_on_floor(entity_p ent, ss_animation_p ss_anim)
 void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim)
 {
     animation_frame_p af = ss_anim->model->animations + ss_anim->current_animation;
-    if(ss_anim->changing_next >= 0x02)
+    if((ss_anim->changing_next >= 0x02) && (ss_anim->changing_next < 0x04))
     {
         float p[3], move[3];
 

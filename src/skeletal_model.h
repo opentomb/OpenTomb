@@ -65,7 +65,12 @@ typedef struct ss_bone_tag_s
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 }ss_bone_tag_t, *ss_bone_tag_p;
 
-
+// changing info:
+// 0x00 - no changes; 
+// 0x01 - next frame, same anim;
+// 0x02 - next frame, next anim (anim ended, may be loop);
+// 0x03 - new frame, new anim (by state change info);
+// 0x04 - rough change by set animation;
 typedef struct ss_animation_s
 {
     uint16_t                    type : 15;
@@ -184,6 +189,11 @@ typedef struct animation_frame_s
     uint16_t                    original_frame_rate;
     uint16_t                    state_id;
     
+    uint32_t                    command_move : 1;
+    uint32_t                    command_change_dir : 1;
+    uint32_t                    : 14;
+    uint32_t                    command_frame : 16;
+    float                       command_data[3];
     float                       speed_x;                // Forward-backward speed
     float                       accel_x;                // Forward-backward accel
     float                       speed_y;                // Left-right speed

@@ -1638,7 +1638,10 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         model->animations->state_change = NULL;
         model->animations->state_change_count = 0;
         model->animations->original_frame_rate = 1;
-
+        vec3_set_zero(model->animations->command_data);
+        model->animations->command_change_dir = 0x00;
+        model->animations->command_move = 0x00;
+        model->animations->command_frame = 0x00;
         bone_frame->bone_tag_count = model->mesh_count;
         bone_frame->bone_tags = (bone_tag_p)malloc(bone_frame->bone_tag_count * sizeof(bone_tag_t));
         vec3_set_zero(bone_frame->pos);
@@ -1698,6 +1701,10 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         anim->anim_command = tr_animation->anim_command;
         anim->num_anim_commands = tr_animation->num_anim_commands;
         anim->state_id = tr_animation->state_id;
+        vec3_set_zero(anim->command_data);
+        anim->command_change_dir = 0x00;
+        anim->command_move = 0x00;
+        anim->command_frame = 0x00;
 
         anim->frames_count = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index+i);
 
@@ -1717,6 +1724,14 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                 switch(*pointer)
                 {
                     case TR_ANIMCOMMAND_PLAYEFFECT:
+                        *(pointer + 1) -= tr_animation->frame_start;
+                        if(0x3FF & (*(pointer + 2)) == TR_EFFECT_CHANGEDIRECTION)
+                        {
+                            anim->command_change_dir = 0x01;
+                            anim->command_frame = *(pointer + 1);
+                        }
+                        break;
+
                     case TR_ANIMCOMMAND_PLAYSOUND:
                         // Recalculate absolute frame number to relative.
                         ///@FIXED: was unpredictable behavior.
@@ -1725,8 +1740,10 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                         break;
 
                     case TR_ANIMCOMMAND_SETPOSITION:
-                        // Parse through 3 operands.
-                        pointer += 3;
+                        anim->command_move = 0x01;
+                        anim->command_data[0] = (float)(*++pointer);     // x = x;
+                        anim->command_data[2] =-(float)(*++pointer);     // z =-y
+                        anim->command_data[1] = (float)(*++pointer);     // y = z
                         break;
 
                     case TR_ANIMCOMMAND_JUMPDISTANCE:
@@ -1740,7 +1757,11 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                 }
             }
         }
-
+    /*uint32_t                    command_move : 1;
+    uint32_t                    command_change_dir : 1;
+    uint32_t                    : 14;
+    uint32_t                    command_frame : 16;
+    float                       command_data[3];*/
 
         if(anim->frames_count <= 0)
         {
