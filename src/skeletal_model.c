@@ -165,7 +165,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
                         bf->bone_tags[k].offset[0] = t * anim->frames[j-1].bone_tags[k].offset[0] + lerp * anim->frames[j].bone_tags[k].offset[0];
                         bf->bone_tags[k].offset[1] = t * anim->frames[j-1].bone_tags[k].offset[1] + lerp * anim->frames[j].bone_tags[k].offset[1];
                         bf->bone_tags[k].offset[2] = t * anim->frames[j-1].bone_tags[k].offset[2] + lerp * anim->frames[j].bone_tags[k].offset[2];
-
+                        
                         vec4_slerp(bf->bone_tags[k].qrotate, anim->frames[j-1].bone_tags[k].qrotate, anim->frames[j].bone_tags[k].qrotate, lerp);
                     }
                     bf++;
@@ -603,32 +603,6 @@ void SSBoneFrame_SetTargetingLimit(struct ss_animation_s *ss_anim, const float l
 }
 
 
-void SSBoneFrame_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame)
-{
-    if(ss_anim && ss_anim->model && (animation < ss_anim->model->animation_count))
-    {
-        animation_frame_p anim = &ss_anim->model->animations[animation];
-        ss_anim->lerp = 0.0;
-        frame %= anim->frames_count;
-        frame = (frame >= 0) ? (frame) : (anim->frames_count - 1 + frame);
-        ss_anim->period = 1.0f / 30.0f;
-
-        ss_anim->changing_curr = 0x03;
-        ss_anim->changing_next = 0x03;
-        
-        ss_anim->current_state = anim->state_id;
-        ss_anim->next_state = anim->state_id;
-
-        ss_anim->next_animation = animation;
-        ss_anim->next_frame = frame;
-        ss_anim->current_animation = animation;
-        ss_anim->current_frame = frame;
-
-        ss_anim->frame_time = (float)frame * ss_anim->period;
-    }
-}
-
-
 struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type_id)
 {
     if(!sm || (sm->mesh_count == bf->bone_tag_count))
@@ -782,6 +756,31 @@ int Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id)
     return -1;
 }
 
+
+void Anim_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame)
+{
+    if(ss_anim && ss_anim->model && (animation < ss_anim->model->animation_count))
+    {
+        animation_frame_p anim = &ss_anim->model->animations[animation];
+        ss_anim->lerp = 0.0;
+        frame %= anim->frames_count;
+        frame = (frame >= 0) ? (frame) : (anim->frames_count - 1 + frame);
+        ss_anim->period = 1.0f / 30.0f;
+
+        ss_anim->changing_curr = 0x03;
+        ss_anim->changing_next = 0x03;
+        
+        ss_anim->current_state = anim->state_id;
+        ss_anim->next_state = anim->state_id;
+
+        ss_anim->next_animation = animation;
+        ss_anim->next_frame = frame;
+        ss_anim->current_animation = animation;
+        ss_anim->current_frame = frame;
+
+        ss_anim->frame_time = (float)frame * ss_anim->period;
+    }
+}
 
 /*
  * Next frame and next anim calculation function.

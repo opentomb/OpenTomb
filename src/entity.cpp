@@ -670,7 +670,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                 switch(*pointer)
                 {
                     case TR_ANIMCOMMAND_SETPOSITION:
-                        if((ss_anim->changing_next >= 0x02) && (ss_anim->onEndFrame == NULL))   // This command executes ONLY at the end of animation.
+                        if(ss_anim->next_frame + 1 == next_af->frames_count)    // This command executes ONLY at the end of animation.
                         {
                             float tr[3], move[3];
                             entity->no_fix_all = 0x01;
@@ -679,7 +679,8 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                             move[1] = (float)(*++pointer);     // y = z
                             Mat4_vec3_rot_macro(tr, entity->transform, move);
                             vec3_add(entity->transform + 12, entity->transform + 12, tr);
-                            Anim_SetNextFrame(ss_anim, ss_anim->period);
+                            Anim_SetNextFrame(ss_anim, ss_anim->period);        // skip one frame
+                            Anim_SetAnimation(ss_anim, ss_anim->next_animation, ss_anim->next_frame);
                             Entity_UpdateTransform(entity);
                             Entity_UpdateRigidBody(entity, 1);
                         }
@@ -783,8 +784,6 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                                             entity->dir_flag = ENT_MOVE_BACKWARD;
                                         }
 
-                                        //ss_anim->current_animation = ss_anim->next_animation;
-                                        //ss_anim->current_frame = ss_anim->next_frame;
                                         Anim_SetNextFrame(ss_anim, ss_anim->period);
                                         Entity_UpdateTransform(entity);
                                         Entity_UpdateRigidBody(entity, 1);
@@ -974,7 +973,7 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
             {
                 entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
             }
-            SSBoneFrame_SetAnimation(ss_anim, animation, frame);
+            Anim_SetAnimation(ss_anim, animation, frame);
             SSBoneFrame_Update(entity->bf, 0.0f);
         }
     }
