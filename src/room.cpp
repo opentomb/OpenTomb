@@ -186,7 +186,7 @@ void Room_Enable(struct room_s *room)
             case OBJECT_ENTITY:
                 if(((entity_p)cont->object)->state_flags & ENTITY_STATE_ENABLED)
                 {
-                    Entity_EnableCollision((entity_p)cont->object);
+                    Physics_EnableCollision(((entity_p)cont->object)->physics);
                 }
                 break;
         }
@@ -223,7 +223,7 @@ void Room_Disable(struct room_s *room)
             case OBJECT_ENTITY:
                 if(((entity_p)cont->object)->state_flags & ENTITY_STATE_ENABLED)
                 {
-                    Entity_DisableCollision((entity_p)cont->object);
+                    Physics_DisableCollision(((entity_p)cont->object)->physics);
                 }
                 break;
         }

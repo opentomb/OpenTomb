@@ -40,7 +40,7 @@ typedef struct camera_flags_s
     uint16_t        enable_controls : 1;
     uint16_t        fade_in : 1;
     uint16_t        fade_out : 1;
-    uint16_t        heawy_triggering : 1;
+    uint16_t        heavy_triggering : 1;
     uint16_t        : 1;
     //Bit 15 —  TR5 only TRLE for TR5 says this flag is used to make camera one-shot, but it’s not true. Actual one-shot flag is placed in extra uint16_t field at 0x0100 for flyby camera TrigAction.*/
 }camera_flags_t, *camera_flags_p;
@@ -51,7 +51,7 @@ typedef struct camera_state_s
     uint32_t                        target_id;
     struct flyby_camera_sequence_s *flyby;
     struct static_camera_sink_s    *sink;
-    
+
     GLfloat                         shake_value;
     GLfloat                         time;
     int                             move;
@@ -60,20 +60,15 @@ typedef struct camera_state_s
 
 typedef struct camera_s
 {
-    GLfloat                     pos[3];                 // camera position
-    GLfloat                     prev_pos[3];            // previous camera position
-    GLfloat                     view_dir[4];            // view cameradirection
-    GLfloat                     up_dir[4];              // up vector
-    GLfloat                     right_dir[4];           // strafe vector
-    GLfloat                     ang[3];                 // camera orientation
-
+    GLfloat                     gl_transform[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_view_mat[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_proj_mat[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_view_proj_mat[16] __attribute__((packed, aligned(16)));
 
     GLfloat                     clip_planes[16];        // frustum side clip planes
+    GLfloat                     prev_pos[3];            // previous camera position
+    GLfloat                     ang[3];                 // camera orientation
     struct frustum_s           *frustum;                // camera frustum structure
-
     GLfloat                     dist_near;
     GLfloat                     dist_far;
 
@@ -100,8 +95,9 @@ typedef struct static_camera_sink_s
     GLfloat                     x;
     GLfloat                     y;
     GLfloat                     z;
-    uint16_t                    room_or_strength;   // Room for camera, strength for sink.
-    uint16_t                    flag_or_zone;       // Flag for camera, zone for sink.
+    uint16_t                    locked : 1;
+    uint16_t                    room_or_strength : 15;   // Room for camera, strength for sink.
+    uint16_t                    flag_or_zone;            // Flag for camera, zone for sink.
 }static_camera_sink_t, *static_camera_sink_p;
 
 typedef struct flyby_camera_state_s
@@ -113,7 +109,7 @@ typedef struct flyby_camera_state_s
     float                       roll;
     float                       timer;
     float                       speed;
-    
+
     int8_t                      sequence;
     int8_t                      index;
     struct camera_flags_s       flags;
@@ -124,7 +120,7 @@ typedef struct flyby_camera_sequence_s
 {
     struct flyby_camera_state_s    *start;
     uint32_t                        locked : 1;
-    
+
     struct spline_s                *pos_x;
     struct spline_s                *pos_y;
     struct spline_s                *pos_z;
@@ -134,7 +130,7 @@ typedef struct flyby_camera_sequence_s
     struct spline_s                *fov;
     struct spline_s                *roll;
     struct spline_s                *speed;
-    
+
     struct flyby_camera_sequence_s *next;
 }flyby_camera_sequence_t, *flyby_camera_sequence_p;
 

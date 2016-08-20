@@ -38,8 +38,6 @@ extern lua_State *engine_lua;
 
 void Save_EntityTree(FILE **f, RedBlackNode_p n);
 void Save_Entity(FILE **f, entity_p ent);
-void Cam_PlayFlyBy(float time);
-
 
 int lua_mlook(lua_State * lua)
 {
@@ -105,11 +103,11 @@ int lua_debuginfo(lua_State * lua)
 {
     if(lua_gettop(lua) == 0)
     {
-        screen_info.show_debuginfo++;
+        screen_info.debug_view_state++;
     }
     else
     {
-        screen_info.show_debuginfo = lua_tointeger(lua, 1);
+        screen_info.debug_view_state = lua_tointeger(lua, 1);
     }
     return 0;
 }
@@ -224,26 +222,37 @@ void Save_Entity(FILE **f, entity_p ent)
                 ent->angles[0], ent->angles[1], ent->angles[2]);
     }
 
-    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed[0], ent->speed[1], ent->speed[2]);
-    fprintf(*f, "\nsetEntityAnim(%d, %d, %d);", ent->id, ent->bf->animations.current_animation, ent->bf->animations.current_frame);
-    fprintf(*f, "\nsetEntityState(%d, %d, %d);", ent->id, ent->bf->animations.next_state, ent->bf->animations.last_state);
+    ss_animation_p ss_anim = &ent->bf->animations;
+    for(; ss_anim->next; ss_anim = ss_anim->next);
 
-    fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
-    fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->id, ent->self->collision_type, ent->self->collision_shape);
-    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
-    //setEntityMeshswap()
-
-    if(ent->self->room != NULL)
+    for(; ss_anim; ss_anim = ss_anim->prev)
     {
-        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id, ent->self->room->id, ent->move_type, ent->dir_flag);
+        if(ss_anim->type != ANIM_TYPE_BASE)
+        {
+            if(ss_anim->model)
+            {
+                fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->model->id);
+            }
+            else
+            {
+                fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, nil);", ent->id, ss_anim->type);
+            }
+        }
     }
-    else
-    {
-        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id, ent->move_type, ent->dir_flag);
-    }
 
-    if(ent->character != NULL)
+    if(ent->character)
     {
+        if(ent->character->target_id != ENTITY_ID_NONE)
+        {
+            fprintf(*f, "\nsetCharacterTarget(%d, %d);", ent->id, ent->character->target_id);
+        }
+        else
+        {
+            fprintf(*f, "\nsetCharacterTarget(%d);", ent->id);
+        }
+
+        fprintf(*f, "\nsetCharacterWeaponModel(%d, %d, %d);", ent->id, ent->character->current_weapon, ent->character->weapon_current_state);
+
         fprintf(*f, "\nremoveAllItems(%d);", ent->id);
         for(inventory_node_p i = ent->character->inventory; i; i = i->next)
         {
@@ -254,6 +263,39 @@ void Save_Entity(FILE **f, entity_p ent)
         {
             fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
         }
+    }
+
+    fprintf(*f, "\nsetEntityLinearSpeed(%d, %.2f);", ent->id, ent->linear_speed);
+    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed[0], ent->speed[1], ent->speed[2]);
+
+    fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
+    fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d);", ent->id, ent->self->collision_type, ent->self->collision_shape);
+    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
+
+    if(ent->self->room != NULL)
+    {
+        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id, ent->self->room->id, ent->move_type, ent->dir_flag);
+    }
+    else
+    {
+        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id, ent->move_type, ent->dir_flag);
+    }
+
+    for(ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
+    {
+        fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->current_animation, ss_anim->current_frame, ss_anim->next_animation, ss_anim->next_frame);
+        fprintf(*f, "\nsetEntityAnimState(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state, ss_anim->current_state);
+        fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %d, %.2f, %.2f, %.2f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type, ss_anim->targeting_bone,
+            ss_anim->target[0], ss_anim->target[1], ss_anim->target[2],
+            ss_anim->bone_direction[0], ss_anim->bone_direction[1], ss_anim->bone_direction[2]);
+        fprintf(*f, "\nentitySSAnimSetAxisMod(%d, %d, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
+            ss_anim->targeting_axis_mod[0], ss_anim->targeting_axis_mod[1], ss_anim->targeting_axis_mod[2]);
+        fprintf(*f, "\nentitySSAnimSetTargetingLimit(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
+            ss_anim->targeting_limit[0], ss_anim->targeting_limit[1], ss_anim->targeting_limit[2], ss_anim->targeting_limit[3]);
+        fprintf(*f, "\nentitySSAnimSetCurrentRotation(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
+            ss_anim->current_mod[0], ss_anim->current_mod[1], ss_anim->current_mod[2], ss_anim->current_mod[3]);
+        fprintf(*f, "\nentitySSAnimSetExtFlags(%d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled,
+            ss_anim->anim_ext_flags, ss_anim->targeting_flags);
     }
 }
 
@@ -291,7 +333,7 @@ int Game_Save(const char* name)
         return 0;
     }
 
-    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow_manager.CurrentLevelPath, gameflow_manager.CurrentGameID, gameflow_manager.CurrentLevelID);
+    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow.getCurrentLevelPath(), gameflow.getCurrentGameID(), gameflow.getCurrentLevelID());
 
     // Save flipmap and flipped room states.
     uint8_t *flip_map;
@@ -399,7 +441,7 @@ void Game_ApplyControls(struct entity_s *ent)
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
-        engine_camera.current_room = World_FindRoomByPosCogerrence(engine_camera.pos, engine_camera.current_room);
+        engine_camera.current_room = World_FindRoomByPosCogerrence(engine_camera.gl_transform + 12, engine_camera.current_room);
     }
     else if(control_states.noclip != 0)
     {
@@ -409,12 +451,12 @@ void Game_ApplyControls(struct entity_s *ent)
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
-        engine_camera.current_room = World_FindRoomByPosCogerrence(engine_camera.pos, engine_camera.current_room);
+        engine_camera.current_room = World_FindRoomByPosCogerrence(engine_camera.gl_transform + 12, engine_camera.current_room);
 
         ent->angles[0] = 180.0 * control_states.cam_angles[0] / M_PI;
-        pos[0] = engine_camera.pos[0] + engine_camera.view_dir[0] * control_states.cam_distance;
-        pos[1] = engine_camera.pos[1] + engine_camera.view_dir[1] * control_states.cam_distance;
-        pos[2] = engine_camera.pos[2] + engine_camera.view_dir[2] * control_states.cam_distance - 512.0;
+        pos[0] = engine_camera.gl_transform[12 + 0] + engine_camera.gl_transform[8 + 0] * control_states.cam_distance;
+        pos[1] = engine_camera.gl_transform[12 + 1] + engine_camera.gl_transform[8 + 1] * control_states.cam_distance;
+        pos[2] = engine_camera.gl_transform[12 + 2] + engine_camera.gl_transform[8 + 2] * control_states.cam_distance - 512.0;
         vec3_copy(ent->transform+12, pos);
         Entity_UpdateTransform(ent);
         Entity_UpdateRigidBody(ent, 1);
@@ -478,265 +520,6 @@ void Game_ApplyControls(struct entity_s *ent)
 
         vec3_copy(ent->character->cmd.move, move_logic);
     }
-}
-
-
-void Cam_PlayFlyBy(float time)
-{
-    if(engine_camera_state.state == CAMERA_STATE_FLYBY)
-    {
-        const float max_time = engine_camera_state.flyby->pos_x->base_points_count - 1;
-        float speed = Spline_Get(engine_camera_state.flyby->speed, engine_camera_state.time);
-        engine_camera_state.time += time * speed / (1024.0f + 512.0f);
-        if(engine_camera_state.time <= max_time)
-        {
-            FlyBySequence_SetCamera(engine_camera_state.flyby, &engine_camera, engine_camera_state.time);
-        }
-        else
-        {
-            engine_camera_state.state = CAMERA_STATE_NORMAL;
-            engine_camera_state.flyby = NULL;
-            engine_camera_state.time = 0.0f;
-            Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
-        }
-    }
-}
-
-
-void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, float dz)
-{
-    float cam_pos[3], cameraFrom[3], cameraTo[3];
-    collision_result_t cb;
-    entity_p target = World_GetEntityByID(engine_camera_state.target_id);
-
-    if(target && (engine_camera_state.state == CAMERA_STATE_FIXED))
-    {
-        cam->pos[0] = engine_camera_state.sink->x;
-        cam->pos[1] = engine_camera_state.sink->y;
-        cam->pos[2] = engine_camera_state.sink->z;
-        cam->current_room = World_GetRoomByID(engine_camera_state.sink->room_or_strength);
-
-        if(target->character)
-        {
-            ss_bone_tag_p btag = target->bf->bone_tags;
-            float target_pos[3];
-            for(uint16_t i = 0; i < target->bf->bone_tag_count; i++)
-            {
-                if(target->bf->bone_tags[i].body_part & BODY_PART_HEAD)
-                {
-                    btag = target->bf->bone_tags + i;
-                    break;
-                }
-            }
-            Mat4_vec3_mul(target_pos, target->transform, btag->full_transform + 12);
-            Cam_LookTo(cam, target_pos);
-        }
-        else
-        {
-            Cam_LookTo(cam, target->transform + 12);
-        }
-
-        engine_camera_state.time -= engine_frame_time;
-        if(engine_camera_state.time <= 0.0f)
-        {
-            entity_p player = World_GetPlayer();
-            engine_camera_state.state = CAMERA_STATE_NORMAL;
-            engine_camera_state.time = 0.0f;
-            engine_camera_state.sink = NULL;
-            engine_camera_state.target_id = (player) ? (player->id) : (-1);
-            Cam_SetFovAspect(cam, screen_info.fov, cam->aspect);
-        }
-        return;
-    }
-
-    vec3_copy(cam_pos, cam->pos);
-    ///@INFO Basic camera override, completely placeholder until a system classic-like is created
-    if(control_states.mouse_look == 0)//If mouse look is off
-    {
-        float currentAngle = control_states.cam_angles[0] * (M_PI / 180.0);     //Current is the current cam angle
-        float targetAngle  = ent->angles[0] * (M_PI / 180.0); //Target is the target angle which is the entity's angle itself
-        float rotSpeed = 2.0; //Speed of rotation
-
-        ///@FIXME
-        //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
-        if(ent->bf->animations.last_state == TR_STATE_LARA_REACH)
-        {
-            if(cam->target_dir == TR_CAM_TARG_BACK)
-            {
-                vec3_copy(cameraFrom, cam_pos);
-                cameraTo[0] = cameraFrom[0] + sinf((ent->angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                cameraTo[1] = cameraFrom[1] - cosf((ent->angles[0] - 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                cameraTo[2] = cameraFrom[2];
-
-                //If collided we want to go right otherwise stay left
-                if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self))
-                {
-                    cameraTo[0] = cameraFrom[0] + sinf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                    cameraTo[1] = cameraFrom[1] - cosf((ent->angles[0] + 90.0) * (M_PI / 180.0)) * control_states.cam_distance;
-                    cameraTo[2] = cameraFrom[2];
-
-                    //If collided we want to go to back else right
-                    if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self))
-                    {
-                        cam->target_dir = TR_CAM_TARG_BACK;
-                    }
-                    else
-                    {
-                        cam->target_dir = TR_CAM_TARG_RIGHT;
-                    }
-                }
-                else
-                {
-                    cam->target_dir = TR_CAM_TARG_LEFT;
-                }
-            }
-        }
-        else if(ent->bf->animations.last_state == TR_STATE_LARA_JUMP_BACK)
-        {
-            cam->target_dir = TR_CAM_TARG_FRONT;
-        }
-        else if(cam->target_dir != TR_CAM_TARG_BACK)
-        {
-            cam->target_dir = TR_CAM_TARG_BACK;//Reset to back
-        }
-
-        //If target mis-matches current we need to update the camera's angle to reach target!
-        if(currentAngle != targetAngle)
-        {
-            switch(cam->target_dir)
-            {
-            case TR_CAM_TARG_BACK:
-                targetAngle = (ent->angles[0]) * (M_PI / 180.0);
-                break;
-            case TR_CAM_TARG_FRONT:
-                targetAngle = (ent->angles[0] - 180.0) * (M_PI / 180.0);
-                break;
-            case TR_CAM_TARG_LEFT:
-                targetAngle = (ent->angles[0] - 75.0) * (M_PI / 180.0);
-                break;
-            case TR_CAM_TARG_RIGHT:
-                targetAngle = (ent->angles[0] + 75.0) * (M_PI / 180.0);
-                break;
-            default:
-                targetAngle = (ent->angles[0]) * (M_PI / 180.0);
-                break;
-            }
-
-            float d_angle = control_states.cam_angles[0] - targetAngle;
-            if(d_angle > M_PI / 2.0)
-            {
-                d_angle -= M_PI/180.0;
-            }
-            if(d_angle < -M_PI / 2.0)
-            {
-                d_angle += M_PI/180.0;
-            }
-            control_states.cam_angles[0] = fmodf(control_states.cam_angles[0] + atan2f(sinf(currentAngle - d_angle), cosf(currentAngle + d_angle)) * (engine_frame_time * rotSpeed), M_PI * 2.0); //Update camera's angle
-        }
-    }
-
-    if((ent->character != NULL) && (ent->character->cam_follow_center > 0))
-    {
-        vec3_copy(cam_pos, ent->obb->centre);
-        ent->character->cam_follow_center--;
-    }
-    else
-    {
-        Mat4_vec3_mul(cam_pos, ent->transform, ent->bf->bone_tags->full_transform+12);
-        cam_pos[2] += dz;
-    }
-
-    //Code to manage screen shaking effects
-    /*if((engine_camera_state.time > 0.0) && (engine_camera_state.shake_value > 0.0))
-    {
-        cam_pos[0] += ((rand() % abs(engine_camera_state.shake_value)) - (engine_camera_state.shake_value / 2)) * engine_camera_state.time;;
-        cam_pos[1] += ((rand() % abs(engine_camera_state.shake_value)) - (engine_camera_state.shake_value / 2)) * engine_camera_state.time;;
-        cam_pos[2] += ((rand() % abs(engine_camera_state.shake_value)) - (engine_camera_state.shake_value / 2)) * engine_camera_state.time;;
-        engine_camera_state.time  = (engine_camera_state.time < 0.0)?(0.0):(engine_camera_state.time)-engine_frame_time;
-    }*/
-
-    vec3_copy(cameraFrom, cam_pos);
-    cam_pos[2] += dz;
-    vec3_copy(cameraTo, cam_pos);
-
-    if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self))
-    {
-        vec3_add_mul(cam_pos, cb.point, cb.normale, 2.0);
-    }
-
-    if (dx != 0.0)
-    {
-        vec3_copy(cameraFrom, cam_pos);
-        cam_pos[0] += dx * cam->right_dir[0];
-        cam_pos[1] += dx * cam->right_dir[1];
-        cam_pos[2] += dx * cam->right_dir[2];
-        vec3_copy(cameraTo, cam_pos);
-
-        if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self))
-        {
-            vec3_add_mul(cam_pos, cb.point, cb.normale, 2.0);
-        }
-
-        vec3_copy(cameraFrom, cam_pos);
-        if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
-        {
-            entity_p target = World_GetEntityByID(engine_camera_state.target_id);
-            if(target && target != World_GetPlayer())
-            {
-                float dir2d[2], dist;
-                dir2d[0] = target->transform[12 + 0] - cam->pos[0];
-                dir2d[1] = target->transform[12 + 1] - cam->pos[1];
-                dist = control_states.cam_distance / sqrtf(dir2d[0] * dir2d[0] + dir2d[1] * dir2d[1]);
-                cam_pos[0] -= dir2d[0] * dist;
-                cam_pos[1] -= dir2d[1] * dist;
-            }
-        }
-        else
-        {
-            cam_pos[0] += sinf(control_states.cam_angles[0]) * control_states.cam_distance;
-            cam_pos[1] -= cosf(control_states.cam_angles[0]) * control_states.cam_distance;
-        }
-        vec3_copy(cameraTo, cam_pos);
-
-        if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self))
-        {
-            vec3_add_mul(cam_pos, cb.point, cb.normale, 2.0);
-        }
-    }
-
-    //Update cam pos
-    vec3_copy(cam->pos, cam_pos);
-
-    //Modify cam pos for quicksand rooms
-    cam->pos[2] -= 128.0;
-    cam->current_room = World_FindRoomByPosCogerrence(cam->pos, cam->current_room);
-    cam->pos[2] += 128.0;
-    if((cam->current_room != NULL) && (cam->current_room->flags & TR_ROOM_FLAG_QUICKSAND))
-    {
-        cam->pos[2] = cam->current_room->bb_max[2] + 2.0 * 64.0;
-    }
-
-    if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
-    {
-        entity_p target = World_GetEntityByID(engine_camera_state.target_id);
-        if(target)
-        {
-            Cam_LookTo(cam, target->transform + 12);
-            engine_camera_state.time -= engine_frame_time;
-            if(engine_camera_state.time <= 0.0f)
-            {
-                engine_camera_state.target_id = (World_GetPlayer()) ? (World_GetPlayer()->id) : (-1);
-                engine_camera_state.state = CAMERA_STATE_NORMAL;
-                engine_camera_state.time = 0.0f;
-                engine_camera_state.sink = NULL;
-            }
-        }
-    }
-    else
-    {
-        Cam_SetRotation(cam, control_states.cam_angles);
-    }
-    cam->current_room = World_FindRoomByPosCogerrence(cam->pos, cam->current_room);
 }
 
 
@@ -983,15 +766,15 @@ void Game_Prepare()
         room_p room = World_GetRoomByID(0);
         if(room)
         {
-            engine_camera.pos[0] = room->bb_max[0];
-            engine_camera.pos[1] = room->bb_max[1];
-            engine_camera.pos[2] = room->bb_max[2];
+            engine_camera.gl_transform[12 + 0] = room->bb_max[0];
+            engine_camera.gl_transform[12 + 1] = room->bb_max[1];
+            engine_camera.gl_transform[12 + 2] = room->bb_max[2];
         }
     }
 
     // Set gameflow parameters to default.
     // Reset secret trigger map.
-    memset(gameflow_manager.SecretsTriggerMap, 0, sizeof(gameflow_manager.SecretsTriggerMap));
+    gameflow.resetSecrets();///@UNIMPLEMENTED We should save the secrets to a save file prior to resetting!
 }
 
 
@@ -1029,10 +812,11 @@ void Game_SetCameraTarget(uint32_t entity_id, float timer)
 void Game_SetCamera(uint32_t camera_id, int once, int move, float timer)
 {
     static_camera_sink_p sink = World_GetstaticCameraSink(camera_id);
-    if(sink)
+    if(sink && !sink->locked)
     {
         if(engine_camera_state.state != CAMERA_STATE_FLYBY)
         {
+            sink->locked |= 0x01 & once;
             engine_camera_state.state = CAMERA_STATE_FIXED;
             engine_camera_state.sink = sink;
             engine_camera_state.time = timer;
@@ -1056,7 +840,7 @@ void Game_LevelTransition(uint16_t level_index)
     Script_GetLoadingScreen(engine_lua, level_index, file_path);
     if(!Gui_LoadScreenAssignPic(file_path))
     {
-        Gui_LoadScreenAssignPic("resource/graphics/legal.png");
+        Gui_LoadScreenAssignPic("resource/graphics/legal");
     }
     Audio_EndStreams();
 }

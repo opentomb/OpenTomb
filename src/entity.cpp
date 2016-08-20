@@ -40,7 +40,7 @@ entity_p Entity_Create()
     ret->callback_flags = 0x00000000;               // no callbacks by default
 
     ret->OCB = 0;
-    ret->trigger_layout = 0x00;
+    ret->trigger_layout = 0x00U;
     ret->timer = 0.0;
 
     ret->self = (engine_container_p)malloc(sizeof(engine_container_t));
@@ -62,23 +62,7 @@ entity_p Entity_Create()
     ret->current_sector = NULL;
 
     ret->bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
-    ret->bf->animations.model = NULL;
-    ret->bf->animations.onFrame = NULL;
-    ret->bf->animations.frame_time = 0.0;
-    ret->bf->animations.last_state = 0;
-    ret->bf->animations.next_state = 0;
-    ret->bf->animations.lerp = 0.0;
-    ret->bf->animations.current_animation = 0;
-    ret->bf->animations.current_frame = 0;
-    ret->bf->animations.next_animation = 0;
-    ret->bf->animations.next_frame = 0;
-    ret->bf->animations.next = NULL;
-    ret->bf->bone_tag_count = 0;
-    ret->bf->bone_tags = 0;
-    vec3_set_zero(ret->bf->bb_max);
-    vec3_set_zero(ret->bf->bb_min);
-    vec3_set_zero(ret->bf->centre);
-    vec3_set_zero(ret->bf->pos);
+    SSBoneFrame_CreateFromModel(ret->bf, NULL);
     vec3_set_zero(ret->angles);
     vec3_set_zero(ret->speed);
     vec3_set_one(ret->scaling);
@@ -284,9 +268,12 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
                 return;
         };
         Mat4_E(ent->bf->bone_tags[0].full_transform);
+        Physics_GetBodyWorldTransform(ent->physics, tr, 0);
+        Physics_SetGhostWorldTransform(ent->physics, tr, 0);
         for(uint16_t i = 1; i < ent->bf->bone_tag_count; i++)
         {
             Physics_GetBodyWorldTransform(ent->physics, tr, i);
+            Physics_SetGhostWorldTransform(ent->physics, tr, i);
             Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].full_transform, ent->transform, tr);
         }
 
@@ -409,13 +396,11 @@ void Entity_GhostUpdate(struct entity_s *ent)
 {
     if(Physics_IsGhostsInited(ent->physics))
     {
-        float tr[16], v[3];
+        float tr[16];
         uint16_t max_index = Physics_GetBodiesCount(ent->physics);
         for(uint16_t i = 0; i < max_index; i++)
         {
             Physics_GetBodyWorldTransform(ent->physics, tr, i);
-            Mat4_vec3_mul(v, tr, ent->bf->bone_tags[i].mesh_base->centre);
-            vec3_copy(tr + 12, v);
             Physics_SetGhostWorldTransform(ent->physics, tr, i);
         }
     }
@@ -937,25 +922,25 @@ void Entity_ProcessSector(entity_p ent)
     }
 }
 
-
-void Entity_SetAnimation(entity_p entity, int animation, int frame)
+///@FIXME: function did more things than it's name describes;
+void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int frame)
 {
-    if(!entity || !entity->bf->animations.model || (animation >= entity->bf->animations.model->animation_count))
+    if(entity)
     {
-        return;
+        animation = (animation < 0) ? (0) : (animation);
+        entity->no_fix_all = 0x00;
+
+        if(anim_type == ANIM_TYPE_BASE)
+        {
+            entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
+        }
+        SSBoneFrame_SetAnimation(entity->bf, anim_type, animation, frame);
+        SSBoneFrame_Update(entity->bf, 0.0f);
     }
-
-    animation = (animation < 0)?(0):(animation);
-    entity->no_fix_all = 0x00;
-
-    entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
-    SSBoneFrame_SetAnimation(entity->bf, animation, frame);
-    SSBoneFrame_Update(entity->bf);
-    Entity_UpdateRigidBody(entity, 0);
 }
 
 
-void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
+void Entity_DoAnimTransformCommand(entity_p entity, int16_t *anim, int16_t *frame)
 {
     if(entity->bf->animations.model != NULL)
     {
@@ -983,7 +968,7 @@ void Entity_DoAnimMove(entity_p entity, int16_t *anim, int16_t *frame)
                 entity->dir_flag = ENT_MOVE_BACKWARD;
             }
             Entity_UpdateTransform(entity);
-            Entity_SetAnimation(entity, curr_af->next_anim->id, curr_af->next_frame);
+            Entity_SetAnimation(entity, ANIM_TYPE_BASE, curr_af->next_anim->id, curr_af->next_frame);
             *anim = entity->bf->animations.current_animation;
             *frame = entity->bf->animations.current_frame;
         }
@@ -1040,13 +1025,11 @@ void Entity_Frame(entity_p entity, float time)
 {
     if(entity && !(entity->type_flags & ENTITY_TYPE_DYNAMIC) && (entity->state_flags & ENTITY_STATE_ACTIVE)  && (entity->state_flags & ENTITY_STATE_ENABLED))
     {
-        int16_t frame, anim;
         long int t;
         float dt;
         animation_frame_p af;
         state_change_p stc;
         ss_animation_p ss_anim = &entity->bf->animations;
-        uint16_t is_base_anim = 1;
 
         Entity_GhostUpdate(entity);
 
@@ -1065,31 +1048,25 @@ void Entity_Frame(entity_p entity, float time)
                 else if(ss_anim->model && !(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK) &&
                         ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->frames_count > 1)))
                 {
+                    int16_t new_frame, new_anim;
                     uint16_t frame_switch_state = 0x00;
                     ss_anim->lerp = 0.0;
                     stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
-                    Anim_GetNextFrame(ss_anim, time, stc, &frame, &anim, ss_anim->anim_frame_flags);
-                    if(ss_anim->current_animation != anim)
+                    Anim_GetNextFrame(ss_anim, time, stc, &new_frame, &new_anim, ss_anim->anim_frame_flags);
+                    if(ss_anim->current_animation != new_anim)
                     {
-                        ss_anim->last_animation = ss_anim->current_animation;
-
                         frame_switch_state = 0x02;
                         Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
-                        Entity_DoAnimMove(entity, &anim, &frame);
+                        Entity_DoAnimTransformCommand(entity, &new_anim, &new_frame);
 
-                        Entity_SetAnimation(entity, anim, frame);
+                        Entity_SetAnimation(entity, ss_anim->type, new_anim, new_frame);
                         stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
                     }
-                    else if(ss_anim->current_frame != frame)
+                    else if(ss_anim->current_frame != new_frame)
                     {
-                        if(ss_anim->current_frame == 0)
-                        {
-                            ss_anim->last_animation = ss_anim->current_animation;
-                        }
-
                         frame_switch_state = 0x01;
                         Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
-                        Entity_DoAnimMove(entity, &anim, &frame);
+                        Entity_DoAnimTransformCommand(entity, &new_anim, &new_frame);
                     }
 
                     af = ss_anim->model->animations + ss_anim->current_animation;
@@ -1097,7 +1074,7 @@ void Entity_Frame(entity_p entity, float time)
 
                     t = (ss_anim->frame_time) / ss_anim->period;
                     dt = ss_anim->frame_time - (float)t * ss_anim->period;
-                    ss_anim->frame_time = (float)frame * ss_anim->period + dt;
+                    ss_anim->frame_time = (float)new_frame * ss_anim->period + dt;
                     ss_anim->lerp = dt / ss_anim->period;
                     Anim_GetNextFrame(ss_anim, ss_anim->period, stc, &ss_anim->next_frame, &ss_anim->next_animation, ss_anim->anim_frame_flags);
 
@@ -1105,10 +1082,10 @@ void Entity_Frame(entity_p entity, float time)
                     // With variable framerate, we don't know when we'll reach final
                     // frame for sure, so we use native frame number check to increase acceleration.
 
-                    if(is_base_anim && (entity->character) && (ss_anim->current_frame != frame))
+                    if((ss_anim->type == ANIM_TYPE_BASE) && (entity->character) && (ss_anim->current_frame != new_frame))
                     {
                         // NB!!! For Lara, we update ONLY X-axis speed/accel.
-                        if((af->accel_x == 0) || (frame < ss_anim->current_frame))
+                        if((af->accel_x == 0) || (new_frame < ss_anim->current_frame))
                         {
                             entity->anim_linear_speed  = af->speed_x;
                         }
@@ -1118,7 +1095,7 @@ void Entity_Frame(entity_p entity, float time)
                         }
                     }
 
-                    ss_anim->current_frame = frame;
+                    ss_anim->current_frame = new_frame;
 
                     if(ss_anim->onEndFrame != NULL)
                     {
@@ -1126,11 +1103,10 @@ void Entity_Frame(entity_p entity, float time)
                     }
                 }
             }
-            is_base_anim = 0;
             ss_anim = ss_anim->next;
         }
 
-        SSBoneFrame_Update(entity->bf);
+        SSBoneFrame_Update(entity->bf, time);
         if(entity->character != NULL)
         {
             Entity_FixPenetrations(entity, NULL);
@@ -1194,6 +1170,13 @@ void Entity_CheckActivators(struct entity_s *ent)
 
 int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer)
 {
+    int activation_state = ENTITY_TRIGGERING_NOT_READY;
+    if((trigger_timer > 0) && (entity_object->timer > 0.0f))
+    {
+        entity_object->timer = trigger_timer;                                   // Engage timer.
+        return activation_state;
+    }
+
     if(!((entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6))           // Ignore activation, if activity lock is set.
     {
         int activator_id = (entity_activator) ? (entity_activator->id) : (-1);
@@ -1216,35 +1199,42 @@ int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
 
         if((mask == 0x1F) && (event == 0))
         {
-            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, entity_object->id, activator_id);
+            activation_state = Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, entity_object->id, activator_id);
             event = 1;
         }
         else if((mask != 0x1F) && (event == 1))
         {
-            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_DEACTIVATE, entity_object->id, activator_id);
+            activation_state = Script_ExecEntity(engine_lua, ENTITY_CALLBACK_DEACTIVATE, entity_object->id, activator_id);
             event = 0;
         }
 
         // Update trigger layout.
         entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);       // mask  - 00011111
         entity_object->trigger_layout ^= (uint8_t)mask;
-        entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT);      // event - 00100000
-        entity_object->trigger_layout ^= ((uint8_t)event) << 5;
-        entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);       // lock  - 01000000
-        entity_object->trigger_layout ^= ((uint8_t)trigger_lock) << 6;
 
+        if(activation_state != ENTITY_TRIGGERING_NOT_READY)
+        {
+            entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT);  // event - 00100000
+            entity_object->trigger_layout ^= ((uint8_t)event) << 5;
+        }
+
+        if(activation_state == ENTITY_TRIGGERING_ACTIVATED)
+        {
+            entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);   // lock  - 01000000
+            entity_object->trigger_layout ^= ((uint8_t)trigger_lock) << 6;
+        }
         entity_object->timer = trigger_timer;                                   // Engage timer.
     }
 
-    return 0;
+    return activation_state;
 }
 
 
 int  Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_activator)
 {
-    if(!((entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6))           // Ignore activation, if activity lock is set.
+    int activation_state = ENTITY_TRIGGERING_NOT_READY;
+    if(!((entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6))           // Ignore deactivation, if activity lock is set.
     {
-        int top = lua_gettop(engine_lua);
         int activator_id = (entity_activator) ? (entity_activator->id) : (-1);
         // Get current trigger layout.
         uint16_t event = (entity_object->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5;
@@ -1252,18 +1242,20 @@ int  Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_a
         // Execute entity deactivation function, only if activation was previously set.
         if(event == 1)
         {
-            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_DEACTIVATE, entity_object->id, activator_id);
+            activation_state = Script_ExecEntity(engine_lua, ENTITY_CALLBACK_DEACTIVATE, entity_object->id, activator_id);
 
             // Activation mask and timer are forced to zero when entity is deactivated.
             // Activity lock is ignored, since it can't be raised by antitriggers.
             // Update trigger layout.
-            entity_object->trigger_layout = 0x00U;
+            if(activation_state != ENTITY_TRIGGERING_NOT_READY)
+            {
+                entity_object->trigger_layout = 0x00U;
+            }
             entity_object->timer = 0.0f;
         }
-
-        lua_settop(engine_lua, top);
     }
-    return 0;
+
+    return activation_state;
 }
 
 

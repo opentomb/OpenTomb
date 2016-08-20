@@ -143,7 +143,7 @@ void Controls_Key(int32_t button, int state)
                 case ACT_SCREENSHOT:
                     if(!state)
                     {
-                        Sys_TakeScreenShot();
+                        Engine_TakeScreenShot();
                     }
                     break;
 
@@ -521,8 +521,8 @@ void Controls_PrimaryMouseDown(float from[3], float to[3])
     float test_to[3];
     collision_result_t cb;
 
-    vec3_add_mul(test_to, engine_camera.pos, engine_camera.view_dir, 32768.0f);
-    if(Physics_RayTestFiltered(&cb, engine_camera.pos, test_to, NULL))
+    vec3_add_mul(test_to, engine_camera.gl_transform + 12, engine_camera.gl_transform + 8, 32768.0f);
+    if(Physics_RayTestFiltered(&cb, engine_camera.gl_transform + 12, test_to, NULL))
     {
         vec3_copy(from, cb.point);
         vec3_add_mul(to, cb.point, cb.normale, 256.0);
@@ -536,8 +536,8 @@ void Controls_SecondaryMouseDown(struct engine_container_s **cont, float dot[3])
     engine_container_t cam_cont;
     collision_result_t cb;
 
-    vec3_copy(from, engine_camera.pos);
-    vec3_add_mul(to, from, engine_camera.view_dir, 32768.0);
+    vec3_copy(from, engine_camera.gl_transform + 12);
+    vec3_add_mul(to, from, engine_camera.gl_transform + 8, 32768.0);
 
     cam_cont.next = NULL;
     cam_cont.object = NULL;

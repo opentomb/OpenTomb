@@ -57,6 +57,22 @@ inline void Entity_SetLock(entity_p ent, uint16_t status)
     }
 }
 
+
+inline uint32_t Entity_GetLayoutEvent(entity_p ent)
+{
+    return (ent && (ent->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5);
+}
+
+
+inline void Entity_SetLayoutEvent(entity_p ent, uint16_t status)
+{
+    if(ent)
+    {
+        ent->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT);
+        ent->trigger_layout ^= ((uint8_t)status) << 5;   // event  - 00100000
+    }
+}
+
 /*
 -- Does specified flipeffect.
 
@@ -87,271 +103,18 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 {
     if(trigger && entity_activator)
     {
-        int activator           = TR_ACTIVATOR_NORMAL;      // Activator is normal by default.
-        int action_type         = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
-        int header_condition    = 1;                        // by default condition = true
-        int mask_mode           = TRIGGER_OP_OR;            // Activation mask by default.
+        bool has_non_continuos_triggers = false;
 
-        // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
-        // some specific entity classes.
-        // entity_activator_type  == TR_ACTIVATORTYPE_LARA and
-        // trigger_activator_type == TR_ACTIVATORTYPE_MISC
-        switch(trigger->sub_function)
-        {
-            case TR_FD_TRIGTYPE_HEAVY:
-            case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
-            case TR_FD_TRIGTYPE_HEAVYSWITCH:
-                if((entity_activator->type_flags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR) == 0)
-                {
-                    return;
-                }
-                break;
-        }
-
-        switch(trigger->sub_function)
-        {
-            case TR_FD_TRIGTYPE_TRIGGER:
-            case TR_FD_TRIGTYPE_HEAVY:
-                activator = TR_ACTIVATOR_NORMAL;
-                break;
-
-            case TR_FD_TRIGTYPE_PAD:
-            case TR_FD_TRIGTYPE_ANTIPAD:
-                if(trigger->sub_function == TR_FD_TRIGTYPE_ANTIPAD)
-                {
-                    action_type = TR_ACTIONTYPE_ANTI;
-                }
-                // Check move type for triggering entity.
-                header_condition = (entity_activator->move_type == MOVE_ON_FLOOR);  // Set additional condition.
-                break;
-
-            case TR_FD_TRIGTYPE_SWITCH:
-                // Set activator and action type for now; conditions are linked with first item in operand chain.
-                activator = TR_ACTIVATOR_SWITCH;
-                action_type = TR_ACTIONTYPE_SWITCH;
-                mask_mode = TRIGGER_OP_XOR;
-                break;
-
-            case TR_FD_TRIGTYPE_HEAVYSWITCH:
-                // Action type remains normal, as HEAVYSWITCH acts as "heavy trigger" with activator mask filter.
-                activator = TR_ACTIVATOR_SWITCH;
-                mask_mode = TRIGGER_OP_XOR;
-                break;
-
-            case TR_FD_TRIGTYPE_KEY:
-                // Action type remains normal, as key acts one-way (no need in switch routines).
-                activator = TR_ACTIVATOR_KEY;
-                break;
-
-            case TR_FD_TRIGTYPE_PICKUP:
-                // Action type remains normal, as pick-up acts one-way (no need in switch routines).
-                activator = TR_ACTIVATOR_PICKUP;
-                break;
-
-            case TR_FD_TRIGTYPE_COMBAT:
-                // Check weapon status for triggering entity.
-                header_condition = entity_activator->character && (entity_activator->character->weapon_current_state > 0);
-                break;
-
-            case TR_FD_TRIGTYPE_DUMMY:
-            case TR_FD_TRIGTYPE_SKELETON:   ///@FIXME: Find the meaning later!!!
-                // These triggers are being parsed, but not added to trigger script!
-                action_type = TR_ACTIONTYPE_BYPASS;
-                break;
-
-            case TR_FD_TRIGTYPE_ANTITRIGGER:
-            case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
-                action_type = TR_ACTIONTYPE_ANTI;
-                break;
-
-            case TR_FD_TRIGTYPE_MONKEY:
-            case TR_FD_TRIGTYPE_CLIMB:
-                // Check move type for triggering entity.
-                header_condition = ((trigger->sub_function == TR_FD_TRIGTYPE_MONKEY) ? (entity_activator->move_type == MOVE_MONKEYSWING) : (entity_activator->move_type == MOVE_CLIMBING));  // Set additional condition.
-                break;
-
-            case TR_FD_TRIGTYPE_TIGHTROPE:
-                // Check state range for triggering entity.
-                header_condition = ((entity_activator->state_flags >= TR_STATE_LARA_TIGHTROPE_IDLE) && (entity_activator->state_flags <= TR_STATE_LARA_TIGHTROPE_EXIT));
-                break;
-
-            case TR_FD_TRIGTYPE_CRAWLDUCK:
-                // Check state range for triggering entity.
-                header_condition = ((entity_activator->state_flags >= TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN) && (entity_activator->state_flags <= TR_ANIMATION_LARA_CRAWL_SMASH_LEFT));
-                break;
-        }
-
-        if(!header_condition)
-        {
-            return;
-        }
-        if((activator == TR_ACTIVATOR_NORMAL) && (Entity_GetSectorStatus(entity_activator) == 1))
-        {
-            for(trigger_command_p command = trigger->commands; command; command = command->next)
-            {
-                if(command->function == TR_FD_TRIGFUNC_UWCURRENT)
-                {
-                    if(entity_activator->move_type == MOVE_ON_WATER)
-                    {
-                        if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
-                        {
-                            Entity_SetAnimation(entity_activator, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
-                            entity_activator->move_type = MOVE_UNDERWATER;
-                        }
-                    }
-                    else if(entity_activator->move_type == MOVE_UNDERWATER)
-                    {
-                        Entity_MoveToSink(entity_activator, command->operands);
-                    }
-                }
-            }
-            return;
-        }
-
-        // Now execute operand chain for trigger function!
-        int first_command = 1;
-        int switch_sectorstatus = 0;
-        uint32_t switch_mask = 0;
         for(trigger_command_p command = trigger->commands; command; command = command->next)
         {
-            entity_p trig_entity = World_GetEntityByID(command->operands);
-
             switch(command->function)
             {
-                case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
-                    // If activator is specified, first item operand counts as activator index (except
-                    // heavy switch case, which is ordinary heavy trigger case with certain differences).
-                    if(!trig_entity)
-                    {
-                        break;
-                    }
-
-                    if(first_command && (activator != TR_ACTIVATOR_NORMAL))
-                    {
-                        int switch_anim_state = 0;
-                        first_command = 0;
-                        switch(activator)
-                        {
-                            case TR_ACTIVATOR_SWITCH:
-                                if(action_type == TR_ACTIONTYPE_SWITCH)
-                                {
-                                    // Switch action type case.
-                                    switch_anim_state = trig_entity->bf->animations.last_state;
-                                    switch_sectorstatus = (trig_entity->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
-                                    switch_mask = (trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK);
-                                    // Trigger activation mask is here filtered through activator's own mask.
-                                    switch_mask = (switch_mask == 0) ? (0x1F & trigger->mask) : (switch_mask & trigger->mask);
-
-                                    if((switch_anim_state == 0) && (switch_sectorstatus == 1))
-                                    {
-                                        Entity_SetSectorStatus(trig_entity, 0);
-                                        trig_entity->timer = trigger->timer;
-                                        if(trigger->once)
-                                        {
-                                            // Just lock out activator, no anti-action needed.
-                                            Entity_SetLock(trig_entity, 1);
-                                        }
-                                    }
-                                    else if((switch_anim_state == 1) && (switch_sectorstatus == 1))
-                                    {
-                                        // Create statement for antitriggering a switch.
-                                        Entity_SetSectorStatus(trig_entity, 0);
-                                        trig_entity->timer = 0.0f;
-                                    }
-                                    else
-                                    {
-                                        return;
-                                    }
-                                }
-                                else    /// end if (action_type == TR_ACTIONTYPE_SWITCH)
-                                {
-                                    // Ordinary type case (e.g. heavy switch).
-                                    switch_sectorstatus = (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
-                                    switch_mask = (entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK);
-                                    // Trigger activation mask is here filtered through activator's own mask.
-                                    switch_mask = (switch_mask == 0) ? (0x1F & trigger->mask) : (switch_mask & trigger->mask);
-
-                                    if(switch_sectorstatus == 0)
-                                    {
-                                        Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
-                                        if(trigger->once)
-                                        {
-                                            Entity_SetSectorStatus(entity_activator, 1);
-                                            switch_sectorstatus = 1;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        return;
-                                    }
-                                }
-                                break;
-
-                            case TR_ACTIVATOR_KEY:
-                                if((Entity_GetLock(trig_entity) == 1) && (Entity_GetSectorStatus(trig_entity) == 0))
-                                {
-                                    Entity_SetSectorStatus(trig_entity, 1);
-                                }
-                                else
-                                {
-                                    return;
-                                }
-                                break;
-
-                            case TR_ACTIVATOR_PICKUP:
-                                if(!(trig_entity->state_flags & ENTITY_STATE_ENABLED) && (Entity_GetSectorStatus(trig_entity) == 0))
-                                {
-                                    Entity_SetSectorStatus(trig_entity, 1);
-                                }
-                                else
-                                {
-                                    return;
-                                }
-                                break;
-                        };
-                    }
-                    else
-                    {
-                        bool IsPlayer = (World_GetPlayer() == entity_activator);
-                        if(!IsPlayer && (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS))
-                        {
-                            return;
-                        }
-                        if(activator == TR_ACTIVATOR_SWITCH)
-                        {
-                            if(action_type == TR_ACTIONTYPE_ANTI)
-                            {
-                                Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, 0.0f);
-                            }
-                            else
-                            {
-                                Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
-                            }
-                        }
-                        else
-                        {
-                            if(action_type == TR_ACTIONTYPE_ANTI)
-                            {
-                                Entity_Deactivate(trig_entity, entity_activator);
-                            }
-                            else
-                            {
-                                Entity_Activate(trig_entity, entity_activator, trigger->mask, mask_mode, trigger->once, trigger->timer);
-                            }
-                        }
-                        if(!IsPlayer)
-                        {
-                            Entity_SetSectorStatus(entity_activator, 1);
-                        }
-                    }
-                    break;
-
                 case TR_FD_TRIGFUNC_UWCURRENT:
                     if(entity_activator->move_type == MOVE_ON_WATER)
                     {
                         if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
                         {
-                            Entity_SetAnimation(entity_activator, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
+                            Entity_SetAnimation(entity_activator, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
                             entity_activator->move_type = MOVE_UNDERWATER;
                         }
                     }
@@ -361,95 +124,356 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     }
                     break;
 
-                case TR_FD_TRIGFUNC_FLIPMAP:
-                    // FLIPMAP trigger acts two-way for switch cases, so we add FLIPMAP off event to
-                    // anti-events array.
-                    if(activator == TR_ACTIVATOR_SWITCH)
-                    {
-                        World_SetFlipMap(command->operands, switch_mask, 1);
-                        World_SetFlipState(command->operands, 1);
-                    }
-                    else
-                    {
-                        World_SetFlipMap(command->operands, trigger->mask, 0);
-                        World_SetFlipState(command->operands, 1);
-                    }
-                    break;
-
-                case TR_FD_TRIGFUNC_FLIPON:
-                    if(!Entity_GetSectorStatus(entity_activator))
-                    {
-                        // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
-                        // the switch with FLIP_ON trigger, room will remain flipped.
-                        World_SetFlipMap(command->operands, trigger->mask, 1);
-                        World_SetFlipState(command->operands, 1);
-                        Entity_SetSectorStatus(entity_activator, 1);
-                    }
-                    break;
-
-                case TR_FD_TRIGFUNC_FLIPOFF:
-                    if(!Entity_GetSectorStatus(entity_activator))
-                    {
-                        // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
-                        // the switch with FLIP_OFF trigger, room will remain unflipped.
-                        World_SetFlipMap(command->operands, trigger->mask, 0);
-                        World_SetFlipState(command->operands, 0);
-                        Entity_SetSectorStatus(entity_activator, 1);
-                    }
-                    break;
-
-                case TR_FD_TRIGFUNC_SET_TARGET:
-                    Game_SetCameraTarget(command->operands, trigger->timer);
-                    break;
-
-                case TR_FD_TRIGFUNC_SET_CAMERA:
-                    Game_SetCamera(command->cam_index, command->once, command->cam_move, command->cam_timer);
-                    break;
-
-                case TR_FD_TRIGFUNC_FLYBY:
-                    Game_PlayFlyBy(command->operands, command->once);
-                    break;
-
-                case TR_FD_TRIGFUNC_CUTSCENE:
-                    ///snprintf(buf, 128, "   playCutscene(%d); \n", command->operands);
-                    break;
-
-                case TR_FD_TRIGFUNC_ENDLEVEL:
-                    Con_Notify("level was changed to %d", command->operands);
-                    Game_LevelTransition(command->operands);
-                    Gameflow_Send(TR_GAMEFLOW_OP_LEVELCOMPLETE, command->operands);
-                    break;
-
-                case TR_FD_TRIGFUNC_PLAYTRACK:
-                    Entity_SetSectorStatus(entity_activator, 1);
-                    Audio_StreamPlay(command->operands, (trigger->mask << 1) + trigger->once);
-                    break;
-
-                case TR_FD_TRIGFUNC_FLIPEFFECT:
-                    //snprintf(buf, 128, "   doEffect(%d, %d); \n", command->operands, trigger->timer);
-                    break;
-
-                case TR_FD_TRIGFUNC_SECRET:
-                    Entity_SetSectorStatus(entity_activator, 1);
-                    if((command->operands < TR_GAMEFLOW_MAX_SECRETS) && (gameflow_manager.SecretsTriggerMap[command->operands] == 0))
-                    {
-                        gameflow_manager.SecretsTriggerMap[command->operands] = 1;
-                        Audio_StreamPlay(Script_GetSecretTrackNumber(engine_lua));
-                    }
-                    break;
-
-                case TR_FD_TRIGFUNC_CLEARBODIES:
-                    //snprintf(buf, 128, "   clearBodies(); \n");
-                    break;
-
                 default:
-                    Con_Printf("Unknown trigger function: 0x%X", command->function);
+                    has_non_continuos_triggers = true;
                     break;
             };
         }
 
-        if(trigger->once)
+        if(has_non_continuos_triggers)
         {
+            int activator           = TR_ACTIVATOR_NORMAL;      // Activator is normal by default.
+            int action_type         = TR_ACTIONTYPE_NORMAL;     // Action type is normal by default.
+            int mask_mode           = TRIGGER_OP_OR;            // Activation mask by default.
+            int activator_sector_status = Entity_GetSectorStatus(entity_activator);
+            bool header_condition   = true;
+            bool is_heavy           = false;
+            // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
+            // some specific entity classes.
+            // entity_activator_type  == TR_ACTIVATORTYPE_LARA and
+            // trigger_activator_type == TR_ACTIVATORTYPE_MISC
+            switch(trigger->sub_function)
+            {
+                case TR_FD_TRIGTYPE_HEAVY:
+                case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
+                case TR_FD_TRIGTYPE_HEAVYSWITCH:
+                    is_heavy = true;
+                    if((entity_activator->type_flags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR) == 0)
+                    {
+                        return;
+                    }
+                    break;
+            }
+
+            switch(trigger->sub_function)
+            {
+                case TR_FD_TRIGTYPE_TRIGGER:
+                case TR_FD_TRIGTYPE_HEAVY:
+                    activator = TR_ACTIVATOR_NORMAL;
+                    break;
+
+                case TR_FD_TRIGTYPE_ANTIPAD:
+                    action_type = TR_ACTIONTYPE_ANTI;
+                case TR_FD_TRIGTYPE_PAD:
+                    // Check move type for triggering entity.
+                    header_condition = (entity_activator->move_type == MOVE_ON_FLOOR);
+                    break;
+
+                case TR_FD_TRIGTYPE_SWITCH:
+                    // Set activator and action type for now; conditions are linked with first item in operand chain.
+                    activator = TR_ACTIVATOR_SWITCH;
+                    action_type = TR_ACTIONTYPE_SWITCH;
+                    mask_mode = TRIGGER_OP_XOR;
+                    break;
+
+                case TR_FD_TRIGTYPE_HEAVYSWITCH:
+                    // Action type remains normal, as HEAVYSWITCH acts as "heavy trigger" with activator mask filter.
+                    activator = TR_ACTIVATOR_SWITCH;
+                    mask_mode = TRIGGER_OP_XOR;
+                    break;
+
+                case TR_FD_TRIGTYPE_KEY:
+                    // Action type remains normal, as key acts one-way (no need in switch routines).
+                    activator = TR_ACTIVATOR_KEY;
+                    break;
+
+                case TR_FD_TRIGTYPE_PICKUP:
+                    // Action type remains normal, as pick-up acts one-way (no need in switch routines).
+                    activator = TR_ACTIVATOR_PICKUP;
+                    break;
+
+                case TR_FD_TRIGTYPE_COMBAT:
+                    // Check weapon status for triggering entity.
+                    header_condition = header_condition && (entity_activator->character && (entity_activator->character->weapon_current_state > 0));
+                    break;
+
+                case TR_FD_TRIGTYPE_DUMMY:
+                case TR_FD_TRIGTYPE_SKELETON:   ///@FIXME: Find the meaning later!!!
+                    // These triggers are being parsed, but not added to trigger script!
+                    action_type = TR_ACTIONTYPE_BYPASS;
+                    break;
+
+                case TR_FD_TRIGTYPE_ANTITRIGGER:
+                case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
+                    action_type = TR_ACTIONTYPE_ANTI;
+                    break;
+
+                case TR_FD_TRIGTYPE_MONKEY:
+                    header_condition = header_condition && (entity_activator->move_type == MOVE_MONKEYSWING);
+                    break;
+
+                case TR_FD_TRIGTYPE_CLIMB:
+                    header_condition = header_condition && (entity_activator->move_type == MOVE_CLIMBING);
+                    break;
+
+                case TR_FD_TRIGTYPE_TIGHTROPE:
+                    // Check state range for triggering entity.
+                    header_condition = header_condition && ((entity_activator->state_flags >= TR_STATE_LARA_TIGHTROPE_IDLE) && (entity_activator->state_flags <= TR_STATE_LARA_TIGHTROPE_EXIT));
+                    break;
+
+                case TR_FD_TRIGTYPE_CRAWLDUCK:
+                    // Check state range for triggering entity.
+                    header_condition = header_condition && ((entity_activator->state_flags >= TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN) && (entity_activator->state_flags <= TR_ANIMATION_LARA_CRAWL_SMASH_LEFT));
+                    break;
+            }
+
+            if(!header_condition)
+            {
+                return;
+            }
+
+            // Now execute operand chain for trigger function!
+            bool first_command = true;
+            int switch_sectorstatus = 0;
+            int switch_event_state = -1;
+            uint32_t switch_mask = 0;
+            entity_p trig_entity = NULL;
+            entity_p switch_entity = NULL;
+            for(trigger_command_p command = trigger->commands; command; command = command->next)
+            {
+                switch(command->function)
+                {
+                    case TR_FD_TRIGFUNC_OBJECT:         // ACTIVATE / DEACTIVATE object
+                        trig_entity = World_GetEntityByID(command->operands);
+                        // If activator is specified, first item operand counts as activator index (except
+                        // heavy switch case, which is ordinary heavy trigger case with certain differences).
+                        if(!trig_entity)
+                        {
+                            break;
+                        }
+
+                        if(first_command && (activator != TR_ACTIVATOR_NORMAL))
+                        {
+                            first_command = false;
+                            switch(activator)
+                            {
+                                case TR_ACTIVATOR_SWITCH:
+                                    if(action_type == TR_ACTIONTYPE_SWITCH)
+                                    {
+                                        // Switch action type case.
+                                        switch_entity = trig_entity;
+                                        switch_event_state = (trig_entity->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5;
+                                        switch_sectorstatus = (trig_entity->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
+                                        switch_mask = (trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK);
+                                        // Trigger activation mask is here filtered through activator's own mask.
+                                        switch_mask = (switch_mask == 0) ? (0x1F & trigger->mask) : (switch_mask & trigger->mask);
+
+                                        if((switch_event_state == 0) && (switch_sectorstatus == 1))
+                                        {
+                                            Entity_SetSectorStatus(trig_entity, 0);
+                                            trig_entity->timer = trigger->timer;
+                                        }
+                                        else if((switch_event_state == 1) && (switch_sectorstatus == 1))
+                                        {
+                                            // Create statement for antitriggering a switch.
+                                            Entity_SetSectorStatus(trig_entity, 0);
+                                            trig_entity->timer = 0.0f;
+                                        }
+                                        else
+                                        {
+                                            return;
+                                        }
+                                    }
+                                    else    /// end if (action_type == TR_ACTIONTYPE_SWITCH)
+                                    {
+                                        // Ordinary type case (e.g. heavy switch).
+                                        switch_sectorstatus = (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
+                                        switch_mask = (entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK);
+                                        // Trigger activation mask is here filtered through activator's own mask.
+                                        switch_mask = (switch_mask == 0) ? (0x1F & trigger->mask) : (switch_mask & trigger->mask);
+
+                                        if(switch_sectorstatus == 0)
+                                        {
+                                            int activation_state = Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
+                                            if(trigger->once && (activation_state != ENTITY_TRIGGERING_NOT_READY))
+                                            {
+                                                Entity_SetSectorStatus(entity_activator, 1);
+                                                switch_sectorstatus = 1;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            return;
+                                        }
+                                    }
+                                    break;
+
+                                case TR_ACTIVATOR_KEY:
+                                    if((Entity_GetLock(trig_entity) == 1) && (Entity_GetSectorStatus(trig_entity) == 0))
+                                    {
+                                        Entity_SetSectorStatus(trig_entity, 1);
+                                    }
+                                    else
+                                    {
+                                        return;
+                                    }
+                                    break;
+
+                                case TR_ACTIVATOR_PICKUP:
+                                    if(!(trig_entity->state_flags & ENTITY_STATE_ENABLED) && (Entity_GetSectorStatus(trig_entity) == 0))
+                                    {
+                                        Entity_SetSectorStatus(trig_entity, 1);
+                                    }
+                                    else
+                                    {
+                                        return;
+                                    }
+                                    break;
+                            };
+                        }
+                        else
+                        {
+                            int activation_state = ENTITY_TRIGGERING_NOT_READY;
+                            if(activator == TR_ACTIVATOR_SWITCH)
+                            {
+                                if(action_type == TR_ACTIONTYPE_ANTI)
+                                {
+                                    activation_state = Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, 0.0f);
+                                }
+                                else// if(Entity_GetLayoutEvent(trig_entity) != switch_event_state)
+                                {
+                                    activation_state = Entity_Activate(trig_entity, entity_activator, switch_mask, mask_mode, trigger->once, trigger->timer);
+                                }
+                            }
+                            else
+                            {
+                                if(action_type == TR_ACTIONTYPE_ANTI)
+                                {
+                                    activation_state = Entity_Deactivate(trig_entity, entity_activator);
+                                }
+                                else if((activator_sector_status == 0) || (trigger->timer > 0))
+                                {
+                                    activation_state = Entity_Activate(trig_entity, entity_activator, trigger->mask, mask_mode, trigger->once, trigger->timer);
+                                }
+                            }
+                        }
+                        break;
+
+                    case TR_FD_TRIGFUNC_FLIPMAP:
+                        // FLIPMAP trigger acts two-way for switch cases, so we add FLIPMAP off event to
+                        // anti-events array.
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
+                        {
+                            if(activator == TR_ACTIVATOR_SWITCH)
+                            {
+                                World_SetFlipMap(command->operands, switch_mask, TRIGGER_OP_XOR);
+                                World_SetFlipState(command->operands, FLIP_STATE_BY_FLAG);
+                            }
+                            else
+                            {
+                                World_SetFlipMap(command->operands, trigger->mask, TRIGGER_OP_OR);
+                                World_SetFlipState(command->operands, FLIP_STATE_BY_FLAG);
+                            }
+                        }
+                        break;
+
+                    case TR_FD_TRIGFUNC_FLIPON:
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
+                        {
+                            // FLIP_ON trigger acts one-way even in switch cases, i.e. if you un-pull
+                            // the switch with FLIP_ON trigger, room will remain flipped.
+                            World_SetFlipState(command->operands, FLIP_STATE_ON);
+                        }
+                        break;
+
+                    case TR_FD_TRIGFUNC_FLIPOFF:
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
+                        {
+                            // FLIP_OFF trigger acts one-way even in switch cases, i.e. if you un-pull
+                            // the switch with FLIP_OFF trigger, room will remain unflipped.
+                            World_SetFlipState(command->operands, FLIP_STATE_OFF);
+                        }
+                        break;
+
+                    case TR_FD_TRIGFUNC_SET_TARGET:
+                        if(!is_heavy || (activator_sector_status == 0))
+                        {
+                            Game_SetCameraTarget(command->operands, trigger->timer);
+                        }
+                        break;
+
+                    case TR_FD_TRIGFUNC_SET_CAMERA:
+                        if(!is_heavy || (activator_sector_status == 0))
+                        {
+                            Game_SetCamera(command->cam_index, command->once, command->cam_move, command->cam_timer);
+                        }
+                        break;
+
+                    case TR_FD_TRIGFUNC_FLYBY:
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
+                        {
+                            Game_PlayFlyBy(command->operands, command->once);
+                        }
+                        break;
+
+                    case TR_FD_TRIGFUNC_CUTSCENE:
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
+                        {
+                            ///snprintf(buf, 128, "   playCutscene(%d); \n", command->operands);
+                        }
+                        break;
+
+                    case TR_FD_TRIGFUNC_ENDLEVEL:
+                        Con_Notify("level was changed to %d", command->operands);
+                        Game_LevelTransition(command->operands);
+                        if(!gameflow.Send(GF_OP_LEVELCOMPLETE, command->operands))
+                        {
+                            Con_Warning("TR_FD_TRIGFUNC_ENDLEVEL: Failed to add opcode to gameflow action list");
+                        }
+                        break;
+
+                    case TR_FD_TRIGFUNC_PLAYTRACK:
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
+                        {
+                            Audio_StreamPlay(command->operands, (trigger->mask << 1) + trigger->once);
+                        }
+                        break;
+
+                    case TR_FD_TRIGFUNC_FLIPEFFECT:
+                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
+                        {
+                            //snprintf(buf, 128, "   doEffect(%d, %d); \n", command->operands, trigger->timer);
+                        }
+                        break;
+
+                    case TR_FD_TRIGFUNC_SECRET:
+                        if((command->operands < GF_MAX_SECRETS) && (gameflow.getSecretStateAtIndex(command->operands) == 0))
+                        {
+                            gameflow.setSecretStateAtIndex(command->operands, 1);
+                            Audio_StreamPlay(Script_GetSecretTrackNumber(engine_lua));
+                        }
+                        break;
+
+                    case TR_FD_TRIGFUNC_CLEARBODIES:
+                        if(activator_sector_status == 0)
+                        {
+                            //snprintf(buf, 128, "   clearBodies(); \n");
+                        }
+                        break;
+
+                    case TR_FD_TRIGFUNC_UWCURRENT:
+                        // implemented in continuous section
+                        break;
+
+                    default:
+                        if(activator_sector_status == 0)
+                        {
+                            Con_Printf("Unknown trigger function: 0x%X", command->function);
+                        }
+                        break;
+                };
+            }
+
             Entity_SetSectorStatus(entity_activator, 1);
         }
     }
@@ -556,12 +580,12 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
 
             case TR_FD_TRIGTYPE_TIGHTROPE:
                 // Check state range for triggering entity.
-                snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
+                snprintf(buf, 128, " local state = getEntityAnimState(entity_index, ANIM_TYPE_BASE) \n if((state >= %d) and (state <= %d)) then \n", TR_STATE_LARA_TIGHTROPE_IDLE, TR_STATE_LARA_TIGHTROPE_EXIT);
                 condition = 1;  // Set additional condition.
                 break;
             case TR_FD_TRIGTYPE_CRAWLDUCK:
                 // Check state range for triggering entity.
-                snprintf(buf, 128, " local state = getEntityState(entity_index) \n if((state >= %d) and (state <= %d)) then \n", TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
+                snprintf(buf, 128, " local state = getEntityAnimState(entity_index, ANIM_TYPE_BASE) \n if((state >= %d) and (state <= %d)) then \n", TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN, TR_ANIMATION_LARA_CRAWL_SMASH_LEFT);
                 condition = 1;  // Set additional condition.
                 break;
         }
@@ -586,7 +610,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
                                 if(action_type == TR_ACTIONTYPE_SWITCH)
                                 {
                                     // Switch action type case.
-                                    snprintf(buf, 256, " local switch_state = getEntityState(%d); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", command->operands, command->operands, command->operands);
+                                    snprintf(buf, 256, " local switch_state = getEntityAnimState(%d, ANIM_TYPE_BASE); \n local switch_sectorstatus = getEntitySectorStatus(%d); \n local switch_mask = getEntityMask(%d); \n\n", command->operands, command->operands, command->operands);
                                 }
                                 else
                                 {
@@ -840,6 +864,17 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
             SDL_RWclose(file_dump);
         }
     }
+}
+
+
+void Trigger_TrigMaskToStr(char buf[9], uint8_t flag)
+{
+    for(int i = 7; i >= 0; --i)
+    {
+        buf[i] = ((flag & 0x01) != 0) ? ('1') : ('0');
+        flag >>= 1;
+    }
+    buf[8] = 0;
 }
 
 

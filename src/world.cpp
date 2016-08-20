@@ -275,6 +275,8 @@ void World_Open(class VT_Level *tr)
         delete global_world.tex_atlas;
         global_world.tex_atlas = NULL;
     }
+
+    Audio_Init();
 }
 
 
@@ -518,7 +520,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
 
             SSBoneFrame_CreateFromModel(entity->bf, model);
             entity->bf->transform = entity->transform;
-            Entity_SetAnimation(entity, 0, 0);
+            Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);
             Physics_GenRigidBody(entity->physics, entity->bf);
 
             Entity_RebuildBV(entity);
@@ -962,18 +964,21 @@ void World_BuildOverlappedRoomsList(struct room_s *room)
  */
 int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
 {
-    flip_state &= 0x01;  // State is always boolean.
-
     if(flip_index >= global_world.flip_count)
     {
         Con_Warning("wrong flipmap index");
         return 0;
     }
 
-    if(global_world.flip_map[flip_index] == 0x1F)         // Check flipmap state.
+    if((global_world.flip_map[flip_index] == 0x1F) || (flip_state & 0x02))      // Check flipmap state.
     {
         room_p current_room = global_world.rooms;
         bool is_global_flip = global_world.version < TR_IV;
+        if(global_world.flip_map[flip_index] != 0x1F)
+        {
+            flip_state = 0;
+        }
+
         for(uint32_t i = 0; i < global_world.rooms_count; i++, current_room++)
         {
             if(is_global_flip || (current_room->content->alternate_group == flip_index))
@@ -988,7 +993,7 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
                 }
             }
         }
-        global_world.flip_state[flip_index] = flip_state;
+        global_world.flip_state[flip_index] = flip_state & 0x01;
     }
 
     return 0;
@@ -997,8 +1002,6 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
 
 int World_SetFlipMap(uint32_t flip_index, uint8_t flip_mask, uint8_t flip_operation)
 {
-    flip_operation = (flip_operation > TRIGGER_OP_XOR) ? (TRIGGER_OP_XOR) : (TRIGGER_OP_OR);
-
     if(flip_index >= global_world.flip_count)
     {
         Con_Warning("wrong flipmap index");
@@ -1744,6 +1747,7 @@ void World_GenCameras(class VT_Level *tr)
             global_world.cameras_sinks[i].x                   =  tr->cameras[i].x;
             global_world.cameras_sinks[i].y                   =  tr->cameras[i].z;
             global_world.cameras_sinks[i].z                   = -tr->cameras[i].y;
+            global_world.cameras_sinks[i].locked              = 0;
             global_world.cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
             global_world.cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;
         }
@@ -2205,8 +2209,8 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
      */
     room->alternate_room = NULL;
     room->base_room = NULL;
-
-    if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count))
+    // condition vas commented because heavy glitches in TR3+
+    if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count) /*&& (room->id < tr_room->alternate_room)*/)
     {
         room->alternate_room = global_world.rooms + tr_room->alternate_room;
     }
@@ -2383,7 +2387,7 @@ void World_GenEntities(class VT_Level *tr)
             switch(tr->game_version)
             {
                 case TR_I:
-                    if(gameflow_manager.CurrentLevelID == 0)
+                    if(gameflow.getCurrentLevelID() == 0)
                     {
                         LM = World_GetModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
                         if(LM)
@@ -2431,7 +2435,7 @@ void World_GenEntities(class VT_Level *tr)
                 entity->bf->bone_tags[j].mesh_skin = entity->bf->animations.model->mesh_tree[j].mesh_skin;
                 entity->bf->bone_tags[j].mesh_slot = NULL;
             }
-            Entity_SetAnimation(global_world.Character, TR_ANIMATION_LARA_STAY_IDLE, 0);
+            Entity_SetAnimation(global_world.Character, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STAY_IDLE, 0);
             Physics_GenRigidBody(entity->physics, entity->bf);
             Character_Create(entity);
             entity->character->Height = 768.0;
@@ -2443,7 +2447,7 @@ void World_GenEntities(class VT_Level *tr)
             continue;
         }
 
-        Entity_SetAnimation(entity, 0, 0);                                      // Set zero animation and zero frame
+        Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);                      // Set zero animation and zero frame
         Entity_RebuildBV(entity);
         Room_AddObject(entity->self->room, entity->self);
         World_AddEntity(entity);
@@ -2517,6 +2521,11 @@ void World_GenRoomCollision()
 {
     room_p r = global_world.rooms;
 
+    if(r == NULL)
+    {
+        return;
+    }
+
     /*
     if(level_script != NULL)
     {
@@ -2561,6 +2570,12 @@ void World_GenRoomCollision()
 void World_FixRooms()
 {
     room_p r = global_world.rooms;
+
+    if(r == NULL)
+    {
+        return;
+    }
+
     for(uint32_t i = 0; i < global_world.rooms_count; i++, r++)
     {
         if(r->base_room != NULL)
@@ -2584,6 +2599,11 @@ void World_FixRooms()
 void World_MakeEntityItems(struct RedBlackNode_s *n)
 {
     base_item_p item = (base_item_p)n->data;
+
+    if(item == NULL)
+    {
+        return;
+    }
 
     for(uint32_t i = 0; i < global_world.rooms_count; i++)
     {

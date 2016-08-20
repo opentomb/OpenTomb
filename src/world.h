@@ -4,6 +4,10 @@
 
 #include <stdint.h>
 
+#define FLIP_STATE_OFF      (0x00)
+#define FLIP_STATE_ON       (0x01)
+#define FLIP_STATE_BY_FLAG  (0x03)
+
 
 void World_Prepare();
 void World_Open(class VT_Level *tr);

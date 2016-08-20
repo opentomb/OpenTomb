@@ -50,7 +50,7 @@ function moveToSink(entity_index, sink_index)
     local movetype = getEntityMoveType(entity_index);
     if(movetype == 5) then  -- Dive, if on water.
         if(getEntityAnim(entity_index) ~= 113) then
-            setEntityAnim(entity_index, 113);
+            setEntityAnim(entity_index, ANIM_TYPE_BASE, 113, 0);
             setEntityMoveType(entity_index, 6);
         end;
     elseif(movetype == 6) then

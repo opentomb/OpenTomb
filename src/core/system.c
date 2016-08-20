@@ -5,7 +5,6 @@
 #include <sys/time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_image.h>
 #include <SDL2/SDL_rwops.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
@@ -27,7 +26,6 @@ extern lua_State       *engine_lua;
 static uint8_t         *engine_mem_buffer             = NULL;
 static size_t           engine_mem_buffer_size        = 0;
 static size_t           engine_mem_buffer_size_left   = 0;
-static int              screenshot_cnt                = 0;
 
 // =======================================================================
 // General routines
@@ -47,8 +45,9 @@ void Sys_InitGlobals()
     screen_info.y = 20;
     screen_info.w = 800;
     screen_info.h = 600;
-    screen_info.FS_flag = 0;
-    screen_info.show_debuginfo = 0;
+    screen_info.debug_view_state = 0;
+    screen_info.fullscreen = 0;
+    screen_info.crosshair = 0;
     screen_info.fov = 75.0;
 }
 
@@ -169,55 +168,121 @@ void Sys_DebugLog(const char *file, const char *fmt, ...)
 {
     va_list argptr;
     static char data[4096];
-    FILE *fp;
+    int32_t written;
 
     va_start(argptr, fmt);
-    data[0] = '\n';
-    vsnprintf(data, sizeof(data), fmt, argptr);
+    written = vsnprintf(data, sizeof(data), fmt, argptr);
     va_end(argptr);
-    fp = fopen(file, "a");
-    if(fp == NULL)
+
+    if(written > 0)
     {
-        fp = fopen(file, "w");
+        SDL_RWops *fp;
+        // Add newline at end (if possible)
+        if((written + 1) < sizeof(data))
+        {
+            data[written + 0] = '\n';
+            data[written + 1] = 0;
+            written += 1;
+        }
+
+        fp = SDL_RWFromFile(file, "a");
+        if(fp == NULL)
+        {
+            fp = SDL_RWFromFile(file, "w");
+        }
+        if(fp != NULL)
+        {
+            SDL_RWwrite(fp, data, written, 1);
+            SDL_RWclose(fp);
+        }
+        fwrite(data, written, 1, stderr);
     }
-    if(fp != NULL)
+}
+
+
+void WriteTGAfile(const char *filename, const uint8_t *data, const int width, const int height, char invY)
+{
+    unsigned char c;
+    unsigned short s;
+    SDL_RWops *st;
+
+    st = SDL_RWFromFile(filename, "wb");
+    if(st)
     {
-        fwrite(data, strlen(data), 1, fp);
-        fclose(fp);
+        // write the header
+        // id_length
+        c = 0;
+        SDL_RWwrite(st, &c, sizeof(c), 1);
+        // colormap_type
+        c = 0;
+        SDL_RWwrite(st, &c, sizeof(c), 1);
+        // image_type
+        c = 2;
+        SDL_RWwrite(st, &c, sizeof(c), 1);
+        // colormap_index
+        s = 0;
+        SDL_RWwrite(st, &s, sizeof(s), 1);
+        // colormap_length
+        s = 0;
+        SDL_RWwrite(st, &s, sizeof(s), 1);
+        // colormap_size
+        c = 0;
+        SDL_RWwrite(st, &c, sizeof(c), 1);
+        // x_origin
+        s = 0;
+        SDL_RWwrite(st, &s, sizeof(s), 1);
+        // y_origin
+        s = 0;
+        SDL_RWwrite(st, &s, sizeof(s), 1);
+        // width
+        s = SDL_SwapLE16(width);
+        SDL_RWwrite(st, &s, sizeof(s), 1);
+        // height
+        s = SDL_SwapLE16(height);
+        SDL_RWwrite(st, &s, sizeof(s), 1);
+        // bits_per_pixel
+        c = 32;
+        SDL_RWwrite(st, &c, sizeof(c), 1);
+        // attributes
+        c = 0;
+        SDL_RWwrite(st, &c, sizeof(c), 1);
+
+        if(invY)
+        {
+            int y;
+            for (y = 0; y < height; y++)
+            {
+                SDL_RWwrite(st, &data[y * 4 * width], width * 4, 1);
+            }
+        }
+        else
+        {
+            int y;
+            for (y = height-1; y >= 0; y--)
+            {
+                SDL_RWwrite(st, &data[y * 4 * width], width * 4, 1);
+            }
+        }
+        SDL_RWclose(st);
     }
-    fwrite(data, strlen(data), 1, stderr);
 }
 
 
 void Sys_TakeScreenShot()
 {
-    GLint ViewPort[4], h, h2;
+    static int screenshot_cnt = 0;
+    GLint ViewPort[4];
     char fname[128];
     GLubyte *pixels;
-    SDL_Surface *surface;
     uint32_t str_size;
 
     qglGetIntegerv(GL_VIEWPORT, ViewPort);
-    snprintf(fname, 128, "screen_%.5d.png", screenshot_cnt);
+    snprintf(fname, 128, "screen_%.5d.tga", screenshot_cnt);
     str_size = ViewPort[2] * 4;
     pixels = (GLubyte*)malloc(str_size * ViewPort[3]);
-    qglReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    qglReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+    WriteTGAfile(fname, (const uint8_t*)pixels, ViewPort[2], ViewPort[3], 1);
 
-    GLubyte buf[str_size];
-    h2 = ViewPort[3] / 2;
-    for(h = 0; h < h2; h++)
-    {
-        memcpy(buf, pixels + h * str_size, str_size);
-        memcpy(pixels + h * str_size, pixels + (ViewPort[3] - h - 1) * str_size, str_size);
-        memcpy(pixels + (ViewPort[3] - h - 1) * str_size, buf, str_size);
-    }
-    surface = SDL_CreateRGBSurfaceFrom(NULL, ViewPort[2], ViewPort[3], 32, str_size, 0x000000FF, 0x00000FF00, 0x00FF0000, 0xFF000000);
-    surface->format->format = SDL_PIXELFORMAT_RGBA8888;
-    surface->pixels = pixels;
-    IMG_SavePNG(surface, fname);
-
-    surface->pixels = NULL;
-    SDL_FreeSurface(surface);
     free(pixels);
     screenshot_cnt++;
 }

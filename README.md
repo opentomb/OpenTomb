@@ -109,7 +109,8 @@ assets and where to get them:
    screens for PC versions TR1-2, TR4 used level screenshots as loading screens, and TR5
    used encrypted format to store all loading graphics. So, to ease your life, you can
    simply download loading screen package here: http://trep.trlevel.de/temp/loading_screens.zip  
-   Just put it right into OpenTomb directory, and that should do the trick.
+   Just put it right into OpenTomb directory, and that should do the trick. Note: engine supports 
+   png and pcx format of screen images.
     
 7. Compiling
 ------------
@@ -120,11 +121,10 @@ Alternatively, you can manually compile it in Code::Blocks by recursively adding
 from /src directory, and adding these libraries in Linker Settings under Project Build options:
 
 * libmingw32.a
-* libopengl32.a
 * libSDL2main.a
-* libSDL2.a
+* libSDL2.dll.a
 * liblua.a
-* libSDLimage.a
+* libpng.a
 * libz.a
 * libpthread.a
 
@@ -132,12 +132,11 @@ On Linux, just download the source code and run in terminal:
 
     cmake . && make
     
-Necessary dependencies are development headers for SDL2, SDL2 Image, LUA 5.2, ZLIB. You can install
+Necessary dependencies are development headers for SDL2, png, LUA 5.2, ZLIB. You can install
 them in Ubuntu-based distro with this command:
 
-    sudo apt-get install libsdl2-dev libsdl2-image-dev libglu1-mesa-dev zlib1g-dev
+    sudo apt-get install libsdl2-dev libpng12-dev liblua5.2-dev libglu1-mesa-dev zlib1g-dev
 
-You can also fully compile engine using build.sh file in /src folder.
 On Mac, use XCode project, which is also available in source code.
 
 NB: Please note that OpenTomb requires C++11 (-std=c++11) flag to compile properly!

@@ -342,8 +342,8 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             end;
         end;
         
-        setEntityAnim(object_id, on.trig_anim, 0);
-        setEntityAnim(actor_id, on.actor_anim, 0);
+        setEntityAnim(object_id, ANIM_TYPE_BASE, on.trig_anim, 0);
+        setEntityAnim(actor_id, ANIM_TYPE_BASE, on.actor_anim, 0);
         setEntityActivity(object_id, 1);
         addTask(
         function()
@@ -359,14 +359,15 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
                     setEntityLock(object_id, 1);        -- lock filled hole
                 else
                     setEntitySectorStatus(object_id, 1);        -- only for switches - turn on
+                    setEntityEvent(object_id, 1);
                 end
                 return false;
             end
             return true;
         end);
     elseif(off.ready_anim == t and getEntityLock(object_id) ~= 1) then  -- Locked switches doesn't flip back!
-        setEntityAnim(object_id, off.trig_anim, 0);
-        setEntityAnim(actor_id, off.actor_anim, 0);
+        setEntityAnim(object_id, ANIM_TYPE_BASE, off.trig_anim, 0);
+        setEntityAnim(actor_id, ANIM_TYPE_BASE, off.actor_anim, 0);
         setEntityActivity(object_id, 1);
         addTask(
         function()
@@ -376,6 +377,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             end
             if(f >= c - 1) then   -- check the end of animation
                 setEntitySectorStatus(object_id, 1);  -- only for switches - turn off
+                setEntityEvent(object_id, 0);
                 return false;
             end
             return true;

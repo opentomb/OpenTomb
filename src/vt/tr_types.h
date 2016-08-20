@@ -649,16 +649,16 @@ typedef struct tr4_ai_object_s
   */
 typedef struct tr_cinematic_frame_s
 {
-    int16_t roty;        // rotation about Y axis, +/- 32767 == +/- 180 degrees
-    int16_t rotz;        // rotation about Z axis, +/- 32767 == +/- 180 degrees
-    int16_t rotz2;       // seems to work a lot like rotZ;  I haven't yet been able to
-    // differentiate them
-    int16_t posz;        // camera position relative to something (target? Lara? room
-    // origin?).  pos* are _not_ in world coordinates.
-    int16_t posy;        // camera position relative to something (see posZ)
-    int16_t posx;        // camera position relative to something (see posZ)
-    int16_t unknown;     // changing this can cause a runtime error
-    int16_t rotx;        // rotation about X axis, +/- 32767 == +/- 180 degrees
+    //Camera look at position
+    int16_t targetx;
+    int16_t targety;
+    int16_t targetz;
+    //Camera position
+    int16_t posx;
+    int16_t posy;
+    int16_t posz;
+    int16_t fov;
+    int16_t roll;
 } tr_cinematic_frame_t;
 
 /** \brief Lightmap.

@@ -27,17 +27,17 @@ gameflow_paths = {};
 ---------------------------------------------------------------------------------------------------------------------------------------
 -- 3 - Assign script path information
 ---------------------------------------------------------------------------------------------------------------------------------------
-gameflow_paths[GAME_1]   = {script = "scripts/gameflow/TR1.lua",      title = "data/tr1/pix/AMERTIT.jpg" };
-gameflow_paths[GAME_1_1] = {script = "scripts/gameflow/TR1_demo.lua", title = "data/tr1/pix/AMERTIT.jpg" };
-gameflow_paths[GAME_1_5] = {script = "scripts/gameflow/TR1_gold.lua", title = "data/tr1_gold/pix/TITLE.jpg" };
-gameflow_paths[GAME_2]   = {script = "scripts/gameflow/TR2.lua",      title = "data/tr2/pix/TITLE.jpg" };
-gameflow_paths[GAME_2_1] = {script = "scripts/gameflow/TR2_demo.lua", title = "data/tr2/pix/TITLE.jpg" };
-gameflow_paths[GAME_2_5] = {script = "scripts/gameflow/TR2_gold.lua", title = "data/tr2_gold/pix/TITLE.jpg" };
-gameflow_paths[GAME_3]   = {script = "scripts/gameflow/TR3.lua",      title = "graphics/tr3_title.png" };
-gameflow_paths[GAME_3_5] = {script = "scripts/gameflow/TR3_gold.lua", title = "data/tr3_gold/pix/Titleuk.bmp" };
-gameflow_paths[GAME_4]   = {script = "scripts/gameflow/TR4.lua",      title = "graphics/tr4_title.png" };        -- No TR4 title screen!
-gameflow_paths[GAME_4_1] = {script = "scripts/gameflow/TR4_demo.lua", title = "graphics/tr4_title.png" };        -- No TR4 title screen!
-gameflow_paths[GAME_5]   = {script = "scripts/gameflow/TR5.lua",      title = "graphics/tr5_title.png" };        -- No TR5 title screen!
+gameflow_paths[GAME_1]   = {script = "scripts/gameflow/TR1.lua",      title = "data/tr1/pix/AMERTIT" };
+gameflow_paths[GAME_1_1] = {script = "scripts/gameflow/TR1_demo.lua", title = "data/tr1/pix/AMERTIT" };
+gameflow_paths[GAME_1_5] = {script = "scripts/gameflow/TR1_gold.lua", title = "data/tr1_gold/pix/TITLE" };
+gameflow_paths[GAME_2]   = {script = "scripts/gameflow/TR2.lua",      title = "data/tr2/pix/TITLE" };
+gameflow_paths[GAME_2_1] = {script = "scripts/gameflow/TR2_demo.lua", title = "data/tr2/pix/TITLE" };
+gameflow_paths[GAME_2_5] = {script = "scripts/gameflow/TR2_gold.lua", title = "data/tr2_gold/pix/TITLE" };
+gameflow_paths[GAME_3]   = {script = "scripts/gameflow/TR3.lua",      title = "graphics/tr3_title" };
+gameflow_paths[GAME_3_5] = {script = "scripts/gameflow/TR3_gold.lua", title = "data/tr3_gold/pix/Titleuk" };
+gameflow_paths[GAME_4]   = {script = "scripts/gameflow/TR4.lua",      title = "graphics/tr4_title" };        -- No TR4 title screen!
+gameflow_paths[GAME_4_1] = {script = "scripts/gameflow/TR4_demo.lua", title = "graphics/tr4_title" };        -- No TR4 title screen!
+gameflow_paths[GAME_5]   = {script = "scripts/gameflow/TR5.lua",      title = "graphics/tr5_title" };        -- No TR5 title screen!
 
 dofile(gameflow_paths[GAME_1].script);
 --dofile(gameflow_paths[GAME_1_1].script);

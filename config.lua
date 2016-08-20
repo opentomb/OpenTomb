@@ -5,9 +5,10 @@ screen =
     y = 20;
     width = 1200;
     height = 800;
-    fullscreen = 0;
     fov = 75.0;
-    debug_info = 0;
+    debug_view_state = 0;
+    fullscreen = 0;
+    crosshair = 1;
 }
 
 audio =

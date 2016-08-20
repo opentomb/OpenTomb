@@ -28,6 +28,10 @@ extern "C" {
 #define ANIM_TYPE_WEAPON_LH             (0x0002)
 #define ANIM_TYPE_WEAPON_RH             (0x0003)
 #define ANIM_TYPE_WEAPON_TH             (0x0004)
+#define ANIM_TYPE_MISK_1                (0x0100)
+#define ANIM_TYPE_MISK_2                (0x0101)
+#define ANIM_TYPE_MISK_3                (0x0102)
+#define ANIM_TYPE_MISK_4                (0x0103)
 
 #include <stdint.h>
 
@@ -56,18 +60,18 @@ typedef struct ss_bone_tag_s
     float                   qrotate[4];                                         // quaternion rotation
     float                   transform[16]      __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for stack usage
     float                   full_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
-
+    float                   orig_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage (no targeting modifications)
+    
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 }ss_bone_tag_t, *ss_bone_tag_p;
 
 
 typedef struct ss_animation_s
 {
-    int16_t                     type : 15;
-    int16_t                     enabled : 1;
-    int16_t                     last_state;
+    uint16_t                    type : 15;
+    uint16_t                    enabled : 1;
+    int16_t                     current_state;
     int16_t                     next_state;
-    int16_t                     last_animation;
     int16_t                     current_animation;                              //
     int16_t                     next_animation;                                 //
     int16_t                     current_frame;                                  //
@@ -92,6 +96,7 @@ typedef struct ss_animation_s
     void                      (*onEndFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state);
     struct skeletal_model_s    *model;                                          // pointer to the base model
     struct ss_animation_s      *next;
+    struct ss_animation_s      *prev;
 }ss_animation_t, *ss_animation_p;
 
 /*
@@ -227,15 +232,15 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
 
 void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);
 void SSBoneFrame_Clear(ss_bone_frame_p bf);
-void SSBoneFrame_Update(struct ss_bone_frame_s *bf);
+void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time);
 void SSBoneFrame_RotateBone(struct ss_bone_frame_s *bf, const float q_rotate[4], int bone);
 int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
-void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
+void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim, float time);
 void SSBoneFrame_SetTrget(struct ss_animation_s *ss_anim, uint16_t targeted_bone, const float target_pos[3], const float bone_dir[3]);
 void SSBoneFrame_SetTargetingAxisMod(struct ss_animation_s *ss_anim, const float mod[3]);
 void SSBoneFrame_SetTargetingLimit(struct ss_animation_s *ss_anim, const float limit[4]);
-void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int animation, int frame);
-struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type);
+void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int anim_type, int animation, int frame);
+struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type_id);
 struct ss_animation_s *SSBoneFrame_GetOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
 void SSBoneFrame_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_type);
 void SSBoneFrame_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);

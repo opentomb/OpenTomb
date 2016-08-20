@@ -17,11 +17,15 @@ function prepareEntity(object_id)
 end;
 
 function swapEntityState(object_id, state_1, state_2)
-    local current_state = getEntityState(object_id);
+    local current_state = getEntityAnimState(object_id, ANIM_TYPE_BASE);
     if(current_state == state_1) then 
-        setEntityState(object_id, state_2); 
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_2);
+        return ENTITY_TRIGGERING_ACTIVATED;
     elseif(current_state == state_2) then
-        setEntityState(object_id, state_1);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_1);
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    else
+        return ENTITY_TRIGGERING_NOT_READY;
     end;
 end;
 
@@ -33,14 +37,22 @@ end;
 
 function swapEntityActivity(object_id)
     local current_activity = getEntityActivity(object_id);
-    setEntityActivity(object_id, not current_activity);
+    if(current_activity) then
+        setEntityActivity(object_id, false);
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    else
+        setEntityActivity(object_id, true);
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
 end;
 
 function swapEntityEnability(object_id)
     local current_enability = getEntityEnability(object_id);
     if(current_enability) then 
         disableEntity(object_id);
+        return ENTITY_TRIGGERING_DEACTIVATED;
     else 
         enableEntity(object_id);
+        return ENTITY_TRIGGERING_ACTIVATED;
     end;
 end;

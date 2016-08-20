@@ -1,6 +1,7 @@
 
 #include <stdint.h>
-#include <SDL2/SDL_image.h>
+#include <string.h>
+#include <ctype.h>
 
 #include "core/gl_util.h"
 #include "core/gl_font.h"
@@ -13,6 +14,7 @@
 #include "render/render.h"
 #include "render/shader_description.h"
 #include "render/shader_manager.h"
+#include "image.h"
 #include "gui.h"
 #include "mesh.h"
 #include "skeletal_model.h"
@@ -239,6 +241,7 @@ void Gui_Render()
     {
         Gui_DrawInventory();
     }
+    Gui_DrawNotifier();
     qglUseProgramObjectARB(shader->program);
 
     qglDepthMask(GL_FALSE);
@@ -246,7 +249,10 @@ void Gui_Render()
     qglPixelStorei(GL_UNPACK_LSB_FIRST, GL_FALSE);
     qglPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-    Gui_DrawCrosshair();
+    if(screen_info.crosshair != 0)
+    {
+        Gui_DrawCrosshair();
+    }
     Gui_DrawBars();
 
     qglUniform1fARB(shader->colorReplace, 1.0f);
@@ -275,7 +281,6 @@ void Item_Frame(struct ss_bone_frame_s *bf, float time)
     Anim_GetNextFrame(&bf->animations, time, stc, &frame, &anim, 0x00);
     if(anim != bf->animations.current_animation)
     {
-        bf->animations.last_animation = bf->animations.current_animation;
         /*frame %= bf->model->animations[anim].frames_count;
         frame = (frame >= 0)?(frame):(bf->model->animations[anim].frames_count - 1 + frame);
 
@@ -289,10 +294,6 @@ void Item_Frame(struct ss_bone_frame_s *bf, float time)
     }
     else if(bf->animations.current_frame != frame)
     {
-        if(bf->animations.current_frame == 0)
-        {
-            bf->animations.last_animation = bf->animations.current_animation;
-        }
         bf->animations.current_frame = frame;
     }
 
@@ -303,7 +304,7 @@ void Item_Frame(struct ss_bone_frame_s *bf, float time)
     bf->animations.frame_time = (float)frame * bf->animations.period + dt;
     bf->animations.lerp = dt / bf->animations.period;
     Anim_GetNextFrame(&bf->animations, bf->animations.period, stc, &bf->animations.next_frame, &bf->animations.next_animation, 0x00);
-    SSBoneFrame_Update(bf);
+    SSBoneFrame_Update(bf, time);
 }
 
 
@@ -439,22 +440,22 @@ int gui_InventoryManager::getItemElementsCountByType(int type)
 
 void gui_InventoryManager::restoreItemAngle(float time)
 {
-    if(mItemAngle > 0.0)
+    if(mItemAngle > 0.0f)
     {
-        if(mItemAngle <= 180)
+        if(mItemAngle <= 180.0f)
         {
-            mItemAngle -= 180.0 * time / mRingRotatePeriod;
-            if(mItemAngle < 0.0)
+            mItemAngle -= 180.0f * time / mRingRotatePeriod;
+            if(mItemAngle < 0.0f)
             {
-                mItemAngle = 0.0;
+                mItemAngle = 0.0f;
             }
         }
         else
         {
-            mItemAngle += 180.0 * time / mRingRotatePeriod;
-            if(mItemAngle >= 360.0)
+            mItemAngle += 180.0f * time / mRingRotatePeriod;
+            if(mItemAngle >= 360.0f)
             {
-                mItemAngle = 0.0;
+                mItemAngle = 0.0f;
             }
         }
     }
@@ -465,6 +466,8 @@ void gui_InventoryManager::setInventory(struct inventory_node_s **i)
     mInventory = i;
     mCurrentState = INVENTORY_DISABLED;
     mNextState = INVENTORY_DISABLED;
+    mLabel_ItemName.show = 0;
+    mLabel_Title.show = 0;
 }
 
 void gui_InventoryManager::setTitle(int items_type)
@@ -775,6 +778,8 @@ void gui_InventoryManager::render()
     {
         float matrix[16], offset[3], ang;
         int num = 0;
+        mLabel_Title.x = screen_info.w / 2;
+        mLabel_ItemName.x = screen_info.w / 2;
         for(inventory_node_p i = *mInventory; i; i = i->next)
         {
             base_item_p bi = World_GetBaseItemByID(i->id);
@@ -857,39 +862,6 @@ void Gui_SwitchGLMode(char is_gui)
     }
 }
 
-void Gui_FillCrosshairBuffer()
-{
-    GLfloat x0 = screen_info.w / 2.0f;
-    GLfloat y0 = screen_info.h / 2.0f;
-    GLfloat *v, crosshairArray[32];
-    const GLfloat size = 5.0f;
-    const GLfloat color[4] = {1.0, 0.0, 0.0, 1.0};
-
-    v = crosshairArray;
-   *v++ = x0; *v++ = y0 - size;
-    vec4_copy(v, color);
-    v += 4;
-   *v++ = 0.0; *v++ = 0.0;
-
-   *v++ = x0; *v++ = y0 + size;
-    vec4_copy(v, color);
-    v += 4;
-   *v++ = 0.0; *v++ = 0.0;
-
-   *v++ = x0 - size; *v++ = y0;
-    vec4_copy(v, color);
-    v += 4;
-   *v++ = 0.0; *v++ = 0.0;
-
-   *v++ = x0 + size; *v++ = y0;
-    vec4_copy(v, color);
-    v += 4;
-   *v++ = 0.0; *v++ = 0.0;
-
-    qglBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
-    qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), crosshairArray, GL_STATIC_DRAW);
-}
-
 void Gui_FillBackgroundBuffer()
 {
     GLfloat x0 = 0.0f;
@@ -924,8 +896,43 @@ void Gui_FillBackgroundBuffer()
     qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), backgroundArray, GL_STATIC_DRAW);
 }
 
+void Gui_FillCrosshairBuffer()
+{
+    GLfloat x = (GLfloat)screen_info.w / 2.0f;
+    GLfloat y = (GLfloat)screen_info.h / 2.0f;
+    GLfloat *v, crosshairArray[32];
+    const GLfloat size = 8.0f;
+    const GLfloat color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+
+    v = crosshairArray;
+   *v++ = x; *v++ = y - size;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+
+   *v++ = x; *v++ = y + size;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+
+   *v++ = x - size; *v++ = y;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+
+   *v++ = x + size; *v++ = y;
+    vec4_copy(v, color);
+    v += 4;
+   *v++ = 0.0; *v++ = 0.0;
+
+    // copy vertices into GL buffer
+    qglBindBufferARB(GL_ARRAY_BUFFER, crosshairBuffer);
+    qglBufferDataARB(GL_ARRAY_BUFFER, sizeof(GLfloat[32]), crosshairArray, GL_STATIC_DRAW);
+}
+
 void Gui_DrawCrosshair()
 {
+    // TBI: actual ingame crosshair
     BindWhiteTexture();
     qglBindBufferARB(GL_ARRAY_BUFFER_ARB, crosshairBuffer);
     qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
@@ -1040,84 +1047,48 @@ void Gui_DrawLoadScreen(int value)
     Engine_GLSwapWindow();
 }
 
+
 bool Gui_LoadScreenAssignPic(const char* pic_name)
 {
-    char buf[MAX_ENGINE_PATH];
     size_t len = strlen(pic_name);
-    size_t ext_len = 0;
+    char image_name_buf[len + 5];
+    int image_format = 0;
 
-    ///@STICK: we can write incorrect image file extension, but engine will try all supported formats
-    strncpy(buf, pic_name, MAX_ENGINE_PATH);
-    if(!Sys_FileFound(buf, 0))
+    strncpy(image_name_buf, pic_name, len + 1);
+    if(len > 3)
     {
-        for(; ext_len + 1 < len; ext_len++)
+        char *ext = image_name_buf + len;
+        if(strncpy(ext, ".png", 5) && Sys_FileFound(image_name_buf, 0))
         {
-            if(buf[len-ext_len-1] == '.')
-            {
-                break;
-            }
-        }
-
-        if(ext_len + 1 == len)
+            image_format = IMAGE_FORMAT_PNG;
+        }else if(strncpy(ext, ".pcx", 5) && Sys_FileFound(image_name_buf, 0))
         {
-            return false;
-        }
-
-        buf[len - ext_len + 0] = 'b';
-        buf[len - ext_len + 1] = 'm';
-        buf[len - ext_len + 2] = 'p';
-        buf[len - ext_len + 3] = 0;
-        if(!Sys_FileFound(buf, 0))
-        {
-            buf[len - ext_len + 0] = 'j';
-            buf[len - ext_len + 1] = 'p';
-            buf[len - ext_len + 2] = 'g';
-            if(!Sys_FileFound(buf, 0))
-            {
-                buf[len - ext_len + 0] = 'p';
-                buf[len - ext_len + 1] = 'n';
-                buf[len - ext_len + 2] = 'g';
-                if(!Sys_FileFound(buf, 0))
-                {
-                    buf[len - ext_len + 0] = 't';
-                    buf[len - ext_len + 1] = 'g';
-                    buf[len - ext_len + 2] = 'a';
-                    if(!Sys_FileFound(buf, 0))
-                    {
-                        return false;
-                    }
-                }
-            }
+            image_format = IMAGE_FORMAT_PCX;
         }
     }
 
-    SDL_Surface *surface = IMG_Load(buf);
-    if(surface != NULL)
+    uint8_t *img_pixels = NULL;
+    uint32_t img_w = 0;
+    uint32_t img_h = 0;
+    uint32_t img_bpp = 32;
+    if(Image_Load(image_name_buf, image_format, &img_pixels, &img_w, &img_h, &img_bpp))
     {
         GLenum       texture_format;
         GLuint       color_depth;
 
-        if(surface->format->BytesPerPixel == 4)        // Contains an alpha channel
+        if(img_bpp == 32)        // Contains an alpha channel
         {
-            if(surface->format->Rmask == 0x000000ff)
-                texture_format = GL_RGBA;
-            else
-                texture_format = GL_BGRA;
-
+            texture_format = GL_RGBA;
             color_depth = GL_RGBA;
         }
-        else if(surface->format->BytesPerPixel == 3)   // No alpha channel
+        else if(img_bpp == 24)   // No alpha channel
         {
-            if(surface->format->Rmask == 0x000000ff)
-                texture_format = GL_RGB;
-            else
-                texture_format = GL_BGR;
-
+            texture_format = GL_RGB;
             color_depth = GL_RGB;
         }
         else
         {
-            SDL_FreeSurface(surface);
+            free(img_pixels);
             return false;
         }
 
@@ -1129,10 +1100,10 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
         qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         // Edit the texture object's image data using the information SDL_Surface gives us
-        qglTexImage2D(GL_TEXTURE_2D, 0, color_depth, surface->w, surface->h, 0,
-                     texture_format, GL_UNSIGNED_BYTE, surface->pixels);
+        qglTexImage2D(GL_TEXTURE_2D, 0, color_depth, img_w, img_h, 0,
+                     texture_format, GL_UNSIGNED_BYTE, img_pixels);
         qglBindTexture(GL_TEXTURE_2D, 0);
-        SDL_FreeSurface(surface);
+        free(img_pixels);
         return true;
     }
 

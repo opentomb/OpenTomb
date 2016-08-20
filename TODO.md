@@ -22,8 +22,8 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 2. Build configuration
 ----------------------
 * Todo:
-	* Add lua and SDLImage to _extern_ _(TeslaRus task)_
-	* Add build extern libs script ( -> *.a), update C::B project _(TeslaRus task)_
+	* Update internal image lib
+	* Reduce number of dependecies
 	* Make good autobuild system
 	  
 3. Git/GitHub workflow
@@ -55,8 +55,7 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 ---------------
 * Todo:
 	* `game.cpp`: many different logics in one place, needs to be refactored
-	* make some modules (not all!) interface more abstract (hide internal realisation, like `physics.h`/`physics_bullet.cpp`) 
-	* create little module for image loading / saving with simple abstract interface like Image_Load(file_name, format, **buffer, *w, *h, *bpp); Image_Save(file_name, format, *buffer, w, h, bpp);
+	* make some modules (not all!) interface more abstract (hide internal realisation, like `physics.h`/`physics_bullet.cpp`)
 
 5. Collision system
 -------------------
@@ -77,7 +76,6 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 	* Fix moving in some floor slant cases in `Character_FixPosByFloorInfoUnderLegs(...)`
 	* Fix jammed (or slowly stopping) rolling boulders, where it is critical (optional roll by path (not yet implemented), or roll by physics (implemented))
 	* Check room tween butterfly normals
-	* Wrong fail check climbability in TR3, level 1, acute edge (side view like <>) and some other instances of such geometry
 
 6. Character controller
 -----------------------
@@ -91,7 +89,6 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 --------------------
 * Todo:
 	* Fix state change missing with low fps
-	* Skeletal model `ss_anim` control: implement a functional interface to control it, instead of a complex direct access to flags and structures
 	* Update documentation about `ss_animation` structure and functions
 	* Fix incorrect smoothing if there are _move_ or _rotate_ anim commands
 	* Fix dive-rolls:
@@ -113,11 +110,11 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 9. Scripting
 ------------
 * Current situation:
+	* SEE TRIGGERS_tasks.md
 	* Scripts update EVERY game frame! Use the global engine frame time inside time depended scripts!
 * Todo:
 	* Add function like `lua_SaveTable(...)` that recursively print to file/buffer/clay tablets lua code with table content (i.e. `table_name = { red = 1; green = 0; blue = 0; name = "name"; is_u = true; in_tbl = { p1 = "inner"; val = 32.45 } }`)
 	* In all scripts that may change game state, data must be stored in special global table (that will be saved in save game) - needed for game save/load functions to correctly work
-	* `Activate_Entity` script function must returns state (no duplication of activation e.t.c. + better state control)
 
 10. Audio
 ---------

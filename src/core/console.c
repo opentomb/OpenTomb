@@ -31,7 +31,7 @@ static struct
     char                      **line_text;                  // Console text
 
     int                       (*exec_cmd)(char *ch);        // Exec function pointer
-    
+
     uint16_t                    line_size;                  // Console line size
     int16_t                     line_height;                // Height, including spacing
 
@@ -39,11 +39,11 @@ static struct
     int16_t                     cursor_pos;                 // Current cursor position, in symbols
     int16_t                     cursor_x;                   // Cursor position in pixels
     int16_t                     cursor_y;
-    
+
     float                       spacing;                    // Line spacing
     float                       cursor_time;                // Current cursor draw time
     float                       show_cursor_period;
-    
+
     int8_t                      show_cursor;                // Cursor visibility flag
     int8_t                      show_console;               // Visibility flag
 } con_base;
@@ -59,9 +59,9 @@ static void Con_DrawCursor();
 void Con_Init()
 {
     uint16_t i;
-    
+
     con_base.exec_cmd = NULL;
-    
+
     con_base.log_pos = 0;
 
     // lines count check
@@ -156,10 +156,10 @@ void Con_InitFont()
 
 void Con_InitGlobals()
 {
-    con_base.background_color[0] = 1.0;
-    con_base.background_color[1] = 0.9;
-    con_base.background_color[2] = 0.7;
-    con_base.background_color[3] = 0.4;
+    con_base.background_color[0] = 1.0f;
+    con_base.background_color[1] = 0.9f;
+    con_base.background_color[2] = 0.7f;
+    con_base.background_color[3] = 0.4f;
 
     con_base.log_lines_count = CON_MIN_LOG;
     con_base.log_lines       = NULL;
@@ -171,7 +171,7 @@ void Con_InitGlobals()
     con_base.line_style_id   = NULL;
 
     con_base.showing_lines = con_base.line_count;
-    con_base.show_cursor_period = 0.5;
+    con_base.show_cursor_period = 0.5f;
     con_base.cursor_pos = 0;
 }
 
@@ -193,7 +193,7 @@ void Con_Destroy()
     }
     free(con_base.log_lines);
     con_base.log_lines = NULL;
-    
+
     qglDeleteBuffersARB(1, &backgroundBuffer);
     qglDeleteBuffersARB(1, &cursorBuffer);
     backgroundBuffer = 0;
@@ -319,7 +319,7 @@ void Con_Edit(int key)
         return;
     }
 
-    con_base.cursor_time = 0.0;
+    con_base.cursor_time = 0.0f;
     con_base.show_cursor = 1;
 
     int16_t oldLength = utf8_strlen(con_base.line_text[0]);    // int16_t is absolutly enough
@@ -412,11 +412,11 @@ void Con_CalcCursorPosition()
     {
         GLfloat *v, cursor_array[16];
         GLint y = con_base.cursor_y + con_base.line_height;
-        
+
         v = cursor_array;
         con_base.cursor_x = 8 + 1 + glf_get_string_len(gl_font, con_base.line_text[0], con_base.cursor_pos);
-        
-       *v++ = (GLfloat)con_base.cursor_x;                      
+
+       *v++ = (GLfloat)con_base.cursor_x;
        *v++ = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;
         v[0] = 1.0; v[1] = 1.0; v[2] = 1.0; v[3] = 0.7;             v += 4;
         v[0] = 0.0; v[1] = 0.0;                                     v += 2;
@@ -424,7 +424,7 @@ void Con_CalcCursorPosition()
        *v++ = (GLfloat)y + 0.7 * (GLfloat)con_base.line_height;
         v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;              v += 4;
         v[0] = 0.0; v[1] = 0.0;
-        
+
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, cursorBuffer);
         qglBufferDataARB(GL_ARRAY_BUFFER, 16 * sizeof(GLfloat), cursor_array, GL_STATIC_DRAW);
     }
@@ -590,13 +590,13 @@ void Con_Draw(float time)
     {
         int x = 8;
         int y = con_base.cursor_y;
-        
+
         con_base.cursor_time += time;
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         BindWhiteTexture();
         Con_DrawBackground();
         Con_DrawCursor();
-        
+
         for(uint16_t i = 0; i < con_base.showing_lines; i++)
         {
             gl_fontstyle_p style = GLText_GetFontStyle(con_base.line_style_id[i]);
@@ -615,7 +615,7 @@ void Con_FillBackgroundBuffer()
 {
     if(backgroundBuffer)
     {
-        GLfloat x0 = 0.0;
+        GLfloat x0 = 0.0f;
         GLfloat y0 = con_base.cursor_y + con_base.line_height - 8;
         GLfloat x1 = screen_info.w;
         GLfloat y1 = screen_info.h;
@@ -666,7 +666,7 @@ void Con_DrawCursor()
     {
         if(con_base.cursor_time > con_base.show_cursor_period)
         {
-            con_base.cursor_time = 0.0;
+            con_base.cursor_time = 0.0f;
             con_base.show_cursor = !con_base.show_cursor;
         }
     }
@@ -682,7 +682,7 @@ void Con_DrawCursor()
 }
 
 
-int  Con_IsShown()
+int Con_IsShown()
 {
     return con_base.show_console;
 }

@@ -58,7 +58,7 @@ public:
 
         if(c1 && ((c1 == m_cont) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
-            return 1.0;
+            return 1.0f;
         }
 
         if(!r0 || !r1)
@@ -72,21 +72,21 @@ public:
             if((m_cont->object_type == OBJECT_ENTITY) && (m_cont->object))
             {
                 entity_p ent = (entity_p)m_cont->object;
-                rs = Room_GetSectorRaw(r0, ent->transform + 12);
+                rs = ent->current_sector;
             }
             if(Room_IsInNearRoomsList(r0, r1) ||
-               (rs && rs->sector_above && Room_IsInNearRoomsList(r0, rs->sector_above->owner_room)) ||
-               (rs && rs->sector_below && Room_IsInNearRoomsList(r0, rs->sector_below->owner_room)))
+               (rs && rs->sector_above && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_above->owner_room))) ||
+               (rs && rs->sector_below && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_below->owner_room))))
             {
                 return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
             }
             else
             {
-                return 1.0;
+                return 1.0f;
             }
         }
 
-        return 1.0;
+        return 1.0f;
     }
 
     bool               m_skip_ghost;
@@ -114,7 +114,7 @@ public:
 
         if(c1 && ((c1 == m_cont) || (m_skip_ghost && (c1->collision_type == COLLISION_TYPE_GHOST))))
         {
-            return 1.0;
+            return 1.0f;
         }
 
         if(!r0 || !r1)
@@ -124,17 +124,25 @@ public:
 
         if(r0 && r1)
         {
-            if(Room_IsInNearRoomsList(r0, r1))
+            room_sector_p rs = NULL;
+            if((m_cont->object_type == OBJECT_ENTITY) && (m_cont->object))
+            {
+                entity_p ent = (entity_p)m_cont->object;
+                rs = ent->current_sector;
+            }
+            if(Room_IsInNearRoomsList(r0, r1) ||
+               (rs && rs->sector_above && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_above->owner_room))) ||
+               (rs && rs->sector_below && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_below->owner_room))))
             {
                 return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
             }
             else
             {
-                return 1.0;
+                return 1.0f;
             }
         }
 
-        return 1.0;
+        return 1.0f;
     }
 
 private:
@@ -679,7 +687,7 @@ void Physics_GetGhostWorldTransform(struct physics_data_s *physics, float tr[16]
 
 void Physics_SetGhostWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index)
 {
-    if(physics->ghost_objects[index])
+    if(physics->ghost_objects && physics->ghost_objects[index])
     {
         physics->ghost_objects[index]->getWorldTransform().setFromOpenGLMatrix(tr);
     }
@@ -1245,17 +1253,19 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
 }
 
 /*
- * DO something with sticky 80% boxes!!!
- * first of all: convex offsetted boxes to avoid every frame offsets calculation.
+ * 80% boxes hack now is default, but may be rewritten;
  */
-void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf)
+void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, struct ghost_shape_s *boxes)
 {
     if(physics->objects_count > 0)
     {
         btTransform tr;
-        btScalar gltr[16], v[3];
+        btScalar gltr[16];
 
-        physics->manifoldArray = new btManifoldArray();
+        if(!physics->manifoldArray)
+        {
+            physics->manifoldArray = new btManifoldArray();
+        }
 
         switch(physics->cont->collision_shape)
         {
@@ -1299,29 +1309,55 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghost_objects = (btPairCachingGhostObject**)malloc(bf->bone_tag_count * sizeof(btPairCachingGhostObject*));
                     for(uint32_t i = 0; i < physics->objects_count; i++)
                     {
-                        btVector3 box;
-                        box.m_floats[0] = 0.40 * (bf->bone_tags[i].mesh_base->bb_max[0] - bf->bone_tags[i].mesh_base->bb_min[0]);
-                        box.m_floats[1] = 0.40 * (bf->bone_tags[i].mesh_base->bb_max[1] - bf->bone_tags[i].mesh_base->bb_min[1]);
-                        box.m_floats[2] = 0.40 * (bf->bone_tags[i].mesh_base->bb_max[2] - bf->bone_tags[i].mesh_base->bb_min[2]);
-                        bf->bone_tags[i].mesh_base->R = (box.m_floats[0] < box.m_floats[1])?(box.m_floats[0]):(box.m_floats[1]);
-                        bf->bone_tags[i].mesh_base->R = (bf->bone_tags[i].mesh_base->R < box.m_floats[2])?(bf->bone_tags[i].mesh_base->R):(box.m_floats[2]);
+                        ss_bone_tag_p b_tag = bf->bone_tags + i;
 
                         physics->ghost_objects[i] = new btPairCachingGhostObject();
                         physics->ghost_objects[i]->setIgnoreCollisionCheck(physics->bt_body[i], true);
-                        Mat4_Mat4_mul(gltr, bf->transform, bf->bone_tags[i].full_transform);
-                        Mat4_vec3_mul(v, gltr, bf->bone_tags[i].mesh_base->centre);
-                        vec3_copy(gltr+12, v);
+                        Mat4_Mat4_mul(gltr, bf->transform, b_tag->full_transform);
                         tr.setFromOpenGLMatrix(gltr);
                         physics->ghost_objects[i]->setWorldTransform(tr);
                         physics->ghost_objects[i]->setCollisionFlags(physics->ghost_objects[i]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
                         physics->ghost_objects[i]->setUserPointer(physics->cont);
                         physics->ghost_objects[i]->setUserIndex(i);
-                        physics->ghost_objects[i]->setCollisionShape(new btBoxShape(box));
+                        if(boxes)
+                        {
+                            physics->ghost_objects[i]->setCollisionShape(BT_CSfromBBox(boxes[i].bb_min, boxes[i].bb_max));
+                        }
+                        else
+                        {
+                            float bb_min[3], bb_max[3], t;
+                            t = 0.40 * (b_tag->mesh_base->bb_max[0] - b_tag->mesh_base->bb_min[0]);
+                            bb_min[0] = b_tag->mesh_base->centre[0] - t;
+                            bb_max[0] = b_tag->mesh_base->centre[0] + t;
+                            t = 0.40 * (b_tag->mesh_base->bb_max[1] - b_tag->mesh_base->bb_min[1]);
+                            bb_min[1] = b_tag->mesh_base->centre[1] - t;
+                            bb_max[1] = b_tag->mesh_base->centre[1] + t;
+                            t = 0.40 * (b_tag->mesh_base->bb_max[2] - b_tag->mesh_base->bb_min[2]);
+                            bb_min[2] = b_tag->mesh_base->centre[2] - t;
+                            bb_max[2] = b_tag->mesh_base->centre[2] + t;
+
+                            physics->ghost_objects[i]->setCollisionShape(BT_CSfromBBox(bb_min, bb_max));
+                        }
                         physics->ghost_objects[i]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
                         bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[i], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
                     }
                 }
         };
+    }
+}
+
+
+void Physics_SetGhostCollisionShape(struct physics_data_s *physics, uint16_t index, struct ghost_shape_s *shape_info)
+{
+    if(physics->ghost_objects)
+    {
+        btCollisionShape *old_shape = physics->ghost_objects[index]->getCollisionShape();
+        physics->ghost_objects[index]->setCollisionShape(BT_CSfromBBox(shape_info->bb_min, shape_info->bb_max));
+        physics->ghost_objects[index]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
+        if(old_shape)
+        {
+            delete old_shape;
+        }
     }
 }
 
