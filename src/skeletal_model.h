@@ -191,9 +191,9 @@ typedef struct animation_command_s
 typedef struct animation_effect_s
 {
     uint16_t                    id;
-    uint16_t                    frame;
-    uint16_t                    data;
-    uint16_t                    unused;
+    int16_t                     frame;
+    int16_t                     data;
+    int16_t                     unused;
     struct animation_effect_s  *next;
 }animation_effect_t, *animation_effect_p;
 
