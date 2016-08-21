@@ -656,54 +656,58 @@ void Entity_CheckCollisionCallbacks(entity_p ent)
 
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
 {
-    if(World_GetAnimCommands() && ss_anim->model)
+    if(ss_anim->model)
     {
         animation_frame_p next_af = ss_anim->model->animations + ss_anim->next_animation;
         animation_frame_p current_af = ss_anim->model->animations + ss_anim->current_animation;
-        if(next_af->num_anim_commands <= 255)
+        int16_t next_frame    = ss_anim->next_frame;
+
+        for(animation_command_p command = current_af->commands; command; command = command->next)
         {
-            uint32_t count        = next_af->num_anim_commands;
-            int16_t *pointer      = World_GetAnimCommands() + next_af->anim_command;
-            int16_t next_frame    = ss_anim->next_frame;
-            int8_t   random_value = 0;
-
-            for(uint32_t i = 0; i < count; i++, pointer++)
+            switch(command->id)
             {
-                switch(*pointer)
+                case TR_ANIMCOMMAND_SETPOSITION:
+                    if(ss_anim->changing_next >= 0x02)                          // This command executes ONLY at the end of animation.
+                    {
+                        float tr[3];
+                        entity->no_fix_all = 0x01;
+                        Mat4_vec3_rot_macro(tr, entity->transform, command->data);
+                        vec3_add(entity->transform + 12, entity->transform + 12, tr);
+                        Anim_SetNextFrame(ss_anim, ss_anim->period);            // skip one frame
+                        Entity_UpdateTransform(entity);
+                        Entity_UpdateRigidBody(entity, 1);
+                    }
+                    break;
+
+                case TR_ANIMCOMMAND_JUMPDISTANCE:
+                    if(entity->character && (ss_anim->changing_next >= 0x02))   // This command executes ONLY at the end of animation.
+                    {
+                        Character_SetToJump(entity, -command->data[0], command->data[1]);
+                    }
+                    break;
+
+                case TR_ANIMCOMMAND_EMPTYHANDS:
+                    ///@FIXME: Behaviour is yet to be discovered.
+                    break;
+
+                case TR_ANIMCOMMAND_KILL:
+                    if(entity->character)
+                    {
+                        entity->character->resp.kill = 0x01;
+                    }
+                    break;
+            };
+        }
+
+        for(animation_effect_p effect = next_af->effects; effect; effect = effect->next)
+        {
+            if(next_frame == effect->frame)
+            {
+                switch(effect->id)
                 {
-                    case TR_ANIMCOMMAND_SETPOSITION:
-                        pointer += 3;
-                        break;
-
-                    case TR_ANIMCOMMAND_JUMPDISTANCE:
-                        if(next_frame + 1 == next_af->frames_count)             // This command executes ONLY at the end of animation.
-                        {
-                            float vz = *++pointer;
-                            float vh = *++pointer;
-                            Character_SetToJump(entity, -vz, vh);
-                        }
-                        else
-                        {
-                            pointer += 2;
-                        }
-                        break;
-
-                    case TR_ANIMCOMMAND_EMPTYHANDS:
-                        ///@FIXME: Behaviour is yet to be discovered.
-                        break;
-
-                    case TR_ANIMCOMMAND_KILL:
-                        // This command executes ONLY at the end of animation.
-                        if((ss_anim->changing_next >= 0x02) && (entity->character))
-                        {
-                            entity->character->resp.kill = 1;
-                        }
-                        break;
-
                     case TR_ANIMCOMMAND_PLAYSOUND:
-                        if(next_frame == *++pointer)
                         {
-                             int16_t sound_index = (*++pointer) & 0x3FFF;
+                            int16_t sound_index = 0x3FFFF & effect->data;
                             // Quick workaround for TR3 quicksand.
                             if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
                                (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
@@ -711,12 +715,12 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                                 sound_index = 18;
                             }
 
-                            if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
+                            if(effect->data & TR_ANIMCOMMAND_CONDITION_WATER)
                             {
                                 if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_WATER_SHALLOW)
                                     Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
                             }
-                            else if(*pointer & TR_ANIMCOMMAND_CONDITION_LAND)
+                            else if(effect->data & TR_ANIMCOMMAND_CONDITION_LAND)
                             {
                                 if(Entity_GetSubstanceState(entity) != ENTITY_SUBSTANCE_WATER_SHALLOW)
                                     Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
@@ -726,20 +730,15 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                                 Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
                             }
                         }
-                        else
-                        {
-                            pointer++;
-                        }
                         break;
 
                     case TR_ANIMCOMMAND_PLAYEFFECT:
                         // Effects (flipeffects) are various non-typical actions which vary
                         // across different TR game engine versions. There are common ones,
                         // however, and currently only these are supported.
-                        if(next_frame == *++pointer)
                         {
                             entity_p player = World_GetPlayer();
-                            switch(*++pointer & 0x3FFF)
+                            switch(effect->data & 0x3FFF)
                             {
                                 case TR_EFFECT_SHAKESCREEN:
                                     if(player)
@@ -753,6 +752,26 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                                     break;
 
                                 case TR_EFFECT_CHANGEDIRECTION:
+                                    if(ss_anim->changing_next >= 0x01)
+                                    {
+                                        entity->angles[0] += 180.0f;
+                                        if(entity->move_type == MOVE_UNDERWATER)
+                                        {
+                                            entity->angles[1] = -entity->angles[1];                         // for underwater case
+                                        }
+                                        if(entity->dir_flag == ENT_MOVE_BACKWARD)
+                                        {
+                                            entity->dir_flag = ENT_MOVE_FORWARD;
+                                        }
+                                        else if(entity->dir_flag == ENT_MOVE_FORWARD)
+                                        {
+                                            entity->dir_flag = ENT_MOVE_BACKWARD;
+                                        }
+
+                                        Anim_SetNextFrame(ss_anim, ss_anim->period);
+                                        Entity_UpdateTransform(entity);
+                                        Entity_UpdateRigidBody(entity, 1);
+                                    }
                                     break;
 
                                 case TR_EFFECT_HIDEOBJECT:
@@ -846,8 +865,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
 
                                 case TR_EFFECT_BUBBLE:
                                     ///@FIXME: Spawn bubble particle here, when particle system is developed.
-                                    random_value = rand() % 100;
-                                    if(random_value > 60)
+                                    if(rand() % 100 > 60)
                                     {
                                         Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                     }
@@ -858,44 +876,9 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                                     break;
                             }
                         }
-                        else
-                        {
-                            pointer++;
-                        }
                         break;
                 };
-            }
-        }
-
-        if(current_af->command_move && ss_anim->changing_next >= 0x02)
-        {
-            float tr[3];
-            entity->no_fix_all = 0x01;
-            Mat4_vec3_rot_macro(tr, entity->transform, current_af->command_data);
-            vec3_add(entity->transform + 12, entity->transform + 12, tr);
-            Anim_SetNextFrame(ss_anim, ss_anim->period);                        // skip one frame
-            Entity_UpdateTransform(entity);
-            Entity_UpdateRigidBody(entity, 1);
-        }
-        if(next_af->command_change_dir && (next_af->command_frame == ss_anim->next_frame) && (ss_anim->changing_next >= 0x01))
-        {
-            entity->angles[0] += 180.0f;
-            if(entity->move_type == MOVE_UNDERWATER)
-            {
-                entity->angles[1] = -entity->angles[1];                         // for underwater case
-            }
-            if(entity->dir_flag == ENT_MOVE_BACKWARD)
-            {
-                entity->dir_flag = ENT_MOVE_FORWARD;
-            }
-            else if(entity->dir_flag == ENT_MOVE_FORWARD)
-            {
-                entity->dir_flag = ENT_MOVE_BACKWARD;
-            }
-
-            Anim_SetNextFrame(ss_anim, ss_anim->period);
-            Entity_UpdateTransform(entity);
-            Entity_UpdateRigidBody(entity, 1);
+            };
         }
     }
 }

@@ -63,6 +63,20 @@ void SkeletalModel_Clear(skeletal_model_p model)
                     free(anim->frames);
                     anim->frames = NULL;
                 }
+                
+                while(anim->commands)
+                {
+                    animation_command_p next_command = anim->commands->next;
+                    free(anim->commands);
+                    anim->commands = next_command;
+                }
+                
+                while(anim->effects)
+                {
+                    animation_effect_p next_effect = anim->effects->next;
+                    free(anim->effects);
+                    anim->effects = next_effect;
+                }
             }
             model->animation_count= 0;
             free(model->animations);
@@ -697,6 +711,26 @@ void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_t
 /*
  *******************************************************************************
  */
+void Anim_AddCommand(struct animation_frame_s *anim, const animation_command_p command)
+{
+    animation_command_p *ptr = &anim->commands;
+    for(; *ptr; ptr = &((*ptr)->next));
+    *ptr = (animation_command_p)malloc(sizeof(animation_command_t));
+    **ptr = *command;
+    (*ptr)->next = NULL;
+}
+
+
+void Anim_AddEffect(struct animation_frame_s *anim, const animation_effect_p effect)
+{
+    animation_effect_p *ptr = &anim->effects;
+    for(; *ptr; ptr = &((*ptr)->next));
+    *ptr = (animation_effect_p)malloc(sizeof(animation_effect_t));
+    **ptr = *effect;
+    (*ptr)->next = NULL;
+}
+
+
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim)
 {
     if(state_change_anim >= 0)

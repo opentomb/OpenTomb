@@ -86,9 +86,6 @@ extern "C" {
     struct flyby_camera_state_s    *flyby_cameras;
     struct flyby_camera_sequence_s *flyby_camera_sequences;
 
-    uint32_t                        anim_commands_count;
-    int16_t                        *anim_commands;
-
     /// private:
     struct lua_State               *objects_flags_conf;
     struct lua_State               *ent_ID_override;
@@ -115,7 +112,6 @@ bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id);
 
 
 void World_GenTextures(class VT_Level *tr);
-void World_GenAnimCommands(class VT_Level *tr);
 void World_GenAnimTextures(class VT_Level *tr);
 void World_GenMeshes(class VT_Level *tr);
 void World_GenSprites(class VT_Level *tr);
@@ -170,8 +166,6 @@ void World_Prepare()
     global_world.skeletal_models = NULL;
     global_world.skeletal_models_count = 0;
     global_world.sky_box = NULL;
-    global_world.anim_commands = NULL;
-    global_world.anim_commands_count = 0;
 
     global_world.objects_flags_conf = NULL;
     global_world.ent_ID_override = NULL;
@@ -193,9 +187,6 @@ void World_Open(class VT_Level *tr)
 
     World_GenTextures(tr);              // Generate OGL textures
     Gui_DrawLoadScreen(300);
-
-    World_GenAnimCommands(tr);          // Copy anim commands
-    Gui_DrawLoadScreen(310);
 
     World_GenAnimTextures(tr);          // Generate animated textures
     Gui_DrawLoadScreen(320);
@@ -608,12 +599,6 @@ struct static_camera_sink_s *World_GetstaticCameraSink(uint32_t id)
         return global_world.cameras_sinks + id;
     }
     return NULL;
-}
-
-
-int16_t *World_GetAnimCommands()
-{
-    return global_world.anim_commands;
 }
 
 
@@ -1543,14 +1528,6 @@ void World_GenTextures(class VT_Level *tr)
 }
 
 
-void World_GenAnimCommands(class VT_Level *tr)
-{
-    global_world.anim_commands_count = tr->anim_commands_count;
-    global_world.anim_commands = tr->anim_commands;
-    tr->anim_commands = NULL;
-    tr->anim_commands_count = 0;
-}
-
 /**   Animated textures loading.
   *   Natively, animated textures stored as a stream of bitu16s, which
   *   is then parsed on the fly. What we do is parse this stream to the
@@ -2255,7 +2232,7 @@ void World_GenSkeletalModels(class VT_Level *tr)
         tr_moveable = &tr->moveables[i];
         smodel->id = tr_moveable->object_id;
         smodel->mesh_count = tr_moveable->num_meshes;
-        TR_GenSkeletalModel(smodel, i, global_world.meshes, global_world.anim_commands, tr);
+        TR_GenSkeletalModel(smodel, i, global_world.meshes, tr);
         SkeletalModel_FillTransparency(smodel);
     }
 }

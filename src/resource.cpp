@@ -1552,7 +1552,7 @@ void TR_GenRoomMesh(struct room_s *room, size_t room_index, struct anim_seq_s *a
 }
 
 
-void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct base_mesh_s *base_mesh_array, int16_t *base_anim_commands_array, class VT_Level *tr)
+void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct base_mesh_s *base_mesh_array, class VT_Level *tr)
 {
     tr_moveable_t *tr_moveable;
     tr_animation_t *tr_animation;
@@ -1638,10 +1638,8 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         model->animations->state_change = NULL;
         model->animations->state_change_count = 0;
         model->animations->original_frame_rate = 1;
-        vec3_set_zero(model->animations->command_data);
-        model->animations->command_change_dir = 0x00;
-        model->animations->command_move = 0x00;
-        model->animations->command_frame = 0x00;
+        model->animations->commands = NULL;
+        model->animations->effects = NULL;
         bone_frame->bone_tag_count = model->mesh_count;
         bone_frame->bone_tags = (bone_tag_p)malloc(bone_frame->bone_tag_count * sizeof(bone_tag_t));
         vec3_set_zero(bone_frame->pos);
@@ -1682,7 +1680,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
     anim = model->animations;
     for(uint16_t i = 0; i < model->animation_count; i++, anim++)
     {
-        tr_animation = &tr->animations[tr_moveable->animation_index+i];
+        tr_animation = &tr->animations[tr_moveable->animation_index + i];
         frame_offset = tr_animation->frame_offset / 2;
         uint16_t l_start = 0x09;
         if(tr->game_version == TR_I || tr->game_version == TR_I_DEMO || tr->game_version == TR_I_UB)
@@ -1698,15 +1696,11 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         anim->accel_x = tr_animation->accel;
         anim->speed_y = tr_animation->accel_lateral;
         anim->accel_y = tr_animation->speed_lateral;
-        anim->anim_command = tr_animation->anim_command;
-        anim->num_anim_commands = tr_animation->num_anim_commands;
+        anim->commands = NULL;
+        anim->effects = NULL;
         anim->state_id = tr_animation->state_id;
-        vec3_set_zero(anim->command_data);
-        anim->command_change_dir = 0x00;
-        anim->command_move = 0x00;
-        anim->command_frame = 0x00;
 
-        anim->frames_count = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index+i);
+        anim->frames_count = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i);
 
         //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index));
 
@@ -1714,54 +1708,48 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         // Max. amount of AnimCommands is 255, larger numbers are considered as 0.
         // See http://evpopov.com/dl/TR4format.html#Animations for details.
 
-        if( (anim->num_anim_commands > 0) && (anim->num_anim_commands <= 255) )
+        if((tr_animation->num_anim_commands > 0) && (tr_animation->num_anim_commands <= 255))
         {
             // Calculate current animation anim command block offset.
-            int16_t *pointer = base_anim_commands_array + anim->anim_command;
-
-            for(uint32_t count = 0; count < anim->num_anim_commands; count++, pointer++)
+            int16_t *pointer = tr->anim_commands + tr_animation->anim_command;
+            animation_command_t command;
+            animation_effect_t effect;
+            for(uint32_t count = 0; count < tr_animation->num_anim_commands; count++, pointer++)
             {
-                switch(*pointer)
+                command.id = *pointer;
+                switch(command.id)
                 {
-                    case TR_ANIMCOMMAND_PLAYEFFECT:
-                        *(pointer + 1) -= tr_animation->frame_start;
-                        if(0x3FF & (*(pointer + 2)) == TR_EFFECT_CHANGEDIRECTION)
-                        {
-                            anim->command_change_dir = 0x01;
-                            anim->command_frame = *(pointer + 1);
-                        }
-                        break;
-
-                    case TR_ANIMCOMMAND_PLAYSOUND:
-                        // Recalculate absolute frame number to relative.
-                        ///@FIXED: was unpredictable behavior.
-                        *(pointer + 1) -= tr_animation->frame_start;
-                        pointer += 2;
-                        break;
-
                     case TR_ANIMCOMMAND_SETPOSITION:
-                        anim->command_move = 0x01;
-                        anim->command_data[0] = (float)(*++pointer);     // x = x;
-                        anim->command_data[2] =-(float)(*++pointer);     // z =-y
-                        anim->command_data[1] = (float)(*++pointer);     // y = z
+                        command.data[0] = (float)(*++pointer);     // x = x;
+                        command.data[2] =-(float)(*++pointer);     // z =-y
+                        command.data[1] = (float)(*++pointer);     // y = z
+                        Anim_AddCommand(anim, &command);
                         break;
 
                     case TR_ANIMCOMMAND_JUMPDISTANCE:
-                        // Parse through 2 operands.
-                        pointer += 2;
+                        command.data[0] = (float)(*++pointer);     // v_z
+                        command.data[1] = (float)(*++pointer);     // v_y
+                        command.data[2] = 0.0f;
+                        Anim_AddCommand(anim, &command);
                         break;
 
-                    default:
-                        // All other commands have no operands.
+                    case TR_ANIMCOMMAND_PLAYEFFECT:
+                    case TR_ANIMCOMMAND_PLAYSOUND:
+                        effect.id = command.id;
+                        effect.frame = *(++pointer) - tr_animation->frame_start;
+                        effect.data = *(++pointer);
+                        Anim_AddEffect(anim, &effect);
                         break;
-                }
+
+                    case TR_ANIMCOMMAND_KILL:
+                    case TR_ANIMCOMMAND_EMPTYHANDS:
+                    default:
+                        vec3_set_zero(command.data);
+                        Anim_AddCommand(anim, &command);
+                        break;
+                };
             }
         }
-    /*uint32_t                    command_move : 1;
-    uint32_t                    command_change_dir : 1;
-    uint32_t                    : 14;
-    uint32_t                    command_frame : 16;
-    float                       command_data[3];*/
 
         if(anim->frames_count <= 0)
         {

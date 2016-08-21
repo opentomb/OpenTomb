@@ -180,6 +180,23 @@ typedef struct state_change_s
     struct anim_dispatch_s     *anim_dispatch;
 }state_change_t, *state_change_p;
 
+typedef struct animation_command_s
+{
+    uint16_t                    id;
+    uint16_t                    unused;
+    float                       data[3];
+    struct animation_command_s *next;
+}animation_command_t, *animation_command_p;
+
+typedef struct animation_effect_s
+{
+    uint16_t                    id;
+    uint16_t                    frame;
+    uint16_t                    data;
+    uint16_t                    unused;
+    struct animation_effect_s  *next;
+}animation_effect_t, *animation_effect_p;
+
 /*
  * one animation frame structure
  */
@@ -189,17 +206,13 @@ typedef struct animation_frame_s
     uint16_t                    original_frame_rate;
     uint16_t                    state_id;
     
-    uint32_t                    command_move : 1;
-    uint32_t                    command_change_dir : 1;
-    uint32_t                    : 14;
-    uint32_t                    command_frame : 16;
-    float                       command_data[3];
+    struct animation_command_s *commands;
+    struct animation_effect_s  *effects;
+    
     float                       speed_x;                // Forward-backward speed
     float                       accel_x;                // Forward-backward accel
     float                       speed_y;                // Left-right speed
     float                       accel_y;                // Left-right accel
-    uint32_t                    anim_command;
-    uint32_t                    num_anim_commands;
     
     uint16_t                    frames_count;           // Number of frames
     uint16_t                    state_change_count;     // Number of animation statechanges
@@ -257,6 +270,8 @@ void SSBoneFrame_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t a
 void SSBoneFrame_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
 void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
 
+void Anim_AddCommand(struct animation_frame_s *anim, const animation_command_p command);
+void Anim_AddEffect(struct animation_frame_s *anim, const animation_effect_p effect);
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
 int  Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id);
