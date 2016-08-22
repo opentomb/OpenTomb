@@ -660,7 +660,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
     {
         animation_frame_p next_af = ss_anim->model->animations + ss_anim->next_animation;
         animation_frame_p current_af = ss_anim->model->animations + ss_anim->current_animation;
-        int16_t next_frame    = ss_anim->next_frame;
+        bool do_skip_frame = false;
 
         ///@DO COMMANDS
         for(animation_command_p command = current_af->commands; command; command = command->next)
@@ -674,10 +674,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                         entity->no_fix_all = 0x01;
                         Mat4_vec3_rot_macro(tr, entity->transform, command->data);
                         vec3_add(entity->transform + 12, entity->transform + 12, tr);
-                        Anim_SetNextFrame(ss_anim, ss_anim->period);            // skip one frame
-                        Entity_UpdateTransform(entity);
-                        Entity_UpdateRigidBody(entity, 1);
-                        Entity_DoAnimCommands(entity, ss_anim);
+                        do_skip_frame = true;
                     }
                     break;
 
@@ -704,7 +701,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
         ///@DO EFFECTS
         for(animation_effect_p effect = next_af->effects; effect; effect = effect->next)
         {
-            if(next_frame != effect->frame)
+            if(ss_anim->next_frame != effect->frame)
             {
                 continue;
             }
@@ -713,7 +710,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
             {
                 case TR_ANIMCOMMAND_PLAYSOUND:
                     {
-                        int16_t sound_index = 0x3FFFF & effect->data;
+                        int16_t sound_index = 0x3FFF & effect->data;
                         // Quick workaround for TR3 quicksand.
                         if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
                            (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
@@ -763,7 +760,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                                     entity->angles[0] += 180.0f;
                                     if(entity->move_type == MOVE_UNDERWATER)
                                     {
-                                        entity->angles[1] = -entity->angles[1];                         // for underwater case
+                                        entity->angles[1] = -entity->angles[1]; // for underwater case
                                     }
                                     if(entity->dir_flag == ENT_MOVE_BACKWARD)
                                     {
@@ -774,10 +771,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                                         entity->dir_flag = ENT_MOVE_BACKWARD;
                                     }
 
-                                    Anim_SetNextFrame(ss_anim, ss_anim->period);
-                                    Entity_UpdateTransform(entity);
-                                    Entity_UpdateRigidBody(entity, 1);
-                                    Entity_DoAnimCommands(entity, ss_anim);
+                                    do_skip_frame = true;
                                 }
                                 break;
 
@@ -885,6 +879,14 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                     };
                     break;
             };
+        }
+
+        if(do_skip_frame)
+        {
+            Anim_SetNextFrame(ss_anim, ss_anim->period);            // skip one frame
+            Entity_UpdateTransform(entity);
+            Entity_UpdateRigidBody(entity, 1);
+            Entity_DoAnimCommands(entity, ss_anim);
         }
     }
 }

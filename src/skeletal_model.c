@@ -146,7 +146,7 @@ void SkeletalModel_InterpolateFrames(skeletal_model_p model)
                 vec4_copy(bf->bone_tags[k].qrotate, anim->frames[0].bone_tags[k].qrotate);
             }
             bf++;
-
+            
             for(uint16_t j = 1; j < anim->frames_count; j++)
             {
                 for(uint16_t lerp_index = 1; lerp_index <= anim->original_frame_rate; lerp_index++)
