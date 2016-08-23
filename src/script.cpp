@@ -3135,9 +3135,9 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
 
 int lua_GetEntityAnim(lua_State * lua)
 {
-    if(lua_gettop(lua) < 1)
+    if(lua_gettop(lua) < 2)
     {
-        Con_Warning("getEntityAnim: expecting arguments (entity_id)");
+        Con_Warning("getEntityAnim: expecting arguments (entity_id, anim_type_id)");
         return 0;
     }
 
@@ -3150,11 +3150,17 @@ int lua_GetEntityAnim(lua_State * lua)
         return 0;
     }
 
-    lua_pushinteger(lua, ent->bf->animations.current_animation);
-    lua_pushinteger(lua, ent->bf->animations.current_frame);
-    lua_pushinteger(lua, ent->bf->animations.model->animations[ent->bf->animations.current_animation].max_frame);
+    int anim_id = lua_tointeger(lua, 2);
+    ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_id);
+    if(ss_anim && ss_anim->model)
+    {
+        lua_pushinteger(lua, ss_anim->next_animation);
+        lua_pushinteger(lua, ss_anim->next_frame);
+        lua_pushinteger(lua, ss_anim->model->animations[ss_anim->next_animation].max_frame);
+        return 3;
+    }
 
-    return 3;
+    return 0;
 }
 
 
