@@ -203,8 +203,12 @@ typedef struct animation_effect_s
 typedef struct animation_frame_s
 {
     uint32_t                    id;
-    uint16_t                    original_frame_rate;
     uint16_t                    state_id;
+    uint16_t                    max_frame;
+    uint16_t                    frames_count;           // Number of frames
+    uint16_t                    state_change_count;     // Number of animation statechanges
+    struct bone_frame_s        *frames;                 // Frame data
+    struct state_change_s      *state_change;           // Animation statechanges data
     
     struct animation_command_s *commands;
     struct animation_effect_s  *effects;
@@ -213,11 +217,6 @@ typedef struct animation_frame_s
     float                       accel_x;                // Forward-backward accel
     float                       speed_y;                // Left-right speed
     float                       accel_y;                // Left-right accel
-    
-    uint16_t                    frames_count;           // Number of frames
-    uint16_t                    state_change_count;     // Number of animation statechanges
-    struct bone_frame_s        *frames;                 // Frame data
-    struct state_change_s      *state_change;           // Animation statechanges data
 
     struct animation_frame_s   *next_anim;              // Next default animation
     int32_t                     next_frame;             // Next default frame
@@ -247,7 +246,6 @@ typedef struct skeletal_model_s
 
 void SkeletalModel_Clear(skeletal_model_p model);
 void SkeletalModel_GenParentsIndexes(skeletal_model_p model);
-void SkeletalModel_InterpolateFrames(skeletal_model_p models);
 
 void SkeletalModel_FillTransparency(skeletal_model_p model);
 void SkeletalModel_FillSkinnedMeshMap(skeletal_model_p model);

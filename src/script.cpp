@@ -3152,7 +3152,7 @@ int lua_GetEntityAnim(lua_State * lua)
 
     lua_pushinteger(lua, ent->bf->animations.current_animation);
     lua_pushinteger(lua, ent->bf->animations.current_frame);
-    lua_pushinteger(lua, ent->bf->animations.model->animations[ent->bf->animations.current_animation].frames_count);
+    lua_pushinteger(lua, ent->bf->animations.model->animations[ent->bf->animations.current_animation].max_frame);
 
     return 3;
 }

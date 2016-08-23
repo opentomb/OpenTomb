@@ -343,7 +343,7 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
     else
     {
         if((ent->bf->animations.model == NULL) || !Physics_IsBodyesInited(ent->physics) ||
-           ((force == 0) && (ent->bf->animations.model->animation_count == 1) && (ent->bf->animations.model->animations->frames_count == 1)))
+           ((force == 0) && (ent->bf->animations.model->animation_count == 1) && (ent->bf->animations.model->animations->max_frame == 1)))
         {
             return;
         }
@@ -1031,7 +1031,7 @@ void Entity_Frame(entity_p entity, float time)
                     }
                 }
                 else if(ss_anim->model && !(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK) &&
-                        ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->frames_count > 1)))
+                        ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->max_frame > 1)))
                 {
                     frame_switch_state = Anim_SetNextFrame(ss_anim, time);
                     if(frame_switch_state >= 0x01)

@@ -2425,7 +2425,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                 dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                 ss_anim->lerp = dt / ss_anim->period;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                t = ss_anim->model->animations[ss_anim->current_animation].max_frame;
 
                 if(ss_anim->current_frame < t - 1)
                 {
@@ -2458,7 +2458,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 {
                     ss_anim->current_animation = 2;
                     ss_anim->next_animation = 2;
-                    ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                    ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].max_frame - 1;
                     ss_anim->frame_time = 0.0;
                     ss_anim->current_state = WEAPON_STATE_IDLE_TO_HIDE;
                 }
@@ -2474,7 +2474,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
 
             case WEAPON_STATE_FIRE_TO_IDLE:
                 // Yes, same animation, reverse frames order;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                t = ss_anim->model->animations[ss_anim->current_animation].max_frame;
                 ss_anim->frame_time += time;
                 ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                 dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
@@ -2498,7 +2498,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                 dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                 ss_anim->lerp = dt / ss_anim->period;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                t = ss_anim->model->animations[ss_anim->current_animation].max_frame;
 
                 if(ent->character->cmd.ready_weapon)
                 {
@@ -2544,7 +2544,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 else
                 {
                     ss_anim->frame_time = 0.0;
-                    ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                    ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].max_frame - 1;
                     ss_anim->current_state = WEAPON_STATE_FIRE_TO_IDLE;
                 }
                 break;
@@ -2561,7 +2561,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                     dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                     ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                    t = ss_anim->model->animations[ss_anim->current_animation].max_frame;
 
                     if(ss_anim->current_frame < t - 1)
                     {
@@ -2585,7 +2585,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->frame_time = 0.0;
                     ss_anim->current_animation = 0;
                     ss_anim->next_animation = ss_anim->current_animation;
-                    ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                    ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].max_frame - 1;
                     ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
                     ss_anim->current_state = WEAPON_STATE_FIRE_TO_IDLE;
                 }
@@ -2593,7 +2593,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
 
             case WEAPON_STATE_IDLE_TO_HIDE:
                 // Yes, same animation, reverse frames order;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                t = ss_anim->model->animations[ss_anim->current_animation].max_frame;
                 ss_anim->frame_time += time;
                 ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                 dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
@@ -2640,7 +2640,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
     */
     int16_t old_anim = ss_anim->next_animation;
     int16_t old_frame = ss_anim->next_frame;
-    
+
     if(ss_anim->model->animation_count > 4)
     {
         float dt;
@@ -2683,7 +2683,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                 dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                 ss_anim->lerp = dt / ss_anim->period;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                t = ss_anim->model->animations[ss_anim->current_animation].max_frame;
 
                 if(ss_anim->current_frame < t - 1)
                 {
@@ -2732,7 +2732,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
 
             case WEAPON_STATE_FIRE_TO_IDLE:
                 // Yes, same animation, reverse frames order;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                t = ss_anim->model->animations[ss_anim->current_animation].max_frame;
                 ss_anim->frame_time += time;
                 ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                 dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
@@ -2756,7 +2756,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                 dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                 ss_anim->lerp = dt / ss_anim->period;
-                t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                t = ss_anim->model->animations[ss_anim->current_animation].max_frame;
 
                 if(ent->character->cmd.ready_weapon)
                 {
@@ -2802,7 +2802,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 else
                 {
                     ss_anim->frame_time = 0.0;
-                    ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                    ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].max_frame - 1;
                     ss_anim->current_state = WEAPON_STATE_FIRE_TO_IDLE;
                 }
                 break;
@@ -2819,7 +2819,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                     dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
                     ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                    t = ss_anim->model->animations[ss_anim->current_animation].max_frame;
 
                     if(ss_anim->current_frame < t - 1)
                     {
@@ -2843,14 +2843,14 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->frame_time = 0.0;
                     ss_anim->current_animation = 0;
                     ss_anim->next_animation = ss_anim->current_animation;
-                    ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count - 1;
+                    ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].max_frame - 1;
                     ss_anim->next_frame = (ss_anim->current_frame > 0) ? (ss_anim->current_frame - 1) : (0);
                     ss_anim->current_state = WEAPON_STATE_FIRE_TO_IDLE;
                 }
                 break;
 
             case WEAPON_STATE_IDLE_TO_HIDE:
-                t = ss_anim->model->animations[ss_anim->current_animation].frames_count;
+                t = ss_anim->model->animations[ss_anim->current_animation].max_frame;
                 ss_anim->frame_time += time;
                 ss_anim->current_frame = (ss_anim->frame_time) / ss_anim->period;
                 dt = ss_anim->frame_time - (float)ss_anim->current_frame * ss_anim->period;
