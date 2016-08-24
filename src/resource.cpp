@@ -1625,7 +1625,7 @@ void TR_SkeletalModelInterpolateFrames(skeletal_model_p model, tr_animation_t *t
             }
 
             /*
-             * swap old and new animation bone brames
+             * swap old and new animation bone frames
              * free old bone frames;
              */
             for(uint16_t j = 0; j < anim->frames_count; j++)
@@ -1640,6 +1640,10 @@ void TR_SkeletalModelInterpolateFrames(skeletal_model_p model, tr_animation_t *t
             free(anim->frames);
             anim->frames = new_bone_frames;
             anim->frames_count = new_frames_count;
+        }
+        if(anim->max_frame > anim->frames_count)
+        {
+            anim->max_frame = anim->frames_count;                               // i.e.: unused animations
         }
     }
 }

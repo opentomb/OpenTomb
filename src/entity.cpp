@@ -668,7 +668,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
             switch(command->id)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
-                    if(ss_anim->changing_next >= 0x02)                          // This command executes ONLY at the end of animation.
+                    if((ss_anim->onEndFrame == NULL) && (ss_anim->changing_next >= 0x02)) // This command executes ONLY at the end of animation.
                     {
                         float tr[3];
                         entity->no_fix_all = 0x01;
