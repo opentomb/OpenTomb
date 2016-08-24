@@ -328,7 +328,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
         end
     end
     
-    local t = getEntityAnim(object_id);
+    local t = getEntityAnim(object_id, ANIM_TYPE_BASE);
     
     if(on.ready_anim < 0 or on.ready_anim == t) then
         if(key ~= nil) then
@@ -347,7 +347,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
         setEntityActivity(object_id, 1);
         addTask(
         function()
-            local a, f, c = getEntityAnim(actor_id);
+            local a, f, c = getEntityAnim(actor_id, ANIM_TYPE_BASE);
             if(on.switch_frame ~= nil) then
                 c = on.switch_frame
             end
@@ -371,7 +371,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
         setEntityActivity(object_id, 1);
         addTask(
         function()
-            local a, f, c = getEntityAnim(actor_id);
+            local a, f, c = getEntityAnim(actor_id, ANIM_TYPE_BASE);
             if(off.switch_frame ~= nil) then
                 c = off.switch_frame
             end

@@ -65,18 +65,25 @@ typedef struct ss_bone_tag_s
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 }ss_bone_tag_t, *ss_bone_tag_p;
 
-
+// changing info:
+// 0x00 - no changes; 
+// 0x01 - next frame, same anim;
+// 0x02 - next frame, next anim (anim ended, may be loop);
+// 0x03 - new frame, new anim (by state change info);
+// 0x04 - rough change by set animation;
 typedef struct ss_animation_s
 {
     uint16_t                    type : 15;
     uint16_t                    enabled : 1;
+    uint16_t                    changing_next : 8;
+    uint16_t                    changing_curr : 8;
     int16_t                     current_state;
     int16_t                     next_state;
-    int16_t                     current_animation;                              //
-    int16_t                     next_animation;                                 //
-    int16_t                     current_frame;                                  //
-    int16_t                     next_frame;                                     //
-
+    int16_t                     current_animation;
+    int16_t                     current_frame;
+    int16_t                     next_animation;
+    int16_t                     next_frame;
+    
     uint16_t                    anim_frame_flags;                               // base animation control flags
     uint16_t                    anim_ext_flags;                                 // additional animation control flags
 
@@ -93,7 +100,7 @@ typedef struct ss_animation_s
     float                       lerp;
 
     int                       (*onFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, float time);
-    void                      (*onEndFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim, int state);
+    void                      (*onEndFrame)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     struct skeletal_model_s    *model;                                          // pointer to the base model
     struct ss_animation_s      *next;
     struct ss_animation_s      *prev;
@@ -105,6 +112,8 @@ typedef struct ss_animation_s
 typedef struct ss_bone_frame_s
 {
     uint16_t                    bone_tag_count;                                 // number of bones
+    uint16_t                    unused;
+    
     struct ss_bone_tag_s       *bone_tags;                                      // array of bones
     float                       pos[3];                                         // position (base offset)
     float                       bb_min[3];                                      // bounding box min coordinates
@@ -130,15 +139,12 @@ typedef struct bone_tag_s
 typedef struct bone_frame_s
 {
     uint16_t            bone_tag_count;                                         // number of bones
-    uint16_t            command;                                                // & 0x01 - move need, &0x02 - 180 rotate need
+    uint16_t            unused;                                                
     struct bone_tag_s  *bone_tags;                                              // bones data
     float               pos[3];                                                 // position (base offset)
     float               bb_min[3];                                              // bounding box min coordinates
     float               bb_max[3];                                              // bounding box max coordinates
     float               centre[3];                                              // bounding box centre
-    float               move[3];                                                // move command data
-    float               v_Vertical;                                             // jump command data
-    float               v_Horizontal;                                           // jump command data
 }bone_frame_t, *bone_frame_p ;
 
 /*
@@ -174,28 +180,46 @@ typedef struct state_change_s
     struct anim_dispatch_s     *anim_dispatch;
 }state_change_t, *state_change_p;
 
+typedef struct animation_command_s
+{
+    uint16_t                    id;
+    uint16_t                    unused;
+    float                       data[3];
+    struct animation_command_s *next;
+}animation_command_t, *animation_command_p;
+
+typedef struct animation_effect_s
+{
+    uint16_t                    id;
+    int16_t                     frame;
+    int16_t                     data;
+    int16_t                     unused;
+    struct animation_effect_s  *next;
+}animation_effect_t, *animation_effect_p;
+
 /*
  * one animation frame structure
  */
 typedef struct animation_frame_s
 {
     uint32_t                    id;
-    uint8_t                     original_frame_rate;
+    uint16_t                    state_id;
+    uint16_t                    max_frame;
+    uint16_t                    frames_count;           // Number of frames
+    uint16_t                    state_change_count;     // Number of animation statechanges
+    struct bone_frame_s        *frames;                 // Frame data
+    struct state_change_s      *state_change;           // Animation statechanges data
+    
+    struct animation_command_s *commands;
+    struct animation_effect_s  *effects;
+    
     float                       speed_x;                // Forward-backward speed
     float                       accel_x;                // Forward-backward accel
     float                       speed_y;                // Left-right speed
     float                       accel_y;                // Left-right accel
-    uint32_t                    anim_command;
-    uint32_t                    num_anim_commands;
-    uint16_t                    state_id;
-    uint16_t                    frames_count;           // Number of frames
-    struct bone_frame_s        *frames;                 // Frame data
-
-    uint16_t                    state_change_count;     // Number of animation statechanges
-    struct state_change_s      *state_change;           // Animation statechanges data
 
     struct animation_frame_s   *next_anim;              // Next default animation
-    int                         next_frame;             // Next default frame
+    int32_t                     next_frame;             // Next default frame
 }animation_frame_t, *animation_frame_p;
 
 /*
@@ -222,7 +246,6 @@ typedef struct skeletal_model_s
 
 void SkeletalModel_Clear(skeletal_model_p model);
 void SkeletalModel_GenParentsIndexes(skeletal_model_p model);
-void SkeletalModel_InterpolateFrames(skeletal_model_p models);
 
 void SkeletalModel_FillTransparency(skeletal_model_p model);
 void SkeletalModel_FillSkinnedMeshMap(skeletal_model_p model);
@@ -239,17 +262,19 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animati
 void SSBoneFrame_SetTrget(struct ss_animation_s *ss_anim, uint16_t targeted_bone, const float target_pos[3], const float bone_dir[3]);
 void SSBoneFrame_SetTargetingAxisMod(struct ss_animation_s *ss_anim, const float mod[3]);
 void SSBoneFrame_SetTargetingLimit(struct ss_animation_s *ss_anim, const float limit[4]);
-void SSBoneFrame_SetAnimation(struct ss_bone_frame_s *bf, int anim_type, int animation, int frame);
 struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type_id);
 struct ss_animation_s *SSBoneFrame_GetOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
 void SSBoneFrame_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_type);
 void SSBoneFrame_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
 void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
 
+void Anim_AddCommand(struct animation_frame_s *anim, const animation_command_p command);
+void Anim_AddEffect(struct animation_frame_s *anim, const animation_effect_p effect);
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
 int  Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id);
-void Anim_GetNextFrame(struct ss_animation_s *ss_anim, float time, struct state_change_s *stc, int16_t *frame, int16_t *anim, uint16_t anim_flags);
+void Anim_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame);
+int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time);
 
 #ifdef	__cplusplus
 }

@@ -49,15 +49,15 @@
 
 #define OSCILLATE_HANG_USE 0
 
-void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state == 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         float *v = ent->character->traversed_object->transform + 12;
         int i = v[0] / TR_METERING_SECTORSIZE;
-        v[0] = i * TR_METERING_SECTORSIZE + 512.0;
+        v[0] = i * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE / 2;
         i = v[1] / TR_METERING_SECTORSIZE;
-        v[1] = i * TR_METERING_SECTORSIZE + 512.0;
+        v[1] = i * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE / 2;
         SSBoneFrame_Update(ent->bf, 0.0f);
         Entity_UpdateRigidBody(ent->character->traversed_object, 1);
         ent->character->traversed_object = NULL;
@@ -65,9 +65,9 @@ void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim, int state)
     }
 }
 
-void ent_set_on_floor(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_set_on_floor(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state == 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         ent->move_type = MOVE_ON_FLOOR;
         ent->transform[12 + 2] = ent->character->height_info.floor_hit.point[2];
@@ -78,19 +78,10 @@ void ent_set_on_floor(entity_p ent, ss_animation_p ss_anim, int state)
     }
 }
 
-void ent_set_turn_fast(entity_p ent, ss_animation_p ss_anim, int state)
-{
-    if(state == 0x02)
-    {
-        ent->bf->animations.next_state = TR_STATE_LARA_TURN_FAST;
-        ss_anim->onEndFrame = NULL;
-    }
-}
-
-void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim)
 {
     animation_frame_p af = ss_anim->model->animations + ss_anim->current_animation;
-    if(ss_anim->current_frame >= af->frames_count - 1)
+    if((ss_anim->changing_next >= 0x02) && (ss_anim->changing_next < 0x04))
     {
         float p[3], move[3];
 
@@ -98,7 +89,7 @@ void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim, int stat
         Entity_SetAnimation(ent, ANIM_TYPE_BASE, af->next_anim->id, af->next_frame);
         Mat4_vec3_mul(p, ent->transform, ent->bf->bone_tags[0].full_transform + 12);
         vec3_sub(move, move, p);
-        vec3_add(ent->transform+12, ent->transform+12, move);
+        vec3_add(ent->transform + 12, ent->transform + 12, move);
         ent->transform[12 + 2] = ent->character->climb.point[2];
         SSBoneFrame_Update(ent->bf, 0.0f);
         Entity_UpdateRigidBody(ent, 1);
@@ -108,46 +99,55 @@ void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim, int stat
     }
 }
 
-void ent_set_underwater(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_set_turn_fast(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state == 0x02)
+    if(ss_anim->changing_next == 0x02)
+    {
+        ent->bf->animations.next_state = TR_STATE_LARA_TURN_FAST;
+        ss_anim->onEndFrame = NULL;
+    }
+}
+
+void ent_set_underwater(entity_p ent, ss_animation_p ss_anim)
+{
+    if(ss_anim->changing_next >= 0x02)
     {
         ent->move_type = MOVE_UNDERWATER;
         ss_anim->onEndFrame = NULL;
     }
 }
 
-void ent_set_free_falling(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_set_free_falling(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state == 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         ent->move_type = MOVE_FREE_FALLING;
         ss_anim->onEndFrame = NULL;
     }
 }
 
-void ent_set_cmd_slide(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_set_cmd_slide(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state == 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         ent->character->resp.slide = 0x01;
         ss_anim->onEndFrame = NULL;
     }
 }
 
-void ent_correct_diving_angle(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_correct_diving_angle(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state == 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
-        ent->angles[1] = -45.0;
+        ent->angles[1] = -45.0f;
         Entity_UpdateTransform(ent);
         ss_anim->onEndFrame = NULL;
     }
 }
 
-void ent_to_on_water(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_to_on_water(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state == 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         ent->transform[12 + 2] = ent->character->height_info.transition_level;
         Entity_GhostUpdate(ent);
@@ -156,24 +156,24 @@ void ent_to_on_water(entity_p ent, ss_animation_p ss_anim, int state)
     }
 }
 
-void ent_climb_out_of_water(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_climb_out_of_water(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state == 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         float *v = ent->character->climb.point;
-
-        vec3_add_mul(ent->transform+12, v, ent->transform+4, 48.0);             // temporary stick
+        vec3_add_mul(ent->transform + 12, v, ent->transform + 4, 48.0f);        // temporary stick
         ent->transform[12 + 2] = v[2];
         SSBoneFrame_Update(ent->bf, 0.0f);
         Entity_UpdateRigidBody(ent, 1);
         Entity_GhostUpdate(ent);
+        ent->no_fix_all = 0x01;
         ss_anim->onEndFrame = NULL;
     }
 }
 
-void ent_to_edge_climb(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_to_edge_climb(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state == 0x02)
+    if(ss_anim->changing_next >= 0x01)
     {
         float *v = ent->character->climb.point;
         ent->transform[12 + 0] = v[0] - ent->transform[4 + 0] * ent->bf->bb_max[1];
@@ -186,9 +186,9 @@ void ent_to_edge_climb(entity_p ent, ss_animation_p ss_anim, int state)
     }
 }
 
-void ent_to_monkey_swing(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_to_monkey_swing(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state == 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         ent->move_type = MOVE_MONKEYSWING;
         ent->transform[12 + 2] = ent->character->height_info.ceiling_hit.point[2] - ent->bf->bb_max[2];
@@ -197,9 +197,9 @@ void ent_to_monkey_swing(entity_p ent, ss_animation_p ss_anim, int state)
     }
 }
 
-void ent_crawl_to_climb(entity_p ent, ss_animation_p ss_anim, int state)
+void ent_crawl_to_climb(entity_p ent, ss_animation_p ss_anim)
 {
-    if(state == 0x02)
+    if(ss_anim->changing_next >= 0x02)
     {
         character_command_p cmd = &ent->character->cmd;
 
@@ -215,7 +215,7 @@ void ent_crawl_to_climb(entity_p ent, ss_animation_p ss_anim, int state)
         }
 
         ent->no_fix_all = 0x01;
-        ent_to_edge_climb(ent, ss_anim, state);
+        ent_to_edge_climb(ent, ss_anim);
         ss_anim->onEndFrame = NULL;
     }
 }
@@ -242,7 +242,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
     ss_anim->anim_frame_flags = ANIM_NORMAL_CONTROL;
 
     int8_t low_vertical_space = (curr_fc->floor_hit.hit && curr_fc->ceiling_hit.hit && (curr_fc->ceiling_hit.point[2] - curr_fc->floor_hit.point[2] < ent->character->Height - LARA_HANG_VERTICAL_EPSILON));
-    int8_t last_frame = ss_anim->model->animations[ss_anim->current_animation].frames_count <= ss_anim->current_frame + 1;
+    int8_t last_frame = ss_anim->model->animations[ss_anim->current_animation].max_frame <= ss_anim->current_frame + 1;
 
     if(resp->kill == 1)   // Stop any music, if Lara is dead.
     {
@@ -442,8 +442,8 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                             pos[2] = climb->edge_point[2] - 512.0;
                             vec3_copy(climb->point, climb->edge_point);
                             Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_CLIMB_2CLICK, 0);
-                            ent->no_fix_all = 0x01;
                             ss_anim->onEndFrame = ent_set_on_floor_after_climb;
+                            ent->no_fix_all = 0x01;
                             break;
                         }
                         else if(pos[2] + 896.0 >= climb->edge_point[2])
@@ -452,8 +452,8 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                             pos[2] = climb->edge_point[2] - 768.0;
                             vec3_copy(climb->point, climb->edge_point);
                             Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_CLIMB_3CLICK, 0);
-                            ent->no_fix_all = 0x01;
                             ss_anim->onEndFrame = ent_set_on_floor_after_climb;
+                            ent->no_fix_all = 0x01;
                             break;
                         }
                     }   // end IF MOVE_LITTLE_CLIMBING
@@ -1801,7 +1801,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_CLIMB_TO_CRAWL:
             cmd->rot[0] = 0;
             ent->no_fix_all = 0x01;
-            ss_anim->onEndFrame = ent_set_on_floor_after_climb;
+            ss_anim->onEndFrame = ent_set_on_floor_after_climb;;
             break;
 
         case TR_STATE_LARA_HANG:
@@ -1892,11 +1892,13 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     {
                         vec3_copy(climb->point, climb->edge_point);
                         ss_anim->next_state = TR_STATE_LARA_CLIMB_TO_CRAWL;     // crawlspace climb
+                        ss_anim->onEndFrame = ent_to_edge_climb;
                     }
                     else if(climb->edge_hit && (climb->next_z_space >= ent->character->Height - LARA_HANG_VERTICAL_EPSILON))
                     {
                         vec3_copy(climb->point, climb->edge_point);
                         ss_anim->next_state = (cmd->shift)?(TR_STATE_LARA_HANDSTAND):(TR_STATE_LARA_GRABBING);               // climb up
+                        ss_anim->onEndFrame = ent_to_edge_climb;
                     }
                     else
                     {
@@ -2542,7 +2544,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 if(low_vertical_space)
                 {
                     Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_TO_LAND_LOW, 0);
-                    ent_climb_out_of_water(ent, ss_anim, 0x02);
+                    ent_climb_out_of_water(ent, ss_anim);
                 }
                 else
                 {

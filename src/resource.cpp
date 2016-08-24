@@ -99,6 +99,7 @@ void     TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, struct bone
 int      TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind);
 int      TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind);
 uint32_t TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, class VT_Level *tr);
+void     TR_SkeletalModelInterpolateFrames(skeletal_model_p models);
 
 // Main functions which are used to translate legacy TR floor data
 // to native OpenTomb structs.
@@ -838,8 +839,8 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->floor_corners[0][2] -= (abs((float)raw_x_slant) * TR_METERING_STEP);
-                        sector->floor_corners[1][2] -= (abs((float)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[0][2] -= (fabs((float)raw_x_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (fabs((float)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
@@ -849,8 +850,8 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->floor_corners[1][2] -= (abs((float)raw_y_slant) * TR_METERING_STEP);
-                        sector->floor_corners[2][2] -= (abs((float)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[1][2] -= (fabs((float)raw_y_slant) * TR_METERING_STEP);
+                        sector->floor_corners[2][2] -= (fabs((float)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -874,8 +875,8 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     }
                     else if(raw_x_slant < 0)
                     {
-                        sector->ceiling_corners[1][2] += (abs((float)raw_x_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[0][2] += (abs((float)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[1][2] += (fabs((float)raw_x_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (fabs((float)raw_x_slant) * TR_METERING_STEP);
                     }
 
                     if(raw_y_slant > 0)
@@ -885,8 +886,8 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                     }
                     else if(raw_y_slant < 0)
                     {
-                        sector->ceiling_corners[0][2] += (abs((float)raw_y_slant) * TR_METERING_STEP);
-                        sector->ceiling_corners[3][2] += (abs((float)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[0][2] += (fabs((float)raw_y_slant) * TR_METERING_STEP);
+                        sector->ceiling_corners[3][2] += (fabs((float)raw_y_slant) * TR_METERING_STEP);
                     }
 
                     entry++;
@@ -1147,73 +1148,6 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
     }
 
     return ret;
-}
-
-
-void GenerateAnimCommandsTransform(skeletal_model_p model, int16_t *base_anim_commands_array)
-{
-    if(!base_anim_commands_array)
-    {
-        return;
-    }
-
-    //Sys_DebugLog("anim_transform.txt", "MODEL[%d]", model->id);
-    for(uint16_t anim = 0; anim < model->animation_count; anim++)
-    {
-        if(model->animations[anim].num_anim_commands > 255)
-        {
-            continue;                                                           // If no anim commands or current anim has more than 255 (according to TRosettaStone).
-        }
-
-        animation_frame_p af  = model->animations + anim;
-        int16_t *pointer      = base_anim_commands_array + af->anim_command;
-
-        for(uint32_t i = 0; i < af->num_anim_commands; i++, pointer++)
-        {
-            switch(*pointer)
-            {
-                case TR_ANIMCOMMAND_SETPOSITION:
-                    // This command executes ONLY at the end of animation.
-                    af->frames[af->frames_count-1].move[0] = (float)(*++pointer);                          // x = x;
-                    af->frames[af->frames_count-1].move[2] =-(float)(*++pointer);                          // z =-y
-                    af->frames[af->frames_count-1].move[1] = (float)(*++pointer);                          // y = z
-                    af->frames[af->frames_count-1].command |= ANIM_CMD_MOVE;
-                    //Sys_DebugLog("anim_transform.txt", "move[anim = %d, frame = %d, frames = %d]", anim, af->frames_count-1, af->frames_count);
-                    break;
-
-                case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    af->frames[af->frames_count-1].v_Vertical   = *++pointer;
-                    af->frames[af->frames_count-1].v_Horizontal = *++pointer;
-                    af->frames[af->frames_count-1].command |= ANIM_CMD_JUMP;
-                    break;
-
-                case TR_ANIMCOMMAND_EMPTYHANDS:
-                    break;
-
-                case TR_ANIMCOMMAND_KILL:
-                    break;
-
-                case TR_ANIMCOMMAND_PLAYSOUND:
-                    ++pointer;
-                    ++pointer;
-                    break;
-
-                case TR_ANIMCOMMAND_PLAYEFFECT:
-                    {
-                        int frame = *++pointer;
-                        switch(*++pointer & 0x3FFF)
-                        {
-                            case TR_EFFECT_CHANGEDIRECTION:
-                                af->frames[frame].command |= ANIM_CMD_CHANGE_DIRECTION;
-                                //Con_Printf("ROTATE: anim = %d, frame = %d of %d", anim, frame, af->frames_count);
-                                //Sys_DebugLog("anim_transform.txt", "dir[anim = %d, frame = %d, frames = %d]", anim, frame, af->frames_count);
-                                break;
-                        }
-                    }
-                    break;
-            }
-        }
-    }
 }
 
 /**   Assign animated texture to a polygon.
@@ -1619,9 +1553,105 @@ void TR_GenRoomMesh(struct room_s *room, size_t room_index, struct anim_seq_s *a
 }
 
 
-void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct base_mesh_s *base_mesh_array, int16_t *base_anim_commands_array, class VT_Level *tr)
+void TR_SkeletalModelInterpolateFrames(skeletal_model_p model, tr_animation_t *tr_animations)
 {
-    tr_moveable_t *tr_moveable;
+    uint16_t new_frames_count;
+    animation_frame_p anim = model->animations;
+    bone_frame_p bf, new_bone_frames;
+    float lerp, t;
+
+    for(uint16_t i = 0; i < model->animation_count; i++, anim++)
+    {
+        tr_animation_t *tr_anim = tr_animations + i;
+        if(anim->frames_count > 1 && tr_anim->frame_rate > 1)                   // we can't interpolate one frame or rate < 2!
+        {
+            new_frames_count = (uint16_t)tr_anim->frame_rate * (anim->frames_count - 1) + 1;
+            bf = new_bone_frames = (bone_frame_p)malloc(new_frames_count * sizeof(bone_frame_t));
+
+            /*
+             * the first frame does not changes
+             */
+            bf->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
+            bf->bone_tag_count = model->mesh_count;
+            vec3_set_zero(bf->pos);
+            vec3_copy(bf->centre, anim->frames[0].centre);
+            vec3_copy(bf->pos, anim->frames[0].pos);
+            vec3_copy(bf->bb_max, anim->frames[0].bb_max);
+            vec3_copy(bf->bb_min, anim->frames[0].bb_min);
+            for(uint16_t k = 0; k < model->mesh_count; k++)
+            {
+                vec3_copy(bf->bone_tags[k].offset, anim->frames[0].bone_tags[k].offset);
+                vec4_copy(bf->bone_tags[k].qrotate, anim->frames[0].bone_tags[k].qrotate);
+            }
+            bf++;
+
+            for(uint16_t j = 1; j < anim->frames_count; j++)
+            {
+                for(uint16_t lerp_index = 1; lerp_index <= tr_anim->frame_rate; lerp_index++)
+                {
+                    vec3_set_zero(bf->pos);
+                    lerp = ((float)lerp_index) / (float)tr_anim->frame_rate;
+                    t = 1.0f - lerp;
+
+                    bf->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
+                    bf->bone_tag_count = model->mesh_count;
+
+                    bf->centre[0] = t * anim->frames[j-1].centre[0] + lerp * anim->frames[j].centre[0];
+                    bf->centre[1] = t * anim->frames[j-1].centre[1] + lerp * anim->frames[j].centre[1];
+                    bf->centre[2] = t * anim->frames[j-1].centre[2] + lerp * anim->frames[j].centre[2];
+
+                    bf->pos[0] = t * anim->frames[j-1].pos[0] + lerp * anim->frames[j].pos[0];
+                    bf->pos[1] = t * anim->frames[j-1].pos[1] + lerp * anim->frames[j].pos[1];
+                    bf->pos[2] = t * anim->frames[j-1].pos[2] + lerp * anim->frames[j].pos[2];
+
+                    bf->bb_max[0] = t * anim->frames[j-1].bb_max[0] + lerp * anim->frames[j].bb_max[0];
+                    bf->bb_max[1] = t * anim->frames[j-1].bb_max[1] + lerp * anim->frames[j].bb_max[1];
+                    bf->bb_max[2] = t * anim->frames[j-1].bb_max[2] + lerp * anim->frames[j].bb_max[2];
+
+                    bf->bb_min[0] = t * anim->frames[j-1].bb_min[0] + lerp * anim->frames[j].bb_min[0];
+                    bf->bb_min[1] = t * anim->frames[j-1].bb_min[1] + lerp * anim->frames[j].bb_min[1];
+                    bf->bb_min[2] = t * anim->frames[j-1].bb_min[2] + lerp * anim->frames[j].bb_min[2];
+
+                    for(uint16_t k = 0; k < model->mesh_count; k++)
+                    {
+                        bf->bone_tags[k].offset[0] = t * anim->frames[j-1].bone_tags[k].offset[0] + lerp * anim->frames[j].bone_tags[k].offset[0];
+                        bf->bone_tags[k].offset[1] = t * anim->frames[j-1].bone_tags[k].offset[1] + lerp * anim->frames[j].bone_tags[k].offset[1];
+                        bf->bone_tags[k].offset[2] = t * anim->frames[j-1].bone_tags[k].offset[2] + lerp * anim->frames[j].bone_tags[k].offset[2];
+
+                        vec4_slerp(bf->bone_tags[k].qrotate, anim->frames[j-1].bone_tags[k].qrotate, anim->frames[j].bone_tags[k].qrotate, lerp);
+                    }
+                    bf++;
+                }
+            }
+
+            /*
+             * swap old and new animation bone frames
+             * free old bone frames;
+             */
+            for(uint16_t j = 0; j < anim->frames_count; j++)
+            {
+                if(anim->frames[j].bone_tag_count)
+                {
+                    anim->frames[j].bone_tag_count = 0;
+                    free(anim->frames[j].bone_tags);
+                    anim->frames[j].bone_tags = NULL;
+                }
+            }
+            free(anim->frames);
+            anim->frames = new_bone_frames;
+            anim->frames_count = new_frames_count;
+        }
+        if(anim->max_frame > anim->frames_count)
+        {
+            anim->max_frame = anim->frames_count;                               // i.e.: unused animations
+        }
+    }
+}
+
+
+void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct base_mesh_s *base_mesh_array, class VT_Level *tr)
+{
+    tr_moveable_t *tr_moveable = &tr->moveables[model_id];      // original tr structure
     tr_animation_t *tr_animation;
 
     uint32_t frame_offset, frame_step;
@@ -1634,7 +1664,6 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
     mesh_tree_tag_p tree_tag;
     animation_frame_p anim;
 
-    tr_moveable = &tr->moveables[model_id];                                    // original tr structure
     model->collision_map = (uint16_t*)malloc(model->mesh_count * sizeof(uint16_t));
     model->mesh_tree = (mesh_tree_tag_p)calloc(model->mesh_count, sizeof(mesh_tree_tag_t));
     tree_tag = model->mesh_tree;
@@ -1696,24 +1725,21 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         model->animation_count = 1;
         model->animations = (animation_frame_p)malloc(sizeof(animation_frame_t));
         model->animations->frames_count = 1;
+        model->animations->max_frame = 1;
         model->animations->frames = (bone_frame_p)calloc(model->animations->frames_count , sizeof(bone_frame_t));
         bone_frame = model->animations->frames;
 
         model->animations->id = 0;
-        model->animations->next_anim = NULL;
+        model->animations->next_anim = model->animations;
         model->animations->next_frame = 0;
         model->animations->state_change = NULL;
         model->animations->state_change_count = 0;
-        model->animations->original_frame_rate = 1;
-
+        model->animations->commands = NULL;
+        model->animations->effects = NULL;
         bone_frame->bone_tag_count = model->mesh_count;
         bone_frame->bone_tags = (bone_tag_p)malloc(bone_frame->bone_tag_count * sizeof(bone_tag_t));
-
         vec3_set_zero(bone_frame->pos);
-        vec3_set_zero(bone_frame->move);
-        bone_frame->v_Horizontal = 0.0;
-        bone_frame->v_Vertical = 0.0;
-        bone_frame->command = 0x00;
+
         for(uint16_t k = 0; k < bone_frame->bone_tag_count; k++)
         {
             tree_tag = model->mesh_tree + k;
@@ -1750,7 +1776,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
     anim = model->animations;
     for(uint16_t i = 0; i < model->animation_count; i++, anim++)
     {
-        tr_animation = &tr->animations[tr_moveable->animation_index+i];
+        tr_animation = &tr->animations[tr_moveable->animation_index + i];
         frame_offset = tr_animation->frame_offset / 2;
         uint16_t l_start = 0x09;
         if(tr->game_version == TR_I || tr->game_version == TR_I_DEMO || tr->game_version == TR_I_UB)
@@ -1760,18 +1786,16 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         frame_step = tr_animation->frame_size;
 
         anim->id = i;
-        anim->original_frame_rate = tr_animation->frame_rate;
-
         anim->speed_x = tr_animation->speed;
         anim->accel_x = tr_animation->accel;
         anim->speed_y = tr_animation->accel_lateral;
         anim->accel_y = tr_animation->speed_lateral;
-
-        anim->anim_command = tr_animation->anim_command;
-        anim->num_anim_commands = tr_animation->num_anim_commands;
+        anim->commands = NULL;
+        anim->effects = NULL;
         anim->state_id = tr_animation->state_id;
 
-        anim->frames_count = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index+i);
+        anim->max_frame = tr_animation->frame_end - tr_animation->frame_start + 1;
+        anim->frames_count = TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index + i);
 
         //Sys_DebugLog(LOG_FILENAME, "Anim[%d], %d", tr_moveable->animation_index, TR_GetNumFramesForAnimation(tr, tr_moveable->animation_index));
 
@@ -1779,40 +1803,48 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         // Max. amount of AnimCommands is 255, larger numbers are considered as 0.
         // See http://evpopov.com/dl/TR4format.html#Animations for details.
 
-        if( (anim->num_anim_commands > 0) && (anim->num_anim_commands <= 255) )
+        if((tr_animation->num_anim_commands > 0) && (tr_animation->num_anim_commands <= 255))
         {
             // Calculate current animation anim command block offset.
-            int16_t *pointer = base_anim_commands_array + anim->anim_command;
-
-            for(uint32_t count = 0; count < anim->num_anim_commands; count++, pointer++)
+            int16_t *pointer = tr->anim_commands + tr_animation->anim_command;
+            animation_command_t command;
+            animation_effect_t effect;
+            for(uint32_t count = 0; count < tr_animation->num_anim_commands; count++, pointer++)
             {
-                switch(*pointer)
+                command.id = *pointer;
+                switch(command.id)
                 {
                     case TR_ANIMCOMMAND_PLAYEFFECT:
                     case TR_ANIMCOMMAND_PLAYSOUND:
-                        // Recalculate absolute frame number to relative.
-                        ///@FIXED: was unpredictable behavior.
-                        *(pointer + 1) -= tr_animation->frame_start;
-                        pointer += 2;
+                        effect.id = command.id;
+                        effect.frame = *(++pointer) - tr_animation->frame_start;
+                        effect.data = *(++pointer);
+                        Anim_AddEffect(anim, &effect);
                         break;
 
                     case TR_ANIMCOMMAND_SETPOSITION:
-                        // Parse through 3 operands.
-                        pointer += 3;
+                        command.data[0] = (float)(*++pointer);     // x = x;
+                        command.data[2] =-(float)(*++pointer);     // z =-y
+                        command.data[1] = (float)(*++pointer);     // y = z
+                        Anim_AddCommand(anim, &command);
                         break;
 
                     case TR_ANIMCOMMAND_JUMPDISTANCE:
-                        // Parse through 2 operands.
-                        pointer += 2;
+                        command.data[0] = (float)(*++pointer);     // v_z
+                        command.data[1] = (float)(*++pointer);     // v_y
+                        command.data[2] = 0.0f;
+                        Anim_AddCommand(anim, &command);
                         break;
 
+                    case TR_ANIMCOMMAND_KILL:
+                    case TR_ANIMCOMMAND_EMPTYHANDS:
                     default:
-                        // All other commands have no operands.
+                        vec3_set_zero(command.data);
+                        Anim_AddCommand(anim, &command);
                         break;
-                }
+                };
             }
         }
-
 
         if(anim->frames_count <= 0)
         {
@@ -1832,7 +1864,6 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
             bone_frame->bone_tag_count = model->mesh_count;
             bone_frame->bone_tags = (bone_tag_p)malloc(model->mesh_count * sizeof(bone_tag_t));
             vec3_set_zero(bone_frame->pos);
-            vec3_set_zero(bone_frame->move);
             TR_GetBFrameBB_Pos(tr, frame_offset, bone_frame);
 
             if(frame_offset >= tr->frame_data_size)
@@ -1939,7 +1970,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
     /*
      * Animations interpolation to 1/30 sec like in original. Needed for correct state change works.
      */
-    SkeletalModel_InterpolateFrames(model);
+    TR_SkeletalModelInterpolateFrames(model, tr->animations + tr_moveable->animation_index);
     /*
      * state change's loading
      */
@@ -1955,15 +1986,16 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
     {
         anim->state_change_count = 0;
         anim->state_change = NULL;
-
-        tr_animation = &tr->animations[tr_moveable->animation_index+i];
+        anim->next_anim = anim;
+        anim->next_frame = 0;
+        tr_animation = &tr->animations[tr_moveable->animation_index + i];
         int16_t j = tr_animation->next_animation - tr_moveable->animation_index;
         j &= 0x7fff;
         if((j >= 0) && (j < model->animation_count))
         {
             anim->next_anim = model->animations + j;
             anim->next_frame = tr_animation->next_frame - tr->animations[tr_animation->next_animation].frame_start;
-            anim->next_frame %= anim->next_anim->frames_count;
+            anim->next_frame %= anim->next_anim->max_frame;
             if(anim->next_frame < 0)
             {
                 anim->next_frame = 0;
@@ -1971,11 +2003,6 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
 #if LOG_ANIM_DISPATCHES
             Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, anim->next_anim->id, anim->next_frame);
 #endif
-        }
-        else
-        {
-            anim->next_anim = NULL;
-            anim->next_frame = 0;
         }
 
         anim->state_change_count = 0;
@@ -2008,16 +2035,16 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                         sch_p->anim_dispatch = (anim_dispatch_p)realloc(sch_p->anim_dispatch, sch_p->anim_dispatch_count * sizeof(anim_dispatch_t));
 
                         anim_dispatch_p adsp = sch_p->anim_dispatch + sch_p->anim_dispatch_count - 1;
-                        uint16_t next_frames_count = model->animations[next_anim - tr_moveable->animation_index].frames_count;
+                        uint16_t next_max_frame = model->animations[next_anim - tr_moveable->animation_index].max_frame;
                         uint16_t next_frame = tr_adisp->next_frame - tr->animations[next_anim].frame_start;
 
                         uint16_t low  = tr_adisp->low  - tr_animation->frame_start;
                         uint16_t high = tr_adisp->high - tr_animation->frame_start;
 
-                        adsp->frame_low  = low  % anim->frames_count;
-                        adsp->frame_high = (high - 1) % anim->frames_count;
+                        adsp->frame_low  = low  % anim->max_frame;
+                        adsp->frame_high = (high - 1) % anim->max_frame;
                         adsp->next_anim = next_anim - tr_moveable->animation_index;
-                        adsp->next_frame = next_frame % next_frames_count;
+                        adsp->next_frame = next_frame % next_max_frame;
 
 #if LOG_ANIM_DISPATCHES
                         Sys_DebugLog(LOG_FILENAME, "anim_disp[%d], frames_count = %d: interval[%d.. %d], next_anim = %d, next_frame = %d", l,
@@ -2029,8 +2056,6 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
             }
         }
     }
-
-    GenerateAnimCommandsTransform(model, base_anim_commands_array);
 }
 
 

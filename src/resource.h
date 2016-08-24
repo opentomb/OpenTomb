@@ -37,6 +37,6 @@ void Res_RoomSectorsCalculate(struct room_s *rooms, uint32_t rooms_count, uint32
 // Functions generating native OpenTomb structs from legacy TR structs.
 void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count, class bordered_texture_atlas *atlas, class VT_Level *tr);
 void TR_GenRoomMesh(struct room_s *room, size_t room_index, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count, class bordered_texture_atlas *atlas, class VT_Level *tr);
-void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct base_mesh_s *base_mesh_array, int16_t *base_anim_commands_array, class VT_Level *tr);
+void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct base_mesh_s *base_mesh_array, class VT_Level *tr);
 
 #endif
