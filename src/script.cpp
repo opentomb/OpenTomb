@@ -4229,7 +4229,7 @@ int lua_GetEntityAnimState(lua_State * lua)
     {
         if(ss_anim->type == anim_type_id)
         {
-            lua_pushinteger(lua, ent->bf->animations.next_state);
+            lua_pushinteger(lua, ss_anim->next_state);
             return 1;
         }
     }

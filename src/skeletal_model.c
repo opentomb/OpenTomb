@@ -775,7 +775,7 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
         anim_dispatch_p disp = stc->anim_dispatch;
         for(uint16_t i = 0; i < stc->anim_dispatch_count; i++, disp++)
         {
-            if((disp->frame_high >= disp->frame_low) && ((new_frame >= disp->frame_low) && (new_frame <= disp->frame_high)))
+            if((next_anim->max_frame == 1) || (disp->frame_high >= disp->frame_low) && ((new_frame >= disp->frame_low) && (new_frame <= disp->frame_high)))
             {
                 ss_anim->current_animation = ss_anim->next_animation;
                 ss_anim->current_frame = ss_anim->next_frame;
@@ -794,12 +794,20 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
     /*
      * Check next anim if frame >= max_frame
      */
-    if(new_frame + 1 > next_anim->max_frame)
+    if(new_frame >= next_anim->max_frame)
     {
         ss_anim->current_animation = ss_anim->next_animation;
         ss_anim->current_frame = ss_anim->next_frame;
         ss_anim->next_frame = next_anim->next_frame;
-        ss_anim->next_animation  = next_anim->next_anim->id;
+        if(ss_anim->next_animation != next_anim->next_anim->id)
+        {
+            ss_anim->next_animation = next_anim->next_anim->id;
+            ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
+        }
+        else
+        {
+            ss_anim->frame_time = (float)next_anim->max_frame * ss_anim->period;
+        }
         ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
         ss_anim->current_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
         ss_anim->next_state = ss_anim->current_state;

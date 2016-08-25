@@ -801,6 +801,10 @@ void Engine_MainLoop()
             engine_set_zero_time = 0;
             time = 0.0f;
         }
+        else if(time > 1.0f / 30.0f)
+        {
+            time = 1.0f / 30.0f;
+        }
 
         engine_frame_time = time;
 
