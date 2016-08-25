@@ -799,15 +799,7 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
         ss_anim->current_animation = ss_anim->next_animation;
         ss_anim->current_frame = ss_anim->next_frame;
         ss_anim->next_frame = next_anim->next_frame;
-        if(ss_anim->next_animation != next_anim->next_anim->id)
-        {
-            ss_anim->next_animation = next_anim->next_anim->id;
-            ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
-        }
-        else
-        {
-            ss_anim->frame_time = (float)next_anim->max_frame * ss_anim->period;
-        }
+        ss_anim->next_animation = next_anim->next_anim->id;
         ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
         ss_anim->current_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
         ss_anim->next_state = ss_anim->current_state;

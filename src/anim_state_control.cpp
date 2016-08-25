@@ -80,7 +80,6 @@ void ent_set_on_floor(entity_p ent, ss_animation_p ss_anim)
 
 void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim)
 {
-    ss_anim->onEndFrame = NULL;
     /*animation_frame_p af = ss_anim->model->animations + ss_anim->current_animation;
     if((ss_anim->changing_next >= 0x02) && (ss_anim->changing_next < 0x04))
     {
@@ -327,11 +326,11 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(cmd->jump)
             {
                 if(!curr_fc->quicksand)
-                    ss_anim->next_state = TR_STATE_LARA_JUMP_PREPARE;       // jump sideways
+                    ss_anim->next_state = TR_STATE_LARA_JUMP_PREPARE;           // jump sideways
             }
             else if(cmd->roll)
             {
-                if(!curr_fc->quicksand && ss_anim->current_animation != TR_ANIMATION_LARA_CLIMB_2CLICK)
+                if(!curr_fc->quicksand && (ent->move_type != MOVE_CLIMBING) && (ent->no_fix_all == 0x00))
                 {
                     ent->dir_flag = ENT_MOVE_FORWARD;
                     Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ROLL_BEGIN, 0);
