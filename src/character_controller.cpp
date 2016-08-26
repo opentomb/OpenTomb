@@ -156,19 +156,19 @@ void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
     t *= (ent->character) ? (ent->character->linear_speed_mult) : (DEFAULT_CHARACTER_SPEED_MULT);
     if(ent->dir_flag & ENT_MOVE_FORWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+4, t);
+        vec3_mul_scalar(ent->speed, ent->transform + 4, t);
     }
     else if(ent->dir_flag & ENT_MOVE_BACKWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+4,-t);
+        vec3_mul_scalar(ent->speed, ent->transform + 4,-t);
     }
     else if(ent->dir_flag & ENT_MOVE_LEFT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+0,-t);
+        vec3_mul_scalar(ent->speed, ent->transform + 0,-t);
     }
     else if(ent->dir_flag & ENT_MOVE_RIGHT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+0, t);
+        vec3_mul_scalar(ent->speed, ent->transform + 0, t);
     }
     else
     {
@@ -919,19 +919,19 @@ void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizon
     // Calculate the direction of jump by vector multiplication.
     if(ent->dir_flag & ENT_MOVE_FORWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+4,  t);
+        vec3_mul_scalar(ent->speed, ent->transform + 4,  t);
     }
     else if(ent->dir_flag & ENT_MOVE_BACKWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+4, -t);
+        vec3_mul_scalar(ent->speed, ent->transform + 4, -t);
     }
     else if(ent->dir_flag & ENT_MOVE_LEFT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+0, -t);
+        vec3_mul_scalar(ent->speed, ent->transform + 0, -t);
     }
     else if(ent->dir_flag & ENT_MOVE_RIGHT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+0,  t);
+        vec3_mul_scalar(ent->speed, ent->transform + 0,  t);
     }
     else
     {
@@ -1188,7 +1188,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
     /*
      * now move normally
      */
-    if(ent->character->height_info.floor_hit.hit && (ent->character->height_info.floor_hit.point[2] + 1.0 >= ent->transform[12+2] + ent->bf->bb_min[2]))
+    if(ent->character->height_info.floor_hit.hit && (ent->character->height_info.floor_hit.point[2] + 1.0 >= ent->transform[12 + 2] + ent->bf->bb_min[2]))
     {
         engine_container_p cont = ent->character->height_info.floor_hit.obj;
         if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
@@ -1428,19 +1428,19 @@ int Character_MonkeyClimbing(struct entity_s *ent)
 
     if(ent->dir_flag & ENT_MOVE_FORWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+4, t);
+        vec3_mul_scalar(ent->speed, ent->transform + 4, t);
     }
     else if(ent->dir_flag & ENT_MOVE_BACKWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+4,-t);
+        vec3_mul_scalar(ent->speed, ent->transform + 4,-t);
     }
     else if(ent->dir_flag & ENT_MOVE_LEFT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+0,-t);
+        vec3_mul_scalar(ent->speed, ent->transform + 0,-t);
     }
     else if(ent->dir_flag & ENT_MOVE_RIGHT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+0, t);
+        vec3_mul_scalar(ent->speed, ent->transform + 0, t);
     }
     else
     {
@@ -1558,19 +1558,19 @@ int Character_Climbing(struct entity_s *ent)
 
     if(ent->dir_flag == ENT_MOVE_FORWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+4, t);
+        vec3_mul_scalar(ent->speed, ent->transform + 4, t);
     }
     else if(ent->dir_flag == ENT_MOVE_BACKWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+4,-t);
+        vec3_mul_scalar(ent->speed, ent->transform + 4,-t);
     }
     else if(ent->dir_flag == ENT_MOVE_LEFT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+0,-t);
+        vec3_mul_scalar(ent->speed, ent->transform + 0,-t);
     }
     else if(ent->dir_flag == ENT_MOVE_RIGHT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform+0, t);
+        vec3_mul_scalar(ent->speed, ent->transform + 0, t);
     }
     else
     {
@@ -1711,19 +1711,19 @@ int Character_MoveOnWater(struct entity_s *ent)
     float t = ent->linear_speed * ent->linear_speed;
     if((ent->dir_flag & ENT_MOVE_FORWARD) && (ent->character->cmd.move[0] == 1))
     {
-        vec3_mul_scalar(ent->speed, ent->transform+4, t);
+        vec3_mul_scalar(ent->speed, ent->transform + 4, t);
     }
     else if((ent->dir_flag & ENT_MOVE_BACKWARD) && (ent->character->cmd.move[0] == -1))
     {
-        vec3_mul_scalar(ent->speed, ent->transform+4,-t);
+        vec3_mul_scalar(ent->speed, ent->transform + 4,-t);
     }
     else if((ent->dir_flag & ENT_MOVE_LEFT) && (ent->character->cmd.move[1] == -1))
     {
-        vec3_mul_scalar(ent->speed, ent->transform+0,-t);
+        vec3_mul_scalar(ent->speed, ent->transform + 0,-t);
     }
     else if((ent->dir_flag & ENT_MOVE_RIGHT) && (ent->character->cmd.move[1] == 1))
     {
-        vec3_mul_scalar(ent->speed, ent->transform+0, t);
+        vec3_mul_scalar(ent->speed, ent->transform + 0, t);
     }
     else
     {

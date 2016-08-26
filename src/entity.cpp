@@ -175,9 +175,9 @@ void Entity_UpdateRoomPos(entity_p ent)
 
     if(ent->character)
     {
-        Mat4_vec3_mul(pos, ent->transform, ent->bf->bone_tags->full_transform+12);
-        pos[0] = ent->transform[12+0];
-        pos[1] = ent->transform[12+1];
+        Mat4_vec3_mul(pos, ent->transform, ent->bf->bone_tags->full_transform + 12);
+        pos[0] = ent->transform[12 + 0];
+        pos[1] = ent->transform[12 + 1];
     }
     else
     {
@@ -461,7 +461,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
 
             for(int j = 0; j <= iter; j++)
             {
-                vec3_copy(tr+12, curr);
+                vec3_copy(tr + 12, curr);
                 Physics_SetGhostWorldTransform(ent->physics, tr, m);
                 if(Physics_GetGhostPenetrationFixVector(ent->physics, m, tmp))
                 {
@@ -545,7 +545,7 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3])
         }
 
         int numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, move);
-        vec3_add(ent->transform+12, ent->transform+12, reaction);
+        vec3_add(ent->transform + 12, ent->transform + 12, reaction);
 
         if(ent->character != NULL)
         {
@@ -959,9 +959,10 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
             if(anim_type == ANIM_TYPE_BASE)
             {
                 entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
+                Anim_SetAnimation(ss_anim, animation, frame);
+                SSBoneFrame_Update(entity->bf, 0.0f);
+                Entity_FixPenetrations(entity, NULL);
             }
-            Anim_SetAnimation(ss_anim, animation, frame);
-            SSBoneFrame_Update(entity->bf, 0.0f);
         }
     }
 }
@@ -1097,9 +1098,9 @@ void Entity_CheckActivators(struct entity_s *ent)
     {
         float ppos[3];
 
-        ppos[0] = ent->transform[12+0] + ent->transform[4+0] * ent->bf->bb_max[1];
-        ppos[1] = ent->transform[12+1] + ent->transform[4+1] * ent->bf->bb_max[1];
-        ppos[2] = ent->transform[12+2] + ent->transform[4+2] * ent->bf->bb_max[1];
+        ppos[0] = ent->transform[12 + 0] + ent->transform[4 + 0] * ent->bf->bb_max[1];
+        ppos[1] = ent->transform[12 + 1] + ent->transform[4 + 1] * ent->bf->bb_max[1];
+        ppos[2] = ent->transform[12 + 2] + ent->transform[4 + 2] * ent->bf->bb_max[1];
         engine_container_p cont = ent->self->room->content->containers;
         for(; cont; cont = cont->next)
         {
@@ -1109,7 +1110,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                 if((e->type_flags & ENTITY_TYPE_INTERACTIVE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
                     //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
-                    if((e != ent) && (OBB_OBB_Test(e->obb, ent->obb) == 1))//(vec3_dist_sq(ent->transform+12, pos) < r))
+                    if((e != ent) && (OBB_OBB_Test(e->obb, ent->obb) == 1))//(vec3_dist_sq(ent->transform + 12, pos) < r))
                     {
                         Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->id, ent->id);
                     }
@@ -1120,7 +1121,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                     float r = e->activation_offset[3];
                     r *= r;
                     if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
-                                      (v[2] + 32.0 > ent->transform[12+2] + ent->bf->bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf->bb_max[2]))
+                                      (v[2] + 32.0 > ent->transform[12 + 2] + ent->bf->bb_min[2]) && (v[2] - 32.0 < ent->transform[12 + 2] + ent->bf->bb_max[2]))
                     {
                         Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->id, ent->id);
                     }
