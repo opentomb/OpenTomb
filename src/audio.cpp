@@ -983,10 +983,12 @@ void StreamTrack::Stop()    // Immediately stop track.
         }
 
         ALint queued = 0;
-        alGetSourcei(source, /*AL_BUFFERS_QUEUED*/AL_BUFFERS_PROCESSED, &queued);
-        alSourceUnqueueBuffers(source, queued, buffers);
-        alDeleteBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);
-        alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, buffers);
+        alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
+        while(queued--)
+        {
+            ALuint buffer;
+            alSourceUnqueueBuffers(source, 1, &buffer);     // Unlink queued buffers.
+        }
     }
 }
 
@@ -1081,9 +1083,8 @@ bool StreamTrack::Update()
     }
 
     // Check if any track buffers were already processed.
-
+    // Buffers sequence disordering???
     alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed);
-
     while(processed--)  // Manage processed buffers.
     {
         ALuint buffer;
@@ -1125,7 +1126,7 @@ bool StreamTrack::IsDampable()                      // Check if track is dampabl
 
 bool StreamTrack::IsPlaying()                       // Check if track is playing.
 {
-    ALenum state;
+    ALenum state = AL_STOPPED;
 
     if(alIsSource(source))
     {
@@ -1159,26 +1160,11 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
             buffer_offset += audio_settings.stream_buffer_size;
             ret = true;
         }
-        else if(stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND)
-        {
-            uint8_t pcm[audio_settings.stream_buffer_size];
-            for(uint32_t size = 0; size < audio_settings.stream_buffer_size; size++)
-            {
-                pcm[size] = buffer[buffer_offset];
-                buffer_offset++;
-                if(buffer_offset >= buffer_size)
-                {
-                    buffer_offset = 0;
-                }
-            }
-            alBufferData(al_buffer, stb->GetFormat(), pcm, audio_settings.stream_buffer_size, stb->GetRate());
-            ret = true;
-        }
         else
         {
             alBufferData(al_buffer, stb->GetFormat(), buffer + buffer_offset, buffer_size - buffer_offset, stb->GetRate());
-            buffer_offset = buffer_size - 1;
-            ret = false;
+            buffer_offset = (stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND) ? 0 : (buffer_size - 1);
+            ret = true;
         }
     }
 
