@@ -987,7 +987,8 @@ void StreamTrack::Stop()    // Immediately stop track.
         while(queued--)
         {
             ALuint buffer;
-            alSourceUnqueueBuffers(source, 1, &buffer);     // Unlink queued buffers.
+            alSourceUnqueueBuffers(source, 1, &buffer);                         // Unlink queued buffers.
+            alBufferData(buffer, AL_FORMAT_MONO_FLOAT32, NULL, 0, 44100);       // Clear buffer data
         }
     }
 }
@@ -1083,7 +1084,7 @@ bool StreamTrack::Update()
     }
 
     // Check if any track buffers were already processed.
-    // Buffers sequence disordering???
+    // by doc: "Buffer queuing loop must operate in a new thread"
     alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed);
     while(processed--)  // Manage processed buffers.
     {
