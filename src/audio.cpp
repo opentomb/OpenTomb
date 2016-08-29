@@ -171,9 +171,10 @@ public:
     }
 
 private:
-    bool Load_Ogg(const char *path);     // Ogg file loading routine.
-    bool Load_Wad(const char *path);     // Wad file loading routine.
-    bool Load_Wav(const char *path);     // Wav file loading routine.
+    bool Load_Ogg(const char *path);                        // Ogg file loading routine.
+    bool Load_Wad(const char *path, uint32_t track);        // Wad file loading routine.
+    bool Load_Wav(const char *path);                        // Wav file loading routine.
+    bool Load_WavRW(SDL_RWops *file);                       // Wav file loading routine.
 
     int             track_index;
     uint32_t        buffer_size;
@@ -681,7 +682,7 @@ bool StreamTrackBuffer::Load(int track_index)
                 return Load_Ogg(file_path);
 
             case TR_AUDIO_STREAM_METHOD_WAD:
-                return Load_Wad(file_path);
+                return Load_Wad(file_path, track_index);
 
             case TR_AUDIO_STREAM_METHOD_WAV:
                 return Load_Wav(file_path);
@@ -756,26 +757,81 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
 }
 
 
-bool StreamTrackBuffer::Load_Wad(const char *path)
+bool StreamTrackBuffer::Load_Wad(const char *path, uint32_t track)
 {
-    return false;   ///@FIXME: PLACEHOLDER!!!
+    const int TR_AUDIO_STREAM_WAD_STRIDE = 268;
+    const int TR_AUDIO_STREAM_WAD_NAMELENGTH = 260;
+    const int TR_AUDIO_STREAM_WAD_COUNT = 130;
+    char track_name[TR_AUDIO_STREAM_WAD_NAMELENGTH];
+    SDL_RWops *file = NULL;
+    uint32_t offset = 0;
+    uint32_t length = 0;
+
+    if(track > TR_AUDIO_STREAM_WAD_COUNT)
+    {
+        return false;
+    }
+
+    file = SDL_RWFromFile(path, "rb");
+    if(file == NULL)
+    {
+        return false;
+    }
+
+    if(SDL_RWseek(file, (track * TR_AUDIO_STREAM_WAD_STRIDE), RW_SEEK_SET) < 0)
+    {
+        SDL_RWclose(file);
+        return false;
+    }
+
+    if(TR_AUDIO_STREAM_WAD_NAMELENGTH != SDL_RWread(file, track_name, 1, TR_AUDIO_STREAM_WAD_NAMELENGTH))
+    {
+        SDL_RWclose(file);
+        return false;
+    }
+
+    if(1 != SDL_RWread(file, &length, sizeof(uint32_t), 1))
+    {
+        SDL_RWclose(file);
+        return false;
+    }
+
+    if(1 != SDL_RWread(file, &offset, sizeof(uint32_t), 1))
+    {
+        SDL_RWclose(file);
+        return false;
+    }
+
+    if(SDL_RWseek(file, offset, RW_SEEK_SET) < 0)
+    {
+        SDL_RWclose(file);
+        return false;
+    }
+
+    return Load_WavRW(file);
 }
 
 
 bool StreamTrackBuffer::Load_Wav(const char *path)
 {
+    return Load_WavRW(SDL_RWFromFile(path, "rb"));
+}
+
+
+bool StreamTrackBuffer::Load_WavRW(SDL_RWops *file)
+{
     SDL_AudioSpec wav_spec;
     uint8_t      *wav_buffer;
     uint32_t      wav_length;
-    if(SDL_LoadWAV(path, &wav_spec, &wav_buffer, &wav_length) == NULL)
+    if(SDL_LoadWAV_RW(file, 1, &wav_spec, &wav_buffer, &wav_length) == NULL)
     {
-        Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't load track: \"%s\"", path);
+        Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't load track");
         return false;
     }
 
     if(wav_spec.channels > 2)   // We can't use non-mono and barely can use stereo samples.
     {
-        Sys_DebugLog(SYS_LOG_FILENAME, "Error: track \"%s\" has more than 2 channels!", path);
+        Sys_DebugLog(SYS_LOG_FILENAME, "Error: track has more than 2 channels!");
         return false;
     }
 
