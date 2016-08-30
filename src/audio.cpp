@@ -695,7 +695,7 @@ bool StreamTrackBuffer::Load(int track_index)
     return (this->buffer != NULL);
 }
 
-
+///@TODO: fix vorbis streaming! ov_bitrate may differ in differ section
 bool StreamTrackBuffer::Load_Ogg(const char *path)
 {
     vorbis_info    *vorbis_Info = NULL;
@@ -1044,7 +1044,6 @@ void StreamTrack::Stop()    // Immediately stop track.
         {
             ALuint buffer;
             alSourceUnqueueBuffers(source, 1, &buffer);                         // Unlink queued buffers.
-            alBufferData(buffer, AL_FORMAT_MONO_FLOAT32, NULL, 0, 44100);       // Clear buffer data
         }
     }
 }
