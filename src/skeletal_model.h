@@ -18,6 +18,14 @@ extern "C" {
 #define ANIM_FRAME_LOCK                 (2)
 #define ANIM_FRAME_REVERSE              (4)
 
+// changing info:
+#define SS_CHANGING_NONE        (0x00)      // 0x00 - no changes; 
+#define SS_CHANGING_FRAME       (0x01)      // 0x01 - next frame, same anim;
+#define SS_CHANGING_END_ANIM    (0x02)      // 0x02 - next frame, next anim (anim ended, may be loop);
+#define SS_CHANGING_BY_STATE    (0x03)      // 0x03 - new frame, new anim (by state change info);
+#define SS_CHANGING_HEAVY       (0x04)      // 0x04 - rough change by set animation;
+
+    
 #define ANIM_EXT_TARGET_TO              (1)
     
 #define ANIM_TARGET_USE_AXIS_MOD        (0x0001)
@@ -65,12 +73,6 @@ typedef struct ss_bone_tag_s
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 }ss_bone_tag_t, *ss_bone_tag_p;
 
-// changing info:
-// 0x00 - no changes; 
-// 0x01 - next frame, same anim;
-// 0x02 - next frame, next anim (anim ended, may be loop);
-// 0x03 - new frame, new anim (by state change info);
-// 0x04 - rough change by set animation;
 typedef struct ss_animation_s
 {
     uint16_t                    type : 15;
