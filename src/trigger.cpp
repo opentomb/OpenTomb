@@ -137,7 +137,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             int mask_mode           = TRIGGER_OP_OR;            // Activation mask by default.
             int activator_sector_status = Entity_GetSectorStatus(entity_activator);
             bool header_condition   = true;
-
+            bool is_heavy           = false;
             // Activator type is LARA for all triggers except HEAVY ones, which are triggered by
             // some specific entity classes.
             // entity_activator_type  == TR_ACTIVATORTYPE_LARA and
@@ -147,6 +147,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                 case TR_FD_TRIGTYPE_HEAVY:
                 case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
                 case TR_FD_TRIGTYPE_HEAVYSWITCH:
+                    is_heavy = true;
                     if((entity_activator->type_flags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR) == 0)
                     {
                         return;
@@ -286,8 +287,8 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                     else    /// end if (action_type == TR_ACTIONTYPE_SWITCH)
                                     {
                                         // Ordinary type case (e.g. heavy switch).
-                                        switch_sectorstatus = (trig_entity->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;  ///@CHECK: vas entity_activator instead trig_entity
-                                        switch_mask = (trig_entity->trigger_layout & ENTITY_TLAYOUT_MASK);                  ///@CHECK: vas entity_activator instead trig_entity
+                                        switch_sectorstatus = (entity_activator->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7;
+                                        switch_mask = (entity_activator->trigger_layout & ENTITY_TLAYOUT_MASK);
                                         // Trigger activation mask is here filtered through activator's own mask.
                                         switch_mask = (switch_mask == 0) ? (0x1F & trigger->mask) : (switch_mask & trigger->mask);
 
@@ -395,14 +396,17 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         break;
 
                     case TR_FD_TRIGFUNC_SET_TARGET:
-                        if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
+                        if(!is_heavy || (activator_sector_status == 0))
                         {
                             Game_SetCameraTarget(command->operands, trigger->timer);
                         }
                         break;
 
                     case TR_FD_TRIGFUNC_SET_CAMERA:
-                        Game_SetCamera(command->cam_index, command->once, command->cam_move, command->cam_timer);
+                        if(!is_heavy || (activator_sector_status == 0))
+                        {
+                            Game_SetCamera(command->cam_index, command->once, command->cam_move, command->cam_timer);
+                        }
                         break;
 
                     case TR_FD_TRIGFUNC_FLYBY:

@@ -109,7 +109,7 @@ function checkDebugKeys()
 end;
 
 function checkPlayerRagdollConditions()
-    local anim, frame, count = getEntityAnim(player);
+    local anim, frame, count = getEntityAnim(player, ANIM_TYPE_BASE);
     local version = getLevelVersion();
     
     if(getEntityTypeFlag(player, ENTITY_TYPE_DYNAMIC) == 0) then

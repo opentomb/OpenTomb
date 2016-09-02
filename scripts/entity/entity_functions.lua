@@ -53,7 +53,7 @@ function door_init(id)   -- NORMAL doors only!
     setEntityActivity(object_id, 1);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        local a, f, c = getEntityAnim(object_id);
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(c == 1) then
             return swapEntityState(object_id, 0, 1);
         end;
@@ -306,8 +306,10 @@ function heli_rig_TR2_init(id)    -- Helicopter in Offshore Rig (TR2)
             if(getEntityAnimState(object_id, ANIM_TYPE_BASE) ~= 2) then
                 setEntityAnimState(object_id, ANIM_TYPE_BASE, 2);
             else
-                local anim, frame, count = getEntityAnim(object_id);
-                if(frame == count-1) then disableEntity(object_id) end;
+                local anim, frame, count = getEntityAnim(object_id, ANIM_TYPE_BASE);
+                if(frame == count-1) then 
+                    disableEntity(object_id) 
+                end;
             end
         end;
     end
@@ -614,7 +616,7 @@ function wallblade_init(id)     -- Wall blade (TR1-TR3)
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
-        local anim_number = getEntityAnim(object_id);
+        local anim_number = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(anim_number == 2) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
         elseif(anim_number == 1) then
@@ -695,7 +697,7 @@ function pickup_init(id, item_id)    -- Pick-ups
         end
         
         local need_set_pos = true;
-        local curr_anim = getEntityAnim(activator_id);
+        local curr_anim = getEntityAnim(activator_id, ANIM_TYPE_BASE);
 
         if(curr_anim == 103) then                 -- Stay idle
             local dx, dy, dz = getEntityVector(object_id, activator_id);
@@ -729,7 +731,7 @@ function pickup_init(id, item_id)    -- Pick-ups
                 end;
             end;
             
-            local a, f, c = getEntityAnim(activator_id);
+            local a, f, c = getEntityAnim(activator_id, ANIM_TYPE_BASE);
             -- Standing pickup anim makes action on frame 40 in TR1-3, in TR4-5
             -- it was generalized with all rest animations by frame 16.
             if((a == 135) and (getLevelVersion() < TR_IV)) then
@@ -776,14 +778,14 @@ function fallblock_init(id)  -- Falling block (TR1-3)
             return;
         end
 
-        local anim = getEntityAnim(object_id);
+        local anim = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(anim == 0) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
             -- print("you trapped to id = "..object_id);
             local once = true;
             addTask(
             function()
-                local anim = getEntityAnim(object_id);
+                local anim = getEntityAnim(object_id, ANIM_TYPE_BASE);
                 if(anim == 1) then
                     return true;
                 end;
@@ -815,7 +817,7 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
             return ENTITY_TRIGGERING_NOT_READY;
         end
         
-        local anim = getEntityAnim(object_id);
+        local anim = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(anim == 0) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
             setEntityVisibility(object_id, 1);
@@ -834,7 +836,7 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
     end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if((getEntityAnim(object_id) == 1) and (getEntityModelID(activator_id) == 0) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
+        if((getEntityAnim(object_id, ANIM_TYPE_BASE) == 1) and (getEntityModelID(activator_id) == 0) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
             setCharacterParam(activator_id, PARAM_HEALTH, 0);
         end;
     end
@@ -872,11 +874,11 @@ function midastouch_init(id)    -- Midas gold touch
     
     entity_funcs[id].onLoop = function(object_id)
         if(getEntityDistance(player, object_id) < 1024.0) then
-            local lara_anim, frame, count = getEntityAnim(player);
+            local lara_anim, frame, count = getEntityAnim(player, ANIM_TYPE_BASE);
             local lara_sector = getEntitySectorIndex(player);
             local hand_sector = getEntitySectorIndex(object_id);
             
-            if((lara_sector == hand_sector) and (getEntityMoveType(player) == MOVE_ON_FLOOR) and (getEntityAnim(player) ~= 50)) then
+            if((lara_sector == hand_sector) and (getEntityMoveType(player) == MOVE_ON_FLOOR) and (lara_anim ~= 50)) then
                 setCharacterParam(player, PARAM_HEALTH, 0);
                 entitySSAnimEnsureExists(player, ANIM_TYPE_MISK_1, 5); --ANIM_TYPE_MISK_1 - add const
                 setEntityAnim(player, ANIM_TYPE_MISK_1, 1, 0);

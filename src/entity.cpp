@@ -175,9 +175,9 @@ void Entity_UpdateRoomPos(entity_p ent)
 
     if(ent->character)
     {
-        Mat4_vec3_mul(pos, ent->transform, ent->bf->bone_tags->full_transform+12);
-        pos[0] = ent->transform[12+0];
-        pos[1] = ent->transform[12+1];
+        Mat4_vec3_mul(pos, ent->transform, ent->bf->bone_tags->full_transform + 12);
+        pos[0] = ent->transform[12 + 0];
+        pos[1] = ent->transform[12 + 1];
     }
     else
     {
@@ -343,7 +343,7 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
     else
     {
         if((ent->bf->animations.model == NULL) || !Physics_IsBodyesInited(ent->physics) ||
-           ((force == 0) && (ent->bf->animations.model->animation_count == 1) && (ent->bf->animations.model->animations->frames_count == 1)))
+           ((force == 0) && (ent->bf->animations.model->animation_count == 1) && (ent->bf->animations.model->animations->max_frame == 1)))
         {
             return;
         }
@@ -461,7 +461,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
 
             for(int j = 0; j <= iter; j++)
             {
-                vec3_copy(tr+12, curr);
+                vec3_copy(tr + 12, curr);
                 Physics_SetGhostWorldTransform(ent->physics, tr, m);
                 if(Physics_GetGhostPenetrationFixVector(ent->physics, m, tmp))
                 {
@@ -545,7 +545,7 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3])
         }
 
         int numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, move);
-        vec3_add(ent->transform+12, ent->transform+12, reaction);
+        vec3_add(ent->transform + 12, ent->transform + 12, reaction);
 
         if(ent->character != NULL)
         {
@@ -654,32 +654,35 @@ void Entity_CheckCollisionCallbacks(entity_p ent)
 }
 
 
-void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int changing)
+void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
 {
-    if((World_GetAnimCommands() == NULL) || (ss_anim->model == NULL))
+    if(ss_anim->model)
     {
-        return;  // If no anim commands
-    }
+        animation_frame_p next_af = ss_anim->model->animations + ss_anim->next_animation;
+        animation_frame_p current_af = ss_anim->model->animations + ss_anim->current_animation;
+        bool do_skip_frame = false;
 
-    animation_frame_p af  = ss_anim->model->animations + ss_anim->current_animation;
-    if(af->num_anim_commands <= 255)
-    {
-        uint32_t count        = af->num_anim_commands;
-        int16_t *pointer      = World_GetAnimCommands() + af->anim_command;
-        int8_t   random_value = 0;
-
-        for(uint32_t i = 0; i < count; i++, pointer++)
+        ///@DO COMMANDS
+        for(animation_command_p command = current_af->commands; command; command = command->next)
         {
-            switch(*pointer)
+            switch(command->id)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
-                    // This command executes ONLY at the end of animation.
-                    pointer += 3; // Parse through 3 operands.
+                    if(ss_anim->changing_next >= 0x02)                          // This command executes ONLY at the end of animation.
+                    {
+                        float tr[3];
+                        entity->no_fix_all = 0x01;
+                        Mat4_vec3_rot_macro(tr, entity->transform, command->data);
+                        vec3_add(entity->transform + 12, entity->transform + 12, tr);
+                        do_skip_frame = true;
+                    }
                     break;
 
                 case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    // This command executes ONLY at the end of animation.
-                    pointer += 2; // Parse through 2 operands.
+                    if(entity->character && (ss_anim->changing_next >= 0x02))   // This command executes ONLY at the end of animation.
+                    {
+                        Character_SetToJump(entity, -command->data[0], command->data[1]);
+                    }
                     break;
 
                 case TR_ANIMCOMMAND_EMPTYHANDS:
@@ -687,24 +690,27 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                     break;
 
                 case TR_ANIMCOMMAND_KILL:
-                    // This command executes ONLY at the end of animation.
-                    if(ss_anim->current_frame == af->frames_count - 1)
+                    if(entity->character)
                     {
-                        if(entity->character)
-                        {
-                            entity->character->resp.kill = 1;
-                        }
+                        entity->character->resp.kill = 0x01;
                     }
-
                     break;
+            };
+        }
 
+        ///@DO EFFECTS
+        for(animation_effect_p effect = next_af->effects; effect; effect = effect->next)
+        {
+            if(ss_anim->next_frame != effect->frame)
+            {
+                continue;
+            }
+
+            switch(effect->id)
+            {
                 case TR_ANIMCOMMAND_PLAYSOUND:
-                    int16_t sound_index;
-
-                    if(ss_anim->current_frame == *++pointer)
                     {
-                        sound_index = *++pointer & 0x3FFF;
-
+                        int16_t sound_index = 0x3FFF & effect->data;
                         // Quick workaround for TR3 quicksand.
                         if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
                            (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
@@ -712,12 +718,12 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                             sound_index = 18;
                         }
 
-                        if(*pointer & TR_ANIMCOMMAND_CONDITION_WATER)
+                        if(effect->data & TR_ANIMCOMMAND_CONDITION_WATER)
                         {
                             if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_WATER_SHALLOW)
                                 Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
                         }
-                        else if(*pointer & TR_ANIMCOMMAND_CONDITION_LAND)
+                        else if(effect->data & TR_ANIMCOMMAND_CONDITION_LAND)
                         {
                             if(Entity_GetSubstanceState(entity) != ENTITY_SUBSTANCE_WATER_SHALLOW)
                                 Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
@@ -727,32 +733,46 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                             Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
                         }
                     }
-                    else
-                    {
-                        pointer++;
-                    }
                     break;
 
                 case TR_ANIMCOMMAND_PLAYEFFECT:
                     // Effects (flipeffects) are various non-typical actions which vary
                     // across different TR game engine versions. There are common ones,
                     // however, and currently only these are supported.
-                    if(ss_anim->current_frame == *++pointer)
                     {
-                        switch(*++pointer & 0x3FFF)
+                        entity_p player = World_GetPlayer();
+                        switch(effect->data & 0x3FFF)
                         {
                             case TR_EFFECT_SHAKESCREEN:
-                                if(World_GetPlayer())
+                                if(player)
                                 {
-                                    float *pos = World_GetPlayer()->transform + 12;
+                                    float *pos = player->transform + 12;
                                     float dist = vec3_dist(pos, entity->transform + 12);
-                                    dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE)?(0):((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0);
+                                    dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE) ? (0) : ((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0f);
                                     //if(dist > 0)
                                     //    Cam_Shake(&engine_camera, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
                                 }
                                 break;
 
                             case TR_EFFECT_CHANGEDIRECTION:
+                                if(ss_anim->changing_next >= 0x01)
+                                {
+                                    entity->angles[0] += 180.0f;
+                                    if(entity->move_type == MOVE_UNDERWATER)
+                                    {
+                                        entity->angles[1] = -entity->angles[1]; // for underwater case
+                                    }
+                                    if(entity->dir_flag == ENT_MOVE_BACKWARD)
+                                    {
+                                        entity->dir_flag = ENT_MOVE_FORWARD;
+                                    }
+                                    else if(entity->dir_flag == ENT_MOVE_FORWARD)
+                                    {
+                                        entity->dir_flag = ENT_MOVE_BACKWARD;
+                                    }
+
+                                    do_skip_frame = true;
+                                }
                                 break;
 
                             case TR_EFFECT_HIDEOBJECT:
@@ -846,8 +866,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
 
                             case TR_EFFECT_BUBBLE:
                                 ///@FIXME: Spawn bubble particle here, when particle system is developed.
-                                random_value = rand() % 100;
-                                if(random_value > 60)
+                                if(rand() % 100 > 60)
                                 {
                                     Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->id);
                                 }
@@ -857,13 +876,17 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim, int 
                                 ///@FIXME: TODO ALL OTHER EFFECTS!
                                 break;
                         }
-                    }
-                    else
-                    {
-                        pointer++;
-                    }
+                    };
                     break;
-            }
+            };
+        }
+
+        if(do_skip_frame)
+        {
+            Anim_SetNextFrame(ss_anim, ss_anim->period);            // skip one frame
+            Entity_UpdateTransform(entity);
+            Entity_UpdateRigidBody(entity, 1);
+            Entity_DoAnimCommands(entity, ss_anim);
         }
     }
 }
@@ -927,56 +950,19 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
 {
     if(entity)
     {
-        animation = (animation < 0) ? (0) : (animation);
-        entity->no_fix_all = 0x00;
-
-        if(anim_type == ANIM_TYPE_BASE)
+        ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(entity->bf, anim_type);
+        if(ss_anim)
         {
-            entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
-        }
-        SSBoneFrame_SetAnimation(entity->bf, anim_type, animation, frame);
-        SSBoneFrame_Update(entity->bf, 0.0f);
-    }
-}
+            animation = (animation < 0) ? (0) : (animation);
+            entity->no_fix_all = 0x00;
 
-
-void Entity_DoAnimTransformCommand(entity_p entity, int16_t *anim, int16_t *frame)
-{
-    if(entity->bf->animations.model != NULL)
-    {
-        animation_frame_p curr_af = entity->bf->animations.model->animations + entity->bf->animations.current_animation;
-        bone_frame_p curr_bf = curr_af->frames + entity->bf->animations.current_frame;
-
-        if(curr_bf->command & ANIM_CMD_JUMP)
-        {
-            Character_SetToJump(entity, -curr_bf->v_Vertical, curr_bf->v_Horizontal);
-        }
-        if(curr_bf->command & ANIM_CMD_CHANGE_DIRECTION)
-        {
-            //Con_Printf("ROTATED: anim = %d, frame = %d of %d", entity->bf->animations.current_animation, entity->bf->animations.current_frame, entity->bf->animations.model->animations[entity->bf->animations.current_animation].frames_count);
-            entity->angles[0] += 180.0f;
-            if(entity->move_type == MOVE_UNDERWATER)
+            if(anim_type == ANIM_TYPE_BASE)
             {
-                entity->angles[1] = -entity->angles[1];                         // for underwater case
+                entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
+                Anim_SetAnimation(ss_anim, animation, frame);
+                SSBoneFrame_Update(entity->bf, 0.0f);
+                Entity_FixPenetrations(entity, NULL);
             }
-            if(entity->dir_flag == ENT_MOVE_BACKWARD)
-            {
-                entity->dir_flag = ENT_MOVE_FORWARD;
-            }
-            else if(entity->dir_flag == ENT_MOVE_FORWARD)
-            {
-                entity->dir_flag = ENT_MOVE_BACKWARD;
-            }
-            Entity_UpdateTransform(entity);
-            Entity_SetAnimation(entity, ANIM_TYPE_BASE, curr_af->next_anim->id, curr_af->next_frame);
-            *anim = entity->bf->animations.current_animation;
-            *frame = entity->bf->animations.current_frame;
-        }
-        if(curr_bf->command & ANIM_CMD_MOVE)
-        {
-            float tr[3];
-            Mat4_vec3_rot_macro(tr, entity->transform, curr_bf->move);
-            vec3_add(entity->transform+12, entity->transform+12, tr);
         }
     }
 }
@@ -1018,17 +1004,10 @@ void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
 }
 
 
-/**
- * In original engine (+ some information from anim_commands) the anim_commands implement in beginning of frame
- */
 void Entity_Frame(entity_p entity, float time)
 {
     if(entity && !(entity->type_flags & ENTITY_TYPE_DYNAMIC) && (entity->state_flags & ENTITY_STATE_ACTIVE)  && (entity->state_flags & ENTITY_STATE_ENABLED))
     {
-        long int t;
-        float dt;
-        animation_frame_p af;
-        state_change_p stc;
         ss_animation_p ss_anim = &entity->bf->animations;
 
         Entity_GhostUpdate(entity);
@@ -1037,57 +1016,44 @@ void Entity_Frame(entity_p entity, float time)
         {
             if(ss_anim->enabled)
             {
+                int frame_switch_state = 0x00;
                 if(ss_anim->model && ss_anim->onFrame)
                 {
-                    int frame_switch_state = ss_anim->onFrame(entity, ss_anim, time);
-                    if(ss_anim->onEndFrame != NULL)
+                    frame_switch_state = ss_anim->onFrame(entity, ss_anim, time);
+
+                    if(frame_switch_state >= 0x01)
                     {
-                        ss_anim->onEndFrame(entity, ss_anim, frame_switch_state);
+                        Entity_DoAnimCommands(entity, ss_anim);
+                    }
+
+                    if(ss_anim->onEndFrame)
+                    {
+                        ss_anim->onEndFrame(entity, ss_anim);
                     }
                 }
                 else if(ss_anim->model && !(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK) &&
-                        ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->frames_count > 1)))
+                        ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->max_frame > 1)))
                 {
-                    int16_t new_frame, new_anim;
-                    uint16_t frame_switch_state = 0x00;
-                    ss_anim->lerp = 0.0;
-                    stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
-                    Anim_GetNextFrame(ss_anim, time, stc, &new_frame, &new_anim, ss_anim->anim_frame_flags);
-                    if(ss_anim->current_animation != new_anim)
+                    frame_switch_state = Anim_SetNextFrame(ss_anim, time);
+                    if(frame_switch_state >= 0x01)
                     {
-                        frame_switch_state = 0x02;
-                        Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
-                        Entity_DoAnimTransformCommand(entity, &new_anim, &new_frame);
-
-                        Entity_SetAnimation(entity, ss_anim->type, new_anim, new_frame);
-                        stc = Anim_FindStateChangeByID(ss_anim->model->animations + ss_anim->current_animation, ss_anim->next_state);
+                        if(frame_switch_state >= 0x02)
+                        {
+                            entity->no_fix_all = 0x00;
+                        }
+                        Entity_DoAnimCommands(entity, ss_anim);
                     }
-                    else if(ss_anim->current_frame != new_frame)
-                    {
-                        frame_switch_state = 0x01;
-                        Entity_DoAnimCommands(entity, ss_anim, frame_switch_state);
-                        Entity_DoAnimTransformCommand(entity, &new_anim, &new_frame);
-                    }
-
-                    af = ss_anim->model->animations + ss_anim->current_animation;
-                    ss_anim->frame_time += time;
-
-                    t = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - (float)t * ss_anim->period;
-                    ss_anim->frame_time = (float)new_frame * ss_anim->period + dt;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    Anim_GetNextFrame(ss_anim, ss_anim->period, stc, &ss_anim->next_frame, &ss_anim->next_animation, ss_anim->anim_frame_flags);
 
                     // Update acceleration.
                     // With variable framerate, we don't know when we'll reach final
                     // frame for sure, so we use native frame number check to increase acceleration.
-
-                    if((ss_anim->type == ANIM_TYPE_BASE) && (entity->character) && (ss_anim->current_frame != new_frame))
+                    if((ss_anim->type == ANIM_TYPE_BASE) && (entity->character) && (frame_switch_state > 0))
                     {
-                        // NB!!! For Lara, we update ONLY X-axis speed/accel.
-                        if((af->accel_x == 0) || (new_frame < ss_anim->current_frame))
+                        animation_frame_p af = ss_anim->model->animations + ss_anim->next_animation;
+                        // NB!!! For Lara, we update ONLY X-axis speed / accel.
+                        if((af->accel_x == 0) || (frame_switch_state >= 0x02))
                         {
-                            entity->anim_linear_speed  = af->speed_x;
+                            entity->anim_linear_speed = af->speed_x;
                         }
                         else
                         {
@@ -1095,11 +1061,9 @@ void Entity_Frame(entity_p entity, float time)
                         }
                     }
 
-                    ss_anim->current_frame = new_frame;
-
-                    if(ss_anim->onEndFrame != NULL)
+                    if(ss_anim->onEndFrame)
                     {
-                        ss_anim->onEndFrame(entity, ss_anim, frame_switch_state);
+                        ss_anim->onEndFrame(entity, ss_anim);
                     }
                 }
             }
@@ -1134,9 +1098,9 @@ void Entity_CheckActivators(struct entity_s *ent)
     {
         float ppos[3];
 
-        ppos[0] = ent->transform[12+0] + ent->transform[4+0] * ent->bf->bb_max[1];
-        ppos[1] = ent->transform[12+1] + ent->transform[4+1] * ent->bf->bb_max[1];
-        ppos[2] = ent->transform[12+2] + ent->transform[4+2] * ent->bf->bb_max[1];
+        ppos[0] = ent->transform[12 + 0] + ent->transform[4 + 0] * ent->bf->bb_max[1];
+        ppos[1] = ent->transform[12 + 1] + ent->transform[4 + 1] * ent->bf->bb_max[1];
+        ppos[2] = ent->transform[12 + 2] + ent->transform[4 + 2] * ent->bf->bb_max[1];
         engine_container_p cont = ent->self->room->content->containers;
         for(; cont; cont = cont->next)
         {
@@ -1146,7 +1110,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                 if((e->type_flags & ENTITY_TYPE_INTERACTIVE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
                     //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
-                    if((e != ent) && (OBB_OBB_Test(e->obb, ent->obb) == 1))//(vec3_dist_sq(ent->transform+12, pos) < r))
+                    if((e != ent) && (OBB_OBB_Test(e->obb, ent->obb) == 1))//(vec3_dist_sq(ent->transform + 12, pos) < r))
                     {
                         Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->id, ent->id);
                     }
@@ -1157,7 +1121,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                     float r = e->activation_offset[3];
                     r *= r;
                     if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
-                                      (v[2] + 32.0 > ent->transform[12+2] + ent->bf->bb_min[2]) && (v[2] - 32.0 < ent->transform[12+2] + ent->bf->bb_max[2]))
+                                      (v[2] + 32.0 > ent->transform[12 + 2] + ent->bf->bb_min[2]) && (v[2] - 32.0 < ent->transform[12 + 2] + ent->bf->bb_max[2]))
                     {
                         Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->id, ent->id);
                     }

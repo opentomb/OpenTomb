@@ -21,7 +21,6 @@ struct RedBlackNode_s *World_GetEntityTreeRoot();
 struct flyby_camera_sequence_s *World_GetFlyBySequences();
 struct base_item_s *World_GetBaseItemByID(uint32_t id);
 struct static_camera_sink_s *World_GetstaticCameraSink(uint32_t id);
-int16_t *World_GetAnimCommands();
 
 void World_GetRoomInfo(struct room_s **rooms, uint32_t *rooms_count);
 void World_GetAnimSeqInfo(struct anim_seq_s **seq, uint32_t *seq_count);
