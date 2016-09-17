@@ -75,8 +75,8 @@ public:
                 rs = ent->current_sector;
             }
             if(Room_IsInNearRoomsList(r0, r1) ||
-               (rs && rs->sector_above && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_above->owner_room))) ||
-               (rs && rs->sector_below && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_below->owner_room))))
+               (rs && rs->room_above && Room_IsInNearRoomsList(r0, rs->room_above)) ||
+               (rs && rs->room_below && Room_IsInNearRoomsList(r0, rs->room_below)))
             {
                 return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
             }
@@ -131,8 +131,8 @@ public:
                 rs = ent->current_sector;
             }
             if(Room_IsInNearRoomsList(r0, r1) ||
-               (rs && rs->sector_above && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_above->owner_room))) ||
-               (rs && rs->sector_below && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_below->owner_room))))
+               (rs && rs->room_above && Room_IsInNearRoomsList(r0, rs->room_above)) ||
+               (rs && rs->room_below && Room_IsInNearRoomsList(r0, rs->room_below)))
             {
                 return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
             }

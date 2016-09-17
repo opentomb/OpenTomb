@@ -242,7 +242,7 @@ void World_Open(class VT_Level *tr)
 
     // Generate entity functions.
 
-    if(global_world.entity_tree->root)
+    if(global_world.entity_tree && global_world.entity_tree->root)
     {
         World_GenEntityFunctions(global_world.entity_tree->root);
     }
@@ -294,8 +294,11 @@ void World_Clear()
     }
 
     /* entity empty must be done before rooms destroy */
-    RB_Free(global_world.entity_tree);
-    global_world.entity_tree = NULL;
+    if(global_world.entity_tree)
+    {
+        RB_Free(global_world.entity_tree);
+        global_world.entity_tree = NULL;
+    }
 
     /* Now we can delete physics misc objects */
     Physics_CleanUpObjects();
@@ -828,17 +831,17 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
         else if(pos[2] >= old_room->bb_max[2])
         {
             room_sector_p orig_sector = Room_GetSectorRaw(old_room, pos);
-            if(orig_sector->sector_above != NULL)
+            if(orig_sector->room_above)
             {
-                return Room_CheckFlip(orig_sector->sector_above->owner_room);
+                return orig_sector->room_above;
             }
         }
         else if(pos[2] < old_room->bb_min[2])
         {
             room_sector_p orig_sector = Room_GetSectorRaw(old_room, pos);
-            if(orig_sector->sector_below != NULL)
+            if(orig_sector->room_below)
             {
-                return Room_CheckFlip(orig_sector->sector_below->owner_room);
+                return orig_sector->room_below;
             }
         }
     }
@@ -846,12 +849,12 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
     room_sector_p new_sector = Room_GetSectorRaw(old_room, pos);
     if((new_sector != NULL) && new_sector->portal_to_room)
     {
-        return Room_CheckFlip(new_sector->portal_to_room);
+        return /*Room_CheckFlip*/(new_sector->portal_to_room);
     }
 
     for(uint16_t i = 0; i < old_room->near_room_list_size; i++)
     {
-        room_p r = Room_CheckFlip(old_room->near_room_list[i]);
+        room_p r = /*Room_CheckFlip*/(old_room->near_room_list[i]);
         if(r->active &&
            (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
@@ -970,11 +973,11 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
             {
                 if(flip_state)
                 {
-                    Room_SwapRoomToAlternate(current_room);
+                    Room_SwapRoom/*ToAlternate*/(current_room);
                 }
                 else
                 {
-                    Room_SwapRoomToBase(current_room);
+                    Room_SwapRoom/*ToBase*/(current_room);
                 }
             }
         }

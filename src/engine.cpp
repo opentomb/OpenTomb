@@ -863,7 +863,7 @@ void ShowDebugInfo()
                         renderer.debugDrawer->SetColor(0.0, 1.0, 0.0);
                         renderer.debugDrawer->DrawSectorDebugLines(rs);
                         GLText_OutTextXY(30.0f, y += dy, "cont_room: (id = %d, sx = %d, sy = %d)", rs->owner_room->id, rs->index_x, rs->index_y);
-                        GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->sector_below != NULL) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != NULL) ? (rs->sector_above->owner_room->id) : (-1));
+                        GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->room_below) ? (rs->room_below->id) : (-1), (rs->room_above) ? (rs->room_above->id) : (-1));
                         if(rs->trigger)
                         {
                             char trig_type[64];
@@ -931,7 +931,7 @@ void ShowDebugInfo()
                         renderer.debugDrawer->SetColor(0.0, 1.0, 0.0);
                         renderer.debugDrawer->DrawSectorDebugLines(rs);
                         GLText_OutTextXY(30.0f, y += dy, "room = (id = %d, sx = %d, sy = %d)", rs->owner_room->id, rs->index_x, rs->index_y);
-                        GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->sector_below != NULL) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != NULL) ? (rs->sector_above->owner_room->id) : (-1));
+                        GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->room_below) ? (rs->room_below->id) : (-1), (rs->room_above) ? (rs->room_above->id) : (-1));
                         if(rs->trigger)
                         {
                             char trig_type[64];
@@ -1347,7 +1347,7 @@ int Engine_ExecCmd(char *ch)
                 if(sect)
                 {
                     Con_Printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
-                               (int)(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), (int)(sect->sector_above != NULL), (int)(sect->sector_below != NULL));
+                               (int)(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), (int)(sect->room_above != NULL), (int)(sect->room_below != NULL));
                     for(uint32_t i = 0; i < sect->owner_room->content->static_mesh_count; i++)
                     {
                         Con_Printf("static[%d].object_id = %d", i, sect->owner_room->content->static_mesh[i].object_id);

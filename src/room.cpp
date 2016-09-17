@@ -287,7 +287,19 @@ int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont)
 }
 
 
-void Room_SwapRoomToBase(struct room_s *room)
+void Room_SwapRoom(struct room_s *room)
+{
+    /*if(room->base_room && room->active)                             // If room is active alternate room
+    {
+        room->frustum = NULL;
+        room->base_room->frustum = NULL;
+        Room_Disable(room);                                         // Disable current room
+        Room_Disable(room->base_room);                              // Paranoid
+        Room_Enable(room->base_room);                               // Enable original room
+    }*/
+}
+
+/*void Room_SwapRoomToBase(struct room_s *room)
 {
     if(room->base_room && room->active)                             // If room is active alternate room
     {
@@ -310,34 +322,30 @@ void Room_SwapRoomToAlternate(struct room_s *room)
         Room_Disable(room->alternate_room);                         // Paranoid
         Room_Enable(room->alternate_room);                          //
     }
-}
+}*/
 
 
 struct room_sector_s *Room_GetSectorRaw(struct room_s *room, float pos[3])
 {
-    int x, y;
-    room_sector_p ret = NULL;
-
-    if((room == NULL) || !room->active)
+    if(room)
     {
-        return NULL;
+        int x = (int)(pos[0] - room->transform[12]) / 1024;
+        int y = (int)(pos[1] - room->transform[13]) / 1024;
+        if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
+        {
+            return NULL;
+        }
+        /*
+         * column index system
+         * X - column number, Y - string number
+         */
+        return room->sectors + x * room->sectors_y + y;
     }
 
-    x = (int)(pos[0] - room->transform[12]) / 1024;
-    y = (int)(pos[1] - room->transform[13]) / 1024;
-    if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
-    {
-        return NULL;
-    }
-    /*
-     * column index system
-     * X - column number, Y - string number
-     */
-    ret = room->sectors + x * room->sectors_y + y;
-    return ret;
+    return NULL;
 }
 
-
+#if 0
 struct room_sector_s *Room_GetSectorCheckFlip(struct room_s *room, float pos[3])
 {
     int x, y;
@@ -380,14 +388,14 @@ struct room_sector_s *Room_GetSectorCheckFlip(struct room_s *room, float pos[3])
     ret = room->sectors + x * room->sectors_y + y;
     return ret;
 }
-
+#endif
 
 room_sector_p Room_GetSectorXYZ(room_p room, float pos[3])
 {
     int x, y;
     room_sector_p ret = NULL;
 
-    room = Room_CheckFlip(room);
+    //room = Room_CheckFlip(room);
 
     if(!room->active)
     {
@@ -409,14 +417,14 @@ room_sector_p Room_GetSectorXYZ(room_p room, float pos[3])
     /*
      * resolve Z overlapped neighboard rooms. room below has more priority.
      */
-    if(ret->sector_below && (ret->sector_below->ceiling >= pos[2]))
+    if(ret->room_below && (ret->room_below->bb_max[2] >= pos[2]))
     {
-        return Sector_CheckFlip(ret->sector_below);
+        return Room_GetSectorRaw(ret->room_below, ret->pos);
     }
 
-    if(ret->sector_above && (ret->sector_above->floor <= pos[2]))
+    if(ret->room_above && (ret->room_above->bb_min[2] <= pos[2]))
     {
-        return Sector_CheckFlip(ret->sector_above);
+        return Room_GetSectorRaw(ret->room_above, ret->pos);
     }
 
     return ret;
@@ -536,7 +544,7 @@ void Room_MoveActiveItems(struct room_s *room_to, struct room_s *room_from)
 }
 
 
-struct room_s *Room_CheckFlip(struct room_s *r)
+/*struct room_s *Room_CheckFlip(struct room_s *r)
 {
     if(r)
     {
@@ -551,7 +559,7 @@ struct room_s *Room_CheckFlip(struct room_s *r)
     }
 
     return r;
-}
+}*/
 
 
 void Room_GenSpritesBuffer(struct room_s *room)
@@ -588,7 +596,7 @@ void Room_GenSpritesBuffer(struct room_s *room)
 /*
  *   Sectors functionality
  */
-room_sector_p Sector_CheckBaseRoom(room_sector_p rs)
+static room_sector_p Sector_CheckBaseRoom(room_sector_p rs)
 {
     if(rs && rs->owner_room->base_room)
     {
@@ -605,7 +613,7 @@ room_sector_p Sector_CheckBaseRoom(room_sector_p rs)
 }
 
 
-room_sector_p Sector_CheckAlternateRoom(room_sector_p rs)
+static room_sector_p Sector_CheckAlternateRoom(room_sector_p rs)
 {
     if(rs && rs->owner_room->alternate_room)
     {
@@ -639,7 +647,7 @@ struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs)
 }
 
 
-struct room_sector_s *Sector_GetPortalSectorTarget(struct room_sector_s *rs)
+static struct room_sector_s *Sector_GetPortalSectorTarget(struct room_sector_s *rs)
 {
     if(rs && rs->portal_to_room)
     {
@@ -666,8 +674,8 @@ struct room_sector_s *Sector_GetPortalSectorTarget(struct room_sector_s *rs)
 
 int Sectors_Is2SidePortals(struct room_sector_s *s1, struct room_sector_s *s2)
 {
-    s1 = Sector_GetPortalSectorTarget(s1);
-    s2 = Sector_GetPortalSectorTarget(s2);
+    s1 = Sector_GetPortalSectorTargetRaw(s1);
+    s2 = Sector_GetPortalSectorTargetRaw(s2);
 
     if(s1->owner_room == s2->owner_room)
     {
@@ -707,7 +715,7 @@ int Sectors_Is2SidePortals(struct room_sector_s *s1, struct room_sector_s *s2)
 }
 
 
-struct room_sector_s *Sector_CheckFlip(struct room_sector_s *rs)
+/*struct room_sector_s *Sector_CheckFlip(struct room_sector_s *rs)
 {
     if(rs)
     {
@@ -724,12 +732,34 @@ struct room_sector_s *Sector_CheckFlip(struct room_sector_s *rs)
     }
 
     return rs;
+}*/
+
+
+/*struct room_sector_s *Sector_GetSectorAbove(struct room_sector_s *sector)
+{
+    if(sector && sector->room_above)
+    {
+        return Room_GetSectorRaw(sector->room_above, sector->pos);
+    }
+
+    return NULL;
 }
+
+
+struct room_sector_s *Sector_GetSectorBelow(struct room_sector_s *sector)
+{
+    if(sector && sector->room_below)
+    {
+        return Room_GetSectorRaw(sector->room_below, sector->pos);
+    }
+
+    return NULL;
+}*/
 
 
 struct room_sector_s *Sector_GetLowest(struct room_sector_s *sector)
 {
-    for(sector = Sector_CheckFlip(sector); sector->sector_below; sector = Sector_CheckFlip(sector->sector_below));
+    for(; sector && sector->room_below; sector = Room_GetSectorRaw(sector->room_below, sector->pos));
 
     return sector;
 }
@@ -737,7 +767,7 @@ struct room_sector_s *Sector_GetLowest(struct room_sector_s *sector)
 
 struct room_sector_s *Sector_GetHighest(struct room_sector_s *sector)
 {
-    for(sector = Sector_CheckFlip(sector); sector->sector_above; sector = Sector_CheckFlip(sector->sector_above));
+    for(; sector && sector->room_above; sector = Room_GetSectorRaw(sector->room_above, sector->pos));
 
     return sector;
 }
@@ -783,14 +813,14 @@ int Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, int ignore_doors)
     if( (s1->floor != s2->floor) ||
         (s1->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
         (s2->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
-        (!ignore_doors && (s1->sector_below || s2->sector_below))     )
+        (!ignore_doors && (s1->room_below || s2->room_below)) )
     {
           return 0;
     }
 
     for(int i = 0; i < 4; i++)
     {
-        if(s1->floor_corners[0][2] != s2->floor_corners[0][2])
+        if(s1->floor_corners[i][2] != s2->floor_corners[i][2])
         {
             return 0;
         }
@@ -808,14 +838,14 @@ int Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, int ignore_doors)
     if( (s1->ceiling != s2->ceiling) ||
         (s1->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
         (s2->ceiling_penetration_config == TR_PENETRATION_CONFIG_WALL) ||
-        (!ignore_doors && (s1->sector_above || s2->sector_above)) )
+        (!ignore_doors && (s1->room_above || s2->room_above)) )
     {
           return 0;
     }
 
     for(int i = 0; i < 4; i++)
     {
-        if(s1->ceiling_corners[0][2] != s2->ceiling_corners[0][2])
+        if(s1->ceiling_corners[i][2] != s2->ceiling_corners[i][2])
         {
             return 0;
         }

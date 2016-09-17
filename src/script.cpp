@@ -2468,8 +2468,8 @@ int lua_SimilarSector(lua_State * lua)
     room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
     room_sector_p next_sector = Room_GetSectorRaw(ent->self->room, next_pos);
 
-    curr_sector = Sector_GetPortalSectorTarget(curr_sector);
-    next_sector = Sector_GetPortalSectorTarget(next_sector);
+    curr_sector = Sector_GetPortalSectorTargetRaw(curr_sector);
+    next_sector = Sector_GetPortalSectorTargetRaw(next_sector);
 
     bool ignore_doors = lua_toboolean(lua, 5);
 
@@ -2523,7 +2523,7 @@ int lua_GetSectorHeight(lua_State * lua)
     }
 
     room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, pos);
-    curr_sector = Sector_GetPortalSectorTarget(curr_sector);
+    curr_sector = Sector_GetPortalSectorTargetRaw(curr_sector);
     float point[3];
     (ceiling) ? (Sector_LowestCeilingCorner(curr_sector, point)) : (Sector_HighestFloorCorner(curr_sector, point));
 

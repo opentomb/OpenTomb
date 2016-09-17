@@ -196,7 +196,7 @@ int Res_Sector_IsWall(struct room_sector_s *wall_sector, struct room_sector_s *n
 
     if(!near_sector->portal_to_room && wall_sector->portal_to_room && (near_sector->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
     {
-        wall_sector = Sector_GetPortalSectorTarget(wall_sector);
+        wall_sector = Sector_GetPortalSectorTargetRaw(wall_sector);
         if((wall_sector->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) || (0 == Sectors_Is2SidePortals(near_sector, wall_sector)))
         {
             return 1;
@@ -270,8 +270,8 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                         /************************** SECTION WITH DROPS CALCULATIONS **********************/
                         if((!current_heightmap->portal_to_room && !next_heightmap->portal_to_room) || Sectors_Is2SidePortals(current_heightmap, next_heightmap))
                         {
-                            current_heightmap = Sector_GetPortalSectorTarget(current_heightmap);
-                            next_heightmap    = Sector_GetPortalSectorTarget(next_heightmap);
+                            current_heightmap = Sector_GetPortalSectorTargetRaw(current_heightmap);
+                            next_heightmap    = Sector_GetPortalSectorTargetRaw(next_heightmap);
                             if(!current_heightmap->portal_to_room && !next_heightmap->portal_to_room && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                             {
                                 if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -303,16 +303,16 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                 if((joined_floors == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
                 {
                     char valid = 0;
-                    if(next_heightmap->portal_to_room && (current_heightmap->sector_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if(next_heightmap->portal_to_room && (current_heightmap->room_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        next_heightmap = Sector_GetPortalSectorTarget(next_heightmap);
-                        if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
+                        next_heightmap = Sector_GetPortalSectorTargetRaw(next_heightmap);
+                        if(next_heightmap->owner_room->id == current_heightmap->room_above->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_above->owner_room, next_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->room_above, next_heightmap->pos);
                             if(rs && (rs->portal_to_room == next_heightmap->owner_room))
                             {
                                 valid = 1;
@@ -320,16 +320,16 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                         }
                     }
 
-                    if(current_heightmap->portal_to_room && (next_heightmap->sector_above != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if(current_heightmap->portal_to_room && (next_heightmap->room_above != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        current_heightmap = Sector_GetPortalSectorTarget(current_heightmap);
-                        if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
+                        current_heightmap = Sector_GetPortalSectorTargetRaw(current_heightmap);
+                        if(current_heightmap->owner_room->id == next_heightmap->room_above->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_above->owner_room, current_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->room_above, current_heightmap->pos);
                             if(rs && (rs->portal_to_room == current_heightmap->owner_room))
                             {
                                 valid = 1;
@@ -353,16 +353,16 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                 if((joined_ceilings == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
                 {
                     char valid = 0;
-                    if(next_heightmap->portal_to_room && (current_heightmap->sector_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if(next_heightmap->portal_to_room && (current_heightmap->room_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        next_heightmap = Sector_GetPortalSectorTarget(next_heightmap);
-                        if(next_heightmap->owner_room->id == current_heightmap->sector_below->owner_room->id)
+                        next_heightmap = Sector_GetPortalSectorTargetRaw(next_heightmap);
+                        if(next_heightmap->owner_room->id == current_heightmap->room_below->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_below->owner_room, next_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->room_below, next_heightmap->pos);
                             if(rs && (rs->portal_to_room == next_heightmap->owner_room))
                             {
                                 valid = 1;
@@ -370,16 +370,16 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                         }
                     }
 
-                    if(current_heightmap->portal_to_room && (next_heightmap->sector_below != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if(current_heightmap->portal_to_room && (next_heightmap->room_below != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        current_heightmap = Sector_GetPortalSectorTarget(current_heightmap);
-                        if(current_heightmap->owner_room->id == next_heightmap->sector_below->owner_room->id)
+                        current_heightmap = Sector_GetPortalSectorTargetRaw(current_heightmap);
+                        if(current_heightmap->owner_room->id == next_heightmap->room_below->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_below->owner_room, current_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->room_below, current_heightmap->pos);
                             if(rs && (rs->portal_to_room == current_heightmap->owner_room))
                             {
                                 valid = 1;
@@ -459,8 +459,8 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                         /************************** BIG SECTION WITH DROPS CALCULATIONS **********************/
                         if((!current_heightmap->portal_to_room && !next_heightmap->portal_to_room) || Sectors_Is2SidePortals(current_heightmap, next_heightmap))
                         {
-                            current_heightmap = Sector_GetPortalSectorTarget(current_heightmap);
-                            next_heightmap    = Sector_GetPortalSectorTarget(next_heightmap);
+                            current_heightmap = Sector_GetPortalSectorTargetRaw(current_heightmap);
+                            next_heightmap    = Sector_GetPortalSectorTargetRaw(next_heightmap);
                             if(!current_heightmap->portal_to_room && !next_heightmap->portal_to_room && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
                             {
                                 if((current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
@@ -492,16 +492,16 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                 if((joined_floors == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
                 {
                     char valid = 0;
-                    if(next_heightmap->portal_to_room && (current_heightmap->sector_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if(next_heightmap->portal_to_room && (current_heightmap->room_above != NULL) && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        next_heightmap = Sector_GetPortalSectorTarget(next_heightmap);
-                        if(next_heightmap->owner_room->id == current_heightmap->sector_above->owner_room->id)
+                        next_heightmap = Sector_GetPortalSectorTargetRaw(next_heightmap);
+                        if(next_heightmap->owner_room->id == current_heightmap->room_above->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_above->owner_room, next_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->room_above, next_heightmap->pos);
                             if(rs && (rs->portal_to_room == next_heightmap->owner_room))
                             {
                                 valid = 1;
@@ -509,16 +509,16 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                         }
                     }
 
-                    if(current_heightmap->portal_to_room && (next_heightmap->sector_above != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if(current_heightmap->portal_to_room && (next_heightmap->room_above != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        current_heightmap = Sector_GetPortalSectorTarget(current_heightmap);
-                        if(current_heightmap->owner_room->id == next_heightmap->sector_above->owner_room->id)
+                        current_heightmap = Sector_GetPortalSectorTargetRaw(current_heightmap);
+                        if(current_heightmap->owner_room->id == next_heightmap->room_above->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_above->owner_room, current_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->room_above, current_heightmap->pos);
                             if(rs && (rs->portal_to_room == current_heightmap->owner_room))
                             {
                                 valid = 1;
@@ -542,16 +542,16 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                 if((joined_ceilings == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
                 {
                     char valid = 0;
-                    if(next_heightmap->portal_to_room && (current_heightmap->sector_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if(next_heightmap->portal_to_room && (current_heightmap->room_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        next_heightmap = Sector_GetPortalSectorTarget(next_heightmap);
-                        if(next_heightmap->owner_room->id == current_heightmap->sector_below->owner_room->id)
+                        next_heightmap = Sector_GetPortalSectorTargetRaw(next_heightmap);
+                        if(next_heightmap->owner_room->id == current_heightmap->room_below->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->sector_below->owner_room, next_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(current_heightmap->room_below, next_heightmap->pos);
                             if(rs && (rs->portal_to_room == next_heightmap->owner_room))
                             {
                                 valid = 1;
@@ -559,16 +559,16 @@ void Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween
                         }
                     }
 
-                    if(current_heightmap->portal_to_room && (next_heightmap->sector_below != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
+                    if(current_heightmap->portal_to_room && (next_heightmap->room_below != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
-                        current_heightmap = Sector_GetPortalSectorTarget(current_heightmap);
-                        if(current_heightmap->owner_room->id == next_heightmap->sector_below->owner_room->id)
+                        current_heightmap = Sector_GetPortalSectorTargetRaw(current_heightmap);
+                        if(current_heightmap->owner_room->id == next_heightmap->room_below->id)
                         {
                             valid = 1;
                         }
                         if(valid == 0)
                         {
-                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->sector_below->owner_room, current_heightmap->pos);
+                            room_sector_p rs = Room_GetSectorRaw(next_heightmap->room_below, current_heightmap->pos);
                             if(rs && (rs->portal_to_room == current_heightmap->owner_room))
                             {
                                 valid = 1;
@@ -733,16 +733,16 @@ void Res_RoomSectorsCalculate(struct room_s *rooms, uint32_t rooms_count, uint32
          * Let us fill pointers to sectors above and sectors below
          */
         uint8_t rp = tr_room->sector_list[i].room_below;
-        sector->sector_below = NULL;
+        sector->room_below = NULL;
         if(rp < rooms_count && rp != 255)
         {
-            sector->sector_below = Room_GetSectorRaw(rooms + rp, sector->pos);
+            sector->room_below = rooms + rp;
         }
         rp = tr_room->sector_list[i].room_above;
-        sector->sector_above = NULL;
+        sector->room_above = NULL;
         if(rp < rooms_count && rp != 255)
         {
-            sector->sector_above = Room_GetSectorRaw(rooms + rp, sector->pos);
+            sector->room_above = rooms + rp;
         }
 
         room_sector_p near_sector = NULL;
