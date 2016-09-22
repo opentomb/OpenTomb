@@ -326,7 +326,6 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
     fc->transition_level = 32512.0;
 
     r = World_FindRoomByPosCogerrence(pos, r);
-    //r = Room_CheckFlip(r);
     if(r)
     {
         rs = Room_GetSectorXYZ(r, pos);                                         // if r != NULL then rs can not been NULL!!!
@@ -1781,23 +1780,23 @@ int Character_FindTraverse(struct entity_s *ch)
     if(ch->transform[4 + 0] > 0.9)
     {
         float pos[] = {(float)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (float)(ch_s->pos[1]), (float)0.0};
-        obj_s = Room_GetSectorRaw(ch_s->owner_room, pos);
+        obj_s = Room_GetSectorRaw(ch->self->room, pos);
     }
     else if(ch->transform[4 + 0] < -0.9)
     {
         float pos[] = {(float)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (float)(ch_s->pos[1]), (float)0.0};
-        obj_s = Room_GetSectorRaw(ch_s->owner_room, pos);
+        obj_s = Room_GetSectorRaw(ch->self->room, pos);
     }
     // OY move case
     else if(ch->transform[4 + 1] > 0.9)
     {
         float pos[] = {(float)(ch_s->pos[0]), (float)(ch_s->pos[1] + TR_METERING_SECTORSIZE), (float)0.0};
-        obj_s = Room_GetSectorRaw(ch_s->owner_room, pos);
+        obj_s = Room_GetSectorRaw(ch->self->room, pos);
     }
     else if(ch->transform[4 + 1] < -0.9)
     {
         float pos[] = {(float)(ch_s->pos[0]), (float)(ch_s->pos[1] - TR_METERING_SECTORSIZE), (float)0.0};
-        obj_s = Room_GetSectorRaw(ch_s->owner_room, pos);
+        obj_s = Room_GetSectorRaw(ch->self->room, pos);
     }
 
     if(obj_s != NULL)
@@ -1881,23 +1880,23 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         if(ch->transform[4 + 0] > 0.8)
         {
             float pos[] = {(float)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (float)(obj_s->pos[1]), (float)0.0};
-            ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
+            ch_s = Room_GetSectorRaw(obj->self->room, pos);
         }
         else if(ch->transform[4 + 0] < -0.8)
         {
             float pos[] = {(float)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (float)(obj_s->pos[1]), (float)0.0};
-            ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
+            ch_s = Room_GetSectorRaw(obj->self->room, pos);
         }
         // OY move case
         else if(ch->transform[4 + 1] > 0.8)
         {
             float pos[] = {(float)(obj_s->pos[0]), (float)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (float)0.0};
-            ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
+            ch_s = Room_GetSectorRaw(obj->self->room, pos);
         }
         else if(ch->transform[4 + 1] < -0.8)
         {
             float pos[] = {(float)(obj_s->pos[0]), (float)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (float)0.0};
-            ch_s = Room_GetSectorRaw(obj_s->owner_room, pos);
+            ch_s = Room_GetSectorRaw(obj->self->room, pos);
         }
         ch_s = Sector_GetPortalSectorTargetRaw(ch_s);
     }

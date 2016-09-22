@@ -238,7 +238,7 @@ void Physics_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
 /* bullet collision model calculation */
 btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max);
 btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
-btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
+btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, uint32_t sectors_count, struct sector_tween_s *tweens, uint32_t tweens_count, bool useCompression, bool buildBvh);
 
 uint32_t BT_AddFloorAndCeilingToTrimesh(btTriangleMesh *trimesh, struct room_sector_s *sector);
 uint32_t BT_AddSectorTweenToTrimesh(btTriangleMesh *trimesh, struct sector_tween_s *tween);
@@ -1119,19 +1119,18 @@ uint32_t BT_AddSectorTweenToTrimesh(btTriangleMesh *trimesh, struct sector_tween
 
 
 ///@TODO: resolve cases with floor >> ceiling (I.E. floor - ceiling >= 2048)
-btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
+btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, uint32_t sectors_count, struct sector_tween_s *tweens, uint32_t tweens_count, bool useCompression, bool buildBvh)
 {
     uint32_t cnt = 0;
-    room_p r = heightmap->owner_room;
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret = NULL;
 
-    for(uint32_t i = 0; i < r->sectors_count; i++)
+    for(uint32_t i = 0; i < sectors_count; i++)
     {
         cnt += BT_AddFloorAndCeilingToTrimesh(trimesh, heightmap + i);
     }
 
-    for(int i = 0; i < tweens_size; i++)
+    for(uint32_t i = 0; i < tweens_count; i++)
     {
         cnt += BT_AddSectorTweenToTrimesh(trimesh, tweens + i);
     }
@@ -1414,7 +1413,7 @@ void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh)
 
 void Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens, int num_tweens)
 {
-    btCollisionShape *cshape = BT_CSfromHeightmap(room->sectors, tweens, num_tweens, true, true);
+    btCollisionShape *cshape = BT_CSfromHeightmap(room->sectors, room->sectors_count, tweens, num_tweens, true, true);
     room->content->physics_body = NULL;
 
     if(cshape)
@@ -1433,6 +1432,15 @@ void Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens
         room->content->physics_body->bt_body->setFriction(1.0);
         room->self->collision_type = COLLISION_TYPE_STATIC;                     // meshtree
         room->self->collision_shape = COLLISION_SHAPE_TRIMESH;
+    }
+}
+
+
+void Physics_SetOwnerObject(struct physics_object_s *obj, struct engine_container_s *self)
+{
+    if(obj && obj->bt_body)
+    {
+        obj->bt_body->setUserPointer(self);
     }
 }
 
