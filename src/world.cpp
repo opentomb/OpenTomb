@@ -2138,7 +2138,6 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
         p->vertex_count = 4;                                                    // in original TR all portals are axis aligned rectangles
         p->vertex = (float*)malloc(3*p->vertex_count*sizeof(float));
         p->dest_room = r_dest;
-        p->current_room = room;
         TR_vertex_to_arr(p->vertex  , &tr_portal->vertices[3]);
         vec3_add(p->vertex, p->vertex, room->transform+12);
         TR_vertex_to_arr(p->vertex+3, &tr_portal->vertices[2]);
@@ -2481,18 +2480,22 @@ void World_GenSpritesBuffer()
 
 static room_p WorldRoom_FindRealRoomInSequence(room_p room)
 {
-    room_p room_with_portals = NULL;
+    room_p room_with_min_id = room;
 
-    if(room->portals_count > 0)
+    if(!room->alternate_room_prev)
     {
-        room_with_portals = room;
+        return room;
     }
 
-    for(room_p room_it = room->alternate_room_prev; !room_with_portals && room_it; room_it = room_it->alternate_room_prev)
+    for(room_p room_it = room->alternate_room_prev; room_it; room_it = room_it->alternate_room_prev)
     {
-        if(room_it->portals_count > 0)
+        if(!room_it->alternate_room_prev)
         {
-            room_with_portals = room_it;
+            return room_it;
+        }
+        if(room_with_min_id->id > room_it->id)
+        {
+            room_with_min_id = room_it;
         }
         if(room_it == room)
         {
@@ -2500,11 +2503,11 @@ static room_p WorldRoom_FindRealRoomInSequence(room_p room)
         }
     }
 
-    for(room_p room_it = room->alternate_room_next; !room_with_portals && room_it; room_it = room_it->alternate_room_next)
+    for(room_p room_it = room->alternate_room_next; room_it; room_it = room_it->alternate_room_next)
     {
-        if(room_it->portals_count > 0)
+        if(room_with_min_id->id > room_it->id)
         {
-            room_with_portals = room_it;
+            room_with_min_id = room_it;
         }
         if(room_it == room)
         {
@@ -2512,12 +2515,7 @@ static room_p WorldRoom_FindRealRoomInSequence(room_p room)
         }
     }
 
-    if(room_with_portals)
-    {
-        return room_with_portals;
-    }
-
-    return room;
+    return room_with_min_id;
 }
 
 
@@ -2546,7 +2544,7 @@ void World_GenRoomProperties(class VT_Level *tr)
         room_p r = global_world.rooms + i;
         if(!r->real_room)
         {
-            room_p real_room = WorldRoom_FindRealRoomInSequence(r);             // call it once per alt room sequence
+            room_p real_room = WorldRoom_FindRealRoomInSequence(r);             // call it once per alt rooms sequence
             r->real_room = real_room;
             for(room_p room_it = r->alternate_room_next; room_it; room_it = room_it->alternate_room_next)
             {

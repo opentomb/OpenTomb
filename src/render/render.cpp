@@ -1216,21 +1216,17 @@ int CRender::ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
 {
     int ret = 0;
     room_p room = portal->dest_room->real_room;
-    room_p src_room = portal->current_room->real_room;
 
     for(uint16_t i = 0; i < room->portals_count; i++)
     {
         portal_p p = room->portals + i;
         room_p dest_room = p->dest_room->real_room;
-        if(dest_room && (dest_room != src_room))   // do not go back
+        frustum_p gen_frus = frustumManager->PortalFrustumIntersect(p, frus, m_camera);  // backface portals are filtered here
+        if(gen_frus)
         {
-            frustum_p gen_frus = frustumManager->PortalFrustumIntersect(p, frus, m_camera);
-            if(gen_frus)
-            {
-                ret++;
-                this->AddRoom(dest_room);
-                this->ProcessRoom(p, gen_frus);
-            }
+            ret++;
+            this->AddRoom(dest_room);
+            this->ProcessRoom(p, gen_frus);
         }
     }
 
