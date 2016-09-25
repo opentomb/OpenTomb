@@ -324,53 +324,31 @@ void Room_SwapContent(struct room_s *room1, struct room_s *room2)
             }
         }
 
-        // swap physics
+        // swap content
         {
-            struct physics_object_s *t = room1->content->physics_body;
-            room1->content->physics_body = room2->content->physics_body;
-            room2->content->physics_body = t;
+            room_content_p t = room1->content;
+            room1->content = room2->content;
+            room2->content = t;
+
+            // fix physics
             Physics_SetOwnerObject(room1->content->physics_body, room1->self);
             Physics_SetOwnerObject(room2->content->physics_body, room2->self);
-        }
 
-        // swap mesh
-        {
-            base_mesh_p t = room1->content->mesh;
-            room1->content->mesh = room2->content->mesh;
-            room2->content->mesh = t;
-        }
-
-        // swap statics
-        {
-            static_mesh_p t = room1->content->static_mesh;
-            uint32_t count = room1->content->static_mesh_count;
-            room1->content->static_mesh = room2->content->static_mesh;
-            room1->content->static_mesh_count = room2->content->static_mesh_count;
-            room2->content->static_mesh = t;
-            room2->content->static_mesh_count = count;
-
+            // fix static meshes
             for(uint32_t i = 0; i < room1->content->static_mesh_count; ++i)
             {
                 room1->content->static_mesh[i].self->room = room1;
             }
-
             for(uint32_t i = 0; i < room2->content->static_mesh_count; ++i)
             {
                 room2->content->static_mesh[i].self->room = room2;
             }
-        }
 
-        // swap objects
-        {
-            engine_container_p t = room1->content->containers;
-            room1->content->containers = room2->content->containers;
-            room2->content->containers = t;
-
+            // fix containers
             for(engine_container_p cont = room1->content->containers; cont; cont = cont->next)
             {
                 cont->room = room1;
             }
-
             for(engine_container_p cont = room2->content->containers; cont; cont = cont->next)
             {
                 cont->room = room2;

@@ -223,8 +223,9 @@ typedef struct room_s
     uint32_t                    id;                                             // room's ID
     uint32_t                    flags;                                          // room's type + water, wind info
 
-    int8_t                      is_in_r_list;                                   // is room in render list
-    int8_t                      active;
+    uint8_t                     is_in_r_list : 4;                               // is room in render list
+    uint8_t                     is_swapped : 4;
+    uint8_t                     active;
     uint16_t                    portals_count;                                  // number of room portals
     struct portal_s            *portals;                                        // room portals array
     struct room_s              *alternate_room_next;                            // alternative room pointer

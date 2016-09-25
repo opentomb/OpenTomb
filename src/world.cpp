@@ -969,25 +969,15 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
         {
             if(is_global_flip || (current_room->content->alternate_group == flip_index))
             {
-                if(flip_state)
+                if(current_room->alternate_room_next &&
+                   (( flip_state && !current_room->is_swapped) ||
+                    (!flip_state &&  current_room->is_swapped)))
                 {
-                    if(current_room->alternate_room_next)
-                    {
-                        Room_Disable(current_room->real_room);
-                        Room_SwapContent(current_room, current_room->alternate_room_next);
-                        Room_Enable(current_room->real_room);
-                    }
+                    current_room->is_swapped = !current_room->is_swapped;
+                    Room_Disable(current_room->real_room);
+                    Room_SwapContent(current_room, current_room->alternate_room_next);
+                    Room_Enable(current_room->real_room);
                 }
-                /*else
-                {
-                    /// add other condition
-                    if(current_room->alternate_room_next)
-                    {
-                        Room_Disable(current_room->real_room);
-                        Room_SwapContent(current_room, current_room->alternate_room_next);
-                        Room_Enable(current_room->real_room);
-                    }
-                }*/
             }
         }
         global_world.flip_state[flip_index] = flip_state & 0x01;
@@ -1819,6 +1809,8 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     room->flags = tr->rooms[room->id].flags;
     room->frustum = NULL;
     room->active = 1;
+    room->is_in_r_list = 0;
+    room->is_swapped = 0;
 
     Mat4_E_macro(room->transform);
     room->transform[12] = tr->rooms[room->id].offset.x;                         // x = x;
