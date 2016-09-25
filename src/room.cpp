@@ -294,6 +294,13 @@ void Room_SwapContent(struct room_s *room1, struct room_s *room2)
         room1->frustum = NULL;
         room2->frustum = NULL;
 
+        // swap flags
+        {
+            uint32_t t = room1->flags;
+            room1->flags = room2->flags;
+            room2->flags = t;
+        }
+
         // swap portals
         {
             portal_p t = room1->portals;
@@ -322,6 +329,23 @@ void Room_SwapContent(struct room_s *room1, struct room_s *room2)
             {
                 room2->sectors[i].owner_room = room2;
             }
+        }
+
+        // swap near / overlapped rooms list
+        {
+            room_p *t = room1->near_room_list;
+            uint16_t size = room1->near_room_list_size;
+            room1->near_room_list = room2->near_room_list;
+            room1->near_room_list_size = room2->near_room_list_size;
+            room2->near_room_list = t;
+            room2->near_room_list_size = size;
+
+            t = room1->overlapped_room_list;
+            size = room1->overlapped_room_list_size;
+            room1->overlapped_room_list = room2->overlapped_room_list;
+            room1->overlapped_room_list_size = room2->overlapped_room_list_size;
+            room2->overlapped_room_list = t;
+            room2->overlapped_room_list_size = size;
         }
 
         // swap content
@@ -381,11 +405,12 @@ struct room_sector_s *Room_GetSectorRaw(struct room_s *room, float pos[3])
 
 room_sector_p Room_GetSectorXYZ(room_p room, float pos[3])
 {
-    int x, y;
     room_sector_p ret = NULL;
+    int x = (int)(pos[0] - room->transform[12]) / 1024;
+    int y = (int)(pos[1] - room->transform[13]) / 1024;
 
-    x = (int)(pos[0] - room->transform[12]) / 1024;
-    y = (int)(pos[1] - room->transform[13]) / 1024;
+    room = room->real_room;
+
     if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
     {
         return NULL;
@@ -399,14 +424,14 @@ room_sector_p Room_GetSectorXYZ(room_p room, float pos[3])
     /*
      * resolve Z overlapped neighboard rooms. room below has more priority.
      */
-    if(ret->room_below && (ret->room_below->bb_max[2] >= pos[2]))
+    if(ret->room_below && (ret->floor >= pos[2]))
     {
-        ret = Room_GetSectorRaw(ret->room_below, ret->pos);
+        ret = Room_GetSectorRaw(ret->room_below->real_room, ret->pos);
     }
 
-    if(ret->room_above && (ret->room_above->bb_min[2] <= pos[2]))
+    if(ret->room_above && (ret->ceiling <= pos[2]))
     {
-        ret = Room_GetSectorRaw(ret->room_above, ret->pos);
+        ret = Room_GetSectorRaw(ret->room_above->real_room, ret->pos);
     }
 
     return ret;

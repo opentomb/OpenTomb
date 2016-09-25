@@ -822,26 +822,8 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
        (pos[0] >= old_room->bb_min[0]) && (pos[0] < old_room->bb_max[0]) &&
        (pos[1] >= old_room->bb_min[1]) && (pos[1] < old_room->bb_max[1]))
     {
-        if((pos[2] >= old_room->bb_min[2]) && (pos[2] < old_room->bb_max[2]))
-        {
-            return old_room->real_room;
-        }
-        else if(pos[2] >= old_room->bb_max[2])
-        {
-            room_sector_p orig_sector = Room_GetSectorRaw(old_room, pos);
-            if(orig_sector->room_above)
-            {
-                return orig_sector->room_above->real_room;
-            }
-        }
-        else if(pos[2] < old_room->bb_min[2])
-        {
-            room_sector_p orig_sector = Room_GetSectorRaw(old_room, pos);
-            if(orig_sector->room_below)
-            {
-                return orig_sector->room_below->real_room;
-            }
-        }
+        room_sector_p rs_xyz = Room_GetSectorXYZ(old_room, pos);
+        return rs_xyz->owner_room->real_room;
     }
 
     room_sector_p new_sector = Room_GetSectorRaw(old_room, pos);
@@ -974,6 +956,7 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
                     (!flip_state &&  current_room->is_swapped)))
                 {
                     current_room->is_swapped = !current_room->is_swapped;
+                    current_room->alternate_room_next->is_swapped = !current_room->alternate_room_next->is_swapped; ///@HACK or not HACK?
                     Room_Disable(current_room->real_room);
                     Room_SwapContent(current_room, current_room->alternate_room_next);
                     Room_Enable(current_room->real_room);
@@ -2567,9 +2550,11 @@ void World_GenRoomProperties(class VT_Level *tr)
         if(!r->real_room)
         {
             room_p real_room = WorldRoom_FindRealRoomInSequence(r);             // call it once per alt rooms sequence
+            r->active = 0;
             r->real_room = real_room;
             for(room_p room_it = r->alternate_room_next; room_it; room_it = room_it->alternate_room_next)
             {
+                room_it->active = 0;
                 room_it->real_room = real_room;
                 if(room_it == r)
                 {
@@ -2578,12 +2563,14 @@ void World_GenRoomProperties(class VT_Level *tr)
             }
             for(room_p room_it = r->alternate_room_prev; room_it; room_it = room_it->alternate_room_prev)
             {
+                room_it->active = 0;
                 room_it->real_room = real_room;
                 if(room_it == r)
                 {
                     break;
                 }
             }
+            real_room->active = 1;
         }
     }
 

@@ -1470,13 +1470,19 @@ void Physics_DeleteObject(struct physics_object_s *obj)
 
 void Physics_EnableObject(struct physics_object_s *obj)
 {
-    bt_engine_dynamicsWorld->addRigidBody(obj->bt_body);
+    if(obj->bt_body && !obj->bt_body->isInWorld())
+    {
+        bt_engine_dynamicsWorld->addRigidBody(obj->bt_body);
+    }
 }
 
 
 void Physics_DisableObject(struct physics_object_s *obj)
 {
-    bt_engine_dynamicsWorld->removeRigidBody(obj->bt_body);
+    if(obj->bt_body && obj->bt_body->isInWorld())
+    {
+        bt_engine_dynamicsWorld->removeRigidBody(obj->bt_body);
+    }
 }
 
 

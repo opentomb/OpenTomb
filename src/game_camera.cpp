@@ -243,14 +243,15 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
     //Update cam pos
     vec3_copy(cam->gl_transform + 12, cam_pos);
 
+    ///@TODO: fix that HACK!
     //Modify cam pos for quicksand rooms
-    cam->gl_transform[12 + 2] -= 128.0;
+    /*cam->gl_transform[12 + 2] -= 128.0;
     cam->current_room = World_FindRoomByPosCogerrence(cam->gl_transform + 12, cam->current_room);
     cam->gl_transform[12 + 2] += 128.0;
     if((cam->current_room != NULL) && (cam->current_room->flags & TR_ROOM_FLAG_QUICKSAND))
     {
         cam->gl_transform[12 + 2] = cam->current_room->bb_max[2] + 2.0 * 64.0;
-    }
+    }*/
 
     if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
     {
@@ -272,5 +273,5 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
     {
         Cam_SetRotation(cam, control_states.cam_angles);
     }
-    cam->current_room = World_FindRoomByPosCogerrence(cam->gl_transform + 12, cam->current_room);
+    //cam->current_room = World_FindRoomByPosCogerrence(cam->gl_transform + 12, cam->current_room);
 }
