@@ -10,14 +10,14 @@ struct camera_s;
 struct obb_s;
 
 
-typedef struct portal_s                                                         
+typedef struct portal_s
 {
     uint16_t        vertex_count;
     uint16_t        unused;
-    float          *vertex;                                                     // Оригинальные вершины портала
-    float           norm[4];                                                    // уравнение плоскости оригинальных вершин (оно же нормаль)
-    float           centre[3];                                                  // центр портала
-    struct room_s  *dest_room;                                                  // куда ведет портал
+    float          *vertex;                                                     // portal polygon vertices
+    float           norm[4];                                                    // portal plane
+    float           centre[3];                                                  // portal polygon center
+    struct room_s  *dest_room;                                                  // where to lead the portal
 }portal_t, *portal_p;
 
 typedef struct frustum_s

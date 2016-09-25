@@ -294,6 +294,16 @@ void Room_SwapContent(struct room_s *room1, struct room_s *room2)
         room1->frustum = NULL;
         room2->frustum = NULL;
 
+        // swap portals
+        {
+            portal_p t = room1->portals;
+            uint16_t count = room1->portals_count;
+            room1->portals = room2->portals;
+            room1->portals_count = room2->portals_count;
+            room2->portals = t;
+            room2->portals_count = count;
+        }
+
         // swap sectors
         {
             room_sector_p t = room1->sectors;
@@ -599,21 +609,15 @@ struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs)
 
 int Sectors_Is2SidePortals(struct room_sector_s *s1, struct room_sector_s *s2)
 {
-    if(s1->owner_room == s2->owner_room)
-    {
-        return 0;
-    }
-
     s1 = Sector_GetPortalSectorTargetRaw(s1);
     s2 = Sector_GetPortalSectorTargetRaw(s2);
 
     room_sector_p s1p = Room_GetSectorRaw(s2->owner_room, s1->pos);
     room_sector_p s2p = Room_GetSectorRaw(s1->owner_room, s2->pos);
-    s1p = Sector_GetPortalSectorTargetRaw(s1p);
-    s2p = Sector_GetPortalSectorTargetRaw(s2p);
 
-    if(Sector_CheckRealRoom(s1p) == Sector_CheckRealRoom(s1) &&
-       Sector_CheckRealRoom(s2p) == Sector_CheckRealRoom(s2))
+    if(s1p->portal_to_room && s2p->portal_to_room &&
+       (s1p->portal_to_room->real_room == s1->owner_room->real_room) &&
+       (s2p->portal_to_room->real_room == s2->owner_room->real_room))
     {
         return 1;
     }

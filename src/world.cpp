@@ -969,30 +969,23 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
         {
             if(is_global_flip || (current_room->content->alternate_group == flip_index))
             {
-                /*if(flip_state)
+                if(flip_state)
                 {
                     if(current_room->alternate_room_next)
                     {
+                        Room_Disable(current_room->real_room);
                         Room_SwapContent(current_room, current_room->alternate_room_next);
-                        Room_Disable(current_room);
-                        Room_Disable(current_room->alternate_room_next);
-                        if(current_room->real_room == current_room)
-                        {
-                            Room_Enable(current_room);
-                        }
+                        Room_Enable(current_room->real_room);
                     }
                 }
-                else
+                /*else
                 {
-                    if(current_room->base_room)
+                    /// add other condition
+                    if(current_room->alternate_room_next)
                     {
-                        Room_SwapContent(current_room, current_room->base_room);
-                        Room_Disable(current_room);
-                        Room_Disable(current_room->base_room);
-                        if(current_room->base_room->base_room == NULL)
-                        {
-                            Room_Enable(current_room->base_room);
-                        }
+                        Room_Disable(current_room->real_room);
+                        Room_SwapContent(current_room, current_room->alternate_room_next);
+                        Room_Enable(current_room->real_room);
                     }
                 }*/
             }
