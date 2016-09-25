@@ -2467,6 +2467,43 @@ static room_p WorldRoom_FindRealRoomInSequence(room_p room)
 {
     room_p room_with_min_id = room;
 
+    for(uint16_t i = 0; i < room->portals_count; ++i)
+    {
+        room_p outer_room = room->portals[i].dest_room;
+        for(uint16_t j = 0; j < outer_room->portals_count; ++j)
+        {
+            room_p real_room = outer_room->portals[j].dest_room;
+            if(room == real_room)
+            {
+                return real_room;
+            }
+
+            for(room_p room_it = room->alternate_room_prev; room_it; room_it = room_it->alternate_room_prev)
+            {
+                if(room_it == real_room)
+                {
+                    return real_room;
+                }
+                if(room_it == room)
+                {
+                    break;
+                }
+            }
+
+            for(room_p room_it = room->alternate_room_next; room_it; room_it = room_it->alternate_room_next)
+            {
+                if(room_it == real_room)
+                {
+                    return real_room;
+                }
+                if(room_it == room)
+                {
+                    break;
+                }
+            }
+        }
+    }
+
     if(!room->alternate_room_prev)
     {
         return room;

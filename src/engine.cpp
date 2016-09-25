@@ -926,8 +926,8 @@ void ShowDebugInfo()
                 if(ent && ent->self->room)
                 {
                     GLText_OutTextXY(30.0f, y += dy, "char_pos = (%.1f, %.1f, %.1f)", ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2]);
-                    room_p room = (room_p)last_cont->object;
-                    room_sector_p rs = Room_GetSectorRaw(ent->self->room, ent->transform + 12);
+                    room_p room = ent->self->room;
+                    room_sector_p rs = Room_GetSectorRaw(room, ent->transform + 12);
                     if(rs != NULL)
                     {
                         renderer.debugDrawer->SetColor(0.0, 1.0, 0.0);
