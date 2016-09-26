@@ -818,15 +818,31 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
         return World_FindRoomByPos(pos);
     }
 
-    if(old_room->active &&
-       (pos[0] >= old_room->bb_min[0]) && (pos[0] < old_room->bb_max[0]) &&
+    if((pos[0] >= old_room->bb_min[0]) && (pos[0] < old_room->bb_max[0]) &&
        (pos[1] >= old_room->bb_min[1]) && (pos[1] < old_room->bb_max[1]))
     {
-        room_sector_p rs_xyz = Room_GetSectorXYZ(old_room, pos);
-        return rs_xyz->owner_room->real_room;
+        room_sector_p orig_sector = Room_GetSectorRaw(old_room->real_room, pos);
+        if((pos[2] >= orig_sector->floor) && (pos[2] <= orig_sector->ceiling))
+        {
+            return old_room->real_room;
+        }
+        else if(pos[2] >= orig_sector->ceiling)
+        {
+            if(orig_sector->room_above)
+            {
+                return orig_sector->room_above->real_room;
+            }
+        }
+        else if(pos[2] < orig_sector->floor)
+        {
+            if(orig_sector->room_below)
+            {
+                return orig_sector->room_below->real_room;
+            }
+        }
     }
 
-    room_sector_p new_sector = Room_GetSectorRaw(old_room, pos);
+    room_sector_p new_sector = Room_GetSectorRaw(old_room->real_room, pos);
     if((new_sector != NULL) && new_sector->portal_to_room)
     {
         return new_sector->portal_to_room->real_room;
@@ -834,13 +850,13 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
 
     for(uint16_t i = 0; i < old_room->near_room_list_size; i++)
     {
-        room_p r = old_room->near_room_list[i];
+        room_p r = old_room->near_room_list[i]->real_room;
         if(r->active &&
            (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
            (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
         {
-            return r->real_room;
+            return r;
         }
     }
 
@@ -951,12 +967,11 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
         {
             if(is_global_flip || (current_room->content->alternate_group == flip_index))
             {
-                if(current_room->alternate_room_next &&
+                if(current_room->alternate_room_next && (current_room->alternate_room_next != current_room->real_room) &&
                    (( flip_state && !current_room->is_swapped) ||
                     (!flip_state &&  current_room->is_swapped)))
                 {
                     current_room->is_swapped = !current_room->is_swapped;
-                    current_room->alternate_room_next->is_swapped = !current_room->alternate_room_next->is_swapped; ///@HACK or not HACK?
                     Room_Disable(current_room->real_room);
                     Room_SwapContent(current_room, current_room->alternate_room_next);
                     Room_Enable(current_room->real_room);
