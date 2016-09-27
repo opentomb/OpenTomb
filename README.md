@@ -169,7 +169,7 @@ more people involved in project development, so someone may be missing from this
 
 * TeslaRus: main developer.
 * Cochrane: renderer rewrites and optimizing, Mac OS X support.
-* Gh0stBlade: renderer add-ons, shader port, gameflow implementation, state control fix-ups, camera programming.
+* Gh0stBlade: renderer add-ons, shader port, gameflow implementation, state control fix-ups, camera and AI programming.
 * Lwmte: state and scripting fix-ups, controls, GUI and audio modules, trigger and entity system rewrites.
 * Nickotte: interface programming, ring inventory implementation, camera fix-ups.
 * pmatulka: Linux port and testing.
@@ -177,6 +177,7 @@ more people involved in project development, so someone may be missing from this
 * Saracen: room and static mesh lighting.
 * T4Larson: general stability patches and bugfixing.
 * vobject: nightly builds, maintaining general compiler compatibility.
+* xproger: documentation updates.
 
 Additional contributions from: Ado Croft (extensive testing), E. Popov (TRN caustics shader port),
 godmodder (general help), jack9267 (vt loader optimization), meta2tr (testing and bugtracking),

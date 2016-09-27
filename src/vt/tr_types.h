@@ -259,7 +259,7 @@ typedef struct tr5_room_s
     // Reverb info is used in TR3-5 and contains index that specifies reverb type.
     // 0 - Outside, 1 - Small room, 2 - Medium room, 3 - Large room, 4 - Pipe.
 
-    tr5_colour_t light_colour;    // Present in TR5 only
+    tr5_colour_t light_colour;    // Present in TR4 and TR5 only
 
     // TR5 only:
 
