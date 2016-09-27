@@ -6,8 +6,13 @@
 --------------------------------------------------------------------------------
 
 -- Global frame time variable, in seconds
-
 frame_time = 1.0 / 60.0;
+
+-- Script execution interval. Normally, shouldn't be changed.
+script_fps = 60.0;
+
+-- Time coefficient, needed for normalized script values. Changed by engine.
+time_coef = frame_time * script_fps; -- just initial value...
 
 
 -- Key query functions

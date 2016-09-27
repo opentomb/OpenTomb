@@ -1227,7 +1227,6 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
         -- pop-retract phase. Pop phase is done in first 10 frames, and retract phase is done after
         -- frame 50 (e.g. 60-10 = 10 frames as well). For mode 1, we stop the phase right after
         -- spikes were popped out, and send them to idle state - so they can be deactivated later.
-        local time_coef = frame_time * 60.0;
         if(entity_funcs[object_id].curr_timer < 60) then
             entity_funcs[object_id].curr_subscaling = entity_funcs[object_id].curr_subscaling + 6 * time_coef;  -- Subscaling makes full turn in 1 sec.
             if(entity_funcs[object_id].curr_timer <= 10) then
@@ -1473,9 +1472,9 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
     entity_funcs[id].current_angle = 0.0;           -- Current cleaner rotating angle.
     entity_funcs[id].target_angle  = 0.0;           -- Desired angle value, after which cleaner stops rotating.
     
-    entity_funcs[id].turn_rot_speed  = 2.0;         -- Rotation speed for free left-turn.
-    entity_funcs[id].stuck_rot_speed = 2.0;         -- Rotation speed for face-wall right turn.
-    entity_funcs[id].move_speed      = 32.0;        -- Ordinary movement speed.
+    entity_funcs[id].turn_rot_speed  = 2.0;       -- Rotation speed for free left-turn, sector units per second.
+    entity_funcs[id].stuck_rot_speed = 2.0;       -- Rotation speed for face-wall right turn, sector units per second.
+    entity_funcs[id].move_speed      = 32.0;      -- Ordinary movement speed, sector units per second.
     
     entity_funcs[id].loop_detector = {};            -- Loop detector struct needed to prevent cleaner stuck at flat floor.
     
@@ -1536,8 +1535,8 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 
                 if(entity_funcs[object_id].rotating == 0) then
                     entity_funcs[object_id].distance_traveled = 0.0;
-                    moveEntityLocal(object_id, 0.0, entity_funcs[object_id].move_speed, 0.0);  -- Move forward...
-                    entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + entity_funcs[object_id].move_speed;
+                    moveEntityLocal(object_id, 0.0, entity_funcs[object_id].move_speed * time_coef, 0.0);  -- Move forward...
+                    entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + entity_funcs[object_id].move_speed * time_coef;
                 end;
                 
                 if((entity_funcs[object_id].loop_detector[(entity_funcs[object_id].move_count)].x == px) and
@@ -1553,16 +1552,16 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 entity_funcs[object_id].move_count = entity_funcs[object_id].move_count + 1;
                 if(entity_funcs[object_id].move_count > 4) then entity_funcs[object_id].move_count = 1 end;
             else
-                moveEntityLocal(object_id, 0.0, entity_funcs[object_id].move_speed, 0.0);  -- Move forward...
-                entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + entity_funcs[object_id].move_speed;
+                moveEntityLocal(object_id, 0.0, entity_funcs[object_id].move_speed * time_coef, 0.0);  -- Move forward...
+                entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + entity_funcs[object_id].move_speed * time_coef;
             end;
         else            
             if(entity_funcs[object_id].rotating == 1) then
-                entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].turn_rot_speed;
-                rotateEntity(object_id, entity_funcs[object_id].turn_rot_speed);
+                entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].turn_rot_speed * time_coef;
+                rotateEntity(object_id, entity_funcs[object_id].turn_rot_speed * time_coef);
             elseif(entity_funcs[object_id].rotating == 2) then
-                entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].stuck_rot_speed;
-                rotateEntity(object_id, -entity_funcs[object_id].stuck_rot_speed); -- another direction!
+                entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].stuck_rot_speed * time_coef;
+                rotateEntity(object_id, -entity_funcs[object_id].stuck_rot_speed * time_coef); -- another direction!
             end;
             
             if(entity_funcs[object_id].current_angle > entity_funcs[object_id].target_angle) then
