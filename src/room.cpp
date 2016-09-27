@@ -424,12 +424,12 @@ room_sector_p Room_GetSectorXYZ(room_p room, float pos[3])
     /*
      * resolve Z overlapped neighboard rooms. room below has more priority.
      */
-    if(ret->room_below && (ret->floor >= pos[2]))
+    if(ret->room_below && (pos[2] < ret->floor))
     {
         ret = Room_GetSectorRaw(ret->room_below->real_room, ret->pos);
     }
 
-    if(ret->room_above && (ret->ceiling <= pos[2]))
+    if(ret->room_above && (pos[2] > ret->ceiling))
     {
         ret = Room_GetSectorRaw(ret->room_above->real_room, ret->pos);
     }
