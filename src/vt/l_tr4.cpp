@@ -196,11 +196,6 @@ void TR_Level::read_tr4_room(SDL_RWops * const src, tr5_room_t & room)
     // Only in TR4-5
 
     room.alternate_group = read_bitu8(src);
-
-    room.light_colour.r = (( room.intensity2 & 0x00FF)       / 255.0f);
-    room.light_colour.g = (((room.intensity1 & 0xFF00) >> 8) / 255.0f);
-    room.light_colour.b = (( room.intensity1 & 0x00FF)       / 255.0f);
-    room.light_colour.a = (((room.intensity2 & 0xFF00) >> 8) / 255.0f);
 }
 
 void TR_Level::read_tr4_item(SDL_RWops * const src, tr2_item_t & item)
