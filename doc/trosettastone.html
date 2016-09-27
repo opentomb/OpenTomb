@@ -3765,9 +3765,6 @@ boundaries as original room, but altered geometry and/or texturing. Detailed des
 
     <span class="kt">uint32_t</span> <span class="n">RoomColour</span><span class="p">;</span>        <span class="c1">// In ARGB format!</span>
 
-    <span class="kt">int16_t</span> <span class="n">AmbientIntensity1</span><span class="p">;</span>  <span class="c1">// This and the next one only affect externally-lit objects</span>
-    <span class="kt">int16_t</span> <span class="n">AmbientIntensity2</span><span class="p">;</span>  <span class="c1">// Usually the same as AmbientIntensity1</span>
-
     <span class="kt">uint16_t</span> <span class="n">NumLights</span><span class="p">;</span>                 <span class="c1">// Number of point lights in this room</span>
     <span class="n">tr4_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span>   <span class="c1">// List of point lights</span>
 

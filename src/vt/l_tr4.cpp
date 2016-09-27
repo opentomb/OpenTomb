@@ -167,8 +167,10 @@ void TR_Level::read_tr4_room(SDL_RWops * const src, tr5_room_t & room)
     for (i = 0; i < (uint32_t)(room.num_zsectors * room.num_xsectors); i++)
         read_tr_room_sector(src, room.sector_list[i]);
 
-    room.intensity1 = read_bit16(src);
-    room.intensity2 = read_bit16(src);
+    room.light_colour.b = read_bitu8(src);
+    room.light_colour.g = read_bitu8(src);
+    room.light_colour.r = read_bitu8(src);
+    room.light_colour.a = read_bitu8(src);
 
     // only in TR2
     room.light_mode = 0;
