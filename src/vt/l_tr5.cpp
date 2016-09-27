@@ -169,10 +169,10 @@ void TR_Level::read_tr5_room(SDL_RWops * const src, tr5_room_t & room)
     room.num_zsectors = read_bitu16(newsrc);
     room.num_xsectors = read_bitu16(newsrc);
 
-    room.light_colour.b = read_bitu8(newsrc);
-    room.light_colour.g = read_bitu8(newsrc);
-    room.light_colour.r = read_bitu8(newsrc);
-    room.light_colour.a = read_bitu8(newsrc);
+    room.light_colour.b = read_bitu8(newsrc) / 255.0f;
+    room.light_colour.g = read_bitu8(newsrc) / 255.0f;
+    room.light_colour.r = read_bitu8(newsrc) / 255.0f;
+    room.light_colour.a = read_bitu8(newsrc) / 255.0f;
 
     room.num_lights = read_bitu16(newsrc);
     if (room.num_lights > 512)
