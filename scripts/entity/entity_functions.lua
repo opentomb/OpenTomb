@@ -16,7 +16,7 @@ dofile("scripts/entity/script_switch.lua");     -- Additional switch scripts.
 
 -- Erase single entity function.
 
-function efuncs_EraseEntity(index)
+function entfuncs_EraseEntity(index)
     if(entity_funcs[index] ~= nil) then
         if(entity_funcs[index].onDelete ~= nil) then    -- Entity-specific clean-up.
             entity_funcs[index].onDelete(index);
@@ -27,6 +27,7 @@ function efuncs_EraseEntity(index)
         entity_funcs[index].onCollide        = nil;
         entity_funcs[index].onStand          = nil;
         entity_funcs[index].onHit            = nil;
+        entity_funcs[index].onRoomCollide    = nil;
         entity_funcs[index].onLoop           = nil;
         entity_funcs[index].onSave           = nil;
         entity_funcs[index].onLoad           = nil;
@@ -38,7 +39,7 @@ end;
 
 function entfuncs_Clear()
     for k,v in pairs(entity_funcs) do
-        efuncs_EraseEntity(k);
+        entfuncs_EraseEntity(k);
     end;
     print("Entity function table cleaned");
 end;
@@ -50,30 +51,55 @@ end;
 function door_init(id)   -- NORMAL doors only!
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    setEntityActivity(object_id, 1);
+    setEntityActivity(id, 1);
+    
+    entity_funcs[id].open_state   = 1;
+    entity_funcs[id].closed_state = 0;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
-        if(c == 1) then
-            return swapEntityState(object_id, 0, 1);
-        end;
-        return ENTITY_TRIGGERING_NOT_READY;
+        entity_funcs[object_id].must_open  = true;
+        entity_funcs[object_id].must_close = false;
     end;
     
-    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;    -- Same function.
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        entity_funcs[object_id].must_open  = false;
+        entity_funcs[object_id].must_close = true;
+    end;
     
     entity_funcs[id].onLoop = function(object_id)
-        if(getEntityEvent(object_id) == 0) then
-            setEntityTimer(object_id, 0.0);
-        end;
-
-        if((tickEntity(object_id) == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
-            swapEntityState(object_id, 0, 1);
-            setEntityEvent(object_id, 0);
+        local a,f,n = getEntityAnim(object_id);
+        if((a ~= 1) and (a ~= 3)) then
+            local st = getEntityState(object_id);
+            if((entity_funcs[object_id].must_open == true) and (entity_funcs[object_id].open_state ~= st)) then
+                setEntityState(object_id, entity_funcs[object_id].open_state);
+                entity_funcs[object_id].must_open  = false;
+            elseif((entity_funcs[object_id].must_close == true) and (entity_funcs[object_id].closed_state ~= st)) then
+                setEntityState(object_id, entity_funcs[object_id].closed_state);
+                entity_funcs[object_id].must_close = false;
+            end;
+        end;    
+    
+        if(tickEntity(object_id) == TICK_STOPPED) then
+            entity_funcs[object_id].must_open  = false;
+            entity_funcs[object_id].must_close = true;
         end;
     end
     
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].open_state   = nil;
+        entity_funcs[object_id].closed_state = nil;
+        entity_funcs[object_id].must_open    = nil;
+        entity_funcs[object_id].must_close   = nil;
+    end;
+    
     prepareEntity(id);
+    
+    if(entity_funcs[id].must_open == true) then
+        entity_funcs[id].onLoop(id);
+        entity_funcs[id].open_state   = 0;
+        entity_funcs[id].closed_state = 1;
+    end;
+    
 end
 
 function keyhole_init(id)    -- Key and puzzle holes
@@ -124,7 +150,7 @@ function anim_init(id)      -- Ordinary animatings
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 0);
-    disableEntity(id);
+    disableEntity(id); -- CHECK UP - LWMTE
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         swapEntityState(object_id, 1, 0);
@@ -203,9 +229,11 @@ end
 
 
 function venicebird_init(id)    -- Venice singing birds (TR2)
+
     randomized_soundsource_init(id);
     entity_funcs[id].chance   = 2;
     entity_funcs[id].sound_id = 316;
+
 end
 
 
@@ -256,6 +284,8 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     setEntityVisibility(id, false);
     
     entity_funcs[id].distance_passed = 0;
+    entity_funcs[id].distance_to_pass = 30720.0;
+    entity_funcs[id].speed = 40.0;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(not getEntityActivity(object_id)) then
@@ -272,10 +302,10 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     end
     
     entity_funcs[id].onLoop = function(object_id)
-        local dy = 40.0 * 60.0 * frame_time;
+        local dy = entity_funcs[object_id].speed * time_coeff;
         entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + dy;
         moveEntityLocal(object_id, 0.0, dy, 0.0);
-        if(entity_funcs[object_id].distance_passed > 30720) then
+        if(entity_funcs[object_id].distance_passed > entity_funcs[object_id].distance_to_pass) then
             stopSound(297, object_id);
             disableEntity(object_id);
         end;
@@ -283,6 +313,8 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].distance_passed = nil;
+        entity_funcs[object_id].distance_to_pass = nil;
+        entity_funcs[object_id].speed = nil;
     end
     
     prepareEntity(id);
@@ -365,7 +397,7 @@ function tallblock_init(id)    -- Tall moving block (TR1)
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
     entity_funcs[id].onLoop = function(object_id)
-        local move_speed = 32.0 * 60.0 * frame_time;;
+        local move_speed = 32.0 * time_coeff;
         if(not getEntityEvent(object_id)) then 
             move_speed = 0.0 - move_speed;
         end;
@@ -471,7 +503,7 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
             setEntityActivity(object_id, 0);
         end;
         
-        entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].speed;
+        entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].speed * time_coeff; -- CHECK UP - LWMTE
         
         if(entity_funcs[object_id].current_angle < 0.0) then
             entity_funcs[object_id].current_angle = 360.0 + entity_funcs[object_id].current_angle;
@@ -496,7 +528,7 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
     prepareEntity(id);
 end
 
-
+-- BROKEN - LWMTE
 function lasersweep_init(id)      -- Laser sweeper (TR3)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
@@ -682,13 +714,120 @@ function boulder_init(id)
         return ENTITY_TRIGGERING_NOT_READY;
     end
 
+function dart_init(id)  -- TR1 dart / TR2 flying disks
+
+    setEntityTypeFlag(id, ENTITY_TYPE_COLLCHECK);
+    setEntityAnimFlag(id, ANIM_TYPE_BASE, ANIM_FRAME_LOCK);
+    
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_ROOMCOLLISION, 1);
+    
+    entity_funcs[id].speed       = 5120.0;
+    entity_funcs[id].damage      = 50.0;
+    entity_funcs[id].poison      = 0.0;   -- Poison appeared only in TR3.
+    entity_funcs[id].coll_sound  = -1;
+    
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        if(getEntityModelID(object_id) ~= getEntityModelID(activator_id)) then
+            changeCharacterParam(activator_id, PARAM_HEALTH, -entity_funcs[object_id].damage);
+            changeCharacterParam(activator_id, PARAM_POISON,  entity_funcs[object_id].poison);
+            removeEntity(object_id);
+        end;
+    end
+    
+    entity_funcs[id].onRoomCollide = function(object_id, activator_id)
+        playSound(entity_funcs[object_id].coll_sound, object_id);
+        removeEntity(object_id);
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        moveEntityLocal(object_id, 0.0, entity_funcs[object_id].speed * frame_time, 0.0);
+        if(not isInRoom(object_id)) then entity_funcs[object_id].onRoomCollide(object_id) end;   -- Penetration fix
+    end
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].damage      = nil;
+        entity_funcs[object_id].poison      = nil;
+        entity_funcs[object_id].speed       = nil;
+        entity_funcs[object_id].coll_sound  = nil;
+    end
 end
+
+function dartgun_init(id)  -- TR1 dartgun
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityActivity(id, 0);
+    
+    entity_funcs[id].dart_model     = 39;   -- TR1 default, TR2 will override it.
+    entity_funcs[id].shoot_sound    = 151;  -- TR1 default, TR2 will override it.
+    entity_funcs[id].shoot_interval = 1;
+    entity_funcs[id].current_time   = entity_funcs[id].shoot_interval;  -- To activate first dart.
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        swapEntityActivity(object_id);
+		return ENTITY_TRIGGERING_ACTIVATED;
+    end
+    
+    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(entity_funcs[object_id].current_time >= entity_funcs[object_id].shoot_interval) then
+            entity_funcs[object_id].current_time = 0;
+            local x,y,z,ax,ay,az,r = getEntityPos(object_id);
+            playSound(entity_funcs[object_id].shoot_sound, object_id);
+            local dart = spawnEntity(entity_funcs[object_id].dart_model,x,y,z,ax,ay,az,r);
+            moveEntityLocal(dart,0,-256,512);
+        end;
+        
+        entity_funcs[object_id].current_time = entity_funcs[object_id].current_time + frame_time;
+        
+        if(tickEntity(object_id) == TICK_STOPPED) then 
+            swapEntityActivity(object_id);
+            swapEntityEvent(object_id);
+            entity_funcs[object_id].current_time = entity_funcs[object_id].shoot_interval;
+        end;
+    end
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[object_id].dart_model     = nil;
+        entity_funcs[object_id].shoot_sound    = nil;
+        entity_funcs[object_id].shoot_interval = nil;
+        entity_funcs[object_id].current_time   = nil;
+    end
+end
+function discgun_init(id)
+    dartgun_init(id);
+    entity_funcs[id].dart_model  = 61;
+    entity_funcs[id].shoot_sound = 254;
+end;
+
+function disc_init(id)
+    dart_init(id);
+    entity_funcs[id].coll_sound = 258;
+    entity_funcs[id].speed       = 80.0;
+end;
+
+function dartgun_tr3_init(id)
+    dartgun_init(id);
+    rotateEntity(id, 180.0);    -- In TR3, dartguns must be inverted.
+    moveEntityLocal(id, 0,-256,0);
+    entity_funcs[id].dart_model  = 90;
+    entity_funcs[id].shoot_sound = 325;
+    entity_funcs[id].shoot_interval = 0.8;
+end;
+
+function dart_tr3_init(id)
+    dart_init(id);
+    entity_funcs[id].speed      = 150.0;
+    entity_funcs[id].poison     = 0.03;
+end;
 
 
 function pickup_init(id, item_id)    -- Pick-ups
 
     setEntityTypeFlag(id, ENTITY_TYPE_PICKABLE);
     setEntityActivationOffset(id, 0.0, 0.0, 0.0, 480.0);
+    setEntityAnimFlag(id, ANIM_TYPE_BASE, ANIM_FRAME_LOCK);
     setEntityActivity(id, 0);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -756,10 +895,11 @@ end
 function crystal_TR3_init(id)   -- "Savegame" crystal (TR3 version)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    setEntityActivity(id, 1);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+	setEntityActivity(id, 1);
     
-    entity_funcs[id].onLoop = function(object_id)
-        if(getEntityDistance(player, object_id) < 512.0) then
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        if(activator_id == player) then
             playSound(SOUND_MEDIPACK);
             changeCharacterParam(player, PARAM_HEALTH, 200);
             disableEntity(object_id);
@@ -867,7 +1007,7 @@ function pushdoor_init(id)   -- Pushdoors (TR4)
     end;
 end
 
-
+-- CHECK UP - LWMTE
 function midastouch_init(id)    -- Midas gold touch
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
@@ -1115,7 +1255,7 @@ function expplatform_init(id)        -- Expanding platform
     prepareEntity(id);
 end
 
-
+-- BROKEN - LWMTE (RUN THRU?)
 function oldspike_init(id)  -- Teeth spikes
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
@@ -1138,13 +1278,13 @@ function oldspike_init(id)  -- Teeth spikes
                     setCharacterParam(activator_id, PARAM_HEALTH, 0);
                 end;
             elseif(ls > 512.0) then
-                changeCharacterParam(activator_id, PARAM_HEALTH, -(ls / 512.0));
+                changeCharacterParam(activator_id, PARAM_HEALTH, -(ls / 1024.0));
             end;
         end;
     end
 end
 
-
+-- CHECK UP - LWMTE
 function newspike_init(id)  -- Teeth spikes (TR4-5)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
@@ -1227,17 +1367,18 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
         -- pop-retract phase. Pop phase is done in first 10 frames, and retract phase is done after
         -- frame 50 (e.g. 60-10 = 10 frames as well). For mode 1, we stop the phase right after
         -- spikes were popped out, and send them to idle state - so they can be deactivated later.
+        
         if(entity_funcs[object_id].curr_timer < 60) then
-            entity_funcs[object_id].curr_subscaling = entity_funcs[object_id].curr_subscaling + 6 * time_coef;  -- Subscaling makes full turn in 1 sec.
+            entity_funcs[object_id].curr_subscaling = entity_funcs[object_id].curr_subscaling + 6 * time_coeff;  -- Subscaling makes full turn in 1 sec.
             if(entity_funcs[object_id].curr_timer <= 10) then
-                entity_funcs[object_id].curr_scaling = entity_funcs[object_id].curr_scaling + 0.1 * time_coef;
+                entity_funcs[object_id].curr_scaling = entity_funcs[object_id].curr_scaling + 0.1 * time_coeff;
             elseif(entity_funcs[object_id].curr_timer > 50) then
                 if(entity_funcs[object_id].mode == 1) then
                     entity_funcs[object_id].waiting = true;
                     setEntityActivity(object_id, 0);
                     return;
                 else
-                    entity_funcs[object_id].curr_scaling = entity_funcs[object_id].curr_scaling - 0.1 * time_coef;
+                    entity_funcs[object_id].curr_scaling = entity_funcs[object_id].curr_scaling - 0.1 * time_coeff;
                 end;
             end;
             
@@ -1277,7 +1418,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
             setEntityScaling(object_id, 1.0, 1.0, entity_funcs[object_id].curr_scaling - math.abs(math.cos(math.rad(entity_funcs[object_id].curr_subscaling))) / 4);
         end;
         
-        entity_funcs[object_id].curr_timer = entity_funcs[object_id].curr_timer + 1.0 * time_coef;
+        entity_funcs[object_id].curr_timer = entity_funcs[object_id].curr_timer + 1.0 * time_coeff;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
@@ -1472,9 +1613,9 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
     entity_funcs[id].current_angle = 0.0;           -- Current cleaner rotating angle.
     entity_funcs[id].target_angle  = 0.0;           -- Desired angle value, after which cleaner stops rotating.
     
-    entity_funcs[id].turn_rot_speed  = 2.0;       -- Rotation speed for free left-turn, sector units per second.
-    entity_funcs[id].stuck_rot_speed = 2.0;       -- Rotation speed for face-wall right turn, sector units per second.
-    entity_funcs[id].move_speed      = 32.0;      -- Ordinary movement speed, sector units per second.
+    entity_funcs[id].turn_rot_speed  = 2.0;         -- Rotation speed for free left-turn.
+    entity_funcs[id].stuck_rot_speed = 2.0;         -- Rotation speed for face-wall right turn.
+    entity_funcs[id].move_speed      = 32.0;        -- Ordinary movement speed.
     
     entity_funcs[id].loop_detector = {};            -- Loop detector struct needed to prevent cleaner stuck at flat floor.
     
@@ -1535,8 +1676,8 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 
                 if(entity_funcs[object_id].rotating == 0) then
                     entity_funcs[object_id].distance_traveled = 0.0;
-                    moveEntityLocal(object_id, 0.0, entity_funcs[object_id].move_speed * time_coef, 0.0);  -- Move forward...
-                    entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + entity_funcs[object_id].move_speed * time_coef;
+                    moveEntityLocal(object_id, 0.0, entity_funcs[object_id].move_speed, 0.0);  -- Move forward...
+                    entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + entity_funcs[object_id].move_speed;
                 end;
                 
                 if((entity_funcs[object_id].loop_detector[(entity_funcs[object_id].move_count)].x == px) and
@@ -1552,16 +1693,16 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 entity_funcs[object_id].move_count = entity_funcs[object_id].move_count + 1;
                 if(entity_funcs[object_id].move_count > 4) then entity_funcs[object_id].move_count = 1 end;
             else
-                moveEntityLocal(object_id, 0.0, entity_funcs[object_id].move_speed * time_coef, 0.0);  -- Move forward...
-                entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + entity_funcs[object_id].move_speed * time_coef;
+                moveEntityLocal(object_id, 0.0, entity_funcs[object_id].move_speed, 0.0);  -- Move forward...
+                entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + entity_funcs[object_id].move_speed;
             end;
         else            
             if(entity_funcs[object_id].rotating == 1) then
-                entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].turn_rot_speed * time_coef;
-                rotateEntity(object_id, entity_funcs[object_id].turn_rot_speed * time_coef);
+                entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].turn_rot_speed;
+                rotateEntity(object_id, entity_funcs[object_id].turn_rot_speed);
             elseif(entity_funcs[object_id].rotating == 2) then
-                entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].stuck_rot_speed * time_coef;
-                rotateEntity(object_id, -entity_funcs[object_id].stuck_rot_speed * time_coef); -- another direction!
+                entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].stuck_rot_speed;
+                rotateEntity(object_id, -entity_funcs[object_id].stuck_rot_speed); -- another direction!
             end;
             
             if(entity_funcs[object_id].current_angle > entity_funcs[object_id].target_angle) then
@@ -1680,16 +1821,179 @@ function damocles_init(id)      -- Sword of Damocles
     end
 end
 
+function tightrope_init(id)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    
+    entity_funcs[id].onLoop = function(object_id)
+    
+        local dist_to_Lara = getEntityDistance(player, object_id);
+        
+        if(dist_to_Lara < 512.0) then
+            local orient = getEntityOrientation(object_id, player);
+            
+            if(getActionState(ACT_ACTION) and ((orient > 320.0) or (orient < 40.0))) then
+                if(getEntityState(player) == 2) then
+                    setEntityPos(player, getEntityPos(object_id));
+                    rotateEntity(player,180);
+                    moveEntityLocal(player,0,384,0);
+                    setEntityState(player, 124);
+                end;
+            elseif((orient < 220.0) and (orient > 140.0)) then
+                if(getEntityState(player) == 121) then setEntityState(player, 125) end;
+            end;
+        end;
+    end;
+    
+    prepareEntity(id);
+end
+
+function snake_init(id)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_ACTOR);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    disableEntity(id);
+    
+    entity_funcs[id].damage = 50.0;
+    entity_funcs[id].poison =  0.3;
+    entity_funcs[id].disturb_speed = 500.0;
+    entity_funcs[id].time_since_disturb = 0.0;
+    
+    entity_funcs[id].poisoning = true;
+    entity_funcs[id].disturbed = false;
+    entity_funcs[id].bitten    = false;
+    
+    -- Some initialization parameters are slightly varied - it is done to create more realistic
+    -- approach, where each snake in a level has slightly different character.
+    
+    entity_funcs[id].disturb_timeout = 3.0 + ((math.random(100) / 100) - 0.5);
+    entity_funcs[id].disturb_dist    = 1536.0 + (math.random(256) - 128);
+    entity_funcs[id].guard_dist      = 1024.0 + (math.random(256) - 128);
+    entity_funcs[id].suspend_dist    = 2048.0 + (math.random(512) - 256);
+    
+    -- Snake mood here primarily specifies how frequently she will try to bite Lara. If snake is
+    -- suspended, mood is retained until mood release interval is reached.
+    
+    entity_funcs[id].min_mood = 8;
+    entity_funcs[id].max_mood = 15;
+    entity_funcs[id].mood = entity_funcs[id].min_mood;
+    entity_funcs[id].mood_release_interval = 5.0 + ((math.random(100) / 25) - 2.0);
+    entity_funcs[id].current_mood_interval = entity_funcs[id].mood_release_interval;
+    
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(not getEntityActivity(object_id)) then enableEntity(object_id) end;
+        setEntityAnim(object_id, 2, 45);    -- Force lying state on activation.
+    end;
+    
+    entity_funcs[id].onLoop = function(object_id)
+        local dist_to_Lara = getEntityDistance(player, object_id);
+        
+        if(dist_to_Lara < entity_funcs[object_id].disturb_dist) then
+            entity_funcs[object_id].disturbed = true;
+        end;
+        
+        if(entity_funcs[object_id].disturbed) then
+            local speed_Lara = getEntitySpeedLinear(player);
+        
+            setEntityAnimFlag(object_id, ANIM_NORMAL_CONTROL);  -- Unfreeze anim
+            
+            setEntityState(object_id, 0);   -- Protect
+            rotateEntityToEntity(object_id, player, 0, 1.5, true, -20.0);
+            
+            if( (dist_to_Lara <= entity_funcs[object_id].guard_dist) or (speed_Lara > 512.0) ) then
+                if( (getEntityState(object_id) ~= 2) and (math.random(1000) > (1000 - entity_funcs[object_id].mood)) ) then
+                    setEntityState(object_id, 2);   -- Bite
+                    
+                    if((entity_funcs[object_id].mood < entity_funcs[object_id].max_mood) and (dist_to_Lara < entity_funcs[object_id].disturb_dist)) then
+                        entity_funcs[object_id].mood = entity_funcs[object_id].mood + 1;
+                        --print("got creature mood: " .. entity_funcs[object_id].mood);
+                    end;
+                end;
+            end;
+        
+            if(dist_to_Lara < entity_funcs[object_id].suspend_dist) then
+                entity_funcs[object_id].time_since_disturb = entity_funcs[object_id].disturb_timeout;
+            else
+                entity_funcs[object_id].time_since_disturb = entity_funcs[object_id].time_since_disturb - FRAME_TIME;
+                
+                if((entity_funcs[object_id].time_since_disturb <= 0.0) or (dist_to_Lara > entity_funcs[object_id].suspend_dist * 2) ) then
+                    entity_funcs[object_id].time_since_disturb = 0.0;
+                    entity_funcs[object_id].disturbed = false;
+                end;
+            end;
+        else
+            if(entity_funcs[object_id].mood > entity_funcs[object_id].min_mood) then
+                entity_funcs[object_id].current_mood_interval = entity_funcs[object_id].current_mood_interval - FRAME_TIME;
+                if(entity_funcs[object_id].current_mood_interval <= 0) then
+                    entity_funcs[object_id].mood = entity_funcs[object_id].mood - 1;
+                    entity_funcs[object_id].current_mood_interval = entity_funcs[object_id].mood_release_interval;
+                    --print("released creature mood: " .. entity_funcs[object_id].mood);
+                    
+                end;
+            end;
+            setEntityState(object_id, 3);   -- Suspend
+            
+            local a,f,c = getEntityAnim(object_id);
+            if(f == 45) then setEntityAnimFlag(object_id, ANIM_LOCK) end; -- Prevent shaking
+        end;
+    end;
+    
+    entity_funcs[id].onCollide = function(object_id, activator_id)        
+        if( (getEntityModelID(object_id) ~= getEntityModelID(activator_id)) and (getEntityState(object_id) == 2) ) then
+            local a,f,c = getEntityAnim(object_id);
+            
+            if((a == 3) and (f == 8)) then
+                if(entity_funcs[object_id].bitten == false) then
+                    if(entity_funcs[object_id].poisoning) then
+                        changeCharacterParam(activator_id, PARAM_POISON,  entity_funcs[object_id].poison);
+                    end;
+                    changeCharacterParam(activator_id, PARAM_HEALTH, -entity_funcs[object_id].damage);
+                    entity_funcs[object_id].bitten = true;
+                    
+                    local angle = getEntityOrientation(object_id, activator_id, -25.0);
+                    
+                        if((angle >= 45.0 ) and (angle < 135.0)) then setEntityAnim(activator_id, 127);    -- Left
+                    elseif((angle >= 135.0) and (angle < 225.0)) then setEntityAnim(activator_id, 125);    -- Right
+                    elseif((angle >= 225.0) and (angle < 315.0)) then setEntityAnim(activator_id, 128);    -- Forward
+                    else                                              setEntityAnim(activator_id, 126);    -- Back
+                    end;
+                end;
+            else
+                entity_funcs[object_id].bitten = false;
+            end;
+        end;
+    end
+    
+    entity_funcs[id].onDelete = function(object_id)
+        entity_funcs[id].damage = nil;
+        entity_funcs[id].poison = nil;
+        entity_funcs[id].disturb_speed = nil;
+        entity_funcs[id].time_since_disturb = nil;
+        
+        entity_funcs[id].poisoning = nil;
+        entity_funcs[id].disturbed = nil;
+        entity_funcs[id].bitten    = nil;
+        
+        entity_funcs[id].disturb_timeout = nil;
+        entity_funcs[id].disturb_dist    = nil;
+        entity_funcs[id].guard_dist      = nil;
+        entity_funcs[id].suspend_dist    = nil;
+        
+        entity_funcs[id].mood = nil;
+        entity_funcs[id].min_mood = nil;
+        entity_funcs[id].max_mood = nil;
+        entity_funcs[id].mood_release_interval = nil;
+        entity_funcs[id].current_mood_interval = nil;
+    end
+end
+
 function baddie_init(id)    -- INVALID!
 
     setEntityTypeFlag(id, ENTITY_TYPE_ACTOR);
     disableEntity(id);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(not getEntityActivity(object_id)) then 
-            enableEntity(object_id) 
-        end;
-        return ENTITY_TRIGGERING_ACTIVATED;
-    end;
-    
+        if(not getEntityActivity(object_id)) then enableEntity(object_id) end;
+    end;    
 end

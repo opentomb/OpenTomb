@@ -7,8 +7,8 @@ extern "C" {
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
-#include <al.h>
-#include <alc.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 }
 
 #include "core/system.h"
@@ -409,8 +409,14 @@ bool Script_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
 
 int Script_DoTasks(lua_State *lua, float time)
 {
-    lua_pushnumber(lua, time);
-    lua_setglobal(lua, "frame_time");
+    int top = lua_gettop(lua);
+
+    lua_getglobal(lua, "script_fps");
+    float script_fps = (float)lua_tonumber(lua, -1);
+    lua_pushnumber(lua, time * script_fps);
+    lua_setglobal(lua, "time_coef");
+
+    lua_settop(lua, top);
 
     Script_CallVoidFunc(lua, "doTasks");
     Script_CallVoidFunc(lua, "clearKeys");
@@ -1307,6 +1313,19 @@ int lua_GetEntitySectorMaterial(lua_State *lua)
 }
 
 
+int lua_GetEntitySubstanceState(lua_State *lua)
+{
+    if(lua_gettop(lua) < 1) return 0;   // No entity specified - return.
+    entity_p ent = World_GetEntityByID(lua_tonumber(lua, 1));
+
+    if(ent != NULL)
+    {
+        return Entity_GetSubstanceState(ent);
+    }
+    return 0;
+}
+
+
 int lua_SameRoom(lua_State *lua)
 {
     if(lua_gettop(lua) != 2)
@@ -1342,6 +1361,27 @@ int lua_NewSector(lua_State *lua)
     }
 
     return 0;   // No argument specified - return.
+}
+
+
+bool lua_SameSector(lua_State *lua)
+{
+
+    if(lua_gettop(lua) == 2)
+    {
+        int id1 = lua_tonumber(lua, 1);
+        int id2 = lua_tonumber(lua, 2);
+
+        entity_p ent1 = engine_world.getEntityByID(id1);
+        entity_p ent2 = engine_world.getEntityByID(id2);
+
+        if(ent1 && ent2 && ent1->current_sector && ent2->current_sector)
+        {
+            return ent1->current_sector->trig_index == ent2->current_sector->trig_index;
+        }
+    }
+
+    return false;
 }
 
 
@@ -2239,6 +2279,30 @@ int lua_SpawnEntity(lua_State * lua)
     return 1;
 }
 
+
+bool lua_DeleteEntity(lua_State * lua)
+{
+    if(lua_gettop(lua) != 1)
+    {
+        Con_Warning("lua_DeleteEntity: expecting arguments (entity_id)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+
+    if(ent != NULL)
+    {
+        World_DeleteEntity(ent);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
 /*
  * Moveables script control section
  */
@@ -2325,6 +2389,35 @@ int lua_GetEntityDirDot(lua_State * lua)
 
     lua_pushnumber(lua, vec3_dot(e1->transform + 4, e2->transform + 4));
     return 1;
+}
+
+
+bool lua_IsInRoom(lua_State * lua)
+{
+    if(lua_gettop(lua) != 1)
+    {
+        Con_Warning("lua_IsInRoom: expecting arguments (entity_id)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+
+    if((ent) && (ent->self->room))
+    {
+        if(ent->current_sector)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
 }
 
 
@@ -2898,6 +2991,151 @@ int lua_RotateEntity(lua_State *lua)
     }
 
     return 0;
+}
+
+
+void lua_RotateEntityToEntity(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top != 6)
+    {
+        Con_Warning("RotateEntityToEntity: expecting arguments (id1, id2, axis, speed, smooth, add_angle)");
+        return 0;
+    }
+
+    int   id1        = lua_tointeger(lua, 1);
+    int   id2        = lua_tointeger(lua, 2);
+    int   axis       = lua_tointeger(lua, 3);
+    float speed_     = lua_tonumber (lua, 4);
+    float smooth_    = lua_tonumber (lua, 5);
+    float add_angle_ = lua_tonumber (lua, 6);
+
+    entity_p ent1 = World_GetEntityByID(id1);
+    entity_p ent2 = World_GetEntityByID(id2);
+
+    if((!ent1) || (!ent2))
+    {
+        //Con_Warning(SYSWARN_NO_ENTITY, ((!ent1)?id1:id2));
+    }
+    else if((axis < 0) || (axis > 2))
+    {
+        //Con_Warning(SYSWARN_WRONG_AXIS, ((!ent1)?id1:id2));
+    }
+    else
+    {
+        float *ent1_pos = ent1->transform + 12;
+        float *ent2_pos = ent2->transform + 12;
+        float facing[3];
+
+        vec3_sub(facing, ent1_pos, ent2_pos);
+
+        float *targ_angle;
+        float theta;
+
+        switch(axis)
+        {
+            case 0:
+                targ_angle = ent1->angles + 0;
+                theta      = atan2(-facing[0], facing[1]);
+                break;
+            case 1:
+                targ_angle = ent1->angles + 1;
+                theta      = atan2(facing[2], facing[1]);
+                break;
+            case 2:
+                targ_angle = ent1->angles + 2;
+                theta      = atan2(facing[0], facing[2]);
+                break;
+        }
+
+        theta = theta * (360.0 / M_PI_2);
+        if(add_angle_ != 0.0) theta += add_angle_;
+
+        btScalar delta = *targ_angle - theta;
+
+        if(ceil(delta) != 180.0)
+        {
+            if(speed_ != 0.0)
+            {
+                float speed = speed_;
+
+                if(fabs(delta) > speed)
+                {
+                    // Solve ~0-360 rotation cases.
+
+                    if(abs(delta) > 180.0)
+                    {
+                        if(*targ_angle > theta)
+                        {
+                            delta = -((360.0 - *targ_angle) + theta);
+                        }
+                        else
+                        {
+                            delta = (360.0 - theta) + *targ_angle;
+                        }
+                    }
+
+                    if(delta > 180.0)
+                    {
+                        *targ_angle = theta + 180.0;
+                    }
+                    else if((delta >= 0.0) && (delta < 180.0))
+                    {
+                        *targ_angle += speed;
+                    }
+                    else
+                    {
+                        *targ_angle -= speed;
+                    }
+                }
+
+                if(fabs(delta) + speed >= 180.0)
+                    *targ_angle = floor(theta) + 180.0;
+            }
+            else
+            {
+                *targ_angle = theta + 180.0;
+            }
+        }
+
+        Entity_UpdateTransform(ent1);
+        Entity_UpdateRigidBody(ent1, 1);
+    }
+}
+
+
+float lua_GetEntityOrientation(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top != 3)
+    {
+        Con_Warning("GetEntityOrientation: expecting arguments (id1, id2, add_angle)");
+        return 0;
+    }
+
+    entity_p ent1 = World_GetEntityByID(id1);
+    entity_p ent2 = World_GetEntityByID(id2);
+
+    if((!ent1) || (!ent2))
+    {
+        //ConsoleInfo::instance().warning(SYSWARN_NO_ENTITY, ((!ent1)?id1:id2));
+        return 0;
+    }
+    else
+    {
+        float *ent1_pos = ent1->transform + 12;
+        float *ent2_pos = ent2->transform + 12;
+        float facing[3];
+
+        vec3_sub(facing, ent1_pos, ent2_pos);
+
+        float theta = (atan2(-facing[0], facing[1])) * (360.0 / M_PI_2);
+        if(add_angle_ != 0.0) theta += add_angle_;
+
+        //return WrapAngle(ent2->m_angles[0] - theta);
+    }
 }
 
 
@@ -4769,6 +5007,12 @@ int lua_PlayStream(lua_State *lua)
 }
 
 
+int lua_StopStreams(lua_State *lua)
+{
+    Audio_StopStreams();
+}
+
+
 int lua_PlaySound(lua_State *lua)
 {
     int top = lua_gettop(lua);
@@ -5416,6 +5660,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "stopSound", lua_StopSound);
 
     lua_register(lua, "playStream", lua_PlayStream);
+    lua_register(lua, "stopStreams", lua_StopStreams);
 
     lua_register(lua, "setLevel", lua_SetLevel);
     lua_register(lua, "getLevel", lua_GetLevel);
@@ -5449,10 +5694,13 @@ void Script_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "canTriggerEntity", lua_CanTriggerEntity);
     lua_register(lua, "spawnEntity", lua_SpawnEntity);
+    lua_register(lua, "deleteEntity", lua_DeleteEntity);
     lua_register(lua, "enableEntity", lua_EnableEntity);
     lua_register(lua, "disableEntity", lua_DisableEntity);
 
+    lua_register(lua, "isInRoom", lua_IsInRoom);
     lua_register(lua, "sameRoom", lua_SameRoom);
+    lua_register(lua, "sameSector", lua_SameSector);
     lua_register(lua, "newSector", lua_NewSector);
     lua_register(lua, "similarSector", lua_SimilarSector);
     lua_register(lua, "getSectorHeight", lua_GetSectorHeight);
@@ -5469,12 +5717,14 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "moveEntityToSink", lua_MoveEntityToSink);
     lua_register(lua, "moveEntityToEntity", lua_MoveEntityToEntity);
     lua_register(lua, "rotateEntity", lua_RotateEntity);
+    lua_register(lua, "rotateEntityToEntity", lua_RotateEntityToEntity);
 
     lua_register(lua, "getEntityModelID", lua_GetEntityModelID);
 
     lua_register(lua, "getEntityVector", lua_GetEntityVector);
     lua_register(lua, "getEntityDirDot", lua_GetEntityDirDot);
     lua_register(lua, "getEntityDistance", lua_GetEntityDistance);
+    lua_register(lua, "getEntityOrientation", lua_GetEntityOrientation);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "getEntityAngles", lua_GetEntityAngles);
@@ -5551,6 +5801,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getEntitySectorIndex", lua_GetEntitySectorIndex);
     lua_register(lua, "getEntitySectorFlags", lua_GetEntitySectorFlags);
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
+    lua_register(lua, "getEntitySubstanceState", lua_GetEntitySubstanceState);
 
     lua_register(lua, "addEntityRagdoll", lua_AddEntityRagdoll);
     lua_register(lua, "removeEntityRagdoll", lua_RemoveEntityRagdoll);
