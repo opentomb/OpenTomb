@@ -5613,6 +5613,23 @@ bool Script_LuaInit()
 }
 
 
+void Script_LuaPrepare();
+{
+    if(engine_lua)
+    {
+        int top = lua_gettop(engine_lua);
+
+        lua_getglobal(engine_lua, "fe_Prepare");
+        if(lua_isfunction(engine_lua, -1))
+        {
+            lua_CallAndLog(engine_lua, 0, 1, 0);
+        }
+
+        lua_settop(engine_lua, top);
+    }
+}
+
+
 void Script_LuaClearTasks()
 {
     if(engine_lua)
@@ -5628,6 +5645,12 @@ void Script_LuaClearTasks()
         }
 
         lua_getglobal(engine_lua, "entfuncs_Clear");
+        if(lua_isfunction(engine_lua, -1))
+        {
+            lua_CallAndLog(engine_lua, 0, 1, 0);
+        }
+
+        lua_getglobal(engine_lua, "fe_Clear");
         if(lua_isfunction(engine_lua, -1))
         {
             lua_CallAndLog(engine_lua, 0, 1, 0);
