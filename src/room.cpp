@@ -610,25 +610,6 @@ struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs)
 }
 
 
-int Sectors_Is2SidePortals(struct room_sector_s *s1, struct room_sector_s *s2)
-{
-    s1 = Sector_GetPortalSectorTargetRaw(s1);
-    s2 = Sector_GetPortalSectorTargetRaw(s2);
-
-    room_sector_p s1p = Room_GetSectorRaw(s2->owner_room, s1->pos);
-    room_sector_p s2p = Room_GetSectorRaw(s1->owner_room, s2->pos);
-
-    if(s1p->portal_to_room && s2p->portal_to_room &&
-       (s1p->portal_to_room->real_room == s1->owner_room->real_room) &&
-       (s2p->portal_to_room->real_room == s2->owner_room->real_room))
-    {
-        return 1;
-    }
-
-    return 0;
-}
-
-
 struct room_sector_s *Sector_GetLowest(struct room_sector_s *sector)
 {
     for(; sector && sector->room_below; sector = Room_GetSectorRaw(sector->room_below->real_room, sector->pos));
