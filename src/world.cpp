@@ -825,8 +825,7 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
         return orig_sector->portal_to_room->real_room;
     }
 
-    if((pos[0] >= old_room->bb_min[0]) && (pos[0] <= old_room->bb_max[0]) &&
-       (pos[1] >= old_room->bb_min[1]) && (pos[1] <= old_room->bb_max[1]))
+    if(orig_sector)
     {
         if((pos[2] >= orig_sector->floor) && (pos[2] <= orig_sector->ceiling))
         {
