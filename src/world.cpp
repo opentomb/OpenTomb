@@ -827,31 +827,24 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
 
     if(orig_sector)
     {
-        if((pos[2] >= orig_sector->floor) && (pos[2] <= orig_sector->ceiling))
+        if(orig_sector->room_below && (pos[2] < orig_sector->room_below->bb_max[2]))
         {
-            return old_room->real_room;
+            return orig_sector->room_below->real_room;
         }
-        else if(pos[2] > orig_sector->ceiling)
+        else if((pos[2] >= old_room->bb_min[2]) && (pos[2] < old_room->bb_max[2]))
         {
-            if(orig_sector->room_above)
-            {
-                return orig_sector->room_above->real_room;
-            }
+            return old_room;
         }
-        else if(pos[2] < orig_sector->floor)
+        else if(orig_sector->room_above && (pos[2] >= orig_sector->room_above->bb_min[2]))
         {
-            if(orig_sector->room_below)
-            {
-                return orig_sector->room_below->real_room;
-            }
+            return orig_sector->room_above->real_room;
         }
     }
 
     for(uint16_t i = 0; i < old_room->near_room_list_size; i++)
     {
         room_p r = old_room->near_room_list[i]->real_room;
-        if((r == r->real_room) &&
-           (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
+        if((pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
            (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
         {

@@ -246,7 +246,7 @@ void CRender::GenWorldList(struct camera_s *cam)
     cam->current_room = curr_room;                                              // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room
     {
-        const float eps = 1.0f;
+        const float eps = 10.0f;
         portal_p p = curr_room->portals;
         curr_room->frustum = NULL;                                              // room with camera inside has no frustums!
         this->AddRoom(curr_room);                                               // room with camera inside adds to the render list immediately
@@ -260,10 +260,9 @@ void CRender::GenWorldList(struct camera_s *cam)
                 last_frus->parents_count = 1;                                   // created by camera
                 this->ProcessRoom(p, last_frus);                                // next start reccursion algorithm
             }
-            else if((fabs(vec3_plane_dist(p->norm, cam->gl_transform + 12)) <= eps) &&
-                (cam_pos[0] <= dest_room->bb_max[0] + eps) && (cam_pos[0] >= dest_room->bb_min[0] - eps) &&
-                (cam_pos[1] <= dest_room->bb_max[1] + eps) && (cam_pos[1] >= dest_room->bb_min[1] - eps) &&
-                (cam_pos[2] <= dest_room->bb_max[2] + eps) && (cam_pos[2] >= dest_room->bb_min[2] - eps))
+            else if((cam_pos[0] <= dest_room->bb_max[0] + eps) && (cam_pos[0] >= dest_room->bb_min[0] - eps) &&
+                    (cam_pos[1] <= dest_room->bb_max[1] + eps) && (cam_pos[1] >= dest_room->bb_min[1] - eps) &&
+                    (cam_pos[2] <= dest_room->bb_max[2] + eps) && (cam_pos[2] >= dest_room->bb_min[2] - eps))
             {
                 portal_p np = dest_room->portals;
                 dest_room->frustum = NULL;                                      // room with camera inside has no frustums!
