@@ -966,7 +966,17 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
         {
             if(is_global_flip || (current_room->content->alternate_group == flip_index))
             {
-                if(current_room->alternate_room_next && (current_room->alternate_room_next != current_room->real_room) &&
+                bool is_cycled = false;
+                for(room_p room_it = current_room->alternate_room_next; room_it; room_it = room_it->alternate_room_next)
+                {
+                    if(room_it == current_room)
+                    {
+                        is_cycled = true;
+                        break;
+                    }
+                }
+                if(current_room->alternate_room_next &&
+                   (!is_cycled || (current_room->alternate_room_next != current_room->real_room)) &&
                    (( flip_state && !current_room->is_swapped) ||
                     (!flip_state &&  current_room->is_swapped)))
                 {
