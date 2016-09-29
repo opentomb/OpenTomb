@@ -442,7 +442,7 @@ int Room_IsJoined(struct room_s *r1, struct room_s *r2)
     portal_p p = r1->portals;
     for(uint16_t i = 0; i < r1->portals_count; i++, p++)
     {
-        if(p->dest_room->id == r2->id)
+        if(p->dest_room->id == r2->real_room->id)
         {
             return 1;
         }
@@ -451,7 +451,7 @@ int Room_IsJoined(struct room_s *r1, struct room_s *r2)
     p = r2->portals;
     for(uint16_t i = 0; i < r2->portals_count; i++, p++)
     {
-        if(p->dest_room->id == r1->id)
+        if(p->dest_room->id == r1->real_room->id)
         {
             return 1;
         }
@@ -492,7 +492,7 @@ int Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1)
         {
             for(uint16_t i = 0; i < r0->near_room_list_size; i++)
             {
-                if(r0->near_room_list[i]->id == r1->id)
+                if(r0->near_room_list[i]->real_room->id == r1->real_room->id)
                 {
                     return 1;
                 }
@@ -502,7 +502,7 @@ int Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1)
         {
             for(uint16_t i = 0; i < r1->near_room_list_size; i++)
             {
-                if(r1->near_room_list[i]->id == r0->id)
+                if(r1->near_room_list[i]->real_room->id == r0->real_room->id)
                 {
                     return 1;
                 }
