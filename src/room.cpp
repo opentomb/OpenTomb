@@ -161,11 +161,6 @@ void Room_Clear(struct room_s *room)
 
 void Room_Enable(struct room_s *room)
 {
-    if(room->active)
-    {
-        return;
-    }
-
     if(room->content->physics_body != NULL)
     {
         Physics_EnableObject(room->content->physics_body);
@@ -191,18 +186,11 @@ void Room_Enable(struct room_s *room)
                 break;
         }
     }
-
-    room->active = 1;
 }
 
 
 void Room_Disable(struct room_s *room)
 {
-    if(!room->active)
-    {
-        return;
-    }
-
     if(room->content->physics_body)
     {
         Physics_DisableObject(room->content->physics_body);
@@ -228,8 +216,6 @@ void Room_Disable(struct room_s *room)
                 break;
         }
     }
-
-    room->active = 0;
 }
 
 

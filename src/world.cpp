@@ -799,7 +799,7 @@ struct room_s *World_FindRoomByPos(float pos[3])
     room_p r = global_world.rooms;
     for(uint32_t i = 0; i < global_world.rooms_count; i++, r++)
     {
-        if(r->active &&
+        if((r == r->real_room) &&
            (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
            (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
@@ -818,15 +818,21 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
         return World_FindRoomByPos(pos);
     }
 
-    if((pos[0] >= old_room->bb_min[0]) && (pos[0] < old_room->bb_max[0]) &&
-       (pos[1] >= old_room->bb_min[1]) && (pos[1] < old_room->bb_max[1]))
+    old_room = old_room->real_room;
+    room_sector_p orig_sector = Room_GetSectorRaw(old_room, pos);
+    if(orig_sector && orig_sector->portal_to_room)
     {
-        room_sector_p orig_sector = Room_GetSectorRaw(old_room->real_room, pos);
+        return orig_sector->portal_to_room->real_room;
+    }
+
+    if((pos[0] >= old_room->bb_min[0]) && (pos[0] <= old_room->bb_max[0]) &&
+       (pos[1] >= old_room->bb_min[1]) && (pos[1] <= old_room->bb_max[1]))
+    {
         if((pos[2] >= orig_sector->floor) && (pos[2] <= orig_sector->ceiling))
         {
             return old_room->real_room;
         }
-        else if(pos[2] >= orig_sector->ceiling)
+        else if(pos[2] > orig_sector->ceiling)
         {
             if(orig_sector->room_above)
             {
@@ -842,16 +848,10 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
         }
     }
 
-    room_sector_p new_sector = Room_GetSectorRaw(old_room->real_room, pos);
-    if((new_sector != NULL) && new_sector->portal_to_room)
-    {
-        return new_sector->portal_to_room->real_room;
-    }
-
     for(uint16_t i = 0; i < old_room->near_room_list_size; i++)
     {
         room_p r = old_room->near_room_list[i]->real_room;
-        if(r->active &&
+        if((r == r->real_room) &&
            (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
            (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
@@ -1806,7 +1806,6 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
 
     room->flags = tr->rooms[room->id].flags;
     room->frustum = NULL;
-    room->active = 1;
     room->is_in_r_list = 0;
     room->is_swapped = 0;
 
@@ -2565,11 +2564,9 @@ void World_GenRoomProperties(class VT_Level *tr)
         if(!r->real_room)
         {
             room_p real_room = WorldRoom_FindRealRoomInSequence(r);             // call it once per alt rooms sequence
-            r->active = 0;
             r->real_room = real_room;
             for(room_p room_it = r->alternate_room_next; room_it; room_it = room_it->alternate_room_next)
             {
-                room_it->active = 0;
                 room_it->real_room = real_room;
                 if(room_it == r)
                 {
@@ -2578,14 +2575,12 @@ void World_GenRoomProperties(class VT_Level *tr)
             }
             for(room_p room_it = r->alternate_room_prev; room_it; room_it = room_it->alternate_room_prev)
             {
-                room_it->active = 0;
                 room_it->real_room = real_room;
                 if(room_it == r)
                 {
                     break;
                 }
             }
-            real_room->active = 1;
         }
     }
 

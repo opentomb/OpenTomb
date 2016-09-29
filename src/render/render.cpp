@@ -1044,7 +1044,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
     for(uint16_t ni = 0; ni < room->near_room_list_size; ni++)
     {
         room_p near_room = room->near_room_list[ni]->real_room;
-        if(near_room->active && !room->near_room_list[ni]->is_in_r_list)
+        if(!room->near_room_list[ni]->is_in_r_list)
         {
             if (near_room->content->static_mesh_count > 0)
             {
@@ -1178,7 +1178,7 @@ int  CRender::AddRoom(struct room_s *room)
 {
     int ret = 0;
 
-    if(!room->is_in_r_list && room->active)
+    if(!room->is_in_r_list)
     {
         float dist, centre[3];
         centre[0] = (room->bb_min[0] + room->bb_max[0]) / 2;
