@@ -235,7 +235,7 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
 {
     if(!m_need_realloc)
     {
-        room_p dest_room = portal->dest_room;
+        room_p dest_room = portal->dest_room->real_room;
         int in_dist = 0, in_face = 0;
         float *n = cam->frustum->norm;
         float *v = portal->vertex;

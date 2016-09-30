@@ -242,7 +242,7 @@ void World_Open(class VT_Level *tr)
 
     // Generate entity functions.
 
-    if(global_world.entity_tree->root)
+    if(global_world.entity_tree && global_world.entity_tree->root)
     {
         World_GenEntityFunctions(global_world.entity_tree->root);
     }
@@ -294,8 +294,11 @@ void World_Clear()
     }
 
     /* entity empty must be done before rooms destroy */
-    RB_Free(global_world.entity_tree);
-    global_world.entity_tree = NULL;
+    if(global_world.entity_tree)
+    {
+        RB_Free(global_world.entity_tree);
+        global_world.entity_tree = NULL;
+    }
 
     /* Now we can delete physics misc objects */
     Physics_CleanUpObjects();
@@ -796,12 +799,12 @@ struct room_s *World_FindRoomByPos(float pos[3])
     room_p r = global_world.rooms;
     for(uint32_t i = 0; i < global_world.rooms_count; i++, r++)
     {
-        if(r->active &&
+        if((r == r->real_room) &&
            (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
            (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
         {
-            return r;
+            return r->real_room;
         }
     }
     return NULL;
@@ -815,45 +818,33 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
         return World_FindRoomByPos(pos);
     }
 
-    //old_room = Room_CheckFlip(old_room);
-
-    if(old_room->active &&
-       (pos[0] >= old_room->bb_min[0]) && (pos[0] < old_room->bb_max[0]) &&
-       (pos[1] >= old_room->bb_min[1]) && (pos[1] < old_room->bb_max[1]))
+    old_room = old_room->real_room;
+    room_sector_p orig_sector = Room_GetSectorRaw(old_room, pos);
+    if(orig_sector && orig_sector->portal_to_room)
     {
-        if((pos[2] >= old_room->bb_min[2]) && (pos[2] < old_room->bb_max[2]))
+        return orig_sector->portal_to_room->real_room;
+    }
+
+    if(orig_sector)
+    {
+        if(orig_sector->room_below && (pos[2] < orig_sector->room_below->bb_max[2]))
+        {
+            return orig_sector->room_below->real_room;
+        }
+        else if((pos[2] >= old_room->bb_min[2]) && (pos[2] < old_room->bb_max[2]))
         {
             return old_room;
         }
-        else if(pos[2] >= old_room->bb_max[2])
+        else if(orig_sector->room_above && (pos[2] >= orig_sector->room_above->bb_min[2]))
         {
-            room_sector_p orig_sector = Room_GetSectorRaw(old_room, pos);
-            if(orig_sector->sector_above != NULL)
-            {
-                return Room_CheckFlip(orig_sector->sector_above->owner_room);
-            }
+            return orig_sector->room_above->real_room;
         }
-        else if(pos[2] < old_room->bb_min[2])
-        {
-            room_sector_p orig_sector = Room_GetSectorRaw(old_room, pos);
-            if(orig_sector->sector_below != NULL)
-            {
-                return Room_CheckFlip(orig_sector->sector_below->owner_room);
-            }
-        }
-    }
-
-    room_sector_p new_sector = Room_GetSectorRaw(old_room, pos);
-    if((new_sector != NULL) && new_sector->portal_to_room)
-    {
-        return Room_CheckFlip(new_sector->portal_to_room);
     }
 
     for(uint16_t i = 0; i < old_room->near_room_list_size; i++)
     {
-        room_p r = Room_CheckFlip(old_room->near_room_list[i]);
-        if(r->active &&
-           (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
+        room_p r = old_room->near_room_list[i]->real_room;
+        if((pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
            (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
         {
@@ -968,13 +959,24 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
         {
             if(is_global_flip || (current_room->content->alternate_group == flip_index))
             {
-                if(flip_state)
+                bool is_cycled = false;
+                for(room_p room_it = current_room->alternate_room_next; room_it; room_it = room_it->alternate_room_next)
                 {
-                    Room_SwapRoomToAlternate(current_room);
+                    if(room_it == current_room)
+                    {
+                        is_cycled = true;
+                        break;
+                    }
                 }
-                else
+                if(current_room->alternate_room_next &&
+                   (!is_cycled || (current_room->alternate_room_next != current_room->real_room)) &&
+                   (( flip_state && !current_room->is_swapped) ||
+                    (!flip_state &&  current_room->is_swapped)))
                 {
-                    Room_SwapRoomToBase(current_room);
+                    current_room->is_swapped = !current_room->is_swapped;
+                    Room_Disable(current_room->real_room);
+                    Room_SwapContent(current_room, current_room->alternate_room_next);
+                    Room_Enable(current_room->real_room);
                 }
             }
         }
@@ -1806,7 +1808,8 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
 
     room->flags = tr->rooms[room->id].flags;
     room->frustum = NULL;
-    room->active = 1;
+    room->is_in_r_list = 0;
+    room->is_swapped = 0;
 
     Mat4_E_macro(room->transform);
     room->transform[12] = tr->rooms[room->id].offset.x;                         // x = x;
@@ -2119,7 +2122,6 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
         p->vertex_count = 4;                                                    // in original TR all portals are axis aligned rectangles
         p->vertex = (float*)malloc(3*p->vertex_count*sizeof(float));
         p->dest_room = r_dest;
-        p->current_room = room;
         TR_vertex_to_arr(p->vertex  , &tr_portal->vertices[3]);
         vec3_add(p->vertex, p->vertex, room->transform+12);
         TR_vertex_to_arr(p->vertex+3, &tr_portal->vertices[2]);
@@ -2184,12 +2186,13 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     /*
      * alternate room pointer calculation if one exists.
      */
-    room->alternate_room = NULL;
-    room->base_room = NULL;
+    room->alternate_room_next = NULL;
+    room->alternate_room_prev = NULL;
+    room->real_room = room;
     // condition was commented because heavy glitches in TR3+
     if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count) /*&& (room->id < tr_room->alternate_room)*/)
     {
-        room->alternate_room = global_world.rooms + tr_room->alternate_room;
+        room->alternate_room_next = global_world.rooms + tr_room->alternate_room;
     }
 }
 
@@ -2459,23 +2462,133 @@ void World_GenSpritesBuffer()
 }
 
 
+static room_p WorldRoom_FindRealRoomInSequence(room_p room)
+{
+    room_p room_with_min_id = room;
+
+    for(uint16_t i = 0; i < room->portals_count; ++i)
+    {
+        room_p outer_room = room->portals[i].dest_room;
+        for(uint16_t j = 0; j < outer_room->portals_count; ++j)
+        {
+            room_p real_room = outer_room->portals[j].dest_room;
+            if(room == real_room)
+            {
+                return real_room;
+            }
+
+            for(room_p room_it = room->alternate_room_prev; room_it; room_it = room_it->alternate_room_prev)
+            {
+                if(room_it == real_room)
+                {
+                    return real_room;
+                }
+                if(room_it == room)
+                {
+                    break;
+                }
+            }
+
+            for(room_p room_it = room->alternate_room_next; room_it; room_it = room_it->alternate_room_next)
+            {
+                if(room_it == real_room)
+                {
+                    return real_room;
+                }
+                if(room_it == room)
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    if(!room->alternate_room_prev)
+    {
+        return room;
+    }
+
+    for(room_p room_it = room->alternate_room_prev; room_it; room_it = room_it->alternate_room_prev)
+    {
+        if(!room_it->alternate_room_prev)
+        {
+            return room_it;
+        }
+        if(room_with_min_id->id > room_it->id)
+        {
+            room_with_min_id = room_it;
+        }
+        if(room_it == room)
+        {
+            break;
+        }
+    }
+
+    for(room_p room_it = room->alternate_room_next; room_it; room_it = room_it->alternate_room_next)
+    {
+        if(room_with_min_id->id > room_it->id)
+        {
+            room_with_min_id = room_it;
+        }
+        if(room_it == room)
+        {
+            break;
+        }
+    }
+
+    return room_with_min_id;
+}
+
+
 void World_GenRoomProperties(class VT_Level *tr)
 {
     const char *script_dump_name = "scripts_dump.lua";      ///@DEBUG
-    room_p r = global_world.rooms;
     SDL_RWops *f = SDL_RWFromFile(script_dump_name, "w");   ///@DEBUG
     if(f)
     {
         SDL_RWclose(f);
     }
 
-    for(uint32_t i = 0; i < global_world.rooms_count; i++, r++)
+    for(uint32_t i = 0; i < global_world.rooms_count; i++)
     {
-        if(r->alternate_room != NULL)
+        room_p r = global_world.rooms + i;
+        if(r->alternate_room_next)
         {
-            r->alternate_room->base_room = r;   // Refill base room pointer.
+            r->real_room = NULL;
+            r->alternate_room_next->real_room = NULL;                           // HACK for next real room calculation
+            r->alternate_room_next->alternate_room_prev = r;                    // fill base room pointers
         }
+    }
 
+    for(uint32_t i = 0; i < global_world.rooms_count; i++)
+    {
+        room_p r = global_world.rooms + i;
+        if(!r->real_room)
+        {
+            room_p real_room = WorldRoom_FindRealRoomInSequence(r);             // call it once per alt rooms sequence
+            r->real_room = real_room;
+            for(room_p room_it = r->alternate_room_next; room_it; room_it = room_it->alternate_room_next)
+            {
+                room_it->real_room = real_room;
+                if(room_it == r)
+                {
+                    break;
+                }
+            }
+            for(room_p room_it = r->alternate_room_prev; room_it; room_it = room_it->alternate_room_prev)
+            {
+                room_it->real_room = real_room;
+                if(room_it == r)
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+    for(uint32_t i = 0; i < global_world.rooms_count; i++)
+    {
+        room_p r = global_world.rooms + i;
         // Fill heightmap and translate floordata.
         for(uint32_t j = 0; j < r->sectors_count; j++)
         {
@@ -2555,7 +2668,7 @@ void World_FixRooms()
 
     for(uint32_t i = 0; i < global_world.rooms_count; i++, r++)
     {
-        if(r->base_room != NULL)
+        if(r->real_room != r)
         {
             Room_Disable(r);
         }

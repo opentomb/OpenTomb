@@ -846,16 +846,16 @@ bool StreamTrackBuffer::Load_WavRW(SDL_RWops *file)
         Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't load track");
         return false;
     }
-    
+
     if(wav_spec.channels > 2)   // We can't use non-mono and barely can use stereo samples.
     {
         Sys_DebugLog(SYS_LOG_FILENAME, "Error: track has more than 2 channels!");
         return false;
     }
-    
+
     // Extract bitsize from SDL audio spec for further usage.
     uint8_t sample_bitsize = (uint8_t)(wav_spec.format & SDL_AUDIO_MASK_BITSIZE);
-    
+
     // Check if bitsize is supported.
     // We rarely encounter samples with exotic bitsizes, but just in case...
     if((sample_bitsize != 32) && (sample_bitsize != 16) && (sample_bitsize != 8))
@@ -863,29 +863,29 @@ bool StreamTrackBuffer::Load_WavRW(SDL_RWops *file)
         Sys_DebugLog(SYS_LOG_FILENAME, "Can't load sample - wrong bitsize (%d)", sample_bitsize);
         return false;
     }
-    
+
     if(false)//use_SDL_resampler
     {
         int FrameSize = wav_spec.channels * 4; // sizeof(float);
         SDL_AudioCVT cvt;
         SDL_BuildAudioCVT(&cvt, wav_spec.format, wav_spec.channels, wav_spec.freq, AUDIO_F32, wav_spec.channels, 44100);
-        
+
         cvt.len = wav_length;
         buffer_size = wav_length * cvt.len_mult;
         if(buffer_size % FrameSize)
         {
             buffer_size += FrameSize - (buffer_size % FrameSize);   // make align
         }
-        
+
         buffer = (uint8_t*)calloc(buffer_size, 1);
         cvt.buf = buffer;
         memcpy(cvt.buf, wav_buffer, cvt.len);
-        
+
         if(cvt.needed)
         {
             SDL_ConvertAudio(&cvt);
         }
-        
+
 #ifdef HAVE_ALEXT_H
         format = (wav_spec.channels == 1) ? (AL_FORMAT_MONO_FLOAT32) : (AL_FORMAT_STEREO_FLOAT32);
 #endif
@@ -894,7 +894,7 @@ bool StreamTrackBuffer::Load_WavRW(SDL_RWops *file)
     else    // Standard OpenAL sample loading process.
     {
         format = 0x00;
-        
+
         if(wav_spec.channels == 1)
         {
             switch(sample_bitsize)
@@ -929,13 +929,13 @@ bool StreamTrackBuffer::Load_WavRW(SDL_RWops *file)
 #endif
             }
         }
-        
+
         buffer_size = wav_length;
         buffer = (uint8_t*)malloc(buffer_size);
         rate = wav_spec.freq;
         memcpy(buffer, wav_buffer, buffer_size);
     }
-    
+
     SDL_FreeWAV(wav_buffer);
     return true;
 }
