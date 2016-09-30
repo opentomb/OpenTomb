@@ -804,6 +804,11 @@ struct room_s *World_FindRoomByPos(float pos[3])
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
            (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
         {
+            room_sector_p orig_sector = Room_GetSectorRaw(r->real_room, pos);
+            if(orig_sector && orig_sector->portal_to_room)
+            {
+                return orig_sector->portal_to_room->real_room;
+            }
             return r->real_room;
         }
     }

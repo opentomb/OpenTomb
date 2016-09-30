@@ -1216,6 +1216,11 @@ int CRender::ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
     int ret = 0;
     room_p room = portal->dest_room->real_room;
 
+    if(room->is_in_r_list && (room->frustum == NULL))
+    {
+        return 0;
+    }
+
     for(uint16_t i = 0; i < room->portals_count; i++)
     {
         portal_p p = room->portals + i;
