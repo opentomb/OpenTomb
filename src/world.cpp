@@ -2194,8 +2194,7 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     room->alternate_room_next = NULL;
     room->alternate_room_prev = NULL;
     room->real_room = room;
-    // condition was commented because heavy glitches in TR3+
-    if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count) /*&& (room->id < tr_room->alternate_room)*/)
+    if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count))
     {
         room->alternate_room_next = global_world.rooms + tr_room->alternate_room;
     }

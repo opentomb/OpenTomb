@@ -17,22 +17,22 @@
 #include "anim_state_control.h"
 
 
-void Cam_PlayFlyBy(float time)
+void Cam_PlayFlyBy(struct camera_state_s *cam_state, float time)
 {
-    if(engine_camera_state.state == CAMERA_STATE_FLYBY)
+    if(cam_state->state == CAMERA_STATE_FLYBY)
     {
-        const float max_time = engine_camera_state.flyby->pos_x->base_points_count - 1;
-        float speed = Spline_Get(engine_camera_state.flyby->speed, engine_camera_state.time);
-        engine_camera_state.time += time * speed / (1024.0f + 512.0f);
-        if(engine_camera_state.time <= max_time)
+        const float max_time = cam_state->flyby->pos_x->base_points_count - 1;
+        float speed = Spline_Get(cam_state->flyby->speed, cam_state->time);
+        cam_state->time += time * speed / (1024.0f + 512.0f);
+        if(cam_state->time <= max_time)
         {
-            FlyBySequence_SetCamera(engine_camera_state.flyby, &engine_camera, engine_camera_state.time);
+            FlyBySequence_SetCamera(cam_state->flyby, &engine_camera, cam_state->time);
         }
         else
         {
-            engine_camera_state.state = CAMERA_STATE_NORMAL;
-            engine_camera_state.flyby = NULL;
-            engine_camera_state.time = 0.0f;
+            cam_state->state = CAMERA_STATE_NORMAL;
+            cam_state->flyby = NULL;
+            cam_state->time = 0.0f;
             Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
         }
     }
