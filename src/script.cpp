@@ -1364,24 +1364,26 @@ int lua_NewSector(lua_State *lua)
 }
 
 
-bool lua_SameSector(lua_State *lua)
+int lua_SameSector(lua_State *lua)
 {
+    bool result = false;
 
     if(lua_gettop(lua) == 2)
     {
         int id1 = lua_tonumber(lua, 1);
         int id2 = lua_tonumber(lua, 2);
 
-        entity_p ent1 = engine_world.getEntityByID(id1);
-        entity_p ent2 = engine_world.getEntityByID(id2);
+        entity_p ent1 = World_GetEntityByID(id1);
+        entity_p ent2 = World_GetEntityByID(id2);
 
         if(ent1 && ent2 && ent1->current_sector && ent2->current_sector)
         {
-            return ent1->current_sector->trig_index == ent2->current_sector->trig_index;
+            result = ent1->current_sector->trig_index == ent2->current_sector->trig_index;
         }
     }
 
-    return false;
+    lua_pushboolean(lua, result);
+    return 1;
 }
 
 
@@ -2280,7 +2282,7 @@ int lua_SpawnEntity(lua_State * lua)
 }
 
 
-bool lua_DeleteEntity(lua_State * lua)
+int lua_DeleteEntity(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
@@ -2392,7 +2394,7 @@ int lua_GetEntityDirDot(lua_State * lua)
 }
 
 
-bool lua_IsInRoom(lua_State * lua)
+int lua_IsInRoom(lua_State * lua)
 {
     if(lua_gettop(lua) != 1)
     {
@@ -2400,6 +2402,7 @@ bool lua_IsInRoom(lua_State * lua)
         return 0;
     }
 
+    bool result = false;
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(id);
 
@@ -2407,17 +2410,11 @@ bool lua_IsInRoom(lua_State * lua)
     {
         if(ent->current_sector)
         {
-            return true;
-        }
-        else
-        {
-            return false;
+            result = true;
         }
     }
-    else
-    {
-        return false;
-    }
+    lua_pushboolean(lua, result);
+    return 1;
 }
 
 
@@ -2994,7 +2991,7 @@ int lua_RotateEntity(lua_State *lua)
 }
 
 
-void lua_RotateEntityToEntity(lua_State * lua)
+int lua_RotateEntityToEntity(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
@@ -3052,7 +3049,7 @@ void lua_RotateEntityToEntity(lua_State * lua)
         theta = theta * (360.0 / M_PI_2);
         if(add_angle_ != 0.0) theta += add_angle_;
 
-        btScalar delta = *targ_angle - theta;
+        float delta = *targ_angle - theta;
 
         if(ceil(delta) != 180.0)
         {
@@ -3102,10 +3099,12 @@ void lua_RotateEntityToEntity(lua_State * lua)
         Entity_UpdateTransform(ent1);
         Entity_UpdateRigidBody(ent1, 1);
     }
+
+    return 1;
 }
 
 
-float lua_GetEntityOrientation(lua_State * lua)
+int lua_GetEntityOrientation(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
@@ -3114,6 +3113,10 @@ float lua_GetEntityOrientation(lua_State * lua)
         Con_Warning("GetEntityOrientation: expecting arguments (id1, id2, add_angle)");
         return 0;
     }
+
+    int   id1        = lua_tointeger(lua, 1);
+    int   id2        = lua_tointeger(lua, 2);
+    float add_angle_ = lua_tonumber (lua, 3);
 
     entity_p ent1 = World_GetEntityByID(id1);
     entity_p ent2 = World_GetEntityByID(id2);
@@ -3134,7 +3137,9 @@ float lua_GetEntityOrientation(lua_State * lua)
         float theta = (atan2(-facing[0], facing[1])) * (360.0 / M_PI_2);
         if(add_angle_ != 0.0) theta += add_angle_;
 
-        //return WrapAngle(ent2->m_angles[0] - theta);
+        lua_pushnumber(lua, (ent2->angles[0] - theta));
+
+        return 1;
     }
 }
 
@@ -3373,9 +3378,11 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
 
 int lua_GetEntityAnim(lua_State * lua)
 {
-    if(lua_gettop(lua) < 2)
+    int top = lua_gettop(lua);
+
+    if(top < 1)
     {
-        Con_Warning("getEntityAnim: expecting arguments (entity_id, anim_type_id)");
+        Con_Warning("getEntityAnim: expecting arguments (entity_id, (anim_type_id))");
         return 0;
     }
 
@@ -3388,7 +3395,7 @@ int lua_GetEntityAnim(lua_State * lua)
         return 0;
     }
 
-    int anim_id = lua_tointeger(lua, 2);
+    int anim_id = (top > 1)?(lua_tointeger(lua, 2)):(0);
     ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_id);
     if(ss_anim && ss_anim->model)
     {
@@ -5613,7 +5620,7 @@ bool Script_LuaInit()
 }
 
 
-void Script_LuaPrepare();
+void Script_LuaPrepare()
 {
     if(engine_lua)
     {

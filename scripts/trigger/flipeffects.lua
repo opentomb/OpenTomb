@@ -129,12 +129,12 @@ flipeffects[32] = { -- Play footprint and overlay it on floor.
                     (material == SECTOR_MATERIAL_STONE   ) or
                     (material == SECTOR_MATERIAL_CONCRETE) ) then return;
 
-            elseif(getEngineVersion() ~= Engine.IV) then
+            elseif(getLevelVersion() ~= TR_IV) then
             
                     if(material == SECTOR_MATERIAL_SNOW) then sound_id = 293;
                 elseif(material == SECTOR_MATERIAL_ICE ) then sound_id = 289; end;
                 
-            elseif(getEngineVersion() == Engine.IV) then
+            elseif(getLevelVersion() == TR_IV) then
                     
                     if(material == SECTOR_MATERIAL_MARBLE) then sound_id = 293; end;
                 
@@ -151,15 +151,15 @@ fe_Assign(3, 32,32); fe_Assign(4, 32,32); fe_Assign(5, 32,32);
 -- Get certain flipeffect array, regarding current version.
 
 function getFlipeffectArray(ver)
-    if(ver == Engine.I) then
+    if(ver == TR_I) then
         return tr1_flipeffects;
-    elseif(ver == Engine.II) then
+    elseif(ver == TR_II) then
         return tr2_flipeffects;
-    elseif(ver == Engine.III) then
+    elseif(ver == TR_III) then
         return tr3_flipeffects;
-    elseif(ver == Engine.IV) then
+    elseif(ver == TR_IV) then
         return tr4_flipeffects;
-    elseif(ver == Engine.V) then
+    elseif(ver == TR_V) then
         return tr5_flipeffects;
     else
         return nil;
@@ -169,7 +169,7 @@ end;
 -- Launch given flipeffect (id) for a given entity (caller) with given argument (operand).
 
 function execFlipeffect(id, caller, operand)
-    local flipeffects = getFlipeffectArray(getEngineVersion());
+    local flipeffects = getFlipeffectArray(getLevelVersion());
     if((not flipeffects) or (not flipeffects[id]) or (not flipeffects[id].onExec)) then return end;
     
     if(not caller ) then caller  = -1 end;
@@ -193,7 +193,7 @@ end;
 -- Clean up flipeffect temporary variables. Must be called on level end.
 
 function fe_Clear()
-    local flipeffects = getFlipeffectArray(getEngineVersion());
+    local flipeffects = getFlipeffectArray(getLevelVersion());
 
     for k,v in pairs(flipeffects) do
         fe_ClearEffect(flipeffects[k]);
@@ -204,7 +204,7 @@ end;
 -- Initialize flipeffect temporary variables. Must be called on level loading.
 
 function fe_Prepare()
-    local flipeffects = getFlipeffectArray(getEngineVersion());
+    local flipeffects = getFlipeffectArray(getLevelVersion());
 
     for k,v in pairs(flipeffects) do
         fe_PrepareEffect(flipeffects[k]);
