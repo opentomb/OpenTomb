@@ -55,6 +55,9 @@ typedef struct camera_state_s
     GLfloat                         shake_value;
     GLfloat                         time;
     int                             move;
+    float                           entity_offset_x; 
+    float                           entity_offset_z;
+    int8_t                          target_dir; //Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
 }camera_state_t, camera_state_p;
 
 
@@ -77,8 +80,6 @@ typedef struct camera_s
     GLfloat                     f;
     GLfloat                     h;
     GLfloat                     w;
-
-    int8_t                      target_dir;//Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
 
     struct room_s               *current_room;
 }camera_t, *camera_p;

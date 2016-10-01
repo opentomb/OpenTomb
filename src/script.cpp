@@ -981,7 +981,7 @@ int lua_DumpRoom(lua_State * lua)
     {
         room_sector_p rs = r->sectors;
         Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->id, r->sectors_x, r->sectors_y, r->bb_min[2], r->bb_max[2], r->transform[12 + 0], r->transform[12 + 1]);
-        Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != NULL) ? (r->alternate_room->id) : (-1), (r->base_room != NULL) ? (r->base_room->id) : (-1));
+        Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room_next != NULL) ? (r->alternate_room_next->id) : (-1), (r->alternate_room_prev != NULL) ? (r->alternate_room_prev->id) : (-1));
         for(uint32_t i = 0; i < r->sectors_count; i++, rs++)
         {
             Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, (rs->portal_to_room) ? (rs->portal_to_room->id) : (-1));
@@ -2468,8 +2468,8 @@ int lua_SimilarSector(lua_State * lua)
     room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
     room_sector_p next_sector = Room_GetSectorRaw(ent->self->room, next_pos);
 
-    curr_sector = Sector_GetPortalSectorTarget(curr_sector);
-    next_sector = Sector_GetPortalSectorTarget(next_sector);
+    curr_sector = Sector_GetPortalSectorTargetRaw(curr_sector);
+    next_sector = Sector_GetPortalSectorTargetRaw(next_sector);
 
     bool ignore_doors = lua_toboolean(lua, 5);
 
@@ -2523,7 +2523,7 @@ int lua_GetSectorHeight(lua_State * lua)
     }
 
     room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, pos);
-    curr_sector = Sector_GetPortalSectorTarget(curr_sector);
+    curr_sector = Sector_GetPortalSectorTargetRaw(curr_sector);
     float point[3];
     (ceiling) ? (Sector_LowestCeilingCorner(curr_sector, point)) : (Sector_HighestFloorCorner(curr_sector, point));
 

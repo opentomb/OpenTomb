@@ -857,13 +857,14 @@ void ShowDebugInfo()
 
             case OBJECT_ROOM_BASE:
                 {
-                    room_sector_p rs = Room_GetSectorRaw((room_p)last_cont->object, ray_test_point);
+                    room_p room = (room_p)last_cont->object;
+                    room_sector_p rs = Room_GetSectorRaw(room, ray_test_point);
                     if(rs != NULL)
                     {
                         renderer.debugDrawer->SetColor(0.0, 1.0, 0.0);
                         renderer.debugDrawer->DrawSectorDebugLines(rs);
-                        GLText_OutTextXY(30.0f, y += dy, "cont_room: (id = %d, sx = %d, sy = %d)", rs->owner_room->id, rs->index_x, rs->index_y);
-                        GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->sector_below != NULL) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != NULL) ? (rs->sector_above->owner_room->id) : (-1));
+                        GLText_OutTextXY(30.0f, y += dy, "cont_room: (id = %d, sx = %d, sy = %d)", room->id, rs->index_x, rs->index_y);
+                        GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->room_below) ? (rs->room_below->id) : (-1), (rs->room_above) ? (rs->room_above->id) : (-1));
                         if(rs->trigger)
                         {
                             char trig_type[64];
@@ -925,13 +926,14 @@ void ShowDebugInfo()
                 if(ent && ent->self->room)
                 {
                     GLText_OutTextXY(30.0f, y += dy, "char_pos = (%.1f, %.1f, %.1f)", ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2]);
-                    room_sector_p rs = Room_GetSectorRaw(ent->self->room, ent->transform + 12);
+                    room_p room = ent->self->room;
+                    room_sector_p rs = Room_GetSectorRaw(room, ent->transform + 12);
                     if(rs != NULL)
                     {
                         renderer.debugDrawer->SetColor(0.0, 1.0, 0.0);
                         renderer.debugDrawer->DrawSectorDebugLines(rs);
-                        GLText_OutTextXY(30.0f, y += dy, "room = (id = %d, sx = %d, sy = %d)", rs->owner_room->id, rs->index_x, rs->index_y);
-                        GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->sector_below != NULL) ? (rs->sector_below->owner_room->id) : (-1), (rs->sector_above != NULL) ? (rs->sector_above->owner_room->id) : (-1));
+                        GLText_OutTextXY(30.0f, y += dy, "room = (id = %d, sx = %d, sy = %d)", room->id, rs->index_x, rs->index_y);
+                        GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->room_below) ? (rs->room_below->id) : (-1), (rs->room_above) ? (rs->room_above->id) : (-1));
                         if(rs->trigger)
                         {
                             char trig_type[64];
@@ -1347,12 +1349,12 @@ int Engine_ExecCmd(char *ch)
                 if(sect)
                 {
                     Con_Printf("sect(%d, %d), inpenitrable = %d, r_up = %d, r_down = %d", sect->index_x, sect->index_y,
-                               (int)(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), (int)(sect->sector_above != NULL), (int)(sect->sector_below != NULL));
-                    for(uint32_t i = 0; i < sect->owner_room->content->static_mesh_count; i++)
+                               (int)(sect->ceiling == TR_METERING_WALLHEIGHT || sect->floor == TR_METERING_WALLHEIGHT), (int)(sect->room_above != NULL), (int)(sect->room_below != NULL));
+                    for(uint32_t i = 0; i < r->content->static_mesh_count; i++)
                     {
-                        Con_Printf("static[%d].object_id = %d", i, sect->owner_room->content->static_mesh[i].object_id);
+                        Con_Printf("static[%d].object_id = %d", i, r->content->static_mesh[i].object_id);
                     }
-                    for(engine_container_p cont = sect->owner_room->content->containers; cont; cont=cont->next)
+                    for(engine_container_p cont = r->content->containers; cont; cont=cont->next)
                     {
                         if(cont->object_type == OBJECT_ENTITY)
                         {

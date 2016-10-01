@@ -39,7 +39,7 @@ void Game_StopFlyBy();
 
 void Cam_PlayFlyBy(float time);
 int Cam_CheckCollision(struct camera_s *cam, entity_s *ent, float angle);
-void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, float dz);
+void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, struct entity_s *ent);
 
 #endif
 

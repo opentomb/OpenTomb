@@ -701,7 +701,9 @@ void Game_Frame(float time)
             Entity_Frame(player, engine_frame_time);
             if(engine_camera_state.state != CAMERA_STATE_FLYBY)
             {
-                Cam_FollowEntity(&engine_camera, player, 16.0, 128.0);
+                engine_camera_state.entity_offset_x = 16.0f;
+                engine_camera_state.entity_offset_z = 128.0f;
+                Cam_FollowEntity(&engine_camera, &engine_camera_state, player);
             }
             if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
             {

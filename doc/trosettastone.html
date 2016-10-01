@@ -510,9 +510,6 @@ th.tableblock.valign-bottom, td.tableblock.valign-bottom {
   vertical-align: bottom;
 }
 
-th.tableblock.grid-none, td.tableblock.grid-none {
-  border-style: hidden;
-}
 
 /*
  * manpage specific
@@ -2075,7 +2072,7 @@ width:100%;
 <col style="width:1%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2015-08-17)</strong></p></div>
+<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-09-27)</strong></p></div>
 <div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
 <div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div></div></td>
 <td class="tableblock halign-right valign-middle" ><div><div class="paragraph"><p><span class="image">
@@ -2421,11 +2418,11 @@ may be commanded to use a lower level of alignment, one that will not cause padd
 nearly all cases, with exceptions noted below.</p></div>
 <div class="paragraph"><p>To set single-byte alignment in any recent compiler, use the following compiler directive:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="cp">#pragma pack(push, 1)</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="cp">#pragma pack(push, 1)</span>
 </pre></div></div></div>
 <div class="paragraph"><p>To return to the project&#8217;s default alignment, use the following directive:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="cp">#pragma pack(pop)</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="cp">#pragma pack(pop)</span>
 </pre></div></div></div>
 </div>
 </div>
@@ -2545,7 +2542,7 @@ WAVE format, and, as already mentioned, they are embedded either in the data fil
 <div class="paragraph"><p>This is how most colours are specified.</p></div>
 <div class="listingblock">
 <a id="tr_colour"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_colour</span>   <span class="c1">// 3 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_colour</span>   <span class="c1">// 3 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint8_t</span> <span class="n">Red</span><span class="p">;</span>        <span class="c1">// Red component (0 -- darkest, 255 -- brightest)</span>
     <span class="kt">uint8_t</span> <span class="n">Green</span><span class="p">;</span>      <span class="c1">// Green component (0 -- darkest, 255 -- brightest)</span>
@@ -2557,7 +2554,7 @@ bytes instead of this structure.)</p></div>
 <div class="paragraph"><p>And as mentioned earlier, the 16-bit palette uses a similar structure:</p></div>
 <div class="listingblock">
 <a id="tr_colour4"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_colour4</span>  <span class="c1">// 4 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_colour4</span>  <span class="c1">// 4 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint8_t</span> <span class="n">Red</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">Green</span><span class="p">;</span>
@@ -2568,7 +2565,7 @@ bytes instead of this structure.)</p></div>
 <div class="paragraph"><p>In TR5, there is new additional colour type composed of floating-point numbers. This type is primarily used in light structures.</p></div>
 <div class="listingblock">
 <a id="tr5_colour"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr5_colour</span>  <span class="c1">// 4 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr5_colour</span>  <span class="c1">// 4 bytes</span>
 <span class="p">{</span>
     <span class="kt">float</span> <span class="n">Red</span><span class="p">;</span>
     <span class="kt">float</span> <span class="n">Green</span><span class="p">;</span>
@@ -2583,7 +2580,7 @@ bytes instead of this structure.)</p></div>
 quads or triangles) can refer to them by simply using their index in the list.</p></div>
 <div class="listingblock">
 <a id="tr_vertex"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_vertex</span>   <span class="c1">// 6 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_vertex</span>   <span class="c1">// 6 bytes</span>
 <span class="p">{</span>
     <span class="kt">int16_t</span> <span class="n">x</span><span class="p">;</span>
     <span class="kt">int16_t</span> <span class="n">y</span><span class="p">;</span>
@@ -2593,7 +2590,7 @@ quads or triangles) can refer to them by simply using their index in the list.</
 <div class="paragraph"><p>As with colours, TR5 introduced additional vertex type comprised of floating-point numbers:</p></div>
 <div class="listingblock">
 <a id="tr5_vertex"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr5_vertex</span>   <span class="c1">// 12 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr5_vertex</span>   <span class="c1">// 12 bytes</span>
 <span class="p">{</span>
     <span class="kt">float</span> <span class="n">x</span><span class="p">;</span>
     <span class="kt">float</span> <span class="n">y</span><span class="p">;</span>
@@ -2609,7 +2606,7 @@ is an index into the 256-colour palette, while the high byte (<span class="monos
 its vertices mapped onto all 4 vertices of an object texture, in appropriate correspondence.</p></div>
 <div class="listingblock">
 <a id="tr_face4"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_face4</span>    <span class="c1">// 12 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_face4</span>    <span class="c1">// 12 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Vertices</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
     <span class="kt">uint16_t</span> <span class="n">Texture</span><span class="p">;</span>
@@ -2631,7 +2628,7 @@ into the 256-colour palette, while the high byte (<span class="monospaced">Textu
 </span> TR4 and later introduced an extended version <em>only used for meshes</em>, not for triangles and quads making rooms:</p></div>
 <div class="listingblock">
 <a id="tr4_mesh_face4"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_mesh_face4</span>    <span class="c1">// 12 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_mesh_face4</span>    <span class="c1">// 12 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Vertices</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>
     <span class="kt">uint16_t</span> <span class="n">Texture</span><span class="p">;</span>
@@ -2718,7 +2715,7 @@ TR4 engine doesn&#8217;t support environmental map for Lara&#8217;s joints. It s
 object texture, in appropriate correspondence</em>. Moreover, a triangle has only 3 vertices, not 4.</p></div>
 <div class="listingblock">
 <a id="tr_face3"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_face3</span>    <span class="c1">// 8 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_face3</span>    <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Vertices</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
     <span class="kt">uint16_t</span> <span class="n">Texture</span><span class="p">;</span>
@@ -2739,7 +2736,7 @@ object texture, in appropriate correspondence</em>. Moreover, a triangle has onl
 <div class="paragraph"><p>Each <span class="monospaced">uint8_t</span> represents a pixel whose colour is in the 8-bit palette.</p></div>
 <div class="listingblock">
 <a id="tr_textile8"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_textile8</span>    <span class="c1">// 65536 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_textile8</span>    <span class="c1">// 65536 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint8_t</span> <span class="n">Tile</span><span class="p">[</span><span class="mi">256</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span>
 <span class="p">};</span>
@@ -2754,7 +2751,7 @@ object texture, in appropriate correspondence</em>. Moreover, a triangle has onl
 5-bit blue channel (<span class="monospaced">0x001F</span>)</p></div>
 <div class="listingblock">
 <a id="tr_textile16"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_textile16</span>    <span class="c1">// 131072 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_textile16</span>    <span class="c1">// 131072 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Tile</span><span class="p">[</span><span class="mi">256</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span>
 <span class="p">};</span>
@@ -2765,7 +2762,7 @@ object texture, in appropriate correspondence</em>. Moreover, a triangle has onl
 <div class="paragraph"><p>Each <span class="monospaced">uint32_t</span> represents a pixel whose colour is of the form ARGB, (A = most significant byte), each component being one byte.</p></div>
 <div class="listingblock">
 <a id="tr4_textile32"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_textile32</span>    <span class="c1">// 262144 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_textile32</span>    <span class="c1">// 262144 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">Tile</span><span class="p">[</span><span class="mi">256</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span>
 <span class="p">};</span>
@@ -2830,7 +2827,7 @@ by the larger structures that are built using the smaller structures.</p></div>
 <div class="paragraph"><p>$X / Z$ indicate the base position of the room mesh in world coordinates ($Y$ is always zero-relative)</p></div>
 <div class="listingblock">
 <a id="tr_room_info"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_info</span>    <span class="c1">// 16 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_room_info</span>    <span class="c1">// 16 bytes</span>
 <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>             <span class="c1">// X-offset of room (world coordinates)</span>
     <span class="kt">int32_t</span> <span class="n">z</span><span class="p">;</span>             <span class="c1">// Z-offset of room (world coordinates)</span>
@@ -2843,7 +2840,7 @@ by the larger structures that are built using the smaller structures.</p></div>
 <div class="paragraph"><p>TR5 uses an extended version of this structure:</p></div>
 <div class="listingblock">
 <a id="tr5_room_info"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr5_room_info</span>    <span class="c1">// 20 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr5_room_info</span>    <span class="c1">// 20 bytes</span>
 <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>             <span class="c1">// X-offset of room (world coordinates)</span>
     <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>             <span class="c1">// Y-offset of room (world coordinates) - only in TR5</span>
@@ -2862,7 +2859,7 @@ defines <em>only visibility portals</em>, not an actual door model, texture, or 
 &#8220;see&#8221; through it.</p></div>
 <div class="listingblock">
 <a id="tr_room_portal"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_portal</span>  <span class="c1">// 32 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_room_portal</span>  <span class="c1">// 32 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span>  <span class="n">AdjoiningRoom</span><span class="p">;</span> <span class="c1">// Which room this portal leads to</span>
     <span class="n">tr_vertex</span> <span class="n">Normal</span><span class="p">;</span>
@@ -2878,7 +2875,7 @@ contain visual artifacts instead of a viewport to <span class="monospaced">Adjoi
 <div class="paragraph"><p>All the geometry specified here is <em>collisional geometry</em>.</p></div>
 <div class="listingblock">
 <a id="tr_room_sector"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_sector</span> <span class="c1">// 8 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_room_sector</span> <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">FDindex</span><span class="p">;</span>    <span class="c1">// Index into FloorData[]</span>
     <span class="kt">uint16_t</span> <span class="n">BoxIndex</span><span class="p">;</span>   <span class="c1">// Index into Boxes[] (-1 if none)</span>
@@ -3019,7 +3016,7 @@ Here is the description of each:</p></div>
 <h5 id="_tr1_room_lighting">TR1 Room Lighting</h5>
 <div class="listingblock">
 <a id="tr_room_light"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_light</span>   <span class="c1">// 18 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_room_light</span>   <span class="c1">// 18 bytes</span>
 <span class="p">{</span>
      <span class="kt">int32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>       <span class="c1">// Position of light, in world coordinates</span>
     <span class="kt">uint16_t</span> <span class="n">Intensity1</span><span class="p">;</span>    <span class="c1">// Light intensity</span>
@@ -3036,7 +3033,7 @@ room #9, 2nd light in <span class="monospaced">level1.phd</span>). <span class="
 <div class="paragraph"><p>TR2 uses an extended version of TR1 light structure:</p></div>
 <div class="listingblock">
 <a id="tr2_room_light"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_light</span>   <span class="c1">// 24 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr2_room_light</span>   <span class="c1">// 24 bytes</span>
 <span class="p">{</span>
      <span class="kt">int32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>       <span class="c1">// Position of light, in world coordinates</span>
     <span class="kt">uint16_t</span> <span class="n">Intensity1</span><span class="p">;</span>    <span class="c1">// Light intensity</span>
@@ -3052,7 +3049,7 @@ always black, so the number is pseudo-signed (negative values are always treated
 <h5 id="_tr3_room_lighting">TR3 Room Lighting</h5>
 <div class="listingblock">
 <a id="tr3_room_light"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr3_room_light</span>   <span class="c1">// 24 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr3_room_light</span>   <span class="c1">// 24 bytes</span>
 <span class="p">{</span>
         <span class="kt">int32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>       <span class="c1">// Position of light, in world coordinates</span>
      <span class="n">tr_colour4</span> <span class="n">Colour</span><span class="p">;</span>        <span class="c1">// Colour of the light</span>
@@ -3068,7 +3065,7 @@ unknown.</p></div>
 <h5 id="_tr4_room_lighting">TR4 Room Lighting</h5>
 <div class="listingblock">
 <a id="tr4_room_light"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_room_light</span>   <span class="c1">// 46 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_room_light</span>   <span class="c1">// 46 bytes</span>
 <span class="p">{</span>
         <span class="kt">int32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>       <span class="c1">// Position of light, in world coordinates</span>
       <span class="n">tr_colour</span> <span class="n">Colour</span><span class="p">;</span>        <span class="c1">// Colour of the light</span>
@@ -3274,7 +3271,7 @@ width:80%;
 <h5 id="_tr5_room_lighting">TR5 Room Lighting</h5>
 <div class="listingblock">
 <a id="tr5_room_light"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr5_room_light</span>   <span class="c1">// 88 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr5_room_light</span>   <span class="c1">// 88 bytes</span>
 <span class="p">{</span>
         <span class="kt">float</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>       <span class="c1">// Position of light, in world coordinates</span>
         <span class="kt">float</span> <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">;</span>       <span class="c1">// Colour of the light</span>
@@ -3332,7 +3329,7 @@ we&#8217;ll define vertex structure for TR1-2, TR3-4 and TR5 independently.</p><
 <h5 id="_tr1_2_room_vertex_structure">TR1-2 Room Vertex Structure</h5>
 <div class="listingblock">
 <a id="tr_room_vertex"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_vertex</span>  <span class="c1">// 8 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_room_vertex</span>  <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
      <span class="n">tr_vertex</span> <span class="n">Vertex</span><span class="p">;</span>
        <span class="kt">int16_t</span> <span class="n">Lighting</span><span class="p">;</span>
@@ -3343,7 +3340,7 @@ we&#8217;ll define vertex structure for TR1-2, TR3-4 and TR5 independently.</p><
 <div class="paragraph"><p>TR2 uses an extended version of the structure:</p></div>
 <div class="listingblock">
 <a id="tr2_room_vertex"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_vertex</span>  <span class="c1">// 12 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr2_room_vertex</span>  <span class="c1">// 12 bytes</span>
 <span class="p">{</span>
      <span class="n">tr_vertex</span> <span class="n">Vertex</span><span class="p">;</span>
        <span class="kt">int16_t</span> <span class="n">Lighting</span><span class="p">;</span>
@@ -3372,7 +3369,7 @@ we&#8217;ll define vertex structure for TR1-2, TR3-4 and TR5 independently.</p><
 <h5 id="_tr3_4_room_vertex_structure">TR3-4 Room Vertex Structure</h5>
 <div class="listingblock">
 <a id="tr3_room_vertex"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr3_room_vertex</span>  <span class="c1">// 12 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr3_room_vertex</span>  <span class="c1">// 12 bytes</span>
 <span class="p">{</span>
      <span class="n">tr_vertex</span> <span class="n">Vertex</span><span class="p">;</span>
        <span class="kt">int16_t</span> <span class="n">Lighting</span><span class="p">;</span>   <span class="c1">// Value is ignored!</span>
@@ -3434,7 +3431,7 @@ get each colour:</p></div>
 <div class="paragraph"><p>In TR5, room vertex structure was almost completely changed. Coordinates were converted to floats, and normal was added:</p></div>
 <div class="listingblock">
 <a id="tr5_room_vertex"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr5_room_vertex</span>  <span class="c1">// 28 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr5_room_vertex</span>  <span class="c1">// 28 bytes</span>
 <span class="p">{</span>
     <span class="n">tr5_vertex</span> <span class="n">Vertex</span><span class="p">;</span>     <span class="c1">// Vertex is now floating-point</span>
     <span class="n">tr5_vertex</span> <span class="n">Normal</span><span class="p">;</span>
@@ -3448,7 +3445,7 @@ get each colour:</p></div>
 <h4 id="_room_sprite_structure">3.2.6. Room Sprite Structure</h4>
 <div class="listingblock">
 <a id="tr_room_sprite"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_sprite</span>  <span class="c1">// 4 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_room_sprite</span>  <span class="c1">// 4 bytes</span>
 <span class="p">{</span>
     <span class="kt">int16_t</span> <span class="n">Vertex</span><span class="p">;</span>       <span class="c1">// Offset into vertex list</span>
     <span class="kt">int16_t</span> <span class="n">Texture</span><span class="p">;</span>      <span class="c1">// Offset into sprite texture list</span>
@@ -3473,7 +3470,7 @@ replaced by any other version-specific room vertex type (<span class="monospaced
 </div>
 <div class="listingblock">
 <a id="tr_room_data"></a>
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room_data</span>    <span class="c1">// (variable length)</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room_data</span>    <span class="c1">// (variable length)</span>
 <span class="p">{</span>
     <span class="kt">int16_t</span> <span class="n">NumVertices</span><span class="p">;</span>                   <span class="c1">// Number of vertices in the following list</span>
     <span class="n">tr2_room_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// List of vertices (relative coordinates)</span>
@@ -3497,7 +3494,7 @@ have no animations and are confined to a single room.</p></div>
 <h5 id="_tr1_room_static_mesh_structure">TR1 Room Static Mesh Structure</h5>
 <div class="listingblock">
 <a id="tr_room_staticmesh"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_room_staticmesh</span>  <span class="c1">// 18 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_room_staticmesh</span>  <span class="c1">// 18 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>    <span class="c1">// Absolute position in world coordinates</span>
     <span class="kt">uint16_t</span> <span class="n">Rotation</span><span class="p">;</span>
@@ -3509,7 +3506,7 @@ have no animations and are confined to a single room.</p></div>
 <div class="paragraph"><p>In <span class="monospaced">Rotation</span> field, high two bits (<span class="monospaced">0xC000</span>) indicate steps of 90 degrees (e.g. (Rotation &gt;&gt; 14) * 90). However, when parsing this value, no extra bitshifting
 is needed, as you can simply interpret it using this formula:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="kt">float</span> <span class="n">Real_Rotation</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="n">Rotation</span> <span class="o">/</span> <span class="mf">16384.0f</span> <span class="o">*</span> <span class="o">-</span><span class="mi">90</span><span class="p">;</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="kt">float</span> <span class="n">Real_Rotation</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="n">Rotation</span> <span class="o">/</span> <span class="mf">16384.0f</span> <span class="o">*</span> <span class="o">-</span><span class="mi">90</span><span class="p">;</span>
 </pre></div></div></div>
 </div>
 <div class="sect4">
@@ -3517,7 +3514,7 @@ is needed, as you can simply interpret it using this formula:</p></div>
 <div class="paragraph"><p>TR2 again uses an extended version:</p></div>
 <div class="listingblock">
 <a id="tr2_room_staticmesh"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_room_staticmesh</span>  <span class="c1">// 20 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr2_room_staticmesh</span>  <span class="c1">// 20 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>    <span class="c1">// Absolute position in world coordinates</span>
     <span class="kt">uint16_t</span> <span class="n">Rotation</span><span class="p">;</span>
@@ -3532,7 +3529,7 @@ is needed, as you can simply interpret it using this formula:</p></div>
 <h5 id="_tr3_5_room_static_mesh_structure">TR3-5 Room Static Mesh Structure</h5>
 <div class="listingblock">
 <a id="tr3_room_staticmesh"></a>
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr3_room_staticmesh</span>  <span class="c1">// 20 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr3_room_staticmesh</span>  <span class="c1">// 20 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">;</span>    <span class="c1">// Absolute position in world coordinates</span>
     <span class="kt">uint16_t</span> <span class="n">Rotation</span><span class="p">;</span>
@@ -3573,7 +3570,7 @@ structure, and their purpose was presumably optimizing rendering by some kind of
 <h4 id="_tr5_room_layer_structure">3.3.1. TR5 Room Layer Structure</h4>
 <div class="listingblock">
 <a id="tr5_room_layer"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr5_room_layer</span>   <span class="c1">// 56 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr5_room_layer</span>   <span class="c1">// 56 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">NumLayerVertices</span><span class="p">;</span>   <span class="c1">// Number of vertices in this layer (4 bytes)</span>
     <span class="kt">uint16_t</span> <span class="n">UnknownL1</span><span class="p">;</span>
@@ -3616,7 +3613,7 @@ follow.  Those data words must be parsed in order to interpret and construct the
 also applicable to all variations of room structures, <em>except</em> <span class="monospaced">tr5_room</span>, which will be described independently.</p></div>
 <div class="listingblock">
 <a id="tr_room"></a>
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room</span>  <span class="c1">// (variable length)</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_room</span>  <span class="c1">// (variable length)</span>
 <span class="p">{</span>
     <span class="n">tr_room_info</span> <span class="n">info</span><span class="p">;</span>           <span class="c1">// Where the room exists, in world coordinates</span>
 
@@ -3653,7 +3650,7 @@ boundaries as original room, but altered geometry and/or texturing. Detailed des
 <h4 id="_tr2_room_structure">3.4.2. TR2 Room Structure</h4>
 <div class="listingblock">
 <a id="tr2_room"></a>
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr2_room</span>  <span class="c1">// (variable length)</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr2_room</span>  <span class="c1">// (variable length)</span>
 <span class="p">{</span>
     <span class="n">tr_room_info</span> <span class="n">info</span><span class="p">;</span>           <span class="c1">// Where the room exists, in world coordinates</span>
 
@@ -3711,7 +3708,7 @@ boundaries as original room, but altered geometry and/or texturing. Detailed des
 <h4 id="_tr3_room_structure">3.4.3. TR3 Room Structure</h4>
 <div class="listingblock">
 <a id="tr3_room"></a>
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr3_room</span>  <span class="c1">// (variable length)</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr3_room</span>  <span class="c1">// (variable length)</span>
 <span class="p">{</span>
     <span class="n">tr_room_info</span> <span class="n">info</span><span class="p">;</span>           <span class="c1">// Where the room exists, in world coordinates</span>
 
@@ -3750,7 +3747,7 @@ boundaries as original room, but altered geometry and/or texturing. Detailed des
 <h4 id="_tr4_room_structure">3.4.4. TR4 Room Structure</h4>
 <div class="listingblock">
 <a id="tr4_room"></a>
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr4_room</span>  <span class="c1">// (variable length)</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr4_room</span>  <span class="c1">// (variable length)</span>
 <span class="p">{</span>
     <span class="n">tr_room_info</span> <span class="n">info</span><span class="p">;</span>           <span class="c1">// Where the room exists, in world coordinates</span>
 
@@ -3767,9 +3764,6 @@ boundaries as original room, but altered geometry and/or texturing. Detailed des
     <span class="n">tr2_room_sector</span> <span class="n">SectorList</span><span class="p">[</span><span class="n">NumXsectors</span> <span class="o">*</span> <span class="n">NumZsectors</span><span class="p">];</span> <span class="c1">// List of sectors in this room</span>
 
     <span class="kt">uint32_t</span> <span class="n">RoomColour</span><span class="p">;</span>        <span class="c1">// In ARGB format!</span>
-
-    <span class="kt">int16_t</span> <span class="n">AmbientIntensity1</span><span class="p">;</span>  <span class="c1">// This and the next one only affect externally-lit objects</span>
-    <span class="kt">int16_t</span> <span class="n">AmbientIntensity2</span><span class="p">;</span>  <span class="c1">// Usually the same as AmbientIntensity1</span>
 
     <span class="kt">uint16_t</span> <span class="n">NumLights</span><span class="p">;</span>                 <span class="c1">// Number of point lights in this room</span>
     <span class="n">tr4_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span>   <span class="c1">// List of point lights</span>
@@ -3809,7 +3803,7 @@ Angel of Darkness</em> at the very same time.</td>
 </div>
 <div class="listingblock">
 <a id="tr5_room"></a>
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr5_room</span> <span class="c1">// (variable length)</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr5_room</span> <span class="c1">// (variable length)</span>
 <span class="p">{</span>
     <span class="kt">char</span> <span class="n">XELA</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span>           <span class="c1">// So-called &quot;XELA landmark&quot;</span>
 
@@ -5071,7 +5065,7 @@ vertex lighting is used, using the data included with the mesh.</p></div>
 </div>
 <div class="listingblock">
 <a id="tr_mesh"></a>
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_mesh</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr_mesh</span>
 <span class="p">{</span>
     <span class="n">tr_vertex</span> <span class="n">Centre</span><span class="p">;</span>
       <span class="kt">int32_t</span> <span class="n">CollRadius</span><span class="p">;</span>
@@ -5111,7 +5105,7 @@ and <span class="monospaced">ColoredRectangles</span> array contain colored tria
 <div class="paragraph"><p>As coloured faces feature was removed since TR4, <span class="monospaced">tr_mesh</span> structure was changed, and contain no data for coloured faces anymore:</p></div>
 <div class="listingblock">
 <a id="tr4_mesh"></a>
-<div class="content"><div class="highlight"><pre><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr4_mesh</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">virtual</span> <span class="k">struct</span> <span class="n">tr4_mesh</span>
 <span class="p">{</span>
     <span class="n">tr_vertex</span> <span class="n">Centre</span><span class="p">;</span>
       <span class="kt">int32_t</span> <span class="n">CollRadius</span><span class="p">;</span>
@@ -5156,17 +5150,21 @@ specific slot. This behaviour is hardcoded.</td>
 and the latter is used for collision testing.</p></div>
 <div class="listingblock">
 <a id="tr_staticmesh"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_staticmesh</span>   <span class="c1">// 32 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_staticmesh</span>   <span class="c1">// 32 bytes</span>
 <span class="p">{</span>
-    <span class="kt">uint32_t</span>   <span class="n">ID</span><span class="p">;</span>   <span class="c1">// Static Mesh Identifier</span>
-    <span class="kt">uint16_t</span>   <span class="n">Mesh</span><span class="p">;</span> <span class="c1">// Mesh (offset into MeshPointers[])</span>
-    <span class="n">tr2_vertex</span> <span class="n">VisibilityBox</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
-    <span class="n">tr2_vertex</span> <span class="n">CollisionBox</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
-    <span class="kt">uint16_t</span>   <span class="n">Flags</span><span class="p">;</span>
+    <span class="kt">uint32_t</span>        <span class="n">ID</span><span class="p">;</span>   <span class="c1">// Static Mesh Identifier</span>
+    <span class="kt">uint16_t</span>        <span class="n">Mesh</span><span class="p">;</span> <span class="c1">// Mesh (offset into MeshPointers[])</span>
+    <span class="n">tr_bounding_box</span> <span class="n">VisibilityBox</span><span class="p">;</span>
+    <span class="n">tr_bounding_box</span> <span class="n">CollisionBox</span><span class="p">;</span>
+    <span class="kt">uint16_t</span>        <span class="n">Flags</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="n">tr_bounding_box</span> <span class="c1">// 12 bytes</span>
+<span class="p">{</span>
+    <span class="kt">int16_t</span> <span class="n">MinX</span><span class="p">,</span> <span class="n">MaxX</span><span class="p">,</span> <span class="n">MinY</span><span class="p">,</span> <span class="n">MaxY</span><span class="p">,</span> <span class="n">MinZ</span><span class="p">,</span> <span class="n">MaxZ</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p>For <span class="monospaced">VisibilityBox</span> and <span class="monospaced">CollisionBox</span>, dimensions are specified using two vectors, first being the <span class="monospaced">bounding box minimum</span>, and second being the <span class="monospaced">bounding box
-maximum</span>.</p></div>
+<div class="paragraph"><p><span class="monospaced">VisibilityBox</span> and <span class="monospaced">CollisionBox</span> boundaries is always stay axis aligned even after applying tr_room_staticmesh::Rotation (always have 90 degrees step). Additionally, the test whether to rotate the box or not relies on the mesh&#8217;s rotation being an exact multiple of 0x4000 (aka 90 degrees). If this is not the case, the box is not rotated, which results in wrong collision checks.</p></div>
 <div class="paragraph"><p><span class="image">
 <img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
 </span><span class="image">
@@ -5194,7 +5192,7 @@ index specified for them.</p></div>
 </span> Sometimes, model may have <em>two different versions</em> defined in level files&#8201;&#8212;&#8201;one is normal, and another is low-detailed one, with the latter used when camera position gets too far from them. These are called <em>MIP models</em>, and mostly exist for NPCs (enemies). Usually, their type IDs are one off their normal counterparts (for example, skeleton type ID in TR4 is <em>35</em>, and its MIP variation is <em>36</em>).</p></div>
 <div class="listingblock">
 <a id="tr_model"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_model</span>  <span class="c1">// 18 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_model</span>  <span class="c1">// 18 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">ID</span><span class="p">;</span>           <span class="c1">// Type Identifier (matched in Entities[])</span>
     <span class="kt">uint16_t</span> <span class="n">NumMeshes</span><span class="p">;</span>    <span class="c1">// Number of meshes in this object</span>
@@ -5218,7 +5216,7 @@ entries in <span class="monospaced">Entities[]</span>, one for each).</p></div>
 <h4 id="_tr1_entity_structure">5.5.1. TR1 Entity Structure</h4>
 <div class="listingblock">
 <a id="tr_entity"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_entity</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_entity</span>
 <span class="p">{</span>
     <span class="kt">int16_t</span> <span class="n">TypeID</span><span class="p">;</span>     <span class="c1">// Entity type ID (matched in Models[])</span>
     <span class="kt">int16_t</span> <span class="n">Room</span><span class="p">;</span>
@@ -5235,7 +5233,7 @@ entries in <span class="monospaced">Entities[]</span>, one for each).</p></div>
 <h4 id="_tr2_3_entity_structure">5.5.2. TR2-3 Entity Structure</h4>
 <div class="listingblock">
 <a id="tr2_entity"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_entity</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr2_entity</span>
 <span class="p">{</span>
     <span class="kt">int16_t</span> <span class="n">TypeID</span><span class="p">;</span>
     <span class="kt">int16_t</span> <span class="n">Room</span><span class="p">;</span>
@@ -5253,7 +5251,7 @@ entries in <span class="monospaced">Entities[]</span>, one for each).</p></div>
 <h4 id="_tr4_5_entity_structure">5.5.3. TR4-5 Entity Structure</h4>
 <div class="listingblock">
 <a id="tr4_entity"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_entity</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_entity</span>
 <span class="p">{</span>
     <span class="kt">int16_t</span> <span class="n">TypeID</span><span class="p">;</span>
     <span class="kt">int16_t</span> <span class="n">Room</span><span class="p">;</span>
@@ -5331,7 +5329,7 @@ they are also used for some scenery objects and pickup items, though this use ge
 positions of the sprite sides relative to the sprite&#8217;s overall position, measured in TR&#8217;s world-coordinate units.</p></div>
 <div class="listingblock">
 <a id="tr_sprite_texture"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_sprite_texture</span>   <span class="c1">// 16 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_sprite_texture</span>   <span class="c1">// 16 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Tile</span><span class="p">;</span>
      <span class="kt">uint8_t</span> <span class="n">x</span><span class="p">;</span>
@@ -5356,7 +5354,7 @@ positions of the sprite sides relative to the sprite&#8217;s overall position, m
 in other ways (text). Some sequences have only one member; this is done so as to access all the sprites in the same way.</p></div>
 <div class="listingblock">
 <a id="tr_sprite_sequence"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_sprite_sequence</span>  <span class="c1">// 8 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_sprite_sequence</span>  <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">SpriteID</span><span class="p">;</span>       <span class="c1">// Sprite identifier</span>
     <span class="kt">int16_t</span> <span class="n">NegativeLength</span><span class="p">;</span> <span class="c1">// Negative of ``how many sprites are in this sequence&#39;&#39;</span>
@@ -5431,7 +5429,7 @@ standing animation borrow their other animations from the fully-animated ones.</
 <h4 id="_mesh_tree_structure">6.2.1. Mesh Tree Structure</h4>
 <div class="listingblock">
 <a id="tr_meshtree_node"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_meshtree_node</span> <span class="c1">// 4 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_meshtree_node</span> <span class="c1">// 4 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">Flags</span><span class="p">;</span>
      <span class="kt">int32_t</span> <span class="n">Offset_X</span><span class="p">;</span>
@@ -5453,7 +5451,7 @@ frames using the FrameSize value as the size of each frame, since an animation&#
 a different FrameSize value.</p></div>
 <div class="listingblock">
 <a id="tr_animation"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_animation</span> <span class="c1">// 32 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_animation</span> <span class="c1">// 32 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span>  <span class="n">FrameOffset</span><span class="p">;</span> <span class="c1">// Byte offset into Frames[] (divide by 2 for Frames[i])</span>
      <span class="kt">uint8_t</span>  <span class="n">FrameRate</span><span class="p">;</span>   <span class="c1">// Engine ticks per frame</span>
@@ -5515,7 +5513,7 @@ should be rewound. It allows to &#8220;eat up&#8221; certain start-up frames of 
 <div class="paragraph"><p>For TR4 and TR5, extended version of <span class="monospaced">tr_animation</span> is used:</p></div>
 <div class="listingblock">
 <a id="tr4_animation"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_animation</span> <span class="c1">// 40 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_animation</span> <span class="c1">// 40 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span>  <span class="n">FrameOffset</span><span class="p">;</span>
      <span class="kt">uint8_t</span>  <span class="n">FrameRate</span><span class="p">;</span>
@@ -5554,7 +5552,7 @@ rather than forward or backward. However, these values are only used for <em>any
 different range of frames.</p></div>
 <div class="listingblock">
 <a id="tr_state_change"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_state_change</span> <span class="c1">// 6 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_state_change</span> <span class="c1">// 6 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">StateID</span><span class="p">;</span>
     <span class="kt">uint16_t</span> <span class="n">NumAnimDispatches</span><span class="p">;</span> <span class="c1">// number of ranges (seems to always be 1..5)</span>
@@ -5568,7 +5566,7 @@ different range of frames.</p></div>
 left foot forward and another animation for right foot forward.</p></div>
 <div class="listingblock">
 <a id="tr_anim_dispatch"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_anim_dispatch</span>    <span class="c1">// 8 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_anim_dispatch</span>    <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
     <span class="kt">int16_t</span> <span class="n">Low</span><span class="p">;</span>           <span class="c1">// Lowest frame that uses this range</span>
     <span class="kt">int16_t</span> <span class="n">High</span><span class="p">;</span>          <span class="c1">// Highest frame that uses this range</span>
@@ -5586,7 +5584,7 @@ parsed after current one without switching to next AnimCommand). For a given ani
 <div class="paragraph"><p>Some of commands refer to the whole animation (jump speed, position change and empty hands commands), while others of them are associated with specific frames (sound, bubbles, etc.).</p></div>
 <div class="listingblock">
 <a id="tr_anim_command"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_anim_command</span> <span class="c1">// 2 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_anim_command</span> <span class="c1">// 2 bytes</span>
 <span class="p">{</span>
     <span class="kt">int16_t</span> <span class="n">Value</span><span class="p">;</span>
 <span class="p">};</span>
@@ -5658,10 +5656,9 @@ parsed after current one without switching to next AnimCommand). For a given ani
 format:</p></div>
 <div class="listingblock">
 <a id="tr_anim_frame"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_anim_frame</span>    <span class="c1">// Variable size</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_anim_frame</span>    <span class="c1">// Variable size</span>
 <span class="p">{</span>
-     <span class="kt">int16_t</span> <span class="n">BB1x</span><span class="p">,</span> <span class="n">BB1y</span><span class="p">,</span> <span class="n">BB1z</span><span class="p">;</span> <span class="c1">// Bounding box (low)</span>
-     <span class="kt">int16_t</span> <span class="n">BB2x</span><span class="p">,</span> <span class="n">BB2y</span><span class="p">,</span> <span class="n">BB2z</span><span class="p">;</span> <span class="c1">// Bounding box (high)</span>
+     <span class="n">tr_bounding_box</span> <span class="n">box</span><span class="p">;</span> <span class="c1">// Bounding box</span>
      <span class="kt">int16_t</span> <span class="n">OffsetX</span><span class="p">,</span> <span class="n">OffsetY</span><span class="p">,</span> <span class="n">OffsetZ</span><span class="p">;</span> <span class="c1">// Starting offset for this model</span>
      <span class="kt">int16_t</span> <span class="n">NumValues</span><span class="p">;</span>
     <span class="kt">uint16_t</span> <span class="n">AngleSets</span><span class="p">[];</span>   <span class="c1">// Variable size</span>
@@ -5761,26 +5758,26 @@ chains of zone-ID-sharing boxes, with their overlaps pointing to the next boxes 
 <div class="paragraph"><p>There are two variations of box structure&#8201;&#8212;&#8201;one for TR1 and another for TR2 and any other game version.</p></div>
 <div class="listingblock">
 <a id="tr_box"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_box</span>   <span class="c1">// 20 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_box</span>   <span class="c1">// 20 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">Zmin</span><span class="p">;</span>          <span class="c1">// Horizontal dimensions in global units</span>
     <span class="kt">uint32_t</span> <span class="n">Zmax</span><span class="p">;</span>
     <span class="kt">uint32_t</span> <span class="n">Xmin</span><span class="p">;</span>
     <span class="kt">uint32_t</span> <span class="n">Xmax</span><span class="p">;</span>
      <span class="kt">int16_t</span> <span class="n">TrueFloor</span><span class="p">;</span>     <span class="c1">// Height value in global units</span>
-     <span class="kt">int16_t</span> <span class="n">OverlapIndex</span><span class="p">;</span>  <span class="c1">// Index into Overlaps[].</span>
+    <span class="kt">uint16_t</span> <span class="n">OverlapIndex</span><span class="p">;</span>  <span class="c1">// Bits 0-14 is the index into Overlaps[]. Bit 15 is used to terminate overlap list iteration for a single box.</span>
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="listingblock">
 <a id="tr2_box"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_box</span>   <span class="c1">// 8 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr2_box</span>   <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint8_t</span> <span class="n">Zmin</span><span class="p">;</span>          <span class="c1">// Horizontal dimensions in sectors</span>
     <span class="kt">uint8_t</span> <span class="n">Zmax</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">Xmin</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">Xmax</span><span class="p">;</span>
     <span class="kt">int16_t</span> <span class="n">TrueFloor</span><span class="p">;</span>     <span class="c1">// Height value in global units</span>
-    <span class="kt">int16_t</span> <span class="n">OverlapIndex</span><span class="p">;</span>  <span class="c1">// Index into Overlaps[].</span>
+    <span class="kt">int16_t</span> <span class="n">OverlapIndex</span><span class="p">;</span>  <span class="c1">// Index into Overlaps[] (same as tr_box?)</span>
 <span class="p">};</span>
 </pre></div></div></div>
 <div class="paragraph"><p>In <span class="monospaced">OverlapIndex</span>, the high bit is sometimes set; this occurs in front of swinging doors and the like.</p></div>
@@ -5798,7 +5795,7 @@ Which of these zone IDs it uses depends on the kind of the NPC and its current s
 and the second half is for the <em>alternate</em> (flipped) room state. TR1 has 2 sets of ground zones and 1 set of fly zones:</p></div>
 <div class="listingblock">
 <a id="tr_zone"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_zone</span>   <span class="c1">// 12 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_zone</span>   <span class="c1">// 12 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">GroundZone1_Normal</span><span class="p">;</span>
     <span class="kt">uint16_t</span> <span class="n">GroundZone2_Normal</span><span class="p">;</span>
@@ -5811,7 +5808,7 @@ and the second half is for the <em>alternate</em> (flipped) room state. TR1 has 
 <div class="paragraph"><p>TR2-5 have similar breakdowns, though they have 4 ground zones:</p></div>
 <div class="listingblock">
 <a id="tr2_zone"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr2_zone</span>   <span class="c1">// 20 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr2_zone</span>   <span class="c1">// 20 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">GroundZone1_Normal</span><span class="p">;</span>
     <span class="kt">uint16_t</span> <span class="n">GroundZone2_Normal</span><span class="p">;</span>
@@ -5963,7 +5960,7 @@ width:40%;
 <div class="paragraph"><p>The format of AI object structure as follows:</p></div>
 <div class="listingblock">
 <a id="tr_ai_object"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_ai_object</span>   <span class="c1">// 24 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_ai_object</span>   <span class="c1">// 24 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">TypeID</span>     <span class="c1">// Object type ID (same meaning as with tr4_entity)</span>
     <span class="kt">uint16_t</span> <span class="n">Room</span><span class="p">;</span>      <span class="c1">// Room where AI object is placed</span>
@@ -6015,7 +6012,7 @@ MP3 player, which takes place of deprecated CD-Audio player.</p></div>
 needed track from <span class="monospaced">CDAUDIO.WAD</span> header, and then goes straight to an offset for this track into it. The format of <span class="monospaced">CDAUDIO.WAD</span> header entry is:</p></div>
 <div class="listingblock">
 <a id="tr3_cdaudio_entry"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr3_cdaudio_entry</span>    <span class="c1">// 0x10C bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr3_cdaudio_entry</span>    <span class="c1">// 0x10C bytes</span>
 <span class="p">{</span>
         <span class="kt">char</span> <span class="n">Name</span><span class="p">[</span><span class="mi">260</span><span class="p">];</span>     <span class="c1">// C string with track name</span>
     <span class="kt">uint32_t</span> <span class="n">WavLength</span><span class="p">;</span>     <span class="c1">// Wave file size</span>
@@ -6096,7 +6093,7 @@ in <span class="monospaced">MAIN.SFX</span>. Finally, the samples themselves are
 propagate omnidirectionally for about 8 horizontal-grid sizes without regard for the presence of walls.</p></div>
 <div class="listingblock">
 <a id="tr_sound_source"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_sound_source</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_sound_source</span>
 <span class="p">{</span>
      <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>         <span class="c1">// absolute X position of sound source (world coordinates)</span>
      <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>         <span class="c1">// absolute Y position of sound source (world coordinates)</span>
@@ -6113,7 +6110,7 @@ propagate omnidirectionally for about 8 horizontal-grid sizes without regard for
 <div class="paragraph"><p>Each <span class="monospaced">SoundDetails</span> entry can be described as such:</p></div>
 <div class="listingblock">
 <a id="tr_sound_details"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_sound_details</span> <span class="c1">// 8 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_sound_details</span> <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
    <span class="kt">uint16_t</span> <span class="n">Sample</span><span class="p">;</span> <span class="c1">// (index into SampleIndices)</span>
    <span class="kt">uint16_t</span> <span class="n">Volume</span><span class="p">;</span>
@@ -6155,7 +6152,7 @@ Bit 14: Randomize gain. When this flag is set, sound volume (gain) will be sligh
 <div class="paragraph"><p>In TR3 onwards, <span class="monospaced">tr_sound_details</span> structure was rearranged:</p></div>
 <div class="listingblock">
 <a id="tr3_sound_details"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr3_sound_details</span>  <span class="c1">// 8 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr3_sound_details</span>  <span class="c1">// 8 bytes</span>
 <span class="p">{</span>
    <span class="kt">uint16_t</span> <span class="n">Sample</span><span class="p">;</span> <span class="c1">// (index into SampleIndices)</span>
     <span class="kt">uint8_t</span> <span class="n">Volume</span><span class="p">;</span>
@@ -6276,7 +6273,7 @@ The Xcoordinate and Ycoordinate values depend on where the other vertices are in
 then the fourth vertex&#8217;s values will all be zero.</p></div>
 <div class="listingblock">
 <a id="tr_object_texture_vert"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_object_texture_vert</span> <span class="c1">// 4 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_object_texture_vert</span> <span class="c1">// 4 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint8_t</span> <span class="n">Xcoordinate</span><span class="p">;</span> <span class="c1">// 1 if Xpixel is the low value, 255 if Xpixel is the high value in the object texture</span>
     <span class="kt">uint8_t</span> <span class="n">Xpixel</span><span class="p">;</span>
@@ -6290,7 +6287,7 @@ then the fourth vertex&#8217;s values will all be zero.</p></div>
 <div class="paragraph"><p>It&#8217;s object texture structure itself. These, thee contents of <span class="monospaced">ObjectTextures[]</span>, are used for specifying texture mapping for the world geometry and for mesh objects.</p></div>
 <div class="listingblock">
 <a id="tr_object_texture"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_object_texture</span>  <span class="c1">// 20 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_object_texture</span>  <span class="c1">// 20 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Attribute</span><span class="p">;</span>
     <span class="kt">uint16_t</span> <span class="n">TileAndFlag</span><span class="p">;</span>
@@ -6419,7 +6416,7 @@ as well (see <a href="#TR4 Level Format">[TR4 Level Format]</a> section).</p></d
 bumped texture tiles</em>, and rendered one more texture pass on this face using texture from resulting texture tile and the same UV coordinates.</p></div>
 <div class="listingblock">
 <a id="tr4_object_texture"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_object_texture</span> <span class="c1">// 38 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_object_texture</span> <span class="c1">// 38 bytes</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Attribute</span><span class="p">;</span>
     <span class="kt">uint16_t</span> <span class="n">TileAndFlag</span><span class="p">;</span>
@@ -6465,7 +6462,7 @@ coordinates are getting messed up when level is compiled, so one shouldn&#8217;t
 (not a &#8220;real&#8221; C/C++ structure):</p></div>
 <div class="listingblock">
 <a id="animated_textures"></a>
-<div class="content"><div class="highlight"><pre><span class="kt">int16_t</span> <span class="n">NumAnimatedTextures</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="kt">int16_t</span> <span class="n">NumAnimatedTextures</span>
 
 <span class="k">virtual</span> <span class="k">struct</span>
 <span class="p">{</span>
@@ -6535,7 +6532,7 @@ using <em>Camera</em> trigger action, and the second purpose is to <em>move Lara
 was used.</p></div>
 <div class="listingblock">
 <a id="tr_camera"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_camera</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_camera</span>
 <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>
     <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>
@@ -6561,7 +6558,7 @@ from such flyby camera points&#8201;&#8212;&#8201;for example, if <em>camera 0</
 to 5 when moving from one to another.</p></div>
 <div class="listingblock">
 <a id="tr4_flyby_camera"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_flyby_camera</span>  <span class="c1">// 40 bytes</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_flyby_camera</span>  <span class="c1">// 40 bytes</span>
 <span class="p">{</span>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>    <span class="c1">// Camera position</span>
     <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>
@@ -6696,7 +6693,7 @@ in sequence, and so on.</p></div>
 <div class="paragraph"><p>These are camera positionings for cutscenes. All the entity animations are specified separately, and they are not synced with actual camera positions.</p></div>
 <div class="listingblock">
 <a id="tr_cinematic_frame"></a>
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr_cinematic_frame</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_cinematic_frame</span>
 <span class="p">{</span>
     <span class="kt">int16_t</span> <span class="n">rotY</span><span class="p">;</span>    <span class="c1">// rotation about Y axis, +/- 32767 == +/- 180 degrees</span>
     <span class="kt">int16_t</span> <span class="n">rotZ</span><span class="p">;</span>    <span class="c1">// rotation about Z axis, +/- 32767 == +/- 180 degrees</span>
@@ -6746,7 +6743,7 @@ brightness and greater values being darker.</p></div>
 </tr></table>
 </div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span> <span class="c1">// version (4 bytes)</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span> <span class="c1">// version (4 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumTextiles</span><span class="p">;</span> <span class="c1">// number of texture tiles (4 bytes)</span>
 <span class="n">tr2_textile8</span> <span class="n">Textile8</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">Unused</span><span class="p">;</span> <span class="c1">// 32-bit unused value (4 bytes)</span>
@@ -6850,7 +6847,7 @@ brightness and greater values being darker.</p></div>
 <span class="kt">int16_t</span> <span class="n">SoundMap</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// sound map (512 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumSoundDetails</span><span class="p">;</span> <span class="c1">// number of sound-detail records to follow (4 bytes)</span>
 <span class="n">tr2_sample_info</span> <span class="n">SoundDetails</span><span class="p">[</span><span class="n">NumSoundDetails</span><span class="p">];</span> <span class="c1">// sound-detail list (NumSoundDetails * 8 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumSamples</span> <span class="p">(</span><span class="n">number</span> <span class="n">of</span> <span class="kt">uint8_t</span><span class="err">&#39;</span><span class="n">s</span> <span class="n">in</span> <span class="n">Samples</span><span class="p">)</span>
+<span class="kt">uint32_t</span> <span class="nf">NumSamples</span> <span class="p">(</span><span class="n">number</span> <span class="n">of</span> <span class="kt">uint8_t</span><span class="err">&#39;</span><span class="n">s</span> <span class="n">in</span> <span class="n">Samples</span><span class="p">)</span>
 <span class="kt">uint8_t</span> <span class="n">Samples</span> <span class="p">(</span><span class="n">array</span> <span class="n">of</span> <span class="kt">uint8_t</span><span class="err">&#39;</span><span class="n">s</span> <span class="o">--</span> <span class="n">embedded</span> <span class="n">sound</span> <span class="n">samples</span> <span class="n">in</span> <span class="n">Microsoft</span> <span class="n">WAVE</span> <span class="n">format</span><span class="p">)</span>
 <span class="kt">uint32_t</span> <span class="n">NumSampleIndices</span><span class="p">;</span> <span class="c1">// number of sample indices to follow (4 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">SampleIndices</span><span class="p">[</span><span class="n">NumSampleIndices</span><span class="p">];</span> <span class="c1">// sample indices (NumSampleIndices * 4 bytes)</span>
@@ -6868,7 +6865,7 @@ brightness and greater values being darker.</p></div>
 </tr></table>
 </div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span> <span class="c1">// version (4 bytes)</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span> <span class="c1">// version (4 bytes)</span>
 <span class="n">tr_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
 <span class="n">tr_colour4</span> <span class="n">Palette16</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">//  (1024 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumTextiles</span><span class="p">;</span> <span class="c1">// number of texture tiles (4 bytes)</span>
@@ -6987,7 +6984,7 @@ brightness and greater values being darker.</p></div>
 </tr></table>
 </div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span> <span class="c1">// version (4 bytes)</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span> <span class="c1">// version (4 bytes)</span>
 <span class="n">tr_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
 <span class="n">tr_colour4</span> <span class="n">Palette16</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">//  (1024 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumTextiles</span><span class="p">;</span> <span class="c1">// number of texture tiles (4 bytes)</span>
@@ -7271,7 +7268,7 @@ After last compressed chunk, there are now all audio samples, sequentially store
 </li>
 </ul></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_sample</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_sample</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span>  <span class="n">UncompressedSize</span><span class="p">;</span>
     <span class="kt">uint32_t</span>  <span class="n">CompressedSize</span><span class="p">;</span>
@@ -7474,7 +7471,7 @@ scripts were compiled using a utility known as <span class="monospaced">GAMEFLOW
 these script files. From both games the format remained unchanged. TR1&#8217;s gameflow is hardcoded thus there is no external file controlling this resulting in loss
 of flexibility.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span>             <span class="c1">// The Script Version (Always 3 for TR2/3)</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span>             <span class="c1">// The Script Version (Always 3 for TR2/3)</span>
 <span class="kt">uint8_t</span> <span class="n">Description</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>     <span class="c1">// Null-terminated string describing the script copyright info etc. Not encrypted.</span>
 <span class="kt">uint16_t</span> <span class="n">Unknown1</span><span class="p">;</span>            <span class="c1">// ?</span>
 <span class="kt">int32_t</span> <span class="n">FirstOption</span><span class="p">;</span>          <span class="c1">// Level to go to when WHAT happens?</span>
@@ -7573,7 +7570,7 @@ of flexibility.</p></div>
 <div class="sect2">
 <h3 id="_psx_fmv_info">11.2. PSX FMV Info</h3>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">PSXFMVInfo</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">PSXFMVInfo</span>
 <span class="p">{</span>
     <span class="kt">uint32_t</span> <span class="n">flags</span><span class="p">;</span>   <span class="c1">//? First FMV usually has this set as 1</span>
     <span class="kt">uint32_t</span> <span class="n">unknown</span><span class="p">;</span> <span class="c1">//Possibly: size, lba or length can&#39;t remember which</span>
@@ -7584,7 +7581,7 @@ of flexibility.</p></div>
 <div class="sect2">
 <h3 id="_script_flags">11.3. Script Flags</h3>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">enum</span> <span class="n">ScriptFlags</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">ScriptFlags</span>
 <span class="p">{</span>
     <span class="n">DemoVersion</span> <span class="o">=</span>              <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">0</span><span class="p">),</span> <span class="c1">//(=1) Is this a demo version of the game</span>
     <span class="n">TitleDisabled</span> <span class="o">=</span>            <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">1</span><span class="p">),</span> <span class="c1">//(=1) Disables Title Screen</span>
@@ -7605,7 +7602,7 @@ of flexibility.</p></div>
 <div class="sect2">
 <h3 id="_script_language">11.4. Script Language</h3>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">enum</span> <span class="n">ScriptLanguage</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">enum</span> <span class="n">ScriptLanguage</span>
 <span class="p">{</span>
     <span class="n">LANG_ENGLISH</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="n">LANG_FRENCH</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
@@ -7621,7 +7618,7 @@ of flexibility.</p></div>
 value (operand) is usually passed as a parameter to the function the command needs to call. Note: that if a level is a demo level, its level ID will be 1024
 higher than a <em>normal</em> level ID.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">SequenceInfo</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">SequenceInfo</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">Opcode</span><span class="p">;</span>   <span class="c1">//Command</span>
     <span class="kt">uint16_t</span> <span class="n">Operand</span><span class="p">;</span>  <span class="c1">//Not always used, depends on the opcode</span>
@@ -8110,7 +8107,7 @@ the strings used in game for specific language (e.g., <span class="monospaced">E
 <h4 id="_global_header">12.1.1. Global Header</h4>
 <div class="paragraph"><p>This header contains general information not specific to particular level.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_script_header</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_script_header</span>
 <span class="p">{</span>
     <span class="kt">uint8_t</span>  <span class="n">Options</span><span class="p">;</span>
     <span class="kt">uint8_t</span>  <span class="n">Filler</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>     <span class="c1">// Unused</span>
@@ -8156,7 +8153,7 @@ this value was never used, and instead, hardcoded one was specified. This matter
 <div class="paragraph"><p>This section defines platform-specific information, such as <em>file extensions</em> used in PC an PlayStation versions of the game. All the mentioned strings are
 null-terminated.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_script_levelheader</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_script_levelheader</span>
 <span class="p">{</span>
      <span class="kt">uint8_t</span> <span class="n">NumTotalLevels</span><span class="p">;</span>
     <span class="kt">uint16_t</span> <span class="n">NumUniqueLevelPaths</span><span class="p">;</span>
@@ -8182,7 +8179,7 @@ null-terminated.</p></div>
 <div class="sect3">
 <h4 id="_level_listing_block">12.1.3. Level Listing Block</h4>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_script_levellisting</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_script_levellisting</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">OffsetsToLevelpathString</span><span class="p">[</span><span class="n">NumTotalLevels</span><span class="p">];</span>
      <span class="kt">uint8_t</span> <span class="n">LevelpathStringBlock</span> <span class="p">[</span><span class="n">LevelpathStringLen</span><span class="p">];</span>
@@ -8212,7 +8209,7 @@ matter; the original <span class="monospaced">tomb4.exe</span> binary seems to c
 <div class="paragraph"><p>The title screen is special in that it uses the <span class="monospaced">0x82</span> opcode the indicate the level-name and audio track information and it, naturally, lacks the string index
 integer as the title level has no name associated with it.</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_script_leveldata</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_script_leveldata</span>
 <span class="p">{</span>
     <span class="kt">uint8_t</span> <span class="n">LevelData</span> <span class="p">[</span><span class="n">LevelDataLen</span><span class="p">];</span>
 <span class="p">}</span>
@@ -8463,7 +8460,7 @@ above situation, the <em>language file listing block</em> at the end of <span cl
 <h5 id="_the_header">The Header</h5>
 <div class="paragraph"><p>The header of the language file follows this structure:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_lang_header</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_lang_header</span>
 <span class="p">{</span>
     <span class="kt">uint16_t</span> <span class="n">NumGenericStrings</span><span class="p">;</span>
     <span class="kt">uint16_t</span> <span class="n">NumPSXStrings</span><span class="p">;</span>
@@ -8507,7 +8504,7 @@ defined. This, however, is <em>not</em> a limit nor rule of any kind.</p></div>
 <div class="paragraph"><p>The length of this array of total <em>(NumTotalStrings)</em> strings is therefore <em>TotalStringsLen = GenericStringsLen + PSXStringsLen + PCStringsLen</em>.</p></div>
 <div class="paragraph"><p>Hence the string array has the following format:</p></div>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre><span class="k">struct</span> <span class="n">tr4_lang_stringdata</span>
+<div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr4_lang_stringdata</span>
 <span class="p">{</span>
     <span class="n">string_entry</span> <span class="n">Strings</span><span class="p">[</span><span class="n">NumTotalStrings</span><span class="p">];</span>
 <span class="p">}</span>
@@ -8528,7 +8525,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-07-31 13:08:00 MSK
+Last updated 2016-06-24 13:41:45 MSK
 </div>
 </div>
 </body>
