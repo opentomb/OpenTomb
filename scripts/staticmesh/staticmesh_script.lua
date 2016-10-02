@@ -6,30 +6,21 @@
 -- to this table processing.
 -- Please note that static mesh properties may vary from level to level, so
 -- static table is frequently redefined on a per-level basis.
-
-
--- [ coll ] flag values:
-
--- [ coll ] flag values:
--- COLLISION_TYPE_NONE
--- COLLISION_TYPE_STATIC                  -- static object - never moved
--- COLLISION_TYPE_KINEMATIC               -- doors and other moveable statics
--- COLLISION_TYPE_DYNAMIC                 -- hellow full physics interaction
--- COLLISION_TYPE_ACTOR                   -- actor, enemies, NPC, animals
--- COLLISION_TYPE_VEHICLE                 -- car, moto, bike
--- COLLISION_TYPE_GHOST                   -- no fix character position, but works in collision callbacks and interacts with dynamic objects
-
--- [ shape ] flag values:
--- COLLISION_SHAPE_BOX
--- COLLISION_SHAPE_BOX_BASE
--- COLLISION_SHAPE_SPHERE
--- COLLISION_SHAPE_TRIMESH
--- COLLISION_SHAPE_TRIMESH_CONVEX
--- COLLISION_SHAPE_SINGLE_BOX
--- COLLISION_SHAPE_SINGLE_SPHERE
 --------------------------------------------------------------------------------
 
 static_tbl = {};    -- Define static mesh property table.
+
+-- Clear whole static mesh property table. Must be called on each level loading.
+
+function st_Clear()
+    for k,v in pairs(static_tbl) do
+        static_tbl[k].coll  = nil;
+        static_tbl[k].hide  = nil;
+        static_tbl[k].shape = nil;
+        static_tbl[k] = nil;
+    end;
+    print("Static mesh table cleaned");
+end;
 
 -- Get static mesh flags from property table.
 

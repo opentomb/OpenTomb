@@ -12,7 +12,7 @@ frame_time = 1.0 / 60.0;
 script_fps = 60.0;
 
 -- Time coefficient, needed for normalized script values. Changed by engine.
-time_coef = frame_time * script_fps; -- just initial value...
+time_coeff = frame_time * script_fps; -- just initial value...
 
 
 -- Key query functions
@@ -44,6 +44,14 @@ function clearKeys()
         keys_pressed[k] = nil;
     end;
 end
+
+
+-- Autoexec service functions
+
+function clearAutoexec()
+    autoexec_PostLoad = function() end;
+    autoexec_PreLoad = function() end;
+end;
 
 
 -- Task manager functions
@@ -109,6 +117,10 @@ function execEntity(callback_id, object_id, activator_id)
 
         if((bit32.band(callback_id, ENTITY_CALLBACK_HIT) ~= 0) and (entity_funcs[object_id].onHit ~= nil)) then
             return entity_funcs[object_id].onHit(object_id, activator_id);
+        end;
+        
+        if((bit32.band(callback_id, ENTITY_CALLBACK_ROOMCOLLISION) ~= 0) and (entity_funcs[object_id].onRoomCollide ~= nil)) then
+            return entity_funcs[object_id].onRoomCollide(object_id, activator_id);
         end;
     end;
     return -1;

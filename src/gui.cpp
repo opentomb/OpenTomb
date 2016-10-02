@@ -920,6 +920,11 @@ void Gui_DrawBars()
             Bar[BAR_HEALTH].Forced = true;
         }
 
+        if(Character_GetParam(player, PARAM_POISON) > 0.0)
+        {
+            Bar[BAR_HEALTH].Alternate = true;
+        }
+
         Bar[BAR_AIR].Show    (Character_GetParam(player, PARAM_AIR    ));
         Bar[BAR_STAMINA].Show(Character_GetParam(player, PARAM_STAMINA));
         Bar[BAR_HEALTH].Show (Character_GetParam(player, PARAM_HEALTH ));

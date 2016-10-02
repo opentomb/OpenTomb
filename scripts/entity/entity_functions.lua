@@ -69,12 +69,12 @@ function door_init(id)   -- NORMAL doors only!
     entity_funcs[id].onLoop = function(object_id)
         local a,f,n = getEntityAnim(object_id);
         if((a ~= 1) and (a ~= 3)) then
-            local st = getEntityState(object_id);
+            local st = getEntityAnimState(object_id);
             if((entity_funcs[object_id].must_open == true) and (entity_funcs[object_id].open_state ~= st)) then
-                setEntityState(object_id, entity_funcs[object_id].open_state);
+                setEntityAnimState(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].open_state);
                 entity_funcs[object_id].must_open  = false;
             elseif((entity_funcs[object_id].must_close == true) and (entity_funcs[object_id].closed_state ~= st)) then
-                setEntityState(object_id, entity_funcs[object_id].closed_state);
+                setEntityAnimState(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].closed_state);
                 entity_funcs[object_id].must_close = false;
             end;
         end;    
@@ -281,7 +281,7 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, 0);
-    setEntityVisibility(id, false);
+    setEntityVisibility(id, 0);
     
     entity_funcs[id].distance_passed = 0;
     entity_funcs[id].distance_to_pass = 30720.0;
@@ -713,6 +713,7 @@ function boulder_init(id)
         end;
         return ENTITY_TRIGGERING_NOT_READY;
     end
+end
 
 function dart_init(id)  -- TR1 dart / TR2 flying disks
 
@@ -779,7 +780,7 @@ function dartgun_init(id)  -- TR1 dartgun
             moveEntityLocal(dart,0,-256,512);
         end;
         
-        entity_funcs[object_id].current_time = entity_funcs[object_id].current_time + frame_time;
+        entity_funcs[object_id].current_time = entity_funcs[object_id].current_time + time_coeff;
         
         if(tickEntity(object_id) == TICK_STOPPED) then 
             swapEntityActivity(object_id);
@@ -795,6 +796,7 @@ function dartgun_init(id)  -- TR1 dartgun
         entity_funcs[object_id].current_time   = nil;
     end
 end
+
 function discgun_init(id)
     dartgun_init(id);
     entity_funcs[id].dart_model  = 61;
@@ -1833,14 +1835,14 @@ function tightrope_init(id)
             local orient = getEntityOrientation(object_id, player);
             
             if(getActionState(ACT_ACTION) and ((orient > 320.0) or (orient < 40.0))) then
-                if(getEntityState(player) == 2) then
+                if(getEntityAnimState(player) == 2) then
                     setEntityPos(player, getEntityPos(object_id));
                     rotateEntity(player,180);
                     moveEntityLocal(player,0,384,0);
-                    setEntityState(player, 124);
+                    setEntityAnimState(player, ANIM_TYPE_BASE, 124);
                 end;
             elseif((orient < 220.0) and (orient > 140.0)) then
-                if(getEntityState(player) == 121) then setEntityState(player, 125) end;
+                if(getEntityAnimState(player) == 121) then setEntityAnimState(player, ANIM_TYPE_BASE, 125) end;
             end;
         end;
     end;
@@ -1855,7 +1857,7 @@ function snake_init(id)
     disableEntity(id);
     
     entity_funcs[id].damage = 50.0;
-    entity_funcs[id].poison =  0.3;
+    entity_funcs[id].poison =  0.5;
     entity_funcs[id].disturb_speed = 500.0;
     entity_funcs[id].time_since_disturb = 0.0;
     
@@ -1883,7 +1885,7 @@ function snake_init(id)
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(not getEntityActivity(object_id)) then enableEntity(object_id) end;
-        setEntityAnim(object_id, 2, 45);    -- Force lying state on activation.
+        setEntityAnim(object_id, ANIM_TYPE_BASE, 2, 45);    -- Force lying state on activation.
     end;
     
     entity_funcs[id].onLoop = function(object_id)
@@ -1896,14 +1898,14 @@ function snake_init(id)
         if(entity_funcs[object_id].disturbed) then
             local speed_Lara = getEntitySpeedLinear(player);
         
-            setEntityAnimFlag(object_id, ANIM_NORMAL_CONTROL);  -- Unfreeze anim
+            setEntityAnimFlag(object_id, ANIM_TYPE_BASE, ANIM_NORMAL_CONTROL);  -- Unfreeze anim
             
-            setEntityState(object_id, 0);   -- Protect
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, 0);   -- Protect
             rotateEntityToEntity(object_id, player, 0, 1.5, true, -20.0);
             
             if( (dist_to_Lara <= entity_funcs[object_id].guard_dist) or (speed_Lara > 512.0) ) then
-                if( (getEntityState(object_id) ~= 2) and (math.random(1000) > (1000 - entity_funcs[object_id].mood)) ) then
-                    setEntityState(object_id, 2);   -- Bite
+                if( (getEntityAnimState(object_id) ~= 2) and (math.random(1000) > (1000 - entity_funcs[object_id].mood)) ) then
+                    setEntityAnimState(object_id, ANIM_TYPE_BASE, 2);   -- Bite
                     
                     if((entity_funcs[object_id].mood < entity_funcs[object_id].max_mood) and (dist_to_Lara < entity_funcs[object_id].disturb_dist)) then
                         entity_funcs[object_id].mood = entity_funcs[object_id].mood + 1;
@@ -1915,7 +1917,7 @@ function snake_init(id)
             if(dist_to_Lara < entity_funcs[object_id].suspend_dist) then
                 entity_funcs[object_id].time_since_disturb = entity_funcs[object_id].disturb_timeout;
             else
-                entity_funcs[object_id].time_since_disturb = entity_funcs[object_id].time_since_disturb - FRAME_TIME;
+                entity_funcs[object_id].time_since_disturb = entity_funcs[object_id].time_since_disturb - frame_time;
                 
                 if((entity_funcs[object_id].time_since_disturb <= 0.0) or (dist_to_Lara > entity_funcs[object_id].suspend_dist * 2) ) then
                     entity_funcs[object_id].time_since_disturb = 0.0;
@@ -1924,7 +1926,7 @@ function snake_init(id)
             end;
         else
             if(entity_funcs[object_id].mood > entity_funcs[object_id].min_mood) then
-                entity_funcs[object_id].current_mood_interval = entity_funcs[object_id].current_mood_interval - FRAME_TIME;
+                entity_funcs[object_id].current_mood_interval = entity_funcs[object_id].current_mood_interval - frame_time;
                 if(entity_funcs[object_id].current_mood_interval <= 0) then
                     entity_funcs[object_id].mood = entity_funcs[object_id].mood - 1;
                     entity_funcs[object_id].current_mood_interval = entity_funcs[object_id].mood_release_interval;
@@ -1932,31 +1934,31 @@ function snake_init(id)
                     
                 end;
             end;
-            setEntityState(object_id, 3);   -- Suspend
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, 3);   -- Suspend
             
             local a,f,c = getEntityAnim(object_id);
-            if(f == 45) then setEntityAnimFlag(object_id, ANIM_LOCK) end; -- Prevent shaking
+            if(f == 45) then setEntityAnimFlag(object_id, ANIM_TYPE_BASE, ANIM_LOCK) end; -- Prevent shaking
         end;
     end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)        
-        if( (getEntityModelID(object_id) ~= getEntityModelID(activator_id)) and (getEntityState(object_id) == 2) ) then
+        if( (getEntityModelID(object_id) ~= getEntityModelID(activator_id)) and (getEntityAnimState(object_id) == 2) ) then
             local a,f,c = getEntityAnim(object_id);
             
             if((a == 3) and (f == 8)) then
                 if(entity_funcs[object_id].bitten == false) then
                     if(entity_funcs[object_id].poisoning) then
-                        changeCharacterParam(activator_id, PARAM_POISON,  entity_funcs[object_id].poison);
+                        changeCharacterParam(activator_id, PARAM_POISON, entity_funcs[object_id].poison);
                     end;
                     changeCharacterParam(activator_id, PARAM_HEALTH, -entity_funcs[object_id].damage);
                     entity_funcs[object_id].bitten = true;
                     
                     local angle = getEntityOrientation(object_id, activator_id, -25.0);
                     
-                        if((angle >= 45.0 ) and (angle < 135.0)) then setEntityAnim(activator_id, 127);    -- Left
-                    elseif((angle >= 135.0) and (angle < 225.0)) then setEntityAnim(activator_id, 125);    -- Right
-                    elseif((angle >= 225.0) and (angle < 315.0)) then setEntityAnim(activator_id, 128);    -- Forward
-                    else                                              setEntityAnim(activator_id, 126);    -- Back
+                        if((angle >= 45.0 ) and (angle < 135.0)) then setEntityAnim(activator_id, ANIM_TYPE_BASE, 127);    -- Left
+                    elseif((angle >= 135.0) and (angle < 225.0)) then setEntityAnim(activator_id, ANIM_TYPE_BASE, 125);    -- Right
+                    elseif((angle >= 225.0) and (angle < 315.0)) then setEntityAnim(activator_id, ANIM_TYPE_BASE, 128);    -- Forward
+                    else                                              setEntityAnim(activator_id, ANIM_TYPE_BASE, 126);    -- Back
                     end;
                 end;
             else

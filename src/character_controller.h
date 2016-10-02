@@ -155,6 +155,7 @@ enum CharParameters
     PARAM_AIR,
     PARAM_STAMINA,
     PARAM_WARMTH,
+    PARAM_POISON,
     PARAM_EXTRA1,
     PARAM_EXTRA2,
     PARAM_EXTRA3,
@@ -170,6 +171,7 @@ enum CharParameters
 #define LARA_PARAM_AIR_MAX                (3600.0)      // 60 secs of air
 #define LARA_PARAM_STAMINA_MAX            (120.0)       // 4  secs of sprint
 #define LARA_PARAM_WARMTH_MAX             (240.0)       // 8  secs of freeze
+#define LARA_PARAM_POISON_MAX             (5.0)
 
 struct inventory_node_s;
 struct engine_container_s;

@@ -38,10 +38,10 @@ end;
 function swapEntityActivity(object_id)
     local current_activity = getEntityActivity(object_id);
     if(current_activity) then
-        setEntityActivity(object_id, false);
+        setEntityActivity(object_id, 0);
         return ENTITY_TRIGGERING_DEACTIVATED;
     else
-        setEntityActivity(object_id, true);
+        setEntityActivity(object_id, 1);
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
 end;

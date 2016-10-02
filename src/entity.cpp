@@ -650,6 +650,12 @@ void Entity_CheckCollisionCallbacks(entity_p ent)
                 //Con_Printf("collider_bone_index = %d, collider_type = %d", cn->part_self, cn->obj->object_type);
             }
         }
+        else if((ent->callback_flags & ENTITY_CALLBACK_ROOMCOLLISION) &&
+                (cn->obj->object_type == OBJECT_ROOM_BASE))
+        {
+            room_p activator = (room_p)cn->obj->object;
+            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ROOMCOLLISION, ent->id, activator->id);
+        }
     }
 }
 

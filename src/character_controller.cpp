@@ -2083,6 +2083,9 @@ void Character_ApplyCommands(struct entity_s *ent)
 
 void Character_UpdateParams(struct entity_s *ent)
 {
+    // Lwmte: WTF? This shouldn't be here UpdateParams function was created
+    // solely for updating character's "exposed" params, such as HP/AP/SP points.
+
     float speed = engine_frame_time / GAME_LOGIC_REFRESH_INTERVAL;
 
     if(ent->character->weapon_current_state != WEAPON_STATE_HIDE)
@@ -2096,6 +2099,16 @@ void Character_UpdateParams(struct entity_s *ent)
         {
             Character_ClearLookAt(ent);
         }
+    }
+
+
+    // Poisoning is always global
+
+    float poison = Character_GetParam(ent, PARAM_POISON);
+
+    if(poison)
+    {
+        Character_ChangeParam(ent, PARAM_HEALTH, -poison);
     }
 
     switch(ent->move_type)

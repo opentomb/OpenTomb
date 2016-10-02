@@ -946,7 +946,8 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
                                     current_offset++;
                                     command->cam_timer = ((*entry) & 0x00FF);
                                     command->once      = ((*entry) & 0x0100) >> 8;
-                                    command->cam_move  = ((*entry) & 0x1000) >> 12;
+                                    command->cam_move  = (tr->game_version < TR_II)?(((*entry) & 0x0400) >> 10):(((*entry) & 0x1000) >> 12);
+
                                     fd_trigger_function.cont_bit  = ((*entry) & 0x8000) >> 15;
                                 }
                                 break;

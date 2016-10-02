@@ -35,6 +35,7 @@ struct physics_data_s;
 #define ENTITY_CALLBACK_COLLISION                   (0x00000004)
 #define ENTITY_CALLBACK_STAND                       (0x00000008)
 #define ENTITY_CALLBACK_HIT                         (0x00000010)
+#define ENTITY_CALLBACK_ROOMCOLLISION               (0x00000020)
 
 #define ENTITY_SUBSTANCE_NONE                     0
 #define ENTITY_SUBSTANCE_WATER_SHALLOW            1
@@ -62,13 +63,13 @@ typedef struct entity_s
 {
     uint32_t                            id;                     // Unique entity ID
     int32_t                             OCB;                    // Object code bit (since TR4)
-    
+
     uint32_t                            trigger_layout : 8;     // Mask + once + event + sector status flags
     uint32_t                            dir_flag : 8;           // (move direction)
     uint32_t                            move_type : 4;          // on floor / free fall / swim ....
     uint32_t                            no_fix_all : 1;
     uint32_t                            no_fix_z : 1;
-    
+
     float                               timer;              // Set by "timer" trigger field
     uint32_t                            callback_flags;     // information about scripts callbacks
     uint16_t                            type_flags;
@@ -77,7 +78,7 @@ typedef struct entity_s
     float                               linear_speed;
     float                               anim_linear_speed;  // current linear speed from animation info
     float                               speed[3];           // speed of the entity XYZ
-    
+
     uint32_t                            no_fix_skeletal_parts;
     struct ss_bone_frame_s             *bf;                 // current boneframe with full frame information
     struct physics_data_s              *physics;
@@ -93,7 +94,7 @@ typedef struct entity_s
     struct engine_container_s          *self;
 
     float                               activation_offset[4];   // where we can activate object (dx, dy, dz, r)
-    
+
     struct character_s                 *character;
 }entity_t, *entity_p;
 

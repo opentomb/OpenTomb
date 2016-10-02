@@ -1,2 +1,0 @@
-
-disableEntity(2);

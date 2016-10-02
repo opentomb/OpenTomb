@@ -481,6 +481,7 @@ void Game_ApplyControls(struct entity_s *ent)
             if((Inventory_GetItemsCount(ent->character->inventory, ITEM_SMALL_MEDIPACK) > 0) &&
                (Character_ChangeParam(ent, PARAM_HEALTH, 250)))
             {
+                Character_SetParam(ent, PARAM_POISON, 0);
                 Inventory_RemoveItem(&ent->character->inventory, ITEM_SMALL_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
             }
@@ -493,6 +494,7 @@ void Game_ApplyControls(struct entity_s *ent)
             if((Inventory_GetItemsCount(ent->character->inventory, ITEM_LARGE_MEDIPACK) > 0) &&
                (Character_ChangeParam(ent, PARAM_HEALTH, LARA_PARAM_HEALTH_MAX)))
             {
+                Character_SetParam(ent, PARAM_POISON, 0);
                 Inventory_RemoveItem(&ent->character->inventory, ITEM_LARGE_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
             }
@@ -747,6 +749,8 @@ void Game_Prepare()
         Character_SetParam       (player, PARAM_STAMINA, LARA_PARAM_STAMINA_MAX);
         Character_SetParamMaximum(player, PARAM_WARMTH,  LARA_PARAM_WARMTH_MAX );
         Character_SetParam       (player, PARAM_WARMTH , LARA_PARAM_WARMTH_MAX );
+        Character_SetParamMaximum(player, PARAM_POISON,  LARA_PARAM_POISON_MAX );
+        Character_SetParam       (player, PARAM_POISON , 0 );
 
         // Set character statistics to default.
 
