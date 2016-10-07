@@ -890,7 +890,7 @@ void ShowDebugInfo()
                                 Trigger_TrigCmdToStr(trig_func, 64, cmd->function);
                                 if(cmd->function == TR_FD_TRIGFUNC_SET_CAMERA)
                                 {
-                                    GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X, cam_id = 0x%X, cam_move = %d, cam_timer = %d)", trig_func, cmd->operands, cmd->cam_index, cmd->cam_move, cmd->cam_timer);
+                                    GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X, cam_id = 0x%X, cam_move = %d, cam_timer = %d)", trig_func, cmd->operands, cmd->camera.index, cmd->camera.move, cmd->camera.timer);
                                 }
                                 else
                                 {
@@ -959,7 +959,7 @@ void ShowDebugInfo()
                                 Trigger_TrigCmdToStr(trig_func, 64, cmd->function);
                                 if(cmd->function == TR_FD_TRIGFUNC_SET_CAMERA)
                                 {
-                                    GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X, cam_id = 0x%X, cam_move = %d, cam_timer = %d)", trig_func, cmd->operands, cmd->cam_index, cmd->cam_move, cmd->cam_timer);
+                                    GLText_OutTextXY(30.0f, y += dy, "   cmd(func = %s, op = 0x%X, cam_id = 0x%X, cam_move = %d, cam_timer = %d)", trig_func, cmd->operands, cmd->camera.index, cmd->camera.move, cmd->camera.timer);
                                 }
                                 else
                                 {
