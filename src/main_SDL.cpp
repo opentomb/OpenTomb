@@ -11,8 +11,7 @@
 
 int main(int argc, char **argv)
 {
-    ///@TODO: add alternate config filename from argv
-    Engine_Start("config.lua");
+    Engine_Start(argc, argv);
 
     // Entering main loop.
     Engine_MainLoop();
