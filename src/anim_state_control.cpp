@@ -1603,9 +1603,12 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_ROLL_FORWARD:
+            ent->no_fix_skeletal_parts = BODY_PART_HANDS | BODY_PART_LEGS;
             break;
 
         case TR_STATE_LARA_ROLL_BACKWARD:
+            ent->no_fix_skeletal_parts = BODY_PART_HANDS | BODY_PART_LEGS;
+
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
