@@ -4311,7 +4311,15 @@ was previously set for a given entity&#8201;&#8212;&#8201;see further.</p></div>
 </div>
 <div class="paragraph"><p><span class="monospaced">OneShot</span> flag is used <em>only</em> for activation of entities (it is also copied to entity&#8217;s own flag field with same name), and indicates that <em>after activation,
 entity state is locked</em>. It means that even if entity&#8217;s own activation mask is unset (as with <em>switch</em> trigger type&#8201;&#8212;&#8201;see further), entity will remain
-activated. However, it doesn&#8217;t mean that entity couldn&#8217;t be deactivated at all&#8201;&#8212;&#8201;because <em>antitrigger</em> trigger type ignores and resets this flag.</p></div>
+activated. However, it doesn&#8217;t mean that entity couldn&#8217;t be deactivated at all&#8201;&#8212;&#8201;because <em>antitrigger</em> trigger type (see further) ignores and resets this flag.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
+</span><span class="image">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
+</span> In these versions, any <em>antitriggers</em> for locked entity have no effect, and engine completely bypasses antitrigger processing for such entities. It means that once entity was activated by trigger with <span class="monospaced">OneShot</span> flag, it couldn&#8217;t be deactivated at all.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span> There&#8217;s a bit different <span class="monospaced">OneShot</span> flag behaviour for TR3&#8201;&#8212;&#8201;entity state will be locked <em>even if activation mask isn&#8217;t set yet</em>. For example, if there are two complementary triggers for certain entity (let&#8217;s say, with activation masks <span class="monospaced">0x0F</span> and <span class="monospaced">0x10</span>), and each of them has <span class="monospaced">OneShot</span> flag, effectively target entity <em>won&#8217;t ever be activated</em>, cause each trigger immediately locks entity state, bypassing further trigger processing.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -4718,6 +4726,13 @@ engines process FloorData.</p></div>
 <div class="sect3">
 <h4 id="_subfunction_span_class_monospaced_0x09_span_8201_8212_8201_antitrigger">4.5.10. SubFunction <span class="monospaced">0x09</span>&#8201;&#8212;&#8201;Antitrigger</h4>
 <div class="paragraph"><p>Same as <em>Trigger</em>, but performs <em>deactivation</em> for each case of <em>Object</em> trigger action.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Antitrigger type also copies its parent trigger&#8217;s <span class="monospaced">OneShot</span> flag into any entities activated by <em>Object</em> trigger action, meaning that after any further entity activation it will be <em>locked</em>.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_subfunction_span_class_monospaced_0x0a_span_8201_8212_8201_heavy_switch">4.5.11. SubFunction <span class="monospaced">0x0A</span>&#8201;&#8212;&#8201;Heavy switch</h4>
