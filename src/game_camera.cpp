@@ -229,8 +229,13 @@ void Cam_FollowEntity(struct camera_s *cam, struct entity_s *ent, float dx, floa
         }
         else
         {
-            cam_pos[0] += sinf(control_states.cam_angles[0]) * control_states.cam_distance;
-            cam_pos[1] -= cosf(control_states.cam_angles[0]) * control_states.cam_distance;
+            float cos_ay =  cos(control_states.cam_angles[1]);
+            float cam_dx =  sin(control_states.cam_angles[0]) * cos_ay;
+            float cam_dy = -cos(control_states.cam_angles[0]) * cos_ay;
+            float cam_dz = -sin(control_states.cam_angles[1]);
+            cam_pos[0] += cam_dx * control_states.cam_distance;
+            cam_pos[1] += cam_dy * control_states.cam_distance;
+            cam_pos[2] += cam_dz * control_states.cam_distance;
         }
         vec3_copy(cameraTo, cam_pos);
 

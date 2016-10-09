@@ -27,6 +27,7 @@
 #include "../character_controller.h"
 #include "../engine.h"
 #include "../physics.h"
+#include "../controls.h"
 
 CRender renderer;
 
@@ -322,7 +323,7 @@ void CRender::GenWorldList(struct camera_s *cam)
             }
         }
     }
-    else                                                                        // camera is out of all rooms
+    else if(control_states.noclip)                                                                       // camera is out of all rooms
     {
         curr_room = m_rooms;                                                    // draw full level. Yes - it is slow, but it is not gameplay - it is debug.
         for(uint32_t i = 0; i < m_rooms_count; i++, curr_room++)
