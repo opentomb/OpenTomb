@@ -1147,14 +1147,24 @@ int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
         return activation_state;
     }
 
-    if(!((entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6))           // Ignore activation, if activity lock is set.
+    // Get current trigger layout.
+
+    uint16_t mask  = entity_object->trigger_layout & ENTITY_TLAYOUT_MASK;
+    uint16_t event = (entity_object->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5;
+    uint16_t lock  = (entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK ) >> 6;
+
+    // Ignore activation, if activity lock is set.
+
+    // TR3 ONLY: If lock flag is set, bypass activation.
+    // TR4-5 ONLY: If mask was already set and lock flag is set, bypass activation.
+
+    if(((World_GetVersion() == TR_III) && (!lock)) ||
+       ((World_GetVersion() != TR_III) && (!lock) && (mask != 0x1F)))
     {
         int activator_id = (entity_activator) ? (entity_activator->id) : (-1);
-        // Get current trigger layout.
-        uint16_t mask = entity_object->trigger_layout & ENTITY_TLAYOUT_MASK;
-        uint16_t event = (entity_object->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5;
 
         // Apply trigger mask to entity mask.
+
         if(trigger_op == TRIGGER_OP_XOR)
         {
             mask ^= trigger_mask;       // Switch cases
@@ -1203,10 +1213,25 @@ int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
 int  Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_activator)
 {
     int activation_state = ENTITY_TRIGGERING_NOT_READY;
-    if(!((entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6))           // Ignore deactivation, if activity lock is set.
+
+    uint16_t lock = entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK;
+
+    // Ignore deactivation, if activity lock is set.
+
+    // TR3+ ONLY: It seems that antitrigger event DOES NOT check lock state - however, it copies
+    // its trigger lock flag to entity lock flag, so next activation event will be executed once.
+    // In TR1-2, antitriggers are ignored for locked entities.
+
+    if((World_GetVersion() >= TR_III) || !(lock))
     {
+        // Copy trigger lock flag to entity.
+
+        lock = lock |= entity_object->trigger_layout & ENTITY_TLAYOUT_LOCK;
+
         int activator_id = (entity_activator) ? (entity_activator->id) : (-1);
+
         // Get current trigger layout.
+
         uint16_t event = (entity_object->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5;
 
         // Execute entity deactivation function, only if activation was previously set.
