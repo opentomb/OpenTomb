@@ -1,3 +1,9 @@
+function autoexec_PreLoad()
+
+    UVRotate = 8;
+
+end;
+
 function autoexec_PostLoad()
     setEntityCollision(2, false);  -- model 455 - rays
 

@@ -414,7 +414,7 @@ int Script_DoTasks(lua_State *lua, float time)
     lua_getglobal(lua, "script_fps");
     float script_fps = (float)lua_tonumber(lua, -1);
     lua_pushnumber(lua, time * script_fps);
-    lua_setglobal(lua, "time_coef");
+    lua_setglobal(lua, "time_coeff");
 
     lua_settop(lua, top);
 
@@ -3248,9 +3248,9 @@ int lua_SetEntityAnim(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
-    if(top < 4)
+    if(top < 3)
     {
-        Con_Warning("setEntityAnim: expecting arguments (entity_id, anim_type_id, anim_num, frame_number, (next_anim, next_frame))");
+        Con_Warning("setEntityAnim: expecting arguments (entity_id, anim_type_id, anim_num, (frame_number, next_anim, next_frame))");
         return 0;
     }
 
@@ -3267,7 +3267,7 @@ int lua_SetEntityAnim(lua_State * lua)
     ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
     if(ss_anim)
     {
-        Anim_SetAnimation(ss_anim, lua_tointeger(lua, 3), lua_tointeger(lua, 4));
+        Anim_SetAnimation(ss_anim, lua_tointeger(lua, 3), (top >= 4)?(lua_tointeger(lua, 4)):(0));
         if(top >= 6)
         {
             ss_anim->next_animation = lua_tointeger(lua, 5);
@@ -4454,9 +4454,11 @@ int lua_SetEntityResponse(lua_State * lua)
 
 int lua_GetEntityAnimState(lua_State * lua)
 {
-    if(lua_gettop(lua) < 2)
+    int top = lua_gettop(lua);
+
+    if(top < 1)
     {
-        Con_Warning("getEntityAnimState: expecting arguments (entity_id, anim_type_id)");
+        Con_Warning("getEntityAnimState: expecting arguments (entity_id, (anim_type_id))");
         return 0;
     }
 
@@ -4469,7 +4471,8 @@ int lua_GetEntityAnimState(lua_State * lua)
         return 0;
     }
 
-    int anim_type_id = lua_tointeger(lua, 2);
+    int anim_type_id = (top > 1) ? (lua_tointeger(lua, 2)) : (0);
+
     for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
     {
         if(ss_anim->type == anim_type_id)
@@ -4509,6 +4512,7 @@ int lua_GetEntityModel(lua_State * lua)
 int lua_SetEntityAnimState(lua_State * lua)
 {
     int top = lua_gettop(lua);
+
     if(top < 3)
     {
         Con_Warning("setEntityAnimState: expecting arguments (entity_id, anim_type_id, next_state, (current_state))");
@@ -5480,6 +5484,8 @@ void Script_LoadConstants(lua_State *lua)
         lua_setglobal(lua, "ENTITY_CALLBACK_STAND");
         lua_pushinteger(lua, ENTITY_CALLBACK_HIT);
         lua_setglobal(lua, "ENTITY_CALLBACK_HIT");
+        lua_pushinteger(lua, ENTITY_CALLBACK_ROOMCOLLISION);
+        lua_setglobal(lua, "ENTITY_CALLBACK_ROOMCOLLISION");
 
 
         lua_pushinteger(lua, ANIM_NORMAL_CONTROL);
@@ -5645,6 +5651,12 @@ void Script_LuaClearTasks()
 
         Script_CallVoidFunc(engine_lua, "clearTasks");
 
+        lua_getglobal(engine_lua, "st_Clear");
+        if(lua_isfunction(engine_lua, -1))
+        {
+            lua_CallAndLog(engine_lua, 0, 1, 0);
+        }
+
         lua_getglobal(engine_lua, "tlist_Clear");
         if(lua_isfunction(engine_lua, -1))
         {
@@ -5658,6 +5670,14 @@ void Script_LuaClearTasks()
         }
 
         lua_getglobal(engine_lua, "fe_Clear");
+        if(lua_isfunction(engine_lua, -1))
+        {
+            lua_CallAndLog(engine_lua, 0, 1, 0);
+        }
+
+        // Additionally clear autoexec routines.
+
+        lua_getglobal(engine_lua, "clearAutoexec");
         if(lua_isfunction(engine_lua, -1))
         {
             lua_CallAndLog(engine_lua, 0, 1, 0);

@@ -6,6 +6,8 @@
 -- to this table processing.
 -- Please note that static mesh properties may vary from level to level, so
 -- static table is frequently redefined on a per-level basis.
+
+
 --------------------------------------------------------------------------------
 
 static_tbl = {};    -- Define static mesh property table.
@@ -26,10 +28,10 @@ end;
 
 function getStaticMeshProperties(id)
     if((static_tbl == nil) or (static_tbl[id] == nil)) then
-        return COLLISION_TYPE_STATIC, COLLISION_SHAPE_BOX, nil;
+        return -1;
     else
         local coll, shape, hide;
-        if(static_tbl[id].hide ~= nil) then hide = static_tbl[id].hide else hide = 0 end;
+        if(static_tbl[id].hide ~= nil) then hide = static_tbl[id].hide else hide = false end;
         if(static_tbl[id].coll ~= nil) then coll = static_tbl[id].coll else coll = COLLISION_TYPE_NONE end;
         if(static_tbl[id].shape ~= nil) then shape = static_tbl[id].shape else shape = COLLISION_SHAPE_BOX end;
         return coll, shape, hide;

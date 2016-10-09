@@ -11,6 +11,8 @@
 
 dofile("scripts/trigger/flipeffects.lua")  -- Initialize flipeffects.
 
+print("Trigger script loaded");
+
 trigger_list = {};  -- Initialize trigger array.
 
 -- Run trigger. Called when desired entity is on trigger sector.

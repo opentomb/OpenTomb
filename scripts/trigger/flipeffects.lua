@@ -9,6 +9,8 @@
 -- to create appropriate constructor (onInit) and destructor (onDelete) for them
 --------------------------------------------------------------------------------
 
+print("Flipeffect script loaded");
+
 -- Initialize flipeffect function arrays.
 
 flipeffects     = {};  -- Global array storing ALL flipeffects.
