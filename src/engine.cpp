@@ -54,6 +54,7 @@ static SDL_GLContext           sdl_gl_context = 0;
 static ALCdevice              *al_device      = NULL;
 static ALCcontext             *al_context     = NULL;
 
+static char                     base_path[1024] = {0};
 static volatile int             engine_done   = 0;
 static int                      engine_set_zero_time = 0;
 float time_scale = 1.0f;
@@ -120,11 +121,28 @@ void Engine_Start(int argc, char **argv)
             }
             ++i;
         }
-        else if(0 == strncmp(argv[i], "-data_path", 10))
+        else if(0 == strncmp(argv[i], "-base_path", 10))
         {
             if(i + 1 < argc)
             {
-                printf("data path = \"%s\"\n", argv[i + 1]);
+                strncpy(base_path, argv[i + 1], sizeof(base_path) - 1);
+                if(base_path[0])
+                {
+                    char *ch = base_path;
+                    for(; *ch; ++ch)
+                    {
+                        if(*ch == '\\')
+                        {
+                            *ch = '/';
+                        }
+                    }
+                    if(*(ch - 1) != '/')
+                    {
+                        *ch = '/';
+                        ++ch;
+                        *ch = 0;
+                    }
+                }
             }
             ++i;
         }
@@ -133,7 +151,7 @@ void Engine_Start(int argc, char **argv)
             puts("usage:");
             puts("-config \"path_to_config_file\"");
             puts("-autoexec \"path_to_autoexec_file\"");
-            puts("-base_path \"path_to_base_folder_location --NOT IMPLEMENTED-- (contains data, resource, save and script folders)\"");
+            puts("-base_path \"path_to_base_folder_location (contains data, resource, save and script folders)\"");
             exit(0);
         }
     }
@@ -231,6 +249,12 @@ void Engine_Shutdown(int val)
     SDL_Quit();
 
     exit(val);
+}
+
+
+const char *Engine_GetBasePath()
+{
+    return base_path;
 }
 
 
@@ -1045,6 +1069,7 @@ void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix
 
     name[0] = 0;
 
+    strncat(name, base_path, buf_size);
     strncat(name, "scripts/level/", buf_size);
 
     if(game_version < TR_II)
