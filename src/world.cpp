@@ -1800,15 +1800,16 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
         // Disable static mesh collision, if flag value is 3 (TR1) or all bounding box
         // coordinates are equal (TR2-5).
 
-        if((tr_static->flags == 3) ||
-           ((r_static->cbb_min[0] == r_static->cbb_min[1]) && (r_static->cbb_min[1] == r_static->cbb_min[2]) &&
-            (r_static->cbb_max[0] == r_static->cbb_max[1]) && (r_static->cbb_max[1] == r_static->cbb_max[2])))
+        if( (tr_static->flags == 3) ||
+            ((tr_static->collision_box[0].x == -tr_static->collision_box[0].y) && (tr_static->collision_box[0].y == tr_static->collision_box[0].z) &&
+             (tr_static->collision_box[1].x == -tr_static->collision_box[1].y) && (tr_static->collision_box[1].y == tr_static->collision_box[1].z)) )
         {
             r_static->self->collision_type = COLLISION_NONE;
         }
         else
         {
             r_static->self->collision_type = COLLISION_TYPE_STATIC;
+            r_static->self->collision_shape = COLLISION_SHAPE_BOX;
         }
 
         // Set additional static mesh properties from level script override.
