@@ -237,6 +237,7 @@ void Physics_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
 
 /* bullet collision model calculation */
 btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max);
+btCollisionShape* BT_CSfromSphere(btScalar radius);
 btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
 btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
 
@@ -811,6 +812,18 @@ btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max)
 }
 
 
+btCollisionShape *BT_CSfromSphere(btScalar radius)
+{
+    if(radius == 0.0) return NULL;
+
+    btCollisionShape* ret;
+
+    ret = new btSphereShape(radius);
+    ret->setMargin(COLLISION_MARGIN_RIGIDBODY);
+
+    return ret;
+}
+
 btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static)
 {
     uint32_t cnt = 0;
@@ -1152,6 +1165,11 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sec
 
 void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s *bf)
 {
+    if(bf->animations.model == NULL)
+    {
+        return;
+    }
+
     btScalar tr[16];
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
@@ -1211,16 +1229,20 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                     cshape = NULL;
                     switch(physics->cont->collision_shape)
                     {
+                        case COLLISION_SHAPE_BOX:
+                            cshape = BT_CSfromBBox(mesh->bb_min, mesh->bb_max);
+                            break;
+
+                        case COLLISION_SHAPE_SPHERE:
+                            cshape = BT_CSfromSphere(mesh->radius);
+                            break;
+
                         case COLLISION_SHAPE_TRIMESH_CONVEX:
                             cshape = BT_CSfromMesh(mesh, true, true, false);
                             break;
 
                         case COLLISION_SHAPE_TRIMESH:
                             cshape = BT_CSfromMesh(mesh, true, true, true);
-                            break;
-
-                        case COLLISION_SHAPE_BOX:
-                            cshape = BT_CSfromBBox(mesh->bb_min, mesh->bb_max);
                             break;
 
                             ///@TODO: add other shapes implementation; may be change default;
@@ -1276,7 +1298,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghost_objects[0]->setIgnoreCollisionCheck(physics->bt_body[0], true);
                     tr.setFromOpenGLMatrix(bf->transform);
                     physics->ghost_objects[0]->setWorldTransform(tr);
-                    physics->ghost_objects[0]->setCollisionFlags(physics->ghost_objects[0]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
+                    physics->ghost_objects[0]->setCollisionFlags(physics->ghost_objects[0]->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
                     physics->ghost_objects[0]->setUserPointer(physics->cont);
                     physics->ghost_objects[0]->setUserIndex(-1);
                     physics->ghost_objects[0]->setCollisionShape(BT_CSfromBBox(bf->bb_min, bf->bb_max));
@@ -1295,7 +1317,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     tr.setFromOpenGLMatrix(bf->transform);
                     tr.getOrigin() += offset;
                     physics->ghost_objects[0]->setWorldTransform(tr);
-                    physics->ghost_objects[0]->setCollisionFlags(physics->ghost_objects[0]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
+                    physics->ghost_objects[0]->setCollisionFlags(physics->ghost_objects[0]->getCollisionFlags() | btCollisionObject::CF_NO_CONTACT_RESPONSE);
                     physics->ghost_objects[0]->setUserPointer(physics->cont);
                     physics->ghost_objects[0]->setUserIndex(-1);
                     physics->ghost_objects[0]->setCollisionShape(new btSphereShape(getInnerBBRadius(bf->bb_min, bf->bb_max)));
@@ -1434,6 +1456,42 @@ void Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens
         room->self->collision_type = COLLISION_TYPE_STATIC;                     // meshtree
         room->self->collision_shape = COLLISION_SHAPE_TRIMESH;
     }
+}
+
+void Physics_GenEntityRigidBody(struct entity_s *ent)
+{
+    if(ent->self->collision_type == COLLISION_TYPE_NONE)
+    {
+        return;
+    }
+
+    Physics_GenRigidBody(ent->physics, ent->bf);
+
+    // Lwmte: Make this happen for ALL ENTITY RIGID BODIES!
+
+    /*
+    switch(m_self->collision_type)
+    {
+        case COLLISION_TYPE_KINEMATIC:
+            m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
+            break;
+
+        case COLLISION_TYPE_ACTOR:
+            m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_CHARACTER_OBJECT);
+            break;
+
+        case COLLISION_TYPE_GHOST:
+            m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+            break;
+
+        case COLLISION_TYPE_STATIC:
+            m_bt.bt_body.back()->setCollisionFlags(btCollisionObject::CF_STATIC_OBJECT);
+            break;
+
+        default:
+            break;
+    }
+    */
 }
 
 

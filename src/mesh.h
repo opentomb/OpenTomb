@@ -20,7 +20,7 @@ typedef struct mesh_face_s
 {
     GLuint                  texture_index;
     GLuint                  elements_count;
-    GLuint                 *elements;    
+    GLuint                 *elements;
 }mesh_face_t, *mesh_face_p;
 
 /*
@@ -40,7 +40,7 @@ typedef struct base_mesh_s
 
     uint32_t                animated_faces_count;                               // faces with animated texture
     struct mesh_face_s     *animated_faces;
-    
+
     uint32_t                vertex_count;                                       // number of mesh's vertices
     uint32_t                animated_vertex_count;
     struct vertex_s        *vertices;
@@ -49,7 +49,7 @@ typedef struct base_mesh_s
     float                   centre[3];                                          // geometry centre of mesh
     float                   bb_min[3];                                          // AABB bounding volume
     float                   bb_max[3];                                          // AABB bounding volume
-    float                   R;                                                  // radius of the bounding sphere
+    float                   radius;                                                  // radius of the bounding sphere
     uint32_t               *skin_map;                                           // vertices map for skin mesh
 
     GLuint                  vbo_vertex_array;

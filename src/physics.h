@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   engine_bullet.h
  * Author: nTesla
  *
@@ -12,9 +12,15 @@
 
 
 #define DEFAULT_COLLSION_NODE_POOL_SIZE    (128)
-// non zero value prevents to "smooth" normales calculations near edges, 
+
+// non zero value prevents to "smooth" normales calculations near edges,
 // that is wrong for slide state checking.
-#define COLLISION_MARGIN_DEFAULT           (0.0f)
+
+#define COLLISION_MARGIN_DEFAULT                (0.0f)
+#define COLLISION_MARGIN_RIGIDBODY              (0.5f)
+#define COLLISION_GHOST_VOLUME_COEFFICIENT      (0.4f)
+#define COLLISION_CAMERA_SPHERE_RADIUS          (16.0f)
+#define COLLISION_TRAVERSE_TEST_RADIUS          (0.48f)
 
 
 typedef struct collision_node_s
@@ -78,6 +84,7 @@ int  Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16
 void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s *bf);
 void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, struct ghost_shape_s *boxes);
 void Physics_SetGhostCollisionShape(struct physics_data_s *physics, uint16_t index, struct ghost_shape_s *shape_info);
+void Physics_GenEntityRigidBody(struct entity_s *ent);
 void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh);
 void Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens, int num_tweens);
 void Physics_DeleteObject(struct physics_object_s *obj);
