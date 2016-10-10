@@ -9,7 +9,7 @@
 -- command "system->output_triggers = 1".
 --------------------------------------------------------------------------------
 
-dofile("scripts/trigger/flipeffects.lua")  -- Initialize flipeffects.
+dofile(base_path .. "scripts/trigger/flipeffects.lua")  -- Initialize flipeffects.
 
 trigger_list = {};  -- Initialize trigger array.
 

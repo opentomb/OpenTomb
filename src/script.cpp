@@ -5353,6 +5353,11 @@ bool Script_LuaInit()
 
     if(engine_lua != NULL)
     {
+        int top = lua_gettop(engine_lua);
+        lua_pushstring(engine_lua, Engine_GetBasePath());
+        lua_setglobal(engine_lua, "base_path");
+        lua_settop(engine_lua, top);
+
         luaL_openlibs(engine_lua);
         Script_LoadConstants(engine_lua);
         Script_LuaRegisterFuncs(engine_lua);

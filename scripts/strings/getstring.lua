@@ -16,15 +16,15 @@ sys_notify      = {};   -- Define system warnings array.
 
 -- Load default (english) resources at first.
 
-dofile("scripts/strings/english/generic.lua");
-dofile("scripts/strings/english/global_items.lua");
-dofile("scripts/strings/english/sys_notify.lua");
+dofile(base_path .. "scripts/strings/english/generic.lua");
+dofile(base_path .. "scripts/strings/english/global_items.lua");
+dofile(base_path .. "scripts/strings/english/sys_notify.lua");
 
 
 function setLanguage(lang_name)
-    dofile("scripts/strings/" .. lang_name .. "/generic.lua");
-    dofile("scripts/strings/" .. lang_name .. "/global_items.lua");
-    dofile("scripts/strings/" .. lang_name .. "/sys_notify.lua");
+    dofile(base_path .. "scripts/strings/" .. lang_name .. "/generic.lua");
+    dofile(base_path .. "scripts/strings/" .. lang_name .. "/global_items.lua");
+    dofile(base_path .. "scripts/strings/" .. lang_name .. "/sys_notify.lua");
     print("Language changed to " .. lang_name);
 end;
 

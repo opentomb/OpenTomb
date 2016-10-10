@@ -12,7 +12,7 @@ entity_funcs = {};  -- Initialize entity function array.
 
 -- Load up some extra entity scripts.
 
-dofile("scripts/entity/script_switch.lua");     -- Additional switch scripts.
+dofile(base_path .. "scripts/entity/script_switch.lua");     -- Additional switch scripts.
 
 -- Erase single entity function.
 
