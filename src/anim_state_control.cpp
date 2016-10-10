@@ -2476,16 +2476,13 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_UNDERWATER_ROLL_BEGIN, 0);
             }
-            else if(cmd->jump == 1)
+            else if(ent->move_type == MOVE_ON_WATER)
             {
-                if(ent->move_type == MOVE_ON_WATER)
-                {
-                    ent->linear_speed = 0.0f;
-                    ss_anim->next_state = TR_STATE_LARA_ONWATER_STOP;
-                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
-                }
+                ent->linear_speed = 0.0f;
+                ss_anim->next_state = TR_STATE_LARA_ONWATER_STOP;
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
             }
-            else
+            else if(cmd->jump == 1)
             {
                 ss_anim->next_state = TR_STATE_LARA_UNDERWATER_INERTIA;
             }
