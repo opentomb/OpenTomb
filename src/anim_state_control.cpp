@@ -2488,7 +2488,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ss_anim->next_state = TR_STATE_LARA_ONWATER_STOP;
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER, 0); // go to the air
             }
-            else if(cmd->jump == 1)
+            else if(cmd->jump != 1)
             {
                 ss_anim->next_state = TR_STATE_LARA_UNDERWATER_INERTIA;
             }
