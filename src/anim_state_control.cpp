@@ -2446,6 +2446,12 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_UNDERWATER_FORWARD;
             }
+            else if(ent->move_type == MOVE_ON_WATER)
+            {
+                ent->linear_speed = 0.0;
+                ss_anim->next_state = TR_STATE_LARA_ONWATER_STOP;
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_UNDERWATER_TO_ONWATER); // go to the air
+            }
             break;
 
         case TR_STATE_LARA_WATER_DEATH:
@@ -2599,7 +2605,9 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_ONWATER_FORWARD:
+            ent->no_fix_skeletal_parts = BODY_PART_HANDS;
             ent->move_type = MOVE_ON_WATER;
+
             if(resp->kill)
             {
                 ss_anim->next_state = TR_STATE_LARA_WATER_DEATH;
