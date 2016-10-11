@@ -5365,8 +5365,7 @@ bool Script_LuaInit()
         lua_atpanic(engine_lua, lua_LuaPanic);
 
         // Load script loading order (sic!)
-
-        luaL_dofile(engine_lua, "scripts/loadscript.lua");
+        Script_DoLuaFile(engine_lua, "scripts/loadscript.lua");
 
         return true;
     }
@@ -5374,6 +5373,15 @@ bool Script_LuaInit()
     {
         return false;
     }
+}
+
+
+int Script_DoLuaFile(lua_State *lua, const char *local_path)
+{
+    char script_path[1024];
+    strncpy(script_path, Engine_GetBasePath(), sizeof(script_path));
+    strncat(script_path, local_path, sizeof(script_path));
+    return luaL_dofile(engine_lua, script_path);
 }
 
 

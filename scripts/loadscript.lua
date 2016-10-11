@@ -34,5 +34,5 @@ end
 -- Post OpenGL/SDL init script loading.
 
 function loadscript_post()
-    dofile("scripts/gui/fonts.lua")
+    dofile(base_path .. "scripts/gui/fonts.lua")
 end

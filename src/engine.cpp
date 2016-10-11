@@ -1064,14 +1064,12 @@ void Engine_GetLevelName(char *name, const char *path)
 }
 
 
-void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix, uint32_t buf_size)
+void Engine_GetLevelScriptNameLocal(int game_version, char *name, const char *postfix, uint32_t buf_size)
 {
     char level_name[LEVEL_NAME_MAX_LEN];
     Engine_GetLevelName(level_name, gameflow.getCurrentLevelPathLocal());
 
     name[0] = 0;
-
-    strncat(name, base_path, buf_size);
     strncat(name, "scripts/level/", buf_size);
 
     if(game_version < TR_II)

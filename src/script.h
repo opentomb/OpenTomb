@@ -13,6 +13,7 @@ extern lua_State *engine_lua;
 
 void Script_LoadConstants(lua_State *lua);
 bool Script_LuaInit();
+int  Script_DoLuaFile(lua_State *lua, const char *local_path);
 void Script_LuaClearTasks();
 void Script_LuaRegisterFuncs(lua_State *lua);
 

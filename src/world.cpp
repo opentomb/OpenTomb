@@ -1215,9 +1215,6 @@ int lua_SetSectorFlags(lua_State * lua)
 
 void World_ScriptsOpen()
 {
-    char temp_script_name[256];
-    Engine_GetLevelScriptName(global_world.version, temp_script_name, NULL, 256);
-
     global_world.level_script = luaL_newstate();
     if(global_world.level_script)
     {
@@ -1229,11 +1226,11 @@ void World_ScriptsOpen()
         lua_register(global_world.level_script, "setSectorPortal", lua_SetSectorPortal);
         lua_register(global_world.level_script, "setSectorFlags", lua_SetSectorFlags);
 
-        luaL_dofile(global_world.level_script, "scripts/staticmesh/staticmesh_script.lua");
-
-        if(Sys_FileFound(temp_script_name, 0))
+        Script_DoLuaFile(global_world.level_script, "scripts/staticmesh/staticmesh_script.lua");
         {
-            int lua_err = luaL_dofile(global_world.level_script, temp_script_name);
+            char temp_script_name[1024];
+            Engine_GetLevelScriptNameLocal(global_world.version, temp_script_name, NULL, sizeof(temp_script_name));
+            int lua_err = Script_DoLuaFile(global_world.level_script, temp_script_name);
             if(lua_err)
             {
                 Sys_DebugLog("lua_out.txt", "%s", lua_tostring(global_world.level_script, -1));
@@ -1316,11 +1313,11 @@ void World_ScriptsClose()
 
 void World_AutoexecOpen()
 {
-    char temp_script_name[256];
-    Engine_GetLevelScriptName(global_world.version, temp_script_name, "_autoexec", 256);
+    char temp_script_name[1024];
+    Engine_GetLevelScriptNameLocal(global_world.version, temp_script_name, "_autoexec", sizeof(temp_script_name));
 
-    luaL_dofile(engine_lua, "scripts/autoexec.lua");    // do standart autoexec
-    luaL_dofile(engine_lua, temp_script_name);          // do level-specific autoexec
+    Script_DoLuaFile(engine_lua, "scripts/autoexec.lua");    // do standart autoexec
+    Script_DoLuaFile(engine_lua, temp_script_name);          // do level-specific autoexec
 }
 
 
