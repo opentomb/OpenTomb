@@ -156,17 +156,17 @@ int Game_Load(const char* name)
 
     if(local)
     {
-        char token[512];
-        snprintf(token, 512, "save/%s", name);
-        f = fopen(token, "rb");
-        if(f == NULL)
+        char save_path[1024];
+        strncpy(save_path, Engine_GetBasePath(), 1024);
+        strncat(save_path, "save/", 1024);
+        strncat(save_path, name, 1024);
+        if(!Sys_FileFound(save_path, 0))
         {
-            Sys_extWarn("Can not read file \"%s\"", token);
+            Sys_extWarn("Can not read file \"%s\"", save_path);
             return 0;
         }
-        fclose(f);
         Script_LuaClearTasks();
-        luaL_dofile(engine_lua, token);
+        luaL_dofile(engine_lua, save_path);
     }
     else
     {
@@ -305,10 +305,10 @@ void Save_Entity(FILE **f, entity_p ent)
 int Game_Save(const char* name)
 {
     FILE *f;
-    char local, *ch, token[512];
+    char local;
 
     local = 1;
-    for(ch = (char*)name; *ch; ch++)
+    for(const char *ch = name; *ch; ch++)
     {
         if((*ch == '\\') || (*ch == '/'))
         {
@@ -319,8 +319,11 @@ int Game_Save(const char* name)
 
     if(local)
     {
-        snprintf(token, 512, "save/%s", name);
-        f = fopen(token, "wb");
+        char save_path[1024];
+        strncpy(save_path, Engine_GetBasePath(), 1024);
+        strncat(save_path, "save/", 1024);
+        strncat(save_path, name, 1024);
+        f = fopen(save_path, "wb");
     }
     else
     {
@@ -333,7 +336,7 @@ int Game_Save(const char* name)
         return 0;
     }
 
-    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow.getCurrentLevelPath(), gameflow.getCurrentGameID(), gameflow.getCurrentLevelID());
+    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow.getCurrentLevelPathLocal(), gameflow.getCurrentGameID(), gameflow.getCurrentLevelID());
 
     // Save flipmap and flipped room states.
     uint8_t *flip_map;

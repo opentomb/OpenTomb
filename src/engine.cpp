@@ -1067,7 +1067,7 @@ void Engine_GetLevelName(char *name, const char *path)
 void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix, uint32_t buf_size)
 {
     char level_name[LEVEL_NAME_MAX_LEN];
-    Engine_GetLevelName(level_name, gameflow.getCurrentLevelPath());
+    Engine_GetLevelName(level_name, gameflow.getCurrentLevelPathLocal());
 
     name[0] = 0;
 
@@ -1137,9 +1137,16 @@ bool Engine_LoadPCLevel(const char *name)
 
 int Engine_LoadMap(const char *name)
 {
-    if(!Sys_FileFound(name, 0))
+    size_t map_len = strlen(name);
+    size_t base_len = strlen(base_path);
+    size_t buf_len = map_len + base_len + 1;
+    char map_name_buf[buf_len];
+    strncpy(map_name_buf, base_path, buf_len);
+    strncat(map_name_buf, name, buf_len);
+
+    if(!Sys_FileFound(map_name_buf, 0))
     {
-        Con_Warning("file not found: \"%s\"", name);
+        Con_Warning("file not found: \"%s\"", map_name_buf);
         return 0;
     }
 
@@ -1149,16 +1156,16 @@ int Engine_LoadMap(const char *name)
     Gui_DrawLoadScreen(0);
 
     // it is needed for "not in the game" levels or correct saves loading.
-    gameflow.setCurrentLevelPath(name);
+    gameflow.setCurrentLevelPath(map_name_buf);
 
     Gui_DrawLoadScreen(100);
 
 
     // Here we can place different platform-specific level loading routines.
-    switch(VT_Level::get_level_format(name))
+    switch(VT_Level::get_level_format(map_name_buf))
     {
         case LEVEL_FORMAT_PC:
-            if(!Engine_LoadPCLevel(name))
+            if(!Engine_LoadPCLevel(map_name_buf))
             {
                 return 0;
             }

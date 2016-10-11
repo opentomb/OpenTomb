@@ -689,7 +689,7 @@ bool StreamTrackBuffer::Load(int track_index)
         char file_path[1024];
         int load_method = 0;
 
-        if(!Script_GetSoundtrack(engine_lua, track_index, file_path, &load_method, &stream_type))
+        if(!Script_GetSoundtrack(engine_lua, track_index, file_path, sizeof(file_path), &load_method, &stream_type))
         {
             return false;
         }

@@ -39,7 +39,7 @@ bool Script_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_n
 int  Script_GetGlobalSound(lua_State *lua, int global_sound_id);
 int  Script_GetSecretTrackNumber(lua_State *lua);
 int  Script_GetNumTracks(lua_State *lua);
-bool Script_GetSoundtrack(lua_State *lua, int track_index, char *track_path, int *load_method, int *stream_type);
+bool Script_GetSoundtrack(lua_State *lua, int track_index, char *track_path, int file_path_len, int *load_method, int *stream_type);
 bool Script_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path);
 bool Script_GetString(lua_State *lua, int string_index, size_t string_size, char *buffer);
 
