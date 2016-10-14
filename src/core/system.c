@@ -19,6 +19,7 @@
 
 #define INIT_TEMP_MEM_SIZE          (4096 * 1024)
 
+system_settings_t       system_settings;
 screen_info_t           screen_info;
 
 extern lua_State       *engine_lua;
@@ -49,6 +50,8 @@ void Sys_InitGlobals()
     screen_info.fullscreen = 0;
     screen_info.crosshair = 0;
     screen_info.fov = 75.0;
+
+    system_settings.logging = 0;
 }
 
 
@@ -166,6 +169,9 @@ void Sys_Warn(const char *warning, ...)
 
 void Sys_DebugLog(const char *file, const char *fmt, ...)
 {
+    if(!system_settings.logging)
+        return;
+
     va_list argptr;
     static char data[4096];
     int32_t written;

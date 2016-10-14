@@ -33,6 +33,7 @@ int Script_ParseRender(lua_State *lua, struct render_settings_s *rs);
 int Script_ParseAudio(lua_State *lua, struct audio_settings_s *as);
 int Script_ParseConsole(lua_State *lua);
 int Script_ParseControls(lua_State *lua, struct control_settings_s *cs);
+int Script_ParseSystem(lua_State *lua, struct system_settings_s *ss);
 
 bool Script_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_sounds, char *sample_name_mask);
 bool Script_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_number, int *samples_count);

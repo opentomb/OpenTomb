@@ -593,6 +593,25 @@ int Script_ParseControls(lua_State *lua, struct control_settings_s *cs)
     return -1;
 }
 
+int Script_ParseSystem(lua_State *lua, struct system_settings_s *ss)
+{
+    if(lua)
+    {
+        int top = lua_gettop(lua);
+
+        lua_getglobal(lua, "system");
+
+        lua_getfield(lua, -1, "logging");
+        ss->logging = (float)lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
+
+        lua_settop(lua, top);
+        return 1;
+    }
+
+    return -1;
+}
+
 int Script_ParseScreen(lua_State *lua, struct screen_info_s *sc)
 {
     if(lua)

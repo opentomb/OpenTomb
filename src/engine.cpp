@@ -522,6 +522,7 @@ void Engine_LoadConfig(const char *filename)
             Script_ParseAudio(lua, &audio_settings);
             Script_ParseConsole(lua);
             Script_ParseControls(lua, &control_mapper);
+            Script_ParseSystem(lua, &system_settings);
             lua_close(lua);
         }
     }
