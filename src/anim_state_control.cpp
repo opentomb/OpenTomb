@@ -572,6 +572,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_PREPARE:
+            ent->no_fix_skeletal_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
             cmd->rot[0] = 0;
             Character_Lean(ent, cmd, 0.0);
 
@@ -628,7 +629,9 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_BACK:
+            ent->no_fix_skeletal_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
             cmd->rot[0] = 0;
+
             if(resp->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR)
             {
                 if(curr_fc->quicksand)
@@ -658,7 +661,9 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_LEFT:
+            ent->no_fix_skeletal_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
             cmd->rot[0] = 0;
+
             if(resp->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR)
             {
                 if(curr_fc->quicksand)
@@ -684,7 +689,9 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_RIGHT:
+            ent->no_fix_skeletal_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
             cmd->rot[0] = 0;
+
             if(resp->vertical_collide & 0x01 || ent->move_type == MOVE_ON_FLOOR)
             {
                 if(curr_fc->quicksand)
@@ -2242,7 +2249,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_JUMP_FORWARD:
         case TR_STATE_LARA_FALL_BACKWARD:
-            ent->no_fix_skeletal_parts = BODY_PART_LEGS_1 | BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
+            ent->no_fix_skeletal_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
             Character_Lean(ent, cmd, 4.0);
 
             if((resp->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
