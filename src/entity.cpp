@@ -929,15 +929,45 @@ void Entity_ProcessSector(entity_p ent)
 
         if(lowest_sector->flags & SECTOR_FLAG_DEATH)
         {
+            bool kill = false;
+
             if((ent->move_type == MOVE_ON_FLOOR)    ||
-               (ent->move_type == MOVE_UNDERWATER)  ||
                (ent->move_type == MOVE_WADE)        ||
-               (ent->move_type == MOVE_ON_WATER)    ||
                (ent->move_type == MOVE_QUICKSAND))
+            {
+                room_p death_room = NULL;
+
+                if((ent->character->height_info.leg_l_floor.hit) &&
+                   (ent->character->height_info.leg_l_floor.obj->object_type == OBJECT_ROOM_BASE))
+                {
+                    death_room = (room_p)ent->character->height_info.leg_l_floor.obj->object;
+                }
+                else if((ent->character->height_info.leg_r_floor.hit) &&
+                        (ent->character->height_info.leg_r_floor.obj->object_type == OBJECT_ROOM_BASE))
+                {
+                    death_room = (room_p)ent->character->height_info.leg_r_floor.obj->object;
+                }
+
+                // Lwmte: THIS IS STILL BUGGED, AS LEG FLOOR HIT RESULT RETURNS WRONG
+                // ROOM NUMBER IF LARA'S RUNNING ON SLANTS!!!
+
+                if((death_room) && (death_room->id == lowest_sector->owner_room->id))
+                {
+                    kill = true;
+                }
+            }
+            else if((ent->move_type == MOVE_UNDERWATER) ||
+                    (ent->move_type == MOVE_ON_WATER))
+            {
+                kill = true;
+            }
+
+            if(kill)
             {
                 Character_SetParam(ent, PARAM_HEALTH, 0.0);
                 ent->character->resp.kill = 1;
             }
+
         }
     }
 

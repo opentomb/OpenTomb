@@ -69,6 +69,11 @@ console =
     show = 0;
 }
 
+system = 
+{
+    logging = 1;
+}
+
 -- Keys binding
 -- Please note that on XInput game controllers (XBOX360 and such), triggers are NOT
 -- coded as joystick buttons. Instead, they have unique names: JOY_TRIGGERLEFT and
