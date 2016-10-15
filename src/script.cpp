@@ -43,6 +43,7 @@ extern "C" {
 #define RESP_VERT_COLLIDE   (1)
 #define RESP_HOR_COLLIDE    (2)
 #define RESP_SLIDE          (3)
+#define RESP_LEAN           (4)
 
 // Entity timer constants
 #define TICK_IDLE           (0)
@@ -3127,15 +3128,15 @@ int lua_GetEntityOrientation(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
-    if(top != 3)
+    if(top < 2)
     {
-        Con_Warning("GetEntityOrientation: expecting arguments (id1, id2, add_angle)");
+        Con_Warning("GetEntityOrientation: expecting arguments (id1, id2, (add_angle))");
         return 0;
     }
 
     int   id1        = lua_tointeger(lua, 1);
     int   id2        = lua_tointeger(lua, 2);
-    float add_angle_ = lua_tonumber (lua, 3);
+    float add_angle_ = (top>2)?(lua_tonumber (lua, 3)):(0);
 
     entity_p ent1 = World_GetEntityByID(id1);
     entity_p ent2 = World_GetEntityByID(id2);
@@ -4456,6 +4457,10 @@ int lua_SetEntityResponse(lua_State * lua)
 
             case RESP_SLIDE:
                 ent->character->resp.slide = value;
+                break;
+
+            case RESP_LEAN:
+                ent->character->resp.lean = value;
                 break;
 
             default:

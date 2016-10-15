@@ -14,6 +14,7 @@ RESP_KILL           = 0;
 RESP_VERT_COLLIDE   = 1;
 RESP_HOR_COLLIDE    = 2;
 RESP_SLIDE          = 3;
+RESP_LEAN           = 4;
 
 -- Entity timer constants
 

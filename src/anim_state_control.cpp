@@ -197,6 +197,26 @@ void ent_to_monkey_swing(entity_p ent, ss_animation_p ss_anim)
     }
 }
 
+void ent_to_tightrope(entity_p ent, ss_animation_p ss_anim)
+{
+    if(ss_anim->changing_next >= 0x02)
+    {
+        ent->move_type = MOVE_CLIMBING;
+        Entity_GhostUpdate(ent);
+        ss_anim->onEndFrame = NULL;
+    }
+}
+
+void ent_from_tightrope(entity_p ent, ss_animation_p ss_anim)
+{
+    if(ss_anim->changing_next >= 0x02)
+    {
+        ent->move_type = MOVE_ON_FLOOR;
+        Entity_GhostUpdate(ent);
+        ss_anim->onEndFrame = NULL;
+    }
+}
+
 void ent_crawl_to_climb(entity_p ent, ss_animation_p ss_anim)
 {
     if(ss_anim->changing_next >= 0x02)
@@ -3067,6 +3087,117 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(cmd->move[0] != 1)
             {
                 ss_anim->next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
+            }
+            break;
+
+        case TR_STATE_LARA_TIGHTROPE_ENTER:
+            cmd->rot[0] = 0.0;
+            ent->no_fix_all = 0x01;
+            ent->dir_flag = ENT_MOVE_FORWARD;
+            ss_anim->onEndFrame = ent_to_tightrope;
+            ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_IDLE;
+            break;
+
+        case TR_STATE_LARA_TIGHTROPE_EXIT:
+            cmd->rot[0] = 0.0;
+            ent->no_fix_all = 0x01;
+            ent->dir_flag = ENT_MOVE_FORWARD;
+            ss_anim->onEndFrame = ent_from_tightrope;
+            ss_anim->next_state = TR_STATE_LARA_STOP;
+            break;
+
+        case TR_STATE_LARA_TIGHTROPE_IDLE:
+            cmd->rot[0] = 0.0;
+
+            if((ss_anim->current_animation == TR_ANIMATION_LARA_TIGHTROPE_STAND) && (last_frame))
+            {
+                    uint16_t chance_to_fall = rand() % 0x7FFF;
+
+                    if(chance_to_fall > 0x5FFF)
+                        ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_BALANCING_LEFT;
+                    else if(chance_to_fall < 0x2000)
+                        ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_BALANCING_RIGHT;
+            }
+
+            if(ent->character->resp.lean == CHARACTER_LEAN_LEFT)
+            {
+                ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_BALANCING_LEFT;
+                break;
+            }
+            else if(ent->character->resp.lean == CHARACTER_LEAN_RIGHT)
+            {
+                ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_BALANCING_RIGHT;
+                break;
+            }
+            else if((cmd->roll) || (cmd->move[0] == -1))
+            {
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_TIGHTROPE_TURN, 0);
+                ent->dir_flag = ENT_MOVE_FORWARD;
+            }
+            else if(cmd->move[0] == 1)
+            {
+                ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_FORWARD;
+            }
+            break;
+
+        case TR_STATE_LARA_TIGHTROPE_FORWARD:
+            cmd->rot[0] = 0.0;
+            ent->dir_flag = ENT_MOVE_FORWARD;
+
+            if(cmd->move[0] != 1)
+            {
+                ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_IDLE;
+            }
+            else
+            {
+                uint16_t chance_to_unbal = rand() % 0x7FFF;
+                if(chance_to_unbal < 0x00FF)
+                {
+                    ss_anim->next_state = TR_STATE_LARA_TIGHTROPE_IDLE;
+
+                    if(chance_to_unbal > 0x007F)
+                        ent->character->resp.lean = CHARACTER_LEAN_LEFT;
+                    else
+                        ent->character->resp.lean = CHARACTER_LEAN_RIGHT;
+                }
+            }
+            break;
+
+        case TR_STATE_LARA_TIGHTROPE_BALANCING_RIGHT:
+            cmd->rot[0] = 0.0;
+
+            if((ss_anim->current_animation == TR_ANIMATION_LARA_TIGHTROPE_FALL_RIGHT) && (last_frame))
+            {
+                ent->move_type = MOVE_FREE_FALLING;
+                ent->transform[12 + 0] -= 256.0;    // MAGIC: force fall position.
+                ent->transform[12 + 1] += 192.0;
+                ent->transform[12 + 2] -= 640.0;
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
+            }
+            else if((ss_anim->current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_RIGHT) && (ss_anim->current_frame >= 15) && (cmd->move[1] == -1))
+            {
+                // MAGIC: mirroring animation position.
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_TIGHTROPE_RECOVER_RIGHT, 30-ss_anim->current_frame);
+                ent->character->resp.lean = CHARACTER_LEAN_NONE;
+            }
+            break;
+
+        case TR_STATE_LARA_TIGHTROPE_BALANCING_LEFT:
+            cmd->rot[0] = 0.0;
+
+            if((ss_anim->current_animation == TR_ANIMATION_LARA_TIGHTROPE_FALL_LEFT) && (last_frame))
+            {
+                ent->move_type = MOVE_FREE_FALLING;
+                ent->transform[12 + 0] += 256.0;    // MAGIC: force fall position.
+                ent->transform[12 + 1] += 192.0;
+                ent->transform[12 + 2] -= 640.0;
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_LONG, 0);
+            }
+            else if((ss_anim->current_animation == TR_ANIMATION_LARA_TIGHTROPE_LOOSE_LEFT) && (ss_anim->current_frame >= 15) && (cmd->move[1] == 1))
+            {
+                // MAGIC: mirroring animation position.
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_TIGHTROPE_RECOVER_LEFT, 30-ss_anim->current_frame);
+                ent->character->resp.lean = CHARACTER_LEAN_NONE;
             }
             break;
 

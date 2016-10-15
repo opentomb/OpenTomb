@@ -1415,6 +1415,7 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     float t, *pos = ent->transform + 12;
 
     ent->character->resp.slide = 0x00;
+    ent->character->resp.lean = CHARACTER_LEAN_NONE;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 
@@ -1480,6 +1481,7 @@ int Character_WallsClimbing(struct entity_s *ent)
     float move[3], t, *pos = ent->transform + 12;
 
     ent->character->resp.slide = 0x00;
+    ent->character->resp.lean = CHARACTER_LEAN_NONE;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 
@@ -1612,6 +1614,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
     }
 
     ent->character->resp.slide = 0x00;
+    ent->character->resp.lean = CHARACTER_LEAN_NONE;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 
@@ -1682,6 +1685,7 @@ int Character_MoveOnWater(struct entity_s *ent)
     float *pos = ent->transform + 12;
 
     ent->character->resp.slide = 0x00;
+    ent->character->resp.lean = CHARACTER_LEAN_NONE;
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
 

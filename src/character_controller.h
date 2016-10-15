@@ -126,8 +126,13 @@
 #define INERTIA_SPEED_ONWATER    (1.5)
 
 // flags constants
-#define CHARACTER_SLIDE_FRONT                   (0x02)
+#define CHARACTER_SLIDE_NONE                    (0x00)
 #define CHARACTER_SLIDE_BACK                    (0x01)
+#define CHARACTER_SLIDE_FRONT                   (0x02)
+
+#define CHARACTER_LEAN_NONE                     (0x00)
+#define CHARACTER_LEAN_LEFT                     (0x01)
+#define CHARACTER_LEAN_RIGHT                    (0x02)
 
 /*
  * Next step height information
@@ -245,6 +250,7 @@ typedef struct character_response_s
     uint16_t    kill : 1;
     uint16_t    burn : 1;
     uint16_t    slide : 2;
+    uint16_t    lean : 2;
 }character_response_t, *character_response_p;
 
 typedef struct character_param_s
