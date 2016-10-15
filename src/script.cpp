@@ -512,6 +512,20 @@ void Script_LoopEntity(lua_State *lua, int object_id)
     }
 }
 
+void Script_ExecEffect(lua_State *lua, int id, int caller, int operand)
+{
+    int top = lua_gettop(lua);
+    lua_getglobal(lua, "execFlipeffect");
+    if(lua_isfunction(lua, -1))
+    {
+        lua_pushinteger(lua, id);
+        lua_pushinteger(lua, caller);
+        lua_pushinteger(lua, operand);
+        lua_CallAndLog(lua, 3, 0, 0);
+    }
+    lua_settop(lua, top);
+}
+
 /*
  * Game structures parse
  */

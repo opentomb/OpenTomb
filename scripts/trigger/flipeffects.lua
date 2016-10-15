@@ -114,7 +114,7 @@ flipeffects[32] = { -- Play footprint and overlay it on floor.
     onExec =
     function(caller, operand)
         if(caller < 0) then return end;
-        if(getEntitySubstanceState(caller) == 0) then
+        if(not getEntitySubstanceState(caller)) then
             local material = getEntitySectorMaterial(caller);
             local sound_id = -1;
             

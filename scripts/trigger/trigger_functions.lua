@@ -61,18 +61,6 @@ function moveToSink(entity_index, sink_index)
     end;
 end
 
-
--- Does specified flipeffect.
-
-function doEffect(effect_index, extra_parameter) -- extra parameter is usually the timer field
-    if(flipeffects[effect_index] ~= nil) then
-        return flipeffects[effect_index](parameter);
-    else
-        return nil; -- Add hardcoded flipeffect routine here
-    end;
-end
-
-
 -- Sets specified secret index as found and plays audiotrack with pop-up notification.
 
 function findSecret(secret_number)

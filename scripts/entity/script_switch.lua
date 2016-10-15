@@ -365,7 +365,8 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             end
             return true;
         end);
-    elseif(off.ready_anim == t and getEntityLock(object_id) ~= 1) then  -- Locked switches doesn't flip back!
+    -- Locked switches doesn't flip back, but only in TR3+
+    elseif(off.ready_anim == t and ((getLevelVersion() < TR_III) or (getEntityLock(object_id) ~= 1))) then  
         setEntityAnim(object_id, ANIM_TYPE_BASE, off.trig_anim, 0);
         setEntityAnim(actor_id, ANIM_TYPE_BASE, off.actor_anim, 0);
         setEntityActivity(object_id, 1);
