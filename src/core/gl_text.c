@@ -179,10 +179,10 @@ void GLText_RenderStringLine(gl_text_line_p l)
     if(style->rect)
     {
         BindWhiteTexture();
-        GLfloat x0 = l->rect[0] + real_x - style->rect_border * screen_info.w_unit;
-        GLfloat y0 = l->rect[1] + real_y - style->rect_border * screen_info.h_unit;
-        GLfloat x1 = l->rect[2] + real_x + style->rect_border * screen_info.w_unit;
-        GLfloat y1 = l->rect[3] + real_y + style->rect_border * screen_info.h_unit;
+        GLfloat x0 = l->rect[0] + real_x - style->rect_border * screen_info.w;
+        GLfloat y0 = l->rect[1] + real_y - style->rect_border * screen_info.h;
+        GLfloat x1 = l->rect[2] + real_x + style->rect_border * screen_info.w;
+        GLfloat y1 = l->rect[3] + real_y + style->rect_border * screen_info.h;
         GLfloat *v, backgroundArray[32];
 
         v = backgroundArray;

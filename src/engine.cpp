@@ -582,12 +582,11 @@ void Engine_GLSwapWindow()
 
 void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 {
+    const float scale_coeff = 1024.0f;
     screen_info.w = nominalW;
     screen_info.h = nominalH;
 
-    screen_info.w_unit = (float)nominalW / SYS_SCREEN_METERING_RESOLUTION;
-    screen_info.h_unit = (float)nominalH / SYS_SCREEN_METERING_RESOLUTION;
-    screen_info.scale_factor = (screen_info.w < screen_info.h) ? (screen_info.h_unit) : (screen_info.w_unit);
+    screen_info.scale_factor = (screen_info.w < screen_info.h) ? (screen_info.h / scale_coeff) : (screen_info.w / scale_coeff);
 
     GLText_UpdateResize(screen_info.scale_factor);
     Con_UpdateResize();
