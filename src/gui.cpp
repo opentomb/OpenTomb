@@ -1322,7 +1322,7 @@ void gui_ProgressBar::RecalculatePosition()
             mY = (float)screen_info.h - ((float)(mAbsYoffset+mAbsHeight+mAbsBorderSize*2)) * screen_info.scale_factor;
             break;
         case GUI_ANCHOR_VERT_CENTER:
-            mY = ((float)screen_info.h - ((float)(mAbsHeight+mAbsBorderSize*2) * screen_info.h_unit)) / 2 +
+            mY = ((float)screen_info.h - ((float)(mAbsHeight+mAbsBorderSize * 2) * screen_info.h)) / 2 +
                  ((float)mAbsYoffset * screen_info.scale_factor);
             break;
         case GUI_ANCHOR_VERT_BOTTOM:
@@ -1697,8 +1697,8 @@ void gui_ItemNotifier::Reset()
     mCurrRotX = 0.0;
     mCurrRotY = 0.0;
 
-    mEndPosX = ((float)screen_info.w / SYS_SCREEN_METERING_RESOLUTION) * mAbsPosX;
-    mPosY    = ((float)screen_info.h / SYS_SCREEN_METERING_RESOLUTION) * mAbsPosY;
+    mEndPosX = mAbsPosX;
+    mPosY    = mAbsPosY;
     mCurrPosX = screen_info.w + ((float)screen_info.w / GUI_NOTIFIER_OFFSCREEN_DIVIDER * mSize);
     mStartPosX = mCurrPosX;    // Equalize current and start positions.
 }

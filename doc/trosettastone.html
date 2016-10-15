@@ -2072,7 +2072,7 @@ width:100%;
 <col style="width:1%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-09-27)</strong></p></div>
+<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-10-09)</strong></p></div>
 <div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
 <div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div></div></td>
 <td class="tableblock halign-right valign-middle" ><div><div class="paragraph"><p><span class="image">
@@ -2226,7 +2226,7 @@ Clarify the meaning of <em>Bit 4</em> in <a href="#tr2_room_vertex">[tr2_room_ve
 </li>
 <li>
 <p>
-Clarify, what&#8217;s the purpose of <span class="monospaced">Normal</span> field in <a href="#tr5_room_vertex">[tr5_room_vertex]</a> structure, and if really <span class="monospaced">Attributes</span> field was removed.
+Clarify what&#8217;s the purpose of <span class="monospaced">Normal</span> field in <a href="#tr5_room_vertex">[tr5_room_vertex]</a> structure, and if really <span class="monospaced">Attributes</span> field was removed.
 </p>
 </li>
 <li>
@@ -2241,7 +2241,7 @@ Clarify fog bulb values which affect its radius.
 </li>
 <li>
 <p>
-Solve the purpose of <em>flag/zone</em> field in <span class="monospaced">tr_camera</span> structure.
+Solve the purpose of <em>flag/zone</em> field in <span class="monospaced">tr_camera</span> structure <em>for sinks</em>.
 </p>
 </li>
 <li>
@@ -4016,12 +4016,17 @@ then triangles, followed by the second layer&#8217;s rectangles and triangles, a
 </li>
 <li>
 <p>
+<strong>Bit 10</strong>&#8201;&#8212;&#8201;unused. Was re-used in NGLE as a flag specifying <em>room with snow</em>.
+</p>
+</li>
+<li>
+<p>
 <strong>Bit 11</strong>&#8201;&#8212;&#8201;<span class="image">
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
 </span> Not found in any original TR levels, but when the <em>D</em> flag is set in the TRLE, this bit is set. Was re-used in NGLE as a flag specifying
-  <em>Damage room</em>.
+  <em>room with rain</em>.
 </p>
 </li>
 <li>
@@ -4031,7 +4036,7 @@ then triangles, followed by the second layer&#8217;s rectangles and triangles, a
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
 </span> Not found in any original TR levels, but when the <em>P</em> flag is set in the TRLE, this bit is set. Was also re-used in NGLE as a flag
-  specifying <em>Poisonous room</em>.
+  specifying <em>cold room</em> (a room which produce damage on Lara).
 </p>
 </li>
 </ul></div>
@@ -4306,7 +4311,15 @@ was previously set for a given entity&#8201;&#8212;&#8201;see further.</p></div>
 </div>
 <div class="paragraph"><p><span class="monospaced">OneShot</span> flag is used <em>only</em> for activation of entities (it is also copied to entity&#8217;s own flag field with same name), and indicates that <em>after activation,
 entity state is locked</em>. It means that even if entity&#8217;s own activation mask is unset (as with <em>switch</em> trigger type&#8201;&#8212;&#8201;see further), entity will remain
-activated. However, it doesn&#8217;t mean that entity couldn&#8217;t be deactivated at all&#8201;&#8212;&#8201;because <em>antitrigger</em> trigger type ignores and resets this flag.</p></div>
+activated. However, it doesn&#8217;t mean that entity couldn&#8217;t be deactivated at all&#8201;&#8212;&#8201;because <em>antitrigger</em> trigger type (see further) ignores and resets this flag.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
+</span><span class="image">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
+</span> In these versions, any <em>antitriggers</em> for locked entity have no effect, and engine completely bypasses antitrigger processing for such entities. It means that once entity was activated by trigger with <span class="monospaced">OneShot</span> flag, it couldn&#8217;t be deactivated at all.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span> There&#8217;s a bit different <span class="monospaced">OneShot</span> flag behaviour for TR3&#8201;&#8212;&#8201;entity state will be locked <em>even if activation mask isn&#8217;t set yet</em>. For example, if there are two complementary triggers for certain entity (let&#8217;s say, with activation masks <span class="monospaced">0x0F</span> and <span class="monospaced">0x10</span>), and each of them has <span class="monospaced">OneShot</span> flag, effectively target entity <em>won&#8217;t ever be activated</em>, cause each trigger immediately locks entity state, bypassing further trigger processing.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -4713,6 +4726,13 @@ engines process FloorData.</p></div>
 <div class="sect3">
 <h4 id="_subfunction_span_class_monospaced_0x09_span_8201_8212_8201_antitrigger">4.5.10. SubFunction <span class="monospaced">0x09</span>&#8201;&#8212;&#8201;Antitrigger</h4>
 <div class="paragraph"><p>Same as <em>Trigger</em>, but performs <em>deactivation</em> for each case of <em>Object</em> trigger action.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr3.png" alt="TR3 only" width="16" height="17" title="TR3 only">
+</span><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Antitrigger type also copies its parent trigger&#8217;s <span class="monospaced">OneShot</span> flag into any entities activated by <em>Object</em> trigger action, meaning that after any further entity activation it will be <em>locked</em>.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_subfunction_span_class_monospaced_0x0a_span_8201_8212_8201_heavy_switch">4.5.11. SubFunction <span class="monospaced">0x0A</span>&#8201;&#8212;&#8201;Heavy switch</h4>
@@ -4928,9 +4948,15 @@ camera&#8217;s orientation will be changed to a given entity. Note that if such 
 </div>
 <div class="sect3">
 <h4 id="_trigaction_span_class_monospaced_0x07_span_8201_8212_8201_end_level">4.6.8. TrigAction <span class="monospaced">0x07</span>&#8201;&#8212;&#8201; End Level</h4>
-<div class="paragraph"><p>Immediately loads next level. In TR1-3 and TR5, <span class="monospaced">Parameter</span> field is not used, i.e. engine just loads next level specified in script. In TR4, so called &#8220;hub
-system&#8221; was implemented, which allows Lara to jump between levels back and forth. For this reason, <em>End Level</em> trigger action must also explicitly specify
-level index to jump.</p></div>
+<div class="paragraph"><p>Immediately loads next level. In TR1-3 and TR5, <span class="monospaced">Parameter</span> field is not used, i.e. engine just loads next level specified in script.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span> In TR4, so called &#8220;hub system&#8221; was implemented, which allows Lara to jump between levels back and forth. For this reason, <span class="monospaced">Parameter</span> field must also explicitly specify level index to jump.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> Also, since TR4 Lara can have multiple start positions for each level, so <span class="monospaced">Timer</span> field in <span class="monospaced">TriggerSetup</span> entry specifies an OCB of <em>lara start posision AI object</em> to warp Lara to. That is, if there&#8217;s an end level trigger with value <span class="monospaced">3</span> in <span class="monospaced">Timer</span> field, it means that Lara will be warped to first <em>start position AI object</em> with number 3 specified in its OCB. For more info on AI objects, refer to <a href="#ai-objects">this section</a>.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_trigaction_span_class_monospaced_0x08_span_8201_8212_8201_play_soundtrack">4.6.9. TrigAction <span class="monospaced">0x08</span>&#8201;&#8212;&#8201;Play Soundtrack</h4>
@@ -5178,8 +5204,8 @@ no-collision mode is obtained using degenerate collision box (with all-zero or a
 meshes (<span class="monospaced">MeshTree</span>), and also to the animations used (<span class="monospaced">Animation</span>); these will be described in detail below. If the Animation index is -1, that means that there
 are no predefined animations, and entity&#8217;s movement is all generated by the engine; an example is Lara&#8217;s ponytail or rolling balls from TR4 and TR5.</p></div>
 <div class="paragraph"><p>Some entities are really stationary, such as locks and the skybox, and some are not rendered at all, such as &#8220;camera target&#8221; points to aim the camera at,
-flame emitters, AI objects and other service entities. Such invisible models are frequently called <em>nullmeshes</em>, because usually they have no valid mesh
-index specified for them.</p></div>
+flame emitters, AI objects and other service entities. Such invisible models are frequently called <em>nullmeshes</em>, because usually they have null mesh
+index specified for them, and never actually use it.</p></div>
 <div class="paragraph"><p><span class="image">
 <img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
 </span><span class="image">
@@ -5827,7 +5853,7 @@ and the second half is for the <em>alternate</em> (flipped) room state. TR1 has 
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ai_objects">7.4. AI Objects</h3>
+<h3 id="ai-objects">7.4. AI Objects</h3>
 <div class="paragraph"><p>Since TR3, in addition to pathfinding data structures, there are now special <em>AI objects</em>, which are used in a waypoint-like manner, defining specific action, like wandering between two points, guarding specific point or running to specific place in case Lara is around. For example, MP Guards in TR3&#8217;s &#8220;Area 51&#8221; may patrol specific area when they are limited by special <em>AI_PATROL</em> object.</p></div>
 <div class="admonitionblock">
 <table><tr>
@@ -5881,7 +5907,8 @@ and the second half is for the <em>alternate</em> (flipped) room state. TR1 has 
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
-</span> TR4 introduced two additional AI objects, <strong>AI_X1</strong> and <strong>AI_X2</strong>. For example, these are used with SAS Guards in <em>Cairo</em> story arc. When AI_X1 object is placed in the same sector with SAS Guard, he will prefer to shoot grenades instead of bullets. If another SAS Guard with AI_X2 is activated nearby, then first one will stop shooting grenades, and second one will shoot them instead.</p></div>
+</span> TR4 introduced three additional AI objects, <strong>AI_X1</strong>, <strong>AI_X2</strong> and <strong>LARA_START_POS</strong>. First two are used, for example, with SAS Guards in <em>Cairo</em> story arc. When AI_X1 object is placed in the same sector with SAS Guard, he will prefer to shoot grenades instead of bullets. If another SAS Guard with AI_X2 is activated nearby, then first one will stop shooting grenades, and second one will shoot them instead.</p></div>
+<div class="paragraph"><p>As for <strong>LARA_START_POS</strong> AI object, it is used to modify Lara&#8217;s level starting position, according to prior <em>end level trigger action</em> configuration. That is, at start Lara will be teleported to any existing <strong>LARA_START_POS</strong> AI object with same OCB value as in <span class="monospaced">Timer</span> field of <em>end level</em> trigger in previous level.</p></div>
 <div class="sect3">
 <h4 id="_ai_object_ids">7.4.1. AI Object IDs</h4>
 <div class="paragraph"><p>Here are all AI Object type IDs in each TR version which has them:</p></div>
@@ -5896,7 +5923,7 @@ width:40%;
 <col style="width:20%;">
 <thead>
 <tr>
-<th class="tableblock halign-left valign-top" >            </th>
+<th class="tableblock halign-left valign-top" >                </th>
 <th class="tableblock halign-center valign-top" > TR3 </th>
 <th class="tableblock halign-center valign-top" > TR4 </th>
 <th class="tableblock halign-center valign-top" > TR5</th>
@@ -5950,6 +5977,12 @@ width:40%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">405</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">385</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">LARA_START_POS</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">406</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">386</p></td>
 </tr>
 </tbody>
 </table>
@@ -6158,7 +6191,7 @@ Bit 14: Randomize gain. When this flag is set, sound volume (gain) will be sligh
     <span class="kt">uint8_t</span> <span class="n">Volume</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">Range</span><span class="p">;</span>
     <span class="kt">uint8_t</span> <span class="n">Chance</span><span class="p">;</span>
-  <span class="kt">uint8_t</span> <span class="n">Pitch</span><span class="p">;</span>
+    <span class="kt">uint8_t</span> <span class="n">Pitch</span><span class="p">;</span>
     <span class="kt">int16_t</span> <span class="n">Characteristics</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
@@ -6507,7 +6540,7 @@ width:70%;
 </tr>
 </tbody>
 </table>
-<div class="paragraph"><p>UVRotate mode is engaged by specifying <span class="monospaced">UVRotate</span> command in level script entry, which takes rotation speed as an argument. If such command is found (and
+<div class="paragraph"><p>UVRotate mode is engaged by specifying <span class="monospaced">UVRotate</span> command in level script entry, which takes rotation speed as an argument, where speed is amount of pixel shift per each frame, considering fixed 30 FPS framerate (speed value may be negative, and in such cases pixel shift occurs in reverse direction). If such command is found (and
 argument is not zero&#8201;&#8212;&#8201;for example, <span class="monospaced">UVRotate = 4</span>), engine uses special variable value kept in level file, <span class="monospaced">NumUVRotates</span>, to determine if
 animation range belongs to UVRotate mode or classic frames mode. Then, if it belongs to UVRotate mode, each frame of this range is treated as individual
 rotating texture.</p></div>
@@ -6541,10 +6574,9 @@ was used.</p></div>
    <span class="kt">uint16_t</span> <span class="n">Flag</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div></div></div>
-<div class="paragraph"><p><span class="monospaced">X</span>, <span class="monospaced">Y</span> and <span class="monospaced">Z</span> values are coordinates of a given camera or sink. When used with camera, it is an origin point of a camera. When used with sink, it is a point,
-towards which Lara is pushed.</p></div>
+<div class="paragraph"><p><span class="monospaced">X</span>, <span class="monospaced">Y</span> and <span class="monospaced">Z</span> values are coordinates of a given camera or sink. When used with camera, it is an origin point of a camera. When used with sink, it is a point, towards which Lara is pushed.</p></div>
 <div class="paragraph"><p><span class="monospaced">Room</span> value specifies the room where camera is placed. For <em>sink</em> cases, this value is used to define <em>strength of the current</em> which moves Lara underwater.</p></div>
-<div class="paragraph"><p><span class="monospaced">Flag</span> value is unknown for both cameras and sinks. However, there is some info that <span class="monospaced">Flag</span> is re-used for sinks as a <span class="monospaced">Zone[]</span> reference.</p></div>
+<div class="paragraph"><p><span class="monospaced">Flag</span> value <em>for cameras</em> specifies whether it&#8217;s possible to breakout from fixed camera angle. If first bit of this field is set, camera becomes persistent, and it&#8217;s not possible to bypass it with look or draw weapon buttons. For <em>sinks</em>, there is some info that <span class="monospaced">Flag</span> is used as a <span class="monospaced">Zone[]</span> reference.</p></div>
 </div>
 <div class="sect2">
 <h3 id="_flyby_cameras">9.6. Flyby Cameras</h3>
@@ -6563,7 +6595,7 @@ to 5 when moving from one to another.</p></div>
     <span class="kt">int32_t</span> <span class="n">x</span><span class="p">;</span>    <span class="c1">// Camera position</span>
     <span class="kt">int32_t</span> <span class="n">y</span><span class="p">;</span>
     <span class="kt">int32_t</span> <span class="n">z</span><span class="p">;</span>
-    <span class="kt">int32_t</span> <span class="n">dx</span><span class="p">;</span>   <span class="c1">// Camera angles</span>
+    <span class="kt">int32_t</span> <span class="n">dx</span><span class="p">;</span>   <span class="c1">// Camera angles (so called &quot;look at&quot; vector)</span>
     <span class="kt">int32_t</span> <span class="n">dy</span><span class="p">;</span>
     <span class="kt">int32_t</span> <span class="n">dz</span><span class="p">;</span>
 
@@ -6584,11 +6616,11 @@ was raised to 64 in <em>TREP</em>).</p></div>
 <div class="paragraph"><p><span class="monospaced">Index</span> specifies order of the cameras in this particular sequence. Camera with <span class="monospaced">index</span> 0 will be first one in sequence, <span class="monospaced">index</span> 1 means camera will be second
 in sequence, and so on.</p></div>
 <div class="paragraph"><p><span class="monospaced">Room_ID</span> should be valid for a given flyby camera, so it will display properly, as well as have the ability to activate <em>heavy triggers</em>.</p></div>
-<div class="paragraph"><p><span class="monospaced">FOV</span> changes this particular camera&#8217;s field of view.</p></div>
+<div class="paragraph"><p><span class="monospaced">FOV</span> changes this particular camera&#8217;s field of view. The value is 182 times higher than the value entered in the TRLE.</p></div>
 <div class="paragraph"><p><span class="monospaced">Roll</span> changes roll factor of a particular camera. When this parameter is not zero, camera will rotate either left or right along roll axis, creating so-called
-&#8220;dutch angle&#8221;.</p></div>
+&#8220;dutch angle&#8221;. The value is 182 times higher than the value entered in the TRLE.</p></div>
 <div class="paragraph"><p><span class="monospaced">Timer</span> field mainly used to stop camera movement for a given time (in game frames). As this parameter is temporal, it won&#8217;t be interpolated between two cameras.</p></div>
-<div class="paragraph"><p><span class="monospaced">Speed</span> specifies movement speed for this particular camera.</p></div>
+<div class="paragraph"><p><span class="monospaced">Speed</span> specifies movement speed for this particular camera. The value is 655 times higher than the value entered in the TRLE.</p></div>
 <div class="paragraph"><p><span class="monospaced">Flags</span> is an array of bit flags specifying different camera options:</p></div>
 <div class="ulist"><ul>
 <li>
@@ -8525,7 +8557,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-06-24 13:41:45 MSK
+Last updated 2016-10-09 12:46:14 MSK
 </div>
 </div>
 </body>

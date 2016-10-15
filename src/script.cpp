@@ -611,8 +611,6 @@ int Script_ParseScreen(lua_State *lua, struct screen_info_s *sc)
         sc->h = (int16_t)lua_tonumber(lua, -1);
         lua_pop(lua, 1);
 
-        sc->w_unit = (GLfloat)sc->w / SYS_SCREEN_METERING_RESOLUTION;
-        sc->h_unit = (GLfloat)sc->h / SYS_SCREEN_METERING_RESOLUTION;
         lua_getfield(lua, -1, "fullscreen");
         sc->fullscreen = (int8_t)lua_tonumber(lua, -1);
         lua_pop(lua, 1);

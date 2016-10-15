@@ -2543,13 +2543,6 @@ static room_p WorldRoom_FindRealRoomInSequence(room_p room)
 
 void World_GenRoomProperties(class VT_Level *tr)
 {
-    const char *script_dump_name = "scripts_dump.lua";      ///@DEBUG
-    SDL_RWops *f = SDL_RWFromFile(script_dump_name, "w");   ///@DEBUG
-    if(f)
-    {
-        SDL_RWclose(f);
-    }
-
     for(uint32_t i = 0; i < global_world.rooms_count; i++)
     {
         room_p r = global_world.rooms + i;
@@ -2594,7 +2587,6 @@ void World_GenRoomProperties(class VT_Level *tr)
         for(uint32_t j = 0; j < r->sectors_count; j++)
         {
             Res_Sector_TranslateFloorData(global_world.rooms, global_world.rooms_count, r->sectors + j, tr);
-            Trigger_BuildScripts(r->sectors[j].trigger, r->sectors[j].trig_index, script_dump_name);
         }
 
         // Generate links to the near rooms.
