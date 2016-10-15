@@ -1274,6 +1274,7 @@ function oldspike_init(id)  -- Teeth spikes
             if(lz > (pz + 256.0)) then
                 local sx,sy,sz = getEntitySpeed(activator_id);
                 if(sz < -256.0) then
+                    stopSound(SOUND_LARASCREAM, activator_id);
                     setEntityCollision(object_id, 0);
                     setEntityAnim(activator_id, ANIM_TYPE_BASE, 149, 0);
                     setEntityPos(activator_id, lx, ly, pz);
@@ -1432,6 +1433,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
             -- Lara being "impaled" into thin air.
             
             if(entity_funcs[object_id].curr_timer <= 10) then
+                stopSound(SOUND_LARASCREAM, activator_id);
                 setEntityAnim(activator_id, ANIM_TYPE_BASE, 149, 0);
                 setCharacterParam(activator_id, PARAM_HEALTH, 0);
                 entity_funcs[object_id].mode = 1;
@@ -1450,6 +1452,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
             if(lz > (pz + 256.0)) then
                 local sx,sy,sz = getEntitySpeed(activator_id);
                 if(sz < -256.0) then
+                    stopSound(SOUND_LARASCREAM, activator_id);
                     addEntityRagdoll(activator_id, RD_TYPE_LARA);
                     setCharacterParam(activator_id, PARAM_HEALTH, 0);
                     playSound(SOUND_IMPALE, activator_id);

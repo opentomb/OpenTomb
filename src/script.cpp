@@ -3171,6 +3171,7 @@ int lua_GetEntityOrientation(lua_State * lua)
         float theta = (atan2(-facing[0], facing[1])) * (360.0 / M_PI_2);
         if(add_angle_ != 0.0) theta += add_angle_;
 
+        //lua_pushnumber(lua, WrapAngle(ent2->angles[0] - theta));  // IMPLEMENT IT!
         lua_pushnumber(lua, (ent2->angles[0] - theta));
 
         return 1;
