@@ -2369,6 +2369,7 @@ void World_GenRoomProperties(class VT_Level *tr)
         for(uint32_t j = 0; j < r->sectors_count; j++)
         {
             Res_Sector_TranslateFloorData(global_world.rooms, global_world.rooms_count, r->sectors + j, tr);
+            Res_Sector_FixHeights(r->sectors + j);
             Trigger_BuildScripts(r->sectors[j].trigger, r->sectors[j].trig_index, script_dump_name);
         }
 

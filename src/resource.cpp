@@ -1139,6 +1139,11 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
     }
     while(!fd_command.end_bit && (current_offset < max_offset));
 
+    return ret;
+}
+
+void Res_Sector_FixHeights(struct room_sector_s *sector)
+{
     if(sector->floor == TR_METERING_WALLHEIGHT)
     {
         sector->floor_penetration_config = TR_PENETRATION_CONFIG_WALL;
@@ -1147,8 +1152,13 @@ int Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, st
     {
         sector->ceiling_penetration_config = TR_PENETRATION_CONFIG_WALL;
     }
+    // Fix non-material crevices
 
-    return ret;
+    for(size_t i = 0; i < 4; i++)
+    {
+        if(sector->ceiling_corners[i][2] == sector->floor_corners[i][2])
+            sector->ceiling_corners[i][2] += LARA_HANG_WALL_DISTANCE;
+    }
 }
 
 /**   Assign animated texture to a polygon.

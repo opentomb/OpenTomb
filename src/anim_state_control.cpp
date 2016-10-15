@@ -25,28 +25,6 @@
 #include "resource.h"
 #include "controls.h"
 
-/*
- * WALL CLIMB:
- * preframe do {save pos}
- * postframe do {if(out) {load pos; do command;}}
- */
-
-#define LEFT_LEG                    (3)
-#define RIGHT_LEG                   (6)
-
-#define PENETRATION_TEST_OFFSET     (48.0)        ///@TODO: tune it!
-#define WALK_FORWARD_OFFSET         (96.0)        ///@FIXME: find real offset
-#define WALK_BACK_OFFSET            (16.0)
-#define WALK_FORWARD_STEP_UP        (256.0)       // by bone frame bb
-#define RUN_FORWARD_OFFSET          (128.0)       ///@FIXME: find real offset
-#define RUN_FORWARD_STEP_UP         (320.0)       // by bone frame bb
-#define CRAWL_FORWARD_OFFSET        (256.0)
-#define LARA_HANG_WALL_DISTANCE     (128.0 - 24.0)
-#define LARA_HANG_VERTICAL_EPSILON  (64.0)
-#define LARA_HANG_VERTICAL_OFFSET   (12.0)        // in original is 0, in real life hands are little more higher than edge
-#define LARA_TRY_HANG_WALL_OFFSET   (72.0)        // It works more stable than 32 or 128
-#define LARA_HANG_SENSOR_Z          (800.0)       // It works more stable than 1024 (after collision critical fix, of course)
-
 #define OSCILLATE_HANG_USE 0
 
 void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim)
@@ -592,7 +570,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_JUMP_PREPARE:
-            ent->no_fix_skeletal_parts = BODY_PART_LEGS | BODY_PART_HANDS | BODY_PART_HEAD;
+            ent->no_fix_all = 0x01;
             cmd->rot[0] = 0;
             Character_Lean(ent, cmd, 0.0);
 
@@ -1827,7 +1805,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             /*other code here prevents to UGLY Lara's move in end of "climb on", do not loose ent_set_on_floor_after_climb callback here!*/
         case TR_STATE_LARA_HANDSTAND:
-        case TR_STATE_LARA_GRABBING:
+        case TR_STATE_LARA_CLIMBING:
         case TR_STATE_LARA_CLIMB_TO_CRAWL:
             cmd->rot[0] = 0;
             ent->no_fix_all = 0x01;
@@ -1927,7 +1905,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     else if(climb->edge_hit && (climb->next_z_space >= ent->character->Height - LARA_HANG_VERTICAL_EPSILON))
                     {
                         vec3_copy(climb->point, climb->edge_point);
-                        ss_anim->next_state = (cmd->shift)?(TR_STATE_LARA_HANDSTAND):(TR_STATE_LARA_GRABBING);               // climb up
+                        ss_anim->next_state = (cmd->shift)?(TR_STATE_LARA_HANDSTAND):(TR_STATE_LARA_CLIMBING);               // climb up
                         ss_anim->onEndFrame = ent_to_edge_climb;
                     }
                     else
@@ -1999,7 +1977,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->character->cam_follow_center = 64;
             if(ent->move_type == MOVE_CLIMBING)
             {
-                ss_anim->next_state = TR_STATE_LARA_GRABBING;
+                ss_anim->next_state = TR_STATE_LARA_CLIMBING;
                 break;
             }
             if(!clean_action)
@@ -2025,7 +2003,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 if(climb->edge_hit && (climb->next_z_space >= 512.0))
                 {
                     ent->move_type = MOVE_CLIMBING;
-                    ss_anim->next_state = TR_STATE_LARA_GRABBING;
+                    ss_anim->next_state = TR_STATE_LARA_CLIMBING;
                 }
                 else if((!curr_fc->ceiling_hit.hit) || (pos[2] + ent->bf->bb_max[2] < curr_fc->ceiling_hit.point[2]))
                 {

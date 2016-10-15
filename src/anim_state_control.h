@@ -5,6 +5,23 @@
 struct ss_animation_s;
 struct entity_s;
 
+#define LEFT_LEG                    (3)
+#define RIGHT_LEG                   (6)
+
+#define PENETRATION_TEST_OFFSET     (48.0)        ///@TODO: tune it!
+#define WALK_FORWARD_OFFSET         (96.0)        ///@FIXME: find real offset
+#define WALK_BACK_OFFSET            (16.0)
+#define WALK_FORWARD_STEP_UP        (256.0)       // by bone frame bb
+#define RUN_FORWARD_OFFSET          (128.0)       ///@FIXME: find real offset
+#define RUN_FORWARD_STEP_UP         (320.0)       // by bone frame bb
+#define CRAWL_FORWARD_OFFSET        (256.0)
+#define LARA_HANG_WALL_DISTANCE     (128.0 - 24.0)
+#define LARA_HANG_VERTICAL_EPSILON  (64.0)
+#define LARA_HANG_VERTICAL_OFFSET   (12.0)        // in original is 0, in real life hands are little more higher than edge
+#define LARA_TRY_HANG_WALL_OFFSET   (72.0)        // It works more stable than 32 or 128
+#define LARA_HANG_SENSOR_Z          (800.0)       // It works more stable than 1024 (after collision critical fix, of course)
+
+
 /*
  * SURFACE MOVEMENT DIRECTIONS
  */
@@ -558,7 +575,7 @@ struct entity_s;
 #define TR_STATE_LARA_WALK_BACK 16
 #define TR_STATE_LARA_UNDERWATER_FORWARD 17
 #define TR_STATE_LARA_UNDERWATER_INERTIA 18
-#define TR_STATE_LARA_GRABBING 19
+#define TR_STATE_LARA_CLIMBING 19
 #define TR_STATE_LARA_TURN_FAST 20
 #define TR_STATE_LARA_WALK_RIGHT 21
 #define TR_STATE_LARA_WALK_LEFT 22
