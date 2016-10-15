@@ -405,7 +405,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     case TR_FD_TRIGFUNC_SET_CAMERA:
                         if(!is_heavy || (activator_sector_status == 0))
                         {
-                            Game_SetCamera(command->cam_index, command->once, command->cam_move, command->cam_timer);
+                            Game_SetCamera(command->camera.index, command->once, command->camera.move, command->camera.timer);
                         }
                         break;
 
@@ -686,7 +686,7 @@ void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, cons
 
                 case TR_FD_TRIGFUNC_SET_CAMERA:
                     {
-                        snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", command->cam_index, command->cam_timer, command->once, command->cam_move);
+                        snprintf(buf, 128, "   setCamera(%d, %d, %d, %d); \n", command->camera.index, command->camera.timer, command->once, command->camera.move);
                         strncat(single_events, buf, 4096);
                     }
                     break;

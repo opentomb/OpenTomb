@@ -2643,15 +2643,17 @@ int lua_SectorAddTriggerCommand(lua_State * lua)
     cmd->function = lua_tointeger(lua, 4);
     cmd->operands = lua_tointeger(lua, 5);
     cmd->once = lua_tointeger(lua, 6);
-    cmd->cam_index = 0;
-    cmd->cam_move = 0;
-    cmd->cam_timer = 0;
+    cmd->camera.index = 0;
+    cmd->camera.move = 0;
+    cmd->camera.timer = 0;
+    cmd->camera.unused = 0;
 
     if(top >= 9)
     {
-        cmd->cam_index = lua_tointeger(lua, 7);
-        cmd->cam_move = lua_tointeger(lua, 8);
-        cmd->cam_timer = lua_tointeger(lua, 9);
+        cmd->camera.index = lua_tointeger(lua, 7);
+        cmd->camera.move =  lua_tointeger(lua, 8);
+        cmd->camera.timer = lua_tointeger(lua, 9);
+        cmd->camera.unused = 0;
     }
 
     trigger_command_p *last = &rs->trigger->commands;

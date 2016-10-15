@@ -114,9 +114,7 @@ extern struct camera_state_s                 engine_camera_state;
 
 engine_container_p Container_Create();
 
-
-void Engine_Start(const char *config_name);
-void Engine_ParseArgs(int argc, char **argv);
+void Engine_Start(int argc, char **argv);
 void Engine_Shutdown(int val) __attribute__((noreturn));
 void Engine_SetDone();
 void Engine_LoadConfig(const char *filename);
