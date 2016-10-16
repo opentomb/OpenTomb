@@ -43,7 +43,7 @@ public:
 
     uint8_t             getCurrentGameID();
     uint8_t             getCurrentLevelID();
-    const char*         getCurrentLevelName();
+    const char*         getCurrentLevelName(); ///@TODO: delete unused function!
     const char*         getCurrentLevelPathGlobal();
     const char*         getCurrentLevelPathLocal();
     char                getSecretStateAtIndex(int index);

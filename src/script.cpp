@@ -5341,6 +5341,9 @@ void Script_LoadConstants(lua_State *lua)
         lua_pushinteger(lua, ENTITY_TRIGGERING_NOT_READY);
         lua_setglobal(lua, "ENTITY_TRIGGERING_NOT_READY");
 
+        lua_pushstring(lua, Engine_GetBasePath());
+        lua_setglobal(lua, "base_path");
+
         lua_settop(lua, top);
     }
 }
@@ -5352,11 +5355,6 @@ bool Script_LuaInit()
 
     if(engine_lua != NULL)
     {
-        int top = lua_gettop(engine_lua);
-        lua_pushstring(engine_lua, Engine_GetBasePath());
-        lua_setglobal(engine_lua, "base_path");
-        lua_settop(engine_lua, top);
-
         luaL_openlibs(engine_lua);
         Script_LoadConstants(engine_lua);
         Script_LuaRegisterFuncs(engine_lua);
@@ -5379,7 +5377,7 @@ int Script_DoLuaFile(lua_State *lua, const char *local_path)
     char script_path[1024];
     strncpy(script_path, Engine_GetBasePath(), sizeof(script_path));
     strncat(script_path, local_path, sizeof(script_path));
-    return luaL_dofile(engine_lua, script_path);
+    return luaL_dofile(lua, script_path);
 }
 
 

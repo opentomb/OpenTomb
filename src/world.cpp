@@ -1246,15 +1246,8 @@ void World_ScriptsOpen()
     {
         luaL_openlibs(global_world.objects_flags_conf);
         Script_LoadConstants(global_world.objects_flags_conf);
-        int lua_err = luaL_loadfile(global_world.objects_flags_conf, "scripts/entity/entity_properties.lua");
-        if(lua_err)
-        {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(global_world.objects_flags_conf, -1));
-            lua_pop(global_world.objects_flags_conf, 1);
-            lua_close(global_world.objects_flags_conf);
-            global_world.objects_flags_conf = NULL;
-        }
-        lua_err = lua_pcall(global_world.objects_flags_conf, 0, 0, 0);
+        lua_register(global_world.objects_flags_conf, "print", lua_print);
+        int lua_err = Script_DoLuaFile(global_world.objects_flags_conf, "scripts/entity/entity_properties.lua");
         if(lua_err)
         {
             Sys_DebugLog("lua_out.txt", "%s", lua_tostring(global_world.objects_flags_conf, -1));
@@ -1269,15 +1262,8 @@ void World_ScriptsOpen()
     {
         luaL_openlibs(global_world.ent_ID_override);
         Script_LoadConstants(global_world.ent_ID_override);
-        int lua_err = luaL_loadfile(global_world.ent_ID_override, "scripts/entity/entity_model_ID_override.lua");
-        if(lua_err)
-        {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(global_world.ent_ID_override, -1));
-            lua_pop(global_world.ent_ID_override, 1);
-            lua_close(global_world.ent_ID_override);
-            global_world.ent_ID_override = NULL;
-        }
-        lua_err = lua_pcall(global_world.ent_ID_override, 0, 0, 0);
+        lua_register(global_world.ent_ID_override, "print", lua_print);
+        int lua_err = Script_DoLuaFile(global_world.ent_ID_override, "scripts/entity/entity_model_ID_override.lua");
         if(lua_err)
         {
             Sys_DebugLog("lua_out.txt", "%s", lua_tostring(global_world.ent_ID_override, -1));
