@@ -7,8 +7,8 @@ extern "C" {
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
-#include <AL/al.h>
-#include <AL/alc.h>
+#include <al.h>
+#include <alc.h>
 }
 
 #include "core/system.h"
@@ -650,8 +650,6 @@ int Script_ParseScreen(lua_State *lua, struct screen_info_s *sc)
         sc->h = (int16_t)lua_tonumber(lua, -1);
         lua_pop(lua, 1);
 
-        sc->w_unit = (GLfloat)sc->w / SYS_SCREEN_METERING_RESOLUTION;
-        sc->h_unit = (GLfloat)sc->h / SYS_SCREEN_METERING_RESOLUTION;
         lua_getfield(lua, -1, "fullscreen");
         sc->fullscreen = (int8_t)lua_tonumber(lua, -1);
         lua_pop(lua, 1);
@@ -1021,7 +1019,7 @@ int lua_DumpRoom(lua_State * lua)
     {
         room_sector_p rs = r->sectors;
         Sys_DebugLog("room_dump.txt", "ROOM = %d, (%d x %d), bottom = %g, top = %g, pos(%g, %g)", r->id, r->sectors_x, r->sectors_y, r->bb_min[2], r->bb_max[2], r->transform[12 + 0], r->transform[12 + 1]);
-        Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room != NULL) ? (r->alternate_room->id) : (-1), (r->base_room != NULL) ? (r->base_room->id) : (-1));
+        Sys_DebugLog("room_dump.txt", "flag = 0x%X, alt_room = %d, base_room = %d", r->flags, (r->alternate_room_next != NULL) ? (r->alternate_room_next->id) : (-1), (r->alternate_room_prev != NULL) ? (r->alternate_room_prev->id) : (-1));
         for(uint32_t i = 0; i < r->sectors_count; i++, rs++)
         {
             Sys_DebugLog("room_dump.txt", "(%d,%d)\tfloor = %d, ceiling = %d, portal = %d", rs->index_x, rs->index_y, rs->floor, rs->ceiling, (rs->portal_to_room) ? (rs->portal_to_room->id) : (-1));
@@ -2592,8 +2590,8 @@ int lua_SimilarSector(lua_State * lua)
     room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
     room_sector_p next_sector = Room_GetSectorRaw(ent->self->room, next_pos);
 
-    curr_sector = Sector_GetPortalSectorTarget(curr_sector);
-    next_sector = Sector_GetPortalSectorTarget(next_sector);
+    curr_sector = Sector_GetPortalSectorTargetRaw(curr_sector);
+    next_sector = Sector_GetPortalSectorTargetRaw(next_sector);
 
     bool ignore_doors = lua_toboolean(lua, 5);
 
@@ -2647,7 +2645,7 @@ int lua_GetSectorHeight(lua_State * lua)
     }
 
     room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, pos);
-    curr_sector = Sector_GetPortalSectorTarget(curr_sector);
+    curr_sector = Sector_GetPortalSectorTargetRaw(curr_sector);
     float point[3];
     (ceiling) ? (Sector_LowestCeilingCorner(curr_sector, point)) : (Sector_HighestFloorCorner(curr_sector, point));
 
@@ -2767,15 +2765,17 @@ int lua_SectorAddTriggerCommand(lua_State * lua)
     cmd->function = lua_tointeger(lua, 4);
     cmd->operands = lua_tointeger(lua, 5);
     cmd->once = lua_tointeger(lua, 6);
-    cmd->cam_index = 0;
-    cmd->cam_move = 0;
-    cmd->cam_timer = 0;
+    cmd->camera.index = 0;
+    cmd->camera.move = 0;
+    cmd->camera.timer = 0;
+    cmd->camera.unused = 0;
 
     if(top >= 9)
     {
-        cmd->cam_index = lua_tointeger(lua, 7);
-        cmd->cam_move = lua_tointeger(lua, 8);
-        cmd->cam_timer = lua_tointeger(lua, 9);
+        cmd->camera.index = lua_tointeger(lua, 7);
+        cmd->camera.move =  lua_tointeger(lua, 8);
+        cmd->camera.timer = lua_tointeger(lua, 9);
+        cmd->camera.unused = 0;
     }
 
     trigger_command_p *last = &rs->trigger->commands;

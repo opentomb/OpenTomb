@@ -87,6 +87,7 @@ void Physics_SetGhostCollisionShape(struct physics_data_s *physics, uint16_t ind
 void Physics_GenEntityRigidBody(struct entity_s *ent);
 void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh);
 void Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens, int num_tweens);
+void Physics_SetOwnerObject(struct physics_object_s *obj, struct engine_container_s *self);
 void Physics_DeleteObject(struct physics_object_s *obj);
 void Physics_EnableObject(struct physics_object_s *obj);
 void Physics_DisableObject(struct physics_object_s *obj);

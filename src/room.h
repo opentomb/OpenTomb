@@ -136,11 +136,11 @@ typedef struct room_sector_s
     int32_t                     ceiling;
 
     struct trigger_header_s    *trigger;
-    struct room_sector_s       *sector_below;
-    struct room_sector_s       *sector_above;
     struct room_s              *owner_room;    // Room that contain this sector
     struct room_s              *portal_to_room;
 
+    struct room_s              *room_below;
+    struct room_s              *room_above;
     int16_t                     index_x;
     int16_t                     index_y;
     float                       pos[3];
@@ -223,12 +223,13 @@ typedef struct room_s
     uint32_t                    id;                                             // room's ID
     uint32_t                    flags;                                          // room's type + water, wind info
 
-    int8_t                      is_in_r_list;                                   // is room in render list
-    int8_t                      active;
+    uint8_t                     is_in_r_list;                                   // is room in render list
+    uint8_t                     is_swapped;
     uint16_t                    portals_count;                                  // number of room portals
     struct portal_s            *portals;                                        // room portals array
-    struct room_s              *alternate_room;                                 // alternative room pointer
-    struct room_s              *base_room;                                      // base room == room->alternate_room->base_room
+    struct room_s              *alternate_room_next;                            // alternative room pointer
+    struct room_s              *alternate_room_prev;                            // alternative room pointer
+    struct room_s              *real_room;                                      // real room, using in game
     struct frustum_s           *frustum;
 
     struct obb_s               *obb;
@@ -256,11 +257,9 @@ void Room_Disable(struct room_s *room);
 int  Room_AddObject(struct room_s *room, struct engine_container_s *cont);
 int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont);
 
-void Room_SwapRoomToBase(struct room_s *room);
-void Room_SwapRoomToAlternate(struct room_s *room);
+void Room_SwapContent(struct room_s *room1, struct room_s *room2);
 
 struct room_sector_s *Room_GetSectorRaw(struct room_s *room, float pos[3]);
-struct room_sector_s *Room_GetSectorCheckFlip(struct room_s *room, float pos[3]);
 struct room_sector_s *Room_GetSectorXYZ(struct room_s *room, float pos[3]);
 
 void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r);
@@ -269,20 +268,13 @@ int  Room_IsOverlapped(struct room_s *r0, struct room_s *r1);
 int  Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1);
 void Room_MoveActiveItems(struct room_s *room_to, struct room_s *room_from);
 
-struct room_s *Room_CheckFlip(struct room_s *r);
-
 // NOTE: Functions which take native TR level structures as argument will have
 // additional _TR_ prefix. Functions which doesn't use specific TR structures
 // should NOT use such prefix!
 void Room_GenSpritesBuffer(struct room_s *room);
 
-struct room_sector_s *Sector_CheckBaseRoom(struct room_sector_s *rs);
-struct room_sector_s *Sector_CheckAlternateRoom(struct room_sector_s *rs);
 struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs);
-struct room_sector_s *Sector_GetPortalSectorTarget(struct room_sector_s *rs);
-int Sectors_Is2SidePortals(struct room_sector_s *s1, struct room_sector_s *s2);
 
-struct room_sector_s *Sector_CheckFlip(struct room_sector_s *rs);
 struct room_sector_s *Sector_GetLowest(struct room_sector_s *sector);
 struct room_sector_s *Sector_GetHighest(struct room_sector_s *sector);
 

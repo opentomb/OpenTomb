@@ -109,17 +109,22 @@
 #define ENTITY_TRIGGERING_DEACTIVATED  (1)
 #define ENTITY_TRIGGERING_NOT_READY    (2)
 
-struct lua_State;
-
 typedef struct trigger_command_s
 {
-    uint16_t                        function;
-    uint16_t                        operands;
-    uint8_t                         once;
-    uint8_t                         cam_index;
-    uint8_t                         cam_timer;
-    uint8_t                         cam_move;
-    struct trigger_command_s       *next;
+    uint16_t                    function;
+    uint16_t                    operands;
+    struct
+    {
+        uint8_t                 index;
+        uint8_t                 timer;
+        uint8_t                 move;
+        uint8_t                 unused;
+    } camera;
+
+    uint8_t                     once;
+    uint8_t                     unused;
+    
+    struct trigger_command_s   *next;
 }trigger_command_t, *trigger_command_p;
 
 
@@ -134,7 +139,6 @@ typedef struct trigger_header_s
 }trigger_header_t, *trigger_header_p;
 
 
-void Trigger_BuildScripts(trigger_header_p trigger, uint32_t trigger_index, const char *file_name);
 void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *ent);
 
 void Trigger_TrigMaskToStr(char buf[8], uint8_t flag);

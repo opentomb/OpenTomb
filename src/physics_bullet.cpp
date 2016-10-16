@@ -75,8 +75,8 @@ public:
                 rs = ent->current_sector;
             }
             if(Room_IsInNearRoomsList(r0, r1) ||
-               (rs && rs->sector_above && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_above->owner_room))) ||
-               (rs && rs->sector_below && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_below->owner_room))))
+               (rs && rs->room_above && Room_IsInNearRoomsList(r0, rs->room_above)) ||
+               (rs && rs->room_below && Room_IsInNearRoomsList(r0, rs->room_below)))
             {
                 return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
             }
@@ -131,8 +131,8 @@ public:
                 rs = ent->current_sector;
             }
             if(Room_IsInNearRoomsList(r0, r1) ||
-               (rs && rs->sector_above && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_above->owner_room))) ||
-               (rs && rs->sector_below && Room_IsInNearRoomsList(r0, Room_CheckFlip(rs->sector_below->owner_room))))
+               (rs && rs->room_above && Room_IsInNearRoomsList(r0, rs->room_above)) ||
+               (rs && rs->room_below && Room_IsInNearRoomsList(r0, rs->room_below)))
             {
                 return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
             }
@@ -239,7 +239,7 @@ void Physics_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
 btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max);
 btCollisionShape* BT_CSfromSphere(btScalar radius);
 btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
-btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh);
+btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, uint32_t sectors_count, struct sector_tween_s *tweens, uint32_t tweens_count, bool useCompression, bool buildBvh);
 
 uint32_t BT_AddFloorAndCeilingToTrimesh(btTriangleMesh *trimesh, struct room_sector_s *sector);
 uint32_t BT_AddSectorTweenToTrimesh(btTriangleMesh *trimesh, struct sector_tween_s *tween);
@@ -1132,19 +1132,18 @@ uint32_t BT_AddSectorTweenToTrimesh(btTriangleMesh *trimesh, struct sector_tween
 
 
 ///@TODO: resolve cases with floor >> ceiling (I.E. floor - ceiling >= 2048)
-btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, struct sector_tween_s *tweens, int tweens_size, bool useCompression, bool buildBvh)
+btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, uint32_t sectors_count, struct sector_tween_s *tweens, uint32_t tweens_count, bool useCompression, bool buildBvh)
 {
     uint32_t cnt = 0;
-    room_p r = heightmap->owner_room;
     btTriangleMesh *trimesh = new btTriangleMesh;
     btCollisionShape* ret = NULL;
 
-    for(uint32_t i = 0; i < r->sectors_count; i++)
+    for(uint32_t i = 0; i < sectors_count; i++)
     {
         cnt += BT_AddFloorAndCeilingToTrimesh(trimesh, heightmap + i);
     }
 
-    for(int i = 0; i < tweens_size; i++)
+    for(uint32_t i = 0; i < tweens_count; i++)
     {
         cnt += BT_AddSectorTweenToTrimesh(trimesh, tweens + i);
     }
@@ -1436,7 +1435,7 @@ void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh)
 
 void Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens, int num_tweens)
 {
-    btCollisionShape *cshape = BT_CSfromHeightmap(room->sectors, tweens, num_tweens, true, true);
+    btCollisionShape *cshape = BT_CSfromHeightmap(room->sectors, room->sectors_count, tweens, num_tweens, true, true);
     room->content->physics_body = NULL;
 
     if(cshape)
@@ -1495,6 +1494,15 @@ void Physics_GenEntityRigidBody(struct entity_s *ent)
 }
 
 
+void Physics_SetOwnerObject(struct physics_object_s *obj, struct engine_container_s *self)
+{
+    if(obj && obj->bt_body)
+    {
+        obj->bt_body->setUserPointer(self);
+    }
+}
+
+
 void Physics_DeleteObject(struct physics_object_s *obj)
 {
     if(obj)
@@ -1520,13 +1528,19 @@ void Physics_DeleteObject(struct physics_object_s *obj)
 
 void Physics_EnableObject(struct physics_object_s *obj)
 {
-    bt_engine_dynamicsWorld->addRigidBody(obj->bt_body);
+    if(obj->bt_body && !obj->bt_body->isInWorld())
+    {
+        bt_engine_dynamicsWorld->addRigidBody(obj->bt_body);
+    }
 }
 
 
 void Physics_DisableObject(struct physics_object_s *obj)
 {
-    bt_engine_dynamicsWorld->removeRigidBody(obj->bt_body);
+    if(obj->bt_body && obj->bt_body->isInWorld())
+    {
+        bt_engine_dynamicsWorld->removeRigidBody(obj->bt_body);
+    }
 }
 
 

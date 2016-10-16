@@ -5,7 +5,7 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-    
+
 #include <stdint.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
@@ -29,9 +29,7 @@ typedef struct screen_info_s
     int16_t     y;
     int16_t     w;
     int16_t     h;
-    GLfloat     w_unit;   // Metering unit.
-    GLfloat     h_unit;   // Metering unit.
-    
+
     float       fps;
     float       fov;
     float       scale_factor;
