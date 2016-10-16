@@ -3253,13 +3253,13 @@ int lua_SetEntitySpeed(lua_State * lua)
 }
 
 
-int lua_SetEntityLinearSpeed(lua_State * lua)
+int lua_SetEntitySpeedLinear(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
     if(top < 2)
     {
-        Con_Warning("setEntityLinearSpeed: expecting arguments (id, speed");
+        Con_Warning("setEntitySpeedLinear: expecting arguments (id, speed");
         return 0;
     }
 
@@ -5822,7 +5822,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityScaling", lua_SetEntityScaling);
     lua_register(lua, "getEntitySpeed", lua_GetEntitySpeed);
     lua_register(lua, "setEntitySpeed", lua_SetEntitySpeed);
-    lua_register(lua, "setEntityLinearSpeed", lua_SetEntityLinearSpeed);
+    lua_register(lua, "setEntitySpeedLinear", lua_SetEntitySpeedLinear);
     lua_register(lua, "getEntitySpeedLinear", lua_GetEntitySpeedLinear);
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
     lua_register(lua, "setEntityGhostCollisionShape", lua_SetEntityGhostCollisionShape);

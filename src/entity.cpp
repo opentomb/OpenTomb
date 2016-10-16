@@ -745,12 +745,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                     // Effects (flipeffects) are various non-typical actions which vary
                     // across different TR game engine versions. There are common ones,
                     // however, and currently only these are supported.
-                    {
-                        entity_p player    = World_GetPlayer();
-                        uint16_t effect_id = effect->data & 0x3FFF;
-
-                        if(effect_id > 0) Script_ExecEffect(engine_lua, effect_id, entity->id);
-                    }
+                    Script_ExecEffect(engine_lua, effect->data & 0x3FFF, entity->id);
                     break;
             }
         }

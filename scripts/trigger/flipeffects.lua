@@ -39,6 +39,16 @@ end;
 
 -- FLIPEFFECTS IMPLEMENTATION
 
+
+flipeffects[0] = {  -- Change direction
+
+    onExec =
+    function(caller, operand)
+        rotateEntity(caller, 180.0);
+    end;
+};
+fe_Assign(1, 0,0); fe_Assign(2, 0,0); fe_Assign(3, 0,0); fe_Assign(4, 0,0); fe_Assign(5, 0,0);
+
 flipeffects[1] = {  -- Shake camera
 
     onExec =
