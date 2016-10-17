@@ -7,13 +7,17 @@
 //
 
 #include "shader_description.h"
+#include "../engine.h"
 
 #include <stdlib.h>
 
 shader_stage::shader_stage(GLenum type, const char *filename, const char *additionalDefines)
 {
+    char shader_path[1024];
+    strncpy(shader_path, Engine_GetBasePath(), sizeof(shader_path));
+    strncat(shader_path, filename, sizeof(shader_path));
     shader = qglCreateShaderObjectARB(type);
-    if (!loadShaderFromFile(shader, filename, additionalDefines))
+    if (!loadShaderFromFile(shader, shader_path, additionalDefines))
         abort();
 }
 

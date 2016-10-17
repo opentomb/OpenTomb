@@ -116,6 +116,7 @@ engine_container_p Container_Create();
 
 void Engine_Start(int argc, char **argv);
 void Engine_Shutdown(int val) __attribute__((noreturn));
+const char *Engine_GetBasePath();
 void Engine_SetDone();
 void Engine_LoadConfig(const char *filename);
 void Engine_SaveConfig(const char *filename);
@@ -132,7 +133,7 @@ bool Engine_LoadPCLevel(const char *name);
 
 void Engine_TakeScreenShot();
 void Engine_GetLevelName(char *name, const char *path);
-void Engine_GetLevelScriptName(int game_version, char *name, const char *postfix, uint32_t buf_size);
+void Engine_GetLevelScriptNameLocal(int game_version, char *name, const char *postfix, uint32_t buf_size);
 int  Engine_LoadMap(const char *name);
 
 extern "C" int  Engine_ExecCmd(char *ch);

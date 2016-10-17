@@ -289,7 +289,7 @@ bool Script_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_n
 }
 
 
-bool Script_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *load_method, int *stream_type)
+bool Script_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int file_path_len, int *load_method, int *stream_type)
 {
     bool result = false;
 
@@ -314,7 +314,8 @@ bool Script_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int 
                 // Lua returns constant string pointer, which we can't assign to
                 // provided argument; so we need to straightly copy it.
 
-                strncpy(file_path, real_path, 255);
+                strncpy(file_path, Engine_GetBasePath(), file_path_len);
+                strncat(file_path, real_path, file_path_len);
 
                 if(*stream_type != -1)
                 {
@@ -5340,6 +5341,9 @@ void Script_LoadConstants(lua_State *lua)
         lua_pushinteger(lua, ENTITY_TRIGGERING_NOT_READY);
         lua_setglobal(lua, "ENTITY_TRIGGERING_NOT_READY");
 
+        lua_pushstring(lua, Engine_GetBasePath());
+        lua_setglobal(lua, "base_path");
+
         lua_settop(lua, top);
     }
 }
@@ -5357,8 +5361,7 @@ bool Script_LuaInit()
         lua_atpanic(engine_lua, lua_LuaPanic);
 
         // Load script loading order (sic!)
-
-        luaL_dofile(engine_lua, "scripts/loadscript.lua");
+        Script_DoLuaFile(engine_lua, "scripts/loadscript.lua");
 
         return true;
     }
@@ -5366,6 +5369,15 @@ bool Script_LuaInit()
     {
         return false;
     }
+}
+
+
+int Script_DoLuaFile(lua_State *lua, const char *local_path)
+{
+    char script_path[1024];
+    strncpy(script_path, Engine_GetBasePath(), sizeof(script_path));
+    strncat(script_path, local_path, sizeof(script_path));
+    return luaL_dofile(lua, script_path);
 }
 
 

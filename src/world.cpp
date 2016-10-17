@@ -1215,9 +1215,6 @@ int lua_SetSectorFlags(lua_State * lua)
 
 void World_ScriptsOpen()
 {
-    char temp_script_name[256];
-    Engine_GetLevelScriptName(global_world.version, temp_script_name, NULL, 256);
-
     global_world.level_script = luaL_newstate();
     if(global_world.level_script)
     {
@@ -1229,11 +1226,11 @@ void World_ScriptsOpen()
         lua_register(global_world.level_script, "setSectorPortal", lua_SetSectorPortal);
         lua_register(global_world.level_script, "setSectorFlags", lua_SetSectorFlags);
 
-        luaL_dofile(global_world.level_script, "scripts/staticmesh/staticmesh_script.lua");
-
-        if(Sys_FileFound(temp_script_name, 0))
+        Script_DoLuaFile(global_world.level_script, "scripts/staticmesh/staticmesh_script.lua");
         {
-            int lua_err = luaL_dofile(global_world.level_script, temp_script_name);
+            char temp_script_name[1024];
+            Engine_GetLevelScriptNameLocal(global_world.version, temp_script_name, NULL, sizeof(temp_script_name));
+            int lua_err = Script_DoLuaFile(global_world.level_script, temp_script_name);
             if(lua_err)
             {
                 Sys_DebugLog("lua_out.txt", "%s", lua_tostring(global_world.level_script, -1));
@@ -1249,15 +1246,8 @@ void World_ScriptsOpen()
     {
         luaL_openlibs(global_world.objects_flags_conf);
         Script_LoadConstants(global_world.objects_flags_conf);
-        int lua_err = luaL_loadfile(global_world.objects_flags_conf, "scripts/entity/entity_properties.lua");
-        if(lua_err)
-        {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(global_world.objects_flags_conf, -1));
-            lua_pop(global_world.objects_flags_conf, 1);
-            lua_close(global_world.objects_flags_conf);
-            global_world.objects_flags_conf = NULL;
-        }
-        lua_err = lua_pcall(global_world.objects_flags_conf, 0, 0, 0);
+        lua_register(global_world.objects_flags_conf, "print", lua_print);
+        int lua_err = Script_DoLuaFile(global_world.objects_flags_conf, "scripts/entity/entity_properties.lua");
         if(lua_err)
         {
             Sys_DebugLog("lua_out.txt", "%s", lua_tostring(global_world.objects_flags_conf, -1));
@@ -1272,15 +1262,8 @@ void World_ScriptsOpen()
     {
         luaL_openlibs(global_world.ent_ID_override);
         Script_LoadConstants(global_world.ent_ID_override);
-        int lua_err = luaL_loadfile(global_world.ent_ID_override, "scripts/entity/entity_model_ID_override.lua");
-        if(lua_err)
-        {
-            Sys_DebugLog("lua_out.txt", "%s", lua_tostring(global_world.ent_ID_override, -1));
-            lua_pop(global_world.ent_ID_override, 1);
-            lua_close(global_world.ent_ID_override);
-            global_world.ent_ID_override = NULL;
-        }
-        lua_err = lua_pcall(global_world.ent_ID_override, 0, 0, 0);
+        lua_register(global_world.ent_ID_override, "print", lua_print);
+        int lua_err = Script_DoLuaFile(global_world.ent_ID_override, "scripts/entity/entity_model_ID_override.lua");
         if(lua_err)
         {
             Sys_DebugLog("lua_out.txt", "%s", lua_tostring(global_world.ent_ID_override, -1));
@@ -1316,11 +1299,11 @@ void World_ScriptsClose()
 
 void World_AutoexecOpen()
 {
-    char temp_script_name[256];
-    Engine_GetLevelScriptName(global_world.version, temp_script_name, "_autoexec", 256);
+    char temp_script_name[1024];
+    Engine_GetLevelScriptNameLocal(global_world.version, temp_script_name, "_autoexec", sizeof(temp_script_name));
 
-    luaL_dofile(engine_lua, "scripts/autoexec.lua");    // do standart autoexec
-    luaL_dofile(engine_lua, temp_script_name);          // do level-specific autoexec
+    Script_DoLuaFile(engine_lua, "scripts/autoexec.lua");    // do standart autoexec
+    Script_DoLuaFile(engine_lua, temp_script_name);          // do level-specific autoexec
 }
 
 

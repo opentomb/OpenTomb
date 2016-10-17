@@ -1,7 +1,7 @@
 -- OPENTOMB STATIC MESH COLLISION SCRIPT
 -- FOR TOMB RAIDER, LEVEL2 (CAVES)
 
-print("Level script loaded (LEVEL1.lua)");
+print("Level script loaded (LEVEL2.lua)");
 
 -- STATIC COLLISION FLAGS ------------------------------------------------------
 --------------------------------------------------------------------------------

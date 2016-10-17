@@ -39,17 +39,17 @@ gameflow_paths[GAME_4]   = {script = "scripts/gameflow/TR4.lua",      title = "g
 gameflow_paths[GAME_4_1] = {script = "scripts/gameflow/TR4_demo.lua", title = "graphics/tr4_title" };        -- No TR4 title screen!
 gameflow_paths[GAME_5]   = {script = "scripts/gameflow/TR5.lua",      title = "graphics/tr5_title" };        -- No TR5 title screen!
 
-dofile(gameflow_paths[GAME_1].script);
---dofile(gameflow_paths[GAME_1_1].script);
-dofile(gameflow_paths[GAME_1_5].script);
-dofile(gameflow_paths[GAME_2].script);
---dofile(gameflow_paths[GAME_2_1].script);
-dofile(gameflow_paths[GAME_2_5].script);
-dofile(gameflow_paths[GAME_3].script);
-dofile(gameflow_paths[GAME_3_5].script);
-dofile(gameflow_paths[GAME_4].script);
---dofile(gameflow_paths[GAME_4_1].script);
-dofile(gameflow_paths[GAME_5].script);
+dofile(base_path .. gameflow_paths[GAME_1].script);
+--dofile(base_path .. gameflow_paths[GAME_1_1].script);
+dofile(base_path .. gameflow_paths[GAME_1_5].script);
+dofile(base_path .. gameflow_paths[GAME_2].script);
+--dofile(base_path .. gameflow_paths[GAME_2_1].script);
+dofile(base_path .. gameflow_paths[GAME_2_5].script);
+dofile(base_path .. gameflow_paths[GAME_3].script);
+dofile(base_path .. gameflow_paths[GAME_3_5].script);
+dofile(base_path .. gameflow_paths[GAME_4].script);
+--dofile(base_path .. gameflow_paths[GAME_4_1].script);
+dofile(base_path .. gameflow_paths[GAME_5].script);
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------

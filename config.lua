@@ -74,7 +74,7 @@ console =
 -- coded as joystick buttons. Instead, they have unique names: JOY_TRIGGERLEFT and
 -- JOY_TRIGGERRIGHT.
 
-dofile("scripts/config/control_constants.lua");
+dofile(base_path .. "scripts/config/control_constants.lua");
 
 bind(act.jump, KEY_SPACE, JOY_3);
 bind(act.action, KEY_LCTRL, JOY_1);
