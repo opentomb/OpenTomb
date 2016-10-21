@@ -99,7 +99,7 @@ typedef struct gl_text_line_s
 void GLText_Init();
 void GLText_Destroy();
 
-void GLText_UpdateResize(float scale);
+void GLText_UpdateResize(int w, int h, float scale);
 void GLText_RenderStringLine(gl_text_line_p l);
 void GLText_RenderStrings();
 
