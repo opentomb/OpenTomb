@@ -56,3 +56,12 @@ function swapEntityEnability(object_id)
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
 end;
+
+function removeEntity(object_id)
+    disableEntity(object_id);
+    addTask(
+    function()
+        entfuncs_EraseEntity(object_id);
+        deleteEntity(object_id);
+    end);
+end;

@@ -738,13 +738,13 @@ function dart_init(id)  -- TR1 dart / TR2 flying disks
         if(getEntityModelID(object_id) ~= getEntityModelID(activator_id)) then
             changeCharacterParam(activator_id, PARAM_HEALTH, -entity_funcs[object_id].damage);
             changeCharacterParam(activator_id, PARAM_POISON,  entity_funcs[object_id].poison);
-            deleteEntity(object_id);
+            removeEntity(object_id);
         end;
     end
     
     entity_funcs[id].onRoomCollide = function(object_id, activator_id)
         playSound(entity_funcs[object_id].coll_sound, object_id);
-        deleteEntity(object_id);
+        removeEntity(object_id);
     end
     
     entity_funcs[id].onLoop = function(object_id)
