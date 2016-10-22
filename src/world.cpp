@@ -496,14 +496,13 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             entity->OCB            = 0x00;
             entity->timer          = 0.0;
 
-            entity->self->collision_type = COLLISION_NONE;
-            entity->self->collision_shape = COLLISION_SHAPE_TRIMESH;
             entity->move_type          = 0x0000;
             entity->move_type          = 0;
 
             SSBoneFrame_CreateFromModel(entity->bf, model);
             entity->bf->transform = entity->transform;
             Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);
+            World_SetEntityModelProperties(entity);
             Physics_GenEntityRigidBody(entity);
 
             Entity_RebuildBV(entity);
@@ -512,6 +511,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
                 Room_AddObject(entity->self->room, entity->self);
             }
             World_AddEntity(entity);
+            World_SetEntityFunction(entity);
 
             return entity->id;
         }

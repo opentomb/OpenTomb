@@ -2280,7 +2280,7 @@ int lua_SpawnEntity(lua_State * lua)
 {
     if(lua_gettop(lua) < 5)
     {
-        Con_Warning("spawnEntity: expecting arguments (model_id1, room_id, x, y, z, (ax, ay, az))");
+        Con_Warning("spawnEntity: expecting arguments (model_id1, room_id, x, y, z, (ax, ay, az, ov_id))");
         return 0;
     }
 
@@ -2472,8 +2472,9 @@ int lua_GetEntityPosition(lua_State * lua)
     lua_pushnumber(lua, ent->angles[0]);
     lua_pushnumber(lua, ent->angles[1]);
     lua_pushnumber(lua, ent->angles[2]);
+    lua_pushnumber(lua, ent->self->room->id);
 
-    return 6;
+    return 7;
 }
 
 
