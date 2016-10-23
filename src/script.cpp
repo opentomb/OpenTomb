@@ -3393,7 +3393,7 @@ int lua_EntitySSAnimSetEnable(lua_State * lua)
     return 0;
 }
 
-
+// id activator, id trigger
 int lua_CanTriggerEntity(lua_State * lua)
 {
     int id;
@@ -3423,22 +3423,11 @@ int lua_CanTriggerEntity(lua_State * lua)
     }
 
     r = e2->activation_offset[3];
-    if(top >= 3)
-    {
-        r = lua_tonumber(lua, 3);
-    }
     r *= r;
     vec3_copy(offset, e2->activation_offset);
-    if(top >= 4)
-    {
-        offset[0] = lua_tonumber(lua, 4);
-        offset[1] = lua_tonumber(lua, 5);
-        offset[2] = lua_tonumber(lua, 6);
-    }
-
     Mat4_vec3_mul_macro(pos, e2->transform, offset);
-    if((vec3_dot(e1->transform+4, e2->transform+4) > 0.75) &&
-       (vec3_dist_sq(e1->transform+12, pos) < r))
+    if((vec3_dot(e1->transform + 4, e2->transform + 4) > 0.75) &&
+       (vec3_dist_sq(e1->transform + 12, pos) < r))
     {
         lua_pushboolean(lua, 1);
         return 1;
