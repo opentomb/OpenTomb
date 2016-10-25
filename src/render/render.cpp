@@ -1049,7 +1049,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
             {
                 for(uint32_t si = 0; si < near_room->content->static_mesh_count; si++)
                 {
-                    if(OBB_OBB_Test(near_room->content->static_mesh[si].obb, room->obb) &&
+                    if(OBB_OBB_Test(near_room->content->static_mesh[si].obb, room->obb, 0.0f) &&
                        Frustum_IsOBBVisibleInFrustumList(near_room->content->static_mesh[si].obb, (room->frustum) ? (room->frustum) : (m_camera->frustum)) &&
                        (!near_room->content->static_mesh[si].hide || (r_flags & R_DRAW_DUMMY_STATICS)))
                     {
@@ -1078,7 +1078,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
                 {
                 case OBJECT_ENTITY:
                     ent = (entity_p)cont->object;
-                    if(OBB_OBB_Test(ent->obb, room->obb) &&
+                    if(OBB_OBB_Test(ent->obb, room->obb, 0.0f) &&
                        Frustum_IsOBBVisibleInFrustumList(ent->obb, (room->frustum) ? (room->frustum) : (m_camera->frustum)))
                     {
                         this->DrawEntity(ent, modelViewMatrix, modelViewProjectionMatrix);
