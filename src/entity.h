@@ -93,7 +93,7 @@ typedef struct entity_s
     struct engine_container_s          *self;
 
     float                               activation_offset[4];   // where we can activate object (dx, dy, dz, r)
-    
+    float                               activation_angle[4];    // direction_xyz, cos(lim)
     struct character_s                 *character;
 }entity_t, *entity_p;
 

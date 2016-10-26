@@ -1517,6 +1517,55 @@ int lua_SetEntityActivationOffset(lua_State * lua)
 }
 
 
+int lua_GetEntityActivationAngle(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1) return 0;   // No argument - return.
+
+    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+    if(ent == NULL) return 0;
+
+    lua_pushnumber(lua, ent->activation_angle[0]);
+    lua_pushnumber(lua, ent->activation_angle[1]);
+    lua_pushnumber(lua, ent->activation_angle[2]);
+    lua_pushnumber(lua, ent->activation_angle[3]);
+
+    return 4;
+}
+
+
+int lua_SetEntityActivationAngle(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 1)
+    {
+        Con_Warning("setEntityActivationAngle: Expecting arguments (entity_id)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+    if(ent == NULL)
+    {
+        Con_Warning("no entity with id = %d", id);
+        return 0;
+    }
+
+    if(top >= 4)
+    {
+        ent->activation_angle[0] = lua_tonumber(lua, 2);
+        ent->activation_angle[1] = lua_tonumber(lua, 3);
+        ent->activation_angle[2] = lua_tonumber(lua, 4);
+    }
+    if(top >= 5)
+    {
+        ent->activation_angle[3] = lua_tonumber(lua, 5);
+    }
+
+    return 0;
+}
+
+
 int lua_SetCharacterTarget(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -3398,7 +3447,7 @@ int lua_CanTriggerEntity(lua_State * lua)
 {
     int id;
     int top = lua_gettop(lua);
-    float pos[3], offset[3], r;
+    float pos[3], dir[3], r;
 
     if(top < 2)
     {
@@ -3424,9 +3473,9 @@ int lua_CanTriggerEntity(lua_State * lua)
 
     r = e2->activation_offset[3];
     r *= r;
-    vec3_copy(offset, e2->activation_offset);
-    Mat4_vec3_mul_macro(pos, e2->transform, offset);
-    if((vec3_dot(e1->transform + 4, e2->transform + 4) > 0.75) &&
+    Mat4_vec3_mul_macro(pos, e2->transform, e2->activation_offset);
+    Mat4_vec3_rot_macro(dir, e2->transform, e2->activation_angle);
+    if((vec3_dot(e1->transform + 4, dir) > e2->activation_angle[3]) &&
        (vec3_dist_sq(e1->transform + 12, pos) < r))
     {
         lua_pushboolean(lua, 1);
@@ -5549,6 +5598,8 @@ void Script_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "getEntityActivationOffset", lua_GetEntityActivationOffset);
     lua_register(lua, "setEntityActivationOffset", lua_SetEntityActivationOffset);
+    lua_register(lua, "getEntityActivationAngle", lua_GetEntityActivationAngle);
+    lua_register(lua, "setEntityActivationAngle", lua_SetEntityActivationAngle);
     lua_register(lua, "getEntitySectorIndex", lua_GetEntitySectorIndex);
     lua_register(lua, "getEntitySectorFlags", lua_GetEntitySectorFlags);
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);

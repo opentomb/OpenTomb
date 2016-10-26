@@ -71,9 +71,14 @@ entity_p Entity_Create()
     ret->anim_linear_speed = 0.0f;
 
     ret->activation_offset[0] = 0.0f;
-    ret->activation_offset[1] = 256.0f;
+    ret->activation_offset[1] = 0.0f;
     ret->activation_offset[2] = 0.0f;
-    ret->activation_offset[3] = 128.0f;
+    ret->activation_offset[3] = 32.0f;
+
+    ret->activation_angle[0] = 0.0f;
+    ret->activation_angle[1] = 1.0f;
+    ret->activation_angle[2] = 0.0f;
+    ret->activation_angle[3] = 0.70f;
 
     return ret;
 }
@@ -1109,8 +1114,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                 entity_p e = (entity_p)cont->object;
                 if((e->type_flags & ENTITY_TYPE_INTERACTIVE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
-                    //Mat4_vec3_mul_macro(pos, e->transform, e->activation_offset);
-                    if((e != ent) && (OBB_OBB_Test(e->obb, ent->obb, 16.0f) == 1))//(vec3_dist_sq(ent->transform + 12, pos) < r))
+                    if((e != ent) && (OBB_OBB_Test(e->obb, ent->obb, 16.0f) == 1))
                     {
                         Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->id, ent->id);
                     }
