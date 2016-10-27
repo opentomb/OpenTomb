@@ -87,14 +87,17 @@ function set_activation_offset(id)
     if(getLevelVersion() < TR_II) then
         if(model_id == 56) then
             dy = 0.0;
+            r = 160.0;
         end
     elseif(getLevelVersion() < TR_III) then
         if(model_id == 105) then
             dy = 0.0;
+            r = 160.0;
         end
     elseif(getLevelVersion() < TR_IV) then
         if(model_id == 130) then
             dy = 0.0;
+            r = 160.0;
         end
     end
 
@@ -109,7 +112,7 @@ function keyhole_init(id)    -- Key and puzzle holes
     set_activation_offset(id);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(object_id == nil or getEntityActivity(object_id) or not canTriggerEntity(activator_id, object_id)) then
+        if(object_id == nil or getEntityActivity(object_id)) then
             return ENTITY_TRIGGERING_NOT_READY;
         end
         
@@ -128,7 +131,7 @@ function switch_init(id)     -- Ordinary switches
     set_activation_offset(id);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(object_id == nil or not canTriggerEntity(activator_id, object_id)) then
+        if(object_id == nil) then
             return ENTITY_TRIGGERING_NOT_READY;
         end
         

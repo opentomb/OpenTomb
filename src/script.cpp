@@ -3445,9 +3445,7 @@ int lua_EntitySSAnimSetEnable(lua_State * lua)
 // id activator, id trigger
 int lua_CanTriggerEntity(lua_State * lua)
 {
-    int id;
     int top = lua_gettop(lua);
-    float pos[3], dir[3], r;
 
     if(top < 2)
     {
@@ -3455,34 +3453,9 @@ int lua_CanTriggerEntity(lua_State * lua)
         return 1;
     }
 
-    id = lua_tointeger(lua, 1);
-    entity_p e1 = World_GetEntityByID(id);
-    if(e1 == NULL || !e1->character || !e1->character->cmd.action)
-    {
-        lua_pushboolean(lua, 0);
-        return 1;
-    }
-
-    id = lua_tointeger(lua, 2);
-    entity_p e2 = World_GetEntityByID(id);
-    if((e2 == NULL) || (e1 == e2))
-    {
-        lua_pushboolean(lua, 0);
-        return 1;
-    }
-
-    r = e2->activation_offset[3];
-    r *= r;
-    Mat4_vec3_mul_macro(pos, e2->transform, e2->activation_offset);
-    Mat4_vec3_rot_macro(dir, e2->transform, e2->activation_angle);
-    if((vec3_dot(e1->transform + 4, dir) > e2->activation_angle[3]) &&
-       (vec3_dist_sq(e1->transform + 12, pos) < r))
-    {
-        lua_pushboolean(lua, 1);
-        return 1;
-    }
-
-    lua_pushboolean(lua, 0);
+    lua_pushboolean(lua, Entity_CanTrigger(World_GetEntityByID(lua_tointeger(lua, 1)),
+                                           World_GetEntityByID(lua_tointeger(lua, 2))));
+    
     return 1;
 }
 

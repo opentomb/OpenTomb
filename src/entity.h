@@ -110,6 +110,7 @@ void Entity_Frame(entity_p entity, float time);  // process frame + trying to ch
 
 void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateTransform(entity_p entity);
+int  Entity_CanTrigger(entity_p activator, entity_p trigger);
 void Entity_CheckActivators(struct entity_s *ent);
 int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer);
 int  Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_activator);

@@ -1097,15 +1097,33 @@ void Entity_RebuildBV(entity_p ent)
 }
 
 
+int  Entity_CanTrigger(entity_p activator, entity_p trigger)
+{
+    float pos[3], dir[3], r;
+
+    if(!activator || !trigger || (activator == trigger) || !activator->character || !activator->character->cmd.action)
+    {
+        return 0;
+    }
+
+    r = trigger->activation_offset[3];
+    r *= r;
+    Mat4_vec3_mul_macro(pos, trigger->transform, trigger->activation_offset);
+    Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_angle);
+    if((vec3_dot(activator->transform + 4, dir) > trigger->activation_angle[3]) &&
+       (vec3_dist_sq(activator->transform + 12, pos) < r))
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
+
 void Entity_CheckActivators(struct entity_s *ent)
 {
     if((ent != NULL) && (ent->self->room != NULL))
     {
-        float ppos[3];
-
-        ppos[0] = ent->transform[12 + 0] + ent->transform[4 + 0] * ent->bf->bb_max[1];
-        ppos[1] = ent->transform[12 + 1] + ent->transform[4 + 1] * ent->bf->bb_max[1];
-        ppos[2] = ent->transform[12 + 2] + ent->transform[4 + 2] * ent->bf->bb_max[1];
         engine_container_p cont = ent->self->room->content->containers;
         for(; cont; cont = cont->next)
         {
@@ -1114,15 +1132,20 @@ void Entity_CheckActivators(struct entity_s *ent)
                 entity_p e = (entity_p)cont->object;
                 if((e->type_flags & ENTITY_TYPE_INTERACTIVE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
-                    if((e != ent) && (OBB_OBB_Test(e->obb, ent->obb, 16.0f) == 1))
+                    if((e != ent) && (OBB_OBB_Test(e->obb, ent->obb, 32.0f) == 1) && Entity_CanTrigger(ent, e))
                     {
                         Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, e->id, ent->id);
                     }
                 }
                 else if((e->type_flags & ENTITY_TYPE_PICKABLE) && (e->state_flags & ENTITY_STATE_ENABLED))
                 {
+                    float ppos[3];
                     float *v = e->transform + 12;
                     float r = e->activation_offset[3];
+
+                    ppos[0] = ent->transform[12 + 0] + ent->transform[4 + 0] * ent->bf->bb_max[1];
+                    ppos[1] = ent->transform[12 + 1] + ent->transform[4 + 1] * ent->bf->bb_max[1];
+                    ppos[2] = ent->transform[12 + 2] + ent->transform[4 + 2] * ent->bf->bb_max[1];
                     r *= r;
                     if((e != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
                                       (v[2] + 32.0 > ent->transform[12 + 2] + ent->bf->bb_min[2]) && (v[2] - 32.0 < ent->transform[12 + 2] + ent->bf->bb_max[2]))
