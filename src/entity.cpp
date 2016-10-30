@@ -1132,7 +1132,7 @@ void Entity_RotateToTriggerZ(entity_p activator, entity_p trigger)
 }
 
 
-/*void Entity_RotateToTrigger(entity_p activator, entity_p trigger)
+void Entity_RotateToTrigger(entity_p activator, entity_p trigger)
 {
     if(activator && trigger && (activator != trigger))
     {
@@ -1150,9 +1150,9 @@ void Entity_RotateToTriggerZ(entity_p activator, entity_p trigger)
         vec4_mul(dir, q, activator->transform + 8)
         vec4_mul(activator->transform + 8, dir, qt)
 
-        //Mat4_GetAngles(activator->angles, activator->transform);
+        Mat4_GetSelfOrientation(activator->angles, activator->transform);
     }
-}*/
+}
 
 
 void Entity_CheckActivators(struct entity_s *ent)
