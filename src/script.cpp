@@ -1517,29 +1517,29 @@ int lua_SetEntityActivationOffset(lua_State * lua)
 }
 
 
-int lua_GetEntityActivationAngle(lua_State * lua)
+int lua_GetEntityActivationDirection(lua_State * lua)
 {
     if(lua_gettop(lua) < 1) return 0;   // No argument - return.
 
     entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
     if(ent == NULL) return 0;
 
-    lua_pushnumber(lua, ent->activation_angle[0]);
-    lua_pushnumber(lua, ent->activation_angle[1]);
-    lua_pushnumber(lua, ent->activation_angle[2]);
-    lua_pushnumber(lua, ent->activation_angle[3]);
+    lua_pushnumber(lua, ent->activation_direction[0]);
+    lua_pushnumber(lua, ent->activation_direction[1]);
+    lua_pushnumber(lua, ent->activation_direction[2]);
+    lua_pushnumber(lua, ent->activation_direction[3]);
 
     return 4;
 }
 
 
-int lua_SetEntityActivationAngle(lua_State * lua)
+int lua_SetEntityActivationDirection(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
     if(top < 1)
     {
-        Con_Warning("setEntityActivationAngle: Expecting arguments (entity_id)");
+        Con_Warning("setEntityActivationDirection: Expecting arguments (entity_id)");
         return 0;
     }
 
@@ -1553,13 +1553,13 @@ int lua_SetEntityActivationAngle(lua_State * lua)
 
     if(top >= 4)
     {
-        ent->activation_angle[0] = lua_tonumber(lua, 2);
-        ent->activation_angle[1] = lua_tonumber(lua, 3);
-        ent->activation_angle[2] = lua_tonumber(lua, 4);
+        ent->activation_direction[0] = lua_tonumber(lua, 2);
+        ent->activation_direction[1] = lua_tonumber(lua, 3);
+        ent->activation_direction[2] = lua_tonumber(lua, 4);
     }
     if(top >= 5)
     {
-        ent->activation_angle[3] = lua_tonumber(lua, 5);
+        ent->activation_direction[3] = lua_tonumber(lua, 5);
     }
 
     return 0;
@@ -3442,7 +3442,7 @@ int lua_EntitySSAnimSetEnable(lua_State * lua)
     return 0;
 }
 
-// id activator, id trigger
+
 int lua_CanTriggerEntity(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -3455,8 +3455,22 @@ int lua_CanTriggerEntity(lua_State * lua)
 
     lua_pushboolean(lua, Entity_CanTrigger(World_GetEntityByID(lua_tointeger(lua, 1)),
                                            World_GetEntityByID(lua_tointeger(lua, 2))));
-    
+
     return 1;
+}
+
+
+int lua_EntityRotateToTriggerZ(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top >= 2)
+    {
+        Entity_RotateToTriggerZ(World_GetEntityByID(lua_tointeger(lua, 1)),
+                                World_GetEntityByID(lua_tointeger(lua, 2)));
+    }
+
+    return 0;
 }
 
 
@@ -5471,6 +5485,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "printItems", lua_PrintItems);
 
     lua_register(lua, "canTriggerEntity", lua_CanTriggerEntity);
+    lua_register(lua, "entityRotateToTriggerZ", lua_EntityRotateToTriggerZ);
     lua_register(lua, "spawnEntity", lua_SpawnEntity);
     lua_register(lua, "enableEntity", lua_EnableEntity);
     lua_register(lua, "disableEntity", lua_DisableEntity);
@@ -5571,8 +5586,8 @@ void Script_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "getEntityActivationOffset", lua_GetEntityActivationOffset);
     lua_register(lua, "setEntityActivationOffset", lua_SetEntityActivationOffset);
-    lua_register(lua, "getEntityActivationAngle", lua_GetEntityActivationAngle);
-    lua_register(lua, "setEntityActivationAngle", lua_SetEntityActivationAngle);
+    lua_register(lua, "getEntityActivationDirection", lua_GetEntityActivationDirection);
+    lua_register(lua, "setEntityActivationDirection", lua_SetEntityActivationDirection);
     lua_register(lua, "getEntitySectorIndex", lua_GetEntitySectorIndex);
     lua_register(lua, "getEntitySectorFlags", lua_GetEntitySectorFlags);
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);

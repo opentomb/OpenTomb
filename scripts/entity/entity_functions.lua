@@ -119,6 +119,7 @@ function keyhole_init(id)    -- Key and puzzle holes
         if((not getEntityActivity(object_id)) and (switch_activate(object_id, activator_id) == 1)) then
             setEntityPos(activator_id, getEntityPos(object_id));
             moveEntityLocal(activator_id, getEntityActivationOffset(id));
+            entityRotateToTriggerZ(activator_id, object_id);
             return ENTITY_TRIGGERING_ACTIVATED;
         end
         return ENTITY_TRIGGERING_NOT_READY;
@@ -138,6 +139,7 @@ function switch_init(id)     -- Ordinary switches
         if(switch_activate(object_id, activator_id) == 1) then
             setEntityPos(activator_id, getEntityPos(object_id));    -- Move activator right next to object.
             moveEntityLocal(activator_id, getEntityActivationOffset(id));         -- Shift activator back to proper distance.
+            entityRotateToTriggerZ(activator_id, object_id);
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
         return ENTITY_TRIGGERING_NOT_READY;
