@@ -254,8 +254,8 @@ void Mat4_inv_Mat4_affine_mul(float result[16], float src1[16], float src2[16]);
 void Mat4_vec3_mul(float v[3], const float mat[16], const float src[3]);
 void Mat4_vec3_mul_inv(float v[3], float mat[16], float src[3]);
 void Mat4_vec3_mul_T(float v[3], float mat[16], float src[3]);
-void Mat4_SetSelfOrientation(float mat[16], float ang[3]);
-void Mat4_GetSelfOrientation(float ang[3], float mat[16]);
+void Mat4_SetAnglesZXY(float mat[16], float ang[3]);
+void Mat4_GetAnglesZXY(float ang[3], float mat[16]);
 
 int ThreePlanesIntersection(float v[3], float n0[4], float n1[4], float n2[4]);
 #define ThreePlanesIntersection_macro(v, n0, n1, n2, d)\

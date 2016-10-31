@@ -243,7 +243,7 @@ void Entity_UpdateTransform(entity_p entity)
     i = (entity->angles[2] < 0.0)?(i-1):(i);
     entity->angles[2] -= 360.0 * i;
 
-    Mat4_SetSelfOrientation(entity->transform, entity->angles);
+    Mat4_SetAnglesZXY(entity->transform, entity->angles);
 }
 
 
@@ -1150,7 +1150,7 @@ void Entity_RotateToTrigger(entity_p activator, entity_p trigger)
         vec4_mul(dir, q, activator->transform + 8)
         vec4_mul(activator->transform + 8, dir, qt)
 
-        Mat4_GetSelfOrientation(activator->angles, activator->transform);
+        Mat4_GetAnglesZXY(activator->angles, activator->transform);
     }
 }
 

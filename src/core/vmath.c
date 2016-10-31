@@ -940,7 +940,7 @@ void Mat4_vec3_mul_T(float v[3], float mat[16], float src[3])
 }
 
 
-void Mat4_SetSelfOrientation(float mat[16], float ang[3])
+void Mat4_SetAnglesZXY(float mat[16], float ang[3])
 {
     float R[4], Rt[4], temp[4];
     float sin_t2, cos_t2, t;
@@ -1014,7 +1014,7 @@ void Mat4_SetSelfOrientation(float mat[16], float ang[3])
 }
 
 
-void Mat4_GetSelfOrientation(float ang[3], float mat[16])
+void Mat4_GetAnglesZXY(float ang[3], float mat[16])
 {
     const float rad_to_deg = 180.0f / M_PI;
     

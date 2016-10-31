@@ -3474,6 +3474,20 @@ int lua_EntityRotateToTriggerZ(lua_State * lua)
 }
 
 
+int lua_EntityRotateToTrigger(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top >= 2)
+    {
+        Entity_RotateToTrigger(World_GetEntityByID(lua_tointeger(lua, 1)),
+                                World_GetEntityByID(lua_tointeger(lua, 2)));
+    }
+
+    return 0;
+}
+
+
 int lua_GetEntityVisibility(lua_State * lua)
 {
     if(lua_gettop(lua) < 1)
@@ -5486,6 +5500,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "canTriggerEntity", lua_CanTriggerEntity);
     lua_register(lua, "entityRotateToTriggerZ", lua_EntityRotateToTriggerZ);
+    lua_register(lua, "entityRotateToTrigger", lua_EntityRotateToTrigger);
     lua_register(lua, "spawnEntity", lua_SpawnEntity);
     lua_register(lua, "enableEntity", lua_EnableEntity);
     lua_register(lua, "disableEntity", lua_DisableEntity);
