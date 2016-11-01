@@ -1099,21 +1099,18 @@ void Entity_RebuildBV(entity_p ent)
 
 int  Entity_CanTrigger(entity_p activator, entity_p trigger)
 {
-    float pos[3], dir[3], r;
-
-    if(!activator || !trigger || (activator == trigger) || !activator->character || !activator->character->cmd.action)
+    if(activator && trigger && (activator != trigger))
     {
-        return 0;
-    }
-
-    r = trigger->activation_offset[3];
-    r *= r;
-    Mat4_vec3_mul_macro(pos, trigger->transform, trigger->activation_offset);
-    Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_direction);
-    if((vec3_dot(activator->transform + 4, dir) > trigger->activation_direction[3]) &&
-       (vec3_dist_sq(activator->transform + 12, pos) < r))
-    {
-        return 1;
+        float pos[3], dir[3];
+        float r = trigger->activation_offset[3];
+        r *= r;
+        Mat4_vec3_mul_macro(pos, trigger->transform, trigger->activation_offset);
+        Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_direction);
+        if((vec3_dot(activator->transform + 4, dir) > trigger->activation_direction[3]) &&
+           (vec3_dist_sq(activator->transform + 12, pos) < r))
+        {
+            return 1;
+        }
     }
 
     return 0;
