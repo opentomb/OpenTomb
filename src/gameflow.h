@@ -44,7 +44,8 @@ public:
     uint8_t             getCurrentGameID();
     uint8_t             getCurrentLevelID();
     const char*         getCurrentLevelName();
-    const char*         getCurrentLevelPath();
+    const char*         getCurrentLevelPathGlobal();
+    const char*         getCurrentLevelPathLocal();
     char                getSecretStateAtIndex(int index);
 
     void                setCurrentGameID(int gameID);

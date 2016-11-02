@@ -940,7 +940,7 @@ void Mat4_vec3_mul_T(float v[3], float mat[16], float src[3])
 }
 
 
-void Mat4_SetSelfOrientation(float mat[16], float ang[3])
+void Mat4_SetAnglesZXY(float mat[16], float ang[3])
 {
     float R[4], Rt[4], temp[4];
     float sin_t2, cos_t2, t;
@@ -1010,6 +1010,32 @@ void Mat4_SetSelfOrientation(float mat[16], float ang[3])
         vec4_mul(mat+8, temp, Rt);
         mat[3] = 0.0;
         mat[11] = 0.0;
+    }
+}
+
+
+void Mat4_GetAnglesZXY(float ang[3], float mat[16])
+{
+    const float rad_to_deg = 180.0f / M_PI;
+    
+    ang[1] = rad_to_deg * asinf(mat[2 + 4 * 1]);
+    if(ang[1] < 90.0f)
+    {
+        if(ang[1] > -90.0f)
+        {
+            ang[0] = rad_to_deg * atan2f(-mat[0 + 4 * 1], mat[1 + 4 * 1]);
+            ang[2] = rad_to_deg * atan2f(-mat[2 + 4 * 0], mat[2 + 4 * 2]);
+        }
+        else
+        {
+            ang[0] =-rad_to_deg * atan2f(mat[0 + 4 * 2], mat[0 + 4 * 0]);
+            ang[2] = 0.0f;
+        }
+    }
+    else
+    {
+        ang[0] =-rad_to_deg * atan2f(mat[0 + 4 * 2], mat[0 + 4 * 0]);
+        ang[2] = 0.0f;
     }
 }
 

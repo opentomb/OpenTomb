@@ -639,9 +639,9 @@ tr3_entity_tbl[233] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 tr3_entity_tbl[234] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 3
 tr3_entity_tbl[235] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 4
 tr3_entity_tbl[236] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Pickup 1 (pick-up)
-tr3_entity_tbl[237] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Pickup 2 .unused] (pick-up)
+tr3_entity_tbl[237] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Pickup 2 .unused  (pick-up)
 tr3_entity_tbl[238] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Pickup 1 (menu item)
-tr3_entity_tbl[239] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Pickup 2 .unused] (menu item)
+tr3_entity_tbl[239] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Pickup 2 .unused  (menu item)
 tr3_entity_tbl[240] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Infada stone (pick-up)
 tr3_entity_tbl[241] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Element 115 (pick-up)
 tr3_entity_tbl[242] = {coll = COLLISION_TYPE_NONE,      shape = COLLISION_SHAPE_BOX};           -- Eye of Isis (pick-up)

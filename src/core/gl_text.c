@@ -15,7 +15,6 @@
 #include <ftglyph.h>
 #include <ftmodapi.h>
 
-#include "system.h"
 #include "gl_text.h"
 #include "gl_font.h"
 #include "gl_util.h"
@@ -35,6 +34,9 @@ static struct
     uint16_t                 max_fonts;
     struct gl_font_cont_s   *fonts;
 } font_data;
+
+static int screen_width = 0;
+static int screen_height = 0;
 
 
 void GLText_Init()
@@ -121,8 +123,10 @@ void GLText_Destroy()
 }
 
 
-void GLText_UpdateResize(float scale)
+void GLText_UpdateResize(int w, int h, float scale)
 {
+    screen_width = w;
+    screen_height = h;
     if(font_data.max_fonts > 0)
     {
         for(uint16_t i = 0; i < font_data.max_fonts; i++)
@@ -156,7 +160,7 @@ void GLText_RenderStringLine(gl_text_line_p l)
             real_x = l->x;   // Used with center and right alignments.
             break;
         case GLTEXT_ALIGN_RIGHT:
-            real_x = (float)screen_info.w - (l->rect[2] - l->rect[0]) - l->x;
+            real_x = (float)screen_width - (l->rect[2] - l->rect[0]) - l->x;
             break;
         case GLTEXT_ALIGN_CENTER:
             real_x = l->x - 0.5f * (l->rect[2] - l->rect[0]);
@@ -169,7 +173,7 @@ void GLText_RenderStringLine(gl_text_line_p l)
             real_y = l->y;
             break;
         case GLTEXT_ALIGN_TOP:
-            real_y = (float)screen_info.h - (l->rect[3] - l->rect[1]) - l->y;
+            real_y = (float)screen_height - (l->rect[3] - l->rect[1]) - l->y;
             break;
         case GLTEXT_ALIGN_CENTER:
             real_y = l->y - 0.5f * (l->rect[3] - l->rect[1]);
@@ -179,10 +183,10 @@ void GLText_RenderStringLine(gl_text_line_p l)
     if(style->rect)
     {
         BindWhiteTexture();
-        GLfloat x0 = l->rect[0] + real_x - style->rect_border * screen_info.w_unit;
-        GLfloat y0 = l->rect[1] + real_y - style->rect_border * screen_info.h_unit;
-        GLfloat x1 = l->rect[2] + real_x + style->rect_border * screen_info.w_unit;
-        GLfloat y1 = l->rect[3] + real_y + style->rect_border * screen_info.h_unit;
+        GLfloat x0 = l->rect[0] + real_x - style->rect_border * screen_width;
+        GLfloat y0 = l->rect[1] + real_y - style->rect_border * screen_height;
+        GLfloat x1 = l->rect[2] + real_x + style->rect_border * screen_width;
+        GLfloat y1 = l->rect[3] + real_y + style->rect_border * screen_height;
         GLfloat *v, backgroundArray[32];
 
         v = backgroundArray;

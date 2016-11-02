@@ -115,9 +115,15 @@ const char* CGameflow::getCurrentLevelName()
 }
 
 
-const char* CGameflow::getCurrentLevelPath()
+const char* CGameflow::getCurrentLevelPathGlobal()
 {
     return this->m_currentLevelPath;
+}
+
+
+const char* CGameflow::getCurrentLevelPathLocal()
+{
+    return this->m_currentLevelPath + strlen(Engine_GetBasePath());
 }
 
 

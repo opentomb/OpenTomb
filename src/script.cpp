@@ -289,7 +289,7 @@ bool Script_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_n
 }
 
 
-bool Script_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int *load_method, int *stream_type)
+bool Script_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int file_path_len, int *load_method, int *stream_type)
 {
     bool result = false;
 
@@ -314,7 +314,8 @@ bool Script_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int 
                 // Lua returns constant string pointer, which we can't assign to
                 // provided argument; so we need to straightly copy it.
 
-                strncpy(file_path, real_path, 255);
+                strncpy(file_path, Engine_GetBasePath(), file_path_len);
+                strncat(file_path, real_path, file_path_len);
 
                 if(*stream_type != -1)
                 {
@@ -610,8 +611,6 @@ int Script_ParseScreen(lua_State *lua, struct screen_info_s *sc)
         sc->h = (int16_t)lua_tonumber(lua, -1);
         lua_pop(lua, 1);
 
-        sc->w_unit = (GLfloat)sc->w / SYS_SCREEN_METERING_RESOLUTION;
-        sc->h_unit = (GLfloat)sc->h / SYS_SCREEN_METERING_RESOLUTION;
         lua_getfield(lua, -1, "fullscreen");
         sc->fullscreen = (int8_t)lua_tonumber(lua, -1);
         lua_pop(lua, 1);
@@ -1512,6 +1511,55 @@ int lua_SetEntityActivationOffset(lua_State * lua)
     if(top >= 5)
     {
         ent->activation_offset[3] = lua_tonumber(lua, 5);
+    }
+
+    return 0;
+}
+
+
+int lua_GetEntityActivationDirection(lua_State * lua)
+{
+    if(lua_gettop(lua) < 1) return 0;   // No argument - return.
+
+    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+    if(ent == NULL) return 0;
+
+    lua_pushnumber(lua, ent->activation_direction[0]);
+    lua_pushnumber(lua, ent->activation_direction[1]);
+    lua_pushnumber(lua, ent->activation_direction[2]);
+    lua_pushnumber(lua, ent->activation_direction[3]);
+
+    return 4;
+}
+
+
+int lua_SetEntityActivationDirection(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 1)
+    {
+        Con_Warning("setEntityActivationDirection: Expecting arguments (entity_id)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+    if(ent == NULL)
+    {
+        Con_Warning("no entity with id = %d", id);
+        return 0;
+    }
+
+    if(top >= 4)
+    {
+        ent->activation_direction[0] = lua_tonumber(lua, 2);
+        ent->activation_direction[1] = lua_tonumber(lua, 3);
+        ent->activation_direction[2] = lua_tonumber(lua, 4);
+    }
+    if(top >= 5)
+    {
+        ent->activation_direction[3] = lua_tonumber(lua, 5);
     }
 
     return 0;
@@ -3397,9 +3445,7 @@ int lua_EntitySSAnimSetEnable(lua_State * lua)
 
 int lua_CanTriggerEntity(lua_State * lua)
 {
-    int id;
     int top = lua_gettop(lua);
-    float pos[3], offset[3], r;
 
     if(top < 2)
     {
@@ -3407,46 +3453,38 @@ int lua_CanTriggerEntity(lua_State * lua)
         return 1;
     }
 
-    id = lua_tointeger(lua, 1);
-    entity_p e1 = World_GetEntityByID(id);
-    if(e1 == NULL || !e1->character || !e1->character->cmd.action)
-    {
-        lua_pushboolean(lua, 0);
-        return 1;
-    }
+    lua_pushboolean(lua, Entity_CanTrigger(World_GetEntityByID(lua_tointeger(lua, 1)),
+                                           World_GetEntityByID(lua_tointeger(lua, 2))));
 
-    id = lua_tointeger(lua, 2);
-    entity_p e2 = World_GetEntityByID(id);
-    if((e2 == NULL) || (e1 == e2))
-    {
-        lua_pushboolean(lua, 0);
-        return 1;
-    }
-
-    r = e2->activation_offset[3];
-    if(top >= 3)
-    {
-        r = lua_tonumber(lua, 3);
-    }
-    r *= r;
-    vec3_copy(offset, e2->activation_offset);
-    if(top >= 4)
-    {
-        offset[0] = lua_tonumber(lua, 4);
-        offset[1] = lua_tonumber(lua, 5);
-        offset[2] = lua_tonumber(lua, 6);
-    }
-
-    Mat4_vec3_mul_macro(pos, e2->transform, offset);
-    if((vec3_dot(e1->transform+4, e2->transform+4) > 0.75) &&
-       (vec3_dist_sq(e1->transform+12, pos) < r))
-    {
-        lua_pushboolean(lua, 1);
-        return 1;
-    }
-
-    lua_pushboolean(lua, 0);
     return 1;
+}
+
+
+int lua_EntityRotateToTriggerZ(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top >= 2)
+    {
+        Entity_RotateToTriggerZ(World_GetEntityByID(lua_tointeger(lua, 1)),
+                                World_GetEntityByID(lua_tointeger(lua, 2)));
+    }
+
+    return 0;
+}
+
+
+int lua_EntityRotateToTrigger(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top >= 2)
+    {
+        Entity_RotateToTrigger(World_GetEntityByID(lua_tointeger(lua, 1)),
+                                World_GetEntityByID(lua_tointeger(lua, 2)));
+    }
+
+    return 0;
 }
 
 
@@ -5342,6 +5380,9 @@ void Script_LoadConstants(lua_State *lua)
         lua_pushinteger(lua, ENTITY_TRIGGERING_NOT_READY);
         lua_setglobal(lua, "ENTITY_TRIGGERING_NOT_READY");
 
+        lua_pushstring(lua, Engine_GetBasePath());
+        lua_setglobal(lua, "base_path");
+
         lua_settop(lua, top);
     }
 }
@@ -5359,8 +5400,7 @@ bool Script_LuaInit()
         lua_atpanic(engine_lua, lua_LuaPanic);
 
         // Load script loading order (sic!)
-
-        luaL_dofile(engine_lua, "scripts/loadscript.lua");
+        Script_DoLuaFile(engine_lua, "scripts/loadscript.lua");
 
         return true;
     }
@@ -5368,6 +5408,15 @@ bool Script_LuaInit()
     {
         return false;
     }
+}
+
+
+int Script_DoLuaFile(lua_State *lua, const char *local_path)
+{
+    char script_path[1024];
+    strncpy(script_path, Engine_GetBasePath(), sizeof(script_path));
+    strncat(script_path, local_path, sizeof(script_path));
+    return luaL_dofile(lua, script_path);
 }
 
 
@@ -5450,6 +5499,8 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "printItems", lua_PrintItems);
 
     lua_register(lua, "canTriggerEntity", lua_CanTriggerEntity);
+    lua_register(lua, "entityRotateToTriggerZ", lua_EntityRotateToTriggerZ);
+    lua_register(lua, "entityRotateToTrigger", lua_EntityRotateToTrigger);
     lua_register(lua, "spawnEntity", lua_SpawnEntity);
     lua_register(lua, "enableEntity", lua_EnableEntity);
     lua_register(lua, "disableEntity", lua_DisableEntity);
@@ -5550,6 +5601,8 @@ void Script_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "getEntityActivationOffset", lua_GetEntityActivationOffset);
     lua_register(lua, "setEntityActivationOffset", lua_SetEntityActivationOffset);
+    lua_register(lua, "getEntityActivationDirection", lua_GetEntityActivationDirection);
+    lua_register(lua, "setEntityActivationDirection", lua_SetEntityActivationDirection);
     lua_register(lua, "getEntitySectorIndex", lua_GetEntitySectorIndex);
     lua_register(lua, "getEntitySectorFlags", lua_GetEntitySectorFlags);
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);

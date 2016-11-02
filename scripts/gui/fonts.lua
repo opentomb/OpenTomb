@@ -40,9 +40,9 @@ FONTSTYLE_GENERIC               = 14;
 -- NB: All fonts are open-source, free and GPL-compatible, see licenses in fonts
 -- folder.
 
-addFont(FONT_CONSOLE,   "resource/fonts/DroidSansMono.ttf",             12);
-addFont(FONT_PRIMARY,   "resource/fonts/RobotoCondensed-Regular.ttf",   18);
-addFont(FONT_SECONDARY, "resource/fonts/Roboto-Regular.ttf",            14);
+addFont(FONT_CONSOLE,   base_path .. "resource/fonts/DroidSansMono.ttf",             12);
+addFont(FONT_PRIMARY,   base_path .. "resource/fonts/RobotoCondensed-Regular.ttf",   18);
+addFont(FONT_SECONDARY, base_path .. "resource/fonts/Roboto-Regular.ttf",            14);
 
 --------------------------------------------------------------------------------
 

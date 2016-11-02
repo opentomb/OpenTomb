@@ -40,7 +40,7 @@ void OBB_Clear(obb_p bv);
 
 void OBB_Rebuild(obb_p obb, float bb_min[3], float bb_max[3]);
 void OBB_Transform(obb_p obb);
-int OBB_OBB_Test(obb_p obb1, obb_p obb2);
+int OBB_OBB_Test(obb_p obb1, obb_p obb2, float extend);
 
 #ifdef	__cplusplus
 }

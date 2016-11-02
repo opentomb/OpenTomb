@@ -215,24 +215,28 @@ void OBB_Transform(obb_p obb)
 /*
  * http://www.gamasutra.com/view/feature/131790/simple_intersection_tests_for_games.php?print=1
  */
-int OBB_OBB_Test(obb_p obb1, obb_p obb2)
+int OBB_OBB_Test(obb_p obb1, obb_p obb2, float extend)
 {
     //translation, in parent frame
-    float v[3], T[3];
+    float v[3], T[3], a[3], b[3];    //B's basis with respect to A's local frame
+    float R[3][3];
+    float ra, rb, t;
+    int i, k;
+    
     vec3_sub(v, obb2->centre, obb1->centre);
     //translation, in A's frame
     T[0] = vec3_dot(v, obb1->transform + 0);
     T[1] = vec3_dot(v, obb1->transform + 4);
     T[2] = vec3_dot(v, obb1->transform + 8);
 
-    float *a = obb1->extent;
-    float *b = obb2->extent;
-
-    //B's basis with respect to A's local frame
-    float R[3][3];
-    float ra, rb, t;
-    int i, k;
-
+    a[0] = obb1->extent[0] + extend;
+    a[1] = obb1->extent[1] + extend;
+    a[2] = obb1->extent[2] + extend;
+    
+    b[0] = obb2->extent[0] + extend;
+    b[1] = obb2->extent[1] + extend;
+    b[2] = obb2->extent[2] + extend;
+    
     //calculate rotation matrix
     for(i = 0 ; i < 3 ; i++)
     {
@@ -252,7 +256,7 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
     for(i = 0; i < 3; i++)
     {
         ra = a[i];
-        rb = b[0]*fabs(R[i][0]) + b[1]*fabs(R[i][1]) + b[2]*fabs(R[i][2]);
+        rb = b[0] * fabs(R[i][0]) + b[1] * fabs(R[i][1]) + b[2] * fabs(R[i][2]);
         t = fabs(T[i]);
 
         if(t > ra + rb)
@@ -264,9 +268,9 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
     //B's basis vectors
     for(k = 0; k < 3; k++)
     {
-        ra = a[0]*fabs(R[0][k]) + a[1]*fabs(R[1][k]) + a[2]*fabs(R[2][k]);
+        ra = a[0] * fabs(R[0][k]) + a[1] * fabs(R[1][k]) + a[2] * fabs(R[2][k]);
         rb = b[k];
-        t = fabs(T[0]*R[0][k] + T[1]*R[1][k] + T[2]*R[2][k]);
+        t = fabs(T[0] * R[0][k] + T[1] * R[1][k] + T[2] * R[2][k]);
         if(t > ra + rb)
         {
             return 0;
@@ -275,9 +279,9 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
 
     //9 cross products
     //L = A0 x B0
-    ra = a[1]*fabs(R[2][0]) + a[2]*fabs(R[1][0]);
-    rb = b[1]*fabs(R[0][2]) + b[2]*fabs(R[0][1]);
-    t = fabs(T[2]*R[1][0] - T[1]*R[2][0]);
+    ra = a[1] * fabs(R[2][0]) + a[2] * fabs(R[1][0]);
+    rb = b[1] * fabs(R[0][2]) + b[2] * fabs(R[0][1]);
+    t = fabs(T[2] * R[1][0] - T[1] * R[2][0]);
 
     if(t > ra + rb)
     {
@@ -285,9 +289,9 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
     }
 
     //L = A0 x B1
-    ra = a[1]*fabs(R[2][1]) + a[2]*fabs(R[1][1]);
-    rb = b[0]*fabs(R[0][2]) + b[2]*fabs(R[0][0]);
-    t = fabs(T[2]*R[1][1] - T[1]*R[2][1]);
+    ra = a[1] * fabs(R[2][1]) + a[2] * fabs(R[1][1]);
+    rb = b[0] * fabs(R[0][2]) + b[2] * fabs(R[0][0]);
+    t = fabs(T[2] * R[1][1] - T[1] * R[2][1]);
 
     if(t > ra + rb)
     {
@@ -295,9 +299,9 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
     }
 
     //L = A0 x B2
-    ra = a[1]*fabs(R[2][2]) + a[2]*fabs(R[1][2]);
-    rb = b[0]*fabs(R[0][1]) + b[1]*fabs(R[0][0]);
-    t = fabs(T[2]*R[1][2] - T[1]*R[2][2]);
+    ra = a[1] * fabs(R[2][2]) + a[2] * fabs(R[1][2]);
+    rb = b[0] * fabs(R[0][1]) + b[1] * fabs(R[0][0]);
+    t = fabs(T[2] * R[1][2] - T[1] * R[2][2]);
 
     if(t > ra + rb)
     {
@@ -305,9 +309,9 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
     }
 
     //L = A1 x B0
-    ra = a[0]*fabs(R[2][0]) + a[2]*fabs(R[0][0]);
-    rb = b[1]*fabs(R[1][2]) + b[2]*fabs(R[1][1]);
-    t = fabs(T[0]*R[2][0] - T[2]*R[0][0]);
+    ra = a[0] * fabs(R[2][0]) + a[2] * fabs(R[0][0]);
+    rb = b[1] * fabs(R[1][2]) + b[2] * fabs(R[1][1]);
+    t = fabs(T[0] * R[2][0] - T[2] * R[0][0]);
 
     if(t > ra + rb)
     {
@@ -315,9 +319,9 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
     }
 
     //L = A1 x B1
-    ra = a[0]*fabs(R[2][1]) + a[2]*fabs(R[0][1]);
-    rb = b[0]*fabs(R[1][2]) + b[2]*fabs(R[1][0]);
-    t = fabs(T[0]*R[2][1] - T[2]*R[0][1]);
+    ra = a[0] * fabs(R[2][1]) + a[2] * fabs(R[0][1]);
+    rb = b[0] * fabs(R[1][2]) + b[2] * fabs(R[1][0]);
+    t = fabs(T[0] * R[2][1] - T[2] * R[0][1]);
 
     if(t > ra + rb)
     {
@@ -325,9 +329,9 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
     }
 
     //L = A1 x B2
-    ra = a[0]*fabs(R[2][2]) + a[2]*fabs(R[0][2]);
-    rb = b[0]*fabs(R[1][1]) + b[1]*fabs(R[1][0]);
-    t = fabs(T[0]*R[2][2] - T[2]*R[0][2]);
+    ra = a[0] * fabs(R[2][2]) + a[2] * fabs(R[0][2]);
+    rb = b[0] * fabs(R[1][1]) + b[1] * fabs(R[1][0]);
+    t = fabs(T[0] * R[2][2] - T[2] * R[0][2]);
 
     if(t > ra + rb)
     {
@@ -335,9 +339,9 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
     }
 
     //L = A2 x B0
-    ra = a[0]*fabs(R[1][0]) + a[1]*fabs(R[0][0]);
-    rb = b[1]*fabs(R[2][2]) + b[2]*fabs(R[2][1]);
-    t = fabs(T[1]*R[0][0] - T[0]*R[1][0]);
+    ra = a[0] * fabs(R[1][0]) + a[1] * fabs(R[0][0]);
+    rb = b[1] * fabs(R[2][2]) + b[2] * fabs(R[2][1]);
+    t = fabs(T[1] * R[0][0] - T[0] * R[1][0]);
 
     if(t > ra + rb)
     {
@@ -346,9 +350,9 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
 
 
     //L = A2 x B1
-    ra = a[0]*fabs(R[1][1]) + a[1]*fabs(R[0][1]);
-    rb = b[0] *fabs(R[2][2]) + b[2]*fabs(R[2][0]);
-    t = fabs(T[1]*R[0][1] - T[0]*R[1][1]);
+    ra = a[0] * fabs(R[1][1]) + a[1] * fabs(R[0][1]);
+    rb = b[0] * fabs(R[2][2]) + b[2] * fabs(R[2][0]);
+    t = fabs(T[1] * R[0][1] - T[0] * R[1][1]);
 
     if(t > ra + rb)
     {
@@ -356,9 +360,9 @@ int OBB_OBB_Test(obb_p obb1, obb_p obb2)
     }
 
     //L = A2 x B2
-    ra = a[0]*fabs(R[1][2]) + a[1]*fabs(R[0][2]);
-    rb = b[0]*fabs(R[2][1]) + b[1]*fabs(R[2][0]);
-    t = fabs(T[1]*R[0][2] - T[0]*R[1][2]);
+    ra = a[0] * fabs(R[1][2]) + a[1] * fabs(R[0][2]);
+    rb = b[0] * fabs(R[2][1]) + b[1] * fabs(R[2][0]);
+    t = fabs(T[1] * R[0][2] - T[0] * R[1][2]);
 
     if(t > ra + rb)
     {

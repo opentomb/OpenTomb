@@ -1019,14 +1019,17 @@ void Gui_DrawLoadScreen(int value)
 
 bool Gui_LoadScreenAssignPic(const char* pic_name)
 {
-    size_t len = strlen(pic_name);
-    char image_name_buf[len + 5];
+    size_t pic_len = strlen(pic_name);
+    size_t base_len = strlen(Engine_GetBasePath());
+    size_t buf_len = pic_len + base_len + 5;
+    char image_name_buf[buf_len];
     int image_format = 0;
 
-    strncpy(image_name_buf, pic_name, len + 1);
-    if(len > 3)
+    strncpy(image_name_buf, Engine_GetBasePath(), buf_len);
+    strncat(image_name_buf, pic_name, buf_len);
+    if(pic_len > 3)
     {
-        char *ext = image_name_buf + len;
+        char *ext = image_name_buf + pic_len + base_len;
         if(strncpy(ext, ".png", 5) && Sys_FileFound(image_name_buf, 0))
         {
             image_format = IMAGE_FORMAT_PNG;
@@ -1319,7 +1322,7 @@ void gui_ProgressBar::RecalculatePosition()
             mY = (float)screen_info.h - ((float)(mAbsYoffset+mAbsHeight+mAbsBorderSize*2)) * screen_info.scale_factor;
             break;
         case GUI_ANCHOR_VERT_CENTER:
-            mY = ((float)screen_info.h - ((float)(mAbsHeight+mAbsBorderSize*2) * screen_info.h_unit)) / 2 +
+            mY = ((float)screen_info.h - ((float)(mAbsHeight+mAbsBorderSize * 2) * screen_info.h)) / 2 +
                  ((float)mAbsYoffset * screen_info.scale_factor);
             break;
         case GUI_ANCHOR_VERT_BOTTOM:
@@ -1694,8 +1697,8 @@ void gui_ItemNotifier::Reset()
     mCurrRotX = 0.0;
     mCurrRotY = 0.0;
 
-    mEndPosX = ((float)screen_info.w / SYS_SCREEN_METERING_RESOLUTION) * mAbsPosX;
-    mPosY    = ((float)screen_info.h / SYS_SCREEN_METERING_RESOLUTION) * mAbsPosY;
+    mEndPosX = mAbsPosX;
+    mPosY    = mAbsPosY;
     mCurrPosX = screen_info.w + ((float)screen_info.w / GUI_NOTIFIER_OFFSCREEN_DIVIDER * mSize);
     mStartPosX = mCurrPosX;    // Equalize current and start positions.
 }

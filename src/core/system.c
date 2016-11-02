@@ -49,6 +49,8 @@ void Sys_InitGlobals()
     screen_info.fullscreen = 0;
     screen_info.crosshair = 0;
     screen_info.fov = 75.0;
+    screen_info.scale_factor = 1.0f;
+    screen_info.fps = 0.0f;
 }
 
 
