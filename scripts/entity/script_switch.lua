@@ -87,6 +87,12 @@ tr_anim_bigbutton =
     off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
 };
 
+tr_anim_bigswitch =
+{
+    on  = {ready_anim =  0, trig_anim = 1, actor_anim = 324, switch_frame = 80 },
+    off = {ready_anim =  2, trig_anim = 3, actor_anim = 324, switch_frame = 80  }
+};
+
 tr_anim_valve =
 {
     on  = {ready_anim =  0, trig_anim = 1, actor_anim = 470, switch_frame = 30 },
@@ -161,6 +167,7 @@ tr1_switches[55]  = tr_anim_bigwallswitch;
 tr2_switches[104] = tr_anim_bigwallswitch;
 tr3_switches[129] = tr_anim_bigwallswitch;
 tr4_switches[306] = tr_anim_bigwallswitch;
+tr4_switches[318] = tr_anim_bigswitch;
 
 tr1_switches[56]  = tr_anim_uwswitch;
 tr2_switches[105] = tr_anim_uwswitch;
@@ -329,7 +336,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
     end
     
     local t = getEntityAnim(object_id, ANIM_TYPE_BASE);
-    
+    local ret = 0;
     if(on.ready_anim < 0 or on.ready_anim == t) then
         if(key ~= nil) then
             if(getItemsCount(player, key) <= 0) then
@@ -341,9 +348,11 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
                 removeItem(player, key, 1);
             end;
         end;
-        
+
+        ret = 1;
         setEntityAnim(object_id, ANIM_TYPE_BASE, on.trig_anim, 0);
         setEntityAnim(actor_id, ANIM_TYPE_BASE, on.actor_anim, 0);
+        noFixEntityCollision(actor_id);
         setEntityActivity(object_id, 1);
         addTask(
         function()
@@ -366,9 +375,11 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             return true;
         end);
     elseif(off.ready_anim == t and getEntityLock(object_id) ~= 1) then  -- Locked switches doesn't flip back!
+        ret = 2;
         setEntityAnim(object_id, ANIM_TYPE_BASE, off.trig_anim, 0);
         setEntityAnim(actor_id, ANIM_TYPE_BASE, off.actor_anim, 0);
         setEntityActivity(object_id, 1);
+        noFixEntityCollision(actor_id);
         addTask(
         function()
             local a, f, c = getEntityAnim(actor_id, ANIM_TYPE_BASE);
@@ -382,7 +393,8 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
             end
             return true;
         end);
+        return 2;
     end
     
-    return 1;
+    return ret;
 end

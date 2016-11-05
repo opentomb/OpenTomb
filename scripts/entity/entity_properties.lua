@@ -1060,7 +1060,7 @@ tr4_entity_tbl[314] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_
 tr4_entity_tbl[315] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Underwater switch 2
 tr4_entity_tbl[316] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Turn switch
 tr4_entity_tbl[317] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Cog switch
-tr4_entity_tbl[318] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Lever switch
+tr4_entity_tbl[318] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "big_switch"}; -- Lever switch
 tr4_entity_tbl[319] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Jump switch
 tr4_entity_tbl[320] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Crowbar switch
 tr4_entity_tbl[321] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"}; -- Pulley

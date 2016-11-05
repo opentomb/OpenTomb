@@ -136,9 +136,9 @@ function switch_init(id)     -- Ordinary switches
             return ENTITY_TRIGGERING_NOT_READY;
         end
         
-        if(switch_activate(object_id, activator_id) == 1) then
-            setEntityPos(activator_id, getEntityPos(object_id));    -- Move activator right next to object.
-            moveEntityLocal(activator_id, getEntityActivationOffset(id));         -- Shift activator back to proper distance.
+        if(switch_activate(object_id, activator_id) > 0) then
+            setEntityPos(activator_id, getEntityPos(object_id));                -- Move activator right next to object.
+            moveEntityLocal(activator_id, getEntityActivationOffset(id));       -- Shift activator back to proper distance.
             entityRotateToTriggerZ(activator_id, object_id);
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
@@ -148,6 +148,42 @@ function switch_init(id)     -- Ordinary switches
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
             setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
+            setEntitySectorStatus(object_id, 1);
+        end;
+    end;
+end
+
+function big_switch_init(id)     -- Big switches (TR4)
+    
+    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
+    setEntityActivationOffset(id, 0.0, -520.0, 0.0, 128);
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(object_id == nil) then
+            return ENTITY_TRIGGERING_NOT_READY;
+        end
+        
+        local state = switch_activate(object_id, activator_id);
+        if(state > 0) then
+            setEntityPos(activator_id, getEntityPos(object_id));                -- Move activator right next to object.
+            moveEntityLocal(activator_id, getEntityActivationOffset(id));       -- Shift activator back to proper distance.
+            entityRotateToTriggerZ(activator_id, object_id);
+            if(state == 1) then
+                setEntityActivationDirection(id, 0.0, -1.0, 0.0);
+                setEntityActivationOffset(id, 0.0, 520.0, 0.0, 128);
+            else
+                setEntityActivationDirection(id, 0.0, 1.0, 0.0);
+                setEntityActivationOffset(id, 0.0, -520.0, 0.0, 128);
+            end;
+            setEntityCollision(id, 1);
+            return ENTITY_TRIGGERING_ACTIVATED;
+        end;
+        return ENTITY_TRIGGERING_NOT_READY;
+    end;
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(tickEntity(object_id) == TICK_STOPPED) then
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, 3);                   -- 3 - diactivate anim
             setEntitySectorStatus(object_id, 1);
         end;
     end;
