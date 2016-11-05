@@ -92,8 +92,8 @@ typedef struct entity_s
 
     struct engine_container_s          *self;
 
-    float                               activation_offset[4];   // where we can activate object (dx, dy, dz, r)
-    
+    float                               activation_offset[4];       // where we can activate object (dx, dy, dz, r)
+    float                               activation_direction[4];    // direction_xyz, cos(lim)
     struct character_s                 *character;
 }entity_t, *entity_p;
 
@@ -110,6 +110,9 @@ void Entity_Frame(entity_p entity, float time);  // process frame + trying to ch
 
 void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateTransform(entity_p entity);
+int  Entity_CanTrigger(entity_p activator, entity_p trigger);
+void Entity_RotateToTriggerZ(entity_p activator, entity_p trigger);
+void Entity_RotateToTrigger(entity_p activator, entity_p trigger);
 void Entity_CheckActivators(struct entity_s *ent);
 int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer);
 int  Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_activator);

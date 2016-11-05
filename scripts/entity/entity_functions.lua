@@ -76,19 +76,50 @@ function door_init(id)   -- NORMAL doors only!
     prepareEntity(id);
 end
 
+
+function set_activation_offset(id)
+    local model_id = getEntityModelID(id);
+    local dx = 0.0;
+    local dy = 360.0;
+    local dz = 0.0;
+    local  r = 128.0;
+
+    if(getLevelVersion() < TR_II) then
+        if(model_id == 56) then
+            dy = 0.0;
+            r = 160.0;
+        end
+    elseif(getLevelVersion() < TR_III) then
+        if(model_id == 105) then
+            dy = 0.0;
+            r = 160.0;
+        end
+    elseif(getLevelVersion() < TR_IV) then
+        if(model_id == 130) then
+            dy = 0.0;
+            r = 160.0;
+        end
+    end
+
+    setEntityActivationOffset(id, dx, dy, dz, r);
+end
+
+
 function keyhole_init(id)    -- Key and puzzle holes
 
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     setEntityActivity(id, 0);
-    
+    set_activation_offset(id);
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(object_id == nil or getEntityActivity(object_id) or not canTriggerEntity(activator_id, object_id, 256.0, 0.0, 256.0, 0.0)) then
+        if(object_id == nil or getEntityActivity(object_id)) then
             return ENTITY_TRIGGERING_NOT_READY;
         end
         
         if((not getEntityActivity(object_id)) and (switch_activate(object_id, activator_id) == 1)) then
             setEntityPos(activator_id, getEntityPos(object_id));
-            moveEntityLocal(activator_id, 0.0, 360.0, 0.0);
+            moveEntityLocal(activator_id, getEntityActivationOffset(id));
+            entityRotateToTriggerZ(activator_id, object_id);
             return ENTITY_TRIGGERING_ACTIVATED;
         end
         return ENTITY_TRIGGERING_NOT_READY;
@@ -98,15 +129,17 @@ end
 function switch_init(id)     -- Ordinary switches
     
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
-    
+    set_activation_offset(id);
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(object_id == nil or not canTriggerEntity(activator_id, object_id, 256.0, 0.0, 256.0, 0.0)) then
+        if(object_id == nil) then
             return ENTITY_TRIGGERING_NOT_READY;
         end
         
         if(switch_activate(object_id, activator_id) == 1) then
             setEntityPos(activator_id, getEntityPos(object_id));    -- Move activator right next to object.
-            moveEntityLocal(activator_id, 0.0, 360.0, 0.0);         -- Shift activator back to proper distance.
+            moveEntityLocal(activator_id, getEntityActivationOffset(id));         -- Shift activator back to proper distance.
+            entityRotateToTriggerZ(activator_id, object_id);
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
         return ENTITY_TRIGGERING_NOT_READY;
