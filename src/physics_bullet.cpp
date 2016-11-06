@@ -1411,9 +1411,9 @@ void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh)
 }
 
 
-struct physics_object_s* Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens, int num_tweens)
+struct physics_object_s* Physics_GenRoomRigidBody(struct room_s *room, struct room_sector_s *heightmap, uint32_t sectors_count, struct sector_tween_s *tweens, int num_tweens)
 {
-    btCollisionShape *cshape = BT_CSfromHeightmap(room->sectors, room->sectors_count, tweens, num_tweens, true, true);
+    btCollisionShape *cshape = BT_CSfromHeightmap(heightmap, sectors_count, tweens, num_tweens, true, true);
     struct physics_object_s *ret = NULL;
 
     if(cshape)

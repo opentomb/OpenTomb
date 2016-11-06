@@ -972,7 +972,7 @@ void World_UpdateFlipCollisions()
             num_tweens = Res_Sector_GenDynamicTweens(r, room_tween);
             if(num_tweens > 0)
             {
-                r->content->physics_body_dynamic = Physics_GenRoomRigidBody(r, room_tween, num_tweens);
+                r->content->physics_body_dynamic = Physics_GenRoomRigidBody(r, NULL, 0, room_tween, num_tweens);
                 if(r->content->physics_body_dynamic)
                 {
                     Physics_EnableObject(r->content->physics_body_dynamic);
@@ -2681,8 +2681,8 @@ void World_GenRoomCollision()
         num_tweens = Res_Sector_GenStaticTweens(r, room_tween);
 
         // Final step is sending actual sectors to Bullet collision model. We do it here.
-        r->content->physics_body = Physics_GenRoomRigidBody(r, room_tween, num_tweens);
-        r->self->collision_type = COLLISION_TYPE_STATIC;                     // meshtree
+        r->content->physics_body = Physics_GenRoomRigidBody(r, r->sectors, r->sectors_count, room_tween, num_tweens);
+        r->self->collision_type = COLLISION_TYPE_STATIC;                        // meshtree
         r->self->collision_shape = COLLISION_SHAPE_TRIMESH;
 
         Sys_ReturnTempMem(buff_size);
