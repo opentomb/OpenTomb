@@ -1411,28 +1411,28 @@ void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh)
 }
 
 
-void Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens, int num_tweens)
+struct physics_object_s* Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens, int num_tweens)
 {
     btCollisionShape *cshape = BT_CSfromHeightmap(room->sectors, room->sectors_count, tweens, num_tweens, true, true);
-    room->content->physics_body = NULL;
+    struct physics_object_s *ret = NULL;
 
     if(cshape)
     {
         btVector3 localInertia(0, 0, 0);
         btTransform tr;
         tr.setFromOpenGLMatrix(room->transform);
-        room->content->physics_body = (struct physics_object_s*)malloc(sizeof(struct physics_object_s));
+        ret = (struct physics_object_s*)malloc(sizeof(struct physics_object_s));
         btDefaultMotionState* motionState = new btDefaultMotionState(tr);
         cshape->setMargin(COLLISION_MARGIN_DEFAULT);
-        room->content->physics_body->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-        bt_engine_dynamicsWorld->addRigidBody(room->content->physics_body->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
-        room->content->physics_body->bt_body->setUserPointer(room->self);
-        room->content->physics_body->bt_body->setUserIndex(0);
-        room->content->physics_body->bt_body->setRestitution(1.0);
-        room->content->physics_body->bt_body->setFriction(1.0);
-        room->self->collision_type = COLLISION_TYPE_STATIC;                     // meshtree
-        room->self->collision_shape = COLLISION_SHAPE_TRIMESH;
+        ret->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
+        bt_engine_dynamicsWorld->addRigidBody(ret->bt_body, COLLISION_GROUP_ALL, COLLISION_MASK_ALL);
+        ret->bt_body->setUserPointer(room->self);
+        ret->bt_body->setUserIndex(0);
+        ret->bt_body->setRestitution(1.0);
+        ret->bt_body->setFriction(1.0);
     }
+
+    return ret;
 }
 
 

@@ -214,7 +214,8 @@ typedef struct room_content_s
 
     float                       ambient_lighting[3];
     struct base_mesh_s         *mesh;                                           // room's base mesh
-    struct physics_object_s    *physics_body;
+    struct physics_object_s    *physics_body;                                   // static physics data
+    struct physics_object_s    *physics_body_dynamic;                           // static physics data
 }room_content_t, *room_content_p;
 
 
