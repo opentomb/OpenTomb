@@ -3119,7 +3119,7 @@ unknown.</p></div>
 </p>
 </li>
 </ul></div>
-<div class="admonitionblock">
+<div class="admonitionblock" id="fog_bulb">
 <table><tr>
 <td class="icon">
 <img src="./images/icons/note.png" alt="Note">
@@ -5004,7 +5004,7 @@ seperately defined</em>. This workaround was implemented because TR engines lack
 <td class="icon">
 <img src="./images/icons/note.png" alt="Note">
 </td>
-<td class="content">The list of <em>effects</em> differs across game versions. These will be listed in a separate section noting changes from version to version.</td>
+<td class="content">The list of <em>effects</em> differs across game versions. For precise info on each effect for each game version, refer to <a href="#flipeffects">this section</a>.</td>
 </tr></table>
 </div>
 </div>
@@ -5611,7 +5611,7 @@ left foot forward and another animation for right foot forward.</p></div>
 </pre></div></div></div>
 </div>
 <div class="sect3">
-<h4 id="_animcommand_structure">6.2.6. AnimCommand Structure</h4>
+<h4 id="animcommand-structure">6.2.6. AnimCommand Structure</h4>
 <div class="paragraph"><p>These are various commands associated with each animation. They are varying numbers of <span class="monospaced">int16_t</span>s packed into an array. As the <em>FloorData</em>, AnimCommands must be
 parsed sequentially, one by one.</p></div>
 <div class="paragraph"><p>The first AnimCommand entry is the <em>type</em>, which also determines how many <span class="monospaced">int16_t</span> arguments (operands) follow it (i.e. how many <span class="monospaced">int16_t</span> values must be
@@ -6768,7 +6768,7 @@ objects. These contain translations of a colour value and a lighting value, list
 brightness and greater values being darker.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_effects_flipeffects">9.9. Effects (flipeffects)</h3>
+<h3 id="flipeffects">9.9. Effects (flipeffects)</h3>
 <div class="paragraph"><p>In this chapter, we&#8217;ll try to describe each <em>effect</em> (or, natively called, <em>flipeffect</em>) for every TR engine version. Given the fact that effect listing changed from version to version, yet retaining common ones, the easiest way to lay them down is to create a table with effect indexes corresponding to each game version.</p></div>
 <div class="paragraph"><p>Effect names are directly brought from native SDK or debug listings, where available (namely TR1, TR4 and TR5). When native names aren&#8217;t available (which is the case for TR2 and TR3) or wrong (which happens in TR4 and TR5 listings), new ones will be coined. It&#8217;s possible that same effect goes under different names in different game versions. In this case, effect name will be preserved (for historical [sic] reasons), and description will point to an effect with more common name.</p></div>
 <div class="paragraph"><p>Effect description for most common ones will be brought from TRLE manual and then extrapolated to earlier (TR1-3) and later (TR5) versions. For effects which aren&#8217;t described in TRLE, there will be arbitrary description.</p></div>
@@ -6778,7 +6778,7 @@ brightness and greater values being darker.</p></div>
 <img src="./images/icons/note.png" alt="Note">
 </td>
 <td class="content">
-<div class="paragraph"><p>As mentioned in <a id="6.2.6"></a>, effects could be called in two ways&#8201;&#8212;&#8201;either by an entity via <em>AnimCommand</em>, or by <em>trigger action</em>. However, there are certain effects which strictly require caller entity ID to work with (see effect descriptions for that). In such case, if effect is called by trigger action, <em>resulting outcome is undefined</em> in original engine. The most sane way to deal with this situation is to pass an ID of entity which activated given trigger.</p></div>
+<div class="paragraph"><p>As mentioned <a href="#animcommand-structure">here</a>, effects could be called in two ways&#8201;&#8212;&#8201;either by an entity via <em>AnimCommand</em>, or by <em>trigger action</em>. However, there are certain effects which strictly require caller entity ID to work with (see effect descriptions for that). In such case, if effect is called by trigger action, <em>resulting outcome is undefined</em> in original engine. The most sane way to deal with this situation is to pass an ID of entity which activated given trigger.</p></div>
 <div class="paragraph"><p>On contrary, some effects may require <em>certain trigger action</em> and/or <em>certain trigger type</em> to be called at the moment. In such case, if effect is called via AnimCommand, <em>resulting outcome is undefined</em> in original engine.</p></div>
 </td>
 </tr></table>
@@ -6796,7 +6796,7 @@ width:100%;
 <col style="width:18%;">
 <thead>
 <tr>
-<th class="tableblock halign-left valign-top" >                </th>
+<th class="tableblock halign-left valign-top" > Index           </th>
 <th class="tableblock halign-center valign-top" >        TR1        </th>
 <th class="tableblock halign-center valign-top" >        TR2        </th>
 <th class="tableblock halign-center valign-top" >        TR3        </th>
@@ -6808,7 +6808,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">0</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TURN180</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TURN180</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ROTATE_180</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ROTATE_180</p></td>
@@ -6816,7 +6816,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">1</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DINO_STOMP</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOR_SHAKE</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOR_SHAKE</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOR_SHAKE</p></td>
@@ -6824,7 +6824,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">2</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_NORMAL</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_NORMAL</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_NORMAL</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_NORMAL</p></td>
@@ -6832,7 +6832,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">3</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_BUBBLES</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_BUBBLES</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_BUBBLES</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_BUBBLES</p></td>
@@ -6840,63 +6840,63 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">4</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FINISH_LEVEL</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FINISH_LEVEL</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FINISH_LEVEL</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FINISH_LEVEL</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">5</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">EARTHQUAKEFX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">EARTHQUAKE_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOD_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ACTIVATE_CAMERA</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ACTIVATE_CAMERA</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">6</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOODFX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOD_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CHANDELIER_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ACTIVATE_KEY</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ACTIVATE_KEY</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">7</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RAISINGBLOCKFX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RAISINGBLOCK_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RUBBLE_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RUBBLEFX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RUBBLEFX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RUBBLE_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RUBBLE_FX</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">8</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">STAIRS2SLOPEFX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">STAIRS2SLOPE_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">PISTON_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CROWBAR</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CROWBAR</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">9</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SANDFX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SAND_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CURTAIN_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CURTAINFX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CURTAINFX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CURTAIN_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CURTAIN_FX</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">10</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">POWERUPFX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">POWERUP_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETCHANGE_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETCHANGEFX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETCHANGEFX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETCHANGE_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETCHANGE_FX</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">11</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">EXPLOSIONFX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">EXPLOSION_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">EXPLOSION_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">EXPLOSION_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">EXPLOSION_FX</p></td>
@@ -6904,7 +6904,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">12</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_HANDSFREE</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_HANDSFREE</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_HANDSFREE</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_HANDSFREE</p></td>
@@ -6912,7 +6912,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">13</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLIP_MAP (?)</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLIP_MAP (?)</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_RESTOREHANDS</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_RESTOREHANDS</p></td>
@@ -6920,15 +6920,15 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">14</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_RIGHTGUN</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_RIGHTGUN</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_RIGHTGUN</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_RIGHTGUN</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">15</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CHAINBLOCKFX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CHAINBLOCK_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_LEFTGUN</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_LEFTGUN</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_LEFTGUN</p></td>
@@ -6936,7 +6936,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">16</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLICKERFX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SHOOT_RIGHTGUN</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SHOOT_RIGHTGUN</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SHOOT_RIGHTGUN</p></td>
@@ -6944,7 +6944,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">17</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SHOOT_LEFTGUN</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SHOOT_LEFTGUN</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SHOOT_LEFTGUN</p></td>
@@ -6952,7 +6952,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">18</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP1</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP1</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP1</p></td>
@@ -6960,7 +6960,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">19</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP2</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP2</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP2</p></td>
@@ -6968,7 +6968,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">20</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP3</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP3</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP3</p></td>
@@ -6976,7 +6976,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">21</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_ON</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_ON</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_ON</p></td>
@@ -6984,7 +6984,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">22</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_OFF</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_OFF</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_OFF</p></td>
@@ -6992,7 +6992,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">23</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_ON</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_ON</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_ON</p></td>
@@ -7000,7 +7000,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">24</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_OFF</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_OFF</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_OFF</p></td>
@@ -7008,15 +7008,15 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">25</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">STATUE_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">STATUEFX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">STATUEFX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">STATUE_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">STATUE_FX</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">26</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RESET_HAIR</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RESET_HAIR</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RESET_HAIR</p></td>
@@ -7024,15 +7024,15 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">27</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">BOILER_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">BOILERFX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">BOILERFX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">BOILER_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">BOILER_FX</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">28</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_RESET</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETFOG</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETFOG</p></td>
@@ -7040,7 +7040,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">29</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_STOP</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GHOSTTRAP</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GHOSTTRAP</p></td>
@@ -7048,7 +7048,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">30</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_START</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARALOCATION</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARALOCATION</p></td>
@@ -7056,7 +7056,7 @@ width:100%;
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">31</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_FINISHED</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CLEARSCARABS</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CLEARSCARABS</p></td>
@@ -7197,7 +7197,7 @@ width:100%;
 <img src="./images/icons/note.png" alt="Note">
 </td>
 <td class="content">
-<div class="paragraph"><p>In original engines, all effects which name begins with <em>LARA</em> prefix automatically take Lara character as an entity to work with.</p></div>
+<div class="paragraph"><p>In original engines, all effects which name begins with <span class="monospaced">LARA</span> prefix automatically take Lara character as an entity to work with.</p></div>
 </td>
 </tr></table>
 </div>
@@ -7295,6 +7295,41 @@ width:100%;
 <li>
 <p>
 <span class="monospaced">SHOOT_LEFTGUN</span>&#8201;&#8212;&#8201;Activates given entity&#8217;s muzzle flash effect and dynamic light near mesh #13. Muzzle flash position and orientation, as well as effect duration and intensity is hardcoded. Used primarily in cutscenes.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">MESH_SWAP1</span>&#8201;&#8212;&#8201;Swaps all given entity meshes with <em>MESH_SWAP1</em> model meshes (model ID varies across TR versions). Each mesh is swapped only if source meshswap model mesh is not null, otherwise swap is ignored for a given mesh. Calling this effect again swaps all meshes back to native. Used primarily in cutscenes.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">MESH_SWAP2</span>&#8201;&#8212;&#8201;Swaps all given entity meshes with <em>MESH_SWAP2</em> model meshes (model ID varies across TR versions). Each mesh is swapped only if source meshswap model mesh is not null, otherwise swap is ignored for a given mesh. Calling this effect again swaps all meshes back to native. Used primarily in cutscenes.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">MESH_SWAP3</span>&#8201;&#8212;&#8201;Swaps all given entity meshes with <em>MESH_SWAP3</em> model meshes (model ID varies across TR versions). Each mesh is swapped only if source meshswap model mesh is not null, otherwise swap is ignored for a given mesh. Calling this effect again swaps all meshes back to native. Used primarily in cutscenes.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">INV_ON</span>&#8201;&#8212;&#8201;Hides given entity.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">INV_OFF</span>&#8201;&#8212;&#8201;Shows given entity, if it was hidden.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">RESET_HAIR</span>&#8201;&#8212;&#8201;Presumably used to save Lara&#8217;s ponytail from potential stuck during cutscenes.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">SETFOG</span>&#8201;&#8212;&#8201;When called by trigger action, changes global colour for volumetric fog effect. Takes <span class="monospaced">TriggerSetup</span> <em>Timer</em> field as an index into hardcoded RGB table of colours (see  <a href="#fog_bulb">this section</a> for more info)
 </p>
 </li>
 </ul></div>
