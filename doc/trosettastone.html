@@ -6092,6 +6092,7 @@ hardcoded in the engine (for example, gunshots) or by reaching some animation fr
 used to play certain sound sample in specific circumstances, and either called by triggers or from animations.</p></div>
 <div class="paragraph"><p>Sounds may be <em>looped</em> or <em>one shot</em>, with looped ones playing until specifically untriggered by some in-game event. For example, Uzi and M16 sounds are looped
 and will be played until Lara stops firing these weapons&#8201;&#8212;&#8201;in such case, engine sends a command to stop this particular sound.</p></div>
+<div class="paragraph"><p>Sounds may be <em>global</em> or <em>local</em>. <em>Global</em> sounds have no 3D positioning in world space, they always have constant volume and usually not linked to any object in level. These are primarily menu sounds. <em>Local</em> sounds are usually produced by entities or sound source objects. They have certain coordinates in space, and could be affected by their position and environment. <em>Local</em> sounds, when emitted by entities, may travel along with these entities.</p></div>
 <div class="paragraph"><p>Sounds are referred to by an <em>internal sound index</em>; this is translated into which sound sample with the help of three layers of indexing, to allow for a
 suitable degree of abstraction. Internal sound indices for various sounds are consistent across all the level files in a game; a gunshot or a passport opening
 in one level file will have the same internal sound index as in all the others. The highest level of these is the <span class="monospaced">SoundMap[]</span> array, which translates the
@@ -7328,7 +7329,7 @@ width:100%;
 </li>
 <li>
 <p>
-<span class="monospaced">RUBBLEFX</span>&#8201;&#8212;&#8201;Plays rumble sound FX and holds camera shake effect <em>globally</em> for some time, then finishes it with &#8220;shutting&#8221; sound. <span class="image">
+<span class="monospaced">RUBBLEFX</span>&#8201;&#8212;&#8201;Plays <em>global</em> rumble sound FX and holds camera shake effect for some time, then finishes it with &#8220;shutting&#8221; sound. <span class="image">
 <img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
 </span><span class="image">
 <img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
@@ -7337,22 +7338,17 @@ width:100%;
 </li>
 <li>
 <p>
-<span class="monospaced">SETCHANGEFX</span>&#8201;&#8212;&#8201;If this effect is called by trigger action, play sound FX <em>globally</em>, taking <span class="monospaced">TriggerSetup</span> <em>Timer</em> field as a sound ID.
+<span class="monospaced">SETCHANGEFX</span>&#8201;&#8212;&#8201;If this effect is called by trigger action, play <em>global</em> sound FX, taking <span class="monospaced">TriggerSetup</span> <em>Timer</em> field as a sound ID.
 </p>
 </li>
 <li>
 <p>
-<span class="monospaced">EXPLOSION_FX</span>&#8201;&#8212;&#8201;Plays explosion sound (ID #105) and produce full-screen flash graphical FX.
+<span class="monospaced">EXPLOSION_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> explosion sound (ID #105) and produce full-screen flash graphical FX.
 </p>
 </li>
 <li>
 <p>
 <span class="monospaced">CROWBAR</span>&#8201;&#8212;&#8201;Swaps given entity&#8217;s mesh #10 index with same mesh&#8217;s index from <em>CROWBAR_ANIM</em> model (either model ID #246 in TR4, or model ID #240 in TR5). Calling this effect again swaps mesh #10 back to native. Used primarily in cutscenes to create an illusion of Lara getting crowbar in her hand.
-</p>
-</li>
-<li>
-<p>
-<span class="monospaced">CURTAINFX</span>&#8201;&#8212;&#8201;Unused.
 </p>
 </li>
 <li>
