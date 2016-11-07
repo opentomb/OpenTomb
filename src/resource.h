@@ -26,8 +26,9 @@ struct sector_tween_s;
 struct tr5_room_light_s;
 
 
-void     Res_Sector_GenTweens(struct room_s *room, struct sector_tween_s *room_tween);
-bool     Res_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count);
+int  Res_Sector_GenStaticTweens(struct room_s *room, struct sector_tween_s *room_tween);
+int  Res_Sector_GenDynamicTweens(struct room_s *room, struct sector_tween_s *room_tween);
+bool Res_SetAnimTexture(struct polygon_s *polygon, uint32_t tex_index, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count);
 
 int  Res_Sector_TranslateFloorData(struct room_s *rooms, uint32_t rooms_count, struct room_sector_s *sector, class VT_Level *tr);
 int  Res_Sector_In2SideOfPortal(struct room_sector_s *s1, struct room_sector_s *s2, struct portal_s *p);

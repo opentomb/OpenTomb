@@ -259,6 +259,7 @@ void World_Open(class VT_Level *tr)
 
     // Fix initial room states
     World_FixRooms();
+    World_UpdateFlipCollisions();
     Gui_DrawLoadScreen(970);
 
     if(global_world.tex_atlas)
@@ -943,8 +944,51 @@ void World_BuildOverlappedRoomsList(struct room_s *room)
 /*
  * WORLD  TRIGGERING  FUNCTIONS
  */
+
+void World_UpdateFlipCollisions()
+{
+    room_p r = global_world.rooms;
+    for(uint32_t i = 0; i < global_world.rooms_count; ++i, ++r)
+    {
+        if(r->real_room == r)
+        {
+            int num_tweens = r->sectors_count * 4;
+            size_t buff_size = num_tweens * sizeof(sector_tween_t);
+            sector_tween_p room_tween = (sector_tween_p)Sys_GetTempMem(buff_size);
+
+            // Clear previous dynamic tweens
+            Physics_DeleteObject(r->content->physics_alt_tween);
+            r->content->physics_alt_tween = NULL;
+
+            // Clear tween array.
+            for(int j = 0; j < num_tweens; j++)
+            {
+                room_tween[j].ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
+                room_tween[j].floor_tween_type   = TR_SECTOR_TWEEN_TYPE_NONE;
+            }
+
+            // Most difficult task with converting floordata collision to trimesh collision is
+            // building inbetween polygons which will block out gaps between sector heights.
+            num_tweens = Res_Sector_GenDynamicTweens(r, room_tween);
+            if(num_tweens > 0)
+            {
+                r->content->physics_alt_tween = Physics_GenRoomRigidBody(r, NULL, 0, room_tween, num_tweens);
+                if(r->content->physics_alt_tween)
+                {
+                    Physics_EnableObject(r->content->physics_alt_tween);
+                }
+            }
+
+            Sys_ReturnTempMem(buff_size);
+        }
+    }
+}
+
+
 int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
 {
+    int ret = 0;
+
     if(flip_index >= global_world.flip_count)
     {
         Con_Warning("wrong flipmap index");
@@ -978,17 +1022,24 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
                    (( flip_state && !current_room->is_swapped) ||
                     (!flip_state &&  current_room->is_swapped)))
                 {
+
                     current_room->is_swapped = !current_room->is_swapped;
                     Room_Disable(current_room->real_room);
                     Room_SwapContent(current_room, current_room->alternate_room_next);
                     Room_Enable(current_room->real_room);
+                    ret = 1;
                 }
             }
         }
         global_world.flip_state[flip_index] = flip_state & 0x01;
     }
 
-    return 0;
+    if(ret)
+    {
+        World_UpdateFlipCollisions();
+    }
+
+    return ret;
 }
 
 
@@ -1818,6 +1869,7 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     room->content = (room_content_p)malloc(sizeof(room_content_t));
     room->content->containers = NULL;
     room->content->physics_body = NULL;
+    room->content->physics_alt_tween = NULL;
     room->content->mesh = NULL;
     room->content->static_mesh = NULL;
     room->content->sprites = NULL;
@@ -2612,9 +2664,9 @@ void World_GenRoomCollision()
         // two triangles are added to collisional trimesh, in case of triangle inbetween,
         // we add only one, and in case of ghost inbetween, we ignore it.
 
-        int num_heightmaps = (r->sectors_x * r->sectors_y);
-        int num_tweens = (num_heightmaps * 4);
-        sector_tween_s *room_tween   = new sector_tween_s[num_tweens];
+        int num_tweens = r->sectors_count * 4;
+        size_t buff_size = num_tweens * sizeof(sector_tween_t);
+        sector_tween_p room_tween = (sector_tween_p)Sys_GetTempMem(buff_size);
 
         // Clear tween array.
 
@@ -2626,12 +2678,14 @@ void World_GenRoomCollision()
 
         // Most difficult task with converting floordata collision to trimesh collision is
         // building inbetween polygons which will block out gaps between sector heights.
-        Res_Sector_GenTweens(r, room_tween);
+        num_tweens = Res_Sector_GenStaticTweens(r, room_tween);
 
         // Final step is sending actual sectors to Bullet collision model. We do it here.
-        Physics_GenRoomRigidBody(r, room_tween, num_tweens);
+        r->content->physics_body = Physics_GenRoomRigidBody(r, r->sectors, r->sectors_count, room_tween, num_tweens);
+        r->self->collision_type = COLLISION_TYPE_STATIC;                        // meshtree
+        r->self->collision_shape = COLLISION_SHAPE_TRIMESH;
 
-        delete[] room_tween;
+        Sys_ReturnTempMem(buff_size);
     }
 }
 

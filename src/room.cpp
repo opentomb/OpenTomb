@@ -62,6 +62,8 @@ void Room_Clear(struct room_s *room)
 
         Physics_DeleteObject(room->content->physics_body);
         room->content->physics_body = NULL;
+        Physics_DeleteObject(room->content->physics_alt_tween);
+        room->content->physics_alt_tween = NULL;
 
         if(room->content->sprites_count)
         {
@@ -166,6 +168,11 @@ void Room_Enable(struct room_s *room)
         Physics_EnableObject(room->content->physics_body);
     }
 
+    if(room->content->physics_alt_tween)
+    {
+        Physics_DisableObject(room->content->physics_alt_tween);
+    }
+
     for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
     {
         if(room->content->static_mesh[i].physics_body != NULL)
@@ -194,6 +201,11 @@ void Room_Disable(struct room_s *room)
     if(room->content->physics_body)
     {
         Physics_DisableObject(room->content->physics_body);
+    }
+
+    if(room->content->physics_alt_tween)
+    {
+        Physics_DisableObject(room->content->physics_alt_tween);
     }
 
     for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
