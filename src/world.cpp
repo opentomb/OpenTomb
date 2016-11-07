@@ -957,8 +957,8 @@ void World_UpdateFlipCollisions()
             sector_tween_p room_tween = (sector_tween_p)Sys_GetTempMem(buff_size);
 
             // Clear previous dynamic tweens
-            Physics_DeleteObject(r->content->physics_body_dynamic);
-            r->content->physics_body_dynamic = NULL;
+            Physics_DeleteObject(r->content->physics_alt_tween);
+            r->content->physics_alt_tween = NULL;
 
             // Clear tween array.
             for(int j = 0; j < num_tweens; j++)
@@ -972,10 +972,10 @@ void World_UpdateFlipCollisions()
             num_tweens = Res_Sector_GenDynamicTweens(r, room_tween);
             if(num_tweens > 0)
             {
-                r->content->physics_body_dynamic = Physics_GenRoomRigidBody(r, NULL, 0, room_tween, num_tweens);
-                if(r->content->physics_body_dynamic)
+                r->content->physics_alt_tween = Physics_GenRoomRigidBody(r, NULL, 0, room_tween, num_tweens);
+                if(r->content->physics_alt_tween)
                 {
-                    Physics_EnableObject(r->content->physics_body_dynamic);
+                    Physics_EnableObject(r->content->physics_alt_tween);
                 }
             }
 
@@ -1869,7 +1869,7 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     room->content = (room_content_p)malloc(sizeof(room_content_t));
     room->content->containers = NULL;
     room->content->physics_body = NULL;
-    room->content->physics_body_dynamic = NULL;
+    room->content->physics_alt_tween = NULL;
     room->content->mesh = NULL;
     room->content->static_mesh = NULL;
     room->content->sprites = NULL;
