@@ -69,6 +69,10 @@ public:
         if(r0 && r1)
         {
             room_sector_p rs = NULL;
+            if(Room_IsOverlapped(r0, r1))
+            {
+                return 1.0f;
+            }
             if((m_cont->object_type == OBJECT_ENTITY) && (m_cont->object))
             {
                 entity_p ent = (entity_p)m_cont->object;
@@ -125,6 +129,10 @@ public:
         if(r0 && r1)
         {
             room_sector_p rs = NULL;
+            if(Room_IsOverlapped(r0, r1))
+            {
+                return 1.0f;
+            }
             if((m_cont->object_type == OBJECT_ENTITY) && (m_cont->object))
             {
                 entity_p ent = (entity_p)m_cont->object;

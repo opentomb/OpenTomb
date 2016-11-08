@@ -449,8 +449,6 @@ void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r)
 
 int Room_IsJoined(struct room_s *r1, struct room_s *r2)
 {
-    r1 = r1->real_room;
-    r2 = r2->real_room;
     portal_p p = r1->portals;
     for(uint16_t i = 0; i < r1->portals_count; i++, p++)
     {
