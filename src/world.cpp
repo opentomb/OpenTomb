@@ -882,21 +882,22 @@ void World_BuildNearRoomsList(struct room_s *room)
     room->near_room_list_size = 0;
     room->near_room_list = (room_t**)Sys_GetTempMem(global_world.rooms_count * sizeof(room_t*));
 
-    portal_p p = room->portals;
-    for(uint16_t i = 0; i < room->portals_count; i++, p++)
+    room_sector_p rs = room->sectors;
+    for(uint32_t i = 0; i < room->sectors_count; i++, rs++)
     {
-        Room_AddToNearRoomsList(room, p->dest_room);
-    }
-
-    uint16_t nc1 = room->near_room_list_size;
-
-    for(uint16_t i = 0; i < nc1; i++)
-    {
-        room_p r = room->near_room_list[i];
-        p = r->portals;
-        for(uint16_t j = 0; j < r->portals_count; j++, p++)
+        if(rs->portal_to_room)
         {
-            Room_AddToNearRoomsList(room, p->dest_room);
+            Room_AddToNearRoomsList(room, rs->portal_to_room->real_room);
+        }
+
+        if(rs->room_above)
+        {
+            Room_AddToNearRoomsList(room, rs->room_above->real_room);
+        }
+
+        if(rs->room_below)
+        {
+            Room_AddToNearRoomsList(room, rs->room_below->real_room);
         }
     }
 
@@ -2627,13 +2628,13 @@ void World_GenRoomProperties(class VT_Level *tr)
             Res_Sector_TranslateFloorData(global_world.rooms, global_world.rooms_count, r->sectors + j, tr);
         }
 
-        // Generate links to the near rooms.
-        World_BuildNearRoomsList(r);
-        // Generate links to the overlapped rooms.
-        World_BuildOverlappedRoomsList(r);
-
         // Basic sector calculations.
         Res_RoomSectorsCalculate(global_world.rooms, global_world.rooms_count, i, tr);
+
+        // Generate links to the overlapped rooms.
+        World_BuildOverlappedRoomsList(r);
+        // Generate links to the near rooms.
+        World_BuildNearRoomsList(r);
     }
 }
 

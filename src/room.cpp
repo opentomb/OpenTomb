@@ -439,7 +439,7 @@ room_sector_p Room_GetSectorXYZ(room_p room, float pos[3])
 void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r)
 {
     if(room && r && (r->real_room->id != room->real_room->id) &&
-       !Room_IsInNearRoomsList(room, r) && !Room_IsOverlapped(room, r))
+       !Room_IsInNearRoomsList(room, r) && !Room_IsInOverlappedRoomsList(room, r))
     {
         room->near_room_list[room->near_room_list_size] = r->real_room;
         room->near_room_list_size++;
@@ -449,19 +449,23 @@ void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r)
 
 int Room_IsJoined(struct room_s *r1, struct room_s *r2)
 {
-    portal_p p = r1->portals;
-    for(uint16_t i = 0; i < r1->portals_count; i++, p++)
+    room_sector_p rs = r1->sectors;
+    for(uint32_t i = 0; i < r1->sectors_count; i++, rs++)
     {
-        if(p->dest_room->id == r2->real_room->id)
+        if((rs->portal_to_room == r2->real_room) ||
+           (rs->room_above == r2->real_room) ||
+           (rs->room_below == r2->real_room))
         {
             return 1;
         }
     }
 
-    p = r2->portals;
-    for(uint16_t i = 0; i < r2->portals_count; i++, p++)
+    rs = r2->sectors;
+    for(uint32_t i = 0; i < r2->sectors_count; i++, rs++)
     {
-        if(p->dest_room->id == r1->real_room->id)
+        if((rs->portal_to_room == r1->real_room) ||
+           (rs->room_above == r1->real_room) ||
+           (rs->room_below == r1->real_room))
         {
             return 1;
         }
@@ -513,6 +517,41 @@ int Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1)
             for(uint16_t i = 0; i < r1->near_room_list_size; i++)
             {
                 if(r1->near_room_list[i]->real_room->id == r0->real_room->id)
+                {
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+
+int Room_IsInOverlappedRoomsList(struct room_s *r0, struct room_s *r1)
+{
+    if(r0 && r1)
+    {
+        if(r0->id == r1->id)
+        {
+            return 0;
+        }
+
+        if(r1->overlapped_room_list_size >= r0->overlapped_room_list_size)
+        {
+            for(uint16_t i = 0; i < r0->overlapped_room_list_size; i++)
+            {
+                if(r0->overlapped_room_list[i]->real_room->id == r1->real_room->id)
+                {
+                    return 1;
+                }
+            }
+        }
+        else
+        {
+            for(uint16_t i = 0; i < r1->overlapped_room_list_size; i++)
+            {
+                if(r1->overlapped_room_list[i]->real_room->id == r0->real_room->id)
                 {
                     return 1;
                 }

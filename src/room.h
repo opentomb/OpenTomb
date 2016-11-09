@@ -267,6 +267,7 @@ void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r);
 int  Room_IsJoined(struct room_s *r1, struct room_s *r2);
 int  Room_IsOverlapped(struct room_s *r0, struct room_s *r1);
 int  Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1);
+int Room_IsInOverlappedRoomsList(struct room_s *r0, struct room_s *r1);
 void Room_MoveActiveItems(struct room_s *room_to, struct room_s *room_from);
 
 // NOTE: Functions which take native TR level structures as argument will have
