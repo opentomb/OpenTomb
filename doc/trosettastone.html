@@ -2072,7 +2072,7 @@ width:100%;
 <col style="width:1%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-11-08)</strong></p></div>
+<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-11-11)</strong></p></div>
 <div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
 <div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div></div></td>
 <td class="tableblock halign-right valign-middle" ><div><div class="paragraph"><p><span class="image">
@@ -2256,7 +2256,7 @@ Clarify the box-overlap-zone relation in NPC behaviour section.
 </li>
 <li>
 <p>
-Research unlisted TR3 flipeffects, clarify FE 21/22 and 23/24 purpose.
+Clarify flipeffects 31 and 33 for TR5.
 </p>
 </li>
 </ol></div>
@@ -4922,7 +4922,7 @@ way engine treats it in either case will be discussed in corresponding section.<
 </div>
 </div>
 <div class="sect3">
-<h4 id="_trigaction_span_class_monospaced_0x03_span_flip_map">4.6.4. TrigAction <span class="monospaced">0x03</span>: Flip Map</h4>
+<h4 id="trigaction-0x03-flipmap">4.6.4. TrigAction <span class="monospaced">0x03</span>: Flip Map</h4>
 <div class="paragraph"><p><em>FlipMap</em> is an internal engine array of <span class="monospaced">uint8_t</span>s which is used to determine if alternate rooms should be turned on or off (in TRLE terms, <em>flipped</em>). It uses
 <em>trigger mask</em> in the same manner as for <em>Object</em> activation and deactivation, but in this case, alternate rooms are activated if given <span class="monospaced">FlipMap</span> entry mask is
 set (<span class="monospaced">0x1F</span>), and deactivated, if <span class="monospaced">FlipMap</span> entry is not set (not <span class="monospaced">0x1F</span>).</p></div>
@@ -6774,16 +6774,49 @@ brightness and greater values being darker.</p></div>
 </div>
 <div class="sect2">
 <h3 id="flipeffects">9.9. Effects (flipeffects)</h3>
-<div class="paragraph"><p>In this chapter, we&#8217;ll try to describe each <em>effect</em> (or, natively called, <em>flipeffect</em>) for every TR engine version. Given the fact that effect listing changed from version to version, yet retaining common ones, the easiest way to lay them down is to create a table with effect indexes corresponding to each game version.</p></div>
-<div class="paragraph"><p>Effect names are directly brought from native SDK or debug listings, where available (namely TR1, TR4 and TR5). When native names aren&#8217;t available (which is the case for TR2 and TR3) or wrong (which happens in TR4 and TR5 listings), new ones will be coined. It&#8217;s possible that same effect goes under different names in different game versions. In this case, effect name will be preserved (for historical [sic] reasons), and description will point to an effect with more common name.</p></div>
+<div class="sect3">
+<h4 id="_the_concept_2">9.9.1. The Concept</h4>
+<div class="paragraph"><p>As it was briefly mentioned <a href="#trigaction-0x09-effect">earlier</a>, <em>effect</em> (or, commonly named <em>flipeffect</em>) is a special pre-compiled routine which is called when some non-trivial event occurs. The concept of flipeffect is somewhat similar to <em>task</em>, i.e. when some flipeffect is engaged, it could be flagged by engine to call <em>every game frame</em> (however, there are one-shot flipeffects as well). Such setup is needed for some complex flipeffect events, like flickering lights in TR1 Atlantis (see <span class="monospaced">FLICKER_FX</span> description), which stops automatically after some time. If flipeffect is flagged to execute every game frame, this flag can only be unset by own current flipeffect code (when its task is done) or replaced by any other flipeffect call (however, newly called flipeffect doesn&#8217;t necessarily overwrite current flipeffect flag, so you can have one-shot flipeffect executed with another one queued for continuous execution). Ergo, <em>it&#8217;s not possible to queue more than one _continuous</em> flipeffect at a time_, but it&#8217;s possible to have one <em>one-shot</em> and another <em>continuous</em> flipeffect executed every game frame.</p></div>
+</div>
+<div class="sect3">
+<h4 id="_complete_flipeffect_list">9.9.2. Complete Flipeffect List</h4>
+<div class="paragraph"><p>In this chapter, we&#8217;ll try to describe each flipeffect for every TR engine version. Given the fact that flipeffect listing changed from version to version, yet retaining common ones, the easiest way to lay them down is to create a table with flipeffect indexes corresponding to each game version.</p></div>
+<div class="paragraph"><p>There are some guidelines to flipeffect table:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+It&#8217;s possible that same flipeffect goes under different names in different game versions. In this case, legacy flipeffect name will be preserved (for historical <em>[sic]</em> reasons), and description will point to an flipeffect with more recent name. Legacy flipeffect names would be colored in <span class="green">green</span>.
+</p>
+</li>
+<li>
+<p>
+Flipeffect names are directly brought from native SDK or debug listings, where available (namely TR1, TR2, and TR4). When native names aren&#8217;t available (which is the case for TR3 and partially TR5) or wrong (which happens in TR4 and TR5 listings), new ones will be coined. New flipeffect names would be colored in <span class="purple">purple</span>.
+</p>
+</li>
+<li>
+<p>
+It&#8217;s possible that legacy flipeffect code could migrate to later engine versions, but could be broken due to changes in new engine version structures. In this case, flipeffect name would be colored in <span class="red">red</span>.
+</p>
+</li>
+<li>
+<p>
+If there&#8217;s an entry in engine&#8217;s flipeffect list, but no actual code for it, it would be marked as (-).
+</p>
+</li>
+<li>
+<p>
+If actual flipeffect&#8217;s purpose is unknown, it would be marked as (?).
+</p>
+</li>
+</ul></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
 <img src="./images/icons/note.png" alt="Note">
 </td>
 <td class="content">
-<div class="paragraph"><p>As mentioned <a href="#animcommand-structure">here</a>, effects could be called in two ways&#8201;&#8212;&#8201;either by an entity via <em>AnimCommand</em>, or by <em>trigger action</em>. However, there are certain effects which strictly require caller entity ID to work with (see effect descriptions for that). In such case, if effect is called by trigger action, <em>resulting outcome is undefined</em> in original engine. The most sane way to deal with this situation is to pass an ID of entity which activated given trigger.</p></div>
-<div class="paragraph"><p>On contrary, some effects may require <em>certain trigger action</em> and/or <em>certain trigger type</em> to be called at the moment. In such case, if effect is called via AnimCommand, <em>resulting outcome is undefined</em> in original engine.</p></div>
+<div class="paragraph"><p>As mentioned <a href="#animcommand-structure">here</a>, flipeffect could be called in two ways&#8201;&#8212;&#8201;either by an entity via <em>AnimCommand</em>, or by <em>trigger action</em>. However, there are certain flipeffect which strictly require caller entity ID to work with (see effect descriptions for that). In such case, if effect is called by trigger action, <em>resulting outcome is undefined</em> in original engine. The most sane way to deal with this situation is to pass an ID of entity which activated given trigger.</p></div>
+<div class="paragraph"><p>On contrary, some flipeffects may require <em>certain trigger action</em> and/or <em>certain trigger type</em> to be called at the moment. In such case, if effect is called via AnimCommand, <em>resulting outcome is undefined</em> in original engine.</p></div>
 </td>
 </tr></table>
 </div>
@@ -6801,9 +6834,9 @@ width:100%;
 <thead>
 <tr>
 <th class="tableblock halign-left valign-top" > Index           </th>
-<th class="tableblock halign-center valign-top" >        TR1        </th>
+<th class="tableblock halign-center valign-top" >        TR1           </th>
 <th class="tableblock halign-center valign-top" >        TR2        </th>
-<th class="tableblock halign-center valign-top" >        TR3        </th>
+<th class="tableblock halign-center valign-top" >        TR3           </th>
 <th class="tableblock halign-center valign-top" >        TR4        </th>
 <th class="tableblock halign-center valign-top" >        TR5</th>
 </tr>
@@ -6811,15 +6844,15 @@ width:100%;
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">0</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TURN180</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TURN180</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TURN180</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="green">TURN180</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="green">TURN180</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="green">TURN180</span></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ROTATE_180</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ROTATE_180</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">1</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DINO_STOMP</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="green">DINO_STOMP</span></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOR_SHAKE</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOR_SHAKE</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOR_SHAKE</p></td>
@@ -6830,8 +6863,8 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_NORMAL</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_NORMAL</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_NORMAL</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_NORMAL</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_NORMAL</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOD_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">FLOOD_FX</span></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">3</p></td>
@@ -6853,7 +6886,7 @@ width:100%;
 <td class="tableblock halign-left valign-top" ><p class="tableblock">5</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">EARTHQUAKE_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOD_FX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOD_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ACTIVATE_CAMERA</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ACTIVATE_CAMERA</p></td>
 </tr>
@@ -6861,7 +6894,7 @@ width:100%;
 <td class="tableblock halign-left valign-top" ><p class="tableblock">6</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOD_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CHANDELIER_FX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">CHANDELIER_FX</span></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ACTIVATE_KEY</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ACTIVATE_KEY</p></td>
 </tr>
@@ -6877,7 +6910,7 @@ width:100%;
 <td class="tableblock halign-left valign-top" ><p class="tableblock">8</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">STAIRS2SLOPE_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">PISTON_FX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">PISTON_FX</span></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CROWBAR</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CROWBAR</p></td>
 </tr>
@@ -6885,17 +6918,17 @@ width:100%;
 <td class="tableblock halign-left valign-top" ><p class="tableblock">9</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SAND_FX</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CURTAIN_FX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CURTAIN_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">CURTAIN_FX</span></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">10</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">POWERUP_FX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETCHANGE_FX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETCHANGE_FX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETCHANGE_FX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETCHANGE_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SET_CHANGE_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">SET_CHANGE_FX</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="purple">TIMER_FIELD_FX</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="purple">TIMER_FIELD_FX</span></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">11</p></td>
@@ -6917,7 +6950,7 @@ width:100%;
 <td class="tableblock halign-left valign-top" ><p class="tableblock">13</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLIP_MAP</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLIP_MAP</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLIP_MAP</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
@@ -6927,7 +6960,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_RIGHTGUN</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_RIGHTGUN</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_RIGHTGUN</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_RIGHTGUN</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">15</p></td>
@@ -6935,7 +6968,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_LEFTGUN</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_LEFTGUN</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_LEFTGUN</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_LEFTGUN</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">16</p></td>
@@ -6959,7 +6992,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP1</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP1</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP1</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP1</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">19</p></td>
@@ -6967,7 +7000,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP2</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP2</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP2</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP2</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">20</p></td>
@@ -6975,7 +7008,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP3</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP3</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP3</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP3</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">21</p></td>
@@ -6998,22 +7031,22 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_ON</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_ON</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_ON</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_ON</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">24</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_OFF</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_OFF</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_OFF</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_OFF</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">25</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">STATUE_FX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">STATUE_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">STATUE_FX</span></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
@@ -7029,7 +7062,7 @@ width:100%;
 <td class="tableblock halign-left valign-top" ><p class="tableblock">27</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">BOILER_FX</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">BOILER_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">BOILER_FX</span></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
@@ -7045,9 +7078,9 @@ width:100%;
 <td class="tableblock halign-left valign-top" ><p class="tableblock">29</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_STOP</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">ASSAULT_STOP</span></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GHOSTTRAP</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GHOSTTRAP</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">30</p></td>
@@ -7063,7 +7096,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_FINISHED</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_FINISHED</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CLEARSCARABS</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CLEARSCARABS</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RICH1_ROOM69 (?)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">32</p></td>
@@ -7079,7 +7112,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_PENALTY_8</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">(?)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">34</p></td>
@@ -7159,7 +7192,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_6</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">POURSWAP1</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">POURSWAP1</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">44</p></td>
@@ -7167,7 +7200,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_7</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">POURSWAP2</p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">POURSWAP2</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">45</p></td>
@@ -7191,7 +7224,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_10</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_1</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">48</p></td>
@@ -7199,7 +7232,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_11</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_2</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">49</p></td>
@@ -7207,7 +7240,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_12</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_3</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">50</p></td>
@@ -7215,7 +7248,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_13</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_4</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">51</p></td>
@@ -7223,7 +7256,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_14</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_5</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">52</p></td>
@@ -7231,7 +7264,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_15</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_6</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">53</p></td>
@@ -7239,7 +7272,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_16</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_7</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">54</p></td>
@@ -7247,7 +7280,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_17</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_8</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">55</p></td>
@@ -7255,7 +7288,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_18</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_9</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">56</p></td>
@@ -7263,7 +7296,7 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_19</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
-<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_10</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock">57</p></td>
@@ -7271,7 +7304,15 @@ width:100%;
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_RESET</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_11</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">58</p></td>
 <td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_12</p></td>
 </tr>
 </tbody>
 </table>
@@ -7298,7 +7339,7 @@ width:100%;
 </li>
 <li>
 <p>
-<span class="monospaced">LARA_NORMAL</span>&#8201;&#8212;&#8201;Resets certain internal Lara parameters to default ones, including movement modes and camera position.
+<span class="monospaced">LARA_NORMAL</span>&#8201;&#8212;&#8201;Resets certain internal Lara parameters to default ones, including movement modes, FOV and camera position.
 </p>
 </li>
 <li>
@@ -7319,6 +7360,11 @@ width:100%;
 <li>
 <p>
 <span class="monospaced">FINISH_LEVEL</span>&#8201;&#8212;&#8201;Same effect as <em>TrigAction</em> <span class="monospaced">0x07</span>&#8201;&#8212;&#8201;immediately loads next level. For TR4, (which requires explicit level index to jump), current level index is increased and passed as level index to jump to.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">FLIP_MAP</span>&#8201;&#8212;&#8201;Equal to <a href="#trigaction-0x03-flipmap">TrigAction <span class="monospaced">0x03</span></a>.
 </p>
 </li>
 <li>
@@ -7388,6 +7434,16 @@ width:100%;
 </li>
 <li>
 <p>
+<span class="monospaced">DYN_ON</span>&#8201;&#8212;&#8201;Turns dynamic lights on for a given entity. Actual result is unclear.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">DYN_OFF</span>&#8201;&#8212;&#8201;Turns dynamic lights off for a given entity. Actual result is unclear.
+</p>
+</li>
+<li>
+<p>
 <span class="monospaced">RESET_HAIR</span>&#8201;&#8212;&#8201;Presumably used to save Lara&#8217;s ponytail from potential stuck during cutscenes.
 </p>
 </li>
@@ -7398,7 +7454,7 @@ width:100%;
 </li>
 <li>
 <p>
-<span class="monospaced">GHOSTTRAP</span>&#8201;&#8212;&#8201;Kills all the living WRAITH3 entities (model ID #88) this way: the wraith starts falling towards given entity. Reaching it or not, the wraith will die if it hits the floor of the room.
+<span class="monospaced">GHOSTTRAP</span>&#8201;&#8212;&#8201;Kills all the living <em>WRAITH3</em> entities (model ID #88 in TR4) this way: the wraith starts falling towards given entity. Reaching it or not, the wraith will die if it hits the floor of the room.
 </p>
 </li>
 <li>
@@ -7468,27 +7524,57 @@ width:100%;
 </li>
 <li>
 <p>
-<span class="monospaced">RAISINGBLOCK_FX</span>&#8201;&#8212;&#8201;Plays sound with ID 117.
+<span class="monospaced">TUT_HINT_1-12</span>&#8201;&#8212;&#8201;Sequence of Lara&#8217;s voice hints on how to complete tutorial on Streets of Rome (TR5). Setup is similar to <span class="monospaced">GYM_HINT</span> flipeffects, but seems that there&#8217;s no reset flipeffect to restart tutorial.
 </p>
 </li>
 <li>
 <p>
-<span class="monospaced">CHAINBLOCK_FX</span>&#8201;&#8212;&#8201;Plays sound with ID 173 and ID 33 with predefined interval.
+<span class="monospaced">RAISINGBLOCK_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 117.
 </p>
 </li>
 <li>
 <p>
-<span class="monospaced">EARTHQUAKE_FX</span>&#8201;&#8212;&#8201;Shakes screen violently and plays sounds with ID 99 and 70 with predefined intervals. Used in TR1, Palace Midas.
+<span class="monospaced">CHAINBLOCK_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 173 and ID 33 with predefined interval.
 </p>
 </li>
 <li>
 <p>
-<span class="monospaced">STAIRS2SLOPE_FX</span>&#8201;&#8212;&#8201;Plays sound with ID 119 with predefined delay.
+<span class="monospaced">EARTHQUAKE_FX</span>&#8201;&#8212;&#8201;Shakes screen violently and plays sounds with ID 99 and 70 <em>globally</em> with predefined intervals. Used in TR1, Palace Midas.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">STAIRS2SLOPE_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 119 with predefined delay.
 </p>
 </li>
 <li>
 <p>
 <span class="monospaced">FLICKER_FX</span>&#8201;&#8212;&#8201;Flips alternate rooms back and forth several times with predefined intervals, creating illusion of flickering light. Used in TR1, first room of Atlantis.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">BOILER_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 338. Used in TR2, Wreck of the Maria Doria.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">PISTON_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 190. Used in TR2, Living Quarters.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">CURTAIN_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 191. Used in TR2, Living Quarters.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">SET_CHANGE_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 330. Used in TR2, Opera House and Temple of Xian.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">STATUE_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 331. Used in TR2, Barkhang Monastery.
 </p>
 </li>
 <li>
@@ -7502,7 +7588,7 @@ width:100%;
 </li>
 <li>
 <p>
-<span class="monospaced">SETCHANGE_FX</span>&#8201;&#8212;&#8201;If this effect is called by trigger action, play <em>global</em> sound FX, taking <span class="monospaced">TriggerSetup</span> <em>Timer</em> field as a sound ID.
+<span class="monospaced">TIMER_FIELD_FX</span>&#8201;&#8212;&#8201;If this effect is called by trigger action, play <em>global</em> sound FX, taking <span class="monospaced">TriggerSetup</span> <em>Timer</em> field as a sound ID.
 </p>
 </li>
 <li>
@@ -7510,7 +7596,13 @@ width:100%;
 <span class="monospaced">EXPLOSION_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> explosion sound (ID #105) and produce full-screen flash graphical FX (TR3-5) or camera shake effect (TR1-2).
 </p>
 </li>
+<li>
+<p>
+<span class="monospaced">FLOOD_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> flooding sound (TR1&#8201;&#8212;&#8201;ID #81, TR2&#8201;&#8212;&#8201;ID #79, TR3&#8201;&#8212;&#8201;ID #163, TR4&#8201;&#8212;&#8201;ID #238). Implementation differs from version to version&#8201;&#8212;&#8201;in TR1 and TR2 looped waterfall sound is used (which is then stopped by an engine after 1 second), while in TR3 and TR4 one-shot sound is engaged.
+</p>
+</li>
 </ul></div>
+</div>
 </div>
 </div>
 </div>
@@ -9311,7 +9403,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-11-07 10:13:42 MSK
+Last updated 2016-11-11 02:18:15 MSK
 </div>
 </div>
 </body>
