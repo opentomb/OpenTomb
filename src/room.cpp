@@ -285,7 +285,7 @@ int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont)
 }
 
 
-void Room_SwapContent(struct room_s *room1, struct room_s *room2)
+void Room_SwapContentMovablesToActive(struct room_s *room1, struct room_s *room2)
 {
     if(room1 && room2)
     {
@@ -364,6 +364,19 @@ void Room_SwapContent(struct room_s *room1, struct room_s *room2)
             for(uint32_t i = 0; i < room2->content->static_mesh_count; ++i)
             {
                 room2->content->static_mesh[i].self->room = room2;
+            }
+
+            {
+                room_p base_room = (room1 == room1->real_room) ? room1 : NULL;
+                base_room = (room2 == room2->real_room) ? room2 : room1;
+                if(base_room)
+                {
+                    room_p alt_room = (room1 == base_room) ? room2 : room1;
+                    engine_container_p *ptr = &base_room->content->containers;
+                    for(; *ptr; ptr = &((*ptr)->next));
+                    *ptr = alt_room->content->containers;
+                    alt_room->content->containers = NULL;
+                }
             }
 
             // fix containers

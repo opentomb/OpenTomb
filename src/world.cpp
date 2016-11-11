@@ -1026,7 +1026,7 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
 
                     current_room->is_swapped = !current_room->is_swapped;
                     Room_Disable(current_room->real_room);
-                    Room_SwapContent(current_room, current_room->alternate_room_next);
+                    Room_SwapContentMovablesToActive(current_room, current_room->alternate_room_next);
                     Room_Enable(current_room->real_room);
                     ret = 1;
                 }
@@ -2706,16 +2706,6 @@ void World_FixRooms()
         {
             Room_Disable(r);
         }
-
-        // Isolated rooms may be used for rolling ball trick (for ex., LEVEL4.PHD).
-        // Hence, this part is commented.
-
-        /*
-        if((r->portal_count == 0) && (global_world.rooms_count > 1))
-        {
-            Room_Disable(r);
-        }
-        */
     }
 }
 
