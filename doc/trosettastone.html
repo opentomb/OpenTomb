@@ -3497,7 +3497,7 @@ replaced by any other version-specific room vertex type (<span class="monospaced
 </div>
 <div class="sect3">
 <h4 id="_room_static_mesh_structure">3.2.8. Room Static Mesh Structure</h4>
-<div class="paragraph"><p>Positions and IDs of static meshes (e.g. skeletons, spiderwebs, furniture, trees). This is comparable to the <a href="#tr2_item">[tr2_item]</a> structure, except that static meshes
+<div class="paragraph"><p>Positions and IDs of static meshes (e.g. skeletons, spiderwebs, furniture, trees). This is comparable to the <a href="#tr_entity">[tr_entity]</a> structure, except that static meshes
 have no animations and are confined to a single room.</p></div>
 <div class="sect4">
 <h5 id="_tr1_room_static_mesh_structure">TR1 Room Static Mesh Structure</h5>
@@ -3791,8 +3791,8 @@ boundaries as original room, but altered geometry and/or texturing. Detailed des
 </pre></div></div></div>
 <div class="paragraph"><p><span class="monospaced">RoomColour</span> replaces <span class="monospaced">AmbientIntensity</span> and <span class="monospaced">AmbientIntensity2</span> values from <span class="monospaced">tr2_room</span> structure. Note it&#8217;s <em>not in <span class="monospaced">tr_colour4</span> format</em>, because colour order
 is reversed. It should be treated as ARGB, where A is unused.</p></div>
-<div class="paragraph"><p><span class="monospaced">AlternateGroup</span> was introduced in TR4 to solve long-existing engine limitation, which flipped <em>all alternate rooms at once</em> (see <em>flipmap</em> trigger function
-description in <a href="#trigger-functions">Trigger Functions</a> section). Since TR4, engine only flips rooms which have similar index in room&#8217;s <span class="monospaced">AlternateGroup</span> field
+<div class="paragraph"><p><span class="monospaced">AlternateGroup</span> was introduced in TR4 to solve long-existing engine limitation, which flipped <em>all alternate rooms at once</em> (see <a href="#_trigaction_span_class_monospaced_0x03_span_flip_map"><em>flipmap</em> trigger action</a>
+description in <a href="#_trigger_actions">Trigger actions</a> section). Since TR4, engine only flips rooms which have similar index in room&#8217;s <span class="monospaced">AlternateGroup</span> field
 and trigger operand.</p></div>
 </div>
 <div class="sect3">
@@ -6453,7 +6453,7 @@ width:70%;
 <div class="paragraph"><p>Assignation of bump maps happened inside level editor, where each texture piece could be marked as either <em>level 1</em> or <em>level 2</em> degree of bump map effect. When
 level was converted, all texture pieces with bumpmaps were placed into separate texture tiles after all other texture tiles, following by the same amount of
 texture tiles with auto-generated bump maps arranged in the same manner as original texture tiles. Number of bumped texture tiles was kept in separate variable
-as well (see <a href="#TR4 Level Format">[TR4 Level Format]</a> section).</p></div>
+as well (see <a href="#_the_entire_tr4_level_format">TR4 Level Format</a> section).</p></div>
 <div class="paragraph"><p>So, when engine rendered a face with texture marked as <em>bumped</em>, it rendered original texture at first, then it jumped to the texture tile <em>plus number of
 bumped texture tiles</em>, and rendered one more texture pass on this face using texture from resulting texture tile and the same UV coordinates.</p></div>
 <div class="listingblock">
@@ -6786,87 +6786,44 @@ brightness and greater values being darker.</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span> <span class="c1">// version (4 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumTextiles</span><span class="p">;</span> <span class="c1">// number of texture tiles (4 bytes)</span>
-<span class="n">tr2_textile8</span> <span class="n">Textile8</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)</span>
+<span class="n">tr_textile8</span> <span class="n">Textile8</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">Unused</span><span class="p">;</span> <span class="c1">// 32-bit unused value (4 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">NumRooms</span><span class="p">;</span> <span class="c1">// number of rooms (2 bytes)</span>
-<span class="k">virtual</span> <span class="k">struct</span>
-<span class="p">{</span>
-    <span class="n">tr2_room_info</span> <span class="n">RoomInfo</span><span class="p">;</span> <span class="c1">// room header (16 bytes)</span>
-    <span class="kt">uint32_t</span> <span class="n">NumData</span><span class="p">;</span> <span class="c1">// number of data uint16_t&#39;s to follow (=RoomData) (4 bytes)</span>
-    <span class="k">virtual</span> <span class="k">struct</span>
-    <span class="p">{</span>
-        <span class="kt">uint16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices to follow (2 bytes)</span>
-        <span class="n">tr2_vertex_room</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// vertex list (NumVertices * 8 bytes [TR1 version])</span>
-        <span class="kt">uint16_t</span> <span class="n">NumRectangles</span><span class="p">;</span> <span class="c1">// number of rectangles to follow (2 bytes)</span>
-        <span class="n">tr_face4</span> <span class="n">Rectangles</span><span class="p">[</span><span class="n">NumRectangles</span><span class="p">];</span> <span class="c1">// rectangle list (NumRectangles * 10 bytes)</span>
-        <span class="kt">uint16_t</span> <span class="n">NumTriangles</span><span class="p">;</span> <span class="c1">// number of triangles to follow (2 bytes)</span>
-        <span class="n">tr_face3</span> <span class="n">Triangles</span><span class="p">[</span><span class="n">NumTriangles</span><span class="p">];</span> <span class="c1">// triangle list (NumTriangles * 8 bytes)</span>
-        <span class="kt">uint16_t</span> <span class="n">NumSprites</span><span class="p">;</span> <span class="c1">// number of sprites to follow (2 bytes)</span>
-        <span class="n">tr2_room_sprite</span> <span class="n">Sprites</span><span class="p">[</span><span class="n">NumSprites</span><span class="p">];</span> <span class="c1">// room sprite list (NumSprites * 4 bytes)</span>
-        <span class="kt">uint16_t</span> <span class="n">NumDoors</span><span class="p">;</span> <span class="c1">// number of doors to follow (2 bytes)</span>
-        <span class="n">tr2_room_door</span> <span class="n">Doors</span><span class="p">[</span><span class="n">NumDoors</span><span class="p">];</span> <span class="c1">// door list (NumDoors * 32 bytes)</span>
-        <span class="kt">uint16_t</span> <span class="n">NumZsector</span><span class="p">;</span> <span class="c1">// sector table width (2 bytes)</span>
-        <span class="kt">uint16_t</span> <span class="n">NumXsector</span><span class="p">;</span> <span class="c1">// sector table height (2 bytes)</span>
-        <span class="n">tr2_room_sector</span> <span class="n">SectorData</span><span class="p">[</span><span class="n">NumZsector</span> <span class="o">*</span> <span class="n">NumXsector</span><span class="p">];</span> <span class="c1">// sector table (NumZsector * NumXsector * 8 bytes)</span>
-        <span class="kt">int16_t</span> <span class="n">Intensity1</span><span class="p">;</span>
-        <span class="kt">uint16_t</span> <span class="n">NumLights</span><span class="p">;</span> <span class="c1">// number of lights to follow (2 bytes)</span>
-        <span class="n">tr2_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span> <span class="c1">// light list (NumLights * 18 bytes [TR1 version])</span>
-        <span class="kt">uint16_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span> <span class="c1">// number of static mesh records to follow (2 bytes)</span>
-        <span class="n">tr2_room_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span> <span class="c1">// static mesh data (NumStaticMeshes * 18 bytes [TR1 version])</span>
-        <span class="kt">int16_t</span> <span class="n">AlternateRoom</span><span class="p">;</span> <span class="c1">// (2 bytes)</span>
-        <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span> <span class="c1">// (2 bytes)</span>
-    <span class="p">}</span> <span class="n">RoomData</span><span class="p">;</span>
-<span class="p">}</span> <span class="n">Rooms</span><span class="p">[</span><span class="n">NumRooms</span><span class="p">];</span>
+<span class="n">tr_room</span> <span class="n">Rooms</span><span class="p">[</span><span class="n">NumRooms</span><span class="p">];</span> <span class="c1">// room list (variable length)</span>
 <span class="kt">uint32_t</span> <span class="n">NumFloorData</span><span class="p">;</span> <span class="c1">// number of floor data uint16_t&#39;s to follow (4 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">FloorData</span><span class="p">[</span><span class="n">NumFloorData</span><span class="p">];</span> <span class="c1">// floor data (NumFloorData * 2 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumMeshData</span><span class="p">;</span> <span class="c1">// number of uint16_t&#39;s of mesh data to follow (=Meshes[]) (4 bytes)</span>
-<span class="k">virtual</span> <span class="k">struct</span>
-<span class="p">{</span>
-    <span class="n">tr2_vertex</span> <span class="n">Centre</span><span class="p">;</span> <span class="c1">// relative coordinates of mesh centre (6 bytes)</span>
-    <span class="kt">uint8_t</span> <span class="n">Unknown1</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span> <span class="c1">// unknown (4 bytes)</span>
-    <span class="kt">int16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices to follow (2 bytes)</span>
-    <span class="n">tr2_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// list of vertices (NumVertices * 6 bytes)</span>
-    <span class="kt">int16_t</span> <span class="n">NumNormals</span><span class="p">;</span> <span class="c1">// number of normals to follow (2 bytes)</span>
-    <span class="n">tr2_vertex</span> <span class="n">Normals</span><span class="p">[</span><span class="n">NumNormals</span><span class="p">];</span> <span class="c1">// list of normals (NumNormals * 6 bytes) (becomes Lights if NumNormals &lt; 0; 2 bytes)</span>
-    <span class="kt">int16_t</span> <span class="n">NumTexturedRectangles</span><span class="p">;</span> <span class="c1">// number of textured rectangles to follow (2 bytes)</span>
-    <span class="n">tr_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles (NumTexturedRectangles * 10 bytes)</span>
-    <span class="kt">int16_t</span> <span class="n">NumTexturedTriangles</span><span class="p">;</span> <span class="c1">// number of textured triangles to follow (2 bytes)</span>
-    <span class="n">tr_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles (NumTexturedTriangles * 8 bytes)</span>
-    <span class="kt">int16_t</span> <span class="n">NumColouredRectangles</span><span class="p">;</span> <span class="c1">// number of coloured rectangles to follow (2 bytes)</span>
-    <span class="n">tr_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles (NumColouredRectangles * 10 bytes)</span>
-    <span class="kt">int16_t</span> <span class="n">NumColouredTriangles</span><span class="p">;</span> <span class="c1">// number of coloured triangles to follow (2 bytes)</span>
-    <span class="n">tr_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles (NumColouredTriangles * 8 bytes)</span>
-<span class="p">}</span> <span class="n">Meshes</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// note that NumMeshPointers comes AFTER Meshes[]</span>
+<span class="n">tr_mesh</span> <span class="n">Meshes</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// note that NumMeshPointers comes AFTER Meshes[]</span>
 <span class="kt">uint32_t</span> <span class="n">NumMeshPointers</span><span class="p">;</span> <span class="c1">// number of mesh pointers to follow (4 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">MeshPointers</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// mesh pointer list (NumMeshPointers * 4 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumAnimations</span><span class="p">;</span> <span class="c1">// number of animations to follow (4 bytes)</span>
-<span class="n">tr2_animation</span> <span class="n">Animations</span><span class="p">[</span><span class="n">NumAnimations</span><span class="p">];</span> <span class="c1">// animation list (NumAnimations * 32 bytes)</span>
+<span class="n">tr_animation</span> <span class="n">Animations</span><span class="p">[</span><span class="n">NumAnimations</span><span class="p">];</span> <span class="c1">// animation list (NumAnimations * 32 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumStateChanges</span><span class="p">;</span> <span class="c1">// number of state changes to follow (4 bytes)</span>
-<span class="n">tr2_state_change</span> <span class="n">StateChanges</span><span class="p">[</span><span class="n">NumStateChanges</span><span class="p">];</span> <span class="c1">// state-change list (NumStructures * 6 bytes)</span>
+<span class="n">tr_state_change</span> <span class="n">StateChanges</span><span class="p">[</span><span class="n">NumStateChanges</span><span class="p">];</span> <span class="c1">// state-change list (NumStructures * 6 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumAnimDispatches</span><span class="p">;</span> <span class="c1">// number of animation dispatches to follow (4 bytes)</span>
-<span class="n">tr2_anim_dispatch</span> <span class="n">AnimDispatches</span><span class="p">[</span><span class="n">NumAnimDispatches</span><span class="p">];</span> <span class="c1">// animation-dispatch list list (NumAnimDispatches * 8 bytes)</span>
+<span class="n">tr_anim_dispatch</span> <span class="n">AnimDispatches</span><span class="p">[</span><span class="n">NumAnimDispatches</span><span class="p">];</span> <span class="c1">// animation-dispatch list list (NumAnimDispatches * 8 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumAnimCommands</span><span class="p">;</span> <span class="c1">// number of animation commands to follow (4 bytes)</span>
-<span class="n">tr2_anim_command</span> <span class="n">AnimCommands</span><span class="p">[</span><span class="n">NumAnimCommands</span><span class="p">];</span> <span class="c1">// animation-command list (NumAnimCommands * 2 bytes)</span>
+<span class="n">tr_anim_command</span> <span class="n">AnimCommands</span><span class="p">[</span><span class="n">NumAnimCommands</span><span class="p">];</span> <span class="c1">// animation-command list (NumAnimCommands * 2 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumMeshTrees</span><span class="p">;</span> <span class="c1">// number of MeshTrees to follow (4 bytes)</span>
-<span class="n">tr2_meshtree</span> <span class="n">MeshTrees</span><span class="p">[</span><span class="n">NumMeshTrees</span><span class="p">];</span> <span class="c1">// MeshTree list (NumMeshTrees * 4 bytes)</span>
+<span class="n">tr_meshtree_node</span> <span class="n">MeshTrees</span><span class="p">[</span><span class="n">NumMeshTrees</span><span class="p">];</span> <span class="c1">// MeshTree list (NumMeshTrees * 4 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumFrames</span><span class="p">;</span> <span class="c1">// number of words of frame data to follow (4 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">Frames</span><span class="p">[</span><span class="n">NumFrames</span><span class="p">];</span> <span class="c1">// frame data (NumFrames * 2 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumMoveables</span><span class="p">;</span> <span class="c1">// number of moveables to follow (4 bytes)</span>
-<span class="n">tr2_moveable</span> <span class="n">Moveables</span><span class="p">[</span><span class="n">NumMoveables</span><span class="p">];</span> <span class="c1">// moveable list (NumMoveables * 18 bytes)</span>
+<span class="n">tr_model</span> <span class="n">Moveables</span><span class="p">[</span><span class="n">NumMoveables</span><span class="p">];</span> <span class="c1">// moveable list (NumMoveables * 18 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span> <span class="c1">// number of StaticMesh data records to follow (4 bytes)</span>
-<span class="n">tr2_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span> <span class="c1">// StaticMesh data (NumStaticMesh * 32 bytes)</span>
+<span class="n">tr_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span> <span class="c1">// StaticMesh data (NumStaticMesh * 32 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumObjectTextures</span><span class="p">;</span> <span class="c1">// number of object textures to follow (4 bytes) (after AnimatedTextures in TR3)</span>
-<span class="n">tr2_object_texture</span> <span class="n">ObjectTextures</span><span class="p">[</span><span class="n">NumObjectTextures</span><span class="p">];</span> <span class="c1">// object texture list (NumObjectTextures * 20 bytes) (after AnimatedTextures in TR3)</span>
+<span class="n">tr_object_texture</span> <span class="n">ObjectTextures</span><span class="p">[</span><span class="n">NumObjectTextures</span><span class="p">];</span> <span class="c1">// object texture list (NumObjectTextures * 20 bytes) (after AnimatedTextures in TR3)</span>
 <span class="kt">uint32_t</span> <span class="n">NumSpriteTextures</span><span class="p">;</span> <span class="c1">// number of sprite textures to follow (4 bytes)</span>
-<span class="n">tr2_sprite_texture</span> <span class="n">SpriteTextures</span><span class="p">[</span><span class="n">NumSpriteTextures</span><span class="p">];</span> <span class="c1">// sprite texture list (NumSpriteTextures * 16 bytes)</span>
+<span class="n">tr_sprite_texture</span> <span class="n">SpriteTextures</span><span class="p">[</span><span class="n">NumSpriteTextures</span><span class="p">];</span> <span class="c1">// sprite texture list (NumSpriteTextures * 16 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumSpriteSequences</span><span class="p">;</span> <span class="c1">// number of sprite sequences records to follow (4 bytes)</span>
-<span class="n">tr2_sprite_sequence</span> <span class="n">SpriteSequences</span><span class="p">[</span><span class="n">NumSpriteSequences</span><span class="p">];</span> <span class="c1">// sprite sequence data (NumSpriteSequences * 8 bytes)</span>
+<span class="n">tr_sprite_sequence</span> <span class="n">SpriteSequences</span><span class="p">[</span><span class="n">NumSpriteSequences</span><span class="p">];</span> <span class="c1">// sprite sequence data (NumSpriteSequences * 8 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumCameras</span><span class="p">;</span> <span class="c1">// number of camera data records to follow (4 bytes)</span>
-<span class="n">tr2_camera</span> <span class="n">Cameras</span><span class="p">[</span><span class="n">NumCameras</span><span class="p">];</span> <span class="c1">// camera data (NumCameras * 16 bytes)</span>
+<span class="n">tr_camera</span> <span class="n">Cameras</span><span class="p">[</span><span class="n">NumCameras</span><span class="p">];</span> <span class="c1">// camera data (NumCameras * 16 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumSoundSources</span><span class="p">;</span> <span class="c1">// number of sound source data records to follow (4 bytes)</span>
-<span class="n">tr2_sound_source</span> <span class="n">SoundSources</span><span class="p">[</span><span class="n">NumSoundSources</span><span class="p">];</span> <span class="c1">// sound source data (NumSoundSources * 16 bytes)</span>
+<span class="n">tr_sound_source</span> <span class="n">SoundSources</span><span class="p">[</span><span class="n">NumSoundSources</span><span class="p">];</span> <span class="c1">// sound source data (NumSoundSources * 16 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumBoxes</span><span class="p">;</span> <span class="c1">// number of box data records to follow (4 bytes)</span>
-<span class="n">tr2_box</span> <span class="n">Boxes</span><span class="p">[</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// box data (NumBoxes * 20 bytes [TR1 version])</span>
+<span class="n">tr_box</span> <span class="n">Boxes</span><span class="p">[</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// box data (NumBoxes * 20 bytes [TR1 version])</span>
 <span class="kt">uint32_t</span> <span class="n">NumOverlaps</span><span class="p">;</span> <span class="c1">// number of overlap records to follow (4 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">Overlaps</span><span class="p">[</span><span class="n">NumOverlaps</span><span class="p">];</span> <span class="c1">// overlap data (NumOverlaps * 2 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">GroundZone</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// ground zone data</span>
@@ -6878,7 +6835,7 @@ brightness and greater values being darker.</p></div>
 <span class="kt">uint32_t</span> <span class="n">NumAnimatedTextures</span><span class="p">;</span> <span class="c1">// number of animated texture records to follow (4 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">AnimatedTextures</span><span class="p">[</span><span class="n">NumAnimatedTextures</span><span class="p">];</span> <span class="c1">// animated texture data (NumAnimatedTextures * 2 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumItems</span><span class="p">;</span> <span class="c1">// number of items to follow (4 bytes)</span>
-<span class="n">tr2_item</span> <span class="n">Items</span><span class="p">[</span><span class="n">NumItems</span><span class="p">];</span> <span class="c1">// item list (NumItems * 22 bytes [TR1 version])</span>
+<span class="n">tr_entity</span> <span class="n">Items</span><span class="p">[</span><span class="n">NumItems</span><span class="p">];</span> <span class="c1">// item list (NumItems * 22 bytes [TR1 version])</span>
 <span class="kt">uint8_t</span> <span class="n">LightMap</span><span class="p">[</span><span class="mi">32</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span> <span class="c1">// light map (8192 bytes)</span>
 <span class="n">tr_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">NumCinematicFrames</span><span class="p">;</span> <span class="c1">// number of cinematic frame records to follow (2 bytes)</span>
@@ -6888,8 +6845,8 @@ brightness and greater values being darker.</p></div>
 <span class="kt">int16_t</span> <span class="n">SoundMap</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// sound map (512 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumSoundDetails</span><span class="p">;</span> <span class="c1">// number of sound-detail records to follow (4 bytes)</span>
 <span class="n">tr2_sample_info</span> <span class="n">SoundDetails</span><span class="p">[</span><span class="n">NumSoundDetails</span><span class="p">];</span> <span class="c1">// sound-detail list (NumSoundDetails * 8 bytes)</span>
-<span class="kt">uint32_t</span> <span class="n">NumSamples</span> <span class="p">(</span><span class="n">number</span> <span class="n">of</span> <span class="kt">uint8_t</span><span class="err">&#39;</span><span class="n">s</span> <span class="n">in</span> <span class="n">Samples</span><span class="p">)</span>
-<span class="kt">uint8_t</span> <span class="n">Samples</span> <span class="p">(</span><span class="n">array</span> <span class="n">of</span> <span class="kt">uint8_t</span><span class="err">&#39;</span><span class="n">s</span> <span class="o">--</span> <span class="n">embedded</span> <span class="n">sound</span> <span class="n">samples</span> <span class="n">in</span> <span class="n">Microsoft</span> <span class="n">WAVE</span> <span class="n">format</span><span class="p">)</span>
+<span class="kt">uint32_t</span> <span class="n">NumSamples</span><span class="p">;</span> <span class="c1">// number of uint8_t&#39;s in Samples (4 bytes)</span>
+<span class="kt">uint8_t</span> <span class="n">Samples</span><span class="p">[</span><span class="n">NumSamples</span><span class="p">];</span> <span class="c1">// array of uint8_t&#39;s -- embedded sound samples in Microsoft WAVE format (NumSamples bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumSampleIndices</span><span class="p">;</span> <span class="c1">// number of sample indices to follow (4 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">SampleIndices</span><span class="p">[</span><span class="n">NumSampleIndices</span><span class="p">];</span> <span class="c1">// sample indices (NumSampleIndices * 4 bytes)</span>
 </pre></div></div></div>
@@ -6910,13 +6867,13 @@ brightness and greater values being darker.</p></div>
 <span class="n">tr_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
 <span class="n">tr_colour4</span> <span class="n">Palette16</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">//  (1024 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumTextiles</span><span class="p">;</span> <span class="c1">// number of texture tiles (4 bytes)</span>
-<span class="n">tr2_textile8</span> <span class="n">Textile8</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)</span>
-<span class="n">tr2_textile16</span> <span class="n">Textile16</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 16-bit (ARGB) textiles (NumTextiles * 131072 bytes)</span>
+<span class="n">tr_textile8</span> <span class="n">Textile8</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)</span>
+<span class="n">tr_textile16</span> <span class="n">Textile16</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 16-bit (ARGB) textiles (NumTextiles * 131072 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">Unused</span><span class="p">;</span> <span class="c1">// 32-bit unused value (4 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">NumRooms</span><span class="p">;</span> <span class="c1">// number of rooms (2 bytes)</span>
 <span class="k">virtual</span> <span class="k">struct</span>
 <span class="p">{</span>
-    <span class="n">tr2_room_info</span> <span class="n">RoomInfo</span><span class="p">;</span> <span class="c1">// room header (16 bytes)</span>
+    <span class="n">tr_room_info</span> <span class="n">RoomInfo</span><span class="p">;</span> <span class="c1">// room header (16 bytes)</span>
     <span class="kt">uint32_t</span> <span class="n">NumData</span><span class="p">;</span> <span class="c1">// number of data uint16_t&#39;s to follow (=RoomData) (4 bytes)</span>
     <span class="k">virtual</span> <span class="k">struct</span>
     <span class="p">{</span>
@@ -7000,7 +6957,7 @@ brightness and greater values being darker.</p></div>
 <span class="kt">uint32_t</span> <span class="n">NumAnimatedTextures</span><span class="p">;</span> <span class="c1">// number of animated texture records to follow (4 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">AnimatedTextures</span><span class="p">[</span><span class="n">NumAnimatedTextures</span><span class="p">];</span> <span class="c1">// animated texture data (NumAnimatedTextures * 2 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumItems</span><span class="p">;</span> <span class="c1">// number of items to follow (4 bytes)</span>
-<span class="n">tr2_item</span> <span class="n">Items</span><span class="p">[</span><span class="n">NumItems</span><span class="p">];</span> <span class="c1">// item list (NumItems * 24 bytes)</span>
+<span class="n">tr2_entity</span> <span class="n">Items</span><span class="p">[</span><span class="n">NumItems</span><span class="p">];</span> <span class="c1">// item list (NumItems * 24 bytes)</span>
 <span class="kt">uint8_t</span> <span class="n">LightMap</span><span class="p">[</span><span class="mi">32</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span> <span class="c1">// light map (8192 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">NumCinematicFrames</span><span class="p">;</span> <span class="c1">// number of cinematic frame records to follow (2 bytes)</span>
 <span class="n">tr2_cinematic_frame</span> <span class="n">CinematicFrames</span><span class="p">[</span><span class="n">NumCinematicFrames</span><span class="p">];</span> <span class="c1">// (NumCinematicFrames * 16 bytes)</span>
@@ -7029,8 +6986,251 @@ brightness and greater values being darker.</p></div>
 <span class="n">tr_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
 <span class="n">tr_colour4</span> <span class="n">Palette16</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">//  (1024 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumTextiles</span><span class="p">;</span> <span class="c1">// number of texture tiles (4 bytes)</span>
-<span class="n">tr2_textile8</span> <span class="n">Textile8</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)</span>
-<span class="n">tr2_textile16</span> <span class="n">Textile16</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 16-bit (ARGB) textiles (NumTextiles * 131072 bytes) (absent from TR1)</span>
+<span class="n">tr_textile8</span> <span class="n">Textile8</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)</span>
+<span class="n">tr_textile16</span> <span class="n">Textile16</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 16-bit (ARGB) textiles (NumTextiles * 131072 bytes) (absent from TR1)</span>
+<span class="kt">uint32_t</span> <span class="n">Unused</span><span class="p">;</span> <span class="c1">// 32-bit unused value (4 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">NumRooms</span><span class="p">;</span> <span class="c1">// number of rooms (2 bytes)</span>
+<span class="k">virtual</span> <span class="k">struct</span>
+<span class="p">{</span>
+    <span class="n">tr_room_info</span> <span class="n">RoomInfo</span><span class="p">;</span> <span class="c1">// room header (16 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumData</span><span class="p">;</span> <span class="c1">// number of data uint16_t&#39;s to follow (=RoomData) (4 bytes)</span>
+    <span class="k">virtual</span> <span class="k">struct</span>
+    <span class="p">{</span>
+        <span class="kt">uint16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices to follow (2 bytes)</span>
+        <span class="n">tr2_vertex_room</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// vertex list (NumVertices * 12 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">NumRectangles</span><span class="p">;</span> <span class="c1">// number of rectangles to follow (2 bytes)</span>
+        <span class="n">tr_face4</span> <span class="n">Rectangles</span><span class="p">[</span><span class="n">NumRectangles</span><span class="p">];</span> <span class="c1">// rectangle list (NumRectangles * 10 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">NumTriangles</span><span class="p">;</span> <span class="c1">// number of triangles to follow (2 bytes)</span>
+        <span class="n">tr_face3</span> <span class="n">Triangles</span><span class="p">[</span><span class="n">NumTriangles</span><span class="p">];</span> <span class="c1">// triangle list (NumTriangles * 8 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">NumSprites</span><span class="p">;</span> <span class="c1">// number of sprites to follow (2 bytes)</span>
+        <span class="n">tr2_room_sprite</span> <span class="n">Sprites</span><span class="p">[</span><span class="n">NumSprites</span><span class="p">];</span> <span class="c1">// room sprite list (NumSprites * 4 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">NumDoors</span><span class="p">;</span> <span class="c1">// number of doors to follow (2 bytes)</span>
+        <span class="n">tr2_room_door</span> <span class="n">Doors</span><span class="p">[</span><span class="n">NumDoors</span><span class="p">];</span> <span class="c1">// door list (NumDoors * 32 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">NumZsector</span><span class="p">;</span> <span class="c1">// sector table width (2 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">NumXsector</span><span class="p">;</span> <span class="c1">// sector table height (2 bytes)</span>
+        <span class="n">tr2_room_sector</span> <span class="n">SectorData</span><span class="p">[</span><span class="n">NumZsector</span> <span class="o">*</span> <span class="n">NumXsector</span><span class="p">];</span> <span class="c1">// sector table (NumZsector * NumXsector * 8 bytes)</span>
+        <span class="kt">int16_t</span> <span class="n">Intensity1</span><span class="p">;</span>
+        <span class="kt">int16_t</span> <span class="n">Intensity2</span><span class="p">;</span>
+        <span class="kt">uint16_t</span> <span class="n">NumLights</span><span class="p">;</span> <span class="c1">// number of lights to follow (2 bytes)</span>
+        <span class="n">tr2_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span> <span class="c1">// light list (NumLights * 24 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span> <span class="c1">// number of static mesh records to follow (2 bytes)</span>
+        <span class="n">tr2_room_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span> <span class="c1">// static mesh data (NumStaticMeshes * 20 bytes)</span>
+        <span class="kt">int16_t</span> <span class="n">AlternateRoom</span><span class="p">;</span> <span class="c1">// (2 bytes)</span>
+        <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span> <span class="c1">// (2 bytes)</span>
+        <span class="n">tr_colour</span> <span class="n">RoomLightColour</span> <span class="c1">// 3 bytes</span>
+    <span class="p">}</span> <span class="n">RoomData</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">Rooms</span><span class="p">[</span><span class="n">NumRooms</span><span class="p">];</span>
+<span class="kt">uint32_t</span> <span class="n">NumFloorData</span><span class="p">;</span> <span class="c1">// number of floor data uint16_t&#39;s to follow (4 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">FloorData</span><span class="p">[</span><span class="n">NumFloorData</span><span class="p">];</span> <span class="c1">// floor data (NumFloorData * 2 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumMeshData</span><span class="p">;</span> <span class="c1">// number of uint16_t&#39;s of mesh data to follow (=Meshes[]) (4 bytes)</span>
+<span class="k">virtual</span> <span class="k">struct</span>
+<span class="p">{</span>
+    <span class="n">tr2_vertex</span> <span class="n">Centre</span><span class="p">;</span> <span class="c1">// relative coordinates of mesh centre (6 bytes)</span>
+    <span class="kt">uint8_t</span> <span class="n">Unknown1</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span> <span class="c1">// unknown (4 bytes)</span>
+    <span class="kt">int16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices to follow (2 bytes)</span>
+    <span class="n">tr2_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// list of vertices (NumVertices * 6 bytes)</span>
+    <span class="kt">int16_t</span> <span class="n">NumNormals</span><span class="p">;</span> <span class="c1">// number of normals to follow (2 bytes)</span>
+    <span class="n">tr2_vertex</span> <span class="n">Normals</span><span class="p">[</span><span class="n">NumNormals</span><span class="p">];</span> <span class="c1">// list of normals (NumNormals * 6 bytes) (becomes Lights if NumNormals &lt; 0; 2 bytes)</span>
+    <span class="kt">int16_t</span> <span class="n">NumTexturedRectangles</span><span class="p">;</span> <span class="c1">// number of textured rectangles to follow (2 bytes)</span>
+    <span class="n">tr_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles (NumTexturedRectangles * 10 bytes)</span>
+    <span class="kt">int16_t</span> <span class="n">NumTexturedTriangles</span><span class="p">;</span> <span class="c1">// number of textured triangles to follow (2 bytes)</span>
+    <span class="n">tr_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles (NumTexturedTriangles * 8 bytes)</span>
+    <span class="kt">int16_t</span> <span class="n">NumColouredRectangles</span><span class="p">;</span> <span class="c1">// number of coloured rectangles to follow (2 bytes)</span>
+    <span class="n">tr_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles (NumColouredRectangles * 10 bytes)</span>
+    <span class="kt">int16_t</span> <span class="n">NumColouredTriangles</span><span class="p">;</span> <span class="c1">// number of coloured triangles to follow (2 bytes)</span>
+    <span class="n">tr_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles (NumColouredTriangles * 8 bytes)</span>
+<span class="p">}</span> <span class="n">Meshes</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// note that NumMeshPointers comes AFTER Meshes[]</span>
+<span class="kt">uint32_t</span> <span class="n">NumMeshPointers</span><span class="p">;</span> <span class="c1">// number of mesh pointers to follow (4 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">MeshPointers</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// mesh pointer list (NumMeshPointers * 4 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumAnimations</span><span class="p">;</span> <span class="c1">// number of animations to follow (4 bytes)</span>
+<span class="n">tr2_animation</span> <span class="n">Animations</span><span class="p">[</span><span class="n">NumAnimations</span><span class="p">];</span> <span class="c1">// animation list (NumAnimations * 32 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumStateChanges</span><span class="p">;</span> <span class="c1">// number of state changes to follow (4 bytes)</span>
+<span class="n">tr2_state_change</span> <span class="n">StateChanges</span><span class="p">[</span><span class="n">NumStateChanges</span><span class="p">];</span> <span class="c1">// state-change list (NumStructures * 6 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumAnimDispatches</span><span class="p">;</span> <span class="c1">// number of animation dispatches to follow (4 bytes)</span>
+<span class="n">tr2_anim_dispatch</span> <span class="n">AnimDispatches</span><span class="p">[</span><span class="n">NumAnimDispatches</span><span class="p">];</span> <span class="c1">// animation-dispatch list list (NumAnimDispatches * 8 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumAnimCommands</span><span class="p">;</span> <span class="c1">// number of animation commands to follow (4 bytes)</span>
+<span class="n">tr2_anim_command</span> <span class="n">AnimCommands</span><span class="p">[</span><span class="n">NumAnimCommands</span><span class="p">];</span> <span class="c1">// animation-command list (NumAnimCommands * 2 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumMeshTrees</span><span class="p">;</span> <span class="c1">// number of MeshTrees to follow (4 bytes)</span>
+<span class="n">tr2_meshtree</span> <span class="n">MeshTrees</span><span class="p">[</span><span class="n">NumMeshTrees</span><span class="p">];</span> <span class="c1">// MeshTree list (NumMeshTrees * 4 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumFrames</span><span class="p">;</span> <span class="c1">// number of words of frame data to follow (4 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">Frames</span><span class="p">[</span><span class="n">NumFrames</span><span class="p">];</span> <span class="c1">// frame data (NumFrames * 2 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumMoveables</span><span class="p">;</span> <span class="c1">// number of moveables to follow (4 bytes)</span>
+<span class="n">tr2_moveable</span> <span class="n">Moveables</span><span class="p">[</span><span class="n">NumMoveables</span><span class="p">];</span> <span class="c1">// moveable list (NumMoveables * 18 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span> <span class="c1">// number of StaticMesh data records to follow (4 bytes)</span>
+<span class="n">tr2_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span> <span class="c1">// StaticMesh data (NumStaticMesh * 32 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumSpriteTextures</span><span class="p">;</span> <span class="c1">// number of sprite textures to follow (4 bytes)</span>
+<span class="n">tr2_sprite_texture</span> <span class="n">SpriteTextures</span><span class="p">[</span><span class="n">NumSpriteTextures</span><span class="p">];</span> <span class="c1">// sprite texture list (NumSpriteTextures * 16 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumSpriteSequences</span><span class="p">;</span> <span class="c1">// number of sprite sequences records to follow (4 bytes)</span>
+<span class="n">tr2_sprite_sequence</span> <span class="n">SpriteSequences</span><span class="p">[</span><span class="n">NumSpriteSequences</span><span class="p">];</span> <span class="c1">// sprite sequence data (NumSpriteSequences * 8 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumCameras</span><span class="p">;</span> <span class="c1">// number of camera data records to follow (4 bytes)</span>
+<span class="n">tr2_camera</span> <span class="n">Cameras</span><span class="p">[</span><span class="n">NumCameras</span><span class="p">];</span> <span class="c1">// camera data (NumCameras * 16 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumSoundSources</span><span class="p">;</span> <span class="c1">// number of sound source data records to follow (4 bytes)</span>
+<span class="n">tr2_sound_source</span> <span class="n">SoundSources</span><span class="p">[</span><span class="n">NumSoundSources</span><span class="p">];</span> <span class="c1">// sound source data (NumSoundSources * 16 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumBoxes</span><span class="p">;</span> <span class="c1">// number of box data records to follow (4 bytes)</span>
+<span class="n">tr2_box</span> <span class="n">Boxes</span><span class="p">[</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// box data (NumBoxes * 8 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumOverlaps</span><span class="p">;</span> <span class="c1">// number of overlap records to follow (4 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">Overlaps</span><span class="p">[</span><span class="n">NumOverlaps</span><span class="p">];</span> <span class="c1">// overlap data (NumOverlaps * 2 bytes)</span>
+<span class="kt">int16_t</span> <span class="n">Zones</span><span class="p">[</span><span class="mi">10</span><span class="o">*</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// zone data (NumBoxes * 20 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumAnimatedTextures</span><span class="p">;</span> <span class="c1">// number of animated texture records to follow (4 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">AnimatedTextures</span><span class="p">[</span><span class="n">NumAnimatedTextures</span><span class="p">];</span> <span class="c1">// animated texture data (NumAnimatedTextures * 2 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumObjectTextures</span><span class="p">;</span> <span class="c1">// number of object textures to follow (4 bytes) (after AnimatedTextures in TR3)</span>
+<span class="n">tr2_object_texture</span> <span class="n">ObjectTextures</span><span class="p">[</span><span class="n">NumObjectTextures</span><span class="p">];</span> <span class="c1">// object texture list (NumObjectTextures * 20 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumItems</span><span class="p">;</span> <span class="c1">// number of items to follow (4 bytes)</span>
+<span class="n">tr2_entity</span> <span class="n">Items</span><span class="p">[</span><span class="n">NumItems</span><span class="p">];</span> <span class="c1">// item list (NumItems * 24 bytes)</span>
+<span class="kt">uint8_t</span> <span class="n">LightMap</span><span class="p">[</span><span class="mi">32</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span> <span class="c1">// light map (8192 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">NumCinematicFrames</span><span class="p">;</span> <span class="c1">// number of cinematic frame records to follow (2 bytes)</span>
+<span class="n">tr2_cinematic_frame</span> <span class="n">CinematicFrames</span><span class="p">[</span><span class="n">NumCinematicFrames</span><span class="p">];</span> <span class="c1">// (NumCinematicFrames * 16 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">NumDemoData</span><span class="p">;</span> <span class="c1">// number of demo data records to follow (2 bytes)</span>
+<span class="kt">uint8_t</span> <span class="n">DemoData</span><span class="p">[</span><span class="n">NumDemoData</span><span class="p">];</span> <span class="c1">// demo data (NumDemoData bytes)</span>
+<span class="kt">int16_t</span> <span class="n">SoundMap</span><span class="p">[</span><span class="mi">370</span><span class="p">];</span> <span class="c1">// sound map (740 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumSoundDetails</span><span class="p">;</span> <span class="c1">// number of sound-detail records to follow (4 bytes)</span>
+<span class="n">tr2_sample_info</span> <span class="n">SoundDetails</span><span class="p">[</span><span class="n">NumSoundDetails</span><span class="p">];</span> <span class="c1">// sound-detail list (NumSoundDetails * 8 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumSampleIndices</span><span class="p">;</span> <span class="c1">// number of sample indices to follow (4 bytes)  +</span>
+<span class="kt">uint32_t</span> <span class="n">SampleIndices</span><span class="p">[</span><span class="n">NumSampleIndices</span><span class="p">];</span> <span class="c1">// sample indices (NumSampleIndices * 4 bytes)</span>
+</pre></div></div></div>
+</div>
+<div class="sect2">
+<h3 id="_the_entire_tr4_level_format">10.4. The Entire TR4 Level Format</h3>
+<div class="paragraph"><p>What follows is the physical Tomb Raider IV <span class="monospaced">.TR4</span> file layout, byte for byte.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/caution.png" alt="Caution">
+</td>
+<td class="content">This is not a &#8220;real&#8221; C/C++ structure, in that some arrays are variable-length, with the length being defined by another element of the structure.</td>
+</tr></table>
+</div>
+<div class="listingblock">
+<div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span> <span class="c1">// version (4 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">NumRoomTextiles</span><span class="p">;</span> <span class="c1">// number of non bumped room tiles (2 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">NumObjTextiles</span><span class="p">;</span> <span class="c1">// number of object tiles (2 bytes)</span>
+<span class="kt">uint16_t</span> <span class="n">NumBumpTextiles</span><span class="p">;</span> <span class="c1">// number of bumped room tiles (2 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">Textile32_UncompSize</span><span class="p">;</span> <span class="c1">// uncompressed size (in bytes) of the 32-bit textures chunk (4 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">Textile32_CompSize</span><span class="p">;</span> <span class="c1">// compressed size (in bytes) of the 32-bit textures chunk (4 bytes)</span>
+<span class="kt">uint8_t</span> <span class="n">Textile32_Compressed</span><span class="p">[</span><span class="n">Textile32_CompSize</span><span class="p">];</span> <span class="c1">// zlib-compressed 32-bit textures chunk (Textile32_CompSize bytes)</span>
+<span class="p">{</span>
+    <span class="n">tr4_textile32</span> <span class="n">Textile32</span><span class="p">[</span><span class="n">NumRoomTextiles</span> <span class="o">+</span> <span class="n">NumObjTextiles</span> <span class="o">+</span> <span class="n">NumBumpTextiles</span><span class="p">];</span>
+<span class="p">}</span>
+<span class="kt">uint32_t</span> <span class="n">Textile16_UncompSize</span><span class="p">;</span> <span class="c1">// uncompressed size (in bytes) of the 16-bit textures chunk (4 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">Textile16_CompSize</span><span class="p">;</span> <span class="c1">// compressed size (in bytes) of the 16-bit textures chunk (4 bytes)</span>
+<span class="kt">uint8_t</span> <span class="n">Textile16_Compressed</span><span class="p">[</span><span class="n">Textile32_CompSize</span><span class="p">];</span> <span class="c1">// zlib-compressed 16-bit textures chunk (Textile16_CompSize bytes)</span>
+<span class="p">{</span>
+    <span class="n">tr_textile16</span> <span class="n">Textile16</span><span class="p">[</span><span class="n">NumRoomTextiles</span> <span class="o">+</span> <span class="n">NumObjTextiles</span> <span class="o">+</span> <span class="n">NumBumpTextiles</span><span class="p">];</span>
+<span class="p">}</span>
+<span class="kt">uint32_t</span> <span class="n">Textile32Misc_UncompSize</span><span class="p">;</span> <span class="c1">// uncompressed size (in bytes) of the 32-bit misc textures chunk (4 bytes), should always be 524288</span>
+<span class="kt">uint32_t</span> <span class="n">Textile32Misc_CompSize</span><span class="p">;</span> <span class="c1">// compressed size (in bytes) of the 32-bit misc textures chunk (4 bytes)</span>
+<span class="kt">uint8_t</span> <span class="n">Textile32Misc_Compressed</span><span class="p">[</span><span class="n">Textile32Misc_CompSize</span><span class="p">];</span> <span class="c1">// zlib-compressed 32-bit misc textures chunk (Textile32Misc_CompSize bytes)</span>
+<span class="p">{</span>
+    <span class="n">tr4_textile32</span> <span class="n">Textile32Misc</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span>
+<span class="p">}</span>
+<span class="kt">uint32_t</span> <span class="n">LevelData_UncompSize</span><span class="p">;</span> <span class="c1">// uncompressed size (in bytes) of the level data chunk (4 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">LevelData_CompSize</span><span class="p">;</span> <span class="c1">// compressed size (in bytes) of the level data chunk (4 bytes)</span>
+<span class="kt">uint8_t</span> <span class="n">LevelData_Compressed</span><span class="p">[</span><span class="n">LevelData_CompSize</span><span class="p">];</span> <span class="c1">// zlib-compressed level data chunk (LevelData_CompSize bytes)</span>
+<span class="p">{</span>
+    <span class="kt">uint32_t</span> <span class="n">Unused</span><span class="p">;</span> <span class="c1">// 32-bit unused value, always 0 (4 bytes)</span>
+    <span class="kt">uint16_t</span> <span class="n">NumRooms</span><span class="p">;</span> <span class="c1">// number of rooms (2 bytes)</span>
+    <span class="k">virtual</span> <span class="k">struct</span>
+    <span class="p">{</span>
+        <span class="n">tr_room_info</span> <span class="n">RoomInfo</span><span class="p">;</span> <span class="c1">// room header (16 bytes)</span>
+        <span class="kt">uint32_t</span> <span class="n">NumData</span><span class="p">;</span> <span class="c1">// number of data uint16_t&#39;s to follow (=RoomData) (4 bytes)</span>
+        <span class="k">virtual</span> <span class="k">struct</span>
+        <span class="p">{</span>
+            <span class="kt">uint16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices to follow (2 bytes)</span>
+            <span class="n">tr2_vertex_room</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// vertex list (NumVertices * 12 bytes)</span>
+            <span class="kt">uint16_t</span> <span class="n">NumRectangles</span><span class="p">;</span> <span class="c1">// number of rectangles to follow (2 bytes)</span>
+            <span class="n">tr_face4</span> <span class="n">Rectangles</span><span class="p">[</span><span class="n">NumRectangles</span><span class="p">];</span> <span class="c1">// rectangle list (NumRectangles * 10 bytes)</span>
+            <span class="kt">uint16_t</span> <span class="n">NumTriangles</span><span class="p">;</span> <span class="c1">// number of triangles to follow (2 bytes)</span>
+            <span class="n">tr_face3</span> <span class="n">Triangles</span><span class="p">[</span><span class="n">NumTriangles</span><span class="p">];</span> <span class="c1">// triangle list (NumTriangles * 8 bytes)</span>
+            <span class="kt">uint16_t</span> <span class="n">NumSprites</span><span class="p">;</span> <span class="c1">// number of sprites to follow (2 bytes)</span>
+            <span class="n">tr2_room_sprite</span> <span class="n">Sprites</span><span class="p">[</span><span class="n">NumSprites</span><span class="p">];</span> <span class="c1">// room sprite list (NumSprites * 4 bytes)</span>
+            <span class="kt">uint16_t</span> <span class="n">NumDoors</span><span class="p">;</span> <span class="c1">// number of doors to follow (2 bytes)</span>
+            <span class="n">tr2_room_door</span> <span class="n">Doors</span><span class="p">[</span><span class="n">NumDoors</span><span class="p">];</span> <span class="c1">// door list (NumDoors * 32 bytes)</span>
+            <span class="kt">uint16_t</span> <span class="n">NumZsector</span><span class="p">;</span> <span class="c1">// sector table width (2 bytes)</span>
+            <span class="kt">uint16_t</span> <span class="n">NumXsector</span><span class="p">;</span> <span class="c1">// sector table height (2 bytes)</span>
+            <span class="n">tr2_room_sector</span> <span class="n">SectorData</span><span class="p">[</span><span class="n">NumZsector</span> <span class="o">*</span> <span class="n">NumXsector</span><span class="p">];</span> <span class="c1">// sector table (NumZsector * NumXsector * 8 bytes)</span>
+            <span class="kt">int16_t</span> <span class="n">Intensity1</span><span class="p">;</span>
+            <span class="kt">int16_t</span> <span class="n">Intensity2</span><span class="p">;</span>
+            <span class="kt">uint16_t</span> <span class="n">NumLights</span><span class="p">;</span> <span class="c1">// number of lights to follow (2 bytes)</span>
+            <span class="n">tr2_room_light</span> <span class="n">Lights</span><span class="p">[</span><span class="n">NumLights</span><span class="p">];</span> <span class="c1">// light list (NumLights * 24 bytes)</span>
+            <span class="kt">uint16_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span> <span class="c1">// number of static mesh records to follow (2 bytes)</span>
+            <span class="n">tr2_room_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span> <span class="c1">// static mesh data (NumStaticMeshes * 20 bytes)</span>
+            <span class="kt">int16_t</span> <span class="n">AlternateRoom</span><span class="p">;</span> <span class="c1">// (2 bytes)</span>
+            <span class="kt">uint16_t</span> <span class="n">Flags</span><span class="p">;</span> <span class="c1">// (2 bytes)</span>
+            <span class="n">tr_colour</span> <span class="n">RoomLightColour</span> <span class="c1">// 3 bytes</span>
+        <span class="p">}</span> <span class="n">RoomData</span><span class="p">;</span>
+    <span class="p">}</span> <span class="n">Rooms</span><span class="p">[</span><span class="n">NumRooms</span><span class="p">];</span>
+    <span class="kt">uint32_t</span> <span class="n">NumFloorData</span><span class="p">;</span> <span class="c1">// number of floor data uint16_t&#39;s to follow (4 bytes)</span>
+    <span class="kt">uint16_t</span> <span class="n">FloorData</span><span class="p">[</span><span class="n">NumFloorData</span><span class="p">];</span> <span class="c1">// floor data (NumFloorData * 2 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumMeshData</span><span class="p">;</span> <span class="c1">// number of uint16_t&#39;s of mesh data to follow (=Meshes[]) (4 bytes)</span>
+    <span class="k">virtual</span> <span class="k">struct</span>
+    <span class="p">{</span>
+        <span class="n">tr2_vertex</span> <span class="n">Centre</span><span class="p">;</span> <span class="c1">// relative coordinates of mesh centre (6 bytes)</span>
+        <span class="kt">uint8_t</span> <span class="n">Unknown1</span><span class="p">[</span><span class="mi">4</span><span class="p">];</span> <span class="c1">// unknown (4 bytes)</span>
+        <span class="kt">int16_t</span> <span class="n">NumVertices</span><span class="p">;</span> <span class="c1">// number of vertices to follow (2 bytes)</span>
+        <span class="n">tr2_vertex</span> <span class="n">Vertices</span><span class="p">[</span><span class="n">NumVertices</span><span class="p">];</span> <span class="c1">// list of vertices (NumVertices * 6 bytes)</span>
+        <span class="kt">int16_t</span> <span class="n">NumNormals</span><span class="p">;</span> <span class="c1">// number of normals to follow (2 bytes)</span>
+        <span class="n">tr2_vertex</span> <span class="n">Normals</span><span class="p">[</span><span class="n">NumNormals</span><span class="p">];</span> <span class="c1">// list of normals (NumNormals * 6 bytes) (becomes Lights if NumNormals &lt; 0; 2 bytes)</span>
+        <span class="kt">int16_t</span> <span class="n">NumTexturedRectangles</span><span class="p">;</span> <span class="c1">// number of textured rectangles to follow (2 bytes)</span>
+        <span class="n">tr_face4</span> <span class="n">TexturedRectangles</span><span class="p">[</span><span class="n">NumTexturedRectangles</span><span class="p">];</span> <span class="c1">// list of textured rectangles (NumTexturedRectangles * 10 bytes)</span>
+        <span class="kt">int16_t</span> <span class="n">NumTexturedTriangles</span><span class="p">;</span> <span class="c1">// number of textured triangles to follow (2 bytes)</span>
+        <span class="n">tr_face3</span> <span class="n">TexturedTriangles</span><span class="p">[</span><span class="n">NumTexturedTriangles</span><span class="p">];</span> <span class="c1">// list of textured triangles (NumTexturedTriangles * 8 bytes)</span>
+        <span class="kt">int16_t</span> <span class="n">NumColouredRectangles</span><span class="p">;</span> <span class="c1">// number of coloured rectangles to follow (2 bytes)</span>
+        <span class="n">tr_face4</span> <span class="n">ColouredRectangles</span><span class="p">[</span><span class="n">NumColouredRectangles</span><span class="p">];</span> <span class="c1">// list of coloured rectangles (NumColouredRectangles * 10 bytes)</span>
+        <span class="kt">int16_t</span> <span class="n">NumColouredTriangles</span><span class="p">;</span> <span class="c1">// number of coloured triangles to follow (2 bytes)</span>
+        <span class="n">tr_face3</span> <span class="n">ColouredTriangles</span><span class="p">[</span><span class="n">NumColouredTriangles</span><span class="p">];</span> <span class="c1">// list of coloured triangles (NumColouredTriangles * 8 bytes)</span>
+    <span class="p">}</span> <span class="n">Meshes</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// note that NumMeshPointers comes AFTER Meshes[]</span>
+    <span class="kt">uint32_t</span> <span class="n">NumMeshPointers</span><span class="p">;</span> <span class="c1">// number of mesh pointers to follow (4 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">MeshPointers</span><span class="p">[</span><span class="n">NumMeshPointers</span><span class="p">];</span> <span class="c1">// mesh pointer list (NumMeshPointers * 4 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumAnimations</span><span class="p">;</span> <span class="c1">// number of animations to follow (4 bytes)</span>
+    <span class="n">tr2_animation</span> <span class="n">Animations</span><span class="p">[</span><span class="n">NumAnimations</span><span class="p">];</span> <span class="c1">// animation list (NumAnimations * 32 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumStateChanges</span><span class="p">;</span> <span class="c1">// number of state changes to follow (4 bytes)</span>
+    <span class="n">tr2_state_change</span> <span class="n">StateChanges</span><span class="p">[</span><span class="n">NumStateChanges</span><span class="p">];</span> <span class="c1">// state-change list (NumStructures * 6 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumAnimDispatches</span><span class="p">;</span> <span class="c1">// number of animation dispatches to follow (4 bytes)</span>
+    <span class="n">tr2_anim_dispatch</span> <span class="n">AnimDispatches</span><span class="p">[</span><span class="n">NumAnimDispatches</span><span class="p">];</span> <span class="c1">// animation-dispatch list list (NumAnimDispatches * 8 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumAnimCommands</span><span class="p">;</span> <span class="c1">// number of animation commands to follow (4 bytes)</span>
+    <span class="n">tr2_anim_command</span> <span class="n">AnimCommands</span><span class="p">[</span><span class="n">NumAnimCommands</span><span class="p">];</span> <span class="c1">// animation-command list (NumAnimCommands * 2 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumMeshTrees</span><span class="p">;</span> <span class="c1">// number of MeshTrees to follow (4 bytes)</span>
+    <span class="n">tr2_meshtree</span> <span class="n">MeshTrees</span><span class="p">[</span><span class="n">NumMeshTrees</span><span class="p">];</span> <span class="c1">// MeshTree list (NumMeshTrees * 4 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumFrames</span><span class="p">;</span> <span class="c1">// number of words of frame data to follow (4 bytes)</span>
+    <span class="kt">uint16_t</span> <span class="n">Frames</span><span class="p">[</span><span class="n">NumFrames</span><span class="p">];</span> <span class="c1">// frame data (NumFrames * 2 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumMoveables</span><span class="p">;</span> <span class="c1">// number of moveables to follow (4 bytes)</span>
+    <span class="n">tr2_moveable</span> <span class="n">Moveables</span><span class="p">[</span><span class="n">NumMoveables</span><span class="p">];</span> <span class="c1">// moveable list (NumMoveables * 18 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumStaticMeshes</span><span class="p">;</span> <span class="c1">// number of StaticMesh data records to follow (4 bytes)</span>
+    <span class="n">tr2_staticmesh</span> <span class="n">StaticMeshes</span><span class="p">[</span><span class="n">NumStaticMeshes</span><span class="p">];</span> <span class="c1">// StaticMesh data (NumStaticMesh * 32 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumSpriteTextures</span><span class="p">;</span> <span class="c1">// number of sprite textures to follow (4 bytes)</span>
+    <span class="n">tr2_sprite_texture</span> <span class="n">SpriteTextures</span><span class="p">[</span><span class="n">NumSpriteTextures</span><span class="p">];</span> <span class="c1">// sprite texture list (NumSpriteTextures * 16 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumSpriteSequences</span><span class="p">;</span> <span class="c1">// number of sprite sequences records to follow (4 bytes)</span>
+    <span class="n">tr2_sprite_sequence</span> <span class="n">SpriteSequences</span><span class="p">[</span><span class="n">NumSpriteSequences</span><span class="p">];</span> <span class="c1">// sprite sequence data (NumSpriteSequences * 8 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumCameras</span><span class="p">;</span> <span class="c1">// number of camera data records to follow (4 bytes)</span>
+    <span class="n">tr2_camera</span> <span class="n">Cameras</span><span class="p">[</span><span class="n">NumCameras</span><span class="p">];</span> <span class="c1">// camera data (NumCameras * 16 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumSoundSources</span><span class="p">;</span> <span class="c1">// number of sound source data records to follow (4 bytes)</span>
+    <span class="n">tr2_sound_source</span> <span class="n">SoundSources</span><span class="p">[</span><span class="n">NumSoundSources</span><span class="p">];</span> <span class="c1">// sound source data (NumSoundSources * 16 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumBoxes</span><span class="p">;</span> <span class="c1">// number of box data records to follow (4 bytes)</span>
+    <span class="n">tr2_box</span> <span class="n">Boxes</span><span class="p">[</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// box data (NumBoxes * 8 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumOverlaps</span><span class="p">;</span> <span class="c1">// number of overlap records to follow (4 bytes)</span>
+    <span class="kt">uint16_t</span> <span class="n">Overlaps</span><span class="p">[</span><span class="n">NumOverlaps</span><span class="p">];</span> <span class="c1">// overlap data (NumOverlaps * 2 bytes)</span>
+    <span class="kt">int16_t</span> <span class="n">Zones</span><span class="p">[</span><span class="mi">10</span><span class="o">*</span><span class="n">NumBoxes</span><span class="p">];</span> <span class="c1">// zone data (NumBoxes * 20 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumAnimatedTextures</span><span class="p">;</span> <span class="c1">// number of animated texture records to follow (4 bytes)</span>
+    <span class="kt">uint16_t</span> <span class="n">AnimatedTextures</span><span class="p">[</span><span class="n">NumAnimatedTextures</span><span class="p">];</span> <span class="c1">// animated texture data (NumAnimatedTextures * 2 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumObjectTextures</span><span class="p">;</span> <span class="c1">// number of object textures to follow (4 bytes) (after AnimatedTextures in TR3)</span>
+    <span class="n">tr2_object_texture</span> <span class="n">ObjectTextures</span><span class="p">[</span><span class="n">NumObjectTextures</span><span class="p">];</span> <span class="c1">// object texture list (NumObjectTextures * 20 bytes)</span>
+    <span class="kt">uint32_t</span> <span class="n">NumItems</span><span class="p">;</span> <span class="c1">// number of items to follow (4 bytes)</span>
+    <span class="n">tr4_entity</span> <span class="n">Items</span><span class="p">[</span><span class="n">NumItems</span><span class="p">];</span> <span class="c1">// item list (NumItems * 24 bytes)</span>
+    <span class="kt">uint8_t</span> <span class="n">LightMap</span><span class="p">[</span><span class="mi">32</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span> <span class="c1">// light map (8192 bytes)</span>
+    <span class="kt">uint16_t</span> <span class="n">NumCinematicFrames</span><span class="p">;</span> <span class="c1">// number of cinematic frame records to follow (2 bytes)</span>
+    <span class="n">tr2_cinematic_frame</span> <span class="n">CinematicFrames</span><span class="p">[</span><span class="n">NumCinematicFrames</span><span class="p">];</span> <span class="c1">// (NumCinematicFrames * 16 bytes)</span>
+    <span class="kt">uint16_t</span> <span class="n">NumDemoData</span><span class="p">;</span> <span class="c1">// number of demo data records to follow (2 bytes)</span>
+    <span class="kt">uint8_t</span> <span class="n">DemoData</span><span class="p">[</span><span class="n">NumDemoData</span><span class="p">];</span> <span class="c1">// demo data (NumDemoData bytes)</span>
+<span class="p">}</span>
+<span class="kt">uint32_t</span> <span class="n">NumSamples</span><span class="p">;</span> <span class="c1">// number of sound samples (4 bytes)</span>
+<span class="n">tr4_sample</span> <span class="n">Samples</span><span class="p">[</span><span class="n">NumSamples</span><span class="p">];</span> <span class="c1">// sound samples (this is the last part, so you can simply read until EOF)</span>
+
+
+<span class="n">tr_colour</span> <span class="n">Palette</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">// 8-bit palette (768 bytes)</span>
+<span class="n">tr_colour4</span> <span class="n">Palette16</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span> <span class="c1">//  (1024 bytes)</span>
+<span class="kt">uint32_t</span> <span class="n">NumTextiles</span><span class="p">;</span> <span class="c1">// number of texture tiles (4 bytes)</span>
+<span class="n">tr_textile8</span> <span class="n">Textile8</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 8-bit (palettized) textiles (NumTextiles * 65536 bytes)</span>
+<span class="n">tr_textile16</span> <span class="n">Textile16</span><span class="p">[</span><span class="n">NumTextiles</span><span class="p">];</span> <span class="c1">// 16-bit (ARGB) textiles (NumTextiles * 131072 bytes) (absent from TR1)</span>
 <span class="kt">uint32_t</span> <span class="n">Unused</span><span class="p">;</span> <span class="c1">// 32-bit unused value (4 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">NumRooms</span><span class="p">;</span> <span class="c1">// number of rooms (2 bytes)</span>
 <span class="k">virtual</span> <span class="k">struct</span>
@@ -7119,7 +7319,7 @@ brightness and greater values being darker.</p></div>
 <span class="kt">uint32_t</span> <span class="n">NumObjectTextures</span><span class="p">;</span> <span class="c1">// number of object textures to follow (4 bytes) (after AnimatedTextures in TR3)</span>
 <span class="n">tr2_object_texture</span> <span class="n">ObjectTextures</span><span class="p">[</span><span class="n">NumObjectTextures</span><span class="p">];</span> <span class="c1">// object texture list (NumObjectTextures * 20 bytes)</span>
 <span class="kt">uint32_t</span> <span class="n">NumItems</span><span class="p">;</span> <span class="c1">// number of items to follow (4 bytes)</span>
-<span class="n">tr2_item</span> <span class="n">Items</span><span class="p">[</span><span class="n">NumItems</span><span class="p">];</span> <span class="c1">// item list (NumItems * 24 bytes)</span>
+<span class="n">tr4_entity</span> <span class="n">Items</span><span class="p">[</span><span class="n">NumItems</span><span class="p">];</span> <span class="c1">// item list (NumItems * 24 bytes)</span>
 <span class="kt">uint8_t</span> <span class="n">LightMap</span><span class="p">[</span><span class="mi">32</span> <span class="o">*</span> <span class="mi">256</span><span class="p">];</span> <span class="c1">// light map (8192 bytes)</span>
 <span class="kt">uint16_t</span> <span class="n">NumCinematicFrames</span><span class="p">;</span> <span class="c1">// number of cinematic frame records to follow (2 bytes)</span>
 <span class="n">tr2_cinematic_frame</span> <span class="n">CinematicFrames</span><span class="p">[</span><span class="n">NumCinematicFrames</span><span class="p">];</span> <span class="c1">// (NumCinematicFrames * 16 bytes)</span>
@@ -7131,17 +7331,6 @@ brightness and greater values being darker.</p></div>
 <span class="kt">uint32_t</span> <span class="n">NumSampleIndices</span><span class="p">;</span> <span class="c1">// number of sample indices to follow (4 bytes)  +</span>
 <span class="kt">uint32_t</span> <span class="n">SampleIndices</span><span class="p">[</span><span class="n">NumSampleIndices</span><span class="p">];</span> <span class="c1">// sample indices (NumSampleIndices * 4 bytes)</span>
 </pre></div></div></div>
-</div>
-<div class="sect2">
-<h3 id="_the_entire_tr4_level_format">10.4. The Entire TR4 Level Format</h3>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<img src="./images/icons/note.png" alt="Note">
-</td>
-<td class="content">Needs to be written.</td>
-</tr></table>
-</div>
 </div>
 <div class="sect2">
 <h3 id="_the_entire_tr5_level_format">10.5. The Entire TR5 Level Format</h3>
@@ -7174,7 +7363,7 @@ In TR1, after SectorData, there is only the first light intensity, and not the s
 </li>
 <li>
 <p>
-In TR1, tr2_room_light_struct has only one of:
+In TR1, tr2_room_light has only one of:
 </p>
 <div class="ulist"><ul>
 <li>
@@ -7206,7 +7395,7 @@ In TR1, tr2_room_static does not have two light intensities, but only one.
 </li>
 <li>
 <p>
-In TR1, <span class="monospaced">tr2_item_struct</span> is like the TR2 version, but with only one light intensity.
+In TR1, <span class="monospaced">tr_entity</span> is like the TR2 version, but with only one light intensity.
 </p>
 </li>
 <li>
@@ -7242,7 +7431,7 @@ Also in <span class="monospaced">tr3_room</span>, TR3 has 3 extra bytes at the e
 </li>
 <li>
 <p>
-Finally, in TR2, the <span class="monospaced">tr_object_texture</span> data is before the <span class="monospaced">tr_sprite_texture</span> data. In TR3, it is before the <span class="monospaced">tr2_item</span> data.
+Finally, in TR2, the <span class="monospaced">tr_object_texture</span> data is before the <span class="monospaced">tr_sprite_texture</span> data. In TR3, it is before the <span class="monospaced">tr2_entity</span> data.
 </p>
 </li>
 </ul></div>
@@ -7451,7 +7640,7 @@ Also, it is followed by 28 bytes zero padding.
 </li>
 <li>
 <p>
-<a href="#tr5_room_vertex">[tr5_room_vertex]</a> struct is used instead of <a href="#tr4_room_vertex">[tr4_room_vertex]</a>.
+<a href="#tr5_room_vertex">[tr5_room_vertex]</a> struct is used instead of <a href="#tr3_room_vertex">[tr3_room_vertex]</a>.
 </p>
 </li>
 <li>
@@ -8287,7 +8476,7 @@ integer as the title level has no name associated with it.</p></div>
 size of all level data sections comprise <em>Level Block</em>.</p></div>
 <div class="paragraph"><p>To get to a certain level&#8217;s data section, follow that particular level&#8217;s offset from inside the offset table you loaded (described above). The data sections
 themselves are ordered the very same way levels were ordered in <span class="monospaced">SCRIPT.TXT</span>. For more info on the types of all available TR4 chunks and how to parse them, see
-the <a href="#Script Opcodes">[Script Opcodes]</a> section.</p></div>
+the <a href="#_script_opcodes">Script Opcodes</a> section.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_language_file_listing_block">12.1.5. Language File Listing Block</h4>
