@@ -1220,12 +1220,12 @@ int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
         // Full entity mask (11111) is always a reason to activate an entity.
         // If mask is not full, entity won't activate - no exclusions.
 
-        if((mask == 0x1F) /*&& (event == 0)*/)
+        if(mask == 0x1F)
         {
             activation_state = Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, entity_object->id, activator_id);
             event = 1;
         }
-        else if((mask != 0x1F) /*&& (event == 1)*/)
+        else if(mask != 0x1F)
         {
             activation_state = Script_ExecEntity(engine_lua, ENTITY_CALLBACK_DEACTIVATE, entity_object->id, activator_id);
             event = 0;

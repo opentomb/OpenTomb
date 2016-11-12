@@ -3204,10 +3204,14 @@ int lua_GetEntityAnim(lua_State * lua)
     ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_id);
     if(ss_anim && ss_anim->model)
     {
+        animation_frame_p af = ss_anim->model->animations + ss_anim->next_animation;
         lua_pushinteger(lua, ss_anim->next_animation);
         lua_pushinteger(lua, ss_anim->next_frame);
-        lua_pushinteger(lua, ss_anim->model->animations[ss_anim->next_animation].max_frame);
-        return 3;
+        lua_pushinteger(lua, af->max_frame);
+        lua_pushinteger(lua, af->next_anim->id);
+        lua_pushinteger(lua, af->next_frame);
+        lua_pushinteger(lua, af->next_anim->state_id);
+        return 6;
     }
 
     return 0;
@@ -4329,6 +4333,39 @@ int lua_SetEntityAnimState(lua_State * lua)
             {
                 ss_anim->current_state = lua_tointeger(lua, 4);
             }
+            break;
+        }
+    }
+
+    return 0;
+}
+
+
+int lua_SetEntityAnimStateHeavy(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top < 3)
+    {
+        Con_Warning("setEntityAnimStateHeavy: expecting arguments (entity_id, anim_type_id, next_state)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+
+    if(ent == NULL)
+    {
+        Con_Warning("no entity with id = %d", id);
+        return 0;
+    }
+
+    int anim_type_id = lua_tointeger(lua, 2);
+    for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
+    {
+        if(ss_anim->type == anim_type_id)
+        {
+            ss_anim->next_state_heavy = lua_tointeger(lua, 3);
+            ss_anim->next_state = ss_anim->next_state_heavy;
             break;
         }
     }
@@ -5573,6 +5610,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "setEntityCallbackFlag", lua_SetEntityCallbackFlag);
     lua_register(lua, "getEntityAnimState", lua_GetEntityAnimState);
     lua_register(lua, "setEntityAnimState", lua_SetEntityAnimState);
+    lua_register(lua, "setEntityAnimStateHeavy", lua_SetEntityAnimStateHeavy);
     lua_register(lua, "setEntityRoomMove", lua_SetEntityRoomMove);
     lua_register(lua, "getEntityMoveType", lua_GetEntityMoveType);
     lua_register(lua, "setEntityMoveType", lua_SetEntityMoveType);

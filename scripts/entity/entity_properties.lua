@@ -109,7 +109,7 @@ tr1_entity_tbl[56] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_B
 tr1_entity_tbl[57] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};       -- Door
 tr1_entity_tbl[58] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};       -- Door
 tr1_entity_tbl[59] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};       -- Door
-tr1_entity_tbl[60] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};       -- Door
+tr1_entity_tbl[60] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_SINGLE_BOX, func = "door"};       -- Door
 tr1_entity_tbl[61] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};       -- Door
 tr1_entity_tbl[62] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};       -- Door
 tr1_entity_tbl[63] = {coll = COLLISION_TYPE_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};       -- Door
