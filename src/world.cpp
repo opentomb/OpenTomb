@@ -1025,9 +1025,7 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
                 {
 
                     current_room->is_swapped = !current_room->is_swapped;
-                    Room_Disable(current_room->real_room);
-                    Room_SwapContentMovablesToActive(current_room, current_room->alternate_room_next);
-                    Room_Enable(current_room->real_room);
+                    Room_DoFlip(current_room, current_room->alternate_room_next);
                     ret = 1;
                 }
             }

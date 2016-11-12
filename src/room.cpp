@@ -183,6 +183,10 @@ void Room_Enable(struct room_s *room)
 
     for(engine_container_p cont = room->content->containers; cont; cont = cont->next)
     {
+        if(cont->collision_type == COLLISION_TYPE_NONE)
+        {
+            continue;
+        }
         switch(cont->object_type)
         {
             case OBJECT_ENTITY:
@@ -285,9 +289,9 @@ int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont)
 }
 
 
-void Room_SwapContentMovablesToActive(struct room_s *room1, struct room_s *room2)
+void Room_DoFlip(struct room_s *room1, struct room_s *room2)
 {
-    if(room1 && room2)
+    if(room1 && room2 && (room1 != room2))
     {
         room1->frustum = NULL;
         room2->frustum = NULL;
@@ -366,6 +370,7 @@ void Room_SwapContentMovablesToActive(struct room_s *room1, struct room_s *room2
                 room2->content->static_mesh[i].self->room = room2;
             }
 
+            // move movables if it is necessary
             {
                 room_p base_room = (room1 == room1->real_room) ? room1 : NULL;
                 base_room = (room2 == room2->real_room) ? room2 : room1;
@@ -373,13 +378,17 @@ void Room_SwapContentMovablesToActive(struct room_s *room1, struct room_s *room2
                 {
                     room_p alt_room = (room1 == base_room) ? room2 : room1;
                     engine_container_p *ptr = &base_room->content->containers;
+                    engine_container_p base_room_containers = alt_room->content->containers;
+                    alt_room->content->containers = NULL;
+                    Room_Disable(alt_room);
+                    Room_Enable(base_room);                 // enable new collisions
                     for(; *ptr; ptr = &((*ptr)->next));
-                    *ptr = alt_room->content->containers;
+                    *ptr = base_room_containers;            // base room containerrs enability stay as is
                     alt_room->content->containers = NULL;
                 }
             }
 
-            // fix containers
+            // fix containers ownership
             for(engine_container_p cont = room1->content->containers; cont; cont = cont->next)
             {
                 cont->room = room1;
