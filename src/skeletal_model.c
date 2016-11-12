@@ -735,13 +735,19 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
     float dt;
     int32_t new_frame;
     animation_frame_p next_anim = ss_anim->model->animations + ss_anim->next_animation;
-    state_change_p stc = Anim_FindStateChangeByID(next_anim, (ss_anim->next_state_heavy >= 0) ? (ss_anim->next_state_heavy) : (ss_anim->next_state));
+    state_change_p stc = Anim_FindStateChangeByID(next_anim, ss_anim->next_state);
     
     if(next_anim->state_id == ss_anim->next_state_heavy)
     {
         ss_anim->next_state_heavy = -1;
     }
-
+    
+    if(ss_anim->next_state_heavy >= 0)
+    {
+        state_change_p stc_heavy = Anim_FindStateChangeByID(next_anim, ss_anim->next_state_heavy);
+        stc = (stc_heavy) ? (stc_heavy) : (stc);
+    }
+    
     ss_anim->frame_time = (ss_anim->frame_time >= 0.0f) ? (ss_anim->frame_time) : (0.0f);
     ss_anim->frame_time += time;
     new_frame = ss_anim->frame_time / ss_anim->period;
