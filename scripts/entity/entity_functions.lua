@@ -305,6 +305,31 @@ function doorbell_init(id)    -- Lara's Home doorbell (TR2)
 end
 
 
+function natla_cabin_TR1_init(id)
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        local st = getEntityAnimState(object_id, ANIM_TYPE_BASE);
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        setEntityAnim(object_id, ANIM_TYPE_BASE, a, c - 1, c - 1);  -- force it to avoid broken state change
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, st + 1);
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end
+
+    entity_funcs[id].onLoop = function(object_id)
+        if(getEntityEnability(object_id)) then
+            local st = getEntityAnimState(object_id, ANIM_TYPE_BASE);
+            if(st == 4) then
+                disableEntity(object_id);
+                setFlipMap(0x03, 0x1F, TRIGGER_OP_XOR);    --setFlipMap(flip_index, flip_mask, TRIGGER_OP_OR / XOR)
+                setFlipState(0x03, 1);                     --setFlipState(flip_index, FLIP_STATE_ON)
+                entity_funcs[id].onLoop = nil;
+            end;
+        else
+            entity_funcs[id].onLoop = nil;
+        end;
+    end
+end
+
 function alarm_TR2_init(id)    -- Offshore Rig alarm (TR2)
 
     gen_soundsource_init(id);
