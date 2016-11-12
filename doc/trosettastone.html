@@ -2072,7 +2072,7 @@ width:100%;
 <col style="width:1%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-10-25)</strong></p></div>
+<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-11-12)</strong></p></div>
 <div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
 <div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div></div></td>
 <td class="tableblock halign-right valign-middle" ><div><div class="paragraph"><p><span class="image">
@@ -7515,13 +7515,13 @@ of flexibility.</p></div>
 <div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">Version</span><span class="p">;</span>             <span class="c1">// The Script Version (Always 3 for TR2/3)</span>
 <span class="kt">uint8_t</span> <span class="n">Description</span><span class="p">[</span><span class="mi">256</span><span class="p">];</span>     <span class="c1">// Null-terminated string describing the script copyright info etc. Not encrypted.</span>
 <span class="kt">uint16_t</span> <span class="n">GameflowSize</span><span class="p">;</span>        <span class="c1">// Size in bytes of the game flow data, always 128 bytes</span>
-<span class="kt">uint32_t</span> <span class="n">FirstOption</span><span class="p">;</span>         <span class="c1">// What to do when the game starts</span>
-<span class="kt">uint32_t</span> <span class="n">TitleReplace</span><span class="p">;</span>        <span class="c1">// What to do when EXIT_TO_TITLE is requested</span>
-<span class="kt">uint32_t</span> <span class="n">OnDeathDemoMode</span><span class="p">;</span>     <span class="c1">// What to do when Lara dies during the demo mode</span>
-<span class="kt">uint32_t</span> <span class="n">OnDeathInGame</span><span class="p">;</span>       <span class="c1">// What to do when Lara dies during the game</span>
+<span class="kt">int32_t</span> <span class="n">FirstOption</span><span class="p">;</span>         <span class="c1">// What to do when the game starts</span>
+<span class="kt">int32_t</span> <span class="n">TitleReplace</span><span class="p">;</span>        <span class="c1">// What to do when EXIT_TO_TITLE is requested</span>
+<span class="kt">int32_t</span> <span class="n">OnDeathDemoMode</span><span class="p">;</span>     <span class="c1">// What to do when Lara dies during the demo mode</span>
+<span class="kt">int32_t</span> <span class="n">OnDeathInGame</span><span class="p">;</span>       <span class="c1">// What to do when Lara dies during the game</span>
 <span class="kt">uint32_t</span> <span class="n">DemoTime</span><span class="p">;</span>            <span class="c1">// Time in game ticks (1/30th of a second?) to wait before starting a demo</span>
-<span class="kt">uint32_t</span> <span class="n">OnDemoInterrupt</span><span class="p">;</span>     <span class="c1">// What to do when the demo mode is interrupted</span>
-<span class="kt">uint32_t</span> <span class="n">OnDemoEnd</span><span class="p">;</span>           <span class="c1">// What to do when the demo mode ends</span>
+<span class="kt">int32_t</span> <span class="n">OnDemoInterrupt</span><span class="p">;</span>     <span class="c1">// What to do when the demo mode is interrupted</span>
+<span class="kt">int32_t</span> <span class="n">OnDemoEnd</span><span class="p">;</span>           <span class="c1">// What to do when the demo mode ends</span>
 <span class="kt">uint8_t</span> <span class="n">Unknown1</span><span class="p">[</span><span class="mi">36</span><span class="p">];</span>         <span class="c1">// Filler</span>
 <span class="kt">uint16_t</span> <span class="n">NumLevels</span><span class="p">;</span>           <span class="c1">// Number of levels in the game, including the training level, not including the title level.</span>
 <span class="kt">uint16_t</span> <span class="n">NumChapterScreens</span><span class="p">;</span>   <span class="c1">// Chapter screens (Present in TR2, first used in TR3)</span>
@@ -7632,10 +7632,10 @@ of flexibility.</p></div>
     <span class="n">LoadSaveDisabled</span> <span class="o">=</span>         <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">),</span>  <span class="c1">// If set, it indicates that the game does not allow save games.</span>
     <span class="n">ScreenSizingDisabled</span> <span class="o">=</span>     <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">5</span><span class="p">),</span>  <span class="c1">// If set, it indicates that the game does not allow screen resizing (with the function keys).</span>
     <span class="n">LockoutOptionRing</span> <span class="o">=</span>        <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">6</span><span class="p">),</span>  <span class="c1">// If set, it indicates that the user has no access to the Option Ring while playing the game.</span>
-    <span class="n">DozyCheatEnabled</span> <span class="o">=</span>         <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">7</span><span class="p">),</span>  <span class="c1">// If set, it indicates that the game has the DOZY cheat enabled (not present in final versions).</span>
+    <span class="n">DozyCheatEnabled</span> <span class="o">=</span>         <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">7</span><span class="p">),</span>  <span class="c1">// If set, it indicates that the game has the DOZY cheat enabled (only present in the final build of TR2 on PSX).</span>
     <span class="n">UseXor</span> <span class="o">=</span>                   <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">8</span><span class="p">),</span>  <span class="c1">// If set, it indicates that a cypher byte was used to encrypt the strings in the script file, and is stored in the XorKey field.</span>
     <span class="n">GymEnabled</span> <span class="o">=</span>               <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">9</span><span class="p">),</span>  <span class="c1">// Is Gym available on title screen.</span>
-    <span class="n">SelectAnyLevel</span> <span class="o">=</span>           <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">10</span><span class="p">),</span> <span class="c1">// If set, it indicates that the names of the levels are all listed in the Passport.</span>
+    <span class="n">SelectAnyLevel</span> <span class="o">=</span>           <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">10</span><span class="p">),</span> <span class="c1">// If set, it enables level select when New Game is selected.</span>
     <span class="n">EnableCheatCode</span> <span class="o">=</span>          <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">11</span><span class="p">)</span>  <span class="c1">// It apparently has no effect on the PC game.</span>
 <span class="p">};</span>
 </pre></div></div></div>
@@ -7669,14 +7669,14 @@ higher than a <em>normal</em> level ID.</p></div>
 <span class="k">enum</span> <span class="n">ScriptOpcodes</span>
 <span class="p">{</span>
     <span class="n">OP_PICTURE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>             <span class="c1">// Unused. Compiles but does not show in-game. Maybe PSX. Operand is picture ID.</span>
-    <span class="n">OP_PSX_START</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>           <span class="c1">// Unused. Does not compile. Maybe PSX. Operand is track ID.</span>
-    <span class="n">OP_PSX_FMV</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>             <span class="c1">// Unused. Does not compile. Maybe PSX. Operand is FMV ID.</span>
+    <span class="n">OP_LIST_START</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>          <span class="c1">// Unused. Maybe PSX.</span>
+    <span class="n">OP_LIST_END</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>            <span class="c1">// Unused. Maybe PSX.</span>
     <span class="n">OP_FMV</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>                 <span class="c1">// Display Full Motion Video. Operand is FMV ID.</span>
     <span class="n">OP_LEVEL</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>               <span class="c1">// Start a playable level. Operand is level ID.</span>
     <span class="n">OP_CINE</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>                <span class="c1">// Display cut scene sequence. Operand is cutscene ID.</span>
     <span class="n">OP_COMPLETE</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span>            <span class="c1">// Display level-completion statistics panel.</span>
     <span class="n">OP_DEMO</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span>                <span class="c1">// Display demo sequence. Operand is demo level ID.</span>
-    <span class="n">OP_PSX_DEMO</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>            <span class="c1">// Unused. Does not compile. Maybe PSX. Operand is demo level ID.</span>
+    <span class="n">OP_JUMPTOSEQUENCE</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>      <span class="c1">// Jump to another sequence. Operand is sequence ID.</span>
     <span class="n">OP_END</span> <span class="o">=</span> <span class="mi">9</span><span class="p">,</span>                 <span class="c1">// Closes script sequences, LEVEL, DEMOLEVEL, GYM, etc...</span>
     <span class="n">OP_TRACK</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>              <span class="c1">// Play Soundtrack (it precedes opcodes of associated levels). Operand is track ID.</span>
     <span class="n">OP_SUNSET</span> <span class="o">=</span> <span class="mi">11</span><span class="p">,</span>             <span class="c1">// Unknown. Nothing changes in-game. Used in Bartoli&#39;s Hideout. Maybe not-implemented ancestor of TR4 LensFlare?</span>
