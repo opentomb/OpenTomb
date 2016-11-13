@@ -8849,13 +8849,161 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_overview_7">13.1. Overview</h3>
+<div class="sect3">
+<h4 id="_tr4_8201_8212_8201_cutseq_pak">13.1.1. TR4&#8201;&#8212;&#8201;CUTSEQ.PAK</h4>
+<div class="paragraph"><p>In TR4, the file is called <span class="monospaced">CUTSEQ.PAK</span> , and is actually a container for a compressed <span class="monospaced">CUTSEQ.BIN</span> which will be used in TR5 (a lot of things in TR5 't compressed, when they were in TR4).</p></div>
 <div class="listingblock">
 <div class="content"><div class="highlight"><pre><span class="kt">uint32_t</span> <span class="n">UncompSize</span><span class="p">;</span> <span class="c1">// Uncompressed size of data (4 bytes)</span>
-<span class="kt">uint8_t</span> <span class="n">CompressedData</span><span class="p">[];</span> <span class="c1">// zlib-compressed data (read to EOF)</span>
+<span class="kt">uint8_t</span> <span class="n">CompressedData</span><span class="p">[];</span> <span class="c1">// zlib-compressed CUTSEQ.BIN (read to EOF)</span>
 </pre></div></div></div>
+</div>
+<div class="sect3">
+<h4 id="_tr5_8201_8212_8201_cutseq_bin">13.1.2. TR5&#8201;&#8212;&#8201;CUTSEQ.BIN</h4>
 <div class="listingblock">
-<div class="content"><div class="highlight"><pre>
+<div class="content"><div class="highlight"><pre><span class="kt">uint8_t</span> <span class="n">DEL</span><span class="p">[</span><span class="mi">8</span><span class="p">];</span> <span class="c1">// &quot;(C) DEL!&quot;, for Derek Leigh-Gilchrist</span>
+<span class="n">cutscene_header</span> <span class="n">Cutscenes</span><span class="p">[</span><span class="n">N</span><span class="p">];</span> <span class="c1">// N = 30 for TR4, 44 for TR5, 4 for Times Demo</span>
+<span class="kt">uint8_t</span> <span class="n">Padding</span><span class="p">[];</span> <span class="c1">// Empty space between header and data</span>
+<span class="kt">uint8_t</span> <span class="n">CutsceneData</span><span class="p">[];</span>
+
+<span class="k">struct</span> <span class="n">cutscene_header</span> <span class="c1">// 8 bytes</span>
+<span class="p">{</span>
+  <span class="kt">uint32_t</span> <span class="n">Offset</span><span class="p">;</span> <span class="c1">// Offset relative to start of file</span>
+  <span class="kt">uint32_t</span> <span class="n">Size</span><span class="p">;</span> <span class="c1">// Size in bytes</span>
+<span class="p">}</span>
+
+<span class="k">struct</span> <span class="n">cutscene_data</span>
+<span class="p">{</span>
+  <span class="kt">uint16_t</span> <span class="n">NumActors</span><span class="p">;</span> <span class="c1">// Actor 1 is always Lara (slot ID 0)</span>
+  <span class="kt">uint16_t</span> <span class="n">NumFrames</span><span class="p">;</span>
+  <span class="kt">int32_t</span> <span class="n">OriginX</span><span class="p">;</span> <span class="c1">// Origin coordinates are in TR world coordinates</span>
+  <span class="kt">int32_t</span> <span class="n">OriginY</span><span class="p">;</span> <span class="c1">// Negative Y is up</span>
+  <span class="kt">int32_t</span> <span class="n">OriginZ</span><span class="p">;</span>
+  <span class="kt">int32_t</span> <span class="n">AudioTrackIndex</span><span class="p">;</span> <span class="c1">// -1 means no audio track</span>
+  <span class="kt">uint32_t</span> <span class="n">CameraDataOffset</span><span class="p">;</span>
+  <span class="n">actor_slot_header</span> <span class="n">Actors</span><span class="p">[</span><span class="n">NumActors</span><span class="p">];</span>
+  <span class="n">camera_data</span> <span class="n">CameraData</span><span class="p">;</span>
+  <span class="kt">uint8_t</span> <span class="n">Padding</span><span class="p">[];</span>
+  <span class="kt">uint8_t</span> <span class="n">ActorData</span><span class="p">[];</span>
+  <span class="kt">uint8_t</span> <span class="n">Padding</span><span class="p">[];</span>
+<span class="p">}</span>
+
+<span class="k">struct</span> <span class="n">actor_slot_header</span> <span class="c1">// 8 bytes</span>
+<span class="p">{</span>
+  <span class="kt">uint32_t</span> <span class="n">DataOffset</span><span class="p">;</span>
+  <span class="kt">uint16_t</span> <span class="n">SlotNumber</span><span class="p">;</span> <span class="c1">// TR Moveable slot ID number</span>
+  <span class="kt">uint16_t</span> <span class="n">NumNodes</span><span class="p">;</span> <span class="c1">// Same as number of meshes in moveable</span>
+<span class="p">}</span>
+
+<span class="k">struct</span> <span class="n">camera_data</span>
+<span class="p">{</span>
+  <span class="n">position_header</span> <span class="n">TargetHeader</span><span class="p">;</span>
+  <span class="n">position_header</span> <span class="n">CameraHeader</span><span class="p">;</span>
+  <span class="n">packed_coord</span> <span class="n">TargetPosition</span><span class="p">;</span>
+  <span class="n">packed_coord</span> <span class="n">CameraPosition</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">struct</span> <span class="n">actor_data</span>
+<span class="p">{</span>
+  <span class="n">mesh_header</span> <span class="n">Meshes</span><span class="p">[</span><span class="n">NumNodes</span><span class="p">];</span>
+  <span class="n">mesh_data</span> <span class="n">MeshData</span><span class="p">[</span><span class="n">NumNodes</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="k">struct</span> <span class="n">mesh_data</span>
+<span class="p">{</span>
+  <span class="n">packed_coord</span> <span class="n">PositionData</span><span class="p">;</span>
+  <span class="n">packed_coord</span> <span class="n">RotationData</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">struct</span> <span class="n">position_header</span> <span class="c1">// 14 bytes</span>
+<span class="p">{</span>
+  <span class="kt">int16_t</span> <span class="n">StartX</span><span class="p">;</span>
+  <span class="kt">int16_t</span> <span class="n">StartY</span><span class="p">;</span>
+  <span class="kt">int16_t</span> <span class="n">StartZ</span><span class="p">;</span>
+  <span class="kt">uint16_t</span> <span class="n">AxisBitsizes</span><span class="p">;</span> <span class="c1">// X = bits 14-11, Y = 9-6, Z = 4-1</span>
+  <span class="kt">uint16_t</span> <span class="n">NumValuesX</span><span class="p">;</span>
+  <span class="kt">uint16_t</span> <span class="n">NumValuesY</span><span class="p">;</span>
+  <span class="kt">uint16_t</span> <span class="n">NumValuesZ</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">struct</span> <span class="n">rotation_header</span> <span class="c1">// 14 bytes</span>
+<span class="p">{</span>
+  <span class="c1">// 1024 = 360 degrees</span>
+  <span class="kt">int16_t</span> <span class="n">StartX</span><span class="p">;</span>
+  <span class="kt">int16_t</span> <span class="n">StartY</span><span class="p">;</span>
+  <span class="kt">int16_t</span> <span class="n">StartZ</span><span class="p">;</span>
+  <span class="kt">uint16_t</span> <span class="n">AxisBitsizes</span><span class="p">;</span> <span class="c1">// X = bits 14-11, Y = 9-6, Z = 4-1</span>
+  <span class="kt">uint16_t</span> <span class="n">NumValuesX</span><span class="p">;</span>
+  <span class="kt">uint16_t</span> <span class="n">NumValuesY</span><span class="p">;</span>
+  <span class="kt">uint16_t</span> <span class="n">NumValuesZ</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">struct</span> <span class="n">packed_coord</span> <span class="c1">// (variable length)</span>
+<span class="p">{</span>
+  <span class="n">dynamic</span> <span class="n">Xaxis</span><span class="p">;</span> <span class="c1">// todo: explain better</span>
+  <span class="n">dynamic</span> <span class="n">Yaxis</span><span class="p">;</span> <span class="c1">// core design, why did you make this</span>
+  <span class="n">dynamic</span> <span class="n">Zaxis</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div></div></div>
+</div>
+<div class="sect3">
+<h4 id="_notes">13.1.3. Notes</h4>
+<div class="paragraph"><p>In TR4 CUTSEQ.PAK, DEL (Derek Leigh-Gilchrist) left a hidden message in the first Padding section:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>Cutseq.JIZ , Compiled by Del using the one and only 'ASMLE.EXE'
+Ok, I`ve got about 1.5k of padding here, so enjoy my ramblings...
+Keep your greasy mits off my packed data...
+Greets to...
+Alex,Damon,Rich,Charlie,Jon,Dan,Dude,Martin,Jens,DaveS,DaveM,ZeoGrad and all the usual...
+Tombraider IV Delta-Packed Animation Data (C) 1999 Core Design.
+Sector padded for hotness...
+Format:
+dc.w num_actors
+dc.w num_frames
+dc.l orgx,orgy,orgz
+dc.l audio_track
+dc.l packed_camera_data_offset
+dc.l packed_actor_data_offset
+dc.w object_slot
+dc.w num_nodes
+nice eh?
+hack away my friends...
+NUDE CHEAT ALERT... NUDE CHEAT ALERT...
+maybe...
+EMAIL: del@nlights.demon.co.uk
+OR del@core-design.com
+Developer Credits:
+Coding: Del,Gibby,Chris,Rich &amp; Tom
+Delta Compressor: MJ
+Animation: Jerr
+Art: Jibber,Pete,Phil,Andy,Rich,Jamie
+Sound: Pete
+FMV: Pete,Dave and some others...
+Thanks to...
+PsyQ,SCEE,MartinJ and the GNU people...
+Don`t forget, ** PC-Engine RULES **
+BTW people, 30% of the entire game is MIPS.
+The rest is 'C' , but luckily GNU isn`t as dry as it used to be...
+Some decent(ish) links:
+http://www.nlights.demon.co.uk
+http://www.core-design.com
+http://www.hu6280.com
+http://www.geeknews.com
+http://www.hotmail.com
+http://www.hitbox.com
+http://www.tombraider.com
+http://www.ign64.com
+http://www.rareware.com
+http://www.eidos.com
+Special greet to my baby girl Abigail, and my Wife(?) Caroline...
+See you in TR5.... bwhahahah</pre>
+</div></div>
+<div class="paragraph"><p>TR5 CUTSEQ.BIN also contains a message:</p></div>
+<div class="listingblock">
+<div class="content monospaced">
+<pre>'cutseq.asm' Compiled by Del - 18:08:53 Thursday 26th of October 2000</pre>
+</div></div>
+</div>
 </div>
 </div>
 </div>
