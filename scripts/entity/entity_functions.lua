@@ -50,13 +50,27 @@ end;
 function door_init(id)   -- NORMAL doors only!
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    setEntityActivity(object_id, 1);
+    setEntityActivity(id, 1);
     
+    local state_on = 1;
+    local state_off = 0;
+    local object_mask = getEntityMask(id);
+    if(object_mask == 0x1F) then
+        setEntityAnimStateHeavy(id, ANIM_TYPE_BASE, state_on);
+        setEntityTriggerLayout(id, 0x00, 0, 0); -- Reset activation mask and event.
+        state_on = 0;
+        state_off = 1;
+    end;
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        return swapEntityState(object_id, 0, 1);
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_on);
+        return ENTITY_TRIGGERING_ACTIVATED;
     end;
     
-    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;    -- Same function.
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    end;
     
     entity_funcs[id].onLoop = function(object_id)
         if(getEntityEvent(object_id) == 0) then
@@ -64,12 +78,10 @@ function door_init(id)   -- NORMAL doors only!
         end;
 
         if((tickEntity(object_id) == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
-            swapEntityState(object_id, 0, 1);
+            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
             setEntityEvent(object_id, 0);
         end;
     end
-    
-    prepareEntity(id);
 end
 
 
@@ -201,7 +213,7 @@ function anim_init(id)      -- Ordinary animatings
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
-            setEntityAnimState(object_id, ANIM_TYPE_BASE, 0);
+            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 0);
             setEntityActivity(object_id, 0);
         end;
     end
@@ -528,7 +540,7 @@ function sethblade_init(id)      -- Seth blades (TR4)
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
-            setEntityAnimState(object_id, ANIM_TYPE_BASE, 2)
+            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 2)
             setEntityActivity(object_id, 0);
         end;
     end
@@ -687,7 +699,9 @@ function propeller_init(id)      -- Generic propeller (TR1-TR2)
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
     entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then setEntityAnimState(object_id, ANIM_TYPE_BASE, 0) end;
+        if(tickEntity(object_id) == TICK_STOPPED) then 
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, 0) 
+        end;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
