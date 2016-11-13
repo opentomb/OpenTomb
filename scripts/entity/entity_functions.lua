@@ -155,13 +155,13 @@ function switch_init(id)     -- Ordinary switches
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
-            setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
+            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 1);
             setEntitySectorStatus(object_id, 1);
         end;
     end;
 end
 
-function big_switch_init(id)     -- Big switches (TR4)
+function big_switch_init(id)     -- Big switches (TR4) - lever
     
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     setEntityActivationOffset(id, 0.0, -520.0, 0.0, 128);
@@ -191,7 +191,7 @@ function big_switch_init(id)     -- Big switches (TR4)
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
-            setEntityAnimState(object_id, ANIM_TYPE_BASE, 3);                   -- 3 - diactivate anim
+            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 0);              -- 0 - diactivate anim
             setEntitySectorStatus(object_id, 1);
         end;
     end;
@@ -203,18 +203,28 @@ function anim_init(id)      -- Ordinary animatings
     setEntityActivity(id, 0);
     disableEntity(id);
     
+    local state_on = 1;
+    local state_off = 0;
+   
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        swapEntityState(object_id, 1, 0);
-        swapEntityActivity(object_id);
-        return swapEntityEnability(object_id);
-    end    
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_on);
+        setEntityActivity(object_id, true);
+        enableEntity(object_id);
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
     
-    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
-    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+        setEntityActivity(object_id, false);
+        disableEntity(object_id);
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    end;
+
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 0);
+            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
             setEntityActivity(object_id, 0);
+            -- disable entity?
         end;
     end
 end
@@ -426,27 +436,35 @@ function swingblade_init(id)        -- Swinging blades (TR1)
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     setEntityActivity(id, 1);
     
+    local state_on = 2;
+    local state_off = 0;
+    local object_mask = getEntityMask(id);
+    if(object_mask == 0x1F) then
+        setEntityAnimStateHeavy(id, ANIM_TYPE_BASE, state_on);
+        setEntityTriggerLayout(id, 0x00, 0, 0); -- Reset activation mask and event.
+        state_on = 0;
+        state_off = 2;
+    end;
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityAnimState(object_id, ANIM_TYPE_BASE, 2);
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_on);
         return ENTITY_TRIGGERING_ACTIVATED;
     end    
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 0);
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then 
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 0) 
+            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off) 
         end;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        changeCharacterParam(activator_id, PARAM_HEALTH, -45);
+        changeCharacterParam(activator_id, PARAM_HEALTH, -45.0 * frame_time * 30.0);
     end
-    
-    prepareEntity(id);
 end
 
 
@@ -497,32 +515,37 @@ function gen_trap_init(id)      -- Generic traps (TR1-TR2)
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     setEntityActivity(id, 1);
     
+    local state_on = 1;
+    local state_off = 0;
+    local object_mask = getEntityMask(id);
+    if(object_mask == 0x1F) then
+        setEntityAnimStateHeavy(id, ANIM_TYPE_BASE, state_on);
+        setEntityTriggerLayout(id, 0x00, 0, 0); -- Reset activation mask and event.
+        state_on = 0;
+        state_off = 1;
+    end;
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        local current_state = getEntityAnimState(object_id, ANIM_TYPE_BASE);
-        if(current_state == 0) then 
-            setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
-            return ENTITY_TRIGGERING_ACTIVATED;
-        else
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 0);
-            return ENTITY_TRIGGERING_DEACTIVATED;
-        end;
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_on);
+        return ENTITY_TRIGGERING_ACTIVATED;
     end;
     
-    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    end;
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then 
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 0) 
+            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off) 
         end;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 1) then 
-            changeCharacterParam(activator_id, PARAM_HEALTH, -35) 
+            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * frame_time * 30.0) 
         end;
     end
-    
-    prepareEntity(id);
 end
 
 
@@ -531,25 +554,41 @@ function sethblade_init(id)      -- Seth blades (TR4)
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     setEntityActivity(id, 1);
-    
+
+    local state_on = 1;
+    local state_off = 2;
+    local object_mask = getEntityMask(id);
+    if(object_mask == 0x1F) then
+        setEntityAnimStateHeavy(id, ANIM_TYPE_BASE, state_on);
+        setEntityTriggerLayout(id, 0x00, 0, 0); -- Reset activation mask and event.
+        state_on = 2;
+        state_off = 1;
+    end;
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        return swapEntityState(object_id, 1, 2);
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_on);
+        state_on = state_off;
+        return ENTITY_TRIGGERING_ACTIVATED;
     end;
     
-    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    end;
     
     entity_funcs[id].onLoop = function(object_id)
         if(tickEntity(object_id) == TICK_STOPPED) then
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 2)
+            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off)
             setEntityActivity(object_id, 0);
         end;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 1) then setCharacterParam(activator_id, PARAM_HEALTH, 0) end;
+        if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 1) then 
+            setCharacterParam(activator_id, PARAM_HEALTH, 0) 
+        end;
     end
-    
-    prepareEntity(id);
 end
 
 
@@ -691,7 +730,7 @@ function propeller_init(id)      -- Generic propeller (TR1-TR2)
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     setEntityActivity(id, 1);
-    
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
         return swapEntityState(object_id, 0, 1);
     end;
@@ -702,11 +741,13 @@ function propeller_init(id)      -- Generic propeller (TR1-TR2)
         if(tickEntity(object_id) == TICK_STOPPED) then 
             setEntityAnimState(object_id, ANIM_TYPE_BASE, 0) 
         end;
-    end
+    end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 0) then changeCharacterParam(activator_id, PARAM_HEALTH, -100 * 60.0 * frame_time) end;
-    end
+        if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 0) then 
+            changeCharacterParam(activator_id, PARAM_HEALTH, -100 * 60.0 * frame_time) 
+        end;
+    end;
     
     prepareEntity(id);
 end
@@ -716,32 +757,43 @@ function wallblade_init(id)     -- Wall blade (TR1-TR3)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
-    
+
+    state_on = 1;
+    state_off = 0;
+
+    local object_mask = getEntityMask(id);
+    if(object_mask == 0x1F) then
+        setEntityActivity(object_id, state_on);
+        setEntityTriggerLayout(id, 0x00, 0, 0); -- Reset activation mask and event.
+        state_on = 0;
+        state_off = 1;
+    end;
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityActivity(object_id, 1);
+        setEntityActivity(object_id, state_on);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end    
+    end;
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityActivity(object_id, 0);
+        setEntityActivity(object_id, state_off);
         return ENTITY_TRIGGERING_DEACTIVATED;
-    end
+    end;
     
     entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
+        if(tickEntity(object_id) == TICK_STOPPED) then 
+            setEntityActivity(object_id, state_off) 
+        end;
         local anim_number = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(anim_number == 2) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
         elseif(anim_number == 1) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
         end;
-    end
+    end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        changeCharacterParam(activator_id, PARAM_HEALTH, -50);
-    end
-    
-    prepareEntity(id);
+        changeCharacterParam(activator_id, PARAM_HEALTH, -50.0 * 30.0 * frame_time);
+    end;
 end
 
 
@@ -1029,12 +1081,20 @@ function twobp_init(id)        -- Two-block platform
     -- Mode legend: 0 - normal ascent, 1 - normal descent, 2 - push.
     -- Only two classic modes are parsed from OCB, extra modes can be implemented through script.
     
-    if(curr_OCB == 0) then entity_funcs[id].mode = 2 else entity_funcs[id].mode = 0 end;
+    if(curr_OCB == 0) then 
+        entity_funcs[id].mode = 2 
+    else 
+        entity_funcs[id].mode = 0 
+    end;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(getEntityActivity(object_id)) then
             if(entity_funcs[object_id].mode < 2) then
-                if(entity_funcs[object_id].mode == 0) then entity_funcs[object_id].mode = 1 else entity_funcs[object_id].mode = 0 end;
+                if(entity_funcs[object_id].mode == 0) then 
+                    entity_funcs[object_id].mode = 1 
+                else 
+                    entity_funcs[object_id].mode = 0 
+                end;
                 entity_funcs[object_id].current_height = entity_funcs[object_id].raise_height - entity_funcs[object_id].current_height;
             else
                 setEntityActivity(object_id, 0);
@@ -1053,15 +1113,20 @@ function twobp_init(id)        -- Two-block platform
         if(entity_funcs[object_id].waiting == false) then
             if(entity_funcs[object_id].mode < 2) then
                 if(entity_funcs[object_id].current_height < entity_funcs[object_id].raise_height) then
+                    local dz = entity_funcs[object_id].raise_speed * 60.0 * frame_time;
                     if(entity_funcs[object_id].mode == 0) then
-                        moveEntityLocal(object_id, 0.0, 0.0, entity_funcs[object_id].raise_speed);
+                        moveEntityLocal(object_id, 0.0, 0.0, dz);
                     else
-                        moveEntityLocal(object_id, 0.0, 0.0, -entity_funcs[object_id].raise_speed);
+                        moveEntityLocal(object_id, 0.0, 0.0, -dz);
                     end;
                     
-                    entity_funcs[object_id].current_height = entity_funcs[object_id].current_height + entity_funcs[object_id].raise_speed;
+                    entity_funcs[object_id].current_height = entity_funcs[object_id].current_height + dz;
                 else
-                    if(entity_funcs[object_id].mode == 0) then entity_funcs[object_id].mode = 1 else entity_funcs[object_id].mode = 0 end;
+                    if(entity_funcs[object_id].mode == 0) then 
+                        entity_funcs[object_id].mode = 1 
+                    else 
+                        entity_funcs[object_id].mode = 0 
+                    end;
                     entity_funcs[object_id].waiting = true;
                     entity_funcs[object_id].current_height = 0.0; -- Reset height counter.
                     setEntityActivity(object_id, 0);
@@ -1069,15 +1134,17 @@ function twobp_init(id)        -- Two-block platform
             elseif(entity_funcs[object_id].mode == 2) then
                 if(entity_funcs[object_id].push == true) then
                     if(entity_funcs[object_id].current_height < entity_funcs[object_id].push_height) then
-                        moveEntityLocal(object_id, 0.0, 0.0, -entity_funcs[object_id].push_speed);
-                        entity_funcs[object_id].current_height = entity_funcs[object_id].current_height + entity_funcs[object_id].push_speed;
+                        local dz = entity_funcs[object_id].push_speed * 60.0 * frame_time;
+                        moveEntityLocal(object_id, 0.0, 0.0, -dz);
+                        entity_funcs[object_id].current_height = entity_funcs[object_id].current_height + dz;
                     else
                         entity_funcs[object_id].current_height = entity_funcs[object_id].push_height;
                     end;
                 else
                     if(entity_funcs[object_id].current_height > 0.0) then
-                        moveEntityLocal(object_id, 0.0, 0.0, entity_funcs[object_id].push_speed);
-                        entity_funcs[object_id].current_height = entity_funcs[object_id].current_height - entity_funcs[object_id].push_speed;
+                        local dz = entity_funcs[object_id].push_speed * 60.0 * frame_time;
+                        moveEntityLocal(object_id, 0.0, 0.0, dz);
+                        entity_funcs[object_id].current_height = entity_funcs[object_id].current_height - dz;
                     else
                         entity_funcs[object_id].current_height = 0.0;
                     end;
@@ -1652,8 +1719,9 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 
                 if(entity_funcs[object_id].rotating == 0) then
                     entity_funcs[object_id].distance_traveled = 0.0;
-                    moveEntityLocal(object_id, 0.0, entity_funcs[object_id].move_speed, 0.0);  -- Move forward...
-                    entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + entity_funcs[object_id].move_speed;
+                    local dy = entity_funcs[object_id].move_speed * 60.0 * frame_time;
+                    moveEntityLocal(object_id, 0.0, dy, 0.0);  -- Move forward...
+                    entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + dy;
                 end;
                 
                 if((entity_funcs[object_id].loop_detector[(entity_funcs[object_id].move_count)].x == px) and
@@ -1669,16 +1737,19 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 entity_funcs[object_id].move_count = entity_funcs[object_id].move_count + 1;
                 if(entity_funcs[object_id].move_count > 4) then entity_funcs[object_id].move_count = 1 end;
             else
-                moveEntityLocal(object_id, 0.0, entity_funcs[object_id].move_speed, 0.0);  -- Move forward...
-                entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + entity_funcs[object_id].move_speed;
+                local dy = entity_funcs[object_id].move_speed * 60.0 * frame_time;
+                moveEntityLocal(object_id, 0.0, dy, 0.0);  -- Move forward...
+                entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + dy;
             end;
         else            
             if(entity_funcs[object_id].rotating == 1) then
-                entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].turn_rot_speed;
-                rotateEntity(object_id, entity_funcs[object_id].turn_rot_speed);
+                local dza = entity_funcs[object_id].turn_rot_speed * 60.0 * frame_time;
+                entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + dza;
+                rotateEntity(object_id, dza);
             elseif(entity_funcs[object_id].rotating == 2) then
-                entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].stuck_rot_speed;
-                rotateEntity(object_id, -entity_funcs[object_id].stuck_rot_speed); -- another direction!
+                local dza = entity_funcs[object_id].stuck_rot_speed * 60.0 * frame_time;
+                entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + dza;
+                rotateEntity(object_id, -dza); -- another direction!
             end;
             
             if(entity_funcs[object_id].current_angle > entity_funcs[object_id].target_angle) then
