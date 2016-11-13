@@ -737,7 +737,7 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
     animation_frame_p next_anim = ss_anim->model->animations + ss_anim->next_animation;
     state_change_p stc = Anim_FindStateChangeByID(next_anim, ss_anim->next_state);
     
-    if(next_anim->state_id == ss_anim->next_state_heavy)
+    if((next_anim->state_id == ss_anim->next_state_heavy) && (next_anim->next_anim->state_id == ss_anim->next_state_heavy))
     {
         ss_anim->next_state_heavy = -1;
     }
