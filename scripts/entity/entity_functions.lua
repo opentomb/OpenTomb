@@ -161,7 +161,7 @@ function switch_init(id)     -- Ordinary switches
     end;
 end
 
-function big_switch_init(id)     -- Big switches (TR4) - lever
+function lever_switch_init(id)     -- Big switches (TR4) - lever
     
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     setEntityActivationOffset(id, 0.0, -520.0, 0.0, 128);
@@ -1060,7 +1060,7 @@ function midastouch_init(id)    -- Midas gold touch
     prepareEntity(id);
 end
 
-
+-- TODO: delete PUSH - Lara are moved up without it
 function twobp_init(id)        -- Two-block platform
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
@@ -1088,6 +1088,10 @@ function twobp_init(id)        -- Two-block platform
     end;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(getEntityEvent(object_id) == 1) then
+            return ENTITY_TRIGGERING_NOT_READY;
+        end;
+
         if(getEntityActivity(object_id)) then
             if(entity_funcs[object_id].mode < 2) then
                 if(entity_funcs[object_id].mode == 0) then 
@@ -1104,10 +1108,13 @@ function twobp_init(id)        -- Two-block platform
         end;
         
         entity_funcs[object_id].waiting = false;
+        setEntityEvent(object_id, 1);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end
+    end;
     
-    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        return ENTITY_TRIGGERING_NOT_READY;
+    end;
     
     entity_funcs[id].onLoop = function(object_id, activator_id)
         if(entity_funcs[object_id].waiting == false) then

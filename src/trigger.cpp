@@ -201,6 +201,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                 case TR_FD_TRIGTYPE_SKELETON:   ///@FIXME: Find the meaning later!!!
                     // These triggers are being parsed, but not added to trigger script!
                     action_type = TR_ACTIONTYPE_BYPASS;
+                    header_condition = false;
                     break;
 
                 case TR_FD_TRIGTYPE_ANTITRIGGER:
