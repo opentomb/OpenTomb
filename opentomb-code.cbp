@@ -28,10 +28,10 @@
 					<Add option="-march=prescott" />
 					<Add option="-fexpensive-optimizations" />
 					<Add option="-O2" />
-					<Add option="-std=c++11" />
 					<Add option="-Wextra" />
 					<Add option="-Wall" />
-					<Add option="-fno-exceptions -funsafe-math-optimizations -m32 -msse3" />
+					<Add option="-std=c++11" />
+					<Add option="-fno-exceptions -funsafe-math-optimizations -msse3" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -39,18 +39,17 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-std=c99" />
-			<Add option="-std=c++11" />
 			<Add option="-Wall" />
-			<Add option="-m32" />
+			<Add option="-std=c++11" />
+			<Add option="-std=c99" />
 			<Add option="-DOV_EXCLUDE_STATIC_CALLBACKS" />
-			<Add directory="extern/al" />
+			<Add directory="src/config-default" />
 			<Add directory="extern/ogg" />
 			<Add directory="extern/bullet" />
 			<Add directory="extern/freetype2/include" />
 		</Compiler>
 		<Linker>
-			<Add option="-static -m32 -lmingw32 -llua -lpng -lSDL2main -lSDL2.dll -lz -lpthread" />
+			<Add option="-static -lmingw32 -lopenal -lopenal.dll -llua -lpng -lSDL2main -lSDL2.dll -lz -lpthread" />
 		</Linker>
 		<Unit filename="autoexec.lua">
 			<Option target="&lt;{~None~}&gt;" />
@@ -58,204 +57,6 @@
 		<Unit filename="config.lua">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
-		<Unit filename="extern/al/AL/al.h" />
-		<Unit filename="extern/al/AL/alc.h" />
-		<Unit filename="extern/al/AL/alext.h" />
-		<Unit filename="extern/al/AL/efx-creative.h" />
-		<Unit filename="extern/al/AL/efx-presets.h" />
-		<Unit filename="extern/al/AL/efx.h" />
-		<Unit filename="extern/al/Alc/ALc.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/ALu.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/alcConfig.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/alcRing.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/alstring.h" />
-		<Unit filename="extern/al/Alc/backends/backend.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/backends/base.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/backends/base.h" />
-		<Unit filename="extern/al/Alc/backends/loopback.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/backends/null.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/backends/wave.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/bs2b.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/compat.h" />
-		<Unit filename="extern/al/Alc/effects/autowah.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/effects/chorus.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/effects/compressor.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/effects/dedicated.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/effects/distortion.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/effects/echo.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/effects/equalizer.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/effects/flanger.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/effects/modulator.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/effects/null.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/effects/reverb.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/evtqueue.h" />
-		<Unit filename="extern/al/Alc/helpers.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/hrtf.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/hrtf.h" />
-		<Unit filename="extern/al/Alc/midi/base.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/midi/base.h" />
-		<Unit filename="extern/al/Alc/midi/dummy.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/midi/fluidsynth.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/midi/sf2load.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/midi/soft.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/mixer.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/mixer_c.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/mixer_defs.h" />
-		<Unit filename="extern/al/Alc/mixer_inc.hpp" />
-		<Unit filename="extern/al/Alc/mixer_neon.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/mixer_sse.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/mixer_sse2.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/mixer_sse41.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/panning.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/Alc/vector.h" />
-		<Unit filename="extern/al/OpenAL32/alAuxEffectSlot.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/alBuffer.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/alEffect.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/alError.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/alExtension.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/alFilter.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/alFontsound.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/alListener.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/alMidi.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/alPreset.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/alSoundfont.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/alSource.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/alState.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/alThunk.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/OpenAL32/sample_cvt.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/alAuxEffectSlot.h" />
-		<Unit filename="extern/al/alBuffer.h" />
-		<Unit filename="extern/al/alEffect.h" />
-		<Unit filename="extern/al/alError.h" />
-		<Unit filename="extern/al/alFilter.h" />
-		<Unit filename="extern/al/alListener.h" />
-		<Unit filename="extern/al/alMain.h" />
-		<Unit filename="extern/al/alMidi.h" />
-		<Unit filename="extern/al/alSource.h" />
-		<Unit filename="extern/al/alThunk.h" />
-		<Unit filename="extern/al/align.h" />
-		<Unit filename="extern/al/alu.h" />
-		<Unit filename="extern/al/atomic.h" />
-		<Unit filename="extern/al/bool.h" />
-		<Unit filename="extern/al/bs2b.h" />
-		<Unit filename="extern/al/common/atomic.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/common/rwlock.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/common/threads.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/common/uintmap.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="extern/al/config.h" />
-		<Unit filename="extern/al/rwlock.h" />
-		<Unit filename="extern/al/sample_cvt.h" />
-		<Unit filename="extern/al/static_assert.h" />
-		<Unit filename="extern/al/threads.h" />
-		<Unit filename="extern/al/uintmap.h" />
 		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.cpp" />
 		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btAxisSweep3.h" />
 		<Unit filename="extern/bullet/BulletCollision/BroadphaseCollision/btBroadphaseInterface.h" />
@@ -1899,6 +1700,7 @@
 		<Unit filename="src/game.h">
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="src/game_camera.cpp" />
 		<Unit filename="src/gameflow.cpp" />
 		<Unit filename="src/gameflow.h">
 			<Option target="&lt;{~None~}&gt;" />
