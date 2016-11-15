@@ -2072,7 +2072,7 @@ width:100%;
 <col style="width:1%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-10-22)</strong></p></div>
+<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-11-15)</strong></p></div>
 <div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
 <div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div></div></td>
 <td class="tableblock halign-right valign-middle" ><div><div class="paragraph"><p><span class="image">
@@ -2252,6 +2252,11 @@ What&#8217;s the purpose of bits 0-2 (mapping correction) in <em>flags</em> fiel
 <li>
 <p>
 Clarify the box-overlap-zone relation in NPC behaviour section.
+</p>
+</li>
+<li>
+<p>
+Clarify flipeffects 31 and 33 for TR5.
 </p>
 </li>
 </ol></div>
@@ -3119,7 +3124,7 @@ unknown.</p></div>
 </p>
 </li>
 </ul></div>
-<div class="admonitionblock">
+<div class="admonitionblock" id="fog_bulb">
 <table><tr>
 <td class="icon">
 <img src="./images/icons/note.png" alt="Note">
@@ -4693,7 +4698,7 @@ specific state of activator, specific trigger action (activate or deactivate), a
 the switch state is changed</em>. For <em>Object</em> trigger actions, <em>activation</em> means <em>performing <span class="monospaced">XOR</span> operation</em> on these object&#8217;s (entities) activation masks. (See
 next section for description of <em>Object</em> trigger action and <span class="monospaced">Parameter</span> field.)</p></div>
 <div class="paragraph"><p>Please note that this trigger type (as well as <em>any other trigger types</em>) always perform all trigger actions except <em>Object</em> in the same manner! Meaning, if
-there is a <em>Camera</em> or <em>Effect</em> trigger action, it will be performed every time the switch is flipped on or off.</p></div>
+there is a <em>Camera</em> or <em>Flipeffect</em> trigger action, it will be performed every time the switch is flipped on or off.</p></div>
 </div>
 <div class="sect3">
 <h4 id="_subfunction_span_class_monospaced_0x03_span_8201_8212_8201_key">4.5.4. SubFunction <span class="monospaced">0x03</span>&#8201;&#8212;&#8201;Key</h4>
@@ -4917,14 +4922,14 @@ way engine treats it in either case will be discussed in corresponding section.<
 </div>
 </div>
 <div class="sect3">
-<h4 id="_trigaction_span_class_monospaced_0x03_span_flip_map">4.6.4. TrigAction <span class="monospaced">0x03</span>: Flip Map</h4>
+<h4 id="trigaction-0x03-flipmap">4.6.4. TrigAction <span class="monospaced">0x03</span>: Flip Map</h4>
 <div class="paragraph"><p><em>FlipMap</em> is an internal engine array of <span class="monospaced">uint8_t</span>s which is used to determine if alternate rooms should be turned on or off (in TRLE terms, <em>flipped</em>). It uses
 <em>trigger mask</em> in the same manner as for <em>Object</em> activation and deactivation, but in this case, alternate rooms are activated if given <span class="monospaced">FlipMap</span> entry mask is
 set (<span class="monospaced">0x1F</span>), and deactivated, if <span class="monospaced">FlipMap</span> entry is not set (not <span class="monospaced">0x1F</span>).</p></div>
 <div class="paragraph"><p>This trigger action at first applies <em>trigger mask</em> to a given <span class="monospaced">FlipMap</span> entry using <span class="monospaced">OR</span> bitwise operation and then immediately checks if it&#8217;s already set or
 not. If FlipMap entry is set, then it immediately switches rooms to alternate mode.</p></div>
 <div class="paragraph"><p><span class="monospaced">Parameter</span> defines which <span class="monospaced">FlipMap</span> entry engine should refer to decide should it switch alternate rooms on or off. The size of <span class="monospaced">FlipMap</span> array is around 10
-(judging by the number of unused <span class="monospaced">FLIP_MAPn</span> <em>effect</em> entries), but in original levels, number usually never tops 2 or 3.</p></div>
+(judging by the number of unused <span class="monospaced">FLIP_MAPn</span> <em>flipeffect</em> entries), but in original levels, number usually never tops 2 or 3.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -4994,17 +4999,24 @@ comes unnoticed, as majority of TR1 soundtracks are engaged only once in a level
 </div>
 </div>
 <div class="sect3">
-<h4 id="_trigaction_span_class_monospaced_0x09_span_8201_8212_8201_effect">4.6.10. TrigAction <span class="monospaced">0x09</span>&#8201;&#8212;&#8201;Effect</h4>
-<div class="paragraph"><p><em>Effect</em> (or <em>flipeffect</em> in TRLE terms) does not necessarily mean &#8220;special effect&#8221; or so. By the name of &#8220;effect&#8221; comes <em>any non-trivial or special trigger action which should be
-seperately defined</em>. This workaround was implemented because TR engines lack any scripting language to program arbitrary trigger, so you can consider an
-<em>effect</em> as a call to some &#8220;pre-compiled&#8221; scripted function.</p></div>
-<div class="paragraph"><p>For example, in TR2 &#8220;Lara&#8217;s Home&#8221;, there is a need to control assault course timer, like restarting it while reaching start point or stopping it when Lara is off the course. This task is accomplished via several different effects.</p></div>
+<h4 id="trigaction-0x09-flipeffect">4.6.10. TrigAction <span class="monospaced">0x09</span>&#8201;&#8212;&#8201;Flipeffect</h4>
+<div class="paragraph"><p>By the name of &#8220;flipeffect&#8221; comes <em>any non-trivial or special trigger action which should be
+seperately defined</em>. This workaround was implemented because TR engines lack any scripting language to program arbitrary trigger, so you can consider a <em>flipeffect</em> as a call to some &#8220;pre-compiled&#8221; scripted function.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
 <img src="./images/icons/note.png" alt="Note">
 </td>
-<td class="content">The list of <em>effects</em> differs across game versions. These will be listed in a separate section noting changes from version to version.</td>
+<td class="content"><em>Flipeffect</em> does not mean &#8220;flip map effect&#8221; or so, and has no any direct relation to &#8220;flip maps&#8221;.</td>
+</tr></table>
+</div>
+<div class="paragraph"><p>For example, in TR2 &#8220;Lara&#8217;s Home&#8221;, there is a need to control assault course timer, like restarting it while reaching start point or stopping it when Lara is off the course. This task is accomplished via several different flipeffects.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">The list of <em>flipeffects</em> differs across game versions. For precise info on each flipeffect for each game version, refer to <a href="#flipeffects">this section</a>.</td>
 </tr></table>
 </div>
 </div>
@@ -5611,7 +5623,7 @@ left foot forward and another animation for right foot forward.</p></div>
 </pre></div></div></div>
 </div>
 <div class="sect3">
-<h4 id="_animcommand_structure">6.2.6. AnimCommand Structure</h4>
+<h4 id="animcommand-structure">6.2.6. AnimCommand Structure</h4>
 <div class="paragraph"><p>These are various commands associated with each animation. They are varying numbers of <span class="monospaced">int16_t</span>s packed into an array. As the <em>FloorData</em>, AnimCommands must be
 parsed sequentially, one by one.</p></div>
 <div class="paragraph"><p>The first AnimCommand entry is the <em>type</em>, which also determines how many <span class="monospaced">int16_t</span> arguments (operands) follow it (i.e. how many <span class="monospaced">int16_t</span> values must be
@@ -5679,8 +5691,7 @@ parsed after current one without switching to next AnimCommand). For a given ani
 </li>
 <li>
 <p>
-<strong>Effect</strong> (2 operands). The first one is a frame number, and the second one is effect number. Note that <em>effect</em> here is the very same kind of effect used
-  in <em>trigger action</em> with the same name. Effect meaning will be listed separately.
+<strong>Flipeffect</strong> (2 operands). The first one is a frame number, and the second one is flipeffect number. Note that <em>flipeffect</em> here is the very same kind of flipeffect <a href="#trigaction-0x09-flipeffect">used in <em>trigger action</em></a> with the same name. Flipeffect meaning is <a href="#flipeffects">listed separately</a>.
 </p>
 </li>
 </ol></div>
@@ -6088,6 +6099,7 @@ hardcoded in the engine (for example, gunshots) or by reaching some animation fr
 used to play certain sound sample in specific circumstances, and either called by triggers or from animations.</p></div>
 <div class="paragraph"><p>Sounds may be <em>looped</em> or <em>one shot</em>, with looped ones playing until specifically untriggered by some in-game event. For example, Uzi and M16 sounds are looped
 and will be played until Lara stops firing these weapons&#8201;&#8212;&#8201;in such case, engine sends a command to stop this particular sound.</p></div>
+<div class="paragraph"><p>Sounds may be <em>global</em> or <em>local</em>. <em>Global</em> sounds have no 3D positioning in world space, they always have constant volume and usually not linked to any object in level. These are primarily menu sounds. <em>Local</em> sounds are usually produced by entities or sound source objects. They have certain coordinates in space, and could be affected by their position and environment. <em>Local</em> sounds, when emitted by entities, may travel along with these entities.</p></div>
 <div class="paragraph"><p>Sounds are referred to by an <em>internal sound index</em>; this is translated into which sound sample with the help of three layers of indexing, to allow for a
 suitable degree of abstraction. Internal sound indices for various sounds are consistent across all the level files in a game; a gunshot or a passport opening
 in one level file will have the same internal sound index as in all the others. The highest level of these is the <span class="monospaced">SoundMap[]</span> array, which translates the
@@ -6766,6 +6778,900 @@ objects. These contain translations of a colour value and a lighting value, list
 <div class="paragraph"><p><span class="monospaced">2 - (k + 1) / 16</span></p></div>
 <div class="paragraph"><p>This may be associated with the curious fact of the lighting values in the data files increasing in the &#8220;wrong&#8221; direction in TR1 and TR2, with 0 being full
 brightness and greater values being darker.</p></div>
+</div>
+<div class="sect2">
+<h3 id="flipeffects">9.9. Flipeffects</h3>
+<div class="sect3">
+<h4 id="_the_concept_2">9.9.1. The Concept</h4>
+<div class="paragraph"><p>As it was briefly mentioned <a href="#trigaction-0x09-flipeffect">earlier</a>, <em>flipeffect</em> is a special pre-compiled routine which is called when some non-trivial event occurs.</p></div>
+<div class="paragraph"><p>The concept of flipeffect is somewhat similar to <em>task</em>, i.e. when some flipeffect is engaged, it could be flagged by engine to call <em>every game frame</em> (however, there are primarily one-shot flipeffects present). Such setup is needed for some complex flipeffect events, like flickering lights in TR1 Atlantis (see <span class="monospaced">FLICKER_FX</span> description), which stops automatically after some time.</p></div>
+<div class="paragraph"><p>If flipeffect is flagged to execute every game frame, this flag can only be unset by own current flipeffect code (when its task is done&#8201;&#8212;&#8201;for this purpose, special internal <em>flip timer</em> is used to count how much time have passed since flipeffect activation) or replaced by any other flipeffect call (however, newly called flipeffect doesn&#8217;t necessarily overwrite current flipeffect flag, so you can have one-shot flipeffect executed with another one queued for continuous execution). Ergo, <em>it&#8217;s not possible to queue more than one _continuous</em> flipeffect at a time, but it&#8217;s possible to have one <em>one-shot</em> and another <em>continuous</em> flipeffect executed every game frame.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>Continuous flipeffects are mostly present in TR1 and TR2. In TR3, only two &#8220;legacy&#8221; continuous flipeffects remained, and in TR4 and TR5 there are no continuous flipeffects at all. However, there&#8217;s still legacy code that checks if there&#8217;s any continuous flipeffect queued.</p></div>
+</td>
+</tr></table>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_complete_flipeffect_list">9.9.2. Complete Flipeffect List</h4>
+<div class="paragraph"><p>In this chapter, we&#8217;ll try to describe each flipeffect for every TR engine version. Given the fact that flipeffect listing changed from version to version, yet retaining common ones, the easiest way to lay them down is to create a table with flipeffect indexes corresponding to each game version.</p></div>
+<div class="paragraph"><p>There are some guidelines to flipeffect table:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+It&#8217;s possible that same flipeffect goes under different names in different game versions. In this case, legacy flipeffect name will be preserved (for historical <em>[sic]</em> reasons), and description will point to a flipeffect with more recent name. Legacy flipeffect names would be colored in <span class="green">green</span>.
+</p>
+</li>
+<li>
+<p>
+Flipeffect names are directly brought from native SDK or debug listings, where available (namely TR1, TR2, and TR4). When native names are wrong (which happens in TR4 and TR5 listings), new ones will be coined. New flipeffect names would be colored in <span class="purple">purple</span>.
+</p>
+</li>
+<li>
+<p>
+It&#8217;s possible that legacy flipeffect code could migrate to later engine version without changes, but could be broken due to missing code in another part of engine or changes in internal structures. In this case, flipeffect name would be colored in <span class="red">red</span>.
+</p>
+</li>
+<li>
+<p>
+If there&#8217;s an entry in engine&#8217;s flipeffect list, but no actual code for it, it would be marked as (-).
+</p>
+</li>
+<li>
+<p>
+If actual flipeffect&#8217;s purpose is unknown, it would be marked as (?).
+</p>
+</li>
+<li>
+<p>
+If flipeffect ought to be <em>continuous</em>, it will be marked in <strong>bold</strong>.
+</p>
+</li>
+</ul></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>As mentioned <a href="#animcommand-structure">here</a>, flipeffect could be called in two ways&#8201;&#8212;&#8201;either by an entity via <em>AnimCommand</em>, or by <em>trigger action</em>. However, there are certain flipeffect which strictly require caller entity ID to work with (see effect descriptions for that). In such case, if flipeffect is called by trigger action, <em>resulting outcome is undefined</em> in original engine. The most sane way to deal with this situation is to pass an ID of entity which activated given trigger.</p></div>
+<div class="paragraph"><p>On contrary, some flipeffects may require <em>certain trigger action</em> and/or <em>certain trigger type</em> to be called at the moment. In such case, if flipeffect is called via AnimCommand, <em>resulting outcome is undefined</em> in original engine.</p></div>
+</td>
+</tr></table>
+</div>
+<table class="tableblock frame-all grid-all"
+style="
+margin-left:auto; margin-right:auto;
+width:100%;
+">
+<col style="width:9%;">
+<col style="width:18%;">
+<col style="width:18%;">
+<col style="width:18%;">
+<col style="width:18%;">
+<col style="width:18%;">
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top" > Index           </th>
+<th class="tableblock halign-center valign-top" >        TR1           </th>
+<th class="tableblock halign-center valign-top" >        TR2        </th>
+<th class="tableblock halign-center valign-top" >        TR3             </th>
+<th class="tableblock halign-center valign-top" >        TR4               </th>
+<th class="tableblock halign-center valign-top" >        TR5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">0</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="green">TURN180</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="green">TURN180</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="green">TURN180</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ROTATE_180</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ROTATE_180</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">1</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="green">DINO_STOMP</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOR_SHAKE</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOR_SHAKE</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOR_SHAKE</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOR_SHAKE</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">2</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_NORMAL</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_NORMAL</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_NORMAL</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLOOD_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">FLOOD_FX</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">3</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_BUBBLES</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_BUBBLES</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_BUBBLES</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_BUBBLES</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_BUBBLES</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">4</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FINISH_LEVEL</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FINISH_LEVEL</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FINISH_LEVEL</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FINISH_LEVEL</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FINISH_LEVEL</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">5</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><strong>EARTHQUAKE_FX</strong></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><strong>FLOOD_FX</strong></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><strong>FLOOD_FX</strong></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ACTIVATE_CAMERA</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ACTIVATE_CAMERA</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">6</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><strong>FLOOD_FX</strong></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><strong>CHANDELIER_FX</strong></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red"><strong>CHANDELIER_FX</strong></span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ACTIVATE_KEY</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ACTIVATE_KEY</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">7</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RAISINGBLOCK_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RUBBLE_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RUBBLE_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RUBBLE_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RUBBLE_FX</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">8</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><strong>STAIRS2SLOPE_FX</strong></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">PISTON_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">PISTON_FX</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CROWBAR</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CROWBAR</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">9</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><strong>SAND_FX</strong></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CURTAIN_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">CURTAIN_FX</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">10</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><strong>POWERUP_FX</strong></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETCHANGE_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">SETCHANGE_FX</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="purple">TIMER_FIELD_FX</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="purple">TIMER_FIELD_FX</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">11</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">EXPLOSION_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">EXPLOSION_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">EXPLOSION_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">EXPLOSION_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">EXPLOSION_FX</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">12</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_HANDSFREE</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_HANDSFREE</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_HANDSFREE</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_HANDSFREE</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARA_HANDSFREE</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">13</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLIP_MAP</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLIP_MAP</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FLIP_MAP</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">14</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_RIGHTGUN</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_RIGHTGUN</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_RIGHTGUN</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_RIGHTGUN</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">15</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><strong>CHAINBLOCK_FX</strong></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_LEFTGUN</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_LEFTGUN</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DRAW_LEFTGUN</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">16</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><strong>FLICKER_FX</strong></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SHOOT_RIGHTGUN</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SHOOT_RIGHTGUN</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SHOOT_RIGHTGUN</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">17</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SHOOT_LEFTGUN</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SHOOT_LEFTGUN</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SHOOT_LEFTGUN</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">18</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP1</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP1</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP1</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">19</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP2</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP2</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP2</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">20</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP3</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP3</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">MESH_SWAP3</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">21</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_ON</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_ON</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_ON</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_ON</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">22</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_OFF</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_OFF</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_OFF</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">INV_OFF</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">23</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_ON</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_ON</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">24</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_OFF</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">DYN_OFF</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">25</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">STATUE_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">STATUE_FX</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">26</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RESET_HAIR</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RESET_HAIR</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RESET_HAIR</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RESET_HAIR</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">27</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">BOILER_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">BOILER_FX</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">28</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_RESET</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_RESET</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETFOG</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">SETFOG</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">29</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_STOP</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">ASSAULT_STOP</span></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GHOSTTRAP</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">30</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_START</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_START</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARALOCATION</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">LARALOCATION</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">31</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_FINISHED</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_FINISHED</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">CLEARSCARABS</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="purple">RESET_NPC_BUFFER (?)</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">32</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FOOTPRINT_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FOOTPRINT_FX</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">FOOTPRINT_FX</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">33</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_PENALTY_8</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="purple">KILLACTIVEBADDIES_2 (?)</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">34</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RACETRACK_START</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">35</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RACETRACK_RESET</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">36</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">RACETRACK_FINISHED</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">37</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">ASSAULT_PENALTY_30</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">38</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_1</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">39</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_2</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">40</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_3</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">41</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_4</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">42</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_5</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">43</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_6</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">POURSWAP_ON</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">44</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_7</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">POURSWAP_OFF</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">-</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">45</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_8</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">LARALOCATIONPAD</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"><span class="red">LARALOCATIONPAD</span></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">46</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_9</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">KILLACTIVEBADDIES</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">KILLACTIVEBADDIES</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">47</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_10</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_1</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">48</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_11</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_2</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">49</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_12</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_3</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">50</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_13</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_4</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">51</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_14</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_5</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">52</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_15</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_6</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">53</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_16</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_7</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">54</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_17</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_8</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">55</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_18</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_9</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">56</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_19</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_10</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">57</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">GYM_HINT_RESET</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_11</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">58</p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced"></p></td>
+<td class="tableblock halign-center valign-top" ><p class="tableblock monospaced">TUT_HINT_12</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<img src="./images/icons/note.png" alt="Note">
+</td>
+<td class="content">
+<div class="paragraph"><p>In original engines, all flipeffects which name begins with <span class="monospaced">LARA_</span> prefix automatically take Lara character as an entity to work with. Also, most flipeffects with <span class="monospaced">_FX</span> postfix are simple sound effect events.</p></div>
+</td>
+</tr></table>
+</div>
+<div class="ulist"><ul>
+<li>
+<p>
+<span class="monospaced">ROTATE_180</span>&#8201;&#8212;&#8201;Rotates an entity 180 degrees around yaw axis <em>and also around pitch axis for underwater cases</em>. Mostly used in Lara roll animations. This flipeffect needs special approach if original animation frames are interpolated, because usually rotation is done on animation transition (e.g., frame 5 of Lara animation 48, which is second and final part of her roll movement). To prevent stray misaligned interpolated frames, this flipeffect must be performed only in the end of frame-to-frame interpolated sequence.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">TURN180</span>&#8201;&#8212;&#8201;Same as <span class="monospaced">ROTATE_180</span>.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">LARA_NORMAL</span>&#8201;&#8212;&#8201;Resets certain internal Lara parameters to default ones, including movement modes, FOV and camera position.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">FLOOR_SHAKE</span>&#8201;&#8212;&#8201;If entity producing this effect is in less than 8 sector range, send <em>shake effect</em> to camera. Shake effect is a variable which is inversely proportional to entity distance, and, when sent to camera, makes it shake with corresponding amplitude gradually fading out. If there are multiple FLOOR_SHAKE events constantly occuring nearby camera, <em>shake effect</em> won&#8217;t accumulate, but rather overwrite previous value.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">DINO_STOMP</span>&#8201;&#8212;&#8201;Same as <span class="monospaced">FLOOR_SHAKE</span>.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">LARA_BUBBLES</span>&#8201;&#8212;&#8201;When underwater, emit bubble sound (ID #37) and produce bubble particle for Lara. Position of bubble is linked to model&#8217;s last mesh (which is headmesh in case of Lara).
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">FINISH_LEVEL</span>&#8201;&#8212;&#8201;Same effect as <em>TrigAction</em> <span class="monospaced">0x07</span>&#8201;&#8212;&#8201;immediately loads next level. For TR4, (which requires explicit level index to jump), current level index is increased and passed as level index to jump to.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">FLIP_MAP</span>&#8201;&#8212;&#8201;Equal to <a href="#trigaction-0x03-flipmap">TrigAction <span class="monospaced">0x03</span></a>.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">ACTIVATE_CAMERA</span>&#8201;&#8212;&#8201;If there is a trigger type <em>Key</em> (SubFunction <span class="monospaced">0x03</span>) being queued at the moment, and there are any <em>Camera</em> TrigActions (<span class="monospaced">0x01</span>) present in <span class="monospaced">ActionList</span>, these TrigActions will be forced to activate at a given frame of <em>keyhole entity</em> current animation, rather than at the ending frame of it. Works only for <em>keyhole entities</em> which have complex activation animations, not single-frame ones. It can be used to change camera POV before keyhole animation is finished.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">ACTIVATE_KEY</span>&#8201;&#8212;&#8201;Same as above, but works for <em>Object</em> TrigAction. That is, any entities to be activated from <span class="monospaced">ActionList</span> will be activated at a given frame of <em>keyhole entity</em> current animation, rather than at the ending frame of it. Can be used to activate entities before actual keyhole animation is finished.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">LARA_HANDSFREE</span>&#8201;&#8212;&#8201;Functionally removes any weapon from Lara&#8217;s hands. If called during holstering or unholstering operation, immediately aborts it. Note that holstering animation won&#8217;t be automatically performed, and weapon model meshswaps won&#8217;t be swapped back to normal hands.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">DRAW_RIGHTGUN</span>&#8201;&#8212;&#8201;Swaps given entity&#8217;s mesh #10 index with same mesh&#8217;s index from <em>PISTOLS_ANIM</em> model (model ID #1 in all TR versions). Calling this effect again swaps mesh #10 back to native. Used primarily in cutscenes to create an illusion of Lara getting pistol in her right hand.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">DRAW_LEFTGUN</span>&#8201;&#8212;&#8201;Swaps given entity&#8217;s mesh #13 index with same mesh&#8217;s index from <em>PISTOLS_ANIM</em> model (model ID #1 in all TR versions). Calling this effect again swaps mesh #13 back to native. Used primarily in cutscenes to create an illusion of Lara getting pistol in her left hand.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">SHOOT_RIGHTGUN</span>&#8201;&#8212;&#8201;Activates given entity&#8217;s muzzle flash effect and dynamic light near mesh #10. Muzzle flash position and orientation, as well as effect duration and intensity is hardcoded. Used primarily in cutscenes.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">SHOOT_LEFTGUN</span>&#8201;&#8212;&#8201;Activates given entity&#8217;s muzzle flash effect and dynamic light near mesh #13. Muzzle flash position and orientation, as well as effect duration and intensity is hardcoded. Used primarily in cutscenes.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">MESH_SWAP1</span>&#8201;&#8212;&#8201;Swaps all given entity meshes with <em>MESH_SWAP1</em> model meshes (model ID varies across TR versions). Each mesh is swapped only if source meshswap model mesh is not null, otherwise swap is ignored for a given mesh. Calling this flipeffect again swaps all meshes back to native. Used primarily in cutscenes.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">MESH_SWAP2</span>&#8201;&#8212;&#8201;Swaps all given entity meshes with <em>MESH_SWAP2</em> model meshes (model ID varies across TR versions). Each mesh is swapped only if source meshswap model mesh is not null, otherwise swap is ignored for a given mesh. Calling this flipeffect again swaps all meshes back to native. Used primarily in cutscenes.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">MESH_SWAP3</span>&#8201;&#8212;&#8201;Swaps all given entity meshes with <em>MESH_SWAP3</em> model meshes (model ID varies across TR versions). Each mesh is swapped only if source meshswap model mesh is not null, otherwise swap is ignored for a given mesh. Calling this flipeffect again swaps all meshes back to native. Used primarily in cutscenes.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">CROWBAR</span>&#8201;&#8212;&#8201;Swaps given entity&#8217;s mesh #10 index with same mesh&#8217;s index from <em>CROWBAR_ANIM</em> model (either model ID #246 in TR4, or model ID #240 in TR5). Calling this flipeffect again swaps mesh #10 back to native. Used primarily in cutscenes to create an illusion of Lara getting crowbar in her hand.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">POURSWAP_ON</span>&#8201;&#8212;&#8201;Swaps given entity&#8217;s mesh #10 index with same mesh&#8217;s index from <em>LARA_WATER_MESH</em> model (TR4, modei ID #25). Used in Lara&#8217;s waterskin animations used in late TR4 levels with waterskin puzzle.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">POURSWAP_OFF</span>&#8201;&#8212;&#8201;Swaps given entity&#8217;s mesh #10 back to native. Used in Lara&#8217;s waterskin animations used in late TR4 levels with waterskin puzzle.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">INV_ON</span>&#8201;&#8212;&#8201;Hides given entity.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">INV_OFF</span>&#8201;&#8212;&#8201;Shows given entity, if it was hidden.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">DYN_ON</span>&#8201;&#8212;&#8201;Turns dynamic lights on for a given entity. Actual result is unclear.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">DYN_OFF</span>&#8201;&#8212;&#8201;Turns dynamic lights off for a given entity. Actual result is unclear.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">RESET_HAIR</span>&#8201;&#8212;&#8201;Presumably used to save Lara&#8217;s ponytail from potential stuck during cutscenes by resetting all hair parameters to &#8220;identity&#8221;.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">SETFOG</span>&#8201;&#8212;&#8201;When called by trigger action, changes global colour for volumetric fog effect. Takes <span class="monospaced">TriggerSetup</span> <em>Timer</em> field as an index into hardcoded RGB table of colours (see  <a href="#fog_bulb">this section</a> for more info). If specified index is 100, engine temporarily turns off volumetric fog effect (possibly, this was used for debug purposes).
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">GHOSTTRAP</span>&#8201;&#8212;&#8201;Kills all the living <em>WRAITH3</em> entities (model ID #88 in TR4) this way: the wraith starts falling towards given entity. Reaching it or not, the wraith will die if it hits the floor of the room.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">CLEARSCARABS</span>&#8201;&#8212;&#8201;Removes all swarms of scarabs currently wandering in level.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">KILLACTIVEBADDIES</span>&#8201;&#8212;&#8201;Disable and remove all active NPCs from level.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">KILLACTIVEBADDIES_2</span>&#8201;&#8212;&#8201;Present only in TR5. It seems it&#8217;s same as <span class="monospaced">KILLACTIVEBADDIES</span>, but some other processing is done.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">RESET_NPC_BUFFER</span>&#8201;&#8212;&#8201;No visible or significant effect on gameplay. If there are any NPCs in level, then this flipeffect will fill certain memory zone with zero bytes. This flipeffect seems like last-minute fix-up for some memory leak bug.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">LARALOCATION</span>&#8201;&#8212;&#8201;When activated, makes <em>Guide</em> NPC (TR4, model ID #37) or <em>Von Croy</em> NPC (TR4, model ID #39) to move to specific AI_FOLLOW object. Takes <span class="monospaced">TriggerSetup</span> <em>Timer</em> field as an index to search for such OCB within AI objects array. When AI_FOLLOW AI object with same OCB index is found, NPC is then directed to this AI_FOLLOW object. This flipeffect also stores this index in additional global variable which is used to prevent NPC to get back to AI_FOLLOW objects with lower OCB indexes that were already passed&#8201;&#8212;&#8201;for example, if NPC already passed AI_FOLLOW with OCB 2, he won&#8217;t return to AI_FOLLOW with OCB 1, even if he hasn&#8217;t been there before.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">LARALOCATIONPAD</span>&#8201;&#8212;&#8201;Same action as <span class="monospaced">LARALOCATION</span>, but with one difference - <em>Timer</em> field is checked for certain values to engage either specific soundtrack and/or cinematic dialogue with <em>Von Croy</em> NPC (for demonstration, look for Angkor Wat level walkthrough). This additional behaviour is hardcoded for TR4&#8217;s first level index only.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">ASSAULT_RESET</span>&#8201;&#8212;&#8201;Resets assault course clock (for ex., when Lara stepped out of assault course).
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">ASSAULT_STOP</span>&#8201;&#8212;&#8201;Stops assault course clock.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">ASSAULT_START</span>&#8201;&#8212;&#8201;Starts assault course clock.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">ASSAULT_FINISHED</span>&#8201;&#8212;&#8201;Finishes assault course clock and fixes the record. Depending on record time, plays either unbeat record (&#8220;I&#8217;m sure you can do better&#8221;, track ID #24 in TR2) soundtrack or best record (&#8220;Gosh, that was my best time yet&#8221;, track ID #22 in TR2, #95 in TR3) soundtrack. Record time is hardcoded to 100 seconds in TR2 and to 180 seconds in TR3. In TR3, flipeffect also checks if all targets in shooting range were hit by Lara, and if not, applies penalty of 10 seconds for each unhit target. Also, TR3 lacks &#8220;unbeat record&#8221; soundtrack.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">ASSAULT_PENALTY_8</span>&#8201;&#8212;&#8201;8-second penalty for losing track on assault course.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">ASSAULT_PENALTY_30</span>&#8201;&#8212;&#8201;30-second penalty for losing track on assault course.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">RACETRACK_START</span>&#8201;&#8212;&#8201;Prepare racetrack timer for counting lap time. <em>Only works when Lara is on a quadbike!</em> As soon as quadbike leaves sector with this flipeffect, timer will start counting.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">RACETRACK_RESET</span>&#8201;&#8212;&#8201;Resets current lap time. <em>Only works when Lara is on a quadbike!</em>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">RACETRACK_FINISHED</span>&#8201;&#8212;&#8201;Finishes racetrack timer and fixes the record. <em>Only works when Lara is on a quadbike!</em>
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">GYM_HINT_1-19</span>&#8201;&#8212;&#8201;Sequence of Lara&#8217;s voice hints on how to complete gym training. Reason why these are activated via flipeffects rather than normal soundtrack is they must be engaged in predefined order, e.g. voice hint #8 can&#8217;t play before #7 was played, and so on.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">GYM_HINT_RESET</span>&#8201;&#8212;&#8201;Resets gym training progress, so all voice hints will be played once again.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">TUT_HINT_1-12</span>&#8201;&#8212;&#8201;Sequence of Lara&#8217;s voice hints on how to complete tutorial on Streets of Rome (TR5). Setup is similar to <span class="monospaced">GYM_HINT</span> flipeffects, but seems that there&#8217;s no reset flipeffect to restart tutorial.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">RAISINGBLOCK_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 117. Used in TR1, Palace Midas.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">CHAINBLOCK_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sounds with ID 173 and ID 33 with predefined interval. Used in TR1, Tomb of Tihocan.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">EARTHQUAKE_FX</span>&#8201;&#8212;&#8201;Shakes screen violently and plays sounds with ID 99 and 70 <em>globally</em> with predefined intervals. Used in TR1, Palace Midas.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">STAIRS2SLOPE_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 119 with predefined delay. Used in TR1, City of Khamoon.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">SAND_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sounds with ID 161, 118 and 155 with predefined intervals. Used in TR1, City of Khamoon.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">POWERUP_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 155 for 1 second. Presumably used in TR1, one of the Atlantis levels, but never appears on map.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">FLICKER_FX</span>&#8201;&#8212;&#8201;Flips alternate rooms back and forth several times with predefined intervals, creating illusion of flickering light. Used in TR1, first room of Atlantis.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">CHANDELIER_FX</span>&#8201;&#8212;&#8201; Plays <em>global</em> sound with ID 278 for 1 second. Used in TR2, Bartoli&#8217;s Hideout.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">BOILER_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 338. Used in TR2, Wreck of the Maria Doria.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">PISTON_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 190. Used in TR2, Living Quarters.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">CURTAIN_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 191. Used in TR2, Living Quarters.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">SET_CHANGE_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 330. Used in TR2, Opera House and Temple of Xian.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">STATUE_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> sound with ID 331. Used in TR2, Barkhang Monastery.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">RUBBLE_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> rumble sound FX and holds camera shake effect for some time, then finishes it with &#8220;shutting&#8221; sound. <span class="image">
+<img src="images/icons/tr4.png" alt="TR4 only" width="16" height="17" title="TR4 only">
+</span><span class="image">
+<img src="images/icons/tr5.png" alt="TR5 only" width="16" height="17" title="TR5 only">
+</span> If there are any <em>earthquake type</em> objects in a level, engine engages same behaviour <em>locally</em> for these objects.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">TIMER_FIELD_FX</span>&#8201;&#8212;&#8201;If this flipeffect is called by trigger action, play <em>global</em> sound FX, taking <span class="monospaced">TriggerSetup</span> <em>Timer</em> field as a sound ID.
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">EXPLOSION_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> explosion sound (ID #105) and produce full-screen flash graphical FX (TR3-5) or camera shake effect (TR1-2).
+</p>
+</li>
+<li>
+<p>
+<span class="monospaced">FLOOD_FX</span>&#8201;&#8212;&#8201;Plays <em>global</em> flooding sound (TR1&#8201;&#8212;&#8201;ID #81, TR2&#8201;&#8212;&#8201;ID #79, TR3&#8201;&#8212;&#8201;ID #163, TR4&#8201;&#8212;&#8201;ID #238). Implementation differs from version to version&#8201;&#8212;&#8201;in TR1 and TR2 looped waterfall sound is used (which is then stopped by an engine after 1 second), while in TR3 and TR4 one-shot sound is engaged.
+</p>
+</li>
+</ul></div>
+</div>
 </div>
 </div>
 </div>
@@ -8566,7 +9472,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-10-16 11:37:30 MSK
+Last updated 2016-11-15 05:18:39 MSK
 </div>
 </div>
 </body>
