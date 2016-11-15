@@ -3608,7 +3608,7 @@ int lua_SetEntityActivity(lua_State * lua)
         return 0;
     }
 
-    if(lua_tointeger(lua, 2) != 0)
+    if(lua_toboolean(lua, 2))
     {
         ent->state_flags |= ENTITY_STATE_ACTIVE;
     }

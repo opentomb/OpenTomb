@@ -353,7 +353,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
         setEntityAnim(object_id, ANIM_TYPE_BASE, on.trig_anim, 0);
         setEntityAnim(actor_id, ANIM_TYPE_BASE, on.actor_anim, 0);
         noFixEntityCollision(actor_id);
-        setEntityActivity(object_id, 1);
+        setEntityActivity(object_id, true);
         addTask(
         function()
             local a, f, c = getEntityAnim(actor_id, ANIM_TYPE_BASE);
@@ -378,7 +378,7 @@ function switch_activate(object_id, actor_id)   -- actor ID is needed to activat
         ret = 2;
         setEntityAnim(object_id, ANIM_TYPE_BASE, off.trig_anim, 0);
         setEntityAnim(actor_id, ANIM_TYPE_BASE, off.actor_anim, 0);
-        setEntityActivity(object_id, 1);
+        setEntityActivity(object_id, true);
         noFixEntityCollision(actor_id);
         addTask(
         function()
