@@ -2072,7 +2072,7 @@ width:100%;
 <col style="width:1%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-11-15)</strong></p></div>
+<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-11-17)</strong></p></div>
 <div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
 <div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div></div></td>
 <td class="tableblock halign-right valign-middle" ><div><div class="paragraph"><p><span class="image">
@@ -5628,7 +5628,7 @@ left foot forward and another animation for right foot forward.</p></div>
 parsed sequentially, one by one.</p></div>
 <div class="paragraph"><p>The first AnimCommand entry is the <em>type</em>, which also determines how many <span class="monospaced">int16_t</span> arguments (operands) follow it (i.e. how many <span class="monospaced">int16_t</span> values must be
 parsed after current one without switching to next AnimCommand). For a given animation, AnimCommands are parsed until <span class="monospaced">NumAnimCommands</span> value is reached.</p></div>
-<div class="paragraph"><p>Some of commands refer to the whole animation (jump speed, position change and empty hands commands), while others of them are associated with specific frames (sound, bubbles, etc.).</p></div>
+<div class="paragraph"><p>Some of commands refer to the whole animation (jump speed, position change, kill and empty hands commands), while others of them are associated with specific frames (sound, bubbles, etc.). When command refers whole animation, it means that actual command execution will occur on animation transition, i.e. last animation frame.</p></div>
 <div class="listingblock">
 <a id="tr_anim_command"></a>
 <div class="content"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">tr_anim_command</span> <span class="c1">// 2 bytes</span>
@@ -5657,7 +5657,7 @@ parsed after current one without switching to next AnimCommand). For a given ani
 </li>
 <li>
 <p>
-<strong>Kill</strong> (No arguments). Kill entity. This effectively disables entity and removes it from the world.
+<strong>Kill</strong> (No arguments). Kill entity. This effectively disables entity and removes it from the world. For switch entities, same command is used to define switching point animation.
 </p>
 </li>
 <li>
@@ -9472,7 +9472,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-11-15 05:18:39 MSK
+Last updated 2016-11-11 02:18:15 MSK
 </div>
 </div>
 </body>
