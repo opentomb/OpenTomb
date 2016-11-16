@@ -107,8 +107,8 @@ uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_
 void     Res_Sector_SetTweenFloorConfig(struct sector_tween_s *tween);
 void     Res_Sector_SetTweenCeilingConfig(struct sector_tween_s *tween);
 struct room_sector_s *Res_Sector_GetPortalSectorTarget(struct room_sector_s *s);
-int      Res_Sector_Is2SidePortals(struct room_sector_s *s1, struct room_sector_s *s2);
-int      Res_Sector_IsWall(struct room_sector_s *wall_sector, struct room_sector_s *near_sector);
+bool     Res_Sector_Is2SidePortals(struct room_sector_s *s1, struct room_sector_s *s2);
+bool     Res_Sector_IsWall(struct room_sector_s *wall_sector, struct room_sector_s *near_sector);
 /*
  * BASIC SECTOR COLLISION LAYOUT
  *
@@ -199,7 +199,7 @@ struct room_sector_s *Res_Sector_GetPortalSectorTarget(struct room_sector_s *s)
 }
 
 
-int Res_Sector_Is2SidePortals(struct room_sector_s *s1, struct room_sector_s *s2)
+bool Res_Sector_Is2SidePortals(struct room_sector_s *s1, struct room_sector_s *s2)
 {
     s1 = Res_Sector_GetPortalSectorTarget(s1);
     s2 = Res_Sector_GetPortalSectorTarget(s2);
@@ -207,37 +207,29 @@ int Res_Sector_Is2SidePortals(struct room_sector_s *s1, struct room_sector_s *s2
     room_sector_p s1p = Room_GetSectorRaw(s2->owner_room, s1->pos);
     room_sector_p s2p = Room_GetSectorRaw(s1->owner_room, s2->pos);
 
-    if(s1p->portal_to_room && s2p->portal_to_room &&
-       (s1p->portal_to_room->real_room == s1->owner_room->real_room) &&
-       (s2p->portal_to_room->real_room == s2->owner_room->real_room))
-    {
-        return 1;
-    }
-
-    return 0;
+    return (s1p->portal_to_room && s2p->portal_to_room &&
+            (s1p->portal_to_room->real_room == s1->owner_room->real_room) &&
+            (s2p->portal_to_room->real_room == s2->owner_room->real_room));
 }
 
 
-int Res_Sector_IsWall(struct room_sector_s *wall_sector, struct room_sector_s *near_sector)
+bool Res_Sector_IsWall(struct room_sector_s *wall_sector, struct room_sector_s *near_sector)
 {
     if(!wall_sector->portal_to_room && !near_sector->portal_to_room && (wall_sector->floor_penetration_config == TR_PENETRATION_CONFIG_WALL))
     {
-        return 1;
+        return true;
     }
 
     if(!near_sector->portal_to_room && wall_sector->portal_to_room && (near_sector->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
     {
-        if(wall_sector->portal_to_room)
-        {
-            wall_sector = Room_GetSectorRaw(wall_sector->portal_to_room->real_room, wall_sector->pos);
-        }
+        wall_sector = Room_GetSectorRaw(wall_sector->portal_to_room->real_room, wall_sector->pos);
         if((wall_sector->floor_penetration_config == TR_PENETRATION_CONFIG_WALL) || (!Res_Sector_Is2SidePortals(near_sector, wall_sector)))
         {
-            return 1;
+            return true;
         }
     }
 
-    return 0;
+    return false;
 }
 
 
@@ -246,12 +238,14 @@ bool Res_Sector_IsTweenAlterable(struct room_sector_s *s1, struct room_sector_s 
     if(s1->portal_to_room)
     {
         return s2->owner_room->alternate_room_next || s2->owner_room->alternate_room_prev ||
-               s1->portal_to_room->alternate_room_next || s1->portal_to_room->alternate_room_prev;
+               s1->portal_to_room->alternate_room_next || s1->portal_to_room->alternate_room_prev ||
+               (s2->room_above && (s2->room_above->alternate_room_next || s2->room_above->alternate_room_prev));
     }
     else if(s2->portal_to_room)
     {
         return s1->owner_room->alternate_room_next || s1->owner_room->alternate_room_prev ||
-               s2->portal_to_room->alternate_room_next || s2->portal_to_room->alternate_room_prev;
+               s2->portal_to_room->alternate_room_next || s2->portal_to_room->alternate_room_prev ||
+               (s1->room_above && (s1->room_above->alternate_room_next || s1->room_above->alternate_room_prev));
     }
 
     return false;
