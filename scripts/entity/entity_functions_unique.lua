@@ -288,6 +288,21 @@ end
 -------------------    TR 3  -----------------
 ----------------------------------------------
 
+function crystal_TR3_init(id)   -- "Savegame" crystal (TR3 version)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityActivity(id, true);
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(getEntityDistance(player, object_id) < 512.0) then
+            playSound(SOUND_MEDIPACK);
+            changeCharacterParam(player, PARAM_HEALTH, 200);
+            disableEntity(object_id);
+        end;
+    end
+end
+
+
 function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
 
     disableEntity(id);
@@ -519,4 +534,37 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
 end
 
 
+function plough_init(id)     -- Plough (TR4)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityActivity(id, false);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, true);
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end    
+    
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, false);
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    end
+    
+    entity_funcs[id].onLoop = function(object_id)
+        if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
+    end
+    
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        if(getEntityActivity(object_id)) then
+            changeCharacterParam(activator_id, PARAM_HEALTH, -50);
+        end;
+    end
+    
+    prepareEntity(id);
+end
+
+
+----------------------------------------------
+-------------------    TR 5  -----------------
+----------------------------------------------
 

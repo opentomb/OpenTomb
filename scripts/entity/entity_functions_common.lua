@@ -107,7 +107,7 @@ function keyhole_init(id)    -- Key and puzzle holes
     set_activation_offset(id);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(object_id == nil or getEntityActivity(object_id)) then
+        if((object_id == nil) or (getEntityActivity(object_id))) then
             return ENTITY_TRIGGERING_NOT_READY;
         end
         
@@ -127,7 +127,7 @@ function switch_init(id)     -- Ordinary switches
     set_activation_offset(id);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(object_id == nil) then
+        if((object_id == nil) or (getEntityTimer(object_id) > 0.0)) then
             return ENTITY_TRIGGERING_NOT_READY;
         end
         
