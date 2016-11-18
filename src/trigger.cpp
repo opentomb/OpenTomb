@@ -272,13 +272,13 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                         if((switch_event_state == 0) && (switch_sectorstatus == 1))
                                         {
                                             Entity_SetSectorStatus(trig_entity, 0);
-                                            trig_entity->timer = trigger->timer;
+                                            trig_entity->timer = 0;
                                         }
                                         else if((switch_event_state == 1) && (switch_sectorstatus == 1))
                                         {
                                             // Create statement for antitriggering a switch.
                                             Entity_SetSectorStatus(trig_entity, 0);
-                                            trig_entity->timer = 0.0f;
+                                            trig_entity->timer = trigger->timer;
                                         }
                                         else
                                         {

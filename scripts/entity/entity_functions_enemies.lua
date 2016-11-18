@@ -1,0 +1,7 @@
+-- OPENTOMB ENTITY FUNCTIONS SCRIPT
+-- By TeslaRus, Lwmte, 2014-2016
+
+
+
+
+
