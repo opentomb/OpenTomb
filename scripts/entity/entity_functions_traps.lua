@@ -35,7 +35,7 @@ function gen_trap_init(id)      -- Generic traps (TR1-TR2)
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 1) then 
-            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * frame_time * 30.0) 
+            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * 60.0 * frame_time) 
         end;
     end
 end
@@ -117,7 +117,7 @@ function swingblade_init(id)        -- Swinging blades (TR1)
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        changeCharacterParam(activator_id, PARAM_HEALTH, -45.0 * frame_time * 30.0);
+        changeCharacterParam(activator_id, PARAM_HEALTH, -45.0 * 60 * frame_time);
     end
 end
 
@@ -161,7 +161,7 @@ function wallblade_init(id)     -- Wall blade (TR1-TR3)
     end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        changeCharacterParam(activator_id, PARAM_HEALTH, -50.0 * 30.0 * frame_time);
+        changeCharacterParam(activator_id, PARAM_HEALTH, -50.0 * 60.0 * frame_time);
     end;
 end
 
@@ -518,8 +518,8 @@ function lasersweep_init(id)      -- Laser sweeper (TR3)
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     setEntityActivity(id, false);
     
-    entity_funcs[id].speed         = 1.0;
-    entity_funcs[id].phase_length  = math.abs(2048.0 * frame_time * entity_funcs[id].speed);
+    entity_funcs[id].speed         = 1.0 * 60.0;
+    entity_funcs[id].phase_length  = math.abs(2048.0 * entity_funcs[id].speed / 60.0);
     entity_funcs[id].current_phase = 0.0;
     
     entity_funcs[id].stopping      = false;  -- Sweeper will be stopped on the next phase end.
@@ -545,7 +545,7 @@ function lasersweep_init(id)      -- Laser sweeper (TR3)
         end;
         
         if(entity_funcs[object_id].current_wait == 0.0) then
-            local next_phase = entity_funcs[object_id].current_phase + entity_funcs[object_id].speed;
+            local next_phase = entity_funcs[object_id].current_phase + entity_funcs[object_id].speed * frame_time;
             
             if(((next_phase >= 90.0) and (entity_funcs[object_id].current_phase < 90.0)) or
                ((next_phase >= 270.0) and (entity_funcs[object_id].current_phase < 270.0))) then

@@ -31,7 +31,7 @@ function tallblock_init(id)    -- Tall moving block (TR1)
     end
     
     entity_funcs[id].onLoop = function(object_id)
-        local move_dist = 32.0 * 60.0 * frame_time;;
+        local move_dist = 32.0 * 60.0 * frame_time;
         if(getEntityEvent(object_id) == 0) then 
             move_dist = 0.0 - move_dist;
         end;
@@ -318,9 +318,9 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
     entity_funcs[id].current_angle = 0.0;           -- Current cleaner rotating angle.
     entity_funcs[id].target_angle  = 0.0;           -- Desired angle value, after which cleaner stops rotating.
     
-    entity_funcs[id].turn_rot_speed  = 2.0;         -- Rotation speed for free left-turn.
-    entity_funcs[id].stuck_rot_speed = 2.0;         -- Rotation speed for face-wall right turn.
-    entity_funcs[id].move_speed      = 32.0;        -- Ordinary movement speed.
+    entity_funcs[id].turn_rot_speed  = 60 * 2.0;    -- Rotation speed for free left-turn.
+    entity_funcs[id].stuck_rot_speed = 60 * 2.0;    -- Rotation speed for face-wall right turn.
+    entity_funcs[id].move_speed      = 60 * 32.0;   -- Ordinary movement speed.
     
     entity_funcs[id].loop_detector = {};            -- Loop detector struct needed to prevent cleaner stuck at flat floor.
     
@@ -381,7 +381,7 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 
                 if(entity_funcs[object_id].rotating == 0) then
                     entity_funcs[object_id].distance_traveled = 0.0;
-                    local dy = entity_funcs[object_id].move_speed * 60.0 * frame_time;
+                    local dy = entity_funcs[object_id].move_speed * frame_time;
                     moveEntityLocal(object_id, 0.0, dy, 0.0);  -- Move forward...
                     entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + dy;
                 end;
@@ -399,17 +399,17 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 entity_funcs[object_id].move_count = entity_funcs[object_id].move_count + 1;
                 if(entity_funcs[object_id].move_count > 4) then entity_funcs[object_id].move_count = 1 end;
             else
-                local dy = entity_funcs[object_id].move_speed * 60.0 * frame_time;
+                local dy = entity_funcs[object_id].move_speed * frame_time;
                 moveEntityLocal(object_id, 0.0, dy, 0.0);  -- Move forward...
                 entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + dy;
             end;
         else            
             if(entity_funcs[object_id].rotating == 1) then
-                local dza = entity_funcs[object_id].turn_rot_speed * 60.0 * frame_time;
+                local dza = entity_funcs[object_id].turn_rot_speed * frame_time;
                 entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + dza;
                 rotateEntity(object_id, dza);
             elseif(entity_funcs[object_id].rotating == 2) then
-                local dza = entity_funcs[object_id].stuck_rot_speed * 60.0 * frame_time;
+                local dza = entity_funcs[object_id].stuck_rot_speed * frame_time;
                 entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + dza;
                 rotateEntity(object_id, -dza); -- another direction!
             end;
@@ -486,8 +486,8 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     
     entity_funcs[id].current_angle =  0.0;
-    entity_funcs[id].speed         = -0.5;  -- Full turn in 14 seconds, clockwise.
-    entity_funcs[id].radius        =  math.abs(4096.0 * frame_time * entity_funcs[id].speed);
+    entity_funcs[id].speed         = -0.5 * 60.0;  -- Full turn in 14 seconds, clockwise.
+    entity_funcs[id].radius        =  math.abs(4096.0 * entity_funcs[id].speed / 60);
     
     moveEntityLocal(id, 512.0, 0.0, 0.0);  -- Fix position
     
@@ -508,7 +508,7 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
             setEntityActivity(object_id, false);
         end;
         
-        entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].speed;
+        entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].speed * frame_time;
         
         if(entity_funcs[object_id].current_angle < 0.0) then
             entity_funcs[object_id].current_angle = 360.0 + entity_funcs[object_id].current_angle;
@@ -556,7 +556,7 @@ function plough_init(id)     -- Plough (TR4)
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityActivity(object_id)) then
-            changeCharacterParam(activator_id, PARAM_HEALTH, -50);
+            changeCharacterParam(activator_id, PARAM_HEALTH, -50 * 60.0 * frame_time);
         end;
     end
     

@@ -188,6 +188,19 @@ function lever_switch_init(id)     -- Big switches (TR4) - lever
 end
 
 
+function anim_single_init(id)      -- Ordinary one way animatings
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityActivity(id, false);
+   
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
+        setEntityActivity(object_id, true);
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+end
+
+
 function anim_init(id)      -- Ordinary animatings
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
@@ -309,9 +322,8 @@ function boulder_init(id)
                 pushEntityBody(object_id, 0, math.random(150) + 2500.0, 10.0, true);
                 lockEntityBodyLinearFactor(object_id, 0);
             end;
-            return ENTITY_TRIGGERING_ACTIVATED;
         end;
-        return ENTITY_TRIGGERING_NOT_READY;
+        return ENTITY_TRIGGERING_ACTIVATED;
     end
 
 end

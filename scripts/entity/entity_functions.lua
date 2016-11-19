@@ -125,7 +125,7 @@ function propeller_init(id)      -- Generic propeller (TR1-TR2)
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 0) then 
-            changeCharacterParam(activator_id, PARAM_HEALTH, -100 * 60.0 * frame_time) 
+            changeCharacterParam(activator_id, PARAM_HEALTH, -6000.0 * frame_time) 
         end;
     end;
     

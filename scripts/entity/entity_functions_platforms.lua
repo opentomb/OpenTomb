@@ -11,7 +11,7 @@ function twobp_init(id)        -- Two-block platform
     setEntityActivity(id, false);
     
     entity_funcs[id].push_height    = 128.0;
-    entity_funcs[id].push_speed     = 2.0;
+    entity_funcs[id].push_speed     = 2.0 * 60;
     entity_funcs[id].push           = false;   -- Push flag, set when Lara is on platform.
     entity_funcs[id].current_height = 0.0;     -- Used for all modes.
     entity_funcs[id].waiting        = true;    -- Initial state is stopped.
@@ -19,7 +19,7 @@ function twobp_init(id)        -- Two-block platform
     local curr_OCB = getEntityOCB(id);
     
     entity_funcs[id].raise_height = bit32.rshift(bit32.band(curr_OCB, 0xFFF0), 4) * 256.0;
-    entity_funcs[id].raise_speed  = bit32.band(curr_OCB, 0x000F) / 2.0; -- Double FPS.
+    entity_funcs[id].raise_speed  = bit32.band(curr_OCB, 0x000F) * 60 / 2.0; -- Double FPS.
     
     -- Mode legend: 0 - normal ascent, 1 - normal descent, 2 - push.
     -- Only two classic modes are parsed from OCB, extra modes can be implemented through script.
@@ -66,7 +66,7 @@ function twobp_init(id)        -- Two-block platform
         if(entity_funcs[object_id].waiting == false) then
             if(entity_funcs[object_id].mode < 2) then
                 if(entity_funcs[object_id].current_height < entity_funcs[object_id].raise_height) then
-                    local dz = entity_funcs[object_id].raise_speed * 60.0 * frame_time;
+                    local dz = entity_funcs[object_id].raise_speed * frame_time;
                     if(entity_funcs[object_id].mode == 0) then
                         moveEntityLocal(object_id, 0.0, 0.0, dz);
                     else
@@ -87,7 +87,7 @@ function twobp_init(id)        -- Two-block platform
             elseif(entity_funcs[object_id].mode == 2) then
                 if(entity_funcs[object_id].push == true) then
                     if(entity_funcs[object_id].current_height < entity_funcs[object_id].push_height) then
-                        local dz = entity_funcs[object_id].push_speed * 60.0 * frame_time;
+                        local dz = entity_funcs[object_id].push_speed * frame_time;
                         moveEntityLocal(object_id, 0.0, 0.0, -dz);
                         entity_funcs[object_id].current_height = entity_funcs[object_id].current_height + dz;
                     else
@@ -95,7 +95,7 @@ function twobp_init(id)        -- Two-block platform
                     end;
                 else
                     if(entity_funcs[object_id].current_height > 0.0) then
-                        local dz = entity_funcs[object_id].push_speed * 60.0 * frame_time;
+                        local dz = entity_funcs[object_id].push_speed * frame_time;
                         moveEntityLocal(object_id, 0.0, 0.0, dz);
                         entity_funcs[object_id].current_height = entity_funcs[object_id].current_height - dz;
                     else
@@ -134,7 +134,7 @@ function rblock_init(id)        -- Raising block (generic)
     setEntityActivity(id, false);
     
     entity_funcs[id].max_height  = 1024.0;
-    entity_funcs[id].move_speed  = 8.0;
+    entity_funcs[id].move_speed  = 8.0 * 60;
     entity_funcs[id].dummy       = (getEntityOCB(id) == -2);    -- TR5 functionality
     
     if(entity_funcs[id].dummy == true) then
@@ -158,7 +158,7 @@ function rblock_init(id)        -- Raising block (generic)
     entity_funcs[id].onLoop = function(object_id, activator_id)
         if(entity_funcs[object_id].direction == 1) then
             if((entity_funcs[object_id].dummy == false) and (entity_funcs[object_id].curr_height < entity_funcs[object_id].max_height)) then
-                local dz = 60.0 * frame_time * entity_funcs[object_id].move_speed;
+                local dz = frame_time * entity_funcs[object_id].move_speed;
                 entity_funcs[object_id].curr_height = entity_funcs[object_id].curr_height + dz;
                 camShake(125.0, 0.2, object_id);
             else
@@ -168,7 +168,7 @@ function rblock_init(id)        -- Raising block (generic)
             end;
         else
             if((entity_funcs[object_id].dummy == false) and (entity_funcs[object_id].curr_height > 0.0)) then
-                local dz = 60.0 * frame_time * entity_funcs[object_id].move_speed;
+                local dz = frame_time * entity_funcs[object_id].move_speed;
                 entity_funcs[object_id].curr_height = entity_funcs[object_id].curr_height - dz;
                 camShake(125.0, 0.2, object_id);
             else
@@ -206,7 +206,7 @@ function expplatform_init(id)        -- Expanding platform
     setEntityActivity(id, false);
     
     entity_funcs[id].max_width  = 1024.0;
-    entity_funcs[id].move_speed = 8.0;
+    entity_funcs[id].move_speed = 8.0 * 60;
     entity_funcs[id].curr_width = 0.0;
     entity_funcs[id].direction  = 1;
     
@@ -223,7 +223,7 @@ function expplatform_init(id)        -- Expanding platform
     entity_funcs[id].onLoop = function(object_id, activator_id)
         if(entity_funcs[object_id].direction == 1) then
             if(entity_funcs[object_id].curr_width < entity_funcs[object_id].max_width) then
-                local dz = 60.0 * frame_time * entity_funcs[object_id].move_speed;
+                local dz = frame_time * entity_funcs[object_id].move_speed;
                 entity_funcs[object_id].curr_width = entity_funcs[object_id].curr_width + dz;
             else
                 entity_funcs[object_id].curr_width = entity_funcs[object_id].max_width;
@@ -232,7 +232,7 @@ function expplatform_init(id)        -- Expanding platform
             end;
         else
             if(entity_funcs[object_id].curr_width > 0.0) then
-                local dz = 60.0 * frame_time * entity_funcs[object_id].move_speed;
+                local dz = frame_time * entity_funcs[object_id].move_speed;
                 entity_funcs[object_id].curr_width = entity_funcs[object_id].curr_width - dz;
             else
                 entity_funcs[object_id].curr_width = 0.0;
