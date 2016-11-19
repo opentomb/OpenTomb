@@ -1410,6 +1410,7 @@ int lua_DropEntity(lua_State * lua)
         return 0;
     }
 
+    bool only_room = (top > 2) ? (lua_toboolean(lua, 3)) : (false);
     float move[3], g[3], t, time = lua_tonumber(lua, 2);
     float from[3], to[3];
     collision_result_t cb;
@@ -1423,31 +1424,34 @@ int lua_DropEntity(lua_State * lua)
     ent->speed[2] += g[2] * time;
 
     Mat4_vec3_mul_macro(from, ent->transform, ent->bf->centre);
-    from[2] = ent->transform[12 + 2];
     vec3_add(to, from, move);
     to[2] -= (ent->bf->bb_max[2] - ent->bf->bb_min[2]);
 
-    if(Physics_RayTest(&cb, from, to, ent->self))
-    {
-        bool only_room = (top > 2) ? (lua_toboolean(lua, 3)) : (false);
+    bool has_collision = false;
 
-        if((!only_room) || ((only_room) && (cb.obj) && (cb.obj->object_type == OBJECT_ROOM_BASE)))
+    while(Physics_RayTest(&cb, from, to, ent->self))
+    {
+        if(!only_room || ((cb.obj) && (cb.obj->object_type == OBJECT_ROOM_BASE)))
         {
-            ent->transform[12 + 2] = cb.point[2];
-            lua_pushboolean(lua, 1);
+            has_collision = true;
+            break;
         }
-        else
-        {
-            lua_pushboolean(lua, 0);
-        }
+        from[2] = cb.point[2] - 1.0f;
+    }
+
+    if(has_collision)
+    {
+        ent->transform[12 + 2] = cb.point[2];
+        vec3_set_zero(ent->speed);
     }
     else
     {
         vec3_add_to(ent->transform + 12, move);
-        lua_pushboolean(lua, 0);
     }
 
     Entity_UpdateRigidBody(ent, 1);
+    lua_pushboolean(lua, has_collision);
+
     return 1;
 }
 
