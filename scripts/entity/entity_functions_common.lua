@@ -327,3 +327,36 @@ function boulder_init(id)
     end
 
 end
+
+
+function boulder_heavy_init(id)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
+    setEntityActivity(id, false);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(not getEntityActivity(object_id)) then
+            setEntityActivity(object_id, true);
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
+        end;
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end
+
+    entity_funcs[id].onLoop = function(object_id)
+        if(getEntityActivity(object_id)) then
+            local is_stopped = moveEntityHeavy(object_id, 2048.0 * frame_time, true);
+            local is_dropped = dropEntity(object_id, frame_time, true);
+            if(is_dropped and is_stopped) then
+                setEntityActivity(object_id, false);
+                dropEntity(object_id, 1.0, true);
+            end;
+        end;
+    end;
+
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        if(getEntityActivity(object_id)) then 
+            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * frame_time) 
+        end;
+    end;
+
+end;

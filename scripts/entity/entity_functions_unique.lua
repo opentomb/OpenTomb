@@ -521,7 +521,9 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if(getEntityActivity(object_id)) then changeCharacterParam(activator_id, PARAM_HEALTH, -35.0) end;
+        if(getEntityActivity(object_id)) then 
+            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * frame_time) 
+        end;
     end
     
     entity_funcs[id].onDelete = function(object_id)

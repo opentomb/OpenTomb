@@ -1428,7 +1428,6 @@ int lua_DropEntity(lua_State * lua)
     to[2] -= (ent->bf->bb_max[2] - ent->bf->bb_min[2]);
 
     bool has_collision = false;
-
     while(Physics_RayTest(&cb, from, to, ent->self))
     {
         if(!only_room || ((cb.obj) && (cb.obj->object_type == OBJECT_ROOM_BASE)))
@@ -1450,6 +1449,78 @@ int lua_DropEntity(lua_State * lua)
     }
 
     Entity_UpdateRigidBody(ent, 1);
+    lua_pushboolean(lua, has_collision);
+
+    return 1;
+}
+
+
+int lua_MoveEntityHeavy(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 2)
+    {
+        Con_Warning("moveEntityHeavy: expecting arguments (entity_id, dist, (only_room))");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    float dist = lua_tonumber(lua, 2);
+    entity_p ent = World_GetEntityByID(id);
+    if(ent == NULL)
+    {
+        Con_Warning("no entity with id = %d", id);
+        return 0;
+    }
+
+    bool only_room = (top > 2) ? (lua_toboolean(lua, 3)) : (false);
+    float *move_dir = ent->transform + 4;
+    float from[3], to[3];
+    collision_result_t cb;
+
+    float t = dist + ((dist >= 0.0f) ? (ent->bf->bb_max[1]) : (ent->bf->bb_min[1]));
+    Mat4_vec3_mul_macro(from, ent->transform, ent->bf->centre);
+    vec3_add_mul(to, from, move_dir, t);
+
+    bool has_collision = false;
+    room_sector_p next_s = Room_GetSectorRaw(ent->self->room->real_room, to);
+    if(next_s)
+    {
+        if(next_s->portal_to_room)
+        {
+            next_s = Room_GetSectorRaw(next_s->portal_to_room->real_room, next_s->pos);
+        }
+        if(next_s->floor_penetration_config == TR_PENETRATION_CONFIG_WALL)
+        {
+            has_collision = true;
+        }
+    }
+
+    while(!has_collision && Physics_RayTest(&cb, from, to, ent->self))
+    {
+        if(!only_room || ((cb.obj) && (cb.obj->object_type == OBJECT_ROOM_BASE)))
+        {
+            has_collision = true;
+            break;
+        }
+
+        if(dist >= 0.0f)
+        {
+            vec3_add(from, cb.point, move_dir);
+        }
+        else
+        {
+            vec3_sub(from, cb.point, move_dir);
+        }
+    }
+
+    if(!has_collision)
+    {
+        vec3_add_mul(ent->transform + 12, ent->transform + 12, move_dir, dist);
+        Entity_UpdateRigidBody(ent, 1);
+    }
+
     lua_pushboolean(lua, has_collision);
 
     return 1;
@@ -5671,6 +5742,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getGravity", lua_GetGravity);
     lua_register(lua, "setGravity", lua_SetGravity);
     lua_register(lua, "dropEntity", lua_DropEntity);
+    lua_register(lua, "moveEntityHeavy", lua_MoveEntityHeavy);
     lua_register(lua, "bind", lua_BindKey);
 
     lua_register(lua, "addFont", lua_AddFont);
