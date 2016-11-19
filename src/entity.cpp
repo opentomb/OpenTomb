@@ -673,7 +673,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
             switch(command->id)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
-                    if(ss_anim->changing_next >= 0x02)                          // This command executes ONLY at the end of animation.
+                    if(ss_anim->frame_changing_state >= 0x02)                          // This command executes ONLY at the end of animation.
                     {
                         float tr[3];
                         entity->no_fix_all = 0x01;
@@ -684,7 +684,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                     break;
 
                 case TR_ANIMCOMMAND_JUMPDISTANCE:
-                    if(entity->character && (ss_anim->changing_next >= 0x02))   // This command executes ONLY at the end of animation.
+                    if(entity->character && (ss_anim->frame_changing_state >= 0x02))   // This command executes ONLY at the end of animation.
                     {
                         Character_SetToJump(entity, -command->data[0], command->data[1]);
                     }
@@ -760,7 +760,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                                 break;
 
                             case TR_EFFECT_CHANGEDIRECTION:
-                                if(ss_anim->changing_next >= 0x01)
+                                if(ss_anim->frame_changing_state >= 0x01)
                                 {
                                     entity->angles[0] += 180.0f;
                                     if(entity->move_type == MOVE_UNDERWATER)

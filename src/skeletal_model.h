@@ -77,10 +77,7 @@ typedef struct ss_animation_s
 {
     uint16_t                    type;
     uint16_t                    enabled : 1;
-    uint16_t                    : 15;
-    uint16_t                    changing_next : 8;
-    uint16_t                    changing_curr : 8;
-    int16_t                     current_state;
+    uint16_t                    frame_changing_state : 15;
     int16_t                     next_state;
     int16_t                     next_state_heavy;
     int16_t                     current_animation;
@@ -279,6 +276,10 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
 int  Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id);
 void Anim_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame);
 int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time);
+inline uint16_t Anim_GetCurrentState(struct ss_animation_s *ss_anim)
+{
+    return ss_anim->model->animations[ss_anim->next_animation].state_id;
+}
 
 #ifdef	__cplusplus
 }

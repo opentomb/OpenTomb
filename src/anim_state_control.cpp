@@ -51,7 +51,7 @@
 
 void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim)
 {
-    if(ss_anim->changing_next >= 0x02)
+    if(ss_anim->frame_changing_state >= 0x02)
     {
         float *v = ent->character->traversed_object->transform + 12;
         int i = v[0] / TR_METERING_SECTORSIZE;
@@ -67,7 +67,7 @@ void ent_stop_traverse(entity_p ent, ss_animation_p ss_anim)
 
 void ent_set_on_floor(entity_p ent, ss_animation_p ss_anim)
 {
-    if(ss_anim->changing_next >= 0x02)
+    if(ss_anim->frame_changing_state >= 0x02)
     {
         ent->move_type = MOVE_ON_FLOOR;
         ent->transform[12 + 2] = ent->character->height_info.floor_hit.point[2];
@@ -81,7 +81,7 @@ void ent_set_on_floor(entity_p ent, ss_animation_p ss_anim)
 void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim)
 {
     /*animation_frame_p af = ss_anim->model->animations + ss_anim->current_animation;
-    if((ss_anim->changing_next >= 0x02) && (ss_anim->changing_next < 0x04))
+    if((ss_anim->frame_changing_state >= 0x02) && (ss_anim->frame_changing_state < 0x04))
     {
         float p[3], move[3];
 
@@ -101,7 +101,7 @@ void ent_set_on_floor_after_climb(entity_p ent, ss_animation_p ss_anim)
 
 void ent_set_turn_fast(entity_p ent, ss_animation_p ss_anim)
 {
-    if(ss_anim->changing_next == 0x02)
+    if(ss_anim->frame_changing_state == 0x02)
     {
         ent->bf->animations.next_state = TR_STATE_LARA_TURN_FAST;
         ss_anim->onEndFrame = NULL;
@@ -110,7 +110,7 @@ void ent_set_turn_fast(entity_p ent, ss_animation_p ss_anim)
 
 void ent_set_underwater(entity_p ent, ss_animation_p ss_anim)
 {
-    if(ss_anim->changing_next >= 0x02)
+    if(ss_anim->frame_changing_state >= 0x02)
     {
         ent->move_type = MOVE_UNDERWATER;
         ss_anim->onEndFrame = NULL;
@@ -119,7 +119,7 @@ void ent_set_underwater(entity_p ent, ss_animation_p ss_anim)
 
 void ent_set_free_falling(entity_p ent, ss_animation_p ss_anim)
 {
-    if(ss_anim->changing_next >= 0x02)
+    if(ss_anim->frame_changing_state >= 0x02)
     {
         ent->move_type = MOVE_FREE_FALLING;
         ss_anim->onEndFrame = NULL;
@@ -128,7 +128,7 @@ void ent_set_free_falling(entity_p ent, ss_animation_p ss_anim)
 
 void ent_set_cmd_slide(entity_p ent, ss_animation_p ss_anim)
 {
-    if(ss_anim->changing_next >= 0x02)
+    if(ss_anim->frame_changing_state >= 0x02)
     {
         ent->character->resp.slide = 0x01;
         ss_anim->onEndFrame = NULL;
@@ -137,7 +137,7 @@ void ent_set_cmd_slide(entity_p ent, ss_animation_p ss_anim)
 
 void ent_correct_diving_angle(entity_p ent, ss_animation_p ss_anim)
 {
-    if(ss_anim->changing_next >= 0x02)
+    if(ss_anim->frame_changing_state >= 0x02)
     {
         ent->angles[1] = -45.0f;
         Entity_UpdateTransform(ent);
@@ -147,7 +147,7 @@ void ent_correct_diving_angle(entity_p ent, ss_animation_p ss_anim)
 
 void ent_to_on_water(entity_p ent, ss_animation_p ss_anim)
 {
-    if(ss_anim->changing_next >= 0x02)
+    if(ss_anim->frame_changing_state >= 0x02)
     {
         ent->transform[12 + 2] = ent->character->height_info.transition_level;
         Entity_GhostUpdate(ent);
@@ -158,7 +158,7 @@ void ent_to_on_water(entity_p ent, ss_animation_p ss_anim)
 
 void ent_climb_out_of_water(entity_p ent, ss_animation_p ss_anim)
 {
-    if(ss_anim->changing_next >= 0x02)
+    if(ss_anim->frame_changing_state >= 0x02)
     {
         float *v = ent->character->climb.point;
         vec3_add_mul(ent->transform + 12, v, ent->transform + 4, 48.0f);        // temporary stick
@@ -173,7 +173,7 @@ void ent_climb_out_of_water(entity_p ent, ss_animation_p ss_anim)
 
 void ent_to_edge_climb(entity_p ent, ss_animation_p ss_anim)
 {
-    if(ss_anim->changing_next >= 0x01)
+    if(ss_anim->frame_changing_state >= 0x01)
     {
         float *v = ent->character->climb.point;
         ent->transform[12 + 0] = v[0] - ent->transform[4 + 0] * ent->bf->bb_max[1];
@@ -188,7 +188,7 @@ void ent_to_edge_climb(entity_p ent, ss_animation_p ss_anim)
 
 void ent_to_monkey_swing(entity_p ent, ss_animation_p ss_anim)
 {
-    if(ss_anim->changing_next >= 0x02)
+    if(ss_anim->frame_changing_state >= 0x02)
     {
         ent->move_type = MOVE_MONKEYSWING;
         ent->transform[12 + 2] = ent->character->height_info.ceiling_hit.point[2] - ent->bf->bb_max[2];
@@ -199,7 +199,7 @@ void ent_to_monkey_swing(entity_p ent, ss_animation_p ss_anim)
 
 void ent_crawl_to_climb(entity_p ent, ss_animation_p ss_anim)
 {
-    if(ss_anim->changing_next >= 0x02)
+    if(ss_anim->frame_changing_state >= 0x02)
     {
         character_command_p cmd = &ent->character->cmd;
 
@@ -242,7 +242,8 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
     ss_anim->anim_frame_flags = ANIM_NORMAL_CONTROL;
 
     int8_t low_vertical_space = (curr_fc->floor_hit.hit && curr_fc->ceiling_hit.hit && (curr_fc->ceiling_hit.point[2] - curr_fc->floor_hit.point[2] < ent->character->Height - LARA_HANG_VERTICAL_EPSILON));
-    int8_t last_frame = ss_anim->model->animations[ss_anim->current_animation].max_frame <= ss_anim->current_frame + 1;
+    int8_t is_last_frame = ss_anim->model->animations[ss_anim->current_animation].max_frame <= ss_anim->current_frame + 1;
+    uint16_t current_state = Anim_GetCurrentState(ss_anim);
 
     if(resp->kill == 1)   // Stop any music, if Lara is dead.
     {
@@ -257,7 +258,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
  * - Free fall animations
  * - Water animations
  */
-    switch(ss_anim->current_state)
+    switch(current_state)
     {
         /*
          * Base onfloor animations
@@ -755,11 +756,11 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }
 
             }
-            else if(((ss_anim->current_state == TR_STATE_LARA_TURN_LEFT_SLOW ) && (cmd->move[1] == -1)) ||
-                    ((ss_anim->current_state == TR_STATE_LARA_TURN_RIGHT_SLOW) && (cmd->move[1] ==  1))  )
+            else if(((current_state == TR_STATE_LARA_TURN_LEFT_SLOW ) && (cmd->move[1] == -1)) ||
+                    ((current_state == TR_STATE_LARA_TURN_RIGHT_SLOW) && (cmd->move[1] ==  1))  )
             {
                 int substance_state = Entity_GetSubstanceState(ent);
-                if((last_frame) &&
+                if((is_last_frame) &&
                    (substance_state != ENTITY_SUBSTANCE_WATER_WADE) &&
                    (substance_state != ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) &&
                    (substance_state != ENTITY_SUBSTANCE_QUICKSAND_SHALLOW))
