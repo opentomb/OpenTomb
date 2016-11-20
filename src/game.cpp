@@ -527,31 +527,19 @@ void Game_ApplyControls(struct entity_s *ent)
 }
 
 
-void Game_LoopEntities(struct RedBlackNode_s *x)
-{
-    entity_p entity = (entity_p)x->data;
-
-    if(entity->state_flags & ENTITY_STATE_ENABLED)
-    {
-        Entity_ProcessSector(entity);
-        Script_LoopEntity(engine_lua, entity->id);
-    }
-
-    if(x->left != NULL)
-    {
-        Game_LoopEntities(x->left);
-    }
-    if(x->right != NULL)
-    {
-        Game_LoopEntities(x->right);
-    }
-}
-
-
 void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
-    Entity_Frame((entity_p)x->data, engine_frame_time);
-    Entity_UpdateRigidBody((entity_p)x->data, 0);
+    entity_p ent = (entity_p)x->data;
+    if(!ent->self->room || ent->self->room == ent->self->room->real_room)
+    {
+        if(ent->state_flags & ENTITY_STATE_ENABLED)
+        {
+            Entity_ProcessSector(ent);
+            Script_LoopEntity(engine_lua, ent->id);
+        }
+        Entity_Frame(ent, engine_frame_time);
+        Entity_UpdateRigidBody(ent, 0);
+    }
 
     if(x->left != NULL)
     {
@@ -677,11 +665,6 @@ void Game_Frame(float time)
         Entity_ProcessSector(player);
         Character_UpdateParams(player);
         Entity_CheckCollisionCallbacks(player);                                 ///@FIXME: Must do it for ALL interactive entities!
-    }
-
-    if(is_entitytree)
-    {
-        Game_LoopEntities(World_GetEntityTreeRoot());
     }
 
     // This must be called EVERY frame to max out smoothness.

@@ -28,7 +28,6 @@ void Game_LevelTransition(uint16_t level_index);
 void Game_ApplyControls(struct entity_s *ent);
 
 void Game_UpdateAllEntities(struct RedBlackNode_s *x);
-void Game_LoopEntities(struct RedBlackNode_s *x);
 void Game_UpdateAI();
 void Game_UpdateCharacters();
 
