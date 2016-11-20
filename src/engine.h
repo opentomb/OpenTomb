@@ -34,11 +34,12 @@
 #define COLLISION_MASK_ALL                      (0x7FFF)        // bullet uses signed short int for these flags!
 
 #define COLLISION_GROUP_ALL                     (0x7FFF)
-#define COLLISION_GROUP_STATIC                  (0x0001)        // room mesh, statics
-#define COLLISION_GROUP_KINEMATIC               (0x0002)        // doors, blocks, static animated entityes
-#define COLLISION_GROUP_CHARACTERS              (0x0004)        // Lara, enemies, friends, creatures
-#define COLLISION_GROUP_BULLETS                 (0x0008)        // bullets, rockets, grenades, arrows...
-#define COLLISION_GROUP_DYNAMICS                (0x0010)        // test balls, warious
+#define COLLISION_GROUP_STATIC_ROOM             (0x0001)        // room mesh
+#define COLLISION_GROUP_STATIC_OBLECT           (0x0002)
+#define COLLISION_GROUP_KINEMATIC               (0x0004)        // doors, blocks, static animated entityes
+#define COLLISION_GROUP_CHARACTERS              (0x0008)        // Lara, enemies, friends, creatures
+#define COLLISION_GROUP_BULLETS                 (0x0010)        // bullets, rockets, grenades, arrows...
+#define COLLISION_GROUP_DYNAMICS                (0x0020)        // test balls, warious
 
 
 typedef struct engine_container_s

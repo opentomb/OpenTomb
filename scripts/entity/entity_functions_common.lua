@@ -198,6 +198,22 @@ function anim_single_init(id)      -- Ordinary one way animatings
         setEntityActivity(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
+
+    --TODO: move that hack to level script (after loading scripts system backporting?)
+    if(id == 12) then
+        entity_funcs[id].onLoop = function(object_id)
+            local x, y, z = getEntityPos(object_id);
+            if(x > 48896) then
+                x = x - 1024.0 * frame_time;
+                if(x < 48896) then
+                    x = 48896;
+                end;
+                setEntityPos(object_id, x, y, z);
+            else
+                entity_funcs[id].onLoop = nil;
+            end;
+        end;
+    end;
 end
 
 

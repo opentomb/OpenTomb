@@ -1392,6 +1392,33 @@ int lua_SetGravity(lua_State * lua)                                             
 }
 
 
+int lua_CreateGhosts(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 1)
+    {
+        Con_Warning("createGhosts: expecting arguments (entity_id)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+    if(ent == NULL)
+    {
+        Con_Warning("no entity with id = %d", id);
+        return 0;
+    }
+
+    if(!Physics_IsGhostsInited(ent->physics))
+    {
+        Physics_CreateGhosts(ent->physics, ent->bf, NULL);
+    }
+
+    return 0;
+}
+
+
 int lua_DropEntity(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -5741,6 +5768,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
 
     lua_register(lua, "getGravity", lua_GetGravity);
     lua_register(lua, "setGravity", lua_SetGravity);
+    lua_register(lua, "createGhosts", lua_CreateGhosts);
     lua_register(lua, "dropEntity", lua_DropEntity);
     lua_register(lua, "moveEntityHeavy", lua_MoveEntityHeavy);
     lua_register(lua, "bind", lua_BindKey);

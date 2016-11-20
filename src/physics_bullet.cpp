@@ -751,9 +751,10 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
             for(int j = 0; j < manifolds_size; j++)
             {
                 btPersistentManifold* manifold = (*(physics->manifoldArray))[j];
-                btScalar directionSign = manifold->getBody0() == ghost ? btScalar(-1.0) : btScalar(1.0);
+                btScalar directionSign = ((manifold->getBody0() == ghost) ? btScalar(-1.0) : btScalar(1.0));
                 engine_container_p cont0 = (engine_container_p)manifold->getBody0()->getUserPointer();
                 engine_container_p cont1 = (engine_container_p)manifold->getBody1()->getUserPointer();
+
                 if((cont0->collision_type == COLLISION_TYPE_GHOST) || (cont1->collision_type == COLLISION_TYPE_GHOST))
                 {
                     continue;
@@ -1332,18 +1333,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                         }
                         else
                         {
-                            float bb_min[3], bb_max[3], t;
-                            t = 0.40 * (b_tag->mesh_base->bb_max[0] - b_tag->mesh_base->bb_min[0]);
-                            bb_min[0] = b_tag->mesh_base->centre[0] - t;
-                            bb_max[0] = b_tag->mesh_base->centre[0] + t;
-                            t = 0.40 * (b_tag->mesh_base->bb_max[1] - b_tag->mesh_base->bb_min[1]);
-                            bb_min[1] = b_tag->mesh_base->centre[1] - t;
-                            bb_max[1] = b_tag->mesh_base->centre[1] + t;
-                            t = 0.40 * (b_tag->mesh_base->bb_max[2] - b_tag->mesh_base->bb_min[2]);
-                            bb_min[2] = b_tag->mesh_base->centre[2] - t;
-                            bb_max[2] = b_tag->mesh_base->centre[2] + t;
-
-                            physics->ghost_objects[i]->setCollisionShape(BT_CSfromBBox(bb_min, bb_max));
+                            physics->ghost_objects[i]->setCollisionShape(BT_CSfromMesh(b_tag->mesh_base, true, true, false));
                         }
                         physics->ghost_objects[i]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
                         bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[i], COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_ALL);
@@ -1614,7 +1604,7 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
                 for(int k = 0; k < physics->manifoldArray->size(); k++)
                 {
                     btPersistentManifold* manifold = (*physics->manifoldArray)[k];
-                    for(int c = 0; c < manifold->getNumContacts(); c++)               // c++ in C++
+                    for(int c = 0; c < manifold->getNumContacts(); c++)         // c++ in C++
                     {
                         //const btManifoldPoint &pt = manifold->getContactPoint(c);
                         if(manifold->getContactPoint(c).getDistance() < 0.0)
