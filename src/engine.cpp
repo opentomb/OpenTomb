@@ -76,6 +76,8 @@ engine_container_p Container_Create()
     engine_container_p ret;
 
     ret = (engine_container_p)malloc(sizeof(engine_container_t));
+    ret->collision_group = COLLISION_GROUP_KINEMATIC;
+    ret->collision_mask = COLLISION_MASK_ALL;
     ret->next = NULL;
     ret->object = NULL;
     ret->object_type = 0;

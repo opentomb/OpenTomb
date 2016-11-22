@@ -508,7 +508,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             entity->OCB            = 0x00;
             entity->timer          = 0.0;
 
-            entity->self->collision_type = COLLISION_NONE;
+            entity->self->collision_group = COLLISION_GROUP_KINEMATIC;
             entity->self->collision_shape = COLLISION_SHAPE_TRIMESH;
             entity->move_type          = 0x0000;
             entity->move_type          = 0;
@@ -1401,7 +1401,7 @@ void World_SetEntityModelProperties(struct entity_s *ent)
             lua_pushinteger(global_world.objects_flags_conf, ent->bf->animations.model->id);     // entity model id
             if (lua_CallAndLog(global_world.objects_flags_conf, 2, 4, 0))
             {
-                ent->self->collision_type = lua_tointeger(global_world.objects_flags_conf, -4);      // get collision type flag
+                ent->self->collision_group = lua_tointeger(global_world.objects_flags_conf, -4);      // get collision type flag
                 ent->self->collision_shape = lua_tointeger(global_world.objects_flags_conf, -3);     // get collision shape flag
                 ent->bf->animations.model->hide = lua_tointeger(global_world.objects_flags_conf, -2);// get info about model visibility
                 ent->type_flags |= lua_tointeger(global_world.objects_flags_conf, -1);               // get traverse information
@@ -1422,7 +1422,7 @@ void World_SetEntityModelProperties(struct entity_s *ent)
             {
                 if(!lua_isnil(global_world.level_script, -4))
                 {
-                    ent->self->collision_type = lua_tointeger(global_world.level_script, -4);        // get collision type flag
+                    ent->self->collision_group = lua_tointeger(global_world.level_script, -4);        // get collision type flag
                 }
                 if(!lua_isnil(global_world.level_script, -3))
                 {
@@ -1457,7 +1457,7 @@ void World_SetStaticMeshProperties(struct static_mesh_s *r_static)
             {
                 if(!lua_isnil(global_world.level_script, -3))
                 {
-                    r_static->self->collision_type = lua_tointeger(global_world.level_script, -3);
+                    r_static->self->collision_group = lua_tointeger(global_world.level_script, -3);
                 }
                 if(!lua_isnil(global_world.level_script, -2))
                 {
@@ -1858,7 +1858,7 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     room->self->next = NULL;
     room->self->room = room;
     room->self->object = room;
-    room->self->collision_type = COLLISION_TYPE_STATIC;
+    room->self->collision_group = COLLISION_GROUP_STATIC_ROOM;
     room->self->collision_shape = COLLISION_SHAPE_TRIMESH;
     room->self->object_type = OBJECT_ROOM_BASE;
 
@@ -1958,11 +1958,11 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
            ((r_static->cbb_min[0] == r_static->cbb_min[1]) && (r_static->cbb_min[1] == r_static->cbb_min[2]) &&
             (r_static->cbb_max[0] == r_static->cbb_max[1]) && (r_static->cbb_max[1] == r_static->cbb_max[2])))
         {
-            r_static->self->collision_type = COLLISION_NONE;
+            r_static->self->collision_group = COLLISION_NONE;
         }
         else
         {
-            r_static->self->collision_type = COLLISION_TYPE_STATIC;
+            r_static->self->collision_group = COLLISION_GROUP_STATIC_OBLECT;
         }
 
         // Set additional static mesh properties from level script override.
@@ -2313,7 +2313,7 @@ void World_GenEntities(class VT_Level *tr)
         entity->OCB             = tr_item->ocb;
         entity->timer           = 0.0;
 
-        entity->self->collision_type = COLLISION_TYPE_KINEMATIC;
+        entity->self->collision_group = COLLISION_GROUP_KINEMATIC;
         entity->self->collision_shape = COLLISION_SHAPE_TRIMESH;
         entity->move_type          = 0x0000;
         entity->move_type          = MOVE_STATIC_POS;
@@ -2391,7 +2391,7 @@ void World_GenEntities(class VT_Level *tr)
 
             entity->move_type = MOVE_ON_FLOOR;
             global_world.Character = entity;
-            entity->self->collision_type = COLLISION_TYPE_ACTOR;
+            entity->self->collision_group = COLLISION_GROUP_CHARACTERS;
             entity->self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
             entity->bf->animations.model->hide = 0;
             entity->type_flags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
@@ -2472,7 +2472,7 @@ void World_GenEntities(class VT_Level *tr)
         World_SetEntityModelProperties(entity);
         Physics_GenRigidBody(entity->physics, entity->bf);
 
-        if(!(entity->state_flags & ENTITY_STATE_ENABLED) || !(entity->self->collision_type & 0x0001))
+        if(!(entity->state_flags & ENTITY_STATE_ENABLED) || (entity->self->collision_group == COLLISION_NONE))
         {
             Entity_DisableCollision(entity);
         }
@@ -2681,7 +2681,7 @@ void World_GenRoomCollision()
 
         // Final step is sending actual sectors to Bullet collision model. We do it here.
         r->content->physics_body = Physics_GenRoomRigidBody(r, r->sectors, r->sectors_count, room_tween, num_tweens);
-        r->self->collision_type = COLLISION_TYPE_STATIC;                        // meshtree
+        r->self->collision_group = COLLISION_GROUP_STATIC_ROOM;                 // meshtree
         r->self->collision_shape = COLLISION_SHAPE_TRIMESH;
 
         Sys_ReturnTempMem(buff_size);

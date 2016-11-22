@@ -22,31 +22,26 @@
 #define COLLISION_SHAPE_SINGLE_BOX              0x0006     // use single box collision
 #define COLLISION_SHAPE_SINGLE_SPHERE           0x0007
 
-#define COLLISION_TYPE_NONE                     0x0000
-#define COLLISION_TYPE_STATIC                   0x0001     // static object - never moved
-#define COLLISION_TYPE_KINEMATIC                0x0003     // doors and other moveable statics
-#define COLLISION_TYPE_DYNAMIC                  0x0005     // hellow full physics interaction
-#define COLLISION_TYPE_ACTOR                    0x0007     // actor, enemies, NPC, animals
-#define COLLISION_TYPE_VEHICLE                  0x0009     // car, moto, bike
-#define COLLISION_TYPE_GHOST                    0x000B     // no fix character position, but works in collision callbacks and interacts with dynamic objects
-
 #define COLLISION_NONE                          (0x0000)
 #define COLLISION_MASK_ALL                      (0x7FFF)        // bullet uses signed short int for these flags!
 
 #define COLLISION_GROUP_ALL                     (0x7FFF)
 #define COLLISION_GROUP_STATIC_ROOM             (0x0001)        // room mesh
-#define COLLISION_GROUP_STATIC_OBLECT           (0x0002)
+#define COLLISION_GROUP_STATIC_OBLECT           (0x0002)        // room static object
 #define COLLISION_GROUP_KINEMATIC               (0x0004)        // doors, blocks, static animated entityes
-#define COLLISION_GROUP_CHARACTERS              (0x0008)        // Lara, enemies, friends, creatures
-#define COLLISION_GROUP_BULLETS                 (0x0010)        // bullets, rockets, grenades, arrows...
-#define COLLISION_GROUP_DYNAMICS                (0x0020)        // test balls, warious
+#define COLLISION_GROUP_GHOST                   (0x0008)        // probe objects
+#define COLLISION_GROUP_CHARACTERS              (0x0010)        // Lara, enemies, friends, creatures
+#define COLLISION_GROUP_VEHICLE                 (0x0020)        // car, moto, bike
+#define COLLISION_GROUP_BULLETS                 (0x0040)        // bullets, rockets, grenades, arrows...
+#define COLLISION_GROUP_DYNAMICS                (0x0080)        // test balls, warious
 
 
 typedef struct engine_container_s
 {
     uint16_t                     object_type;
-    uint16_t                     collision_type;
     uint16_t                     collision_shape;
+    int16_t                      collision_group;
+    int16_t                      collision_mask;
     void                        *object;
     struct room_s               *room;
     struct engine_container_s   *next;

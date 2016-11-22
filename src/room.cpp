@@ -183,7 +183,7 @@ void Room_Enable(struct room_s *room)
 
     for(engine_container_p cont = room->content->containers; cont; cont = cont->next)
     {
-        if(cont->collision_type == COLLISION_TYPE_NONE)
+        if(cont->collision_group == COLLISION_NONE)
         {
             continue;
         }

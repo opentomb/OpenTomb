@@ -1229,9 +1229,9 @@ int lua_SetEntityGhostCollisionShape(lua_State * lua)
 
 int lua_SetEntityCollisionFlags(lua_State * lua)
 {
-    if(lua_gettop(lua) < 3)
+    if(lua_gettop(lua) < 4)
     {
-        Con_Warning("setEntityCollisionFlags: expecting arguments (entity_id, collision_type, collision_shape)");
+        Con_Warning("setEntityCollisionFlags: expecting arguments (entity_id, collision_group, collision_shape, collision_mask)");
         return 0;
     }
 
@@ -1243,18 +1243,12 @@ int lua_SetEntityCollisionFlags(lua_State * lua)
         return 0;
     }
 
-    uint16_t collision_type = lua_tointeger(lua, 2);
-    uint16_t collision_shape = lua_tointeger(lua, 3);
-    if((ent->self->collision_type & 0x0001) && !(collision_type & 0x0001))
-    {
-        Entity_DisableCollision(ent);
-    }
-    else if(!(ent->self->collision_type & 0x0001) && (collision_type & 0x0001))
-    {
-        Entity_EnableCollision(ent);
-    }
-    ent->self->collision_type = collision_type;
-    ent->self->collision_shape = collision_shape;
+    ent->self->collision_group = lua_tointeger(lua, 2);
+    ent->self->collision_shape = lua_tointeger(lua, 3);
+    ent->self->collision_mask = lua_tointeger(lua, 4);
+
+    Physics_SetCollisionFlags(ent->physics, ent->self->collision_group, ent->self->collision_mask);
+
     if(Physics_GetBodiesCount(ent->physics) != ent->bf->bone_tag_count)
     {
         ent->self->collision_shape = COLLISION_SHAPE_SINGLE_BOX;
@@ -5493,20 +5487,26 @@ void Script_LoadConstants(lua_State *lua)
         lua_pushinteger(lua, COLLISION_SHAPE_SINGLE_SPHERE);
         lua_setglobal(lua, "COLLISION_SHAPE_SINGLE_SPHERE");
 
-        lua_pushinteger(lua, COLLISION_TYPE_NONE);
-        lua_setglobal(lua, "COLLISION_TYPE_NONE");
-        lua_pushinteger(lua, COLLISION_TYPE_STATIC);
-        lua_setglobal(lua, "COLLISION_TYPE_STATIC");
-        lua_pushinteger(lua, COLLISION_TYPE_KINEMATIC);
-        lua_setglobal(lua, "COLLISION_TYPE_KINEMATIC");
-        lua_pushinteger(lua, COLLISION_TYPE_DYNAMIC);
-        lua_setglobal(lua, "COLLISION_TYPE_DYNAMIC");
-        lua_pushinteger(lua, COLLISION_TYPE_ACTOR);
-        lua_setglobal(lua, "COLLISION_TYPE_ACTOR");
-        lua_pushinteger(lua, COLLISION_TYPE_VEHICLE);
-        lua_setglobal(lua, "COLLISION_TYPE_VEHICLE");
-        lua_pushinteger(lua, COLLISION_TYPE_GHOST);
-        lua_setglobal(lua, "COLLISION_TYPE_GHOST");
+        lua_pushinteger(lua, COLLISION_NONE);
+        lua_setglobal(lua, "COLLISION_NONE");
+        lua_pushinteger(lua, COLLISION_GROUP_ALL);
+        lua_setglobal(lua, "COLLISION_GROUP_ALL");
+        lua_pushinteger(lua, COLLISION_GROUP_STATIC_ROOM);
+        lua_setglobal(lua, "COLLISION_GROUP_STATIC_ROOM");
+        lua_pushinteger(lua, COLLISION_GROUP_STATIC_OBLECT);
+        lua_setglobal(lua, "COLLISION_GROUP_STATIC_OBLECT");
+        lua_pushinteger(lua, COLLISION_GROUP_KINEMATIC);
+        lua_setglobal(lua, "COLLISION_GROUP_KINEMATIC");
+        lua_pushinteger(lua, COLLISION_GROUP_GHOST);
+        lua_setglobal(lua, "COLLISION_GROUP_GHOST");
+        lua_pushinteger(lua, COLLISION_GROUP_CHARACTERS);
+        lua_setglobal(lua, "COLLISION_GROUP_CHARACTERS");
+        lua_pushinteger(lua, COLLISION_GROUP_VEHICLE);
+        lua_setglobal(lua, "COLLISION_GROUP_VEHICLE");
+        lua_pushinteger(lua, COLLISION_GROUP_BULLETS);
+        lua_setglobal(lua, "COLLISION_GROUP_BULLETS");
+        lua_pushinteger(lua, COLLISION_GROUP_DYNAMICS);
+        lua_setglobal(lua, "COLLISION_GROUP_DYNAMICS");
 
         lua_pushinteger(lua, ENTITY_TRIGGERING_ACTIVATED);
         lua_setglobal(lua, "ENTITY_TRIGGERING_ACTIVATED");

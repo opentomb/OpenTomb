@@ -108,6 +108,10 @@ void Character_Create(struct entity_s *ent)
 
         ret->traversed_object = NULL;
 
+        ent->self->collision_group = COLLISION_GROUP_CHARACTERS;
+        ent->self->collision_mask = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC |
+                                    COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_DYNAMICS;
+
         Physics_CreateGhosts(ent->physics, ent->bf, NULL);
     }
 }

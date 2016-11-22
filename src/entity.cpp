@@ -48,8 +48,9 @@ entity_p Entity_Create()
     ret->self->object = ret;
     ret->self->object_type = OBJECT_ENTITY;
     ret->self->room = NULL;
-    ret->self->collision_type = COLLISION_TYPE_KINEMATIC;
     ret->self->collision_shape = COLLISION_SHAPE_TRIMESH;
+    ret->self->collision_group = COLLISION_GROUP_KINEMATIC;
+    ret->self->collision_mask = COLLISION_MASK_ALL;
     ret->obb = OBB_Create();
     ret->obb->transform = ret->transform;
 
@@ -151,12 +152,11 @@ void Entity_EnableCollision(entity_p ent)
 {
     if(Physics_IsBodyesInited(ent->physics))
     {
-        ent->self->collision_type |= 0x0001;
         Physics_EnableCollision(ent->physics);
     }
     else
     {
-        ent->self->collision_type = COLLISION_TYPE_KINEMATIC;
+        ent->self->collision_group = COLLISION_GROUP_KINEMATIC;
         Physics_GenRigidBody(ent->physics, ent->bf);
     }
 }
@@ -166,7 +166,6 @@ void Entity_DisableCollision(entity_p ent)
 {
     if(Physics_IsBodyesInited(ent->physics))
     {
-        ent->self->collision_type &= ~0x0001;
         Physics_DisableCollision(ent->physics);
     }
 }
@@ -354,7 +353,7 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
         }
 
         Entity_UpdateRoomPos(ent);
-        if(ent->self->collision_type & 0x0001)
+        if(ent->self->collision_group != COLLISION_NONE)
         {
             switch(ent->self->collision_shape)
             {
