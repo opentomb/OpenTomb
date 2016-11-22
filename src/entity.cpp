@@ -415,6 +415,8 @@ void Entity_GhostUpdate(struct entity_s *ent)
 int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float move_global[3])
 {
     int ret = 0;
+    const int16_t filter = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC |
+                           COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_VEHICLE | COLLISION_GROUP_DYNAMICS;
 
     vec3_set_zero(reaction);
     if(Physics_IsGhostsInited(ent->physics) && (ent->no_fix_all == 0x00) && (Physics_GetBodiesCount(ent->physics) == ent->bf->bone_tag_count))
@@ -467,7 +469,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             {
                 vec3_copy(tr + 12, curr);
                 Physics_SetGhostWorldTransform(ent->physics, tr, m);
-                if(Physics_GetGhostPenetrationFixVector(ent->physics, m, tmp))
+                if(Physics_GetGhostPenetrationFixVector(ent->physics, m, filter, tmp))
                 {
                     vec3_add_to(ent->transform + 12, tmp);
                     vec3_add_to(curr, tmp);
@@ -639,7 +641,7 @@ void Entity_CheckCollisionCallbacks(entity_p ent)
 {
     // I do not know why, but without Entity_GhostUpdate(ent); it works pretty slow!
     Entity_GhostUpdate(ent);
-    collision_node_p cn = Physics_GetCurrentCollisions(ent->physics);
+    collision_node_p cn = Physics_GetCurrentCollisions(ent->physics, COLLISION_GROUP_GHOST);
     for(; cn; cn = cn->next)
     {
         // do callbacks here:

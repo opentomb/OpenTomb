@@ -735,7 +735,7 @@ void Physics_SetGhostWorldTransform(struct physics_data_s *physics, float tr[16]
 /**
  * It is from bullet_character_controller
  */
-int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_t index, float correction[3])
+int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_t index, int16_t filter, float correction[3])
 {
     // Here we must refresh the overlapping paircache as the penetrating movement itself or the
     // previous recovery iteration might have used setWorldTransform and pushed us into an object
@@ -781,24 +781,27 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
             for(int j = 0; j < manifolds_size; j++)
             {
                 btPersistentManifold* manifold = (*(physics->manifoldArray))[j];
-                btScalar directionSign = ((manifold->getBody0() == ghost) ? btScalar(-1.0) : btScalar(1.0));
-                engine_container_p cont0 = (engine_container_p)manifold->getBody0()->getUserPointer();
-                engine_container_p cont1 = (engine_container_p)manifold->getBody1()->getUserPointer();
-
-                if((cont0->collision_group == COLLISION_GROUP_GHOST) || (cont1->collision_group == COLLISION_GROUP_GHOST))
+                btCollisionObject *obj = (btCollisionObject*)manifold->getBody0();
+                btScalar directionSign = btScalar(1.0);
+                if(obj == ghost)
                 {
-                    continue;
+                    obj = (btCollisionObject*)manifold->getBody1();
+                    directionSign = btScalar(-1.0);
                 }
-                for(int k = 0; k < manifold->getNumContacts(); k++)
-                {
-                    const btManifoldPoint&pt = manifold->getContactPoint(k);
-                    btScalar dist = pt.getDistance();
 
-                    if(dist < 0.0)
+                if(obj->getBroadphaseHandle()->m_collisionFilterGroup & filter)
+                {
+                    for(int k = 0; k < manifold->getNumContacts(); k++)
                     {
-                        t = pt.m_normalWorldOnB * dist * directionSign;
-                        vec3_add(correction, correction, t.m_floats)
-                        ret++;
+                        const btManifoldPoint&pt = manifold->getContactPoint(k);
+                        btScalar dist = pt.getDistance();
+
+                        if(dist < 0.0)
+                        {
+                            t = pt.m_normalWorldOnB * dist * directionSign;
+                            vec3_add(correction, correction, t.m_floats)
+                            ret++;
+                        }
                     }
                 }
             }
@@ -1615,7 +1618,7 @@ void Physics_SetLinearFactor(struct physics_data_s *physics, float factor[3], ui
 }
 
 
-struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics)
+struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics, int16_t filter)
 {
     struct collision_node_s *ret = NULL;
 
@@ -1656,23 +1659,25 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
                         //const btManifoldPoint &pt = manifold->getContactPoint(c);
                         if(manifold->getContactPoint(c).getDistance() < 0.0)
                         {
-                            collision_node_p cn = Physics_GetCollisionNode();
-                            if(cn == NULL)
-                            {
-                                break;
-                            }
                             btCollisionObject *obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody0();
-                            cn->obj = (engine_container_p)obj->getUserPointer();
-                            if(physics->cont == cn->obj)
+                            if(physics->cont == ((engine_container_p)obj->getUserPointer()))
                             {
                                 obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody1();
-                                cn->obj = (engine_container_p)obj->getUserPointer();
                             }
-                            cn->part_from = obj->getUserIndex();
-                            cn->part_self = i;
-                            cn->next = ret;
-                            ret = cn;
-                            break;
+
+                            if(obj->getBroadphaseHandle()->m_collisionFilterGroup & filter)
+                            {
+                                collision_node_p cn = Physics_GetCollisionNode();
+                                if(cn)
+                                {
+                                    cn->obj = (engine_container_p)obj->getUserPointer();
+                                    cn->part_from = obj->getUserIndex();
+                                    cn->part_self = i;
+                                    cn->next = ret;
+                                    ret = cn;
+                                }
+                                break;
+                            }
                         }
                     }
                 }
