@@ -581,10 +581,9 @@ void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
         }
         Character_ApplyCommands(ent);
 
-        for(int h = 0; h < ent->character->hair_count; h++)
-        {
-            Hair_Update(ent->character->hairs[h], ent->physics);
-        }
+        Entity_ProcessSector(ent);
+        Character_UpdateParams(ent);
+        Entity_CheckCollisionCallbacks(ent);
     }
 
     if(x->left != NULL)
@@ -611,10 +610,6 @@ void Game_UpdateCharacters()
         if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
         {
             ent->character->resp.kill = 0;   // Kill, if no HP.
-        }
-        for(int h = 0; h < ent->character->hair_count; h++)
-        {
-            Hair_Update(ent->character->hairs[h], ent->physics);
         }
     }
 
@@ -664,7 +659,7 @@ void Game_Frame(float time)
     {
         Entity_ProcessSector(player);
         Character_UpdateParams(player);
-        Entity_CheckCollisionCallbacks(player);                                 ///@FIXME: Must do it for ALL interactive entities!
+        Entity_CheckCollisionCallbacks(player);
     }
 
     // This must be called EVERY frame to max out smoothness.

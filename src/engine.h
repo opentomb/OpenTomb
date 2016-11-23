@@ -36,6 +36,10 @@
 #define COLLISION_GROUP_DYNAMICS                (0x0080)        // test balls, warious
 
 
+#define COLLISION_FILTER_CHARACTER              (COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC | \
+                                                 COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_VEHICLE | COLLISION_GROUP_DYNAMICS)
+
+
 typedef struct engine_container_s
 {
     uint16_t                     object_type;

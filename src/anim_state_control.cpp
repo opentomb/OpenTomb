@@ -378,7 +378,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     global_offset[2] += ent->bf->bb_max[2];
                     vec3_add(global_offset, global_offset, pos);
                     Character_GetHeightInfo(global_offset, &next_fc);
-                    if(((Entity_CheckNextPenetration(ent, move) == 0) || (resp->horizontal_collide == 0x00)) &&
+                    if(((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0) || (resp->horizontal_collide == 0x00)) &&
                        (next_fc.floor_hit.hit && (next_fc.floor_hit.point[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_hit.point[2] <= pos[2] + ent->character->max_step_up_height)))
                     {
                         ent->move_type = MOVE_ON_FLOOR;
@@ -399,7 +399,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     vec3_mul_scalar(global_offset, ent->transform + 4, RUN_FORWARD_OFFSET);
                     global_offset[2] += ent->bf->bb_max[2];
                     Character_CheckNextStep(ent, global_offset, &next_fc);
-                    if(((Entity_CheckNextPenetration(ent, move) == 0) || (resp->horizontal_collide == 0x00)) && (!Character_HasStopSlant(ent, &next_fc)))
+                    if(((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0) || (resp->horizontal_collide == 0x00)) && (!Character_HasStopSlant(ent, &next_fc)))
                     {
                         ent->move_type = MOVE_ON_FLOOR;
                         ent->dir_flag = ENT_MOVE_FORWARD;
@@ -490,7 +490,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 if(cmd->shift)
                 {
                     vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
-                    if((Entity_CheckNextPenetration(ent, move) == 0) || (resp->horizontal_collide == 0x00))
+                    if((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0) || (resp->horizontal_collide == 0x00))
                     {
                         vec3_mul_scalar(global_offset, ent->transform + 4, -WALK_BACK_OFFSET);
                         global_offset[2] += ent->bf->bb_max[2];
@@ -506,7 +506,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 else    // RUN BACK
                 {
                     vec3_mul_scalar(move, ent->transform + 4, - PENETRATION_TEST_OFFSET);
-                    if((Entity_CheckNextPenetration(ent, move) == 0) || (resp->horizontal_collide == 0x00))
+                    if((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0) || (resp->horizontal_collide == 0x00))
                     {
                         ent->dir_flag = ENT_MOVE_BACKWARD;
                         if((curr_fc->water || curr_fc->quicksand) && curr_fc->floor_hit.hit && (curr_fc->transition_level - curr_fc->floor_hit.point[2] > ent->character->wade_depth))
@@ -525,7 +525,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 if(cmd->shift)
                 {
                     vec3_mul_scalar(move, ent->transform + 0, PENETRATION_TEST_OFFSET);
-                    if((Entity_CheckNextPenetration(ent, move) == 0) || (resp->horizontal_collide == 0x00))
+                    if((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0) || (resp->horizontal_collide == 0x00))
                     {
                         vec3_mul_scalar(global_offset, ent->transform + 0, RUN_FORWARD_OFFSET);
                         global_offset[2] += ent->bf->bb_max[2];
@@ -548,7 +548,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 if(cmd->shift)
                 {
                     vec3_mul_scalar(move, ent->transform + 0, -PENETRATION_TEST_OFFSET);
-                    if((Entity_CheckNextPenetration(ent, move) == 0) || (resp->horizontal_collide == 0x00))
+                    if((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0) || (resp->horizontal_collide == 0x00))
                     {
                         vec3_mul_scalar(global_offset, ent->transform + 0, -RUN_FORWARD_OFFSET);
                         global_offset[2] += ent->bf->bb_max[2];
@@ -594,7 +594,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
                 vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
-                if(Entity_CheckNextPenetration(ent, move) == 0)
+                if(Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0)
                 {
                     ss_anim->next_state = TR_STATE_LARA_JUMP_FORWARD;           // jump forward
                 }
@@ -603,7 +603,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->dir_flag = ENT_MOVE_BACKWARD;
                 vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
-                if(Entity_CheckNextPenetration(ent, move) == 0)
+                if(Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0)
                 {
                     ss_anim->next_state = TR_STATE_LARA_JUMP_BACK;              // jump backward
                 }
@@ -612,7 +612,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->dir_flag = ENT_MOVE_RIGHT;
                 vec3_mul_scalar(move, ent->transform + 0, PENETRATION_TEST_OFFSET);
-                if(Entity_CheckNextPenetration(ent, move) == 0)
+                if(Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0)
                 {
                     ss_anim->next_state = TR_STATE_LARA_JUMP_LEFT;              // jump right
                 }
@@ -621,7 +621,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ent->dir_flag = ENT_MOVE_LEFT;
                 vec3_mul_scalar(move, ent->transform + 0, -PENETRATION_TEST_OFFSET);
-                if(Entity_CheckNextPenetration(ent, move) == 0)
+                if(Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0)
                 {
                     ss_anim->next_state = TR_STATE_LARA_JUMP_RIGHT;             // jump left
                 }
@@ -1115,7 +1115,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             if(cmd->move[0] == 1)
             {
                 vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
-                Entity_CheckNextPenetration(ent, move);
+                Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER);
             }
 
             if(resp->kill == 1)
@@ -1919,7 +1919,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 else if(cmd->move[1] ==-1)
                 {
                     vec3_mul_scalar(move, ent->transform + 0, -PENETRATION_TEST_OFFSET);
-                    if((Entity_CheckNextPenetration(ent, move) == 0) || (resp->horizontal_collide == 0x00)) //we only want lara to shimmy when last frame is reached!
+                    if((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0) || (resp->horizontal_collide == 0x00)) //we only want lara to shimmy when last frame is reached!
                     {
                         ent->move_type = ENT_MOVE_LEFT;
                         Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_CLIMB_LEFT, 0);
@@ -1932,7 +1932,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 else if(cmd->move[1] == 1)
                 {
                     vec3_mul_scalar(move, ent->transform + 0, PENETRATION_TEST_OFFSET);
-                    if((Entity_CheckNextPenetration(ent, move) == 0) || (resp->horizontal_collide == 0x00)) //we only want lara to shimmy when last frame is reached!
+                    if((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0) || (resp->horizontal_collide == 0x00)) //we only want lara to shimmy when last frame is reached!
                     {
                         ent->move_type = ENT_MOVE_RIGHT;
                         Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_CLIMB_RIGHT, 0);
@@ -2153,7 +2153,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             if(cmd->move[1] ==-1)
             {
                 vec3_mul_scalar(move, ent->transform + 0, -PENETRATION_TEST_OFFSET);
-                if((Entity_CheckNextPenetration(ent, move) > 0) && (resp->horizontal_collide != 0x00))
+                if((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) > 0) && (resp->horizontal_collide != 0x00))
                 {
                     ss_anim->next_state = TR_STATE_LARA_HANG;
                 }
@@ -2221,7 +2221,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             if(cmd->move[1] == 1)
             {
                 vec3_mul_scalar(move, ent->transform + 0, PENETRATION_TEST_OFFSET);
-                if((Entity_CheckNextPenetration(ent, move) > 0) && (resp->horizontal_collide != 0x00))
+                if((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) > 0) && (resp->horizontal_collide != 0x00))
                 {
                     ss_anim->next_state = TR_STATE_LARA_HANG;
                 }
@@ -2764,7 +2764,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
 
             vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
-            if((Entity_CheckNextPenetration(ent, move) > 0) && (resp->horizontal_collide != 0x00))  // Smash into wall
+            if((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) > 0) && (resp->horizontal_collide != 0x00))  // Smash into wall
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
@@ -2791,7 +2791,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(cmd->move[0] == 1)
             {
                 vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
-                if((Entity_CheckNextPenetration(ent, move) == 0) || (resp->horizontal_collide == 0x00))
+                if((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0) || (resp->horizontal_collide == 0x00))
                 {
                     vec3_mul_scalar(global_offset, ent->transform + 4, CRAWL_FORWARD_OFFSET);
                     global_offset[2] += 0.5 * (ent->bf->bb_max[2] + ent->bf->bb_min[2]);
@@ -2807,7 +2807,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(cmd->move[0] == -1)
             {
                 vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
-                if((Entity_CheckNextPenetration(ent, move) == 0) || (resp->horizontal_collide == 0x00))
+                if((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) == 0) || (resp->horizontal_collide == 0x00))
                 {
                     vec3_mul_scalar(global_offset, ent->transform + 4, -CRAWL_FORWARD_OFFSET);
                     global_offset[2] += 0.5 * (ent->bf->bb_max[2] + ent->bf->bb_min[2]);
@@ -2856,7 +2856,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->no_fix_skeletal_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
             ent->character->rotate_speed_mult = 0.5f;
             vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
-            if((Entity_CheckNextPenetration(ent, move) > 0) && (resp->horizontal_collide != 0x00))
+            if((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) > 0) && (resp->horizontal_collide != 0x00))
             {
                 ent->dir_flag = ENT_STAY;
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_CRAWL_IDLE, 0);
@@ -2884,7 +2884,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->no_fix_skeletal_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
             ent->character->rotate_speed_mult = 0.5f;
             vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
-            if((Entity_CheckNextPenetration(ent, move) > 0) && (resp->horizontal_collide != 0x00))
+            if((Entity_CheckNextPenetration(ent, move, COLLISION_FILTER_CHARACTER) > 0) && (resp->horizontal_collide != 0x00))
             {
                 ent->dir_flag = ENT_STAY;
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_CRAWL_IDLE, 0);

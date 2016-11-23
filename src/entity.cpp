@@ -412,11 +412,9 @@ void Entity_GhostUpdate(struct entity_s *ent)
 
 
 ///@TODO: make experiment with convexSweepTest with spheres: no more iterative cycles;
-int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float move_global[3])
+int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float move_global[3], int16_t filter)
 {
     int ret = 0;
-    const int16_t filter = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC |
-                           COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_VEHICLE | COLLISION_GROUP_DYNAMICS;
 
     vec3_set_zero(reaction);
     if(Physics_IsGhostsInited(ent->physics) && (ent->no_fix_all == 0x00) && (Physics_GetBodiesCount(ent->physics) == ent->bf->bone_tag_count))
@@ -494,7 +492,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
  * @param cmd - here we fill cmd->horizontal_collide field
  * @param move - absolute 3d move vector
  */
-int Entity_CheckNextPenetration(struct entity_s *ent, float move[3])
+int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], int16_t filter)
 {
     int ret = 0;
     if(Physics_IsGhostsInited(ent->physics))
@@ -504,7 +502,7 @@ int Entity_CheckNextPenetration(struct entity_s *ent, float move[3])
         Entity_GhostUpdate(ent);
         vec3_add(pos, pos, move);
         //resp->horizontal_collide = 0x00;
-        ret = Entity_GetPenetrationFixVector(ent, reaction, move);
+        ret = Entity_GetPenetrationFixVector(ent, reaction, move, filter);
         if((ret > 0) && (ent->character != NULL))
         {
             t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
@@ -527,7 +525,7 @@ int Entity_CheckNextPenetration(struct entity_s *ent, float move[3])
 }
 
 
-void Entity_FixPenetrations(struct entity_s *ent, float move[3])
+void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
 {
     if(Physics_IsGhostsInited(ent->physics))
     {
@@ -550,7 +548,7 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3])
             return;
         }
 
-        int numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, move);
+        int numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, move, filter);
         vec3_add(ent->transform + 12, ent->transform + 12, reaction);
 
         if(ent->character != NULL)
@@ -653,7 +651,6 @@ void Entity_CheckCollisionCallbacks(entity_p ent)
             {
                 // Activator and entity IDs are swapped in case of collision callback.
                 Script_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->id, ent->id);
-                //Con_Printf("collider_bone_index = %d, collider_type = %d", cn->part_self, cn->obj->object_type);
             }
         }
     }
@@ -967,7 +964,7 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
                 entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
                 Anim_SetAnimation(ss_anim, animation, frame);
                 SSBoneFrame_Update(entity->bf, 0.0f);
-                Entity_FixPenetrations(entity, NULL);
+                Entity_FixPenetrations(entity, NULL, COLLISION_FILTER_CHARACTER);
             }
         }
     }
@@ -1079,7 +1076,7 @@ void Entity_Frame(entity_p entity, float time)
         SSBoneFrame_Update(entity->bf, time);
         if(entity->character != NULL)
         {
-            Entity_FixPenetrations(entity, NULL);
+            Entity_FixPenetrations(entity, NULL, COLLISION_FILTER_CHARACTER);
         }
     }
 }

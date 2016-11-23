@@ -122,9 +122,9 @@ int  Entity_GetSubstanceState(entity_p entity);
 void Entity_UpdateRigidBody(struct entity_s *ent, int force);
 void Entity_GhostUpdate(struct entity_s *ent);
 
-int  Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float move_global[3]);
-int  Entity_CheckNextPenetration(struct entity_s *ent, float move[3]);
-void Entity_FixPenetrations(struct entity_s *ent, float move[3]);
+int  Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float move_global[3], int16_t filter);
+int  Entity_CheckNextPenetration(struct entity_s *ent, float move[3], int16_t filter);
+void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter);
 
 void Entity_CheckCollisionCallbacks(entity_p ent);
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim);

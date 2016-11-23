@@ -1927,6 +1927,7 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
     return hair;
 }
 
+
 void Hair_Delete(struct hair_s *hair)
 {
     if(hair)
@@ -1960,7 +1961,6 @@ void Hair_Delete(struct hair_s *hair)
         hair->elements = NULL;
         hair->element_count = 0;
 
-        free(hair->container);
         hair->container = NULL;
         hair->owner_body = 0;
 
@@ -1970,53 +1970,6 @@ void Hair_Delete(struct hair_s *hair)
     }
 }
 
-
-void Hair_Update(struct hair_s *hair, struct physics_data_s *physics)
-{
-    if(hair && (hair->element_count > 0))
-    {
-        /*btScalar new_transform[16];
-
-        Mat4_Mat4_mul(new_transform, entity->transform, entity->bf->bone_tags[hair->owner_body].full_transform);
-
-        // Calculate mixed velocities.
-        btVector3 mix_vel(new_transform[12+0] - hair->owner_body_transform[12+0],
-                          new_transform[12+1] - hair->owner_body_transform[12+1],
-                          new_transform[12+2] - hair->owner_body_transform[12+2]);
-        mix_vel *= 1.0 / engine_frame_time;
-
-        if(0)
-        {
-            btScalar sub_tr[16];
-            btTransform ang_tr;
-            btVector3 mix_ang;
-            Mat4_inv_Mat4_affine_mul(sub_tr, hair->owner_body_transform, new_transform);
-            ang_tr.setFromOpenGLMatrix(sub_tr);
-            ang_tr.getBasis().getEulerYPR(mix_ang.m_floats[2], mix_ang.m_floats[1], mix_ang.m_floats[0]);
-            mix_ang *= 1.0 / engine_frame_time;
-
-            // Looks like angular velocity breaks up constraints on VERY fast moves,
-            // like mid-air turn. Probably, I've messed up with multiplier value...
-
-            hair->elements[hair->root_index].body->setAngularVelocity(mix_ang);
-            hair->owner_char->bt_body[hair->owner_body]->setAngularVelocity(mix_ang);
-        }
-        Mat4_Copy(hair->owner_body_transform, new_transform);*/
-
-        // Set mixed velocities to both parent body and first hair body.
-
-        //hair->elements[hair->root_index].body->setLinearVelocity(mix_vel);
-        //hair->owner_char->bt_body[hair->owner_body]->setLinearVelocity(mix_vel);
-
-        /*mix_vel *= -10.0;                                                     ///@FIXME: magick speed coefficient (force air hair friction!);
-        for(int j = 0; j < hair->element_count; j++)
-        {
-            hair->elements[j].body->applyCentralForce(mix_vel);
-        }*/
-
-        //hair->container->room = physics->cont->room;
-    }
-}
 
 struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_index)
 {
@@ -2268,8 +2221,10 @@ bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, 
         btVector3 inertia (0.0, 0.0, 0.0);
         btScalar  mass = setup->body_setup[i].mass;
 
-        bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
-
+        if(physics->bt_body[i]->isInWorld())
+        {
+            bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
+        }
         physics->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
         physics->bt_body[i]->setMassProps(mass, inertia);
 
@@ -2393,7 +2348,10 @@ bool Ragdoll_Delete(struct physics_data_s *physics)
 
     for(uint32_t i = 0; i < physics->objects_count; i++)
     {
-        bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
+        if(physics->bt_body[i]->isInWorld())
+        {
+            bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
+        }
         physics->bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
         bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i], physics->cont->collision_group, physics->cont->collision_mask);
     }
@@ -2450,22 +2408,22 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
     memcpy(setup->hit_func, func_name, string_length * sizeof(char));
     lua_pop(lua, 1);
 
-        lua_getfield(lua, -1, "joint_count");
+    lua_getfield(lua, -1, "joint_count");
     setup->joint_count = (uint32_t)lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
+    lua_pop(lua, 1);
 
-        lua_getfield(lua, -1, "body_count");
+    lua_getfield(lua, -1, "body_count");
     setup->body_count  = (uint32_t)lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
+    lua_pop(lua, 1);
 
 
-        lua_getfield(lua, -1, "joint_cfm");
+    lua_getfield(lua, -1, "joint_cfm");
     setup->joint_cfm   = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
+    lua_pop(lua, 1);
 
-        lua_getfield(lua, -1, "joint_erp");
+    lua_getfield(lua, -1, "joint_erp");
     setup->joint_erp   = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
+    lua_pop(lua, 1);
 
 
     if((setup->body_count <= 0) || (setup->joint_count <= 0))
