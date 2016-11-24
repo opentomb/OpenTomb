@@ -44,7 +44,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     float cam_pos[3], cameraFrom[3], cameraTo[3];
     collision_result_t cb;
     entity_p target = World_GetEntityByID(cam_state->target_id);
-    int16_t filter = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC;
+    const int16_t filter = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC;
 
     if(target && (cam_state->state == CAMERA_STATE_FIXED))
     {
