@@ -522,7 +522,7 @@ void Controls_PrimaryMouseDown(float from[3], float to[3])
     collision_result_t cb;
 
     vec3_add_mul(test_to, engine_camera.gl_transform + 12, engine_camera.gl_transform + 8, 32768.0f);
-    if(Physics_RayTestFiltered(&cb, engine_camera.gl_transform + 12, test_to, NULL))
+    if(Physics_RayTestFiltered(&cb, engine_camera.gl_transform + 12, test_to, NULL, COLLISION_MASK_ALL))
     {
         vec3_copy(from, cb.point);
         vec3_add_mul(to, cb.point, cb.normale, 256.0);
@@ -544,7 +544,7 @@ void Controls_SecondaryMouseDown(struct engine_container_s **cont, float dot[3])
     cam_cont.object_type = 0;
     cam_cont.room = engine_camera.current_room;
 
-    if(Physics_RayTest(&cb, from, to, &cam_cont))
+    if(Physics_RayTest(&cb, from, to, &cam_cont, COLLISION_MASK_ALL))
     {
         if(cb.obj && cb.obj->object_type != OBJECT_BULLET_MISC)
         {

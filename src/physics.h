@@ -60,9 +60,9 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics);
 void Physics_GetGravity(float g[3]);
 void Physics_SetGravity(float g[3]);
 
-int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont);
-int  Physics_RayTestFiltered(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont);
-int  Physics_SphereTest(struct collision_result_s *result, float from[3], float to[3], float R, struct engine_container_s *cont);
+int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont, int16_t filter);
+int  Physics_RayTestFiltered(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont, int16_t filter);
+int  Physics_SphereTest(struct collision_result_s *result, float from[3], float to[3], float R, struct engine_container_s *cont, int16_t filter);
 
 /* Physics object manipulation functions */
 int  Physics_IsBodyesInited(struct physics_data_s *physics);

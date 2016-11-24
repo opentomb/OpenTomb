@@ -41,10 +41,11 @@ extern "C" {
 class bt_engine_ClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
 {
 public:
-    bt_engine_ClosestRayResultCallback(engine_container_p cont, bool skip_ghost = false) : btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+    bt_engine_ClosestRayResultCallback(engine_container_p cont, int16_t filter) :
+        btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0)),
+        m_cont(cont),
+        m_filter(filter)
     {
-        m_cont = cont;
-        m_skip_ghost = skip_ghost;
     }
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace) override
@@ -56,7 +57,7 @@ public:
         c1 = (engine_container_p)rayResult.m_collisionObject->getUserPointer();
         r1 = (c1)?(c1->room):(NULL);
 
-        if(c1 && ((c1 == m_cont) || (m_skip_ghost && (c1->collision_group == COLLISION_GROUP_GHOST))))
+        if(c1 && ((c1->collision_group & m_filter) == 0x0000) || (c1 == m_cont))
         {
             return 1.0f;
         }
@@ -93,18 +94,19 @@ public:
         return 1.0f;
     }
 
-    bool               m_skip_ghost;
     engine_container_p m_cont;
+    int16_t            m_filter;
 };
 
 
 class bt_engine_ClosestConvexResultCallback : public btCollisionWorld::ClosestConvexResultCallback
 {
 public:
-    bt_engine_ClosestConvexResultCallback(engine_container_p cont, bool skip_ghost = false) : btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0))
+    bt_engine_ClosestConvexResultCallback(engine_container_p cont, int16_t filter) :
+        btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0)),
+        m_cont(cont),
+        m_filter(filter)
     {
-        m_cont = cont;
-        m_skip_ghost = skip_ghost;
     }
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult &convexResult, bool normalInWorldSpace)
@@ -116,7 +118,7 @@ public:
         c1 = (engine_container_p)convexResult.m_hitCollisionObject->getUserPointer();
         r1 = (c1)?(c1->room):(NULL);
 
-        if(c1 && ((c1 == m_cont) || (m_skip_ghost && (c1->collision_group == COLLISION_GROUP_GHOST))))
+        if(c1 && ((c1->collision_group & m_filter) == 0x0000) || (c1 == m_cont))
         {
             return 1.0f;
         }
@@ -154,8 +156,8 @@ public:
     }
 
 private:
-    bool               m_skip_ghost;
     engine_container_p m_cont;
+    int16_t            m_filter;
 };
 
 
@@ -540,21 +542,13 @@ void Physics_SetGravity(float g[3])
 }
 
 
-int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont)
+int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont, int16_t filter)
 {
-    bt_engine_ClosestRayResultCallback cb(cont, true);
+    bt_engine_ClosestRayResultCallback cb(cont, filter);
     btVector3 vFrom(from[0], from[1], from[2]), vTo(to[0], to[1], to[2]);
 
-    if(cont)
-    {
-        cb.m_collisionFilterMask = cont->collision_mask;
-        cb.m_collisionFilterGroup = cont->collision_group;
-    }
-    else
-    {
-        cb.m_collisionFilterMask = COLLISION_MASK_ALL;
-        cb.m_collisionFilterGroup = COLLISION_GROUP_ALL;
-    }
+    cb.m_collisionFilterMask = filter;
+    cb.m_collisionFilterGroup = (cont) ? (cont->collision_group) : (COLLISION_GROUP_ALL);
 
     if(result)
     {
@@ -584,23 +578,16 @@ int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[
 }
 
 
-int  Physics_RayTestFiltered(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont)
+int  Physics_RayTestFiltered(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont, int16_t filter)
 {
-    bt_engine_ClosestRayResultCallback cb(cont, true);
+    bt_engine_ClosestRayResultCallback cb(cont, filter);
     btVector3 vFrom(from[0], from[1], from[2]), vTo(to[0], to[1], to[2]);
 
     cb.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
     cb.m_flags |= btTriangleRaycastCallback::kF_KeepUnflippedNormal;
-    if(cont)
-    {
-        cb.m_collisionFilterMask = cont->collision_mask;
-        cb.m_collisionFilterGroup = cont->collision_group;
-    }
-    else
-    {
-        cb.m_collisionFilterMask = COLLISION_MASK_ALL;
-        cb.m_collisionFilterGroup = COLLISION_GROUP_ALL;
-    }
+
+    cb.m_collisionFilterMask = filter;
+    cb.m_collisionFilterGroup = (cont) ? (cont->collision_group) : (COLLISION_GROUP_ALL);
 
     if(result)
     {
@@ -630,9 +617,9 @@ int  Physics_RayTestFiltered(struct collision_result_s *result, float from[3], f
 }
 
 
-int  Physics_SphereTest(struct collision_result_s *result, float from[3], float to[3], float R, struct engine_container_s *cont)
+int  Physics_SphereTest(struct collision_result_s *result, float from[3], float to[3], float R, struct engine_container_s *cont, int16_t filter)
 {
-    bt_engine_ClosestConvexResultCallback cb(cont, true);
+    bt_engine_ClosestConvexResultCallback cb(cont, filter);
     btVector3 vFrom(from[0], from[1], from[2]), vTo(to[0], to[1], to[2]);
     btTransform tFrom, tTo;
     btSphereShape sphere(R);
@@ -642,16 +629,8 @@ int  Physics_SphereTest(struct collision_result_s *result, float from[3], float 
     tTo.setIdentity();
     tTo.setOrigin(vTo);
 
-    if(cont)
-    {
-        cb.m_collisionFilterMask = cont->collision_mask;
-        cb.m_collisionFilterGroup = cont->collision_group;
-    }
-    else
-    {
-        cb.m_collisionFilterMask = COLLISION_MASK_ALL;
-        cb.m_collisionFilterGroup = COLLISION_GROUP_ALL;
-    }
+    cb.m_collisionFilterMask = filter;
+    cb.m_collisionFilterGroup = (cont) ? (cont->collision_group) : (COLLISION_GROUP_ALL);
 
     if(result)
     {

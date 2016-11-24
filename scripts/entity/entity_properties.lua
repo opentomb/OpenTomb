@@ -20,7 +20,7 @@
 -- COLLISION_GROUP_DYNAMICS                 -- hellow full physics interaction
 -- COLLISION_GROUP_CHARACTERS                   -- actor, enemies, NPC, animals
 -- COLLISION_GROUP_VEHICLE                 -- car, moto, bike
--- COLLISION_GROUP_GHOST                   -- no fix character position, but works in collision callbacks and interacts with dynamic objects
+-- COLLISION_GROUP_TRIGGERS                   -- no fix character position, but works in collision callbacks and interacts with dynamic objects
 
 -- [ shape ] flag values:
 -- COLLISION_SHAPE_BOX
@@ -83,7 +83,7 @@ tr1_entity_tbl[34] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_S
 
 tr1_entity_tbl[35] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_SINGLE_BOX, func = "fallblock"};  -- Falling floor
 tr1_entity_tbl[36] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "swingblade"}; -- Swinging blade (Vilcabamba, etc.)
-tr1_entity_tbl[37] = {coll = COLLISION_GROUP_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};   -- Spikes
+tr1_entity_tbl[37] = {coll = COLLISION_GROUP_TRIGGERS,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};   -- Spikes
 tr1_entity_tbl[38] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder_heavy"};        -- Boulder
 tr1_entity_tbl[39] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Dart
 tr1_entity_tbl[40] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Dartgun
@@ -206,8 +206,8 @@ tr1_entity_tbl[166] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_
 tr1_entity_tbl[169] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, hide = 0x01};        -- Camera target
 tr1_entity_tbl[170] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, hide = 0x01};        -- Waterfall mist
 
-tr1_entity_tbl[172] = {coll = COLLISION_GROUP_GHOST, shape = COLLISION_SHAPE_BOX};                     -- Mutant bullet
-tr1_entity_tbl[173] = {coll = COLLISION_GROUP_GHOST, shape = COLLISION_SHAPE_BOX};                     -- Mutant grenade
+tr1_entity_tbl[172] = {coll = COLLISION_GROUP_TRIGGERS, shape = COLLISION_SHAPE_BOX};                     -- Mutant bullet
+tr1_entity_tbl[173] = {coll = COLLISION_GROUP_TRIGGERS, shape = COLLISION_SHAPE_BOX};                     -- Mutant grenade
 
 tr1_entity_tbl[177] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, hide = 0x01};        -- Lava particle emitter
 
@@ -278,7 +278,7 @@ tr2_entity_tbl[54] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_S
 tr2_entity_tbl[55] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_SINGLE_BOX, func = "fallblock"}; -- Collapsible floor
 tr2_entity_tbl[57] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Loose boards
 tr2_entity_tbl[58] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Swinging sandbag / spiky ball
-tr2_entity_tbl[59] = {coll = COLLISION_GROUP_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};  -- Spikes / Glass shards
+tr2_entity_tbl[59] = {coll = COLLISION_GROUP_TRIGGERS,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};  -- Spikes / Glass shards
 tr2_entity_tbl[60] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"};                     -- Boulder
 tr2_entity_tbl[61] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Disk (like dart)
 tr2_entity_tbl[62] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Wall-mounted disk shooter (like dartgun)
@@ -298,7 +298,7 @@ tr2_entity_tbl[77] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_
 tr2_entity_tbl[78] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Overhead pulley hook
 tr2_entity_tbl[79] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallceiling"};                     -- Sandbag / Ceiling fragments
 tr2_entity_tbl[80] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Rolling spindle
-tr2_entity_tbl[81] = {coll = COLLISION_GROUP_GHOST,     shape = COLLISION_SHAPE_BOX, func = "wallblade"};                     -- Wall-mounted knife blade
+tr2_entity_tbl[81] = {coll = COLLISION_GROUP_TRIGGERS,     shape = COLLISION_SHAPE_BOX, func = "wallblade"};                     -- Wall-mounted knife blade
 tr2_entity_tbl[82] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Statue with knife blade
 tr2_entity_tbl[83] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX};          -- Multiple boulders / snowballs
 tr2_entity_tbl[84] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Detachable icicles
@@ -507,7 +507,7 @@ tr3_entity_tbl[82] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_B
 
 tr3_entity_tbl[83] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_SINGLE_BOX, func = "fallblock"};                 -- Collapsible floor
 tr3_entity_tbl[86] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                 -- Swinging thing
-tr3_entity_tbl[87] = {coll = COLLISION_GROUP_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};                 -- Spikes / Barbed wire
+tr3_entity_tbl[87] = {coll = COLLISION_GROUP_TRIGGERS,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};                 -- Spikes / Barbed wire
 tr3_entity_tbl[88] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"};                 -- Boulder / Barrel
 tr3_entity_tbl[89] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"};                 -- Giant boulder (Temple of Puna)
 tr3_entity_tbl[90] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                 -- Disk (like dart)
@@ -667,7 +667,7 @@ tr3_entity_tbl[288] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE
 
 -- TRAPS, cont. --
 
-tr3_entity_tbl[291] = {coll = COLLISION_GROUP_GHOST, shape = COLLISION_SHAPE_BOX, func = "lasersweep"};           -- Laser sweeper
+tr3_entity_tbl[291] = {coll = COLLISION_GROUP_TRIGGERS, shape = COLLISION_SHAPE_BOX, func = "lasersweep"};           -- Laser sweeper
 tr3_entity_tbl[292] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, hide = 0x01}; -- Electrified Field
 tr3_entity_tbl[295] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};           -- Detonator switch box
 
@@ -856,8 +856,8 @@ tr4_entity_tbl[129] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE
 -- TRAPS & INTERACTION OBJECTS
 
 tr4_entity_tbl[130] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"}; -- Rolling ball
-tr4_entity_tbl[131] = {coll = COLLISION_GROUP_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Spikey floor - UNUSED?
-tr4_entity_tbl[132] = {coll = COLLISION_GROUP_GHOST,     shape = COLLISION_SHAPE_BOX, func = "newspike"}; -- Teeth spikes
+tr4_entity_tbl[131] = {coll = COLLISION_GROUP_TRIGGERS,     shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Spikey floor - UNUSED?
+tr4_entity_tbl[132] = {coll = COLLISION_GROUP_TRIGGERS,     shape = COLLISION_SHAPE_BOX, func = "newspike"}; -- Teeth spikes
 tr4_entity_tbl[133] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Joby spikes
 tr4_entity_tbl[134] = {coll = COLLISION_GROUP_KINEMATIC,      shape = COLLISION_SHAPE_BOX, func = "slicerdicer"}; -- Slicer dicer
 tr4_entity_tbl[135] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH}; -- Chain
@@ -1337,8 +1337,8 @@ tr5_entity_tbl[115] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE
 
 -- TRAPS & INTERACTION OBJECTS
 
-tr5_entity_tbl[116] = {coll = COLLISION_GROUP_GHOST,     shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Spikey Floor - UNUSED?
-tr5_entity_tbl[117] = {coll = COLLISION_GROUP_GHOST,     shape = COLLISION_SHAPE_BOX, func = "newspike"}; -- Teeth Spikes
+tr5_entity_tbl[116] = {coll = COLLISION_GROUP_TRIGGERS,     shape = COLLISION_SHAPE_BOX, func = "oldspike"}; -- Spikey Floor - UNUSED?
+tr5_entity_tbl[117] = {coll = COLLISION_GROUP_TRIGGERS,     shape = COLLISION_SHAPE_BOX, func = "newspike"}; -- Teeth Spikes
 tr5_entity_tbl[118] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Rome Hammer
 tr5_entity_tbl[119] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX}; -- Hammer 2 - UNUSED?
 

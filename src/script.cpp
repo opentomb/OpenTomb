@@ -1448,29 +1448,19 @@ int lua_DropEntity(lua_State * lua)
     vec3_add(to, from, move);
     to[2] -= (ent->bf->bb_max[2] - ent->bf->bb_min[2]);
 
-    bool has_collision = false;
-    while(Physics_RayTest(&cb, from, to, ent->self))
-    {
-        if(!only_room || ((cb.obj) && (cb.obj->object_type == OBJECT_ROOM_BASE)))
-        {
-            has_collision = true;
-            break;
-        }
-        from[2] = cb.point[2] - 1.0f;
-    }
-
-    if(has_collision)
+    int16_t filter = ent->self->collision_mask & ((only_room) ? (COLLISION_GROUP_STATIC_ROOM) : (COLLISION_GROUP_ALL));
+    if(Physics_RayTest(&cb, from, to, ent->self, filter))
     {
         ent->transform[12 + 2] = cb.point[2];
         vec3_set_zero(ent->speed);
+        lua_pushboolean(lua, true);
     }
     else
     {
         vec3_add_to(ent->transform + 12, move);
+        lua_pushboolean(lua, false);
     }
-
     Entity_UpdateRigidBody(ent, 1);
-    lua_pushboolean(lua, has_collision);
 
     return 1;
 }
@@ -1518,22 +1508,10 @@ int lua_MoveEntityHeavy(lua_State * lua)
         }
     }
 
-    while(!has_collision && Physics_RayTest(&cb, from, to, ent->self))
+    if(!has_collision)
     {
-        if(!only_room || ((cb.obj) && (cb.obj->object_type == OBJECT_ROOM_BASE)))
-        {
-            has_collision = true;
-            break;
-        }
-
-        if(dist >= 0.0f)
-        {
-            vec3_add(from, cb.point, move_dir);
-        }
-        else
-        {
-            vec3_sub(from, cb.point, move_dir);
-        }
+        int16_t filter = ent->self->collision_mask & ((only_room) ? (COLLISION_GROUP_STATIC_ROOM) : (COLLISION_GROUP_ALL));
+        has_collision = Physics_RayTest(&cb, from, to, ent->self, filter);
     }
 
     if(!has_collision)
@@ -5499,6 +5477,8 @@ void Script_LoadConstants(lua_State *lua)
         lua_setglobal(lua, "COLLISION_GROUP_KINEMATIC");
         lua_pushinteger(lua, COLLISION_GROUP_GHOST);
         lua_setglobal(lua, "COLLISION_GROUP_GHOST");
+        lua_pushinteger(lua, COLLISION_GROUP_TRIGGERS);
+        lua_setglobal(lua, "COLLISION_GROUP_TRIGGERS");
         lua_pushinteger(lua, COLLISION_GROUP_CHARACTERS);
         lua_setglobal(lua, "COLLISION_GROUP_CHARACTERS");
         lua_pushinteger(lua, COLLISION_GROUP_VEHICLE);

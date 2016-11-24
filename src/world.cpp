@@ -509,6 +509,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             entity->timer          = 0.0;
 
             entity->self->collision_group = COLLISION_GROUP_KINEMATIC;
+            entity->self->collision_mask = COLLISION_MASK_ALL;
             entity->self->collision_shape = COLLISION_SHAPE_TRIMESH;
             entity->move_type          = 0x0000;
             entity->move_type          = 0;
@@ -1441,6 +1442,13 @@ void World_SetEntityModelProperties(struct entity_s *ent)
         }
         lua_settop(global_world.level_script, top);
     }
+
+    switch(ent->self->collision_group)
+    {
+        case COLLISION_GROUP_TRIGGERS:
+            ent->self->collision_mask = COLLISION_GROUP_GHOST | COLLISION_GROUP_CHARACTERS;
+            break;
+    };
 }
 
 
@@ -2314,8 +2322,8 @@ void World_GenEntities(class VT_Level *tr)
         entity->timer           = 0.0;
 
         entity->self->collision_group = COLLISION_GROUP_KINEMATIC;
+        entity->self->collision_mask = COLLISION_MASK_ALL;
         entity->self->collision_shape = COLLISION_SHAPE_TRIMESH;
-        entity->move_type          = 0x0000;
         entity->move_type          = MOVE_STATIC_POS;
 
         entity->bf->animations.model = World_GetModelByID(tr_item->object_id);

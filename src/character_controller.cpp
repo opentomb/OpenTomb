@@ -110,7 +110,7 @@ void Character_Create(struct entity_s *ent)
 
         ent->self->collision_group = COLLISION_GROUP_CHARACTERS;
         ent->self->collision_mask = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC |
-                                    COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_DYNAMICS | COLLISION_GROUP_GHOST;
+                                    COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_DYNAMICS | COLLISION_GROUP_GHOST | COLLISION_GROUP_TRIGGERS;
         Physics_SetCollisionFlags(ent->physics, ent->self->collision_group, ent->self->collision_mask);
         Physics_CreateGhosts(ent->physics, ent->bf, NULL);
     }
@@ -209,7 +209,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         vec3_copy(to, from);
         to[2] -= ent->character->Height;
         vec3_copy(hi->leg_l_floor.point, from);
-        Physics_RayTest(&hi->leg_l_floor, from ,to, ent->self);
+        Physics_RayTest(&hi->leg_l_floor, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST);
     }
 
     if((hi->leg_r_index >= 0) && (hi->leg_r_index < ent->bf->bone_tag_count))
@@ -219,7 +219,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         vec3_copy(to, from);
         to[2] -= ent->character->Height;
         vec3_copy(hi->leg_r_floor.point, from);
-        Physics_RayTest(&hi->leg_r_floor, from ,to, ent->self);
+        Physics_RayTest(&hi->leg_r_floor, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST);
     }
 
     if((hi->hand_l_index >= 0) && (hi->hand_l_index < ent->bf->bone_tag_count))
@@ -228,7 +228,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         from[2] = base_z;
         vec3_copy(to, from);
         to[2] -= ent->character->Height;
-        Physics_RayTest(&hi->hand_l_floor, from ,to, ent->self);
+        Physics_RayTest(&hi->hand_l_floor, from ,to, ent->self, COLLISION_FILTER_HEIGHT_TEST);
         vec3_copy(hi->hand_l_floor.point, from);
     }
 
@@ -238,7 +238,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
         from[2] = base_z;
         vec3_copy(to, from);
         to[2] -= ent->character->Height;
-        Physics_RayTest(&hi->hand_r_floor, from ,to, ent->self);
+        Physics_RayTest(&hi->hand_r_floor, from ,to, ent->self, COLLISION_FILTER_HEIGHT_TEST);
         vec3_copy(hi->hand_r_floor.point, from);
     }
 }
@@ -402,10 +402,10 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
     to[1] = from[1];
     to[2] = from[2] - 8192.0f;
 
-    Physics_RayTest(&fc->floor_hit, from ,to, fc->self);
+    Physics_RayTest(&fc->floor_hit, from ,to, fc->self, COLLISION_FILTER_HEIGHT_TEST);
 
     to[2] = from[2] + 4096.0f;
-    Physics_RayTest(&fc->ceiling_hit, from ,to, fc->self);
+    Physics_RayTest(&fc->ceiling_hit, from ,to, fc->self, COLLISION_FILTER_HEIGHT_TEST);
 }
 
 /**
@@ -499,7 +499,7 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
     to[1] = pos[1];
     to[2] = from[2];
 
-    if(Physics_RayTest(NULL, from, to, fc->self))
+    if(Physics_RayTest(NULL, from, to, fc->self, COLLISION_FILTER_HEIGHT_TEST))
     {
         ret = CHARACTER_STEP_UP_IMPOSSIBLE;
     }
@@ -556,7 +556,7 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
                 //renderer.debugDrawer->DrawLine(from, to, red, red);
                 while((from[0] + 4.0f * R * ent->transform[0 + 0] - pos[0]) * ent->transform[0 + 0] + (from[1] + 4.0f *R * ent->transform[0 + 1] - pos[1]) * ent->transform[0 + 1] > 0.0f)
                 {
-                    if(Physics_SphereTest(&cb, from, to, R, ent->self))
+                    if(Physics_SphereTest(&cb, from, to, R, ent->self, COLLISION_FILTER_HEIGHT_TEST))
                     {
                         fix[0] += (cb.point[0] - hi->leg_r_floor.point[0]);
                         fix[1] += (cb.point[1] - hi->leg_r_floor.point[1]);
@@ -581,7 +581,7 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
                 //renderer.debugDrawer->DrawLine(from, to, red, red);
                 while((from[0] - 4.0f * R * ent->transform[0 + 0] - pos[0]) * ent->transform[0 + 0] + (from[1] - 4.0f *R * ent->transform[0 + 1] - pos[1]) * ent->transform[0 + 1] < 0.0f)
                 {
-                    if(Physics_SphereTest(&cb, from, to, R, ent->self))
+                    if(Physics_SphereTest(&cb, from, to, R, ent->self, COLLISION_FILTER_HEIGHT_TEST))
                     {
                         fix[0] += (cb.point[0] - hi->leg_l_floor.point[0]);
                         fix[1] += (cb.point[1] - hi->leg_l_floor.point[1]);
@@ -641,7 +641,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     to[1] = test_to[1];
     to[2] = test_from[2];
     //renderer.debugDrawer->DrawLine(from, to, color, color);
-    if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self))
+    if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
     {
         // NEAR WALL CASE
         if(cb.fraction > 0.0f)
@@ -654,7 +654,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             from[2] = cb.point[2] + ent->character->max_step_up_height;
             to[2] = test_to[2];
             //renderer.debugDrawer->DrawLine(from, to, color, color);
-            if(Physics_RayTestFiltered(&cb, from, to, ent->self))
+            if(Physics_RayTestFiltered(&cb, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST))
             {
                 vec3_copy(n1, cb.normale);
                 n1[3] = -vec3_dot(n1, cb.point);
@@ -667,7 +667,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
                 to[2] = from[2];
                 while(to[2] > test_to[2])
                 {
-                    if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (vec3_dot(cb.normale, n1) < 0.98f))
+                    if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST) && (vec3_dot(cb.normale, n1) < 0.98f))
                     {
                         vec3_copy(n0, cb.normale);
                         n0[3] = -vec3_dot(n0, cb.point);
@@ -687,7 +687,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         from[2] = test_from[2];
         to[2] = test_to[2];
         //renderer.debugDrawer->DrawLine(from, to, color, color);
-        if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (cb.fraction > 0.0f))
+        if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST) && (cb.fraction > 0.0f))
         {
             vec3_copy(n0, cb.normale);
             n0[3] = -vec3_dot(n0, cb.point);
@@ -703,7 +703,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             for(; to[2] >= test_to[2]; from[2] += z_step, to[2] += z_step)      // we can't climb under floor!
             {
                 //renderer.debugDrawer->DrawLine(from, to, color, color);
-                if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self) && (cb.fraction > 0.0f))
+                if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST) && (cb.fraction > 0.0f))
                 {
                     if(up_founded && (vec3_dist_sq(cb.normale, n0) > 0.05f))
                     {
@@ -799,14 +799,14 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         vec3_copy(from, climb->edge_point);
         vec3_copy(to, from);
         to[2] += climb->next_z_space;
-        if(Physics_RayTestFiltered(&cb, from, to, ent->self))
+        if(Physics_RayTestFiltered(&cb, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST))
         {
             climb->next_z_space = cb.point[2] - climb->edge_point[2];
             if(climb->next_z_space < 0.01f)
             {
                 climb->next_z_space = 2.0 * ent->character->Height;
                 from[2] += fabs(climb->next_z_space);
-                if(Physics_RayTestFiltered(&cb, from, to, ent->self))
+                if(Physics_RayTestFiltered(&cb, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST))
                 {
                     climb->next_z_space = cb.point[2] - climb->edge_point[2];
                 }
@@ -817,7 +817,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         from[1] = to[1] = test_from[1];
         from[2] = test_from[2];
         to[2] = climb->edge_point[2] - ent->character->Height;
-        climb->can_hang = (Physics_RayTestFiltered(NULL, from, to, ent->self) ? (0x00) : (0x01));
+        climb->can_hang = (Physics_RayTestFiltered(NULL, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST) ? (0x00) : (0x01));
     }
 }
 
@@ -852,7 +852,7 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
     to[1] += ent->transform[4 + 1] * t;
     to[2] += ent->transform[4 + 2] * t;
 
-    if(!Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self))
+    if(!Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
     {
         return;
     }
@@ -899,7 +899,7 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
         to[1] += ent->transform[4 + 1] * t;
         to[2] += ent->transform[4 + 2] * t;
 
-        if(Physics_SphereTest(NULL, from, to, ent->character->climb_r, ent->self))
+        if(Physics_SphereTest(NULL, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
         {
             climb->wall_hit = 0x02;
         }
@@ -1103,7 +1103,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         move[0] = pos[0];
         move[1] = pos[1];
         move[2] = pos[2] + 24.0f;
-        Physics_SphereTest(&ent->character->height_info.floor_hit, move, tv, 16.0f, ent->self);
+        Physics_SphereTest(&ent->character->height_info.floor_hit, move, tv, 16.0f, ent->self, COLLISION_FILTER_HEIGHT_TEST);
         ent->character->height_info.floor_hit.normale[0] = 0.0f;
         ent->character->height_info.floor_hit.normale[1] = 0.0f;
         ent->character->height_info.floor_hit.normale[2] = 1.0f;
@@ -1832,7 +1832,7 @@ int Sector_AllowTraverse(struct room_sector_s *rs, float floor, struct engine_co
     from[2] = floor + TR_METERING_SECTORSIZE * 0.5;
     to[2]   = floor - TR_METERING_SECTORSIZE * 0.5;
 
-    if(Physics_RayTest(&cb, from, to, cont))
+    if(Physics_RayTest(&cb, from, to, cont, COLLISION_FILTER_HEIGHT_TEST))
     {
         if(fabs(cb.point[2] - floor) < 1.1)
         {
@@ -1901,7 +1901,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
     to[1] = from[1] = obj_s->pos[1];
     from[2] = floor + TR_METERING_SECTORSIZE * 0.5;
     to[2] = floor + TR_METERING_SECTORSIZE * 2.5;
-    if(Physics_RayTest(&cb, from, to, obj->self))
+    if(Physics_RayTest(&cb, from, to, obj->self, COLLISION_FILTER_HEIGHT_TEST))
     {
         if((cb.obj != NULL) && (cb.obj->object_type == OBJECT_ENTITY) && (((entity_p)cb.obj->object)->type_flags & ENTITY_TYPE_TRAVERSE))
         {
@@ -1948,7 +1948,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         to[0] = next_s->pos[0];
         to[1] = next_s->pos[1];
         to[2] = from[2];
-        if(!Physics_SphereTest(NULL, from ,to, 0.48 * TR_METERING_SECTORSIZE, obj->self))
+        if(!Physics_SphereTest(NULL, from ,to, 0.48 * TR_METERING_SECTORSIZE, obj->self, COLLISION_FILTER_HEIGHT_TEST))
         {
             ret |= 0x01;                                                        // can traverse forvard
         }
@@ -1991,7 +1991,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         to[0] = next_s->pos[0];
         to[1] = next_s->pos[1];
         to[2] = from[2];
-        if(!Physics_SphereTest(NULL, from ,to, 0.48 * TR_METERING_SECTORSIZE, ch->self))
+        if(!Physics_SphereTest(NULL, from ,to, 0.48 * TR_METERING_SECTORSIZE, ch->self, COLLISION_FILTER_HEIGHT_TEST))
         {
             ret |= 0x02;                                                        // can traverse backvard
         }

@@ -639,7 +639,7 @@ void Entity_CheckCollisionCallbacks(entity_p ent)
 {
     // I do not know why, but without Entity_GhostUpdate(ent); it works pretty slow!
     Entity_GhostUpdate(ent);
-    collision_node_p cn = Physics_GetCurrentCollisions(ent->physics, COLLISION_GROUP_GHOST);
+    collision_node_p cn = Physics_GetCurrentCollisions(ent->physics, COLLISION_GROUP_TRIGGERS);
     for(; cn; cn = cn->next)
     {
         // do callbacks here:

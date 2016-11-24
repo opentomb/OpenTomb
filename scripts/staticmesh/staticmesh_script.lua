@@ -11,13 +11,16 @@
 -- [ coll ] flag values:
 
 -- [ coll ] flag values:
--- COLLISION_TYPE_NONE
--- COLLISION_GROUP_STATIC_OBLECT                  -- static object - never moved
--- COLLISION_GROUP_KINEMATIC               -- doors and other moveable statics
--- COLLISION_GROUP_DYNAMICS                 -- hellow full physics interaction
--- COLLISION_GROUP_CHARACTERS                   -- actor, enemies, NPC, animals
--- COLLISION_GROUP_VEHICLE                 -- car, moto, bike
--- COLLISION_GROUP_GHOST                   -- no fix character position, but works in collision callbacks and interacts with dynamic objects
+-- COLLISION_GROUP_ALL                     
+-- COLLISION_GROUP_STATIC_ROOM                     // room mesh
+-- COLLISION_GROUP_STATIC_OBLECT                   // room static object
+-- COLLISION_GROUP_KINEMATIC                       // doors, blocks, static animated entityes
+-- COLLISION_GROUP_GHOST                           // probe objects
+-- COLLISION_GROUP_TRIGGERS                        // probe objects
+-- COLLISION_GROUP_CHARACTERS                      // Lara, enemies, friends, creatures
+-- COLLISION_GROUP_VEHICLE                         // car, moto, bike
+-- COLLISION_GROUP_BULLETS                         // bullets, rockets, grenades, arrows...
+-- COLLISION_GROUP_DYNAMICS                        // test balls, warious
 
 -- [ shape ] flag values:
 -- COLLISION_SHAPE_BOX
