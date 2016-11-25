@@ -391,6 +391,7 @@ function spikewall_init(id)      -- Spike wall
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityCollisionFlags(id, bit32.bor(COLLISION_GROUP_TRIGGERS, COLLISION_GROUP_CHARACTERS), nil, bit32.bor(COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_GHOST));
     setEntityActivity(id, false);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -432,7 +433,7 @@ function spikewall_init(id)      -- Spike wall
             end;
             
             if(getCharacterParam(activator_id, PARAM_HEALTH) > 0) then
-                changeCharacterParam(activator_id, PARAM_HEALTH, -20);
+                changeCharacterParam(activator_id, PARAM_HEALTH, -20 * 60 * frame_time);
                 playSound(getGlobalSound(getLevelVersion(), GLOBALID_SPIKEHIT), activator_id);
                 if(getCharacterParam(activator_id, PARAM_HEALTH) <= 0) then
                     addEntityRagdoll(activator_id, RD_TYPE_LARA);
@@ -450,6 +451,7 @@ function spikeceiling_init(id)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityCollisionFlags(id, COLLISION_GROUP_TRIGGERS, nil, bit32.bor(COLLISION_GROUP_CHARACTERS, COLLISION_GROUP_GHOST));
     setEntityActivity(id, false);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -497,7 +499,7 @@ function spikeceiling_init(id)
                     setCharacterParam(activator_id, PARAM_HEALTH, 0);
                     playSound(SOUND_IMPALE, activator_id);
                 else
-                    changeCharacterParam(activator_id, PARAM_HEALTH, -20);
+                    changeCharacterParam(activator_id, PARAM_HEALTH, -20 * 60 * frame_time);
                     playSound(getGlobalSound(getLevelVersion(), GLOBALID_SPIKEHIT), activator_id);
                     if(getCharacterParam(activator_id, PARAM_HEALTH) <= 0) then
                         addEntityRagdoll(activator_id, RD_TYPE_LARA);

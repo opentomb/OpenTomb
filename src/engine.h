@@ -26,15 +26,15 @@
 #define COLLISION_MASK_ALL                      (0x7FFF)        // bullet uses signed short int for these flags!
 
 #define COLLISION_GROUP_ALL                     (0x7FFF)
-#define COLLISION_GROUP_STATIC_ROOM             (0x0001)        // room mesh
-#define COLLISION_GROUP_STATIC_OBLECT           (0x0002)        // room static object
-#define COLLISION_GROUP_KINEMATIC               (0x0004)        // doors, blocks, static animated entityes
-#define COLLISION_GROUP_GHOST                   (0x0008)        // probe objects
-#define COLLISION_GROUP_TRIGGERS                (0x0010)        // probe objects
-#define COLLISION_GROUP_CHARACTERS              (0x0020)        // Lara, enemies, friends, creatures
-#define COLLISION_GROUP_VEHICLE                 (0x0040)        // car, moto, bike
-#define COLLISION_GROUP_BULLETS                 (0x0080)        // bullets, rockets, grenades, arrows...
-#define COLLISION_GROUP_DYNAMICS                (0x0100)        // test balls, warious
+#define COLLISION_GROUP_STATIC_ROOM             (0x0040)        // room mesh
+#define COLLISION_GROUP_STATIC_OBLECT           (0x0080)        // room static object
+#define COLLISION_GROUP_KINEMATIC               (0x0100)        // doors, blocks, static animated entityes
+#define COLLISION_GROUP_GHOST                   (0x0200)        // probe objects
+#define COLLISION_GROUP_TRIGGERS                (0x0400)        // probe objects
+#define COLLISION_GROUP_CHARACTERS              (0x0800)        // Lara, enemies, friends, creatures
+#define COLLISION_GROUP_VEHICLE                 (0x1000)        // car, moto, bike
+#define COLLISION_GROUP_BULLETS                 (0x2000)        // bullets, rockets, grenades, arrows...
+#define COLLISION_GROUP_DYNAMICS                (0x4000)        // test balls, warious
 
 
 #define COLLISION_FILTER_CHARACTER              (COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC | \

@@ -349,7 +349,11 @@ function boulder_heavy_init(id)
 
     setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
     setEntityActivity(id, false);
-    
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    local group = bit32.bor(COLLISION_GROUP_TRIGGERS, COLLISION_GROUP_CHARACTERS);
+    local mask = bit32.bor(COLLISION_GROUP_STATIC_ROOM, COLLISION_GROUP_STATIC_OBLECT);
+    setEntityCollisionFlags(id, group, nil, mask);
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(not getEntityActivity(object_id)) then
             setEntityActivity(object_id, true);
@@ -371,7 +375,7 @@ function boulder_heavy_init(id)
 
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityActivity(object_id)) then 
-            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * frame_time) 
+            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * 60 * frame_time) 
         end;
     end;
 

@@ -473,10 +473,12 @@ void Physics_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispat
     c1 = (engine_container_p)((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->getUserPointer();
     r1 = (c1)?(c1->room):(NULL);
 
+    bool has_ghosts = (collisionPair.m_pProxy0->m_collisionFilterGroup == COLLISION_GROUP_GHOST) ||
+                      (collisionPair.m_pProxy1->m_collisionFilterGroup == COLLISION_GROUP_GHOST);
+
     if(c1 && c1 == c0)
     {
-        if((collisionPair.m_pProxy0->m_collisionFilterGroup == COLLISION_GROUP_GHOST) ||
-           (collisionPair.m_pProxy1->m_collisionFilterGroup == COLLISION_GROUP_GHOST))
+        if(has_ghosts)
         {
             return;                                                             // No self interaction
         }
@@ -490,7 +492,7 @@ void Physics_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispat
         return;
     }
 
-    if(r0 && r1)
+    if(r0 && r1 && (has_ghosts || (c0->collision_group & c1->collision_mask) && (c1->collision_group & c0->collision_mask)))
     {
         if(Room_IsInNearRoomsList(r0, r1))
         {
@@ -547,9 +549,6 @@ int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[
     bt_engine_ClosestRayResultCallback cb(cont, filter);
     btVector3 vFrom(from[0], from[1], from[2]), vTo(to[0], to[1], to[2]);
 
-    cb.m_collisionFilterMask = filter;
-    cb.m_collisionFilterGroup = (cont) ? (cont->collision_group) : (COLLISION_GROUP_ALL);
-
     if(result)
     {
         result->hit = 0x00;
@@ -585,9 +584,6 @@ int  Physics_RayTestFiltered(struct collision_result_s *result, float from[3], f
 
     cb.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
     cb.m_flags |= btTriangleRaycastCallback::kF_KeepUnflippedNormal;
-
-    cb.m_collisionFilterMask = filter;
-    cb.m_collisionFilterGroup = (cont) ? (cont->collision_group) : (COLLISION_GROUP_ALL);
 
     if(result)
     {
@@ -628,9 +624,6 @@ int  Physics_SphereTest(struct collision_result_s *result, float from[3], float 
     tFrom.setOrigin(vFrom);
     tTo.setIdentity();
     tTo.setOrigin(vTo);
-
-    cb.m_collisionFilterMask = filter;
-    cb.m_collisionFilterGroup = (cont) ? (cont->collision_group) : (COLLISION_GROUP_ALL);
 
     if(result)
     {
@@ -768,7 +761,8 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
                     directionSign = btScalar(-1.0);
                 }
 
-                if(obj->getBroadphaseHandle()->m_collisionFilterGroup & filter)
+                engine_container_p cont = (engine_container_p)obj->getUserPointer();
+                if(!cont || (cont->collision_group & filter))
                 {
                     for(int k = 0; k < manifold->getNumContacts(); k++)
                     {
@@ -820,7 +814,7 @@ btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max)
     OBB_Clear(obb);
     free(obb);
 
-    if(cnt == 0)                                                                // fixed: without that condition engine may easily crash
+    if(cnt == 0)
     {
         delete trimesh;
         return NULL;
@@ -1139,7 +1133,6 @@ uint32_t BT_AddSectorTweenToTrimesh(btTriangleMesh *trimesh, struct sector_tween
 }
 
 
-///@TODO: resolve cases with floor >> ceiling (I.E. floor - ceiling >= 2048)
 btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, uint32_t sectors_count, struct sector_tween_s *tweens, uint32_t tweens_count, bool useCompression, bool buildBvh)
 {
     uint32_t cnt = 0;
@@ -1194,7 +1187,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                 physics->bt_body[0]->setUserIndex(0);
                 physics->bt_body[0]->setRestitution(1.0);
                 physics->bt_body[0]->setFriction(1.0);
-                bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[0], physics->cont->collision_group, physics->cont->collision_mask);
+                bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[0]);
             }
             break;
 
@@ -1216,7 +1209,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                 physics->bt_body[0]->setUserIndex(0);
                 physics->bt_body[0]->setRestitution(1.0);
                 physics->bt_body[0]->setFriction(1.0);
-                bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[0], physics->cont->collision_group, physics->cont->collision_mask);
+                bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[0]);
             }
             break;
 
@@ -1264,7 +1257,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                         physics->bt_body[i]->setUserIndex(i);
                         physics->bt_body[i]->setRestitution(1.0);
                         physics->bt_body[i]->setFriction(1.0);
-                        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i], physics->cont->collision_group, physics->cont->collision_mask);
+                        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i]);
                     }
                 }
             }
@@ -1296,7 +1289,6 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghost_objects[0]->setIgnoreCollisionCheck(physics->bt_body[0], true);
                     tr.setFromOpenGLMatrix(bf->transform);
                     physics->ghost_objects[0]->setWorldTransform(tr);
-                    physics->ghost_objects[0]->setCollisionFlags(physics->ghost_objects[0]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
                     physics->ghost_objects[0]->setUserPointer(physics->cont);
                     physics->ghost_objects[0]->setUserIndex(-1);
                     physics->ghost_objects[0]->setCollisionShape(BT_CSfromBBox(bf->bb_min, bf->bb_max));
@@ -1315,7 +1307,6 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     tr.setFromOpenGLMatrix(bf->transform);
                     tr.getOrigin() += offset;
                     physics->ghost_objects[0]->setWorldTransform(tr);
-                    physics->ghost_objects[0]->setCollisionFlags(physics->ghost_objects[0]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
                     physics->ghost_objects[0]->setUserPointer(physics->cont);
                     physics->ghost_objects[0]->setUserIndex(-1);
                     physics->ghost_objects[0]->setCollisionShape(new btSphereShape(getInnerBBRadius(bf->bb_min, bf->bb_max)));
@@ -1336,7 +1327,6 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                         Mat4_Mat4_mul(gltr, bf->transform, b_tag->full_transform);
                         tr.setFromOpenGLMatrix(gltr);
                         physics->ghost_objects[i]->setWorldTransform(tr);
-                        physics->ghost_objects[i]->setCollisionFlags(physics->ghost_objects[i]->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
                         physics->ghost_objects[i]->setUserPointer(physics->cont);
                         physics->ghost_objects[i]->setUserIndex(i);
                         if(boxes)
@@ -1415,7 +1405,7 @@ void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh)
         cshape->setMargin(COLLISION_MARGIN_DEFAULT);
         smesh->physics_body->bt_body->setRestitution(1.0);
         smesh->physics_body->bt_body->setFriction(1.0);
-        bt_engine_dynamicsWorld->addRigidBody(smesh->physics_body->bt_body, COLLISION_GROUP_STATIC_OBLECT, COLLISION_MASK_ALL);
+        bt_engine_dynamicsWorld->addRigidBody(smesh->physics_body->bt_body);
         smesh->physics_body->bt_body->setUserPointer(smesh->self);
     }
 }
@@ -1435,7 +1425,7 @@ struct physics_object_s* Physics_GenRoomRigidBody(struct room_s *room, struct ro
         btDefaultMotionState* motionState = new btDefaultMotionState(tr);
         cshape->setMargin(COLLISION_MARGIN_DEFAULT);
         ret->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-        bt_engine_dynamicsWorld->addRigidBody(ret->bt_body, COLLISION_GROUP_STATIC_ROOM, COLLISION_MASK_ALL);
+        bt_engine_dynamicsWorld->addRigidBody(ret->bt_body);
         ret->bt_body->setUserPointer(room->self);
         ret->bt_body->setUserIndex(0);
         ret->bt_body->setRestitution(1.0);
@@ -1510,7 +1500,7 @@ void Physics_EnableCollision(struct physics_data_s *physics)
             btRigidBody *b = physics->bt_body[i];
             if((b != NULL) && !b->isInWorld())
             {
-                bt_engine_dynamicsWorld->addRigidBody(b, physics->cont->collision_group, physics->cont->collision_mask);
+                bt_engine_dynamicsWorld->addRigidBody(b);
             }
         }
     }
@@ -1533,30 +1523,13 @@ void Physics_DisableCollision(struct physics_data_s *physics)
 }
 
 
-void Physics_SetCollisionFlags(struct physics_data_s *physics, int16_t group, int16_t mask)
-{
-    if(physics->bt_body)
-    {
-        for(uint32_t i = 0; i < physics->objects_count; i++)
-        {
-            btRigidBody *b = physics->bt_body[i];
-            if(b && b->getBroadphaseHandle())
-            {
-                b->getBroadphaseHandle()->m_collisionFilterGroup = group;
-                b->getBroadphaseHandle()->m_collisionFilterMask = mask;
-            }
-        }
-    }
-}
-
-
 void Physics_SetCollisionScale(struct physics_data_s *physics, float scaling[3])
 {
     for(int i = 0; i < physics->objects_count; i++)
     {
         bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
             physics->bt_body[i]->getCollisionShape()->setLocalScaling(btVector3(scaling[0], scaling[1], scaling[2]));
-        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i], physics->cont->collision_group, physics->cont->collision_mask);
+        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i]);
 
         physics->bt_body[i]->activate();
     }
@@ -1575,11 +1548,11 @@ void Physics_SetBodyMass(struct physics_data_s *physics, float mass, uint16_t in
         physics->bt_body[index]->updateInertiaTensor();
         physics->bt_body[index]->clearForces();
 
-        btVector3 factor = (mass > 0.0)?(btVector3(1.0, 1.0, 1.0)):(btVector3(0.0, 0.0, 0.0));
+        btVector3 factor = (mass > 0.0) ? (btVector3(1.0, 1.0, 1.0)) : (btVector3(0.0, 0.0, 0.0));
         physics->bt_body[index]->setLinearFactor (factor);
         physics->bt_body[index]->setAngularFactor(factor);
 
-    bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[index], physics->cont->collision_group, physics->cont->collision_mask);
+    bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[index]);
 
     physics->bt_body[index]->activate();
 }
@@ -1644,7 +1617,8 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
                                 obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody1();
                             }
 
-                            if(obj->getBroadphaseHandle()->m_collisionFilterGroup & filter)
+                            engine_container_p cont = (engine_container_p)obj->getUserPointer();
+                            if(!cont || (cont->collision_group & filter))
                             {
                                 collision_node_p cn = Physics_GetCollisionNode();
                                 if(cn)
@@ -1743,12 +1717,16 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
     }
 
     // Setup engine container. FIXME: DOESN'T WORK PROPERLY ATM.
-
     struct hair_s *hair = (struct hair_s*)calloc(1, sizeof(struct hair_s));
-    const int16_t group = COLLISION_GROUP_DYNAMICS;
-    const int16_t mask = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC | COLLISION_GROUP_CHARACTERS;
-    hair->container = physics->cont;
+    /*hair->container = Container_Create();
+    hair->container->collision_group = COLLISION_GROUP_DYNAMICS;
+    hair->container->collision_mask = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC | COLLISION_GROUP_CHARACTERS;
+    hair->container->collision_shape = COLLISION_SHAPE_TRIMESH;
+    hair->container->object_type = OBJECT_HAIR;
+    hair->container->object = hair;
+    hair->container->room = physics->cont->room;*/
 
+    hair->container = physics->cont;
     // Setup initial hair parameters.
     hair->owner_body = setup->link_body;    // Entity body to refer to.
 
@@ -1810,7 +1788,7 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
         // bodies (e. g. animated meshes), or else Lara's ghost object or anything else will be able to
         // collide with hair!
         hair->elements[i].body->setUserPointer(hair->container);
-        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body, group, mask);
+        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body);
 
         hair->elements[i].body->activate();
     }
@@ -1945,6 +1923,10 @@ void Hair_Delete(struct hair_s *hair)
 
         hair->root_index = 0;
         hair->tail_index = 0;
+
+        //free(hair->container);
+        //hair->container = NULL;
+
         free(hair);
     }
 }
@@ -2332,7 +2314,7 @@ bool Ragdoll_Delete(struct physics_data_s *physics)
             bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
         }
         physics->bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
-        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i], physics->cont->collision_group, physics->cont->collision_mask);
+        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i]);
     }
 
     free(physics->bt_joints);

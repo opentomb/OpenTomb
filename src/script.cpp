@@ -1243,11 +1243,18 @@ int lua_SetEntityCollisionFlags(lua_State * lua)
         return 0;
     }
 
-    ent->self->collision_group = lua_tointeger(lua, 2);
-    ent->self->collision_shape = lua_tointeger(lua, 3);
-    ent->self->collision_mask = lua_tointeger(lua, 4);
-
-    Physics_SetCollisionFlags(ent->physics, ent->self->collision_group, ent->self->collision_mask);
+    if(!lua_isnil(lua, 2))
+    {
+        ent->self->collision_group = lua_tointeger(lua, 2);
+    }
+    if(!lua_isnil(lua, 3))
+    {
+        ent->self->collision_shape = lua_tointeger(lua, 3);
+    }
+    if(!lua_isnil(lua, 4))
+    {
+        ent->self->collision_mask = lua_tointeger(lua, 4);
+    }
 
     if(Physics_GetBodiesCount(ent->physics) != ent->bf->bone_tag_count)
     {
@@ -1448,7 +1455,7 @@ int lua_DropEntity(lua_State * lua)
     vec3_add(to, from, move);
     to[2] -= (ent->bf->bb_max[2] - ent->bf->bb_min[2]);
 
-    int16_t filter = ent->self->collision_mask & ((only_room) ? (COLLISION_GROUP_STATIC_ROOM) : (COLLISION_GROUP_ALL));
+    int16_t filter = ((only_room) ? (COLLISION_GROUP_STATIC_ROOM) : ent->self->collision_mask);
     if(Physics_RayTest(&cb, from, to, ent->self, filter))
     {
         ent->transform[12 + 2] = cb.point[2];
@@ -1510,7 +1517,7 @@ int lua_MoveEntityHeavy(lua_State * lua)
 
     if(!has_collision)
     {
-        int16_t filter = ent->self->collision_mask & ((only_room) ? (COLLISION_GROUP_STATIC_ROOM) : (COLLISION_GROUP_ALL));
+        int16_t filter = ((only_room) ? (COLLISION_GROUP_STATIC_ROOM) : ent->self->collision_mask);
         has_collision = Physics_RayTest(&cb, from, to, ent->self, filter);
     }
 
