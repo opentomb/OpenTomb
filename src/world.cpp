@@ -1446,7 +1446,7 @@ void World_SetEntityModelProperties(struct entity_s *ent)
     switch(ent->self->collision_group)
     {
         case COLLISION_GROUP_TRIGGERS:
-            ent->self->collision_mask = COLLISION_GROUP_GHOST | COLLISION_GROUP_CHARACTERS;
+            ent->self->collision_mask = COLLISION_GROUP_CHARACTERS;
             break;
     };
 }
@@ -1867,6 +1867,7 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     room->self->room = room;
     room->self->object = room;
     room->self->collision_group = COLLISION_GROUP_STATIC_ROOM;
+    room->self->collision_mask = COLLISION_MASK_ALL;
     room->self->collision_shape = COLLISION_SHAPE_TRIMESH;
     room->self->object_type = OBJECT_ROOM_BASE;
 
@@ -1919,6 +1920,8 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
         r_static->self->room = room;
         r_static->self->object = room->content->static_mesh + i;
         r_static->self->object_type = OBJECT_STATIC_MESH;
+        r_static->self->collision_group = COLLISION_GROUP_STATIC_OBLECT;
+        r_static->self->collision_mask = COLLISION_MASK_ALL;
         r_static->object_id = tr_room->static_meshes[i].object_id;
         r_static->mesh = global_world.meshes + tr->mesh_indices[tr_static->mesh];
         r_static->pos[0] = tr_room->static_meshes[i].pos.x;
@@ -1967,10 +1970,6 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
             (r_static->cbb_max[0] == r_static->cbb_max[1]) && (r_static->cbb_max[1] == r_static->cbb_max[2])))
         {
             r_static->self->collision_group = COLLISION_NONE;
-        }
-        else
-        {
-            r_static->self->collision_group = COLLISION_GROUP_STATIC_OBLECT;
         }
 
         // Set additional static mesh properties from level script override.

@@ -5482,8 +5482,8 @@ void Script_LoadConstants(lua_State *lua)
         lua_setglobal(lua, "COLLISION_GROUP_STATIC_OBLECT");
         lua_pushinteger(lua, COLLISION_GROUP_KINEMATIC);
         lua_setglobal(lua, "COLLISION_GROUP_KINEMATIC");
-        lua_pushinteger(lua, COLLISION_GROUP_GHOST);
-        lua_setglobal(lua, "COLLISION_GROUP_GHOST");
+        //lua_pushinteger(lua, COLLISION_GROUP_GHOST);
+        //lua_setglobal(lua, "COLLISION_GROUP_GHOST");
         lua_pushinteger(lua, COLLISION_GROUP_TRIGGERS);
         lua_setglobal(lua, "COLLISION_GROUP_TRIGGERS");
         lua_pushinteger(lua, COLLISION_GROUP_CHARACTERS);
@@ -5494,6 +5494,8 @@ void Script_LoadConstants(lua_State *lua)
         lua_setglobal(lua, "COLLISION_GROUP_BULLETS");
         lua_pushinteger(lua, COLLISION_GROUP_DYNAMICS);
         lua_setglobal(lua, "COLLISION_GROUP_DYNAMICS");
+        lua_pushinteger(lua, COLLISION_GROUP_DYNAMICS_NI);
+        lua_setglobal(lua, "COLLISION_GROUP_DYNAMICS_NI");
 
         lua_pushinteger(lua, ENTITY_TRIGGERING_ACTIVATED);
         lua_setglobal(lua, "ENTITY_TRIGGERING_ACTIVATED");

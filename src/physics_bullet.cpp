@@ -473,36 +473,25 @@ void Physics_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispat
     c1 = (engine_container_p)((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->getUserPointer();
     r1 = (c1)?(c1->room):(NULL);
 
-    bool has_ghosts = (collisionPair.m_pProxy0->m_collisionFilterGroup == COLLISION_GROUP_GHOST) ||
-                      (collisionPair.m_pProxy1->m_collisionFilterGroup == COLLISION_GROUP_GHOST);
+    bool has_ghosts = (collisionPair.m_pProxy0->m_collisionFilterGroup == btBroadphaseProxy::SensorTrigger) ||
+                      (collisionPair.m_pProxy1->m_collisionFilterGroup == btBroadphaseProxy::SensorTrigger);
 
-    if(c1 && c1 == c0)
+    if(c1 && c1 == c0)                                                          // No self interaction
     {
-        if(has_ghosts)
-        {
-            return;                                                             // No self interaction
-        }
-        dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);
-        return;
-    }
-
-    if(!r0 && !r1)
-    {
-        dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);// Both are out of rooms
-        return;
-    }
-
-    if(r0 && r1 && (has_ghosts || (c0->collision_group & c1->collision_mask) && (c1->collision_group & c0->collision_mask)))
-    {
-        if(Room_IsInNearRoomsList(r0, r1))
+        if(!has_ghosts)
         {
             dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);
-            return;
         }
-        else
+        return;
+    }
+
+    if((!r0 && !r1) || Room_IsInNearRoomsList(r0, r1))
+    {
+        if(has_ghosts || (c0->collision_group & c1->collision_mask) && (c1->collision_group & c0->collision_mask))
         {
-            return;
+            dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);
         }
+        return;
     }
 }
 
@@ -1187,7 +1176,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                 physics->bt_body[0]->setUserIndex(0);
                 physics->bt_body[0]->setRestitution(1.0);
                 physics->bt_body[0]->setFriction(1.0);
-                bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[0]);
+                bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[0], btBroadphaseProxy::KinematicFilter, btBroadphaseProxy::AllFilter);
             }
             break;
 
@@ -1209,7 +1198,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                 physics->bt_body[0]->setUserIndex(0);
                 physics->bt_body[0]->setRestitution(1.0);
                 physics->bt_body[0]->setFriction(1.0);
-                bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[0]);
+                bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[0], btBroadphaseProxy::KinematicFilter, btBroadphaseProxy::AllFilter);
             }
             break;
 
@@ -1257,7 +1246,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                         physics->bt_body[i]->setUserIndex(i);
                         physics->bt_body[i]->setRestitution(1.0);
                         physics->bt_body[i]->setFriction(1.0);
-                        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i]);
+                        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i], btBroadphaseProxy::KinematicFilter, btBroadphaseProxy::AllFilter);
                     }
                 }
             }
@@ -1293,7 +1282,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghost_objects[0]->setUserIndex(-1);
                     physics->ghost_objects[0]->setCollisionShape(BT_CSfromBBox(bf->bb_min, bf->bb_max));
                     physics->ghost_objects[0]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
-                    bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[0], COLLISION_GROUP_GHOST, COLLISION_MASK_ALL);
+                    bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[0], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter);
                 }
                 break;
 
@@ -1311,7 +1300,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghost_objects[0]->setUserIndex(-1);
                     physics->ghost_objects[0]->setCollisionShape(new btSphereShape(getInnerBBRadius(bf->bb_min, bf->bb_max)));
                     physics->ghost_objects[0]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
-                    bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[0], COLLISION_GROUP_GHOST, COLLISION_MASK_ALL);
+                    bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[0], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter);
                 }
                 break;
 
@@ -1338,7 +1327,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                             physics->ghost_objects[i]->setCollisionShape(BT_CSfromMesh(b_tag->mesh_base, true, true, false));
                         }
                         physics->ghost_objects[i]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
-                        bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[i], COLLISION_GROUP_GHOST, COLLISION_MASK_ALL);
+                        bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[i], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter);
                     }
                 }
         };
@@ -1405,7 +1394,7 @@ void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh)
         cshape->setMargin(COLLISION_MARGIN_DEFAULT);
         smesh->physics_body->bt_body->setRestitution(1.0);
         smesh->physics_body->bt_body->setFriction(1.0);
-        bt_engine_dynamicsWorld->addRigidBody(smesh->physics_body->bt_body);
+        bt_engine_dynamicsWorld->addRigidBody(smesh->physics_body->bt_body, btBroadphaseProxy::StaticFilter, btBroadphaseProxy::AllFilter);
         smesh->physics_body->bt_body->setUserPointer(smesh->self);
     }
 }
@@ -1425,7 +1414,7 @@ struct physics_object_s* Physics_GenRoomRigidBody(struct room_s *room, struct ro
         btDefaultMotionState* motionState = new btDefaultMotionState(tr);
         cshape->setMargin(COLLISION_MARGIN_DEFAULT);
         ret->bt_body = new btRigidBody(0.0, motionState, cshape, localInertia);
-        bt_engine_dynamicsWorld->addRigidBody(ret->bt_body);
+        bt_engine_dynamicsWorld->addRigidBody(ret->bt_body, btBroadphaseProxy::StaticFilter, btBroadphaseProxy::AllFilter);
         ret->bt_body->setUserPointer(room->self);
         ret->bt_body->setUserIndex(0);
         ret->bt_body->setRestitution(1.0);
@@ -1472,7 +1461,7 @@ void Physics_EnableObject(struct physics_object_s *obj)
 {
     if(obj->bt_body && !obj->bt_body->isInWorld())
     {
-        bt_engine_dynamicsWorld->addRigidBody(obj->bt_body);
+        bt_engine_dynamicsWorld->addRigidBody(obj->bt_body, btBroadphaseProxy::StaticFilter, btBroadphaseProxy::AllFilter);
     }
 }
 
@@ -1498,7 +1487,7 @@ void Physics_EnableCollision(struct physics_data_s *physics)
         for(uint32_t i = 0; i < physics->objects_count; i++)
         {
             btRigidBody *b = physics->bt_body[i];
-            if((b != NULL) && !b->isInWorld())
+            if(b && !b->isInWorld())
             {
                 bt_engine_dynamicsWorld->addRigidBody(b);
             }
@@ -1514,7 +1503,7 @@ void Physics_DisableCollision(struct physics_data_s *physics)
         for(uint32_t i = 0; i < physics->objects_count; i++)
         {
             btRigidBody *b = physics->bt_body[i];
-            if((b != NULL) && b->isInWorld())
+            if(b && b->isInWorld())
             {
                 bt_engine_dynamicsWorld->removeRigidBody(b);
             }
@@ -2210,7 +2199,7 @@ bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, 
 
     for(uint32_t i = 0; i < setup->body_count; i++)
     {
-        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i]);
+        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i], btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::CharacterFilter | btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter);
         physics->bt_body[i]->activate();
         physics->bt_body[i]->setLinearVelocity(btVector3(0.0, 0.0, 0.0));
     }
@@ -2286,6 +2275,7 @@ bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, 
     {
         Ragdoll_Delete(physics);  // PARANOID: Clean up the mess, if something went wrong.
     }
+
     return result;
 }
 
@@ -2314,7 +2304,7 @@ bool Ragdoll_Delete(struct physics_data_s *physics)
             bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
         }
         physics->bt_body[i]->setMassProps(0, btVector3(0.0, 0.0, 0.0));
-        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i]);
+        bt_engine_dynamicsWorld->addRigidBody(physics->bt_body[i], btBroadphaseProxy::KinematicFilter, btBroadphaseProxy::AllFilter);
     }
 
     free(physics->bt_joints);
