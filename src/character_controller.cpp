@@ -6,6 +6,7 @@
 #include "core/polygon.h"
 #include "core/obb.h"
 #include "render/render.h"
+#include "script/script.h"
 
 #include "vt/tr_versions.h"
 #include "audio.h"
@@ -13,7 +14,6 @@
 #include "world.h"
 #include "character_controller.h"
 #include "anim_state_control.h"
-#include "script.h"
 #include "engine.h"
 #include "physics.h"
 #include "entity.h"

@@ -109,7 +109,7 @@ function twobp_init(id)        -- Two-block platform
     end;
     
     entity_funcs[id].onStand = function(object_id, activator_id)
-        if(getEntityActivity(object_id) and (getEntityModel(activator_id) == 0)) then  -- Lara
+        if(getEntityActivity(object_id) and (getEntityModelID(activator_id) == 0)) then  -- Lara
             entity_funcs[object_id].push = true;
         end;
     end;

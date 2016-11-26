@@ -1946,10 +1946,13 @@
 		</Unit>
 		<Unit filename="src/room.cpp" />
 		<Unit filename="src/room.h" />
-		<Unit filename="src/script.cpp" />
-		<Unit filename="src/script.h">
-			<Option target="&lt;{~None~}&gt;" />
-		</Unit>
+		<Unit filename="src/script/script.cpp" />
+		<Unit filename="src/script/script.h" />
+		<Unit filename="src/script/script_audio.cpp" />
+		<Unit filename="src/script/script_character.cpp" />
+		<Unit filename="src/script/script_entity.cpp" />
+		<Unit filename="src/script/script_skeletal_model.cpp" />
+		<Unit filename="src/script/script_world.cpp" />
 		<Unit filename="src/skeletal_model.c">
 			<Option compilerVar="CC" />
 		</Unit>

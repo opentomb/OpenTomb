@@ -16,15 +16,14 @@ extern "C" {
 #include "core/console.h"
 #include "core/vmath.h"
 
+#include "script/script.h"
 #include "render/camera.h"
 #include "anim_state_control.h"
-#include "script.h"
 #include "engine.h"
 #include "physics.h"
 #include "controls.h"
 #include "gui.h"
 #include "game.h"
-#include "script.h"
 
 
 void Controls_Key(int32_t button, int state)
