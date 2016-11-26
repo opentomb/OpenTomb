@@ -1707,15 +1707,14 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
 
     // Setup engine container. FIXME: DOESN'T WORK PROPERLY ATM.
     struct hair_s *hair = (struct hair_s*)calloc(1, sizeof(struct hair_s));
-    /*hair->container = Container_Create();
-    hair->container->collision_group = COLLISION_GROUP_DYNAMICS;
+    hair->container = Container_Create();
+    hair->container->collision_group = COLLISION_GROUP_DYNAMICS_NI;
     hair->container->collision_mask = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC | COLLISION_GROUP_CHARACTERS;
     hair->container->collision_shape = COLLISION_SHAPE_TRIMESH;
     hair->container->object_type = OBJECT_HAIR;
     hair->container->object = hair;
-    hair->container->room = physics->cont->room;*/
+    hair->container->room = physics->cont->room;
 
-    hair->container = physics->cont;
     // Setup initial hair parameters.
     hair->owner_body = setup->link_body;    // Entity body to refer to.
 
@@ -1731,7 +1730,7 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
     // last element of the hair, as it indicates absence of "child" constraint.
 
     hair->root_index = 0;
-    hair->tail_index = hair->element_count-1;
+    hair->tail_index = hair->element_count - 1;
 
     // Weight step is needed to determine the weight of each hair body.
     // It is derived from root body weight and tail body weight.
@@ -1777,7 +1776,7 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
         // bodies (e. g. animated meshes), or else Lara's ghost object or anything else will be able to
         // collide with hair!
         hair->elements[i].body->setUserPointer(hair->container);
-        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body);
+        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body, btBroadphaseProxy::DebrisFilter, btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter | btBroadphaseProxy::CharacterFilter);
 
         hair->elements[i].body->activate();
     }
@@ -1913,10 +1912,19 @@ void Hair_Delete(struct hair_s *hair)
         hair->root_index = 0;
         hair->tail_index = 0;
 
-        //free(hair->container);
-        //hair->container = NULL;
+        free(hair->container);
+        hair->container = NULL;
 
         free(hair);
+    }
+}
+
+
+void Hair_Update(struct hair_s *hair, struct physics_data_s *physics)
+{
+    if(hair && (hair->element_count > 0))
+    {
+        hair->container->room = physics->cont->room;
     }
 }
 
@@ -2276,6 +2284,8 @@ bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, 
         Ragdoll_Delete(physics);  // PARANOID: Clean up the mess, if something went wrong.
     }
 
+    physics->cont->collision_group = COLLISION_GROUP_DYNAMICS_NI;
+
     return result;
 }
 
@@ -2310,6 +2320,7 @@ bool Ragdoll_Delete(struct physics_data_s *physics)
     free(physics->bt_joints);
     physics->bt_joints = NULL;
     physics->bt_joint_count = 0;
+    physics->cont->collision_group = COLLISION_GROUP_CHARACTERS;
 
     return true;
 

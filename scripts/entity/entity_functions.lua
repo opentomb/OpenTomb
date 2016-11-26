@@ -158,7 +158,7 @@ function fallblock_init(id)  -- Falling block (TR1-3)
                     setEntityCollision(object_id, 0);
                     once = false;
                 end;
-                if(dropEntity(object_id, frame_time, nil)) then
+                if(dropEntity(object_id, frame_time, true)) then
                     setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
                     return false;
                 end;
@@ -188,7 +188,7 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
             setEntityVisibility(object_id, 1);
             addTask(
             function()
-                if(dropEntity(object_id, frame_time, nil)) then
+                if(dropEntity(object_id, frame_time, true)) then
                     setEntityAnim(object_id, ANIM_TYPE_BASE, 2, 0);
                     setEntityCollision(object_id, 0);
                     return false;

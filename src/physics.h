@@ -147,6 +147,8 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
 // Removes specified hair from entity and clears it from memory.
 void Hair_Delete(struct hair_s *hair);
 
+void Hair_Update(struct hair_s *hair, struct physics_data_s *physics);
+
 int Hair_GetElementsCount(struct hair_s *hair);
 
 void Hair_GetElementInfo(struct hair_s *hair, int element, struct base_mesh_s **mesh, float tr[16]);

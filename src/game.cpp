@@ -584,6 +584,11 @@ void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
         Entity_ProcessSector(ent);
         Character_UpdateParams(ent);
         Entity_CheckCollisionCallbacks(ent);
+
+        for(int h = 0; h < ent->character->hair_count; h++)
+        {
+            Hair_Update(ent->character->hairs[h], ent->physics);
+        }
     }
 
     if(x->left != NULL)
@@ -610,6 +615,11 @@ void Game_UpdateCharacters()
         if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
         {
             ent->character->resp.kill = 0;   // Kill, if no HP.
+        }
+        
+        for(int h = 0; h < ent->character->hair_count; h++)
+        {
+            Hair_Update(ent->character->hairs[h], ent->physics);
         }
     }
 
