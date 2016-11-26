@@ -60,13 +60,13 @@ set(OPENTOMB_SRCS
     src/render/shader_manager.cpp
     src/render/bsp_tree_2d.c
     src/render/shader_manager.h
-	src/script/script.h
-	src/script/script.cpp
-	src/script/script_audio.cpp
-	src/script/script_character.cpp
-	src/script/script_entity.cpp
-	src/script/script_skeletal_model.cpp
-	src/script/script_world.cpp
+    src/script/script.h
+    src/script/script.cpp
+    src/script/script_audio.cpp
+    src/script/script_character.cpp
+    src/script/script_entity.cpp
+    src/script/script_skeletal_model.cpp
+    src/script/script_world.cpp
     src/resource.cpp
     src/resource.h
     src/room.cpp
