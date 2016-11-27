@@ -350,6 +350,7 @@ function boulder_heavy_init(id)
     setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
     setEntityActivity(id, false);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    createGhosts(id);
     local group = bit32.bor(COLLISION_GROUP_TRIGGERS, COLLISION_GROUP_CHARACTERS);
     local mask = bit32.bor(COLLISION_GROUP_STATIC_ROOM, COLLISION_GROUP_STATIC_OBLECT);
     setEntityCollisionFlags(id, group, nil, mask);
@@ -364,11 +365,17 @@ function boulder_heavy_init(id)
 
     entity_funcs[id].onLoop = function(object_id)
         if(getEntityActivity(object_id)) then
-            local is_stopped = moveEntityHeavy(object_id, 2048.0 * frame_time, true);
+            moveEntityLocal(object_id, 0.0, 2048.0 * frame_time, 0.0);
+            local is_stopped, dx, dy, dz = getEntityCollisionFix(object_id, COLLISION_GROUP_STATIC_ROOM);
+            if(is_stopped) then
+                is_stopped = dz * dz < dx * dx + dy * dy;
+                moveEntityGlobal(object_id, dx, dy, dz);
+            end;
+
             local is_dropped = dropEntity(object_id, frame_time, true);
             if(is_dropped and is_stopped) then
                 setEntityActivity(object_id, false);
-                dropEntity(object_id, 1.0, true);
+                dropEntity(object_id, 64.0, true);
             end;
         end;
     end;

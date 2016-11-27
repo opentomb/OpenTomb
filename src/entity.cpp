@@ -412,7 +412,7 @@ void Entity_GhostUpdate(struct entity_s *ent)
 
 
 ///@TODO: make experiment with convexSweepTest with spheres: no more iterative cycles;
-int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float move_global[3], int16_t filter)
+int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], int16_t filter)
 {
     int ret = 0;
 
@@ -435,7 +435,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             }
 
             // antitunneling condition for main body parts, needs only in move case: ((move != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER)))
-            if((btag->parent == NULL) || ((move_global != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
+            if((btag->parent == NULL) || ((btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
             {
                 Physics_GetGhostWorldTransform(ent->physics, tr, m);
                 from[0] = tr[12 + 0] + ent->transform[12 + 0] - orig_pos[0];
@@ -492,17 +492,17 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
  * @param cmd - here we fill cmd->horizontal_collide field
  * @param move - absolute 3d move vector
  */
-int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], int16_t filter)
+int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float reaction[3], int16_t filter)
 {
     int ret = 0;
     if(Physics_IsGhostsInited(ent->physics))
     {
-        float t1, t2, reaction[3], *pos = ent->transform + 12;
+        float t1, t2, *pos = ent->transform + 12;
 
         Entity_GhostUpdate(ent);
         vec3_add(pos, pos, move);
-        //resp->horizontal_collide = 0x00;
-        ret = Entity_GetPenetrationFixVector(ent, reaction, move, filter);
+
+        ret = Entity_GetPenetrationFixVector(ent, reaction, filter);
         if((ret > 0) && (ent->character != NULL))
         {
             t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
@@ -548,7 +548,7 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
             return;
         }
 
-        int numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, move, filter);
+        int numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, filter);
         vec3_add(ent->transform + 12, ent->transform + 12, reaction);
 
         if(ent->character != NULL)
