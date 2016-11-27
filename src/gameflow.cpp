@@ -6,8 +6,8 @@ extern "C" {
 
 #include "core/gl_text.h"
 #include "core/console.h"
+#include "script/script.h"
 #include "gameflow.h"
-#include "script.h"
 
 #include <assert.h>
 

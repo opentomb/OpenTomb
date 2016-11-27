@@ -17,6 +17,7 @@ extern "C" {
 #include "render/camera.h"
 #include "render/frustum.h"
 #include "render/render.h"
+#include "script/script.h"
 #include "engine.h"
 #include "physics.h"
 #include "controls.h"
@@ -26,7 +27,6 @@ extern "C" {
 #include "audio.h"
 #include "skeletal_model.h"
 #include "entity.h"
-#include "script.h"
 #include "trigger.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
@@ -616,7 +616,7 @@ void Game_UpdateCharacters()
         {
             ent->character->resp.kill = 0;   // Kill, if no HP.
         }
-        
+
         for(int h = 0; h < ent->character->hair_count; h++)
         {
             Hair_Update(ent->character->hairs[h], ent->physics);

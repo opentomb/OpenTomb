@@ -90,7 +90,7 @@ function checkDebugKeys()
         setEntityCollision(player, 1);
         removeEntityRagdoll(player);
         setEntityMoveType(player, MOVE_FREE_FALLING);
-        setEntityResponse(player, RESP_KILL, 0);
+        setCharacterResponse(player, RESP_KILL, 0);
         setCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
         setEntityAnimFlag(player, ANIM_TYPE_BASE, ANIM_NORMAL_CONTROL);
     end;

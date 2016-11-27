@@ -25,6 +25,7 @@ extern "C" {
 #include "render/frustum.h"
 #include "render/bordered_texture_atlas.h"
 #include "render/shader_description.h"
+#include "script/script.h"
 #include "vt/vt_level.h"
 
 #include "audio.h"
@@ -34,7 +35,6 @@ extern "C" {
 #include "skeletal_model.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
-#include "script.h"
 #include "engine.h"
 #include "physics.h"
 #include "inventory.h"
