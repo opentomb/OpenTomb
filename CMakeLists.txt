@@ -71,8 +71,6 @@ set(OPENTOMB_SRCS
     src/resource.h
     src/room.cpp
     src/room.h
-    src/script.cpp
-    src/script.h
     src/skeletal_model.h
     src/skeletal_model.c
     src/trigger.cpp
