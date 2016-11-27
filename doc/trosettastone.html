@@ -2072,7 +2072,7 @@ width:100%;
 <col style="width:1%;">
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-11-17)</strong></p></div>
+<td class="tableblock halign-left valign-middle" ><div><div class="paragraph"><p><strong>Document Version 3.0 preview (last edit: 2016-11-27)</strong></p></div>
 <div class="paragraph"><p>Including Tomb Raider <span class="monospaced">.PHD/.TUB</span>, Tomb Raider II-III <span class="monospaced">.TR2</span>, Tomb Raider IV <span class="monospaced">.TR4</span> and Tomb Raider Chronicles (V) <span class="monospaced">.TRC</span> information, where available.</p></div>
 <div class="paragraph"><p>Also includes <span class="monospaced">TOMBPC.DAT</span> script information, <span class="monospaced">CDAUDIO.WAD</span> and <span class="monospaced">CUTSEQ.PAK</span> information.</p></div></div></td>
 <td class="tableblock halign-right valign-middle" ><div><div class="paragraph"><p><span class="image">
@@ -4884,8 +4884,8 @@ width:60%;
 <td class="tableblock halign-left valign-top" ><p class="tableblock">bit 8 (<span class="monospaced">0x0100</span>)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">Move</span></p></td>
-<td class="tableblock halign-left valign-top" ><p class="tableblock">bit 12 (<span class="monospaced">0x1000</span>) <em>in TR1</em>, bit 10 (<span class="monospaced">0x0400</span>) <em>in TR2</em></p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">MoveTimer</span></p></td>
+<td class="tableblock halign-left valign-top" ><p class="tableblock">bits 9..13 (<span class="monospaced">0x3E00</span>)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top" ><p class="tableblock"><span class="monospaced">ContBit</span></p></td>
@@ -4896,7 +4896,11 @@ width:60%;
 <div class="paragraph"><p><span class="monospaced">Timer</span> is a number of seconds to wait before automatically switching back to the normal camera. If 0, it never switches back to normal camera, as long as
 trigger is active.</p></div>
 <div class="paragraph"><p><span class="monospaced">Once</span>: If set, only switch to camera once; otherwise, switch to camera every time trigger is active.</p></div>
-<div class="paragraph"><p><span class="monospaced">Move</span>: Camera smoothly moves from current point to camera point when activated. Move speed is hardcoded.</p></div>
+<div class="paragraph"><p><span class="image">
+<img src="images/icons/tr1.png" alt="TR1 only" width="16" height="17" title="TR1 only">
+</span><span class="image">
+<img src="images/icons/tr2.png" alt="TR2 only" width="16" height="17" title="TR2 only">
+</span><span class="monospaced">MoveTimer</span>: Specifies time which is used to smoothly move camera from Lara to desired camera viewpoint. Movement is done via <em>spline function</em>. The larger value is, the more time it takes to move camera away from Lara. Therefore, if <span class="monospaced">MoveTimer</span> is zero, then camera immediately cuts to new viewpoint.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -9472,7 +9476,7 @@ string&#8217;s by the current string&#8217;s offset.</p></div>
 <div id="footnotes"><hr></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-11-11 02:18:15 MSK
+Last updated 2016-11-15 05:18:39 MSK
 </div>
 </div>
 </body>
