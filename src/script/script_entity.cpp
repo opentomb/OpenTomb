@@ -1800,6 +1800,39 @@ int lua_CreateGhosts(lua_State * lua)
 }
 
 
+int lua_GetEntityGlobalMove(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 4)
+    {
+        Con_Warning("getEntityGlobalMove: expecting arguments (entity_id, dx, dy, dz)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    entity_p ent = World_GetEntityByID(id);
+    if(ent)
+    {
+        float move[3], gmove[3];
+        move[0] = lua_tonumber(lua, 2);
+        move[1] = lua_tonumber(lua, 3);
+        move[2] = lua_tonumber(lua, 4);
+
+        Mat4_vec3_rot_macro(gmove, ent->transform, move);
+
+        lua_pushnumber(lua, gmove[0]);
+        lua_pushnumber(lua, gmove[1]);
+        lua_pushnumber(lua, gmove[2]);
+
+        return 3;
+    }
+
+    Con_Warning("no entity with id = %d", id);
+    return 0;
+}
+
+
 int lua_GetEntityCollisionFix(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -2117,6 +2150,7 @@ void Script_LuaRegisterEntityFuncs(lua_State *lua)
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
 
     lua_register(lua, "createGhosts", lua_CreateGhosts);
+    lua_register(lua, "getEntityGlobalMove", lua_GetEntityGlobalMove);
     lua_register(lua, "getEntityCollisionFix", lua_GetEntityCollisionFix);
     lua_register(lua, "getEntityMoveCollisionFix", lua_GetEntityMoveCollisionFix);
     lua_register(lua, "dropEntity", lua_DropEntity);
