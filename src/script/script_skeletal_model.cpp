@@ -80,13 +80,18 @@ int lua_SetStateChangeRange(lua_State * lua)
 
 int lua_GetEntityModelID(lua_State * lua)
 {
-    if(lua_gettop(lua) >= 1)
+    int top = lua_gettop(lua);
+    if(top >= 1)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->bf->animations.model)
+        if(ent)
         {
-            lua_pushinteger(lua, ent->bf->animations.model->id);
-            return 1;
+            ss_animation_p ss_anim = (top > 1) ? (SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2))) : (&ent->bf->animations);
+            if(ss_anim && ss_anim->model)
+            {
+                lua_pushinteger(lua, ss_anim->model->id);
+                return 1;
+            }
         }
     }
     return 0;
@@ -150,6 +155,36 @@ int lua_SetModelCollisionMap(lua_State * lua)
         model->collision_map[arg] = val;
     }
 
+    return 0;
+}
+
+
+int lua_SetModelBodyPartFlag(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top < 3)
+    {
+        Con_Warning("setModelBodyPartFlag: expecting arguments (model_id, bone_id, body_part_flag)");
+        return 0;
+    }
+
+    int id = lua_tointeger(lua, 1);
+    skeletal_model_p model = World_GetModelByID(id);
+
+    if(model)
+    {
+        int bone_id = lua_tointeger(lua, 2);
+        if((bone_id < 0) || (bone_id >= model->mesh_count))
+        {
+            Con_Warning("wrong bone index = %d", bone_id);
+            return 0;
+        }
+        model->mesh_tree[bone_id].body_part = lua_tointeger(lua, 3);
+        return 0;
+    }
+
+    Con_Warning("no skeletal model with id = %d", id);
     return 0;
 }
 
@@ -429,7 +464,7 @@ int lua_SetEntityAnim(lua_State * lua)
     if(ss_anim)
     {
         Anim_SetAnimation(ss_anim, lua_tointeger(lua, 3), lua_tointeger(lua, 4));
-        if(top >= 6)
+        if(top >= 5)
         {
             ss_anim->next_animation = lua_tointeger(lua, 5);
             ss_anim->next_frame = lua_tointeger(lua, 6);
@@ -707,6 +742,7 @@ int lua_EntitySSAnimSetEnable(lua_State * lua)
 void Script_LuaRegisterAnimFuncs(lua_State *lua)
 {
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
+    lua_register(lua, "setModelBodyPartFlag", lua_SetModelBodyPartFlag);
     lua_register(lua, "setStateChangeRange", lua_SetStateChangeRange);
 
     lua_register(lua, "getEntityModelID", lua_GetEntityModelID);

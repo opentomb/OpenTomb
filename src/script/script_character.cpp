@@ -182,11 +182,7 @@ int lua_AddCharacterHair(lua_State *lua)
         {
             hair_setup_s *hair_setup = Hair_GetSetup(lua, setup_index);
 
-            if(!hair_setup)
-            {
-                Con_Warning("wrong hair setup index = %d", setup_index);
-            }
-            else
+            if(hair_setup)
             {
                 ent->character->hair_count++;
                 ent->character->hairs = (struct hair_s**)realloc(ent->character->hairs, (sizeof(struct hair_s*) * ent->character->hair_count));
@@ -195,6 +191,10 @@ int lua_AddCharacterHair(lua_State *lua)
                 {
                     Con_Warning("can not create hair for entity_id = %d", ent_id);
                 }
+            }
+            else
+            {
+                Con_Warning("wrong hair setup index = %d", setup_index);
             }
             free(hair_setup);
         }
@@ -248,11 +248,7 @@ int lua_ResetCharacterHair(lua_State *lua)
 
 int lua_AddEntityRagdoll(lua_State *lua)
 {
-    if(lua_gettop(lua) != 2)
-    {
-        Con_Warning("addEntityRagdoll: expecting arguments (entity_id, ragdoll_setup_index)");
-    }
-    else
+    if(lua_gettop(lua) >= 2)
     {
         int ent_id       = lua_tointeger(lua, 1);
         int setup_index  = lua_tointeger(lua, 2);
@@ -281,18 +277,17 @@ int lua_AddEntityRagdoll(lua_State *lua)
             Con_Warning("no entity with id = %d", ent_id);
         }
     }
+    else
+    {
+        Con_Warning("addEntityRagdoll: expecting arguments (entity_id, ragdoll_setup_index)");
+    }
     return 0;
 }
 
 
 int lua_RemoveEntityRagdoll(lua_State *lua)
 {
-    if(lua_gettop(lua) != 1)
-    {
-        Con_Warning("removeEntityRagdoll: expecting arguments (entity_id)");
-        return 0;
-    }
-    else
+    if(lua_gettop(lua) >= 1)
     {
         int ent_id   = lua_tointeger(lua, 1);
         entity_p ent = World_GetEntityByID(ent_id);
@@ -309,6 +304,10 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
         {
             Con_Warning("no entity with id = %d", ent_id);
         }
+    }
+    else
+    {
+        Con_Warning("removeEntityRagdoll: expecting arguments (entity_id)");
     }
     return 0;
 }

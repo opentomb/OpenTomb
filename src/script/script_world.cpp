@@ -48,14 +48,14 @@ int lua_GetLevelVersion(lua_State *lua)
 
 int lua_SameRoom(lua_State *lua)
 {
-    if(lua_gettop(lua) != 2)
+    if(lua_gettop(lua) < 2)
     {
         Con_Warning("sameRoom: expecting arguments (ent_id1, ent_id2)");
         return 0;
     }
 
     entity_p ent1 = World_GetEntityByID(lua_tonumber(lua, 1));
-    entity_p ent2 = World_GetEntityByID(lua_tonumber(lua, 1));
+    entity_p ent2 = World_GetEntityByID(lua_tonumber(lua, 2));
 
     if(ent1 && ent2)
     {
@@ -97,7 +97,7 @@ int lua_SimilarSector(lua_State * lua)
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(id);
 
-    if(ent == NULL)
+    if(!ent)
     {
         Con_Warning("no entity with id = %d", id);
         return 0;
@@ -147,23 +147,21 @@ int lua_GetSectorHeight(lua_State * lua)
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(id);
 
-    if(ent == NULL)
+    if(!ent)
     {
         Con_Warning("no entity with id = %d", id);
         return 0;
     }
 
-    bool ceiling = false;
-    if(top > 1) ceiling = lua_toboolean(lua, 2);
-
+    bool ceiling = (top > 1) ? (lua_toboolean(lua, 2)) : (false);
     float pos[3];
-    vec3_copy(pos, ent->transform+12);
+    vec3_copy(pos, ent->transform + 12);
 
     if(top > 2)
     {
-        float dx = lua_tonumber(lua, 2);
-        float dy = lua_tonumber(lua, 3);
-        float dz = lua_tonumber(lua, 4);
+        float dx = lua_tonumber(lua, 3);
+        float dy = lua_tonumber(lua, 4);
+        float dz = lua_tonumber(lua, 5);
 
         pos[0] += dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0];
         pos[1] += dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1];
@@ -196,7 +194,7 @@ int lua_SectorTriggerClear(lua_State * lua)
     sx = lua_tointeger(lua, 2);
     sy = lua_tointeger(lua, 3);
     room_sector_p rs = World_GetRoomSector(id, sx, sy);
-    if(rs == NULL)
+    if(!rs)
     {
         Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
         return 0;
@@ -235,7 +233,7 @@ int lua_SectorAddTrigger(lua_State * lua)
     sx = lua_tointeger(lua, 2);
     sy = lua_tointeger(lua, 3);
     room_sector_p rs = World_GetRoomSector(id, sx, sy);
-    if(rs == NULL)
+    if(!rs)
     {
         Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
         return 0;
@@ -274,7 +272,7 @@ int lua_SectorAddTriggerCommand(lua_State * lua)
     sx = lua_tointeger(lua, 2);
     sy = lua_tointeger(lua, 3);
     room_sector_p rs = World_GetRoomSector(id, sx, sy);
-    if(rs == NULL)
+    if(!rs)
     {
         Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
         return 0;
@@ -362,24 +360,29 @@ int lua_SetGravity(lua_State * lua)                                             
 
 int lua_GetSecretStatus(lua_State *lua)
 {
-    if(lua_gettop(lua) < 1) return 0;   // No parameter specified - return
-
-    int secret_number = lua_tointeger(lua, 1);
-    if((secret_number > GF_MAX_SECRETS) || (secret_number < 0)) return 0;   // No such secret - return
-
-    lua_pushinteger(lua, (int)gameflow.getSecretStateAtIndex(secret_number));
-    return 1;
+    if(lua_gettop(lua) >= 1)
+    {
+        int secret_number = lua_tointeger(lua, 1);
+        if((secret_number <= GF_MAX_SECRETS) && (secret_number >= 0))
+        {
+            lua_pushinteger(lua, (int)gameflow.getSecretStateAtIndex(secret_number));
+            return 1;
+        }
+    }
+    return 0;   // No parameter specified - return
 }
 
 
 int lua_SetSecretStatus(lua_State *lua)
 {
-    if(lua_gettop(lua) < 2) return 0;   // No parameter specified - return
-
-    int secret_number = lua_tointeger(lua, 1);
-    if((secret_number > GF_MAX_SECRETS) || (secret_number < 0)) return 0;   // No such secret - return
-
-    gameflow.setSecretStateAtIndex(secret_number, lua_tointeger(lua, 2));
+    if(lua_gettop(lua) >= 1)
+    {
+        int secret_number = lua_tointeger(lua, 1);
+        if((secret_number <= GF_MAX_SECRETS) && (secret_number >= 0))
+        {
+            gameflow.setSecretStateAtIndex(secret_number, lua_tointeger(lua, 2));
+        }
+    }
     return 0;
 }
 
