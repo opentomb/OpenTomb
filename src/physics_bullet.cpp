@@ -46,6 +46,10 @@ public:
         m_cont(cont),
         m_filter(filter)
     {
+        m_collisionFilterMask = (filter & (COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_STATIC_ROOM)) ? (btBroadphaseProxy::StaticFilter) : 0x0000;
+        m_collisionFilterMask |= (filter & COLLISION_GROUP_KINEMATIC) ? (btBroadphaseProxy::KinematicFilter) : 0x0000;
+        m_collisionFilterMask |= (filter & (COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_VEHICLE)) ? (btBroadphaseProxy::CharacterFilter) : 0x0000;
+        m_collisionFilterMask |= (filter & COLLISION_GROUP_DYNAMICS) ? (btBroadphaseProxy::DefaultFilter) : 0x0000;
     }
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace) override
@@ -107,6 +111,10 @@ public:
         m_cont(cont),
         m_filter(filter)
     {
+        m_collisionFilterMask = (filter & (COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_STATIC_ROOM)) ? (btBroadphaseProxy::StaticFilter) : 0x0000;
+        m_collisionFilterMask |= (filter & COLLISION_GROUP_KINEMATIC) ? (btBroadphaseProxy::KinematicFilter) : 0x0000;
+        m_collisionFilterMask |= (filter & (COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_VEHICLE)) ? (btBroadphaseProxy::CharacterFilter) : 0x0000;
+        m_collisionFilterMask |= (filter & COLLISION_GROUP_DYNAMICS) ? (btBroadphaseProxy::DefaultFilter) : 0x0000;
     }
 
     virtual btScalar addSingleResult(btCollisionWorld::LocalConvexResult &convexResult, bool normalInWorldSpace)
