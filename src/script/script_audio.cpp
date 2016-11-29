@@ -128,7 +128,9 @@ int Script_GetNumTracks(lua_State *lua)
         {
             lua_pushinteger(lua, World_GetVersion());
             if(lua_CallAndLog(lua, 1, 1, 0))
+            {
                 num_tracks = lua_tointeger(lua, -1);
+            }
         }
         lua_settop(lua, top);
     }
@@ -147,19 +149,17 @@ bool Script_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_s
         lua_getglobal(lua, "getOverridedSamplesInfo");
         const char *real_path;
 
-        if (lua_isfunction(lua, -1))
+        if(lua_isfunction(lua, -1))
         {
             lua_pushinteger(lua, World_GetVersion());
-            if (lua_CallAndLog(lua, 1, 3, 0))
+            if(lua_CallAndLog(lua, 1, 3, 0))
             {
                 size_t string_length = 0;
                 real_path   = lua_tolstring(lua, -1, &string_length);
                *num_sounds  = lua_tointeger(lua, -2);
                *num_samples = lua_tointeger(lua, -3);
-                strncpy(sample_name_mask, real_path, 255);
-
-                if((*num_sounds != -1) && (*num_samples != -1) && (strcmp(real_path, "NONE") != 0))
-                    result = true;
+                strncpy(sample_name_mask, real_path, string_length);
+                result = ((*num_sounds != -1) && (*num_samples != -1) && (strcmp(real_path, "NONE") != 0));
             }
         }
         lua_settop(lua, top);
@@ -191,9 +191,7 @@ bool Script_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_n
             {
                 *first_sample_number = (int)lua_tointeger(lua, -2);
                 *samples_count       = (int)lua_tointeger(lua, -1);
-
-                if((*first_sample_number != -1) && (*samples_count != -1))
-                    result = true;
+                result = ((*first_sample_number != -1) && (*samples_count != -1));
             }
         }
         lua_settop(lua, top);
@@ -230,11 +228,7 @@ bool Script_GetSoundtrack(lua_State *lua, int track_index, char *file_path, int 
 
                 strncpy(file_path, Engine_GetBasePath(), file_path_len);
                 strncat(file_path, real_path, file_path_len);
-
-                if(*stream_type != -1)
-                {
-                    result = true;
-                }
+                result = (*stream_type != -1);
             }
         }
         lua_settop(lua, top);
@@ -359,7 +353,10 @@ int lua_StopSound(lua_State *lua)
         result = Audio_Kill(id, TR_AUDIO_EMITTER_ENTITY, ent_id);
     }
 
-    if(result < 0) Con_Warning("audio with id = %d not played", id);
+    if(result < 0)
+    {
+        Con_Warning("audio with id = %d not played", id);
+    }
 
     return 0;
 }

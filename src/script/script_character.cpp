@@ -120,13 +120,14 @@ int lua_SetCharacterParam(lua_State * lua)
 
 int lua_GetCharacterCombatMode(lua_State * lua)
 {
-    if(lua_gettop(lua) < 1) return 0;
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-
-    if(ent && ent->character)
+    if(lua_gettop(lua) >= 1)
     {
-        lua_pushnumber(lua, ent->character->weapon_current_state);
-        return 1;
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            lua_pushnumber(lua, ent->character->weapon_current_state);
+            return 1;
+        }
     }
 
     return 0;
@@ -187,8 +188,9 @@ int lua_AddCharacterHair(lua_State *lua)
                 ent->character->hair_count++;
                 ent->character->hairs = (struct hair_s**)realloc(ent->character->hairs, (sizeof(struct hair_s*) * ent->character->hair_count));
                 ent->character->hairs[ent->character->hair_count-1] = Hair_Create(hair_setup, ent->physics);
-                if(!ent->character->hairs[ent->character->hair_count-1])
+                if(!ent->character->hairs[ent->character->hair_count - 1])
                 {
+                    ent->character->hair_count--;
                     Con_Warning("can not create hair for entity_id = %d", ent_id);
                 }
             }
@@ -209,12 +211,7 @@ int lua_AddCharacterHair(lua_State *lua)
 
 int lua_ResetCharacterHair(lua_State *lua)
 {
-    if(lua_gettop(lua) != 1)
-    {
-        Con_Warning("resetCharacterHair: expecting arguments (entity_id)");
-        return 0;
-    }
-    else
+    if(lua_gettop(lua) == 1)
     {
         int ent_id   = lua_tointeger(lua, 1);
         entity_p ent = World_GetEntityByID(ent_id);
@@ -241,6 +238,10 @@ int lua_ResetCharacterHair(lua_State *lua)
         {
             Con_Warning("no character with id = %d", ent_id);
         }
+    }
+    else
+    {
+        Con_Warning("resetCharacterHair: expecting arguments (entity_id)");
     }
     return 0;
 }
@@ -324,18 +325,9 @@ int lua_AddItem(lua_State * lua)
         return 0;
     }
 
-    if(top >= 3)
-    {
-        count = lua_tointeger(lua, 3);
-    }
-    else
-    {
-        count = -1;
-    }
-
     int entity_id = lua_tointeger(lua, 1);
     int item_id = lua_tointeger(lua, 2);
-
+    count = (top >= 3) ? (lua_tointeger(lua, 3)) : (-1);
     entity_p ent = World_GetEntityByID(entity_id);
 
     if(ent && ent->character)
@@ -363,13 +355,12 @@ int lua_RemoveItem(lua_State * lua)
     }
 
     int entity_id = lua_tointeger(lua, 1);
-    int item_id = lua_tointeger(lua, 2);
-    int count = lua_tointeger(lua, 3);
-
     entity_p ent = World_GetEntityByID(entity_id);
 
     if(ent && ent->character)
     {
+        int item_id = lua_tointeger(lua, 2);
+        int count = lua_tointeger(lua, 3);
         lua_pushinteger(lua, Inventory_RemoveItem(&ent->character->inventory, item_id, count));
         return 1;
     }
@@ -410,13 +401,12 @@ int lua_GetItemsCount(lua_State * lua)
         Con_Warning("getItemsCount: expecting arguments (entity_id, item_id)");
         return 0;
     }
+
     int entity_id = lua_tointeger(lua, 1);
-    int item_id = lua_tointeger(lua, 2);
-
     entity_p ent = World_GetEntityByID(entity_id);
-
     if(ent && ent->character)
     {
+        int item_id = lua_tointeger(lua, 2);
         lua_pushinteger(lua, Inventory_GetItemsCount(ent->character->inventory, item_id));
         return 1;
     }
@@ -438,13 +428,7 @@ int lua_PrintItems(lua_State * lua)
 
     int entity_id = lua_tointeger(lua, 1);
     entity_p  ent = World_GetEntityByID(entity_id);
-    if(ent == NULL)
-    {
-        Con_Warning("no entity with id = %d", entity_id);
-        return 0;
-    }
-
-    if(ent->character)
+    if(ent && ent->character)
     {
         inventory_node_p i = ent->character->inventory;
         for(; i; i = i->next)
@@ -452,6 +436,11 @@ int lua_PrintItems(lua_State * lua)
             Con_Printf("item[id = %d]: count = %d", i->id, i->count);
         }
     }
+    else
+    {
+        Con_Warning("no character with id = %d", entity_id);
+    }
+
     return 0;
 }
 
@@ -495,7 +484,7 @@ int lua_SetCharacterResponse(lua_State * lua)
     }
     else
     {
-        Con_Warning("no entity with id = %d", id);
+        Con_Warning("no character with id = %d", id);
     }
 
     return 0;
@@ -537,7 +526,7 @@ int lua_GetCharacterResponse(lua_State * lua)
     }
     else
     {
-        Con_Warning("no entity with id = %d", id);
+        Con_Warning("no character with id = %d", id);
         return 0;
     }
 }
@@ -560,7 +549,7 @@ int lua_SetCharacterWeaponModel(lua_State *lua)
     }
     else
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning("no character with id = %d", id);
     }
 
     return 0;
@@ -585,7 +574,7 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
     }
     else
     {
-        Con_Warning("no entity with id = %d", id);
+        Con_Warning("no character with id = %d", id);
         return 0;
     }
 }
@@ -608,7 +597,7 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
     }
     else
     {
-        Con_Printf("can not find entity with id = %d", id);
+        Con_Warning("no character with id = %d", id);
     }
 
     return 0;

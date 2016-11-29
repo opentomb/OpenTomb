@@ -1011,9 +1011,10 @@ void Script_LoadConstants(lua_State *lua)
 
 bool Script_LuaInit()
 {
+    bool ret = false;
     engine_lua = luaL_newstate();
 
-    if(engine_lua != NULL)
+    if(engine_lua)
     {
         luaL_openlibs(engine_lua);
         Script_LoadConstants(engine_lua);
@@ -1022,13 +1023,10 @@ bool Script_LuaInit()
 
         // Load script loading order (sic!)
         Script_DoLuaFile(engine_lua, "scripts/loadscript.lua");
+        ret = true;
+    }
 
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return ret;
 }
 
 

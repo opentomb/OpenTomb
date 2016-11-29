@@ -1,6 +1,6 @@
 
-#ifndef PARSE_H
-#define PARSE_H
+#ifndef ENGINE_SCRIPT_H
+#define ENGINE_SCRIPT_H
 
 struct screen_info_s;
 struct entity_s;

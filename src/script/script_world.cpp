@@ -33,7 +33,6 @@ extern "C" {
 #include "../gameflow.h"
 #include "../anim_state_control.h"
 #include "../character_controller.h"
-#include "../audio.h"
 #include "../gui.h"
 #include "../engine_string.h"
 
@@ -57,13 +56,7 @@ int lua_SameRoom(lua_State *lua)
     entity_p ent1 = World_GetEntityByID(lua_tonumber(lua, 1));
     entity_p ent2 = World_GetEntityByID(lua_tonumber(lua, 2));
 
-    if(ent1 && ent2)
-    {
-        lua_pushboolean(lua, ent1->self->room == ent2->self->room);
-        return 1;
-    }
-
-    lua_pushboolean(lua, 0);
+    lua_pushboolean(lua, ent1 && ent2 && (ent1->self->room == ent2->self->room));
     return 1;
 }
 
@@ -73,11 +66,8 @@ int lua_NewSector(lua_State *lua)
     if(lua_gettop(lua) > 0)
     {
         entity_p ent = World_GetEntityByID(lua_tonumber(lua, 1));
-        if(ent)
-        {
-            lua_pushboolean(lua, ent->current_sector == ent->last_sector);
-            return 1;
-        }
+        lua_pushboolean(lua, ent && (ent->current_sector == ent->last_sector));
+        return 1;
     }
 
     return 0;   // No argument specified - return.
@@ -109,9 +99,9 @@ int lua_SimilarSector(lua_State * lua)
 
     float next_pos[3];
 
-    next_pos[0] = ent->transform[12+0] + (dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0]);
-    next_pos[1] = ent->transform[12+1] + (dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1]);
-    next_pos[2] = ent->transform[12+2] + (dx * ent->transform[0+2] + dy * ent->transform[4+2] + dz * ent->transform[8+2]);
+    next_pos[0] = ent->transform[12 + 0] + (dx * ent->transform[0 + 0] + dy * ent->transform[4 + 0] + dz * ent->transform[8 + 0]);
+    next_pos[1] = ent->transform[12 + 1] + (dx * ent->transform[0 + 1] + dy * ent->transform[4 + 1] + dz * ent->transform[8 + 1]);
+    next_pos[2] = ent->transform[12 + 2] + (dx * ent->transform[0 + 2] + dy * ent->transform[4 + 2] + dz * ent->transform[8 + 2]);
 
     room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, ent->transform+12);
     room_sector_p next_sector = Room_GetSectorRaw(ent->self->room, next_pos);
@@ -146,43 +136,43 @@ int lua_GetSectorHeight(lua_State * lua)
 
     int id = lua_tointeger(lua, 1);
     entity_p ent = World_GetEntityByID(id);
+    if(ent)
+    {
+        bool ceiling = (top > 1) ? (lua_toboolean(lua, 2)) : (false);
+        float pos[3];
+        vec3_copy(pos, ent->transform + 12);
 
-    if(!ent)
+        if(top > 2)
+        {
+            float dx = lua_tonumber(lua, 3);
+            float dy = lua_tonumber(lua, 4);
+            float dz = lua_tonumber(lua, 5);
+
+            pos[0] += dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0];
+            pos[1] += dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1];
+            pos[2] += dx * ent->transform[0+2] + dy * ent->transform[4+2] + dz * ent->transform[8+2];
+        }
+
+        room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, pos);
+        curr_sector = Sector_GetPortalSectorTargetRaw(curr_sector);
+        float point[3];
+        (ceiling) ? (Sector_LowestCeilingCorner(curr_sector, point)) : (Sector_HighestFloorCorner(curr_sector, point));
+
+        lua_pushnumber(lua, point[2]);
+        return 1;
+    }
+    else
     {
         Con_Warning("no entity with id = %d", id);
         return 0;
     }
-
-    bool ceiling = (top > 1) ? (lua_toboolean(lua, 2)) : (false);
-    float pos[3];
-    vec3_copy(pos, ent->transform + 12);
-
-    if(top > 2)
-    {
-        float dx = lua_tonumber(lua, 3);
-        float dy = lua_tonumber(lua, 4);
-        float dz = lua_tonumber(lua, 5);
-
-        pos[0] += dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0];
-        pos[1] += dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1];
-        pos[2] += dx * ent->transform[0+2] + dy * ent->transform[4+2] + dz * ent->transform[8+2];
-    }
-
-    room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, pos);
-    curr_sector = Sector_GetPortalSectorTargetRaw(curr_sector);
-    float point[3];
-    (ceiling) ? (Sector_LowestCeilingCorner(curr_sector, point)) : (Sector_HighestFloorCorner(curr_sector, point));
-
-    lua_pushnumber(lua, point[2]);
-    return 1;
 }
 
 
 int lua_SectorTriggerClear(lua_State * lua)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
+    int id, sx, sy;
+    int top = lua_gettop(lua);
 
     if(top < 3)
     {
@@ -194,23 +184,24 @@ int lua_SectorTriggerClear(lua_State * lua)
     sx = lua_tointeger(lua, 2);
     sy = lua_tointeger(lua, 3);
     room_sector_p rs = World_GetRoomSector(id, sx, sy);
-    if(!rs)
+    if(rs)
+    {
+        if(rs->trigger)
+        {
+            for(trigger_command_p current_command = rs->trigger->commands; current_command; )
+            {
+                trigger_command_p next_command = current_command->next;
+                current_command->next = NULL;
+                free(current_command);
+                current_command = next_command;
+            }
+            free(rs->trigger);
+            rs->trigger = NULL;
+        }
+    }
+    else
     {
         Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
-        return 0;
-    }
-
-    if(rs->trigger)
-    {
-        for(trigger_command_p current_command = rs->trigger->commands; current_command; )
-        {
-            trigger_command_p next_command = current_command->next;
-            current_command->next = NULL;
-            free(current_command);
-            current_command = next_command;
-        }
-        free(rs->trigger);
-        rs->trigger = NULL;
     }
 
     return 0;
@@ -219,9 +210,8 @@ int lua_SectorTriggerClear(lua_State * lua)
 
 int lua_SectorAddTrigger(lua_State * lua)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
+    int id, sx, sy;
+    int top = lua_gettop(lua);
 
     if(top < 8)
     {
@@ -258,9 +248,8 @@ int lua_SectorAddTrigger(lua_State * lua)
 
 int lua_SectorAddTriggerCommand(lua_State * lua)
 {
-    int id, sx, sy, top;
-
-    top = lua_gettop(lua);
+    int id, sx, sy;
+    int top = lua_gettop(lua);
 
     if(top < 6)
     {
@@ -537,7 +526,7 @@ int lua_LoadMap(lua_State *lua)
     if(lua_isstring(lua, 1))
     {
         const char *s = lua_tostring(lua, 1);
-        if((s != NULL) && (s[0] != 0))
+        if(s && s[0])
         {
             if(!lua_isnil(lua, 2))
             {
