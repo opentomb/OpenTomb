@@ -46,6 +46,7 @@ public:
         m_cont(cont),
         m_filter(filter)
     {
+        m_collisionFilterGroup = btBroadphaseProxy::SensorTrigger;
         m_collisionFilterMask = (filter & (COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_STATIC_ROOM)) ? (btBroadphaseProxy::StaticFilter) : 0x0000;
         m_collisionFilterMask |= (filter & COLLISION_GROUP_KINEMATIC) ? (btBroadphaseProxy::KinematicFilter) : 0x0000;
         m_collisionFilterMask |= (filter & (COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_VEHICLE)) ? (btBroadphaseProxy::CharacterFilter) : 0x0000;
@@ -111,6 +112,7 @@ public:
         m_cont(cont),
         m_filter(filter)
     {
+        m_collisionFilterGroup = btBroadphaseProxy::SensorTrigger;
         m_collisionFilterMask = (filter & (COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_STATIC_ROOM)) ? (btBroadphaseProxy::StaticFilter) : 0x0000;
         m_collisionFilterMask |= (filter & COLLISION_GROUP_KINEMATIC) ? (btBroadphaseProxy::KinematicFilter) : 0x0000;
         m_collisionFilterMask |= (filter & (COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_VEHICLE)) ? (btBroadphaseProxy::CharacterFilter) : 0x0000;
@@ -481,8 +483,13 @@ void Physics_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispat
     c1 = (engine_container_p)((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->getUserPointer();
     r1 = (c1)?(c1->room):(NULL);
 
-    bool has_ghosts = (collisionPair.m_pProxy0->m_collisionFilterGroup == btBroadphaseProxy::SensorTrigger) ||
+    int has_ghosts =  (collisionPair.m_pProxy0->m_collisionFilterGroup == btBroadphaseProxy::SensorTrigger) +
                       (collisionPair.m_pProxy1->m_collisionFilterGroup == btBroadphaseProxy::SensorTrigger);
+
+    if(has_ghosts == 2)
+    {
+        return;
+    }
 
     if(c1 && c1 == c0)                                                          // No self interaction
     {
@@ -1290,7 +1297,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghost_objects[0]->setUserIndex(-1);
                     physics->ghost_objects[0]->setCollisionShape(BT_CSfromBBox(bf->bb_min, bf->bb_max));
                     physics->ghost_objects[0]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
-                    bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[0], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter);
+                    bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[0], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter & ~btBroadphaseProxy::SensorTrigger);
                 }
                 break;
 
@@ -1308,7 +1315,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghost_objects[0]->setUserIndex(-1);
                     physics->ghost_objects[0]->setCollisionShape(new btSphereShape(getInnerBBRadius(bf->bb_min, bf->bb_max)));
                     physics->ghost_objects[0]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
-                    bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[0], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter);
+                    bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[0], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter & ~btBroadphaseProxy::SensorTrigger);
                 }
                 break;
 
@@ -1335,7 +1342,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                             physics->ghost_objects[i]->setCollisionShape(BT_CSfromMesh(b_tag->mesh_base, true, true, false));
                         }
                         physics->ghost_objects[i]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
-                        bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[i], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter);
+                        bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[i], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter & ~btBroadphaseProxy::SensorTrigger);
                     }
                 }
         };
