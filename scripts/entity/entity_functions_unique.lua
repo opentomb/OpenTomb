@@ -65,7 +65,7 @@ function midastouch_init(id)    -- Midas gold touch
             
             if((lara_sector == hand_sector) and (getEntityMoveType(player) == MOVE_ON_FLOOR) and (lara_anim ~= 50)) then
                 setCharacterParam(player, PARAM_HEALTH, 0);
-                entitySSAnimEnsureExists(player, ANIM_TYPE_MISK_1, 5); --ANIM_TYPE_MISK_1 - add const
+                entitySSAnimEnsureExists(player, ANIM_TYPE_MISK_1, 5);          --ANIM_TYPE_MISK_1 - add const
                 setEntityAnim(player, ANIM_TYPE_MISK_1, 1, 0);
                 entitySSAnimSetEnable(player, ANIM_TYPE_MISK_1, 1);
                 entitySSAnimSetEnable(player, ANIM_TYPE_BASE, 0);
@@ -82,58 +82,46 @@ function damocles_init(id)      -- Sword of Damocles
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityCollisionFlags(id, bit32.bor(COLLISION_GROUP_TRIGGERS, COLLISION_GROUP_CHARACTERS), nil, COLLISION_GROUP_CHARACTERS);
     setEntityActivity(id, false);
-    
+    local rot_speed = 60.0 * (((math.random(20) - 10) / 5) + 1);
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
-        entity_funcs[id].rot_speed = ((math.random(20) - 10) / 5) + 1;
-        entity_funcs[id].falling = false;
         return ENTITY_TRIGGERING_ACTIVATED;
     end    
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
-        entity_funcs[id].rot_speed = 0.0;
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
     
     entity_funcs[id].onLoop = function(object_id)
-        rotateEntity(object_id, entity_funcs[object_id].rot_speed);
+        rotateEntity(object_id, rot_speed * frame_time);
         
         if(sameRoom(player, object_id)) then
-            local dx,dy,dz = getEntityVector(player, object_id);
-            if((math.abs(dx) < 1024.0) and (math.abs(dy) < 1024.0) and (entity_funcs[object_id].falling == false)) then
-                entity_funcs[object_id].falling = true;
-                addTask(
-                function()
-                    moveEntityToEntity(object_id, player, 32.0, true);
-                    if(dropEntity(object_id, frame_time, true)) then
-                        playSound(103, object_id);
-                        setEntityActivity(object_id, false);
-                        entity_funcs[object_id].falling = false;
-                        return false;
-                    end;
-                    return true;
-                end);
+            local dx, dy, dz = getEntityVector(player, object_id);
+            if(dx * dx + dy * dy < 1048576.0) then
+                moveEntityToEntity(object_id, player, 48.0 * 60.0 * frame_time, true);
+                if(dropEntity(object_id, frame_time, true)) then
+                    playSound(103, object_id);
+                    setEntityActivity(object_id, false);
+                    entity_funcs[id].onLoop = nil;
+                end;
             end;
         end
     end    
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if((entity_funcs[object_id].falling == true) and (getEntityModelID(activator_id) == 0) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
+        if(getEntityActivity(object_id) and (activator_id == player) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
             setCharacterParam(activator_id, PARAM_HEALTH, 0);
             playSound(SOUND_GEN_DEATH, activator_id);
             playSound(103, object_id);
             addEntityRagdoll(activator_id, RD_TYPE_LARA);
-            setEntityActivity(object_id, false);
-            setEntityBodyMass(object_id, 1, 15.0);
+            --setEntityCollisionFlags(object_id, COLLISION_GROUP_ALL, nil, COLLISION_GROUP_ALL);
+            --setEntityBodyMass(object_id, 1, 15.0);
         end;
-    end
-    
-    entity_funcs[id].onDelete = function(object_id)
-        entity_funcs[object_id].rot_speed = nil;
-        entity_funcs[object_id].falling = nil;
-    end
+    end;
 end
 
 

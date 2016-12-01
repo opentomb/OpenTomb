@@ -617,7 +617,7 @@ int lua_SetEntityPosition(lua_State * lua)
                     ent->transform[12 + 0] = lua_tonumber(lua, 2);
                     ent->transform[12 + 1] = lua_tonumber(lua, 3);
                     ent->transform[12 + 2] = lua_tonumber(lua, 4);
-                    return 0;
+                    Entity_UpdateRigidBody(ent, 1);
                 }
                 else
                 {
@@ -638,6 +638,7 @@ int lua_SetEntityPosition(lua_State * lua)
                     ent->angles[1] = lua_tonumber(lua, 6);
                     ent->angles[2] = lua_tonumber(lua, 7);
                     Entity_UpdateTransform(ent);
+                    Entity_UpdateRigidBody(ent, 1);
                 }
                 else
                 {
