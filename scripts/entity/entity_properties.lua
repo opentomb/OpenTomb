@@ -130,9 +130,9 @@ tr1_entity_tbl[71] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_B
 tr1_entity_tbl[72] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                      -- Menu: Compass
 tr1_entity_tbl[73] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                      -- Menu: Lara's Home photo
 
-tr1_entity_tbl[74] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "anim"};       -- Animating 1
-tr1_entity_tbl[75] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "anim"};       -- Animating 2
-tr1_entity_tbl[76] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "anim"};       -- Animating 3
+tr1_entity_tbl[74] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "anim_single"};       -- Animating 1
+tr1_entity_tbl[75] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "anim_single"};       -- Animating 2
+tr1_entity_tbl[76] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "anim_single"};       -- Animating 3
 
 tr1_entity_tbl[81] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                      -- Menu: Passport (closed)
 

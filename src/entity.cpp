@@ -1217,6 +1217,10 @@ int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
 
         // Full entity mask (11111) is always a reason to activate an entity.
         // If mask is not full, entity won't activate - no exclusions.
+        entity_object->timer = trigger_timer;                                   // Engage timer.
+        // Update trigger layout.
+        entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);       // mask  - 00011111
+        entity_object->trigger_layout ^= (uint8_t)mask;
 
         if(mask == 0x1F)
         {
@@ -1225,13 +1229,10 @@ int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
         }
         else if(mask != 0x1F)
         {
+            entity_object->timer = 0.0f;
             activation_state = Script_ExecEntity(engine_lua, ENTITY_CALLBACK_DEACTIVATE, entity_object->id, activator_id);
             event = 0;
         }
-
-        // Update trigger layout.
-        entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);       // mask  - 00011111
-        entity_object->trigger_layout ^= (uint8_t)mask;
 
         if(activation_state != ENTITY_TRIGGERING_NOT_READY)
         {
@@ -1244,7 +1245,6 @@ int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
             entity_object->trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);   // lock  - 01000000
             entity_object->trigger_layout ^= ((uint8_t)trigger_lock) << 6;
         }
-        entity_object->timer = trigger_timer;                                   // Engage timer.
     }
 
     return activation_state;
