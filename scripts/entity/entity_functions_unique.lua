@@ -101,7 +101,8 @@ function damocles_init(id)      -- Sword of Damocles
         
         if(sameRoom(player, object_id)) then
             local dx, dy, dz = getEntityVector(player, object_id);
-            if(dx * dx + dy * dy < 1048576.0) then
+            local vx, vy, vz = getEntitySpeed(object_id);
+            if((vz < 0.0) or (dx * dx + dy * dy < 1048576.0)) then
                 moveEntityToEntity(object_id, player, 48.0 * 60.0 * frame_time, true);
                 if(dropEntity(object_id, frame_time, true)) then
                     playSound(103, object_id);

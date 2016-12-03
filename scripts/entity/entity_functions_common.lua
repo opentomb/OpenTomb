@@ -383,7 +383,8 @@ function boulder_heavy_init(id)
             moveEntityLocal(object_id, 0.0, 2048.0 * frame_time, 0.0);
             local is_stopped, dx, dy, dz = getEntityCollisionFix(object_id, COLLISION_GROUP_STATIC_ROOM);
             if(is_stopped) then
-                is_stopped = dz * dz < dx * dx + dy * dy;
+                local mx, my, mz = getEntityGlobalMove(object_id, 0.0, 1.0, 0.0);
+                is_stopped = (mx * dx + my * dy + mz * dz < 0.0) and (dz * dz < dx * dx + dy * dy);
                 moveEntityGlobal(object_id, dx, dy, dz);
             end;
 
