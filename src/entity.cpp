@@ -1162,7 +1162,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                 entity_p trigger = (entity_p)cont->object;
                 if((trigger->type_flags & ENTITY_TYPE_INTERACTIVE) && (trigger->state_flags & ENTITY_STATE_ENABLED))
                 {
-                    if((trigger != ent) && (OBB_OBB_Test(trigger->obb, ent->obb, 32.0f) == 1) && Entity_CanTrigger(ent, trigger))
+                    if((trigger != ent) && Entity_CanTrigger(ent, trigger))
                     {
                         Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, trigger->id, ent->id);
                     }

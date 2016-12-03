@@ -55,8 +55,28 @@ end
 
 function midastouch_init(id)    -- Midas gold touch
 
-    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    
+    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
+
+    setEntityActivationOffset(id, -620.0, 0.0, -500.0, 128.0);
+    setEntityActivationDirection(id, 1.0, 0.0, 0.0, 0.87);
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(activator_id == nil) then
+            return ENTITY_TRIGGERING_NOT_READY;
+        end
+
+        local a, f, c = getEntityAnim(activator_id, ANIM_TYPE_BASE);
+        if((a ~= 134) and (getItemsCount(activator_id, 100) > 0)) then
+            setEntityPos(activator_id, getEntityPos(object_id));
+            moveEntityLocal(activator_id, getEntityActivationOffset(object_id));
+            entityRotateToTriggerZ(activator_id, object_id);
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 134, 0);
+            removeItem(activator_id, 100, 1);
+            addItem(activator_id, ITEM_PUZZLE_1, 1);
+        end;
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+
     entity_funcs[id].onLoop = function(object_id)
         if(getEntityDistance(player, object_id) < 1024.0) then
             local lara_anim, frame, count = getEntityAnim(player, ANIM_TYPE_BASE);
@@ -73,8 +93,6 @@ function midastouch_init(id)    -- Midas gold touch
             end;
         end;
     end
-    
-    prepareEntity(id);
 end
 
 
