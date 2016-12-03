@@ -171,6 +171,43 @@ private:
 };
 
 
+struct bt_engine_OverlapFilterCallback : public btOverlapFilterCallback
+{
+	// return true when pairs need collision
+	virtual bool	needBroadphaseCollision(btBroadphaseProxy* proxy0,btBroadphaseProxy* proxy1) const
+	{
+		bool collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) &&
+		                (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask);
+
+        if(collides)
+        {
+            engine_container_p c0 = (engine_container_p)((btCollisionObject*)proxy0->m_clientObject)->getUserPointer();
+            engine_container_p c1 = (engine_container_p)((btCollisionObject*)proxy1->m_clientObject)->getUserPointer();;
+            room_p r0 = (c0) ? (c0->room) : (NULL);
+            room_p r1 = (c1) ? (c1->room) : (NULL);
+
+            int num_ghosts = (proxy0->m_collisionFilterGroup == btBroadphaseProxy::SensorTrigger) +
+                             (proxy1->m_collisionFilterGroup == btBroadphaseProxy::SensorTrigger);
+
+            if(num_ghosts == 2)
+            {
+                return false;
+            }
+
+            if(c1 && c1 == c0)                                                  // No self interaction
+            {
+                return false;
+            }
+
+            collides = ((!r0 && !r1) || Room_IsInNearRoomsList(r0, r1) &&
+                        (num_ghosts || (c0->collision_group & c1->collision_mask) && (c1->collision_group & c0->collision_mask)));
+        }
+
+		return collides;
+	}
+} bt_engine_overlap_filter_callback;
+
+
 struct physics_object_s
 {
     btRigidBody    *bt_body;
@@ -252,9 +289,6 @@ struct collision_node_s                 *collision_nodes_pool = NULL;
 
 struct collision_node_s *Physics_GetCollisionNode();
 
-void Physics_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
-void Physics_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep);
-
 /* bullet collision model calculation */
 btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max);
 btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
@@ -285,7 +319,6 @@ void Physics_Init()
 
     ///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
     bt_engine_dispatcher = new btCollisionDispatcher(bt_engine_collisionConfiguration);
-    bt_engine_dispatcher->setNearCallback(Physics_RoomNearCallback);
 
     ///btDbvtBroadphase is a good general purpose broadphase. You can also try out btAxis3Sweep.
     bt_engine_overlappingPairCache = new btDbvtBroadphase();
@@ -296,7 +329,7 @@ void Physics_Init()
     bt_engine_solver = new btSequentialImpulseConstraintSolver;
 
     bt_engine_dynamicsWorld = new btDiscreteDynamicsWorld(bt_engine_dispatcher, bt_engine_overlappingPairCache, bt_engine_solver, bt_engine_collisionConfiguration);
-    bt_engine_dynamicsWorld->setInternalTickCallback(Physics_InternalTickCallback);
+    bt_engine_dynamicsWorld->getPairCache()->setOverlapFilterCallback(&bt_engine_overlap_filter_callback);
     bt_engine_dynamicsWorld->setGravity(btVector3(0, 0, -4500.0));
 
     bt_debug_drawer.setDebugMode(btIDebugDraw::DBG_DrawWireframe | btIDebugDraw::DBG_DrawConstraints);
@@ -467,69 +500,6 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
         physics->objects_count = 0;
         free(physics);
     }
-}
-
-
-/**
- * overlapping room collision filter
- */
-void Physics_RoomNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
-{
-    engine_container_p c0, c1;
-    room_p r0 = NULL, r1 = NULL;
-
-    c0 = (engine_container_p)((btCollisionObject*)collisionPair.m_pProxy0->m_clientObject)->getUserPointer();
-    r0 = (c0)?(c0->room):(NULL);
-    c1 = (engine_container_p)((btCollisionObject*)collisionPair.m_pProxy1->m_clientObject)->getUserPointer();
-    r1 = (c1)?(c1->room):(NULL);
-
-    int has_ghosts =  (collisionPair.m_pProxy0->m_collisionFilterGroup == btBroadphaseProxy::SensorTrigger) +
-                      (collisionPair.m_pProxy1->m_collisionFilterGroup == btBroadphaseProxy::SensorTrigger);
-
-    if(has_ghosts == 2)
-    {
-        return;
-    }
-
-    if(c1 && c1 == c0)                                                          // No self interaction
-    {
-        if(!has_ghosts)
-        {
-            dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);
-        }
-        return;
-    }
-
-    if((!r0 && !r1) || Room_IsInNearRoomsList(r0, r1))
-    {
-        if(has_ghosts || (c0->collision_group & c1->collision_mask) && (c1->collision_group & c0->collision_mask))
-        {
-            dispatcher.defaultNearCallback(collisionPair, dispatcher, dispatchInfo);
-        }
-        return;
-    }
-}
-
-/**
- * update current room of bullet object
- */
-void Physics_InternalTickCallback(btDynamicsWorld *world, btScalar timeStep)
-{
-    /*for(int i = world->getNumCollisionObjects() - 1; i >= 0; i--)
-    {
-        btCollisionObject* obj = bt_engine_dynamicsWorld->getCollisionObjectArray()[i];
-        btRigidBody* body = btRigidBody::upcast(obj);
-        if (body && !body->isStaticObject() && body->getMotionState())
-        {
-            btTransform trans;
-            body->getMotionState()->getWorldTransform(trans);
-            engine_container_p cont = (engine_container_p)body->getUserPointer();
-            if(cont && (cont->object_type == OBJECT_BULLET_MISC))
-            {
-                cont->room = Room_FindPosCogerrence(trans.getOrigin().m_floats, cont->room);
-            }
-        }
-    }*/
 }
 
 
