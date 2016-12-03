@@ -126,6 +126,51 @@ function damocles_init(id)      -- Sword of Damocles
 end
 
 
+function Thor_hummer_init(id)      -- map 5
+
+    setEntityActivity(id, false);
+   
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        local a, f, c = getEntityAnim(actor_id, ANIM_TYPE_BASE);
+        if(a == 0) then
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
+            setEntityActivity(object_id, true);
+        end;
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if(a == 1) then
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+        end;
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id)
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+
+        if((tickEntity(object_id) == TICK_STOPPED) and (a <= 1)) then
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+            return;
+        end;
+
+        if(a == 1) then
+            if((f + 1 >= c) and (getEntityTimer(object_id) >= 0.75)) then
+                setEntityAnim(object_id, ANIM_TYPE_BASE, 2, 0);
+                setEntityAnimState(object_id, ANIM_TYPE_BASE, 2);
+            end;
+        elseif((a == 2) and (f + 1 >= c)) then
+            local x, y, z = getEntityPos(19);
+            setEntityPos(19, x, y, -17152);
+            x, y, z = getEntityPos(20);
+            setEntityPos(20, x, y, -19200);
+            entity_funcs[id].onLoop = nil;
+        end;
+    end;
+end
+
+
 function natla_cabin_TR1_init(id)
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
