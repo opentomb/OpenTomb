@@ -238,14 +238,12 @@ bool Res_Sector_IsTweenAlterable(struct room_sector_s *s1, struct room_sector_s 
     if(s1->portal_to_room)
     {
         return s2->owner_room->alternate_room_next || s2->owner_room->alternate_room_prev ||
-               s1->portal_to_room->alternate_room_next || s1->portal_to_room->alternate_room_prev ||
-               (s2->room_above && (s2->room_above->alternate_room_next || s2->room_above->alternate_room_prev));
+               s1->portal_to_room->alternate_room_next || s1->portal_to_room->alternate_room_prev;
     }
     else if(s2->portal_to_room)
     {
         return s1->owner_room->alternate_room_next || s1->owner_room->alternate_room_prev ||
-               s2->portal_to_room->alternate_room_next || s2->portal_to_room->alternate_room_prev ||
-               (s1->room_above && (s1->room_above->alternate_room_next || s1->room_above->alternate_room_prev));
+               s2->portal_to_room->alternate_room_next || s2->portal_to_room->alternate_room_prev;
     }
 
     return false;
@@ -254,11 +252,6 @@ bool Res_Sector_IsTweenAlterable(struct room_sector_s *s1, struct room_sector_s 
 
 void Res_Sector_GenXTween(sector_tween_s *room_tween, room_sector_p current_heightmap, room_sector_p next_heightmap, bool is_static)
 {
-    char joined_floors = 0;
-    char joined_ceilings = 0;
-    room_sector_p current_heightmap_orig = current_heightmap;
-    room_sector_p next_heightmap_orig = next_heightmap;
-
     /* XY corners coordinates must be calculated from native room sector */
     room_tween->floor_corners[0][1] = current_heightmap->floor_corners[0][1];
     room_tween->floor_corners[1][1] = room_tween->floor_corners[0][1];
@@ -289,8 +282,6 @@ void Res_Sector_GenXTween(sector_tween_s *room_tween, room_sector_p current_heig
             Res_Sector_SetTweenFloorConfig(room_tween);
             room_tween->floor_tween_inverted = 0x01;
             room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
-            joined_floors = 1;
-            joined_ceilings = 1;
         }
         else if(Res_Sector_IsWall(current_heightmap, next_heightmap))
         {
@@ -300,8 +291,6 @@ void Res_Sector_GenXTween(sector_tween_s *room_tween, room_sector_p current_heig
             room_tween->floor_corners[3][2] = next_heightmap->floor_corners[2][2];
             Res_Sector_SetTweenFloorConfig(room_tween);
             room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
-            joined_floors = 1;
-            joined_ceilings = 1;
         }
         else
         {
@@ -320,7 +309,6 @@ void Res_Sector_GenXTween(sector_tween_s *room_tween, room_sector_p current_heig
                         room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->floor_tween_inverted = 0x01;
-                        joined_floors = 1;
                     }
                     if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
@@ -329,111 +317,9 @@ void Res_Sector_GenXTween(sector_tween_s *room_tween, room_sector_p current_heig
                         room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[2][2];
                         room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[1][2];
                         Res_Sector_SetTweenCeilingConfig(room_tween);
-                        joined_ceilings = 1;
                     }
                 }
             }
-        }
-    }
-
-    current_heightmap = current_heightmap_orig;
-    next_heightmap    = next_heightmap_orig;
-    if((joined_floors == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
-    {
-        char valid = 0;
-        if(next_heightmap->portal_to_room && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID &&
-           (current_heightmap->room_above && (!is_static || (!current_heightmap->room_above->alternate_room_next && current_heightmap->room_above->alternate_room_prev)))))
-        {
-            next_heightmap = Res_Sector_GetPortalSectorTarget(next_heightmap);
-            if(next_heightmap->owner_room->id == current_heightmap->room_above->id)
-            {
-                valid = 1;
-            }
-            if(valid == 0)
-            {
-                room_sector_p rs = Room_GetSectorRaw(current_heightmap->room_above->real_room, next_heightmap->pos);
-                if(rs && (rs->portal_to_room == next_heightmap->owner_room))
-                {
-                    valid = 1;
-                }
-            }
-        }
-
-        if(current_heightmap->portal_to_room && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) &&
-           (next_heightmap->room_above && (!is_static || (!next_heightmap->room_above->alternate_room_next && next_heightmap->room_above->alternate_room_prev))))
-        {
-            current_heightmap = Res_Sector_GetPortalSectorTarget(current_heightmap);
-            if(current_heightmap->owner_room->id == next_heightmap->room_above->id)
-            {
-                valid = 1;
-            }
-            if(valid == 0)
-            {
-                room_sector_p rs = Room_GetSectorRaw(next_heightmap->room_above->real_room, current_heightmap->pos);
-                if(rs && (rs->portal_to_room == current_heightmap->owner_room))
-                {
-                    valid = 1;
-                }
-            }
-        }
-
-        if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
-        {
-            room_tween->floor_corners[0][2] = current_heightmap->floor_corners[0][2];
-            room_tween->floor_corners[1][2] = next_heightmap->floor_corners[3][2];
-            room_tween->floor_corners[2][2] = next_heightmap->floor_corners[2][2];
-            room_tween->floor_corners[3][2] = current_heightmap->floor_corners[1][2];
-            Res_Sector_SetTweenFloorConfig(room_tween);
-            room_tween->floor_tween_inverted = 0x01;
-        }
-    }
-
-    current_heightmap = current_heightmap_orig;
-    next_heightmap    = next_heightmap_orig;
-    if((joined_ceilings == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
-    {
-        char valid = 0;
-        if(next_heightmap->portal_to_room && (current_heightmap->room_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
-        {
-            next_heightmap = Res_Sector_GetPortalSectorTarget(next_heightmap);
-            if(next_heightmap->owner_room->id == current_heightmap->room_below->id)
-            {
-                valid = 1;
-            }
-            if(valid == 0)
-            {
-                room_sector_p rs = Room_GetSectorRaw(current_heightmap->room_below->real_room, next_heightmap->pos);
-                if(rs && (rs->portal_to_room == next_heightmap->owner_room))
-                {
-                    valid = 1;
-                }
-            }
-        }
-
-        if(current_heightmap->portal_to_room && (next_heightmap->room_below != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
-        {
-            current_heightmap = Res_Sector_GetPortalSectorTarget(current_heightmap);
-            if(current_heightmap->owner_room->id == next_heightmap->room_below->id)
-            {
-                valid = 1;
-            }
-            if(valid == 0)
-            {
-                room_sector_p rs = Room_GetSectorRaw(next_heightmap->room_below->real_room, current_heightmap->pos);
-                if(rs && (rs->portal_to_room == current_heightmap->owner_room))
-                {
-                    valid = 1;
-                }
-            }
-        }
-
-        if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
-        {
-            room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[0][2];
-            room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[3][2];
-            room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[2][2];
-            room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[1][2];
-            Res_Sector_SetTweenCeilingConfig(room_tween);
         }
     }
 }
@@ -441,11 +327,6 @@ void Res_Sector_GenXTween(sector_tween_s *room_tween, room_sector_p current_heig
 
 void Res_Sector_GenYTween(sector_tween_s *room_tween, room_sector_p current_heightmap, room_sector_p next_heightmap, bool is_static)
 {
-    char joined_floors = 0;
-    char joined_ceilings = 0;
-    room_sector_p current_heightmap_orig = current_heightmap;
-    room_sector_p next_heightmap_orig = next_heightmap;
-
     room_tween->floor_corners[0][0] = current_heightmap->floor_corners[1][0];
     room_tween->floor_corners[1][0] = room_tween->floor_corners[0][0];
     room_tween->floor_corners[2][0] = room_tween->floor_corners[0][0];
@@ -464,9 +345,6 @@ void Res_Sector_GenYTween(sector_tween_s *room_tween, room_sector_p current_heig
     room_tween->ceiling_corners[2][1] = current_heightmap->ceiling_corners[2][1];
     room_tween->ceiling_corners[3][1] = room_tween->ceiling_corners[2][1];
 
-    joined_floors = 0;
-    joined_ceilings = 0;
-
     if((next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) || (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
     {
         // Init Y-plane tween  [ - ]
@@ -479,8 +357,6 @@ void Res_Sector_GenYTween(sector_tween_s *room_tween, room_sector_p current_heig
             Res_Sector_SetTweenFloorConfig(room_tween);
             room_tween->floor_tween_inverted = 0x01;
             room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
-            joined_floors = 1;
-            joined_ceilings = 1;
         }
         else if(Res_Sector_IsWall(current_heightmap, next_heightmap))
         {
@@ -490,8 +366,6 @@ void Res_Sector_GenYTween(sector_tween_s *room_tween, room_sector_p current_heig
             room_tween->floor_corners[3][2] = next_heightmap->floor_corners[3][2];
             Res_Sector_SetTweenFloorConfig(room_tween);
             room_tween->ceiling_tween_type = TR_SECTOR_TWEEN_TYPE_NONE;
-            joined_floors = 1;
-            joined_ceilings = 1;
         }
         else
         {
@@ -510,7 +384,6 @@ void Res_Sector_GenYTween(sector_tween_s *room_tween, room_sector_p current_heig
                         room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
                         Res_Sector_SetTweenFloorConfig(room_tween);
                         room_tween->floor_tween_inverted = 0x01;
-                        joined_floors = 1;
                     }
                     if((current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID) || (next_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
                     {
@@ -519,111 +392,9 @@ void Res_Sector_GenYTween(sector_tween_s *room_tween, room_sector_p current_heig
                         room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[3][2];
                         room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[2][2];
                         Res_Sector_SetTweenCeilingConfig(room_tween);
-                        joined_ceilings = 1;
                     }
                 }
             }
-        }
-    }
-
-    current_heightmap = current_heightmap_orig;
-    next_heightmap    = next_heightmap_orig;
-    if((joined_floors == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
-    {
-        char valid = 0;
-        if(next_heightmap->portal_to_room && (current_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) &&
-           (current_heightmap->room_above && (!is_static || (!current_heightmap->room_above->alternate_room_next && current_heightmap->room_above->alternate_room_prev))))
-        {
-            next_heightmap = Res_Sector_GetPortalSectorTarget(next_heightmap);
-            if(next_heightmap->owner_room->id == current_heightmap->room_above->id)
-            {
-                valid = 1;
-            }
-            if(valid == 0)
-            {
-                room_sector_p rs = Room_GetSectorRaw(current_heightmap->room_above->real_room, next_heightmap->pos);
-                if(rs && (rs->portal_to_room == next_heightmap->owner_room))
-                {
-                    valid = 1;
-                }
-            }
-        }
-
-        if(current_heightmap->portal_to_room && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID) &&
-           (next_heightmap->room_above && (!is_static || (!next_heightmap->room_above->alternate_room_next && next_heightmap->room_above->alternate_room_prev))))
-        {
-            current_heightmap = Res_Sector_GetPortalSectorTarget(current_heightmap);
-            if(current_heightmap->owner_room->id == next_heightmap->room_above->id)
-            {
-                valid = 1;
-            }
-            if(valid == 0)
-            {
-                room_sector_p rs = Room_GetSectorRaw(next_heightmap->room_above->real_room, current_heightmap->pos);
-                if(rs && (rs->portal_to_room == current_heightmap->owner_room))
-                {
-                    valid = 1;
-                }
-            }
-        }
-
-        if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
-        {
-            room_tween->floor_corners[0][2] = current_heightmap->floor_corners[1][2];
-            room_tween->floor_corners[1][2] = next_heightmap->floor_corners[0][2];
-            room_tween->floor_corners[2][2] = next_heightmap->floor_corners[3][2];
-            room_tween->floor_corners[3][2] = current_heightmap->floor_corners[2][2];
-            Res_Sector_SetTweenFloorConfig(room_tween);
-            room_tween->floor_tween_inverted = 0x01;
-        }
-    }
-
-    current_heightmap = current_heightmap_orig;
-    next_heightmap    = next_heightmap_orig;
-    if((joined_ceilings == 0) && (!current_heightmap->portal_to_room || !next_heightmap->portal_to_room))
-    {
-        char valid = 0;
-        if(next_heightmap->portal_to_room && (current_heightmap->room_below != NULL) && (current_heightmap->ceiling_penetration_config == TR_PENETRATION_CONFIG_SOLID))
-        {
-            next_heightmap = Res_Sector_GetPortalSectorTarget(next_heightmap);
-            if(next_heightmap->owner_room->id == current_heightmap->room_below->id)
-            {
-                valid = 1;
-            }
-            if(valid == 0)
-            {
-                room_sector_p rs = Room_GetSectorRaw(current_heightmap->room_below->real_room, next_heightmap->pos);
-                if(rs && (rs->portal_to_room == next_heightmap->owner_room))
-                {
-                    valid = 1;
-                }
-            }
-        }
-
-        if(current_heightmap->portal_to_room && (next_heightmap->room_below != NULL) && (next_heightmap->floor_penetration_config == TR_PENETRATION_CONFIG_SOLID))
-        {
-            current_heightmap = Res_Sector_GetPortalSectorTarget(current_heightmap);
-            if(current_heightmap->owner_room->id == next_heightmap->room_below->id)
-            {
-                valid = 1;
-            }
-            if(valid == 0)
-            {
-                room_sector_p rs = Room_GetSectorRaw(next_heightmap->room_below->real_room, current_heightmap->pos);
-                if(rs && (rs->portal_to_room == current_heightmap->owner_room))
-                {
-                    valid = 1;
-                }
-            }
-        }
-
-        if((valid == 1) && (current_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL) && (next_heightmap->floor_penetration_config != TR_PENETRATION_CONFIG_WALL))
-        {
-            room_tween->ceiling_corners[0][2] = current_heightmap->ceiling_corners[1][2];
-            room_tween->ceiling_corners[1][2] = next_heightmap->ceiling_corners[0][2];
-            room_tween->ceiling_corners[2][2] = next_heightmap->ceiling_corners[3][2];
-            room_tween->ceiling_corners[3][2] = current_heightmap->ceiling_corners[2][2];
-            Res_Sector_SetTweenCeilingConfig(room_tween);
         }
     }
 }
