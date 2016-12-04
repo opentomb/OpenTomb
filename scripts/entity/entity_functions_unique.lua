@@ -157,11 +157,16 @@ end
 function Thor_hummer_init(id)      -- map 5
 
     setEntityActivity(id, false);
-   
+    
+    local spawned_id = spawnEntity(45, 25, getEntityPos(63));
+
+    print("thor spawned id = " .. spawned_id);
+    
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        local a, f, c = getEntityAnim(actor_id, ANIM_TYPE_BASE);
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(a == 0) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
+            setEntityAnim(spawned_id, ANIM_TYPE_BASE, 1, 0);
             setEntityActivity(object_id, true);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
@@ -171,6 +176,7 @@ function Thor_hummer_init(id)      -- map 5
         local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(a == 1) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+            setEntityAnim(spawned_id, ANIM_TYPE_BASE, 0, 0);
         end;
         return ENTITY_TRIGGERING_DEACTIVATED;
     end;
@@ -180,15 +186,19 @@ function Thor_hummer_init(id)      -- map 5
 
         if((tickEntity(object_id) == TICK_STOPPED) and (a <= 1)) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+            setEntityAnim(spawned_id, ANIM_TYPE_BASE, 0, 0);
             return;
         end;
 
         if(a == 1) then
             if((f + 1 >= c) and (getEntityTimer(object_id) >= 0.75)) then
                 setEntityAnim(object_id, ANIM_TYPE_BASE, 2, 0);
-                setEntityAnimState(object_id, ANIM_TYPE_BASE, 2);
+                setEntityAnim(spawned_id, ANIM_TYPE_BASE, 2, 0);
             end;
         elseif((a == 2) and (f + 1 >= c)) then
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
+            setEntityAnim(spawned_id, ANIM_TYPE_BASE, 3, 0);
+            
             local x, y, z = getEntityPos(19);
             setEntityPos(19, x, y, -17152);
             x, y, z = getEntityPos(20);

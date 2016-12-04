@@ -438,12 +438,12 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
     if(global_world.entity_tree)
     {
         skeletal_model_p model = World_GetModelByID(model_id);
-        if(model != NULL)
+        if(model)
         {
             entity_p entity = World_GetEntityByID(id);
             RedBlackNode_p node = global_world.entity_tree->root;
 
-            if(entity != NULL)
+            if(entity)
             {
                 if(pos != NULL)
                 {
@@ -468,7 +468,6 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             }
 
             entity = Entity_Create();
-
             if(id < 0)
             {
                 entity->id = 0;

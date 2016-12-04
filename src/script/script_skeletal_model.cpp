@@ -435,7 +435,7 @@ int lua_SetEntityAnim(lua_State * lua)
 
     if(top < 4)
     {
-        Con_Warning("setEntityAnim: expecting arguments (entity_id, anim_type_id, anim_num, frame_number, (next_anim, next_frame))");
+        Con_Warning("setEntityAnim: expecting arguments (entity_id, anim_type_id, anim_num, frame_number, (curr_anim, curr_frame))");
         return 0;
     }
 
@@ -447,10 +447,15 @@ int lua_SetEntityAnim(lua_State * lua)
         if(ss_anim)
         {
             Anim_SetAnimation(ss_anim, lua_tointeger(lua, 3), lua_tointeger(lua, 4));
-            if(top >= 5)
+            if(top >= 6)
             {
-                ss_anim->next_animation = lua_tointeger(lua, 5);
-                ss_anim->next_frame = lua_tointeger(lua, 6);
+                int16_t anim = lua_tointeger(lua, 5);
+                int16_t frame = lua_tointeger(lua, 6);
+                if((anim < ss_anim->model->animation_count) && (frame < ss_anim->model->animations[anim].frames_count))
+                {
+                    ss_anim->current_animation = anim;
+                    ss_anim->current_frame = frame;
+                }
             }
         }
     }

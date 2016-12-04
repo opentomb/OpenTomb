@@ -212,13 +212,13 @@ void Save_Entity(FILE **f, entity_p ent)
     {
         uint32_t room_id = (ent->self->room)?(ent->self->room->id):(0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->bf->animations.model->id, room_id,
-                ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
+                ent->transform[12 + 0], ent->transform[12+1], ent->transform[12+2],
                 ent->angles[0], ent->angles[1], ent->angles[2], ent->id);
     }
     else
     {
         fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id,
-                ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
+                ent->transform[12 + 0], ent->transform[12+1], ent->transform[12+2],
                 ent->angles[0], ent->angles[1], ent->angles[2]);
     }
 
@@ -271,6 +271,7 @@ void Save_Entity(FILE **f, entity_p ent)
     fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
     fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d, %d);", ent->id, ent->self->collision_group, ent->self->collision_shape, ent->self->collision_mask);
     fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
+    fprintf(*f, "\nsetEntityTimer(%d, %.3f);", ent->id, ent->timer);
 
     if(ent->self->room != NULL)
     {
@@ -283,7 +284,7 @@ void Save_Entity(FILE **f, entity_p ent)
 
     for(ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
     {
-        fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->current_animation, ss_anim->current_frame, ss_anim->next_animation, ss_anim->next_frame);
+        fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_animation, ss_anim->next_frame, ss_anim->current_animation, ss_anim->current_frame);
         fprintf(*f, "\nsetEntityAnimStateHeavy(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state_heavy);
         fprintf(*f, "\nsetEntityAnimState(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state);
         fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %d, %.2f, %.2f, %.2f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type, ss_anim->targeting_bone,

@@ -1157,12 +1157,12 @@ void Entity_CheckActivators(struct entity_s *ent)
         engine_container_p cont = ent->self->room->content->containers;
         for(; cont; cont = cont->next)
         {
-            if((cont->object_type == OBJECT_ENTITY) && (cont->object))
+            if((cont->object_type == OBJECT_ENTITY) && cont->object && (cont->object != ent))
             {
                 entity_p trigger = (entity_p)cont->object;
                 if((trigger->type_flags & ENTITY_TYPE_INTERACTIVE) && (trigger->state_flags & ENTITY_STATE_ENABLED))
                 {
-                    if((trigger != ent) && Entity_CanTrigger(ent, trigger))
+                    if(Entity_CanTrigger(ent, trigger))
                     {
                         Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, trigger->id, ent->id);
                     }
@@ -1177,8 +1177,8 @@ void Entity_CheckActivators(struct entity_s *ent)
                     ppos[1] = ent->transform[12 + 1] + ent->transform[4 + 1] * ent->bf->bb_max[1];
                     ppos[2] = ent->transform[12 + 2] + ent->transform[4 + 2] * ent->bf->bb_max[1];
                     r *= r;
-                    if((trigger != ent) && ((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
-                                      (v[2] + 32.0 > ent->transform[12 + 2] + ent->bf->bb_min[2]) && (v[2] - 32.0 < ent->transform[12 + 2] + ent->bf->bb_max[2]))
+                    if(((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
+                        (v[2] + 72.0 > ent->transform[12 + 2] + ent->bf->bb_min[2]) && (v[2] - 32.0 < ent->transform[12 + 2] + ent->bf->bb_max[2]))
                     {
                         Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, trigger->id, ent->id);
                     }

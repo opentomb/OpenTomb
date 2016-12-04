@@ -414,7 +414,7 @@ int lua_SpawnEntity(lua_State * lua)
 {
     if(lua_gettop(lua) < 5)
     {
-        Con_Warning("spawnEntity: expecting arguments (model_id1, room_id, x, y, z, (ax, ay, az))");
+        Con_Warning("spawnEntity: expecting arguments (model_id1, room_id, x, y, z, (ax, ay, az, ov_id))");
         return 0;
     }
 
