@@ -378,14 +378,15 @@ function boulder_heavy_init(id)
     entity_funcs[id].onLoop = function(object_id)
         if(getEntityActivity(object_id)) then
             moveEntityLocal(object_id, 0.0, 2048.0 * frame_time, 0.0);
-            local is_stopped, t = getEntitySphereTest(object_id, COLLISION_GROUP_STATIC_ROOM, 320.0, 0.0, 32.0, 0.0);
+            local is_stopped, t = getEntitySphereTest(object_id, COLLISION_GROUP_STATIC_ROOM, 320.0, 0.0, 180.0, 0.0);
+
+            local need_fix, dx, dy, dz = getEntityCollisionFix(object_id, COLLISION_GROUP_STATIC_ROOM);
+            if(need_fix) then
+                moveEntityGlobal(object_id, dx / 2, dy / 2, dz / 2);
+            end;
 
             local is_dropped = dropEntity(object_id, frame_time, true);
             if(is_dropped and is_stopped) then
-                local need_fix, dx, dy, dz = getEntityCollisionFix(object_id, COLLISION_GROUP_STATIC_ROOM);
-                if(need_fix) then
-                    moveEntityGlobal(object_id, dx / 2, dy / 2, dz / 2);
-                end;
                 setEntityActivity(object_id, false);
                 dropEntity(object_id, 64.0, true);
             end;
