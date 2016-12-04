@@ -362,9 +362,8 @@ function boulder_heavy_init(id)
     setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
     setEntityActivity(id, false);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
-    createGhosts(id);
     local group = bit32.bor(COLLISION_GROUP_TRIGGERS, COLLISION_GROUP_CHARACTERS);
-    local mask = bit32.bor(COLLISION_GROUP_STATIC_ROOM, COLLISION_GROUP_STATIC_OBLECT);
+    local mask = bit32.bor(COLLISION_GROUP_STATIC_ROOM, COLLISION_GROUP_STATIC_OBLECT, COLLISION_GROUP_KINEMATIC);
     setEntityCollisionFlags(id, group, nil, mask);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -377,13 +376,17 @@ function boulder_heavy_init(id)
 
     entity_funcs[id].onLoop = function(object_id)
         if(getEntityActivity(object_id)) then
-            moveEntityLocal(object_id, 0.0, 2048.0 * frame_time, 0.0);
-            local is_stopped, t = getEntitySphereTest(object_id, COLLISION_GROUP_STATIC_ROOM, 320.0, 0.0, 180.0, 0.0);
-
-            local need_fix, dx, dy, dz = getEntityCollisionFix(object_id, COLLISION_GROUP_STATIC_ROOM);
-            if(need_fix) then
-                moveEntityGlobal(object_id, dx / 2, dy / 2, dz / 2);
+            local dy = 2560.0 * frame_time;
+            local R = 512;
+            local r = 256;
+            local test_y = R - r + dy;
+            local lim = dy / test_y;
+            local is_stopped, t = getEntitySphereTest(object_id, mask, r, 0.0, test_y, 0.0);
+            if(is_stopped) then
+                dy = t * test_y - (R - r);
+                is_stopped = dy < 16.0;
             end;
+            moveEntityLocal(object_id, 0.0, dy, 0.0);
 
             local is_dropped = dropEntity(object_id, frame_time, true);
             if(is_dropped and is_stopped) then

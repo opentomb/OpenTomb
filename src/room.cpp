@@ -504,14 +504,16 @@ int Room_IsOverlapped(struct room_s *r0, struct room_s *r1)
         return 0;
     }
 
-    if(r0->bb_min[0] >= r1->bb_max[0] || r0->bb_max[0] <= r1->bb_min[0] ||
-       r0->bb_min[1] >= r1->bb_max[1] || r0->bb_max[1] <= r1->bb_min[1] ||
+    const int margin = TR_METERING_SECTORSIZE * 2;
+
+    if(r0->bb_min[0] >= r1->bb_max[0] - margin || r0->bb_max[0] - margin <= r1->bb_min[0] ||
+       r0->bb_min[1] >= r1->bb_max[1] - margin || r0->bb_max[1] - margin <= r1->bb_min[1] ||
        r0->bb_min[2] >= r1->bb_max[2] || r0->bb_max[2] <= r1->bb_min[2])
     {
         return 0;
     }
 
-    return !Room_IsJoined(r0, r1);
+    return 1;
 }
 
 
