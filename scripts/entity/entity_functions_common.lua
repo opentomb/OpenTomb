@@ -112,9 +112,8 @@ function keyhole_init(id)    -- Key and puzzle holes
         end
         
         if((not getEntityActivity(object_id)) and (switch_activate(object_id, activator_id) == 1)) then
-            setEntityPos(activator_id, getEntityPos(object_id));
-            moveEntityLocal(activator_id, getEntityActivationOffset(id));
             entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
             return ENTITY_TRIGGERING_ACTIVATED;
         end
         return ENTITY_TRIGGERING_NOT_READY;
@@ -132,9 +131,8 @@ function switch_init(id)     -- Ordinary switches
         end
         
         if(switch_activate(object_id, activator_id) > 0) then
-            setEntityPos(activator_id, getEntityPos(object_id));                -- Move activator right next to object.
-            moveEntityLocal(activator_id, getEntityActivationOffset(id));       -- Shift activator back to proper distance.
             entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
         return ENTITY_TRIGGERING_NOT_READY;
@@ -162,9 +160,8 @@ function lever_switch_init(id)     -- Big switches (TR4) - lever
         
         local state = switch_activate(object_id, activator_id);                 -- 0 - nothing / in process, 1 - on, 2 - off
         if(state > 0) then
-            setEntityPos(activator_id, getEntityPos(object_id));                -- Move activator right next to object.
-            moveEntityLocal(activator_id, getEntityActivationOffset(id));       -- Shift activator back to proper distance.
             entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
             if(state == 1) then
                 setEntityActivationDirection(id, 0.0, -1.0, 0.0);
                 setEntityActivationOffset(id, 0.0, 520.0, 0.0, 128);

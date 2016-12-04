@@ -998,6 +998,23 @@ int lua_EntityRotateToTrigger(lua_State * lua)
 }
 
 
+int lua_EntityMoveToTriggerActivationPoint(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        entity_p trigger = World_GetEntityByID(lua_tointeger(lua, 2));
+        if(ent && trigger)
+        {
+            float *pos = ent->transform + 12;
+            Mat4_vec3_mul_macro(pos, trigger->transform, trigger->activation_offset);
+        }
+    }
+
+    return 0;
+}
+
+
 int lua_GetEntityVisibility(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -2049,6 +2066,7 @@ void Script_LuaRegisterEntityFuncs(lua_State *lua)
     lua_register(lua, "canTriggerEntity", lua_CanTriggerEntity);
     lua_register(lua, "entityRotateToTriggerZ", lua_EntityRotateToTriggerZ);
     lua_register(lua, "entityRotateToTrigger", lua_EntityRotateToTrigger);
+    lua_register(lua, "entityMoveToTriggerActivationPoint", lua_EntityMoveToTriggerActivationPoint);
     lua_register(lua, "enableEntity", lua_EnableEntity);
     lua_register(lua, "disableEntity", lua_DisableEntity);
 

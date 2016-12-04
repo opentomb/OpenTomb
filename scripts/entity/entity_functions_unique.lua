@@ -67,9 +67,8 @@ function midastouch_init(id)    -- Midas gold touch
 
         local a, f, c = getEntityAnim(activator_id, ANIM_TYPE_BASE);
         if((a ~= 134) and (getItemsCount(activator_id, 100) > 0)) then
-            setEntityPos(activator_id, getEntityPos(object_id));
-            moveEntityLocal(activator_id, getEntityActivationOffset(object_id));
             entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
             setEntityAnim(activator_id, ANIM_TYPE_BASE, 134, 0);
             removeItem(activator_id, 100, 1);
             addItem(activator_id, ITEM_PUZZLE_1, 1);
