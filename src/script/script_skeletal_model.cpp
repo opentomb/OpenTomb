@@ -444,7 +444,7 @@ int lua_SetEntityAnim(lua_State * lua)
     {
         uint16_t anim_type_id = lua_tointeger(lua, 2);
         ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
-        if(ss_anim)
+        if(ss_anim && ss_anim->model)
         {
             Anim_SetAnimation(ss_anim, lua_tointeger(lua, 3), lua_tointeger(lua, 4));
             if(top >= 6)

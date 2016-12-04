@@ -1891,6 +1891,111 @@ int lua_GetEntityMoveCollisionFix(lua_State * lua)
 }
 
 
+int lua_GetEntityRayTest(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 5)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            int16_t filter = lua_tointeger(lua, 2);
+            float from[3], to[3], move[3];
+            collision_result_t cs;
+
+            vec3_copy(move, ent->bf->centre);
+            if(top >= 8)
+            {
+                move[0] += lua_tonumber(lua, 6);
+                move[1] += lua_tonumber(lua, 7);
+                move[2] += lua_tonumber(lua, 8);
+            }
+            Mat4_vec3_mul_macro(from, ent->transform, move);
+
+            move[0] = lua_tonumber(lua, 3);
+            move[1] = lua_tonumber(lua, 4);
+            move[2] = lua_tonumber(lua, 5);
+            Mat4_vec3_rot_macro(to, ent->transform, move);
+
+            to[0] += from[0];
+            to[1] += from[1];
+            to[2] += from[2];
+
+            bool result = Physics_RayTestFiltered(&cs, from, to, ent->self, filter);
+            lua_pushboolean(lua, result);
+            lua_pushnumber(lua, cs.fraction);
+            lua_pushnumber(lua, cs.point[0]);
+            lua_pushnumber(lua, cs.point[1]);
+            lua_pushnumber(lua, cs.point[2]);
+            return 5;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getEntityRayTest: expecting arguments (entity_id, filter, mx, my, mz, (dx, dy, dz))");
+    }
+
+    return 0;
+}
+
+
+int lua_GetEntitySphereTest(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 6)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            int16_t filter = lua_tointeger(lua, 2);
+            float r = lua_tointeger(lua, 3);
+            float from[3], to[3], move[3];
+            collision_result_t cs;
+
+            vec3_copy(move, ent->bf->centre);
+            if(top >= 9)
+            {
+                move[0] += lua_tonumber(lua, 7);
+                move[1] += lua_tonumber(lua, 8);
+                move[2] += lua_tonumber(lua, 9);
+            }
+            Mat4_vec3_mul_macro(from, ent->transform, move);
+
+            move[0] = lua_tonumber(lua, 4);
+            move[1] = lua_tonumber(lua, 5);
+            move[2] = lua_tonumber(lua, 6);
+            Mat4_vec3_rot_macro(to, ent->transform, move);
+
+            to[0] += from[0];
+            to[1] += from[1];
+            to[2] += from[2];
+
+            bool result = Physics_SphereTest(&cs, from, to, r, ent->self, filter);
+            lua_pushboolean(lua, result);
+            lua_pushnumber(lua, cs.fraction);
+            lua_pushnumber(lua, cs.point[0]);
+            lua_pushnumber(lua, cs.point[1]);
+            lua_pushnumber(lua, cs.point[2]);
+            return 5;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getEntitySphereTest: expecting arguments (entity_id, filter, r, mx, my, mz, (dx, dy, dz))");
+    }
+
+    return 0;
+}
+
+
 int lua_DropEntity(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -2141,6 +2246,8 @@ void Script_LuaRegisterEntityFuncs(lua_State *lua)
     lua_register(lua, "getEntityGlobalMove", lua_GetEntityGlobalMove);
     lua_register(lua, "getEntityCollisionFix", lua_GetEntityCollisionFix);
     lua_register(lua, "getEntityMoveCollisionFix", lua_GetEntityMoveCollisionFix);
+    lua_register(lua, "getEntityRayTest", lua_GetEntityRayTest);
+    lua_register(lua, "getEntitySphereTest", lua_GetEntitySphereTest);
     lua_register(lua, "dropEntity", lua_DropEntity);
     lua_register(lua, "setEntityBodyMass", lua_SetEntityBodyMass);
     lua_register(lua, "pushEntityBody", lua_PushEntityBody);
