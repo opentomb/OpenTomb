@@ -57,7 +57,7 @@ function midastouch_init(id)    -- Midas gold touch
 
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
 
-    setEntityActivationOffset(id, -620.0, 0.0, -500.0, 128.0);
+    setEntityActivationOffset(id, -640.0, 0.0, -512.0, 128.0);
     setEntityActivationDirection(id, 1.0, 0.0, 0.0, 0.87);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -65,13 +65,13 @@ function midastouch_init(id)    -- Midas gold touch
             return ENTITY_TRIGGERING_NOT_READY;
         end
 
-        local a, f, c = getEntityAnim(activator_id, ANIM_TYPE_BASE);
-        if((a ~= 134) and (getItemsCount(activator_id, 100) > 0)) then
+        if((not entitySSAnimGetEnable(activator_id, ANIM_TYPE_MISK_1)) and (getItemsCount(activator_id, 100) > 0)) then
             entityRotateToTriggerZ(activator_id, object_id);
             entityMoveToTriggerActivationPoint(activator_id, object_id);
-            setEntityAnim(activator_id, ANIM_TYPE_BASE, 134, 0);
-            removeItem(activator_id, 100, 1);
-            addItem(activator_id, ITEM_PUZZLE_1, 1);
+            entitySSAnimEnsureExists(activator_id, ANIM_TYPE_MISK_1, 5);
+            setEntityAnim(activator_id, ANIM_TYPE_MISK_1, 0, 0);
+            entitySSAnimSetEnable(activator_id, ANIM_TYPE_MISK_1, 1);
+            entitySSAnimSetEnable(activator_id, ANIM_TYPE_BASE, 0);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
@@ -82,6 +82,17 @@ function midastouch_init(id)    -- Midas gold touch
             local lara_sector = getEntitySectorIndex(player);
             local hand_sector = getEntitySectorIndex(object_id);
             
+            if(entitySSAnimGetEnable(player, ANIM_TYPE_MISK_1)) then
+                entityMoveToTriggerActivationPoint(player, object_id);
+                local a, f, c = getEntityAnim(activator_id, ANIM_TYPE_MISK_1);
+                if((a == 0) and (f + 1 >= c)) then
+                    entitySSAnimSetEnable(player, ANIM_TYPE_MISK_1, 0);
+                    entitySSAnimSetEnable(player, ANIM_TYPE_BASE, 1);
+                    removeItem(player, 100, 1);
+                    addItem(player, ITEM_PUZZLE_1, 1);
+                end;
+            end;
+
             if((lara_sector == hand_sector) and (getEntityMoveType(player) == MOVE_ON_FLOOR) and (lara_anim ~= 50)) then
                 setCharacterParam(player, PARAM_HEALTH, 0);
                 entitySSAnimEnsureExists(player, ANIM_TYPE_MISK_1, 5);          --ANIM_TYPE_MISK_1 - add const

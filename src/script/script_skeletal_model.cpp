@@ -691,28 +691,55 @@ int lua_EntitySSAnimSetExtFlags(lua_State * lua)
 
 int lua_EntitySSAnimSetEnable(lua_State * lua)
 {
-    if(lua_gettop(lua) < 3)
+    if(lua_gettop(lua) >= 3)
     {
-        Con_Warning("entitySSAnimEnable: expecting arguments (entity_id, anim_type_id, enabled)");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        int anim_type_id = lua_tointeger(lua, 2);
-        if(lua_tointeger(lua, 3))
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
         {
-            SSBoneFrame_EnableOverrideAnimByType(ent->bf, anim_type_id);
+            int anim_type_id = lua_tointeger(lua, 2);
+            if(lua_tointeger(lua, 3))
+            {
+                SSBoneFrame_EnableOverrideAnimByType(ent->bf, anim_type_id);
+            }
+            else
+            {
+                SSBoneFrame_DisableOverrideAnim(ent->bf, anim_type_id);
+            }
         }
         else
         {
-            SSBoneFrame_DisableOverrideAnim(ent->bf, anim_type_id);
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("entitySSAnimSetEnable: expecting arguments (entity_id, anim_type_id, enabled)");
+    }
+
+    return 0;
+}
+
+
+int lua_EntitySSAnimGetEnable(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            int anim_type_id = lua_tointeger(lua, 2);
+            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
+            lua_pushboolean(lua, (ss_anim && ss_anim->enabled));
+            return 1;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("entitySSAnimGetEnable: expecting arguments (entity_id, anim_type_id)");
     }
 
     return 0;
@@ -745,4 +772,5 @@ void Script_LuaRegisterAnimFuncs(lua_State *lua)
     lua_register(lua, "entitySSAnimSetCurrentRotation", lua_EntitySSAnimSetCurrentRotation);
     lua_register(lua, "entitySSAnimSetExtFlags", lua_EntitySSAnimSetExtFlags);
     lua_register(lua, "entitySSAnimSetEnable", lua_EntitySSAnimSetEnable);
+    lua_register(lua, "entitySSAnimGetEnable", lua_EntitySSAnimGetEnable);
 }
