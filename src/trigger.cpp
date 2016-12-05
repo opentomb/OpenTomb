@@ -166,8 +166,11 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     action_type = TR_ACTIONTYPE_ANTI;
                 case TR_FD_TRIGTYPE_PAD:
                     // Check move type for triggering entity.
-                    header_condition = (entity_activator->move_type == MOVE_ON_FLOOR) && entity_activator->current_sector &&
-                                       (entity_activator->transform[12 + 2] <= entity_activator->current_sector->floor + 16);
+                    {
+                        room_sector_p lowest_sector  = Sector_GetLowest(entity_activator->current_sector);
+                        header_condition = (entity_activator->move_type == MOVE_ON_FLOOR) && lowest_sector &&
+                                           (entity_activator->transform[12 + 2] <= lowest_sector->floor + 16);
+                    }
                     break;
 
                 case TR_FD_TRIGTYPE_SWITCH:

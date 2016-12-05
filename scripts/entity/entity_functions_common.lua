@@ -265,6 +265,7 @@ end
 function pushable_init(id)
     setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
     setEntityCollisionFlags(id, COLLISION_GROUP_STATIC_ROOM, nil, nil);
+    setEntityCollisionGroup(id, COLLISION_GROUP_STATIC_ROOM);
 end
 
 

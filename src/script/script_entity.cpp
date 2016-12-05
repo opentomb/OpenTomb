@@ -1737,7 +1737,6 @@ int lua_SetEntityCollisionFlags(lua_State * lua)
             if(!lua_isnil(lua, 2))
             {
                 ent->self->collision_group = lua_tointeger(lua, 2);
-                Physics_SetCollisionGroup(ent->physics, ent->self->collision_group);
             }
             if(!lua_isnil(lua, 3))
             {
@@ -1761,6 +1760,30 @@ int lua_SetEntityCollisionFlags(lua_State * lua)
     else
     {
         Con_Warning("setEntityCollisionFlags: expecting arguments (entity_id, collision_group, collision_shape, collision_mask)");
+    }
+
+    return 0;
+}
+
+
+int lua_SetEntityCollisionGroup(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            ent->self->collision_group = lua_tointeger(lua, 2);
+            Physics_SetCollisionGroup(ent->physics, ent->self->collision_group);
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setEntityCollisionGroup: expecting arguments (entity_id, collision_group)");
     }
 
     return 0;
@@ -2243,6 +2266,7 @@ void Script_LuaRegisterEntityFuncs(lua_State *lua)
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
 
     lua_register(lua, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
+    lua_register(lua, "setEntityCollisionGroup", lua_SetEntityCollisionGroup);
     lua_register(lua, "createGhosts", lua_CreateGhosts);
     lua_register(lua, "getEntityGlobalMove", lua_GetEntityGlobalMove);
     lua_register(lua, "getEntityCollisionFix", lua_GetEntityCollisionFix);
