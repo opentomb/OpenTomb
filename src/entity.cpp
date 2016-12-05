@@ -926,14 +926,23 @@ void Entity_ProcessSector(entity_p ent)
 
         if(lowest_sector->flags & SECTOR_FLAG_DEATH)
         {
-            if((ent->move_type == MOVE_ON_FLOOR)    ||
-               (ent->move_type == MOVE_UNDERWATER)  ||
-               (ent->move_type == MOVE_WADE)        ||
-               (ent->move_type == MOVE_ON_WATER)    ||
-               (ent->move_type == MOVE_QUICKSAND))
+            switch(ent->move_type)
             {
-                Character_SetParam(ent, PARAM_HEALTH, 0.0);
-                ent->character->resp.kill = 1;
+                case MOVE_ON_FLOOR:
+                case MOVE_QUICKSAND:
+                    if(ent->transform[12 + 2] <= lowest_sector->floor + 16)
+                    {
+                        Character_SetParam(ent, PARAM_HEALTH, 0.0);
+                        ent->character->resp.kill = 1;
+                    }
+                    break;
+
+                case MOVE_WADE:
+                case MOVE_ON_WATER:
+                case MOVE_UNDERWATER:
+                    Character_SetParam(ent, PARAM_HEALTH, 0.0);
+                    ent->character->resp.kill = 1;
+                    break;
             }
         }
     }
