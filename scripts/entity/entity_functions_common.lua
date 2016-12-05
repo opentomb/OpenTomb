@@ -264,6 +264,7 @@ end
 
 function pushable_init(id)
     setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
+    setEntityCollisionFlags(id, COLLISION_GROUP_STATIC_ROOM, nil, nil);
 end
 
 
@@ -363,8 +364,13 @@ function boulder_heavy_init(id)
     setEntityActivity(id, false);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     local group = bit32.bor(COLLISION_GROUP_TRIGGERS, COLLISION_GROUP_CHARACTERS);
-    local mask = bit32.bor(COLLISION_GROUP_STATIC_ROOM, COLLISION_GROUP_STATIC_OBLECT, COLLISION_GROUP_KINEMATIC);
+    local mask = COLLISION_GROUP_STATIC_ROOM;
     setEntityCollisionFlags(id, group, nil, mask);
+
+    local x, y, z = getEntityPos(id);
+    entity_funcs[id].x = x;
+    entity_funcs[id].y = y;
+    entity_funcs[id].z = z;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(not getEntityActivity(object_id)) then
@@ -372,6 +378,12 @@ function boulder_heavy_init(id)
             setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
+    end
+
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityPos(object_id, entity_funcs[object_id].x, entity_funcs[object_id].y, entity_funcs[object_id].z);
+        setEntityActivity(object_id, false);
+        return ENTITY_TRIGGERING_DEACTIVATED;
     end
 
     entity_funcs[id].onLoop = function(object_id)

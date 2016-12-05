@@ -1497,6 +1497,27 @@ void Physics_DisableCollision(struct physics_data_s *physics)
 }
 
 
+void Physics_SetCollisionGroup(struct physics_data_s *physics, int16_t group)
+{
+    if(physics->bt_body != NULL)
+    {
+        int16_t bt_group = (group & (COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_STATIC_ROOM)) ? (btBroadphaseProxy::StaticFilter) : 0x0000;
+        bt_group |= (group & COLLISION_GROUP_KINEMATIC) ? (btBroadphaseProxy::KinematicFilter) : 0x0000;
+        bt_group |= (group & (COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_VEHICLE)) ? (btBroadphaseProxy::CharacterFilter) : 0x0000;
+        bt_group |= (group & COLLISION_GROUP_DYNAMICS) ? (btBroadphaseProxy::DefaultFilter) : 0x0000;
+
+        for(uint32_t i = 0; i < physics->objects_count; i++)
+        {
+            btRigidBody *b = physics->bt_body[i];
+            if(b && b->getBroadphaseHandle())
+            {
+                b->getBroadphaseHandle()->m_collisionFilterGroup = bt_group;
+            }
+        }
+    }
+}
+
+
 void Physics_SetCollisionScale(struct physics_data_s *physics, float scaling[3])
 {
     for(int i = 0; i < physics->objects_count; i++)

@@ -238,45 +238,6 @@ int lua_SetEntityGhostCollisionShape(lua_State * lua)
 }
 
 
-int lua_SetEntityCollisionFlags(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 4)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
-        {
-            if(!lua_isnil(lua, 2))
-            {
-                ent->self->collision_group = lua_tointeger(lua, 2);
-            }
-            if(!lua_isnil(lua, 3))
-            {
-                ent->self->collision_shape = lua_tointeger(lua, 3);
-            }
-            if(!lua_isnil(lua, 4))
-            {
-                ent->self->collision_mask = lua_tointeger(lua, 4);
-            }
-
-            if(Physics_GetBodiesCount(ent->physics) != ent->bf->bone_tag_count)
-            {
-                ent->self->collision_shape = COLLISION_SHAPE_SINGLE_BOX;
-            }
-        }
-        else
-        {
-            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("setEntityCollisionFlags: expecting arguments (entity_id, collision_group, collision_shape, collision_mask)");
-    }
-
-    return 0;
-}
-
-
 int lua_GetEntitySectorFlags(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -1766,6 +1727,46 @@ int lua_SetEntityRoomMove(lua_State * lua)
 /*
  * physics routine
  */
+int lua_SetEntityCollisionFlags(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 4)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            if(!lua_isnil(lua, 2))
+            {
+                ent->self->collision_group = lua_tointeger(lua, 2);
+                Physics_SetCollisionGroup(ent->physics, ent->self->collision_group);
+            }
+            if(!lua_isnil(lua, 3))
+            {
+                ent->self->collision_shape = lua_tointeger(lua, 3);
+            }
+            if(!lua_isnil(lua, 4))
+            {
+                ent->self->collision_mask = lua_tointeger(lua, 4);
+            }
+
+            if(Physics_GetBodiesCount(ent->physics) != ent->bf->bone_tag_count)
+            {
+                ent->self->collision_shape = COLLISION_SHAPE_SINGLE_BOX;
+            }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setEntityCollisionFlags: expecting arguments (entity_id, collision_group, collision_shape, collision_mask)");
+    }
+
+    return 0;
+}
+
+
 int lua_CreateGhosts(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -2200,7 +2201,6 @@ void Script_LuaRegisterEntityFuncs(lua_State *lua)
     lua_register(lua, "getEntitySpeedLinear", lua_GetEntitySpeedLinear);
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
     lua_register(lua, "setEntityGhostCollisionShape", lua_SetEntityGhostCollisionShape);
-    lua_register(lua, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
     lua_register(lua, "setEntityBodyPartFlag", lua_SetEntityBodyPartFlag);
     lua_register(lua, "getEntityVisibility", lua_GetEntityVisibility);
     lua_register(lua, "setEntityVisibility", lua_SetEntityVisibility);
@@ -2242,6 +2242,7 @@ void Script_LuaRegisterEntityFuncs(lua_State *lua)
     lua_register(lua, "getEntitySectorFlags", lua_GetEntitySectorFlags);
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
 
+    lua_register(lua, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
     lua_register(lua, "createGhosts", lua_CreateGhosts);
     lua_register(lua, "getEntityGlobalMove", lua_GetEntityGlobalMove);
     lua_register(lua, "getEntityCollisionFix", lua_GetEntityCollisionFix);
