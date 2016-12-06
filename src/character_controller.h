@@ -338,7 +338,7 @@ int Character_MoveUnderWater(struct entity_s *ent);
 int Character_MoveOnWater(struct entity_s *ent);
 
 int Character_FindTraverse(struct entity_s *ch);
-int Sector_AllowTraverse(struct room_sector_s *rs, float floor, struct engine_container_s *cont);
+int Sector_AllowTraverse(struct room_sector_s *rs, float floor);
 int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj);
 
 void Character_ApplyCommands(struct entity_s *ent);
