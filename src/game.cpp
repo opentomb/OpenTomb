@@ -218,7 +218,7 @@ void Save_Entity(FILE **f, entity_p ent)
     else
     {
         fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id,
-                ent->transform[12 + 0], ent->transform[12+1], ent->transform[12+2],
+                ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2],
                 ent->angles[0], ent->angles[1], ent->angles[2]);
     }
 

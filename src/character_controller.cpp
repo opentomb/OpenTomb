@@ -1357,7 +1357,7 @@ int Character_FreeFalling(struct entity_s *ent)
     }
 
     vec3_add(pos, pos, move);
-    Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);                                          // get horizontal collide
+    Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
 
     if(ent->character->height_info.ceiling_hit.hit && ent->speed[2] > 0.0)
     {

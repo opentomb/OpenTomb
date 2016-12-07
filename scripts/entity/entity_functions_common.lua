@@ -59,9 +59,8 @@ function pushdoor_init(id)   -- Pushdoors (TR4)
 
         if((not getEntityActivity(object_id))) then
             setEntityActivity(object_id, true);
-            local x, y, z, az, ax, ay = getEntityPos(object_id);
-            setEntityPos(activator_id, x, y, z, az + 180.0, ax, ay);
-            moveEntityLocal(activator_id, 0.0, 256.0, 0.0);
+            entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
             -- floor door 317 anim
             -- vertical door 412 anim
             setEntityAnim(activator_id, ANIM_TYPE_BASE, 412, 0);

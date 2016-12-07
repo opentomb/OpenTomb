@@ -687,8 +687,8 @@ struct room_sector_s *Sector_GetHighest(struct room_sector_s *sector)
 
 void Sector_HighestFloorCorner(room_sector_p rs, float v[3])
 {
-    float *r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2])?(rs->floor_corners[0]):(rs->floor_corners[1]);
-    float *r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2])?(rs->floor_corners[2]):(rs->floor_corners[3]);
+    float *r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2]) ? (rs->floor_corners[0]) : (rs->floor_corners[1]);
+    float *r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2]) ? (rs->floor_corners[2]) : (rs->floor_corners[3]);
 
     if(r1[2] > r2[2])
     {
@@ -703,8 +703,8 @@ void Sector_HighestFloorCorner(room_sector_p rs, float v[3])
 
 void Sector_LowestCeilingCorner(room_sector_p rs, float v[3])
 {
-    float *r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2])?(rs->ceiling_corners[0]):(rs->ceiling_corners[1]);
-    float *r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2])?(rs->ceiling_corners[2]):(rs->ceiling_corners[3]);
+    float *r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2]) ? (rs->ceiling_corners[0]) : (rs->ceiling_corners[1]);
+    float *r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2]) ? (rs->ceiling_corners[2]) : (rs->ceiling_corners[3]);
 
     if(r1[2] < r2[2])
     {

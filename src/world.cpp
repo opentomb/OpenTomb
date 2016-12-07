@@ -2733,10 +2733,8 @@ void World_MakeEntityItems(struct RedBlackNode_s *n)
                 entity_p ent = (entity_p)cont->object;
                 if(ent->bf->animations.model->id == item->world_model_id)
                 {
-                    char buf[64] = {0};
-                    snprintf(buf, 64, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", ent->id, ent->id);
-                    luaL_dostring(engine_lua, buf);
-                    snprintf(buf, 32, "pickup_init(%d, %d);", ent->id, item->id);
+                    char buf[128] = {0};
+                    snprintf(buf, 128, "if(entity_funcs[%d] == nil) then entity_funcs[%d] = {}; pickup_init(%d, %d); end", ent->id, ent->id, ent->id, item->id);
                     luaL_dostring(engine_lua, buf);
                     Entity_DisableCollision(ent);
                 }

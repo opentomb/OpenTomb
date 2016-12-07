@@ -529,8 +529,6 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
 {
     if(Physics_IsGhostsInited(ent->physics))
     {
-        float t1, t2, reaction[3];
-
         if((move != NULL) && (ent->character != NULL))
         {
             ent->character->resp.horizontal_collide    = 0x00;
@@ -548,49 +546,59 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
             return;
         }
 
-        int numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, filter);
-        vec3_add(ent->transform + 12, ent->transform + 12, reaction);
-
-        if(ent->character != NULL)
+        bool is_first_test = true;
+        int num_iters = 3;
+        const float part = 1.0f / (float)num_iters;
+        float t1, t2, reaction[3];
+        int numPenetrationLoops = 0;
+        while((--num_iters >= 0) && ((numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, filter)) > 0))
         {
-            if((move != NULL) && (numPenetrationLoops > 0))
+            reaction[0] *= part;
+            reaction[1] *= part;
+            reaction[2] *= part;
+            vec3_add(ent->transform + 12, ent->transform + 12, reaction);
+
+            if(ent->character)
             {
-                t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
-                t2 = move[0] * move[0] + move[1] * move[1];
-                if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2))    // we have horizontal move and horizontal correction
+                if(is_first_test && move && (numPenetrationLoops > 0))
                 {
-                    t2 *= t1;
-                    t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
-                    if(t1 < ent->character->critical_wall_component)
+                    t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
+                    t2 = move[0] * move[0] + move[1] * move[1];
+                    if((reaction[2] * reaction[2] < t1) && (move[2] * move[2] < t2))    // we have horizontal move and horizontal correction
                     {
-                        ent->character->resp.horizontal_collide |= 0x01;
+                        t2 *= t1;
+                        t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
+                        if(t1 < ent->character->critical_wall_component)
+                        {
+                            ent->character->resp.horizontal_collide |= 0x01;
+                        }
+                    }
+                    else if((reaction[2] * reaction[2] > t1) && (move[2] * move[2] > t2))
+                    {
+                        if((reaction[2] > 0.0) && (move[2] < 0.0))
+                        {
+                            ent->character->resp.vertical_collide |= 0x01;
+                        }
+                        else if((reaction[2] < 0.0) && (move[2] > 0.0))
+                        {
+                            ent->character->resp.vertical_collide |= 0x02;
+                        }
                     }
                 }
-                else if((reaction[2] * reaction[2] > t1) && (move[2] * move[2] > t2))
+
+                if(ent->character->height_info.ceiling_hit.hit && (reaction[2] < -0.1))
                 {
-                    if((reaction[2] > 0.0) && (move[2] < 0.0))
-                    {
-                        ent->character->resp.vertical_collide |= 0x01;
-                    }
-                    else if((reaction[2] < 0.0) && (move[2] > 0.0))
-                    {
-                        ent->character->resp.vertical_collide |= 0x02;
-                    }
+                    ent->character->resp.vertical_collide |= 0x02;
+                }
+
+                if(ent->character->height_info.floor_hit.hit && (reaction[2] > 0.1))
+                {
+                    ent->character->resp.vertical_collide |= 0x01;
                 }
             }
-
-            if(ent->character->height_info.ceiling_hit.hit && (reaction[2] < -0.1))
-            {
-                ent->character->resp.vertical_collide |= 0x02;
-            }
-
-            if(ent->character->height_info.floor_hit.hit && (reaction[2] > 0.1))
-            {
-                ent->character->resp.vertical_collide |= 0x01;
-            }
+            is_first_test = false;
+            Entity_GhostUpdate(ent);
         }
-
-        Entity_GhostUpdate(ent);
     }
 }
 

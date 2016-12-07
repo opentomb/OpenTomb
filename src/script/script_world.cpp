@@ -148,9 +148,9 @@ int lua_GetSectorHeight(lua_State * lua)
             float dy = lua_tonumber(lua, 4);
             float dz = lua_tonumber(lua, 5);
 
-            pos[0] += dx * ent->transform[0+0] + dy * ent->transform[4+0] + dz * ent->transform[8+0];
-            pos[1] += dx * ent->transform[0+1] + dy * ent->transform[4+1] + dz * ent->transform[8+1];
-            pos[2] += dx * ent->transform[0+2] + dy * ent->transform[4+2] + dz * ent->transform[8+2];
+            pos[0] += dx * ent->transform[0 + 0] + dy * ent->transform[4 + 0] + dz * ent->transform[8 + 0];
+            pos[1] += dx * ent->transform[0 + 1] + dy * ent->transform[4 + 1] + dz * ent->transform[8 + 1];
+            pos[2] += dx * ent->transform[0 + 2] + dy * ent->transform[4 + 2] + dz * ent->transform[8 + 2];
         }
 
         room_sector_p curr_sector = Room_GetSectorRaw(ent->self->room, pos);

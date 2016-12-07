@@ -250,7 +250,7 @@ bool Res_Sector_IsTweenAlterable(struct room_sector_s *s1, struct room_sector_s 
 }
 
 
-void Res_Sector_GenXTween(sector_tween_s *room_tween, room_sector_p current_heightmap, room_sector_p next_heightmap, bool is_static)
+void Res_Sector_GenXTween(sector_tween_s *room_tween, room_sector_p current_heightmap, room_sector_p next_heightmap)
 {
     /* XY corners coordinates must be calculated from native room sector */
     room_tween->floor_corners[0][1] = current_heightmap->floor_corners[0][1];
@@ -325,7 +325,7 @@ void Res_Sector_GenXTween(sector_tween_s *room_tween, room_sector_p current_heig
 }
 
 
-void Res_Sector_GenYTween(sector_tween_s *room_tween, room_sector_p current_heightmap, room_sector_p next_heightmap, bool is_static)
+void Res_Sector_GenYTween(sector_tween_s *room_tween, room_sector_p current_heightmap, room_sector_p next_heightmap)
 {
     room_tween->floor_corners[0][0] = current_heightmap->floor_corners[1][0];
     room_tween->floor_corners[1][0] = room_tween->floor_corners[0][0];
@@ -404,7 +404,6 @@ void Res_Sector_GenYTween(sector_tween_s *room_tween, room_sector_p current_heig
 int  Res_Sector_GenStaticTweens(struct room_s *room, struct sector_tween_s *room_tween)
 {
     int ret = 0;
-    const bool is_static = true;
     for(uint16_t h = 0; h < room->sectors_y - 1; h++)
     {
         for(uint16_t w = 0; w < room->sectors_x - 1; w++)
@@ -414,7 +413,7 @@ int  Res_Sector_GenStaticTweens(struct room_s *room, struct sector_tween_s *room
             room_sector_p next_heightmap    = current_heightmap + 1;
             if((w > 0) && !Res_Sector_IsTweenAlterable(current_heightmap, next_heightmap))
             {
-                Res_Sector_GenXTween(room_tween, current_heightmap, next_heightmap, is_static);
+                Res_Sector_GenXTween(room_tween, current_heightmap, next_heightmap);
                 if((room_tween->floor_tween_type != TR_SECTOR_TWEEN_TYPE_NONE) ||
                    (room_tween->ceiling_tween_type != TR_SECTOR_TWEEN_TYPE_NONE))
                 {
@@ -427,7 +426,7 @@ int  Res_Sector_GenStaticTweens(struct room_s *room, struct sector_tween_s *room
             next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
             if((h > 0) && !Res_Sector_IsTweenAlterable(current_heightmap, next_heightmap))
             {
-                Res_Sector_GenYTween(room_tween, current_heightmap, next_heightmap, is_static);
+                Res_Sector_GenYTween(room_tween, current_heightmap, next_heightmap);
                 if((room_tween->floor_tween_type != TR_SECTOR_TWEEN_TYPE_NONE) ||
                    (room_tween->ceiling_tween_type != TR_SECTOR_TWEEN_TYPE_NONE))
                 {
@@ -445,7 +444,6 @@ int  Res_Sector_GenStaticTweens(struct room_s *room, struct sector_tween_s *room
 int  Res_Sector_GenDynamicTweens(struct room_s *room, struct sector_tween_s *room_tween)
 {
     int ret = 0;
-    const bool is_static = false;
     for(uint16_t h = 0; h < room->sectors_y - 1; h++)
     {
         for(uint16_t w = 0; w < room->sectors_x - 1; w++)
@@ -455,7 +453,7 @@ int  Res_Sector_GenDynamicTweens(struct room_s *room, struct sector_tween_s *roo
             room_sector_p next_heightmap    = current_heightmap + 1;
             if((w > 0) && Res_Sector_IsTweenAlterable(current_heightmap, next_heightmap))
             {
-                Res_Sector_GenXTween(room_tween, current_heightmap, next_heightmap, is_static);
+                Res_Sector_GenXTween(room_tween, current_heightmap, next_heightmap);
                 if((room_tween->floor_tween_type != TR_SECTOR_TWEEN_TYPE_NONE) ||
                    (room_tween->ceiling_tween_type != TR_SECTOR_TWEEN_TYPE_NONE))
                 {
@@ -468,7 +466,7 @@ int  Res_Sector_GenDynamicTweens(struct room_s *room, struct sector_tween_s *roo
             next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
             if((h > 0) && Res_Sector_IsTweenAlterable(current_heightmap, next_heightmap))
             {
-                Res_Sector_GenYTween(room_tween, current_heightmap, next_heightmap, is_static);
+                Res_Sector_GenYTween(room_tween, current_heightmap, next_heightmap);
                 if((room_tween->floor_tween_type != TR_SECTOR_TWEEN_TYPE_NONE) ||
                    (room_tween->ceiling_tween_type != TR_SECTOR_TWEEN_TYPE_NONE))
                 {
