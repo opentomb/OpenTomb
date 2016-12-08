@@ -374,7 +374,7 @@ function boulder_heavy_init(id)
     entity_funcs[id].z = z;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(not getEntityActivity(object_id)) then
+        if(not getEntityActivity(object_id) and (getEntityEvent(object_id) == 0)) then
             setEntityActivity(object_id, true);
             setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
         end;
