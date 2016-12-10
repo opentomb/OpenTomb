@@ -508,9 +508,29 @@ int Room_IsOverlapped(struct room_s *r0, struct room_s *r1)
 
     if(r0->bb_min[0] >= r1->bb_max[0] - margin || r0->bb_max[0] - margin <= r1->bb_min[0] ||
        r0->bb_min[1] >= r1->bb_max[1] - margin || r0->bb_max[1] - margin <= r1->bb_min[1] ||
-       r0->bb_min[2] >= r1->bb_max[2] - TR_METERING_SECTORSIZE || r0->bb_max[2] - TR_METERING_SECTORSIZE <= r1->bb_min[2])
+       r0->bb_min[2] >= r1->bb_max[2] || r0->bb_max[2] <= r1->bb_min[2])
     {
         return 0;
+    }
+
+    room_sector_p rs = r0->sectors;
+    for(uint32_t i = 0; i < r0->sectors_count; i++, rs++)
+    {
+        if((rs->room_above == r1->real_room) ||
+           (rs->room_below == r1->real_room))
+        {
+            return 0;
+        }
+    }
+
+    rs = r1->sectors;
+    for(uint32_t i = 0; i < r1->sectors_count; i++, rs++)
+    {
+        if((rs->room_above == r0->real_room) ||
+           (rs->room_below == r0->real_room))
+        {
+            return 0;
+        }
     }
 
     return 1;

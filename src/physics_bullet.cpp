@@ -207,7 +207,7 @@ struct bt_engine_OverlapFilterCallback : public btOverlapFilterCallback
                 return false;
             }
 
-            collides = ((!r0 && !r1) || Room_IsInNearRoomsList(r0, r1) && /*!Room_IsInOverlappedRoomsList(r0, r1) && */ //does it needed?
+            collides = ((!r0 && !r1) || Room_IsInNearRoomsList(r0, r1) && !Room_IsInOverlappedRoomsList(r0, r1) &&
                         (num_ghosts || (c0->collision_group & c1->collision_mask) && (c1->collision_group & c0->collision_mask)));
         }
 

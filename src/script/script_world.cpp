@@ -376,6 +376,47 @@ int lua_SetSecretStatus(lua_State *lua)
 }
 
 
+int lua_AddRoomToOverlappedList(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        room_p r0 = World_GetRoomByID(lua_tointeger(lua, 1));
+        room_p r1 = World_GetRoomByID(lua_tointeger(lua, 2));
+        if(r0 && r1 && !Room_IsInOverlappedRoomsList(r0, r1))
+        {
+            room_p *old_list = r0->overlapped_room_list;
+            room_p *new_list = (room_p*)malloc((r0->overlapped_room_list_size + 1) * sizeof(room_p));
+            for(uint16_t i = 0; i < r0->overlapped_room_list_size; ++i)
+            {
+                new_list[i] = r0->overlapped_room_list[i];
+            }
+            new_list[r0->overlapped_room_list_size] = r1->real_room;
+            r0->overlapped_room_list = new_list;
+            r0->overlapped_room_list_size++;
+            if(old_list)
+            {
+                free(old_list);
+            }
+
+            old_list = r1->overlapped_room_list;
+            new_list = (room_p*)malloc((r1->overlapped_room_list_size + 1) * sizeof(room_p));
+            for(uint16_t i = 0; i < r1->overlapped_room_list_size; ++i)
+            {
+                new_list[i] = r1->overlapped_room_list[i];
+            }
+            new_list[r1->overlapped_room_list_size] = r0->real_room;
+            r1->overlapped_room_list = new_list;
+            r1->overlapped_room_list_size++;
+            if(old_list)
+            {
+                free(old_list);
+            }
+        }
+    }
+    return 0;
+}
+
+
 int lua_CreateBaseItem(lua_State * lua)
 {
     if(lua_gettop(lua) < 5)
@@ -797,6 +838,7 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
 
     lua_register(lua, "getSecretStatus", lua_GetSecretStatus);
     lua_register(lua, "setSecretStatus", lua_SetSecretStatus);
+    lua_register(lua, "addRoomToOverlappedList", lua_AddRoomToOverlappedList);
 
     lua_register(lua, "genUVRotateAnimation", lua_genUVRotateAnimation);
 
