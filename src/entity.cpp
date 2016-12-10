@@ -255,8 +255,6 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
         switch(ent->self->collision_shape)
         {
             case COLLISION_SHAPE_SINGLE_BOX:
-                return;
-
             case COLLISION_SHAPE_SINGLE_SPHERE:
                 {
                     float centre[3], offset[3];
@@ -356,9 +354,6 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
             switch(ent->self->collision_shape)
             {
                 case COLLISION_SHAPE_SINGLE_BOX:
-                    Physics_SetBodyWorldTransform(ent->physics, ent->transform, 0);
-                    break;
-
                 case COLLISION_SHAPE_SINGLE_SPHERE:
                     {
                         float centre[3], offset[3];

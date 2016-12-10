@@ -181,8 +181,10 @@ struct bt_engine_OverlapFilterCallback : public btOverlapFilterCallback
 
         if(collides)
         {
-            engine_container_p c0 = (engine_container_p)((btCollisionObject*)proxy0->m_clientObject)->getUserPointer();
-            engine_container_p c1 = (engine_container_p)((btCollisionObject*)proxy1->m_clientObject)->getUserPointer();;
+            btCollisionObject *obj0 = (btCollisionObject*)proxy0->m_clientObject;
+            btCollisionObject *obj1 = (btCollisionObject*)proxy1->m_clientObject;
+            engine_container_p c0 = (engine_container_p)obj0->getUserPointer();
+            engine_container_p c1 = (engine_container_p)obj1->getUserPointer();;
             room_p r0 = (c0) ? (c0->room) : (NULL);
             room_p r1 = (c1) ? (c1->room) : (NULL);
 
@@ -195,6 +197,12 @@ struct bt_engine_OverlapFilterCallback : public btOverlapFilterCallback
             }
 
             if(c1 && c1 == c0)                                                  // No self interaction
+            {
+                return false;
+            }
+
+            if((c0 && c0->collision_group == COLLISION_GROUP_TRIGGERS && !obj1->isStaticOrKinematicObject()) ||
+               (c1 && c1->collision_group == COLLISION_GROUP_TRIGGERS && !obj0->isStaticOrKinematicObject()))
             {
                 return false;
             }
@@ -303,9 +311,9 @@ btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
 {
     btScalar r = bb_max[0] - bb_min[0];
     btScalar t = bb_max[1] - bb_min[1];
-    r = (t > r)?(r):(t);
+    r = (t > r) ? (r) : (t);
     t = bb_max[2] - bb_min[2];
-    return (t > r)?(r):(t);
+    return (t > r) ? (0.5f * r) : (0.5f * t);
 }
 
 // Bullet Physics initialization.
@@ -1167,7 +1175,10 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                 physics->objects_count = 1;
                 physics->bt_body = (btRigidBody**)malloc(physics->objects_count * sizeof(btRigidBody*));
 
-                cshape = BT_CSfromBBox(bf->bb_min, bf->bb_max);
+                float hx = (bf->bb_max[0] - bf->bb_min[0]) * 0.5f;
+                float hy = (bf->bb_max[1] - bf->bb_min[1]) * 0.5f;
+                float hz = (bf->bb_max[2] - bf->bb_min[2]) * 0.5f;
+                cshape = new btBoxShape(btVector3(hx, hy, hz));
                 cshape->calculateLocalInertia(0.0, localInertia);
                 cshape->setMargin(COLLISION_MARGIN_DEFAULT);
                 startTransform.setIdentity();
@@ -1190,7 +1201,6 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                 cshape->calculateLocalInertia(0.0, localInertia);
                 cshape->setMargin(COLLISION_MARGIN_DEFAULT);
                 startTransform.setIdentity();
-                startTransform.setOrigin(btVector3(0.5f * (bf->bb_min[0] + bf->bb_max[0]), 0.5f * (bf->bb_min[1] + bf->bb_max[1]), 0.5f * (bf->bb_min[2] + bf->bb_max[2])));
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                 physics->bt_body[0] = new btRigidBody(0.0, motionState, cshape, localInertia);
                 physics->bt_body[0]->setUserPointer(physics->cont);
@@ -1273,10 +1283,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghosts_info[0].shape_id = COLLISION_SHAPE_SINGLE_BOX;
                     vec3_copy(physics->ghosts_info[0].bb_max, bf->bb_max);
                     vec3_copy(physics->ghosts_info[0].bb_min, bf->bb_min);
-                    vec3_add(physics->ghosts_info[0].offset, bf->bb_min, bf->bb_min);
-                    physics->ghosts_info[0].offset[0] *= 0.5f;
-                    physics->ghosts_info[0].offset[1] *= 0.5f;
-                    physics->ghosts_info[0].offset[2] *= 0.5f;
+                    vec3_set_zero(physics->ghosts_info[0].offset);
 
                     physics->ghost_objects = (btPairCachingGhostObject**)malloc(bf->bone_tag_count * sizeof(btPairCachingGhostObject*));
                     physics->ghost_objects[0] = new btPairCachingGhostObject();
@@ -1301,10 +1308,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghosts_info[0].shape_id = COLLISION_SHAPE_SINGLE_SPHERE;
                     vec3_copy(physics->ghosts_info[0].bb_max, bf->bb_max);
                     vec3_copy(physics->ghosts_info[0].bb_min, bf->bb_min);
-                    vec3_add(physics->ghosts_info[0].offset, bf->bb_min, bf->bb_min);
-                    physics->ghosts_info[0].offset[0] *= 0.5f;
-                    physics->ghosts_info[0].offset[1] *= 0.5f;
-                    physics->ghosts_info[0].offset[2] *= 0.5f;
+                    vec3_set_zero(physics->ghosts_info[0].offset);
 
                     physics->ghost_objects = (btPairCachingGhostObject**)malloc(bf->bone_tag_count * sizeof(btPairCachingGhostObject*));
                     physics->ghost_objects[0] = new btPairCachingGhostObject();
