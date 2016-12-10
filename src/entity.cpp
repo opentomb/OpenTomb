@@ -252,12 +252,9 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
     {
         float tr[16];
         Physics_GetBodyWorldTransform(ent->physics, ent->transform, 0);
-        Entity_UpdateRoomPos(ent);
         switch(ent->self->collision_shape)
         {
             case COLLISION_SHAPE_SINGLE_BOX:
-                return;
-
             case COLLISION_SHAPE_SINGLE_SPHERE:
                 {
                     float centre[3], offset[3];
@@ -352,15 +349,11 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
             return;
         }
 
-        Entity_UpdateRoomPos(ent);
         if(ent->self->collision_group != COLLISION_NONE)
         {
             switch(ent->self->collision_shape)
             {
                 case COLLISION_SHAPE_SINGLE_BOX:
-                    Physics_SetBodyWorldTransform(ent->physics, ent->transform, 0);
-                    break;
-
                 case COLLISION_SHAPE_SINGLE_SPHERE:
                     {
                         float centre[3], offset[3];
@@ -477,6 +470,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], int1
                 vec3_add_to(curr, move);
             }
         }
+        Entity_GhostUpdate(ent);
         vec3_sub(reaction, ent->transform + 12, orig_pos);
         vec3_copy(ent->transform + 12, orig_pos);
     }

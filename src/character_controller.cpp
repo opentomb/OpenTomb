@@ -112,6 +112,7 @@ void Character_Create(struct entity_s *ent)
         ent->self->collision_mask = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC |
                                     COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_DYNAMICS | COLLISION_GROUP_DYNAMICS_NI | COLLISION_GROUP_TRIGGERS;
         Physics_CreateGhosts(ent->physics, ent->bf, NULL);
+        Entity_GhostUpdate(ent);
     }
 }
 
@@ -627,6 +628,12 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     char up_founded = 0;
     collision_result_t cb;
     //const float color[3] = {1.0, 0.0, 0.0};
+
+    if(ent->current_sector && ent->current_sector->room_above &&
+       ent->current_sector->room_above->bb_min[2] < test_from[2] + 256.0f)
+    {
+        ent->self->room = ent->current_sector->room_above;
+    }
 
     climb->height_info = CHARACTER_STEP_HORIZONTAL;
     climb->can_hang = 0x00;

@@ -39,8 +39,10 @@ typedef struct collision_result_s
 
 typedef struct ghost_shape_s
 {
-    float bb_min[3];
-    float bb_max[3];
+    uint32_t    shape_id;
+    float       bb_min[3];
+    float       bb_max[3];
+    float       offset[3];
 }ghost_shape_t, *ghost_shape_p;
 
 
@@ -76,8 +78,8 @@ int  Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16
 
 // Bullet entity rigid body generating.
 void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s *bf);
-void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, struct ghost_shape_s *boxes);
-void Physics_SetGhostCollisionShape(struct physics_data_s *physics, uint16_t index, struct ghost_shape_s *shape_info);
+void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, struct ghost_shape_s *shape_info);
+void Physics_SetGhostCollisionShape(struct physics_data_s *physics, struct ss_bone_frame_s *bf, uint16_t index, struct ghost_shape_s *shape_info);
 void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh);
 struct physics_object_s* Physics_GenRoomRigidBody(struct room_s *room, struct room_sector_s *heightmap, uint32_t sectors_count, struct sector_tween_s *tweens, int num_tweens);
 void Physics_SetOwnerObject(struct physics_object_s *obj, struct engine_container_s *self);
