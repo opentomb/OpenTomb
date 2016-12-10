@@ -365,6 +365,7 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
                         ent->transform[12 + 1] += offset[1];
                         ent->transform[12 + 2] += offset[2];
                         Physics_SetBodyWorldTransform(ent->physics, ent->transform, 0);
+                        Physics_SetGhostWorldTransform(ent->physics,ent->transform, 0);
                         ent->transform[12 + 0] -= offset[0];
                         ent->transform[12 + 1] -= offset[1];
                         ent->transform[12 + 2] -= offset[2];
@@ -378,6 +379,7 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
                         {
                             Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
                             Physics_SetBodyWorldTransform(ent->physics, tr, i);
+                            Physics_SetGhostWorldTransform(ent->physics, tr, i);
                         }
                     }
                     break;
@@ -493,8 +495,8 @@ int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float react
     {
         float t1, t2, *pos = ent->transform + 12;
 
-        Entity_GhostUpdate(ent);
         vec3_add(pos, pos, move);
+        Entity_GhostUpdate(ent);
 
         ret = Entity_GetPenetrationFixVector(ent, reaction, filter);
         if((ret > 0) && (ent->character != NULL))

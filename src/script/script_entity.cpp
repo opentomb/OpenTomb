@@ -2055,9 +2055,9 @@ int lua_DropEntity(lua_State * lua)
 
             if(Physics_RayTest(&cb, from, to, ent->self, filter))
             {
+                lua_pushboolean(lua, ent->transform[12 + 2] < cb.point[2] + 1.0f);
                 ent->transform[12 + 2] = cb.point[2];
                 vec3_set_zero(ent->speed);
-                lua_pushboolean(lua, true);
             }
             else
             {
