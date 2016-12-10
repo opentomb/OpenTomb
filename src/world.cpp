@@ -2477,6 +2477,7 @@ void World_GenEntities(class VT_Level *tr)
         World_AddEntity(entity);
         World_SetEntityModelProperties(entity);
         Physics_GenRigidBody(entity->physics, entity->bf);
+        Entity_UpdateRigidBody(entity, 1);
 
         if(!(entity->state_flags & ENTITY_STATE_ENABLED) || (entity->self->collision_group == COLLISION_NONE))
         {

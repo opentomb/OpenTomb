@@ -219,6 +219,7 @@ typedef struct physics_data_s
     btRigidBody                       **bt_body;
 
     // dynamic
+    struct ghost_shape_s               *ghosts_info;
     btPairCachingGhostObject          **ghost_objects;          // like Bullet character controller for penetration resolving.
     btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
     uint16_t                            objects_count;          // Ragdoll joints
@@ -433,6 +434,7 @@ struct physics_data_s *Physics_CreatePhysicsData(struct engine_container_s *cont
     ret->objects_count = 0;
     ret->bt_joint_count = 0;
     ret->manifoldArray = NULL;
+    ret->ghosts_info = NULL;
     ret->ghost_objects = NULL;
     ret->cont = cont;
 
@@ -460,6 +462,12 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
             }
             free(physics->ghost_objects);
             physics->ghost_objects = NULL;
+        }
+
+        if(physics->ghosts_info)
+        {
+            free(physics->ghosts_info);
+            physics->ghosts_info = NULL;
         }
 
         if(physics->manifoldArray)
@@ -662,9 +670,15 @@ void Physics_SetBodyWorldTransform(struct physics_data_s *physics, float tr[16],
 
 void Physics_GetGhostWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index)
 {
-    if(physics->ghost_objects[index])
+    if(physics->ghost_objects && physics->ghost_objects[index])
     {
+        float offset[3], pos[3];
+        offset[0] = -physics->ghosts_info[index].offset[0];
+        offset[1] = -physics->ghosts_info[index].offset[1];
+        offset[2] = -physics->ghosts_info[index].offset[2];
         physics->ghost_objects[index]->getWorldTransform().getOpenGLMatrix(tr);
+        Mat4_vec3_mul_macro(pos, tr, offset);
+        vec3_copy(tr + 12, pos);
     }
 }
 
@@ -673,7 +687,10 @@ void Physics_SetGhostWorldTransform(struct physics_data_s *physics, float tr[16]
 {
     if(physics->ghost_objects && physics->ghost_objects[index])
     {
+        btVector3 origin;
+        Mat4_vec3_mul_macro(origin.m_floats, tr, physics->ghosts_info[index].offset);
         physics->ghost_objects[index]->getWorldTransform().setFromOpenGLMatrix(tr);
+        physics->ghost_objects[index]->getWorldTransform().setOrigin(origin);
     }
 }
 
@@ -1139,7 +1156,6 @@ btCollisionShape *BT_CSfromHeightmap(struct room_sector_s *heightmap, uint32_t s
 
 void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s *bf)
 {
-    btScalar tr[16];
     btVector3 localInertia(0, 0, 0);
     btTransform startTransform;
     btCollisionShape *cshape = NULL;
@@ -1154,7 +1170,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                 cshape = BT_CSfromBBox(bf->bb_min, bf->bb_max);
                 cshape->calculateLocalInertia(0.0, localInertia);
                 cshape->setMargin(COLLISION_MARGIN_DEFAULT);
-                startTransform.setFromOpenGLMatrix(bf->transform);
+                startTransform.setIdentity();
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                 physics->bt_body[0] = new btRigidBody(0.0, motionState, cshape, localInertia);
                 physics->bt_body[0]->setUserPointer(physics->cont);
@@ -1173,10 +1189,8 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                 cshape = new btSphereShape(getInnerBBRadius(bf->bb_min, bf->bb_max));
                 cshape->calculateLocalInertia(0.0, localInertia);
                 cshape->setMargin(COLLISION_MARGIN_DEFAULT);
-                btVector3 offset, centre(0.5f * (bf->bb_min[0] + bf->bb_max[0]), 0.5f * (bf->bb_min[1] + bf->bb_max[1]), 0.5f * (bf->bb_min[2] + bf->bb_max[2]));
-                Mat4_vec3_rot_macro(offset.m_floats, bf->transform, centre);
-                startTransform.setFromOpenGLMatrix(bf->transform);
-                startTransform.getOrigin() += offset;
+                startTransform.setIdentity();
+                startTransform.setOrigin(btVector3(0.5f * (bf->bb_min[0] + bf->bb_max[0]), 0.5f * (bf->bb_min[1] + bf->bb_max[1]), 0.5f * (bf->bb_min[2] + bf->bb_max[2])));
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                 physics->bt_body[0] = new btRigidBody(0.0, motionState, cshape, localInertia);
                 physics->bt_body[0]->setUserPointer(physics->cont);
@@ -1223,8 +1237,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                         cshape->calculateLocalInertia(0.0, localInertia);
                         cshape->setMargin(COLLISION_MARGIN_DEFAULT);
 
-                        Mat4_Mat4_mul(tr, bf->transform, bf->bone_tags[i].full_transform);
-                        startTransform.setFromOpenGLMatrix(tr);
+                        startTransform.setIdentity();
                         btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
                         physics->bt_body[i] = new btRigidBody(0.0, motionState, cshape, localInertia);
                         physics->bt_body[i]->setUserPointer(physics->cont);
@@ -1242,13 +1255,11 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
 /*
  * 80% boxes hack now is default, but may be rewritten;
  */
-void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, struct ghost_shape_s *boxes)
+void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, struct ghost_shape_s *shape_info)
 {
     if(physics->objects_count > 0)
     {
         btTransform tr;
-        btScalar gltr[16];
-
         if(!physics->manifoldArray)
         {
             physics->manifoldArray = new btManifoldArray();
@@ -1258,14 +1269,27 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
         {
             case COLLISION_SHAPE_SINGLE_BOX:
                 {
+                    physics->ghosts_info = (ghost_shape_p)malloc(sizeof(ghost_shape_t));
+                    physics->ghosts_info[0].shape_id = COLLISION_SHAPE_SINGLE_BOX;
+                    vec3_copy(physics->ghosts_info[0].bb_max, bf->bb_max);
+                    vec3_copy(physics->ghosts_info[0].bb_min, bf->bb_min);
+                    vec3_add(physics->ghosts_info[0].offset, bf->bb_min, bf->bb_min);
+                    physics->ghosts_info[0].offset[0] *= 0.5f;
+                    physics->ghosts_info[0].offset[1] *= 0.5f;
+                    physics->ghosts_info[0].offset[2] *= 0.5f;
+
                     physics->ghost_objects = (btPairCachingGhostObject**)malloc(bf->bone_tag_count * sizeof(btPairCachingGhostObject*));
                     physics->ghost_objects[0] = new btPairCachingGhostObject();
                     physics->ghost_objects[0]->setIgnoreCollisionCheck(physics->bt_body[0], true);
-                    tr.setFromOpenGLMatrix(bf->transform);
+                    tr.setIdentity();
                     physics->ghost_objects[0]->setWorldTransform(tr);
                     physics->ghost_objects[0]->setUserPointer(physics->cont);
                     physics->ghost_objects[0]->setUserIndex(-1);
-                    physics->ghost_objects[0]->setCollisionShape(BT_CSfromBBox(bf->bb_min, bf->bb_max));
+
+                    float hx = (bf->bb_max[0] - bf->bb_min[0]) * 0.5f;
+                    float hy = (bf->bb_max[1] - bf->bb_min[1]) * 0.5f;
+                    float hz = (bf->bb_max[2] - bf->bb_min[2]) * 0.5f;
+                    physics->ghost_objects[0]->setCollisionShape(new btBoxShape(btVector3(hx, hy, hz)));
                     physics->ghost_objects[0]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
                     bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[0], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter & ~btBroadphaseProxy::SensorTrigger);
                 }
@@ -1273,13 +1297,19 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
 
             case COLLISION_SHAPE_SINGLE_SPHERE:
                 {
+                    physics->ghosts_info = (ghost_shape_p)malloc(sizeof(ghost_shape_t));
+                    physics->ghosts_info[0].shape_id = COLLISION_SHAPE_SINGLE_SPHERE;
+                    vec3_copy(physics->ghosts_info[0].bb_max, bf->bb_max);
+                    vec3_copy(physics->ghosts_info[0].bb_min, bf->bb_min);
+                    vec3_add(physics->ghosts_info[0].offset, bf->bb_min, bf->bb_min);
+                    physics->ghosts_info[0].offset[0] *= 0.5f;
+                    physics->ghosts_info[0].offset[1] *= 0.5f;
+                    physics->ghosts_info[0].offset[2] *= 0.5f;
+
                     physics->ghost_objects = (btPairCachingGhostObject**)malloc(bf->bone_tag_count * sizeof(btPairCachingGhostObject*));
                     physics->ghost_objects[0] = new btPairCachingGhostObject();
                     physics->ghost_objects[0]->setIgnoreCollisionCheck(physics->bt_body[0], true);
-                    btVector3 offset, centre(0.5f * (bf->bb_min[0] + bf->bb_max[0]), 0.5f * (bf->bb_min[1] + bf->bb_max[1]), 0.5f * (bf->bb_min[2] + bf->bb_max[2]));
-                    Mat4_vec3_rot_macro(offset.m_floats, bf->transform, centre);
-                    tr.setFromOpenGLMatrix(bf->transform);
-                    tr.getOrigin() += offset;
+                    tr.setIdentity();
                     physics->ghost_objects[0]->setWorldTransform(tr);
                     physics->ghost_objects[0]->setUserPointer(physics->cont);
                     physics->ghost_objects[0]->setUserIndex(-1);
@@ -1291,6 +1321,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
 
             default:
                 {
+                    physics->ghosts_info = (ghost_shape_p)malloc(bf->bone_tag_count * sizeof(ghost_shape_t));
                     physics->ghost_objects = (btPairCachingGhostObject**)malloc(bf->bone_tag_count * sizeof(btPairCachingGhostObject*));
                     for(uint32_t i = 0; i < physics->objects_count; i++)
                     {
@@ -1298,17 +1329,38 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
 
                         physics->ghost_objects[i] = new btPairCachingGhostObject();
                         physics->ghost_objects[i]->setIgnoreCollisionCheck(physics->bt_body[i], true);
-                        Mat4_Mat4_mul(gltr, bf->transform, b_tag->full_transform);
-                        tr.setFromOpenGLMatrix(gltr);
+                        tr.setIdentity();
                         physics->ghost_objects[i]->setWorldTransform(tr);
                         physics->ghost_objects[i]->setUserPointer(physics->cont);
                         physics->ghost_objects[i]->setUserIndex(i);
-                        if(boxes)
+                        if(shape_info)
                         {
-                            physics->ghost_objects[i]->setCollisionShape(BT_CSfromBBox(boxes[i].bb_min, boxes[i].bb_max));
+                            float hx = (shape_info[i].bb_max[0] - shape_info[i].bb_min[0]) * 0.5f;
+                            float hy = (shape_info[i].bb_max[1] - shape_info[i].bb_min[1]) * 0.5f;
+                            float hz = (shape_info[i].bb_max[2] - shape_info[i].bb_min[2]) * 0.5f;
+                            physics->ghosts_info[i] = shape_info[i];
+                            switch(shape_info[i].shape_id)
+                            {
+                                case COLLISION_SHAPE_BOX:
+                                    physics->ghost_objects[i]->setCollisionShape(new btBoxShape(btVector3(hx, hy, hz)));
+                                    break;
+
+                                case COLLISION_SHAPE_SPHERE:
+                                    physics->ghost_objects[i]->setCollisionShape(new btSphereShape(hx));
+                                    break;
+
+                                default:
+                                    vec3_set_zero(physics->ghosts_info[i].offset);
+                                    physics->ghost_objects[i]->setCollisionShape(BT_CSfromMesh(b_tag->mesh_base, true, true, false));
+                                    break;
+                            };
                         }
                         else
                         {
+                            physics->ghosts_info[i].shape_id = COLLISION_SHAPE_TRIMESH_CONVEX;
+                            vec3_copy(physics->ghosts_info[i].bb_max, b_tag->mesh_base->bb_max);
+                            vec3_copy(physics->ghosts_info[i].bb_min, b_tag->mesh_base->bb_min);
+                            vec3_set_zero(physics->ghosts_info[i].offset);
                             physics->ghost_objects[i]->setCollisionShape(BT_CSfromMesh(b_tag->mesh_base, true, true, false));
                         }
                         physics->ghost_objects[i]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
@@ -1320,16 +1372,40 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
 }
 
 
-void Physics_SetGhostCollisionShape(struct physics_data_s *physics, uint16_t index, struct ghost_shape_s *shape_info)
+void Physics_SetGhostCollisionShape(struct physics_data_s *physics, struct ss_bone_frame_s *bf, uint16_t index, struct ghost_shape_s *shape_info)
 {
     if(physics->ghost_objects)
     {
-        btCollisionShape *old_shape = physics->ghost_objects[index]->getCollisionShape();
-        physics->ghost_objects[index]->setCollisionShape(BT_CSfromBBox(shape_info->bb_min, shape_info->bb_max));
-        physics->ghost_objects[index]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
-        if(old_shape)
+        btCollisionShape *new_shape = NULL;
+        float hx = (shape_info->bb_max[0] - shape_info->bb_min[0]) * 0.5f;
+        float hy = (shape_info->bb_max[1] - shape_info->bb_min[1]) * 0.5f;
+        float hz = (shape_info->bb_max[2] - shape_info->bb_min[2]) * 0.5f;
+
+        switch(shape_info->shape_id)
         {
-            delete old_shape;
+            case COLLISION_SHAPE_BOX:
+                new_shape = new btBoxShape(btVector3(hx, hy, hz));
+                break;
+
+            case COLLISION_SHAPE_SPHERE:
+                new_shape = new btSphereShape(hx);
+                break;
+
+            case COLLISION_SHAPE_TRIMESH:
+                new_shape = BT_CSfromMesh(bf->bone_tags[index].mesh_base, true, true, false);
+                break;
+        };
+
+        if(new_shape)
+        {
+            btCollisionShape *old_shape = physics->ghost_objects[index]->getCollisionShape();
+            physics->ghosts_info[index] = *shape_info;
+            physics->ghost_objects[index]->setCollisionShape(new_shape);
+            physics->ghost_objects[index]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
+            if(old_shape)
+            {
+                delete old_shape;
+            }
         }
     }
 }

@@ -543,6 +543,7 @@ void Game_UpdateAllEntities(struct RedBlackNode_s *x)
         }
         Entity_Frame(ent, engine_frame_time);
         Entity_UpdateRigidBody(ent, 0);
+        Entity_UpdateRoomPos(ent);
     }
 
     if(x->left != NULL)

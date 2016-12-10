@@ -208,21 +208,26 @@ int lua_SetEntityCollision(lua_State * lua)
 
 int lua_SetEntityGhostCollisionShape(lua_State * lua)
 {
-    if(lua_gettop(lua) >= 8)
+    if(lua_gettop(lua) >= 9)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
             uint16_t ghost_index = lua_tointeger(lua, 2);
+            base_mesh_p mesh = ent->bf->bone_tags[ghost_index].mesh_base;
             ghost_shape_t shape;
-            shape.bb_min[0] = lua_tonumber(lua, 3);
-            shape.bb_min[1] = lua_tonumber(lua, 4);
-            shape.bb_min[2] = lua_tonumber(lua, 5);
-            shape.bb_max[0] = lua_tonumber(lua, 6);
-            shape.bb_max[1] = lua_tonumber(lua, 7);
-            shape.bb_max[2] = lua_tonumber(lua, 8);
-
-            Physics_SetGhostCollisionShape(ent->physics, ghost_index, &shape);
+            shape.shape_id = lua_tonumber(lua, 3);
+            shape.bb_min[0] = (!lua_isnil(lua, 4) || !mesh) ? (lua_tonumber(lua, 4)) : (mesh->bb_min[0]);
+            shape.bb_min[1] = (!lua_isnil(lua, 5) || !mesh) ? (lua_tonumber(lua, 5)) : (mesh->bb_min[1]);
+            shape.bb_min[2] = (!lua_isnil(lua, 6) || !mesh) ? (lua_tonumber(lua, 6)) : (mesh->bb_min[2]);
+            shape.bb_max[0] = (!lua_isnil(lua, 7) || !mesh) ? (lua_tonumber(lua, 7)) : (mesh->bb_max[0]);
+            shape.bb_max[1] = (!lua_isnil(lua, 8) || !mesh) ? (lua_tonumber(lua, 8)) : (mesh->bb_max[1]);
+            shape.bb_max[2] = (!lua_isnil(lua, 9) || !mesh) ? (lua_tonumber(lua, 9)) : (mesh->bb_max[2]);
+            vec3_add(shape.offset, shape.bb_min, shape.bb_max);
+            shape.offset[0] *= 0.5f;
+            shape.offset[1] *= 0.5f;
+            shape.offset[2] *= 0.5f;
+            Physics_SetGhostCollisionShape(ent->physics, ent->bf, ghost_index, &shape);
         }
         else
         {
@@ -1798,6 +1803,7 @@ int lua_CreateGhosts(lua_State * lua)
         if(ent && !Physics_IsGhostsInited(ent->physics))
         {
             Physics_CreateGhosts(ent->physics, ent->bf, NULL);
+            Entity_GhostUpdate(ent);
         }
         else
         {
