@@ -629,6 +629,12 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     collision_result_t cb;
     //const float color[3] = {1.0, 0.0, 0.0};
 
+    if(ent->current_sector && ent->current_sector->room_above &&
+       ent->current_sector->room_above->bb_min[2] < test_from[2] + 256.0f)
+    {
+        ent->self->room = ent->current_sector->room_above;
+    }
+
     climb->height_info = CHARACTER_STEP_HORIZONTAL;
     climb->can_hang = 0x00;
     climb->edge_hit = 0x00;

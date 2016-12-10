@@ -84,9 +84,7 @@ public:
                 entity_p ent = (entity_p)m_cont->object;
                 rs = ent->current_sector;
             }
-            if(Room_IsInNearRoomsList(r0, r1) ||
-               (rs && rs->room_above && Room_IsInNearRoomsList(r0, rs->room_above)) ||
-               (rs && rs->room_below && Room_IsInNearRoomsList(r0, rs->room_below)))
+            if(Room_IsInNearRoomsList(r0, r1))
             {
                 return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
             }
@@ -150,9 +148,7 @@ public:
                 entity_p ent = (entity_p)m_cont->object;
                 rs = ent->current_sector;
             }
-            if(Room_IsInNearRoomsList(r0, r1) ||
-               (rs && rs->room_above && Room_IsInNearRoomsList(r0, rs->room_above)) ||
-               (rs && rs->room_below && Room_IsInNearRoomsList(r0, rs->room_below)))
+            if(Room_IsInNearRoomsList(r0, r1))
             {
                 return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
             }

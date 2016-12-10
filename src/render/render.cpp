@@ -262,7 +262,8 @@ void CRender::GenWorldList(struct camera_s *cam)
             }
             else if((cam_pos[0] <= dest_room->bb_max[0] + eps) && (cam_pos[0] >= dest_room->bb_min[0] - eps) &&
                     (cam_pos[1] <= dest_room->bb_max[1] + eps) && (cam_pos[1] >= dest_room->bb_min[1] - eps) &&
-                    (cam_pos[2] <= dest_room->bb_max[2] + eps) && (cam_pos[2] >= dest_room->bb_min[2] - eps))
+                    (cam_pos[2] <= dest_room->bb_max[2] + eps) && (cam_pos[2] >= dest_room->bb_min[2] - eps) &&
+                    !Room_IsInOverlappedRoomsList(curr_room, dest_room))
             {
                 portal_p np = dest_room->portals;
                 dest_room->frustum = NULL;                                      // room with camera inside has no frustums!
