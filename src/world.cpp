@@ -2318,6 +2318,7 @@ void World_GenEntities(class VT_Level *tr)
         entity->trigger_layout  = (tr_item->flags & 0x3E00) >> 9;               ///@FIXME: Ignore INVISIBLE and CLEAR BODY flags for a moment.
         entity->OCB             = tr_item->ocb;
         entity->timer           = 0.0;
+        entity->state_flags &= (tr_item->flags & 0x0100) ? (~ENTITY_STATE_VISIBLE) : (0xFFFF);
 
         entity->self->collision_group = COLLISION_GROUP_KINEMATIC;
         entity->self->collision_mask = COLLISION_MASK_ALL;
@@ -2479,7 +2480,7 @@ void World_GenEntities(class VT_Level *tr)
         Physics_GenRigidBody(entity->physics, entity->bf);
         Entity_UpdateRigidBody(entity, 1);
 
-        if(!(entity->state_flags & ENTITY_STATE_ENABLED) || (entity->self->collision_group == COLLISION_NONE))
+        if(!(entity->state_flags & ENTITY_STATE_ENABLED) || !(entity->state_flags & ENTITY_STATE_VISIBLE) || (entity->self->collision_group == COLLISION_NONE))
         {
             Entity_DisableCollision(entity);
         }
