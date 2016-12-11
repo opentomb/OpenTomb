@@ -495,9 +495,8 @@ int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float react
     {
         float t1, t2, *pos = ent->transform + 12;
 
-        vec3_add(pos, pos, move);
         Entity_GhostUpdate(ent);
-
+        vec3_add(pos, pos, move);
         ret = Entity_GetPenetrationFixVector(ent, reaction, filter);
         if((ret > 0) && (ent->character != NULL))
         {
