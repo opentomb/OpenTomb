@@ -1012,7 +1012,7 @@ int lua_SetEntityVisibility(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            if(lua_tointeger(lua, 2) != 0)
+            if(lua_toboolean(lua, 2))
             {
                 ent->state_flags |= ENTITY_STATE_VISIBLE;
             }

@@ -278,7 +278,8 @@ function pickup_init(id, item_id)    -- Pick-ups
         if((item_id == nil) or (object_id == nil)) then
             return ENTITY_TRIGGERING_NOT_READY;
         end
-        
+
+        setEntityVisibility(object_id, true);
         local need_set_pos = true;
         local curr_anim = getEntityAnim(activator_id, ANIM_TYPE_BASE);
 

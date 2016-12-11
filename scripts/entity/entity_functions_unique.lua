@@ -295,7 +295,7 @@ function heli_rig_TR2_init(id)    -- Helicopter in Offshore Rig (TR2)
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
-        setEntityVisibility(object_id, 1);
+        setEntityVisibility(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
     end
     
@@ -327,7 +327,7 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(not getEntityActivity(object_id)) then
             setEntityActivity(object_id, true);
-            setEntityVisibility(id, 1);
+            setEntityVisibility(id, true);
             playSound(297, object_id);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;

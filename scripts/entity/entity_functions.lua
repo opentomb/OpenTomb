@@ -175,7 +175,9 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     
     local level_version = getLevelVersion();
-    if((level_version < TR_II) or (level_version >= TR_III)) then setEntityVisibility(id, 0) end;
+    if((level_version < TR_II) or (level_version >= TR_III)) then 
+        setEntityVisibility(id, false) 
+    end;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
@@ -185,7 +187,7 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
         local anim = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(anim == 0) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
-            setEntityVisibility(object_id, 1);
+            setEntityVisibility(object_id, true);
             addTask(
             function()
                 if(dropEntity(object_id, frame_time, true)) then

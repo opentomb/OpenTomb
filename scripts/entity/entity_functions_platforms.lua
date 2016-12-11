@@ -139,7 +139,7 @@ function rblock_init(id)        -- Raising block (generic)
     
     if(entity_funcs[id].dummy == true) then
         setEntityScaling(id, 1.0, 1.0, 1.0);
-        setEntityVisibility(id, 0);
+        setEntityVisibility(id, false);
         entity_funcs[id].curr_height = entity_funcs[id].max_height;
         entity_funcs[id].direction   = 2;
     else

@@ -1179,7 +1179,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                         Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, trigger->id, ent->id);
                     }
                 }
-                else if((trigger->type_flags & ENTITY_TYPE_PICKABLE) && (trigger->state_flags & ENTITY_STATE_ENABLED))
+                else if((trigger->type_flags & ENTITY_TYPE_PICKABLE) && (trigger->state_flags & ENTITY_STATE_ENABLED) && (trigger->state_flags & ENTITY_STATE_VISIBLE))
                 {
                     float ppos[3];
                     float *v = trigger->transform + 12;
