@@ -94,10 +94,10 @@ tr1_entity_tbl[44] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_
 tr1_entity_tbl[45] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                                     -- Thor's hammer (block) - spawned by script
 tr1_entity_tbl[46] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH };                                    -- Thor's lightning ball
 tr1_entity_tbl[47] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "anim_single"};               -- Barricade
-tr1_entity_tbl[48] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x18, func = "pushable"};         -- Pushable block
-tr1_entity_tbl[49] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x18, func = "pushable"};         -- Pushable block
-tr1_entity_tbl[50] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x18, func = "pushable"};         -- Pushable block
-tr1_entity_tbl[51] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x18, func = "pushable"};         -- Pushable block
+tr1_entity_tbl[48] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x30, func = "pushable"};         -- Pushable block
+tr1_entity_tbl[49] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x30, func = "pushable"};         -- Pushable block
+tr1_entity_tbl[50] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x30, func = "pushable"};         -- Pushable block
+tr1_entity_tbl[51] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x30, func = "pushable"};         -- Pushable block
 tr1_entity_tbl[52] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "tallblock"};                      -- Moving block
 tr1_entity_tbl[53] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallceiling"};                      -- Falling ceiling
 tr1_entity_tbl[54] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Sword of Damocles (unused?)
@@ -286,10 +286,10 @@ tr2_entity_tbl[63] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_
 tr2_entity_tbl[64] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};                     -- Slamming door
 tr2_entity_tbl[65] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Elevator
 tr2_entity_tbl[66] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Minisub
-tr2_entity_tbl[67] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x18, func = "pushable"};        -- Movable cubical block (pushable)
-tr2_entity_tbl[68] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x18, func = "pushable"};        -- Movable cubical block (pushable)
-tr2_entity_tbl[69] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x18, func = "pushable"};        -- Movable cubical block (pushable)
-tr2_entity_tbl[70] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x18, func = "pushable"};        -- Movable cubical block (pushable)
+tr2_entity_tbl[67] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x30, func = "pushable"};        -- Movable cubical block (pushable)
+tr2_entity_tbl[68] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x30, func = "pushable"};        -- Movable cubical block (pushable)
+tr2_entity_tbl[69] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x30, func = "pushable"};        -- Movable cubical block (pushable)
+tr2_entity_tbl[70] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, trav = 0x30, func = "pushable"};        -- Movable cubical block (pushable)
 tr2_entity_tbl[71] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Big bowl (Ice Palace)
 tr2_entity_tbl[72] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Breakable window (can shoot out)
 tr2_entity_tbl[73] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Breakable window (must jump through)
@@ -513,8 +513,8 @@ tr3_entity_tbl[89] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_
 tr3_entity_tbl[90] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                 -- Disk (like dart)
 tr3_entity_tbl[91] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, hide = 0x01};                 -- Dart shooter
 tr3_entity_tbl[94] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};                 -- Spiked impaled skeleton / Slamming door
-tr3_entity_tbl[97] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, trav = 0x18, func = "pushable"};    -- Movable cubical block (pushable)
-tr3_entity_tbl[98] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, trav = 0x18, func = "pushable"};    -- Movable cubical block (pushable)
+tr3_entity_tbl[97] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, trav = 0x30, func = "pushable"};    -- Movable cubical block (pushable)
+tr3_entity_tbl[98] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, trav = 0x30, func = "pushable"};    -- Movable cubical block (pushable)
 tr3_entity_tbl[101] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Destroyable boarded-up window
 tr3_entity_tbl[102] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Destroyable boarded-up window / wall
 tr3_entity_tbl[106] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Overhead pulley hook

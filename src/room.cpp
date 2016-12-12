@@ -689,6 +689,23 @@ struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs)
 }
 
 
+struct room_sector_s *Sector_GetPortalSectorTargetReal(struct room_sector_s *rs)
+{
+    if(rs && rs->portal_to_room)
+    {
+        room_p r = rs->portal_to_room->real_room;
+        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
+        {
+            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+        }
+    }
+
+    return rs;
+}
+
+
 struct room_sector_s *Sector_GetLowest(struct room_sector_s *sector)
 {
     for(; sector && sector->room_below; sector = Room_GetSectorRaw(sector->room_below->real_room, sector->pos));
