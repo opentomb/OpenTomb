@@ -262,7 +262,12 @@ end
 
 
 function pushable_init(id)
-    setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
+    setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
+    setEntityTypeFlag(id, ENTITY_TYPE_TRAVERSE, 1);
+    if(getLevelVersion() < TR_IV) then
+        setEntityTypeFlag(id, ENTITY_TYPE_TRAVERSE_FLOOR, 1);
+    end;
+
     setEntityCollisionFlags(id, COLLISION_GROUP_STATIC_ROOM, nil, nil);
     setEntityCollisionGroup(id, COLLISION_GROUP_STATIC_ROOM);
 end

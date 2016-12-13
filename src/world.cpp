@@ -1399,12 +1399,11 @@ void World_SetEntityModelProperties(struct entity_s *ent)
         {
             lua_pushinteger(global_world.objects_flags_conf, global_world.version);              // engine version
             lua_pushinteger(global_world.objects_flags_conf, ent->bf->animations.model->id);     // entity model id
-            if (lua_CallAndLog(global_world.objects_flags_conf, 2, 4, 0))
+            if (lua_CallAndLog(global_world.objects_flags_conf, 2, 3, 0))
             {
-                ent->self->collision_group = lua_tointeger(global_world.objects_flags_conf, -4);      // get collision type flag
-                ent->self->collision_shape = lua_tointeger(global_world.objects_flags_conf, -3);     // get collision shape flag
-                ent->bf->animations.model->hide = lua_tointeger(global_world.objects_flags_conf, -2);// get info about model visibility
-                ent->type_flags |= lua_tointeger(global_world.objects_flags_conf, -1);               // get traverse information
+                ent->self->collision_group = lua_tointeger(global_world.objects_flags_conf, -3);      // get collision type flag
+                ent->self->collision_shape = lua_tointeger(global_world.objects_flags_conf, -2);     // get collision shape flag
+                ent->bf->animations.model->hide = lua_tointeger(global_world.objects_flags_conf, -1);// get info about model visibility
             }
         }
         lua_settop(global_world.objects_flags_conf, top);
@@ -1418,24 +1417,19 @@ void World_SetEntityModelProperties(struct entity_s *ent)
         {
             lua_pushinteger(global_world.level_script, global_world.version);                // engine version
             lua_pushinteger(global_world.level_script, ent->bf->animations.model->id);       // entity model id
-            if (lua_CallAndLog(global_world.level_script, 2, 4, 0))                                 // call that function
+            if (lua_CallAndLog(global_world.level_script, 2, 3, 0))                                 // call that function
             {
-                if(!lua_isnil(global_world.level_script, -4))
-                {
-                    ent->self->collision_group = lua_tointeger(global_world.level_script, -4);        // get collision type flag
-                }
                 if(!lua_isnil(global_world.level_script, -3))
                 {
-                    ent->self->collision_shape = lua_tointeger(global_world.level_script, -3);       // get collision shape flag
+                    ent->self->collision_group = lua_tointeger(global_world.level_script, -3);        // get collision type flag
                 }
                 if(!lua_isnil(global_world.level_script, -2))
                 {
-                    ent->bf->animations.model->hide = lua_tointeger(global_world.level_script, -2);  // get info about model visibility
+                    ent->self->collision_shape = lua_tointeger(global_world.level_script, -2);       // get collision shape flag
                 }
                 if(!lua_isnil(global_world.level_script, -1))
                 {
-                    ent->type_flags &= ~(ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR);
-                    ent->type_flags |= lua_tointeger(global_world.level_script, -1);                 // get traverse information
+                    ent->bf->animations.model->hide = lua_tointeger(global_world.level_script, -1);  // get info about model visibility
                 }
             }
         }
