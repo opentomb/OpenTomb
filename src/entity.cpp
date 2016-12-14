@@ -543,14 +543,16 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
 
         bool is_first_test = true;
         int num_iters = 3;
-        const float part = 1.0f / (float)num_iters;
+        float part = 1.0f / (float)num_iters;
         float t1, t2, reaction[3];
         int numPenetrationLoops = 0;
         while((--num_iters >= 0) && ((numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, filter)) > 0))
         {
+            part = (num_iters == 0) ? (1.0f) : (part);
             reaction[0] *= part;
             reaction[1] *= part;
             reaction[2] *= part;
+            reaction[2] = (ent->no_fix_z) ? (0.0f) : (reaction[2]);
             vec3_add(ent->transform + 12, ent->transform + 12, reaction);
 
             if(ent->character)

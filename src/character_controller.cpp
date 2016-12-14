@@ -2029,6 +2029,7 @@ void Character_ApplyCommands(struct entity_s *ent)
         ent->character->state_func(ent, &ent->bf->animations);
     }
 
+    ent->no_fix_z = 0x00;
     switch(ent->move_type)
     {
         case MOVE_ON_FLOOR:
@@ -2036,6 +2037,7 @@ void Character_ApplyCommands(struct entity_s *ent)
             break;
 
         case MOVE_FREE_FALLING:
+            ent->no_fix_z = 0x01;
             Character_FreeFalling(ent);
             break;
 
