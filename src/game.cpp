@@ -467,6 +467,7 @@ void Game_ApplyControls(struct entity_s *ent)
         pos[2] = engine_camera.gl_transform[12 + 2] + engine_camera.gl_transform[8 + 2] * control_states.cam_distance - 512.0;
         vec3_copy(ent->transform + 12, pos);
         Entity_UpdateTransform(ent);
+        Entity_UpdateRoomPos(ent);
         Entity_UpdateRigidBody(ent, 1);
         Entity_GhostUpdate(ent);
     }
