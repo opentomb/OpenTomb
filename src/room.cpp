@@ -423,7 +423,7 @@ struct room_sector_s *Room_GetSectorRaw(struct room_s *room, float pos[3])
 }
 
 
-room_sector_p Room_GetSectorXYZ(room_p room, float pos[3])
+struct room_sector_s *Room_GetSectorXYZ(struct room_s *room, float pos[3])
 {
     room_sector_p ret = NULL;
     int x = (int)(pos[0] - room->transform[12]) / 1024;

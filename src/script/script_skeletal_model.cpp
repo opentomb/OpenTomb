@@ -24,53 +24,52 @@ int lua_SetStateChangeRange(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
-    if(top < 6)
+    if(top >= 6)
     {
-        Con_Warning("setStateChangeRange: expecting arguments (model_id, anim_num, state_id, dispatch_num, start_frame, end_frame, (next_anim), (next_frame))");
-        return 0;
-    }
-
-    skeletal_model_p model = World_GetModelByID(lua_tointeger(lua, 1));
-    if(model)
-    {
-        int anim = lua_tointeger(lua, 2);
-        int state = lua_tointeger(lua, 3);
-        int dispatch = lua_tointeger(lua, 4);
-        int frame_low = lua_tointeger(lua, 5);
-        int frame_high = lua_tointeger(lua, 6);
-
-        if((anim < 0) || (anim + 1 > model->animation_count))
+        skeletal_model_p model = World_GetModelByID(lua_tointeger(lua, 1));
+        if(model)
         {
-            Con_Warning("wrong anim number = %d", anim);
-            return 0;
-        }
-
-        animation_frame_p af = model->animations + anim;
-        for(uint16_t i = 0; i < af->state_change_count; i++)
-        {
-            if(af->state_change[i].id == (uint32_t)state)
+            int anim = lua_tointeger(lua, 2);
+            if((anim >= 0) && (anim < model->animation_count))
             {
-                if((dispatch >= 0) && (dispatch < af->state_change[i].anim_dispatch_count))
+                int state = lua_tointeger(lua, 3);
+                animation_frame_p af = model->animations + anim;
+                for(uint16_t i = 0; i < af->state_change_count; i++)
                 {
-                    af->state_change[i].anim_dispatch[dispatch].frame_low = frame_low;
-                    af->state_change[i].anim_dispatch[dispatch].frame_high = frame_high;
-                    if(top >= 8)
+                    if(af->state_change[i].id == (uint32_t)state)
                     {
-                        af->state_change[i].anim_dispatch[dispatch].next_anim = lua_tointeger(lua, 7);
-                        af->state_change[i].anim_dispatch[dispatch].next_frame = lua_tointeger(lua, 8);
+                        int dispatch = lua_tointeger(lua, 4);
+                        if((dispatch >= 0) && (dispatch < af->state_change[i].anim_dispatch_count))
+                        {
+                            af->state_change[i].anim_dispatch[dispatch].frame_low = lua_tointeger(lua, 5);
+                            af->state_change[i].anim_dispatch[dispatch].frame_high = lua_tointeger(lua, 6);
+                            if(top >= 8)
+                            {
+                                af->state_change[i].anim_dispatch[dispatch].next_anim = lua_tointeger(lua, 7);
+                                af->state_change[i].anim_dispatch[dispatch].next_frame = lua_tointeger(lua, 8);
+                            }
+                        }
+                        else
+                        {
+                            Con_Warning("wrong anim dispatch number = %d", dispatch);
+                        }
+                        break;
                     }
                 }
-                else
-                {
-                    Con_Warning("wrong anim dispatch number = %d", dispatch);
-                }
-                break;
             }
+            else
+            {
+                Con_Warning("wrong anim number = %d", anim);
+            }
+        }
+        else
+        {
+            Con_Warning("no skeletal model with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no skeletal model with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("setStateChangeRange: expecting arguments (model_id, anim_num, state_id, dispatch_num, start_frame, end_frame, (next_anim, next_frame))");
     }
 
     return 0;
@@ -99,28 +98,29 @@ int lua_GetEntityModelID(lua_State * lua)
 
 int lua_GetEntityAnimState(lua_State * lua)
 {
-    if(lua_gettop(lua) < 2)
+    if(lua_gettop(lua) >= 2)
     {
-        Con_Warning("getEntityAnimState: expecting arguments (entity_id, anim_type_id)");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        int anim_type_id = lua_tointeger(lua, 2);
-        for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
         {
-            if(ss_anim->type == anim_type_id)
+            int anim_type_id = lua_tointeger(lua, 2);
+            for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
             {
-                lua_pushinteger(lua, ss_anim->next_state);
-                return 1;
+                if(ss_anim->type == anim_type_id)
+                {
+                    lua_pushinteger(lua, ss_anim->next_state);
+                    return 1;
+                }
             }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("getEntityAnimState: expecting arguments (entity_id, anim_type_id)");
     }
 
     return 0;
@@ -132,26 +132,27 @@ int lua_GetEntityAnimState(lua_State * lua)
  */
 int lua_SetModelCollisionMap(lua_State * lua)
 {
-    if(lua_gettop(lua) < 3)
+    if(lua_gettop(lua) >= 3)
     {
-        Con_Warning("wrong arguments number, shoul be (model_id, map_index, value)");
-        return 0;
-    }
-
-    skeletal_model_p model = World_GetModelByID(lua_tointeger(lua, 1));
-    if(model)
-    {
-        int arg = lua_tointeger(lua, 2);
-        int val = lua_tointeger(lua, 3);
-        if((arg >= 0) && (arg < model->mesh_count) &&
-           (val >= 0) && (val < model->mesh_count))
+        skeletal_model_p model = World_GetModelByID(lua_tointeger(lua, 1));
+        if(model)
         {
-            model->collision_map[arg] = val;
+            int arg = lua_tointeger(lua, 2);
+            int val = lua_tointeger(lua, 3);
+            if((arg >= 0) && (arg < model->mesh_count) &&
+               (val >= 0) && (val < model->mesh_count))
+            {
+                model->collision_map[arg] = val;
+            }
+        }
+        else
+        {
+            Con_Warning("wrong model id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("wrong model id = %d", lua_tointeger(lua, 1));
+        Con_Warning("wrong arguments number, shoul be (model_id, map_index, value)");
     }
 
     return 0;
@@ -162,26 +163,29 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
-    if(top < 3)
+    if(top >= 3)
     {
-        Con_Warning("setModelBodyPartFlag: expecting arguments (model_id, bone_id, body_part_flag)");
-        return 0;
-    }
-
-    skeletal_model_p model = World_GetModelByID(lua_tointeger(lua, 1));
-    if(model)
-    {
-        int bone_id = lua_tointeger(lua, 2);
-        if((bone_id < 0) || (bone_id >= model->mesh_count))
+        skeletal_model_p model = World_GetModelByID(lua_tointeger(lua, 1));
+        if(model)
         {
-            Con_Warning("wrong bone index = %d", bone_id);
-            return 0;
+            int bone_id = lua_tointeger(lua, 2);
+            if((bone_id >= 0) && (bone_id < model->mesh_count))
+            {
+                model->mesh_tree[bone_id].body_part = lua_tointeger(lua, 3);
+            }
+            else
+            {
+                Con_Warning("wrong bone index = %d", bone_id);
+            }
         }
-        model->mesh_tree[bone_id].body_part = lua_tointeger(lua, 3);
+        else
+        {
+            Con_Warning("no skeletal model with id = %d", lua_tointeger(lua, 1));
+        }
     }
     else
     {
-        Con_Warning("no skeletal model with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("setModelBodyPartFlag: expecting arguments (model_id, bone_id, body_part_flag)");
     }
 
     return 0;
@@ -190,29 +194,29 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
 
 int lua_SetEntityAnimState(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-    if(top < 3)
+    if(lua_gettop(lua) >= 3)
     {
-        Con_Warning("setEntityAnimState: expecting arguments (entity_id, anim_type_id, next_state)");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        int anim_type_id = lua_tointeger(lua, 2);
-        for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
         {
-            if(ss_anim->type == anim_type_id)
+            int anim_type_id = lua_tointeger(lua, 2);
+            for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
             {
-                ss_anim->next_state = lua_tointeger(lua, 3);
-                break;
+                if(ss_anim->type == anim_type_id)
+                {
+                    ss_anim->next_state = lua_tointeger(lua, 3);
+                    break;
+                }
             }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("setEntityAnimState: expecting arguments (entity_id, anim_type_id, next_state)");
     }
 
     return 0;
@@ -221,30 +225,30 @@ int lua_SetEntityAnimState(lua_State * lua)
 
 int lua_SetEntityAnimStateHeavy(lua_State * lua)
 {
-    int top = lua_gettop(lua);
-    if(top < 3)
+    if(lua_gettop(lua) >= 3)
     {
-        Con_Warning("setEntityAnimStateHeavy: expecting arguments (entity_id, anim_type_id, next_state)");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        int anim_type_id = lua_tointeger(lua, 2);
-        for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
         {
-            if(ss_anim->type == anim_type_id)
+            int anim_type_id = lua_tointeger(lua, 2);
+            for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
             {
-                ss_anim->next_state_heavy = lua_tointeger(lua, 3);
-                ss_anim->next_state = ss_anim->next_state_heavy;
-                break;
+                if(ss_anim->type == anim_type_id)
+                {
+                    ss_anim->next_state_heavy = lua_tointeger(lua, 3);
+                    ss_anim->next_state = ss_anim->next_state_heavy;
+                    break;
+                }
             }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("setEntityAnimStateHeavy: expecting arguments (entity_id, anim_type_id, next_state)");
     }
 
     return 0;
@@ -253,44 +257,47 @@ int lua_SetEntityAnimStateHeavy(lua_State * lua)
 
 int lua_GetEntityMeshCount(lua_State *lua)
 {
-    if(lua_gettop(lua) < 1)
+    if(lua_gettop(lua) >= 1)
     {
-        Con_Warning("getEntityMeshCount: expecting arguments (entity_id)");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        lua_pushinteger(lua, ent->bf->bone_tag_count);
-        return 1;
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            lua_pushinteger(lua, ent->bf->bone_tag_count);
+            return 1;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
-        return 0;
+        Con_Warning("getEntityMeshCount: expecting arguments (entity_id)");
     }
+
+    return 0;
 }
 
 
 int lua_SetEntityMeshswap(lua_State * lua)
 {
-    if(lua_gettop(lua) < 2)
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p         ent_dest = World_GetEntityByID(lua_tointeger(lua, 1));
+        skeletal_model_p model_src = World_GetModelByID(lua_tointeger(lua, 2));
+        if(ent_dest && model_src)
+        {
+            int meshes_to_copy = (ent_dest->bf->bone_tag_count > model_src->mesh_count) ? (model_src->mesh_count) : (ent_dest->bf->bone_tag_count);
+            for(int i = 0; i < meshes_to_copy; i++)
+            {
+                ent_dest->bf->bone_tags[i].mesh_base = model_src->mesh_tree[i].mesh_base;
+                ent_dest->bf->bone_tags[i].mesh_skin = model_src->mesh_tree[i].mesh_skin;
+            }
+        }
+    }
+    else
     {
         Con_Warning("setEntityMeshswap: expecting arguments (id_dest, id_src)");
-        return 0;
-    }
-
-    entity_p         ent_dest = World_GetEntityByID(lua_tointeger(lua, 1));
-    skeletal_model_p model_src = World_GetModelByID(lua_tointeger(lua, 2));
-    if(ent_dest && model_src)
-    {
-        int meshes_to_copy = (ent_dest->bf->bone_tag_count > model_src->mesh_count) ? (model_src->mesh_count) : (ent_dest->bf->bone_tag_count);
-        for(int i = 0; i < meshes_to_copy; i++)
-        {
-            ent_dest->bf->bone_tags[i].mesh_base = model_src->mesh_tree[i].mesh_base;
-            ent_dest->bf->bone_tags[i].mesh_skin = model_src->mesh_tree[i].mesh_skin;
-        }
     }
 
     return 0;
@@ -299,28 +306,29 @@ int lua_SetEntityMeshswap(lua_State * lua)
 
 int lua_SetModelMeshReplaceFlag(lua_State *lua)
 {
-    if(lua_gettop(lua) < 3)
+    if(lua_gettop(lua) >= 3)
     {
-        Con_Printf("setModelMeshReplaceFlag: Wrong arguments count. Must be (id_model, bone_num, flag)");
-        return 0;
-    }
-
-    skeletal_model_p sm = World_GetModelByID(lua_tointeger(lua, 1));
-    if(sm)
-    {
-        int bone = lua_tointeger(lua, 2);
-        if((bone >= 0) && (bone < sm->mesh_count))
+        skeletal_model_p sm = World_GetModelByID(lua_tointeger(lua, 1));
+        if(sm)
         {
-            sm->mesh_tree[bone].replace_mesh = lua_tointeger(lua, 3);
+            int bone = lua_tointeger(lua, 2);
+            if((bone >= 0) && (bone < sm->mesh_count))
+            {
+                sm->mesh_tree[bone].replace_mesh = lua_tointeger(lua, 3);
+            }
+            else
+            {
+                Con_Printf("wrong bone number = %d", bone);
+            }
         }
         else
         {
-            Con_Printf("wrong bone number = %d", bone);
+            Con_Printf("can not find model with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Printf("can not find model with id = %d", lua_tointeger(lua, 1));
+        Con_Printf("setModelMeshReplaceFlag: Wrong arguments count. Must be (id_model, bone_num, flag)");
     }
 
     return 0;
@@ -331,28 +339,29 @@ int lua_SetEntityAnimFlag(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
-    if(top < 3)
+    if(top >= 3)
     {
-        Con_Warning("setEntityAnimFlag: expecting arguments (entity_id, anim_type_id, anim_flag)");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        int anim_type_id = lua_tointeger(lua, 2);
-        for(ss_animation_p  ss_anim_it = &ent->bf->animations; ss_anim_it; ss_anim_it = ss_anim_it->next)
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
         {
-            if(ss_anim_it->type == anim_type_id)
+            int anim_type_id = lua_tointeger(lua, 2);
+            for(ss_animation_p  ss_anim_it = &ent->bf->animations; ss_anim_it; ss_anim_it = ss_anim_it->next)
             {
-                ss_anim_it->anim_frame_flags = lua_tointeger(lua, 3);
-                break;
+                if(ss_anim_it->type == anim_type_id)
+                {
+                    ss_anim_it->anim_frame_flags = lua_tointeger(lua, 3);
+                    break;
+                }
             }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("setEntityAnimFlag: expecting arguments (entity_id, anim_type_id, anim_flag)");
     }
 
     return 0;
@@ -361,28 +370,29 @@ int lua_SetEntityAnimFlag(lua_State * lua)
 
 int lua_SetModelAnimReplaceFlag(lua_State *lua)
 {
-    if(lua_gettop(lua) < 3)
+    if(lua_gettop(lua) >= 3)
     {
-        Con_Printf("setModelAnimReplaceFlag: Wrong arguments count. Must be (id_model, bone_num, flag)");
-        return 0;
-    }
-
-    skeletal_model_p sm = World_GetModelByID(lua_tointeger(lua, 1));
-    if(sm)
-    {
-        int bone = lua_tointeger(lua, 2);
-        if((bone >= 0) && (bone < sm->mesh_count))
+        skeletal_model_p sm = World_GetModelByID(lua_tointeger(lua, 1));
+        if(sm)
         {
-            sm->mesh_tree[bone].replace_anim = lua_tointeger(lua, 3);
+            int bone = lua_tointeger(lua, 2);
+            if((bone >= 0) && (bone < sm->mesh_count))
+            {
+                sm->mesh_tree[bone].replace_anim = lua_tointeger(lua, 3);
+            }
+            else
+            {
+                Con_Printf("wrong bone number = %d", bone);
+            }
         }
         else
         {
-            Con_Printf("wrong bone number = %d", bone);
+            Con_Printf("can not find model with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Printf("can not find model with id = %d", lua_tointeger(lua, 1));
+        Con_Printf("setModelAnimReplaceFlag: Wrong arguments count. Must be (id_model, bone_num, flag)");
     }
 
     return 0;
@@ -391,38 +401,24 @@ int lua_SetModelAnimReplaceFlag(lua_State *lua)
 
 int lua_CopyMeshFromModelToModel(lua_State *lua)
 {
-    if(lua_gettop(lua) < 4)
+    if(lua_gettop(lua) >= 4)
     {
-        Con_Printf("copyMeshFromModelToModel: expecting arguments (id_model1, id_model2, bone_num1, bone_num2)");
-        return 0;
-    }
+        skeletal_model_p sm1 = World_GetModelByID(lua_tointeger(lua, 1));
+        skeletal_model_p sm2 = World_GetModelByID(lua_tointeger(lua, 2));
 
-    int id = lua_tointeger(lua, 1);
-    skeletal_model_p sm1 = World_GetModelByID(id);
-    if(sm1 == NULL)
-    {
-        Con_Printf("can not find model with id = %d", id);
-        return 0;
-    }
-
-    id = lua_tointeger(lua, 2);
-    skeletal_model_p sm2 = World_GetModelByID(id);
-    if(sm2 == NULL)
-    {
-        Con_Printf("can not find model with id = %d", id);
-        return 0;
-    }
-
-    int bone1 = lua_tointeger(lua, 3);
-    int bone2 = lua_tointeger(lua, 4);
-
-    if((bone1 >= 0) && (bone1 < sm1->mesh_count) && (bone2 >= 0) && (bone2 < sm2->mesh_count))
-    {
-        sm1->mesh_tree[bone1].mesh_base = sm2->mesh_tree[bone2].mesh_base;
+        if(sm1 && sm2)
+        {
+            int bone1 = lua_tointeger(lua, 3);
+            int bone2 = lua_tointeger(lua, 4);
+            if((bone1 >= 0) && (bone1 < sm1->mesh_count) && (bone2 >= 0) && (bone2 < sm2->mesh_count))
+            {
+                sm1->mesh_tree[bone1].mesh_base = sm2->mesh_tree[bone2].mesh_base;
+            }
+        }
     }
     else
     {
-        Con_AddLine("wrong bone number = %d", FONTSTYLE_GENERIC);
+        Con_Printf("copyMeshFromModelToModel: expecting arguments (id_model1, id_model2, bone_num1, bone_num2)");
     }
 
     return 0;
@@ -433,35 +429,36 @@ int lua_SetEntityAnim(lua_State * lua)
 {
     int top = lua_gettop(lua);
 
-    if(top < 4)
+    if(top >= 4)
     {
-        Con_Warning("setEntityAnim: expecting arguments (entity_id, anim_type_id, anim_num, frame_number, (curr_anim, curr_frame))");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        uint16_t anim_type_id = lua_tointeger(lua, 2);
-        ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
-        if(ss_anim && ss_anim->model)
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
         {
-            Anim_SetAnimation(ss_anim, lua_tointeger(lua, 3), lua_tointeger(lua, 4));
-            if(top >= 6)
+            uint16_t anim_type_id = lua_tointeger(lua, 2);
+            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
+            if(ss_anim && ss_anim->model)
             {
-                int16_t anim = lua_tointeger(lua, 5);
-                int16_t frame = lua_tointeger(lua, 6);
-                if((anim < ss_anim->model->animation_count) && (frame < ss_anim->model->animations[anim].frames_count))
+                Anim_SetAnimation(ss_anim, lua_tointeger(lua, 3), lua_tointeger(lua, 4));
+                if(top >= 6)
                 {
-                    ss_anim->current_animation = anim;
-                    ss_anim->current_frame = frame;
+                    int16_t anim = lua_tointeger(lua, 5);
+                    int16_t frame = lua_tointeger(lua, 6);
+                    if((anim < ss_anim->model->animation_count) && (frame < ss_anim->model->animations[anim].frames_count))
+                    {
+                        ss_anim->current_animation = anim;
+                        ss_anim->current_frame = frame;
+                    }
                 }
             }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("setEntityAnim: expecting arguments (entity_id, anim_type_id, anim_num, frame_number, (curr_anim, curr_frame))");
     }
 
     return 0;
@@ -470,32 +467,33 @@ int lua_SetEntityAnim(lua_State * lua)
 
 int lua_GetEntityAnim(lua_State * lua)
 {
-    if(lua_gettop(lua) < 2)
+    if(lua_gettop(lua) >= 2)
     {
-        Con_Warning("getEntityAnim: expecting arguments (entity_id, anim_type_id)");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        int anim_id = lua_tointeger(lua, 2);
-        ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_id);
-        if(ss_anim && ss_anim->model)
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
         {
-            animation_frame_p af = ss_anim->model->animations + ss_anim->next_animation;
-            lua_pushinteger(lua, ss_anim->next_animation);
-            lua_pushinteger(lua, ss_anim->next_frame);
-            lua_pushinteger(lua, af->max_frame);
-            lua_pushinteger(lua, af->next_anim->id);
-            lua_pushinteger(lua, af->next_frame);
-            lua_pushinteger(lua, af->next_anim->state_id);
-            return 6;
+            int anim_id = lua_tointeger(lua, 2);
+            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_id);
+            if(ss_anim && ss_anim->model)
+            {
+                animation_frame_p af = ss_anim->model->animations + ss_anim->next_animation;
+                lua_pushinteger(lua, ss_anim->next_animation);
+                lua_pushinteger(lua, ss_anim->next_frame);
+                lua_pushinteger(lua, af->max_frame);
+                lua_pushinteger(lua, af->next_anim->id);
+                lua_pushinteger(lua, af->next_frame);
+                lua_pushinteger(lua, af->next_anim->state_id);
+                return 6;
+            }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("getEntityAnim: expecting arguments (entity_id, anim_type_id)");
     }
 
     return 0;
@@ -504,31 +502,32 @@ int lua_GetEntityAnim(lua_State * lua)
 
 int lua_EntitySSAnimEnsureExists(lua_State * lua)
 {
-    if(lua_gettop(lua) < 1)
+    if(lua_gettop(lua) >= 3)
     {
-        Con_Warning("entitySSAnimEnsureExists: expecting arguments (entity_id, anim_type_id, model_id)");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        int anim_type_id = lua_tointeger(lua, 2);
-        if(!SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id))
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
         {
-            if(!lua_isnil(lua, 3))
+            int anim_type_id = lua_tointeger(lua, 2);
+            if(!SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id))
             {
-                SSBoneFrame_AddOverrideAnim(ent->bf, World_GetModelByID(lua_tointeger(lua, 3)), anim_type_id);
+                if(!lua_isnil(lua, 3))
+                {
+                    SSBoneFrame_AddOverrideAnim(ent->bf, World_GetModelByID(lua_tointeger(lua, 3)), anim_type_id);
+                }
+                else
+                {
+                    SSBoneFrame_AddOverrideAnim(ent->bf, NULL, anim_type_id);
+                }
             }
-            else
-            {
-                SSBoneFrame_AddOverrideAnim(ent->bf, NULL, anim_type_id);
-            }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("entitySSAnimEnsureExists: expecting arguments (entity_id, anim_type_id, model_id)");
     }
 
     return 0;
@@ -537,34 +536,34 @@ int lua_EntitySSAnimEnsureExists(lua_State * lua)
 
 int lua_EntitySSAnimSetTarget(lua_State * lua)
 {
-    if(lua_gettop(lua) < 9)
+    if(lua_gettop(lua) >= 9)
     {
-        Con_Warning("entitySSAnimSetTarget: expecting arguments (entity_id, anim_type_id, targeted_bone, target_x, target_y, target_z, bone_dir_x, bone_dir_y, bone_dir_z)");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        int anim_type_id = lua_tointeger(lua, 2);
-        ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
-        if(ss_anim)
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
         {
-            float pos[3], dir[3];
-            uint16_t targeted_bone = lua_tointeger(lua, 3);
-            pos[0] = lua_tonumber(lua, 4);
-            pos[1] = lua_tonumber(lua, 5);
-            pos[2] = lua_tonumber(lua, 6);
-            dir[0] = lua_tonumber(lua, 7);
-            dir[1] = lua_tonumber(lua, 8);
-            dir[2] = lua_tonumber(lua, 9);
+            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2));
+            if(ss_anim)
+            {
+                float pos[3], dir[3];
+                uint16_t targeted_bone = lua_tointeger(lua, 3);
+                pos[0] = lua_tonumber(lua, 4);
+                pos[1] = lua_tonumber(lua, 5);
+                pos[2] = lua_tonumber(lua, 6);
+                dir[0] = lua_tonumber(lua, 7);
+                dir[1] = lua_tonumber(lua, 8);
+                dir[2] = lua_tonumber(lua, 9);
 
-            SSBoneFrame_SetTrget(ss_anim, targeted_bone, pos, dir);
+                SSBoneFrame_SetTrget(ss_anim, targeted_bone, pos, dir);
+            }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("entitySSAnimSetTarget: expecting arguments (entity_id, anim_type_id, targeted_bone, target_x, target_y, target_z, bone_dir_x, bone_dir_y, bone_dir_z)");
     }
 
     return 0;
@@ -573,28 +572,29 @@ int lua_EntitySSAnimSetTarget(lua_State * lua)
 
 int lua_EntitySSAnimSetAxisMod(lua_State * lua)
 {
-    if(lua_gettop(lua) < 5)
+    if(lua_gettop(lua) >= 5)
     {
-        Con_Warning("entitySSAnimSetAxisMod: expecting arguments (entity_id, anim_type_id, mod_x, mod_y, mod_z)");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2));
-        if(ss_anim)
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
         {
-            float mod[3];
-            mod[0] = lua_tonumber(lua, 3);
-            mod[1] = lua_tonumber(lua, 4);
-            mod[2] = lua_tonumber(lua, 5);
-            SSBoneFrame_SetTargetingAxisMod(ss_anim, mod);
+            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2));
+            if(ss_anim)
+            {
+                float mod[3];
+                mod[0] = lua_tonumber(lua, 3);
+                mod[1] = lua_tonumber(lua, 4);
+                mod[2] = lua_tonumber(lua, 5);
+                SSBoneFrame_SetTargetingAxisMod(ss_anim, mod);
+            }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("entitySSAnimSetAxisMod: expecting arguments (entity_id, anim_type_id, mod_x, mod_y, mod_z)");
     }
 
     return 0;
@@ -603,30 +603,30 @@ int lua_EntitySSAnimSetAxisMod(lua_State * lua)
 
 int lua_EntitySSAnimSetTargetingLimit(lua_State * lua)
 {
-    if(lua_gettop(lua) < 6)
+    if(lua_gettop(lua) >= 6)
     {
-        Con_Warning("entitySSAnimSetTargetingLimit: expecting arguments (entity_id, anim_type_id, q_x, q_y, q_z, q_w)");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        int anim_type_id = lua_tointeger(lua, 2);
-        ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
-        if(ss_anim)
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
         {
-            float q[4];
-            q[0] = lua_tonumber(lua, 3);
-            q[1] = lua_tonumber(lua, 4);
-            q[2] = lua_tonumber(lua, 5);
-            q[3] = lua_tonumber(lua, 6);
-            SSBoneFrame_SetTargetingLimit(ss_anim, q);
+            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2));
+            if(ss_anim)
+            {
+                float q[4];
+                q[0] = lua_tonumber(lua, 3);
+                q[1] = lua_tonumber(lua, 4);
+                q[2] = lua_tonumber(lua, 5);
+                q[3] = lua_tonumber(lua, 6);
+                SSBoneFrame_SetTargetingLimit(ss_anim, q);
+            }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("entitySSAnimSetTargetingLimit: expecting arguments (entity_id, anim_type_id, q_x, q_y, q_z, q_w)");
     }
 
     return 0;
@@ -635,30 +635,30 @@ int lua_EntitySSAnimSetTargetingLimit(lua_State * lua)
 
 int lua_EntitySSAnimSetCurrentRotation(lua_State * lua)
 {
-    if(lua_gettop(lua) < 6)
+    if(lua_gettop(lua) >= 6)
     {
-        Con_Warning("entitySSAnimSetCurrentRotation: expecting arguments (entity_id, anim_type_id, q_x, q_y, q_z, q_w)");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        int anim_type_id = lua_tointeger(lua, 2);
-        ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
-        if(ss_anim)
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
         {
-            float q[4];
-            q[0] = lua_tonumber(lua, 3);
-            q[1] = lua_tonumber(lua, 4);
-            q[2] = lua_tonumber(lua, 5);
-            q[3] = lua_tonumber(lua, 6);
-            vec4_copy(ss_anim->current_mod, q);
+            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2));
+            if(ss_anim)
+            {
+                float q[4];
+                q[0] = lua_tonumber(lua, 3);
+                q[1] = lua_tonumber(lua, 4);
+                q[2] = lua_tonumber(lua, 5);
+                q[3] = lua_tonumber(lua, 6);
+                vec4_copy(ss_anim->current_mod, q);
+            }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("entitySSAnimSetCurrentRotation: expecting arguments (entity_id, anim_type_id, q_x, q_y, q_z, q_w)");
     }
 
     return 0;
@@ -667,27 +667,27 @@ int lua_EntitySSAnimSetCurrentRotation(lua_State * lua)
 
 int lua_EntitySSAnimSetExtFlags(lua_State * lua)
 {
-    if(lua_gettop(lua) < 5)
+    if(lua_gettop(lua) >= 5)
     {
-        Con_Warning("entitySSAnimSetCurrentRotation: expecting arguments (entity_id, anim_type_id, enabled, anim_ext_flags, anim_targeting_flags)");
-        return 0;
-    }
-
-    entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-    if(ent)
-    {
-        int anim_type_id = lua_tointeger(lua, 2);
-        ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type_id);
-        if(ss_anim)
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
         {
-            ss_anim->enabled = 0x01 & (lua_tointeger(lua, 3));
-            ss_anim->anim_ext_flags = lua_tointeger(lua, 4);
-            ss_anim->targeting_flags = lua_tointeger(lua, 5);
+            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2));
+            if(ss_anim)
+            {
+                ss_anim->enabled = 0x01 & (lua_tointeger(lua, 3));
+                ss_anim->anim_ext_flags = lua_tointeger(lua, 4);
+                ss_anim->targeting_flags = lua_tointeger(lua, 5);
+            }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        Con_Warning("entitySSAnimSetCurrentRotation: expecting arguments (entity_id, anim_type_id, enabled, anim_ext_flags, anim_targeting_flags)");
     }
 
     return 0;

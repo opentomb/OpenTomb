@@ -68,7 +68,7 @@ int Script_ParseAudio(lua_State *lua, struct audio_settings_s *as)
  */
  int Script_GetGlobalSound(lua_State *lua, int global_sound_id)
 {
-    lua_Integer sound_id = 0;
+    int sound_id = 0;
 
     if(lua)
     {
@@ -87,7 +87,7 @@ int Script_ParseAudio(lua_State *lua, struct audio_settings_s *as)
         lua_settop(lua, top);
     }
 
-    return (int)sound_id;
+    return sound_id;
 }
 
 
@@ -249,29 +249,22 @@ int lua_PlayStream(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
-    if(top < 1)
+    if(top >= 1)
     {
-        Con_Warning("playStream: expecting arguments (stream_id, (mask))");
-        return 0;
-    }
-
-    int id = lua_tointeger(lua, 1);
-    uint8_t mask = 0;
-    if(top >= 2) mask = lua_tointeger(lua, 2);
-
-    if(id < 0)
-    {
-        Con_Warning("wrong stream id");
-        return 0;
-    }
-
-    if(mask)
-    {
-        Audio_StreamPlay(id, mask);
+        int id = lua_tointeger(lua, 1);
+        if(id >= 0)
+        {
+            uint8_t mask = (top >= 2) ? (lua_tointeger(lua, 2)) : (0);
+            Audio_StreamPlay(id, mask);
+        }
+        else
+        {
+            Con_Warning("wrong stream id");
+        }
     }
     else
     {
-        Audio_StreamPlay(id);
+        Con_Warning("playStream: expecting arguments (stream_id, (mask))");
     }
 
     return 0;
@@ -282,43 +275,43 @@ int lua_PlaySound(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
-    if(top < 1)
+    if(top >= 1)
     {
-        Con_Warning("playSound: expecting arguments (sound_id, (entity_id))");
-        return 0;
-    }
+        uint32_t id  = lua_tointeger(lua, 1);           // uint_t can't been less zero, reduce number of comparations
+        int ent_id = -1;
+        if((top >= 2) && World_GetEntityByID(ent_id = lua_tointeger(lua, 2)) == NULL)
+        {
+            ent_id = -1;
+        }
 
-    uint32_t id  = lua_tointeger(lua, 1);           // uint_t can't been less zero, reduce number of comparations
+        int result;
 
-    int ent_id = -1;
-    if((top >= 2) && World_GetEntityByID(ent_id = lua_tointeger(lua, 2)) == NULL)
-    {
-        ent_id = -1;
-    }
+        if(ent_id >= 0)
+        {
+            result = Audio_Send(id, TR_AUDIO_EMITTER_ENTITY, ent_id);
+        }
+        else
+        {
+            result = Audio_Send(id, TR_AUDIO_EMITTER_GLOBAL);
+        }
 
-    int result;
+        if(result < 0)
+        {
+            switch(result)
+            {
+                case TR_AUDIO_SEND_NOCHANNEL:
+                    Con_Warning("send ignored: no free channels");
+                    break;
 
-    if(ent_id >= 0)
-    {
-        result = Audio_Send(id, TR_AUDIO_EMITTER_ENTITY, ent_id);
+                case TR_AUDIO_SEND_NOSAMPLE:
+                    Con_Warning("send ignored: no sample");
+                    break;
+            }
+        }
     }
     else
     {
-        result = Audio_Send(id, TR_AUDIO_EMITTER_GLOBAL);
-    }
-
-    if(result < 0)
-    {
-        switch(result)
-        {
-            case TR_AUDIO_SEND_NOCHANNEL:
-                Con_Warning("send ignored: no free channels");
-                break;
-
-            case TR_AUDIO_SEND_NOSAMPLE:
-                Con_Warning("send ignored: no sample");
-                break;
-        }
+        Con_Warning("playSound: expecting arguments (sound_id, (entity_id))");
     }
 
     return 0;
@@ -329,33 +322,34 @@ int lua_StopSound(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
-    if(top < 1)
+    if(top >= 1)
     {
-        Con_Warning("stopSound: expecting arguments (sound_id, (entity_id))");
-        return 0;
-    }
+        uint32_t id  = lua_tointeger(lua, 1);
+        int ent_id = -1;
+        if((top >= 2) && World_GetEntityByID(ent_id = lua_tointeger(lua, 2)) == NULL)
+        {
+            ent_id = -1;
+        }
 
-    uint32_t id  = lua_tointeger(lua, 1);
-    int ent_id = -1;
-    if((top >= 2) && World_GetEntityByID(ent_id = lua_tointeger(lua, 2)) == NULL)
-    {
-        ent_id = -1;
-    }
+        int result;
 
-    int result;
+        if(ent_id == -1)
+        {
+            result = Audio_Kill(id, TR_AUDIO_EMITTER_GLOBAL);
+        }
+        else
+        {
+            result = Audio_Kill(id, TR_AUDIO_EMITTER_ENTITY, ent_id);
+        }
 
-    if(ent_id == -1)
-    {
-        result = Audio_Kill(id, TR_AUDIO_EMITTER_GLOBAL);
+        if(result < 0)
+        {
+            Con_Warning("audio with id = %d not played", id);
+        }
     }
     else
     {
-        result = Audio_Kill(id, TR_AUDIO_EMITTER_ENTITY, ent_id);
-    }
-
-    if(result < 0)
-    {
-        Con_Warning("audio with id = %d not played", id);
+        Con_Warning("stopSound: expecting arguments (sound_id, (entity_id))");
     }
 
     return 0;
