@@ -182,7 +182,7 @@ function oldspike_init(id)  -- Teeth spikes
             if(lz > (pz + 256.0)) then
                 local sx,sy,sz = getEntitySpeed(activator_id);
                 if(sz < -256.0) then
-                    setEntityCollision(object_id, 0);
+                    setEntityCollision(object_id, false);
                     setEntityAnim(activator_id, ANIM_TYPE_BASE, 149, 0);
                     setEntityPos(activator_id, lx, ly, pz);
                     setCharacterParam(activator_id, PARAM_HEALTH, 0);
@@ -202,7 +202,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
     setEntityActivity(id, false);
     
     setEntityVisibility(id, false);
-    setEntityCollision(id, 0);
+    setEntityCollision(id, false);
     
     entity_funcs[id].interval        = 150;     -- 150 frames = 2.5 seconds
     entity_funcs[id].curr_timer      = entity_funcs[id].interval;   -- This activates spikes on first call.
@@ -306,7 +306,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
                 entity_funcs[object_id].curr_scaling = 0.0;
                 setEntityVisibility(object_id, false);
                 setEntityScaling(object_id, 1.0, 1.0, 0.0);
-                setEntityCollision(object_id, 0);
+                setEntityCollision(object_id, false);
                 entity_funcs[object_id].waiting = true;
                 if(entity_funcs[object_id].mode == 2) then
                     setEntityActivity(object_id, false);
@@ -319,7 +319,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
             
         else
             setEntityVisibility(object_id, true);
-            setEntityCollision(object_id, 1);
+            setEntityCollision(object_id, true);
             entity_funcs[object_id].curr_timer = 0;
             playSound(343, object_id);
             entity_funcs[object_id].waiting = false;

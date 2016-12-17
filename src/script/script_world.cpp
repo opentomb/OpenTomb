@@ -49,8 +49,8 @@ int lua_SameRoom(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
-        entity_p ent1 = World_GetEntityByID(lua_tonumber(lua, 1));
-        entity_p ent2 = World_GetEntityByID(lua_tonumber(lua, 2));
+        entity_p ent1 = World_GetEntityByID(lua_tointeger(lua, 1));
+        entity_p ent2 = World_GetEntityByID(lua_tointeger(lua, 2));
         lua_pushboolean(lua, ent1 && ent2 && (ent1->self->room == ent2->self->room));
         return 1;
     }
@@ -67,7 +67,7 @@ int lua_NewSector(lua_State *lua)
 {
     if(lua_gettop(lua) > 0)
     {
-        entity_p ent = World_GetEntityByID(lua_tonumber(lua, 1));
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         lua_pushboolean(lua, ent && (ent->current_sector == ent->last_sector));
         return 1;
     }

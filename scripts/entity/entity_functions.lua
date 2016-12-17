@@ -155,7 +155,7 @@ function fallblock_init(id)  -- Falling block (TR1-3)
                     return true;
                 end;
                 if(once) then
-                    setEntityCollision(object_id, 0);
+                    setEntityCollision(object_id, false);
                     once = false;
                 end;
                 if(dropEntity(object_id, frame_time, true)) then
@@ -192,7 +192,7 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
             function()
                 if(dropEntity(object_id, frame_time, true)) then
                     setEntityAnim(object_id, ANIM_TYPE_BASE, 2, 0);
-                    setEntityCollision(object_id, 0);
+                    setEntityCollision(object_id, false);
                     return false;
                 end;
                 return true;

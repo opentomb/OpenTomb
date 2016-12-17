@@ -144,7 +144,7 @@ int lua_EnableEntity(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
     {
-        entity_p ent = World_GetEntityByID(lua_tonumber(lua, 1));
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
             Entity_Enable(ent);
@@ -163,7 +163,7 @@ int lua_DisableEntity(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
     {
-        entity_p ent = World_GetEntityByID(lua_tonumber(lua, 1));
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
             Entity_Disable(ent);
@@ -184,10 +184,10 @@ int lua_SetEntityCollision(lua_State * lua)
 
     if(top >= 1)
     {
-        entity_p ent = World_GetEntityByID(lua_tonumber(lua, 1));
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            if((top >= 2) && (lua_tointeger(lua, 2)))
+            if((top >= 2) && (lua_toboolean(lua, 2)))
             {
                 Entity_EnableCollision(ent);
             }
@@ -216,7 +216,7 @@ int lua_SetEntityGhostCollisionShape(lua_State * lua)
             uint16_t ghost_index = lua_tointeger(lua, 2);
             base_mesh_p mesh = ent->bf->bone_tags[ghost_index].mesh_base;
             ghost_shape_t shape;
-            shape.shape_id = lua_tonumber(lua, 3);
+            shape.shape_id = lua_tointeger(lua, 3);
             shape.bb_min[0] = (!lua_isnil(lua, 4) || !mesh) ? (lua_tonumber(lua, 4)) : (mesh->bb_min[0]);
             shape.bb_min[1] = (!lua_isnil(lua, 5) || !mesh) ? (lua_tonumber(lua, 5)) : (mesh->bb_min[1]);
             shape.bb_min[2] = (!lua_isnil(lua, 6) || !mesh) ? (lua_tonumber(lua, 6)) : (mesh->bb_min[2]);
@@ -247,7 +247,7 @@ int lua_GetEntitySectorFlags(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
-        entity_p ent = World_GetEntityByID(lua_tonumber(lua, 1));
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && (ent->current_sector))
         {
             lua_pushinteger(lua, ent->current_sector->flags);
@@ -263,7 +263,7 @@ int lua_GetEntitySectorIndex(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
-        entity_p ent = World_GetEntityByID(lua_tonumber(lua, 1));
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && (ent->current_sector))
         {
             lua_pushinteger(lua, ent->current_sector->trig_index);
@@ -279,7 +279,7 @@ int lua_GetEntitySectorMaterial(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
-        entity_p ent = World_GetEntityByID(lua_tonumber(lua, 1));
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && (ent->current_sector))
         {
             lua_pushinteger(lua, ent->current_sector->material);
@@ -1271,7 +1271,7 @@ int lua_GetEntitySectorStatus(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
-        entity_p ent = World_GetEntityByID(lua_tonumber(lua, 1));
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
             lua_pushinteger(lua, ((ent->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7));
@@ -1287,7 +1287,7 @@ int lua_SetEntitySectorStatus(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
-        entity_p ent = World_GetEntityByID(lua_tonumber(lua, 1));
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
             uint8_t trigger_layout = ent->trigger_layout;

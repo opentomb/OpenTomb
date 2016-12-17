@@ -40,15 +40,15 @@ int Script_ParseAudio(lua_State *lua, struct audio_settings_s *as)
         lua_pop(lua, 1);
 
         lua_getfield(lua, -1, "use_effects");
-        as->use_effects  = lua_tonumber(lua, -1);
+        as->use_effects  = lua_tointeger(lua, -1);
         lua_pop(lua, 1);
 
         lua_getfield(lua, -1, "listener_is_player");
-        as->listener_is_player = lua_tonumber(lua, -1);
+        as->listener_is_player = lua_tointeger(lua, -1);
         lua_pop(lua, 1);
 
         lua_getfield(lua, -1, "stream_buffer_size");
-        as->stream_buffer_size = (lua_tonumber(lua, -1)) * 1024;
+        as->stream_buffer_size = (lua_tointeger(lua, -1)) * 1024;
         lua_pop(lua, 1);
 
         if(as->stream_buffer_size <= 0)

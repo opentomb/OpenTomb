@@ -200,9 +200,13 @@ function Thor_hummer_init(id)      -- map 5
             setEntityAnim(spawned_id, ANIM_TYPE_BASE, 3, 0);
             
             local x, y, z = getEntityPos(19);
+            setEntityCollision(19, true);
+            setEntityVisibility(19, true);
             setEntityPos(19, x, y, -17152);
             x, y, z = getEntityPos(20);
             setEntityPos(20, x, y, -19200);
+            setEntityCollision(20, true);
+            setEntityVisibility(20, true);
             entity_funcs[id].onLoop = nil;
         end;
     end;

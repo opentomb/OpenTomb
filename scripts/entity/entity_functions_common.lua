@@ -168,7 +168,7 @@ function lever_switch_init(id)     -- Big switches (TR4) - lever
                 setEntityActivationDirection(id, 0.0, 1.0, 0.0);
                 setEntityActivationOffset(id, 0.0, -520.0, 0.0, 128);
             end;
-            setEntityCollision(id, 1);
+            setEntityCollision(id, true);
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
         return ENTITY_TRIGGERING_NOT_READY;
