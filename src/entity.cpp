@@ -159,6 +159,7 @@ void Entity_EnableCollision(entity_p ent)
         ent->self->collision_group = COLLISION_GROUP_KINEMATIC;
         Physics_GenRigidBody(ent->physics, ent->bf);
     }
+    ent->state_flags |= ENTITY_STATE_COLLIDABLE;
 }
 
 
@@ -168,6 +169,7 @@ void Entity_DisableCollision(entity_p ent)
     {
         Physics_DisableCollision(ent->physics);
     }
+    ent->state_flags &= ~(uint16_t)ENTITY_STATE_COLLIDABLE;
 }
 
 

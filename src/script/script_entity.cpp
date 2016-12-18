@@ -1368,6 +1368,14 @@ int lua_SetEntityFlags(lua_State * lua)
             if(!lua_isnil(lua, 2))
             {
                 ent->state_flags = lua_tointeger(lua, 2);
+                if(ent->state_flags & ENTITY_STATE_COLLIDABLE)
+                {
+                    Entity_EnableCollision(ent);
+                }
+                else
+                {
+                    Entity_DisableCollision(ent);
+                }
             }
             if(!lua_isnil(lua, 3))
             {

@@ -1035,6 +1035,8 @@ void Character_LookAt(struct entity_s *ent, float target[3])
     const float head_target_limit[4] = {0.0f, 1.0f, 0.0f, 0.273f};
     ss_animation_p anim_head_track = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_HEAD_TRACK);
     ss_animation_p  base_anim = &ent->bf->animations;
+    const uint16_t bone_head = 14;
+    const uint16_t bone_body = 7;
 
     base_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
 
@@ -1044,7 +1046,7 @@ void Character_LookAt(struct entity_s *ent, float target[3])
     }
 
     anim_head_track->targeting_flags = 0x0000;
-    SSBoneFrame_SetTrget(anim_head_track, 14, target, bone_dir);
+    SSBoneFrame_SetTrget(anim_head_track, bone_head, target, bone_dir);
     SSBoneFrame_SetTargetingLimit(anim_head_track, head_target_limit);
 
     if(SSBoneFrame_CheckTargetBoneLimit(ent->bf, anim_head_track))
@@ -1052,11 +1054,11 @@ void Character_LookAt(struct entity_s *ent, float target[3])
         anim_head_track->anim_ext_flags |= ANIM_EXT_TARGET_TO;
         if((ent->move_type == MOVE_ON_FLOOR) || (ent->move_type == MOVE_FREE_FALLING))
         {
-            const float axis_mod[3] = {0.5f, 0.5f, 1.0f};
+            const float axis_mod[3] = {0.33f, 0.33f, 1.0f};
             const float target_limit[4] = {0.0f, 1.0f, 0.0f, 0.883f};
 
             base_anim->targeting_flags = 0x0000;
-            SSBoneFrame_SetTrget(base_anim, 7, target, bone_dir);
+            SSBoneFrame_SetTrget(base_anim, bone_body, target, bone_dir);
             SSBoneFrame_SetTargetingLimit(base_anim, target_limit);
             SSBoneFrame_SetTargetingAxisMod(base_anim, axis_mod);
             base_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
