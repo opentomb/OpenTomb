@@ -491,7 +491,7 @@ int lua_GetLevel(lua_State *lua)
 
 int lua_SetLevel(lua_State *lua)
 {
-    if(lua_gettop(lua) != 1)
+    if(lua_gettop(lua) == 1)
     {
         int id  = lua_tointeger(lua, 1);
         Con_Notify("level was changed to %d", id);
