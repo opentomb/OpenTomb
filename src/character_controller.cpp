@@ -148,6 +148,30 @@ void Character_Clean(struct entity_s *ent)
     ent->character = NULL;
 }
 
+
+void Character_Update(struct entity_s *ent)
+{
+    if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
+    {
+        Entity_CheckActivators(ent);
+    }
+    if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
+    {
+        ent->character->resp.kill = 1;                                          // Kill, if no HP.
+    }
+    Character_ApplyCommands(ent);
+
+    Entity_ProcessSector(ent);
+    Character_UpdateParams(ent);
+    Entity_CheckCollisionCallbacks(ent);
+
+    for(int h = 0; h < ent->character->hair_count; h++)
+    {
+        Hair_Update(ent->character->hairs[h], ent->physics);
+    }
+}
+
+
 /**
  * Calculates character speed, based on direction flag and anim linear speed
  * @param ent
@@ -2068,7 +2092,6 @@ void Character_ApplyCommands(struct entity_s *ent)
             break;
     };
 
-    Entity_UpdateRigidBody(ent, 1);
     Character_UpdatePlatformPostStep(ent);
 }
 

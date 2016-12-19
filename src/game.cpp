@@ -451,7 +451,7 @@ void Game_ApplyControls(struct entity_s *ent)
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
         engine_camera.current_room = World_FindRoomByPosCogerrence(engine_camera.gl_transform + 12, engine_camera.current_room);
     }
-    else if(control_states.noclip != 0)
+    else if(control_states.noclip)
     {
         float pos[3];
         float dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
@@ -535,8 +535,12 @@ void Game_ApplyControls(struct entity_s *ent)
 void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
     entity_p ent = (entity_p)x->data;
-    if(!ent->self->room || ent->self->room == ent->self->room->real_room)
+    if(ent && (!ent->self->room || (ent->self->room == ent->self->room->real_room)))
     {
+        if(ent->character)
+        {
+            Character_Update(ent);
+        }
         if(ent->state_flags & ENTITY_STATE_ENABLED)
         {
             Entity_ProcessSector(ent);
@@ -571,88 +575,15 @@ void Game_UpdateAI()
 }
 
 
-void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
-{
-    entity_p ent = (entity_p)x->data;
-
-    if(ent && ent->character)
-    {
-        if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
-        {
-            Entity_CheckActivators(ent);
-        }
-        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
-        {
-            ent->character->resp.kill = 1;                                      // Kill, if no HP.
-        }
-        Character_ApplyCommands(ent);
-
-        Entity_ProcessSector(ent);
-        Character_UpdateParams(ent);
-        Entity_CheckCollisionCallbacks(ent);
-
-        for(int h = 0; h < ent->character->hair_count; h++)
-        {
-            Hair_Update(ent->character->hairs[h], ent->physics);
-        }
-    }
-
-    if(x->left != NULL)
-    {
-        Game_UpdateCharactersTree(x->left);
-    }
-    if(x->right != NULL)
-    {
-        Game_UpdateCharactersTree(x->right);
-    }
-}
-
-
-void Game_UpdateCharacters()
-{
-    entity_p ent = World_GetPlayer();
-
-    if(ent && ent->character)
-    {
-        if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
-        {
-            Entity_CheckActivators(ent);
-        }
-        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
-        {
-            ent->character->resp.kill = 0;   // Kill, if no HP.
-        }
-
-        for(int h = 0; h < ent->character->hair_count; h++)
-        {
-            Hair_Update(ent->character->hairs[h], ent->physics);
-        }
-    }
-
-    RedBlackNode_p root = World_GetEntityTreeRoot();
-    if(root)
-    {
-        Game_UpdateCharactersTree(root);
-    }
-}
-
-
 void Game_Frame(float time)
 {
     entity_p player = World_GetPlayer();
-    bool is_entitytree = (World_GetEntityTreeRoot() != NULL);
-    bool is_character  = (player != NULL);
 
     // GUI and controls should be updated at all times!
-
-    Gui_Update();
-
-    ///@FIXME: I have no idea what's happening here! - Lwmte
-
     if(!Con_IsShown() && control_states.gui_inventory && main_inventory_manager)
     {
-        if((is_character) &&
-           (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
+        if(player &&
+          (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
         {
             main_inventory_manager->setInventory(&player->character->inventory);
             main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
@@ -669,34 +600,29 @@ void Game_Frame(float time)
         return;
     }
 
+    // In game mode
     Script_DoTasks(engine_lua, time);
     Game_UpdateAI();
-    if(is_character)
-    {
-        Entity_ProcessSector(player);
-        Character_UpdateParams(player);
-        Entity_CheckCollisionCallbacks(player);
-    }
 
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
-    if(engine_camera_state.state != CAMERA_STATE_FLYBY)
+    if(player && (engine_camera_state.state != CAMERA_STATE_FLYBY))
     {
         Game_ApplyControls(player);
+        if(!control_states.noclip)
+        {
+            Character_Update(player);
+        }
+        Entity_Frame(player, engine_frame_time);
+        Entity_UpdateRigidBody(player, 1);
+
     }
 
-    Cam_PlayFlyBy(&engine_camera_state, time);
-
-    if(is_character)
+    if(!control_states.noclip && !control_states.free_look)
     {
-        if(player->type_flags & ENTITY_TYPE_DYNAMIC)
+        Cam_PlayFlyBy(&engine_camera_state, time);
+        if(player)
         {
-            Entity_UpdateRigidBody(player, 0);
-        }
-        if(!control_states.noclip && !control_states.free_look)
-        {
-            Character_ApplyCommands(player);
-            Entity_Frame(player, engine_frame_time);
             if(engine_camera_state.state != CAMERA_STATE_FLYBY)
             {
                 engine_camera_state.entity_offset_x = 16.0f;
@@ -718,9 +644,7 @@ void Game_Frame(float time)
         }
     }
 
-    Game_UpdateCharacters();
-
-    if(is_entitytree)
+    if(World_GetEntityTreeRoot())
     {
         Game_UpdateAllEntities(World_GetEntityTreeRoot());
     }

@@ -848,6 +848,8 @@ void Script_LoadConstants(lua_State *lua)
         lua_setglobal(lua, "ENTITY_STATE_ACTIVE");
         lua_pushinteger(lua, ENTITY_STATE_VISIBLE);
         lua_setglobal(lua, "ENTITY_STATE_VISIBLE");
+        lua_pushinteger(lua, ENTITY_STATE_COLLIDABLE);
+        lua_setglobal(lua, "ENTITY_STATE_COLLIDABLE");
 
         lua_pushinteger(lua, ENTITY_TYPE_GENERIC);
         lua_setglobal(lua, "ENTITY_TYPE_GENERIC");

@@ -201,11 +201,6 @@ void Gui_Destroy()
 }
 
 
-void Gui_Update()
-{
-
-}
-
 void Gui_UpdateResize()
 {
     for(int i = 0; i < BAR_LASTINDEX; i++)
@@ -216,6 +211,7 @@ void Gui_UpdateResize()
     Gui_FillCrosshairBuffer();
     Gui_FillBackgroundBuffer();
 }
+
 
 void Gui_Render()
 {

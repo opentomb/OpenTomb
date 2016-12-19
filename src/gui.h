@@ -343,7 +343,6 @@ void Gui_DrawNotifier();
 /**
  * General GUI update routines.
  */
-void Gui_Update();
 void Gui_UpdateResize();  // Called every resize event.
 
 #endif

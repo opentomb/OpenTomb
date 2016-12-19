@@ -35,7 +35,7 @@ entity_p Entity_Create()
 
     ret->move_type = MOVE_ON_FLOOR;
     Mat4_E(ret->transform);
-    ret->state_flags = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
+    ret->state_flags = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE | ENTITY_STATE_COLLIDABLE;
     ret->type_flags = ENTITY_TYPE_GENERIC;
     ret->callback_flags = 0x00000000;               // no callbacks by default
 
