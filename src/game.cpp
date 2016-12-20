@@ -612,6 +612,22 @@ void Game_Frame(float time)
         if(!control_states.noclip)
         {
             Character_Update(player);
+            if(player->character->target_id == ENTITY_ID_NONE)
+            {
+                entity_p target = Character_FindTarget(player);
+                if(target)
+                {
+                    player->character->target_id = target->id;
+                }
+            }
+            else if(player->character->weapon_current_state != WEAPON_STATE_HIDE)
+            {
+                entity_p target = World_GetEntityByID(player->character->target_id);
+                if(!target || !Character_IsTargetAccessible(player, target))
+                {
+                    player->character->target_id = ENTITY_ID_NONE;
+                }
+            }
         }
         Entity_Frame(player, engine_frame_time);
         Entity_UpdateRigidBody(player, 1);

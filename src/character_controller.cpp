@@ -151,23 +151,27 @@ void Character_Clean(struct entity_s *ent)
 
 void Character_Update(struct entity_s *ent)
 {
-    if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
+    const uint16_t mask = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE;
+    if(mask == (ent->state_flags & mask))
     {
-        Entity_CheckActivators(ent);
-    }
-    if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
-    {
-        ent->character->resp.kill = 1;                                          // Kill, if no HP.
-    }
-    Character_ApplyCommands(ent);
+        if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
+        {
+            Entity_CheckActivators(ent);
+        }
+        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
+        {
+            ent->character->resp.kill = 1;                                      // Kill, if no HP.
+        }
+        Character_ApplyCommands(ent);
 
-    Entity_ProcessSector(ent);
-    Character_UpdateParams(ent);
-    Entity_CheckCollisionCallbacks(ent);
+        Entity_ProcessSector(ent);
+        Character_UpdateParams(ent);
+        Entity_CheckCollisionCallbacks(ent);
 
-    for(int h = 0; h < ent->character->hair_count; h++)
-    {
-        Hair_Update(ent->character->hairs[h], ent->physics);
+        for(int h = 0; h < ent->character->hair_count; h++)
+        {
+            Hair_Update(ent->character->hairs[h], ent->physics);
+        }
     }
 }
 
@@ -2058,6 +2062,11 @@ void Character_ApplyCommands(struct entity_s *ent)
     ent->no_fix_z = 0x00;
     switch(ent->move_type)
     {
+        case MOVE_KINEMATIC:
+        case MOVE_STATIC_POS:
+            Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
+            break;
+
         case MOVE_ON_FLOOR:
             Character_MoveOnFloor(ent);
             break;
@@ -2085,6 +2094,10 @@ void Character_ApplyCommands(struct entity_s *ent)
 
         case MOVE_ON_WATER:
             Character_MoveOnWater(ent);
+            break;
+
+        case MOVE_FLY:
+            Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
             break;
 
         default:
@@ -2235,6 +2248,51 @@ int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
     }
 
     return 1;
+}
+
+
+int Character_IsTargetAccessible(struct entity_s *character, struct entity_s *target)
+{
+    collision_result_t cs;
+    float dir[3], t;
+    vec3_sub(dir, target->transform + 12, character->transform + 12);
+    vec3_norm(dir, t);
+    t = vec3_dot(character->transform + 4, dir);
+    return (t > 0.0f) && (!Physics_RayTest(&cs, character->obb->centre, target->obb->centre, character->self, COLLISION_FILTER_CHARACTER) || (cs.obj == target->self));
+}
+
+
+struct entity_s *Character_FindTarget(struct entity_s *ent)
+{
+    entity_p ret = NULL;
+    float max_dot = 0.0f;
+    collision_result_t cs;
+
+    for(int ri = -1; ri < ent->self->room->near_room_list_size; ++ri)
+    {
+        room_p r = (ri >= 0) ? (ent->self->room->near_room_list[ri]) : (ent->self->room);
+        for(engine_container_p cont = r->content->containers; cont; cont = cont->next)
+        {
+            if(cont->object_type == OBJECT_ENTITY)
+            {
+                entity_p target = (entity_p)cont->object;
+                if((target->type_flags & ENTITY_TYPE_ACTOR) && (target->state_flags & ENTITY_STATE_ACTIVE))
+                {
+                    float dir[3], t;
+                    vec3_sub(dir, target->transform + 12, ent->transform + 12);
+                    vec3_norm(dir, t);
+                    t = vec3_dot(ent->transform + 4, dir);
+                    if((t > max_dot) && (!Physics_RayTest(&cs, ent->obb->centre, target->obb->centre, ent->self, COLLISION_FILTER_CHARACTER) || (cs.obj == target->self)))
+                    {
+                        max_dot = t;
+                        ret = target;
+                    }
+                }
+            }
+        }
+    }
+
+    return ret;
 }
 
 
@@ -2587,6 +2645,11 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     }
                     else
                     {
+                        if(target)
+                        {
+                            Character_SetParam(target, PARAM_HEALTH, Character_GetParam(target, PARAM_HEALTH) - 25.0f);
+                            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
+                        }
                         ss_anim->frame_time = dt;
                         ss_anim->current_frame = 0;
                         ss_anim->next_frame = 1;
@@ -2845,6 +2908,11 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     }
                     else
                     {
+                        if(target)
+                        {
+                            Character_SetParam(target, PARAM_HEALTH, Character_GetParam(target, PARAM_HEALTH) - 50.0f);
+                            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
+                        }
                         ss_anim->frame_time = dt;
                         ss_anim->current_frame = 0;
                         ss_anim->next_frame = 1;

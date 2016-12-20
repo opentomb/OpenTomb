@@ -23,6 +23,36 @@ extern "C" {
 #include "../gui.h"
 
 
+
+int lua_CharacterCreate(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && !ent->character)
+        {
+            Character_Create(ent);
+            if(top >= 2)
+            {
+                ent->character->parameters.param[PARAM_HEALTH] = lua_tonumber(lua, 2);
+                ent->character->parameters.maximum[PARAM_HEALTH] = lua_tonumber(lua, 2);
+            }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d, or character already created", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("characterCreate: expecting arguments (entity_id, (hp))");
+    }
+
+    return 0;
+}
+
+
 int lua_SetCharacterTarget(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -31,7 +61,7 @@ int lua_SetCharacterTarget(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character)
         {
-            ent->character->target_id = (top > 1) ? (lua_tointeger(lua, 2)) : (ENTITY_ID_NONE);
+            ent->character->target_id = ((top > 1) && !lua_isnil(lua, 2)) ? (lua_tointeger(lua, 2)) : (ENTITY_ID_NONE);
         }
         else
         {
@@ -599,6 +629,7 @@ void Script_LuaRegisterCharacterFuncs(lua_State *lua)
     lua_register(lua, "addEntityRagdoll", lua_AddEntityRagdoll);
     lua_register(lua, "removeEntityRagdoll", lua_RemoveEntityRagdoll);
 
+    lua_register(lua, "characterCreate", lua_CharacterCreate);
     lua_register(lua, "setCharacterTarget", lua_SetCharacterTarget);
     lua_register(lua, "getCharacterParam", lua_GetCharacterParam);
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);

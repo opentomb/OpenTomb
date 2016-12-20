@@ -86,6 +86,7 @@
 #define MOVE_MONKEYSWING        (9)
 #define MOVE_WALLS_CLIMB        (10)
 #define MOVE_DOZY               (11)
+#define MOVE_FLY                (12)
 
 #define CHARACTER_USE_COMPLEX_COLLISION         (1)
 
@@ -350,6 +351,8 @@ int   Character_SetParam(struct entity_s *ent, int parameter, float value);
 int   Character_ChangeParam(struct entity_s *ent, int parameter, float value);
 int   Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value);
 
+int Character_IsTargetAccessible(struct entity_s *character, struct entity_s *target);
+struct entity_s *Character_FindTarget(struct entity_s *ent);
 void  Character_SetTarget(struct entity_s *ent, uint32_t target_id);
 int   Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state);
 

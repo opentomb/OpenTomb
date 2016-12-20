@@ -209,17 +209,3 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
     end
 end
 
-
-function baddie_init(id)    -- INVALID!
-
-    setEntityTypeFlag(id, ENTITY_TYPE_ACTOR);
-    disableEntity(id);
-    
-    entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(not getEntityActivity(object_id)) then 
-            enableEntity(object_id) 
-        end;
-        return ENTITY_TRIGGERING_ACTIVATED;
-    end;
-    
-end
