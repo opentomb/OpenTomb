@@ -203,7 +203,7 @@ void Entity_UpdateRoomPos(entity_p ent)
             new_room = new_sector->owner_room;
         }
 
-        if(!ent->character && (ent->self->room != new_room))
+        if(ent->self->room != new_room)
         {
             if((ent->self->room != NULL) && !Room_IsOverlapped(ent->self->room, new_room))
             {
@@ -1090,10 +1090,6 @@ void Entity_Frame(entity_p entity, float time)
         }
 
         SSBoneFrame_Update(entity->bf, time);
-        if(entity->character != NULL)
-        {
-            Entity_FixPenetrations(entity, NULL, COLLISION_FILTER_CHARACTER);
-        }
     }
 }
 

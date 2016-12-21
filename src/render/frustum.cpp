@@ -387,7 +387,7 @@ bool Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum, bool 
     vertex_p curr_v, prev_v;
     char ins, outs;
 
-    if(check_backface && (vec3_plane_dist(p->plane, frustum->cam_pos) < 0.0))
+    if(check_backface && ((vec3_plane_dist(p->plane, frustum->cam_pos)) < 0.0f))
     {
         return false;
     }
@@ -661,11 +661,11 @@ bool Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum)
     for(int i = 0; i < 6; i++, p++)
     {
         t = vec3_plane_dist(p->plane, frustum->cam_pos);
-        if((t > 0.0) && Frustum_IsPolyVisible(p, frustum, true))
+        if((t >= 0.0f) && Frustum_IsPolyVisible(p, frustum, true))
         {
             return true;
         }
-        if(inside && (t > 0))
+        if(inside && (t > 0.0f))
         {
             inside = false;
         }

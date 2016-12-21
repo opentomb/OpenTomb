@@ -547,7 +547,7 @@ void Game_UpdateAllEntities(struct RedBlackNode_s *x)
             Script_LoopEntity(engine_lua, ent->id);
         }
         Entity_Frame(ent, engine_frame_time);
-        Entity_UpdateRigidBody(ent, 0);
+        Entity_UpdateRigidBody(ent, ent->character != NULL);
         Entity_UpdateRoomPos(ent);
     }
 

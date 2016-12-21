@@ -109,6 +109,7 @@ void Character_Create(struct entity_s *ent)
         ret->traversed_object = NULL;
 
         ent->self->collision_group = COLLISION_GROUP_CHARACTERS;
+        Physics_SetCollisionGroup(ent->physics, COLLISION_GROUP_CHARACTERS);
         ent->self->collision_mask = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC |
                                     COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_DYNAMICS | COLLISION_GROUP_DYNAMICS_NI | COLLISION_GROUP_TRIGGERS;
         Physics_CreateGhosts(ent->physics, ent->bf, NULL);
@@ -2064,7 +2065,7 @@ void Character_ApplyCommands(struct entity_s *ent)
     {
         case MOVE_KINEMATIC:
         case MOVE_STATIC_POS:
-            Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
+            //Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
             break;
 
         case MOVE_ON_FLOOR:
@@ -2210,12 +2211,12 @@ int Character_SetParam(struct entity_s *ent, int parameter, float value)
 
 float Character_GetParam(struct entity_s *ent, int parameter)
 {
-    if(!ent || !ent->character || (parameter >= PARAM_LASTINDEX))
+    if(ent && ent->character && (parameter < PARAM_LASTINDEX))
     {
-        return 0;
+        return ent->character->parameters.param[parameter];
     }
 
-    return ent->character->parameters.param[parameter];
+    return 0;
 }
 
 int Character_ChangeParam(struct entity_s *ent, int parameter, float value)

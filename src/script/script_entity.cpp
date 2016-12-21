@@ -1635,11 +1635,7 @@ int lua_SetEntityRoomMove(lua_State * lua)
             room_p room = NULL;
             if(!lua_isnil(lua, 2) && (room = World_GetRoomByID(lua_tointeger(lua, 2))))
             {
-                if(ent == World_GetPlayer())
-                {
-                    ent->self->room = room;
-                }
-                else if(ent->self->room != room)
+                if(ent->self->room != room)
                 {
                     if(ent->self->room != NULL)
                     {

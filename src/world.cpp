@@ -2456,7 +2456,10 @@ void World_GenEntities(class VT_Level *tr)
             }
             Entity_SetAnimation(global_world.Character, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STAY_IDLE, 0);
             Physics_GenRigidBody(entity->physics, entity->bf);
+            Entity_UpdateRigidBody(entity, 1);
             Character_Create(entity);
+            Room_AddObject(entity->self->room, entity->self);
+            
             entity->character->Height = 768.0;
             entity->character->state_func = State_Control_Lara;
             entity->character->height_info.leg_l_index = LEFT_LEG;

@@ -1380,9 +1380,10 @@ void Physics_SetGhostCollisionShape(struct physics_data_s *physics, struct ss_bo
         float hx = (shape_info->bb_max[0] - shape_info->bb_min[0]) * 0.5f;
         float hy = (shape_info->bb_max[1] - shape_info->bb_min[1]) * 0.5f;
         float hz = (shape_info->bb_max[2] - shape_info->bb_min[2]) * 0.5f;
-        if(hx < 0.0f)
+        if((hx <= 0.0f) || (hy <= 0.0f) || (hz <= 0.0f))
         {
             shape_info->shape_id = COLLISION_NONE;
+            physics->ghosts_info[index].shape_id = COLLISION_NONE;
         }
 
         switch(shape_info->shape_id)
@@ -1412,7 +1413,7 @@ void Physics_SetGhostCollisionShape(struct physics_data_s *physics, struct ss_bo
             physics->ghost_objects[index]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
             if(!physics->ghost_objects[index]->getBroadphaseHandle())
             {
-                bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[index]);
+                bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[index], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter & ~btBroadphaseProxy::SensorTrigger);
             }
             if(old_shape)
             {
@@ -1555,7 +1556,7 @@ void Physics_DisableObject(struct physics_object_s *obj)
  */
 void Physics_EnableCollision(struct physics_data_s *physics)
 {
-    if(physics->bt_body != NULL)
+    if(physics->bt_body)
     {
         for(uint32_t i = 0; i < physics->objects_count; i++)
         {
@@ -1563,6 +1564,12 @@ void Physics_EnableCollision(struct physics_data_s *physics)
             if(b && !b->isInWorld())
             {
                 bt_engine_dynamicsWorld->addRigidBody(b);
+            }
+            if(physics->ghost_objects && physics->ghost_objects[i] &&
+               (physics->ghosts_info[i].shape_id != COLLISION_NONE) &&
+               !physics->ghost_objects[i]->getBroadphaseHandle())
+            {
+                bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[i], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter & ~btBroadphaseProxy::SensorTrigger);
             }
         }
     }
@@ -1579,6 +1586,12 @@ void Physics_DisableCollision(struct physics_data_s *physics)
             if(b && b->isInWorld())
             {
                 bt_engine_dynamicsWorld->removeRigidBody(b);
+            }
+
+            if(physics->ghost_objects && physics->ghost_objects[i] &&
+               physics->ghost_objects[i]->getBroadphaseHandle())
+            {
+                bt_engine_dynamicsWorld->removeCollisionObject(physics->ghost_objects[i]);
             }
         }
     }
