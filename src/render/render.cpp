@@ -906,7 +906,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
     {
         for(uint16_t i = 0; i < room->overlapped_room_list_size; i++)
         {
-            if(room->overlapped_room_list[i]->is_in_r_list)
+            if(room->overlapped_room_list[i]->real_room->is_in_r_list)
             {
                 need_stencil = true;
                 break;
