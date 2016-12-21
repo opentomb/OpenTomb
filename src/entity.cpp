@@ -203,22 +203,7 @@ void Entity_UpdateRoomPos(entity_p ent)
             new_room = new_sector->owner_room;
         }
 
-        if(ent->self->room != new_room)
-        {
-            if((ent->self->room != NULL) && !Room_IsOverlapped(ent->self->room, new_room))
-            {
-                if(ent->self->room)
-                {
-                    Room_RemoveObject(ent->self->room, ent->self);
-                }
-                if(new_room)
-                {
-                    Room_AddObject(new_room, ent->self);
-                }
-            }
-        }
-
-        ent->self->room = new_room;
+        Entity_MoveToRoom(ent, new_room);
         ent->last_sector = ent->current_sector;
 
         if(ent->current_sector != new_sector)
@@ -226,6 +211,23 @@ void Entity_UpdateRoomPos(entity_p ent)
             ent->trigger_layout &= (uint8_t)(~ENTITY_TLAYOUT_SSTATUS);          // Reset sector status.
             ent->current_sector = new_sector;
         }
+    }
+}
+
+
+void Entity_MoveToRoom(entity_p entity, struct room_s *new_room)
+{
+    if(entity->self->room != new_room)
+    {
+        if(entity->self->room)
+        {
+            Room_RemoveObject(entity->self->room, entity->self);
+        }
+        if(new_room)
+        {
+            Room_AddObject(new_room, entity->self);
+        }
+        entity->self->room = new_room;
     }
 }
 

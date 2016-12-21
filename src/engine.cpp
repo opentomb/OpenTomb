@@ -947,6 +947,11 @@ void ShowDebugInfo()
         case 2:
             {
                 entity_p ent = World_GetPlayer();
+
+                if(engine_camera.current_room)
+                {
+                    GLText_OutTextXY(30.0f, y += dy, "cam_room = (id = %d)", engine_camera.current_room->id);
+                }
                 if(ent && ent->self->room)
                 {
                     GLText_OutTextXY(30.0f, y += dy, "char_pos = (%.1f, %.1f, %.1f)", ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2]);

@@ -106,6 +106,7 @@ void Entity_Disable(entity_p ent);
 void Entity_EnableCollision(entity_p ent);
 void Entity_DisableCollision(entity_p ent);
 void Entity_UpdateRoomPos(entity_p ent);
+void Entity_MoveToRoom(entity_p entity, struct room_s *new_room);
 
 void Entity_Frame(entity_p entity, float time);  // process frame + trying to change state
 

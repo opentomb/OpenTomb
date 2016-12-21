@@ -456,11 +456,12 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
                 }
                 if(room_id < global_world.rooms_count)
                 {
-                    entity->self->room = global_world.rooms + room_id;
+                    Entity_MoveToRoom(entity, global_world.rooms + room_id);
                     entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform+12);
                 }
                 else
                 {
+                    Room_RemoveObject(entity->self->room, entity->self);
                     entity->self->room = NULL;
                 }
 
@@ -494,6 +495,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             if(room_id < global_world.rooms_count)
             {
                 entity->self->room = global_world.rooms + room_id;
+                Room_AddObject(entity->self->room, entity->self);
                 entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
             }
             else
@@ -797,13 +799,14 @@ struct room_s *World_GetRoomByID(uint32_t id)
 
 struct room_s *World_FindRoomByPos(float pos[3])
 {
+    const float z_margin = TR_METERING_SECTORSIZE / 2.0f;
     room_p r = global_world.rooms;
     for(uint32_t i = 0; i < global_world.rooms_count; i++, r++)
     {
         if((r == r->real_room) &&
            (pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
            (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
-           (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
+           (pos[2] >= r->bb_min[2] - z_margin) && (pos[2] < r->bb_max[2]))
         {
             room_sector_p orig_sector = Room_GetSectorRaw(r->real_room, pos);
             if(orig_sector && orig_sector->portal_to_room)
@@ -847,12 +850,13 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
         }
     }
 
+    const float z_margin = TR_METERING_SECTORSIZE / 2.0f;
     for(uint16_t i = 0; i < old_room->near_room_list_size; i++)
     {
         room_p r = old_room->near_room_list[i]->real_room;
-        if((pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
-           (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
-           (pos[2] >= r->bb_min[2]) && (pos[2] < r->bb_max[2]))
+        if((pos[0] >= r->bb_min[0] + TR_METERING_SECTORSIZE) && (pos[0] < r->bb_max[0] - TR_METERING_SECTORSIZE) &&
+           (pos[1] >= r->bb_min[1] + TR_METERING_SECTORSIZE) && (pos[1] < r->bb_max[1] - TR_METERING_SECTORSIZE) &&
+           (pos[2] >= r->bb_min[2] - z_margin) && (pos[2] < r->bb_max[2]))
         {
             return r;
         }
@@ -2459,7 +2463,7 @@ void World_GenEntities(class VT_Level *tr)
             Entity_UpdateRigidBody(entity, 1);
             Character_Create(entity);
             Room_AddObject(entity->self->room, entity->self);
-            
+
             entity->character->Height = 768.0;
             entity->character->state_func = State_Control_Lara;
             entity->character->height_info.leg_l_index = LEFT_LEG;

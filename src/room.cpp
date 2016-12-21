@@ -258,7 +258,7 @@ int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont)
 {
     engine_container_p previous_cont, current_cont;
 
-    if((cont == NULL) || (room->content->containers == NULL))
+    if(!room || !cont || !room->content->containers)
     {
         return 0;
     }

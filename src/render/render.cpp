@@ -230,7 +230,7 @@ void CRender::UpdateAnimTextures()
  */
 void CRender::GenWorldList(struct camera_s *cam)
 {
-    this->CleanList();                                                          // clear old render list
+    this->CleanList();
     this->dynamicBSP->Reset(m_anim_sequences);
     this->frustumManager->Reset();
     cam->frustum->next = NULL;
@@ -977,6 +977,13 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         this->DrawMesh(room->content->mesh, NULL, NULL);
     }
 
+#if STENCIL_FRUSTUM
+    if(need_stencil)
+    {
+        qglDisable(GL_STENCIL_TEST);
+    }
+#endif
+
     if (room->content->static_mesh_count > 0)
     {
         qglUseProgramObjectARB(shaderManager->getStaticMeshShader()->program);
@@ -1065,13 +1072,6 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
             }
         }
     }
-
-#if STENCIL_FRUSTUM
-    if(need_stencil)
-    {
-        qglDisable(GL_STENCIL_TEST);
-    }
-#endif
 }
 
 

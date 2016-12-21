@@ -661,7 +661,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     if(ent->current_sector && ent->current_sector->room_above &&
        ent->current_sector->room_above->bb_min[2] < test_from[2] + 256.0f)
     {
-        ent->self->room = ent->current_sector->room_above->real_room;
+        Entity_MoveToRoom(ent, ent->current_sector->room_above->real_room);
     }
 
     climb->height_info = CHARACTER_STEP_HORIZONTAL;

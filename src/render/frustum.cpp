@@ -240,7 +240,7 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
         float *n = cam->frustum->norm;
         float *v = portal->vertex;
 
-        if(vec3_plane_dist(portal->norm, cam->gl_transform + 12) < -SPLIT_EPSILON)            // non face or degenerate to the line portal
+        if((dest_room == cam->current_room) || vec3_plane_dist(portal->norm, cam->gl_transform + 12) < -SPLIT_EPSILON)            // non face or degenerate to the line portal
         {
             return NULL;
         }
