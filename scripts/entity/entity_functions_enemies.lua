@@ -38,6 +38,15 @@ function baddie_init(id)    -- INVALID!
         end;
     end;
 
+    entity_funcs[id].onLoop = function(object_id)
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+            if(f + 1 >= c) then
+                setEntityActivity(object_id, false);
+                entity_funcs[object_id].onLoop = nil;
+            end;
+        end;
+    end;
 end
 
 
@@ -59,7 +68,7 @@ function bat_init(id)
     end;
 
     entity_funcs[id].onLoop = function(object_id)
-        if((getCharacterParam(object_id, PARAM_HEALTH) == 0) and (getEntityMoveType(object_id) == MOVE_FLY)) then
+        if((getCharacterParam(object_id, PARAM_HEALTH) == 0) and getEntityActivity(object_id)) then
             local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
             if((a == 3) and dropEntity(object_id, frame_time)) then
                 setEntityAnim(object_id, ANIM_TYPE_BASE, 4, 0);
@@ -85,6 +94,19 @@ function wolf_init(id)
     setEntityGhostCollisionShape(id,  2,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setEntityGhostCollisionShape(id,  3,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
 
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
+        changeCharacterParam(object_id, PARAM_HEALTH, -damage);
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            setCharacterTarget(activator_id, nil);
+            setEntityCollision(object_id, false);
+            if(damage > 80) then
+                setEntityAnim(object_id, ANIM_TYPE_BASE, 22, 0);
+            else
+                setEntityAnim(object_id, ANIM_TYPE_BASE, 20, 0);
+            end;
+        end;
+    end;
 end;
 
 
@@ -94,4 +116,18 @@ function bear_init(id)
     setCharacterParam(id, PARAM_HEALTH, 300, 300);
     setEntityGhostCollisionShape(id,  14,  COLLISION_SHAPE_SPHERE, -256, -128, -256, 256, 256, 128);
 
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
+            setCharacterTarget(activator_id, nil);
+            setEntityCollision(object_id, false);
+            if(a >= 4 and a <= 10 or a == 14) then
+                setEntityAnim(object_id, ANIM_TYPE_BASE, 19, 0);
+            else
+                setEntityAnim(object_id, ANIM_TYPE_BASE, 20, 0);
+            end;
+        end;
+    end;
 end;

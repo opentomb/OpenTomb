@@ -2913,7 +2913,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     {
                         if(target)
                         {
-                            ent->character->parameters.param[PARAM_HIT_DAMAGE] = 85.0f;
+                            ent->character->parameters.param[PARAM_HIT_DAMAGE] = 180.0f;
                             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
                         }
                         ss_anim->frame_time = dt;

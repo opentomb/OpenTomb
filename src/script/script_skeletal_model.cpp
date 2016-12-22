@@ -450,6 +450,7 @@ int lua_SetEntityAnim(lua_State * lua)
                     }
                 }
             }
+            SSBoneFrame_Update(ent->bf, 0.0f);
         }
         else
         {
