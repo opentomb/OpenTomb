@@ -22,7 +22,6 @@ function baddie_init(id)    -- INVALID!
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((getCharacterParam(object_id, PARAM_HEALTH) > 0) and (not getEntityActivity(object_id))) then 
-            --print("enemy activated: " .. object_id);
             enableEntity(object_id);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
@@ -30,6 +29,7 @@ function baddie_init(id)    -- INVALID!
 
 
     entity_funcs[id].onHit = function(object_id, activator_id)
+        changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setCharacterTarget(activator_id, nil);
             setEntityActivity(object_id, false);
@@ -49,9 +49,23 @@ function bat_init(id)
     setEntityMoveType(id, MOVE_FLY);
     noFixEntityCollision(id);
 
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            setCharacterTarget(activator_id, nil);
+            setEntityCollision(object_id, false);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
+        end;
+    end;
+
     entity_funcs[id].onLoop = function(object_id)
         if((getCharacterParam(object_id, PARAM_HEALTH) == 0) and (getEntityMoveType(object_id) == MOVE_FLY)) then
-            if(dropEntity(object_id, frame_time)) then
+            local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+            if((a == 3) and dropEntity(object_id, frame_time)) then
+                setEntityAnim(object_id, ANIM_TYPE_BASE, 4, 0);
+            end;
+
+            if((a == 4) and (f + 1 >= c)) then
                 setEntityActivity(object_id, false);
                 entity_funcs[object_id].onLoop = nil;
             end;

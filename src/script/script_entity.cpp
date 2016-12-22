@@ -2055,6 +2055,7 @@ int lua_DropEntity(lua_State * lua)
 
             Mat4_vec3_mul_macro(from, ent->transform, ent->bf->centre);
             vec3_add(to, from, move);
+            from[2] += 32.0f;
             to[2] -= (ent->bf->bb_max[2] - ent->bf->bb_min[2]);
 
             if(Physics_RayTest(&cb, from, to, ent->self, filter))

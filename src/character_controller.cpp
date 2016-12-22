@@ -80,6 +80,7 @@ void Character_Create(struct entity_s *ent)
             ret->parameters.param[i] = 0.0;
             ret->parameters.maximum[i] = 0.0;
         }
+        ret->parameters.maximum[PARAM_HIT_DAMAGE] = 9999.0;
 
         ret->sphere = CHARACTER_BASE_RADIUS;
         ret->climb_sensor = ent->character->climb_r;
@@ -2277,7 +2278,8 @@ struct entity_s *Character_FindTarget(struct entity_s *ent)
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p target = (entity_p)cont->object;
-                if((target->type_flags & ENTITY_TYPE_ACTOR) && (target->state_flags & ENTITY_STATE_ACTIVE))
+                if((target->type_flags & ENTITY_TYPE_ACTOR) && (target->state_flags & ENTITY_STATE_ACTIVE) &&
+                   (Character_GetParam(target, PARAM_HEALTH) > 0))
                 {
                     float dir[3], t;
                     vec3_sub(dir, target->transform + 12, ent->transform + 12);
@@ -2648,7 +2650,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     {
                         if(target)
                         {
-                            Character_SetParam(target, PARAM_HEALTH, Character_GetParam(target, PARAM_HEALTH) - 25.0f);
+                            ent->character->parameters.param[PARAM_HIT_DAMAGE] = 25.0f;
                             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
                         }
                         ss_anim->frame_time = dt;
@@ -2911,7 +2913,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     {
                         if(target)
                         {
-                            Character_SetParam(target, PARAM_HEALTH, Character_GetParam(target, PARAM_HEALTH) - 50.0f);
+                            ent->character->parameters.param[PARAM_HIT_DAMAGE] = 85.0f;
                             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
                         }
                         ss_anim->frame_time = dt;

@@ -845,6 +845,17 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, ENTITY_CALLBACK_STAND);
         LUA_EXPOSE(lua, ENTITY_CALLBACK_HIT);
 
+        LUA_EXPOSE(lua, PARAM_HEALTH);
+        LUA_EXPOSE(lua, PARAM_AIR);
+        LUA_EXPOSE(lua, PARAM_STAMINA);
+        LUA_EXPOSE(lua, PARAM_WARMTH);
+        LUA_EXPOSE(lua, PARAM_HIT_DAMAGE);
+        LUA_EXPOSE(lua, PARAM_EXTRA1);
+        LUA_EXPOSE(lua, PARAM_EXTRA2);
+        LUA_EXPOSE(lua, PARAM_EXTRA3);
+        LUA_EXPOSE(lua, PARAM_EXTRA4);
+        LUA_EXPOSE(lua, PARAM_LASTINDEX);
+
         LUA_EXPOSE(lua, ANIM_NORMAL_CONTROL);
         LUA_EXPOSE(lua, ANIM_LOOP_LAST_FRAME);
         LUA_EXPOSE(lua, ANIM_FRAME_LOCK);
