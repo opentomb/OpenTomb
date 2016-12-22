@@ -447,7 +447,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             {
                 if(pos != NULL)
                 {
-                    vec3_copy(entity->transform+12, pos);
+                    vec3_copy(entity->transform + 12, pos);
                 }
                 if(ang != NULL)
                 {
@@ -457,7 +457,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
                 if(room_id < global_world.rooms_count)
                 {
                     Entity_MoveToRoom(entity, global_world.rooms + room_id);
-                    entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform+12);
+                    entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
                 }
                 else
                 {
@@ -485,7 +485,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
 
             if(pos != NULL)
             {
-                vec3_copy(entity->transform+12, pos);
+                vec3_copy(entity->transform + 12, pos);
             }
             if(ang != NULL)
             {
@@ -504,7 +504,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             }
 
             entity->type_flags     = ENTITY_TYPE_SPAWNED;
-            entity->state_flags    = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE;
+            entity->state_flags    = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE | ENTITY_STATE_COLLIDABLE;
             entity->trigger_layout = 0x00;
             entity->OCB            = 0x00;
             entity->timer          = 0.0;
@@ -531,7 +531,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
         }
     }
 
-    return 0xFFFFFFFF;
+    return ENTITY_ID_NONE;
 }
 
 
@@ -2031,9 +2031,9 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
         sector->index_x = i / room->sectors_y;
         sector->index_y = i % room->sectors_y;
 
-        sector->pos[0] = room->transform[12] + sector->index_x * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
-        sector->pos[1] = room->transform[13] + sector->index_y * TR_METERING_SECTORSIZE + 0.5 * TR_METERING_SECTORSIZE;
-        sector->pos[2] = 0.5 * (tr_room->y_bottom + tr_room->y_top);
+        sector->pos[0] = room->transform[12] + sector->index_x * TR_METERING_SECTORSIZE + 0.5f * TR_METERING_SECTORSIZE;
+        sector->pos[1] = room->transform[13] + sector->index_y * TR_METERING_SECTORSIZE + 0.5f * TR_METERING_SECTORSIZE;
+        sector->pos[2] = 0.5f * (tr_room->y_bottom + tr_room->y_top);
 
         sector->owner_room = room;
         sector->trigger = NULL;
@@ -2163,43 +2163,43 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     {
         r_dest = global_world.rooms + tr_portal->adjoining_room;
         p->vertex_count = 4;                                                    // in original TR all portals are axis aligned rectangles
-        p->vertex = (float*)malloc(3*p->vertex_count*sizeof(float));
+        p->vertex = (float*)malloc(3 * p->vertex_count * sizeof(float));
         p->dest_room = r_dest;
-        TR_vertex_to_arr(p->vertex  , &tr_portal->vertices[3]);
-        vec3_add(p->vertex, p->vertex, room->transform+12);
-        TR_vertex_to_arr(p->vertex+3, &tr_portal->vertices[2]);
-        vec3_add(p->vertex+3, p->vertex+3, room->transform+12);
-        TR_vertex_to_arr(p->vertex+6, &tr_portal->vertices[1]);
-        vec3_add(p->vertex+6, p->vertex+6, room->transform+12);
-        TR_vertex_to_arr(p->vertex+9, &tr_portal->vertices[0]);
-        vec3_add(p->vertex+9, p->vertex+9, room->transform+12);
-        vec3_add(p->centre, p->vertex, p->vertex+3);
-        vec3_add(p->centre, p->centre, p->vertex+6);
-        vec3_add(p->centre, p->centre, p->vertex+9);
-        p->centre[0] /= 4.0;
-        p->centre[1] /= 4.0;
-        p->centre[2] /= 4.0;
+        TR_vertex_to_arr(p->vertex, &tr_portal->vertices[3]);
+        vec3_add(p->vertex, p->vertex, room->transform + 12);
+        TR_vertex_to_arr(p->vertex + 3, &tr_portal->vertices[2]);
+        vec3_add(p->vertex + 3, p->vertex + 3, room->transform + 12);
+        TR_vertex_to_arr(p->vertex + 6, &tr_portal->vertices[1]);
+        vec3_add(p->vertex + 6, p->vertex + 6, room->transform + 12);
+        TR_vertex_to_arr(p->vertex + 9, &tr_portal->vertices[0]);
+        vec3_add(p->vertex + 9, p->vertex + 9, room->transform + 12);
+        vec3_add(p->centre, p->vertex, p->vertex + 3);
+        vec3_add(p->centre, p->centre, p->vertex + 6);
+        vec3_add(p->centre, p->centre, p->vertex + 9);
+        p->centre[0] /= 4.0f;
+        p->centre[1] /= 4.0f;
+        p->centre[2] /= 4.0f;
         Portal_GenNormale(p);
 
         /*
          * Portal position fix...
          */
         // X_MIN
-        if((p->norm[0] > 0.999) && (((int)p->centre[0])%2))
+        if((p->norm[0] > 0.999) && (((int)p->centre[0]) % 2))
         {
             float pos[3] = {1.0, 0.0, 0.0};
             Portal_Move(p, pos);
         }
 
         // Y_MIN
-        if((p->norm[1] > 0.999) && (((int)p->centre[1])%2))
+        if((p->norm[1] > 0.999) && (((int)p->centre[1]) % 2))
         {
             float pos[3] = {0.0, 1.0, 0.0};
             Portal_Move(p, pos);
         }
 
         // Z_MAX
-        if((p->norm[2] <-0.999) && (((int)p->centre[2])%2))
+        if((p->norm[2] <-0.999) && (((int)p->centre[2]) % 2))
         {
             float pos[3] = {0.0, 0.0, -1.0};
             Portal_Move(p, pos);
@@ -2319,9 +2319,9 @@ void World_GenEntities(class VT_Level *tr)
         entity->state_flags &= (tr_item->flags & 0x0100) ? (~ENTITY_STATE_VISIBLE) : (0xFFFF);
 
         entity->self->collision_group = COLLISION_GROUP_KINEMATIC;
-        entity->self->collision_mask = COLLISION_MASK_ALL;
+        entity->self->collision_mask  = COLLISION_MASK_ALL;
         entity->self->collision_shape = COLLISION_SHAPE_TRIMESH;
-        entity->move_type          = MOVE_STATIC_POS;
+        entity->move_type             = MOVE_STATIC_POS;
 
         entity->bf->animations.model = World_GetModelByID(tr_item->object_id);
 
