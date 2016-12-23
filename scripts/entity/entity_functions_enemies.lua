@@ -3,6 +3,9 @@
 
 --Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, e->id, ent->id);
 function baddie_init(id)    -- INVALID!
+    if(entity_funcs[id] == nil) then
+        entity_funcs[id] = {};
+    end;
 
     setEntityTypeFlag(id, ENTITY_TYPE_ACTOR);
     characterCreate(id, 100.0);
@@ -210,3 +213,59 @@ function Pierre_init(id)
         end;
     end;
 end;
+
+
+function TorsoBoss_init(id)
+    baddie_init(id);
+    setCharacterParam(id, PARAM_HEALTH, 500, 500);
+    setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_SPHERE, nil, nil, 128, nil, nil, 768);     -- base
+
+    enableEntity(id);
+    setEntityAnim(id, ANIM_TYPE_BASE, 1, 0);
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            setCharacterTarget(activator_id, nil);
+            setEntityCollision(object_id, false);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 13, 0);
+        end;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id)
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+            if(f + 1 >= c) then
+                activateEntity(86, object_id, 0x1F, TRIGGER_OP_OR, 0x01, 0.0);
+                setEntityActivity(object_id, false);
+                entity_funcs[object_id].onLoop = nil;
+            end;
+        end;
+    end;
+end;
+
+
+function MutantEgg_init(id)
+    if(getLevel() == 15) then
+        setEntityActivity(id, false);
+        setEntityCollision(id, false);
+    
+        entity_funcs[id].onActivate = function(object_id, activator_id)
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
+            setEntityActivity(object_id, true);
+            return ENTITY_TRIGGERING_ACTIVATED;
+        end;
+
+        entity_funcs[id].onLoop = function(object_id)
+            local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+            if(f + 1 >= c) then
+                local spawned_id = spawnEntity(34, getEntityRoom(object_id), getEntityPos(object_id));
+                moveEntityLocal(spawned_id, -512.0, 512.0, -4096.0);
+                TorsoBoss_init(spawned_id);
+                setEntityActivity(object_id, false);
+                entity_funcs[object_id].onLoop = nil;
+            end;
+        end;
+    end;
+end;
+

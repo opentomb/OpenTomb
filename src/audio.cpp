@@ -1311,7 +1311,8 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     // Don't even try to do anything with track, if its index is greater than overall amount of
     // soundtracks specified in a stream track map count (which is derived from script).
 
-    if(track_index >= audio_world_data.stream_track_map_count)
+    if((track_index >= audio_world_data.stream_track_map_count) ||
+       (track_index >= audio_world_data.stream_buffers_count))
     {
         Con_AddLine("StreamPlay: CANCEL, track index is out of bounds.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
