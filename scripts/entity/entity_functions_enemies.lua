@@ -116,7 +116,6 @@ function bear_init(id)
     setCharacterParam(id, PARAM_HEALTH, 300, 300);
     setEntityGhostCollisionShape(id,  14,  COLLISION_SHAPE_SPHERE, -256, -128, -256, 256, 256, 128);
 
-
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
@@ -127,6 +126,86 @@ function bear_init(id)
                 setEntityAnim(object_id, ANIM_TYPE_BASE, 19, 0);
             else
                 setEntityAnim(object_id, ANIM_TYPE_BASE, 20, 0);
+            end;
+        end;
+    end;
+end;
+
+
+function Larson_init(id)
+    baddie_init(id);
+
+    setCharacterParam(id, PARAM_HEALTH, 300, 300);
+    setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_SPHERE, -60.0, nil, 0, 60.0, nil, 16.0);   -- base
+    setEntityGhostCollisionShape(id, 7,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- torso
+    setEntityGhostCollisionShape(id, 8,  COLLISION_SHAPE_SPHERE, nil, nil, nil, nil, nil, nil);     -- head
+    setEntityGhostCollisionShape(id, 1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
+    setEntityGhostCollisionShape(id, 4,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            setCharacterTarget(activator_id, nil);
+            setEntityCollision(object_id, false);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 15, 0);
+        end;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id)
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            if(getLevel() == 4) then
+                local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+                if((a == 15) and (f + 1 >= c)) then
+                    local dist = getEntityDistance(object_id, player);
+                    if(dist < 2048) then
+                        setLevel(5);  -- really play cutscene first
+                    end;
+                end;
+            else
+                setEntityActivity(object_id, false);
+                entity_funcs[object_id].onLoop = nil;
+            end;
+        end;
+    end;
+end;
+
+
+function Pierre_init(id)
+    baddie_init(id);
+
+    setCharacterParam(id, PARAM_HEALTH, 300, 300);
+    setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_SPHERE, -60.0, nil, 0, 60.0, nil, 16.0);   -- base
+    setEntityGhostCollisionShape(id, 7,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- torso
+    setEntityGhostCollisionShape(id, 8,  COLLISION_SHAPE_SPHERE, nil, nil, nil, nil, nil, nil);     -- head
+    setEntityGhostCollisionShape(id, 1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
+    setEntityGhostCollisionShape(id, 4,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            if(getLevel() == 9) then
+                setCharacterTarget(activator_id, nil);
+                setEntityCollision(object_id, false);
+                setEntityAnim(object_id, ANIM_TYPE_BASE, 12, 0);
+            else
+                --flee
+            end;
+        end;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id)
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            if(getLevel() == 9) then
+                local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+                if((a == 12) and (f + 1 >= c)) then
+                    local spawned_id = spawnEntity(133, getEntityRoom(object_id), getEntityPos(object_id));
+                    setEntityActivity(object_id, false);
+                    entity_funcs[object_id].onLoop = nil;
+                end;
+            else
+                -- if not visible then...
+                disableEntity(object_id); -- TODO: implement flee
+                entity_funcs[object_id].onLoop = nil;
             end;
         end;
     end;

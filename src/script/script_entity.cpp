@@ -397,6 +397,37 @@ int lua_GetEntityDirDot(lua_State * lua)
 }
 
 
+int lua_GetEntityRoom(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            if(ent->self->room)
+            {
+                lua_pushinteger(lua, ent->self->room->id);
+            }
+            else
+            {
+                lua_pushnil(lua);
+            }
+            return 1;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getEntityRoom: expecting arguments (entity_id)");
+    }
+
+    return 0;
+}
+
+
 int lua_GetEntityPosition(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -2223,6 +2254,7 @@ void Script_LuaRegisterEntityFuncs(lua_State *lua)
     lua_register(lua, "getEntityVector", lua_GetEntityVector);
     lua_register(lua, "getEntityDirDot", lua_GetEntityDirDot);
     lua_register(lua, "getEntityDistance", lua_GetEntityDistance);
+    lua_register(lua, "getEntityRoom", lua_GetEntityRoom);
     lua_register(lua, "getEntityPos", lua_GetEntityPosition);
     lua_register(lua, "setEntityPos", lua_SetEntityPosition);
     lua_register(lua, "getEntityAngles", lua_GetEntityAngles);
