@@ -269,3 +269,14 @@ function MutantEgg_init(id)
     end;
 end;
 
+
+function ScionHolder_init(id)
+    setEntityTypeFlag(id, ENTITY_TYPE_ACTOR, 1);  -- make it targetable
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        setCharacterTarget(activator_id, nil);
+        setEntityActivity(object_id, false);
+        setEntityTypeFlag(0x6b, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
+        disableEntity(0x69);
+    end;
+end;

@@ -183,7 +183,7 @@ tr1_entity_tbl[140] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE
 
 tr1_entity_tbl[145] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Scion 1
 tr1_entity_tbl[146] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Scion 2
-tr1_entity_tbl[147] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Scion holder
+tr1_entity_tbl[147] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "ScionHolder"};-- Scion holder
 tr1_entity_tbl[150] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Scion piece
 
 -- ANIMATINGS --

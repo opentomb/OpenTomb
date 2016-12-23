@@ -573,7 +573,7 @@ void Engine_Display()
         Cam_RecalcClipPlanes(&engine_camera);
         // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
 
-        screen_info.debug_view_state %= 4;
+        screen_info.debug_view_state %= 5;
         if(screen_info.debug_view_state)
         {
             ShowDebugInfo();
@@ -1002,6 +1002,27 @@ void ShowDebugInfo()
             break;
 
         case 3:
+            {
+                entity_p ent = World_GetPlayer();
+                if(ent && ent->self->room)
+                {
+                    for(engine_container_p cont = ent->self->room->content->containers; cont; cont = cont->next)
+                    {
+                        if(cont->object_type == OBJECT_ENTITY)
+                        {
+                            entity_p e = (entity_p)cont->object;
+                            gl_text_line_p text = renderer.OutTextXYZ(e->transform[12 + 0], e->transform[12 + 1], e->transform[12 + 2], "(entity[0x%X])", e->id);
+                            if(text)
+                            {
+                                text->x_align = GLTEXT_ALIGN_CENTER;
+                            }
+                        }
+                    }
+                }
+            }
+            break;
+
+        case 4:
             if(renderer.dynamicBSP)
             {
                 GLText_OutTextXY(30.0f, y += dy, "input polygons = %07d", renderer.dynamicBSP->GetInputPolygonsCount());
