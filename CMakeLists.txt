@@ -11,7 +11,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 message(WARNING "This CMakeLists.txt does not generate usable executables, it is only used to process the documentation and test compilability.")
 
-add_subdirectory(doc)
+#add_subdirectory(doc)
 
 set(OPENTOMB_SRCS
     src/anim_state_control.cpp
