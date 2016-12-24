@@ -50,6 +50,13 @@ dofile(base_path .. "scripts/entity/entity_functions_enemies.lua");
 dofile(base_path .. "scripts/entity/entity_functions_platforms.lua");
 
 
+function getEntitySaveData(id)
+    if((entity_funcs ~= nil) and (entity_funcs[id] ~= nil) and (entity_funcs[id].onSave ~= nil)) then
+        return entity_funcs[id].onSave();
+    end;
+    return "";
+end;
+
 function gen_soundsource_init(id)    -- Generic sound source (continous)
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, false);

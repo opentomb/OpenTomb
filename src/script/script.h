@@ -51,6 +51,7 @@ bool Script_GetString(lua_State *lua, int string_index, size_t string_size, char
 
 void Script_LoopEntity(lua_State *lua, int object_id);
 int  Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator = -1);
+size_t Script_GetEntitySaveData(lua_State *lua, int id_entity, char *buf, size_t buf_size);
 int  Script_DoTasks(lua_State *lua, float time);
 bool Script_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_call = false);
 

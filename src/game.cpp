@@ -222,6 +222,12 @@ void Save_Entity(FILE **f, entity_p ent)
                 ent->angles[0], ent->angles[1], ent->angles[2]);
     }
 
+    char save_buff[32768] = {0};
+    if(Script_GetEntitySaveData(engine_lua, ent->id, save_buff, sizeof(save_buff)) > 0)
+    {
+        fprintf(*f, "\n%s", save_buff);
+    }
+
     ss_animation_p ss_anim = &ent->bf->animations;
     for(; ss_anim->next; ss_anim = ss_anim->next);
 

@@ -54,6 +54,26 @@ int Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_act
 }
 
 
+size_t Script_GetEntitySaveData(lua_State *lua, int id_entity, char *buf, size_t buf_size)
+{
+    int top = lua_gettop(lua);
+    size_t ret = 0;
+
+    lua_getglobal(lua, "getEntitySaveData");
+    if(lua_isfunction(lua, -1))
+    {
+        lua_pushinteger(lua, id_entity);
+        if((lua_pcall(lua, 1, 1, 0) == LUA_OK) && lua_isstring(lua, -1))
+        {
+            strncpy(buf, lua_tolstring(lua, -1, &ret), buf_size);
+        }
+    }
+    lua_settop(lua, top);
+
+    return ret;
+}
+
+
 void Script_LoopEntity(lua_State *lua, int object_id)
 {
     entity_p ent = World_GetEntityByID(object_id);

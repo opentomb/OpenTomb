@@ -226,9 +226,12 @@ function TorsoBoss_init(id)
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
-            setEntityCollision(object_id, false);
-            setEntityAnim(object_id, ANIM_TYPE_BASE, 13, 0);
+            local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
+            if(a ~= 13) then
+                setCharacterTarget(activator_id, nil);
+                setEntityCollision(object_id, false);
+                setEntityAnim(object_id, ANIM_TYPE_BASE, 13, 0);
+            end;
         end;
     end;
 
@@ -242,6 +245,10 @@ function TorsoBoss_init(id)
             end;
         end;
     end;
+
+    entity_funcs[id].onSave = function()
+        return "TorsoBoss_init(" .. id .. ");\n";
+    end;
 end;
 
 
@@ -251,8 +258,10 @@ function MutantEgg_init(id)
         setEntityCollision(id, false);
     
         entity_funcs[id].onActivate = function(object_id, activator_id)
-            setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
-            setEntityActivity(object_id, true);
+            if(getEntityEvent(object_id) == 0) then
+                setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
+                setEntityActivity(object_id, true);
+            end;
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
 
