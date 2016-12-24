@@ -44,6 +44,7 @@ end;
 --------------------------------------------------------------------------------
 
 dofile(base_path .. "scripts/entity/entity_functions_common.lua");
+dofile(base_path .. "scripts/entity/entity_functions_switch.lua");
 dofile(base_path .. "scripts/entity/entity_functions_traps.lua");
 dofile(base_path .. "scripts/entity/entity_functions_unique.lua");
 dofile(base_path .. "scripts/entity/entity_functions_enemies.lua");
