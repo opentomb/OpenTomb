@@ -317,6 +317,28 @@ void SSBoneFrame_Clear(ss_bone_frame_p bf)
 }
 
 
+void SSBoneFrame_Copy(struct ss_bone_frame_s *dst, struct ss_bone_frame_s *src)
+{
+    if(dst->bone_tag_count == src->bone_tag_count)
+    {
+        vec3_copy(dst->pos, src->pos);
+        vec3_copy(dst->centre, src->centre);
+        vec3_copy(dst->bb_max, src->bb_max);
+        vec3_copy(dst->bb_min, src->bb_min);
+        
+        dst->animations.model = src->animations.model;
+        dst->animations.enabled = src->animations.enabled;
+        dst->animations.current_animation = src->animations.current_animation;
+        dst->animations.current_frame = src->animations.current_frame;
+        dst->animations.next_animation = src->animations.next_animation;
+        dst->animations.next_frame = src->animations.next_frame;
+        dst->animations.lerp = src->animations.lerp;
+        dst->animations.frame_time = src->animations.frame_time;
+        dst->animations.next_state = src->animations.next_state;
+    }
+}
+
+
 void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
 {
     float t = 1.0f - bf->animations.lerp;

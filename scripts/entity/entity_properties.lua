@@ -41,7 +41,7 @@ tr1_entity_tbl = {};
 -- NOTE: Objects before ID 06 are internal service objects and never appear in-game.
 
 -- ACTORS --
-tr1_entity_tbl[06] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX};                      -- Doppelgagner
+tr1_entity_tbl[06] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "Doppelgagner"};                -- Doppelgagner
 tr1_entity_tbl[07] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "wolf"};                        -- Wolf
 tr1_entity_tbl[08] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "bear"};                        -- Bear
 tr1_entity_tbl[09] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "bat"};                         -- Bat

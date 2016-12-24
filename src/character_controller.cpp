@@ -2278,7 +2278,8 @@ struct entity_s *Character_FindTarget(struct entity_s *ent)
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p target = (entity_p)cont->object;
-                if((target->type_flags & ENTITY_TYPE_ACTOR) && (target->state_flags & ENTITY_STATE_ACTIVE))
+                if((target->type_flags & ENTITY_TYPE_ACTOR) && (target->state_flags & ENTITY_STATE_ACTIVE) &&
+                   (!target->character || (target->character->parameters.param[PARAM_HEALTH] > 0.0f)))
                 {
                     float dir[3], t;
                     vec3_sub(dir, target->transform + 12, ent->transform + 12);

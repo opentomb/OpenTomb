@@ -747,7 +747,7 @@ void Game_SetCameraTarget(uint32_t entity_id, float timer)
 {
     entity_p ent = World_GetEntityByID(entity_id);
     engine_camera_state.target_id = entity_id;
-    if(ent && (engine_camera_state.state == CAMERA_STATE_NORMAL))
+    if(ent && (!ent->character || (ent->character->parameters.param[PARAM_HEALTH] > 0.0f)) && (engine_camera_state.state == CAMERA_STATE_NORMAL))
     {
         engine_camera_state.state = CAMERA_STATE_LOOK_AT;
         engine_camera_state.time = timer;
