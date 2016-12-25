@@ -347,7 +347,7 @@ end;
 
 function ScionHolder_init(id)
     setEntityTypeFlag(id, ENTITY_TYPE_ACTOR, 1);  -- make it targetable
-
+    print("scion holder");
     entity_funcs[id].onHit = function(object_id, activator_id)
         setCharacterTarget(activator_id, nil);
         setEntityActivity(object_id, false);
