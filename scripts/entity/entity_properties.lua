@@ -79,7 +79,7 @@ tr1_entity_tbl[37] = {coll = COLLISION_GROUP_TRIGGERS,  shape = COLLISION_SHAPE_
 tr1_entity_tbl[38] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_SINGLE_SPHERE, func = "boulder_heavy"};        -- Boulder
 tr1_entity_tbl[39] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Dart
 tr1_entity_tbl[40] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Dartgun
-tr1_entity_tbl[41] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Lifting door
+tr1_entity_tbl[41] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "anim_single"};-- Lifting door
 tr1_entity_tbl[42] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};       -- Slamming sawtooth doors
 tr1_entity_tbl[43] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "damocles"};                  -- Sword of Damocles
 tr1_entity_tbl[44] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "Thor_hummer"};               -- Thor's hammer (handle)
