@@ -346,12 +346,29 @@ end;
 
 
 function ScionHolder_init(id)
-    setEntityTypeFlag(id, ENTITY_TYPE_ACTOR, 1);  -- make it targetable
-    print("scion holder");
-    entity_funcs[id].onHit = function(object_id, activator_id)
-        setCharacterTarget(activator_id, nil);
-        setEntityActivity(object_id, false);
-        setEntityTypeFlag(0x6b, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
-        disableEntity(0x69);
+    if(getLevel() == 15) then
+        setEntityTypeFlag(id, ENTITY_TYPE_ACTOR, 1);  -- make it targetable
+        entity_funcs[id].onHit = function(object_id, activator_id)
+            setCharacterTarget(activator_id, nil);
+            setEntityActivity(object_id, false);
+            setEntityTypeFlag(0x6b, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
+            disableEntity(0x69);
+        end;
+    elseif(getLevel() == 14) then
+        setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
+        setEntityActivationOffset(id, -660.0, 2048.0, 128.0, 256.0);
+        setEntityActivationDirection(id, 1.0, 0.0, 0.0, 0.77);
+
+        entity_funcs[id].onActivate = function(object_id, activator_id)
+            if(activator_id == nil) then
+                return ENTITY_TRIGGERING_NOT_READY;
+            end
+
+            entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
+            -- play cutscene here!
+            setLevel(15);
+            return ENTITY_TRIGGERING_ACTIVATED;
+        end;
     end;
 end;
