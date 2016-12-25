@@ -11,73 +11,14 @@
 
 dofile(base_path .. "scripts/trigger/flipeffects.lua")  -- Initialize flipeffects.
 
-trigger_list = {};  -- Initialize trigger array.
-
--- Run trigger. Called when desired entity is on trigger sector.
-
-function tlist_RunTrigger(index, activator_type, activator)
-    if((trigger_list[index] ~= nil) and (trigger_list[index].func ~= nil) and (trigger_list[index].activator_type == activator_type)) then
-        return trigger_list[index].func(activator);
-    else
-        return 0;
-    end;
-end;
-
--- Erase single trigger.
-
-function tlist_EraseTrigger(index)
-    if(trigger_list[index] ~= nil) then
-        trigger_list[index].func = nil;
-        trigger_list[index].activator_type = nil;
-        trigger_list[index] = nil;
-    end;
-end;
-
--- Clear whole trigger array. Must be called on each level loading.
-
-function tlist_Clear()
-    for k,v in pairs(trigger_list) do
-        tlist_EraseTrigger(k);
-    end;
-    print("Trigger table cleaned");
-end;
-
-
-
--- Moves desired entity to specified sink.
-
-function moveToSink(entity_index, sink_index)
-    local movetype = getEntityMoveType(entity_index);
-    if(movetype == 5) then  -- Dive, if on water.
-        anim = getEntityAnim(entity_index, ANIM_TYPE_BASE);
-        if(anim ~= 113) then
-            setEntityAnim(entity_index, ANIM_TYPE_BASE, 113, 0);
-            setEntityMoveType(entity_index, 6);
-        end;
-    elseif(movetype == 6) then
-        moveEntityToSink(entity_index, sink_index);
-    end;
-end
-
-
 -- Does specified flipeffect.
 
-function doEffect(effect_index, extra_parameter) -- extra parameter is usually the timer field
+function doFlipEffect(effect_index, extra_parameter) -- extra parameter is usually the timer field
+    print("flip effect[" .. effect_index .. "](" .. extra_parameter .. ")");
     if(flipeffects[effect_index] ~= nil) then
         return flipeffects[effect_index](parameter);
     else
         return nil; -- Add hardcoded flipeffect routine here
-    end;
-end
-
-
--- Sets specified secret index as found and plays audiotrack with pop-up notification.
-
-function findSecret(secret_number)
-    if(getSecretStatus(secret_number) == 0) then
-        setSecretStatus(secret_number, 1);  -- Set actual secret status
-        playStream(getSecretTrackNumber(getLevelVersion()));   -- Play audiotrack
-        --showNotify("You have found a secret!", NOTIFY_ACHIEVEMENT);
     end;
 end
 
