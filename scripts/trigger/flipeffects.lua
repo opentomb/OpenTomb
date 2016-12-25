@@ -32,6 +32,6 @@ end;
 
 -- room flickering effect: WORKAROUND
 flipeffects[16] = function(parameter)
-    setFlipMap(0x00, 0x00, TRIGGER_OP_XOR);    --setFlipMap(flip_index, flip_mask, TRIGGER_OP_OR / XOR)
-    setFlipState(0x00, 0);                     --setFlipState(flip_index, FLIP_STATE_ON)
+    setFlipMap(0x00, 0x1F, TRIGGER_OP_XOR);    --setFlipMap(flip_index, flip_mask, TRIGGER_OP_OR / XOR)
+    setFlipState(0x00, 3);                     --setFlipState(flip_index, FLIP_STATE_ON)
 end;

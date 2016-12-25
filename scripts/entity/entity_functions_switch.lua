@@ -389,16 +389,16 @@ function keyhole_init(id)    -- Key and puzzle holes
             return ENTITY_TRIGGERING_NOT_READY;
         end
         
-        local t = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        local t = getEntityAnim(activator_id, ANIM_TYPE_BASE);
         if(entity_funcs[object_id].on.ready_anim < 0 or entity_funcs[object_id].on.ready_anim == t) then
-            if(key ~= nil) then
-                if(getItemsCount(activator_id, key) <= 0) then
-                    if(getActionChange(entity_funcs[object_id].act.action) == 0) then
+            if(entity_funcs[object_id].key ~= nil) then
+                if(getItemsCount(activator_id, entity_funcs[object_id].key) <= 0) then
+                    if(getActionChange(act.action) == 0) then
                         playSound(SOUND_NO);
                     end;
                     return ENTITY_TRIGGERING_NOT_READY;
                 else
-                    removeItem(activator_id, key, 1);
+                    removeItem(activator_id, entity_funcs[object_id].key, 1);
                 end;
             end;
 
