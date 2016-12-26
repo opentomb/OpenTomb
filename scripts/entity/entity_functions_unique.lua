@@ -147,8 +147,6 @@ function damocles_init(id)      -- Sword of Damocles
             playSound(SOUND_GEN_DEATH, activator_id);
             playSound(103, object_id);
             addEntityRagdoll(activator_id, RD_TYPE_LARA);
-            --setEntityCollisionFlags(object_id, COLLISION_GROUP_ALL, nil, COLLISION_GROUP_ALL);
-            --setEntityBodyMass(object_id, 1, 15.0);
         end;
     end;
 end
@@ -158,15 +156,14 @@ function Thor_hummer_init(id)      -- map 5
 
     setEntityActivity(id, false);
     
-    local spawned_id = spawnEntity(45, 25, getEntityPos(63));
-
-    print("thor spawned id = " .. spawned_id);
+    entity_funcs[id].spawned_id = spawnEntity(45, 25, getEntityPos(63));
+    --print("thor spawned id = " .. entity_funcs[id].spawned_id);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(a == 0) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
-            setEntityAnim(spawned_id, ANIM_TYPE_BASE, 1, 0);
+            setEntityAnim(entity_funcs[object_id].spawned_id, ANIM_TYPE_BASE, 1, 0);
             setEntityActivity(object_id, true);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
@@ -176,7 +173,7 @@ function Thor_hummer_init(id)      -- map 5
         local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(a == 1) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
-            setEntityAnim(spawned_id, ANIM_TYPE_BASE, 0, 0);
+            setEntityAnim(entity_funcs[object_id].spawned_id, ANIM_TYPE_BASE, 0, 0);
         end;
         return ENTITY_TRIGGERING_DEACTIVATED;
     end;
@@ -186,28 +183,31 @@ function Thor_hummer_init(id)      -- map 5
 
         if((tickEntity(object_id) == TICK_STOPPED) and (a <= 1)) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
-            setEntityAnim(spawned_id, ANIM_TYPE_BASE, 0, 0);
+            setEntityAnim(entity_funcs[object_id].spawned_id, ANIM_TYPE_BASE, 0, 0);
             return;
         end;
 
         if(a == 1) then
             if((f + 1 >= c) and (getEntityTimer(object_id) >= 0.75)) then
                 setEntityAnim(object_id, ANIM_TYPE_BASE, 2, 0);
-                setEntityAnim(spawned_id, ANIM_TYPE_BASE, 2, 0);
+                setEntityAnim(entity_funcs[object_id].spawned_id, ANIM_TYPE_BASE, 2, 0);
             end;
         elseif((a == 2) and (f + 1 >= c)) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
-            setEntityAnim(spawned_id, ANIM_TYPE_BASE, 3, 0);
+            setEntityAnim(entity_funcs[object_id].spawned_id, ANIM_TYPE_BASE, 3, 0);
             
-            local x, y, z = getEntityPos(19);
             setEntityCollision(19, true);
             setEntityVisibility(19, true);
-            setEntityPos(19, x, y, -17152);
-            x, y, z = getEntityPos(20);
-            setEntityPos(20, x, y, -19200);
+            moveEntityLocal(19, 0, 0, -1024);
             setEntityCollision(20, true);
             setEntityVisibility(20, true);
-            entity_funcs[id].onLoop = nil;
+            moveEntityLocal(20, 0, 0, -1024);
+        elseif(a == 3) then
+            local b1_dropped = dropEntity(19, frame_time, true);
+            local b2_dropped = dropEntity(20, frame_time, true);
+            if(b1_dropped and b2_dropped) then
+                setEntityActivity(object_id, false);
+            end;
         end;
     end;
 end
@@ -237,6 +237,35 @@ function natla_cabin_TR1_init(id)
         end;
     end
 end
+
+
+function ScionHolder_init(id)
+    if(getLevel() == 15) then
+        setEntityTypeFlag(id, ENTITY_TYPE_ACTOR, 1);  -- make it targetable
+        entity_funcs[id].onHit = function(object_id, activator_id)
+            setCharacterTarget(activator_id, nil);
+            setEntityActivity(object_id, false);
+            setEntityTypeFlag(0x6b, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
+            disableEntity(0x69);
+        end;
+    elseif(getLevel() == 14) then
+        setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
+        setEntityActivationOffset(id, -660.0, 2048.0, 128.0, 256.0);
+        setEntityActivationDirection(id, 1.0, 0.0, 0.0, 0.77);
+
+        entity_funcs[id].onActivate = function(object_id, activator_id)
+            if(activator_id == nil) then
+                return ENTITY_TRIGGERING_NOT_READY;
+            end
+
+            entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
+            -- play cutscene here!
+            setLevel(15);
+            return ENTITY_TRIGGERING_ACTIVATED;
+        end;
+    end;
+end;
 
 
 ----------------------------------------------

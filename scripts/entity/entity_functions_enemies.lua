@@ -248,11 +248,12 @@ function Pierre_init(id)
     setEntityGhostCollisionShape(id, 8,  COLLISION_SHAPE_SPHERE, nil, nil, nil, nil, nil, nil);     -- head
     setEntityGhostCollisionShape(id, 1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
     setEntityGhostCollisionShape(id, 4,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
+    entity_funcs[id].is_flee = (getLevel() ~= 9) or (getEntityRoom(id) ~= 110);
 
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            if(getLevel() == 9) then
+            if(not entity_funcs[object_id].is_flee) then
                 setCharacterTarget(activator_id, nil);
                 setEntityCollision(object_id, false);
                 setEntityAnim(object_id, ANIM_TYPE_BASE, 12, 0);
@@ -340,35 +341,6 @@ function MutantEgg_init(id)
                 setEntityActivity(object_id, false);
                 entity_funcs[object_id].onLoop = nil;
             end;
-        end;
-    end;
-end;
-
-
-function ScionHolder_init(id)
-    if(getLevel() == 15) then
-        setEntityTypeFlag(id, ENTITY_TYPE_ACTOR, 1);  -- make it targetable
-        entity_funcs[id].onHit = function(object_id, activator_id)
-            setCharacterTarget(activator_id, nil);
-            setEntityActivity(object_id, false);
-            setEntityTypeFlag(0x6b, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
-            disableEntity(0x69);
-        end;
-    elseif(getLevel() == 14) then
-        setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
-        setEntityActivationOffset(id, -660.0, 2048.0, 128.0, 256.0);
-        setEntityActivationDirection(id, 1.0, 0.0, 0.0, 0.77);
-
-        entity_funcs[id].onActivate = function(object_id, activator_id)
-            if(activator_id == nil) then
-                return ENTITY_TRIGGERING_NOT_READY;
-            end
-
-            entityRotateToTriggerZ(activator_id, object_id);
-            entityMoveToTriggerActivationPoint(activator_id, object_id);
-            -- play cutscene here!
-            setLevel(15);
-            return ENTITY_TRIGGERING_ACTIVATED;
         end;
     end;
 end;
