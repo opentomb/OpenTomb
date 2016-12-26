@@ -41,7 +41,7 @@ function baddie_init(id)    -- INVALID!
         end;
     end;
 
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
             if(f + 1 >= c) then
@@ -87,7 +87,7 @@ function Doppelgagner_init(id)
         end;
     end;
 
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         local room = getEntityRoom(player);
 
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
@@ -136,7 +136,7 @@ function bat_init(id)
         end;
     end;
 
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if((getCharacterParam(object_id, PARAM_HEALTH) == 0) and getEntityActivity(object_id)) then
             local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
             if((a == 3) and dropEntity(object_id, frame_time)) then
@@ -220,7 +220,7 @@ function Larson_init(id)
         end;
     end;
 
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             if(getLevel() == 4) then
                 local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
@@ -263,7 +263,7 @@ function Pierre_init(id)
         end;
     end;
 
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             if(getLevel() == 9) then
                 local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
@@ -302,7 +302,7 @@ function TorsoBoss_init(id)
         end;
     end;
 
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
             if(f + 1 >= c) then
@@ -332,7 +332,7 @@ function MutantEgg_init(id)
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
 
-        entity_funcs[id].onLoop = function(object_id)
+        entity_funcs[id].onLoop = function(object_id, tick_state)
             local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
             if(f + 1 >= c) then
                 local spawned_id = spawnEntity(34, getEntityRoom(object_id), getEntityPos(object_id));

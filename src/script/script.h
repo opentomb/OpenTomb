@@ -14,6 +14,11 @@ struct lua_State;
 #define RESP_HOR_COLLIDE    (2)
 #define RESP_SLIDE          (3)
 
+// Entity timer constants
+#define TICK_IDLE           (0)
+#define TICK_STOPPED        (1)
+#define TICK_ACTIVE         (2)
+
 extern lua_State *engine_lua;
 
 void Script_LoadConstants(lua_State *lua);
@@ -49,7 +54,7 @@ bool Script_GetSoundtrack(lua_State *lua, int track_index, char *track_path, int
 bool Script_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path);
 bool Script_GetString(lua_State *lua, int string_index, size_t string_size, char *buffer);
 
-void Script_LoopEntity(lua_State *lua, int object_id);
+void Script_LoopEntity(lua_State *lua, struct entity_s *ent);
 int  Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator = -1);
 size_t Script_GetEntitySaveData(lua_State *lua, int id_entity, char *buf, size_t buf_size);
 void Script_DoFlipEffect(lua_State *lua, int id_effect, int param);

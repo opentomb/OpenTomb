@@ -27,12 +27,8 @@ function door_init(id)   -- NORMAL doors only!
         return ENTITY_TRIGGERING_DEACTIVATED;
     end;
     
-    entity_funcs[id].onLoop = function(object_id)
-        if(getEntityEvent(object_id) == 0) then
-            setEntityTimer(object_id, 0.0);
-        end;
-
-        if((tickEntity(object_id) == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if((tick_state == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
             setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
             setEntityEvent(object_id, 0);
         end;
@@ -84,8 +80,8 @@ function anim_single_init(id)      -- Ordinary one way animatings
         return ENTITY_TRIGGERING_DEACTIVATED;
     end;
 
-    entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(tick_state == TICK_STOPPED) then
             setEntityAnimState(object_id, ANIM_TYPE_BASE, 0);
             setEntityActivity(object_id, false);
         end;
@@ -94,7 +90,7 @@ function anim_single_init(id)      -- Ordinary one way animatings
     --TODO: move that hack to level script (after loading scripts system backporting?)
     if(version == TR_I) then
         if(id == 12) then
-            entity_funcs[id].onLoop = function(object_id)
+            entity_funcs[id].onLoop = function(object_id, tick_state)
                 local x, y, z = getEntityPos(object_id);
                 if(x > 48896) then
                     x = x - 1024.0 * frame_time;
@@ -134,8 +130,8 @@ function anim_init(id)      -- Ordinary animatings
         return ENTITY_TRIGGERING_DEACTIVATED;
     end;
 
-    entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(tick_state == TICK_STOPPED) then
             setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
             setEntityActivity(object_id, false);
             -- disable entity?
@@ -276,7 +272,7 @@ function boulder_heavy_init(id)
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
 
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityActivity(object_id)) then
             local dy = 2048.0 * frame_time;
             local R = 512;

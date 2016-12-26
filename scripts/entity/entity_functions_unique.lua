@@ -30,7 +30,7 @@ function tallblock_init(id)    -- Tall moving block (TR1)
         return ENTITY_TRIGGERING_NOT_READY;
     end
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         local move_dist = 32.0 * 60.0 * frame_time;
         if(getEntityEvent(object_id) == 0) then 
             move_dist = 0.0 - move_dist;
@@ -76,7 +76,7 @@ function midastouch_init(id)    -- Midas gold touch
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
 
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityDistance(player, object_id) < 1024.0) then
             local lara_anim, frame, count = getEntityAnim(player, ANIM_TYPE_BASE);
             local lara_sector = getEntitySectorIndex(player);
@@ -124,7 +124,7 @@ function damocles_init(id)      -- Sword of Damocles
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         rotateEntity(object_id, rot_speed * frame_time);
         
         if(sameRoom(player, object_id)) then
@@ -178,10 +178,10 @@ function Thor_hummer_init(id)      -- map 5
         return ENTITY_TRIGGERING_DEACTIVATED;
     end;
 
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
 
-        if((tickEntity(object_id) == TICK_STOPPED) and (a <= 1)) then
+        if((tick_state == TICK_STOPPED) and (a <= 1)) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
             setEntityAnim(entity_funcs[object_id].spawned_id, ANIM_TYPE_BASE, 0, 0);
             return;
@@ -223,7 +223,7 @@ function natla_cabin_TR1_init(id)
         return ENTITY_TRIGGERING_ACTIVATED;
     end
 
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityEnability(object_id)) then
             local st = getEntityAnimState(object_id, ANIM_TYPE_BASE);
             if(st == 4) then
@@ -311,7 +311,7 @@ function doorbell_init(id)    -- Lara's Home doorbell (TR2)
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityDistance(player, object_id) < 4096.0) then
             playSound(334, object_id);
             setEntityActivity(object_id, false);
@@ -332,7 +332,7 @@ function heli_rig_TR2_init(id)    -- Helicopter in Offshore Rig (TR2)
         return ENTITY_TRIGGERING_ACTIVATED;
     end
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityLock(object_id)) then
             if(getEntityAnimState(object_id, ANIM_TYPE_BASE) ~= 2) then
                 setEntityAnimState(object_id, ANIM_TYPE_BASE, 2);
@@ -371,7 +371,7 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         local dy = 40.0 * 60.0 * frame_time;
         entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + dy;
         moveEntityLocal(object_id, 0.0, dy, 0.0);
@@ -398,7 +398,7 @@ function crystal_TR3_init(id)   -- "Savegame" crystal (TR3 version)
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, true);
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityDistance(player, object_id) < 512.0) then
             playSound(SOUND_MEDIPACK);
             changeCharacterParam(player, PARAM_HEALTH, 200);
@@ -454,7 +454,7 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         local px,py,pz,ax = getEntityPos(object_id);
         playSound(191, object_id);
         
@@ -608,8 +608,8 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
-    entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(tick_state == TICK_STOPPED) then
             setEntityActivity(object_id, false);
         end;
         
@@ -657,8 +657,10 @@ function plough_init(id)     -- Plough (TR4)
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
     
-    entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(tick_state == TICK_STOPPED) then 
+            setEntityActivity(object_id, false) 
+        end;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)

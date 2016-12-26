@@ -550,7 +550,7 @@ void Game_UpdateAllEntities(struct RedBlackNode_s *x)
         if(ent->state_flags & ENTITY_STATE_ENABLED)
         {
             Entity_ProcessSector(ent);
-            Script_LoopEntity(engine_lua, ent->id);
+            Script_LoopEntity(engine_lua, ent);
         }
         Entity_Frame(ent, engine_frame_time);
         Entity_UpdateRigidBody(ent, ent->character != NULL);

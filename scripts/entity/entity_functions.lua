@@ -71,9 +71,9 @@ function gen_soundsource_init(id)    -- Generic sound source (continous)
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         playSound(entity_funcs[object_id].sound_id, object_id);
-        if(tickEntity(object_id) == TICK_STOPPED) then
+        if(tick_state == TICK_STOPPED) then
             setEntityActivity(object_id, false)
             stopSound(entity_funcs[object_id].sound_id, object_id);
         end;
@@ -97,8 +97,8 @@ function randomized_soundsource_init(id)    -- Randomized sound source
         return swapEntityActivity(object_id);
     end
     
-    entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(tick_state == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
         if((math.random(1000) > (1000 - entity_funcs[object_id].chance)) and (getEntityDistance(player, object_id) < 8192.0)) then
             playSound(entity_funcs[object_id].sound_id, object_id);
         end;
@@ -125,8 +125,8 @@ function propeller_init(id)      -- Generic propeller (TR1-TR2)
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
-    entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then 
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(tick_state == TICK_STOPPED) then 
             setEntityAnimState(object_id, ANIM_TYPE_BASE, 0) 
         end;
     end;

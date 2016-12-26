@@ -74,17 +74,33 @@ size_t Script_GetEntitySaveData(lua_State *lua, int id_entity, char *buf, size_t
 }
 
 
-void Script_LoopEntity(lua_State *lua, int object_id)
+void Script_LoopEntity(lua_State *lua, struct entity_s *ent)
 {
-    entity_p ent = World_GetEntityByID(object_id);
-    if((lua) && (ent->state_flags & ENTITY_STATE_ACTIVE))
+    if(lua && ent && (ent->state_flags & ENTITY_STATE_ACTIVE))
     {
         int top = lua_gettop(lua);
+        int tick_state = TICK_ACTIVE;
+
+        if(ent->timer > 0.0f)
+        {
+            ent->timer -= engine_frame_time;
+            if(ent->timer <= 0.0f)
+            {
+                ent->timer = 0.0f;
+                tick_state = TICK_STOPPED;
+            }
+        }
+        else
+        {
+            tick_state = TICK_IDLE;
+        }
+
         lua_getglobal(lua, "loopEntity");
         if(lua_isfunction(lua, -1))
         {
-            lua_pushinteger(lua, object_id);
-            lua_CallAndLog(lua, 1, 0, 0);
+            lua_pushinteger(lua, ent->id);
+            lua_pushinteger(lua, tick_state);
+            lua_CallAndLog(lua, 2, 0, 0);
         }
         lua_settop(lua, top);
     }

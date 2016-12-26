@@ -27,11 +27,6 @@ extern "C" {
 #include "../character_controller.h"
 
 
-// Entity timer constants
-#define TICK_IDLE           (0)
-#define TICK_STOPPED        (1)
-#define TICK_ACTIVE         (2)
-
 #define LUA_EXPOSE(lua, x) do { lua_pushinteger(lua, x); lua_setglobal(lua, #x); } while(false)
 
 
