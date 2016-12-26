@@ -164,6 +164,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                 case TR_FD_TRIGTYPE_ANTIPAD:
                     action_type = TR_ACTIONTYPE_ANTI;
+                    mask_mode = TRIGGER_OP_AND_INV;
                 case TR_FD_TRIGTYPE_PAD:
                     // Check move type for triggering entity.
                     {
@@ -211,6 +212,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                 case TR_FD_TRIGTYPE_ANTITRIGGER:
                 case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
                     action_type = TR_ACTIONTYPE_ANTI;
+                    mask_mode = TRIGGER_OP_AND_INV;
                     break;
 
                 case TR_FD_TRIGTYPE_MONKEY:

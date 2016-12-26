@@ -101,8 +101,9 @@
 // Activation mask operation can be either XOR (for switch triggers) or OR (for any
 // other types of triggers).
 
-#define TRIGGER_OP_OR  0
-#define TRIGGER_OP_XOR 1
+#define TRIGGER_OP_OR       0
+#define TRIGGER_OP_XOR      1
+#define TRIGGER_OP_AND_INV  2
 
 // Entity activation response
 #define ENTITY_TRIGGERING_ACTIVATED    (0)

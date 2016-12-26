@@ -920,6 +920,7 @@ void Script_LoadConstants(lua_State *lua)
 
         LUA_EXPOSE(lua, TRIGGER_OP_OR);
         LUA_EXPOSE(lua, TRIGGER_OP_XOR);
+        LUA_EXPOSE(lua, TRIGGER_OP_AND_INV);
 
         LUA_EXPOSE(lua, RESP_KILL);
         LUA_EXPOSE(lua, RESP_VERT_COLLIDE);

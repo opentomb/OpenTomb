@@ -1061,9 +1061,13 @@ int World_SetFlipMap(uint32_t flip_index, uint8_t flip_mask, uint8_t flip_operat
     {
         global_world.flip_map[flip_index] ^= flip_mask;
     }
-    else
+    else if(flip_operation == TRIGGER_OP_OR)
     {
         global_world.flip_map[flip_index] |= flip_mask;
+    }
+    else  // TRIGGER_OP_AND
+    {
+        global_world.flip_map[flip_index] &= ~flip_mask;
     }
 
     return 0;
