@@ -62,6 +62,8 @@ void Room_Clear(struct room_s *room)
 
         Physics_DeleteObject(room->content->physics_body);
         room->content->physics_body = NULL;
+        Physics_DeleteObject(room->content->physics_alt_tween);
+        room->content->physics_alt_tween = NULL;
 
         if(room->content->sprites_count)
         {
@@ -166,6 +168,11 @@ void Room_Enable(struct room_s *room)
         Physics_EnableObject(room->content->physics_body);
     }
 
+    if(room->content->physics_alt_tween)
+    {
+        Physics_DisableObject(room->content->physics_alt_tween);
+    }
+
     for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
     {
         if(room->content->static_mesh[i].physics_body != NULL)
@@ -176,6 +183,10 @@ void Room_Enable(struct room_s *room)
 
     for(engine_container_p cont = room->content->containers; cont; cont = cont->next)
     {
+        if(cont->collision_group == COLLISION_NONE)
+        {
+            continue;
+        }
         switch(cont->object_type)
         {
             case OBJECT_ENTITY:
@@ -194,6 +205,11 @@ void Room_Disable(struct room_s *room)
     if(room->content->physics_body)
     {
         Physics_DisableObject(room->content->physics_body);
+    }
+
+    if(room->content->physics_alt_tween)
+    {
+        Physics_DisableObject(room->content->physics_alt_tween);
     }
 
     for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
@@ -242,7 +258,7 @@ int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont)
 {
     engine_container_p previous_cont, current_cont;
 
-    if((cont == NULL) || (room->content->containers == NULL))
+    if(!room || !cont || !room->content->containers)
     {
         return 0;
     }
@@ -273,9 +289,9 @@ int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont)
 }
 
 
-void Room_SwapContent(struct room_s *room1, struct room_s *room2)
+void Room_DoFlip(struct room_s *room1, struct room_s *room2)
 {
-    if(room1 && room2)
+    if(room1 && room2 && (room1 != room2))
     {
         room1->frustum = NULL;
         room2->frustum = NULL;
@@ -354,7 +370,25 @@ void Room_SwapContent(struct room_s *room1, struct room_s *room2)
                 room2->content->static_mesh[i].self->room = room2;
             }
 
-            // fix containers
+            // move movables if it is necessary
+            {
+                room_p base_room = (room1 == room1->real_room) ? room1 : NULL;
+                base_room = (room2 == room2->real_room) ? room2 : room1;
+                if(base_room)
+                {
+                    room_p alt_room = (room1 == base_room) ? room2 : room1;
+                    engine_container_p *ptr = &base_room->content->containers;
+                    engine_container_p base_room_containers = alt_room->content->containers;
+                    alt_room->content->containers = NULL;
+                    Room_Disable(alt_room);
+                    Room_Enable(base_room);                 // enable new collisions
+                    for(; *ptr; ptr = &((*ptr)->next));
+                    *ptr = base_room_containers;            // base room containerrs enability stay as is
+                    alt_room->content->containers = NULL;
+                }
+            }
+
+            // fix containers ownership
             for(engine_container_p cont = room1->content->containers; cont; cont = cont->next)
             {
                 cont->room = room1;
@@ -389,7 +423,7 @@ struct room_sector_s *Room_GetSectorRaw(struct room_s *room, float pos[3])
 }
 
 
-room_sector_p Room_GetSectorXYZ(room_p room, float pos[3])
+struct room_sector_s *Room_GetSectorXYZ(struct room_s *room, float pos[3])
 {
     room_sector_p ret = NULL;
     int x = (int)(pos[0] - room->transform[12]) / 1024;
@@ -427,7 +461,7 @@ room_sector_p Room_GetSectorXYZ(room_p room, float pos[3])
 void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r)
 {
     if(room && r && (r->real_room->id != room->real_room->id) &&
-       !Room_IsInNearRoomsList(room, r) && !Room_IsOverlapped(room, r))
+       !Room_IsInNearRoomsList(room, r) && !Room_IsInOverlappedRoomsList(room, r))
     {
         room->near_room_list[room->near_room_list_size] = r->real_room;
         room->near_room_list_size++;
@@ -437,21 +471,23 @@ void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r)
 
 int Room_IsJoined(struct room_s *r1, struct room_s *r2)
 {
-    r1 = r1->real_room;
-    r2 = r2->real_room;
-    portal_p p = r1->portals;
-    for(uint16_t i = 0; i < r1->portals_count; i++, p++)
+    room_sector_p rs = r1->sectors;
+    for(uint32_t i = 0; i < r1->sectors_count; i++, rs++)
     {
-        if(p->dest_room->id == r2->real_room->id)
+        if((rs->portal_to_room == r2->real_room) ||
+           (rs->room_above == r2->real_room) ||
+           (rs->room_below == r2->real_room))
         {
             return 1;
         }
     }
 
-    p = r2->portals;
-    for(uint16_t i = 0; i < r2->portals_count; i++, p++)
+    rs = r2->sectors;
+    for(uint32_t i = 0; i < r2->sectors_count; i++, rs++)
     {
-        if(p->dest_room->id == r1->real_room->id)
+        if((rs->portal_to_room == r1->real_room) ||
+           (rs->room_above == r1->real_room) ||
+           (rs->room_below == r1->real_room))
         {
             return 1;
         }
@@ -468,14 +504,36 @@ int Room_IsOverlapped(struct room_s *r0, struct room_s *r1)
         return 0;
     }
 
-    if(r0->bb_min[0] >= r1->bb_max[0] || r0->bb_max[0] <= r1->bb_min[0] ||
-       r0->bb_min[1] >= r1->bb_max[1] || r0->bb_max[1] <= r1->bb_min[1] ||
+    const int margin = TR_METERING_SECTORSIZE * 2;
+
+    if(r0->bb_min[0] >= r1->bb_max[0] - margin || r0->bb_max[0] - margin <= r1->bb_min[0] ||
+       r0->bb_min[1] >= r1->bb_max[1] - margin || r0->bb_max[1] - margin <= r1->bb_min[1] ||
        r0->bb_min[2] >= r1->bb_max[2] || r0->bb_max[2] <= r1->bb_min[2])
     {
         return 0;
     }
 
-    return !Room_IsJoined(r0, r1);
+    room_sector_p rs = r0->sectors;
+    for(uint32_t i = 0; i < r0->sectors_count; i++, rs++)
+    {
+        if((rs->room_above == r1->real_room) ||
+           (rs->room_below == r1->real_room))
+        {
+            return 0;
+        }
+    }
+
+    rs = r1->sectors;
+    for(uint32_t i = 0; i < r1->sectors_count; i++, rs++)
+    {
+        if((rs->room_above == r0->real_room) ||
+           (rs->room_below == r0->real_room))
+        {
+            return 0;
+        }
+    }
+
+    return 1;
 }
 
 
@@ -503,6 +561,41 @@ int Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1)
             for(uint16_t i = 0; i < r1->near_room_list_size; i++)
             {
                 if(r1->near_room_list[i]->real_room->id == r0->real_room->id)
+                {
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}
+
+
+int Room_IsInOverlappedRoomsList(struct room_s *r0, struct room_s *r1)
+{
+    if(r0 && r1)
+    {
+        if(r0->id == r1->id)
+        {
+            return 0;
+        }
+
+        if(r1->overlapped_room_list_size >= r0->overlapped_room_list_size)
+        {
+            for(uint16_t i = 0; i < r0->overlapped_room_list_size; i++)
+            {
+                if(r0->overlapped_room_list[i]->real_room->id == r1->real_room->id)
+                {
+                    return 1;
+                }
+            }
+        }
+        else
+        {
+            for(uint16_t i = 0; i < r1->overlapped_room_list_size; i++)
+            {
+                if(r1->overlapped_room_list[i]->real_room->id == r0->real_room->id)
                 {
                     return 1;
                 }
@@ -596,6 +689,23 @@ struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs)
 }
 
 
+struct room_sector_s *Sector_GetPortalSectorTargetReal(struct room_sector_s *rs)
+{
+    if(rs && rs->portal_to_room)
+    {
+        room_p r = rs->portal_to_room->real_room;
+        int ind_x = (rs->pos[0] - r->transform[12 + 0]) / TR_METERING_SECTORSIZE;
+        int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
+        if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
+        {
+            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+        }
+    }
+
+    return rs;
+}
+
+
 struct room_sector_s *Sector_GetLowest(struct room_sector_s *sector)
 {
     for(; sector && sector->room_below; sector = Room_GetSectorRaw(sector->room_below->real_room, sector->pos));
@@ -614,8 +724,8 @@ struct room_sector_s *Sector_GetHighest(struct room_sector_s *sector)
 
 void Sector_HighestFloorCorner(room_sector_p rs, float v[3])
 {
-    float *r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2])?(rs->floor_corners[0]):(rs->floor_corners[1]);
-    float *r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2])?(rs->floor_corners[2]):(rs->floor_corners[3]);
+    float *r1 = (rs->floor_corners[0][2] > rs->floor_corners[1][2]) ? (rs->floor_corners[0]) : (rs->floor_corners[1]);
+    float *r2 = (rs->floor_corners[2][2] > rs->floor_corners[3][2]) ? (rs->floor_corners[2]) : (rs->floor_corners[3]);
 
     if(r1[2] > r2[2])
     {
@@ -630,8 +740,8 @@ void Sector_HighestFloorCorner(room_sector_p rs, float v[3])
 
 void Sector_LowestCeilingCorner(room_sector_p rs, float v[3])
 {
-    float *r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2])?(rs->ceiling_corners[0]):(rs->ceiling_corners[1]);
-    float *r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2])?(rs->ceiling_corners[2]):(rs->ceiling_corners[3]);
+    float *r1 = (rs->ceiling_corners[0][2] > rs->ceiling_corners[1][2]) ? (rs->ceiling_corners[0]) : (rs->ceiling_corners[1]);
+    float *r2 = (rs->ceiling_corners[2][2] > rs->ceiling_corners[3][2]) ? (rs->ceiling_corners[2]) : (rs->ceiling_corners[3]);
 
     if(r1[2] < r2[2])
     {

@@ -109,24 +109,10 @@ function execEntity(callback_id, object_id, activator_id)
     return -1;
 end
 
-function loopEntity(object_id)
-    if((object_id == nil) or (entity_funcs[object_id] == nil) or (entity_funcs[object_id].onLoop == nil)) then return end;
-    entity_funcs[object_id].onLoop(object_id);
-end
-
-function tickEntity(object_id)
-    local timer = getEntityTimer(object_id);
-    if(timer > 0.0) then
-        timer = timer - frame_time;
-        if(timer < 0.0) then timer = 0.0 end;
-        setEntityTimer(object_id, timer);
-        if(timer == 0.0) then
-            return TICK_STOPPED;
-        end;
-    else
-        return TICK_IDLE; -- never return!!!
+function loopEntity(object_id, tick_state)
+    if((object_id ~= nil) and (entity_funcs[object_id] ~= nil) and (entity_funcs[object_id].onLoop ~= nil)) then
+        entity_funcs[object_id].onLoop(object_id, tick_state);
     end;
-    return TICK_ACTIVE;
 end
 
 print("System_scripts.lua loaded");

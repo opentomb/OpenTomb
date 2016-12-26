@@ -44,6 +44,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     float cam_pos[3], cameraFrom[3], cameraTo[3];
     collision_result_t cb;
     entity_p target = World_GetEntityByID(cam_state->target_id);
+    const int16_t filter = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC;
 
     if(target && (cam_state->state == CAMERA_STATE_FIXED))
     {
@@ -92,10 +93,10 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
         float currentAngle = control_states.cam_angles[0] * (M_PI / 180.0f);    //Current is the current cam angle
         float targetAngle  = ent->angles[0] * (M_PI / 180.0f); //Target is the target angle which is the entity's angle itself
         float rotSpeed = 2.0f; //Speed of rotation
-
+        uint16_t current_state = Anim_GetCurrentState(&ent->bf->animations);
         ///@FIXME
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
-        if(ent->bf->animations.current_state == TR_STATE_LARA_REACH)
+        if(current_state == TR_STATE_LARA_REACH)
         {
             if(cam_state->target_dir == TR_CAM_TARG_BACK)
             {
@@ -105,14 +106,14 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
                 cameraTo[2] = cameraFrom[2];
 
                 //If collided we want to go right otherwise stay left
-                if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self))
+                if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self, filter))
                 {
                     cameraTo[0] = cameraFrom[0] + sinf((ent->angles[0] + 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
                     cameraTo[1] = cameraFrom[1] - cosf((ent->angles[0] + 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
                     cameraTo[2] = cameraFrom[2];
 
                     //If collided we want to go to back else right
-                    if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self))
+                    if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self, filter))
                     {
                         cam_state->target_dir = TR_CAM_TARG_BACK;
                     }
@@ -127,7 +128,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
                 }
             }
         }
-        else if(ent->bf->animations.current_state == TR_STATE_LARA_JUMP_BACK)
+        else if(current_state == TR_STATE_LARA_JUMP_BACK)
         {
             cam_state->target_dir = TR_CAM_TARG_FRONT;
         }
@@ -195,7 +196,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     cam_pos[2] += cam_state->entity_offset_z;
     vec3_copy(cameraTo, cam_pos);
 
-    if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self))
+    if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self, filter))
     {
         vec3_add_mul(cam_pos, cb.point, cb.normale, 2.0f);
     }
@@ -208,7 +209,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
         cam_pos[2] += cam_state->entity_offset_x * cam->gl_transform[0 + 2];
         vec3_copy(cameraTo, cam_pos);
 
-        if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self))
+        if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self, filter))
         {
             vec3_add_mul(cam_pos, cb.point, cb.normale, 2.0f);
         }
@@ -234,7 +235,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
         }
         vec3_copy(cameraTo, cam_pos);
 
-        if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self))
+        if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self, filter))
         {
             vec3_add_mul(cam_pos, cb.point, cb.normale, 2.0f);
         }

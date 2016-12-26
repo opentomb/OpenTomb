@@ -6,14 +6,15 @@
 -- setCharacterOption functions.
 --------------------------------------------------------------------------------
 
-PARAM_HEALTH   = 0;
-PARAM_AIR      = 1;
-PARAM_STAMINA  = 2;
-PARAM_WARMTH   = 3;
-PARAM_EXTRA1   = 4;
-PARAM_EXTRA2   = 5;
-PARAM_EXTRA3   = 6;
-PARAM_EXTRA4   = 7;
+--PARAM_HEALTH     = 0;
+--PARAM_AIR        = 1;
+--PARAM_STAMINA    = 2;
+--PARAM_WARMTH     = 3;
+--PARAM_HIT_DAMAGE = 4;
+--PARAM_EXTRA1     = 5;
+--PARAM_EXTRA2     = 6;
+--PARAM_EXTRA3     = 7;
+--PARAM_EXTRA4     = 8;
 
 PARAM_ABSOLUTE_MAX = -1;
 

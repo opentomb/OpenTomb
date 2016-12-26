@@ -11,13 +11,16 @@
 -- [ coll ] flag values:
 
 -- [ coll ] flag values:
--- COLLISION_TYPE_NONE
--- COLLISION_TYPE_STATIC                  -- static object - never moved
--- COLLISION_TYPE_KINEMATIC               -- doors and other moveable statics
--- COLLISION_TYPE_DYNAMIC                 -- hellow full physics interaction
--- COLLISION_TYPE_ACTOR                   -- actor, enemies, NPC, animals
--- COLLISION_TYPE_VEHICLE                 -- car, moto, bike
--- COLLISION_TYPE_GHOST                   -- no fix character position, but works in collision callbacks and interacts with dynamic objects
+-- COLLISION_GROUP_ALL                     
+-- COLLISION_GROUP_STATIC_ROOM                     // room mesh
+-- COLLISION_GROUP_STATIC_OBLECT                   // room static object
+-- COLLISION_GROUP_KINEMATIC                       // doors, blocks, static animated entityes
+-- COLLISION_GROUP_GHOST                           // probe objects
+-- COLLISION_GROUP_TRIGGERS                        // probe objects
+-- COLLISION_GROUP_CHARACTERS                      // Lara, enemies, friends, creatures
+-- COLLISION_GROUP_VEHICLE                         // car, moto, bike
+-- COLLISION_GROUP_BULLETS                         // bullets, rockets, grenades, arrows...
+-- COLLISION_GROUP_DYNAMICS                        // test balls, warious
 
 -- [ shape ] flag values:
 -- COLLISION_SHAPE_BOX
@@ -35,11 +38,11 @@ static_tbl = {};    -- Define static mesh property table.
 
 function getStaticMeshProperties(id)
     if((static_tbl == nil) or (static_tbl[id] == nil)) then
-        return COLLISION_TYPE_STATIC, COLLISION_SHAPE_BOX, nil;
+        return COLLISION_GROUP_STATIC_OBLECT, COLLISION_SHAPE_BOX, nil;
     else
         local coll, shape, hide;
         if(static_tbl[id].hide ~= nil) then hide = static_tbl[id].hide else hide = 0 end;
-        if(static_tbl[id].coll ~= nil) then coll = static_tbl[id].coll else coll = COLLISION_TYPE_NONE end;
+        if(static_tbl[id].coll ~= nil) then coll = static_tbl[id].coll else coll = COLLISION_NONE end;
         if(static_tbl[id].shape ~= nil) then shape = static_tbl[id].shape else shape = COLLISION_SHAPE_BOX end;
         return coll, shape, hide;
     end;

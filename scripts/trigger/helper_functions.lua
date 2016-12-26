@@ -18,13 +18,23 @@ end;
 
 function swapEntityState(object_id, state_1, state_2)
     local current_state = getEntityAnimState(object_id, ANIM_TYPE_BASE);
-    if(current_state == state_1) then 
-        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_2);
-        return ENTITY_TRIGGERING_ACTIVATED;
-    elseif(current_state == state_2) then
-        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_1);
-        return ENTITY_TRIGGERING_DEACTIVATED;
+    local a, f, c, na, nf, ns = getEntityAnim(object_id, ANIM_TYPE_BASE);
+    if(c == 1) then
+        if(current_state == state_1) then 
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_2);
+            return ENTITY_TRIGGERING_ACTIVATED;
+        elseif(current_state == state_2) then
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_1);
+            return ENTITY_TRIGGERING_DEACTIVATED;
+        end;
     else
+        if(ns == state_1) then
+            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_2);
+            return ENTITY_TRIGGERING_ACTIVATED;
+        elseif(ns == state_2) then
+            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_1);
+            return ENTITY_TRIGGERING_DEACTIVATED;
+        end;
         return ENTITY_TRIGGERING_NOT_READY;
     end;
 end;

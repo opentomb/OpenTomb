@@ -240,7 +240,7 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
         float *n = cam->frustum->norm;
         float *v = portal->vertex;
 
-        if(vec3_plane_dist(portal->norm, cam->gl_transform + 12) < -SPLIT_EPSILON)            // non face or degenerate to the line portal
+        if((dest_room == cam->current_room) || vec3_plane_dist(portal->norm, cam->gl_transform + 12) < -SPLIT_EPSILON)            // non face or degenerate to the line portal
         {
             return NULL;
         }
@@ -387,7 +387,7 @@ bool Frustum_IsPolyVisible(struct polygon_s *p, struct frustum_s *frustum, bool 
     vertex_p curr_v, prev_v;
     char ins, outs;
 
-    if(check_backface && (vec3_plane_dist(p->plane, frustum->cam_pos) < 0.0))
+    if(check_backface && ((vec3_plane_dist(p->plane, frustum->cam_pos)) < 0.0f))
     {
         return false;
     }
@@ -661,11 +661,11 @@ bool Frustum_IsOBBVisible(struct obb_s *obb, struct frustum_s *frustum)
     for(int i = 0; i < 6; i++, p++)
     {
         t = vec3_plane_dist(p->plane, frustum->cam_pos);
-        if((t > 0.0) && Frustum_IsPolyVisible(p, frustum, true))
+        if((t >= 0.0f) && Frustum_IsPolyVisible(p, frustum, true))
         {
             return true;
         }
-        if(inside && (t > 0))
+        if(inside && (t > 0.0f))
         {
             inside = false;
         }

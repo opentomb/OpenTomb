@@ -284,6 +284,7 @@ void SSBoneFrame_InitSSAnim(struct ss_animation_s *ss_anim, uint32_t anim_type_i
 
     ss_anim->frame_time = 0.0f;
     ss_anim->next_state = 0;
+    ss_anim->next_state_heavy = -1;
     ss_anim->lerp = 0.0;
     ss_anim->current_animation = 0;
     ss_anim->current_frame = 0;
@@ -313,6 +314,28 @@ void SSBoneFrame_Clear(ss_bone_frame_p bf)
         ss_anim = ss_anim_next;
     }
     bf->animations.next = NULL;
+}
+
+
+void SSBoneFrame_Copy(struct ss_bone_frame_s *dst, struct ss_bone_frame_s *src)
+{
+    if(dst->bone_tag_count == src->bone_tag_count)
+    {
+        vec3_copy(dst->pos, src->pos);
+        vec3_copy(dst->centre, src->centre);
+        vec3_copy(dst->bb_max, src->bb_max);
+        vec3_copy(dst->bb_min, src->bb_min);
+        
+        dst->animations.model = src->animations.model;
+        dst->animations.enabled = src->animations.enabled;
+        dst->animations.current_animation = src->animations.current_animation;
+        dst->animations.current_frame = src->animations.current_frame;
+        dst->animations.next_animation = src->animations.next_animation;
+        dst->animations.next_frame = src->animations.next_frame;
+        dst->animations.lerp = src->animations.lerp;
+        dst->animations.frame_time = src->animations.frame_time;
+        dst->animations.next_state = src->animations.next_state;
+    }
 }
 
 
@@ -711,10 +734,8 @@ void Anim_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame)
         frame = (frame >= 0) ? (frame) : (anim->max_frame - 1 + frame);
         ss_anim->period = 1.0f / 30.0f;
 
-        ss_anim->changing_curr = 0x04;
-        ss_anim->changing_next = 0x04;
+        ss_anim->frame_changing_state = 0x04;
 
-        ss_anim->current_state = anim->state_id;
         ss_anim->next_state = anim->state_id;
 
         ss_anim->next_animation = animation;
@@ -736,14 +757,24 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
     animation_frame_p next_anim = ss_anim->model->animations + ss_anim->next_animation;
     state_change_p stc = Anim_FindStateChangeByID(next_anim, ss_anim->next_state);
     
+    if((next_anim->state_id == ss_anim->next_state_heavy) && (next_anim->next_anim->state_id == ss_anim->next_state_heavy))
+    {
+        ss_anim->next_state_heavy = -1;
+    }
+    
+    if(ss_anim->next_state_heavy >= 0)
+    {
+        state_change_p stc_heavy = Anim_FindStateChangeByID(next_anim, ss_anim->next_state_heavy);
+        stc = (stc_heavy) ? (stc_heavy) : (stc);
+    }
+    
     ss_anim->frame_time = (ss_anim->frame_time >= 0.0f) ? (ss_anim->frame_time) : (0.0f);
     ss_anim->frame_time += time;
     new_frame = ss_anim->frame_time / ss_anim->period;
     dt = ss_anim->frame_time - (float)new_frame * ss_anim->period;
     ss_anim->lerp = dt / ss_anim->period;
     
-    ss_anim->changing_next = 0x00;
-    ss_anim->changing_curr = 0x00;
+    ss_anim->frame_changing_state = 0x00;
     
     /*
      * Flag has a highest priority
@@ -782,10 +813,8 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
                 ss_anim->next_animation = disp->next_anim;
                 ss_anim->next_frame = disp->next_frame;
                 ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
-                ss_anim->current_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
-                ss_anim->next_state = ss_anim->current_state;
-                ss_anim->changing_curr = ss_anim->changing_next;
-                ss_anim->changing_next = 0x03;
+                ss_anim->next_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
+                ss_anim->frame_changing_state = 0x03;
                 return 0x03;
             }
         }
@@ -801,10 +830,8 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
         ss_anim->next_frame = next_anim->next_frame;
         ss_anim->next_animation = next_anim->next_anim->id;
         ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
-        ss_anim->current_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
-        ss_anim->next_state = ss_anim->current_state;
-        ss_anim->changing_curr = ss_anim->changing_next;
-        ss_anim->changing_next = 0x02;
+        ss_anim->next_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
+        ss_anim->frame_changing_state = 0x02;
         return 0x02;
     }
     
@@ -813,8 +840,7 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
         ss_anim->current_animation = ss_anim->next_animation;
         ss_anim->current_frame = ss_anim->next_frame;
         ss_anim->next_frame = new_frame;
-        ss_anim->changing_curr = ss_anim->changing_next;
-        ss_anim->changing_next = 0x01;
+        ss_anim->frame_changing_state = 0x01;
         return 0x01;
     }
     

@@ -86,6 +86,7 @@
 #define MOVE_MONKEYSWING        (9)
 #define MOVE_WALLS_CLIMB        (10)
 #define MOVE_DOZY               (11)
+#define MOVE_FLY                (12)
 
 #define CHARACTER_USE_COMPLEX_COLLISION         (1)
 
@@ -155,6 +156,7 @@ enum CharParameters
     PARAM_AIR,
     PARAM_STAMINA,
     PARAM_WARMTH,
+    PARAM_HIT_DAMAGE,
     PARAM_EXTRA1,
     PARAM_EXTRA2,
     PARAM_EXTRA3,
@@ -310,6 +312,7 @@ typedef struct character_s
 
 void Character_Create(struct entity_s *ent);
 void Character_Clean(struct entity_s *ent);
+void Character_Update(struct entity_s *ent);
 
 void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);
 int  Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height_info_s *nfc);
@@ -338,7 +341,7 @@ int Character_MoveUnderWater(struct entity_s *ent);
 int Character_MoveOnWater(struct entity_s *ent);
 
 int Character_FindTraverse(struct entity_s *ch);
-int Sector_AllowTraverse(struct room_sector_s *rs, float floor, struct engine_container_s *cont);
+int Sector_AllowTraverse(struct room_sector_s *rs, float floor);
 int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj);
 
 void Character_ApplyCommands(struct entity_s *ent);
@@ -349,6 +352,8 @@ int   Character_SetParam(struct entity_s *ent, int parameter, float value);
 int   Character_ChangeParam(struct entity_s *ent, int parameter, float value);
 int   Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value);
 
+int Character_IsTargetAccessible(struct entity_s *character, struct entity_s *target);
+struct entity_s *Character_FindTarget(struct entity_s *ent);
 void  Character_SetTarget(struct entity_s *ent, uint32_t target_id);
 int   Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state);
 

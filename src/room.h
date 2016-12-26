@@ -214,7 +214,8 @@ typedef struct room_content_s
 
     float                       ambient_lighting[3];
     struct base_mesh_s         *mesh;                                           // room's base mesh
-    struct physics_object_s    *physics_body;
+    struct physics_object_s    *physics_body;                                   // static physics data
+    struct physics_object_s    *physics_alt_tween;                              // changable (alt room) tween physics data
 }room_content_t, *room_content_p;
 
 
@@ -257,7 +258,7 @@ void Room_Disable(struct room_s *room);
 int  Room_AddObject(struct room_s *room, struct engine_container_s *cont);
 int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont);
 
-void Room_SwapContent(struct room_s *room1, struct room_s *room2);
+void Room_DoFlip(struct room_s *room1, struct room_s *room2);
 
 struct room_sector_s *Room_GetSectorRaw(struct room_s *room, float pos[3]);
 struct room_sector_s *Room_GetSectorXYZ(struct room_s *room, float pos[3]);
@@ -266,6 +267,7 @@ void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r);
 int  Room_IsJoined(struct room_s *r1, struct room_s *r2);
 int  Room_IsOverlapped(struct room_s *r0, struct room_s *r1);
 int  Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1);
+int  Room_IsInOverlappedRoomsList(struct room_s *r0, struct room_s *r1);
 void Room_MoveActiveItems(struct room_s *room_to, struct room_s *room_from);
 
 // NOTE: Functions which take native TR level structures as argument will have
@@ -274,6 +276,7 @@ void Room_MoveActiveItems(struct room_s *room_to, struct room_s *room_from);
 void Room_GenSpritesBuffer(struct room_s *room);
 
 struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs);
+struct room_sector_s *Sector_GetPortalSectorTargetReal(struct room_sector_s *rs);
 
 struct room_sector_s *Sector_GetLowest(struct room_sector_s *sector);
 struct room_sector_s *Sector_GetHighest(struct room_sector_s *sector);

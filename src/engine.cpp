@@ -25,6 +25,7 @@ extern "C" {
 #include "core/gl_text.h"
 #include "render/camera.h"
 #include "render/render.h"
+#include "script/script.h"
 #include "vt/vt_level.h"
 #include "game.h"
 #include "audio.h"
@@ -36,7 +37,6 @@ extern "C" {
 #include "room.h"
 #include "world.h"
 #include "resource.h"
-#include "script.h"
 #include "engine.h"
 #include "physics.h"
 #include "controls.h"
@@ -76,6 +76,8 @@ engine_container_p Container_Create()
     engine_container_p ret;
 
     ret = (engine_container_p)malloc(sizeof(engine_container_t));
+    ret->collision_group = COLLISION_GROUP_KINEMATIC;
+    ret->collision_mask = COLLISION_MASK_ALL;
     ret->next = NULL;
     ret->object = NULL;
     ret->object_type = 0;
@@ -571,7 +573,7 @@ void Engine_Display()
         Cam_RecalcClipPlanes(&engine_camera);
         // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
 
-        screen_info.debug_view_state %= 4;
+        screen_info.debug_view_state %= 5;
         if(screen_info.debug_view_state)
         {
             ShowDebugInfo();
@@ -934,7 +936,7 @@ void ShowDebugInfo()
                 if(ent && ent->character)
                 {
                     animation_frame_p anim = ent->bf->animations.model->animations + ent->bf->animations.current_animation;
-                    GLText_OutTextXY(30.0f, y += dy, "curr_st = %03d, next_st = %03d", ent->bf->animations.current_state, ent->bf->animations.next_state);
+                    GLText_OutTextXY(30.0f, y += dy, "curr_st = %03d, next_st = %03d", anim->state_id, ent->bf->animations.next_state);
                     GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, curr_frame = %03d, next_anim = %03d, next_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.current_frame, ent->bf->animations.next_animation, ent->bf->animations.next_frame);
                     GLText_OutTextXY(30.0f, y += dy, "anim_next_anim = %03d, anim_next_frame = %03d", anim->next_anim->id, anim->next_frame);
                     GLText_OutTextXY(30.0f, y += dy, "posX = %f, posY = %f, posZ = %f", ent->transform[12], ent->transform[13], ent->transform[14]);
@@ -945,6 +947,11 @@ void ShowDebugInfo()
         case 2:
             {
                 entity_p ent = World_GetPlayer();
+
+                if(engine_camera.current_room)
+                {
+                    GLText_OutTextXY(30.0f, y += dy, "cam_room = (id = %d)", engine_camera.current_room->id);
+                }
                 if(ent && ent->self->room)
                 {
                     GLText_OutTextXY(30.0f, y += dy, "char_pos = (%.1f, %.1f, %.1f)", ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2]);
@@ -995,6 +1002,27 @@ void ShowDebugInfo()
             break;
 
         case 3:
+            {
+                entity_p ent = World_GetPlayer();
+                if(ent && ent->self->room)
+                {
+                    for(engine_container_p cont = ent->self->room->content->containers; cont; cont = cont->next)
+                    {
+                        if(cont->object_type == OBJECT_ENTITY)
+                        {
+                            entity_p e = (entity_p)cont->object;
+                            gl_text_line_p text = renderer.OutTextXYZ(e->transform[12 + 0], e->transform[12 + 1], e->transform[12 + 2], "(entity[0x%X])", e->id);
+                            if(text)
+                            {
+                                text->x_align = GLTEXT_ALIGN_CENTER;
+                            }
+                        }
+                    }
+                }
+            }
+            break;
+
+        case 4:
             if(renderer.dynamicBSP)
             {
                 GLText_OutTextXY(30.0f, y += dy, "input polygons = %07d", renderer.dynamicBSP->GetInputPolygonsCount());

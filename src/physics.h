@@ -39,8 +39,10 @@ typedef struct collision_result_s
 
 typedef struct ghost_shape_s
 {
-    float bb_min[3];
-    float bb_max[3];
+    uint32_t    shape_id;
+    float       bb_min[3];
+    float       bb_max[3];
+    float       offset[3];
 }ghost_shape_t, *ghost_shape_p;
 
 
@@ -60,9 +62,9 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics);
 void Physics_GetGravity(float g[3]);
 void Physics_SetGravity(float g[3]);
 
-int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont);
-int  Physics_RayTestFiltered(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont);
-int  Physics_SphereTest(struct collision_result_s *result, float from[3], float to[3], float R, struct engine_container_s *cont);
+int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont, int16_t filter);
+int  Physics_RayTestFiltered(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont, int16_t filter);
+int  Physics_SphereTest(struct collision_result_s *result, float from[3], float to[3], float R, struct engine_container_s *cont, int16_t filter);
 
 /* Physics object manipulation functions */
 int  Physics_IsBodyesInited(struct physics_data_s *physics);
@@ -72,14 +74,14 @@ void Physics_GetBodyWorldTransform(struct physics_data_s *physics, float tr[16],
 void Physics_SetBodyWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index);
 void Physics_GetGhostWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index);
 void Physics_SetGhostWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index);
-int  Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_t index, float correction[3]);
+int  Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_t index, int16_t filter, float correction[3]);
 
 // Bullet entity rigid body generating.
 void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s *bf);
-void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, struct ghost_shape_s *boxes);
-void Physics_SetGhostCollisionShape(struct physics_data_s *physics, uint16_t index, struct ghost_shape_s *shape_info);
+void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s *bf, struct ghost_shape_s *shape_info);
+void Physics_SetGhostCollisionShape(struct physics_data_s *physics, struct ss_bone_frame_s *bf, uint16_t index, struct ghost_shape_s *shape_info);
 void Physics_GenStaticMeshRigidBody(struct static_mesh_s *smesh);
-void Physics_GenRoomRigidBody(struct room_s *room, struct sector_tween_s *tweens, int num_tweens);
+struct physics_object_s* Physics_GenRoomRigidBody(struct room_s *room, struct room_sector_s *heightmap, uint32_t sectors_count, struct sector_tween_s *tweens, int num_tweens);
 void Physics_SetOwnerObject(struct physics_object_s *obj, struct engine_container_s *self);
 void Physics_DeleteObject(struct physics_object_s *obj);
 void Physics_EnableObject(struct physics_object_s *obj);
@@ -87,11 +89,12 @@ void Physics_DisableObject(struct physics_object_s *obj);
 
 void Physics_EnableCollision(struct physics_data_s *physics);
 void Physics_DisableCollision(struct physics_data_s *physics);
+void Physics_SetCollisionGroup(struct physics_data_s *physics, int16_t group);
 void Physics_SetCollisionScale(struct physics_data_s *physics, float scaling[3]);
 void Physics_SetBodyMass(struct physics_data_s *physics, float mass, uint16_t index);
 void Physics_PushBody(struct physics_data_s *physics, float speed[3], uint16_t index);
 void Physics_SetLinearFactor(struct physics_data_s *physics, float factor[3], uint16_t index);
-struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics);
+struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics, int16_t filter);
 
 
 /* Ragdoll interface */
@@ -147,7 +150,6 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
 // Removes specified hair from entity and clears it from memory.
 void Hair_Delete(struct hair_s *hair);
 
-// Constantly updates some specific parameters to keep hair aligned to entity.
 void Hair_Update(struct hair_s *hair, struct physics_data_s *physics);
 
 int Hair_GetElementsCount(struct hair_s *hair);

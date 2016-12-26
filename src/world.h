@@ -45,6 +45,7 @@ void World_BuildOverlappedRoomsList(struct room_s *room);
 
 int World_SetFlipState(uint32_t flip_index, uint32_t flip_state);
 int World_SetFlipMap(uint32_t flip_index, uint8_t flip_mask, uint8_t flip_operation);
+void World_UpdateFlipCollisions();
 uint32_t World_GetFlipMap(uint32_t flip_index);
 uint32_t World_GetFlipState(uint32_t flip_index);
 

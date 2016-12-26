@@ -177,6 +177,7 @@ more people involved in project development, so someone may be missing from this
 * Saracen: room and static mesh lighting.
 * T4Larson: general stability patches and bugfixing.
 * vobject: nightly builds, maintaining general compiler compatibility.
+* vvs: testing, feedback, bug report.
 * xproger: documentation updates.
 
 Additional contributions from: Ado Croft (extensive testing), E. Popov (TRN caustics shader port),
