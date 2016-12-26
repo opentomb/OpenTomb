@@ -356,7 +356,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                             {
                                 if(action_type == TR_ACTIONTYPE_ANTI)
                                 {
-                                    activation_state = Entity_Deactivate(trig_entity, entity_activator);
+                                    activation_state = Entity_Activate(trig_entity, entity_activator, trigger->mask, mask_mode, trigger->once, 0.0f);
                                 }
                                 else if((activator_sector_status == 0) || (trigger->timer > 0))
                                 {

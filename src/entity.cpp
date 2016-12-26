@@ -1206,7 +1206,7 @@ void Entity_CheckActivators(struct entity_s *ent)
 int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer)
 {
     int activation_state = ENTITY_TRIGGERING_NOT_READY;
-    if((trigger_timer > 0) && (entity_object->timer > 0.0f))
+    if((trigger_timer > 0) && (entity_object->timer > 0.0f) && (trigger_op != TRIGGER_OP_AND_INV))
     {
         entity_object->timer = trigger_timer;                                   // Engage timer.
         return activation_state;
