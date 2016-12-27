@@ -43,6 +43,8 @@ struct room_sector_s *World_GetRoomSector(int room_id, int x, int y);
 void World_BuildNearRoomsList(struct room_s *room);
 void World_BuildOverlappedRoomsList(struct room_s *room);
 
+uint16_t World_GetGlobalFlipState();
+void World_SetGlobalFlipState(int flip_state);
 int World_SetFlipState(uint32_t flip_index, uint32_t flip_state);
 int World_SetFlipMap(uint32_t flip_index, uint8_t flip_mask, uint8_t flip_operation);
 void World_UpdateFlipCollisions();

@@ -55,6 +55,7 @@ extern "C" {
     uint32_t                        flip_count;             // Number of flips
     uint8_t                        *flip_map;               // Flipped room activity array.
     uint8_t                        *flip_state;             // Flipped room state array.
+    uint16_t                        global_flip_state;
 
     bordered_texture_atlas         *tex_atlas;
     uint32_t                        tex_count;              // Number of textures
@@ -145,6 +146,7 @@ void World_Prepare()
     global_world.flip_map = NULL;
     global_world.flip_state = NULL;
     global_world.flip_count = 0;
+    global_world.global_flip_state = 0;
     global_world.textures = NULL;
     global_world.type = 0;
     global_world.entity_tree = NULL;
@@ -315,6 +317,7 @@ void World_Clear()
     if(global_world.flip_count)
     {
         global_world.flip_count = 0;
+        global_world.global_flip_state = 0;
         free(global_world.flip_map);
         free(global_world.flip_state);
         global_world.flip_map = NULL;
@@ -993,6 +996,43 @@ void World_UpdateFlipCollisions()
 }
 
 
+uint16_t World_GetGlobalFlipState()
+{
+    return global_world.global_flip_state;
+}
+
+
+void World_SetGlobalFlipState(int flip_state)
+{
+    room_p current_room = global_world.rooms;
+    flip_state &= 0x00000001;
+    for(uint32_t i = 0; i < global_world.rooms_count; i++, current_room++)
+    {
+        if(current_room->alternate_room_next || current_room->alternate_room_prev)
+        {
+            bool is_cycled = false;
+            for(room_p room_it = current_room->alternate_room_next; room_it; room_it = room_it->alternate_room_next)
+            {
+                if(room_it == current_room)
+                {
+                    is_cycled = true;
+                    break;
+                }
+            }
+            if(current_room->alternate_room_next &&
+               (!is_cycled || (current_room->alternate_room_next != current_room->real_room)) &&
+               (( flip_state && !current_room->is_swapped) ||
+                (!flip_state &&  current_room->is_swapped)))
+            {
+                current_room->is_swapped = !current_room->is_swapped;
+                Room_DoFlip(current_room, current_room->alternate_room_next);
+                global_world.global_flip_state = flip_state;
+            }
+        }
+    }
+}
+
+
 int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
 {
     int ret = 0;
@@ -1030,7 +1070,6 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
                    (( flip_state && !current_room->is_swapped) ||
                     (!flip_state &&  current_room->is_swapped)))
                 {
-
                     current_room->is_swapped = !current_room->is_swapped;
                     Room_DoFlip(current_room, current_room->alternate_room_next);
                     ret = 1;
@@ -1038,6 +1077,7 @@ int World_SetFlipState(uint32_t flip_index, uint32_t flip_state)
             }
         }
         global_world.flip_state[flip_index] = flip_state & 0x01;
+        global_world.global_flip_state = ret && is_global_flip && (flip_state & 0x01);
     }
 
     if(ret)

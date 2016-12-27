@@ -18,6 +18,7 @@ extern "C" {
 #include "render/frustum.h"
 #include "render/render.h"
 #include "script/script.h"
+#include "vt/tr_versions.h"
 #include "engine.h"
 #include "physics.h"
 #include "controls.h"
@@ -354,12 +355,22 @@ int Game_Save(const char* name)
     uint8_t *flip_state;
     uint32_t flip_count;
     World_GetFlipInfo(&flip_map, &flip_state, &flip_count);
-    for(uint32_t i = 0; i < flip_count; i++)
+    if(World_GetVersion() >= TR_IV)
     {
-        fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, flip_map[i]);
-        fprintf(f, "setFlipState(%d, %d);\n", i, flip_state[i]);
+        for(uint32_t i = 0; i < flip_count; i++)
+        {
+            fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, flip_map[i]);
+            fprintf(f, "setFlipState(%d, %d);\n", i, flip_state[i]);
+        }
     }
-
+    else
+    {
+        fprintf(f, "setGlobalFlipState(%d);\n", (int)World_GetGlobalFlipState());
+        for(uint32_t i = 0; i < flip_count; i++)
+        {
+            fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, flip_map[i]);
+        }
+    }
     Save_Entity(&f, World_GetPlayer());    // Save Lara.
 
     RedBlackNode_p root = World_GetEntityTreeRoot();

@@ -607,6 +607,21 @@ int lua_LoadMap(lua_State *lua)
 /*
  * Flipped (alternate) room functions
  */
+int lua_SetGlobalFlipState(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        World_SetGlobalFlipState(lua_tointeger(lua, 1));
+    }
+    else
+    {
+        Con_Warning("setGlobalFlipState: expecting arguments (flip_state)");
+    }
+
+    return 0;
+}
+
+
 int lua_SetFlipState(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
@@ -839,6 +854,7 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
 
     lua_register(lua, "setFlipMap", lua_SetFlipMap);
     lua_register(lua, "getFlipMap", lua_GetFlipMap);
+    lua_register(lua, "setGlobalFlipState", lua_SetGlobalFlipState);
     lua_register(lua, "setFlipState", lua_SetFlipState);
     lua_register(lua, "getFlipState", lua_GetFlipState);
 
