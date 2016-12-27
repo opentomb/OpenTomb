@@ -7,29 +7,29 @@ function door_init(id)   -- NORMAL doors only!
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, true);
     
-    local state_on = 1;
-    local state_off = 0;
+    entity_funcs[id].state_on = 1;
+    entity_funcs[id].state_off = 0;
     local object_mask = getEntityMask(id);
     if(object_mask == 0x1F) then
-        setEntityAnimStateHeavy(id, ANIM_TYPE_BASE, state_on);
+        setEntityAnimStateHeavy(id, ANIM_TYPE_BASE, entity_funcs[id].state_on);
         setEntityTriggerLayout(id, 0x00, 0, 0); -- Reset activation mask and event.
-        state_on = 0;
-        state_off = 1;
+        entity_funcs[id].state_on = 0;
+        entity_funcs[id].state_off = 1;
     end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_on);
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_on);
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_off);
         return ENTITY_TRIGGERING_DEACTIVATED;
     end;
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if((tick_state == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_off);
             setEntityEvent(object_id, 0);
         end;
     end
@@ -157,20 +157,38 @@ function pickup_init(id, item_id)    -- Pick-ups
     setEntityTypeFlag(id, ENTITY_TYPE_PICKABLE);
     setEntityActivationOffset(id, 0.0, 0.0, 0.0, 480.0);
     setEntityActivity(id, false);
+    setEntityAnimFlag(id, ANIM_TYPE_BASE, ANIM_FRAME_LOCK);
+    entity_funcs[id].activator_id = nil;
+    entity_funcs[id].need_set_pos = true;
+
+    entity_funcs[id].onSave = function()
+        if(entity_funcs[id].activator_id ~= nil) then
+            local addr = "\nentity_funcs[" .. id .. "].";
+            local ret  = addr .. "activator_id = " .. entity_funcs[id].activator_id .. ";";
+            if(entity_funcs[id].need_set_pos) then
+                ret = ret .. addr .. "need_set_pos = true;";
+            else
+                ret = ret .. addr .. "need_set_pos = false;";
+            end;
+            return ret;
+        end;
+
+        return "";
+    end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if((item_id == nil) or (object_id == nil)) then
+        if((item_id == nil) or (object_id == nil) or (entity_funcs[object_id].activator_id ~= nil)) then
             return ENTITY_TRIGGERING_NOT_READY;
         end
 
-        setEntityVisibility(object_id, true);
-        local need_set_pos = true;
+        enableEntity(object_id);
+        setEntityActivity(id, false);
         local curr_anim = getEntityAnim(activator_id, ANIM_TYPE_BASE);
 
         if(curr_anim == 103) then                 -- Stay idle
             local dx, dy, dz = getEntityVector(object_id, activator_id);
             if(dz < -256.0) then
-                need_set_pos = false;
+                entity_funcs[object_id].need_set_pos = false;
                 setEntityAnim(activator_id, ANIM_TYPE_BASE, 425, 0); -- Standing pickup, test version
                 --noFixEntityCollision(activator_id);
             else
@@ -186,16 +204,24 @@ function pickup_init(id, item_id)    -- Pick-ups
             return ENTITY_TRIGGERING_NOT_READY;                      -- Disable picking up, if Lara isn't idle.
         end;
 
-        addTask(
-        function()
+        entity_funcs[object_id].activator_id = activator_id;
+        setEntityActivity(object_id, true);
+
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(entity_funcs[object_id].activator_id ~= nil) then
+            local activator_id = entity_funcs[object_id].activator_id;
+
             -- Position corrector
             if(getEntityMoveType(activator_id) == MOVE_UNDERWATER) then
                 if(getEntityDistance(object_id, activator_id) > 128.0) then
-                    moveEntityToEntity(activator_id, object_id, 25.0);
+                    moveEntityToEntity(activator_id, object_id, 25.0 * 60.0 * frame_time);
                 end;
-            elseif(need_set_pos) then
+            elseif(entity_funcs[object_id].need_set_pos) then
                 if(getEntityDistance(object_id, activator_id) > 32.0) then
-                    moveEntityToEntity(activator_id, object_id, 50.0);
+                    moveEntityToEntity(activator_id, object_id, 50.0 * 60.0 * frame_time);
                 end;
             end;
             
@@ -214,11 +240,10 @@ function pickup_init(id, item_id)    -- Pick-ups
 
             addItem(activator_id, item_id);
             disableEntity(object_id);
-            return false;   -- Item successfully picked up, kill the task.
-        end);
-        return ENTITY_TRIGGERING_ACTIVATED;
+            entity_funcs[object_id].activator_id = nil;
+        end;
     end;
-end
+end;
 
 
 function boulder_init(id)

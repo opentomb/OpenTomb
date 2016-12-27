@@ -1224,13 +1224,13 @@ int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
         {
             mask ^= trigger_mask;       // Switch cases
         }
-        else if(trigger_op == TRIGGER_OP_OR)
+        else if(trigger_op == TRIGGER_OP_AND_INV)
+        {
+            mask &= ~trigger_mask;      // anti event
+        }
+        else
         {
             mask |= trigger_mask;
-        }
-        else   // TRIGGER_OP_AND
-        {
-            mask &= ~trigger_mask;
         }
 
         // Full entity mask (11111) is always a reason to activate an entity.
