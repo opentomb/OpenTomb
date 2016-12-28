@@ -609,7 +609,7 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
                 to[1] = from[1];
                 to[2] = ent->transform[12 + 2] - ent->character->max_step_up_height;
                 //renderer.debugDrawer->DrawLine(from, to, red, red);
-                while((from[0] - 4.0f * R * ent->transform[0 + 0] - pos[0]) * ent->transform[0 + 0] + (from[1] - 4.0f *R * ent->transform[0 + 1] - pos[1]) * ent->transform[0 + 1] < 0.0f)
+                while((from[0] - 4.0f * R * ent->transform[0 + 0] - pos[0]) * ent->transform[0 + 0] + (from[1] - 4.0f * R * ent->transform[0 + 1] - pos[1]) * ent->transform[0 + 1] < 0.0f)
                 {
                     if(Physics_SphereTest(&cb, from, to, R, ent->self, COLLISION_FILTER_HEIGHT_TEST))
                     {
@@ -868,9 +868,17 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
     climb->wall_hit = 0x00;
     climb->edge_hit = 0x00;
     climb->edge_obj = NULL;
-    vec3_copy(climb->point, ent->character->climb.point);
 
     if(ent->character->height_info.walls_climb == 0x00)
+    {
+        return;
+    }
+
+    // now we have wall normale in XOY plane. Let us check all flags
+    if(!((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_NORTH) && (ent->transform[4 + 1] >  0.7)) &&
+       !((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_EAST)  && (ent->transform[4 + 0] >  0.7)) &&
+       !((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_SOUTH) && (ent->transform[4 + 1] < -0.7)) &&
+       !((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_WEST)  && (ent->transform[4 + 0] < -0.7)))
     {
         return;
     }
@@ -879,20 +887,28 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
     climb->up[1] = 0.0;
     climb->up[2] = 1.0;
 
-    from[0] = pos[0] + ent->transform[8 + 0] * ent->bf->bb_max[2] - ent->transform[4 + 0] * ent->character->climb_r;
-    from[1] = pos[1] + ent->transform[8 + 1] * ent->bf->bb_max[2] - ent->transform[4 + 1] * ent->character->climb_r;
-    from[2] = pos[2] + ent->transform[8 + 2] * ent->bf->bb_max[2] - ent->transform[4 + 2] * ent->character->climb_r;
+    Character_GetMiddleHandsPos(ent, from);
     vec3_copy(to, from);
-    t = ent->character->forvard_size + ent->bf->bb_max[1];
+    t = ent->character->climb_r * 2.0f;
+    from[0] -= ent->transform[4 + 0] * t;
+    from[1] -= ent->transform[4 + 1] * t;
+
+    t += ent->character->forvard_size;
     to[0] += ent->transform[4 + 0] * t;
     to[1] += ent->transform[4 + 1] * t;
-    to[2] += ent->transform[4 + 2] * t;
 
     if(!Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
     {
+        to[2] =- ent->character->min_step_up_height;
+        Character_CheckClimbability(ent, climb, from, to);
+        if(climb->edge_hit)
+        {
+            pos[2] += climb->edge_point[2] - from[2];
+        }
         return;
     }
 
+    climb->wall_hit = 0x01;
     vec3_copy(climb->point, cb.point);
     vec3_copy(climb->n, cb.normale);
     wn2[0] = climb->n[0];
@@ -904,36 +920,12 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
     climb->t[0] =-wn2[1];
     climb->t[1] = wn2[0];
     climb->t[2] = 0.0;
-    // now we have wall normale in XOY plane. Let us check all flags
-
-    if((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_NORTH) && (wn2[1] < -0.7))
-    {
-        climb->wall_hit = 0x01;                                                    // nW = (0, -1, 0);
-    }
-    if((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_EAST) && (wn2[0] < -0.7))
-    {
-        climb->wall_hit = 0x01;                                                    // nW = (-1, 0, 0);
-    }
-    if((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_SOUTH) && (wn2[1] > 0.7))
-    {
-        climb->wall_hit = 0x01;                                                    // nW = (0, 1, 0);
-    }
-    if((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_WEST) && (wn2[0] > 0.7))
-    {
-        climb->wall_hit = 0x01;                                                    // nW = (1, 0, 0);
-    }
 
     if(climb->wall_hit)
     {
         t = 0.67 * ent->character->Height;
-        from[0] -= ent->transform[8 + 0] * t;
-        from[1] -= ent->transform[8 + 1] * t;
         from[2] -= ent->transform[8 + 2] * t;
-        vec3_copy(to, from);
-        t = ent->character->forvard_size + ent->bf->bb_max[1];
-        to[0] += ent->transform[4 + 0] * t;
-        to[1] += ent->transform[4 + 1] * t;
-        to[2] += ent->transform[4 + 2] * t;
+        to[2] = from[2];
 
         if(Physics_SphereTest(NULL, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
         {
@@ -1503,10 +1495,9 @@ int Character_WallsClimbing(struct entity_s *ent)
     ent->character->resp.vertical_collide = 0x00;
 
     Character_CheckWallsClimbability(ent, climb);
-    ent->character->climb = *climb;
     if(!(climb->wall_hit))
     {
-        ent->character->height_info.walls_climb = 0x00;
+        //ent->character->height_info.walls_climb = 0x00;
         return 2;
     }
 

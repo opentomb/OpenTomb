@@ -1842,8 +1842,15 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     }
                     else if(climb->wall_hit == 0x00)
                     {
-                        ent->move_type = MOVE_FREE_FALLING;
-                        Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+                        if(climb->can_hang)
+                        {
+                            ent->move_type = MOVE_CLIMBING;
+                        }
+                        else
+                        {
+                            ent->move_type = MOVE_FREE_FALLING;
+                            Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+                        }
                     }
                     else
                     {
@@ -1904,7 +1911,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     else if(climb->edge_hit && (climb->next_z_space >= ent->character->Height - LARA_HANG_VERTICAL_EPSILON))
                     {
                         vec3_copy(climb->point, climb->edge_point);
-                        ss_anim->next_state = (cmd->shift)?(TR_STATE_LARA_HANDSTAND):(TR_STATE_LARA_GRABBING);               // climb up
+                        ss_anim->next_state = (cmd->shift) ? (TR_STATE_LARA_HANDSTAND) : (TR_STATE_LARA_GRABBING);               // climb up
                         ss_anim->onEndFrame = ent_to_edge_climb;
                     }
                     else
@@ -1971,7 +1978,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_LADDER_IDLE:
             cmd->rot[0] = 0;
-            ent->move_type = MOVE_WALLS_CLIMB;
             ent->dir_flag = ENT_STAY;
             ent->character->cam_follow_center = 64;
             if(ent->move_type == MOVE_CLIMBING)
@@ -1979,6 +1985,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ss_anim->next_state = TR_STATE_LARA_GRABBING;
                 break;
             }
+            ent->move_type = MOVE_WALLS_CLIMB;
             if(!clean_action)
             {
                 ent->move_type = MOVE_FREE_FALLING;
@@ -1991,14 +1998,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->move[0] == 1)
             {
-                t = LARA_TRY_HANG_WALL_OFFSET;
-                Character_GetMiddleHandsPos(ent, climb_from);
-                climb_from[0] -= ent->character->climb_r * ent->transform[4 + 0];
-                climb_from[1] -= ent->character->climb_r * ent->transform[4 + 1];
-                climb_to[0] = climb_from[0] + t * ent->transform[4 + 0];
-                climb_to[1] = climb_from[1] + t * ent->transform[4 + 1];
-                climb_to[2] = climb_from[2] - ent->character->max_step_up_height;
-                Character_CheckClimbability(ent, climb, climb_from, climb_to);
+                Character_CheckWallsClimbability(ent, climb);
                 if(climb->edge_hit && (climb->next_z_space >= 512.0))
                 {
                     ent->move_type = MOVE_CLIMBING;
@@ -2055,16 +2055,9 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 break;
             }
 
+            Character_CheckWallsClimbability(ent, climb);
             if(clean_action && ent->character->climb.wall_hit)
             {
-                t = LARA_TRY_HANG_WALL_OFFSET;
-                Character_GetMiddleHandsPos(ent, climb_from);
-                climb_from[0] -= ent->character->climb_r * ent->transform[4 + 0];
-                climb_from[1] -= ent->character->climb_r * ent->transform[4 + 1];
-                climb_to[0] = climb_from[0] + t * ent->transform[4 + 0];
-                climb_to[1] = climb_from[1] + t * ent->transform[4 + 1];
-                climb_to[2] = climb_from[2] - ent->character->max_step_up_height;
-                Character_CheckClimbability(ent, climb, climb_from, climb_to);
                 if(climb->edge_hit && (climb->next_z_space >= 512.0))
                 {
                     ent->move_type = MOVE_CLIMBING;
@@ -2073,11 +2066,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 else if((cmd->move[0] <= 0) && (curr_fc->ceiling_hit.hit || (pos[2] + ent->bf->bb_max[2] >= curr_fc->ceiling_hit.point[2])))
                 {
                     ss_anim->next_state = TR_STATE_LARA_LADDER_IDLE;
-                }
-
-                if(curr_fc->ceiling_hit.hit && (pos[2] + ent->bf->bb_max[2] > curr_fc->ceiling_hit.point[2]))
-                {
-                    pos[2] = curr_fc->ceiling_hit.point[2] - ent->bf->bb_max[2];
                 }
             }
             else
