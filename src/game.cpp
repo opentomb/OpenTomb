@@ -309,6 +309,11 @@ void Save_Entity(FILE **f, entity_p ent)
                 ss_anim->anim_ext_flags, ss_anim->targeting_flags);
         }
     }
+
+    if(ent->no_fix_all)
+    {
+        fprintf(*f, "\nnoFixEntityCollision(%d);", ent->id);
+    }
 }
 
 /**

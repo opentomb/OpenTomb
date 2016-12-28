@@ -63,6 +63,8 @@ flipeffects[16].doEffect = function(parameter)
                     return false;
                 end;
             else
+                setFlipState(0x00, 0);
+                flipeffects[16].state = nil;
                 return false;
             end;
             
