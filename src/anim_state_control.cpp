@@ -588,6 +588,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             if((curr_fc->water || curr_fc->quicksand) && curr_fc->floor_hit.hit && (curr_fc->transition_level - curr_fc->floor_hit.point[2] > ent->character->wade_depth))
             {
+                ent->no_fix_all = 0x01;
                 //Stay, directional jumps are not allowed whilst in wade depth
             }
             else if(cmd->move[0] == 1)
@@ -625,6 +626,10 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 {
                     ss_anim->next_state = TR_STATE_LARA_JUMP_RIGHT;             // jump left
                 }
+            }
+            else
+            {
+                ent->no_fix_all = 0x01;
             }
             break;
 
@@ -1630,6 +1635,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
          */
         case TR_STATE_LARA_JUMP_UP:
             cmd->rot[0] = 0;
+            ent->no_fix_all = 0x01;
             if(clean_action && (ent->move_type != MOVE_WALLS_CLIMB) && (ent->move_type != MOVE_CLIMBING))
             {
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE + ent->character->climb_r;
