@@ -148,7 +148,7 @@ function pushable_init(id)
     end;
 
     setEntityCollisionFlags(id, COLLISION_GROUP_STATIC_ROOM, nil, nil);
-    setEntityCollisionGroup(id, COLLISION_GROUP_STATIC_ROOM);
+    setEntityCollisionGroupAndMask(id, COLLISION_GROUP_STATIC_ROOM, COLLISION_MASK_ALL);
 end
 
 
