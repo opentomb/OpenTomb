@@ -1030,6 +1030,7 @@ void World_SetGlobalFlipState(int flip_state)
             }
         }
     }
+    World_UpdateFlipCollisions();
 }
 
 
