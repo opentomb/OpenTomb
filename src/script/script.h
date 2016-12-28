@@ -58,6 +58,7 @@ void Script_LoopEntity(lua_State *lua, struct entity_s *ent);
 int  Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator = -1);
 size_t Script_GetEntitySaveData(lua_State *lua, int id_entity, char *buf, size_t buf_size);
 void Script_DoFlipEffect(lua_State *lua, int id_effect, int param);
+size_t Script_GetFlipEffectsSaveData(lua_State *lua, char *buf, size_t buf_size);
 int  Script_DoTasks(lua_State *lua, float time);
 bool Script_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_call = false);
 

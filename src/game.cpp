@@ -365,6 +365,12 @@ int Game_Save(const char* name)
         fprintf(f, "setGlobalFlipState(%d);\n", (int)World_GetGlobalFlipState());
     }
 
+    char save_buffer[32768] = {0};
+    if(Script_GetFlipEffectsSaveData(engine_lua, save_buffer, sizeof(save_buffer)) > 0)
+    {
+        fprintf(f, "\n%s\n", save_buffer);
+    }
+
     Save_Entity(&f, World_GetPlayer());    // Save Lara.
 
     RedBlackNode_p root = World_GetEntityTreeRoot();

@@ -55,6 +55,25 @@ void Script_DoFlipEffect(lua_State *lua, int id_effect, int param)
 }
 
 
+size_t Script_GetFlipEffectsSaveData(lua_State *lua, char *buf, size_t buf_size)
+{
+    int top = lua_gettop(lua);
+    size_t ret = 0;
+
+    lua_getglobal(lua, "onSaveFlipEffects");
+    if(lua_isfunction(lua, -1))
+    {
+        if((lua_pcall(lua, 0, 1, 0) == LUA_OK) && lua_isstring(lua, -1))
+        {
+            strncpy(buf, lua_tolstring(lua, -1, &ret), buf_size);
+        }
+    }
+    lua_settop(lua, top);
+
+    return ret;
+}
+
+
 int lua_GetLevelVersion(lua_State *lua)
 {
     lua_pushinteger(lua, World_GetVersion());
