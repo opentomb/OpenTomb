@@ -1827,7 +1827,24 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                         ent->dir_flag = ENT_MOVE_FORWARD;
                         if(ss_anim->current_animation != TR_ANIMATION_LARA_LADDER_UP_HANDS)
                         {
-                            Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_LADDER_UP_HANDS, 0);
+                            if(climb->edge_hit && (climb->next_z_space >= 512.0) && ((climb->next_z_space < ent->character->Height - LARA_HANG_VERTICAL_EPSILON) || (cmd->crouch == 1)))
+                            {
+                                vec3_copy(climb->point, climb->edge_point);
+                                ss_anim->next_state = TR_STATE_LARA_CLIMB_TO_CRAWL;     // crawlspace climb
+                                ss_anim->onEndFrame = ent_to_edge_climb;
+                                ent->move_type = MOVE_CLIMBING;
+                            }
+                            else if(climb->edge_hit && (climb->next_z_space >= ent->character->Height - LARA_HANG_VERTICAL_EPSILON))
+                            {
+                                vec3_copy(climb->point, climb->edge_point);
+                                ss_anim->next_state = (cmd->shift) ? (TR_STATE_LARA_HANDSTAND) : (TR_STATE_LARA_GRABBING);               // climb up
+                                ss_anim->onEndFrame = ent_to_edge_climb;
+                                ent->move_type = MOVE_CLIMBING;
+                            }
+                            else
+                            {
+                                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_LADDER_UP_HANDS, 0);
+                            }
                         }
                     }
                     else if(cmd->move[0] ==-1)             // DOWN
@@ -1936,7 +1953,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     vec3_mul_scalar(move, ent->transform + 0, -PENETRATION_TEST_OFFSET);
                     if((Entity_CheckNextPenetration(ent, move, reaction, COLLISION_FILTER_CHARACTER) == 0) || (resp->horizontal_collide == 0x00)) //we only want lara to shimmy when last frame is reached!
                     {
-                        ent->move_type = ENT_MOVE_LEFT;
+                        ent->dir_flag = ENT_MOVE_LEFT;
                         Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_CLIMB_LEFT, 0);
                     }
                     else
@@ -1949,7 +1966,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     vec3_mul_scalar(move, ent->transform + 0, PENETRATION_TEST_OFFSET);
                     if((Entity_CheckNextPenetration(ent, move, reaction, COLLISION_FILTER_CHARACTER) == 0) || (resp->horizontal_collide == 0x00)) //we only want lara to shimmy when last frame is reached!
                     {
-                        ent->move_type = ENT_MOVE_RIGHT;
+                        ent->dir_flag = ENT_MOVE_RIGHT;
                         Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_CLIMB_RIGHT, 0);
                     }
                     else
