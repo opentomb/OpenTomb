@@ -860,8 +860,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
 
 void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s *climb)
 {
-    float from[3], to[3];
-    float wn2[2], t, *pos = ent->transform + 12;
+    float from[3], to[3], t;
     collision_result_t cb;
 
     climb->can_hang = 0x00;
@@ -893,43 +892,37 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
     from[0] -= ent->transform[4 + 0] * t;
     from[1] -= ent->transform[4 + 1] * t;
 
-    t += ent->character->forvard_size;
+    t += ent->character->forvard_size + 64.0f;      //@WORKAROUND! stupid useless anim move command usages!
     to[0] += ent->transform[4 + 0] * t;
     to[1] += ent->transform[4 + 1] * t;
 
-    if(!Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
+    to[2] =- ent->character->min_step_up_height;
+    Character_CheckClimbability(ent, climb, from, to);
+    to[2] =+ ent->character->min_step_up_height;
+    if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
     {
-        to[2] =- ent->character->min_step_up_height;
-        Character_CheckClimbability(ent, climb, from, to);
-        if(climb->edge_hit)
+        float wn2[2] = {cb.normale[0], cb.normale[1]};
+
+        climb->wall_hit = 0x01;
+        vec3_copy(climb->point, cb.point);
+        vec3_copy(climb->n, cb.normale);
+        t = sqrt(wn2[0] * wn2[0] + wn2[1] * wn2[1]);
+        wn2[0] /= t;
+        wn2[0] /= t;
+
+        climb->t[0] =-wn2[1];
+        climb->t[1] = wn2[0];
+        climb->t[2] = 0.0;
+
+        if(climb->wall_hit)
         {
-            pos[2] += climb->edge_point[2] - from[2];
-        }
-        return;
-    }
+            from[2] -= 0.67 * ent->character->Height;
+            to[2] = from[2];
 
-    climb->wall_hit = 0x01;
-    vec3_copy(climb->point, cb.point);
-    vec3_copy(climb->n, cb.normale);
-    wn2[0] = climb->n[0];
-    wn2[1] = climb->n[1];
-    t = sqrt(wn2[0] * wn2[0] + wn2[1] * wn2[1]);
-    wn2[0] /= t;
-    wn2[0] /= t;
-
-    climb->t[0] =-wn2[1];
-    climb->t[1] = wn2[0];
-    climb->t[2] = 0.0;
-
-    if(climb->wall_hit)
-    {
-        t = 0.67 * ent->character->Height;
-        from[2] -= ent->transform[8 + 2] * t;
-        to[2] = from[2];
-
-        if(Physics_SphereTest(NULL, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
-        {
-            climb->wall_hit = 0x02;
+            if(Physics_SphereTest(NULL, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
+            {
+                climb->wall_hit = 0x02;
+            }
         }
     }
 }
@@ -1495,13 +1488,17 @@ int Character_WallsClimbing(struct entity_s *ent)
     ent->character->resp.vertical_collide = 0x00;
 
     Character_CheckWallsClimbability(ent, climb);
-    if(!(climb->wall_hit))
+    Character_GetMiddleHandsPos(ent, move);
+    if(!climb->wall_hit || (climb->edge_hit && (climb->edge_point[2] < move[2])))
     {
-        //ent->character->height_info.walls_climb = 0x00;
+        if(climb->edge_hit && (ent->dir_flag != ENT_MOVE_BACKWARD))
+        {
+            pos[2] += climb->edge_point[2] - move[2];
+        }
         return 2;
     }
 
-    ent->angles[0] = 180.0 * atan2f(climb->n[0], -climb->n[1]) / M_PI;
+    ent->angles[0] = 180.0f * atan2f(climb->n[0], -climb->n[1]) / M_PI;
     Entity_UpdateTransform(ent);
     pos[0] = climb->point[0] - ent->transform[4 + 0] * ent->bf->bb_max[1];
     pos[1] = climb->point[1] - ent->transform[4 + 1] * ent->bf->bb_max[1];
@@ -1527,7 +1524,7 @@ int Character_WallsClimbing(struct entity_s *ent)
         vec3_set_zero(move);
     }
     t = vec3_abs(move);
-    if(t > 0.01)
+    if(t > 0.01f)
     {
         move[0] /= t;
         move[1] /= t;

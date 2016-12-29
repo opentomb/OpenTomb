@@ -1808,7 +1808,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_CLIMB_TO_CRAWL:
             cmd->rot[0] = 0;
             ent->no_fix_all = 0x01;
-            ss_anim->onEndFrame = ent_set_on_floor_after_climb;;
+            ss_anim->onEndFrame = ent_set_on_floor_after_climb;
             break;
 
         case TR_STATE_LARA_HANG:
@@ -1824,11 +1824,19 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     }
                     else if(cmd->move[0] == 1)             // UP
                     {
-                        Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_LADDER_UP_HANDS, 0);
+                        ent->dir_flag = ENT_MOVE_FORWARD;
+                        if(ss_anim->current_animation != TR_ANIMATION_LARA_LADDER_UP_HANDS)
+                        {
+                            Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_LADDER_UP_HANDS, 0);
+                        }
                     }
                     else if(cmd->move[0] ==-1)             // DOWN
                     {
-                        Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_LADDER_DOWN_HANDS, 0);
+                        ent->dir_flag = ENT_MOVE_BACKWARD;
+                        if(ss_anim->current_animation != TR_ANIMATION_LARA_LADDER_DOWN_HANDS)
+                        {
+                            Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_LADDER_DOWN_HANDS, 0);
+                        }
                     }
                     else if(cmd->move[1] == 1)
                     {
@@ -1849,18 +1857,12 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                         else
                         {
                             ent->move_type = MOVE_FREE_FALLING;
-                            Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
                         }
-                    }
-                    else
-                    {
-                        ss_anim->anim_frame_flags = ANIM_LOOP_LAST_FRAME;       // disable shake
                     }
                 }
                 else
                 {
                     ent->move_type = MOVE_FREE_FALLING;
-                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_TRY_HANG_VERTICAL, 0); // fall down
                 }
                 break;
             }
@@ -2049,22 +2051,18 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_LADDER_UP:
             ent->character->cam_follow_center = 64;
-            if(ent->move_type == MOVE_CLIMBING)
+            if((ent->move_type == MOVE_CLIMBING) || (cmd->move[0] <= 0) ||
+               ((curr_fc->ceiling_hit.hit && (pos[2] + ent->bf->bb_max[2] >= curr_fc->ceiling_hit.point[2]))))
             {
                 ss_anim->next_state = TR_STATE_LARA_LADDER_IDLE;
                 break;
             }
 
-            Character_CheckWallsClimbability(ent, climb);
             if(clean_action && ent->character->climb.wall_hit)
             {
                 if(climb->edge_hit && (climb->next_z_space >= 512.0))
                 {
                     ent->move_type = MOVE_CLIMBING;
-                    ss_anim->next_state = TR_STATE_LARA_LADDER_IDLE;
-                }
-                else if((cmd->move[0] <= 0) && (curr_fc->ceiling_hit.hit || (pos[2] + ent->bf->bb_max[2] >= curr_fc->ceiling_hit.point[2])))
-                {
                     ss_anim->next_state = TR_STATE_LARA_LADDER_IDLE;
                 }
             }
@@ -2077,6 +2075,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_LADDER_DOWN:
             ent->character->cam_follow_center = 64;
+            ent->move_type = MOVE_WALLS_CLIMB;
             if(clean_action && ent->character->climb.wall_hit && (cmd->move[1] < 0))
             {
                 if(ent->character->climb.wall_hit != 0x02)
