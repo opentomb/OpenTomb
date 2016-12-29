@@ -2107,8 +2107,15 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 if(!ent->character->climb.wall_hit)
                 {
-                    ent->move_type = MOVE_FREE_FALLING;
-                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+                    if(ent->character->climb.edge_hit && ent->character->climb.can_hang)
+                    {
+                        ent->move_type = MOVE_CLIMBING;
+                    }
+                    else
+                    {
+                        ent->move_type = MOVE_FREE_FALLING;
+                        Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+                    }
                 }
             }
             else
@@ -2175,8 +2182,15 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 if(!ent->character->climb.wall_hit)
                 {
-                    ent->move_type = MOVE_FREE_FALLING;
-                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+                    if(ent->character->climb.edge_hit && ent->character->climb.can_hang)
+                    {
+                        ent->move_type = MOVE_CLIMBING;
+                    }
+                    else
+                    {
+                        ent->move_type = MOVE_FREE_FALLING;
+                        Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STOP_HANG_VERTICAL, 0); // fall down
+                    }
                 }
             }
             else
