@@ -896,9 +896,9 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
     to[0] += ent->transform[4 + 0] * t;
     to[1] += ent->transform[4 + 1] * t;
 
-    to[2] =- ent->character->min_step_up_height;
+    to[2] -= ent->character->min_step_up_height;
     Character_CheckClimbability(ent, climb, from, to);
-    to[2] =+ ent->character->min_step_up_height;
+    to[2] += ent->character->min_step_up_height;
     if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
     {
         float wn2[2] = {cb.normale[0], cb.normale[1]};
@@ -1500,8 +1500,8 @@ int Character_WallsClimbing(struct entity_s *ent)
 
     ent->angles[0] = atan2f(climb->n[0], -climb->n[1]) * 180.0f / M_PI;
     Entity_UpdateTransform(ent);
-    pos[0] = climb->point[0] - ent->transform[4 + 0] * ent->bf->bb_max[1];
-    pos[1] = climb->point[1] - ent->transform[4 + 1] * ent->bf->bb_max[1];
+    pos[0] = climb->point[0] + climb->n[0] * ent->bf->bb_max[1];
+    pos[1] = climb->point[1] + climb->n[1] * ent->bf->bb_max[1];
 
     if(ent->dir_flag == ENT_MOVE_RIGHT)
     {
