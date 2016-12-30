@@ -230,6 +230,8 @@ typedef struct physics_data_s
     uint16_t                            bt_joint_count;         // Ragdoll joints
     btTypedConstraint                 **bt_joints;              // Ragdoll joints
 
+    int16_t                             collision_group;
+    int16_t                             collision_mask;
     struct engine_container_s          *cont;
 }physics_data_t, *physics_data_p;
 
@@ -440,6 +442,8 @@ struct physics_data_s *Physics_CreatePhysicsData(struct engine_container_s *cont
     ret->manifoldArray = NULL;
     ret->ghosts_info = NULL;
     ret->ghost_objects = NULL;
+    ret->collision_group = btBroadphaseProxy::KinematicFilter;
+    ret->collision_mask = btBroadphaseProxy::AllFilter;
     ret->cont = cont;
 
     return ret;
@@ -1563,7 +1567,7 @@ void Physics_EnableCollision(struct physics_data_s *physics)
             btRigidBody *b = physics->bt_body[i];
             if(b && !b->isInWorld())
             {
-                bt_engine_dynamicsWorld->addRigidBody(b);
+                bt_engine_dynamicsWorld->addRigidBody(b, physics->collision_group, physics->collision_mask);
             }
             if(physics->ghost_objects && physics->ghost_objects[i] &&
                (physics->ghosts_info[i].shape_id != COLLISION_NONE) &&
@@ -1598,21 +1602,29 @@ void Physics_DisableCollision(struct physics_data_s *physics)
 }
 
 
-void Physics_SetCollisionGroup(struct physics_data_s *physics, int16_t group)
+void Physics_SetCollisionGroupAndMask(struct physics_data_s *physics, int16_t group, int16_t mask)
 {
     if(physics->bt_body != NULL)
     {
-        int16_t bt_group = (group & (COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_STATIC_ROOM)) ? (btBroadphaseProxy::StaticFilter) : 0x0000;
-        bt_group |= (group & COLLISION_GROUP_KINEMATIC) ? (btBroadphaseProxy::KinematicFilter) : 0x0000;
-        bt_group |= (group & (COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_VEHICLE)) ? (btBroadphaseProxy::CharacterFilter) : 0x0000;
-        bt_group |= (group & COLLISION_GROUP_DYNAMICS) ? (btBroadphaseProxy::DefaultFilter) : 0x0000;
+        physics->collision_group = (group & (COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_STATIC_ROOM)) ? (btBroadphaseProxy::StaticFilter) : 0x0000;
+        physics->collision_group |= (group & COLLISION_GROUP_KINEMATIC) ? (btBroadphaseProxy::KinematicFilter) : 0x0000;
+        physics->collision_group |= (group & (COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_VEHICLE)) ? (btBroadphaseProxy::CharacterFilter) : 0x0000;
+        physics->collision_group |= (group & COLLISION_GROUP_DYNAMICS) ? (btBroadphaseProxy::DefaultFilter) : 0x0000;
+
+        physics->collision_mask = btBroadphaseProxy::SensorTrigger;
+        physics->collision_mask |= (mask & (COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_STATIC_ROOM)) ? (btBroadphaseProxy::StaticFilter) : 0x0000;
+        physics->collision_mask |= (mask & COLLISION_GROUP_KINEMATIC) ? (btBroadphaseProxy::KinematicFilter) : 0x0000;
+        physics->collision_mask |= (mask & (COLLISION_GROUP_CHARACTERS | COLLISION_GROUP_VEHICLE)) ? (btBroadphaseProxy::CharacterFilter) : 0x0000;
+        physics->collision_mask |= (mask & COLLISION_GROUP_DYNAMICS) ? (btBroadphaseProxy::DefaultFilter) : 0x0000;
+        physics->collision_mask = (mask == COLLISION_MASK_ALL) ? (btBroadphaseProxy::AllFilter) : physics->collision_mask;
 
         for(uint32_t i = 0; i < physics->objects_count; i++)
         {
             btRigidBody *b = physics->bt_body[i];
             if(b && b->getBroadphaseHandle())
             {
-                b->getBroadphaseHandle()->m_collisionFilterGroup = bt_group;
+                b->getBroadphaseHandle()->m_collisionFilterGroup = physics->collision_group;
+                b->getBroadphaseHandle()->m_collisionFilterMask = physics->collision_mask;
             }
         }
     }

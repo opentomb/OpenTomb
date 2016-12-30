@@ -680,7 +680,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
             switch(command->id)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
-                    if(ss_anim->frame_changing_state >= 0x02)                          // This command executes ONLY at the end of animation.
+                    if(ss_anim->frame_changing_state >= 0x02)                   // This command executes ONLY at the end of animation.
                     {
                         float tr[3];
                         entity->no_fix_all = 0x01;
@@ -1224,13 +1224,13 @@ int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_act
         {
             mask ^= trigger_mask;       // Switch cases
         }
-        else if(trigger_op == TRIGGER_OP_OR)
+        else if(trigger_op == TRIGGER_OP_AND_INV)
+        {
+            mask &= ~trigger_mask;      // anti event
+        }
+        else
         {
             mask |= trigger_mask;
-        }
-        else   // TRIGGER_OP_AND
-        {
-            mask &= ~trigger_mask;
         }
 
         // Full entity mask (11111) is always a reason to activate an entity.

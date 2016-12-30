@@ -55,6 +55,25 @@ void Script_DoFlipEffect(lua_State *lua, int id_effect, int param)
 }
 
 
+size_t Script_GetFlipEffectsSaveData(lua_State *lua, char *buf, size_t buf_size)
+{
+    int top = lua_gettop(lua);
+    size_t ret = 0;
+
+    lua_getglobal(lua, "onSaveFlipEffects");
+    if(lua_isfunction(lua, -1))
+    {
+        if((lua_pcall(lua, 0, 1, 0) == LUA_OK) && lua_isstring(lua, -1))
+        {
+            strncpy(buf, lua_tolstring(lua, -1, &ret), buf_size);
+        }
+    }
+    lua_settop(lua, top);
+
+    return ret;
+}
+
+
 int lua_GetLevelVersion(lua_State *lua)
 {
     lua_pushinteger(lua, World_GetVersion());
@@ -607,6 +626,21 @@ int lua_LoadMap(lua_State *lua)
 /*
  * Flipped (alternate) room functions
  */
+int lua_SetGlobalFlipState(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        World_SetGlobalFlipState(lua_tointeger(lua, 1));
+    }
+    else
+    {
+        Con_Warning("setGlobalFlipState: expecting arguments (flip_state)");
+    }
+
+    return 0;
+}
+
+
 int lua_SetFlipState(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
@@ -839,6 +873,7 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
 
     lua_register(lua, "setFlipMap", lua_SetFlipMap);
     lua_register(lua, "getFlipMap", lua_GetFlipMap);
+    lua_register(lua, "setGlobalFlipState", lua_SetGlobalFlipState);
     lua_register(lua, "setFlipState", lua_SetFlipState);
     lua_register(lua, "getFlipState", lua_GetFlipState);
 

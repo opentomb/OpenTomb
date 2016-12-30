@@ -18,6 +18,7 @@ extern "C" {
 #include "render/frustum.h"
 #include "render/render.h"
 #include "script/script.h"
+#include "vt/tr_versions.h"
 #include "engine.h"
 #include "physics.h"
 #include "controls.h"
@@ -308,6 +309,11 @@ void Save_Entity(FILE **f, entity_p ent)
                 ss_anim->anim_ext_flags, ss_anim->targeting_flags);
         }
     }
+
+    if(ent->no_fix_all)
+    {
+        fprintf(*f, "\nnoFixEntityCollision(%d);", ent->id);
+    }
 }
 
 /**
@@ -358,6 +364,16 @@ int Game_Save(const char* name)
     {
         fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, flip_map[i]);
         fprintf(f, "setFlipState(%d, %d);\n", i, flip_state[i]);
+    }
+    if(World_GetVersion() < TR_IV)
+    {
+        fprintf(f, "setGlobalFlipState(%d);\n", (int)World_GetGlobalFlipState());
+    }
+
+    char save_buffer[32768] = {0};
+    if(Script_GetFlipEffectsSaveData(engine_lua, save_buffer, sizeof(save_buffer)) > 0)
+    {
+        fprintf(f, "\n%s\n", save_buffer);
     }
 
     Save_Entity(&f, World_GetPlayer());    // Save Lara.

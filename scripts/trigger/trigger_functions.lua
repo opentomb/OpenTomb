@@ -14,12 +14,23 @@ dofile(base_path .. "scripts/trigger/flipeffects.lua")  -- Initialize flipeffect
 -- Does specified flipeffect.
 
 function doFlipEffect(effect_index, extra_parameter) -- extra parameter is usually the timer field
-    print("flip effect[" .. effect_index .. "](" .. extra_parameter .. ")");
-    if(flipeffects[effect_index] ~= nil) then
-        return flipeffects[effect_index](parameter);
+    print("flip effect[" .. effect_index .. "]doEffect(" .. extra_parameter .. ")");
+    if((flipeffects[effect_index] ~= nil) and (flipeffects[effect_index].doEffect ~= nil)) then
+        return flipeffects[effect_index].doEffect(parameter);
     else
         return nil; -- Add hardcoded flipeffect routine here
     end;
+end
+
+
+function onSaveFlipEffects()
+    local ret = "-- save flip effects";
+    for k, v in pairs(flipeffects) do
+        if(v.saveEffect ~= nil) then
+            ret = ret .. v.saveEffect();
+        end;
+    end;
+    return ret;
 end
 
 
