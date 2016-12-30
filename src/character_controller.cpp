@@ -908,11 +908,11 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
         vec3_copy(climb->n, cb.normale);
         t = sqrt(wn2[0] * wn2[0] + wn2[1] * wn2[1]);
         wn2[0] /= t;
-        wn2[0] /= t;
+        wn2[1] /= t;
 
         climb->t[0] =-wn2[1];
         climb->t[1] = wn2[0];
-        climb->t[2] = 0.0;
+        climb->t[2] = 0.0f;
 
         if(climb->wall_hit)
         {
@@ -1498,46 +1498,35 @@ int Character_WallsClimbing(struct entity_s *ent)
         return 2;
     }
 
-    ent->angles[0] = 180.0f * atan2f(climb->n[0], -climb->n[1]) / M_PI;
+    ent->angles[0] = atan2f(climb->n[0], -climb->n[1]) * 180.0f / M_PI;
     Entity_UpdateTransform(ent);
     pos[0] = climb->point[0] - ent->transform[4 + 0] * ent->bf->bb_max[1];
     pos[1] = climb->point[1] - ent->transform[4 + 1] * ent->bf->bb_max[1];
 
-    if(ent->dir_flag == ENT_MOVE_FORWARD)
-    {
-        vec3_copy(move, climb->up);
-    }
-    else if(ent->dir_flag == ENT_MOVE_BACKWARD)
-    {
-        vec3_copy_inv(move, climb->up);
-    }
-    else if(ent->dir_flag == ENT_MOVE_RIGHT)
+    if(ent->dir_flag == ENT_MOVE_RIGHT)
     {
         vec3_copy(move, climb->t);
+        t = ent->anim_linear_speed * ent->character->linear_speed_mult;
     }
     else if(ent->dir_flag == ENT_MOVE_LEFT)
     {
         vec3_copy_inv(move, climb->t);
+        t = ent->anim_linear_speed * ent->character->linear_speed_mult;
     }
     else
     {
         vec3_set_zero(move);
+        t = 0.0f;
     }
-    t = vec3_abs(move);
-    if(t > 0.01f)
+
+    if(t != 0.0f)
     {
-        move[0] /= t;
-        move[1] /= t;
-        move[2] /= t;
+        vec3_mul_scalar(ent->speed, move, t);
+        vec3_mul_scalar(move, ent->speed, engine_frame_time);
+        vec3_add(pos, pos, move);
+        Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);          // get horizontal collide
     }
 
-    t = ent->anim_linear_speed * ent->character->linear_speed_mult;
-    vec3_mul_scalar(ent->speed, move, t);
-    vec3_mul_scalar(move, ent->speed, engine_frame_time);
-
-    Entity_GhostUpdate(ent);
-    vec3_add(pos, pos, move);
-    Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
     Entity_UpdateRoomPos(ent);
 
     return 1;
