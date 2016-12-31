@@ -1738,32 +1738,48 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 break;
             }
 
-            if(clean_action && (ent->move_type == MOVE_FREE_FALLING))
+            if(clean_action)
             {
-                t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
-                Character_GetMiddleHandsPos(ent, climb_from);
-                climb_from[0] -= ent->character->climb_r * ent->transform[4 + 0];
-                climb_from[1] -= ent->character->climb_r * ent->transform[4 + 1];
-                climb_from[2] += ent->character->climb_r + engine_frame_time * ent->speed[2];
-                climb_to[0] = climb_from[0] + t * ent->transform[4 + 0];
-                climb_to[1] = climb_from[1] + t * ent->transform[4 + 1];
-                climb_to[2] = climb_from[2] - ent->character->Height;
-                Character_CheckClimbability(ent, climb, climb_from, climb_to);  //global_offset, &next_fc, ent->character->Height);
-                if(climb->edge_hit && climb->can_hang)
+                if(ent->move_type == MOVE_FREE_FALLING)
                 {
-                    vec3_copy(climb->point, climb->edge_point);
-                    ent->angles[0] = climb->edge_z_ang;
-                    Entity_UpdateTransform(ent);
-                    ent->move_type = MOVE_CLIMBING;                             // hang on
-                    vec3_set_zero(ent->speed);
-                }
+                    t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
+                    Character_GetMiddleHandsPos(ent, climb_from);
+                    climb_from[0] -= ent->character->climb_r * ent->transform[4 + 0];
+                    climb_from[1] -= ent->character->climb_r * ent->transform[4 + 1];
+                    climb_from[2] += ent->character->climb_r + engine_frame_time * ent->speed[2];
+                    climb_to[0] = climb_from[0] + t * ent->transform[4 + 0];
+                    climb_to[1] = climb_from[1] + t * ent->transform[4 + 1];
+                    climb_to[2] = climb_from[2] - ent->character->Height;
+                    Character_CheckClimbability(ent, climb, climb_from, climb_to);  //global_offset, &next_fc, ent->character->Height);
+                    if(climb->edge_hit && climb->can_hang)
+                    {
+                        vec3_copy(climb->point, climb->edge_point);
+                        ent->angles[0] = climb->edge_z_ang;
+                        Entity_UpdateTransform(ent);
+                        ent->move_type = MOVE_CLIMBING;                             // hang on
+                        vec3_set_zero(ent->speed);
+                    }
 
-                // If Lara is moving backwards off the ledge we want to move Lara slightly forwards
-                // depending on the current angle.
-                if((ent->dir_flag == ENT_MOVE_BACKWARD) && (ent->move_type == MOVE_CLIMBING))
+                    // If Lara is moving backwards off the ledge we want to move Lara slightly forwards
+                    // depending on the current angle.
+                    if((ent->dir_flag == ENT_MOVE_BACKWARD) && (ent->move_type == MOVE_CLIMBING))
+                    {
+                        pos[0] = climb->point[0] - ent->transform[4 + 0] * (ent->character->forvard_size + 16.0);
+                        pos[1] = climb->point[1] - ent->transform[4 + 1] * (ent->character->forvard_size + 16.0);
+                    }
+                }
+                if(ent->move_type == MOVE_FREE_FALLING)
                 {
-                    pos[0] = climb->point[0] - ent->transform[4 + 0] * (ent->character->forvard_size + 16.0);
-                    pos[1] = climb->point[1] - ent->transform[4 + 1] * (ent->character->forvard_size + 16.0);
+                    Character_CheckWallsClimbability(ent, climb);
+                    if(climb->wall_hit)
+                    {
+                        ent->move_type = MOVE_WALLS_CLIMB;
+                        ss_anim->next_state = TR_STATE_LARA_HANG;
+                    }
+                }
+                else if(ent->move_type == MOVE_WALLS_CLIMB)
+                {
+                    ss_anim->next_state = TR_STATE_LARA_HANG;
                 }
             }
 
@@ -1858,8 +1874,14 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                             }
                         }
                     }
-                    else if(cmd->move[0] ==-1)             // DOWN
+                    else if(cmd->move[0] ==-1)                                  // DOWN
                     {
+                        if(ent->character->height_info.floor_hit.hit && (ent->transform[12 + 2] < ent->character->height_info.floor_hit.point[2] + ent->character->max_step_up_height))
+                        {
+                            Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
+                            ent->move_type = MOVE_FREE_FALLING;
+                            break;
+                        }
                         ent->dir_flag = ENT_MOVE_BACKWARD;
                         if(ss_anim->current_animation != TR_ANIMATION_LARA_LADDER_DOWN_HANDS)
                         {
@@ -2055,6 +2077,12 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(cmd->move[0] == -1)
             {
                 ss_anim->next_state = TR_STATE_LARA_LADDER_DOWN;
+                if(ent->character->height_info.floor_hit.hit && (ent->transform[12 + 2] < ent->character->height_info.floor_hit.point[2] + ent->character->max_step_up_height))
+                {
+                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_STATE_LARA_FALL_BACKWARD, 0);
+                    ent->move_type = MOVE_FREE_FALLING;
+                    break;
+                }
             }
             else if(cmd->move[1] == 1)
             {
@@ -2119,6 +2147,12 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->move_type = MOVE_WALLS_CLIMB;
             if(clean_action && ent->character->climb.wall_hit && (cmd->move[1] < 0))
             {
+                if(ent->character->height_info.floor_hit.hit && (ent->transform[12 + 2] < ent->character->height_info.floor_hit.point[2] + 256.0f))
+                {
+                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_STATE_LARA_FALL_BACKWARD, 0);
+                    ent->move_type = MOVE_FREE_FALLING;
+                    break;
+                }
                 if(ent->character->climb.wall_hit != 0x02)
                 {
                     ss_anim->next_state = TR_STATE_LARA_LADDER_IDLE;
