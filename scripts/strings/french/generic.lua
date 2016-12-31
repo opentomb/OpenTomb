@@ -1,4 +1,4 @@
--- OPENTOMB GENERIC STRINGS - ENGLISH LANGUAGE
+-- OPENTOMB GENERIC STRINGS - FRENCH LANGUAGE
 -- by Lwmte, Jan 2015
 -- French Translation by: Joey79100 and zdimension.
 -- Translation Version: 1.1.0.0 (January 9th, 2016)
