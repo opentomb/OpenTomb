@@ -1,7 +1,7 @@
 -- OPENTOMB GENERIC STRINGS - ENGLISH LANGUAGE
 -- by Lwmte, Jan 2015
--- French Translation by: Joey79100.
--- Translation Version: 1.0.0.0 (January 11th, 2015)
+-- French Translation by: Joey79100 and zdimension.
+-- Translation Version: 1.1.0.0 (January 9th, 2016)
 
 --------------------------------------------------------------------------------
 -- This set of strings is used globally in all engine versions for various
@@ -11,14 +11,14 @@
 -- Game menu entries
 
 strings[000] = "Nouvelle partie";
-strings[001] = "Sélectionner Jeu";
-strings[002] = "Sélectionner Niveau";
+strings[001] = "Sélectionner le jeu";
+strings[002] = "Sélectionner le niveau";
 strings[003] = "La Demeure de Lara";
-strings[004] = "Saugarder Partie";
-strings[005] = "Charger Partie";
+strings[004] = "Sauvegarder la partie";
+strings[005] = "Charger la partie";
 strings[006] = "Options";
 strings[007] = "Quitter";
-strings[008] = "Recommencer niveau";
+strings[008] = "Recommencer le niveau";
 strings[009] = "Retour à l'écran Titre";
 
 -- Dialog components
@@ -94,7 +94,7 @@ strings[093] = "%d days, %02d:%02d" -- Time passed
 strings[100] = "Tomb Raider I";
 strings[101] = "Tomb Raider I Gold: Unfinished Business";      -- This title wasn't translated
 strings[200] = "Tomb Raider II";
-strings[201] = "Tomb Raider II Gold: The Golden Mask";         -- This title wasn't translated either...
+strings[201] = "Tomb Raider II Gold: Le Masque d'Or";         -- This title wasn't translated either... -- actually (on my TR2 CD from 1997) it's written "Tomb Raider II : Le Masque d'Or"
 strings[300] = "Tomb Raider III";
 strings[301] = "Tomb Raider III Gold: Le Dernier Artefact";    -- And this one has been translated badly... the French title means the "LAST" Artifact instead of the "LOST".
 strings[400] = "Tomb Raider IV: La Révélation Finale";
