@@ -1764,7 +1764,7 @@ int Character_MoveOnWater(struct entity_s *ent)
 int Character_FindTraverse(struct entity_s *ch)
 {
     room_sector_p ch_s, obj_s = NULL;
-    ch_s = Room_GetSectorRaw(ch->self->room->real_room, ch->transform + 12);
+    ch_s = ch->current_sector;
 
     if(ch_s == NULL)
     {
@@ -1798,7 +1798,7 @@ int Character_FindTraverse(struct entity_s *ch)
 
     if(obj_s != NULL)
     {
-        obj_s = Sector_GetPortalSectorTargetRaw(obj_s);
+        obj_s = Sector_GetPortalSectorTargetReal(obj_s);
         for(engine_container_p cont = obj_s->owner_room->content->containers; cont; cont = cont->next)
         {
             if(cont->object_type == OBJECT_ENTITY)
@@ -1806,12 +1806,28 @@ int Character_FindTraverse(struct entity_s *ch)
                 entity_p e = (entity_p)cont->object;
                 if((e->type_flags & ENTITY_TYPE_TRAVERSE) && OBB_OBB_Test(e->obb, ch->obb, 32.0f) && (fabs(e->transform[12 + 2] - ch->transform[12 + 2]) < 1.1f))
                 {
-                    int oz = (ch->angles[0] + 45.0) / 90.0;
-                    ch->angles[0] = oz * 90.0;
+                    int oz = (ch->angles[0] + 45.0f) / 90.0f;
+                    ch->angles[0] = oz * 90.0f;
                     ch->character->traversed_object = e;
                     Entity_UpdateTransform(ch);
                     return 1;
                 }
+            }
+        }
+    }
+
+    for(engine_container_p cont = ch_s->owner_room->content->containers; cont; cont = cont->next)
+    {
+        if(cont->object_type == OBJECT_ENTITY)
+        {
+            entity_p e = (entity_p)cont->object;
+            if((e->type_flags & ENTITY_TYPE_TRAVERSE) && OBB_OBB_Test(e->obb, ch->obb, 32.0f) && (fabs(e->transform[12 + 2] - ch->transform[12 + 2]) < 1.1f))
+            {
+                int oz = (ch->angles[0] + 45.0f) / 90.0f;
+                ch->angles[0] = oz * 90.0f;
+                ch->character->traversed_object = e;
+                Entity_UpdateTransform(ch);
+                return 1;
             }
         }
     }
@@ -1867,34 +1883,8 @@ int Sector_AllowTraverse(struct room_sector_s *rs, float floor)
  */
 int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
 {
-    room_sector_p ch_s  = Room_GetSectorRaw(ch->self->room->real_room, ch->transform + 12);
-    room_sector_p obj_s = Room_GetSectorRaw(obj->self->room->real_room, obj->transform + 12);
-
-    if(obj_s == ch_s)
-    {
-        if(ch->transform[4 + 0] > 0.8)
-        {
-            float pos[] = {(float)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (float)(obj_s->pos[1]), (float)0.0};
-            ch_s = Room_GetSectorRaw(obj->self->room->real_room, pos);
-        }
-        else if(ch->transform[4 + 0] < -0.8)
-        {
-            float pos[] = {(float)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (float)(obj_s->pos[1]), (float)0.0};
-            ch_s = Room_GetSectorRaw(obj->self->room->real_room, pos);
-        }
-        // OY move case
-        else if(ch->transform[4 + 1] > 0.8)
-        {
-            float pos[] = {(float)(obj_s->pos[0]), (float)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (float)0.0};
-            ch_s = Room_GetSectorRaw(obj->self->room->real_room, pos);
-        }
-        else if(ch->transform[4 + 1] < -0.8)
-        {
-            float pos[] = {(float)(obj_s->pos[0]), (float)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (float)0.0};
-            ch_s = Room_GetSectorRaw(obj->self->room->real_room, pos);
-        }
-        ch_s = Sector_GetPortalSectorTargetReal(ch_s);
-    }
+    room_sector_p ch_s  = ch->current_sector;
+    room_sector_p obj_s = obj->current_sector;
 
     if((ch_s == NULL) || (obj_s == NULL))
     {

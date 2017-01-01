@@ -680,7 +680,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
             switch(command->id)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
-                    if(ss_anim->frame_changing_state >= 0x02)                   // This command executes ONLY at the end of animation.
+                    if(ss_anim->frame_changing_state == 0x02)                   // This command executes ONLY at the end of animation.
                     {
                         float tr[3];
                         entity->no_fix_all = 0x01;
@@ -1035,10 +1035,10 @@ void Entity_Frame(entity_p entity, float time)
 
         while(ss_anim)
         {
-            if(ss_anim->enabled)
+            if(ss_anim->enabled && ss_anim->model)
             {
                 int frame_switch_state = 0x00;
-                if(ss_anim->model && ss_anim->onFrame)
+                if(ss_anim->onFrame)
                 {
                     frame_switch_state = ss_anim->onFrame(entity, ss_anim, time);
 
@@ -1052,16 +1052,13 @@ void Entity_Frame(entity_p entity, float time)
                         ss_anim->onEndFrame(entity, ss_anim);
                     }
                 }
-                else if(ss_anim->model && !(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK) &&
+                else if(!(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK) &&
                         ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->max_frame > 1)))
                 {
                     frame_switch_state = Anim_SetNextFrame(ss_anim, time);
                     if(frame_switch_state >= 0x01)
                     {
-                        if(frame_switch_state >= 0x02)
-                        {
-                            entity->no_fix_all = 0x00;
-                        }
+                        entity->no_fix_all = (frame_switch_state >= 0x02) ? (0x00) : (entity->no_fix_all);
                         Entity_DoAnimCommands(entity, ss_anim);
                     }
 
