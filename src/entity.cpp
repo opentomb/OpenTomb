@@ -680,12 +680,19 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
             switch(command->id)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
-                    if(ss_anim->frame_changing_state >= 0x02)                   // This command executes ONLY at the end of animation.
+                    if(ss_anim->frame_changing_state >= 0x02 && (ss_anim->current_frame >= current_af->max_frame - 1))                   // This command executes ONLY at the end of animation.
                     {
-                        float tr[3];
-                        entity->no_fix_all = 0x01;
+                        float tr[3], delta[3];
+#if 0
                         Mat4_vec3_rot_macro(tr, entity->transform, command->data);
+#else
+                        float *v0 = current_af->frames[ss_anim->current_frame].pos;
+                        float *v1 = next_af->frames[ss_anim->next_frame].pos;
+                        vec3_sub(delta, v0, v1);
+                        Mat4_vec3_rot_macro(tr, entity->transform, delta);
+#endif
                         vec3_add(entity->transform + 12, entity->transform + 12, tr);
+                        entity->no_fix_all = 0x01;
                         do_skip_frame = true;
                     }
                     break;
