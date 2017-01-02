@@ -829,7 +829,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if((cmd->move[0] == 1) && (cmd->crouch == 0) && (next_fc.floor_hit.normale[2] >= ent->character->critical_slant_z_component) && (i == CHARACTER_STEP_UP_BIG))
             {
                 ent->dir_flag = ENT_STAY;
-                i = Anim_GetAnimDispatchCase(ent->bf, 2);                     // MOST CORRECT STATECHANGE!!!
+                i = Anim_GetAnimDispatchCase(ent->bf, 2);                       // MOST CORRECT STATECHANGE!!!
                 if(i == 0)
                 {
                     Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_RUN_UP_STEP_RIGHT, 0);
@@ -1643,7 +1643,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                        (ent->speed[2] < 0.0)) // Only hang if speed is lower than zero.
                     {
                         // Fix the position to the TR metering step.
-                        ent->transform[12+2] = (float)((int)((ent->transform[12+2]) / TR_METERING_STEP) * TR_METERING_STEP);
+                        pos[2] = (float)((int)((pos[2]) / TR_METERING_STEP) * TR_METERING_STEP);
                         ent->move_type = MOVE_WALLS_CLIMB;
                         Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_HANG_IDLE, -1);
                         break;
@@ -1674,10 +1674,12 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->move_type == MOVE_UNDERWATER)
             {
+                float new_tr[16];
+                Mat4_Copy(new_tr, ent->transform);
                 ent->angles[1] = -45.0;
+                Mat4_SetAnglesZXY(new_tr, ent->angles);
                 cmd->rot[1] = 0.0;
-                Entity_UpdateTransform(ent);
-                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0, new_tr);
             }
             else if(clean_action && (curr_fc->ceiling_climb) && (curr_fc->ceiling_hit.hit) && (pos[2] + ent->bf->bb_max[2] > curr_fc->ceiling_hit.point[2] - 64.0))
             {
@@ -1708,10 +1710,12 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             cmd->rot[0] = 0;
             if(ent->move_type == MOVE_UNDERWATER)
             {
+                float new_tr[16];
+                Mat4_Copy(new_tr, ent->transform);
                 ent->angles[1] = -45.0;
+                Mat4_SetAnglesZXY(new_tr, ent->angles);
                 cmd->rot[1] = 0.0;
-                Entity_UpdateTransform(ent);
-                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0, new_tr);
                 break;
             }
 
@@ -2318,10 +2322,12 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(ent->move_type == MOVE_UNDERWATER)
             {
+                float new_tr[16];
+                Mat4_Copy(new_tr, ent->transform);
                 ent->angles[1] = -45.0;
+                Mat4_SetAnglesZXY(new_tr, ent->angles);
                 cmd->rot[1] = 0.0;
-                Entity_UpdateTransform(ent);
-                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0, new_tr);
             }
             else if(resp->horizontal_collide & 0x01)
             {
@@ -2355,10 +2361,13 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
              * FREE FALL TO UNDERWATER CASES
              */
         case TR_STATE_LARA_UNDERWATER_DIVING:
-            ent->angles[1] = -45.0;
-            cmd->rot[1] = 0.0;
-            Entity_UpdateTransform(ent);
-            ss_anim->onEndFrame = ent_correct_diving_angle;
+            if(ent->move_type != MOVE_FREE_FALLING)
+            {
+                ent->angles[1] = -45.0;
+                cmd->rot[1] = 0.0;
+                Entity_UpdateTransform(ent);
+                ss_anim->onEndFrame = ent_correct_diving_angle;
+            }
             break;
 
         case TR_STATE_LARA_FREEFALL:
@@ -2379,10 +2388,12 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->move_type == MOVE_UNDERWATER)
             {
+                float new_tr[16];
+                Mat4_Copy(new_tr, ent->transform);
                 ent->angles[1] = -45.0;
+                Mat4_SetAnglesZXY(new_tr, ent->angles);
                 cmd->rot[1] = 0.0;
-                Entity_UpdateTransform(ent);                                     // needed here to fix underwater in wall collision bug
-                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0);
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0, new_tr);
                 Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, ent->id);       // Stop scream
 
                 // Splash sound is hardcoded, beginning with TR3.
@@ -2506,7 +2517,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_WATER_DEATH:
             if(ent->move_type != MOVE_ON_WATER)
             {
-                pos[2] += (TR_METERING_SECTORSIZE / 4) * engine_frame_time;     // go to the air
+                pos[2] += TR_METERING_STEP * engine_frame_time;                 // go to the air
             }
             break;
 
@@ -2668,13 +2679,13 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 Character_GetHeightInfo(pos, &next_fc);
                 pos[2] = t;
                 ss_anim->next_state = TR_STATE_LARA_UNDERWATER_FORWARD;
-                ss_anim->onEndFrame = ent_set_underwater;                          // dive
+                ss_anim->onEndFrame = ent_set_underwater;                       // dive
             }
             else if((cmd->move[0] == 1) && !clean_action)
             {
                 if(!curr_fc->floor_hit.hit || (pos[2] - ent->character->Height > curr_fc->floor_hit.point[2]- ent->character->swim_depth))
                 {
-                    //ent->current_state = ent->current_state;                          // swim forward
+                    //ent->current_state = ent->current_state;                    // swim forward
                 }
                 else
                 {

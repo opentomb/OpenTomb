@@ -69,6 +69,7 @@ typedef struct entity_s
     uint32_t                            move_type : 4;          // on floor / free fall / swim ....
     uint32_t                            no_fix_all : 1;
     uint32_t                            no_fix_z : 1;
+    uint32_t                            no_anim_pos_autocorrection : 1;
     
     float                               timer;              // Set by "timer" trigger field
     uint32_t                            callback_flags;     // information about scripts callbacks
@@ -131,7 +132,7 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
 void Entity_CheckCollisionCallbacks(entity_p ent);
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim);
 void Entity_ProcessSector(entity_p ent);
-void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int frame);
+void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int frame, float new_transform[16] = NULL);
 void Entity_MoveToSink(entity_p entity, uint32_t sink_index);
 void Entity_MoveForward(entity_p ent, float dist);
 void Entity_MoveStrafe(entity_p ent, float dist);

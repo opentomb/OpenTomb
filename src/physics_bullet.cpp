@@ -74,15 +74,9 @@ public:
 
         if(r0 && r1)
         {
-            room_sector_p rs = NULL;
             if(Room_IsInOverlappedRoomsList(r0, r1))
             {
                 return 1.0f;
-            }
-            if((m_cont->object_type == OBJECT_ENTITY) && (m_cont->object))
-            {
-                entity_p ent = (entity_p)m_cont->object;
-                rs = ent->current_sector;
             }
             if(Room_IsInNearRoomsList(r0, r1))
             {
@@ -138,15 +132,9 @@ public:
 
         if(r0 && r1)
         {
-            room_sector_p rs = NULL;
             if(Room_IsInOverlappedRoomsList(r0, r1))
             {
                 return 1.0f;
-            }
-            if((m_cont->object_type == OBJECT_ENTITY) && (m_cont->object))
-            {
-                entity_p ent = (entity_p)m_cont->object;
-                rs = ent->current_sector;
             }
             if(Room_IsInNearRoomsList(r0, r1))
             {

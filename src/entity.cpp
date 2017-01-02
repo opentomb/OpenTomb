@@ -56,6 +56,7 @@ entity_p Entity_Create()
 
     ret->no_fix_all = 0x00;
     ret->no_fix_z = 0x00;
+    ret->no_anim_pos_autocorrection = 0x00;
     ret->no_fix_skeletal_parts = 0x00000000;
     ret->physics = Physics_CreatePhysicsData(ret->self);
 
@@ -682,15 +683,8 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                 case TR_ANIMCOMMAND_SETPOSITION:
                     if(ss_anim->frame_changing_state >= 0x02 && (ss_anim->current_frame >= current_af->max_frame - 1))                   // This command executes ONLY at the end of animation.
                     {
-                        float tr[3], delta[3];
-#if 0
+                        float tr[3];
                         Mat4_vec3_rot_macro(tr, entity->transform, command->data);
-#else
-                        float *v0 = current_af->frames[ss_anim->current_frame].pos;
-                        float *v1 = next_af->frames[ss_anim->next_frame].pos;
-                        vec3_sub(delta, v0, v1);
-                        Mat4_vec3_rot_macro(tr, entity->transform, delta);
-#endif
                         vec3_add(entity->transform + 12, entity->transform + 12, tr);
                         entity->no_fix_all = 0x01;
                         do_skip_frame = true;
@@ -974,7 +968,7 @@ void Entity_ProcessSector(entity_p ent)
 }
 
 ///@FIXME: function did more things than it's name describes;
-void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int frame)
+void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int frame, float new_transform[16])
 {
     if(entity)
     {
@@ -983,13 +977,43 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
         {
             animation = (animation < 0) ? (0) : (animation);
             entity->no_fix_all = 0x00;
-
-            if(anim_type == ANIM_TYPE_BASE)
+            if(ss_anim->model && (anim_type == ANIM_TYPE_BASE))
             {
+                if(!entity->no_anim_pos_autocorrection)
+                {
+                    float move[3], r0[3], r1[3];
+                    vec3_copy(move, entity->bf->bone_tags->full_transform + 12);
+                    Mat4_vec3_rot_macro(r0, entity->transform, move);
+
+                    Anim_SetAnimation(ss_anim, animation, frame);
+                    SSBoneFrame_Update(entity->bf, 0.0f);
+                    vec3_copy(move, entity->bf->bone_tags->full_transform + 12);
+                    if(new_transform)
+                    {
+                        Mat4_Copy(entity->transform, new_transform);
+                    }
+                    Mat4_vec3_rot_macro(r1, entity->transform, move);
+
+                    vec3_sub(move, r0, r1);
+                    vec3_add(entity->transform + 12, entity->transform + 12, move);
+                }
+                else
+                {
+                    Anim_SetAnimation(ss_anim, animation, frame);
+                    SSBoneFrame_Update(entity->bf, 0.0f);
+                    if(new_transform)
+                    {
+                        Mat4_Copy(entity->transform, new_transform);
+                    }
+                }
                 entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
-                Anim_SetAnimation(ss_anim, animation, frame);
-                SSBoneFrame_Update(entity->bf, 0.0f);
+                Entity_UpdateRigidBody(entity, 1);
+                Entity_GhostUpdate(entity);
                 Entity_FixPenetrations(entity, NULL, COLLISION_FILTER_CHARACTER);
+            }
+            else
+            {
+                Anim_SetAnimation(ss_anim, animation, frame);
             }
         }
     }
