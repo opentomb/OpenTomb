@@ -56,7 +56,7 @@ entity_p Entity_Create()
 
     ret->no_fix_all = 0x00;
     ret->no_fix_z = 0x00;
-    ret->no_anim_pos_autocorrection = 0x00;
+    ret->no_anim_pos_autocorrection = 0x01;
     ret->no_fix_skeletal_parts = 0x00000000;
     ret->physics = Physics_CreatePhysicsData(ret->self);
 
