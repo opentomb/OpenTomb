@@ -401,18 +401,39 @@ void Entity_GhostUpdate(struct entity_s *ent)
     if(Physics_IsGhostsInited(ent->physics))
     {
         float tr[16];
-        uint16_t max_index = Physics_GetBodiesCount(ent->physics);
-        for(uint16_t i = 0; i < max_index; i++)
+        switch(ent->self->collision_shape)
         {
-            Physics_GetBodyWorldTransform(ent->physics, tr, i);
-            Physics_SetGhostWorldTransform(ent->physics, tr, i);
-        }
+            case COLLISION_SHAPE_SINGLE_BOX:
+            case COLLISION_SHAPE_SINGLE_SPHERE:
+                {
+                    float centre[3];
+                    float *pos = tr + 12;
+                    Mat4_Copy(tr, ent->transform);
+                    centre[0] = 0.5f * (ent->bf->bb_min[0] + ent->bf->bb_max[0]);
+                    centre[1] = 0.5f * (ent->bf->bb_min[1] + ent->bf->bb_max[1]);
+                    centre[2] = 0.5f * (ent->bf->bb_min[2] + ent->bf->bb_max[2]);
+                    Mat4_vec3_mul_macro(pos, ent->transform, centre);
+                    Physics_SetGhostWorldTransform(ent->physics, tr, 0);
+                }
+                break;
+
+            default:
+                {
+                    uint16_t max_index = Physics_GetBodiesCount(ent->physics);
+                    for(uint16_t i = 0; i < max_index; i++)
+                    {
+                        Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
+                        Physics_SetGhostWorldTransform(ent->physics, tr, i);
+                    }
+                }
+                break;
+        };
     }
 }
 
 
 ///@TODO: make experiment with convexSweepTest with spheres: no more iterative cycles;
-int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], int16_t filter)
+int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float ent_move[3], int16_t filter)
 {
     int ret = 0;
 
@@ -434,23 +455,31 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], int1
                 continue;
             }
 
-            // antitunneling condition for main body parts, needs only in move case: ((move != NULL) && (btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER)))
+            // antitunneling condition for main body parts, needs only in move case
             if((btag->parent == NULL) || ((btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
             {
                 Physics_GetGhostWorldTransform(ent->physics, tr, m);
                 from[0] = tr[12 + 0] + ent->transform[12 + 0] - orig_pos[0];
                 from[1] = tr[12 + 1] + ent->transform[12 + 1] - orig_pos[1];
                 from[2] = tr[12 + 2] + ent->transform[12 + 2] - orig_pos[2];
+                if(ent_move)
+                {
+                    from[0] -= ent_move[0];
+                    from[1] -= ent_move[1];
+                    from[2] -= ent_move[2];
+                }
             }
             else
             {
-                float parent_from[3];
+                float parent_from[3], offset[3];
                 Mat4_vec3_mul(parent_from, btag->parent->full_transform, btag->parent->mesh_base->centre);
+                Mat4_vec3_rot_macro(offset, btag->full_transform, btag->mesh_base->centre);
+                vec3_sub(parent_from, parent_from, offset);
                 Mat4_vec3_mul(from, ent->transform, parent_from);
             }
 
             Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
-            Mat4_vec3_mul(to, tr, btag->mesh_base->centre);
+            vec3_copy(to, tr + 12)
             vec3_copy(curr, from);
             vec3_sub(move, to, from);
             move_len = vec3_abs(move);
@@ -502,7 +531,7 @@ int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float react
 
         Entity_GhostUpdate(ent);
         vec3_add(pos, pos, move);
-        ret = Entity_GetPenetrationFixVector(ent, reaction, filter);
+        ret = Entity_GetPenetrationFixVector(ent, reaction, move, filter);
         if((ret > 0) && (ent->character != NULL))
         {
             t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
@@ -529,40 +558,27 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
 {
     if(Physics_IsGhostsInited(ent->physics))
     {
-        if((move != NULL) && (ent->character != NULL))
+        if(move && ent->character)
         {
             ent->character->resp.horizontal_collide    = 0x00;
             ent->character->resp.vertical_collide      = 0x00;
         }
 
-        if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
+        if(ent->no_fix_all || ent->type_flags & ENTITY_TYPE_DYNAMIC)
         {
             return;
         }
 
-        if(ent->no_fix_all)
-        {
-            Entity_GhostUpdate(ent);
-            return;
-        }
-
-        bool is_first_test = true;
-        int num_iters = 3;
-        float part = 1.0f / (float)num_iters;
         float t1, t2, reaction[3];
-        int numPenetrationLoops = 0;
-        while((--num_iters >= 0) && ((numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, filter)) > 0))
+        int numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, move, filter);
+        if(numPenetrationLoops > 0)
         {
-            part = (num_iters == 0) ? (1.0f) : (part);
-            reaction[0] *= part;
-            reaction[1] *= part;
-            reaction[2] *= part;
             reaction[2] = (ent->no_fix_z) ? (0.0f) : (reaction[2]);
             vec3_add(ent->transform + 12, ent->transform + 12, reaction);
 
             if(ent->character)
             {
-                if(is_first_test && move && (numPenetrationLoops > 0))
+                if(move && (numPenetrationLoops > 0))
                 {
                     t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
                     t2 = move[0] * move[0] + move[1] * move[1];
@@ -598,7 +614,6 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
                     ent->character->resp.vertical_collide |= 0x01;
                 }
             }
-            is_first_test = false;
             Entity_GhostUpdate(ent);
         }
     }
@@ -993,9 +1008,11 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
                         Mat4_Copy(entity->transform, new_transform);
                     }
                     Mat4_vec3_rot_macro(r1, entity->transform, move);
-
                     vec3_sub(move, r0, r1);
                     vec3_add(entity->transform + 12, entity->transform + 12, move);
+
+                    Entity_GhostUpdate(entity);
+                    Entity_FixPenetrations(entity, move, COLLISION_FILTER_CHARACTER);
                 }
                 else
                 {
@@ -1005,11 +1022,11 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
                     {
                         Mat4_Copy(entity->transform, new_transform);
                     }
+                    Entity_GhostUpdate(entity);
+                    Entity_FixPenetrations(entity, NULL, COLLISION_FILTER_CHARACTER);
                 }
                 entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
                 Entity_UpdateRigidBody(entity, 1);
-                Entity_GhostUpdate(entity);
-                Entity_FixPenetrations(entity, NULL, COLLISION_FILTER_CHARACTER);
             }
             else
             {
