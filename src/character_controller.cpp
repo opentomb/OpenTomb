@@ -39,6 +39,7 @@ void Character_Create(struct entity_s *ent)
         ent->character = ret;
         ret->height_info.self = ent->self;
         ent->dir_flag = ENT_STAY;
+        ent->no_anim_pos_autocorrection = 0x00;
 
         ret->target_id = ENTITY_ID_NONE;
         ret->hair_count = 0;
