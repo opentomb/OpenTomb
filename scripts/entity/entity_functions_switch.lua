@@ -588,3 +588,31 @@ function lever_switch_init(id)     -- Big switches (TR4) - lever
         end;
     end;
 end
+
+
+function WheelKnob_init(id)   -- Bulkdoors (TR2)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
+    setEntityActivity(id, false);
+
+    setEntityActivationDirection(id, 0.0, 1.0, 0.0, 0.70);
+    setEntityActivationOffset(id, 0.0, 256.0, 0.0, 128.0);
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if((object_id == nil) or (activator_id == nil)) then
+            return ENTITY_TRIGGERING_NOT_READY;
+        end;
+
+        local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if(a == 0) then
+            setEntityActivity(object_id, true);
+            entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
+            setEntitySectorStatus(object_id, 1);
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 214, 0);  --TODO: I can't found correct anim >.<
+            return ENTITY_TRIGGERING_ACTIVATED;
+        end;
+        return ENTITY_TRIGGERING_NOT_READY;
+    end;
+end

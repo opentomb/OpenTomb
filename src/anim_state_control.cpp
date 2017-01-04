@@ -1693,11 +1693,11 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if((resp->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
-                ss_anim->next_state = TR_STATE_LARA_STOP;                        // landing immediately
+                ss_anim->next_state = TR_STATE_LARA_STOP;                       // landing immediately
             }
             else
             {
-                if(ent->speed[2] < -FREE_FALL_SPEED_2)                 // next free fall stage
+                if(ent->speed[2] < -FREE_FALL_SPEED_2)                          // next free fall stage
                 {
                     ent->move_type = MOVE_FREE_FALLING;
                     ss_anim->next_state = TR_STATE_LARA_FREEFALL;
@@ -2306,25 +2306,21 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if((resp->vertical_collide & 0x01) || (ent->move_type == MOVE_ON_FLOOR))
             {
-                if(ent->self->room->flags & TR_ROOM_FLAG_QUICKSAND)
+                if((cmd->move[0] == 1) && (current_state == TR_STATE_LARA_JUMP_FORWARD))
                 {
-                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STAY_IDLE, 0);
-                }
-                else if(!clean_action && (cmd->move[0] == 1) && (cmd->crouch == 0))
-                {
-                    ent->move_type = MOVE_ON_FLOOR;
                     ss_anim->next_state = TR_STATE_LARA_RUN_FORWARD;
                 }
                 else
                 {
                     ss_anim->next_state = TR_STATE_LARA_STOP;
                 }
+                ent->move_type = MOVE_ON_FLOOR;
             }
             else if(ent->move_type == MOVE_UNDERWATER)
             {
                 float new_tr[16];
                 Mat4_Copy(new_tr, ent->transform);
-                ent->angles[1] = -45.0;
+                ent->angles[1] = -45.0f;
                 Mat4_SetAnglesZXY(new_tr, ent->angles);
                 cmd->rot[1] = 0.0;
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0, new_tr);

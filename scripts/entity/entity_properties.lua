@@ -299,7 +299,7 @@ tr2_entity_tbl[86] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_
 tr2_entity_tbl[87] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "spikeceiling"};                     -- Spiky ceiling segment
 tr2_entity_tbl[88] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Tibetan bell
 tr2_entity_tbl[91] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Lara and a snowmobile
-tr2_entity_tbl[92] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Wheel knob
+tr2_entity_tbl[92] = {coll = COLLISION_GROUP_KINEMATIC,shape = COLLISION_SHAPE_BOX, func = "WheelKnob"}; -- Wheel knob
 tr2_entity_tbl[93] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "switch"};    -- Switch
 tr2_entity_tbl[94] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "propeller"};                     -- Underwater propeller
 tr2_entity_tbl[95] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Air fan
