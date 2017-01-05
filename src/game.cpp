@@ -100,20 +100,6 @@ int lua_noclip(lua_State * lua)
 }
 
 
-int lua_debuginfo(lua_State * lua)
-{
-    if(lua_gettop(lua) == 0)
-    {
-        screen_info.debug_view_state++;
-    }
-    else
-    {
-        screen_info.debug_view_state = lua_tointeger(lua, 1);
-    }
-    return 0;
-}
-
-
 void Game_InitGlobals()
 {
     control_states.free_look_speed = 3000.0;
@@ -128,7 +114,6 @@ void Game_RegisterLuaFunctions(lua_State *lua)
 {
     if(lua != NULL)
     {
-        lua_register(lua, "debuginfo", lua_debuginfo);
         lua_register(lua, "mlook", lua_mlook);
         lua_register(lua, "freelook", lua_freelook);
         lua_register(lua, "cam_distance", lua_cam_distance);
