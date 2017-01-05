@@ -598,6 +598,23 @@ function WheelKnob_init(id)   -- Bulkdoors (TR2)
     setEntityActivationDirection(id, 0.0, 1.0, 0.0, 0.70);
     setEntityActivationOffset(id, 0.0, 256.0, 0.0, 128.0);
 
+    -- enable anims replacing from model 12
+    setModelAnimReplaceFlag(12, 0, 0x01);
+    setModelAnimReplaceFlag(12, 1, 0x01);
+    setModelAnimReplaceFlag(12, 2, 0x01);
+    setModelAnimReplaceFlag(12, 3, 0x01);
+    setModelAnimReplaceFlag(12, 4, 0x01);
+    setModelAnimReplaceFlag(12, 5, 0x01);
+    setModelAnimReplaceFlag(12, 6, 0x01);
+    setModelAnimReplaceFlag(12, 7, 0x01);
+    setModelAnimReplaceFlag(12, 8, 0x01);
+    setModelAnimReplaceFlag(12, 9, 0x01);
+    setModelAnimReplaceFlag(12, 10, 0x01);
+    setModelAnimReplaceFlag(12, 11, 0x01);
+    setModelAnimReplaceFlag(12, 12, 0x01);
+    setModelAnimReplaceFlag(12, 13, 0x01);
+    setModelAnimReplaceFlag(12, 14, 0x01);
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
             return ENTITY_TRIGGERING_NOT_READY;
@@ -610,9 +627,23 @@ function WheelKnob_init(id)   -- Bulkdoors (TR2)
             entityMoveToTriggerActivationPoint(activator_id, object_id);
             setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
             setEntitySectorStatus(object_id, 1);                                -- it is a switch
-            setEntityAnim(activator_id, ANIM_TYPE_BASE, 214, 0);                -- TODO: I can't found correct anim >.<
+
+            entitySSAnimEnsureExists(activator_id, ANIM_TYPE_MISK_1, 12);
+            setEntityAnim(activator_id, ANIM_TYPE_MISK_1, 2, 0);
+            entitySSAnimSetEnable(activator_id, ANIM_TYPE_MISK_1, 1);
+            entitySSAnimSetEnable(activator_id, ANIM_TYPE_BASE, 0);
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
         return ENTITY_TRIGGERING_NOT_READY;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(entitySSAnimGetEnable(player, ANIM_TYPE_MISK_1)) then
+            local a, f, c = getEntityAnim(player, ANIM_TYPE_MISK_1);
+            if((a == 2) and (f + 1 >= c)) then
+                entitySSAnimSetEnable(player, ANIM_TYPE_MISK_1, 0);
+                entitySSAnimSetEnable(player, ANIM_TYPE_BASE, 1);
+            end;
+        end;
     end;
 end
