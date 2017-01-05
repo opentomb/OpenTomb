@@ -609,8 +609,8 @@ function WheelKnob_init(id)   -- Bulkdoors (TR2)
             entityRotateToTriggerZ(activator_id, object_id);
             entityMoveToTriggerActivationPoint(activator_id, object_id);
             setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
-            setEntitySectorStatus(object_id, 1);
-            setEntityAnim(activator_id, ANIM_TYPE_BASE, 214, 0);  --TODO: I can't found correct anim >.<
+            setEntitySectorStatus(object_id, 1);                                -- it is a switch
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 214, 0);                -- TODO: I can't found correct anim >.<
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
         return ENTITY_TRIGGERING_NOT_READY;

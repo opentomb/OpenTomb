@@ -472,9 +472,8 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             else
             {
                 float parent_from[3], offset[3];
-                Mat4_vec3_mul(parent_from, btag->parent->full_transform, btag->parent->mesh_base->centre);
-                Mat4_vec3_rot_macro(offset, btag->full_transform, btag->mesh_base->centre);
-                vec3_sub(parent_from, parent_from, offset);
+                vec3_copy_inv(offset, btag->mesh_base->centre);
+                Mat4_vec3_mul_macro(parent_from, btag->full_transform, offset);
                 Mat4_vec3_mul(from, ent->transform, parent_from);
             }
 

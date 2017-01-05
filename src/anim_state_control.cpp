@@ -565,7 +565,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             if((curr_fc->water || curr_fc->quicksand) && curr_fc->floor_hit.hit && (curr_fc->transition_level - curr_fc->floor_hit.point[2] > ent->character->wade_depth))
             {
-                ent->no_fix_all = 0x01;
+                ent->no_fix_skeletal_parts = ~(uint32_t)BODY_PART_BODY_LOW;
                 //Stay, directional jumps are not allowed whilst in wade depth
             }
             else if(cmd->move[0] == 1)
@@ -606,7 +606,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else
             {
-                ent->no_fix_all = 0x01;
+                ent->no_fix_skeletal_parts = ~(uint32_t)BODY_PART_BODY_LOW;
             }
             break;
 
@@ -2594,7 +2594,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 {
                     ent->dir_flag = ENT_STAY;
                     ent->move_type = MOVE_CLIMBING;
-                    ent->no_fix_all = 0x01;
+                    //ent->no_fix_all = 0x01;
                     ent->angles[0] = climb->edge_z_ang;
                     Entity_UpdateTransform(ent);
                     vec3_copy(climb->point, climb->edge_point);

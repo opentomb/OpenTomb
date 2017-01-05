@@ -869,6 +869,7 @@ void ShowDebugInfo()
 
     if(last_cont)
     {
+        GLText_OutTextXY(30.0f, y += dy, "VIEW: Selected object");
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
@@ -932,6 +933,7 @@ void ShowDebugInfo()
     {
         case 1:
             {
+                GLText_OutTextXY(30.0f, y += dy, "VIEW: Lara anim");
                 entity_p ent = World_GetPlayer();
                 if(ent && ent->character)
                 {
@@ -947,7 +949,7 @@ void ShowDebugInfo()
         case 2:
             {
                 entity_p ent = World_GetPlayer();
-
+                GLText_OutTextXY(30.0f, y += dy, "VIEW: Sector info");
                 if(engine_camera.current_room)
                 {
                     GLText_OutTextXY(30.0f, y += dy, "cam_room = (id = %d)", engine_camera.current_room->id);
@@ -1004,6 +1006,7 @@ void ShowDebugInfo()
         case 3:
             {
                 entity_p ent = World_GetPlayer();
+                GLText_OutTextXY(30.0f, y += dy, "VIEW: Room entities");
                 if(ent && ent->self->room)
                 {
                     for(engine_container_p cont = ent->self->room->content->containers; cont; cont = cont->next)
@@ -1023,6 +1026,7 @@ void ShowDebugInfo()
             break;
 
         case 4:
+            GLText_OutTextXY(30.0f, y += dy, "VIEW: BSP tree info");
             if(renderer.dynamicBSP)
             {
                 GLText_OutTextXY(30.0f, y += dy, "input polygons = %07d", renderer.dynamicBSP->GetInputPolygonsCount());
