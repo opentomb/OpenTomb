@@ -127,6 +127,19 @@ function bat_init(id)
     setEntityMoveType(id, MOVE_FLY);
     noFixEntityCollision(id);
 
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if((getCharacterParam(object_id, PARAM_HEALTH) > 0) and (not getEntityActivity(object_id))) then 
+            enableEntity(object_id);
+            local hit, frac, hx, hy, hz = getEntityRayTest(object_id, COLLISION_GROUP_STATIC_ROOM, 0, 0, 640, 0, 0, -320);
+            if (hit) then
+                local x, y, z = getEntityPos(object_id);
+                z = hz - 256;
+                setEntityPos(object_id, x, y, z);
+            end;
+        end;
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
