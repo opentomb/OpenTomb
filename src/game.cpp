@@ -292,6 +292,7 @@ void Save_Entity(FILE **f, entity_p ent)
                 ss_anim->current_mod[0], ss_anim->current_mod[1], ss_anim->current_mod[2], ss_anim->current_mod[3]);
             fprintf(*f, "\nentitySSAnimSetExtFlags(%d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled,
                 ss_anim->anim_ext_flags, ss_anim->targeting_flags);
+            fprintf(*f, "\nentitySSAnimSetEnable(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled);
         }
     }
 

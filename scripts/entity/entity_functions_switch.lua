@@ -599,29 +599,40 @@ function WheelKnob_init(id)   -- Bulkdoors (TR2)
     setEntityActivationOffset(id, 0.0, 256.0, 0.0, 128.0);
 
     -- enable anims replacing from model 12
-    setModelAnimReplaceFlag(12, 0, 0x01);
-    setModelAnimReplaceFlag(12, 1, 0x01);
-    setModelAnimReplaceFlag(12, 2, 0x01);
-    setModelAnimReplaceFlag(12, 3, 0x01);
-    setModelAnimReplaceFlag(12, 4, 0x01);
-    setModelAnimReplaceFlag(12, 5, 0x01);
-    setModelAnimReplaceFlag(12, 6, 0x01);
-    setModelAnimReplaceFlag(12, 7, 0x01);
-    setModelAnimReplaceFlag(12, 8, 0x01);
-    setModelAnimReplaceFlag(12, 9, 0x01);
-    setModelAnimReplaceFlag(12, 10, 0x01);
-    setModelAnimReplaceFlag(12, 11, 0x01);
-    setModelAnimReplaceFlag(12, 12, 0x01);
-    setModelAnimReplaceFlag(12, 13, 0x01);
-    setModelAnimReplaceFlag(12, 14, 0x01);
+    setModelAnimReplaceFlag(12, 0, 0x01);       copyMeshFromModelToModel(12, 0, 0, 0);
+    setModelAnimReplaceFlag(12, 1, 0x01);       copyMeshFromModelToModel(12, 0, 1, 1);
+    setModelAnimReplaceFlag(12, 2, 0x01);       copyMeshFromModelToModel(12, 0, 2, 2);
+    setModelAnimReplaceFlag(12, 3, 0x01);       copyMeshFromModelToModel(12, 0, 3, 3);
+    setModelAnimReplaceFlag(12, 4, 0x01);       copyMeshFromModelToModel(12, 0, 4, 4);
+    setModelAnimReplaceFlag(12, 5, 0x01);       copyMeshFromModelToModel(12, 0, 5, 5);
+    setModelAnimReplaceFlag(12, 6, 0x01);       copyMeshFromModelToModel(12, 0, 6, 6);
+    setModelAnimReplaceFlag(12, 7, 0x01);       copyMeshFromModelToModel(12, 0, 7, 7);
+    setModelAnimReplaceFlag(12, 8, 0x01);       copyMeshFromModelToModel(12, 0, 8, 8);
+    setModelAnimReplaceFlag(12, 9, 0x01);       copyMeshFromModelToModel(12, 0, 9, 9);
+    setModelAnimReplaceFlag(12, 10, 0x01);      copyMeshFromModelToModel(12, 0, 10, 10);
+    setModelAnimReplaceFlag(12, 11, 0x01);      copyMeshFromModelToModel(12, 0, 11, 11);
+    setModelAnimReplaceFlag(12, 12, 0x01);      copyMeshFromModelToModel(12, 0, 12, 12);
+    setModelAnimReplaceFlag(12, 13, 0x01);      copyMeshFromModelToModel(12, 0, 13, 13);
+    setModelAnimReplaceFlag(12, 14, 0x01);      copyMeshFromModelToModel(12, 0, 14, 14);
+
+    entity_funcs[id].activator_id = nil;
+
+    entity_funcs[id].onSave = function()
+        if(entity_funcs[id].activator_id ~= nil) then
+            local addr = "\nentity_funcs[" .. id .. "].";
+            return addr .. "activator_id = " .. entity_funcs[id].activator_id .. ";";
+        end;
+        return "";
+    end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
             return ENTITY_TRIGGERING_NOT_READY;
         end;
 
-        local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
-        if(a == 0) then
+        local a, f = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if((a == 0) and (f == 0)) then
+            entity_funcs[object_id].activator_id = activator_id;
             setEntityActivity(object_id, true);
             entityRotateToTriggerZ(activator_id, object_id);
             entityMoveToTriggerActivationPoint(activator_id, object_id);
@@ -638,12 +649,17 @@ function WheelKnob_init(id)   -- Bulkdoors (TR2)
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
-        if(entitySSAnimGetEnable(player, ANIM_TYPE_MISK_1)) then
-            local a, f, c = getEntityAnim(player, ANIM_TYPE_MISK_1);
+        if(entitySSAnimGetEnable(entity_funcs[object_id].activator_id, ANIM_TYPE_MISK_1)) then
+            local a, f, c = getEntityAnim(entity_funcs[object_id].activator_id, ANIM_TYPE_MISK_1);
             if((a == 2) and (f + 1 >= c)) then
-                entitySSAnimSetEnable(player, ANIM_TYPE_MISK_1, 0);
-                entitySSAnimSetEnable(player, ANIM_TYPE_BASE, 1);
+                entitySSAnimSetEnable(entity_funcs[object_id].activator_id, ANIM_TYPE_MISK_1, 0);
+                entitySSAnimSetEnable(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE, 1);
             end;
+        end;
+
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if((a == 2) and (f >= c - 1)) then
+            setEntityActivity(object_id, false);
         end;
     end;
 end

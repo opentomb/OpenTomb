@@ -13,6 +13,7 @@ extern "C" {
 #include <lauxlib.h>
 #include <al.h>
 #include <alc.h>
+#include <GL/gl.h>
 }
 
 #include "core/system.h"
@@ -64,9 +65,6 @@ engine_container_p      last_cont = NULL;
 static float            ray_test_point[3] = {0.0f, 0.0f, 0.0f};
 static ss_bone_frame_t  test_model = {0};
 static int32_t          test_model_index = 0;
-static float            test_model_dist = 1024.0f;
-static float            test_model_z_offset = 256.0f;
-static float            test_model_angles[3] = {45.0f, 45.0f, 0.0f};
 
 struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_mapper = {0};
@@ -614,6 +612,10 @@ void Engine_Display()
         }
         else
         {
+            /*qglPolygonMode(GL_FRONT, GL_FILL);
+            qglDisable(GL_CULL_FACE);*/
+            qglDisable(GL_BLEND);
+            qglEnable(GL_ALPHA_TEST);
             ShowModelView();
         }
         Gui_SwitchGLMode(1);
@@ -921,41 +923,6 @@ void TestModelApplyKey(int key)
             Anim_SetAnimation(&test_model.animations, test_model.animations.current_animation + 1, 0);
             break;
 
-        case SDLK_w:
-            if(test_model_dist >= 8.0f)
-            {
-                test_model_dist -= engine_frame_time * 8192.0f;
-            }
-            break;
-
-        case SDLK_s:
-            test_model_dist += engine_frame_time * 8192.0f;
-            break;
-
-        case SDLK_LEFT:
-            test_model_angles[0] += engine_frame_time * 2048.0f;
-            break;
-
-        case SDLK_RIGHT:
-            test_model_angles[0] -= engine_frame_time * 2048.0f;
-            break;
-
-        case SDLK_UP:
-            test_model_angles[1] += engine_frame_time * 2048.0f;
-            break;
-
-        case SDLK_DOWN:
-            test_model_angles[1] -= engine_frame_time * 2048.0f;
-            break;
-
-        case SDLK_SPACE:
-            test_model_z_offset += engine_frame_time * 8192.0f;
-            break;
-
-        case SDLK_LALT:
-            test_model_z_offset -= engine_frame_time * 8192.0f;
-            break;
-
         default:
             break;
     }
@@ -983,6 +950,9 @@ void SetTestModel(int index)
 void ShowModelView()
 {
     static float tr[16];
+    static float test_model_angles[3] = {45.0f, 45.0f, 0.0f};
+    static float test_model_dist = 1024.0f;
+    static float test_model_z_offset = 256.0f;
     uint32_t sm_count;
     skeletal_model_p sm = NULL;
 
@@ -998,6 +968,39 @@ void ShowModelView()
         float *cam_pos = engine_camera.gl_transform + 12;
         animation_frame_p af = sm->animations + test_model.animations.current_animation;
         const lit_shader_description *shader = renderer.shaderManager->getEntityShader(0);
+
+        if(control_states.look_right || control_states.move_right)
+        {
+            test_model_angles[0] += engine_frame_time * 256.0f;
+        }
+        if(control_states.look_left || control_states.move_left)
+        {
+            test_model_angles[0] -= engine_frame_time * 256.0f;
+        }
+        if(control_states.look_up)
+        {
+            test_model_angles[1] += engine_frame_time * 256.0f;
+        }
+        if(control_states.look_down)
+        {
+            test_model_angles[1] -= engine_frame_time * 256.0f;
+        }
+        if(control_states.move_forward && (test_model_dist >= 8.0f))
+        {
+            test_model_dist -= engine_frame_time * 512.0f;
+        }
+        if(control_states.move_backward)
+        {
+            test_model_dist += engine_frame_time * 512.0f;
+        }
+        if(control_states.move_up)
+        {
+            test_model_z_offset += engine_frame_time * 512.0f;
+        }
+        if(control_states.move_down)
+        {
+            test_model_z_offset -= engine_frame_time * 512.0f;
+        }
 
         test_model.transform = tr;
         Mat4_E_macro(tr);
@@ -1234,7 +1237,7 @@ void ShowDebugInfo()
             break;
 
         case debug_view_state_e::model_view:
-            GLText_OutTextXY(30.0f, y += dy, "VIEW: MODELS ANIM (use o, p, [, ], w, s, space, L alt and arrows)");
+            GLText_OutTextXY(30.0f, y += dy, "VIEW: MODELS ANIM (use o, p, [, ], w, s, space, v and arrows)");
             break;
     };
 }
