@@ -525,7 +525,7 @@ tr3_entity_tbl[121] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE
 tr3_entity_tbl[122] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Temple statue (original petrified state)
 tr3_entity_tbl[123] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                -- Monkey with medipack
 tr3_entity_tbl[124] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                -- Monkey with key
-tr3_entity_tbl[127] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                -- Zipline handle
+tr3_entity_tbl[127] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX,     func = "zipline"};               -- Zipline handle
 tr3_entity_tbl[128] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Switch
 tr3_entity_tbl[129] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Switch
 tr3_entity_tbl[130] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Underwater switch

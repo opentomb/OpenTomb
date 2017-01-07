@@ -1210,35 +1210,39 @@ void Entity_RotateToTrigger(entity_p activator, entity_p trigger)
 
 void Entity_CheckActivators(struct entity_s *ent)
 {
-    if((ent != NULL) && (ent->self->room != NULL))
+    if(ent && ent->self->room)
     {
-        engine_container_p cont = ent->self->room->content->containers;
-        for(; cont; cont = cont->next)
+        for(int room_index = -1; room_index < ent->self->room->near_room_list_size; ++room_index)
         {
-            if((cont->object_type == OBJECT_ENTITY) && cont->object && (cont->object != ent))
+            room_p room = (room_index >= 0) ? (ent->self->room->near_room_list[room_index]) : (ent->self->room);
+            engine_container_p cont = room->content->containers;
+            for(; cont; cont = cont->next)
             {
-                entity_p trigger = (entity_p)cont->object;
-                if((trigger->type_flags & ENTITY_TYPE_INTERACTIVE) && (trigger->state_flags & ENTITY_STATE_ENABLED))
+                if((cont->object_type == OBJECT_ENTITY) && cont->object && (cont->object != ent))
                 {
-                    if(Entity_CanTrigger(ent, trigger))
+                    entity_p trigger = (entity_p)cont->object;
+                    if((trigger->type_flags & ENTITY_TYPE_INTERACTIVE) && (trigger->state_flags & ENTITY_STATE_ENABLED))
                     {
-                        Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, trigger->id, ent->id);
+                        if(Entity_CanTrigger(ent, trigger))
+                        {
+                            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, trigger->id, ent->id);
+                        }
                     }
-                }
-                else if((trigger->type_flags & ENTITY_TYPE_PICKABLE) && (trigger->state_flags & ENTITY_STATE_ENABLED) && (trigger->state_flags & ENTITY_STATE_VISIBLE))
-                {
-                    float ppos[3];
-                    float *v = trigger->transform + 12;
-                    float r = trigger->activation_offset[3];
-
-                    ppos[0] = ent->transform[12 + 0] + ent->transform[4 + 0] * ent->bf->bb_max[1];
-                    ppos[1] = ent->transform[12 + 1] + ent->transform[4 + 1] * ent->bf->bb_max[1];
-                    ppos[2] = ent->transform[12 + 2] + ent->transform[4 + 2] * ent->bf->bb_max[1];
-                    r *= r;
-                    if(((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
-                        (v[2] + 72.0 > ent->transform[12 + 2] + ent->bf->bb_min[2]) && (v[2] - 32.0 < ent->transform[12 + 2] + ent->bf->bb_max[2]))
+                    else if((trigger->type_flags & ENTITY_TYPE_PICKABLE) && (trigger->state_flags & ENTITY_STATE_ENABLED) && (trigger->state_flags & ENTITY_STATE_VISIBLE))
                     {
-                        Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, trigger->id, ent->id);
+                        float ppos[3];
+                        float *v = trigger->transform + 12;
+                        float r = trigger->activation_offset[3];
+
+                        ppos[0] = ent->transform[12 + 0] + ent->transform[4 + 0] * ent->bf->bb_max[1];
+                        ppos[1] = ent->transform[12 + 1] + ent->transform[4 + 1] * ent->bf->bb_max[1];
+                        ppos[2] = ent->transform[12 + 2] + ent->transform[4 + 2] * ent->bf->bb_max[1];
+                        r *= r;
+                        if(((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
+                            (v[2] + 72.0 > ent->transform[12 + 2] + ent->bf->bb_min[2]) && (v[2] - 32.0 < ent->transform[12 + 2] + ent->bf->bb_max[2]))
+                        {
+                            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, trigger->id, ent->id);
+                        }
                     }
                 }
             }
