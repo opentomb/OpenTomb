@@ -302,13 +302,13 @@ tr2_entity_tbl[91] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_B
 tr2_entity_tbl[92] = {coll = COLLISION_GROUP_KINEMATIC,shape = COLLISION_SHAPE_BOX, func = "WheelKnob"}; -- Wheel knob
 tr2_entity_tbl[93] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "switch"};    -- Switch
 tr2_entity_tbl[94] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "propeller"};                     -- Underwater propeller
-tr2_entity_tbl[95] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Air fan
-tr2_entity_tbl[96] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Swinging box / spiky ball
-tr2_entity_tbl[101] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                    -- Rolling storage drums
-tr2_entity_tbl[102] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                    -- Zipline handle
-tr2_entity_tbl[103] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "switch"};   -- Switch
-tr2_entity_tbl[104] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "switch"};   -- Switch
-tr2_entity_tbl[105] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "switch"};   -- Underwater switch
+tr2_entity_tbl[95] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Air fan
+tr2_entity_tbl[96] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Swinging box / spiky ball
+tr2_entity_tbl[101] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Rolling storage drums
+tr2_entity_tbl[102] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "zipline"};   -- Zipline handle
+tr2_entity_tbl[103] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "switch"};    -- Switch
+tr2_entity_tbl[104] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "switch"};    -- Switch
+tr2_entity_tbl[105] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "switch"};    -- Underwater switch
 
 -- DOORS --
 

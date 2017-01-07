@@ -108,7 +108,7 @@ int lua_GetEntityAnimState(lua_State * lua)
             {
                 if(ss_anim->type == anim_type_id)
                 {
-                    lua_pushinteger(lua, ss_anim->next_state);
+                    lua_pushinteger(lua, Anim_GetCurrentState(ss_anim));
                     return 1;
                 }
             }

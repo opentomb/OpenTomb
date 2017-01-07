@@ -1997,6 +1997,11 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             break;
 
+        case TR_STATE_LARA_ZIPLINE_RIDE:
+            ss_anim->next_state = (clean_action) ? (TR_STATE_LARA_ZIPLINE_RIDE) : (TR_STATE_LARA_JUMP_FORWARD);
+            ent->speed[2] = 0.0f;
+            break;
+
         case TR_STATE_LARA_LADDER_IDLE:
             cmd->rot[0] = 0;
             ent->dir_flag = ENT_STAY;

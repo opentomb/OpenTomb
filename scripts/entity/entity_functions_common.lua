@@ -332,3 +332,62 @@ function boulder_heavy_init(id)
     end;
 
 end;
+
+
+function zipline_init(id)
+    setEntityActivity(id, false);
+    setEntityAnim(id, ANIM_TYPE_BASE, 0, 0);
+    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
+
+    setEntityActivationOffset(id, 0.0, 350.0, 0.0, 256.0);
+    setEntityActivationDirection(id, 0.0, 1.0, 0.0, 0.77);
+    
+    entity_funcs[id].activator_id = nil;
+
+    entity_funcs[id].onSave = function()
+        if(entity_funcs[id].activator_id ~= nil) then
+            local addr = "\nentity_funcs[" .. id .. "].";
+            return addr .. "activator_id = " .. entity_funcs[id].activator_id .. ";";
+        end;
+        return "";
+    end;
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(getEntityEvent(object_id) == 0) then
+            setEntityEvent(object_id, 1);
+            setEntityActivity(id, true);
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 215, 0);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+            entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
+            entity_funcs[id].activator_id = activator_id;
+            return ENTITY_TRIGGERING_ACTIVATED;
+        end;
+        return ENTITY_TRIGGERING_NOT_READY;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if((entity_funcs[object_id].activator_id ~= nil) and (a == 1)) then
+            local dx = 0.0;
+            local dy = 4096.0 * frame_time;
+            local dz = 0.0 - dy / 4.0;
+            local hit = getEntityRayTest(object_id, COLLISION_GROUP_STATIC_ROOM, dx, dy + 128.0, dz, 0, 0, 0);
+            if(hit) then
+                if(70 == getEntityAnimState(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE)) then
+                    setEntityAnim(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE, 217, 0);
+                end;
+                entity_funcs[object_id].activator_id = nil;
+                setEntityActivity(object_id, false);
+            else
+                moveEntityLocal(object_id, dx, dy, dz);
+            end;
+        end;
+
+        if((entity_funcs[object_id].activator_id ~= nil) and (70 == getEntityAnimState(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE))) then
+            setEntityPos(entity_funcs[object_id].activator_id, getEntityPos(object_id));
+        end;
+    end;
+end;
+
+
