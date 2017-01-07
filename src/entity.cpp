@@ -441,7 +441,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
     if(Physics_IsGhostsInited(ent->physics) && (ent->no_fix_all == 0x00) && (Physics_GetBodiesCount(ent->physics) == ent->bf->bone_tag_count))
     {
         float tmp[3], orig_pos[3];
-        float tr[16];
+        float tr[16], ghost_tr[16];
         float from[3], to[3], curr[3], move[3], move_len;
 
         vec3_copy(orig_pos, ent->transform + 12);
@@ -455,13 +455,14 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
                 continue;
             }
 
+            Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
             // antitunneling condition for main body parts, needs only in move case
             if((btag->parent == NULL) || ((btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
             {
-                Physics_GetGhostWorldTransform(ent->physics, tr, m);
-                from[0] = tr[12 + 0] + ent->transform[12 + 0] - orig_pos[0];
-                from[1] = tr[12 + 1] + ent->transform[12 + 1] - orig_pos[1];
-                from[2] = tr[12 + 2] + ent->transform[12 + 2] - orig_pos[2];
+                Physics_GetGhostWorldTransform(ent->physics, ghost_tr, m);
+                from[0] = ghost_tr[12 + 0] + ent->transform[12 + 0] - orig_pos[0];
+                from[1] = ghost_tr[12 + 1] + ent->transform[12 + 1] - orig_pos[1];
+                from[2] = ghost_tr[12 + 2] + ent->transform[12 + 2] - orig_pos[2];
                 if(ent_move)
                 {
                     from[0] -= ent_move[0];
@@ -471,13 +472,11 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             }
             else
             {
-                float parent_from[3], offset[3];
+                float offset[3];
                 vec3_copy_inv(offset, btag->mesh_base->centre);
-                Mat4_vec3_mul_macro(parent_from, btag->full_transform, offset);
-                Mat4_vec3_mul(from, ent->transform, parent_from);
+                Mat4_vec3_mul_macro(from, tr, offset);
             }
 
-            Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
             vec3_copy(to, tr + 12)
             vec3_copy(curr, from);
             vec3_sub(move, to, from);
@@ -491,7 +490,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             move[1] /= (float)iter;
             move[2] /= (float)iter;
 
-            for(int j = 0; j <= iter; j++)
+            for(int j = 0; j < iter; j++)
             {
                 vec3_copy(tr + 12, curr);
                 Physics_SetGhostWorldTransform(ent->physics, tr, m);
@@ -569,15 +568,14 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
         }
 
         float t1, t2, reaction[3];
-        int numPenetrationLoops = Entity_GetPenetrationFixVector(ent, reaction, move, filter);
-        if(numPenetrationLoops > 0)
+        if(0 < Entity_GetPenetrationFixVector(ent, reaction, move, filter))
         {
             reaction[2] = (ent->no_fix_z) ? (0.0f) : (reaction[2]);
             vec3_add(ent->transform + 12, ent->transform + 12, reaction);
 
             if(ent->character)
             {
-                if(move && (numPenetrationLoops > 0))
+                if(move)
                 {
                     t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
                     t2 = move[0] * move[0] + move[1] * move[1];
