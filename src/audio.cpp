@@ -4,13 +4,14 @@
 
 #include <math.h>
 
-#include "config-opentomb.h"
+#include "config-default/config-opentomb.h"
 
 extern "C" {
 #include <al.h>
 #include <alc.h>
 #ifdef HAVE_ALEXT_H
 #include <alext.h>
+#define AL_ALEXT_PROTOTYPES
 #endif
 #ifdef HAVE_EFX_H
 #include <efx.h>

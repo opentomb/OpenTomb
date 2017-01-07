@@ -19,6 +19,7 @@
 
 #define HAVE_ALC_H 1
 #define HAVE_EFX_H 1
+#define HAVE_ALEXT_H 1
 #define HAVE_EFX_PRESETS_H 1
 
 #endif /* config_opentomb_h */
