@@ -360,7 +360,7 @@ function zipline_init(id)
     end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(getEntityEvent(object_id) == 0) then
+        if((getEntityEvent(object_id) == 0) and canTriggerEntity(activator_id, object_id)) then
             setEntityEvent(object_id, 1);
             setEntityActivity(id, true);
             setEntityAnim(activator_id, ANIM_TYPE_BASE, anim_grab, 0);
