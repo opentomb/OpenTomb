@@ -967,7 +967,8 @@ void ShowModelView()
         float subModelView[16], subModelViewProjection[16];
         float *cam_pos = engine_camera.gl_transform + 12;
         animation_frame_p af = sm->animations + test_model.animations.current_animation;
-        const lit_shader_description *shader = renderer.shaderManager->getEntityShader(0);
+        const int current_light_number = 1;
+        const lit_shader_description *shader = renderer.shaderManager->getEntityShader(current_light_number);
 
         if(control_states.look_right || control_states.move_right)
         {
@@ -1027,6 +1028,19 @@ void ShowModelView()
         Mat4_Mat4_mul(subModelView, engine_camera.gl_view_mat, tr);
         Mat4_Mat4_mul(subModelViewProjection, engine_camera.gl_view_proj_mat, tr);
         qglUseProgramObjectARB(shader->program);
+
+        {
+            GLfloat ambient_component[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+            GLfloat colors[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+            GLfloat positions[3] = {16384.0f, 16384.0f, 16384.0f};
+            GLfloat innerRadiuses = 128.0f;
+            GLfloat outerRadiuses = 32768.0f;
+            qglUniform4fvARB(shader->light_ambient, 1, ambient_component);
+            qglUniform4fvARB(shader->light_color, current_light_number, colors);
+            qglUniform3fvARB(shader->light_position, current_light_number, positions);
+            qglUniform1fvARB(shader->light_inner_radius, current_light_number, &innerRadiuses);
+            qglUniform1fvARB(shader->light_outer_radius, current_light_number, &outerRadiuses);
+        }
         renderer.DrawSkeletalModel(shader, &test_model, subModelView, subModelViewProjection);
         renderer.debugDrawer->DrawAxis(4096.0f, tr);
 
