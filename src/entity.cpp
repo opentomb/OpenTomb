@@ -442,7 +442,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
     {
         float tmp[3], orig_pos[3];
         float tr[16], ghost_tr[16];
-        float from[3], to[3], curr[3], move[3], move_len;
+        float from0[3], from[3], to[3], curr[3], move[3], move_len;
 
         vec3_copy(orig_pos, ent->transform + 12);
         for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
@@ -456,6 +456,10 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             }
 
             Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
+            if(i == 0)
+            {
+                vec3_copy(from0, tr + 12);
+            }
             // antitunneling condition for main body parts, needs only in move case
             if((btag->parent == NULL) || ((btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
             {
@@ -474,7 +478,8 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             {
                 float offset[3];
                 vec3_copy_inv(offset, btag->mesh_base->centre);
-                Mat4_vec3_mul_macro(from, tr, offset);
+                Mat4_vec3_rot_macro(from, tr, offset);
+                vec3_add_to(from, from0);
             }
 
             vec3_copy(to, tr + 12)
