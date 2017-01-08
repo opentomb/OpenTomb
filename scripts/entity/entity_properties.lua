@@ -283,8 +283,8 @@ tr2_entity_tbl[68] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_
 tr2_entity_tbl[69] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};        -- Movable cubical block (pushable)
 tr2_entity_tbl[70] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};        -- Movable cubical block (pushable)
 tr2_entity_tbl[71] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Big bowl (Ice Palace)
-tr2_entity_tbl[72] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Breakable window (can shoot out)
-tr2_entity_tbl[73] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Breakable window (must jump through)
+tr2_entity_tbl[72] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "breakable_window"};-- Breakable window (can shoot out)
+tr2_entity_tbl[73] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "breakable_window_jmp"};-- Breakable window (must jump through)
 tr2_entity_tbl[76] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "propeller"};                     -- Airplane propeller
 tr2_entity_tbl[77] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Power saw
 tr2_entity_tbl[78] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Overhead pulley hook
@@ -305,7 +305,7 @@ tr2_entity_tbl[94] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_
 tr2_entity_tbl[95] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Air fan
 tr2_entity_tbl[96] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Swinging box / spiky ball
 tr2_entity_tbl[101] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Rolling storage drums
-tr2_entity_tbl[102] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "zipline"};   -- Zipline handle
+tr2_entity_tbl[102] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "zipline"};   -- Zipline handle
 tr2_entity_tbl[103] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "switch"};    -- Switch
 tr2_entity_tbl[104] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "switch"};    -- Switch
 tr2_entity_tbl[105] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "switch"};    -- Underwater switch
@@ -525,7 +525,7 @@ tr3_entity_tbl[121] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE
 tr3_entity_tbl[122] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Temple statue (original petrified state)
 tr3_entity_tbl[123] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                -- Monkey with medipack
 tr3_entity_tbl[124] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                -- Monkey with key
-tr3_entity_tbl[127] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX,     func = "zipline"};               -- Zipline handle
+tr3_entity_tbl[127] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX,     func = "zipline"};               -- Zipline handle
 tr3_entity_tbl[128] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Switch
 tr3_entity_tbl[129] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Switch
 tr3_entity_tbl[130] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "switch"};                -- Underwater switch

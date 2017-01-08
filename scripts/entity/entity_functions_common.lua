@@ -377,7 +377,7 @@ function zipline_init(id)
         local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if((entity_funcs[object_id].activator_id ~= nil) and (a == 1)) then
             local dx = 0.0;
-            local dy = 4096.0 * frame_time;
+            local dy = 3072.0 * frame_time;
             local dz = 0.0 - dy / 4.0;
             local hit = getEntityRayTest(object_id, COLLISION_GROUP_STATIC_ROOM, dx, dy + 128.0, dz, 0, 0, 0);
             if(hit) then
@@ -398,3 +398,22 @@ function zipline_init(id)
 end;
 
 
+function breakable_window_init(id)
+    setEntityActivity(id, false);
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        setEntityActivity(object_id, true);
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if(f >= c - 1) then
+            disableEntity(object_id);
+        end;
+    end;
+end;
+
+--WORKAROUND
+function breakable_window_jmp_init(id)
+    breakable_window_init(id);
+end;

@@ -2223,12 +2223,18 @@ int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
 
 int Character_IsTargetAccessible(struct entity_s *character, struct entity_s *target)
 {
-    collision_result_t cs;
-    float dir[3], t;
-    vec3_sub(dir, target->transform + 12, character->transform + 12);
-    vec3_norm(dir, t);
-    t = vec3_dot(character->transform + 4, dir);
-    return (t > 0.0f) && (!Physics_RayTest(&cs, character->obb->centre, target->obb->centre, character->self, COLLISION_FILTER_CHARACTER) || (cs.obj == target->self));
+    int ret = 0;
+    if(target && (target->state_flags & ENTITY_STATE_ACTIVE))
+    {
+        collision_result_t cs;
+        float dir[3], t;
+        vec3_sub(dir, target->transform + 12, character->transform + 12);
+        vec3_norm(dir, t);
+        t = vec3_dot(character->transform + 4, dir);
+        ret = (t > 0.0f) && (!Physics_RayTest(&cs, character->obb->centre, target->obb->centre, character->self, COLLISION_FILTER_CHARACTER) || (cs.obj == target->self));
+    }
+
+    return ret;
 }
 
 
@@ -2416,6 +2422,11 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
     */
     int16_t old_anim = ss_anim->next_animation;
     int16_t old_frame = ss_anim->next_frame;
+
+    /*static float d_from[3] = {0.0f, 0.0f, 0.0f};
+    static float d_to[3] = {0.0f, 0.0f, 0.0f};
+    static float color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+    renderer.debugDrawer->DrawLine(d_from, d_to, color, color);*/
 
     if(ss_anim->model->animation_count == 4)
     {
@@ -2616,11 +2627,30 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     }
                     else
                     {
+                        ent->character->parameters.param[PARAM_HIT_DAMAGE] = 25.0f;
                         if(target)
                         {
-                            ent->character->parameters.param[PARAM_HIT_DAMAGE] = 25.0f;
                             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
                         }
+                        else
+                        {
+                            collision_result_t cs;
+                            float from[3], to[3], tr[16];
+                            ss_bone_tag_p bt = ent->bf->bone_tags + targeted_bone + 2;
+                            Mat4_Mat4_mul(tr, ent->transform, bt->full_transform);
+                            vec3_copy(from, tr + 12);
+                            vec3_add_mul(to, from, tr + 8, -32768.0f);
+
+                            //vec3_copy(d_from, from);
+                            //vec3_copy(d_to, to);
+
+                            if(Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
+                            {
+                                target = (entity_p)cs.obj->object;
+                                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
+                            }
+                        }
+
                         ss_anim->frame_time = dt;
                         ss_anim->current_frame = 0;
                         ss_anim->next_frame = 1;
@@ -2686,6 +2716,11 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
     */
     int16_t old_anim = ss_anim->next_animation;
     int16_t old_frame = ss_anim->next_frame;
+
+    /*static float d_from[3] = {0.0f, 0.0f, 0.0f};
+    static float d_to[3] = {0.0f, 0.0f, 0.0f};
+    static float color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+    renderer.debugDrawer->DrawLine(d_from, d_to, color, color);*/
 
     if(ss_anim->model->animation_count > 4)
     {
@@ -2879,10 +2914,28 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     }
                     else
                     {
+                        ent->character->parameters.param[PARAM_HIT_DAMAGE] = 180.0f;
                         if(target)
                         {
-                            ent->character->parameters.param[PARAM_HIT_DAMAGE] = 180.0f;
                             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
+                        }
+                        else
+                        {
+                            collision_result_t cs;
+                            float from[3], to[3], tr[16];
+                            ss_bone_tag_p bt = ent->bf->bone_tags + 10;
+                            Mat4_Mat4_mul(tr, ent->transform, bt->full_transform);
+                            vec3_copy(from, tr + 12);
+                            vec3_add_mul(to, from, tr + 8, -32768.0f);
+
+                            //vec3_copy(d_from, from);
+                            //vec3_copy(d_to, to);
+
+                            if(Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
+                            {
+                                target = (entity_p)cs.obj->object;
+                                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
+                            }
                         }
                         ss_anim->frame_time = dt;
                         ss_anim->current_frame = 0;
