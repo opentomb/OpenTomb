@@ -12,6 +12,11 @@ function tallblock_init(id)    -- Tall moving block (TR1)
 	
     entity_funcs[id].distance_passed = 0;
     
+    entity_funcs[id].onSave = function()
+        local addr = "\nentity_funcs[" .. id .. "].";
+        return addr .. "distance_passed = " .. entity_funcs[id].distance_passed .. ";";
+    end;
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(getEntityEvent(object_id) == 0) then
             setEntityActivity(object_id, true);
@@ -55,6 +60,22 @@ end
 
 function midastouch_init(id)    -- Midas gold touch
 
+    --enable Midas death anim
+    setModelAnimReplaceFlag(5, 0, 0x01);
+    setModelAnimReplaceFlag(5, 1, 0x01);
+    setModelAnimReplaceFlag(5, 2, 0x01);
+    setModelAnimReplaceFlag(5, 3, 0x01);
+    setModelAnimReplaceFlag(5, 4, 0x01);
+    setModelAnimReplaceFlag(5, 5, 0x01);
+    setModelAnimReplaceFlag(5, 6, 0x01);
+    setModelAnimReplaceFlag(5, 7, 0x01);
+    setModelAnimReplaceFlag(5, 8, 0x01);
+    setModelAnimReplaceFlag(5, 9, 0x01);
+    setModelAnimReplaceFlag(5, 10, 0x01);
+    setModelAnimReplaceFlag(5, 11, 0x01);
+    setModelAnimReplaceFlag(5, 12, 0x01);
+    setModelAnimReplaceFlag(5, 13, 0x01);
+    setModelAnimReplaceFlag(5, 14, 0x01);
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
 
     setEntityActivationOffset(id, -640.0, 0.0, -512.0, 128.0);

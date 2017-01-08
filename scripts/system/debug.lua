@@ -70,10 +70,6 @@ function checkDebugKeys()
         print("Ragdoll deactivated!");
         removeEntityRagdoll(player);
     end;
-       
-    if(checkKey(KEY_Y, true)) then
-        debuginfo();
-    end;
     
     if(checkKey(KEY_H, true)) then
         setCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);

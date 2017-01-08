@@ -489,6 +489,10 @@ void Controls_DebugKeys(int button, int state)
                 }
                 break;
 
+            case SDLK_y:
+                screen_info.debug_view_state++;
+                break;
+
             case SDLK_g:
                 if(time_scale == 1.0)
                 {

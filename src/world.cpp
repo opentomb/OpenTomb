@@ -614,6 +614,13 @@ struct static_camera_sink_s *World_GetstaticCameraSink(uint32_t id)
 }
 
 
+void World_GetSkeletalModelsInfo(struct skeletal_model_s **models, uint32_t *models_count)
+{
+    *models = global_world.skeletal_models;
+    *models_count = global_world.skeletal_models_count;
+}
+
+
 void World_GetRoomInfo(struct room_s **rooms, uint32_t *rooms_count)
 {
     *rooms = global_world.rooms;

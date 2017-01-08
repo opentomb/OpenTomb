@@ -1939,7 +1939,7 @@ int lua_GetEntityCollisionFix(lua_State * lua)
         {
             int16_t filter = lua_tointeger(lua, 2);
             float reaction[3] = {0.0f, 0.0f, 0.0f};
-            Entity_GetPenetrationFixVector(ent, reaction, filter);
+            Entity_GetPenetrationFixVector(ent, reaction, NULL, filter);
 
             bool result = (reaction[0] != 0.0f) || (reaction[1] != 0.0f) || (reaction[2] != 0.0f);
             lua_pushboolean(lua, result);

@@ -39,6 +39,7 @@ void Character_Create(struct entity_s *ent)
         ent->character = ret;
         ret->height_info.self = ent->self;
         ent->dir_flag = ENT_STAY;
+        ent->no_anim_pos_autocorrection = 0x00;
 
         ret->target_id = ENTITY_ID_NONE;
         ret->hair_count = 0;
@@ -1764,7 +1765,7 @@ int Character_MoveOnWater(struct entity_s *ent)
 int Character_FindTraverse(struct entity_s *ch)
 {
     room_sector_p ch_s, obj_s = NULL;
-    ch_s = Room_GetSectorRaw(ch->self->room->real_room, ch->transform + 12);
+    ch_s = ch->current_sector;
 
     if(ch_s == NULL)
     {
@@ -1798,7 +1799,7 @@ int Character_FindTraverse(struct entity_s *ch)
 
     if(obj_s != NULL)
     {
-        obj_s = Sector_GetPortalSectorTargetRaw(obj_s);
+        obj_s = Sector_GetPortalSectorTargetReal(obj_s);
         for(engine_container_p cont = obj_s->owner_room->content->containers; cont; cont = cont->next)
         {
             if(cont->object_type == OBJECT_ENTITY)
@@ -1806,12 +1807,28 @@ int Character_FindTraverse(struct entity_s *ch)
                 entity_p e = (entity_p)cont->object;
                 if((e->type_flags & ENTITY_TYPE_TRAVERSE) && OBB_OBB_Test(e->obb, ch->obb, 32.0f) && (fabs(e->transform[12 + 2] - ch->transform[12 + 2]) < 1.1f))
                 {
-                    int oz = (ch->angles[0] + 45.0) / 90.0;
-                    ch->angles[0] = oz * 90.0;
+                    int oz = (ch->angles[0] + 45.0f) / 90.0f;
+                    ch->angles[0] = oz * 90.0f;
                     ch->character->traversed_object = e;
                     Entity_UpdateTransform(ch);
                     return 1;
                 }
+            }
+        }
+    }
+
+    for(engine_container_p cont = ch_s->owner_room->content->containers; cont; cont = cont->next)
+    {
+        if(cont->object_type == OBJECT_ENTITY)
+        {
+            entity_p e = (entity_p)cont->object;
+            if((e->type_flags & ENTITY_TYPE_TRAVERSE) && OBB_OBB_Test(e->obb, ch->obb, 32.0f) && (fabs(e->transform[12 + 2] - ch->transform[12 + 2]) < 1.1f))
+            {
+                int oz = (ch->angles[0] + 45.0f) / 90.0f;
+                ch->angles[0] = oz * 90.0f;
+                ch->character->traversed_object = e;
+                Entity_UpdateTransform(ch);
+                return 1;
             }
         }
     }
@@ -1867,34 +1884,8 @@ int Sector_AllowTraverse(struct room_sector_s *rs, float floor)
  */
 int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
 {
-    room_sector_p ch_s  = Room_GetSectorRaw(ch->self->room->real_room, ch->transform + 12);
-    room_sector_p obj_s = Room_GetSectorRaw(obj->self->room->real_room, obj->transform + 12);
-
-    if(obj_s == ch_s)
-    {
-        if(ch->transform[4 + 0] > 0.8)
-        {
-            float pos[] = {(float)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (float)(obj_s->pos[1]), (float)0.0};
-            ch_s = Room_GetSectorRaw(obj->self->room->real_room, pos);
-        }
-        else if(ch->transform[4 + 0] < -0.8)
-        {
-            float pos[] = {(float)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (float)(obj_s->pos[1]), (float)0.0};
-            ch_s = Room_GetSectorRaw(obj->self->room->real_room, pos);
-        }
-        // OY move case
-        else if(ch->transform[4 + 1] > 0.8)
-        {
-            float pos[] = {(float)(obj_s->pos[0]), (float)(obj_s->pos[1] - TR_METERING_SECTORSIZE), (float)0.0};
-            ch_s = Room_GetSectorRaw(obj->self->room->real_room, pos);
-        }
-        else if(ch->transform[4 + 1] < -0.8)
-        {
-            float pos[] = {(float)(obj_s->pos[0]), (float)(obj_s->pos[1] + TR_METERING_SECTORSIZE), (float)0.0};
-            ch_s = Room_GetSectorRaw(obj->self->room->real_room, pos);
-        }
-        ch_s = Sector_GetPortalSectorTargetReal(ch_s);
-    }
+    room_sector_p ch_s  = ch->current_sector;
+    room_sector_p obj_s = obj->current_sector;
 
     if((ch_s == NULL) || (obj_s == NULL))
     {
@@ -2232,12 +2223,18 @@ int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
 
 int Character_IsTargetAccessible(struct entity_s *character, struct entity_s *target)
 {
-    collision_result_t cs;
-    float dir[3], t;
-    vec3_sub(dir, target->transform + 12, character->transform + 12);
-    vec3_norm(dir, t);
-    t = vec3_dot(character->transform + 4, dir);
-    return (t > 0.0f) && (!Physics_RayTest(&cs, character->obb->centre, target->obb->centre, character->self, COLLISION_FILTER_CHARACTER) || (cs.obj == target->self));
+    int ret = 0;
+    if(target && (target->state_flags & ENTITY_STATE_ACTIVE))
+    {
+        collision_result_t cs;
+        float dir[3], t;
+        vec3_sub(dir, target->transform + 12, character->transform + 12);
+        vec3_norm(dir, t);
+        t = vec3_dot(character->transform + 4, dir);
+        ret = (t > 0.0f) && (!Physics_RayTest(&cs, character->obb->centre, target->obb->centre, character->self, COLLISION_FILTER_CHARACTER) || (cs.obj == target->self));
+    }
+
+    return ret;
 }
 
 
@@ -2425,6 +2422,11 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
     */
     int16_t old_anim = ss_anim->next_animation;
     int16_t old_frame = ss_anim->next_frame;
+
+    /*static float d_from[3] = {0.0f, 0.0f, 0.0f};
+    static float d_to[3] = {0.0f, 0.0f, 0.0f};
+    static float color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+    renderer.debugDrawer->DrawLine(d_from, d_to, color, color);*/
 
     if(ss_anim->model->animation_count == 4)
     {
@@ -2625,11 +2627,30 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     }
                     else
                     {
+                        ent->character->parameters.param[PARAM_HIT_DAMAGE] = 25.0f;
                         if(target)
                         {
-                            ent->character->parameters.param[PARAM_HIT_DAMAGE] = 25.0f;
                             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
                         }
+                        else
+                        {
+                            collision_result_t cs;
+                            float from[3], to[3], tr[16];
+                            ss_bone_tag_p bt = ent->bf->bone_tags + targeted_bone + 2;
+                            Mat4_Mat4_mul(tr, ent->transform, bt->full_transform);
+                            vec3_copy(from, tr + 12);
+                            vec3_add_mul(to, from, tr + 8, -32768.0f);
+
+                            //vec3_copy(d_from, from);
+                            //vec3_copy(d_to, to);
+
+                            if(Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
+                            {
+                                target = (entity_p)cs.obj->object;
+                                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
+                            }
+                        }
+
                         ss_anim->frame_time = dt;
                         ss_anim->current_frame = 0;
                         ss_anim->next_frame = 1;
@@ -2695,6 +2716,11 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
     */
     int16_t old_anim = ss_anim->next_animation;
     int16_t old_frame = ss_anim->next_frame;
+
+    /*static float d_from[3] = {0.0f, 0.0f, 0.0f};
+    static float d_to[3] = {0.0f, 0.0f, 0.0f};
+    static float color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
+    renderer.debugDrawer->DrawLine(d_from, d_to, color, color);*/
 
     if(ss_anim->model->animation_count > 4)
     {
@@ -2888,10 +2914,28 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     }
                     else
                     {
+                        ent->character->parameters.param[PARAM_HIT_DAMAGE] = 180.0f;
                         if(target)
                         {
-                            ent->character->parameters.param[PARAM_HIT_DAMAGE] = 180.0f;
                             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
+                        }
+                        else
+                        {
+                            collision_result_t cs;
+                            float from[3], to[3], tr[16];
+                            ss_bone_tag_p bt = ent->bf->bone_tags + 10;
+                            Mat4_Mat4_mul(tr, ent->transform, bt->full_transform);
+                            vec3_copy(from, tr + 12);
+                            vec3_add_mul(to, from, tr + 8, -32768.0f);
+
+                            //vec3_copy(d_from, from);
+                            //vec3_copy(d_to, to);
+
+                            if(Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
+                            {
+                                target = (entity_p)cs.obj->object;
+                                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
+                            }
                         }
                         ss_anim->frame_time = dt;
                         ss_anim->current_frame = 0;

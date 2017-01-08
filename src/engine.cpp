@@ -13,6 +13,7 @@ extern "C" {
 #include <lauxlib.h>
 #include <al.h>
 #include <alc.h>
+#include <GL/gl.h>
 }
 
 #include "core/system.h"
@@ -43,6 +44,7 @@ extern "C" {
 #include "trigger.h"
 #include "character_controller.h"
 #include "render/bsp_tree.h"
+#include "render/shader_manager.h"
 #include "image.h"
 
 
@@ -61,6 +63,8 @@ float time_scale = 1.0f;
 
 engine_container_p      last_cont = NULL;
 static float            ray_test_point[3] = {0.0f, 0.0f, 0.0f};
+static ss_bone_frame_t  test_model = {0};
+static int32_t          test_model_index = 0;
 
 struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_mapper = {0};
@@ -69,6 +73,18 @@ float                                   engine_frame_time = 0.0;
 lua_State                              *engine_lua = NULL;
 struct camera_s                         engine_camera;
 struct camera_state_s                   engine_camera_state;
+
+
+enum debug_view_state_e
+{
+    no_debug = 0,
+    player_anim,
+    sector_info,
+    room_entities,
+    bsp_info,
+    model_view,
+    debug_states_count
+};
 
 
 engine_container_p Container_Create()
@@ -96,6 +112,9 @@ void Engine_Display();
 void Engine_PollSDLEvents();
 void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH);
 
+void TestModelApplyKey(int key);
+void SetTestModel(int index);
+void ShowModelView();
 void ShowDebugInfo();
 
 void Engine_Start(int argc, char **argv)
@@ -196,6 +215,7 @@ void Engine_Start(int argc, char **argv)
 void Engine_Shutdown(int val)
 {
     renderer.ResetWorld(NULL, 0, NULL, 0);
+    SSBoneFrame_Clear(&test_model);
     World_Clear();
 
     if(engine_lua)
@@ -573,7 +593,7 @@ void Engine_Display()
         Cam_RecalcClipPlanes(&engine_camera);
         // GL_VERTEX_ARRAY | GL_COLOR_ARRAY
 
-        screen_info.debug_view_state %= 5;
+        screen_info.debug_view_state %= debug_states_count;
         if(screen_info.debug_view_state)
         {
             ShowDebugInfo();
@@ -585,9 +605,19 @@ void Engine_Display()
 
         qglFrontFace(GL_CW);
 
-        renderer.GenWorldList(&engine_camera);
-        renderer.DrawList();
-
+        if(screen_info.debug_view_state != debug_view_state_e::model_view)
+        {
+            renderer.GenWorldList(&engine_camera);
+            renderer.DrawList();
+        }
+        else
+        {
+            /*qglPolygonMode(GL_FRONT, GL_FILL);
+            qglDisable(GL_CULL_FACE);*/
+            qglDisable(GL_BLEND);
+            qglEnable(GL_ALPHA_TEST);
+            ShowModelView();
+        }
         Gui_SwitchGLMode(1);
         qglEnable(GL_ALPHA_TEST);
 
@@ -770,6 +800,10 @@ void Engine_PollSDLEvents()
                     Controls_Key(event.key.keysym.sym, event.key.state);
                     // DEBUG KEYBOARD COMMANDS
                     Controls_DebugKeys(event.key.keysym.sym, event.key.state);
+                    if((screen_info.debug_view_state == debug_view_state_e::model_view) && event.key.state)
+                    {
+                        TestModelApplyKey(event.key.keysym.sym);
+                    }
                 }
                 break;
 
@@ -853,11 +887,193 @@ void Engine_MainLoop()
 
         Sys_ResetTempMem();
         Engine_PollSDLEvents();
-        Game_Frame(time);
-        gameflow.Do();
-
+        if(screen_info.debug_view_state != debug_view_state_e::model_view)
+        {
+            Game_Frame(time);
+            gameflow.Do();
+        }
         Audio_Update(time);
         Engine_Display();
+    }
+}
+
+
+void TestModelApplyKey(int key)
+{
+    switch(key)
+    {
+        case SDLK_LEFTBRACKET:
+            test_model_index--;
+            SetTestModel(test_model_index);
+            break;
+
+        case SDLK_RIGHTBRACKET:
+            test_model_index++;
+            SetTestModel(test_model_index);
+            break;
+
+        case SDLK_o:
+            if(test_model.animations.current_animation > 0)
+            {
+                Anim_SetAnimation(&test_model.animations, test_model.animations.current_animation - 1, 0);
+            }
+            break;
+
+        case SDLK_p:
+            Anim_SetAnimation(&test_model.animations, test_model.animations.current_animation + 1, 0);
+            break;
+
+        default:
+            break;
+    }
+}
+
+
+void SetTestModel(int index)
+{
+    skeletal_model_p sm;
+    uint32_t sm_count;
+    World_GetSkeletalModelsInfo(&sm, &sm_count);
+
+    index = (index >= 0) ? (index) : (sm_count - 1);
+    index = (index >= sm_count) ? (0) : (index);
+
+    if(sm_count > 0)
+    {
+        test_model_index = index;
+        SSBoneFrame_Clear(&test_model);
+        SSBoneFrame_CreateFromModel(&test_model, sm + index);
+    }
+}
+
+
+void ShowModelView()
+{
+    static float tr[16];
+    static float test_model_angles[3] = {45.0f, 45.0f, 0.0f};
+    static float test_model_dist = 1024.0f;
+    static float test_model_z_offset = 256.0f;
+    uint32_t sm_count;
+    skeletal_model_p sm = NULL;
+
+    World_GetSkeletalModelsInfo(&sm, &sm_count);
+    if((test_model_index >= 0) && (test_model_index < sm_count))
+    {
+        sm += test_model_index;
+    }
+
+    if(sm && (test_model.animations.model == sm))
+    {
+        float subModelView[16], subModelViewProjection[16];
+        float *cam_pos = engine_camera.gl_transform + 12;
+        animation_frame_p af = sm->animations + test_model.animations.current_animation;
+        const int current_light_number = 1;
+        const lit_shader_description *shader = renderer.shaderManager->getEntityShader(current_light_number);
+
+        if(control_states.look_right || control_states.move_right)
+        {
+            test_model_angles[0] += engine_frame_time * 256.0f;
+        }
+        if(control_states.look_left || control_states.move_left)
+        {
+            test_model_angles[0] -= engine_frame_time * 256.0f;
+        }
+        if(control_states.look_up)
+        {
+            test_model_angles[1] += engine_frame_time * 256.0f;
+        }
+        if(control_states.look_down)
+        {
+            test_model_angles[1] -= engine_frame_time * 256.0f;
+        }
+        if(control_states.move_forward && (test_model_dist >= 8.0f))
+        {
+            test_model_dist -= engine_frame_time * 512.0f;
+        }
+        if(control_states.move_backward)
+        {
+            test_model_dist += engine_frame_time * 512.0f;
+        }
+        if(control_states.move_up)
+        {
+            test_model_z_offset += engine_frame_time * 512.0f;
+        }
+        if(control_states.move_down)
+        {
+            test_model_z_offset -= engine_frame_time * 512.0f;
+        }
+
+        test_model.transform = tr;
+        Mat4_E_macro(tr);
+        Mat4_E_macro(engine_camera.gl_transform);
+        engine_camera.ang[0] = test_model_angles[0];
+        engine_camera.ang[1] = test_model_angles[1] + 90.0f;
+        engine_camera.ang[2] = test_model_angles[2];
+        Mat4_SetAnglesZXY(engine_camera.gl_transform, engine_camera.ang);
+        cam_pos[0] = -engine_camera.gl_transform[8 + 0] * test_model_dist;
+        cam_pos[1] = -engine_camera.gl_transform[8 + 1] * test_model_dist;
+        cam_pos[2] = -engine_camera.gl_transform[8 + 2] * test_model_dist + test_model_z_offset;
+        Cam_Apply(&engine_camera);
+
+        test_model.animations.frame_time += engine_frame_time;
+        test_model.animations.current_frame = test_model.animations.frame_time / test_model.animations.period;
+        if(test_model.animations.current_frame >= af->frames_count)
+        {
+            test_model.animations.frame_time = 0.0f;
+            test_model.animations.current_frame = 0;
+        }
+        test_model.animations.next_frame = test_model.animations.current_frame;
+        SSBoneFrame_Update(&test_model, 0.0f);
+
+        Mat4_Mat4_mul(subModelView, engine_camera.gl_view_mat, tr);
+        Mat4_Mat4_mul(subModelViewProjection, engine_camera.gl_view_proj_mat, tr);
+        qglUseProgramObjectARB(shader->program);
+
+        {
+            GLfloat ambient_component[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+            GLfloat colors[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+            GLfloat positions[3] = {16384.0f, 16384.0f, 16384.0f};
+            GLfloat innerRadiuses = 128.0f;
+            GLfloat outerRadiuses = 32768.0f;
+            qglUniform4fvARB(shader->light_ambient, 1, ambient_component);
+            qglUniform4fvARB(shader->light_color, current_light_number, colors);
+            qglUniform3fvARB(shader->light_position, current_light_number, positions);
+            qglUniform1fvARB(shader->light_inner_radius, current_light_number, &innerRadiuses);
+            qglUniform1fvARB(shader->light_outer_radius, current_light_number, &outerRadiuses);
+        }
+        renderer.DrawSkeletalModel(shader, &test_model, subModelView, subModelViewProjection);
+        renderer.debugDrawer->DrawAxis(4096.0f, tr);
+
+        {
+            const float dy = -18.0f * screen_info.scale_factor;
+            float y = (float)screen_info.h + dy;
+
+            GLText_OutTextXY(30.0f, y += dy, "MODEL[%d]; state: %d", (int)sm->id, (int)af->state_id);
+            GLText_OutTextXY(30.0f, y += dy, "anim: %d of %d", (int)test_model.animations.current_animation, (int)sm->animation_count);
+            GLText_OutTextXY(30.0f, y += dy, "frame: %d of %d, %d", (int)test_model.animations.current_frame, (int)af->max_frame, (int)af->frames_count);
+            GLText_OutTextXY(30.0f, y += dy, "next a: %d,next f: %d", (int)af->next_anim->id, (int)af->next_frame);
+
+            for(animation_command_p cmd = af->commands; cmd; cmd = cmd->next)
+            {
+                GLText_OutTextXY(30.0f, y += dy, "command[%d]: {%.1f,  %.1f,  %.1f}", (int)cmd->id, cmd->data[0], cmd->data[1], cmd->data[2]);
+            }
+
+            y = (float)screen_info.h + dy;
+            for(uint16_t i = 0; i < af->state_change_count; ++i)
+            {
+                state_change_p stc = af->state_change + i;
+                GLText_OutTextXY(screen_info.w - 350, y += dy, "state change[%d]:", (int)stc->id);
+                for(uint16_t j = 0; j < stc->anim_dispatch_count; ++j)
+                {
+                    anim_dispatch_p disp = stc->anim_dispatch + j;
+                    GLText_OutTextXY(screen_info.w - 320, y += dy, "frame_int(%d, %d), to (%d, %d):", (int)disp->frame_low, (int)disp->frame_high, (int)disp->next_anim, (int)disp->next_frame);
+                }
+            }
+        }
+    }
+    else
+    {
+        SetTestModel(test_model_index);
     }
 }
 
@@ -869,6 +1085,7 @@ void ShowDebugInfo()
 
     if(last_cont)
     {
+        GLText_OutTextXY(30.0f, y += dy, "VIEW: Selected object");
         switch(last_cont->object_type)
         {
             case OBJECT_ENTITY:
@@ -930,8 +1147,9 @@ void ShowDebugInfo()
 
     switch(screen_info.debug_view_state)
     {
-        case 1:
+        case debug_view_state_e::player_anim:
             {
+                GLText_OutTextXY(30.0f, y += dy, "VIEW: Lara anim");
                 entity_p ent = World_GetPlayer();
                 if(ent && ent->character)
                 {
@@ -944,10 +1162,10 @@ void ShowDebugInfo()
             }
             break;
 
-        case 2:
+        case debug_view_state_e::sector_info:
             {
                 entity_p ent = World_GetPlayer();
-
+                GLText_OutTextXY(30.0f, y += dy, "VIEW: Sector info");
                 if(engine_camera.current_room)
                 {
                     GLText_OutTextXY(30.0f, y += dy, "cam_room = (id = %d)", engine_camera.current_room->id);
@@ -1001,9 +1219,10 @@ void ShowDebugInfo()
             }
             break;
 
-        case 3:
+        case debug_view_state_e::room_entities:
             {
                 entity_p ent = World_GetPlayer();
+                GLText_OutTextXY(30.0f, y += dy, "VIEW: Room entities");
                 if(ent && ent->self->room)
                 {
                     for(engine_container_p cont = ent->self->room->content->containers; cont; cont = cont->next)
@@ -1022,12 +1241,17 @@ void ShowDebugInfo()
             }
             break;
 
-        case 4:
+        case debug_view_state_e::bsp_info:
+            GLText_OutTextXY(30.0f, y += dy, "VIEW: BSP tree info");
             if(renderer.dynamicBSP)
             {
                 GLText_OutTextXY(30.0f, y += dy, "input polygons = %07d", renderer.dynamicBSP->GetInputPolygonsCount());
                 GLText_OutTextXY(30.0f, y += dy, "added polygons = %07d", renderer.dynamicBSP->GetAddedPolygonsCount());
             }
+            break;
+
+        case debug_view_state_e::model_view:
+            GLText_OutTextXY(30.0f, y += dy, "VIEW: MODELS ANIM (use o, p, [, ], w, s, space, v and arrows)");
             break;
     };
 }

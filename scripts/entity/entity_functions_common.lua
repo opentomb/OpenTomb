@@ -332,3 +332,106 @@ function boulder_heavy_init(id)
     end;
 
 end;
+
+
+function zipline_init(id)
+    setEntityActivity(id, false);
+    setEntityAnim(id, ANIM_TYPE_BASE, 0, 0);
+    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
+
+    setEntityActivationOffset(id, 0.0, 350.0, 0.0, 256.0);
+    setEntityActivationDirection(id, 0.0, 1.0, 0.0, 0.77);
+    
+    entity_funcs[id].activator_id = nil;
+    entity_funcs[id].x0, entity_funcs[id].y0, entity_funcs[id].z0 = getEntityPos(id); 
+    local anim_grab = 215;
+    local anim_drop = 217;
+    if(getLevelVersion() >= TR_III) then
+        anim_grab = 214;
+        anim_drop = 216;
+    end;
+
+    entity_funcs[id].onSave = function()
+        if(entity_funcs[id].activator_id ~= nil) then
+            local addr = "\nentity_funcs[" .. id .. "].";
+            return addr .. "activator_id = " .. entity_funcs[id].activator_id .. ";";
+        end;
+        return "";
+    end;
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if((getEntityEvent(object_id) == 0) and canTriggerEntity(activator_id, object_id)) then
+            setEntityEvent(object_id, 1);
+            setEntityActivity(object_id, true);
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, anim_grab, 0);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+            entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
+            entity_funcs[id].activator_id = activator_id;
+            return ENTITY_TRIGGERING_ACTIVATED;
+        elseif((getEntityEvent(object_id) == 1) and (not getEntityActivity(object_id))) then
+            setEntityEvent(object_id, 0);
+            setEntityActivity(object_id, false);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+            setEntityPos(object_id, entity_funcs[object_id].x0, entity_funcs[object_id].y0, entity_funcs[object_id].z0);
+            return ENTITY_TRIGGERING_DEACTIVATED;
+        end;
+        return ENTITY_TRIGGERING_NOT_READY;
+    end;
+
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityEvent(object_id, 0);
+        setEntityActivity(object_id, false);
+        setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+        setEntityPos(object_id, entity_funcs[object_id].x0, entity_funcs[object_id].y0, entity_funcs[object_id].z0);
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if(a == 1) then
+            local dx = 0.0;
+            local dy = 3072.0 * frame_time;
+            local dz = 0.0 - dy / 4.0;
+            local hit = getEntityRayTest(object_id, COLLISION_GROUP_STATIC_ROOM, dx, dy + 128.0, dz, 0, 0, 0);
+            if(hit) then
+                if(entity_funcs[object_id].activator_id ~= nil) then
+                    setEntityAnim(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE, anim_drop, 0);
+                end;
+                entity_funcs[object_id].activator_id = nil;
+                setEntityActivity(object_id, false);
+            else
+                moveEntityLocal(object_id, dx, dy, dz);
+            end;
+        end;
+
+        if(entity_funcs[object_id].activator_id ~= nil) then
+            if(70 == getEntityAnimState(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE)) then
+                setEntityPos(entity_funcs[object_id].activator_id, getEntityPos(object_id));
+            elseif(a == 1) then
+                entity_funcs[object_id].activator_id = nil;
+            end;
+        end;
+    end;
+end;
+
+
+function breakable_window_init(id)
+    setEntityActivity(id, false);
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        setEntityActivity(object_id, true);
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if(f >= c - 1) then
+            disableEntity(object_id);
+        end;
+    end;
+end;
+
+--WORKAROUND
+function breakable_window_jmp_init(id)
+    breakable_window_init(id);
+end;

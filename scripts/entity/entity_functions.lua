@@ -120,15 +120,14 @@ function propeller_init(id)      -- Generic propeller (TR1-TR2)
     setEntityActivity(id, true);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        return swapEntityState(object_id, 0, 1);
+        local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if(a ~= 0) then
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+        end;
     end;
     
-    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
-    
-    entity_funcs[id].onLoop = function(object_id, tick_state)
-        if(tick_state == TICK_STOPPED) then 
-            setEntityAnimState(object_id, ANIM_TYPE_BASE, 0) 
-        end;
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
     end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
