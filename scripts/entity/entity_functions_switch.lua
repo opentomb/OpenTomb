@@ -482,7 +482,6 @@ function switch_init(id)     -- Ordinary switches
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if((tick_state == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
             setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 1);
-            setEntitySectorStatus(object_id, 1);
             setEntityEvent(object_id, 0);
         end;
 
@@ -557,7 +556,6 @@ function lever_switch_init(id)     -- Big switches (TR4) - lever
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if((tick_state == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
             setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 1);
-            setEntitySectorStatus(object_id, 1);
             setEntityEvent(object_id, 0);
         end;
 

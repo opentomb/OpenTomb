@@ -343,7 +343,7 @@ function zipline_init(id)
     setEntityActivationDirection(id, 0.0, 1.0, 0.0, 0.77);
     
     entity_funcs[id].activator_id = nil;
-
+    entity_funcs[id].x0, entity_funcs[id].y0, entity_funcs[id].z0 = getEntityPos(id); 
     local anim_grab = 215;
     local anim_drop = 217;
     if(getLevelVersion() >= TR_III) then
@@ -362,26 +362,40 @@ function zipline_init(id)
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((getEntityEvent(object_id) == 0) and canTriggerEntity(activator_id, object_id)) then
             setEntityEvent(object_id, 1);
-            setEntityActivity(id, true);
+            setEntityActivity(object_id, true);
             setEntityAnim(activator_id, ANIM_TYPE_BASE, anim_grab, 0);
             setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
             entityRotateToTriggerZ(activator_id, object_id);
             entityMoveToTriggerActivationPoint(activator_id, object_id);
             entity_funcs[id].activator_id = activator_id;
             return ENTITY_TRIGGERING_ACTIVATED;
+        elseif((getEntityEvent(object_id) == 1) and (not getEntityActivity(object_id))) then
+            setEntityEvent(object_id, 0);
+            setEntityActivity(object_id, false);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+            setEntityPos(object_id, entity_funcs[object_id].x0, entity_funcs[object_id].y0, entity_funcs[object_id].z0);
+            return ENTITY_TRIGGERING_DEACTIVATED;
         end;
         return ENTITY_TRIGGERING_NOT_READY;
     end;
 
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityEvent(object_id, 0);
+        setEntityActivity(object_id, false);
+        setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+        setEntityPos(object_id, entity_funcs[object_id].x0, entity_funcs[object_id].y0, entity_funcs[object_id].z0);
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    end;
+
     entity_funcs[id].onLoop = function(object_id, tick_state)
         local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
-        if((entity_funcs[object_id].activator_id ~= nil) and (a == 1)) then
+        if(a == 1) then
             local dx = 0.0;
             local dy = 3072.0 * frame_time;
             local dz = 0.0 - dy / 4.0;
             local hit = getEntityRayTest(object_id, COLLISION_GROUP_STATIC_ROOM, dx, dy + 128.0, dz, 0, 0, 0);
             if(hit) then
-                if(70 == getEntityAnimState(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE)) then
+                if(entity_funcs[object_id].activator_id ~= nil) then
                     setEntityAnim(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE, anim_drop, 0);
                 end;
                 entity_funcs[object_id].activator_id = nil;
@@ -391,8 +405,12 @@ function zipline_init(id)
             end;
         end;
 
-        if((entity_funcs[object_id].activator_id ~= nil) and (70 == getEntityAnimState(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE))) then
-            setEntityPos(entity_funcs[object_id].activator_id, getEntityPos(object_id));
+        if(entity_funcs[object_id].activator_id ~= nil) then
+            if(70 == getEntityAnimState(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE)) then
+                setEntityPos(entity_funcs[object_id].activator_id, getEntityPos(object_id));
+            elseif(a == 1) then
+                entity_funcs[object_id].activator_id = nil;
+            end;
         end;
     end;
 end;
