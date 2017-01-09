@@ -1012,9 +1012,6 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
                     Mat4_vec3_rot_macro(r1, entity->transform, move);
                     vec3_sub(move, r0, r1);
                     vec3_add(entity->transform + 12, entity->transform + 12, move);
-
-                    Entity_GhostUpdate(entity);
-                    Entity_FixPenetrations(entity, move, COLLISION_FILTER_CHARACTER);
                 }
                 else
                 {
@@ -1024,9 +1021,9 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
                     {
                         Mat4_Copy(entity->transform, new_transform);
                     }
-                    Entity_GhostUpdate(entity);
-                    Entity_FixPenetrations(entity, NULL, COLLISION_FILTER_CHARACTER);
                 }
+                Entity_GhostUpdate(entity);
+                Entity_FixPenetrations(entity, NULL, COLLISION_FILTER_CHARACTER);
                 entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
                 Entity_UpdateRigidBody(entity, 1);
             }
