@@ -52,7 +52,7 @@ void OBB_Rebuild(obb_p obb, float bb_min[3], float bb_max[3])
 
     vec3_add(obb->base_centre, bb_min, bb_max);
     vec3_mul_scalar(obb->base_centre, obb->base_centre, 0.5);
-    obb->r = vec3_abs(obb->extent);
+    obb->radius = vec3_abs(obb->extent);
 
     p = obb->base_polygons;
     // UP
