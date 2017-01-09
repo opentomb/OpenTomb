@@ -1,4 +1,4 @@
--- OPENTOMB STATIC MESH COLLISION SCRIPT
+-- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER 1, GYM
 
 print("Level script loaded (GYM.lua)");
