@@ -1,7 +1,7 @@
 -- OPENTOMB LEVEL SCRIPT
--- FOR TOMB RAIDER 4, SEMER
+-- FOR TOMB RAIDER 4, SEMER2
 
-print("Level script loaded (SEMER.lua)");
+print("Level script loaded (SEMER2.lua)");
 
 level_PostLoad = function()
     addCharacterHair(player, HAIR_TR4_OLD);
