@@ -1190,7 +1190,7 @@ void World_ScriptsOpen()
 {
     if(engine_lua)
     {
-        Script_DoLuaFile(engine_lua, "scripts/staticmesh/staticmesh_script.lua"); ///@TODO: RENAME THAT SCRIPT!
+        Script_DoLuaFile(engine_lua, "scripts/level_preload.lua");
         {
             char temp_script_name[1024];
             int top = lua_gettop(engine_lua);

@@ -1,9 +1,10 @@
--- OPENTOMB STATIC PROPERTY SCRIPT
+-- OPENTOMB LEVEL PRELOAD SCRIPT
 -- By Lwmte, Apr 2015
 
 --------------------------------------------------------------------------------
 -- This script defines static mesh property table, as well as functions related
 -- to this table processing.
+-- Here are level preload routine. 
 -- Please note that static mesh properties may vary from level to level, so
 -- static table is frequently redefined on a per-level basis.
 
