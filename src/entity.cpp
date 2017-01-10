@@ -485,11 +485,11 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             vec3_copy(curr, from);
             vec3_sub(move, to, from);
             move_len = vec3_abs(move);
-            if((i == 0) && (move_len > 1024.0))                                 ///@FIXME: magick const 1024.0!
+            if((i == 0) && (move_len > 1024.0f))                                ///@FIXME: magick const 1024.0!
             {
                 break;
             }
-            int iter = (float)(2.0 * move_len / btag->mesh_base->R) + 1;        ///@FIXME (not a critical): magick const 2.0!
+            int iter = (float)(2.0f * move_len / btag->mesh_base->radius) + 1;  ///@FIXME (not a critical): magick const 2.0!
             move[0] /= (float)iter;
             move[1] /= (float)iter;
             move[2] /= (float)iter;
