@@ -136,7 +136,7 @@ bool Engine_LoadPCLevel(const char *name);
 
 void Engine_TakeScreenShot();
 void Engine_GetLevelName(char *name, const char *path);
-void Engine_GetLevelScriptNameLocal(int game_version, char *name, const char *postfix, uint32_t buf_size);
+void Engine_GetLevelScriptNameLocal(int game_version, char *name, uint32_t buf_size);
 int  Engine_LoadMap(const char *name);
 
 extern "C" int  Engine_ExecCmd(char *ch);

@@ -1185,7 +1185,7 @@ void World_ScriptsOpen()
         {
             char temp_script_name[1024];
             int top = lua_gettop(engine_lua);
-            Engine_GetLevelScriptNameLocal(global_world.version, temp_script_name, NULL, sizeof(temp_script_name));
+            Engine_GetLevelScriptNameLocal(global_world.version, temp_script_name, sizeof(temp_script_name));
             int lua_err = Script_DoLuaFile(engine_lua, temp_script_name);
             if(lua_err)
             {
