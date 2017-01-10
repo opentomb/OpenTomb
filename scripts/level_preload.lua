@@ -33,6 +33,9 @@
 -- COLLISION_SHAPE_SINGLE_SPHERE
 --------------------------------------------------------------------------------
 
+dofile(base_path .. "scripts/entity/entity_properties.lua");
+dofile(base_path .. "scripts/entity/entity_model_ID_override.lua");
+
 static_tbl = {};    -- Define static mesh property table.
 
 -- Get static mesh flags from property table.
