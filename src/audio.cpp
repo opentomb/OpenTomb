@@ -4,7 +4,7 @@
 
 #include <math.h>
 
-#include "config-default/config-opentomb.h"
+#include "config-opentomb.h"
 
 extern "C" {
 #include <al.h>
