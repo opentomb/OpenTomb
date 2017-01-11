@@ -349,18 +349,18 @@ function set_activation_offset(id)
 
     if(getLevelVersion() < TR_II) then
         if(model_id == 56) then
-            dy = 0.0;
-            r = 160.0;
+            dy = 64.0;
+            r = 256.0;
         end
     elseif(getLevelVersion() < TR_III) then
         if(model_id == 105) then
-            dy = 0.0;
-            r = 160.0;
+            dy = 64.0;
+            r = 256.0;
         end
     elseif(getLevelVersion() < TR_IV) then
         if(model_id == 130) then
-            dy = 0.0;
-            r = 160.0;
+            dy = 64.0;
+            r = 256.0;
         end
     end
 

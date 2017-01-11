@@ -6,8 +6,6 @@ UVRotate = 4;
 print("Level script loaded (ANGKOR1.lua)");
 
 level_PostLoad = function()
-    setEntityCollision(2, false);  -- model 455 - rays
-
     addCharacterHair(player, HAIR_TR4_KID_1);
     addCharacterHair(player, HAIR_TR4_KID_2);
 
@@ -15,6 +13,9 @@ level_PostLoad = function()
 end;
 
 level_PreLoad = function()
+    tr4_entity_tbl[453] = {coll = COLLISION_NONE, shape = COLLISION_SHAPE_BOX}; -- sunlight
+    tr4_entity_tbl[455] = {coll = COLLISION_NONE, shape = COLLISION_SHAPE_BOX}; -- sunlight
+
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     -- PLANT statics (as listed in OBJECTS.H from TRLE)
