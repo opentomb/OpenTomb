@@ -80,7 +80,7 @@ enum debug_view_state_e
     no_debug = 0,
     player_anim,
     sector_info,
-    room_entities,
+    room_objects,
     bsp_info,
     model_view,
     debug_states_count
@@ -1219,13 +1219,14 @@ void ShowDebugInfo()
             }
             break;
 
-        case debug_view_state_e::room_entities:
+        case debug_view_state_e::room_objects:
             {
                 entity_p ent = World_GetPlayer();
-                GLText_OutTextXY(30.0f, y += dy, "VIEW: Room entities");
+                GLText_OutTextXY(30.0f, y += dy, "VIEW: Room objects");
                 if(ent && ent->self->room)
                 {
-                    for(engine_container_p cont = ent->self->room->content->containers; cont; cont = cont->next)
+                    room_p r = ent->self->room;
+                    for(engine_container_p cont = r->content->containers; cont; cont = cont->next)
                     {
                         if(cont->object_type == OBJECT_ENTITY)
                         {
@@ -1235,6 +1236,16 @@ void ShowDebugInfo()
                             {
                                 text->x_align = GLTEXT_ALIGN_CENTER;
                             }
+                        }
+                    }
+
+                    for(uint32_t i = 0; i < r->content->static_mesh_count; ++i)
+                    {
+                        static_mesh_p sm = r->content->static_mesh + i;
+                        gl_text_line_p text = renderer.OutTextXYZ(sm->pos[0], sm->pos[1], sm->pos[2], "(static[0x%X])", sm->object_id);
+                        if(text)
+                        {
+                            text->x_align = GLTEXT_ALIGN_CENTER;
                         }
                     }
                 }
