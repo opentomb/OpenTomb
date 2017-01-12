@@ -37,7 +37,7 @@ extern "C" {
 #include "../engine_string.h"
 
 
-void Script_DoFlipEffect(lua_State *lua, int id_effect, int param)
+void Script_DoFlipEffect(lua_State *lua, int id_effect, int id_object, int param)
 {
     int top = lua_gettop(lua);
 
@@ -45,8 +45,9 @@ void Script_DoFlipEffect(lua_State *lua, int id_effect, int param)
     if(lua_isfunction(lua, -1))
     {
         lua_pushinteger(lua, id_effect);
+        lua_pushinteger(lua, id_object);
         lua_pushinteger(lua, param);
-        if(lua_pcall(lua, 2, 0, 0) == LUA_OK)
+        if(lua_pcall(lua, 3, 0, 0) == LUA_OK)
         {
            //
         }

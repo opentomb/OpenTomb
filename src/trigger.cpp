@@ -449,7 +449,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     case TR_FD_TRIGFUNC_FLIPEFFECT:
                         if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
                         {
-                            Script_DoFlipEffect(engine_lua, command->operands, trigger->timer);
+                            Script_DoFlipEffect(engine_lua, command->operands, entity_activator->id, trigger->timer);
                         }
                         break;
 
