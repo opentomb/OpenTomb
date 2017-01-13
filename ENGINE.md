@@ -32,6 +32,14 @@
 		-	shader_description, shader_manager - module for shaders manipulations;
 		-	render - main scene rendering module, working in two steps: 1: generates rendering list by camera, 2: render previously generated list; here implemented debug rendering;
 		
+	-	script - contains LUA script functions;
+		- script - engine constants loading to LUA, parsers functions, system functions;
+		- script_audio - audio config parsing, audio starting / stopping / state getting; 
+		- script_character - character parameters manipulation, inventory functions;
+		- script_entity - physics, positioning, flags, states manipulation; 
+		- script_skeletal_model - animation control system;
+		- script_world - spawning objects, levels transition, level configuration functions, objects / effects generation;
+		
 	-	anim_state_control - only Lara's state control controller module;
 	-	audio - AL audio sources and soundtrack manipulation and storage module;
 	-	character_controller - controls moving in different conditions (on floor, free fall, under water, on water, climbing a.t.c...); + contains helpers functions and weapon state control functions;
@@ -49,8 +57,7 @@
 	-	physics_bullet - stores all engine physics geometry; contains all physics code implementation with bullet library; creates own physics geometry from level resources;
 	-	resource - simple layer for conversion level data from VT format to engine format; here are floor data to collision geometry parser;
 	-	room - contains room structure and objects ownership manipulation (entity a contains in room c and moved to room d);
-	-	script - contains LUA script functions, engine constants loading to LUA;
 	-	skeletal_model - contains base model animation representation structures, and in game usage unique skeletel model structure; implemented smoothed skeletal model update algorithm, multi animation system algoritm and multi targeting bone mutators algorithm (head tracking, weapons targeting);
-	-	trigger - here is main (in game) sector trigger handler / parser;
+	-	trigger - here is main (in game) sector trigger handler / parser, objects functions caller;
 	-	world - main level data base storage (exclude sound): models, entities, rooms, meshes a.t.c. here are level loader / destructor and interface for accessing to rooms / entities by coordinates / id's;
 	
