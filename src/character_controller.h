@@ -324,8 +324,6 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
 
 void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz = 0);
 void Character_UpdateCurrentHeight(struct entity_s *ent);
-void Character_UpdatePlatformPreStep(struct entity_s *ent);
-void Character_UpdatePlatformPostStep(struct entity_s *ent);
 
 void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizontal);
 void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lean);
