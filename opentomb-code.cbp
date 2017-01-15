@@ -25,13 +25,12 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-march=prescott" />
 					<Add option="-fexpensive-optimizations" />
 					<Add option="-O2" />
-					<Add option="-std=c++11" />
 					<Add option="-Wextra" />
 					<Add option="-Wall" />
-					<Add option="-fno-exceptions -funsafe-math-optimizations -m32 -msse3" />
+					<Add option="-std=c++11" />
+					<Add option="-fno-exceptions -funsafe-math-optimizations -msse3" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -39,9 +38,9 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-std=c99" />
-			<Add option="-std=c++11" />
 			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add option="-std=c99" />
 			<Add option="-m32" />
 			<Add option="-DOV_EXCLUDE_STATIC_CALLBACKS" />
 			<Add directory="extern/al" />
@@ -50,6 +49,7 @@
 			<Add directory="extern/freetype2/include" />
 		</Compiler>
 		<Linker>
+			<Add option="-m32" />
 			<Add option="-static -lmingw32 -llua -lpng -lopenal.dll -lSDL2main -lSDL2.dll -lz -lpthread" />
 		</Linker>
 		<Unit filename="autoexec.lua">
