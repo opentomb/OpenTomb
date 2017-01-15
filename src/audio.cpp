@@ -11,7 +11,6 @@ extern "C" {
 #include <alc.h>
 #ifdef HAVE_ALEXT_H
 #include <alext.h>
-#include "config-default/config-opentomb.h"
 #endif
 #ifdef HAVE_EFX_H
 #include <efx.h>
