@@ -700,9 +700,9 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
 }
 
 
-int Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id)
+int Anim_GetAnimDispatchCase(struct ss_animation_s *ss_anim, uint32_t id)
 {
-    animation_frame_p anim = bf->animations.model->animations + bf->animations.current_animation;
+    animation_frame_p anim = ss_anim->model->animations + ss_anim->current_animation;
     state_change_p stc = anim->state_change;
 
     for(uint16_t i = 0; i < anim->state_change_count; i++, stc++)
@@ -712,7 +712,7 @@ int Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id)
             anim_dispatch_p disp = stc->anim_dispatch;
             for(uint16_t j = 0; j < stc->anim_dispatch_count; j++, disp++)
             {
-                if((disp->frame_high >= disp->frame_low) && (bf->animations.current_frame >= disp->frame_low) && (bf->animations.current_frame <= disp->frame_high))
+                if((disp->frame_high >= disp->frame_low) && (ss_anim->current_frame >= disp->frame_low) && (ss_anim->current_frame <= disp->frame_high))
                 {
                     return (int)j;
                 }

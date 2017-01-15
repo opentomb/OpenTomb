@@ -245,6 +245,7 @@ typedef struct character_response_s
     uint16_t    kill : 1;
     uint16_t    burn : 1;
     uint16_t    slide : 2;
+    uint16_t    step_z : 2;
 }character_response_t, *character_response_p;
 
 typedef struct character_param_s
