@@ -22,4 +22,8 @@
 #define HAVE_ALEXT_H 1
 #define HAVE_EFX_PRESETS_H 1
 
+#ifdef HAVE_ALEXT_H
+#define AL_ALEXT_PROTOTYPES
+#endif
+
 #endif /* config_opentomb_h */
