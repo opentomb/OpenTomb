@@ -1192,10 +1192,14 @@ int Character_MoveOnFloor(struct entity_s *ent)
             ent->character->resp.step_z = (t < -ent->character->min_step_up_height) ? (0x01) : (0x00);
             pos[2] = ent->character->height_info.floor_hit.point[2];
         }
-        else if(t > 0.0f)
+        else if(t > ent->character->min_step_up_height)
         {
-            ent->character->resp.step_z = (t > ent->character->min_step_up_height) ? (0x02) : (0x00);
+            ent->character->resp.step_z = 0x02;
             pos[2] -= engine_frame_time * 2400.0;                               ///@FIXME: magick
+        }
+        else
+        {
+            pos[2] = ent->character->height_info.floor_hit.point[2];
         }
     }
     else
