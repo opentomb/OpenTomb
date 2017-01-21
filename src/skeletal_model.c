@@ -806,7 +806,9 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
         anim_dispatch_p disp = stc->anim_dispatch;
         for(uint16_t i = 0; i < stc->anim_dispatch_count; i++, disp++)
         {
-            if((next_anim->max_frame == 1) || (disp->frame_high >= disp->frame_low) && ((new_frame >= disp->frame_low) && (new_frame <= disp->frame_high)))
+            if((next_anim->max_frame == 1) || 
+               (new_frame >= disp->frame_low) && (new_frame <= disp->frame_high) || 
+               (ss_anim->next_frame <= disp->frame_high) && (new_frame >= disp->frame_high))
             {
                 ss_anim->current_animation = ss_anim->next_animation;
                 ss_anim->current_frame = ss_anim->next_frame;

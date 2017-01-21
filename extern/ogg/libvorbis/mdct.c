@@ -41,6 +41,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
 #include "../codec.h"
 #include "mdct.h"
 #include "os.h"

@@ -1199,10 +1199,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     pos[2] = curr_fc->floor_hit.point[2];
                     ent->dir_flag = ENT_MOVE_BACKWARD;
                 }
-                else
-                {
-                    ent->dir_flag = ENT_STAY;                                   // waiting for correct frame
-                }
             }
             else if((cmd->move[0] == -1) && ((cmd->shift) || (ent->character->height_info.quicksand)))
             {

@@ -486,7 +486,7 @@ int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
 
 void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
 {
-    if(ent->no_fix_all == 0)
+    if(0 && ent->no_fix_all == 0)
     {
         height_info_p hi = &ent->character->height_info;
         float *pos = ent->transform + 12;
@@ -1050,35 +1050,12 @@ int Character_MoveOnFloor(struct entity_s *ent)
      * check move type
      */
 
-    if(!ent->character->height_info.floor_hit.hit || (ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height < pos[2]))
+    if(ent->character->height_info.floor_hit.hit && (pos[2] < ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height))
     {
-        tv[0] = pos[0];
-        tv[1] = pos[1];
-        tv[2] = pos[2] - ent->character->max_step_up_height;
-        move[0] = pos[0];
-        move[1] = pos[1];
-        move[2] = pos[2] + 24.0f;
-        Physics_SphereTest(&ent->character->height_info.floor_hit, move, tv, 16.0f, ent->self, COLLISION_FILTER_HEIGHT_TEST);
-        ent->character->height_info.floor_hit.normale[0] = 0.0f;
-        ent->character->height_info.floor_hit.normale[1] = 0.0f;
-        ent->character->height_info.floor_hit.normale[2] = 1.0f;
-    }
-
-    if(ent->character->height_info.floor_hit.hit || (ent->character->resp.vertical_collide & 0x01))
-    {
-        if(ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height < pos[2])
-        {
-            ent->move_type = MOVE_FREE_FALLING;
-            ent->speed[2] = 0.0;
-            return -1;                                                          // nothing to do here
-        }
-        else
-        {
-            ent->character->resp.vertical_collide |= 0x01;
-        }
-
+        ent->character->resp.vertical_collide |= 0x01;
         vec3_copy(tv, ent->character->height_info.floor_hit.normale);
-        if(ent->character->height_info.floor_hit.hit && tv[2] > 0.02 && tv[2] < ent->character->critical_slant_z_component)
+
+        if((tv[2] > 0.02) && (tv[2] < ent->character->critical_slant_z_component))
         {
             tv[2] = -tv[2];
             t = ent->character->linear_speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT;
@@ -1099,14 +1076,13 @@ int Character_MoveOnFloor(struct entity_s *ent)
                 // back forward slide down
             }
             Entity_UpdateTransform(ent);
-            ent->character->resp.vertical_collide |= 0x01;
         }
         else    // no slide - free to walk
         {
             t = ent->anim_linear_speed * ent->character->linear_speed_mult;
             ent->character->resp.vertical_collide |= 0x01;
 
-            ent->angles[0] += ROT_SPEED_LAND * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
+            ent->angles[0] += ROT_SPEED_LAND * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * (float)ent->character->cmd.rot[0];
 
             Entity_UpdateTransform(ent); // apply rotations
 
@@ -1146,7 +1122,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
     /*
      * now move normally
      */
-    if(ent->character->height_info.floor_hit.hit && (ent->character->height_info.floor_hit.point[2] + 1.0 >= ent->transform[12 + 2] + ent->bf->bb_min[2]))
+    if(ent->character->height_info.floor_hit.hit && (ent->character->height_info.floor_hit.point[2] + 1.0f >= pos[2] + ent->bf->bb_min[2]))
     {
         engine_container_p cont = ent->character->height_info.floor_hit.obj;
         if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
@@ -1187,7 +1163,6 @@ int Character_MoveOnFloor(struct entity_s *ent)
         if(t < 0.0f)
         {
             pos[2] = ent->character->height_info.floor_hit.point[2];
-            Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
             ent->character->resp.vertical_collide |= 0x01;
             ent->character->resp.step_z = (t < -ent->character->min_step_up_height) ? (0x01) : (0x00);
             pos[2] = ent->character->height_info.floor_hit.point[2];
@@ -1196,6 +1171,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         {
             ent->character->resp.step_z = (t > ent->character->min_step_up_height) ? (0x02) : (0x00);
             pos[2] -= engine_frame_time * 2400.0;                               ///@FIXME: magick
+            pos[2] = (pos[2] >= ent->character->height_info.floor_hit.point[2]) ? (pos[2]) : (ent->character->height_info.floor_hit.point[2]);
         }
     }
     else
@@ -1911,7 +1887,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         float from[3], to[3];
         from[0] = ch_s->pos[0];
         from[1] = ch_s->pos[1];
-        from[2] = floor + 0.5 * TR_METERING_SECTORSIZE;
+        from[2] = floor + 0.5f * TR_METERING_SECTORSIZE;
 
         to[0] = next_s->pos[0];
         to[1] = next_s->pos[1];
