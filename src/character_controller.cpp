@@ -486,7 +486,8 @@ int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
 
 void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
 {
-    if(0 && ent->no_fix_all == 0)
+#if 0
+    if(ent->no_fix_all == 0)
     {
         height_info_p hi = &ent->character->height_info;
         float *pos = ent->transform + 12;
@@ -557,6 +558,7 @@ void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent)
             ent->transform[12 + 1] += fix[1];
         }
     }
+#endif
 }
 
 
@@ -1045,13 +1047,66 @@ int Character_MoveOnFloor(struct entity_s *ent)
      */
     ent->character->resp.horizontal_collide = 0x00;
     ent->character->resp.vertical_collide = 0x00;
+    ent->character->resp.slide = 0x00;
     ent->character->resp.step_z = 0x00;
-    /*
-     * check move type
-     */
 
+    t = ent->anim_linear_speed * ent->character->linear_speed_mult;
+    ent->angles[0] += ROT_SPEED_LAND * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * (float)ent->character->cmd.rot[0];
+    Entity_UpdateTransform(ent); // apply rotations
+
+    if(ent->dir_flag & ENT_MOVE_FORWARD)
+    {
+        vec3_mul_scalar(ent->speed, ent->transform + 4, t);
+    }
+    else if(ent->dir_flag & ENT_MOVE_BACKWARD)
+    {
+        vec3_mul_scalar(ent->speed, ent->transform + 4,-t);
+    }
+    else if(ent->dir_flag & ENT_MOVE_LEFT)
+    {
+        vec3_mul_scalar(ent->speed, ent->transform + 0,-t);
+    }
+    else if(ent->dir_flag & ENT_MOVE_RIGHT)
+    {
+        vec3_mul_scalar(ent->speed, ent->transform + 0, t);
+    }
+    else
+    {
+        vec3_set_zero(ent->speed);
+        //ent->dir_flag = ENT_MOVE_FORWARD;
+    }
+
+    /*
+     * do on floor move
+     */
+    vec3_mul_scalar(move, ent->speed, engine_frame_time);
+    t = vec3_abs(move);
+
+    norm_move_xy[0] = move[0];
+    norm_move_xy[1] = move[1];
+    norm_move_xy_len = sqrt(move[0] * move[0] + move[1] * move[1]);
+    if(norm_move_xy_len > 0.2 * t)
+    {
+        norm_move_xy[0] /= norm_move_xy_len;
+        norm_move_xy[1] /= norm_move_xy_len;
+    }
+    else
+    {
+        norm_move_xy_len = 32512.0;
+        norm_move_xy[0] = 0.0;
+        norm_move_xy[1] = 0.0;
+    }
+
+    Entity_GhostUpdate(ent);
+    vec3_add(pos, pos, move);
+    Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);
+    Character_UpdateCurrentHeight(ent);
+
+    /*
+     * check micro gaps cases
+     */
     if(!ent->character->height_info.floor_hit.hit || (pos[2] >= ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height))
-     {
+    {
         tv[0] = pos[0];
         tv[1] = pos[1];
         tv[2] = pos[2] - ent->character->fall_down_height;
@@ -1093,37 +1148,39 @@ int Character_MoveOnFloor(struct entity_s *ent)
             }
             Entity_UpdateTransform(ent);
         }
-        else    // no slide - free to walk
+        else
         {
-            t = ent->anim_linear_speed * ent->character->linear_speed_mult;
-            ent->character->resp.vertical_collide |= 0x01;
-
-            ent->angles[0] += ROT_SPEED_LAND * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * (float)ent->character->cmd.rot[0];
-
-            Entity_UpdateTransform(ent); // apply rotations
-
-            if(ent->dir_flag & ENT_MOVE_FORWARD)
+            t = pos[2] - ent->character->height_info.floor_hit.point[2];
+            if(t < 0.0f)
             {
-                vec3_mul_scalar(ent->speed, ent->transform + 4, t);
+                pos[2] = ent->character->height_info.floor_hit.point[2];
+                ent->character->resp.vertical_collide |= 0x01;
+                ent->character->resp.step_z = (t < -ent->character->min_step_up_height) ? (0x01) : (0x00);
+                pos[2] = ent->character->height_info.floor_hit.point[2];
             }
-            else if(ent->dir_flag & ENT_MOVE_BACKWARD)
+            else if(t > ent->character->min_step_up_height)
             {
-                vec3_mul_scalar(ent->speed, ent->transform + 4,-t);
-            }
-            else if(ent->dir_flag & ENT_MOVE_LEFT)
-            {
-                vec3_mul_scalar(ent->speed, ent->transform + 0,-t);
-            }
-            else if(ent->dir_flag & ENT_MOVE_RIGHT)
-            {
-                vec3_mul_scalar(ent->speed, ent->transform + 0, t);
+                ent->character->resp.step_z = 0x02;
+                pos[2] -= engine_frame_time * 2400.0;                           ///@FIXME: magick
+                pos[2] = (pos[2] >= ent->character->height_info.floor_hit.point[2]) ? (pos[2]) : (ent->character->height_info.floor_hit.point[2]);
             }
             else
             {
-                vec3_set_zero(ent->speed);
-                //ent->dir_flag = ENT_MOVE_FORWARD;
+                pos[2] = ent->character->height_info.floor_hit.point[2];
             }
-            ent->character->resp.slide = 0x00;
+        }
+
+        if(ent->character->height_info.floor_hit.hit && (ent->character->height_info.floor_hit.point[2] + 1.0f >= pos[2] + ent->bf->bb_min[2]))
+        {
+            engine_container_p cont = ent->character->height_info.floor_hit.obj;
+            if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
+            {
+                entity_p e = (entity_p)cont->object;
+                if(e->callback_flags & ENTITY_CALLBACK_STAND)
+                {
+                    Script_ExecEntity(engine_lua, ENTITY_CALLBACK_STAND, e->id, ent->id);
+                }
+            }
         }
     }
     else                                                                        // no hit to the floor
@@ -1132,74 +1189,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         ent->character->resp.vertical_collide = 0x00;
         ent->move_type = MOVE_FREE_FALLING;
         ent->speed[2] = 0.0;
-        return -1;                                                              // nothing to do here
-    }
-
-    /*
-     * now move normally
-     */
-    if(ent->character->height_info.floor_hit.hit && (ent->character->height_info.floor_hit.point[2] + 1.0f >= pos[2] + ent->bf->bb_min[2]))
-    {
-        engine_container_p cont = ent->character->height_info.floor_hit.obj;
-        if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
-        {
-            entity_p e = (entity_p)cont->object;
-            if(e->callback_flags & ENTITY_CALLBACK_STAND)
-            {
-                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_STAND, e->id, ent->id);
-            }
-        }
-    }
-
-    vec3_mul_scalar(move, ent->speed, engine_frame_time);
-    t = vec3_abs(move);
-
-    norm_move_xy[0] = move[0];
-    norm_move_xy[1] = move[1];
-    norm_move_xy_len = sqrt(move[0] * move[0] + move[1] * move[1]);
-    if(norm_move_xy_len > 0.2 * t)
-    {
-        norm_move_xy[0] /= norm_move_xy_len;
-        norm_move_xy[1] /= norm_move_xy_len;
-    }
-    else
-    {
-        norm_move_xy_len = 32512.0;
-        norm_move_xy[0] = 0.0;
-        norm_move_xy[1] = 0.0;
-    }
-
-    Entity_GhostUpdate(ent);
-    vec3_add(pos, pos, move);
-    Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);
-    Character_UpdateCurrentHeight(ent);
-    if(ent->character->height_info.floor_hit.hit && (ent->character->height_info.floor_hit.point[2] > pos[2] - ent->character->fall_down_height))
-    {
-        t = pos[2] - ent->character->height_info.floor_hit.point[2];
-        if(t < 0.0f)
-        {
-            pos[2] = ent->character->height_info.floor_hit.point[2];
-            ent->character->resp.vertical_collide |= 0x01;
-            ent->character->resp.step_z = (t < -ent->character->min_step_up_height) ? (0x01) : (0x00);
-            pos[2] = ent->character->height_info.floor_hit.point[2];
-        }
-        else if(t > ent->character->min_step_up_height)
-        {
-            ent->character->resp.step_z = 0x02;
-            pos[2] -= engine_frame_time * 2400.0;                               ///@FIXME: magick
-            pos[2] = (pos[2] >= ent->character->height_info.floor_hit.point[2]) ? (pos[2]) : (ent->character->height_info.floor_hit.point[2]);
-        }
-        else
-        {
-            pos[2] = ent->character->height_info.floor_hit.point[2];
-        }
-    }
-    else
-    {
-        ent->move_type = MOVE_FREE_FALLING;
-        ent->speed[2] = 0.0;
-        Entity_UpdateRoomPos(ent);
-        return 2;
+        return -1;
     }
 
     Entity_UpdateRoomPos(ent);

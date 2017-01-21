@@ -791,11 +791,15 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             cmd->crouch |= low_vertical_space;
 
+            Character_Lean(ent, cmd, 6.0);
+            vec3_mul_scalar(global_offset, ent->transform + 4, RUN_FORWARD_OFFSET);
+            global_offset[2] += ent->bf->bb_max[2];
+            i = Character_CheckNextStep(ent, global_offset, &next_fc);
+
             if(ent->move_type == MOVE_ON_FLOOR)
             {
                 ent->no_fix_skeletal_parts = BODY_PART_HANDS | BODY_PART_LEGS;
             }
-            Character_Lean(ent, cmd, 6.0);
 
             if(ent->move_type == MOVE_FREE_FALLING)
             {
@@ -823,7 +827,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_CROUCH_IDLE;
             }
-            else if((cmd->move[0] == 1) && (cmd->crouch == 0) && (next_fc.floor_hit.normale[2] >= ent->character->critical_slant_z_component) && (ent->character->resp.step_z == 0x01))
+            else if((cmd->move[0] == 1) && (cmd->crouch == 0) && (ent->character->resp.step_z == 0x01))
             {
                 ent->dir_flag = ENT_STAY;
                 i = Anim_GetAnimDispatchCase(ss_anim, 2);                       // MOST CORRECT STATECHANGE!!!
