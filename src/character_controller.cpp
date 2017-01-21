@@ -1050,6 +1050,22 @@ int Character_MoveOnFloor(struct entity_s *ent)
      * check move type
      */
 
+    if(!ent->character->height_info.floor_hit.hit || (pos[2] >= ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height))
+     {
+        tv[0] = pos[0];
+        tv[1] = pos[1];
+        tv[2] = pos[2] - ent->character->fall_down_height;
+        move[0] = pos[0];
+        move[1] = pos[1];
+        move[2] = pos[2] + 24.0f;
+        if(Physics_SphereTest(&ent->character->height_info.floor_hit, move, tv, 16.0f, ent->self, COLLISION_FILTER_HEIGHT_TEST))
+        {
+            ent->character->height_info.floor_hit.normale[0] = 0.0f;
+            ent->character->height_info.floor_hit.normale[1] = 0.0f;
+            ent->character->height_info.floor_hit.normale[2] = 1.0f;
+        }
+    }
+
     if(ent->character->height_info.floor_hit.hit && (pos[2] < ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height))
     {
         ent->character->resp.vertical_collide |= 0x01;
