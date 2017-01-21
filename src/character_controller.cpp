@@ -1102,9 +1102,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
     Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);
     Character_UpdateCurrentHeight(ent);
 
-    /*
-     * check micro gaps cases
-     */
+    // check micro gaps cases
     if(!ent->character->height_info.floor_hit.hit || (pos[2] >= ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height))
     {
         tv[0] = pos[0];
@@ -1121,6 +1119,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         }
     }
 
+    // check move type
     if(ent->character->height_info.floor_hit.hit && (pos[2] < ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height))
     {
         ent->character->resp.vertical_collide |= 0x01;
@@ -1148,7 +1147,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
             }
             Entity_UpdateTransform(ent);
         }
-        else
+
         {
             t = pos[2] - ent->character->height_info.floor_hit.point[2];
             if(t < 0.0f)
@@ -1189,7 +1188,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         ent->character->resp.vertical_collide = 0x00;
         ent->move_type = MOVE_FREE_FALLING;
         ent->speed[2] = 0.0;
-        return -1;
+        return 2;
     }
 
     Entity_UpdateRoomPos(ent);
