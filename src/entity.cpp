@@ -696,7 +696,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
             switch(command->id)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
-                    if(ss_anim->frame_changing_state >= 0x02 && (ss_anim->current_frame >= current_af->max_frame - 1))                   // This command executes ONLY at the end of animation.
+                    if((ss_anim->frame_changing_state >= 0x02) && (ss_anim->current_frame >= current_af->max_frame - 1))   // This command executes ONLY at the end of animation.
                     {
                         float tr[3];
                         Mat4_vec3_rot_macro(tr, entity->transform, command->data);
@@ -922,63 +922,63 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
 
 void Entity_ProcessSector(entity_p ent)
 {
-    if(!ent->current_sector) return;
-
     // Calculate both above and below sectors for further usage.
     // Sector below is generally needed for getting proper trigger index,
     // as many triggers tend to be called from the lowest room in a row
     // (e.g. first trapdoor in The Great Wall, etc.)
     // Sector above primarily needed for paranoid cases of monkeyswing.
-
-    room_sector_p highest_sector = Sector_GetHighest(ent->current_sector);
-    room_sector_p lowest_sector  = Sector_GetLowest(ent->current_sector);
-
-    if(ent->character)
+    if(ent->current_sector)
     {
-        ent->character->height_info.walls_climb_dir  = 0;
-        ent->character->height_info.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
-                                                                               SECTOR_FLAG_CLIMB_EAST  |
-                                                                               SECTOR_FLAG_CLIMB_NORTH |
-                                                                               SECTOR_FLAG_CLIMB_SOUTH );
+        room_sector_p highest_sector = Sector_GetHighest(ent->current_sector);
+        room_sector_p lowest_sector  = Sector_GetLowest(ent->current_sector);
 
-        ent->character->height_info.walls_climb     = (ent->character->height_info.walls_climb_dir > 0);
-        ent->character->height_info.ceiling_climb   = 0x00;
-
-        if((highest_sector->flags & SECTOR_FLAG_CLIMB_CEILING) || (lowest_sector->flags & SECTOR_FLAG_CLIMB_CEILING))
+        if(ent->character)
         {
-            ent->character->height_info.ceiling_climb = 0x01;
-        }
+            ent->character->height_info.walls_climb_dir  = 0;
+            ent->character->height_info.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
+                                                                                   SECTOR_FLAG_CLIMB_EAST  |
+                                                                                   SECTOR_FLAG_CLIMB_NORTH |
+                                                                                   SECTOR_FLAG_CLIMB_SOUTH );
 
-        if(lowest_sector->flags & SECTOR_FLAG_DEATH)
-        {
-            switch(ent->move_type)
+            ent->character->height_info.walls_climb     = (ent->character->height_info.walls_climb_dir > 0);
+            ent->character->height_info.ceiling_climb   = 0x00;
+
+            if((highest_sector->flags & SECTOR_FLAG_CLIMB_CEILING) || (lowest_sector->flags & SECTOR_FLAG_CLIMB_CEILING))
             {
-                case MOVE_ON_FLOOR:
-                case MOVE_QUICKSAND:
-                    if(ent->transform[12 + 2] <= lowest_sector->floor + 16)
-                    {
+                ent->character->height_info.ceiling_climb = 0x01;
+            }
+
+            if(lowest_sector->flags & SECTOR_FLAG_DEATH)
+            {
+                switch(ent->move_type)
+                {
+                    case MOVE_ON_FLOOR:
+                    case MOVE_QUICKSAND:
+                        if(ent->transform[12 + 2] <= lowest_sector->floor + 16)
+                        {
+                            Character_SetParam(ent, PARAM_HEALTH, 0.0);
+                            ent->character->resp.kill = 0x01;
+                        }
+                        break;
+
+                    case MOVE_WADE:
+                    case MOVE_ON_WATER:
+                    case MOVE_UNDERWATER:
                         Character_SetParam(ent, PARAM_HEALTH, 0.0);
                         ent->character->resp.kill = 1;
-                    }
-                    break;
-
-                case MOVE_WADE:
-                case MOVE_ON_WATER:
-                case MOVE_UNDERWATER:
-                    Character_SetParam(ent, PARAM_HEALTH, 0.0);
-                    ent->character->resp.kill = 1;
-                    break;
+                        break;
+                }
             }
         }
-    }
 
-    // If entity either marked as trigger activator (Lara) or heavytrigger activator (other entities),
-    // we try to execute a trigger for this sector.
+        // If entity either marked as trigger activator (Lara) or heavytrigger activator (other entities),
+        // we try to execute a trigger for this sector.
 
-    if(ent->type_flags & (ENTITY_TYPE_TRIGGER_ACTIVATOR | ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR))
-    {
-        // Look up trigger function table and run trigger if it exists.
-        Trigger_DoCommands(lowest_sector->trigger, ent);
+        if(ent->type_flags & (ENTITY_TYPE_TRIGGER_ACTIVATOR | ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR))
+        {
+            // Look up trigger function table and run trigger if it exists.
+            Trigger_DoCommands(lowest_sector->trigger, ent);
+        }
     }
 }
 
