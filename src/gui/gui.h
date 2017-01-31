@@ -3,7 +3,7 @@
 #define ENGINE_GUI_H
 
 #include <stdint.h>
-#include "core/gl_text.h"
+#include "../core/gl_text.h"
 
 // Anchoring is needed to link specific GUI element to specific screen position,
 // independent of screen resolution and aspect ratio. Vertical and horizontal
