@@ -173,7 +173,6 @@ enum CharParameters
 #define LARA_PARAM_STAMINA_MAX            (120.0)       // 4  secs of sprint
 #define LARA_PARAM_WARMTH_MAX             (240.0)       // 8  secs of freeze
 
-struct inventory_node_s;
 struct engine_container_s;
 struct entity_s;
 
@@ -273,7 +272,6 @@ typedef struct character_s
     struct character_command_s  cmd;                    // character control commands
     struct character_response_s resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
 
-    struct inventory_node_s    *inventory;
     struct character_param_s    parameters;
     struct character_stats_s    statistics;
 

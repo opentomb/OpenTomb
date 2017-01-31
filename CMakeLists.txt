@@ -34,6 +34,8 @@ set(OPENTOMB_SRCS
     src/core/utf8_32.h
     src/core/vmath.c
     src/core/vmath.h
+    src/gui/gui.cpp
+    src/gui/gui.h
     src/render/bordered_texture_atlas.cpp
     src/render/bordered_texture_atlas.h
     src/render/bsp_tree.cpp
@@ -90,8 +92,6 @@ set(OPENTOMB_SRCS
     src/game_camera.cpp
     src/gameflow.cpp
     src/gameflow.h
-    src/gui.cpp
-    src/gui.h
     src/inventory.cpp
     src/inventory.h
     src/image.cpp

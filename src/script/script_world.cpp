@@ -18,6 +18,7 @@ extern "C" {
 #include "../core/polygon.h"
 #include "../render/camera.h"
 #include "../render/render.h"
+#include "../gui/gui.h"
 #include "../vt/tr_versions.h"
 #include "../mesh.h"
 #include "../skeletal_model.h"
@@ -33,7 +34,6 @@ extern "C" {
 #include "../gameflow.h"
 #include "../anim_state_control.h"
 #include "../character_controller.h"
-#include "../gui.h"
 #include "../engine_string.h"
 
 

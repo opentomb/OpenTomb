@@ -20,7 +20,6 @@
 #include "skeletal_model.h"
 #include "resource.h"
 #include "engine_string.h"
-#include "inventory.h"
 #include "game.h"
 #include "controls.h"
 
@@ -33,7 +32,6 @@ void Character_Create(struct entity_s *ent)
 
         ret = (character_p)malloc(sizeof(character_t));
         ret->state_func = NULL;
-        ret->inventory = NULL;
         ret->ent = ent;
         ent->character = ret;
         ret->height_info.self = ent->self;
@@ -129,9 +127,6 @@ void Character_Clean(struct entity_s *ent)
     }
 
     actor->ent = NULL;
-
-    Inventory_RemoveAllItems(&actor->inventory);
-
     if(actor->hairs)
     {
         for(int i = 0; i < actor->hair_count; i++)

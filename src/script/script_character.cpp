@@ -16,11 +16,11 @@ extern "C" {
 #include "../core/console.h"
 #include "../core/vmath.h"
 #include "../core/polygon.h"
+#include "../gui/gui.h"
 #include "../inventory.h"
 #include "../entity.h"
 #include "../world.h"
 #include "../character_controller.h"
-#include "../gui.h"
 
 
 
@@ -341,7 +341,7 @@ int lua_AddItem(lua_State * lua)
             entity_p player = World_GetPlayer();
             int item_id = lua_tointeger(lua, 2);
             int count = (top >= 3) ? (lua_tointeger(lua, 3)) : (-1);
-            lua_pushinteger(lua, Inventory_AddItem(&ent->character->inventory, item_id, count));
+            lua_pushinteger(lua, Inventory_AddItem(&ent->inventory, item_id, count));
             if(!player || ent->id == player->id)
             {
                 Gui_NotifierStart(item_id);
@@ -371,7 +371,7 @@ int lua_RemoveItem(lua_State * lua)
         {
             int item_id = lua_tointeger(lua, 2);
             int count = lua_tointeger(lua, 3);
-            lua_pushinteger(lua, Inventory_RemoveItem(&ent->character->inventory, item_id, count));
+            lua_pushinteger(lua, Inventory_RemoveItem(&ent->inventory, item_id, count));
             return 1;
         }
         else
@@ -395,7 +395,7 @@ int lua_RemoveAllItems(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character)
         {
-            Inventory_RemoveAllItems(&ent->character->inventory);
+            Inventory_RemoveAllItems(&ent->inventory);
         }
         else
         {
@@ -419,7 +419,7 @@ int lua_GetItemsCount(lua_State * lua)
         if(ent && ent->character)
         {
             int item_id = lua_tointeger(lua, 2);
-            lua_pushinteger(lua, Inventory_GetItemsCount(ent->character->inventory, item_id));
+            lua_pushinteger(lua, Inventory_GetItemsCount(ent->inventory, item_id));
             return 1;
         }
         else
@@ -443,7 +443,7 @@ int lua_PrintItems(lua_State * lua)
         entity_p  ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character)
         {
-            inventory_node_p i = ent->character->inventory;
+            inventory_node_p i = ent->inventory;
             for(; i; i = i->next)
             {
                 Con_Printf("item[id = %d]: count = %d", i->id, i->count);
