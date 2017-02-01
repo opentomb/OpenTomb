@@ -16,8 +16,6 @@ extern "C" {
 #include "../core/console.h"
 #include "../core/vmath.h"
 #include "../core/polygon.h"
-#include "../gui/gui.h"
-#include "../inventory.h"
 #include "../entity.h"
 #include "../world.h"
 #include "../character_controller.h"
@@ -330,139 +328,6 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
 }
 
 
-int lua_AddItem(lua_State * lua)
-{
-    int top = lua_gettop(lua);
-    if(top >= 2)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            entity_p player = World_GetPlayer();
-            int item_id = lua_tointeger(lua, 2);
-            int count = (top >= 3) ? (lua_tointeger(lua, 3)) : (-1);
-            lua_pushinteger(lua, Inventory_AddItem(&ent->inventory, item_id, count));
-            if(!player || ent->id == player->id)
-            {
-                Gui_NotifierStart(item_id);
-            }
-            return 1;
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("addItem: expecting arguments (entity_id, item_id, (items_count = pickup_count))");
-    }
-
-    return 0;
-}
-
-
-int lua_RemoveItem(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 3)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            int item_id = lua_tointeger(lua, 2);
-            int count = lua_tointeger(lua, 3);
-            lua_pushinteger(lua, Inventory_RemoveItem(&ent->inventory, item_id, count));
-            return 1;
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("removeItem: expecting arguments (entity_id, item_id, items_count)");
-    }
-
-    return 0;
-}
-
-
-int lua_RemoveAllItems(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 1)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            Inventory_RemoveAllItems(&ent->inventory);
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("removeAllItems: expecting arguments (entity_id)");
-    }
-
-    return 0;
-}
-
-
-int lua_GetItemsCount(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 2)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            int item_id = lua_tointeger(lua, 2);
-            lua_pushinteger(lua, Inventory_GetItemsCount(ent->inventory, item_id));
-            return 1;
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("getItemsCount: expecting arguments (entity_id, item_id)");
-    }
-
-    return 0;
-}
-
-
-int lua_PrintItems(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 1)
-    {
-        entity_p  ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            inventory_node_p i = ent->inventory;
-            for(; i; i = i->next)
-            {
-                Con_Printf("item[id = %d]: count = %d", i->id, i->count);
-            }
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("printItems: expecting arguments (entity_id)");
-    }
-
-    return 0;
-}
-
-
 int lua_SetCharacterResponse(lua_State * lua)
 {
     if(lua_gettop(lua) >= 3)
@@ -620,12 +485,6 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
 
 void Script_LuaRegisterCharacterFuncs(lua_State *lua)
 {
-    lua_register(lua, "addItem", lua_AddItem);
-    lua_register(lua, "removeItem", lua_RemoveItem);
-    lua_register(lua, "removeAllItems", lua_RemoveAllItems);
-    lua_register(lua, "getItemsCount", lua_GetItemsCount);
-    lua_register(lua, "printItems", lua_PrintItems);
-
     lua_register(lua, "addEntityRagdoll", lua_AddEntityRagdoll);
     lua_register(lua, "removeEntityRagdoll", lua_RemoveEntityRagdoll);
 
