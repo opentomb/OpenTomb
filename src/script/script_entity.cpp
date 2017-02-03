@@ -1034,18 +1034,23 @@ int lua_GetItemsCount(lua_State * lua)
 }
 
 
-int lua_PrintItems(lua_State * lua)
+int lua_GetItems(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
     {
         entity_p  ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            inventory_node_p i = ent->inventory;
-            for(; i; i = i->next)
+            lua_newtable(lua);
+            int top = lua_gettop(lua);
+            for(inventory_node_p i = ent->inventory; i; i = i->next)
             {
-                Con_Printf("item[id = %d]: count = %d", i->id, i->count);
+                lua_pushinteger(lua, i->count);
+                lua_rawseti(lua, -2, i->id);
+                lua_settop(lua, top);
             }
+
+            return 1;
         }
         else
         {
@@ -1054,7 +1059,7 @@ int lua_PrintItems(lua_State * lua)
     }
     else
     {
-        Con_Warning("printItems: expecting arguments (entity_id)");
+        Con_Warning("getItems: expecting arguments (entity_id)");
     }
 
     return 0;
@@ -2416,8 +2421,8 @@ void Script_LuaRegisterEntityFuncs(lua_State *lua)
     lua_register(lua, "removeItem", lua_RemoveItem);
     lua_register(lua, "removeAllItems", lua_RemoveAllItems);
     lua_register(lua, "getItemsCount", lua_GetItemsCount);
-    lua_register(lua, "printItems", lua_PrintItems);    
-    
+    lua_register(lua, "getItems", lua_GetItems);
+
     lua_register(lua, "canTriggerEntity", lua_CanTriggerEntity);
     lua_register(lua, "entityRotateToTriggerZ", lua_EntityRotateToTriggerZ);
     lua_register(lua, "entityRotateToTrigger", lua_EntityRotateToTrigger);

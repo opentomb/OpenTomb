@@ -40,6 +40,15 @@ function clearKeys()
     end;
 end
 
+function printTable(tbl)
+    for k, v in pairs(tbl) do
+        if(v ~= nil) then
+            print("tbl[" .. k .. "] = " .. v);
+        else
+            print("tbl[" .. k .. "] = nil");
+        end;
+    end;
+end;
 
 -- Task manager functions
 
