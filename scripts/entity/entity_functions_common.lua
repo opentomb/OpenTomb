@@ -158,6 +158,11 @@ function pickup_init(id, item_id)    -- Pick-ups
     setEntityActivationOffset(id, 0.0, 0.0, 0.0, 480.0);
     setEntityActivity(id, false);
     setEntityAnimFlag(id, ANIM_TYPE_BASE, ANIM_FRAME_LOCK);
+
+    removeAllItems(id);
+    local pickup_count = getBaseItemInfo(item_id);
+    addItem(id, item_id, pickup_count);
+
     entity_funcs[id].activator_id = nil;
     entity_funcs[id].need_set_pos = true;
 
@@ -238,7 +243,15 @@ function pickup_init(id, item_id)    -- Pick-ups
                 end;
             end;
 
-            addItem(activator_id, item_id);
+            local items = getItems(object_id);
+            if(items ~= nil) then
+                removeAllItems(object_id);
+                for k, v in pairs(items) do
+                    addItem(activator_id, k, v);
+                end;
+            end;
+            items = nil;
+
             disableEntity(object_id);
             entity_funcs[object_id].activator_id = nil;
         end;

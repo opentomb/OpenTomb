@@ -938,7 +938,7 @@ int lua_AddItem(lua_State * lua)
         {
             entity_p player = World_GetPlayer();
             int item_id = lua_tointeger(lua, 2);
-            int count = (top >= 3) ? (lua_tointeger(lua, 3)) : (-1);
+            int count = (top >= 3) ? (lua_tointeger(lua, 3)) : (1);
             lua_pushinteger(lua, Inventory_AddItem(&ent->inventory, item_id, count));
             if(!player || ent->id == player->id)
             {
