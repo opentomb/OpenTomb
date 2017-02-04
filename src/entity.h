@@ -10,6 +10,7 @@ struct character_s;
 struct ss_animation_s;
 struct ss_bone_frame_s;
 struct physics_data_s;
+struct inventory_node_s;
 
 #define ENTITY_ID_NONE                              (0xFFFFFFFF)
 
@@ -96,6 +97,7 @@ typedef struct entity_s
 
     float                               activation_offset[4];       // where we can activate object (dx, dy, dz, r)
     float                               activation_direction[4];    // direction_xyz, cos(lim)
+    struct inventory_node_s            *inventory;
     struct character_s                 *character;
 }entity_t, *entity_p;
 
@@ -131,6 +133,7 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
 
 void Entity_CheckCollisionCallbacks(entity_p ent);
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim);
+bool Entity_DoFlipEffect(entity_p entity, uint16_t effect_id, int16_t param);
 void Entity_ProcessSector(entity_p ent);
 void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int frame, float new_transform[16] = NULL);
 void Entity_MoveToSink(entity_p entity, uint32_t sink_index);

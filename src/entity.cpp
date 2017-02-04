@@ -26,6 +26,7 @@ extern "C" {
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "gameflow.h"
+#include "inventory.h"
 #include "engine_string.h"
 
 
@@ -60,6 +61,7 @@ entity_p Entity_Create()
     ret->no_fix_skeletal_parts = 0x00000000;
     ret->physics = Physics_CreatePhysicsData(ret->self);
 
+    ret->inventory = NULL;
     ret->character = NULL;
     ret->current_sector = NULL;
 
@@ -105,6 +107,7 @@ void Entity_Clear(entity_p entity)
         Ragdoll_Delete(entity->physics);
         entity->type_flags &= ~ENTITY_TYPE_DYNAMIC;
 
+        Inventory_RemoveAllItems(&entity->inventory);
         if(entity->character)
         {
             Character_Clean(entity);
@@ -734,179 +737,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                 continue;
             }
 
-            switch(effect->id)
-            {
-                case TR_ANIMCOMMAND_PLAYSOUND:
-                    {
-                        int16_t sound_index = 0x3FFF & effect->data;
-                        // Quick workaround for TR3 quicksand.
-                        if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
-                           (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
-                        {
-                            sound_index = 18;
-                        }
-
-                        if(effect->data & TR_ANIMCOMMAND_CONDITION_WATER)
-                        {
-                            if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_WATER_SHALLOW)
-                                Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                        }
-                        else if(effect->data & TR_ANIMCOMMAND_CONDITION_LAND)
-                        {
-                            if(Entity_GetSubstanceState(entity) != ENTITY_SUBSTANCE_WATER_SHALLOW)
-                                Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                        }
-                        else
-                        {
-                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                        }
-                    }
-                    break;
-
-                case TR_ANIMCOMMAND_PLAYEFFECT:
-                    // Effects (flipeffects) are various non-typical actions which vary
-                    // across different TR game engine versions. There are common ones,
-                    // however, and currently only these are supported.
-                    {
-                        entity_p player = World_GetPlayer();
-                        switch(effect->data & 0x3FFF)
-                        {
-                            case TR_EFFECT_SHAKESCREEN:
-                                if(player)
-                                {
-                                    float *pos = player->transform + 12;
-                                    float dist = vec3_dist(pos, entity->transform + 12);
-                                    dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE) ? (0) : ((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0f);
-                                    //if(dist > 0)
-                                    //    Cam_Shake(&engine_camera, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
-                                }
-                                break;
-
-                            case TR_EFFECT_CHANGEDIRECTION:
-                                if(ss_anim->frame_changing_state >= 0x01)
-                                {
-                                    entity->angles[0] += 180.0f;
-                                    if(entity->move_type == MOVE_UNDERWATER)
-                                    {
-                                        entity->angles[1] = -entity->angles[1]; // for underwater case
-                                    }
-                                    if(entity->dir_flag == ENT_MOVE_BACKWARD)
-                                    {
-                                        entity->dir_flag = ENT_MOVE_FORWARD;
-                                    }
-                                    else if(entity->dir_flag == ENT_MOVE_FORWARD)
-                                    {
-                                        entity->dir_flag = ENT_MOVE_BACKWARD;
-                                    }
-
-                                    do_skip_frame = true;
-                                }
-                                break;
-
-                            case TR_EFFECT_HIDEOBJECT:
-                                entity->state_flags &= ~ENTITY_STATE_VISIBLE;
-                                break;
-
-                            case TR_EFFECT_SHOWOBJECT:
-                                entity->state_flags |= ENTITY_STATE_VISIBLE;
-                                break;
-
-                            case TR_EFFECT_PLAYSTEPSOUND:
-                                // Please note that we bypass land/water mask, as TR3-5 tends to ignore
-                                // this flag and play step sound in any case on land, ignoring it
-                                // completely in water rooms.
-                                if(!Entity_GetSubstanceState(entity))
-                                {
-                                    // TR3-5 footstep map.
-                                    // We define it here as a magic numbers array, because TR3-5 versions
-                                    // fortunately have no differences in footstep sounds order.
-                                    // Also note that some footstep types mutually share same sound IDs
-                                    // across different TR versions.
-                                    switch(entity->current_sector->material)
-                                    {
-                                        case SECTOR_MATERIAL_MUD:
-                                            Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
-                                            if(World_GetVersion() != TR_IV)
-                                            {
-                                                Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            }
-                                            break;
-
-                                        case SECTOR_MATERIAL_SAND:  // Same as grass
-                                            Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_GRAVEL:
-                                            Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
-                                            if(World_GetVersion() != TR_IV)
-                                            {
-                                                Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            }
-                                            break;
-
-                                        case SECTOR_MATERIAL_WATER: // BYPASS!
-                                            // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
-                                            // Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_WOOD:
-                                            Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_METAL:
-                                            Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_MARBLE:    // TR4 only
-                                            if(World_GetVersion() == TR_IV)
-                                            {
-                                                Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            }
-                                            break;
-
-                                        case SECTOR_MATERIAL_GRASS:     // Same as sand
-                                            Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_CONCRETE:  // DEFAULT SOUND, BYPASS!
-                                            Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_OLDWOOD:   // Same as wood
-                                            Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_OLDMETAL:  // Same as metal
-                                            Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-                                    }
-                                }
-                                break;
-
-                            case TR_EFFECT_BUBBLE:
-                                ///@FIXME: Spawn bubble particle here, when particle system is developed.
-                                if(rand() % 100 > 60)
-                                {
-                                    Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                }
-                                break;
-
-                            default:
-                                ///@FIXME: TODO ALL OTHER EFFECTS!
-                                break;
-                        }
-                    };
-                    break;
-            };
+            do_skip_frame |= Entity_DoFlipEffect(entity, effect->id, effect->data);
         }
 
         if(do_skip_frame)
@@ -917,6 +748,186 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
             Entity_DoAnimCommands(entity, ss_anim);
         }
     }
+}
+
+
+bool Entity_DoFlipEffect(entity_p entity, uint16_t effect_id, int16_t param)
+{
+    bool do_skip_frame = false;
+    switch(effect_id)
+    {
+        case TR_ANIMCOMMAND_PLAYSOUND:
+            {
+                int16_t sound_index = 0x3FFF & param;
+                // Quick workaround for TR3 quicksand.
+                if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
+                   (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
+                {
+                    sound_index = 18;
+                }
+
+                if(param & TR_ANIMCOMMAND_CONDITION_WATER)
+                {
+                    if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_WATER_SHALLOW)
+                        Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                }
+                else if(param & TR_ANIMCOMMAND_CONDITION_LAND)
+                {
+                    if(Entity_GetSubstanceState(entity) != ENTITY_SUBSTANCE_WATER_SHALLOW)
+                        Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                }
+                else
+                {
+                    Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                }
+            }
+            break;
+
+        case TR_ANIMCOMMAND_PLAYEFFECT:
+            // Effects (flipeffects) are various non-typical actions which vary
+            // across different TR game engine versions. There are common ones,
+            // however, and currently only these are supported.
+            {
+                entity_p player = World_GetPlayer();
+                switch(param & 0x3FFF)
+                {
+                    case TR_EFFECT_SHAKESCREEN:
+                        if(player)
+                        {
+                            float *pos = player->transform + 12;
+                            float dist = vec3_dist(pos, entity->transform + 12);
+                            dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE) ? (0) : ((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0f);
+                            //if(dist > 0)
+                            //    Cam_Shake(&engine_camera, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
+                        }
+                        break;
+
+                    case TR_EFFECT_CHANGEDIRECTION:
+                        {
+                            entity->angles[0] += 180.0f;
+                            if(entity->move_type == MOVE_UNDERWATER)
+                            {
+                                entity->angles[1] = -entity->angles[1]; // for underwater case
+                            }
+                            if(entity->dir_flag == ENT_MOVE_BACKWARD)
+                            {
+                                entity->dir_flag = ENT_MOVE_FORWARD;
+                            }
+                            else if(entity->dir_flag == ENT_MOVE_FORWARD)
+                            {
+                                entity->dir_flag = ENT_MOVE_BACKWARD;
+                            }
+
+                            do_skip_frame = true;
+                        }
+                        break;
+
+                    case TR_EFFECT_HIDEOBJECT:
+                        entity->state_flags &= ~ENTITY_STATE_VISIBLE;
+                        break;
+
+                    case TR_EFFECT_SHOWOBJECT:
+                        entity->state_flags |= ENTITY_STATE_VISIBLE;
+                        break;
+
+                    case TR_EFFECT_PLAYSTEPSOUND:
+                        // Please note that we bypass land/water mask, as TR3-5 tends to ignore
+                        // this flag and play step sound in any case on land, ignoring it
+                        // completely in water rooms.
+                        if(!Entity_GetSubstanceState(entity))
+                        {
+                            // TR3-5 footstep map.
+                            // We define it here as a magic numbers array, because TR3-5 versions
+                            // fortunately have no differences in footstep sounds order.
+                            // Also note that some footstep types mutually share same sound IDs
+                            // across different TR versions.
+                            switch(entity->current_sector->material)
+                            {
+                                case SECTOR_MATERIAL_MUD:
+                                    Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
+                                    if(World_GetVersion() != TR_IV)
+                                    {
+                                        Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    }
+                                    break;
+
+                                case SECTOR_MATERIAL_SAND:  // Same as grass
+                                    Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_GRAVEL:
+                                    Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
+                                    if(World_GetVersion() != TR_IV)
+                                    {
+                                        Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    }
+                                    break;
+
+                                case SECTOR_MATERIAL_WATER: // BYPASS!
+                                    // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
+                                    // Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_WOOD:
+                                    Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_METAL:
+                                    Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_MARBLE:    // TR4 only
+                                    if(World_GetVersion() == TR_IV)
+                                    {
+                                        Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    }
+                                    break;
+
+                                case SECTOR_MATERIAL_GRASS:     // Same as sand
+                                    Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_CONCRETE:  // DEFAULT SOUND, BYPASS!
+                                    Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_OLDWOOD:   // Same as wood
+                                    Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_OLDMETAL:  // Same as metal
+                                    Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+                            }
+                        }
+                        break;
+
+                    case TR_EFFECT_BUBBLE:
+                        ///@FIXME: Spawn bubble particle here, when particle system is developed.
+                        if(rand() % 100 > 60)
+                        {
+                            Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                        }
+                        break;
+
+                    default:
+                        ///@FIXME: TODO ALL OTHER EFFECTS!
+                        break;
+                }
+            };
+            break;
+    };
+
+    return do_skip_frame;
 }
 
 

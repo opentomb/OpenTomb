@@ -17,6 +17,7 @@ extern "C" {
 #include "render/camera.h"
 #include "render/frustum.h"
 #include "render/render.h"
+#include "gui/gui.h"
 #include "script/script.h"
 #include "vt/tr_versions.h"
 #include "engine.h"
@@ -32,7 +33,6 @@ extern "C" {
 #include "anim_state_control.h"
 #include "character_controller.h"
 #include "gameflow.h"
-#include "gui.h"
 #include "inventory.h"
 
 extern lua_State *engine_lua;
@@ -232,6 +232,12 @@ void Save_Entity(FILE **f, entity_p ent)
         }
     }
 
+    fprintf(*f, "\nremoveAllItems(%d);", ent->id);
+    for(inventory_node_p i = ent->inventory; i; i = i->next)
+    {
+        fprintf(*f, "\naddItem(%d, %d, %d);", ent->id, i->id, i->count);
+    }
+
     if(ent->character)
     {
         if(ent->character->target_id != ENTITY_ID_NONE)
@@ -244,13 +250,6 @@ void Save_Entity(FILE **f, entity_p ent)
         }
 
         fprintf(*f, "\nsetCharacterWeaponModel(%d, %d, %d);", ent->id, ent->character->current_weapon, ent->character->weapon_current_state);
-
-        fprintf(*f, "\nremoveAllItems(%d);", ent->id);
-        for(inventory_node_p i = ent->character->inventory; i; i = i->next)
-        {
-            fprintf(*f, "\naddItem(%d, %d, %d);", ent->id, i->id, i->count);
-        }
-
         for(int i = 0; i < PARAM_LASTINDEX; i++)
         {
             fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
@@ -496,10 +495,10 @@ void Game_ApplyControls(struct entity_s *ent)
 
         if(control_states.use_small_medi)
         {
-            if((Inventory_GetItemsCount(ent->character->inventory, ITEM_SMALL_MEDIPACK) > 0) &&
+            if((Inventory_GetItemsCount(ent->inventory, ITEM_SMALL_MEDIPACK) > 0) &&
                (Character_ChangeParam(ent, PARAM_HEALTH, 250)))
             {
-                Inventory_RemoveItem(&ent->character->inventory, ITEM_SMALL_MEDIPACK, 1);
+                Inventory_RemoveItem(&ent->inventory, ITEM_SMALL_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
@@ -508,10 +507,10 @@ void Game_ApplyControls(struct entity_s *ent)
 
         if(control_states.use_big_medi)
         {
-            if((Inventory_GetItemsCount(ent->character->inventory, ITEM_LARGE_MEDIPACK) > 0) &&
+            if((Inventory_GetItemsCount(ent->inventory, ITEM_LARGE_MEDIPACK) > 0) &&
                (Character_ChangeParam(ent, PARAM_HEALTH, LARA_PARAM_HEALTH_MAX)))
             {
-                Inventory_RemoveItem(&ent->character->inventory, ITEM_LARGE_MEDIPACK, 1);
+                Inventory_RemoveItem(&ent->inventory, ITEM_LARGE_MEDIPACK, 1);
                 Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
             }
 
@@ -594,7 +593,7 @@ void Game_Frame(float time)
         if(player &&
           (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
         {
-            main_inventory_manager->setInventory(&player->character->inventory);
+            main_inventory_manager->setInventory(&player->inventory);
             main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
         }
         if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_IDLE)
