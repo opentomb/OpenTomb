@@ -1289,9 +1289,12 @@ int lua_SetEntityTriggerLayout(lua_State *lua)
             else if(top == 4)
             {
                 uint8_t trigger_layout = ent->trigger_layout;
-                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);  trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);          // mask  - 00011111
-                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT); trigger_layout ^= ((uint8_t)lua_tointeger(lua, 3)) << 5;   // event - 00100000
-                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  trigger_layout ^= ((uint8_t)lua_tointeger(lua, 4)) << 6;   // lock  - 01000000
+                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);  
+                trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);          // mask  - 00011111
+                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT); 
+                trigger_layout ^= ((uint8_t)lua_tointeger(lua, 3)) << 5;   // event - 00100000
+                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  
+                trigger_layout ^= ((uint8_t)lua_tointeger(lua, 4)) << 6;   // lock  - 01000000
                 ent->trigger_layout = trigger_layout;
             }
         }
@@ -1317,7 +1320,8 @@ int lua_SetEntityLock(lua_State * lua)
         if(ent)
         {
             uint8_t trigger_layout = ent->trigger_layout;
-            trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  trigger_layout ^= ((uint8_t)lua_tointeger(lua, 2)) << 6;   // lock  - 01000000
+            trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  
+            trigger_layout ^= ((uint8_t)lua_tointeger(lua, 2)) << 6;   // lock  - 01000000
             ent->trigger_layout = trigger_layout;
         }
     }
@@ -1400,7 +1404,8 @@ int lua_SetEntityMask(lua_State * lua)
         if(ent)
         {
             uint8_t trigger_layout = ent->trigger_layout;
-            trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);  trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);   // mask  - 00011111
+            trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);  
+            trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);   // mask  - 00011111
             ent->trigger_layout = trigger_layout;
         }
     }

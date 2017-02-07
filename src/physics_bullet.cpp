@@ -214,6 +214,7 @@ typedef struct physics_data_s
     struct ghost_shape_s               *ghosts_info;
     btPairCachingGhostObject          **ghost_objects;          // like Bullet character controller for penetration resolving.
     btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
+    struct collision_node_s            *collision_track;
     uint16_t                            objects_count;          // Ragdoll joints
     uint16_t                            bt_joint_count;         // Ragdoll joints
     btTypedConstraint                 **bt_joints;              // Ragdoll joints
@@ -278,12 +279,6 @@ btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld = NULL;
 
 CBulletDebugDrawer                       bt_debug_drawer;
 
-uint32_t                                 collision_nodes_pool_size = 0;
-uint32_t                                 collision_nodes_pool_used = 0;
-struct collision_node_s                 *collision_nodes_pool = NULL;
-
-struct collision_node_s *Physics_GetCollisionNode();
-
 /* bullet collision model calculation */
 btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max);
 btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
@@ -305,10 +300,6 @@ btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
 // Bullet Physics initialization.
 void Physics_Init()
 {
-    collision_nodes_pool = (struct collision_node_s*)malloc(DEFAULT_COLLSION_NODE_POOL_SIZE * sizeof(struct collision_node_s));
-    collision_nodes_pool_size = DEFAULT_COLLSION_NODE_POOL_SIZE;
-    collision_nodes_pool_used = 0;
-
     ///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
     bt_engine_collisionConfiguration = new btDefaultCollisionConfiguration();
 
@@ -349,11 +340,6 @@ void Physics_Destroy()
     delete bt_engine_collisionConfiguration;
 
     delete bt_engine_ghostPairCallback;
-
-    free(collision_nodes_pool);
-    collision_nodes_pool = NULL;
-    collision_nodes_pool_size = 0;
-    collision_nodes_pool_used = 0;
 }
 
 
@@ -361,25 +347,12 @@ void Physics_StepSimulation(float time)
 {
     time = (time < 0.1f) ? (time) : (0.0f);
     bt_engine_dynamicsWorld->stepSimulation(time, 0);
-    collision_nodes_pool_used = 0;
 }
 
 void Physics_DebugDrawWorld()
 {
     bt_engine_dynamicsWorld->debugDrawWorld();
 }
-
-struct collision_node_s *Physics_GetCollisionNode()
-{
-    struct collision_node_s *ret = NULL;
-    if(collision_nodes_pool_used < collision_nodes_pool_size)
-    {
-        ret = collision_nodes_pool + collision_nodes_pool_used;
-        collision_nodes_pool_used++;
-    }
-    return ret;
-}
-
 
 void Physics_CleanUpObjects()
 {
@@ -430,6 +403,7 @@ struct physics_data_s *Physics_CreatePhysicsData(struct engine_container_s *cont
     ret->manifoldArray = NULL;
     ret->ghosts_info = NULL;
     ret->ghost_objects = NULL;
+    ret->collision_track = NULL;
     ret->collision_group = btBroadphaseProxy::KinematicFilter;
     ret->collision_mask = btBroadphaseProxy::AllFilter;
     ret->cont = cont;
@@ -442,6 +416,14 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
 {
     if(physics)
     {
+        for(collision_node_p cn = physics->collision_track; cn;)
+        {
+            collision_node_p next = cn->next;
+            free(cn);
+            cn = next;
+        }
+        physics->collision_track = NULL;
+        
         if(physics->ghost_objects)
         {
             for(int i = 0; i < physics->objects_count; i++)
@@ -1668,11 +1650,9 @@ void Physics_SetLinearFactor(struct physics_data_s *physics, float factor[3], ui
 
 struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics, int16_t filter)
 {
-    struct collision_node_s *ret = NULL;
-
+    collision_node_p *cn = &(physics->collision_track);
     if(physics->ghost_objects)
     {
-        btTransform orig_tr;
         for(uint32_t i = 0; i < physics->objects_count; i++)
         {
             btPairCachingGhostObject *ghost = physics->ghost_objects[i];
@@ -1718,27 +1698,31 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
                                 engine_container_p cont = (engine_container_p)obj->getUserPointer();
                                 if(!cont || (cont->collision_group & filter))
                                 {
-                                    collision_node_p cn = Physics_GetCollisionNode();
-                                    if(cn)
+                                    if(*cn == NULL)
                                     {
-                                        cn->obj = (engine_container_p)obj->getUserPointer();
-                                        cn->part_from = obj->getUserIndex();
-                                        cn->part_self = i;
-                                        cn->next = ret;
-                                        ret = cn;
+                                        *cn = (collision_node_p)malloc(sizeof(collision_node_t));
+                                        (*cn)->next = NULL;
                                     }
+                                    (*cn)->obj = (engine_container_p)obj->getUserPointer();
+                                    (*cn)->part_from = obj->getUserIndex();
+                                    (*cn)->part_self = i;
+                                    cn = &((*cn)->next);
                                     break;
                                 }
                             }
                         }
                     }
                 }
-                ghost->setWorldTransform(orig_tr);
             }
         }
     }
 
-    return ret;
+    if(*cn)
+    {
+        (*cn)->obj = NULL;
+    }
+    
+    return physics->collision_track;
 }
 
 /* *****************************************************************************

@@ -665,16 +665,13 @@ int  Entity_GetSubstanceState(entity_p entity)
 
 void Entity_CheckCollisionCallbacks(entity_p ent)
 {
-    // I do not know why, but without Entity_GhostUpdate(ent); it works pretty slow!
-    Entity_GhostUpdate(ent);
     collision_node_p cn = Physics_GetCurrentCollisions(ent->physics, COLLISION_GROUP_TRIGGERS);
-    for(; cn; cn = cn->next)
+    for(; cn && cn->obj; cn = cn->next)
     {
         // do callbacks here:
         if(cn->obj->object_type == OBJECT_ENTITY)
         {
             entity_p activator = (entity_p)cn->obj->object;
-
             if(activator->callback_flags & ENTITY_CALLBACK_COLLISION)
             {
                 // Activator and entity IDs are swapped in case of collision callback.
