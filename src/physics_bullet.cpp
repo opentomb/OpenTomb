@@ -423,7 +423,7 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
             cn = next;
         }
         physics->collision_track = NULL;
-        
+
         if(physics->ghost_objects)
         {
             for(int i = 0; i < physics->objects_count; i++)
@@ -702,14 +702,13 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
         num_pairs = pairArray.size();
         for(int i = 0; i < num_pairs; i++)
         {
-            physics->manifoldArray->clear();
             // do not use commented code: it prevents to collision skips.
             //btBroadphasePair &pair = pairArray[i];
             //btBroadphasePair* collisionPair = bt_engine_dynamicsWorld->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
             btBroadphasePair *collisionPair = &pairArray[i];
-
             if(collisionPair && collisionPair->m_algorithm)
             {
+                physics->manifoldArray->clear();
                 collisionPair->m_algorithm->getAllContactManifolds(*(physics->manifoldArray));
                 manifolds_size = physics->manifoldArray->size();
                 for(int j = 0; j < manifolds_size; j++)
@@ -742,6 +741,7 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
                 }
             }
         }
+        physics->manifoldArray->clear();
     }
 
     return ret;
@@ -1662,11 +1662,10 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
                 int num_pairs = pairArray.size();
                 for(int j = 0; j < num_pairs; j++)
                 {
-                    physics->manifoldArray->clear();
                     btBroadphasePair *collisionPair = &pairArray[j];
-
                     if(collisionPair && collisionPair->m_algorithm)
                     {
+                        physics->manifoldArray->clear();
                         collisionPair->m_algorithm->getAllContactManifolds(*physics->manifoldArray);
                         for(int k = 0; k < physics->manifoldArray->size(); k++)
                         {
@@ -1703,13 +1702,14 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
                 }
             }
         }
+        physics->manifoldArray->clear();
     }
 
     if(*cn)
     {
         (*cn)->obj = NULL;
     }
-    
+
     return physics->collision_track;
 }
 

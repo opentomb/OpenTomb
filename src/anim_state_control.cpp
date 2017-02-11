@@ -736,7 +736,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     ss_anim->next_state = TR_STATE_LARA_WADE_FORWARD;
                     ent->dir_flag = ENT_MOVE_FORWARD;
                 }
-
             }
             else if(((current_state == TR_STATE_LARA_TURN_LEFT_SLOW ) && (cmd->move[1] == -1)) ||
                     ((current_state == TR_STATE_LARA_TURN_RIGHT_SLOW) && (cmd->move[1] ==  1))  )
@@ -1871,6 +1870,7 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }
                 else
                 {
+                    vec3_set_zero(ent->speed);
                     ent->move_type = MOVE_FREE_FALLING;
                 }
                 break;
@@ -2052,12 +2052,6 @@ int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(cmd->move[0] == -1)
             {
                 ss_anim->next_state = TR_STATE_LARA_LADDER_DOWN;
-                if(ent->character->height_info.floor_hit.hit && (ent->transform[12 + 2] < ent->character->height_info.floor_hit.point[2] + ent->character->max_step_up_height))
-                {
-                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_STATE_LARA_FALL_BACKWARD, 0);
-                    ent->move_type = MOVE_FREE_FALLING;
-                    break;
-                }
             }
             else if(cmd->move[1] == 1)
             {
