@@ -699,7 +699,7 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
         bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
 
         vec3_set_zero(correction);
-        num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
+        num_pairs = pairArray.size();
         for(int i = 0; i < num_pairs; i++)
         {
             physics->manifoldArray->clear();
@@ -708,41 +708,35 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
             //btBroadphasePair* collisionPair = bt_engine_dynamicsWorld->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
             btBroadphasePair *collisionPair = &pairArray[i];
 
-            if(!collisionPair)
-            {
-                continue;
-            }
-
-            if(collisionPair->m_algorithm)
+            if(collisionPair && collisionPair->m_algorithm)
             {
                 collisionPair->m_algorithm->getAllContactManifolds(*(physics->manifoldArray));
-            }
-
-            manifolds_size = physics->manifoldArray->size();
-            for(int j = 0; j < manifolds_size; j++)
-            {
-                btPersistentManifold* manifold = (*(physics->manifoldArray))[j];
-                btCollisionObject *obj = (btCollisionObject*)manifold->getBody0();
-                btScalar directionSign = btScalar(1.0);
-                if(obj == ghost)
+                manifolds_size = physics->manifoldArray->size();
+                for(int j = 0; j < manifolds_size; j++)
                 {
-                    obj = (btCollisionObject*)manifold->getBody1();
-                    directionSign = btScalar(-1.0);
-                }
-
-                engine_container_p cont = (engine_container_p)obj->getUserPointer();
-                if(!cont || (cont->collision_group & filter))
-                {
-                    for(int k = 0; k < manifold->getNumContacts(); k++)
+                    btPersistentManifold* manifold = (*(physics->manifoldArray))[j];
+                    btCollisionObject *obj = (btCollisionObject*)manifold->getBody0();
+                    btScalar directionSign = btScalar(1.0);
+                    if(obj == ghost)
                     {
-                        const btManifoldPoint&pt = manifold->getContactPoint(k);
-                        btScalar dist = pt.getDistance();
+                        obj = (btCollisionObject*)manifold->getBody1();
+                        directionSign = btScalar(-1.0);
+                    }
 
-                        if(dist < 0.0)
+                    engine_container_p cont = (engine_container_p)obj->getUserPointer();
+                    if(cont && (cont->collision_group & filter))
+                    {
+                        for(int k = 0; k < manifold->getNumContacts(); k++)
                         {
-                            t = pt.m_normalWorldOnB * dist * directionSign;
-                            vec3_add(correction, correction, t.m_floats)
-                            ret++;
+                            const btManifoldPoint&pt = manifold->getContactPoint(k);
+                            btScalar dist = pt.getDistance();
+
+                            if(dist < 0.0)
+                            {
+                                t = pt.m_normalWorldOnB * dist * directionSign;
+                                vec3_add(correction, correction, t.m_floats)
+                                ret++;
+                            }
                         }
                     }
                 }
@@ -1665,49 +1659,43 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
                 bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
                 bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
 
-                int num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
+                int num_pairs = pairArray.size();
                 for(int j = 0; j < num_pairs; j++)
                 {
                     physics->manifoldArray->clear();
                     btBroadphasePair *collisionPair = &pairArray[j];
 
-                    if(!collisionPair)
-                    {
-                        continue;
-                    }
-
-                    if(collisionPair->m_algorithm)
+                    if(collisionPair && collisionPair->m_algorithm)
                     {
                         collisionPair->m_algorithm->getAllContactManifolds(*physics->manifoldArray);
-                    }
-
-                    for(int k = 0; k < physics->manifoldArray->size(); k++)
-                    {
-                        btPersistentManifold* manifold = (*physics->manifoldArray)[k];
-                        for(int c = 0; c < manifold->getNumContacts(); c++)         // c++ in C++
+                        for(int k = 0; k < physics->manifoldArray->size(); k++)
                         {
-                            //const btManifoldPoint &pt = manifold->getContactPoint(c);
-                            if(manifold->getContactPoint(c).getDistance() < 0.0)
+                            btPersistentManifold* manifold = (*physics->manifoldArray)[k];
+                            for(int c = 0; c < manifold->getNumContacts(); c++)         // c++ in C++
                             {
-                                btCollisionObject *obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody0();
-                                if(physics->cont == ((engine_container_p)obj->getUserPointer()))
+                                //const btManifoldPoint &pt = manifold->getContactPoint(c);
+                                if(manifold->getContactPoint(c).getDistance() < 0.0)
                                 {
-                                    obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody1();
-                                }
-
-                                engine_container_p cont = (engine_container_p)obj->getUserPointer();
-                                if(!cont || (cont->collision_group & filter))
-                                {
-                                    if(*cn == NULL)
+                                    btCollisionObject *obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody0();
+                                    if(obj == ghost)
                                     {
-                                        *cn = (collision_node_p)malloc(sizeof(collision_node_t));
-                                        (*cn)->next = NULL;
+                                        obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody1();
                                     }
-                                    (*cn)->obj = (engine_container_p)obj->getUserPointer();
-                                    (*cn)->part_from = obj->getUserIndex();
-                                    (*cn)->part_self = i;
-                                    cn = &((*cn)->next);
-                                    break;
+
+                                    engine_container_p cont = (engine_container_p)obj->getUserPointer();
+                                    if(cont && (cont->collision_group & filter))
+                                    {
+                                        if(*cn == NULL)
+                                        {
+                                            *cn = (collision_node_p)malloc(sizeof(collision_node_t));
+                                            (*cn)->next = NULL;
+                                        }
+                                        (*cn)->obj = cont;
+                                        (*cn)->part_from = obj->getUserIndex();
+                                        (*cn)->part_self = i;
+                                        cn = &((*cn)->next);
+                                        break;
+                                    }
                                 }
                             }
                         }
