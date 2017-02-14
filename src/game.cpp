@@ -30,7 +30,6 @@ extern "C" {
 #include "skeletal_model.h"
 #include "entity.h"
 #include "trigger.h"
-#include "anim_state_control.h"
 #include "character_controller.h"
 #include "gameflow.h"
 #include "inventory.h"

@@ -14,7 +14,6 @@
 #include "skeletal_model.h"
 #include "entity.h"
 #include "character_controller.h"
-#include "anim_state_control.h"
 
 
 void Cam_PlayFlyBy(struct camera_state_s *cam_state, float time)
@@ -89,6 +88,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
 
     vec3_copy(cam_pos, cam->gl_transform + 12);
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
+#if 0
     if(control_states.mouse_look == 0)//If mouse look is off
     {
         float currentAngle = control_states.cam_angles[0] * (M_PI / 180.0f);    //Current is the current cam angle
@@ -172,7 +172,8 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
             control_states.cam_angles[0] = fmodf(control_states.cam_angles[0] + atan2f(sinf(currentAngle - d_angle), cosf(currentAngle + d_angle)) * (engine_frame_time * rotSpeed), M_PI * 2.0f); //Update camera's angle
         }
     }
-
+#endif
+    
     if((ent->character != NULL) && (ent->character->cam_follow_center > 0))
     {
         vec3_copy(cam_pos, ent->obb->centre);

@@ -23,7 +23,6 @@ extern "C" {
 #include "engine.h"
 #include "physics.h"
 #include "trigger.h"
-#include "anim_state_control.h"
 #include "character_controller.h"
 #include "gameflow.h"
 #include "inventory.h"
@@ -491,7 +490,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             {
                 break;
             }
-            int iter = (float)(2.0f * move_len / btag->mesh_base->radius) + 1;  ///@FIXME (not a critical): magick const 2.0!
+            int iter = (float)(3.0f * move_len / btag->mesh_base->radius) + 1;  ///@FIXME (not a critical): magick const 2.0!
             move[0] /= (float)iter;
             move[1] /= (float)iter;
             move[2] /= (float)iter;
@@ -546,7 +545,7 @@ int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float react
                 t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
                 if(t1 < ent->character->critical_wall_component)
                 {
-                    ent->character->resp.horizontal_collide |= 0x01;
+                    ent->character->state.horizontal_collide |= 0x01;
                 }
             }
         }
@@ -564,8 +563,8 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
     {
         if(move && ent->character)
         {
-            ent->character->resp.horizontal_collide    = 0x00;
-            ent->character->resp.vertical_collide      = 0x00;
+            ent->character->state.horizontal_collide    = 0x00;
+            ent->character->state.vertical_collide      = 0x00;
         }
 
         if(ent->no_fix_all || ent->type_flags & ENTITY_TYPE_DYNAMIC)
@@ -591,30 +590,30 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
                         t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
                         if(t1 < ent->character->critical_wall_component)
                         {
-                            ent->character->resp.horizontal_collide |= 0x01;
+                            ent->character->state.horizontal_collide |= 0x01;
                         }
                     }
                     else if((reaction[2] * reaction[2] > t1) && (move[2] * move[2] > t2))
                     {
                         if((reaction[2] > 0.0) && (move[2] < 0.0))
                         {
-                            ent->character->resp.vertical_collide |= 0x01;
+                            ent->character->state.vertical_collide |= 0x01;
                         }
                         else if((reaction[2] < 0.0) && (move[2] > 0.0))
                         {
-                            ent->character->resp.vertical_collide |= 0x02;
+                            ent->character->state.vertical_collide |= 0x02;
                         }
                     }
                 }
 
                 if(ent->character->height_info.ceiling_hit.hit && (reaction[2] < -0.1))
                 {
-                    ent->character->resp.vertical_collide |= 0x02;
+                    ent->character->state.vertical_collide |= 0x02;
                 }
 
                 if(ent->character->height_info.floor_hit.hit && (reaction[2] > 0.1))
                 {
-                    ent->character->resp.vertical_collide |= 0x01;
+                    ent->character->state.vertical_collide |= 0x01;
                 }
             }
             Entity_GhostUpdate(ent);
@@ -720,7 +719,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                 case TR_ANIMCOMMAND_KILL:
                     if(entity->character)
                     {
-                        entity->character->resp.kill = 0x01;
+                        entity->character->state.kill = 0x01;
                     }
                     break;
             };
@@ -965,7 +964,7 @@ void Entity_ProcessSector(entity_p ent)
                         if(ent->transform[12 + 2] <= lowest_sector->floor + 16)
                         {
                             Character_SetParam(ent, PARAM_HEALTH, 0.0);
-                            ent->character->resp.kill = 0x01;
+                            ent->character->state.kill = 0x01;
                         }
                         break;
 
@@ -973,7 +972,7 @@ void Entity_ProcessSector(entity_p ent)
                     case MOVE_ON_WATER:
                     case MOVE_UNDERWATER:
                         Character_SetParam(ent, PARAM_HEALTH, 0.0);
-                        ent->character->resp.kill = 1;
+                        ent->character->state.kill = 1;
                         break;
                 }
             }

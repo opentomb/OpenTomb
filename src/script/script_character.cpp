@@ -339,19 +339,19 @@ int lua_SetCharacterResponse(lua_State * lua)
             switch(lua_tointeger(lua, 2))
             {
                 case RESP_KILL:
-                    ent->character->resp.kill = value;
+                    ent->character->state.kill = value;
                     break;
 
                 case RESP_VERT_COLLIDE:
-                    ent->character->resp.vertical_collide = value;
+                    ent->character->state.vertical_collide = value;
                     break;
 
                 case RESP_HOR_COLLIDE:
-                    ent->character->resp.horizontal_collide = value;
+                    ent->character->state.horizontal_collide = value;
                     break;
 
                 case RESP_SLIDE:
-                    ent->character->resp.slide = value;
+                    ent->character->state.slide = value;
                     break;
 
                 default:
@@ -382,16 +382,16 @@ int lua_GetCharacterResponse(lua_State * lua)
             switch(lua_tointeger(lua, 2))
             {
                 case 0:
-                    lua_pushinteger(lua, ent->character->resp.kill);
+                    lua_pushinteger(lua, ent->character->state.kill);
                     break;
                 case 1:
-                    lua_pushinteger(lua, ent->character->resp.vertical_collide);
+                    lua_pushinteger(lua, ent->character->state.vertical_collide);
                     break;
                 case 2:
-                    lua_pushinteger(lua, ent->character->resp.horizontal_collide);
+                    lua_pushinteger(lua, ent->character->state.horizontal_collide);
                     break;
                 case 3:
-                    lua_pushinteger(lua, ent->character->resp.slide);
+                    lua_pushinteger(lua, ent->character->state.slide);
                     break;
                 default:
                     lua_pushinteger(lua, 0);

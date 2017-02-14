@@ -1,21 +1,6 @@
 
-#ifndef ANIM_STATE_CONTROL_H
-#define ANIM_STATE_CONTROL_H
-
-struct ss_animation_s;
-struct entity_s;
-
-/*
- * SURFACE MOVEMENT DIRECTIONS
- */
-
-#define ENT_STAY 0x00000000
-#define ENT_MOVE_FORWARD 0x00000001
-#define ENT_MOVE_BACKWARD 0x00000002
-#define ENT_MOVE_LEFT 0x00000004
-#define ENT_MOVE_RIGHT 0x00000008
-#define ENT_MOVE_JUMP 0x00000010
-#define ENT_MOVE_CROUCH 0x00000020
+#ifndef STATE_CONTROL_LARA_H
+#define STATE_CONTROL_LARA_H
 
 /*
  *  ====== LARA'S ANIMATIONS ======
@@ -736,8 +721,6 @@ struct entity_s;
 #define TR_EFFECT_REMOVEWATERSKIN       44
 #define TR_EFFECT_LARALOCATIONPAD       45
 #define TR_EFFECT_KILLALLENEMIES        46
-
-int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim);
 
 #endif
 

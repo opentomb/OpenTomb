@@ -237,15 +237,18 @@ typedef struct character_command_s
     uint16_t    sprint : 1;
 }character_command_t, *character_command_p;
 
-typedef struct character_response_s
+typedef struct character_state_s
 {
     int8_t      vertical_collide;
     int8_t      horizontal_collide;
-    uint16_t    kill : 1;
-    uint16_t    burn : 1;
     uint16_t    slide : 2;
     uint16_t    step_z : 2;
-}character_response_t, *character_response_p;
+    uint16_t    kill : 1;
+    uint16_t    crouch : 1;
+    uint16_t    sprint : 1;
+    uint16_t    tightrope : 1;
+    uint16_t    burn : 1;
+}character_state_t, *character_state_p;
 
 typedef struct character_param_s
 {
@@ -270,7 +273,7 @@ typedef struct character_s
 {
     struct entity_s            *ent;                    // actor entity
     struct character_command_s  cmd;                    // character control commands
-    struct character_response_s resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
+    struct character_state_s    state;                  // character state info (collides, slide, next steps, drops, e.t.c.)
 
     struct character_param_s    parameters;
     struct character_stats_s    statistics;

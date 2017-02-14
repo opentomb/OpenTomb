@@ -74,8 +74,9 @@ set(OPENTOMB_SRCS
     src/vt/vt_level.h
     src/vt/tr_types.h
     src/vt/tr_versions.h
-    src/anim_state_control.cpp
-    src/anim_state_control.h
+    src/state_control/state_control.h
+    src/state_control/state_control_Lara.h
+	src/state_control/state_control_Lara.cpp
     src/audio.cpp
     src/audio.h
     src/character_controller.cpp

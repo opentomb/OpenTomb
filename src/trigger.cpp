@@ -22,7 +22,6 @@ extern "C" {
 #include "skeletal_model.h"
 #include "entity.h"
 #include "character_controller.h"
-#include "anim_state_control.h"
 #include "world.h"
 
 
@@ -110,13 +109,10 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             switch(command->function)
             {
                 case TR_FD_TRIGFUNC_UWCURRENT:
-                    if(entity_activator->move_type == MOVE_ON_WATER)
+                    if((entity_activator->move_type == MOVE_ON_WATER) && entity_activator->character)
                     {
-                        if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
-                        {
-                            Entity_SetAnimation(entity_activator, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
-                            entity_activator->move_type = MOVE_UNDERWATER;
-                        }
+                        ///@TODO: do force dive here!
+                        Entity_MoveToSink(entity_activator, command->operands);
                     }
                     else if(entity_activator->move_type == MOVE_UNDERWATER)
                     {
@@ -225,12 +221,12 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                 case TR_FD_TRIGTYPE_TIGHTROPE:
                     // Check state range for triggering entity.
-                    header_condition = header_condition && ((entity_activator->state_flags >= TR_STATE_LARA_TIGHTROPE_IDLE) && (entity_activator->state_flags <= TR_STATE_LARA_TIGHTROPE_EXIT));
+                    header_condition = header_condition && entity_activator->character && entity_activator->character->state.tightrope;
                     break;
 
                 case TR_FD_TRIGTYPE_CRAWLDUCK:
                     // Check state range for triggering entity.
-                    header_condition = header_condition && ((entity_activator->state_flags >= TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN) && (entity_activator->state_flags <= TR_ANIMATION_LARA_CRAWL_SMASH_LEFT));
+                    header_condition = header_condition && entity_activator->character && entity_activator->character->state.crouch;
                     break;
             }
 
