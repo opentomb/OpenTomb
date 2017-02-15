@@ -5,7 +5,8 @@
 struct ss_animation_s;
 struct entity_s;
 
-int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim);
+int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim);
+void StateControl_LaraSetDefaultAnim(struct entity_s *ent, int anim_type, int move_type);
 
 #endif
 

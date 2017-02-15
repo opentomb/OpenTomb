@@ -196,7 +196,31 @@ void ent_crawl_to_climb(entity_p ent, ss_animation_p ss_anim)
 }
 
 
-int State_Control_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
+void StateControl_LaraSetDefaultAnim(struct entity_s *ent, int anim_type, int move_type)
+{
+    switch(move_type)
+    {
+        case MOVE_FREE_FALLING:
+            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0, NULL);
+            break;
+
+        case MOVE_UNDERWATER:
+            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_LARA_UNDERWATER_IDLE, 0, NULL);
+            break;
+
+        case MOVE_ON_WATER:
+            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_LARA_ONWATER_IDLE, 0, NULL);
+            break;
+
+        case MOVE_ON_FLOOR:
+        default:
+            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_LARA_STAY_IDLE, 0, NULL);
+            break;
+    }
+}
+
+
+int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 {
     int i;
     int clean_action = (ent->character->cmd.action && (ent->character->weapon_current_state == WEAPON_STATE_HIDE));

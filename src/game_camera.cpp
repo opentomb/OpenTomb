@@ -88,16 +88,16 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
 
     vec3_copy(cam_pos, cam->gl_transform + 12);
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
-#if 0
+
     if(control_states.mouse_look == 0)//If mouse look is off
     {
         float currentAngle = control_states.cam_angles[0] * (M_PI / 180.0f);    //Current is the current cam angle
         float targetAngle  = ent->angles[0] * (M_PI / 180.0f); //Target is the target angle which is the entity's angle itself
         float rotSpeed = 2.0f; //Speed of rotation
-        uint16_t current_state = Anim_GetCurrentState(&ent->bf->animations);
         ///@FIXME
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
-        if(current_state == TR_STATE_LARA_REACH)
+        //if(current_state == TR_STATE_LARA_REACH)
+        if((ent->move_type == MOVE_FREE_FALLING) && (ent->dir_flag == ENT_MOVE_FORWARD))
         {
             if(cam_state->target_dir == TR_CAM_TARG_BACK)
             {
@@ -129,7 +129,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
                 }
             }
         }
-        else if(current_state == TR_STATE_LARA_JUMP_BACK)
+        else if((ent->move_type == MOVE_FREE_FALLING) && (ent->dir_flag == ENT_MOVE_BACKWARD))
         {
             cam_state->target_dir = TR_CAM_TARG_FRONT;
         }
@@ -172,8 +172,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
             control_states.cam_angles[0] = fmodf(control_states.cam_angles[0] + atan2f(sinf(currentAngle - d_angle), cosf(currentAngle + d_angle)) * (engine_frame_time * rotSpeed), M_PI * 2.0f); //Update camera's angle
         }
     }
-#endif
-    
+
     if((ent->character != NULL) && (ent->character->cam_follow_center > 0))
     {
         vec3_copy(cam_pos, ent->obb->centre);
