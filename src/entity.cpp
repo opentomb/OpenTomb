@@ -719,7 +719,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                 case TR_ANIMCOMMAND_KILL:
                     if(entity->character)
                     {
-                        entity->character->state.kill = 0x01;
+                        entity->character->state.dead = 0x01;
                     }
                     break;
             };
@@ -964,7 +964,7 @@ void Entity_ProcessSector(entity_p ent)
                         if(ent->transform[12 + 2] <= lowest_sector->floor + 16)
                         {
                             Character_SetParam(ent, PARAM_HEALTH, 0.0);
-                            ent->character->state.kill = 0x01;
+                            ent->character->state.dead = 0x01;
                         }
                         break;
 
@@ -972,7 +972,7 @@ void Entity_ProcessSector(entity_p ent)
                     case MOVE_ON_WATER:
                     case MOVE_UNDERWATER:
                         Character_SetParam(ent, PARAM_HEALTH, 0.0);
-                        ent->character->state.kill = 1;
+                        ent->character->state.dead = 1;
                         break;
                 }
             }

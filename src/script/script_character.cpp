@@ -339,7 +339,7 @@ int lua_SetCharacterResponse(lua_State * lua)
             switch(lua_tointeger(lua, 2))
             {
                 case RESP_KILL:
-                    ent->character->state.kill = value;
+                    ent->character->state.dead = value;
                     break;
 
                 case RESP_VERT_COLLIDE:
@@ -382,7 +382,7 @@ int lua_GetCharacterResponse(lua_State * lua)
             switch(lua_tointeger(lua, 2))
             {
                 case 0:
-                    lua_pushinteger(lua, ent->character->state.kill);
+                    lua_pushinteger(lua, ent->character->state.dead);
                     break;
                 case 1:
                     lua_pushinteger(lua, ent->character->state.vertical_collide);

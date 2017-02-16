@@ -241,13 +241,13 @@ typedef struct character_state_s
 {
     int8_t      vertical_collide;
     int8_t      horizontal_collide;
-    uint16_t    slide : 2;
-    uint16_t    step_z : 2;
-    uint16_t    kill : 1;
+    uint16_t    slide : 2;      //0 - none, 1 - forward, 2 - backward
+    uint16_t    step_z : 2;     //0 - none, 1 - dz to step up, 2 - dz to step down;
+    uint16_t    dead : 1;
+    uint16_t    burn : 1;
     uint16_t    crouch : 1;
     uint16_t    sprint : 1;
     uint16_t    tightrope : 1;
-    uint16_t    burn : 1;
 }character_state_t, *character_state_p;
 
 typedef struct character_param_s
@@ -287,7 +287,7 @@ typedef struct character_s
     int16_t                     weapon_current_state;
 
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
-
+    void                       (*set_idle_anim_func)(struct entity_s *ent, int anim_type, int move_type);
     float                       linear_speed_mult;
     float                       rotate_speed_mult;
     float                       min_step_up_height;

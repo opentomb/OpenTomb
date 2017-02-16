@@ -31,6 +31,7 @@ void Character_Create(struct entity_s *ent)
 
         ret = (character_p)malloc(sizeof(character_t));
         ret->state_func = NULL;
+        ret->set_idle_anim_func = NULL;
         ret->ent = ent;
         ent->character = ret;
         ret->height_info.self = ent->self;
@@ -48,7 +49,7 @@ void Character_Create(struct entity_s *ent)
         ret->state.horizontal_collide = 0x00;
         ret->state.slide = 0x00;
         ret->state.step_z = 0x00;
-        ret->state.kill = 0x00;
+        ret->state.dead = 0x00;
         ret->state.burn = 0x00;
         ret->state.crouch = 0x00;
         ret->state.sprint = 0x00;
@@ -160,7 +161,7 @@ void Character_Update(struct entity_s *ent)
         }
         if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
         {
-            ent->character->state.kill = 1;                                      // Kill, if no HP.
+            ent->character->state.dead = 1;                                     // Kill, if no HP.
         }
         Character_ApplyCommands(ent);
 
@@ -1459,7 +1460,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
     ent->character->state.horizontal_collide = 0x00;
     ent->character->state.vertical_collide = 0x00;
 
-    if(!ent->character->state.kill)   // Block controls if Lara is dead.
+    if(!ent->character->state.dead)   // Block controls if Lara is dead.
     {
         // Calculate current speed.
         if(ent->character->cmd.jump)
@@ -1978,7 +1979,7 @@ void Character_UpdateParams(struct entity_s *ent)
             {
                 if(!Character_ChangeParam(ent, PARAM_HEALTH, -3.0 * speed))
                 {
-                    ent->character->state.kill = 1;
+                    ent->character->state.dead = 1;
                 }
             }
             break;

@@ -111,7 +111,12 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                 case TR_FD_TRIGFUNC_UWCURRENT:
                     if((entity_activator->move_type == MOVE_ON_WATER) && entity_activator->character)
                     {
-                        ///@TODO: do force dive here!
+                        if(entity_activator->character->set_idle_anim_func)
+                        {
+                            entity_activator->character->set_idle_anim_func(entity_activator, ANIM_TYPE_BASE, MOVE_FREE_FALLING);
+                            entity_activator->transform[12 + 2] -= TR_METERING_STEP;
+                            entity_activator->move_type = MOVE_FREE_FALLING;
+                        }
                         Entity_MoveToSink(entity_activator, command->operands);
                     }
                     else if(entity_activator->move_type == MOVE_UNDERWATER)
