@@ -1041,9 +1041,8 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
 }
 
 
-void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
+void Entity_MoveToSink(entity_p entity, struct static_camera_sink_s *sink)
 {
-    static_camera_sink_p sink = World_GetstaticCameraSink(sink_index);
     if(sink)
     {
         float sink_pos[3], *ent_pos = entity->transform + 12;
@@ -1062,11 +1061,12 @@ void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
 
         float speed[3];
         vec3_sub(speed, sink_pos, ent_pos);
-        float t = vec3_abs(speed);
-        if(t > 0.001)
+        float dist = vec3_abs(speed);
+        if(dist > 0.001)
         {
-            t = 240.0f * engine_frame_time * ((float)(sink->room_or_strength)) / t;
-
+            float t = 240.0f * engine_frame_time * ((float)(sink->room_or_strength));
+            t = (t < dist) ? (t / dist) : (1.0f);
+            
             ent_pos[0] += speed[0] * t;
             ent_pos[1] += speed[1] * t;
             ent_pos[2] += speed[2] * t;

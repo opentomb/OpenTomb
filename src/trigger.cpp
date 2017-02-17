@@ -14,6 +14,7 @@ extern "C" {
 #include "core/console.h"
 #include "core/vmath.h"
 #include "script/script.h"
+#include "render/camera.h"
 #include "room.h"
 #include "trigger.h"
 #include "gameflow.h"
@@ -109,19 +110,25 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             switch(command->function)
             {
                 case TR_FD_TRIGFUNC_UWCURRENT:
-                    if((entity_activator->move_type == MOVE_ON_WATER) && entity_activator->character)
                     {
-                        if(entity_activator->character->set_idle_anim_func)
+                        static_camera_sink_p sink = World_GetstaticCameraSink(command->operands);
+                        if((entity_activator->move_type == MOVE_ON_WATER) && entity_activator->character)
                         {
-                            entity_activator->character->set_idle_anim_func(entity_activator, ANIM_TYPE_BASE, MOVE_FREE_FALLING);
-                            entity_activator->transform[12 + 2] -= TR_METERING_STEP;
-                            entity_activator->move_type = MOVE_FREE_FALLING;
+                            if(sink && sink->room_or_strength > 4)
+                            {
+                                if(entity_activator->character->set_idle_anim_func)
+                                {
+                                    entity_activator->character->set_idle_anim_func(entity_activator, ANIM_TYPE_BASE, MOVE_FREE_FALLING);
+                                    entity_activator->transform[12 + 2] -= TR_METERING_STEP;
+                                    entity_activator->move_type = MOVE_FREE_FALLING;
+                                }
+                                Entity_MoveToSink(entity_activator, sink);
+                            }
                         }
-                        Entity_MoveToSink(entity_activator, command->operands);
-                    }
-                    else if(entity_activator->move_type == MOVE_UNDERWATER)
-                    {
-                        Entity_MoveToSink(entity_activator, command->operands);
+                        else if(entity_activator->move_type == MOVE_UNDERWATER)
+                        {
+                            Entity_MoveToSink(entity_activator, sink);
+                        }
                     }
                     break;
 

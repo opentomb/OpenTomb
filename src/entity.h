@@ -202,7 +202,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim);
 bool Entity_DoFlipEffect(entity_p entity, uint16_t effect_id, int16_t param);
 void Entity_ProcessSector(entity_p ent);
 void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int frame, float new_transform[16] = NULL);
-void Entity_MoveToSink(entity_p entity, uint32_t sink_index);
+void Entity_MoveToSink(entity_p entity, struct static_camera_sink_s *sink);
 void Entity_MoveForward(entity_p ent, float dist);
 void Entity_MoveStrafe(entity_p ent, float dist);
 void Entity_MoveVertical(entity_p ent, float dist);
