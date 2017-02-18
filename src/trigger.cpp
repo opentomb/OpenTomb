@@ -101,6 +101,10 @@ end
 ///@TODO: move here TickEntity with Inversing entity state... see carefully heavy irregular cases
 void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activator)
 {
+    if(entity_activator && entity_activator->character)
+    {
+        entity_activator->character->state.uw_current = 0x00;
+    }
     if(trigger && entity_activator)
     {
         bool has_non_continuos_triggers = false;
@@ -110,24 +114,16 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             switch(command->function)
             {
                 case TR_FD_TRIGFUNC_UWCURRENT:
+                    if(entity_activator->character)
                     {
                         static_camera_sink_p sink = World_GetstaticCameraSink(command->operands);
-                        if((entity_activator->move_type == MOVE_ON_WATER) && entity_activator->character)
+                        if(sink && (entity_activator->current_sector != Room_GetSectorRaw(entity_activator->self->room, sink->pos)))
                         {
-                            if(sink && sink->room_or_strength > 4)
+                            if(entity_activator->move_type == MOVE_UNDERWATER)
                             {
-                                if(entity_activator->character->set_idle_anim_func)
-                                {
-                                    entity_activator->character->set_idle_anim_func(entity_activator, ANIM_TYPE_BASE, MOVE_FREE_FALLING);
-                                    entity_activator->transform[12 + 2] -= TR_METERING_STEP;
-                                    entity_activator->move_type = MOVE_FREE_FALLING;
-                                }
                                 Entity_MoveToSink(entity_activator, sink);
                             }
-                        }
-                        else if(entity_activator->move_type == MOVE_UNDERWATER)
-                        {
-                            Entity_MoveToSink(entity_activator, sink);
+                            entity_activator->character->state.uw_current = 0x01;
                         }
                     }
                     break;

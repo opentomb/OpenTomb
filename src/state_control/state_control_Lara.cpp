@@ -2589,6 +2589,13 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_ONWATER_STOP:
+            if(state->uw_current)
+            {
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
+                ent->move_type = MOVE_UNDERWATER;
+                break;
+            }
+
             if(clean_action && (cmd->move[0] == 1) && (ent->move_type != MOVE_CLIMBING))
             {
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
@@ -2675,7 +2682,14 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_ONWATER_FORWARD:
+            if(state->uw_current)
+            {
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
+                ent->move_type = MOVE_UNDERWATER;
+                break;
+            }
             ent->move_type = MOVE_ON_WATER;
+
             if(state->dead)
             {
                 ss_anim->next_state = TR_STATE_LARA_WATER_DEATH;
@@ -2707,6 +2721,13 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_ONWATER_BACK:
+            if(state->uw_current)
+            {
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
+                ent->move_type = MOVE_UNDERWATER;
+                break;
+            }
+
             if(cmd->move[0] == -1 && cmd->jump == 0)
             {
                 if(!curr_fc->floor_hit.hit || (curr_fc->floor_hit.point[2] + ent->character->Height < curr_fc->transition_level))
@@ -2725,6 +2746,13 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_ONWATER_LEFT:
+            if(state->uw_current)
+            {
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
+                ent->move_type = MOVE_UNDERWATER;
+                break;
+            }
+
             cmd->rot[0] = 0;
             if(cmd->jump == 0)
             {
@@ -2754,6 +2782,13 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_LARA_ONWATER_RIGHT:
+            if(state->uw_current)
+            {
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
+                ent->move_type = MOVE_UNDERWATER;
+                break;
+            }
+
             cmd->rot[0] = 0;
             if(cmd->jump == 0)
             {

@@ -48,9 +48,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
 
     if(target && (cam_state->state == CAMERA_STATE_FIXED))
     {
-        cam->gl_transform[12 + 0] = cam_state->sink->x;
-        cam->gl_transform[12 + 1] = cam_state->sink->y;
-        cam->gl_transform[12 + 2] = cam_state->sink->z;
+        vec3_copy(cam->gl_transform + 12, cam_state->sink->pos)
         cam->current_room = World_GetRoomByID(cam_state->sink->room_or_strength);
 
         if(target->character)

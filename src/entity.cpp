@@ -973,7 +973,7 @@ void Entity_ProcessSector(entity_p ent)
                     case MOVE_ON_WATER:
                     case MOVE_UNDERWATER:
                         Character_SetParam(ent, PARAM_HEALTH, 0.0);
-                        ent->character->state.dead = 1;
+                        ent->character->state.dead = 0x01;
                         break;
                 }
             }
@@ -1047,9 +1047,9 @@ void Entity_MoveToSink(entity_p entity, struct static_camera_sink_s *sink)
     if(sink)
     {
         float sink_pos[3], *ent_pos = entity->transform + 12;
-        sink_pos[0] = sink->x;
-        sink_pos[1] = sink->y;
-        sink_pos[2] = sink->z + 256.0; // Prevents digging into the floor.
+        sink_pos[0] = sink->pos[0];
+        sink_pos[1] = sink->pos[1];
+        sink_pos[2] = sink->pos[2] + 256.0; // Prevents digging into the floor.
 
         room_sector_p ls = Sector_GetLowest(entity->current_sector);
         room_sector_p hs = Sector_GetHighest(entity->current_sector);

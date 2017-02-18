@@ -1596,9 +1596,9 @@ void World_GenCameras(class VT_Level *tr)
         global_world.cameras_sinks = (static_camera_sink_p)malloc(global_world.cameras_sinks_count * sizeof(static_camera_sink_t));
         for(uint32_t i = 0; i < global_world.cameras_sinks_count; i++)
         {
-            global_world.cameras_sinks[i].x                   =  tr->cameras[i].x;
-            global_world.cameras_sinks[i].y                   =  tr->cameras[i].z;
-            global_world.cameras_sinks[i].z                   = -tr->cameras[i].y;
+            global_world.cameras_sinks[i].pos[0]              =  tr->cameras[i].x;
+            global_world.cameras_sinks[i].pos[1]              =  tr->cameras[i].z;
+            global_world.cameras_sinks[i].pos[2]              = -tr->cameras[i].y;
             global_world.cameras_sinks[i].locked              = 0;
             global_world.cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
             global_world.cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;

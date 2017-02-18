@@ -357,7 +357,7 @@ int lua_SetCharacterState(lua_State * lua)
     }
     else
     {
-        Con_Warning("setEntityResponse: expecting arguments (entity_id, response_id, value)");
+        Con_Warning("setCharacterState: expecting arguments (entity_id, response_id, value)");
     }
 
     return 0;
@@ -394,7 +394,7 @@ int lua_GetCharacterState(lua_State * lua)
     }
     else
     {
-        Con_Warning("getEntityResponse: expecting arguments (entity_id, response_id)");
+        Con_Warning("getCharacterState: expecting arguments (entity_id, response_id)");
     }
 
     return 0;
