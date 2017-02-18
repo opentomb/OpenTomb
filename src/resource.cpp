@@ -33,10 +33,10 @@ extern "C" {
 #include "trigger.h"
 #include "mesh.h"
 #include "skeletal_model.h"
-#include "anim_state_control.h"
 #include "character_controller.h"
 #include "engine.h"
 #include "physics.h"
+#include "entity.h"
 #include "inventory.h"
 #include "resource.h"
 

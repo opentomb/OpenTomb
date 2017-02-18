@@ -328,7 +328,7 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
 }
 
 
-int lua_SetCharacterResponse(lua_State * lua)
+int lua_SetCharacterState(lua_State * lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -338,20 +338,12 @@ int lua_SetCharacterResponse(lua_State * lua)
             int8_t value = (int8_t)lua_tointeger(lua, 3);
             switch(lua_tointeger(lua, 2))
             {
-                case RESP_KILL:
-                    ent->character->resp.kill = value;
+                case CHARACTER_STATE_DEAD:
+                    ent->character->state.dead = value;
                     break;
 
-                case RESP_VERT_COLLIDE:
-                    ent->character->resp.vertical_collide = value;
-                    break;
-
-                case RESP_HOR_COLLIDE:
-                    ent->character->resp.horizontal_collide = value;
-                    break;
-
-                case RESP_SLIDE:
-                    ent->character->resp.slide = value;
+                case CHARACTER_STATE_SLIDE:
+                    ent->character->state.slide = value;
                     break;
 
                 default:
@@ -365,14 +357,14 @@ int lua_SetCharacterResponse(lua_State * lua)
     }
     else
     {
-        Con_Warning("setEntityResponse: expecting arguments (entity_id, response_id, value)");
+        Con_Warning("setCharacterState: expecting arguments (entity_id, response_id, value)");
     }
 
     return 0;
 }
 
 
-int lua_GetCharacterResponse(lua_State * lua)
+int lua_GetCharacterState(lua_State * lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -381,20 +373,16 @@ int lua_GetCharacterResponse(lua_State * lua)
         {
             switch(lua_tointeger(lua, 2))
             {
-                case 0:
-                    lua_pushinteger(lua, ent->character->resp.kill);
+                case CHARACTER_STATE_DEAD:
+                    lua_pushinteger(lua, ent->character->state.dead);
                     break;
-                case 1:
-                    lua_pushinteger(lua, ent->character->resp.vertical_collide);
+
+                case CHARACTER_STATE_SLIDE:
+                    lua_pushinteger(lua, ent->character->state.slide);
                     break;
-                case 2:
-                    lua_pushinteger(lua, ent->character->resp.horizontal_collide);
-                    break;
-                case 3:
-                    lua_pushinteger(lua, ent->character->resp.slide);
-                    break;
+
                 default:
-                    lua_pushinteger(lua, 0);
+                    lua_pushnil(lua);
                     break;
             }
             return 1;
@@ -406,7 +394,7 @@ int lua_GetCharacterResponse(lua_State * lua)
     }
     else
     {
-        Con_Warning("getEntityResponse: expecting arguments (entity_id, response_id)");
+        Con_Warning("getCharacterState: expecting arguments (entity_id, response_id)");
     }
 
     return 0;
@@ -494,8 +482,8 @@ void Script_LuaRegisterCharacterFuncs(lua_State *lua)
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);
     lua_register(lua, "changeCharacterParam", lua_ChangeCharacterParam);
 
-    lua_register(lua, "getCharacterResponse", lua_GetCharacterResponse);
-    lua_register(lua, "setCharacterResponse", lua_SetCharacterResponse);
+    lua_register(lua, "getCharacterState", lua_GetCharacterState);
+    lua_register(lua, "setCharacterState", lua_SetCharacterState);
     lua_register(lua, "getCharacterCurrentWeapon", lua_GetCharacterCurrentWeapon);
     lua_register(lua, "setCharacterCurrentWeapon", lua_SetCharacterCurrentWeapon);
     lua_register(lua, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);

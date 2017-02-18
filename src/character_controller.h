@@ -237,15 +237,20 @@ typedef struct character_command_s
     uint16_t    sprint : 1;
 }character_command_t, *character_command_p;
 
-typedef struct character_response_s
+typedef struct character_state_s
 {
-    int8_t      vertical_collide;
-    int8_t      horizontal_collide;
-    uint16_t    kill : 1;
-    uint16_t    burn : 1;
-    uint16_t    slide : 2;
-    uint16_t    step_z : 2;
-}character_response_t, *character_response_p;
+    uint32_t    floor_collide : 1;
+    uint32_t    ceiling_collide : 1;
+    uint32_t    wall_collide : 1;
+    uint32_t    slide : 2;      //0 - none, 1 - forward, 2 - backward
+    uint32_t    step_z : 2;     //0 - none, 1 - dz to step up, 2 - dz to step down;
+    uint32_t    uw_current : 1;
+    uint32_t    dead : 1;
+    uint32_t    burn : 1;
+    uint32_t    crouch : 1;
+    uint32_t    sprint : 1;
+    uint32_t    tightrope : 1;
+}character_state_t, *character_state_p;
 
 typedef struct character_param_s
 {
@@ -270,7 +275,7 @@ typedef struct character_s
 {
     struct entity_s            *ent;                    // actor entity
     struct character_command_s  cmd;                    // character control commands
-    struct character_response_s resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
+    struct character_state_s    state;                  // character state info (collides, slide, next steps, drops, e.t.c.)
 
     struct character_param_s    parameters;
     struct character_stats_s    statistics;
@@ -284,7 +289,7 @@ typedef struct character_s
     int16_t                     weapon_current_state;
 
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
-
+    void                       (*set_idle_anim_func)(struct entity_s *ent, int anim_type, int move_type);
     float                       linear_speed_mult;
     float                       rotate_speed_mult;
     float                       min_step_up_height;

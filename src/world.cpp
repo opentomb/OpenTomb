@@ -22,6 +22,7 @@ extern "C" {
 #include "render/render.h"
 #include "render/bordered_texture_atlas.h"
 #include "script/script.h"
+#include "state_control/state_control.h"
 #include "gui/gui.h"
 #include "vt/vt_level.h"
 #include "audio.h"
@@ -31,7 +32,6 @@ extern "C" {
 #include "skeletal_model.h"
 #include "entity.h"
 #include "character_controller.h"
-#include "anim_state_control.h"
 #include "engine.h"
 #include "physics.h"
 #include "gameflow.h"
@@ -1596,9 +1596,9 @@ void World_GenCameras(class VT_Level *tr)
         global_world.cameras_sinks = (static_camera_sink_p)malloc(global_world.cameras_sinks_count * sizeof(static_camera_sink_t));
         for(uint32_t i = 0; i < global_world.cameras_sinks_count; i++)
         {
-            global_world.cameras_sinks[i].x                   =  tr->cameras[i].x;
-            global_world.cameras_sinks[i].y                   =  tr->cameras[i].z;
-            global_world.cameras_sinks[i].z                   = -tr->cameras[i].y;
+            global_world.cameras_sinks[i].pos[0]              =  tr->cameras[i].x;
+            global_world.cameras_sinks[i].pos[1]              =  tr->cameras[i].z;
+            global_world.cameras_sinks[i].pos[2]              = -tr->cameras[i].y;
             global_world.cameras_sinks[i].locked              = 0;
             global_world.cameras_sinks[i].room_or_strength    =  tr->cameras[i].room;
             global_world.cameras_sinks[i].flag_or_zone        =  tr->cameras[i].unknown1;
@@ -2288,14 +2288,15 @@ void World_GenEntities(class VT_Level *tr)
                 entity->bf->bone_tags[j].mesh_skin = entity->bf->animations.model->mesh_tree[j].mesh_skin;
                 entity->bf->bone_tags[j].mesh_slot = NULL;
             }
-            Entity_SetAnimation(global_world.Character, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STAY_IDLE, 0);
+            StateControl_LaraSetIdleAnim(global_world.Character, ANIM_TYPE_BASE, MOVE_ON_FLOOR);
             Physics_GenRigidBody(entity->physics, entity->bf);
             Entity_UpdateRigidBody(entity, 1);
             Character_Create(entity);
             Room_AddObject(entity->self->room, entity->self);
 
             entity->character->Height = 768.0;
-            entity->character->state_func = State_Control_Lara;
+            entity->character->state_func = StateControl_Lara;
+            entity->character->set_idle_anim_func = StateControl_LaraSetIdleAnim;
             entity->character->height_info.leg_l_index = LEFT_LEG;
             entity->character->height_info.leg_r_index = RIGHT_LEG;
             //entity->character->height_info.hand_l_index = LEFT_HAND;

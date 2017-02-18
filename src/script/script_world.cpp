@@ -32,7 +32,6 @@ extern "C" {
 #include "../controls.h"
 #include "../game.h"
 #include "../gameflow.h"
-#include "../anim_state_control.h"
 #include "../character_controller.h"
 #include "../engine_string.h"
 

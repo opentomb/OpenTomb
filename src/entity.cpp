@@ -23,7 +23,6 @@ extern "C" {
 #include "engine.h"
 #include "physics.h"
 #include "trigger.h"
-#include "anim_state_control.h"
 #include "character_controller.h"
 #include "gameflow.h"
 #include "inventory.h"
@@ -491,7 +490,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             {
                 break;
             }
-            int iter = (float)(2.0f * move_len / btag->mesh_base->radius) + 1;  ///@FIXME (not a critical): magick const 2.0!
+            int iter = (float)(3.0f * move_len / btag->mesh_base->radius) + 1;  ///@FIXME (not a critical): magick const 2.0!
             move[0] /= (float)iter;
             move[1] /= (float)iter;
             move[2] /= (float)iter;
@@ -546,7 +545,7 @@ int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float react
                 t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
                 if(t1 < ent->character->critical_wall_component)
                 {
-                    ent->character->resp.horizontal_collide |= 0x01;
+                    ent->character->state.wall_collide = 0x01;
                 }
             }
         }
@@ -564,8 +563,9 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
     {
         if(move && ent->character)
         {
-            ent->character->resp.horizontal_collide    = 0x00;
-            ent->character->resp.vertical_collide      = 0x00;
+            ent->character->state.floor_collide = 0x00;
+            ent->character->state.ceiling_collide = 0x00;
+            ent->character->state.wall_collide = 0x00;
         }
 
         if(ent->no_fix_all || ent->type_flags & ENTITY_TYPE_DYNAMIC)
@@ -591,30 +591,30 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
                         t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
                         if(t1 < ent->character->critical_wall_component)
                         {
-                            ent->character->resp.horizontal_collide |= 0x01;
+                            ent->character->state.wall_collide = 0x01;
                         }
                     }
                     else if((reaction[2] * reaction[2] > t1) && (move[2] * move[2] > t2))
                     {
                         if((reaction[2] > 0.0) && (move[2] < 0.0))
                         {
-                            ent->character->resp.vertical_collide |= 0x01;
+                            ent->character->state.floor_collide = 0x01;
                         }
                         else if((reaction[2] < 0.0) && (move[2] > 0.0))
                         {
-                            ent->character->resp.vertical_collide |= 0x02;
+                            ent->character->state.ceiling_collide = 0x01;
                         }
                     }
                 }
 
                 if(ent->character->height_info.ceiling_hit.hit && (reaction[2] < -0.1))
                 {
-                    ent->character->resp.vertical_collide |= 0x02;
+                    ent->character->state.ceiling_collide = 0x01;
                 }
 
                 if(ent->character->height_info.floor_hit.hit && (reaction[2] > 0.1))
                 {
-                    ent->character->resp.vertical_collide |= 0x01;
+                    ent->character->state.floor_collide = 0x01;
                 }
             }
             Entity_GhostUpdate(ent);
@@ -720,7 +720,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                 case TR_ANIMCOMMAND_KILL:
                     if(entity->character)
                     {
-                        entity->character->resp.kill = 0x01;
+                        entity->character->state.dead = 0x01;
                     }
                     break;
             };
@@ -965,7 +965,7 @@ void Entity_ProcessSector(entity_p ent)
                         if(ent->transform[12 + 2] <= lowest_sector->floor + 16)
                         {
                             Character_SetParam(ent, PARAM_HEALTH, 0.0);
-                            ent->character->resp.kill = 0x01;
+                            ent->character->state.dead = 0x01;
                         }
                         break;
 
@@ -973,7 +973,7 @@ void Entity_ProcessSector(entity_p ent)
                     case MOVE_ON_WATER:
                     case MOVE_UNDERWATER:
                         Character_SetParam(ent, PARAM_HEALTH, 0.0);
-                        ent->character->resp.kill = 1;
+                        ent->character->state.dead = 0x01;
                         break;
                 }
             }
@@ -1042,15 +1042,14 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
 }
 
 
-void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
+void Entity_MoveToSink(entity_p entity, struct static_camera_sink_s *sink)
 {
-    static_camera_sink_p sink = World_GetstaticCameraSink(sink_index);
     if(sink)
     {
         float sink_pos[3], *ent_pos = entity->transform + 12;
-        sink_pos[0] = sink->x;
-        sink_pos[1] = sink->y;
-        sink_pos[2] = sink->z + 256.0; // Prevents digging into the floor.
+        sink_pos[0] = sink->pos[0];
+        sink_pos[1] = sink->pos[1];
+        sink_pos[2] = sink->pos[2] + 256.0; // Prevents digging into the floor.
 
         room_sector_p ls = Sector_GetLowest(entity->current_sector);
         room_sector_p hs = Sector_GetHighest(entity->current_sector);
@@ -1063,10 +1062,11 @@ void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
 
         float speed[3];
         vec3_sub(speed, sink_pos, ent_pos);
-        float t = vec3_abs(speed);
-        if(t > 0.001)
+        float dist = vec3_abs(speed);
+        if(dist > 0.001)
         {
-            t = 240.0f * engine_frame_time * ((float)(sink->room_or_strength)) / t;
+            float t = 240.0f * engine_frame_time * ((float)(sink->room_or_strength));
+            t = (t < dist) ? (t / dist) : (1.0f);
 
             ent_pos[0] += speed[0] * t;
             ent_pos[1] += speed[1] * t;
