@@ -239,15 +239,17 @@ typedef struct character_command_s
 
 typedef struct character_state_s
 {
-    int8_t      vertical_collide;
-    int8_t      horizontal_collide;
-    uint16_t    slide : 2;      //0 - none, 1 - forward, 2 - backward
-    uint16_t    step_z : 2;     //0 - none, 1 - dz to step up, 2 - dz to step down;
-    uint16_t    dead : 1;
-    uint16_t    burn : 1;
-    uint16_t    crouch : 1;
-    uint16_t    sprint : 1;
-    uint16_t    tightrope : 1;
+    uint32_t    floor_collide : 1;
+    uint32_t    ceiling_collide : 1;
+    uint32_t    wall_collide : 1;
+    //uint32_t    wall_mov : 1;
+    uint32_t    slide : 2;      //0 - none, 1 - forward, 2 - backward
+    uint32_t    step_z : 2;     //0 - none, 1 - dz to step up, 2 - dz to step down;
+    uint32_t    dead : 1;
+    uint32_t    burn : 1;
+    uint32_t    crouch : 1;
+    uint32_t    sprint : 1;
+    uint32_t    tightrope : 1;
 }character_state_t, *character_state_p;
 
 typedef struct character_param_s

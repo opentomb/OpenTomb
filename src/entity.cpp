@@ -545,7 +545,7 @@ int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float react
                 t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
                 if(t1 < ent->character->critical_wall_component)
                 {
-                    ent->character->state.horizontal_collide |= 0x01;
+                    ent->character->state.wall_collide = 0x01;
                 }
             }
         }
@@ -563,8 +563,9 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
     {
         if(move && ent->character)
         {
-            ent->character->state.horizontal_collide    = 0x00;
-            ent->character->state.vertical_collide      = 0x00;
+            ent->character->state.floor_collide = 0x00;
+            ent->character->state.ceiling_collide = 0x00;
+            ent->character->state.wall_collide = 0x00;
         }
 
         if(ent->no_fix_all || ent->type_flags & ENTITY_TYPE_DYNAMIC)
@@ -590,30 +591,30 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
                         t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
                         if(t1 < ent->character->critical_wall_component)
                         {
-                            ent->character->state.horizontal_collide |= 0x01;
+                            ent->character->state.wall_collide = 0x01;
                         }
                     }
                     else if((reaction[2] * reaction[2] > t1) && (move[2] * move[2] > t2))
                     {
                         if((reaction[2] > 0.0) && (move[2] < 0.0))
                         {
-                            ent->character->state.vertical_collide |= 0x01;
+                            ent->character->state.floor_collide = 0x01;
                         }
                         else if((reaction[2] < 0.0) && (move[2] > 0.0))
                         {
-                            ent->character->state.vertical_collide |= 0x02;
+                            ent->character->state.ceiling_collide = 0x01;
                         }
                     }
                 }
 
                 if(ent->character->height_info.ceiling_hit.hit && (reaction[2] < -0.1))
                 {
-                    ent->character->state.vertical_collide |= 0x02;
+                    ent->character->state.ceiling_collide = 0x01;
                 }
 
                 if(ent->character->height_info.floor_hit.hit && (reaction[2] > 0.1))
                 {
-                    ent->character->state.vertical_collide |= 0x01;
+                    ent->character->state.floor_collide = 0x01;
                 }
             }
             Entity_GhostUpdate(ent);
@@ -1066,7 +1067,7 @@ void Entity_MoveToSink(entity_p entity, struct static_camera_sink_s *sink)
         {
             float t = 240.0f * engine_frame_time * ((float)(sink->room_or_strength));
             t = (t < dist) ? (t / dist) : (1.0f);
-            
+
             ent_pos[0] += speed[0] * t;
             ent_pos[1] += speed[1] * t;
             ent_pos[2] += speed[2] * t;

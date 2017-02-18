@@ -917,10 +917,8 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, TRIGGER_OP_XOR);
         LUA_EXPOSE(lua, TRIGGER_OP_AND_INV);
 
-        LUA_EXPOSE(lua, RESP_KILL);
-        LUA_EXPOSE(lua, RESP_VERT_COLLIDE);
-        LUA_EXPOSE(lua, RESP_HOR_COLLIDE);
-        LUA_EXPOSE(lua, RESP_SLIDE);
+        LUA_EXPOSE(lua, CHARACTER_STATE_DEAD);
+        LUA_EXPOSE(lua, CHARACTER_STATE_SLIDE);
 
         LUA_EXPOSE(lua, TICK_IDLE);
         LUA_EXPOSE(lua, TICK_STOPPED);

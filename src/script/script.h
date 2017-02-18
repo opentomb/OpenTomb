@@ -9,10 +9,8 @@ struct lua_State;
 #define CVAR_LUA_TABLE_NAME "cvars"
 
 // Response constants
-#define RESP_KILL           (0)
-#define RESP_VERT_COLLIDE   (1)
-#define RESP_HOR_COLLIDE    (2)
-#define RESP_SLIDE          (3)
+#define CHARACTER_STATE_DEAD           (0)
+#define CHARACTER_STATE_SLIDE          (1)
 
 // Entity timer constants
 #define TICK_IDLE           (0)
