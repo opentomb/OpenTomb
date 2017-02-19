@@ -420,30 +420,30 @@ void Controls_InitGlobals()
     control_mapper.joy_look_sensitivity = 1.5;
     control_mapper.joy_move_sensitivity = 1.5;
 
-    control_mapper.action_map[ACT_JUMP].primary       = SDLK_SPACE;
-    control_mapper.action_map[ACT_ACTION].primary     = SDLK_LCTRL;
-    control_mapper.action_map[ACT_ROLL].primary       = SDLK_x;
-    control_mapper.action_map[ACT_SPRINT].primary     = SDLK_CAPSLOCK;
-    control_mapper.action_map[ACT_CROUCH].primary     = SDLK_c;
-    control_mapper.action_map[ACT_WALK].primary       = SDLK_LSHIFT;
+    control_mapper.action_map[ACT_JUMP].primary       = SDL_SCANCODE_SPACE;
+    control_mapper.action_map[ACT_ACTION].primary     = SDL_SCANCODE_LCTRL;
+    control_mapper.action_map[ACT_ROLL].primary       = SDL_SCANCODE_X;
+    control_mapper.action_map[ACT_SPRINT].primary     = SDL_SCANCODE_CAPSLOCK;
+    control_mapper.action_map[ACT_CROUCH].primary     = SDL_SCANCODE_C;
+    control_mapper.action_map[ACT_WALK].primary       = SDL_SCANCODE_LSHIFT;
 
-    control_mapper.action_map[ACT_UP].primary         = SDLK_w;
-    control_mapper.action_map[ACT_DOWN].primary       = SDLK_s;
-    control_mapper.action_map[ACT_LEFT].primary       = SDLK_a;
-    control_mapper.action_map[ACT_RIGHT].primary      = SDLK_d;
+    control_mapper.action_map[ACT_UP].primary         = SDL_SCANCODE_W;
+    control_mapper.action_map[ACT_DOWN].primary       = SDL_SCANCODE_S;
+    control_mapper.action_map[ACT_LEFT].primary       = SDL_SCANCODE_A;
+    control_mapper.action_map[ACT_RIGHT].primary      = SDL_SCANCODE_D;
 
-    control_mapper.action_map[ACT_STEPLEFT].primary   = SDLK_h;
-    control_mapper.action_map[ACT_STEPRIGHT].primary  = SDLK_j;
+    control_mapper.action_map[ACT_STEPLEFT].primary   = SDL_SCANCODE_H;
+    control_mapper.action_map[ACT_STEPRIGHT].primary  = SDL_SCANCODE_J;
 
-    control_mapper.action_map[ACT_LOOKUP].primary     = SDLK_UP;
-    control_mapper.action_map[ACT_LOOKDOWN].primary   = SDLK_DOWN;
-    control_mapper.action_map[ACT_LOOKLEFT].primary   = SDLK_LEFT;
-    control_mapper.action_map[ACT_LOOKRIGHT].primary  = SDLK_RIGHT;
+    control_mapper.action_map[ACT_LOOKUP].primary     = SDL_SCANCODE_UP;
+    control_mapper.action_map[ACT_LOOKDOWN].primary   = SDL_SCANCODE_DOWN;
+    control_mapper.action_map[ACT_LOOKLEFT].primary   = SDL_SCANCODE_LEFT;
+    control_mapper.action_map[ACT_LOOKRIGHT].primary  = SDL_SCANCODE_RIGHT;
 
-    control_mapper.action_map[ACT_SCREENSHOT].primary = SDLK_PRINTSCREEN;
-    control_mapper.action_map[ACT_CONSOLE].primary    = SDLK_BACKQUOTE;
-    control_mapper.action_map[ACT_SAVEGAME].primary   = SDLK_F5;
-    control_mapper.action_map[ACT_LOADGAME].primary   = SDLK_F6;
+    control_mapper.action_map[ACT_SCREENSHOT].primary = SDL_SCANCODE_PRINTSCREEN;
+    control_mapper.action_map[ACT_CONSOLE].primary    = SDL_SCANCODE_GRAVE;
+    control_mapper.action_map[ACT_SAVEGAME].primary   = SDL_SCANCODE_F5;
+    control_mapper.action_map[ACT_LOADGAME].primary   = SDL_SCANCODE_F6;
 }
 
 void Controls_DebugKeys(int button, int state)
@@ -453,46 +453,46 @@ void Controls_DebugKeys(int button, int state)
         extern float time_scale;
         switch(button)
         {
-            case SDLK_RETURN:
+            case SDL_SCANCODE_RETURN:
                 if(main_inventory_manager)
                 {
                     main_inventory_manager->send(gui_InventoryManager::INVENTORY_ACTIVATE);
                 }
                 break;
 
-            case SDLK_UP:
+            case SDL_SCANCODE_UP:
                 if(main_inventory_manager)
                 {
                     main_inventory_manager->send(gui_InventoryManager::INVENTORY_UP);
                 }
                 break;
 
-            case SDLK_DOWN:
+            case SDL_SCANCODE_DOWN:
                 if(main_inventory_manager)
                 {
                     main_inventory_manager->send(gui_InventoryManager::INVENTORY_DOWN);
                 }
                 break;
 
-            case SDLK_LEFT:
+            case SDL_SCANCODE_LEFT:
                 if(main_inventory_manager)
                 {
                     main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_LEFT);
                 }
                 break;
 
-            case SDLK_RIGHT:
+            case SDL_SCANCODE_RIGHT:
                 if(main_inventory_manager)
                 {
                     main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_RIGHT);
                 }
                 break;
 
-            case SDLK_y:
+            case SDL_SCANCODE_Y:
                 screen_info.debug_view_state++;
                 break;
 
-            case SDLK_g:
+            case SDL_SCANCODE_G:
                 if(time_scale == 1.0)
                 {
                     time_scale = 0.033;
@@ -503,11 +503,11 @@ void Controls_DebugKeys(int button, int state)
                 }
                 break;
 
-            case SDLK_l:
+            case SDL_SCANCODE_L:
                 control_states.free_look = !control_states.free_look;
                 break;
 
-            case SDLK_n:
+            case SDL_SCANCODE_N:
                 control_states.noclip = !control_states.noclip;
                 break;
 

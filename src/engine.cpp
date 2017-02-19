@@ -766,7 +766,7 @@ void Engine_PollSDLEvents()
 
             case SDL_KEYUP:
             case SDL_KEYDOWN:
-                if( (event.key.keysym.sym == SDLK_F4) &&
+                if( (event.key.keysym.scancode == SDL_SCANCODE_F4) &&
                     (event.key.state == SDL_PRESSED)  &&
                     (event.key.keysym.mod & KMOD_ALT) )
                 {
@@ -797,12 +797,12 @@ void Engine_PollSDLEvents()
                 }
                 else
                 {
-                    Controls_Key(event.key.keysym.sym, event.key.state);
+                    Controls_Key(event.key.keysym.scancode, event.key.state);
                     // DEBUG KEYBOARD COMMANDS
-                    Controls_DebugKeys(event.key.keysym.sym, event.key.state);
+                    Controls_DebugKeys(event.key.keysym.scancode, event.key.state);
                     if((screen_info.debug_view_state == debug_view_state_e::model_view) && event.key.state)
                     {
-                        TestModelApplyKey(event.key.keysym.sym);
+                        TestModelApplyKey(event.key.keysym.scancode);
                     }
                 }
                 break;
@@ -902,24 +902,24 @@ void TestModelApplyKey(int key)
 {
     switch(key)
     {
-        case SDLK_LEFTBRACKET:
+        case SDL_SCANCODE_LEFTBRACKET:
             test_model_index--;
             SetTestModel(test_model_index);
             break;
 
-        case SDLK_RIGHTBRACKET:
+        case SDL_SCANCODE_RIGHTBRACKET:
             test_model_index++;
             SetTestModel(test_model_index);
             break;
 
-        case SDLK_o:
+        case SDL_SCANCODE_O:
             if(test_model.animations.current_animation > 0)
             {
                 Anim_SetAnimation(&test_model.animations, test_model.animations.current_animation - 1, 0);
             }
             break;
 
-        case SDLK_p:
+        case SDL_SCANCODE_P:
             Anim_SetAnimation(&test_model.animations, test_model.animations.current_animation + 1, 0);
             break;
 
