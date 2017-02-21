@@ -3,6 +3,7 @@
 #define ENTITY_H
 
 #include <stdint.h>
+#include <stdlib.h>
 
 struct room_sector_s;
 struct obb_s;

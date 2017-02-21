@@ -2288,15 +2288,14 @@ void World_GenEntities(class VT_Level *tr)
                 entity->bf->bone_tags[j].mesh_skin = entity->bf->animations.model->mesh_tree[j].mesh_skin;
                 entity->bf->bone_tags[j].mesh_slot = NULL;
             }
-            StateControl_LaraSetIdleAnim(global_world.Character, ANIM_TYPE_BASE, MOVE_ON_FLOOR);
             Physics_GenRigidBody(entity->physics, entity->bf);
             Entity_UpdateRigidBody(entity, 1);
             Character_Create(entity);
+            StateControl_SetStateFunctions(entity, STATE_FUNCTIONS_LARA);
+            entity->character->set_idle_anim_func(entity, ANIM_TYPE_BASE, MOVE_ON_FLOOR);
             Room_AddObject(entity->self->room, entity->self);
 
             entity->character->Height = 768.0;
-            entity->character->state_func = StateControl_Lara;
-            entity->character->set_idle_anim_func = StateControl_LaraSetIdleAnim;
             entity->character->height_info.leg_l_index = LEFT_LEG;
             entity->character->height_info.leg_r_index = RIGHT_LEG;
             //entity->character->height_info.hand_l_index = LEFT_HAND;

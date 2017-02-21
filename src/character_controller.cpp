@@ -45,11 +45,12 @@ void Character_Create(struct entity_s *ent)
         ret->weapon_current_state = 0x00;
         ret->current_weapon = 0;
 
-        ent->character->state.floor_collide = 0x00;
-        ent->character->state.ceiling_collide = 0x00;
-        ent->character->state.wall_collide = 0x00;
+        ret->state.floor_collide = 0x00;
+        ret->state.ceiling_collide = 0x00;
+        ret->state.wall_collide = 0x00;
         ret->state.slide = 0x00;
         ret->state.step_z = 0x00;
+        ret->state.uw_current = 0x00;
         ret->state.dead = 0x00;
         ret->state.burn = 0x00;
         ret->state.crouch = 0x00;

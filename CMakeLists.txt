@@ -75,6 +75,7 @@ set(OPENTOMB_SRCS
     src/vt/tr_types.h
     src/vt/tr_versions.h
     src/state_control/state_control.h
+    src/state_control/state_control.cpp
     src/state_control/state_control_Lara.h
     src/state_control/state_control_Lara.cpp
     src/audio.cpp
