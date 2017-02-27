@@ -807,6 +807,21 @@ int lua_SetFlipState(lua_State *lua)
 }
 
 
+int lua_SetPlayer(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        World_SetPlayer(World_GetEntityByID(lua_tointeger(lua, 1)));
+    }
+    else
+    {
+        Con_Warning("setPlayer: expecting arguments (entity_id)");
+    }
+
+    return 0;
+}
+
+
 int lua_SetFlipMap(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
@@ -1025,6 +1040,7 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
     lua_register(lua, "setGame", lua_SetGame);
     lua_register(lua, "loadMap", lua_LoadMap);
 
+    lua_register(lua, "setPlayer", lua_SetPlayer);
     lua_register(lua, "setFlipMap", lua_SetFlipMap);
     lua_register(lua, "getFlipMap", lua_GetFlipMap);
     lua_register(lua, "setGlobalFlipState", lua_SetGlobalFlipState);

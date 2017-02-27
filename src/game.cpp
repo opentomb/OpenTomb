@@ -542,7 +542,7 @@ void Game_ApplyControls(struct entity_s *ent)
 void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
     entity_p ent = (entity_p)x->data;
-    if(ent && (!ent->self->room || (ent->self->room == ent->self->room->real_room)))
+    if(ent && (ent != World_GetPlayer()) && (!ent->self->room || (ent->self->room == ent->self->room->real_room)))
     {
         if(ent->character)
         {
@@ -613,7 +613,7 @@ void Game_Frame(float time)
 
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
-    if(player && (engine_camera_state.state != CAMERA_STATE_FLYBY))
+    if(player && player->character && (engine_camera_state.state != CAMERA_STATE_FLYBY))
     {
         Game_ApplyControls(player);
         if(!control_states.noclip)
@@ -638,7 +638,6 @@ void Game_Frame(float time)
         }
         Entity_Frame(player, engine_frame_time);
         Entity_UpdateRigidBody(player, 1);
-
     }
 
     if(!control_states.noclip && !control_states.free_look)

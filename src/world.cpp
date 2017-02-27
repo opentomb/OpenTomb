@@ -278,12 +278,7 @@ void World_Clear()
         main_inventory_manager->setItemsType(1);                                // see base items
     }
 
-    if(global_world.Character != NULL)
-    {
-        global_world.Character->self->room = NULL;
-        global_world.Character->self->next = NULL;
-        global_world.Character->current_sector = NULL;
-    }
+    global_world.Character = NULL;
 
     /* entity empty must be done before rooms destroy */
     if(global_world.entity_tree)
@@ -354,13 +349,6 @@ void World_Clear()
     /*items empty*/
     RB_Free(global_world.items_tree);
     global_world.items_tree = NULL;
-
-    if(global_world.Character)
-    {
-        Entity_Clear(global_world.Character);
-        free(global_world.Character);
-        global_world.Character = NULL;
-    }
 
     if(global_world.skeletal_models_count)
     {
@@ -535,11 +523,6 @@ struct entity_s *World_GetEntityByID(uint32_t id)
     entity_p ent = NULL;
     RedBlackNode_p node;
 
-    if((global_world.Character != NULL) && (global_world.Character->id == id))
-    {
-        return global_world.Character;
-    }
-
     if(global_world.entity_tree == NULL)
     {
         return NULL;
@@ -552,6 +535,23 @@ struct entity_s *World_GetEntityByID(uint32_t id)
     }
 
     return ent;
+}
+
+
+void World_SetPlayer(struct entity_s *entity)
+{
+    int top = lua_gettop(engine_lua);
+    global_world.Character = entity;
+    if(entity && entity->character)
+    {
+        lua_pushinteger(engine_lua, entity->id);
+    }
+    else
+    {
+        lua_pushinteger(engine_lua, ENTITY_ID_NONE);
+    }
+    lua_setglobal(engine_lua, "player");
+    lua_settop(engine_lua, top);
 }
 
 
@@ -2116,7 +2116,6 @@ void World_GenSkeletalModels(class VT_Level *tr)
 void World_GenEntities(class VT_Level *tr)
 {
     int top;
-
     tr2_item_t *tr_item;
     entity_p entity;
 
@@ -2225,17 +2224,11 @@ void World_GenEntities(class VT_Level *tr)
             skeletal_model_p tmp, LM;                                           // LM - Lara Model
 
             entity->move_type = MOVE_ON_FLOOR;
-            global_world.Character = entity;
             entity->self->collision_group = COLLISION_GROUP_CHARACTERS;
             entity->self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
             entity->bf->animations.model->hide = 0;
             entity->type_flags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
             LM = (skeletal_model_p)entity->bf->animations.model;
-
-            top = lua_gettop(engine_lua);
-            lua_pushinteger(engine_lua, entity->id);
-            lua_setglobal(engine_lua, "player");
-            lua_settop(engine_lua, top);
 
             switch(tr->game_version)
             {
@@ -2300,16 +2293,19 @@ void World_GenEntities(class VT_Level *tr)
             entity->character->height_info.leg_r_index = RIGHT_LEG;
             //entity->character->height_info.hand_l_index = LEFT_HAND;
             //entity->character->height_info.hand_r_index = RIGHT_HAND;
-            continue;
+            World_AddEntity(entity);
+            World_SetPlayer(entity);
         }
-
-        Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);                      // Set zero animation and zero frame
-        Entity_RebuildBV(entity);
-        Room_AddObject(entity->self->room, entity->self);
-        World_AddEntity(entity);
-        World_SetEntityModelProperties(entity);
-        Physics_GenRigidBody(entity->physics, entity->bf);
-        Entity_UpdateRigidBody(entity, 1);
+        else
+        {
+            Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);                  // Set zero animation and zero frame
+            Entity_RebuildBV(entity);
+            Room_AddObject(entity->self->room, entity->self);
+            World_AddEntity(entity);
+            World_SetEntityModelProperties(entity);
+            Physics_GenRigidBody(entity->physics, entity->bf);
+            Entity_UpdateRigidBody(entity, 1);
+        }
 
         if(!(entity->state_flags & ENTITY_STATE_ENABLED) || (entity->self->collision_group == COLLISION_NONE))
         {

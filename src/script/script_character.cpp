@@ -16,6 +16,7 @@ extern "C" {
 #include "../core/console.h"
 #include "../core/vmath.h"
 #include "../core/polygon.h"
+#include "../state_control/state_control.h"
 #include "../entity.h"
 #include "../world.h"
 #include "../character_controller.h"
@@ -47,6 +48,29 @@ int lua_CharacterCreate(lua_State * lua)
         Con_Warning("characterCreate: expecting arguments (entity_id, (hp))");
     }
 
+    return 0;
+}
+
+
+int lua_SetCharacterStateControlFunctions(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            StateControl_SetStateFunctions(ent, lua_tointeger(lua, 2));
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setCharacterStateControlFunctions: expecting arguments (entity_id, funcs_id)");
+    }
     return 0;
 }
 
@@ -477,6 +501,7 @@ void Script_LuaRegisterCharacterFuncs(lua_State *lua)
     lua_register(lua, "removeEntityRagdoll", lua_RemoveEntityRagdoll);
 
     lua_register(lua, "characterCreate", lua_CharacterCreate);
+    lua_register(lua, "setCharacterStateControlFunctions", lua_SetCharacterStateControlFunctions);
     lua_register(lua, "setCharacterTarget", lua_SetCharacterTarget);
     lua_register(lua, "getCharacterParam", lua_GetCharacterParam);
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);
