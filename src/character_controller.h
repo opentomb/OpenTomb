@@ -335,6 +335,7 @@ void Character_LookAt(struct entity_s *ent, float target[3]);
 void Character_ClearLookAt(struct entity_s *ent);
 
 int Character_MoveOnFloor(struct entity_s *ent);
+int Character_MoveFly(struct entity_s *ent);
 int Character_FreeFalling(struct entity_s *ent);
 int Character_MonkeyClimbing(struct entity_s *ent);
 int Character_WallsClimbing(struct entity_s *ent);

@@ -219,18 +219,19 @@ void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
  */
 void Character_UpdateCurrentHeight(struct entity_s *ent)
 {
-    float from[3], to[3], base_z;
+    float from[3], to[3], base_z, *v;
     height_info_p hi = &ent->character->height_info;
 
     hi->leg_l_floor.hit = 0x00;
     hi->leg_r_floor.hit = 0x00;
     hi->hand_l_floor.hit = 0x00;
     hi->hand_r_floor.hit = 0x00;
-    to[0] = 0.0;
-    to[1] = 0.0;
-    to[2] = ent->bf->bone_tags[0].transform[12 + 2];
-    Mat4_vec3_mul_macro(from, ent->transform, to);
+    v = ent->bf->bone_tags[0].transform + 12;
+    Mat4_vec3_mul_macro(from, ent->transform, v);
+    from[2] += 128.0f;
     base_z = from[2];
+    from[0] = ent->transform[12 + 0];
+    from[1] = ent->transform[12 + 1];
     Character_GetHeightInfo(from, hi, ent->character->Height);
 
     if((hi->leg_l_index >= 0) && (hi->leg_l_index < ent->bf->bone_tag_count))
@@ -1196,6 +1197,66 @@ int Character_MoveOnFloor(struct entity_s *ent)
 }
 
 
+int Character_MoveFly(struct entity_s *ent)
+{
+    float move[3], *pos = ent->transform + 12;
+
+    ent->character->state.slide = 0x00;
+    ent->character->state.floor_collide = 0x00;
+    ent->character->state.ceiling_collide = 0x00;
+    ent->character->state.wall_collide = 0x00;
+
+    if(!ent->character->state.dead)   // Block controls if Lara is dead.
+    {
+        // Calculate current speed.
+        if(ent->character->cmd.jump)
+        {
+            ent->linear_speed += MAX_SPEED_UNDERWATER * INERTIA_SPEED_UNDERWATER * engine_frame_time;
+            if(ent->linear_speed > MAX_SPEED_UNDERWATER)
+            {
+                ent->linear_speed = MAX_SPEED_UNDERWATER;
+            }
+        }
+        else if(ent->linear_speed > 0.0f)
+        {
+            ent->linear_speed -= MAX_SPEED_UNDERWATER * INERTIA_SPEED_UNDERWATER * engine_frame_time;
+            if(ent->linear_speed < 0.0f)
+            {
+                ent->linear_speed = 0.0f;
+            }
+        }
+
+        ent->angles[0] += ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
+        ent->angles[1] -= ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[1];
+        ent->angles[2]  = 0.0;
+
+        if((ent->angles[1] > 70.0) && (ent->angles[1] < 180.0))                 // Underwater angle limiter.
+        {
+           ent->angles[1] = 70.0;
+        }
+        else if((ent->angles[1] > 180.0) && (ent->angles[1] < 270.0))
+        {
+            ent->angles[1] = 270.0;
+        }
+
+        Entity_UpdateTransform(ent);                                            // apply rotations
+        vec3_mul_scalar(ent->speed, ent->transform + 4, ent->linear_speed * ent->character->linear_speed_mult);    // OY move only!
+    }
+    else
+    {
+        ent->move_type = MOVE_FREE_FALLING;
+    }
+
+    vec3_mul_scalar(move, ent->speed, engine_frame_time);
+    vec3_add(pos, pos, move);
+    Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
+    Entity_UpdateRoomPos(ent);
+    Character_UpdateCurrentHeight(ent);
+
+    return 1;
+}
+
+
 int Character_FreeFalling(struct entity_s *ent)
 {
     float move[3], g[3], *pos = ent->transform + 12;
@@ -1920,7 +1981,7 @@ void Character_ApplyCommands(struct entity_s *ent)
             break;
 
         case MOVE_FLY:
-            Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
+            Character_MoveFly(ent);
             break;
 
         default:

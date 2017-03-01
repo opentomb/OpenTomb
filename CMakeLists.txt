@@ -78,6 +78,8 @@ set(OPENTOMB_SRCS
     src/state_control/state_control.cpp
     src/state_control/state_control_Lara.h
     src/state_control/state_control_Lara.cpp
+    src/state_control/state_control_bat.h
+    src/state_control/state_control_bat.cpp
     src/audio.cpp
     src/audio.h
     src/character_controller.cpp

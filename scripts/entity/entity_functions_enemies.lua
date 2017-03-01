@@ -15,7 +15,7 @@ function baddie_init(id)    -- INVALID!
 
     setEntityGhostCollisionShape(id,  0,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     while(m < meshes_count) do
-        setEntityGhostCollisionShape(id,  m,  COLLISION_SHAPE_BOX, 1, -1, 0, 0, 0, 0);
+        setEntityGhostCollisionShape(id,  m,  COLLISION_SHAPE_BOX, 0, 0, 0, 0, 0, 0);
         m = m + 1;
     end;
 
@@ -123,17 +123,18 @@ function bat_init(id)
     baddie_init(id);
     
     setCharacterParam(id, PARAM_HEALTH, 100, 100);
-    setEntityGhostCollisionShape(id,  1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  0,  COLLISION_SHAPE_SPHERE, -64, -64, -64, 64, 64, 64);
     setEntityMoveType(id, MOVE_FLY);
-    noFixEntityCollision(id);
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_BAT);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((getCharacterParam(object_id, PARAM_HEALTH) > 0) and (not getEntityActivity(object_id))) then 
             enableEntity(object_id);
-            local hit, frac, hx, hy, hz = getEntityRayTest(object_id, COLLISION_GROUP_STATIC_ROOM, 0, 0, 640, 0, 0, -320);
-            if (hit) then
+            local hit, frac, hx, hy, hz = getEntityRayTest(object_id, COLLISION_GROUP_STATIC_ROOM, 0, 0, 1024, 0, 0, -512);
+            if(hit) then
                 local x, y, z = getEntityPos(object_id);
-                z = hz - 256;
+                z = hz - 320;
+                print("bat fix");
                 setEntityPos(object_id, x, y, z);
             end;
         end;
@@ -144,23 +145,23 @@ function bat_init(id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setCharacterTarget(activator_id, nil);
-            setEntityCollision(object_id, false);
+            --setEntityCollision(object_id, false);
             setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
         end;
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
-        if((getCharacterParam(object_id, PARAM_HEALTH) == 0) and getEntityActivity(object_id)) then
-            local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
-            if((a == 3) and dropEntity(object_id, frame_time)) then
-                setEntityAnim(object_id, ANIM_TYPE_BASE, 4, 0);
-            end;
+        --if((getCharacterParam(object_id, PARAM_HEALTH) == 0) and getEntityActivity(object_id)) then
+        --    local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        --    if((a == 3) and dropEntity(object_id, frame_time)) then
+        --        setEntityAnim(object_id, ANIM_TYPE_BASE, 4, 0);
+        --    end;
 
-            if((a == 4) and (f + 1 >= c)) then
-                setEntityActivity(object_id, false);
-                entity_funcs[object_id].onLoop = nil;
-            end;
-        end;
+        --    if((a == 4) and (f + 1 >= c)) then
+        --        setEntityActivity(object_id, false);
+        --        entity_funcs[object_id].onLoop = nil;
+        --    end;
+        --end;
     end;
 
 end;

@@ -16,6 +16,7 @@ extern "C" {
 #include "../core/vmath.h"
 #include "../render/camera.h"
 #include "../render/render.h"
+#include "../state_control/state_control.h"
 #include "../vt/tr_versions.h"
 #include "../skeletal_model.h"
 #include "../trigger.h"
@@ -883,6 +884,9 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, PARAM_EXTRA3);
         LUA_EXPOSE(lua, PARAM_EXTRA4);
         LUA_EXPOSE(lua, PARAM_LASTINDEX);
+
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_LARA);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_BAT);
 
         LUA_EXPOSE(lua, ANIM_NORMAL_CONTROL);
         LUA_EXPOSE(lua, ANIM_LOOP_LAST_FRAME);

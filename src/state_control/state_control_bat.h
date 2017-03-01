@@ -1,0 +1,24 @@
+
+#ifndef STATE_CONTROL_BAT_H
+#define STATE_CONTROL_BAT_H
+
+/*
+ *  ====== BAT'S ANIMATIONS ======
+ */
+#define TR_ANIMATION_BAT_START 0
+#define TR_ANIMATION_BAT_FLY 1
+#define TR_ANIMATION_BAT_ATTACK 2
+#define TR_ANIMATION_BAT_DROP 3
+#define TR_ANIMATION_BAT_DEAD 4
+
+//   ====== BAT'S STATES ======
+
+#define TR_STATE_CURRENT (-1)
+#define TR_STATE_BAT_START 1
+#define TR_STATE_BAT_FLY 2
+#define TR_STATE_BAT_ATTACK 3
+#define TR_STATE_BAT_DROP 4
+#define TR_STATE_BAT_DEAD 5
+
+#endif
+
