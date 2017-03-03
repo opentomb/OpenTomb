@@ -145,24 +145,12 @@ function bat_init(id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setCharacterTarget(activator_id, nil);
-            --setEntityCollision(object_id, false);
+            setEntityCollision(object_id, false);
             setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
         end;
     end;
 
-    entity_funcs[id].onLoop = function(object_id, tick_state)
-        --if((getCharacterParam(object_id, PARAM_HEALTH) == 0) and getEntityActivity(object_id)) then
-        --    local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
-        --    if((a == 3) and dropEntity(object_id, frame_time)) then
-        --        setEntityAnim(object_id, ANIM_TYPE_BASE, 4, 0);
-        --    end;
-
-        --    if((a == 4) and (f + 1 >= c)) then
-        --        setEntityActivity(object_id, false);
-        --        entity_funcs[object_id].onLoop = nil;
-        --    end;
-        --end;
-    end;
+    entity_funcs[id].onLoop = nil;
 
 end;
 
@@ -171,6 +159,7 @@ function wolf_init(id)
     baddie_init(id);
     setEntityAnim(id, ANIM_TYPE_BASE, 0, -1);
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_WOLF);
 
     setCharacterParam(id, PARAM_HEALTH, 200, 200);
     setEntityGhostCollisionShape(id,  1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
@@ -202,14 +191,8 @@ function bear_init(id)
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
             setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
-            if(a >= 4 and a <= 10 or a == 14) then
-                setEntityAnim(object_id, ANIM_TYPE_BASE, 19, 0);
-            else
-                setEntityAnim(object_id, ANIM_TYPE_BASE, 20, 0);
-            end;
         end;
     end;
 end;

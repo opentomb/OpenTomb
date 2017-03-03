@@ -1206,7 +1206,7 @@ int Character_MoveFly(struct entity_s *ent)
     ent->character->state.ceiling_collide = 0x00;
     ent->character->state.wall_collide = 0x00;
 
-    if(!ent->character->state.dead)   // Block controls if Lara is dead.
+    if(!ent->character->state.dead)   // Block controls if character is dead.
     {
         // Calculate current speed.
         if(ent->character->cmd.jump)
@@ -1230,7 +1230,7 @@ int Character_MoveFly(struct entity_s *ent)
         ent->angles[1] -= ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[1];
         ent->angles[2]  = 0.0;
 
-        if((ent->angles[1] > 70.0) && (ent->angles[1] < 180.0))                 // Underwater angle limiter.
+        if((ent->angles[1] > 70.0) && (ent->angles[1] < 180.0))                 // angle limiter.
         {
            ent->angles[1] = 70.0;
         }

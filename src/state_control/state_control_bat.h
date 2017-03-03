@@ -13,7 +13,6 @@
 
 //   ====== BAT'S STATES ======
 
-#define TR_STATE_CURRENT (-1)
 #define TR_STATE_BAT_START 1
 #define TR_STATE_BAT_FLY 2
 #define TR_STATE_BAT_ATTACK 3
