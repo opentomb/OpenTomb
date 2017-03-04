@@ -31,7 +31,7 @@
 #define TR_STATE_WOLF_WOOOO 7
 #define TR_STATE_WOLF_IDLE 8    // -> 1
 #define TR_STATE_WOLF_STAY_CROUCH 9 // -> 1 -> 3 -> 5 -> 7 -> 12
-#define TR_STATE_WOLF_RUN_LEFT 10
+#define TR_STATE_WOLF_RUN_RIGHT 10
 #define TR_STATE_WOLF_DEAD 11
 #define TR_STATE_WOLF_STAY_ATTACK 12
 

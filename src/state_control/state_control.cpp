@@ -13,6 +13,9 @@ void StateControl_BatSetIdleAnim(struct entity_s *ent, int anim_type, int move_t
 int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim);
 void StateControl_WolfSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
 
+int StateControl_Bear(struct entity_s *ent, struct ss_animation_s *ss_anim);
+void StateControl_BearSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
+
 void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
 {
     if(ent && ent->character)
@@ -32,6 +35,11 @@ void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
             case STATE_FUNCTIONS_WOLF:
                 ent->character->state_func = StateControl_Wolf;
                 ent->character->set_idle_anim_func = StateControl_WolfSetIdleAnim;
+                break;
+
+            case STATE_FUNCTIONS_BEAR:
+                ent->character->state_func = StateControl_Bear;
+                ent->character->set_idle_anim_func = StateControl_BearSetIdleAnim;
                 break;
         }
     }

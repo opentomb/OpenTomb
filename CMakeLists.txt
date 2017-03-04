@@ -82,6 +82,8 @@ set(OPENTOMB_SRCS
     src/state_control/state_control_bat.cpp
     src/state_control/state_control_wolf.h
     src/state_control/state_control_wolf.cpp
+    src/state_control/state_control_bear.h
+    src/state_control/state_control_bear.cpp
     src/audio.cpp
     src/audio.h
     src/character_controller.cpp
