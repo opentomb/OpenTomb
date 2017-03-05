@@ -172,11 +172,6 @@ function wolf_init(id)
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
-            if(damage > 80) then
-                setEntityAnim(object_id, ANIM_TYPE_BASE, 22, 0);
-            else
-                setEntityAnim(object_id, ANIM_TYPE_BASE, 20, 0);
-            end;
         end;
     end;
 end;
@@ -191,6 +186,54 @@ function bear_init(id)
 
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            setCharacterTarget(activator_id, nil);
+            setEntityCollision(object_id, false);
+        end;
+    end;
+end;
+
+
+function raptor_init(id)
+    baddie_init(id);
+    setEntityAnim(id, ANIM_TYPE_BASE, 0, -1);
+    setEntityAnimState(id, ANIM_TYPE_BASE, 1);
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_RAPTOR);
+
+    setCharacterParam(id, PARAM_HEALTH, 200, 200);
+    setEntityGhostCollisionShape(id,  21,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  22,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  24,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
+        changeCharacterParam(object_id, PARAM_HEALTH, -damage);
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            setCharacterTarget(activator_id, nil);
+            setEntityCollision(object_id, false);
+        end;
+    end;
+end;
+
+
+function trex_init(id)
+    baddie_init(id);
+    setEntityAnim(id, ANIM_TYPE_BASE, 0, -1);
+    setEntityAnimState(id, ANIM_TYPE_BASE, 1);
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_TREX);
+
+    setCharacterParam(id, PARAM_HEALTH, 2000, 2000);
+    setEntityGhostCollisionShape(id,  9,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  10,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  11,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  12,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  13,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  20,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  21,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
+        changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
