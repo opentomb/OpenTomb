@@ -246,6 +246,7 @@ function Larson_init(id)
     baddie_init(id);
 
     setCharacterParam(id, PARAM_HEALTH, 300, 300);
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LARSON);
     setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_SPHERE, -60.0, nil, 0, 60.0, nil, 16.0);   -- base
     setEntityGhostCollisionShape(id, 7,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- torso
     setEntityGhostCollisionShape(id, 8,  COLLISION_SHAPE_SPHERE, nil, nil, nil, nil, nil, nil);     -- head
@@ -257,7 +258,6 @@ function Larson_init(id)
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
-            setEntityAnim(object_id, ANIM_TYPE_BASE, 15, 0);
         end;
     end;
 

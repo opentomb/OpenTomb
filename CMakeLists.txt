@@ -88,6 +88,8 @@ set(OPENTOMB_SRCS
     src/state_control/state_control_raptor.cpp
     src/state_control/state_control_trex.h
     src/state_control/state_control_trex.cpp
+    src/state_control/state_control_Larson.h
+    src/state_control/state_control_Larson.cpp
     src/audio.cpp
     src/audio.h
     src/character_controller.cpp

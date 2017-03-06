@@ -891,6 +891,7 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, STATE_FUNCTIONS_BEAR);
         LUA_EXPOSE(lua, STATE_FUNCTIONS_RAPTOR);
         LUA_EXPOSE(lua, STATE_FUNCTIONS_TREX);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_LARSON);
 
         LUA_EXPOSE(lua, ANIM_NORMAL_CONTROL);
         LUA_EXPOSE(lua, ANIM_LOOP_LAST_FRAME);
