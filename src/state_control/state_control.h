@@ -11,6 +11,8 @@ struct entity_s;
 #define STATE_FUNCTIONS_RAPTOR      (0x05)
 #define STATE_FUNCTIONS_TREX        (0x06)
 #define STATE_FUNCTIONS_LARSON      (0x07)
+#define STATE_FUNCTIONS_LION        (0x08)
+#define STATE_FUNCTIONS_GORILLA     (0x09)
 
 #define TR_STATE_CURRENT (-1)
 

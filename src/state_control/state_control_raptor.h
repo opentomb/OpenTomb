@@ -3,7 +3,7 @@
 #define STATE_CONTROL_RAPTOR_H
 
 /*
- *  ====== BAT'S ANIMATIONS ======
+ *  ====== RAPTOR'S ANIMATIONS ======
  */
 #define TR_ANIMATION_RAPTOR_STAY 0
 #define TR_ANIMATION_RAPTOR_RUN 1
@@ -13,7 +13,7 @@
 #define TR_ANIMATION_RAPTOR_DEAD1 9
 #define TR_ANIMATION_RAPTOR_DEAD2 10
 
-//   ====== BAT'S STATES ======
+//   ====== RAPTOR'S STATES ======
 #define TR_STATE_RAPTOR_DEAD 0
 #define TR_STATE_RAPTOR_STAY 1  // -> 2 -> 3 -> 4 -> 6 -> 8
 #define TR_STATE_RAPTOR_WALK 2  // -> 1
