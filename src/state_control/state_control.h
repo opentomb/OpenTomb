@@ -13,6 +13,8 @@ struct entity_s;
 #define STATE_FUNCTIONS_LARSON      (0x07)
 #define STATE_FUNCTIONS_LION        (0x08)
 #define STATE_FUNCTIONS_GORILLA     (0x09)
+#define STATE_FUNCTIONS_CROCODILE   (0x0A)
+#define STATE_FUNCTIONS_RAT         (0x0B)
 
 #define TR_STATE_CURRENT (-1)
 

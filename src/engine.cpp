@@ -1075,7 +1075,7 @@ void ShowDebugInfo()
     float y = (float)screen_info.h;
     const float dy = -18.0f * screen_info.scale_factor;
 
-    if(last_cont)
+    if(last_cont && (screen_info.debug_view_state != debug_view_state_e::model_view))
     {
         GLText_OutTextXY(30.0f, y += dy, "VIEW: Selected object");
         switch(last_cont->object_type)

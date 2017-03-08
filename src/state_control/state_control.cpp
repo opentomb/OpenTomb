@@ -31,6 +31,12 @@ void StateControl_LionSetIdleAnim(struct entity_s *ent, int anim_type, int move_
 int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim);
 void StateControl_GorillaSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
 
+int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim);
+void StateControl_CrocodileSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
+
+int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim);
+void StateControl_RatSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
+
 void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
 {
     if(ent && ent->character)
@@ -81,6 +87,16 @@ void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
                 ent->character->state_func = StateControl_Gorilla;
                 ent->character->set_idle_anim_func = StateControl_GorillaSetIdleAnim;
                 ent->character->Height = 512.0f;
+                break;
+
+            case STATE_FUNCTIONS_CROCODILE:
+                ent->character->state_func = StateControl_Crocodile;
+                ent->character->set_idle_anim_func = StateControl_CrocodileSetIdleAnim;
+                break;
+
+            case STATE_FUNCTIONS_RAT:
+                ent->character->state_func = StateControl_Rat;
+                ent->character->set_idle_anim_func = StateControl_RatSetIdleAnim;
                 break;
         }
     }

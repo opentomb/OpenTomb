@@ -274,7 +274,6 @@ function gorilla_init(id)
     setEntityGhostCollisionShape(id, 11,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);  -- hand
     setEntityGhostCollisionShape(id, 14,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);  -- head
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_GORILLA);
-    entity_funcs[id].is_flee = (getLevel() ~= 9) or (getEntityRoom(id) ~= 110);
 
     entity_funcs[id].onHit = function(object_id, activator_id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
@@ -286,6 +285,48 @@ function gorilla_init(id)
     end;
 end;
 
+
+function crocodile_init(id)
+    baddie_init(id);
+
+    setCharacterParam(id, PARAM_HEALTH, 400, 400);
+    setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 8,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 10,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 11,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_CROCODILE);
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
+        changeCharacterParam(object_id, PARAM_HEALTH, -damage);
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            setCharacterTarget(activator_id, nil);
+            setEntityCollision(object_id, false);
+        end;
+    end;
+end;
+
+
+function rat_init(id)
+    baddie_init(id);
+
+    setCharacterParam(id, PARAM_HEALTH, 150, 150);
+    setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 2,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 9,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_RAT);
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
+        changeCharacterParam(object_id, PARAM_HEALTH, -damage);
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            setCharacterTarget(activator_id, nil);
+            setEntityCollision(object_id, false);
+        end;
+    end;
+end;
 
 
 function Larson_init(id)
