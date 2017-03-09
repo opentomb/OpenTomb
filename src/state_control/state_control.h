@@ -15,6 +15,7 @@ struct entity_s;
 #define STATE_FUNCTIONS_GORILLA     (0x09)
 #define STATE_FUNCTIONS_CROCODILE   (0x0A)
 #define STATE_FUNCTIONS_RAT         (0x0B)
+#define STATE_FUNCTIONS_CENTAUR     (0x0C)
 
 #define TR_STATE_CURRENT (-1)
 

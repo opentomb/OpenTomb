@@ -329,6 +329,27 @@ function rat_init(id)
 end;
 
 
+function centaur_init(id)
+    baddie_init(id);
+
+    setCharacterParam(id, PARAM_HEALTH, 550, 550);
+    setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 2,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 9,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_CENTAUR);
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
+        changeCharacterParam(object_id, PARAM_HEALTH, -damage);
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            setCharacterTarget(activator_id, nil);
+            setEntityCollision(object_id, false);
+        end;
+    end;
+end;
+
+
 function Larson_init(id)
     baddie_init(id);
 
@@ -385,27 +406,23 @@ function Pierre_init(id)
             if(not entity_funcs[object_id].is_flee) then
                 setCharacterTarget(activator_id, nil);
                 setEntityCollision(object_id, false);
-                setEntityAnim(object_id, ANIM_TYPE_BASE, 12, 0);
             else
-                --flee
+                setCharacterParam(object_id, PARAM_HEALTH, 1);
             end;
         end;
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
-        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            if(getLevel() == 9) then
-                local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
-                if((a == 12) and (f + 1 >= c)) then
-                    local spawned_id = spawnEntity(133, getEntityRoom(object_id), getEntityPos(object_id));
-                    setEntityActivity(object_id, false);
-                    entity_funcs[object_id].onLoop = nil;
-                end;
-            else
-                -- if not visible then...
-                disableEntity(object_id); -- TODO: implement flee
+        local hp = getCharacterParam(object_id, PARAM_HEALTH);
+        if((hp == 0) and (getLevel() == 9)) then
+            local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+            if((a == 12) and (f + 1 >= c)) then
+                local spawned_id = spawnEntity(133, getEntityRoom(object_id), getEntityPos(object_id));
+                setEntityActivity(object_id, false);
                 entity_funcs[object_id].onLoop = nil;
             end;
+        elseif((hp == 1) and entity_funcs[object_id].is_flee) then
+
         end;
     end;
 end;

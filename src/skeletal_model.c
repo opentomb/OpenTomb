@@ -777,31 +777,9 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
     ss_anim->frame_changing_state = 0x00;
     
     /*
-     * Flag has a highest priority
-     */
-    if((new_frame + 1 >= next_anim->max_frame) && (ss_anim->anim_frame_flags == ANIM_LOOP_LAST_FRAME))
-    {
-        ss_anim->next_frame = next_anim->max_frame - 1;
-        ss_anim->current_frame = ss_anim->next_frame;
-        ss_anim->current_animation = ss_anim->next_animation;
-        ss_anim->lerp = 0.0f;
-        ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period;
-        return 0x00;
-    }
-    else if(ss_anim->anim_frame_flags == ANIM_FRAME_LOCK)
-    {
-        ss_anim->current_frame = 0;
-        ss_anim->current_frame = ss_anim->next_frame;
-        ss_anim->current_animation = ss_anim->next_animation;
-        ss_anim->lerp = 0.0f;
-        ss_anim->frame_time = 0.0f;
-        return 0x00;
-    }
-
-    /*
      * State change check
      */
-    if(stc)
+    if(stc && !(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK))
     {
         anim_dispatch_p disp = stc->anim_dispatch;
         for(uint16_t i = 0; i < stc->anim_dispatch_count; i++, disp++)
@@ -820,6 +798,28 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
                 return 0x03;
             }
         }
+    }
+    
+    /*
+     * Flag has a highest priority
+     */
+    if(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK)
+    {
+        ss_anim->current_frame = 0;
+        ss_anim->current_frame = ss_anim->next_frame;
+        ss_anim->current_animation = ss_anim->next_animation;
+        ss_anim->lerp = 0.0f;
+        ss_anim->frame_time = 0.0f;
+        return 0x00;
+    }
+    else if((new_frame + 1 >= next_anim->max_frame) && (ss_anim->anim_frame_flags == ANIM_LOOP_LAST_FRAME))
+    {
+        ss_anim->next_frame = next_anim->max_frame - 1;
+        ss_anim->current_frame = ss_anim->next_frame;
+        ss_anim->current_animation = ss_anim->next_animation;
+        ss_anim->lerp = 0.0f;
+        ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period;
+        return 0x00;
     }
     
     /*

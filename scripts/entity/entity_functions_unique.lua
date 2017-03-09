@@ -234,6 +234,11 @@ function Thor_hummer_init(id)      -- map 5
 end
 
 
+function centaur_statue_init(id)
+
+end
+
+
 function natla_cabin_TR1_init(id)
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
