@@ -20,6 +20,5 @@
 #define TR_STATE_LARSON_STAY_QUEUED 6// -> 1
 #define TR_STATE_LARSON_SHOOT 7
 
-
 #endif
 

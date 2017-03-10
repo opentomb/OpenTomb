@@ -90,6 +90,8 @@ set(OPENTOMB_SRCS
     src/state_control/state_control_trex.cpp
     src/state_control/state_control_Larson.h
     src/state_control/state_control_Larson.cpp
+    src/state_control/state_control_Pierre.h
+    src/state_control/state_control_Pierre.cpp
     src/state_control/state_control_lion.h
     src/state_control/state_control_lion.cpp
     src/state_control/state_control_gorilla.h

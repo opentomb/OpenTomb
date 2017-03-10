@@ -25,6 +25,9 @@ void StateControl_TRexSetIdleAnim(struct entity_s *ent, int anim_type, int move_
 int StateControl_Larson(struct entity_s *ent, struct ss_animation_s *ss_anim);
 void StateControl_LarsonSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
 
+int StateControl_Pierre(struct entity_s *ent, struct ss_animation_s *ss_anim);
+void StateControl_PierreSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
+
 int StateControl_Lion(struct entity_s *ent, struct ss_animation_s *ss_anim);
 void StateControl_LionSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
 
@@ -79,6 +82,11 @@ void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
             case STATE_FUNCTIONS_LARSON:
                 ent->character->state_func = StateControl_Larson;
                 ent->character->set_idle_anim_func = StateControl_LarsonSetIdleAnim;
+                break;
+
+            case STATE_FUNCTIONS_PIERRE:
+                ent->character->state_func = StateControl_Pierre;
+                ent->character->set_idle_anim_func = StateControl_PierreSetIdleAnim;
                 break;
 
             case STATE_FUNCTIONS_LION:

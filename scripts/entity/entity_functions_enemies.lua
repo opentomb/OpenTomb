@@ -399,7 +399,7 @@ function Pierre_init(id)
     setEntityGhostCollisionShape(id, 8,  COLLISION_SHAPE_SPHERE, nil, nil, nil, nil, nil, nil);     -- head
     setEntityGhostCollisionShape(id, 1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
     setEntityGhostCollisionShape(id, 4,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
-    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LARSON);
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_PIERRE);
     entity_funcs[id].is_flee = (getLevel() ~= 9) or (getEntityRoom(id) ~= 110);
 
     entity_funcs[id].onHit = function(object_id, activator_id)
