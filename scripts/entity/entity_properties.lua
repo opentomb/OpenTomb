@@ -49,13 +49,13 @@ tr1_entity_tbl[10] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_S
 tr1_entity_tbl[11] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "crocodile"};                   -- Crocodile (water)
 tr1_entity_tbl[12] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "lion"};                        -- Lion Male
 tr1_entity_tbl[13] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "lion"};                        -- Lion Female
-tr1_entity_tbl[14] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Puma
+tr1_entity_tbl[14] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "puma"};                        -- Puma
 tr1_entity_tbl[15] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "gorilla"};                     -- Gorilla
 tr1_entity_tbl[16] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "rat"};                         -- Rat (land)
 tr1_entity_tbl[17] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "rat"};                         -- Rat (water)
 tr1_entity_tbl[18] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "trex"};                        -- T-Rex
 tr1_entity_tbl[19] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "raptor"};                      -- Raptor
-tr1_entity_tbl[20] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                      -- Winged mutant
+tr1_entity_tbl[20] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "winged_mutant"};               -- Winged mutant
 tr1_entity_tbl[21] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_TRIMESH_CONVEX, hide = 0x01};         -- (RESPAWN POINT?)
 tr1_entity_tbl[22] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_TRIMESH_CONVEX, hide = 0x01};         -- (AI TARGET?)
 tr1_entity_tbl[23] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "centaur"};                     -- Centaur

@@ -43,6 +43,12 @@ void StateControl_RatSetIdleAnim(struct entity_s *ent, int anim_type, int move_t
 int StateControl_Centaur(struct entity_s *ent, struct ss_animation_s *ss_anim);
 void StateControl_CentaurSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
 
+int StateControl_Puma(struct entity_s *ent, struct ss_animation_s *ss_anim);
+void StateControl_PumaSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
+
+int StateControl_WingedMutant(struct entity_s *ent, struct ss_animation_s *ss_anim);
+void StateControl_WingedMutantSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
+
 void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
 {
     if(ent && ent->character)
@@ -114,6 +120,16 @@ void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
                 ent->character->state_func = StateControl_Centaur;
                 ent->character->set_idle_anim_func = StateControl_CentaurSetIdleAnim;
                 break;
+                
+            case STATE_FUNCTIONS_PUMA:
+                ent->character->state_func = StateControl_Puma;
+                ent->character->set_idle_anim_func = StateControl_PumaSetIdleAnim;
+                break;
+                
+            case STATE_FUNCTIONS_WINGED_MUTANT:
+                ent->character->state_func = StateControl_WingedMutant;
+                ent->character->set_idle_anim_func = StateControl_WingedMutantSetIdleAnim;
+                break;                
         }
     }
 }

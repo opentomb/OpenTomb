@@ -1,0 +1,24 @@
+
+#ifndef STATE_CONTROL_PUMA_H
+#define STATE_CONTROL_PUMA_H
+
+/*
+ *  ====== PUMA'S ANIMATIONS ======
+ */
+#define TR_ANIMATION_PUMA_STAY 0
+#define TR_ANIMATION_PUMA_DEAD1 4
+#define TR_ANIMATION_PUMA_DEAD2 5
+#define TR_ANIMATION_PUMA_ARRRR 6
+
+
+//   ====== PUMA'S STATES ======
+#define TR_STATE_PUMA_STAY 1  // -> 2 -> 3 -> 4 -> 6 -> 7
+#define TR_STATE_PUMA_WALK 2  // -> 1
+#define TR_STATE_PUMA_RUN 3   // -> 1
+#define TR_STATE_PUMA_JUMP_ATTACK 4
+#define TR_STATE_PUMA_DEAD 5
+#define TR_STATE_PUMA_ARRRR 6
+#define TR_STATE_PUMA_STAY_ATTACK 7
+
+#endif
+

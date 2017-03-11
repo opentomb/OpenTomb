@@ -102,6 +102,10 @@ set(OPENTOMB_SRCS
     src/state_control/state_control_rat.cpp
     src/state_control/state_control_centaur.h
     src/state_control/state_control_centaur.cpp
+    src/state_control/state_control_puma.h
+    src/state_control/state_control_puma.cpp
+    src/state_control/state_control_winged_mutant.h
+    src/state_control/state_control_winged_mutant.cpp
     src/audio.cpp
     src/audio.h
     src/character_controller.cpp

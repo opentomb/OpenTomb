@@ -238,6 +238,53 @@ function lion_init(id)
 end;
 
 
+function puma_init(id)
+    baddie_init(id);
+    setEntityAnim(id, ANIM_TYPE_BASE, 0, -1);
+    setEntityAnimState(id, ANIM_TYPE_BASE, 1);
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_PUMA);
+
+    setCharacterParam(id, PARAM_HEALTH, 200, 200);
+    setEntityGhostCollisionShape(id,  7,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  19,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  20,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
+        changeCharacterParam(object_id, PARAM_HEALTH, -damage);
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            setCharacterTarget(activator_id, nil);
+            setEntityCollision(object_id, false);
+        end;
+    end;
+end;
+
+
+function winged_mutant_init(id)
+    baddie_init(id);
+    setEntityAnim(id, ANIM_TYPE_BASE, 0, -1);
+    setEntityAnimState(id, ANIM_TYPE_BASE, 1);
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_WINGED_MUTANT);
+
+    setCharacterParam(id, PARAM_HEALTH, 300, 300);
+    setEntityGhostCollisionShape(id,  0,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  2,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  3,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id,  15,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);  -- wing
+    setEntityGhostCollisionShape(id,  18,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);  -- wing
+
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
+        changeCharacterParam(object_id, PARAM_HEALTH, -damage);
+        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            setCharacterTarget(activator_id, nil);
+            setEntityCollision(object_id, false);
+        end;
+    end;
+end;
+
+
 function trex_init(id)
     baddie_init(id);
     setEntityAnim(id, ANIM_TYPE_BASE, 0, -1);
@@ -356,12 +403,12 @@ function Larson_init(id)
     baddie_init(id);
 
     setCharacterParam(id, PARAM_HEALTH, 300, 300);
-    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LARSON);
     setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_SPHERE, -60.0, nil, 0, 60.0, nil, 16.0);   -- base
     setEntityGhostCollisionShape(id, 7,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- torso
     setEntityGhostCollisionShape(id, 8,  COLLISION_SHAPE_SPHERE, nil, nil, nil, nil, nil, nil);     -- head
     setEntityGhostCollisionShape(id, 1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
     setEntityGhostCollisionShape(id, 4,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LARSON);
 
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
@@ -460,10 +507,6 @@ function TorsoBoss_init(id)
             end;
         end;
     end;
-
-    entity_funcs[id].onSave = function()
-        return "TorsoBoss_init(" .. id .. ");\n";
-    end;
 end;
 
 
@@ -486,6 +529,10 @@ function MutantEgg_init(id)
                 local spawned_id = spawnEntity(34, getEntityRoom(object_id), getEntityPos(object_id));
                 moveEntityLocal(spawned_id, -512.0, 512.0, -4096.0);
                 TorsoBoss_init(spawned_id);
+                entity_funcs[spawned_id].onSave = function()
+                    return "TorsoBoss_init(" .. spawned_id .. ");\n";
+                end;
+
                 setEntityActivity(object_id, false);
                 entity_funcs[object_id].onLoop = nil;
             end;
