@@ -49,6 +49,15 @@ void StateControl_PumaSetIdleAnim(struct entity_s *ent, int anim_type, int move_
 int StateControl_WingedMutant(struct entity_s *ent, struct ss_animation_s *ss_anim);
 void StateControl_WingedMutantSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
 
+int StateControl_Cowboy(struct entity_s *ent, struct ss_animation_s *ss_anim);
+void StateControl_CowboySetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
+
+int StateControl_MrT(struct entity_s *ent, struct ss_animation_s *ss_anim);
+void StateControl_MrTSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
+
+int StateControl_Skateboardist(struct entity_s *ent, struct ss_animation_s *ss_anim);
+void StateControl_SkateboardistSetIdleAnim(struct entity_s *ent, int anim_type, int move_type);
+
 void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
 {
     if(ent && ent->character)
@@ -120,16 +129,31 @@ void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
                 ent->character->state_func = StateControl_Centaur;
                 ent->character->set_idle_anim_func = StateControl_CentaurSetIdleAnim;
                 break;
-                
+
             case STATE_FUNCTIONS_PUMA:
                 ent->character->state_func = StateControl_Puma;
                 ent->character->set_idle_anim_func = StateControl_PumaSetIdleAnim;
                 break;
-                
+
             case STATE_FUNCTIONS_WINGED_MUTANT:
                 ent->character->state_func = StateControl_WingedMutant;
                 ent->character->set_idle_anim_func = StateControl_WingedMutantSetIdleAnim;
-                break;                
+                break;
+
+            case STATE_FUNCTIONS_COWBOY:
+                ent->character->state_func = StateControl_Cowboy;
+                ent->character->set_idle_anim_func = StateControl_CowboySetIdleAnim;
+                break;
+
+            case STATE_FUNCTIONS_MRT:
+                ent->character->state_func = StateControl_MrT;
+                ent->character->set_idle_anim_func = StateControl_MrTSetIdleAnim;
+                break;
+
+            case STATE_FUNCTIONS_SKATEBOARDIST:
+                ent->character->state_func = StateControl_Skateboardist;
+                ent->character->set_idle_anim_func = StateControl_SkateboardistSetIdleAnim;
+                break;
         }
     }
 }

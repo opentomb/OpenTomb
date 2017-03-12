@@ -1,0 +1,22 @@
+
+#ifndef STATE_CONTROL_COWBOY_H
+#define STATE_CONTROL_COWBOY_H
+
+/*
+ *  ====== COWBOY'S ANIMATIONS ======
+ */
+#define TR_ANIMATION_COWBOY_SHOOTING 4
+#define TR_ANIMATION_COWBOY_DEAD 7
+#define TR_ANIMATION_COWBOY_STAY 14
+
+//   ====== COWBOY'S STATES ======
+
+#define TR_STATE_COWBOY_STAY 1  // -> 2 -> 3 -> 4
+#define TR_STATE_COWBOY_WALK 2  // -> 1
+#define TR_STATE_COWBOY_RUN 3   // -> 1
+#define TR_STATE_COWBOY_AIM 4   // -> 1 -> 6
+#define TR_STATE_COWBOY_DEAD 5
+#define TR_STATE_COWBOY_SHOOT 6
+
+#endif
+

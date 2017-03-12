@@ -19,6 +19,9 @@ struct entity_s;
 #define STATE_FUNCTIONS_CENTAUR             (0x0D)
 #define STATE_FUNCTIONS_PUMA                (0x0E)
 #define STATE_FUNCTIONS_WINGED_MUTANT       (0x0F)
+#define STATE_FUNCTIONS_COWBOY              (0x10)
+#define STATE_FUNCTIONS_SKATEBOARDIST       (0x11)
+#define STATE_FUNCTIONS_MRT                 (0x12)
 
 #define TR_STATE_CURRENT (-1)
 

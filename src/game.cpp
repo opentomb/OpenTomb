@@ -619,6 +619,7 @@ void Game_Frame(float time)
         if(!control_states.noclip)
         {
             Character_Update(player);
+            Script_LoopEntity(engine_lua, player);   ///@TODO: fix that hack (refactoring)
             if(player->character->target_id == ENTITY_ID_NONE)
             {
                 entity_p target = Character_FindTarget(player);
