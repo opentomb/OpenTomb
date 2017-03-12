@@ -196,7 +196,7 @@ end;
 
 function raptor_init(id)
     baddie_init(id);
-    setEntityAnim(id, ANIM_TYPE_BASE, 0, -1);
+    setEntityAnim(id, ANIM_TYPE_BASE, 0, 0);
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_RAPTOR);
 
@@ -218,7 +218,7 @@ end;
 
 function lion_init(id)
     baddie_init(id);
-    setEntityAnim(id, ANIM_TYPE_BASE, 0, -1);
+    setEntityAnim(id, ANIM_TYPE_BASE, 0, 0);
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LION);
 
@@ -240,7 +240,7 @@ end;
 
 function puma_init(id)
     baddie_init(id);
-    setEntityAnim(id, ANIM_TYPE_BASE, 0, -1);
+    setEntityAnim(id, ANIM_TYPE_BASE, 0, 0);
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_PUMA);
 
@@ -262,7 +262,7 @@ end;
 
 function winged_mutant_init(id)
     baddie_init(id);
-    setEntityAnim(id, ANIM_TYPE_BASE, 0, -1);
+    setEntityAnim(id, ANIM_TYPE_BASE, 0, 0);
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_WINGED_MUTANT);
 
@@ -287,7 +287,7 @@ end;
 
 function trex_init(id)
     baddie_init(id);
-    setEntityAnim(id, ANIM_TYPE_BASE, 0, -1);
+    setEntityAnim(id, ANIM_TYPE_BASE, 0, 0);
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_TREX);
 
@@ -508,6 +508,60 @@ function TorsoBoss_init(id)
         end;
     end;
 end;
+
+
+function mummy_init(id)
+    winged_mutant_init(id);
+    setEntityGhostCollisionShape(id,  15,  COLLISION_SHAPE_BOX, 0, 0, 0, 0, 0, 0);  -- wing
+    setEntityGhostCollisionShape(id,  18,  COLLISION_SHAPE_BOX, 0, 0, 0, 0, 0, 0);  -- wing
+    --TODO: delete wings!!!
+end
+
+
+function mummy_spawner_init(id)
+    entity_funcs[id].spawned_id = nil;
+    
+    entity_funcs[id].onSave = function()
+        if(entity_funcs[id].spawned_id ~= nil) then
+            return "entity_funcs[" .. id .. "] = " .. entity_funcs[id].spawned_id .. ";\n";
+        end;
+    end;
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(entity_funcs[object_id].spawned_id == nil) then
+            entity_funcs[object_id].spawned_id = spawnEntity(20, getEntityRoom(object_id), getEntityPos(object_id));
+            mummy_init(entity_funcs[object_id].spawned_id);
+            entity_funcs[entity_funcs[object_id].spawned_id].onSave = function()
+                return "mummy_init(" .. entity_funcs[object_id].spawned_id .. ");\n";
+            end;
+            enableEntity(entity_funcs[object_id].spawned_id);
+        end;
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+end
+
+
+function mutant_spawner_init(id)
+    entity_funcs[id].spawned_id = nil;
+    
+    entity_funcs[id].onSave = function()
+        if(entity_funcs[id].spawned_id ~= nil) then
+            return "entity_funcs[" .. id .. "] = " .. entity_funcs[id].spawned_id .. ";\n";
+        end;
+    end;
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(entity_funcs[object_id].spawned_id == nil) then
+            entity_funcs[object_id].spawned_id = spawnEntity(20, getEntityRoom(object_id), getEntityPos(object_id));
+            winged_mutant_init(entity_funcs[object_id].spawned_id);
+            entity_funcs[entity_funcs[object_id].spawned_id].onSave = function()
+                return "winged_mutant_init(" .. entity_funcs[object_id].spawned_id .. ");\n";
+            end;
+            enableEntity(entity_funcs[object_id].spawned_id);
+        end;
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+end
 
 
 function MutantEgg_init(id)
