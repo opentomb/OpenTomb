@@ -112,6 +112,10 @@ set(OPENTOMB_SRCS
     src/state_control/state_control_cowboy.cpp
     src/state_control/state_control_skateboardist.h
     src/state_control/state_control_skateboardist.cpp
+    src/state_control/state_control_torso_boss.h
+    src/state_control/state_control_torso_boss.cpp
+    src/state_control/state_control_Natla.h
+    src/state_control/state_control_Natla.cpp
     src/audio.cpp
     src/audio.h
     src/character_controller.cpp
