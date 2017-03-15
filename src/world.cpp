@@ -2285,7 +2285,7 @@ void World_GenEntities(class VT_Level *tr)
             Entity_UpdateRigidBody(entity, 1);
             Character_Create(entity);
             StateControl_SetStateFunctions(entity, STATE_FUNCTIONS_LARA);
-            entity->character->set_idle_anim_func(entity, ANIM_TYPE_BASE, MOVE_ON_FLOOR);
+            entity->character->set_key_anim_func(entity, &entity->bf->animations, ANIMATION_KEY_INIT);
             Room_AddObject(entity->self->room, entity->self);
 
             entity->character->Height = 768.0;

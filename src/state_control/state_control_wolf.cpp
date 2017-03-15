@@ -22,13 +22,16 @@
 #include "state_control.h"
 
 
-void StateControl_WolfSetIdleAnim(struct entity_s *ent, int anim_type, int move_type)
+void StateControl_WolfSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim)
 {
-    switch(move_type)
+    switch(key_anim)
     {
-        case MOVE_ON_FLOOR:
-            ent->no_anim_pos_autocorrection = 0x01;
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_WOLF_STAY_TO_IDLE, -1, NULL);
+        case ANIMATION_KEY_INIT:
+            Anim_SetAnimation(ss_anim, TR_ANIMATION_WOLF_STAY_TO_IDLE, -1);
+            break;
+
+        case ANIMATION_KEY_DEAD:
+            Anim_SetAnimation(ss_anim, TR_ANIMATION_WOLF_DEAD1, 0);
             break;
     }
 }

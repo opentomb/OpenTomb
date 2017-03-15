@@ -22,8 +22,13 @@ struct entity_s;
 #define STATE_FUNCTIONS_COWBOY              (0x10)
 #define STATE_FUNCTIONS_SKATEBOARDIST       (0x11)
 #define STATE_FUNCTIONS_MRT                 (0x12)
+#define STATE_FUNCTIONS_TORSO_BOSS          (0x13)
+#define STATE_FUNCTIONS_NATLA               (0x14)
 
 #define TR_STATE_CURRENT (-1)
+
+#define ANIMATION_KEY_INIT          (0)
+#define ANIMATION_KEY_DEAD          (1)
 
 void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id);
 

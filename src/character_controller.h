@@ -289,7 +289,7 @@ typedef struct character_s
     int16_t                     weapon_current_state;
 
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
-    void                       (*set_idle_anim_func)(struct entity_s *ent, int anim_type, int move_type);
+    void                       (*set_key_anim_func)(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim);
     float                       linear_speed_mult;
     float                       rotate_speed_mult;
     float                       min_step_up_height;

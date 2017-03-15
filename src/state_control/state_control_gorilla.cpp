@@ -60,12 +60,25 @@ void ent_gorilla_fix_strafe(entity_p ent, ss_animation_p ss_anim)
 }
 
 
-void StateControl_GorillaSetIdleAnim(struct entity_s *ent, int anim_type, int move_type)
+void StateControl_GorillaSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim)
 {
-    switch(move_type)
+    uint16_t current_state = Anim_GetCurrentState(ss_anim);
+
+    switch(key_anim)
     {
-        case MOVE_ON_FLOOR:
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_GORILLA_STAY, 0, NULL);
+        case ANIMATION_KEY_INIT:
+            Anim_SetAnimation(ss_anim, TR_ANIMATION_GORILLA_STAY, 0);
+            break;
+
+        case ANIMATION_KEY_DEAD:
+            if(current_state == TR_STATE_GORILLA_STAY)
+            {
+                Anim_SetAnimation(ss_anim, TR_ANIMATION_GORILLA_DEAD1, 0);
+            }
+            else
+            {
+                Anim_SetAnimation(ss_anim, TR_ANIMATION_GORILLA_DEAD2, 0);
+            }
             break;
     }
 }

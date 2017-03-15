@@ -22,12 +22,16 @@
 #include "state_control.h"
 
 
-void StateControl_CowboySetIdleAnim(struct entity_s *ent, int anim_type, int move_type)
+void StateControl_CowboySetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim)
 {
-    switch(move_type)
+    switch(key_anim)
     {
-        case MOVE_ON_FLOOR:
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_COWBOY_STAY, 0, NULL);
+        case ANIMATION_KEY_INIT:
+            Anim_SetAnimation(ss_anim, TR_ANIMATION_COWBOY_STAY, 0);
+            break;
+
+        case ANIMATION_KEY_DEAD:
+            Anim_SetAnimation(ss_anim, TR_ANIMATION_COWBOY_DEAD, 0);
             break;
     }
 }

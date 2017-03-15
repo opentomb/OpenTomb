@@ -22,27 +22,38 @@
 #include "state_control.h"
 
 
-void StateControl_RatSetIdleAnim(struct entity_s *ent, int anim_type, int move_type)
+void StateControl_RatSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim)
 {
-    ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type);
-    switch(move_type)
+    switch(key_anim)
     {
-        case MOVE_ON_FLOOR:
-            if(ss_anim)
+        case ANIMATION_KEY_INIT:
+            switch(ent->move_type)
             {
-                ss_anim->model = World_GetModelByID(TR_MODEL_RAT_TR1);
+                case MOVE_ON_WATER:
+                    ss_anim->model = World_GetModelByID(TR_MODEL_RAT_OW_TR1);
+                    Anim_SetAnimation(ss_anim, TR_ANIMATION_RAT_OW_FLOW, 0);
+                    break;
+
+                case MOVE_ON_FLOOR:
+                    ss_anim->model = World_GetModelByID(TR_MODEL_RAT_OF_TR1);
+                    Anim_SetAnimation(ss_anim, TR_ANIMATION_RAT_OF_STAY, 0);
+                    break;
             }
-            Entity_SetAnimation(ent, anim_type, TR_STATE_RAT_STAY, 0, NULL);
-            ent->move_type = MOVE_ON_FLOOR;
             break;
 
-        case MOVE_ON_WATER:
-            if(ss_anim)
+        case ANIMATION_KEY_DEAD:
+            switch(ent->move_type)
             {
-                ss_anim->model = World_GetModelByID(TR_MODEL_RAT_OW_TR1);
+                case MOVE_ON_WATER:
+                    ss_anim->model = World_GetModelByID(TR_MODEL_RAT_OW_TR1);
+                    Anim_SetAnimation(ss_anim, TR_ANIMATION_RAT_OW_DEAD, 0);
+                    break;
+
+                case MOVE_ON_FLOOR:
+                    ss_anim->model = World_GetModelByID(TR_MODEL_RAT_OF_TR1);
+                    Anim_SetAnimation(ss_anim, TR_ANIMATION_RAT_OF_DEAD, 0);
+                    break;
             }
-            Entity_SetAnimation(ent, anim_type, TR_STATE_RAT_OW_FLOW, 0, NULL);
-            ent->move_type = MOVE_ON_WATER;
             break;
     }
 }
@@ -64,7 +75,8 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
     {
         if(ss_anim->model->id != TR_MODEL_RAT_OW_TR1)
         {
-            StateControl_RatSetIdleAnim(ent, ss_anim->type, MOVE_ON_WATER);
+            ent->move_type = MOVE_ON_WATER;
+            StateControl_RatSetKeyAnim(ent, ss_anim, ANIMATION_KEY_INIT);
         }
         ent->character->parameters.param[PARAM_AIR] = 100;
         ent->character->parameters.maximum[PARAM_AIR] = 100;
@@ -97,7 +109,8 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
     {
         if(ss_anim->model->id == TR_MODEL_RAT_OW_TR1)
         {
-            StateControl_RatSetIdleAnim(ent, ss_anim->type, MOVE_ON_FLOOR);
+            ent->move_type = MOVE_ON_FLOOR;
+            StateControl_RatSetKeyAnim(ent, ss_anim, ANIMATION_KEY_INIT);
         }
 
         uint16_t current_state = Anim_GetCurrentState(ss_anim);
@@ -106,7 +119,7 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
             case TR_STATE_RAT_STAY: // -> 3 -> 4 -> 6
                 if(state->dead)
                 {
-                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_RAT_DEAD, 0, NULL);
+                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_RAT_OF_DEAD, 0, NULL);
                 }
                 else if(cmd->action)
                 {
@@ -128,11 +141,7 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             case TR_STATE_RAT_STAY_HIGH: // -> 1
                 cmd->rot[0] = 0;
-                if(state->dead)
-                {
-                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_RAT_DEAD, 0, NULL);
-                }
-                else if(cmd->move[0] > 0)
+                if(state->dead || cmd->move[0] > 0)
                 {
                     ss_anim->next_state = TR_STATE_RAT_STAY;
                 }
@@ -145,7 +154,7 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ent->dir_flag = ENT_MOVE_FORWARD;
                 if(state->dead)
                 {
-                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_RAT_DEAD, 0, NULL);
+                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_RAT_OF_DEAD, 0, NULL);
                 }
                 if(cmd->action)
                 {

@@ -885,6 +885,9 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, PARAM_EXTRA4);
         LUA_EXPOSE(lua, PARAM_LASTINDEX);
 
+        LUA_EXPOSE(lua, ANIMATION_KEY_INIT);
+        LUA_EXPOSE(lua, ANIMATION_KEY_DEAD);
+        
         LUA_EXPOSE(lua, STATE_FUNCTIONS_LARA);
         LUA_EXPOSE(lua, STATE_FUNCTIONS_BAT);
         LUA_EXPOSE(lua, STATE_FUNCTIONS_WOLF);
@@ -903,6 +906,8 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, STATE_FUNCTIONS_COWBOY);
         LUA_EXPOSE(lua, STATE_FUNCTIONS_SKATEBOARDIST);
         LUA_EXPOSE(lua, STATE_FUNCTIONS_MRT);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_TORSO_BOSS);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_NATLA);
 
         LUA_EXPOSE(lua, ANIM_NORMAL_CONTROL);
         LUA_EXPOSE(lua, ANIM_LOOP_LAST_FRAME);

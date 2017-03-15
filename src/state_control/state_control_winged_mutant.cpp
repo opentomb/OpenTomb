@@ -22,16 +22,22 @@
 #include "state_control.h"
 
 
-void StateControl_WingedMutantSetIdleAnim(struct entity_s *ent, int anim_type, int move_type)
+void StateControl_WingedMutantSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim)
 {
-    switch(move_type)
+    switch(key_anim)
     {
-        case MOVE_ON_FLOOR:
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_WINGED_MUTANT_STAY_INIT, 0, NULL);
+        case ANIMATION_KEY_INIT:
+            if(ent->move_type == MOVE_FLY)
+            {
+                Anim_SetAnimation(ss_anim, TR_ANIMATION_WINGED_MUTANT_FLY, 0);
+            }
+            else
+            {
+                Anim_SetAnimation(ss_anim, TR_ANIMATION_WINGED_MUTANT_STAY_INIT, 0);
+            }
             break;
 
-        case MOVE_FLY:
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_WINGED_MUTANT_FLY, 0, NULL);
+        case ANIMATION_KEY_DEAD:
             break;
     }
 }

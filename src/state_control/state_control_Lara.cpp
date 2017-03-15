@@ -196,25 +196,33 @@ void ent_crawl_to_climb(entity_p ent, ss_animation_p ss_anim)
 }
 
 
-void StateControl_LaraSetIdleAnim(struct entity_s *ent, int anim_type, int move_type)
+void StateControl_LaraSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim)
 {
-    switch(move_type)
+    switch(key_anim)
     {
-        case MOVE_FREE_FALLING:
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0, NULL);
+        case ANIMATION_KEY_INIT:
+            switch(ent->move_type)
+            {
+                case MOVE_FREE_FALLING:
+                    Anim_SetAnimation(ss_anim, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
+                    break;
+
+                case MOVE_UNDERWATER:
+                    Anim_SetAnimation(ss_anim, TR_ANIMATION_LARA_UNDERWATER_IDLE, 0);
+                    break;
+
+                case MOVE_ON_WATER:
+                    Anim_SetAnimation(ss_anim, TR_ANIMATION_LARA_ONWATER_IDLE, 0);
+                    break;
+
+                case MOVE_ON_FLOOR:
+                default:
+                    Anim_SetAnimation(ss_anim, TR_ANIMATION_LARA_STAY_IDLE, 0);
+                    break;
+            }
             break;
 
-        case MOVE_UNDERWATER:
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_LARA_UNDERWATER_IDLE, 0, NULL);
-            break;
-
-        case MOVE_ON_WATER:
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_LARA_ONWATER_IDLE, 0, NULL);
-            break;
-
-        case MOVE_ON_FLOOR:
-        default:
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_LARA_STAY_IDLE, 0, NULL);
+        case ANIMATION_KEY_DEAD:
             break;
     }
 }

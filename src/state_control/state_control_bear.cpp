@@ -22,13 +22,12 @@
 #include "state_control.h"
 
 
-void StateControl_BearSetIdleAnim(struct entity_s *ent, int anim_type, int move_type)
+void StateControl_BearSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim)
 {
-    switch(move_type)
+    switch(key_anim)
     {
-        case MOVE_ON_FLOOR:
-            ent->no_anim_pos_autocorrection = 0x01;
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_BEAR_STAY, 0, NULL);
+        case ANIMATION_KEY_INIT:
+            Anim_SetAnimation(ss_anim, TR_ANIMATION_BEAR_STAY, 0);
             break;
     }
 }

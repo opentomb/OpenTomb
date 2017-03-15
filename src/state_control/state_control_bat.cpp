@@ -22,24 +22,30 @@
 #include "state_control.h"
 
 
-void StateControl_BatSetIdleAnim(struct entity_s *ent, int anim_type, int move_type)
+void StateControl_BatSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim)
 {
-    switch(move_type)
+    switch(key_anim)
     {
-        case MOVE_FLY:
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_BAT_FLY, 0, NULL);
+        case ANIMATION_KEY_INIT:
+            if(ent->move_type == MOVE_STATIC_POS)
+            {
+                Anim_SetAnimation(ss_anim, TR_ANIMATION_BAT_START, 0);
+            }
+            else
+            {
+                Anim_SetAnimation(ss_anim, TR_ANIMATION_BAT_FLY, 0);
+            }
             break;
 
-        case MOVE_MONKEYSWING:
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_BAT_START, 0, NULL);
-            break;
-
-        case MOVE_FREE_FALLING:
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_BAT_DROP, 0, NULL);
-            break;
-
-        case MOVE_ON_FLOOR:
-            Entity_SetAnimation(ent, anim_type, TR_ANIMATION_BAT_DEAD, 0, NULL);
+        case ANIMATION_KEY_DEAD:
+            if(ent->move_type == MOVE_ON_FLOOR)
+            {
+                Anim_SetAnimation(ss_anim, TR_ANIMATION_BAT_DEAD, 0);
+            }
+            else
+            {
+                Anim_SetAnimation(ss_anim, TR_ANIMATION_BAT_DROP, 0);
+            }
             break;
     }
 }

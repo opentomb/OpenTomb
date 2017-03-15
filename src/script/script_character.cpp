@@ -17,6 +17,7 @@ extern "C" {
 #include "../core/vmath.h"
 #include "../core/polygon.h"
 #include "../state_control/state_control.h"
+#include "../skeletal_model.h"
 #include "../entity.h"
 #include "../world.h"
 #include "../character_controller.h"
@@ -70,6 +71,33 @@ int lua_SetCharacterStateControlFunctions(lua_State * lua)
     else
     {
         Con_Warning("setCharacterStateControlFunctions: expecting arguments (entity_id, funcs_id)");
+    }
+    return 0;
+}
+
+
+int lua_SetCharacterKeyAnim(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 3)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character && ent->character->set_key_anim_func)
+        {
+            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2));
+            if(ss_anim)
+            {
+                ent->character->set_key_anim_func(ent, ss_anim, lua_tointeger(lua, 3));
+            }
+        }
+        else
+        {
+            Con_Warning("no suitable character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setCharacterKeyAnim: expecting arguments (entity_id, anim_type, anim_key_id)");
     }
     return 0;
 }
@@ -502,6 +530,7 @@ void Script_LuaRegisterCharacterFuncs(lua_State *lua)
 
     lua_register(lua, "characterCreate", lua_CharacterCreate);
     lua_register(lua, "setCharacterStateControlFunctions", lua_SetCharacterStateControlFunctions);
+    lua_register(lua, "setCharacterKeyAnim", lua_SetCharacterKeyAnim);
     lua_register(lua, "setCharacterTarget", lua_SetCharacterTarget);
     lua_register(lua, "getCharacterParam", lua_GetCharacterParam);
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);
