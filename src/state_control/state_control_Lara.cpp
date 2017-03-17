@@ -256,6 +256,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         Audio_EndStreams(TR_AUDIO_STREAM_TYPE_CHAT);
     }
 
+    state->ragdoll = 0x00;
     state->sprint = 0x00;
     state->crouch = 0x00;
     state->tightrope = (current_state >= TR_STATE_LARA_TIGHTROPE_IDLE) && (current_state <= TR_STATE_LARA_TIGHTROPE_EXIT);
@@ -271,6 +272,14 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         /*
          * Base onfloor animations
          */
+        case TR_STATE_LARA_DEATH:
+            if(is_last_frame)
+            {
+                state->ragdoll = 0x01;
+                //addEntityRagdoll(player, RD_TYPE_LARA);
+            }
+            break;
+
         case TR_STATE_LARA_STOP:
             // Reset directional flag only on intermediate animation!
 

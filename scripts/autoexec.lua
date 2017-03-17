@@ -264,8 +264,6 @@ elseif (getLevelVersion() == TR_V) then
 end
 
 -- Add global level tasks
-
-addTask(checkPlayerRagdollConditions);    -- check ragdolls
 addTask(checkDebugKeys);
 
 -- Test TR_ITEMS

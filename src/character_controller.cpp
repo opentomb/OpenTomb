@@ -52,6 +52,7 @@ void Character_Create(struct entity_s *ent)
         ret->state.step_z = 0x00;
         ret->state.uw_current = 0x00;
         ret->state.dead = 0x00;
+        ret->state.ragdoll = 0x00;
         ret->state.burn = 0x00;
         ret->state.crouch = 0x00;
         ret->state.sprint = 0x00;
@@ -1208,8 +1209,10 @@ int Character_MoveFly(struct entity_s *ent)
 
     if(!ent->character->state.dead)   // Block controls if character is dead.
     {
+        character_command_p cmd = &ent->character->cmd;
+        float dir[3] = {0.0f, 0.0f, 0.0f};
         // Calculate current speed.
-        if(ent->character->cmd.jump)
+        if(cmd->move[0] || cmd->move[1] || cmd->move[2])
         {
             ent->linear_speed += MAX_SPEED_UNDERWATER * INERTIA_SPEED_UNDERWATER * engine_frame_time;
             if(ent->linear_speed > MAX_SPEED_UNDERWATER)
@@ -1226,21 +1229,18 @@ int Character_MoveFly(struct entity_s *ent)
             }
         }
 
-        ent->angles[0] += ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
-        ent->angles[1] -= ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[1];
-        ent->angles[2]  = 0.0;
-
-        if((ent->angles[1] > 70.0) && (ent->angles[1] < 180.0))                 // angle limiter.
+        if(!cmd->shift)
         {
-           ent->angles[1] = 70.0;
+            ent->angles[0] += ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * cmd->rot[0];
+            ent->angles[1]  = 0.0f;
+            ent->angles[2]  = 0.0f;
+            Entity_UpdateTransform(ent);
         }
-        else if((ent->angles[1] > 180.0) && (ent->angles[1] < 270.0))
-        {
-            ent->angles[1] = 270.0;
-        }
-
-        Entity_UpdateTransform(ent);                                            // apply rotations
-        vec3_mul_scalar(ent->speed, ent->transform + 4, ent->linear_speed * ent->character->linear_speed_mult);    // OY move only!
+        dir[0] = (cmd->shift) ? (cmd->move[1]) : (0.0f);
+        dir[1] = cmd->move[0];
+        dir[2] = cmd->move[2];
+        Mat4_vec3_rot_macro(ent->speed, ent->transform, dir);
+        vec3_mul_scalar(ent->speed, ent->speed, ent->linear_speed * ent->character->linear_speed_mult);    // OY move only!
     }
     else
     {

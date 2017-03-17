@@ -12,11 +12,8 @@
 int main(int argc, char **argv)
 {
     Engine_Start(argc, argv);
-
-    // Entering main loop.
     Engine_MainLoop();
-
-    // Main loop interrupted; shutting down.
     Engine_Shutdown(EXIT_SUCCESS);
+
     return(EXIT_SUCCESS);
 }

@@ -551,7 +551,7 @@ void Engine_InitSDLControls()
 
 void Engine_LoadConfig(const char *filename)
 {
-    if((filename != NULL) && Sys_FileFound(filename, 0))
+    if(filename && Sys_FileFound(filename, 0))
     {
         lua_State *lua = luaL_newstate();
         if(lua != NULL)
@@ -572,7 +572,7 @@ void Engine_LoadConfig(const char *filename)
     }
     else
     {
-        Sys_Warn("Could not find \"%s\"", filename);
+        Sys_Warn("Could not find config file");
     }
 }
 
