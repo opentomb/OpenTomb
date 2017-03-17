@@ -177,10 +177,10 @@ void Engine_Start(int argc, char **argv)
         }
     }
 
-    Engine_LoadConfig(config_name ? config_name : "config.lua");
-
     // Primary initialization.
     Engine_Init_Pre();
+
+    Engine_LoadConfig(config_name ? config_name : "config.lua");
 
     // Init generic SDL interfaces.
     Engine_InitSDLControls();
