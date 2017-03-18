@@ -64,17 +64,15 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 	* Collision margin is zero, otherwise normals in near edges become smooth and Lara slides down or stops in places she should not
 
 * Todo:
-	* Fix shimmy left/right jamming
 	* Fix moving after landing on sloped surface:
 		* Find body parts that stop Lara
 		* Tune collision form, or disable collision checking for them
 		* Bind with 3
-	* Make ghost body parts meshes tunable by config (no more hardcoded boxes)
+	* Make rigid body parts meshes tunable by config
 	* For future optimazation, add switchable single ghost object for character
 	* Add _Long Ray Test_ (pierces rooms portals and builds room list for collisional checking) - needed for long range shooting and AI
-	* Make refactoring of `Physics_GetCurrentCollisions(...)` (mem managment)
+	* Add last collision resolving objects tracking
 	* Fix moving in some floor slant cases in `Character_FixPosByFloorInfoUnderLegs(...)`
-	* Fix jammed (or slowly stopping) rolling boulders, where it is critical (optional roll by path (not yet implemented), or roll by physics (implemented))
 	* Check room tween butterfly normals
 
 6. Character controller
@@ -83,12 +81,10 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 	* Weapon control system needs to be refactored/fixed (2-handed weapon model switches in wrong frame)
 	* Add auto weapon hiding in water environment e.t.c. (simple task)
 	* Fix usage of weapons while crouching
-	* Implement base state control for TR1 enemies (bat, wolf, bear first, others later) - needed for simple AI testing/developing
 
 7. Animation control
 --------------------
 * Todo:
-	* Fix state change missing with low fps
 	* Update documentation about `ss_animation` structure and functions
 	* Fix incorrect smoothing if there are _move_ or _rotate_ anim commands
 	* Fix dive-rolls:

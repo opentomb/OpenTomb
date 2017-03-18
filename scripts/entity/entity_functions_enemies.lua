@@ -729,13 +729,13 @@ function Natla_init(id, is_spawned)
         end;
     end;
 
-    --entity_funcs[id].onLoop = function(object_id, tick_state)
-        --if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            --local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
-            --if(f + 1 >= c) then
-            --end;
-        --end;
-    --end;
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if((getCharacterParam(object_id, PARAM_HEALTH) == 0) and (5 == getEntityAnimState(object_id, ANIM_TYPE_BASE))) then
+            setEntityCollision(object_id, true);
+            setCharacterState(object_id, CHARACTER_STATE_DEAD, 0);
+            setCharacterParam(object_id, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
+        end;
+    end;
 end
 
 
