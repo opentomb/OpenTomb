@@ -223,5 +223,16 @@ int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
     };
 
+    if(state->slide == CHARACTER_SLIDE_BACK)
+    {
+        ent->dir_flag = ENT_MOVE_BACKWARD;
+        ent->anim_linear_speed = 64;
+    }
+    else if(state->slide == CHARACTER_SLIDE_FRONT)
+    {
+        ent->dir_flag = ENT_MOVE_FORWARD;
+        ent->anim_linear_speed = 64;
+    }
+
     return 0;
 }
