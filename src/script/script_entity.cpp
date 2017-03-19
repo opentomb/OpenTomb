@@ -1289,11 +1289,11 @@ int lua_SetEntityTriggerLayout(lua_State *lua)
             else if(top == 4)
             {
                 uint8_t trigger_layout = ent->trigger_layout;
-                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);  
+                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);
                 trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);          // mask  - 00011111
-                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT); 
+                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT);
                 trigger_layout ^= ((uint8_t)lua_tointeger(lua, 3)) << 5;   // event - 00100000
-                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  
+                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);
                 trigger_layout ^= ((uint8_t)lua_tointeger(lua, 4)) << 6;   // lock  - 01000000
                 ent->trigger_layout = trigger_layout;
             }
@@ -1320,7 +1320,7 @@ int lua_SetEntityLock(lua_State * lua)
         if(ent)
         {
             uint8_t trigger_layout = ent->trigger_layout;
-            trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  
+            trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);
             trigger_layout ^= ((uint8_t)lua_tointeger(lua, 2)) << 6;   // lock  - 01000000
             ent->trigger_layout = trigger_layout;
         }
@@ -1404,7 +1404,7 @@ int lua_SetEntityMask(lua_State * lua)
         if(ent)
         {
             uint8_t trigger_layout = ent->trigger_layout;
-            trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);  
+            trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);
             trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);   // mask  - 00011111
             ent->trigger_layout = trigger_layout;
         }
@@ -1905,6 +1905,27 @@ int lua_SetEntityCollision(lua_State * lua)
     else
     {
         Con_Warning("setEntityCollision: Expecting arguments (entity_id, val)");
+    }
+
+    return 0;
+}
+
+
+int lua_SetEntityBoneCollision(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top >= 3)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            Physics_SetBoneCollision(ent->physics, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
+        }
+    }
+    else
+    {
+        Con_Warning("setEntityBoneCollision: Expecting arguments (entity_id, bone_id, val)");
     }
 
     return 0;
@@ -2501,6 +2522,7 @@ void Script_LuaRegisterEntityFuncs(lua_State *lua)
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
 
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
+    lua_register(lua, "setEntityBoneCollision", lua_SetEntityBoneCollision);
     lua_register(lua, "setEntityGhostCollisionShape", lua_SetEntityGhostCollisionShape);
     lua_register(lua, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
     lua_register(lua, "setEntityCollisionGroupAndMask", lua_SetEntityCollisionGroupAndMask);

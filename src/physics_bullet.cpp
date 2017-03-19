@@ -205,10 +205,16 @@ struct physics_object_s
     btRigidBody    *bt_body;
 };
 
+struct kinematic_info_s
+{
+    bool        has_collisions;
+};
+
 typedef struct physics_data_s
 {
     // kinematic
     btRigidBody                       **bt_body;
+    struct kinematic_info_s            *bt_info;
 
     // dynamic
     struct ghost_shape_s               *ghosts_info;
@@ -397,6 +403,7 @@ struct physics_data_s *Physics_CreatePhysicsData(struct engine_container_s *cont
     struct physics_data_s *ret = (struct physics_data_s*)malloc(sizeof(struct physics_data_s));
 
     ret->bt_body = NULL;
+    ret->bt_info = NULL;
     ret->bt_joints = NULL;
     ret->objects_count = 0;
     ret->bt_joint_count = 0;
@@ -423,6 +430,12 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
             cn = next;
         }
         physics->collision_track = NULL;
+
+        if(physics->bt_info)
+        {
+            free(physics->bt_info);
+            physics->bt_info = NULL;
+        }
 
         if(physics->ghost_objects)
         {
@@ -1138,6 +1151,8 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
             {
                 physics->objects_count = 1;
                 physics->bt_body = (btRigidBody**)malloc(physics->objects_count * sizeof(btRigidBody*));
+                physics->bt_info = (struct kinematic_info_s*)malloc(physics->objects_count * sizeof(struct kinematic_info_s));
+                physics->bt_info->has_collisions = true;
 
                 float hx = (bf->bb_max[0] - bf->bb_min[0]) * 0.5f;
                 float hy = (bf->bb_max[1] - bf->bb_min[1]) * 0.5f;
@@ -1160,6 +1175,8 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
             {
                 physics->objects_count = 1;
                 physics->bt_body = (btRigidBody**)malloc(physics->objects_count * sizeof(btRigidBody*));
+                physics->bt_info = (struct kinematic_info_s*)malloc(physics->objects_count * sizeof(struct kinematic_info_s));
+                physics->bt_info->has_collisions = true;
 
                 cshape = new btSphereShape(getInnerBBRadius(bf->bb_min, bf->bb_max));
                 cshape->calculateLocalInertia(0.0, localInertia);
@@ -1179,11 +1196,13 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
             {
                 physics->objects_count = bf->bone_tag_count;
                 physics->bt_body = (btRigidBody**)malloc(physics->objects_count * sizeof(btRigidBody*));
+                physics->bt_info = (struct kinematic_info_s*)malloc(physics->objects_count * sizeof(struct kinematic_info_s));
 
                 for(uint32_t i = 0; i < physics->objects_count; i++)
                 {
                     base_mesh_p mesh = bf->bone_tags[i].mesh_base;
                     cshape = NULL;
+                    physics->bt_info[i].has_collisions = false;
                     switch(physics->cont->collision_shape)
                     {
                         case COLLISION_SHAPE_TRIMESH_CONVEX:
@@ -1208,6 +1227,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
 
                     if(cshape)
                     {
+                        physics->bt_info[i].has_collisions = true;
                         cshape->calculateLocalInertia(0.0, localInertia);
                         cshape->setMargin(COLLISION_MARGIN_DEFAULT);
 
@@ -1529,7 +1549,7 @@ void Physics_EnableCollision(struct physics_data_s *physics)
         for(uint32_t i = 0; i < physics->objects_count; i++)
         {
             btRigidBody *b = physics->bt_body[i];
-            if(b && !b->isInWorld())
+            if(b && physics->bt_info[i].has_collisions && !b->isInWorld())
             {
                 bt_engine_dynamicsWorld->addRigidBody(b, physics->collision_group, physics->collision_mask);
             }
@@ -1561,6 +1581,21 @@ void Physics_DisableCollision(struct physics_data_s *physics)
             {
                 bt_engine_dynamicsWorld->removeCollisionObject(physics->ghost_objects[i]);
             }
+        }
+    }
+}
+
+
+void Physics_SetBoneCollision(struct physics_data_s *physics, int bone_index, int collision)
+{
+    if(physics->bt_body && (bone_index >= 0) && (bone_index < physics->objects_count))
+    {
+        btRigidBody *b = physics->bt_body[bone_index];
+        physics->bt_info[bone_index].has_collisions = collision;
+
+        if(b && !collision && b->isInWorld())
+        {
+            bt_engine_dynamicsWorld->removeRigidBody(b);
         }
     }
 }

@@ -89,6 +89,7 @@ void Physics_DisableObject(struct physics_object_s *obj);
 
 void Physics_EnableCollision(struct physics_data_s *physics);
 void Physics_DisableCollision(struct physics_data_s *physics);
+void Physics_SetBoneCollision(struct physics_data_s *physics, int bone_index, int collision);
 void Physics_SetCollisionGroupAndMask(struct physics_data_s *physics, int16_t group, int16_t mask);
 void Physics_SetCollisionScale(struct physics_data_s *physics, float scaling[3]);
 void Physics_SetBodyMass(struct physics_data_s *physics, float mass, uint16_t index);

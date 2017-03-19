@@ -307,8 +307,13 @@ function winged_mutant_init(id, is_spawned)
     setEntityGhostCollisionShape(id,  1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setEntityGhostCollisionShape(id,  2,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setEntityGhostCollisionShape(id,  3,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
-    --setEntityGhostCollisionShape(id,  15,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);  -- wing
-    --setEntityGhostCollisionShape(id,  18,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);  -- wing
+
+    setEntityBoneCollision(id, 15, false);      -- wing
+    setEntityBoneCollision(id, 16, false);
+    setEntityBoneCollision(id, 17, false);
+    setEntityBoneCollision(id, 18, false);      -- wing
+    setEntityBoneCollision(id, 19, false);
+    setEntityBoneCollision(id, 20, false);
 
     if(is_spawned ~= nil) then
         entity_funcs[id].onSave = function()
