@@ -777,30 +777,6 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
     ss_anim->frame_changing_state = 0x00;
     
     /*
-     * State change check
-     */
-    if(stc && !(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK))
-    {
-        anim_dispatch_p disp = stc->anim_dispatch;
-        for(uint16_t i = 0; i < stc->anim_dispatch_count; i++, disp++)
-        {
-            if((next_anim->max_frame == 1) || 
-               (new_frame >= disp->frame_low) && (new_frame <= disp->frame_high) || 
-               (ss_anim->next_frame <= disp->frame_high) && (new_frame >= disp->frame_high))
-            {
-                ss_anim->current_animation = ss_anim->next_animation;
-                ss_anim->current_frame = ss_anim->next_frame;
-                ss_anim->next_animation = disp->next_anim;
-                ss_anim->next_frame = disp->next_frame;
-                ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
-                ss_anim->next_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
-                ss_anim->frame_changing_state = 0x03;
-                return 0x03;
-            }
-        }
-    }
-    
-    /*
      * Flag has a highest priority
      */
     if(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK)
@@ -820,6 +796,30 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
         ss_anim->lerp = 0.0f;
         ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period;
         return 0x00;
+    }
+    
+    /*
+     * State change check
+     */
+    if(stc)
+    {
+        anim_dispatch_p disp = stc->anim_dispatch;
+        for(uint16_t i = 0; i < stc->anim_dispatch_count; i++, disp++)
+        {
+            if((next_anim->max_frame == 1) || 
+               (new_frame >= disp->frame_low) && (new_frame <= disp->frame_high) || 
+               (ss_anim->next_frame <= disp->frame_high) && (new_frame >= disp->frame_high))
+            {
+                ss_anim->current_animation = ss_anim->next_animation;
+                ss_anim->current_frame = ss_anim->next_frame;
+                ss_anim->next_animation = disp->next_anim;
+                ss_anim->next_frame = disp->next_frame;
+                ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
+                ss_anim->next_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
+                ss_anim->frame_changing_state = 0x03;
+                return 0x03;
+            }
+        }
     }
     
     /*
