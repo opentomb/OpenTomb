@@ -59,6 +59,7 @@ typedef struct ss_bone_tag_s
 {
     struct ss_bone_tag_s   *parent;
     uint16_t                index;
+    uint16_t                is_hidden : 1;
     struct base_mesh_s     *mesh_base;                                          // base mesh - pointer to the first mesh in array
     struct base_mesh_s     *mesh_skin;                                          // base skinned mesh for ТР4+
     struct base_mesh_s     *mesh_slot;

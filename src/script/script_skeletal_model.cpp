@@ -425,6 +425,36 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
 }
 
 
+int lua_SetEntityBoneVisibility(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top >= 3)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            uint16_t bone_id = lua_tointeger(lua, 2);
+            if(bone_id < ent->bf->bone_tag_count)
+            {
+                ent->bf->bone_tags[bone_id].is_hidden = !lua_toboolean(lua, 3);
+            }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setEntityBoneVisibility: expecting arguments (entity_id, bone_id, value");
+    }
+
+    return 0;
+}
+
+
+
 int lua_SetEntityAnim(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -790,6 +820,7 @@ void Script_LuaRegisterAnimFuncs(lua_State *lua)
     lua_register(lua, "copyMeshFromModelToModel", lua_CopyMeshFromModelToModel);
 
     lua_register(lua, "getEntityAnim", lua_GetEntityAnim);
+    lua_register(lua, "setEntityBoneVisibility", lua_SetEntityBoneVisibility);
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
     lua_register(lua, "entitySSAnimCopy", lua_EntitySSAnimCopy);
     lua_register(lua, "entitySSAnimEnsureExists", lua_EntitySSAnimEnsureExists);

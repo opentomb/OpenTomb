@@ -746,7 +746,12 @@ end
 
 function mummy_init(id, is_spawned)
     winged_mutant_init(id);
-    --TODO: delete wings  meshes and rigids
+    setEntityBoneVisibility(id, 15, false);      -- wing
+    setEntityBoneVisibility(id, 16, false);
+    setEntityBoneVisibility(id, 17, false);
+    setEntityBoneVisibility(id, 18, false);      -- wing
+    setEntityBoneVisibility(id, 19, false);
+    setEntityBoneVisibility(id, 20, false);
 
     if(is_spawned ~= nil) then
         entity_funcs[id].onSave = function()

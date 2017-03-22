@@ -813,28 +813,30 @@ void CRender::DrawSkyBox(const float modelViewProjectionMatrix[16])
 void CRender::DrawSkeletalModel(const lit_shader_description *shader, struct ss_bone_frame_s *bframe, const float mvMatrix[16], const float mvpMatrix[16])
 {
     ss_bone_tag_p btag = bframe->bone_tags;
-
+    float mvTransform[16];
+    float mvpTransform[16];
     //mvMatrix = modelViewMatrix x entity->transform
     //mvpMatrix = modelViewProjectionMatrix x entity->transform
 
     for(uint16_t i = 0; i < bframe->bone_tag_count; i++, btag++)
     {
-        float mvTransform[16];
-        Mat4_Mat4_mul(mvTransform, mvMatrix, btag->full_transform);
-        qglUniformMatrix4fvARB(shader->model_view, 1, false, mvTransform);
-
-        float mvpTransform[16];
-        Mat4_Mat4_mul(mvpTransform, mvpMatrix, btag->full_transform);
-        qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvpTransform);
-
-        this->DrawMesh(btag->mesh_base, NULL, NULL);
-        if(btag->mesh_slot)
+        if(!btag->is_hidden)
         {
-            this->DrawMesh(btag->mesh_slot, NULL, NULL);
-        }
-        if(btag->mesh_skin && btag->parent)
-        {
-            this->DrawSkinMesh(btag->mesh_skin, btag->parent->mesh_base, btag->transform);
+            Mat4_Mat4_mul(mvTransform, mvMatrix, btag->full_transform);
+            qglUniformMatrix4fvARB(shader->model_view, 1, false, mvTransform);
+            
+            Mat4_Mat4_mul(mvpTransform, mvpMatrix, btag->full_transform);
+            qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvpTransform);
+
+            this->DrawMesh(btag->mesh_base, NULL, NULL);
+            if(btag->mesh_slot)
+            {
+                this->DrawMesh(btag->mesh_slot, NULL, NULL);
+            }
+            if(btag->mesh_skin && btag->parent)
+            {
+                this->DrawSkinMesh(btag->mesh_skin, btag->parent->mesh_base, btag->transform);
+            }
         }
     }
 }

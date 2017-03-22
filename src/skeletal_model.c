@@ -240,6 +240,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
         for(uint16_t i = 0; i < bf->bone_tag_count; i++)
         {
             bf->bone_tags[i].index = i;
+            bf->bone_tags[i].is_hidden = 0x00;
             bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
             bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
             bf->bone_tags[i].mesh_slot = NULL;
