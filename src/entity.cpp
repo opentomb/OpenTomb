@@ -23,9 +23,9 @@ extern "C" {
 #include "engine.h"
 #include "physics.h"
 #include "trigger.h"
-#include "anim_state_control.h"
 #include "character_controller.h"
 #include "gameflow.h"
+#include "inventory.h"
 #include "engine_string.h"
 
 
@@ -60,6 +60,7 @@ entity_p Entity_Create()
     ret->no_fix_skeletal_parts = 0x00000000;
     ret->physics = Physics_CreatePhysicsData(ret->self);
 
+    ret->inventory = NULL;
     ret->character = NULL;
     ret->current_sector = NULL;
 
@@ -105,6 +106,7 @@ void Entity_Clear(entity_p entity)
         Ragdoll_Delete(entity->physics);
         entity->type_flags &= ~ENTITY_TYPE_DYNAMIC;
 
+        Inventory_RemoveAllItems(&entity->inventory);
         if(entity->character)
         {
             Character_Clean(entity);
@@ -432,7 +434,6 @@ void Entity_GhostUpdate(struct entity_s *ent)
 }
 
 
-///@TODO: make experiment with convexSweepTest with spheres: no more iterative cycles;
 int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float ent_move[3], int16_t filter)
 {
     int ret = 0;
@@ -442,7 +443,8 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
     {
         float tmp[3], orig_pos[3];
         float tr[16], ghost_tr[16];
-        float from0[3], from[3], to[3], curr[3], move[3], move_len;
+        float from[3], to[3], curr[3], move[3], move_len;
+        float from_parent[3], offset[3];
 
         vec3_copy(orig_pos, ent->transform + 12);
         for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
@@ -456,12 +458,8 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             }
 
             Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
-            if(i == 0)
-            {
-                vec3_copy(from0, tr + 12);
-            }
             // antitunneling condition for main body parts, needs only in move case
-            if((btag->parent == NULL) || ((btag->body_part & (BODY_PART_BODY_LOW | BODY_PART_BODY_UPPER))))
+            if(btag->parent == NULL)
             {
                 Physics_GetGhostWorldTransform(ent->physics, ghost_tr, m);
                 from[0] = ghost_tr[12 + 0] + ent->transform[12 + 0] - orig_pos[0];
@@ -476,26 +474,28 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             }
             else
             {
-                float offset[3];
+                Mat4_vec3_mul(offset, btag->parent->full_transform, btag->parent->mesh_base->centre);
+                Mat4_vec3_mul(from_parent, ent->transform, offset);
+
                 vec3_copy_inv(offset, btag->mesh_base->centre);
                 Mat4_vec3_rot_macro(from, tr, offset);
-                vec3_add_to(from, from0);
+                vec3_add_to(from, from_parent);
             }
 
             vec3_copy(to, tr + 12)
             vec3_copy(curr, from);
             vec3_sub(move, to, from);
             move_len = vec3_abs(move);
-            if((i == 0) && (move_len > 1024.0))                                 ///@FIXME: magick const 1024.0!
+            if((i == 0) && (move_len > 1024.0f))                                ///@FIXME: magick const 1024.0!
             {
                 break;
             }
-            int iter = (float)(2.0 * move_len / btag->mesh_base->R) + 1;        ///@FIXME (not a critical): magick const 2.0!
+            int iter = (float)(3.0f * move_len / btag->mesh_base->radius) + 1;  ///@FIXME (not a critical): magick const 2.0!
             move[0] /= (float)iter;
             move[1] /= (float)iter;
             move[2] /= (float)iter;
 
-            for(int j = 0; j < iter; j++)
+            for(int j = 0; j <= iter; j++)
             {
                 vec3_copy(tr + 12, curr);
                 Physics_SetGhostWorldTransform(ent->physics, tr, m);
@@ -545,7 +545,7 @@ int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float react
                 t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
                 if(t1 < ent->character->critical_wall_component)
                 {
-                    ent->character->resp.horizontal_collide |= 0x01;
+                    ent->character->state.wall_collide = 0x01;
                 }
             }
         }
@@ -563,8 +563,9 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
     {
         if(move && ent->character)
         {
-            ent->character->resp.horizontal_collide    = 0x00;
-            ent->character->resp.vertical_collide      = 0x00;
+            ent->character->state.floor_collide = 0x00;
+            ent->character->state.ceiling_collide = 0x00;
+            ent->character->state.wall_collide = 0x00;
         }
 
         if(ent->no_fix_all || ent->type_flags & ENTITY_TYPE_DYNAMIC)
@@ -590,30 +591,30 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
                         t1 = (reaction[0] * move[0] + reaction[1] * move[1]) / sqrtf(t2);
                         if(t1 < ent->character->critical_wall_component)
                         {
-                            ent->character->resp.horizontal_collide |= 0x01;
+                            ent->character->state.wall_collide = 0x01;
                         }
                     }
                     else if((reaction[2] * reaction[2] > t1) && (move[2] * move[2] > t2))
                     {
                         if((reaction[2] > 0.0) && (move[2] < 0.0))
                         {
-                            ent->character->resp.vertical_collide |= 0x01;
+                            ent->character->state.floor_collide = 0x01;
                         }
                         else if((reaction[2] < 0.0) && (move[2] > 0.0))
                         {
-                            ent->character->resp.vertical_collide |= 0x02;
+                            ent->character->state.ceiling_collide = 0x01;
                         }
                     }
                 }
 
                 if(ent->character->height_info.ceiling_hit.hit && (reaction[2] < -0.1))
                 {
-                    ent->character->resp.vertical_collide |= 0x02;
+                    ent->character->state.ceiling_collide = 0x01;
                 }
 
                 if(ent->character->height_info.floor_hit.hit && (reaction[2] > 0.1))
                 {
-                    ent->character->resp.vertical_collide |= 0x01;
+                    ent->character->state.floor_collide = 0x01;
                 }
             }
             Entity_GhostUpdate(ent);
@@ -664,16 +665,13 @@ int  Entity_GetSubstanceState(entity_p entity)
 
 void Entity_CheckCollisionCallbacks(entity_p ent)
 {
-    // I do not know why, but without Entity_GhostUpdate(ent); it works pretty slow!
-    Entity_GhostUpdate(ent);
     collision_node_p cn = Physics_GetCurrentCollisions(ent->physics, COLLISION_GROUP_TRIGGERS);
-    for(; cn; cn = cn->next)
+    for(; cn && cn->obj; cn = cn->next)
     {
         // do callbacks here:
         if(cn->obj->object_type == OBJECT_ENTITY)
         {
             entity_p activator = (entity_p)cn->obj->object;
-
             if(activator->callback_flags & ENTITY_CALLBACK_COLLISION)
             {
                 // Activator and entity IDs are swapped in case of collision callback.
@@ -698,7 +696,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
             switch(command->id)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
-                    if(ss_anim->frame_changing_state >= 0x02 && (ss_anim->current_frame >= current_af->max_frame - 1))                   // This command executes ONLY at the end of animation.
+                    if((ss_anim->frame_changing_state >= 0x02) && (ss_anim->current_frame >= current_af->max_frame - 1))   // This command executes ONLY at the end of animation.
                     {
                         float tr[3];
                         Mat4_vec3_rot_macro(tr, entity->transform, command->data);
@@ -722,7 +720,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                 case TR_ANIMCOMMAND_KILL:
                     if(entity->character)
                     {
-                        entity->character->resp.kill = 0x01;
+                        entity->character->state.dead = 0x01;
                     }
                     break;
             };
@@ -736,179 +734,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                 continue;
             }
 
-            switch(effect->id)
-            {
-                case TR_ANIMCOMMAND_PLAYSOUND:
-                    {
-                        int16_t sound_index = 0x3FFF & effect->data;
-                        // Quick workaround for TR3 quicksand.
-                        if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
-                           (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
-                        {
-                            sound_index = 18;
-                        }
-
-                        if(effect->data & TR_ANIMCOMMAND_CONDITION_WATER)
-                        {
-                            if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_WATER_SHALLOW)
-                                Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                        }
-                        else if(effect->data & TR_ANIMCOMMAND_CONDITION_LAND)
-                        {
-                            if(Entity_GetSubstanceState(entity) != ENTITY_SUBSTANCE_WATER_SHALLOW)
-                                Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                        }
-                        else
-                        {
-                            Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                        }
-                    }
-                    break;
-
-                case TR_ANIMCOMMAND_PLAYEFFECT:
-                    // Effects (flipeffects) are various non-typical actions which vary
-                    // across different TR game engine versions. There are common ones,
-                    // however, and currently only these are supported.
-                    {
-                        entity_p player = World_GetPlayer();
-                        switch(effect->data & 0x3FFF)
-                        {
-                            case TR_EFFECT_SHAKESCREEN:
-                                if(player)
-                                {
-                                    float *pos = player->transform + 12;
-                                    float dist = vec3_dist(pos, entity->transform + 12);
-                                    dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE) ? (0) : ((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0f);
-                                    //if(dist > 0)
-                                    //    Cam_Shake(&engine_camera, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
-                                }
-                                break;
-
-                            case TR_EFFECT_CHANGEDIRECTION:
-                                if(ss_anim->frame_changing_state >= 0x01)
-                                {
-                                    entity->angles[0] += 180.0f;
-                                    if(entity->move_type == MOVE_UNDERWATER)
-                                    {
-                                        entity->angles[1] = -entity->angles[1]; // for underwater case
-                                    }
-                                    if(entity->dir_flag == ENT_MOVE_BACKWARD)
-                                    {
-                                        entity->dir_flag = ENT_MOVE_FORWARD;
-                                    }
-                                    else if(entity->dir_flag == ENT_MOVE_FORWARD)
-                                    {
-                                        entity->dir_flag = ENT_MOVE_BACKWARD;
-                                    }
-
-                                    do_skip_frame = true;
-                                }
-                                break;
-
-                            case TR_EFFECT_HIDEOBJECT:
-                                entity->state_flags &= ~ENTITY_STATE_VISIBLE;
-                                break;
-
-                            case TR_EFFECT_SHOWOBJECT:
-                                entity->state_flags |= ENTITY_STATE_VISIBLE;
-                                break;
-
-                            case TR_EFFECT_PLAYSTEPSOUND:
-                                // Please note that we bypass land/water mask, as TR3-5 tends to ignore
-                                // this flag and play step sound in any case on land, ignoring it
-                                // completely in water rooms.
-                                if(!Entity_GetSubstanceState(entity))
-                                {
-                                    // TR3-5 footstep map.
-                                    // We define it here as a magic numbers array, because TR3-5 versions
-                                    // fortunately have no differences in footstep sounds order.
-                                    // Also note that some footstep types mutually share same sound IDs
-                                    // across different TR versions.
-                                    switch(entity->current_sector->material)
-                                    {
-                                        case SECTOR_MATERIAL_MUD:
-                                            Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
-                                            if(World_GetVersion() != TR_IV)
-                                            {
-                                                Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            }
-                                            break;
-
-                                        case SECTOR_MATERIAL_SAND:  // Same as grass
-                                            Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_GRAVEL:
-                                            Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
-                                            if(World_GetVersion() != TR_IV)
-                                            {
-                                                Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            }
-                                            break;
-
-                                        case SECTOR_MATERIAL_WATER: // BYPASS!
-                                            // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
-                                            // Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_WOOD:
-                                            Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_METAL:
-                                            Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_MARBLE:    // TR4 only
-                                            if(World_GetVersion() == TR_IV)
-                                            {
-                                                Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            }
-                                            break;
-
-                                        case SECTOR_MATERIAL_GRASS:     // Same as sand
-                                            Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_CONCRETE:  // DEFAULT SOUND, BYPASS!
-                                            Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_OLDWOOD:   // Same as wood
-                                            Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-
-                                        case SECTOR_MATERIAL_OLDMETAL:  // Same as metal
-                                            Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                            break;
-                                    }
-                                }
-                                break;
-
-                            case TR_EFFECT_BUBBLE:
-                                ///@FIXME: Spawn bubble particle here, when particle system is developed.
-                                if(rand() % 100 > 60)
-                                {
-                                    Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->id);
-                                }
-                                break;
-
-                            default:
-                                ///@FIXME: TODO ALL OTHER EFFECTS!
-                                break;
-                        }
-                    };
-                    break;
-            };
+            do_skip_frame |= Entity_DoFlipEffect(entity, effect->id, effect->data);
         }
 
         if(do_skip_frame)
@@ -922,65 +748,245 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
 }
 
 
+bool Entity_DoFlipEffect(entity_p entity, uint16_t effect_id, int16_t param)
+{
+    bool do_skip_frame = false;
+    switch(effect_id)
+    {
+        case TR_ANIMCOMMAND_PLAYSOUND:
+            {
+                int16_t sound_index = 0x3FFF & param;
+                // Quick workaround for TR3 quicksand.
+                if((Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_CONSUMED) ||
+                   (Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_QUICKSAND_SHALLOW)   )
+                {
+                    sound_index = 18;
+                }
+
+                if(param & TR_ANIMCOMMAND_CONDITION_WATER)
+                {
+                    if(Entity_GetSubstanceState(entity) == ENTITY_SUBSTANCE_WATER_SHALLOW)
+                        Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                }
+                else if(param & TR_ANIMCOMMAND_CONDITION_LAND)
+                {
+                    if(Entity_GetSubstanceState(entity) != ENTITY_SUBSTANCE_WATER_SHALLOW)
+                        Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                }
+                else
+                {
+                    Audio_Send(sound_index, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                }
+            }
+            break;
+
+        case TR_ANIMCOMMAND_PLAYEFFECT:
+            // Effects (flipeffects) are various non-typical actions which vary
+            // across different TR game engine versions. There are common ones,
+            // however, and currently only these are supported.
+            {
+                entity_p player = World_GetPlayer();
+                switch(param & 0x3FFF)
+                {
+                    case TR_EFFECT_SHAKESCREEN:
+                        if(player)
+                        {
+                            float *pos = player->transform + 12;
+                            float dist = vec3_dist(pos, entity->transform + 12);
+                            dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE) ? (0) : ((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0f);
+                            //if(dist > 0)
+                            //    Cam_Shake(&engine_camera, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
+                        }
+                        break;
+
+                    case TR_EFFECT_CHANGEDIRECTION:
+                        {
+                            entity->angles[0] += 180.0f;
+                            if(entity->move_type == MOVE_UNDERWATER)
+                            {
+                                entity->angles[1] = -entity->angles[1]; // for underwater case
+                            }
+                            if(entity->dir_flag == ENT_MOVE_BACKWARD)
+                            {
+                                entity->dir_flag = ENT_MOVE_FORWARD;
+                            }
+                            else if(entity->dir_flag == ENT_MOVE_FORWARD)
+                            {
+                                entity->dir_flag = ENT_MOVE_BACKWARD;
+                            }
+
+                            do_skip_frame = true;
+                        }
+                        break;
+
+                    case TR_EFFECT_HIDEOBJECT:
+                        entity->state_flags &= ~ENTITY_STATE_VISIBLE;
+                        break;
+
+                    case TR_EFFECT_SHOWOBJECT:
+                        entity->state_flags |= ENTITY_STATE_VISIBLE;
+                        break;
+
+                    case TR_EFFECT_PLAYSTEPSOUND:
+                        // Please note that we bypass land/water mask, as TR3-5 tends to ignore
+                        // this flag and play step sound in any case on land, ignoring it
+                        // completely in water rooms.
+                        if(!Entity_GetSubstanceState(entity))
+                        {
+                            // TR3-5 footstep map.
+                            // We define it here as a magic numbers array, because TR3-5 versions
+                            // fortunately have no differences in footstep sounds order.
+                            // Also note that some footstep types mutually share same sound IDs
+                            // across different TR versions.
+                            switch(entity->current_sector->material)
+                            {
+                                case SECTOR_MATERIAL_MUD:
+                                    Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_SNOW:  // TR3 & TR5 only
+                                    if(World_GetVersion() != TR_IV)
+                                    {
+                                        Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    }
+                                    break;
+
+                                case SECTOR_MATERIAL_SAND:  // Same as grass
+                                    Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_GRAVEL:
+                                    Audio_Send(290, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_ICE:   // TR3 & TR5 only
+                                    if(World_GetVersion() != TR_IV)
+                                    {
+                                        Audio_Send(289, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    }
+                                    break;
+
+                                case SECTOR_MATERIAL_WATER: // BYPASS!
+                                    // Audio_Send(17, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_STONE: // DEFAULT SOUND, BYPASS!
+                                    // Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_WOOD:
+                                    Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_METAL:
+                                    Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_MARBLE:    // TR4 only
+                                    if(World_GetVersion() == TR_IV)
+                                    {
+                                        Audio_Send(293, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    }
+                                    break;
+
+                                case SECTOR_MATERIAL_GRASS:     // Same as sand
+                                    Audio_Send(291, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_CONCRETE:  // DEFAULT SOUND, BYPASS!
+                                    Audio_Send(-1, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_OLDWOOD:   // Same as wood
+                                    Audio_Send(292, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+
+                                case SECTOR_MATERIAL_OLDMETAL:  // Same as metal
+                                    Audio_Send(294, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                                    break;
+                            }
+                        }
+                        break;
+
+                    case TR_EFFECT_BUBBLE:
+                        ///@FIXME: Spawn bubble particle here, when particle system is developed.
+                        if(rand() % 100 > 60)
+                        {
+                            Audio_Send(TR_AUDIO_SOUND_BUBBLE, TR_AUDIO_EMITTER_ENTITY, entity->id);
+                        }
+                        break;
+
+                    default:
+                        ///@FIXME: TODO ALL OTHER EFFECTS!
+                        break;
+                }
+            };
+            break;
+    };
+
+    return do_skip_frame;
+}
+
+
 void Entity_ProcessSector(entity_p ent)
 {
-    if(!ent->current_sector) return;
-
     // Calculate both above and below sectors for further usage.
     // Sector below is generally needed for getting proper trigger index,
     // as many triggers tend to be called from the lowest room in a row
     // (e.g. first trapdoor in The Great Wall, etc.)
     // Sector above primarily needed for paranoid cases of monkeyswing.
-
-    room_sector_p highest_sector = Sector_GetHighest(ent->current_sector);
-    room_sector_p lowest_sector  = Sector_GetLowest(ent->current_sector);
-
-    if(ent->character)
+    if(ent->current_sector)
     {
-        ent->character->height_info.walls_climb_dir  = 0;
-        ent->character->height_info.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
-                                                                               SECTOR_FLAG_CLIMB_EAST  |
-                                                                               SECTOR_FLAG_CLIMB_NORTH |
-                                                                               SECTOR_FLAG_CLIMB_SOUTH );
+        room_sector_p highest_sector = Sector_GetHighest(ent->current_sector);
+        room_sector_p lowest_sector  = Sector_GetLowest(ent->current_sector);
 
-        ent->character->height_info.walls_climb     = (ent->character->height_info.walls_climb_dir > 0);
-        ent->character->height_info.ceiling_climb   = 0x00;
-
-        if((highest_sector->flags & SECTOR_FLAG_CLIMB_CEILING) || (lowest_sector->flags & SECTOR_FLAG_CLIMB_CEILING))
+        if(ent->character)
         {
-            ent->character->height_info.ceiling_climb = 0x01;
-        }
+            ent->character->height_info.walls_climb_dir  = 0;
+            ent->character->height_info.walls_climb_dir |= lowest_sector->flags & (SECTOR_FLAG_CLIMB_WEST  |
+                                                                                   SECTOR_FLAG_CLIMB_EAST  |
+                                                                                   SECTOR_FLAG_CLIMB_NORTH |
+                                                                                   SECTOR_FLAG_CLIMB_SOUTH );
 
-        if(lowest_sector->flags & SECTOR_FLAG_DEATH)
-        {
-            switch(ent->move_type)
+            ent->character->height_info.walls_climb     = (ent->character->height_info.walls_climb_dir > 0);
+            ent->character->height_info.ceiling_climb   = 0x00;
+
+            if((highest_sector->flags & SECTOR_FLAG_CLIMB_CEILING) || (lowest_sector->flags & SECTOR_FLAG_CLIMB_CEILING))
             {
-                case MOVE_ON_FLOOR:
-                case MOVE_QUICKSAND:
-                    if(ent->transform[12 + 2] <= lowest_sector->floor + 16)
-                    {
-                        Character_SetParam(ent, PARAM_HEALTH, 0.0);
-                        ent->character->resp.kill = 1;
-                    }
-                    break;
+                ent->character->height_info.ceiling_climb = 0x01;
+            }
 
-                case MOVE_WADE:
-                case MOVE_ON_WATER:
-                case MOVE_UNDERWATER:
-                    Character_SetParam(ent, PARAM_HEALTH, 0.0);
-                    ent->character->resp.kill = 1;
-                    break;
+            if(lowest_sector->flags & SECTOR_FLAG_DEATH)
+            {
+                switch(ent->move_type)
+                {
+                    case MOVE_ON_FLOOR:
+                    case MOVE_QUICKSAND:
+                        if(ent->transform[12 + 2] <= lowest_sector->floor + 16)
+                        {
+                            Character_SetParam(ent, PARAM_HEALTH, 0.0);
+                            ent->character->state.dead = 0x01;
+                        }
+                        break;
+
+                    case MOVE_WADE:
+                    case MOVE_ON_WATER:
+                    case MOVE_UNDERWATER:
+                        Character_SetParam(ent, PARAM_HEALTH, 0.0);
+                        ent->character->state.dead = 0x01;
+                        break;
+                }
             }
         }
-    }
 
-    // If entity either marked as trigger activator (Lara) or heavytrigger activator (other entities),
-    // we try to execute a trigger for this sector.
+        // If entity either marked as trigger activator (Lara) or heavytrigger activator (other entities),
+        // we try to execute a trigger for this sector.
 
-    if(ent->type_flags & (ENTITY_TYPE_TRIGGER_ACTIVATOR | ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR))
-    {
-        // Look up trigger function table and run trigger if it exists.
-        Trigger_DoCommands(lowest_sector->trigger, ent);
+        if(ent->type_flags & (ENTITY_TYPE_TRIGGER_ACTIVATOR | ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR))
+        {
+            // Look up trigger function table and run trigger if it exists.
+            Trigger_DoCommands(lowest_sector->trigger, ent);
+        }
     }
 }
 
@@ -1012,9 +1018,6 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
                     Mat4_vec3_rot_macro(r1, entity->transform, move);
                     vec3_sub(move, r0, r1);
                     vec3_add(entity->transform + 12, entity->transform + 12, move);
-
-                    Entity_GhostUpdate(entity);
-                    Entity_FixPenetrations(entity, move, COLLISION_FILTER_CHARACTER);
                 }
                 else
                 {
@@ -1024,9 +1027,9 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
                     {
                         Mat4_Copy(entity->transform, new_transform);
                     }
-                    Entity_GhostUpdate(entity);
-                    Entity_FixPenetrations(entity, NULL, COLLISION_FILTER_CHARACTER);
                 }
+                Entity_GhostUpdate(entity);
+                Entity_FixPenetrations(entity, NULL, COLLISION_FILTER_CHARACTER);
                 entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
                 Entity_UpdateRigidBody(entity, 1);
             }
@@ -1039,15 +1042,14 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
 }
 
 
-void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
+void Entity_MoveToSink(entity_p entity, struct static_camera_sink_s *sink)
 {
-    static_camera_sink_p sink = World_GetstaticCameraSink(sink_index);
     if(sink)
     {
         float sink_pos[3], *ent_pos = entity->transform + 12;
-        sink_pos[0] = sink->x;
-        sink_pos[1] = sink->y;
-        sink_pos[2] = sink->z + 256.0; // Prevents digging into the floor.
+        sink_pos[0] = sink->pos[0];
+        sink_pos[1] = sink->pos[1];
+        sink_pos[2] = sink->pos[2] + 256.0; // Prevents digging into the floor.
 
         room_sector_p ls = Sector_GetLowest(entity->current_sector);
         room_sector_p hs = Sector_GetHighest(entity->current_sector);
@@ -1060,10 +1062,11 @@ void Entity_MoveToSink(entity_p entity, uint32_t sink_index)
 
         float speed[3];
         vec3_sub(speed, sink_pos, ent_pos);
-        float t = vec3_abs(speed);
-        if(t > 0.001)
+        float dist = vec3_abs(speed);
+        if(dist > 0.001)
         {
-            t = 240.0f * engine_frame_time * ((float)(sink->room_or_strength)) / t;
+            float t = 240.0f * engine_frame_time * ((float)(sink->room_or_strength));
+            t = (t < dist) ? (t / dist) : (1.0f);
 
             ent_pos[0] += speed[0] * t;
             ent_pos[1] += speed[1] * t;

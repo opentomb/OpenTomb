@@ -27,12 +27,12 @@ extern "C" {
 #include "render/camera.h"
 #include "render/render.h"
 #include "script/script.h"
+#include "gui/gui.h"
 #include "vt/vt_level.h"
 #include "game.h"
 #include "audio.h"
 #include "mesh.h"
 #include "skeletal_model.h"
-#include "gui.h"
 #include "entity.h"
 #include "gameflow.h"
 #include "room.h"
@@ -80,7 +80,7 @@ enum debug_view_state_e
     no_debug = 0,
     player_anim,
     sector_info,
-    room_entities,
+    room_objects,
     bsp_info,
     model_view,
     debug_states_count
@@ -177,10 +177,10 @@ void Engine_Start(int argc, char **argv)
         }
     }
 
-    Engine_LoadConfig(config_name ? config_name : "config.lua");
-
     // Primary initialization.
     Engine_Init_Pre();
+
+    Engine_LoadConfig(config_name ? config_name : "config.lua");
 
     // Init generic SDL interfaces.
     Engine_InitSDLControls();
@@ -551,7 +551,7 @@ void Engine_InitSDLControls()
 
 void Engine_LoadConfig(const char *filename)
 {
-    if((filename != NULL) && Sys_FileFound(filename, 0))
+    if(filename && Sys_FileFound(filename, 0))
     {
         lua_State *lua = luaL_newstate();
         if(lua != NULL)
@@ -572,7 +572,7 @@ void Engine_LoadConfig(const char *filename)
     }
     else
     {
-        Sys_Warn("Could not find \"%s\"", filename);
+        Sys_Warn("Could not find config file");
     }
 }
 
@@ -766,7 +766,7 @@ void Engine_PollSDLEvents()
 
             case SDL_KEYUP:
             case SDL_KEYDOWN:
-                if( (event.key.keysym.sym == SDLK_F4) &&
+                if( (event.key.keysym.scancode == SDL_SCANCODE_F4) &&
                     (event.key.state == SDL_PRESSED)  &&
                     (event.key.keysym.mod & KMOD_ALT) )
                 {
@@ -797,12 +797,12 @@ void Engine_PollSDLEvents()
                 }
                 else
                 {
-                    Controls_Key(event.key.keysym.sym, event.key.state);
+                    Controls_Key(event.key.keysym.scancode, event.key.state);
                     // DEBUG KEYBOARD COMMANDS
-                    Controls_DebugKeys(event.key.keysym.sym, event.key.state);
+                    Controls_DebugKeys(event.key.keysym.scancode, event.key.state);
                     if((screen_info.debug_view_state == debug_view_state_e::model_view) && event.key.state)
                     {
-                        TestModelApplyKey(event.key.keysym.sym);
+                        TestModelApplyKey(event.key.keysym.scancode);
                     }
                 }
                 break;
@@ -902,24 +902,24 @@ void TestModelApplyKey(int key)
 {
     switch(key)
     {
-        case SDLK_LEFTBRACKET:
+        case SDL_SCANCODE_LEFTBRACKET:
             test_model_index--;
             SetTestModel(test_model_index);
             break;
 
-        case SDLK_RIGHTBRACKET:
+        case SDL_SCANCODE_RIGHTBRACKET:
             test_model_index++;
             SetTestModel(test_model_index);
             break;
 
-        case SDLK_o:
+        case SDL_SCANCODE_O:
             if(test_model.animations.current_animation > 0)
             {
                 Anim_SetAnimation(&test_model.animations, test_model.animations.current_animation - 1, 0);
             }
             break;
 
-        case SDLK_p:
+        case SDL_SCANCODE_P:
             Anim_SetAnimation(&test_model.animations, test_model.animations.current_animation + 1, 0);
             break;
 
@@ -967,7 +967,7 @@ void ShowModelView()
         float subModelView[16], subModelViewProjection[16];
         float *cam_pos = engine_camera.gl_transform + 12;
         animation_frame_p af = sm->animations + test_model.animations.current_animation;
-        const int current_light_number = 1;
+        const int current_light_number = 0;
         const lit_shader_description *shader = renderer.shaderManager->getEntityShader(current_light_number);
 
         if(control_states.look_right || control_states.move_right)
@@ -1031,15 +1031,7 @@ void ShowModelView()
 
         {
             GLfloat ambient_component[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-            GLfloat colors[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-            GLfloat positions[3] = {16384.0f, 16384.0f, 16384.0f};
-            GLfloat innerRadiuses = 128.0f;
-            GLfloat outerRadiuses = 32768.0f;
             qglUniform4fvARB(shader->light_ambient, 1, ambient_component);
-            qglUniform4fvARB(shader->light_color, current_light_number, colors);
-            qglUniform3fvARB(shader->light_position, current_light_number, positions);
-            qglUniform1fvARB(shader->light_inner_radius, current_light_number, &innerRadiuses);
-            qglUniform1fvARB(shader->light_outer_radius, current_light_number, &outerRadiuses);
         }
         renderer.DrawSkeletalModel(shader, &test_model, subModelView, subModelViewProjection);
         renderer.debugDrawer->DrawAxis(4096.0f, tr);
@@ -1083,7 +1075,7 @@ void ShowDebugInfo()
     float y = (float)screen_info.h;
     const float dy = -18.0f * screen_info.scale_factor;
 
-    if(last_cont)
+    if(last_cont && (screen_info.debug_view_state != debug_view_state_e::model_view))
     {
         GLText_OutTextXY(30.0f, y += dy, "VIEW: Selected object");
         switch(last_cont->object_type)
@@ -1219,13 +1211,14 @@ void ShowDebugInfo()
             }
             break;
 
-        case debug_view_state_e::room_entities:
+        case debug_view_state_e::room_objects:
             {
                 entity_p ent = World_GetPlayer();
-                GLText_OutTextXY(30.0f, y += dy, "VIEW: Room entities");
+                GLText_OutTextXY(30.0f, y += dy, "VIEW: Room objects");
                 if(ent && ent->self->room)
                 {
-                    for(engine_container_p cont = ent->self->room->content->containers; cont; cont = cont->next)
+                    room_p r = ent->self->room;
+                    for(engine_container_p cont = r->content->containers; cont; cont = cont->next)
                     {
                         if(cont->object_type == OBJECT_ENTITY)
                         {
@@ -1235,6 +1228,16 @@ void ShowDebugInfo()
                             {
                                 text->x_align = GLTEXT_ALIGN_CENTER;
                             }
+                        }
+                    }
+
+                    for(uint32_t i = 0; i < r->content->static_mesh_count; ++i)
+                    {
+                        static_mesh_p sm = r->content->static_mesh + i;
+                        gl_text_line_p text = renderer.OutTextXYZ(sm->pos[0], sm->pos[1], sm->pos[2], "(static[0x%X])", sm->object_id);
+                        if(text)
+                        {
+                            text->x_align = GLTEXT_ALIGN_CENTER;
                         }
                     }
                 }
@@ -1315,7 +1318,7 @@ void Engine_GetLevelName(char *name, const char *path)
 }
 
 
-void Engine_GetLevelScriptNameLocal(int game_version, char *name, const char *postfix, uint32_t buf_size)
+void Engine_GetLevelScriptNameLocal(int game_version, char *name, uint32_t buf_size)
 {
     char level_name[LEVEL_NAME_MAX_LEN];
     Engine_GetLevelName(level_name, gameflow.getCurrentLevelPathLocal());
@@ -1350,10 +1353,6 @@ void Engine_GetLevelScriptNameLocal(int game_version, char *name, const char *po
     }
 
     strncat(name, level_name, buf_size);
-    if(postfix)
-    {
-        strncat(name, postfix, buf_size);
-    }
     strncat(name, ".lua", buf_size);
 }
 

@@ -1,0 +1,23 @@
+
+#ifndef STATE_CONTROL_PIERRE_H
+#define STATE_CONTROL_PIERRE_H
+
+/*
+ *  ====== PIERRE'S ANIMATIONS ======
+ */
+#define TR_ANIMATION_PIERRE_STAY 0
+#define TR_ANIMATION_PIERRE_STOP_SHOOTING 4
+#define TR_ANIMATION_PIERRE_DEAD 12
+
+//   ====== PIERRE'S STATES ======
+
+#define TR_STATE_PIERRE_STAY 1  // -> 2 -> 3 -> 4 -> 6
+#define TR_STATE_PIERRE_WALK 2  // -> 1
+#define TR_STATE_PIERRE_RUN 3   // -> 1
+#define TR_STATE_PIERRE_AIM 4   // -> 1 -> 7
+#define TR_STATE_PIERRE_DEAD 5
+#define TR_STATE_PIERRE_STAY_QUEUED 6// -> 1
+#define TR_STATE_PIERRE_SHOOT 7
+
+#endif
+

@@ -1,0 +1,26 @@
+
+#ifndef STATE_CONTROL_LION_H
+#define STATE_CONTROL_LION_H
+
+/*
+ *  ====== LION'S ANIMATIONS ======
+ */
+#define TR_ANIMATION_LION_STAY 0
+#define TR_ANIMATION_LION_WALK 2
+#define TR_ANIMATION_LION_RUN 4
+#define TR_ANIMATION_LION_DEAD1 7
+#define TR_ANIMATION_LION_DEAD2 8
+#define TR_ANIMATION_LION_ATTACK 11
+#define TR_ANIMATION_LION_ARRRR 12
+
+//   ====== LION'S STATES ======
+#define TR_STATE_LION_STAY 1  // -> 2 -> 3 -> 4 -> 6 -> 7
+#define TR_STATE_LION_WALK 2  // -> 1
+#define TR_STATE_LION_RUN 3   // -> 1
+#define TR_STATE_LION_JUMP_ATTACK 4
+#define TR_STATE_LION_DEAD 5
+#define TR_STATE_LION_ARRRR 6
+#define TR_STATE_LION_STAY_ATTACK 7
+
+#endif
+

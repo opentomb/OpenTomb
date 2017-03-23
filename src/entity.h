@@ -3,6 +3,7 @@
 #define ENTITY_H
 
 #include <stdint.h>
+#include <stdlib.h>
 
 struct room_sector_s;
 struct obb_s;
@@ -10,6 +11,7 @@ struct character_s;
 struct ss_animation_s;
 struct ss_bone_frame_s;
 struct physics_data_s;
+struct inventory_node_s;
 
 #define ENTITY_ID_NONE                              (0xFFFFFFFF)
 
@@ -29,6 +31,72 @@ struct physics_data_s;
 #define ENTITY_TYPE_ACTOR                           (0x0080)    // Is actor.
 
 #define ENTITY_TYPE_SPAWNED                         (0x8000)    // Was spawned.
+
+/*
+ * SURFACE MOVEMENT DIRECTIONS
+ */
+#define ENT_STAY 0x00000000
+#define ENT_MOVE_FORWARD 0x00000001
+#define ENT_MOVE_BACKWARD 0x00000002
+#define ENT_MOVE_LEFT 0x00000004
+#define ENT_MOVE_RIGHT 0x00000008
+#define ENT_MOVE_JUMP 0x00000010
+#define ENT_MOVE_CROUCH 0x00000020
+
+//   ====== ANIMATION COMMANDS ======
+#define TR_ANIMCOMMAND_SETPOSITION  1
+#define TR_ANIMCOMMAND_JUMPDISTANCE 2
+#define TR_ANIMCOMMAND_EMPTYHANDS   3
+#define TR_ANIMCOMMAND_KILL         4
+#define TR_ANIMCOMMAND_PLAYSOUND    5
+#define TR_ANIMCOMMAND_PLAYEFFECT   6
+#define TR_ANIMCOMMAND_INTERACT     7
+
+//   ====== ANIMATION EFFECTS FLAGS ======
+#define TR_ANIMCOMMAND_CONDITION_LAND  0x4000
+#define TR_ANIMCOMMAND_CONDITION_WATER 0X8000
+
+//   ====== ANIMATION EFFECTS / FLIPEFFECTS ======
+#define TR_EFFECT_CHANGEDIRECTION       0
+#define TR_EFFECT_SHAKESCREEN           1
+#define TR_EFFECT_PLAYFLOODSOUND        2
+#define TR_EFFECT_BUBBLE                3
+#define TR_EFFECT_ENDLEVEL              4
+#define TR_EFFECT_ACTIVATECAMERA        5
+#define TR_EFFECT_ACTIVATEKEY           6
+#define TR_EFFECT_ENABLEEARTHQUAKES     7
+#define TR_EFFECT_GETCROWBAR            8
+#define TR_EFFECT_CURTAINFX             9  // Effect 9 is empty in TR4.
+#define TR_EFFECT_PLAYSOUND_TIMERFIELD  10
+#define TR_EFFECT_PLAYEXPLOSIONSOUND    11
+#define TR_EFFECT_DISABLEGUNS           12
+#define TR_EFFECT_ENABLEGUNS            13
+#define TR_EFFECT_GETRIGHTGUN           14
+#define TR_EFFECT_GETLEFTGUN            15
+#define TR_EFFECT_FIRERIGHTGUN          16
+#define TR_EFFECT_FIRELEFTGUN           17
+#define TR_EFFECT_MESHSWAP1             18
+#define TR_EFFECT_MESHSWAP2             19
+#define TR_EFFECT_MESHSWAP3             20
+#define TR_EFFECT_INV_ON                21 // Effect 21 is unknown at offset 4376F0.
+#define TR_EFFECT_INV_OFF               22 // Effect 22 is unknown at offset 437700.
+#define TR_EFFECT_HIDEOBJECT            23
+#define TR_EFFECT_SHOWOBJECT            24
+#define TR_EFFECT_STATUEFX              25 // Effect 25 is empty in TR4.
+#define TR_EFFECT_RESETHAIR             26
+#define TR_EFFECT_BOILERFX              27 // Effect 27 is empty in TR4.
+#define TR_EFFECT_SETFOGCOLOUR          28
+#define TR_EFFECT_GHOSTTRAP             29 // Effect 29 is unknown at offset 4372F0
+#define TR_EFFECT_LARALOCATION          30
+#define TR_EFFECT_CLEARSCARABS          31
+#define TR_EFFECT_PLAYSTEPSOUND         32 // Also called FOOTPRINT_FX in TR4 source code.
+
+// Effects 33 - 42 are assigned to FLIP_MAP0-FLIP_MAP9 in TR4 source code,
+// but are empty in TR4 binaries.
+#define TR_EFFECT_GETWATERSKIN          43
+#define TR_EFFECT_REMOVEWATERSKIN       44
+#define TR_EFFECT_LARALOCATIONPAD       45
+#define TR_EFFECT_KILLALLENEMIES        46
 
 #define ENTITY_CALLBACK_NONE                        (0x00000000)
 #define ENTITY_CALLBACK_ACTIVATE                    (0x00000001)
@@ -96,6 +164,7 @@ typedef struct entity_s
 
     float                               activation_offset[4];       // where we can activate object (dx, dy, dz, r)
     float                               activation_direction[4];    // direction_xyz, cos(lim)
+    struct inventory_node_s            *inventory;
     struct character_s                 *character;
 }entity_t, *entity_p;
 
@@ -131,9 +200,10 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
 
 void Entity_CheckCollisionCallbacks(entity_p ent);
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim);
+bool Entity_DoFlipEffect(entity_p entity, uint16_t effect_id, int16_t param);
 void Entity_ProcessSector(entity_p ent);
 void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int frame, float new_transform[16] = NULL);
-void Entity_MoveToSink(entity_p entity, uint32_t sink_index);
+void Entity_MoveToSink(entity_p entity, struct static_camera_sink_s *sink);
 void Entity_MoveForward(entity_p ent, float dist);
 void Entity_MoveStrafe(entity_p ent, float dist);
 void Entity_MoveVertical(entity_p ent, float dist);

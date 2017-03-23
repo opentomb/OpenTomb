@@ -1,0 +1,24 @@
+
+#ifndef STATE_CONTROL_LARSON_H
+#define STATE_CONTROL_LARSON_H
+
+/*
+ *  ====== LARSON'S ANIMATIONS ======
+ */
+#define TR_ANIMATION_LARSON_STAY 0
+#define TR_ANIMATION_LARSON_STOP_SHOOTING 4
+#define TR_ANIMATION_LARSON_STAY_QUEUED 9
+#define TR_ANIMATION_LARSON_DEAD 15
+
+//   ====== LARSON'S STATES ======
+
+#define TR_STATE_LARSON_STAY 1  // -> 2 -> 3 -> 4 -> 6
+#define TR_STATE_LARSON_WALK 2  // -> 1
+#define TR_STATE_LARSON_RUN 3   // -> 1
+#define TR_STATE_LARSON_AIM 4   // -> 1 -> 7
+#define TR_STATE_LARSON_DEAD 5
+#define TR_STATE_LARSON_STAY_QUEUED 6// -> 1
+#define TR_STATE_LARSON_SHOOT 7
+
+#endif
+

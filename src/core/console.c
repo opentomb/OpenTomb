@@ -26,9 +26,9 @@ static struct
     uint16_t                    log_pos;                    // Current log position
     char                      **log_lines;                  // Console lines
 
-    uint16_t                    line_count;                 // Amount of shown lines
-    uint16_t                   *line_style_id;
-    char                      **line_text;                  // Console text
+    uint16_t                    lines_count;                // Amount of shown lines
+    uint16_t                   *lines_style_id;
+    char                      **lines_text;                 // Console text
 
     int                       (*exec_cmd)(char *ch);        // Exec function pointer
 
@@ -55,6 +55,7 @@ static GLuint                   cursorBuffer = 0;
 static void Con_FillBackgroundBuffer();
 static void Con_DrawBackground();
 static void Con_DrawCursor();
+inline void Con_ResizeLineStr(char **str_ptr, size_t min_size, size_t new_size);
 
 void Con_Init()
 {
@@ -65,13 +66,13 @@ void Con_Init()
     con_base.log_pos = 0;
 
     // lines count check
-    if(con_base.line_count < CON_MIN_LINES)
+    if(con_base.lines_count < CON_MIN_LINES)
     {
-        con_base.line_count = CON_MIN_LINES;
+        con_base.lines_count = CON_MIN_LINES;
     }
-    if(con_base.line_count > CON_MAX_LINES)
+    if(con_base.lines_count > CON_MAX_LINES)
     {
-        con_base.line_count = CON_MAX_LINES;
+        con_base.lines_count = CON_MAX_LINES;
     }
 
     // log size check
@@ -89,9 +90,9 @@ void Con_Init()
     {
         con_base.showing_lines = CON_MIN_LINES;
     }
-    if(con_base.showing_lines > con_base.line_count)
+    if(con_base.showing_lines > con_base.lines_count)
     {
-        con_base.showing_lines = con_base.line_count;
+        con_base.showing_lines = con_base.lines_count;
     }
 
     // spacing check
@@ -114,13 +115,13 @@ void Con_Init()
         con_base.line_size = CON_MAX_LINE_SIZE;
     }
 
-    con_base.line_text  = (char**)malloc(con_base.line_count*sizeof(char*));
-    con_base.line_style_id = (uint16_t*)malloc(con_base.line_count * sizeof(uint16_t));
+    con_base.lines_text  = (char**)malloc(con_base.lines_count*sizeof(char*));
+    con_base.lines_style_id = (uint16_t*)malloc(con_base.lines_count * sizeof(uint16_t));
 
-    for(i = 0; i < con_base.line_count; i++)
+    for(i = 0; i < con_base.lines_count; i++)
     {
-        con_base.line_text[i]  = (char*) calloc(con_base.line_size*sizeof(char), 1);
-        con_base.line_style_id[i] = FONTSTYLE_GENERIC;
+        con_base.lines_text[i]  = (char*) calloc(con_base.line_size * sizeof(char), 1);
+        con_base.lines_style_id[i] = FONTSTYLE_GENERIC;
     }
 
     con_base.log_lines = (char**) realloc(con_base.log_lines, con_base.log_lines_count * sizeof(char*));
@@ -165,12 +166,12 @@ void Con_InitGlobals()
     con_base.log_lines       = NULL;
 
     con_base.spacing         = CON_MIN_LINE_INTERVAL;
-    con_base.line_count      = CON_MIN_LINES;
+    con_base.lines_count     = CON_MIN_LINES;
     con_base.line_size       = CON_MIN_LINE_SIZE;
-    con_base.line_text       = NULL;
-    con_base.line_style_id   = NULL;
+    con_base.lines_text      = NULL;
+    con_base.lines_style_id  = NULL;
 
-    con_base.showing_lines = con_base.line_count;
+    con_base.showing_lines = con_base.lines_count;
     con_base.show_cursor_period = 0.5f;
     con_base.cursor_pos = 0;
 }
@@ -180,12 +181,12 @@ void Con_Destroy()
 {
     uint16_t i;
 
-    for(i = 0; i < con_base.line_count; i++)
+    for(i = 0; i < con_base.lines_count; i++)
     {
-        free(con_base.line_text[i]);
+        free(con_base.lines_text[i]);
     }
-    free(con_base.line_text);
-    free(con_base.line_style_id);
+    free(con_base.lines_text);
+    free(con_base.lines_style_id);
 
     for(i = 0; i < con_base.log_lines_count; i++)
     {
@@ -236,7 +237,7 @@ uint16_t Con_GetShowingLines()
 
 void Con_SetShowingLines(uint16_t value)
 {
-    if((value >= 2) && (value <= con_base.line_count))
+    if((value >= 2) && (value <= con_base.lines_count))
     {
         con_base.showing_lines = value;
         con_base.cursor_y = screen_info.h - con_base.line_height * con_base.showing_lines;
@@ -258,26 +259,100 @@ void Con_SetShowCursorPeriod(float time)
 
 void Con_SetLinesCount(uint16_t count)
 {
-    if((count >= CON_MIN_LINES) && (count <= CON_MAX_LINES) && (con_base.line_text == NULL))
+    if((count >= CON_MIN_LINES) && (count <= CON_MAX_LINES))
     {
-        con_base.line_count = count;
+        if(con_base.lines_text)
+        {
+            char **new_lines = (char**)malloc(count * sizeof(char*));
+            char **old_lines = con_base.lines_text;
+            uint16_t *new_styles = (uint16_t*)malloc(count * sizeof(uint16_t));
+            uint16_t *old_styles = con_base.lines_style_id;
+            
+            for(uint16_t i = 0; i < count; i++)
+            {
+                new_lines[i] = (i < con_base.lines_count) ? (old_lines[i]) : ((char*)calloc(con_base.line_size * sizeof(char), 1));
+                new_styles[i] = (i < con_base.lines_count) ? (old_styles[i]) : (FONTSTYLE_GENERIC);
+            }
+            for(uint16_t i = count; i < con_base.lines_count; i++)
+            {
+                free(old_lines[i]);
+            }
+            con_base.lines_text = new_lines;
+            con_base.lines_style_id = new_styles;
+            free(old_lines);
+            free(old_styles);
+        }
+        con_base.log_pos = 0;
+        con_base.lines_count = count;
     }
 }
 
 
 void Con_SetLogLinesCount(uint16_t count)
 {
-    if((count >= CON_MIN_LOG) && (count <= CON_MAX_LOG) && (con_base.log_lines == NULL))
+    if((count >= CON_MIN_LOG) && (count <= CON_MAX_LOG))
     {
+        if(con_base.log_lines)
+        {
+            char **new_lines = (char**)malloc(count * sizeof(char*));
+            char **old_lines = con_base.log_lines;
+            for(uint16_t i = 0; i < count; i++)
+            {
+                new_lines[i] = (i < con_base.log_lines_count) ? (old_lines[i]) : ((char*)calloc(con_base.line_size * sizeof(char), 1));
+            }
+            for(uint16_t i = count; i < con_base.log_lines_count; i++)
+            {
+                free(old_lines[i]);
+            }
+            con_base.log_lines = new_lines;
+            free(old_lines);
+        }
+        con_base.log_pos = 0;
         con_base.log_lines_count = count;
+    }
+}
+
+void Con_ResizeLineStr(char **str_ptr, size_t min_size, size_t new_size)
+{
+    char *new_line = (char*)malloc(new_size * sizeof(char));
+    char *old_line = *str_ptr;
+    if(old_line)
+    {
+        memcpy(new_line, old_line, min_size);
+        new_line[new_size - 1] = 0;
+       *str_ptr = new_line;
+        free(old_line);
+    }
+    else
+    {
+        new_line[0] = 0;
+       *str_ptr = new_line;
     }
 }
 
 
 void Con_SetMaxLineLenght(uint16_t line_size)
 {
-    if((line_size >= CON_MIN_LINE_SIZE) && (line_size <= CON_MAX_LINE_SIZE) && (con_base.line_text == NULL) && (con_base.log_lines == NULL))
+    if((line_size >= CON_MIN_LINE_SIZE) && (line_size <= CON_MAX_LINE_SIZE))
     {
+        uint16_t min_line_size = (con_base.line_size < line_size) ? (con_base.line_size) : (line_size);
+
+        if(con_base.lines_text)
+        {
+            for(uint16_t i = 0; i < con_base.lines_count; i++)
+            {
+                Con_ResizeLineStr(con_base.lines_text + i, min_line_size, line_size);
+            }
+        }
+
+        if(con_base.log_lines)
+        {
+            for(uint16_t i = 0; i < con_base.log_lines_count; i++)
+            {
+                Con_ResizeLineStr(con_base.log_lines + i, min_line_size, line_size);
+            }
+        }
+        con_base.cursor_pos = 0;
         con_base.line_size = line_size;
     }
 }
@@ -305,14 +380,14 @@ void Con_Edit(int key)
         return;
     }
 
-    if((key == SDLK_RETURN) && con_base.line_text[0])
+    if((key == SDLK_RETURN) && con_base.lines_text[0])
     {
-        Con_AddLog(con_base.line_text[0]);
-        if(con_base.exec_cmd && !con_base.exec_cmd(con_base.line_text[0]))
+        Con_AddLog(con_base.lines_text[0]);
+        if(con_base.exec_cmd && !con_base.exec_cmd(con_base.lines_text[0]))
         {
             //Con_AddLine(con_base.text[0]);
         }
-        con_base.line_text[0][0] = 0;
+        con_base.lines_text[0][0] = 0;
         con_base.cursor_pos = 0;
         con_base.cursor_x = 8 + 1;
         Con_CalcCursorPosition();
@@ -322,7 +397,7 @@ void Con_Edit(int key)
     con_base.cursor_time = 0.0f;
     con_base.show_cursor = 1;
 
-    int16_t oldLength = utf8_strlen(con_base.line_text[0]);    // int16_t is absolutly enough
+    int16_t oldLength = utf8_strlen(con_base.lines_text[0]);    // int16_t is absolutly enough
 
     switch(key)
     {
@@ -330,13 +405,13 @@ void Con_Edit(int key)
             //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUPAGE));
             if(*con_base.log_lines[con_base.log_pos])
             {
-                strncpy(con_base.line_text[0], con_base.log_lines[con_base.log_pos], con_base.line_size);
+                strncpy(con_base.lines_text[0], con_base.log_lines[con_base.log_pos], con_base.line_size);
                 con_base.log_pos++;
                 if((!*con_base.log_lines[con_base.log_pos]) || (con_base.log_pos >= con_base.log_lines_count))
                 {
                     con_base.log_pos = 0;
                 }
-                con_base.cursor_pos = utf8_strlen(con_base.line_text[0]);
+                con_base.cursor_pos = utf8_strlen(con_base.lines_text[0]);
             }
             break;
 
@@ -348,9 +423,9 @@ void Con_Edit(int key)
             }
             if((con_base.log_pos > 0) && *con_base.log_lines[con_base.log_pos-1])
             {
-                strncpy(con_base.line_text[0], con_base.log_lines[con_base.log_pos-1], con_base.line_size);
+                strncpy(con_base.lines_text[0], con_base.log_lines[con_base.log_pos-1], con_base.line_size);
                 con_base.log_pos--;
-                con_base.cursor_pos = utf8_strlen(con_base.line_text[0]);
+                con_base.cursor_pos = utf8_strlen(con_base.lines_text[0]);
             }
             break;
 
@@ -380,21 +455,21 @@ void Con_Edit(int key)
             if(con_base.cursor_pos > 0)
             {
                 con_base.cursor_pos--;
-                utf8_delete_char((uint8_t*)con_base.line_text[0], con_base.cursor_pos);
+                utf8_delete_char((uint8_t*)con_base.lines_text[0], con_base.cursor_pos);
             }
             break;
 
         case SDLK_DELETE:
             if(/*(con_base.cursor_pos > 0) && */(con_base.cursor_pos < oldLength))
             {
-                utf8_delete_char((uint8_t*)con_base.line_text[0], con_base.cursor_pos);
+                utf8_delete_char((uint8_t*)con_base.lines_text[0], con_base.cursor_pos);
             }
             break;
 
         default:
             if((oldLength < con_base.line_size-1) && (key >= SDLK_SPACE))
             {
-                utf8_insert_char((uint8_t*)con_base.line_text[0], key, con_base.cursor_pos, con_base.line_size);
+                utf8_insert_char((uint8_t*)con_base.lines_text[0], key, con_base.cursor_pos, con_base.line_size);
                 ++oldLength;
                 con_base.cursor_pos++;
             }
@@ -414,7 +489,7 @@ void Con_CalcCursorPosition()
         GLint y = con_base.cursor_y + con_base.line_height;
 
         v = cursor_array;
-        con_base.cursor_x = 8 + 1 + glf_get_string_len(gl_font, con_base.line_text[0], con_base.cursor_pos);
+        con_base.cursor_x = 8 + 1 + glf_get_string_len(gl_font, con_base.lines_text[0], con_base.cursor_pos);
 
        *v++ = (GLfloat)con_base.cursor_x;
        *v++ = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;
@@ -464,18 +539,18 @@ void Con_AddLine(const char *text, uint16_t font_style)
         size_t len = 0;
         do
         {
-            char *last = con_base.line_text[con_base.line_count-1];             // save pointer to the last log string
+            char *last = con_base.lines_text[con_base.lines_count-1];             // save pointer to the last log string
             len = strlen(text);
-            for(uint16_t i = con_base.line_count - 1; i > 1; i--)               // shift log
+            for(uint16_t i = con_base.lines_count - 1; i > 1; i--)               // shift log
             {
-                con_base.line_style_id[i] = con_base.line_style_id[i - 1];
-                con_base.line_text[i]  = con_base.line_text[i - 1];             // shift is round
+                con_base.lines_style_id[i] = con_base.lines_style_id[i - 1];
+                con_base.lines_text[i]  = con_base.lines_text[i - 1];             // shift is round
             }
 
-            con_base.line_text[1] = last;                                       // cycle the shift
-            con_base.line_style_id[1] = font_style;
-            strncpy(con_base.line_text[1], text, con_base.line_size);
-            con_base.line_text[1][con_base.line_size - 1] = 0;                  // paranoid end of string
+            con_base.lines_text[1] = last;                                       // cycle the shift
+            con_base.lines_style_id[1] = font_style;
+            strncpy(con_base.lines_text[1], text, con_base.line_size);
+            con_base.lines_text[1][con_base.line_size - 1] = 0;                  // paranoid end of string
             text += con_base.line_size - 1;
         }
         while(len >= con_base.line_size);
@@ -573,10 +648,10 @@ void Con_UpdateResize()
 
 void Con_Clean()
 {
-    for(uint16_t i = 0; i < con_base.line_count; i++)
+    for(uint16_t i = 0; i < con_base.lines_count; i++)
     {
-        con_base.line_text[i][0]  = 0;
-        con_base.line_style_id[i] = FONTSTYLE_GENERIC;
+        con_base.lines_text[i][0]  = 0;
+        con_base.lines_style_id[i] = FONTSTYLE_GENERIC;
     }
 }
 
@@ -599,12 +674,12 @@ void Con_Draw(float time)
 
         for(uint16_t i = 0; i < con_base.showing_lines; i++)
         {
-            gl_fontstyle_p style = GLText_GetFontStyle(con_base.line_style_id[i]);
+            gl_fontstyle_p style = GLText_GetFontStyle(con_base.lines_style_id[i]);
             y += con_base.line_height;
             if(style)
             {
                 vec4_copy(gl_font->gl_font_color, style->font_color);
-                glf_render_str(gl_font, (GLfloat)x, (GLfloat)y, con_base.line_text[i]);
+                glf_render_str(gl_font, (GLfloat)x, (GLfloat)y, con_base.lines_text[i]);
             }
         }
     }

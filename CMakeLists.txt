@@ -34,6 +34,8 @@ set(OPENTOMB_SRCS
     src/core/utf8_32.h
     src/core/vmath.c
     src/core/vmath.h
+    src/gui/gui.cpp
+    src/gui/gui.h
     src/render/bordered_texture_atlas.cpp
     src/render/bordered_texture_atlas.h
     src/render/bsp_tree.cpp
@@ -72,8 +74,48 @@ set(OPENTOMB_SRCS
     src/vt/vt_level.h
     src/vt/tr_types.h
     src/vt/tr_versions.h
-    src/anim_state_control.cpp
-    src/anim_state_control.h
+    src/state_control/state_control.h
+    src/state_control/state_control.cpp
+    src/state_control/state_control_Lara.h
+    src/state_control/state_control_Lara.cpp
+    src/state_control/state_control_bat.h
+    src/state_control/state_control_bat.cpp
+    src/state_control/state_control_wolf.h
+    src/state_control/state_control_wolf.cpp
+    src/state_control/state_control_bear.h
+    src/state_control/state_control_bear.cpp
+    src/state_control/state_control_raptor.h
+    src/state_control/state_control_raptor.cpp
+    src/state_control/state_control_trex.h
+    src/state_control/state_control_trex.cpp
+    src/state_control/state_control_Larson.h
+    src/state_control/state_control_Larson.cpp
+    src/state_control/state_control_Pierre.h
+    src/state_control/state_control_Pierre.cpp
+    src/state_control/state_control_lion.h
+    src/state_control/state_control_lion.cpp
+    src/state_control/state_control_gorilla.h
+    src/state_control/state_control_gorilla.cpp
+    src/state_control/state_control_crocodile.h
+    src/state_control/state_control_crocodile.cpp
+    src/state_control/state_control_rat.h
+    src/state_control/state_control_rat.cpp
+    src/state_control/state_control_centaur.h
+    src/state_control/state_control_centaur.cpp
+    src/state_control/state_control_puma.h
+    src/state_control/state_control_puma.cpp
+    src/state_control/state_control_winged_mutant.h
+    src/state_control/state_control_winged_mutant.cpp
+    src/state_control/state_control_MrT.h
+    src/state_control/state_control_MrT.cpp
+    src/state_control/state_control_cowboy.h
+    src/state_control/state_control_cowboy.cpp
+    src/state_control/state_control_skateboardist.h
+    src/state_control/state_control_skateboardist.cpp
+    src/state_control/state_control_torso_boss.h
+    src/state_control/state_control_torso_boss.cpp
+    src/state_control/state_control_Natla.h
+    src/state_control/state_control_Natla.cpp
     src/audio.cpp
     src/audio.h
     src/character_controller.cpp
@@ -90,8 +132,6 @@ set(OPENTOMB_SRCS
     src/game_camera.cpp
     src/gameflow.cpp
     src/gameflow.h
-    src/gui.cpp
-    src/gui.h
     src/inventory.cpp
     src/inventory.h
     src/image.cpp

@@ -59,6 +59,7 @@ typedef struct ss_bone_tag_s
 {
     struct ss_bone_tag_s   *parent;
     uint16_t                index;
+    uint16_t                is_hidden : 1;
     struct base_mesh_s     *mesh_base;                                          // base mesh - pointer to the first mesh in array
     struct base_mesh_s     *mesh_skin;                                          // base skinned mesh for ТР4+
     struct base_mesh_s     *mesh_slot;
@@ -274,7 +275,7 @@ void Anim_AddCommand(struct animation_frame_s *anim, const animation_command_p c
 void Anim_AddEffect(struct animation_frame_s *anim, const animation_effect_p effect);
 struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
-int  Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id);
+int  Anim_GetAnimDispatchCase(struct ss_animation_s *ss_anim, uint32_t id);
 void Anim_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame);
 int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time);
 inline uint16_t Anim_GetCurrentState(struct ss_animation_s *ss_anim)

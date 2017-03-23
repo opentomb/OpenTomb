@@ -19,6 +19,8 @@ extern "C" {
 #include "../skeletal_model.h"
 #include "../trigger.h"
 #include "../room.h"
+#include "../gui/gui.h"
+#include "../inventory.h"
 #include "../entity.h"
 #include "../world.h"
 #include "../engine.h"
@@ -718,7 +720,7 @@ int lua_MoveEntityToSink(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            Entity_MoveToSink(ent, lua_tointeger(lua, 2));
+            Entity_MoveToSink(ent, World_GetstaticCameraSink(lua_tointeger(lua, 2)));
         }
     }
     else
@@ -920,6 +922,144 @@ int lua_SetEntityBodyPartFlag(lua_State * lua)
     else
     {
         Con_Warning("setEntityBodyPartFlag: expecting arguments (entity_id, bone_id, body_part_flag)");
+    }
+
+    return 0;
+}
+
+
+int lua_AddItem(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            entity_p player = World_GetPlayer();
+            int item_id = lua_tointeger(lua, 2);
+            int count = (top >= 3) ? (lua_tointeger(lua, 3)) : (1);
+            lua_pushinteger(lua, Inventory_AddItem(&ent->inventory, item_id, count));
+            if(!player || ent->id == player->id)
+            {
+                Gui_NotifierStart(item_id);
+            }
+            return 1;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("addItem: expecting arguments (entity_id, item_id, (items_count = pickup_count))");
+    }
+
+    return 0;
+}
+
+
+int lua_RemoveItem(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 3)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            int item_id = lua_tointeger(lua, 2);
+            int count = lua_tointeger(lua, 3);
+            lua_pushinteger(lua, Inventory_RemoveItem(&ent->inventory, item_id, count));
+            return 1;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("removeItem: expecting arguments (entity_id, item_id, items_count)");
+    }
+
+    return 0;
+}
+
+
+int lua_RemoveAllItems(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            Inventory_RemoveAllItems(&ent->inventory);
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("removeAllItems: expecting arguments (entity_id)");
+    }
+
+    return 0;
+}
+
+
+int lua_GetItemsCount(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            int item_id = lua_tointeger(lua, 2);
+            lua_pushinteger(lua, Inventory_GetItemsCount(ent->inventory, item_id));
+            return 1;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getItemsCount: expecting arguments (entity_id, item_id)");
+    }
+
+    return 0;
+}
+
+
+int lua_GetItems(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p  ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            lua_newtable(lua);
+            int top = lua_gettop(lua);
+            for(inventory_node_p i = ent->inventory; i; i = i->next)
+            {
+                lua_pushinteger(lua, i->count);
+                lua_rawseti(lua, -2, i->id);
+                lua_settop(lua, top);
+            }
+
+            return 1;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getItems: expecting arguments (entity_id)");
     }
 
     return 0;
@@ -1149,9 +1289,12 @@ int lua_SetEntityTriggerLayout(lua_State *lua)
             else if(top == 4)
             {
                 uint8_t trigger_layout = ent->trigger_layout;
-                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);  trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);          // mask  - 00011111
-                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT); trigger_layout ^= ((uint8_t)lua_tointeger(lua, 3)) << 5;   // event - 00100000
-                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  trigger_layout ^= ((uint8_t)lua_tointeger(lua, 4)) << 6;   // lock  - 01000000
+                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);
+                trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);          // mask  - 00011111
+                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_EVENT);
+                trigger_layout ^= ((uint8_t)lua_tointeger(lua, 3)) << 5;   // event - 00100000
+                trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);
+                trigger_layout ^= ((uint8_t)lua_tointeger(lua, 4)) << 6;   // lock  - 01000000
                 ent->trigger_layout = trigger_layout;
             }
         }
@@ -1177,7 +1320,8 @@ int lua_SetEntityLock(lua_State * lua)
         if(ent)
         {
             uint8_t trigger_layout = ent->trigger_layout;
-            trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);  trigger_layout ^= ((uint8_t)lua_tointeger(lua, 2)) << 6;   // lock  - 01000000
+            trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_LOCK);
+            trigger_layout ^= ((uint8_t)lua_tointeger(lua, 2)) << 6;   // lock  - 01000000
             ent->trigger_layout = trigger_layout;
         }
     }
@@ -1260,7 +1404,8 @@ int lua_SetEntityMask(lua_State * lua)
         if(ent)
         {
             uint8_t trigger_layout = ent->trigger_layout;
-            trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);  trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);   // mask  - 00011111
+            trigger_layout &= ~(uint8_t)(ENTITY_TLAYOUT_MASK);
+            trigger_layout ^= (uint8_t)lua_tointeger(lua, 2);   // mask  - 00011111
             ent->trigger_layout = trigger_layout;
         }
     }
@@ -1760,6 +1905,27 @@ int lua_SetEntityCollision(lua_State * lua)
     else
     {
         Con_Warning("setEntityCollision: Expecting arguments (entity_id, val)");
+    }
+
+    return 0;
+}
+
+
+int lua_SetEntityBoneCollision(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top >= 3)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            Physics_SetBoneCollision(ent->physics, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
+        }
+    }
+    else
+    {
+        Con_Warning("setEntityBoneCollision: Expecting arguments (entity_id, bone_id, val)");
     }
 
     return 0;
@@ -2277,6 +2443,12 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
 
 void Script_LuaRegisterEntityFuncs(lua_State *lua)
 {
+    lua_register(lua, "addItem", lua_AddItem);
+    lua_register(lua, "removeItem", lua_RemoveItem);
+    lua_register(lua, "removeAllItems", lua_RemoveAllItems);
+    lua_register(lua, "getItemsCount", lua_GetItemsCount);
+    lua_register(lua, "getItems", lua_GetItems);
+
     lua_register(lua, "canTriggerEntity", lua_CanTriggerEntity);
     lua_register(lua, "entityRotateToTriggerZ", lua_EntityRotateToTriggerZ);
     lua_register(lua, "entityRotateToTrigger", lua_EntityRotateToTrigger);
@@ -2350,6 +2522,7 @@ void Script_LuaRegisterEntityFuncs(lua_State *lua)
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
 
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
+    lua_register(lua, "setEntityBoneCollision", lua_SetEntityBoneCollision);
     lua_register(lua, "setEntityGhostCollisionShape", lua_SetEntityGhostCollisionShape);
     lua_register(lua, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
     lua_register(lua, "setEntityCollisionGroupAndMask", lua_SetEntityCollisionGroupAndMask);

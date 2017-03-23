@@ -240,6 +240,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
         for(uint16_t i = 0; i < bf->bone_tag_count; i++)
         {
             bf->bone_tags[i].index = i;
+            bf->bone_tags[i].is_hidden = 0x00;
             bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
             bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
             bf->bone_tags[i].mesh_slot = NULL;
@@ -700,9 +701,9 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
 }
 
 
-int Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id)
+int Anim_GetAnimDispatchCase(struct ss_animation_s *ss_anim, uint32_t id)
 {
-    animation_frame_p anim = bf->animations.model->animations + bf->animations.current_animation;
+    animation_frame_p anim = ss_anim->model->animations + ss_anim->current_animation;
     state_change_p stc = anim->state_change;
 
     for(uint16_t i = 0; i < anim->state_change_count; i++, stc++)
@@ -712,7 +713,7 @@ int Anim_GetAnimDispatchCase(struct ss_bone_frame_s *bf, uint32_t id)
             anim_dispatch_p disp = stc->anim_dispatch;
             for(uint16_t j = 0; j < stc->anim_dispatch_count; j++, disp++)
             {
-                if((disp->frame_high >= disp->frame_low) && (bf->animations.current_frame >= disp->frame_low) && (bf->animations.current_frame <= disp->frame_high))
+                if((disp->frame_high >= disp->frame_low) && (ss_anim->current_frame >= disp->frame_low) && (ss_anim->current_frame <= disp->frame_high))
                 {
                     return (int)j;
                 }
@@ -779,16 +780,7 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
     /*
      * Flag has a highest priority
      */
-    if((new_frame + 1 >= next_anim->max_frame) && (ss_anim->anim_frame_flags == ANIM_LOOP_LAST_FRAME))
-    {
-        ss_anim->next_frame = next_anim->max_frame - 1;
-        ss_anim->current_frame = ss_anim->next_frame;
-        ss_anim->current_animation = ss_anim->next_animation;
-        ss_anim->lerp = 0.0f;
-        ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period;
-        return 0x00;
-    }
-    else if(ss_anim->anim_frame_flags == ANIM_FRAME_LOCK)
+    if(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK)
     {
         ss_anim->current_frame = 0;
         ss_anim->current_frame = ss_anim->next_frame;
@@ -797,7 +789,16 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
         ss_anim->frame_time = 0.0f;
         return 0x00;
     }
-
+    else if((new_frame + 1 >= next_anim->max_frame) && (ss_anim->anim_frame_flags == ANIM_LOOP_LAST_FRAME))
+    {
+        ss_anim->next_frame = next_anim->max_frame - 1;
+        ss_anim->current_frame = ss_anim->next_frame;
+        ss_anim->current_animation = ss_anim->next_animation;
+        ss_anim->lerp = 0.0f;
+        ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period;
+        return 0x00;
+    }
+    
     /*
      * State change check
      */
@@ -806,7 +807,9 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
         anim_dispatch_p disp = stc->anim_dispatch;
         for(uint16_t i = 0; i < stc->anim_dispatch_count; i++, disp++)
         {
-            if((next_anim->max_frame == 1) || (disp->frame_high >= disp->frame_low) && ((new_frame >= disp->frame_low) && (new_frame <= disp->frame_high)))
+            if((next_anim->max_frame == 1) || 
+               (new_frame >= disp->frame_low) && (new_frame <= disp->frame_high) || 
+               (ss_anim->next_frame <= disp->frame_high) && (new_frame >= disp->frame_high))
             {
                 ss_anim->current_animation = ss_anim->next_animation;
                 ss_anim->current_frame = ss_anim->next_frame;

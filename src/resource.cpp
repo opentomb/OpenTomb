@@ -33,10 +33,10 @@ extern "C" {
 #include "trigger.h"
 #include "mesh.h"
 #include "skeletal_model.h"
-#include "anim_state_control.h"
 #include "character_controller.h"
 #include "engine.h"
 #include "physics.h"
+#include "entity.h"
 #include "inventory.h"
 #include "resource.h"
 
@@ -1164,7 +1164,7 @@ void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *
     mesh->centre[0] = tr_mesh->centre.x;
     mesh->centre[1] =-tr_mesh->centre.z;
     mesh->centre[2] = tr_mesh->centre.y;
-    mesh->R = tr_mesh->collision_size;
+    mesh->radius = tr_mesh->collision_size;
 
     mesh->vertex_count = tr_mesh->num_vertices;
     vertex = mesh->vertices = (vertex_p)calloc(mesh->vertex_count, sizeof(vertex_t));

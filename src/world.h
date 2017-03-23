@@ -16,6 +16,7 @@ int  World_GetVersion();
 
 uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], float ang[3], int32_t id);
 struct entity_s *World_GetEntityByID(uint32_t id);
+void World_SetPlayer(struct entity_s *entity);
 struct entity_s *World_GetPlayer();
 struct RedBlackNode_s *World_GetEntityTreeRoot();
 struct flyby_camera_sequence_s *World_GetFlyBySequences();

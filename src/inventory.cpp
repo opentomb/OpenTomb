@@ -8,98 +8,59 @@
 
 int32_t Inventory_AddItem(struct inventory_node_s **root, uint32_t item_id, int32_t count)// returns items count after in the function's end
 {
-    if(!root)
-    {
-        return 0;
-    }
-
     base_item_p item = World_GetBaseItemByID(item_id);
-    if(!item)
-    {
-        return 0;
-    }
 
-    inventory_node_p last, i  = *root;
-
-    count = (count == -1)?(item->count):(count);
-    last = i;
-    while(i)
+    if(root && item)
     {
-        if(i->id == item_id)
+        inventory_node_p *i  = root;
+        for(; *i; i = &((*i)->next))
         {
-            i->count += count;
-            return i->count;
+            if((*i)->id == item_id)
+            {
+                (*i)->count += count;
+                return (*i)->count;
+            }
         }
-        last = i;
-        i = i->next;
+
+        *i = (inventory_node_p)malloc(sizeof(inventory_node_t));
+        (*i)->id = item_id;
+        (*i)->count = count;
+        (*i)->max_count = 0xFFFFFFFF;
+        (*i)->next = NULL;
+
+        return count;
     }
 
-    i = (inventory_node_p)malloc(sizeof(inventory_node_t));
-    i->id = item_id;
-    i->count = count;
-    i->next = NULL;
-    if(last != NULL)
-    {
-        last->next = i;
-    }
-    else
-    {
-        *root = i;
-    }
-
-    return count;
+    return 0;
 }
 
 // returns items count after in the function's end
 int32_t Inventory_RemoveItem(struct inventory_node_s **root, uint32_t item_id, int32_t count)
 {
-    if(!root || !*root)
+    if(root)
     {
-        return 0;
-    }
-
-    if((*root)->id == item_id)
-    {
-        inventory_node_p i = *root;
-        if(i->count > count)
+        for(inventory_node_p *i  = root; *i; i = &((*i)->next))
         {
-            i->count -= count;
-            return i->count;
-        }
-        else if(i->count == count)
-        {
-            *root = i->next;
-            free(i);
-            return 0;
-        }
-        else // count_to_remove > current_items_count
-        {
-            return (int32_t)i->count - (int32_t)count;
-        }
-    }
-
-    inventory_node_p prev_item = *root;
-    for(inventory_node_p i = prev_item->next; i; i = i->next)
-    {
-        if(i->id == item_id)
-        {
-            if(i->count > count)
+            if((*i)->id == item_id)
             {
-                i->count -= count;
-                return i->count;
-            }
-            else if(i->count == count)
-            {
-                prev_item->next = i->next;
-                free(i);
-                return 0;
-            }
-            else // count_to_remove > current_items_count
-            {
-                return (int32_t)i->count - (int32_t)count;
+                if((*i)->count > count)
+                {
+                    (*i)->count -= count;
+                    return (*i)->count;
+                }
+                else if((*i)->count == count)
+                {
+                    inventory_node_p next = (*i)->next;
+                    free(*i);
+                    *i = next;
+                    return 0;
+                }
+                else // count_to_remove > current_items_count
+                {
+                    return (int32_t)(*i)->count - (int32_t)count;
+                }
             }
         }
-        prev_item = i;
     }
 
     return -count;

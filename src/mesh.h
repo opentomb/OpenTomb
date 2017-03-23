@@ -49,7 +49,7 @@ typedef struct base_mesh_s
     float                   centre[3];                                          // geometry centre of mesh
     float                   bb_min[3];                                          // AABB bounding volume
     float                   bb_max[3];                                          // AABB bounding volume
-    float                   R;                                                  // radius of the bounding sphere
+    float                   radius;                                             // radius of the bounding sphere
     uint32_t               *skin_map;                                           // vertices map for skin mesh
 
     GLuint                  vbo_vertex_array;

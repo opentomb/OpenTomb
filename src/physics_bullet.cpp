@@ -205,15 +205,22 @@ struct physics_object_s
     btRigidBody    *bt_body;
 };
 
+struct kinematic_info_s
+{
+    bool        has_collisions;
+};
+
 typedef struct physics_data_s
 {
     // kinematic
     btRigidBody                       **bt_body;
+    struct kinematic_info_s            *bt_info;
 
     // dynamic
     struct ghost_shape_s               *ghosts_info;
     btPairCachingGhostObject          **ghost_objects;          // like Bullet character controller for penetration resolving.
     btManifoldArray                    *manifoldArray;          // keep track of the contact manifolds
+    struct collision_node_s            *collision_track;
     uint16_t                            objects_count;          // Ragdoll joints
     uint16_t                            bt_joint_count;         // Ragdoll joints
     btTypedConstraint                 **bt_joints;              // Ragdoll joints
@@ -278,12 +285,6 @@ btDiscreteDynamicsWorld                 *bt_engine_dynamicsWorld = NULL;
 
 CBulletDebugDrawer                       bt_debug_drawer;
 
-uint32_t                                 collision_nodes_pool_size = 0;
-uint32_t                                 collision_nodes_pool_used = 0;
-struct collision_node_s                 *collision_nodes_pool = NULL;
-
-struct collision_node_s *Physics_GetCollisionNode();
-
 /* bullet collision model calculation */
 btCollisionShape* BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max);
 btCollisionShape* BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, bool buildBvh, bool is_static = true);
@@ -305,10 +306,6 @@ btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
 // Bullet Physics initialization.
 void Physics_Init()
 {
-    collision_nodes_pool = (struct collision_node_s*)malloc(DEFAULT_COLLSION_NODE_POOL_SIZE * sizeof(struct collision_node_s));
-    collision_nodes_pool_size = DEFAULT_COLLSION_NODE_POOL_SIZE;
-    collision_nodes_pool_used = 0;
-
     ///collision configuration contains default setup for memory, collision setup. Advanced users can create their own configuration.
     bt_engine_collisionConfiguration = new btDefaultCollisionConfiguration();
 
@@ -349,11 +346,6 @@ void Physics_Destroy()
     delete bt_engine_collisionConfiguration;
 
     delete bt_engine_ghostPairCallback;
-
-    free(collision_nodes_pool);
-    collision_nodes_pool = NULL;
-    collision_nodes_pool_size = 0;
-    collision_nodes_pool_used = 0;
 }
 
 
@@ -361,25 +353,12 @@ void Physics_StepSimulation(float time)
 {
     time = (time < 0.1f) ? (time) : (0.0f);
     bt_engine_dynamicsWorld->stepSimulation(time, 0);
-    collision_nodes_pool_used = 0;
 }
 
 void Physics_DebugDrawWorld()
 {
     bt_engine_dynamicsWorld->debugDrawWorld();
 }
-
-struct collision_node_s *Physics_GetCollisionNode()
-{
-    struct collision_node_s *ret = NULL;
-    if(collision_nodes_pool_used < collision_nodes_pool_size)
-    {
-        ret = collision_nodes_pool + collision_nodes_pool_used;
-        collision_nodes_pool_used++;
-    }
-    return ret;
-}
-
 
 void Physics_CleanUpObjects()
 {
@@ -424,12 +403,14 @@ struct physics_data_s *Physics_CreatePhysicsData(struct engine_container_s *cont
     struct physics_data_s *ret = (struct physics_data_s*)malloc(sizeof(struct physics_data_s));
 
     ret->bt_body = NULL;
+    ret->bt_info = NULL;
     ret->bt_joints = NULL;
     ret->objects_count = 0;
     ret->bt_joint_count = 0;
     ret->manifoldArray = NULL;
     ret->ghosts_info = NULL;
     ret->ghost_objects = NULL;
+    ret->collision_track = NULL;
     ret->collision_group = btBroadphaseProxy::KinematicFilter;
     ret->collision_mask = btBroadphaseProxy::AllFilter;
     ret->cont = cont;
@@ -442,6 +423,20 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
 {
     if(physics)
     {
+        for(collision_node_p cn = physics->collision_track; cn;)
+        {
+            collision_node_p next = cn->next;
+            free(cn);
+            cn = next;
+        }
+        physics->collision_track = NULL;
+
+        if(physics->bt_info)
+        {
+            free(physics->bt_info);
+            physics->bt_info = NULL;
+        }
+
         if(physics->ghost_objects)
         {
             for(int i = 0; i < physics->objects_count; i++)
@@ -717,55 +712,49 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
         bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
 
         vec3_set_zero(correction);
-        num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
+        num_pairs = pairArray.size();
         for(int i = 0; i < num_pairs; i++)
         {
-            physics->manifoldArray->clear();
             // do not use commented code: it prevents to collision skips.
             //btBroadphasePair &pair = pairArray[i];
             //btBroadphasePair* collisionPair = bt_engine_dynamicsWorld->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
             btBroadphasePair *collisionPair = &pairArray[i];
-
-            if(!collisionPair)
+            if(collisionPair && collisionPair->m_algorithm)
             {
-                continue;
-            }
-
-            if(collisionPair->m_algorithm)
-            {
+                physics->manifoldArray->clear();
                 collisionPair->m_algorithm->getAllContactManifolds(*(physics->manifoldArray));
-            }
-
-            manifolds_size = physics->manifoldArray->size();
-            for(int j = 0; j < manifolds_size; j++)
-            {
-                btPersistentManifold* manifold = (*(physics->manifoldArray))[j];
-                btCollisionObject *obj = (btCollisionObject*)manifold->getBody0();
-                btScalar directionSign = btScalar(1.0);
-                if(obj == ghost)
+                manifolds_size = physics->manifoldArray->size();
+                for(int j = 0; j < manifolds_size; j++)
                 {
-                    obj = (btCollisionObject*)manifold->getBody1();
-                    directionSign = btScalar(-1.0);
-                }
-
-                engine_container_p cont = (engine_container_p)obj->getUserPointer();
-                if(!cont || (cont->collision_group & filter))
-                {
-                    for(int k = 0; k < manifold->getNumContacts(); k++)
+                    btPersistentManifold* manifold = (*(physics->manifoldArray))[j];
+                    btCollisionObject *obj = (btCollisionObject*)manifold->getBody0();
+                    btScalar directionSign = btScalar(1.0);
+                    if(obj == ghost)
                     {
-                        const btManifoldPoint&pt = manifold->getContactPoint(k);
-                        btScalar dist = pt.getDistance();
+                        obj = (btCollisionObject*)manifold->getBody1();
+                        directionSign = btScalar(-1.0);
+                    }
 
-                        if(dist < 0.0)
+                    engine_container_p cont = (engine_container_p)obj->getUserPointer();
+                    if(cont && (cont->collision_group & filter))
+                    {
+                        for(int k = 0; k < manifold->getNumContacts(); k++)
                         {
-                            t = pt.m_normalWorldOnB * dist * directionSign;
-                            vec3_add(correction, correction, t.m_floats)
-                            ret++;
+                            const btManifoldPoint&pt = manifold->getContactPoint(k);
+                            btScalar dist = pt.getDistance();
+
+                            if(dist < 0.0)
+                            {
+                                t = pt.m_normalWorldOnB * dist * directionSign;
+                                vec3_add(correction, correction, t.m_floats)
+                                ret++;
+                            }
                         }
                     }
                 }
             }
         }
+        physics->manifoldArray->clear();
     }
 
     return ret;
@@ -1162,6 +1151,8 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
             {
                 physics->objects_count = 1;
                 physics->bt_body = (btRigidBody**)malloc(physics->objects_count * sizeof(btRigidBody*));
+                physics->bt_info = (struct kinematic_info_s*)malloc(physics->objects_count * sizeof(struct kinematic_info_s));
+                physics->bt_info->has_collisions = true;
 
                 float hx = (bf->bb_max[0] - bf->bb_min[0]) * 0.5f;
                 float hy = (bf->bb_max[1] - bf->bb_min[1]) * 0.5f;
@@ -1184,6 +1175,8 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
             {
                 physics->objects_count = 1;
                 physics->bt_body = (btRigidBody**)malloc(physics->objects_count * sizeof(btRigidBody*));
+                physics->bt_info = (struct kinematic_info_s*)malloc(physics->objects_count * sizeof(struct kinematic_info_s));
+                physics->bt_info->has_collisions = true;
 
                 cshape = new btSphereShape(getInnerBBRadius(bf->bb_min, bf->bb_max));
                 cshape->calculateLocalInertia(0.0, localInertia);
@@ -1203,11 +1196,13 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
             {
                 physics->objects_count = bf->bone_tag_count;
                 physics->bt_body = (btRigidBody**)malloc(physics->objects_count * sizeof(btRigidBody*));
+                physics->bt_info = (struct kinematic_info_s*)malloc(physics->objects_count * sizeof(struct kinematic_info_s));
 
                 for(uint32_t i = 0; i < physics->objects_count; i++)
                 {
                     base_mesh_p mesh = bf->bone_tags[i].mesh_base;
                     cshape = NULL;
+                    physics->bt_info[i].has_collisions = false;
                     switch(physics->cont->collision_shape)
                     {
                         case COLLISION_SHAPE_TRIMESH_CONVEX:
@@ -1232,6 +1227,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
 
                     if(cshape)
                     {
+                        physics->bt_info[i].has_collisions = true;
                         cshape->calculateLocalInertia(0.0, localInertia);
                         cshape->setMargin(COLLISION_MARGIN_DEFAULT);
 
@@ -1553,7 +1549,7 @@ void Physics_EnableCollision(struct physics_data_s *physics)
         for(uint32_t i = 0; i < physics->objects_count; i++)
         {
             btRigidBody *b = physics->bt_body[i];
-            if(b && !b->isInWorld())
+            if(b && physics->bt_info[i].has_collisions && !b->isInWorld())
             {
                 bt_engine_dynamicsWorld->addRigidBody(b, physics->collision_group, physics->collision_mask);
             }
@@ -1585,6 +1581,21 @@ void Physics_DisableCollision(struct physics_data_s *physics)
             {
                 bt_engine_dynamicsWorld->removeCollisionObject(physics->ghost_objects[i]);
             }
+        }
+    }
+}
+
+
+void Physics_SetBoneCollision(struct physics_data_s *physics, int bone_index, int collision)
+{
+    if(physics->bt_body && (bone_index >= 0) && (bone_index < physics->objects_count))
+    {
+        btRigidBody *b = physics->bt_body[bone_index];
+        physics->bt_info[bone_index].has_collisions = collision;
+
+        if(b && !collision && b->isInWorld())
+        {
+            bt_engine_dynamicsWorld->removeRigidBody(b);
         }
     }
 }
@@ -1668,11 +1679,9 @@ void Physics_SetLinearFactor(struct physics_data_s *physics, float factor[3], ui
 
 struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics, int16_t filter)
 {
-    struct collision_node_s *ret = NULL;
-
+    collision_node_p *cn = &(physics->collision_track);
     if(physics->ghost_objects)
     {
-        btTransform orig_tr;
         for(uint32_t i = 0; i < physics->objects_count; i++)
         {
             btPairCachingGhostObject *ghost = physics->ghost_objects[i];
@@ -1685,60 +1694,58 @@ struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *phy
                 bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
                 bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
 
-                int num_pairs = ghost->getOverlappingPairCache()->getNumOverlappingPairs();
+                int num_pairs = pairArray.size();
                 for(int j = 0; j < num_pairs; j++)
                 {
-                    physics->manifoldArray->clear();
                     btBroadphasePair *collisionPair = &pairArray[j];
-
-                    if(!collisionPair)
+                    if(collisionPair && collisionPair->m_algorithm)
                     {
-                        continue;
-                    }
-
-                    if(collisionPair->m_algorithm)
-                    {
+                        physics->manifoldArray->clear();
                         collisionPair->m_algorithm->getAllContactManifolds(*physics->manifoldArray);
-                    }
-
-                    for(int k = 0; k < physics->manifoldArray->size(); k++)
-                    {
-                        btPersistentManifold* manifold = (*physics->manifoldArray)[k];
-                        for(int c = 0; c < manifold->getNumContacts(); c++)         // c++ in C++
+                        for(int k = 0; k < physics->manifoldArray->size(); k++)
                         {
-                            //const btManifoldPoint &pt = manifold->getContactPoint(c);
-                            if(manifold->getContactPoint(c).getDistance() < 0.0)
+                            btPersistentManifold* manifold = (*physics->manifoldArray)[k];
+                            for(int c = 0; c < manifold->getNumContacts(); c++)         // c++ in C++
                             {
-                                btCollisionObject *obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody0();
-                                if(physics->cont == ((engine_container_p)obj->getUserPointer()))
+                                //const btManifoldPoint &pt = manifold->getContactPoint(c);
+                                if(manifold->getContactPoint(c).getDistance() < 0.0)
                                 {
-                                    obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody1();
-                                }
-
-                                engine_container_p cont = (engine_container_p)obj->getUserPointer();
-                                if(!cont || (cont->collision_group & filter))
-                                {
-                                    collision_node_p cn = Physics_GetCollisionNode();
-                                    if(cn)
+                                    btCollisionObject *obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody0();
+                                    if(obj == ghost)
                                     {
-                                        cn->obj = (engine_container_p)obj->getUserPointer();
-                                        cn->part_from = obj->getUserIndex();
-                                        cn->part_self = i;
-                                        cn->next = ret;
-                                        ret = cn;
+                                        obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody1();
                                     }
-                                    break;
+
+                                    engine_container_p cont = (engine_container_p)obj->getUserPointer();
+                                    if(cont && (cont->collision_group & filter))
+                                    {
+                                        if(*cn == NULL)
+                                        {
+                                            *cn = (collision_node_p)malloc(sizeof(collision_node_t));
+                                            (*cn)->next = NULL;
+                                        }
+                                        (*cn)->obj = cont;
+                                        (*cn)->part_from = obj->getUserIndex();
+                                        (*cn)->part_self = i;
+                                        cn = &((*cn)->next);
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
                 }
-                ghost->setWorldTransform(orig_tr);
             }
         }
+        physics->manifoldArray->clear();
     }
 
-    return ret;
+    if(*cn)
+    {
+        (*cn)->obj = NULL;
+    }
+
+    return physics->collision_track;
 }
 
 /* *****************************************************************************

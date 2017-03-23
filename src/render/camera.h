@@ -93,9 +93,7 @@ typedef struct camera_s
 
 typedef struct static_camera_sink_s
 {
-    GLfloat                     x;
-    GLfloat                     y;
-    GLfloat                     z;
+    GLfloat                     pos[3];
     uint16_t                    locked : 1;
     uint16_t                    room_or_strength : 15;   // Room for camera, strength for sink.
     uint16_t                    flag_or_zone;            // Flag for camera, zone for sink.

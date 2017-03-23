@@ -46,6 +46,9 @@ Carsten Bormann
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
 #include "os.h"
 #include "smallft.h"
 #include "lpc.h"

@@ -28,7 +28,7 @@ typedef struct obb_s
     struct polygon_s     base_polygons[6];               // bv base surface
     struct polygon_s     polygons[6];                    // bv world coordinate surface
     float               *transform;                      // Object transform matrix
-    float                r;
+    float                radius;
 
     float                base_centre[3];
     float                centre[3];

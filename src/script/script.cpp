@@ -16,6 +16,7 @@ extern "C" {
 #include "../core/vmath.h"
 #include "../render/camera.h"
 #include "../render/render.h"
+#include "../state_control/state_control.h"
 #include "../vt/tr_versions.h"
 #include "../skeletal_model.h"
 #include "../trigger.h"
@@ -884,6 +885,30 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, PARAM_EXTRA4);
         LUA_EXPOSE(lua, PARAM_LASTINDEX);
 
+        LUA_EXPOSE(lua, ANIMATION_KEY_INIT);
+        LUA_EXPOSE(lua, ANIMATION_KEY_DEAD);
+        
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_LARA);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_BAT);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_WOLF);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_BEAR);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_RAPTOR);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_TREX);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_LARSON);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_PIERRE);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_LION);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_GORILLA);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_CROCODILE);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_RAT);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_CENTAUR);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_PUMA);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_WINGED_MUTANT);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_COWBOY);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_SKATEBOARDIST);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_MRT);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_TORSO_BOSS);
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_NATLA);
+
         LUA_EXPOSE(lua, ANIM_NORMAL_CONTROL);
         LUA_EXPOSE(lua, ANIM_LOOP_LAST_FRAME);
         LUA_EXPOSE(lua, ANIM_FRAME_LOCK);
@@ -917,10 +942,8 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, TRIGGER_OP_XOR);
         LUA_EXPOSE(lua, TRIGGER_OP_AND_INV);
 
-        LUA_EXPOSE(lua, RESP_KILL);
-        LUA_EXPOSE(lua, RESP_VERT_COLLIDE);
-        LUA_EXPOSE(lua, RESP_HOR_COLLIDE);
-        LUA_EXPOSE(lua, RESP_SLIDE);
+        LUA_EXPOSE(lua, CHARACTER_STATE_DEAD);
+        LUA_EXPOSE(lua, CHARACTER_STATE_SLIDE);
 
         LUA_EXPOSE(lua, TICK_IDLE);
         LUA_EXPOSE(lua, TICK_STOPPED);

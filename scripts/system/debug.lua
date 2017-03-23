@@ -12,7 +12,7 @@ function goToEntity(id)
     if(player ~= nil) then
         setEntityPos(player, getEntityPos(id));
     end;
-end;
+end
 
 function checkDebugKeys()
     if(checkKey(KEY_RETURN, true)) then
@@ -86,7 +86,7 @@ function checkDebugKeys()
         setEntityCollision(player, true);
         removeEntityRagdoll(player);
         setEntityMoveType(player, MOVE_FREE_FALLING);
-        setCharacterResponse(player, RESP_KILL, 0);
+        setCharacterState(player, CHARACTER_STATE_DEAD, 0);
         setCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
         setEntityAnimFlag(player, ANIM_TYPE_BASE, ANIM_NORMAL_CONTROL);
     end;
@@ -102,23 +102,4 @@ function checkDebugKeys()
     if(checkKey(KEY_9, true)) then setCharacterCurrentWeapon(player, 9) end;
     
     return true;
-end;
-
-function checkPlayerRagdollConditions()
-    local anim, frame, count = getEntityAnim(player, ANIM_TYPE_BASE);
-    local version = getLevelVersion();
-    
-    if(getEntityTypeFlag(player, ENTITY_TYPE_DYNAMIC) == 0) then
-        if( ((anim ==  25) and (frame >= 6 )) or
-            ((anim == 155) and (frame >= 5 )) or
-            ((anim == 139) and (frame >= 17)) or
-            ((anim == 133) and (frame >= 18)) or
-            ((anim == 145) and (frame >= 67)) or
-            ((anim == 301) and (frame >= 57)) or
-            ((anim == 138) and (((frame >= 60) and (version >= TR_II)) or ((frame >= 8) and (version < TR_II)))) ) then
-                addEntityRagdoll(player, RD_TYPE_LARA);
-        end;
-    end;
-    
-    return true;
-end;
+end

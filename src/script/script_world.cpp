@@ -18,6 +18,7 @@ extern "C" {
 #include "../core/polygon.h"
 #include "../render/camera.h"
 #include "../render/render.h"
+#include "../gui/gui.h"
 #include "../vt/tr_versions.h"
 #include "../mesh.h"
 #include "../skeletal_model.h"
@@ -31,13 +32,11 @@ extern "C" {
 #include "../controls.h"
 #include "../game.h"
 #include "../gameflow.h"
-#include "../anim_state_control.h"
 #include "../character_controller.h"
-#include "../gui.h"
 #include "../engine_string.h"
 
 
-void Script_DoFlipEffect(lua_State *lua, int id_effect, int param)
+void Script_DoFlipEffect(lua_State *lua, int id_effect, int id_object, int param)
 {
     int top = lua_gettop(lua);
 
@@ -45,8 +44,9 @@ void Script_DoFlipEffect(lua_State *lua, int id_effect, int param)
     if(lua_isfunction(lua, -1))
     {
         lua_pushinteger(lua, id_effect);
+        lua_pushinteger(lua, id_object);
         lua_pushinteger(lua, param);
-        if(lua_pcall(lua, 2, 0, 0) == LUA_OK)
+        if(lua_pcall(lua, 3, 0, 0) == LUA_OK)
         {
            //
         }
@@ -78,6 +78,128 @@ int lua_GetLevelVersion(lua_State *lua)
 {
     lua_pushinteger(lua, World_GetVersion());
     return 1;
+}
+
+
+/*
+ * Load level functions
+ */
+int lua_SetSectorFloorConfig(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 10)
+    {
+        int id = lua_tointeger(lua, 1);
+        int sx = lua_tointeger(lua, 2);
+        int sy = lua_tointeger(lua, 3);
+        room_sector_p rs = World_GetRoomSector(id, sx, sy);
+        if(rs)
+        {
+            if(!lua_isnil(lua, 4))  rs->floor_penetration_config = lua_tointeger(lua, 4);
+            if(!lua_isnil(lua, 5))  rs->floor_diagonal_type = lua_tointeger(lua, 5);
+            if(!lua_isnil(lua, 6))  rs->floor = lua_tonumber(lua, 6);
+            rs->floor_corners[0][2] = lua_tonumber(lua, 7);
+            rs->floor_corners[1][2] = lua_tonumber(lua, 8);
+            rs->floor_corners[2][2] = lua_tonumber(lua, 9);
+            rs->floor_corners[3][2] = lua_tonumber(lua, 10);
+        }
+        else
+        {
+            Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        }
+    }
+    else
+    {
+        Con_AddLine("Wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
+    }
+
+    return 0;
+}
+
+
+int lua_SetSectorCeilingConfig(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 10)
+    {
+        int id = lua_tointeger(lua, 1);
+        int sx = lua_tointeger(lua, 2);
+        int sy = lua_tointeger(lua, 3);
+        room_sector_p rs = World_GetRoomSector(id, sx, sy);
+        if(rs)
+        {
+            if(!lua_isnil(lua, 4))  rs->ceiling_penetration_config = lua_tointeger(lua, 4);
+            if(!lua_isnil(lua, 5))  rs->ceiling_diagonal_type = lua_tointeger(lua, 5);
+            if(!lua_isnil(lua, 6))  rs->ceiling = lua_tonumber(lua, 6);
+            rs->ceiling_corners[0][2] = lua_tonumber(lua, 7);
+            rs->ceiling_corners[1][2] = lua_tonumber(lua, 8);
+            rs->ceiling_corners[2][2] = lua_tonumber(lua, 9);
+            rs->ceiling_corners[3][2] = lua_tonumber(lua, 10);
+        }
+        else
+        {
+            Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        }
+    }
+    else
+    {
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
+    }
+
+    return 0;
+}
+
+
+int lua_SetSectorPortal(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 4)
+    {
+        int id = lua_tointeger(lua, 1);
+        int sx = lua_tointeger(lua, 2);
+        int sy = lua_tointeger(lua, 3);
+        room_sector_p rs = World_GetRoomSector(id, sx, sy);
+        if(rs)
+        {
+            rs->portal_to_room = World_GetRoomByID(lua_tointeger(lua, 4));
+        }
+        else
+        {
+            Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        }
+    }
+    else
+    {
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, portal_room_id)", FONTSTYLE_CONSOLE_WARNING);
+    }
+
+    return 0;
+}
+
+
+int lua_SetSectorFlags(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 7)
+    {
+        int id = lua_tointeger(lua, 1);
+        int sx = lua_tointeger(lua, 2);
+        int sy = lua_tointeger(lua, 3);
+        room_sector_p rs = World_GetRoomSector(id, sx, sy);
+        if(rs)
+        {
+            if(!lua_isnil(lua, 4))  rs->floor_penetration_config = lua_tointeger(lua, 4);
+            if(!lua_isnil(lua, 5))  rs->floor_diagonal_type = lua_tointeger(lua, 5);
+            if(!lua_isnil(lua, 6))  rs->ceiling_penetration_config = lua_tointeger(lua, 6);
+            if(!lua_isnil(lua, 7))  rs->ceiling_diagonal_type = lua_tointeger(lua, 7);
+        }
+        else
+        {
+            Con_AddLine("wrong sector info", FONTSTYLE_CONSOLE_WARNING);
+        }
+    }
+    else
+    {
+        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)", FONTSTYLE_CONSOLE_WARNING);
+    }
+
+    return 0;
 }
 
 
@@ -475,6 +597,33 @@ int lua_DeleteBaseItem(lua_State * lua)
 }
 
 
+int lua_GetBaseItemInfo(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        base_item_p item = World_GetBaseItemByID(lua_tointeger(lua, 1));
+        if(item)
+        {
+            lua_pushinteger(lua, item->count);
+            lua_pushinteger(lua, item->type);
+            lua_pushinteger(lua, item->world_model_id);
+            lua_pushstring(lua, item->name);
+            return 4;
+        }
+        else
+        {
+            Con_Warning("no base item with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getBaseItemInfo: expecting arguments (item_id)");
+    }
+
+    return 0;
+}
+
+
 int lua_SpawnEntity(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -652,6 +801,21 @@ int lua_SetFlipState(lua_State *lua)
     else
     {
         Con_Warning("setFlipState: expecting arguments (flip_index, flip_state)");
+    }
+
+    return 0;
+}
+
+
+int lua_SetPlayer(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        World_SetPlayer(World_GetEntityByID(lua_tointeger(lua, 1)));
+    }
+    else
+    {
+        Con_Warning("setPlayer: expecting arguments (entity_id)");
     }
 
     return 0;
@@ -868,9 +1032,15 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
     lua_register(lua, "setLevel", lua_SetLevel);
     lua_register(lua, "getLevel", lua_GetLevel);
 
+    lua_register(lua, "setSectorFloorConfig", lua_SetSectorFloorConfig);
+    lua_register(lua, "setSectorCeilingConfig", lua_SetSectorCeilingConfig);
+    lua_register(lua, "setSectorPortal", lua_SetSectorPortal);
+    lua_register(lua, "setSectorFlags", lua_SetSectorFlags);
+
     lua_register(lua, "setGame", lua_SetGame);
     lua_register(lua, "loadMap", lua_LoadMap);
 
+    lua_register(lua, "setPlayer", lua_SetPlayer);
     lua_register(lua, "setFlipMap", lua_SetFlipMap);
     lua_register(lua, "getFlipMap", lua_GetFlipMap);
     lua_register(lua, "setGlobalFlipState", lua_SetGlobalFlipState);
@@ -879,6 +1049,7 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
 
     lua_register(lua, "createBaseItem", lua_CreateBaseItem);
     lua_register(lua, "deleteBaseItem", lua_DeleteBaseItem);
+    lua_register(lua, "getBaseItemInfo", lua_GetBaseItemInfo);
     lua_register(lua, "spawnEntity", lua_SpawnEntity);
 
     lua_register(lua, "sameRoom", lua_SameRoom);

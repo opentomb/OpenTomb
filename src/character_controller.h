@@ -173,7 +173,6 @@ enum CharParameters
 #define LARA_PARAM_STAMINA_MAX            (120.0)       // 4  secs of sprint
 #define LARA_PARAM_WARMTH_MAX             (240.0)       // 8  secs of freeze
 
-struct inventory_node_s;
 struct engine_container_s;
 struct entity_s;
 
@@ -238,14 +237,21 @@ typedef struct character_command_s
     uint16_t    sprint : 1;
 }character_command_t, *character_command_p;
 
-typedef struct character_response_s
+typedef struct character_state_s
 {
-    int8_t      vertical_collide;
-    int8_t      horizontal_collide;
-    uint16_t    kill : 1;
-    uint16_t    burn : 1;
-    uint16_t    slide : 2;
-}character_response_t, *character_response_p;
+    uint32_t    floor_collide : 1;
+    uint32_t    ceiling_collide : 1;
+    uint32_t    wall_collide : 1;
+    uint32_t    slide : 2;      //0 - none, 1 - forward, 2 - backward
+    uint32_t    step_z : 2;     //0 - none, 1 - dz to step up, 2 - dz to step down;
+    uint32_t    uw_current : 1;
+    uint32_t    dead : 1;
+    uint32_t    ragdoll : 1;
+    uint32_t    burn : 1;
+    uint32_t    crouch : 1;
+    uint32_t    sprint : 1;
+    uint32_t    tightrope : 1;
+}character_state_t, *character_state_p;
 
 typedef struct character_param_s
 {
@@ -270,9 +276,8 @@ typedef struct character_s
 {
     struct entity_s            *ent;                    // actor entity
     struct character_command_s  cmd;                    // character control commands
-    struct character_response_s resp;                   // character response info (collides, slide, next steps, drops, e.t.c.)
+    struct character_state_s    state;                  // character state info (collides, slide, next steps, drops, e.t.c.)
 
-    struct inventory_node_s    *inventory;
     struct character_param_s    parameters;
     struct character_stats_s    statistics;
 
@@ -285,7 +290,7 @@ typedef struct character_s
     int16_t                     weapon_current_state;
 
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
-
+    void                       (*set_key_anim_func)(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim);
     float                       linear_speed_mult;
     float                       rotate_speed_mult;
     float                       min_step_up_height;
@@ -324,8 +329,6 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
 
 void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz = 0);
 void Character_UpdateCurrentHeight(struct entity_s *ent);
-void Character_UpdatePlatformPreStep(struct entity_s *ent);
-void Character_UpdatePlatformPostStep(struct entity_s *ent);
 
 void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizontal);
 void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lean);
@@ -333,6 +336,7 @@ void Character_LookAt(struct entity_s *ent, float target[3]);
 void Character_ClearLookAt(struct entity_s *ent);
 
 int Character_MoveOnFloor(struct entity_s *ent);
+int Character_MoveFly(struct entity_s *ent);
 int Character_FreeFalling(struct entity_s *ent);
 int Character_MonkeyClimbing(struct entity_s *ent);
 int Character_WallsClimbing(struct entity_s *ent);

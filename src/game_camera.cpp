@@ -14,7 +14,6 @@
 #include "skeletal_model.h"
 #include "entity.h"
 #include "character_controller.h"
-#include "anim_state_control.h"
 
 
 void Cam_PlayFlyBy(struct camera_state_s *cam_state, float time)
@@ -49,9 +48,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
 
     if(target && (cam_state->state == CAMERA_STATE_FIXED))
     {
-        cam->gl_transform[12 + 0] = cam_state->sink->x;
-        cam->gl_transform[12 + 1] = cam_state->sink->y;
-        cam->gl_transform[12 + 2] = cam_state->sink->z;
+        vec3_copy(cam->gl_transform + 12, cam_state->sink->pos)
         cam->current_room = World_GetRoomByID(cam_state->sink->room_or_strength);
 
         if(target->character)
@@ -89,15 +86,16 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
 
     vec3_copy(cam_pos, cam->gl_transform + 12);
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
+
     if(control_states.mouse_look == 0)//If mouse look is off
     {
         float currentAngle = control_states.cam_angles[0] * (M_PI / 180.0f);    //Current is the current cam angle
         float targetAngle  = ent->angles[0] * (M_PI / 180.0f); //Target is the target angle which is the entity's angle itself
         float rotSpeed = 2.0f; //Speed of rotation
-        uint16_t current_state = Anim_GetCurrentState(&ent->bf->animations);
         ///@FIXME
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
-        if(current_state == TR_STATE_LARA_REACH)
+        //if(current_state == TR_STATE_LARA_REACH)
+        if((ent->move_type == MOVE_FREE_FALLING) && (ent->dir_flag == ENT_MOVE_FORWARD))
         {
             if(cam_state->target_dir == TR_CAM_TARG_BACK)
             {
@@ -129,7 +127,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
                 }
             }
         }
-        else if(current_state == TR_STATE_LARA_JUMP_BACK)
+        else if((ent->move_type == MOVE_FREE_FALLING) && (ent->dir_flag == ENT_MOVE_BACKWARD))
         {
             cam_state->target_dir = TR_CAM_TARG_FRONT;
         }

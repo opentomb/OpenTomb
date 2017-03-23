@@ -14,6 +14,7 @@ extern "C" {
 #include "core/console.h"
 #include "core/vmath.h"
 #include "script/script.h"
+#include "render/camera.h"
 #include "room.h"
 #include "trigger.h"
 #include "gameflow.h"
@@ -22,7 +23,6 @@ extern "C" {
 #include "skeletal_model.h"
 #include "entity.h"
 #include "character_controller.h"
-#include "anim_state_control.h"
 #include "world.h"
 
 
@@ -101,6 +101,10 @@ end
 ///@TODO: move here TickEntity with Inversing entity state... see carefully heavy irregular cases
 void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activator)
 {
+    if(entity_activator && entity_activator->character)
+    {
+        entity_activator->character->state.uw_current = 0x00;
+    }
     if(trigger && entity_activator)
     {
         bool has_non_continuos_triggers = false;
@@ -110,17 +114,17 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
             switch(command->function)
             {
                 case TR_FD_TRIGFUNC_UWCURRENT:
-                    if(entity_activator->move_type == MOVE_ON_WATER)
+                    if(entity_activator->character)
                     {
-                        if(entity_activator->bf->animations.current_animation != TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE)
+                        static_camera_sink_p sink = World_GetstaticCameraSink(command->operands);
+                        if(sink && (entity_activator->current_sector != Room_GetSectorRaw(entity_activator->self->room, sink->pos)))
                         {
-                            Entity_SetAnimation(entity_activator, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_DIVE_ALTERNATE, 0);
-                            entity_activator->move_type = MOVE_UNDERWATER;
+                            if(entity_activator->move_type == MOVE_UNDERWATER)
+                            {
+                                Entity_MoveToSink(entity_activator, sink);
+                            }
+                            entity_activator->character->state.uw_current = 0x01;
                         }
-                    }
-                    else if(entity_activator->move_type == MOVE_UNDERWATER)
-                    {
-                        Entity_MoveToSink(entity_activator, command->operands);
                     }
                     break;
 
@@ -225,12 +229,12 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                 case TR_FD_TRIGTYPE_TIGHTROPE:
                     // Check state range for triggering entity.
-                    header_condition = header_condition && ((entity_activator->state_flags >= TR_STATE_LARA_TIGHTROPE_IDLE) && (entity_activator->state_flags <= TR_STATE_LARA_TIGHTROPE_EXIT));
+                    header_condition = header_condition && entity_activator->character && entity_activator->character->state.tightrope;
                     break;
 
                 case TR_FD_TRIGTYPE_CRAWLDUCK:
                     // Check state range for triggering entity.
-                    header_condition = header_condition && ((entity_activator->state_flags >= TR_ANIMATION_LARA_CROUCH_ROLL_FORWARD_BEGIN) && (entity_activator->state_flags <= TR_ANIMATION_LARA_CRAWL_SMASH_LEFT));
+                    header_condition = header_condition && entity_activator->character && entity_activator->character->state.crouch;
                     break;
             }
 
@@ -449,7 +453,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     case TR_FD_TRIGFUNC_FLIPEFFECT:
                         if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
                         {
-                            Script_DoFlipEffect(engine_lua, command->operands, trigger->timer);
+                            Script_DoFlipEffect(engine_lua, command->operands, entity_activator->id, trigger->timer);
                         }
                         break;
 

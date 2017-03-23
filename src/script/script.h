@@ -9,10 +9,8 @@ struct lua_State;
 #define CVAR_LUA_TABLE_NAME "cvars"
 
 // Response constants
-#define RESP_KILL           (0)
-#define RESP_VERT_COLLIDE   (1)
-#define RESP_HOR_COLLIDE    (2)
-#define RESP_SLIDE          (3)
+#define CHARACTER_STATE_DEAD           (0)
+#define CHARACTER_STATE_SLIDE          (1)
 
 // Entity timer constants
 #define TICK_IDLE           (0)
@@ -57,7 +55,7 @@ bool Script_GetString(lua_State *lua, int string_index, size_t string_size, char
 void Script_LoopEntity(lua_State *lua, struct entity_s *ent);
 int  Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator = -1);
 size_t Script_GetEntitySaveData(lua_State *lua, int id_entity, char *buf, size_t buf_size);
-void Script_DoFlipEffect(lua_State *lua, int id_effect, int param);
+void Script_DoFlipEffect(lua_State *lua, int id_effect, int id_object, int param);
 size_t Script_GetFlipEffectsSaveData(lua_State *lua, char *buf, size_t buf_size);
 int  Script_DoTasks(lua_State *lua, float time);
 bool Script_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_call = false);

@@ -23,6 +23,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
 #include "../ogg.h"
 #include "../codec.h"
 #include "codec_internal.h"

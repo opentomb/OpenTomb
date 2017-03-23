@@ -16,11 +16,11 @@ extern "C" {
 #include "../core/console.h"
 #include "../core/vmath.h"
 #include "../core/polygon.h"
-#include "../inventory.h"
+#include "../state_control/state_control.h"
+#include "../skeletal_model.h"
 #include "../entity.h"
 #include "../world.h"
 #include "../character_controller.h"
-#include "../gui.h"
 
 
 
@@ -49,6 +49,56 @@ int lua_CharacterCreate(lua_State * lua)
         Con_Warning("characterCreate: expecting arguments (entity_id, (hp))");
     }
 
+    return 0;
+}
+
+
+int lua_SetCharacterStateControlFunctions(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            StateControl_SetStateFunctions(ent, lua_tointeger(lua, 2));
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setCharacterStateControlFunctions: expecting arguments (entity_id, funcs_id)");
+    }
+    return 0;
+}
+
+
+int lua_SetCharacterKeyAnim(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 3)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character && ent->character->set_key_anim_func)
+        {
+            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2));
+            if(ss_anim)
+            {
+                ent->character->set_key_anim_func(ent, ss_anim, lua_tointeger(lua, 3));
+            }
+        }
+        else
+        {
+            Con_Warning("no suitable character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setCharacterKeyAnim: expecting arguments (entity_id, anim_type, anim_key_id)");
+    }
     return 0;
 }
 
@@ -330,140 +380,7 @@ int lua_RemoveEntityRagdoll(lua_State *lua)
 }
 
 
-int lua_AddItem(lua_State * lua)
-{
-    int top = lua_gettop(lua);
-    if(top >= 2)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            entity_p player = World_GetPlayer();
-            int item_id = lua_tointeger(lua, 2);
-            int count = (top >= 3) ? (lua_tointeger(lua, 3)) : (-1);
-            lua_pushinteger(lua, Inventory_AddItem(&ent->character->inventory, item_id, count));
-            if(!player || ent->id == player->id)
-            {
-                Gui_NotifierStart(item_id);
-            }
-            return 1;
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("addItem: expecting arguments (entity_id, item_id, (items_count = pickup_count))");
-    }
-
-    return 0;
-}
-
-
-int lua_RemoveItem(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 3)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            int item_id = lua_tointeger(lua, 2);
-            int count = lua_tointeger(lua, 3);
-            lua_pushinteger(lua, Inventory_RemoveItem(&ent->character->inventory, item_id, count));
-            return 1;
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("removeItem: expecting arguments (entity_id, item_id, items_count)");
-    }
-
-    return 0;
-}
-
-
-int lua_RemoveAllItems(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 1)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            Inventory_RemoveAllItems(&ent->character->inventory);
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("removeAllItems: expecting arguments (entity_id)");
-    }
-
-    return 0;
-}
-
-
-int lua_GetItemsCount(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 2)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            int item_id = lua_tointeger(lua, 2);
-            lua_pushinteger(lua, Inventory_GetItemsCount(ent->character->inventory, item_id));
-            return 1;
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("getItemsCount: expecting arguments (entity_id, item_id)");
-    }
-
-    return 0;
-}
-
-
-int lua_PrintItems(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 1)
-    {
-        entity_p  ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            inventory_node_p i = ent->character->inventory;
-            for(; i; i = i->next)
-            {
-                Con_Printf("item[id = %d]: count = %d", i->id, i->count);
-            }
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("printItems: expecting arguments (entity_id)");
-    }
-
-    return 0;
-}
-
-
-int lua_SetCharacterResponse(lua_State * lua)
+int lua_SetCharacterState(lua_State * lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -473,20 +390,12 @@ int lua_SetCharacterResponse(lua_State * lua)
             int8_t value = (int8_t)lua_tointeger(lua, 3);
             switch(lua_tointeger(lua, 2))
             {
-                case RESP_KILL:
-                    ent->character->resp.kill = value;
+                case CHARACTER_STATE_DEAD:
+                    ent->character->state.dead = value;
                     break;
 
-                case RESP_VERT_COLLIDE:
-                    ent->character->resp.vertical_collide = value;
-                    break;
-
-                case RESP_HOR_COLLIDE:
-                    ent->character->resp.horizontal_collide = value;
-                    break;
-
-                case RESP_SLIDE:
-                    ent->character->resp.slide = value;
+                case CHARACTER_STATE_SLIDE:
+                    ent->character->state.slide = value;
                     break;
 
                 default:
@@ -500,14 +409,14 @@ int lua_SetCharacterResponse(lua_State * lua)
     }
     else
     {
-        Con_Warning("setEntityResponse: expecting arguments (entity_id, response_id, value)");
+        Con_Warning("setCharacterState: expecting arguments (entity_id, response_id, value)");
     }
 
     return 0;
 }
 
 
-int lua_GetCharacterResponse(lua_State * lua)
+int lua_GetCharacterState(lua_State * lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -516,20 +425,16 @@ int lua_GetCharacterResponse(lua_State * lua)
         {
             switch(lua_tointeger(lua, 2))
             {
-                case 0:
-                    lua_pushinteger(lua, ent->character->resp.kill);
+                case CHARACTER_STATE_DEAD:
+                    lua_pushinteger(lua, ent->character->state.dead);
                     break;
-                case 1:
-                    lua_pushinteger(lua, ent->character->resp.vertical_collide);
+
+                case CHARACTER_STATE_SLIDE:
+                    lua_pushinteger(lua, ent->character->state.slide);
                     break;
-                case 2:
-                    lua_pushinteger(lua, ent->character->resp.horizontal_collide);
-                    break;
-                case 3:
-                    lua_pushinteger(lua, ent->character->resp.slide);
-                    break;
+
                 default:
-                    lua_pushinteger(lua, 0);
+                    lua_pushnil(lua);
                     break;
             }
             return 1;
@@ -541,7 +446,7 @@ int lua_GetCharacterResponse(lua_State * lua)
     }
     else
     {
-        Con_Warning("getEntityResponse: expecting arguments (entity_id, response_id)");
+        Con_Warning("getCharacterState: expecting arguments (entity_id, response_id)");
     }
 
     return 0;
@@ -620,23 +525,19 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
 
 void Script_LuaRegisterCharacterFuncs(lua_State *lua)
 {
-    lua_register(lua, "addItem", lua_AddItem);
-    lua_register(lua, "removeItem", lua_RemoveItem);
-    lua_register(lua, "removeAllItems", lua_RemoveAllItems);
-    lua_register(lua, "getItemsCount", lua_GetItemsCount);
-    lua_register(lua, "printItems", lua_PrintItems);
-
     lua_register(lua, "addEntityRagdoll", lua_AddEntityRagdoll);
     lua_register(lua, "removeEntityRagdoll", lua_RemoveEntityRagdoll);
 
     lua_register(lua, "characterCreate", lua_CharacterCreate);
+    lua_register(lua, "setCharacterStateControlFunctions", lua_SetCharacterStateControlFunctions);
+    lua_register(lua, "setCharacterKeyAnim", lua_SetCharacterKeyAnim);
     lua_register(lua, "setCharacterTarget", lua_SetCharacterTarget);
     lua_register(lua, "getCharacterParam", lua_GetCharacterParam);
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);
     lua_register(lua, "changeCharacterParam", lua_ChangeCharacterParam);
 
-    lua_register(lua, "getCharacterResponse", lua_GetCharacterResponse);
-    lua_register(lua, "setCharacterResponse", lua_SetCharacterResponse);
+    lua_register(lua, "getCharacterState", lua_GetCharacterState);
+    lua_register(lua, "setCharacterState", lua_SetCharacterState);
     lua_register(lua, "getCharacterCurrentWeapon", lua_GetCharacterCurrentWeapon);
     lua_register(lua, "setCharacterCurrentWeapon", lua_SetCharacterCurrentWeapon);
     lua_register(lua, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);
