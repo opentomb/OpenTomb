@@ -197,7 +197,7 @@ void Save_Entity(FILE **f, entity_p ent)
     {
         uint32_t room_id = (ent->self->room)?(ent->self->room->id):(0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->bf->animations.model->id, room_id,
-                ent->transform[12 + 0], ent->transform[12+1], ent->transform[12+2],
+                ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2],
                 ent->angles[0], ent->angles[1], ent->angles[2], ent->id);
     }
     else
@@ -205,6 +205,11 @@ void Save_Entity(FILE **f, entity_p ent)
         fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id,
                 ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2],
                 ent->angles[0], ent->angles[1], ent->angles[2]);
+    }
+
+    if(ent->bf->animations.model && ent->character)
+    {
+        fprintf(*f, "\nsetEntityBaseAnimModel(%d, %d);", ent->id, ent->bf->animations.model->id);
     }
 
     char save_buff[32768] = {0};
