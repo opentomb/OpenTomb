@@ -212,6 +212,14 @@ void Save_Entity(FILE **f, entity_p ent)
         fprintf(*f, "\nsetEntityBaseAnimModel(%d, %d);", ent->id, ent->bf->animations.model->id);
     }
 
+    for(uint16_t i = 0; i < ent->bf->bone_tag_count; ++i)
+    {
+        if(ent->bf->bone_tags[i].is_hidden)
+        {
+            fprintf(*f, "\nsetEntityBoneVisibility(%d, %d, false);", ent->id, i);
+        }
+    }
+
     char save_buff[32768] = {0};
     if(Script_GetEntitySaveData(engine_lua, ent->id, save_buff, sizeof(save_buff)) > 0)
     {

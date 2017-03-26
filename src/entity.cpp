@@ -474,10 +474,17 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             }
             else
             {
-                Mat4_vec3_mul(offset, btag->parent->full_transform, btag->parent->mesh_base->centre);
+                vec3_add(tmp, btag->parent->mesh_base->bb_max, btag->parent->mesh_base->bb_min);
+                tmp[0] *= 0.5f;
+                tmp[1] *= 0.5f;
+                tmp[2] *= 0.5f;
+                Mat4_vec3_mul(offset, btag->parent->full_transform, tmp);
                 Mat4_vec3_mul(from_parent, ent->transform, offset);
 
-                vec3_copy_inv(offset, btag->mesh_base->centre);
+                vec3_add(tmp, btag->mesh_base->bb_max, btag->mesh_base->bb_min);
+                offset[0] = -0.5f * tmp[0];
+                offset[1] = -0.5f * tmp[1];
+                offset[2] = -0.5f * tmp[2];
                 Mat4_vec3_rot_macro(from, tr, offset);
                 vec3_add_to(from, from_parent);
             }
@@ -490,7 +497,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             {
                 break;
             }
-            int iter = (float)(3.0f * move_len / btag->mesh_base->radius) + 1;  ///@FIXME (not a critical): magick const 2.0!
+            int iter = (float)(3.0f * move_len / btag->mesh_base->radius) + 1;  ///@FIXME (not a critical): magick const 3.0!
             move[0] /= (float)iter;
             move[1] /= (float)iter;
             move[2] /= (float)iter;

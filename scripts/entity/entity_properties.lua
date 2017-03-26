@@ -190,7 +190,7 @@ tr1_entity_tbl[150] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE
 
 tr1_entity_tbl[161] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "centaur_statue"};  -- Centaur statue
 tr1_entity_tbl[162] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "natla_cabin_TR1"}; -- Natla's mines cabin
-tr1_entity_tbl[163] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Mutant egg
+tr1_entity_tbl[163] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "mutant_egg"};      -- Mutant egg
 
 -- SERVICE OBJECTS --
 
@@ -205,7 +205,7 @@ tr1_entity_tbl[177] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_
 
 tr1_entity_tbl[179] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, hide = 0x01};        -- Flame emitter
 tr1_entity_tbl[180] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "spikewall"};                     -- Moving lava mass
-tr1_entity_tbl[181] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "MutantEgg"};                     -- Mutant egg (big)
+tr1_entity_tbl[181] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "mutant_boss_egg"};               -- Mutant egg (big)
 tr1_entity_tbl[182] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Motorboat
 
 tr1_entity_tbl[183] = {coll = COLLISION_NONE, shape = COLLISION_SHAPE_TRIMESH, hide = 0x01};        -- Earthquake
