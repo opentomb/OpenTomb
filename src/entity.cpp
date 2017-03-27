@@ -60,6 +60,7 @@ entity_p Entity_Create()
     ret->no_fix_skeletal_parts = 0x00000000;
     ret->physics = Physics_CreatePhysicsData(ret->self);
 
+    ret->activation_point = NULL;
     ret->inventory = NULL;
     ret->character = NULL;
     ret->current_sector = NULL;
@@ -73,17 +74,26 @@ entity_p Entity_Create()
     ret->linear_speed = 0.0f;
     ret->anim_linear_speed = 0.0f;
 
-    ret->activation_offset[0] = 0.0f;
-    ret->activation_offset[1] = 0.0f;
-    ret->activation_offset[2] = 0.0f;
-    ret->activation_offset[3] = 32.0f;
-
-    ret->activation_direction[0] = 0.0f;
-    ret->activation_direction[1] = 1.0f;
-    ret->activation_direction[2] = 0.0f;
-    ret->activation_direction[3] = 0.70f;
-
     return ret;
+}
+
+
+void Entity_InitActivationPoint(entity_p entity)
+{
+    if(!entity->activation_point)
+    {
+        entity->activation_point = (activation_point_p)malloc(sizeof(activation_point_t));
+    }
+
+    entity->activation_point->offset[0] = 0.0f;
+    entity->activation_point->offset[1] = 0.0f;
+    entity->activation_point->offset[2] = 0.0f;
+    entity->activation_point->offset[3] = 32.0f;
+
+    entity->activation_point->direction[0] = 0.0f;
+    entity->activation_point->direction[1] = 1.0f;
+    entity->activation_point->direction[2] = 0.0f;
+    entity->activation_point->direction[3] = 0.70f;
 }
 
 
@@ -101,6 +111,11 @@ void Entity_Clear(entity_p entity)
             OBB_Clear(entity->obb);
             free(entity->obb);
             entity->obb = NULL;
+        }
+
+        if(entity->activation_point)
+        {
+            free(entity->activation_point);
         }
 
         Ragdoll_Delete(entity->physics);
@@ -1171,14 +1186,24 @@ int  Entity_CanTrigger(entity_p activator, entity_p trigger)
     if(activator && trigger && (activator != trigger))
     {
         float pos[3], dir[3];
-        float r = trigger->activation_offset[3];
-        r *= r;
-        Mat4_vec3_mul_macro(pos, trigger->transform, trigger->activation_offset);
-        Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_direction);
-        if((vec3_dot(activator->transform + 4, dir) > trigger->activation_direction[3]) &&
-           (vec3_dist_sq(activator->transform + 12, pos) < r))
+        if(trigger->activation_point)
         {
-            return 1;
+            float r = trigger->activation_point->offset[3];
+            r *= r;
+            Mat4_vec3_mul_macro(pos, trigger->transform, trigger->activation_point->offset);
+            if(vec3_dist_sq(activator->transform + 12, pos) < r)
+            {
+                if(vec3_sqabs(trigger->activation_point->direction) > 0.001f)
+                {
+                    Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_point->direction);
+                }
+                else
+                {
+                    vec3_sub(dir, trigger->transform + 12, activator->transform + 12);
+                    vec3_norm(dir, r);
+                }
+                return (vec3_dot(activator->transform + 4, dir) > trigger->activation_point->direction[3]);
+            }
         }
     }
 
@@ -1188,10 +1213,18 @@ int  Entity_CanTrigger(entity_p activator, entity_p trigger)
 
 void Entity_RotateToTriggerZ(entity_p activator, entity_p trigger)
 {
-    if(activator && trigger && (activator != trigger))
+    if(activator && trigger && trigger->activation_point && (activator != trigger))
     {
-        float dir[3];
-        Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_direction);
+        float dir[4];
+        if(vec3_sqabs(trigger->activation_point->direction) > 0.001f)
+        {
+            Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_point->direction);
+        }
+        else
+        {
+            vec3_sub(dir, trigger->transform + 12, activator->transform + 12);
+            vec3_norm(dir, dir[3]);
+        }
         activator->angles[0] = (180.0f  / M_PI) * atan2f(-dir[0], dir[1]);
         Entity_UpdateTransform(activator);
     }
@@ -1200,10 +1233,18 @@ void Entity_RotateToTriggerZ(entity_p activator, entity_p trigger)
 
 void Entity_RotateToTrigger(entity_p activator, entity_p trigger)
 {
-    if(activator && trigger && (activator != trigger))
+    if(activator && trigger && trigger->activation_point && (activator != trigger))
     {
         float dir[4], q[4], qt[4];
-        Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_direction);
+        if(vec3_sqabs(trigger->activation_point->direction) > 0.001f)
+        {
+            Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_point->direction);
+        }
+        else
+        {
+            vec3_sub(dir, trigger->transform + 12, activator->transform + 12);
+            vec3_norm(dir, dir[3]);
+        }
         vec4_GetQuaternionRotation(q, activator->transform + 4, dir);
         vec4_sop(qt, q);
 
@@ -1231,7 +1272,7 @@ void Entity_CheckActivators(struct entity_s *ent)
             engine_container_p cont = room->content->containers;
             for(; cont; cont = cont->next)
             {
-                if((cont->object_type == OBJECT_ENTITY) && cont->object && (cont->object != ent))
+                if((cont->object_type == OBJECT_ENTITY) && cont->object && (cont->object != ent) && ((entity_p)cont->object)->activation_point)
                 {
                     entity_p trigger = (entity_p)cont->object;
                     if((trigger->type_flags & ENTITY_TYPE_INTERACTIVE) && (trigger->state_flags & ENTITY_STATE_ENABLED))
@@ -1245,7 +1286,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                     {
                         float ppos[3];
                         float *v = trigger->transform + 12;
-                        float r = trigger->activation_offset[3];
+                        float r = trigger->activation_point->offset[3];
 
                         ppos[0] = ent->transform[12 + 0] + ent->transform[4 + 0] * ent->bf->bb_max[1];
                         ppos[1] = ent->transform[12 + 1] + ent->transform[4 + 1] * ent->bf->bb_max[1];
