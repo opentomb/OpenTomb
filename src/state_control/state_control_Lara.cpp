@@ -8,11 +8,11 @@
 
 #include "../render/camera.h"
 #include "../script/script.h"
+#include "../physics/physics.h"
 #include "../vt/tr_versions.h"
 #include "../engine.h"
 #include "../audio.h"
 #include "../controls.h"
-#include "../physics.h"
 #include "../room.h"
 #include "../world.h"
 #include "../skeletal_model.h"
@@ -276,7 +276,10 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             if(is_last_frame)
             {
                 state->ragdoll = 0x01;
-                //addEntityRagdoll(player, RD_TYPE_LARA);
+                if(ent->character->ragdoll)
+                {
+                    Ragdoll_Create(ent->physics, ent->bf, ent->character->ragdoll);
+                }
             }
             break;
 

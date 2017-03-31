@@ -21,7 +21,6 @@ extern "C" {
 #include "script/script.h"
 #include "vt/tr_versions.h"
 #include "engine.h"
-#include "physics.h"
 #include "controls.h"
 #include "room.h"
 #include "world.h"

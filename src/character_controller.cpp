@@ -7,6 +7,7 @@
 #include "core/obb.h"
 #include "render/render.h"
 #include "script/script.h"
+#include "physics/ragdoll.h"
 
 #include "vt/tr_versions.h"
 #include "audio.h"
@@ -14,7 +15,6 @@
 #include "world.h"
 #include "character_controller.h"
 #include "engine.h"
-#include "physics.h"
 #include "entity.h"
 #include "skeletal_model.h"
 #include "resource.h"
@@ -41,6 +41,7 @@ void Character_Create(struct entity_s *ent)
         ret->target_id = ENTITY_ID_NONE;
         ret->hair_count = 0;
         ret->hairs = NULL;
+        ret->ragdoll = NULL;
 
         ret->weapon_current_state = 0x00;
         ret->current_weapon = 0;
@@ -143,6 +144,12 @@ void Character_Clean(struct entity_s *ent)
         free(actor->hairs);
         actor->hairs = NULL;
         actor->hair_count = 0;
+    }
+
+    if(actor->ragdoll)
+    {
+        Ragdoll_DeleteSetup(actor->ragdoll);
+        actor->ragdoll = NULL;
     }
 
     actor->height_info.water = 0x00;
