@@ -55,7 +55,6 @@ entity_p Entity_Create()
     ret->obb->transform = ret->transform;
 
     ret->no_fix_all = 0x00;
-    ret->no_fix_z = 0x00;
     ret->no_anim_pos_autocorrection = 0x01;
     ret->no_fix_skeletal_parts = 0x00000000;
     ret->physics = Physics_CreatePhysicsData(ret->self);
@@ -527,6 +526,46 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
                 vec3_add_to(curr, move);
             }
         }
+
+        vec3_sub(reaction, ent->transform + 12, orig_pos);
+        if(ret > 0)
+        {
+            filter &= COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT;
+            ss_bone_tag_p btag = ent->bf->bone_tags + 0;
+            ghost_shape_p ghost_info = Physics_GetGhostShapeInfo(ent->physics, 0);
+
+            Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
+
+            from[0] = tr[12 + 0] - reaction[0];
+            from[1] = tr[12 + 1] - reaction[1];
+            from[2] = tr[12 + 2] - reaction[2];
+
+            vec3_copy(to, tr + 12)
+            vec3_copy(curr, from);
+            vec3_sub(move, to, from);
+            move_len = vec3_abs(move);
+
+            int iter = (float)(1.5f * move_len / ghost_info->radius) + 1;
+            move[0] /= (float)iter;
+            move[1] /= (float)iter;
+            move[2] /= (float)iter;
+            iter = (move_len > 0.0f) ? (iter) : (0);
+
+            for(int j = 0; j <= iter; j++)
+            {
+                vec3_copy(tr + 12, curr);
+                Physics_SetGhostWorldTransform(ent->physics, tr, 0);
+                if(Physics_GetGhostPenetrationFixVector(ent->physics, 0, filter, tmp))
+                {
+                    vec3_add_to(ent->transform + 12, tmp);
+                    vec3_add_to(curr, tmp);
+                    vec3_add_to(from, tmp);
+                    ret++;
+                }
+                vec3_add_to(curr, move);
+            }
+        }
+
         vec3_sub(reaction, ent->transform + 12, orig_pos);
         vec3_copy(ent->transform + 12, orig_pos);
         Entity_GhostUpdate(ent);
@@ -591,12 +630,10 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
             return;
         }
 
-        float t1, t2, reaction[3], reaction_static[3];
+        float t1, t2, reaction[3];
         if(0 < Entity_GetPenetrationFixVector(ent, reaction, move, filter))
         {
-            reaction[2] = (ent->no_fix_z) ? (0.0f) : (reaction[2]);
             vec3_add(ent->transform + 12, ent->transform + 12, reaction);
-
             if(ent->character)
             {
                 if(move)
@@ -636,12 +673,6 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
                 }
             }
             Entity_GhostUpdate(ent);
-
-            if(0 < Entity_GetPenetrationFixVector(ent, reaction_static, reaction, COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT))
-            {
-                vec3_add(ent->transform + 12, ent->transform + 12, reaction_static);
-                Entity_GhostUpdate(ent);
-            }
         }
     }
 }
