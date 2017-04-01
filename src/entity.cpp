@@ -539,6 +539,12 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             from[0] = tr[12 + 0] - reaction[0];
             from[1] = tr[12 + 1] - reaction[1];
             from[2] = tr[12 + 2] - reaction[2];
+            if(ent_move)
+            {
+                from[0] -= ent_move[0];
+                from[1] -= ent_move[1];
+                from[2] -= ent_move[2];
+            }
 
             vec3_copy(to, tr + 12)
             vec3_copy(curr, from);
@@ -579,8 +585,9 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
  * we check walls and other collision objects reaction. if reaction more then critacal
  * then cmd->horizontal_collide |= 0x01;
  * @param ent - cheked entity
- * @param cmd - here we fill cmd->horizontal_collide field
  * @param move - absolute 3d move vector
+ * @param reaction - absolute 3d vector for collision resolving
+ * @param filter - bit mask to filter objects by collisiontype
  */
 int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float reaction[3], int16_t filter)
 {

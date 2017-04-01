@@ -273,12 +273,12 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
          * Base onfloor animations
          */
         case TR_STATE_LARA_DEATH:
-            if(is_last_frame)
+            if(is_last_frame && !(ent->type_flags & ENTITY_TYPE_DYNAMIC))
             {
                 state->ragdoll = 0x01;
-                if(ent->character->ragdoll)
+                if(ent->character->ragdoll && Ragdoll_Create(ent->physics, ent->bf, ent->character->ragdoll))
                 {
-                    Ragdoll_Create(ent->physics, ent->bf, ent->character->ragdoll);
+                    ent->type_flags |= ENTITY_TYPE_DYNAMIC;
                 }
             }
             break;

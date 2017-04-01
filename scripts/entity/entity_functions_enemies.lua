@@ -76,6 +76,7 @@ function Doppelgagner_init(id)
     setEntityGhostCollisionShape(id, 8,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
 
     setHumanoidBodyParts(id);
+    setCharacterRagdollSetup(id, RD_TYPE_LARA);
 
     entity_funcs[id].onHit = function(object_id, activator_id)
         hp = getCharacterParam(player, PARAM_HEALTH) - getCharacterParam(player, PARAM_HIT_DAMAGE);
@@ -83,7 +84,7 @@ function Doppelgagner_init(id)
         setCharacterParam(object_id, PARAM_HEALTH, hp);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setCharacterTarget(activator_id, nil);
-            addEntityRagdoll(object_id, RD_TYPE_LARA);
+            setCharacterRagdollActivity(object_id, true);
         end;
     end;
 
@@ -92,7 +93,7 @@ function Doppelgagner_init(id)
 
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setEntityTypeFlag(object_id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
-            addEntityRagdoll(object_id, RD_TYPE_LARA);
+            setCharacterRagdollActivity(object_id, true);
             setEntityActivity(object_id, false);
             return;
         end;
