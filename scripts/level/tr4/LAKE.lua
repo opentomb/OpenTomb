@@ -6,7 +6,7 @@ print("Level script loaded (LAKE.lua)");
 level_PostLoad = function()
     setEntityCollision(88, false);  -- model 457
 
-    addCharacterHair(player, HAIR_TR4_OLD);
+    addCharacterHair(player, getHairSetup(HAIR_TR4_OLD));
     playStream(110);
 end;
 

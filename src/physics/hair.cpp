@@ -7,42 +7,32 @@ extern "C" {
 }
 
 #include "hair.h"
-#include "../script/script.h"
 
-struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_index)
+struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, int stack_pos)
 {
     struct hair_setup_s *hair_setup = NULL;
     int top = lua_gettop(lua);
 
-    lua_getglobal(lua, "getHairSetup");
-    if(!lua_isfunction(lua, -1))
-    {
-        lua_settop(lua, top);
-        return NULL;
-    }
-
-    lua_pushinteger(lua, hair_entry_index);
-    if(!lua_CallAndLog(lua, 1, 1, 0) || !lua_istable(lua, -1))
+    if(!lua_istable(lua, stack_pos))
     {
         lua_settop(lua, top);
         return NULL;
     }
 
     hair_setup = (struct hair_setup_s*)malloc(sizeof(struct hair_setup_s));
-    lua_getfield(lua, -1, "model");
+    lua_getfield(lua, stack_pos, "model");
     hair_setup->model_id = (uint32_t)lua_tonumber(lua, -1);
     lua_pop(lua, 1);
 
-    lua_getfield(lua, -1, "link_body");
+    lua_getfield(lua, stack_pos, "link_body");
     hair_setup->link_body = (uint32_t)lua_tonumber(lua, -1);
     lua_pop(lua, 1);
 
-    lua_getfield(lua, -1, "v_count");
+    lua_getfield(lua, stack_pos, "v_count");
     hair_setup->vertex_map_count = (uint32_t)lua_tonumber(lua, -1);
     lua_pop(lua, 1);
 
-
-    lua_getfield(lua, -1, "props");
+    lua_getfield(lua, stack_pos, "props");
     if(!lua_istable(lua, -1))
     {
         free(hair_setup);
@@ -81,7 +71,6 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_in
     hair_setup->joint_erp        = lua_tonumber(lua, -1);
     lua_pop(lua, 1);
 
-
     lua_getfield(lua, -1, "hair_damping");
     if(!lua_istable(lua, -1))
     {
@@ -100,23 +89,22 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_in
     lua_pop(lua, 1);
     lua_pop(lua, 1);
 
-    lua_getfield(lua, -1, "v_index");
+    lua_getfield(lua, stack_pos, "v_index");
     if(!lua_istable(lua, -1))
     {
         free(hair_setup);
         lua_settop(lua, top);
         return NULL;
     }
-    for(uint32_t i = 1; i <= hair_setup->vertex_map_count; i++)
+    for(uint32_t i = 0; i < hair_setup->vertex_map_count; i++)
     {
-        lua_rawgeti(lua, -1, i);
-        hair_setup->head_vertex_map[i-1] = (uint32_t)lua_tonumber(lua, -1);
+        lua_rawgeti(lua, -1, i + 1);
+        hair_setup->head_vertex_map[i] = (uint32_t)lua_tonumber(lua, -1);
         lua_pop(lua, 1);
-
     }
     lua_pop(lua, 1);
 
-    lua_getfield(lua, -1, "offset");
+    lua_getfield(lua, stack_pos, "offset");
     if(!lua_istable(lua, -1))
     {
         free(hair_setup);
@@ -137,7 +125,7 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_in
 
     lua_pop(lua, 1);
 
-    lua_getfield(lua, -1, "root_angle");
+    lua_getfield(lua, stack_pos, "root_angle");
     if(!lua_istable(lua, -1))
     {
         free(hair_setup);
@@ -155,7 +143,6 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_in
     lua_rawgeti(lua, -1, 3);
     hair_setup->root_angle[2] = lua_tonumber(lua, -1);
     lua_pop(lua, 1);
-
 
     lua_settop(lua, top);
     return hair_setup;

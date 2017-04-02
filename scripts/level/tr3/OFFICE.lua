@@ -4,7 +4,7 @@
 print("Level script loaded (OFFICE.lua)");
 
 level_PostLoad = function()
-    addCharacterHair(player, HAIR_TR3);
+    addCharacterHair(player, getHairSetup(HAIR_TR3));
     playStream(78);
 end;
 

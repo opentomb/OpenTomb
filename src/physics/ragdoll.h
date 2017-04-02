@@ -51,7 +51,7 @@ typedef struct rd_setup_s
     rd_joint_setup_s   *joint_setup;
     rd_body_setup_s    *body_setup;
 
-    char               *hit_func;   // Later to be implemented as hit callback function.
+    char               *hit_func;       // Later to be implemented as hit callback function.
 }rd_setup_t, *rd_setup_p;
 
 
@@ -63,7 +63,7 @@ typedef struct rd_setup_s
 #define RD_DEFAULT_SLEEPING_THRESHOLD 10.0
 
 
-struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index);
+struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int stack_pos);
 void Ragdoll_DeleteSetup(struct rd_setup_s *setup);
 
 #endif	/* PHYSICS_RAGDOLL_H */

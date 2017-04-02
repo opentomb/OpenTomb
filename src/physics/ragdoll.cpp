@@ -8,28 +8,19 @@ extern "C" {
 }
 
 #include "ragdoll.h"
-#include "../script/script.h"
 
-struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
+struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int stack_pos)
 {
     struct rd_setup_s *setup = NULL;
     int top = lua_gettop(lua);
 
-    lua_getglobal(lua, "getRagdollSetup");
-    if(!lua_isfunction(lua, -1))
+    if(!lua_istable(lua, stack_pos))
     {
         lua_settop(lua, top);
         return NULL;
     }
 
-    lua_pushinteger(lua, ragdoll_index);
-    if(!lua_CallAndLog(lua, 1, 1, 0) || !lua_istable(lua, -1))
-    {
-        lua_settop(lua, top);
-        return NULL;
-    }
-
-    lua_getfield(lua, -1, "hit_callback");
+    lua_getfield(lua, stack_pos, "hit_callback");
     if(!lua_isstring(lua, -1))
     {
         lua_settop(lua, top);
@@ -51,23 +42,22 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
     memcpy(setup->hit_func, func_name, string_length * sizeof(char));
     lua_pop(lua, 1);
 
-    lua_getfield(lua, -1, "joint_count");
+    lua_getfield(lua, stack_pos, "joint_count");
     setup->joint_count = (uint32_t)lua_tonumber(lua, -1);
     lua_pop(lua, 1);
 
-    lua_getfield(lua, -1, "body_count");
+    lua_getfield(lua, stack_pos, "body_count");
     setup->body_count  = (uint32_t)lua_tonumber(lua, -1);
     lua_pop(lua, 1);
 
 
-    lua_getfield(lua, -1, "joint_cfm");
+    lua_getfield(lua, stack_pos, "joint_cfm");
     setup->joint_cfm   = lua_tonumber(lua, -1);
     lua_pop(lua, 1);
 
-    lua_getfield(lua, -1, "joint_erp");
+    lua_getfield(lua, stack_pos, "joint_erp");
     setup->joint_erp   = lua_tonumber(lua, -1);
     lua_pop(lua, 1);
-
 
     if((setup->body_count <= 0) || (setup->joint_count <= 0))
     {
@@ -77,7 +67,7 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
         return NULL;
     }
 
-    lua_getfield(lua, -1, "body");
+    lua_getfield(lua, stack_pos, "body");
     if(!lua_istable(lua, -1))
     {
         Ragdoll_DeleteSetup(setup);
@@ -91,7 +81,7 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
 
     for(uint32_t i = 0; i < setup->body_count; i++)
     {
-        lua_rawgeti(lua, -1, i+1);
+        lua_rawgeti(lua, -1, i + 1);
         if(!lua_istable(lua, -1))
         {
             Ragdoll_DeleteSetup(setup);
@@ -134,7 +124,7 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
     }
     lua_pop(lua, 1);
 
-    lua_getfield(lua, -1, "joint");
+    lua_getfield(lua, stack_pos, "joint");
     if(!lua_istable(lua, -1))
     {
         Ragdoll_DeleteSetup(setup);
@@ -145,7 +135,7 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
 
     for(uint32_t i = 0; i < setup->joint_count; i++)
     {
-        lua_rawgeti(lua, -1, i+1);
+        lua_rawgeti(lua, -1, i + 1);
         if(!lua_istable(lua, -1))
         {
             Ragdoll_DeleteSetup(setup);
@@ -160,7 +150,6 @@ struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
         lua_getfield(lua, -1, "joint_type");
         setup->joint_setup[i].joint_type = (uint16_t)lua_tonumber(lua, -1);
         lua_pop(lua, 1);
-
 
         lua_getfield(lua, -1, "body1_offset");
         if(!lua_istable(lua, -1))

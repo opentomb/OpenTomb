@@ -57,7 +57,7 @@ typedef struct hair_setup_s
 
 
 // Gets scripted hair set-up to specified hair set-up structure.
-hair_setup_p Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_index);
+hair_setup_p Hair_GetSetup(struct lua_State *lua, int stack_pos);
 
 
 #endif	/* PHYSICS_HAIR_H */

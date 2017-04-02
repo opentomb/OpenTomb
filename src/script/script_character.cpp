@@ -247,21 +247,17 @@ int lua_ChangeCharacterParam(lua_State * lua)
 
 int lua_AddCharacterHair(lua_State *lua)
 {
-    if(lua_gettop(lua) != 2)
-    {
-        Con_Warning("addCharacterHair: expecting arguments (entity_id, hair_setup_index)");
-    }
-    else
+    if(lua_gettop(lua) >= 2)
     {
         entity_p ent   = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character)
         {
-            hair_setup_s *hair_setup = Hair_GetSetup(lua, lua_tointeger(lua, 2));
+            hair_setup_s *hair_setup = Hair_GetSetup(lua, 2);
             if(hair_setup)
             {
                 ent->character->hair_count++;
                 ent->character->hairs = (struct hair_s**)realloc(ent->character->hairs, (sizeof(struct hair_s*) * ent->character->hair_count));
-                ent->character->hairs[ent->character->hair_count-1] = Hair_Create(hair_setup, ent->physics);
+                ent->character->hairs[ent->character->hair_count - 1] = Hair_Create(hair_setup, ent->physics);
                 if(!ent->character->hairs[ent->character->hair_count - 1])
                 {
                     ent->character->hair_count--;
@@ -278,6 +274,10 @@ int lua_AddCharacterHair(lua_State *lua)
         {
             Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
         }
+    }
+    else
+    {
+        Con_Warning("addCharacterHair: expecting arguments (entity_id, hair_setup_table)");
     }
     return 0;
 }
@@ -326,7 +326,7 @@ int lua_SetCharacterRagdollSetup(lua_State *lua)
         entity_p ent   = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character)
         {
-            struct rd_setup_s *ragdoll_setup = Ragdoll_GetSetup(lua, lua_tointeger(lua, 2));
+            struct rd_setup_s *ragdoll_setup = Ragdoll_GetSetup(lua, 2);
             if(ragdoll_setup)
             {
                 Ragdoll_DeleteSetup(ent->character->ragdoll);
@@ -334,7 +334,7 @@ int lua_SetCharacterRagdollSetup(lua_State *lua)
             }
             else
             {
-                Con_Warning("no ragdoll setup with id = %d", lua_tointeger(lua, 2));
+                Con_Warning("bad ragdoll setup");
             }
         }
         else
@@ -344,7 +344,7 @@ int lua_SetCharacterRagdollSetup(lua_State *lua)
     }
     else
     {
-        Con_Warning("setCharacterRagdollSetup: expecting arguments (entity_id, ragdoll_setup_index)");
+        Con_Warning("setCharacterRagdollSetup: expecting arguments (entity_id, ragdoll_setup_table)");
     }
     return 0;
 }

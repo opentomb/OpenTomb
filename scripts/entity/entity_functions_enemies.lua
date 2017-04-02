@@ -76,7 +76,7 @@ function Doppelgagner_init(id)
     setEntityGhostCollisionShape(id, 8,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
 
     setHumanoidBodyParts(id);
-    setCharacterRagdollSetup(id, RD_TYPE_LARA);
+    setCharacterRagdollSetup(id, getRagdollSetup(RD_TYPE_LARA));
 
     entity_funcs[id].onHit = function(object_id, activator_id)
         hp = getCharacterParam(player, PARAM_HEALTH) - getCharacterParam(player, PARAM_HIT_DAMAGE);

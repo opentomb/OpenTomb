@@ -4,7 +4,7 @@
 print("Level script loaded (SHORE.lua)");
 
 level_PostLoad = function()
-    addCharacterHair(player, HAIR_TR3);
+    addCharacterHair(player, getHairSetup(HAIR_TR3));
 
     moveEntityLocal(player, 0, 0, 256);                -- Raise Lara from the floor
     setEntityMoveType(player, MOVE_UNDERWATER);     -- Change to underwater state
