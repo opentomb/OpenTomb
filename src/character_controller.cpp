@@ -1128,7 +1128,9 @@ int Character_MoveOnFloor(struct entity_s *ent)
     }
 
     // check move type
-    if(ent->character->height_info.floor_hit.hit && (pos[2] < ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height))
+    if(ent->character->height_info.floor_hit.hit && 
+       (pos[2] < ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height) &&
+       (ent->speed[2] <= 0.0f))
     {
         ent->character->state.floor_collide = 0x01;
         vec3_copy(tv, ent->character->height_info.floor_hit.normale);
@@ -1195,7 +1197,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         ent->character->state.slide = 0x00;
         ent->character->state.floor_collide = 0x00;
         ent->move_type = MOVE_FREE_FALLING;
-        ent->speed[2] = 0.0;
+        ent->speed[2] = (ent->speed[2] < 0.0f) ? (0.0) : (ent->speed[2]);
         return 2;
     }
 
@@ -1324,7 +1326,7 @@ int Character_FreeFalling(struct entity_s *ent)
         if(ent->character->height_info.ceiling_hit.point[2] < ent->bf->bb_max[2] + pos[2])
         {
             pos[2] = ent->character->height_info.ceiling_hit.point[2] - ent->bf->bb_max[2];
-            ent->speed[2] = 0.0f;
+            ent->speed[2] = (ent->speed[2] > 0.0f) ? (0.0f) : (ent->speed[2]);
             ent->character->state.ceiling_collide = 0x01;
         }
     }
