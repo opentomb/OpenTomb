@@ -4,7 +4,7 @@
 print("Level script loaded (JOBY4.lua)");
 
 level_PostLoad = function()
-    addCharacterHair(player, HAIR_TR5_OLD);
+    addCharacterHair(player, getHairSetup(HAIR_TR5_OLD));
     playStream(127);
 end;
 

@@ -7,6 +7,7 @@
 #include "core/obb.h"
 #include "render/render.h"
 #include "script/script.h"
+#include "physics/ragdoll.h"
 
 #include "vt/tr_versions.h"
 #include "audio.h"
@@ -14,7 +15,6 @@
 #include "world.h"
 #include "character_controller.h"
 #include "engine.h"
-#include "physics.h"
 #include "entity.h"
 #include "skeletal_model.h"
 #include "resource.h"
@@ -41,6 +41,7 @@ void Character_Create(struct entity_s *ent)
         ret->target_id = ENTITY_ID_NONE;
         ret->hair_count = 0;
         ret->hairs = NULL;
+        ret->ragdoll = NULL;
 
         ret->weapon_current_state = 0x00;
         ret->current_weapon = 0;
@@ -143,6 +144,12 @@ void Character_Clean(struct entity_s *ent)
         free(actor->hairs);
         actor->hairs = NULL;
         actor->hair_count = 0;
+    }
+
+    if(actor->ragdoll)
+    {
+        Ragdoll_DeleteSetup(actor->ragdoll);
+        actor->ragdoll = NULL;
     }
 
     actor->height_info.water = 0x00;
@@ -1121,7 +1128,9 @@ int Character_MoveOnFloor(struct entity_s *ent)
     }
 
     // check move type
-    if(ent->character->height_info.floor_hit.hit && (pos[2] < ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height))
+    if(ent->character->height_info.floor_hit.hit && 
+       (pos[2] < ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height) &&
+       (ent->speed[2] <= 0.0f))
     {
         ent->character->state.floor_collide = 0x01;
         vec3_copy(tv, ent->character->height_info.floor_hit.normale);
@@ -1188,7 +1197,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         ent->character->state.slide = 0x00;
         ent->character->state.floor_collide = 0x00;
         ent->move_type = MOVE_FREE_FALLING;
-        ent->speed[2] = 0.0;
+        ent->speed[2] = (ent->speed[2] < 0.0f) ? (0.0) : (ent->speed[2]);
         return 2;
     }
 
@@ -1317,7 +1326,7 @@ int Character_FreeFalling(struct entity_s *ent)
         if(ent->character->height_info.ceiling_hit.point[2] < ent->bf->bb_max[2] + pos[2])
         {
             pos[2] = ent->character->height_info.ceiling_hit.point[2] - ent->bf->bb_max[2];
-            ent->speed[2] = 0.0f;
+            ent->speed[2] = (ent->speed[2] > 0.0f) ? (0.0f) : (ent->speed[2]);
             ent->character->state.ceiling_collide = 0x01;
         }
     }
@@ -1943,7 +1952,6 @@ void Character_ApplyCommands(struct entity_s *ent)
         ent->character->state_func(ent, &ent->bf->animations);
     }
 
-    ent->no_fix_z = 0x00;
     switch(ent->move_type)
     {
         case MOVE_KINEMATIC:
@@ -1956,7 +1964,6 @@ void Character_ApplyCommands(struct entity_s *ent)
             break;
 
         case MOVE_FREE_FALLING:
-            ent->no_fix_z = 0x01;
             Character_FreeFalling(ent);
             break;
 

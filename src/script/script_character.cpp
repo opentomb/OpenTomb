@@ -247,21 +247,17 @@ int lua_ChangeCharacterParam(lua_State * lua)
 
 int lua_AddCharacterHair(lua_State *lua)
 {
-    if(lua_gettop(lua) != 2)
-    {
-        Con_Warning("addCharacterHair: expecting arguments (entity_id, hair_setup_index)");
-    }
-    else
+    if(lua_gettop(lua) >= 2)
     {
         entity_p ent   = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character)
         {
-            hair_setup_s *hair_setup = Hair_GetSetup(lua, lua_tointeger(lua, 2));
+            hair_setup_s *hair_setup = Hair_GetSetup(lua, 2);
             if(hair_setup)
             {
                 ent->character->hair_count++;
                 ent->character->hairs = (struct hair_s**)realloc(ent->character->hairs, (sizeof(struct hair_s*) * ent->character->hair_count));
-                ent->character->hairs[ent->character->hair_count-1] = Hair_Create(hair_setup, ent->physics);
+                ent->character->hairs[ent->character->hair_count - 1] = Hair_Create(hair_setup, ent->physics);
                 if(!ent->character->hairs[ent->character->hair_count - 1])
                 {
                     ent->character->hair_count--;
@@ -278,6 +274,10 @@ int lua_AddCharacterHair(lua_State *lua)
         {
             Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
         }
+    }
+    else
+    {
+        Con_Warning("addCharacterHair: expecting arguments (entity_id, hair_setup_table)");
     }
     return 0;
 }
@@ -319,62 +319,75 @@ int lua_ResetCharacterHair(lua_State *lua)
 }
 
 
-int lua_AddEntityRagdoll(lua_State *lua)
+int lua_SetCharacterRagdollSetup(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
         entity_p ent   = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
+        if(ent && ent->character)
         {
-            struct rd_setup_s *ragdoll_setup = Ragdoll_GetSetup(lua, lua_tointeger(lua, 2));
+            struct rd_setup_s *ragdoll_setup = Ragdoll_GetSetup(lua, 2);
             if(ragdoll_setup)
             {
-                if(!Ragdoll_Create(ent->physics, ent->bf, ragdoll_setup))
-                {
-                    Con_Warning("can not create ragdoll for entity_id = %d", lua_tointeger(lua, 1));
-                }
-                ent->type_flags |=  ENTITY_TYPE_DYNAMIC;
-                Ragdoll_DeleteSetup(ragdoll_setup);
+                Ragdoll_DeleteSetup(ent->character->ragdoll);
+                ent->character->ragdoll = ragdoll_setup;
             }
             else
             {
-                Con_Warning("no ragdoll setup with id = %d", lua_tointeger(lua, 2));
+                Con_Warning("bad ragdoll setup");
             }
         }
         else
         {
-            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("addEntityRagdoll: expecting arguments (entity_id, ragdoll_setup_index)");
+        Con_Warning("setCharacterRagdollSetup: expecting arguments (entity_id, ragdoll_setup_table)");
     }
     return 0;
 }
 
 
-int lua_RemoveEntityRagdoll(lua_State *lua)
+int lua_SetCharacterRagdollActivity(lua_State *lua)
 {
-    if(lua_gettop(lua) >= 1)
+    if(lua_gettop(lua) >= 2)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
+        if(ent && ent->character)
         {
-            if(!Ragdoll_Delete(ent->physics))
+            if(lua_toboolean(lua, 2))
             {
-                Con_Warning("can not remove ragdoll for entity_id = %d", lua_tointeger(lua, 1));
+                if(ent->character->ragdoll && Ragdoll_Create(ent->physics, ent->bf, ent->character->ragdoll))
+                {
+                    ent->type_flags |=  ENTITY_TYPE_DYNAMIC;
+                }
+                else
+                {
+                    Con_Warning("can not create ragdoll for entity_id = %d", lua_tointeger(lua, 1));
+                }
             }
-            ent->type_flags &= ~ENTITY_TYPE_DYNAMIC;
+            else
+            {
+                if(Ragdoll_Delete(ent->physics))
+                {
+                   ent->type_flags &= ~ENTITY_TYPE_DYNAMIC;
+                }
+                else
+                {
+                    Con_Warning("can not remove ragdoll from entity_id = %d", lua_tointeger(lua, 1));
+                }
+            }
         }
         else
         {
-            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
         }
     }
     else
     {
-        Con_Warning("removeEntityRagdoll: expecting arguments (entity_id)");
+        Con_Warning("setCharacterRagdollActivity: expecting arguments (entity_id, value)");
     }
     return 0;
 }
@@ -525,8 +538,8 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
 
 void Script_LuaRegisterCharacterFuncs(lua_State *lua)
 {
-    lua_register(lua, "addEntityRagdoll", lua_AddEntityRagdoll);
-    lua_register(lua, "removeEntityRagdoll", lua_RemoveEntityRagdoll);
+    lua_register(lua, "setCharacterRagdollSetup", lua_SetCharacterRagdollSetup);
+    lua_register(lua, "setCharacterRagdollActivity", lua_SetCharacterRagdollActivity);
 
     lua_register(lua, "characterCreate", lua_CharacterCreate);
     lua_register(lua, "setCharacterStateControlFunctions", lua_SetCharacterStateControlFunctions);

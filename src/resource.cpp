@@ -26,6 +26,7 @@ extern "C" {
 #include "render/bordered_texture_atlas.h"
 #include "render/shader_description.h"
 #include "script/script.h"
+#include "physics/physics.h"
 #include "vt/vt_level.h"
 
 #include "audio.h"
@@ -35,7 +36,6 @@ extern "C" {
 #include "skeletal_model.h"
 #include "character_controller.h"
 #include "engine.h"
-#include "physics.h"
 #include "entity.h"
 #include "inventory.h"
 #include "resource.h"

@@ -15,6 +15,7 @@ extern "C" {
 #include "../core/gl_text.h"
 #include "../core/console.h"
 #include "../core/vmath.h"
+#include "../physics/physics.h"
 #include "../mesh.h"
 #include "../skeletal_model.h"
 #include "../trigger.h"
@@ -24,7 +25,6 @@ extern "C" {
 #include "../entity.h"
 #include "../world.h"
 #include "../engine.h"
-#include "../physics.h"
 
 
 int Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator)

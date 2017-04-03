@@ -362,7 +362,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
             if(lz > (pz + 256.0)) then
                 local sx,sy,sz = getEntitySpeed(activator_id);
                 if(sz < -256.0) then
-                    addEntityRagdoll(activator_id, RD_TYPE_LARA);
+                    setCharacterRagdollActivity(activator_id, true);
                     setCharacterParam(activator_id, PARAM_HEALTH, 0);
                     playSound(SOUND_IMPALE, activator_id);
                 end;
@@ -436,7 +436,7 @@ function spikewall_init(id)      -- Spike wall
                 changeCharacterParam(activator_id, PARAM_HEALTH, -20 * 60 * frame_time);
                 playSound(getGlobalSound(getLevelVersion(), GLOBALID_SPIKEHIT), activator_id);
                 if(getCharacterParam(activator_id, PARAM_HEALTH) <= 0) then
-                    addEntityRagdoll(activator_id, RD_TYPE_LARA);
+                    setCharacterRagdollActivity(activator_id, true);
                     playSound(SOUND_GEN_DEATH, activator_id);
                     setEntityActivity(object_id, false);
                     stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
@@ -495,14 +495,14 @@ function spikeceiling_init(id)
                 
             if(getCharacterParam(activator_id, PARAM_HEALTH) > 0) then
                 if(lz > (pz - 256.0)) then
-                    addEntityRagdoll(activator_id, RD_TYPE_LARA);
+                    setCharacterRagdollActivity(activator_id, true);
                     setCharacterParam(activator_id, PARAM_HEALTH, 0);
                     playSound(SOUND_IMPALE, activator_id);
                 else
                     changeCharacterParam(activator_id, PARAM_HEALTH, -20 * 60 * frame_time);
                     playSound(getGlobalSound(getLevelVersion(), GLOBALID_SPIKEHIT), activator_id);
                     if(getCharacterParam(activator_id, PARAM_HEALTH) <= 0) then
-                        addEntityRagdoll(activator_id, RD_TYPE_LARA);
+                        setCharacterRagdollActivity(activator_id, true);
                         playSound(SOUND_GEN_DEATH, activator_id);
                         setEntityActivity(object_id, false);
                         stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);

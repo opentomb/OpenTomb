@@ -4,7 +4,9 @@
 
 #include <stdint.h>
 
-#include "physics.h"
+#include "physics/physics.h"
+#include "physics/hair.h"
+#include "physics/ragdoll.h"
 
 /*------ Lara's model-------
              .=.
@@ -285,6 +287,7 @@ typedef struct character_s
     int8_t                      cam_follow_center;
     int8_t                      hair_count;
     struct hair_s             **hairs;
+    struct rd_setup_s          *ragdoll;
 
     int16_t                     current_weapon;
     int16_t                     weapon_current_state;

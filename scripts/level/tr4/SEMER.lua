@@ -4,7 +4,7 @@
 print("Level script loaded (SEMER.lua)");
 
 level_PostLoad = function()
-    addCharacterHair(player, HAIR_TR4_OLD);
+    addCharacterHair(player, getHairSetup(HAIR_TR4_OLD));
     playStream(107);
 end;
 
