@@ -92,10 +92,6 @@ void Character_Create(struct entity_s *ent)
         ret->climb_sensor = ent->character->climb_r;
         ret->height_info.ceiling_hit = zero_result;
         ret->height_info.floor_hit = zero_result;
-        ret->height_info.leg_l_floor = zero_result;
-        ret->height_info.leg_r_floor = zero_result;
-        ret->height_info.hand_l_floor = zero_result;
-        ret->height_info.hand_r_floor = zero_result;
         ret->height_info.water = 0x00;
 
         ret->height_info.leg_l_index = -1;
@@ -183,6 +179,13 @@ void Character_Update(struct entity_s *ent)
         {
             Hair_Update(ent->character->hairs[h], ent->physics);
         }
+
+        if(ent->character->state.ragdoll && ent->character->ragdoll &&
+           !(ent->type_flags & ENTITY_TYPE_DYNAMIC) &&
+            Ragdoll_Create(ent->physics, ent->bf, ent->character->ragdoll))
+        {
+            ent->type_flags |= ENTITY_TYPE_DYNAMIC;
+        }
     }
 }
 
@@ -230,10 +233,6 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
     float from[3], to[3], base_z, *v;
     height_info_p hi = &ent->character->height_info;
 
-    hi->leg_l_floor.hit = 0x00;
-    hi->leg_r_floor.hit = 0x00;
-    hi->hand_l_floor.hit = 0x00;
-    hi->hand_r_floor.hit = 0x00;
     v = ent->bf->bone_tags[0].transform + 12;
     Mat4_vec3_mul_macro(from, ent->transform, v);
     from[2] += 128.0f;
@@ -241,46 +240,6 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
     from[0] = ent->transform[12 + 0];
     from[1] = ent->transform[12 + 1];
     Character_GetHeightInfo(from, hi, ent->character->Height);
-
-    if((hi->leg_l_index >= 0) && (hi->leg_l_index < ent->bf->bone_tag_count))
-    {
-        Mat4_vec3_mul(from, ent->transform, ent->bf->bone_tags[hi->leg_l_index].full_transform + 12);
-        from[2] = base_z;
-        vec3_copy(to, from);
-        to[2] -= ent->character->Height;
-        vec3_copy(hi->leg_l_floor.point, from);
-        Physics_RayTest(&hi->leg_l_floor, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST);
-    }
-
-    if((hi->leg_r_index >= 0) && (hi->leg_r_index < ent->bf->bone_tag_count))
-    {
-        Mat4_vec3_mul(from, ent->transform, ent->bf->bone_tags[hi->leg_r_index].full_transform + 12);
-        from[2] = base_z;
-        vec3_copy(to, from);
-        to[2] -= ent->character->Height;
-        vec3_copy(hi->leg_r_floor.point, from);
-        Physics_RayTest(&hi->leg_r_floor, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST);
-    }
-
-    if((hi->hand_l_index >= 0) && (hi->hand_l_index < ent->bf->bone_tag_count))
-    {
-        Mat4_vec3_mul(from, ent->transform, ent->bf->bone_tags[hi->hand_l_index].full_transform + 12);
-        from[2] = base_z;
-        vec3_copy(to, from);
-        to[2] -= ent->character->Height;
-        Physics_RayTest(&hi->hand_l_floor, from ,to, ent->self, COLLISION_FILTER_HEIGHT_TEST);
-        vec3_copy(hi->hand_l_floor.point, from);
-    }
-
-    if((hi->hand_r_index >= 0) && (hi->hand_r_index < ent->bf->bone_tag_count))
-    {
-        Mat4_vec3_mul(from, ent->transform, ent->bf->bone_tags[hi->hand_r_index].full_transform + 12);
-        from[2] = base_z;
-        vec3_copy(to, from);
-        to[2] -= ent->character->Height;
-        Physics_RayTest(&hi->hand_r_floor, from ,to, ent->self, COLLISION_FILTER_HEIGHT_TEST);
-        vec3_copy(hi->hand_r_floor.point, from);
-    }
 }
 
 /**
@@ -1128,7 +1087,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
     }
 
     // check move type
-    if(ent->character->height_info.floor_hit.hit && 
+    if(ent->character->height_info.floor_hit.hit &&
        (pos[2] < ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height) &&
        (ent->speed[2] <= 0.0f))
     {

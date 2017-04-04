@@ -362,6 +362,7 @@ int lua_SetCharacterRagdollActivity(lua_State *lua)
                 if(ent->character->ragdoll && Ragdoll_Create(ent->physics, ent->bf, ent->character->ragdoll))
                 {
                     ent->type_flags |=  ENTITY_TYPE_DYNAMIC;
+                    ent->character->state.ragdoll = 0x01;
                 }
                 else
                 {
@@ -373,6 +374,7 @@ int lua_SetCharacterRagdollActivity(lua_State *lua)
                 if(Ragdoll_Delete(ent->physics))
                 {
                    ent->type_flags &= ~ENTITY_TYPE_DYNAMIC;
+                   ent->character->state.ragdoll = 0x00;
                 }
                 else
                 {

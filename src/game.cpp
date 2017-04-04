@@ -217,7 +217,7 @@ void Save_Entity(FILE **f, entity_p ent)
         fprintf(*f, "\nsetEntityActivationOffset(%d, %.4f, %.4f, %.4f, %.4f);", ent->id, ap->offset[0], ap->offset[1], ap->offset[2], ap->offset[3]);
         fprintf(*f, "\nsetEntityActivationDirection(%d, %.4f, %.4f, %.4f, %.4f);", ent->id, ap->direction[0], ap->direction[1], ap->direction[2], ap->direction[3]);
     }
-    
+
     for(uint16_t i = 0; i < ent->bf->bone_tag_count; ++i)
     {
         if(ent->bf->bone_tags[i].is_hidden)
@@ -658,6 +658,7 @@ void Game_Frame(float time)
         }
         Entity_Frame(player, engine_frame_time);
         Entity_UpdateRigidBody(player, 1);
+        Entity_UpdateRoomPos(player);
     }
 
     if(!control_states.noclip && !control_states.free_look)

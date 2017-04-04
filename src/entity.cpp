@@ -211,6 +211,7 @@ void Entity_UpdateRoomPos(entity_p ent)
         v[2] /= 2.0;
         Mat4_vec3_mul_macro(pos, ent->transform, v);
     }
+
     new_room = World_FindRoomByPosCogerrence(pos, ent->self->room);
     if(new_room)
     {

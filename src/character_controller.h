@@ -209,11 +209,6 @@ typedef struct height_info_s
     struct collision_result_s                floor_hit;
     struct collision_result_s                ceiling_hit;
 
-    struct collision_result_s                leg_l_floor;
-    struct collision_result_s                leg_r_floor;
-    struct collision_result_s                hand_l_floor;
-    struct collision_result_s                hand_r_floor;
-
     float                                    transition_level;
     int16_t                                  water;
     int16_t                                  quicksand;
