@@ -2290,7 +2290,7 @@ void World_GenEntities(class VT_Level *tr)
             Room_AddObject(entity->self->room, entity->self);
 
             entity->character->bone_head = 14;
-            entity->character->bone_body = 7;
+            entity->character->bone_torso = 7;
             entity->character->Height = 768.0;
             World_AddEntity(entity);
             World_SetPlayer(entity);

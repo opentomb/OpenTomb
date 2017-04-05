@@ -271,7 +271,7 @@ typedef struct character_s
     struct rd_setup_s          *ragdoll;
 
     uint16_t                    bone_head;
-    uint16_t                    bone_body;
+    uint16_t                    bone_torso;
     int16_t                     current_weapon;
     int16_t                     weapon_current_state;
 
