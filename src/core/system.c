@@ -2,12 +2,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
+
+#ifdef _MSC_VER///@GH0ST
+#include <time.h>
+#include <SDL.h>
+#include <SDL_platform.h>
+#include <SDL_rwops.h>
+#include <SDL_video.h>
+#include <SDL_audio.h>
+#else
 #include <sys/time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_rwops.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
+#endif
+
+
 
 #include <lua.h>
 #include <lualib.h>
@@ -107,6 +120,7 @@ SYS TIME
 */
 float Sys_FloatTime (void)
 {
+#if 0///@GH0ST
     struct              timeval tp;
     static long int     secbase = 0;
 
@@ -119,6 +133,9 @@ float Sys_FloatTime (void)
     }
 
     return (float)(tp.tv_sec - secbase) + (float)tp.tv_usec * 1.0e-6;
+#else
+	return 0.0f;
+#endif
 }
 
 

@@ -4,7 +4,12 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#ifdef _MSC_VER///@GH0ST
+#include <SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
+
 
 extern "C" {
 #include <lua.h>

@@ -10,9 +10,13 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER///@GH0ST
+#include <SDL_platform.h>
+#include <SDL_opengl.h>    /* Header File For The OpenGL Library */
+#else
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>    /* Header File For The OpenGL Library */
-
+#endif
 
 /* Miscellaneous */
 typedef void (APIENTRYP PFNGLCLEARINDEXPROC) (GLfloat c);                  

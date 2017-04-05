@@ -21,8 +21,14 @@
 
 #include <assert.h>
 #include <string.h>
+
+#ifdef _MSC_VER ///@GH0ST
+#include <SDL.h>
+#include <SDL_endian.h>
+#else
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_endian.h>
+#endif
 
 #include "l_main.h"
 #include "../core/system.h"

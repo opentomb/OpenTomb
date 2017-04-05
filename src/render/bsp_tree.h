@@ -2,8 +2,13 @@
 #define BSP_TREE_H
 
 #include <stdint.h>
+#ifdef _MSC_VER///@GH0ST
+#include <SDL_platform.h>
+#include <SDL_opengl.h>
+#else
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
+#endif
 #include "../core/vmath.h"
 
 struct polygon_s;
@@ -64,9 +69,10 @@ public:
     
     CDynamicBSP(uint32_t size);
    ~CDynamicBSP();
-   
-    void AddNewPolygonList(struct polygon_s *p, float transform[16], struct frustum_s *f);
+
     void Reset(struct anim_seq_s *seq);
+
+	void AddNewPolygonList(struct polygon_s *p, float transform[16], struct frustum_s *f);
     
     struct vertex_s *GetVertexArray()
     {

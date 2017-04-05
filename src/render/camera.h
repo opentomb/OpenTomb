@@ -2,8 +2,13 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#ifdef _MSC_VER///@GH0ST
+#include <SDL_platform.h>
+#include <SDL_opengl.h>
+#else
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
+#endif
 
 struct room_s;
 struct frustum_s;
@@ -63,10 +68,17 @@ typedef struct camera_state_s
 
 typedef struct camera_s
 {
+#ifdef _MSC_VER ///@GH0ST
+	GLfloat                     gl_transform[16];
+	GLfloat                     gl_view_mat[16];
+	GLfloat                     gl_proj_mat[16];
+	GLfloat                     gl_view_proj_mat[16];
+#else
     GLfloat                     gl_transform[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_view_mat[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_proj_mat[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_view_proj_mat[16] __attribute__((packed, aligned(16)));
+#endif
 
     GLfloat                     clip_planes[16];        // frustum side clip planes
     GLfloat                     prev_pos[3];            // previous camera position

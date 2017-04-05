@@ -1,10 +1,18 @@
 #include <stdlib.h>
 
+#ifdef _MSC_VER///@GH0ST
+#include <SDL.h>
+#include <SDL_platform.h>
+#include <SDL_keycode.h>
+#include <SDL_scancode.h>
+#include <SDL_events.h>
+#else
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_keycode.h>
 #include <SDL2/SDL_scancode.h>
 #include <SDL2/SDL_events.h>
+#endif
 
 extern "C" {
 #include <lua.h>

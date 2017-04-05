@@ -1,7 +1,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef _MSC_VER///@GH0ST
+#include <SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
+
 
 #include "core/gl_util.h"
 #include "core/console.h"

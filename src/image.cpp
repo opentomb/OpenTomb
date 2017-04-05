@@ -1,11 +1,21 @@
 
 #include <string.h>
 #include <stdlib.h>
+
+#ifdef _MSC_VER///@GH0ST
+#include <SDL_rwops.h>
+#include <SDL_endian.h>
+#else
 #include <SDL2/SDL_rwops.h>
 #include <SDL2/SDL_endian.h>
+#endif
 
 #include <png.h>
+#ifdef _MSC_VER///@GH0ST
+#include <SDL_pixels.h>
+#else
 #include <SDL2/SDL_pixels.h>
+#endif
 
 #include "image.h"
 

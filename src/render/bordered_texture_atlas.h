@@ -27,8 +27,14 @@
  */
 
 #include <stdint.h>
+#ifdef _MSC_VER
+#include <SDL_platform.h>
+#include <SDL_opengl.h>
+#else
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
+#endif
+
 #include "../core/polygon.h"
 #include "../vt/tr_types.h"
 

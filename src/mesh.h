@@ -9,8 +9,14 @@ extern "C" {
 #define MESH_FULL_OPAQUE      0x00  // Fully opaque object (all polygons are opaque: all t.flags < 0x02)
 #define MESH_HAS_TRANSPARENCY 0x01  // Fully transparency or has transparency and opaque polygon / object
 
+#ifdef _MSC_VER///@GH0ST
+#include <SDL_platform.h>
+#include <SDL_opengl.h>
+#else
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
+#endif
+
 #include <stdint.h>
 
 struct polygon_s;

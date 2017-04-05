@@ -1,7 +1,11 @@
 #ifndef _L_MAIN_H_
 #define _L_MAIN_H_
 
+#ifdef _MSC_VER
+#include <SDL_rwops.h>
+#else
 #include <SDL2/SDL_rwops.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

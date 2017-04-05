@@ -2,7 +2,12 @@
 #ifndef CONTROLS_H
 #define CONTROLS_H
 
+#ifdef _MSC_VER ///@GH0ST
+#include <SDL.h>
+#else
 #include <SDL2/SDL.h>
+#endif
+
 #include <stdint.h>
 
 #define JOY_BUTTON_MASK  1000

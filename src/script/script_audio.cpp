@@ -7,8 +7,14 @@ extern "C" {
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+
+#ifdef _MSC_VER
+#include <AL/al.h>
+#include <AL/alc.h>
+#else
 #include <al.h>
 #include <alc.h>
+#endif
 }
 
 #include "script.h"

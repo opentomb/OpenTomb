@@ -153,8 +153,11 @@ typedef struct entity_s
     struct physics_data_s              *physics;
     float                               scaling[3];         // entity scaling
     float                               angles[3];
+#ifdef _MSC_VER///@GH0ST
+	float                               transform[16]; // GL transformation matrix
+#else
     float                               transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
-
+#endif
     struct obb_s                       *obb;                // oriented bounding box
 
     struct room_sector_s               *current_sector;
