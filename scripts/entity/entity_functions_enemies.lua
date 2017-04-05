@@ -210,6 +210,8 @@ function bear_init(id)
             setEntityCollision(object_id, false);
         end;
     end;
+
+    entity_funcs[id].onLoop = nil;
 end;
 
 

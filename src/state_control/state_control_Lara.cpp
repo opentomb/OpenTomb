@@ -580,10 +580,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     ss_anim->next_state = TR_STATE_LARA_TURN_LEFT_SLOW;
                 }
             }       // end MOVE LEFT
-            else
-            {
-                Character_FixPosByFloorInfoUnderLegs(ent);
-            }
             break;
 
         case TR_STATE_LARA_JUMP_PREPARE:
@@ -790,7 +786,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
         case TR_STATE_LARA_TURN_FAST:
@@ -817,7 +812,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
             /*
@@ -1117,7 +1111,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_RUN_FORWARD;
             }
-            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
 
@@ -1250,7 +1243,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
         case TR_STATE_LARA_WALK_LEFT:
@@ -1289,7 +1281,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
         case TR_STATE_LARA_WALK_RIGHT:
@@ -1328,7 +1319,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
             /*
