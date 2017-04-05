@@ -1158,7 +1158,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                 float hy = (bf->bb_max[1] - bf->bb_min[1]) * 0.5f;
                 float hz = (bf->bb_max[2] - bf->bb_min[2]) * 0.5f;
                 cshape = new btBoxShape(btVector3(hx, hy, hz));
-                cshape->calculateLocalInertia(0.0, localInertia);
+               // cshape->calculateLocalInertia(0.0, localInertia);
                 cshape->setMargin(COLLISION_MARGIN_DEFAULT);
                 startTransform.setIdentity();
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
@@ -1179,7 +1179,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                 physics->bt_info->has_collisions = true;
 
                 cshape = new btSphereShape(getInnerBBRadius(bf->bb_min, bf->bb_max));
-                cshape->calculateLocalInertia(0.0, localInertia);
+                //cshape->calculateLocalInertia(0.0, localInertia);
                 cshape->setMargin(COLLISION_MARGIN_DEFAULT);
                 startTransform.setIdentity();
                 btDefaultMotionState* motionState = new btDefaultMotionState(startTransform);
@@ -1228,7 +1228,7 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
                     if(cshape)
                     {
                         physics->bt_info[i].has_collisions = true;
-                        cshape->calculateLocalInertia(0.0, localInertia);
+                        //cshape->calculateLocalInertia(0.0, localInertia);
                         cshape->setMargin(COLLISION_MARGIN_DEFAULT);
 
                         startTransform.setIdentity();
@@ -1648,8 +1648,10 @@ void Physics_SetBodyMass(struct physics_data_s *physics, float mass, uint16_t in
     btVector3 inertia (0.0, 0.0, 0.0);
     bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[index]);
 
-        physics->bt_body[index]->getCollisionShape()->calculateLocalInertia(mass, inertia);
-
+	if (mass != 0.0f)
+	{
+		physics->bt_body[index]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+	}
         physics->bt_body[index]->setMassProps(mass, inertia);
 
         physics->bt_body[index]->updateInertiaTensor();
@@ -1866,8 +1868,13 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
 
         // Make collision shape out of mesh.
         hair->elements[i].shape = BT_CSfromMesh(hair->elements[i].mesh, true, true, false);
-        hair->elements[i].shape->calculateLocalInertia((current_weight * setup->hair_inertia), localInertia);
-        hair->elements[i].joint = NULL;
+		float mass = (current_weight * setup->hair_inertia);
+		if (mass != 0.0f)
+		{
+
+			hair->elements[i].shape->calculateLocalInertia(mass, localInertia);
+		}
+		hair->elements[i].joint = NULL;
 
         // Decrease next body weight to weight_step parameter.
         current_weight -= weight_step;
@@ -2300,7 +2307,11 @@ bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, 
         {
             bt_engine_dynamicsWorld->removeRigidBody(physics->bt_body[i]);
         }
-        physics->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+
+		if (mass != 0.0f)
+		{
+			physics->bt_body[i]->getCollisionShape()->calculateLocalInertia(mass, inertia);
+		}
         physics->bt_body[i]->setMassProps(mass, inertia);
 
         physics->bt_body[i]->updateInertiaTensor();
