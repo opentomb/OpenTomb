@@ -1,11 +1,11 @@
-#ifdef _MSC_VER
-#undef main
-#endif
-
 #include <SDL2/SDL.h>
 #include <stdlib.h>
 
 #include "engine.h"
+
+#if _MSC_VER//Hack
+#undef main
+#endif
 
 /*
  * see ENGINE.md
