@@ -187,7 +187,7 @@ else()
 endif()
 
 find_package(PNG REQUIRED)
-#find_package(Lua REQUIRED)#Not working on cmake 3.8.0 due to a bug
+find_package(Lua REQUIRED)
 find_package(ZLIB REQUIRED)
 
 # Check for optional OpenAL include files that are not present in all implementations of the library
@@ -204,7 +204,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
 target_include_directories(
     ${PROJECT_NAME} PRIVATE
     ${PNG_INCLUDE_DIRS}
-    #${LUA_INCLUDE_DIR}#Not working on cmake 3.8.0 due to a bug
+    ${LUA_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIR}
     ${OPENAL_INCLUDE_DIR}
@@ -217,7 +217,7 @@ target_link_libraries(
     freetype2
     ogg
     ${PNG_LIBRARIES}
-    #${LUA_LIBRARIES}#Not working on cmake 3.8.0 due to a bug
+    ${LUA_LIBRARIES}
     ${OPENAL_LIBRARY}
     ${SDL2_LIBRARY}
     ${ZLIB_LIBRARIES}
