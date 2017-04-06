@@ -3,10 +3,6 @@
 
 #include "engine.h"
 
-#if _MSC_VER//Hack
-#undef main
-#endif
-
 /*
  * see ENGINE.md
  * see TODO.md
