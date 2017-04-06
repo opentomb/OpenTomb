@@ -68,10 +68,10 @@ typedef struct ss_bone_tag_s
     float                   offset[3];                                          // model position offset
 
     float                   qrotate[4];                                         // quaternion rotation
-#ifdef _MSC_VER///@GH0ST align me
-	float                   transform[16];    // 4x4 OpenGL matrix for stack usage
-	float                   full_transform[16];    // 4x4 OpenGL matrix for global usage
-	float                   orig_transform[16];    // 4x4 OpenGL matrix for global usage (no targeting modifications)
+#ifdef _MSC_VER
+	float                   __declspec(align(16)) transform[16];    // 4x4 OpenGL matrix for stack usage
+	float                   __declspec(align(16)) full_transform[16];    // 4x4 OpenGL matrix for global usage
+	float                   __declspec(align(16)) orig_transform[16];    // 4x4 OpenGL matrix for global usage (no targeting modifications)
 #else
     float                   transform[16]      __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for stack usage
     float                   full_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage

@@ -186,8 +186,8 @@ typedef struct static_mesh_s
     float                       vbb_max[3];
     float                       cbb_min[3];                                     // collision bounding box
     float                       cbb_max[3];
-#ifdef _MSC_VER ///@GH0ST
-	float                       transform[16];   // gl transformation matrix
+#ifdef _MSC_VER
+	float                       __declspec(align(16)) transform[16];   // gl transformation matrix
 #else
     float                       transform[16]   __attribute__((packed, aligned(16)));   // gl transformation matrix
 #endif
@@ -239,8 +239,8 @@ typedef struct room_s
     struct obb_s               *obb;
     float                       bb_min[3];                                      // room's bounding box
     float                       bb_max[3];                                      // room's bounding box
-#ifdef _MSC_VER ///@GH0ST
-	float                       transform[16]; // GL transformation matrix
+#ifdef _MSC_VER
+	float                       __declspec(align(16)) transform[16]; // GL transformation matrix
 #else
     float                       transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
 #endif
