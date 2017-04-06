@@ -36,6 +36,12 @@ set(OPENTOMB_SRCS
     src/core/vmath.h
     src/gui/gui.cpp
     src/gui/gui.h
+    src/physics/physics.h
+    src/physics/physics_bullet.cpp
+    src/physics/hair.h
+    src/physics/hair.cpp
+    src/physics/ragdoll.h
+    src/physics/ragdoll.cpp
     src/render/bordered_texture_atlas.cpp
     src/render/bordered_texture_atlas.h
     src/render/bsp_tree.cpp
@@ -139,8 +145,6 @@ set(OPENTOMB_SRCS
     src/main_SDL.cpp
     src/mesh.c
     src/mesh.h
-    src/physics.h
-    src/physics_bullet.cpp
     src/resource.cpp
     src/resource.h
     src/room.cpp

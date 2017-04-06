@@ -26,9 +26,9 @@ extern "C" {
 
 #include "script/script.h"
 #include "render/camera.h"
+#include "physics/physics.h"
 #include "gui/gui.h"
 #include "engine.h"
-#include "physics.h"
 #include "controls.h"
 #include "game.h"
 

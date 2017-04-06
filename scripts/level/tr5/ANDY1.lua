@@ -4,8 +4,8 @@
 print("Level script loaded (ANDY1.lua)");
 
 level_PostLoad = function()
-    addCharacterHair(player, HAIR_TR5_KID_1);
-    addCharacterHair(player, HAIR_TR5_KID_2);
+    addCharacterHair(player, getHairSetup(HAIR_TR5_KID_1));
+    addCharacterHair(player, getHairSetup(HAIR_TR5_KID_2));
     playStream(124);
 end;
 

@@ -15,6 +15,7 @@ extern "C" {
 #include "../core/gl_text.h"
 #include "../core/console.h"
 #include "../core/vmath.h"
+#include "../physics/physics.h"
 #include "../mesh.h"
 #include "../skeletal_model.h"
 #include "../trigger.h"
@@ -24,7 +25,6 @@ extern "C" {
 #include "../entity.h"
 #include "../world.h"
 #include "../engine.h"
-#include "../physics.h"
 
 
 int Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator)
@@ -269,12 +269,12 @@ int lua_GetEntityActivationOffset(lua_State * lua)
     if(lua_gettop(lua) >= 1)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
+        if(ent && ent->activation_point)
         {
-            lua_pushnumber(lua, ent->activation_offset[0]);
-            lua_pushnumber(lua, ent->activation_offset[1]);
-            lua_pushnumber(lua, ent->activation_offset[2]);
-            lua_pushnumber(lua, ent->activation_offset[3]);
+            lua_pushnumber(lua, ent->activation_point->offset[0]);
+            lua_pushnumber(lua, ent->activation_point->offset[1]);
+            lua_pushnumber(lua, ent->activation_point->offset[2]);
+            lua_pushnumber(lua, ent->activation_point->offset[3]);
             return 4;
         }
     }
@@ -292,15 +292,20 @@ int lua_SetEntityActivationOffset(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
+            if(!ent->activation_point)
+            {
+                Entity_InitActivationPoint(ent);
+            }
+
             if(top >= 4)
             {
-                ent->activation_offset[0] = lua_tonumber(lua, 2);
-                ent->activation_offset[1] = lua_tonumber(lua, 3);
-                ent->activation_offset[2] = lua_tonumber(lua, 4);
+                ent->activation_point->offset[0] = lua_tonumber(lua, 2);
+                ent->activation_point->offset[1] = lua_tonumber(lua, 3);
+                ent->activation_point->offset[2] = lua_tonumber(lua, 4);
             }
             if(top >= 5)
             {
-                ent->activation_offset[3] = lua_tonumber(lua, 5);
+                ent->activation_point->offset[3] = lua_tonumber(lua, 5);
             }
         }
         else
@@ -324,10 +329,10 @@ int lua_GetEntityActivationDirection(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            lua_pushnumber(lua, ent->activation_direction[0]);
-            lua_pushnumber(lua, ent->activation_direction[1]);
-            lua_pushnumber(lua, ent->activation_direction[2]);
-            lua_pushnumber(lua, ent->activation_direction[3]);
+            lua_pushnumber(lua, ent->activation_point->direction[0]);
+            lua_pushnumber(lua, ent->activation_point->direction[1]);
+            lua_pushnumber(lua, ent->activation_point->direction[2]);
+            lua_pushnumber(lua, ent->activation_point->direction[3]);
             return 4;
         }
     }
@@ -345,12 +350,17 @@ int lua_SetEntityActivationDirection(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            ent->activation_direction[0] = lua_tonumber(lua, 2);
-            ent->activation_direction[1] = lua_tonumber(lua, 3);
-            ent->activation_direction[2] = lua_tonumber(lua, 4);
+            if(!ent->activation_point)
+            {
+                Entity_InitActivationPoint(ent);
+            }
+
+            ent->activation_point->direction[0] = lua_tonumber(lua, 2);
+            ent->activation_point->direction[1] = lua_tonumber(lua, 3);
+            ent->activation_point->direction[2] = lua_tonumber(lua, 4);
             if(top >= 5)
             {
-                ent->activation_direction[3] = lua_tonumber(lua, 5);
+                ent->activation_point->direction[3] = lua_tonumber(lua, 5);
             }
         }
         else
@@ -1112,10 +1122,10 @@ int lua_EntityMoveToTriggerActivationPoint(lua_State * lua)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         entity_p trigger = World_GetEntityByID(lua_tointeger(lua, 2));
-        if(ent && trigger)
+        if(ent && trigger && trigger->activation_point)
         {
             float *pos = ent->transform + 12;
-            Mat4_vec3_mul_macro(pos, trigger->transform, trigger->activation_offset);
+            Mat4_vec3_mul_macro(pos, trigger->transform, trigger->activation_point->offset);
         }
     }
 

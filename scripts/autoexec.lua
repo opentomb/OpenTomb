@@ -44,6 +44,7 @@ setEntityGhostCollisionShape(player, 11, COLLISION_SHAPE_BOX, nil, nil, nil, nil
 setEntityGhostCollisionShape(player, 8,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
 
 setHumanoidBodyParts(player);
+setCharacterRagdollSetup(player, getRagdollSetup(RD_TYPE_LARA));
 
 -- creates map for left and right hands
 function setDefaultModelAnimReplaceFlag(m_id)

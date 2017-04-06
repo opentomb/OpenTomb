@@ -4,7 +4,7 @@
 print("Level script loaded (ANDREA2.lua)");
 
 level_PostLoad = function()
-    addCharacterHair(player, HAIR_TR5_OLD);
+    addCharacterHair(player, getHairSetup(HAIR_TR5_OLD));
     playStream(126);
 end;
 

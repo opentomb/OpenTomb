@@ -2,13 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
-
-
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
@@ -18,22 +11,25 @@ extern "C" {
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 #include <BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
 
-#include "core/gl_util.h"
-#include "core/gl_font.h"
-#include "core/gl_text.h"
-#include "core/console.h"
-#include "core/obb.h"
-#include "render/render.h"
-#include "script/script.h"
-#include "engine.h"
-#include "mesh.h"
-#include "skeletal_model.h"
-#include "character_controller.h"
-#include "entity.h"
-#include "resource.h"
-#include "room.h"
-#include "world.h"
+#include "../core/gl_util.h"
+#include "../core/gl_font.h"
+#include "../core/gl_text.h"
+#include "../core/console.h"
+#include "../core/obb.h"
+#include "../render/render.h"
+#include "../script/script.h"
+#include "../engine.h"
+#include "../mesh.h"
+#include "../skeletal_model.h"
+#include "../character_controller.h"
+#include "../entity.h"
+#include "../resource.h"
+#include "../room.h"
+#include "../world.h"
 #include "physics.h"
+#include "ragdoll.h"
+#include "hair.h"
+
 
 /*
  * INTERNAL BHYSICS CLASSES
@@ -298,9 +294,9 @@ btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
 {
     btScalar r = bb_max[0] - bb_min[0];
     btScalar t = bb_max[1] - bb_min[1];
-    r = (t > r) ? (r) : (t);
+    r = ((t > r) && (r != 0.0f)) ? (r) : (t);
     t = bb_max[2] - bb_min[2];
-    return (t > r) ? (0.5f * r) : (0.5f * t);
+    return ((t > r) && (r != 0.0f)) ? (0.5f * r) : (0.5f * t);
 }
 
 // Bullet Physics initialization.
@@ -437,6 +433,23 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
             physics->bt_info = NULL;
         }
 
+        if(physics->bt_joints)
+        {
+            for(uint32_t i = 0; i < physics->bt_joint_count; i++)
+            {
+                if(physics->bt_joints[i])
+                {
+                    bt_engine_dynamicsWorld->removeConstraint(physics->bt_joints[i]);
+                    delete physics->bt_joints[i];
+                    physics->bt_joints[i] = NULL;
+                }
+            }
+
+            free(physics->bt_joints);
+            physics->bt_joints = NULL;
+            physics->bt_joint_count = 0;
+        }
+        
         if(physics->ghost_objects)
         {
             for(int i = 0; i < physics->objects_count; i++)
@@ -683,6 +696,12 @@ void Physics_SetGhostWorldTransform(struct physics_data_s *physics, float tr[16]
         physics->ghost_objects[index]->getWorldTransform().setFromOpenGLMatrix(tr);
         physics->ghost_objects[index]->getWorldTransform().setOrigin(origin);
     }
+}
+
+
+ghost_shape_p Physics_GetGhostShapeInfo(struct physics_data_s *physics, uint16_t index)
+{
+    return physics->ghosts_info + index;
 }
 
 
@@ -1267,6 +1286,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghosts_info[0].shape_id = COLLISION_SHAPE_SINGLE_BOX;
                     vec3_copy(physics->ghosts_info[0].bb_max, bf->bb_max);
                     vec3_copy(physics->ghosts_info[0].bb_min, bf->bb_min);
+                    physics->ghosts_info[0].radius = getInnerBBRadius(bf->bb_min, bf->bb_max);
                     vec3_set_zero(physics->ghosts_info[0].offset);
 
                     physics->ghost_objects = (btPairCachingGhostObject**)malloc(bf->bone_tag_count * sizeof(btPairCachingGhostObject*));
@@ -1292,6 +1312,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghosts_info[0].shape_id = COLLISION_SHAPE_SINGLE_SPHERE;
                     vec3_copy(physics->ghosts_info[0].bb_max, bf->bb_max);
                     vec3_copy(physics->ghosts_info[0].bb_min, bf->bb_min);
+                    physics->ghosts_info[0].radius = getInnerBBRadius(bf->bb_min, bf->bb_max);
                     vec3_set_zero(physics->ghosts_info[0].offset);
 
                     physics->ghost_objects = (btPairCachingGhostObject**)malloc(bf->bone_tag_count * sizeof(btPairCachingGhostObject*));
@@ -1301,7 +1322,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                     physics->ghost_objects[0]->setWorldTransform(tr);
                     physics->ghost_objects[0]->setUserPointer(physics->cont);
                     physics->ghost_objects[0]->setUserIndex(-1);
-                    physics->ghost_objects[0]->setCollisionShape(new btSphereShape(getInnerBBRadius(bf->bb_min, bf->bb_max)));
+                    physics->ghost_objects[0]->setCollisionShape(new btSphereShape(physics->ghosts_info[0].radius));
                     physics->ghost_objects[0]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
                     bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[0], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter & ~btBroadphaseProxy::SensorTrigger);
                 }
@@ -1351,6 +1372,7 @@ void Physics_CreateGhosts(struct physics_data_s *physics, struct ss_bone_frame_s
                             vec3_set_zero(physics->ghosts_info[i].offset);
                             physics->ghost_objects[i]->setCollisionShape(BT_CSfromMesh(b_tag->mesh_base, true, true, false));
                         }
+                        physics->ghosts_info[i].radius = getInnerBBRadius(physics->ghosts_info[i].bb_min, physics->ghosts_info[i].bb_max);
                         physics->ghost_objects[i]->getCollisionShape()->setMargin(COLLISION_MARGIN_DEFAULT);
                         bt_engine_dynamicsWorld->addCollisionObject(physics->ghost_objects[i], btBroadphaseProxy::SensorTrigger, btBroadphaseProxy::AllFilter & ~btBroadphaseProxy::SensorTrigger);
                     }
@@ -1368,6 +1390,7 @@ void Physics_SetGhostCollisionShape(struct physics_data_s *physics, struct ss_bo
         float hx = (shape_info->bb_max[0] - shape_info->bb_min[0]) * 0.5f;
         float hy = (shape_info->bb_max[1] - shape_info->bb_min[1]) * 0.5f;
         float hz = (shape_info->bb_max[2] - shape_info->bb_min[2]) * 0.5f;
+        shape_info->radius = getInnerBBRadius(shape_info->bb_min, shape_info->bb_max);
         if((hx <= 0.0f) || (hy <= 0.0f) || (hz <= 0.0f))
         {
             shape_info->shape_id = COLLISION_NONE;
@@ -1780,33 +1803,6 @@ typedef struct hair_s
 
 }hair_t, *hair_p;
 
-typedef struct hair_setup_s
-{
-    uint32_t     model_id;           // Hair model ID
-    uint32_t     link_body;          // Lara's head mesh index
-
-    btScalar     root_weight;        // Root and tail hair body weight. Intermediate body
-    btScalar     tail_weight;        // weights are calculated from these two parameters
-
-    btScalar     hair_damping[2];    // Damping affects hair "plasticity"
-    btScalar     hair_inertia;       // Inertia affects hair "responsiveness"
-    btScalar     hair_restitution;   // "Bounciness" of the hair
-    btScalar     hair_friction;      // How much other bodies will affect hair trajectory
-
-    btScalar     joint_overlap;      // How much two hair bodies overlap each other
-
-    btScalar     joint_cfm;          // Constraint force mixing (joint softness)
-    btScalar     joint_erp;          // Error reduction parameter (joint "inertia")
-
-    btScalar     head_offset[3];     // Linear offset to place hair to
-    btScalar     root_angle[3];      // First constraint set angle (to align hair angle)
-
-    uint32_t     vertex_map_count;   // Amount of REAL vertices to link head and hair
-    uint32_t     hair_vertex_map[HAIR_VERTEX_MAP_LIMIT]; // Hair vertex indices to link
-    uint32_t     head_vertex_map[HAIR_VERTEX_MAP_LIMIT]; // Head vertex indices to link
-
-}hair_setup_t, *hair_setup_p;
-
 
 struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *physics)
 {
@@ -2052,159 +2048,6 @@ void Hair_Update(struct hair_s *hair, struct physics_data_s *physics)
     }
 }
 
-
-struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_index)
-{
-    struct hair_setup_s *hair_setup = NULL;
-    int top = lua_gettop(lua);
-
-    lua_getglobal(lua, "getHairSetup");
-    if(!lua_isfunction(lua, -1))
-    {
-        lua_settop(lua, top);
-        return NULL;
-    }
-
-    lua_pushinteger(lua, hair_entry_index);
-    if(!lua_CallAndLog(lua, 1, 1, 0) || !lua_istable(lua, -1))
-    {
-        lua_settop(lua, top);
-        return NULL;
-    }
-
-    hair_setup = (struct hair_setup_s*)malloc(sizeof(struct hair_setup_s));
-    lua_getfield(lua, -1, "model");
-    hair_setup->model_id = (uint32_t)lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "link_body");
-    hair_setup->link_body = (uint32_t)lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "v_count");
-    hair_setup->vertex_map_count = (uint32_t)lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-
-    lua_getfield(lua, -1, "props");
-    if(!lua_istable(lua, -1))
-    {
-        free(hair_setup);
-        lua_settop(lua, top);
-        return NULL;
-    }
-    lua_getfield(lua, -1, "root_weight");
-    hair_setup->root_weight      = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "tail_weight");
-    hair_setup->tail_weight      = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "hair_inertia");
-    hair_setup->hair_inertia     = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "hair_friction");
-    hair_setup->hair_friction    = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "hair_bouncing");
-    hair_setup->hair_restitution = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "joint_overlap");
-    hair_setup->joint_overlap    = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "joint_cfm");
-    hair_setup->joint_cfm        = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "joint_erp");
-    hair_setup->joint_erp        = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-
-    lua_getfield(lua, -1, "hair_damping");
-    if(!lua_istable(lua, -1))
-    {
-        free(hair_setup);
-        lua_settop(lua, top);
-        return NULL;
-    }
-    lua_rawgeti(lua, -1, 1);
-    hair_setup->hair_damping[0] = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_rawgeti(lua, -1, 2);
-    hair_setup->hair_damping[1] = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_pop(lua, 1);
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "v_index");
-    if(!lua_istable(lua, -1))
-    {
-        free(hair_setup);
-        lua_settop(lua, top);
-        return NULL;
-    }
-    for(uint32_t i = 1; i <= hair_setup->vertex_map_count; i++)
-    {
-        lua_rawgeti(lua, -1, i);
-        hair_setup->head_vertex_map[i-1] = (uint32_t)lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-    }
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "offset");
-    if(!lua_istable(lua, -1))
-    {
-        free(hair_setup);
-        lua_settop(lua, top);
-        return NULL;
-    }
-    lua_rawgeti(lua, -1, 1);
-    hair_setup->head_offset[0] = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_rawgeti(lua, -1, 2);
-    hair_setup->head_offset[1] = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_rawgeti(lua, -1, 3);
-    hair_setup->head_offset[2] = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "root_angle");
-    if(!lua_istable(lua, -1))
-    {
-        free(hair_setup);
-        lua_settop(lua, top);
-        return NULL;
-    }
-    lua_rawgeti(lua, -1, 1);
-    hair_setup->root_angle[0] = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_rawgeti(lua, -1, 2);
-    hair_setup->root_angle[1] = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_rawgeti(lua, -1, 3);
-    hair_setup->root_angle[2] = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-
-    lua_settop(lua, top);
-    return hair_setup;
-}
-
 int Hair_GetElementsCount(struct hair_s *hair)
 {
     return (hair)?(hair->element_count):(0);
@@ -2220,56 +2063,6 @@ void Hair_GetElementInfo(struct hair_s *hair, int element, struct base_mesh_s **
 /* *****************************************************************************
  * ************************  RAGDOLL DATA  *************************************
  * ****************************************************************************/
-
-// Joint setup struct is used to parse joint script entry to
-// actual joint.
-
-typedef struct rd_joint_setup_s
-{
-    uint16_t        body_index;     // Primary body index
-    uint16_t        joint_type;     // See above as RD_CONSTRAINT_* definitions.
-
-    float           body1_offset[3];   // Primary pivot point offset
-    float           body2_offset[3];   // Secondary pivot point offset
-
-    float           body1_angle[3]; // Primary pivot point angle
-    float           body2_angle[3]; // Secondary pivot point angle
-
-    float           joint_limit[3]; // Only first two are used for hinge constraint.
-
-}rd_joint_setup_t, *rd_joint_setup_p;
-
-
-// Ragdoll body setup is used to modify body properties for ragdoll needs.
-
-typedef struct rd_body_setup_s
-{
-    float        mass;
-
-    float        damping[2];
-    float        restitution;
-    float        friction;
-
-}rd_body_setup_t, *rd_body_setup_p;
-
-
-// Ragdoll setup struct is an unified structure which contains settings
-// for ALL joints and bodies of a given ragdoll.
-
-typedef struct rd_setup_s
-{
-    uint32_t            joint_count;
-    uint32_t            body_count;
-
-    float               joint_cfm;      // Constraint force mixing (joint softness)
-    float               joint_erp;      // Error reduction parameter (joint "inertia")
-
-    rd_joint_setup_s   *joint_setup;
-    rd_body_setup_s    *body_setup;
-
-    char               *hit_func;   // Later to be implemented as hit callback function.
-}rd_setup_t, *rd_setup_p;
-
 
 bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, struct rd_setup_s *setup)
 {
@@ -2454,293 +2247,4 @@ bool Ragdoll_Delete(struct physics_data_s *physics)
 
     // NB! Bodies remain in the same state!
     // To make them static again, additionally call setEntityBodyMass script function.
-}
-
-
-struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int ragdoll_index)
-{
-    struct rd_setup_s *setup = NULL;
-    int top = lua_gettop(lua);
-
-    lua_getglobal(lua, "getRagdollSetup");
-    if(!lua_isfunction(lua, -1))
-    {
-        lua_settop(lua, top);
-        return NULL;
-    }
-
-    lua_pushinteger(lua, ragdoll_index);
-    if(!lua_CallAndLog(lua, 1, 1, 0) || !lua_istable(lua, -1))
-    {
-        lua_settop(lua, top);
-        return NULL;
-    }
-
-    lua_getfield(lua, -1, "hit_callback");
-    if(!lua_isstring(lua, -1))
-    {
-        lua_settop(lua, top);
-        return NULL;
-    }
-
-    setup = (rd_setup_p)malloc(sizeof(rd_setup_t));
-    setup->body_count = 0;
-    setup->joint_count = 0;
-    setup->body_setup = NULL;
-    setup->joint_setup = NULL;
-    setup->hit_func = NULL;
-    setup->joint_cfm = 0.0;
-    setup->joint_erp = 0.0;
-
-    size_t string_length = 0;
-    const char* func_name = lua_tolstring(lua, -1, &string_length);
-    setup->hit_func = (char*)calloc(string_length, sizeof(char));
-    memcpy(setup->hit_func, func_name, string_length * sizeof(char));
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "joint_count");
-    setup->joint_count = (uint32_t)lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "body_count");
-    setup->body_count  = (uint32_t)lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-
-    lua_getfield(lua, -1, "joint_cfm");
-    setup->joint_cfm   = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "joint_erp");
-    setup->joint_erp   = lua_tonumber(lua, -1);
-    lua_pop(lua, 1);
-
-
-    if((setup->body_count <= 0) || (setup->joint_count <= 0))
-    {
-        Ragdoll_DeleteSetup(setup);
-        setup = NULL;
-        lua_settop(lua, top);
-        return NULL;
-    }
-
-    lua_getfield(lua, -1, "body");
-    if(!lua_istable(lua, -1))
-    {
-        Ragdoll_DeleteSetup(setup);
-        setup = NULL;
-        lua_settop(lua, top);
-        return NULL;
-    }
-
-    setup->body_setup  = (rd_body_setup_p)calloc(setup->body_count, sizeof(rd_body_setup_t));
-    setup->joint_setup = (rd_joint_setup_p)calloc(setup->joint_count, sizeof(rd_joint_setup_t));
-
-    for(uint32_t i = 0; i < setup->body_count; i++)
-    {
-        lua_rawgeti(lua, -1, i+1);
-        if(!lua_istable(lua, -1))
-        {
-            Ragdoll_DeleteSetup(setup);
-            setup = NULL;
-            lua_settop(lua, top);
-            return NULL;
-        }
-        lua_getfield(lua, -1, "mass");
-        setup->body_setup[i].mass = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_getfield(lua, -1, "restitution");
-        setup->body_setup[i].restitution = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_getfield(lua, -1, "friction");
-        setup->body_setup[i].friction = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-
-        lua_getfield(lua, -1, "damping");
-        if(!lua_istable(lua, -1))
-        {
-            Ragdoll_DeleteSetup(setup);
-            setup = NULL;
-            lua_settop(lua, top);
-            return NULL;
-        }
-
-        lua_rawgeti(lua, -1, 1);
-        setup->body_setup[i].damping[0] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_rawgeti(lua, -1, 2);
-        setup->body_setup[i].damping[1] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_pop(lua, 1);
-        lua_pop(lua, 1);
-    }
-    lua_pop(lua, 1);
-
-    lua_getfield(lua, -1, "joint");
-    if(!lua_istable(lua, -1))
-    {
-        Ragdoll_DeleteSetup(setup);
-        setup = NULL;
-        lua_settop(lua, top);
-        return NULL;
-    }
-
-    for(uint32_t i = 0; i < setup->joint_count; i++)
-    {
-        lua_rawgeti(lua, -1, i+1);
-        if(!lua_istable(lua, -1))
-        {
-            Ragdoll_DeleteSetup(setup);
-            setup = NULL;
-            lua_settop(lua, top);
-            return NULL;
-        }
-        lua_getfield(lua, -1, "body_index");
-        setup->joint_setup[i].body_index = (uint16_t)lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_getfield(lua, -1, "joint_type");
-        setup->joint_setup[i].joint_type = (uint16_t)lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-
-        lua_getfield(lua, -1, "body1_offset");
-        if(!lua_istable(lua, -1))
-        {
-            Ragdoll_DeleteSetup(setup);
-            setup = NULL;
-            lua_settop(lua, top);
-            return NULL;
-        }
-        lua_rawgeti(lua, -1, 1);
-        setup->joint_setup[i].body1_offset[0] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_rawgeti(lua, -1, 2);
-        setup->joint_setup[i].body1_offset[1] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_rawgeti(lua, -1, 3);
-        setup->joint_setup[i].body1_offset[2] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_pop(lua, 1);
-
-        lua_getfield(lua, -1, "body2_offset");
-        if(!lua_istable(lua, -1))
-        {
-            Ragdoll_DeleteSetup(setup);
-            setup = NULL;
-            lua_settop(lua, top);
-            return NULL;
-        }
-        lua_rawgeti(lua, -1, 1);
-        setup->joint_setup[i].body2_offset[0] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_rawgeti(lua, -1, 2);
-        setup->joint_setup[i].body2_offset[1] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_rawgeti(lua, -1, 3);
-        setup->joint_setup[i].body2_offset[2] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_pop(lua, 1);
-
-        lua_getfield(lua, -1, "body1_angle");
-        if(!lua_istable(lua, -1))
-        {
-            Ragdoll_DeleteSetup(setup);
-            setup = NULL;
-            lua_settop(lua, top);
-            return NULL;
-        }
-        lua_rawgeti(lua, -1, 1);
-        setup->joint_setup[i].body1_angle[0] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_rawgeti(lua, -1, 2);
-        setup->joint_setup[i].body1_angle[1] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_rawgeti(lua, -1, 3);
-        setup->joint_setup[i].body1_angle[2] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_pop(lua, 1);
-
-        lua_getfield(lua, -1, "body2_angle");
-        if(!lua_istable(lua, -1))
-        {
-            Ragdoll_DeleteSetup(setup);
-            setup = NULL;
-            lua_settop(lua, top);
-            return NULL;
-        }
-        lua_rawgeti(lua, -1, 1);
-        setup->joint_setup[i].body2_angle[0] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_rawgeti(lua, -1, 2);
-        setup->joint_setup[i].body2_angle[1] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_rawgeti(lua, -1, 3);
-        setup->joint_setup[i].body2_angle[2] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_pop(lua, 1);
-
-        lua_getfield(lua, -1, "joint_limit");
-        if(!lua_istable(lua, -1))
-        {
-            Ragdoll_DeleteSetup(setup);
-            setup = NULL;
-            lua_settop(lua, top);
-            return NULL;
-        }
-        lua_rawgeti(lua, -1, 1);
-        setup->joint_setup[i].joint_limit[0] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_rawgeti(lua, -1, 2);
-        setup->joint_setup[i].joint_limit[1] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_rawgeti(lua, -1, 3);
-        setup->joint_setup[i].joint_limit[2] = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_pop(lua, 1);
-        lua_pop(lua, 1);
-    }
-
-    lua_settop(lua, top);
-    return setup;
-}
-
-
-void Ragdoll_DeleteSetup(struct rd_setup_s *setup)
-{
-    if(setup)
-    {
-        free(setup->body_setup);
-        setup->body_setup = NULL;
-        setup->body_count = 0;
-
-        free(setup->joint_setup);
-        setup->joint_setup = NULL;
-        setup->joint_count = 0;
-
-        free(setup->hit_func);
-        setup->hit_func = NULL;
-
-        free(setup);
-    }
 }

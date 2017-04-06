@@ -63,12 +63,12 @@ function checkDebugKeys()
 
     if(checkKey(KEY_R, true)) then
         print("Ragdoll activated!");
-        addEntityRagdoll(player, RD_TYPE_LARA);
+        setCharacterRagdollActivity(player, true);
     end;
     
     if(checkKey(KEY_T, true)) then
         print("Ragdoll deactivated!");
-        removeEntityRagdoll(player);
+        setCharacterRagdollActivity(player, false);
     end;
     
     if(checkKey(KEY_H, true)) then
@@ -84,7 +84,7 @@ function checkDebugKeys()
         end;
         
         setEntityCollision(player, true);
-        removeEntityRagdoll(player);
+        setCharacterRagdollActivity(player, false);
         setEntityMoveType(player, MOVE_FREE_FALLING);
         setCharacterState(player, CHARACTER_STATE_DEAD, 0);
         setCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
