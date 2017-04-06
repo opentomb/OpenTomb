@@ -19,11 +19,7 @@
  *
  */
 
-#ifdef _MSC_VER///@GH0ST
-#include <SDL_endian.h>
-#else
 #include <SDL2/SDL_endian.h>
-#endif
 
 #include <zlib.h>
 #include "l_main.h"

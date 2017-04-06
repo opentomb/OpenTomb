@@ -8,13 +8,9 @@ extern "C" {
 
 #include <stdint.h>
 
-#ifdef _MSC_VER ///@GH0ST
-#include <SDL_platform.h>
-#include <SDL_opengl.h>
-#else
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#endif
+
 #define CON_MIN_LOG 16
 #define CON_MAX_LOG 128
 

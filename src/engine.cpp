@@ -1,13 +1,6 @@
-#ifdef _MSC_VER///@GH0ST
-#include <SDL.h>
-#include <SDL_platform.h>
-#include <SDL_opengl.h>
-#else
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#endif
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,13 +12,8 @@ extern "C" {
 #include <lualib.h>
 #include <lauxlib.h>
 
-#ifdef _MSC_VER///@GH0ST
-#include <AL/al.h>
-#include <AL/alc.h>
-#else
 #include <al.h>
 #include <alc.h>
-#endif
 
 #include <GL/gl.h>
 }

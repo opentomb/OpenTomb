@@ -2,16 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef _MSC_VER///@GH0ST
-#include <SDL_platform.h>
-#include <SDL_opengl.h>
-#include <SDL_keycode.h>
-#else
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_keycode.h>
-#endif
-
 
 #include <lua.h>
 #include <lualib.h>

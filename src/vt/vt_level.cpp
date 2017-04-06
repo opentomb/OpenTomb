@@ -1,10 +1,5 @@
-#ifdef _MSC_VER///@GH0ST
-#include <SDL.h>
-#include <SDL_endian.h>
-#else
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_endian.h>
-#endif
 #include <stdio.h>
 #include "tr_versions.h"
 #include "vt_level.h"

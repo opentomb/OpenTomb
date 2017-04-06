@@ -1,13 +1,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef _MSC_VER///@GH0ST
-#include <SDL.h>
-#include <SDL_rwops.h>
-#else
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_rwops.h>
-#endif
 
 extern "C" {
 #include <lua.h>

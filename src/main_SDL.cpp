@@ -1,10 +1,8 @@
-#ifdef _MSC_VER///@GH0ST
-#include <SDL.h>
+#ifdef _MSC_VER
 #undef main
-#else
-#include <SDL2/SDL.h>
 #endif
 
+#include <SDL2/SDL.h>
 #include <stdlib.h>
 
 #include "engine.h"

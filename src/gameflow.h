@@ -17,7 +17,6 @@
 #define     GAME_4_1    (9)
 #define     GAME_5      (10)
 
-#define GF_MAX_ACTIONS 32
 #define GF_MAX_SECRETS 256
 
 #define GF_NOENTRY     -1

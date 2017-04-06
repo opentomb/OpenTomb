@@ -6,21 +6,15 @@
 
 #ifdef _MSC_VER///@GH0ST
 #include <time.h>
-#include <SDL.h>
-#include <SDL_platform.h>
-#include <SDL_rwops.h>
-#include <SDL_video.h>
-#include <SDL_audio.h>
 #else
 #include <sys/time.h>
+#endif
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_rwops.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
-#endif
-
-
 
 #include <lua.h>
 #include <lualib.h>
