@@ -1372,8 +1372,8 @@ void World_GenAnimTextures(class VT_Level *tr)
             seq->frame_lock        = false; // by default anim is playing
             seq->uvrotate          = false; // by default uvrotate
             seq->reverse_direction = false; // Needed for proper reverse-type start-up.
-            seq->frame_rate        = 0.05;  // Should be passed as 1 / FPS.
-            seq->frame_time        = 0.0;   // Reset frame time to initial state.
+            seq->frame_rate        = 0.05f;  // Should be passed as 1 / FPS.
+            seq->frame_time        = 0.0f;   // Reset frame time to initial state.
             seq->current_frame     = 0;     // Reset current frame to zero.
 
             for(uint16_t j = 0; j < seq->frames_count; j++)
@@ -1394,7 +1394,7 @@ void World_GenAnimTextures(class VT_Level *tr)
             if((i < num_uvrotates) && (seq->frames_count <= 2))
             {
                 seq->uvrotate   = true;
-                seq->frame_rate = 0.05 * 16;
+                seq->frame_rate = 0.05f * 16;
             }
             seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
             global_world.tex_atlas->getCoordinates(&p0, seq->frame_list[0], false);

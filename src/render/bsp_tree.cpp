@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
@@ -234,77 +235,6 @@ CDynamicBSP::~CDynamicBSP()
 }
 
 
-void CDynamicBSP::AddNewPolygonList(struct polygon_s *p, float transform[16], struct frustum_s *f)
-{
-    for( ; p && (!m_realloc_state); p = p->next)
-    {
-        m_temp_allocated = 0;
-        polygon_p np = this->CreatePolygon(p->vertex_count);
-        bool visible = (f == NULL);
-        vertex_p src_v, dst_v;
-
-        np->anim_id = p->anim_id;
-        np->frame_offset = p->frame_offset;
-        np->double_side  = p->double_side;
-
-        np->transparency = p->transparency;
-
-        Mat4_vec3_rot_macro(np->plane, transform, p->plane);
-        for(uint16_t i = 0; i < p->vertex_count; i++)
-        {
-            src_v = p->vertices + i;
-            dst_v = np->vertices + i;
-            Mat4_vec3_mul_macro(dst_v->position, transform, src_v->position);
-        }
-        np->plane[3] = -vec3_dot(np->plane, np->vertices[0].position);
-
-        for(frustum_p ff = f; (!visible) && ff; ff = ff->next)
-        {
-            if(Frustum_IsPolyVisible(np, ff, false))
-            {
-                visible = true;
-                break;
-            }
-        }
-
-        if(visible)
-        {
-            if(p->anim_id > 0)
-            {
-                anim_seq_p seq = m_anim_seq + p->anim_id - 1;
-                uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
-                tex_frame_p tf = seq->frames + frame;
-                np->texture_index = tf->texture_index;
-
-                for(uint16_t i = 0; i < p->vertex_count; i++)
-                {
-                    src_v = p->vertices + i;
-                    dst_v = np->vertices + i;
-                    Mat4_vec3_rot_macro(dst_v->normal, transform, src_v->normal);
-                    vec4_copy(dst_v->color, src_v->color);
-                    ApplyAnimTextureTransformation(dst_v->tex_coord, src_v->tex_coord, tf);
-                }
-            }
-            else
-            {
-                np->texture_index = p->texture_index;
-                for(uint16_t i = 0; i < p->vertex_count; i++)
-                {
-                    src_v = p->vertices + i;
-                    dst_v = np->vertices + i;
-                    Mat4_vec3_rot_macro(dst_v->normal, transform, src_v->normal);
-                    vec4_copy(dst_v->color, src_v->color);
-                    dst_v->tex_coord[0] = src_v->tex_coord[0];
-                    dst_v->tex_coord[1] = src_v->tex_coord[1];
-                }
-            }
-            m_input_polygons++;
-            this->AddPolygon(m_root, np);
-        }
-    }
-}
-
-
 void CDynamicBSP::Reset(struct anim_seq_s *seq)
 {
     if(m_vbo == 0)
@@ -362,4 +292,78 @@ void CDynamicBSP::Reset(struct anim_seq_s *seq)
     m_input_polygons = 0;
     m_added_polygons = 0;
     m_root = this->CreateBSPNode();
+}
+
+void CDynamicBSP::AddNewPolygonList(polygon_s * p, float transform[16], frustum_s * f)
+{
+	if (!m_realloc_state) return;
+
+	while(p)
+	{
+		m_temp_allocated = 0;
+		polygon_p np = this->CreatePolygon(p->vertex_count);
+		bool visible = (f == NULL);
+		vertex_p src_v, dst_v;
+
+		np->anim_id = p->anim_id;
+		np->frame_offset = p->frame_offset;
+		np->double_side = p->double_side;
+
+		np->transparency = p->transparency;
+
+		Mat4_vec3_rot_macro(np->plane, transform, p->plane);
+		for (uint16_t i = 0; i < p->vertex_count; i++)
+		{
+			src_v = p->vertices + i;
+			dst_v = np->vertices + i;
+			Mat4_vec3_mul_macro(dst_v->position, transform, src_v->position);
+		}
+		np->plane[3] = -vec3_dot(np->plane, np->vertices[0].position);
+
+		for (frustum_p ff = f; (!visible) && ff; ff = ff->next)
+		{
+			if (Frustum_IsPolyVisible(np, ff, false))
+			{
+				visible = true;
+				break;
+			}
+		}
+
+		if (visible)
+		{
+			if (p->anim_id > 0)
+			{
+				anim_seq_p seq = m_anim_seq + p->anim_id - 1;
+				uint16_t frame = (seq->current_frame + p->frame_offset) % seq->frames_count;
+				tex_frame_p tf = seq->frames + frame;
+				np->texture_index = tf->texture_index;
+
+				for (uint16_t i = 0; i < p->vertex_count; i++)
+				{
+					src_v = p->vertices + i;
+					dst_v = np->vertices + i;
+					Mat4_vec3_rot_macro(dst_v->normal, transform, src_v->normal);
+					vec4_copy(dst_v->color, src_v->color);
+					ApplyAnimTextureTransformation(dst_v->tex_coord, src_v->tex_coord, tf);
+				}
+			}
+			else
+			{
+				np->texture_index = p->texture_index;
+				for (uint16_t i = 0; i < p->vertex_count; i++)
+				{
+					src_v = p->vertices + i;
+					dst_v = np->vertices + i;
+					Mat4_vec3_rot_macro(dst_v->normal, transform, src_v->normal);
+					vec4_copy(dst_v->color, src_v->color);
+					dst_v->tex_coord[0] = src_v->tex_coord[0];
+					dst_v->tex_coord[1] = src_v->tex_coord[1];
+				}
+			}
+			m_input_polygons++;
+			this->AddPolygon(m_root, np);
+		}
+
+		p = p->next;
+	}
 }

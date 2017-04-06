@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <string>
 #include <stdlib.h>
 
 #include "../core/system.h"

@@ -64,9 +64,10 @@ public:
     
     CDynamicBSP(uint32_t size);
    ~CDynamicBSP();
-   
-    void AddNewPolygonList(struct polygon_s *p, float transform[16], struct frustum_s *f);
+
     void Reset(struct anim_seq_s *seq);
+
+	void AddNewPolygonList(struct polygon_s *p, float transform[16], struct frustum_s *f);
     
     struct vertex_s *GetVertexArray()
     {

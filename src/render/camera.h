@@ -63,10 +63,17 @@ typedef struct camera_state_s
 
 typedef struct camera_s
 {
+#ifdef _MSC_VER
+	GLfloat                     __declspec(align(16)) gl_transform[16];
+	GLfloat                     __declspec(align(16)) gl_view_mat[16];
+	GLfloat                     __declspec(align(16)) gl_proj_mat[16];
+	GLfloat                     __declspec(align(16)) gl_view_proj_mat[16];
+#else
     GLfloat                     gl_transform[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_view_mat[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_proj_mat[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_view_proj_mat[16] __attribute__((packed, aligned(16)));
+#endif
 
     GLfloat                     clip_planes[16];        // frustum side clip planes
     GLfloat                     prev_pos[3];            // previous camera position

@@ -19,7 +19,7 @@ CGameflow::CGameflow()
     memset(this->m_currentLevelPath, 0, MAX_ENGINE_PATH);
     this->m_currentGameID = 0;
     this->m_currentLevelID = 0;
-    memset(this->m_actions, GF_NOENTRY, GF_MAX_ACTIONS);
+	this->m_actions.clear();
     memset(this->m_secretsTriggerMap, 0, GF_MAX_SECRETS);
 }
 
@@ -30,14 +30,14 @@ CGameflow::~CGameflow()
     memset(this->m_currentLevelPath, 0, MAX_ENGINE_PATH);
     this->m_currentGameID = 0;
     this->m_currentLevelID = 0;
-    memset(this->m_actions, 0, GF_MAX_ACTIONS);
+	this->m_actions.clear();
     memset(this->m_secretsTriggerMap, 0, GF_MAX_SECRETS);
 }
 
 
 void CGameflow::Do()
 {
-    for(int i = 0; i < GF_MAX_ACTIONS; i++)
+    for(int i = 0; i < this->m_actions.size(); i++)
     {
         switch(this->m_actions[i].m_opcode)
         {
@@ -83,17 +83,11 @@ void CGameflow::Do()
 
 bool CGameflow::Send(int opcode, int operand)
 {
-    //Iterate through our action list until we have a free space (TR_GAMEFLOW_NOENTRY) to add the next action.
-    for(int i = 0; i < GF_MAX_ACTIONS; i++)
-    {
-        if(this->m_actions[i].m_opcode == GF_NOENTRY)
-        {
-            this->m_actions[i].m_opcode = opcode;
-            this->m_actions[i].m_operand = operand;
-            return true;
-        }
-    }
-    return false;
+	gameflow_action act;
+	act.m_opcode = opcode;
+	act.m_operand = operand;
+	this->m_actions.push_back(act);
+    return true;
 }
 
 

@@ -20,6 +20,7 @@
  */
 
 #include <SDL2/SDL.h>
+
 #include <zlib.h>
 #include "l_main.h"
 #include "../core/system.h"

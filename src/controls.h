@@ -3,6 +3,7 @@
 #define CONTROLS_H
 
 #include <SDL2/SDL.h>
+
 #include <stdint.h>
 
 #define JOY_BUTTON_MASK  1000

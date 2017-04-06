@@ -2,7 +2,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
+
+#ifndef _MSC_VER
 #include <sys/time.h>
+#endif
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_rwops.h>
@@ -105,20 +110,46 @@ void Sys_ResetTempMem()
 SYS TIME
 ===============================================================================
 */
+
+#if _MSC_VER
+typedef struct timeval {
+	long tv_sec;
+	long tv_usec;
+} timeval;
+
+int gettimeofday(struct timeval * tp, struct timezone * tzp)
+{
+	static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
+
+	SYSTEMTIME  system_time;
+	FILETIME    file_time;
+	uint64_t    time;
+
+	GetSystemTime(&system_time);
+	SystemTimeToFileTime(&system_time, &file_time);
+	time = ((uint64_t)file_time.dwLowDateTime);
+	time += ((uint64_t)file_time.dwHighDateTime) << 32;
+
+	tp->tv_sec = (long)((time - EPOCH) / 10000000L);
+	tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
+	return 0;
+}
+#endif
+
 float Sys_FloatTime (void)
 {
-    struct              timeval tp;
-    static long int     secbase = 0;
+	struct              timeval tp;
+	static long int     secbase = 0;
 
-    gettimeofday(&tp, NULL);
+	gettimeofday(&tp, NULL);
+	
+	if (!secbase)
+	{
+		secbase = tp.tv_sec;
+		return tp.tv_usec * 1.0e-6;
+	}
 
-    if (!secbase)
-    {
-        secbase = tp.tv_sec;
-        return tp.tv_usec * 1.0e-6;
-    }
-
-    return (float)(tp.tv_sec - secbase) + (float)tp.tv_usec * 1.0e-6;
+	return (float)(tp.tv_sec - secbase) + (float)tp.tv_usec * 1.0e-6;
 }
 
 

@@ -20,6 +20,7 @@
  */
 
 #include <SDL2/SDL_endian.h>
+
 #include <zlib.h>
 #include "l_main.h"
 #include "tr_versions.h"

@@ -155,6 +155,13 @@ set(OPENTOMB_SRCS
     src/world.h
 )
 
+#Windows zlib_winapi define
+IF(WIN32) # Check if we are on Windows
+  if(MSVC) # Check if we are using the Visual Studio compiler
+    add_definitions(-DZLIB_WINAPI=1)
+  endif()
+endif()
+
 if(MINGW AND CMAKE_CROSSCOMPILING)
     # Cross compiling on Linux with the MinGW toolchain.
     message(STATUS "MinGW Cross-Compilation")

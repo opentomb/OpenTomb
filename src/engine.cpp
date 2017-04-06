@@ -1,7 +1,7 @@
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,8 +11,10 @@ extern "C" {
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+
 #include <al.h>
 #include <alc.h>
+
 #include <GL/gl.h>
 }
 
@@ -1387,7 +1389,13 @@ int Engine_LoadMap(const char *name)
     size_t map_len = strlen(name);
     size_t base_len = strlen(base_path);
     size_t buf_len = map_len + base_len + 1;
-    char map_name_buf[buf_len];
+
+#ifdef _MSC_VER///@GH0ST
+	char *map_name_buf = (char*)malloc(sizeof(char) * buf_len);
+#else
+	char map_name_buf[buf_len];
+#endif
+   
     strncpy(map_name_buf, base_path, buf_len);
     strncat(map_name_buf, name, buf_len);
 
@@ -1448,6 +1456,10 @@ int Engine_LoadMap(const char *name)
     Gui_DrawLoadScreen(1000);
     Gui_NotifierStop();
     engine_set_zero_time = 1;
+
+#ifdef _MSC_VER///@GH0ST
+	free(map_name_buf);
+#endif
 
     return 1;
 }

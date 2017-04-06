@@ -55,6 +55,7 @@ struct base_mesh_s;
  * SMOOTHED ANIMATIONS STRUCTURES
  * stack matrices are needed for skinned mesh transformations.
  */
+
 typedef struct ss_bone_tag_s
 {
     struct ss_bone_tag_s   *parent;
@@ -67,10 +68,15 @@ typedef struct ss_bone_tag_s
     float                   offset[3];                                          // model position offset
 
     float                   qrotate[4];                                         // quaternion rotation
+#ifdef _MSC_VER
+	float                   __declspec(align(16)) transform[16];    // 4x4 OpenGL matrix for stack usage
+	float                   __declspec(align(16)) full_transform[16];    // 4x4 OpenGL matrix for global usage
+	float                   __declspec(align(16)) orig_transform[16];    // 4x4 OpenGL matrix for global usage (no targeting modifications)
+#else
     float                   transform[16]      __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for stack usage
     float                   full_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
     float                   orig_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage (no targeting modifications)
-    
+#endif
     uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
 }ss_bone_tag_t, *ss_bone_tag_p;
 

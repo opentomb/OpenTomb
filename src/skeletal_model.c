@@ -89,8 +89,14 @@ void SkeletalModel_Clear(skeletal_model_p model)
 
 void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
 {
+
     int stack = 0;
-    uint16_t parents[model->mesh_count];
+    
+#ifdef _MSC_VER///@GH0ST
+	uint16_t *parents = (uint16_t*)malloc(sizeof(uint16_t) * model->mesh_count);
+#else
+	uint16_t parents[model->mesh_count];
+#endif	
 
     parents[0] = 0;
     model->mesh_tree[0].parent = 0;                                             // root
@@ -114,6 +120,10 @@ void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
             }
         }
     }
+
+#ifdef _MSC_VER
+	free(parents);
+#endif
 }
 
 

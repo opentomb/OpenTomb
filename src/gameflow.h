@@ -3,6 +3,7 @@
 #define GAMEFLOW_H
 
 #include "engine.h"
+#include <vector>
 
 #define     GAME_1      (0)
 #define     GAME_1_1    (1)
@@ -16,7 +17,6 @@
 #define     GAME_4_1    (9)
 #define     GAME_5      (10)
 
-#define GF_MAX_ACTIONS 32
 #define GF_MAX_SECRETS 256
 
 #define GF_NOENTRY     -1
@@ -64,7 +64,7 @@ private:
     char                m_currentLevelName[LEVEL_NAME_MAX_LEN];
     char                m_currentLevelPath[MAX_ENGINE_PATH];
 
-    gameflow_action     m_actions[GF_MAX_ACTIONS];
+    std::vector<gameflow_action> m_actions;
     char                m_secretsTriggerMap[GF_MAX_SECRETS];
 };
 

@@ -11,6 +11,7 @@ extern "C" {
 
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
+
 #include <stdint.h>
 
 struct polygon_s;

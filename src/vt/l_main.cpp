@@ -20,6 +20,7 @@
  */
 
 #include <SDL2/SDL.h>
+
 #include <string.h>
 
 #include "l_main.h"

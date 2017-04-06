@@ -1,6 +1,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+
 #include <SDL2/SDL_rwops.h>
 #include <SDL2/SDL_endian.h>
 

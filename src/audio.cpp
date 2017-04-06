@@ -1,6 +1,5 @@
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_audio.h>
+#include <SDL2/SDL_platform.h>
+#include <SDL2/SDL_opengl.h>
 
 #include <math.h>
 
@@ -9,6 +8,7 @@
 extern "C" {
 #include <al.h>
 #include <alc.h>
+
 #ifdef HAVE_ALEXT_H
 #include <alext.h>
 #endif

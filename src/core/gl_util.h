@@ -13,7 +13,6 @@ extern "C" {
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>    /* Header File For The OpenGL Library */
 
-
 /* Miscellaneous */
 typedef void (APIENTRYP PFNGLCLEARINDEXPROC) (GLfloat c);                  
 typedef void (APIENTRYP PFNGLCLEARCOLORPROC) (GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);                  

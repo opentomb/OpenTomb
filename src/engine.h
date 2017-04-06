@@ -118,7 +118,11 @@ extern struct camera_state_s                 engine_camera_state;
 engine_container_p Container_Create();
 
 void Engine_Start(int argc, char **argv);
+#ifdef _MSC_VER
+void Engine_Shutdown(int val);
+#else
 void Engine_Shutdown(int val) __attribute__((noreturn));
+#endif
 const char *Engine_GetBasePath();
 void Engine_SetDone();
 void Engine_LoadConfig(const char *filename);
