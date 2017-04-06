@@ -118,23 +118,83 @@ void Sys_ResetTempMem()
 SYS TIME
 ===============================================================================
 */
+
+#if _MSC_VER
+const __int64 DELTA_EPOCH_IN_MICROSECS = 11644473600000000;
+struct timeval2 {
+	__int32 tv_sec;
+	__int32 tv_usec;
+};
+struct timezone2
+{
+	__int32  tz_minuteswest; /* minutes W of Greenwich */
+	__int32  tz_dsttime;     /* type of dst correction */
+};
+
+int gettimeofday2(struct timeval2 *tv/*in*/, struct timezone2 *tz/*in*/)
+{
+	FILETIME ft;
+	__int64 tmpres = 0;
+	TIME_ZONE_INFORMATION tz_winapi;
+	int rez = 0;
+
+	ZeroMemory(&ft, sizeof(ft));
+	ZeroMemory(&tz_winapi, sizeof(tz_winapi));
+
+	GetSystemTimeAsFileTime(&ft);
+
+	tmpres = ft.dwHighDateTime;
+	tmpres <<= 32;
+	tmpres |= ft.dwLowDateTime;
+
+	/*converting file time to unix epoch*/
+	tmpres /= 10;  /*convert into microseconds*/
+	tmpres -= DELTA_EPOCH_IN_MICROSECS;
+	tv->tv_sec = (__int32)(tmpres*0.000001);
+	tv->tv_usec = (tmpres % 1000000);
+
+
+	//_tzset(),don't work properly, so we use GetTimeZoneInformation
+	rez = GetTimeZoneInformation(&tz_winapi);
+
+	if (tz)
+	{
+		tz->tz_dsttime = (rez == 2) ? 1 : 0;
+		tz->tz_minuteswest = tz_winapi.Bias + ((rez == 2) ? tz_winapi.DaylightBias : 0);
+	}
+
+	return 0;
+}
+#endif
+
 float Sys_FloatTime (void)
 {
-#if 0///@GH0ST
-    struct              timeval tp;
-    static long int     secbase = 0;
+#if _MSC_VER///@GH0ST
+	struct              timeval2 tp;
+	static long int     secbase = 0;
 
-    gettimeofday(&tp, NULL);
+	gettimeofday2(&tp, NULL);
 
-    if (!secbase)
-    {
-        secbase = tp.tv_sec;
-        return tp.tv_usec * 1.0e-6;
-    }
+	if (!secbase)
+	{
+		secbase = tp.tv_sec;
+		return tp.tv_usec * 1.0e-6;
+	}
 
-    return (float)(tp.tv_sec - secbase) + (float)tp.tv_usec * 1.0e-6;
+	return (float)(tp.tv_sec - secbase) + (float)tp.tv_usec * 1.0e-6;
 #else
-	return 0.0f;
+	struct              timeval tp;
+	static long int     secbase = 0;
+
+	gettimeofday(&tp, NULL);
+
+	if (!secbase)
+	{
+		secbase = tp.tv_sec;
+		return tp.tv_usec * 1.0e-6;
+	}
+
+	return (float)(tp.tv_sec - secbase) + (float)tp.tv_usec * 1.0e-6;
 #endif
 }
 
