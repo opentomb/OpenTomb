@@ -1019,7 +1019,7 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
     size_t base_len = strlen(Engine_GetBasePath());
     size_t buf_len = pic_len + base_len + 5;
     
-#ifdef _MSC_VER///@GH0ST
+#ifdef _MSC_VER
 	char *image_name_buf = (char*)malloc(sizeof(char) * buf_len);
 #else
 	char image_name_buf[buf_len];
@@ -1081,7 +1081,7 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
         return true;
     }
 
-#ifdef _MSC_VER///@GH0ST
+#ifdef _MSC_VER
 	free(image_name_buf);
 #endif
     return false;
