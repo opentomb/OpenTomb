@@ -10,10 +10,11 @@ extern "C" {
 #include <lauxlib.h>
 }
 
+#include <map>
+
 #include "core/gl_util.h"
 #include "core/console.h"
 #include "core/system.h"
-#include "core/redblack.h"
 #include "core/vmath.h"
 #include "core/polygon.h"
 #include "core/obb.h"
@@ -76,8 +77,8 @@ extern "C" {
     struct entity_s                *Character;              // this is an unique Lara's pointer =)
     struct skeletal_model_s        *sky_box;                // global skybox
 
-    struct RedBlackHeader_s        *entity_tree;            // tree of world active objects
-    struct RedBlackHeader_s        *items_tree;             // tree of world items
+    std::map<uint32_t, entity_p>    entity_tree;
+    std::map<uint32_t, base_item_p> items_tree;
 
     uint32_t                        type;
 
@@ -89,17 +90,10 @@ extern "C" {
 } global_world;
 
 
-void World_GenRBTrees();
-int  compEntityEQ(void *x, void *y);
-int  compEntityLT(void *x, void *y);
-void RBEntityFree(void *x);
-void RBItemFree(void *x);
-
 // private load level functions prototipes:
 void World_SetEntityModelProperties(struct entity_s *ent);
 void World_SetStaticMeshProperties(struct static_mesh_s *r_static);
 void World_SetEntityFunction(struct entity_s *ent);
-void World_GenEntityFunctions(struct RedBlackNode_s *x);
 void World_ScriptsOpen();
 void World_AutoexecOpen();
 // Create entity function from script, if exists.
@@ -123,7 +117,7 @@ void World_GenSpritesBuffer();
 void World_GenRoomProperties(class VT_Level *tr);
 void World_GenRoomCollision();
 void World_FixRooms();
-void World_MakeEntityPickable(struct RedBlackNode_s *n, entity_p ent, int *done);          // Assign pickup functions to previously created base items.
+void World_MakeEntityPickable(entity_p ent);                                    // Assign pickup functions to previously created base items.
 
 
 void World_Prepare()
@@ -143,8 +137,6 @@ void World_Prepare()
     global_world.global_flip_state = 0;
     global_world.textures = NULL;
     global_world.type = 0;
-    global_world.entity_tree = NULL;
-    global_world.items_tree = NULL;
     global_world.Character = NULL;
 
     global_world.anim_sequences = NULL;
@@ -172,9 +164,6 @@ void World_Open(class VT_Level *tr)
     global_world.version = tr->game_version;
 
     World_ScriptsOpen();                // Open configuration scripts.
-    Gui_DrawLoadScreen(150);
-
-    World_GenRBTrees();                 // Generate red-black trees
     Gui_DrawLoadScreen(200);
 
     World_GenTextures(tr);              // Generate OGL textures
@@ -233,10 +222,9 @@ void World_Open(class VT_Level *tr)
     Gui_DrawLoadScreen(860);
 
     // Generate entity functions.
-
-    if(global_world.entity_tree && global_world.entity_tree->root)
+    for(const std::pair<uint32_t, entity_p> &it : global_world.entity_tree)
     {
-        World_GenEntityFunctions(global_world.entity_tree->root);
+        World_SetEntityFunction(it.second);
     }
     Gui_DrawLoadScreen(910);
 
@@ -281,11 +269,13 @@ void World_Clear()
     global_world.Character = NULL;
 
     /* entity empty must be done before rooms destroy */
-    if(global_world.entity_tree)
+    for(std::pair<const uint32_t, entity_p> &it : global_world.entity_tree)
     {
-        RB_Free(global_world.entity_tree);
-        global_world.entity_tree = NULL;
+        Entity_Clear(it.second);
+        free(it.second);
+        it.second = NULL;
     }
+    global_world.entity_tree.clear();
 
     /* Now we can delete physics misc objects */
     Physics_CleanUpObjects();
@@ -347,8 +337,14 @@ void World_Clear()
     }
 
     /*items empty*/
-    RB_Free(global_world.items_tree);
-    global_world.items_tree = NULL;
+    for(std::pair<const uint32_t, base_item_p> &it : global_world.items_tree)
+    {
+        SSBoneFrame_Clear(it.second->bf);
+        free(it.second->bf);
+        free(it.second);
+        it.second = NULL;
+    }
+    global_world.items_tree.clear();
 
     if(global_world.skeletal_models_count)
     {
@@ -415,56 +411,14 @@ int World_GetVersion()
 
 uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], float ang[3], int32_t id)
 {
-    if(global_world.entity_tree)
+    skeletal_model_p model = World_GetModelByID(model_id);
+
+    if(model)
     {
-        skeletal_model_p model = World_GetModelByID(model_id);
-        int done = 0;
-        if(model)
+        entity_p entity = World_GetEntityByID(id);
+
+        if(entity)
         {
-            entity_p entity = World_GetEntityByID(id);
-            RedBlackNode_p node = global_world.entity_tree->root;
-
-            if(entity)
-            {
-                if(pos != NULL)
-                {
-                    vec3_copy(entity->transform + 12, pos);
-                }
-                if(ang != NULL)
-                {
-                    vec3_copy(entity->angles, ang);
-                    Entity_UpdateTransform(entity);
-                }
-                if(room_id < global_world.rooms_count)
-                {
-                    Entity_MoveToRoom(entity, global_world.rooms + room_id);
-                    entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
-                }
-                else
-                {
-                    Room_RemoveObject(entity->self->room, entity->self);
-                    entity->self->room = NULL;
-                }
-                World_MakeEntityPickable(global_world.items_tree->root, entity, &done);
-
-                return entity->id;
-            }
-
-            entity = Entity_Create();
-            if(id < 0)
-            {
-                entity->id = 0;
-                while(node != NULL)
-                {
-                    entity->id = *((uint32_t*)node->key) + 1;
-                    node = node->right;
-                }
-            }
-            else
-            {
-                entity->id = id;
-            }
-
             if(pos != NULL)
             {
                 vec3_copy(entity->transform + 12, pos);
@@ -476,42 +430,79 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             }
             if(room_id < global_world.rooms_count)
             {
-                entity->self->room = global_world.rooms + room_id;
-                Room_AddObject(entity->self->room, entity->self);
+                Entity_MoveToRoom(entity, global_world.rooms + room_id);
                 entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
             }
             else
             {
+                Room_RemoveObject(entity->self->room, entity->self);
                 entity->self->room = NULL;
             }
-
-            entity->type_flags     = ENTITY_TYPE_SPAWNED;
-            entity->state_flags    = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE | ENTITY_STATE_COLLIDABLE;
-            entity->trigger_layout = 0x00;
-            entity->OCB            = 0x00;
-            entity->timer          = 0.0;
-
-            entity->self->collision_group = COLLISION_GROUP_KINEMATIC;
-            entity->self->collision_mask = COLLISION_MASK_ALL;
-            entity->self->collision_shape = COLLISION_SHAPE_TRIMESH;
-            entity->move_type          = 0x0000;
-            entity->move_type          = 0;
-
-            SSBoneFrame_CreateFromModel(entity->bf, model);
-            entity->bf->transform = entity->transform;
-            Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);
-            Physics_GenRigidBody(entity->physics, entity->bf);
-
-            Entity_RebuildBV(entity);
-            if(entity->self->room != NULL)
-            {
-                Room_AddObject(entity->self->room, entity->self);
-            }
-            World_AddEntity(entity);
-            World_MakeEntityPickable(global_world.items_tree->root, entity, &done);
+            World_MakeEntityPickable(entity);
 
             return entity->id;
         }
+
+        entity = Entity_Create();
+        if(id < 0)
+        {
+            entity->id = 0;
+            if(!global_world.entity_tree.empty())
+            {
+                entity->id = global_world.entity_tree.rbegin()->first + 1;
+            }
+        }
+        else
+        {
+            entity->id = id;
+        }
+
+        if(pos != NULL)
+        {
+            vec3_copy(entity->transform + 12, pos);
+        }
+        if(ang != NULL)
+        {
+            vec3_copy(entity->angles, ang);
+            Entity_UpdateTransform(entity);
+        }
+        if(room_id < global_world.rooms_count)
+        {
+            entity->self->room = global_world.rooms + room_id;
+            Room_AddObject(entity->self->room, entity->self);
+            entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
+        }
+        else
+        {
+            entity->self->room = NULL;
+        }
+
+        entity->type_flags     = ENTITY_TYPE_SPAWNED;
+        entity->state_flags    = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE | ENTITY_STATE_COLLIDABLE;
+        entity->trigger_layout = 0x00;
+        entity->OCB            = 0x00;
+        entity->timer          = 0.0;
+
+        entity->self->collision_group = COLLISION_GROUP_KINEMATIC;
+        entity->self->collision_mask = COLLISION_MASK_ALL;
+        entity->self->collision_shape = COLLISION_SHAPE_TRIMESH;
+        entity->move_type          = 0x0000;
+        entity->move_type          = 0;
+
+        SSBoneFrame_CreateFromModel(entity->bf, model);
+        entity->bf->transform = entity->transform;
+        Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);
+        Physics_GenRigidBody(entity->physics, entity->bf);
+
+        Entity_RebuildBV(entity);
+        if(entity->self->room != NULL)
+        {
+            Room_AddObject(entity->self->room, entity->self);
+        }
+        World_AddEntity(entity);
+        World_MakeEntityPickable(entity);
+
+        return entity->id;
     }
 
     return ENTITY_ID_NONE;
@@ -521,17 +512,11 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
 struct entity_s *World_GetEntityByID(uint32_t id)
 {
     entity_p ent = NULL;
-    RedBlackNode_p node;
+    std::map<uint32_t, entity_p>::iterator it = global_world.entity_tree.find(id);
 
-    if(global_world.entity_tree == NULL)
+    if(it != global_world.entity_tree.end())
     {
-        return NULL;
-    }
-
-    node = RB_SearchNode(&id, global_world.entity_tree);
-    if(node != NULL)
-    {
-        ent = (entity_p)node->data;
+        ent = it->second;
     }
 
     return ent;
@@ -561,9 +546,15 @@ struct entity_s *World_GetPlayer()
 }
 
 
-struct RedBlackNode_s *World_GetEntityTreeRoot()
+void World_IterateAllEntities(int (*iterator)(struct entity_s *ent, void *data), void *data)
 {
-    return (global_world.entity_tree) ? (global_world.entity_tree->root) : (NULL);
+    for(std::pair<const uint32_t, entity_p> &it : global_world.entity_tree)
+    {
+        if(iterator(it.second, data))
+        {
+            break;;
+        }
+    }
 }
 
 
@@ -576,17 +567,11 @@ struct flyby_camera_sequence_s *World_GetFlyBySequences()
 struct base_item_s *World_GetBaseItemByID(uint32_t id)
 {
     base_item_p item = NULL;
-    RedBlackNode_p node;
+    std::map<uint32_t, base_item_p>::iterator it = global_world.items_tree.find(id);
 
-    if(global_world.items_tree == NULL)
+    if(it != global_world.items_tree.end())
     {
-        return NULL;
-    }
-
-    node = RB_SearchNode(&id, global_world.items_tree);
-    if(node != NULL)
-    {
-        item = (base_item_p)node->data;
+        item = it->second;
     }
 
     return item;
@@ -665,14 +650,18 @@ int World_AddAnimSeq(struct anim_seq_s *seq)
 
 int World_AddEntity(struct entity_s *entity)
 {
-    RB_InsertIgnore(&entity->id, entity, global_world.entity_tree);
+    global_world.entity_tree[entity->id] = entity;
+
     return 1;
 }
 
 
 int World_DeleteEntity(struct entity_s *entity)
 {
-    RB_Delete(global_world.entity_tree, RB_SearchNode(&entity->id, global_world.entity_tree));
+    global_world.entity_tree.erase(entity->id);
+    Entity_Clear(entity);
+    free(entity);
+
     return 1;
 }
 
@@ -680,35 +669,37 @@ int World_DeleteEntity(struct entity_s *entity)
 int World_CreateItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
 {
     skeletal_model_p model = World_GetModelByID(model_id);
-    if((model == NULL) || (global_world.items_tree == NULL))
+    if(model && (global_world.items_tree.count(item_id) == 0))
     {
-        return 0;
+        base_item_p item = BaseItem_Create(model, item_id);
+        item->world_model_id = world_model_id;
+        item->type = type;
+        item->count = count;
+        if(name)
+        {
+            strncpy(item->name, name, sizeof(item->name));
+        }
+        global_world.items_tree[item_id] = item;
+
+        return 1;
     }
 
-    ss_bone_frame_p bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
-    SSBoneFrame_CreateFromModel(bf, model);
-
-    base_item_p item = (base_item_p)malloc(sizeof(base_item_t));
-    item->id = item_id;
-    item->world_model_id = world_model_id;
-    item->type = type;
-    item->count = count;
-    item->name[0] = 0;
-    if(name)
-    {
-        strncpy(item->name, name, 64);
-    }
-    item->bf = bf;
-
-    RB_InsertReplace(&item->id, item, global_world.items_tree);
-
-    return 1;
+    return 0;
 }
 
 
 int World_DeleteItem(uint32_t item_id)
 {
-    RB_Delete(global_world.items_tree, RB_SearchNode(&item_id, global_world.items_tree));
+    std::map<const uint32_t, base_item_p>::iterator it = global_world.items_tree.find(item_id);
+
+    if(it != global_world.items_tree.end())
+    {
+        BaseItem_Clear(it->second);
+        free(it->second);
+        it->second = NULL;
+        global_world.items_tree.erase(it);
+    }
+
     return 1;
 }
 
@@ -1135,48 +1126,6 @@ uint32_t World_GetFlipState(uint32_t flip_index)
 /*
  * PRIVATE  WORLD  FUNCTIONS
  */
-
-void World_GenRBTrees()
-{
-    global_world.entity_tree = RB_Init();
-    global_world.entity_tree->rb_compEQ = compEntityEQ;
-    global_world.entity_tree->rb_compLT = compEntityLT;
-    global_world.entity_tree->rb_free_data = RBEntityFree;
-
-    global_world.items_tree = RB_Init();
-    global_world.items_tree->rb_compEQ = compEntityEQ;
-    global_world.items_tree->rb_compLT = compEntityLT;
-    global_world.items_tree->rb_free_data = RBItemFree;
-}
-
-
-int compEntityEQ(void *x, void *y)
-{
-    return (*((uint32_t*)x) == *((uint32_t*)y));
-}
-
-
-int compEntityLT(void *x, void *y)
-{
-    return (*((uint32_t*)x) < *((uint32_t*)y));
-}
-
-
-void RBEntityFree(void *x)
-{
-    Entity_Clear((entity_p)x);
-    free(x);
-}
-
-
-void RBItemFree(void *x)
-{
-    SSBoneFrame_Clear(((base_item_p)x)->bf);
-    free(((base_item_p)x)->bf);
-    free(x);
-}
-
-
 void World_ScriptsOpen()
 {
     if(engine_lua)
@@ -1332,23 +1281,6 @@ void World_SetEntityFunction(struct entity_s *ent)
 }
 
 // Functions setting parameters from configuration scripts.
-void World_GenEntityFunctions(struct RedBlackNode_s *x)
-{
-    entity_p entity = (entity_p)x->data;
-
-    World_SetEntityFunction(entity);
-
-    if(x->left != NULL)
-    {
-        World_GenEntityFunctions(x->left);
-    }
-    if(x->right != NULL)
-    {
-        World_GenEntityFunctions(x->right);
-    }
-}
-
-
 void World_GenTextures(class VT_Level *tr)
 {
     int border_size = renderer.settings.texture_border;
@@ -2318,17 +2250,16 @@ void World_GenBaseItems()
 {
     Script_CallVoidFunc(engine_lua, "genBaseItems");
 
-    if(global_world.items_tree && global_world.items_tree->root)
+    if(!global_world.items_tree.empty())
     {
-        for(uint32_t i = 0; i < global_world.rooms_count; i++)
+        for(uint32_t i = 0; i < global_world.rooms_count; ++i)
         {
             engine_container_p cont = global_world.rooms[i].content->containers;
             for(; cont; cont = cont->next)
             {
                 if(cont->object_type == OBJECT_ENTITY)
                 {
-                    int done = 0;
-                    World_MakeEntityPickable(global_world.items_tree->root, (entity_p)cont->object, &done);
+                    World_MakeEntityPickable((entity_p)cont->object);
                 }
             }
         }
@@ -2546,25 +2477,17 @@ void World_FixRooms()
 }
 
 
-void World_MakeEntityPickable(struct RedBlackNode_s *n, entity_p ent, int *done)
+void World_MakeEntityPickable(entity_p ent)
 {
-    if(n)
+    for(std::pair<const uint32_t, base_item_p> &it : global_world.items_tree)
     {
-        base_item_p item = (base_item_p)n->data;
-        if(!*done && ent && ent->bf->animations.model)
+        if(it.second && (ent->bf->animations.model->id == it.second->world_model_id))
         {
-            if(item && (ent->bf->animations.model->id == item->world_model_id))
-            {
-                char buf[128] = {0};
-                snprintf(buf, 128, "if(entity_funcs[%d] == nil) then entity_funcs[%d] = {}; pickup_init(%d, %d); end", ent->id, ent->id, ent->id, item->id);
-                luaL_dostring(engine_lua, buf);
-                Entity_DisableCollision(ent);
-                *done = 1;
-                return;
-            }
-
-            World_MakeEntityPickable(n->right, ent, done);
-            World_MakeEntityPickable(n->left, ent, done);
+            char buf[128] = {0};
+            snprintf(buf, 128, "if(entity_funcs[%d] == nil) then entity_funcs[%d] = {}; pickup_init(%d, %d); end", ent->id, ent->id, ent->id, it.second->id);
+            luaL_dostring(engine_lua, buf);
+            Entity_DisableCollision(ent);
+            break;
         }
     }
 }

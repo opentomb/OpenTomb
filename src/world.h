@@ -18,7 +18,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
 struct entity_s *World_GetEntityByID(uint32_t id);
 void World_SetPlayer(struct entity_s *entity);
 struct entity_s *World_GetPlayer();
-struct RedBlackNode_s *World_GetEntityTreeRoot();
+void World_IterateAllEntities(int (*iterator)(struct entity_s *ent, void *data), void *data);
 struct flyby_camera_sequence_s *World_GetFlyBySequences();
 struct base_item_s *World_GetBaseItemByID(uint32_t id);
 struct static_camera_sink_s *World_GetstaticCameraSink(uint32_t id);

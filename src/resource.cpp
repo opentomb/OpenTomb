@@ -17,7 +17,6 @@ extern "C" {
 #include "core/gl_util.h"
 #include "core/gl_text.h"
 #include "core/console.h"
-#include "core/redblack.h"
 #include "core/polygon.h"
 #include "core/obb.h"
 #include "render/camera.h"
