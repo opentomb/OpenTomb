@@ -127,6 +127,13 @@ struct inventory_node_s;
 
 // Specific in-game entity structure.
 
+typedef struct activation_point_s
+{
+    float                               offset[4];       // where we can activate object (dx, dy, dz, r)
+    float                               direction[4];    // direction_xyz, cos(lim)
+}activation_point_t, *activation_point_p;
+
+
 typedef struct entity_s
 {
     uint32_t                            id;                     // Unique entity ID
@@ -136,7 +143,7 @@ typedef struct entity_s
     uint32_t                            dir_flag : 8;           // (move direction)
     uint32_t                            move_type : 4;          // on floor / free fall / swim ....
     uint32_t                            no_fix_all : 1;
-    uint32_t                            no_fix_z : 1;
+    //uint32_t                            fix_root_only : 1;      // only zero mesh use for collision resolving
     uint32_t                            no_anim_pos_autocorrection : 1;
     
     float                               timer;              // Set by "timer" trigger field
@@ -162,14 +169,14 @@ typedef struct entity_s
 
     struct engine_container_s          *self;
 
-    float                               activation_offset[4];       // where we can activate object (dx, dy, dz, r)
-    float                               activation_direction[4];    // direction_xyz, cos(lim)
+    struct activation_point_s          *activation_point;
     struct inventory_node_s            *inventory;
     struct character_s                 *character;
 }entity_t, *entity_p;
 
 
 entity_p Entity_Create();
+void Entity_InitActivationPoint(entity_p entity);
 void Entity_Clear(entity_p entity);
 void Entity_Enable(entity_p ent);
 void Entity_Disable(entity_p ent);

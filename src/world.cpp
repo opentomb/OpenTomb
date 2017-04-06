@@ -23,6 +23,7 @@ extern "C" {
 #include "render/bordered_texture_atlas.h"
 #include "script/script.h"
 #include "state_control/state_control.h"
+#include "physics/physics.h"
 #include "gui/gui.h"
 #include "vt/vt_level.h"
 #include "audio.h"
@@ -33,7 +34,6 @@ extern "C" {
 #include "entity.h"
 #include "character_controller.h"
 #include "engine.h"
-#include "physics.h"
 #include "gameflow.h"
 #include "resource.h"
 #include "inventory.h"
@@ -2289,11 +2289,9 @@ void World_GenEntities(class VT_Level *tr)
             entity->character->set_key_anim_func(entity, &entity->bf->animations, ANIMATION_KEY_INIT);
             Room_AddObject(entity->self->room, entity->self);
 
+            entity->character->bone_head = 14;
+            entity->character->bone_torso = 7;
             entity->character->Height = 768.0;
-            entity->character->height_info.leg_l_index = LEFT_LEG;
-            entity->character->height_info.leg_r_index = RIGHT_LEG;
-            //entity->character->height_info.hand_l_index = LEFT_HAND;
-            //entity->character->height_info.hand_r_index = RIGHT_HAND;
             World_AddEntity(entity);
             World_SetPlayer(entity);
         }

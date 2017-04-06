@@ -84,7 +84,8 @@ int lua_GetEntityModelID(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            ss_animation_p ss_anim = (top > 1) ? (SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2))) : (&ent->bf->animations);
+            uint16_t anim_type = (top > 1) ? (lua_tointeger(lua, 2)) : (ANIM_TYPE_BASE);
+            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_type);
             if(ss_anim && ss_anim->model)
             {
                 lua_pushinteger(lua, ss_anim->model->id);
@@ -130,6 +131,34 @@ int lua_GetEntityAnimState(lua_State * lua)
 /*
  * Base engine functions
  */
+int lua_SetEntityBaseAnimModel(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            skeletal_model_p model = World_GetModelByID(lua_tointeger(lua, 2));
+            if(model && ent->bf->animations.model && (ent->bf->animations.model->mesh_count == model->mesh_count))
+            {
+                ent->bf->animations.model = model;
+            }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setEntityBaseAnimModel: expecting arguments (entity_id, model_id)");
+    }
+
+    return 0;
+}
+
+
+
 int lua_SetModelCollisionMap(lua_State * lua)
 {
     if(lua_gettop(lua) >= 3)
@@ -804,6 +833,7 @@ int lua_EntitySSAnimGetEnable(lua_State * lua)
 
 void Script_LuaRegisterAnimFuncs(lua_State *lua)
 {
+    lua_register(lua, "setEntityBaseAnimModel", lua_SetEntityBaseAnimModel);
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
     lua_register(lua, "setModelBodyPartFlag", lua_SetModelBodyPartFlag);
     lua_register(lua, "setStateChangeRange", lua_SetStateChangeRange);

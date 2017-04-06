@@ -8,11 +8,11 @@
 
 #include "../render/camera.h"
 #include "../script/script.h"
+#include "../physics/physics.h"
 #include "../vt/tr_versions.h"
 #include "../engine.h"
 #include "../audio.h"
 #include "../controls.h"
-#include "../physics.h"
 #include "../room.h"
 #include "../world.h"
 #include "../skeletal_model.h"
@@ -273,10 +273,9 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
          * Base onfloor animations
          */
         case TR_STATE_LARA_DEATH:
-            if(is_last_frame)
+            if(is_last_frame && !(ent->type_flags & ENTITY_TYPE_DYNAMIC))
             {
                 state->ragdoll = 0x01;
-                //addEntityRagdoll(player, RD_TYPE_LARA);
             }
             break;
 
@@ -581,10 +580,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     ss_anim->next_state = TR_STATE_LARA_TURN_LEFT_SLOW;
                 }
             }       // end MOVE LEFT
-            else
-            {
-                Character_FixPosByFloorInfoUnderLegs(ent);
-            }
             break;
 
         case TR_STATE_LARA_JUMP_PREPARE:
@@ -791,7 +786,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
         case TR_STATE_LARA_TURN_FAST:
@@ -818,7 +812,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
             /*
@@ -1118,7 +1111,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_RUN_FORWARD;
             }
-            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
 
@@ -1251,7 +1243,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
         case TR_STATE_LARA_WALK_LEFT:
@@ -1290,7 +1281,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
         case TR_STATE_LARA_WALK_RIGHT:
@@ -1329,7 +1319,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            Character_FixPosByFloorInfoUnderLegs(ent);
             break;
 
             /*

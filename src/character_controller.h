@@ -4,7 +4,9 @@
 
 #include <stdint.h>
 
-#include "physics.h"
+#include "physics/physics.h"
+#include "physics/hair.h"
+#include "physics/ragdoll.h"
 
 /*------ Lara's model-------
              .=.
@@ -60,15 +62,6 @@
 #define CHARACTER_BOX_HALF_SIZE (128.0)
 #define CHARACTER_BASE_RADIUS   (128.0)
 #define CHARACTER_BASE_HEIGHT   (512.0)
-
-
-/*
- * default legs offsets
- */
-#define LEFT_LEG                    (3)
-#define RIGHT_LEG                   (6)
-#define LEFT_HAND                   (13)
-#define RIGHT_HAND                  (10)
 
 /*
  * ENTITY MOVEMENT TYPES
@@ -207,19 +200,9 @@ typedef struct height_info_s
     struct collision_result_s                floor_hit;
     struct collision_result_s                ceiling_hit;
 
-    struct collision_result_s                leg_l_floor;
-    struct collision_result_s                leg_r_floor;
-    struct collision_result_s                hand_l_floor;
-    struct collision_result_s                hand_r_floor;
-
     float                                    transition_level;
     int16_t                                  water;
     int16_t                                  quicksand;
-
-    int16_t                                  leg_l_index;
-    int16_t                                  leg_r_index;
-    int16_t                                  hand_l_index;
-    int16_t                                  hand_r_index;
 }height_info_t, *height_info_p;
 
 typedef struct character_command_s
@@ -285,7 +268,10 @@ typedef struct character_s
     int8_t                      cam_follow_center;
     int8_t                      hair_count;
     struct hair_s             **hairs;
+    struct rd_setup_s          *ragdoll;
 
+    uint16_t                    bone_head;
+    uint16_t                    bone_torso;
     int16_t                     current_weapon;
     int16_t                     weapon_current_state;
 
@@ -322,7 +308,6 @@ void Character_Update(struct entity_s *ent);
 void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);
 int  Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height_info_s *nfc);
 int  Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
-void Character_FixPosByFloorInfoUnderLegs(struct entity_s *ent);
 void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3]);
 void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float test_from[3], float test_to[3]);
 void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s *climb);

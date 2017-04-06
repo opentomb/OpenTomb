@@ -167,7 +167,7 @@ function damocles_init(id)      -- Sword of Damocles
             setCharacterParam(activator_id, PARAM_HEALTH, 0);
             playSound(SOUND_GEN_DEATH, activator_id);
             playSound(103, object_id);
-            addEntityRagdoll(activator_id, RD_TYPE_LARA);
+            setCharacterRagdollActivity(activator_id, true);
         end;
     end;
 end
@@ -585,7 +585,7 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
             a_model = getEntityModelID(activator_id);
             if((a_model == 0) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then  -- Lara
                 setEntityActivity(object_id, false);
-                addEntityRagdoll(activator_id, RD_TYPE_LARA);
+                setCharacterRagdollActivity(activator_id, true);
                 setCharacterParam(activator_id, PARAM_HEALTH, 0);
                 stopSound(191, object_id);
                 playSound(SOUND_GEN_DEATH, activator_id);

@@ -12,7 +12,6 @@
 #include "../engine.h"
 #include "../audio.h"
 #include "../controls.h"
-#include "../physics.h"
 #include "../room.h"
 #include "../world.h"
 #include "../skeletal_model.h"
