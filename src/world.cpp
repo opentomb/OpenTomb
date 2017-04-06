@@ -339,8 +339,7 @@ void World_Clear()
     /*items empty*/
     for(std::pair<const uint32_t, base_item_p> &it : global_world.items_tree)
     {
-        SSBoneFrame_Clear(it.second->bf);
-        free(it.second->bf);
+        BaseItem_Clear(it.second);
         free(it.second);
         it.second = NULL;
     }
