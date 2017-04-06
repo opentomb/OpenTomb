@@ -4,9 +4,7 @@
 #include <time.h>
 
 
-#ifdef _MSC_VER///@GH0ST
-#include <time.h>
-#else
+#ifndef _MSC_VER
 #include <sys/time.h>
 #endif
 
@@ -114,74 +112,37 @@ SYS TIME
 */
 
 #if _MSC_VER
-const __int64 DELTA_EPOCH_IN_MICROSECS = 11644473600000000;
-struct timeval2 {
-	__int32 tv_sec;
-	__int32 tv_usec;
-};
-struct timezone2
+typedef struct timeval {
+	long tv_sec;
+	long tv_usec;
+} timeval;
+
+int gettimeofday(struct timeval * tp, struct timezone * tzp)
 {
-	__int32  tz_minuteswest; /* minutes W of Greenwich */
-	__int32  tz_dsttime;     /* type of dst correction */
-};
+	static const uint64_t EPOCH = ((uint64_t)116444736000000000ULL);
 
-int gettimeofday2(struct timeval2 *tv/*in*/, struct timezone2 *tz/*in*/)
-{
-	FILETIME ft;
-	__int64 tmpres = 0;
-	TIME_ZONE_INFORMATION tz_winapi;
-	int rez = 0;
+	SYSTEMTIME  system_time;
+	FILETIME    file_time;
+	uint64_t    time;
 
-	ZeroMemory(&ft, sizeof(ft));
-	ZeroMemory(&tz_winapi, sizeof(tz_winapi));
+	GetSystemTime(&system_time);
+	SystemTimeToFileTime(&system_time, &file_time);
+	time = ((uint64_t)file_time.dwLowDateTime);
+	time += ((uint64_t)file_time.dwHighDateTime) << 32;
 
-	GetSystemTimeAsFileTime(&ft);
-
-	tmpres = ft.dwHighDateTime;
-	tmpres <<= 32;
-	tmpres |= ft.dwLowDateTime;
-
-	/*converting file time to unix epoch*/
-	tmpres /= 10;  /*convert into microseconds*/
-	tmpres -= DELTA_EPOCH_IN_MICROSECS;
-	tv->tv_sec = (__int32)(tmpres*0.000001);
-	tv->tv_usec = (tmpres % 1000000);
-
-
-	//_tzset(),don't work properly, so we use GetTimeZoneInformation
-	rez = GetTimeZoneInformation(&tz_winapi);
-
-	if (tz)
-	{
-		tz->tz_dsttime = (rez == 2) ? 1 : 0;
-		tz->tz_minuteswest = tz_winapi.Bias + ((rez == 2) ? tz_winapi.DaylightBias : 0);
-	}
-
+	tp->tv_sec = (long)((time - EPOCH) / 10000000L);
+	tp->tv_usec = (long)(system_time.wMilliseconds * 1000);
 	return 0;
 }
 #endif
 
 float Sys_FloatTime (void)
 {
-#if _MSC_VER///@GH0ST
-	struct              timeval2 tp;
-	static long int     secbase = 0;
-
-	gettimeofday2(&tp, NULL);
-
-	if (!secbase)
-	{
-		secbase = tp.tv_sec;
-		return tp.tv_usec * 1.0e-6;
-	}
-
-	return (float)(tp.tv_sec - secbase) + (float)tp.tv_usec * 1.0e-6;
-#else
 	struct              timeval tp;
 	static long int     secbase = 0;
 
 	gettimeofday(&tp, NULL);
-
+	
 	if (!secbase)
 	{
 		secbase = tp.tv_sec;
@@ -189,7 +150,6 @@ float Sys_FloatTime (void)
 	}
 
 	return (float)(tp.tv_sec - secbase) + (float)tp.tv_usec * 1.0e-6;
-#endif
 }
 
 
