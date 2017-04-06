@@ -30,7 +30,6 @@ void BaseItem_Clear(base_item_p item)
     {
         SSBoneFrame_Clear(item->bf);
         free(item->bf);
-        free(item);
     }
 }
 
