@@ -24,12 +24,13 @@ base_item_p BaseItem_Create(struct skeletal_model_s *model, uint32_t id)
 }
 
 
-void BaseItem_Clear(base_item_p item)
+void BaseItem_Delete(base_item_p item)
 {
     if(item)
     {
         SSBoneFrame_Clear(item->bf);
         free(item->bf);
+        free(item);
     }
 }
 

@@ -96,7 +96,7 @@ void Entity_InitActivationPoint(entity_p entity)
 }
 
 
-void Entity_Clear(entity_p entity)
+void Entity_Delete(entity_p entity)
 {
     if(entity)
     {
@@ -123,7 +123,7 @@ void Entity_Clear(entity_p entity)
         Inventory_RemoveAllItems(&entity->inventory);
         if(entity->character)
         {
-            Character_Clean(entity);
+            Character_Delete(entity);
         }
 
         Physics_DeletePhysicsData(entity->physics);
@@ -141,6 +141,8 @@ void Entity_Clear(entity_p entity)
             free(entity->bf);
             entity->bf = NULL;
         }
+        
+        free(entity);
     }
 }
 

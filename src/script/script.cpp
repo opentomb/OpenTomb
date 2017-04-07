@@ -177,8 +177,8 @@ bool Script_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
         lua_getglobal(lua, "getLoadingScreen");
         if(lua_isfunction(lua, -1))
         {
-            lua_pushinteger(lua, gameflow.getCurrentGameID());
-            lua_pushinteger(lua, gameflow.getCurrentLevelID());
+            lua_pushinteger(lua, Gameflow_GetCurrentGameID());
+            lua_pushinteger(lua, Gameflow_GetCurrentLevelID());
             lua_pushinteger(lua, level_index);
             if (lua_CallAndLog(lua, 3, 1, 0))
             {
@@ -888,7 +888,7 @@ void Script_LoadConstants(lua_State *lua)
 
         LUA_EXPOSE(lua, ANIMATION_KEY_INIT);
         LUA_EXPOSE(lua, ANIMATION_KEY_DEAD);
-        
+
         LUA_EXPOSE(lua, STATE_FUNCTIONS_LARA);
         LUA_EXPOSE(lua, STATE_FUNCTIONS_BAT);
         LUA_EXPOSE(lua, STATE_FUNCTIONS_WOLF);

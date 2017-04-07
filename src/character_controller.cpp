@@ -117,7 +117,7 @@ void Character_Create(struct entity_s *ent)
     }
 }
 
-void Character_Clean(struct entity_s *ent)
+void Character_Delete(struct entity_s *ent)
 {
     character_p actor = ent->character;
 
@@ -162,7 +162,7 @@ void Character_Update(struct entity_s *ent)
         {
             Entity_CheckActivators(ent);
         }
-        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
+        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0f)
         {
             ent->character->state.dead = 1;                                     // Kill, if no HP.
         }
@@ -227,13 +227,12 @@ void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
  */
 void Character_UpdateCurrentHeight(struct entity_s *ent)
 {
-    float from[3], to[3], base_z, *v;
+    float from[3], *v;
     height_info_p hi = &ent->character->height_info;
 
     v = ent->bf->bone_tags[0].transform + 12;
     Mat4_vec3_mul_macro(from, ent->transform, v);
     from[2] += 128.0f;
-    base_z = from[2];
     from[0] = ent->transform[12 + 0];
     from[1] = ent->transform[12 + 1];
     Character_GetHeightInfo(from, hi, ent->character->Height);
@@ -969,7 +968,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
 
     norm_move_xy[0] = move[0];
     norm_move_xy[1] = move[1];
-    norm_move_xy_len = sqrt(move[0] * move[0] + move[1] * move[1]);
+    norm_move_xy_len = sqrtf(move[0] * move[0] + move[1] * move[1]);
     if(norm_move_xy_len > 0.2 * t)
     {
         norm_move_xy[0] /= norm_move_xy_len;

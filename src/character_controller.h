@@ -302,7 +302,7 @@ typedef struct character_s
 }character_t, *character_p;
 
 void Character_Create(struct entity_s *ent);
-void Character_Clean(struct entity_s *ent);
+void Character_Delete(struct entity_s *ent);
 void Character_Update(struct entity_s *ent);
 
 void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);

@@ -140,9 +140,6 @@ bool Ragdoll_Delete(struct physics_data_s *physics);
 struct hair_s;
 struct hair_setup_s;
 
-// Gets scripted hair set-up to specified hair set-up structure.
-struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, uint32_t hair_entry_index);
-
 // Creates hair into allocated hair structure, using previously defined setup and
 // entity index.
 struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *physics);

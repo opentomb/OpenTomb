@@ -263,12 +263,12 @@ int lua_AddCharacterHair(lua_State *lua)
                     ent->character->hair_count--;
                     Con_Warning("can not create hair for entity_id = %d", lua_tointeger(lua, 1));
                 }
+                Hair_DeleteSetup(hair_setup);
             }
             else
             {
                 Con_Warning("wrong hair setup index = %d", lua_tointeger(lua, 2));
             }
-            free(hair_setup);
         }
         else
         {

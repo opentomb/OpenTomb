@@ -341,7 +341,7 @@ int Game_Save(const char* name)
         return 0;
     }
 
-    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow.getCurrentLevelPathLocal(), gameflow.getCurrentGameID(), gameflow.getCurrentLevelID());
+    fprintf(f, "loadMap(\"%s\", %d, %d);\n", Gameflow_GetCurrentLevelPathLocal(), Gameflow_GetCurrentGameID(), Gameflow_GetCurrentLevelID());
 
     // Save flipmap and flipped room states.
     uint8_t *flip_map;
@@ -710,7 +710,7 @@ void Game_Prepare()
 
     // Set gameflow parameters to default.
     // Reset secret trigger map.
-    gameflow.resetSecrets();///@UNIMPLEMENTED We should save the secrets to a save file prior to resetting!
+    Gameflow_ResetSecrets();///@UNIMPLEMENTED We should save the secrets to a save file prior to resetting!
 }
 
 

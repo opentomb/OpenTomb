@@ -177,7 +177,7 @@ typedef struct entity_s
 
 entity_p Entity_Create();
 void Entity_InitActivationPoint(entity_p entity);
-void Entity_Clear(entity_p entity);
+void Entity_Delete(entity_p entity);
 void Entity_Enable(entity_p ent);
 void Entity_Disable(entity_p ent);
 void Entity_EnableCollision(entity_p ent);

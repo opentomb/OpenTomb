@@ -185,7 +185,7 @@ bool Script_GetOverridedSample(lua_State *lua, int sound_id, int *first_sample_n
         if(lua_isfunction(lua, -1))
         {
             lua_pushinteger(lua, World_GetVersion());
-            lua_pushinteger(lua, gameflow.getCurrentLevelID());
+            lua_pushinteger(lua, Gameflow_GetCurrentLevelID());
             lua_pushinteger(lua, sound_id);
             if(lua_CallAndLog(lua, 3, 2, 0))
             {

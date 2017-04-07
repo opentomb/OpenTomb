@@ -499,7 +499,7 @@ int lua_GetSecretStatus(lua_State *lua)
         int secret_number = lua_tointeger(lua, 1);
         if((secret_number <= GF_MAX_SECRETS) && (secret_number >= 0))
         {
-            lua_pushinteger(lua, (int)gameflow.getSecretStateAtIndex(secret_number));
+            lua_pushinteger(lua, Gameflow_GetSecretStateAtIndex(secret_number));
             return 1;
         }
     }
@@ -514,7 +514,7 @@ int lua_SetSecretStatus(lua_State *lua)
         int secret_number = lua_tointeger(lua, 1);
         if((secret_number <= GF_MAX_SECRETS) && (secret_number >= 0))
         {
-            gameflow.setSecretStateAtIndex(secret_number, lua_tointeger(lua, 2));
+            Gameflow_SetSecretStateAtIndex(secret_number, lua_tointeger(lua, 2));
         }
     }
     return 0;
@@ -669,7 +669,7 @@ int lua_SpawnEntity(lua_State * lua)
 
 int lua_GetLevel(lua_State *lua)
 {
-    lua_pushinteger(lua, gameflow.getCurrentLevelID());
+    lua_pushinteger(lua, Gameflow_GetCurrentLevelID());
     return 1;
 }
 
@@ -682,7 +682,7 @@ int lua_SetLevel(lua_State *lua)
         Con_Notify("level was changed to %d", id);
 
         Game_LevelTransition(id);
-        if(!gameflow.Send(GF_OP_LEVELCOMPLETE, id))
+        if(!Gameflow_Send(GF_OP_LEVELCOMPLETE, id))
         {
             Con_Warning("setLevel: Failed to add opcode to gameflow action list");
         }
@@ -701,16 +701,16 @@ int lua_SetGame(lua_State *lua)
     int top = lua_gettop(lua);
     if(top >= 1)
     {
-        gameflow.setCurrentGameID(lua_tointeger(lua, 1));
+        Gameflow_SetCurrentGameID(lua_tointeger(lua, 1));
         if(!lua_isnil(lua, 2))
         {
-            gameflow.setCurrentLevelID(lua_tointeger(lua, 2));
+            Gameflow_SetCurrentLevelID(lua_tointeger(lua, 2));
         }
 
         lua_getglobal(lua, "getTitleScreen");
         if(lua_isfunction(lua, -1))
         {
-            lua_pushnumber(lua, gameflow.getCurrentGameID());
+            lua_pushnumber(lua, Gameflow_GetCurrentGameID());
             if(lua_CallAndLog(lua, 1, 1, 0))
             {
                 //Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
@@ -719,10 +719,10 @@ int lua_SetGame(lua_State *lua)
         }
         lua_settop(lua, top);
 
-        Con_Notify("level was changed to %d", gameflow.getCurrentGameID());
-        Game_LevelTransition(gameflow.getCurrentLevelID());
+        Con_Notify("level was changed to %d", Gameflow_GetCurrentGameID());
+        Game_LevelTransition(Gameflow_GetCurrentLevelID());
 
-        if(!gameflow.Send(GF_OP_LEVELCOMPLETE, gameflow.getCurrentLevelID()))
+        if(!Gameflow_Send(GF_OP_LEVELCOMPLETE, Gameflow_GetCurrentLevelID()))
         {
             Con_Warning("setGame: Failed to add opcode to gameflow action list");
         }
@@ -747,14 +747,14 @@ int lua_LoadMap(lua_State *lua)
             {
                 if(!lua_isnil(lua, 2))
                 {
-                    gameflow.setCurrentGameID(lua_tointeger(lua, 2));
+                    Gameflow_SetCurrentGameID(lua_tointeger(lua, 2));
                 }
                 if(!lua_isnil(lua, 3))
                 {
-                    gameflow.setCurrentLevelID(lua_tointeger(lua, 3));
+                    Gameflow_SetCurrentLevelID(lua_tointeger(lua, 3));
                 }
                 char file_path[MAX_ENGINE_PATH];
-                Script_GetLoadingScreen(lua, gameflow.getCurrentLevelID(), file_path);
+                Script_GetLoadingScreen(lua, Gameflow_GetCurrentLevelID(), file_path);
                 if(!Gui_LoadScreenAssignPic(file_path))
                 {
                     Gui_LoadScreenAssignPic("resource/graphics/legal");
