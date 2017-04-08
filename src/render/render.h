@@ -3,7 +3,7 @@
 #define RENDER_H
 
 #include <stdint.h>
-#include <SDL2/SDL.h>
+#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
 #include "../core/vmath.h"

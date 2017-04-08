@@ -22,7 +22,16 @@ struct gameflow_s
     char                            m_secretsTriggerMap[GF_MAX_SECRETS];
 
     std::vector<gameflow_action>    m_actions;
-} global_gameflow = { 0 };
+} global_gameflow;
+
+
+void Gameflow_Init()
+{
+    memset(global_gameflow.m_currentLevelName, 0, sizeof(global_gameflow.m_currentLevelName));
+    memset(global_gameflow.m_currentLevelPath, 0, sizeof(global_gameflow.m_currentLevelPath));
+    memset(global_gameflow.m_secretsTriggerMap, 0, sizeof(global_gameflow.m_secretsTriggerMap));
+    global_gameflow.m_actions.clear();
+}
 
 
 bool Gameflow_Send(int opcode, int operand)
@@ -37,7 +46,7 @@ bool Gameflow_Send(int opcode, int operand)
 }
 
 
-void Gameflow_Do()
+void Gameflow_ProcessCommands()
 {
     for(; !global_gameflow.m_actions.empty(); global_gameflow.m_actions.pop_back())
     {

@@ -54,8 +54,9 @@ enum GF_OP
     GF_OP_LASTINDEX
 };
 
+void Gameflow_Init();
 bool Gameflow_Send(int opcode, int operand);
-void Gameflow_Do();
+void Gameflow_ProcessCommands();
 void Gameflow_ResetSecrets();
 const char* Gameflow_GetCurrentLevelPathLocal();
 void Gameflow_SetCurrentLevelPath(const char* filePath);

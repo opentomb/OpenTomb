@@ -303,6 +303,7 @@ void Engine_Init_Pre()
     Sys_Init();
     GLText_Init();
     Con_Init();
+    Gameflow_Init();
     Con_SetExecFunction(Engine_ExecCmd);
     Script_LuaInit();
 
@@ -889,7 +890,7 @@ void Engine_MainLoop()
         if(screen_info.debug_view_state != debug_view_state_e::model_view)
         {
             Game_Frame(time);
-            Gameflow_Do();
+            Gameflow_ProcessCommands();
         }
         Audio_Update(time);
         Engine_Display();
