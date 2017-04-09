@@ -288,7 +288,7 @@ typedef struct character_s
 
     float                       climb_r;                // climbing sensor radius
     float                       forvard_size;           // offset for climbing calculation
-    float                       Height;                 // base character height
+    float                       height;                 // base character height
     float                       wade_depth;             // water depth that enable wade walk
     float                       swim_depth;             // depth offset for starting to swim
 

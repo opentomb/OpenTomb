@@ -48,6 +48,72 @@ int lua_CharacterCreate(lua_State * lua)
 }
 
 
+int lua_SetCharacterBones(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 3)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            ent->character->bone_head = lua_tointeger(lua, 2);
+            ent->character->bone_torso = lua_tointeger(lua, 3);
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setCharacterBones: expecting arguments (entity_id, head_bone, torso_bone)");
+    }
+    return 0;
+}
+
+
+int lua_SetCharacterMoveSizes(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 6)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            if(!lua_isnil(lua, 2))
+            {
+                ent->character->height = lua_tointeger(lua, 2);
+            }
+            if(!lua_isnil(lua, 3))
+            {
+                ent->character->min_step_up_height = lua_tointeger(lua, 3);
+            }
+            if(!lua_isnil(lua, 4))
+            {
+                ent->character->max_step_up_height = lua_tointeger(lua, 4);
+            }
+            if(!lua_isnil(lua, 5))
+            {
+                ent->character->max_climb_height = lua_tointeger(lua, 5);
+            }
+            if(!lua_isnil(lua, 6))
+            {
+                ent->character->fall_down_height = lua_tointeger(lua, 6);
+            }
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setCharacterMoveSizes: expecting arguments (entity_id, height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height)");
+    }
+    return 0;
+}
+
+
 int lua_SetCharacterStateControlFunctions(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -539,6 +605,8 @@ void Script_LuaRegisterCharacterFuncs(lua_State *lua)
     lua_register(lua, "setCharacterRagdollActivity", lua_SetCharacterRagdollActivity);
 
     lua_register(lua, "characterCreate", lua_CharacterCreate);
+    lua_register(lua, "setCharacterBones", lua_SetCharacterBones);
+    lua_register(lua, "setCharacterMoveSizes", lua_SetCharacterMoveSizes);
     lua_register(lua, "setCharacterStateControlFunctions", lua_SetCharacterStateControlFunctions);
     lua_register(lua, "setCharacterKeyAnim", lua_SetCharacterKeyAnim);
     lua_register(lua, "setCharacterTarget", lua_SetCharacterTarget);

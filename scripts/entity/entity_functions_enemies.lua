@@ -42,11 +42,10 @@ function Lara_init(id)
     setEntityTypeFlag(id, ENTITY_TYPE_TRIGGER_ACTIVATOR, 1);
     characterCreate(id);
     setCharacterParam(id, PARAM_HEALTH, 1000.0, 1000.0);
-    --entity->move_type = MOVE_ON_FLOOR;
-    --entity->character->bone_head = 14;
-    --entity->character->bone_torso = 7;
-    --entity->character->Height = 768.0;
+    setCharacterBones(id, 14, 7);  --head, torso
+    setCharacterMoveSizes(id, 768.0, 128.0, 288.0, 1920.0, 320.0); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
+    setEntityMoveType(id, MOVE_ON_FLOOR);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LARA);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
 
@@ -450,6 +449,8 @@ function gorilla_init(id)
     setEntityGhostCollisionShape(id, 11,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);  -- hand
     setEntityGhostCollisionShape(id, 14,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);  -- head
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_GORILLA);
+
+    setCharacterMoveSizes(id, 512.0, nil, nil, nil, nil); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()

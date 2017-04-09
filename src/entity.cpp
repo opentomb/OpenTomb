@@ -141,7 +141,7 @@ void Entity_Delete(entity_p entity)
             free(entity->bf);
             entity->bf = NULL;
         }
-        
+
         free(entity);
     }
 }
@@ -697,7 +697,7 @@ int  Entity_GetSubstanceState(entity_p entity)
 
     if(entity->self->room->flags & TR_ROOM_FLAG_QUICKSAND)
     {
-        if(entity->character->height_info.transition_level > entity->transform[12 + 2] + entity->character->Height)
+        if(entity->character->height_info.transition_level > entity->transform[12 + 2] + entity->character->height)
         {
             return ENTITY_SUBSTANCE_QUICKSAND_CONSUMED;
         }
