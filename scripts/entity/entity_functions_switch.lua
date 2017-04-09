@@ -425,7 +425,7 @@ function keyhole_init(id)    -- Key and puzzle holes
             if(f >= c - 1) then                                 -- check the end of animation
                 if(entity_funcs[object_id].key ~= nil) then
                     if(entity_funcs[object_id].meshswap ~= nil) then
-                        setEntityMeshswap(object_id, entity_funcs[object_id].meshswap); -- only for puzzleholes - do a meshswap
+                        setEntityMeshes(object_id, entity_funcs[object_id].meshswap, nil, nil);
                     end
                     setEntityLock(object_id, 1);                -- lock filled hole
                 end;

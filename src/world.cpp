@@ -2083,7 +2083,7 @@ void World_GenEntities(class VT_Level *tr)
 
         if(engine_lua)
         {
-            if(entity->bf->animations.model == NULL)
+            if(entity->bf->animations.model == NULL)   ///@TODO: DELETE THIS HACK! (add script function)
             {
                 top = lua_gettop(engine_lua);                                   // save LUA stack
                 lua_getglobal(engine_lua, "getOverridedID");                    // add to the up of stack LUA's function
@@ -2100,7 +2100,7 @@ void World_GenEntities(class VT_Level *tr)
             lua_getglobal(engine_lua, "getOverridedAnim");                      // add to the up of stack LUA's function
             lua_pushinteger(engine_lua, tr->game_version);                      // add to stack first argument
             lua_pushinteger(engine_lua, tr_item->object_id);                    // add to stack second argument
-            if (lua_CallAndLog(engine_lua, 2, 1, 0))                            // call that function
+            if(lua_CallAndLog(engine_lua, 2, 1, 0))                             // call that function
             {
                 int replace_anim_id = lua_tointeger(engine_lua, -1);
                 if(replace_anim_id > 0)
@@ -2138,6 +2138,7 @@ void World_GenEntities(class VT_Level *tr)
         SSBoneFrame_CreateFromModel(entity->bf, entity->bf->animations.model);
         entity->bf->transform = entity->transform;
 
+        ///@TODO: DELETE that hack!
         if(0 == tr_item->object_id)                                             // Lara is an unical model
         {
             skeletal_model_p tmp, LM;                                           // LM - Lara Model
@@ -2149,57 +2150,6 @@ void World_GenEntities(class VT_Level *tr)
             entity->type_flags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
             LM = (skeletal_model_p)entity->bf->animations.model;
 
-            switch(tr->game_version)
-            {
-                case TR_I:
-                    if(Gameflow_GetCurrentLevelID() == 0)
-                    {
-                        LM = World_GetModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
-                        if(LM)
-                        {
-                            // In TR1, Lara has unified head mesh for all her alternate skins.
-                            // Hence, we copy all meshes except head, to prevent Potato Raider bug.
-                            SkeletalModel_CopyMeshes(global_world.skeletal_models[0].mesh_tree, LM->mesh_tree, global_world.skeletal_models[0].mesh_count - 1);
-                        }
-                    }
-                    break;
-
-                case TR_III:
-                    LM = World_GetModelByID(TR_ITEM_LARA_SKIN_TR3);
-                    if(LM)
-                    {
-                        SkeletalModel_CopyMeshes(global_world.skeletal_models[0].mesh_tree, LM->mesh_tree, global_world.skeletal_models[0].mesh_count);
-                        tmp = World_GetModelByID(11);                           // moto / quadro cycle animations
-                        if(tmp)
-                        {
-                            SkeletalModel_CopyMeshes(tmp->mesh_tree, LM->mesh_tree, global_world.skeletal_models[0].mesh_count);
-                        }
-                    }
-                    break;
-
-                case TR_IV:
-                case TR_IV_DEMO:
-                case TR_V:
-                    LM = World_GetModelByID(TR_ITEM_LARA_SKIN_TR45);            // base skeleton meshes
-                    if(LM)
-                    {
-                        SkeletalModel_CopyMeshes(global_world.skeletal_models[0].mesh_tree, LM->mesh_tree, global_world.skeletal_models[0].mesh_count);
-                    }
-                    LM = World_GetModelByID(TR_ITEM_LARA_SKIN_JOINTS_TR45);     // skin skeleton meshes
-                    if(LM)
-                    {
-                        SkeletalModel_CopyMeshesToSkinned(global_world.skeletal_models[0].mesh_tree, LM->mesh_tree, global_world.skeletal_models[0].mesh_count);
-                    }
-                    SkeletalModel_FillSkinnedMeshMap(&global_world.skeletal_models[0]);
-                    break;
-            };
-
-            for(uint16_t j = 0; j < entity->bf->bone_tag_count; j++)
-            {
-                entity->bf->bone_tags[j].mesh_base = entity->bf->animations.model->mesh_tree[j].mesh_base;
-                entity->bf->bone_tags[j].mesh_skin = entity->bf->animations.model->mesh_tree[j].mesh_skin;
-                entity->bf->bone_tags[j].mesh_slot = NULL;
-            }
             Physics_GenRigidBody(entity->physics, entity->bf);
             Entity_UpdateRigidBody(entity, 1);
             Character_Create(entity);

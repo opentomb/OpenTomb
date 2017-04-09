@@ -2,7 +2,7 @@
 #ifndef GAMEFLOW_H
 #define GAMEFLOW_H
 
-#include "engine.h"
+#include <stdint.h>
 
 #define     GAME_1      (0)
 #define     GAME_1_1    (1)

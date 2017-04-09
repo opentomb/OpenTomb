@@ -9,13 +9,6 @@
 #define TR_ITEM_SKYBOX_TR4 459
 #define TR_ITEM_SKYBOX_TR5 454
 
-///@FIXME: Move Lara skin item IDs to script!
-
-#define TR_ITEM_LARA_SKIN_ALTERNATE_TR1    5
-#define TR_ITEM_LARA_SKIN_TR3            315
-#define TR_ITEM_LARA_SKIN_TR45             8
-#define TR_ITEM_LARA_SKIN_JOINTS_TR45      9
-
 #define LOG_ANIM_DISPATCHES 0
 
 class  VT_Level;

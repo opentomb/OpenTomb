@@ -26,26 +26,6 @@
 -- 0x03: overriding mesh in disarmed state;
 -- 0x04: add mesh to slot in disarmed state;
 
-setEntityGhostCollisionShape(player, 0,  COLLISION_SHAPE_SPHERE, -60.0, nil, nil, 60.0, nil, nil);
-setEntityGhostCollisionShape(player, 7,  COLLISION_SHAPE_BOX, -48.0, -54.0, 8.0, 48.0, 32.0, 166.0);
-setEntityGhostCollisionShape(player, 1,  COLLISION_SHAPE_BOX, -32.0, -26.1, -176.0, 32.0, 29.1, -2.7);
-setEntityGhostCollisionShape(player, 4,  COLLISION_SHAPE_BOX, -32.0, -27.1, -175.3, 32.0, 28.1, 1.7);
-setEntityGhostCollisionShape(player, 10, COLLISION_SHAPE_SPHERE, -32.0, nil, -52.0, 16.0, nil, 0);
-setEntityGhostCollisionShape(player, 13, COLLISION_SHAPE_SPHERE, -16.0, nil, -52.0, 32.0, nil, 0);
-setEntityGhostCollisionShape(player, 14, COLLISION_SHAPE_SPHERE, -56.0, 0, 0, 56.0, 16.0, 64.0);
-
-setEntityGhostCollisionShape(player, 3,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
-setEntityGhostCollisionShape(player, 6,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
-setEntityGhostCollisionShape(player, 2,  COLLISION_SHAPE_BOX, -30.0, -40.0, -200.0, 24.0, 16.0, 0);
-setEntityGhostCollisionShape(player, 5,  COLLISION_SHAPE_BOX, -24.0, -40.0, -200.0, 30.0, 16.0, 0);
-setEntityGhostCollisionShape(player, 12, COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
-setEntityGhostCollisionShape(player, 9,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
-setEntityGhostCollisionShape(player, 11, COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
-setEntityGhostCollisionShape(player, 8,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
-
-setHumanoidBodyParts(player);
-setCharacterRagdollSetup(player, getRagdollSetup(RD_TYPE_LARA));
-
 -- creates map for left and right hands
 function setDefaultModelAnimReplaceFlag(m_id)
     setModelAnimReplaceFlag(m_id, 8, 0x01);

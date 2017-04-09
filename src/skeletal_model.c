@@ -131,71 +131,11 @@ void SkeletalModel_FillTransparency(skeletal_model_p model)
 }
 
 
-void SkeletalModel_FillSkinnedMeshMap(skeletal_model_p model)
-{
-    uint32_t *ch;
-    uint32_t founded_index = 0xFFFFFFFF;
-    float tv[3];
-    vertex_p v, founded_vertex;
-    base_mesh_p mesh_base, mesh_skin;
-    mesh_tree_tag_p tree_tag, prev_tree_tag;
-
-    tree_tag = model->mesh_tree;
-    for(uint16_t i = 0; i < model->mesh_count; i++, tree_tag++)
-    {
-        if(!tree_tag->mesh_skin)
-        {
-            continue;
-        }
-        mesh_base = tree_tag->mesh_base;
-        mesh_skin = tree_tag->mesh_skin;
-        ch = mesh_skin->skin_map = (uint32_t*)malloc(mesh_skin->vertex_count * sizeof(uint32_t));
-        v = mesh_skin->vertices;
-        for(uint32_t k = 0; k < mesh_skin->vertex_count; k++, v++, ch++)
-        {
-            *ch = 0xFFFFFFFF;
-            founded_index = BaseMesh_FindVertexIndex(mesh_base, v->position);
-            if(founded_index != 0xFFFFFFFF)
-            {
-                founded_vertex = mesh_base->vertices + founded_index;
-                vec3_copy(v->position, founded_vertex->position);
-                vec3_copy(v->normal, founded_vertex->normal);
-            }
-            else
-            {
-                vec3_add(tv, v->position, tree_tag->offset);
-                prev_tree_tag = model->mesh_tree + tree_tag->parent;
-                founded_index = BaseMesh_FindVertexIndex(prev_tree_tag->mesh_base, tv);
-                if(founded_index != 0xFFFFFFFF)
-                {
-                    founded_vertex = prev_tree_tag->mesh_base->vertices + founded_index;
-                    *ch = founded_index;
-                    vec3_sub(v->position, founded_vertex->position, tree_tag->offset);
-                    vec3_copy(v->normal, founded_vertex->normal);
-                }
-            }
-        }
-    }
-}
-
-
 void SkeletalModel_CopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
 {
     for(int i = 0; i < tags_count; i++)
     {
         dst[i].mesh_base = src[i].mesh_base;
-    }
-}
-
-
-void SkeletalModel_CopyMeshesToSkinned(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count)
-{
-    for(int i = 0; i < tags_count; i++)
-    {
-        if(i != src[i].parent)
-        {
-            dst[i].mesh_skin = src[i].mesh_base;
-        }
     }
 }
 
@@ -242,8 +182,10 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
             bf->bone_tags[i].index = i;
             bf->bone_tags[i].is_hidden = 0x00;
             bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
-            bf->bone_tags[i].mesh_skin = model->mesh_tree[i].mesh_skin;
+            bf->bone_tags[i].mesh_replace = NULL;
+            bf->bone_tags[i].mesh_skin = NULL;
             bf->bone_tags[i].mesh_slot = NULL;
+            bf->bone_tags[i].skin_map = NULL;
             bf->bone_tags[i].alt_anim = NULL;
             bf->bone_tags[i].body_part = model->mesh_tree[i].body_part;
 
@@ -302,6 +244,14 @@ void SSBoneFrame_Clear(ss_bone_frame_p bf)
 {
     if(bf && bf->bone_tag_count)
     {
+        for(uint16_t i = 0; i < bf->bone_tag_count; i++)
+        {
+            if(bf->bone_tags[i].skin_map)
+            {
+                free(bf->bone_tags[i].skin_map);
+            }
+        }
+        
         free(bf->bone_tags);
         bf->bone_tag_count = 0;
         bf->bone_tags = NULL;
@@ -848,4 +798,55 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
     }
     
     return 0x00;
+}
+
+
+void SSBoneFrame_FillSkinnedMeshMap(ss_bone_frame_p bf)
+{
+    uint32_t *ch;
+    uint32_t founded_index = 0xFFFFFFFF;
+    float tv[3];
+    vertex_p v, founded_vertex;
+    base_mesh_p mesh_base, mesh_skin;
+    ss_bone_tag_p tree_tag = bf->bone_tags;
+
+    for(uint16_t i = 0; i < bf->bone_tag_count; i++, tree_tag++)
+    {
+        if(!tree_tag->mesh_skin)
+        {
+            continue;
+        }
+        if(tree_tag->skin_map)
+        {
+            free(tree_tag->skin_map);
+            tree_tag->skin_map = NULL;
+        }
+        mesh_base = tree_tag->mesh_base;
+        mesh_skin = tree_tag->mesh_skin;
+        ch = tree_tag->skin_map = (uint32_t*)malloc(mesh_skin->vertex_count * sizeof(uint32_t));
+        v = mesh_skin->vertices;
+        for(uint32_t k = 0; k < mesh_skin->vertex_count; k++, v++, ch++)
+        {
+            *ch = 0xFFFFFFFF;
+            founded_index = BaseMesh_FindVertexIndex(mesh_base, v->position);
+            if(founded_index != 0xFFFFFFFF)
+            {
+                founded_vertex = mesh_base->vertices + founded_index;
+                vec3_copy(v->position, founded_vertex->position);
+                vec3_copy(v->normal, founded_vertex->normal);
+            }
+            else if(tree_tag->parent)
+            {
+                vec3_add(tv, v->position, tree_tag->offset);
+                founded_index = BaseMesh_FindVertexIndex(tree_tag->parent->mesh_base, tv);
+                if(founded_index != 0xFFFFFFFF)
+                {
+                    founded_vertex = tree_tag->parent->mesh_base->vertices + founded_index;
+                    *ch = founded_index;
+                    vec3_sub(v->position, founded_vertex->position, tree_tag->offset);
+                    vec3_copy(v->normal, founded_vertex->normal);
+                }
+            }
+        }
+    }
 }

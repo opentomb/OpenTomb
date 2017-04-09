@@ -59,12 +59,6 @@ void BaseMesh_Clear(base_mesh_p mesh)
         mesh->animated_vertex_count = 0;
     }
 
-    if(mesh->skin_map)
-    {
-        free(mesh->skin_map);
-        mesh->skin_map = NULL;
-    }
-
     if(mesh->faces)
     {
         for(uint32_t i = 0; i < mesh->faces_count; i++)

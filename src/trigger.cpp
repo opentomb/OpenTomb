@@ -15,6 +15,7 @@ extern "C" {
 #include "core/vmath.h"
 #include "script/script.h"
 #include "render/camera.h"
+#include "engine.h"
 #include "room.h"
 #include "trigger.h"
 #include "gameflow.h"

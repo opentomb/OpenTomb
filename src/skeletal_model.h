@@ -61,9 +61,11 @@ typedef struct ss_bone_tag_s
     uint16_t                index;
     uint16_t                is_hidden : 1;
     struct base_mesh_s     *mesh_base;                                          // base mesh - pointer to the first mesh in array
+    struct base_mesh_s     *mesh_replace;
     struct base_mesh_s     *mesh_skin;                                          // base skinned mesh for ТР4+
     struct base_mesh_s     *mesh_slot;
     struct ss_animation_s  *alt_anim;
+    uint32_t               *skin_map;                                           // vertices map for skin mesh
     float                   offset[3];                                          // model position offset
 
     float                   qrotate[4];                                         // quaternion rotation
@@ -155,7 +157,6 @@ typedef struct bone_frame_s
 typedef struct mesh_tree_tag_s
 {
     struct base_mesh_s         *mesh_base;                                      // base mesh - pointer to the first mesh in array
-    struct base_mesh_s         *mesh_skin;                                      // base skinned mesh for ТР4+
     float                       offset[3];                                      // model position offset
     uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = POP + PUSH
     uint16_t                    parent;                                         // parent index
@@ -250,9 +251,7 @@ void SkeletalModel_Clear(skeletal_model_p model);
 void SkeletalModel_GenParentsIndexes(skeletal_model_p model);
 
 void SkeletalModel_FillTransparency(skeletal_model_p model);
-void SkeletalModel_FillSkinnedMeshMap(skeletal_model_p model);
 void SkeletalModel_CopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
-void SkeletalModel_CopyMeshesToSkinned(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
 void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
 
 void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);
@@ -270,6 +269,7 @@ struct ss_animation_s *SSBoneFrame_GetOverrideAnim(struct ss_bone_frame_s *bf, u
 void SSBoneFrame_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_type);
 void SSBoneFrame_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
 void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
+void SSBoneFrame_FillSkinnedMeshMap(ss_bone_frame_p model);
 
 void Anim_AddCommand(struct animation_frame_s *anim, const animation_command_p command);
 void Anim_AddEffect(struct animation_frame_s *anim, const animation_effect_p effect);

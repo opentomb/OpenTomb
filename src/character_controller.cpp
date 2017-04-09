@@ -2136,7 +2136,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
 
         for(uint16_t i = 0; i < base_model->mesh_count; i++)
         {
-            ent->bf->bone_tags[i].mesh_base = base_model->mesh_tree[i].mesh_base;
+            ent->bf->bone_tags[i].mesh_replace = NULL;
             ent->bf->bone_tags[i].mesh_slot = NULL;
         }
 
@@ -2146,7 +2146,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
             {
                 if(sm->mesh_tree[i].replace_mesh == 0x01)
                 {
-                    ent->bf->bone_tags[i].mesh_base = sm->mesh_tree[i].mesh_base;
+                    ent->bf->bone_tags[i].mesh_replace = sm->mesh_tree[i].mesh_base;
                 }
                 else if(sm->mesh_tree[i].replace_mesh == 0x02)
                 {
@@ -2161,7 +2161,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
                 ss_animation_p alt_anim = ent->bf->bone_tags[i].alt_anim;
                 if(sm->mesh_tree[i].replace_mesh == 0x03)
                 {
-                    ent->bf->bone_tags[i].mesh_base = sm->mesh_tree[i].mesh_base;
+                    ent->bf->bone_tags[i].mesh_replace = sm->mesh_tree[i].mesh_base;
                 }
                 else if(sm->mesh_tree[i].replace_mesh == 0x04)
                 {
@@ -2190,7 +2190,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
         for(uint16_t i = 0; i < bm->mesh_count; i++)
         {
             ss_animation_p alt_anim = ent->bf->bone_tags[i].alt_anim;
-            ent->bf->bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
+            ent->bf->bone_tags[i].mesh_replace = NULL;
             ent->bf->bone_tags[i].mesh_slot = NULL;
             if(alt_anim && ((alt_anim->type == ANIM_TYPE_WEAPON_TH) || (alt_anim->type == ANIM_TYPE_WEAPON_LH) || (alt_anim->type == ANIM_TYPE_WEAPON_RH)))
             {
