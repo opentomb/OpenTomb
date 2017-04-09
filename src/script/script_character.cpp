@@ -33,11 +33,6 @@ int lua_CharacterCreate(lua_State * lua)
         if(ent && !ent->character)
         {
             Character_Create(ent);
-            if(top >= 2)
-            {
-                ent->character->parameters.param[PARAM_HEALTH] = lua_tonumber(lua, 2);
-                ent->character->parameters.maximum[PARAM_HEALTH] = lua_tonumber(lua, 2);
-            }
         }
         else
         {

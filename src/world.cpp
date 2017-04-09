@@ -2138,39 +2138,13 @@ void World_GenEntities(class VT_Level *tr)
         SSBoneFrame_CreateFromModel(entity->bf, entity->bf->animations.model);
         entity->bf->transform = entity->transform;
 
-        ///@TODO: DELETE that hack!
-        if(0 == tr_item->object_id)                                             // Lara is an unical model
-        {
-            skeletal_model_p LM;  // LM - Lara Model
-
-            entity->move_type = MOVE_ON_FLOOR;
-            entity->self->collision_group = COLLISION_GROUP_CHARACTERS;
-            entity->self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
-            entity->bf->animations.model->hide = 0;
-            LM = (skeletal_model_p)entity->bf->animations.model;
-
-            Physics_GenRigidBody(entity->physics, entity->bf);
-            Entity_UpdateRigidBody(entity, 1);
-            Character_Create(entity);
-            entity->move_type = MOVE_ON_FLOOR;
-            Room_AddObject(entity->self->room, entity->self);
-
-            entity->character->bone_head = 14;
-            entity->character->bone_torso = 7;
-            entity->character->Height = 768.0;
-            World_AddEntity(entity);
-            World_SetPlayer(entity);
-        }
-        else
-        {
-            Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);                  // Set zero animation and zero frame
-            Entity_RebuildBV(entity);
-            Room_AddObject(entity->self->room, entity->self);
-            World_AddEntity(entity);
-            World_SetEntityModelProperties(entity);
-            Physics_GenRigidBody(entity->physics, entity->bf);
-            Entity_UpdateRigidBody(entity, 1);
-        }
+        Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);                      // Set zero animation and zero frame
+        Entity_RebuildBV(entity);
+        Room_AddObject(entity->self->room, entity->self);
+        World_AddEntity(entity);
+        World_SetEntityModelProperties(entity);
+        Physics_GenRigidBody(entity->physics, entity->bf);
+        Entity_UpdateRigidBody(entity, 1);
 
         if(!(entity->state_flags & ENTITY_STATE_ENABLED) || (entity->self->collision_group == COLLISION_NONE))
         {

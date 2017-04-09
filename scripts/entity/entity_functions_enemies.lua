@@ -26,19 +26,27 @@ function Lara_init(id)
     print("LARA INIT");
     if(getLevelVersion() < TR_II) then
         if(getLevel() == 0) then
-            setEntityMeshes(player, 5, 0, 13);
+            setEntityMeshes(id, 5, 0, 13);
         end;
     elseif(getLevelVersion() < TR_III) then
         print("TR 2");
     elseif(getLevelVersion() < TR_IV) then
-        setEntityMeshes(player, 315, 0, 14);
+        setEntityMeshes(id, 315, 0, 14);
     else
-        setEntityMeshes(player, 8, 0, 14);
-        setEntitySkinMeshes(player, 9, 1, 14);
+        setEntityMeshes(id, 8, 0, 14);
+        setEntitySkinMeshes(id, 9, 1, 14);
     end;
 
     resetRigidBodies(id);
+    setEntityTypeFlag(id, ENTITY_TYPE_ACTOR, 1);
     setEntityTypeFlag(id, ENTITY_TYPE_TRIGGER_ACTIVATOR, 1);
+    characterCreate(id);
+    setCharacterParam(id, PARAM_HEALTH, 1000.0, 1000.0);
+    --entity->move_type = MOVE_ON_FLOOR;
+    --entity->character->bone_head = 14;
+    --entity->character->bone_torso = 7;
+    --entity->character->Height = 768.0;
+
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LARA);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
 
@@ -61,6 +69,8 @@ function Lara_init(id)
 
     setHumanoidBodyParts(id);
     setCharacterRagdollSetup(id, getRagdollSetup(RD_TYPE_LARA));
+
+    setPlayer(id);
 end
 
 
@@ -70,7 +80,8 @@ function baddie_init(id)    -- INVALID!
     end;
 
     setEntityTypeFlag(id, ENTITY_TYPE_ACTOR);
-    characterCreate(id, 100.0);
+    characterCreate(id);
+    setCharacterParam(id, PARAM_HEALTH, 100.0, 100.0);
 
     local meshes_count = getEntityMeshCount(id);
     local m = 1;
