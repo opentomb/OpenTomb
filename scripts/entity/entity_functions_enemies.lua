@@ -37,7 +37,10 @@ function Lara_init(id)
         setEntitySkinMeshes(player, 9, 1, 14);
     end;
 
+    resetRigidBodies(id);
+    setEntityTypeFlag(id, ENTITY_TYPE_TRIGGER_ACTIVATOR, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LARA);
+    setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
 
     setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_SPHERE, -60.0, nil, nil, 60.0, nil, nil);
     setEntityGhostCollisionShape(id, 7,  COLLISION_SHAPE_BOX, -48.0, -54.0, 8.0, 48.0, 32.0, 166.0);

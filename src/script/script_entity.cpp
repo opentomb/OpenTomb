@@ -2049,6 +2049,29 @@ int lua_SetEntityCollisionGroupAndMask(lua_State * lua)
 }
 
 
+int lua_ResetRigidBodies(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            Physics_GenRigidBody(ent->physics, ent->bf);
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("resetRigidBodies: expecting arguments (entity_id)");
+    }
+
+    return 0;
+}
+
+
 int lua_CreateGhosts(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -2536,6 +2559,7 @@ void Script_LuaRegisterEntityFuncs(lua_State *lua)
     lua_register(lua, "setEntityGhostCollisionShape", lua_SetEntityGhostCollisionShape);
     lua_register(lua, "setEntityCollisionFlags", lua_SetEntityCollisionFlags);
     lua_register(lua, "setEntityCollisionGroupAndMask", lua_SetEntityCollisionGroupAndMask);
+    lua_register(lua, "resetRigidBodies", lua_ResetRigidBodies);
     lua_register(lua, "createGhosts", lua_CreateGhosts);
     lua_register(lua, "getEntityGlobalMove", lua_GetEntityGlobalMove);
     lua_register(lua, "getEntityCollisionFix", lua_GetEntityCollisionFix);

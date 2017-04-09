@@ -2141,21 +2141,18 @@ void World_GenEntities(class VT_Level *tr)
         ///@TODO: DELETE that hack!
         if(0 == tr_item->object_id)                                             // Lara is an unical model
         {
-            skeletal_model_p tmp, LM;                                           // LM - Lara Model
+            skeletal_model_p LM;  // LM - Lara Model
 
             entity->move_type = MOVE_ON_FLOOR;
             entity->self->collision_group = COLLISION_GROUP_CHARACTERS;
             entity->self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
             entity->bf->animations.model->hide = 0;
-            entity->type_flags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
             LM = (skeletal_model_p)entity->bf->animations.model;
 
             Physics_GenRigidBody(entity->physics, entity->bf);
             Entity_UpdateRigidBody(entity, 1);
             Character_Create(entity);
-            StateControl_SetStateFunctions(entity, STATE_FUNCTIONS_LARA);
             entity->move_type = MOVE_ON_FLOOR;
-            entity->character->set_key_anim_func(entity, &entity->bf->animations, ANIMATION_KEY_INIT);
             Room_AddObject(entity->self->room, entity->self);
 
             entity->character->bone_head = 14;
