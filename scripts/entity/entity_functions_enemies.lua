@@ -932,3 +932,11 @@ function mutant_boss_egg_init(id)
         end;
     end;
 end;
+
+
+--                          TR_II
+
+function MaskedGoon_init(id)
+    baddie_init(id);
+    setEntityBaseAnimModel(id, 16);
+end

@@ -231,9 +231,9 @@ tr2_entity_tbl[51] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_
 -- ACTORS --
 
 tr2_entity_tbl[15] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Doberman
-tr2_entity_tbl[16] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Masked goon (white mask, jacket)
-tr2_entity_tbl[17] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Masked goon (white mask, vest)
-tr2_entity_tbl[18] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Masked goon (black mask)
+tr2_entity_tbl[16] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "MaskedGoon"};            -- Masked goon (white mask, jacket)
+tr2_entity_tbl[17] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "MaskedGoon"};            -- Masked goon (white mask, vest)
+tr2_entity_tbl[18] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "MaskedGoon"};            -- Masked goon (black mask)
 tr2_entity_tbl[19] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Knifethrower
 tr2_entity_tbl[20] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Shotgun goon
 tr2_entity_tbl[21] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Rat

@@ -2083,7 +2083,7 @@ void World_GenEntities(class VT_Level *tr)
 
         if(engine_lua)
         {
-            if(entity->bf->animations.model == NULL)   ///@TODO: DELETE THIS HACK! (add script function)
+            if(entity->bf->animations.model == NULL)
             {
                 top = lua_gettop(engine_lua);                                   // save LUA stack
                 lua_getglobal(engine_lua, "getOverridedID");                    // add to the up of stack LUA's function
@@ -2095,24 +2095,6 @@ void World_GenEntities(class VT_Level *tr)
                 }
                 lua_settop(engine_lua, top);                                    // restore LUA stack
             }
-
-            top = lua_gettop(engine_lua);                                       // save LUA stack
-            lua_getglobal(engine_lua, "getOverridedAnim");                      // add to the up of stack LUA's function
-            lua_pushinteger(engine_lua, tr->game_version);                      // add to stack first argument
-            lua_pushinteger(engine_lua, tr_item->object_id);                    // add to stack second argument
-            if(lua_CallAndLog(engine_lua, 2, 1, 0))                             // call that function
-            {
-                int replace_anim_id = lua_tointeger(engine_lua, -1);
-                if(replace_anim_id > 0)
-                {
-                    skeletal_model_s* replace_anim_model = World_GetModelByID(replace_anim_id);
-                    animation_frame_p ta;
-                    uint16_t tc;
-                    SWAPT(entity->bf->animations.model->animations, replace_anim_model->animations, ta);
-                    SWAPT(entity->bf->animations.model->animation_count, replace_anim_model->animation_count, tc);
-                }
-            }
-            lua_settop(engine_lua, top);                                        // restore LUA stack
         }
 
         if(entity->bf->animations.model == NULL)
