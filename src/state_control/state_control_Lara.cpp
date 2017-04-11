@@ -6,8 +6,6 @@
 #include "../core/console.h"
 #include "../core/vmath.h"
 
-#include "../render/camera.h"
-#include "../script/script.h"
 #include "../physics/physics.h"
 #include "../vt/tr_versions.h"
 #include "../engine.h"
@@ -455,6 +453,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     {
                         if(pos[2] + 640.0 >= climb->edge_point[2])
                         {
+                            ent->anim_linear_speed = 0.0f;
                             ent->angles[0] = climb->edge_z_ang;
                             pos[2] = climb->edge_point[2] - 512.0;
                             vec3_copy(climb->point, climb->edge_point);
@@ -464,6 +463,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                         }
                         else if(pos[2] + 896.0 >= climb->edge_point[2])
                         {
+                            ent->anim_linear_speed = 0.0f;
                             ent->angles[0] = climb->edge_z_ang;
                             pos[2] = climb->edge_point[2] - 768.0;
                             vec3_copy(climb->point, climb->edge_point);
@@ -2616,9 +2616,10 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 low_vertical_space = climb->edge_hit && climb->edge_point[2] <= curr_fc->transition_level;
                 if(climb->edge_hit && (climb->next_z_space >= ent->character->height - LARA_HANG_VERTICAL_EPSILON))// && (climb->edge_point.m_floats[2] - pos[2] < ent->character->max_step_up_height))   // max_step_up_height is not correct value here
                 {
+                    ent->anim_linear_speed = 0.0f;
+                    ent->linear_speed = 0.0f;
                     ent->dir_flag = ENT_STAY;
                     ent->move_type = MOVE_CLIMBING;
-                    //ent->no_fix_all = 0x01;
                     ent->angles[0] = climb->edge_z_ang;
                     Entity_UpdateTransform(ent);
                     vec3_copy(climb->point, climb->edge_point);
@@ -2627,6 +2628,8 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->move_type == MOVE_CLIMBING)
             {
+                ent->anim_linear_speed = 0.0f;
+                ent->linear_speed = 0.0f;
                 vec3_set_zero(ent->speed);
                 cmd->rot[0] = 0;
                 ent->no_fix_all = 0x01;
