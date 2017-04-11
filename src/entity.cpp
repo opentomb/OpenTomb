@@ -55,6 +55,7 @@ entity_p Entity_Create()
     ret->obb->transform = ret->transform;
 
     ret->no_fix_all = 0x00;
+    ret->no_move = 0x00;
     ret->no_anim_pos_autocorrection = 0x01;
     ret->no_fix_skeletal_parts = 0x00000000;
     ret->physics = Physics_CreatePhysicsData(ret->self);
@@ -141,7 +142,7 @@ void Entity_Delete(entity_p entity)
             free(entity->bf);
             entity->bf = NULL;
         }
-        
+
         free(entity);
     }
 }
@@ -697,7 +698,7 @@ int  Entity_GetSubstanceState(entity_p entity)
 
     if(entity->self->room->flags & TR_ROOM_FLAG_QUICKSAND)
     {
-        if(entity->character->height_info.transition_level > entity->transform[12 + 2] + entity->character->Height)
+        if(entity->character->height_info.transition_level > entity->transform[12 + 2] + entity->character->height)
         {
             return ENTITY_SUBSTANCE_QUICKSAND_CONSUMED;
         }

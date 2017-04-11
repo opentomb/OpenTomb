@@ -1,14 +1,86 @@
 -- OPENTOMB ENTITY FUNCTIONS SCRIPT
 -- By TeslaRus, Lwmte, 2014-2016
 
---Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, e->id, ent->id);
+function setHumanoidBodyParts(id)
+    setEntityBodyPartFlag(id,  0, BODY_PART_BODY_LOW);
+    setEntityBodyPartFlag(id,  7, BODY_PART_BODY_UPPER);
+    setEntityBodyPartFlag(id, 14, BODY_PART_HEAD);
+
+    setEntityBodyPartFlag(id, 11, BODY_PART_LEFT_HAND_1);
+    setEntityBodyPartFlag(id, 12, BODY_PART_LEFT_HAND_2);
+    setEntityBodyPartFlag(id, 13, BODY_PART_LEFT_HAND_3);
+    setEntityBodyPartFlag(id,  8, BODY_PART_RIGHT_HAND_1);
+    setEntityBodyPartFlag(id,  9, BODY_PART_RIGHT_HAND_2);
+    setEntityBodyPartFlag(id, 10, BODY_PART_RIGHT_HAND_3);
+
+    setEntityBodyPartFlag(id,  1, BODY_PART_LEFT_LEG_1);
+    setEntityBodyPartFlag(id,  2, BODY_PART_LEFT_LEG_2);
+    setEntityBodyPartFlag(id,  3, BODY_PART_LEFT_LEG_3);
+    setEntityBodyPartFlag(id,  4, BODY_PART_RIGHT_LEG_1);
+    setEntityBodyPartFlag(id,  5, BODY_PART_RIGHT_LEG_2);
+    setEntityBodyPartFlag(id,  6, BODY_PART_RIGHT_LEG_3);
+end
+
+
+function Lara_init(id)
+    print("LARA INIT");
+    if(getLevelVersion() < TR_II) then
+        if(getLevel() == 0) then
+            setEntityMeshes(id, 5, 0, 13);
+        end;
+    elseif(getLevelVersion() < TR_III) then
+        print("TR 2");
+    elseif(getLevelVersion() < TR_IV) then
+        setEntityMeshes(id, 315, 0, 14);
+    else
+        setEntityMeshes(id, 8, 0, 14);
+        setEntitySkinMeshes(id, 9, 1, 14);
+    end;
+
+    resetRigidBodies(id);
+    setEntityTypeFlag(id, ENTITY_TYPE_ACTOR, 1);
+    setEntityTypeFlag(id, ENTITY_TYPE_TRIGGER_ACTIVATOR, 1);
+    characterCreate(id);
+    setCharacterParam(id, PARAM_HEALTH, 1000.0, 1000.0);
+    setCharacterBones(id, 14, 7);  --head, torso
+    setCharacterMoveSizes(id, 768.0, 128.0, 288.0, 1920.0, 320.0); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
+
+    setEntityMoveType(id, MOVE_ON_FLOOR);
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LARA);
+    setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+
+    setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_SPHERE, -60.0, nil, nil, 60.0, nil, nil);
+    setEntityGhostCollisionShape(id, 7,  COLLISION_SHAPE_BOX, -48.0, -54.0, 8.0, 48.0, 32.0, 166.0);
+    setEntityGhostCollisionShape(id, 1,  COLLISION_SHAPE_BOX, -32.0, -26.1, -176.0, 32.0, 29.1, -2.7);
+    setEntityGhostCollisionShape(id, 4,  COLLISION_SHAPE_BOX, -32.0, -27.1, -175.3, 32.0, 28.1, 1.7);
+    setEntityGhostCollisionShape(id, 10, COLLISION_SHAPE_SPHERE, -32.0, nil, -52.0, 16.0, nil, 0);
+    setEntityGhostCollisionShape(id, 13, COLLISION_SHAPE_SPHERE, -16.0, nil, -52.0, 32.0, nil, 0);
+    setEntityGhostCollisionShape(id, 14, COLLISION_SHAPE_SPHERE, -56.0, 0, 0, 56.0, 16.0, 64.0);
+
+    setEntityGhostCollisionShape(id, 3,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 6,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 2,  COLLISION_SHAPE_BOX, -30.0, -40.0, -200.0, 24.0, 16.0, 0);
+    setEntityGhostCollisionShape(id, 5,  COLLISION_SHAPE_BOX, -24.0, -40.0, -200.0, 30.0, 16.0, 0);
+    setEntityGhostCollisionShape(id, 12, COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 9,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 11, COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityGhostCollisionShape(id, 8,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+
+    setHumanoidBodyParts(id);
+    setCharacterRagdollSetup(id, getRagdollSetup(RD_TYPE_LARA));
+
+    setPlayer(id);
+end
+
+
 function baddie_init(id)    -- INVALID!
     if(entity_funcs[id] == nil) then
         entity_funcs[id] = {};
     end;
 
     setEntityTypeFlag(id, ENTITY_TYPE_ACTOR);
-    characterCreate(id, 100.0);
+    characterCreate(id);
+    setCharacterParam(id, PARAM_HEALTH, 100.0, 100.0);
 
     local meshes_count = getEntityMeshCount(id);
     local m = 1;
@@ -377,6 +449,8 @@ function gorilla_init(id)
     setEntityGhostCollisionShape(id, 11,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);  -- hand
     setEntityGhostCollisionShape(id, 14,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);  -- head
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_GORILLA);
+
+    setCharacterMoveSizes(id, 512.0, nil, nil, nil, nil); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
@@ -858,3 +932,11 @@ function mutant_boss_egg_init(id)
         end;
     end;
 end;
+
+
+--                          TR_II
+
+function MaskedGoon_init(id)
+    baddie_init(id);
+    setEntityBaseAnimModel(id, 16);
+end

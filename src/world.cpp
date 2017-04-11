@@ -2095,24 +2095,6 @@ void World_GenEntities(class VT_Level *tr)
                 }
                 lua_settop(engine_lua, top);                                    // restore LUA stack
             }
-
-            top = lua_gettop(engine_lua);                                       // save LUA stack
-            lua_getglobal(engine_lua, "getOverridedAnim");                      // add to the up of stack LUA's function
-            lua_pushinteger(engine_lua, tr->game_version);                      // add to stack first argument
-            lua_pushinteger(engine_lua, tr_item->object_id);                    // add to stack second argument
-            if (lua_CallAndLog(engine_lua, 2, 1, 0))                            // call that function
-            {
-                int replace_anim_id = lua_tointeger(engine_lua, -1);
-                if(replace_anim_id > 0)
-                {
-                    skeletal_model_s* replace_anim_model = World_GetModelByID(replace_anim_id);
-                    animation_frame_p ta;
-                    uint16_t tc;
-                    SWAPT(entity->bf->animations.model->animations, replace_anim_model->animations, ta);
-                    SWAPT(entity->bf->animations.model->animation_count, replace_anim_model->animation_count, tc);
-                }
-            }
-            lua_settop(engine_lua, top);                                        // restore LUA stack
         }
 
         if(entity->bf->animations.model == NULL)
@@ -2138,92 +2120,13 @@ void World_GenEntities(class VT_Level *tr)
         SSBoneFrame_CreateFromModel(entity->bf, entity->bf->animations.model);
         entity->bf->transform = entity->transform;
 
-        if(0 == tr_item->object_id)                                             // Lara is an unical model
-        {
-            skeletal_model_p tmp, LM;                                           // LM - Lara Model
-
-            entity->move_type = MOVE_ON_FLOOR;
-            entity->self->collision_group = COLLISION_GROUP_CHARACTERS;
-            entity->self->collision_shape = COLLISION_SHAPE_TRIMESH_CONVEX;
-            entity->bf->animations.model->hide = 0;
-            entity->type_flags |= ENTITY_TYPE_TRIGGER_ACTIVATOR;
-            LM = (skeletal_model_p)entity->bf->animations.model;
-
-            switch(tr->game_version)
-            {
-                case TR_I:
-                    if(Gameflow_GetCurrentLevelID() == 0)
-                    {
-                        LM = World_GetModelByID(TR_ITEM_LARA_SKIN_ALTERNATE_TR1);
-                        if(LM)
-                        {
-                            // In TR1, Lara has unified head mesh for all her alternate skins.
-                            // Hence, we copy all meshes except head, to prevent Potato Raider bug.
-                            SkeletalModel_CopyMeshes(global_world.skeletal_models[0].mesh_tree, LM->mesh_tree, global_world.skeletal_models[0].mesh_count - 1);
-                        }
-                    }
-                    break;
-
-                case TR_III:
-                    LM = World_GetModelByID(TR_ITEM_LARA_SKIN_TR3);
-                    if(LM)
-                    {
-                        SkeletalModel_CopyMeshes(global_world.skeletal_models[0].mesh_tree, LM->mesh_tree, global_world.skeletal_models[0].mesh_count);
-                        tmp = World_GetModelByID(11);                           // moto / quadro cycle animations
-                        if(tmp)
-                        {
-                            SkeletalModel_CopyMeshes(tmp->mesh_tree, LM->mesh_tree, global_world.skeletal_models[0].mesh_count);
-                        }
-                    }
-                    break;
-
-                case TR_IV:
-                case TR_IV_DEMO:
-                case TR_V:
-                    LM = World_GetModelByID(TR_ITEM_LARA_SKIN_TR45);            // base skeleton meshes
-                    if(LM)
-                    {
-                        SkeletalModel_CopyMeshes(global_world.skeletal_models[0].mesh_tree, LM->mesh_tree, global_world.skeletal_models[0].mesh_count);
-                    }
-                    LM = World_GetModelByID(TR_ITEM_LARA_SKIN_JOINTS_TR45);     // skin skeleton meshes
-                    if(LM)
-                    {
-                        SkeletalModel_CopyMeshesToSkinned(global_world.skeletal_models[0].mesh_tree, LM->mesh_tree, global_world.skeletal_models[0].mesh_count);
-                    }
-                    SkeletalModel_FillSkinnedMeshMap(&global_world.skeletal_models[0]);
-                    break;
-            };
-
-            for(uint16_t j = 0; j < entity->bf->bone_tag_count; j++)
-            {
-                entity->bf->bone_tags[j].mesh_base = entity->bf->animations.model->mesh_tree[j].mesh_base;
-                entity->bf->bone_tags[j].mesh_skin = entity->bf->animations.model->mesh_tree[j].mesh_skin;
-                entity->bf->bone_tags[j].mesh_slot = NULL;
-            }
-            Physics_GenRigidBody(entity->physics, entity->bf);
-            Entity_UpdateRigidBody(entity, 1);
-            Character_Create(entity);
-            StateControl_SetStateFunctions(entity, STATE_FUNCTIONS_LARA);
-            entity->move_type = MOVE_ON_FLOOR;
-            entity->character->set_key_anim_func(entity, &entity->bf->animations, ANIMATION_KEY_INIT);
-            Room_AddObject(entity->self->room, entity->self);
-
-            entity->character->bone_head = 14;
-            entity->character->bone_torso = 7;
-            entity->character->Height = 768.0;
-            World_AddEntity(entity);
-            World_SetPlayer(entity);
-        }
-        else
-        {
-            Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);                  // Set zero animation and zero frame
-            Entity_RebuildBV(entity);
-            Room_AddObject(entity->self->room, entity->self);
-            World_AddEntity(entity);
-            World_SetEntityModelProperties(entity);
-            Physics_GenRigidBody(entity->physics, entity->bf);
-            Entity_UpdateRigidBody(entity, 1);
-        }
+        Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);                      // Set zero animation and zero frame
+        Entity_RebuildBV(entity);
+        Room_AddObject(entity->self->room, entity->self);
+        World_AddEntity(entity);
+        World_SetEntityModelProperties(entity);
+        Physics_GenRigidBody(entity->physics, entity->bf);
+        Entity_UpdateRigidBody(entity, 1);
 
         if(!(entity->state_flags & ENTITY_STATE_ENABLED) || (entity->self->collision_group == COLLISION_NONE))
         {

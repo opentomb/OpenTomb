@@ -104,7 +104,7 @@ void Character_Create(struct entity_s *ent)
         ret->climb.edge_hit = 0x00;
         ret->climb.wall_hit = 0x00;
         ret->forvard_size = 48.0;                                               ///@FIXME: magick number
-        ret->Height = CHARACTER_BASE_HEIGHT;
+        ret->height = CHARACTER_BASE_HEIGHT;
 
         ret->traversed_object = NULL;
 
@@ -235,7 +235,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
     from[2] += 128.0f;
     from[0] = ent->transform[12 + 0];
     from[1] = ent->transform[12 + 1];
-    Character_GetHeightInfo(from, hi, ent->character->Height);
+    Character_GetHeightInfo(from, hi, ent->character->height);
 }
 
 /**
@@ -366,7 +366,7 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
             {
                 ret = CHARACTER_STEP_DOWN_BIG;
             }
-            else if(delta <= ent->character->Height)
+            else if(delta <= ent->character->height)
             {
                 ret = CHARACTER_STEP_DOWN_DROP;
             }
@@ -649,7 +649,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         climb->t[1] = climb->edge_tan_xy[1];
 
         // Calc hang info
-        climb->next_z_space = 2.0f * ent->character->Height;
+        climb->next_z_space = 2.0f * ent->character->height;
         vec3_copy(from, climb->edge_point);
         vec3_copy(to, from);
         to[2] += climb->next_z_space;
@@ -658,7 +658,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             climb->next_z_space = cb.point[2] - climb->edge_point[2];
             if(climb->next_z_space < 0.01f)
             {
-                climb->next_z_space = 2.0 * ent->character->Height;
+                climb->next_z_space = 2.0 * ent->character->height;
                 from[2] += fabs(climb->next_z_space);
                 if(Physics_RayTestFiltered(&cb, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST))
                 {
@@ -670,7 +670,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         from[0] = to[0] = test_from[0];
         from[1] = to[1] = test_from[1];
         from[2] = test_from[2];
-        to[2] = climb->edge_point[2] - ent->character->Height;
+        to[2] = climb->edge_point[2] - ent->character->height;
         climb->can_hang = (Physics_RayTestFiltered(NULL, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST) ? (0x00) : (0x01));
     }
 }
@@ -734,7 +734,7 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
 
         if(climb->wall_hit)
         {
-            from[2] -= 0.67 * ent->character->Height;
+            from[2] -= 0.67 * ent->character->height;
             to[2] = from[2];
 
             if(Physics_SphereTest(NULL, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
@@ -1189,7 +1189,7 @@ int Character_FreeFalling(struct entity_s *ent)
         }
 
         float transition_level = ent->character->height_info.transition_level;
-        transition_level = (World_GetVersion() < TR_II) ? (transition_level) : (transition_level - ent->character->Height);
+        transition_level = (World_GetVersion() < TR_II) ? (transition_level) : (transition_level - ent->character->height);
         if(!ent->character->height_info.water || (ent->current_sector->floor <= transition_level))
         {
             ent->move_type = MOVE_UNDERWATER;
@@ -1462,7 +1462,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
             //pos[2] = fc.transition_level;
             return 2;
         }
-        if(!ent->character->height_info.floor_hit.hit || (ent->character->height_info.transition_level - ent->character->height_info.floor_hit.point[2] >= ent->character->Height))
+        if(!ent->character->height_info.floor_hit.hit || (ent->character->height_info.transition_level - ent->character->height_info.floor_hit.point[2] >= ent->character->height))
         {
             pos[2] = ent->character->height_info.transition_level - ent->bf->bb_max[2];
         }
@@ -2136,7 +2136,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
 
         for(uint16_t i = 0; i < base_model->mesh_count; i++)
         {
-            ent->bf->bone_tags[i].mesh_base = base_model->mesh_tree[i].mesh_base;
+            ent->bf->bone_tags[i].mesh_replace = NULL;
             ent->bf->bone_tags[i].mesh_slot = NULL;
         }
 
@@ -2146,7 +2146,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
             {
                 if(sm->mesh_tree[i].replace_mesh == 0x01)
                 {
-                    ent->bf->bone_tags[i].mesh_base = sm->mesh_tree[i].mesh_base;
+                    ent->bf->bone_tags[i].mesh_replace = sm->mesh_tree[i].mesh_base;
                 }
                 else if(sm->mesh_tree[i].replace_mesh == 0x02)
                 {
@@ -2161,7 +2161,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
                 ss_animation_p alt_anim = ent->bf->bone_tags[i].alt_anim;
                 if(sm->mesh_tree[i].replace_mesh == 0x03)
                 {
-                    ent->bf->bone_tags[i].mesh_base = sm->mesh_tree[i].mesh_base;
+                    ent->bf->bone_tags[i].mesh_replace = sm->mesh_tree[i].mesh_base;
                 }
                 else if(sm->mesh_tree[i].replace_mesh == 0x04)
                 {
@@ -2190,7 +2190,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
         for(uint16_t i = 0; i < bm->mesh_count; i++)
         {
             ss_animation_p alt_anim = ent->bf->bone_tags[i].alt_anim;
-            ent->bf->bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
+            ent->bf->bone_tags[i].mesh_replace = NULL;
             ent->bf->bone_tags[i].mesh_slot = NULL;
             if(alt_anim && ((alt_anim->type == ANIM_TYPE_WEAPON_TH) || (alt_anim->type == ANIM_TYPE_WEAPON_LH) || (alt_anim->type == ANIM_TYPE_WEAPON_RH)))
             {

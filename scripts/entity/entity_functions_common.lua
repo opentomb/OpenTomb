@@ -2,6 +2,11 @@
 -- By TeslaRus, Lwmte, 2014-2016
 
 
+function save_crystal_init(id)
+    disableEntity(id);
+end
+
+
 function door_init(id)   -- NORMAL doors only!
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);

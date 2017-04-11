@@ -41,6 +41,8 @@ tr1_entity_tbl = {};
 -- NOTE: Objects before ID 06 are internal service objects and never appear in-game.
 
 -- ACTORS --
+tr1_entity_tbl[0] = {coll = COLLISION_GROUP_CHARACTERS,      shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "Lara"};                        -- Lara
+
 tr1_entity_tbl[06] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "Doppelgagner"};                -- Doppelgagner
 tr1_entity_tbl[07] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "wolf"};                        -- Wolf
 tr1_entity_tbl[08] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "bear"};                        -- Bear
@@ -122,14 +124,14 @@ tr1_entity_tbl[71] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_B
 tr1_entity_tbl[72] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                      -- Menu: Compass
 tr1_entity_tbl[73] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                      -- Menu: Lara's Home photo
 
-tr1_entity_tbl[74] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "anim_single"};       -- Animating 1
-tr1_entity_tbl[75] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "anim_single"};       -- Animating 2
-tr1_entity_tbl[76] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "anim_single"};       -- Animating 3
+tr1_entity_tbl[74] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "anim_single"};         -- Animating 1
+tr1_entity_tbl[75] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "anim_single"};         -- Animating 2
+tr1_entity_tbl[76] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "anim_single"};         -- Animating 3
 
-tr1_entity_tbl[81] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                      -- Menu: Passport (closed)
+tr1_entity_tbl[81] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                                -- Menu: Passport (closed)
 
-tr1_entity_tbl[82] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                      -- Natla Logo
-tr1_entity_tbl[83] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Savegame crystal
+tr1_entity_tbl[82] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                                -- Natla Logo
+tr1_entity_tbl[83] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_TRIMESH, func = "save_crystal"};     -- Savegame crystal
 
 tr1_entity_tbl[95] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                      -- Menu: Sunglasses
 tr1_entity_tbl[96] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                      -- Menu: Cassette player
@@ -218,6 +220,8 @@ tr2_entity_tbl = {};
 -- Remark: object IDs 0-12 are used for Lara model and never show in game
 -- independently.
 
+tr2_entity_tbl[0] = {coll = COLLISION_GROUP_CHARACTERS,      shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "Lara"};                        -- Lara
+
 -- VEHICLES --
 
 tr2_entity_tbl[13] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                -- Red snowmobile (can go fast)
@@ -227,9 +231,9 @@ tr2_entity_tbl[51] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_
 -- ACTORS --
 
 tr2_entity_tbl[15] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Doberman
-tr2_entity_tbl[16] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Masked goon (white mask, jacket)
-tr2_entity_tbl[17] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Masked goon (white mask, vest)
-tr2_entity_tbl[18] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Masked goon (black mask)
+tr2_entity_tbl[16] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "MaskedGoon"};            -- Masked goon (white mask, jacket)
+tr2_entity_tbl[17] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "MaskedGoon"};            -- Masked goon (white mask, vest)
+tr2_entity_tbl[18] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "MaskedGoon"};            -- Masked goon (black mask)
 tr2_entity_tbl[19] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Knifethrower
 tr2_entity_tbl[20] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Shotgun goon
 tr2_entity_tbl[21] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "baddie"};                -- Rat
@@ -422,6 +426,8 @@ tr2_entity_tbl[264] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_
 tr3_entity_tbl = {};
 
 -- NOTE: Objects before ID 12 are internal service objects and never appear in-game.
+
+tr3_entity_tbl[0] = {coll = COLLISION_GROUP_CHARACTERS,      shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "Lara"};                        -- Lara
 
 -- VEHICLES --
 
@@ -728,6 +734,8 @@ tr3_entity_tbl[373] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE
 --------------------------------- TR_IV, TR_IV_DEMO ----------------------------
 --------------------------------------------------------------------------------
 tr4_entity_tbl = {};
+
+tr4_entity_tbl[0] = {coll = COLLISION_GROUP_CHARACTERS,      shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "Lara"};                        -- Lara
 
 -- Remark: object IDs 0-30 are used for Lara model and speechheads, and never
 -- show in game independently.
@@ -1231,6 +1239,8 @@ tr4_entity_tbl[458] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE
 ------------------------------------- TR_V -------------------------------------
 --------------------------------------------------------------------------------
 tr5_entity_tbl = {};
+
+tr5_entity_tbl[0] = {coll = COLLISION_GROUP_CHARACTERS,      shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "Lara"};                        -- Lara
 
 -- Remark: object IDs 0-30 are used for Lara model and speechheads, and never
 -- show in game independently.

@@ -1564,7 +1564,6 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
     {
         model->collision_map[k] = k;
         tree_tag->mesh_base = base_mesh_array + (mesh_index[k]);
-        tree_tag->mesh_skin = NULL;
         tree_tag->replace_anim = 0x00;
         tree_tag->replace_mesh = 0x00;
         tree_tag->body_part    = 0x00;

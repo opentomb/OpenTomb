@@ -119,7 +119,6 @@ void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
             case STATE_FUNCTIONS_GORILLA:
                 ent->character->state_func = StateControl_Gorilla;
                 ent->character->set_key_anim_func = StateControl_GorillaSetKeyAnim;
-                ent->character->Height = 512.0f;
                 break;
 
             case STATE_FUNCTIONS_CROCODILE:
@@ -161,12 +160,12 @@ void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
                 ent->character->state_func = StateControl_Skateboardist;
                 ent->character->set_key_anim_func = StateControl_SkateboardistSetKeyAnim;
                 break;
-                
+
             case STATE_FUNCTIONS_TORSO_BOSS:
                 ent->character->state_func = StateControl_TorsoBoss;
                 ent->character->set_key_anim_func = StateControl_TorsoBossSetKeyAnim;
                 break;
-                
+
             case STATE_FUNCTIONS_NATLA:
                 ent->character->state_func = StateControl_Natla;
                 ent->character->set_key_anim_func = StateControl_NatlaSetKeyAnim;

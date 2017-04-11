@@ -741,13 +741,12 @@ void CRender::DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, 
     }
 }
 
-void CRender::DrawSkinMesh(struct base_mesh_s *mesh, struct base_mesh_s *parent_mesh, float transform[16])
+void CRender::DrawSkinMesh(struct base_mesh_s *mesh, struct base_mesh_s *parent_mesh, uint32_t *map, float transform[16])
 {
     uint32_t i;
     vertex_p v;
     float *p_vertex, *src_v, *dst_v;
     GLfloat *p_normale, *src_n, *dst_n;
-    uint32_t *ch = mesh->skin_map;
     size_t buf_size = mesh->vertex_count * 3 * sizeof(GLfloat);
 
     p_vertex  = (GLfloat*)Sys_GetTempMem(buf_size);
@@ -755,18 +754,18 @@ void CRender::DrawSkinMesh(struct base_mesh_s *mesh, struct base_mesh_s *parent_
     dst_v = p_vertex;
     dst_n = p_normale;
     v = mesh->vertices;
-    for(i = 0; i < mesh->vertex_count; i++, v++, ch++)
+    for(i = 0; i < mesh->vertex_count; i++, v++, map++)
     {
         src_v = v->position;
         src_n = v->normal;
-        if(*ch == 0xFFFFFFFF)
+        if(*map == 0xFFFFFFFF)
         {
             vec3_copy(dst_v, src_v);
             vec3_copy(dst_n, src_n);
         }
         else
         {
-            Mat4_vec3_mul_inv(dst_v, transform, parent_mesh->vertices[*ch].position);
+            Mat4_vec3_mul_inv(dst_v, transform, parent_mesh->vertices[*map].position);
             dst_n[0]  = transform[0] * src_n[0] + transform[1] * src_n[1] + transform[2]  * src_n[2];             // (M^-1 * src).x
             dst_n[1]  = transform[4] * src_n[0] + transform[5] * src_n[1] + transform[6]  * src_n[2];             // (M^-1 * src).y
             dst_n[2]  = transform[8] * src_n[0] + transform[9] * src_n[1] + transform[10] * src_n[2];             // (M^-1 * src).z
@@ -828,14 +827,14 @@ void CRender::DrawSkeletalModel(const lit_shader_description *shader, struct ss_
             Mat4_Mat4_mul(mvpTransform, mvpMatrix, btag->full_transform);
             qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvpTransform);
 
-            this->DrawMesh(btag->mesh_base, NULL, NULL);
+            this->DrawMesh((btag->mesh_replace) ? (btag->mesh_replace) : (btag->mesh_base), NULL, NULL);
             if(btag->mesh_slot)
             {
                 this->DrawMesh(btag->mesh_slot, NULL, NULL);
             }
             if(btag->mesh_skin && btag->parent)
             {
-                this->DrawSkinMesh(btag->mesh_skin, btag->parent->mesh_base, btag->transform);
+                this->DrawSkinMesh(btag->mesh_skin, btag->parent->mesh_base, btag->skin_map, btag->transform);
             }
         }
     }
