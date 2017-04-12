@@ -1810,7 +1810,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
  */
 void Character_ApplyCommands(struct entity_s *ent)
 {
-    if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
+    if((ent->type_flags & ENTITY_TYPE_DYNAMIC) || ent->no_move)
     {
         return;
     }

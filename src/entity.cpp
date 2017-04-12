@@ -118,9 +118,6 @@ void Entity_Delete(entity_p entity)
             free(entity->activation_point);
         }
 
-        Ragdoll_Delete(entity->physics);
-        entity->type_flags &= ~ENTITY_TYPE_DYNAMIC;
-
         Inventory_RemoveAllItems(&entity->inventory);
         if(entity->character)
         {
@@ -627,18 +624,15 @@ int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float react
 
 void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
 {
-    if(Physics_IsGhostsInited(ent->physics))
+    if(Physics_IsGhostsInited(ent->physics) &&
+       !ent->no_fix_all && !ent->no_move &&
+       !(ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
         if(move && ent->character)
         {
             ent->character->state.floor_collide = 0x00;
             ent->character->state.ceiling_collide = 0x00;
             ent->character->state.wall_collide = 0x00;
-        }
-
-        if(ent->no_fix_all || ent->type_flags & ENTITY_TYPE_DYNAMIC)
-        {
-            return;
         }
 
         float t1, t2, reaction[3];
@@ -1110,7 +1104,7 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
 
 void Entity_MoveToSink(entity_p entity, struct static_camera_sink_s *sink)
 {
-    if(sink)
+    if(sink && !entity->no_move)
     {
         float sink_pos[3], *ent_pos = entity->transform + 12;
         sink_pos[0] = sink->pos[0];
