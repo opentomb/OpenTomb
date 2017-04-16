@@ -1668,7 +1668,7 @@ int Engine_ExecCmd(char *ch)
             }
             else
             {
-                Con_AddText("Not avaliable =(", FONTSTYLE_CONSOLE_WARNING);
+                Con_AddText("Not available =(", FONTSTYLE_CONSOLE_WARNING);
             }
             return 1;
         }

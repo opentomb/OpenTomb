@@ -454,7 +454,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
     int ret = 0;
 
     vec3_set_zero(reaction);
-    if(Physics_IsGhostsInited(ent->physics) && (ent->no_fix_all == 0x00) && (Physics_GetBodiesCount(ent->physics) == ent->bf->bone_tag_count))
+    if(Physics_IsGhostsInited(ent->physics) && (Physics_GetBodiesCount(ent->physics) == ent->bf->bone_tag_count))
     {
         float tmp[3], orig_pos[3];
         float tr[16];
@@ -761,7 +761,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                         float tr[3];
                         Mat4_vec3_rot_macro(tr, entity->transform, command->data);
                         vec3_add(entity->transform + 12, entity->transform + 12, tr);
-                        entity->no_fix_all = 0x01;
+                        entity->no_move = 0x01;
                         do_skip_frame = true;
                     }
                     break;
@@ -1060,6 +1060,7 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
         {
             animation = (animation < 0) ? (0) : (animation);
             entity->no_fix_all = 0x00;
+            entity->no_move = 0x00;
             if(ss_anim->model && (anim_type == ANIM_TYPE_BASE))
             {
                 if(!entity->no_anim_pos_autocorrection)
@@ -1172,6 +1173,7 @@ void Entity_Frame(entity_p entity, float time)
                     if(frame_switch_state >= 0x01)
                     {
                         entity->no_fix_all = (frame_switch_state >= 0x02) ? (0x00) : (entity->no_fix_all);
+                        entity->no_move = (frame_switch_state >= 0x02) ? (0x00) : (entity->no_move);
                         Entity_DoAnimCommands(entity, ss_anim);
                     }
 

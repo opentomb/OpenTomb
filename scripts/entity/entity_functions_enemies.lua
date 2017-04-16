@@ -42,7 +42,7 @@ function Lara_init(id)
     setEntityTypeFlag(id, ENTITY_TYPE_TRIGGER_ACTIVATOR, 1);
     characterCreate(id);
     setCharacterParam(id, PARAM_HEALTH, 1000.0, 1000.0);
-    setCharacterBones(id, 14, 7);  --head, torso
+    setCharacterBones(id, 14, 7, 11, 13, 8, 10);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 768.0, 128.0, 288.0, 1920.0, 320.0); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     setEntityMoveType(id, MOVE_ON_FLOOR);

@@ -297,7 +297,11 @@ int Save_Entity(entity_p ent, void *data)
 
         if(ent->no_fix_all)
         {
-            fprintf(*f, "\nnoFixEntityCollision(%d);", ent->id);
+            fprintf(*f, "\nnoFixEntityCollision(%d, true);", ent->id);
+        }
+        if(ent->no_move)
+        {
+            fprintf(*f, "\nnoEntityMove(%d, true);", ent->id);
         }
     }
 

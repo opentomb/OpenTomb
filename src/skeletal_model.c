@@ -465,7 +465,7 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animati
 }
 
 
-void SSBoneFrame_SetTrget(struct ss_animation_s *ss_anim, uint16_t targeted_bone, const float target_pos[3], const float bone_dir[3])
+void SSBoneFrame_SetTarget(struct ss_animation_s *ss_anim, uint16_t targeted_bone, const float target_pos[3], const float bone_dir[3])
 {
     ss_anim->targeting_bone = targeted_bone;
     vec3_copy(ss_anim->target, target_pos);

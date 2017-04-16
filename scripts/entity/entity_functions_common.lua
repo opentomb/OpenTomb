@@ -200,7 +200,7 @@ function pickup_init(id, item_id)    -- Pick-ups
             if(dz < -256.0) then
                 entity_funcs[object_id].need_set_pos = false;
                 setEntityAnim(activator_id, ANIM_TYPE_BASE, 425, 0); -- Standing pickup, test version
-                --noFixEntityCollision(activator_id);
+                --noEntityMove(activator_id, true);
             else
                 setEntityAnim(activator_id, ANIM_TYPE_BASE, 135, 0); -- Stay pickup
             end;

@@ -84,7 +84,6 @@
 #define CHARACTER_USE_COMPLEX_COLLISION         (1)
 
 // Lara's character behavior constants
-#define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
 #define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0)                         ///@FIXME: check original
 #define DEFAULT_MAX_STEP_UP_HEIGHT              (256.0 + 32.0)                  ///@FIXME: check original
 #define DEFAULT_FALL_DOWN_HEIGHT                (320.0)                         ///@FIXME: check original
@@ -272,6 +271,10 @@ typedef struct character_s
 
     uint16_t                    bone_head;
     uint16_t                    bone_torso;
+    uint16_t                    bone_l_hand_start;
+    uint16_t                    bone_l_hand_end;
+    uint16_t                    bone_r_hand_start;
+    uint16_t                    bone_r_hand_end;
     int16_t                     current_weapon;
     int16_t                     weapon_current_state;
 

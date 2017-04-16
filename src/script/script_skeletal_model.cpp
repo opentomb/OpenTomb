@@ -664,7 +664,7 @@ int lua_EntitySSAnimSetTarget(lua_State * lua)
                 dir[1] = lua_tonumber(lua, 8);
                 dir[2] = lua_tonumber(lua, 9);
 
-                SSBoneFrame_SetTrget(ss_anim, targeted_bone, pos, dir);
+                SSBoneFrame_SetTarget(ss_anim, targeted_bone, pos, dir);
             }
         }
         else

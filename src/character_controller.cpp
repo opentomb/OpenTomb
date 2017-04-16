@@ -45,6 +45,10 @@ void Character_Create(struct entity_s *ent)
 
         ret->bone_head = 0x00;
         ret->bone_torso = 0x00;
+        ret->bone_l_hand_start = 0x00;
+        ret->bone_l_hand_end = 0x00;
+        ret->bone_r_hand_start = 0x00;
+        ret->bone_r_hand_end = 0x00;
         ret->weapon_current_state = 0x00;
         ret->current_weapon = 0;
 
@@ -451,8 +455,8 @@ int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
 void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
 {
     float temp[3];
-    const float *v1 = ent->bf->bone_tags[10].full_transform + 12;
-    const float *v2 = ent->bf->bone_tags[13].full_transform + 12;
+    const float *v1 = ent->bf->bone_tags[ent->character->bone_l_hand_end].full_transform + 12;
+    const float *v2 = ent->bf->bone_tags[ent->character->bone_r_hand_end].full_transform + 12;
 
     temp[0] = 0.0f;
     temp[1] = 0.5f * (v1[1] + v2[1]);
@@ -876,7 +880,7 @@ void Character_LookAt(struct entity_s *ent, float target[3])
     }
 
     anim_head_track->targeting_flags = 0x0000;
-    SSBoneFrame_SetTrget(anim_head_track, ent->character->bone_head, target, bone_dir);
+    SSBoneFrame_SetTarget(anim_head_track, ent->character->bone_head, target, bone_dir);
     SSBoneFrame_SetTargetingLimit(anim_head_track, head_target_limit);
 
     if(SSBoneFrame_CheckTargetBoneLimit(ent->bf, anim_head_track))
@@ -888,7 +892,7 @@ void Character_LookAt(struct entity_s *ent, float target[3])
             const float target_limit[4] = {0.0f, 1.0f, 0.0f, 0.883f};
 
             base_anim->targeting_flags = 0x0000;
-            SSBoneFrame_SetTrget(base_anim, ent->character->bone_torso, target, bone_dir);
+            SSBoneFrame_SetTarget(base_anim, ent->character->bone_torso, target, bone_dir);
             SSBoneFrame_SetTargetingLimit(base_anim, target_limit);
             SSBoneFrame_SetTargetingAxisMod(base_anim, axis_mod);
             base_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
@@ -2225,14 +2229,14 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
         const float bone_dir[] = {0.0f, 1.0f, 0.0f};
         float dt;
         int32_t t;
-        uint16_t targeted_bone = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (11) : (8);
+        uint16_t targeted_bone = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (ent->character->bone_l_hand_start) : (ent->character->bone_r_hand_start);
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
         bool silent = false;
         if(target)
         {
             float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.224f};
             ss_anim->targeting_flags = 0x0000;
-            SSBoneFrame_SetTrget(ss_anim, targeted_bone, target->obb->centre, bone_dir);
+            SSBoneFrame_SetTarget(ss_anim, targeted_bone, target->obb->centre, bone_dir);
             if(ss_anim->type == ANIM_TYPE_WEAPON_LH)
             {
                 vec3_RotateZ(targeting_limit, targeting_limit, 40.0f);
@@ -2518,14 +2522,13 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
     {
         float dt;
         int32_t t;
-        uint16_t targeted_bone = 7;
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
         if(target)
         {
             const float bone_dir[3] = {0.0f, 1.0f, 0.0f};
             const float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.624f};
             ss_anim->targeting_flags = 0x0000;
-            SSBoneFrame_SetTrget(ss_anim, targeted_bone, target->obb->centre, bone_dir);
+            SSBoneFrame_SetTarget(ss_anim, ent->character->bone_torso, target->obb->centre, bone_dir);
             SSBoneFrame_SetTargetingLimit(ss_anim, targeting_limit);
 
             if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, ss_anim))

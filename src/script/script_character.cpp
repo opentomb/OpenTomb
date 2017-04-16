@@ -51,13 +51,17 @@ int lua_CharacterCreate(lua_State * lua)
 int lua_SetCharacterBones(lua_State * lua)
 {
     int top = lua_gettop(lua);
-    if(top >= 3)
+    if(top >= 7)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character)
         {
             ent->character->bone_head = lua_tointeger(lua, 2);
             ent->character->bone_torso = lua_tointeger(lua, 3);
+            ent->character->bone_l_hand_start = lua_tointeger(lua, 4);
+            ent->character->bone_l_hand_end = lua_tointeger(lua, 5);
+            ent->character->bone_r_hand_start = lua_tointeger(lua, 6);
+            ent->character->bone_r_hand_end = lua_tointeger(lua, 7);
         }
         else
         {
@@ -66,7 +70,7 @@ int lua_SetCharacterBones(lua_State * lua)
     }
     else
     {
-        Con_Warning("setCharacterBones: expecting arguments (entity_id, head_bone, torso_bone)");
+        Con_Warning("setCharacterBones: expecting arguments (entity_id, head_bone, torso_bone, l_hand_first, l_hand_last, r_hand_first, r_hand_last)");
     }
     return 0;
 }

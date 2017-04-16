@@ -161,17 +161,36 @@ int lua_DeactivateEntity(lua_State *lua)
 
 int lua_NoFixEntityCollision(lua_State *lua)
 {
-    if(lua_gettop(lua) >= 1)
+    if(lua_gettop(lua) >= 2)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            ent->no_fix_all = 0x01;
+            ent->no_fix_all = lua_toboolean(lua, 2);
         }
     }
     else
     {
-        Con_Warning("noFixEntityCollision: Expecting arguments (entity_id)");
+        Con_Warning("noFixEntityCollision: Expecting arguments (entity_id, value)");
+    }
+
+    return 0;
+}
+
+
+int lua_NoEntityMove(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            ent->no_fix_all = lua_toboolean(lua, 2);
+        }
+    }
+    else
+    {
+        Con_Warning("noEntityMove: Expecting arguments (entity_id, value)");
     }
 
     return 0;
@@ -2492,6 +2511,7 @@ void Script_LuaRegisterEntityFuncs(lua_State *lua)
     lua_register(lua, "activateEntity", lua_ActivateEntity);
     lua_register(lua, "deactivateEntity", lua_DeactivateEntity);
     lua_register(lua, "noFixEntityCollision", lua_NoFixEntityCollision);
+    lua_register(lua, "noEntityMove", lua_NoEntityMove);
 
     lua_register(lua, "moveEntityGlobal", lua_MoveEntityGlobal);
     lua_register(lua, "moveEntityLocal", lua_MoveEntityLocal);
