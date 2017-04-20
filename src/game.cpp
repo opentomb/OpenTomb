@@ -240,6 +240,8 @@ int Save_Entity(entity_p ent, void *data)
 
         if(ent->character)
         {
+            fprintf(*f, "\nsetCharacterClimbPoint(%d, %.2f, %.2f, %.2f);", ent->id,
+                    ent->character->climb.point[0], ent->character->climb.point[1], ent->character->climb.point[2]);
             if(ent->character->target_id != ENTITY_ID_NONE)
             {
                 fprintf(*f, "\nsetCharacterTarget(%d, %d);", ent->id, ent->character->target_id);

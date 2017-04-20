@@ -533,6 +533,57 @@ int lua_GetCharacterState(lua_State * lua)
 }
 
 
+int lua_SetCharacterClimbPoint(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 4)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            ent->character->climb.point[0] = lua_tonumber(lua, 2);
+            ent->character->climb.point[1] = lua_tonumber(lua, 3);
+            ent->character->climb.point[2] = lua_tonumber(lua, 4);
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Printf("setCharacterClimbPoint: expecting arguments (id_entity, x, y, z)");
+    }
+
+    return 0;
+}
+
+
+int lua_GetCharacterClimbPoint(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            lua_pushnumber(lua, ent->character->climb.point[0]);
+            lua_pushnumber(lua, ent->character->climb.point[1]);
+            lua_pushnumber(lua, ent->character->climb.point[2]);
+            return 3;
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Printf("getCharacterClimbPoint: expecting arguments (id_entity)");
+    }
+
+    return 0;
+}
+
+
 int lua_SetCharacterWeaponModel(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
@@ -618,8 +669,11 @@ void Script_LuaRegisterCharacterFuncs(lua_State *lua)
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);
     lua_register(lua, "changeCharacterParam", lua_ChangeCharacterParam);
 
-    lua_register(lua, "getCharacterState", lua_GetCharacterState);
     lua_register(lua, "setCharacterState", lua_SetCharacterState);
+    lua_register(lua, "getCharacterState", lua_GetCharacterState);
+    lua_register(lua, "setCharacterClimbPoint", lua_SetCharacterClimbPoint);
+    lua_register(lua, "getCharacterClimbPoint", lua_GetCharacterClimbPoint);
+
     lua_register(lua, "getCharacterCurrentWeapon", lua_GetCharacterCurrentWeapon);
     lua_register(lua, "setCharacterCurrentWeapon", lua_SetCharacterCurrentWeapon);
     lua_register(lua, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);

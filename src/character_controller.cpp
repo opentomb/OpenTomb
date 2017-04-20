@@ -1814,7 +1814,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
  */
 void Character_ApplyCommands(struct entity_s *ent)
 {
-    if((ent->type_flags & ENTITY_TYPE_DYNAMIC) || ent->no_move)
+    if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
     {
         return;
     }
@@ -1831,49 +1831,52 @@ void Character_ApplyCommands(struct entity_s *ent)
         ent->character->state_func(ent, &ent->bf->animations);
     }
 
-    switch(ent->move_type)
+    if(!ent->no_move)
     {
-        case MOVE_KINEMATIC:
-        case MOVE_STATIC_POS:
-            //Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
-            break;
+        switch(ent->move_type)
+        {
+            case MOVE_KINEMATIC:
+            case MOVE_STATIC_POS:
+                //Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
+                break;
 
-        case MOVE_ON_FLOOR:
-            Character_MoveOnFloor(ent);
-            break;
+            case MOVE_ON_FLOOR:
+                Character_MoveOnFloor(ent);
+                break;
 
-        case MOVE_FREE_FALLING:
-            Character_FreeFalling(ent);
-            break;
+            case MOVE_FREE_FALLING:
+                Character_FreeFalling(ent);
+                break;
 
-        case MOVE_CLIMBING:
-            Character_Climbing(ent);
-            break;
+            case MOVE_CLIMBING:
+                Character_Climbing(ent);
+                break;
 
-        case MOVE_MONKEYSWING:
-            Character_MonkeyClimbing(ent);
-            break;
+            case MOVE_MONKEYSWING:
+                Character_MonkeyClimbing(ent);
+                break;
 
-        case MOVE_WALLS_CLIMB:
-            Character_WallsClimbing(ent);
-            break;
+            case MOVE_WALLS_CLIMB:
+                Character_WallsClimbing(ent);
+                break;
 
-        case MOVE_UNDERWATER:
-            Character_MoveUnderWater(ent);
-            break;
+            case MOVE_UNDERWATER:
+                Character_MoveUnderWater(ent);
+                break;
 
-        case MOVE_ON_WATER:
-            Character_MoveOnWater(ent);
-            break;
+            case MOVE_ON_WATER:
+                Character_MoveOnWater(ent);
+                break;
 
-        case MOVE_FLY:
-            Character_MoveFly(ent);
-            break;
+            case MOVE_FLY:
+                Character_MoveFly(ent);
+                break;
 
-        default:
-            ent->move_type = MOVE_ON_FLOOR;
-            break;
-    };
+            default:
+                ent->move_type = MOVE_ON_FLOOR;
+                break;
+        };
+    }
 }
 
 void Character_UpdateParams(struct entity_s *ent)
