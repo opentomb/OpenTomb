@@ -100,6 +100,18 @@ void ent_correct_diving_angle(entity_p ent, ss_animation_p ss_anim)
     }
 }
 
+void ent_correct_swandiwe_angle(entity_p ent, ss_animation_p ss_anim)
+{
+    if(ss_anim->frame_changing_state >= 0x02)
+    {
+        float ang[3];
+        Mat4_GetAnglesZXY(ang, ent->bf->bone_tags->full_transform);
+        ent->angles[1] = ang[1];
+        Entity_UpdateTransform(ent);
+        ss_anim->onEndFrame = NULL;
+    }
+}
+
 void ent_to_on_water(entity_p ent, ss_animation_p ss_anim)
 {
     if(ss_anim->frame_changing_state >= 0x02)
@@ -2278,11 +2290,11 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->shift == 1)
             {
-                ss_anim->next_state = TR_STATE_LARA_SWANDIVE_BEGIN;              // fly like fish
+                ss_anim->next_state = TR_STATE_LARA_SWANDIVE_BEGIN;             // fly like fish
             }
             else if(ent->speed[2] <= -FREE_FALL_SPEED_2)
             {
-                ss_anim->next_state = TR_STATE_LARA_FREEFALL;                    // free falling
+                ss_anim->next_state = TR_STATE_LARA_FREEFALL;                   // free falling
             }
             else if(cmd->roll)
             {
@@ -2381,15 +2393,16 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->character->rotate_speed_mult = 0.4f;
             if(state->floor_collide || ent->move_type == MOVE_ON_FLOOR)
             {
-                ss_anim->next_state = TR_STATE_LARA_STOP;                        // landing - roll
+                ss_anim->next_state = TR_STATE_LARA_STOP;                       // landing - roll
             }
             else if(ent->move_type == MOVE_UNDERWATER)
             {
                 ss_anim->next_state = TR_STATE_LARA_UNDERWATER_DIVING;
+                ss_anim->onEndFrame = ent_correct_swandiwe_angle;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_LARA_SWANDIVE_END;                // next stage
+                ss_anim->next_state = TR_STATE_LARA_SWANDIVE_END;               // next stage
             }
             break;
 
@@ -2418,6 +2431,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(ent->move_type == MOVE_UNDERWATER)
             {
                 ss_anim->next_state = TR_STATE_LARA_UNDERWATER_DIVING;
+                ss_anim->onEndFrame = ent_correct_swandiwe_angle;
             }
             else if(cmd->jump)
             {
