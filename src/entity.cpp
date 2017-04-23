@@ -1166,8 +1166,7 @@ void Entity_Frame(entity_p entity, float time)
                         ss_anim->onEndFrame(entity, ss_anim);
                     }
                 }
-                else if(!(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK) &&
-                        ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->max_frame > 1)))
+                else if((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->max_frame > 1))
                 {
                     frame_switch_state = Anim_SetNextFrame(ss_anim, time);
                     if(frame_switch_state >= 0x01)
