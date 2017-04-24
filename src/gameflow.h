@@ -2,7 +2,7 @@
 #ifndef GAMEFLOW_H
 #define GAMEFLOW_H
 
-#include "engine.h"
+#include <stdint.h>
 
 #define     GAME_1      (0)
 #define     GAME_1_1    (1)
@@ -16,7 +16,6 @@
 #define     GAME_4_1    (9)
 #define     GAME_5      (10)
 
-#define GF_MAX_ACTIONS 32
 #define GF_MAX_SECRETS 256
 
 #define GF_NOENTRY     -1
@@ -25,47 +24,6 @@ struct gameflow_action
 {
     int8_t      m_opcode;
     uint8_t     m_operand;
-};
-
-class CGameflow
-{
-
-public:
-
-    CGameflow();
-    ~CGameflow();
-
-    void                Do();
-    bool                Send(int opcode, int operand = -1);
-
-    uint16_t            getGameState();
-    void                setGameState(uint16_t state);
-
-    uint8_t             getCurrentGameID();
-    uint8_t             getCurrentLevelID();
-    const char*         getCurrentLevelName();
-    const char*         getCurrentLevelPathGlobal();
-    const char*         getCurrentLevelPathLocal();
-    char                getSecretStateAtIndex(int index);
-
-    void                setCurrentGameID(int gameID);
-    void                setCurrentLevelID(int levelID);
-    void                setCurrentLevelName(const char* levelName);
-    void                setCurrentLevelPath(const char* filePath);
-    void                setSecretStateAtIndex(int index, int value);
-
-    void                resetSecrets();
-
-private:
-
-    uint8_t             m_currentGameID;
-    uint8_t             m_currentLevelID;
-
-    char                m_currentLevelName[LEVEL_NAME_MAX_LEN];
-    char                m_currentLevelPath[MAX_ENGINE_PATH];
-
-    gameflow_action     m_actions[GF_MAX_ACTIONS];
-    char                m_secretsTriggerMap[GF_MAX_SECRETS];
 };
 
 enum GF_OP
@@ -96,6 +54,19 @@ enum GF_OP
     GF_OP_LASTINDEX
 };
 
-extern class CGameflow gameflow;
+void Gameflow_Init();
+bool Gameflow_Send(int opcode, int operand);
+void Gameflow_ProcessCommands();
+void Gameflow_ResetSecrets();
+const char* Gameflow_GetCurrentLevelPathLocal();
+void Gameflow_SetCurrentLevelPath(const char* filePath);
+
+void Gameflow_SetCurrentGameID(uint8_t id);
+void Gameflow_SetCurrentLevelID(uint8_t id);
+void Gameflow_SetSecretStateAtIndex(int index, int value);
+uint8_t Gameflow_GetCurrentGameID();
+uint8_t Gameflow_GetCurrentLevelID();
+int Gameflow_GetSecretStateAtIndex(int index);
+
 
 #endif //GAMEFLOW_H

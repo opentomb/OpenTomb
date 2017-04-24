@@ -5,7 +5,6 @@
 
 #include "core/gl_util.h"
 #include "core/console.h"
-#include "core/redblack.h"
 #include "core/vmath.h"
 #include "core/polygon.h"
 #include "core/obb.h"

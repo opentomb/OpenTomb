@@ -3,7 +3,7 @@
 #define RENDER_H
 
 #include <stdint.h>
-#include <SDL2/SDL.h>
+#include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
 #include "../core/vmath.h"
@@ -149,7 +149,7 @@ class CRender
         void DrawBSPBackToFront(struct bsp_node_s *root);
 
         void DrawMesh(struct base_mesh_s *mesh, const float *overrideVertices, const float *overrideNormals);
-        void DrawSkinMesh(struct base_mesh_s *mesh, struct base_mesh_s *parent_mesh, float transform[16]);
+        void DrawSkinMesh(struct base_mesh_s *mesh, struct base_mesh_s *parent_mesh, uint32_t *map, float transform[16]);
         void DrawSkyBox(const float matrix[16]);
 
         void DrawSkeletalModel(const struct lit_shader_description *shader, struct ss_bone_frame_s *bframe, const float mvMatrix[16], const float mvpMatrix[16]);

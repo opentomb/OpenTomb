@@ -142,8 +142,8 @@ typedef struct entity_s
     uint32_t                            trigger_layout : 8;     // Mask + once + event + sector status flags
     uint32_t                            dir_flag : 8;           // (move direction)
     uint32_t                            move_type : 4;          // on floor / free fall / swim ....
-    uint32_t                            no_fix_all : 1;
-    //uint32_t                            fix_root_only : 1;      // only zero mesh use for collision resolving
+    uint32_t                            no_fix_all : 1;         // only setPos and anim command can ignore that
+    uint32_t                            no_move : 1;
     uint32_t                            no_anim_pos_autocorrection : 1;
     
     float                               timer;              // Set by "timer" trigger field
@@ -177,7 +177,7 @@ typedef struct entity_s
 
 entity_p Entity_Create();
 void Entity_InitActivationPoint(entity_p entity);
-void Entity_Clear(entity_p entity);
+void Entity_Delete(entity_p entity);
 void Entity_Enable(entity_p ent);
 void Entity_Disable(entity_p ent);
 void Entity_EnableCollision(entity_p ent);

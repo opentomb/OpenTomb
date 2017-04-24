@@ -2,6 +2,11 @@
 -- By TeslaRus, Lwmte, 2014-2016
 
 
+function save_crystal_init(id)
+    disableEntity(id);
+end
+
+
 function door_init(id)   -- NORMAL doors only!
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
@@ -195,7 +200,7 @@ function pickup_init(id, item_id)    -- Pick-ups
             if(dz < -256.0) then
                 entity_funcs[object_id].need_set_pos = false;
                 setEntityAnim(activator_id, ANIM_TYPE_BASE, 425, 0); -- Standing pickup, test version
-                --noFixEntityCollision(activator_id);
+                --noEntityMove(activator_id, true);
             else
                 setEntityAnim(activator_id, ANIM_TYPE_BASE, 135, 0); -- Stay pickup
             end;

@@ -74,7 +74,7 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, int stack_pos)
     lua_getfield(lua, -1, "hair_damping");
     if(!lua_istable(lua, -1))
     {
-        free(hair_setup);
+        Hair_DeleteSetup(hair_setup);
         lua_settop(lua, top);
         return NULL;
     }
@@ -92,7 +92,7 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, int stack_pos)
     lua_getfield(lua, stack_pos, "v_index");
     if(!lua_istable(lua, -1))
     {
-        free(hair_setup);
+        Hair_DeleteSetup(hair_setup);
         lua_settop(lua, top);
         return NULL;
     }
@@ -107,7 +107,7 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, int stack_pos)
     lua_getfield(lua, stack_pos, "offset");
     if(!lua_istable(lua, -1))
     {
-        free(hair_setup);
+        Hair_DeleteSetup(hair_setup);
         lua_settop(lua, top);
         return NULL;
     }
@@ -128,7 +128,7 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, int stack_pos)
     lua_getfield(lua, stack_pos, "root_angle");
     if(!lua_istable(lua, -1))
     {
-        free(hair_setup);
+        Hair_DeleteSetup(hair_setup);
         lua_settop(lua, top);
         return NULL;
     }
@@ -146,4 +146,13 @@ struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, int stack_pos)
 
     lua_settop(lua, top);
     return hair_setup;
+}
+
+
+void Hair_DeleteSetup(hair_setup_p setup)
+{
+    if(setup)
+    {
+        free(setup);
+    }
 }

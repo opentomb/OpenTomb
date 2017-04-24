@@ -55,6 +55,7 @@ entity_p Entity_Create()
     ret->obb->transform = ret->transform;
 
     ret->no_fix_all = 0x00;
+    ret->no_move = 0x00;
     ret->no_anim_pos_autocorrection = 0x01;
     ret->no_fix_skeletal_parts = 0x00000000;
     ret->physics = Physics_CreatePhysicsData(ret->self);
@@ -96,7 +97,7 @@ void Entity_InitActivationPoint(entity_p entity)
 }
 
 
-void Entity_Clear(entity_p entity)
+void Entity_Delete(entity_p entity)
 {
     if(entity)
     {
@@ -117,13 +118,10 @@ void Entity_Clear(entity_p entity)
             free(entity->activation_point);
         }
 
-        Ragdoll_Delete(entity->physics);
-        entity->type_flags &= ~ENTITY_TYPE_DYNAMIC;
-
         Inventory_RemoveAllItems(&entity->inventory);
         if(entity->character)
         {
-            Character_Clean(entity);
+            Character_Delete(entity);
         }
 
         Physics_DeletePhysicsData(entity->physics);
@@ -141,6 +139,8 @@ void Entity_Clear(entity_p entity)
             free(entity->bf);
             entity->bf = NULL;
         }
+
+        free(entity);
     }
 }
 
@@ -454,7 +454,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
     int ret = 0;
 
     vec3_set_zero(reaction);
-    if(Physics_IsGhostsInited(ent->physics) && (ent->no_fix_all == 0x00) && (Physics_GetBodiesCount(ent->physics) == ent->bf->bone_tag_count))
+    if(Physics_IsGhostsInited(ent->physics) && (Physics_GetBodiesCount(ent->physics) == ent->bf->bone_tag_count))
     {
         float tmp[3], orig_pos[3];
         float tr[16];
@@ -624,18 +624,15 @@ int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float react
 
 void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
 {
-    if(Physics_IsGhostsInited(ent->physics))
+    if(Physics_IsGhostsInited(ent->physics) &&
+       !ent->no_fix_all && !ent->no_move &&
+       !(ent->type_flags & ENTITY_TYPE_DYNAMIC))
     {
         if(move && ent->character)
         {
             ent->character->state.floor_collide = 0x00;
             ent->character->state.ceiling_collide = 0x00;
             ent->character->state.wall_collide = 0x00;
-        }
-
-        if(ent->no_fix_all || ent->type_flags & ENTITY_TYPE_DYNAMIC)
-        {
-            return;
         }
 
         float t1, t2, reaction[3];
@@ -695,7 +692,7 @@ int  Entity_GetSubstanceState(entity_p entity)
 
     if(entity->self->room->flags & TR_ROOM_FLAG_QUICKSAND)
     {
-        if(entity->character->height_info.transition_level > entity->transform[12 + 2] + entity->character->Height)
+        if(entity->character->height_info.transition_level > entity->transform[12 + 2] + entity->character->height)
         {
             return ENTITY_SUBSTANCE_QUICKSAND_CONSUMED;
         }
@@ -764,7 +761,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                         float tr[3];
                         Mat4_vec3_rot_macro(tr, entity->transform, command->data);
                         vec3_add(entity->transform + 12, entity->transform + 12, tr);
-                        entity->no_fix_all = 0x01;
+                        entity->no_move = 0x01;
                         do_skip_frame = true;
                     }
                     break;
@@ -1063,6 +1060,7 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
         {
             animation = (animation < 0) ? (0) : (animation);
             entity->no_fix_all = 0x00;
+            entity->no_move = 0x00;
             if(ss_anim->model && (anim_type == ANIM_TYPE_BASE))
             {
                 if(!entity->no_anim_pos_autocorrection)
@@ -1107,7 +1105,7 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
 
 void Entity_MoveToSink(entity_p entity, struct static_camera_sink_s *sink)
 {
-    if(sink)
+    if(sink && !entity->no_move)
     {
         float sink_pos[3], *ent_pos = entity->transform + 12;
         sink_pos[0] = sink->pos[0];
@@ -1168,13 +1166,13 @@ void Entity_Frame(entity_p entity, float time)
                         ss_anim->onEndFrame(entity, ss_anim);
                     }
                 }
-                else if(!(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK) &&
-                        ((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->max_frame > 1)))
+                else if((ss_anim->model->animation_count > 1) || (ss_anim->model->animations->max_frame > 1))
                 {
                     frame_switch_state = Anim_SetNextFrame(ss_anim, time);
                     if(frame_switch_state >= 0x01)
                     {
                         entity->no_fix_all = (frame_switch_state >= 0x02) ? (0x00) : (entity->no_fix_all);
+                        entity->no_move = (frame_switch_state >= 0x02) ? (0x00) : (entity->no_move);
                         Entity_DoAnimCommands(entity, ss_anim);
                     }
 

@@ -158,7 +158,6 @@ int lua_SetEntityBaseAnimModel(lua_State * lua)
 }
 
 
-
 int lua_SetModelCollisionMap(lua_State * lua)
 {
     if(lua_gettop(lua) >= 3)
@@ -308,25 +307,57 @@ int lua_GetEntityMeshCount(lua_State *lua)
 }
 
 
-int lua_SetEntityMeshswap(lua_State * lua)
+int lua_SetEntityMeshes(lua_State * lua)
 {
-    if(lua_gettop(lua) >= 2)
+    if(lua_gettop(lua) >= 4)
     {
         entity_p         ent_dest = World_GetEntityByID(lua_tointeger(lua, 1));
         skeletal_model_p model_src = World_GetModelByID(lua_tointeger(lua, 2));
         if(ent_dest && model_src)
         {
-            int meshes_to_copy = (ent_dest->bf->bone_tag_count > model_src->mesh_count) ? (model_src->mesh_count) : (ent_dest->bf->bone_tag_count);
-            for(int i = 0; i < meshes_to_copy; i++)
+            int index = lua_tointeger(lua, 3);
+            int to = (lua_isnil(lua, 4)) ? (ent_dest->bf->bone_tag_count) : (lua_tointeger(lua, 4));
+            index = (index >= 0) ? (index) : (0);
+            to = (to <= ent_dest->bf->bone_tag_count) ? (to) : (ent_dest->bf->bone_tag_count);
+            to = (to <= model_src->mesh_count) ? (to) : (model_src->mesh_count);
+            for(; index <= to; ++index)
             {
-                ent_dest->bf->bone_tags[i].mesh_base = model_src->mesh_tree[i].mesh_base;
-                ent_dest->bf->bone_tags[i].mesh_skin = model_src->mesh_tree[i].mesh_skin;
+                ent_dest->bf->bone_tags[index].mesh_base = model_src->mesh_tree[index].mesh_base;
             }
         }
     }
     else
     {
-        Con_Warning("setEntityMeshswap: expecting arguments (id_dest, id_src)");
+        Con_Warning("setEntityMeshes: expecting arguments (id_dest, id_src)");
+    }
+
+    return 0;
+}
+
+
+int lua_SetEntitySkinMeshes(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 4)
+    {
+        entity_p         ent_dest = World_GetEntityByID(lua_tointeger(lua, 1));
+        skeletal_model_p model_src = World_GetModelByID(lua_tointeger(lua, 2));
+        if(ent_dest && model_src)
+        {
+            int index = lua_tointeger(lua, 3);
+            int to = (lua_isnil(lua, 4)) ? (ent_dest->bf->bone_tag_count) : (lua_tointeger(lua, 4));
+            index = (index >= 0) ? (index) : (0);
+            to = (to <= ent_dest->bf->bone_tag_count) ? (to) : (ent_dest->bf->bone_tag_count);
+            to = (to <= model_src->mesh_count) ? (to) : (model_src->mesh_count);
+            for(; index <= to; ++index)
+            {
+                ent_dest->bf->bone_tags[index].mesh_skin = model_src->mesh_tree[index].mesh_base;
+            }
+            SSBoneFrame_FillSkinnedMeshMap(ent_dest->bf);
+        }
+    }
+    else
+    {
+        Con_Warning("setEntitySkinMeshes: expecting arguments (id_dest, id_src)");
     }
 
     return 0;
@@ -633,7 +664,7 @@ int lua_EntitySSAnimSetTarget(lua_State * lua)
                 dir[1] = lua_tonumber(lua, 8);
                 dir[2] = lua_tonumber(lua, 9);
 
-                SSBoneFrame_SetTrget(ss_anim, targeted_bone, pos, dir);
+                SSBoneFrame_SetTarget(ss_anim, targeted_bone, pos, dir);
             }
         }
         else
@@ -843,7 +874,8 @@ void Script_LuaRegisterAnimFuncs(lua_State *lua)
     lua_register(lua, "setEntityAnimState", lua_SetEntityAnimState);
     lua_register(lua, "setEntityAnimStateHeavy", lua_SetEntityAnimStateHeavy);
     lua_register(lua, "getEntityMeshCount", lua_GetEntityMeshCount);
-    lua_register(lua, "setEntityMeshswap", lua_SetEntityMeshswap);
+    lua_register(lua, "setEntityMeshes", lua_SetEntityMeshes);
+    lua_register(lua, "setEntitySkinMeshes", lua_SetEntitySkinMeshes);
     lua_register(lua, "setModelMeshReplaceFlag", lua_SetModelMeshReplaceFlag);
     lua_register(lua, "setEntityAnimFlag", lua_SetEntityAnimFlag);
     lua_register(lua, "setModelAnimReplaceFlag", lua_SetModelAnimReplaceFlag);

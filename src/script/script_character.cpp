@@ -33,11 +33,6 @@ int lua_CharacterCreate(lua_State * lua)
         if(ent && !ent->character)
         {
             Character_Create(ent);
-            if(top >= 2)
-            {
-                ent->character->parameters.param[PARAM_HEALTH] = lua_tonumber(lua, 2);
-                ent->character->parameters.maximum[PARAM_HEALTH] = lua_tonumber(lua, 2);
-            }
         }
         else
         {
@@ -49,6 +44,76 @@ int lua_CharacterCreate(lua_State * lua)
         Con_Warning("characterCreate: expecting arguments (entity_id, (hp))");
     }
 
+    return 0;
+}
+
+
+int lua_SetCharacterBones(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 7)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            ent->character->bone_head = lua_tointeger(lua, 2);
+            ent->character->bone_torso = lua_tointeger(lua, 3);
+            ent->character->bone_l_hand_start = lua_tointeger(lua, 4);
+            ent->character->bone_l_hand_end = lua_tointeger(lua, 5);
+            ent->character->bone_r_hand_start = lua_tointeger(lua, 6);
+            ent->character->bone_r_hand_end = lua_tointeger(lua, 7);
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setCharacterBones: expecting arguments (entity_id, head_bone, torso_bone, l_hand_first, l_hand_last, r_hand_first, r_hand_last)");
+    }
+    return 0;
+}
+
+
+int lua_SetCharacterMoveSizes(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 6)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            if(!lua_isnil(lua, 2))
+            {
+                ent->character->height = lua_tointeger(lua, 2);
+            }
+            if(!lua_isnil(lua, 3))
+            {
+                ent->character->min_step_up_height = lua_tointeger(lua, 3);
+            }
+            if(!lua_isnil(lua, 4))
+            {
+                ent->character->max_step_up_height = lua_tointeger(lua, 4);
+            }
+            if(!lua_isnil(lua, 5))
+            {
+                ent->character->max_climb_height = lua_tointeger(lua, 5);
+            }
+            if(!lua_isnil(lua, 6))
+            {
+                ent->character->fall_down_height = lua_tointeger(lua, 6);
+            }
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setCharacterMoveSizes: expecting arguments (entity_id, height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height)");
+    }
     return 0;
 }
 
@@ -263,12 +328,12 @@ int lua_AddCharacterHair(lua_State *lua)
                     ent->character->hair_count--;
                     Con_Warning("can not create hair for entity_id = %d", lua_tointeger(lua, 1));
                 }
+                Hair_DeleteSetup(hair_setup);
             }
             else
             {
                 Con_Warning("wrong hair setup index = %d", lua_tointeger(lua, 2));
             }
-            free(hair_setup);
         }
         else
         {
@@ -468,6 +533,57 @@ int lua_GetCharacterState(lua_State * lua)
 }
 
 
+int lua_SetCharacterClimbPoint(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 4)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            ent->character->climb.point[0] = lua_tonumber(lua, 2);
+            ent->character->climb.point[1] = lua_tonumber(lua, 3);
+            ent->character->climb.point[2] = lua_tonumber(lua, 4);
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Printf("setCharacterClimbPoint: expecting arguments (id_entity, x, y, z)");
+    }
+
+    return 0;
+}
+
+
+int lua_GetCharacterClimbPoint(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            lua_pushnumber(lua, ent->character->climb.point[0]);
+            lua_pushnumber(lua, ent->character->climb.point[1]);
+            lua_pushnumber(lua, ent->character->climb.point[2]);
+            return 3;
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Printf("getCharacterClimbPoint: expecting arguments (id_entity)");
+    }
+
+    return 0;
+}
+
+
 int lua_SetCharacterWeaponModel(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
@@ -544,6 +660,8 @@ void Script_LuaRegisterCharacterFuncs(lua_State *lua)
     lua_register(lua, "setCharacterRagdollActivity", lua_SetCharacterRagdollActivity);
 
     lua_register(lua, "characterCreate", lua_CharacterCreate);
+    lua_register(lua, "setCharacterBones", lua_SetCharacterBones);
+    lua_register(lua, "setCharacterMoveSizes", lua_SetCharacterMoveSizes);
     lua_register(lua, "setCharacterStateControlFunctions", lua_SetCharacterStateControlFunctions);
     lua_register(lua, "setCharacterKeyAnim", lua_SetCharacterKeyAnim);
     lua_register(lua, "setCharacterTarget", lua_SetCharacterTarget);
@@ -551,8 +669,11 @@ void Script_LuaRegisterCharacterFuncs(lua_State *lua)
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);
     lua_register(lua, "changeCharacterParam", lua_ChangeCharacterParam);
 
-    lua_register(lua, "getCharacterState", lua_GetCharacterState);
     lua_register(lua, "setCharacterState", lua_SetCharacterState);
+    lua_register(lua, "getCharacterState", lua_GetCharacterState);
+    lua_register(lua, "setCharacterClimbPoint", lua_SetCharacterClimbPoint);
+    lua_register(lua, "getCharacterClimbPoint", lua_GetCharacterClimbPoint);
+
     lua_register(lua, "getCharacterCurrentWeapon", lua_GetCharacterCurrentWeapon);
     lua_register(lua, "setCharacterCurrentWeapon", lua_SetCharacterCurrentWeapon);
     lua_register(lua, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);

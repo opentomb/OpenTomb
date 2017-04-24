@@ -71,6 +71,8 @@ typedef struct inventory_node_s
     struct inventory_node_s    *next;
 }inventory_node_t, *inventory_node_p;
 
+base_item_p BaseItem_Create(struct skeletal_model_s *model, uint32_t id);
+void BaseItem_Delete(base_item_p item);
 
 int32_t Inventory_AddItem(struct inventory_node_s **root, uint32_t item_id, int32_t count);       
 int32_t Inventory_RemoveItem(struct inventory_node_s **root, uint32_t item_id, int32_t count);

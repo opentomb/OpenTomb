@@ -404,7 +404,7 @@ function keyhole_init(id)    -- Key and puzzle holes
 
             setEntityAnim(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].on.trig_anim, 0);
             setEntityAnim(activator_id, ANIM_TYPE_BASE, entity_funcs[object_id].on.actor_anim, 0);
-            noFixEntityCollision(activator_id);
+            noEntityMove(activator_id, true);
             setEntityActivity(object_id, true);
             entity_funcs[object_id].activator_id = activator_id;
             entity_funcs[object_id].state = 1;
@@ -425,7 +425,7 @@ function keyhole_init(id)    -- Key and puzzle holes
             if(f >= c - 1) then                                 -- check the end of animation
                 if(entity_funcs[object_id].key ~= nil) then
                     if(entity_funcs[object_id].meshswap ~= nil) then
-                        setEntityMeshswap(object_id, entity_funcs[object_id].meshswap); -- only for puzzleholes - do a meshswap
+                        setEntityMeshes(object_id, entity_funcs[object_id].meshswap, nil, nil);
                     end
                     setEntityLock(object_id, 1);                -- lock filled hole
                 end;
@@ -459,7 +459,7 @@ function switch_init(id)     -- Ordinary switches
             ret = 1;
             setEntityAnim(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].on.trig_anim, 0);
             setEntityAnim(activator_id, ANIM_TYPE_BASE, entity_funcs[object_id].on.actor_anim, 0);
-            noFixEntityCollision(activator_id);
+            noEntityMove(activator_id, true);
             setEntityActivity(object_id, true);
             entity_funcs[object_id].state = 1;
         elseif(entity_funcs[object_id].off.ready_anim == t and getEntityLock(object_id) ~= 1) then  -- Locked switches doesn't flip back!
@@ -467,7 +467,7 @@ function switch_init(id)     -- Ordinary switches
             setEntityAnim(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].off.trig_anim, 0);
             setEntityAnim(activator_id, ANIM_TYPE_BASE, entity_funcs[object_id].off.actor_anim, 0);
             setEntityActivity(object_id, true);
-            noFixEntityCollision(activator_id);
+            noEntityMove(activator_id, true);
             entity_funcs[object_id].state = 2;
         end;
 
@@ -533,7 +533,7 @@ function lever_switch_init(id)     -- Big switches (TR4) - lever
             ret = 1;
             setEntityAnim(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].on.trig_anim, 0);
             setEntityAnim(activator_id, ANIM_TYPE_BASE, entity_funcs[object_id].on.actor_anim, 0);
-            noFixEntityCollision(activator_id);
+            noEntityMove(activator_id, true);
             setEntityActivity(object_id, true);
             entity_funcs[object_id].state = 1;
         elseif(entity_funcs[object_id].off.ready_anim == t and getEntityLock(object_id) ~= 1) then  -- Locked switches doesn't flip back!
@@ -541,7 +541,7 @@ function lever_switch_init(id)     -- Big switches (TR4) - lever
             setEntityAnim(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].off.trig_anim, 0);
             setEntityAnim(activator_id, ANIM_TYPE_BASE, entity_funcs[object_id].off.actor_anim, 0);
             setEntityActivity(object_id, true);
-            noFixEntityCollision(activator_id);
+            noEntityMove(activator_id, true);
             entity_funcs[object_id].state = 2;
         end;
 

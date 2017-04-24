@@ -83,15 +83,6 @@ tr2_id_override[195] = 199;
 tr2_id_override[196] = 200;
 
 
--- In TR2, some entities have animations borrowed from another entities, so for
--- this purpose, we define animation override table.
-
-tr2_anim_override = {};
-
-tr2_anim_override[17] = 16;             -- Masked goon (white mask, vest)
-tr2_anim_override[18] = 16;             -- Masked goon (black mask)
-
-
 --------------------------------------------------------------------------------
 -------------------------------------- TR_III ----------------------------------
 --------------------------------------------------------------------------------
@@ -107,41 +98,6 @@ tr4_id_override = {};
 --------------------------------------------------------------------------------
 tr5_id_override = {};
 
-function getOverridedAnim(ver, id)
-    if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB
-        if((tr1_anim_override == nil) or (tr1_anim_override[id] == nil)) then
-            return -1;
-        else
-            return tr1_anim_override[id];
-        end;
-    elseif(ver < 5) then                -- TR_II, TR_II_DEMO
-        if((tr2_anim_override == nil) or (tr2_anim_override[id] == nil)) then
-            return -1;
-        else
-            return tr2_anim_override[id];
-        end
-    elseif(ver < 6) then                -- TR_III
-        if((tr3_anim_override == nil) or (tr3_anim_override[id] == nil)) then
-            return -1;
-        else
-            return tr3_anim_override[id];
-        end
-    elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO
-        if((tr4_anim_override == nil) or (tr4_anim_override[id] == nil)) then
-            return -1;
-        else
-            return tr4_anim_override[id];
-        end
-    elseif(ver < 9) then                -- TR_V
-        if((tr5_anim_override == nil) or (tr5_anim_override[id] == nil)) then
-            return -1;
-        else
-            return tr5_anim_override[id];
-        end
-    else
-        return -1;
-    end;
-end;
 
 function getOverridedID(ver, id)
     if(ver < 3) then                    -- TR_I, TR_I_DEMO, TR_I_UB

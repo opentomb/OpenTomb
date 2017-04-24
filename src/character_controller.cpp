@@ -45,6 +45,10 @@ void Character_Create(struct entity_s *ent)
 
         ret->bone_head = 0x00;
         ret->bone_torso = 0x00;
+        ret->bone_l_hand_start = 0x00;
+        ret->bone_l_hand_end = 0x00;
+        ret->bone_r_hand_start = 0x00;
+        ret->bone_r_hand_end = 0x00;
         ret->weapon_current_state = 0x00;
         ret->current_weapon = 0;
 
@@ -104,7 +108,7 @@ void Character_Create(struct entity_s *ent)
         ret->climb.edge_hit = 0x00;
         ret->climb.wall_hit = 0x00;
         ret->forvard_size = 48.0;                                               ///@FIXME: magick number
-        ret->Height = CHARACTER_BASE_HEIGHT;
+        ret->height = CHARACTER_BASE_HEIGHT;
 
         ret->traversed_object = NULL;
 
@@ -117,7 +121,7 @@ void Character_Create(struct entity_s *ent)
     }
 }
 
-void Character_Clean(struct entity_s *ent)
+void Character_Delete(struct entity_s *ent)
 {
     character_p actor = ent->character;
 
@@ -162,7 +166,7 @@ void Character_Update(struct entity_s *ent)
         {
             Entity_CheckActivators(ent);
         }
-        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
+        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0f)
         {
             ent->character->state.dead = 1;                                     // Kill, if no HP.
         }
@@ -227,16 +231,15 @@ void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
  */
 void Character_UpdateCurrentHeight(struct entity_s *ent)
 {
-    float from[3], to[3], base_z, *v;
+    float from[3], *v;
     height_info_p hi = &ent->character->height_info;
 
     v = ent->bf->bone_tags[0].transform + 12;
     Mat4_vec3_mul_macro(from, ent->transform, v);
     from[2] += 128.0f;
-    base_z = from[2];
     from[0] = ent->transform[12 + 0];
     from[1] = ent->transform[12 + 1];
-    Character_GetHeightInfo(from, hi, ent->character->Height);
+    Character_GetHeightInfo(from, hi, ent->character->height);
 }
 
 /**
@@ -367,7 +370,7 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
             {
                 ret = CHARACTER_STEP_DOWN_BIG;
             }
-            else if(delta <= ent->character->Height)
+            else if(delta <= ent->character->height)
             {
                 ret = CHARACTER_STEP_DOWN_DROP;
             }
@@ -452,8 +455,8 @@ int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
 void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
 {
     float temp[3];
-    const float *v1 = ent->bf->bone_tags[10].full_transform + 12;
-    const float *v2 = ent->bf->bone_tags[13].full_transform + 12;
+    const float *v1 = ent->bf->bone_tags[ent->character->bone_l_hand_end].full_transform + 12;
+    const float *v2 = ent->bf->bone_tags[ent->character->bone_r_hand_end].full_transform + 12;
 
     temp[0] = 0.0f;
     temp[1] = 0.5f * (v1[1] + v2[1]);
@@ -650,7 +653,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         climb->t[1] = climb->edge_tan_xy[1];
 
         // Calc hang info
-        climb->next_z_space = 2.0f * ent->character->Height;
+        climb->next_z_space = 2.0f * ent->character->height;
         vec3_copy(from, climb->edge_point);
         vec3_copy(to, from);
         to[2] += climb->next_z_space;
@@ -659,7 +662,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             climb->next_z_space = cb.point[2] - climb->edge_point[2];
             if(climb->next_z_space < 0.01f)
             {
-                climb->next_z_space = 2.0 * ent->character->Height;
+                climb->next_z_space = 2.0 * ent->character->height;
                 from[2] += fabs(climb->next_z_space);
                 if(Physics_RayTestFiltered(&cb, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST))
                 {
@@ -671,7 +674,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         from[0] = to[0] = test_from[0];
         from[1] = to[1] = test_from[1];
         from[2] = test_from[2];
-        to[2] = climb->edge_point[2] - ent->character->Height;
+        to[2] = climb->edge_point[2] - ent->character->height;
         climb->can_hang = (Physics_RayTestFiltered(NULL, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST) ? (0x00) : (0x01));
     }
 }
@@ -735,7 +738,7 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
 
         if(climb->wall_hit)
         {
-            from[2] -= 0.67 * ent->character->Height;
+            from[2] -= 0.67 * ent->character->height;
             to[2] = from[2];
 
             if(Physics_SphereTest(NULL, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
@@ -877,7 +880,7 @@ void Character_LookAt(struct entity_s *ent, float target[3])
     }
 
     anim_head_track->targeting_flags = 0x0000;
-    SSBoneFrame_SetTrget(anim_head_track, ent->character->bone_head, target, bone_dir);
+    SSBoneFrame_SetTarget(anim_head_track, ent->character->bone_head, target, bone_dir);
     SSBoneFrame_SetTargetingLimit(anim_head_track, head_target_limit);
 
     if(SSBoneFrame_CheckTargetBoneLimit(ent->bf, anim_head_track))
@@ -889,7 +892,7 @@ void Character_LookAt(struct entity_s *ent, float target[3])
             const float target_limit[4] = {0.0f, 1.0f, 0.0f, 0.883f};
 
             base_anim->targeting_flags = 0x0000;
-            SSBoneFrame_SetTrget(base_anim, ent->character->bone_torso, target, bone_dir);
+            SSBoneFrame_SetTarget(base_anim, ent->character->bone_torso, target, bone_dir);
             SSBoneFrame_SetTargetingLimit(base_anim, target_limit);
             SSBoneFrame_SetTargetingAxisMod(base_anim, axis_mod);
             base_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
@@ -969,7 +972,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
 
     norm_move_xy[0] = move[0];
     norm_move_xy[1] = move[1];
-    norm_move_xy_len = sqrt(move[0] * move[0] + move[1] * move[1]);
+    norm_move_xy_len = sqrtf(move[0] * move[0] + move[1] * move[1]);
     if(norm_move_xy_len > 0.2 * t)
     {
         norm_move_xy[0] /= norm_move_xy_len;
@@ -1190,7 +1193,7 @@ int Character_FreeFalling(struct entity_s *ent)
         }
 
         float transition_level = ent->character->height_info.transition_level;
-        transition_level = (World_GetVersion() < TR_II) ? (transition_level) : (transition_level - ent->character->Height);
+        transition_level = (World_GetVersion() < TR_II) ? (transition_level) : (transition_level - ent->character->height);
         if(!ent->character->height_info.water || (ent->current_sector->floor <= transition_level))
         {
             ent->move_type = MOVE_UNDERWATER;
@@ -1463,7 +1466,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
             //pos[2] = fc.transition_level;
             return 2;
         }
-        if(!ent->character->height_info.floor_hit.hit || (ent->character->height_info.transition_level - ent->character->height_info.floor_hit.point[2] >= ent->character->Height))
+        if(!ent->character->height_info.floor_hit.hit || (ent->character->height_info.transition_level - ent->character->height_info.floor_hit.point[2] >= ent->character->height))
         {
             pos[2] = ent->character->height_info.transition_level - ent->bf->bb_max[2];
         }
@@ -1828,49 +1831,52 @@ void Character_ApplyCommands(struct entity_s *ent)
         ent->character->state_func(ent, &ent->bf->animations);
     }
 
-    switch(ent->move_type)
+    if(!ent->no_move)
     {
-        case MOVE_KINEMATIC:
-        case MOVE_STATIC_POS:
-            //Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
-            break;
+        switch(ent->move_type)
+        {
+            case MOVE_KINEMATIC:
+            case MOVE_STATIC_POS:
+                //Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
+                break;
 
-        case MOVE_ON_FLOOR:
-            Character_MoveOnFloor(ent);
-            break;
+            case MOVE_ON_FLOOR:
+                Character_MoveOnFloor(ent);
+                break;
 
-        case MOVE_FREE_FALLING:
-            Character_FreeFalling(ent);
-            break;
+            case MOVE_FREE_FALLING:
+                Character_FreeFalling(ent);
+                break;
 
-        case MOVE_CLIMBING:
-            Character_Climbing(ent);
-            break;
+            case MOVE_CLIMBING:
+                Character_Climbing(ent);
+                break;
 
-        case MOVE_MONKEYSWING:
-            Character_MonkeyClimbing(ent);
-            break;
+            case MOVE_MONKEYSWING:
+                Character_MonkeyClimbing(ent);
+                break;
 
-        case MOVE_WALLS_CLIMB:
-            Character_WallsClimbing(ent);
-            break;
+            case MOVE_WALLS_CLIMB:
+                Character_WallsClimbing(ent);
+                break;
 
-        case MOVE_UNDERWATER:
-            Character_MoveUnderWater(ent);
-            break;
+            case MOVE_UNDERWATER:
+                Character_MoveUnderWater(ent);
+                break;
 
-        case MOVE_ON_WATER:
-            Character_MoveOnWater(ent);
-            break;
+            case MOVE_ON_WATER:
+                Character_MoveOnWater(ent);
+                break;
 
-        case MOVE_FLY:
-            Character_MoveFly(ent);
-            break;
+            case MOVE_FLY:
+                Character_MoveFly(ent);
+                break;
 
-        default:
-            ent->move_type = MOVE_ON_FLOOR;
-            break;
-    };
+            default:
+                ent->move_type = MOVE_ON_FLOOR;
+                break;
+        };
+    }
 }
 
 void Character_UpdateParams(struct entity_s *ent)
@@ -2137,7 +2143,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
 
         for(uint16_t i = 0; i < base_model->mesh_count; i++)
         {
-            ent->bf->bone_tags[i].mesh_base = base_model->mesh_tree[i].mesh_base;
+            ent->bf->bone_tags[i].mesh_replace = NULL;
             ent->bf->bone_tags[i].mesh_slot = NULL;
         }
 
@@ -2147,7 +2153,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
             {
                 if(sm->mesh_tree[i].replace_mesh == 0x01)
                 {
-                    ent->bf->bone_tags[i].mesh_base = sm->mesh_tree[i].mesh_base;
+                    ent->bf->bone_tags[i].mesh_replace = sm->mesh_tree[i].mesh_base;
                 }
                 else if(sm->mesh_tree[i].replace_mesh == 0x02)
                 {
@@ -2162,7 +2168,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
                 ss_animation_p alt_anim = ent->bf->bone_tags[i].alt_anim;
                 if(sm->mesh_tree[i].replace_mesh == 0x03)
                 {
-                    ent->bf->bone_tags[i].mesh_base = sm->mesh_tree[i].mesh_base;
+                    ent->bf->bone_tags[i].mesh_replace = sm->mesh_tree[i].mesh_base;
                 }
                 else if(sm->mesh_tree[i].replace_mesh == 0x04)
                 {
@@ -2191,7 +2197,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
         for(uint16_t i = 0; i < bm->mesh_count; i++)
         {
             ss_animation_p alt_anim = ent->bf->bone_tags[i].alt_anim;
-            ent->bf->bone_tags[i].mesh_base = bm->mesh_tree[i].mesh_base;
+            ent->bf->bone_tags[i].mesh_replace = NULL;
             ent->bf->bone_tags[i].mesh_slot = NULL;
             if(alt_anim && ((alt_anim->type == ANIM_TYPE_WEAPON_TH) || (alt_anim->type == ANIM_TYPE_WEAPON_LH) || (alt_anim->type == ANIM_TYPE_WEAPON_RH)))
             {
@@ -2226,14 +2232,14 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
         const float bone_dir[] = {0.0f, 1.0f, 0.0f};
         float dt;
         int32_t t;
-        uint16_t targeted_bone = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (11) : (8);
+        uint16_t targeted_bone = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (ent->character->bone_l_hand_start) : (ent->character->bone_r_hand_start);
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
         bool silent = false;
         if(target)
         {
             float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.224f};
             ss_anim->targeting_flags = 0x0000;
-            SSBoneFrame_SetTrget(ss_anim, targeted_bone, target->obb->centre, bone_dir);
+            SSBoneFrame_SetTarget(ss_anim, targeted_bone, target->obb->centre, bone_dir);
             if(ss_anim->type == ANIM_TYPE_WEAPON_LH)
             {
                 vec3_RotateZ(targeting_limit, targeting_limit, 40.0f);
@@ -2519,14 +2525,13 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
     {
         float dt;
         int32_t t;
-        uint16_t targeted_bone = 7;
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
         if(target)
         {
             const float bone_dir[3] = {0.0f, 1.0f, 0.0f};
             const float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.624f};
             ss_anim->targeting_flags = 0x0000;
-            SSBoneFrame_SetTrget(ss_anim, targeted_bone, target->obb->centre, bone_dir);
+            SSBoneFrame_SetTarget(ss_anim, ent->character->bone_torso, target->obb->centre, bone_dir);
             SSBoneFrame_SetTargetingLimit(ss_anim, targeting_limit);
 
             if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, ss_anim))

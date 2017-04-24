@@ -289,6 +289,7 @@ btCollisionShape* BT_CSfromHeightmap(struct room_sector_s *heightmap, uint32_t s
 uint32_t BT_AddFloorAndCeilingToTrimesh(btTriangleMesh *trimesh, struct room_sector_s *sector);
 uint32_t BT_AddSectorTweenToTrimesh(btTriangleMesh *trimesh, struct sector_tween_s *tween);
 
+void Physics_DeleteRigidBody(struct physics_data_s *physics);                   // only for internal usage
 
 btScalar getInnerBBRadius(btScalar bb_min[3], btScalar bb_max[3])
 {
@@ -449,7 +450,7 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
             physics->bt_joints = NULL;
             physics->bt_joint_count = 0;
         }
-        
+
         if(physics->ghost_objects)
         {
             for(int i = 0; i < physics->objects_count; i++)
@@ -481,33 +482,7 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
             physics->manifoldArray = NULL;
         }
 
-        if(physics->bt_body)
-        {
-            for(int i = 0; i < physics->objects_count; i++)
-            {
-                btRigidBody *body = physics->bt_body[i];
-                if(body)
-                {
-                    body->setUserPointer(NULL);
-                    if(body->getMotionState())
-                    {
-                        delete body->getMotionState();
-                        body->setMotionState(NULL);
-                    }
-                    if(body->getCollisionShape())
-                    {
-                        delete body->getCollisionShape();
-                        body->setCollisionShape(NULL);
-                    }
-
-                    bt_engine_dynamicsWorld->removeRigidBody(body);
-                    delete body;
-                    physics->bt_body[i] = NULL;
-                }
-            }
-            free(physics->bt_body);
-            physics->bt_body = NULL;
-        }
+        Physics_DeleteRigidBody(physics);
 
         physics->objects_count = 0;
         free(physics);
@@ -1164,6 +1139,13 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
     btTransform startTransform;
     btCollisionShape *cshape = NULL;
 
+    Physics_DeleteRigidBody(physics);
+    if(physics->bt_info)
+    {
+        free(physics->bt_info);
+        physics->bt_info = NULL;
+    }
+
     switch(physics->cont->collision_shape)
     {
         case COLLISION_SHAPE_SINGLE_BOX:
@@ -1264,6 +1246,39 @@ void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s
             break;
     };
 }
+
+
+void Physics_DeleteRigidBody(struct physics_data_s *physics)
+{
+    if(physics->bt_body)
+    {
+        for(int i = 0; i < physics->objects_count; i++)
+        {
+            btRigidBody *body = physics->bt_body[i];
+            if(body)
+            {
+                body->setUserPointer(NULL);
+                if(body->getMotionState())
+                {
+                    delete body->getMotionState();
+                    body->setMotionState(NULL);
+                }
+                if(body->getCollisionShape())
+                {
+                    delete body->getCollisionShape();
+                    body->setCollisionShape(NULL);
+                }
+
+                bt_engine_dynamicsWorld->removeRigidBody(body);
+                delete body;
+                physics->bt_body[i] = NULL;
+            }
+        }
+        free(physics->bt_body);
+        physics->bt_body = NULL;
+    }
+}
+
 
 /*
  * 80% boxes hack now is default, but may be rewritten;

@@ -26,8 +26,6 @@ set(OPENTOMB_SRCS
     src/core/obb.h
     src/core/polygon.c
     src/core/polygon.h
-    src/core/redblack.c
-    src/core/redblack.h
     src/core/system.c
     src/core/system.h
     src/core/utf8_32.c

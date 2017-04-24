@@ -50,7 +50,6 @@ typedef struct base_mesh_s
     float                   bb_min[3];                                          // AABB bounding volume
     float                   bb_max[3];                                          // AABB bounding volume
     float                   radius;                                             // radius of the bounding sphere
-    uint32_t               *skin_map;                                           // vertices map for skin mesh
 
     GLuint                  vbo_vertex_array;
     GLuint                  vbo_animated_vertex_array;

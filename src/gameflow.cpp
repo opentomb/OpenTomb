@@ -6,40 +6,53 @@ extern "C" {
 
 #include "core/gl_text.h"
 #include "core/console.h"
+#include "engine.h"
 #include "script/script.h"
 #include "gameflow.h"
 
 #include <assert.h>
+#include <vector>
 
-class CGameflow gameflow;
-
-CGameflow::CGameflow()
+struct gameflow_s
 {
-    memset(this->m_currentLevelName, 0, LEVEL_NAME_MAX_LEN);
-    memset(this->m_currentLevelPath, 0, MAX_ENGINE_PATH);
-    this->m_currentGameID = 0;
-    this->m_currentLevelID = 0;
-    memset(this->m_actions, GF_NOENTRY, GF_MAX_ACTIONS);
-    memset(this->m_secretsTriggerMap, 0, GF_MAX_SECRETS);
+    uint8_t                         m_currentGameID;
+    uint8_t                         m_currentLevelID;
+
+    char                            m_currentLevelName[LEVEL_NAME_MAX_LEN];
+    char                            m_currentLevelPath[MAX_ENGINE_PATH];
+    char                            m_secretsTriggerMap[GF_MAX_SECRETS];
+
+    std::vector<gameflow_action>    m_actions;
+} global_gameflow;
+
+
+void Gameflow_Init()
+{
+    memset(global_gameflow.m_currentLevelName, 0, sizeof(global_gameflow.m_currentLevelName));
+    memset(global_gameflow.m_currentLevelPath, 0, sizeof(global_gameflow.m_currentLevelPath));
+    memset(global_gameflow.m_secretsTriggerMap, 0, sizeof(global_gameflow.m_secretsTriggerMap));
+    global_gameflow.m_actions.clear();
 }
 
 
-CGameflow::~CGameflow()
+bool Gameflow_Send(int opcode, int operand)
 {
-    memset(this->m_currentLevelName, 0, LEVEL_NAME_MAX_LEN);
-    memset(this->m_currentLevelPath, 0, MAX_ENGINE_PATH);
-    this->m_currentGameID = 0;
-    this->m_currentLevelID = 0;
-    memset(this->m_actions, 0, GF_MAX_ACTIONS);
-    memset(this->m_secretsTriggerMap, 0, GF_MAX_SECRETS);
+    gameflow_action act;
+
+    act.m_opcode = opcode;
+    act.m_operand = operand;
+    global_gameflow.m_actions.push_back(act);
+
+    return true;
 }
 
 
-void CGameflow::Do()
+void Gameflow_ProcessCommands()
 {
-    for(int i = 0; i < GF_MAX_ACTIONS; i++)
+    for(; !global_gameflow.m_actions.empty(); global_gameflow.m_actions.pop_back())
     {
-        switch(this->m_actions[i].m_opcode)
+        gameflow_action &it = global_gameflow.m_actions.back();
+        switch(it.m_opcode)
         {
             case GF_OP_LEVELCOMPLETE:
             {
@@ -49,124 +62,93 @@ void CGameflow::Do()
                 lua_getglobal(engine_lua, "getNextLevel");
 
                 //Push the 3 arguments require dby getNextLevel();
-                lua_pushnumber(engine_lua, this->m_currentGameID);
-                lua_pushnumber(engine_lua, this->m_currentLevelID);
-                lua_pushnumber(engine_lua, this->m_actions[i].m_operand);
+                lua_pushnumber(engine_lua, global_gameflow.m_currentGameID);
+                lua_pushnumber(engine_lua, global_gameflow.m_currentLevelID);
+                lua_pushnumber(engine_lua, it.m_operand);
 
                 if (lua_CallAndLog(engine_lua, 3, 3, 0))
                 {
                     //First value in stack is level id
-                    this->m_currentLevelID = lua_tonumber(engine_lua, -1);
+                    global_gameflow.m_currentLevelID = lua_tonumber(engine_lua, -1);
                     //Second value in stack is level name
-                    strncpy(this->m_currentLevelName, lua_tostring(engine_lua, -2), LEVEL_NAME_MAX_LEN);
+                    strncpy(global_gameflow.m_currentLevelName, lua_tostring(engine_lua, -2), LEVEL_NAME_MAX_LEN);
                     //Third value in stack is level path
-                    strncpy(this->m_currentLevelPath, lua_tostring(engine_lua, -3), MAX_ENGINE_PATH);
-                    Engine_LoadMap(this->m_currentLevelPath);
+                    strncpy(global_gameflow.m_currentLevelPath, lua_tostring(engine_lua, -3), MAX_ENGINE_PATH);
+                    Engine_LoadMap(global_gameflow.m_currentLevelPath);
                 }
                 else
                 {
                     Con_AddLine("Fatal Error: Failed to call GetNextLevel()", FONTSTYLE_CONSOLE_WARNING);
                 }
                 lua_settop(engine_lua, top);
-                this->m_actions[i].m_opcode = GF_NOENTRY;
+                it.m_opcode = GF_NOENTRY;
             }
             break;
+
             case GF_NOENTRY:
                 continue;
+
             default:
-                //Con_Printf("Unimplemented gameflow opcode: %i", this->m_actions[i].m_opcode);
+                //Con_Printf("Unimplemented gameflow opcode: %i", global_gameflow.m_actions[i].m_opcode);
                 break;
         };   // end switch(gameflow_manager.Operand)
     }
 }
 
-
-bool CGameflow::Send(int opcode, int operand)
+void Gameflow_ResetSecrets()
 {
-    //Iterate through our action list until we have a free space (TR_GAMEFLOW_NOENTRY) to add the next action.
-    for(int i = 0; i < GF_MAX_ACTIONS; i++)
-    {
-        if(this->m_actions[i].m_opcode == GF_NOENTRY)
-        {
-            this->m_actions[i].m_opcode = opcode;
-            this->m_actions[i].m_operand = operand;
-            return true;
-        }
-    }
-    return false;
+    memset(global_gameflow.m_secretsTriggerMap, 0, GF_MAX_SECRETS * sizeof(*global_gameflow.m_secretsTriggerMap));
 }
 
 
-uint8_t CGameflow::getCurrentGameID()
+const char* Gameflow_GetCurrentLevelPathLocal()
 {
-    return this->m_currentGameID;
+    return global_gameflow.m_currentLevelPath + strlen(Engine_GetBasePath());
 }
 
 
-uint8_t CGameflow::getCurrentLevelID()
-{
-    return this->m_currentLevelID;
-}
-
-
-const char* CGameflow::getCurrentLevelName()
-{
-    return this->m_currentLevelName;
-}
-
-
-const char* CGameflow::getCurrentLevelPathGlobal()
-{
-    return this->m_currentLevelPath;
-}
-
-
-const char* CGameflow::getCurrentLevelPathLocal()
-{
-    return this->m_currentLevelPath + strlen(Engine_GetBasePath());
-}
-
-
-void CGameflow::setCurrentLevelName(const char* levelName)
-{
-    assert(strlen(levelName) < LEVEL_NAME_MAX_LEN);
-    strncpy(this->m_currentLevelName, levelName, LEVEL_NAME_MAX_LEN);
-}
-
-
-void CGameflow::setCurrentLevelPath(const char* filePath)
+void Gameflow_SetCurrentLevelPath(const char* filePath)
 {
     assert(strlen(filePath) < LEVEL_NAME_MAX_LEN);
-    strncpy(this->m_currentLevelPath, filePath, MAX_ENGINE_PATH);
+    strncpy(global_gameflow.m_currentLevelPath, filePath, MAX_ENGINE_PATH);
 }
 
 
-void CGameflow::resetSecrets()
+void Gameflow_SetCurrentGameID(uint8_t id)
 {
-    memset(this->m_secretsTriggerMap, 0, GF_MAX_SECRETS);
+    assert(id >= 0 && id <= GAME_5);
+    global_gameflow.m_currentGameID = id;
 }
 
 
-char CGameflow::getSecretStateAtIndex(int index)
+void Gameflow_SetCurrentLevelID(uint8_t id)
+{
+    assert(id >= 0);///@TODO pull max level ID from script?
+    global_gameflow.m_currentLevelID = id;
+}
+
+
+void Gameflow_SetSecretStateAtIndex(int index, int value)
 {
     assert((index >= 0) && index <= (GF_MAX_SECRETS));
-    return this->m_secretsTriggerMap[index];
+    global_gameflow.m_secretsTriggerMap[index] = (char)value; ///@FIXME should not cast.
 }
 
-void CGameflow::setSecretStateAtIndex(int index, int value)
+
+uint8_t Gameflow_GetCurrentGameID()
+{
+    return global_gameflow.m_currentGameID;
+}
+
+
+uint8_t Gameflow_GetCurrentLevelID()
+{
+    return global_gameflow.m_currentLevelID;
+}
+
+
+int Gameflow_GetSecretStateAtIndex(int index)
 {
     assert((index >= 0) && index <= (GF_MAX_SECRETS));
-    this->m_secretsTriggerMap[index] = (char)value; ///@FIXME should not cast.
-}
-
-void CGameflow::setCurrentGameID(int gameID)
-{
-    assert(gameID >= 0 && gameID <= GAME_5);
-    this->m_currentGameID = gameID;
-}
-
-void CGameflow::setCurrentLevelID(int levelID)
-{
-    assert(levelID >= 0);///@TODO pull max level ID from script?
-    this->m_currentLevelID = levelID;
+    return global_gameflow.m_secretsTriggerMap[index];
 }

@@ -3,8 +3,37 @@
 #include <stdint.h>
 
 #include "inventory.h"
+#include "skeletal_model.h"
 #include "engine.h"
 #include "world.h"
+
+
+base_item_p BaseItem_Create(struct skeletal_model_s *model, uint32_t id)
+{
+    base_item_p item = (base_item_p)malloc(sizeof(base_item_t));
+
+    item->bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
+    SSBoneFrame_CreateFromModel(item->bf, model);
+    item->id = id;
+    item->world_model_id = model->id;
+    item->type = 0;
+    item->count = 0;
+    item->name[0] = 0;
+
+    return item;
+}
+
+
+void BaseItem_Delete(base_item_p item)
+{
+    if(item)
+    {
+        SSBoneFrame_Clear(item->bf);
+        free(item->bf);
+        free(item);
+    }
+}
+
 
 int32_t Inventory_AddItem(struct inventory_node_s **root, uint32_t item_id, int32_t count)// returns items count after in the function's end
 {

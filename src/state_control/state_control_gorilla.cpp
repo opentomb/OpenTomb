@@ -140,7 +140,7 @@ int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     }
                     Character_CheckClimbability(ent, climb, climb_from, climb_to);
                     if(  climb->edge_hit                                                                &&
-                        (climb->next_z_space >= ent->character->Height)    &&
+                        (climb->next_z_space >= ent->character->height)    &&
                         (pos[2] + ent->character->max_step_up_height < climb->edge_point[2]))
                     {
                         if(pos[2] + 800.0f >= climb->edge_point[2])

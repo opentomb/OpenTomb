@@ -11,7 +11,6 @@ extern "C" {
 #include "core/system.h"
 #include "core/console.h"
 #include "core/vmath.h"
-#include "core/redblack.h"
 #include "core/polygon.h"
 #include "core/obb.h"
 #include "render/camera.h"
@@ -35,8 +34,7 @@ extern "C" {
 
 extern lua_State *engine_lua;
 
-void Save_EntityTree(FILE **f, RedBlackNode_p n);
-void Save_Entity(FILE **f, entity_p ent);
+int Save_Entity(entity_p ent, void *data);
 
 int lua_mlook(lua_State * lua)
 {
@@ -168,155 +166,148 @@ int Game_Load(const char* name)
     return 1;
 }
 
-
-void Save_EntityTree(FILE **f, RedBlackNode_p n)
-{
-    if(n->left != NULL)
-    {
-        Save_EntityTree(f, n->left);
-    }
-    Save_Entity(f, (entity_p)n->data);
-    if(n->right != NULL)
-    {
-        Save_EntityTree(f, n->right);
-    }
-}
-
 /**
  * Entity save function, based on engine lua scripts;
  */
-void Save_Entity(FILE **f, entity_p ent)
+int Save_Entity(entity_p ent, void *data)
 {
-    if(ent == NULL)
+    if(ent)
     {
-        return;
-    }
-
-    if(ent->type_flags & ENTITY_TYPE_SPAWNED)
-    {
-        uint32_t room_id = (ent->self->room)?(ent->self->room->id):(0xFFFFFFFF);
-        fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->bf->animations.model->id, room_id,
-                ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2],
-                ent->angles[0], ent->angles[1], ent->angles[2], ent->id);
-    }
-    else
-    {
-        fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id,
-                ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2],
-                ent->angles[0], ent->angles[1], ent->angles[2]);
-    }
-
-    if(ent->bf->animations.model && ent->character)
-    {
-        fprintf(*f, "\nsetEntityBaseAnimModel(%d, %d);", ent->id, ent->bf->animations.model->id);
-    }
-
-    if(ent->activation_point)
-    {
-        activation_point_p ap = ent->activation_point;
-        fprintf(*f, "\nsetEntityActivationOffset(%d, %.4f, %.4f, %.4f, %.4f);", ent->id, ap->offset[0], ap->offset[1], ap->offset[2], ap->offset[3]);
-        fprintf(*f, "\nsetEntityActivationDirection(%d, %.4f, %.4f, %.4f, %.4f);", ent->id, ap->direction[0], ap->direction[1], ap->direction[2], ap->direction[3]);
-    }
-
-    for(uint16_t i = 0; i < ent->bf->bone_tag_count; ++i)
-    {
-        if(ent->bf->bone_tags[i].is_hidden)
+        FILE **f = (FILE**)data;
+        if(ent->type_flags & ENTITY_TYPE_SPAWNED)
         {
-            fprintf(*f, "\nsetEntityBoneVisibility(%d, %d, false);", ent->id, i);
-        }
-    }
-
-    char save_buff[32768] = {0};
-    if(Script_GetEntitySaveData(engine_lua, ent->id, save_buff, sizeof(save_buff)) > 0)
-    {
-        fprintf(*f, "\n%s", save_buff);
-    }
-
-    ss_animation_p ss_anim = &ent->bf->animations;
-    for(; ss_anim->next; ss_anim = ss_anim->next);
-
-    for(; ss_anim; ss_anim = ss_anim->prev)
-    {
-        if(ss_anim->type != ANIM_TYPE_BASE)
-        {
-            if(ss_anim->model)
-            {
-                fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->model->id);
-            }
-            else
-            {
-                fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, nil);", ent->id, ss_anim->type);
-            }
-        }
-    }
-
-    fprintf(*f, "\nremoveAllItems(%d);", ent->id);
-    for(inventory_node_p i = ent->inventory; i; i = i->next)
-    {
-        fprintf(*f, "\naddItem(%d, %d, %d);", ent->id, i->id, i->count);
-    }
-
-    if(ent->character)
-    {
-        if(ent->character->target_id != ENTITY_ID_NONE)
-        {
-            fprintf(*f, "\nsetCharacterTarget(%d, %d);", ent->id, ent->character->target_id);
+            uint32_t room_id = (ent->self->room) ? (ent->self->room->id) : (0xFFFFFFFF);
+            fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->bf->animations.model->id, room_id,
+                    ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2],
+                    ent->angles[0], ent->angles[1], ent->angles[2], ent->id);
         }
         else
         {
-            fprintf(*f, "\nsetCharacterTarget(%d);", ent->id);
+            fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id,
+                    ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2],
+                    ent->angles[0], ent->angles[1], ent->angles[2]);
         }
 
-        fprintf(*f, "\nsetCharacterWeaponModel(%d, %d, %d);", ent->id, ent->character->current_weapon, ent->character->weapon_current_state);
-        for(int i = 0; i < PARAM_LASTINDEX; i++)
+        if(ent->bf->animations.model && ent->character)
         {
-            fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
+            fprintf(*f, "\nsetEntityBaseAnimModel(%d, %d);", ent->id, ent->bf->animations.model->id);
         }
-    }
 
-    fprintf(*f, "\nsetEntityLinearSpeed(%d, %.2f);", ent->id, ent->linear_speed);
-    fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed[0], ent->speed[1], ent->speed[2]);
-
-    fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
-    fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d, %d);", ent->id, ent->self->collision_group, ent->self->collision_shape, ent->self->collision_mask);
-    fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
-    fprintf(*f, "\nsetEntityTimer(%d, %.3f);", ent->id, ent->timer);
-
-    if(ent->self->room != NULL)
-    {
-        fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id, ent->self->room->id, ent->move_type, ent->dir_flag);
-    }
-    else
-    {
-        fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id, ent->move_type, ent->dir_flag);
-    }
-
-    for(ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
-    {
-        if(ss_anim->model)
+        if(ent->activation_point)
         {
-            fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_animation, ss_anim->next_frame, ss_anim->current_animation, ss_anim->current_frame);
-            fprintf(*f, "\nsetEntityAnimStateHeavy(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state_heavy);
-            fprintf(*f, "\nsetEntityAnimState(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state);
-            fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %d, %.2f, %.2f, %.2f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type, ss_anim->targeting_bone,
-                ss_anim->target[0], ss_anim->target[1], ss_anim->target[2],
-                ss_anim->bone_direction[0], ss_anim->bone_direction[1], ss_anim->bone_direction[2]);
-            fprintf(*f, "\nentitySSAnimSetAxisMod(%d, %d, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
-                ss_anim->targeting_axis_mod[0], ss_anim->targeting_axis_mod[1], ss_anim->targeting_axis_mod[2]);
-            fprintf(*f, "\nentitySSAnimSetTargetingLimit(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
-                ss_anim->targeting_limit[0], ss_anim->targeting_limit[1], ss_anim->targeting_limit[2], ss_anim->targeting_limit[3]);
-            fprintf(*f, "\nentitySSAnimSetCurrentRotation(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
-                ss_anim->current_mod[0], ss_anim->current_mod[1], ss_anim->current_mod[2], ss_anim->current_mod[3]);
-            fprintf(*f, "\nentitySSAnimSetExtFlags(%d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled,
-                ss_anim->anim_ext_flags, ss_anim->targeting_flags);
-            fprintf(*f, "\nentitySSAnimSetEnable(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled);
+            activation_point_p ap = ent->activation_point;
+            fprintf(*f, "\nsetEntityActivationOffset(%d, %.4f, %.4f, %.4f, %.4f);", ent->id, ap->offset[0], ap->offset[1], ap->offset[2], ap->offset[3]);
+            fprintf(*f, "\nsetEntityActivationDirection(%d, %.4f, %.4f, %.4f, %.4f);", ent->id, ap->direction[0], ap->direction[1], ap->direction[2], ap->direction[3]);
+        }
+
+        for(uint16_t i = 0; i < ent->bf->bone_tag_count; ++i)
+        {
+            if(ent->bf->bone_tags[i].is_hidden)
+            {
+                fprintf(*f, "\nsetEntityBoneVisibility(%d, %d, false);", ent->id, i);
+            }
+        }
+
+        char save_buff[32768] = {0};
+        if(Script_GetEntitySaveData(engine_lua, ent->id, save_buff, sizeof(save_buff)) > 0)
+        {
+            fprintf(*f, "\n%s", save_buff);
+        }
+
+        ss_animation_p ss_anim = &ent->bf->animations;
+        for(; ss_anim->next; ss_anim = ss_anim->next);
+
+        for(; ss_anim; ss_anim = ss_anim->prev)
+        {
+            if(ss_anim->type != ANIM_TYPE_BASE)
+            {
+                if(ss_anim->model)
+                {
+                    fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->model->id);
+                }
+                else
+                {
+                    fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, nil);", ent->id, ss_anim->type);
+                }
+            }
+        }
+
+        fprintf(*f, "\nremoveAllItems(%d);", ent->id);
+        for(inventory_node_p i = ent->inventory; i; i = i->next)
+        {
+            fprintf(*f, "\naddItem(%d, %d, %d);", ent->id, i->id, i->count);
+        }
+
+        if(ent->character)
+        {
+            fprintf(*f, "\nsetCharacterClimbPoint(%d, %.2f, %.2f, %.2f);", ent->id,
+                    ent->character->climb.point[0], ent->character->climb.point[1], ent->character->climb.point[2]);
+            if(ent->character->target_id != ENTITY_ID_NONE)
+            {
+                fprintf(*f, "\nsetCharacterTarget(%d, %d);", ent->id, ent->character->target_id);
+            }
+            else
+            {
+                fprintf(*f, "\nsetCharacterTarget(%d);", ent->id);
+            }
+
+            fprintf(*f, "\nsetCharacterWeaponModel(%d, %d, %d);", ent->id, ent->character->current_weapon, ent->character->weapon_current_state);
+            for(int i = 0; i < PARAM_LASTINDEX; i++)
+            {
+                fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
+            }
+        }
+
+        fprintf(*f, "\nsetEntityLinearSpeed(%d, %.2f);", ent->id, ent->linear_speed);
+        fprintf(*f, "\nsetEntitySpeed(%d, %.2f, %.2f, %.2f);", ent->id, ent->speed[0], ent->speed[1], ent->speed[2]);
+
+        fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
+        fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d, %d);", ent->id, ent->self->collision_group, ent->self->collision_shape, ent->self->collision_mask);
+        fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
+        fprintf(*f, "\nsetEntityTimer(%d, %.3f);", ent->id, ent->timer);
+
+        if(ent->self->room != NULL)
+        {
+            fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id, ent->self->room->id, ent->move_type, ent->dir_flag);
+        }
+        else
+        {
+            fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id, ent->move_type, ent->dir_flag);
+        }
+
+        for(ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
+        {
+            if(ss_anim->model)
+            {
+                fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_animation, ss_anim->next_frame, ss_anim->current_animation, ss_anim->current_frame);
+                fprintf(*f, "\nsetEntityAnimStateHeavy(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state_heavy);
+                fprintf(*f, "\nsetEntityAnimState(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state);
+                fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %d, %.2f, %.2f, %.2f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type, ss_anim->targeting_bone,
+                    ss_anim->target[0], ss_anim->target[1], ss_anim->target[2],
+                    ss_anim->bone_direction[0], ss_anim->bone_direction[1], ss_anim->bone_direction[2]);
+                fprintf(*f, "\nentitySSAnimSetAxisMod(%d, %d, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
+                    ss_anim->targeting_axis_mod[0], ss_anim->targeting_axis_mod[1], ss_anim->targeting_axis_mod[2]);
+                fprintf(*f, "\nentitySSAnimSetTargetingLimit(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
+                    ss_anim->targeting_limit[0], ss_anim->targeting_limit[1], ss_anim->targeting_limit[2], ss_anim->targeting_limit[3]);
+                fprintf(*f, "\nentitySSAnimSetCurrentRotation(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
+                    ss_anim->current_mod[0], ss_anim->current_mod[1], ss_anim->current_mod[2], ss_anim->current_mod[3]);
+                fprintf(*f, "\nentitySSAnimSetExtFlags(%d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled,
+                    ss_anim->anim_ext_flags, ss_anim->targeting_flags);
+                fprintf(*f, "\nentitySSAnimSetEnable(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled);
+            }
+        }
+
+        if(ent->no_fix_all)
+        {
+            fprintf(*f, "\nnoFixEntityCollision(%d, true);", ent->id);
+        }
+        if(ent->no_move)
+        {
+            fprintf(*f, "\nnoEntityMove(%d, true);", ent->id);
         }
     }
 
-    if(ent->no_fix_all)
-    {
-        fprintf(*f, "\nnoFixEntityCollision(%d);", ent->id);
-    }
+    return 0;
 }
 
 /**
@@ -356,7 +347,7 @@ int Game_Save(const char* name)
         return 0;
     }
 
-    fprintf(f, "loadMap(\"%s\", %d, %d);\n", gameflow.getCurrentLevelPathLocal(), gameflow.getCurrentGameID(), gameflow.getCurrentLevelID());
+    fprintf(f, "loadMap(\"%s\", %d, %d);\n", Gameflow_GetCurrentLevelPathLocal(), Gameflow_GetCurrentGameID(), Gameflow_GetCurrentLevelID());
 
     // Save flipmap and flipped room states.
     uint8_t *flip_map;
@@ -379,13 +370,8 @@ int Game_Save(const char* name)
         fprintf(f, "\n%s\n", save_buffer);
     }
 
-    Save_Entity(&f, World_GetPlayer());    // Save Lara.
+    World_IterateAllEntities(&Save_Entity, &f);
 
-    RedBlackNode_p root = World_GetEntityTreeRoot();
-    if(root)
-    {
-        Save_EntityTree(&f, root);
-    }
     fclose(f);
 
     return 1;
@@ -558,9 +544,8 @@ void Game_ApplyControls(struct entity_s *ent)
 }
 
 
-void Game_UpdateAllEntities(struct RedBlackNode_s *x)
+int Game_UpdateEntity(entity_p ent, void *data)
 {
-    entity_p ent = (entity_p)x->data;
     if(ent && (ent != World_GetPlayer()) && (!ent->self->room || (ent->self->room == ent->self->room->real_room)))
     {
         if(ent->character)
@@ -577,14 +562,7 @@ void Game_UpdateAllEntities(struct RedBlackNode_s *x)
         Entity_UpdateRoomPos(ent);
     }
 
-    if(x->left != NULL)
-    {
-        Game_UpdateAllEntities(x->left);
-    }
-    if(x->right != NULL)
-    {
-        Game_UpdateAllEntities(x->right);
-    }
+    return 0;
 }
 
 
@@ -687,10 +665,7 @@ void Game_Frame(float time)
         }
     }
 
-    if(World_GetEntityTreeRoot())
-    {
-        Game_UpdateAllEntities(World_GetEntityTreeRoot());
-    }
+    World_IterateAllEntities(Game_UpdateEntity, NULL);
 
     Physics_StepSimulation(time);
 
@@ -741,7 +716,7 @@ void Game_Prepare()
 
     // Set gameflow parameters to default.
     // Reset secret trigger map.
-    gameflow.resetSecrets();///@UNIMPLEMENTED We should save the secrets to a save file prior to resetting!
+    Gameflow_ResetSecrets();///@UNIMPLEMENTED We should save the secrets to a save file prior to resetting!
 }
 
 

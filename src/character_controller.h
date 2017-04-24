@@ -84,7 +84,6 @@
 #define CHARACTER_USE_COMPLEX_COLLISION         (1)
 
 // Lara's character behavior constants
-#define DEFAULT_MAX_MOVE_ITERATIONS             (3)                             ///@FIXME: magic
 #define DEFAULT_MIN_STEP_UP_HEIGHT              (128.0)                         ///@FIXME: check original
 #define DEFAULT_MAX_STEP_UP_HEIGHT              (256.0 + 32.0)                  ///@FIXME: check original
 #define DEFAULT_FALL_DOWN_HEIGHT                (320.0)                         ///@FIXME: check original
@@ -272,6 +271,10 @@ typedef struct character_s
 
     uint16_t                    bone_head;
     uint16_t                    bone_torso;
+    uint16_t                    bone_l_hand_start;
+    uint16_t                    bone_l_hand_end;
+    uint16_t                    bone_r_hand_start;
+    uint16_t                    bone_r_hand_end;
     int16_t                     current_weapon;
     int16_t                     weapon_current_state;
 
@@ -288,7 +291,7 @@ typedef struct character_s
 
     float                       climb_r;                // climbing sensor radius
     float                       forvard_size;           // offset for climbing calculation
-    float                       Height;                 // base character height
+    float                       height;                 // base character height
     float                       wade_depth;             // water depth that enable wade walk
     float                       swim_depth;             // depth offset for starting to swim
 
@@ -302,7 +305,7 @@ typedef struct character_s
 }character_t, *character_p;
 
 void Character_Create(struct entity_s *ent);
-void Character_Clean(struct entity_s *ent);
+void Character_Delete(struct entity_s *ent);
 void Character_Update(struct entity_s *ent);
 
 void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);
