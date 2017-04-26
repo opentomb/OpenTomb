@@ -789,19 +789,16 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
         ///@DO EFFECTS
         for(animation_effect_p effect = next_af->effects; effect; effect = effect->next)
         {
-            if(ss_anim->next_frame != effect->frame)
+            if(ss_anim->next_frame == effect->frame)
             {
-                continue;
+                do_skip_frame |= Entity_DoFlipEffect(entity, effect->id, effect->data);
             }
-
-            do_skip_frame |= Entity_DoFlipEffect(entity, effect->id, effect->data);
         }
 
         if(do_skip_frame)
         {
-            Anim_SetNextFrame(ss_anim, ss_anim->period);            // skip one frame
+            Anim_SetNextFrame(ss_anim, ss_anim->period);    // skip one frame
             Entity_UpdateTransform(entity);
-            Entity_UpdateRigidBody(entity, 1);
             Entity_DoAnimCommands(entity, ss_anim);
         }
     }
