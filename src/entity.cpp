@@ -452,6 +452,7 @@ void Entity_GhostUpdate(struct entity_s *ent)
 int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float ent_move[3], int16_t filter)
 {
     int ret = 0;
+    collision_node_p cn = NULL;
 
     vec3_set_zero(reaction);
     if(Physics_IsGhostsInited(ent->physics) && (Physics_GetBodiesCount(ent->physics) == ent->bf->bone_tag_count))
@@ -517,8 +518,10 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             {
                 vec3_copy(tr + 12, curr);
                 Physics_SetGhostWorldTransform(ent->physics, tr, m);
-                if(Physics_GetGhostPenetrationFixVector(ent->physics, m, filter, tmp))
+                cn = Physics_GetGhostCurrentCollision(ent->physics, m, filter);
+                for(; cn && cn->obj; cn = cn->next)
                 {
+                    vec3_mul_scalar(tmp, cn->penetration, cn->penetration[3]);
                     vec3_add_to(ent->transform + 12, tmp);
                     vec3_add_to(curr, tmp);
                     vec3_add_to(from, tmp);
@@ -562,8 +565,10 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
             {
                 vec3_copy(tr + 12, curr);
                 Physics_SetGhostWorldTransform(ent->physics, tr, 0);
-                if(Physics_GetGhostPenetrationFixVector(ent->physics, 0, filter, tmp))
+                cn = Physics_GetGhostCurrentCollision(ent->physics, 0, filter);
+                for(; cn && cn->obj; cn = cn->next)
                 {
+                    vec3_mul_scalar(tmp, cn->penetration, cn->penetration[3]);
                     vec3_add_to(ent->transform + 12, tmp);
                     vec3_add_to(curr, tmp);
                     vec3_add_to(from, tmp);
@@ -722,20 +727,23 @@ int  Entity_GetSubstanceState(entity_p entity)
     }
 }
 
-
+///@TODO: add here duplicated callbacks filtering!
 void Entity_CheckCollisionCallbacks(entity_p ent)
 {
-    collision_node_p cn = Physics_GetCurrentCollisions(ent->physics, COLLISION_GROUP_TRIGGERS);
-    for(; cn && cn->obj; cn = cn->next)
+    for(int i = Physics_GetBodiesCount(ent->physics) - 1; i >= 0; --i)
     {
-        // do callbacks here:
-        if(cn->obj->object_type == OBJECT_ENTITY)
+        collision_node_p cn = Physics_GetGhostCurrentCollision(ent->physics, i, COLLISION_GROUP_TRIGGERS);
+        for(; cn && cn->obj; cn = cn->next)
         {
-            entity_p activator = (entity_p)cn->obj->object;
-            if(activator->callback_flags & ENTITY_CALLBACK_COLLISION)
+            // do callbacks here:
+            if(cn->obj->object_type == OBJECT_ENTITY)
             {
-                // Activator and entity IDs are swapped in case of collision callback.
-                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->id, ent->id);
+                entity_p activator = (entity_p)cn->obj->object;
+                if(activator->callback_flags & ENTITY_CALLBACK_COLLISION)
+                {
+                    // Activator and entity IDs are swapped in case of collision callback.
+                    Script_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->id, ent->id);
+                }
             }
         }
     }
