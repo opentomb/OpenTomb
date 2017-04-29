@@ -29,15 +29,16 @@ obb_p OBB_Create()
 }
 
 
-void OBB_Clear(obb_p obb)
+void OBB_Delete(obb_p obb)
 {
-    if(obb != NULL)
+    if(obb)
     {
         for(int i = 0; i < 6; i++)
         {
             Polygon_Clear(obb->polygons + i);
             Polygon_Clear(obb->base_polygons + i);
         }
+        free(obb);
     }
 }
 

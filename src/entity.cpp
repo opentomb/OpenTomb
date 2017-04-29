@@ -108,8 +108,7 @@ void Entity_Delete(entity_p entity)
 
         if(entity->obb)
         {
-            OBB_Clear(entity->obb);
-            free(entity->obb);
+            OBB_Delete(entity->obb);
             entity->obb = NULL;
         }
 

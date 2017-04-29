@@ -44,8 +44,7 @@ void Room_Clear(struct room_s *room)
                 Physics_DeleteObject(room->content->static_mesh[i].physics_body);
                 room->content->static_mesh[i].physics_body = NULL;
 
-                OBB_Clear(room->content->static_mesh[i].obb);
-                free(room->content->static_mesh[i].obb);
+                OBB_Delete(room->content->static_mesh[i].obb);
                 room->content->static_mesh[i].obb = NULL;
                 if(room->content->static_mesh[i].self)
                 {
@@ -146,8 +145,7 @@ void Room_Clear(struct room_s *room)
 
     if(room->obb)
     {
-        OBB_Clear(room->obb);
-        free(room->obb);
+        OBB_Delete(room->obb);
         room->obb = NULL;
     }
 

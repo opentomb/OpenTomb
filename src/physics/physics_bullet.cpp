@@ -232,7 +232,11 @@ typedef struct physics_data_s
 class CBulletDebugDrawer : public btIDebugDraw
 {
 public:
-    CBulletDebugDrawer(){}
+    CBulletDebugDrawer() :
+    m_debugMode(0)
+    {
+    }
+
    ~CBulletDebugDrawer(){}
 
     virtual void   drawLine(const btVector3& from,const btVector3& to,const btVector3& color) override
@@ -785,22 +789,19 @@ btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max)
     OBB_Rebuild(obb, bb_min, bb_max);
     for(uint32_t i = 0; i < 6; i++, p++)
     {
-        if(Polygon_IsBroken(p))
+        if(!Polygon_IsBroken(p))
         {
-            continue;
+            for(uint32_t j = 1; j + 1 < p->vertex_count; j++)
+            {
+                vec3_copy(v0.m_floats, p->vertices[j + 1].position);
+                vec3_copy(v1.m_floats, p->vertices[j].position);
+                vec3_copy(v2.m_floats, p->vertices[0].position);
+                trimesh->addTriangle(v0, v1, v2, true);
+            }
+            cnt ++;
         }
-        for(uint32_t j = 1; j + 1 < p->vertex_count; j++)
-        {
-            vec3_copy(v0.m_floats, p->vertices[j + 1].position);
-            vec3_copy(v1.m_floats, p->vertices[j].position);
-            vec3_copy(v2.m_floats, p->vertices[0].position);
-            trimesh->addTriangle(v0, v1, v2, true);
-        }
-        cnt ++;
     }
-
-    OBB_Clear(obb);
-    free(obb);
+    OBB_Delete(obb);
 
     if(cnt == 0)
     {
@@ -825,19 +826,17 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
     p = mesh->polygons;
     for(uint32_t i = 0; i < mesh->polygons_count; i++, p++)
     {
-        if(Polygon_IsBroken(p))
+        if(!Polygon_IsBroken(p))
         {
-            continue;
+            for(uint32_t j = 1; j + 1 < p->vertex_count; j++)
+            {
+                vec3_copy(v0.m_floats, p->vertices[j + 1].position);
+                vec3_copy(v1.m_floats, p->vertices[j].position);
+                vec3_copy(v2.m_floats, p->vertices[0].position);
+                trimesh->addTriangle(v0, v1, v2, true);
+            }
+            cnt ++;
         }
-
-        for(uint32_t j = 1; j + 1 < p->vertex_count; j++)
-        {
-            vec3_copy(v0.m_floats, p->vertices[j + 1].position);
-            vec3_copy(v1.m_floats, p->vertices[j].position);
-            vec3_copy(v2.m_floats, p->vertices[0].position);
-            trimesh->addTriangle(v0, v1, v2, true);
-        }
-        cnt ++;
     }
 
     if(cnt == 0)

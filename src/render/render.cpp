@@ -1366,7 +1366,7 @@ CRenderDebugDrawer::~CRenderDebugDrawer()
         qglDeleteBuffersARB(1, &m_gl_vbo);
         m_gl_vbo = 0;
     }
-    OBB_Clear(m_obb);
+    OBB_Delete(m_obb);
     m_obb = NULL;
 }
 

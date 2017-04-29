@@ -36,7 +36,7 @@ typedef struct obb_s
 } obb_t, *obb_p;
 
 obb_p OBB_Create();
-void OBB_Clear(obb_p bv);
+void OBB_Delete(obb_p bv);
 
 void OBB_Rebuild(obb_p obb, float bb_min[3], float bb_max[3]);
 void OBB_Transform(obb_p obb);
