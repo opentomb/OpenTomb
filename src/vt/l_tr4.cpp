@@ -20,6 +20,7 @@
  */
 
 #include <SDL2/SDL_endian.h>
+
 #include <zlib.h>
 #include "l_main.h"
 #include "tr_versions.h"
@@ -276,7 +277,9 @@ void TR_Level::read_tr4_mesh(SDL_RWops * const src, tr4_mesh_t & mesh)
     int i;
 
     read_tr_vertex16(src, mesh.centre);
-    mesh.collision_size = read_bit32(src);
+	mesh.collision_size = read_bit16(src);
+	mesh.flags = read_bitu8(src);
+	mesh.dummy = read_bitu8(src);
 
     mesh.num_vertices = read_bit16(src);
     mesh.vertices = (tr5_vertex_t*)malloc(mesh.num_vertices * sizeof(tr5_vertex_t));
