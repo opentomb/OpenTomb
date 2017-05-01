@@ -23,6 +23,7 @@ typedef struct collision_node_s
     uint16_t                    part_self;
     struct engine_container_s  *obj;
     struct collision_node_s    *next;
+    float                       penetration[4];  // x, y, z, dist
 }collision_node_t, *collision_node_p;
 
 
@@ -76,7 +77,7 @@ void Physics_SetBodyWorldTransform(struct physics_data_s *physics, float tr[16],
 void Physics_GetGhostWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index);
 void Physics_SetGhostWorldTransform(struct physics_data_s *physics, float tr[16], uint16_t index);
 ghost_shape_p Physics_GetGhostShapeInfo(struct physics_data_s *physics, uint16_t index);
-int  Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_t index, int16_t filter, float correction[3]);
+collision_node_p Physics_GetGhostCurrentCollision(struct physics_data_s *physics, uint16_t index, int16_t filter);
 
 // Bullet entity rigid body generating.
 void Physics_GenRigidBody(struct physics_data_s *physics, struct ss_bone_frame_s *bf);
@@ -97,7 +98,6 @@ void Physics_SetCollisionScale(struct physics_data_s *physics, float scaling[3])
 void Physics_SetBodyMass(struct physics_data_s *physics, float mass, uint16_t index);
 void Physics_PushBody(struct physics_data_s *physics, float speed[3], uint16_t index);
 void Physics_SetLinearFactor(struct physics_data_s *physics, float factor[3], uint16_t index);
-struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics, int16_t filter);
 
 
 /* Ragdoll interface */

@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
@@ -15,6 +16,7 @@
 #include "../core/gl_font.h"
 #include "../core/gl_text.h"
 #include "../core/console.h"
+#include "../core/vmath.h"
 #include "../core/obb.h"
 #include "../render/render.h"
 #include "../script/script.h"
@@ -230,7 +232,11 @@ typedef struct physics_data_s
 class CBulletDebugDrawer : public btIDebugDraw
 {
 public:
-    CBulletDebugDrawer(){}
+    CBulletDebugDrawer() :
+    m_debugMode(0)
+    {
+    }
+
    ~CBulletDebugDrawer(){}
 
     virtual void   drawLine(const btVector3& from,const btVector3& to,const btVector3& color) override
@@ -683,7 +689,7 @@ ghost_shape_p Physics_GetGhostShapeInfo(struct physics_data_s *physics, uint16_t
 /**
  * It is from bullet_character_controller
  */
-int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_t index, int16_t filter, float correction[3])
+collision_node_p Physics_GetGhostCurrentCollision(struct physics_data_s *physics, uint16_t index, int16_t filter)
 {
     // Here we must refresh the overlapping paircache as the penetrating movement itself or the
     // previous recovery iteration might have used setWorldTransform and pushed us into an object
@@ -693,19 +699,18 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
     // Do this by calling the broadphase's setAabb with the moved AABB, this will update the broadphase
     // paircache and the ghostobject's internal paircache at the same time.    /BW
 
-    int ret = 0;
+    collision_node_p *cn = &(physics->collision_track);
     btPairCachingGhostObject *ghost = physics->ghost_objects[index];
     if(ghost && ghost->getBroadphaseHandle())
     {
         int num_pairs, manifolds_size;
         btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
-        btVector3 aabb_min, aabb_max, t;
+        btVector3 aabb_min, aabb_max;
 
         ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
         bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
         bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
 
-        vec3_set_zero(correction);
         num_pairs = pairArray.size();
         for(int i = 0; i < num_pairs; i++)
         {
@@ -739,9 +744,21 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
 
                             if(dist < 0.0)
                             {
-                                t = pt.m_normalWorldOnB * dist * directionSign;
-                                vec3_add(correction, correction, t.m_floats)
-                                ret++;
+                                if(*cn == NULL)
+                                {
+                                    *cn = (collision_node_p)malloc(sizeof(collision_node_t));
+                                    (*cn)->next = NULL;
+                                }
+
+                                (*cn)->obj = cont;
+                                (*cn)->part_from = obj->getUserIndex();
+                                (*cn)->part_self = i;
+                                (*cn)->penetration[0] = pt.m_normalWorldOnB[0];
+                                (*cn)->penetration[1] = pt.m_normalWorldOnB[1];
+                                (*cn)->penetration[2] = pt.m_normalWorldOnB[2];
+                                (*cn)->penetration[3] = dist * directionSign;
+
+                                cn = &((*cn)->next);
                             }
                         }
                     }
@@ -751,7 +768,12 @@ int Physics_GetGhostPenetrationFixVector(struct physics_data_s *physics, uint16_
         physics->manifoldArray->clear();
     }
 
-    return ret;
+    if(*cn)
+    {
+        (*cn)->obj = NULL;
+    }
+
+    return physics->collision_track;
 }
 
 
@@ -767,22 +789,19 @@ btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max)
     OBB_Rebuild(obb, bb_min, bb_max);
     for(uint32_t i = 0; i < 6; i++, p++)
     {
-        if(Polygon_IsBroken(p))
+        if(!Polygon_IsBroken(p))
         {
-            continue;
+            for(uint32_t j = 1; j + 1 < p->vertex_count; j++)
+            {
+                vec3_copy(v0.m_floats, p->vertices[j + 1].position);
+                vec3_copy(v1.m_floats, p->vertices[j].position);
+                vec3_copy(v2.m_floats, p->vertices[0].position);
+                trimesh->addTriangle(v0, v1, v2, true);
+            }
+            cnt ++;
         }
-        for(uint32_t j = 1; j + 1 < p->vertex_count; j++)
-        {
-            vec3_copy(v0.m_floats, p->vertices[j + 1].position);
-            vec3_copy(v1.m_floats, p->vertices[j].position);
-            vec3_copy(v2.m_floats, p->vertices[0].position);
-            trimesh->addTriangle(v0, v1, v2, true);
-        }
-        cnt ++;
     }
-
-    OBB_Clear(obb);
-    free(obb);
+    OBB_Delete(obb);
 
     if(cnt == 0)
     {
@@ -807,19 +826,17 @@ btCollisionShape *BT_CSfromMesh(struct base_mesh_s *mesh, bool useCompression, b
     p = mesh->polygons;
     for(uint32_t i = 0; i < mesh->polygons_count; i++, p++)
     {
-        if(Polygon_IsBroken(p))
+        if(!Polygon_IsBroken(p))
         {
-            continue;
+            for(uint32_t j = 1; j + 1 < p->vertex_count; j++)
+            {
+                vec3_copy(v0.m_floats, p->vertices[j + 1].position);
+                vec3_copy(v1.m_floats, p->vertices[j].position);
+                vec3_copy(v2.m_floats, p->vertices[0].position);
+                trimesh->addTriangle(v0, v1, v2, true);
+            }
+            cnt ++;
         }
-
-        for(uint32_t j = 1; j + 1 < p->vertex_count; j++)
-        {
-            vec3_copy(v0.m_floats, p->vertices[j + 1].position);
-            vec3_copy(v1.m_floats, p->vertices[j].position);
-            vec3_copy(v2.m_floats, p->vertices[0].position);
-            trimesh->addTriangle(v0, v1, v2, true);
-        }
-        cnt ++;
     }
 
     if(cnt == 0)
@@ -1714,77 +1731,6 @@ void Physics_SetLinearFactor(struct physics_data_s *physics, float factor[3], ui
     physics->bt_body[index]->setLinearFactor(btVector3(factor[0], factor[1], factor[2]));
 }
 
-
-struct collision_node_s *Physics_GetCurrentCollisions(struct physics_data_s *physics, int16_t filter)
-{
-    collision_node_p *cn = &(physics->collision_track);
-    if(physics->ghost_objects)
-    {
-        for(uint32_t i = 0; i < physics->objects_count; i++)
-        {
-            btPairCachingGhostObject *ghost = physics->ghost_objects[i];
-            if(ghost && ghost->getBroadphaseHandle())
-            {
-                btBroadphasePairArray &pairArray = ghost->getOverlappingPairCache()->getOverlappingPairArray();
-                btVector3 aabb_min, aabb_max;
-
-                ghost->getCollisionShape()->getAabb(ghost->getWorldTransform(), aabb_min, aabb_max);
-                bt_engine_dynamicsWorld->getBroadphase()->setAabb(ghost->getBroadphaseHandle(), aabb_min, aabb_max, bt_engine_dynamicsWorld->getDispatcher());
-                bt_engine_dynamicsWorld->getDispatcher()->dispatchAllCollisionPairs(ghost->getOverlappingPairCache(), bt_engine_dynamicsWorld->getDispatchInfo(), bt_engine_dynamicsWorld->getDispatcher());
-
-                int num_pairs = pairArray.size();
-                for(int j = 0; j < num_pairs; j++)
-                {
-                    btBroadphasePair *collisionPair = &pairArray[j];
-                    if(collisionPair && collisionPair->m_algorithm)
-                    {
-                        physics->manifoldArray->clear();
-                        collisionPair->m_algorithm->getAllContactManifolds(*physics->manifoldArray);
-                        for(int k = 0; k < physics->manifoldArray->size(); k++)
-                        {
-                            btPersistentManifold* manifold = (*physics->manifoldArray)[k];
-                            for(int c = 0; c < manifold->getNumContacts(); c++)         // c++ in C++
-                            {
-                                //const btManifoldPoint &pt = manifold->getContactPoint(c);
-                                if(manifold->getContactPoint(c).getDistance() < 0.0)
-                                {
-                                    btCollisionObject *obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody0();
-                                    if(obj == ghost)
-                                    {
-                                        obj = (btCollisionObject*)(*physics->manifoldArray)[k]->getBody1();
-                                    }
-
-                                    engine_container_p cont = (engine_container_p)obj->getUserPointer();
-                                    if(cont && (cont->collision_group & filter))
-                                    {
-                                        if(*cn == NULL)
-                                        {
-                                            *cn = (collision_node_p)malloc(sizeof(collision_node_t));
-                                            (*cn)->next = NULL;
-                                        }
-                                        (*cn)->obj = cont;
-                                        (*cn)->part_from = obj->getUserIndex();
-                                        (*cn)->part_self = i;
-                                        cn = &((*cn)->next);
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        physics->manifoldArray->clear();
-    }
-
-    if(*cn)
-    {
-        (*cn)->obj = NULL;
-    }
-
-    return physics->collision_track;
-}
 
 /* *****************************************************************************
  * ************************  HAIR DATA  ****************************************
