@@ -283,8 +283,8 @@ typedef struct tr4_mesh_s
 {
     tr5_vertex_t centre;                // This is usually close to the mesh's centroid, and appears to be the center of a sphere used for collision testing.
     int16_t collision_size;             // This appears to be the radius of that aforementioned collisional sphere.
-	uint8_t flags;						// Known flags (&1)
-	uint8_t dummy;						// Unused
+    uint8_t flags;                      // Known flags (&1)
+    uint8_t dummy;                      // Unused
     int16_t num_vertices;               // number of vertices in this mesh
     uint32_t vertices_count;
     tr5_vertex_t *vertices;             //[NumVertices]; // list of vertices (relative coordinates)

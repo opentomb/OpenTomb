@@ -704,9 +704,9 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
         return;
     }
 
-    climb->up[0] = 0.0;
-    climb->up[1] = 0.0;
-    climb->up[2] = 1.0;
+    climb->up[0] = 0.0f;
+    climb->up[1] = 0.0f;
+    climb->up[2] = 1.0f;
 
     Character_GetMiddleHandsPos(ent, from);
     vec3_copy(to, from);
@@ -738,7 +738,7 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
 
         if(climb->wall_hit)
         {
-            from[2] -= 0.67 * ent->character->height;
+            from[2] -= 0.67f * ent->character->height;
             to[2] = from[2];
 
             if(Physics_SphereTest(NULL, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
@@ -801,7 +801,7 @@ void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizon
 void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lean)
 {
     float neg_lean   = 360.0f - max_lean;
-    float lean_coeff = (max_lean == 0.0) ? (48.0f) : (max_lean * 3.0f);
+    float lean_coeff = (max_lean == 0.0f) ? (48.0f) : (max_lean * 3.0f);
 
     // Continously lean character, according to current left/right direction.
     if((cmd->move[1] == 0) || (max_lean == 0.0f))                               // No direction - restore straight vertical position!
@@ -857,8 +857,8 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
             }
             else    // Approaching from center
             {
-                ent->angles[2] += 0.5f * (360.0 - fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
-                if(ent->angles[2] > 360.0) ent->angles[2] -= 360.0f;
+                ent->angles[2] += 0.5f * (360.0f - fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
+                if(ent->angles[2] > 360.0f) ent->angles[2] -= 360.0f;
             }
         }
     }
@@ -973,16 +973,16 @@ int Character_MoveOnFloor(struct entity_s *ent)
     norm_move_xy[0] = move[0];
     norm_move_xy[1] = move[1];
     norm_move_xy_len = sqrtf(move[0] * move[0] + move[1] * move[1]);
-    if(norm_move_xy_len > 0.2 * t)
+    if(norm_move_xy_len > 0.2f * t)
     {
         norm_move_xy[0] /= norm_move_xy_len;
         norm_move_xy[1] /= norm_move_xy_len;
     }
     else
     {
-        norm_move_xy_len = 32512.0;
-        norm_move_xy[0] = 0.0;
-        norm_move_xy[1] = 0.0;
+        norm_move_xy_len = 32512.0f;
+        norm_move_xy[0] = 0.0f;
+        norm_move_xy[1] = 0.0f;
     }
 
     Entity_GhostUpdate(ent);
@@ -1020,13 +1020,13 @@ int Character_MoveOnFloor(struct entity_s *ent)
             tv[2] = -tv[2];
             t = ent->character->linear_speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT;
             vec3_mul_scalar(ent->speed, tv, t);                                 // slide down direction
-            ang = 180.0 * atan2f(tv[0], -tv[1]) / M_PI;                         // from -180 deg to +180 deg
+            ang = 180.0f * atan2f(tv[0], -tv[1]) / M_PI;                        // from -180 deg to +180 deg
             //ang = (ang < 0.0) ? (ang + 360.0) : (ang);
             t = tv[0] * ent->transform[4 + 0] + tv[1] * ent->transform[4 + 1];
-            if(t >= 0.0)
+            if(t >= 0.0f)
             {
                 ent->character->state.slide = CHARACTER_SLIDE_FRONT;
-                ent->angles[0] = ang + 180.0;
+                ent->angles[0] = ang + 180.0f;
                 // front forward slide down
             }
             else
@@ -1050,7 +1050,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
             else if(t > ent->character->min_step_up_height)
             {
                 ent->character->state.step_z = 0x02;
-                pos[2] -= engine_frame_time * 2400.0;                           ///@FIXME: magick
+                pos[2] -= engine_frame_time * 2400.0f;                          ///@FIXME: magick
                 pos[2] = (pos[2] >= ent->character->height_info.floor_hit.point[2]) ? (pos[2]) : (ent->character->height_info.floor_hit.point[2]);
             }
             else
@@ -1162,7 +1162,7 @@ int Character_FreeFalling(struct entity_s *ent)
 
     float rot = ROT_SPEED_FREEFALL * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
     ent->angles[0] += rot;
-    ent->angles[1] = 0.0;
+    ent->angles[1] = 0.0f;
 
     Entity_UpdateTransform(ent);                                                // apply rotations
 
@@ -1185,11 +1185,11 @@ int Character_FreeFalling(struct entity_s *ent)
 
     if(ent->self->room && (ent->self->room->flags & TR_ROOM_FLAG_WATER))
     {
-        if(ent->speed[2] < 0.0)
+        if(ent->speed[2] < 0.0f)
         {
-            ent->anim_linear_speed = 0.0;
-            ent->speed[0] = 0.0;
-            ent->speed[1] = 0.0;
+            ent->anim_linear_speed = 0.0f;
+            ent->speed[0] = 0.0f;
+            ent->speed[1] = 0.0f;
         }
 
         float transition_level = ent->character->height_info.transition_level;
@@ -1241,8 +1241,8 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     t = ent->anim_linear_speed * ent->character->linear_speed_mult;
 
     ent->angles[0] += ROT_SPEED_MONKEYSWING * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
-    ent->angles[1] = 0.0;
-    ent->angles[2] = 0.0;
+    ent->angles[1] = 0.0f;
+    ent->angles[2] = 0.0f;
     Entity_UpdateTransform(ent);                                                // apply rotations
 
     if(ent->dir_flag & ENT_MOVE_FORWARD)
@@ -1265,7 +1265,7 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     {
         vec3_set_zero(ent->speed);
     }
-    ent->speed[2] = 0.0;
+    ent->speed[2] = 0.0f;
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
 
     vec3_add(pos, pos, move);
@@ -1358,8 +1358,8 @@ int Character_Climbing(struct entity_s *ent)
 
     t = ent->anim_linear_speed * ent->character->linear_speed_mult;
     ent->angles[0] += ROT_SPEED_MONKEYSWING * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
-    ent->angles[1] = 0.0;
-    ent->angles[2] = 0.0;
+    ent->angles[1] = 0.0f;
+    ent->angles[2] = 0.0f;
     Entity_UpdateTransform(ent);                                                // apply rotations
 
     if(ent->dir_flag == ENT_MOVE_FORWARD)
@@ -1487,8 +1487,8 @@ int Character_MoveOnWater(struct entity_s *ent)
     ent->character->state.wall_collide = 0x00;
 
     ent->angles[0] += ROT_SPEED_ONWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
-    ent->angles[1] = 0.0;
-    ent->angles[2] = 0.0;
+    ent->angles[1] = 0.0f;
+    ent->angles[2] = 0.0f;
     Entity_UpdateTransform(ent);     // apply rotations
 
     // Calculate current speed.
@@ -1751,7 +1751,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         float from[3], to[3];
         from[0] = obj_s->pos[0];
         from[1] = obj_s->pos[1];
-        from[2] = floor + 0.5 * TR_METERING_SECTORSIZE;
+        from[2] = floor + 0.5f * TR_METERING_SECTORSIZE;
 
         to[0] = next_s->pos[0];
         to[1] = next_s->pos[1];
@@ -1767,23 +1767,23 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
      */
     next_s = NULL;
     // OX move case
-    if(ch->transform[4 + 0] > 0.8)
+    if(ch->transform[4 + 0] > 0.8f)
     {
         float pos[] = {(float)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (float)(ch_s->pos[1]), 0.0f};
         next_s = Room_GetSectorRaw(ch_s->owner_room->real_room, pos);
     }
-    else if(ch->transform[4 + 0] < -0.8)
+    else if(ch->transform[4 + 0] < -0.8f)
     {
         float pos[] = {(float)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (float)(ch_s->pos[1]), 0.0f};
         next_s = Room_GetSectorRaw(ch_s->owner_room->real_room, pos);
     }
     // OY move case
-    else if(ch->transform[4 + 1] > 0.8)
+    else if(ch->transform[4 + 1] > 0.8f)
     {
         float pos[] = {(float)(ch_s->pos[0]), (float)(ch_s->pos[1] - TR_METERING_SECTORSIZE), 0.0f};
         next_s = Room_GetSectorRaw(ch_s->owner_room->real_room, pos);
     }
-    else if(ch->transform[4 + 1] < -0.8)
+    else if(ch->transform[4 + 1] < -0.8f)
     {
         float pos[] = {(float)(ch_s->pos[0]), (float)(ch_s->pos[1] + TR_METERING_SECTORSIZE), 0.0f};
         next_s = Room_GetSectorRaw(ch_s->owner_room->real_room, pos);
@@ -2265,7 +2265,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 {
                     ss_anim->current_animation = 2;
                     ss_anim->current_frame = 0;
-                    ss_anim->frame_time = 0.0;
+                    ss_anim->frame_time = 0.0f;
                     ss_anim->next_state = WEAPON_STATE_HIDE_TO_READY;
                     ent->character->weapon_current_state = WEAPON_STATE_IDLE;
                 }
@@ -2304,13 +2304,13 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 ss_anim->current_animation = 0;
                 ss_anim->next_frame = 0;
                 ss_anim->next_animation = 0;
-                ss_anim->frame_time = 0.0;
+                ss_anim->frame_time = 0.0f;
                 if(ent->character->cmd.ready_weapon)
                 {
                     ss_anim->current_animation = 2;
                     ss_anim->next_animation = 2;
                     ss_anim->current_frame = ss_anim->next_frame = ss_anim->model->animations[ss_anim->current_animation].max_frame - 1;
-                    ss_anim->frame_time = 0.0;
+                    ss_anim->frame_time = 0.0f;
                     ss_anim->next_state = WEAPON_STATE_IDLE_TO_HIDE;
                 }
                 else if((!silent && ent->character->cmd.action) || target)
@@ -2355,7 +2355,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 {
                     ss_anim->current_animation = 2;
                     ss_anim->next_animation = 2;
-                    ss_anim->frame_time = 0.0;
+                    ss_anim->frame_time = 0.0f;
                     ss_anim->next_state = WEAPON_STATE_IDLE_TO_HIDE;
                     break;
                 }
@@ -2457,7 +2457,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 }
                 else
                 {
-                    ss_anim->frame_time = 0.0;
+                    ss_anim->frame_time = 0.0f;
                     ss_anim->current_animation = 0;
                     ss_anim->next_animation = ss_anim->current_animation;
                     ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].max_frame - 1;
@@ -2551,7 +2551,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->next_animation = 1;
                     ss_anim->current_frame = 0;
                     ss_anim->next_frame = 0;
-                    ss_anim->frame_time = 0.0;
+                    ss_anim->frame_time = 0.0f;
                     ss_anim->next_state = WEAPON_STATE_HIDE_TO_READY;
                     ent->character->weapon_current_state = WEAPON_STATE_IDLE;
                 }
@@ -2580,7 +2580,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     ss_anim->current_animation = 0;
                     ss_anim->next_frame = 0;
                     ss_anim->next_animation = 0;
-                    ss_anim->frame_time = 0.0;
+                    ss_anim->frame_time = 0.0f;
                     ss_anim->next_state = WEAPON_STATE_IDLE;
                 }
                 break;
@@ -2590,13 +2590,13 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 ss_anim->current_animation = 0;
                 ss_anim->next_frame = 0;
                 ss_anim->next_animation = 0;
-                ss_anim->frame_time = 0.0;
+                ss_anim->frame_time = 0.0f;
                 if(ent->character->cmd.ready_weapon)
                 {
                     ss_anim->current_animation = 3;
                     ss_anim->next_animation = 3;
                     //ss_anim->current_frame = ss_anim->next_frame = 0;
-                    ss_anim->frame_time = 0.0;
+                    ss_anim->frame_time = 0.0f;
                     ss_anim->next_state = WEAPON_STATE_IDLE_TO_HIDE;
                 }
                 else if(ent->character->cmd.action || target)
@@ -2680,7 +2680,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                 }
                 else
                 {
-                    ss_anim->frame_time = 0.0;
+                    ss_anim->frame_time = 0.0f;
                     ss_anim->current_frame = ss_anim->model->animations[ss_anim->current_animation].max_frame - 1;
                     ss_anim->next_state = WEAPON_STATE_FIRE_TO_IDLE;
                 }

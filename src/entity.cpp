@@ -205,9 +205,9 @@ void Entity_UpdateRoomPos(entity_p ent)
     {
         float v[3];
         vec3_add(v, ent->bf->bb_min, ent->bf->bb_max);
-        v[0] /= 2.0;
-        v[1] /= 2.0;
-        v[2] /= 2.0;
+        v[0] /= 2.0f;
+        v[1] /= 2.0f;
+        v[2] /= 2.0f;
         Mat4_vec3_mul_macro(pos, ent->transform, v);
     }
 
@@ -251,17 +251,17 @@ void Entity_MoveToRoom(entity_p entity, struct room_s *new_room)
 
 void Entity_UpdateTransform(entity_p entity)
 {
-    int32_t i = entity->angles[0] / 360.0;
-    i = (entity->angles[0] < 0.0)?(i-1):(i);
-    entity->angles[0] -= 360.0 * i;
+    int32_t i = entity->angles[0] / 360.0f;
+    i = (entity->angles[0] < 0.0f) ? (i - 1) : (i);
+    entity->angles[0] -= 360.0f * i;
 
-    i = entity->angles[1] / 360.0;
-    i = (entity->angles[1] < 0.0)?(i-1):(i);
-    entity->angles[1] -= 360.0 * i;
+    i = entity->angles[1] / 360.0f;
+    i = (entity->angles[1] < 0.0f) ? (i - 1) : (i);
+    entity->angles[1] -= 360.0f * i;
 
-    i = entity->angles[2] / 360.0;
-    i = (entity->angles[2] < 0.0)?(i-1):(i);
-    entity->angles[2] -= 360.0 * i;
+    i = entity->angles[2] / 360.0f;
+    i = (entity->angles[2] < 0.0f) ? (i - 1) : (i);
+    entity->angles[2] -= 360.0f * i;
 
     Mat4_SetAnglesZXY(entity->transform, entity->angles);
 }
@@ -329,10 +329,10 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
                 float *bb_max = ent->bf->bone_tags[i].mesh_base->bb_max;
                 float r = bb_max[0] - bb_min[0];
                 float t = bb_max[1] - bb_min[1];
-                r = (t > r)?(t):(r);
+                r = (t > r) ? (t) : (r);
                 t = bb_max[2] - bb_min[2];
-                r = (t > r)?(t):(r);
-                r *= 0.5;
+                r = (t > r) ? (t) : (r);
+                r *= 0.5f;
 
                 if(ent->bf->bb_min[0] > pos[0] - r)
                 {
@@ -660,23 +660,23 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
                     }
                     else if((reaction[2] * reaction[2] > t1) && (move[2] * move[2] > t2))
                     {
-                        if((reaction[2] > 0.0) && (move[2] < 0.0))
+                        if((reaction[2] > 0.0f) && (move[2] < 0.0f))
                         {
                             ent->character->state.floor_collide = 0x01;
                         }
-                        else if((reaction[2] < 0.0) && (move[2] > 0.0))
+                        else if((reaction[2] < 0.0f) && (move[2] > 0.0f))
                         {
                             ent->character->state.ceiling_collide = 0x01;
                         }
                     }
                 }
 
-                if(ent->character->height_info.ceiling_hit.hit && (reaction[2] < -0.1))
+                if(ent->character->height_info.ceiling_hit.hit && (reaction[2] < -0.1f))
                 {
                     ent->character->state.ceiling_collide = 0x01;
                 }
 
-                if(ent->character->height_info.floor_hit.hit && (reaction[2] > 0.1))
+                if(ent->character->height_info.floor_hit.hit && (reaction[2] > 0.1f))
                 {
                     ent->character->state.floor_collide = 0x01;
                 }
@@ -1026,9 +1026,9 @@ void Entity_ProcessSector(entity_p ent)
                 {
                     case MOVE_ON_FLOOR:
                     case MOVE_QUICKSAND:
-                        if(ent->transform[12 + 2] <= lowest_sector->floor + 16)
+                        if(ent->transform[12 + 2] <= lowest_sector->floor + 16.0f)
                         {
-                            Character_SetParam(ent, PARAM_HEALTH, 0.0);
+                            Character_SetParam(ent, PARAM_HEALTH, 0.0f);
                             ent->character->state.dead = 0x01;
                         }
                         break;
@@ -1036,7 +1036,7 @@ void Entity_ProcessSector(entity_p ent)
                     case MOVE_WADE:
                     case MOVE_ON_WATER:
                     case MOVE_UNDERWATER:
-                        Character_SetParam(ent, PARAM_HEALTH, 0.0);
+                        Character_SetParam(ent, PARAM_HEALTH, 0.0f);
                         ent->character->state.dead = 0x01;
                         break;
                 }
@@ -1114,7 +1114,7 @@ void Entity_MoveToSink(entity_p entity, struct static_camera_sink_s *sink)
         float sink_pos[3], *ent_pos = entity->transform + 12;
         sink_pos[0] = sink->pos[0];
         sink_pos[1] = sink->pos[1];
-        sink_pos[2] = sink->pos[2] + 256.0; // Prevents digging into the floor.
+        sink_pos[2] = sink->pos[2] + TR_METERING_STEP; // Prevents digging into the floor.
 
         room_sector_p ls = Sector_GetLowest(entity->current_sector);
         room_sector_p hs = Sector_GetHighest(entity->current_sector);
@@ -1336,7 +1336,7 @@ void Entity_CheckActivators(struct entity_s *ent)
                         ppos[2] = ent->transform[12 + 2] + ent->transform[4 + 2] * ent->bf->bb_max[1];
                         r *= r;
                         if(((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
-                            (v[2] + 72.0 > ent->transform[12 + 2] + ent->bf->bb_min[2]) && (v[2] - 32.0 < ent->transform[12 + 2] + ent->bf->bb_max[2]))
+                            (v[2] + 72.0f > ent->transform[12 + 2] + ent->bf->bb_min[2]) && (v[2] - 32.0f < ent->transform[12 + 2] + ent->bf->bb_max[2]))
                         {
                             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, trigger->id, ent->id);
                         }
