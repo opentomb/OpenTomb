@@ -448,7 +448,7 @@ void Entity_GhostUpdate(struct entity_s *ent)
 }
 
 
-int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float ent_move[3], int16_t filter)
+int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t callback, float reaction[3], float ent_move[3], int16_t filter)
 {
     int ret = 0;
     collision_node_p cn = NULL;
@@ -518,6 +518,10 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
                 vec3_copy(tr + 12, curr);
                 Physics_SetGhostWorldTransform(ent->physics, tr, m);
                 cn = Physics_GetGhostCurrentCollision(ent->physics, m, filter);
+                if(callback)
+                {
+                    callback(ent, cn);
+                }
                 for(; cn && cn->obj; cn = cn->next)
                 {
                     vec3_mul_scalar(tmp, cn->penetration, cn->penetration[3]);
@@ -594,7 +598,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], floa
  * @param reaction - absolute 3d vector for collision resolving
  * @param filter - bit mask to filter objects by collisiontype
  */
-int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float reaction[3], int16_t filter)
+int Entity_CheckNextPenetration(struct entity_s *ent, collision_callback_t callback, float move[3], float reaction[3], int16_t filter)
 {
     int ret = 0;
     if(Physics_IsGhostsInited(ent->physics))
@@ -603,7 +607,7 @@ int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float react
 
         Entity_GhostUpdate(ent);
         vec3_add(pos, pos, move);
-        ret = Entity_GetPenetrationFixVector(ent, reaction, move, filter);
+        ret = Entity_GetPenetrationFixVector(ent, callback, reaction, move, filter);
         if((ret > 0) && (ent->character != NULL))
         {
             t1 = reaction[0] * reaction[0] + reaction[1] * reaction[1];
@@ -626,7 +630,7 @@ int Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float react
 }
 
 
-void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
+void Entity_FixPenetrations(struct entity_s *ent, collision_callback_t callback, float move[3], int16_t filter)
 {
     if(Physics_IsGhostsInited(ent->physics) &&
        !ent->no_fix_all && !ent->no_move &&
@@ -640,7 +644,7 @@ void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter)
         }
 
         float t1, t2, reaction[3];
-        if(0 < Entity_GetPenetrationFixVector(ent, reaction, move, filter))
+        if(0 < Entity_GetPenetrationFixVector(ent, callback, reaction, move, filter))
         {
             vec3_add(ent->transform + 12, ent->transform + 12, reaction);
             if(ent->character)
@@ -1094,7 +1098,7 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
                     }
                 }
                 Entity_GhostUpdate(entity);
-                Entity_FixPenetrations(entity, NULL, COLLISION_FILTER_CHARACTER);
+                Entity_FixPenetrations(entity, NULL, NULL, COLLISION_FILTER_CHARACTER);
                 entity->anim_linear_speed = entity->bf->animations.model->animations[animation].speed_x;
                 Entity_UpdateRigidBody(entity, 1);
             }

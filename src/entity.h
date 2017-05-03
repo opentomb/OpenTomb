@@ -125,6 +125,8 @@ struct inventory_node_s;
 #define WEAPON_STATE_FIRE_TO_IDLE               (0x05)
 #define WEAPON_STATE_IDLE_TO_HIDE               (0x06)
 
+typedef void (*collision_callback_t)(struct entity_s *ent, struct collision_node_s *cn);
+
 // Specific in-game entity structure.
 
 typedef struct activation_point_s
@@ -201,9 +203,9 @@ int  Entity_GetSubstanceState(entity_p entity);
 void Entity_UpdateRigidBody(struct entity_s *ent, int force);
 void Entity_GhostUpdate(struct entity_s *ent);
 
-int  Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float ent_move[3], int16_t filter);
-int  Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float reaction[3], int16_t filter);
-void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter);
+int  Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t callback, float reaction[3], float ent_move[3], int16_t filter);
+int  Entity_CheckNextPenetration(struct entity_s *ent, collision_callback_t callback, float move[3], float reaction[3], int16_t filter);
+void Entity_FixPenetrations(struct entity_s *ent, collision_callback_t callback, float move[3], int16_t filter);
 
 void Entity_CheckCollisionCallbacks(entity_p ent);
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim);

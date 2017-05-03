@@ -481,7 +481,7 @@ void Game_ApplyControls(struct entity_s *ent)
         Entity_UpdateRoomPos(ent);
         Entity_UpdateRigidBody(ent, 1);
         Entity_GhostUpdate(ent);
-        Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
+        Entity_FixPenetrations(ent, NULL, NULL, COLLISION_FILTER_CHARACTER);
     }
     else
     {

@@ -131,7 +131,7 @@ function damocles_init(id)      -- Sword of Damocles
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
-    setEntityCollisionFlags(id, bit32.bor(COLLISION_GROUP_TRIGGERS, COLLISION_GROUP_CHARACTERS), nil, COLLISION_GROUP_CHARACTERS);
+    setEntityCollisionFlags(id, COLLISION_GROUP_CHARACTERS, nil, COLLISION_GROUP_CHARACTERS);
     setEntityActivity(id, false);
     local rot_speed = 60.0 * (((math.random(20) - 10) / 5) + 1);
 

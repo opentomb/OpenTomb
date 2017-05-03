@@ -191,6 +191,24 @@ void Character_Update(struct entity_s *ent)
 }
 
 
+void Character_CollisionCallback(struct entity_s *ent, struct collision_node_s *cn)
+{
+    for(; cn && cn->obj; cn = cn->next)
+    {
+        if(cn->obj->object_type == OBJECT_ENTITY)
+        {
+            entity_p activator = (entity_p)cn->obj->object;
+            if(activator->callback_flags & ENTITY_CALLBACK_COLLISION)
+            {
+                // Activator and entity IDs are swapped in case of collision callback.
+                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->id, ent->id);
+            }
+            // if hit enemy
+        }
+    }
+}
+
+
 /**
  * Calculates character speed, based on direction flag and anim linear speed
  * @param ent
@@ -646,7 +664,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         climb->edge_z_ang = 180.0f * atan2f(n2[0], -n2[1]) / M_PI;
         climb->edge_tan_xy[0] = -n2[1];
         climb->edge_tan_xy[1] = n2[0];
-        d = sqrt(n2[0] * n2[0] + n2[1] * n2[1]);
+        d = sqrtf(n2[0] * n2[0] + n2[1] * n2[1]);
         climb->edge_tan_xy[0] /= d;
         climb->edge_tan_xy[1] /= d;
         climb->t[0] = climb->edge_tan_xy[0];
@@ -728,7 +746,7 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
         climb->wall_hit = 0x01;
         vec3_copy(climb->point, cb.point);
         vec3_copy(climb->n, cb.normale);
-        t = sqrt(wn2[0] * wn2[0] + wn2[1] * wn2[1]);
+        t = sqrtf(wn2[0] * wn2[0] + wn2[1] * wn2[1]);
         wn2[0] /= t;
         wn2[1] /= t;
 
@@ -987,7 +1005,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
 
     Entity_GhostUpdate(ent);
     vec3_add(pos, pos, move);
-    Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);
+    Entity_FixPenetrations(ent, Character_CollisionCallback, move, COLLISION_FILTER_CHARACTER);
     Character_UpdateCurrentHeight(ent);
 
     // check micro gaps cases
@@ -1138,7 +1156,7 @@ int Character_MoveFly(struct entity_s *ent)
 
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
     vec3_add(pos, pos, move);
-    Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
+    Entity_FixPenetrations(ent, Character_CollisionCallback, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
     Entity_UpdateRoomPos(ent);
     Character_UpdateCurrentHeight(ent);
 
@@ -1178,7 +1196,7 @@ int Character_FreeFalling(struct entity_s *ent)
     vec3_RotateZ(ent->speed, ent->speed, rot);
 
     vec3_add(pos, pos, move);
-    Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
+    Entity_FixPenetrations(ent, Character_CollisionCallback, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
     Entity_GhostUpdate(ent);
     Entity_UpdateRoomPos(ent);
     Character_UpdateCurrentHeight(ent);
@@ -1269,7 +1287,7 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
 
     vec3_add(pos, pos, move);
-    Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
+    Entity_FixPenetrations(ent, Character_CollisionCallback, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
     if(ent->character->height_info.ceiling_hit.hit && (pos[2] + ent->bf->bb_max[2] - ent->character->height_info.ceiling_hit.point[2] > - 0.33 * ent->character->min_step_up_height))
     {
         pos[2] = ent->character->height_info.ceiling_hit.point[2] - ent->bf->bb_max[2];
@@ -1335,7 +1353,7 @@ int Character_WallsClimbing(struct entity_s *ent)
         vec3_mul_scalar(ent->speed, move, t);
         vec3_mul_scalar(move, ent->speed, engine_frame_time);
         vec3_add(pos, pos, move);
-        Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);          // get horizontal collide
+        Entity_FixPenetrations(ent, Character_CollisionCallback, move, COLLISION_FILTER_CHARACTER);          // get horizontal collide
     }
 
     Entity_UpdateRoomPos(ent);
@@ -1382,13 +1400,13 @@ int Character_Climbing(struct entity_s *ent)
     {
         vec3_set_zero(ent->speed);
         Entity_GhostUpdate(ent);
-        Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
+        Entity_FixPenetrations(ent, Character_CollisionCallback, NULL, COLLISION_FILTER_CHARACTER);
         return 1;
     }
 
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
     vec3_add(pos, pos, move);
-    Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
+    Entity_FixPenetrations(ent, Character_CollisionCallback, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
     Entity_UpdateRoomPos(ent);
 
     return 1;
@@ -1455,7 +1473,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
     }
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
     vec3_add(pos, pos, move);
-    Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
+    Entity_FixPenetrations(ent, Character_CollisionCallback, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
     Entity_UpdateRoomPos(ent);
     Character_UpdateCurrentHeight(ent);
     if(ent->character->height_info.water && (pos[2] + ent->bf->bb_max[2] >= ent->character->height_info.transition_level))
@@ -1530,7 +1548,7 @@ int Character_MoveOnWater(struct entity_s *ent)
     {
         vec3_set_zero(ent->speed);
         Entity_GhostUpdate(ent);
-        Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
+        Entity_FixPenetrations(ent, Character_CollisionCallback, NULL, COLLISION_FILTER_CHARACTER);
         Entity_UpdateRoomPos(ent);
         if(ent->character->height_info.water)
         {
@@ -1549,7 +1567,7 @@ int Character_MoveOnWater(struct entity_s *ent)
      */
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
     vec3_add(pos, pos, move);
-    Entity_FixPenetrations(ent, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
+    Entity_FixPenetrations(ent, Character_CollisionCallback, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide
     Entity_UpdateRoomPos(ent);
     Character_UpdateCurrentHeight(ent);
     if(ent->character->height_info.water)

@@ -292,7 +292,7 @@ function boulder_heavy_init(id)
     setEntityActivity(id, false);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     createGhosts(id);
-    local group = bit32.bor(COLLISION_GROUP_TRIGGERS, COLLISION_GROUP_KINEMATIC);
+    local group = COLLISION_GROUP_KINEMATIC;
     local mask = COLLISION_GROUP_STATIC_ROOM;
     setEntityCollisionFlags(id, group, nil, mask);
 

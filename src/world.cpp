@@ -1213,13 +1213,6 @@ void World_SetEntityModelProperties(struct entity_s *ent)
         }
         lua_settop(engine_lua, top);
     }
-
-    switch(ent->self->collision_group)
-    {
-        case COLLISION_GROUP_TRIGGERS:
-            ent->self->collision_mask = COLLISION_GROUP_CHARACTERS;
-            break;
-    };
 }
 
 
