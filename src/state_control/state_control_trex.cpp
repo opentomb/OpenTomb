@@ -47,6 +47,7 @@ int StateControl_TRex(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
     state->sprint = 0x00;
     state->crouch = 0x00;
+    state->attack = 0x00;
 
     switch(current_state)
     {
@@ -99,6 +100,7 @@ int StateControl_TRex(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_TREX_ATTACK:
             cmd->rot[0] = 0;
+            state->attack = 0x01;
             /*if(World_GetPlayer() && World_GetPlayer()->character &&  World_GetPlayer()->character->state.dead)
             {
                 ss_anim->next_state = TR_STATE_TREX_KILL;

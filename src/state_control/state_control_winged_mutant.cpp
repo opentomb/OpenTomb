@@ -54,9 +54,16 @@ int StateControl_WingedMutant(struct entity_s *ent, struct ss_animation_s *ss_an
     ss_anim->anim_frame_flags = ANIM_NORMAL_CONTROL;
 
     state->sprint = 0x00;
+    state->attack = 0x00;
 
     switch(current_state)
     {
+        case TR_STATE_WINGED_MUTANT_JUMP_ATTACK:
+        case TR_STATE_WINGED_MUTANT_RUN_ATTACK:
+        case TR_STATE_WINGED_MUTANT_STAY_ATTACK:
+            state->attack = 0x01;
+            break;
+
         case TR_STATE_WINGED_MUTANT_STAY_INIT:
             if(cmd->action || (cmd->move[0] > 0))
             {

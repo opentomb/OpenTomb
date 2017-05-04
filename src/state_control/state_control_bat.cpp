@@ -60,6 +60,7 @@ int StateControl_Bat(struct entity_s *ent, struct ss_animation_s *ss_anim)
     ss_anim->anim_frame_flags = ANIM_NORMAL_CONTROL;
 
     state->sprint = 0x00;
+    state->attack = 0x00;
 
     switch(current_state)
     {
@@ -70,8 +71,9 @@ int StateControl_Bat(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ss_anim->next_state = TR_STATE_BAT_FLY;
             break;
 
-        case TR_STATE_BAT_FLY:
         case TR_STATE_BAT_ATTACK:
+            state->attack = 0x01;
+        case TR_STATE_BAT_FLY:
             if(state->dead)
             {
                 ss_anim->next_state = TR_STATE_BAT_DROP;

@@ -227,6 +227,7 @@ typedef struct character_state_s
     uint32_t    slide : 2;      //0 - none, 1 - forward, 2 - backward
     uint32_t    step_z : 2;     //0 - none, 1 - dz to step up, 2 - dz to step down;
     uint32_t    uw_current : 1;
+    uint32_t    attack : 1;
     uint32_t    dead : 1;
     uint32_t    ragdoll : 1;
     uint32_t    burn : 1;

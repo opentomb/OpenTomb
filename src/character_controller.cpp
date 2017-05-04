@@ -58,6 +58,7 @@ void Character_Create(struct entity_s *ent)
         ret->state.slide = 0x00;
         ret->state.step_z = 0x00;
         ret->state.uw_current = 0x00;
+        ret->state.attack = 0x00;
         ret->state.dead = 0x00;
         ret->state.ragdoll = 0x00;
         ret->state.burn = 0x00;
@@ -197,13 +198,16 @@ void Character_CollisionCallback(struct entity_s *ent, struct collision_node_s *
     {
         if(cn->obj->object_type == OBJECT_ENTITY)
         {
-            entity_p activator = (entity_p)cn->obj->object;
-            if(activator->callback_flags & ENTITY_CALLBACK_COLLISION)
+            entity_p trigger = (entity_p)cn->obj->object;
+            if(trigger->callback_flags & ENTITY_CALLBACK_COLLISION)
             {
                 // Activator and entity IDs are swapped in case of collision callback.
-                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, activator->id, ent->id);
+                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, trigger->id, ent->id);
             }
-            // if hit enemy
+            if(trigger->character && trigger->character->state.attack)
+            {
+                
+            }
         }
     }
 }

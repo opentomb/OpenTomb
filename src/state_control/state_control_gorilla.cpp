@@ -95,6 +95,7 @@ int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim)
     ss_anim->onEndFrame = ent_gorilla_fix_strafe;
     state->sprint = 0x00;
     state->crouch = 0x00;
+    state->attack = 0x00;
 
     if(ent->move_type == MOVE_CLIMBING)
     {
@@ -219,6 +220,11 @@ int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_GORILLA_CLIMB:
             cmd->rot[0] = 0;
             ent->move_type = MOVE_CLIMBING;
+            break;
+
+        case TR_STATE_GORILLA_FORWARD_ATTACK:
+        case TR_STATE_GORILLA_STAY_ATTACK:
+            state->attack = 0x01;
             break;
     };
 

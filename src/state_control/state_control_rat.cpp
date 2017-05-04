@@ -69,6 +69,7 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
     state->sprint = 0x00;
     state->crouch = 0x00;
+    state->attack = 0x00;
 
     if(ent->character->height_info.water && (pos[2] - ent->character->height_info.transition_level < 16.0f))
     {
@@ -99,8 +100,12 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 break;
 
             case TR_STATE_RAT_OW_DEAD:
+                cmd->rot[0] = 0;
+                break;
+
             case TR_STATE_RAT_OW_ATTACK:
                 cmd->rot[0] = 0;
+                state->attack = 0x01;
                 break;
         };
     }
@@ -148,6 +153,7 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 {
                     ss_anim->next_state = TR_STATE_RAT_STAY_HIGH;
                 }
+                break;
 
             case TR_STATE_RAT_RUN: // -> 1 -> 2
                 ent->dir_flag = ENT_MOVE_FORWARD;
@@ -167,6 +173,11 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 {
                     ss_anim->next_state = TR_STATE_RAT_STAY;
                 }
+                break;
+
+            case TR_STATE_RAT_ATTACK:
+            case TR_STATE_RAT_RUN_ATTACK:
+                state->attack = 0x01;
                 break;
         };
     }

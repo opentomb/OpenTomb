@@ -62,13 +62,13 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
 {
     character_command_p cmd = &ent->character->cmd;
     character_state_p state = &ent->character->state;
-    float *pos = ent->transform + 12;
 
     ent->character->rotate_speed_mult = 1.0f;
     ss_anim->anim_frame_flags = ANIM_NORMAL_CONTROL;
 
     state->sprint = 0x00;
     state->crouch = 0x00;
+    state->attack = 0x00;
 
     if(ent->self->room && (ent->self->room->flags & TR_ROOM_FLAG_WATER))
     {
@@ -98,6 +98,7 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 break;
 
             case TR_STATE_CROCODILE_UW_ATTACK: // -> 1
+                state->attack = 0x01;
                 ent->dir_flag = ENT_MOVE_FORWARD;
                 if(!state->dead && cmd->action)
                 {
@@ -179,6 +180,10 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 {
                     ss_anim->next_state = TR_STATE_CROCODILE_WALK;
                 }
+                break;
+
+            case TR_STATE_CROCODILE_ATTACK:
+                state->attack = 0x01;
                 break;
         };
     }

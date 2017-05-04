@@ -469,6 +469,13 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t ca
             ghost_shape_p ghost_info = Physics_GetGhostShapeInfo(ent->physics, m);
             if(btag->body_part & ent->no_fix_skeletal_parts)
             {
+                if(callback)
+                {
+                    Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
+                    Physics_SetGhostWorldTransform(ent->physics, tr, m);
+                    cn = Physics_GetGhostCurrentCollision(ent->physics, m, filter);
+                    callback(ent, cn);
+                }
                 continue;
             }
 

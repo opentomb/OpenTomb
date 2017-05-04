@@ -48,6 +48,7 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
     state->sprint = 0x00;
     state->crouch = 0x00;
+    state->attack = 0x00;
 
     switch(current_state)
     {
@@ -175,8 +176,13 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             break;
 
+        case TR_STATE_WOLF_STAY_ATTACK:// 12
+            state->attack = 0x01;
+            break;
+
         case TR_STATE_WOLF_JUMP_ATTACK:// 6   // -> 3
             ent->dir_flag = ENT_MOVE_FORWARD;
+            state->attack = 0x01;
             if(state->dead)
             {
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_WOLF_DEAD3, 0, NULL);
@@ -226,7 +232,6 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         default:
         case TR_STATE_WOLF_DEAD:// 11
-        case TR_STATE_WOLF_STAY_ATTACK:// 12
             cmd->rot[0] = 0;
             break;
     };

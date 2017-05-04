@@ -47,6 +47,8 @@ int StateControl_TorsoBoss(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
     state->sprint = 0x00;
     state->crouch = 0x00;
+    state->attack = 0x00;
+
     ent->character->rotate_speed_mult = 0.33;
     switch(current_state)
     {
@@ -119,7 +121,11 @@ int StateControl_TorsoBoss(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_TORSO_BOSS_ATTACK_KILL:
-            // if hit > pc hp then kill routine
+        case TR_STATE_TORSO_BOSS_ATTACK:
+        case TR_STATE_TORSO_BOSS_ATTACK_BIG:
+        case TR_STATE_TORSO_BOSS_ATTACK_JUMP:
+            state->attack = 0x01;
+            cmd->rot[0] = 0;
             break;
 
         default:
