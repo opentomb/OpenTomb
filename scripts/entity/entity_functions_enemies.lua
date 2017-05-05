@@ -505,6 +505,7 @@ function rat_init(id)
     setEntityGhostCollisionShape(id, 1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setEntityGhostCollisionShape(id, 2,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setEntityGhostCollisionShape(id, 9,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setCharacterBones(id, 2, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_RAT);
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
