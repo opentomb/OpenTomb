@@ -56,6 +56,50 @@ int Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_act
 }
 
 
+int Script_EntityUpdateCollisionInfo(lua_State *lua, int id, struct collision_node_s *cn)
+{
+    int top = lua_gettop(lua);
+
+    lua_getglobal(lua, "entity_funcs");
+    if(!lua_istable(lua, -1))
+    {
+        lua_settop(lua, top);
+        return 0;
+    }
+
+    lua_rawgeti(lua, -1, id);
+    if(!lua_istable(lua, -1))
+    {
+        lua_settop(lua, top);
+        return 0;
+    }
+
+    lua_pushstring(lua, "col_part_from");
+    lua_pushinteger(lua, cn->part_from);
+    lua_settable(lua, -3);
+
+    lua_pushstring(lua, "col_part_self");
+    lua_pushinteger(lua, cn->part_self);
+    lua_settable(lua, -3);
+
+    lua_pushstring(lua, "col_px");
+    lua_pushnumber(lua, cn->penetration[0] * cn->penetration[3]);
+    lua_settable(lua, -3);
+
+    lua_pushstring(lua, "col_py");
+    lua_pushnumber(lua, cn->penetration[1] * cn->penetration[3]);
+    lua_settable(lua, -3);
+
+    lua_pushstring(lua, "col_pz");
+    lua_pushnumber(lua, cn->penetration[2] * cn->penetration[3]);
+    lua_settable(lua, -3);
+
+    lua_settop(lua, top);
+
+    return 1;
+}
+
+
 size_t Script_GetEntitySaveData(lua_State *lua, int id_entity, char *buf, size_t buf_size)
 {
     int top = lua_gettop(lua);

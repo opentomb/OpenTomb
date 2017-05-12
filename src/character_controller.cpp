@@ -204,10 +204,10 @@ void Character_CollisionCallback(struct entity_s *ent, struct collision_node_s *
                 // Activator and entity IDs are swapped in case of collision callback.
                 Script_ExecEntity(engine_lua, ENTITY_CALLBACK_COLLISION, trigger->id, ent->id);
             }
-            if(trigger->character && trigger->character->state.attack && 
-               trigger->character->bone_head == cn->part_from)
+            if(trigger->character && trigger->character->state.attack)
             {
-                Con_Printf("Hit %d -> %d", (int)cn->part_from, (int)cn->part_self);
+                Script_EntityUpdateCollisionInfo(engine_lua, trigger->id, cn);
+                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ATTACK, trigger->id, ent->id);
             }
         }
     }

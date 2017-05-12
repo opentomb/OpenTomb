@@ -874,6 +874,7 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, ENTITY_CALLBACK_COLLISION);
         LUA_EXPOSE(lua, ENTITY_CALLBACK_STAND);
         LUA_EXPOSE(lua, ENTITY_CALLBACK_HIT);
+        LUA_EXPOSE(lua, ENTITY_CALLBACK_ATTACK);
 
         LUA_EXPOSE(lua, PARAM_HEALTH);
         LUA_EXPOSE(lua, PARAM_AIR);

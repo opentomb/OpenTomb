@@ -54,6 +54,7 @@ bool Script_GetString(lua_State *lua, int string_index, size_t string_size, char
 
 void Script_LoopEntity(lua_State *lua, struct entity_s *ent);
 int  Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator = -1);
+int  Script_EntityUpdateCollisionInfo(lua_State *lua, int id, struct collision_node_s *cn);
 size_t Script_GetEntitySaveData(lua_State *lua, int id_entity, char *buf, size_t buf_size);
 void Script_DoFlipEffect(lua_State *lua, int id_effect, int id_object, int param);
 size_t Script_GetFlipEffectsSaveData(lua_State *lua, char *buf, size_t buf_size);

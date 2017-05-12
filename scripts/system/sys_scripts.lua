@@ -114,6 +114,10 @@ function execEntity(callback_id, object_id, activator_id)
         if((bit32.band(callback_id, ENTITY_CALLBACK_HIT) ~= 0) and (entity_funcs[object_id].onHit ~= nil)) then
             return entity_funcs[object_id].onHit(object_id, activator_id);
         end;
+
+        if((bit32.band(callback_id, ENTITY_CALLBACK_ATTACK) ~= 0) and (entity_funcs[object_id].onAttack ~= nil)) then
+            return entity_funcs[object_id].onAttack(object_id, activator_id);
+        end;
     end;
     return -1;
 end
