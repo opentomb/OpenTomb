@@ -30,28 +30,81 @@ extern "C" {
 int Script_ExecEntity(lua_State *lua, int id_callback, int id_object, int id_activator)
 {
     int top = lua_gettop(lua);
-    int ret = ENTITY_TRIGGERING_NOT_READY;
+    int ret = -1;
 
-    lua_getglobal(lua, "execEntity");
-    if(lua_isfunction(lua, -1))
+    lua_getglobal(lua, "entity_funcs");
+    if(!lua_istable(lua, -1))
     {
-        int argn = 0;
-        lua_pushinteger(lua, id_callback);  argn++;
-        lua_pushinteger(lua, id_object);    argn++;
-
-        if(id_activator >= 0)
-        {
-            lua_pushinteger(lua, id_activator);
-            argn++;
-        }
-
-        if(lua_pcall(lua, argn, 1, 0) == LUA_OK)
-        {
-            ret = lua_tointeger(lua, -1);
-        }
+        lua_settop(lua, top);
+        return -1;
     }
+
+    lua_rawgeti(lua, -1, id_object);
+    if(!lua_istable(lua, -1))
+    {
+        lua_settop(lua, top);
+        return -1;
+    }
+
+    switch(id_callback)
+    {
+        case ENTITY_CALLBACK_ACTIVATE:
+            lua_pushstring(lua, "onActivate");
+            break;
+
+        case ENTITY_CALLBACK_DEACTIVATE:
+            lua_pushstring(lua, "onDeactivate");
+            break;
+
+        case ENTITY_CALLBACK_COLLISION:
+            lua_pushstring(lua, "onCollide");
+            break;
+
+        case ENTITY_CALLBACK_STAND:
+            lua_pushstring(lua, "onStand");
+            break;
+
+        case ENTITY_CALLBACK_HIT:
+            lua_pushstring(lua, "onHit");
+            break;
+
+        case ENTITY_CALLBACK_ATTACK:
+            lua_pushstring(lua, "onAttack");
+            break;
+
+        case ENTITY_CALLBACK_SHOOT:
+            lua_pushstring(lua, "onShoot");
+            break;
+
+        default:
+            lua_settop(lua, top);
+            return -1;
+    }
+
+    lua_rawget(lua, -2);
+    if(!lua_isfunction(lua, -1))
+    {
+        lua_settop(lua, top);
+        return -1;
+    }
+
+    lua_pushinteger(lua, id_object);
+    if(id_activator >= 0)
+    {
+        lua_pushinteger(lua, id_activator);
+    }
+    else
+    {
+        lua_pushnil(lua);
+    }
+
+    if(lua_pcall(lua, 2, 1, 0) == LUA_OK)
+    {
+        ret = lua_tointeger(lua, -1);
+    }
+
     lua_settop(lua, top);
-    //Sys_Warn("Broken \"execEntity\" script function");
+
     return ret;
 }
 
@@ -141,13 +194,32 @@ void Script_LoopEntity(lua_State *lua, struct entity_s *ent)
             tick_state = TICK_IDLE;
         }
 
-        lua_getglobal(lua, "loopEntity");
-        if(lua_isfunction(lua, -1))
+        lua_getglobal(lua, "entity_funcs");
+        if(!lua_istable(lua, -1))
         {
-            lua_pushinteger(lua, ent->id);
-            lua_pushinteger(lua, tick_state);
-            lua_CallAndLog(lua, 2, 0, 0);
+            lua_settop(lua, top);
+            return;
         }
+
+        lua_rawgeti(lua, -1, ent->id);
+        if(!lua_istable(lua, -1))
+        {
+            lua_settop(lua, top);
+            return;
+        }
+
+        lua_pushstring(lua, "onLoop");
+        lua_rawget(lua, -2);
+        if(!lua_isfunction(lua, -1))
+        {
+            lua_settop(lua, top);
+            return;
+        }
+
+        lua_pushinteger(lua, ent->id);
+        lua_pushinteger(lua, tick_state);
+        lua_CallAndLog(lua, 2, 0, 0);
+
         lua_settop(lua, top);
     }
 }

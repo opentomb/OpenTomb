@@ -1036,6 +1036,13 @@ void ShowModelView()
         renderer.DrawSkeletalModel(shader, &test_model, subModelView, subModelViewProjection);
         renderer.debugDrawer->DrawAxis(4096.0f, tr);
 
+        for(int i = 0; i < test_model.bone_tag_count; ++i)
+        {
+            ss_bone_tag_p bf = test_model.bone_tags + i;
+            Mat4_vec3_mul_macro(tr, bf->full_transform, bf->mesh_base->centre);
+            renderer.OutTextXYZ(tr[0], tr[1], tr[2], "%d", i);
+        }
+
         {
             const float dy = -18.0f * screen_info.scale_factor;
             float y = (float)screen_info.h + dy;
