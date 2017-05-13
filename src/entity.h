@@ -105,6 +105,7 @@ struct inventory_node_s;
 #define ENTITY_CALLBACK_STAND                       (0x00000008)
 #define ENTITY_CALLBACK_HIT                         (0x00000010)
 #define ENTITY_CALLBACK_ATTACK                      (0x00000020)
+#define ENTITY_CALLBACK_SHOOT                       (0x00000040)
 
 #define ENTITY_SUBSTANCE_NONE                     0
 #define ENTITY_SUBSTANCE_WATER_SHALLOW            1

@@ -71,6 +71,19 @@ function Lara_init(id)
 
     setPlayer(id);
 
+    entity_funcs[id].onShoot = function(object_id, activator_id)
+        local weapon = getCharacterCurrentWeapon(object_id);
+        if(weapon == 1 or weapon == 2) then
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 30, 30);
+        else
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 130, 130);
+        end;
+
+        if(entity_funcs[activator_id].onHit ~= nil) then
+            entity_funcs[activator_id].onHit(activator_id, object_id);
+        end;
+    end;
+
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then

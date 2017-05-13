@@ -2449,10 +2449,9 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     }
                     else
                     {
-                        ent->character->parameters.param[PARAM_HIT_DAMAGE] = 25.0f;
                         if(target)
                         {
-                            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
+                            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
                         }
                         else
                         {
@@ -2469,7 +2468,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                             if(Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
                             {
                                 target = (entity_p)cs.obj->object;
-                                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
+                                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
                             }
                         }
 
@@ -2735,10 +2734,9 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                     }
                     else
                     {
-                        ent->character->parameters.param[PARAM_HIT_DAMAGE] = 180.0f;
                         if(target)
                         {
-                            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
+                            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
                         }
                         else
                         {
@@ -2755,7 +2753,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                             if(Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
                             {
                                 target = (entity_p)cs.obj->object;
-                                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_HIT, target->id, ent->id);
+                                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
                             }
                         }
                         ss_anim->frame_time = dt;
