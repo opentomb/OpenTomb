@@ -2255,14 +2255,15 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
         const float bone_dir[] = {0.0f, 1.0f, 0.0f};
         float dt;
         int32_t t;
-        uint16_t targeted_bone = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (ent->character->bone_l_hand_start) : (ent->character->bone_r_hand_start);
+        uint16_t targeted_bone_start = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (ent->character->bone_l_hand_start) : (ent->character->bone_r_hand_start);
+        uint16_t targeted_bone_end = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (ent->character->bone_l_hand_end) : (ent->character->bone_r_hand_end);
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
         bool silent = false;
         if(target)
         {
             float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.224f};
             ss_anim->targeting_flags = 0x0000;
-            SSBoneFrame_SetTarget(ss_anim, targeted_bone, target->obb->centre, bone_dir);
+            SSBoneFrame_SetTarget(ss_anim, targeted_bone_start, target->obb->centre, bone_dir);
             if(ss_anim->type == ANIM_TYPE_WEAPON_LH)
             {
                 vec3_RotateZ(targeting_limit, targeting_limit, 40.0f);
@@ -2457,7 +2458,7 @@ int Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                         {
                             collision_result_t cs;
                             float from[3], to[3], tr[16];
-                            ss_bone_tag_p bt = ent->bf->bone_tags + targeted_bone + 2;
+                            ss_bone_tag_p bt = ent->bf->bone_tags + targeted_bone_end;
                             Mat4_Mat4_mul(tr, ent->transform, bt->full_transform);
                             vec3_copy(from, tr + 12);
                             vec3_add_mul(to, from, tr + 8, -32768.0f);
@@ -2742,7 +2743,7 @@ int Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *
                         {
                             collision_result_t cs;
                             float from[3], to[3], tr[16];
-                            ss_bone_tag_p bt = ent->bf->bone_tags + 10;
+                            ss_bone_tag_p bt = ent->bf->bone_tags + ent->character->bone_r_hand_end;
                             Mat4_Mat4_mul(tr, ent->transform, bt->full_transform);
                             vec3_copy(from, tr + 12);
                             vec3_add_mul(to, from, tr + 8, -32768.0f);

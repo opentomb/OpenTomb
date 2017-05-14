@@ -113,11 +113,11 @@ function baddie_init(id)    -- INVALID!
 
     setEntityMoveType(id, MOVE_ON_FLOOR);
     disableEntity(id);
-    setCharacterTarget(id, player);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((getCharacterParam(object_id, PARAM_HEALTH) > 0) and (not getEntityActivity(object_id))) then 
             enableEntity(object_id);
+            setCharacterTarget(object_id, player);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
@@ -229,6 +229,7 @@ function bat_init(id)
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((getCharacterParam(object_id, PARAM_HEALTH) > 0) and (not getEntityActivity(object_id))) then 
             enableEntity(object_id);
+            setCharacterTarget(object_id, player);
             local hit, frac, hx, hy, hz = getEntityRayTest(object_id, COLLISION_GROUP_STATIC_ROOM, 0, 0, 1024, 0, 0, -512);
             if(hit) then
                 local x, y, z = getEntityPos(object_id);
@@ -246,6 +247,13 @@ function bat_init(id)
             setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
             setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
+        end;
+    end;
+
+    entity_funcs[id].onAttack = function(object_id, activator_id)
+        setCharacterParam(object_id, PARAM_HIT_DAMAGE, 150 * frame_time, 150 * frame_time);
+        if(entity_funcs[activator_id].onHit ~= nil) then
+            entity_funcs[activator_id].onHit(activator_id, object_id);
         end;
     end;
 
@@ -416,6 +424,10 @@ function winged_mutant_init(id)
         end;
     end;
 
+    entity_funcs[id].onShoot = function(object_id, activator_id)
+        print("peu");
+    end;
+
     entity_funcs[id].onHit = function(object_id, activator_id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
@@ -573,6 +585,10 @@ function centaur_init(id)
         end;
     end;
 
+    entity_funcs[id].onShoot = function(object_id, activator_id)
+        print("peu");
+    end;
+
     entity_funcs[id].onHit = function(object_id, activator_id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
@@ -607,6 +623,10 @@ function Larson_init(id)
             setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
+    end;
+
+    entity_funcs[id].onShoot = function(object_id, activator_id)
+        print("peu");
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
@@ -658,6 +678,10 @@ function Pierre_init(id)
         end;
     end;
 
+    entity_funcs[id].onShoot = function(object_id, activator_id)
+        print("peu");
+    end;
+
     entity_funcs[id].onLoop = function(object_id, tick_state)
         local hp = getCharacterParam(object_id, PARAM_HEALTH);
         if((hp == 0) and (getLevel() == 9)) then
@@ -684,11 +708,16 @@ function cowboy_init(id)
     setEntityGhostCollisionShape(id, 1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
     setEntityGhostCollisionShape(id, 4,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_COWBOY);
+    setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
             return "cowboy_init(" .. id .. ");\n";
         end;
+    end;
+
+    entity_funcs[id].onShoot = function(object_id, activator_id)
+        print("peu");
     end;
 
     entity_funcs[id].onHit = function(object_id, activator_id)
@@ -716,6 +745,10 @@ function MrT_init(id)
         entity_funcs[id].onSave = function()
             return "MrT_init(" .. id .. ");\n";
         end;
+    end;
+
+    entity_funcs[id].onShoot = function(object_id, activator_id)
+        print("peu");
     end;
 
     entity_funcs[id].onHit = function(object_id, activator_id)
@@ -755,12 +788,17 @@ function skateboardist_init(id)
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((getCharacterParam(object_id, PARAM_HEALTH) > 0) and (not getEntityActivity(object_id))) then 
             enableEntity(object_id);
+            setCharacterTarget(object_id, player);
             entity_funcs[object_id].skate_id = spawnEntity(29, getEntityRoom(object_id), getEntityPos(object_id));
             setEntityCollision(entity_funcs[object_id].skate_id, false);
             setEntityActivity(entity_funcs[object_id].skate_id, true);
             --print("skate = " .. entity_funcs[object_id].skate_id);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+
+    entity_funcs[id].onShoot = function(object_id, activator_id)
+        print("peu");
     end;
 
     entity_funcs[id].onHit = function(object_id, activator_id)
@@ -841,6 +879,10 @@ function Natla_init(id)
             setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
+    end;
+
+    entity_funcs[id].onShoot = function(object_id, activator_id)
+        print("peu");
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)

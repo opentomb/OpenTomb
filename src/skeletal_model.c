@@ -301,12 +301,6 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
     bone_frame_p curr_bf = curr_anim->frames + bf->animations.current_frame;
     bone_frame_p next_bf = next_anim->frames + bf->animations.next_frame;
     
-    if((bf->animations.current_frame + 1 == curr_anim->max_frame) && (curr_anim->max_frame < curr_anim->frames_count))
-    {
-        next_anim = curr_anim;
-        next_bf = curr_bf + 1;
-    }
-    
     vec3_interpolate_macro(bf->bb_max, curr_bf->bb_max, next_bf->bb_max, bf->animations.lerp, t);
     vec3_interpolate_macro(bf->bb_min, curr_bf->bb_min, next_bf->bb_min, bf->animations.lerp, t);
     vec3_interpolate_macro(bf->centre, curr_bf->centre, next_bf->centre, bf->animations.lerp, t);

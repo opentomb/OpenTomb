@@ -95,6 +95,14 @@ int StateControl_Centaur(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ss_anim->next_state = TR_STATE_CENTAUR_STAY;
             }
             break;
+
+        case TR_STATE_CENTAUR_SHOOT:
+            entity_p target = World_GetEntityByID(ent->character->target_id);
+            if((ss_anim->frame_changing_state >= 0x02) && target && Character_IsTargetAccessible(ent, target))
+            {
+                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
+            }
+            break;
     };
 
     return 0;

@@ -107,6 +107,15 @@ int StateControl_Skateboardist(struct entity_s *ent, struct ss_animation_s *ss_a
                 ss_anim->next_state = TR_STATE_SKATEBOARDIST_STOP;
             }
             break;
+
+        case TR_STATE_SKATEBOARDIST_SHOOTING1:
+        case TR_STATE_SKATEBOARDIST_SHOOTING2:
+            entity_p target = World_GetEntityByID(ent->character->target_id);
+            if((ss_anim->frame_changing_state >= 0x02) && target && Character_IsTargetAccessible(ent, target))
+            {
+                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
+            }
+            break;
     };
 
     if(state->slide == CHARACTER_SLIDE_BACK)
