@@ -279,6 +279,16 @@ function wolf_init(id)
         end;
     end;
 
+    entity_funcs[id].onAttack = function(object_id, activator_id)
+        local bone = entity_funcs[object_id].col_part_from;
+        if(bone == 3 or bone == 6 or bone == 9 or bone == 10 or bone == 13 or bone == 14) then
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 150 * frame_time, 150 * frame_time);
+            if(entity_funcs[activator_id].onHit ~= nil) then
+                entity_funcs[activator_id].onHit(activator_id, object_id);
+            end;
+        end;
+    end;
+
     entity_funcs[id].onHit = function(object_id, activator_id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
@@ -300,6 +310,16 @@ function bear_init(id)
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
             return "bear_init(" .. id .. ");\n";
+        end;
+    end;
+
+    entity_funcs[id].onAttack = function(object_id, activator_id)
+        local bone = entity_funcs[object_id].col_part_from;
+        if(bone == 14 or bone == 17 or bone == 2 or bone == 3 or bone == 5 or bone == 6) then
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 250 * frame_time, 250 * frame_time);
+            if(entity_funcs[activator_id].onHit ~= nil) then
+                entity_funcs[activator_id].onHit(activator_id, object_id);
+            end;
         end;
     end;
 
@@ -332,6 +352,16 @@ function raptor_init(id)
         end;
     end;
 
+    entity_funcs[id].onAttack = function(object_id, activator_id)
+        local bone = entity_funcs[object_id].col_part_from;
+        if(bone >= 9 and bone <= 23) then
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 200 * frame_time, 200 * frame_time);
+            if(entity_funcs[activator_id].onHit ~= nil) then
+                entity_funcs[activator_id].onHit(activator_id, object_id);
+            end;
+        end;
+    end;
+
     entity_funcs[id].onHit = function(object_id, activator_id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
@@ -360,6 +390,16 @@ function lion_init(id)
         end;
     end;
 
+    entity_funcs[id].onAttack = function(object_id, activator_id)
+        local bone = entity_funcs[object_id].col_part_from;
+        if(bone == 20 or bone == 21 or bone == 2 or bone == 3 or bone == 5 or bone == 6) then
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 200 * frame_time, 200 * frame_time);
+            if(entity_funcs[activator_id].onHit ~= nil) then
+                entity_funcs[activator_id].onHit(activator_id, object_id);
+            end;
+        end;
+    end;
+
     entity_funcs[id].onHit = function(object_id, activator_id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
@@ -385,6 +425,16 @@ function puma_init(id)
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
             return "puma_init(" .. id .. ");\n";
+        end;
+    end;
+
+    entity_funcs[id].onAttack = function(object_id, activator_id)
+        local bone = entity_funcs[object_id].col_part_from;
+        if(bone == 20 or bone == 21 or bone == 2 or bone == 3 or bone == 5 or bone == 6) then
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 200 * frame_time, 200 * frame_time);
+            if(entity_funcs[activator_id].onHit ~= nil) then
+                entity_funcs[activator_id].onHit(activator_id, object_id);
+            end;
         end;
     end;
 
@@ -428,6 +478,16 @@ function winged_mutant_init(id)
         print("peu");
     end;
 
+    entity_funcs[id].onAttack = function(object_id, activator_id)
+        local bone = entity_funcs[object_id].col_part_from;
+        if(bone >= 3 and bone <= 10) then
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 200 * frame_time, 200 * frame_time);
+            if(entity_funcs[activator_id].onHit ~= nil) then
+                entity_funcs[activator_id].onHit(activator_id, object_id);
+            end;
+        end;
+    end;
+
     entity_funcs[id].onHit = function(object_id, activator_id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
@@ -457,6 +517,21 @@ function trex_init(id)
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
             return "trex_init(" .. id .. ");\n";
+        end;
+    end;
+
+    entity_funcs[id].onAttack = function(object_id, activator_id)
+        local bone = entity_funcs[object_id].col_part_from;
+        if(bone == 12 or bone == 13) then
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 450 * frame_time, 450 * frame_time);
+            if(entity_funcs[activator_id].onHit ~= nil) then
+                entity_funcs[activator_id].onHit(activator_id, object_id);
+            end;
+        else
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 120 * frame_time, 120 * frame_time);
+            if(entity_funcs[activator_id].onHit ~= nil) then
+                entity_funcs[activator_id].onHit(activator_id, object_id);
+            end;
         end;
     end;
 
@@ -490,6 +565,16 @@ function gorilla_init(id)
         end;
     end;
 
+    entity_funcs[id].onAttack = function(object_id, activator_id)
+        local bone = entity_funcs[object_id].col_part_from;
+        if(bone == 14 or bone == 15 or bone == 12 or bone == 13 or bone == 9 or bone == 10) then
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 200 * frame_time, 200 * frame_time);
+            if(entity_funcs[activator_id].onHit ~= nil) then
+                entity_funcs[activator_id].onHit(activator_id, object_id);
+            end;
+        end;
+    end;
+
     entity_funcs[id].onHit = function(object_id, activator_id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
@@ -515,6 +600,16 @@ function crocodile_init(id)
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
             return "crocodile_init(" .. id .. ");\n";
+        end;
+    end;
+
+    entity_funcs[id].onAttack = function(object_id, activator_id)
+        local bone = entity_funcs[object_id].col_part_from;
+        if(bone == 8 or bone == 9) then
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 200 * frame_time, 200 * frame_time);
+            if(entity_funcs[activator_id].onHit ~= nil) then
+                entity_funcs[activator_id].onHit(activator_id, object_id);
+            end;
         end;
     end;
 
@@ -830,6 +925,16 @@ function TorsoBoss_init(id)
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
             return "TorsoBoss_init(" .. id .. ");\n";
+        end;
+    end;
+
+    entity_funcs[id].onAttack = function(object_id, activator_id)
+        local bone = entity_funcs[object_id].col_part_from;
+        if(bone >= 4 and bone <= 25) then
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 200 * frame_time, 200 * frame_time);
+            if(entity_funcs[activator_id].onHit ~= nil) then
+                entity_funcs[activator_id].onHit(activator_id, object_id);
+            end;
         end;
     end;
 

@@ -139,6 +139,4 @@ void Engine_GetLevelName(char *name, const char *path);
 void Engine_GetLevelScriptNameLocal(int game_version, char *name, uint32_t buf_size);
 int  Engine_LoadMap(const char *name);
 
-extern "C" int  Engine_ExecCmd(char *ch);
-
 #endif

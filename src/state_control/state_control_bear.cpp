@@ -124,9 +124,6 @@ int StateControl_Bear(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             break;
 
-        case TR_STATE_BEAR_ATTACK:
-            cmd->rot[0] = 0;
-            state->attack = 0x01;
         case TR_STATE_BEAR_RUN:
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(state->dead)
@@ -147,6 +144,7 @@ int StateControl_Bear(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             break;
 
+        case TR_STATE_BEAR_ATTACK:
         case TR_STATE_BEAR_ATTACK_HIGH:
         case TR_STATE_BEAR_RUN_ATTACK:
             state->attack = 0x01;

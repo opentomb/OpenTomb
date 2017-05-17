@@ -99,6 +99,8 @@ engine_container_p Container_Create()
     return ret;
 }
 
+extern "C" int  Engine_ExecCmd(char *ch);
+
 void Engine_Init_Pre();
 void Engine_Init_Post();
 void Engine_InitGL();
@@ -1463,7 +1465,7 @@ int Engine_LoadMap(const char *name)
 }
 
 
-int Engine_ExecCmd(char *ch)
+extern "C" int Engine_ExecCmd(char *ch)
 {
     char token[1024];
 

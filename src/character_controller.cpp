@@ -22,6 +22,8 @@
 #include "game.h"
 #include "controls.h"
 
+void Character_CollisionCallback(struct entity_s *ent, struct collision_node_s *cn);
+
 void Character_Create(struct entity_s *ent)
 {
     if(ent && !ent->character)
