@@ -30,7 +30,7 @@ void World_GetFlipInfo(uint8_t **flip_map, uint8_t **flip_state, uint32_t *flip_
 
 int World_AddAnimSeq(struct anim_seq_s *seq);
 int World_AddEntity(struct entity_s *entity);
-int World_DeleteEntity(struct entity_s *entity);
+int World_DeleteEntity(uint32_t id);
 int World_CreateItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
 int World_DeleteItem(uint32_t item_id);
 struct sprite_s *World_GetSpriteByID(uint32_t ID);

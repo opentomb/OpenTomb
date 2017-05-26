@@ -667,6 +667,22 @@ int lua_SpawnEntity(lua_State * lua)
 }
 
 
+int lua_DeleteEntity(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 1)
+    {
+        World_DeleteEntity(lua_tointeger(lua, 1));
+    }
+    else
+    {
+        Con_Warning("deleteEntity: expecting arguments (entity_id)");
+    }
+
+    return 0;
+}
+
+
 int lua_GetLevel(lua_State *lua)
 {
     lua_pushinteger(lua, Gameflow_GetCurrentLevelID());
@@ -1051,6 +1067,7 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
     lua_register(lua, "deleteBaseItem", lua_DeleteBaseItem);
     lua_register(lua, "getBaseItemInfo", lua_GetBaseItemInfo);
     lua_register(lua, "spawnEntity", lua_SpawnEntity);
+    lua_register(lua, "deleteEntity", lua_DeleteEntity);
 
     lua_register(lua, "sameRoom", lua_SameRoom);
     lua_register(lua, "newSector", lua_NewSector);

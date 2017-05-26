@@ -757,6 +757,9 @@ collision_node_p Physics_GetGhostCurrentCollision(struct physics_data_s *physics
                                 (*cn)->penetration[1] = pt.m_normalWorldOnB[1];
                                 (*cn)->penetration[2] = pt.m_normalWorldOnB[2];
                                 (*cn)->penetration[3] = dist * directionSign;
+                                (*cn)->point[0] = pt.m_positionWorldOnA[0];
+                                (*cn)->point[1] = pt.m_positionWorldOnA[1];
+                                (*cn)->point[2] = pt.m_positionWorldOnA[2];
 
                                 cn = &((*cn)->next);
                             }
@@ -801,6 +804,7 @@ btCollisionShape *BT_CSfromBBox(btScalar *bb_min, btScalar *bb_max)
             cnt ++;
         }
     }
+
     OBB_Delete(obb);
 
     if(cnt == 0)

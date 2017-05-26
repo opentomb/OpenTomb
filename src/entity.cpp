@@ -101,7 +101,7 @@ void Entity_Delete(entity_p entity)
 {
     if(entity)
     {
-        if(entity->self->room && (entity != World_GetPlayer()))
+        if(entity->self->room)
         {
             Room_RemoveObject(entity->self->room, entity->self);
         }
@@ -1267,10 +1267,10 @@ int  Entity_CanTrigger(entity_p activator, entity_p trigger)
 
 void Entity_RotateToTriggerZ(entity_p activator, entity_p trigger)
 {
-    if(activator && trigger && trigger->activation_point && (activator != trigger))
+    if(activator && trigger && (activator != trigger))
     {
         float dir[4];
-        if(vec3_sqabs(trigger->activation_point->direction) > 0.001f)
+        if(trigger->activation_point && (vec3_sqabs(trigger->activation_point->direction) > 0.001f))
         {
             Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_point->direction);
         }
@@ -1285,18 +1285,26 @@ void Entity_RotateToTriggerZ(entity_p activator, entity_p trigger)
 }
 
 
-void Entity_RotateToTrigger(entity_p activator, entity_p trigger)
+void Entity_RotateToTrigger(entity_p activator, entity_p trigger, int bone_to)
 {
-    if(activator && trigger && trigger->activation_point && (activator != trigger))
+    if(activator && trigger && (activator != trigger))
     {
         float dir[4], q[4], qt[4];
-        if(vec3_sqabs(trigger->activation_point->direction) > 0.001f)
+        if(trigger->activation_point && (vec3_sqabs(trigger->activation_point->direction) > 0.001f))
         {
             Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_point->direction);
         }
         else
         {
-            vec3_sub(dir, trigger->transform + 12, activator->transform + 12);
+            if((0 <= bone_to) && (bone_to < trigger->bf->bone_tag_count))
+            {
+                Mat4_vec3_mul(dir, trigger->transform, trigger->bf->bone_tags[bone_to].full_transform + 12);
+                vec3_sub(dir, dir, activator->transform + 12);
+            }
+            else
+            {
+                vec3_sub(dir, trigger->transform + 12, activator->transform + 12);
+            }
             vec3_norm(dir, dir[3]);
         }
         vec4_GetQuaternionRotation(q, activator->transform + 4, dir);

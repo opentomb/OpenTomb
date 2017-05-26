@@ -24,6 +24,7 @@ typedef struct collision_node_s
     struct engine_container_s  *obj;
     struct collision_node_s    *next;
     float                       penetration[4];  // x, y, z, dist
+    float                       point[3];
 }collision_node_t, *collision_node_p;
 
 

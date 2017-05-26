@@ -1241,10 +1241,11 @@ int lua_EntityRotateToTriggerZ(lua_State * lua)
 
 int lua_EntityRotateToTrigger(lua_State * lua)
 {
-    if(lua_gettop(lua) >= 2)
+    if(lua_gettop(lua) >= 3)
     {
         Entity_RotateToTrigger(World_GetEntityByID(lua_tointeger(lua, 1)),
-                               World_GetEntityByID(lua_tointeger(lua, 2)));
+                               World_GetEntityByID(lua_tointeger(lua, 2)),
+                               lua_tointeger(lua, 3));
     }
 
     return 0;

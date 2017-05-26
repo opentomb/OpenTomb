@@ -352,6 +352,31 @@ function boulder_heavy_init(id)
 end;
 
 
+function projectile_init(id, speed, damage)
+    setEntityActivity(id, true);
+    setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    createGhosts(id);
+    local group = COLLISION_GROUP_KINEMATIC;
+    local mask = COLLISION_GROUP_STATIC_ROOM;
+    setEntityCollisionFlags(id, group, nil, mask);
+    setEntityGhostCollisionShape(id, 0, COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+
+    entity_funcs[id].onSave = function()
+        return "projectile_init(" .. id .. ", " .. speed .. ", " .. damage .. ");\n";
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        moveEntityLocal(object_id, 0.0, speed * frame_time, 0.0);
+    end;
+
+    entity_funcs[id].onCollide = function(object_id, activator_id)
+        changeCharacterParam(activator_id, PARAM_HEALTH, -damage);
+        disableEntity(object_id);
+        setEntityStateFlag(object_id, ENTITY_STATE_DELETED, 1);
+    end;
+end
+
+
 function zipline_init(id)
     setEntityActivity(id, false);
     setEntityAnim(id, ANIM_TYPE_BASE, 0, 0);

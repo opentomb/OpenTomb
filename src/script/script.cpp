@@ -856,6 +856,7 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, ENTITY_STATE_ACTIVE);
         LUA_EXPOSE(lua, ENTITY_STATE_VISIBLE);
         LUA_EXPOSE(lua, ENTITY_STATE_COLLIDABLE);
+        LUA_EXPOSE(lua, ENTITY_STATE_DELETED);
 
         LUA_EXPOSE(lua, ENTITY_TYPE_SPAWNED);
         LUA_EXPOSE(lua, ENTITY_TYPE_GENERIC);

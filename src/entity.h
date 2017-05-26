@@ -19,6 +19,7 @@ struct inventory_node_s;
 #define ENTITY_STATE_ACTIVE                         (0x0002)    // Entity is animated.
 #define ENTITY_STATE_VISIBLE                        (0x0004)    // Entity is visible.
 #define ENTITY_STATE_COLLIDABLE                     (0x0008)    // Collisions enabled.
+#define ENTITY_STATE_DELETED                        (0x1000)    // Will be deleted on update.
 
 #define ENTITY_TYPE_GENERIC                         (0x0000)    // Just an animating.
 #define ENTITY_TYPE_INTERACTIVE                     (0x0001)    // Can respond to other entity's commands.
@@ -195,7 +196,7 @@ void Entity_RebuildBV(entity_p ent);
 void Entity_UpdateTransform(entity_p entity);
 int  Entity_CanTrigger(entity_p activator, entity_p trigger);
 void Entity_RotateToTriggerZ(entity_p activator, entity_p trigger);
-void Entity_RotateToTrigger(entity_p activator, entity_p trigger);
+void Entity_RotateToTrigger(entity_p activator, entity_p trigger, int bone_to);
 void Entity_CheckActivators(struct entity_s *ent);
 int  Entity_Activate(struct entity_s *entity_object, struct entity_s *entity_activator, uint16_t trigger_mask, uint16_t trigger_op, uint16_t trigger_lock, uint16_t trigger_timer);
 int  Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_activator);
