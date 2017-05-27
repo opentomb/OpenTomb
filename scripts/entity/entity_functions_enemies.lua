@@ -482,7 +482,13 @@ function winged_mutant_init(id)
     end;
 
     entity_funcs[id].onShoot = function(object_id, activator_id)
-        print("peu");
+        local spawned_id = spawnEntity(173, getEntityRoom(object_id), getEntityPos(object_id));
+        moveEntityLocal(spawned_id, 128, 1024 - 380, 1024 - 64);
+        local target = getCharacterTarget(object_id);
+        if(target >= 0) then
+            entityRotateToTrigger(spawned_id, target, 0);
+        end;
+        projectile_init(spawned_id, 4096, 150);
     end;
 
     entity_funcs[id].onAttack = function(object_id, activator_id)
@@ -1044,6 +1050,7 @@ function mummy_spawner_init(id)
             local spawned_id = spawnEntity(20, getEntityRoom(object_id), getEntityPos(object_id));
             mummy_init(spawned_id);
             enableEntity(spawned_id);
+            setCharacterTarget(object_id, player);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
@@ -1056,6 +1063,7 @@ function mutant_spawner_init(id)
             local spawned_id = spawnEntity(20, getEntityRoom(object_id), getEntityPos(object_id));
             winged_mutant_init(spawned_id);
             enableEntity(spawned_id);
+            setCharacterTarget(object_id, player);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
@@ -1069,6 +1077,7 @@ function mutant_egg_init(id)
         if(getEntityEvent(object_id) == 0) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
             setEntityActivity(object_id, true);
+            setCharacterTarget(object_id, player);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
