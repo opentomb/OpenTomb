@@ -693,7 +693,10 @@ function centaur_init(id)
     end;
 
     entity_funcs[id].onShoot = function(object_id, activator_id)
-        print("peu");
+        local spawned_id = spawnEntity(173, getEntityRoom(object_id), getEntityPos(object_id));
+        moveEntityLocal(spawned_id, 128, 1024 + 128, 1024 + 256);
+        entityRotateToTrigger(spawned_id, getCharacterTarget(object_id), 0);
+        projectile_init(spawned_id, 4096, 150);
     end;
 
     entity_funcs[id].onHit = function(object_id, activator_id)

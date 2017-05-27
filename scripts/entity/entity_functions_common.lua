@@ -353,13 +353,18 @@ end;
 
 
 function projectile_init(id, speed, damage)
-    setEntityActivity(id, true);
+    if(entity_funcs[id] == nil) then
+        entity_funcs[id] = {};
+    end;
+
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     createGhosts(id);
-    local group = COLLISION_GROUP_KINEMATIC;
-    local mask = COLLISION_GROUP_STATIC_ROOM;
+    local group = COLLISION_GROUP_CHARACTER;
+    local mask = COLLISION_GROUP_CHARACTER;
+    local filter = bit32.bor(COLLISION_GROUP_STATIC_ROOM, COLLISION_GROUP_STATIC_OBLECT, COLLISION_GROUP_KINEMATIC);
     setEntityCollisionFlags(id, group, nil, mask);
     setEntityGhostCollisionShape(id, 0, COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
+    setEntityActivity(id, true);
 
     entity_funcs[id].onSave = function()
         return "projectile_init(" .. id .. ", " .. speed .. ", " .. damage .. ");\n";
@@ -367,12 +372,17 @@ function projectile_init(id, speed, damage)
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
         moveEntityLocal(object_id, 0.0, speed * frame_time, 0.0);
+        if(getEntityCollisionFix(object_id, filter)) then
+            setEntityStateFlag(object_id, ENTITY_STATE_DELETED, 1);
+            print("projectile wall hit: " .. object_id);
+        end;
     end;
 
     entity_funcs[id].onCollide = function(object_id, activator_id)
         changeCharacterParam(activator_id, PARAM_HEALTH, -damage);
         disableEntity(object_id);
         setEntityStateFlag(object_id, ENTITY_STATE_DELETED, 1);
+        print("projectile character hit: " .. object_id);
     end;
 end
 
