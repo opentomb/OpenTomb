@@ -157,7 +157,6 @@ public:
     void    Animate();
     void    Draw();
 
-    void    SetPos(float X, float Y);
     void    SetRot(float X, float Y);
     void    SetSize(float size);
     void    SetRotateTime(float time);
@@ -165,9 +164,6 @@ public:
 private:
     bool    mActive;
     int     mItem;
-
-    float   mAbsPosY;
-    float   mAbsPosX;
 
     float   mPosY;
     float   mStartPosX;

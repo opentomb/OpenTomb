@@ -180,7 +180,6 @@ void Gui_InitBars()
 
 void Gui_InitNotifier()
 {
-    Notifier.SetPos(850.0, 850.0);
     Notifier.SetRot(180.0, 270.0);
     Notifier.SetSize(128.0);
     Notifier.SetRotateTime(2500.0);
@@ -293,11 +292,11 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatri
         vec3_sub(bb, bf->bb_max, bf->bb_min);
         if(bb[0] >= bb[1])
         {
-            size /= ((bb[0] >= bb[2])?(bb[0]):(bb[2]));
+            size /= ((bb[0] >= bb[2]) ? (bb[0]) : (bb[2]));
         }
         else
         {
-            size /= ((bb[1] >= bb[2])?(bb[1]):(bb[2]));
+            size /= ((bb[1] >= bb[2]) ? (bb[1]) : (bb[2]));
         }
         size *= 0.8;
 
@@ -1292,7 +1291,7 @@ void gui_ProgressBar::RecalculateSize()
     // If bar alignment is set to horizontal, calculate it from bar width.
     // If bar is vertical, then calculate it from height.
 
-    mRangeUnit = (!Vertical)?( (mWidth) / mMaxValue ):( (mHeight) / mMaxValue );
+    mRangeUnit = (!Vertical) ? ( (mWidth) / mMaxValue ) : ( (mHeight) / mMaxValue );
 }
 
 // Recalculate position, according to viewport resolution.
@@ -1372,11 +1371,11 @@ void gui_ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDe
 void gui_ProgressBar::Show(float value)
 {
     // Initial value limiters (to prevent bar overflow).
-    value  = (value >= 0.0f)?(value):(0.0f);
-    value  = (value > mMaxValue)?(mMaxValue):(value);
+    value  = (value >= 0.0f) ? (value):(0.0f);
+    value  = (value > mMaxValue) ? (mMaxValue):(value);
 
     // Enable blink mode, if value is gone below warning value.
-    mBlink = (value <= mWarnValue)?(true):(false);
+    mBlink = (value <= mWarnValue) ? (true):(false);
 
     if(mAutoShow)   // Check autoshow visibility conditions.
     {
@@ -1500,8 +1499,8 @@ void gui_ProgressBar::Show(float value)
     {
           // Draw full-sized background rect (instead of base bar rect)
           Gui_DrawRect(mX + mBorderWidth, mY + mBorderHeight, mWidth, mHeight,
-                       mBackMainColor, (Vertical)?(mBackFadeColor):(mBackMainColor),
-                       (Vertical)?(mBackMainColor):(mBackFadeColor), mBackFadeColor,
+                       mBackMainColor, (Vertical) ? (mBackFadeColor) : (mBackMainColor),
+                       (Vertical) ? (mBackMainColor) : (mBackFadeColor), mBackFadeColor,
                        BM_OPAQUE);
           return;
     }
@@ -1519,32 +1518,32 @@ void gui_ProgressBar::Show(float value)
     if(Invert)
     {
         memcpy(RectFirstColor,
-               (Alternate)?(mAltMainColor):(mBaseMainColor),
+               (Alternate) ? (mAltMainColor) : (mBaseMainColor),
                sizeof(float) * 4);
 
         // Main-fade gradient is recalculated according to current / maximum value ratio.
         for(int i = 0; i <= 3; i++)
-            RectSecondColor[i] = (Alternate)?((mBaseRatio * mAltFadeColor[i])  + ((1 - mBaseRatio) * mAltMainColor[i]))
-                                            :((mBaseRatio * mBaseFadeColor[i]) + ((1 - mBaseRatio) * mBaseMainColor[i]));
+            RectSecondColor[i] = (Alternate) ? ((mBaseRatio * mAltFadeColor[i])  + ((1 - mBaseRatio) * mAltMainColor[i]))
+                                             : ((mBaseRatio * mBaseFadeColor[i]) + ((1 - mBaseRatio) * mBaseMainColor[i]));
 
     }
     else
     {
         memcpy(RectSecondColor,
-               (Alternate)?(mAltMainColor):(mBaseMainColor),
+               (Alternate) ? (mAltMainColor) : (mBaseMainColor),
                sizeof(float) * 4);
 
         // Main-fade gradient is recalculated according to current / maximum value ratio.
         for(int i = 0; i <= 3; i++)
-            RectFirstColor[i] = (Alternate)?((mBaseRatio * mAltFadeColor[i])  + ((1 - mBaseRatio) * mAltMainColor[i]))
-                                           :((mBaseRatio * mBaseFadeColor[i]) + ((1 - mBaseRatio) * mBaseMainColor[i]));
+            RectFirstColor[i] = (Alternate) ? ((mBaseRatio * mAltFadeColor[i])  + ((1 - mBaseRatio) * mAltMainColor[i]))
+                                            : ((mBaseRatio * mBaseFadeColor[i]) + ((1 - mBaseRatio) * mBaseMainColor[i]));
 
     } // end if(Invert)
 
     // If vertical style flag is set, we draw bar base top-bottom, else we draw it left-right.
     if(Vertical)
     {
-        RectAnchor = ( (Invert)?(mY + mHeight - mBaseSize):(mY) ) + mBorderHeight;
+        RectAnchor = ((Invert) ? (mY + mHeight - mBaseSize) : (mY)) + mBorderHeight;
 
         // Draw actual bar base.
         Gui_DrawRect(mX + mBorderWidth, RectAnchor,
@@ -1555,7 +1554,7 @@ void gui_ProgressBar::Show(float value)
 
         // Draw background rect.
         Gui_DrawRect(mX + mBorderWidth,
-                     (Invert)?(mY + mBorderHeight):(RectAnchor + mBaseSize),
+                     (Invert) ? (mY + mBorderHeight) : (RectAnchor + mBaseSize),
                      mWidth, mHeight - mBaseSize,
                      mBackMainColor, mBackFadeColor,
                      mBackMainColor, mBackFadeColor,
@@ -1579,7 +1578,7 @@ void gui_ProgressBar::Show(float value)
     }
     else
     {
-        RectAnchor = ( (Invert)?(mX + mWidth - mBaseSize):(mX) ) + mBorderWidth;
+        RectAnchor = ((Invert) ? (mX + mWidth - mBaseSize) : (mX)) + mBorderWidth;
 
         // Draw actual bar base.
         Gui_DrawRect(RectAnchor, mY + mBorderHeight,
@@ -1589,7 +1588,7 @@ void gui_ProgressBar::Show(float value)
                      BM_OPAQUE);
 
         // Draw background rect.
-        Gui_DrawRect((Invert)?(mX + mBorderWidth):(RectAnchor + mBaseSize),
+        Gui_DrawRect((Invert) ? (mX + mBorderWidth) : (RectAnchor + mBaseSize),
                      mY + mBorderHeight,
                      mWidth - mBaseSize, mHeight,
                      mBackMainColor, mBackMainColor,
@@ -1620,7 +1619,6 @@ void gui_ProgressBar::Show(float value)
 
 gui_ItemNotifier::gui_ItemNotifier()
 {
-    SetPos(850, 850);
     SetRot(0,0);
     SetSize(1.0);
     SetRotateTime(1000.0);
@@ -1651,8 +1649,8 @@ void gui_ItemNotifier::Animate()
             mCurrRotX += (engine_frame_time * mRotateTime);
             //mCurrRotY += (engine_frame_time * mRotateTime);
 
-            mCurrRotX = (mCurrRotX > 360.0)?(mCurrRotX - 360.0):(mCurrRotX);
-            //mCurrRotY = (mCurrRotY > 360.0)?(mCurrRotY - 360.0):(mCurrRotY);
+            mCurrRotX = (mCurrRotX > 360.0) ? (mCurrRotX - 360.0) : (mCurrRotX);
+            //mCurrRotY = (mCurrRotY > 360.0) ? (mCurrRotY - 360.0) : (mCurrRotY);
         }
 
         float step = 0;
@@ -1660,10 +1658,10 @@ void gui_ItemNotifier::Animate()
         if(mCurrTime == 0)
         {
             step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
-            step = (step <= 0.5)?(0.5):(step);
+            step = (step <= 0.5) ? (0.5) : (step);
 
             mCurrPosX -= step;
-            mCurrPosX  = (mCurrPosX < mEndPosX)?(mEndPosX):(mCurrPosX);
+            mCurrPosX  = (mCurrPosX < mEndPosX) ? (mEndPosX) : (mCurrPosX);
 
             if(mCurrPosX == mEndPosX)
                 mCurrTime += engine_frame_time;
@@ -1675,10 +1673,10 @@ void gui_ItemNotifier::Animate()
         else
         {
             step = (mCurrPosX - mEndPosX) * (engine_frame_time * 4.0);
-            step = (step <= 0.5)?(0.5):(step);
+            step = (step <= 0.5) ? (0.5) : (step);
 
             mCurrPosX += step;
-            mCurrPosX  = (mCurrPosX > mStartPosX)?(mStartPosX):(mCurrPosX);
+            mCurrPosX  = (mCurrPosX > mStartPosX) ? (mStartPosX) : (mCurrPosX);
 
             if(mCurrPosX == mStartPosX)
                 Reset();
@@ -1693,8 +1691,8 @@ void gui_ItemNotifier::Reset()
     mCurrRotX = 0.0;
     mCurrRotY = 0.0;
 
-    mEndPosX = mAbsPosX;
-    mPosY    = mAbsPosY;
+    mEndPosX = 0.85f * screen_info.w;
+    mPosY    = 0.15f * screen_info.h;
     mCurrPosX = screen_info.w + ((float)screen_info.w / GUI_NOTIFIER_OFFSCREEN_DIVIDER * mSize);
     mStartPosX = mCurrPosX;    // Equalize current and start positions.
 }
@@ -1733,12 +1731,6 @@ void gui_ItemNotifier::Draw()
     }
 }
 
-void gui_ItemNotifier::SetPos(float X, float Y)
-{
-    mAbsPosX = X;
-    mAbsPosY = 1000.0 - Y;
-}
-
 void gui_ItemNotifier::SetRot(float X, float Y)
 {
     mRotX = X;
@@ -1752,5 +1744,5 @@ void gui_ItemNotifier::SetSize(float size)
 
 void gui_ItemNotifier::SetRotateTime(float time)
 {
-    mRotateTime = (1000.0 / time) * 360.0;
+    mRotateTime = (1000.0f / time) * 360.0f;
 }
