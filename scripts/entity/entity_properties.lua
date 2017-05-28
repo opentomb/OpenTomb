@@ -78,16 +78,16 @@ tr1_entity_tbl[34] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_S
 tr1_entity_tbl[35] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_SINGLE_BOX, func = "fallblock"};  -- Falling floor
 tr1_entity_tbl[36] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "swingblade"}; -- Swinging blade (Vilcabamba, etc.)
 tr1_entity_tbl[37] = {coll = COLLISION_GROUP_TRIGGERS,  shape = COLLISION_SHAPE_BOX, func = "oldspike"};   -- Spikes
-tr1_entity_tbl[38] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_SINGLE_SPHERE, func = "boulder_heavy"};        -- Boulder
-tr1_entity_tbl[39] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Dart
-tr1_entity_tbl[40] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Dartgun
-tr1_entity_tbl[41] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "anim_single"};-- Lifting door
-tr1_entity_tbl[42] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};       -- Slamming sawtooth doors
-tr1_entity_tbl[43] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "damocles"};                  -- Sword of Damocles
-tr1_entity_tbl[44] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "Thor_hummer"};               -- Thor's hammer (handle)
-tr1_entity_tbl[45] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                                     -- Thor's hammer (block) - spawned by script
-tr1_entity_tbl[46] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH };                                    -- Thor's lightning ball
-tr1_entity_tbl[47] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "anim_single"};               -- Barricade
+tr1_entity_tbl[38] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_SINGLE_SPHERE, func = "boulder_heavy"};         -- Boulder
+tr1_entity_tbl[39] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                                       -- Dart
+tr1_entity_tbl[40] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "dart_emitter"};                -- Dartgun
+tr1_entity_tbl[41] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "anim_single"};                 -- Lifting door
+tr1_entity_tbl[42] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};                        -- Slamming sawtooth doors
+tr1_entity_tbl[43] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "damocles"};                    -- Sword of Damocles
+tr1_entity_tbl[44] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "Thor_hummer"};                 -- Thor's hammer (handle)
+tr1_entity_tbl[45] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                                       -- Thor's hammer (block) - spawned by script
+tr1_entity_tbl[46] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH };                                      -- Thor's lightning ball
+tr1_entity_tbl[47] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "anim_single"};                 -- Barricade
 tr1_entity_tbl[48] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};         -- Pushable block
 tr1_entity_tbl[49] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};         -- Pushable block
 tr1_entity_tbl[50] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};         -- Pushable block

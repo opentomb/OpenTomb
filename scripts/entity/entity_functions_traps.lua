@@ -41,6 +41,37 @@ function gen_trap_init(id)      -- Generic traps (TR1-TR2)
 end
 
 
+function dart_emitter_init(id)
+    setEntityActivity(id, false);
+    entity_funcs[id].passed = 1.0;
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        setEntityActivity(object_id, true);
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, false);
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        entity_funcs[id].passed = entity_funcs[id].passed + frame_time;
+        if(entity_funcs[id].passed > 1.5) then 
+            entity_funcs[id].passed = 0.0;
+
+            local spawned_id = spawnEntity(39, getEntityRoom(object_id), getEntityPos(object_id));
+            moveEntityLocal(spawned_id, 0, -128 - 64, 512);
+            projectile_init(spawned_id, 4096, 150);
+        end;
+
+        if(tick_state == TICK_STOPPED) then
+            setEntityActivity(object_id, false);
+        end;
+    end
+end
+
+
 function sethblade_init(id)      -- Seth blades (TR4)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);

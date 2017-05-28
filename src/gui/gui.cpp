@@ -1371,11 +1371,11 @@ void gui_ProgressBar::SetAutoshow(bool enabled, int delay, bool fade, int fadeDe
 void gui_ProgressBar::Show(float value)
 {
     // Initial value limiters (to prevent bar overflow).
-    value  = (value >= 0.0f) ? (value):(0.0f);
+    value  = (value >= 0.0f) ? (value) : (0.0f);
     value  = (value > mMaxValue) ? (mMaxValue):(value);
 
     // Enable blink mode, if value is gone below warning value.
-    mBlink = (value <= mWarnValue) ? (true):(false);
+    mBlink = (value <= mWarnValue);
 
     if(mAutoShow)   // Check autoshow visibility conditions.
     {
