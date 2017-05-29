@@ -144,33 +144,27 @@ function fallblock_init(id)  -- Falling block (TR1-3)
 
     setEntityCallbackFlag(id, ENTITY_CALLBACK_STAND, 1);
     setEntitySpeed(id, 0.0, 0.0, 0.0);
+    setEntityActivity(id, false);
 
     entity_funcs[id].onStand = function(object_id, activator_id)
-        if((object_id == nil) or (activator_id == nil)) then
-            return;
-        end
-
         local anim = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(anim == 0) then
+            setEntityActivity(object_id, true);
             setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
-            -- print("you trapped to id = "..object_id);
-            local once = true;
-            addTask(
-            function()
-                local anim = getEntityAnim(object_id, ANIM_TYPE_BASE);
-                if(anim == 1) then
-                    return true;
-                end;
-                if(once) then
-                    setEntityCollision(object_id, false);
-                    once = false;
-                end;
-                if(dropEntity(object_id, frame_time, true)) then
-                    setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
-                    return false;
-                end;
-                return true;
-            end);
+        end;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if(a == 2) then
+            setEntityCollision(object_id, false);
+            if(dropEntity(object_id, frame_time, true)) then
+                setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
+            end;
+        elseif(a >= 3) then
+            if(f + 1 >= c) then
+                setEntityActivity(object_id, false);
+            end;
         end;
     end;
 end
@@ -180,39 +174,40 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
 
     setEntitySpeed(id, 0.0, 0.0, 0.0);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
-    
+    setEntityActivity(id, false);
+
     local level_version = getLevelVersion();
     if((level_version < TR_II) or (level_version >= TR_III)) then 
-        setEntityVisibility(id, false) 
+        setEntityVisibility(id, false);
     end;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if((object_id == nil) or (activator_id == nil)) then
-            return ENTITY_TRIGGERING_NOT_READY;
-        end
-        
         local anim = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(anim == 0) then
-            setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
-            setEntityVisibility(object_id, true);
-            addTask(
-            function()
-                if(dropEntity(object_id, frame_time, true)) then
-                    setEntityAnim(object_id, ANIM_TYPE_BASE, 2, 0);
-                    setEntityCollision(object_id, false);
-                    return false;
-                end;
-                return true;
-            end);
+            enableEntity(object_id);
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
         return ENTITY_TRIGGERING_NOT_READY;
     end;
     
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if(a == 1) then
+            if(dropEntity(object_id, frame_time, true)) then
+                setEntityAnimState(object_id, ANIM_TYPE_BASE, 2);
+            end;
+        elseif(a >= 2) then
+            if(f + 1 >= c) then
+                setEntityCollision(object_id, false);
+                setEntityActivity(object_id, false);
+            end;
+        end;
+    end;
+
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if((getEntityAnim(object_id, ANIM_TYPE_BASE) == 1) and (getEntityModelID(activator_id) == 0) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
             setCharacterParam(activator_id, PARAM_HEALTH, 0);
         end;
-    end
+    end;
 end
-

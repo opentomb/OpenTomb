@@ -2456,7 +2456,7 @@ int lua_DropEntity(lua_State * lua)
 
             Physics_GetGravity(g);
             vec3_mul_scalar(move, ent->speed, time);
-            t = 0.5 * time * time;
+            t = 0.5f * time * time;
             vec3_add_mul(move, move, g, t);
             ent->speed[0] += g[0] * time;
             ent->speed[1] += g[1] * time;
@@ -2467,7 +2467,7 @@ int lua_DropEntity(lua_State * lua)
             from[2] += 32.0f;
             to[2] -= (ent->bf->bb_max[2] - ent->bf->bb_min[2]);
 
-            if(Physics_RayTest(&cb, from, to, ent->self, filter))
+            if(Physics_RayTestFiltered(&cb, from, to, ent->self, filter))
             {
                 lua_pushboolean(lua, ent->transform[12 + 2] < cb.point[2] + 1.0f);
                 ent->transform[12 + 2] = cb.point[2];
