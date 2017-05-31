@@ -283,6 +283,31 @@ int lua_SetEntityAnimStateHeavy(lua_State * lua)
 }
 
 
+int lua_GetModelMeshCount(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        skeletal_model_p sm = World_GetModelByID(lua_tointeger(lua, 1));
+        if(sm)
+        {
+            lua_pushinteger(lua, sm->mesh_count);
+            return 1;
+        }
+        else
+        {
+            Con_Warning("no model with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getModelMeshCount: expecting arguments (model_id)");
+    }
+
+    lua_pushinteger(lua, 0);
+    return 1;
+}
+
+
 int lua_GetEntityMeshCount(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -303,7 +328,8 @@ int lua_GetEntityMeshCount(lua_State *lua)
         Con_Warning("getEntityMeshCount: expecting arguments (entity_id)");
     }
 
-    return 0;
+    lua_pushinteger(lua, 0);
+    return 1;
 }
 
 
@@ -873,6 +899,7 @@ void Script_LuaRegisterAnimFuncs(lua_State *lua)
     lua_register(lua, "getEntityAnimState", lua_GetEntityAnimState);
     lua_register(lua, "setEntityAnimState", lua_SetEntityAnimState);
     lua_register(lua, "setEntityAnimStateHeavy", lua_SetEntityAnimStateHeavy);
+    lua_register(lua, "getModelMeshCount", lua_GetModelMeshCount);
     lua_register(lua, "getEntityMeshCount", lua_GetEntityMeshCount);
     lua_register(lua, "setEntityMeshes", lua_SetEntityMeshes);
     lua_register(lua, "setEntitySkinMeshes", lua_SetEntitySkinMeshes);

@@ -2215,7 +2215,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
 
         return 1;
     }
-    else
+    else if(ent->bf->animations.model)
     {
         // do unarmed default model
         skeletal_model_p bm = ent->bf->animations.model;

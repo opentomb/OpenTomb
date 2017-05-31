@@ -120,14 +120,14 @@ void Con_Init()
 
     for(i = 0; i < con_base.lines_count; i++)
     {
-        con_base.lines_text[i]  = (char*) calloc(con_base.line_size * sizeof(char), 1);
+        con_base.lines_text[i]  = (char*)calloc(con_base.line_size * sizeof(char), 1);
         con_base.lines_style_id[i] = FONTSTYLE_GENERIC;
     }
 
-    con_base.log_lines = (char**) realloc(con_base.log_lines, con_base.log_lines_count * sizeof(char*));
+    con_base.log_lines = (char**)malloc(con_base.log_lines_count * sizeof(char*));
     for(i = 0; i < con_base.log_lines_count; i++)
     {
-        con_base.log_lines[i] = (char*) calloc(con_base.line_size * sizeof(char), 1);
+        con_base.log_lines[i] = (char*)calloc(con_base.line_size * sizeof(char), 1);
     }
 }
 

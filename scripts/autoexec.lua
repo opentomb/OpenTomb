@@ -36,7 +36,27 @@ function setDefaultModelAnimReplaceFlag(m_id)
     setModelAnimReplaceFlag(m_id, 13, 0x01);
 end
 
+function enableModelAnimReplaceFlags(m_id, copy_meshes_back)
+    local meshes_count = getModelMeshCount(m_id);
+    local m = 0;
+
+    if(copy_meshes_back) then
+        while(m < meshes_count) do
+            setModelAnimReplaceFlag(m_id, m, 0x01);
+            copyMeshFromModelToModel(m_id, 0, m, m);
+            m = m + 1;
+        end;
+    else
+        while(m < meshes_count) do
+            setModelAnimReplaceFlag(m_id, m, 0x01);
+            m = m + 1;
+        end;
+    end;
+end
+
 if (getLevelVersion() < TR_II) then
+    enableModelAnimReplaceFlags(5, false);
+
     -- pistols
     setDefaultModelAnimReplaceFlag(1);
     setModelMeshReplaceFlag(1, 10, 0x01);
@@ -66,6 +86,8 @@ if (getLevelVersion() < TR_II) then
     setModelMeshReplaceFlag(4, 4, 0x03);
 
 elseif (getLevelVersion() < TR_III) then
+    enableModelAnimReplaceFlags(12, true);
+
     -- pistols
     setDefaultModelAnimReplaceFlag(1);
     setModelMeshReplaceFlag(1, 10, 0x01);

@@ -301,7 +301,7 @@ int lua_NoEntityMove(lua_State *lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            ent->no_fix_all = lua_toboolean(lua, 2);
+            ent->no_move = lua_toboolean(lua, 2);
         }
     }
     else

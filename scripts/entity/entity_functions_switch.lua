@@ -596,23 +596,6 @@ function WheelKnob_init(id)   -- Bulkdoors (TR2)
     setEntityActivationDirection(id, 0.0, 1.0, 0.0, 0.70);
     setEntityActivationOffset(id, 0.0, 256.0, 0.0, 128.0);
 
-    -- enable anims replacing from model 12
-    setModelAnimReplaceFlag(12, 0, 0x01);       copyMeshFromModelToModel(12, 0, 0, 0);
-    setModelAnimReplaceFlag(12, 1, 0x01);       copyMeshFromModelToModel(12, 0, 1, 1);
-    setModelAnimReplaceFlag(12, 2, 0x01);       copyMeshFromModelToModel(12, 0, 2, 2);
-    setModelAnimReplaceFlag(12, 3, 0x01);       copyMeshFromModelToModel(12, 0, 3, 3);
-    setModelAnimReplaceFlag(12, 4, 0x01);       copyMeshFromModelToModel(12, 0, 4, 4);
-    setModelAnimReplaceFlag(12, 5, 0x01);       copyMeshFromModelToModel(12, 0, 5, 5);
-    setModelAnimReplaceFlag(12, 6, 0x01);       copyMeshFromModelToModel(12, 0, 6, 6);
-    setModelAnimReplaceFlag(12, 7, 0x01);       copyMeshFromModelToModel(12, 0, 7, 7);
-    setModelAnimReplaceFlag(12, 8, 0x01);       copyMeshFromModelToModel(12, 0, 8, 8);
-    setModelAnimReplaceFlag(12, 9, 0x01);       copyMeshFromModelToModel(12, 0, 9, 9);
-    setModelAnimReplaceFlag(12, 10, 0x01);      copyMeshFromModelToModel(12, 0, 10, 10);
-    setModelAnimReplaceFlag(12, 11, 0x01);      copyMeshFromModelToModel(12, 0, 11, 11);
-    setModelAnimReplaceFlag(12, 12, 0x01);      copyMeshFromModelToModel(12, 0, 12, 12);
-    setModelAnimReplaceFlag(12, 13, 0x01);      copyMeshFromModelToModel(12, 0, 13, 13);
-    setModelAnimReplaceFlag(12, 14, 0x01);      copyMeshFromModelToModel(12, 0, 14, 14);
-
     entity_funcs[id].activator_id = nil;
 
     entity_funcs[id].onSave = function()
@@ -641,6 +624,7 @@ function WheelKnob_init(id)   -- Bulkdoors (TR2)
             setEntityAnim(activator_id, ANIM_TYPE_MISK_1, 2, 0);
             entitySSAnimSetEnable(activator_id, ANIM_TYPE_MISK_1, 1);
             entitySSAnimSetEnable(activator_id, ANIM_TYPE_BASE, 0);
+            noEntityMove(activator_id, true);
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
         return ENTITY_TRIGGERING_NOT_READY;
@@ -652,6 +636,7 @@ function WheelKnob_init(id)   -- Bulkdoors (TR2)
             if((a == 2) and (f + 1 >= c)) then
                 entitySSAnimSetEnable(entity_funcs[object_id].activator_id, ANIM_TYPE_MISK_1, 0);
                 entitySSAnimSetEnable(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE, 1);
+                noEntityMove(entity_funcs[object_id].activator_id, false);
             end;
         end;
 

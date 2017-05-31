@@ -371,7 +371,7 @@ void CRender::DrawList()
                 if(cont->object_type == OBJECT_ENTITY)
                 {
                     entity_p ent = (entity_p)cont->object;
-                    if((ent->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && (ent->state_flags & ENTITY_STATE_VISIBLE) && Frustum_IsOBBVisibleInFrustumList(ent->obb, (r->frustum) ? (r->frustum) : (m_camera->frustum)))
+                    if((ent->state_flags & ENTITY_STATE_VISIBLE) && ent->bf->animations.model && (ent->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY) && Frustum_IsOBBVisibleInFrustumList(ent->obb, (r->frustum) ? (r->frustum) : (m_camera->frustum)))
                     {
                         float tr[16];
                         for(uint16_t j = 0; j < ent->bf->bone_tag_count; j++)
