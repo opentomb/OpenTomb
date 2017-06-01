@@ -23,33 +23,46 @@
 
 void StateControl_RatSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim)
 {
+    skeletal_model_p sm = ss_anim->model;
+    switch(ent->move_type)
+    {
+        case MOVE_UNDERWATER:
+        case MOVE_ON_WATER:
+            sm = World_GetModelByID(TR_MODEL_RAT_OW_TR1);
+            break;
+
+        case MOVE_ON_FLOOR:
+            sm = World_GetModelByID(TR_MODEL_RAT_OF_TR1);
+            break;
+    }
+    if(sm)
+    {
+        ss_anim->model = sm;
+    }
+
     switch(key_anim)
     {
         case ANIMATION_KEY_INIT:
-            switch(ent->move_type)
+            switch(ss_anim->model->id)
             {
-                case MOVE_ON_WATER:
-                    ss_anim->model = World_GetModelByID(TR_MODEL_RAT_OW_TR1);
+                case TR_MODEL_RAT_OW_TR1:
                     Anim_SetAnimation(ss_anim, TR_ANIMATION_RAT_OW_FLOW, 0);
                     break;
 
-                case MOVE_ON_FLOOR:
-                    ss_anim->model = World_GetModelByID(TR_MODEL_RAT_OF_TR1);
+                case TR_MODEL_RAT_OF_TR1:
                     Anim_SetAnimation(ss_anim, TR_ANIMATION_RAT_OF_STAY, 0);
                     break;
             }
             break;
 
         case ANIMATION_KEY_DEAD:
-            switch(ent->move_type)
+            switch(ss_anim->model->id)
             {
-                case MOVE_ON_WATER:
-                    ss_anim->model = World_GetModelByID(TR_MODEL_RAT_OW_TR1);
+                case TR_MODEL_RAT_OW_TR1:
                     Anim_SetAnimation(ss_anim, TR_ANIMATION_RAT_OW_DEAD, 0);
                     break;
 
-                case MOVE_ON_FLOOR:
-                    ss_anim->model = World_GetModelByID(TR_MODEL_RAT_OF_TR1);
+                case TR_MODEL_RAT_OF_TR1:
                     Anim_SetAnimation(ss_anim, TR_ANIMATION_RAT_OF_DEAD, 0);
                     break;
             }
@@ -70,6 +83,8 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
     state->sprint = 0x00;
     state->crouch = 0x00;
     state->attack = 0x00;
+    ent->character->parameters.param[PARAM_AIR] = 1000;
+    ent->character->parameters.maximum[PARAM_AIR] = 1000;
 
     if(ent->character->height_info.water && (pos[2] - ent->character->height_info.transition_level < 16.0f))
     {

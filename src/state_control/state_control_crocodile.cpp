@@ -23,33 +23,45 @@
 
 void StateControl_CrocodileSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim)
 {
+    skeletal_model_p sm = ss_anim->model;
+    switch(ent->move_type)
+    {
+        case MOVE_UNDERWATER:
+            sm = World_GetModelByID(TR_MODEL_CROCODILE_UW_TR1);
+            break;
+
+        case MOVE_ON_FLOOR:
+            sm = World_GetModelByID(TR_MODEL_CROCODILE_OF_TR1);
+            break;
+    }
+    if(sm)
+    {
+        ss_anim->model = sm;
+    }
+
     switch(key_anim)
     {
         case ANIMATION_KEY_INIT:
-            switch(ent->move_type)
+            switch(ss_anim->model->id)
             {
-                case MOVE_UNDERWATER:
-                    ss_anim->model = World_GetModelByID(TR_MODEL_CROCODILE_UW_TR1);
+                case TR_MODEL_CROCODILE_UW_TR1:
                     Anim_SetAnimation(ss_anim, TR_ANIMATION_CROCODILE_UW_FLOW, 0);
                     break;
 
-                case MOVE_ON_FLOOR:
-                    ss_anim->model = World_GetModelByID(TR_MODEL_CROCODILE_OF_TR1);
+                case TR_MODEL_CROCODILE_OF_TR1:
                     Anim_SetAnimation(ss_anim, TR_ANIMATION_CROCODILE_OF_STAY, 0);
                     break;
             }
             break;
 
         case ANIMATION_KEY_DEAD:
-            switch(ent->move_type)
+            switch(ss_anim->model->id)
             {
-                case MOVE_UNDERWATER:
-                    ss_anim->model = World_GetModelByID(TR_MODEL_CROCODILE_UW_TR1);
+                case TR_MODEL_CROCODILE_UW_TR1:
                     Anim_SetAnimation(ss_anim, TR_ANIMATION_CROCODILE_UW_DEAD, 0);
                     break;
 
-                case MOVE_ON_FLOOR:
-                    ss_anim->model = World_GetModelByID(TR_MODEL_CROCODILE_OF_TR1);
+                case TR_MODEL_CROCODILE_OF_TR1:
                     Anim_SetAnimation(ss_anim, TR_ANIMATION_CROCODILE_OF_DEAD, 0);
                     break;
             }
@@ -77,8 +89,8 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->move_type = MOVE_UNDERWATER;
             StateControl_CrocodileSetKeyAnim(ent, ss_anim, ANIMATION_KEY_INIT);
         }
-        ent->character->parameters.param[PARAM_AIR] = 100;
-        ent->character->parameters.maximum[PARAM_AIR] = 100;
+        ent->character->parameters.param[PARAM_AIR] = 1000;
+        ent->character->parameters.maximum[PARAM_AIR] = 1000;
         uint16_t current_state = Anim_GetCurrentState(ss_anim);
         switch(current_state)
         {
