@@ -23,22 +23,6 @@
 
 void StateControl_CrocodileSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim)
 {
-    skeletal_model_p sm = ss_anim->model;
-    switch(ent->move_type)
-    {
-        case MOVE_UNDERWATER:
-            sm = World_GetModelByID(TR_MODEL_CROCODILE_UW_TR1);
-            break;
-
-        case MOVE_ON_FLOOR:
-            sm = World_GetModelByID(TR_MODEL_CROCODILE_OF_TR1);
-            break;
-    }
-    if(sm)
-    {
-        ss_anim->model = sm;
-    }
-
     switch(key_anim)
     {
         case ANIMATION_KEY_INIT:
@@ -74,6 +58,8 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
 {
     character_command_p cmd = &ent->character->cmd;
     character_state_p state = &ent->character->state;
+    skeletal_model_p sm = ss_anim->model;
+    uint16_t current_state = Anim_GetCurrentState(ss_anim);
 
     ent->character->rotate_speed_mult = 1.0f;
     ss_anim->anim_frame_flags = ANIM_NORMAL_CONTROL;
@@ -82,16 +68,34 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
     state->crouch = 0x00;
     state->attack = 0x00;
 
-    if(ent->self->room && (ent->self->room->flags & TR_ROOM_FLAG_WATER))
+    switch(ent->move_type)
     {
-        if(ss_anim->model->id != TR_MODEL_CROCODILE_UW_TR1)
-        {
+        case MOVE_ON_WATER:
             ent->move_type = MOVE_UNDERWATER;
-            StateControl_CrocodileSetKeyAnim(ent, ss_anim, ANIMATION_KEY_INIT);
-        }
+        case MOVE_UNDERWATER:
+            sm = World_GetModelByID(TR_MODEL_CROCODILE_UW_TR1);
+            if(sm && ss_anim->model->id != TR_MODEL_CROCODILE_UW_TR1)
+            {
+                ss_anim->model = sm;
+                Anim_SetAnimation(ss_anim, TR_ANIMATION_CROCODILE_UW_FLOW, 0);
+            }
+            break;
+
+        case MOVE_ON_FLOOR:
+            sm = World_GetModelByID(TR_MODEL_CROCODILE_OF_TR1);
+            if(sm && ss_anim->model->id != TR_MODEL_CROCODILE_OF_TR1)
+            {
+                ss_anim->model = sm;
+                Anim_SetAnimation(ss_anim, TR_ANIMATION_CROCODILE_OF_STAY, 0);
+            }
+            break;
+    }
+
+    if(ss_anim->model->id == TR_MODEL_CROCODILE_UW_TR1)
+    {
         ent->character->parameters.param[PARAM_AIR] = 1000;
         ent->character->parameters.maximum[PARAM_AIR] = 1000;
-        uint16_t current_state = Anim_GetCurrentState(ss_anim);
+
         switch(current_state)
         {
             case TR_STATE_CROCODILE_UW_FLOW: // -> 2
@@ -123,15 +127,8 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 break;
         };
     }
-    else
+    else if(ss_anim->model->id == TR_MODEL_CROCODILE_OF_TR1)
     {
-        if(ss_anim->model->id == TR_MODEL_CROCODILE_UW_TR1)
-        {
-            ent->move_type = MOVE_ON_FLOOR;
-            StateControl_CrocodileSetKeyAnim(ent, ss_anim, ANIMATION_KEY_INIT);
-        }
-
-        uint16_t current_state = Anim_GetCurrentState(ss_anim);
         switch(current_state)
         {
             case TR_STATE_CROCODILE_STAY: // -> 2 -> 3 -> 4 -> 5

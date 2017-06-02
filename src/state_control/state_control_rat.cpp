@@ -23,23 +23,6 @@
 
 void StateControl_RatSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim)
 {
-    skeletal_model_p sm = ss_anim->model;
-    switch(ent->move_type)
-    {
-        case MOVE_UNDERWATER:
-        case MOVE_ON_WATER:
-            sm = World_GetModelByID(TR_MODEL_RAT_OW_TR1);
-            break;
-
-        case MOVE_ON_FLOOR:
-            sm = World_GetModelByID(TR_MODEL_RAT_OF_TR1);
-            break;
-    }
-    if(sm)
-    {
-        ss_anim->model = sm;
-    }
-
     switch(key_anim)
     {
         case ANIMATION_KEY_INIT:
@@ -75,7 +58,8 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
 {
     character_command_p cmd = &ent->character->cmd;
     character_state_p state = &ent->character->state;
-    float *pos = ent->transform + 12;
+    skeletal_model_p sm = ss_anim->model;
+    uint16_t current_state = Anim_GetCurrentState(ss_anim);
 
     ent->character->rotate_speed_mult = 1.0f;
     ss_anim->anim_frame_flags = ANIM_NORMAL_CONTROL;
@@ -83,19 +67,34 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
     state->sprint = 0x00;
     state->crouch = 0x00;
     state->attack = 0x00;
-    ent->character->parameters.param[PARAM_AIR] = 1000;
-    ent->character->parameters.maximum[PARAM_AIR] = 1000;
 
-    if(ent->character->height_info.water && (pos[2] - ent->character->height_info.transition_level < 16.0f))
+    switch(ent->move_type)
     {
-        if(ss_anim->model->id != TR_MODEL_RAT_OW_TR1)
-        {
+        case MOVE_UNDERWATER:
             ent->move_type = MOVE_ON_WATER;
-            StateControl_RatSetKeyAnim(ent, ss_anim, ANIMATION_KEY_INIT);
-        }
+        case MOVE_ON_WATER:
+            sm = World_GetModelByID(TR_MODEL_RAT_OW_TR1);
+            if(sm && (ss_anim->model->id != TR_MODEL_RAT_OW_TR1))
+            {
+                ss_anim->model = sm;
+                Anim_SetAnimation(ss_anim, TR_ANIMATION_RAT_OW_FLOW, 0);
+            }
+            break;
+
+        case MOVE_ON_FLOOR:
+            sm = World_GetModelByID(TR_MODEL_RAT_OF_TR1);
+            if(sm && (ss_anim->model->id != TR_MODEL_RAT_OF_TR1))
+            {
+                ss_anim->model = sm;
+                Anim_SetAnimation(ss_anim, TR_ANIMATION_RAT_OF_STAY, 0);
+            }
+            break;
+    }
+
+    if(ss_anim->model->id == TR_MODEL_RAT_OW_TR1)
+    {
         ent->character->parameters.param[PARAM_AIR] = 100;
         ent->character->parameters.maximum[PARAM_AIR] = 100;
-        uint16_t current_state = Anim_GetCurrentState(ss_anim);
         switch(current_state)
         {
             ent->dir_flag = ENT_MOVE_FORWARD;
@@ -124,15 +123,8 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 break;
         };
     }
-    else
+    else if(ss_anim->model->id == TR_MODEL_RAT_OF_TR1)
     {
-        if(ss_anim->model->id == TR_MODEL_RAT_OW_TR1)
-        {
-            ent->move_type = MOVE_ON_FLOOR;
-            StateControl_RatSetKeyAnim(ent, ss_anim, ANIMATION_KEY_INIT);
-        }
-
-        uint16_t current_state = Anim_GetCurrentState(ss_anim);
         switch(current_state)
         {
             case TR_STATE_RAT_STAY: // -> 3 -> 4 -> 6
