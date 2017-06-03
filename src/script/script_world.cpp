@@ -624,6 +624,33 @@ int lua_GetBaseItemInfo(lua_State * lua)
 }
 
 
+int lua_GetBaseItemInfoByWorldID(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        base_item_p item = World_GetBaseItemByWorldModelID(lua_tointeger(lua, 1));
+        if(item)
+        {
+            lua_pushinteger(lua, item->count);
+            lua_pushinteger(lua, item->type);
+            lua_pushinteger(lua, item->id);
+            lua_pushstring(lua, item->name);
+            return 4;
+        }
+        else
+        {
+            Con_Warning("no base item with world_model_id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getBaseItemInfoByWorldID: expecting arguments (world_model_id)");
+    }
+
+    return 0;
+}
+
+
 int lua_SpawnEntity(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -1066,6 +1093,7 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
     lua_register(lua, "createBaseItem", lua_CreateBaseItem);
     lua_register(lua, "deleteBaseItem", lua_DeleteBaseItem);
     lua_register(lua, "getBaseItemInfo", lua_GetBaseItemInfo);
+    lua_register(lua, "getBaseItemInfoByWorldID", lua_GetBaseItemInfoByWorldID);
     lua_register(lua, "spawnEntity", lua_SpawnEntity);
     lua_register(lua, "deleteEntity", lua_DeleteEntity);
 

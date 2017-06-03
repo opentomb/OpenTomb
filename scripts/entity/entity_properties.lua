@@ -92,9 +92,9 @@ tr1_entity_tbl[48] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_
 tr1_entity_tbl[49] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};         -- Pushable block
 tr1_entity_tbl[50] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};         -- Pushable block
 tr1_entity_tbl[51] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};         -- Pushable block
-tr1_entity_tbl[52] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "tallblock"};                      -- Moving block
+tr1_entity_tbl[52] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "tallblock"};                    -- Moving block
 tr1_entity_tbl[53] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallceiling"};                      -- Falling ceiling
-tr1_entity_tbl[54] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                      -- Sword of Damocles (unused?)
+tr1_entity_tbl[54] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                  -- Sword of Damocles (unused?)
 tr1_entity_tbl[55] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"};     -- Wall switch (lever)
 tr1_entity_tbl[56] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "switch"};     -- Underwater switch (lever)
 
@@ -103,7 +103,7 @@ tr1_entity_tbl[56] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_
 tr1_entity_tbl[57] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};       -- Door
 tr1_entity_tbl[58] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};       -- Door
 tr1_entity_tbl[59] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};       -- Door
-tr1_entity_tbl[60] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "door"};       -- Door
+tr1_entity_tbl[60] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "door"};           -- Door
 tr1_entity_tbl[61] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};       -- Door
 tr1_entity_tbl[62] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};       -- Door
 tr1_entity_tbl[63] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "door"};       -- Door
@@ -133,55 +133,55 @@ tr1_entity_tbl[81] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_B
 tr1_entity_tbl[82] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                                -- Natla Logo
 tr1_entity_tbl[83] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_TRIMESH, func = "save_crystal"};     -- Savegame crystal
 
-tr1_entity_tbl[95] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                      -- Menu: Sunglasses
-tr1_entity_tbl[96] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                      -- Menu: Cassette player
-tr1_entity_tbl[97] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                      -- Menu: Arrow keys
-tr1_entity_tbl[98] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                      -- Menu: Flashlight (UNUSED!)
+tr1_entity_tbl[95] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                        -- Menu: Sunglasses
+tr1_entity_tbl[96] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                        -- Menu: Cassette player
+tr1_entity_tbl[97] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                        -- Menu: Arrow keys
+tr1_entity_tbl[98] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                        -- Menu: Flashlight (UNUSED!)
 
 -- GENERAL MENU ITEMS --
 
-tr1_entity_tbl[99] =  {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Menu: Pistols
-tr1_entity_tbl[100] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Menu: Shotgun
-tr1_entity_tbl[101] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Menu: Magnums
-tr1_entity_tbl[102] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Menu: Uzis
-tr1_entity_tbl[103] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Menu: Pistol ammo
-tr1_entity_tbl[104] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Menu: Shotgun ammo
-tr1_entity_tbl[105] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Menu: Magnum ammo
-tr1_entity_tbl[106] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Menu: Uzi ammo
-tr1_entity_tbl[107] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Menu: Grenade ammo (UNUSED!)
-tr1_entity_tbl[108] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Pick-up: Small medipack
-tr1_entity_tbl[109] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Pick-up: Large medipack
+tr1_entity_tbl[99] =  {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Menu: Pistols
+tr1_entity_tbl[100] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Menu: Shotgun
+tr1_entity_tbl[101] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Menu: Magnums
+tr1_entity_tbl[102] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Menu: Uzis
+tr1_entity_tbl[103] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Menu: Pistol ammo
+tr1_entity_tbl[104] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Menu: Shotgun ammo
+tr1_entity_tbl[105] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Menu: Magnum ammo
+tr1_entity_tbl[106] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Menu: Uzi ammo
+tr1_entity_tbl[107] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Menu: Grenade ammo (UNUSED!)
+tr1_entity_tbl[108] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Pick-up: Small medipack
+tr1_entity_tbl[109] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Pick-up: Large medipack
 
 -- PUZZLE PICKUPS --
 
-tr1_entity_tbl[114] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Pick-up: Puzzle 1
-tr1_entity_tbl[115] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Pick-up: Puzzle 2
-tr1_entity_tbl[116] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Pick-up: Puzzle 3
-tr1_entity_tbl[117] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Pick-up: Puzzle 4
+tr1_entity_tbl[114] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Pick-up: Puzzle 1
+tr1_entity_tbl[115] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Pick-up: Puzzle 2
+tr1_entity_tbl[116] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Pick-up: Puzzle 3
+tr1_entity_tbl[117] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Pick-up: Puzzle 4
 
 -- PUZZLES, KEYS AND SLOTS FOR THEM --
 
-tr1_entity_tbl[118] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Slot 1 empty
-tr1_entity_tbl[119] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Slot 2 empty
-tr1_entity_tbl[120] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Slot 3 empty
-tr1_entity_tbl[121] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Slot 4 empty
-tr1_entity_tbl[122] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Slot 1 full
-tr1_entity_tbl[123] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Slot 2 full
-tr1_entity_tbl[124] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Slot 3 full
-tr1_entity_tbl[125] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Slot 4 full
+tr1_entity_tbl[118] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};    -- Slot 1 empty
+tr1_entity_tbl[119] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};    -- Slot 2 empty
+tr1_entity_tbl[120] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};    -- Slot 3 empty
+tr1_entity_tbl[121] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};    -- Slot 4 empty
+tr1_entity_tbl[122] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Slot 1 full
+tr1_entity_tbl[123] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Slot 2 full
+tr1_entity_tbl[124] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Slot 3 full
+tr1_entity_tbl[125] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Slot 4 full
 
-tr1_entity_tbl[127] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Puzzle item 1
-tr1_entity_tbl[128] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, hide = 0x01, func = "midastouch"};        -- Midas gold touch
+tr1_entity_tbl[127] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Puzzle item 1
+tr1_entity_tbl[128] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, hide = 0x01, func = "midastouch"};        -- Midas gold touch
 
-tr1_entity_tbl[133] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Key 1
-tr1_entity_tbl[134] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Key 2
-tr1_entity_tbl[135] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Key 3
-tr1_entity_tbl[136] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Key 4
+tr1_entity_tbl[133] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Key 1
+tr1_entity_tbl[134] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Key 2
+tr1_entity_tbl[135] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Key 3
+tr1_entity_tbl[136] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Key 4
 
-tr1_entity_tbl[137] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Lock 1
-tr1_entity_tbl[138] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Lock 2
-tr1_entity_tbl[139] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Lock 3
-tr1_entity_tbl[140] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};   -- Lock 4
+tr1_entity_tbl[137] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};    -- Lock 1
+tr1_entity_tbl[138] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};    -- Lock 2
+tr1_entity_tbl[139] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};    -- Lock 3
+tr1_entity_tbl[140] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};    -- Lock 4
 
 tr1_entity_tbl[145] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                               -- Scion 1
 tr1_entity_tbl[146] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                               -- Scion 2
@@ -271,48 +271,48 @@ tr2_entity_tbl[54] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_S
 
 -- TRAPS --
 
-tr2_entity_tbl[55] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_SINGLE_BOX, func = "fallblock"}; -- Collapsible floor
-tr2_entity_tbl[57] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Loose boards
-tr2_entity_tbl[58] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Swinging sandbag / spiky ball
-tr2_entity_tbl[59] = {coll = COLLISION_GROUP_TRIGGERS,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};  -- Spikes / Glass shards
-tr2_entity_tbl[60] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"};                     -- Boulder
-tr2_entity_tbl[61] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Disk (like dart)
-tr2_entity_tbl[62] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Wall-mounted disk shooter (like dartgun)
-tr2_entity_tbl[63] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Drawbridge
-tr2_entity_tbl[64] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};                     -- Slamming door
-tr2_entity_tbl[65] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Elevator
-tr2_entity_tbl[66] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Minisub
-tr2_entity_tbl[67] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};        -- Movable cubical block (pushable)
-tr2_entity_tbl[68] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};        -- Movable cubical block (pushable)
-tr2_entity_tbl[69] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};        -- Movable cubical block (pushable)
-tr2_entity_tbl[70] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};        -- Movable cubical block (pushable)
-tr2_entity_tbl[71] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Big bowl (Ice Palace)
-tr2_entity_tbl[72] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "breakable_window"};-- Breakable window (can shoot out)
+tr2_entity_tbl[55] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_SINGLE_BOX, func = "fallblock"};    -- Collapsible floor
+tr2_entity_tbl[57] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                           -- Loose boards
+tr2_entity_tbl[58] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                               -- Swinging sandbag / spiky ball
+tr2_entity_tbl[59] = {coll = COLLISION_GROUP_TRIGGERS,     shape = COLLISION_SHAPE_BOX, func = "oldspike"};         -- Spikes / Glass shards
+tr2_entity_tbl[60] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "boulder"};  -- Boulder
+tr2_entity_tbl[61] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                               -- Disk (like dart)
+tr2_entity_tbl[62] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                                -- Wall-mounted disk shooter (like dartgun)
+tr2_entity_tbl[63] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                           -- Drawbridge
+tr2_entity_tbl[64] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "gen_trap"};            -- Slamming door
+tr2_entity_tbl[65] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                           -- Elevator
+tr2_entity_tbl[66] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                               -- Minisub
+tr2_entity_tbl[67] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};            -- Movable cubical block (pushable)
+tr2_entity_tbl[68] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};            -- Movable cubical block (pushable)
+tr2_entity_tbl[69] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};            -- Movable cubical block (pushable)
+tr2_entity_tbl[70] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "pushable"};            -- Movable cubical block (pushable)
+tr2_entity_tbl[71] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                               -- Big bowl (Ice Palace)
+tr2_entity_tbl[72] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "breakable_window"};    -- Breakable window (can shoot out)
 tr2_entity_tbl[73] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "breakable_window_jmp"};-- Breakable window (must jump through)
-tr2_entity_tbl[76] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "propeller"};                     -- Airplane propeller
-tr2_entity_tbl[77] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Power saw
-tr2_entity_tbl[78] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Overhead pulley hook
-tr2_entity_tbl[79] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallceiling"};                     -- Sandbag / Ceiling fragments
-tr2_entity_tbl[80] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Rolling spindle
-tr2_entity_tbl[81] = {coll = COLLISION_GROUP_TRIGGERS,     shape = COLLISION_SHAPE_BOX, func = "wallblade"};                     -- Wall-mounted knife blade
-tr2_entity_tbl[82] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Statue with knife blade
-tr2_entity_tbl[83] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX};          -- Multiple boulders / snowballs
-tr2_entity_tbl[84] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Detachable icicles
-tr2_entity_tbl[85] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "spikewall"};                     -- Spiky movable wall
-tr2_entity_tbl[86] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                     -- Bounce pad
-tr2_entity_tbl[87] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "spikeceiling"};                     -- Spiky ceiling segment
-tr2_entity_tbl[88] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Tibetan bell
-tr2_entity_tbl[91] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                     -- Lara and a snowmobile
-tr2_entity_tbl[92] = {coll = COLLISION_GROUP_KINEMATIC,shape = COLLISION_SHAPE_BOX, func = "WheelKnob"}; -- Wheel knob
-tr2_entity_tbl[93] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "switch"};    -- Switch
-tr2_entity_tbl[94] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "propeller"};                     -- Underwater propeller
-tr2_entity_tbl[95] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Air fan
-tr2_entity_tbl[96] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Swinging box / spiky ball
-tr2_entity_tbl[101] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                     -- Rolling storage drums
-tr2_entity_tbl[102] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "zipline"};   -- Zipline handle
-tr2_entity_tbl[103] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "switch"};    -- Switch
-tr2_entity_tbl[104] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "switch"};    -- Switch
-tr2_entity_tbl[105] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "switch"};    -- Underwater switch
+tr2_entity_tbl[76] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "propeller"};           -- Airplane propeller
+tr2_entity_tbl[77] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                               -- Power saw
+tr2_entity_tbl[78] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                               -- Overhead pulley hook
+tr2_entity_tbl[79] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "fallceiling"};         -- Sandbag / Ceiling fragments
+tr2_entity_tbl[80] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                               -- Rolling spindle
+tr2_entity_tbl[81] = {coll = COLLISION_GROUP_TRIGGERS,     shape = COLLISION_SHAPE_BOX, func = "wallblade"};        -- Wall-mounted knife blade
+tr2_entity_tbl[82] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                               -- Statue with knife blade
+tr2_entity_tbl[83] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH_CONVEX};                    -- Multiple boulders / snowballs
+tr2_entity_tbl[84] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                               -- Detachable icicles
+tr2_entity_tbl[85] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "spikewall"};           -- Spiky movable wall
+tr2_entity_tbl[86] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};                           -- Bounce pad
+tr2_entity_tbl[87] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "spikeceiling"};        -- Spiky ceiling segment
+tr2_entity_tbl[88] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                       -- Tibetan bell
+tr2_entity_tbl[91] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                        -- Lara and a snowmobile
+tr2_entity_tbl[92] = {coll = COLLISION_GROUP_KINEMATIC,shape = COLLISION_SHAPE_BOX, func = "WheelKnob"};    -- Wheel knob
+tr2_entity_tbl[93] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "switch"};       -- Switch
+tr2_entity_tbl[94] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "propeller"};   -- Underwater propeller
+tr2_entity_tbl[95] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                       -- Air fan
+tr2_entity_tbl[96] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                       -- Swinging box / spiky ball
+tr2_entity_tbl[101] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Rolling storage drums
+tr2_entity_tbl[102] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "zipline"};    -- Zipline handle
+tr2_entity_tbl[103] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "switch"};     -- Switch
+tr2_entity_tbl[104] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "switch"};     -- Switch
+tr2_entity_tbl[105] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, func = "switch"};     -- Underwater switch
 
 -- DOORS --
 
@@ -333,60 +333,60 @@ tr2_entity_tbl[119] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE
 
 -- MISC ITEMS --
 
-tr2_entity_tbl[120] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Secret #1
-tr2_entity_tbl[121] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Secret #2
-tr2_entity_tbl[122] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Lara and butler picture
-tr2_entity_tbl[133] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Secret #3
-tr2_entity_tbl[134] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Natla's logo
-tr2_entity_tbl[152] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Flare
-tr2_entity_tbl[153] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Sunglasses
-tr2_entity_tbl[154] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Portable CD player
-tr2_entity_tbl[155] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Direction keys
-tr2_entity_tbl[157] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Pistol
-tr2_entity_tbl[158] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Shotgun
-tr2_entity_tbl[159] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Auto-pistol
-tr2_entity_tbl[160] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Uzi
-tr2_entity_tbl[161] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Harpoon gun
-tr2_entity_tbl[162] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- M16
-tr2_entity_tbl[163] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Grenade launcher
-tr2_entity_tbl[164] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Pistol ammo(?)
-tr2_entity_tbl[165] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Shotgun ammo
-tr2_entity_tbl[166] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Auto-pistol ammo
-tr2_entity_tbl[167] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Uzi ammo
-tr2_entity_tbl[168] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Harpoons
-tr2_entity_tbl[169] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- M16 ammo
-tr2_entity_tbl[170] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Grenades
-tr2_entity_tbl[171] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Small medipack
-tr2_entity_tbl[172] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Large medipack
-tr2_entity_tbl[173] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Flares (opening box)
-tr2_entity_tbl[178] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Puzzle 1
-tr2_entity_tbl[179] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Puzzle 2
-tr2_entity_tbl[180] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Puzzle 3 ?
-tr2_entity_tbl[181] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Puzzle 4
-tr2_entity_tbl[182] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};               -- Slot 1 empty
-tr2_entity_tbl[183] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};               -- Slot 2 empty
-tr2_entity_tbl[184] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};               -- Slot 3 empty ?
-tr2_entity_tbl[185] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};               -- Slot 4 empty
-tr2_entity_tbl[186] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Slot 1 full
-tr2_entity_tbl[187] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Slot 2 full
-tr2_entity_tbl[188] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Slot 3 full ?
-tr2_entity_tbl[189] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Slot 4 full
-tr2_entity_tbl[197] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Key 1
-tr2_entity_tbl[198] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Key 2
-tr2_entity_tbl[199] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Key 3
-tr2_entity_tbl[200] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Key 4
-tr2_entity_tbl[201] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};               -- Lock 1
-tr2_entity_tbl[202] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};               -- Lock 2
-tr2_entity_tbl[203] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};               -- Lock 3
-tr2_entity_tbl[204] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};               -- Lock 4
-tr2_entity_tbl[207] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Pickup 5
-tr2_entity_tbl[208] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Pickup 6
-tr2_entity_tbl[209] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Dragon explosion effect (expanding netted bubble)
-tr2_entity_tbl[210] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Dragon explosion effect (expanding netted bubble)
-tr2_entity_tbl[211] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};               -- Dragon explosion effect (expanding solid bubble)
-tr2_entity_tbl[212] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "alarm_TR2"};               -- Alarm
+tr2_entity_tbl[120] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Secret #1
+tr2_entity_tbl[121] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Secret #2
+tr2_entity_tbl[122] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                               -- Lara and butler picture
+tr2_entity_tbl[133] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Secret #3
+tr2_entity_tbl[134] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                               -- Natla's logo
+tr2_entity_tbl[152] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Flare
+tr2_entity_tbl[153] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Sunglasses
+tr2_entity_tbl[154] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Portable CD player
+tr2_entity_tbl[155] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Direction keys
+tr2_entity_tbl[157] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Pistol
+tr2_entity_tbl[158] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Shotgun
+tr2_entity_tbl[159] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Auto-pistol
+tr2_entity_tbl[160] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Uzi
+tr2_entity_tbl[161] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Harpoon gun
+tr2_entity_tbl[162] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- M16
+tr2_entity_tbl[163] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Grenade launcher
+tr2_entity_tbl[164] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Pistol ammo(?)
+tr2_entity_tbl[165] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Shotgun ammo
+tr2_entity_tbl[166] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Auto-pistol ammo
+tr2_entity_tbl[167] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Uzi ammo
+tr2_entity_tbl[168] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Harpoons
+tr2_entity_tbl[169] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- M16 ammo
+tr2_entity_tbl[170] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Grenades
+tr2_entity_tbl[171] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Small medipack
+tr2_entity_tbl[172] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Large medipack
+tr2_entity_tbl[173] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Flares (opening box)
+tr2_entity_tbl[178] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Puzzle 1
+tr2_entity_tbl[179] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Puzzle 2
+tr2_entity_tbl[180] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Puzzle 3 ?
+tr2_entity_tbl[181] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Puzzle 4
+tr2_entity_tbl[182] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};             -- Slot 1 empty
+tr2_entity_tbl[183] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};             -- Slot 2 empty
+tr2_entity_tbl[184] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};             -- Slot 3 empty ?
+tr2_entity_tbl[185] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};             -- Slot 4 empty
+tr2_entity_tbl[186] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                               -- Slot 1 full
+tr2_entity_tbl[187] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                               -- Slot 2 full
+tr2_entity_tbl[188] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                               -- Slot 3 full ?
+tr2_entity_tbl[189] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                               -- Slot 4 full
+tr2_entity_tbl[197] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Key 1
+tr2_entity_tbl[198] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Key 2
+tr2_entity_tbl[199] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Key 3
+tr2_entity_tbl[200] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Key 4
+tr2_entity_tbl[201] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};             -- Lock 1
+tr2_entity_tbl[202] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};             -- Lock 2
+tr2_entity_tbl[203] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};             -- Lock 3
+tr2_entity_tbl[204] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"};             -- Lock 4
+tr2_entity_tbl[207] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Pickup 5
+tr2_entity_tbl[208] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Pickup 6
+tr2_entity_tbl[209] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                               -- Dragon explosion effect (expanding netted bubble)
+tr2_entity_tbl[210] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                               -- Dragon explosion effect (expanding netted bubble)
+tr2_entity_tbl[211] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                               -- Dragon explosion effect (expanding solid bubble)
+tr2_entity_tbl[212] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "alarm_TR2"};           -- Alarm
 tr2_entity_tbl[213] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, hide = 0x01, func = "drips"};  -- Dripping water
-tr2_entity_tbl[214] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};               -- Tyrannosaur
+tr2_entity_tbl[214] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                              -- Tyrannosaur
 tr2_entity_tbl[215] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, hide = 0x01, func = "venicebird"};  -- Singing birds
 tr2_entity_tbl[216] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, hide = 0x01};  -- Placeholder
 tr2_entity_tbl[217] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, hide = 0x01};  -- Placeholder
@@ -556,28 +556,28 @@ tr3_entity_tbl[145] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_
 tr3_entity_tbl[146] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Stopwatch
 tr3_entity_tbl[147] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Lara's Home photo
 tr3_entity_tbl[158] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Passport (closed)
-tr3_entity_tbl[159] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Natla logo
-tr3_entity_tbl[160] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Pistols (pick-up)
-tr3_entity_tbl[161] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Shotgun (pick-up)
-tr3_entity_tbl[162] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Desert Eagle (pick-up)
-tr3_entity_tbl[163] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Uzis (pick-up)
-tr3_entity_tbl[164] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Harpoon gun (pick-up)
-tr3_entity_tbl[165] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- MP5 (pick-up)
-tr3_entity_tbl[166] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Rocket launcher (pick-up)
-tr3_entity_tbl[167] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Grenade launcher (pick-up)
-tr3_entity_tbl[168] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Pistol ammo (pick-up)
-tr3_entity_tbl[169] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Shotgun ammo (pick-up)
-tr3_entity_tbl[170] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Desert Eagle ammo (pick-up)
-tr3_entity_tbl[171] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Uzi ammo (pick-up)
-tr3_entity_tbl[172] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Harpoons (pick-up)
-tr3_entity_tbl[173] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- MP5 ammo (pick-up)
-tr3_entity_tbl[174] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Rockets (pick-up)
-tr3_entity_tbl[175] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Grenades (pick-up)
-tr3_entity_tbl[176] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Small medipack (pick-up)
-tr3_entity_tbl[177] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Large medipack (pick-up)
-tr3_entity_tbl[178] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Flares (pick-up)
-tr3_entity_tbl[179] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Flare (pick-up)
-tr3_entity_tbl[180] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "crystal_TR3"};           -- Savegame crystal (pick-up)
+tr3_entity_tbl[159] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                               -- Natla logo
+tr3_entity_tbl[160] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Pistols (pick-up)
+tr3_entity_tbl[161] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Shotgun (pick-up)
+tr3_entity_tbl[162] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Desert Eagle (pick-up)
+tr3_entity_tbl[163] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Uzis (pick-up)
+tr3_entity_tbl[164] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Harpoon gun (pick-up)
+tr3_entity_tbl[165] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- MP5 (pick-up)
+tr3_entity_tbl[166] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Rocket launcher (pick-up)
+tr3_entity_tbl[167] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Grenade launcher (pick-up)
+tr3_entity_tbl[168] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Pistol ammo (pick-up)
+tr3_entity_tbl[169] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Shotgun ammo (pick-up)
+tr3_entity_tbl[170] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Desert Eagle ammo (pick-up)
+tr3_entity_tbl[171] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Uzi ammo (pick-up)
+tr3_entity_tbl[172] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Harpoons (pick-up)
+tr3_entity_tbl[173] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- MP5 ammo (pick-up)
+tr3_entity_tbl[174] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Rockets (pick-up)
+tr3_entity_tbl[175] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Grenades (pick-up)
+tr3_entity_tbl[176] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Small medipack (pick-up)
+tr3_entity_tbl[177] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Large medipack (pick-up)
+tr3_entity_tbl[178] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Flares (pick-up)
+tr3_entity_tbl[179] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};            -- Flare (pick-up)
+tr3_entity_tbl[180] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "crystal_TR3"};         -- Savegame crystal (pick-up)
 
 -- MENU ITEMS --
 
@@ -608,60 +608,60 @@ tr3_entity_tbl[204] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_
 
 -- PUZZLE ITEMS & KEYS --
 
-tr3_entity_tbl[205] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Puzzle 1 (pick-up)
-tr3_entity_tbl[206] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Puzzle 2 (pick-up)
-tr3_entity_tbl[207] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Puzzle 3 (pick-up)
-tr3_entity_tbl[208] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Puzzle 4 (pick-up)
-tr3_entity_tbl[209] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Puzzle 1 (menu item)
-tr3_entity_tbl[210] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Puzzle 2 (menu item)
-tr3_entity_tbl[211] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Puzzle 3 (menu item)
-tr3_entity_tbl[212] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Puzzle 4 (menu item)
-tr3_entity_tbl[213] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Slot 1 empty
-tr3_entity_tbl[214] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Slot 2 empty
-tr3_entity_tbl[215] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Slot 3 empty
-tr3_entity_tbl[216] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Slot 4 empty
-tr3_entity_tbl[217] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};           -- Slot 1 full
-tr3_entity_tbl[218] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};           -- Slot 2 full
-tr3_entity_tbl[219] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};           -- Slot 3 full
-tr3_entity_tbl[220] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};           -- Slot 4 full
-tr3_entity_tbl[224] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Key 1 (pick-up)
-tr3_entity_tbl[225] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Key 2 (pick-up)
-tr3_entity_tbl[226] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Key 3 (pick-up)
-tr3_entity_tbl[227] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Key 4 (pick-up)
-tr3_entity_tbl[228] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Key 1 (menu item)
-tr3_entity_tbl[229] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Key 2 (menu item)
-tr3_entity_tbl[230] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Key 3 (menu item)
-tr3_entity_tbl[231] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Key 4 (menu item)
-tr3_entity_tbl[232] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 1
-tr3_entity_tbl[233] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 2
-tr3_entity_tbl[234] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 3
-tr3_entity_tbl[235] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};           -- Lock 4
-tr3_entity_tbl[236] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Pickup 1 (pick-up)
-tr3_entity_tbl[237] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Pickup 2 .unused  (pick-up)
-tr3_entity_tbl[238] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Pickup 1 (menu item)
-tr3_entity_tbl[239] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Pickup 2 .unused  (menu item)
-tr3_entity_tbl[240] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Infada stone (pick-up)
-tr3_entity_tbl[241] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Element 115 (pick-up)
-tr3_entity_tbl[242] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Eye of Isis (pick-up)
-tr3_entity_tbl[243] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Ora dagger (pick-up)
-tr3_entity_tbl[244] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Infada stone (menu item)
-tr3_entity_tbl[245] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Element 115 (menu item)
-tr3_entity_tbl[246] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Eye of Isis (menu item)
-tr3_entity_tbl[247] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Ora dagger (menu item)
-tr3_entity_tbl[272] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Keys (sprite)
-tr3_entity_tbl[273] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Keys (sprite)
-tr3_entity_tbl[276] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Infada stone
-tr3_entity_tbl[277] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Element 115
-tr3_entity_tbl[278] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Eye of Isis
-tr3_entity_tbl[279] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Ora dagger
+tr3_entity_tbl[205] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Puzzle 1 (pick-up)
+tr3_entity_tbl[206] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Puzzle 2 (pick-up)
+tr3_entity_tbl[207] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Puzzle 3 (pick-up)
+tr3_entity_tbl[208] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Puzzle 4 (pick-up)
+tr3_entity_tbl[209] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Puzzle 1 (menu item)
+tr3_entity_tbl[210] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Puzzle 2 (menu item)
+tr3_entity_tbl[211] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Puzzle 3 (menu item)
+tr3_entity_tbl[212] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Puzzle 4 (menu item)
+tr3_entity_tbl[213] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};        -- Slot 1 empty
+tr3_entity_tbl[214] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};        -- Slot 2 empty
+tr3_entity_tbl[215] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};        -- Slot 3 empty
+tr3_entity_tbl[216] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};        -- Slot 4 empty
+tr3_entity_tbl[217] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                          -- Slot 1 full
+tr3_entity_tbl[218] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                          -- Slot 2 full
+tr3_entity_tbl[219] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                          -- Slot 3 full
+tr3_entity_tbl[220] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                          -- Slot 4 full
+tr3_entity_tbl[224] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Key 1 (pick-up)
+tr3_entity_tbl[225] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Key 2 (pick-up)
+tr3_entity_tbl[226] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Key 3 (pick-up)
+tr3_entity_tbl[227] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Key 4 (pick-up)
+tr3_entity_tbl[228] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Key 1 (menu item)
+tr3_entity_tbl[229] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Key 2 (menu item)
+tr3_entity_tbl[230] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Key 3 (menu item)
+tr3_entity_tbl[231] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Key 4 (menu item)
+tr3_entity_tbl[232] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};        -- Lock 1
+tr3_entity_tbl[233] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};        -- Lock 2
+tr3_entity_tbl[234] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};        -- Lock 3
+tr3_entity_tbl[235] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"};        -- Lock 4
+tr3_entity_tbl[236] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Pickup 1 (pick-up)
+tr3_entity_tbl[237] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Pickup 2 .unused  (pick-up)
+tr3_entity_tbl[238] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Pickup 1 (menu item)
+tr3_entity_tbl[239] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Pickup 2 .unused  (menu item)
+tr3_entity_tbl[240] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Infada stone (pick-up)
+tr3_entity_tbl[241] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Element 115 (pick-up)
+tr3_entity_tbl[242] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Eye of Isis (pick-up)
+tr3_entity_tbl[243] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};        -- Ora dagger (pick-up)
+tr3_entity_tbl[244] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Infada stone (menu item)
+tr3_entity_tbl[245] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Element 115 (menu item)
+tr3_entity_tbl[246] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Eye of Isis (menu item)
+tr3_entity_tbl[247] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Ora dagger (menu item)
+tr3_entity_tbl[272] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Keys (sprite)
+tr3_entity_tbl[273] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Keys (sprite)
+tr3_entity_tbl[276] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Infada stone
+tr3_entity_tbl[277] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Element 115
+tr3_entity_tbl[278] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Eye of Isis
+tr3_entity_tbl[279] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Ora dagger
 
-tr3_entity_tbl[282] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Fire-breathing dragon statue
-tr3_entity_tbl[285] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};           -- Unknown visible #285
+tr3_entity_tbl[282] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Fire-breathing dragon statue
+tr3_entity_tbl[285] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX};                           -- Unknown visible #285
 
 -- ENEMIES, cont. --
 
-tr3_entity_tbl[287] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};           -- Tyrannosaur
-tr3_entity_tbl[288] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};           -- Raptor
+tr3_entity_tbl[287] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH};              -- Tyrannosaur
+tr3_entity_tbl[288] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                  -- Raptor
 
 -- TRAPS, cont. --
 
@@ -908,91 +908,91 @@ tr4_entity_tbl[173] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_
 -- PICK-UP WALKTHROUGH ITEMS
 
 tr4_entity_tbl[174] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Element puzzle
-tr4_entity_tbl[175] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 1
-tr4_entity_tbl[176] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 2
-tr4_entity_tbl[177] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 3
-tr4_entity_tbl[178] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 4
-tr4_entity_tbl[179] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 5
-tr4_entity_tbl[180] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 6
-tr4_entity_tbl[181] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 7
-tr4_entity_tbl[182] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 8
-tr4_entity_tbl[183] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 9
-tr4_entity_tbl[184] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 10
-tr4_entity_tbl[185] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 11
-tr4_entity_tbl[186] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 12
-tr4_entity_tbl[187] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 1 combo 1
-tr4_entity_tbl[188] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 1 combo 2
-tr4_entity_tbl[189] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 2 combo 1
-tr4_entity_tbl[190] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 2 combo 2
-tr4_entity_tbl[191] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 3 combo 1
-tr4_entity_tbl[192] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 3 combo 2
-tr4_entity_tbl[193] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 4 combo 1
-tr4_entity_tbl[194] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 4 combo 2
-tr4_entity_tbl[195] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 5 combo 1
-tr4_entity_tbl[196] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 5 combo 2
-tr4_entity_tbl[197] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 6 combo 1
-tr4_entity_tbl[198] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 6 combo 2
-tr4_entity_tbl[199] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 7 combo 1
-tr4_entity_tbl[200] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 7 combo 2
-tr4_entity_tbl[201] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 8 combo 1
-tr4_entity_tbl[202] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle item 8 combo 2
-tr4_entity_tbl[203] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 1
-tr4_entity_tbl[204] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 2
-tr4_entity_tbl[205] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 3
-tr4_entity_tbl[206] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 4
-tr4_entity_tbl[207] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 5
-tr4_entity_tbl[208] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 6
-tr4_entity_tbl[209] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 7
-tr4_entity_tbl[210] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 8
-tr4_entity_tbl[211] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 9
-tr4_entity_tbl[212] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 10
-tr4_entity_tbl[213] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 11
-tr4_entity_tbl[214] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 12
-tr4_entity_tbl[215] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 1 combo 1
-tr4_entity_tbl[216] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 1 combo 2
-tr4_entity_tbl[217] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 2 combo 1
-tr4_entity_tbl[218] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 2 combo 2
-tr4_entity_tbl[219] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 3 combo 1
-tr4_entity_tbl[220] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 3 combo 2
-tr4_entity_tbl[221] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 4 combo 1
-tr4_entity_tbl[222] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 4 combo 2
-tr4_entity_tbl[223] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 5 combo 1
-tr4_entity_tbl[224] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 5 combo 2
-tr4_entity_tbl[225] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 6 combo 1
-tr4_entity_tbl[226] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 6 combo 2
-tr4_entity_tbl[227] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 7 combo 1
-tr4_entity_tbl[228] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 7 combo 2
-tr4_entity_tbl[229] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 8 combo 1
-tr4_entity_tbl[230] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 8 combo 2
-tr4_entity_tbl[231] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 1
-tr4_entity_tbl[232] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 2
-tr4_entity_tbl[233] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 3
-tr4_entity_tbl[234] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 4
-tr4_entity_tbl[235] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 1 combo 1
-tr4_entity_tbl[236] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 1 combo 2
-tr4_entity_tbl[237] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 2 combo 1
-tr4_entity_tbl[238] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 2 combo 2
-tr4_entity_tbl[239] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 3 combo 1
-tr4_entity_tbl[240] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 3 combo 2
-tr4_entity_tbl[241] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 4 combo 1
-tr4_entity_tbl[242] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 4 combo 2
-tr4_entity_tbl[243] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Examine 1
-tr4_entity_tbl[244] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Examine 2
-tr4_entity_tbl[245] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Examine 3
-tr4_entity_tbl[246] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Crowbar item
-tr4_entity_tbl[247] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Burning torch item
-tr4_entity_tbl[248] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Clock work beetle
-tr4_entity_tbl[249] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Clock work beetle combo 1
-tr4_entity_tbl[250] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Clock work beetle combo 2
-tr4_entity_tbl[251] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Mine detector
-tr4_entity_tbl[252] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Quest item 1
-tr4_entity_tbl[253] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Quest item 2
-tr4_entity_tbl[254] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Quest item 3
-tr4_entity_tbl[255] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Quest item 4
-tr4_entity_tbl[256] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Quest item 5
-tr4_entity_tbl[257] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Quest item 6
-tr4_entity_tbl[258] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Map - UNUSED
-tr4_entity_tbl[259] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Secret map - UNUSED
+tr4_entity_tbl[175] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 1
+tr4_entity_tbl[176] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 2
+tr4_entity_tbl[177] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 3
+tr4_entity_tbl[178] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 4
+tr4_entity_tbl[179] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 5
+tr4_entity_tbl[180] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 6
+tr4_entity_tbl[181] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 7
+tr4_entity_tbl[182] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 8
+tr4_entity_tbl[183] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 9
+tr4_entity_tbl[184] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 10
+tr4_entity_tbl[185] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 11
+tr4_entity_tbl[186] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 12
+tr4_entity_tbl[187] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 1 combo 1
+tr4_entity_tbl[188] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 1 combo 2
+tr4_entity_tbl[189] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 2 combo 1
+tr4_entity_tbl[190] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 2 combo 2
+tr4_entity_tbl[191] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 3 combo 1
+tr4_entity_tbl[192] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 3 combo 2
+tr4_entity_tbl[193] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 4 combo 1
+tr4_entity_tbl[194] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 4 combo 2
+tr4_entity_tbl[195] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 5 combo 1
+tr4_entity_tbl[196] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 5 combo 2
+tr4_entity_tbl[197] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 6 combo 1
+tr4_entity_tbl[198] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 6 combo 2
+tr4_entity_tbl[199] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 7 combo 1
+tr4_entity_tbl[200] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 7 combo 2
+tr4_entity_tbl[201] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 8 combo 1
+tr4_entity_tbl[202] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle item 8 combo 2
+tr4_entity_tbl[203] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 1
+tr4_entity_tbl[204] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 2
+tr4_entity_tbl[205] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 3
+tr4_entity_tbl[206] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 4
+tr4_entity_tbl[207] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 5
+tr4_entity_tbl[208] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 6
+tr4_entity_tbl[209] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 7
+tr4_entity_tbl[210] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 8
+tr4_entity_tbl[211] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 9
+tr4_entity_tbl[212] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 10
+tr4_entity_tbl[213] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 11
+tr4_entity_tbl[214] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 12
+tr4_entity_tbl[215] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 1 combo 1
+tr4_entity_tbl[216] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 1 combo 2
+tr4_entity_tbl[217] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 2 combo 1
+tr4_entity_tbl[218] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 2 combo 2
+tr4_entity_tbl[219] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 3 combo 1
+tr4_entity_tbl[220] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 3 combo 2
+tr4_entity_tbl[221] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 4 combo 1
+tr4_entity_tbl[222] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 4 combo 2
+tr4_entity_tbl[223] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 5 combo 1
+tr4_entity_tbl[224] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 5 combo 2
+tr4_entity_tbl[225] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 6 combo 1
+tr4_entity_tbl[226] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 6 combo 2
+tr4_entity_tbl[227] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 7 combo 1
+tr4_entity_tbl[228] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 7 combo 2
+tr4_entity_tbl[229] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 8 combo 1
+tr4_entity_tbl[230] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 8 combo 2
+tr4_entity_tbl[231] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 1
+tr4_entity_tbl[232] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 2
+tr4_entity_tbl[233] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 3
+tr4_entity_tbl[234] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 4
+tr4_entity_tbl[235] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 1 combo 1
+tr4_entity_tbl[236] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 1 combo 2
+tr4_entity_tbl[237] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 2 combo 1
+tr4_entity_tbl[238] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 2 combo 2
+tr4_entity_tbl[239] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 3 combo 1
+tr4_entity_tbl[240] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 3 combo 2
+tr4_entity_tbl[241] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 4 combo 1
+tr4_entity_tbl[242] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 4 combo 2
+tr4_entity_tbl[243] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Examine 1
+tr4_entity_tbl[244] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Examine 2
+tr4_entity_tbl[245] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Examine 3
+tr4_entity_tbl[246] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Crowbar item
+tr4_entity_tbl[247] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Burning torch item
+tr4_entity_tbl[248] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Clock work beetle
+tr4_entity_tbl[249] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Clock work beetle combo 1
+tr4_entity_tbl[250] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Clock work beetle combo 2
+tr4_entity_tbl[251] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Mine detector
+tr4_entity_tbl[252] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Quest item 1
+tr4_entity_tbl[253] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Quest item 2
+tr4_entity_tbl[254] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Quest item 3
+tr4_entity_tbl[255] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Quest item 4
+tr4_entity_tbl[256] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Quest item 5
+tr4_entity_tbl[257] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Quest item 6
+tr4_entity_tbl[258] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Map - UNUSED
+tr4_entity_tbl[259] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Secret map - UNUSED
 
 -- PUZZLE HOLES AND KEYHOLES
 
@@ -1008,18 +1008,18 @@ tr4_entity_tbl[268] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_
 tr4_entity_tbl[269] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"}; -- Puzzle hole 10
 tr4_entity_tbl[270] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"}; -- Puzzle hole 11
 tr4_entity_tbl[271] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"}; -- Puzzle hole 12
-tr4_entity_tbl[272] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle done 1
-tr4_entity_tbl[273] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle done 2
-tr4_entity_tbl[274] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle done 3
-tr4_entity_tbl[275] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle done 4
-tr4_entity_tbl[276] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle done 5
-tr4_entity_tbl[277] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle done 6
-tr4_entity_tbl[278] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle done 7
-tr4_entity_tbl[279] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle done 8
-tr4_entity_tbl[280] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle done 9
-tr4_entity_tbl[281] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle done 10
-tr4_entity_tbl[282] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle done 11
-tr4_entity_tbl[283] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle done 12
+tr4_entity_tbl[272] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle done 1
+tr4_entity_tbl[273] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle done 2
+tr4_entity_tbl[274] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle done 3
+tr4_entity_tbl[275] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle done 4
+tr4_entity_tbl[276] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle done 5
+tr4_entity_tbl[277] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle done 6
+tr4_entity_tbl[278] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle done 7
+tr4_entity_tbl[279] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle done 8
+tr4_entity_tbl[280] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle done 9
+tr4_entity_tbl[281] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle done 10
+tr4_entity_tbl[282] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle done 11
+tr4_entity_tbl[283] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle done 12
 tr4_entity_tbl[284] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX, func = "keyhole"}; -- Key hole 1 (ig keyhole hub.tr4)
 tr4_entity_tbl[285] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"}; -- Key hole 2
 tr4_entity_tbl[286] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "keyhole"}; -- Key hole 3
@@ -1103,32 +1103,32 @@ tr4_entity_tbl[348] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE
 
  -- PICK-UP SUPPLY ITEMS
 
-tr4_entity_tbl[349] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pistols item
-tr4_entity_tbl[350] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pistols ammo item
-tr4_entity_tbl[351] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Uzi item
-tr4_entity_tbl[352] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Uzi ammo item
-tr4_entity_tbl[353] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Shotgun item
-tr4_entity_tbl[354] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Shotgun ammo 1 item
-tr4_entity_tbl[355] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Shotgun ammo 2 item
-tr4_entity_tbl[356] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Crossbow item
-tr4_entity_tbl[357] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Crossbow ammo 1 item
-tr4_entity_tbl[358] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Crossbow ammo 2 item
-tr4_entity_tbl[359] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Crossbow ammo 3 item
-tr4_entity_tbl[360] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Crossbow bolt
-tr4_entity_tbl[361] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Grenade gun item
-tr4_entity_tbl[362] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Grenade gun ammo 1 item
-tr4_entity_tbl[363] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Grenade gun ammo 2 item
-tr4_entity_tbl[364] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Grenade gun ammo 3 item
-tr4_entity_tbl[365] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Grenade
-tr4_entity_tbl[366] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Six shooter item
-tr4_entity_tbl[367] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Six shooter ammo item
-tr4_entity_tbl[368] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Big medipack item
-tr4_entity_tbl[369] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Small medipack item
-tr4_entity_tbl[370] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Laser sight item
-tr4_entity_tbl[371] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Binoculars item
-tr4_entity_tbl[372] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Flare item
-tr4_entity_tbl[373] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Flare inv item
-tr4_entity_tbl[374] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Diary item - UNUSED
+tr4_entity_tbl[349] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pistols item
+tr4_entity_tbl[350] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pistols ammo item
+tr4_entity_tbl[351] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Uzi item
+tr4_entity_tbl[352] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Uzi ammo item
+tr4_entity_tbl[353] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Shotgun item
+tr4_entity_tbl[354] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Shotgun ammo 1 item
+tr4_entity_tbl[355] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Shotgun ammo 2 item
+tr4_entity_tbl[356] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Crossbow item
+tr4_entity_tbl[357] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Crossbow ammo 1 item
+tr4_entity_tbl[358] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Crossbow ammo 2 item
+tr4_entity_tbl[359] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Crossbow ammo 3 item
+tr4_entity_tbl[360] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Crossbow bolt
+tr4_entity_tbl[361] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Grenade gun item
+tr4_entity_tbl[362] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Grenade gun ammo 1 item
+tr4_entity_tbl[363] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Grenade gun ammo 2 item
+tr4_entity_tbl[364] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Grenade gun ammo 3 item
+tr4_entity_tbl[365] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Grenade
+tr4_entity_tbl[366] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Six shooter item
+tr4_entity_tbl[367] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Six shooter ammo item
+tr4_entity_tbl[368] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Big medipack item
+tr4_entity_tbl[369] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Small medipack item
+tr4_entity_tbl[370] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Laser sight item
+tr4_entity_tbl[371] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Binoculars item
+tr4_entity_tbl[372] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Flare item
+tr4_entity_tbl[373] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Flare inv item
+tr4_entity_tbl[374] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Diary item - UNUSED
 
 -- INVENTORY ITEMS
 
@@ -1415,60 +1415,60 @@ tr5_entity_tbl[171] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE
 
 -- PICK-UP WALKTHROUGH ITEMS
 
-tr5_entity_tbl[172] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 1
-tr5_entity_tbl[173] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 2
-tr5_entity_tbl[174] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 3
-tr5_entity_tbl[175] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 4
-tr5_entity_tbl[176] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 5
-tr5_entity_tbl[177] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 6
-tr5_entity_tbl[178] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 7
-tr5_entity_tbl[179] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 8
-tr5_entity_tbl[180] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 1 Combo 1
-tr5_entity_tbl[181] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 1 Combo 2
-tr5_entity_tbl[182] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 2 Combo 1
-tr5_entity_tbl[183] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 2 Combo 2
-tr5_entity_tbl[184] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 3 Combo 1
-tr5_entity_tbl[185] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 3 Combo 2
-tr5_entity_tbl[186] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 4 Combo 1
-tr5_entity_tbl[187] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 4 Combo 2
-tr5_entity_tbl[188] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 5 Combo 1
-tr5_entity_tbl[189] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 5 Combo 2
-tr5_entity_tbl[190] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 6 Combo 1
-tr5_entity_tbl[191] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 6 Combo 2
-tr5_entity_tbl[192] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 7 Combo 1
-tr5_entity_tbl[193] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 7 Combo 2
-tr5_entity_tbl[194] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 8 Combo 1
-tr5_entity_tbl[195] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Puzzle 8 Combo 2
-tr5_entity_tbl[196] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key 1
-tr5_entity_tbl[197] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key 2
-tr5_entity_tbl[198] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key 3 - UNUSED?
-tr5_entity_tbl[199] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key 4 - UNUSED?
-tr5_entity_tbl[200] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key 5 - UNUSED?
-tr5_entity_tbl[201] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key 6
-tr5_entity_tbl[202] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key 7
-tr5_entity_tbl[203] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key 8
+tr5_entity_tbl[172] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 1
+tr5_entity_tbl[173] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 2
+tr5_entity_tbl[174] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 3
+tr5_entity_tbl[175] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 4
+tr5_entity_tbl[176] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 5
+tr5_entity_tbl[177] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 6
+tr5_entity_tbl[178] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 7
+tr5_entity_tbl[179] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 8
+tr5_entity_tbl[180] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 1 Combo 1
+tr5_entity_tbl[181] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 1 Combo 2
+tr5_entity_tbl[182] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 2 Combo 1
+tr5_entity_tbl[183] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 2 Combo 2
+tr5_entity_tbl[184] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 3 Combo 1
+tr5_entity_tbl[185] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 3 Combo 2
+tr5_entity_tbl[186] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 4 Combo 1
+tr5_entity_tbl[187] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 4 Combo 2
+tr5_entity_tbl[188] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 5 Combo 1
+tr5_entity_tbl[189] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 5 Combo 2
+tr5_entity_tbl[190] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 6 Combo 1
+tr5_entity_tbl[191] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 6 Combo 2
+tr5_entity_tbl[192] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 7 Combo 1
+tr5_entity_tbl[193] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 7 Combo 2
+tr5_entity_tbl[194] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 8 Combo 1
+tr5_entity_tbl[195] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Puzzle 8 Combo 2
+tr5_entity_tbl[196] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key 1
+tr5_entity_tbl[197] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key 2
+tr5_entity_tbl[198] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key 3 - UNUSED?
+tr5_entity_tbl[199] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key 4 - UNUSED?
+tr5_entity_tbl[200] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key 5 - UNUSED?
+tr5_entity_tbl[201] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key 6
+tr5_entity_tbl[202] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key 7
+tr5_entity_tbl[203] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key 8
 
-tr5_entity_tbl[204] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 1 combo 1
-tr5_entity_tbl[205] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 1 combo 2
-tr5_entity_tbl[206] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 2 combo 1
-tr5_entity_tbl[207] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 2 combo 2
-tr5_entity_tbl[208] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 3 combo 1
-tr5_entity_tbl[209] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 3 combo 2
-tr5_entity_tbl[210] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 4 combo 1
-tr5_entity_tbl[211] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 4 combo 2
-tr5_entity_tbl[212] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 5 combo 1
-tr5_entity_tbl[213] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 5 combo 2
-tr5_entity_tbl[214] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 6 combo 1
-tr5_entity_tbl[215] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 6 combo 2
-tr5_entity_tbl[216] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 7 combo 1
-tr5_entity_tbl[217] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 7 combo 2
-tr5_entity_tbl[218] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 8 combo 1
-tr5_entity_tbl[219] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Key item 8 combo 2
+tr5_entity_tbl[204] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 1 combo 1
+tr5_entity_tbl[205] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 1 combo 2
+tr5_entity_tbl[206] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 2 combo 1
+tr5_entity_tbl[207] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 2 combo 2
+tr5_entity_tbl[208] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 3 combo 1
+tr5_entity_tbl[209] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 3 combo 2
+tr5_entity_tbl[210] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 4 combo 1
+tr5_entity_tbl[211] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 4 combo 2
+tr5_entity_tbl[212] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 5 combo 1
+tr5_entity_tbl[213] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 5 combo 2
+tr5_entity_tbl[214] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 6 combo 1
+tr5_entity_tbl[215] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 6 combo 2
+tr5_entity_tbl[216] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 7 combo 1
+tr5_entity_tbl[217] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 7 combo 2
+tr5_entity_tbl[218] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 8 combo 1
+tr5_entity_tbl[219] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Key item 8 combo 2
 
-tr5_entity_tbl[220] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 1
-tr5_entity_tbl[221] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 2
-tr5_entity_tbl[222] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 3 - UNUSED?
-tr5_entity_tbl[223] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Gold rose
+tr5_entity_tbl[220] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 1
+tr5_entity_tbl[221] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 2
+tr5_entity_tbl[222] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pickup item 3 - UNUSED?
+tr5_entity_tbl[223] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Gold rose
 
 tr5_entity_tbl[224] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 1 combo 1 - UNUSED
 tr5_entity_tbl[225] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pickup item 1 combo 2 - UNUSED
@@ -1483,13 +1483,13 @@ tr5_entity_tbl[232] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_
 tr5_entity_tbl[233] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Examine 2 - UNUSED
 tr5_entity_tbl[234] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Examine 3 - UNUSED
 
-tr5_entity_tbl[235] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Chloroform cloth
-tr5_entity_tbl[236] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Chloroform bottle
-tr5_entity_tbl[237] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Chloroform soaked cloth
-tr5_entity_tbl[238] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Cosh (?)
-tr5_entity_tbl[239] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Hammer item - UNUSED?
-tr5_entity_tbl[240] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Crowbar item
-tr5_entity_tbl[241] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Torch item
+tr5_entity_tbl[235] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Chloroform cloth
+tr5_entity_tbl[236] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Chloroform bottle
+tr5_entity_tbl[237] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Chloroform soaked cloth
+tr5_entity_tbl[238] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Cosh (?)
+tr5_entity_tbl[239] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Hammer item - UNUSED?
+tr5_entity_tbl[240] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Crowbar item
+tr5_entity_tbl[241] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Torch item
 
 -- PUZZLEHOLES AND KEYHOLES
 
@@ -1595,29 +1595,29 @@ tr5_entity_tbl[333] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_
 
 -- PICK-UP SUPPLY ITEMS
 
-tr5_entity_tbl[334] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pistols
-tr5_entity_tbl[335] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Pistols ammo
-tr5_entity_tbl[336] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Uzis
-tr5_entity_tbl[337] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Uzis ammo
-tr5_entity_tbl[338] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Shotgun
-tr5_entity_tbl[339] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Shotgun shells 1
-tr5_entity_tbl[340] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Shotgun shells 2
-tr5_entity_tbl[341] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Grappling gun
-tr5_entity_tbl[342] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Grappling ammo type 1
-tr5_entity_tbl[343] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Grappling ammo type 2
-tr5_entity_tbl[344] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Grappling ammo type 3
-tr5_entity_tbl[345] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- HK Gun
-tr5_entity_tbl[346] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- HK ammo
-tr5_entity_tbl[347] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Revolver
-tr5_entity_tbl[348] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Revolver bullets
-tr5_entity_tbl[349] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Big Medi-Pack
-tr5_entity_tbl[350] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Small Medi-Pack
-tr5_entity_tbl[351] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Laser sight
-tr5_entity_tbl[352] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Binoculars
-tr5_entity_tbl[353] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Silencer
-tr5_entity_tbl[354] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Burning flare
-tr5_entity_tbl[355] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Flares
-tr5_entity_tbl[356] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX}; -- Timex-TMX (Compass)
+tr5_entity_tbl[334] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pistols
+tr5_entity_tbl[335] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Pistols ammo
+tr5_entity_tbl[336] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Uzis
+tr5_entity_tbl[337] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Uzis ammo
+tr5_entity_tbl[338] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Shotgun
+tr5_entity_tbl[339] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Shotgun shells 1
+tr5_entity_tbl[340] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Shotgun shells 2
+tr5_entity_tbl[341] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Grappling gun
+tr5_entity_tbl[342] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Grappling ammo type 1
+tr5_entity_tbl[343] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Grappling ammo type 2
+tr5_entity_tbl[344] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Grappling ammo type 3
+tr5_entity_tbl[345] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- HK Gun
+tr5_entity_tbl[346] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- HK ammo
+tr5_entity_tbl[347] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Revolver
+tr5_entity_tbl[348] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Revolver bullets
+tr5_entity_tbl[349] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Big Medi-Pack
+tr5_entity_tbl[350] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Small Medi-Pack
+tr5_entity_tbl[351] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Laser sight
+tr5_entity_tbl[352] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Binoculars
+tr5_entity_tbl[353] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Silencer
+tr5_entity_tbl[354] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Burning flare
+tr5_entity_tbl[355] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Flares
+tr5_entity_tbl[356] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"}; -- Timex-TMX (Compass)
 
 -- INVENTORY ITEMS
 

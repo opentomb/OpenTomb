@@ -157,7 +157,14 @@ function pushable_init(id)
 end
 
 
-function pickup_init(id, item_id)    -- Pick-ups
+function pickable_init(id)    -- Pick-ups
+
+    local model_id = getEntityModelID(id);
+    local pickup_count, item_type, item_id = getBaseItemInfoByWorldID(model_id);
+
+    if(item_id == nil) then
+        return;
+    end;
 
     setEntityTypeFlag(id, ENTITY_TYPE_PICKABLE);
     setEntityActivationOffset(id, 0.0, 0.0, 0.0, 480.0);
@@ -165,16 +172,20 @@ function pickup_init(id, item_id)    -- Pick-ups
     setEntityAnimFlag(id, ANIM_TYPE_BASE, ANIM_FRAME_LOCK);
 
     removeAllItems(id);
-    local pickup_count = getBaseItemInfo(item_id);
     addItem(id, item_id, pickup_count);
 
     entity_funcs[id].activator_id = nil;
     entity_funcs[id].need_set_pos = true;
 
     entity_funcs[id].onSave = function()
+        local ret = "";
+        if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
+            ret = "\nbat_init(" .. id .. ");";
+        end;
+
         if(entity_funcs[id].activator_id ~= nil) then
             local addr = "\nentity_funcs[" .. id .. "].";
-            local ret  = addr .. "activator_id = " .. entity_funcs[id].activator_id .. ";";
+            ret = ret .. addr .. "activator_id = " .. entity_funcs[id].activator_id .. ";";
             if(entity_funcs[id].need_set_pos) then
                 ret = ret .. addr .. "need_set_pos = true;";
             else
@@ -183,11 +194,11 @@ function pickup_init(id, item_id)    -- Pick-ups
             return ret;
         end;
 
-        return "";
+        return ret;
     end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if((item_id == nil) or (object_id == nil) or (entity_funcs[object_id].activator_id ~= nil)) then
+        if((object_id == nil) or (entity_funcs[object_id].activator_id ~= nil)) then
             return ENTITY_TRIGGERING_NOT_READY;
         end
 

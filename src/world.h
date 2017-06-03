@@ -21,6 +21,7 @@ struct entity_s *World_GetPlayer();
 void World_IterateAllEntities(int (*iterator)(struct entity_s *ent, void *data), void *data);
 struct flyby_camera_sequence_s *World_GetFlyBySequences();
 struct base_item_s *World_GetBaseItemByID(uint32_t id);
+struct base_item_s *World_GetBaseItemByWorldModelID(uint32_t id);
 struct static_camera_sink_s *World_GetstaticCameraSink(uint32_t id);
 
 void World_GetSkeletalModelsInfo(struct skeletal_model_s **models, uint32_t *models_count);

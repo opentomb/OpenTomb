@@ -117,7 +117,6 @@ void World_GenSpritesBuffer();
 void World_GenRoomProperties(class VT_Level *tr);
 void World_GenRoomCollision();
 void World_FixRooms();
-void World_MakeEntityPickable(entity_p ent);                                    // Assign pickup functions to previously created base items.
 
 
 void World_Prepare()
@@ -435,7 +434,6 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
                 Room_RemoveObject(entity->self->room, entity->self);
                 entity->self->room = NULL;
             }
-            World_MakeEntityPickable(entity);
 
             return entity->id;
         }
@@ -497,8 +495,6 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             Room_AddObject(entity->self->room, entity->self);
         }
         World_AddEntity(entity);
-        World_MakeEntityPickable(entity);
-
         return entity->id;
     }
 
@@ -572,6 +568,20 @@ struct base_item_s *World_GetBaseItemByID(uint32_t id)
     }
 
     return item;
+}
+
+
+struct base_item_s *World_GetBaseItemByWorldModelID(uint32_t id)
+{
+    for(std::pair<const uint32_t, base_item_p> &it : global_world.items_tree)
+    {
+        if(it.second && (id == it.second->world_model_id))
+        {
+            return it.second;
+        }
+    }
+
+    return NULL;
 }
 
 
@@ -2138,21 +2148,6 @@ void World_GenEntities(class VT_Level *tr)
 void World_GenBaseItems()
 {
     Script_CallVoidFunc(engine_lua, "genBaseItems");
-
-    if(!global_world.items_tree.empty())
-    {
-        for(uint32_t i = 0; i < global_world.rooms_count; ++i)
-        {
-            engine_container_p cont = global_world.rooms[i].content->containers;
-            for(; cont; cont = cont->next)
-            {
-                if(cont->object_type == OBJECT_ENTITY)
-                {
-                    World_MakeEntityPickable((entity_p)cont->object);
-                }
-            }
-        }
-    }
 }
 
 
@@ -2361,22 +2356,6 @@ void World_FixRooms()
         if(r->real_room != r)
         {
             Room_Disable(r);
-        }
-    }
-}
-
-
-void World_MakeEntityPickable(entity_p ent)
-{
-    for(std::pair<const uint32_t, base_item_p> &it : global_world.items_tree)
-    {
-        if(it.second && (ent->bf->animations.model->id == it.second->world_model_id))
-        {
-            char buf[128] = {0};
-            snprintf(buf, 128, "if(entity_funcs[%d] == nil) then entity_funcs[%d] = {}; pickup_init(%d, %d); end", ent->id, ent->id, ent->id, it.second->id);
-            luaL_dostring(engine_lua, buf);
-            Entity_DisableCollision(ent);
-            break;
         }
     }
 }
