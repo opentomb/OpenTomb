@@ -77,18 +77,13 @@ function checkDebugKeys()
     end;
     
     if(checkKey(KEY_Z, true)) then
-        if(getEntityMoveType(player) == MOVE_UNDERWATER) then
-            setEntityAnim(player, ANIM_TYPE_BASE, 103, 0);
-        else
-            setEntityAnim(player, ANIM_TYPE_BASE, 108, 0);
-        end;
-        
         setEntityCollision(player, true);
         setCharacterRagdollActivity(player, false);
-        setEntityMoveType(player, MOVE_FREE_FALLING);
         setCharacterState(player, CHARACTER_STATE_DEAD, 0);
         setCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
         setEntityAnimFlag(player, ANIM_TYPE_BASE, ANIM_NORMAL_CONTROL);
+        setCharacterKeyAnim(player, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+        setEntityActivity(player, true);
     end;
     
     if(checkKey(KEY_1, true)) then setCharacterCurrentWeapon(player, 1) end;
