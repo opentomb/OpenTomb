@@ -332,7 +332,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                                     break;
 
                                 case TR_ACTIVATOR_PICKUP:
-                                    if(!(trig_entity->state_flags & ENTITY_STATE_ENABLED) && (Entity_GetSectorStatus(trig_entity) == 0))
+                                    if(!(trig_entity->state_flags & ENTITY_STATE_VISIBLE) && (Entity_GetSectorStatus(trig_entity) == 0))
                                     {
                                         Entity_SetSectorStatus(trig_entity, 1);
                                     }

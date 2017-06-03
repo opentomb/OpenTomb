@@ -807,6 +807,9 @@ function Pierre_init(id)
             local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
             if((a == 12) and (f + 1 >= c)) then
                 local spawned_id = spawnEntity(133, getEntityRoom(object_id), getEntityPos(object_id));
+                pickable_init(spawned_id);
+                spawned_id = spawnEntity(150, getEntityRoom(object_id), getEntityPos(object_id));
+                pickable_init(spawned_id);
                 setEntityActivity(object_id, false);
                 entity_funcs[object_id].onLoop = nil;
             end;

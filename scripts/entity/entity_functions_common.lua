@@ -166,6 +166,10 @@ function pickable_init(id)    -- Pick-ups
         return;
     end;
 
+    if(entity_funcs[id] == nil) then
+        entity_funcs[id] = {};
+    end;
+
     setEntityTypeFlag(id, ENTITY_TYPE_PICKABLE);
     setEntityActivationOffset(id, 0.0, 0.0, 0.0, 480.0);
     setEntityActivity(id, false);

@@ -58,6 +58,44 @@ function tallblock_init(id)    -- Tall moving block (TR1)
 end
 
 
+function scion_init(id)
+    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
+    setEntityActivationOffset(id, 0.0, 0.0, -500.0, 480.0);
+    setEntityActivationDirection(id, 0.0, 0.0, 0.0, 0.27);
+    setEntityActivity(id, false);
+    setEntityAnimFlag(id, ANIM_TYPE_BASE, ANIM_FRAME_LOCK);
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if((not entitySSAnimGetEnable(activator_id, ANIM_TYPE_MISK_1))) then
+            entityRotateToTriggerZ(activator_id, object_id);
+            entitySSAnimEnsureExists(activator_id, ANIM_TYPE_MISK_1, 5);
+            setEntityAnim(activator_id, ANIM_TYPE_MISK_1, 0, 0);
+            entitySSAnimSetEnable(activator_id, ANIM_TYPE_MISK_1, 1);
+            entitySSAnimSetEnable(activator_id, ANIM_TYPE_BASE, 0);
+            noEntityMove(activator_id, true);
+            setEntityActivity(object_id, true);
+        end;
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(entitySSAnimGetEnable(player, ANIM_TYPE_MISK_1)) then
+            local a, f, c = getEntityAnim(player, ANIM_TYPE_MISK_1);
+            if((a == 0) and (f >= 40)) then
+                setEntityVisibility(object_id, false);
+            end;
+            if((a == 0) and (f + 1 >= c)) then
+                entitySSAnimSetEnable(player, ANIM_TYPE_MISK_1, 0);
+                entitySSAnimSetEnable(player, ANIM_TYPE_BASE, 1);
+                addItem(player, 150, 1);
+                noEntityMove(player, false);
+                disableEntity(object_id);
+            end;
+        end;
+    end
+end;
+
+
 function midastouch_init(id)    -- Midas gold touch
 
     --enable Midas death anim
