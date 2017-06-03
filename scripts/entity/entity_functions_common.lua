@@ -180,7 +180,7 @@ function pickable_init(id)    -- Pick-ups
     entity_funcs[id].onSave = function()
         local ret = "";
         if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
-            ret = "\nbat_init(" .. id .. ");";
+            ret = "\npickable_init(" .. id .. ");";
         end;
 
         if(entity_funcs[id].activator_id ~= nil) then
