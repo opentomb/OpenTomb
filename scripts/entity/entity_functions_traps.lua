@@ -43,7 +43,7 @@ end
 
 function dart_emitter_init(id)
     setEntityActivity(id, false);
-    entity_funcs[id].passed = 1.0;
+    entity_funcs[id].passed = 1.4;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
@@ -63,6 +63,7 @@ function dart_emitter_init(id)
             local spawned_id = spawnEntity(39, getEntityRoom(object_id), getEntityPos(object_id));
             moveEntityLocal(spawned_id, 0, -128 - 64, 512);
             projectile_init(spawned_id, 4096, 150);
+            playSound(151, object_id);
         end;
 
         if(tick_state == TICK_STOPPED) then

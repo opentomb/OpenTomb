@@ -66,7 +66,7 @@ function scion_init(id)
     setEntityAnimFlag(id, ANIM_TYPE_BASE, ANIM_FRAME_LOCK);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if((not entitySSAnimGetEnable(activator_id, ANIM_TYPE_MISK_1))) then
+        if((getEntityEvent(object_id) == 0) and (not entitySSAnimGetEnable(activator_id, ANIM_TYPE_MISK_1))) then
             entityRotateToTriggerZ(activator_id, object_id);
             entitySSAnimEnsureExists(activator_id, ANIM_TYPE_MISK_1, 5);
             setEntityAnim(activator_id, ANIM_TYPE_MISK_1, 0, 0);
@@ -74,8 +74,9 @@ function scion_init(id)
             entitySSAnimSetEnable(activator_id, ANIM_TYPE_BASE, 0);
             noEntityMove(activator_id, true);
             setEntityActivity(object_id, true);
+            return ENTITY_TRIGGERING_ACTIVATED;
         end;
-        return ENTITY_TRIGGERING_ACTIVATED;
+        return ENTITY_TRIGGERING_NOT_READY;
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
