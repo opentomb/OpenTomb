@@ -810,6 +810,8 @@ function Pierre_init(id)
                 pickable_init(spawned_id);
                 spawned_id = spawnEntity(150, getEntityRoom(object_id), getEntityPos(object_id));
                 pickable_init(spawned_id);
+                spawned_id = spawnEntity(101, getEntityRoom(object_id), getEntityPos(object_id));
+                pickable_init(spawned_id);
                 setEntityActivity(object_id, false);
                 entity_funcs[object_id].onLoop = nil;
             end;

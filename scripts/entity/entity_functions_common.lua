@@ -174,6 +174,7 @@ function pickable_init(id)    -- Pick-ups
     setEntityActivationOffset(id, 0.0, 0.0, 0.0, 480.0);
     setEntityActivity(id, false);
     setEntityAnimFlag(id, ANIM_TYPE_BASE, ANIM_FRAME_LOCK);
+    setEntityCollision(id, false);
 
     removeAllItems(id);
     addItem(id, item_id, pickup_count);
@@ -207,7 +208,8 @@ function pickable_init(id)    -- Pick-ups
         end
 
         enableEntity(object_id);
-        setEntityActivity(id, false);
+        setEntityCollision(object_id, false);
+        setEntityActivity(object_id, false);
         local curr_anim = getEntityAnim(activator_id, ANIM_TYPE_BASE);
 
         if(curr_anim == 103) then                 -- Stay idle

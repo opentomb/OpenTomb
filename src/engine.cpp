@@ -109,13 +109,13 @@ void Engine_InitSDLVideo();
 void Engine_InitSDLControls();
 void Engine_InitDefaultGlobals();
 
-void Engine_Display();
+void Engine_Display(float time);
 void Engine_PollSDLEvents();
 void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH);
 
 void TestModelApplyKey(int key);
 void SetTestModel(int index);
-void ShowModelView();
+void ShowModelView(float time);
 void ShowDebugInfo();
 
 void Engine_Start(int argc, char **argv)
@@ -585,7 +585,7 @@ void Engine_SaveConfig(const char *filename)
 }
 
 
-void Engine_Display()
+void Engine_Display(float time)
 {
     if(!engine_done)
     {
@@ -618,7 +618,7 @@ void Engine_Display()
             qglDisable(GL_CULL_FACE);*/
             qglDisable(GL_BLEND);
             qglEnable(GL_ALPHA_TEST);
-            ShowModelView();
+            ShowModelView(time);
         }
         Gui_SwitchGLMode(1);
         qglEnable(GL_ALPHA_TEST);
@@ -895,7 +895,7 @@ void Engine_MainLoop()
             Gameflow_ProcessCommands();
         }
         Audio_Update(time);
-        Engine_Display();
+        Engine_Display(time);
     }
 }
 
@@ -949,7 +949,7 @@ void SetTestModel(int index)
 }
 
 
-void ShowModelView()
+void ShowModelView(float time)
 {
     static float tr[16];
     static float test_model_angles[3] = {45.0f, 45.0f, 0.0f};
@@ -974,35 +974,35 @@ void ShowModelView()
 
         if(control_states.look_right || control_states.move_right)
         {
-            test_model_angles[0] += engine_frame_time * 256.0f;
+            test_model_angles[0] += time * 256.0f;
         }
         if(control_states.look_left || control_states.move_left)
         {
-            test_model_angles[0] -= engine_frame_time * 256.0f;
+            test_model_angles[0] -= time * 256.0f;
         }
         if(control_states.look_up)
         {
-            test_model_angles[1] += engine_frame_time * 256.0f;
+            test_model_angles[1] += time * 256.0f;
         }
         if(control_states.look_down)
         {
-            test_model_angles[1] -= engine_frame_time * 256.0f;
+            test_model_angles[1] -= time * 256.0f;
         }
         if(control_states.move_forward && (test_model_dist >= 8.0f))
         {
-            test_model_dist -= engine_frame_time * 512.0f;
+            test_model_dist -= time * 512.0f;
         }
         if(control_states.move_backward)
         {
-            test_model_dist += engine_frame_time * 512.0f;
+            test_model_dist += time * 512.0f;
         }
         if(control_states.move_up)
         {
-            test_model_z_offset += engine_frame_time * 512.0f;
+            test_model_z_offset += time * 512.0f;
         }
         if(control_states.move_down)
         {
-            test_model_z_offset -= engine_frame_time * 512.0f;
+            test_model_z_offset -= time * 512.0f;
         }
 
         test_model.transform = tr;
@@ -1017,7 +1017,7 @@ void ShowModelView()
         cam_pos[2] = -engine_camera.gl_transform[8 + 2] * test_model_dist + test_model_z_offset;
         Cam_Apply(&engine_camera);
 
-        test_model.animations.frame_time += engine_frame_time;
+        test_model.animations.frame_time += time;
         test_model.animations.current_frame = test_model.animations.frame_time / test_model.animations.period;
         if(test_model.animations.current_frame >= af->frames_count)
         {

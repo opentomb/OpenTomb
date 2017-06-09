@@ -641,7 +641,7 @@ void Game_Frame(float time)
                 }
             }
         }
-        Entity_Frame(player, engine_frame_time);
+        Entity_Frame(player, time);
         Entity_UpdateRigidBody(player, 1);
         Entity_UpdateRoomPos(player);
     }
