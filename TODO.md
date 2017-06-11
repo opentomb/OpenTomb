@@ -1,4 +1,4 @@
-OpenTomb — TODO list for high-priority bugs / tasks
+OpenTomb ï¿½ TODO list for high-priority bugs / tasks
 ---------------------------------------------------
 
 ### Table of contents ###
@@ -57,32 +57,43 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 	* `game.cpp`: many different logics in one place, needs to be refactored
 	* make some modules (not all!) interface more abstract (hide internal realisation, like `physics.h`/`physics_bullet.cpp`)
 
-5. Collision system
+5. Engine
+-------------------
+* Current situation:
+	* Implemented entity spawning and safety deleting, projectiles, player switching...
+
+* Todo:
+	* Reduce globals using (shared between modules globals)
+	* Mowe out the console.c rendering code 
+	* Make alt-rooms state saveable in case of 3 and more alt rooms chains
+
+6. Collision system
 -------------------
 * Current situation:
 	* Fixed back/front-facing polygons orientation for physics geometry, now the engine has a working _Filtered Ray Test_ (skips back-faced polygons)
 	* Collision margin is zero, otherwise normals in near edges become smooth and Lara slides down or stops in places she should not
-
+	* Refactored collision callbacks implementation that allow to register hit damage and any other collisions
+  
 * Todo:
 	* Fix moving after landing on sloped surface:
 		* Find body parts that stop Lara
 		* Tune collision form, or disable collision checking for them
 		* Bind with 3
-	* Make rigid body parts meshes tunable by config
+	* Make rigid body parts shapes tunable by config
 	* For future optimazation, add switchable single ghost object for character
 	* Add _Long Ray Test_ (pierces rooms portals and builds room list for collisional checking) - needed for long range shooting and AI
-	* Add last collision resolving objects tracking
-	* Fix moving in some floor slant cases in `Character_FixPosByFloorInfoUnderLegs(...)`
+	* Reimplement correctly `Character_FixPosByFloorInfoUnderLegs(...)`: now is deleted
 	* Check room tween butterfly normals
 
-6. Character controller
+7. Character controller
 -----------------------
 * Todo:
+	* Base AI, path finding, boxes...
 	* Weapon control system needs to be refactored/fixed (2-handed weapon model switches in wrong frame)
 	* Add auto weapon hiding in water environment e.t.c. (simple task)
 	* Fix usage of weapons while crouching
 
-7. Animation control
+8. Animation control
 --------------------
 * Todo:
 	* Update documentation about `ss_animation` structure and functions
@@ -96,14 +107,14 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 		* Climbability distance threshold too high when jumping (i.e. reaching heights that shouldn't be reached)
 		* Reduce height correction when Lara lets go the hold on an edge (let go hold button)
 
-8. Camera control
+9. Camera control
 -----------------
 * Todo:
 	* Fix camera targeting to correct body part or OBB center (add special function to get targeting pos by target entity id)
 	* Implement camera flags and their function (e.g. "flyby", "once")
 	* Add special `camera_entity`, store it in world module, access by `entity_p World_GetCameraEntity();` - needed for heavy triggers
 
-9. Scripting
+10. Scripting
 ------------
 * Current situation:
 	* SEE TRIGGERS_tasks.md
@@ -112,7 +123,7 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 	* Add function like `lua_SaveTable(...)` that recursively print to file/buffer/clay tablets lua code with table content (i.e. `table_name = { red = 1; green = 0; blue = 0; name = "name"; is_u = true; in_tbl = { p1 = "inner"; val = 32.45 } }`)
 	* In all scripts that may change game state, data must be stored in special global table (that will be saved in save game) - needed for game save/load functions to correctly work
 
-10. Audio
+11. Audio
 ---------
 * Current situation:
 	* Sound tracks playing was disabled
