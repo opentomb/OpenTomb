@@ -1,4 +1,4 @@
-OpenTomb � TODO list for high-priority bugs / tasks
+OpenTomb — TODO list for high-priority bugs / tasks
 ---------------------------------------------------
 
 ### Table of contents ###
