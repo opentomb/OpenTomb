@@ -63,9 +63,10 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 	* Implemented entity spawning and safety deleting, projectiles, player switching...
 
 * Todo:
+	* Add activation callbacks for inventory items (no more `read-only` for inventory)
 	* Reduce globals using (shared between modules globals)
-	* Mowe out the console.c rendering code 
-	* Make alt-rooms state saveable in case of 3 and more alt rooms chains
+	* Move out the console.c rendering code 
+	* Make alt-room state savable in cases where there's a chain of 3 or more alt-rooms
 
 6. Collision system
 -------------------
@@ -82,7 +83,7 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 	* Make rigid body parts shapes tunable by config
 	* For future optimazation, add switchable single ghost object for character
 	* Add _Long Ray Test_ (pierces rooms portals and builds room list for collisional checking) - needed for long range shooting and AI
-	* Reimplement correctly `Character_FixPosByFloorInfoUnderLegs(...)`: now is deleted
+	* Re-implement Character_FixPosByFloorInfoUnderLegs(...) it has been deleted
 	* Check room tween butterfly normals
 
 7. Character controller
