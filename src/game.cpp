@@ -573,19 +573,6 @@ int Game_UpdateEntity(entity_p ent, void *data)
 }
 
 
-void Game_UpdateAI()
-{
-    entity_p ent = NULL;
-    //for(ALL CHARACTERS, EXCEPT PLAYER)
-    {
-        if(ent)
-        {
-            // UPDATE AI commands
-        }
-    }
-}
-
-
 void Game_Frame(float time)
 {
     entity_p player = World_GetPlayer();
@@ -613,7 +600,6 @@ void Game_Frame(float time)
 
     // In game mode
     Script_DoTasks(engine_lua, time);
-    Game_UpdateAI();
 
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.

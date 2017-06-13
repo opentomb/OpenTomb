@@ -120,14 +120,13 @@ typedef struct room_box_s
     int32_t     y_min;
     int32_t     y_max;
     int32_t     true_floor;
-    int32_t     overlap_index;
+    uint16_t   *overlap;
 }room_box_t, *room_box_p;
 
 
 typedef struct room_sector_s
 {
     uint32_t                    trig_index; // Trigger function index.
-    int32_t                     box_index;
 
     uint32_t                    flags;      // Climbability, death etc.
     uint32_t                    material;   // Footstep sound and footsteps.
@@ -136,6 +135,7 @@ typedef struct room_sector_s
     int32_t                     ceiling;
 
     struct trigger_header_s    *trigger;
+    struct room_box_s          *box;
     struct room_s              *owner_room;    // Room that contain this sector
     struct room_s              *portal_to_room;
 

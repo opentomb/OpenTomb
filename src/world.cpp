@@ -53,6 +53,9 @@ extern "C" {
     uint32_t                        room_boxes_count;
     struct room_box_s              *room_boxes;
 
+    uint16_t                       *overlaps;
+    uint32_t                        overlaps_count;
+
     uint32_t                        flip_count;             // Number of flips
     uint8_t                        *flip_map;               // Flipped room activity array.
     uint8_t                        *flip_state;             // Flipped room state array.
@@ -145,6 +148,8 @@ void World_Prepare()
     global_world.textures = 0;
     global_world.room_boxes = NULL;
     global_world.room_boxes_count = 0;
+    global_world.overlaps = NULL;
+    global_world.overlaps_count = 0;
     global_world.cameras_sinks = NULL;
     global_world.cameras_sinks_count = 0;
     global_world.flyby_cameras = NULL;
@@ -301,6 +306,13 @@ void World_Clear()
         global_world.room_boxes_count = 0;
         free(global_world.room_boxes);
         global_world.room_boxes = NULL;
+    }
+
+    if(global_world.overlaps_count)
+    {
+        global_world.overlaps_count = 0;
+        free(global_world.overlaps);
+        global_world.overlaps = NULL;
     }
 
     if(global_world.cameras_sinks_count)
@@ -1503,6 +1515,15 @@ void World_GenSprites(class VT_Level *tr)
 
 void World_GenBoxes(class VT_Level *tr)
 {
+    global_world.overlaps = NULL;
+    global_world.overlaps_count = tr->overlaps_count;
+
+    if(global_world.overlaps_count)
+    {
+        global_world.overlaps = (uint16_t*)malloc(global_world.overlaps_count * sizeof(uint16_t));
+        memcpy(global_world.overlaps, tr->overlaps, global_world.overlaps_count * sizeof(uint16_t));
+    }
+
     global_world.room_boxes = NULL;
     global_world.room_boxes_count = tr->boxes_count;
 
@@ -1511,7 +1532,11 @@ void World_GenBoxes(class VT_Level *tr)
         global_world.room_boxes = (room_box_p)malloc(global_world.room_boxes_count * sizeof(room_box_t));
         for(uint32_t i = 0; i < global_world.room_boxes_count; i++)
         {
-            global_world.room_boxes[i].overlap_index = tr->boxes[i].overlap_index;
+            global_world.room_boxes[i].overlap = NULL;
+            if((tr->boxes[i].overlap_index >= 0) && (tr->boxes[i].overlap_index < global_world.overlaps_count))
+            {
+                global_world.room_boxes[i].overlap = global_world.overlaps + tr->boxes[i].overlap_index;
+            }
             global_world.room_boxes[i].true_floor =-tr->boxes[i].true_floor;
             global_world.room_boxes[i].x_min = tr->boxes[i].xmin;
             global_world.room_boxes[i].x_max = tr->boxes[i].xmax;
@@ -1803,19 +1828,25 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
 
         sector->owner_room = room;
         sector->trigger = NULL;
+        sector->box = NULL;
 
         if(tr->game_version < TR_III)
         {
-            sector->box_index = tr_room->sector_list[i].box_index;
+            if(tr_room->sector_list[i].box_index < global_world.room_boxes_count)
+            {
+                sector->box = global_world.room_boxes + tr_room->sector_list[i].box_index;
+            }
             sector->material  = SECTOR_MATERIAL_STONE;
         }
         else
         {
-            sector->box_index = (tr_room->sector_list[i].box_index & 0xFFF0) >> 4;
+            uint16_t box = (tr_room->sector_list[i].box_index & 0xFFF0) >> 4;
+            if(box < global_world.room_boxes_count)
+            {
+                sector->box = global_world.room_boxes + box;
+            }
             sector->material  = (tr_room->sector_list[i].box_index & 0x000F);
         }
-
-        if(sector->box_index == 0xFFFF) sector->box_index = -1;
 
         sector->flags = 0;  // Clear sector flags.
 
