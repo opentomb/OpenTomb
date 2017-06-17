@@ -113,14 +113,30 @@ struct physics_object_s;
 struct trigger_header_s;
 
 
+typedef struct room_zone_s
+{
+    uint16_t GroundZone1_Normal;
+    uint16_t GroundZone2_Normal;
+    uint16_t GroundZone3_Normal;
+    uint16_t GroundZone4_Normal;
+    uint16_t FlyZone_Normal;
+    uint16_t GroundZone1_Alternate;
+    uint16_t GroundZone2_Alternate;
+    uint16_t GroundZone3_Alternate;
+    uint16_t GroundZone4_Alternate;
+    uint16_t FlyZone_Alternate;
+}room_zone_t, *room_zone_p;
+
+
 typedef struct room_box_s
 {
-    int32_t     x_min;
-    int32_t     x_max;
-    int32_t     y_min;
-    int32_t     y_max;
-    int32_t     true_floor;
-    uint16_t   *overlap;
+    int32_t             x_min;
+    int32_t             x_max;
+    int32_t             y_min;
+    int32_t             y_max;
+    int32_t             true_floor;
+    uint16_t           *overlap;
+    struct room_zone_s  zone;
 }room_box_t, *room_box_p;
 
 
