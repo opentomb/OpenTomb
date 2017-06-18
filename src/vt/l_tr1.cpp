@@ -125,6 +125,20 @@ void TR_Level::read_tr_box(SDL_RWops * const src, tr_box_t & box)
     box.overlap_index = read_bit16(src);
 }
 
+void TR_Level::read_tr_zone(SDL_RWops * const src, tr2_zone_t & zone)
+{
+    zone.GroundZone1_Normal = read_bit16(src);
+    zone.GroundZone2_Normal = read_bit16(src);
+    zone.GroundZone3_Normal = -1;
+    zone.GroundZone4_Normal = -1;
+    zone.FlyZone_Normal = read_bit16(src);
+    zone.GroundZone1_Alternate = read_bit16(src);
+    zone.GroundZone2_Alternate = read_bit16(src);
+    zone.GroundZone3_Alternate = -1;
+    zone.GroundZone4_Alternate = -1;
+    zone.FlyZone_Alternate = read_bit16(src);
+}
+
 /// \brief reads a room sprite definition.
 void TR_Level::read_tr_room_sprite(SDL_RWops * const src, tr_room_sprite_t & room_sprite)
 {
@@ -710,6 +724,7 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
 
     this->boxes_count = read_bitu32(src);
     this->boxes = (tr_box_t*)malloc(this->boxes_count * sizeof(tr_box_t));
+    this->zones = (tr2_zone_t*)malloc(this->boxes_count * sizeof(tr2_zone_t));
     for (i = 0; i < this->boxes_count; i++)
         read_tr_box(src, this->boxes[i]);
 
@@ -719,13 +734,8 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
         this->overlaps[i] = read_bitu16(src);
 
     // Zones
-    this->zones_count = this->boxes_count * 6;
-    if (this->zones_count > 0)
-    {
-        this->zones = (int16_t*)malloc(this->zones_count * sizeof(uint16_t));
-        for (i = 0; i < this->zones_count; i++)
-            this->zones[i] = read_bit16(src);
-    }
+    for (i = 0; i < this->boxes_count; i++)
+        read_tr_zone(src, this->zones[i]);
 
     this->animated_textures_count = read_bitu32(src);
     this->animated_textures_uv_count = 0; // No UVRotate in TR1

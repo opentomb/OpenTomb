@@ -306,6 +306,7 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
 
     this->boxes_count = read_bitu32(src);
     this->boxes = (tr_box_t*)malloc(this->boxes_count * sizeof(tr_box_t));
+    this->zones = (tr2_zone_t*)malloc(this->boxes_count * sizeof(tr2_zone_t));
     for (i = 0; i < this->boxes_count; i++)
         read_tr2_box(src, this->boxes[i]);
 
@@ -315,13 +316,8 @@ void TR_Level::read_tr3_level(SDL_RWops *const src)
         this->overlaps[i] = read_bitu16(src);
 
     // Zones
-    this->zones_count = this->boxes_count * 10;
-    if (this->zones_count > 0)
-    {
-        this->zones = (int16_t*)malloc(this->zones_count * sizeof(uint16_t));
-        for (i = 0; i < this->zones_count; i++)
-            this->zones[i] = read_bit16(src);
-    }
+    for (i = 0; i < this->boxes_count; i++)
+        read_tr2_zone(src, this->zones[i]);
 
     this->animated_textures_count = read_bitu32(src);
     this->animated_textures_uv_count = 0; // No UVRotate in TR3

@@ -686,6 +686,7 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
 
     this->boxes_count = read_bitu32(newsrc);
     this->boxes = (tr_box_t*)malloc(this->boxes_count * sizeof(tr_box_t));
+    this->zones = (tr2_zone_t*)malloc(this->boxes_count * sizeof(tr2_zone_t));
     for (i = 0; i < this->boxes_count; i++)
         read_tr2_box(newsrc, this->boxes[i]);
 
@@ -695,13 +696,8 @@ void TR_Level::read_tr4_level(SDL_RWops * const _src)
         this->overlaps[i] = read_bitu16(newsrc);
 
     // Zones
-    this->zones_count = this->boxes_count * 10;
-    if (this->zones_count > 0)
-    {
-        this->zones = (int16_t*)malloc(this->zones_count * sizeof(uint16_t));
-        for (i = 0; i < this->zones_count; i++)
-            this->zones[i] = read_bit16(newsrc);
-    }
+    for (i = 0; i < this->boxes_count; i++)
+        read_tr2_zone(newsrc, this->zones[i]);
 
     this->animated_textures_count = read_bitu32(newsrc);
     this->animated_textures = (uint16_t*)malloc(this->animated_textures_count * sizeof(uint16_t));

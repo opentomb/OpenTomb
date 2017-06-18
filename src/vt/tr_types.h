@@ -514,6 +514,22 @@ typedef struct tr_box_s
     // occurs in front of swinging doors and the like.
 } tr_box_t;
 
+/** \brief Zone.
+  */
+typedef struct tr2_zone_s
+{
+    int16_t GroundZone1_Normal;
+    int16_t GroundZone2_Normal;
+    int16_t GroundZone3_Normal;
+    int16_t GroundZone4_Normal;
+    int16_t FlyZone_Normal;
+    int16_t GroundZone1_Alternate;
+    int16_t GroundZone2_Alternate;
+    int16_t GroundZone3_Alternate;
+    int16_t GroundZone4_Alternate;
+    int16_t FlyZone_Alternate;
+} tr2_zone_t;
+
 /** \brief SoundSource.
   *
   * This structure contains the details of continuous-sound sources. Although

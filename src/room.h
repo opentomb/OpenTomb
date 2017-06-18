@@ -115,16 +115,16 @@ struct trigger_header_s;
 
 typedef struct room_zone_s
 {
-    uint16_t GroundZone1_Normal;
-    uint16_t GroundZone2_Normal;
-    uint16_t GroundZone3_Normal;
-    uint16_t GroundZone4_Normal;
-    uint16_t FlyZone_Normal;
-    uint16_t GroundZone1_Alternate;
-    uint16_t GroundZone2_Alternate;
-    uint16_t GroundZone3_Alternate;
-    uint16_t GroundZone4_Alternate;
-    uint16_t FlyZone_Alternate;
+    int16_t GroundZone1_Normal;
+    int16_t GroundZone2_Normal;
+    int16_t GroundZone3_Normal;
+    int16_t GroundZone4_Normal;
+    int16_t FlyZone_Normal;
+    int16_t GroundZone1_Alternate;
+    int16_t GroundZone2_Alternate;
+    int16_t GroundZone3_Alternate;
+    int16_t GroundZone4_Alternate;
+    int16_t FlyZone_Alternate;
 }room_zone_t, *room_zone_p;
 
 

@@ -1543,31 +1543,17 @@ void World_GenBoxes(class VT_Level *tr)
             r_box->x_max = tr->boxes[i].xmax;
             r_box->y_min =-tr->boxes[i].zmax;
             r_box->y_max =-tr->boxes[i].zmin;
-            memset(&r_box->zone, 0x00, sizeof(r_box->zone));
-            if(global_world.version < TR_II)
-            {
-                int16_t *zone = tr->zones + i * 6;
-                r_box->zone.GroundZone1_Normal = *zone++;
-                r_box->zone.GroundZone2_Normal = *zone++;
-                r_box->zone.FlyZone_Normal = *zone++;
-                r_box->zone.GroundZone1_Alternate = *zone++;
-                r_box->zone.GroundZone2_Alternate = *zone++;
-                r_box->zone.FlyZone_Alternate = *zone;
-            }
-            else
-            {
-                int16_t *zone = tr->zones + i * 10;
-                r_box->zone.GroundZone1_Normal = *zone++;
-                r_box->zone.GroundZone2_Normal = *zone++;
-                r_box->zone.GroundZone3_Normal = *zone++;
-                r_box->zone.GroundZone4_Normal = *zone++;
-                r_box->zone.FlyZone_Normal = *zone++;
-                r_box->zone.GroundZone1_Alternate = *zone++;
-                r_box->zone.GroundZone2_Alternate = *zone++;
-                r_box->zone.GroundZone3_Alternate = *zone++;
-                r_box->zone.GroundZone4_Alternate = *zone++;
-                r_box->zone.FlyZone_Alternate = *zone;
-            }
+
+            r_box->zone.GroundZone1_Normal = tr->zones[i].GroundZone1_Normal;
+            r_box->zone.GroundZone2_Normal = tr->zones[i].GroundZone2_Normal;
+            r_box->zone.GroundZone3_Normal = tr->zones[i].GroundZone3_Normal;
+            r_box->zone.GroundZone4_Normal = tr->zones[i].GroundZone4_Normal;
+            r_box->zone.FlyZone_Normal = tr->zones[i].FlyZone_Normal;
+            r_box->zone.GroundZone1_Alternate = tr->zones[i].GroundZone1_Alternate;
+            r_box->zone.GroundZone2_Alternate = tr->zones[i].GroundZone2_Alternate;
+            r_box->zone.GroundZone3_Alternate = tr->zones[i].GroundZone3_Alternate;
+            r_box->zone.GroundZone4_Alternate = tr->zones[i].GroundZone4_Alternate;
+            r_box->zone.FlyZone_Alternate = tr->zones[i].FlyZone_Alternate;
         }
     }
 }

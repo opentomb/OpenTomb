@@ -89,7 +89,6 @@ class TR_Level
             this->boxes = NULL;                 // destroyed
             this->overlaps_count = 0;           // destroyed
             this->overlaps = NULL;              // destroyed
-            this->zones_count = 0;              // destroyed
             this->zones = NULL;                 // destroyed
             this->items_count = 0;              // destroyed
             this->items = NULL;                 // destroyed
@@ -257,6 +256,8 @@ class TR_Level
                 this->boxes_count = 0; 
                 free(this->boxes); 
                 this->boxes = NULL; 
+                free(this->zones); 
+                this->zones = NULL; 
             }
             
             if(this->overlaps_count)
@@ -264,13 +265,6 @@ class TR_Level
                 this->overlaps_count = 0; 
                 free(this->overlaps); 
                 this->overlaps = NULL; 
-            }
-            
-            if(this->zones_count)
-            {
-                this->zones_count = 0; 
-                free(this->zones); 
-                this->zones = NULL; 
             }
             
             if(this->items_count)
@@ -518,10 +512,9 @@ class TR_Level
     tr_sound_source_t *sound_sources;       ///< \brief sound sources.
     uint32_t boxes_count;
     tr_box_t *boxes;                        ///< \brief boxes.
+    tr2_zone_t *zones;                      ///< \brief zones.
     uint32_t overlaps_count;
     uint16_t *overlaps;                     ///< \brief overlaps.
-    uint32_t zones_count;
-    int16_t *zones;                         ///< \brief zones.
     uint32_t items_count;
     tr2_item_t *items;                      ///< \brief items.
     tr_lightmap_t lightmap;                 ///< \brief ligthmap (TR1-3).
@@ -581,6 +574,7 @@ class TR_Level
     void read_tr_lightmap(SDL_RWops * const src, tr_lightmap_t & lightmap);
     void read_tr_palette(SDL_RWops * const src, tr2_palette_t & palette);
     void read_tr_box(SDL_RWops * const src, tr_box_t & box);
+    void read_tr_zone(SDL_RWops * const src, tr2_zone_t & zone);
     void read_tr_room_sprite(SDL_RWops * const src, tr_room_sprite_t & room_sprite);
     void read_tr_room_portal(SDL_RWops * const src, tr_room_portal_t & portal);
     void read_tr_room_sector(SDL_RWops * const src, tr_room_sector_t & room_sector);
@@ -606,6 +600,7 @@ class TR_Level
     void read_tr2_palette16(SDL_RWops * const src, tr2_palette_t & palette16);
     void read_tr2_textile16(SDL_RWops * const src, tr2_textile16_t & textile);
     void read_tr2_box(SDL_RWops * const src, tr_box_t & box);
+    void read_tr2_zone(SDL_RWops * const src, tr2_zone_t & zone);
     void read_tr2_room_light(SDL_RWops * const src, tr5_room_light_t & light);
     void read_tr2_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & room_vertex);
     void read_tr2_room_staticmesh(SDL_RWops * const src, tr2_room_staticmesh_t & room_static_mesh);
