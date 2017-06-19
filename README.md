@@ -136,7 +136,7 @@ the source code must be open-source as well. Hence, all used libraries and bundl
 be open-source with GPL-compatible licenses. Here is the list of used libraries and resources and
 their licenses:
 
-* OpenGL — does not need licensing (http://opengl3.org/about/licensing/)
+* OpenGL — does not need licensing (https://www.opengl.org/about/#11)
 * OpenAL Soft — LGPL
 * SDL / SDL Image — zlib
 * Bullet — zlib
