@@ -121,7 +121,7 @@ On Linux, just download the source code and run in terminal:
 Necessary dependencies are development headers for SDL2, png, LUA 5.2, ZLIB. You can install
 them in Ubuntu-based distro with this command:
 
-    sudo apt-get install libsdl2-dev libpng12-dev liblua5.2-dev libglu1-mesa-dev zlib1g-dev
+    sudo apt-get install libopenal-dev libsdl2-dev libpng12-dev liblua5.2-dev libglu1-mesa-dev zlib1g-dev
 
 On Mac, use XCode project, which is also available in source code.
 
