@@ -529,29 +529,29 @@ int lua_AddRoomToOverlappedList(lua_State * lua)
         room_p r1 = World_GetRoomByID(lua_tointeger(lua, 2));
         if(r0 && r1 && !Room_IsInOverlappedRoomsList(r0, r1))
         {
-            room_p *old_list = r0->overlapped_room_list;
-            room_p *new_list = (room_p*)malloc((r0->overlapped_room_list_size + 1) * sizeof(room_p));
-            for(uint16_t i = 0; i < r0->overlapped_room_list_size; ++i)
+            room_p *old_list = r0->content->overlapped_room_list;
+            room_p *new_list = (room_p*)malloc((r0->content->overlapped_room_list_size + 1) * sizeof(room_p));
+            for(uint16_t i = 0; i < r0->content->overlapped_room_list_size; ++i)
             {
-                new_list[i] = r0->overlapped_room_list[i];
+                new_list[i] = r0->content->overlapped_room_list[i];
             }
-            new_list[r0->overlapped_room_list_size] = r1->real_room;
-            r0->overlapped_room_list = new_list;
-            r0->overlapped_room_list_size++;
+            new_list[r0->content->overlapped_room_list_size] = r1->real_room;
+            r0->content->overlapped_room_list = new_list;
+            r0->content->overlapped_room_list_size++;
             if(old_list)
             {
                 free(old_list);
             }
 
-            old_list = r1->overlapped_room_list;
-            new_list = (room_p*)malloc((r1->overlapped_room_list_size + 1) * sizeof(room_p));
-            for(uint16_t i = 0; i < r1->overlapped_room_list_size; ++i)
+            old_list = r1->content->overlapped_room_list;
+            new_list = (room_p*)malloc((r1->content->overlapped_room_list_size + 1) * sizeof(room_p));
+            for(uint16_t i = 0; i < r1->content->overlapped_room_list_size; ++i)
             {
-                new_list[i] = r1->overlapped_room_list[i];
+                new_list[i] = r1->content->overlapped_room_list[i];
             }
-            new_list[r1->overlapped_room_list_size] = r0->real_room;
-            r1->overlapped_room_list = new_list;
-            r1->overlapped_room_list_size++;
+            new_list[r1->content->overlapped_room_list_size] = r0->real_room;
+            r1->content->overlapped_room_list = new_list;
+            r1->content->overlapped_room_list_size++;
             if(old_list)
             {
                 free(old_list);

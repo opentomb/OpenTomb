@@ -214,7 +214,17 @@ typedef struct static_mesh_s
 
 typedef struct room_content_s
 {
-    struct engine_container_s  *containers;                                     // engine containers with moveables objects
+    uint32_t                    original_room_id;
+    uint32_t                    room_flags;                                     // room's type + water, wind info
+    uint32_t                    portals_count;                                  // number of room portals
+    struct portal_s            *portals;                                        // room portals array
+    struct room_sector_s       *sectors;
+    
+    uint16_t                    near_room_list_size;
+    uint16_t                    overlapped_room_list_size;
+    struct room_s             **near_room_list;
+    struct room_s             **overlapped_room_list;
+    
     uint32_t                    static_mesh_count;
     struct static_mesh_s       *static_mesh;
     uint32_t                    sprites_count;
@@ -238,12 +248,8 @@ typedef struct room_content_s
 typedef struct room_s
 {
     uint32_t                    id;                                             // room's ID
-    uint32_t                    flags;                                          // room's type + water, wind info
-
-    uint8_t                     is_in_r_list;                                   // is room in render list
-    uint8_t                     is_swapped;
-    uint16_t                    portals_count;                                  // number of room portals
-    struct portal_s            *portals;                                        // room portals array
+    uint32_t                    is_in_r_list : 1;                               // is room in render list
+    uint32_t                    is_swapped : 1;
     struct room_s              *alternate_room_next;                            // alternative room pointer
     struct room_s              *alternate_room_prev;                            // alternative room pointer
     struct room_s              *real_room;                                      // real room, using in game
@@ -256,13 +262,9 @@ typedef struct room_s
     uint32_t                    sectors_count;
     uint16_t                    sectors_x;
     uint16_t                    sectors_y;
-    struct room_sector_s       *sectors;
-
-    uint16_t                    near_room_list_size;
-    struct room_s             **near_room_list;
-    uint16_t                    overlapped_room_list_size;
-    struct room_s             **overlapped_room_list;
+    struct engine_container_s  *containers;                                     // engine containers with moveables objects
     struct room_content_s      *content;
+    struct room_content_s      *original_content;
 
     struct engine_container_s  *self;
 }room_t, *room_p;

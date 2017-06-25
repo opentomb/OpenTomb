@@ -867,9 +867,9 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
     }
 
     const float z_margin = TR_METERING_SECTORSIZE / 2.0f;
-    for(uint16_t i = 0; i < old_room->near_room_list_size; i++)
+    for(uint16_t i = 0; i < old_room->content->near_room_list_size; i++)
     {
-        room_p r = old_room->near_room_list[i]->real_room;
+        room_p r = old_room->content->near_room_list[i]->real_room;
         if((pos[0] >= r->bb_min[0] + TR_METERING_SECTORSIZE) && (pos[0] < r->bb_max[0] - TR_METERING_SECTORSIZE) &&
            (pos[1] >= r->bb_min[1] + TR_METERING_SECTORSIZE) && (pos[1] < r->bb_max[1] - TR_METERING_SECTORSIZE) &&
            (pos[2] >= r->bb_min[2] - z_margin) && (pos[2] < r->bb_max[2]))
@@ -889,7 +889,7 @@ struct room_sector_s *World_GetRoomSector(int room_id, int x, int y)
         room_p room = global_world.rooms + room_id;
         if((x >= 0) && (y >= 0) && (x < room->sectors_x) && (y < room->sectors_y))
         {
-            return room->sectors + x * room->sectors_y + y;
+            return room->content->sectors + x * room->sectors_y + y;
         }
     }
 
@@ -899,10 +899,10 @@ struct room_sector_s *World_GetRoomSector(int room_id, int x, int y)
 
 void World_BuildNearRoomsList(struct room_s *room)
 {
-    room->near_room_list_size = 0;
-    room->near_room_list = (room_t**)Sys_GetTempMem(global_world.rooms_count * sizeof(room_t*));
+    room->content->near_room_list_size = 0;
+    room->content->near_room_list = (room_t**)Sys_GetTempMem(global_world.rooms_count * sizeof(room_t*));
 
-    room_sector_p rs = room->sectors;
+    room_sector_p rs = room->content->sectors;
     for(uint32_t i = 0; i < room->sectors_count; i++, rs++)
     {
         if(rs->portal_to_room)
@@ -921,15 +921,15 @@ void World_BuildNearRoomsList(struct room_s *room)
         }
     }
 
-    if(room->near_room_list_size > 0)
+    if(room->content->near_room_list_size > 0)
     {
-        room_t **p = (room_t**)malloc(room->near_room_list_size * sizeof(room_t*));
-        memcpy(p, room->near_room_list, room->near_room_list_size * sizeof(room_t*));
-        room->near_room_list = p;
+        room_t **p = (room_t**)malloc(room->content->near_room_list_size * sizeof(room_t*));
+        memcpy(p, room->content->near_room_list, room->content->near_room_list_size * sizeof(room_t*));
+        room->content->near_room_list = p;
     }
     else
     {
-        room->near_room_list = NULL;
+        room->content->near_room_list = NULL;
     }
     Sys_ReturnTempMem(global_world.rooms_count * sizeof(room_t*));
 }
@@ -937,27 +937,27 @@ void World_BuildNearRoomsList(struct room_s *room)
 
 void World_BuildOverlappedRoomsList(struct room_s *room)
 {
-    room->overlapped_room_list_size = 0;
-    room->overlapped_room_list = (room_t**)Sys_GetTempMem(global_world.rooms_count * sizeof(room_t*));
+    room->content->overlapped_room_list_size = 0;
+    room->content->overlapped_room_list = (room_t**)Sys_GetTempMem(global_world.rooms_count * sizeof(room_t*));
 
     for(uint32_t i = 0; i < global_world.rooms_count; i++)
     {
         if(Room_IsOverlapped(room, global_world.rooms + i))
         {
-            room->overlapped_room_list[room->overlapped_room_list_size] = global_world.rooms + i;
-            room->overlapped_room_list_size++;
+            room->content->overlapped_room_list[room->content->overlapped_room_list_size] = global_world.rooms + i;
+            room->content->overlapped_room_list_size++;
         }
     }
 
-    if(room->overlapped_room_list_size > 0)
+    if(room->content->overlapped_room_list_size > 0)
     {
-        room_t **p = (room_t**)malloc(room->overlapped_room_list_size * sizeof(room_t*));
-        memcpy(p, room->overlapped_room_list, room->overlapped_room_list_size * sizeof(room_t*));
-        room->overlapped_room_list = p;
+        room_t **p = (room_t**)malloc(room->content->overlapped_room_list_size * sizeof(room_t*));
+        memcpy(p, room->content->overlapped_room_list, room->content->overlapped_room_list_size * sizeof(room_t*));
+        room->content->overlapped_room_list = p;
     }
     else
     {
-        room->overlapped_room_list = NULL;
+        room->content->overlapped_room_list = NULL;
     }
     Sys_ReturnTempMem(global_world.rooms_count * sizeof(room_t*));
 }
@@ -1652,8 +1652,8 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     tr_room_portal_t *tr_portal;
     room_sector_p sector;
 
-    room->flags = tr->rooms[room->id].flags;
     room->frustum = NULL;
+    room->containers = NULL;
     room->is_in_r_list = 0;
     room->is_swapped = 0;
 
@@ -1671,11 +1671,14 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     room->self->collision_shape = COLLISION_SHAPE_TRIMESH;
     room->self->object_type = OBJECT_ROOM_BASE;
 
-    room->near_room_list_size = 0;
-    room->overlapped_room_list_size = 0;
-
     room->content = (room_content_p)malloc(sizeof(room_content_t));
-    room->content->containers = NULL;
+    room->original_content = room->content;
+    room->content->original_room_id = room->id;
+    room->content->room_flags = tr->rooms[room->id].flags;
+    room->content->near_room_list_size = 0;
+    room->content->near_room_list = NULL;
+    room->content->overlapped_room_list_size = 0;
+    room->content->overlapped_room_list = NULL;
     room->content->physics_body = NULL;
     room->content->physics_alt_tween = NULL;
     room->content->mesh = NULL;
@@ -1813,7 +1816,7 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     room->sectors_x = tr_room->num_xsectors;
     room->sectors_y = tr_room->num_zsectors;
     room->sectors_count = room->sectors_x * room->sectors_y;
-    room->sectors = (room_sector_p)malloc(room->sectors_count * sizeof(room_sector_t));
+    room->content->sectors = (room_sector_p)malloc(room->sectors_count * sizeof(room_sector_t));
 
     /*
      * base sectors information loading and collisional mesh creation
@@ -1826,7 +1829,7 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     // quickly detect slopes for pushable blocks and other entities that rely on
     // floor level.
 
-    sector = room->sectors;
+    sector = room->content->sectors;
     for(uint32_t i = 0; i < room->sectors_count; i++, sector++)
     {
         // Filling base sectors information.
@@ -1878,42 +1881,42 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
 
         if(sector->ceiling == TR_METERING_WALLHEIGHT)
         {
-            room->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_WALL;
+            room->content->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_WALL;
         }
         else if(tr_room->sector_list[i].room_above != 0xFF)
         {
-            room->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_GHOST;
+            room->content->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_GHOST;
         }
         else
         {
-            room->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+            room->content->sectors[i].ceiling_penetration_config = TR_PENETRATION_CONFIG_SOLID;
         }
 
         // Reset some sector parameters to avoid garbaged memory issues.
-        room->sectors[i].portal_to_room = NULL;
-        room->sectors[i].ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NONE;
-        room->sectors[i].floor_diagonal_type   = TR_SECTOR_DIAGONAL_TYPE_NONE;
+        room->content->sectors[i].portal_to_room = NULL;
+        room->content->sectors[i].ceiling_diagonal_type = TR_SECTOR_DIAGONAL_TYPE_NONE;
+        room->content->sectors[i].floor_diagonal_type   = TR_SECTOR_DIAGONAL_TYPE_NONE;
 
         // Now, we define heightmap cells position and draft (flat) height.
         // Draft height is derived from sector's floor and ceiling values, which are
         // copied into heightmap cells Y coordinates. As result, we receive flat
         // heightmap cell, which will be operated later with floordata.
 
-        room->sectors[i].ceiling_corners[0][0] = (float)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[0][1] = (float)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[0][2] = (float)sector->ceiling;
+        room->content->sectors[i].ceiling_corners[0][0] = (float)sector->index_x * TR_METERING_SECTORSIZE;
+        room->content->sectors[i].ceiling_corners[0][1] = (float)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->content->sectors[i].ceiling_corners[0][2] = (float)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[1][0] = (float)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[1][1] = (float)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[1][2] = (float)sector->ceiling;
+        room->content->sectors[i].ceiling_corners[1][0] = (float)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->content->sectors[i].ceiling_corners[1][1] = (float)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->content->sectors[i].ceiling_corners[1][2] = (float)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[2][0] = (float)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[2][1] = (float)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[2][2] = (float)sector->ceiling;
+        room->content->sectors[i].ceiling_corners[2][0] = (float)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->content->sectors[i].ceiling_corners[2][1] = (float)sector->index_y * TR_METERING_SECTORSIZE;
+        room->content->sectors[i].ceiling_corners[2][2] = (float)sector->ceiling;
 
-        room->sectors[i].ceiling_corners[3][0] = (float)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[3][1] = (float)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].ceiling_corners[3][2] = (float)sector->ceiling;
+        room->content->sectors[i].ceiling_corners[3][0] = (float)sector->index_x * TR_METERING_SECTORSIZE;
+        room->content->sectors[i].ceiling_corners[3][1] = (float)sector->index_y * TR_METERING_SECTORSIZE;
+        room->content->sectors[i].ceiling_corners[3][2] = (float)sector->ceiling;
 
         // BUILDING FLOOR HEIGHTMAP.
 
@@ -1921,32 +1924,32 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
 
         if(sector->floor == TR_METERING_WALLHEIGHT)
         {
-            room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_WALL;
+            room->content->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_WALL;
         }
         else if(tr_room->sector_list[i].room_below != 0xFF)
         {
-            room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_GHOST;
+            room->content->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_GHOST;
         }
         else
         {
-            room->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
+            room->content->sectors[i].floor_penetration_config = TR_PENETRATION_CONFIG_SOLID;
         }
 
-        room->sectors[i].floor_corners[0][0] = (float)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[0][1] = (float)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[0][2] = (float)sector->floor;
+        room->content->sectors[i].floor_corners[0][0] = (float)sector->index_x * TR_METERING_SECTORSIZE;
+        room->content->sectors[i].floor_corners[0][1] = (float)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->content->sectors[i].floor_corners[0][2] = (float)sector->floor;
 
-        room->sectors[i].floor_corners[1][0] = (float)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[1][1] = (float)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[1][2] = (float)sector->floor;
+        room->content->sectors[i].floor_corners[1][0] = (float)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->content->sectors[i].floor_corners[1][1] = (float)sector->index_y * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->content->sectors[i].floor_corners[1][2] = (float)sector->floor;
 
-        room->sectors[i].floor_corners[2][0] = (float)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[2][1] = (float)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[2][2] = (float)sector->floor;
+        room->content->sectors[i].floor_corners[2][0] = (float)sector->index_x * TR_METERING_SECTORSIZE + TR_METERING_SECTORSIZE;
+        room->content->sectors[i].floor_corners[2][1] = (float)sector->index_y * TR_METERING_SECTORSIZE;
+        room->content->sectors[i].floor_corners[2][2] = (float)sector->floor;
 
-        room->sectors[i].floor_corners[3][0] = (float)sector->index_x * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[3][1] = (float)sector->index_y * TR_METERING_SECTORSIZE;
-        room->sectors[i].floor_corners[3][2] = (float)sector->floor;
+        room->content->sectors[i].floor_corners[3][0] = (float)sector->index_x * TR_METERING_SECTORSIZE;
+        room->content->sectors[i].floor_corners[3][1] = (float)sector->index_y * TR_METERING_SECTORSIZE;
+        room->content->sectors[i].floor_corners[3][2] = (float)sector->floor;
     }
 
     /*
@@ -1965,10 +1968,10 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     /*
      * portals loading / calculation!!!
      */
-    room->portals_count = tr_room->num_portals;
-    p = room->portals = (portal_p)calloc(room->portals_count, sizeof(portal_t));
+    room->content->portals_count = tr_room->num_portals;
+    p = room->content->portals = (portal_p)calloc(room->content->portals_count, sizeof(portal_t));
     tr_portal = tr_room->portals;
-    for(uint16_t i = 0; i < room->portals_count; i++, p++, tr_portal++)
+    for(uint16_t i = 0; i < room->content->portals_count; i++, p++, tr_portal++)
     {
         r_dest = global_world.rooms + tr_portal->adjoining_room;
         p->vertex_count = 4;                                                    // in original TR all portals are axis aligned rectangles
@@ -2207,12 +2210,12 @@ static room_p WorldRoom_FindRealRoomInSequence(room_p room)
 {
     room_p room_with_min_id = room;
 
-    for(uint16_t i = 0; i < room->portals_count; ++i)
+    for(uint16_t i = 0; i < room->content->portals_count; ++i)
     {
-        room_p outer_room = room->portals[i].dest_room;
-        for(uint16_t j = 0; j < outer_room->portals_count; ++j)
+        room_p outer_room = room->content->portals[i].dest_room;
+        for(uint16_t j = 0; j < outer_room->content->portals_count; ++j)
         {
-            room_p real_room = outer_room->portals[j].dest_room;
+            room_p real_room = outer_room->content->portals[j].dest_room;
             if(room == real_room)
             {
                 return real_room;
@@ -2326,7 +2329,7 @@ void World_GenRoomProperties(class VT_Level *tr)
         // Fill heightmap and translate floordata.
         for(uint32_t j = 0; j < r->sectors_count; j++)
         {
-            Res_Sector_TranslateFloorData(global_world.rooms, global_world.rooms_count, r->sectors + j, tr);
+            Res_Sector_TranslateFloorData(global_world.rooms, global_world.rooms_count, r->content->sectors + j, tr);
         }
 
         // Basic sector calculations.
@@ -2376,7 +2379,7 @@ void World_GenRoomCollision()
         num_tweens = Res_Sector_GenStaticTweens(r, room_tween);
 
         // Final step is sending actual sectors to Bullet collision model. We do it here.
-        r->content->physics_body = Physics_GenRoomRigidBody(r, r->sectors, r->sectors_count, room_tween, num_tweens);
+        r->content->physics_body = Physics_GenRoomRigidBody(r, r->content->sectors, r->sectors_count, room_tween, num_tweens);
         r->self->collision_group = COLLISION_GROUP_STATIC_ROOM;                 // meshtree
         r->self->collision_shape = COLLISION_SHAPE_TRIMESH;
 

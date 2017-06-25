@@ -2349,7 +2349,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(state->floor_collide || (ent->move_type == MOVE_ON_FLOOR))
             {
-                if(ent->self->room->flags & TR_ROOM_FLAG_QUICKSAND)
+                if(ent->self->room->content->room_flags & TR_ROOM_FLAG_QUICKSAND)
                 {
                     Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STAY_IDLE, 0);
                     Audio_Kill(TR_AUDIO_SOUND_LARASCREAM, TR_AUDIO_EMITTER_ENTITY, ent->id);

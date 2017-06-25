@@ -247,10 +247,10 @@ void CRender::GenWorldList(struct camera_s *cam)
     if(curr_room != NULL)                                                       // camera located in some room
     {
         const float eps = 10.0f;
-        portal_p p = curr_room->portals;
+        portal_p p = curr_room->content->portals;
         curr_room->frustum = NULL;                                              // room with camera inside has no frustums!
         this->AddRoom(curr_room);                                               // room with camera inside adds to the render list immediately
-        for(uint16_t i = 0; i < curr_room->portals_count; i++, p++)             // go through all start room portals
+        for(uint16_t i = 0; i < curr_room->content->portals_count; i++, p++)    // go through all start room portals
         {
             room_p dest_room = p->dest_room->real_room;
             frustum_p last_frus = this->frustumManager->PortalFrustumIntersect(p, cam->frustum, cam);
@@ -265,11 +265,11 @@ void CRender::GenWorldList(struct camera_s *cam)
                     (cam_pos[2] <= dest_room->bb_max[2] + eps) && (cam_pos[2] >= dest_room->bb_min[2] - eps) &&
                     !Room_IsInOverlappedRoomsList(curr_room, dest_room))
             {
-                portal_p np = dest_room->portals;
+                portal_p np = dest_room->content->portals;
                 dest_room->frustum = NULL;                                      // room with camera inside has no frustums!
                 if(this->AddRoom(dest_room))                                    // room with camera inside adds to the render list immediately
                 {
-                    for(uint16_t ii = 0; ii < dest_room->portals_count; ii++, np++)// go through all start room portals
+                    for(uint16_t ii = 0; ii < dest_room->content->portals_count; ii++, np++)// go through all start room portals
                     {
                         room_p ndest_room = np->dest_room->real_room;
                         frustum_p last_frus = this->frustumManager->PortalFrustumIntersect(np, cam->frustum, cam);
@@ -366,7 +366,7 @@ void CRender::DrawList()
             }
 
             // Add transparency polygons from all entities (if they exists) // yes, entities may be animated and intersects with each others;
-            for(engine_container_p cont = r->content->containers; cont; cont = cont->next)
+            for(engine_container_p cont = r->containers; cont; cont = cont->next)
             {
                 if(cont->object_type == OBJECT_ENTITY)
                 {
@@ -905,9 +905,9 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
     bool need_stencil = false;
     if(room->frustum != NULL)
     {
-        for(uint16_t i = 0; i < room->overlapped_room_list_size; i++)
+        for(uint16_t i = 0; i < room->content->overlapped_room_list_size; i++)
         {
-            if(room->overlapped_room_list[i]->real_room->is_in_r_list)
+            if(room->content->overlapped_room_list[i]->real_room->is_in_r_list)
             {
                 need_stencil = true;
                 break;
@@ -961,7 +961,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         float modelViewProjectionTransform[16];
         Mat4_Mat4_mul(modelViewProjectionTransform, modelViewProjectionMatrix, room->transform);
 
-        const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(room->content->light_mode == 1, room->flags & 1);
+        const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(room->content->light_mode == 1, room->content->room_flags & 1);
 
         GLfloat tint[4];
         CalculateWaterTint(tint, 1);
@@ -1001,7 +1001,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
                 vec4_copy(tint, room->content->static_mesh[i].tint);
 
                 //If this static mesh is in a water room
-                if(room->flags & TR_ROOM_FLAG_WATER)
+                if(room->content->room_flags & TR_ROOM_FLAG_WATER)
                 {
                     CalculateWaterTint(tint, 0);
                 }
@@ -1011,7 +1011,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         }
     }
 
-    for(cont = room->content->containers; cont; cont = cont->next)
+    for(cont = room->containers; cont; cont = cont->next)
     {
         switch(cont->object_type)
         {
@@ -1025,10 +1025,10 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         };
     }
 
-    for(uint16_t ni = 0; ni < room->near_room_list_size; ni++)
+    for(uint16_t ni = 0; ni < room->content->near_room_list_size; ni++)
     {
-        room_p near_room = room->near_room_list[ni]->real_room;
-        if(!room->near_room_list[ni]->is_in_r_list)
+        room_p near_room = room->content->near_room_list[ni]->real_room;
+        if(!room->content->near_room_list[ni]->is_in_r_list)
         {
             if (near_room->content->static_mesh_count > 0)
             {
@@ -1047,7 +1047,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
                         vec4_copy(tint, near_room->content->static_mesh[si].tint);
 
                         //If this static mesh is in a water near_room
-                        if(near_room->flags & TR_ROOM_FLAG_WATER)
+                        if(near_room->content->room_flags & TR_ROOM_FLAG_WATER)
                         {
                             CalculateWaterTint(tint, 0);
                         }
@@ -1057,7 +1057,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
                 }
             }
 
-            for(cont = near_room->content->containers; cont; cont=cont->next)
+            for(cont = near_room->containers; cont; cont=cont->next)
             {
                 switch(cont->object_type)
                 {
@@ -1171,7 +1171,7 @@ int  CRender::AddRoom(struct room_s *room)
             r_list_active_count++;
             ret++;
 
-            if(room->flags & TR_ROOM_FLAG_SKYBOX)
+            if(room->content->room_flags & TR_ROOM_FLAG_SKYBOX)
             {
                 r_flags |= R_DRAW_SKYBOX;
             }
@@ -1199,9 +1199,9 @@ int CRender::ProcessRoom(struct portal_s *portal, struct frustum_s *frus)
         return 0;
     }
 
-    for(uint16_t i = 0; i < room->portals_count; i++)
+    for(uint16_t i = 0; i < room->content->portals_count; i++)
     {
-        portal_p p = room->portals + i;
+        portal_p p = room->content->portals + i;
         room_p dest_room = p->dest_room->real_room;
         frustum_p gen_frus = frustumManager->PortalFrustumIntersect(p, frus, m_camera);  // backface portals are filtered here
         if(gen_frus)
@@ -1234,7 +1234,7 @@ const lit_shader_description *CRender::SetupEntityLight(struct entity_s *entity,
         ambient_component[2] = room->content->ambient_lighting[2];
         ambient_component[3] = 1.0f;
 
-        if(room->flags & TR_ROOM_FLAG_WATER)
+        if(room->content->room_flags & TR_ROOM_FLAG_WATER)
         {
             CalculateWaterTint(ambient_component, 0);
         }
@@ -1269,7 +1269,7 @@ const lit_shader_description *CRender::SetupEntityLight(struct entity_s *entity,
             colors[current_light_number*4 + 2] = std::fmin(std::fmax(current_light->colour[2], 0.0), 1.0);
             colors[current_light_number*4 + 3] = std::fmin(std::fmax(current_light->colour[3], 0.0), 1.0);
 
-            if(room->flags & TR_ROOM_FLAG_WATER)
+            if(room->content->room_flags & TR_ROOM_FLAG_WATER)
             {
                 CalculateWaterTint(colors + current_light_number * 4, 0);
             }
@@ -1292,9 +1292,9 @@ const lit_shader_description *CRender::SetupEntityLight(struct entity_s *entity,
             }
         }
 
-        for(uint32_t room_index = 0; (current_light_number < MAX_NUM_LIGHTS) && (room_index < room->near_room_list_size); room_index++)
+        for(uint32_t room_index = 0; (current_light_number < MAX_NUM_LIGHTS) && (room_index < room->content->near_room_list_size); room_index++)
         {
-            room_p near_room = room->near_room_list[room_index];
+            room_p near_room = room->content->near_room_list[room_index];
             for(uint32_t i = 0; (i < near_room->content->lights_count) && (current_light_number < MAX_NUM_LIGHTS); i++)
             {
                 current_light = &near_room->content->lights[i];
@@ -1761,9 +1761,9 @@ void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room, struct camera_s
     if(m_drawFlags & R_DRAW_PORTALS)
     {
         this->SetColor(0.0, 0.0, 0.0);
-        for(uint16_t i = 0; i < room->portals_count; i++)
+        for(uint16_t i = 0; i < room->content->portals_count; i++)
         {
-            this->DrawPortal(room->portals+i);
+            this->DrawPortal(room->content->portals+i);
         }
     }
 
@@ -1786,9 +1786,9 @@ void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room, struct camera_s
         this->SetColor(1.0, 0.0, 1.0);
         for(uint32_t i = 0; i < room->sectors_count; i++)
         {
-            if(room->sectors[i].trigger)
+            if(room->content->sectors[i].trigger)
             {
-                this->DrawSectorDebugLines(room->sectors + i);
+                this->DrawSectorDebugLines(room->content->sectors + i);
             }
         }
     }
@@ -1813,7 +1813,7 @@ void CRenderDebugDrawer::DrawRoomDebugLines(struct room_s *room, struct camera_s
         }
     }
 
-    for(cont = room->content->containers; cont; cont = cont->next)
+    for(cont = room->containers; cont; cont = cont->next)
     {
         switch(cont->object_type)
         {

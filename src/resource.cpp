@@ -408,7 +408,7 @@ int  Res_Sector_GenStaticTweens(struct room_s *room, struct sector_tween_s *room
         for(uint16_t w = 0; w < room->sectors_x - 1; w++)
         {
             // Init X-plane tween [ | ]
-            room_sector_p current_heightmap = room->sectors + (w * room->sectors_y + h);
+            room_sector_p current_heightmap = room->content->sectors + (w * room->sectors_y + h);
             room_sector_p next_heightmap    = current_heightmap + 1;
             if((w > 0) && !Res_Sector_IsTweenAlterable(current_heightmap, next_heightmap))
             {
@@ -421,8 +421,8 @@ int  Res_Sector_GenStaticTweens(struct room_s *room, struct sector_tween_s *room
                 }
             }
 
-            current_heightmap = room->sectors + (w * room->sectors_y + h);
-            next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
+            current_heightmap = room->content->sectors + (w * room->sectors_y + h);
+            next_heightmap    = room->content->sectors + ((w + 1) * room->sectors_y + h);
             if((h > 0) && !Res_Sector_IsTweenAlterable(current_heightmap, next_heightmap))
             {
                 Res_Sector_GenYTween(room_tween, current_heightmap, next_heightmap);
@@ -448,7 +448,7 @@ int  Res_Sector_GenDynamicTweens(struct room_s *room, struct sector_tween_s *roo
         for(uint16_t w = 0; w < room->sectors_x - 1; w++)
         {
             // Init X-plane tween [ | ]
-            room_sector_p current_heightmap = room->sectors + (w * room->sectors_y + h);
+            room_sector_p current_heightmap = room->content->sectors + (w * room->sectors_y + h);
             room_sector_p next_heightmap    = current_heightmap + 1;
             if((w > 0) && Res_Sector_IsTweenAlterable(current_heightmap, next_heightmap))
             {
@@ -461,8 +461,8 @@ int  Res_Sector_GenDynamicTweens(struct room_s *room, struct sector_tween_s *roo
                 }
             }
 
-            current_heightmap = room->sectors + (w * room->sectors_y + h);
-            next_heightmap    = room->sectors + ((w + 1) * room->sectors_y + h);
+            current_heightmap = room->content->sectors + (w * room->sectors_y + h);
+            next_heightmap    = room->content->sectors + ((w + 1) * room->sectors_y + h);
             if((h > 0) && Res_Sector_IsTweenAlterable(current_heightmap, next_heightmap))
             {
                 Res_Sector_GenYTween(room_tween, current_heightmap, next_heightmap);
@@ -614,7 +614,7 @@ void Res_RoomSectorsCalculate(struct room_s *rooms, uint32_t rooms_count, uint32
     /*
      * Sectors loading
      */
-    sector = room->sectors;
+    sector = room->content->sectors;
     for(uint32_t i = 0; i < room->sectors_count; i++, sector++)
     {
         /*
@@ -656,8 +656,8 @@ void Res_RoomSectorsCalculate(struct room_s *rooms, uint32_t rooms_count, uint32
 
         if(near_sector && sector->portal_to_room)
         {
-            portal_p p = room->portals;
-            for(uint16_t j = 0; j < room->portals_count; j++, p++)
+            portal_p p = room->content->portals;
+            for(uint16_t j = 0; j < room->content->portals_count; j++, p++)
             {
                 if((p->norm[2] < 0.01) && ((p->norm[2] > -0.01)))
                 {

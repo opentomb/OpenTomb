@@ -1227,7 +1227,7 @@ void ShowDebugInfo()
                 if(ent && ent->self->room)
                 {
                     room_p r = ent->self->room;
-                    for(engine_container_p cont = r->content->containers; cont; cont = cont->next)
+                    for(engine_container_p cont = r->containers; cont; cont = cont->next)
                     {
                         if(cont->object_type == OBJECT_ENTITY)
                         {
@@ -1644,7 +1644,7 @@ extern "C" int Engine_ExecCmd(char *ch)
                     {
                         Con_Printf("static[%d].object_id = %d", i, r->content->static_mesh[i].object_id);
                     }
-                    for(engine_container_p cont = r->content->containers; cont; cont=cont->next)
+                    for(engine_container_p cont = r->containers; cont; cont=cont->next)
                     {
                         if(cont->object_type == OBJECT_ENTITY)
                         {
