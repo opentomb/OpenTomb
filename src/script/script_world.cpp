@@ -934,6 +934,30 @@ int lua_GetFlipState(lua_State *lua)
     return 0;
 }
 
+int lua_SetRoomActiveContent(lua_State *lua)
+{
+    if(lua_gettop(lua) == 2)
+    {
+        room_p r1 = World_GetRoomByID(lua_tointeger(lua, 1));
+        room_p r2 = World_GetRoomByID(lua_tointeger(lua, 2));
+
+        if(r1 && r2 && (r1->content->original_room_id != r2->id))
+        {
+            Room_SetActiveContent(r1, r2);
+        }
+        else
+        {
+            Con_Warning("wrong room id");
+        }
+    }
+    else
+    {
+        Con_Warning("setRoomActiveContent: expecting arguments (room1_id, room2_id)");
+    }
+
+    return 0;
+}
+
 /*
  * Generate UV rotate animations
  */
@@ -1089,6 +1113,7 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
     lua_register(lua, "setGlobalFlipState", lua_SetGlobalFlipState);
     lua_register(lua, "setFlipState", lua_SetFlipState);
     lua_register(lua, "getFlipState", lua_GetFlipState);
+    lua_register(lua, "setRoomActiveContent", lua_SetRoomActiveContent);
 
     lua_register(lua, "createBaseItem", lua_CreateBaseItem);
     lua_register(lua, "deleteBaseItem", lua_DeleteBaseItem);

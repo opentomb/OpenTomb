@@ -282,6 +282,37 @@ int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont)
 }
 
 
+void Room_SetActiveContent(struct room_s *room, struct room_s *room_with_content_from)
+{
+    engine_container_p cont = room->containers;
+    room->containers = NULL;
+    room->content = room_with_content_from->original_content;
+    Physics_SetOwnerObject(room->content->physics_body, room->self);
+    Physics_SetOwnerObject(room->content->physics_alt_tween, room->self);
+
+    for(uint32_t i = 0; i < room->content->static_mesh_count; ++i)
+    {
+        room->content->static_mesh[i].self->room = room;
+    }
+
+    for(uint32_t i = 0; i < room->sectors_count; ++i)
+    {
+        room->content->sectors[i].owner_room = room;
+    }
+
+    if(room == room->real_room)
+    {
+        Room_Enable(room);
+    }
+    else
+    {
+        Room_Disable(room);
+    }
+
+    room->containers = cont;
+}
+
+
 void Room_DoFlip(struct room_s *room1, struct room_s *room2)
 {
     if(room1 && room2 && (room1 != room2))
@@ -297,7 +328,9 @@ void Room_DoFlip(struct room_s *room1, struct room_s *room2)
 
             // fix physics
             Physics_SetOwnerObject(room1->content->physics_body, room1->self);
+            Physics_SetOwnerObject(room1->content->physics_alt_tween, room1->self);
             Physics_SetOwnerObject(room2->content->physics_body, room2->self);
+            Physics_SetOwnerObject(room2->content->physics_alt_tween, room2->self);
 
             // fix static meshes
             for(uint32_t i = 0; i < room1->content->static_mesh_count; ++i)

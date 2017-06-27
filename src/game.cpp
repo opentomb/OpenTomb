@@ -365,6 +365,17 @@ int Game_Save(const char* name)
         fprintf(f, "setGlobalFlipState(%d);\n", (int)World_GetGlobalFlipState());
     }
 
+    int id = 0;
+    room_p r = World_GetRoomByID(id);
+    while(r)
+    {
+        if(r->alternate_room_next || r->alternate_room_prev)
+        {
+            fprintf(f, "setRoomActiveContent(%d, %d);\n", id, r->content->original_room_id);
+        }
+        r = World_GetRoomByID(++id);
+    }
+    
     char save_buffer[32768] = {0};
     if(Script_GetFlipEffectsSaveData(engine_lua, save_buffer, sizeof(save_buffer)) > 0)
     {
