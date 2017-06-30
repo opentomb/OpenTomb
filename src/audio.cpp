@@ -2007,7 +2007,7 @@ bool Audio_IsTrackUsedInTriggers(int track_index)
         room_p r = rooms + room_index;
         for(uint32_t sector_index = 0; sector_index < r->sectors_count; sector_index++)
         {
-            room_sector_p rs = r->sectors + sector_index;
+            room_sector_p rs = r->content->sectors + sector_index;
             if(rs->trigger)
             {
                 for(trigger_command_p cmd = rs->trigger->commands; cmd; cmd = cmd->next)
@@ -2598,7 +2598,7 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
 
     if(cam->current_room)
     {
-        if(cam->current_room->flags & TR_ROOM_FLAG_WATER)
+        if(cam->current_room->content->room_flags & TR_ROOM_FLAG_WATER)
         {
             fxManager.current_room_type = TR_AUDIO_FX_WATER;
         }
@@ -2607,9 +2607,9 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam)
             fxManager.current_room_type = cam->current_room->content->reverb_info;
         }
 
-        if(fxManager.water_state != (int8_t)(cam->current_room->flags & TR_ROOM_FLAG_WATER))
+        if(fxManager.water_state != (int8_t)(cam->current_room->content->room_flags & TR_ROOM_FLAG_WATER))
         {
-            fxManager.water_state = cam->current_room->flags & TR_ROOM_FLAG_WATER;
+            fxManager.water_state = cam->current_room->content->room_flags & TR_ROOM_FLAG_WATER;
 
             if(fxManager.water_state)
             {

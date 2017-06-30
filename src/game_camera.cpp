@@ -251,7 +251,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
         cam_pos[2] -= 128.0f;
         room_p check_room = World_FindRoomByPosCogerrence(cam_pos, cam->current_room);
         cam_pos[2] += 128.0f;
-        if(check_room && (check_room->flags & TR_ROOM_FLAG_QUICKSAND))
+        if(check_room && (check_room->content->room_flags & TR_ROOM_FLAG_QUICKSAND))
         {
             cam->gl_transform[12 + 2] = check_room->bb_max[2] + 128.0f;
         }

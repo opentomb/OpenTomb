@@ -705,7 +705,7 @@ int  Entity_GetSubstanceState(entity_p entity)
         return 0;
     }
 
-    if(entity->self->room->flags & TR_ROOM_FLAG_QUICKSAND)
+    if(entity->self->room->content->room_flags & TR_ROOM_FLAG_QUICKSAND)
     {
         if(entity->character->height_info.transition_level > entity->transform[12 + 2] + entity->character->height)
         {
@@ -1328,10 +1328,10 @@ void Entity_CheckActivators(struct entity_s *ent)
 {
     if(ent && ent->self->room)
     {
-        for(int room_index = -1; room_index < ent->self->room->near_room_list_size; ++room_index)
+        for(int room_index = -1; room_index < ent->self->room->content->near_room_list_size; ++room_index)
         {
-            room_p room = (room_index >= 0) ? (ent->self->room->near_room_list[room_index]) : (ent->self->room);
-            engine_container_p cont = room->content->containers;
+            room_p room = (room_index >= 0) ? (ent->self->room->content->near_room_list[room_index]) : (ent->self->room);
+            engine_container_p cont = room->containers;
             for(; cont; cont = cont->next)
             {
                 if((cont->object_type == OBJECT_ENTITY) && cont->object && (cont->object != ent) && ((entity_p)cont->object)->activation_point)

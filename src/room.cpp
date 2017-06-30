@@ -19,129 +19,125 @@
 
 void Room_Clear(struct room_s *room)
 {
-    portal_p p;
-
-    if(room == NULL)
+    if(!room)
     {
         return;
     }
 
-    if(room->content)
-    {
-        room->content->containers = NULL;
-
-        if(room->content->mesh)
-        {
-            BaseMesh_Clear(room->content->mesh);
-            free(room->content->mesh);
-            room->content->mesh = NULL;
-        }
-
-        if(room->content->static_mesh_count)
-        {
-            for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
-            {
-                Physics_DeleteObject(room->content->static_mesh[i].physics_body);
-                room->content->static_mesh[i].physics_body = NULL;
-
-                OBB_Delete(room->content->static_mesh[i].obb);
-                room->content->static_mesh[i].obb = NULL;
-                if(room->content->static_mesh[i].self)
-                {
-                    room->content->static_mesh[i].self->room = NULL;
-                    free(room->content->static_mesh[i].self);
-                    room->content->static_mesh[i].self = NULL;
-                }
-            }
-            free(room->content->static_mesh);
-            room->content->static_mesh = NULL;
-            room->content->static_mesh_count = 0;
-        }
-
-        Physics_DeleteObject(room->content->physics_body);
-        room->content->physics_body = NULL;
-        Physics_DeleteObject(room->content->physics_alt_tween);
-        room->content->physics_alt_tween = NULL;
-
-        if(room->content->sprites_count)
-        {
-            free(room->content->sprites);
-            room->content->sprites = NULL;
-            room->content->sprites_count = 0;
-        }
-
-        if(room->content->sprites_vertices)
-        {
-            free(room->content->sprites_vertices);
-            room->content->sprites_vertices = NULL;
-        }
-
-        if(room->content->lights_count)
-        {
-            free(room->content->lights);
-            room->content->lights = NULL;
-            room->content->lights_count = 0;
-        }
-
-        free(room->content);
-        room->content = NULL;
-    }
-
-
-    p = room->portals;
-    room->near_room_list_size = 0;
-
-    if(room->portals_count)
-    {
-        for(uint16_t i = 0; i < room->portals_count; i++, p++)
-        {
-            Portal_Clear(p);
-        }
-        free(room->portals);
-        room->portals = NULL;
-        room->portals_count = 0;
-    }
-
+    room->containers = NULL;
+    room->content = NULL;
     room->frustum = NULL;
 
-    if(room->sectors_count)
+    if(room->original_content)
     {
-        room_sector_p s = room->sectors;
-        for(uint32_t i = 0; i < room->sectors_count; i++, s++)
+        room_content_p content = room->original_content;
+        portal_p p = content->portals;
+        if(content->portals_count)
         {
-            if(s->trigger)
+            for(uint16_t i = 0; i < content->portals_count; i++, p++)
             {
-                for(trigger_command_p current_command = s->trigger->commands; current_command; )
-                {
-                    trigger_command_p next_command = current_command->next;
-                    current_command->next = NULL;
-                    free(current_command);
-                    current_command = next_command;
-                }
-                free(s->trigger);
-                s->trigger = NULL;
+                Portal_Clear(p);
             }
+            free(content->portals);
+            content->portals = NULL;
+            content->portals_count = 0;
         }
-        free(room->sectors);
-        room->sectors = NULL;
-        room->sectors_count = 0;
-        room->sectors_x = 0;
-        room->sectors_y = 0;
-    }
 
-    if(room->overlapped_room_list)
-    {
-        room->overlapped_room_list_size = 0;
-        free(room->overlapped_room_list);
-        room->overlapped_room_list = NULL;
-    }
+        if(content->mesh)
+        {
+            BaseMesh_Clear(content->mesh);
+            free(content->mesh);
+            content->mesh = NULL;
+        }
 
-    if(room->near_room_list)
-    {
-        room->near_room_list_size = 0;
-        free(room->near_room_list);
-        room->near_room_list = NULL;
+        if(content->static_mesh_count)
+        {
+            for(uint32_t i = 0; i < content->static_mesh_count; i++)
+            {
+                Physics_DeleteObject(content->static_mesh[i].physics_body);
+                content->static_mesh[i].physics_body = NULL;
+
+                OBB_Delete(content->static_mesh[i].obb);
+                content->static_mesh[i].obb = NULL;
+                if(content->static_mesh[i].self)
+                {
+                    content->static_mesh[i].self->room = NULL;
+                    free(content->static_mesh[i].self);
+                    content->static_mesh[i].self = NULL;
+                }
+            }
+            free(content->static_mesh);
+            content->static_mesh = NULL;
+            content->static_mesh_count = 0;
+        }
+
+        Physics_DeleteObject(content->physics_body);
+        content->physics_body = NULL;
+        Physics_DeleteObject(content->physics_alt_tween);
+        content->physics_alt_tween = NULL;
+
+        if(content->sprites_count)
+        {
+            free(content->sprites);
+            content->sprites = NULL;
+            content->sprites_count = 0;
+        }
+
+        if(content->sprites_vertices)
+        {
+            free(content->sprites_vertices);
+            content->sprites_vertices = NULL;
+        }
+
+        if(content->lights_count)
+        {
+            free(content->lights);
+            content->lights = NULL;
+            content->lights_count = 0;
+        }
+
+        if(room->sectors_count)
+        {
+            room_sector_p s = content->sectors;
+            for(uint32_t i = 0; i < room->sectors_count; i++, s++)
+            {
+                if(s->trigger)
+                {
+                    for(trigger_command_p current_command = s->trigger->commands; current_command; )
+                    {
+                        trigger_command_p next_command = current_command->next;
+                        current_command->next = NULL;
+                        free(current_command);
+                        current_command = next_command;
+                    }
+                    free(s->trigger);
+                    s->trigger = NULL;
+                }
+            }
+            free(content->sectors);
+            content->sectors = NULL;
+            room->sectors_count = 0;
+            room->sectors_x = 0;
+            room->sectors_y = 0;
+        }
+
+        if(content->overlapped_room_list)
+        {
+            content->overlapped_room_list_size = 0;
+            free(content->overlapped_room_list);
+            content->overlapped_room_list = NULL;
+        }
+
+        if(content->near_room_list)
+        {
+            content->near_room_list_size = 0;
+            free(content->near_room_list);
+            content->near_room_list = NULL;
+        }
+
+        free(content);
     }
+    room->original_content = NULL;
 
     if(room->obb)
     {
@@ -178,7 +174,7 @@ void Room_Enable(struct room_s *room)
         }
     }
 
-    for(engine_container_p cont = room->content->containers; cont; cont = cont->next)
+    for(engine_container_p cont = room->containers; cont; cont = cont->next)
     {
         if(cont->collision_group == COLLISION_NONE)
         {
@@ -217,7 +213,7 @@ void Room_Disable(struct room_s *room)
         }
     }
 
-    for(engine_container_p cont = room->content->containers; cont; cont = cont->next)
+    for(engine_container_p cont = room->containers; cont; cont = cont->next)
     {
         switch(cont->object_type)
         {
@@ -234,7 +230,7 @@ void Room_Disable(struct room_s *room)
 
 int  Room_AddObject(struct room_s *room, struct engine_container_s *cont)
 {
-    engine_container_p curr = room->content->containers;
+    engine_container_p curr = room->containers;
 
     for(; curr; curr = curr->next)
     {
@@ -245,8 +241,8 @@ int  Room_AddObject(struct room_s *room, struct engine_container_s *cont)
     }
 
     cont->room = room;
-    cont->next = room->content->containers;
-    room->content->containers = cont;
+    cont->next = room->containers;
+    room->containers = cont;
     return 1;
 }
 
@@ -255,19 +251,19 @@ int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont)
 {
     engine_container_p previous_cont, current_cont;
 
-    if(!room || !cont || !room->content->containers)
+    if(!room || !room->containers)
     {
         return 0;
     }
 
-    if(room->content->containers == cont)
+    if(room->containers == cont)
     {
-        room->content->containers = cont->next;
+        room->containers = cont->next;
         cont->room = NULL;
         return 1;
     }
 
-    previous_cont = room->content->containers;
+    previous_cont = room->containers;
     current_cont = previous_cont->next;
     while(current_cont)
     {
@@ -286,66 +282,43 @@ int  Room_RemoveObject(struct room_s *room, struct engine_container_s *cont)
 }
 
 
+void Room_SetActiveContent(struct room_s *room, struct room_s *room_with_content_from)
+{
+    engine_container_p cont = room->containers;
+    room->containers = NULL;
+    room->content = room_with_content_from->original_content;
+    Physics_SetOwnerObject(room->content->physics_body, room->self);
+    Physics_SetOwnerObject(room->content->physics_alt_tween, room->self);
+
+    for(uint32_t i = 0; i < room->content->static_mesh_count; ++i)
+    {
+        room->content->static_mesh[i].self->room = room;
+    }
+
+    for(uint32_t i = 0; i < room->sectors_count; ++i)
+    {
+        room->content->sectors[i].owner_room = room;
+    }
+
+    if(room == room->real_room)
+    {
+        Room_Enable(room);
+    }
+    else
+    {
+        Room_Disable(room);
+    }
+
+    room->containers = cont;
+}
+
+
 void Room_DoFlip(struct room_s *room1, struct room_s *room2)
 {
     if(room1 && room2 && (room1 != room2))
     {
         room1->frustum = NULL;
         room2->frustum = NULL;
-
-        // swap flags
-        {
-            uint32_t t = room1->flags;
-            room1->flags = room2->flags;
-            room2->flags = t;
-        }
-
-        // swap portals
-        {
-            portal_p t = room1->portals;
-            uint16_t count = room1->portals_count;
-            room1->portals = room2->portals;
-            room1->portals_count = room2->portals_count;
-            room2->portals = t;
-            room2->portals_count = count;
-        }
-
-        // swap sectors
-        {
-            room_sector_p t = room1->sectors;
-            uint32_t count = room1->sectors_count;
-            room1->sectors = room2->sectors;
-            room1->sectors_count = room2->sectors_count;
-            room2->sectors = t;
-            room2->sectors_count = count;
-
-            for(uint32_t i = 0; i < room1->sectors_count; ++i)
-            {
-                room1->sectors[i].owner_room = room1;
-            }
-
-            for(uint32_t i = 0; i < room2->sectors_count; ++i)
-            {
-                room2->sectors[i].owner_room = room2;
-            }
-        }
-
-        // swap near / overlapped rooms list
-        {
-            room_p *t = room1->near_room_list;
-            uint16_t size = room1->near_room_list_size;
-            room1->near_room_list = room2->near_room_list;
-            room1->near_room_list_size = room2->near_room_list_size;
-            room2->near_room_list = t;
-            room2->near_room_list_size = size;
-
-            t = room1->overlapped_room_list;
-            size = room1->overlapped_room_list_size;
-            room1->overlapped_room_list = room2->overlapped_room_list;
-            room1->overlapped_room_list_size = room2->overlapped_room_list_size;
-            room2->overlapped_room_list = t;
-            room2->overlapped_room_list_size = size;
-        }
 
         // swap content
         {
@@ -355,7 +328,9 @@ void Room_DoFlip(struct room_s *room1, struct room_s *room2)
 
             // fix physics
             Physics_SetOwnerObject(room1->content->physics_body, room1->self);
+            Physics_SetOwnerObject(room1->content->physics_alt_tween, room1->self);
             Physics_SetOwnerObject(room2->content->physics_body, room2->self);
+            Physics_SetOwnerObject(room2->content->physics_alt_tween, room2->self);
 
             // fix static meshes
             for(uint32_t i = 0; i < room1->content->static_mesh_count; ++i)
@@ -367,32 +342,30 @@ void Room_DoFlip(struct room_s *room1, struct room_s *room2)
                 room2->content->static_mesh[i].self->room = room2;
             }
 
-            // move movables if it is necessary
+            // update enability if it is necessary
             {
                 room_p base_room = (room1 == room1->real_room) ? room1 : NULL;
                 base_room = (room2 == room2->real_room) ? room2 : room1;
                 if(base_room)
                 {
+                    engine_container_p cont = base_room->containers;
+                    base_room->containers = NULL;
                     room_p alt_room = (room1 == base_room) ? room2 : room1;
-                    engine_container_p *ptr = &base_room->content->containers;
-                    engine_container_p base_room_containers = alt_room->content->containers;
-                    alt_room->content->containers = NULL;
                     Room_Disable(alt_room);
                     Room_Enable(base_room);                 // enable new collisions
-                    for(; *ptr; ptr = &((*ptr)->next));
-                    *ptr = base_room_containers;            // base room containerrs enability stay as is
-                    alt_room->content->containers = NULL;
+                    base_room->containers = cont;
                 }
             }
 
-            // fix containers ownership
-            for(engine_container_p cont = room1->content->containers; cont; cont = cont->next)
+            // fix sectors ownership
+            for(uint32_t i = 0; i < room1->sectors_count; ++i)
             {
-                cont->room = room1;
+                room1->content->sectors[i].owner_room = room1;
             }
-            for(engine_container_p cont = room2->content->containers; cont; cont = cont->next)
+
+            for(uint32_t i = 0; i < room2->sectors_count; ++i)
             {
-                cont->room = room2;
+                room2->content->sectors[i].owner_room = room2;
             }
         }
     }
@@ -413,7 +386,7 @@ struct room_sector_s *Room_GetSectorRaw(struct room_s *room, float pos[3])
          * column index system
          * X - column number, Y - string number
          */
-        return room->sectors + x * room->sectors_y + y;
+        return room->content->sectors + x * room->sectors_y + y;
     }
 
     return NULL;
@@ -436,7 +409,7 @@ struct room_sector_s *Room_GetSectorXYZ(struct room_s *room, float pos[3])
      * column index system
      * X - column number, Y - string number
      */
-    ret = room->sectors + x * room->sectors_y + y;
+    ret = room->content->sectors + x * room->sectors_y + y;
 
     /*
      * resolve Z overlapped neighboard rooms. room below has more priority.
@@ -460,15 +433,15 @@ void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r)
     if(room && r && (r->real_room->id != room->real_room->id) &&
        !Room_IsInNearRoomsList(room, r) && !Room_IsInOverlappedRoomsList(room, r))
     {
-        room->near_room_list[room->near_room_list_size] = r->real_room;
-        room->near_room_list_size++;
+        room->content->near_room_list[room->content->near_room_list_size] = r->real_room;
+        room->content->near_room_list_size++;
     }
 }
 
 
 int Room_IsJoined(struct room_s *r1, struct room_s *r2)
 {
-    room_sector_p rs = r1->sectors;
+    room_sector_p rs = r1->content->sectors;
     for(uint32_t i = 0; i < r1->sectors_count; i++, rs++)
     {
         if((rs->portal_to_room == r2->real_room) ||
@@ -479,7 +452,7 @@ int Room_IsJoined(struct room_s *r1, struct room_s *r2)
         }
     }
 
-    rs = r2->sectors;
+    rs = r2->content->sectors;
     for(uint32_t i = 0; i < r2->sectors_count; i++, rs++)
     {
         if((rs->portal_to_room == r1->real_room) ||
@@ -510,7 +483,7 @@ int Room_IsOverlapped(struct room_s *r0, struct room_s *r1)
         return 0;
     }
 
-    room_sector_p rs = r0->sectors;
+    room_sector_p rs = r0->content->sectors;
     for(uint32_t i = 0; i < r0->sectors_count; i++, rs++)
     {
         if((rs->room_above == r1->real_room) ||
@@ -520,7 +493,7 @@ int Room_IsOverlapped(struct room_s *r0, struct room_s *r1)
         }
     }
 
-    rs = r1->sectors;
+    rs = r1->content->sectors;
     for(uint32_t i = 0; i < r1->sectors_count; i++, rs++)
     {
         if((rs->room_above == r0->real_room) ||
@@ -543,11 +516,11 @@ int Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1)
             return 1;
         }
 
-        if(r1->near_room_list_size >= r0->near_room_list_size)
+        if(r1->content->near_room_list_size >= r0->content->near_room_list_size)
         {
-            for(uint16_t i = 0; i < r0->near_room_list_size; i++)
+            for(uint16_t i = 0; i < r0->content->near_room_list_size; i++)
             {
-                if(r0->near_room_list[i]->real_room->id == r1->real_room->id)
+                if(r0->content->near_room_list[i]->real_room->id == r1->real_room->id)
                 {
                     return 1;
                 }
@@ -555,9 +528,9 @@ int Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1)
         }
         else
         {
-            for(uint16_t i = 0; i < r1->near_room_list_size; i++)
+            for(uint16_t i = 0; i < r1->content->near_room_list_size; i++)
             {
-                if(r1->near_room_list[i]->real_room->id == r0->real_room->id)
+                if(r1->content->near_room_list[i]->real_room->id == r0->real_room->id)
                 {
                     return 1;
                 }
@@ -578,11 +551,11 @@ int Room_IsInOverlappedRoomsList(struct room_s *r0, struct room_s *r1)
             return 0;
         }
 
-        if(r1->overlapped_room_list_size >= r0->overlapped_room_list_size)
+        if(r1->content->overlapped_room_list_size >= r0->content->overlapped_room_list_size)
         {
-            for(uint16_t i = 0; i < r0->overlapped_room_list_size; i++)
+            for(uint16_t i = 0; i < r0->content->overlapped_room_list_size; i++)
             {
-                if(r0->overlapped_room_list[i]->real_room->id == r1->real_room->id)
+                if(r0->content->overlapped_room_list[i]->real_room->id == r1->real_room->id)
                 {
                     return 1;
                 }
@@ -590,9 +563,9 @@ int Room_IsInOverlappedRoomsList(struct room_s *r0, struct room_s *r1)
         }
         else
         {
-            for(uint16_t i = 0; i < r1->overlapped_room_list_size; i++)
+            for(uint16_t i = 0; i < r1->content->overlapped_room_list_size; i++)
             {
-                if(r1->overlapped_room_list[i]->real_room->id == r0->real_room->id)
+                if(r1->content->overlapped_room_list[i]->real_room->id == r0->real_room->id)
                 {
                     return 1;
                 }
@@ -606,14 +579,14 @@ int Room_IsInOverlappedRoomsList(struct room_s *r0, struct room_s *r1)
 
 void Room_MoveActiveItems(struct room_s *room_to, struct room_s *room_from)
 {
-    engine_container_p t = room_from->content->containers;
+    engine_container_p t = room_from->containers;
 
-    room_from->content->containers = NULL;
+    room_from->containers = NULL;
     for(; t; t = t->next)
     {
         t->room = room_to;
-        t->next = room_to->content->containers;
-        room_to->content->containers = t;
+        t->next = room_to->containers;
+        room_to->containers = t;
     }
 }
 
@@ -661,7 +634,7 @@ static room_sector_p Sector_CheckRealRoom(room_sector_p rs)
         int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
-            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+            rs = r->content->sectors + (ind_x * r->sectors_y + ind_y);
         }
     }
 
@@ -678,7 +651,7 @@ struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs)
         int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
-            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+            rs = r->content->sectors + (ind_x * r->sectors_y + ind_y);
         }
     }
 
@@ -695,7 +668,7 @@ struct room_sector_s *Sector_GetPortalSectorTargetReal(struct room_sector_s *rs)
         int ind_y = (rs->pos[1] - r->transform[12 + 1]) / TR_METERING_SECTORSIZE;
         if((ind_x >= 0) && (ind_x < r->sectors_x) && (ind_y >= 0) && (ind_y < r->sectors_y))
         {
-            rs = r->sectors + (ind_x * r->sectors_y + ind_y);
+            rs = r->content->sectors + (ind_x * r->sectors_y + ind_y);
         }
     }
 

@@ -286,12 +286,12 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
     if(r)
     {
         rs = Room_GetSectorXYZ(r, pos);                                         // if r != NULL then rs can not been NULL!!!
-        if(r->flags & TR_ROOM_FLAG_WATER)                                       // in water - go up
+        if(r->content->room_flags & TR_ROOM_FLAG_WATER)                         // in water - go up
         {
             while(rs->room_above)
             {
                 rs = Room_GetSectorRaw(rs->room_above->real_room, rs->pos);
-                if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) == 0x00)        // find air
+                if((rs->owner_room->content->room_flags & TR_ROOM_FLAG_WATER) == 0x00)        // find air
                 {
                     fc->transition_level = (float)rs->floor;
                     fc->water = 0x01;
@@ -299,12 +299,12 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
                 }
             }
         }
-        else if(r->flags & TR_ROOM_FLAG_QUICKSAND)
+        else if(r->content->room_flags & TR_ROOM_FLAG_QUICKSAND)
         {
             while(rs->room_above)
             {
                 rs = Room_GetSectorRaw(rs->room_above->real_room, rs->pos);
-                if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)    // find air
+                if((rs->owner_room->content->room_flags & TR_ROOM_FLAG_QUICKSAND) == 0x00)    // find air
                 {
                     fc->transition_level = (float)rs->floor;
                     if(fc->transition_level - fc->floor_hit.point[2] > v_offset)
@@ -324,13 +324,13 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
             while(rs->room_below)
             {
                 rs = Room_GetSectorRaw(rs->room_below->real_room, rs->pos);
-                if((rs->owner_room->flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
+                if((rs->owner_room->content->room_flags & TR_ROOM_FLAG_WATER) != 0x00)        // find water
                 {
                     fc->transition_level = (float)rs->ceiling;
                     fc->water = 0x01;
                     break;
                 }
-                else if((rs->owner_room->flags & TR_ROOM_FLAG_QUICKSAND) != 0x00)// find water
+                else if((rs->owner_room->content->room_flags & TR_ROOM_FLAG_QUICKSAND) != 0x00)// find water
                 {
                     fc->transition_level = (float)rs->ceiling;
                     if(fc->transition_level - fc->floor_hit.point[2] > v_offset)
@@ -1208,7 +1208,7 @@ int Character_FreeFalling(struct entity_s *ent)
     Entity_UpdateRoomPos(ent);
     Character_UpdateCurrentHeight(ent);
 
-    if(ent->self->room && (ent->self->room->flags & TR_ROOM_FLAG_WATER))
+    if(ent->self->room && (ent->self->room->content->room_flags & TR_ROOM_FLAG_WATER))
     {
         if(ent->speed[2] < 0.0f)
         {
@@ -1431,7 +1431,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
 
     // Check current place.
 
-    if(ent->self->room && !(ent->self->room->flags & TR_ROOM_FLAG_WATER))
+    if(ent->self->room && !(ent->self->room->content->room_flags & TR_ROOM_FLAG_WATER))
     {
         ent->move_type = MOVE_FREE_FALLING;
         return 2;
@@ -1628,7 +1628,7 @@ int Character_FindTraverse(struct entity_s *ch)
     if(obj_s != NULL)
     {
         obj_s = Sector_GetPortalSectorTargetReal(obj_s);
-        for(engine_container_p cont = obj_s->owner_room->content->containers; cont; cont = cont->next)
+        for(engine_container_p cont = obj_s->owner_room->containers; cont; cont = cont->next)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
@@ -1645,7 +1645,7 @@ int Character_FindTraverse(struct entity_s *ch)
         }
     }
 
-    for(engine_container_p cont = ch_s->owner_room->content->containers; cont; cont = cont->next)
+    for(engine_container_p cont = ch_s->owner_room->containers; cont; cont = cont->next)
     {
         if(cont->object_type == OBJECT_ENTITY)
         {
@@ -1686,7 +1686,7 @@ int Sector_AllowTraverse(struct room_sector_s *rs, float floor)
         return 0x01;
     }
 
-    for(engine_container_p cont = rs->owner_room->real_room->content->containers; cont; cont = cont->next)
+    for(engine_container_p cont = rs->owner_room->real_room->containers; cont; cont = cont->next)
     {
         if(cont->object_type == OBJECT_ENTITY)
         {
@@ -1726,7 +1726,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         return 0x00;
     }
 
-    for(engine_container_p cont = obj_s->owner_room->real_room->content->containers; cont; cont = cont->next)
+    for(engine_container_p cont = obj_s->owner_room->real_room->containers; cont; cont = cont->next)
     {
         if(cont->object_type == OBJECT_ENTITY)
         {
@@ -2068,10 +2068,10 @@ struct entity_s *Character_FindTarget(struct entity_s *ent)
     float max_dot = 0.0f;
     collision_result_t cs;
 
-    for(int ri = -1; ri < ent->self->room->near_room_list_size; ++ri)
+    for(int ri = -1; ri < ent->self->room->content->near_room_list_size; ++ri)
     {
-        room_p r = (ri >= 0) ? (ent->self->room->near_room_list[ri]) : (ent->self->room);
-        for(engine_container_p cont = r->content->containers; cont; cont = cont->next)
+        room_p r = (ri >= 0) ? (ent->self->room->content->near_room_list[ri]) : (ent->self->room);
+        for(engine_container_p cont = r->containers; cont; cont = cont->next)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
