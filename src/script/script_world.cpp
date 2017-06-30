@@ -945,10 +945,6 @@ int lua_SetRoomActiveContent(lua_State *lua)
         {
             Room_SetActiveContent(r1, r2);
         }
-        else
-        {
-            Con_Warning("wrong room id");
-        }
     }
     else
     {
