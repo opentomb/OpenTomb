@@ -189,6 +189,15 @@ int Save_Entity(entity_p ent, void *data)
                     ent->angles[0], ent->angles[1], ent->angles[2]);
         }
 
+        if(ent->self->room)
+        {
+            fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id, ent->self->room->id, ent->move_type, ent->dir_flag);
+        }
+        else
+        {
+            fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id, ent->move_type, ent->dir_flag);
+        }
+
         if(ent->bf->animations.model && ent->character)
         {
             fprintf(*f, "\nsetEntityBaseAnimModel(%d, %d);", ent->id, ent->bf->animations.model->id);
@@ -266,15 +275,6 @@ int Save_Entity(entity_p ent, void *data)
         fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d, %d);", ent->id, ent->self->collision_group, ent->self->collision_shape, ent->self->collision_mask);
         fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
         fprintf(*f, "\nsetEntityTimer(%d, %.3f);", ent->id, ent->timer);
-
-        if(ent->self->room != NULL)
-        {
-            fprintf(*f, "\nsetEntityRoomMove(%d, %d, %d, %d);", ent->id, ent->self->room->id, ent->move_type, ent->dir_flag);
-        }
-        else
-        {
-            fprintf(*f, "\nsetEntityRoomMove(%d, nil, %d, %d);", ent->id, ent->move_type, ent->dir_flag);
-        }
 
         for(ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
         {
@@ -375,7 +375,7 @@ int Game_Save(const char* name)
         }
         r = World_GetRoomByID(++id);
     }
-    
+
     char save_buffer[32768] = {0};
     if(Script_GetFlipEffectsSaveData(engine_lua, save_buffer, sizeof(save_buffer)) > 0)
     {
