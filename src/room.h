@@ -128,15 +128,22 @@ typedef struct room_zone_s
 }room_zone_t, *room_zone_p;
 
 
+typedef struct box_overlap_s
+{
+    uint16_t        box : 15;
+    uint16_t        end : 1;
+}box_overlap_t, *box_overlap_p;
+
+
 typedef struct room_box_s
 {
-    int32_t             x_min;
-    int32_t             x_max;
-    int32_t             y_min;
-    int32_t             y_max;
-    int32_t             true_floor;
-    uint16_t           *overlap;
-    struct room_zone_s  zone;
+    int32_t                 x_min;
+    int32_t                 x_max;
+    int32_t                 y_min;
+    int32_t                 y_max;
+    int32_t                 true_floor;
+    struct box_overlap_s   *overlaps;
+    struct room_zone_s      zone;
 }room_box_t, *room_box_p;
 
 
