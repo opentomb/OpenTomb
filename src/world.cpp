@@ -1536,7 +1536,7 @@ void World_GenBoxes(class VT_Level *tr)
         for(uint32_t i = 0; i < global_world.overlaps_count; i++)
         {
             global_world.overlaps[i].box = tr->overlaps[i] & 0x7FFF;
-            global_world.overlaps[i].end = (tr->overlaps[i] & 0x1000) ? (1) : (0);
+            global_world.overlaps[i].end = (tr->overlaps[i] & 0x8000) ? (1) : (0);
         }
         global_world.overlaps[global_world.overlaps_count - 1].end = 1;         // never believe user data
     }
