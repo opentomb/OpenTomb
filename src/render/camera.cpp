@@ -218,17 +218,17 @@ void Cam_SetRotation(camera_p cam, GLfloat angles[3])
     /*
      * LEFT - RIGHT INIT
      */
-    cam->gl_transform[8 + 0] =-sin_t2;                                                  // OY - view
+    cam->gl_transform[8 + 0] =-sin_t2;                                          // OY - view
     cam->gl_transform[8 + 1] = cos_t2;
     cam->gl_transform[8 + 2] = 0.0;
     cam->gl_transform[8 + 3] = 0.0;
 
-    cam->gl_transform[0 + 0] = cos_t2;                                                 // OX - right
+    cam->gl_transform[0 + 0] = cos_t2;                                          // OX - right
     cam->gl_transform[0 + 1] = sin_t2;
     cam->gl_transform[0 + 2] = 0.0;
     cam->gl_transform[0 + 3] = 0.0;
 
-    cam->gl_transform[4 + 0] = 0.0;                                                       // OZ - up
+    cam->gl_transform[4 + 0] = 0.0;                                             // OZ - up
     cam->gl_transform[4 + 1] = 0.0;
     cam->gl_transform[4 + 2] = 1.0;
     cam->gl_transform[4 + 3] = 0.0;
@@ -287,33 +287,33 @@ void Cam_RecalcClipPlanes(camera_p cam)
 {
     GLfloat T[4], LU[4], V[3], *n = cam->clip_planes;
 
-    V[0] = cam->gl_transform[8 + 0] * cam->dist_near;                                   // вектор - от позиции камеры до центра плоскости проекции
+    V[0] = cam->gl_transform[8 + 0] * cam->dist_near;
     V[1] = cam->gl_transform[8 + 1] * cam->dist_near;
     V[2] = cam->gl_transform[8 + 2] * cam->dist_near;
 
-    T[0] = cam->gl_transform[12 + 0] + V[0];                                            // центр плоскости проекции
+    T[0] = cam->gl_transform[12 + 0] + V[0];
     T[1] = cam->gl_transform[12 + 1] + V[1];
     T[2] = cam->gl_transform[12 + 2] + V[2];
 
     //==========================================================================
 
-    vec3_copy(cam->frustum->norm, cam->gl_transform + 8);                               // Основная плоскость отсечения (что сзади - то не рисуем)
-    cam->frustum->norm[3] = -vec3_dot(cam->gl_transform + 8, cam->gl_transform + 12);   // плоскость проекции проходит через наблюдателя.
+    vec3_copy(cam->frustum->norm, cam->gl_transform + 8);
+    cam->frustum->norm[3] = -vec3_dot(cam->gl_transform + 8, cam->gl_transform + 12);
 
     //==========================================================================
 
     //   DOWN
-    T[3] = cam->h / 2.0;                                                        // половина высоты плоскости проекции
-    LU[0] = V[0] - T[3] * cam->gl_transform[4 + 0];                             // вектор нижней плоскости отсечения
+    T[3] = cam->h / 2.0;
+    LU[0] = V[0] - T[3] * cam->gl_transform[4 + 0];
     LU[1] = V[1] - T[3] * cam->gl_transform[4 + 1];
     LU[2] = V[2] - T[3] * cam->gl_transform[4 + 2];
 
     vec3_cross(cam->clip_planes+8, cam->gl_transform + 0, LU)
-    LU[3] = vec3_abs(cam->clip_planes+8);                                       // модуль нормали к левой / правой плоскостям
+    LU[3] = vec3_abs(cam->clip_planes+8);
     vec3_norm_plane(cam->clip_planes+8, cam->gl_transform + 12, LU[3])
 
     //   UP
-    LU[0] = V[0] + T[3] * cam->gl_transform[4 + 0];                                       // вектор верхней плоскости отсечения
+    LU[0] = V[0] + T[3] * cam->gl_transform[4 + 0];
     LU[1] = V[1] + T[3] * cam->gl_transform[4 + 1];
     LU[2] = V[2] + T[3] * cam->gl_transform[4 + 2];
 
@@ -323,17 +323,17 @@ void Cam_RecalcClipPlanes(camera_p cam)
     //==========================================================================
 
     //   LEFT
-    T[3] = cam->w / 2.0;                                                        // половина ширины плоскости проекции
-    LU[0] = V[0] - T[3] * cam->gl_transform[0 + 0];                                    // вектор левой плоскости отсечения
+    T[3] = cam->w / 2.0;
+    LU[0] = V[0] - T[3] * cam->gl_transform[0 + 0];
     LU[1] = V[1] - T[3] * cam->gl_transform[0 + 1];
     LU[2] = V[2] - T[3] * cam->gl_transform[0 + 2];
 
     vec3_cross(cam->clip_planes, cam->gl_transform + 4, LU)
-    LU[3] = vec3_abs(cam->clip_planes);                                         // модуль нормали к левой / правой плоскостям
+    LU[3] = vec3_abs(cam->clip_planes);
     vec3_norm_plane(cam->clip_planes, cam->gl_transform + 12, LU[3])
 
     //   RIGHT
-    LU[0] = V[0] + T[3] * cam->gl_transform[0 + 0];                                    // вектор правой плоскости отсечения
+    LU[0] = V[0] + T[3] * cam->gl_transform[0 + 0];
     LU[1] = V[1] + T[3] * cam->gl_transform[0 + 1];
     LU[2] = V[2] + T[3] * cam->gl_transform[0 + 2];
 

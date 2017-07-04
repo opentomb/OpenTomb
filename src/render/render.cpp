@@ -477,6 +477,25 @@ void CRender::DrawListDebugLines()
                 }
             }
         }
+
+        if(r_flags & R_DRAW_AI_BOXES)
+        {
+            float v0[3], v1[3], tr[16];
+            uint32_t id = 0;
+
+            Mat4_E_macro(tr);
+            debugDrawer->SetColor(0.7f, 0.6f, 0.3f);
+            for(room_box_p rb = World_GetRoomBoxByID(id); rb; rb = World_GetRoomBoxByID(++id))
+            {
+                v0[0] = rb->x_min;
+                v0[1] = rb->y_min;
+                v0[2] = rb->true_floor;
+                v1[0] = rb->x_max;
+                v1[1] = rb->y_max;
+                v1[2] = rb->true_floor + 1024.0f;
+                debugDrawer->DrawBBox(v0, v1, tr);
+            }
+        }
     }
 
     if(!debugDrawer->IsEmpty() && m_camera)

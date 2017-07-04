@@ -1488,7 +1488,7 @@ extern "C" int Engine_ExecCmd(char *ch)
             Con_AddLine("free_look - switch camera mode\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("r_crosshair - switch crosshair visibility\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("cam_distance - camera distance to actor\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room, r_flyby, r_triggers - render modes\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room, r_flyby, r_triggers, r_ai_boxes - render modes\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("playsound(id) - play specified sound\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("stopsound(id) - stop specified sound\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("Watch out for case sensitive commands!\0", FONTSTYLE_CONSOLE_WARNING);
@@ -1622,6 +1622,11 @@ extern "C" int Engine_ExecCmd(char *ch)
         else if(!strcmp(token, "r_triggers"))
         {
             renderer.r_flags ^= R_DRAW_TRIGGERS;
+            return 1;
+        }
+        else if(!strcmp(token, "r_ai_boxes"))
+        {
+            renderer.r_flags ^= R_DRAW_AI_BOXES;
             return 1;
         }
         else if(!strcmp(token, "r_crosshair"))

@@ -1762,9 +1762,9 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                 {
                     tree_tag = model->mesh_tree + k;
                     bone_tag = bone_frame->bone_tags + k;
-                    rot[0] = 0.0;
-                    rot[1] = 0.0;
-                    rot[2] = 0.0;
+                    rot[0] = 0.0f;
+                    rot[1] = 0.0f;
+                    rot[2] = 0.0f;
                     vec4_SetZXYRotations(bone_tag->qrotate, rot);
                     vec3_copy(bone_tag->offset, tree_tag->offset);
                 }
@@ -1776,9 +1776,9 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                 {
                     tree_tag = model->mesh_tree + k;
                     bone_tag = bone_frame->bone_tags + k;
-                    rot[0] = 0.0;
-                    rot[1] = 0.0;
-                    rot[2] = 0.0;
+                    rot[0] = 0.0f;
+                    rot[1] = 0.0f;
+                    rot[2] = 0.0f;
                     vec4_SetZXYRotations(bone_tag->qrotate, rot);
                     vec3_copy(bone_tag->offset, tree_tag->offset);
 
@@ -1794,9 +1794,9 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                             rot[0] = (float)((temp1 & 0x3ff0) >> 4);
                             rot[2] =-(float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
                             rot[1] = (float)(temp2 & 0x03ff);
-                            rot[0] *= 360.0 / 1024.0;
-                            rot[1] *= 360.0 / 1024.0;
-                            rot[2] *= 360.0 / 1024.0;
+                            rot[0] *= 360.0f / 1024.0f;
+                            rot[1] *= 360.0f / 1024.0f;
+                            rot[2] *= 360.0f / 1024.0f;
                             vec4_SetZXYRotations(bone_tag->qrotate, rot);
                             break;
 
@@ -1806,34 +1806,34 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                             if(tr->game_version >= TR_IV)
                             {
                                 ang = (float)(temp1 & 0x0fff);
-                                ang *= 360.0 / 4096.0;
+                                ang *= 360.0f / 4096.0f;
                             }
                             else
                             {
                                 ang = (float)(temp1 & 0x03ff);
-                                ang *= 360.0 / 1024.0;
+                                ang *= 360.0f / 1024.0f;
                             }
 
                             switch (temp1 & 0xc000)
                             {
                                 case 0x4000:    // x only
                                     rot[0] = ang;
-                                    rot[1] = 0;
-                                    rot[2] = 0;
+                                    rot[1] = 0.0f;
+                                    rot[2] = 0.0f;
                                     vec4_SetZXYRotations(bone_tag->qrotate, rot);
                                     break;
 
                                 case 0x8000:    // y only
-                                    rot[0] = 0;
-                                    rot[1] = 0;
+                                    rot[0] = 0.0f;
+                                    rot[1] = 0.0f;
                                     rot[2] =-ang;
                                     vec4_SetZXYRotations(bone_tag->qrotate, rot);
                                     break;
 
                                 case 0xc000:    // z only
-                                    rot[0] = 0;
+                                    rot[0] = 0.0f;
                                     rot[1] = ang;
-                                    rot[2] = 0;
+                                    rot[2] = 0.0f;
                                     vec4_SetZXYRotations(bone_tag->qrotate, rot);
                                     break;
 
@@ -1842,9 +1842,9 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                                     rot[0] = (float)((temp1 & 0x3ff0) >> 4);
                                     rot[2] =-(float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
                                     rot[1] = (float)(temp2 & 0x03ff);
-                                    rot[0] *= 360.0 / 1024.0;
-                                    rot[1] *= 360.0 / 1024.0;
-                                    rot[2] *= 360.0 / 1024.0;
+                                    rot[0] *= 360.0f / 1024.0f;
+                                    rot[1] *= 360.0f / 1024.0f;
+                                    rot[2] *= 360.0f / 1024.0f;
                                     vec4_SetZXYRotations(bone_tag->qrotate, rot);
                                     l ++;
                                     break;
@@ -2018,7 +2018,7 @@ int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
     {
         if(moveable_ind + 2 < tr->moveables_count)                              // I hope there is no two neighboard movables with animation_index'es == 0xFFFF
         {
-            next_moveable = &tr->moveables[moveable_ind+2];
+            next_moveable = &tr->moveables[moveable_ind + 2];
         }
         else
         {

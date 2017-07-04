@@ -1464,23 +1464,23 @@ int  Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_a
 
 void Entity_MoveForward(entity_p ent, float dist)
 {
-    ent->transform[12] += ent->transform[4] * dist;
-    ent->transform[13] += ent->transform[5] * dist;
-    ent->transform[14] += ent->transform[6] * dist;
+    ent->transform[12 + 0] += ent->transform[4] * dist;
+    ent->transform[12 + 1] += ent->transform[5] * dist;
+    ent->transform[12 + 2] += ent->transform[6] * dist;
 }
 
 
 void Entity_MoveStrafe(entity_p ent, float dist)
 {
-    ent->transform[12] += ent->transform[0] * dist;
-    ent->transform[13] += ent->transform[1] * dist;
-    ent->transform[14] += ent->transform[2] * dist;
+    ent->transform[12 + 0] += ent->transform[0] * dist;
+    ent->transform[12 + 1] += ent->transform[1] * dist;
+    ent->transform[12 + 2] += ent->transform[2] * dist;
 }
 
 
 void Entity_MoveVertical(entity_p ent, float dist)
 {
-    ent->transform[12] += ent->transform[8] * dist;
-    ent->transform[13] += ent->transform[9] * dist;
-    ent->transform[14] += ent->transform[10] * dist;
+    ent->transform[12 + 0] += ent->transform[8] * dist;
+    ent->transform[12 + 1] += ent->transform[9] * dist;
+    ent->transform[12 + 2] += ent->transform[10] * dist;
 }

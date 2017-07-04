@@ -25,6 +25,8 @@
 #define R_DRAW_POINTS           0x00004000      // Points rendering
 #define R_DRAW_FLYBY            0x00008000      // FlyBy cameras spline rendering
 #define R_DRAW_TRIGGERS         0x00010000      // Trigger sectors drawing
+#define R_DRAW_AI_BOXES         0x00020000      // AI boxes drawing
+#define R_DRAW_AI_OBJECTS       0x00040000      // AI objects drawing
 
 #define STENCIL_FRUSTUM 1
 

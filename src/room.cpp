@@ -376,8 +376,8 @@ struct room_sector_s *Room_GetSectorRaw(struct room_s *room, float pos[3])
 {
     if(room)
     {
-        int x = (int)(pos[0] - room->transform[12]) / 1024;
-        int y = (int)(pos[1] - room->transform[13]) / 1024;
+        int x = (int)(pos[0] - room->transform[12 + 0]) / TR_METERING_SECTORSIZE;
+        int y = (int)(pos[1] - room->transform[12 + 1]) / TR_METERING_SECTORSIZE;
         if(x < 0 || x >= room->sectors_x || y < 0 || y >= room->sectors_y)
         {
             return NULL;
@@ -396,8 +396,8 @@ struct room_sector_s *Room_GetSectorRaw(struct room_s *room, float pos[3])
 struct room_sector_s *Room_GetSectorXYZ(struct room_s *room, float pos[3])
 {
     room_sector_p ret = NULL;
-    int x = (int)(pos[0] - room->transform[12]) / 1024;
-    int y = (int)(pos[1] - room->transform[13]) / 1024;
+    int x = (int)(pos[0] - room->transform[12 + 0]) / TR_METERING_SECTORSIZE;
+    int y = (int)(pos[1] - room->transform[12 + 1]) / TR_METERING_SECTORSIZE;
 
     room = room->real_room;
 
