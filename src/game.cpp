@@ -1,7 +1,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <list>
 
 extern "C" {
 #include <lua.h>
@@ -572,12 +571,6 @@ int Game_UpdateEntity(entity_p ent, void *data)
         Entity_Frame(ent, engine_frame_time);
         Entity_UpdateRigidBody(ent, ent->character != NULL);
         Entity_UpdateRoomPos(ent);
-
-        if(ent->state_flags & ENTITY_STATE_DELETED)
-        {
-            std::list<uint32_t> *delete_list = (std::list<uint32_t>*)data;
-            delete_list->push_back(ent->id);
-        }
     }
 
     return 0;
@@ -669,12 +662,7 @@ void Game_Frame(float time)
         }
     }
 
-    std::list<uint32_t> delete_list;
-    World_IterateAllEntities(Game_UpdateEntity, &delete_list);
-    for(uint32_t id : delete_list)
-    {
-        World_DeleteEntity(id);
-    }
+    World_IterateAllEntities(Game_UpdateEntity, NULL);
 
     Physics_StepSimulation(time);
 

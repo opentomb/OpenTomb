@@ -137,6 +137,7 @@ typedef struct box_overlap_s
 
 typedef struct room_box_s
 {
+    uint32_t                id;
     float                   bb_min[3];
     float                   bb_max[3];
     struct box_overlap_s   *overlaps;

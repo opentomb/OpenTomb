@@ -11,6 +11,7 @@ extern "C" {
 }
 
 #include <map>
+#include <list>
 
 #include "core/gl_util.h"
 #include "core/console.h"
@@ -554,12 +555,21 @@ struct entity_s *World_GetPlayer()
 
 void World_IterateAllEntities(int (*iterator)(struct entity_s *ent, void *data), void *data)
 {
+    std::list<uint32_t> delete_list;
     for(std::pair<const uint32_t, entity_p> &it : global_world.entity_tree)
     {
+        if(it.second->state_flags & ENTITY_STATE_DELETED)
+        {
+            delete_list.push_back(it.first);
+        }
         if(iterator(it.second, data))
         {
-            break;;
+            break;
         }
+    }
+    for(uint32_t id : delete_list)
+    {
+        World_DeleteEntity(id);
     }
 }
 
@@ -1555,6 +1565,7 @@ void World_GenBoxes(class VT_Level *tr)
             {
                 r_box->overlaps = global_world.overlaps + tr->boxes[i].overlap_index;
             }
+            r_box->id = i;
             r_box->bb_min[0] = tr->boxes[i].xmin;
             r_box->bb_min[1] =-tr->boxes[i].zmax;
             r_box->bb_min[2] = tr->boxes[i].true_floor;

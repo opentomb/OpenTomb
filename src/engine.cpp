@@ -1261,6 +1261,7 @@ void ShowDebugInfo()
                 if(ent && ent->current_sector && ent->current_sector->box)
                 {
                     room_box_p box = ent->current_sector->box;
+                    GLText_OutTextXY(30.0f, y += dy, "box = %d", (int)box->id);
                     for(box_overlap_p ov = box->overlaps; ov; ov++)
                     {
                         GLText_OutTextXY(30.0f, y += dy, "overlap = %d", (int)ov->box);

@@ -114,6 +114,21 @@ void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
             }
         }
     }
+    
+    for(uint16_t i = 1; i + 1 < model->mesh_count; i++)
+    {
+        for(uint16_t j = 1; j + i < model->mesh_count; j++)
+        {
+            uint16_t m1 = model->collision_map[j];
+            uint16_t m2 = model->collision_map[j + 1];
+            if(model->mesh_tree[m1].parent > model->mesh_tree[m2].parent)
+            {
+                uint16_t t = model->collision_map[j];
+                model->collision_map[j] = model->collision_map[j + 1];
+                model->collision_map[j + 1] = t;
+            }
+        }
+    }
 }
 
 
