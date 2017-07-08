@@ -80,6 +80,7 @@ enum debug_view_state_e
     player_anim,
     sector_info,
     room_objects,
+    ai_boxes,
     bsp_info,
     model_view,
     debug_states_count
@@ -1249,6 +1250,29 @@ void ShowDebugInfo()
                             text->x_align = GLTEXT_ALIGN_CENTER;
                         }
                     }
+                }
+            }
+            break;
+
+        case debug_view_state_e::ai_boxes:
+            {
+                entity_p ent = World_GetPlayer();
+                GLText_OutTextXY(30.0f, y += dy, "VIEW: AI boxes");
+                if(ent && ent->current_sector && ent->current_sector->box)
+                {
+                    room_box_p box = ent->current_sector->box;
+                    for(box_overlap_p ov = box->overlaps; ov; ov++)
+                    {
+                        GLText_OutTextXY(30.0f, y += dy, "overlap = %d", (int)ov->box);
+                        if(ov->end)
+                        {
+                            break;
+                        }
+                    }
+                    
+                    float tr[16];
+                    Mat4_E_macro(tr);
+                    renderer.debugDrawer->DrawBBox(box->bb_min, box->bb_max, tr);
                 }
             }
             break;

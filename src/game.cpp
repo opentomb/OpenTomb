@@ -140,9 +140,9 @@ int Game_Load(const char* name)
     if(local)
     {
         char save_path[1024];
-        strncpy(save_path, Engine_GetBasePath(), 1024);
-        strncat(save_path, "save/", 1024);
-        strncat(save_path, name, 1024);
+        strncpy(save_path, Engine_GetBasePath(), sizeof(save_path));
+        strncat(save_path, "save/", sizeof(save_path));
+        strncat(save_path, name, sizeof(save_path));
         if(!Sys_FileFound(save_path, 0))
         {
             Sys_extWarn("Can not read file \"%s\"", save_path);
@@ -332,9 +332,9 @@ int Game_Save(const char* name)
     if(local)
     {
         char save_path[1024];
-        strncpy(save_path, Engine_GetBasePath(), 1024);
-        strncat(save_path, "save/", 1024);
-        strncat(save_path, name, 1024);
+        strncpy(save_path, Engine_GetBasePath(), sizeof(save_path));
+        strncat(save_path, "save/", sizeof(save_path));
+        strncat(save_path, name, sizeof(save_path));
         f = fopen(save_path, "wb");
     }
     else

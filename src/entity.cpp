@@ -1071,6 +1071,7 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
     if(entity)
     {
         ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(entity->bf, anim_type);
+        Entity_UpdateTransform(entity);
         if(ss_anim)
         {
             animation = (animation < 0) ? (0) : (animation);
