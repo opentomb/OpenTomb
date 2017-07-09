@@ -15,6 +15,8 @@
 #include "mesh.h"
 #include "trigger.h"
 #include "room.h"
+#include "core/system.h"
+#include "world.h"
 
 
 void Room_Clear(struct room_s *room)
@@ -772,3 +774,103 @@ int Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, int ignore_doors)
 
     return 1;
 }
+
+
+/////////////////////////////////////////
+static bool Room_IsBoxForPath(room_box_p box, int zone)
+{
+    if(box)
+    {
+        return (zone < 0) || 
+               (zone == box->zone.GroundZone1_Normal) ||
+               (zone == box->zone.GroundZone2_Normal) ||
+               (zone == box->zone.GroundZone3_Normal) ||
+               (zone == box->zone.GroundZone4_Normal);
+    }
+    return false;
+}
+
+int  Room_FindPath(room_box_p path_buf, uint32_t max_boxes, room_sector_p from, room_sector_p to, int zone)
+{
+    int ret = 0;
+    if(from->box && to->box && (from->box->id != to->box->id))
+    {
+        const int buf_size = sizeof(room_box_p) * max_boxes;
+        room_box_p *current_front = (room_box_p*)Sys_GetTempMem(buf_size);
+        room_box_p *next_front = (room_box_p*)Sys_GetTempMem(buf_size);
+        room_box_p *to_clean = (room_box_p*)Sys_GetTempMem(buf_size);
+        size_t current_front_size = 1;
+        size_t next_front_size = 0;
+        size_t to_clean_size = 0;
+
+        to_clean[to_clean_size++] = from->box;
+        current_front[0] = from->box;
+        current_front[0]->path_distance = 0;
+        current_front[0]->path_parent = NULL;
+        
+        while(current_front_size > 0)
+        {
+            for(size_t i = 0; i < current_front_size; ++i)
+            {
+                room_box_p current_box = current_front[i];
+                box_overlap_p ov = current_box->overlaps;
+                while(ov)
+                {
+                    room_box_p next_box = World_GetRoomBoxByID(ov->box);
+                    if(next_box->id != from->box->id)
+                    {
+                        if(!next_box->path_parent && Room_IsBoxForPath(next_box, zone))
+                        {
+                            to_clean[to_clean_size++] = next_box;
+                            next_front[next_front_size++] = next_box;
+                            next_box->path_parent = current_box;
+                            next_box->path_distance = current_box->path_distance + 1;
+                            if(next_box->id == to->box->id)
+                            {
+                                room_box_p p = next_box;
+                                while(p)
+                                {
+                                    path_buf[p->path_distance] = *p;
+                                    p = p->path_parent;
+                                    ++ret;
+                                }
+                                goto END;
+                            }
+                        }
+                        else if(next_box->path_distance > current_box->path_distance + 1)
+                        {
+                            next_box->path_distance = current_box->path_distance + 1;
+                            next_box->path_parent = current_box->path_parent;
+                        }
+                    }
+
+                    if(ov->end)
+                    {
+                        break;
+                    }
+                    ov++;
+                }
+            }
+            
+            ///SWAP FRONTS HERE
+            {
+                room_box_p *tn = current_front;
+                current_front = next_front;
+                current_front_size = next_front_size;
+                next_front = tn;
+                next_front_size = 0;
+            }
+        }
+        
+        END:
+        for(uint32_t i = 0; i < to_clean_size; ++i)
+        {
+            to_clean[i]->path_parent = NULL;
+            to_clean[i]->path_distance = 0;
+        }
+        Sys_ReturnTempMem(3 * buf_size);
+    }
+    
+    return ret;
+}
+

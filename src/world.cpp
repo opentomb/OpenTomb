@@ -908,6 +908,12 @@ struct room_sector_s *World_GetRoomSector(int room_id, int x, int y)
 }
 
 
+uint32_t World_GetRoomBoxesCount()
+{
+    return global_world.room_boxes_count;
+}
+
+
 struct room_box_s *World_GetRoomBoxByID(uint32_t id)
 {
     if(id < global_world.room_boxes_count)
@@ -1561,6 +1567,8 @@ void World_GenBoxes(class VT_Level *tr)
         {
             room_box_p r_box = global_world.room_boxes + i;
             r_box->overlaps = NULL;
+            r_box->path_parent = NULL;
+            r_box->path_distance = 0;
             if((tr->boxes[i].overlap_index >= 0) && (tr->boxes[i].overlap_index < global_world.overlaps_count))
             {
                 r_box->overlaps = global_world.overlaps + tr->boxes[i].overlap_index;

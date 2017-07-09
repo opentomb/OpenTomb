@@ -28,6 +28,9 @@ int  Res_Sector_In2SideOfPortal(struct room_sector_s *s1, struct room_sector_s *
 void Res_RoomLightCalculate(struct light_s *light, struct tr5_room_light_s *tr_light);
 void Res_RoomSectorsCalculate(struct room_s *rooms, uint32_t rooms_count, uint32_t room_index, class VT_Level *tr);
 
+// NOTE: Functions which take native TR level structures as argument will have
+// additional _TR_ prefix. Functions which doesn't use specific TR structures
+// should NOT use such prefix!
 // Functions generating native OpenTomb structs from legacy TR structs.
 void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count, class bordered_texture_atlas *atlas, class VT_Level *tr);
 void TR_GenRoomMesh(struct room_s *room, size_t room_index, struct anim_seq_s *anim_sequences, uint32_t anim_sequences_count, class bordered_texture_atlas *atlas, class VT_Level *tr);

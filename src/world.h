@@ -42,6 +42,7 @@ struct room_s *World_GetRoomByID(uint32_t id);
 struct room_s *World_FindRoomByPos(float pos[3]);
 struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_room);
 struct room_sector_s *World_GetRoomSector(int room_id, int x, int y);
+uint32_t World_GetRoomBoxesCount();
 struct room_box_s *World_GetRoomBoxByID(uint32_t id);
 
 uint16_t World_GetGlobalFlipState();

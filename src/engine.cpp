@@ -1262,6 +1262,10 @@ void ShowDebugInfo()
                 {
                     room_box_p box = ent->current_sector->box;
                     GLText_OutTextXY(30.0f, y += dy, "box = %d", (int)box->id);
+                    GLText_OutTextXY(30.0f, y += dy, "zone1 = %d", (int)box->zone.GroundZone1_Normal);
+                    GLText_OutTextXY(30.0f, y += dy, "zone2 = %d", (int)box->zone.GroundZone2_Normal);
+                    GLText_OutTextXY(30.0f, y += dy, "zone3 = %d", (int)box->zone.GroundZone3_Normal);
+                    GLText_OutTextXY(30.0f, y += dy, "zone4 = %d", (int)box->zone.GroundZone4_Normal);
                     for(box_overlap_p ov = box->overlaps; ov; ov++)
                     {
                         GLText_OutTextXY(30.0f, y += dy, "overlap = %d", (int)ov->box);
@@ -1274,6 +1278,18 @@ void ShowDebugInfo()
                     float tr[16];
                     Mat4_E_macro(tr);
                     renderer.debugDrawer->DrawBBox(box->bb_min, box->bb_max, tr);
+                    if(last_cont && (last_cont->object_type == OBJECT_ENTITY))
+                    {
+                        entity_p target = (entity_p)last_cont->object;
+                        const int buf_size = sizeof(room_box_p) * World_GetRoomBoxesCount();
+                        room_box_p path = (room_box_p)Sys_GetTempMem(buf_size);
+                        int dist = Room_FindPath(path, World_GetRoomBoxesCount(), ent->current_sector, target->current_sector, -1);
+                        for( ; dist > 0; --dist)
+                        {
+                            renderer.debugDrawer->DrawBBox(path[dist - 1].bb_min, path[dist - 1].bb_max, tr);
+                        }
+                        Sys_ReturnTempMem(buf_size);
+                    }
                 }
             }
             break;
