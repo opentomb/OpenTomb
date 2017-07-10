@@ -6,6 +6,7 @@
 #include "core/gl_util.h"
 #include "core/console.h"
 #include "core/vmath.h"
+#include "core/system.h"
 #include "core/polygon.h"
 #include "core/obb.h"
 #include "render/frustum.h"
@@ -15,7 +16,6 @@
 #include "mesh.h"
 #include "trigger.h"
 #include "room.h"
-#include "core/system.h"
 #include "world.h"
 
 
@@ -781,7 +781,8 @@ static bool Room_IsBoxForPath(room_box_p box, int zone)
 {
     if(box)
     {
-        return (zone < 0) || 
+        return (zone < 0) ||
+               (zone == box->zone.FlyZone_Normal) ||
                (zone == box->zone.GroundZone1_Normal) ||
                (zone == box->zone.GroundZone2_Normal) ||
                (zone == box->zone.GroundZone3_Normal) ||

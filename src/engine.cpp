@@ -1262,6 +1262,7 @@ void ShowDebugInfo()
                 {
                     room_box_p box = ent->current_sector->box;
                     GLText_OutTextXY(30.0f, y += dy, "box = %d", (int)box->id);
+                    GLText_OutTextXY(30.0f, y += dy, "fly = %d", (int)box->zone.FlyZone_Normal);
                     GLText_OutTextXY(30.0f, y += dy, "zone1 = %d", (int)box->zone.GroundZone1_Normal);
                     GLText_OutTextXY(30.0f, y += dy, "zone2 = %d", (int)box->zone.GroundZone2_Normal);
                     GLText_OutTextXY(30.0f, y += dy, "zone3 = %d", (int)box->zone.GroundZone3_Normal);
