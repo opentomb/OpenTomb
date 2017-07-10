@@ -792,7 +792,7 @@ static bool Room_IsBoxForPath(room_box_p box, int zone)
 
 int  Room_FindPath(room_box_p path_buf, uint32_t max_boxes, room_sector_p from, room_sector_p to, int zone)
 {
-    int ret = 0;
+    int ret = -1;
     if(from->box && to->box && (from->box->id != to->box->id))
     {
         const int buf_size = sizeof(room_box_p) * max_boxes;
@@ -807,6 +807,7 @@ int  Room_FindPath(room_box_p path_buf, uint32_t max_boxes, room_sector_p from, 
         current_front[0] = from->box;
         current_front[0]->path_distance = 0;
         current_front[0]->path_parent = NULL;
+        ret = 0;
         
         while(current_front_size > 0)
         {
@@ -830,15 +831,15 @@ int  Room_FindPath(room_box_p path_buf, uint32_t max_boxes, room_sector_p from, 
                                 room_box_p p = next_box;
                                 while(p)
                                 {
-                                    path_buf[p->path_distance] = *p;
+                                    path_buf[ret++] = *p;
                                     p = p->path_parent;
-                                    ++ret;
                                 }
                                 goto END;
                             }
                         }
                         else if(next_box->path_distance > current_box->path_distance + 1)
                         {
+                            next_front[next_front_size++] = next_box;
                             next_box->path_distance = current_box->path_distance + 1;
                             next_box->path_parent = current_box->path_parent;
                         }
