@@ -917,7 +917,7 @@ void Character_LookAt(struct entity_s *ent, float target[3])
             const float target_limit[4] = {0.0f, 1.0f, 0.0f, 0.883f};
 
             base_anim->targeting_flags = 0x0000;
-            SSBoneFrame_SetTarget(base_anim, ent->character->bone_torso, target, bone_dir);
+            SSBoneFrame_SetTarget(base_anim, base_anim->model->mesh_tree[ent->character->bone_head].parent, target, bone_dir);
             SSBoneFrame_SetTargetingLimit(base_anim, target_limit);
             SSBoneFrame_SetTargetingAxisMod(base_anim, axis_mod);
             base_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
