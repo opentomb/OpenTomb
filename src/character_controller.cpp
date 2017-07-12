@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "core/vmath.h"
+#include "core/system.h"
 #include "core/console.h"
 #include "core/polygon.h"
 #include "core/obb.h"
@@ -42,6 +43,7 @@ void Character_Create(struct entity_s *ent)
 
         ret->target_id = ENTITY_ID_NONE;
         ret->hair_count = 0;
+        ret->path_dist = 0;
         ret->hairs = NULL;
         ret->ragdoll = NULL;
 
@@ -133,6 +135,8 @@ void Character_Delete(struct entity_s *ent)
         return;
     }
 
+    actor->path_dist = 0;
+    actor->path[0] = NULL;
     actor->ent = NULL;
     if(actor->hairs)
     {
@@ -190,6 +194,26 @@ void Character_Update(struct entity_s *ent)
         {
             ent->type_flags |= ENTITY_TYPE_DYNAMIC;
         }
+    }
+}
+
+
+void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target)
+{
+    if(ent->character && ent->current_sector && ent->current_sector->box && target && target->box)
+    {
+        const int buf_size = sizeof(room_box_p) * World_GetRoomBoxesCount();
+        room_box_p *path = (room_box_p*)Sys_GetTempMem(buf_size);
+        int dist = Room_FindPath(path, World_GetRoomBoxesCount(), ent->current_sector, target, -1);
+        const int max_dist = sizeof(ent->character->path) / sizeof(ent->character->path[0]);
+        ent->character->path_dist = (dist > max_dist) ? (max_dist) : dist;
+        
+        for(int i = 0; i < ent->character->path_dist; ++i)
+        {
+            ent->character->path[i] = path[dist - i - 1];
+        }
+        
+        Sys_ReturnTempMem(buf_size);
     }
 }
 

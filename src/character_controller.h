@@ -265,10 +265,12 @@ typedef struct character_s
     struct character_stats_s    statistics;
 
     uint32_t                    target_id;
-    int8_t                      cam_follow_center;
+    int16_t                     cam_follow_center;
     int8_t                      hair_count;
+    int8_t                      path_dist;                                      // 0 .. n_path - 1
     struct hair_s             **hairs;
     struct rd_setup_s          *ragdoll;
+    struct room_box_s          *path[8];
 
     uint16_t                    bone_head;
     uint16_t                    bone_torso;
@@ -308,6 +310,7 @@ typedef struct character_s
 void Character_Create(struct entity_s *ent);
 void Character_Delete(struct entity_s *ent);
 void Character_Update(struct entity_s *ent);
+void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target);
 
 void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);
 int  Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height_info_s *nfc);

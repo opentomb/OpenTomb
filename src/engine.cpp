@@ -1279,17 +1279,14 @@ void ShowDebugInfo()
                     float tr[16];
                     Mat4_E_macro(tr);
                     renderer.debugDrawer->DrawBBox(box->bb_min, box->bb_max, tr);
-                    if(last_cont && (last_cont->object_type == OBJECT_ENTITY))
+                    if(ent->character && last_cont && (last_cont->object_type == OBJECT_ENTITY))
                     {
                         entity_p target = (entity_p)last_cont->object;
-                        const int buf_size = sizeof(room_box_p) * World_GetRoomBoxesCount();
-                        room_box_p path = (room_box_p)Sys_GetTempMem(buf_size);
-                        int dist = Room_FindPath(path, World_GetRoomBoxesCount(), ent->current_sector, target->current_sector, -1);
-                        for( ; dist > 0; --dist)
+                        Character_UpdatePath(ent, target->current_sector);
+                        for(int i = 0; i < ent->character->path_dist; ++i)
                         {
-                            renderer.debugDrawer->DrawBBox(path[dist - 1].bb_min, path[dist - 1].bb_max, tr);
+                            renderer.debugDrawer->DrawBBox(ent->character->path[i]->bb_min, ent->character->path[i]->bb_max, tr);
                         }
-                        Sys_ReturnTempMem(buf_size);
                     }
                 }
             }
