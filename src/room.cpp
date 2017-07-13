@@ -841,9 +841,22 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
                             }
                             else if(next_box->path_distance > current_box->path_distance + 1)
                             {
-                                next_front[next_front_size++] = next_box;
+                                bool not_in_front = true;
                                 next_box->path_distance = current_box->path_distance + 1;
                                 next_box->path_parent = current_box->path_parent;
+                                for(size_t j = 0; j < next_front_size; ++j)
+                                {
+                                    if(next_front[j]->id == next_box->id)
+                                    {
+                                        not_in_front = false;
+                                        break;
+                                    }
+                                }
+                                
+                                if(not_in_front)
+                                {
+                                    next_front[next_front_size++] = next_box;
+                                }
                             }
                         }
 

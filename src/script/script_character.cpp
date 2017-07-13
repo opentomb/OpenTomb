@@ -191,6 +191,27 @@ int lua_SetCharacterTarget(lua_State * lua)
 }
 
 
+int lua_SetCharacterPathTarget(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        entity_p target = World_GetEntityByID(lua_tointeger(lua, 2));
+        if(ent && ent->character)
+        {
+            ent->character->path_target = (target) ? (target->current_sector) : (NULL);
+            Character_UpdatePath(ent, ent->character->path_target);
+        }
+    }
+    else
+    {
+        Con_Warning("setCharacterPathTarget: expecting arguments (entity_id, target_id)");
+    }
+    return 0;
+}
+
+
 int lua_GetCharacterTarget(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -690,6 +711,7 @@ void Script_LuaRegisterCharacterFuncs(lua_State *lua)
     lua_register(lua, "setCharacterStateControlFunctions", lua_SetCharacterStateControlFunctions);
     lua_register(lua, "setCharacterKeyAnim", lua_SetCharacterKeyAnim);
     lua_register(lua, "setCharacterTarget", lua_SetCharacterTarget);
+    lua_register(lua, "setCharacterPathTarget", lua_SetCharacterPathTarget);
     lua_register(lua, "getCharacterTarget", lua_GetCharacterTarget);
     lua_register(lua, "getCharacterParam", lua_GetCharacterParam);
     lua_register(lua, "setCharacterParam", lua_SetCharacterParam);

@@ -44,6 +44,7 @@ void Character_Create(struct entity_s *ent)
         ret->target_id = ENTITY_ID_NONE;
         ret->hair_count = 0;
         ret->path_dist = 0;
+        ret->path_target = NULL;
         ret->hairs = NULL;
         ret->ragdoll = NULL;
 
@@ -137,6 +138,7 @@ void Character_Delete(struct entity_s *ent)
 
     actor->path_dist = 0;
     actor->path[0] = NULL;
+    actor->path_target = NULL;
     actor->ent = NULL;
     if(actor->hairs)
     {
@@ -177,6 +179,7 @@ void Character_Update(struct entity_s *ent)
         {
             ent->character->state.dead = 1;                                     // Kill, if no HP.
         }
+        Character_GoToPathTarget(ent);
         Character_ApplyCommands(ent);
 
         Entity_ProcessSector(ent);
@@ -214,6 +217,58 @@ void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target)
         }
         
         Sys_ReturnTempMem(buf_size);
+    }
+}
+
+
+void Character_GoToPathTarget(struct entity_s *ent)
+{
+    if(ent->character && ent->current_sector && ent->current_sector->box && 
+       ent->character->path_target && (ent->character->path_dist > 0))
+    {
+        float dir[4];
+        ent->character->cmd.rot[0] = 0;
+        ent->character->cmd.move[0] = 0;
+        
+        if(ent->character->path_target == ent->current_sector)
+        {
+            ent->character->path_target = NULL;
+            return;
+        }
+        
+        if(ent->current_sector->box->id != ent->character->path[0]->id)
+        {
+            Character_UpdatePath(ent, ent->character->path_target);
+            if(ent->character->path_dist == 0)
+            {
+                return;
+            }
+        }
+        
+        if(ent->character->path_dist == 1)
+        {
+            vec3_copy(dir, ent->character->path_target->pos);
+        }
+        else
+        {
+            Room_GetOverlapCenter(ent->character->path[0], ent->character->path[1], dir);
+        }
+        
+        vec3_sub(dir, dir, ent->transform + 12);
+        vec3_norm(dir, dir[3]);
+        
+        float z = dir[0] * ent->transform[4 + 1] - dir[1] * ent->transform[4 + 0];
+        ent->character->cmd.rot[0] = 0;
+        if(z > 0.05f)
+        {
+            ent->character->cmd.rot[0] = -1;
+        }
+        else if(z < -0.05f)
+        {
+            ent->character->cmd.rot[0] = 1;
+        }
+        
+        ent->character->cmd.move[0] = (dir[3] > 32.0f) ? (0x01) : (0x00);
     }
 }
 
@@ -970,7 +1025,7 @@ void Character_ClearLookAt(struct entity_s *ent)
  */
 int Character_MoveOnFloor(struct entity_s *ent)
 {
-    float norm_move_xy_len, t, ang, *pos = ent->transform + 12;
+    float norm_move_xy_len, t, *pos = ent->transform + 12;
     float tv[3], move[3], norm_move_xy[2];
 
     if(!ent->character)
@@ -1066,6 +1121,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
 
         if((tv[2] > 0.02) && (tv[2] < ent->character->critical_slant_z_component))
         {
+            float ang;
             tv[2] = -tv[2];
             t = ent->character->linear_speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT;
             vec3_mul_scalar(ent->speed, tv, t);                                 // slide down direction
