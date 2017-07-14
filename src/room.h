@@ -140,11 +140,7 @@ typedef struct room_box_s
     uint32_t                id;
     float                   bb_min[3];
     float                   bb_max[3];
-    struct box_overlap_s   *overlaps;
-    
-    int32_t                 path_distance;
-    struct room_box_s      *path_parent;
-    
+    struct box_overlap_s   *overlaps;    
     struct room_zone_s      zone;
 }room_box_t, *room_box_p;
 

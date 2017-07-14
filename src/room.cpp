@@ -807,20 +807,19 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
         if(from->box->id != to->box->id)
         {
             const int buf_size = sizeof(room_box_p) * max_boxes;
-            room_box_p *current_front = (room_box_p*)Sys_GetTempMem(buf_size);
-            room_box_p *next_front = (room_box_p*)Sys_GetTempMem(buf_size);
-            room_box_p *to_clean = (room_box_p*)Sys_GetTempMem(buf_size);
+            room_box_p *current_front = (room_box_p*)Sys_GetTempMem(3 * buf_size);
+            room_box_p *next_front = current_front + max_boxes;
+            room_box_p *parents = next_front + max_boxes;
+            int32_t *weights = (int32_t*)Sys_GetTempMem(max_boxes * sizeof(int32_t));
             size_t current_front_size = 1;
             size_t next_front_size = 0;
-            size_t to_clean_size = 0;
             int32_t min_weight = 0;
 
-            to_clean[to_clean_size++] = from->box;
             current_front[0] = from->box;
-            current_front[0]->path_distance = 0;
-            current_front[0]->path_parent = NULL;
+            weights[current_front[0]->id] = 0;
+            memset(parents, 0x00, buf_size);
 
-            while((current_front_size > 0) && (!to->box->path_parent || (min_weight < to->box->path_distance)))
+            while((current_front_size > 0) && (!parents[to->box->id] || (min_weight < weights[to->box->id])))
             {
                 min_weight = 0x7FFFFFFF;
                 for(size_t i = 0; i < current_front_size; ++i)
@@ -834,20 +833,19 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
                         {
                             int32_t weight = fabs(next_box->bb_max[0] + next_box->bb_min[0] - current_box->bb_max[0] - current_box->bb_min[0] + 1.0f) / TR_METERING_SECTORSIZE;
                             weight += fabs(next_box->bb_max[1] + next_box->bb_min[1] - current_box->bb_max[1] - current_box->bb_min[1] + 1.0f) / TR_METERING_SECTORSIZE;
-                            if(!next_box->path_parent)
+                            if(!parents[next_box->id])
                             {
-                                to_clean[to_clean_size++] = next_box;
                                 next_front[next_front_size++] = next_box;
-                                next_box->path_parent = current_box;
-                                next_box->path_distance = current_box->path_distance + weight;
-                                min_weight = (min_weight < next_box->path_distance) ? (min_weight) : next_box->path_distance;
+                                parents[next_box->id] = current_box;
+                                weights[next_box->id] = weights[current_box->id] + weight;
+                                min_weight = (min_weight < weights[next_box->id]) ? (min_weight) : weights[next_box->id];
                             }
-                            else if(next_box->path_distance > current_box->path_distance + weight)
+                            else if(weights[next_box->id] > weights[current_box->id] + weight)
                             {
                                 bool not_in_front = true;
-                                next_box->path_parent = current_box;
-                                next_box->path_distance = current_box->path_distance + weight;
-                                min_weight = (min_weight < next_box->path_distance) ? (min_weight) : next_box->path_distance;
+                                parents[next_box->id] = current_box;
+                                weights[next_box->id] = weights[current_box->id] + weight;
+                                min_weight = (min_weight < weights[next_box->id]) ? (min_weight) : weights[next_box->id];
                                 for(size_t j = 0; j < next_front_size; ++j)
                                 {
                                     if(next_front[j]->id == next_box->id)
@@ -882,22 +880,17 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
                 }
             }
 
-            if(to->box->path_parent)
+            if(parents[to->box->id])
             {
                 room_box_p p = to->box;
                 while(p)
                 {
                     path_buf[ret++] = p;
-                    p = p->path_parent;
+                    p = parents[p->id];
                 }
             }
-        
-            for(uint32_t i = 0; i < to_clean_size; ++i)
-            {
-                to_clean[i]->path_parent = NULL;
-                to_clean[i]->path_distance = 0;
-            }
-            Sys_ReturnTempMem(3 * buf_size);
+
+            Sys_ReturnTempMem(3 * buf_size + max_boxes * sizeof(int32_t));
         }
         else
         {
