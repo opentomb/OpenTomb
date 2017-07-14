@@ -813,7 +813,7 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
             size_t current_front_size = 1;
             size_t next_front_size = 0;
             size_t to_clean_size = 0;
-            uint32_t min_weight = 0;
+            int32_t min_weight = 0;
 
             to_clean[to_clean_size++] = from->box;
             current_front[0] = from->box;
@@ -830,11 +830,11 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
                     while(ov)
                     {
                         room_box_p next_box = World_GetRoomBoxByID(ov->box);
-                        if(next_box->id != from->box->id)
+                        if((next_box->id != from->box->id) && Room_IsBoxForPath(current_box, next_box, zone))
                         {
-                            uint32_t weight = (next_box->bb_max[0] - next_box->bb_min[0] + 1.0f) / TR_METERING_SECTORSIZE;
-                            weight *= (next_box->bb_max[1] - next_box->bb_min[1] + 1.0f) / TR_METERING_SECTORSIZE;
-                            if(!next_box->path_parent && Room_IsBoxForPath(current_box, next_box, zone))
+                            int32_t weight = fabs(next_box->bb_max[0] + next_box->bb_min[0] - current_box->bb_max[0] - current_box->bb_min[0] + 1.0f) / TR_METERING_SECTORSIZE;
+                            weight += fabs(next_box->bb_max[1] + next_box->bb_min[1] - current_box->bb_max[1] - current_box->bb_min[1] + 1.0f) / TR_METERING_SECTORSIZE;
+                            if(!next_box->path_parent)
                             {
                                 to_clean[to_clean_size++] = next_box;
                                 next_front[next_front_size++] = next_box;
@@ -845,7 +845,7 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
                             else if(next_box->path_distance > current_box->path_distance + weight)
                             {
                                 bool not_in_front = true;
-                                next_box->path_parent = current_box->path_parent;
+                                next_box->path_parent = current_box;
                                 next_box->path_distance = current_box->path_distance + weight;
                                 min_weight = (min_weight < next_box->path_distance) ? (min_weight) : next_box->path_distance;
                                 for(size_t j = 0; j < next_front_size; ++j)
