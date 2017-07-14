@@ -777,19 +777,27 @@ int Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, int ignore_doors)
 
 
 /////////////////////////////////////////
-static bool Room_IsBoxForPath(room_box_p box, int zone)
+static bool Room_IsBoxForPath(room_box_p curr_box, room_box_p next_box, int zone)
 {
-    if(box)
+    if(next_box && (fabs(curr_box->bb_min[2] - next_box->bb_min[2]) <= TR_METERING_STEP + 1.0f))
     {
         return (zone < 0) ||
-               (zone == box->zone.FlyZone_Normal) ||
-               (zone == box->zone.GroundZone1_Normal) ||
-               (zone == box->zone.GroundZone2_Normal) ||
-               (zone == box->zone.GroundZone3_Normal) ||
-               (zone == box->zone.GroundZone4_Normal);
+               (zone == next_box->zone.FlyZone_Normal) ||
+               (zone == next_box->zone.GroundZone1_Normal) ||
+               (zone == next_box->zone.GroundZone2_Normal) ||
+               (zone == next_box->zone.GroundZone3_Normal) ||
+               (zone == next_box->zone.GroundZone4_Normal);
     }
     return false;
 }
+
+
+int  Room_IsInBox(room_box_p box, float pos[3])
+{
+    return (box->bb_min[0] <= pos[0]) && (pos[0] <= box->bb_max[0]) &&
+           (box->bb_min[1] <= pos[1]) && (pos[1] <= box->bb_max[1]);
+}
+
 
 int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from, room_sector_p to, int zone)
 {
@@ -805,14 +813,16 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
             size_t current_front_size = 1;
             size_t next_front_size = 0;
             size_t to_clean_size = 0;
+            uint32_t min_weight = 0;
 
             to_clean[to_clean_size++] = from->box;
             current_front[0] = from->box;
             current_front[0]->path_distance = 0;
             current_front[0]->path_parent = NULL;
 
-            while(current_front_size > 0)
+            while((current_front_size > 0) && (!to->box->path_parent || (min_weight < to->box->path_distance)))
             {
+                min_weight = 0x7FFFFFFF;
                 for(size_t i = 0; i < current_front_size; ++i)
                 {
                     room_box_p current_box = current_front[i];
@@ -822,28 +832,22 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
                         room_box_p next_box = World_GetRoomBoxByID(ov->box);
                         if(next_box->id != from->box->id)
                         {
-                            if(!next_box->path_parent && Room_IsBoxForPath(next_box, zone))
+                            uint32_t weight = (next_box->bb_max[0] - next_box->bb_min[0] + 1.0f) / TR_METERING_SECTORSIZE;
+                            weight *= (next_box->bb_max[1] - next_box->bb_min[1] + 1.0f) / TR_METERING_SECTORSIZE;
+                            if(!next_box->path_parent && Room_IsBoxForPath(current_box, next_box, zone))
                             {
                                 to_clean[to_clean_size++] = next_box;
                                 next_front[next_front_size++] = next_box;
                                 next_box->path_parent = current_box;
-                                next_box->path_distance = current_box->path_distance + 1;
-                                if(next_box->id == to->box->id)
-                                {
-                                    room_box_p p = next_box;
-                                    while(p)
-                                    {
-                                        path_buf[ret++] = p;
-                                        p = p->path_parent;
-                                    }
-                                    goto END;
-                                }
+                                next_box->path_distance = current_box->path_distance + weight;
+                                min_weight = (min_weight < next_box->path_distance) ? (min_weight) : next_box->path_distance;
                             }
-                            else if(next_box->path_distance > current_box->path_distance + 1)
+                            else if(next_box->path_distance > current_box->path_distance + weight)
                             {
                                 bool not_in_front = true;
-                                next_box->path_distance = current_box->path_distance + 1;
                                 next_box->path_parent = current_box->path_parent;
+                                next_box->path_distance = current_box->path_distance + weight;
+                                min_weight = (min_weight < next_box->path_distance) ? (min_weight) : next_box->path_distance;
                                 for(size_t j = 0; j < next_front_size; ++j)
                                 {
                                     if(next_front[j]->id == next_box->id)
@@ -878,7 +882,16 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
                 }
             }
 
-            END:
+            if(to->box->path_parent)
+            {
+                room_box_p p = to->box;
+                while(p)
+                {
+                    path_buf[ret++] = p;
+                    p = p->path_parent;
+                }
+            }
+        
             for(uint32_t i = 0; i < to_clean_size; ++i)
             {
                 to_clean[i]->path_parent = NULL;

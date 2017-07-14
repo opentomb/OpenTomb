@@ -251,7 +251,14 @@ void Character_GoToPathTarget(struct entity_s *ent)
         }
         else
         {
-            Room_GetOverlapCenter(ent->character->path[0], ent->character->path[1], dir);
+            if((ent->character->path_dist >= 3) && Room_IsInBox(ent->character->path[1], ent->transform + 12))
+            {
+                Room_GetOverlapCenter(ent->character->path[1], ent->character->path[2], dir);
+            }
+            else
+            {
+                Room_GetOverlapCenter(ent->character->path[0], ent->character->path[1], dir);
+            }
         }
         
         vec3_sub(dir, dir, ent->transform + 12);
