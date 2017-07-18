@@ -23,7 +23,6 @@ extern "C" {
 #include "../character_controller.h"
 
 
-
 int lua_CharacterCreate(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -194,7 +193,7 @@ int lua_SetCharacterTarget(lua_State * lua)
 int lua_SetCharacterPathTarget(lua_State * lua)
 {
     int top = lua_gettop(lua);
-    if(top >= 1)
+    if(top >= 2)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         entity_p target = World_GetEntityByID(lua_tointeger(lua, 2));

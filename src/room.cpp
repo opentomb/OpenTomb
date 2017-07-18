@@ -644,6 +644,27 @@ static room_sector_p Sector_CheckRealRoom(room_sector_p rs)
 }
 
 
+struct room_sector_s *Sector_GetNextSector(struct room_sector_s *rs, float dir[3])
+{
+    int ind_x = rs->index_x;
+    int ind_y = rs->index_y;
+    room_p r = rs->owner_room;
+        
+    if(fabs(dir[0]) > fabs(dir[1]))
+    {
+        ind_x += (dir[0] > 0.0f) ? (1) : (-1);
+        ind_x = ((ind_x >= 0) && (ind_x < r->sectors_x)) ? (ind_x) : (rs->index_x);
+    }
+    else
+    {
+        ind_y += (dir[1] > 0.0f) ? (1) : (-1);
+        ind_y = ((ind_y >= 0) && (ind_y < r->sectors_y)) ? (ind_y) : (rs->index_y);
+    }
+
+    return r->content->sectors + (ind_x * r->sectors_y + ind_y);
+}
+
+
 struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs)
 {
     if(rs && rs->portal_to_room)
@@ -777,16 +798,11 @@ int Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, int ignore_doors)
 
 
 /////////////////////////////////////////
-static bool Room_IsBoxForPath(room_box_p curr_box, room_box_p next_box, int zone)
+static bool Room_IsBoxForPath(room_box_p curr_box, room_box_p next_box, int max_step)
 {
-    if(next_box && (fabs(curr_box->bb_min[2] - next_box->bb_min[2]) <= TR_METERING_STEP + 1.0f))
+    if(next_box)
     {
-        return (zone < 0) ||
-               (zone == next_box->zone.FlyZone_Normal) ||
-               (zone == next_box->zone.GroundZone1_Normal) ||
-               (zone == next_box->zone.GroundZone2_Normal) ||
-               (zone == next_box->zone.GroundZone3_Normal) ||
-               (zone == next_box->zone.GroundZone4_Normal);
+        return (fabs(curr_box->bb_min[2] - next_box->bb_min[2]) <= max_step + 1.0f);
     }
     return false;
 }
@@ -799,7 +815,7 @@ int  Room_IsInBox(room_box_p box, float pos[3])
 }
 
 
-int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from, room_sector_p to, int zone)
+int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from, room_sector_p to, int max_step)
 {
     int ret = 0;
     if(from->box && to->box)
@@ -813,15 +829,13 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
             int32_t *weights = (int32_t*)Sys_GetTempMem(max_boxes * sizeof(int32_t));
             size_t current_front_size = 1;
             size_t next_front_size = 0;
-            int32_t min_weight = 0;
 
             current_front[0] = from->box;
             weights[current_front[0]->id] = 0;
             memset(parents, 0x00, buf_size);
 
-            while((current_front_size > 0) && (!parents[to->box->id] || (min_weight < weights[to->box->id])))
+            while(current_front_size > 0)
             {
-                min_weight = 0x7FFFFFFF;
                 for(size_t i = 0; i < current_front_size; ++i)
                 {
                     room_box_p current_box = current_front[i];
@@ -829,23 +843,22 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
                     while(ov)
                     {
                         room_box_p next_box = World_GetRoomBoxByID(ov->box);
-                        if((next_box->id != from->box->id) && Room_IsBoxForPath(current_box, next_box, zone))
+                        int32_t weight = fabs(next_box->bb_max[0] + next_box->bb_min[0] - current_box->bb_max[0] - current_box->bb_min[0] + 1.0f) / TR_METERING_SECTORSIZE;
+                        weight += fabs(next_box->bb_max[1] + next_box->bb_min[1] - current_box->bb_max[1] - current_box->bb_min[1] + 1.0f) / TR_METERING_SECTORSIZE;
+                        if((next_box->id != from->box->id) && Room_IsBoxForPath(current_box, next_box, max_step) &&
+                           (!parents[to->box->id] || (weights[current_box->id] + weight < weights[to->box->id])))
                         {
-                            int32_t weight = fabs(next_box->bb_max[0] + next_box->bb_min[0] - current_box->bb_max[0] - current_box->bb_min[0] + 1.0f) / TR_METERING_SECTORSIZE;
-                            weight += fabs(next_box->bb_max[1] + next_box->bb_min[1] - current_box->bb_max[1] - current_box->bb_min[1] + 1.0f) / TR_METERING_SECTORSIZE;
                             if(!parents[next_box->id])
                             {
                                 next_front[next_front_size++] = next_box;
                                 parents[next_box->id] = current_box;
                                 weights[next_box->id] = weights[current_box->id] + weight;
-                                min_weight = (min_weight < weights[next_box->id]) ? (min_weight) : weights[next_box->id];
                             }
                             else if(weights[next_box->id] > weights[current_box->id] + weight)
                             {
                                 bool not_in_front = true;
                                 parents[next_box->id] = current_box;
                                 weights[next_box->id] = weights[current_box->id] + weight;
-                                min_weight = (min_weight < weights[next_box->id]) ? (min_weight) : weights[next_box->id];
                                 for(size_t j = 0; j < next_front_size; ++j)
                                 {
                                     if(next_front[j]->id == next_box->id)

@@ -207,7 +207,8 @@ void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target)
     {
         const int buf_size = sizeof(room_box_p) * World_GetRoomBoxesCount();
         room_box_p *path = (room_box_p*)Sys_GetTempMem(buf_size);
-        int dist = Room_FindPath(path, World_GetRoomBoxesCount(), ent->current_sector, target, -1);
+        int max_step = (ent->move_type == MOVE_FLY) ? (TR_METERING_STEP) : (16384.0f);
+        int dist = Room_FindPath(path, World_GetRoomBoxesCount(), ent->current_sector, target, max_step);
         const int max_dist = sizeof(ent->character->path) / sizeof(ent->character->path[0]);
         ent->character->path_dist = (dist > max_dist) ? (max_dist) : dist;
         
@@ -229,6 +230,9 @@ void Character_GoToPathTarget(struct entity_s *ent)
         float dir[4];
         ent->character->cmd.rot[0] = 0;
         ent->character->cmd.move[0] = 0;
+        ent->character->cmd.move[1] = 0;
+        ent->character->cmd.move[2] = 0;
+        ent->character->cmd.shift = 0;
         
         if(ent->character->path_target == ent->current_sector)
         {
@@ -266,15 +270,34 @@ void Character_GoToPathTarget(struct entity_s *ent)
         
         float z = dir[0] * ent->transform[4 + 1] - dir[1] * ent->transform[4 + 0];
         ent->character->cmd.rot[0] = 0;
-        if(z > 0.05f)
+        if(z > 0.01f)
         {
             ent->character->cmd.rot[0] = -1;
         }
-        else if(z < -0.05f)
+        else if(z < -0.01f)
         {
             ent->character->cmd.rot[0] = 1;
         }
         
+        if(ent->move_type == MOVE_FLY)
+        {
+            float target_z = ent->character->path_target->floor + 600.0f;
+            room_sector_p next_sector = Sector_GetNextSector(ent->current_sector, ent->transform + 4);
+            target_z = (target_z < next_sector->floor + TR_METERING_STEP) ? (next_sector->floor + TR_METERING_STEP) : target_z;
+            target_z = (target_z > next_sector->ceiling - TR_METERING_STEP) ? (next_sector->ceiling - TR_METERING_STEP) : target_z;
+            if(ent->transform[12 + 2] < target_z - 64.0f)
+            {
+                ent->character->cmd.move[2] = 0x01;
+            }
+            else if(ent->transform[12 + 2] > target_z + 64.0f)
+            {
+                ent->character->cmd.move[2] = -0x01;
+            }
+        }
+        else
+        {
+            ent->character->cmd.shift = (fabs(z) > 0.4f) || (dir[3] < 4096.0f);
+        }
         ent->character->cmd.move[0] = (dir[3] > 32.0f) ? (0x01) : (0x00);
     }
 }

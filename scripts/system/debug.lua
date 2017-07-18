@@ -14,6 +14,10 @@ function goToEntity(id)
     end;
 end
 
+function gtp(id)
+    setCharacterPathTarget(id, player);
+end
+
 function checkDebugKeys()
     if(checkKey(KEY_RETURN, true)) then
         setGame(debug_game, debug_level);

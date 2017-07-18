@@ -296,6 +296,7 @@ void Room_MoveActiveItems(struct room_s *room_to, struct room_s *room_from);
 
 void Room_GenSpritesBuffer(struct room_s *room);
 
+struct room_sector_s *Sector_GetNextSector(struct room_sector_s *rs, float dir[3]);
 struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs);
 struct room_sector_s *Sector_GetPortalSectorTargetReal(struct room_sector_s *rs);
 
@@ -309,7 +310,7 @@ int Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, int ignore_doors);
 int Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, int ignore_doors);
 
 int  Room_IsInBox(room_box_p box, float pos[3]);
-int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from, room_sector_p to, int zone);
+int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from, room_sector_p to, int max_step);
 void Room_GetOverlapCenter(room_box_p b1, room_box_p b2, float pos[3]);
 
 #endif //ROOM_H

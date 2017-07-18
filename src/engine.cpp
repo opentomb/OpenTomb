@@ -653,7 +653,7 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
     Con_UpdateResize();
     Gui_UpdateResize();
 
-    Cam_SetFovAspect(&engine_camera, screen_info.fov, (float)nominalW/(float)nominalH);
+    Cam_SetFovAspect(&engine_camera, screen_info.fov, (float)nominalW / (float)nominalH);
     Cam_RecalcClipPlanes(&engine_camera);
 
     qglViewport(0, 0, pixelsW, pixelsH);
@@ -687,7 +687,7 @@ void Engine_PollSDLEvents()
                        (event.motion.y < ((screen_info.h / 2) - (screen_info.h / 4))) ||
                        (event.motion.y > ((screen_info.h / 2) + (screen_info.h / 4))))
                     {
-                        SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
+                        SDL_WarpMouseInWindow(sdl_window, screen_info.w / 2, screen_info.h / 2);
                     }
                 }
                 mouse_setup = 1;
@@ -1179,7 +1179,7 @@ void ShowDebugInfo()
                     room_sector_p rs = Room_GetSectorRaw(room, ent->transform + 12);
                     if(rs != NULL)
                     {
-                        renderer.debugDrawer->SetColor(0.0, 1.0, 0.0);
+                        renderer.debugDrawer->SetColor(0.0f, 1.0f, 0.0f);
                         renderer.debugDrawer->DrawSectorDebugLines(rs);
                         GLText_OutTextXY(30.0f, y += dy, "room = (id = %d, sx = %d, sy = %d)", room->id, rs->index_x, rs->index_y);
                         GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->room_below) ? (rs->room_below->id) : (-1), (rs->room_above) ? (rs->room_above->id) : (-1));
@@ -1196,7 +1196,7 @@ void ShowDebugInfo()
                                 entity_p trig_obj = World_GetEntityByID(cmd->operands);
                                 if(trig_obj)
                                 {
-                                    renderer.debugDrawer->SetColor(0.0, 0.0, 1.0);
+                                    renderer.debugDrawer->SetColor(0.0f, 0.0f, 1.0f);
                                     renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform);
                                     Trigger_TrigMaskToStr(trig_mask, trig_obj->trigger_layout);
                                     gl_text_line_p text = renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = 0x%X, layout = 0b%s)", trig_obj->id, trig_mask);
@@ -1283,9 +1283,19 @@ void ShowDebugInfo()
                     {
                         entity_p target = (entity_p)last_cont->object;
                         Character_UpdatePath(ent, target->current_sector);
+                        renderer.debugDrawer->SetColor(0.0f, 0.0f, 0.0f);
                         for(int i = 0; i < ent->character->path_dist; ++i)
                         {
                             renderer.debugDrawer->DrawBBox(ent->character->path[i]->bb_min, ent->character->path[i]->bb_max, tr);
+                        }
+                        
+                        GLfloat red[3] = {1.0f, 0.0f, 0.0f};
+                        GLfloat from[3], to[3];
+                        for(int i = 2; i < ent->character->path_dist; ++i)
+                        {
+                            Room_GetOverlapCenter(ent->character->path[i], ent->character->path[i - 1], to);
+                            Room_GetOverlapCenter(ent->character->path[i - 1], ent->character->path[i - 2], from);
+                            renderer.debugDrawer->DrawLine(from, to, red, red);
                         }
                     }
                 }
