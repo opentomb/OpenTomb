@@ -822,6 +822,7 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
     {
         if(from->box->id != to->box->id)
         {
+            float pt_from[3], pt_to[3];
             const int buf_size = sizeof(room_box_p) * max_boxes;
             room_box_p *current_front = (room_box_p*)Sys_GetTempMem(3 * buf_size);
             room_box_p *next_front = current_front + max_boxes;
@@ -840,11 +841,20 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
                 {
                     room_box_p current_box = current_front[i];
                     box_overlap_p ov = current_box->overlaps;
+                    if(parents[current_box->id])
+                    {
+                        Room_GetOverlapCenter(parents[current_box->id], current_box, pt_from);
+                    }
+                    else
+                    {
+                        vec3_copy(pt_from, from->pos);
+                    }
+                    
                     while(ov)
                     {
                         room_box_p next_box = World_GetRoomBoxByID(ov->box);
-                        int32_t weight = fabs(next_box->bb_max[0] + next_box->bb_min[0] - current_box->bb_max[0] - current_box->bb_min[0] + 1.0f) / TR_METERING_SECTORSIZE;
-                        weight += fabs(next_box->bb_max[1] + next_box->bb_min[1] - current_box->bb_max[1] - current_box->bb_min[1] + 1.0f) / TR_METERING_SECTORSIZE;
+                        Room_GetOverlapCenter(current_box, next_box, pt_to);
+                        int32_t weight = (fabs(pt_to[0] - pt_from[0] + 1.0f) + fabs(pt_to[1] - pt_from[1] + 1.0f)) / TR_METERING_SECTORSIZE;
                         if((next_box->id != from->box->id) && Room_IsBoxForPath(current_box, next_box, max_step) &&
                            (!parents[to->box->id] || (weights[current_box->id] + weight < weights[to->box->id])))
                         {
