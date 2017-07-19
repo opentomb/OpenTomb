@@ -234,3 +234,121 @@ tr_mesh_thee_tag_t TR_Level::get_mesh_tree_tag_for_model(tr_moveable_t *model, i
     
     return ret;
 }
+
+void TR_Level::get_anim_frame_data(tr5_vertex_t min_max_pos[3], tr5_vertex_t *rotations, int meshes_count, tr_animation_t *anim, int frame)
+{
+    uint16_t temp1, temp2;
+    uint16_t offset = (game_version < TR_II) ? (0x0A) : (0x09);
+    uint32_t frame_offset = (anim->frame_offset / 2) + (uint32_t)anim->frame_size * frame;
+    float ang;
+    
+    if(frame_offset >= frame_data_size)
+    {
+        min_max_pos[0].x = 0.0f;
+        min_max_pos[0].y = 0.0f;
+        min_max_pos[0].z = 0.0f;
+
+        min_max_pos[1].x = 0.0f;
+        min_max_pos[1].y = 0.0f;
+        min_max_pos[1].z = 0.0f;
+
+        min_max_pos[2].x = 0.0f;
+        min_max_pos[2].y = 0.0f;
+        min_max_pos[2].z = 0.0f;
+        
+        for(int mesh_it = 0; mesh_it < meshes_count; ++mesh_it, ++rotations)
+        {
+            rotations->x = 0.0f;
+            rotations->y = 0.0f;
+            rotations->z = 0.0f;
+        }
+        return;
+    }
+    
+    /*
+     * - first 9 words are bounding box and frame offset coordinates.
+     * - 10's word is a rotations count, must be equal to number of meshes in model.
+     *   BUT! only in TR1. In TR2 - TR5 after first 9 words begins next section.
+     * - in the next follows rotation's data. one word - one rotation, if rotation is one-axis (one angle).
+     *   two words in 3-axis rotations (3 angles). angles are calculated with bit mask.
+     */
+    
+    {
+        uint16_t *frame = frame_data + frame_offset;
+        min_max_pos[0].x = (short int)frame[0];
+        min_max_pos[0].y = (short int)frame[2];
+        min_max_pos[0].z = (short int)frame[4];
+
+        min_max_pos[1].x = (short int)frame[1];
+        min_max_pos[1].y = (short int)frame[3];
+        min_max_pos[1].z = (short int)frame[5];
+
+        min_max_pos[2].x = (short int)frame[6];
+        min_max_pos[2].y = (short int)frame[7];
+        min_max_pos[2].z = (short int)frame[8];
+    }
+    
+    for(int mesh_it = 0; mesh_it < meshes_count; ++mesh_it, ++rotations)
+    {
+        switch(game_version)
+        {
+            case TR_I:
+            case TR_I_UB:
+            case TR_I_DEMO:
+                temp2 = frame_data[frame_offset + offset++];
+                temp1 = frame_data[frame_offset + offset++];
+                rotations->x = (float)((temp1 & 0x3ff0) >> 4);
+                rotations->y = (float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
+                rotations->z = (float)(temp2 & 0x03ff);
+                rotations->x *= 360.0f / 1024.0f;
+                rotations->y *= 360.0f / 1024.0f;
+                rotations->z *= 360.0f / 1024.0f;
+                break;
+
+            default: /* TR_II + */
+                temp1 = frame_data[frame_offset + offset++];
+                if(game_version >= TR_IV)
+                {
+                    ang = (float)(temp1 & 0x0fff);
+                    ang *= 360.0f / 4096.0f;
+                }
+                else
+                {
+                    ang = (float)(temp1 & 0x03ff);
+                    ang *= 360.0f / 1024.0f;
+                }
+
+                switch (temp1 & 0xc000)
+                {
+                    case 0x4000:    // x only
+                        rotations->x = ang;
+                        rotations->y = 0.0f;
+                        rotations->z = 0.0f;
+                        break;
+
+                    case 0x8000:    // y only
+                        rotations->x = 0.0f;
+                        rotations->y = ang;
+                        rotations->z = 0.0f;
+                        break;
+
+                    case 0xc000:    // z only
+                        rotations->x = 0.0f;
+                        rotations->y = 0.0f;
+                        rotations->z = ang;
+                        break;
+
+                    default:        // all three
+                        temp2 = frame_data[frame_offset + offset++];
+                        rotations->x = (float)((temp1 & 0x3ff0) >> 4);
+                        rotations->y = (float)(((temp1 & 0x000f) << 6) | ((temp2 & 0xfc00) >> 10));
+                        rotations->z = (float)(temp2 & 0x03ff);
+                        rotations->x *= 360.0f / 1024.0f;
+                        rotations->y *= 360.0f / 1024.0f;
+                        rotations->z *= 360.0f / 1024.0f;
+                        break;
+                };
+                break;
+        };
+    }
+}

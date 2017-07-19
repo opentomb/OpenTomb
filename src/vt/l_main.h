@@ -545,6 +545,7 @@ class TR_Level
     void read_level(const char *filename, int32_t game_version);
     void read_level(SDL_RWops * const src, int32_t game_version);
     tr_mesh_thee_tag_t get_mesh_tree_tag_for_model(tr_moveable_t *model, int index);
+    void get_anim_frame_data(tr5_vertex_t min_max_pos[3], tr5_vertex_t *rotations, int meshes_count, tr_animation_t *anim, int frame);
     
     protected:
     uint32_t num_textiles;          ///< \brief number of 256x256 textiles.
