@@ -854,7 +854,7 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
                     {
                         room_box_p next_box = World_GetRoomBoxByID(ov->box);
                         Room_GetOverlapCenter(current_box, next_box, pt_to);
-                        int32_t weight = (fabs(pt_to[0] - pt_from[0] + 1.0f) + fabs(pt_to[1] - pt_from[1] + 1.0f)) / TR_METERING_SECTORSIZE;
+                        int32_t weight = (fabs(pt_to[0] - pt_from[0]) + fabs(pt_to[1] - pt_from[1]) + 1.0f) / TR_METERING_SECTORSIZE;
                         if((next_box->id != from->box->id) && Room_IsBoxForPath(current_box, next_box, max_step) &&
                            (!parents[to->box->id] || (weights[current_box->id] + weight < weights[to->box->id])))
                         {

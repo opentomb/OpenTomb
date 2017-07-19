@@ -95,9 +95,8 @@ __inline void TR_color_to_arr(float v[4], tr5_colour_t *tr_c)
  * Functions for getting various parameters from legacy TR structs.
  */
 void     TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, struct bone_frame_s *bone_frame);
-int      TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind);
+int32_t  TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind);
 int      TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind);
-uint32_t TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, class VT_Level *tr);
 void     TR_SkeletalModelInterpolateFrames(skeletal_model_p models);
 
 // Main functions which are used to translate legacy TR floor data
@@ -125,9 +124,9 @@ bool     Res_Sector_IsWall(struct room_sector_s *wall_sector, struct room_sector
 
 uint32_t Res_Sector_BiggestCorner(uint32_t v1, uint32_t v2, uint32_t v3, uint32_t v4)
 {
-    v1 = (v1 > v2)?(v1):(v2);
-    v2 = (v3 > v4)?(v3):(v4);
-    return (v1 > v2)?(v1):(v2);
+    v1 = (v1 > v2) ? (v1) : (v2);
+    v2 = (v3 > v4) ? (v3) : (v4);
+    return (v1 > v2) ? (v1) : (v2);
 }
 
 
@@ -1141,7 +1140,7 @@ void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *
     polygon_p p;
     float n;
     vertex_p vertex;
-    const uint32_t tex_mask = (tr->game_version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
+    const uint32_t tex_mask = (tr->game_version == TR_IV) ? (TR_TEXTURE_INDEX_MASK_TR4) : (TR_TEXTURE_INDEX_MASK);
 
     /* TR WAD FORMAT DOCUMENTATION!
      * tr4_face[3,4]_t:
@@ -1343,7 +1342,7 @@ void TR_GenRoomMesh(struct room_s *room, size_t room_index, struct anim_seq_s *a
     base_mesh_p mesh;
     float n;
     vertex_p vertex;
-    uint32_t tex_mask = (tr->game_version == TR_IV)?(TR_TEXTURE_INDEX_MASK_TR4):(TR_TEXTURE_INDEX_MASK);
+    uint32_t tex_mask = (tr->game_version == TR_IV) ? (TR_TEXTURE_INDEX_MASK_TR4) : (TR_TEXTURE_INDEX_MASK);
 
     tr_room = &tr->rooms[room_index];
 
@@ -1886,7 +1885,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         {
             state_change_p sch_p;
 #if LOG_ANIM_DISPATCHES
-            Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim)?(anim->next_anim->id):(-1), anim->next_frame);
+            Sys_DebugLog(LOG_FILENAME, "ANIM[%d], next_anim = %d, next_frame = %d", i, (anim->next_anim) ? (anim->next_anim->id) : (-1), anim->next_frame);
 #endif
             anim->state_change_count = tr_animation->num_state_changes;
             sch_p = anim->state_change = (state_change_p)malloc(tr_animation->num_state_changes * sizeof(state_change_t));
@@ -1973,101 +1972,39 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, struct bone_fra
 }
 
 
-int TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
+int32_t TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
 {
-    int ret;
-    tr_moveable_t *curr_moveable, *next_moveable;
-
-    curr_moveable = &tr->moveables[moveable_ind];
-
-    if(curr_moveable->animation_index == 0xFFFF)
+    tr_moveable_t *curr_moveable = &tr->moveables[moveable_ind];
+    if(curr_moveable->animation_index != 0xFFFF)
     {
-        return 0;
+        uint32_t next_anim_index = tr->animations_count;
+        for(uint32_t movable_it = moveable_ind + 1; movable_it < tr->moveables_count; ++movable_it)
+        {
+            if(tr->moveables[movable_it].animation_index != 0xFFFF)
+            {
+                next_anim_index = tr->moveables[movable_it].animation_index;
+                break;
+            }
+        }
+        return next_anim_index - curr_moveable->animation_index;
     }
-
-    if(moveable_ind == tr->moveables_count-1)
-    {
-        ret = (int32_t)tr->animations_count - (int32_t)curr_moveable->animation_index;
-        if(ret < 0)
-        {
-            return 1;
-        }
-        else
-        {
-            return ret;
-        }
-    }
-
-    next_moveable = &tr->moveables[moveable_ind+1];
-    if(next_moveable->animation_index == 0xFFFF)
-    {
-        if(moveable_ind + 2 < tr->moveables_count)                              // I hope there is no two neighboard movables with animation_index'es == 0xFFFF
-        {
-            next_moveable = &tr->moveables[moveable_ind + 2];
-        }
-        else
-        {
-            return 1;
-        }
-    }
-
-    ret = (next_moveable->animation_index <= tr->animations_count)?(next_moveable->animation_index):(tr->animations_count);
-    ret -= (int32_t)curr_moveable->animation_index;
-
-    return ret;
+    
+    return 0;
 }
 
 
 int TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
 {
-    tr_animation_t *curr_anim, *next_anim;
-    int ret;
-
-    curr_anim = &tr->animations[animation_ind];
-    if(curr_anim->frame_size <= 0)
+    tr_animation_t *curr_anim = &tr->animations[animation_ind];
+    if(curr_anim->frame_size > 0)
     {
-        return 1;                                                               // impossible!
-    }
-
-    if(animation_ind == tr->animations_count - 1)
-    {
-        ret = 2 * tr->frame_data_size - curr_anim->frame_offset;
-        ret /= curr_anim->frame_size * 2;                                       /// it is fully correct!
-        return ret;
-    }
-
-    next_anim = tr->animations + animation_ind + 1;
-    ret = next_anim->frame_offset - curr_anim->frame_offset;
-    ret /= curr_anim->frame_size * 2;
-
-    return ret;
-}
-
-
-uint32_t TR_GetOriginalAnimationFrameOffset(uint32_t offset, uint32_t anim, class VT_Level *tr)
-{
-    tr_animation_t *tr_animation;
-
-    if(anim >= tr->animations_count)
-    {
-        return -1;
-    }
-
-    tr_animation = &tr->animations[anim];
-    if(anim + 1 == tr->animations_count)
-    {
-        if(offset < tr_animation->frame_offset)
+        uint32_t next_frame_offset = 2 * tr->frame_data_size;
+        if(animation_ind < tr->animations_count - 1)
         {
-            return -2;
+            next_frame_offset = (curr_anim + 1)->frame_offset;
         }
+        return (next_frame_offset - curr_anim->frame_offset) / (curr_anim->frame_size * 2);
     }
-    else
-    {
-        if((offset < tr_animation->frame_offset) && (offset >= (tr_animation+1)->frame_offset))
-        {
-            return -2;
-        }
-    }
-
-    return tr_animation->frame_offset;
+    
+    return 1;
 }
