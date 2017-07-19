@@ -1561,27 +1561,17 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
 
     for(uint16_t k = 0; k < model->mesh_count; k++, tree_tag++)
     {
+        tr_mesh_thee_tag_t mtt = tr->get_mesh_tree_tag_for_model(tr_moveable, k);
         model->collision_map[k] = k;
-        tree_tag->mesh_base = base_mesh_array + (mesh_index[k]);
+        tree_tag->mesh_base = base_mesh_array + mesh_index[k];
         tree_tag->replace_anim = 0x00;
         tree_tag->replace_mesh = 0x00;
         tree_tag->body_part    = 0x00;
-        tree_tag->offset[0] = 0.0;
-        tree_tag->offset[1] = 0.0;
-        tree_tag->offset[2] = 0.0;
         tree_tag->parent = 0;
-        if(k == 0)
-        {
-            tree_tag->flag = 0x02;
-        }
-        else
-        {
-            uint32_t *tr_mesh_tree = tr->mesh_tree_data + tr_moveable->mesh_tree_index + (k-1)*4;
-            tree_tag->flag = (tr_mesh_tree[0] & 0xFF);
-            tree_tag->offset[0] = (float)((int32_t)tr_mesh_tree[1]);
-            tree_tag->offset[1] = (float)((int32_t)tr_mesh_tree[3]);
-            tree_tag->offset[2] =-(float)((int32_t)tr_mesh_tree[2]);
-        }
+        tree_tag->offset[0] = mtt.dx;
+        tree_tag->offset[1] = mtt.dz;
+        tree_tag->offset[2] =-mtt.dy;
+        tree_tag->flag = mtt.flag_data & 0xFF;
     }
 
     SkeletalModel_GenParentsIndexes(model);
@@ -1753,7 +1743,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                     vec3_copy(bone_tag->offset, tree_tag->offset);
                 }
             }
-            else
+            else  ///@TODO: move that PORN to VT loader!
             {
                 uint16_t l = l_start;
                 for(uint16_t k = 0;k < bone_frame->bone_tag_count; k++)
@@ -1934,11 +1924,9 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
 
 void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, struct bone_frame_s *bone_frame)
 {
-    unsigned short int *frame;
-
     if(frame_offset < tr->frame_data_size)
     {
-        frame = tr->frame_data + frame_offset;
+        uint16_t *frame = tr->frame_data + frame_offset;
         bone_frame->bb_min[0] = (short int)frame[0];                            // x_min
         bone_frame->bb_min[1] = (short int)frame[4];                            // y_min
         bone_frame->bb_min[2] =-(short int)frame[3];                            // z_min
@@ -1966,9 +1954,9 @@ void TR_GetBFrameBB_Pos(class VT_Level *tr, size_t frame_offset, struct bone_fra
         bone_frame->pos[2] = 0.0;
     }
 
-    bone_frame->centre[0] = (bone_frame->bb_min[0] + bone_frame->bb_max[0]) / 2.0;
-    bone_frame->centre[1] = (bone_frame->bb_min[1] + bone_frame->bb_max[1]) / 2.0;
-    bone_frame->centre[2] = (bone_frame->bb_min[2] + bone_frame->bb_max[2]) / 2.0;
+    bone_frame->centre[0] = 0.5f * (bone_frame->bb_min[0] + bone_frame->bb_max[0]);
+    bone_frame->centre[1] = 0.5f * (bone_frame->bb_min[1] + bone_frame->bb_max[1]);
+    bone_frame->centre[2] = 0.5f * (bone_frame->bb_min[2] + bone_frame->bb_max[2]);
 }
 
 

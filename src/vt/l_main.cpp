@@ -213,3 +213,24 @@ void TR_Level::read_level(SDL_RWops * const src, int32_t game_version)
             break;
     }
 }
+
+tr_mesh_thee_tag_t TR_Level::get_mesh_tree_tag_for_model(tr_moveable_t *model, int index)
+{
+    tr_mesh_thee_tag_t ret;
+    
+    ret.dx = 0.0f;
+    ret.dy = 0.0f;
+    ret.dz = 0.0f;
+    ret.flag_data = 0x02;
+    
+    if((index > 0) && (index < model->num_meshes))
+    {
+        uint32_t *tr_mesh_tree = mesh_tree_data + model->mesh_tree_index + (index - 1) * 4;
+        ret.flag_data = tr_mesh_tree[0];
+        ret.dx = (float)((int32_t)tr_mesh_tree[1]);
+        ret.dy = (float)((int32_t)tr_mesh_tree[2]);
+        ret.dz = (float)((int32_t)tr_mesh_tree[3]);
+    }
+    
+    return ret;
+}

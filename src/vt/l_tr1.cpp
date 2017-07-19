@@ -664,11 +664,11 @@ void TR_Level::read_tr_level(SDL_RWops * const src, bool demo_or_ub)
     this->mesh_tree_data_size = read_bitu32(src);
     this->mesh_tree_data = (uint32_t*)malloc(this->mesh_tree_data_size * sizeof(uint32_t));
     for (i = 0; i < this->mesh_tree_data_size; i++)
-        this->mesh_tree_data[i] = read_bitu32(src);                     // 4 bytes
+        this->mesh_tree_data[i] = read_bitu32(src);
 
     read_frame_moveable_data(src);
 
-    // try to fix ugly stick
+    // try to fix ugly hack
     for (i = 0; i < this->animations_count; i++)
     {
         uint32_t frame_offset = this->animations[i].frame_offset / 2;

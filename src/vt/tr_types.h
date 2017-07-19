@@ -461,6 +461,19 @@ typedef struct tr_animation_s
     uint16_t anim_command;          // offset into AnimCommand[]
 } tr_animation_t;
 
+/** \brief Mesh Tree.
+  *
+  * Each one contains the flag (0x0001 = POP, 0x0002 = PUSH, 0x0003 = POP + PUSH)
+  * and mesh offset (x, y, z)
+  */
+typedef struct tr_mesh_thee_tag_s
+{               // 16 bytes
+    uint32_t    flag_data;
+    float       dx;
+    float       dy;
+    float       dz;
+} tr_mesh_thee_tag_t;
+
 /** \brief State Change.
   *
   * Each one contains the state to change to and which animation dispatches
