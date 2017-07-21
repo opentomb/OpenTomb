@@ -59,7 +59,7 @@ void TR_Level::read_tr2_box(SDL_RWops * const src, tr_box_t & box)
     box.xmin = 1024 * read_bitu8(src);
     box.xmax = 1024 * read_bitu8(src);
     box.true_floor =-read_bit16(src);
-    box.overlap_index = read_bit16(src);
+    box.overlap_index = read_bitu16(src);
 }
 
 void TR_Level::read_tr2_zone(SDL_RWops * const src, tr2_zone_t & zone)

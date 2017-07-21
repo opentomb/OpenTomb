@@ -272,6 +272,7 @@ typedef struct character_s
     struct rd_setup_s          *ragdoll;
     struct room_box_s          *path[8];
     struct room_sector_s       *path_target;
+    int                         ai_zone;
 
     uint16_t                    bone_head;
     uint16_t                    bone_torso;

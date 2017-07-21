@@ -125,7 +125,7 @@ function midastouch_init(id)    -- Midas gold touch
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityDistance(player, object_id) < 1024.0) then
             local lara_anim, frame, count = getEntityAnim(player, ANIM_TYPE_BASE);
-            local lara_sector = getEntitySectorIndex(player);
+            local lara_sector = getEntitySectorIndex(player);                   -- do not use getEntitySectorIndex: DEPRECATED!
             local hand_sector = getEntitySectorIndex(object_id);
             
             if(entitySSAnimGetEnable(player, ANIM_TYPE_MISK_1)) then
@@ -141,7 +141,7 @@ function midastouch_init(id)    -- Midas gold touch
 
             if((lara_sector == hand_sector) and (getEntityMoveType(player) == MOVE_ON_FLOOR) and (lara_anim ~= 50)) then
                 setCharacterParam(player, PARAM_HEALTH, 0);
-                entitySSAnimEnsureExists(player, ANIM_TYPE_MISK_1, 5);          --ANIM_TYPE_MISK_1 - add const
+                entitySSAnimEnsureExists(player, ANIM_TYPE_MISK_1, 5);
                 setEntityAnim(player, ANIM_TYPE_MISK_1, 1, 0);
                 entitySSAnimSetEnable(player, ANIM_TYPE_MISK_1, 1);
                 entitySSAnimSetEnable(player, ANIM_TYPE_BASE, 0);

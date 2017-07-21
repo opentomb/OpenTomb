@@ -1566,12 +1566,19 @@ void World_GenBoxes(class VT_Level *tr)
         for(uint32_t i = 0; i < global_world.room_boxes_count; i++)
         {
             room_box_p r_box = global_world.room_boxes + i;
+            uint16_t ov_index = 0x7FFF & tr->boxes[i].overlap_index;
             r_box->overlaps = NULL;
-            if((tr->boxes[i].overlap_index >= 0) && (tr->boxes[i].overlap_index < global_world.overlaps_count))
+            if((tr->boxes[i].overlap_index >= 0) && (ov_index < global_world.overlaps_count))
             {
-                r_box->overlaps = global_world.overlaps + tr->boxes[i].overlap_index;
+                r_box->overlaps = global_world.overlaps + ov_index;
+            }
+            else
+            {
+                Con_Printf("box = %d, bad overlap index = %d", i, ov_index);
             }
             r_box->id = i;
+            r_box->is_blockable = (tr->boxes[i].overlap_index & 0x8000) ? (0x01) : (0x00);
+            r_box->is_blocked = 0x00;
             r_box->bb_min[0] = tr->boxes[i].xmin;
             r_box->bb_min[1] =-tr->boxes[i].zmax;
             r_box->bb_min[2] = tr->boxes[i].true_floor;
@@ -2213,6 +2220,7 @@ void World_GenEntities(class VT_Level *tr)
         Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);                      // Set zero animation and zero frame
         Entity_RebuildBV(entity);
         Room_AddObject(entity->self->room, entity->self);
+        entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
         World_AddEntity(entity);
         World_SetEntityModelProperties(entity);
         Physics_GenRigidBody(entity->physics, entity->bf);

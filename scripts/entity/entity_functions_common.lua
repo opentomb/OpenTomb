@@ -12,23 +12,29 @@ function door_init(id)   -- NORMAL doors only!
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, true);
     
+    entity_funcs[id].box = getEntityBoxID(id, 0, -1);
     entity_funcs[id].state_on = 1;
     entity_funcs[id].state_off = 0;
+    setBoxBlocked(entity_funcs[id].box, true);
+
     local object_mask = getEntityMask(id);
     if(object_mask == 0x1F) then
         setEntityAnimStateHeavy(id, ANIM_TYPE_BASE, entity_funcs[id].state_on);
         setEntityTriggerLayout(id, 0x00, 0, 0); -- Reset activation mask and event.
         entity_funcs[id].state_on = 0;
         entity_funcs[id].state_off = 1;
+        setBoxBlocked(entity_funcs[id].box, false);
     end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_on);
+        setBoxBlocked(entity_funcs[object_id].box, entity_funcs[object_id].state_on ~= 1);
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_off);
+        setBoxBlocked(entity_funcs[object_id].box, entity_funcs[object_id].state_on == 1);
         return ENTITY_TRIGGERING_DEACTIVATED;
     end;
     
@@ -36,6 +42,7 @@ function door_init(id)   -- NORMAL doors only!
         if((tick_state == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
             setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_off);
             setEntityEvent(object_id, 0);
+            setBoxBlocked(entity_funcs[object_id].box, entity_funcs[object_id].state_on == 1);
         end;
     end
 end
@@ -45,6 +52,7 @@ function pushdoor_init(id)   -- Pushdoors (TR4)
 
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     setEntityActivity(id, false);
+    entity_funcs[id].box = getEntityBoxID(id, 0, -1);
 
     setEntityActivationDirection(id, 0.0, -1.0, 0.0, 0.70);
     setEntityActivationOffset(id, 0.0, -400.0, 0.0, 128.0);
@@ -61,9 +69,72 @@ function pushdoor_init(id)   -- Pushdoors (TR4)
             -- floor door 317 anim
             -- vertical door 412 anim
             setEntityAnim(activator_id, ANIM_TYPE_BASE, 412, 0);
+            setBoxBlocked(entity_funcs[object_id].box, false);
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
         return ENTITY_TRIGGERING_NOT_READY;
+    end;
+end
+
+
+function WheelKnob_init(id)   -- Bulkdoors (TR2)
+
+    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
+    setEntityActivity(id, false);
+
+    setEntityActivationDirection(id, 0.0, 1.0, 0.0, 0.70);
+    setEntityActivationOffset(id, 0.0, 256.0, 0.0, 128.0);
+
+    entity_funcs[id].activator_id = nil;
+    entity_funcs[id].box = getEntityBoxID(id, 0, -1);
+
+    entity_funcs[id].onSave = function()
+        if(entity_funcs[id].activator_id ~= nil) then
+            local addr = "\nentity_funcs[" .. id .. "].";
+            return addr .. "activator_id = " .. entity_funcs[id].activator_id .. ";";
+        end;
+        return "";
+    end;
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if((object_id == nil) or (activator_id == nil)) then
+            return ENTITY_TRIGGERING_NOT_READY;
+        end;
+
+        local a, f = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if((a == 0) and (f == 0)) then
+            entity_funcs[object_id].activator_id = activator_id;
+            setEntityActivity(object_id, true);
+            entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
+            setEntitySectorStatus(object_id, 1);                                -- it is a switch
+
+            entitySSAnimEnsureExists(activator_id, ANIM_TYPE_MISK_1, 12);
+            setEntityAnim(activator_id, ANIM_TYPE_MISK_1, 2, 0);
+            entitySSAnimSetEnable(activator_id, ANIM_TYPE_MISK_1, 1);
+            entitySSAnimSetEnable(activator_id, ANIM_TYPE_BASE, 0);
+            noEntityMove(activator_id, true);
+            return ENTITY_TRIGGERING_ACTIVATED;
+        end;
+        return ENTITY_TRIGGERING_NOT_READY;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(entitySSAnimGetEnable(entity_funcs[object_id].activator_id, ANIM_TYPE_MISK_1)) then
+            local a, f, c = getEntityAnim(entity_funcs[object_id].activator_id, ANIM_TYPE_MISK_1);
+            if((a == 2) and (f + 1 >= c)) then
+                entitySSAnimSetEnable(entity_funcs[object_id].activator_id, ANIM_TYPE_MISK_1, 0);
+                entitySSAnimSetEnable(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE, 1);
+                noEntityMove(entity_funcs[object_id].activator_id, false);
+                setBoxBlocked(entity_funcs[object_id].box, false);
+            end;
+        end;
+
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if((a == 2) and (f >= c - 1)) then
+            setEntityActivity(object_id, false);
+        end;
     end;
 end
 

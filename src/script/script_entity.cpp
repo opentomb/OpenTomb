@@ -399,6 +399,33 @@ int lua_GetEntitySectorMaterial(lua_State *lua)
 }
 
 
+int lua_GetEntityBoxID(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 3)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->self->room)
+        {
+            float pos[3] = {ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2]};
+            float dx = TR_METERING_SECTORSIZE * lua_tointeger(lua, 2);
+            float dy = TR_METERING_SECTORSIZE * lua_tointeger(lua, 3);
+            pos[0] += dx * ent->transform[0 + 0] + dy * ent->transform[4 + 0];
+            pos[1] += dx * ent->transform[0 + 1] + dy * ent->transform[4 + 1];
+            room_sector_p rs = Room_GetSectorRaw(ent->self->room, pos);
+            rs = Sector_GetPortalSectorTargetRaw(rs);
+            if(rs && rs->box)
+            {
+                lua_pushinteger(lua, rs->box->id);
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+
 int lua_GetEntityActivationOffset(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -2690,6 +2717,7 @@ void Script_LuaRegisterEntityFuncs(lua_State *lua)
     lua_register(lua, "getEntitySectorIndex", lua_GetEntitySectorIndex);
     lua_register(lua, "getEntitySectorFlags", lua_GetEntitySectorFlags);
     lua_register(lua, "getEntitySectorMaterial", lua_GetEntitySectorMaterial);
+    lua_register(lua, "getEntityBoxID", lua_GetEntityBoxID);
 
     lua_register(lua, "setEntityCollision", lua_SetEntityCollision);
     lua_register(lua, "setEntityBoneCollision", lua_SetEntityBoneCollision);

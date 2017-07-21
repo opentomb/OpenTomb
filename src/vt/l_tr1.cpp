@@ -122,7 +122,7 @@ void TR_Level::read_tr_box(SDL_RWops * const src, tr_box_t & box)
     box.xmin = read_bit32(src);
     box.xmax = read_bit32(src);
     box.true_floor =-read_bit16(src);
-    box.overlap_index = read_bit16(src);
+    box.overlap_index = read_bitu16(src);
 }
 
 void TR_Level::read_tr_zone(SDL_RWops * const src, tr2_zone_t & zone)

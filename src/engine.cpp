@@ -1262,6 +1262,7 @@ void ShowDebugInfo()
                 {
                     room_box_p box = ent->current_sector->box;
                     GLText_OutTextXY(30.0f, y += dy, "box = %d, floor = %d", (int)box->id, (int)box->bb_min[2]);
+                    GLText_OutTextXY(30.0f, y += dy, "blockable = %d, blocked = %d", (int)box->is_blockable, (int)box->is_blocked);
                     GLText_OutTextXY(30.0f, y += dy, "fly = %d", (int)box->zone.FlyZone_Normal);
                     GLText_OutTextXY(30.0f, y += dy, "zones = %d, %d, %d, %d", (int)box->zone.GroundZone1_Normal, (int)box->zone.GroundZone2_Normal, (int)box->zone.GroundZone3_Normal, (int)box->zone.GroundZone4_Normal);
                     for(box_overlap_p ov = box->overlaps; ov; ov++)
@@ -1278,21 +1279,24 @@ void ShowDebugInfo()
                     renderer.debugDrawer->DrawBBox(box->bb_min, box->bb_max, tr);
                     if(ent->character && last_cont && (last_cont->object_type == OBJECT_ENTITY))
                     {
-                        entity_p target = (entity_p)last_cont->object;
-                        Character_UpdatePath(ent, target->current_sector);
-                        renderer.debugDrawer->SetColor(0.0f, 0.0f, 0.0f);
-                        for(int i = 0; i < ent->character->path_dist; ++i)
+                        entity_p foe = (entity_p)last_cont->object;
+                        if(foe->character)
                         {
-                            renderer.debugDrawer->DrawBBox(ent->character->path[i]->bb_min, ent->character->path[i]->bb_max, tr);
-                        }
-                        
-                        GLfloat red[3] = {1.0f, 0.0f, 0.0f};
-                        GLfloat from[3], to[3];
-                        for(int i = 2; i < ent->character->path_dist; ++i)
-                        {
-                            Room_GetOverlapCenter(ent->character->path[i], ent->character->path[i - 1], to);
-                            Room_GetOverlapCenter(ent->character->path[i - 1], ent->character->path[i - 2], from);
-                            renderer.debugDrawer->DrawLine(from, to, red, red);
+                            Character_UpdatePath(foe, ent->current_sector);
+                            renderer.debugDrawer->SetColor(0.0f, 0.0f, 0.0f);
+                            for(int i = 0; i < foe->character->path_dist; ++i)
+                            {
+                                renderer.debugDrawer->DrawBBox(foe->character->path[i]->bb_min, foe->character->path[i]->bb_max, tr);
+                            }
+
+                            GLfloat red[3] = {1.0f, 0.0f, 0.0f};
+                            GLfloat from[3], to[3];
+                            for(int i = 2; i < foe->character->path_dist; ++i)
+                            {
+                                Room_GetOverlapCenter(foe->character->path[i], foe->character->path[i - 1], to);
+                                Room_GetOverlapCenter(foe->character->path[i - 1], foe->character->path[i - 2], from);
+                                renderer.debugDrawer->DrawLine(from, to, red, red);
+                            }
                         }
                     }
                 }

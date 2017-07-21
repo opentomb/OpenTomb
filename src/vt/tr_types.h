@@ -523,7 +523,7 @@ typedef struct tr_box_s
     uint32_t xmin;
     uint32_t xmax;
     int16_t true_floor;     // Y value (no scaling)
-    int16_t overlap_index;  // index into Overlaps[]. The high bit is sometimes set; this
+    uint16_t overlap_index; // index into Overlaps[]. The high bit is sometimes set;
     // occurs in front of swinging doors and the like.
 } tr_box_t;
 

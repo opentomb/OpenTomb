@@ -954,6 +954,25 @@ int lua_SetRoomActiveContent(lua_State *lua)
     return 0;
 }
 
+
+int lua_SetBoxBlocked(lua_State *lua)
+{
+    if(lua_gettop(lua) == 2)
+    {
+        room_box_p box = World_GetRoomBoxByID(lua_tointeger(lua, 1));
+        if(box && box->is_blockable)
+        {
+            box->is_blocked = lua_toboolean(lua, 2);
+        }
+    }
+    else
+    {
+        Con_Warning("setBoxBlocked: expecting arguments (box_id, value)");
+    }
+
+    return 0;
+}
+
 /*
  * Generate UV rotate animations
  */
@@ -1110,6 +1129,7 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
     lua_register(lua, "setFlipState", lua_SetFlipState);
     lua_register(lua, "getFlipState", lua_GetFlipState);
     lua_register(lua, "setRoomActiveContent", lua_SetRoomActiveContent);
+    lua_register(lua, "setBoxBlocked", lua_SetBoxBlocked);
 
     lua_register(lua, "createBaseItem", lua_CreateBaseItem);
     lua_register(lua, "deleteBaseItem", lua_DeleteBaseItem);

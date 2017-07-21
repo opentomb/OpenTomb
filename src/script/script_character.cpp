@@ -190,6 +190,29 @@ int lua_SetCharacterTarget(lua_State * lua)
 }
 
 
+int lua_SetCharacterAIParams(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            ent->character->ai_zone = lua_tointeger(lua, 2);
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setCharacterAIParams: expecting arguments (entity_id, zone)");
+    }
+    return 0;
+}
+
+
 int lua_SetCharacterPathTarget(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -709,6 +732,7 @@ void Script_LuaRegisterCharacterFuncs(lua_State *lua)
     lua_register(lua, "setCharacterMoveSizes", lua_SetCharacterMoveSizes);
     lua_register(lua, "setCharacterStateControlFunctions", lua_SetCharacterStateControlFunctions);
     lua_register(lua, "setCharacterKeyAnim", lua_SetCharacterKeyAnim);
+    lua_register(lua, "setCharacterAIParams", lua_SetCharacterAIParams);
     lua_register(lua, "setCharacterTarget", lua_SetCharacterTarget);
     lua_register(lua, "setCharacterPathTarget", lua_SetCharacterPathTarget);
     lua_register(lua, "getCharacterTarget", lua_GetCharacterTarget);

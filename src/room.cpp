@@ -798,11 +798,16 @@ int Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, int ignore_doors)
 
 
 /////////////////////////////////////////
-static bool Room_IsBoxForPath(room_box_p curr_box, room_box_p next_box, int max_step)
+static bool Room_IsBoxForPath(room_box_p curr_box, room_box_p next_box, int max_step, int zone)
 {
-    if(next_box)
+    if(next_box && !next_box->is_blocked)
     {
-        return (fabs(curr_box->bb_min[2] - next_box->bb_min[2]) <= max_step + 1.0f);
+        return (fabs(curr_box->bb_min[2] - next_box->bb_min[2]) < max_step + 1.0f) && 
+               ((next_box->zone.GroundZone1_Normal == zone) || 
+                (next_box->zone.GroundZone2_Normal == zone) || 
+                (next_box->zone.GroundZone3_Normal == zone) ||
+                (next_box->zone.GroundZone4_Normal == zone) ||
+                (next_box->zone.FlyZone_Normal == zone));
     }
     return false;
 }
@@ -815,7 +820,7 @@ int  Room_IsInBox(room_box_p box, float pos[3])
 }
 
 
-int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from, room_sector_p to, int max_step)
+int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from, room_sector_p to, int max_step, int zone)
 {
     int ret = 0;
     if(from->box && to->box)
@@ -855,7 +860,7 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
                         room_box_p next_box = World_GetRoomBoxByID(ov->box);
                         Room_GetOverlapCenter(current_box, next_box, pt_to);
                         int32_t weight = (fabs(pt_to[0] - pt_from[0]) + fabs(pt_to[1] - pt_from[1]) + 1.0f) / TR_METERING_STEP;
-                        if((next_box->id != from->box->id) && Room_IsBoxForPath(current_box, next_box, max_step) &&
+                        if((next_box->id != from->box->id) && Room_IsBoxForPath(current_box, next_box, max_step, zone) &&
                            (!parents[to->box->id] || (weights[current_box->id] + weight < weights[to->box->id])))
                         {
                             if(!parents[next_box->id])

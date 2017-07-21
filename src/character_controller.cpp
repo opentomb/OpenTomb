@@ -22,6 +22,7 @@
 #include "engine_string.h"
 #include "game.h"
 #include "controls.h"
+#include "mesh.h"
 
 void Character_CollisionCallback(struct entity_s *ent, struct collision_node_s *cn);
 
@@ -47,6 +48,7 @@ void Character_Create(struct entity_s *ent)
         ret->path_target = NULL;
         ret->hairs = NULL;
         ret->ragdoll = NULL;
+        ret->ai_zone = 0;
 
         ret->bone_head = 0x00;
         ret->bone_torso = 0x00;
@@ -207,8 +209,8 @@ void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target)
     {
         const int buf_size = sizeof(room_box_p) * World_GetRoomBoxesCount();
         room_box_p *path = (room_box_p*)Sys_GetTempMem(buf_size);
-        int max_step = (ent->move_type == MOVE_FLY) ? (TR_METERING_STEP) : (16384.0f);
-        int dist = Room_FindPath(path, World_GetRoomBoxesCount(), ent->current_sector, target, max_step);
+        int max_step = (ent->move_type == MOVE_FLY) ? (16384.0f) : (TR_METERING_STEP);
+        int dist = Room_FindPath(path, World_GetRoomBoxesCount(), ent->current_sector, target, max_step, ent->character->ai_zone);
         const int max_dist = sizeof(ent->character->path) / sizeof(ent->character->path[0]);
         ent->character->path_dist = (dist > max_dist) ? (max_dist) : dist;
         
@@ -218,6 +220,49 @@ void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target)
         }
         
         Sys_ReturnTempMem(buf_size);
+    }
+}
+
+
+void Character_FixByBox(struct entity_s *ent, struct room_box_s *curr_box, struct room_box_s *next_box)
+{
+    float r = ent->bf->bone_tags->mesh_base->radius;
+    int32_t fix_x = 0;
+    int32_t fix_y = 0;
+    
+    if(ent->transform[12 + 0] + r > curr_box->bb_max[0])
+    {
+        fix_x = curr_box->bb_max[0] - ent->transform[12 + 0] - r;
+    }
+    else if(ent->transform[12 + 0] - r < curr_box->bb_min[0])
+    {
+        fix_x = curr_box->bb_min[0] - ent->transform[12 + 0] + r;
+    }
+    
+    if(ent->transform[12 + 1] + r > curr_box->bb_max[1])
+    {
+        fix_y = curr_box->bb_max[1] - ent->transform[12 + 1] - r;
+    }
+    else if(ent->transform[12 + 1] - r < curr_box->bb_min[1])
+    {
+        fix_y = curr_box->bb_min[1] - ent->transform[12 + 1] + r;
+    }
+    
+    if(fix_x && fix_y)
+    {
+        ent->transform[12 + 0] += fix_x;
+        ent->transform[12 + 1] += fix_y;
+    }
+    else if(!next_box)
+    {
+        if(fix_x && ((ent->transform[12 + 0] + r > next_box->bb_max[0]) || (ent->transform[12 + 0] - r < next_box->bb_min[0])))
+        {
+            ent->transform[12 + 0] += fix_x;
+        }
+        if(fix_y && ((ent->transform[12 + 1] + r > next_box->bb_max[1]) || (ent->transform[12 + 1] - r < next_box->bb_min[1])))
+        {
+            ent->transform[12 + 1] += fix_y;
+        }
     }
 }
 
@@ -239,6 +284,8 @@ void Character_GoToPathTarget(struct entity_s *ent)
             ent->character->path_target = NULL;
             return;
         }
+        
+        Character_FixByBox(ent, ent->character->path[0], (ent->character->path_dist > 1) ? (ent->character->path[1]) : (NULL));
         
         if(ent->current_sector->box->id != ent->character->path[0]->id)
         {
@@ -370,9 +417,6 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
 
     v = ent->bf->bone_tags[0].transform + 12;
     Mat4_vec3_mul_macro(from, ent->transform, v);
-    from[2] += 128.0f;
-    from[0] = ent->transform[12 + 0];
-    from[1] = ent->transform[12 + 1];
     Character_GetHeightInfo(from, hi, ent->character->height);
 }
 
