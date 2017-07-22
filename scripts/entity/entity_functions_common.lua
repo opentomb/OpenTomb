@@ -7,12 +7,25 @@ function save_crystal_init(id)
 end
 
 
+function getDoorBox(id)
+    box, blockable = getEntityBoxID(id, 0, 0);
+    if(blockable ~= true) then
+        box, blockable = getEntityBoxID(id, 0, -1);
+    end;
+
+    if(blockable == true) then
+        return box;
+    else
+        return -1;
+    end;
+end
+
 function door_init(id)   -- NORMAL doors only!
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, true);
     
-    entity_funcs[id].box = getEntityBoxID(id, 0, -1);
+    entity_funcs[id].box = getDoorBox(id);
     entity_funcs[id].state_on = 1;
     entity_funcs[id].state_off = 0;
     setBoxBlocked(entity_funcs[id].box, true);
@@ -52,7 +65,7 @@ function pushdoor_init(id)   -- Pushdoors (TR4)
 
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     setEntityActivity(id, false);
-    entity_funcs[id].box = getEntityBoxID(id, 0, -1);
+    entity_funcs[id].box = getDoorBox(id);
 
     setEntityActivationDirection(id, 0.0, -1.0, 0.0, 0.70);
     setEntityActivationOffset(id, 0.0, -400.0, 0.0, 128.0);
@@ -86,7 +99,7 @@ function WheelKnob_init(id)   -- Bulkdoors (TR2)
     setEntityActivationOffset(id, 0.0, 256.0, 0.0, 128.0);
 
     entity_funcs[id].activator_id = nil;
-    entity_funcs[id].box = getEntityBoxID(id, 0, -1);
+    entity_funcs[id].box = getDoorBox(id);
 
     entity_funcs[id].onSave = function()
         if(entity_funcs[id].activator_id ~= nil) then

@@ -417,7 +417,8 @@ int lua_GetEntityBoxID(lua_State *lua)
             if(rs && rs->box)
             {
                 lua_pushinteger(lua, rs->box->id);
-                return 1;
+                lua_pushboolean(lua, rs->box->is_blockable);
+                return 2;
             }
         }
     }

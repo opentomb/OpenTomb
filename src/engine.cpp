@@ -1280,7 +1280,7 @@ void ShowDebugInfo()
                     if(ent->character && last_cont && (last_cont->object_type == OBJECT_ENTITY))
                     {
                         entity_p foe = (entity_p)last_cont->object;
-                        if(foe->character)
+                        if(foe->character && foe->current_sector)
                         {
                             Character_UpdatePath(foe, ent->current_sector);
                             renderer.debugDrawer->SetColor(0.0f, 0.0f, 0.0f);
@@ -1291,12 +1291,17 @@ void ShowDebugInfo()
 
                             GLfloat red[3] = {1.0f, 0.0f, 0.0f};
                             GLfloat from[3], to[3];
-                            for(int i = 2; i < foe->character->path_dist; ++i)
+                            vec3_copy(from, foe->current_sector->pos);
+                            from[2] = foe->transform[12 + 2] + TR_METERING_STEP;
+                            for(int i = 1; i < foe->character->path_dist; ++i)
                             {
                                 Room_GetOverlapCenter(foe->character->path[i], foe->character->path[i - 1], to);
-                                Room_GetOverlapCenter(foe->character->path[i - 1], foe->character->path[i - 2], from);
                                 renderer.debugDrawer->DrawLine(from, to, red, red);
+                                vec3_copy(from, to);
                             }
+                            vec3_copy(to, ent->current_sector->pos);
+                            to[2] = ent->transform[12 + 2] + TR_METERING_STEP;
+                            renderer.debugDrawer->DrawLine(from, to, red, red);
                         }
                     }
                 }
