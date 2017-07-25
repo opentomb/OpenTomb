@@ -148,6 +148,23 @@ typedef struct room_box_s
 }room_box_t, *room_box_p;
 
 
+#define ZONE_TYPE_ALL       (0)
+#define ZONE_TYPE_1         (1)
+#define ZONE_TYPE_2         (2)
+#define ZONE_TYPE_3         (3)
+#define ZONE_TYPE_4         (4)
+#define ZONE_TYPE_FLY       (5)
+
+typedef struct box_validition_options_s
+{
+    uint16_t                step_up;
+    uint16_t                step_down;
+    uint16_t                zone_type : 15;
+    uint16_t                zone_alt : 1;
+    uint16_t                zone;
+}box_validition_options_t, *box_validition_options_p;
+
+
 typedef struct room_sector_s
 {
     uint32_t                    trig_index; // Trigger function index.
@@ -313,7 +330,7 @@ int Sectors_SimilarFloor(room_sector_p s1, room_sector_p s2, int ignore_doors);
 int Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, int ignore_doors);
 
 int  Room_IsInBox(room_box_p box, float pos[3]);
-int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from, room_sector_p to, int max_step, int zone);
+int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from, room_sector_p to, box_validition_options_p op);
 void Room_GetOverlapCenter(room_box_p b1, room_box_p b2, float pos[3]);
 
 #endif //ROOM_H

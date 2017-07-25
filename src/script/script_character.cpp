@@ -193,12 +193,13 @@ int lua_SetCharacterTarget(lua_State * lua)
 int lua_SetCharacterAIParams(lua_State * lua)
 {
     int top = lua_gettop(lua);
-    if(top >= 2)
+    if(top >= 3)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character)
         {
             ent->character->ai_zone = lua_tointeger(lua, 2);
+            ent->character->ai_zone_type = lua_tointeger(lua, 3);
         }
         else
         {
@@ -207,7 +208,7 @@ int lua_SetCharacterAIParams(lua_State * lua)
     }
     else
     {
-        Con_Warning("setCharacterAIParams: expecting arguments (entity_id, zone)");
+        Con_Warning("setCharacterAIParams: expecting arguments (entity_id, zone, zone_type)");
     }
     return 0;
 }

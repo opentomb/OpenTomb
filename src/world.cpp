@@ -1700,9 +1700,7 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     room->is_swapped = 0;
 
     Mat4_E_macro(room->transform);
-    room->transform[12 + 0] = tr->rooms[room->id].offset.x;                     // x = x;
-    room->transform[12 + 1] =-tr->rooms[room->id].offset.z;                     // y =-z;
-    room->transform[12 + 2] = tr->rooms[room->id].offset.y;                     // z = y;
+    TR_vertex_to_arr(room->transform + 12, &tr->rooms[room->id].offset);
 
     room->self = (engine_container_p)malloc(sizeof(engine_container_t));
     room->self->next = NULL;
@@ -1769,9 +1767,7 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
         r_static->self->collision_mask = COLLISION_MASK_ALL;
         r_static->object_id = tr_room->static_meshes[i].object_id;
         r_static->mesh = global_world.meshes + tr->mesh_indices[tr_static->mesh];
-        r_static->pos[0] = tr_room->static_meshes[i].pos.x;
-        r_static->pos[1] =-tr_room->static_meshes[i].pos.z;
-        r_static->pos[2] = tr_room->static_meshes[i].pos.y;
+        TR_vertex_to_arr(r_static->pos, &tr_room->static_meshes[i].pos);
         r_static->rot[0] = tr_room->static_meshes[i].rotation;
         r_static->rot[1] = 0.0;
         r_static->rot[2] = 0.0;
@@ -2148,9 +2144,7 @@ void World_GenEntities(class VT_Level *tr)
         tr_item = &tr->items[i];
         entity = Entity_Create();
         entity->id = i;
-        entity->transform[12 + 0] = tr_item->pos.x;
-        entity->transform[12 + 1] =-tr_item->pos.z;
-        entity->transform[12 + 2] = tr_item->pos.y;
+        TR_vertex_to_arr(entity->transform + 12, &tr_item->pos);
         entity->angles[0] = tr_item->rotation;
         entity->angles[1] = 0.0f;
         entity->angles[2] = 0.0f;

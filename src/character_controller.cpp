@@ -49,6 +49,7 @@ void Character_Create(struct entity_s *ent)
         ret->hairs = NULL;
         ret->ragdoll = NULL;
         ret->ai_zone = 0;
+        ret->ai_zone_type = ZONE_TYPE_ALL;
 
         ret->bone_head = 0x00;
         ret->bone_torso = 0x00;
@@ -209,16 +210,21 @@ void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target)
     {
         const int buf_size = sizeof(room_box_p) * World_GetRoomBoxesCount();
         room_box_p *path = (room_box_p*)Sys_GetTempMem(buf_size);
-        int max_step = (ent->move_type == MOVE_FLY) ? (16384.0f) : (TR_METERING_STEP);
-        int dist = Room_FindPath(path, World_GetRoomBoxesCount(), ent->current_sector, target, max_step, ent->character->ai_zone);
+        box_validition_options_t op;
+        op.zone = ent->character->ai_zone;
+        op.zone_type = (ent->move_type == MOVE_FLY) ? (ZONE_TYPE_FLY) : (ent->character->ai_zone_type);
+        op.zone_alt = ent->self->room->is_swapped;
+        op.step_up = (ent->character->max_step_up_height > ent->character->max_climb_height) ? (ent->character->max_step_up_height) : (ent->character->max_climb_height);
+        op.step_down = ent->character->fall_down_height;
+        int dist = Room_FindPath(path, World_GetRoomBoxesCount(), ent->current_sector, target, &op);
         const int max_dist = sizeof(ent->character->path) / sizeof(ent->character->path[0]);
         ent->character->path_dist = (dist > max_dist) ? (max_dist) : dist;
-        
+
         for(int i = 0; i < ent->character->path_dist; ++i)
         {
             ent->character->path[i] = path[dist - i - 1];
         }
-        
+
         Sys_ReturnTempMem(buf_size);
     }
 }
@@ -229,7 +235,7 @@ void Character_FixByBox(struct entity_s *ent, struct room_box_s *curr_box, struc
     float r = ent->bf->bone_tags->mesh_base->radius;
     int32_t fix_x = 0;
     int32_t fix_y = 0;
-    
+
     if(ent->transform[12 + 0] + r > curr_box->bb_max[0])
     {
         fix_x = curr_box->bb_max[0] - ent->transform[12 + 0] - r;
@@ -238,7 +244,7 @@ void Character_FixByBox(struct entity_s *ent, struct room_box_s *curr_box, struc
     {
         fix_x = curr_box->bb_min[0] - ent->transform[12 + 0] + r;
     }
-    
+
     if(ent->transform[12 + 1] + r > curr_box->bb_max[1])
     {
         fix_y = curr_box->bb_max[1] - ent->transform[12 + 1] - r;
@@ -247,19 +253,24 @@ void Character_FixByBox(struct entity_s *ent, struct room_box_s *curr_box, struc
     {
         fix_y = curr_box->bb_min[1] - ent->transform[12 + 1] + r;
     }
-    
-    if(fix_x && fix_y)
+
+    if(!next_box)
     {
         ent->transform[12 + 0] += fix_x;
         ent->transform[12 + 1] += fix_y;
     }
-    else if(!next_box)
+    else if(next_box && (fix_x || fix_y))
     {
-        if(fix_x && ((ent->transform[12 + 0] + r > next_box->bb_max[0]) || (ent->transform[12 + 0] - r < next_box->bb_min[0])))
+        float min = (curr_box->bb_min[0] < next_box->bb_min[0]) ? (curr_box->bb_min[0]) : (next_box->bb_min[0]);
+        float max = (curr_box->bb_max[0] > next_box->bb_max[0]) ? (curr_box->bb_max[0]) : (next_box->bb_max[0]);
+        if(fix_x && ((ent->transform[12 + 0] + r > max) || (ent->transform[12 + 0] - r < min)))
         {
             ent->transform[12 + 0] += fix_x;
         }
-        if(fix_y && ((ent->transform[12 + 1] + r > next_box->bb_max[1]) || (ent->transform[12 + 1] - r < next_box->bb_min[1])))
+        
+        min = (curr_box->bb_min[1] < next_box->bb_min[1]) ? (curr_box->bb_min[1]) : (next_box->bb_min[1]);
+        max = (curr_box->bb_max[1] > next_box->bb_max[1]) ? (curr_box->bb_max[1]) : (next_box->bb_max[1]);
+        if(fix_y && ((ent->transform[12 + 1] + r > max) || (ent->transform[12 + 1] - r < min)))
         {
             ent->transform[12 + 1] += fix_y;
         }
@@ -269,7 +280,7 @@ void Character_FixByBox(struct entity_s *ent, struct room_box_s *curr_box, struc
 
 void Character_GoToPathTarget(struct entity_s *ent)
 {
-    if(ent->character && ent->current_sector && ent->current_sector->box && 
+    if(ent->character && ent->current_sector && ent->current_sector->box &&
        ent->character->path_target && (ent->character->path_dist > 0))
     {
         float dir[4];
@@ -278,15 +289,15 @@ void Character_GoToPathTarget(struct entity_s *ent)
         ent->character->cmd.move[1] = 0;
         ent->character->cmd.move[2] = 0;
         ent->character->cmd.shift = 0;
-        
+
         if(ent->character->path_target == ent->current_sector)
         {
             ent->character->path_target = NULL;
             return;
         }
-        
+
         Character_FixByBox(ent, ent->character->path[0], (ent->character->path_dist > 1) ? (ent->character->path[1]) : (NULL));
-        
+
         if(ent->current_sector->box->id != ent->character->path[0]->id)
         {
             Character_UpdatePath(ent, ent->character->path_target);
@@ -295,7 +306,7 @@ void Character_GoToPathTarget(struct entity_s *ent)
                 return;
             }
         }
-        
+
         if(ent->character->path_dist == 1)
         {
             vec3_copy(dir, ent->character->path_target->pos);
@@ -311,10 +322,10 @@ void Character_GoToPathTarget(struct entity_s *ent)
                 Room_GetOverlapCenter(ent->character->path[0], ent->character->path[1], dir);
             }
         }
-        
+
         vec3_sub(dir, dir, ent->transform + 12);
         vec3_norm(dir, dir[3]);
-        
+
         float z = dir[0] * ent->transform[4 + 1] - dir[1] * ent->transform[4 + 0];
         ent->character->cmd.rot[0] = 0;
         if(z > 0.01f)
@@ -325,7 +336,7 @@ void Character_GoToPathTarget(struct entity_s *ent)
         {
             ent->character->cmd.rot[0] = 1;
         }
-        
+
         if(ent->move_type == MOVE_FLY)
         {
             float target_z = ent->character->path_target->floor + 600.0f;

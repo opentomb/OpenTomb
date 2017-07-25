@@ -20,6 +20,7 @@ extern "C" {
 #include "../vt/tr_versions.h"
 #include "../skeletal_model.h"
 #include "../trigger.h"
+#include "../room.h"
 #include "../entity.h"
 #include "../engine.h"
 #include "../controls.h"
@@ -928,6 +929,13 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, ANIM_TYPE_MISK_3);
         LUA_EXPOSE(lua, ANIM_TYPE_MISK_4);
 
+        LUA_EXPOSE(lua, ZONE_TYPE_ALL);
+        LUA_EXPOSE(lua, ZONE_TYPE_1);
+        LUA_EXPOSE(lua, ZONE_TYPE_2);
+        LUA_EXPOSE(lua, ZONE_TYPE_3);
+        LUA_EXPOSE(lua, ZONE_TYPE_4);
+        LUA_EXPOSE(lua, ZONE_TYPE_FLY);
+        
         LUA_EXPOSE(lua, MOVE_STATIC_POS);
         LUA_EXPOSE(lua, MOVE_KINEMATIC);
         LUA_EXPOSE(lua, MOVE_ON_FLOOR);

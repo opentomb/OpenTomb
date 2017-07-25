@@ -798,16 +798,34 @@ int Sectors_SimilarCeiling(room_sector_p s1, room_sector_p s2, int ignore_doors)
 
 
 /////////////////////////////////////////
-static bool Room_IsBoxForPath(room_box_p curr_box, room_box_p next_box, int max_step, int zone)
+static bool Room_IsBoxForPath(room_box_p curr_box, room_box_p next_box, box_validition_options_p op)
 {
     if(next_box && !next_box->is_blocked)
     {
-        return (fabs(curr_box->bb_min[2] - next_box->bb_min[2]) < max_step + 1.0f) && 
-               ((next_box->zone.GroundZone1_Normal == zone) || 
-                (next_box->zone.GroundZone2_Normal == zone) || 
-                (next_box->zone.GroundZone3_Normal == zone) ||
-                (next_box->zone.GroundZone4_Normal == zone) ||
-                (next_box->zone.FlyZone_Normal == zone));
+        int32_t step = next_box->bb_min[2] - curr_box->bb_min[2];
+        if((op->zone_type == ZONE_TYPE_FLY) || ((step >= 0) ? (step - op->step_up <= 0) : (0 <= step + op->step_down)))
+        {
+            switch(op->zone_type)
+            {
+                case ZONE_TYPE_ALL:
+                    return true;
+                    
+                case ZONE_TYPE_FLY:
+                    return (op->zone_alt) ? (op->zone & next_box->zone.FlyZone_Alternate) : (op->zone & next_box->zone.FlyZone_Normal);
+                    
+                case ZONE_TYPE_1:
+                    return (op->zone_alt) ? (op->zone & next_box->zone.GroundZone1_Alternate) : (op->zone & next_box->zone.GroundZone1_Normal);
+                    
+                case ZONE_TYPE_2:
+                    return (op->zone_alt) ? (op->zone & next_box->zone.GroundZone2_Alternate) : (op->zone & next_box->zone.GroundZone2_Normal);
+                    
+                case ZONE_TYPE_3:
+                    return (op->zone_alt) ? (op->zone & next_box->zone.GroundZone3_Alternate) : (op->zone & next_box->zone.GroundZone3_Normal);
+                    
+                case ZONE_TYPE_4:
+                    return (op->zone_alt) ? (op->zone & next_box->zone.GroundZone4_Alternate) : (op->zone & next_box->zone.GroundZone4_Normal);
+            }
+        }
     }
     return false;
 }
@@ -820,7 +838,7 @@ int  Room_IsInBox(room_box_p box, float pos[3])
 }
 
 
-int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from, room_sector_p to, int max_step, int zone)
+int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from, room_sector_p to, box_validition_options_p op)
 {
     int ret = 0;
     if(from->box && to->box)
@@ -860,7 +878,7 @@ int  Room_FindPath(room_box_p *path_buf, uint32_t max_boxes, room_sector_p from,
                         room_box_p next_box = World_GetRoomBoxByID(ov->box);
                         Room_GetOverlapCenter(current_box, next_box, pt_to);
                         int32_t weight = (fabs(pt_to[0] - pt_from[0]) + fabs(pt_to[1] - pt_from[1]) + 1.0f) / TR_METERING_STEP;
-                        if((next_box->id != from->box->id) && Room_IsBoxForPath(current_box, next_box, max_step, zone) &&
+                        if((next_box->id != from->box->id) && Room_IsBoxForPath(current_box, next_box, op) &&
                            (!parents[to->box->id] || (weights[current_box->id] + weight < weights[to->box->id])))
                         {
                             if(!parents[next_box->id])

@@ -574,9 +574,7 @@ void Res_RoomLightCalculate(struct light_s *light, struct tr5_room_light_s *tr_l
             break;
     }
 
-    light->pos[0] = tr_light->pos.x;
-    light->pos[1] =-tr_light->pos.z;
-    light->pos[2] = tr_light->pos.y;
+    TR_vertex_to_arr(light->pos, &tr_light->pos);
     light->pos[3] = 1.0f;
 
     if(light->light_type == LT_SHADOW)
@@ -1158,10 +1156,8 @@ void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *
 
     tr_mesh = &tr->meshes[mesh_index];
     mesh->id = mesh_index;
-    mesh->centre[0] = tr_mesh->centre.x;
-    mesh->centre[1] =-tr_mesh->centre.z;
-    mesh->centre[2] = tr_mesh->centre.y;
     mesh->radius = tr_mesh->collision_size;
+    TR_vertex_to_arr(mesh->centre, &tr_mesh->centre);
 
     mesh->vertex_count = tr_mesh->num_vertices;
     vertex = mesh->vertices = (vertex_p)calloc(mesh->vertex_count, sizeof(vertex_t));
@@ -1625,7 +1621,7 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
     for(uint16_t i = 0; i < model->animation_count; i++, anim++)
     {
         tr_animation_t *tr_animation = &tr->animations[tr_moveable->animation_index + i];
-        
+
         anim->id = i;
         anim->speed_x = tr_animation->speed;
         anim->accel_x = tr_animation->accel;
@@ -1718,11 +1714,11 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
             bone_frame->pos[0] = min_max_pos[2].x;
             bone_frame->pos[1] = min_max_pos[2].z;
             bone_frame->pos[2] =-min_max_pos[2].y;
-            
+
             bone_frame->centre[0] = 0.5f * (bone_frame->bb_min[0] + bone_frame->bb_max[0]);
             bone_frame->centre[1] = 0.5f * (bone_frame->bb_min[1] + bone_frame->bb_max[1]);
             bone_frame->centre[2] = 0.5f * (bone_frame->bb_min[2] + bone_frame->bb_max[2]);
-            
+
             for(uint16_t k = 0; k < bone_frame->bone_tag_count; k++)
             {
                 tree_tag = model->mesh_tree + k;
@@ -1844,7 +1840,7 @@ int32_t TR_GetNumAnimationsForMoveable(class VT_Level *tr, size_t moveable_ind)
         }
         return next_anim_index - curr_moveable->animation_index;
     }
-    
+
     return 0;
 }
 
@@ -1861,6 +1857,6 @@ int TR_GetNumFramesForAnimation(class VT_Level *tr, size_t animation_ind)
         }
         return (next_frame_offset - curr_anim->frame_offset) / (curr_anim->frame_size * 2);
     }
-    
+
     return 1;
 }
