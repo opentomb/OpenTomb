@@ -155,7 +155,7 @@ typedef struct entity_s
     uint32_t                            callback_flags;     // information about scripts callbacks
     uint16_t                            type_flags;
     uint16_t                            state_flags;
-
+    
     float                               linear_speed;
     float                               anim_linear_speed;  // current linear speed from animation info
     float                               speed[3];           // speed of the entity XYZ

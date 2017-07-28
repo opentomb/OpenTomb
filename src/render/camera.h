@@ -47,6 +47,7 @@ typedef struct camera_flags_s
 
 typedef struct camera_state_s
 {
+    float                           pos[3];
     uint32_t                        state;
     uint32_t                        target_id;
     struct flyby_camera_sequence_s *flyby;
@@ -55,7 +56,7 @@ typedef struct camera_state_s
     GLfloat                         shake_value;
     GLfloat                         time;
     int                             move;
-    float                           entity_offset_x; 
+    float                           entity_offset_x;
     float                           entity_offset_z;
     int8_t                          target_dir; //Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
 }camera_state_t, camera_state_p;

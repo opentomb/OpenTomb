@@ -490,6 +490,15 @@ void CRender::DrawListDebugLines()
                 debugDrawer->DrawBBox(rb->bb_min, rb->bb_max, tr);
             }
         }
+
+        if(r_flags & R_DRAW_CAMERAS)
+        {
+            uint32_t id = 0;
+            for(static_camera_sink_p sink = World_GetstaticCameraSink(id); sink; sink = World_GetstaticCameraSink(++id))
+            {
+                this->OutTextXYZ(sink->pos[0], sink->pos[1], sink->pos[2], "S[%d]", id);
+            }
+        }
     }
 
     if(!debugDrawer->IsEmpty() && m_camera)

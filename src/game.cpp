@@ -638,8 +638,29 @@ void Game_Frame(float time)
 
     if(!control_states.noclip && !control_states.free_look)
     {
-        Cam_PlayFlyBy(&engine_camera_state, time);
-        if(player)
+        entity_p target = World_GetEntityByID(engine_camera_state.target_id);
+        if(target && engine_camera_state.sink)
+        {
+            vec3_copy(engine_camera.gl_transform + 12, engine_camera_state.pos)
+            engine_camera.current_room = World_GetRoomByID(engine_camera_state.sink->room_or_strength);
+
+            if(target->character)
+            {
+                ss_bone_tag_p btag = target->bf->bone_tags + target->character->bone_head;
+                float target_pos[3];
+                Mat4_vec3_mul(target_pos, target->transform, btag->full_transform + 12);
+                Cam_LookTo(&engine_camera, target_pos);
+            }
+            else
+            {
+                Cam_LookTo(&engine_camera, target->transform + 12);
+            }
+        }
+        else if(engine_camera_state.state == CAMERA_STATE_FLYBY)
+        {
+            Cam_PlayFlyBy(&engine_camera_state, time);
+        }
+        else if(player)
         {
             if(engine_camera_state.state != CAMERA_STATE_FLYBY)
             {
@@ -659,6 +680,16 @@ void Game_Frame(float time)
             {
                 Character_ClearLookAt(player);
             }
+        }
+
+        engine_camera_state.time -= engine_frame_time;
+        if(engine_camera_state.time <= 0.0f)
+        {
+            engine_camera_state.state = CAMERA_STATE_NORMAL;
+            engine_camera_state.time = 0.0f;
+            engine_camera_state.sink = NULL;
+            engine_camera_state.target_id = (player) ? (player->id) : (-1);
+            Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
         }
     }
 
@@ -740,25 +771,42 @@ void Game_SetCameraTarget(uint32_t entity_id, float timer)
 {
     entity_p ent = World_GetEntityByID(entity_id);
     engine_camera_state.target_id = entity_id;
-    if(ent && (!ent->character || (ent->character->parameters.param[PARAM_HEALTH] > 0.0f)) && (engine_camera_state.state == CAMERA_STATE_NORMAL))
+    if(ent && !engine_camera_state.sink)
     {
         engine_camera_state.state = CAMERA_STATE_LOOK_AT;
         engine_camera_state.time = timer;
     }
 }
 
-// if timer == 0 then camera set is permanent
+
 void Game_SetCamera(uint32_t camera_id, int once, int move, float timer)
 {
     static_camera_sink_p sink = World_GetstaticCameraSink(camera_id);
     if(sink && !sink->locked)
     {
-        if(engine_camera_state.state != CAMERA_STATE_FLYBY)
+        engine_camera_state.time = (timer > 0) ? (timer) : (1.0f);
+        if(move)
+        {
+            float dir[4];
+            vec3_sub(dir, sink->pos, engine_camera_state.pos);
+            engine_camera_state.state = CAMERA_STATE_FIXED;
+            dir[3] = vec3_abs(dir);
+            if(dir[3] > 0.001f)
+            {
+                float t = engine_frame_time * TR_METERING_SECTORSIZE;
+                t = (t < dir[3]) ? (t) : (dir[3]);
+                t /= dir[3];
+                engine_camera_state.pos[0] += dir[0] * t;
+                engine_camera_state.pos[1] += dir[1] * t;
+                engine_camera_state.pos[2] += dir[2] * t;
+            }
+        }
+        else if(engine_camera_state.state != CAMERA_STATE_FLYBY)
         {
             sink->locked |= 0x01 & once;
+            vec3_copy(engine_camera_state.pos, sink->pos);
             engine_camera_state.state = CAMERA_STATE_FIXED;
             engine_camera_state.sink = sink;
-            engine_camera_state.time = timer;
             engine_camera_state.move = move;
         }
     }

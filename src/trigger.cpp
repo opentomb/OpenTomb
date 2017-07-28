@@ -74,32 +74,7 @@ inline void Entity_SetLayoutEvent(entity_p ent, uint16_t status)
     }
 }
 
-/*
--- Does specified flipeffect.
 
-function doEffect(effect_index, extra_parameter) -- extra parameter is usually the timer field
-    if(flipeffects[effect_index] ~= nil) then
-        return flipeffects[effect_index](parameter);
-    else
-        return nil; -- Add hardcoded flipeffect routine here
-    end;
-end
-
-
--- Clear dead enemies, if they have CLEAR BODY flag specified.
-function clearBodies()
-    print("CLEAR BODIES");
-end
-
-
--- Plays specified cutscene. Only valid in retail TR4-5.
-function playCutscene(cutscene_index)
-    if(getLevelVersion() < TR_IV) then return 0 end;
-    print("CUTSCENE: index = " .. cutscene_index);
-end
- */
-
-///@TODO: move here TickEntity with Inversing entity state... see carefully heavy irregular cases
 void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activator)
 {
     if(entity_activator && entity_activator->character)

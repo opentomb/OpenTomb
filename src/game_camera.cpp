@@ -18,22 +18,19 @@
 
 void Cam_PlayFlyBy(struct camera_state_s *cam_state, float time)
 {
-    if(cam_state->state == CAMERA_STATE_FLYBY)
+    const float max_time = cam_state->flyby->pos_x->base_points_count - 1;
+    float speed = Spline_Get(cam_state->flyby->speed, cam_state->time);
+    cam_state->time += time * speed / (1024.0f + 512.0f);
+    if(cam_state->time <= max_time)
     {
-        const float max_time = cam_state->flyby->pos_x->base_points_count - 1;
-        float speed = Spline_Get(cam_state->flyby->speed, cam_state->time);
-        cam_state->time += time * speed / (1024.0f + 512.0f);
-        if(cam_state->time <= max_time)
-        {
-            FlyBySequence_SetCamera(cam_state->flyby, &engine_camera, cam_state->time);
-        }
-        else
-        {
-            cam_state->state = CAMERA_STATE_NORMAL;
-            cam_state->flyby = NULL;
-            cam_state->time = 0.0f;
-            Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
-        }
+        FlyBySequence_SetCamera(cam_state->flyby, &engine_camera, cam_state->time);
+    }
+    else
+    {
+        cam_state->state = CAMERA_STATE_NORMAL;
+        cam_state->flyby = NULL;
+        cam_state->time = 0.0f;
+        Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
     }
 }
 
@@ -42,47 +39,8 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
 {
     float cam_pos[3], cameraFrom[3], cameraTo[3];
     collision_result_t cb;
-    entity_p target = World_GetEntityByID(cam_state->target_id);
     const int16_t filter = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC;
     const float test_r = 16.0f;
-
-    if(target && (cam_state->state == CAMERA_STATE_FIXED))
-    {
-        vec3_copy(cam->gl_transform + 12, cam_state->sink->pos)
-        cam->current_room = World_GetRoomByID(cam_state->sink->room_or_strength);
-
-        if(target->character)
-        {
-            ss_bone_tag_p btag = target->bf->bone_tags;
-            float target_pos[3];
-            for(uint16_t i = 0; i < target->bf->bone_tag_count; i++)
-            {
-                if(target->bf->bone_tags[i].body_part & BODY_PART_HEAD)
-                {
-                    btag = target->bf->bone_tags + i;
-                    break;
-                }
-            }
-            Mat4_vec3_mul(target_pos, target->transform, btag->full_transform + 12);
-            Cam_LookTo(cam, target_pos);
-        }
-        else
-        {
-            Cam_LookTo(cam, target->transform + 12);
-        }
-
-        cam_state->time -= engine_frame_time;
-        if(cam_state->time <= 0.0f)
-        {
-            entity_p player = World_GetPlayer();
-            cam_state->state = CAMERA_STATE_NORMAL;
-            cam_state->time = 0.0f;
-            cam_state->sink = NULL;
-            cam_state->target_id = (player) ? (player->id) : (-1);
-            Cam_SetFovAspect(cam, screen_info.fov, cam->aspect);
-        }
-        return;
-    }
 
     vec3_copy(cam_pos, cam->gl_transform + 12);
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created

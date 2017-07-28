@@ -24,9 +24,10 @@
 #define R_DRAW_SKYBOX           0x00002000      // Draw skybox
 #define R_DRAW_POINTS           0x00004000      // Points rendering
 #define R_DRAW_FLYBY            0x00008000      // FlyBy cameras spline rendering
-#define R_DRAW_TRIGGERS         0x00010000      // Trigger sectors drawing
-#define R_DRAW_AI_BOXES         0x00020000      // AI boxes drawing
-#define R_DRAW_AI_OBJECTS       0x00040000      // AI objects drawing
+#define R_DRAW_CAMERAS          0x00010000      // AI objects drawing
+#define R_DRAW_TRIGGERS         0x00020000      // Trigger sectors drawing
+#define R_DRAW_AI_BOXES         0x00040000      // AI boxes drawing
+#define R_DRAW_AI_OBJECTS       0x00080000      // AI objects drawing
 
 #define STENCIL_FRUSTUM 1
 
@@ -111,13 +112,13 @@ class CRenderDebugDrawer
         void DrawEntityDebugLines(struct entity_s *entity);
         void DrawSectorDebugLines(struct room_sector_s *rs);
         void DrawRoomDebugLines(struct room_s *room, struct camera_s *cam);
-        
+
         // physics debug interface
         void   DrawLine(const float from[3], const float to[3], const float color_from[3], const float color_to[3]);
         void   DrawContactPoint(const float pointOnB[3], const float normalOnB[3], float distance, int lifeTime, const float color[3]);
         void     SetDrawFlags(uint32_t flags) {m_drawFlags = flags;};
         uint32_t GetDrawFlags() const {return m_drawFlags;}
-        
+
     private:
         uint32_t m_drawFlags;
         uint32_t m_max_lines;
@@ -161,7 +162,7 @@ class CRender
         void DrawRoomSprites(struct room_s *room);
 
         struct gl_text_line_s *OutTextXYZ(GLfloat x, GLfloat y, GLfloat z, const char *fmt, ...);
-        
+
     private:
         struct render_list_s
         {
@@ -174,9 +175,9 @@ class CRender
         int  AddRoom(struct room_s *room);
         int  ProcessRoom(struct portal_s *portal, struct frustum_s *frus);
         const lit_shader_description *SetupEntityLight(struct entity_s *entity, const float modelViewMatrix[16]);
-        
+
         struct camera_s            *m_camera;
-        
+
         struct room_s              *m_rooms;
         uint32_t                    m_rooms_count;
         struct anim_seq_s          *m_anim_sequences;
@@ -184,12 +185,12 @@ class CRender
 
         uint16_t                    m_active_transparency;
         GLuint                      m_active_texture;
-        
+
         uint32_t                    r_list_size;
         uint32_t                    r_list_active_count;
         struct render_list_s       *r_list;
         class CFrustumManager      *frustumManager;
-        
+
     public:
         struct render_settings_s    settings;
         class shader_manager       *shaderManager;
