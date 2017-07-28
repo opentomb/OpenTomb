@@ -639,57 +639,53 @@ void Game_Frame(float time)
     if(!control_states.noclip && !control_states.free_look)
     {
         entity_p target = World_GetEntityByID(engine_camera_state.target_id);
-        if(target && engine_camera_state.sink)
-        {
-            vec3_copy(engine_camera.gl_transform + 12, engine_camera_state.pos)
-            engine_camera.current_room = World_GetRoomByID(engine_camera_state.sink->room_or_strength);
-
-            if(target->character)
-            {
-                ss_bone_tag_p btag = target->bf->bone_tags + target->character->bone_head;
-                float target_pos[3];
-                Mat4_vec3_mul(target_pos, target->transform, btag->full_transform + 12);
-                Cam_LookTo(&engine_camera, target_pos);
-            }
-            else
-            {
-                Cam_LookTo(&engine_camera, target->transform + 12);
-            }
-        }
-        else if(engine_camera_state.state == CAMERA_STATE_FLYBY)
+        if(engine_camera_state.state == CAMERA_STATE_FLYBY)
         {
             Cam_PlayFlyBy(&engine_camera_state, time);
         }
-        else if(player)
+        else 
         {
-            if(engine_camera_state.state != CAMERA_STATE_FLYBY)
+            if(target && engine_camera_state.sink)
+            {
+                vec3_copy(engine_camera.gl_transform + 12, engine_camera_state.pos)
+                engine_camera.current_room = World_GetRoomByID(engine_camera_state.sink->room_or_strength);
+
+                if(target->character)
+                {
+                    ss_bone_tag_p btag = target->bf->bone_tags + target->character->bone_head;
+                    float target_pos[3];
+                    Mat4_vec3_mul(target_pos, target->transform, btag->full_transform + 12);
+                    Cam_LookTo(&engine_camera, target_pos);
+                }
+                else
+                {
+                    Cam_LookTo(&engine_camera, target->transform + 12);
+                }
+            }
+            else if(player)
             {
                 engine_camera_state.entity_offset_x = 16.0f;
                 engine_camera_state.entity_offset_z = 128.0f;
                 Cam_FollowEntity(&engine_camera, &engine_camera_state, player);
-            }
-            if(engine_camera_state.state == CAMERA_STATE_LOOK_AT)
-            {
-                entity_p target = World_GetEntityByID(engine_camera_state.target_id);
-                if(target)
+                if(target && (engine_camera_state.state == CAMERA_STATE_LOOK_AT))
                 {
                     Character_LookAt(player, target->obb->centre);
                 }
+                else
+                {
+                    Character_ClearLookAt(player);
+                }
             }
-            else
+            
+            engine_camera_state.time -= engine_frame_time;
+            if(engine_camera_state.time <= 0.0f)
             {
-                Character_ClearLookAt(player);
+                engine_camera_state.state = CAMERA_STATE_NORMAL;
+                engine_camera_state.time = 0.0f;
+                engine_camera_state.sink = NULL;
+                engine_camera_state.target_id = (player) ? (player->id) : (-1);
+                Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
             }
-        }
-
-        engine_camera_state.time -= engine_frame_time;
-        if(engine_camera_state.time <= 0.0f)
-        {
-            engine_camera_state.state = CAMERA_STATE_NORMAL;
-            engine_camera_state.time = 0.0f;
-            engine_camera_state.sink = NULL;
-            engine_camera_state.target_id = (player) ? (player->id) : (-1);
-            Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
         }
     }
 
