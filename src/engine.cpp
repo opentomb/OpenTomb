@@ -1467,6 +1467,10 @@ int Engine_LoadMap(const char *name)
 
     Game_StopFlyBy();
     engine_camera.current_room = NULL;
+    engine_camera_state.state = CAMERA_STATE_NORMAL;
+    engine_camera_state.time = 0.0f;
+    engine_camera_state.sink = NULL;
+    engine_camera_state.target_id = ENTITY_ID_NONE;
     renderer.ResetWorld(NULL, 0, NULL, 0);
     Gui_DrawLoadScreen(0);
 

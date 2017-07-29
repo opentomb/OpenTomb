@@ -19,6 +19,7 @@ struct inventory_node_s;
 #define ENTITY_STATE_ACTIVE                         (0x0002)    // Entity is animated.
 #define ENTITY_STATE_VISIBLE                        (0x0004)    // Entity is visible.
 #define ENTITY_STATE_COLLIDABLE                     (0x0008)    // Collisions enabled.
+#define ENTITY_STATE_NO_CAM_TARGETABLE              (0x0010)    // Disallow targeting by the camera.
 #define ENTITY_STATE_DELETED                        (0x1000)    // Will be deleted on update.
 
 #define ENTITY_TYPE_GENERIC                         (0x0000)    // Just an animating.

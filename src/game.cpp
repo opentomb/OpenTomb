@@ -607,9 +607,17 @@ void Game_Frame(float time)
 
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
-    if(player && player->character && (engine_camera_state.state != CAMERA_STATE_FLYBY))
+    if(player && player->character)
     {
-        Game_ApplyControls(player);
+        if(engine_camera_state.state != CAMERA_STATE_FLYBY)
+        {
+            Game_ApplyControls(player);
+        }
+        else
+        {
+            memset(&player->character->cmd, 0x00, sizeof(player->character->cmd));
+        }
+        
         if(!control_states.noclip)
         {
             Character_Update(player);
@@ -685,6 +693,10 @@ void Game_Frame(float time)
                 engine_camera_state.sink = NULL;
                 engine_camera_state.target_id = (player) ? (player->id) : (-1);
                 Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
+                if(target)
+                {
+                    target->state_flags |= ENTITY_STATE_NO_CAM_TARGETABLE;
+                }
             }
         }
     }
@@ -766,11 +778,19 @@ void Game_PlayFlyBy(uint32_t sequence_id, int once)
 void Game_SetCameraTarget(uint32_t entity_id, float timer)
 {
     entity_p ent = World_GetEntityByID(entity_id);
-    engine_camera_state.target_id = entity_id;
-    if(ent && !engine_camera_state.sink)
+    if(ent && (ent->state_flags & ENTITY_STATE_NO_CAM_TARGETABLE))
     {
-        engine_camera_state.state = CAMERA_STATE_LOOK_AT;
-        engine_camera_state.time = timer;
+        engine_camera_state.target_id = ENTITY_ID_NONE;
+        engine_camera_state.sink = NULL;
+    }
+    else
+    {
+        engine_camera_state.target_id = entity_id;
+        if(ent && !engine_camera_state.sink)
+        {
+            engine_camera_state.state = CAMERA_STATE_LOOK_AT;
+            engine_camera_state.time = timer;
+        }
     }
 }
 
