@@ -47,7 +47,6 @@ typedef struct camera_flags_s
 
 typedef struct camera_state_s
 {
-    float                           pos[3];
     uint32_t                        state;
     uint32_t                        target_id;
     struct flyby_camera_sequence_s *flyby;

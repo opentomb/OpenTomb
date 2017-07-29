@@ -647,6 +647,7 @@ void Game_Frame(float time)
     if(!control_states.noclip && !control_states.free_look)
     {
         entity_p target = World_GetEntityByID(engine_camera_state.target_id);
+        target = (target) ? (target) : player;
         if(engine_camera_state.state == CAMERA_STATE_FLYBY)
         {
             Cam_PlayFlyBy(&engine_camera_state, time);
@@ -655,29 +656,27 @@ void Game_Frame(float time)
         {
             if(engine_camera_state.sink)
             {
-                if(target)
+                if(engine_camera_state.move)
                 {
-                    vec3_copy(engine_camera.gl_transform + 12, engine_camera_state.pos)
-                    engine_camera.current_room = World_GetRoomByID(engine_camera_state.sink->room_or_strength);
-                    if(target->character)
-                    {
-                        ss_bone_tag_p btag = target->bf->bone_tags + target->character->bone_head;
-                        float target_pos[3];
-                        Mat4_vec3_mul(target_pos, target->transform, btag->full_transform + 12);
-                        Cam_LookTo(&engine_camera, target_pos);
-                    }
-                    else
-                    {
-                        Cam_LookTo(&engine_camera, target->transform + 12);
-                    }
+                    Cam_MoveTo(&engine_camera, engine_camera_state.sink->pos, engine_frame_time * TR_METERING_SECTORSIZE * (float)engine_camera_state.move);
                 }
                 else
                 {
-                    Cam_MoveTo(&engine_camera, engine_camera_state.pos, engine_frame_time * 4096.0f);
-                    if(player)
+                    vec3_copy(engine_camera.gl_transform + 12, engine_camera_state.sink->pos);
+                }
+                
+                if(target)
+                {
+                    float pos[3];
+                    if(target->character)
                     {
-                        Cam_LookTo(&engine_camera, player->obb->centre);
+                        Mat4_vec3_mul(pos, target->transform, target->bf->bone_tags[target->character->bone_head].full_transform + 12);
                     }
+                    else
+                    {
+                        vec3_copy(pos, target->obb->centre);
+                    }
+                    Cam_LookTo(&engine_camera, pos);
                 }
             }
             else if(player)
@@ -700,6 +699,7 @@ void Game_Frame(float time)
             {
                 engine_camera_state.state = CAMERA_STATE_NORMAL;
                 engine_camera_state.time = 0.0f;
+                engine_camera_state.move = 0;
                 engine_camera_state.sink = NULL;
                 engine_camera_state.target_id = ENTITY_ID_NONE;
                 Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
@@ -810,30 +810,14 @@ void Game_SetCamera(uint32_t camera_id, int once, int move, float timer)
     static_camera_sink_p sink = World_GetstaticCameraSink(camera_id);
     if(sink && !sink->locked)
     {
+        engine_camera_state.move = move;
         engine_camera_state.time = (timer > 0) ? (timer) : (1.0f);
-        if(move)
+        engine_camera_state.sink = sink;
+        sink->locked |= 0x01 & once;
+        engine_camera_state.state = CAMERA_STATE_FIXED;
+        if(engine_camera_state.target_id == ENTITY_ID_NONE)
         {
-            float dir[4];
-            vec3_sub(dir, sink->pos, engine_camera_state.pos);
-            engine_camera_state.state = CAMERA_STATE_FIXED;
-            dir[3] = vec3_abs(dir);
-            if(dir[3] > 0.001f)
-            {
-                float t = engine_frame_time * TR_METERING_SECTORSIZE;
-                t = (t < dir[3]) ? (t) : (dir[3]);
-                t /= dir[3];
-                engine_camera_state.pos[0] += dir[0] * t;
-                engine_camera_state.pos[1] += dir[1] * t;
-                engine_camera_state.pos[2] += dir[2] * t;
-            }
-        }
-        else if(engine_camera_state.state != CAMERA_STATE_FLYBY)
-        {
-            sink->locked |= 0x01 & once;
-            vec3_copy(engine_camera_state.pos, sink->pos);
-            engine_camera_state.state = CAMERA_STATE_FIXED;
-            engine_camera_state.sink = sink;
-            engine_camera_state.move = move;
+            engine_camera_state.move = 4;
         }
     }
 }
