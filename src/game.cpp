@@ -653,21 +653,31 @@ void Game_Frame(float time)
         }
         else 
         {
-            if(target && engine_camera_state.sink)
+            if(engine_camera_state.sink)
             {
-                vec3_copy(engine_camera.gl_transform + 12, engine_camera_state.pos)
-                engine_camera.current_room = World_GetRoomByID(engine_camera_state.sink->room_or_strength);
-
-                if(target->character)
+                if(target)
                 {
-                    ss_bone_tag_p btag = target->bf->bone_tags + target->character->bone_head;
-                    float target_pos[3];
-                    Mat4_vec3_mul(target_pos, target->transform, btag->full_transform + 12);
-                    Cam_LookTo(&engine_camera, target_pos);
+                    vec3_copy(engine_camera.gl_transform + 12, engine_camera_state.pos)
+                    engine_camera.current_room = World_GetRoomByID(engine_camera_state.sink->room_or_strength);
+                    if(target->character)
+                    {
+                        ss_bone_tag_p btag = target->bf->bone_tags + target->character->bone_head;
+                        float target_pos[3];
+                        Mat4_vec3_mul(target_pos, target->transform, btag->full_transform + 12);
+                        Cam_LookTo(&engine_camera, target_pos);
+                    }
+                    else
+                    {
+                        Cam_LookTo(&engine_camera, target->transform + 12);
+                    }
                 }
                 else
                 {
-                    Cam_LookTo(&engine_camera, target->transform + 12);
+                    Cam_MoveTo(&engine_camera, engine_camera_state.pos, engine_frame_time * 4096.0f);
+                    if(player)
+                    {
+                        Cam_LookTo(&engine_camera, player->obb->centre);
+                    }
                 }
             }
             else if(player)
@@ -691,7 +701,7 @@ void Game_Frame(float time)
                 engine_camera_state.state = CAMERA_STATE_NORMAL;
                 engine_camera_state.time = 0.0f;
                 engine_camera_state.sink = NULL;
-                engine_camera_state.target_id = (player) ? (player->id) : (-1);
+                engine_camera_state.target_id = ENTITY_ID_NONE;
                 Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
                 if(target)
                 {

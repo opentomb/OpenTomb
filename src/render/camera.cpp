@@ -263,6 +263,22 @@ void Cam_SetRotation(camera_p cam, GLfloat angles[3])
 }
 
 
+void Cam_MoveTo(camera_p cam, GLfloat to[3], GLfloat max_dist)
+{
+    float dir[4];
+    vec3_sub(dir, to, cam->gl_transform + 12);
+    dir[3] = vec3_abs(dir);
+    if(dir[3] > 0.001f)
+    {
+        max_dist = (max_dist < dir[3]) ? (max_dist) : (dir[3]);
+        max_dist /= dir[3];
+        cam->gl_transform[12 + 0] += dir[0] * max_dist;
+        cam->gl_transform[12 + 1] += dir[1] * max_dist;
+        cam->gl_transform[12 + 2] += dir[2] * max_dist;
+    }
+}
+
+
 void Cam_LookTo(camera_p cam, GLfloat to[3])
 {
     float d;
