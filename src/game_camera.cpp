@@ -215,25 +215,5 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
         }
     }
 
-    if(cam_state->state == CAMERA_STATE_LOOK_AT)
-    {
-        entity_p target = World_GetEntityByID(cam_state->target_id);
-        if(target)
-        {
-            Cam_LookTo(cam, target->transform + 12);
-            cam_state->time -= engine_frame_time;
-            if(cam_state->time <= 0.0f)
-            {
-                cam_state->target_id = (World_GetPlayer()) ? (World_GetPlayer()->id) : (-1);
-                cam_state->state = CAMERA_STATE_NORMAL;
-                cam_state->time = 0.0f;
-                cam_state->sink = NULL;
-            }
-        }
-    }
-    else
-    {
-        Cam_SetRotation(cam, control_states.cam_angles);
-    }
-    //cam->current_room = World_FindRoomByPosCogerrence(cam->gl_transform + 12, cam->current_room);
+    Cam_SetRotation(cam, control_states.cam_angles);
 }

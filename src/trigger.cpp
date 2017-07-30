@@ -385,7 +385,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     case TR_FD_TRIGFUNC_SET_TARGET:
                         if(!is_heavy || (activator_sector_status == 0))
                         {
-                            Game_SetCameraTarget(command->operands, trigger->timer);
+                            Game_SetCameraTarget(command->operands);
                         }
                         break;
 

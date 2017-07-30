@@ -687,29 +687,27 @@ void Game_Frame(float time)
                 if(target && (engine_camera_state.state == CAMERA_STATE_LOOK_AT))
                 {
                     Character_LookAt(player, target->obb->centre);
+                    Cam_LookTo(&engine_camera, target->obb->centre);
                 }
                 else
                 {
                     Character_ClearLookAt(player);
                 }
             }
-            
-            if(engine_camera_state.time > 0.0f)
+
+            engine_camera_state.time -= engine_frame_time;
+            if(engine_camera_state.time < 0.0f)
             {
-                engine_camera_state.time -= engine_frame_time;
-                if(engine_camera_state.time < 0.0f)
+                if(target && (engine_camera_state.state == CAMERA_STATE_LOOK_AT))
                 {
-                    if(target && (engine_camera_state.state == CAMERA_STATE_LOOK_AT))
-                    {
-                        target->state_flags |= ENTITY_STATE_NO_CAM_TARGETABLE;
-                    }
-                    engine_camera_state.state = CAMERA_STATE_NORMAL;
-                    engine_camera_state.time = 0.0f;
-                    engine_camera_state.move = 0;
-                    engine_camera_state.sink = NULL;
-                    engine_camera_state.target_id = ENTITY_ID_NONE;
-                    Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
+                    target->state_flags |= ENTITY_STATE_NO_CAM_TARGETABLE;
                 }
+                engine_camera_state.state = CAMERA_STATE_NORMAL;
+                engine_camera_state.time = 0.0f;
+                engine_camera_state.move = 0;
+                engine_camera_state.sink = NULL;
+                engine_camera_state.target_id = ENTITY_ID_NONE;
+                Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
             }
         }
     }
@@ -788,7 +786,7 @@ void Game_PlayFlyBy(uint32_t sequence_id, int once)
 }
 
 
-void Game_SetCameraTarget(uint32_t entity_id, float timer)
+void Game_SetCameraTarget(uint32_t entity_id)
 {
     entity_p ent = World_GetEntityByID(entity_id);
     engine_camera_state.move = 0;
@@ -796,7 +794,7 @@ void Game_SetCameraTarget(uint32_t entity_id, float timer)
     if(ent && !engine_camera_state.sink && !(ent->state_flags & ENTITY_STATE_NO_CAM_TARGETABLE))
     {
         engine_camera_state.state = CAMERA_STATE_LOOK_AT;
-        engine_camera_state.time = (engine_camera_state.time == 0.0f) ? (timer) : (engine_camera_state.time);
+        engine_camera_state.time = 1.0f;
     }
 }
 
