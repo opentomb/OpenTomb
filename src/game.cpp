@@ -647,7 +647,7 @@ void Game_Frame(float time)
     if(!control_states.noclip && !control_states.free_look)
     {
         entity_p target = World_GetEntityByID(engine_camera_state.target_id);
-        target = (target) ? (target) : player;
+        target = (target) ? (target) : (player);
         if(engine_camera_state.state == CAMERA_STATE_FLYBY)
         {
             Cam_PlayFlyBy(&engine_camera_state, time);
@@ -795,6 +795,7 @@ void Game_SetCameraTarget(uint32_t entity_id, float timer)
     }
     else
     {
+        engine_camera_state.move = 0;
         engine_camera_state.target_id = entity_id;
         if(ent && !engine_camera_state.sink)
         {
