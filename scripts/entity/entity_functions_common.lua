@@ -55,6 +55,7 @@ function door_init(id)   -- NORMAL doors only!
         if((tick_state == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
             setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_off);
             setEntityEvent(object_id, 0);
+            setEntityMask(object_id, 0);
             setBoxBlocked(entity_funcs[object_id].box, entity_funcs[object_id].state_on == 1);
         end;
     end
