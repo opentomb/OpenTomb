@@ -170,7 +170,7 @@ tr1_entity_tbl[123] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE
 tr1_entity_tbl[124] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Slot 3 full
 tr1_entity_tbl[125] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Slot 4 full
 
-tr1_entity_tbl[127] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_BOX};                      -- Puzzle item 1
+tr1_entity_tbl[127] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};                      -- Puzzle item 1
 tr1_entity_tbl[128] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE_BOX, hide = 0x01, func = "midastouch"};        -- Midas gold touch
 
 tr1_entity_tbl[133] = {coll = COLLISION_NONE,           shape = COLLISION_SHAPE_BOX, func = "pickable"};    -- Key 1
