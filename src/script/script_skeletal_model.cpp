@@ -142,6 +142,10 @@ int lua_SetEntityBaseAnimModel(lua_State * lua)
             if(model && ent->bf->animations.model && (ent->bf->animations.model->mesh_count == model->mesh_count))
             {
                 ent->bf->animations.model = model;
+                ent->bf->animations.current_animation = 0;
+                ent->bf->animations.current_frame = 0;
+                ent->bf->animations.next_animation = 0;
+                ent->bf->animations.next_frame = 0;
             }
         }
         else

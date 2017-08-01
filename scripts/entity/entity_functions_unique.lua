@@ -64,14 +64,22 @@ function scion_init(id)
     setEntityActivationDirection(id, 0.0, 0.0, 0.0, 0.27);
     setEntityActivity(id, false);
     setEntityAnimFlag(id, ANIM_TYPE_BASE, ANIM_FRAME_LOCK);
+    entity_funcs[id].activator_id = nil;
+
+    entity_funcs[id].onSave = function()
+        if(entity_funcs[id].activator_id ~= nil) then
+            local addr = "\nentity_funcs[" .. id .. "].";
+            return addr .. "activator_id = " .. entity_funcs[id].activator_id .. ";";
+        end;
+        return "";
+    end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if((getEntityEvent(object_id) == 0) and (not entitySSAnimGetEnable(activator_id, ANIM_TYPE_MISK_1))) then
+        if((getEntityEvent(object_id) == 0) and (0 == getEntityModelID(activator_id, ANIM_TYPE_BASE))) then
+            entity_funcs[object_id].activator_id = activator_id;
             entityRotateToTriggerZ(activator_id, object_id);
-            entitySSAnimEnsureExists(activator_id, ANIM_TYPE_MISK_1, 5);
-            setEntityAnim(activator_id, ANIM_TYPE_MISK_1, 0, 0);
-            entitySSAnimSetEnable(activator_id, ANIM_TYPE_MISK_1, 1);
-            entitySSAnimSetEnable(activator_id, ANIM_TYPE_BASE, 0);
+            setEntityBaseAnimModel(activator_id, 5);
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 0, 0);
             noEntityMove(activator_id, true);
             setEntityActivity(object_id, true);
             return ENTITY_TRIGGERING_ACTIVATED;
@@ -80,16 +88,17 @@ function scion_init(id)
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
-        if(entitySSAnimGetEnable(player, ANIM_TYPE_MISK_1)) then
-            local a, f, c = getEntityAnim(player, ANIM_TYPE_MISK_1);
+        local activator_id = entity_funcs[object_id].activator_id;
+        if(5 == getEntityModelID(activator_id, ANIM_TYPE_BASE)) then
+            local a, f, c = getEntityAnim(activator_id, ANIM_TYPE_BASE);
             if((a == 0) and (f >= 40)) then
                 setEntityVisibility(object_id, false);
             end;
             if((a == 0) and (f + 1 >= c)) then
-                entitySSAnimSetEnable(player, ANIM_TYPE_MISK_1, 0);
-                entitySSAnimSetEnable(player, ANIM_TYPE_BASE, 1);
-                addItem(player, 150, 1);
-                noEntityMove(player, false);
+                setEntityBaseAnimModel(activator_id, 0);
+                setEntityAnim(activator_id, ANIM_TYPE_BASE, 103, 0);
+                addItem(activator_id, 150, 1);
+                noEntityMove(activator_id, false);
                 disableEntity(object_id);
             end;
         end;
@@ -104,47 +113,53 @@ function midastouch_init(id)    -- Midas gold touch
 
     setEntityActivationOffset(id, -640.0, 0.0, -512.0, 128.0);
     setEntityActivationDirection(id, 1.0, 0.0, 0.0, 0.87);
+    entity_funcs[id].activator_id = nil;
+
+    entity_funcs[id].onSave = function()
+        if(entity_funcs[id].activator_id ~= nil) then
+            local addr = "\nentity_funcs[" .. id .. "].";
+            return addr .. "activator_id = " .. entity_funcs[id].activator_id .. ";";
+        end;
+        return "";
+    end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(activator_id == nil) then
             return ENTITY_TRIGGERING_NOT_READY;
         end
 
-        if((not entitySSAnimGetEnable(activator_id, ANIM_TYPE_MISK_1)) and (getItemsCount(activator_id, 100) > 0)) then
+        if((0 == getEntityModelID(activator_id, ANIM_TYPE_BASE)) and (getItemsCount(activator_id, 100) > 0)) then
+            entity_funcs[object_id].activator_id = activator_id;
             entityRotateToTriggerZ(activator_id, object_id);
-            entityMoveToTriggerActivationPoint(activator_id, object_id);
-            entitySSAnimEnsureExists(activator_id, ANIM_TYPE_MISK_1, 5);
-            setEntityAnim(activator_id, ANIM_TYPE_MISK_1, 0, 0);
-            entitySSAnimSetEnable(activator_id, ANIM_TYPE_MISK_1, 1);
-            entitySSAnimSetEnable(activator_id, ANIM_TYPE_BASE, 0);
+            setEntityBaseAnimModel(activator_id, 5);
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 0, 0);
             noEntityMove(activator_id, true);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
-        if(getEntityDistance(player, object_id) < 1024.0) then
-            local lara_anim, frame, count = getEntityAnim(player, ANIM_TYPE_BASE);
-            local lara_sector = getEntitySectorIndex(player);                   -- do not use getEntitySectorIndex: DEPRECATED!
+        local activator_id = entity_funcs[object_id].activator_id;
+        if(getEntityDistance(activator_id, object_id) < 1024.0) then
+            local lara_anim, frame, count = getEntityAnim(activator_id, ANIM_TYPE_BASE);
+            local lara_sector = getEntitySectorIndex(activator_id);                   -- do not use getEntitySectorIndex: DEPRECATED!
             local hand_sector = getEntitySectorIndex(object_id);
             
-            if(entitySSAnimGetEnable(player, ANIM_TYPE_MISK_1)) then
-                local a, f, c = getEntityAnim(activator_id, ANIM_TYPE_MISK_1);
+            if(5 == getEntityModelID(activator_id, ANIM_TYPE_BASE)) then
+                local a, f, c = getEntityAnim(activator_id, ANIM_TYPE_BASE);
                 if((a == 0) and (f + 1 >= c)) then
-                    entitySSAnimSetEnable(player, ANIM_TYPE_MISK_1, 0);
-                    entitySSAnimSetEnable(player, ANIM_TYPE_BASE, 1);
-                    removeItem(player, 100, 1);
-                    addItem(player, ITEM_PUZZLE_1, 1);
-                    noEntityMove(player, false);
+                    setEntityBaseAnimModel(activator_id, 0);
+                    setEntityAnim(activator_id, ANIM_TYPE_BASE, 103, 0);
+                    removeItem(activator_id, 100, 1);
+                    addItem(activator_id, ITEM_PUZZLE_1, 1);
+                    noEntityMove(activator_id, false);
                 end;
             end;
 
-            if((lara_sector == hand_sector) and (getEntityMoveType(player) == MOVE_ON_FLOOR) and (lara_anim ~= 50)) then
-                setCharacterParam(player, PARAM_HEALTH, 0);
-                entitySSAnimEnsureExists(player, ANIM_TYPE_MISK_1, 5);
-                setEntityAnim(player, ANIM_TYPE_MISK_1, 1, 0);
-                entitySSAnimSetEnable(player, ANIM_TYPE_MISK_1, 1);
-                entitySSAnimSetEnable(player, ANIM_TYPE_BASE, 0);
+            if((lara_sector == hand_sector) and (getEntityMoveType(activator_id) == MOVE_ON_FLOOR) and (lara_anim ~= 50)) then
+                setCharacterParam(activator_id, PARAM_HEALTH, 0);
+                setEntityBaseAnimModel(activator_id, 5);
+                setEntityAnim(activator_id, ANIM_TYPE_BASE, 1, 0);
                 disableEntity(object_id);
             end;
         end;

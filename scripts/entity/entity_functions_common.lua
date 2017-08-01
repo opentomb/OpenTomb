@@ -124,10 +124,8 @@ function WheelKnob_init(id)   -- Bulkdoors (TR2)
             setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
             setEntitySectorStatus(object_id, 1);                                -- it is a switch
 
-            entitySSAnimEnsureExists(activator_id, ANIM_TYPE_MISK_1, 12);
-            setEntityAnim(activator_id, ANIM_TYPE_MISK_1, 2, 0);
-            entitySSAnimSetEnable(activator_id, ANIM_TYPE_MISK_1, 1);
-            entitySSAnimSetEnable(activator_id, ANIM_TYPE_BASE, 0);
+            setEntityBaseAnimModel(activator_id, 12);
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, 2, 0);
             noEntityMove(activator_id, true);
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
@@ -135,11 +133,11 @@ function WheelKnob_init(id)   -- Bulkdoors (TR2)
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
-        if(entitySSAnimGetEnable(entity_funcs[object_id].activator_id, ANIM_TYPE_MISK_1)) then
-            local a, f, c = getEntityAnim(entity_funcs[object_id].activator_id, ANIM_TYPE_MISK_1);
+        if(12 == getEntityModelID(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE)) then
+            local a, f, c = getEntityAnim(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE);
             if((a == 2) and (f + 1 >= c)) then
-                entitySSAnimSetEnable(entity_funcs[object_id].activator_id, ANIM_TYPE_MISK_1, 0);
-                entitySSAnimSetEnable(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE, 1);
+                setEntityBaseAnimModel(entity_funcs[object_id].activator_id, 0);
+                setEntityAnim(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE, 103, 0);
                 noEntityMove(entity_funcs[object_id].activator_id, false);
                 setBoxBlocked(entity_funcs[object_id].box, false);
             end;
