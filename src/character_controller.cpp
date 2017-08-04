@@ -283,14 +283,14 @@ void Character_FixByBox(struct entity_s *ent, room_box_p curr_box)
         {
             float min = (curr_box->bb_min[0] < next_box->bb_min[0]) ? (curr_box->bb_min[0]) : (next_box->bb_min[0]);
             float max = (curr_box->bb_max[0] > next_box->bb_max[0]) ? (curr_box->bb_max[0]) : (next_box->bb_max[0]);
-            if(fix_y || fix_x && ((ent->transform[12 + 0] + r > max) || (ent->transform[12 + 0] - r < min)))
+            if(fix_x && ((ent->transform[12 + 0] + r > max) || (ent->transform[12 + 0] - r < min)))
             {
                 ent->transform[12 + 0] += fix_x;
             }
 
             min = (curr_box->bb_min[1] < next_box->bb_min[1]) ? (curr_box->bb_min[1]) : (next_box->bb_min[1]);
             max = (curr_box->bb_max[1] > next_box->bb_max[1]) ? (curr_box->bb_max[1]) : (next_box->bb_max[1]);
-            if(fix_x || fix_y && ((ent->transform[12 + 1] + r > max) || (ent->transform[12 + 1] - r < min)))
+            if(fix_y && ((ent->transform[12 + 1] + r > max) || (ent->transform[12 + 1] - r < min)))
             {
                 ent->transform[12 + 1] += fix_y;
             }
@@ -326,20 +326,13 @@ void Character_GoToPathTarget(struct entity_s *ent)
             }
         }
 
-        if(ent->character->path_dist == 1)
+        if((ent->character->path_dist == 1) || Room_IsInBox(ent->character->path[1], ent->transform + 12))
         {
             vec3_copy(dir, ent->character->path_target->pos);
         }
         else
         {
-            if((ent->character->path_dist >= 3) && Room_IsInBox(ent->character->path[1], ent->transform + 12))
-            {
-                Room_GetOverlapCenter(ent->character->path[1], ent->character->path[2], dir);
-            }
-            else
-            {
-                Room_GetOverlapCenter(ent->character->path[0], ent->character->path[1], dir);
-            }
+            Room_GetOverlapCenter(ent->character->path[0], ent->character->path[1], dir);
         }
 
         vec3_sub(dir, dir, ent->transform + 12);

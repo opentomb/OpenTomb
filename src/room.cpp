@@ -803,7 +803,7 @@ static bool Room_IsBoxForPath(room_box_p curr_box, room_box_p next_box, box_vali
     if(next_box && !next_box->is_blocked)
     {
         int32_t step = next_box->bb_min[2] - curr_box->bb_min[2];
-        if((op->zone_type == ZONE_TYPE_FLY) || ((step >= 0) ? (step - op->step_up <= 0) : (0 <= step + op->step_down)))
+        if((op->zone_type == ZONE_TYPE_FLY) || ((step >= 0) ? (step - op->step_up <= 1.0f) : (-1.0f <= step + op->step_down)))
         {
             switch(op->zone_type)
             {
