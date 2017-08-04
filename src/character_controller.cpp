@@ -25,6 +25,7 @@
 #include "mesh.h"
 
 void Character_CollisionCallback(struct entity_s *ent, struct collision_node_s *cn);
+void Character_FixByBox(struct entity_s *ent, room_box_p curr_box);
 
 void Character_Create(struct entity_s *ent)
 {
@@ -174,6 +175,8 @@ void Character_Update(struct entity_s *ent)
     const uint16_t mask = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE;
     if(mask == (ent->state_flags & mask))
     {
+        room_box_p last_box = (ent->current_sector) ? (ent->current_sector->box) : (NULL);
+        bool is_player = (World_GetPlayer() == ent);
         if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
         {
             Entity_CheckActivators(ent);
@@ -182,12 +185,20 @@ void Character_Update(struct entity_s *ent)
         {
             ent->character->state.dead = 1;                                     // Kill, if no HP.
         }
-        Character_GoToPathTarget(ent);
+        if(!is_player)
+        {
+            Character_UpdateAI(ent);
+        }
         Character_ApplyCommands(ent);
 
         Entity_ProcessSector(ent);
         Character_UpdateParams(ent);
         Entity_CheckCollisionCallbacks(ent);
+
+        if(!is_player)
+        {
+            Character_FixByBox(ent, last_box);
+        }
 
         for(int h = 0; h < ent->character->hair_count; h++)
         {
@@ -230,49 +241,59 @@ void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target)
 }
 
 
-void Character_FixByBox(struct entity_s *ent, struct room_box_s *curr_box, struct room_box_s *next_box)
+void Character_FixByBox(struct entity_s *ent, room_box_p curr_box)
 {
-    float r = ent->bf->bone_tags->mesh_base->radius;
-    int32_t fix_x = 0;
-    int32_t fix_y = 0;
+    curr_box = (ent->character->path_dist > 0) ? (ent->character->path[0]) : (curr_box);
+    if(curr_box)
+    {
+        float r = ent->bf->bone_tags->mesh_base->radius;
+        room_box_p next_box = (ent->character->path_dist > 1) ? (ent->character->path[1]) : (NULL);
+        int32_t fix_x = 0;
+        int32_t fix_y = 0;
 
-    if(ent->transform[12 + 0] + r > curr_box->bb_max[0])
-    {
-        fix_x = curr_box->bb_max[0] - ent->transform[12 + 0] - r;
-    }
-    else if(ent->transform[12 + 0] - r < curr_box->bb_min[0])
-    {
-        fix_x = curr_box->bb_min[0] - ent->transform[12 + 0] + r;
-    }
+        if(ent->transform[12 + 2] < curr_box->bb_min[2])
+        {
+            ent->transform[12 + 2] = curr_box->bb_min[2];
+        }
 
-    if(ent->transform[12 + 1] + r > curr_box->bb_max[1])
-    {
-        fix_y = curr_box->bb_max[1] - ent->transform[12 + 1] - r;
-    }
-    else if(ent->transform[12 + 1] - r < curr_box->bb_min[1])
-    {
-        fix_y = curr_box->bb_min[1] - ent->transform[12 + 1] + r;
-    }
+        if(ent->transform[12 + 0] + r > curr_box->bb_max[0])
+        {
+            fix_x = curr_box->bb_max[0] - ent->transform[12 + 0] - r;
+        }
+        else if(ent->transform[12 + 0] - r < curr_box->bb_min[0])
+        {
+            fix_x = curr_box->bb_min[0] - ent->transform[12 + 0] + r;
+        }
 
-    if(!next_box)
-    {
-        ent->transform[12 + 0] += fix_x;
-        ent->transform[12 + 1] += fix_y;
-    }
-    else if(next_box && (fix_x || fix_y))
-    {
-        float min = (curr_box->bb_min[0] < next_box->bb_min[0]) ? (curr_box->bb_min[0]) : (next_box->bb_min[0]);
-        float max = (curr_box->bb_max[0] > next_box->bb_max[0]) ? (curr_box->bb_max[0]) : (next_box->bb_max[0]);
-        if(fix_x && ((ent->transform[12 + 0] + r > max) || (ent->transform[12 + 0] - r < min)))
+        if(ent->transform[12 + 1] + r > curr_box->bb_max[1])
+        {
+            fix_y = curr_box->bb_max[1] - ent->transform[12 + 1] - r;
+        }
+        else if(ent->transform[12 + 1] - r < curr_box->bb_min[1])
+        {
+            fix_y = curr_box->bb_min[1] - ent->transform[12 + 1] + r;
+        }
+
+        if(!next_box)
         {
             ent->transform[12 + 0] += fix_x;
-        }
-        
-        min = (curr_box->bb_min[1] < next_box->bb_min[1]) ? (curr_box->bb_min[1]) : (next_box->bb_min[1]);
-        max = (curr_box->bb_max[1] > next_box->bb_max[1]) ? (curr_box->bb_max[1]) : (next_box->bb_max[1]);
-        if(fix_y && ((ent->transform[12 + 1] + r > max) || (ent->transform[12 + 1] - r < min)))
-        {
             ent->transform[12 + 1] += fix_y;
+        }
+        else if(next_box && (fix_x || fix_y))
+        {
+            float min = (curr_box->bb_min[0] < next_box->bb_min[0]) ? (curr_box->bb_min[0]) : (next_box->bb_min[0]);
+            float max = (curr_box->bb_max[0] > next_box->bb_max[0]) ? (curr_box->bb_max[0]) : (next_box->bb_max[0]);
+            if(fix_y || fix_x && ((ent->transform[12 + 0] + r > max) || (ent->transform[12 + 0] - r < min)))
+            {
+                ent->transform[12 + 0] += fix_x;
+            }
+
+            min = (curr_box->bb_min[1] < next_box->bb_min[1]) ? (curr_box->bb_min[1]) : (next_box->bb_min[1]);
+            max = (curr_box->bb_max[1] > next_box->bb_max[1]) ? (curr_box->bb_max[1]) : (next_box->bb_max[1]);
+            if(fix_x || fix_y && ((ent->transform[12 + 1] + r > max) || (ent->transform[12 + 1] - r < min)))
+            {
+                ent->transform[12 + 1] += fix_y;
+            }
         }
     }
 }
@@ -295,8 +316,6 @@ void Character_GoToPathTarget(struct entity_s *ent)
             ent->character->path_target = NULL;
             return;
         }
-
-        Character_FixByBox(ent, ent->character->path[0], (ent->character->path_dist > 1) ? (ent->character->path[1]) : (NULL));
 
         if(ent->current_sector->box->id != ent->character->path[0]->id)
         {
@@ -357,6 +376,22 @@ void Character_GoToPathTarget(struct entity_s *ent)
             ent->character->cmd.shift = (fabs(z) > 0.4f) || (dir[3] < 4096.0f);
         }
         ent->character->cmd.move[0] = (dir[3] > 32.0f) ? (0x01) : (0x00);
+    }
+}
+
+
+void Character_UpdateAI(struct entity_s *ent)
+{
+    if(ent->character)
+    {
+        entity_p target = World_GetEntityByID(ent->character->target_id);
+        if(target && target->current_sector && (ent->character->path_target != target->current_sector))
+        {
+            ent->character->path_target = target->current_sector;
+            Character_UpdatePath(ent, ent->character->path_target);
+        }
+
+        Character_GoToPathTarget(ent);
     }
 }
 

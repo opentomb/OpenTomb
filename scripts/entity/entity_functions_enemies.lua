@@ -113,9 +113,9 @@ function baddie_init(id)    -- INVALID!
 
     setEntityMoveType(id, MOVE_ON_FLOOR);
     disableEntity(id);
-    
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if((getCharacterParam(object_id, PARAM_HEALTH) > 0) and (not getEntityActivity(object_id))) then 
+        if((getCharacterParam(object_id, PARAM_HEALTH) > 0) and (not getEntityActivity(object_id))) then
             enableEntity(object_id);
             setCharacterTarget(object_id, player);
         end;
@@ -214,12 +214,13 @@ end;
 
 function bat_init(id)
     baddie_init(id);
-    
+
     setCharacterParam(id, PARAM_HEALTH, 100, 100);
     setEntityGhostCollisionShape(id,  0,  COLLISION_SHAPE_SPHERE, -64, -64, -64, 64, 64, 64);
     setEntityMoveType(id, MOVE_FLY);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_BAT);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_FLY);
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
@@ -228,7 +229,7 @@ function bat_init(id)
     end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if((getCharacterParam(object_id, PARAM_HEALTH) > 0) and (not getEntityActivity(object_id))) then 
+        if((getCharacterParam(object_id, PARAM_HEALTH) > 0) and (not getEntityActivity(object_id))) then
             enableEntity(object_id);
             setCharacterTarget(object_id, player);
             local hit, frac, hx, hy, hz = getEntityRayTest(object_id, COLLISION_GROUP_STATIC_ROOM, 0, 0, 1024, 0, 0, -512);
@@ -269,7 +270,9 @@ function wolf_init(id)
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_WOLF);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
-    setCharacterAIParams(id, 15, ZONE_TYPE_1);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 3, 1, nil, nil, nil, nil);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
+    setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 256, 256); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     setCharacterParam(id, PARAM_HEALTH, 200, 200);
     setEntityGhostCollisionShape(id,  1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
@@ -305,11 +308,13 @@ end;
 
 function bear_init(id)
     baddie_init(id);
-    
+
     setCharacterParam(id, PARAM_HEALTH, 300, 300);
     setEntityGhostCollisionShape(id,  14,  COLLISION_SHAPE_SPHERE, -256, -128, -256, 256, 256, 128);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_BEAR);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 256, 256);
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
@@ -345,6 +350,8 @@ function raptor_init(id)
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_RAPTOR);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 256, 256);
 
     setCharacterParam(id, PARAM_HEALTH, 200, 200);
     setEntityGhostCollisionShape(id,  21,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
@@ -384,6 +391,8 @@ function lion_init(id)
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LION);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 256, 256);
 
     setCharacterParam(id, PARAM_HEALTH, 200, 200);
     setEntityGhostCollisionShape(id,  7,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
@@ -423,6 +432,8 @@ function puma_init(id)
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_PUMA);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 256, 256);
 
     setCharacterParam(id, PARAM_HEALTH, 200, 200);
     setEntityGhostCollisionShape(id,  7,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
@@ -462,6 +473,8 @@ function winged_mutant_init(id)
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_WINGED_MUTANT);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 256, 256);
 
     setCharacterParam(id, PARAM_HEALTH, 300, 300);
     setEntityGhostCollisionShape(id,  0,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
@@ -519,6 +532,8 @@ function trex_init(id)
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_TREX);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 2048.0, 256.0, 256.0, 256, 256);
 
     setCharacterParam(id, PARAM_HEALTH, 2000, 2000);
     setEntityGhostCollisionShape(id,  9,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
@@ -528,7 +543,7 @@ function trex_init(id)
     setEntityGhostCollisionShape(id,  13,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setEntityGhostCollisionShape(id,  20,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setEntityGhostCollisionShape(id,  21,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
-    
+
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
             return "trex_init(" .. id .. ");\n";
@@ -572,6 +587,8 @@ function gorilla_init(id)
     setEntityGhostCollisionShape(id, 14,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);  -- head
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_GORILLA);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_2);
+    setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 768, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     setCharacterMoveSizes(id, 512.0, nil, nil, nil, nil); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
@@ -613,6 +630,8 @@ function crocodile_init(id)
     setEntityGhostCollisionShape(id, 11,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_CROCODILE);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 256.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
@@ -652,6 +671,8 @@ function rat_init(id)
     setCharacterBones(id, 2, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_RAT);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 256.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
@@ -692,6 +713,8 @@ function centaur_init(id)
     setEntityGhostCollisionShape(id, 18, COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_CENTAUR);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 1024.0, 256.0, 256.0, 256, 256);                  -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
@@ -728,6 +751,8 @@ function Larson_init(id)
     setEntityGhostCollisionShape(id, 4,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LARSON);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 768.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
@@ -777,6 +802,8 @@ function Pierre_init(id)
     setEntityGhostCollisionShape(id, 4,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_PIERRE);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 768.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     entity_funcs[id].is_flee = (getLevel() ~= 9) or (getEntityRoom(id) ~= 110);
 
@@ -834,6 +861,8 @@ function cowboy_init(id)
     setEntityGhostCollisionShape(id, 4,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_COWBOY);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 768.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
@@ -866,6 +895,8 @@ function MrT_init(id)
     setEntityGhostCollisionShape(id, 4,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_MRT);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 800.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
@@ -900,6 +931,8 @@ function skateboardist_init(id)
     setEntityGhostCollisionShape(id, 4,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);        -- leg
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_SKATEBOARDIST);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 768.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     entity_funcs[id].onSave = function()
         local sp_save = "";
@@ -913,7 +946,7 @@ function skateboardist_init(id)
     end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if((getCharacterParam(object_id, PARAM_HEALTH) > 0) and (not getEntityActivity(object_id))) then 
+        if((getCharacterParam(object_id, PARAM_HEALTH) > 0) and (not getEntityActivity(object_id))) then
             enableEntity(object_id);
             setCharacterTarget(object_id, player);
             entity_funcs[object_id].skate_id = spawnEntity(29, getEntityRoom(object_id), getEntityPos(object_id));
@@ -950,6 +983,8 @@ function TorsoBoss_init(id)
     setCharacterParam(id, PARAM_HEALTH, 1500, 1500);
     setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_SPHERE, nil, nil, 128, nil, nil, 768);     -- base
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_TORSO_BOSS);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 1680.0, 256.0, 256.0, 256, 256);                  -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     enableEntity(id);
     setEntityAnim(id, ANIM_TYPE_BASE, 1, 0);
@@ -1004,6 +1039,8 @@ function Natla_init(id)
     setEntityGhostCollisionShape(id,  18,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);  -- leg
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_NATLA);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterMoveSizes(id, 768.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
@@ -1116,7 +1153,7 @@ function mutant_boss_egg_init(id)
     if(getLevel() == 15) then
         setEntityActivity(id, false);
         setEntityCollision(id, false);
-    
+
         entity_funcs[id].onActivate = function(object_id, activator_id)
             if(getEntityEvent(object_id) == 0) then
                 setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);

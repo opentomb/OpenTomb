@@ -315,6 +315,7 @@ void Character_Delete(struct entity_s *ent);
 void Character_Update(struct entity_s *ent);
 void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target);
 void Character_GoToPathTarget(struct entity_s *ent);
+void Character_UpdateAI(struct entity_s *ent);
 
 void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);
 int  Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height_info_s *nfc);
