@@ -176,7 +176,7 @@ void Character_Update(struct entity_s *ent)
     if(mask == (ent->state_flags & mask))
     {
         room_box_p last_box = (ent->current_sector) ? (ent->current_sector->box) : (NULL);
-        bool is_player = (World_GetPlayer() == ent);
+        bool is_player = (World_GetPlayer() == ent);       
         if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
         {
             Entity_CheckActivators(ent);
@@ -301,7 +301,7 @@ void Character_FixByBox(struct entity_s *ent, room_box_p curr_box)
 
 void Character_GoToPathTarget(struct entity_s *ent)
 {
-    if(ent->character && ent->current_sector && ent->current_sector->box &&
+    if(ent->current_sector && ent->current_sector->box &&
        ent->character->path_target && (ent->character->path_dist > 0))
     {
         float dir[4];
@@ -384,7 +384,7 @@ void Character_GoToPathTarget(struct entity_s *ent)
 
 void Character_UpdateAI(struct entity_s *ent)
 {
-    if(ent->character)
+    if(!ent->character->state.dead)
     {
         entity_p target = World_GetEntityByID(ent->character->target_id);
         if(target && target->current_sector && (ent->character->path_target != target->current_sector))
@@ -978,15 +978,8 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
 
 void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizontal)
 {
-    float t;
-
-    if(!ent->character)
-    {
-        return;
-    }
-
     // Jump length is a speed value multiplied by global speed coefficient.
-    t = v_horizontal * ent->character->linear_speed_mult;
+    float t = v_horizontal * ent->character->linear_speed_mult;
 
     // Calculate the direction of jump by vector multiplication.
     if(ent->dir_flag & ENT_MOVE_FORWARD)
@@ -1149,11 +1142,6 @@ int Character_MoveOnFloor(struct entity_s *ent)
 {
     float norm_move_xy_len, t, *pos = ent->transform + 12;
     float tv[3], move[3], norm_move_xy[2];
-
-    if(!ent->character)
-    {
-        return 0;
-    }
 
     /*
      * init height info structure
@@ -1376,11 +1364,6 @@ int Character_MoveFly(struct entity_s *ent)
 int Character_FreeFalling(struct entity_s *ent)
 {
     float move[3], g[3], *pos = ent->transform + 12;
-
-    if(!ent->character)
-    {
-        return 0;
-    }
 
     ent->character->state.slide = 0x00;
     ent->character->state.floor_collide = 0x00;

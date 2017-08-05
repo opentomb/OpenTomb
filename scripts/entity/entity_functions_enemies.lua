@@ -221,6 +221,7 @@ function bat_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_BAT);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_FLY);
+    setCharacterMoveSizes(id, 64.0, 0.0, 0.0, 0.0, 32.0); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()

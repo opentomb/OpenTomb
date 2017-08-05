@@ -220,7 +220,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_STATE_LARA_STOP:
             // Reset directional flag only on intermediate animation!
-
+            ent->no_fix_skeletal_parts |= BODY_PART_HANDS_2;
             if(ss_anim->current_animation == TR_ANIMATION_LARA_STAY_SOLID)
             {
                 ent->dir_flag = ENT_STAY;
@@ -236,11 +236,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 (ss_anim->current_animation == TR_ANIMATION_LARA_STAY_SOLID) )
             {
                 ent->move_type = MOVE_ON_FLOOR;
-            }
-
-            if(ent->move_type == MOVE_ON_FLOOR)
-            {
-                ent->no_fix_skeletal_parts = BODY_PART_LEGS_2 | BODY_PART_LEGS_3;
             }
 
             if(ent->move_type == MOVE_FREE_FALLING)
@@ -2833,7 +2828,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_CRAWL_IDLE:
             state->crouch = 0x01;
             ent->dir_flag = ENT_MOVE_FORWARD;
-            ent->no_fix_skeletal_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+            ent->no_fix_skeletal_parts = BODY_PART_HANDS | BODY_PART_LEGS;
             if(state->dead == 1)
             {
                 ent->dir_flag = ENT_STAY;
@@ -2922,7 +2917,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_CRAWL_FORWARD:
             state->crouch = 0x01;
             ent->dir_flag = ENT_MOVE_FORWARD;
-            ent->no_fix_skeletal_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+            ent->no_fix_skeletal_parts = BODY_PART_HANDS | BODY_PART_LEGS;
             ent->character->rotate_speed_mult = 0.5f;
             vec3_mul_scalar(move, ent->transform + 4, PENETRATION_TEST_OFFSET);
             if((Entity_CheckNextPenetration(ent, NULL, move, reaction, COLLISION_FILTER_CHARACTER) > 0) && state->wall_collide)
@@ -2951,7 +2946,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_CRAWL_BACK:
             state->crouch = 0x01;
             ent->dir_flag = ENT_MOVE_FORWARD;   // Absurd? No, Core Design.
-            ent->no_fix_skeletal_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+            ent->no_fix_skeletal_parts = BODY_PART_HANDS | BODY_PART_LEGS;
             ent->character->rotate_speed_mult = 0.5f;
             vec3_mul_scalar(move, ent->transform + 4, -PENETRATION_TEST_OFFSET);
             if((Entity_CheckNextPenetration(ent, NULL, move, reaction, COLLISION_FILTER_CHARACTER) > 0) && state->wall_collide)
