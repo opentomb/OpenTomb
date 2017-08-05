@@ -133,6 +133,13 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         return;
                     }
                     break;
+                    
+                default:
+                    if(entity_activator->type_flags & ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR)
+                    {
+                        return;
+                    }
+                    break;
             }
 
             switch(trigger->sub_function)
