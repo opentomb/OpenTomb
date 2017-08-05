@@ -1053,6 +1053,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_WADE_FORWARD:
             ent->character->rotate_speed_mult = 0.4f;
             ent->dir_flag = ENT_MOVE_FORWARD;
+            ent->move_type = MOVE_ON_FLOOR;
 
             if(ent->character->height_info.quicksand)
             {
@@ -1076,7 +1077,8 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(curr_fc->water)
             {
-                if((curr_fc->transition_level - curr_fc->floor_hit.point[2] <= ent->character->wade_depth))
+                float depth = curr_fc->transition_level - curr_fc->floor_hit.point[2];
+                if(depth <= ent->character->wade_depth)
                 {
                     // run / walk case
                     if((cmd->move[0] == 1) && (!state->wall_collide))
@@ -1088,26 +1090,19 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                         ss_anim->next_state = TR_STATE_LARA_STOP;
                     }
                 }
-                else if(curr_fc->transition_level - curr_fc->floor_hit.point[2] > (ent->character->height - ent->character->swim_depth))
+                else if(depth <= ent->character->height - ent->character->swim_depth)
                 {
-                    // swim case
-                    if(curr_fc->transition_level - curr_fc->floor_hit.point[2] > ent->character->height + ent->character->max_step_up_height)
-                    {
-                        Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_START_FREE_FALL, 0);                                    // swim underwater
-                    }
-                    else
-                    {
-                        Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_IDLE, 0);                                       // swim onwater
-                        ent->move_type = MOVE_ON_WATER;
-                        pos[2] = curr_fc->transition_level;
-                    }
-                }
-                else if(curr_fc->transition_level - curr_fc->floor_hit.point[2] > ent->character->wade_depth)              // wade case
-                {
+                    // wade case
                     if((cmd->move[0] != 1) || (state->wall_collide))
                     {
                         ss_anim->next_state = TR_STATE_LARA_STOP;
                     }
+                }
+                else
+                {
+                    Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_SWIM_FORWARD, 0);
+                    ss_anim->next_state = TR_STATE_LARA_ONWATER_FORWARD;
+                    ent->move_type = MOVE_ON_WATER;
                 }
             }
             else                                                                // no water, stay or run / walk
@@ -1138,15 +1133,15 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             vec3_mul_scalar(global_offset, ent->transform + 4, -WALK_BACK_OFFSET);
             global_offset[2] += ent->bf->bb_max[2];
             i = Character_CheckNextStep(ent, global_offset, &next_fc);
-            if(ent->move_type == MOVE_FREE_FALLING)
-            {
-                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_START_FREE_FALL, 0);
-            }
-            else if(curr_fc->water && (curr_fc->floor_hit.point[2] + ent->character->height < curr_fc->transition_level))
+            if(curr_fc->water && (!curr_fc->floor_hit.hit || (curr_fc->floor_hit.point[2] + ent->character->height - ent->character->swim_depth < curr_fc->transition_level)))
             {
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_ONWATER_SWIM_BACK, 0);
                 ss_anim->next_state = TR_STATE_LARA_ONWATER_BACK;
                 ent->move_type = MOVE_ON_WATER;
+            }
+            else if(ent->move_type == MOVE_FREE_FALLING)
+            {
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_START_FREE_FALL, 0);
             }
             else if((i < CHARACTER_STEP_DOWN_BIG) || (i > CHARACTER_STEP_UP_BIG))
             {
@@ -1197,11 +1192,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 if(next_fc.floor_hit.hit && (next_fc.floor_hit.point[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_hit.point[2] <= pos[2] + ent->character->max_step_up_height))
                 //if(curr_fc->leg_l_floor.hit && (curr_fc->leg_l_floor.point[2] > pos[2] - ent->character->max_step_up_height) && (curr_fc->leg_l_floor.point[2] <= pos[2] + ent->character->max_step_up_height))
                 {
-                    if(!curr_fc->water || (curr_fc->floor_hit.point[2] + ent->character->height > curr_fc->transition_level)) // if (floor_hit.hit == 0) then we went to MOVE_FREE_FALLING.
-                    {
-                        // continue walking
-                    }
-                    else
+                    if(curr_fc->water && (!curr_fc->floor_hit.hit || (curr_fc->floor_hit.point[2] - curr_fc->transition_level > ent->character->height - ent->character->swim_depth)))
                     {
                         ss_anim->next_state = TR_STATE_LARA_ONWATER_LEFT;
                         ss_anim->onEndFrame = ent_to_on_water;
@@ -1235,11 +1226,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 if(next_fc.floor_hit.hit && (next_fc.floor_hit.point[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_hit.point[2] <= pos[2] + ent->character->max_step_up_height))
                 //if(curr_fc->leg_r_floor.hit && (curr_fc->leg_r_floor.point[2] > pos[2] - ent->character->max_step_up_height) && (curr_fc->leg_r_floor.point[2] <= pos[2] + ent->character->max_step_up_height))
                 {
-                    if(!curr_fc->water || (curr_fc->floor_hit.point[2] + ent->character->height > curr_fc->transition_level)) // if (floor_hit.hit == 0) then we went to MOVE_FREE_FALLING.
-                    {
-                        // continue walking
-                    }
-                    else
+                    if(curr_fc->water && (!curr_fc->floor_hit.hit || (curr_fc->floor_hit.point[2] - curr_fc->transition_level > ent->character->height - ent->character->swim_depth)))
                     {
                         ss_anim->next_state = TR_STATE_LARA_ONWATER_RIGHT;
                         ss_anim->onEndFrame = ent_to_on_water;
@@ -2644,17 +2631,14 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ss_anim->next_state = TR_STATE_LARA_UNDERWATER_FORWARD;
                 ss_anim->onEndFrame = ent_set_underwater;                       // dive
             }
+            else if(curr_fc->floor_hit.hit && (curr_fc->transition_level - curr_fc->floor_hit.point[2] < ent->character->height - ent->character->swim_depth))
+            {
+                ss_anim->next_state = TR_STATE_LARA_WADE_FORWARD;
+                ss_anim->onEndFrame = ent_set_on_floor;                         // to wade
+            }
             else if((cmd->move[0] == 1) && !clean_action)
             {
-                if(!curr_fc->floor_hit.hit || (pos[2] - ent->character->height > curr_fc->floor_hit.point[2]- ent->character->swim_depth))
-                {
-                    //ent->current_state = ent->current_state;                  // swim forward
-                }
-                else
-                {
-                    ss_anim->next_state = TR_STATE_LARA_WADE_FORWARD;
-                    ss_anim->onEndFrame = ent_set_on_floor;                     // to wade
-                }
+                ss_anim->next_state = current_state;
             }
             else
             {
@@ -3147,9 +3131,10 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
     switch(ss_anim->current_animation)
     {
         case TR_ANIMATION_LARA_STAY_JUMP_SIDES:
-            ent->no_fix_skeletal_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3 | BODY_PART_HEAD;
+            ent->no_fix_skeletal_parts = BODY_PART_HANDS | BODY_PART_LEGS | BODY_PART_HEAD;
             break;
 
+        case TR_ANIMATION_LARA_LANDING_HARD:
         case TR_ANIMATION_LARA_CROUCH_TO_STAND:
             ent->no_fix_skeletal_parts = BODY_PART_HANDS | BODY_PART_LEGS;
             break;
