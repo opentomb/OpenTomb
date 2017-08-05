@@ -250,7 +250,7 @@ void Character_FixByBox(struct entity_s *ent, room_box_p curr_box)
         room_box_p next_box = (ent->character->path_dist > 1) ? (ent->character->path[1]) : (NULL);
         int32_t fix_x = 0;
         int32_t fix_y = 0;
-
+        
         if(ent->transform[12 + 2] < curr_box->bb_min[2])
         {
             ent->transform[12 + 2] = curr_box->bb_min[2];
@@ -274,7 +274,7 @@ void Character_FixByBox(struct entity_s *ent, room_box_p curr_box)
             fix_y = curr_box->bb_min[1] - ent->transform[12 + 1] + r;
         }
 
-        if(!next_box)
+        if(fix_x && fix_y || !next_box)
         {
             ent->transform[12 + 0] += fix_x;
             ent->transform[12 + 1] += fix_y;
@@ -326,7 +326,16 @@ void Character_GoToPathTarget(struct entity_s *ent)
             }
         }
 
-        if((ent->character->path_dist == 1) || Room_IsInBox(ent->character->path[1], ent->transform + 12))
+        if((ent->character->path_dist > 1) && Room_IsInBox(ent->character->path[1], ent->transform + 12))
+        {
+            for(int i = 1; i < ent->character->path_dist; ++i)
+            {
+                ent->character->path[i - 1] = ent->character->path[i];
+            }
+            ent->character->path_dist--;
+        }
+        
+        if(ent->character->path_dist == 1)
         {
             vec3_copy(dir, ent->character->path_target->pos);
         }
