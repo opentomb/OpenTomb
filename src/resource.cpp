@@ -1180,7 +1180,7 @@ void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *
         face3 = &tr_mesh->textured_triangles[i];
         tex = &tr->object_textures[face3->texture & tex_mask];
 
-        p->double_side = (bool)(face3->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+        p->double_side = (face3->texture >> 15) ? (0x01) : (0x00);              // CORRECT, BUT WRONG IN TR3-5
 
         Res_SetAnimTexture(p, face3->texture & tex_mask, anim_sequences, anim_sequences_count);
 
@@ -1223,7 +1223,7 @@ void TR_GenMesh(struct base_mesh_s *mesh, size_t mesh_index, struct anim_seq_s *
         face4 = &tr_mesh->textured_rectangles[i];
         tex = &tr->object_textures[face4->texture & tex_mask];
 
-        p->double_side = (bool)(face4->texture >> 15);    // CORRECT, BUT WRONG IN TR3-5
+        p->double_side = (face4->texture >> 15) ? (0x01) : (0x00);              // CORRECT, BUT WRONG IN TR3-5
 
         Res_SetAnimTexture(p, face4->texture & tex_mask, anim_sequences, anim_sequences_count);
 
@@ -1371,7 +1371,7 @@ void TR_GenRoomMesh(struct room_s *room, size_t room_index, struct anim_seq_s *a
         uint32_t masked_texture = tr_room->triangles[i].texture & tex_mask;
         Polygon_Resize(p, 3);
         TR_SetupRoomPolygonVertices(p, mesh, tr_room, tr_room->triangles[i].vertices);
-        p->double_side = tr_room->triangles[i].texture & 0x8000;
+        p->double_side = (tr_room->triangles[i].texture & 0x8000) ? (0x01) : (0x00);
         p->transparency = tr->object_textures[masked_texture].transparency_flags;
         Res_SetAnimTexture(p, masked_texture, anim_sequences, anim_sequences_count);
         atlas->getCoordinates(p, masked_texture, 0);
@@ -1385,7 +1385,7 @@ void TR_GenRoomMesh(struct room_s *room, size_t room_index, struct anim_seq_s *a
         uint32_t masked_texture = tr_room->rectangles[i].texture & tex_mask;
         Polygon_Resize(p, 4);
         TR_SetupRoomPolygonVertices(p, mesh, tr_room, tr_room->rectangles[i].vertices);
-        p->double_side = tr_room->rectangles[i].texture & 0x8000;
+        p->double_side = (tr_room->rectangles[i].texture & 0x8000) ? (0x01) : (0x00);
         p->transparency = tr->object_textures[masked_texture].transparency_flags;
         Res_SetAnimTexture(p, masked_texture, anim_sequences, anim_sequences_count);
         atlas->getCoordinates(p, masked_texture, 0);

@@ -190,8 +190,8 @@ uint32_t BaseMesh_AddVertex(base_mesh_p mesh, struct vertex_s *vertex)
     for(vertex_index = 0; vertex_index < mesh->vertex_count; vertex_index++, v++)
     {
         if(v->position[0] == vertex->position[0] && v->position[1] == vertex->position[1] && v->position[2] == vertex->position[2] &&
-           v->tex_coord[0] == vertex->tex_coord[0] && v->tex_coord[1] == vertex->tex_coord[1])
-            ///@QUESTION: color check?
+           v->tex_coord[0] == vertex->tex_coord[0] && v->tex_coord[1] == vertex->tex_coord[1] &&
+           v->color[0] == vertex->color[0] && v->color[1] == vertex->color[1] && v->color[2] == vertex->color[2] && v->color[3] == vertex->color[3])
         {
             return vertex_index;
         }

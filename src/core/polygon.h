@@ -39,8 +39,8 @@ typedef struct polygon_s
     uint16_t            vertex_count;                                           // number of vertices
     uint16_t            anim_id;                                                // anim texture ID
     uint16_t            frame_offset;                                           // anim texture frame offset
-    uint16_t            transparency;                                           // transparency information
-    uint8_t             double_side;                                            // double side flag
+    uint16_t            transparency : 8;                                       // transparency information
+    uint16_t            double_side : 8;                                        // double side flag
     float               plane[4];                                               // polygon plane equation
 
     struct polygon_s   *next;                                                   // polygon list (for BSP using)
