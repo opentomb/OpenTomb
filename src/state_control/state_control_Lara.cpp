@@ -2765,7 +2765,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_CROUCH_IDLE:
             state->crouch = 0x01;
             ent->dir_flag = ENT_MOVE_FORWARD;
-            ent->no_fix_skeletal_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3;
+            ent->no_fix_skeletal_parts = BODY_PART_HANDS | BODY_PART_LEGS;
             move[0] = pos[0];
             move[1] = pos[1];
             move[2] = pos[2] + 0.5 * (ent->bf->bb_max[2] - ent->bf->bb_min[2]);
@@ -2775,15 +2775,15 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if((cmd->crouch == 0) && !low_vertical_space)
             {
-                ss_anim->next_state = TR_STATE_LARA_STOP;                        // Back to stand
+                ss_anim->next_state = TR_STATE_LARA_STOP;                       // Back to stand
             }
             else if((cmd->move[0] != 0) || (state->dead == 1))
             {
-                ss_anim->next_state = TR_STATE_LARA_CRAWL_IDLE;                  // Both forward & back provoke crawl stage
+                ss_anim->next_state = TR_STATE_LARA_CRAWL_IDLE;                 // Both forward & back provoke crawl stage
             }
             else if(cmd->jump == 1)
             {
-                ss_anim->next_state = TR_STATE_LARA_CROUCH_ROLL;                 // Crouch roll
+                ss_anim->next_state = TR_STATE_LARA_CROUCH_ROLL;                // Crouch roll
             }
             else
             {
@@ -3150,6 +3150,10 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->no_fix_skeletal_parts = BODY_PART_HANDS_2 | BODY_PART_HANDS_3 | BODY_PART_LEGS_3 | BODY_PART_HEAD;
             break;
 
+        case TR_ANIMATION_LARA_CROUCH_TO_STAND:
+            ent->no_fix_skeletal_parts = BODY_PART_HANDS | BODY_PART_LEGS;
+            break;
+            
         case TR_ANIMATION_LARA_TRY_HANG_SOLID:
         case TR_ANIMATION_LARA_FLY_FORWARD_TRY_HANG:
             if((ent->move_type == MOVE_FREE_FALLING) && (ent->character->cmd.action) &&

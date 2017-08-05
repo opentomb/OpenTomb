@@ -176,7 +176,7 @@ void Character_Update(struct entity_s *ent)
     if(mask == (ent->state_flags & mask))
     {
         room_box_p last_box = (ent->current_sector) ? (ent->current_sector->box) : (NULL);
-        bool is_player = (World_GetPlayer() == ent);       
+        bool is_player = (World_GetPlayer() == ent);
         if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
         {
             Entity_CheckActivators(ent);
