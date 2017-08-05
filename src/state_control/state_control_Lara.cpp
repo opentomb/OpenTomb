@@ -2633,8 +2633,10 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(curr_fc->floor_hit.hit && (curr_fc->transition_level - curr_fc->floor_hit.point[2] < ent->character->height - ent->character->swim_depth))
             {
-                ss_anim->next_state = TR_STATE_LARA_WADE_FORWARD;
-                ss_anim->onEndFrame = ent_set_on_floor;                         // to wade
+                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_WADE, 0);
+                ent->move_type = MOVE_ON_FLOOR;
+                //ss_anim->next_state = TR_STATE_LARA_WADE_FORWARD;
+                //ss_anim->onEndFrame = ent_set_on_floor;
             }
             else if((cmd->move[0] == 1) && !clean_action)
             {
