@@ -313,6 +313,7 @@ void Engine_Init_Pre()
 
     Cam_Init(&engine_camera);
     engine_camera_state.state = CAMERA_STATE_NORMAL;
+    engine_camera_state.target_id = ENTITY_ID_NONE;
     engine_camera_state.flyby = NULL;
     engine_camera_state.sink = NULL;
     engine_camera_state.shake_value = 0.0f;

@@ -70,7 +70,7 @@ typedef struct camera_s
 
     GLfloat                     clip_planes[16];        // frustum side clip planes
     GLfloat                     prev_pos[3];            // previous camera position
-    GLfloat                     ang[3];                 // camera orientation
+    GLfloat                     ang[3];                 // camera orientation ZXY
     struct frustum_s           *frustum;                // camera frustum structure
     GLfloat                     dist_near;
     GLfloat                     dist_far;
