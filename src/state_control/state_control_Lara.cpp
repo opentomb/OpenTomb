@@ -107,6 +107,7 @@ void ent_correct_swandiwe_angle(entity_p ent, ss_animation_p ss_anim)
         float ang[3];
         Mat4_GetAnglesZXY(ang, ent->bf->bone_tags->full_transform);
         ent->angles[1] = ang[1];
+        ent->transform[12 + 2] += 256.0f;
         Entity_UpdateTransform(ent);
         ss_anim->onEndFrame = NULL;
     }
@@ -1616,7 +1617,8 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 float new_tr[16];
                 Mat4_Copy(new_tr, ent->transform);
-                ent->angles[1] = -45.0;
+                vec3_sub_mul(new_tr + 12, new_tr + 12, new_tr + 4, 256.0f);
+                ent->angles[1] = -45.0f;
                 Mat4_SetAnglesZXY(new_tr, ent->angles);
                 cmd->rot[1] = 0.0;
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_TO_UNDERWATER, 0, new_tr);
@@ -2251,6 +2253,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 float new_tr[16];
                 Mat4_Copy(new_tr, ent->transform);
+                vec3_sub_mul(new_tr + 12, new_tr + 12, new_tr + 4, 256.0f);
                 ent->angles[1] = -45.0f;
                 Mat4_SetAnglesZXY(new_tr, ent->angles);
                 cmd->rot[1] = 0.0;
@@ -2288,13 +2291,13 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
              * FREE FALL TO UNDERWATER CASES
              */
         case TR_STATE_LARA_UNDERWATER_DIVING:
-            if(ent->move_type != MOVE_FREE_FALLING)
+            /*if(ent->move_type != MOVE_FREE_FALLING)
             {
                 ent->angles[1] = -45.0;
                 cmd->rot[1] = 0.0;
                 Entity_UpdateTransform(ent);
                 ss_anim->onEndFrame = ent_correct_diving_angle;
-            }
+            }*/
             break;
 
         case TR_STATE_LARA_FREEFALL:
@@ -2317,6 +2320,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 float new_tr[16];
                 Mat4_Copy(new_tr, ent->transform);
+                vec3_sub_mul(new_tr + 12, new_tr + 12, new_tr + 4, 256.0f);
                 ent->angles[1] = -45.0;
                 Mat4_SetAnglesZXY(new_tr, ent->angles);
                 cmd->rot[1] = 0.0;
