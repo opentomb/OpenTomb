@@ -46,6 +46,7 @@ void Character_Create(struct entity_s *ent)
         ret->target_id = ENTITY_ID_NONE;
         ret->hair_count = 0;
         ret->path_dist = 0;
+        ret->path[0] = (ent->current_sector) ? (ent->current_sector->box) : (NULL);
         ret->path_target = NULL;
         ret->hairs = NULL;
         ret->ragdoll = NULL;
@@ -243,7 +244,7 @@ void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target)
 
 void Character_FixByBox(struct entity_s *ent, room_box_p curr_box)
 {
-    curr_box = (ent->character->path_dist > 0) ? (ent->character->path[0]) : (curr_box);
+    curr_box = (ent->character->path[0]) ? (ent->character->path[0]) : (curr_box);
     if(curr_box)
     {
         float r = ent->bf->bone_tags->mesh_base->radius;
