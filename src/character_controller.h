@@ -228,7 +228,7 @@ typedef struct character_state_s
     uint32_t    step_z : 2;     //0 - none, 1 - dz to step up, 2 - dz to step down;
     uint32_t    uw_current : 1;
     uint32_t    attack : 1;
-    uint32_t    dead : 1;
+    uint32_t    dead : 2;
     uint32_t    ragdoll : 1;
     uint32_t    burn : 1;
     uint32_t    crouch : 1;
@@ -314,7 +314,7 @@ void Character_Create(struct entity_s *ent);
 void Character_Delete(struct entity_s *ent);
 void Character_Update(struct entity_s *ent);
 void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target);
-void Character_GoToPathTarget(struct entity_s *ent);
+void Character_GoByPathToTarget(struct entity_s *ent);
 void Character_UpdateAI(struct entity_s *ent);
 
 void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);

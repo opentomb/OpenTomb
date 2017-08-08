@@ -128,6 +128,10 @@ int StateControl_TorsoBoss(struct entity_s *ent, struct ss_animation_s *ss_anim)
             cmd->rot[0] = 0;
             break;
 
+        case TR_STATE_TORSO_BOSS_DEAD:
+            state->dead = 0x02;
+            break;
+            
         default:
             cmd->rot[0] = 0;
             break;

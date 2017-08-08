@@ -123,6 +123,10 @@ int StateControl_MrT(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ss_anim->next_state = TR_STATE_MRT_STAY;
             }
             break;
+            
+        case TR_STATE_MRT_DEAD:
+            state->dead = 0x02;
+            break;
     };
 
     if(state->slide == CHARACTER_SLIDE_BACK)

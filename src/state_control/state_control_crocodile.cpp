@@ -125,6 +125,10 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     ss_anim->next_state = TR_STATE_CROCODILE_UW_FLOW;
                 }
                 break;
+                
+        case TR_STATE_CROCODILE_DEAD:
+            state->dead = 0x02;
+            break;
         };
     }
     else if(ss_anim->model->id == TR_MODEL_CROCODILE_OF_TR1)
@@ -193,6 +197,10 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             case TR_STATE_CROCODILE_ATTACK:
                 state->attack = 0x01;
+                break;
+                
+            case TR_STATE_CROCODILE_DEAD:
+                state->dead = 0x02;
                 break;
         };
     }

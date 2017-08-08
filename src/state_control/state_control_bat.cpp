@@ -104,12 +104,14 @@ int StateControl_Bat(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_BAT_DEAD:
             cmd->rot[0] = 0;
             ent->dir_flag = ENT_STAY;
+            state->dead = 0x02;
             if(ent->move_type == MOVE_FREE_FALLING)
             {
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_BAT_DROP, 0, NULL);
+                state->dead = 0x01;
             }
             break;
     };
-
+    
     return 0;
 }

@@ -213,6 +213,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
          * Base onfloor animations
          */
         case TR_STATE_LARA_DEATH:
+            state->dead = 0x02;
             if(is_last_frame && !(ent->type_flags & ENTITY_TYPE_DYNAMIC))
             {
                 state->ragdoll = 0x01;
@@ -3106,7 +3107,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ss_anim->next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
             }
             break;
-
+            
             /*
              * intermediate animations are processed automatically.
              */

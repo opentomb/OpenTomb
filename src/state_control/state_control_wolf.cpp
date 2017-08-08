@@ -234,10 +234,13 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             break;
 
-        default:
         case TR_STATE_WOLF_DEAD:// 11
-            cmd->rot[0] = 0;
+            state->dead = 0x02;
             break;
+            
+        default:
+            cmd->rot[0] = 0;
+            break;            
     };
 
     return 0;

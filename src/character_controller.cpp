@@ -181,10 +181,17 @@ void Character_Update(struct entity_s *ent)
         {
             Entity_CheckActivators(ent);
         }
-        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0f)
+        
+        
+        if(ent->character->state.dead)
         {
-            ent->character->state.dead = 1;                                     // Kill, if no HP.
+            memset(&ent->character->cmd, 0x00, sizeof(ent->character->cmd));
         }
+        else if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0f)
+        {
+            ent->character->state.dead = 0x01;                                  // Kill, if no HP.
+        }
+        
         if(!is_player && !ent->character->state.dead)
         {
             Character_UpdateAI(ent);
@@ -299,7 +306,7 @@ void Character_FixByBox(struct entity_s *ent)
 }
 
 
-void Character_GoToPathTarget(struct entity_s *ent)
+void Character_GoByPathToTarget(struct entity_s *ent)
 {
     if(ent->current_sector && ent->current_sector->box &&
        ent->character->path_target && (ent->character->path_dist > 0))
@@ -349,22 +356,15 @@ void Character_GoToPathTarget(struct entity_s *ent)
 
         float sin_a = dir[0] * ent->transform[4 + 1] - dir[1] * ent->transform[4 + 0];
         float cos_a = dir[0] * ent->transform[4 + 0] + dir[1] * ent->transform[4 + 1];
+        float delta = (180.0f / M_PI) * sin_a / cos_a;
         ent->character->cmd.rot[0] = 0;
-        if(sin_a > 0.10f)
-        {
-            ent->character->cmd.rot[0] = -1;
-        }
-        else if(sin_a < -0.10f)
-        {
-            ent->character->cmd.rot[0] = 1;
-        }
-        else if(cos_a < -0.90)
+        if((cos_a < 0.90) || (fabs(delta) > engine_frame_time * ent->character->rotate_speed_mult))
         {
             ent->character->cmd.rot[0] = (sin_a >= 0.0f) ? (-1) : (1);
         }
         else
         {
-            ent->angles[0] -= (180.0f / M_PI) * engine_frame_time * ent->character->rotate_speed_mult * sin_a / cos_a;
+            ent->angles[0] -=  delta;
         }
 
         if(ent->move_type == MOVE_FLY)
@@ -400,7 +400,7 @@ void Character_UpdateAI(struct entity_s *ent)
         Character_UpdatePath(ent, ent->character->path_target);
     }
 
-    Character_GoToPathTarget(ent);
+    Character_GoByPathToTarget(ent);
 }
 
 
@@ -471,6 +471,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
 
     v = ent->bf->bone_tags[0].transform + 12;
     Mat4_vec3_mul_macro(from, ent->transform, v);
+    from[2] -= ent->speed[2] * engine_frame_time;
     Character_GetHeightInfo(from, hi, ent->character->height);
 }
 
@@ -2150,11 +2151,11 @@ void Character_UpdateParams(struct entity_s *ent)
             break;
 
         case MOVE_UNDERWATER:
-            if(!Character_ChangeParam(ent, PARAM_AIR, -speed))
+            if(!ent->character->state.dead && !Character_ChangeParam(ent, PARAM_AIR, -speed))
             {
                 if(!Character_ChangeParam(ent, PARAM_HEALTH, -3.0f * speed))
                 {
-                    ent->character->state.dead = 1;
+                    ent->character->state.dead = 0x01;
                 }
             }
             break;

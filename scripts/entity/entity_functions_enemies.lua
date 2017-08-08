@@ -134,7 +134,7 @@ function baddie_init(id)    -- INVALID!
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
-        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+        if(getCharacterState(object_id, CHARACTER_STATE_DEAD) > 1) then
             local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
             if(f + 1 >= c) then
                 setEntityActivity(object_id, false);
@@ -221,7 +221,7 @@ function bat_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_BAT);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_FLY);
-    setCharacterMoveSizes(id, 64.0, 0.0, 0.0, 0.0, 32.0); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
+    setCharacterMoveSizes(id, 64.0, 64.0, 0.0, 0.0, 64.0); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
@@ -249,7 +249,6 @@ function bat_init(id)
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
-            setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
         end;
     end;
 
@@ -259,8 +258,6 @@ function bat_init(id)
             entity_funcs[activator_id].onHit(activator_id, object_id);
         end;
     end;
-
-    entity_funcs[id].onLoop = nil;
 
 end;
 
@@ -340,8 +337,6 @@ function bear_init(id)
             setEntityCollision(object_id, false);
         end;
     end;
-
-    entity_funcs[id].onLoop = nil;
 end;
 
 
@@ -971,10 +966,13 @@ function skateboardist_init(id)
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
-        local a, f = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
         setEntityAnim(entity_funcs[object_id].skate_id, ANIM_TYPE_BASE, a, f);
         entitySSAnimCopy(entity_funcs[object_id].skate_id, object_id);
         setEntityPos(entity_funcs[object_id].skate_id, getEntityPos(object_id));
+        if ((getCharacterState(object_id, CHARACTER_STATE_DEAD) > 1) and (f + 1 >= c)) then
+            setEntityActivity(object_id, false);
+        end;
     end;
 end
 

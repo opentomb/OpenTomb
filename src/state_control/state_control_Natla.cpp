@@ -173,6 +173,10 @@ int StateControl_Natla(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ss_anim->next_state = TR_STATE_NATLA_FLY;
             }
             break;
+            
+        case TR_STATE_NATLA_DEAD:
+            state->dead = 0x02;
+            break;
     };
 
     if(state->slide == CHARACTER_SLIDE_BACK)

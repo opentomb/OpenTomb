@@ -119,6 +119,10 @@ int StateControl_Lion(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LION_STAY_ATTACK:
             state->attack = 0x01;
             break;
+            
+        case TR_STATE_LION_DEAD:
+            state->dead = 0x02;
+            break;
     };
 
     return 0;

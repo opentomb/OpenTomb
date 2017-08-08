@@ -115,6 +115,7 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             case TR_STATE_RAT_OW_DEAD:
                 cmd->rot[0] = 0;
+                state->dead = 0x02;
                 break;
 
             case TR_STATE_RAT_OW_ATTACK:
@@ -186,6 +187,10 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
             case TR_STATE_RAT_RUN_ATTACK:
                 state->attack = 0x01;
                 break;
+                
+        case TR_STATE_RAT_DEAD:
+            state->dead = 0x02;
+            break;
         };
     }
 

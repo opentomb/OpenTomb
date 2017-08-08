@@ -119,6 +119,10 @@ int StateControl_Puma(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_PUMA_STAY_ATTACK:
             state->attack = 0x01;
             break;
+            
+        case TR_STATE_PUMA_DEAD:
+            state->dead = 0x02;
+            break;
     };
 
     return 0;

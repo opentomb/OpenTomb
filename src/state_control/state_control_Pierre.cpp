@@ -138,6 +138,10 @@ int StateControl_Pierre(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_PIERRE_STOP_SHOOTING, 0, NULL);
             }
             break;
+            
+        case TR_STATE_PIERRE_DEAD:
+            state->dead = 0x02;
+            break;
     };
 
     if(state->slide == CHARACTER_SLIDE_BACK)

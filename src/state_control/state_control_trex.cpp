@@ -110,6 +110,10 @@ int StateControl_TRex(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ss_anim->next_state = TR_STATE_TREX_ATTACK;
             }
             break;
+            
+        case TR_STATE_TREX_DEAD:
+            state->dead = 0x02;
+            break;
     };
 
     return 0;

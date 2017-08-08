@@ -21,5 +21,5 @@ noclip(0);
 --loadMap(base_path .. "tests/altroom3/LEVEL1.PHD");
 --loadMap(base_path .. "tests/heavy1/LEVEL1.PHD");
 --loadMap(base_path .. "tests/TRIGGERS.PHD");
-setgamef(4, 22);
---dofile(base_path .. "save/qsave.lua");
+--setgamef(4, 22);
+dofile(base_path .. "save/qsave.lua");

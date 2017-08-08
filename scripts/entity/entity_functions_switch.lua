@@ -472,7 +472,7 @@ function switch_init(id)     -- Ordinary switches
         end;
 
         if(ret > 0) then
-            entityRotateToTriggerZ(activator_id, object_id);
+            entityRotateToTrigger(activator_id, object_id, -1);
             entityMoveToTriggerActivationPoint(activator_id, object_id);
             return ENTITY_TRIGGERING_ACTIVATED;
         end;

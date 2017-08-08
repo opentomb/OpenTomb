@@ -226,6 +226,10 @@ int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_GORILLA_STAY_ATTACK:
             state->attack = 0x01;
             break;
+            
+        case TR_STATE_GORILLA_DEAD:
+            state->dead = 0x02;
+            break;
     };
 
     if(state->slide == CHARACTER_SLIDE_BACK)

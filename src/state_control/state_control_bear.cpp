@@ -150,8 +150,11 @@ int StateControl_Bear(struct entity_s *ent, struct ss_animation_s *ss_anim)
             state->attack = 0x01;
             break;
 
-        default:
         case TR_STATE_BEAR_DEAD:
+            state->dead = 0x02;
+            break;            
+            
+        default:
             cmd->rot[0] = 0;
             break;
     };

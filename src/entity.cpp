@@ -796,7 +796,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                     break;
 
                 case TR_ANIMCOMMAND_KILL:
-                    if(entity->character)
+                    if(entity->character && !entity->character->state.dead)
                     {
                         entity->character->state.dead = 0x01;
                     }
@@ -1031,7 +1031,7 @@ void Entity_ProcessSector(entity_p ent)
                 ent->character->height_info.ceiling_climb = 0x01;
             }
 
-            if(lowest_sector->flags & SECTOR_FLAG_DEATH)
+            if(!ent->character->state.dead && (lowest_sector->flags & SECTOR_FLAG_DEATH))
             {
                 switch(ent->move_type)
                 {

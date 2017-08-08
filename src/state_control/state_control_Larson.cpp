@@ -138,6 +138,10 @@ int StateControl_Larson(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARSON_STOP_SHOOTING, 0, NULL);
             }
             break;
+            
+        case TR_STATE_LARSON_DEAD:
+            state->dead = 0x02;
+            break;
     };
 
     if(state->slide == CHARACTER_SLIDE_BACK)
