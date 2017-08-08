@@ -25,7 +25,7 @@
 #include "mesh.h"
 
 void Character_CollisionCallback(struct entity_s *ent, struct collision_node_s *cn);
-void Character_FixByBox(struct entity_s *ent, room_box_p curr_box);
+void Character_FixByBox(struct entity_s *ent);
 
 void Character_Create(struct entity_s *ent)
 {
@@ -176,7 +176,6 @@ void Character_Update(struct entity_s *ent)
     const uint16_t mask = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE;
     if(mask == (ent->state_flags & mask))
     {
-        room_box_p last_box = (ent->current_sector) ? (ent->current_sector->box) : (NULL);
         bool is_player = (World_GetPlayer() == ent);
         if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
         {
@@ -186,7 +185,7 @@ void Character_Update(struct entity_s *ent)
         {
             ent->character->state.dead = 1;                                     // Kill, if no HP.
         }
-        if(!is_player)
+        if(!is_player && !ent->character->state.dead)
         {
             Character_UpdateAI(ent);
         }
@@ -196,9 +195,9 @@ void Character_Update(struct entity_s *ent)
         Character_UpdateParams(ent);
         Entity_CheckCollisionCallbacks(ent);
 
-        if(!is_player)
+        if(!is_player && !ent->character->state.dead)
         {
-            Character_FixByBox(ent, last_box);
+            Character_FixByBox(ent);
         }
 
         for(int h = 0; h < ent->character->hair_count; h++)
@@ -242,16 +241,16 @@ void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target)
 }
 
 
-void Character_FixByBox(struct entity_s *ent, room_box_p curr_box)
+void Character_FixByBox(struct entity_s *ent)
 {
-    curr_box = (ent->character->path[0]) ? (ent->character->path[0]) : (curr_box);
-    if(curr_box)
+    if(ent->character->path[0])
     {
         float r = ent->bf->bone_tags->mesh_base->radius;
+        room_box_p curr_box = ent->character->path[0];
         room_box_p next_box = (ent->character->path_dist > 1) ? (ent->character->path[1]) : (NULL);
         int32_t fix_x = 0;
         int32_t fix_y = 0;
-        
+
         if(ent->transform[12 + 2] < curr_box->bb_min[2])
         {
             ent->transform[12 + 2] = curr_box->bb_min[2];
@@ -335,7 +334,7 @@ void Character_GoToPathTarget(struct entity_s *ent)
             }
             ent->character->path_dist--;
         }
-        
+
         if(ent->character->path_dist == 1)
         {
             vec3_copy(dir, ent->character->path_target->pos);
@@ -348,15 +347,24 @@ void Character_GoToPathTarget(struct entity_s *ent)
         vec3_sub(dir, dir, ent->transform + 12);
         vec3_norm(dir, dir[3]);
 
-        float z = dir[0] * ent->transform[4 + 1] - dir[1] * ent->transform[4 + 0];
+        float sin_a = dir[0] * ent->transform[4 + 1] - dir[1] * ent->transform[4 + 0];
+        float cos_a = dir[0] * ent->transform[4 + 0] + dir[1] * ent->transform[4 + 1];
         ent->character->cmd.rot[0] = 0;
-        if(z > 0.01f)
+        if(sin_a > 0.10f)
         {
             ent->character->cmd.rot[0] = -1;
         }
-        else if(z < -0.01f)
+        else if(sin_a < -0.10f)
         {
             ent->character->cmd.rot[0] = 1;
+        }
+        else if(cos_a < -0.90)
+        {
+            ent->character->cmd.rot[0] = (sin_a >= 0.0f) ? (-1) : (1);
+        }
+        else
+        {
+            ent->angles[0] -= (180.0f / M_PI) * engine_frame_time * ent->character->rotate_speed_mult * sin_a / cos_a;
         }
 
         if(ent->move_type == MOVE_FLY)
@@ -376,7 +384,7 @@ void Character_GoToPathTarget(struct entity_s *ent)
         }
         else
         {
-            ent->character->cmd.shift = (fabs(z) > 0.4f) || (dir[3] < 4096.0f);
+            ent->character->cmd.shift = (dir[3] < 4096.0f);
         }
         ent->character->cmd.move[0] = (dir[3] > 32.0f) ? (0x01) : (0x00);
     }
@@ -385,17 +393,14 @@ void Character_GoToPathTarget(struct entity_s *ent)
 
 void Character_UpdateAI(struct entity_s *ent)
 {
-    if(!ent->character->state.dead)
+    entity_p target = World_GetEntityByID(ent->character->target_id);
+    if(target && target->current_sector && (ent->character->path_target != target->current_sector))
     {
-        entity_p target = World_GetEntityByID(ent->character->target_id);
-        if(target && target->current_sector && (ent->character->path_target != target->current_sector))
-        {
-            ent->character->path_target = target->current_sector;
-            Character_UpdatePath(ent, ent->character->path_target);
-        }
-
-        Character_GoToPathTarget(ent);
+        ent->character->path_target = target->current_sector;
+        Character_UpdatePath(ent, ent->character->path_target);
     }
+
+    Character_GoToPathTarget(ent);
 }
 
 
@@ -1813,7 +1818,7 @@ int Character_FindTraverse(struct entity_s *ch)
 
     if(obj_s != NULL)
     {
-        obj_s = Sector_GetPortalSectorTargetReal(obj_s);
+        obj_s = Sector_GetPortalSectorTargetRaw(obj_s);
         for(engine_container_p cont = obj_s->owner_room->containers; cont; cont = cont->next)
         {
             if(cont->object_type == OBJECT_ENTITY)
@@ -1956,7 +1961,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         next_s = Room_GetSectorRaw(obj_s->owner_room->real_room, pos);
     }
 
-    next_s = Sector_GetPortalSectorTargetReal(next_s);
+    next_s = Sector_GetPortalSectorTargetRaw(next_s);
     if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor) == 0x01))
     {
         float from[3], to[3];
@@ -2000,7 +2005,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         next_s = Room_GetSectorRaw(ch_s->owner_room->real_room, pos);
     }
 
-    next_s = Sector_GetPortalSectorTargetReal(next_s);
+    next_s = Sector_GetPortalSectorTargetRaw(next_s);
     if((next_s != NULL) && (Sector_AllowTraverse(next_s, floor) == 0x01))
     {
         float from[3], to[3];

@@ -254,7 +254,7 @@ int lua_SimilarSector(lua_State * lua)
             next_pos[2] = ent->transform[12 + 2] + (dx * ent->transform[0 + 2] + dy * ent->transform[4 + 2] + dz * ent->transform[8 + 2]);
 
             room_sector_p next_sector = Room_GetSectorRaw(ent->current_sector->owner_room, next_pos);
-            next_sector = Sector_GetPortalSectorTargetReal(next_sector);
+            next_sector = Sector_GetPortalSectorTargetRaw(next_sector);
 
             bool ignore_doors = lua_toboolean(lua, 5);
 

@@ -318,7 +318,6 @@ void Room_GenSpritesBuffer(struct room_s *room);
 
 struct room_sector_s *Sector_GetNextSector(struct room_sector_s *rs, float dir[3]);
 struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs);
-struct room_sector_s *Sector_GetPortalSectorTargetReal(struct room_sector_s *rs);
 
 struct room_sector_s *Sector_GetLowest(struct room_sector_s *sector);
 struct room_sector_s *Sector_GetHighest(struct room_sector_s *sector);
