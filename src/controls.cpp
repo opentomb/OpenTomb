@@ -399,6 +399,8 @@ void Controls_RefreshStates()
 void Controls_InitGlobals()
 {
     control_mapper.mouse_sensitivity = 25.0;
+    control_mapper.mouse_invert_x = 0;
+    control_mapper.mouse_invert_y = 0;
     control_mapper.use_joy = 0;
 
     control_mapper.joy_number = 0;              ///@FIXME: Replace with joystick scanner default value when done.
