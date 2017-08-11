@@ -185,6 +185,7 @@ void Character_Update(struct entity_s *ent)
         if(ent->character->state.dead)
         {
             memset(&ent->character->cmd, 0x00, sizeof(ent->character->cmd));
+            Character_ClearLookAt(ent);
         }
         else if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0f)
         {

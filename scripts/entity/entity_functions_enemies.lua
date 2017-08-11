@@ -221,6 +221,7 @@ function bat_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_BAT);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_FLY);
+    setCharacterBones(id, 4, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 64.0, 64.0, 0.0, 0.0, 64.0); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
@@ -312,6 +313,7 @@ function bear_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_BEAR);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 14, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 256, 256);
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
@@ -347,6 +349,7 @@ function raptor_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_RAPTOR);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 22, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 256, 256);
 
     setCharacterParam(id, PARAM_HEALTH, 200, 200);
@@ -388,6 +391,7 @@ function lion_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LION);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 20, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 256, 256);
 
     setCharacterParam(id, PARAM_HEALTH, 200, 200);
@@ -429,6 +433,7 @@ function puma_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_PUMA);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 20, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 256, 256);
 
     setCharacterParam(id, PARAM_HEALTH, 200, 200);
@@ -470,6 +475,7 @@ function winged_mutant_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_WINGED_MUTANT);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 3, 1, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 256, 256);
 
     setCharacterParam(id, PARAM_HEALTH, 300, 300);
@@ -529,6 +535,7 @@ function trex_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_TREX);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 12, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 2048.0, 256.0, 256.0, 256, 256);
 
     setCharacterParam(id, PARAM_HEALTH, 2000, 2000);
@@ -586,6 +593,7 @@ function gorilla_init(id)
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_2);
     setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 768, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
+    setCharacterBones(id, 14, 7, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 512.0, nil, nil, nil, nil); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
@@ -627,6 +635,7 @@ function crocodile_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_CROCODILE);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 8, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 256.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
@@ -664,10 +673,10 @@ function rat_init(id)
     setEntityGhostCollisionShape(id, 1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setEntityGhostCollisionShape(id, 2,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setEntityGhostCollisionShape(id, 9,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
-    setCharacterBones(id, 2, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_RAT);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 2, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 256.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
@@ -710,6 +719,7 @@ function centaur_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_CENTAUR);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 18, 11, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 1024.0, 256.0, 256.0, 256, 256);                  -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
@@ -748,6 +758,7 @@ function Larson_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LARSON);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 8, 7, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 768.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
@@ -799,6 +810,7 @@ function Pierre_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_PIERRE);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 8, 7, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 768.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     entity_funcs[id].is_flee = (getLevel() ~= 9) or (getEntityRoom(id) ~= 110);
@@ -858,6 +870,7 @@ function cowboy_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_COWBOY);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 2, 1, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 768.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
@@ -892,6 +905,7 @@ function MrT_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_MRT);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 2, 1, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 800.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
@@ -928,6 +942,7 @@ function skateboardist_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_SKATEBOARDIST);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 8, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 768.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     entity_funcs[id].onSave = function()
@@ -983,6 +998,7 @@ function TorsoBoss_init(id)
     setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_SPHERE, nil, nil, 128, nil, nil, 768);     -- base
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_TORSO_BOSS);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 3, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 1680.0, 256.0, 256.0, 256, 256);                  -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     enableEntity(id);
@@ -1039,6 +1055,7 @@ function Natla_init(id)
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_NATLA);
     setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
+    setCharacterBones(id, 2, 1, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 768.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
