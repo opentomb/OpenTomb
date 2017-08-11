@@ -43,7 +43,6 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     const float test_r = 16.0f;
 
     vec3_copy(cam_pos, cam->gl_transform + 12);
-    cam->current_room = ent->self->room;
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
 
     if(control_states.mouse_look == 0)//If mouse look is off

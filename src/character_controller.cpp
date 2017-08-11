@@ -181,8 +181,7 @@ void Character_Update(struct entity_s *ent)
         {
             Entity_CheckActivators(ent);
         }
-        
-        
+
         if(ent->character->state.dead)
         {
             memset(&ent->character->cmd, 0x00, sizeof(ent->character->cmd));
@@ -312,6 +311,7 @@ void Character_GoByPathToTarget(struct entity_s *ent)
        ent->character->path_target && (ent->character->path_dist > 0))
     {
         float dir[4];
+        ent->character->rotate_speed_mult = 1.0f;
         ent->character->cmd.rot[0] = 0;
         ent->character->cmd.move[0] = 0;
         ent->character->cmd.move[1] = 0;
@@ -356,15 +356,12 @@ void Character_GoByPathToTarget(struct entity_s *ent)
 
         float sin_a = dir[0] * ent->transform[4 + 1] - dir[1] * ent->transform[4 + 0];
         float cos_a = dir[0] * ent->transform[4 + 0] + dir[1] * ent->transform[4 + 1];
-        float delta = (180.0f / M_PI) * sin_a / cos_a;
-        ent->character->cmd.rot[0] = 0;
-        if((cos_a < 0.90) || (fabs(delta) > engine_frame_time * ent->character->rotate_speed_mult))
+        float delta = fabs((180.0f / M_PI) * sin_a / cos_a);
+
+        ent->character->cmd.rot[0] = (sin_a >= 0.0f) ? (-1) : (1);    
+        if((cos_a > 0.75) && (delta < 360.0f * engine_frame_time))
         {
-            ent->character->cmd.rot[0] = (sin_a >= 0.0f) ? (-1) : (1);
-        }
-        else
-        {
-            ent->angles[0] -=  delta;
+            ent->character->rotate_speed_mult = delta / (360.0f * engine_frame_time);
         }
 
         if(ent->move_type == MOVE_FLY)
@@ -394,10 +391,17 @@ void Character_GoByPathToTarget(struct entity_s *ent)
 void Character_UpdateAI(struct entity_s *ent)
 {
     entity_p target = World_GetEntityByID(ent->character->target_id);
-    if(target && target->current_sector && (ent->character->path_target != target->current_sector))
+    if(target)
     {
-        ent->character->path_target = target->current_sector;
-        Character_UpdatePath(ent, ent->character->path_target);
+        if(ent->character->bone_head > 0)
+        {
+            Character_LookAt(ent, target->obb->centre);
+        }
+        if(target->current_sector && (ent->character->path_target != target->current_sector))
+        {
+            ent->character->path_target = target->current_sector;
+            Character_UpdatePath(ent, ent->character->path_target);
+        }
     }
 
     Character_GoByPathToTarget(ent);
@@ -1114,7 +1118,7 @@ void Character_LookAt(struct entity_s *ent, float target[3])
         anim_head_track->anim_ext_flags |= ANIM_EXT_TARGET_TO;
         if((ent->move_type == MOVE_ON_FLOOR) || (ent->move_type == MOVE_FREE_FALLING))
         {
-            const float axis_mod[3] = {0.33f, 0.33f, 1.0f};
+            const float axis_mod[3] = {0.23f, 0.33f, 1.0f};
             const float target_limit[4] = {0.0f, 1.0f, 0.0f, 0.883f};
 
             base_anim->targeting_flags = 0x0000;
@@ -1318,45 +1322,38 @@ int Character_MoveFly(struct entity_s *ent)
     ent->character->state.ceiling_collide = 0x00;
     ent->character->state.wall_collide = 0x00;
 
-    if(!ent->character->state.dead)   // Block controls if character is dead.
+    character_command_p cmd = &ent->character->cmd;
+    float dir[3] = {0.0f, 0.0f, 0.0f};
+    // Calculate current speed.
+    if(cmd->move[0] || cmd->move[1] || cmd->move[2])
     {
-        character_command_p cmd = &ent->character->cmd;
-        float dir[3] = {0.0f, 0.0f, 0.0f};
-        // Calculate current speed.
-        if(cmd->move[0] || cmd->move[1] || cmd->move[2])
+        ent->linear_speed += MAX_SPEED_UNDERWATER * INERTIA_SPEED_UNDERWATER * engine_frame_time;
+        if(ent->linear_speed > MAX_SPEED_UNDERWATER)
         {
-            ent->linear_speed += MAX_SPEED_UNDERWATER * INERTIA_SPEED_UNDERWATER * engine_frame_time;
-            if(ent->linear_speed > MAX_SPEED_UNDERWATER)
-            {
-                ent->linear_speed = MAX_SPEED_UNDERWATER;
-            }
+            ent->linear_speed = MAX_SPEED_UNDERWATER;
         }
-        else if(ent->linear_speed > 0.0f)
+    }
+    else if(ent->linear_speed > 0.0f)
+    {
+        ent->linear_speed -= MAX_SPEED_UNDERWATER * INERTIA_SPEED_UNDERWATER * engine_frame_time;
+        if(ent->linear_speed < 0.0f)
         {
-            ent->linear_speed -= MAX_SPEED_UNDERWATER * INERTIA_SPEED_UNDERWATER * engine_frame_time;
-            if(ent->linear_speed < 0.0f)
-            {
-                ent->linear_speed = 0.0f;
-            }
+            ent->linear_speed = 0.0f;
         }
+    }
 
-        if(!cmd->shift)
-        {
-            ent->angles[0] += ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * cmd->rot[0];
-            ent->angles[1]  = 0.0f;
-            ent->angles[2]  = 0.0f;
-            Entity_UpdateTransform(ent);
-        }
-        dir[0] = (cmd->shift) ? (cmd->move[1]) : (0.0f);
-        dir[1] = cmd->move[0];
-        dir[2] = cmd->move[2];
-        Mat4_vec3_rot_macro(ent->speed, ent->transform, dir);
-        vec3_mul_scalar(ent->speed, ent->speed, ent->linear_speed * ent->character->linear_speed_mult);    // OY move only!
-    }
-    else
+    if(!cmd->shift)
     {
-        ent->move_type = MOVE_FREE_FALLING;
+        ent->angles[0] += ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * cmd->rot[0];
+        ent->angles[1]  = 0.0f;
+        ent->angles[2]  = 0.0f;
+        Entity_UpdateTransform(ent);
     }
+    dir[0] = (cmd->shift) ? (cmd->move[1]) : (0.0f);
+    dir[1] = cmd->move[0];
+    dir[2] = cmd->move[2];
+    Mat4_vec3_rot_macro(ent->speed, ent->transform, dir);
+    vec3_mul_scalar(ent->speed, ent->speed, ent->linear_speed * ent->character->linear_speed_mult);    // OY move only!
 
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
     vec3_add(pos, pos, move);
@@ -1634,42 +1631,40 @@ int Character_MoveUnderWater(struct entity_s *ent)
     ent->character->state.ceiling_collide = 0x00;
     ent->character->state.wall_collide = 0x00;
 
-    if(!ent->character->state.dead)   // Block controls if Lara is dead.
+    // Calculate current speed.
+    if(ent->character->cmd.jump)
     {
-        // Calculate current speed.
-        if(ent->character->cmd.jump)
+        ent->linear_speed += MAX_SPEED_UNDERWATER * INERTIA_SPEED_UNDERWATER * engine_frame_time;
+        if(ent->linear_speed > MAX_SPEED_UNDERWATER)
         {
-            ent->linear_speed += MAX_SPEED_UNDERWATER * INERTIA_SPEED_UNDERWATER * engine_frame_time;
-            if(ent->linear_speed > MAX_SPEED_UNDERWATER)
-            {
-                ent->linear_speed = MAX_SPEED_UNDERWATER;
-            }
+            ent->linear_speed = MAX_SPEED_UNDERWATER;
         }
-        else if(ent->linear_speed > 0.0f)
-        {
-            ent->linear_speed -= MAX_SPEED_UNDERWATER * INERTIA_SPEED_UNDERWATER * engine_frame_time;
-            if(ent->linear_speed < 0.0f)
-            {
-                ent->linear_speed = 0.0f;
-            }
-        }
-
-        ent->angles[0] += ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
-        ent->angles[1] -= ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[1];
-        ent->angles[2]  = 0.0f;
-
-        if((ent->angles[1] > 70.0f) && (ent->angles[1] < 180.0f))               // Underwater angle limiter.
-        {
-           ent->angles[1] = 70.0f;
-        }
-        else if((ent->angles[1] > 180.0f) && (ent->angles[1] < 270.0f))
-        {
-            ent->angles[1] = 270.0f;
-        }
-
-        Entity_UpdateTransform(ent);                                            // apply rotations
-        vec3_mul_scalar(ent->speed, ent->transform + 4, ent->linear_speed * ent->character->linear_speed_mult);    // OY move only!
     }
+    else if(ent->linear_speed > 0.0f)
+    {
+        ent->linear_speed -= MAX_SPEED_UNDERWATER * INERTIA_SPEED_UNDERWATER * engine_frame_time;
+        if(ent->linear_speed < 0.0f)
+        {
+            ent->linear_speed = 0.0f;
+        }
+    }
+
+    ent->angles[0] += ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
+    ent->angles[1] -= ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[1];
+    ent->angles[2]  = 0.0f;
+
+    if((ent->angles[1] > 70.0f) && (ent->angles[1] < 180.0f))               // Underwater angle limiter.
+    {
+       ent->angles[1] = 70.0f;
+    }
+    else if((ent->angles[1] > 180.0f) && (ent->angles[1] < 270.0f))
+    {
+        ent->angles[1] = 270.0f;
+    }
+
+    Entity_UpdateTransform(ent);                                            // apply rotations
+    vec3_mul_scalar(ent->speed, ent->transform + 4, ent->linear_speed * ent->character->linear_speed_mult);    // OY move only!
+
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
     vec3_add(pos, pos, move);
     Entity_FixPenetrations(ent, Character_CollisionCallback, move, COLLISION_FILTER_CHARACTER);              // get horizontal collide

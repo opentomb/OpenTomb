@@ -31,7 +31,7 @@ gameflow_paths[GAME_2].level[11] = { name = "Tibetan Foothills",       filepath 
 gameflow_paths[GAME_2].level[12] = { name = "Barkhang Monastery",      filepath = "data/tr2/data/MONASTRY.TR2",     picpath = "data/tr2/pix/tibet" };
 gameflow_paths[GAME_2].level[13] = { name = "Catacombs of the Talion", filepath = "data/tr2/data/catacomb.TR2",     picpath = "data/tr2/pix/tibet" };
 gameflow_paths[GAME_2].level[14] = { name = "Ice Palace",              filepath = "data/tr2/data/ICECAVE.TR2",      picpath = "data/tr2/pix/tibet" };
-gameflow_paths[GAME_2].level[15] = { name = "Temple of Xian",          filepath = "data/tr2/data/Emprtomb.tr2",     picpath = "data/tr2/pix/china" };
+gameflow_paths[GAME_2].level[15] = { name = "Temple of Xian",          filepath = "data/tr2/data/Emprtomb.TR2",     picpath = "data/tr2/pix/china" };
 gameflow_paths[GAME_2].level[16] = { name = "Floating Islands",        filepath = "data/tr2/data/FLOATING.TR2",     picpath = "data/tr2/pix/china" };
 gameflow_paths[GAME_2].level[17] = { name = "The Dragon's Lair",       filepath = "data/tr2/data/xian.TR2",         picpath = "data/tr2/pix/china" };
 gameflow_paths[GAME_2].level[18] = { name = "Home Sweet Home",         filepath = "data/tr2/data/house.TR2",        picpath = "data/tr2/pix/mansion" };
