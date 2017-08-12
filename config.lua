@@ -36,6 +36,8 @@ render =
 controls =
 {
     mouse_sensitivity = 25.0;
+    mouse_invert_x = 0;
+    mouse_invert_y = 0;
 
     use_joy = 0;                                -- Use joystick - yes (1) or no (0)
     joy_number = 0;                             -- If you have one joystick in system, it will be 0.

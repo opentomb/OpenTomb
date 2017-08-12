@@ -678,8 +678,8 @@ void Engine_PollSDLEvents()
                 {
                     if(mouse_setup)                                             // it is not perfect way, but cursor
                     {                                                           // every engine start is in one place
-                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity * 0.01;
-                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity * 0.01;
+                        control_states.look_axis_x = event.motion.xrel * (control_mapper.mouse_invert_x ? -1 : 1) * control_mapper.mouse_sensitivity * 0.01;
+                        control_states.look_axis_y = event.motion.yrel * (control_mapper.mouse_invert_y ? -1 : 1) * control_mapper.mouse_sensitivity * 0.01;
                     }
 
                     if((event.motion.x < ((screen_info.w / 2) - (screen_info.w / 4))) ||
