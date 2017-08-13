@@ -948,7 +948,31 @@ void World_BuildNearRoomsList(struct room_s *room)
             Room_AddToNearRoomsList(room, rs->room_below->real_room);
         }
     }
+    
+    uint32_t list_1_size = room->content->near_room_list_size;
+    for(uint32_t j = 0; j < list_1_size; j++)
+    {
+        room_p r = room->content->near_room_list[j];
+        rs = r->content->sectors;
+        for(uint32_t i = 0; i < r->sectors_count; i++, rs++)
+        {
+            if(rs->portal_to_room)
+            {
+                Room_AddToNearRoomsList(room, rs->portal_to_room->real_room);
+            }
 
+            if(rs->room_above)
+            {
+                Room_AddToNearRoomsList(room, rs->room_above->real_room);
+            }
+
+            if(rs->room_below)
+            {
+                Room_AddToNearRoomsList(room, rs->room_below->real_room);
+            }
+        }
+    }
+    
     if(room->content->near_room_list_size > 0)
     {
         room_t **p = (room_t**)malloc(room->content->near_room_list_size * sizeof(room_t*));
@@ -2371,11 +2395,14 @@ void World_GenRoomProperties(class VT_Level *tr)
 
         // Basic sector calculations.
         Res_RoomSectorsCalculate(global_world.rooms, global_world.rooms_count, i, tr);
-
+    }
+    
+    for(uint32_t i = 0; i < global_world.rooms_count; i++)
+    {
         // Generate links to the overlapped rooms.
-        World_BuildOverlappedRoomsList(r);
+        World_BuildOverlappedRoomsList(global_world.rooms + i);
         // Generate links to the near rooms.
-        World_BuildNearRoomsList(r);
+        World_BuildNearRoomsList(global_world.rooms + i);
     }
 }
 

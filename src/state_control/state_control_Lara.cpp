@@ -94,20 +94,7 @@ void ent_correct_diving_angle(entity_p ent, ss_animation_p ss_anim)
 {
     if(ss_anim->frame_changing_state >= 0x02)
     {
-        ent->angles[1] = -45.0f;
-        Entity_UpdateTransform(ent);
-        ss_anim->onEndFrame = NULL;
-    }
-}
-
-void ent_correct_swandiwe_angle(entity_p ent, ss_animation_p ss_anim)
-{
-    if(ss_anim->frame_changing_state >= 0x02)
-    {
-        float ang[3];
-        Mat4_GetAnglesZXY(ang, ent->bf->bone_tags->full_transform);
-        ent->angles[1] = ang[1];
-        ent->transform[12 + 2] += 256.0f;
+        ent->angles[1] = (ss_anim->current_animation == TR_ANIMATION_LARA_FREE_FALL_FISH) ? (-75.0f) : (-45.0f);
         Entity_UpdateTransform(ent);
         ss_anim->onEndFrame = NULL;
     }
@@ -2378,7 +2365,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(ent->move_type == MOVE_UNDERWATER)
             {
                 ss_anim->next_state = TR_STATE_LARA_UNDERWATER_DIVING;
-                ss_anim->onEndFrame = ent_correct_swandiwe_angle;
+                ss_anim->onEndFrame = ent_correct_diving_angle;
             }
             else
             {
@@ -2411,7 +2398,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(ent->move_type == MOVE_UNDERWATER)
             {
                 ss_anim->next_state = TR_STATE_LARA_UNDERWATER_DIVING;
-                ss_anim->onEndFrame = ent_correct_swandiwe_angle;
+                ss_anim->onEndFrame = ent_correct_diving_angle;
             }
             else if(cmd->jump)
             {
