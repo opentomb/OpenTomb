@@ -35,7 +35,8 @@ render =
 
 controls =
 {
-    mouse_sensitivity = 25.0;
+    mouse_sensitivity_x = 0.25;                 -- to inverse mouse axis use negative values
+    mouse_sensitivity_y = 0.25;
 
     use_joy = 0;                                -- Use joystick - yes (1) or no (0)
     joy_number = 0;                             -- If you have one joystick in system, it will be 0.

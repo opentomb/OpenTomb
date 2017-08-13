@@ -86,7 +86,8 @@ typedef struct control_action_s
 
 typedef struct control_settings_s
 {
-    float       mouse_sensitivity;
+    float       mouse_sensitivity_x;
+    float       mouse_sensitivity_y;
 
     // Global joystick settings.
     int8_t      use_joy;

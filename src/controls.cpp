@@ -398,7 +398,8 @@ void Controls_RefreshStates()
 
 void Controls_InitGlobals()
 {
-    control_mapper.mouse_sensitivity = 25.0;
+    control_mapper.mouse_sensitivity_x = 0.25f;
+    control_mapper.mouse_sensitivity_y = 0.25f;
     control_mapper.use_joy = 0;
 
     control_mapper.joy_number = 0;              ///@FIXME: Replace with joystick scanner default value when done.
@@ -417,8 +418,8 @@ void Controls_InitGlobals()
     control_mapper.joy_look_deadzone = 1500;
     control_mapper.joy_move_deadzone = 1500;
 
-    control_mapper.joy_look_sensitivity = 1.5;
-    control_mapper.joy_move_sensitivity = 1.5;
+    control_mapper.joy_look_sensitivity = 1.5f;
+    control_mapper.joy_move_sensitivity = 1.5f;
 
     control_mapper.action_map[ACT_JUMP].primary       = SDL_SCANCODE_SPACE;
     control_mapper.action_map[ACT_ACTION].primary     = SDL_SCANCODE_LCTRL;
@@ -493,13 +494,13 @@ void Controls_DebugKeys(int button, int state)
                 break;
 
             case SDL_SCANCODE_G:
-                if(time_scale == 1.0)
+                if(time_scale == 1.0f)
                 {
-                    time_scale = 0.033;
+                    time_scale = 0.033f;
                 }
                 else
                 {
-                    time_scale = 1.0;
+                    time_scale = 1.0f;
                 }
                 break;
 
@@ -527,7 +528,7 @@ void Controls_PrimaryMouseDown(float from[3], float to[3])
     if(Physics_RayTestFiltered(&cb, engine_camera.gl_transform + 12, test_to, NULL, COLLISION_MASK_ALL))
     {
         vec3_copy(from, cb.point);
-        vec3_add_mul(to, cb.point, cb.normale, 256.0);
+        vec3_add_mul(to, cb.point, cb.normale, 256.0f);
     }
 }
 
@@ -539,7 +540,7 @@ void Controls_SecondaryMouseDown(struct engine_container_s **cont, float dot[3])
     collision_result_t cb;
 
     vec3_copy(from, engine_camera.gl_transform + 12);
-    vec3_add_mul(to, from, engine_camera.gl_transform + 8, 32768.0);
+    vec3_add_mul(to, from, engine_camera.gl_transform + 8, 32768.0f);
 
     cam_cont.next = NULL;
     cam_cont.object = NULL;

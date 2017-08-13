@@ -273,10 +273,15 @@ int Script_ParseControls(lua_State *lua, struct control_settings_s *cs)
         int top = lua_gettop(lua);
 
         lua_getglobal(lua, "controls");
-        lua_getfield(lua, -1, "mouse_sensitivity");
-        cs->mouse_sensitivity = lua_tonumber(lua, -1);
+        
+        lua_getfield(lua, -1, "mouse_sensitivity_x");
+        cs->mouse_sensitivity_x = lua_tonumber(lua, -1);
         lua_pop(lua, 1);
 
+        lua_getfield(lua, -1, "mouse_sensitivity_y");
+        cs->mouse_sensitivity_y = lua_tonumber(lua, -1);
+        lua_pop(lua, 1); 
+        
         lua_getfield(lua, -1, "use_joy");
         cs->use_joy = lua_tonumber(lua, -1);
         lua_pop(lua, 1);
