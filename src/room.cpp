@@ -431,15 +431,24 @@ struct room_sector_s *Room_GetSectorXYZ(struct room_s *room, float pos[3])
 
 
 void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r)
-{
-    if(room && r && (r->real_room->id != room->real_room->id) &&
-       (room->bb_min[0] <= r->bb_max[0] && room->bb_max[0] >= r->bb_min[0] &&
-        room->bb_min[1] <= r->bb_max[1] && room->bb_max[1] >= r->bb_min[1] /*||
-        room->bb_min[2] >= r->bb_max[2] || room->bb_max[2] <= r->bb_min[2]*/) &&
-       !Room_IsInNearRoomsList(room, r) && !Room_IsInOverlappedRoomsList(room, r))
+{   
+    if(room && r && (r->real_room->id != room->real_room->id))
     {
-        room->content->near_room_list[room->content->near_room_list_size] = r->real_room;
-        room->content->near_room_list_size++;
+        for(uint32_t i = 0; i < room->content->near_room_list_size; ++i)
+        {
+            if(room->content->near_room_list[i]->id == r->id)
+            {
+                return;
+            }
+        }
+        
+        if((room->bb_min[0] <= r->bb_max[0] && room->bb_max[0] >= r->bb_min[0]) &&
+           (room->bb_min[1] <= r->bb_max[1] && room->bb_max[1] >= r->bb_min[1]) &&
+           !Room_IsInOverlappedRoomsList(room, r))
+        {
+            room->content->near_room_list[room->content->near_room_list_size] = r->real_room;
+            room->content->near_room_list_size++;
+        }
     }
 }
 
