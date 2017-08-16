@@ -143,7 +143,7 @@ typedef struct room_box_s
     uint32_t                 : 14;
     float                   bb_min[3];
     float                   bb_max[3];
-    struct box_overlap_s   *overlaps;    
+    struct box_overlap_s   *overlaps;
     struct room_zone_s      zone;
 }room_box_t, *room_box_p;
 
@@ -244,12 +244,12 @@ typedef struct room_content_s
     uint32_t                    portals_count;                                  // number of room portals
     struct portal_s            *portals;                                        // room portals array
     struct room_sector_s       *sectors;
-    
+
     uint16_t                    near_room_list_size;
     uint16_t                    overlapped_room_list_size;
     struct room_s             **near_room_list;
     struct room_s             **overlapped_room_list;
-    
+
     uint32_t                    static_mesh_count;
     struct static_mesh_s       *static_mesh;
     uint32_t                    sprites_count;
@@ -281,8 +281,8 @@ typedef struct room_s
     struct frustum_s           *frustum;
 
     struct obb_s               *obb;
-    float                       bb_min[3];                                      // room's bounding box
-    float                       bb_max[3];                                      // room's bounding box
+    float                       bb_min[3];                                      // effective room box, exclude portal sectors zones
+    float                       bb_max[3];                                      //
     float                       transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
     uint32_t                    sectors_count;
     uint16_t                    sectors_x;

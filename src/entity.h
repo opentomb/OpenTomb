@@ -169,10 +169,6 @@ typedef struct entity_s
     float                               transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
 
     struct obb_s                       *obb;                // oriented bounding box
-
-    struct room_sector_s               *current_sector;
-    struct room_sector_s               *last_sector;
-
     struct engine_container_s          *self;
 
     struct activation_point_s          *activation_point;

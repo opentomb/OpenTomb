@@ -46,7 +46,7 @@ void Character_Create(struct entity_s *ent)
         ret->target_id = ENTITY_ID_NONE;
         ret->hair_count = 0;
         ret->path_dist = 0;
-        ret->path[0] = (ent->current_sector) ? (ent->current_sector->box) : (NULL);
+        ret->path[0] = (ent->self->sector) ? (ent->self->sector->box) : (NULL);
         ret->path_target = NULL;
         ret->hairs = NULL;
         ret->ragdoll = NULL;
@@ -224,7 +224,7 @@ void Character_Update(struct entity_s *ent)
 
 void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target)
 {
-    if(ent->character && ent->current_sector && ent->current_sector->box && target && target->box)
+    if(ent->character && ent->self->sector && ent->self->sector->box && target && target->box)
     {
         const int buf_size = sizeof(room_box_p) * World_GetRoomBoxesCount();
         room_box_p *path = (room_box_p*)Sys_GetTempMem(buf_size);
@@ -234,7 +234,7 @@ void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target)
         op.zone_alt = ent->self->room->is_swapped;
         op.step_up = (ent->character->max_step_up_height > ent->character->max_climb_height) ? (ent->character->max_step_up_height) : (ent->character->max_climb_height);
         op.step_down = ent->character->fall_down_height;
-        int dist = Room_FindPath(path, World_GetRoomBoxesCount(), ent->current_sector, target, &op);
+        int dist = Room_FindPath(path, World_GetRoomBoxesCount(), ent->self->sector, target, &op);
         const int max_dist = sizeof(ent->character->path) / sizeof(ent->character->path[0]);
         ent->character->path_dist = (dist > max_dist) ? (max_dist) : dist;
 
@@ -308,7 +308,7 @@ void Character_FixByBox(struct entity_s *ent)
 
 void Character_GoByPathToTarget(struct entity_s *ent)
 {
-    if(ent->current_sector && ent->current_sector->box &&
+    if(ent->self->sector && ent->self->sector->box &&
        ent->character->path_target && (ent->character->path_dist > 0))
     {
         float dir[4];
@@ -319,13 +319,13 @@ void Character_GoByPathToTarget(struct entity_s *ent)
         ent->character->cmd.move[2] = 0;
         ent->character->cmd.shift = 0;
 
-        if(ent->character->path_target == ent->current_sector)
+        if(ent->character->path_target == ent->self->sector)
         {
             ent->character->path_target = NULL;
             return;
         }
 
-        if(ent->current_sector->box->id != ent->character->path[0]->id)
+        if(ent->self->sector->box->id != ent->character->path[0]->id)
         {
             Character_UpdatePath(ent, ent->character->path_target);
             if(ent->character->path_dist == 0)
@@ -350,6 +350,17 @@ void Character_GoByPathToTarget(struct entity_s *ent)
         else
         {
             Room_GetOverlapCenter(ent->character->path[0], ent->character->path[1], dir);
+            if(vec3_dist_sq(dir, ent->transform + 12) < 0.25f * TR_METERING_SECTORSIZE * TR_METERING_SECTORSIZE)
+            {
+                if(ent->character->path_dist > 2)
+                {
+                    Room_GetOverlapCenter(ent->character->path[1], ent->character->path[2], dir);
+                }
+                else
+                {
+                    vec3_copy(dir, ent->character->path_target->pos);
+                }
+            }
         }
 
         vec3_sub(dir, dir, ent->transform + 12);
@@ -368,7 +379,7 @@ void Character_GoByPathToTarget(struct entity_s *ent)
         if(ent->move_type == MOVE_FLY)
         {
             float target_z = ent->character->path_target->floor + 600.0f;
-            room_sector_p next_sector = Sector_GetNextSector(ent->current_sector, ent->transform + 4);
+            room_sector_p next_sector = Sector_GetNextSector(ent->self->sector, ent->transform + 4);
             target_z = (target_z < next_sector->floor + TR_METERING_STEP) ? (next_sector->floor + TR_METERING_STEP) : target_z;
             target_z = (target_z > next_sector->ceiling - TR_METERING_STEP) ? (next_sector->ceiling - TR_METERING_STEP) : target_z;
             if(ent->transform[12 + 2] < target_z - 64.0f)
@@ -398,9 +409,9 @@ void Character_UpdateAI(struct entity_s *ent)
         {
             Character_LookAt(ent, target->obb->centre);
         }
-        if(target->current_sector && (ent->character->path_target != target->current_sector))
+        if(target->self->sector && (ent->character->path_target != target->self->sector))
         {
-            ent->character->path_target = target->current_sector;
+            ent->character->path_target = target->self->sector;
             Character_UpdatePath(ent, ent->character->path_target);
         }
     }
@@ -719,10 +730,10 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     collision_result_t cb;
     //const float color[3] = {1.0, 0.0, 0.0};
 
-    if(ent->current_sector && ent->current_sector->room_above &&
-       ent->current_sector->room_above->bb_min[2] < test_from[2] + 256.0f)
+    if(ent->self->sector && ent->self->sector->room_above &&
+       ent->self->sector->room_above->bb_min[2] < test_from[2] + 256.0f)
     {
-        Entity_MoveToRoom(ent, ent->current_sector->room_above->real_room);
+        Entity_MoveToRoom(ent, ent->self->sector->room_above->real_room);
     }
 
     climb->height_info = CHARACTER_STEP_HORIZONTAL;
@@ -1409,7 +1420,7 @@ int Character_FreeFalling(struct entity_s *ent)
 
         float transition_level = ent->character->height_info.transition_level;
         transition_level = (World_GetVersion() < TR_II) ? (transition_level) : (transition_level - ent->character->height);
-        if(!ent->character->height_info.water || (ent->current_sector->floor <= transition_level))
+        if(!ent->character->height_info.water || (ent->self->sector->floor <= transition_level))
         {
             ent->move_type = MOVE_UNDERWATER;
             return 2;
@@ -1781,7 +1792,7 @@ int Character_MoveOnWater(struct entity_s *ent)
 int Character_FindTraverse(struct entity_s *ch)
 {
     room_sector_p ch_s, obj_s = NULL;
-    ch_s = ch->current_sector;
+    ch_s = ch->self->sector;
 
     if(ch_s == NULL)
     {
@@ -1900,8 +1911,8 @@ int Sector_AllowTraverse(struct room_sector_s *rs, float floor)
  */
 int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
 {
-    room_sector_p ch_s  = ch->current_sector;
-    room_sector_p obj_s = obj->current_sector;
+    room_sector_p ch_s  = ch->self->sector;
+    room_sector_p obj_s = obj->self->sector;
 
     if((ch_s == NULL) || (obj_s == NULL))
     {

@@ -221,19 +221,6 @@ int lua_SameRoom(lua_State *lua)
 }
 
 
-int lua_NewSector(lua_State *lua)
-{
-    if(lua_gettop(lua) > 0)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        lua_pushboolean(lua, ent && (ent->current_sector == ent->last_sector));
-        return 1;
-    }
-
-    return 0;   // No argument specified - return.
-}
-
-
 int lua_SimilarSector(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -253,18 +240,18 @@ int lua_SimilarSector(lua_State * lua)
             next_pos[1] = ent->transform[12 + 1] + (dx * ent->transform[0 + 1] + dy * ent->transform[4 + 1] + dz * ent->transform[8 + 1]);
             next_pos[2] = ent->transform[12 + 2] + (dx * ent->transform[0 + 2] + dy * ent->transform[4 + 2] + dz * ent->transform[8 + 2]);
 
-            room_sector_p next_sector = Room_GetSectorRaw(ent->current_sector->owner_room, next_pos);
+            room_sector_p next_sector = Room_GetSectorRaw(ent->self->sector->owner_room, next_pos);
             next_sector = Sector_GetPortalSectorTargetRaw(next_sector);
 
             bool ignore_doors = lua_toboolean(lua, 5);
 
             if((top >= 6) && lua_toboolean(lua, 6))
             {
-                lua_pushboolean(lua, Sectors_SimilarCeiling(ent->current_sector, next_sector, ignore_doors));
+                lua_pushboolean(lua, Sectors_SimilarCeiling(ent->self->sector, next_sector, ignore_doors));
             }
             else
             {
-                lua_pushboolean(lua, Sectors_SimilarFloor(ent->current_sector, next_sector, ignore_doors));
+                lua_pushboolean(lua, Sectors_SimilarFloor(ent->self->sector, next_sector, ignore_doors));
             }
 
             return 1;
@@ -306,7 +293,7 @@ int lua_GetSectorHeight(lua_State * lua)
                 pos[2] += dx * ent->transform[0 + 2] + dy * ent->transform[4 + 2] + dz * ent->transform[8 + 2];
             }
 
-            (ceiling) ? (Sector_LowestCeilingCorner(ent->current_sector, pos)) : (Sector_HighestFloorCorner(ent->current_sector, pos));
+            (ceiling) ? (Sector_LowestCeilingCorner(ent->self->sector, pos)) : (Sector_HighestFloorCorner(ent->self->sector, pos));
 
             lua_pushnumber(lua, pos[2]);
             return 1;
@@ -1139,7 +1126,6 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
     lua_register(lua, "deleteEntity", lua_DeleteEntity);
 
     lua_register(lua, "sameRoom", lua_SameRoom);
-    lua_register(lua, "newSector", lua_NewSector);
     lua_register(lua, "similarSector", lua_SimilarSector);
     lua_register(lua, "getSectorHeight", lua_GetSectorHeight);
     lua_register(lua, "sectorTriggerClear", lua_SectorTriggerClear);

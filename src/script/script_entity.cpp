@@ -356,9 +356,9 @@ int lua_GetEntitySectorFlags(lua_State *lua)
     if(lua_gettop(lua) >= 1)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && (ent->current_sector))
+        if(ent && (ent->self->sector))
         {
-            lua_pushinteger(lua, ent->current_sector->flags);
+            lua_pushinteger(lua, ent->self->sector->flags);
             return 1;
         }
     }
@@ -372,9 +372,9 @@ int lua_GetEntitySectorIndex(lua_State *lua)
     if(lua_gettop(lua) >= 1)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && (ent->current_sector))
+        if(ent && (ent->self->sector))
         {
-            lua_pushinteger(lua, ent->current_sector->trig_index);
+            lua_pushinteger(lua, ent->self->sector->trig_index);
             return 1;
         }
     }
@@ -388,9 +388,9 @@ int lua_GetEntitySectorMaterial(lua_State *lua)
     if(lua_gettop(lua) >= 1)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && (ent->current_sector))
+        if(ent && ent->self->sector)
         {
-            lua_pushinteger(lua, ent->current_sector->material);
+            lua_pushinteger(lua, ent->self->sector->material);
             return 1;
         }
     }

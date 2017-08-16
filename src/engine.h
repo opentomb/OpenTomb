@@ -51,6 +51,7 @@ typedef struct engine_container_s
     int16_t                      collision_mask;
     void                        *object;
     struct room_s               *room;
+    struct room_sector_s        *sector;
     struct engine_container_s   *next;
 }engine_container_t, *engine_container_p;
 
@@ -116,6 +117,7 @@ extern struct camera_s                       engine_camera;
 extern struct camera_state_s                 engine_camera_state;
 
 engine_container_p Container_Create();
+void Container_Delete(engine_container_p cont);
 
 void Engine_Start(int argc, char **argv);
 void Engine_Shutdown(int val) __attribute__((noreturn));

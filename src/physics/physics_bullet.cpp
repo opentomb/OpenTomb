@@ -58,7 +58,7 @@ public:
 
         r0 = (m_cont)?(m_cont->room):(NULL);
         c1 = (engine_container_p)rayResult.m_collisionObject->getUserPointer();
-        r1 = (c1)?(c1->room):(NULL);
+        r1 = (c1) ? (c1->room) : (NULL);
 
         if(c1 && ((c1->collision_group & m_filter) == 0x0000) || (c1 == m_cont))
         {
@@ -116,7 +116,7 @@ public:
 
         r0 = (m_cont)?(m_cont->room):(NULL);
         c1 = (engine_container_p)convexResult.m_hitCollisionObject->getUserPointer();
-        r1 = (c1)?(c1->room):(NULL);
+        r1 = (c1) ? (c1->room) : (NULL);
 
         if(c1 && ((c1->collision_group & m_filter) == 0x0000) || (c1 == m_cont))
         {
@@ -155,11 +155,11 @@ private:
 
 struct bt_engine_OverlapFilterCallback : public btOverlapFilterCallback
 {
-	// return true when pairs need collision
-	virtual bool	needBroadphaseCollision(btBroadphaseProxy* proxy0,btBroadphaseProxy* proxy1) const
-	{
-		bool collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) &&
-		                (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask);
+    // return true when pairs need collision
+    virtual bool needBroadphaseCollision(btBroadphaseProxy* proxy0,btBroadphaseProxy* proxy1) const
+    {
+        bool collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) &&
+                        (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask);
 
         if(collides)
         {
@@ -191,10 +191,30 @@ struct bt_engine_OverlapFilterCallback : public btOverlapFilterCallback
 
             collides = ((!r0 && !r1) || Room_IsInNearRoomsList(r0, r1) && !Room_IsInOverlappedRoomsList(r0, r1) &&
                         (num_ghosts || (c0->collision_group & c1->collision_mask) && (c1->collision_group & c0->collision_mask)));
+
+            if(collides && (r0 != r1) && (r0->content->overlapped_room_list || r1->content->overlapped_room_list))
+            {
+                if(c0->sector && c1->sector)
+                {
+                    room_sector_p pc0 = Room_GetSectorRaw(r1, c0->sector->pos);
+                    room_sector_p pc1 = Room_GetSectorRaw(r0, c0->sector->pos);
+                    collides = pc0 && pc1 && (pc0->portal_to_room == r0) && (pc1->portal_to_room == r1);
+                }
+                else if(c0->sector && !c1->sector)
+                {
+                    room_sector_p pc0 = Room_GetSectorRaw(r1, c0->sector->pos);
+                    collides = pc0 && (pc0->portal_to_room == r0);
+                }
+                else if(!c0->sector && c1->sector)
+                {
+                    room_sector_p pc1 = Room_GetSectorRaw(r0, c1->sector->pos);
+                    collides = pc1 && (pc1->portal_to_room == r1);
+                }
+            }
         }
 
-		return collides;
-	}
+        return collides;
+    }
 } bt_engine_overlap_filter_callback;
 
 

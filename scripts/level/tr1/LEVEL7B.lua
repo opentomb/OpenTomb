@@ -5,7 +5,7 @@ print("Level script loaded (LEVEL7B.lua)");
 
 
 level_PostLoad = function()
-    addRoomToOverlappedList(77, 78);
+    -- to do something
 end;
 
 level_PreLoad = function()

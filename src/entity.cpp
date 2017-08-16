@@ -43,7 +43,7 @@ entity_p Entity_Create()
     ret->trigger_layout = 0x00U;
     ret->timer = 0.0;
 
-    ret->self = (engine_container_p)malloc(sizeof(engine_container_t));
+    ret->self = Container_Create();
     ret->self->next = NULL;
     ret->self->object = ret;
     ret->self->object_type = OBJECT_ENTITY;
@@ -63,7 +63,6 @@ entity_p Entity_Create()
     ret->activation_point = NULL;
     ret->inventory = NULL;
     ret->character = NULL;
-    ret->current_sector = NULL;
 
     ret->bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
     SSBoneFrame_CreateFromModel(ret->bf, NULL);
@@ -128,7 +127,7 @@ void Entity_Delete(entity_p entity)
 
         if(entity->self)
         {
-            free(entity->self);
+            Container_Delete(entity->self);
             entity->self = NULL;
         }
 
@@ -221,12 +220,11 @@ void Entity_UpdateRoomPos(entity_p ent)
         }
 
         Entity_MoveToRoom(ent, new_room);
-        ent->last_sector = ent->current_sector;
 
-        if(ent->current_sector != new_sector)
+        if(ent->self->sector != new_sector)
         {
             ent->trigger_layout &= (uint8_t)(~ENTITY_TLAYOUT_SSTATUS);          // Reset sector status.
-            ent->current_sector = new_sector;
+            ent->self->sector = new_sector;
         }
     }
 }
@@ -913,7 +911,7 @@ bool Entity_DoFlipEffect(entity_p entity, uint16_t effect_id, int16_t param)
                             // fortunately have no differences in footstep sounds order.
                             // Also note that some footstep types mutually share same sound IDs
                             // across different TR versions.
-                            switch(entity->current_sector->material)
+                            switch(entity->self->sector->material)
                             {
                                 case SECTOR_MATERIAL_MUD:
                                     Audio_Send(288, TR_AUDIO_EMITTER_ENTITY, entity->id);
@@ -1010,10 +1008,10 @@ void Entity_ProcessSector(entity_p ent)
     // as many triggers tend to be called from the lowest room in a row
     // (e.g. first trapdoor in The Great Wall, etc.)
     // Sector above primarily needed for paranoid cases of monkeyswing.
-    if(ent->current_sector)
+    if(ent->self->sector)
     {
-        room_sector_p highest_sector = Sector_GetHighest(ent->current_sector);
-        room_sector_p lowest_sector  = Sector_GetLowest(ent->current_sector);
+        room_sector_p highest_sector = Sector_GetHighest(ent->self->sector);
+        room_sector_p lowest_sector  = Sector_GetLowest(ent->self->sector);
 
         if(ent->character)
         {
@@ -1128,8 +1126,8 @@ void Entity_MoveToSink(entity_p entity, struct static_camera_sink_s *sink)
         sink_pos[1] = sink->pos[1];
         sink_pos[2] = sink->pos[2] + TR_METERING_STEP; // Prevents digging into the floor.
 
-        room_sector_p ls = Sector_GetLowest(entity->current_sector);
-        room_sector_p hs = Sector_GetHighest(entity->current_sector);
+        room_sector_p ls = Sector_GetLowest(entity->self->sector);
+        room_sector_p hs = Sector_GetHighest(entity->self->sector);
 
         if((sink_pos[2] > hs->ceiling) ||
            (sink_pos[2] < ls->floor) )

@@ -93,7 +93,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     if(entity_activator->character)
                     {
                         static_camera_sink_p sink = World_GetstaticCameraSink(command->operands);
-                        if(sink && (entity_activator->current_sector != Room_GetSectorRaw(entity_activator->self->room, sink->pos)))
+                        if(sink && (entity_activator->self->sector != Room_GetSectorRaw(entity_activator->self->room, sink->pos)))
                         {
                             if(entity_activator->move_type == MOVE_UNDERWATER)
                             {
@@ -155,7 +155,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                 case TR_FD_TRIGTYPE_PAD:
                     // Check move type for triggering entity.
                     {
-                        room_sector_p lowest_sector  = Sector_GetLowest(entity_activator->current_sector);
+                        room_sector_p lowest_sector  = Sector_GetLowest(entity_activator->self->sector);
                         header_condition = (entity_activator->move_type == MOVE_ON_FLOOR) && lowest_sector &&
                                            (entity_activator->transform[12 + 2] <= lowest_sector->floor + 16);
                     }

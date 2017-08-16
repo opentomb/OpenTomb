@@ -18,6 +18,7 @@ extern "C" {
 #include "../core/polygon.h"
 #include "../state_control/state_control.h"
 #include "../skeletal_model.h"
+#include "../engine.h"
 #include "../entity.h"
 #include "../world.h"
 #include "../character_controller.h"
@@ -223,7 +224,7 @@ int lua_SetCharacterPathTarget(lua_State * lua)
         entity_p target = World_GetEntityByID(lua_tointeger(lua, 2));
         if(ent && ent->character)
         {
-            ent->character->path_target = (target) ? (target->current_sector) : (NULL);
+            ent->character->path_target = (target) ? (target->self->sector) : (NULL);
             Character_UpdatePath(ent, ent->character->path_target);
         }
     }

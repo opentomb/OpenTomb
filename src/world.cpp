@@ -441,7 +441,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             if(room_id < global_world.rooms_count)
             {
                 Entity_MoveToRoom(entity, global_world.rooms + room_id);
-                entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
+                entity->self->sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
             }
             else
             {
@@ -479,7 +479,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
         {
             entity->self->room = global_world.rooms + room_id;
             Room_AddObject(entity->self->room, entity->self);
-            entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
+            entity->self->sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
         }
         else
         {
@@ -937,30 +937,15 @@ void World_BuildNearRoomsList(struct room_s *room)
         {
             Room_AddToNearRoomsList(room, rs->portal_to_room->real_room);
         }
-
-        if(rs->room_above)
-        {
-            Room_AddToNearRoomsList(room, rs->room_above->real_room);
-        }
-
-        if(rs->room_below)
-        {
-            Room_AddToNearRoomsList(room, rs->room_below->real_room);
-        }
     }
-    
-    uint32_t list_1_size = room->content->near_room_list_size;
-    for(uint32_t j = 0; j < list_1_size; j++)
+
+    int32_t list_1_size = room->content->near_room_list_size;
+    for(int32_t j = -1; j < list_1_size; j++)
     {
-        room_p r = room->content->near_room_list[j];
+        room_p r = (j < 0) ? room : room->content->near_room_list[j];
         rs = r->content->sectors;
         for(uint32_t i = 0; i < r->sectors_count; i++, rs++)
         {
-            if(rs->portal_to_room)
-            {
-                Room_AddToNearRoomsList(room, rs->portal_to_room->real_room);
-            }
-
             if(rs->room_above)
             {
                 Room_AddToNearRoomsList(room, rs->room_above->real_room);
@@ -972,7 +957,7 @@ void World_BuildNearRoomsList(struct room_s *room)
             }
         }
     }
-    
+
     if(room->content->near_room_list_size > 0)
     {
         room_t **p = (room_t**)malloc(room->content->near_room_list_size * sizeof(room_t*));
@@ -1726,7 +1711,7 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     Mat4_E_macro(room->transform);
     TR_vertex_to_arr(room->transform + 12, &tr->rooms[room->id].offset);
 
-    room->self = (engine_container_p)malloc(sizeof(engine_container_t));
+    room->self = Container_Create();
     room->self->next = NULL;
     room->self->room = room;
     room->self->object = room;
@@ -1783,15 +1768,17 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
             r_static--;
             continue;
         }
-        r_static->self = (engine_container_p)calloc(1, sizeof(engine_container_t));
+        TR_vertex_to_arr(r_static->pos, &tr_room->static_meshes[i].pos);
+        r_static->self = Container_Create();
         r_static->self->room = room;
+        r_static->self->sector = Room_GetSectorRaw(room, r_static->pos);
         r_static->self->object = room->content->static_mesh + i;
         r_static->self->object_type = OBJECT_STATIC_MESH;
         r_static->self->collision_group = COLLISION_GROUP_STATIC_OBLECT;
         r_static->self->collision_mask = COLLISION_MASK_ALL;
         r_static->object_id = tr_room->static_meshes[i].object_id;
         r_static->mesh = global_world.meshes + tr->mesh_indices[tr_static->mesh];
-        TR_vertex_to_arr(r_static->pos, &tr_room->static_meshes[i].pos);
+
         r_static->rot[0] = tr_room->static_meshes[i].rotation;
         r_static->rot[1] = 0.0;
         r_static->rot[2] = 0.0;
@@ -2176,12 +2163,12 @@ void World_GenEntities(class VT_Level *tr)
         if((tr_item->room >= 0) && ((uint32_t)tr_item->room < global_world.rooms_count))
         {
             entity->self->room = global_world.rooms + tr_item->room;
-            entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
+            entity->self->sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
         }
         else
         {
             entity->self->room = NULL;
-            entity->current_sector = NULL;
+            entity->self->sector = NULL;
         }
 
         entity->trigger_layout  = (tr_item->flags & 0x3E00) >> 9;               ///@FIXME: Ignore CLEAR BODY flags for a moment.
@@ -2238,7 +2225,7 @@ void World_GenEntities(class VT_Level *tr)
         Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);                      // Set zero animation and zero frame
         Entity_RebuildBV(entity);
         Room_AddObject(entity->self->room, entity->self);
-        entity->current_sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
+        entity->self->sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
         World_AddEntity(entity);
         World_SetEntityModelProperties(entity);
         Physics_GenRigidBody(entity->physics, entity->bf);
@@ -2396,7 +2383,7 @@ void World_GenRoomProperties(class VT_Level *tr)
         // Basic sector calculations.
         Res_RoomSectorsCalculate(global_world.rooms, global_world.rooms_count, i, tr);
     }
-    
+
     for(uint32_t i = 0; i < global_world.rooms_count; i++)
     {
         // Generate links to the overlapped rooms.
