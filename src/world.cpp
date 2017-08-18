@@ -861,7 +861,9 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
         return orig_sector->portal_to_room->real_room;
     }
 
-    if(orig_sector)
+    if(orig_sector &&
+       (pos[0] >= old_room->bb_min[0]) && (pos[0] < old_room->bb_max[0]) &&
+       (pos[1] >= old_room->bb_min[1]) && (pos[1] < old_room->bb_max[1]))
     {
         if(orig_sector->room_below && (pos[2] < orig_sector->room_below->bb_max[2]))
         {
@@ -881,8 +883,8 @@ struct room_s *World_FindRoomByPosCogerrence(float pos[3], struct room_s *old_ro
     for(uint16_t i = 0; i < old_room->content->near_room_list_size; i++)
     {
         room_p r = old_room->content->near_room_list[i]->real_room;
-        if((pos[0] >= r->bb_min[0] + TR_METERING_SECTORSIZE) && (pos[0] < r->bb_max[0] - TR_METERING_SECTORSIZE) &&
-           (pos[1] >= r->bb_min[1] + TR_METERING_SECTORSIZE) && (pos[1] < r->bb_max[1] - TR_METERING_SECTORSIZE) &&
+        if((pos[0] >= r->bb_min[0]) && (pos[0] < r->bb_max[0]) &&
+           (pos[1] >= r->bb_min[1]) && (pos[1] < r->bb_max[1]) &&
            (pos[2] >= r->bb_min[2] - z_margin) && (pos[2] < r->bb_max[2]))
         {
             return r;
@@ -1750,116 +1752,6 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
         BaseMesh_GenFaces(room->content->mesh);
     }
     /*
-     *  let us load static room meshes
-     */
-    room->content->static_mesh_count = tr_room->num_static_meshes;
-    if(room->content->static_mesh_count)
-    {
-        room->content->static_mesh = (static_mesh_p)calloc(room->content->static_mesh_count, sizeof(static_mesh_t));
-    }
-
-    r_static = room->content->static_mesh;
-    for(uint16_t i = 0; i < tr_room->num_static_meshes; i++, r_static++)
-    {
-        tr_static = tr->find_staticmesh_id(tr_room->static_meshes[i].object_id);
-        if(tr_static == NULL)
-        {
-            room->content->static_mesh_count--;
-            r_static--;
-            continue;
-        }
-        TR_vertex_to_arr(r_static->pos, &tr_room->static_meshes[i].pos);
-        r_static->self = Container_Create();
-        r_static->self->room = room;
-        r_static->self->sector = Room_GetSectorRaw(room, r_static->pos);
-        r_static->self->object = room->content->static_mesh + i;
-        r_static->self->object_type = OBJECT_STATIC_MESH;
-        r_static->self->collision_group = COLLISION_GROUP_STATIC_OBLECT;
-        r_static->self->collision_mask = COLLISION_MASK_ALL;
-        r_static->object_id = tr_room->static_meshes[i].object_id;
-        r_static->mesh = global_world.meshes + tr->mesh_indices[tr_static->mesh];
-
-        r_static->rot[0] = tr_room->static_meshes[i].rotation;
-        r_static->rot[1] = 0.0;
-        r_static->rot[2] = 0.0;
-        r_static->tint[0] = tr_room->static_meshes[i].tint.r * 2;
-        r_static->tint[1] = tr_room->static_meshes[i].tint.g * 2;
-        r_static->tint[2] = tr_room->static_meshes[i].tint.b * 2;
-        r_static->tint[3] = tr_room->static_meshes[i].tint.a * 2;
-        r_static->obb = OBB_Create();
-
-        r_static->cbb_min[0] = tr_static->collision_box[0].x;
-        r_static->cbb_min[1] =-tr_static->collision_box[0].z;
-        r_static->cbb_min[2] = tr_static->collision_box[1].y;
-        r_static->cbb_max[0] = tr_static->collision_box[1].x;
-        r_static->cbb_max[1] =-tr_static->collision_box[1].z;
-        r_static->cbb_max[2] = tr_static->collision_box[0].y;
-
-        r_static->vbb_min[0] = tr_static->visibility_box[0].x;
-        r_static->vbb_min[1] =-tr_static->visibility_box[0].z;
-        r_static->vbb_min[2] = tr_static->visibility_box[1].y;
-        r_static->vbb_max[0] = tr_static->visibility_box[1].x;
-        r_static->vbb_max[1] =-tr_static->visibility_box[1].z;
-        r_static->vbb_max[2] = tr_static->visibility_box[0].y;
-
-        r_static->obb->transform = r_static->transform;
-        r_static->obb->radius = r_static->mesh->radius;
-        Mat4_E(r_static->transform);
-        Mat4_Translate(r_static->transform, r_static->pos);
-        float ang = r_static->rot[0] * M_PI / 180.0f;
-        Mat4_RotateZ_SinCos(r_static->transform, sinf(ang), cosf(ang));
-        OBB_Rebuild(r_static->obb, r_static->vbb_min, r_static->vbb_max);
-        OBB_Transform(r_static->obb);
-
-        r_static->physics_body = NULL;
-        r_static->hide = 0;
-
-        // Disable static mesh collision, if flag value is 3 (TR1) or all bounding box
-        // coordinates are equal (TR2-5).
-
-        if((tr_static->flags == 3) ||
-           ((r_static->cbb_min[0] == r_static->cbb_min[1]) && (r_static->cbb_min[1] == r_static->cbb_min[2]) &&
-            (r_static->cbb_max[0] == r_static->cbb_max[1]) && (r_static->cbb_max[1] == r_static->cbb_max[2])))
-        {
-            r_static->self->collision_group = COLLISION_NONE;
-        }
-
-        // Set additional static mesh properties from level script override.
-
-        World_SetStaticMeshProperties(r_static);
-
-        // Set static mesh collision.
-        Physics_GenStaticMeshRigidBody(r_static);
-    }
-
-    /*
-     * sprites loading section
-     */
-    room->content->sprites_count = tr_room->num_sprites;
-    if(room->content->sprites_count != 0)
-    {
-        uint32_t actual_sprites_count = 0;
-        room->content->sprites = (room_sprite_p)calloc(room->content->sprites_count, sizeof(room_sprite_t));
-        for(uint32_t i = 0; i < room->content->sprites_count; i++)
-        {
-            if((tr_room->sprites[i].texture >= 0) && ((uint32_t)tr_room->sprites[i].texture < global_world.sprites_count))
-            {
-                room_sprite_p rs = room->content->sprites + actual_sprites_count;
-                rs->sprite = global_world.sprites + tr_room->sprites[i].texture;
-                TR_vertex_to_arr(rs->pos, &tr_room->vertices[tr_room->sprites[i].vertex].vertex);
-                vec3_add(rs->pos, rs->pos, room->transform + 12);
-                actual_sprites_count++;
-            }
-        }
-        room->content->sprites_count = actual_sprites_count;
-        if(actual_sprites_count == 0)
-        {
-            free(room->content->sprites);
-            room->content->sprites = NULL;
-        }
-    }
-
-    /*
      * let us load sectors
      */
     room->sectors_x = tr_room->num_xsectors;
@@ -1877,7 +1769,6 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     // object will be created. Afterwards, this heightmap also can be used to
     // quickly detect slopes for pushable blocks and other entities that rely on
     // floor level.
-
     sector = room->content->sectors;
     for(uint32_t i = 0; i < room->sectors_count; i++, sector++)
     {
@@ -2096,6 +1987,116 @@ void World_GenRoom(struct room_s *room, class VT_Level *tr)
     if((tr_room->alternate_room >= 0) && ((uint32_t)tr_room->alternate_room < tr->rooms_count))
     {
         room->alternate_room_next = global_world.rooms + tr_room->alternate_room;
+    }
+
+    /*
+     *  let us load static room meshes
+     */
+    room->content->static_mesh_count = tr_room->num_static_meshes;
+    if(room->content->static_mesh_count)
+    {
+        room->content->static_mesh = (static_mesh_p)calloc(room->content->static_mesh_count, sizeof(static_mesh_t));
+    }
+
+    r_static = room->content->static_mesh;
+    for(uint16_t i = 0; i < tr_room->num_static_meshes; i++, r_static++)
+    {
+        tr_static = tr->find_staticmesh_id(tr_room->static_meshes[i].object_id);
+        if(tr_static == NULL)
+        {
+            room->content->static_mesh_count--;
+            r_static--;
+            continue;
+        }
+        TR_vertex_to_arr(r_static->pos, &tr_room->static_meshes[i].pos);
+        r_static->self = Container_Create();
+        r_static->self->room = room;
+        r_static->self->sector = Room_GetSectorRaw(room, r_static->pos);
+        r_static->self->object = room->content->static_mesh + i;
+        r_static->self->object_type = OBJECT_STATIC_MESH;
+        r_static->self->collision_group = COLLISION_GROUP_STATIC_OBLECT;
+        r_static->self->collision_mask = COLLISION_MASK_ALL;
+        r_static->object_id = tr_room->static_meshes[i].object_id;
+        r_static->mesh = global_world.meshes + tr->mesh_indices[tr_static->mesh];
+
+        r_static->rot[0] = tr_room->static_meshes[i].rotation;
+        r_static->rot[1] = 0.0;
+        r_static->rot[2] = 0.0;
+        r_static->tint[0] = tr_room->static_meshes[i].tint.r * 2;
+        r_static->tint[1] = tr_room->static_meshes[i].tint.g * 2;
+        r_static->tint[2] = tr_room->static_meshes[i].tint.b * 2;
+        r_static->tint[3] = tr_room->static_meshes[i].tint.a * 2;
+        r_static->obb = OBB_Create();
+
+        r_static->cbb_min[0] = tr_static->collision_box[0].x;
+        r_static->cbb_min[1] =-tr_static->collision_box[0].z;
+        r_static->cbb_min[2] = tr_static->collision_box[1].y;
+        r_static->cbb_max[0] = tr_static->collision_box[1].x;
+        r_static->cbb_max[1] =-tr_static->collision_box[1].z;
+        r_static->cbb_max[2] = tr_static->collision_box[0].y;
+
+        r_static->vbb_min[0] = tr_static->visibility_box[0].x;
+        r_static->vbb_min[1] =-tr_static->visibility_box[0].z;
+        r_static->vbb_min[2] = tr_static->visibility_box[1].y;
+        r_static->vbb_max[0] = tr_static->visibility_box[1].x;
+        r_static->vbb_max[1] =-tr_static->visibility_box[1].z;
+        r_static->vbb_max[2] = tr_static->visibility_box[0].y;
+
+        r_static->obb->transform = r_static->transform;
+        r_static->obb->radius = r_static->mesh->radius;
+        Mat4_E(r_static->transform);
+        Mat4_Translate(r_static->transform, r_static->pos);
+        float ang = r_static->rot[0] * M_PI / 180.0f;
+        Mat4_RotateZ_SinCos(r_static->transform, sinf(ang), cosf(ang));
+        OBB_Rebuild(r_static->obb, r_static->vbb_min, r_static->vbb_max);
+        OBB_Transform(r_static->obb);
+
+        r_static->physics_body = NULL;
+        r_static->hide = 0;
+
+        // Disable static mesh collision, if flag value is 3 (TR1) or all bounding box
+        // coordinates are equal (TR2-5).
+
+        if((tr_static->flags == 3) ||
+           ((r_static->cbb_min[0] == r_static->cbb_min[1]) && (r_static->cbb_min[1] == r_static->cbb_min[2]) &&
+            (r_static->cbb_max[0] == r_static->cbb_max[1]) && (r_static->cbb_max[1] == r_static->cbb_max[2])))
+        {
+            r_static->self->collision_group = COLLISION_NONE;
+        }
+
+        // Set additional static mesh properties from level script override.
+
+        World_SetStaticMeshProperties(r_static);
+
+        // Set static mesh collision.
+        Physics_GenStaticMeshRigidBody(r_static);
+    }
+
+    /*
+     * sprites loading section
+     */
+    room->content->sprites_count = tr_room->num_sprites;
+    if(room->content->sprites_count != 0)
+    {
+        uint32_t actual_sprites_count = 0;
+        room->content->sprites = (room_sprite_p)calloc(room->content->sprites_count, sizeof(room_sprite_t));
+        for(uint32_t i = 0; i < room->content->sprites_count; i++)
+        {
+            if((tr_room->sprites[i].texture >= 0) && ((uint32_t)tr_room->sprites[i].texture < global_world.sprites_count))
+            {
+                room_sprite_p rs = room->content->sprites + actual_sprites_count;
+                rs->sprite = global_world.sprites + tr_room->sprites[i].texture;
+                TR_vertex_to_arr(rs->pos, &tr_room->vertices[tr_room->sprites[i].vertex].vertex);
+                vec3_add(rs->pos, rs->pos, room->transform + 12);
+                actual_sprites_count++;
+            }
+        }
+        room->content->sprites_count = actual_sprites_count;
+        if(actual_sprites_count == 0)
+        {
+            free(room->content->sprites);
+            room->content->sprites = NULL;
+        }
     }
 }
 

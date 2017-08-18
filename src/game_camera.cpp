@@ -45,7 +45,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     vec3_copy(cam_pos, cam->gl_transform + 12);
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
 
-    if(control_states.mouse_look == 0)//If mouse look is off
+    if(!control_states.mouse_look)
     {
         float currentAngle = control_states.cam_angles[0] * (M_PI / 180.0f);    //Current is the current cam angle
         float targetAngle  = ent->angles[0] * (M_PI / 180.0f); //Target is the target angle which is the entity's angle itself
@@ -129,7 +129,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
         }
     }
 
-    if((ent->character != NULL) && (ent->character->cam_follow_center > 0))
+    if(ent->character && (ent->character->cam_follow_center > 0))
     {
         vec3_copy(cam_pos, ent->obb->centre);
         ent->character->cam_follow_center--;
@@ -149,61 +149,54 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     }*/
 
     vec3_copy(cameraFrom, cam_pos);
+    cam_pos[2] += 2.0f * cam_state->entity_offset_z;
     vec3_copy(cameraTo, cam_pos);
-    cameraTo[2] += 2.0f * cam_state->entity_offset_z;
-
     if(Physics_SphereTest(&cb, cameraFrom, cameraTo, test_r, ent->self, filter))
     {
         vec3_add_mul(cam_pos, cb.point, cb.normale, 2.5f * test_r);
     }
-    else
-    {
-        vec3_copy(cam_pos, cameraTo);
-    }
 
-    if (cam_state->entity_offset_x != 0.0f)
+    if(cam_state->entity_offset_x != 0.0f)
     {
         vec3_copy(cameraFrom, cam_pos);
         cam_pos[0] += cam_state->entity_offset_x * cam->gl_transform[0 + 0];
         cam_pos[1] += cam_state->entity_offset_x * cam->gl_transform[0 + 1];
         cam_pos[2] += cam_state->entity_offset_x * cam->gl_transform[0 + 2];
         vec3_copy(cameraTo, cam_pos);
-
         if(Physics_SphereTest(&cb, cameraFrom, cameraTo, test_r, ent->self, filter))
         {
-            vec3_add_mul(cam_pos, cb.point, cb.normale, 2.0f);
+            vec3_add_mul(cam_pos, cb.point, cb.normale, 2.5f * test_r);
         }
+    }
 
-        vec3_copy(cameraFrom, cam_pos);
-        if(cam_state->state == CAMERA_STATE_LOOK_AT)
+    vec3_copy(cameraFrom, cam_pos);
+    if(cam_state->state == CAMERA_STATE_LOOK_AT)
+    {
+        entity_p target = World_GetEntityByID(cam_state->target_id);
+        if(target && target != World_GetPlayer())
         {
-            entity_p target = World_GetEntityByID(cam_state->target_id);
-            if(target && target != World_GetPlayer())
-            {
-                float dir2d[2], dist;
-                dir2d[0] = target->transform[12 + 0] - cam->gl_transform[12 + 0];
-                dir2d[1] = target->transform[12 + 1] - cam->gl_transform[12 + 1];
-                dist = control_states.cam_distance / sqrtf(dir2d[0] * dir2d[0] + dir2d[1] * dir2d[1]);
-                cam_pos[0] -= dir2d[0] * dist;
-                cam_pos[1] -= dir2d[1] * dist;
-            }
+            float dir2d[2], dist;
+            dir2d[0] = target->transform[12 + 0] - cam->gl_transform[12 + 0];
+            dir2d[1] = target->transform[12 + 1] - cam->gl_transform[12 + 1];
+            dist = control_states.cam_distance / sqrtf(dir2d[0] * dir2d[0] + dir2d[1] * dir2d[1]);
+            cam_pos[0] -= dir2d[0] * dist;
+            cam_pos[1] -= dir2d[1] * dist;
         }
-        else
-        {
-            cam_pos[0] += sinf(control_states.cam_angles[0]) * control_states.cam_distance;
-            cam_pos[1] -= cosf(control_states.cam_angles[0]) * control_states.cam_distance;
-        }
-        vec3_copy(cameraTo, cam_pos);
-
-        if(Physics_SphereTest(&cb, cameraFrom, cameraTo, test_r, ent->self, filter))
-        {
-            vec3_add_mul(cam_pos, cb.point, cb.normale, 2.0f);
-        }
+    }
+    else
+    {
+        cam_pos[0] += sinf(control_states.cam_angles[0]) * control_states.cam_distance;
+        cam_pos[1] -= cosf(control_states.cam_angles[0]) * control_states.cam_distance;
+    }
+    vec3_copy(cameraTo, cam_pos);
+    if(Physics_SphereTest(&cb, cameraFrom, cameraTo, test_r, ent->self, filter))
+    {
+        vec3_add_mul(cam_pos, cb.point, cb.normale, 2.5f * test_r);
     }
 
     //Update cam pos
     vec3_copy(cam->gl_transform + 12, cam_pos);
-
+    cam->current_room = World_FindRoomByPosCogerrence(cam_pos, ent->self->room);
     // check quicksand
     {
         cam_pos[2] -= 128.0f;
