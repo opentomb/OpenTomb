@@ -1016,11 +1016,11 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     ent->dir_flag = ENT_MOVE_FORWARD;
                 }
             }
-            else if((state->wall_collide) || (i < CHARACTER_STEP_DOWN_BIG || i > CHARACTER_STEP_UP_BIG) || (low_vertical_space))
+            else if(state->wall_collide || low_vertical_space || 
+                    (i < CHARACTER_STEP_DOWN_BIG || i > CHARACTER_STEP_UP_BIG) ||
+                    (next_fc.floor_hit.normale[2] < ent->character->critical_slant_z_component))
             {
-                /*
-                 * too high
-                 */
+                // too high or slide
                 ent->dir_flag = ENT_STAY;
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STAY_IDLE, 0);
             }
@@ -1132,7 +1132,8 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_START_FREE_FALL, 0);
             }
-            else if((i < CHARACTER_STEP_DOWN_BIG) || (i > CHARACTER_STEP_UP_BIG))
+            else if((i < CHARACTER_STEP_DOWN_BIG) || (i > CHARACTER_STEP_UP_BIG) ||
+                    (next_fc.floor_hit.normale[2] < ent->character->critical_slant_z_component))
             {
                 ent->dir_flag = ENT_STAY;
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_CLIMB_2CLICK_END, 0);
@@ -1179,7 +1180,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 vec3_add(global_offset, global_offset, pos);
                 Character_GetHeightInfo(global_offset, &next_fc);
                 if(next_fc.floor_hit.hit && (next_fc.floor_hit.point[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_hit.point[2] <= pos[2] + ent->character->max_step_up_height))
-                //if(curr_fc->leg_l_floor.hit && (curr_fc->leg_l_floor.point[2] > pos[2] - ent->character->max_step_up_height) && (curr_fc->leg_l_floor.point[2] <= pos[2] + ent->character->max_step_up_height))
                 {
                     if(curr_fc->water && (!curr_fc->floor_hit.hit || (curr_fc->floor_hit.point[2] - curr_fc->transition_level > ent->character->height - ent->character->swim_depth)))
                     {
@@ -1213,7 +1213,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 vec3_add(global_offset, global_offset, pos);
                 Character_GetHeightInfo(global_offset, &next_fc);
                 if(next_fc.floor_hit.hit && (next_fc.floor_hit.point[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_hit.point[2] <= pos[2] + ent->character->max_step_up_height))
-                //if(curr_fc->leg_r_floor.hit && (curr_fc->leg_r_floor.point[2] > pos[2] - ent->character->max_step_up_height) && (curr_fc->leg_r_floor.point[2] <= pos[2] + ent->character->max_step_up_height))
                 {
                     if(curr_fc->water && (!curr_fc->floor_hit.hit || (curr_fc->floor_hit.point[2] - curr_fc->transition_level > ent->character->height - ent->character->swim_depth)))
                     {
@@ -1525,14 +1524,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(low_vertical_space)
             {
                 ent->dir_flag = ENT_STAY;
-            }
-            else if(state->slide == CHARACTER_SLIDE_FRONT)
-            {
-                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
-            }
-            else if(state->slide == CHARACTER_SLIDE_BACK)
-            {
-                Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
             }
             break;
 
@@ -3123,6 +3114,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
         case TR_ANIMATION_LARA_LANDING_HARD:
         case TR_ANIMATION_LARA_CROUCH_TO_STAND:
+        case TR_STATE_LARA_PICKUP:
             ent->no_fix_skeletal_parts = BODY_PART_HANDS | BODY_PART_LEGS;
             break;
             
