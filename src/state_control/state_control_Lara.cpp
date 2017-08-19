@@ -225,6 +225,8 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 (ss_anim->current_animation == TR_ANIMATION_LARA_STAY_SOLID) )
             {
                 ent->move_type = MOVE_ON_FLOOR;
+                ent->no_move = 0x00;
+                state->wall_collide = 0x00;
             }
 
             if(ent->move_type == MOVE_FREE_FALLING)
@@ -371,10 +373,10 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                         climb_from[2] = curr_fc->ceiling_hit.point[2] - ent->character->climb_r;
                     }
                     Character_CheckClimbability(ent, climb, climb_from, climb_to);
-                    if(  climb->edge_hit                                                                &&
-                        (climb->next_z_space >= ent->character->height - LARA_HANG_VERTICAL_EPSILON)    &&
-                        (pos[2] + ent->character->max_step_up_height < climb->edge_point[2])      &&
-                        (pos[2] + 2944.0f >= climb->edge_point[2]))              // trying to climb on
+                    if(climb->edge_hit &&
+                       (climb->next_z_space >= ent->character->height - LARA_HANG_VERTICAL_EPSILON) &&
+                       (pos[2] + ent->character->max_step_up_height < climb->edge_point[2]) &&
+                       (pos[2] + 2944.0f >= climb->edge_point[2]))              // trying to climb on
                     {
                         if(pos[2] + 640.0f >= climb->edge_point[2])
                         {
