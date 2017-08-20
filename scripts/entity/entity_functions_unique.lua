@@ -291,6 +291,7 @@ function centaur_statue_init(id)
             disableEntity(object_id);
             local spawned_id = spawnEntity(23, getEntityRoom(object_id), getEntityPos(object_id));
             centaur_init(spawned_id);
+            setCharacterTarget(spawned_id, player);
             enableEntity(spawned_id);
 
             entity_funcs[spawned_id].onSave = function()

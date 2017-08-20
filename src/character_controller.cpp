@@ -1254,23 +1254,20 @@ int Character_MoveOnFloor(struct entity_s *ent)
 
         if((tv[2] > 0.02) && (tv[2] < ent->character->critical_slant_z_component))
         {
-            float ang;
             tv[2] = -tv[2];
             t = ent->character->linear_speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT;
             vec3_mul_scalar(ent->speed, tv, t);                                 // slide down direction
-            ang = 180.0f * atan2f(tv[0], -tv[1]) / M_PI;                        // from -180 deg to +180 deg
-            //ang = (ang < 0.0) ? (ang + 360.0) : (ang);
-            t = tv[0] * ent->transform[4 + 0] + tv[1] * ent->transform[4 + 1];
-            if(t >= 0.0f)
+            t = 180.0f * atan2f(tv[0], -tv[1]) / M_PI;                          // from -180 deg to +180 deg
+            if(tv[0] * ent->transform[4 + 0] + tv[1] * ent->transform[4 + 1] >= 0.0f)
             {
                 ent->character->state.slide = CHARACTER_SLIDE_FRONT;
-                ent->angles[0] = ang + 180.0f;
+                ent->angles[0] = t + 180.0f;
                 // front forward slide down
             }
             else
             {
                 ent->character->state.slide = CHARACTER_SLIDE_BACK;
-                ent->angles[0] = ang;
+                ent->angles[0] = t;
                 // back forward slide down
             }
             Entity_UpdateTransform(ent);

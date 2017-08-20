@@ -128,7 +128,6 @@ function baddie_init(id)    -- INVALID!
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setCharacterTarget(activator_id, nil);
             setEntityActivity(object_id, false);
-            setEntityCollision(object_id, false);
             -- DO KILL ANIM
         end;
     end;
@@ -138,6 +137,7 @@ function baddie_init(id)    -- INVALID!
             local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
             if(f + 1 >= c) then
                 setEntityActivity(object_id, false);
+                setEntityCollision(object_id, false);
                 entity_funcs[object_id].onLoop = nil;
             end;
         end;
@@ -1109,7 +1109,7 @@ function mummy_spawner_init(id)
             local spawned_id = spawnEntity(20, getEntityRoom(object_id), getEntityPos(object_id));
             mummy_init(spawned_id);
             enableEntity(spawned_id);
-            setCharacterTarget(object_id, player);
+            setCharacterTarget(spawned_id, player);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
@@ -1122,7 +1122,7 @@ function mutant_spawner_init(id)
             local spawned_id = spawnEntity(20, getEntityRoom(object_id), getEntityPos(object_id));
             winged_mutant_init(spawned_id);
             enableEntity(spawned_id);
-            setCharacterTarget(object_id, player);
+            setCharacterTarget(spawned_id, player);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
@@ -1136,7 +1136,6 @@ function mutant_egg_init(id)
         if(getEntityEvent(object_id) == 0) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
             setEntityActivity(object_id, true);
-            setCharacterTarget(object_id, player);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
@@ -1149,6 +1148,7 @@ function mutant_egg_init(id)
                 local spawned_id = spawnEntity(20, getEntityRoom(object_id), getEntityPos(object_id));
                 moveEntityLocal(spawned_id, -512.0, 512.0, 0.0);
                 winged_mutant_init(spawned_id);
+                setCharacterTarget(spawned_id, player);
                 enableEntity(spawned_id);
 
                 local i = 1;
@@ -1185,6 +1185,7 @@ function mutant_boss_egg_init(id)
                     local spawned_id = spawnEntity(34, getEntityRoom(object_id), getEntityPos(object_id));
                     moveEntityLocal(spawned_id, -512.0, 512.0, -4096.0);
                     TorsoBoss_init(spawned_id);
+                    setCharacterTarget(spawned_id, player);
 
                     local i = 1;
                     while(i < 25) do
