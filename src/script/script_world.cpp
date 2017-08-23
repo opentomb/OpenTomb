@@ -813,6 +813,21 @@ int lua_LoadMap(lua_State *lua)
 }
 
 
+int lua_GameflowLoadMap(lua_State *lua)
+{
+    if((lua_gettop(lua) >= 1) && lua_isstring(lua, 1))
+    {
+        Gameflow_SetLoadMap(lua_tostring(lua, 1));
+    }
+    else
+    {
+        Con_Warning("gameflowLoadMap: expecting arguments (map_name)");
+    }
+
+    return 0;
+}
+
+
 /*
  * Flipped (alternate) room functions
  */
@@ -1086,6 +1101,49 @@ int lua_PlayFlyby(lua_State *lua)
 }
 
 
+int lua_SetCameraPos(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 3)
+    {
+        engine_camera.gl_transform[12 + 0] = lua_tonumber(lua, 1);
+        engine_camera.gl_transform[12 + 1] = lua_tonumber(lua, 2);
+        engine_camera.gl_transform[12 + 2] = lua_tonumber(lua, 3);
+        Cam_Apply(&engine_camera);
+    }
+
+    return 0;
+}
+
+
+int lua_SetCameraAngles(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 3)
+    {
+        engine_camera.ang[0] = lua_tonumber(lua, 1);
+        engine_camera.ang[1] = lua_tonumber(lua, 2);
+        engine_camera.ang[2] = lua_tonumber(lua, 3);
+        Cam_SetRotation(&engine_camera, engine_camera.ang);
+    }
+
+    return 0;
+}
+
+
+int lua_CameraLookAt(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 3)
+    {
+        float pos[3];
+        pos[0] = lua_tonumber(lua, 1);
+        pos[1] = lua_tonumber(lua, 2);
+        pos[2] = lua_tonumber(lua, 3);
+        Cam_LookTo(&engine_camera, pos);
+    }
+
+    return 0;
+}
+
+
 int lua_FlashSetup(lua_State *lua)
 {
     /*if(lua_gettop(lua) != 6) return 0;
@@ -1119,6 +1177,7 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
 
     lua_register(lua, "setGame", lua_SetGame);
     lua_register(lua, "loadMap", lua_LoadMap);
+    lua_register(lua, "gameflowLoadMap", lua_GameflowLoadMap);
 
     lua_register(lua, "setPlayer", lua_SetPlayer);
     lua_register(lua, "setFlipMap", lua_SetFlipMap);
@@ -1155,6 +1214,9 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
 
     lua_register(lua, "camShake", lua_CamShake);
     lua_register(lua, "playFlyby", lua_PlayFlyby);
+    lua_register(lua, "setCameraPos", lua_SetCameraPos);
+    lua_register(lua, "setCameraAngles", lua_SetCameraAngles);
+    lua_register(lua, "cameraLookAt", lua_CameraLookAt);
     lua_register(lua, "flashSetup", lua_FlashSetup);
     lua_register(lua, "flashStart", lua_FlashStart);
 }

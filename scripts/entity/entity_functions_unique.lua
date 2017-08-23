@@ -352,7 +352,7 @@ function ScionHolder_init(id)
             entityRotateToTriggerZ(activator_id, object_id);
             entityMoveToTriggerActivationPoint(activator_id, object_id);
             -- play cutscene here!
-
+            setGame(GAME_1, 15);
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
     end;

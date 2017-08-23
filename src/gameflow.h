@@ -50,6 +50,7 @@ enum GF_OP
 
 void Gameflow_Init();
 bool Gameflow_Send(int opcode, int operand);
+void Gameflow_SetLoadMap(const char* filePath);
 void Gameflow_ProcessCommands();
 void Gameflow_ResetSecrets();
 const char* Gameflow_GetCurrentLevelPathLocal();
