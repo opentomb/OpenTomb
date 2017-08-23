@@ -786,7 +786,8 @@ function Larson_init(id)
                 if((a == 15) and (f + 1 >= c)) then
                     local dist = getEntityDistance(object_id, player);
                     if(dist < 2048) then
-                        setLevel(5);  -- really play cutscene first
+                        --loadMap(base_path .. "data/tr1/data/CUT1.PHD");
+                        --setLevel(5);  -- really play cutscene first
                     end;
                 end;
             else

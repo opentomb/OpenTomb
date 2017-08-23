@@ -239,6 +239,7 @@ void Audio_InitGlobals();
 
 void Audio_Init(uint32_t num_Sources = TR_AUDIO_MAX_CHANNELS);
 void Audio_GenSamples(class VT_Level *tr);
+void Audio_CacheTrack(int id);
 int  Audio_DeInit();
 void Audio_Update(float time);
 

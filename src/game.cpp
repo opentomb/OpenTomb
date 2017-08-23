@@ -464,7 +464,7 @@ void Game_ApplyControls(struct entity_s *ent)
         control_states.look_axis_y = 0.0;
     }
 
-    if((control_states.free_look != 0) || !ent || !ent->character)
+    if(control_states.free_look || !ent || !ent->character)
     {
         float dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
         Cam_SetRotation(&engine_camera, control_states.cam_angles);
@@ -617,7 +617,7 @@ void Game_Frame(float time)
         {
             memset(&player->character->cmd, 0x00, sizeof(player->character->cmd));
         }
-        
+
         if(!control_states.noclip)
         {
             Character_Update(player);
@@ -643,6 +643,10 @@ void Game_Frame(float time)
         Entity_UpdateRigidBody(player, 1);
         Entity_UpdateRoomPos(player);
     }
+    else if(control_states.free_look)
+    {
+        Game_ApplyControls(NULL);
+    }
 
     if(!control_states.noclip && !control_states.free_look)
     {
@@ -652,7 +656,7 @@ void Game_Frame(float time)
         {
             Cam_PlayFlyBy(&engine_camera_state, time);
         }
-        else 
+        else
         {
             if(engine_camera_state.sink)
             {
@@ -664,7 +668,7 @@ void Game_Frame(float time)
                 {
                     vec3_copy(engine_camera.gl_transform + 12, engine_camera_state.sink->pos);
                 }
-                
+
                 if(target)
                 {
                     float pos[3];
@@ -747,7 +751,7 @@ void Game_Prepare()
         player->character->statistics.saves_used     = 0;
         player->character->statistics.secrets_game   = 0;
         player->character->statistics.secrets_level  = 0;
-        
+
         vec3_copy(engine_camera.gl_transform + 12, player->transform + 12);
         engine_camera.gl_transform[12 + 2] += player->character->height;
         engine_camera.ang[0] = player->angles[0] + 180.0f;

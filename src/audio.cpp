@@ -41,7 +41,6 @@ extern "C" {
 #include "engine_string.h"
 #include "room.h"
 #include "world.h"
-#include "trigger.h"
 
 
 // FX manager structure.
@@ -1332,9 +1331,13 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     // in "stream_type" argument, file path into "file_path" argument and load method into
     // "load_method" argument. Function itself returns false, if script wasn't found or
     // request was broken; in this case, we quit.
-
+    if(!audio_world_data.stream_buffers[track_index])
+    {
+        Audio_CacheTrack(track_index);
+    }
+    
     StreamTrackBuffer *stb = audio_world_data.stream_buffers[track_index];
-    if(stb == NULL)
+    if(!stb)
     {
         Con_AddLine("StreamPlay: CANCEL, wrong track index or broken script.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_LOADERROR;
@@ -1997,31 +2000,20 @@ void Audio_Init(uint32_t num_Sources)
 }
 
 
-bool Audio_IsTrackUsedInTriggers(int track_index)
+void Audio_CacheTrack(int id)
 {
-    room_p rooms = NULL;
-    uint32_t rooms_count = 0;
-    World_GetRoomInfo(&rooms, &rooms_count);
-    for(uint32_t room_index = 0; room_index < rooms_count; room_index++)
+    if((id >= 0) && (id < audio_world_data.stream_buffers_count) && !audio_world_data.stream_buffers[id])
     {
-        room_p r = rooms + room_index;
-        for(uint32_t sector_index = 0; sector_index < r->sectors_count; sector_index++)
+        StreamTrackBuffer *stb = new StreamTrackBuffer();
+        if(stb->Load(id))
         {
-            room_sector_p rs = r->content->sectors + sector_index;
-            if(rs->trigger)
-            {
-                for(trigger_command_p cmd = rs->trigger->commands; cmd; cmd = cmd->next)
-                {
-                    if((cmd->function == TR_FD_TRIGFUNC_PLAYTRACK) && (cmd->operands == track_index))
-                    {
-                        return true;
-                    }
-                }
-            }
+            audio_world_data.stream_buffers[id] = stb;
+        }
+        else
+        {
+            delete stb;
         }
     }
-
-    return false;
 }
 
 
@@ -2038,24 +2030,8 @@ void Audio_GenSamples(class VT_Level *tr)
     audio_world_data.stream_buffers_count = Script_GetNumTracks(engine_lua);
     if(audio_world_data.stream_buffers_count > 0)
     {
-        int secret_track_index = Script_GetSecretTrackNumber(engine_lua);
-        audio_world_data.stream_buffers = (StreamTrackBuffer**)malloc(audio_world_data.stream_buffers_count * sizeof(StreamTrackBuffer));
-        for(uint32_t i = 0; i < audio_world_data.stream_buffers_count; i++)
-        {
-            audio_world_data.stream_buffers[i] = NULL;
-            if((i == secret_track_index) || Audio_IsTrackUsedInTriggers(i))
-            {
-                StreamTrackBuffer *stb = new StreamTrackBuffer();
-                if(stb->Load(i))
-                {
-                    audio_world_data.stream_buffers[i] = stb;
-                }
-                else
-                {
-                    delete stb;
-                }
-            }
-        }
+        audio_world_data.stream_buffers = (StreamTrackBuffer**)calloc(audio_world_data.stream_buffers_count, sizeof(StreamTrackBuffer*));
+        Audio_CacheTrack(Script_GetSecretTrackNumber(engine_lua));
     }
 
     // Generate new buffer array.

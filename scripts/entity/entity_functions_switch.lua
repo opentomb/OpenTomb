@@ -388,7 +388,7 @@ function keyhole_init(id)    -- Key and puzzle holes
         if((object_id == nil) or (getEntityActivity(object_id))) then
             return ENTITY_TRIGGERING_NOT_READY;
         end
-        
+
         local t = getEntityAnim(activator_id, ANIM_TYPE_BASE);
         if(entity_funcs[object_id].on.ready_anim < 0 or entity_funcs[object_id].on.ready_anim == t) then
             if(entity_funcs[object_id].key ~= nil) then
@@ -437,7 +437,7 @@ function keyhole_init(id)    -- Key and puzzle holes
 end
 
 function switch_init(id)     -- Ordinary switches
-    
+
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     set_activation_offset(id);
     set_activation_data(id);
@@ -478,7 +478,7 @@ function switch_init(id)     -- Ordinary switches
         end;
         return ENTITY_TRIGGERING_NOT_READY;
     end;
-    
+
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if((tick_state == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
             setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 1);
@@ -511,7 +511,7 @@ end
 
 
 function lever_switch_init(id)     -- Big switches (TR4) - lever
-    
+
     setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
     setEntityActivationOffset(id, 0.0, -520.0, 0.0, 128);
     set_activation_data(id);
@@ -552,7 +552,7 @@ function lever_switch_init(id)     -- Big switches (TR4) - lever
         end;
         return ENTITY_TRIGGERING_NOT_READY;
     end;
-    
+
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if((tick_state == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
             setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 1);

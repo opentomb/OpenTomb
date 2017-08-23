@@ -446,8 +446,7 @@ void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r)
 
         if(!Room_IsInOverlappedRoomsList(room, r))
         {
-            room->content->near_room_list[room->content->near_room_list_size] = r->real_room;
-            room->content->near_room_list_size++;
+            room->content->near_room_list[room->content->near_room_list_size++] = r->real_room;
         }
     }
 }
@@ -528,24 +527,11 @@ int Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1)
             return 1;
         }
 
-        if(r1->content->near_room_list_size >= r0->content->near_room_list_size)
+        for(uint16_t i = 0; i < r0->content->near_room_list_size; i++)
         {
-            for(uint16_t i = 0; i < r0->content->near_room_list_size; i++)
+            if(r0->content->near_room_list[i]->real_room->id == r1->real_room->id)
             {
-                if(r0->content->near_room_list[i]->real_room->id == r1->real_room->id)
-                {
-                    return 1;
-                }
-            }
-        }
-        else
-        {
-            for(uint16_t i = 0; i < r1->content->near_room_list_size; i++)
-            {
-                if(r1->content->near_room_list[i]->real_room->id == r0->real_room->id)
-                {
-                    return 1;
-                }
+                return 1;
             }
         }
     }
@@ -556,31 +542,13 @@ int Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1)
 
 int Room_IsInOverlappedRoomsList(struct room_s *r0, struct room_s *r1)
 {
-    if(r0 && r1)
+    if(r0 && r1 && (r0->id != r1->id))
     {
-        if(r0->id == r1->id)
+        for(uint16_t i = 0; i < r0->content->overlapped_room_list_size; i++)
         {
-            return 0;
-        }
-
-        if(r1->content->overlapped_room_list_size >= r0->content->overlapped_room_list_size)
-        {
-            for(uint16_t i = 0; i < r0->content->overlapped_room_list_size; i++)
+            if(r0->content->overlapped_room_list[i]->real_room->id == r1->real_room->id)
             {
-                if(r0->content->overlapped_room_list[i]->real_room->id == r1->real_room->id)
-                {
-                    return 1;
-                }
-            }
-        }
-        else
-        {
-            for(uint16_t i = 0; i < r1->content->overlapped_room_list_size; i++)
-            {
-                if(r1->content->overlapped_room_list[i]->real_room->id == r0->real_room->id)
-                {
-                    return 1;
-                }
+                return 1;
             }
         }
     }

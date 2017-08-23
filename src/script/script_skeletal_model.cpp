@@ -411,10 +411,6 @@ int lua_SetModelMeshReplaceFlag(lua_State *lua)
                 Con_Printf("wrong bone number = %d", bone);
             }
         }
-        else
-        {
-            Con_Printf("can not find model with id = %d", lua_tointeger(lua, 1));
-        }
     }
     else
     {
@@ -474,10 +470,6 @@ int lua_SetModelAnimReplaceFlag(lua_State *lua)
             {
                 Con_Printf("wrong bone number = %d", bone);
             }
-        }
-        else
-        {
-            Con_Printf("can not find model with id = %d", lua_tointeger(lua, 1));
         }
     }
     else

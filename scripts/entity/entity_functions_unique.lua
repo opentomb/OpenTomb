@@ -9,9 +9,9 @@ function tallblock_init(id)    -- Tall moving block (TR1)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, false);
-	
+
     entity_funcs[id].distance_passed = 0;
-    
+
     entity_funcs[id].onSave = function()
         local addr = "\nentity_funcs[" .. id .. "].";
         return addr .. "distance_passed = " .. entity_funcs[id].distance_passed .. ";";
@@ -25,7 +25,7 @@ function tallblock_init(id)    -- Tall moving block (TR1)
         end;
         return ENTITY_TRIGGERING_NOT_READY;
     end
-    
+
 	entity_funcs[id].onDeactivate = function(object_id, activator_id)
         if(getEntityEvent(object_id) ~= 0) then
             setEntityActivity(object_id, true);
@@ -34,13 +34,13 @@ function tallblock_init(id)    -- Tall moving block (TR1)
         end;
         return ENTITY_TRIGGERING_NOT_READY;
     end
-    
+
     entity_funcs[id].onLoop = function(object_id, tick_state)
         local move_dist = 32.0 * 60.0 * frame_time;
-        if(getEntityEvent(object_id) == 0) then 
+        if(getEntityEvent(object_id) == 0) then
             move_dist = 0.0 - move_dist;
         end;
-        
+
         entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + move_dist;
         moveEntityLocal(object_id, 0.0, move_dist, 0.0);
         if(math.abs(entity_funcs[object_id].distance_passed) >= 2048.0) then
@@ -49,11 +49,11 @@ function tallblock_init(id)    -- Tall moving block (TR1)
             entity_funcs[object_id].distance_passed = 0;
         end;
     end
-    
+
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].distance_passed = nil;
     end
-    
+
     prepareEntity(id);
 end
 
@@ -144,7 +144,7 @@ function midastouch_init(id)    -- Midas gold touch
             local lara_anim, frame, count = getEntityAnim(activator_id, ANIM_TYPE_BASE);
             local lara_sector = getEntitySectorIndex(activator_id);                   -- do not use getEntitySectorIndex: DEPRECATED!
             local hand_sector = getEntitySectorIndex(object_id);
-            
+
             if(5 == getEntityModelID(activator_id, ANIM_TYPE_BASE)) then
                 local a, f, c = getEntityAnim(activator_id, ANIM_TYPE_BASE);
                 if((a == 0) and (f + 1 >= c)) then
@@ -178,16 +178,16 @@ function damocles_init(id)      -- Sword of Damocles
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end    
-    
+    end
+
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
-    
+
     entity_funcs[id].onLoop = function(object_id, tick_state)
         rotateEntity(object_id, rot_speed * frame_time);
-        
+
         if(sameRoom(player, object_id)) then
             local dx, dy, dz = getEntityVector(player, object_id);
             local vx, vy, vz = getEntitySpeed(object_id);
@@ -200,8 +200,8 @@ function damocles_init(id)      -- Sword of Damocles
                 end;
             end;
         end
-    end    
-    
+    end
+
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityActivity(object_id) and (activator_id == player) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
             setCharacterParam(activator_id, PARAM_HEALTH, 0);
@@ -216,10 +216,10 @@ end
 function Thor_hummer_init(id)      -- map 5
 
     setEntityActivity(id, false);
-    
+
     entity_funcs[id].spawned_id = spawnEntity(45, 25, getEntityPos(63));
     --print("thor spawned id = " .. entity_funcs[id].spawned_id);
-    
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
         local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(a == 0) then
@@ -256,7 +256,7 @@ function Thor_hummer_init(id)      -- map 5
         elseif((a == 2) and (f + 1 >= c)) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
             setEntityAnim(entity_funcs[object_id].spawned_id, ANIM_TYPE_BASE, 3, 0);
-            
+
             setEntityCollision(19, true);
             setEntityVisibility(19, true);
             moveEntityLocal(19, 0, 0, -1024);
@@ -352,7 +352,7 @@ function ScionHolder_init(id)
             entityRotateToTriggerZ(activator_id, object_id);
             entityMoveToTriggerActivationPoint(activator_id, object_id);
             -- play cutscene here!
-            setLevel(15);
+
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
     end;
@@ -395,13 +395,13 @@ function doorbell_init(id)    -- Lara's Home doorbell (TR2)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, false);
-    
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
         return swapEntityActivity(object_id);
     end
-    
+
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
-    
+
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityDistance(player, object_id) < 4096.0) then
             playSound(334, object_id);
@@ -416,26 +416,26 @@ function heli_rig_TR2_init(id)    -- Helicopter in Offshore Rig (TR2)
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, false);
     setEntityVisibility(id, false);
-    
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
         setEntityVisibility(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
     end
-    
+
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityLock(object_id)) then
             if(getEntityAnimState(object_id, ANIM_TYPE_BASE) ~= 2) then
                 setEntityAnimState(object_id, ANIM_TYPE_BASE, 2);
             else
                 local anim, frame, count = getEntityAnim(object_id, ANIM_TYPE_BASE);
-                if(frame == count-1) then 
-                    disableEntity(object_id) 
+                if(frame == count-1) then
+                    disableEntity(object_id)
                 end;
             end
         end;
     end
-    
+
     prepareEntity(id);
 end
 
@@ -445,9 +445,9 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, false);
     setEntityVisibility(id, false);
-    
+
     entity_funcs[id].distance_passed = 0;
-    
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(not getEntityActivity(object_id)) then
             setEntityActivity(object_id, true);
@@ -456,12 +456,12 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
     end
-    
+
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
-    
+
     entity_funcs[id].onLoop = function(object_id, tick_state)
         local dy = 40.0 * 60.0 * frame_time;
         entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + dy;
@@ -471,11 +471,11 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
             disableEntity(object_id);
         end;
     end
-    
+
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].distance_passed = nil;
     end
-    
+
     prepareEntity(id);
 end
 
@@ -488,7 +488,7 @@ function crystal_TR3_init(id)   -- "Savegame" crystal (TR3 version)
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, true);
-    
+
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityDistance(player, object_id) < 512.0) then
             playSound(SOUND_MEDIPACK);
@@ -502,53 +502,53 @@ end
 function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
 
     disableEntity(id);
-    
+
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
-    
+
     -- Initialize specific cleaner parameters.
-    
+
     entity_funcs[id].rotating = 0;                  -- Specifies if cleaner is in rotating phase or not.
     entity_funcs[id].distance_traveled = 1024.0;    -- Each 1024 units, cleaner checks floor state.
                                                     -- Must be 1024 by default to process initial floor state correctly!
     entity_funcs[id].current_angle = 0.0;           -- Current cleaner rotating angle.
     entity_funcs[id].target_angle  = 0.0;           -- Desired angle value, after which cleaner stops rotating.
-    
+
     entity_funcs[id].turn_rot_speed  = 60 * 2.0;    -- Rotation speed for free left-turn.
     entity_funcs[id].stuck_rot_speed = 60 * 2.0;    -- Rotation speed for face-wall right turn.
     entity_funcs[id].move_speed      = 60 * 32.0;   -- Ordinary movement speed.
-    
+
     entity_funcs[id].loop_detector = {};            -- Loop detector struct needed to prevent cleaner stuck at flat floor.
-    
+
     entity_funcs[id].loop_detector[1] = {x = 0.0, y = 0.0};
     entity_funcs[id].loop_detector[2] = {x = 0.0, y = 0.0};
     entity_funcs[id].loop_detector[3] = {x = 0.0, y = 0.0};
     entity_funcs[id].loop_detector[4] = {x = 0.0, y = 0.0};
-    
+
     entity_funcs[id].move_count = 1;                -- Needed to fill loop detector struct each 4 moves.
     entity_funcs[id].loop_count = 0;                -- If loop count reaches a value of 4, cleaner will turn right, not left.
-    
+
     entity_funcs[id].dead = 0;                      -- Needed to process fuse box collision correctly.
-    
-    
+
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(not getEntityActivity(object_id)) then 
-            enableEntity(object_id) 
+        if(not getEntityActivity(object_id)) then
+            enableEntity(object_id)
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
-    end    
-    
+    end
+
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         playSound(131, object_id);
         stopSound(191, object_id);
         setEntityActivity(object_id, false);
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
-    
+
     entity_funcs[id].onLoop = function(object_id, tick_state)
         local px,py,pz,ax = getEntityPos(object_id);
         playSound(191, object_id);
-        
+
         if(entity_funcs[object_id].rotating == 0) then
             if(entity_funcs[object_id].distance_traveled >= 1024.0) then
                 if(similarSector(object_id, -1024.0, 0.0, 0.0, false)) then  -- Rotate left
@@ -569,29 +569,29 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                     py = (math.floor((py / 512.0) + 0.5)) * 512.0;  -- round position
                     setEntityPos(object_id, px,py,pz,ax,ay,az);
                 end;
-                
+
                 -- Loop detector algorithm: each turn cleaner stores its current position in an array of 4.
                 -- If current array unit is equal to current position, it will increase loop counter, otherwise
                 -- loop counter is reset back to zero. When loop counter reaches 4, robot is forced to turn right,
                 -- not left. This prevents robot from being stuck at 2x2 flat floor section.
-                
+
                 if(entity_funcs[object_id].rotating == 0) then
                     entity_funcs[object_id].distance_traveled = 0.0;
                     local dy = entity_funcs[object_id].move_speed * frame_time;
                     moveEntityLocal(object_id, 0.0, dy, 0.0);  -- Move forward...
                     entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + dy;
                 end;
-                
+
                 if((entity_funcs[object_id].loop_detector[(entity_funcs[object_id].move_count)].x == px) and
                    (entity_funcs[object_id].loop_detector[(entity_funcs[object_id].move_count)].y == py)) then
                     entity_funcs[object_id].loop_count = entity_funcs[object_id].loop_count + 1;
                 else
                     entity_funcs[object_id].loop_count = 0;
                 end;
-                
+
                 entity_funcs[object_id].loop_detector[(entity_funcs[object_id].move_count)].x = px;
                 entity_funcs[object_id].loop_detector[(entity_funcs[object_id].move_count)].y = py;
-                 
+
                 entity_funcs[object_id].move_count = entity_funcs[object_id].move_count + 1;
                 if(entity_funcs[object_id].move_count > 4) then entity_funcs[object_id].move_count = 1 end;
             else
@@ -599,7 +599,7 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 moveEntityLocal(object_id, 0.0, dy, 0.0);  -- Move forward...
                 entity_funcs[object_id].distance_traveled = entity_funcs[object_id].distance_traveled + dy;
             end;
-        else            
+        else
             if(entity_funcs[object_id].rotating == 1) then
                 local dza = entity_funcs[object_id].turn_rot_speed * frame_time;
                 entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + dza;
@@ -609,7 +609,7 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + dza;
                 rotateEntity(object_id, -dza); -- another direction!
             end;
-            
+
             if(entity_funcs[object_id].current_angle > entity_funcs[object_id].target_angle) then
                 ax = (math.floor((ax / 90.0) + 0.5)) * 90.0;        -- round angle
                 setEntityPos(object_id, px,py,pz,ax,ay,az);
@@ -620,7 +620,7 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
             end;
         end;
     end;
-    
+
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityActivity(object_id)) then
             a_model = getEntityModelID(activator_id);
@@ -645,7 +645,7 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
             end;
         end;
     end
-    
+
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].rotating            = nil;
         entity_funcs[object_id].distance_traveled   = nil;
@@ -657,13 +657,13 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
         entity_funcs[object_id].move_count          = nil;
         entity_funcs[object_id].loop_count          = nil;
         entity_funcs[object_id].dead                = nil;
-        
+
         for k,v in pairs(entity_funcs[object_id].loop_detector) do
             entity_funcs[object_id].loop_detector[k].x = nil;
             entity_funcs[object_id].loop_detector[k].y = nil;
             entity_funcs[object_id].loop_detector[k]   = nil;
         end;
-        
+
         entity_funcs[object_id].loop_detector       = nil;
     end
 end
@@ -680,54 +680,54 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
     disableEntity(id);
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
-    
+
     entity_funcs[id].current_angle =  0.0;
     entity_funcs[id].speed         = -0.5 * 60.0;  -- Full turn in 14 seconds, clockwise.
     entity_funcs[id].radius        =  math.abs(4096.0 * entity_funcs[id].speed / 60);
-    
+
     moveEntityLocal(id, 512.0, 0.0, 0.0);  -- Fix position
-    
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(not getEntityActivity(object_id)) then 
+        if(not getEntityActivity(object_id)) then
             enableEntity(object_id);
             return ENTITY_TRIGGERING_ACTIVATED;
-        else 
+        else
             disableEntity(object_id)
             return ENTITY_TRIGGERING_DEACTIVATED;
         end;
     end;
-    
+
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
-    
+
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(tick_state == TICK_STOPPED) then
             setEntityActivity(object_id, false);
         end;
-        
+
         entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle + entity_funcs[object_id].speed * frame_time;
-        
+
         if(entity_funcs[object_id].current_angle < 0.0) then
             entity_funcs[object_id].current_angle = 360.0 + entity_funcs[object_id].current_angle;
         elseif(entity_funcs[object_id].current_angle > 360.0) then
             entity_funcs[object_id].current_angle = entity_funcs[object_id].current_angle - 360.0;
         end;
-        
+
         moveEntityLocal(object_id, 0.0, math.cos(math.rad(entity_funcs[object_id].current_angle)) * entity_funcs[object_id].radius, -math.sin(math.rad(entity_funcs[object_id].current_angle)) * entity_funcs[object_id].radius);
-        
+
     end
-    
+
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if(getEntityActivity(object_id)) then 
-            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * frame_time) 
+        if(getEntityActivity(object_id)) then
+            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * frame_time)
         end;
     end
-    
+
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].current_angle = nil;
         entity_funcs[object_id].speed         = nil;
         entity_funcs[object_id].radius        = nil;
     end
-    
+
     prepareEntity(id);
 end
 
@@ -737,29 +737,29 @@ function plough_init(id)     -- Plough (TR4)
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     setEntityActivity(id, false);
-    
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end    
-    
+    end
+
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
-    
+
     entity_funcs[id].onLoop = function(object_id, tick_state)
-        if(tick_state == TICK_STOPPED) then 
-            setEntityActivity(object_id, false) 
+        if(tick_state == TICK_STOPPED) then
+            setEntityActivity(object_id, false)
         end;
     end
-    
+
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityActivity(object_id)) then
             changeCharacterParam(activator_id, PARAM_HEALTH, -50 * 60.0 * frame_time);
         end;
     end
-    
+
     prepareEntity(id);
 end
 

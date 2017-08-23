@@ -6,6 +6,7 @@ print("Level script loaded (LEVEL10B.lua)");
 level_PostLoad = function()
     playStream(60);
     addRoomToOverlappedList(47, 84);
+    addRoomToOverlappedList(84, 47);
     setEntityTypeFlag(0x6E, ENTITY_TYPE_PICKABLE, 0);
     setEntityTypeFlag(0x6E, ENTITY_TYPE_GENERIC, 1);
 end;

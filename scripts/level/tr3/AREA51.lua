@@ -4,6 +4,7 @@
 print("Level script loaded (AREA51.lua)");
 
 level_PostLoad = function()
+    addRoomToNearList(113, 27);
     addCharacterHair(player, getHairSetup(HAIR_TR3));
     playStream(27);
 end;

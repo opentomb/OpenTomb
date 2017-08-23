@@ -213,14 +213,14 @@ void World_Open(class VT_Level *tr)
     World_GenSpritesBuffer();
     Gui_DrawLoadScreen(700);
 
-    World_GenRoomProperties(tr);
-    Gui_DrawLoadScreen(750);
-
-    World_GenRoomCollision();
-    Gui_DrawLoadScreen(800);
-
     // Initialize audio.
     Audio_GenSamples(tr);
+    Gui_DrawLoadScreen(750);
+    
+    World_GenRoomProperties(tr);
+    Gui_DrawLoadScreen(800);
+
+    World_GenRoomCollision();
     Gui_DrawLoadScreen(850);
 
     // Find and set skybox.
@@ -239,6 +239,7 @@ void World_Open(class VT_Level *tr)
     Gui_DrawLoadScreen(940);
 
     // Process level autoexec loading.
+    Audio_Init();
     World_AutoexecOpen();
     Gui_DrawLoadScreen(960);
 
@@ -252,8 +253,6 @@ void World_Open(class VT_Level *tr)
         delete global_world.tex_atlas;
         global_world.tex_atlas = NULL;
     }
-
-    Audio_Init();
 }
 
 
@@ -2378,7 +2377,15 @@ void World_GenRoomProperties(class VT_Level *tr)
         // Fill heightmap and translate floordata.
         for(uint32_t j = 0; j < r->sectors_count; j++)
         {
-            Res_Sector_TranslateFloorData(global_world.rooms, global_world.rooms_count, r->content->sectors + j, tr);
+            room_sector_p rs = r->content->sectors + j;
+            Res_Sector_TranslateFloorData(global_world.rooms, global_world.rooms_count, rs, tr);
+            for(trigger_command_p cmd = (rs->trigger) ? (rs->trigger->commands) : (NULL); cmd; cmd = cmd->next)
+            {
+                if(cmd->function == TR_FD_TRIGFUNC_PLAYTRACK)
+                {
+                    Audio_CacheTrack(cmd->operands);
+                }
+            }
         }
 
         // Basic sector calculations.

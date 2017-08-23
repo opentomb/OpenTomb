@@ -194,6 +194,7 @@ typedef struct height_info_s
     int8_t                                   ceiling_climb;
     int8_t                                   walls_climb;
     int8_t                                   walls_climb_dir;
+    uint8_t                                  slide; //0 - none, 1 - forward, 2 - backward
     struct engine_container_s               *self;
 
     struct collision_result_s                floor_hit;
@@ -224,7 +225,6 @@ typedef struct character_state_s
     uint32_t    floor_collide : 1;
     uint32_t    ceiling_collide : 1;
     uint32_t    wall_collide : 1;
-    uint32_t    slide : 2;      //0 - none, 1 - forward, 2 - backward
     uint32_t    step_z : 2;     //0 - none, 1 - dz to step up, 2 - dz to step down;
     uint32_t    uw_current : 1;
     uint32_t    attack : 1;
@@ -317,7 +317,7 @@ void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target);
 void Character_GoByPathToTarget(struct entity_s *ent);
 void Character_UpdateAI(struct entity_s *ent);
 
-void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);
+void Character_GetHeightInfo(struct entity_s *ent, float pos[3], struct height_info_s *fc, float v_offset = 0.0);
 int  Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height_info_s *nfc);
 int  Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
 void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3]);

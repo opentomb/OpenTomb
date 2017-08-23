@@ -514,7 +514,7 @@ int lua_AddRoomToOverlappedList(lua_State * lua)
     {
         room_p r0 = World_GetRoomByID(lua_tointeger(lua, 1));
         room_p r1 = World_GetRoomByID(lua_tointeger(lua, 2));
-        if(r0 && r1 && !Room_IsInOverlappedRoomsList(r0, r1))
+        if(r0 && r1 && (r0 != r1) && !Room_IsInOverlappedRoomsList(r0, r1))
         {
             room_p *old_list = r0->content->overlapped_room_list;
             room_p *new_list = (room_p*)malloc((r0->content->overlapped_room_list_size + 1) * sizeof(room_p));
@@ -529,16 +529,29 @@ int lua_AddRoomToOverlappedList(lua_State * lua)
             {
                 free(old_list);
             }
+        }
+    }
+    return 0;
+}
 
-            old_list = r1->content->overlapped_room_list;
-            new_list = (room_p*)malloc((r1->content->overlapped_room_list_size + 1) * sizeof(room_p));
-            for(uint16_t i = 0; i < r1->content->overlapped_room_list_size; ++i)
+
+int lua_AddRoomToNearList(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        room_p r0 = World_GetRoomByID(lua_tointeger(lua, 1));
+        room_p r1 = World_GetRoomByID(lua_tointeger(lua, 2));
+        if(r0 && r1 && (r0 != r1) && !Room_IsInOverlappedRoomsList(r0, r1))
+        {
+            room_p *old_list = r0->content->near_room_list;
+            room_p *new_list = (room_p*)malloc((r0->content->near_room_list_size + 1) * sizeof(room_p));
+            for(uint16_t i = 0; i < r0->content->near_room_list_size; ++i)
             {
-                new_list[i] = r1->content->overlapped_room_list[i];
+                new_list[i] = r0->content->near_room_list[i];
             }
-            new_list[r1->content->overlapped_room_list_size] = r0->real_room;
-            r1->content->overlapped_room_list = new_list;
-            r1->content->overlapped_room_list_size++;
+            new_list[r0->content->near_room_list_size] = r1->real_room;
+            r0->content->near_room_list = new_list;
+            r0->content->near_room_list_size++;
             if(old_list)
             {
                 free(old_list);
@@ -704,17 +717,15 @@ int lua_GetLevel(lua_State *lua)
 }
 
 
-int lua_SetLevel(lua_State *lua)
+int lua_GameflowSend(lua_State *lua)
 {
-    if(lua_gettop(lua) == 1)
+    if(lua_gettop(lua) >= 2)
     {
-        int id  = lua_tointeger(lua, 1);
-        Con_Notify("level was changed to %d", id);
-
-        Game_LevelTransition(id);
-        if(!Gameflow_Send(GF_OP_LEVELCOMPLETE, id))
+        int opcode  = lua_tointeger(lua, 1);
+        int id  = lua_tointeger(lua, 2);
+        if(!Gameflow_Send(opcode, id))
         {
-            Con_Warning("setLevel: Failed to add opcode to gameflow action list");
+            Con_Warning("gameflowSend: Failed to add opcode to gameflow action list");
         }
     }
     else
@@ -1098,7 +1109,7 @@ int lua_FlashStart(lua_State *lua)
 void Script_LuaRegisterWorldFuncs(lua_State *lua)
 {
     lua_register(lua, "getLevelVersion", lua_GetLevelVersion);
-    lua_register(lua, "setLevel", lua_SetLevel);
+    lua_register(lua, "gameflowSend", lua_GameflowSend);
     lua_register(lua, "getLevel", lua_GetLevel);
 
     lua_register(lua, "setSectorFloorConfig", lua_SetSectorFloorConfig);
@@ -1135,6 +1146,7 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
     lua_register(lua, "getSecretStatus", lua_GetSecretStatus);
     lua_register(lua, "setSecretStatus", lua_SetSecretStatus);
     lua_register(lua, "addRoomToOverlappedList", lua_AddRoomToOverlappedList);
+    lua_register(lua, "addRoomToNearList", lua_AddRoomToNearList);
 
     lua_register(lua, "genUVRotateAnimation", lua_genUVRotateAnimation);
 

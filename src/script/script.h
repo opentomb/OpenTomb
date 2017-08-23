@@ -10,7 +10,6 @@ struct lua_State;
 
 // Response constants
 #define CHARACTER_STATE_DEAD           (0)
-#define CHARACTER_STATE_SLIDE          (1)
 
 // Entity timer constants
 #define TICK_IDLE           (0)

@@ -544,10 +544,6 @@ int lua_SetCharacterState(lua_State * lua)
                     ent->character->state.dead = value;
                     break;
 
-                case CHARACTER_STATE_SLIDE:
-                    ent->character->state.slide = value;
-                    break;
-
                 default:
                     break;
             }
@@ -577,10 +573,6 @@ int lua_GetCharacterState(lua_State * lua)
             {
                 case CHARACTER_STATE_DEAD:
                     lua_pushinteger(lua, ent->character->state.dead);
-                    break;
-
-                case CHARACTER_STATE_SLIDE:
-                    lua_pushinteger(lua, ent->character->state.slide);
                     break;
 
                 default:

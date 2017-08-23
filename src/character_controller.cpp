@@ -65,7 +65,6 @@ void Character_Create(struct entity_s *ent)
         ret->state.floor_collide = 0x00;
         ret->state.ceiling_collide = 0x00;
         ret->state.wall_collide = 0x00;
-        ret->state.slide = 0x00;
         ret->state.step_z = 0x00;
         ret->state.uw_current = 0x00;
         ret->state.attack = 0x00;
@@ -488,13 +487,13 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
     v = ent->bf->bone_tags[0].transform + 12;
     Mat4_vec3_mul_macro(from, ent->transform, v);
     from[2] -= ent->speed[2] * engine_frame_time;
-    Character_GetHeightInfo(from, hi, ent->character->height);
+    Character_GetHeightInfo(ent, from, hi, ent->character->height);
 }
 
 /**
  * Start position are taken from ent->transform
  */
-void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset)
+void Character_GetHeightInfo(struct entity_s *ent, float pos[3], struct height_info_s *fc, float v_offset)
 {
     float from[3], to[3];
     room_p r = (fc->self) ? (fc->self->room) : (NULL);
@@ -583,6 +582,13 @@ void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_off
 
     to[2] = from[2] + 4096.0f;
     Physics_RayTest(&fc->ceiling_hit, from ,to, fc->self, COLLISION_FILTER_HEIGHT_TEST);
+    
+    
+    fc->slide = 0x00;
+    if(fc->floor_hit.hit && (fc->floor_hit.normale[2] > 0.02) && (fc->floor_hit.normale[2] < ent->character->critical_slant_z_component))
+    {
+        fc->slide = (fc->floor_hit.normale[0] * ent->transform[4 + 0] + fc->floor_hit.normale[1] * ent->transform[4 + 1] >= 0.0f) ? (CHARACTER_SLIDE_FRONT) : (CHARACTER_SLIDE_BACK);
+    }    
 }
 
 /**
@@ -597,7 +603,7 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
     ///penetration test?
 
     vec3_add(pos, ent->transform + 12, offset);
-    Character_GetHeightInfo(pos, nfc);
+    Character_GetHeightInfo(ent, pos, nfc);
 
     if(fc->floor_hit.hit && nfc->floor_hit.hit)
     {
@@ -1031,7 +1037,7 @@ void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizon
 
     ent->character->state.floor_collide = 0x00;
     ent->character->state.ceiling_collide = 0x00;
-    ent->character->state.slide = 0x00;
+    //ent->character->state.slide = 0x00;
     ent->character->state.step_z = 0x00;
 
     // Apply vertical speed.
@@ -1172,7 +1178,6 @@ int Character_MoveOnFloor(struct entity_s *ent)
     ent->character->state.floor_collide = 0x00;
     ent->character->state.ceiling_collide = 0x00;
     ent->character->state.wall_collide = 0x00;
-    ent->character->state.slide = 0x00;
     ent->character->state.step_z = 0x00;
 
     t = ent->anim_linear_speed * ent->character->linear_speed_mult;
@@ -1252,23 +1257,19 @@ int Character_MoveOnFloor(struct entity_s *ent)
         ent->character->state.floor_collide = 0x01;
         vec3_copy(tv, ent->character->height_info.floor_hit.normale);
 
-        if((tv[2] > 0.02) && (tv[2] < ent->character->critical_slant_z_component))
+        if(ent->character->height_info.slide)
         {
             tv[2] = -tv[2];
             t = ent->character->linear_speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT;
             vec3_mul_scalar(ent->speed, tv, t);                                 // slide down direction
             t = 180.0f * atan2f(tv[0], -tv[1]) / M_PI;                          // from -180 deg to +180 deg
-            if(tv[0] * ent->transform[4 + 0] + tv[1] * ent->transform[4 + 1] >= 0.0f)
+            if(ent->character->height_info.slide == CHARACTER_SLIDE_FRONT)
             {
-                ent->character->state.slide = CHARACTER_SLIDE_FRONT;
                 ent->angles[0] = t + 180.0f;
-                // front forward slide down
             }
-            else
+            else //if(ent->character->state.slide == CHARACTER_SLIDE_BACK)
             {
-                ent->character->state.slide = CHARACTER_SLIDE_BACK;
                 ent->angles[0] = t;
-                // back forward slide down
             }
             Entity_UpdateTransform(ent);
         }
@@ -1309,7 +1310,6 @@ int Character_MoveOnFloor(struct entity_s *ent)
     }
     else                                                                        // no hit to the floor
     {
-        ent->character->state.slide = 0x00;
         ent->character->state.floor_collide = 0x00;
         ent->move_type = MOVE_FREE_FALLING;
         ent->speed[2] = (ent->speed[2] < 0.0f) ? (0.0) : (ent->speed[2]);
@@ -1326,7 +1326,6 @@ int Character_MoveFly(struct entity_s *ent)
 {
     float move[3], *pos = ent->transform + 12;
 
-    ent->character->state.slide = 0x00;
     ent->character->state.floor_collide = 0x00;
     ent->character->state.ceiling_collide = 0x00;
     ent->character->state.wall_collide = 0x00;
@@ -1378,7 +1377,6 @@ int Character_FreeFalling(struct entity_s *ent)
 {
     float move[3], g[3], *pos = ent->transform + 12;
 
-    ent->character->state.slide = 0x00;
     ent->character->state.floor_collide = 0x00;
     ent->character->state.ceiling_collide = 0x00;
     ent->character->state.wall_collide = 0x00;
@@ -1456,7 +1454,6 @@ int Character_MonkeyClimbing(struct entity_s *ent)
     float t, *pos = ent->transform + 12;
     int ret = 1;
 
-    ent->character->state.slide = 0x00;
     ent->character->state.floor_collide = 0x00;
     ent->character->state.ceiling_collide = 0x00;
     ent->character->state.wall_collide = 0x00;
@@ -1516,7 +1513,6 @@ int Character_WallsClimbing(struct entity_s *ent)
     climb_info_t *climb = &ent->character->climb;
     float move[3], t, *pos = ent->transform + 12;
 
-    ent->character->state.slide = 0x00;
     ent->character->state.floor_collide = 0x00;
     ent->character->state.ceiling_collide = 0x00;
     ent->character->state.wall_collide = 0x00;
@@ -1574,7 +1570,6 @@ int Character_Climbing(struct entity_s *ent)
     float move[3];
     float t, *pos = ent->transform + 12;
 
-    ent->character->state.slide = 0x00;
     ent->character->state.floor_collide = 0x00;
     ent->character->state.ceiling_collide = 0x00;
     ent->character->state.wall_collide = 0x00;
@@ -1635,7 +1630,6 @@ int Character_MoveUnderWater(struct entity_s *ent)
         return 2;
     }
 
-    ent->character->state.slide = 0x00;
     ent->character->state.floor_collide = 0x00;
     ent->character->state.ceiling_collide = 0x00;
     ent->character->state.wall_collide = 0x00;
@@ -1702,7 +1696,6 @@ int Character_MoveOnWater(struct entity_s *ent)
     float move[3];
     float *pos = ent->transform + 12;
 
-    ent->character->state.slide = 0x00;
     ent->character->state.floor_collide = 0x00;
     ent->character->state.ceiling_collide = 0x00;
     ent->character->state.wall_collide = 0x00;

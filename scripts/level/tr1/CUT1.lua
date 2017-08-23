@@ -4,7 +4,7 @@
 print("Level script loaded (CUT1.lua)");
 
 level_PostLoad = function()
-
+    playStream(23);
 end;
 
 level_PreLoad = function()

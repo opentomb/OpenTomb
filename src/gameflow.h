@@ -20,12 +20,6 @@
 
 #define GF_NOENTRY     -1
 
-struct gameflow_action
-{
-    int8_t      m_opcode;
-    uint8_t     m_operand;
-};
-
 enum GF_OP
 {
     GF_OP_PICTURE,         // Unknown possibly TR1?
