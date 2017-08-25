@@ -92,7 +92,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                 case TR_FD_TRIGFUNC_UWCURRENT:
                     if(entity_activator->character)
                     {
-                        static_camera_sink_p sink = World_GetstaticCameraSink(command->operands);
+                        static_camera_sink_p sink = World_GetStaticCameraSink(command->operands);
                         if(sink && (entity_activator->self->sector != Room_GetSectorRaw(entity_activator->self->room, sink->pos)))
                         {
                             if(entity_activator->move_type == MOVE_UNDERWATER)

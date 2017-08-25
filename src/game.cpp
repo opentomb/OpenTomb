@@ -810,7 +810,7 @@ void Game_SetCameraTarget(uint32_t entity_id)
 
 void Game_SetCamera(uint32_t camera_id, int once, int move, float timer)
 {
-    static_camera_sink_p sink = World_GetstaticCameraSink(camera_id);
+    static_camera_sink_p sink = World_GetStaticCameraSink(camera_id);
     if(sink && !sink->locked)
     {
         engine_camera_state.move = move;

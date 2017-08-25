@@ -326,7 +326,7 @@ void Engine_Init_Pre()
     engine_camera_state.sink = NULL;
     engine_camera_state.shake_value = 0.0f;
     engine_camera_state.time = 0.0f;
-
+    Mat4_E_macro(engine_camera_state.cutscene_tr);
     Physics_Init();
 }
 

@@ -78,7 +78,7 @@ extern "C" {
     uint32_t                        skeletal_models_count;  // number of base skeletal models
     struct skeletal_model_s        *skeletal_models;        // base skeletal models data
 
-    struct entity_s                *Character;              // this is an unique Lara's pointer =)
+    struct entity_s                *player;                 // this is an unique Lara's pointer =)
     struct skeletal_model_s        *sky_box;                // global skybox
 
     std::map<uint32_t, entity_p>    entity_tree;
@@ -88,8 +88,10 @@ extern "C" {
 
     uint32_t                        cameras_sinks_count;    // Amount of cameras and sinks.
     struct static_camera_sink_s    *cameras_sinks;          // Cameras and sinks.
-    uint32_t                        flyby_cameras_count;
-    struct flyby_camera_state_s    *flyby_cameras;
+    uint32_t                        flyby_frames_count;
+    struct camera_frame_s          *flyby_frames;
+    uint32_t                        cinematic_frames_count;
+    struct camera_frame_s          *cinematic_frames;
     struct flyby_camera_sequence_s *flyby_camera_sequences;
 } global_world;
 
@@ -110,6 +112,7 @@ void World_GenMeshes(class VT_Level *tr);
 void World_GenSprites(class VT_Level *tr);
 void World_GenBoxes(class VT_Level *tr);
 void World_GenCameras(class VT_Level *tr);
+void World_GenCinematicCameras(class VT_Level *tr);
 void World_GenFlyByCameras(class VT_Level *tr);
 void World_GenRoom(struct room_s *room, class VT_Level *tr);
 void World_GenRooms(class VT_Level *tr);
@@ -141,7 +144,7 @@ void World_Prepare()
     global_world.global_flip_state = 0;
     global_world.textures = NULL;
     global_world.type = 0;
-    global_world.Character = NULL;
+    global_world.player = NULL;
 
     global_world.anim_sequences = NULL;
     global_world.anim_sequences_count = 0;
@@ -154,8 +157,10 @@ void World_Prepare()
     global_world.overlaps_count = 0;
     global_world.cameras_sinks = NULL;
     global_world.cameras_sinks_count = 0;
-    global_world.flyby_cameras = NULL;
-    global_world.flyby_cameras_count = 0;
+    global_world.flyby_frames = NULL;
+    global_world.flyby_frames_count = 0;
+    global_world.cinematic_frames = NULL;
+    global_world.cinematic_frames_count = 0;
     global_world.flyby_camera_sequences = NULL;
     global_world.skeletal_models = NULL;
     global_world.skeletal_models_count = 0;
@@ -187,12 +192,11 @@ void World_Open(class VT_Level *tr)
     World_GenBoxes(tr);                 // Generate boxes.
     Gui_DrawLoadScreen(440);
 
-    World_GenCameras(tr);               // Generate cameras & sinks.
-    Gui_DrawLoadScreen(460);
-
     World_GenRooms(tr);                 // Build all rooms
     Gui_DrawLoadScreen(480);
-
+    
+    World_GenCameras(tr);               // Generate cameras & sinks.
+    World_GenCinematicCameras(tr);
     World_GenFlyByCameras(tr);
     Gui_DrawLoadScreen(500);
 
@@ -216,7 +220,7 @@ void World_Open(class VT_Level *tr)
     // Initialize audio.
     Audio_GenSamples(tr);
     Gui_DrawLoadScreen(750);
-    
+
     World_GenRoomProperties(tr);
     Gui_DrawLoadScreen(800);
 
@@ -271,7 +275,7 @@ void World_Clear()
         main_inventory_manager->setItemsType(1);                                // see base items
     }
 
-    global_world.Character = NULL;
+    global_world.player = NULL;
 
     /* entity empty must be done before rooms destroy */
     for(std::pair<const uint32_t, entity_p> &it : global_world.entity_tree)
@@ -323,11 +327,18 @@ void World_Clear()
         global_world.cameras_sinks = NULL;
     }
 
-    if(global_world.flyby_cameras_count)
+    if(global_world.flyby_frames_count)
     {
-        global_world.flyby_cameras_count = 0;
-        free(global_world.flyby_cameras);
-        global_world.flyby_cameras = NULL;
+        global_world.flyby_frames_count = 0;
+        free(global_world.flyby_frames);
+        global_world.flyby_frames = NULL;
+    }
+
+    if(global_world.cinematic_frames_count)
+    {
+        global_world.cinematic_frames_count = 0;
+        free(global_world.cinematic_frames);
+        global_world.cinematic_frames = NULL;
     }
 
     for(flyby_camera_sequence_p s = global_world.flyby_camera_sequences; s;)
@@ -532,7 +543,7 @@ struct entity_s *World_GetEntityByID(uint32_t id)
 void World_SetPlayer(struct entity_s *entity)
 {
     int top = lua_gettop(engine_lua);
-    global_world.Character = entity;
+    global_world.player = entity;
     if(entity && entity->character)
     {
         lua_pushinteger(engine_lua, entity->id);
@@ -548,7 +559,7 @@ void World_SetPlayer(struct entity_s *entity)
 
 struct entity_s *World_GetPlayer()
 {
-    return global_world.Character;
+    return global_world.player;
 }
 
 
@@ -607,11 +618,21 @@ struct base_item_s *World_GetBaseItemByWorldModelID(uint32_t id)
 }
 
 
-struct static_camera_sink_s *World_GetstaticCameraSink(uint32_t id)
+struct static_camera_sink_s *World_GetStaticCameraSink(uint32_t id)
 {
     if(id < global_world.cameras_sinks_count)
     {
         return global_world.cameras_sinks + id;
+    }
+    return NULL;
+}
+
+
+struct camera_frame_s *World_GetCinematicFrame(uint32_t id)
+{
+    if(id < global_world.cinematic_frames_count)
+    {
+        return global_world.cinematic_frames + id;
     }
     return NULL;
 }
@@ -1632,17 +1653,39 @@ void World_GenCameras(class VT_Level *tr)
 }
 
 
+void World_GenCinematicCameras(class VT_Level *tr)
+{
+    global_world.cinematic_frames = NULL;
+    global_world.cinematic_frames_count = tr->cinematic_frames_count;
+
+    if(global_world.cinematic_frames_count)
+    {
+        global_world.cinematic_frames = (camera_frame_p)calloc(global_world.cinematic_frames_count, sizeof(camera_frame_t));
+        for(uint32_t i = 0; i < global_world.cinematic_frames_count; i++)
+        {
+            global_world.cinematic_frames[i].pos[0] = tr->cinematic_frames[i].posx;
+            global_world.cinematic_frames[i].pos[1] = tr->cinematic_frames[i].posz;
+            global_world.cinematic_frames[i].pos[2] =-tr->cinematic_frames[i].posy;
+            global_world.cinematic_frames[i].target[0] = tr->cinematic_frames[i].targetx;
+            global_world.cinematic_frames[i].target[1] = tr->cinematic_frames[i].targetz;
+            global_world.cinematic_frames[i].target[2] =-tr->cinematic_frames[i].targety;
+            global_world.cinematic_frames[i].fov = (float)(tr->cinematic_frames[i].fov) / 16384.0f * 90.0f;
+            global_world.cinematic_frames[i].roll = (float)(tr->cinematic_frames[i].roll) / 16384.0f * 90.0f;
+        }
+    }
+}
+
 void World_GenFlyByCameras(class VT_Level *tr)
 {
-    global_world.flyby_cameras = NULL;
-    global_world.flyby_cameras_count = tr->flyby_cameras_count;
+    global_world.flyby_frames = NULL;
+    global_world.flyby_frames_count = tr->flyby_cameras_count;
 
-    if(global_world.flyby_cameras_count)
+    if(global_world.flyby_frames_count)
     {
         uint32_t start_index = 0;
         flyby_camera_sequence_p *last_seq_ptr = &global_world.flyby_camera_sequences;
-        global_world.flyby_cameras = (flyby_camera_state_p)malloc(global_world.flyby_cameras_count * sizeof(flyby_camera_state_t));
-        for(uint32_t i = 0; i < global_world.flyby_cameras_count; i++)
+        global_world.flyby_frames = (camera_frame_p)malloc(global_world.flyby_frames_count * sizeof(camera_frame_t));
+        for(uint32_t i = 0; i < global_world.flyby_frames_count; i++)
         {
             union
             {
@@ -1651,30 +1694,30 @@ void World_GenFlyByCameras(class VT_Level *tr)
             };
             flags_ui  =  tr->flyby_cameras[i].flags;
 
-            global_world.flyby_cameras[i].flags           =  flags;
-            global_world.flyby_cameras[i].pos[0]          =  tr->flyby_cameras[i].pos_x;
-            global_world.flyby_cameras[i].pos[1]          =  tr->flyby_cameras[i].pos_z;
-            global_world.flyby_cameras[i].pos[2]          = -tr->flyby_cameras[i].pos_y;
-            global_world.flyby_cameras[i].target[0]       =  tr->flyby_cameras[i].target_x;
-            global_world.flyby_cameras[i].target[1]       =  tr->flyby_cameras[i].target_z;
-            global_world.flyby_cameras[i].target[2]       = -tr->flyby_cameras[i].target_y;
+            global_world.flyby_frames[i].flags           =  flags;
+            global_world.flyby_frames[i].pos[0]          =  tr->flyby_cameras[i].pos_x;
+            global_world.flyby_frames[i].pos[1]          =  tr->flyby_cameras[i].pos_z;
+            global_world.flyby_frames[i].pos[2]          = -tr->flyby_cameras[i].pos_y;
+            global_world.flyby_frames[i].target[0]       =  tr->flyby_cameras[i].target_x;
+            global_world.flyby_frames[i].target[1]       =  tr->flyby_cameras[i].target_z;
+            global_world.flyby_frames[i].target[2]       = -tr->flyby_cameras[i].target_y;
 
-            global_world.flyby_cameras[i].fov             =  tr->flyby_cameras[i].fov;
-            global_world.flyby_cameras[i].roll            =  tr->flyby_cameras[i].roll;
-            global_world.flyby_cameras[i].timer           =  tr->flyby_cameras[i].timer;
-            global_world.flyby_cameras[i].speed           =  tr->flyby_cameras[i].speed;
+            global_world.flyby_frames[i].fov             =  tr->flyby_cameras[i].fov;
+            global_world.flyby_frames[i].roll            =  tr->flyby_cameras[i].roll;
+            global_world.flyby_frames[i].timer           =  tr->flyby_cameras[i].timer;
+            global_world.flyby_frames[i].speed           =  tr->flyby_cameras[i].speed;
 
-            global_world.flyby_cameras[i].sequence        =  tr->flyby_cameras[i].sequence;
-            global_world.flyby_cameras[i].index           =  tr->flyby_cameras[i].index;
+            global_world.flyby_frames[i].sequence        =  tr->flyby_cameras[i].sequence;
+            global_world.flyby_frames[i].index           =  tr->flyby_cameras[i].index;
 
             if((tr->flyby_cameras[i].room_id >= 0) && ((uint32_t)tr->flyby_cameras[i].room_id < global_world.rooms_count))
             {
-                global_world.flyby_cameras[i].room            =  global_world.rooms + tr->flyby_cameras[i].room_id;
+                global_world.flyby_frames[i].room            =  global_world.rooms + tr->flyby_cameras[i].room_id;
             }
 
-            if((i + 1 == global_world.flyby_cameras_count) || (tr->flyby_cameras[i].sequence != tr->flyby_cameras[i + 1].sequence))
+            if((i + 1 == global_world.flyby_frames_count) || (tr->flyby_cameras[i].sequence != tr->flyby_cameras[i + 1].sequence))
             {
-                *last_seq_ptr = FlyBySequence_Create(global_world.flyby_cameras + start_index, i - start_index + 1);
+                *last_seq_ptr = FlyBySequence_Create(global_world.flyby_frames + start_index, i - start_index + 1);
                 if(*last_seq_ptr)
                 {
                     last_seq_ptr = &(*last_seq_ptr)->next;

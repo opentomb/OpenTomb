@@ -55,6 +55,7 @@ typedef struct camera_state_s
     GLfloat                         shake_value;
     GLfloat                         time;
     int                             move;
+    float                           cutscene_tr[16];
     float                           entity_offset_x;
     float                           entity_offset_z;
     int8_t                          target_dir; //Target rotation direction (0 = Back, 1 = Front, 2 = Left, 3 = Right)
@@ -99,7 +100,7 @@ typedef struct static_camera_sink_s
     uint16_t                    flag_or_zone;            // Flag for camera, zone for sink.
 }static_camera_sink_t, *static_camera_sink_p;
 
-typedef struct flyby_camera_state_s
+typedef struct camera_frame_s
 {
     float                       pos[3];
     float                       target[3];
@@ -113,11 +114,11 @@ typedef struct flyby_camera_state_s
     int8_t                      index;
     struct camera_flags_s       flags;
     struct room_s              *room;
-}flyby_camera_state_t, *flyby_camera_state_p;
+}camera_frame_t, *camera_frame_p;
 
 typedef struct flyby_camera_sequence_s
 {
-    struct flyby_camera_state_s    *start;
+    struct camera_frame_s          *start;
     uint32_t                        locked : 1;
 
     struct spline_s                *pos_x;
@@ -144,8 +145,9 @@ void Cam_SetRotation(camera_p cam, GLfloat angles[3]);             // set orient
 void Cam_MoveTo(camera_p cam, GLfloat to[3], GLfloat max_dist);
 void Cam_LookTo(camera_p cam, GLfloat to[3]);
 void Cam_RecalcClipPlanes(camera_p cam);                           // recalculation of camera frustum clipplanes
+void Cam_SetFrame(camera_p cam, camera_frame_p a, camera_frame_p b, float offset[3], float lerp);
 
-flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_t count);
+flyby_camera_sequence_p FlyBySequence_Create(camera_frame_p start, uint32_t count);
 void FlyBySequence_Clear(flyby_camera_sequence_p s);
 void FlyBySequence_SetCamera(flyby_camera_sequence_p s, camera_p cam, float t);
 

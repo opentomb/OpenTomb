@@ -893,7 +893,7 @@ int lua_MoveEntityToSink(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            Entity_MoveToSink(ent, World_GetstaticCameraSink(lua_tointeger(lua, 2)));
+            Entity_MoveToSink(ent, World_GetStaticCameraSink(lua_tointeger(lua, 2)));
         }
     }
     else

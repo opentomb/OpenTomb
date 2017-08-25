@@ -381,9 +381,25 @@ void Cam_RecalcClipPlanes(camera_p cam)
 }
 
 /*
- * FLYBY CAMERAS
+ * SCENES CAMERAS
  */
-flyby_camera_sequence_p FlyBySequence_Create(flyby_camera_state_p start, uint32_t count)
+void Cam_SetFrame(camera_p cam, camera_frame_p a, camera_frame_p b, float tr[16], float lerp)
+{
+    float from[3], to[3];
+    float t = 1.0f - lerp;
+
+    vec3_interpolate_macro(from, a->pos, b->pos, lerp, t);
+    vec3_interpolate_macro(to, a->target, b->target, lerp, t);
+    Mat4_vec3_mul(cam->gl_transform + 12, tr, from);
+    Mat4_vec3_mul(to, tr, to);
+    
+    cam->fov = a->fov * t + b->fov * lerp;
+    Cam_SetFovAspect(cam, cam->fov, cam->aspect);
+    Cam_LookTo(cam, to);
+}
+
+
+flyby_camera_sequence_p FlyBySequence_Create(camera_frame_p start, uint32_t count)
 {
     flyby_camera_sequence_p ret = NULL;
 

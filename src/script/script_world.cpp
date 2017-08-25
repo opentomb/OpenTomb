@@ -1101,6 +1101,48 @@ int lua_PlayFlyby(lua_State *lua)
 }
 
 
+int lua_SetCameraFrame(lua_State *lua)
+{
+    bool can_continue = false;
+    if(lua_gettop(lua) >= 1)
+    {
+        float lerp = lua_tonumber(lua, 1);
+        int32_t frame = lerp;
+        camera_frame_p a = World_GetCinematicFrame(frame);
+        camera_frame_p b = World_GetCinematicFrame(frame + 1);
+        can_continue = a || b;
+        if(a)
+        {
+            b = (b) ? (b) : (a);
+            Cam_SetFrame(&engine_camera, a, b, engine_camera_state.cutscene_tr, lerp - frame);
+        }
+    }
+    lua_pushboolean(lua, can_continue);
+    
+    return 1;
+}
+
+
+int lua_SetCinematicTransform(lua_State *lua)
+{
+    int top = lua_gettop(lua);
+    if(top >= 3)
+    {
+        float ang[3];
+        Mat4_E_macro(engine_camera_state.cutscene_tr);
+        engine_camera_state.cutscene_tr[12 + 0] = lua_tonumber(lua, 1);
+        engine_camera_state.cutscene_tr[12 + 1] = lua_tonumber(lua, 2);
+        engine_camera_state.cutscene_tr[12 + 2] = lua_tonumber(lua, 3);
+        ang[0] = (top >= 4) ? (lua_tonumber(lua, 4)) : (0.0f);
+        ang[1] = (top >= 5) ? (lua_tonumber(lua, 5)) : (0.0f);
+        ang[2] = (top >= 6) ? (lua_tonumber(lua, 6)) : (0.0f);
+        Mat4_SetAnglesZXY(engine_camera_state.cutscene_tr, ang);
+    }
+
+    return 0;
+}
+
+
 int lua_SetCameraPos(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
@@ -1214,6 +1256,8 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
 
     lua_register(lua, "camShake", lua_CamShake);
     lua_register(lua, "playFlyby", lua_PlayFlyby);
+    lua_register(lua, "setCameraFrame", lua_SetCameraFrame);
+    lua_register(lua, "setCinematicTransform", lua_SetCinematicTransform);
     lua_register(lua, "setCameraPos", lua_SetCameraPos);
     lua_register(lua, "setCameraAngles", lua_SetCameraAngles);
     lua_register(lua, "cameraLookAt", lua_CameraLookAt);

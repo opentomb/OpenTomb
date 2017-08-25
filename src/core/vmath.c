@@ -320,12 +320,12 @@ void vec3_GetPlaneEquation(float eq[4], float v0[3], float v1[3], float v2[3])
     vec3_sub(l2, v0, v2);                                                       // get the second vector inside the plane
     vec3_cross(eq, l1, l2);                                                     // get the normal vector to the plane
 
-    t = sqrtf(eq[0]*eq[0] + eq[1]*eq[1] + eq[2]*eq[2]);                         // normalize vector
+    t = sqrtf(eq[0] * eq[0] + eq[1] * eq[1] + eq[2] * eq[2]);                   // normalize vector
     eq[0] /= t;
     eq[1] /= t;
     eq[2] /= t;
 
-    eq[3] = -(v0[0]*eq[0] + v0[1]*eq[1] + v0[2]*eq[2]);                         // distance from the plane to (0, 0, 0)
+    eq[3] = -(v0[0] * eq[0] + v0[1] * eq[1] + v0[2] * eq[2]);                   // distance from the plane to (0, 0, 0)
 }
 
 
@@ -369,8 +369,8 @@ void vec3_RotateZ(float res[3], float src[3], float ang)
     sint = sinf(ang);
     cost = cosf(ang);
     res[2] = src[2];
-    t[0] = src[0]*cost - src[1] * sint;
-    t[1] = src[0]*sint + src[1] * cost;
+    t[0] = src[0] * cost - src[1] * sint;
+    t[1] = src[0] * sint + src[1] * cost;
 
     res[0] = t[0];
     res[1] = t[1];
