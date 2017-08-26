@@ -142,7 +142,7 @@ function midastouch_init(id)    -- Midas gold touch
         local activator_id = entity_funcs[object_id].activator_id;
         if(getEntityDistance(activator_id, object_id) < 1024.0) then
             local lara_anim, frame, count = getEntityAnim(activator_id, ANIM_TYPE_BASE);
-            local lara_sector = getEntitySectorIndex(activator_id);                   -- do not use getEntitySectorIndex: DEPRECATED!
+            local lara_sector = getEntitySectorIndex(activator_id);             -- do not use getEntitySectorIndex: DEPRECATED!
             local hand_sector = getEntitySectorIndex(object_id);
 
             if(5 == getEntityModelID(activator_id, ANIM_TYPE_BASE)) then
@@ -349,12 +349,25 @@ function ScionHolder_init(id)
                 return ENTITY_TRIGGERING_NOT_READY;
             end
 
-            entityRotateToTriggerZ(activator_id, object_id);
-            entityMoveToTriggerActivationPoint(activator_id, object_id);
-            -- play cutscene here!
-            setGame(GAME_1, 15);
+            if(0 == getEntityModelID(activator_id, ANIM_TYPE_BASE)) then
+                entity_funcs[id].activator_id = activator_id;
+                entityRotateToTriggerZ(activator_id, object_id);
+                entityMoveToTriggerActivationPoint(activator_id, object_id);
+                setEntityBaseAnimModel(activator_id, 5);
+                setEntityAnim(activator_id, ANIM_TYPE_BASE, 0, 0);
+                noEntityMove(activator_id, true);
+            end;
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
+
+        entity_funcs[id].onLoop = function(object_id, tick_state)
+            if(5 == getEntityModelID(entity_funcs[id].activator_id, ANIM_TYPE_BASE)) then
+                local a, f, c = getEntityAnim(entity_funcs[id].activator_id, ANIM_TYPE_BASE);
+                if((a == 0) and (f + 1 >= c)) then
+                    gameflowLoadMap(base_path .. "data/tr1/data/CUT4.PHD");
+                end;
+            end;
+        end
     end;
 end;
 

@@ -477,6 +477,21 @@ void CRender::DrawListDebugLines()
                 }
             }
         }
+        
+        if(r_flags & R_DRAW_CINEMATICS)
+        {
+            const float color_r[3] = {1.0f, 0.0f, 0.0f};
+            const float color_g[3] = {0.0f, 1.0f, 0.0f};
+            float v0[3], v1[3];
+            uint32_t id = 0;
+            while(camera_frame_p frame = World_GetCinematicFrame(id++))
+            {
+                Mat4_vec3_mul(v0, engine_camera_state.cutscene_tr, frame->pos);
+                Mat4_vec3_mul(v1, engine_camera_state.cutscene_tr, frame->target);
+                debugDrawer->DrawLine(v0, v1, color_r, color_g);
+            }
+            debugDrawer->DrawAxis(4096.0f, engine_camera_state.cutscene_tr);
+        }
 
         if(r_flags & R_DRAW_AI_BOXES)
         {

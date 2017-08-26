@@ -1488,6 +1488,7 @@ int Engine_LoadMap(const char *name)
     engine_camera_state.time = 0.0f;
     engine_camera_state.sink = NULL;
     engine_camera_state.target_id = ENTITY_ID_NONE;
+    Mat4_E_macro(engine_camera_state.cutscene_tr);
     renderer.ResetWorld(NULL, 0, NULL, 0);
     Gui_DrawLoadScreen(0);
 
@@ -1566,7 +1567,7 @@ extern "C" int Engine_ExecCmd(char *ch)
             Con_AddLine("free_look - switch camera mode\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("r_crosshair - switch crosshair visibility\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("cam_distance - camera distance to actor\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room, r_flyby, r_triggers, r_ai_boxes, r_cameras - render modes\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room, r_flyby, r_cinematics, r_triggers, r_ai_boxes, r_cameras - render modes\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("playsound(id) - play specified sound\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("stopsound(id) - stop specified sound\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("Watch out for case sensitive commands!\0", FONTSTYLE_CONSOLE_WARNING);
@@ -1702,6 +1703,11 @@ extern "C" int Engine_ExecCmd(char *ch)
             renderer.r_flags ^= R_DRAW_CAMERAS;
             return 1;
         }
+        else if(!strcmp(token, "r_cinematics"))
+        {
+            renderer.r_flags ^= R_DRAW_CINEMATICS;
+            return 1;
+        }        
         else if(!strcmp(token, "r_triggers"))
         {
             renderer.r_flags ^= R_DRAW_TRIGGERS;

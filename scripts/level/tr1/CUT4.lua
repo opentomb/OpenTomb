@@ -5,16 +5,16 @@ print("Level script loaded (CUT4.lua)");
 
 level_PostLoad = function()
     playStream(22);
-    entity_funcs[0] = {};
-    entity_funcs[0].t = 0;
-    entity_funcs[0].onLoop = function(object_id, tick_state)
-        entity_funcs[0].t = entity_funcs[0].t + frame_time;
-        if(not setCameraFrame(entity_funcs[0].t * 30)) then
+    entity_funcs[1] = {};
+    entity_funcs[1].t = 0;
+    entity_funcs[1].onLoop = function(object_id, tick_state)
+        entity_funcs[1].t = entity_funcs[1].t + frame_time;
+        if(not setCameraFrame(entity_funcs[1].t * 30)) then
             setGame(GAME_1, 15);
         end;
     end;
 end;
 
 level_PreLoad = function()
-    setCinematicTransform(0, 0, 0, 128.056);
+    setCinematicTransform(49664, 51712, 18688, -90);
 end;

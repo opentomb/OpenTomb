@@ -1110,9 +1110,9 @@ int lua_SetCameraFrame(lua_State *lua)
         int32_t frame = lerp;
         camera_frame_p a = World_GetCinematicFrame(frame);
         camera_frame_p b = World_GetCinematicFrame(frame + 1);
-        can_continue = a || b;
         if(a)
         {
+            can_continue = true;
             b = (b) ? (b) : (a);
             Cam_SetFrame(&engine_camera, a, b, engine_camera_state.cutscene_tr, lerp - frame);
         }
