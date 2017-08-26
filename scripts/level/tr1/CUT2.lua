@@ -7,7 +7,7 @@ level_PostLoad = function()
     playStream(25);
     local id = 0;
     while(true) do
-        local x, y, z, az = getEntityPos(id);
+        local x = getEntityPos(id);
         if(x == nil) then
             break;
         end;

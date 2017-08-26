@@ -361,7 +361,7 @@ function ScionHolder_init(id)
         end;
 
         entity_funcs[id].onLoop = function(object_id, tick_state)
-            if(5 == getEntityModelID(entity_funcs[id].activator_id, ANIM_TYPE_BASE)) then
+            if((entity_funcs[id].activator_id ~= nil) and (5 == getEntityModelID(entity_funcs[id].activator_id, ANIM_TYPE_BASE))) then
                 local a, f, c = getEntityAnim(entity_funcs[id].activator_id, ANIM_TYPE_BASE);
                 if((a == 0) and (f + 1 >= c)) then
                     gameflowLoadMap(base_path .. "data/tr1/data/CUT4.PHD");
