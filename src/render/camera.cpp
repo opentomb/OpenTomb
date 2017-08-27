@@ -263,6 +263,37 @@ void Cam_SetRotation(camera_p cam, GLfloat angles[3])
 }
 
 
+void Cam_SetRoll(camera_p cam, GLfloat roll)
+{
+    float sin_t2, cos_t2, module;
+    float t1[4], t2[4], t[4];
+
+    roll /= 2.0;
+    sin_t2 = sin(roll);
+    cos_t2 = cos(roll);
+
+    t1[3] = cos_t2;
+    t1[0] = cam->gl_transform[8 + 0] * sin_t2;
+    t1[1] = cam->gl_transform[8 + 1] * sin_t2;
+    t1[2] = cam->gl_transform[8 + 2] * sin_t2;
+    module = vec4_abs(t1);
+    t1[0] /= module;
+    t1[1] /= module;
+    t1[2] /= module;
+    t1[3] /= module;
+
+    vec4_sop(t2, t1);
+
+    cam->gl_transform[4 + 3] = 0.0;
+    vec4_mul(t, t1, cam->gl_transform + 4);
+    vec4_mul(cam->gl_transform + 4, t, t2);
+
+    cam->gl_transform[0 + 3] = 0.0;
+    vec4_mul(t, t1, cam->gl_transform + 0);
+    vec4_mul(cam->gl_transform + 0, t, t2);
+}
+
+
 void Cam_MoveTo(camera_p cam, GLfloat to[3], GLfloat max_dist)
 {
     float dir[4];
@@ -385,7 +416,7 @@ void Cam_RecalcClipPlanes(camera_p cam)
  */
 void Cam_SetFrame(camera_p cam, camera_frame_p a, camera_frame_p b, float tr[16], float lerp)
 {
-    float from[3], to[3];
+    float from[3], to[3], roll;
     float t = 1.0f - lerp;
 
     vec3_interpolate_macro(from, a->pos, b->pos, lerp, t);
@@ -393,9 +424,11 @@ void Cam_SetFrame(camera_p cam, camera_frame_p a, camera_frame_p b, float tr[16]
     Mat4_vec3_mul(cam->gl_transform + 12, tr, from);
     Mat4_vec3_mul(to, tr, to);
     
+    roll = a->roll * t + b->roll * lerp;
     cam->fov = a->fov * t + b->fov * lerp;
     Cam_SetFovAspect(cam, cam->fov, cam->aspect);
     Cam_LookTo(cam, to);
+    //Cam_SetRoll(cam, roll);
 }
 
 
@@ -506,34 +539,8 @@ void FlyBySequence_SetCamera(flyby_camera_sequence_p s, camera_p cam, float t)
     Cam_LookTo(cam, to);
 
     d = Spline_Get(s->roll, t);
-
     if(d != 0.0f)
     {
-        float sin_t2, cos_t2, module;
-        float t1[4], t2[4], t[4];
-
-        d /= 2.0;
-        sin_t2 = sin(d);
-        cos_t2 = cos(d);
-
-        t1[3] = cos_t2;
-        t1[0] = cam->gl_transform[8 + 0] * sin_t2;
-        t1[1] = cam->gl_transform[8 + 1] * sin_t2;
-        t1[2] = cam->gl_transform[8 + 2] * sin_t2;
-        module = vec4_abs(t1);
-        t1[0] /= module;
-        t1[1] /= module;
-        t1[2] /= module;
-        t1[3] /= module;
-
-        vec4_sop(t2, t1);
-
-        cam->gl_transform[4 + 3] = 0.0;
-        vec4_mul(t, t1, cam->gl_transform + 4);
-        vec4_mul(cam->gl_transform + 4, t, t2);
-
-        cam->gl_transform[0 + 3] = 0.0;
-        vec4_mul(t, t1, cam->gl_transform + 0);
-        vec4_mul(cam->gl_transform + 0, t, t2);
+        Cam_SetRoll(cam, d);
     }
 }
