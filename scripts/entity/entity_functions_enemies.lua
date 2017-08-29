@@ -786,7 +786,7 @@ function Larson_init(id)
                 if((a == 15) and (f + 1 >= c)) then
                     local dist = getEntityDistance(object_id, player);
                     if(dist < 2048) then
-                        gameflowLoadMap(base_path .. "data/tr1/data/CUT1.PHD");
+                        gameflowSend(GF_OP_LEVELCOMPLETE, getLevel() + 1);
                     end;
                 end;
             else
@@ -813,7 +813,7 @@ function Pierre_init(id)
     setCharacterBones(id, 8, 7, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 768.0, 256.0, 256.0, 256, 256);                   -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
-    entity_funcs[id].is_flee = (getLevel() ~= 9) or (getEntityRoom(id) ~= 110);
+    entity_funcs[id].is_flee = (getLevel() ~= 10) or (getEntityRoom(id) ~= 110);
 
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
@@ -839,7 +839,7 @@ function Pierre_init(id)
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
         local hp = getCharacterParam(object_id, PARAM_HEALTH);
-        if((hp == 0) and (getLevel() == 9)) then
+        if((hp == 0) and (getLevel() == 10)) then
             local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
             if((a == 12) and (f + 1 >= c)) then
                 local spawned_id = spawnEntity(133, getEntityRoom(object_id), getEntityPos(object_id));
@@ -1166,7 +1166,7 @@ end;
 
 
 function mutant_boss_egg_init(id)
-    if(getLevel() == 15) then
+    if(getLevel() == 19) then
         setEntityActivity(id, false);
         setEntityCollision(id, false);
 

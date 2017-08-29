@@ -419,7 +419,6 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                     case TR_FD_TRIGFUNC_ENDLEVEL:
                         Con_Notify("level was changed to %d", command->operands);
-                        Game_LevelTransition(command->operands);
                         if(!Gameflow_Send(GF_OP_LEVELCOMPLETE, command->operands))
                         {
                             Con_Warning("TR_FD_TRIGFUNC_ENDLEVEL: Failed to add opcode to gameflow action list");

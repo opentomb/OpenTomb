@@ -10,7 +10,7 @@ level_PostLoad = function()
     entity_funcs[1].onLoop = function(object_id, tick_state)
         entity_funcs[1].t = entity_funcs[1].t + frame_time;
         if(not setCameraFrame(entity_funcs[1].t * 30)) then
-            setGame(GAME_1, 15);
+            gameflowSend(GF_OP_LEVELCOMPLETE, getLevel() + 1);
         end;
     end;
 end;

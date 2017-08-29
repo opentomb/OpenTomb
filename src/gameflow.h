@@ -50,18 +50,16 @@ enum GF_OP
 
 void Gameflow_Init();
 bool Gameflow_Send(int opcode, int operand);
-void Gameflow_SetLoadMap(const char* filePath);
 void Gameflow_ProcessCommands();
-void Gameflow_ResetSecrets();
-const char* Gameflow_GetCurrentLevelPathLocal();
-void Gameflow_SetCurrentLevelPath(const char* filePath);
 
-void Gameflow_SetCurrentGameID(uint8_t id);
-void Gameflow_SetCurrentLevelID(uint8_t id);
-void Gameflow_SetSecretStateAtIndex(int index, int value);
+bool Gameflow_SetMap(const char* filePath, int game_id, int level_id);
+bool Gameflow_SetGame(int game_id, int level_id);
+const char* Gameflow_GetCurrentLevelPathLocal();
 uint8_t Gameflow_GetCurrentGameID();
 uint8_t Gameflow_GetCurrentLevelID();
-int Gameflow_GetSecretStateAtIndex(int index);
 
+void Gameflow_ResetSecrets();
+void Gameflow_SetSecretStateAtIndex(int index, int value);
+int Gameflow_GetSecretStateAtIndex(int index);
 
 #endif //GAMEFLOW_H

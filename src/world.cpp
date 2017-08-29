@@ -100,7 +100,7 @@ extern "C" {
 void World_SetEntityModelProperties(struct entity_s *ent);
 void World_SetStaticMeshProperties(struct static_mesh_s *r_static);
 void World_SetEntityFunction(struct entity_s *ent);
-void World_ScriptsOpen();
+void World_ScriptsOpen(const char *path);
 void World_AutoexecOpen();
 // Create entity function from script, if exists.
 bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id);
@@ -168,13 +168,17 @@ void World_Prepare()
 }
 
 
-void World_Open(class VT_Level *tr)
+void World_Open(const char *path, int trv)
 {
+    VT_Level *tr = new VT_Level();
+    tr->read_level(path, trv);
+    tr->prepare_level();
+    //tr_level->dump_textures();
     World_Clear();
 
     global_world.version = tr->game_version;
 
-    World_ScriptsOpen();                // Open configuration scripts.
+    World_ScriptsOpen(path);                // Open configuration scripts.
     Gui_DrawLoadScreen(200);
 
     World_GenTextures(tr);              // Generate OGL textures
@@ -257,6 +261,8 @@ void World_Open(class VT_Level *tr)
         delete global_world.tex_atlas;
         global_world.tex_atlas = NULL;
     }
+    
+    delete tr;
 }
 
 
@@ -1208,7 +1214,7 @@ uint32_t World_GetFlipState(uint32_t flip_index)
 /*
  * PRIVATE  WORLD  FUNCTIONS
  */
-void World_ScriptsOpen()
+void World_ScriptsOpen(const char *path)
 {
     if(engine_lua)
     {
@@ -1216,7 +1222,7 @@ void World_ScriptsOpen()
         {
             char temp_script_name[1024];
             int top = lua_gettop(engine_lua);
-            Engine_GetLevelScriptNameLocal(global_world.version, temp_script_name, sizeof(temp_script_name));
+            Engine_GetLevelScriptNameLocal(path, global_world.version, temp_script_name, sizeof(temp_script_name));
             int lua_err = Script_DoLuaFile(engine_lua, temp_script_name);
             if(lua_err)
             {

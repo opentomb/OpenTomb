@@ -832,15 +832,3 @@ void Game_StopFlyBy()
     engine_camera_state.flyby = NULL;
     Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
 }
-
-
-void Game_LevelTransition(uint16_t level_index)
-{
-    char file_path[MAX_ENGINE_PATH];
-    Script_GetLoadingScreen(engine_lua, level_index, file_path);
-    if(!Gui_LoadScreenAssignPic(file_path))
-    {
-        Gui_LoadScreenAssignPic("resource/graphics/legal");
-    }
-    Audio_EndStreams();
-}

@@ -6,11 +6,13 @@ extern "C" {
 
 #include "core/gl_text.h"
 #include "core/console.h"
-#include "engine.h"
 #include "script/script.h"
+#include "gui/gui.h"
+#include "engine.h"
 #include "gameflow.h"
 #include "game.h"
 #include "audio.h"
+#include "world.h"
 
 #include <assert.h>
 #include <vector>
@@ -23,24 +25,39 @@ typedef struct gameflow_action_s
 
 struct gameflow_s
 {
-    uint8_t                         m_currentGameID;
-    uint8_t                         m_currentLevelID;
+    int                             m_currentGameID;
+    int                             m_currentLevelID;
+
+    int                             m_nextGameID;
+    int                             m_nextLevelID;
 
     char                            m_currentLevelName[LEVEL_NAME_MAX_LEN];
     char                            m_currentLevelPath[MAX_ENGINE_PATH];
     char                            m_secretsTriggerMap[GF_MAX_SECRETS];
-    char                            m_doLoadMap[MAX_ENGINE_PATH];
 
     std::vector<gameflow_action_t>    m_actions;
 } global_gameflow;
 
+typedef struct level_info_s
+{
+    int num_levels = 0;
+    char name[LEVEL_NAME_MAX_LEN];
+    char path[MAX_ENGINE_PATH];
+    char pic[MAX_ENGINE_PATH];
+}level_info_t, *level_info_p;
+
+
+bool Gameflow_GetLevelInfo(level_info_p info, int game_id, int level_id);
+bool Gameflow_SetGameInternal(int game_id, int level_id);
+
 
 void Gameflow_Init()
 {
+    global_gameflow.m_nextGameID = -1;
+    global_gameflow.m_nextLevelID = -1;
     memset(global_gameflow.m_currentLevelName, 0, sizeof(global_gameflow.m_currentLevelName));
     memset(global_gameflow.m_currentLevelPath, 0, sizeof(global_gameflow.m_currentLevelPath));
     memset(global_gameflow.m_secretsTriggerMap, 0, sizeof(global_gameflow.m_secretsTriggerMap));
-    memset(global_gameflow.m_doLoadMap, 0, sizeof(global_gameflow.m_doLoadMap));
     global_gameflow.m_actions.clear();
 }
 
@@ -57,12 +74,6 @@ bool Gameflow_Send(int opcode, int operand)
 }
 
 
-void Gameflow_SetLoadMap(const char* filePath)
-{
-    strncpy(global_gameflow.m_doLoadMap, filePath, LEVEL_NAME_MAX_LEN);
-}
-
-
 void Gameflow_ProcessCommands()
 {
     for(; !global_gameflow.m_actions.empty(); global_gameflow.m_actions.pop_back())
@@ -71,36 +82,21 @@ void Gameflow_ProcessCommands()
         switch(it.m_opcode)
         {
             case GF_OP_LEVELCOMPLETE:
-            {
-                int top = lua_gettop(engine_lua);
-                Game_LevelTransition(it.m_operand);
-
-                //Must be loaded from gameflow script!
-                lua_getglobal(engine_lua, "getNextLevel");
-
-                //Push the 3 arguments require dby getNextLevel();
-                lua_pushnumber(engine_lua, global_gameflow.m_currentGameID);
-                lua_pushnumber(engine_lua, global_gameflow.m_currentLevelID);
-                lua_pushnumber(engine_lua, it.m_operand);
-
-                if (lua_CallAndLog(engine_lua, 3, 3, 0))
+                if(World_GetPlayer())
                 {
-                    //First value in stack is level id
-                    global_gameflow.m_currentLevelID = lua_tonumber(engine_lua, -1);
-                    //Second value in stack is level name
-                    strncpy(global_gameflow.m_currentLevelName, lua_tostring(engine_lua, -2), LEVEL_NAME_MAX_LEN);
-                    //Third value in stack is level path
-                    strncpy(global_gameflow.m_currentLevelPath, lua_tostring(engine_lua, -3), MAX_ENGINE_PATH);
-                    Engine_LoadMap(global_gameflow.m_currentLevelPath);
+                    luaL_dostring(engine_lua, "saved_inventory = getItems(player);");
                 }
-                else
+                if(Gameflow_SetGameInternal(global_gameflow.m_currentGameID, global_gameflow.m_currentLevelID + 1) && World_GetPlayer())
                 {
-                    Con_AddLine("Fatal Error: Failed to call GetNextLevel()", FONTSTYLE_CONSOLE_WARNING);
+                    luaL_dostring(engine_lua, "if(saved_inventory ~= nil) then\n"
+                                                  "removeAllItems(player);\n"
+                                                  "for k, v in pairs(saved_inventory) do\n"
+                                                      "addItem(player, k, v);\n"
+                                                  "end;\n"
+                                                  "saved_inventory = nil;\n"
+                                              "end;");
                 }
-                lua_settop(engine_lua, top);
-                it.m_opcode = GF_NOENTRY;
-            }
-            break;
+                break;
 
             case GF_OP_SETTRACK:
                 Audio_StreamPlay(it.m_operand);
@@ -114,52 +110,130 @@ void Gameflow_ProcessCommands()
                 break;
         };   // end switch(gameflow_manager.Operand)
     }
-    
-    if(global_gameflow.m_doLoadMap[0])
+
+    if(global_gameflow.m_nextGameID >= 0)
     {
-        strncpy(global_gameflow.m_currentLevelName, global_gameflow.m_doLoadMap, LEVEL_NAME_MAX_LEN);
-        Engine_LoadMap(global_gameflow.m_doLoadMap);
-        memset(global_gameflow.m_doLoadMap, 0, sizeof(global_gameflow.m_doLoadMap));
+        Gameflow_SetGameInternal(global_gameflow.m_nextGameID, global_gameflow.m_nextLevelID);
+        global_gameflow.m_nextGameID = -1;
+        global_gameflow.m_nextLevelID = -1;
     }
 }
 
-void Gameflow_ResetSecrets()
+
+bool Gameflow_SetMap(const char* filePath, int game_id, int level_id)
 {
-    memset(global_gameflow.m_secretsTriggerMap, 0, GF_MAX_SECRETS * sizeof(*global_gameflow.m_secretsTriggerMap));
+    level_info_t info;
+    if(Gameflow_GetLevelInfo(&info, game_id, level_id))
+    {
+        if(!Gui_LoadScreenAssignPic(info.pic))
+        {
+            Gui_LoadScreenAssignPic("resource/graphics/legal");
+        }
+    }
+
+    strncpy(global_gameflow.m_currentLevelPath, filePath, MAX_ENGINE_PATH);
+    global_gameflow.m_currentGameID = game_id;
+    global_gameflow.m_currentLevelID = level_id;
+
+    return Engine_LoadMap(filePath);
+}
+
+
+bool Gameflow_SetGame(int game_id, int level_id)
+{
+    global_gameflow.m_nextGameID = game_id;
+    global_gameflow.m_nextLevelID = level_id;
+    return true;
+}
+
+
+bool Gameflow_GetLevelInfo(level_info_p info, int game_id, int level_id)
+{
+    int top = lua_gettop(engine_lua);
+
+    lua_getglobal(engine_lua, "gameflow_params");
+    if(!lua_istable(engine_lua, -1))
+    {
+        lua_settop(engine_lua, top);
+        return false;
+    }
+
+    lua_rawgeti(engine_lua, -1, game_id);
+    if(!lua_istable(engine_lua, -1))
+    {
+        lua_settop(engine_lua, top);
+        return false;
+    }
+
+    lua_getfield(engine_lua, -1, "title");
+    strncpy(info->pic, lua_tostring(engine_lua, -1), MAX_ENGINE_PATH);
+    lua_pop(engine_lua, 1);
+
+    lua_getfield(engine_lua, -1, "numlevels");
+    info->num_levels = lua_tointeger(engine_lua, -1);
+    lua_pop(engine_lua, 1);
+
+    lua_getfield(engine_lua, -1, "levels");
+    if(!lua_istable(engine_lua, -1))
+    {
+        lua_settop(engine_lua, top);
+        return false;
+    }
+
+    level_id = (level_id <= info->num_levels) ? (level_id) : (0);
+    lua_rawgeti(engine_lua, -1, level_id);
+    if(!lua_istable(engine_lua, -1))
+    {
+        lua_settop(engine_lua, top);
+        return false;
+    }
+
+    lua_getfield(engine_lua, -1, "name");
+    strncpy(info->name, lua_tostring(engine_lua, -1), LEVEL_NAME_MAX_LEN);
+    lua_pop(engine_lua, 1);
+
+    lua_getfield(engine_lua, -1, "filepath");
+    strncpy(info->path, lua_tostring(engine_lua, -1), MAX_ENGINE_PATH);
+    lua_pop(engine_lua, 1);
+
+    lua_getfield(engine_lua, -1, "picpath");
+    strncpy(info->pic, lua_tostring(engine_lua, -1), MAX_ENGINE_PATH);
+    lua_pop(engine_lua, 1);
+
+    lua_pop(engine_lua, 1);   // level_id
+    lua_pop(engine_lua, 1);   // levels
+
+    lua_pop(engine_lua, 1);   // game_id
+    lua_settop(engine_lua, top);
+
+    return true;
+}
+
+
+bool Gameflow_SetGameInternal(int game_id, int level_id)
+{
+    level_info_t info;
+    if(Gameflow_GetLevelInfo(&info, game_id, level_id))
+    {
+        if(!Gui_LoadScreenAssignPic(info.pic))
+        {
+            Gui_LoadScreenAssignPic("resource/graphics/legal");
+        }
+
+        global_gameflow.m_currentGameID = game_id;
+        global_gameflow.m_currentLevelID = level_id;
+        strncpy(global_gameflow.m_currentLevelName, info.name, LEVEL_NAME_MAX_LEN);
+        strncpy(global_gameflow.m_currentLevelPath, info.path, MAX_ENGINE_PATH);
+        return Engine_LoadMap(info.path);
+    }
+
+    return false;
 }
 
 
 const char* Gameflow_GetCurrentLevelPathLocal()
 {
     return global_gameflow.m_currentLevelPath + strlen(Engine_GetBasePath());
-}
-
-
-void Gameflow_SetCurrentLevelPath(const char* filePath)
-{
-    assert(strlen(filePath) < LEVEL_NAME_MAX_LEN);
-    strncpy(global_gameflow.m_currentLevelPath, filePath, MAX_ENGINE_PATH);
-}
-
-
-void Gameflow_SetCurrentGameID(uint8_t id)
-{
-    assert(id >= 0 && id <= GAME_5);
-    global_gameflow.m_currentGameID = id;
-}
-
-
-void Gameflow_SetCurrentLevelID(uint8_t id)
-{
-    assert(id >= 0);///@TODO pull max level ID from script?
-    global_gameflow.m_currentLevelID = id;
-}
-
-
-void Gameflow_SetSecretStateAtIndex(int index, int value)
-{
-    assert((index >= 0) && index <= (GF_MAX_SECRETS));
-    global_gameflow.m_secretsTriggerMap[index] = (char)value; ///@FIXME should not cast.
 }
 
 
@@ -172,6 +246,19 @@ uint8_t Gameflow_GetCurrentGameID()
 uint8_t Gameflow_GetCurrentLevelID()
 {
     return global_gameflow.m_currentLevelID;
+}
+
+
+void Gameflow_ResetSecrets()
+{
+    memset(global_gameflow.m_secretsTriggerMap, 0, GF_MAX_SECRETS * sizeof(*global_gameflow.m_secretsTriggerMap));
+}
+
+
+void Gameflow_SetSecretStateAtIndex(int index, int value)
+{
+    assert((index >= 0) && index <= (GF_MAX_SECRETS));
+    global_gameflow.m_secretsTriggerMap[index] = (char)value; ///@FIXME should not cast.
 }
 
 

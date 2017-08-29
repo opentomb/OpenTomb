@@ -730,7 +730,7 @@ int lua_GameflowSend(lua_State *lua)
     }
     else
     {
-        Con_Warning("setLevel: expecting arguments (level_id)");
+        Con_Warning("gameflowSend: expecting arguments (opcode, param)");
     }
 
     return 0;
@@ -742,31 +742,8 @@ int lua_SetGame(lua_State *lua)
     int top = lua_gettop(lua);
     if(top >= 1)
     {
-        Gameflow_SetCurrentGameID(lua_tointeger(lua, 1));
-        if(!lua_isnil(lua, 2))
-        {
-            Gameflow_SetCurrentLevelID(lua_tointeger(lua, 2));
-        }
-
-        lua_getglobal(lua, "getTitleScreen");
-        if(lua_isfunction(lua, -1))
-        {
-            lua_pushnumber(lua, Gameflow_GetCurrentGameID());
-            if(lua_CallAndLog(lua, 1, 1, 0))
-            {
-                //Gui_FadeAssignPic(FADER_LOADSCREEN, lua_tostring(lua, -1));
-                lua_pop(lua, 1);
-            }
-        }
-        lua_settop(lua, top);
-
+        Gameflow_SetGame(lua_tointeger(lua, 1), (top >= 2) ? (lua_tointeger(lua, 2)) : (0));
         Con_Notify("level was changed to %d", Gameflow_GetCurrentGameID());
-        Game_LevelTransition(Gameflow_GetCurrentLevelID());
-
-        if(!Gameflow_Send(GF_OP_LEVELCOMPLETE, Gameflow_GetCurrentLevelID()))
-        {
-            Con_Warning("setGame: Failed to add opcode to gameflow action list");
-        }
     }
     else
     {
@@ -779,49 +756,20 @@ int lua_SetGame(lua_State *lua)
 
 int lua_LoadMap(lua_State *lua)
 {
-    if(lua_gettop(lua) >= 1)
+    if(lua_gettop(lua) >= 3)
     {
         if(lua_isstring(lua, 1))
         {
             const char *s = lua_tostring(lua, 1);
             if(s && s[0])
             {
-                if(!lua_isnil(lua, 2))
-                {
-                    Gameflow_SetCurrentGameID(lua_tointeger(lua, 2));
-                }
-                if(!lua_isnil(lua, 3))
-                {
-                    Gameflow_SetCurrentLevelID(lua_tointeger(lua, 3));
-                }
-                char file_path[MAX_ENGINE_PATH];
-                Script_GetLoadingScreen(lua, Gameflow_GetCurrentLevelID(), file_path);
-                if(!Gui_LoadScreenAssignPic(file_path))
-                {
-                    Gui_LoadScreenAssignPic("resource/graphics/legal");
-                }
-                Engine_LoadMap(s);
+                Gameflow_SetMap(s, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
             }
         }
     }
     else
     {
-        Con_Warning("loadMap: expecting arguments (map_name, (game_id, map_id))");
-    }
-
-    return 0;
-}
-
-
-int lua_GameflowLoadMap(lua_State *lua)
-{
-    if((lua_gettop(lua) >= 1) && lua_isstring(lua, 1))
-    {
-        Gameflow_SetLoadMap(lua_tostring(lua, 1));
-    }
-    else
-    {
-        Con_Warning("gameflowLoadMap: expecting arguments (map_name)");
+        Con_Warning("loadMap: expecting arguments (map_name, game_id, level_id)");
     }
 
     return 0;
@@ -1219,7 +1167,6 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
 
     lua_register(lua, "setGame", lua_SetGame);
     lua_register(lua, "loadMap", lua_LoadMap);
-    lua_register(lua, "gameflowLoadMap", lua_GameflowLoadMap);
 
     lua_register(lua, "setPlayer", lua_SetPlayer);
     lua_register(lua, "setFlipMap", lua_SetFlipMap);

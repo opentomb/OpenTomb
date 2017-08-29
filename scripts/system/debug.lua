@@ -22,8 +22,8 @@ function checkDebugKeys()
     if(checkKey(KEY_RETURN, true)) then
         setGame(debug_game, debug_level);
         debug_level = debug_level + 1;
-        if(debug_game == GAME_1) then 
-            if(debug_level == 16) then
+        if(debug_game == GAME_1) then
+            if(debug_level == 20) then
                 debug_game = GAME_1_5;
                 debug_level = 1;
             end;
@@ -69,17 +69,17 @@ function checkDebugKeys()
         print("Ragdoll activated!");
         setCharacterRagdollActivity(player, true);
     end;
-    
+
     if(checkKey(KEY_T, true)) then
         print("Ragdoll deactivated!");
         setCharacterRagdollActivity(player, false);
     end;
-    
+
     if(checkKey(KEY_H, true)) then
         setCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
         playSound(SOUND_MEDIPACK, player);
     end;
-    
+
     if(checkKey(KEY_Z, true)) then
         setEntityCollision(player, true);
         setCharacterRagdollActivity(player, false);
@@ -89,7 +89,7 @@ function checkDebugKeys()
         setCharacterKeyAnim(player, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
         setEntityActivity(player, true);
     end;
-    
+
     if(checkKey(KEY_1, true)) then setCharacterCurrentWeapon(player, 1) end;
     if(checkKey(KEY_2, true)) then setCharacterCurrentWeapon(player, 2) end;
     if(checkKey(KEY_3, true)) then setCharacterCurrentWeapon(player, 3) end;
@@ -99,6 +99,6 @@ function checkDebugKeys()
     if(checkKey(KEY_7, true)) then setCharacterCurrentWeapon(player, 7) end;
     if(checkKey(KEY_8, true)) then setCharacterCurrentWeapon(player, 8) end;
     if(checkKey(KEY_9, true)) then setCharacterCurrentWeapon(player, 9) end;
-    
+
     return true;
 end

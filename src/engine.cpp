@@ -1401,10 +1401,10 @@ void Engine_GetLevelName(char *name, const char *path)
 }
 
 
-void Engine_GetLevelScriptNameLocal(int game_version, char *name, uint32_t buf_size)
+void Engine_GetLevelScriptNameLocal(const char *level_path, int game_version, char *name, uint32_t buf_size)
 {
     char level_name[LEVEL_NAME_MAX_LEN];
-    Engine_GetLevelName(level_name, Gameflow_GetCurrentLevelPathLocal());
+    Engine_GetLevelName(level_name, level_path);
 
     name[0] = 0;
     strncat(name, "scripts/level/", buf_size);
@@ -1445,21 +1445,13 @@ bool Engine_LoadPCLevel(const char *name)
     int trv = VT_Level::get_PC_level_version(name);
     if(trv != TR_UNKNOWN)
     {
-        VT_Level *tr_level = new VT_Level();
-        tr_level->read_level(name, trv);
-        tr_level->prepare_level();
-        //tr_level->dump_textures();
-
-        World_Open(tr_level);
+        World_Open(name, trv);
 
         char buf[LEVEL_NAME_MAX_LEN] = {0x00};
         Engine_GetLevelName(buf, name);
 
         Con_Notify("loaded PC level");
         Con_Notify("version = %d, map = \"%s\"", trv, buf);
-        Con_Notify("rooms count = %d", tr_level->rooms_count);
-
-        delete tr_level;
         return true;
     }
     return false;
@@ -1490,13 +1482,10 @@ int Engine_LoadMap(const char *name)
     engine_camera_state.target_id = ENTITY_ID_NONE;
     Mat4_E_macro(engine_camera_state.cutscene_tr);
     renderer.ResetWorld(NULL, 0, NULL, 0);
+    Audio_EndStreams();
     Gui_DrawLoadScreen(0);
 
-    // it is needed for "not in the game" levels or correct saves loading.
-    Gameflow_SetCurrentLevelPath(map_name_buf);
-
     Gui_DrawLoadScreen(100);
-
     // Here we can place different platform-specific level loading routines.
     bool is_success_load = false;
     switch(VT_Level::get_level_format(map_name_buf))

@@ -163,47 +163,6 @@ bool Script_GetString(lua_State *lua, int string_index, size_t string_size, char
 }
 
 
-bool Script_GetLoadingScreen(lua_State *lua, int level_index, char *pic_path)
-{
-    bool result = false;
-    size_t  string_length  = 0;
-    int     top;
-
-    const char *real_path;
-
-    if(lua != NULL)
-    {
-        top = lua_gettop(lua);
-
-        lua_getglobal(lua, "getLoadingScreen");
-        if(lua_isfunction(lua, -1))
-        {
-            lua_pushinteger(lua, Gameflow_GetCurrentGameID());
-            lua_pushinteger(lua, Gameflow_GetCurrentLevelID());
-            lua_pushinteger(lua, level_index);
-            if (lua_CallAndLog(lua, 3, 1, 0))
-            {
-                real_path = lua_tolstring(lua, -1, &string_length);
-
-                // Lua returns constant string pointer, which we can't assign to
-                // provided argument; so we need to straightly copy it.
-
-                strncpy(pic_path, real_path, MAX_ENGINE_PATH);
-
-                result = true;
-            }
-        }
-        lua_settop(lua, top);
-    }
-
-    // If Lua wasn't able to extract file path from the script, most likely it means
-    // that entry is broken or missing, or wrong track ID was specified. So we return
-    // FALSE in such cases.
-
-    return result;
-}
-
-
 /*
  * Gameplay functions
  */

@@ -22,7 +22,6 @@ int Game_Save(const char* name);
 void Game_Frame(float time);
 
 void Game_Prepare();
-void Game_LevelTransition(uint16_t level_index);
 
 void Game_ApplyControls(struct entity_s *ent);
 

@@ -331,7 +331,7 @@ end
 
 
 function ScionHolder_init(id)
-    if(getLevel() == 15) then
+    if(getLevel() == 19) then
         setEntityTypeFlag(id, ENTITY_TYPE_ACTOR, 1);  -- make it targetable
         entity_funcs[id].onHit = function(object_id, activator_id)
             setCharacterTarget(activator_id, nil);
@@ -339,7 +339,7 @@ function ScionHolder_init(id)
             setEntityTypeFlag(0x6b, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
             disableEntity(0x69);
         end;
-    elseif(getLevel() == 14) then
+    elseif(getLevel() == 17) then
         setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
         setEntityActivationOffset(id, -660.0, 2048.0, 128.0, 256.0);
         setEntityActivationDirection(id, 1.0, 0.0, 0.0, 0.77);
@@ -364,7 +364,7 @@ function ScionHolder_init(id)
             if((entity_funcs[id].activator_id ~= nil) and (5 == getEntityModelID(entity_funcs[id].activator_id, ANIM_TYPE_BASE))) then
                 local a, f, c = getEntityAnim(entity_funcs[id].activator_id, ANIM_TYPE_BASE);
                 if((a == 0) and (f + 1 >= c)) then
-                    gameflowLoadMap(base_path .. "data/tr1/data/CUT4.PHD");
+                    gameflowSend(GF_OP_LEVELCOMPLETE, getLevel() + 1);
                 end;
             end;
         end

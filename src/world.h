@@ -10,7 +10,7 @@
 
 
 void World_Prepare();
-void World_Open(class VT_Level *tr);
+void World_Open(const char *path, int trv);
 void World_Clear();
 int  World_GetVersion();
 
