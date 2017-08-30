@@ -54,7 +54,7 @@ void Gameflow_ProcessCommands();
 
 bool Gameflow_SetMap(const char* filePath, int game_id, int level_id);
 bool Gameflow_SetGame(int game_id, int level_id);
-const char* Gameflow_GetCurrentLevelPathLocal();
+const char *Gameflow_GetCurrentLevelPathLocal();
 uint8_t Gameflow_GetCurrentGameID();
 uint8_t Gameflow_GetCurrentLevelID();
 

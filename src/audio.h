@@ -252,6 +252,8 @@ int  Audio_Kill(int effect_ID, int entity_type = TR_AUDIO_EMITTER_GLOBAL, int en
 // Stream tracks (music / BGM) routines.
 int  Audio_EndStreams(int stream_type = -1);        // End ALL streams (with crossfade).
 int  Audio_StopStreams(int stream_type = -1);       // Immediately stop ALL streams.
+int  Audio_PauseStreams(int stream_type = -1);      // Pause ALL streams (of specified type).
+int  Audio_ResumeStreams(int stream_type = -1);     // Resume ALL streams.
 
 // Generally, you need only this function to trigger any track.
 int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask = 0);

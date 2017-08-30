@@ -216,13 +216,14 @@ public:
     }
     bool Play(bool fade_in = false);     // Begins to play track.
     void Pause();                        // Pauses track, preserving position.
+    void Resume();                       // Resume paused track.
     void End();                          // End track with fade-out.
     void Stop();                         // Immediately stop track.
     bool Update();                       // Update track and manage streaming.
 
     bool IsTrack(const int track_index); // Checks desired track's index.
     bool IsType(const int track_type);   // Checks desired track's type.
-    bool IsPlaying();                    // Checks if track is playing.
+    ALenum GetState();                   //
     bool IsActive();                     // Checks if track is still active.
     bool IsDampable();                   // Checks if track is dampable.
 
@@ -336,8 +337,7 @@ int  Audio_IsTrackPlaying(uint32_t track_index);    // See if track is already p
 int  Audio_TrackAlreadyPlayed(uint32_t track_index, int8_t mask = 0);     // Check if track played with given activation mask.
 void Audio_UpdateStreams();                         // Update all streams.
 void Audio_UpdateStreamsDamping();                  // See if there any damping tracks playing.
-void Audio_PauseStreams(int stream_type = -1);      // Pause ALL streams (of specified type).
-void Audio_ResumeStreams(int stream_type = -1);     // Resume ALL streams.
+
 
 // Error handling routines.
 int  Audio_LogALError(int error_marker = 0);    // AL-specific error handler.
@@ -1042,6 +1042,15 @@ void StreamTrack::Pause()
 }
 
 
+void StreamTrack::Resume()
+{
+    if(alIsSource(source))
+    {
+        alSourcePlay(source);
+    }
+}
+
+
 void StreamTrack::End()     // Smoothly end track with fadeout.
 {
     active = false;
@@ -1055,7 +1064,9 @@ void StreamTrack::Stop()    // Immediately stop track.
     current_track = -1;
     if(alIsSource(source))  // Stop and unlink all associated buffers.
     {
-        if(IsPlaying())
+        ALenum state = AL_STOPPED;
+        alGetSourcei(source, AL_SOURCE_STATE, &state);
+        if(state != AL_STOPPED)
         {
             alSourceStop(source);
         }
@@ -1202,7 +1213,7 @@ bool StreamTrack::IsDampable()                      // Check if track is dampabl
 }
 
 
-bool StreamTrack::IsPlaying()                       // Check if track is playing.
+ALenum StreamTrack::GetState()                      // AL_STOPPED, AL_INITIAL, AL_PLAYING, AL_PAUSED
 {
     ALenum state = AL_STOPPED;
 
@@ -1211,8 +1222,7 @@ bool StreamTrack::IsPlaying()                       // Check if track is playing
        alGetSourcei(source, AL_SOURCE_STATE, &state);
     }
 
-    // Paused also counts as playing.
-    return ((state == AL_PLAYING) || (state == AL_PAUSED));
+    return state;
 }
 
 
@@ -1335,7 +1345,7 @@ int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask)
     {
         Audio_CacheTrack(track_index);
     }
-    
+
     StreamTrackBuffer *stb = audio_world_data.stream_buffers[track_index];
     if(!stb)
     {
@@ -1406,13 +1416,11 @@ void Audio_UpdateStreamsDamping()
 
     for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; i++)
     {
-        if(audio_world_data.stream_tracks[i].IsPlaying())
+        if(!audio_world_data.stream_tracks[i].IsType(TR_AUDIO_STREAM_TYPE_BACKGROUND) &&
+           (AL_PLAYING == audio_world_data.stream_tracks[i].GetState()))
         {
-            if(!audio_world_data.stream_tracks[i].IsType(TR_AUDIO_STREAM_TYPE_BACKGROUND))
-            {
-                StreamTrack::damp_active = true;
-                return; // No need to check more, we found at least one condition.
-            }
+            StreamTrack::damp_active = true;
+            return; // No need to check more, we found at least one condition.
         }
     }
 }
@@ -1425,16 +1433,13 @@ void Audio_UpdateStreams()
 
     for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; i++)
     {
-        if(audio_world_data.stream_tracks[i].IsPlaying())
+        if(AL_PLAYING == audio_world_data.stream_tracks[i].GetState())
         {
             audio_world_data.stream_tracks[i].Update();
         }
-        else
+        else if(!audio_world_data.stream_tracks[i].IsActive())
         {
-            if(audio_world_data.stream_tracks[i].IsActive())
-            {
-                audio_world_data.stream_tracks[i].Stop();
-            }
+            audio_world_data.stream_tracks[i].Stop();
         }
     }
 }
@@ -1444,8 +1449,8 @@ int  Audio_IsTrackPlaying(uint32_t track_index)
 {
     for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; i++)
     {
-        if(audio_world_data.stream_tracks[i].IsPlaying() &&
-           audio_world_data.stream_tracks[i].IsTrack(track_index))
+        if(audio_world_data.stream_tracks[i].IsTrack(track_index) &&
+           AL_PLAYING == audio_world_data.stream_tracks[i].GetState())
         {
             return 1;
         }
@@ -1493,10 +1498,12 @@ int  Audio_TrackAlreadyPlayed(uint32_t track_index, int8_t mask)
 
 int Audio_GetFreeStream()
 {
+    ALenum state;
     for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; i++)
     {
-        if( (!audio_world_data.stream_tracks[i].IsPlaying()) &&
-            (!audio_world_data.stream_tracks[i].IsActive())   )
+        state = audio_world_data.stream_tracks[i].GetState();
+        if(!audio_world_data.stream_tracks[i].IsActive() &&
+           ((AL_STOPPED == state) || (AL_INITIAL == state)))
         {
             return i;
         }
@@ -1509,15 +1516,17 @@ int Audio_GetFreeStream()
 int  Audio_StopStreams(int stream_type)
 {
     int ret = 0;
-
+    ALenum state;
     for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; i++)
     {
-        if(audio_world_data.stream_tracks[i].IsPlaying()          &&
-           (audio_world_data.stream_tracks[i].IsType(stream_type) ||
-            stream_type == -1)) // Stop ALL streams at once.
+        if((stream_type == -1) || audio_world_data.stream_tracks[i].IsType(stream_type))
         {
-            audio_world_data.stream_tracks[i].Stop();
-            ret++;
+            state = audio_world_data.stream_tracks[i].GetState();
+            if(AL_PLAYING == state || AL_PAUSED == state)
+            {
+                audio_world_data.stream_tracks[i].Stop();
+                ret++;
+            }
         }
     }
 
@@ -1528,20 +1537,64 @@ int  Audio_StopStreams(int stream_type)
 int  Audio_EndStreams(int stream_type)
 {
     int ret = 0;
+    ALenum state;
+    for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; i++)
+    {
+        if((stream_type == -1) || audio_world_data.stream_tracks[i].IsType(stream_type))
+        {
+            state = audio_world_data.stream_tracks[i].GetState();
+            if(AL_PLAYING == state)
+            {
+                audio_world_data.stream_tracks[i].End();
+                ret++;
+            }
+            else if(AL_PAUSED == state)
+            {
+                audio_world_data.stream_tracks[i].Stop();
+                ret++;
+            }
+        }
+    }
+
+    return ret;
+}
+
+
+int  Audio_PauseStreams(int stream_type)
+{
+    int ret = 0;
 
     for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; i++)
     {
-        if( (stream_type == -1) ||                              // End ALL streams at once.
-            ((audio_world_data.stream_tracks[i].IsPlaying()) &&
-             (audio_world_data.stream_tracks[i].IsType(stream_type))) )
+        if(((stream_type == -1) || audio_world_data.stream_tracks[i].IsType(stream_type)) &&
+            (AL_PLAYING == audio_world_data.stream_tracks[i].GetState()))
         {
-            audio_world_data.stream_tracks[i].End();
+            audio_world_data.stream_tracks[i].Pause();
             ret++;
         }
     }
 
     return ret;
 }
+
+
+int  Audio_ResumeStreams(int stream_type)
+{
+    int ret = 0;
+
+    for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; i++)
+    {
+        if(((stream_type == -1) || audio_world_data.stream_tracks[i].IsType(stream_type)) &&
+            (AL_PAUSED == audio_world_data.stream_tracks[i].GetState()))
+        {
+            audio_world_data.stream_tracks[i].Resume();
+            ret++;
+        }
+    }
+
+    return ret;
+}
+
 
 // ======== Audio source global methods ========
 int  Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)

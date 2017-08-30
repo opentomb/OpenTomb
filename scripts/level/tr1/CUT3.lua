@@ -9,7 +9,7 @@ level_PostLoad = function()
     entity_funcs[1] = {};
     entity_funcs[1].t = 0;
     entity_funcs[1].onLoop = function(object_id, tick_state)
-        if((entity_funcs[1].t >= 5) and (entity_funcs[1].t < 5 + frame_time)) then
+        if((entity_funcs[1].t < 5) and (entity_funcs[1].t + frame_time >= 5)) then
             setGlobalFlipState(0);
         end;
         entity_funcs[1].t = entity_funcs[1].t + frame_time;

@@ -21,6 +21,7 @@ extern "C" {
 #include "physics/physics.h"
 #include "gui/gui.h"
 #include "engine.h"
+#include "audio.h"
 #include "controls.h"
 #include "game.h"
 
@@ -123,6 +124,7 @@ void Controls_Key(int32_t button, int state)
 
                         if(Con_IsShown())
                         {
+                            Audio_PauseStreams();
                             //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                             SDL_ShowCursor(1);
                             SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -130,6 +132,7 @@ void Controls_Key(int32_t button, int state)
                         }
                         else
                         {
+                            Audio_ResumeStreams();
                             //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                             SDL_ShowCursor(0);
                             SDL_SetRelativeMouseMode(SDL_TRUE);

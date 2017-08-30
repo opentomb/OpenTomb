@@ -15,12 +15,13 @@ extern "C" {
 #include "world.h"
 
 #include <assert.h>
+#include <string.h>
 #include <vector>
 
 typedef struct gameflow_action_s
 {
-    int8_t      m_opcode;
-    uint8_t     m_operand;
+    int16_t      m_opcode;
+    uint16_t     m_operand;
 } gameflow_action_t;
 
 struct gameflow_s
@@ -231,7 +232,7 @@ bool Gameflow_SetGameInternal(int game_id, int level_id)
 }
 
 
-const char* Gameflow_GetCurrentLevelPathLocal()
+const char *Gameflow_GetCurrentLevelPathLocal()
 {
     return global_gameflow.m_currentLevelPath + strlen(Engine_GetBasePath());
 }
