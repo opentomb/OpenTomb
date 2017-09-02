@@ -17,7 +17,7 @@ mlook(1);
 freelook(0);
 cam_distance(1024.0);
 noclip(0);
-setgamef(1, 16)
+--setgamef(1, 16)
 --loadMap(base_path .. "tests/altroom3/LEVEL1.PHD");
 --loadMap(base_path .. "tests/heavy1/LEVEL1.PHD");
 --loadMap(base_path .. "tests/TRIGGERS.PHD");

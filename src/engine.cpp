@@ -1532,6 +1532,30 @@ int Engine_LoadMap(const char *name)
     return is_success_load;
 }
 
+#include "fmv/tiny_codec.h"
+
+int Engine_LoadRPL(const char *name)
+{
+    SDL_RWops *rw = SDL_RWFromFile(name, "rb");
+    if(rw)
+    {
+        tiny_codec_t s;
+        AVPacket pkt;
+        int frame = 0;
+        s.pb = rw;
+        rpl_read_header(&s);
+        pkt.is_video = 1;
+        while(s.packet(&s, &pkt) != -1)
+        {
+            frame++;
+            Con_Printf("pkt size = %d, frame size = %d, frame = %d", pkt.size, s.video.decode(&s, &pkt), frame);
+            av_packet_unref(&pkt);
+        }
+        codec_clear(&s);
+        SDL_RWclose(rw);
+    }
+}
+
 
 extern "C" int Engine_ExecCmd(char *ch)
 {
@@ -1741,7 +1765,8 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "xxx"))
         {
-            SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
+            Engine_LoadRPL("data/tr1/fmv/CORE.RPL");
+            /*SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
             if(f)
             {
                 long int size;
@@ -1761,7 +1786,7 @@ extern "C" int Engine_ExecCmd(char *ch)
             else
             {
                 Con_AddText("Not available =(", FONTSTYLE_CONSOLE_WARNING);
-            }
+            }*/
             return 1;
         }
         else if(token[0])
