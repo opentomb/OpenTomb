@@ -55,7 +55,7 @@ static int read_line(SDL_RWops *pb, char* line, int bufsize)
         if(b == '\n')
         {
             line[i] = '\0';
-            return /*avio_feof(pb) ? -1 :*/ 0;
+            return 0;
         }
         line[i] = b;
     }

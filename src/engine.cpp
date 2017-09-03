@@ -1542,6 +1542,7 @@ int Engine_LoadRPL(const char *name)
         tiny_codec_t s;
         AVPacket pkt;
         int frame = 0;
+        char fname[128];
         s.pb = rw;
         rpl_read_header(&s);
         pkt.is_video = 1;
@@ -1549,6 +1550,11 @@ int Engine_LoadRPL(const char *name)
         {
             frame++;
             Con_Printf("pkt size = %d, frame size = %d, frame = %d", pkt.size, s.video.decode(&s, &pkt), frame);
+            if(frame >= 300 && frame <= 400)
+            {
+                snprintf(fname, 128, "xxx/frame_%.5d.tga", frame);
+                Sys_WriteTGAfile(fname, s.video.buff, s.video.width, s.video.height, 16, 0);
+            }            
             av_packet_unref(&pkt);
         }
         codec_clear(&s);

@@ -30,9 +30,13 @@
 
 static int av_log2(uint32_t value)
 {
-    int ret = -1;
+#if 0
+    int ret = 0;
     for(; value; value >>= 1, ++ret);
-    return ret;
+    return ret ? ret - 1 : ret;
+#else
+    return (31 - __builtin_clz((value) | 1));
+#endif
 }
 
 typedef union MacroBlock
@@ -90,6 +94,10 @@ void escape124_decode_init(struct tiny_codec_s *avctx)
         s->num_superblocks = ((unsigned)avctx->video.width / 8) *
                              ((unsigned)avctx->video.height / 8);
         
+        for (int i = 0; i < 3; i++)
+        {
+            s->codebooks[i].blocks = NULL;
+        }
     }
 }
 
@@ -286,7 +294,7 @@ int escape124_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *avpkt)
                 return -1;
             }
 
-            free(&s->codebooks[i].blocks);
+            free(s->codebooks[i].blocks);
             s->codebooks[i] = unpack_codebook(&gb, cb_depth, cb_size);
             if (!s->codebooks[i].blocks)
                 return -1;
@@ -295,9 +303,16 @@ int escape124_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *avpkt)
 
     new_frame_data = (uint16_t*)avctx->video.buff;
     new_stride = avctx->video.line_bytes / 2;
-    old_frame_data = (uint16_t*)avctx->video.buff + new_stride * avctx->video.height;
+    old_frame_data = new_frame_data + new_stride * avctx->video.height;
     old_stride = avctx->video.line_bytes / 2;
-    memcpy(old_frame_data, new_frame_data, avctx->video.line_bytes * avctx->video.height);
+    /*if(avpkt->flags & AV_PKT_FLAG_KEY)
+    {
+        memset(old_frame_data, 0x00, new_stride * avctx->video.height);
+    }
+    else*/
+    {
+        memcpy(old_frame_data, new_frame_data, avctx->video.line_bytes * avctx->video.height);
+    }
     
     for (superblock_index = 0; superblock_index < s->num_superblocks; superblock_index++)
     {

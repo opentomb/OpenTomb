@@ -18,6 +18,7 @@ int av_get_packet(SDL_RWops *pb, AVPacket *pkt, int size)
     pkt->pts = 0;
     pkt->duration = 0;
     pkt->pos = 0;
+    pkt->flags = 0;
     return SDL_RWread(pb, pkt->data, 1, size);
 }
 

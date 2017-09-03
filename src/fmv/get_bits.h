@@ -110,10 +110,22 @@ typedef struct GetBitContext
 #else
 #   define MIN_CACHE_BITS 25
 #endif
-/*
+
 #define OPEN_READER_NOSIZE(name, gb)            \
     unsigned int name ## _index = (gb)->index;  \
-    unsigned int av_unused name ## _cache
+    unsigned int /*av_unused*/ name ## _cache
+
+#define AV_RL32(x)                                \
+    (((uint32_t)((const uint8_t*)(x))[3] << 24) |    \
+               (((const uint8_t*)(x))[2] << 16) |    \
+               (((const uint8_t*)(x))[1] <<  8) |    \
+                ((const uint8_t*)(x))[0])
+
+#define AV_RB32(x)                                \
+    (((uint32_t)((const uint8_t*)(x))[0] << 24) |    \
+               (((const uint8_t*)(x))[1] << 16) |    \
+               (((const uint8_t*)(x))[2] <<  8) |    \
+                ((const uint8_t*)(x))[3])
 
 #if UNCHECKED_BITSTREAM_READER
 #define OPEN_READER(name, gb) OPEN_READER_NOSIZE(name, gb)
@@ -194,7 +206,19 @@ typedef struct GetBitContext
 #endif
 
 #define GET_CACHE(name, gb) ((uint32_t) name ## _cache)
-*/
+
+static inline int sign_extend(int val, unsigned bits)
+{
+    unsigned shift = 8 * sizeof(int) - bits;
+    union { unsigned u; int s; } v = { (unsigned) val << shift };
+    return v.s >> shift;
+}
+
+static unsigned zero_extend(unsigned val, unsigned bits)
+{
+    return (val << ((8 * sizeof(int)) - bits)) >> ((8 * sizeof(int)) - bits);
+}
+
 static inline int get_bits_count(const GetBitContext *s)
 {
     return s->index;
@@ -242,7 +266,7 @@ static inline void skip_bits_long(GetBitContext *s, int n)
     return (zero_extend(sign ^ cache, n) ^ sign) - sign;
 }*/
 
-/*static inline int get_sbits(GetBitContext *s, int n)
+static inline int get_sbits(GetBitContext *s, int n)
 {
     register int tmp;
     OPEN_READER(re, s);
@@ -252,7 +276,7 @@ static inline void skip_bits_long(GetBitContext *s, int n)
     LAST_SKIP_BITS(re, s, n);
     CLOSE_READER(re, s);
     return tmp;
-}*/
+}
 
 static inline unsigned int get_bits1(GetBitContext *s)
 {
@@ -279,13 +303,14 @@ static inline unsigned int get_bits1(GetBitContext *s)
  */
 static inline unsigned int get_bits(GetBitContext *s, int n)
 {
-    uint32_t result = 0;
-    for(; n > 0; --n)
-    {
-        result <<= 1;
-        result |= get_bits1(s);
-    }
-    return result;
+    register int tmp;
+    OPEN_READER(re, s);
+    av_assert2(n>0 && n<=25);
+    UPDATE_CACHE(re, s);
+    tmp = SHOW_UBITS(re, s, n);
+    LAST_SKIP_BITS(re, s, n);
+    CLOSE_READER(re, s);
+    return tmp;
 }
 
 /**
@@ -296,7 +321,7 @@ static av_always_inline int get_bitsz(GetBitContext *s, int n)
     return n ? get_bits(s, n) : 0;
 }
 
-/*static inline unsigned int get_bits_le(GetBitContext *s, int n)
+static inline unsigned int get_bits_le(GetBitContext *s, int n)
 {
     register int tmp;
     OPEN_READER(re, s);
@@ -306,12 +331,12 @@ static av_always_inline int get_bitsz(GetBitContext *s, int n)
     LAST_SKIP_BITS(re, s, n);
     CLOSE_READER(re, s);
     return tmp;
-}*/
+}
 
 /**
  * Show 1-25 bits.
  */
-/*static inline unsigned int show_bits(GetBitContext *s, int n)
+static inline unsigned int show_bits(GetBitContext *s, int n)
 {
     register int tmp;
     OPEN_READER_NOSIZE(re, s);
@@ -319,16 +344,16 @@ static av_always_inline int get_bitsz(GetBitContext *s, int n)
     UPDATE_CACHE(re, s);
     tmp = SHOW_UBITS(re, s, n);
     return tmp;
-}*/
+}
 
-/*static inline void skip_bits(GetBitContext *s, int n)
+static inline void skip_bits(GetBitContext *s, int n)
 {
     OPEN_READER(re, s);
     LAST_SKIP_BITS(re, s, n);
     CLOSE_READER(re, s);
-}*/
+}
 
-/*static inline unsigned int show_bits1(GetBitContext *s)
+static inline unsigned int show_bits1(GetBitContext *s)
 {
     return show_bits(s, 1);
 }
@@ -336,14 +361,14 @@ static av_always_inline int get_bitsz(GetBitContext *s, int n)
 static inline void skip_bits1(GetBitContext *s)
 {
     skip_bits(s, 1);
-}*/
+}
 
 /**
  * Read 0-32 bits.
  */
 static inline unsigned int get_bits_long(GetBitContext *s, int n)
 {
-    av_assert2(n>=0 && n<=32);
+    av_assert2(n >= 0 && n <= 32);
     if (!n) {
         return 0;
     } else if (n <= MIN_CACHE_BITS) {
