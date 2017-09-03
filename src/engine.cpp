@@ -1542,20 +1542,18 @@ int Engine_LoadRPL(const char *name)
         tiny_codec_t s;
         AVPacket pkt;
         int frame = 0;
-        char fname[128];
-        s.pb = rw;
+        codec_init(&s, rw);
         rpl_read_header(&s);
+        s.video.rgba = (uint8_t*)malloc(4 * s.video.width * s.video.height);
         pkt.is_video = 1;
         while(s.packet(&s, &pkt) != -1)
         {
             frame++;
-            Con_Printf("pkt size = %d, frame size = %d, frame = %d", pkt.size, s.video.decode(&s, &pkt), frame);
-            if(frame >= 300 && frame <= 400)
-            {
-                snprintf(fname, 128, "xxx/frame_%.5d.tga", frame);
-                Sys_WriteTGAfile(fname, s.video.buff, s.video.width, s.video.height, 16, 0);
-            }            
+            s.video.decode(&s, &pkt);
+            Gui_SetScreenTexture(s.video.rgba, s.video.width, s.video.height, 32);
+            Gui_DrawLoadScreen(-1);
             av_packet_unref(&pkt);
+            SDL_Delay(1000 / 45);
         }
         codec_clear(&s);
         SDL_RWclose(rw);
@@ -1726,7 +1724,7 @@ extern "C" int Engine_ExecCmd(char *ch)
         {
             renderer.r_flags ^= R_DRAW_CINEMATICS;
             return 1;
-        }        
+        }
         else if(!strcmp(token, "r_triggers"))
         {
             renderer.r_flags ^= R_DRAW_TRIGGERS;
@@ -1762,7 +1760,7 @@ extern "C" int Engine_ExecCmd(char *ch)
                         if(cont->object_type == OBJECT_ENTITY)
                         {
                             entity_p e = (entity_p)cont->object;
-                            Con_Printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->transform[12+0], (int)e->transform[12+1], (int)e->transform[12+2], e->id);
+                            Con_Printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->transform[12 + 0], (int)e->transform[12 + 1], (int)e->transform[12 + 2], e->id);
                         }
                     }
                 }
@@ -1771,7 +1769,8 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "xxx"))
         {
-            Engine_LoadRPL("data/tr1/fmv/CORE.RPL");
+            //Engine_LoadRPL("data/tr1/fmv/MANSION.RPL");
+            Engine_LoadRPL("data/tr1/fmv/LIFT.RPL");
             /*SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
             if(f)
             {

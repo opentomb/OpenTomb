@@ -113,20 +113,13 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
     SDL_RWops *pb = s->pb;
     RPLContext *rpl = (RPLContext*)s->private_context;
     int ret = -1;
-    //AVStream* stream;
     index_entry_p index_entry;
-
-    if(rpl->chunk_part == rpl->frames_per_chunk)
-    {
-        rpl->chunk_number++;
-        rpl->chunk_part = 0;
-    }
 
     if (rpl->chunk_number >= s->video.entry_size)
         return -1;
 
     index_entry = &s->video.entry[rpl->chunk_number];
-    
+
     if((rpl->frame_in_part == 0) && (SDL_RWseek(pb, index_entry->pos, RW_SEEK_SET) < 0))
         return -1;
 
@@ -154,10 +147,10 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
         pkt->stream_index = rpl->chunk_part;
 
         rpl->frame_in_part++;
-        if (rpl->frame_in_part == rpl->frames_per_chunk)
+        if (rpl->frame_in_part >= rpl->frames_per_chunk)
         {
             rpl->frame_in_part = 0;
-            rpl->chunk_part++;
+            rpl->chunk_number++;
         }
     }
     else
@@ -197,7 +190,6 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
 }
 
 
-int escape124_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *avpkt);
 void escape124_decode_init(struct tiny_codec_s *avctx);
 
 int rpl_read_header(struct tiny_codec_s *s)
@@ -215,7 +207,7 @@ int rpl_read_header(struct tiny_codec_s *s)
     //AVRational fps;
 
     char line[RPL_LINE_LENGTH];
-    
+
     SDL_RWseek(pb, 0, RW_SEEK_SET);
     // The header for RPL/ARMovie files is 21 lines of text
     // containing the various header fields.  The fields are always
@@ -258,7 +250,6 @@ int rpl_read_header(struct tiny_codec_s *s)
             break;
 #endif
         case 124:
-            s->video.decode = escape124_decode_frame;
             s->video.codec_tag = 124;
             s->video.line_bytes = s->video.width * 2;
             s->video.buff = (uint8_t*)calloc(1, 2 * s->video.line_bytes * s->video.height);

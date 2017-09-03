@@ -50,7 +50,7 @@
 #define UNCHECKED_BITSTREAM_READER !CONFIG_SAFE_BITSTREAM_READER
 #endif
 
-typedef struct GetBitContext 
+typedef struct GetBitContext
 {
     const uint8_t *buffer, *buffer_end;
     int index;
@@ -207,6 +207,17 @@ typedef struct GetBitContext
 
 #define GET_CACHE(name, gb) ((uint32_t) name ## _cache)
 
+static inline int av_log2(uint32_t value)
+{
+#if 0
+    int ret = 0;
+    for(; value; value >>= 1, ++ret);
+    return ret ? ret - 1 : ret;
+#else
+    return (31 - __builtin_clz((value) | 1));
+#endif
+}
+
 static inline int sign_extend(int val, unsigned bits)
 {
     unsigned shift = 8 * sizeof(int) - bits;
@@ -278,26 +289,6 @@ static inline int get_sbits(GetBitContext *s, int n)
     return tmp;
 }
 
-static inline unsigned int get_bits1(GetBitContext *s)
-{
-    unsigned int index = s->index;
-    uint8_t result     = s->buffer[index >> 3];
-#ifdef BITSTREAM_READER_LE
-    result >>= index & 7;
-    result  &= 1;
-#else
-    result <<= index & 7;
-    result >>= 8 - 1;
-#endif
-#if !UNCHECKED_BITSTREAM_READER
-    if (s->index < s->size_in_bits_plus8)
-#endif
-        index++;
-    s->index = index;
-
-    return result;
-}
-
 /**
  * Read 1-25 bits.
  */
@@ -331,6 +322,26 @@ static inline unsigned int get_bits_le(GetBitContext *s, int n)
     LAST_SKIP_BITS(re, s, n);
     CLOSE_READER(re, s);
     return tmp;
+}
+
+static inline unsigned int get_bits1(GetBitContext *s)
+{
+    unsigned int index = s->index;
+    uint8_t result     = s->buffer[index >> 3];
+#ifdef BITSTREAM_READER_LE
+    result >>= index & 7;
+    result  &= 1;
+#else
+    result <<= index & 7;
+    result >>= 8 - 1;
+#endif
+#if !UNCHECKED_BITSTREAM_READER
+    if (s->index < s->size_in_bits_plus8)
+#endif
+        index++;
+    s->index = index;
+
+    return result;
 }
 
 /**
@@ -450,7 +461,7 @@ static inline int init_get_bits(GetBitContext *s, const uint8_t *buffer, int bit
     int buffer_size;
     int ret = 0;
 
-    if (bit_size >= INT_MAX - 7 || bit_size < 0 || !buffer) 
+    if (bit_size >= INT_MAX - 7 || bit_size < 0 || !buffer)
     {
         bit_size    = 0;
         buffer      = NULL;

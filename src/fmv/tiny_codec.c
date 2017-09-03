@@ -37,14 +37,14 @@ void codec_init(struct tiny_codec_s *s, SDL_RWops *rw)
     s->pb = rw;
     s->audio.free_data = NULL;
     s->audio.priv_data = NULL;
-    
+
     s->audio.buff = NULL;
     s->audio.entry = NULL;
     s->audio.priv_data = NULL;
     s->audio.free_data = NULL;
     s->audio.decode = NULL;
     s->audio.codec_tag = 0;
-    
+
     s->video.buff = NULL;
     s->video.rgba = NULL;
     s->video.entry = NULL;
@@ -66,7 +66,7 @@ void codec_clear(struct tiny_codec_s *s)
     s->video.codec_tag = 0;
     s->audio.decode = NULL;
     s->audio.codec_tag = 0;
-    
+
     if(s->video.buff)
     {
         free(s->video.buff);
@@ -87,7 +87,7 @@ void codec_clear(struct tiny_codec_s *s)
         s->video.free_data(s->video.priv_data);
         s->video.priv_data = NULL;
     }
-    
+
     if(s->audio.buff)
     {
         free(s->audio.buff);

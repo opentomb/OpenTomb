@@ -1002,8 +1002,10 @@ void Gui_DrawLoadScreen(int value)
     qglUniform2fvARB(shader->screenSize, 1, screenSize);
 
     Gui_DrawRect(0.0, 0.0, screen_info.w, screen_info.h, color_w, color_w, color_w, color_w, BM_OPAQUE, load_screen_tex);
-    Bar[BAR_LOADING].Show(value);
-
+    if(value >= 0)
+    {
+        Bar[BAR_LOADING].Show(value);
+    }
     qglDepthMask(GL_TRUE);
     qglPopClientAttrib();
     qglPopAttrib();
@@ -1011,6 +1013,41 @@ void Gui_DrawLoadScreen(int value)
     Engine_GLSwapWindow();
 }
 
+
+bool Gui_SetScreenTexture(void *data, int w, int h, int bpp)
+{
+    GLenum       texture_format;
+    GLuint       color_depth;
+
+    if(bpp == 32)        // Contains an alpha channel
+    {
+        texture_format = GL_RGBA;
+        color_depth = GL_RGBA;
+    }
+    else if(bpp == 24)   // No alpha channel
+    {
+        texture_format = GL_RGB;
+        color_depth = GL_RGB;
+    }
+    else
+    {
+        return false;
+    }
+
+    // Bind the texture object
+    qglBindTexture(GL_TEXTURE_2D, load_screen_tex);
+
+    // Set the texture's stretching properties
+    qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Edit the texture object's image data using the information SDL_Surface gives us
+    qglTexImage2D(GL_TEXTURE_2D, 0, color_depth, w, h, 0,
+                 texture_format, GL_UNSIGNED_BYTE, data);
+    qglBindTexture(GL_TEXTURE_2D, 0);
+
+    return true;
+}
 
 bool Gui_LoadScreenAssignPic(const char* pic_name)
 {
@@ -1040,38 +1077,9 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
     uint32_t img_bpp = 32;
     if(Image_Load(image_name_buf, image_format, &img_pixels, &img_w, &img_h, &img_bpp))
     {
-        GLenum       texture_format;
-        GLuint       color_depth;
-
-        if(img_bpp == 32)        // Contains an alpha channel
-        {
-            texture_format = GL_RGBA;
-            color_depth = GL_RGBA;
-        }
-        else if(img_bpp == 24)   // No alpha channel
-        {
-            texture_format = GL_RGB;
-            color_depth = GL_RGB;
-        }
-        else
-        {
-            free(img_pixels);
-            return false;
-        }
-
-        // Bind the texture object
-        qglBindTexture(GL_TEXTURE_2D, load_screen_tex);
-
-        // Set the texture's stretching properties
-        qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        // Edit the texture object's image data using the information SDL_Surface gives us
-        qglTexImage2D(GL_TEXTURE_2D, 0, color_depth, img_w, img_h, 0,
-                     texture_format, GL_UNSIGNED_BYTE, img_pixels);
-        qglBindTexture(GL_TEXTURE_2D, 0);
+        bool ret = Gui_SetScreenTexture(img_pixels, img_w, img_h, img_bpp);
         free(img_pixels);
-        return true;
+        return ret;
     }
 
     return false;
