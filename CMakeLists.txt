@@ -36,6 +36,8 @@ set(OPENTOMB_SRCS
     src/gui/gui.h
     src/fmv/tiny_codec.h
     src/fmv/tiny_codec.c
+    src/fmv/stream_codec.h
+    src/fmv/stream_codec.c
     src/fmv/get_bits.h
     src/fmv/rpl.c
     src/fmv/escape124.c

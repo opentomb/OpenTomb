@@ -66,7 +66,8 @@ static int read_line(SDL_RWops *pb, char* line, int bufsize)
 static int32_t read_int(const char* line, const char** endptr, int* error)
 {
     unsigned long result = 0;
-    for (; *line>='0' && *line<='9'; line++) {
+    for (; *line>='0' && *line<='9'; line++)
+    {
         if (result > (0x7FFFFFFF - 9) / 10)
             *error = -1;
         result = 10 * result + *line - '0';
@@ -87,25 +88,28 @@ static int32_t read_line_and_int(SDL_RWops *pb, int* error)
   * the spec for the header leaves out a lot of details,
   * so this is mostly guessing.
   */
-/*static AVRational read_fps(const char* line, int* error)
+static int read_fps(const char* line, uint64_t *num, uint64_t *denum)
 {
-    int64_t num, den = 1;
-    AVRational result;
-    num = read_int(line, &line, error);
+    int error = 0;
+    *num = read_int(line, &line, &error);
+    *denum = 1;
+
     if (*line == '.')
         line++;
-    for (; *line>='0' && *line<='9'; line++) {
+
+    for (; (*line >= '0') && (*line <= '9'); line++)
+    {
         // Truncate any numerator too large to fit into an int64_t
-        if (num > (INT64_MAX - 9) / 10 || den > INT64_MAX / 10)
+        if (*num > (INT64_MAX - 9) / 10 || *denum > INT64_MAX / 10)
             break;
-        num  = 10 * num + *line - '0';
-        den *= 10;
+        *num = *num * 10 + *line - '0';
+        *denum *= 10;
     }
     if (!num)
-        *error = -1;
-    av_reduce(&result.num, &result.den, num, den, 0x7FFFFFFF);
-    return result;
-}*/
+        error = -1;
+
+    return error;
+}
 
 
 static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
@@ -139,7 +143,6 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
             return ret;
         if (ret != frame_size)
         {
-            av_packet_unref(pkt);
             return -1;
         }
         pkt->duration = 1;
@@ -160,7 +163,6 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
             return ret;
         if (ret != index_entry->size)
         {
-            av_packet_unref(pkt);
             return -1;
         }
 
@@ -192,7 +194,7 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
 
 void escape124_decode_init(struct tiny_codec_s *avctx);
 
-int rpl_read_header(struct tiny_codec_s *s)
+int codec_open_rpl(struct tiny_codec_s *s)
 {
     SDL_RWops *pb = s->pb;
     s->private_context = (RPLContext*)calloc(sizeof(RPLContext), 1);
@@ -204,7 +206,6 @@ int rpl_read_header(struct tiny_codec_s *s)
 
     uint32_t i;
     int32_t audio_format, chunk_catalog_offset, number_of_chunks;
-    //AVRational fps;
 
     char line[RPL_LINE_LENGTH];
 
@@ -228,27 +229,22 @@ int rpl_read_header(struct tiny_codec_s *s)
     //av_dict_set(&s->metadata, "author"   , line, 0);
 
     // video headers
-    /*vst = avformat_new_stream(s, NULL);
-    if (!vst)
-        return -1;*/
-    /*vst->codecpar->codec_type      = AVMEDIA_TYPE_VIDEO;*/
     codec_tag = read_line_and_int(pb, &error);  // video format
     s->packet = rpl_read_packet;
     s->video.width           = read_line_and_int(pb, &error);  // video width
     s->video.height          = read_line_and_int(pb, &error);  // video height
-    read_line_and_int(pb, &error);  // video bits per sample
-    error |= read_line(pb, line, sizeof(line));                   // video frames per second
-    /*fps = read_fps(line, &error);
-    avpriv_set_pts_info(vst, 32, fps.den, fps.num);*/
-    s->video.rgba = NULL;
+    read_line_and_int(pb, &error);                             // video bits per sample
+    error |= read_line(pb, line, sizeof(line));                // video frames per second
+    error |= read_fps(line, &s->fps_num, &s->fps_denum);
+
     // Figure out the video codec
     switch (codec_tag)
     {
-#if 0
         case 122:
-            vst->codecpar->codec_id = AV_CODEC_ID_ESCAPE122;
+            s->video.decode = NULL; //AV_CODEC_ID_ESCAPE122;
+            s->video.codec_tag = 122;
             break;
-#endif
+
         case 124:
             s->video.codec_tag = 124;
             s->video.line_bytes = s->video.width * 2;
@@ -258,7 +254,7 @@ int rpl_read_header(struct tiny_codec_s *s)
             break;
 
         case 130:
-            s->video.decode = NULL;//AV_CODEC_ID_ESCAPE130;
+            s->video.decode = NULL; //AV_CODEC_ID_ESCAPE130;
             s->video.codec_tag = 130;
             break;
 
@@ -296,11 +292,11 @@ int rpl_read_header(struct tiny_codec_s *s)
                     // 16-bit audio is always signed
                     s->audio.decode = NULL;//AV_CODEC_ID_PCM_S16LE;
                     s->audio.codec_tag = 0;
-                    break;
                 }
                 // There are some other formats listed as legal per the spec;
                 // samples needed.
                 break;
+
             case 101:
                 if (s->audio.bits_per_coded_sample == 8)
                 {
@@ -308,20 +304,14 @@ int rpl_read_header(struct tiny_codec_s *s)
                     // are all unsigned.
                     s->audio.decode = NULL;//AV_CODEC_ID_PCM_U8;
                     s->audio.codec_tag = 0;
-                    break;
                 }
                 else if (s->audio.bits_per_coded_sample == 4)
                 {
                     s->audio.decode = NULL;//AV_CODEC_ID_ADPCM_IMA_EA_SEAD;
                     s->audio.codec_tag = 0;
-                    break;
                 }
                 break;
         }
-        //if (ast->codecpar->codec_id == AV_CODEC_ID_NONE)
-        //    avpriv_request_sample(s, "Audio format %"PRId32,
-        //                          audio_format);
-        //avpriv_set_pts_info(ast, 32, 1, ast->codecpar->bit_rate);
     }
     else
     {

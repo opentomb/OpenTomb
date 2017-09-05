@@ -26,6 +26,8 @@ extern "C" {
 #include "render/render.h"
 #include "script/script.h"
 #include "physics/physics.h"
+#include "fmv/tiny_codec.h"
+#include "fmv/stream_codec.h"
 #include "gui/gui.h"
 #include "vt/vt_level.h"
 #include "game.h"
@@ -53,6 +55,8 @@ static SDL_Haptic             *sdl_haptic     = NULL;
 static SDL_GLContext           sdl_gl_context = 0;
 static ALCdevice              *al_device      = NULL;
 static ALCcontext             *al_context     = NULL;
+
+static stream_codec_t           engine_video;
 
 static char                     base_path[1024] = {0};
 static volatile int             engine_done   = 0;
@@ -214,7 +218,7 @@ void Engine_Start(int argc, char **argv)
 
     // Setting up mouse.
     SDL_SetRelativeMouseMode(SDL_TRUE);
-    SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
+    SDL_WarpMouseInWindow(sdl_window, screen_info.w / 2, screen_info.h / 2);
     SDL_ShowCursor(0);
 
     luaL_dofile(engine_lua, autoexec_name ? autoexec_name : "autoexec.lua");
@@ -226,6 +230,8 @@ void Engine_Shutdown(int val)
     renderer.ResetWorld(NULL, 0, NULL, 0);
     SSBoneFrame_Clear(&test_model);
     World_Clear();
+
+    stream_codec_clear(&engine_video);
 
     if(engine_lua)
     {
@@ -291,6 +297,7 @@ const char *Engine_GetBasePath()
 
 void Engine_SetDone()
 {
+    stream_codec_stop(&engine_video, 0);
     engine_done = 1;
 }
 
@@ -307,8 +314,7 @@ void Engine_InitDefaultGlobals()
 // First stage of initialization.
 void Engine_Init_Pre()
 {
-    /* Console must be initialized previously! some functions uses CON_AddLine before GL initialization!
-     * Rendering activation may be done later. */
+    stream_codec_init(&engine_video);
 
     Sys_Init();
     GLText_Init();
@@ -777,12 +783,17 @@ void Engine_PollSDLEvents()
 
             case SDL_KEYUP:
             case SDL_KEYDOWN:
-                if( (event.key.keysym.scancode == SDL_SCANCODE_F4) &&
-                    (event.key.state == SDL_PRESSED)  &&
-                    (event.key.keysym.mod & KMOD_ALT) )
+                if((event.key.keysym.scancode == SDL_SCANCODE_F4) &&
+                   (event.key.state == SDL_PRESSED) &&
+                   (event.key.keysym.mod & KMOD_ALT))
                 {
                     Engine_SetDone();
                     break;
+                }
+
+                if(event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
+                {
+                    stream_codec_stop(&engine_video, 0);
                 }
 
                 if(Con_IsShown() && event.key.state)
@@ -890,21 +901,38 @@ void Engine_MainLoop()
             time_cycl = 0.0f;
         }
 
-        gl_text_line_p fps = GLText_OutTextXY(10.0f, 10.0f, fps_str);
-        fps->x_align    = GLTEXT_ALIGN_RIGHT;
-        fps->y_align    = GLTEXT_ALIGN_BOTTOM;
-        fps->font_id    = FONT_PRIMARY;
-        fps->style_id   = FONTSTYLE_MENU_TITLE;
-
         Sys_ResetTempMem();
         Engine_PollSDLEvents();
-        if(screen_info.debug_view_state != debug_view_state_e::model_view)
+
+        gl_text_line_p fps = GLText_OutTextXY(10.0f, 10.0f, fps_str);
+        if(fps)
         {
-            Game_Frame(time);
-            Gameflow_ProcessCommands();
+            fps->x_align    = GLTEXT_ALIGN_RIGHT;
+            fps->y_align    = GLTEXT_ALIGN_BOTTOM;
+            fps->font_id    = FONT_PRIMARY;
+            fps->style_id   = FONTSTYLE_MENU_TITLE;
         }
-        Audio_Update(time);
-        Engine_Display(time);
+
+        if(!stream_codec_check_playing(&engine_video))
+        {
+            if(screen_info.debug_view_state != debug_view_state_e::model_view)
+            {
+                Game_Frame(time);
+                Gameflow_ProcessCommands();
+            }
+            Audio_Update(time);
+            Engine_Display(time);
+        }
+        else
+        {
+            uint8_t *rgba = stream_codec_get_rgba_lock(&engine_video);
+            if(rgba)
+            {
+                Gui_SetScreenTexture(rgba, engine_video.codec.video.width, engine_video.codec.video.height, 32);
+            }
+            stream_codec_unlock_get(&engine_video);
+            Gui_DrawLoadScreen(-1);
+        }
     }
 }
 
@@ -1532,34 +1560,6 @@ int Engine_LoadMap(const char *name)
     return is_success_load;
 }
 
-#include "fmv/tiny_codec.h"
-
-int Engine_LoadRPL(const char *name)
-{
-    SDL_RWops *rw = SDL_RWFromFile(name, "rb");
-    if(rw)
-    {
-        tiny_codec_t s;
-        AVPacket pkt;
-        int frame = 0;
-        codec_init(&s, rw);
-        rpl_read_header(&s);
-        s.video.rgba = (uint8_t*)malloc(4 * s.video.width * s.video.height);
-        pkt.is_video = 1;
-        while(s.packet(&s, &pkt) != -1)
-        {
-            frame++;
-            s.video.decode(&s, &pkt);
-            Gui_SetScreenTexture(s.video.rgba, s.video.width, s.video.height, 32);
-            Gui_DrawLoadScreen(-1);
-            av_packet_unref(&pkt);
-            SDL_Delay(1000 / 45);
-        }
-        codec_clear(&s);
-        SDL_RWclose(rw);
-    }
-}
-
 
 extern "C" int Engine_ExecCmd(char *ch)
 {
@@ -1769,8 +1769,8 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "xxx"))
         {
-            //Engine_LoadRPL("data/tr1/fmv/MANSION.RPL");
-            Engine_LoadRPL("data/tr1/fmv/LIFT.RPL");
+            //stream_codec_play_rpl("data/tr1/fmv/MANSION.RPL");
+            stream_codec_play_rpl(&engine_video, "data/tr1/fmv/LIFT.RPL");
             /*SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
             if(f)
             {

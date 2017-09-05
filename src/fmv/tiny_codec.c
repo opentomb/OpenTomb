@@ -12,7 +12,15 @@
 
 int av_get_packet(SDL_RWops *pb, AVPacket *pkt, int size)
 {
-    pkt->data = (uint8_t*)malloc(size);
+    if(pkt->allocated_size < size)
+    {
+        pkt->allocated_size = size + 1024 - size % 1024;
+        if(pkt->data)
+        {
+            free(pkt->data);
+        }
+        pkt->data = (uint8_t*)malloc(pkt->allocated_size);
+    }
     pkt->size = size;
     pkt->dts = 0;
     pkt->pts = 0;
@@ -29,14 +37,17 @@ void av_packet_unref(AVPacket *pkt)
         free(pkt->data);
     }
     pkt->data = NULL;
+    pkt->allocated_size = 0;
     pkt->size = 0;
 }
 
 void codec_init(struct tiny_codec_s *s, SDL_RWops *rw)
 {
     s->pb = rw;
-    s->audio.free_data = NULL;
-    s->audio.priv_data = NULL;
+    s->private_context = NULL;
+    s->free_context = NULL;
+    s->fps_num = 24;
+    s->fps_denum = 1;
 
     s->audio.buff = NULL;
     s->audio.entry = NULL;
@@ -71,11 +82,6 @@ void codec_clear(struct tiny_codec_s *s)
     {
         free(s->video.buff);
         s->video.buff = NULL;
-    }
-    if(s->video.rgba)
-    {
-        free(s->video.rgba);
-        s->video.rgba = NULL;
     }
     if(s->video.entry)
     {

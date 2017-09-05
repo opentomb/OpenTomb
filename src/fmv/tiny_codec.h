@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
 /*
  * File:   tiny_codec.h
@@ -49,6 +44,7 @@ typedef struct AVPacket
     int64_t dts;
     uint8_t *data;
     int   size;
+    int   allocated_size;
     int   stream_index;
     /**
      * A combination of AV_PKT_FLAG values
@@ -80,6 +76,8 @@ typedef struct tiny_codec_s
     void               *private_context;
     void              (*free_context)(void *context);
     int               (*packet)(struct tiny_codec_s *s, struct AVPacket *pkt);
+    uint64_t            fps_num;
+    uint64_t            fps_denum;
     struct
     {
         uint32_t        codec_tag;
@@ -124,7 +122,7 @@ void av_packet_unref(AVPacket *pkt);
 void codec_init(struct tiny_codec_s *s, SDL_RWops *rw);
 void codec_clear(struct tiny_codec_s *s);
 
-int rpl_read_header(struct tiny_codec_s *s);
+int codec_open_rpl(struct tiny_codec_s *s);
 
 #ifdef __cplusplus
 }
