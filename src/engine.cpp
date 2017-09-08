@@ -1561,6 +1561,12 @@ int Engine_LoadMap(const char *name)
 }
 
 
+int  Engine_PlayVideo(const char *name)
+{
+    return stream_codec_play_rpl(&engine_video, name);
+}
+
+
 extern "C" int Engine_ExecCmd(char *ch)
 {
     char token[1024];
@@ -1769,7 +1775,6 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "xxx"))
         {
-            //stream_codec_play_rpl("data/tr1/fmv/MANSION.RPL");
             stream_codec_play_rpl(&engine_video, "data/tr1/fmv/LIFT.RPL");
             /*SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
             if(f)

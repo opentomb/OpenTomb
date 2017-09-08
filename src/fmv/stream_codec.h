@@ -14,14 +14,14 @@
 #ifndef TINY_STREAM_H
 #define TINY_STREAM_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 #include <pthread.h>
 
 #include "tiny_codec.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define VIDEO_STATE_STOPPED     (0)
 #define VIDEO_STATE_QEUED       (1)

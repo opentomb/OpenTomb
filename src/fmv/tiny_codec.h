@@ -9,11 +9,11 @@
 #ifndef TINY_CODEC_H
 #define TINY_CODEC_H
 
+#include <inttypes.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <inttypes.h>
 
 #define AV_PKT_FLAG_KEY     0x0001 ///< The packet contains a keyframe
 #define AV_PKT_FLAG_CORRUPT 0x0002 ///< The packet content is corrupted
@@ -84,13 +84,13 @@ typedef struct tiny_codec_s
         uint16_t        width;
         uint16_t        height;
         uint32_t        line_bytes;
-        uint32_t        current_frame;
         uint8_t        *rgba;
         uint8_t        *buff;
         void           *priv_data;
         void          (*free_data)(void *data);
         int           (*decode)(struct tiny_codec_s *s, struct AVPacket *pkt);
 
+        uint32_t                entry_current;
         uint32_t                entry_size;
         struct index_entry_s   *entry;
     } video;
@@ -107,14 +107,18 @@ typedef struct tiny_codec_s
         void           *priv_data;
         void          (*free_data)(void *data);
         uint32_t      (*decode)(struct tiny_codec_s *s, struct AVPacket *pkt);
+        uint32_t        buff_size;
+        uint32_t        buff_offset;
         uint8_t        *buff;
 
+        uint32_t                entry_current;
         uint32_t                entry_size;
         struct index_entry_s   *entry;
     } audio;
 }tiny_codec_t, *tiny_codec_p;
 
 
+void av_init_packet(AVPacket *pkt);
 int av_get_packet(SDL_RWops *pb, AVPacket *pkt, int size);
 void av_packet_unref(AVPacket *pkt);
 

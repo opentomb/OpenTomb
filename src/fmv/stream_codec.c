@@ -5,12 +5,14 @@
 #include <ctype.h>
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_platform.h>
+//#ifndef _POSIX_C_SOURCE
+#ifndef _POSIX_SOURCE
+#define __USE_POSIX199309  (1)   // make posix GCC workable
+#define __USE_XOPEN2K
+#endif
 #include <pthread.h>
-#ifdef _TIMESPEC_DEFINED
+#ifdef _TIMESPEC_DEFINED         // make MinGW workable
 #include <pthread_time.h>
-#elif !defined CLOCK_REALTIME
-#define CLOCK_REALTIME 0
 #endif
 
 #include "tiny_codec.h"
@@ -73,20 +75,21 @@ static void *stream_codec_thread_func(void *data)
     stream_codec_p s = (stream_codec_p)data;
     if(s)
     {
-        AVPacket pkt;
+        AVPacket pkt_video, pkt_audio;
         uint64_t frame = 0;
         uint64_t ns = 0;
         struct timespec time_start = { 0 };
         struct timespec vid_time;
 
         s->codec.video.rgba = (uint8_t*)malloc(4 * s->codec.video.width * s->codec.video.height);
-        pkt.is_video = 1;
-        pkt.data = NULL;
-        pkt.size = 0;
-        pkt.allocated_size = 0;
+        av_init_packet(&pkt_video);
+        pkt_video.is_video = 1;
+        av_init_packet(&pkt_audio);
+        pkt_audio.is_video = 0;
         clock_gettime(CLOCK_REALTIME, &time_start);
 
-        while(!s->stop && (s->codec.packet(&s->codec, &pkt) != -1))
+        pthread_mutex_timedlock(&s->timer_mutex, &vid_time);
+        while(!s->stop && (s->codec.packet(&s->codec, &pkt_video) != -1))
         {
             frame++;
             ns = (frame * s->codec.fps_denum) % s->codec.fps_num;
@@ -99,12 +102,13 @@ static void *stream_codec_thread_func(void *data)
                 vid_time.tv_sec++;
             }
             pthread_mutex_lock(&s->buffer_mutex);
-            s->codec.video.decode(&s->codec, &pkt);
+            s->codec.video.decode(&s->codec, &pkt_video);
             pthread_mutex_unlock(&s->buffer_mutex);
             s->state = VIDEO_STATE_RUNNING;
             pthread_mutex_timedlock(&s->timer_mutex, &vid_time);
         }
-        av_packet_unref(&pkt);
+        av_packet_unref(&pkt_video);
+        av_packet_unref(&pkt_audio);
         s->state = VIDEO_STATE_QEUED;
         pthread_mutex_lock(&s->buffer_mutex);
         free(s->codec.video.rgba);
@@ -145,7 +149,8 @@ int stream_codec_play_rpl(stream_codec_p s, const char *name)
             {
                 s->state = VIDEO_STATE_QEUED;
                 s->stop = 0;
-                return pthread_create(&s->thread, NULL, stream_codec_thread_func, s);
+                pthread_create(&s->thread, NULL, stream_codec_thread_func, s);
+                return s->thread != 0;
             }
             else
             {
@@ -154,5 +159,6 @@ int stream_codec_play_rpl(stream_codec_p s, const char *name)
             }
         }
     }
-    return -1;
+    return 0;
 }
+

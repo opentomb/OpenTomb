@@ -27,7 +27,6 @@
 
 
 #define RPL_SIGNATURE "ARMovie"
-#define RPL_SIGNATURE_SIZE 8
 
 /** 256 is arbitrary, but should be big enough for any reasonable file. */
 #define RPL_LINE_LENGTH 256
@@ -38,7 +37,6 @@ typedef struct RPLContext
     int32_t frames_per_chunk;
 
     // Stream position data
-    uint32_t chunk_number;
     uint32_t chunk_part;
     uint32_t frame_in_part;
 } RPLContext;
@@ -117,82 +115,103 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
     SDL_RWops *pb = s->pb;
     RPLContext *rpl = (RPLContext*)s->private_context;
     int ret = -1;
-    index_entry_p index_entry;
+    index_entry_p entry;
 
-    if (rpl->chunk_number >= s->video.entry_size)
-        return -1;
-
-    index_entry = &s->video.entry[rpl->chunk_number];
-
-    if((rpl->frame_in_part == 0) && (SDL_RWseek(pb, index_entry->pos, RW_SEEK_SET) < 0))
-        return -1;
-
-    if (s->video.codec_tag == 124)
+    if(pkt->is_video)
     {
-        // We have to split Escape 124 frames because there are
-        // multiple frames per chunk in Escape 124 samples.
-        uint32_t frame_size;
-
-        SDL_ReadLE32(pb);//avio_skip(pb, 4); // flags `
-        frame_size = SDL_ReadLE32(pb);
-        if (SDL_RWseek(pb, -8, RW_SEEK_CUR) < 0)
+        if (s->video.entry_current >= s->video.entry_size)
             return -1;
 
-        ret = av_get_packet(pb, pkt, frame_size);
-        if (ret < 0)
-            return ret;
-        if (ret != frame_size)
+        entry = &s->video.entry[s->video.entry_current];
+
+        pkt->pos = (rpl->frame_in_part == 0) ? (entry->pos) : pkt->pos;
+        if(SDL_RWseek(pb, pkt->pos, RW_SEEK_SET) < 0)
+            return -1;
+
+        if(s->video.codec_tag == 124)
         {
-            return -1;
+            // We have to split Escape 124 frames because there are
+            // multiple frames per chunk in Escape 124 samples.
+            uint32_t frame_size;
+            SDL_ReadLE32(pb); // flags `
+            frame_size = SDL_ReadLE32(pb);
+            if (SDL_RWseek(pb, -8, RW_SEEK_CUR) < 0)
+                return -1;
+
+            ret = av_get_packet(pb, pkt, frame_size);
+            if (ret < 0)
+                return ret;
+            if (ret != frame_size)
+            {
+                return -1;
+            }
+            pkt->duration = 1;
+            pkt->pts = entry->timestamp + rpl->frame_in_part;
+            pkt->stream_index = rpl->chunk_part;
+
+            rpl->frame_in_part++;
+            if (rpl->frame_in_part >= rpl->frames_per_chunk)
+            {
+                rpl->frame_in_part = 0;
+                s->video.entry_current++;
+            }
         }
-        pkt->duration = 1;
-        pkt->pts = index_entry->timestamp + rpl->frame_in_part;
-        pkt->stream_index = rpl->chunk_part;
-
-        rpl->frame_in_part++;
-        if (rpl->frame_in_part >= rpl->frames_per_chunk)
+        else if(s->video.codec_tag == 130)
         {
-            rpl->frame_in_part = 0;
-            rpl->chunk_number++;
+            ret = av_get_packet(pb, pkt, entry->size);
+            if (ret < 0)
+                return ret;
+            if (ret != entry->size)
+            {
+                return -1;
+            }
+
+            // frames_per_chunk should always be one here; the header
+            // parsing will warn if it isn't.
+            pkt->duration = rpl->frames_per_chunk;
+
+            pkt->pts = entry->timestamp;
+            pkt->stream_index = rpl->chunk_part;
+            rpl->chunk_part++;
         }
     }
     else
     {
-        ret = av_get_packet(pb, pkt, index_entry->size);
+        if(s->audio.entry_current >= s->audio.entry_size)
+            return -1;
+
+        entry = &s->audio.entry[s->audio.entry_current];
+
+        pkt->pos = entry->pos;
+        if(SDL_RWseek(pb, pkt->pos, RW_SEEK_SET) < 0)
+            return -1;
+
+        ret = av_get_packet(pb, pkt, entry->size);
         if (ret < 0)
             return ret;
-        if (ret != index_entry->size)
+        if (ret != entry->size)
         {
             return -1;
         }
 
-        if (pkt->is_video)
-        {
-            // frames_per_chunk should always be one here; the header
-            // parsing will warn if it isn't.
-            pkt->duration = rpl->frames_per_chunk;
-        }
-        else
-        {
-            // All the audio codecs supported in this container
-            // (at least so far) are constant-bitrate.
-            pkt->duration = ret * 8;
-        }
-        pkt->pts = index_entry->timestamp;
+        // All the audio codecs supported in this container
+        // (at least so far) are constant-bitrate.
+        pkt->duration = ret * 8;
+
+        pkt->pts = entry->timestamp;
         pkt->stream_index = rpl->chunk_part;
         rpl->chunk_part++;
     }
 
     // None of the Escape formats have keyframes, and the ADPCM
     // format used doesn't have keyframes.
-    if (rpl->chunk_number == 1 && rpl->frame_in_part == 0)
-        pkt->flags |= AV_PKT_FLAG_KEY;
 
     return ret;
 }
 
 
 void escape124_decode_init(struct tiny_codec_s *avctx);
+void pcm_decode_init(struct tiny_codec_s *avctx);
 
 int codec_open_rpl(struct tiny_codec_s *s)
 {
@@ -290,8 +309,8 @@ int codec_open_rpl(struct tiny_codec_s *s)
                 if(s->audio.bits_per_coded_sample == 16)
                 {
                     // 16-bit audio is always signed
-                    s->audio.decode = NULL;//AV_CODEC_ID_PCM_S16LE;
-                    s->audio.codec_tag = 0;
+                    s->audio.codec_tag = 0;//AV_CODEC_ID_PCM_S16LE;
+                    pcm_decode_init(s);
                 }
                 // There are some other formats listed as legal per the spec;
                 // samples needed.
@@ -302,8 +321,8 @@ int codec_open_rpl(struct tiny_codec_s *s)
                 {
                     // The samples with this kind of audio that I have
                     // are all unsigned.
-                    s->audio.decode = NULL;//AV_CODEC_ID_PCM_U8;
-                    s->audio.codec_tag = 0;
+                    s->audio.codec_tag = 0;//AV_CODEC_ID_PCM_U8;
+                    pcm_decode_init(s);
                 }
                 else if (s->audio.bits_per_coded_sample == 4)
                 {
@@ -374,3 +393,8 @@ int codec_open_rpl(struct tiny_codec_s *s)
     return error;
 }
 
+
+void pcm_decode_init(struct tiny_codec_s *avctx)
+{
+    
+}

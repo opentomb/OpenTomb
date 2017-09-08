@@ -258,4 +258,8 @@ int  Audio_ResumeStreams(int stream_type = -1);     // Resume ALL streams.
 // Generally, you need only this function to trigger any track.
 int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask = 0);
 
+int Audio_StreamExternalPlay();
+int Audio_StreamExternalStop();
+int Audio_StreamExternalUpdateBuffer(uint8_t *buff, size_t size, int sample_bitsize, int channels, int frequency);
+
 #endif // AUDIO_H

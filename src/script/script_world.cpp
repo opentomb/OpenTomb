@@ -1154,6 +1154,17 @@ int lua_FlashStart(lua_State *lua)
 }
 
 
+int lua_PlayVideo(lua_State *lua)
+{
+    if((lua_gettop(lua) >= 1) && lua_isstring(lua, 1))
+    {
+        Engine_PlayVideo(lua_tostring(lua, 1));
+    }
+
+    return 0;
+}
+
+
 void Script_LuaRegisterWorldFuncs(lua_State *lua)
 {
     lua_register(lua, "getLevelVersion", lua_GetLevelVersion);
@@ -1210,4 +1221,5 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
     lua_register(lua, "cameraLookAt", lua_CameraLookAt);
     lua_register(lua, "flashSetup", lua_FlashSetup);
     lua_register(lua, "flashStart", lua_FlashStart);
+    lua_register(lua, "playVideo", lua_PlayVideo);
 }
