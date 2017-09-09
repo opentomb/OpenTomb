@@ -46,6 +46,7 @@ void Sys_Error(const char *error, ...);
 void Sys_Warn(const char *warning, ...);
 void Sys_DebugLog(const char *file, const char *fmt, ...);
 
+void Sys_WriteTGAfile(const char *filename, const uint8_t *data, const int width, const int height, int bpp, char invY);
 void Sys_TakeScreenShot();
 
 int Sys_FileFound(const char *name, int checkWrite);

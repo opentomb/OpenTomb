@@ -172,6 +172,11 @@ public:
         return rate;
     }
 
+    ALsizei GetStreamBufferPart()
+    {
+        return buffer_part;
+    }
+    
     int GetType()
     {
         return stream_type;
@@ -185,6 +190,7 @@ private:
 
     int             track_index;
     uint32_t        buffer_size;
+    uint32_t        buffer_part;
     uint8_t        *buffer;
     int             stream_type;         // Either BACKGROUND, ONESHOT or CHAT.
     ALenum          format;
@@ -309,6 +315,11 @@ struct audio_world_data_s
 
     uint32_t                        stream_track_map_count; // Stream track flag map count.
     uint8_t                        *stream_track_map;       // Stream track flag map.
+
+    ALuint                          external_source;
+    uint32_t                        external_buffer_offset;
+    int                             external_source_linked_buffers;
+    ALuint                          external_source_buffers[TR_AUDIO_STREAM_NUMBUFFERS];
 } audio_world_data;
 
 
@@ -317,7 +328,7 @@ void Audio_InitFX();
 #ifdef HAVE_ALEXT_H
 int  Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *reverb);
 #endif
-bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, SDL_AudioSpec wav_spec, bool use_SDL_resampler = false);
+bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, int sample_bitsize, int channels, int frequency);
 int  Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size = 0);
 int  Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname);
 void Audio_LoadOverridedSamples();
@@ -736,11 +747,11 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
 
     vorbis_Info = ov_info(&vorbis_Stream, -1);
     format = (vorbis_Info->channels == 1) ? (AL_FORMAT_MONO16) : (AL_FORMAT_STEREO16);
+    buffer_part = vorbis_Info->bitrate_nominal;
     rate = vorbis_Info->rate;
 
     {
         const size_t temp_buf_size = 64 * 1024 * 1024;
-        long int bitrate_nominal = vorbis_Info->bitrate_nominal;
         char *temp_buff = (char*)malloc(temp_buf_size);
         size_t readed = 0;
         buffer_size = 0;
@@ -764,7 +775,7 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
         {
             buffer = (uint8_t*)malloc(buffer_size);
             memcpy(buffer, temp_buff, buffer_size);
-            Con_Notify("file \"%s\" loaded with rate=%d, bitrate=%.1f", path, rate, ((float)bitrate_nominal / 1000));
+            Con_Notify("file \"%s\" loaded with rate=%d, bitrate=%.1f", path, rate, ((float)vorbis_Info->bitrate_nominal / 1000.0f));
             ret = true;
         }
         free(temp_buff);
@@ -931,6 +942,7 @@ bool StreamTrackBuffer::Load_WavRW(SDL_RWops *file)
 
         buffer_size = wav_length;
         buffer = (uint8_t*)malloc(buffer_size);
+        buffer_part = 128 * 1024;
         rate = wav_spec.freq;
         memcpy(buffer, wav_buffer, buffer_size);
     }
@@ -1064,7 +1076,7 @@ void StreamTrack::Stop()    // Immediately stop track.
     current_track = -1;
     if(alIsSource(source))  // Stop and unlink all associated buffers.
     {
-        ALenum state = AL_STOPPED;
+        ALint state = AL_STOPPED;
         alGetSourcei(source, AL_SOURCE_STATE, &state);
         if(state != AL_STOPPED)
         {
@@ -1084,8 +1096,8 @@ void StreamTrack::Stop()    // Immediately stop track.
 
 bool StreamTrack::Update()
 {
-    int  processed     = 0;
-    bool buffered      = true;
+    ALint processed    = 0;
+    bool buffered      = false;
     bool change_gain   = false;
 
     // Update damping, if track supports it.
@@ -1128,8 +1140,9 @@ bool StreamTrack::Update()
         }
 
         // Crossfade has ended, we can now kill the stream.
-        if(current_volume <= 0.0)
+        if(current_volume <= 0.0f)
         {
+            current_volume = 0.0f;
             Stop();
             return true;    // Stop track, although return success, as everything is normal.
         }
@@ -1174,14 +1187,14 @@ bool StreamTrack::Update()
     // Check if any track buffers were already processed.
     // by doc: "Buffer queuing loop must operate in a new thread"
     alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed);
-    while(processed--)  // Manage processed buffers.
+    while(0 < processed--)  // Manage processed buffer.
     {
-        ALuint buffer;
-        alSourceUnqueueBuffers(source, 1, &buffer);     // Unlink processed buffer.
-        buffered = Stream(buffer);                      // Refill processed buffer.
-        if(buffered)
+        ALuint buffer = 0;
+        alSourceUnqueueBuffers(source, 1, &buffer);     // Unlink processed buffer.                 
+        if(Stream(buffer))  // Refill processed buffer.
         {
             alSourceQueueBuffers(source, 1, &buffer);   // Relink processed buffer.
+            buffered = true;
         }
     }
 
@@ -1215,7 +1228,7 @@ bool StreamTrack::IsDampable()                      // Check if track is dampabl
 
 ALenum StreamTrack::GetState()                      // AL_STOPPED, AL_INITIAL, AL_PLAYING, AL_PAUSED
 {
-    ALenum state = AL_STOPPED;
+    ALint state = AL_STOPPED;
 
     if(alIsSource(source))
     {
@@ -1231,6 +1244,7 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
     uint8_t *buffer = NULL;
     StreamTrackBuffer *stb = NULL;
     size_t buffer_size = 0;
+    size_t block_size = 0;
     bool ret = false;
 
     if(current_track >= 0)
@@ -1242,10 +1256,11 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
 
     if(buffer && (buffer_offset + 1 < buffer_size))
     {
-        if(buffer_offset + audio_settings.stream_buffer_size < buffer_size)
+        block_size = stb->GetStreamBufferPart();
+        if(buffer_offset + block_size < buffer_size)
         {
-            alBufferData(al_buffer, stb->GetFormat(), buffer + buffer_offset, audio_settings.stream_buffer_size, stb->GetRate());
-            buffer_offset += audio_settings.stream_buffer_size;
+            alBufferData(al_buffer, stb->GetFormat(), buffer + buffer_offset, block_size, stb->GetRate());
+            buffer_offset += block_size;
             ret = true;
         }
         else
@@ -1274,7 +1289,7 @@ void StreamTrack::SetFX()
     if(fxManager.current_room_type != fxManager.last_room_type)  // Switch audio send.
     {
         fxManager.last_room_type = fxManager.current_room_type;
-        fxManager.current_slot   = (++fxManager.current_slot > (TR_AUDIO_MAX_SLOTS-1))?(0):(fxManager.current_slot);
+        fxManager.current_slot   = (++fxManager.current_slot > (TR_AUDIO_MAX_SLOTS - 1)) ? (0) : (fxManager.current_slot);
 
         effect = fxManager.al_effect[fxManager.current_room_type];
         slot   = fxManager.al_slot[fxManager.current_slot];
@@ -1450,7 +1465,7 @@ int  Audio_IsTrackPlaying(uint32_t track_index)
     for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; i++)
     {
         if(audio_world_data.stream_tracks[i].IsTrack(track_index) &&
-           AL_PLAYING == audio_world_data.stream_tracks[i].GetState())
+           (AL_PLAYING == audio_world_data.stream_tracks[i].GetState()))
         {
             return 1;
         }
@@ -1499,17 +1514,24 @@ int  Audio_TrackAlreadyPlayed(uint32_t track_index, int8_t mask)
 int Audio_GetFreeStream()
 {
     ALenum state;
+    int ret = TR_AUDIO_STREAMPLAY_NOFREESTREAM;
     for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; i++)
     {
         state = audio_world_data.stream_tracks[i].GetState();
-        if(!audio_world_data.stream_tracks[i].IsActive() &&
-           ((AL_STOPPED == state) || (AL_INITIAL == state)))
         {
-            return i;
+            if((AL_STOPPED == state) || (AL_INITIAL == state))
+            {
+                return i;
+            }
+            else if(AL_PAUSED == state)
+            {
+                audio_world_data.stream_tracks[ret].Stop();
+                return i;
+            }
         }
     }
-
-    return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // If no free source, return error.
+   
+    return ret;
 }
 
 
@@ -1716,7 +1738,7 @@ int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID)
             (audio_world_data.audio_sources[i].effect_index == (uint32_t)effect_ID  ) &&
             audio_world_data.audio_sources[i].IsActive())
         {
-            int state;
+            ALint state;
             alGetSourcei(audio_world_data.audio_sources[i].source_index, AL_SOURCE_STATE, &state);
             if(state == AL_PLAYING)
             {
@@ -1939,7 +1961,6 @@ void Audio_InitGlobals()
     audio_settings.sound_volume = 0.8;
     audio_settings.use_effects  = true;
     audio_settings.listener_is_player = false;
-    audio_settings.stream_buffer_size = 32;
 
     audio_world_data.audio_sources = NULL;
     audio_world_data.audio_sources_count = 0;
@@ -2044,8 +2065,8 @@ void Audio_Init(uint32_t num_Sources)
 
     // Generate stream tracks array.
 
-    audio_world_data.stream_tracks_count = TR_AUDIO_STREAM_NUMSOURCES;
-    audio_world_data.stream_tracks = new StreamTrack[TR_AUDIO_STREAM_NUMSOURCES];
+    audio_world_data.stream_tracks_count = TR_AUDIO_STREAM_NUMSOURCES - 1;
+    audio_world_data.stream_tracks = new StreamTrack[audio_world_data.stream_tracks_count];
 
     // Reset last room type used for assigning reverb.
 
@@ -2501,7 +2522,7 @@ int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, ui
     // Find out sample format and load it correspondingly.
     // Note that with OpenAL, we can have samples of different formats in same level.
 
-    bool result = Audio_FillALBuffer(buf_number, wav_buffer, uncomp_sample_size, wav_spec);
+    bool result = Audio_FillALBuffer(buf_number, wav_buffer, uncomp_sample_size, wav_spec.format & SDL_AUDIO_MASK_BITSIZE, wav_spec.channels, wav_spec.freq);
 
     SDL_FreeWAV(wav_buffer);
 
@@ -2532,7 +2553,7 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
     }
     SDL_RWclose(file);
 
-    bool result = Audio_FillALBuffer(buf_number, wav_buffer, wav_length, wav_spec);
+    bool result = Audio_FillALBuffer(buf_number, wav_buffer, wav_length, wav_spec.format & SDL_AUDIO_MASK_BITSIZE, wav_spec.channels, wav_spec.freq);
 
     SDL_FreeWAV(wav_buffer);
 
@@ -2540,16 +2561,13 @@ int Audio_LoadALbufferFromWAV_File(ALuint buf_number, const char *fname)
 }
 
 
-bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, SDL_AudioSpec wav_spec, bool use_SDL_resampler)
+bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_size, int sample_bitsize, int channels, int frequency)
 {
-    if(wav_spec.channels > 2)   // We can't use non-mono and barely can use stereo samples.
+    if(channels > 2)   // We can't use non-mono and barely can use stereo samples.
     {
         Sys_DebugLog(SYS_LOG_FILENAME, "Error: sample %03d has more than 2 channels!", buf_number);
         return false;
     }
-
-    // Extract bitsize from SDL audio spec for further usage.
-    uint8_t sample_bitsize = (uint8_t)(wav_spec.format & SDL_AUDIO_MASK_BITSIZE);
 
     // Check if bitsize is supported.
     // We rarely encounter samples with exotic bitsizes, but just in case...
@@ -2562,7 +2580,7 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
     // Standard OpenAL sample loading process.
         ALenum sample_format = 0x00;
 
-        if(wav_spec.channels == 1)
+        if(channels == 1)
         {
             switch(sample_bitsize)
             {
@@ -2597,7 +2615,7 @@ bool Audio_FillALBuffer(ALuint buf_number, Uint8* buffer_data, Uint32 buffer_siz
             }
         }
 
-        alBufferData(buf_number, sample_format, buffer_data, buffer_size, wav_spec.freq);
+        alBufferData(buf_number, sample_format, buffer_data, buffer_size, frequency);
 
     return true;
 }
@@ -2674,4 +2692,143 @@ void Audio_Update(float time)
         Audio_UpdateStreams();
         Audio_UpdateListenerByCamera(&engine_camera);
     }
+}
+
+
+void Audio_StreamExternalInit()
+{
+    // init external source
+    audio_world_data.external_source_linked_buffers = 0;
+    audio_world_data.external_buffer_offset = 0;
+    alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, audio_world_data.external_source_buffers);              // Generate all buffers at once.
+    alGenSources(1, &audio_world_data.external_source);
+
+    if(alIsSource(audio_world_data.external_source))
+    {
+        alSource3f(audio_world_data.external_source, AL_POSITION,        0.0f,  0.0f, -1.0f); // OpenAL tut says this.
+        alSource3f(audio_world_data.external_source, AL_VELOCITY,        0.0f,  0.0f,  0.0f);
+        alSource3f(audio_world_data.external_source, AL_DIRECTION,       0.0f,  0.0f,  0.0f);
+        alSourcef (audio_world_data.external_source, AL_ROLLOFF_FACTOR,  0.0f              );
+        alSourcei (audio_world_data.external_source, AL_SOURCE_RELATIVE, AL_TRUE           );
+        alSourcei (audio_world_data.external_source, AL_LOOPING,         AL_FALSE          ); // No effect, but just in case...
+    }
+}
+
+
+void Audio_StreamExternalDeinit()
+{
+    audio_world_data.external_buffer_offset = 0;
+    if(alIsSource(audio_world_data.external_source))
+    {
+        alSourceStop(audio_world_data.external_source);
+        alDeleteSources(1, &audio_world_data.external_source);
+        audio_world_data.external_source = 0;
+    }
+    alDeleteBuffers(TR_AUDIO_STREAM_NUMBUFFERS, audio_world_data.external_source_buffers);
+}
+
+
+int Audio_StreamExternalPlay()
+{
+    if(alIsSource(audio_world_data.external_source))
+    {
+        ALint state = 0;
+        alGetSourcei(audio_world_data.external_source, AL_SOURCE_STATE, &state);
+        if(state != AL_PLAYING)
+        {
+            alSourcef(audio_world_data.external_source, AL_GAIN, audio_settings.music_volume);
+            alSourcePlay(audio_world_data.external_source);
+        }
+        return 1;
+    }
+    return -1;
+}
+
+
+int Audio_StreamExternalStop()
+{
+    if(alIsSource(audio_world_data.external_source))
+    {
+        ALint queued = 0;
+        ALint state = AL_STOPPED;
+        alGetSourcei(audio_world_data.external_source, AL_SOURCE_STATE, &state);
+        if(state != AL_STOPPED)
+        {
+            alSourceStop(audio_world_data.external_source);
+        }
+
+        alGetSourcei(audio_world_data.external_source, AL_BUFFERS_QUEUED, &queued);
+        while(0 < queued--)
+        {
+            ALuint buffer;
+            alSourceUnqueueBuffers(audio_world_data.external_source, 1, &buffer);
+        }
+        audio_world_data.external_source_linked_buffers = 0;
+        audio_world_data.external_buffer_offset = 0;
+        return 1;
+    }
+    return -1;
+}
+
+
+int Audio_StreamExternalBufferIsNeedUpdate()
+{
+    if(alIsSource(audio_world_data.external_source))
+    {
+        if(audio_world_data.external_source_linked_buffers >= TR_AUDIO_STREAM_NUMBUFFERS)
+        {
+            ALint processed = 0;
+            alGetSourcei(audio_world_data.external_source, AL_BUFFERS_PROCESSED, &processed);
+            return processed > 0;
+        }
+        return 1;
+    }
+    return 0;
+}
+
+
+uint32_t Audio_StreamExternalBufferOffset()
+{
+    return audio_world_data.external_buffer_offset;
+}
+
+
+int Audio_StreamExternalUpdateBuffer(uint8_t *buff, size_t size, int sample_bitsize, int channels, int frequency)
+{
+    if(alIsSource(audio_world_data.external_source))
+    {
+        if(audio_world_data.external_source_linked_buffers >= TR_AUDIO_STREAM_NUMBUFFERS)
+        {
+            ALint processed = 0;
+            // Check if any track buffers were already processed.
+            // by doc: "Buffer queuing loop must operate in a new thread"
+            alGetSourcei(audio_world_data.external_source, AL_BUFFERS_PROCESSED, &processed);
+            if(processed > 0)
+            {
+                ALuint buffer_index = 0;
+                alSourceUnqueueBuffers(audio_world_data.external_source, 1, &buffer_index);
+                if(Audio_FillALBuffer(buffer_index, buff, size, sample_bitsize, channels, frequency))
+                {
+                    audio_world_data.external_buffer_offset += size;
+                    alSourceQueueBuffers(audio_world_data.external_source, 1, &buffer_index);
+                    return 1;
+                }
+                return -1;
+            }
+            return 0;
+        }
+        else
+        {
+            ALuint buffer_index = audio_world_data.external_source_buffers[audio_world_data.external_source_linked_buffers];
+            ++audio_world_data.external_source_linked_buffers;
+            if(Audio_FillALBuffer(buffer_index, buff, size, sample_bitsize, channels, frequency))
+            {
+                alSourceQueueBuffers(audio_world_data.external_source, 1, &buffer_index);
+                audio_world_data.external_buffer_offset += size;
+                return 1;
+            }
+            return -1;
+        }
+    }
+    return -1;
 }

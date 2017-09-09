@@ -47,15 +47,6 @@ int Script_ParseAudio(lua_State *lua, struct audio_settings_s *as)
         as->listener_is_player = lua_tointeger(lua, -1);
         lua_pop(lua, 1);
 
-        lua_getfield(lua, -1, "stream_buffer_size");
-        as->stream_buffer_size = (lua_tointeger(lua, -1)) * 1024;
-        lua_pop(lua, 1);
-
-        if(as->stream_buffer_size <= 0)
-        {
-            as->stream_buffer_size = 128 * 1024;
-        }
-
         lua_settop(lua, top);
         return 1;
     }

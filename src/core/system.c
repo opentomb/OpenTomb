@@ -202,10 +202,10 @@ void Sys_DebugLog(const char *file, const char *fmt, ...)
 }
 
 
-void WriteTGAfile(const char *filename, const uint8_t *data, const int width, const int height, char invY)
+void Sys_WriteTGAfile(const char *filename, const uint8_t *data, const int width, const int height, int bpp, char invY)
 {
-    unsigned char c;
-    unsigned short s;
+    uint8_t c;
+    uint16_t s;
     SDL_RWops *st;
 
     st = SDL_RWFromFile(filename, "wb");
@@ -243,7 +243,7 @@ void WriteTGAfile(const char *filename, const uint8_t *data, const int width, co
         s = SDL_SwapLE16(height);
         SDL_RWwrite(st, &s, sizeof(s), 1);
         // bits_per_pixel
-        c = 32;
+        c = 0xFF & bpp;
         SDL_RWwrite(st, &c, sizeof(c), 1);
         // attributes
         c = 0;
@@ -283,7 +283,7 @@ void Sys_TakeScreenShot()
     str_size = ViewPort[2] * 4;
     pixels = (GLubyte*)malloc(str_size * ViewPort[3]);
     qglReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_BGRA, GL_UNSIGNED_BYTE, pixels);
-    WriteTGAfile(fname, (const uint8_t*)pixels, ViewPort[2], ViewPort[3], 1);
+    Sys_WriteTGAfile(fname, (const uint8_t*)pixels, ViewPort[2], ViewPort[3], 32, 1);
 
     free(pixels);
     screenshot_cnt++;

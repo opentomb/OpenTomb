@@ -191,7 +191,7 @@ void Character_Update(struct entity_s *ent)
             ent->character->state.dead = 0x01;                                  // Kill, if no HP.
         }
         
-        if(!is_player && !ent->character->state.dead)
+        if(!is_player && !ent->character->state.dead && (ent->character->ai_zone >= 0))
         {
             Character_UpdateAI(ent);
         }
@@ -201,7 +201,7 @@ void Character_Update(struct entity_s *ent)
         Character_UpdateParams(ent);
         Entity_CheckCollisionCallbacks(ent);
 
-        if(!is_player && !ent->character->state.dead)
+        if(!is_player && !ent->character->state.dead && (ent->character->ai_zone >= 0))
         {
             Character_FixByBox(ent);
         }

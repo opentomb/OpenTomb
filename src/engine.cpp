@@ -26,6 +26,8 @@ extern "C" {
 #include "render/render.h"
 #include "script/script.h"
 #include "physics/physics.h"
+#include "fmv/tiny_codec.h"
+#include "fmv/stream_codec.h"
 #include "gui/gui.h"
 #include "vt/vt_level.h"
 #include "game.h"
@@ -53,6 +55,8 @@ static SDL_Haptic             *sdl_haptic     = NULL;
 static SDL_GLContext           sdl_gl_context = 0;
 static ALCdevice              *al_device      = NULL;
 static ALCcontext             *al_context     = NULL;
+
+static stream_codec_t           engine_video;
 
 static char                     base_path[1024] = {0};
 static volatile int             engine_done   = 0;
@@ -195,7 +199,8 @@ void Engine_Start(int argc, char **argv)
     Engine_InitSDLControls();
     Engine_InitSDLVideo();
     Engine_InitAL();
-
+    Audio_StreamExternalInit();
+    
     // Additional OpenGL initialization.
     Engine_InitGL();
     renderer.DoShaders();
@@ -214,7 +219,7 @@ void Engine_Start(int argc, char **argv)
 
     // Setting up mouse.
     SDL_SetRelativeMouseMode(SDL_TRUE);
-    SDL_WarpMouseInWindow(sdl_window, screen_info.w/2, screen_info.h/2);
+    SDL_WarpMouseInWindow(sdl_window, screen_info.w / 2, screen_info.h / 2);
     SDL_ShowCursor(0);
 
     luaL_dofile(engine_lua, autoexec_name ? autoexec_name : "autoexec.lua");
@@ -227,12 +232,15 @@ void Engine_Shutdown(int val)
     SSBoneFrame_Clear(&test_model);
     World_Clear();
 
+    stream_codec_clear(&engine_video);
+
     if(engine_lua)
     {
         lua_close(engine_lua);
         engine_lua = NULL;
     }
 
+    Audio_StreamExternalDeinit();
     Physics_Destroy();
     Gui_Destroy();
     Con_Destroy();
@@ -291,6 +299,8 @@ const char *Engine_GetBasePath()
 
 void Engine_SetDone()
 {
+    stream_codec_stop(&engine_video, 0);
+    Audio_StreamExternalStop();
     engine_done = 1;
 }
 
@@ -307,8 +317,7 @@ void Engine_InitDefaultGlobals()
 // First stage of initialization.
 void Engine_Init_Pre()
 {
-    /* Console must be initialized previously! some functions uses CON_AddLine before GL initialization!
-     * Rendering activation may be done later. */
+    stream_codec_init(&engine_video);
 
     Sys_Init();
     GLText_Init();
@@ -316,7 +325,7 @@ void Engine_Init_Pre()
     Gameflow_Init();
     Con_SetExecFunction(Engine_ExecCmd);
     Script_LuaInit();
-
+    
     Script_CallVoidFunc(engine_lua, "loadscript_pre", true);
 
     Cam_Init(&engine_camera);
@@ -777,12 +786,17 @@ void Engine_PollSDLEvents()
 
             case SDL_KEYUP:
             case SDL_KEYDOWN:
-                if( (event.key.keysym.scancode == SDL_SCANCODE_F4) &&
-                    (event.key.state == SDL_PRESSED)  &&
-                    (event.key.keysym.mod & KMOD_ALT) )
+                if((event.key.keysym.scancode == SDL_SCANCODE_F4) &&
+                   (event.key.state == SDL_PRESSED) &&
+                   (event.key.keysym.mod & KMOD_ALT))
                 {
                     Engine_SetDone();
                     break;
+                }
+
+                if(event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
+                {
+                    stream_codec_stop(&engine_video, 0);
                 }
 
                 if(Con_IsShown() && event.key.state)
@@ -890,21 +904,57 @@ void Engine_MainLoop()
             time_cycl = 0.0f;
         }
 
-        gl_text_line_p fps = GLText_OutTextXY(10.0f, 10.0f, fps_str);
-        fps->x_align    = GLTEXT_ALIGN_RIGHT;
-        fps->y_align    = GLTEXT_ALIGN_BOTTOM;
-        fps->font_id    = FONT_PRIMARY;
-        fps->style_id   = FONTSTYLE_MENU_TITLE;
-
         Sys_ResetTempMem();
         Engine_PollSDLEvents();
-        if(screen_info.debug_view_state != debug_view_state_e::model_view)
+
+        gl_text_line_p fps = GLText_OutTextXY(10.0f, 10.0f, fps_str);
+        if(fps)
         {
-            Game_Frame(time);
-            Gameflow_ProcessCommands();
+            fps->x_align    = GLTEXT_ALIGN_RIGHT;
+            fps->y_align    = GLTEXT_ALIGN_BOTTOM;
+            fps->font_id    = FONT_PRIMARY;
+            fps->style_id   = FONTSTYLE_MENU_TITLE;
         }
-        Audio_Update(time);
-        Engine_Display(time);
+
+        int codec_end_state = stream_codec_check_end(&engine_video);
+        if(codec_end_state == 1)
+        {
+            Audio_StreamExternalStop();
+        }
+        
+        if(codec_end_state >= 0)
+        {
+            if(screen_info.debug_view_state != debug_view_state_e::model_view)
+            {
+                Game_Frame(time);
+                Gameflow_ProcessCommands();
+            }
+            Audio_Update(time);
+            Engine_Display(time);
+        }
+        else
+        {
+            stream_codec_audio_lock(&engine_video);
+            if(engine_video.codec.audio.buff && (engine_video.codec.audio.buff_offset >= Audio_StreamExternalBufferOffset()))
+            {
+                Audio_StreamExternalUpdateBuffer(engine_video.codec.audio.buff, engine_video.codec.audio.buff_size, 
+                    engine_video.codec.audio.bits_per_coded_sample, engine_video.codec.audio.channels, engine_video.codec.audio.sample_rate);
+            }
+            if(Audio_StreamExternalBufferIsNeedUpdate())
+            {
+                engine_video.update_audio = 1;
+            }
+            stream_codec_audio_unlock(&engine_video);
+            Audio_StreamExternalPlay();
+            
+            stream_codec_video_lock(&engine_video);
+            if(engine_video.codec.video.rgba)
+            {
+                Gui_SetScreenTexture(engine_video.codec.video.rgba, engine_video.codec.video.width, engine_video.codec.video.height, 32);
+            }
+            stream_codec_video_unlock(&engine_video);
+            Gui_DrawLoadScreen(-1);
+        }
     }
 }
 
@@ -1533,6 +1583,19 @@ int Engine_LoadMap(const char *name)
 }
 
 
+int  Engine_PlayVideo(const char *name)
+{
+    Audio_StreamExternalStop();
+    return stream_codec_play_rpl(&engine_video, name);
+}
+
+
+int  Engine_IsVideoPlayed()
+{
+    return (engine_video.state != VIDEO_STATE_STOPPED);
+}
+
+
 extern "C" int Engine_ExecCmd(char *ch)
 {
     char token[1024];
@@ -1696,7 +1759,7 @@ extern "C" int Engine_ExecCmd(char *ch)
         {
             renderer.r_flags ^= R_DRAW_CINEMATICS;
             return 1;
-        }        
+        }
         else if(!strcmp(token, "r_triggers"))
         {
             renderer.r_flags ^= R_DRAW_TRIGGERS;
@@ -1732,7 +1795,7 @@ extern "C" int Engine_ExecCmd(char *ch)
                         if(cont->object_type == OBJECT_ENTITY)
                         {
                             entity_p e = (entity_p)cont->object;
-                            Con_Printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->transform[12+0], (int)e->transform[12+1], (int)e->transform[12+2], e->id);
+                            Con_Printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->transform[12 + 0], (int)e->transform[12 + 1], (int)e->transform[12 + 2], e->id);
                         }
                     }
                 }
@@ -1741,7 +1804,8 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "xxx"))
         {
-            SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
+            stream_codec_play_rpl(&engine_video, "data/tr1/fmv/LIFT.RPL");
+            /*SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
             if(f)
             {
                 long int size;
@@ -1761,7 +1825,7 @@ extern "C" int Engine_ExecCmd(char *ch)
             else
             {
                 Con_AddText("Not available =(", FONTSTYLE_CONSOLE_WARNING);
-            }
+            }*/
             return 1;
         }
         else if(token[0])

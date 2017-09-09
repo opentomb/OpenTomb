@@ -332,6 +332,7 @@ void Gui_NotifierStop();
 void Gui_DrawCrosshair();
 void Gui_DrawBars();
 void Gui_DrawLoadScreen(int value);
+bool Gui_SetScreenTexture(void *data, int w, int h, int bpp);
 bool Gui_LoadScreenAssignPic(const char* pic_name);
 void Gui_DrawInventory();
 void Gui_DrawNotifier();
