@@ -172,6 +172,11 @@ public:
         return rate;
     }
 
+    ALsizei GetStreamBufferPart()
+    {
+        return buffer_part;
+    }
+    
     int GetType()
     {
         return stream_type;
@@ -185,6 +190,7 @@ private:
 
     int             track_index;
     uint32_t        buffer_size;
+    uint32_t        buffer_part;
     uint8_t        *buffer;
     int             stream_type;         // Either BACKGROUND, ONESHOT or CHAT.
     ALenum          format;
@@ -741,11 +747,11 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
 
     vorbis_Info = ov_info(&vorbis_Stream, -1);
     format = (vorbis_Info->channels == 1) ? (AL_FORMAT_MONO16) : (AL_FORMAT_STEREO16);
+    buffer_part = vorbis_Info->bitrate_nominal;
     rate = vorbis_Info->rate;
 
     {
         const size_t temp_buf_size = 64 * 1024 * 1024;
-        long int bitrate_nominal = vorbis_Info->bitrate_nominal;
         char *temp_buff = (char*)malloc(temp_buf_size);
         size_t readed = 0;
         buffer_size = 0;
@@ -769,7 +775,7 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
         {
             buffer = (uint8_t*)malloc(buffer_size);
             memcpy(buffer, temp_buff, buffer_size);
-            Con_Notify("file \"%s\" loaded with rate=%d, bitrate=%.1f", path, rate, ((float)bitrate_nominal / 1000));
+            Con_Notify("file \"%s\" loaded with rate=%d, bitrate=%.1f", path, rate, ((float)vorbis_Info->bitrate_nominal / 1000.0f));
             ret = true;
         }
         free(temp_buff);
@@ -936,6 +942,7 @@ bool StreamTrackBuffer::Load_WavRW(SDL_RWops *file)
 
         buffer_size = wav_length;
         buffer = (uint8_t*)malloc(buffer_size);
+        buffer_part = 128 * 1024;
         rate = wav_spec.freq;
         memcpy(buffer, wav_buffer, buffer_size);
     }
@@ -1180,7 +1187,7 @@ bool StreamTrack::Update()
     // Check if any track buffers were already processed.
     // by doc: "Buffer queuing loop must operate in a new thread"
     alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed);
-    while(processed--)  // Manage processed buffers.
+    while(0 < processed--)  // Manage processed buffer.
     {
         ALuint buffer = 0;
         alSourceUnqueueBuffers(source, 1, &buffer);     // Unlink processed buffer.                 
@@ -1237,6 +1244,7 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
     uint8_t *buffer = NULL;
     StreamTrackBuffer *stb = NULL;
     size_t buffer_size = 0;
+    size_t block_size = 0;
     bool ret = false;
 
     if(current_track >= 0)
@@ -1248,10 +1256,11 @@ bool StreamTrack::Stream(ALuint al_buffer)             // Update stream process.
 
     if(buffer && (buffer_offset + 1 < buffer_size))
     {
-        if(buffer_offset + audio_settings.stream_buffer_size < buffer_size)
+        block_size = stb->GetStreamBufferPart();
+        if(buffer_offset + block_size < buffer_size)
         {
-            alBufferData(al_buffer, stb->GetFormat(), buffer + buffer_offset, audio_settings.stream_buffer_size, stb->GetRate());
-            buffer_offset += audio_settings.stream_buffer_size;
+            alBufferData(al_buffer, stb->GetFormat(), buffer + buffer_offset, block_size, stb->GetRate());
+            buffer_offset += block_size;
             ret = true;
         }
         else
@@ -1456,7 +1465,7 @@ int  Audio_IsTrackPlaying(uint32_t track_index)
     for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; i++)
     {
         if(audio_world_data.stream_tracks[i].IsTrack(track_index) &&
-           AL_PLAYING == audio_world_data.stream_tracks[i].GetState())
+           (AL_PLAYING == audio_world_data.stream_tracks[i].GetState()))
         {
             return 1;
         }
@@ -1508,9 +1517,7 @@ int Audio_GetFreeStream()
     int ret = TR_AUDIO_STREAMPLAY_NOFREESTREAM;
     for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; i++)
     {
-        
         state = audio_world_data.stream_tracks[i].GetState();
-        //if(!audio_world_data.stream_tracks[i].IsActive())
         {
             if((AL_STOPPED == state) || (AL_INITIAL == state))
             {
@@ -1518,11 +1525,12 @@ int Audio_GetFreeStream()
             }
             else if(AL_PAUSED == state)
             {
-                ret = i;
+                audio_world_data.stream_tracks[ret].Stop();
+                return i;
             }
         }
     }
-
+   
     return ret;
 }
 
@@ -1953,7 +1961,6 @@ void Audio_InitGlobals()
     audio_settings.sound_volume = 0.8;
     audio_settings.use_effects  = true;
     audio_settings.listener_is_player = false;
-    audio_settings.stream_buffer_size = 32;
 
     audio_world_data.audio_sources = NULL;
     audio_world_data.audio_sources_count = 0;

@@ -141,5 +141,6 @@ void Engine_GetLevelName(char *name, const char *path);
 void Engine_GetLevelScriptNameLocal(const char *level_path, int game_version, char *name, uint32_t buf_size);
 int  Engine_LoadMap(const char *name);
 int  Engine_PlayVideo(const char *name);
+int  Engine_IsVideoPlayed();
 
 #endif

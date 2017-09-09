@@ -77,7 +77,7 @@ bool Gameflow_Send(int opcode, int operand)
 
 void Gameflow_ProcessCommands()
 {
-    for(; !global_gameflow.m_actions.empty(); global_gameflow.m_actions.pop_back())
+    for(; !Engine_IsVideoPlayed() && !global_gameflow.m_actions.empty(); global_gameflow.m_actions.pop_back())
     {
         gameflow_action_t &it = global_gameflow.m_actions.back();
         switch(it.m_opcode)

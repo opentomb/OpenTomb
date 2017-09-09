@@ -1590,6 +1590,12 @@ int  Engine_PlayVideo(const char *name)
 }
 
 
+int  Engine_IsVideoPlayed()
+{
+    return (engine_video.state != VIDEO_STATE_STOPPED);
+}
+
+
 extern "C" int Engine_ExecCmd(char *ch)
 {
     char token[1024];

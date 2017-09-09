@@ -225,7 +225,7 @@ typedef struct audio_settings_s
 {
     float       music_volume;
     float       sound_volume;
-    uint32_t    stream_buffer_size;
+    //uint32_t    stream_buffer_size;
     uint32_t    use_effects : 1;
     uint32_t    listener_is_player : 1; // RESERVED FOR FUTURE USE
 }audio_settings_t, *audio_settings_p;
