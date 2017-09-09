@@ -345,7 +345,7 @@ function ScionHolder_init(id)
         setEntityActivationDirection(id, 1.0, 0.0, 0.0, 0.77);
 
         entity_funcs[id].onActivate = function(object_id, activator_id)
-            if(activator_id == nil) then
+            if((activator_id == nil) or (not canTriggerEntity(activator_id, object_id))) then
                 return ENTITY_TRIGGERING_NOT_READY;
             end
 
