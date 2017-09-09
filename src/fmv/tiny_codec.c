@@ -61,6 +61,7 @@ void codec_init(struct tiny_codec_s *s, SDL_RWops *rw)
     s->fps_num = 24;
     s->fps_denum = 1;
 
+    s->audio.buff_allocated_size = 0;
     s->audio.buff_size = 0;
     s->audio.buff_offset = 0;
     s->audio.buff = NULL;
@@ -88,6 +89,7 @@ void codec_clear(struct tiny_codec_s *s)
     if(s->free_context)
     {
         s->free_context(s->private_context);
+        s->free_context = NULL;
         s->private_context = NULL;
     }
     s->packet = NULL;
@@ -95,6 +97,9 @@ void codec_clear(struct tiny_codec_s *s)
     s->video.codec_tag = 0;
     s->audio.decode = NULL;
     s->audio.codec_tag = 0;
+    s->audio.buff_allocated_size = 0;
+    s->audio.buff_size = 0;
+    s->audio.buff_offset = 0;
 
     if(s->video.buff)
     {
@@ -112,6 +117,7 @@ void codec_clear(struct tiny_codec_s *s)
     {
         s->video.free_data(s->video.priv_data);
         s->video.priv_data = NULL;
+        s->video.free_data = NULL;
     }
 
     if(s->audio.buff)
@@ -130,13 +136,6 @@ void codec_clear(struct tiny_codec_s *s)
     {
         s->audio.free_data(s->audio.priv_data);
         s->audio.priv_data = NULL;
+        s->audio.free_data = NULL;
     }
 }
-
-
-uint32_t decode_audio_copy(struct tiny_codec_s *s, struct AVPacket *pkt)
-{
-    return 0;
-}
-
-

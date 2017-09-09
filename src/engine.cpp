@@ -199,7 +199,8 @@ void Engine_Start(int argc, char **argv)
     Engine_InitSDLControls();
     Engine_InitSDLVideo();
     Engine_InitAL();
-
+    Audio_StreamExternalInit();
+    
     // Additional OpenGL initialization.
     Engine_InitGL();
     renderer.DoShaders();
@@ -239,6 +240,7 @@ void Engine_Shutdown(int val)
         engine_lua = NULL;
     }
 
+    Audio_StreamExternalDeinit();
     Physics_Destroy();
     Gui_Destroy();
     Con_Destroy();
@@ -298,6 +300,7 @@ const char *Engine_GetBasePath()
 void Engine_SetDone()
 {
     stream_codec_stop(&engine_video, 0);
+    Audio_StreamExternalStop();
     engine_done = 1;
 }
 
@@ -322,7 +325,7 @@ void Engine_Init_Pre()
     Gameflow_Init();
     Con_SetExecFunction(Engine_ExecCmd);
     Script_LuaInit();
-
+    
     Script_CallVoidFunc(engine_lua, "loadscript_pre", true);
 
     Cam_Init(&engine_camera);
@@ -913,7 +916,13 @@ void Engine_MainLoop()
             fps->style_id   = FONTSTYLE_MENU_TITLE;
         }
 
-        if(!stream_codec_check_playing(&engine_video))
+        int codec_end_state = stream_codec_check_end(&engine_video);
+        if(codec_end_state == 1)
+        {
+            Audio_StreamExternalStop();
+        }
+        
+        if(codec_end_state >= 0)
         {
             if(screen_info.debug_view_state != debug_view_state_e::model_view)
             {
@@ -925,12 +934,25 @@ void Engine_MainLoop()
         }
         else
         {
-            uint8_t *rgba = stream_codec_get_rgba_lock(&engine_video);
-            if(rgba)
+            stream_codec_audio_lock(&engine_video);
+            if(engine_video.codec.audio.buff && (engine_video.codec.audio.buff_offset >= Audio_StreamExternalBufferOffset()))
             {
-                Gui_SetScreenTexture(rgba, engine_video.codec.video.width, engine_video.codec.video.height, 32);
+                Audio_StreamExternalUpdateBuffer(engine_video.codec.audio.buff, engine_video.codec.audio.buff_size, 
+                    engine_video.codec.audio.bits_per_coded_sample, engine_video.codec.audio.channels, engine_video.codec.audio.sample_rate);
             }
-            stream_codec_unlock_get(&engine_video);
+            if(Audio_StreamExternalBufferIsNeedUpdate())
+            {
+                engine_video.update_audio = 1;
+            }
+            stream_codec_audio_unlock(&engine_video);
+            Audio_StreamExternalPlay();
+            
+            stream_codec_video_lock(&engine_video);
+            if(engine_video.codec.video.rgba)
+            {
+                Gui_SetScreenTexture(engine_video.codec.video.rgba, engine_video.codec.video.width, engine_video.codec.video.height, 32);
+            }
+            stream_codec_video_unlock(&engine_video);
             Gui_DrawLoadScreen(-1);
         }
     }
@@ -1563,6 +1585,7 @@ int Engine_LoadMap(const char *name)
 
 int  Engine_PlayVideo(const char *name)
 {
+    Audio_StreamExternalStop();
     return stream_codec_play_rpl(&engine_video, name);
 }
 

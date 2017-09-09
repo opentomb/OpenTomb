@@ -179,7 +179,7 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
     {
         if(s->audio.entry_current >= s->audio.entry_size)
             return -1;
-
+       
         entry = &s->audio.entry[s->audio.entry_current];
 
         pkt->pos = entry->pos;
@@ -200,7 +200,7 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
 
         pkt->pts = entry->timestamp;
         pkt->stream_index = rpl->chunk_part;
-        rpl->chunk_part++;
+        s->audio.entry_current++;
     }
 
     // None of the Escape formats have keyframes, and the ADPCM
@@ -265,6 +265,7 @@ int codec_open_rpl(struct tiny_codec_s *s)
             break;
 
         case 124:
+            s->video.decode = NULL;
             s->video.codec_tag = 124;
             s->video.line_bytes = s->video.width * 2;
             s->video.buff = (uint8_t*)calloc(1, 2 * s->video.line_bytes * s->video.height);
@@ -394,7 +395,25 @@ int codec_open_rpl(struct tiny_codec_s *s)
 }
 
 
+static uint32_t pcm_dummy_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *avpkt)
+{
+    if(avctx->audio.buff_allocated_size < avpkt->size)
+    {
+        avctx->audio.buff_allocated_size = avpkt->size + 1024 - avpkt->size % 1024;
+        if(avctx->audio.buff)
+        {
+            free(avctx->audio.buff);
+        }
+        avctx->audio.buff = (uint8_t*)malloc(avctx->audio.buff_allocated_size);
+    }
+    memcpy(avctx->audio.buff, avpkt->data, avpkt->size);
+    avctx->audio.buff_offset += avctx->audio.buff_size;
+    avctx->audio.buff_size = avpkt->size;
+    
+    return avpkt->size;
+}
+
 void pcm_decode_init(struct tiny_codec_s *avctx)
 {
-    
+    avctx->audio.decode = pcm_dummy_decode_frame;
 }

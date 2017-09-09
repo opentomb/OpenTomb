@@ -311,6 +311,7 @@ struct audio_world_data_s
     uint8_t                        *stream_track_map;       // Stream track flag map.
 
     ALuint                          external_source;
+    uint32_t                        external_buffer_offset;
     int                             external_source_linked_buffers;
     ALuint                          external_source_buffers[TR_AUDIO_STREAM_NUMBUFFERS];
 } audio_world_data;
@@ -1068,7 +1069,7 @@ void StreamTrack::Stop()    // Immediately stop track.
     current_track = -1;
     if(alIsSource(source))  // Stop and unlink all associated buffers.
     {
-        ALenum state = AL_STOPPED;
+        ALint state = AL_STOPPED;
         alGetSourcei(source, AL_SOURCE_STATE, &state);
         if(state != AL_STOPPED)
         {
@@ -1220,7 +1221,7 @@ bool StreamTrack::IsDampable()                      // Check if track is dampabl
 
 ALenum StreamTrack::GetState()                      // AL_STOPPED, AL_INITIAL, AL_PLAYING, AL_PAUSED
 {
-    ALenum state = AL_STOPPED;
+    ALint state = AL_STOPPED;
 
     if(alIsSource(source))
     {
@@ -1729,7 +1730,7 @@ int Audio_IsEffectPlaying(int effect_ID, int entity_type, int entity_ID)
             (audio_world_data.audio_sources[i].effect_index == (uint32_t)effect_ID  ) &&
             audio_world_data.audio_sources[i].IsActive())
         {
-            int state;
+            ALint state;
             alGetSourcei(audio_world_data.audio_sources[i].source_index, AL_SOURCE_STATE, &state);
             if(state == AL_PLAYING)
             {
@@ -2051,33 +2052,18 @@ void Audio_Init(uint32_t num_Sources)
 
     // Generate new source array.
 
-    num_Sources -= (TR_AUDIO_STREAM_NUMSOURCES + 1);          // Subtract sources reserved for music.
+    num_Sources -= TR_AUDIO_STREAM_NUMSOURCES;          // Subtract sources reserved for music.
     audio_world_data.audio_sources_count = num_Sources;
     audio_world_data.audio_sources = new AudioSource[num_Sources];
 
     // Generate stream tracks array.
 
-    audio_world_data.stream_tracks_count = TR_AUDIO_STREAM_NUMSOURCES;
-    audio_world_data.stream_tracks = new StreamTrack[TR_AUDIO_STREAM_NUMSOURCES];
+    audio_world_data.stream_tracks_count = TR_AUDIO_STREAM_NUMSOURCES - 1;
+    audio_world_data.stream_tracks = new StreamTrack[audio_world_data.stream_tracks_count];
 
     // Reset last room type used for assigning reverb.
 
     fxManager.last_room_type = TR_AUDIO_FX_LASTINDEX;
-
-    // init external source
-    audio_world_data.external_source_linked_buffers = 0;
-    alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, audio_world_data.external_source_buffers);              // Generate all buffers at once.
-    alGenSources(1, &audio_world_data.external_source);
-
-    if(alIsSource(audio_world_data.external_source))
-    {
-        alSource3f(audio_world_data.external_source, AL_POSITION,        0.0f,  0.0f, -1.0f); // OpenAL tut says this.
-        alSource3f(audio_world_data.external_source, AL_VELOCITY,        0.0f,  0.0f,  0.0f);
-        alSource3f(audio_world_data.external_source, AL_DIRECTION,       0.0f,  0.0f,  0.0f);
-        alSourcef (audio_world_data.external_source, AL_ROLLOFF_FACTOR,  0.0f              );
-        alSourcei (audio_world_data.external_source, AL_SOURCE_RELATIVE, AL_TRUE           );
-        alSourcei (audio_world_data.external_source, AL_LOOPING,         AL_FALSE          ); // No effect, but just in case...
-    }
 }
 
 
@@ -2368,14 +2354,6 @@ int Audio_DeInit()
 {
     Audio_StopAllSources();
     Audio_StopStreams();
-
-    if(alIsSource(audio_world_data.external_source))
-    {
-        alSourceStop(audio_world_data.external_source);
-        alDeleteSources(1, &audio_world_data.external_source);
-        audio_world_data.external_source = 0;
-    }
-    alDeleteBuffers(TR_AUDIO_STREAM_NUMBUFFERS, audio_world_data.external_source_buffers);
 
     if(audio_world_data.audio_sources)
     {
@@ -2710,12 +2688,50 @@ void Audio_Update(float time)
 }
 
 
+void Audio_StreamExternalInit()
+{
+    // init external source
+    audio_world_data.external_source_linked_buffers = 0;
+    audio_world_data.external_buffer_offset = 0;
+    alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, audio_world_data.external_source_buffers);              // Generate all buffers at once.
+    alGenSources(1, &audio_world_data.external_source);
+
+    if(alIsSource(audio_world_data.external_source))
+    {
+        alSource3f(audio_world_data.external_source, AL_POSITION,        0.0f,  0.0f, -1.0f); // OpenAL tut says this.
+        alSource3f(audio_world_data.external_source, AL_VELOCITY,        0.0f,  0.0f,  0.0f);
+        alSource3f(audio_world_data.external_source, AL_DIRECTION,       0.0f,  0.0f,  0.0f);
+        alSourcef (audio_world_data.external_source, AL_ROLLOFF_FACTOR,  0.0f              );
+        alSourcei (audio_world_data.external_source, AL_SOURCE_RELATIVE, AL_TRUE           );
+        alSourcei (audio_world_data.external_source, AL_LOOPING,         AL_FALSE          ); // No effect, but just in case...
+    }
+}
+
+
+void Audio_StreamExternalDeinit()
+{
+    audio_world_data.external_buffer_offset = 0;
+    if(alIsSource(audio_world_data.external_source))
+    {
+        alSourceStop(audio_world_data.external_source);
+        alDeleteSources(1, &audio_world_data.external_source);
+        audio_world_data.external_source = 0;
+    }
+    alDeleteBuffers(TR_AUDIO_STREAM_NUMBUFFERS, audio_world_data.external_source_buffers);
+}
+
+
 int Audio_StreamExternalPlay()
 {
     if(alIsSource(audio_world_data.external_source))
     {
-        alSourcef(audio_world_data.external_source, AL_GAIN, audio_settings.music_volume);
-        alSourcePlay(audio_world_data.external_source);
+        ALint state = 0;
+        alGetSourcei(audio_world_data.external_source, AL_SOURCE_STATE, &state);
+        if(state != AL_PLAYING)
+        {
+            alSourcef(audio_world_data.external_source, AL_GAIN, audio_settings.music_volume);
+            alSourcePlay(audio_world_data.external_source);
+        }
         return 1;
     }
     return -1;
@@ -2727,23 +2743,46 @@ int Audio_StreamExternalStop()
     if(alIsSource(audio_world_data.external_source))
     {
         ALint queued = 0;
-        //ALenum state = AL_STOPPED;
-        //alGetSourcei(source, AL_SOURCE_STATE, &state);
-        //if(state != AL_STOPPED)
+        ALint state = AL_STOPPED;
+        alGetSourcei(audio_world_data.external_source, AL_SOURCE_STATE, &state);
+        if(state != AL_STOPPED)
         {
             alSourceStop(audio_world_data.external_source);
         }
 
         alGetSourcei(audio_world_data.external_source, AL_BUFFERS_QUEUED, &queued);
-        while(queued--)
+        while(0 < queued--)
         {
             ALuint buffer;
             alSourceUnqueueBuffers(audio_world_data.external_source, 1, &buffer);
         }
         audio_world_data.external_source_linked_buffers = 0;
+        audio_world_data.external_buffer_offset = 0;
         return 1;
     }
     return -1;
+}
+
+
+int Audio_StreamExternalBufferIsNeedUpdate()
+{
+    if(alIsSource(audio_world_data.external_source))
+    {
+        if(audio_world_data.external_source_linked_buffers >= TR_AUDIO_STREAM_NUMBUFFERS)
+        {
+            ALint processed = 0;
+            alGetSourcei(audio_world_data.external_source, AL_BUFFERS_PROCESSED, &processed);
+            return processed > 0;
+        }
+        return 1;
+    }
+    return 0;
+}
+
+
+uint32_t Audio_StreamExternalBufferOffset()
+{
+    return audio_world_data.external_buffer_offset;
 }
 
 
@@ -2763,6 +2802,7 @@ int Audio_StreamExternalUpdateBuffer(uint8_t *buff, size_t size, int sample_bits
                 alSourceUnqueueBuffers(audio_world_data.external_source, 1, &buffer_index);
                 if(Audio_FillALBuffer(buffer_index, buff, size, sample_bitsize, channels, frequency))
                 {
+                    audio_world_data.external_buffer_offset += size;
                     alSourceQueueBuffers(audio_world_data.external_source, 1, &buffer_index);
                     return 1;
                 }
@@ -2777,6 +2817,7 @@ int Audio_StreamExternalUpdateBuffer(uint8_t *buff, size_t size, int sample_bits
             if(Audio_FillALBuffer(buffer_index, buff, size, sample_bitsize, channels, frequency))
             {
                 alSourceQueueBuffers(audio_world_data.external_source, 1, &buffer_index);
+                audio_world_data.external_buffer_offset += size;
                 return 1;
             }
             return -1;
