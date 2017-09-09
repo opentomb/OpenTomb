@@ -93,7 +93,6 @@ static void *stream_codec_thread_func(void *data)
         pkt_audio.is_video = 0;
         clock_gettime(CLOCK_REALTIME, &time_start);
 
-        pthread_mutex_timedlock(&s->timer_mutex, &vid_time);
         while(!s->stop && can_continue)
         {
             frame++;
@@ -190,6 +189,10 @@ int stream_codec_play_rpl(stream_codec_p s, const char *name)
                 s->state = VIDEO_STATE_QEUED;
                 s->stop = 0;
                 s->update_audio = 1;
+                
+                pthread_mutex_unlock(&s->video_buffer_mutex);
+                pthread_mutex_unlock(&s->audio_buffer_mutex);
+                pthread_mutex_unlock(&s->timer_mutex);
                 pthread_create(&s->thread, NULL, stream_codec_thread_func, s);
                 return s->thread != 0;
             }
