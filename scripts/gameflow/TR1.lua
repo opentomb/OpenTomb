@@ -35,3 +35,6 @@ gameflow_params[GAME_1].levels[17] = { name = "Atlantis",                filepat
 gameflow_params[GAME_1].levels[18] = { name = "Atlantis",                filepath = "data/tr1/data/CUT4.PHD",         picpath = "data/tr1/pix/atlanloa" };
 gameflow_params[GAME_1].levels[19] = { name = "The Great Pyramid",       filepath = "data/tr1/data/LEVEL10C.PHD",     picpath = "data/tr1/pix/atlanloa" };
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+gameflow_params[GAME_1].fmv = {};
+gameflow_params[GAME_1].fmv[0] =  { name = "Core", filepath = "data/tr1/fmv/CORE.RPL" };

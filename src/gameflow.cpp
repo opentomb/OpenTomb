@@ -49,6 +49,7 @@ typedef struct level_info_s
 
 
 bool Gameflow_GetLevelInfo(level_info_p info, int game_id, int level_id);
+bool Gameflow_GetFMVPath(level_info_p info, int fmv_id);
 bool Gameflow_SetGameInternal(int game_id, int level_id);
 
 
@@ -77,6 +78,7 @@ bool Gameflow_Send(int opcode, int operand)
 
 void Gameflow_ProcessCommands()
 {
+    level_info_t info;
     for(; !Engine_IsVideoPlayed() && !global_gameflow.m_actions.empty(); global_gameflow.m_actions.pop_back())
     {
         gameflow_action_t &it = global_gameflow.m_actions.back();
@@ -103,6 +105,13 @@ void Gameflow_ProcessCommands()
                 Audio_StreamPlay(it.m_operand);
                 break;
 
+            case GF_OP_STARTFMV:
+                if(Gameflow_GetFMVPath(&info, it.m_operand))
+                {
+                    Engine_PlayVideo(info.path);
+                }
+                break;                
+                
             case GF_NOENTRY:
                 continue;
 
@@ -203,6 +212,56 @@ bool Gameflow_GetLevelInfo(level_info_p info, int game_id, int level_id)
 
     lua_pop(engine_lua, 1);   // level_id
     lua_pop(engine_lua, 1);   // levels
+
+    lua_pop(engine_lua, 1);   // game_id
+    lua_settop(engine_lua, top);
+
+    return true;
+}
+
+
+bool Gameflow_GetFMVPath(level_info_p info, int fmv_id)
+{
+    int top = lua_gettop(engine_lua);
+
+    lua_getglobal(engine_lua, "gameflow_params");
+    if(!lua_istable(engine_lua, -1))
+    {
+        lua_settop(engine_lua, top);
+        return false;
+    }
+
+    lua_rawgeti(engine_lua, -1, global_gameflow.m_currentGameID);
+    if(!lua_istable(engine_lua, -1))
+    {
+        lua_settop(engine_lua, top);
+        return false;
+    }
+
+    lua_getfield(engine_lua, -1, "fmv");
+    if(!lua_istable(engine_lua, -1))
+    {
+        lua_settop(engine_lua, top);
+        return false;
+    }
+
+    lua_rawgeti(engine_lua, -1, fmv_id);
+    if(!lua_istable(engine_lua, -1))
+    {
+        lua_settop(engine_lua, top);
+        return false;
+    }
+
+    lua_getfield(engine_lua, -1, "name");
+    strncpy(info->name, lua_tostring(engine_lua, -1), LEVEL_NAME_MAX_LEN);
+    lua_pop(engine_lua, 1);
+
+    lua_getfield(engine_lua, -1, "filepath");
+    strncpy(info->path, lua_tostring(engine_lua, -1), MAX_ENGINE_PATH);
+    lua_pop(engine_lua, 1);
+
+    lua_pop(engine_lua, 1);   // fmv_id
+    lua_pop(engine_lua, 1);   // fmv
 
     lua_pop(engine_lua, 1);   // game_id
     lua_settop(engine_lua, top);
