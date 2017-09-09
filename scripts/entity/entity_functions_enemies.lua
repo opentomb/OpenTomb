@@ -146,7 +146,21 @@ end
 
 
 function Doppelgagner_init(id)
-    baddie_init(id);
+    if(entity_funcs[id] == nil) then
+        entity_funcs[id] = {};
+    end;
+
+    setEntityTypeFlag(id, ENTITY_TYPE_ACTOR);
+    characterCreate(id);
+
+    setCharacterParam(id, PARAM_HEALTH, 1000.0, 1000.0);
+    setCharacterBones(id, 14, 7, 11, 13, 8, 10);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
+    setCharacterMoveSizes(id, 768.0, 128.0, 288.0, 1920.0, 320.0); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
+
+    setEntityMoveType(id, MOVE_ON_FLOOR);
+    setCharacterStateControlFunctions(id, STATE_FUNCTIONS_LARA);
+    setCharacterAIParams(id, -1, ZONE_TYPE_FLY);
+
     local x0 = 36864;
     local y0 = 61440;
 
@@ -184,6 +198,7 @@ function Doppelgagner_init(id)
         local room = getEntityRoom(player);
 
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
+            setCharacterState(object_id, CHARACTER_STATE_DEAD, 2);
             setEntityTypeFlag(object_id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
             setCharacterRagdollActivity(object_id, true);
             setEntityActivity(object_id, false);
