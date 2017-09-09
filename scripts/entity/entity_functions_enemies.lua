@@ -158,7 +158,7 @@ function Doppelgagner_init(id)
     setCharacterMoveSizes(id, 768.0, 128.0, 288.0, 1920.0, 320.0); -- height, min_step_up_height, max_step_up_height, max_climb_height, fall_down_height
 
     setEntityMoveType(id, MOVE_ON_FLOOR);
-    setCharacterAIParams(id, -1, ZONE_TYPE_FLY);
+    setCharacterAIParams(id, -1, -1);
 
     local x0 = 36864;
     local y0 = 61440;
