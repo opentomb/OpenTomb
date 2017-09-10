@@ -83,9 +83,7 @@ typedef struct tiny_codec_s
         uint32_t        codec_tag;
         uint16_t        width;
         uint16_t        height;
-        uint32_t        line_bytes;
         uint8_t        *rgba;
-        uint8_t        *buff;
         void           *priv_data;
         void          (*free_data)(void *data);
         int           (*decode)(struct tiny_codec_s *s, struct AVPacket *pkt);

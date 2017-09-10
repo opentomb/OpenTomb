@@ -73,7 +73,6 @@ void codec_init(struct tiny_codec_s *s, SDL_RWops *rw)
     s->audio.decode = NULL;
     s->audio.codec_tag = 0;
 
-    s->video.buff = NULL;
     s->video.rgba = NULL;
     s->video.entry = NULL;
     s->video.entry_size = 0;
@@ -101,11 +100,6 @@ void codec_clear(struct tiny_codec_s *s)
     s->audio.buff_size = 0;
     s->audio.buff_offset = 0;
 
-    if(s->video.buff)
-    {
-        free(s->video.buff);
-        s->video.buff = NULL;
-    }
     if(s->video.entry)
     {
         free(s->video.entry);

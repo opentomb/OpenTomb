@@ -133,7 +133,7 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
             // We have to split Escape 124 frames because there are
             // multiple frames per chunk in Escape 124 samples.
             uint32_t frame_size;
-            SDL_ReadLE32(pb); // flags `
+            SDL_ReadLE32(pb); // flags
             frame_size = SDL_ReadLE32(pb);
             if (SDL_RWseek(pb, -8, RW_SEEK_CUR) < 0)
                 return -1;
@@ -158,6 +158,10 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
         }
         else if(s->video.codec_tag == 130)
         {
+            pkt->pos = entry->pos;
+            if(SDL_RWseek(pb, pkt->pos, RW_SEEK_SET) < 0)
+                return -1;
+
             ret = av_get_packet(pb, pkt, entry->size);
             if (ret < 0)
                 return ret;
@@ -172,7 +176,7 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
 
             pkt->pts = entry->timestamp;
             pkt->stream_index = rpl->chunk_part;
-            rpl->chunk_part++;
+            s->video.entry_current++;
         }
     }
     else
@@ -211,6 +215,7 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
 
 
 void escape124_decode_init(struct tiny_codec_s *avctx);
+void escape130_decode_init(struct tiny_codec_s *avctx);
 void pcm_decode_init(struct tiny_codec_s *avctx);
 
 int codec_open_rpl(struct tiny_codec_s *s)
@@ -267,8 +272,6 @@ int codec_open_rpl(struct tiny_codec_s *s)
         case 124:
             s->video.decode = NULL;
             s->video.codec_tag = 124;
-            s->video.line_bytes = s->video.width * 2;
-            s->video.buff = (uint8_t*)calloc(1, 2 * s->video.line_bytes * s->video.height);
             escape124_decode_init(s);
             // The header is wrong here, at least sometimes
             break;
@@ -276,6 +279,7 @@ int codec_open_rpl(struct tiny_codec_s *s)
         case 130:
             s->video.decode = NULL; //AV_CODEC_ID_ESCAPE130;
             s->video.codec_tag = 130;
+            escape130_decode_init(s);
             break;
 
         default:

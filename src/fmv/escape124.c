@@ -51,6 +51,9 @@ typedef struct CodeBook
 typedef struct Escape124Context
 {
     unsigned num_superblocks;
+    uint32_t line_bytes;
+    uint8_t *buff1;
+    uint8_t *buff2;
     CodeBook codebooks[3];
 } Escape124Context;
 
@@ -69,6 +72,8 @@ static void escape124_free_data(void *data)
         {
             free(s->codebooks[i].blocks);
         }
+        free(s->buff1);
+        free(s->buff2);
         free(s);
     }
 }
@@ -273,11 +278,11 @@ static int escape124_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
         }
     }
 
-    new_frame_data = (uint16_t*)avctx->video.buff;
-    new_stride = avctx->video.line_bytes / 2;
-    old_frame_data = new_frame_data + new_stride * avctx->video.height;
-    old_stride = avctx->video.line_bytes / 2;
-    memcpy(old_frame_data, new_frame_data, avctx->video.line_bytes * avctx->video.height);
+    new_frame_data = s->buff1;
+    new_stride = s->line_bytes / 2;
+    old_frame_data = s->buff2;
+    old_stride = s->line_bytes / 2;
+    //memcpy(old_frame_data, new_frame_data, s->line_bytes * avctx->video.height);
 
     for (superblock_index = 0; superblock_index < s->num_superblocks; superblock_index++)
     {
@@ -372,7 +377,7 @@ static int escape124_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
         uint8_t *rgba = avctx->video.rgba;
         for(i = 0; i < avctx->video.height; ++i)
         {
-            uint16_t *px = (uint16_t*)avctx->video.buff + i * new_stride;
+            uint16_t *px = (uint16_t*)s->buff1 + i * new_stride;
             for(int j = 0; j < avctx->video.width; ++j, ++px)
             {
                 *rgba++ = ((*px) & 0x7C00) >> (10 - 3);
@@ -382,6 +387,8 @@ static int escape124_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
             }
         }
     }
+    FFSWAP(uint8_t*, s->buff1, s->buff2);
+    
     return frame_size;
 }
 
@@ -395,8 +402,10 @@ void escape124_decode_init(struct tiny_codec_s *avctx)
         avctx->video.free_data = escape124_free_data;
         s->num_superblocks = ((unsigned)avctx->video.width / 8) *
                              ((unsigned)avctx->video.height / 8);
-
-        for (int i = 0; i < 3; i++)
+        s->line_bytes = avctx->video.width * 2;
+        s->buff1 = (uint8_t*)calloc(1, s->line_bytes * avctx->video.height);
+        s->buff2 = (uint8_t*)calloc(1, s->line_bytes * avctx->video.height);
+        for(int i = 0; i < 3; i++)
         {
             s->codebooks[i].blocks = NULL;
         }

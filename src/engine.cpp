@@ -1804,7 +1804,7 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "xxx"))
         {
-            stream_codec_play_rpl(&engine_video, "data/tr1/fmv/LIFT.RPL");
+            stream_codec_play_rpl(&engine_video, "data/tr2/fmv/CRASH.RPL");
             /*SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
             if(f)
             {
