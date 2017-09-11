@@ -114,7 +114,7 @@ static void *stream_codec_thread_func(void *data)
                 s->update_audio = 0;
                 pthread_mutex_unlock(&s->audio_buffer_mutex);
             }
-            
+
             if(s->codec.video.decode && (s->codec.packet(&s->codec, &pkt_video) >= 0))
             {
                 pthread_mutex_lock(&s->video_buffer_mutex);
@@ -122,14 +122,14 @@ static void *stream_codec_thread_func(void *data)
                 pthread_mutex_unlock(&s->video_buffer_mutex);
                 can_continue++;
             }
-            
+
             s->state = VIDEO_STATE_RUNNING;
             pthread_mutex_timedlock(&s->timer_mutex, &vid_time);
         }
         av_packet_unref(&pkt_video);
         av_packet_unref(&pkt_audio);
         s->state = VIDEO_STATE_QEUED;
-        
+
         pthread_mutex_lock(&s->video_buffer_mutex);
         free(s->codec.video.rgba);
         s->codec.video.rgba = NULL;
@@ -142,7 +142,7 @@ static void *stream_codec_thread_func(void *data)
         s->codec.audio.buff_size = 0;
         s->codec.audio.buff_allocated_size = 0;
         pthread_mutex_unlock(&s->audio_buffer_mutex);
-        
+
         codec_clear(&s->codec);
         SDL_RWclose(s->codec.pb);
         s->codec.pb = NULL;
@@ -189,10 +189,7 @@ int stream_codec_play_rpl(stream_codec_p s, const char *name)
                 s->state = VIDEO_STATE_QEUED;
                 s->stop = 0;
                 s->update_audio = 1;
-                
-                pthread_mutex_unlock(&s->video_buffer_mutex);
-                pthread_mutex_unlock(&s->audio_buffer_mutex);
-                pthread_mutex_unlock(&s->timer_mutex);
+
                 pthread_create(&s->thread, NULL, stream_codec_thread_func, s);
                 return s->thread != 0;
             }

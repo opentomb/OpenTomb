@@ -90,6 +90,7 @@ bind(act.down, KEY_S);
 bind(act.left, KEY_A);
 bind(act.right, KEY_D);
 
+bind(act.look, KEY_O);
 bind(act.lookup, KEY_UP, JOY_POVUP);
 bind(act.lookdown, KEY_DOWN, JOY_POVDOWN);
 bind(act.lookleft, KEY_LEFT, JOY_POVLEFT);
