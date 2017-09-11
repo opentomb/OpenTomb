@@ -73,7 +73,8 @@ typedef struct engine_control_state_s
     int8_t      move_up;                           // These are not typically used.
     int8_t      move_down;
 
-    int8_t      look_up;                           // Look (camera) keys.
+    int8_t      look;                              // Look (camera) keys.
+    int8_t      look_up;
     int8_t      look_down;
     int8_t      look_left;
     int8_t      look_right;

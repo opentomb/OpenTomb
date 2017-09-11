@@ -282,6 +282,7 @@ static int escape130_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
     {
         uint8_t *rgba = avctx->video.rgba;
         float y, u, v;
+        int r, g, b;
         new_cb = s->new_u;
         new_cr = s->new_v;
         
@@ -294,9 +295,15 @@ static int escape130_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
                 y = (s->new_y[new_y_stride * i + j] << 2);
                 u = chroma_vals[cb];
                 v = chroma_vals[cr];
-                *rgba++ = y + 1.13983f * (v - 128);
-                *rgba++ = y - 0.39465f * (u - 128) - 0.58060f * (v - 128);
-                *rgba++ = y + 2.03211f * (u - 128);
+                r = y + 1.13983f * (v - 128);
+                g = y - 0.39465f * (u - 128) - 0.58060f * (v - 128);
+                b = y + 2.03211f * (u - 128);
+                r = (r < 0) ? (0) : (r);
+                g = (g < 0) ? (0) : (g);
+                b = (b < 0) ? (0) : (b);
+                *rgba++ = (r <= 0xFF) ? (r) : 0xFF;
+                *rgba++ = (g <= 0xFF) ? (g) : 0xFF;
+                *rgba++ = (b <= 0xFF) ? (b) : 0xFF;
                 *rgba++ = 0xFF;
             }
             if(i & 1)

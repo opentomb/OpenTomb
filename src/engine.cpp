@@ -1804,8 +1804,8 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "xxx"))
         {
-            stream_codec_play_rpl(&engine_video, "data/tr2/fmv/CRASH.RPL");
-            /*SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
+            //stream_codec_play_rpl(&engine_video, "data/tr2/fmv/CRASH.RPL");
+            SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
             if(f)
             {
                 long int size;
@@ -1825,7 +1825,7 @@ extern "C" int Engine_ExecCmd(char *ch)
             else
             {
                 Con_AddText("Not available =(", FONTSTYLE_CONSOLE_WARNING);
-            }*/
+            }
             return 1;
         }
         else if(token[0])

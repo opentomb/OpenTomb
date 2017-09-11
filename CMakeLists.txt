@@ -41,7 +41,6 @@ set(OPENTOMB_SRCS
     src/fmv/get_bits.h
     src/fmv/rpl.c
     src/fmv/escape124.c
-    src/fmv/escape130.c
     src/physics/physics.h
     src/physics/physics_bullet.cpp
     src/physics/hair.h

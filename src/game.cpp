@@ -648,6 +648,16 @@ void Game_Frame(float time)
         Game_ApplyControls(NULL);
     }
 
+    if(control_states.look)
+    {
+        if(engine_camera_state.state == CAMERA_STATE_FLYBY)
+        {
+            engine_camera_state.state = CAMERA_STATE_NORMAL;
+            Cam_SetFovAspect(&engine_camera, screen_info.fov, engine_camera.aspect);
+        }
+        engine_camera_state.time = 0.0f;
+    }
+    
     if(!control_states.noclip && !control_states.free_look)
     {
         entity_p target = World_GetEntityByID(engine_camera_state.target_id);
@@ -688,7 +698,7 @@ void Game_Frame(float time)
                 engine_camera_state.entity_offset_x = 16.0f;
                 engine_camera_state.entity_offset_z = 128.0f;
                 Cam_FollowEntity(&engine_camera, &engine_camera_state, player);
-                if(target && (engine_camera_state.state == CAMERA_STATE_LOOK_AT))
+                if(!control_states.look && target && (engine_camera_state.state == CAMERA_STATE_LOOK_AT))
                 {
                     Character_LookAt(player, target->transform + 12);
                     Cam_LookTo(&engine_camera, target->transform + 12);

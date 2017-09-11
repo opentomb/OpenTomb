@@ -86,7 +86,11 @@ void Controls_Key(int32_t button, int state)
                     control_states.move_down = state;
                     control_states.state_crouch = state;
                     break;
-
+                    
+                case ACT_LOOK:
+                    control_states.look = state;
+                    break;
+                    
                 case ACT_LOOKUP:
                     control_states.look_up = state;
                     break;
@@ -439,6 +443,7 @@ void Controls_InitGlobals()
     control_mapper.action_map[ACT_STEPLEFT].primary   = SDL_SCANCODE_H;
     control_mapper.action_map[ACT_STEPRIGHT].primary  = SDL_SCANCODE_J;
 
+    control_mapper.action_map[ACT_LOOK].primary       = SDL_SCANCODE_O;
     control_mapper.action_map[ACT_LOOKUP].primary     = SDL_SCANCODE_UP;
     control_mapper.action_map[ACT_LOOKDOWN].primary   = SDL_SCANCODE_DOWN;
     control_mapper.action_map[ACT_LOOKLEFT].primary   = SDL_SCANCODE_LEFT;
