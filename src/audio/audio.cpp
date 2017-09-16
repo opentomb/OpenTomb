@@ -283,7 +283,7 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
     vorbis_Info = ov_info(&vorbis_Stream, -1);
     channels = vorbis_Info->channels;
     sample_bitsize = 16;
-    buffer_part = vorbis_Info->bitrate_nominal;
+    buffer_part = vorbis_Info->bitrate_nominal * 16;
     rate = vorbis_Info->rate;
 
     {
@@ -887,7 +887,7 @@ void Audio_UpdateStreams(float time)
                 alSourcef(s->source, AL_GAIN, s->current_volume);
             }
 
-            if(stb && StreamTrack_IsNeedUpdateBuffer(s) && (s->buffer_offset < stb->buffer_size))
+            while(stb && StreamTrack_IsNeedUpdateBuffer(s) && (s->buffer_offset < stb->buffer_size))
             {
                 size_t bytes = stb->buffer_part;
                 if(bytes > stb->buffer_size - s->buffer_offset)

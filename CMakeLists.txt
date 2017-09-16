@@ -128,8 +128,12 @@ set(OPENTOMB_SRCS
     src/state_control/state_control_torso_boss.cpp
     src/state_control/state_control_Natla.h
     src/state_control/state_control_Natla.cpp
-    src/audio.cpp
-    src/audio.h
+    src/audio/audio.cpp
+    src/audio/audio.h
+    src/audio/audio_fx.cpp
+    src/audio/audio_fx.h
+    src/audio/audio_stream.cpp
+    src/audio/audio_stream.h
     src/character_controller.cpp
     src/character_controller.h
     src/controls.cpp
