@@ -35,21 +35,6 @@ enum TR_AUDIO_STREAM_METHOD
 
 };
 
-// Audio stream type defines stream behaviour. While background track
-// loops forever until interrupted by other background track, one-shot
-// and chat tracks doesn't interrupt them, playing in parallel instead.
-// However, all stream types could be interrupted by next pending track
-// with same type.
-
-enum TR_AUDIO_STREAM_TYPE
-{
-    TR_AUDIO_STREAM_TYPE_BACKGROUND,    // BGM tracks.
-    TR_AUDIO_STREAM_TYPE_ONESHOT,       // One-shot music pieces.
-    TR_AUDIO_STREAM_TYPE_CHAT,          // Chat tracks.
-    TR_AUDIO_STREAM_TYPE_LASTINDEX
-
-};
-
 // Crossfades for different track types are also different,
 // since background ones tend to blend in smoothly, while one-shot
 // tracks should be switched fastly.

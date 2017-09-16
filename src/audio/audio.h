@@ -124,6 +124,19 @@ enum TR_AUDIO_SOUND_GLOBALID
 #define TR_AUDIO_STREAMPLAY_IGNORED        0
 #define TR_AUDIO_STREAMPLAY_PROCESSED      1
 
+// Audio stream type defines stream behaviour. While background track
+// loops forever until interrupted by other background track, one-shot
+// and chat tracks doesn't interrupt them, playing in parallel instead.
+// However, all stream types could be interrupted by next pending track
+// with same type.
+
+enum TR_AUDIO_STREAM_TYPE
+{
+    TR_AUDIO_STREAM_TYPE_BACKGROUND,    // BGM tracks.
+    TR_AUDIO_STREAM_TYPE_ONESHOT,       // One-shot music pieces.
+    TR_AUDIO_STREAM_TYPE_CHAT,          // Chat tracks.
+    TR_AUDIO_STREAM_TYPE_LASTINDEX
+};
 
 // Audio settings structure.
 

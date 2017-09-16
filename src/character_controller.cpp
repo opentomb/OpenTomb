@@ -187,8 +187,8 @@ void Character_Update(struct entity_s *ent)
             Character_ClearLookAt(ent);
             if(is_player)   // Stop any music, if Lara is dead.
             {
-                //Audio_EndStreams(TR_AUDIO_STREAM_TYPE_ONESHOT);
-                //Audio_EndStreams(TR_AUDIO_STREAM_TYPE_CHAT);
+                Audio_EndStreams(TR_AUDIO_STREAM_TYPE_ONESHOT);
+                Audio_EndStreams(TR_AUDIO_STREAM_TYPE_CHAT);
             }
         }
         else if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0f)
