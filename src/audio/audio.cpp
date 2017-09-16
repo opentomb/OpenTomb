@@ -748,7 +748,6 @@ int Audio_StreamPlay(uint32_t track_index, const uint8_t mask)
     // This should become useless option, once proper one-shot trigger functionality is implemented.
     if(Audio_IsTrackPlaying(track_index))
     {
-        Con_AddLine("StreamPlay: CANCEL, stream already playing.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_IGNORED;
     }
 
@@ -901,6 +900,11 @@ void Audio_UpdateStreams(float time)
                 {
                     s->buffer_offset += bytes;
                 }
+            }
+            
+            if((s->buffer_offset >= stb->buffer_size) && (s->type == TR_AUDIO_STREAM_TYPE_BACKGROUND))
+            {
+                s->buffer_offset = 0;
             }
         }
     }
@@ -2030,19 +2034,9 @@ void Audio_UpdateListenerByEntity(struct entity_s *ent)
 
 void Audio_Update(float time)
 {
-    //static float game_logic_time  = 0.0;
-    //game_logic_time += time;
-
-    //if(game_logic_time >= GAME_LOGIC_REFRESH_INTERVAL)
-    {
-        //int32_t t = game_logic_time / GAME_LOGIC_REFRESH_INTERVAL;
-        //float dt = (float)t * GAME_LOGIC_REFRESH_INTERVAL;
-        //game_logic_time -= dt;
-
-        Audio_UpdateSources();
-        Audio_UpdateStreams(time);
-        Audio_UpdateListenerByCamera(&engine_camera, time);
-    }
+    Audio_UpdateSources();
+    Audio_UpdateStreams(time);
+    Audio_UpdateListenerByCamera(&engine_camera, time);
 }
 
 
