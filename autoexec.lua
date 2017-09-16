@@ -22,5 +22,5 @@ playVideo(base_path .. "data/tr1/fmv/CORE.RPL");
 --loadMap(base_path .. "tests/altroom3/LEVEL1.PHD");
 --loadMap(base_path .. "tests/heavy1/LEVEL1.PHD");
 --loadMap(base_path .. "tests/TRIGGERS.PHD");
---setgamef(4, 22);
+setgamef(1, 0);
 --dofile(base_path .. "save/qsave.lua");

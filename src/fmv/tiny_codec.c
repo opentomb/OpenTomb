@@ -133,3 +133,15 @@ void codec_clear(struct tiny_codec_s *s)
         s->audio.free_data = NULL;
     }
 }
+
+void codec_simplify_fps(struct tiny_codec_s *s)
+{
+    if(s->fps_denum && s->fps_num)
+    {
+        while((s->fps_denum % 10 == 0) && (s->fps_num % 10 == 0))
+        {
+            s->fps_denum /= 10;
+            s->fps_num /= 10;
+        }
+    }
+}

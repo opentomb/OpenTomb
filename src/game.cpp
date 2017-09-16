@@ -19,12 +19,12 @@ extern "C" {
 #include "gui/gui.h"
 #include "script/script.h"
 #include "vt/tr_versions.h"
+#include "audio/audio.h"
 #include "engine.h"
 #include "controls.h"
 #include "room.h"
 #include "world.h"
 #include "game.h"
-#include "audio.h"
 #include "skeletal_model.h"
 #include "entity.h"
 #include "trigger.h"
@@ -106,7 +106,7 @@ void Game_InitGlobals()
 }
 
 
-void Game_RegisterLuaFunctions(lua_State *lua)
+void Game_RegisterLuaFunctions(struct lua_State *lua)
 {
     if(lua != NULL)
     {
@@ -657,7 +657,7 @@ void Game_Frame(float time)
         }
         engine_camera_state.time = 0.0f;
     }
-    
+
     if(!control_states.noclip && !control_states.free_look)
     {
         entity_p target = World_GetEntityByID(engine_camera_state.target_id);

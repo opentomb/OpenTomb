@@ -17,31 +17,13 @@
 
 #define TR_AUDIO_MAX_CHANNELS 32
 
-// MAX_SLOTS specifies amount of FX slots used to apply environmental
-// effects to sounds. We need at least two of them to prevent glitches
-// at environment transition (slots are cyclically changed, leaving
-// previously played samples at old slot). Maximum amount is 4, but
-// it's not recommended to set it more than 2.
+// NUMSOURCES tells the engine how many sources we should reserve for
+// in-game music and BGMs, considering crossfades. By default, it's 6,
+// as it's more than enough for typical TR audio setup (one BGM track
+// plus one one-shot track or chat track in TR5).
 
-#define TR_AUDIO_MAX_SLOTS 2
+#define TR_AUDIO_STREAM_NUMSOURCES 6
 
-// In TR3-5, there were 5 reverb / echo effect flags for each
-// room, but they were never used in PC versions - however, level
-// files still contain this info, so we now can re-use these flags
-// to assign reverb/echo presets to each room.
-// Also, underwater environment can be considered as additional
-// reverb flag, so overall amount is 6.
-
-enum TR_AUDIO_FX {
-
-    TR_AUDIO_FX_OUTSIDE,         // EFX_REVERB_PRESET_CITY
-    TR_AUDIO_FX_SMALLROOM,       // EFX_REVERB_PRESET_LIVINGROOM
-    TR_AUDIO_FX_MEDIUMROOM,      // EFX_REVERB_PRESET_WOODEN_LONGPASSAGE
-    TR_AUDIO_FX_LARGEROOM,       // EFX_REVERB_PRESET_DOME_TOMB
-    TR_AUDIO_FX_PIPE,            // EFX_REVERB_PRESET_PIPE_LARGE
-    TR_AUDIO_FX_WATER,           // EFX_REVERB_PRESET_UNDERWATER
-    TR_AUDIO_FX_LASTINDEX
-};
 
 // Sound flags are found at offset 7 of SoundDetail unit and specify
 // certain sound modifications.
@@ -134,43 +116,13 @@ enum TR_AUDIO_SOUND_GLOBALID
 };
 
 
-// NUMBUFFERS is a number of buffers cyclically used for each stream.
-// Double is enough, but we use quad for further stability, because
-// OGG codec seems to be very sensitive to buffering.
-
-#define TR_AUDIO_STREAM_NUMBUFFERS 4
-
-// NUMSOURCES tells the engine how many sources we should reserve for
-// in-game music and BGMs, considering crossfades. By default, it's 6,
-// as it's more than enough for typical TR audio setup (one BGM track
-// plus one one-shot track or chat track in TR5).
-
-#define TR_AUDIO_STREAM_NUMSOURCES 6
-
-// MAP_SIZE is similar to sound map size, but it is used to mark
-// already played audiotracks. Note that audiotracks CAN play several
-// times, if they were consequently called with increasing activation
-// flags (e.g., at first we call it with 00001 flag, then with 00101,
-// and so on). If all activation flags were set, including only once
-// flag, audiotrack won't play anymore.
-
-#define TR_AUDIO_STREAM_MAP_SIZE 256
-
-// Stream loading method describes the way audiotracks are loaded.
-// There are either seperate OGG files, single CDAUDIO.WAD file or
-// seperate ADPCM WAV files.
-// You can add extra types with implementation of extra audio codecs,
-// only thing to do is to add corresponding stream and load routines
-// into class' private section.
-
-enum TR_AUDIO_STREAM_METHOD
-{
-    TR_AUDIO_STREAM_METHOD_OGG,    // OGG files. Used in TR1-2 (replaces CD audio).
-    TR_AUDIO_STREAM_METHOD_WAD,    // WAD file.  Used in TR3.
-    TR_AUDIO_STREAM_METHOD_WAV,    // WAV files. Used in TR4-5.
-    TR_AUDIO_STREAM_METHOD_LASTINDEX
-
-};
+// Possible errors produced by Audio_StreamPlay / Audio_StreamStop functions.
+#define TR_AUDIO_STREAMPLAY_PLAYERROR    (-4)
+#define TR_AUDIO_STREAMPLAY_LOADERROR    (-3)
+#define TR_AUDIO_STREAMPLAY_WRONGTRACK   (-2)
+#define TR_AUDIO_STREAMPLAY_NOFREESTREAM (-1)
+#define TR_AUDIO_STREAMPLAY_IGNORED        0
+#define TR_AUDIO_STREAMPLAY_PROCESSED      1
 
 // Audio stream type defines stream behaviour. While background track
 // loops forever until interrupted by other background track, one-shot
@@ -184,40 +136,7 @@ enum TR_AUDIO_STREAM_TYPE
     TR_AUDIO_STREAM_TYPE_ONESHOT,       // One-shot music pieces.
     TR_AUDIO_STREAM_TYPE_CHAT,          // Chat tracks.
     TR_AUDIO_STREAM_TYPE_LASTINDEX
-
 };
-
-// Crossfades for different track types are also different,
-// since background ones tend to blend in smoothly, while one-shot
-// tracks should be switched fastly.
-
-#define TR_AUDIO_STREAM_CROSSFADE_ONESHOT (GAME_LOGIC_REFRESH_INTERVAL    / 0.3f)
-#define TR_AUDIO_STREAM_CROSSFADE_BACKGROUND (GAME_LOGIC_REFRESH_INTERVAL / 2.0f)
-#define TR_AUDIO_STREAM_CROSSFADE_CHAT (GAME_LOGIC_REFRESH_INTERVAL       / 0.1f)
-
-// Damp coefficient specifies target volume level on a tracks
-// that are being silenced (background music). The larger it is, the bigger
-// silencing is.
-
-#define TR_AUDIO_STREAM_DAMP_LEVEL 0.6f
-
-// Damp fade speed is used when dampable track is either being
-// damped or un-damped.
-
-#define TR_AUDIO_STREAM_DAMP_SPEED (GAME_LOGIC_REFRESH_INTERVAL / 1.0f)
-
-// Possible errors produced by Audio_StreamPlay / Audio_StreamStop functions.
-
-#define TR_AUDIO_STREAMPLAY_PLAYERROR    (-4)
-#define TR_AUDIO_STREAMPLAY_LOADERROR    (-3)
-#define TR_AUDIO_STREAMPLAY_WRONGTRACK   (-2)
-#define TR_AUDIO_STREAMPLAY_NOFREESTREAM (-1)
-#define TR_AUDIO_STREAMPLAY_IGNORED        0
-#define TR_AUDIO_STREAMPLAY_PROCESSED      1
-
-
-struct camera_s;
-struct entity_s;
 
 // Audio settings structure.
 

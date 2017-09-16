@@ -20,8 +20,8 @@ extern "C" {
 #include "render/camera.h"
 #include "physics/physics.h"
 #include "gui/gui.h"
+#include "audio/audio.h"
 #include "engine.h"
-#include "audio.h"
 #include "controls.h"
 #include "game.h"
 

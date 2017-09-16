@@ -15,7 +15,7 @@ extern "C" {
 #include "script/script.h"
 #include "physics/physics.h"
 #include "vt/tr_versions.h"
-#include "audio.h"
+#include "audio/audio.h"
 #include "mesh.h"
 #include "skeletal_model.h"
 #include "entity.h"

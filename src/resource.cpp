@@ -24,11 +24,11 @@ extern "C" {
 #include "render/frustum.h"
 #include "render/bordered_texture_atlas.h"
 #include "render/shader_description.h"
+#include "audio/audio.h"
 #include "script/script.h"
 #include "physics/physics.h"
 #include "vt/vt_level.h"
 
-#include "audio.h"
 #include "room.h"
 #include "trigger.h"
 #include "mesh.h"

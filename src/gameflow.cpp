@@ -8,10 +8,10 @@ extern "C" {
 #include "core/console.h"
 #include "script/script.h"
 #include "gui/gui.h"
+#include "audio/audio.h"
 #include "engine.h"
 #include "gameflow.h"
 #include "game.h"
-#include "audio.h"
 #include "world.h"
 
 #include <assert.h>
