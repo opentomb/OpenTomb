@@ -199,7 +199,7 @@ set(CMAKE_REQUIRED_INCLUDES ${OPENAL_INCLUDE_DIR})
 CHECK_INCLUDE_FILES(alext.h HAVE_ALC_H)
 CHECK_INCLUDE_FILES(efx.h HAVE_EFX_H)
 CHECK_INCLUDE_FILES("efx-presets.h" HAVE_EFX_PRESETS_H)
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config-opentomb.h.in ${CMAKE_CURRENT_BINARY_DIR}/config-opentomb.h)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config-opentomb.h.in ${CMAKE_CURRENT_SOURCE_DIR}/config-opentomb.h)
 
 add_executable(${PROJECT_NAME} ${OPENTOMB_SRCS} ${OPENTOMB_ICON})
 set_target_properties(${PROJECT_NAME} PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
