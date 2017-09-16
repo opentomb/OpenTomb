@@ -11,7 +11,7 @@
 #include "physics/ragdoll.h"
 
 #include "vt/tr_versions.h"
-#include "audio.h"
+#include "audio/audio.h"
 #include "room.h"
 #include "world.h"
 #include "character_controller.h"
@@ -185,12 +185,17 @@ void Character_Update(struct entity_s *ent)
         {
             memset(&ent->character->cmd, 0x00, sizeof(ent->character->cmd));
             Character_ClearLookAt(ent);
+            if(is_player)   // Stop any music, if Lara is dead.
+            {
+                //Audio_EndStreams(TR_AUDIO_STREAM_TYPE_ONESHOT);
+                //Audio_EndStreams(TR_AUDIO_STREAM_TYPE_CHAT);
+            }
         }
         else if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0f)
         {
             ent->character->state.dead = 0x01;                                  // Kill, if no HP.
         }
-        
+
         if(!is_player && !ent->character->state.dead && (ent->character->ai_zone >= 0))
         {
             Character_UpdateAI(ent);
@@ -369,7 +374,7 @@ void Character_GoByPathToTarget(struct entity_s *ent)
         float cos_a = dir[0] * ent->transform[4 + 0] + dir[1] * ent->transform[4 + 1];
         float delta = fabs((180.0f / M_PI) * sin_a / cos_a);
 
-        ent->character->cmd.rot[0] = (sin_a >= 0.0f) ? (-1) : (1);    
+        ent->character->cmd.rot[0] = (sin_a >= 0.0f) ? (-1) : (1);
         if((cos_a > 0.75) && (delta < 360.0f * engine_frame_time))
         {
             ent->character->rotate_speed_mult = delta / (360.0f * engine_frame_time);
@@ -582,13 +587,13 @@ void Character_GetHeightInfo(struct entity_s *ent, float pos[3], struct height_i
 
     to[2] = from[2] + 4096.0f;
     Physics_RayTest(&fc->ceiling_hit, from ,to, fc->self, COLLISION_FILTER_HEIGHT_TEST);
-    
-    
+
+
     fc->slide = 0x00;
     if(fc->floor_hit.hit && (fc->floor_hit.normale[2] > 0.02) && (fc->floor_hit.normale[2] < ent->character->critical_slant_z_component))
     {
         fc->slide = (fc->floor_hit.normale[0] * ent->transform[4 + 0] + fc->floor_hit.normale[1] * ent->transform[4 + 1] >= 0.0f) ? (CHARACTER_SLIDE_FRONT) : (CHARACTER_SLIDE_BACK);
-    }    
+    }
 }
 
 /**

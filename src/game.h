@@ -10,12 +10,11 @@
 
 #define GAME_LOGIC_REFRESH_INTERVAL (1.0 / 60.0)
 
-struct lua_State;
 struct camera_s;
 struct entity_s;
 
 void Game_InitGlobals();
-void Game_RegisterLuaFunctions(lua_State *lua);
+void Game_RegisterLuaFunctions(struct lua_State *lua);
 int Game_Load(const char* name);
 int Game_Save(const char* name);
 

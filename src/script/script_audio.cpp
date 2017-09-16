@@ -16,12 +16,11 @@ extern "C" {
 #include "../core/system.h"
 #include "../core/gl_text.h"
 #include "../core/console.h"
+#include "../audio/audio.h"
 
 #include "../gameflow.h"
 #include "../engine.h"
 #include "../world.h"
-#include "../audio.h"
-
 
 
 int Script_ParseAudio(lua_State *lua, struct audio_settings_s *as)

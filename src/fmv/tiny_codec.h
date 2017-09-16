@@ -124,6 +124,7 @@ void av_packet_unref(AVPacket *pkt);
 
 void codec_init(struct tiny_codec_s *s, SDL_RWops *rw);
 void codec_clear(struct tiny_codec_s *s);
+void codec_simplify_fps(struct tiny_codec_s *s);
 
 int codec_open_rpl(struct tiny_codec_s *s);
 

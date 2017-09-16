@@ -260,7 +260,8 @@ int codec_open_rpl(struct tiny_codec_s *s)
     read_line_and_int(pb, &error);                             // video bits per sample
     error |= read_line(pb, line, sizeof(line));                // video frames per second
     error |= read_fps(line, &s->fps_num, &s->fps_denum);
-
+    codec_simplify_fps(s);
+    
     // Figure out the video codec
     switch (codec_tag)
     {

@@ -8,8 +8,8 @@
 
 #include "../physics/physics.h"
 #include "../vt/tr_versions.h"
+#include "../audio/audio.h"
 #include "../engine.h"
-#include "../audio.h"
 #include "../controls.h"
 #include "../room.h"
 #include "../world.h"
@@ -176,12 +176,6 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
     int8_t low_vertical_space = (curr_fc->floor_hit.hit && curr_fc->ceiling_hit.hit && (curr_fc->ceiling_hit.point[2] - curr_fc->floor_hit.point[2] < ent->character->height - LARA_HANG_VERTICAL_EPSILON));
     int8_t is_last_frame = ss_anim->model->animations[ss_anim->current_animation].max_frame <= ss_anim->current_frame + 1;
     uint16_t current_state = Anim_GetCurrentState(ss_anim);
-
-    if(state->dead == 1)   // Stop any music, if Lara is dead.
-    {
-        Audio_EndStreams(TR_AUDIO_STREAM_TYPE_ONESHOT);
-        Audio_EndStreams(TR_AUDIO_STREAM_TYPE_CHAT);
-    }
 
     state->ragdoll = 0x00;
     state->sprint = 0x00;
@@ -1018,7 +1012,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     ent->dir_flag = ENT_MOVE_FORWARD;
                 }
             }
-            else if(state->wall_collide || low_vertical_space || 
+            else if(state->wall_collide || low_vertical_space ||
                     (i < CHARACTER_STEP_DOWN_BIG || i > CHARACTER_STEP_UP_BIG) ||
                     (next_fc.floor_hit.normale[2] < ent->character->critical_slant_z_component))
             {
@@ -3087,7 +3081,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ss_anim->next_state = TR_STATE_LARA_MONKEYSWING_IDLE;
             }
             break;
-            
+
             /*
              * intermediate animations are processed automatically.
              */
@@ -3119,7 +3113,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_PICKUP:
             ent->no_fix_skeletal_parts = BODY_PART_HANDS | BODY_PART_LEGS;
             break;
-            
+
         case TR_ANIMATION_LARA_TRY_HANG_SOLID:
         case TR_ANIMATION_LARA_FLY_FORWARD_TRY_HANG:
             if((ent->move_type == MOVE_FREE_FALLING) && (ent->character->cmd.action) &&

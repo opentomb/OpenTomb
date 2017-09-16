@@ -30,8 +30,8 @@ extern "C" {
 #include "fmv/stream_codec.h"
 #include "gui/gui.h"
 #include "vt/vt_level.h"
+#include "audio/audio.h"
 #include "game.h"
-#include "audio.h"
 #include "mesh.h"
 #include "skeletal_model.h"
 #include "entity.h"
@@ -200,7 +200,7 @@ void Engine_Start(int argc, char **argv)
     Engine_InitSDLVideo();
     Engine_InitAL();
     Audio_StreamExternalInit();
-    
+
     // Additional OpenGL initialization.
     Engine_InitGL();
     renderer.DoShaders();
@@ -325,7 +325,7 @@ void Engine_Init_Pre()
     Gameflow_Init();
     Con_SetExecFunction(Engine_ExecCmd);
     Script_LuaInit();
-    
+
     Script_CallVoidFunc(engine_lua, "loadscript_pre", true);
 
     Cam_Init(&engine_camera);
@@ -794,11 +794,6 @@ void Engine_PollSDLEvents()
                     break;
                 }
 
-                if(event.key.keysym.scancode == SDL_SCANCODE_ESCAPE)
-                {
-                    stream_codec_stop(&engine_video, 0);
-                }
-
                 if(Con_IsShown() && event.key.state)
                 {
                     switch(event.key.keysym.sym)
@@ -921,7 +916,7 @@ void Engine_MainLoop()
         {
             Audio_StreamExternalStop();
         }
-        
+
         if(codec_end_state >= 0)
         {
             if(screen_info.debug_view_state != debug_view_state_e::model_view)
@@ -937,7 +932,7 @@ void Engine_MainLoop()
             stream_codec_audio_lock(&engine_video);
             if(engine_video.codec.audio.buff && (engine_video.codec.audio.buff_offset >= Audio_StreamExternalBufferOffset()))
             {
-                Audio_StreamExternalUpdateBuffer(engine_video.codec.audio.buff, engine_video.codec.audio.buff_size, 
+                Audio_StreamExternalUpdateBuffer(engine_video.codec.audio.buff, engine_video.codec.audio.buff_size,
                     engine_video.codec.audio.bits_per_coded_sample, engine_video.codec.audio.channels, engine_video.codec.audio.sample_rate);
             }
             if(Audio_StreamExternalBufferIsNeedUpdate())
@@ -946,7 +941,7 @@ void Engine_MainLoop()
             }
             stream_codec_audio_unlock(&engine_video);
             Audio_StreamExternalPlay();
-            
+
             stream_codec_video_lock(&engine_video);
             if(engine_video.codec.video.rgba)
             {
@@ -954,6 +949,11 @@ void Engine_MainLoop()
             }
             stream_codec_video_unlock(&engine_video);
             Gui_DrawLoadScreen(-1);
+
+            if(control_states.gui_inventory)
+            {
+                stream_codec_stop(&engine_video, 0);
+            }
         }
     }
 }
@@ -1585,8 +1585,14 @@ int Engine_LoadMap(const char *name)
 
 int  Engine_PlayVideo(const char *name)
 {
-    Audio_StreamExternalStop();
-    return stream_codec_play_rpl(&engine_video, name);
+    if(engine_video.state == VIDEO_STATE_STOPPED)
+    {
+        Audio_StreamExternalStop();
+        Audio_StopStreams(-1);
+        Con_SetShown(0);
+        return stream_codec_play_rpl(&engine_video, name);
+    }
+    return 0;
 }
 
 
@@ -1804,8 +1810,8 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "xxx"))
         {
-            stream_codec_play_rpl(&engine_video, "data/tr2/fmv/CRASH.RPL");
-            /*SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
+            //stream_codec_play_rpl(&engine_video, "data/tr2/fmv/CRASH.RPL");
+            SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
             if(f)
             {
                 long int size;
@@ -1825,7 +1831,7 @@ extern "C" int Engine_ExecCmd(char *ch)
             else
             {
                 Con_AddText("Not available =(", FONTSTYLE_CONSOLE_WARNING);
-            }*/
+            }
             return 1;
         }
         else if(token[0])
