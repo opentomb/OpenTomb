@@ -101,8 +101,8 @@ void StreamTrack_Init(stream_track_p s);
 void StreamTrack_Clear(stream_track_p s);
 int StreamTrack_Play(stream_track_p s);
 int StreamTrack_Stop(stream_track_p s);
-int StreamTrack_CheckForEnd(stream_track_p s);
 int StreamTrack_Pause(stream_track_p s);
+int StreamTrack_CheckForEnd(stream_track_p s);
 
 int StreamTrack_IsNeedUpdateBuffer(stream_track_p s);
 int StreamTrack_UpdateBuffer(stream_track_p s, uint8_t *buff, size_t size, int sample_bitsize, int channels, int frequency);

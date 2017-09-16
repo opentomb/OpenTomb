@@ -853,6 +853,7 @@ void Audio_UpdateStreams(float time)
         if((s->state != TR_AUDIO_STREAM_STOPPED) && alIsSource(s->source))
         {
             ALint state = 0;
+            ALfloat inc = 0.0f;
             alGetSourcei(s->source, AL_SOURCE_STATE, &state);
             StreamTrackBuffer *stb = ((s->track >= 0) && (s->track < audio_world_data.stream_buffers_count)) ?
                 (audio_world_data.stream_buffers[s->track]) : (NULL);
@@ -863,9 +864,24 @@ void Audio_UpdateStreams(float time)
                 continue;
             }
             
+            switch(s->type)
+            {
+                case TR_AUDIO_STREAM_TYPE_BACKGROUND:
+                    inc = time * TR_AUDIO_STREAM_CROSSFADE_BACKGROUND;
+                    break;
+
+                case TR_AUDIO_STREAM_TYPE_ONESHOT:
+                    inc = time * TR_AUDIO_STREAM_CROSSFADE_ONESHOT;
+                    break;
+
+                case TR_AUDIO_STREAM_TYPE_CHAT:
+                    inc = time * TR_AUDIO_STREAM_CROSSFADE_CHAT;
+                    break;
+            }
+            
             if(s->state == TR_AUDIO_STREAM_STOPPING)
             {
-                s->current_volume -= time * TR_AUDIO_STREAM_CROSSFADE_BACKGROUND;
+                s->current_volume -= inc;
                 if(s->current_volume <= 0.0f)
                 {
                     s->current_volume = 0.0f;
@@ -879,7 +895,7 @@ void Audio_UpdateStreams(float time)
             }
             else if((s->state == TR_AUDIO_STREAM_PLAYING) && (s->current_volume < audio_settings.sound_volume))
             {
-                s->current_volume += time * TR_AUDIO_STREAM_CROSSFADE_BACKGROUND;
+                s->current_volume += inc;
                 if(s->current_volume > audio_settings.sound_volume)
                 {
                     s->current_volume = audio_settings.sound_volume;
