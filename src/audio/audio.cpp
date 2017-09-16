@@ -27,6 +27,7 @@ extern "C" {
 
 #include "../core/system.h"
 #include "../core/vmath.h"
+#include "../core/gl_text.h"
 #include "../core/console.h"
 #include "../script/script.h"
 #include "../render/camera.h"
@@ -739,7 +740,7 @@ int Audio_StreamPlay(uint32_t track_index, const uint8_t mask)
     if((track_index >= audio_world_data.stream_track_map_count) ||
        (track_index >= audio_world_data.stream_buffers_count))
     {
-        //Con_AddLine("StreamPlay: CANCEL, track index is out of bounds.", FONTSTYLE_CONSOLE_WARNING);
+        Con_AddLine("StreamPlay: CANCEL, track index is out of bounds.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_WRONGTRACK;
     }
 
@@ -747,7 +748,7 @@ int Audio_StreamPlay(uint32_t track_index, const uint8_t mask)
     // This should become useless option, once proper one-shot trigger functionality is implemented.
     if(Audio_IsTrackPlaying(track_index))
     {
-        //Con_AddLine("StreamPlay: CANCEL, stream already playing.", FONTSTYLE_CONSOLE_WARNING);
+        Con_AddLine("StreamPlay: CANCEL, stream already playing.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_IGNORED;
     }
 
@@ -763,7 +764,7 @@ int Audio_StreamPlay(uint32_t track_index, const uint8_t mask)
     StreamTrackBuffer *stb = audio_world_data.stream_buffers[track_index];
     if(!stb)
     {
-        //Con_AddLine("StreamPlay: CANCEL, wrong track index or broken script.", FONTSTYLE_CONSOLE_WARNING);
+        Con_AddLine("StreamPlay: CANCEL, wrong track index or broken script.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_LOADERROR;
     }
 
@@ -777,32 +778,18 @@ int Audio_StreamPlay(uint32_t track_index, const uint8_t mask)
         return TR_AUDIO_STREAMPLAY_IGNORED;
     }
 
+    if(stb->stream_type != TR_AUDIO_STREAM_TYPE_ONESHOT)
+    {
+        Audio_StopStreams(stb->stream_type);
+    }
+    
     // Entry found, now process to actual track loading.
     target_stream = Audio_GetFreeStream();            // At first, we need to get free stream.
     if(target_stream == -1)
     {
-        //Con_AddLine("StreamPlay: CANCEL, no free stream.", FONTSTYLE_CONSOLE_WARNING);
+        Con_AddLine("StreamPlay: CANCEL, no free stream.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // No success, exit and don't play anything.
     }
-    /*if(target_stream == -1)
-    {
-        do_fade_in = Audio_StopStreams(stb->stream_type);  // If no free track found, hardly stop all tracks.
-        target_stream = Audio_GetFreeStream();             // Try again to assign free stream.
-
-        if(target_stream == -1)
-        {
-            Con_AddLine("StreamPlay: CANCEL, no free stream.", FONTSTYLE_CONSOLE_WARNING);
-            return TR_AUDIO_STREAMPLAY_NOFREESTREAM;  // No success, exit and don't play anything.
-        }
-    }
-    else
-    {
-        do_fade_in = Audio_EndStreams(stream_type);   // End all streams of this type with fadeout.
-
-        // Additionally check if track type is looped. If it is, force fade in in any case.
-        // This is needed to smooth out possible pop with gapless looped track at a start-up.
-        do_fade_in |= (stream_type == TR_AUDIO_STREAM_TYPE_BACKGROUND);
-    }*/
 
     stream_track_p s = audio_world_data.stream_tracks + target_stream;
     s->track = stb->track_index;
@@ -834,9 +821,9 @@ int Audio_StreamPlay(uint32_t track_index, const uint8_t mask)
         }
     }
     
-    if(StreamTrack_Play(s) > 0)
+    if(StreamTrack_Play(s) <= 0)
     {
-        //Con_AddLine("StreamPlay: CANCEL, stream play error.", FONTSTYLE_CONSOLE_WARNING);
+        Con_AddLine("StreamPlay: CANCEL, stream play error.", FONTSTYLE_CONSOLE_WARNING);
         return TR_AUDIO_STREAMPLAY_PLAYERROR;
     }
 
