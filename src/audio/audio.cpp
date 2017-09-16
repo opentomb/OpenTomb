@@ -802,9 +802,9 @@ int Audio_StreamPlay(uint32_t track_index, const uint8_t mask)
         {
             bytes = stb->buffer_size - s->buffer_offset;
         }
-        if(StreamTrack_UpdateBuffer(s, stb->buffer + s->buffer_offset, bytes, stb->sample_bitsize, stb->channels, stb->rate) > 0)
+        if(StreamTrack_UpdateBuffer(s, stb->buffer + s->buffer_offset, bytes, stb->sample_bitsize, stb->channels, stb->rate) <= 0)
         {
-            s->buffer_offset += bytes;
+            break;
         }
     }
     
@@ -839,7 +839,7 @@ void Audio_UpdateStreams(float time)
         if((s->state != TR_AUDIO_STREAM_STOPPED) && alIsSource(s->source))
         {
             ALint state = 0;
-            ALfloat inc = 0.0f;
+            ALfloat inc = 0.0f;//15 920 704 //12 056 352	
             alGetSourcei(s->source, AL_SOURCE_STATE, &state);
             StreamTrackBuffer *stb = ((s->track >= 0) && (s->track < audio_world_data.stream_buffers_count)) ?
                 (audio_world_data.stream_buffers[s->track]) : (NULL);
@@ -892,13 +892,13 @@ void Audio_UpdateStreams(float time)
             while(stb && StreamTrack_IsNeedUpdateBuffer(s) && (s->buffer_offset < stb->buffer_size))
             {
                 size_t bytes = stb->buffer_part;
-                if(bytes > stb->buffer_size - s->buffer_offset)
+                if(bytes + s->buffer_offset > stb->buffer_size)
                 {
                     bytes = stb->buffer_size - s->buffer_offset;
                 }
-                if(StreamTrack_UpdateBuffer(s, stb->buffer + s->buffer_offset, bytes, stb->sample_bitsize, stb->channels, stb->rate) > 0)
+                if(StreamTrack_UpdateBuffer(s, stb->buffer + s->buffer_offset, bytes, stb->sample_bitsize, stb->channels, stb->rate) <= 0)
                 {
-                    s->buffer_offset += bytes;
+                    break;
                 }
             }
             
