@@ -33,8 +33,8 @@ PCs with powerful CPUs and graphic cards — unlike original engines, which are 
 and older (original engine, on which all classics were based, will turn 20 next year).
 
 Links to forums and info:
-http://www.tombraiderforums.com/showthread.php?t=197508
-https://discord.gg/d8mQgdc
+* TR forum link: http://www.tombraiderforums.com/showthread.php?t=197508
+* Discord channel: https://discord.gg/d8mQgdc
 
 ### Why it's developed? ###
 Many may ask — why develop another TR engine clone, while we have fully working Windows
