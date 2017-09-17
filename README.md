@@ -32,6 +32,10 @@ contemporary updates, features and additions — to fully benefit from being run
 PCs with powerful CPUs and graphic cards — unlike original engines, which are getting older
 and older (original engine, on which all classics were based, will turn 20 next year).
 
+Links to forums and info:
+http://www.tombraiderforums.com/showthread.php?t=197508
+https://discord.gg/d8mQgdc
+
 ### Why it's developed? ###
 Many may ask — why develop another TR engine clone, while we have fully working Windows
 builds of TR2-5, and TR1 is perfectly working through DosBox? The answer is simple - the
@@ -142,6 +146,7 @@ their licenses:
 * Bullet — zlib
 * Freetype2 — GPL
 * Lua — MIT
+* ffmpeg rpl format and codecs (http://git.videolan.org/)
 
 * Droid Sans Mono, Roboto Condensed Regular and Roboto Regular fonts — Apache
     
