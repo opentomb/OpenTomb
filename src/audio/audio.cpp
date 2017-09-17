@@ -284,7 +284,7 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
     vorbis_Info = ov_info(&vorbis_Stream, -1);
     channels = vorbis_Info->channels;
     sample_bitsize = 16;
-    buffer_part = vorbis_Info->bitrate_nominal * 16;
+    buffer_part = vorbis_Info->bitrate_nominal;
     rate = vorbis_Info->rate;
 
     {

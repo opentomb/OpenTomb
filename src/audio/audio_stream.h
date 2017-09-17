@@ -32,7 +32,6 @@ enum TR_AUDIO_STREAM_METHOD
     TR_AUDIO_STREAM_METHOD_WAD,    // WAD file.  Used in TR3.
     TR_AUDIO_STREAM_METHOD_WAV,    // WAV files. Used in TR4-5.
     TR_AUDIO_STREAM_METHOD_LASTINDEX
-
 };
 
 // Crossfades for different track types are also different,
@@ -67,18 +66,14 @@ enum TR_AUDIO_STREAM_METHOD
 
 typedef struct stream_track_s
 {
-    uint32_t        id;   //current_track // Needed to prevent same track sending.
-    int             type; //stream_type;        // Either BACKGROUND, ONESHOT or CHAT.
-    int             state;
-    ALuint          source;
-    uint32_t        track;
+    int32_t         track;
+    uint16_t        type; // Either BACKGROUND, ONESHOT or CHAT.
+    uint16_t        state;
     uint32_t        linked_buffers;
     uint32_t        buffer_offset;
+    ALuint          source;
     ALuint          buffers[TR_AUDIO_STREAM_NUMBUFFERS];
     ALfloat         current_volume;     // Stream volume, considering fades.
-    ALfloat         volume_accel;
-    //ALfloat         damped_volume;      // Additional damp volume multiplier.
-
 }stream_track_t, *stream_track_p;
 
 

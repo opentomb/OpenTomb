@@ -23,14 +23,11 @@ void Audio_UnsetFX(ALuint source);
 
 void StreamTrack_Init(stream_track_p s)
 {
-    // init external source
-    s->id = 0;
     s->type = TR_AUDIO_STREAM_TYPE_ONESHOT;
     s->state = TR_AUDIO_STREAM_STOPPED;
     s->linked_buffers = 0;
     s->buffer_offset = 0;
     s->current_volume = 0.0f;
-    s->volume_accel = 0.0f;
     s->track = -1;
     alGenBuffers(TR_AUDIO_STREAM_NUMBUFFERS, s->buffers);              // Generate all buffers at once.
     alGenSources(1, &s->source);
