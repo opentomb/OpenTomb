@@ -28,7 +28,6 @@ void main()
     vec3 normal = normalize(varying_normal);
     
 #if NUMBER_OF_LIGHTS > 0
-	vec4 tmp;
 	vec3 current_light_position;//Or direction
 	
 	float current_light_intensity;
@@ -40,23 +39,20 @@ void main()
         current_light_position = light_position[i] - varying_position;
         current_light_distance = length(current_light_position);
 		
-		current_light_intensity = clamp(((light_outerRadius[i] - current_light_distance)/(light_outerRadius[i]-light_innerRadius[i])),0.0,1.0);
-		//current_light_intensity = clamp(((light_outerRadius[i] - current_light_distance)/light_outerRadius[i]),0.0,1.0);
-		
-		tmp = sumc(light_color[i]) == 0.0 ? vec4(1.0) : light_color[i];
+		//current_light_intensity = clamp(((light_outerRadius[i] - current_light_distance)/(light_outerRadius[i]-light_innerRadius[i])),0.0,1.0);
+		current_light_intensity = clamp(((light_outerRadius[i] - current_light_distance)/light_outerRadius[i]),0.0,1.0);
 		
         // Diffuse term
-        lightColor = max(lightColor, tmp * current_light_intensity * shading(normal, current_light_position) );
+        lightColor = max(lightColor, light_color[i] * current_light_intensity * shading(normal, current_light_position) );
         
 		lightDirection += current_light_position;
         // Specular currently term is not used (only TR4 and up, was not yet implemented. Maybe later.)
     }
 #endif
     lightAmbient = light_ambient * shading(normal,lightDirection);
+	
     // Combine with color from texture and vertex
     vec4 texColor = texture2D(color_map, varying_texCoord);
 	vec4 tmp = (lightAmbient + lightColor) * texColor * varying_color;
-    gl_FragColor = vec4(0.0); lightAmbient;//vec4(tmp.rgb,texColor.a);
-	
-	gl_FragColor.a = 1.0;
+    gl_FragColor = vec4(tmp.rgb,texColor.a);
 }
