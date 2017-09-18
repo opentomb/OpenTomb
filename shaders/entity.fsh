@@ -16,29 +16,47 @@ varying vec2 varying_texCoord;
 varying vec3 varying_normal;
 varying vec3 varying_position;
 
+float shading(vec3 n, vec3 l) { return 0.5 + 0.5 * max(dot(n,normalize(l)), 0.0); }
+float sumc(vec4 c){ return c.r + c.g + c.b; }
+
 void main()
 {
     // Find color from lights
-    vec4 lightColor = light_ambient;
+	vec4 lightAmbient;
+    vec4 lightColor = vec4(0.0);
+	vec3 lightDirection = vec3(0.0,1.0,0.0);
     vec3 normal = normalize(varying_normal);
     
 #if NUMBER_OF_LIGHTS > 0
+	vec4 tmp;
+	vec3 current_light_position;//Or direction
+	
+	float current_light_intensity;
+	float current_light_distance;
+	
     for (int i = 0; i < NUMBER_OF_LIGHTS; i++)
     {
         // Geometry
-        vec3 toLight = light_position[i] - varying_position;
-        float lengthToLight = length(toLight);
-        float intensity = 1.0 - smoothstep(light_innerRadius[i], light_outerRadius[i], lengthToLight);
-        
+        current_light_position = light_position[i] - varying_position;
+        current_light_distance = length(current_light_position);
+		
+		current_light_intensity = clamp(((light_outerRadius[i] - current_light_distance)/(light_outerRadius[i]-light_innerRadius[i])),0.0,1.0);
+		//current_light_intensity = clamp(((light_outerRadius[i] - current_light_distance)/light_outerRadius[i]),0.0,1.0);
+		
+		tmp = sumc(light_color[i]) == 0.0 ? vec4(1.0) : light_color[i];
+		
         // Diffuse term
-        vec4 diffuse = light_color[i] * max(dot(normal, toLight / lengthToLight), 0.0);
-        lightColor += diffuse * intensity;
+        lightColor = max(lightColor, tmp * current_light_intensity * shading(normal, current_light_position) );
         
+		lightDirection += current_light_position;
         // Specular currently term is not used (only TR4 and up, was not yet implemented. Maybe later.)
     }
 #endif
-    
+    lightAmbient = light_ambient * shading(normal,lightDirection);
     // Combine with color from texture and vertex
     vec4 texColor = texture2D(color_map, varying_texCoord);
-    gl_FragColor = texColor * lightColor * varying_color;
+	vec4 tmp = (lightAmbient + lightColor) * texColor * varying_color;
+    gl_FragColor = vec4(0.0); lightAmbient;//vec4(tmp.rgb,texColor.a);
+	
+	gl_FragColor.a = 1.0;
 }
