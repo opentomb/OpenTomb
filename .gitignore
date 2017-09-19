@@ -14,6 +14,7 @@
 CMakeLists.txt.user
 .dep.inc
 Makefile
+src/config-opentomb.h
 obj/
 bin/
 build/
