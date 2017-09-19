@@ -193,11 +193,11 @@ void TR_Level::read_tr_room_light(SDL_RWops * const src, tr5_room_light_t & ligh
 {
     read_tr_vertex32(src, light.pos);
     // read and make consistent
-	float data = read_bitu16(src);
-	data = data < 0.0f || data > 8191.0f ? 0.0f : data;
-	
+    float data = read_bitu16(src);
+    data = data < 0.0f || data > 8191.0f ? 0.0f : data;
+    
     light.intensity1 = (8191 - data);
-	
+    
     light.fade1 = read_bitu32(src);
     // only in TR2
     light.intensity2 = light.intensity1;
@@ -231,12 +231,12 @@ void TR_Level::read_tr_room_vertex(SDL_RWops * const src, tr5_room_vertex_t & ro
 {
     read_tr_vertex16(src, room_vertex.vertex);
     // read and make consistent
-	float data = read_bitu16(src);
-	data = data < 0.0f || data > 8191.0f ? 0.0f : data;
-	
+    float data = read_bitu16(src);
+    data = data < 0.0f || data > 8191.0f ? 0.0f : data;
+    
     room_vertex.lighting1 = (8191 - data);
-	
-	
+    
+    
     // only in TR2
     room_vertex.lighting2 = room_vertex.lighting1;
     room_vertex.attributes = 0;
@@ -333,17 +333,17 @@ void TR_Level::read_tr_room(SDL_RWops * const src, tr5_room_t & room)
         read_tr_room_sector(src, room.sector_list[i]);
 
     // read and make consistent
-	float roomIntensity = read_bit16(src);
-	roomIntensity = (roomIntensity < 0.0f || roomIntensity > 8191.0f) ? 0.0f : roomIntensity;
-	
+    float roomIntensity = read_bit16(src);
+    roomIntensity = (roomIntensity < 0.0f || roomIntensity > 8191.0f) ? 0.0f : roomIntensity;
+    
     room.intensity1 = roomIntensity;
     // only in TR2-TR4
     room.intensity2 = room.intensity1;
     // only in TR2
     room.light_mode = 0;
-	
-	roomIntensity /= 16384.0f;
-	
+    
+    roomIntensity /= 16384.0f;
+    
     room.num_lights = read_bitu16(src);
     room.lights = (tr5_room_light_t*)malloc(room.num_lights * sizeof(tr5_room_light_t));
     for (i = 0; i < room.num_lights; i++)

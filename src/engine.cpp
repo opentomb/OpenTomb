@@ -1405,14 +1405,14 @@ void Engine_TakeScreenShot()
     GLubyte *pixels;
     uint32_t str_size;
 
-	time_t     now = time(0);
-	struct tm  tstruct = *localtime(&now);
-	char       buf[80];
-	strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &tstruct);
-	
+    time_t now = time(0);
+    struct tm tstruct = *localtime(&now);
+    char buf[80];
+    strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &tstruct);
+    
     qglGetIntegerv(GL_VIEWPORT, ViewPort);
     snprintf(fname, sizeof(fname), "screen_%s.png", buf);
-
+    
     str_size = ViewPort[2] * 4;
     pixels = (GLubyte*)malloc(str_size * ViewPort[3]);
     qglReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels);
