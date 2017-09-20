@@ -38,10 +38,19 @@ set(OPENTOMB_SRCS
     src/fmv/tiny_codec.c
     src/fmv/stream_codec.h
     src/fmv/stream_codec.c
+    src/fmv/common.h
+    src/fmv/bytestream.h
     src/fmv/get_bits.h
     src/fmv/rpl.c
-    src/fmv/escape124.c
-    src/fmv/escape130.c
+    src/fmv/codecs/avcodec.h
+    src/fmv/codecs/adpcm.h
+    src/fmv/codecs/adpcm.c
+    src/fmv/codecs/adpcm_data.c
+    src/fmv/codecs/adpcm_data.h
+    src/fmv/codecs/pcm.c
+    src/fmv/codecs/escape124.c
+    src/fmv/codecs/escape130.c
+    src/fmv/codecs/reverse.c
     src/physics/physics.h
     src/physics/physics_bullet.cpp
     src/physics/hair.h

@@ -65,13 +65,17 @@ void codec_init(struct tiny_codec_s *s, SDL_RWops *rw)
     s->audio.buff_size = 0;
     s->audio.buff_offset = 0;
     s->audio.buff = NULL;
+    s->audio.buff_p = NULL;
     s->audio.entry = NULL;
     s->audio.entry_size = 0;
     s->audio.entry_current = 0;
+    s->audio.extradata_size = 0;
+    s->audio.extradata = NULL;
     s->audio.priv_data = NULL;
     s->audio.free_data = NULL;
     s->audio.decode = NULL;
     s->audio.codec_tag = 0;
+    s->audio.block_align = 0;
 
     s->video.rgba = NULL;
     s->video.entry = NULL;
@@ -119,6 +123,11 @@ void codec_clear(struct tiny_codec_s *s)
         free(s->audio.buff);
         s->audio.buff = NULL;
     }
+    if(s->audio.buff_p)
+    {
+        free(s->audio.buff_p);
+        s->audio.buff_p = NULL;
+    }
     if(s->audio.entry)
     {
         free(s->audio.entry);
@@ -144,4 +153,32 @@ void codec_simplify_fps(struct tiny_codec_s *s)
             s->fps_num /= 10;
         }
     }
+}
+
+uint32_t codec_resize_audio_buffer(struct tiny_codec_s *s, uint32_t sample_size, uint32_t samples)
+{
+    uint32_t bytes_per_channel = sample_size * samples;
+    uint32_t ret = s->audio.channels * bytes_per_channel;
+    if(s->audio.buff_allocated_size < ret)
+    {
+        s->audio.buff_allocated_size = ret + 1024 - ret % 1024;
+        if(s->audio.buff)
+        {
+            free(s->audio.buff);
+        }
+        if(s->audio.buff_p)
+        {
+            free(s->audio.buff_p);
+        }
+        s->audio.buff = (uint8_t*)malloc(s->audio.buff_allocated_size);
+        s->audio.buff_p = (uint8_t**)malloc(s->audio.channels * sizeof(int16_t*));
+    }
+
+    s->audio.buff_p[0] = s->audio.buff;
+    for(uint16_t i = 1; i < s->audio.channels; ++i)
+    {
+        s->audio.buff_p[i] = s->audio.buff_p[i - 1] + bytes_per_channel;
+    }
+
+    return ret;
 }

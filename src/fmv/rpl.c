@@ -24,6 +24,7 @@
 #include <SDL2/SDL.h>
 
 #include "tiny_codec.h"
+#include "codecs/avcodec.h"
 
 
 #define RPL_SIGNATURE "ARMovie"
@@ -64,7 +65,7 @@ static int read_line(SDL_RWops *pb, char* line, int bufsize)
 static int32_t read_int(const char* line, const char** endptr, int* error)
 {
     unsigned long result = 0;
-    for (; *line>='0' && *line<='9'; line++)
+    for (; *line>='0' && *line <= '9'; line++)
     {
         if (result > (0x7FFFFFFF - 9) / 10)
             *error = -1;
@@ -128,7 +129,7 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
         if(SDL_RWseek(pb, pkt->pos, RW_SEEK_SET) < 0)
             return -1;
 
-        if(s->video.codec_tag == 124)
+        if(s->video.codec_tag == AV_CODEC_ID_ESCAPE124)
         {
             // We have to split Escape 124 frames because there are
             // multiple frames per chunk in Escape 124 samples.
@@ -156,7 +157,7 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
                 s->video.entry_current++;
             }
         }
-        else if(s->video.codec_tag == 130)
+        else if(s->video.codec_tag == AV_CODEC_ID_ESCAPE130)
         {
             pkt->pos = entry->pos;
             if(SDL_RWseek(pb, pkt->pos, RW_SEEK_SET) < 0)
@@ -183,7 +184,7 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
     {
         if(s->audio.entry_current >= s->audio.entry_size)
             return -1;
-       
+
         entry = &s->audio.entry[s->audio.entry_current];
 
         pkt->pos = entry->pos;
@@ -217,6 +218,7 @@ static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
 void escape124_decode_init(struct tiny_codec_s *avctx);
 void escape130_decode_init(struct tiny_codec_s *avctx);
 void pcm_decode_init(struct tiny_codec_s *avctx);
+void adpcm_decode_init(struct tiny_codec_s *avctx);
 
 int codec_open_rpl(struct tiny_codec_s *s)
 {
@@ -246,45 +248,39 @@ int codec_open_rpl(struct tiny_codec_s *s)
         return -1;
     }
     error |= read_line(pb, line, sizeof(line));      // movie name
-    //av_dict_set(&s->metadata, "title"    , line, 0);
     error |= read_line(pb, line, sizeof(line));      // date/copyright
-    //av_dict_set(&s->metadata, "copyright", line, 0);
     error |= read_line(pb, line, sizeof(line));      // author and other
-    //av_dict_set(&s->metadata, "author"   , line, 0);
 
     // video headers
     codec_tag = read_line_and_int(pb, &error);  // video format
     s->packet = rpl_read_packet;
+    s->video.decode = NULL;
     s->video.width           = read_line_and_int(pb, &error);  // video width
     s->video.height          = read_line_and_int(pb, &error);  // video height
     read_line_and_int(pb, &error);                             // video bits per sample
     error |= read_line(pb, line, sizeof(line));                // video frames per second
     error |= read_fps(line, &s->fps_num, &s->fps_denum);
     codec_simplify_fps(s);
-    
+
     // Figure out the video codec
     switch (codec_tag)
     {
         case 122:
-            s->video.decode = NULL; //AV_CODEC_ID_ESCAPE122;
-            s->video.codec_tag = 122;
+            s->video.codec_tag = 0;//AV_CODEC_ID_ESCAPE122;
             break;
 
         case 124:
-            s->video.decode = NULL;
-            s->video.codec_tag = 124;
+            s->video.codec_tag = AV_CODEC_ID_ESCAPE124;
             escape124_decode_init(s);
             // The header is wrong here, at least sometimes
             break;
 
         case 130:
-            s->video.decode = NULL; //AV_CODEC_ID_ESCAPE130;
-            s->video.codec_tag = 130;
+            s->video.codec_tag = AV_CODEC_ID_ESCAPE130;
             escape130_decode_init(s);
             break;
 
         default:
-            s->video.decode = NULL;
             s->video.codec_tag = 0;
             break;
     }
@@ -315,7 +311,7 @@ int codec_open_rpl(struct tiny_codec_s *s)
                 if(s->audio.bits_per_coded_sample == 16)
                 {
                     // 16-bit audio is always signed
-                    s->audio.codec_tag = 0;//AV_CODEC_ID_PCM_S16LE;
+                    s->audio.codec_tag = AV_CODEC_ID_PCM_S16LE;
                     pcm_decode_init(s);
                 }
                 // There are some other formats listed as legal per the spec;
@@ -327,13 +323,13 @@ int codec_open_rpl(struct tiny_codec_s *s)
                 {
                     // The samples with this kind of audio that I have
                     // are all unsigned.
-                    s->audio.codec_tag = 0;//AV_CODEC_ID_PCM_U8;
+                    s->audio.codec_tag = AV_CODEC_ID_PCM_U8;
                     pcm_decode_init(s);
                 }
                 else if (s->audio.bits_per_coded_sample == 4)
                 {
-                    s->audio.decode = NULL;//AV_CODEC_ID_ADPCM_IMA_EA_SEAD;
-                    s->audio.codec_tag = 0;
+                    s->audio.codec_tag = AV_CODEC_ID_ADPCM_IMA_EA_SEAD;
+                    adpcm_decode_init(s);
                 }
                 break;
         }
@@ -397,28 +393,4 @@ int codec_open_rpl(struct tiny_codec_s *s)
     }
 
     return error;
-}
-
-
-static uint32_t pcm_dummy_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *avpkt)
-{
-    if(avctx->audio.buff_allocated_size < avpkt->size)
-    {
-        avctx->audio.buff_allocated_size = avpkt->size + 1024 - avpkt->size % 1024;
-        if(avctx->audio.buff)
-        {
-            free(avctx->audio.buff);
-        }
-        avctx->audio.buff = (uint8_t*)malloc(avctx->audio.buff_allocated_size);
-    }
-    memcpy(avctx->audio.buff, avpkt->data, avpkt->size);
-    avctx->audio.buff_offset += avctx->audio.buff_size;
-    avctx->audio.buff_size = avpkt->size;
-    
-    return avpkt->size;
-}
-
-void pcm_decode_init(struct tiny_codec_s *avctx)
-{
-    avctx->audio.decode = pcm_dummy_decode_frame;
 }
