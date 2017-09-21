@@ -97,7 +97,7 @@ function scion_init(id)
             if((a == 0) and (f + 1 >= c)) then
                 setEntityBaseAnimModel(activator_id, 0);
                 setEntityAnim(activator_id, ANIM_TYPE_BASE, 103, 0);
-                addItem(activator_id, 150, 1);
+                addItem(activator_id, ITEM_QUEST_3, 1);
                 noEntityMove(activator_id, false);
                 disableEntity(object_id);
             end;
