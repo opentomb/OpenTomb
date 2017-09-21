@@ -5,7 +5,6 @@
 #include <ctype.h>
 
 #include <SDL2/SDL.h>
-//#ifndef _POSIX_C_SOURCE
 #ifndef _POSIX_SOURCE
 #define __USE_POSIX199309  (1)   // make posix GCC workable
 #define __USE_XOPEN2K
@@ -126,24 +125,18 @@ static void *stream_codec_thread_func(void *data)
             s->state = VIDEO_STATE_RUNNING;
             pthread_mutex_timedlock(&s->timer_mutex, &vid_time);
         }
-        av_packet_unref(&pkt_video);
-        av_packet_unref(&pkt_audio);
         s->state = VIDEO_STATE_QEUED;
 
         pthread_mutex_lock(&s->video_buffer_mutex);
+        pthread_mutex_lock(&s->audio_buffer_mutex);
+        av_packet_unref(&pkt_video);
+        av_packet_unref(&pkt_audio);
         free(s->codec.video.rgba);
         s->codec.video.rgba = NULL;
-        pthread_mutex_unlock(&s->video_buffer_mutex);
-
-        pthread_mutex_lock(&s->audio_buffer_mutex);
-        free(s->codec.audio.buff);
-        s->codec.audio.buff = NULL;
-        s->codec.audio.buff_offset = 0;
-        s->codec.audio.buff_size = 0;
-        s->codec.audio.buff_allocated_size = 0;
-        pthread_mutex_unlock(&s->audio_buffer_mutex);
-
         codec_clear(&s->codec);
+        pthread_mutex_unlock(&s->video_buffer_mutex);
+        pthread_mutex_unlock(&s->audio_buffer_mutex);
+        
         SDL_RWclose(s->codec.pb);
         s->codec.pb = NULL;
     }
@@ -202,4 +195,3 @@ int stream_codec_play_rpl(stream_codec_p s, const char *name)
     }
     return 0;
 }
-

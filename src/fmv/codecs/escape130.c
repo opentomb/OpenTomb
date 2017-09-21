@@ -24,8 +24,8 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 
-#include "get_bits.h"
-#include "tiny_codec.h"
+#include "../get_bits.h"
+#include "../tiny_codec.h"
 
 typedef struct Escape130Context
 {
@@ -156,9 +156,9 @@ static int escape130_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
     unsigned y[4] = { 0 }, cb = 0x10, cr = 0x10;
     int skip = -1, y_avg = 0, i, j;
     uint8_t *ya = s->old_y_avg;
-    
+
     // first 16 bytes are header; no useful information in here
-    if(buf_size <= 16) 
+    if(buf_size <= 16)
     {
         //av_log(avctx, AV_LOG_ERROR, "Insufficient frame data\n");
         return -1;
@@ -196,7 +196,7 @@ static int escape130_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
             return -1;
         }
 
-        if (skip) 
+        if (skip)
         {
             y[0] = old_y[0];
             y[1] = old_y[1];
@@ -213,7 +213,7 @@ static int escape130_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
                 unsigned sign_selector       = get_bits(&gb, 6);
                 unsigned difference_selector = get_bits(&gb, 2);
                 y_avg = 2 * get_bits(&gb, 5);
-                for (i = 0; i < 4; i++) 
+                for (i = 0; i < 4; i++)
                 {
                     y[i] = av_clip_c(y_avg + offset_table[difference_selector] *
                                      sign_table[sign_selector][i], 0, 63);
@@ -285,7 +285,7 @@ static int escape130_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
         int r, g, b;
         new_cb = s->new_u;
         new_cr = s->new_v;
-        
+
         for(i = 0; i < avctx->video.height; ++i)
         {
             for(int j = 0; j < avctx->video.width; ++j)
@@ -343,7 +343,7 @@ void escape130_decode_init(struct tiny_codec_s *avctx)
         avctx->video.decode = escape130_decode_frame;
         avctx->video.priv_data = s;
         avctx->video.free_data = escape130_free_data;
-        
+
         //avctx->pix_fmt = AV_PIX_FMT_YUV420P;
         s->old_y_avg = malloc(avctx->video.width * avctx->video.height / 4);
         s->buf1      = malloc(avctx->video.width * avctx->video.height * 3 / 2);
@@ -352,7 +352,7 @@ void escape130_decode_init(struct tiny_codec_s *avctx)
         s->linesize[0] = avctx->video.width;
         s->linesize[1] = avctx->video.width / 2;
         s->linesize[2] = avctx->video.width / 2;
-        
+
         s->new_y = s->buf1;
         s->new_u = s->new_y + avctx->video.width * avctx->video.height;
         s->new_v = s->new_u + avctx->video.width * avctx->video.height / 4;

@@ -24,8 +24,8 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 
-#include "get_bits.h"
-#include "tiny_codec.h"
+#include "../get_bits.h"
+#include "../tiny_codec.h"
 
 
 typedef union MacroBlock
@@ -278,9 +278,9 @@ static int escape124_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
         }
     }
 
-    new_frame_data = s->buff1;
+    new_frame_data = (uint16_t*)s->buff1;
     new_stride = s->line_bytes / 2;
-    old_frame_data = s->buff2;
+    old_frame_data = (uint16_t*)s->buff2;
     old_stride = s->line_bytes / 2;
     //memcpy(old_frame_data, new_frame_data, s->line_bytes * avctx->video.height);
 
@@ -388,7 +388,7 @@ static int escape124_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
         }
     }
     FFSWAP(uint8_t*, s->buff1, s->buff2);
-    
+
     return frame_size;
 }
 

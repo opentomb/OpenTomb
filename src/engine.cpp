@@ -933,7 +933,7 @@ void Engine_MainLoop()
             if(engine_video.codec.audio.buff && (engine_video.codec.audio.buff_offset >= Audio_StreamExternalBufferOffset()))
             {
                 Audio_StreamExternalUpdateBuffer(engine_video.codec.audio.buff, engine_video.codec.audio.buff_size,
-                    engine_video.codec.audio.bits_per_coded_sample, engine_video.codec.audio.channels, engine_video.codec.audio.sample_rate);
+                    engine_video.codec.audio.bits_per_sample, engine_video.codec.audio.channels, engine_video.codec.audio.sample_rate);
             }
             if(Audio_StreamExternalBufferIsNeedUpdate())
             {
