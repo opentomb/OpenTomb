@@ -69,7 +69,6 @@ void stream_codec_stop(stream_codec_p s, int wait)
         pthread_join(s->thread, NULL);
         s->thread = 0;
     }
-    codec_clear(&s->codec);
 }
 
 
