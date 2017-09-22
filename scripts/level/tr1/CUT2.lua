@@ -21,6 +21,8 @@ level_PostLoad = function()
         entity_funcs[0].t = entity_funcs[0].t + frame_time;
         if(not setCameraFrame(entity_funcs[0].t * 30) or (0 ~= getActionState(act.look))) then
             gameflowSend(GF_OP_LEVELCOMPLETE, getLevel() + 1);
+            gameflowSend(GF_OP_STARTFMV, 5);
+            entity_funcs[0].onLoop = nil;
         end;
     end;
 end;

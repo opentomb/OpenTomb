@@ -37,4 +37,13 @@ gameflow_params[GAME_1].levels[19] = { name = "The Great Pyramid",       filepat
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 gameflow_params[GAME_1].fmv = {};
-gameflow_params[GAME_1].fmv[0] =  { name = "Core", filepath = "data/tr1/fmv/CORE.RPL" };
+gameflow_params[GAME_1].fmv[0] =  { name = "Core", filepath = "data/tr1/fmv/CORE.RPL" };    -- engine start
+gameflow_params[GAME_1].fmv[1] =  { name = "Core", filepath = "data/tr1/fmv/MANSION.RPL" }; -- home
+gameflow_params[GAME_1].fmv[2] =  { name = "Core", filepath = "data/tr1/fmv/CAFE.RPL" };    -- start new game
+gameflow_params[GAME_1].fmv[3] =  { name = "Core", filepath = "data/tr1/fmv/SNOW.RPL" };    -- start EP1
+gameflow_params[GAME_1].fmv[4] =  { name = "Core", filepath = "data/tr1/fmv/LIFT.RPL" };    -- start EP2
+gameflow_params[GAME_1].fmv[5] =  { name = "Core", filepath = "data/tr1/fmv/VISION.RPL" };  -- start EP3
+gameflow_params[GAME_1].fmv[6] =  { name = "Core", filepath = "data/tr1/fmv/PRISON.RPL" };  -- end EP3
+gameflow_params[GAME_1].fmv[7] =  { name = "Core", filepath = "data/tr1/fmv/CANYON.RPL" };  -- start EP4
+gameflow_params[GAME_1].fmv[8] =  { name = "Core", filepath = "data/tr1/fmv/PYRAMID.RPL" }  -- start Pyramid
+gameflow_params[GAME_1].fmv[9] =  { name = "Core", filepath = "data/tr1/fmv/END.RPL" };     -- end game

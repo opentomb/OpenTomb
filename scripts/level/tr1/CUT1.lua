@@ -20,8 +20,8 @@ level_PostLoad = function()
     entity_funcs[0].onLoop = function(object_id, tick_state)
         entity_funcs[0].t = entity_funcs[0].t + frame_time;
         if(not setCameraFrame(entity_funcs[0].t * 30) or (0 ~= getActionState(act.look))) then
-            playVideo(base_path .. "data/tr1/fmv/LIFT.RPL");
             gameflowSend(GF_OP_LEVELCOMPLETE, getLevel() + 1);
+            gameflowSend(GF_OP_STARTFMV, 4);
             entity_funcs[0].onLoop = nil;
         end;
     end;
