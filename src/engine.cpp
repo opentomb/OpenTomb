@@ -441,7 +441,7 @@ void Engine_InitSDLVideo()
 
         lglGetIntegerv = (PFNGLGETIINTEGERVPROC)SDL_GL_GetProcAddress("glGetIntegerv");
         lglGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
-        maxSamples = (maxSamples > 16)?(16):(maxSamples);                       // Fix for faulty GL max. sample number.
+        maxSamples = (maxSamples > 16) ? (16) : (maxSamples);                   // Fix for faulty GL max. sample number.
 
         if(renderer.settings.antialias_samples > maxSamples)
         {

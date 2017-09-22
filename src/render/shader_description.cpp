@@ -32,7 +32,7 @@ shader_description::shader_description(const shader_stage &vertex, const shader_
     qglAttachObjectARB(program, vertex.shader);
     qglAttachObjectARB(program, fragment.shader);
     qglLinkProgramARB(program);
-    printInfoLog(program);
+    //printInfoLog(program);
 
     sampler = qglGetUniformLocationARB(program, "color_map");
 }

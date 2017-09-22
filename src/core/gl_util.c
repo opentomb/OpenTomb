@@ -439,10 +439,13 @@ void InitGLExtFuncs()
     qglDrawElements = (PFNGLDRAWELEMENTSPROC)SDL_GL_GetProcAddress("glDrawElements");
     qglInterleavedArrays = (PFNGLINTERLEAVEDARRAYSPROC)SDL_GL_GetProcAddress("glInterleavedArrays");
     
-    const char* buf = (const char*)qglGetString(GL_EXTENSIONS);
-    size_t buf_size = strlen(buf) + 1;
-    engine_gl_ext_str = (char*)malloc(buf_size);
-    strncpy(engine_gl_ext_str, buf, buf_size);
+    const char *buf = (const char*)qglGetString(GL_EXTENSIONS);
+    if(buf)
+    {
+        size_t buf_size = strlen(buf) + 1;
+        engine_gl_ext_str = (char*)malloc(buf_size);
+        strncpy(engine_gl_ext_str, buf, buf_size);
+    }
     
     qglGenTextures(1, &whiteTexture);
     qglBindTexture(GL_TEXTURE_2D, whiteTexture);
@@ -689,15 +692,15 @@ int loadShaderFromBuff(GLhandleARB ShaderObj, const char *source, const char *ad
         {
             qglShaderSourceARB(ShaderObj, 1, (const char **)&source, &source_size);
         }
-        Sys_DebugLog(GL_LOG_FILENAME, "source loaded");
+        //Sys_DebugLog(GL_LOG_FILENAME, "source loaded");
         qglCompileShaderARB(ShaderObj);
-        Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
+        //Sys_DebugLog(GL_LOG_FILENAME, "trying to compile");
         if(checkOpenGLError())
         {
             return 0;
         }
         qglGetObjectParameterivARB(ShaderObj, GL_OBJECT_COMPILE_STATUS_ARB, &compileStatus);
-        printInfoLog(ShaderObj);
+        //printInfoLog(ShaderObj);
     }
     return compileStatus != 0;
 }
@@ -709,7 +712,7 @@ int loadShaderFromFile(GLhandleARB ShaderObj, const char *fileName, const char *
     GLint size = 0;
     int ret = 0;
 
-    Sys_DebugLog(GL_LOG_FILENAME, "GL_Loading %s", fileName);
+    //Sys_DebugLog(GL_LOG_FILENAME, "GL_Loading %s", fileName);
     file = fopen (fileName, "rb");
     if (file == NULL)
     {
@@ -729,11 +732,13 @@ int loadShaderFromFile(GLhandleARB ShaderObj, const char *fileName, const char *
 
     char *buf = (char*)malloc(size + 1);
     fseek(file, 0, SEEK_SET);
-    fread(buf, 1, size, file);
+    if(size != fread(buf, 1, size, file))
+    {
+        Sys_DebugLog(GL_LOG_FILENAME, "Error loading file %s", fileName);
+    }
     buf[size] = 0;
     fclose(file);
 
-    //printf ( "source = %s\n", buf );
     ret = loadShaderFromBuff(ShaderObj, buf, additionalDefines);
     free(buf);
     return ret;
