@@ -125,15 +125,16 @@ static void *stream_codec_thread_func(void *data)
             pthread_mutex_timedlock(&s->timer_mutex, &vid_time);
         }
         s->state = VIDEO_STATE_QEUED;
-
-        pthread_mutex_lock(&s->video_buffer_mutex);
-        pthread_mutex_lock(&s->audio_buffer_mutex);
         av_packet_unref(&pkt_video);
         av_packet_unref(&pkt_audio);
+        
+        pthread_mutex_lock(&s->video_buffer_mutex);
         free(s->codec.video.rgba);
         s->codec.video.rgba = NULL;
-        codec_clear(&s->codec);
         pthread_mutex_unlock(&s->video_buffer_mutex);
+        
+        pthread_mutex_lock(&s->audio_buffer_mutex);
+        codec_clear(&s->codec);
         pthread_mutex_unlock(&s->audio_buffer_mutex);
         
         SDL_RWclose(s->codec.pb);

@@ -35,45 +35,46 @@ extern "C" {
 /*
  * MISK
  */
-char *SC_ParseToken(char *data, char *token)
+char *SC_ParseToken(char *data, char *token, size_t token_size)
 {
-    ///@FIXME: token may be overflowed
     int c;
-    int len;
+    int len = 0;
 
-    len = 0;
-    token[0] = 0;
-
-    if(!data)
+    if(!data || token_size < 2)
     {
         return NULL;
     }
-
+    token[0] = 0;
+    
 // skip whitespace
     skipwhite:
     while((c = *data) <= ' ')
     {
         if(c == 0)
-            return NULL;                    // end of file;
+        {
+            return NULL;
+        }
         data++;
     }
 
 // skip // comments
-    if (c=='/' && data[1] == '/')
+    if(data[0] == '/' && data[1] == '/')
     {
-        while (*data && *data != '\n')
+        while(*data && *data != '\n')
+        {
             data++;
+        }
         goto skipwhite;
     }
 
 // handle quoted strings specially
-    if (c == '\"')
+    if(c == '\"')
     {
         data++;
-        while (1)
+        while(len + 1 < token_size)
         {
             c = *data++;
-            if (c=='\"' || !c)
+            if (c == '\"' || !c)
             {
                 token[len] = 0;
                 return data;
@@ -83,16 +84,14 @@ char *SC_ParseToken(char *data, char *token)
         }
     }
 
-
 // parse single characters
-    if (c=='{' || c=='}'|| c==')'|| c=='(' || c=='\'' || c==':')
+    if(c=='{' || c=='}'|| c==')'|| c=='(' || c=='\'' || c==':')
     {
         token[len] = c;
         len++;
         token[len] = 0;
         return data+1;
     }
-
 
 // parse a regular word
     do
@@ -101,11 +100,12 @@ char *SC_ParseToken(char *data, char *token)
         data++;
         len++;
         c = *data;
-        if (c=='{' || c=='}'|| c==')'|| c=='(' || c=='\'' || c==':')
+        if(c == '{' || c == '}' || c == ')' || c == '(' || c == '\'' || c == '\"' || c == ':')
         {
             break;
         }
-    } while (c>32);
+    }
+    while((c > ' ') && (len + 1 < token_size));
 
     token[len] = 0;
     return data;
@@ -114,7 +114,7 @@ char *SC_ParseToken(char *data, char *token)
 float SC_ParseFloat(char **ch)
 {
     char token[64];
-    (*ch) = SC_ParseToken(*ch, token);
+    (*ch) = SC_ParseToken(*ch, token, sizeof(token));
     if(token[0])
     {
         return atof(token);
@@ -125,7 +125,7 @@ float SC_ParseFloat(char **ch)
 int SC_ParseInt(char **ch)
 {
     char token[64];
-    (*ch) = SC_ParseToken(*ch, token);
+    (*ch) = SC_ParseToken(*ch, token, sizeof(token));
     if(token[0])
     {
         return atoi(token);

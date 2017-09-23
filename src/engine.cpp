@@ -29,6 +29,7 @@ extern "C" {
 #include "fmv/tiny_codec.h"
 #include "fmv/stream_codec.h"
 #include "gui/gui.h"
+#include "gui/gui_inventory.h"
 #include "vt/vt_level.h"
 #include "audio/audio.h"
 #include "game.h"
@@ -1609,7 +1610,7 @@ extern "C" int Engine_ExecCmd(char *ch)
     while(ch != NULL)
     {
         char *pch = ch;
-        ch = SC_ParseToken(ch, token);
+        ch = SC_ParseToken(ch, token, sizeof(token));
         if(!strcmp(token, "help"))
         {
             Con_AddLine("Available commands:\0", FONTSTYLE_CONSOLE_WARNING);
@@ -1640,7 +1641,7 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "save"))
         {
-            ch = SC_ParseToken(ch, token);
+            ch = SC_ParseToken(ch, token, sizeof(token));
             if(NULL != ch)
             {
                 Game_Save(token);
@@ -1649,7 +1650,7 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "load"))
         {
-            ch = SC_ParseToken(ch, token);
+            ch = SC_ParseToken(ch, token, sizeof(token));
             if(NULL != ch)
             {
                 Game_Load(token);
@@ -1668,7 +1669,7 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "spacing"))
         {
-            ch = SC_ParseToken(ch, token);
+            ch = SC_ParseToken(ch, token, sizeof(token));
             if(NULL == ch)
             {
                 Con_Notify("spacing = %d", Con_GetLineInterval());
@@ -1679,7 +1680,7 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "showing_lines"))
         {
-            ch = SC_ParseToken(ch, token);
+            ch = SC_ParseToken(ch, token, sizeof(token));
             if(NULL == ch)
             {
                 Con_Notify("showing lines = %d", Con_GetShowingLines());
@@ -1810,7 +1811,6 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "xxx"))
         {
-            //stream_codec_play_rpl(&engine_video, "data/tr2/fmv/CRASH.RPL");
             SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
             if(f)
             {

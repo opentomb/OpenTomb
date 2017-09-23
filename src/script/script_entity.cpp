@@ -20,7 +20,7 @@ extern "C" {
 #include "../skeletal_model.h"
 #include "../trigger.h"
 #include "../room.h"
-#include "../gui/gui.h"
+#include "../gui/gui_inventory.h"
 #include "../inventory.h"
 #include "../entity.h"
 #include "../world.h"

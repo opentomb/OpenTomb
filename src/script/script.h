@@ -24,7 +24,7 @@ int  Script_DoLuaFile(lua_State *lua, const char *local_path);
 void Script_LuaClearTasks();
 void Script_LuaRegisterFuncs(lua_State *lua);
 
-char *SC_ParseToken(char *data, char *token);
+char *SC_ParseToken(char *data, char *token, size_t token_size);
 float SC_ParseFloat(char **ch);
 int   SC_ParseInt(char **ch);
 
