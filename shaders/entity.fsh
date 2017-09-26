@@ -24,7 +24,7 @@ void main()
     // Find color from lights
     vec4 lightAmbient;
     vec4 lightColor = vec4(0.0);
-    vec3 lightDirection = vec3(0.0,1.0,0.0);
+    vec3 lightDirection = vec3(0.0,2.0,-1.0);
     vec3 normal = normalize(varying_normal);
     
 #if NUMBER_OF_LIGHTS > 0
