@@ -1699,7 +1699,7 @@ void gui_ItemNotifier::Reset()
     mCurrRotX = 0.0;
     mCurrRotY = 0.0;
 
-    mEndPosX = 0.85f * screen_info.w;
+    mEndPosX = 0.90f * screen_info.w;
     mPosY    = 0.15f * screen_info.h;
     mCurrPosX = screen_info.w + ((float)screen_info.w / GUI_NOTIFIER_OFFSCREEN_DIVIDER * mSize);
     mStartPosX = mCurrPosX;    // Equalize current and start positions.
@@ -1712,6 +1712,15 @@ void gui_ItemNotifier::Draw()
         base_item_p item = World_GetBaseItemByID(mItem);
         if(item)
         {
+            gl_text_line_p inventory_name = GLText_OutTextXY(mCurrPosX, 45.0f, "%s", item->name);
+            
+            if(inventory_name)
+            {
+                inventory_name->x_align    = GLTEXT_ALIGN_CENTER;
+                inventory_name->font_id    = FONT_PRIMARY;
+                inventory_name->style_id   = FONTSTYLE_MENU_TITLE;
+            }
+            
             int anim = item->bf->animations.current_animation;
             int frame = item->bf->animations.current_frame;
             float time = item->bf->animations.frame_time;

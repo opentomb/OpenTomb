@@ -908,8 +908,7 @@ void Engine_MainLoop()
         {
             fps->x_align    = GLTEXT_ALIGN_RIGHT;
             fps->y_align    = GLTEXT_ALIGN_BOTTOM;
-            fps->font_id    = FONT_PRIMARY;
-            fps->style_id   = FONTSTYLE_MENU_TITLE;
+            fps->style_id   = FONTSTYLE_NOTIFIER;
         }
 
         int codec_end_state = stream_codec_check_end(&engine_video);
