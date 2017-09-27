@@ -1525,7 +1525,7 @@ void TR_SkeletalModelInterpolateFrames(skeletal_model_p model, tr_animation_t *t
             anim->frames = new_bone_frames;
             anim->frames_count = new_frames_count;
         }
-        if(anim->max_frame > anim->frames_count)
+        if(anim->max_frame > anim->frames_count || anim->max_frame == 0)
         {
             anim->max_frame = anim->frames_count;                               // i.e.: unused animations
         }
