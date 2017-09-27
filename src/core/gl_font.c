@@ -143,10 +143,10 @@ static __inline GLuint NextPowerOf2(GLuint in)
 }
 
 
-static __inline void bbox_add(float *x0, float *x1, float *y0, float *y1,
-                              float *x_min, float *x_max, float *y_min, float *y_max)
+static __inline void bbox_add(int32_t *x0, int32_t *x1, int32_t *y0, int32_t *y1,
+                              int32_t *x_min, int32_t *x_max, int32_t *y_min, int32_t *y_max)
 {
-    float min, max;
+    int32_t min, max;
 
     if(*x0 > *x1)
     {
@@ -256,8 +256,8 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
             g = glf->ft_face->glyph;
             glf->glyphs[i].width = g->bitmap.width;
             glf->glyphs[i].height = g->bitmap.rows;
-            glf->glyphs[i].advance_x = g->advance.x;
-            glf->glyphs[i].advance_y = g->advance.y;
+            glf->glyphs[i].advance_x_pt = g->advance.x;
+            glf->glyphs[i].advance_y_pt = g->advance.y;
             glf->glyphs[i].left = g->bitmap_left;
             glf->glyphs[i].top = g->bitmap_top;
 
@@ -340,14 +340,14 @@ void glf_reface(gl_tex_font_p glf, const char *file_name, uint16_t font_size)
 }
 
 
-float glf_get_ascender(gl_tex_font_p glf)
+int32_t glf_get_ascender(gl_tex_font_p glf)
 {
     if((glf->font_size == 0) || (glf->ft_face == NULL))
     {
         return 0.0;
     }
 
-    return (float)(glf->ft_face->ascender) / 64.0f;
+    return glf->ft_face->ascender;
 }
 
 
@@ -364,30 +364,28 @@ uint16_t glf_get_font_size(gl_tex_font_p glf)
 }
 
 
-float glf_get_string_len(gl_tex_font_p glf, const char *text, int n)
+int32_t glf_get_string_len(gl_tex_font_p glf, const char *text, int n)
 {
-    float x = 0.0;
+    int32_t x = 0;
+    uint8_t *ch = (uint8_t*)text;
 
-    if((glf != NULL) && (glf->ft_face != NULL))
+    if(glf && glf->ft_face && *ch)
     {
-        uint8_t *nch, *nch2, *ch = (uint8_t*)text;
         uint32_t curr_utf32, next_utf32;
+        int i = 0;
+        FT_Vector kern;
 
-        nch = utf8_to_utf32(ch, &curr_utf32);
+        ch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
-
-        for(int i = 0; (*ch != 0) && !((n >= 0) && (i >= n)); i++)
+        for(; (n < 0) || (i < n); i++)
         {
-            FT_Vector kern;
-
-            nch2 = utf8_to_utf32(nch, &next_utf32);
+            n = (*ch) ? (n) : (0);
+            ch = utf8_to_utf32(ch, &next_utf32);
             next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
-            ch = nch;
-            nch = nch2;
 
             FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
             curr_utf32 = next_utf32;
-            x += (GLfloat)(kern.x + glf->glyphs[curr_utf32].advance_x) / 64.0;
+            x += kern.x + glf->glyphs[curr_utf32].advance_x_pt;
         }
     }
 
@@ -395,58 +393,89 @@ float glf_get_string_len(gl_tex_font_p glf, const char *text, int n)
 }
 
 
-void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, GLfloat *y0, GLfloat *x1, GLfloat *y1)
+char *glf_get_string_for_width(gl_tex_font_p glf, char *text, int32_t w_pt, int *n_sym)
 {
-    *x0 = 0.0;
-    *x1 = 0.0;
-    *y0 = 0.0;
-    *y1 = 0.0;
+    int32_t x = 0;
+    uint8_t *ch = (uint8_t*)text;
+    char *ret = text;
+    *n_sym = 0;
 
-    if((glf != NULL) && (glf->ft_face != NULL))
+    if(glf && glf->ft_face && *ch)
     {
-
-        uint8_t *nch, *nch2, *ch = (uint8_t*)text;
-        float x = 0.0;
-        float y = 0.0;
-        float xx0, xx1, yy0, yy1;
         uint32_t curr_utf32, next_utf32;
+        FT_Vector kern;
 
-        nch = utf8_to_utf32(ch, &curr_utf32);
+        ch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
-
-        for(int i = 0; (*ch != 0) && !((n >= 0) && (i >= n)); i++)
+        w_pt -= glf->glyphs[curr_utf32].advance_x_pt;
+        do
         {
-            FT_Vector kern;
-            char_info_p g = glf->glyphs + curr_utf32;
-
-            nch2 = utf8_to_utf32(nch, &next_utf32);
-
+            ret = (char*)ch;
+            (*n_sym)++;
+            w_pt = (*ch) ? (w_pt) : (0);
+            ch = utf8_to_utf32(ch, &next_utf32);
             next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
-            ch = nch;
-            nch = nch2;
 
             FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
             curr_utf32 = next_utf32;
+            x += kern.x + glf->glyphs[curr_utf32].advance_x_pt;
+        }
+        while(x < w_pt);
+    }
 
-            xx0 = x  + g->left;
-            xx1 = xx0 + g->width;
-            yy0 = y  + g->top;
-            yy1 = yy0 - g->height;
+    return ret;
+}
+
+
+void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, int32_t *x0, int32_t *y0, int32_t *x1, int32_t *y1)
+{
+    uint8_t *ch = (uint8_t*)text;
+    *x0 = 0;
+    *x1 = 0;
+    *y0 = 0;
+    *y1 = 0;
+
+    if(glf && glf->ft_face && *ch)
+    {
+        FT_Vector kern;
+        int32_t x_pt = 0;
+        int32_t y_pt = 0;
+        int32_t xx0, xx1, yy0, yy1;
+        uint32_t curr_utf32, next_utf32;
+
+        ch = utf8_to_utf32(ch, &curr_utf32);
+        curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
+        for(int i = 0; (n < 0) || (i < n); i++)
+        {
+            char_info_p g = glf->glyphs + curr_utf32;
+            n = (*ch) ? (n) : (0);
+
+            ch = utf8_to_utf32(ch, &next_utf32);
+            next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
+            FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
+            curr_utf32 = next_utf32;
+
+            xx0 = x_pt + g->left * 64;
+            xx1 = xx0 + g->width * 64;
+            yy0 = y_pt + g->top * 64;
+            yy1 = yy0 - g->height * 64;
             bbox_add(&xx0, &xx1, &yy0, &yy1, x0, x1, y0, y1);
 
-            x += (GLfloat)(kern.x + g->advance_x) / 64.0;
-            y += (GLfloat)(kern.y + g->advance_y) / 64.0;
+            x_pt += kern.x + g->advance_x_pt;
+            y_pt += kern.y + g->advance_y_pt;
         }
     }
 }
 
 
-void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
+void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text, int32_t n_sym)
 {
     if(glf && glf->ft_face && text && (text[0] != 0))
     {
         uint8_t *nch, *ch = (uint8_t*)text;
         FT_Vector kern;
+        int32_t x_pt = 0;
+        int32_t y_pt = 0;
         if(glf->gl_real_tex_indexes_count == 1)
         {
             GLuint elements_count = 0;
@@ -458,7 +487,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
             curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
 
             qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-            for(p = buffer; *ch;)
+            for(p = buffer; *ch && n_sym--;)
             {
                 char_info_p g;
                 uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
@@ -473,9 +502,9 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 
                 if(g->tex_index != 0)
                 {
-                    GLfloat x0 = x  + g->left;
+                    GLfloat x0 = x  + g->left + x_pt / 64.0f;
                     GLfloat x1 = x0 + g->width;
-                    GLfloat y0 = y  + g->top;
+                    GLfloat y0 = y  + g->top + y_pt / 64.0f;
                     GLfloat y1 = y0 - g->height;
 
                     *p = x0;            p++;
@@ -516,8 +545,8 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
                     vec4_copy(p, glf->gl_font_color);   p += 4;
                     elements_count++;
                 }
-                x += (GLfloat)(kern.x + g->advance_x) / 64.0;
-                y += (GLfloat)(kern.y + g->advance_y) / 64.0;
+                x_pt += kern.x + g->advance_x_pt;
+                y_pt += kern.y + g->advance_y_pt;
             }
             ///RENDER
             if(elements_count != 0)
@@ -539,7 +568,7 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
             nch = utf8_to_utf32(ch, &curr_utf32);
             curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
             qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-            for(; *ch;)
+            for(; *ch && n_sym--;)
             {
                 char_info_p g;
                 uint8_t *nch2 = utf8_to_utf32(nch, &next_utf32);
@@ -554,15 +583,10 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
 
                 if(g->tex_index != 0)
                 {
-                    if(active_texture != g->tex_index)
-                    {
-                        qglBindTexture(GL_TEXTURE_2D, g->tex_index);
-                        active_texture = g->tex_index;
-                    }
                     ///RENDER
-                    GLfloat x0 = x  + g->left;
+                    GLfloat x0 = x  + g->left + x_pt / 64.0f;
                     GLfloat x1 = x0 + g->width;
-                    GLfloat y0 = y  + g->top;
+                    GLfloat y0 = y  + g->top + y_pt / 64.0f;
                     GLfloat y1 = y0 - g->height;
 
                     p = buffer;
@@ -590,13 +614,18 @@ void glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text)
                     *p = g->tex_y1;     p++;
                     vec4_copy(p, glf->gl_font_color);
 
+                    if(active_texture != g->tex_index)
+                    {
+                        qglBindTexture(GL_TEXTURE_2D, g->tex_index);
+                        active_texture = g->tex_index;
+                    }
                     qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+0);
                     qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), buffer+2);
                     qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), buffer+4);
                     qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
                 }
-                x += (GLfloat)(kern.x + g->advance_x) / 64.0;
-                y += (GLfloat)(kern.y + g->advance_y) / 64.0;
+                x_pt += kern.x + g->advance_x_pt;
+                y_pt += kern.y + g->advance_y_pt;
             }
         }
     }

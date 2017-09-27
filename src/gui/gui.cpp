@@ -269,7 +269,7 @@ void Gui_SwitchGLMode(char is_gui)
     }
     else                                                                        // set camera coordinate system
     {
-        memcpy(guiProjectionMatrix, engine_camera.gl_proj_mat, sizeof(GLfloat[16]));
+        memcpy(guiProjectionMatrix, engine_camera.gl_proj_mat, sizeof(guiProjectionMatrix));
     }
 }
 
@@ -368,40 +368,6 @@ void Gui_DrawBars()
         Bar[BAR_WARMTH].Show (Character_GetParam(player, PARAM_WARMTH ));
     }
 }
-
-void Gui_DrawInventory()
-{
-    main_inventory_manager->frame(engine_frame_time);
-    if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED)
-    {
-        return;
-    }
-
-    qglDepthMask(GL_FALSE);
-    {
-        BindWhiteTexture();
-        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, backgroundBuffer);
-        qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
-        qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[2]));
-        qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[6]));
-        qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    }
-    qglDepthMask(GL_TRUE);
-    qglClear(GL_DEPTH_BUFFER_BIT);
-
-    qglPushAttrib(GL_ENABLE_BIT);
-    qglEnable(GL_ALPHA_TEST);
-    qglPushClientAttrib(GL_CLIENT_VERTEX_ARRAY_BIT);
-    qglEnableClientState(GL_NORMAL_ARRAY);
-    qglEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-    Gui_SwitchGLMode(0);
-    main_inventory_manager->render();
-    Gui_SwitchGLMode(1);
-    qglPopClientAttrib();
-    qglPopAttrib();
-}
-
 
 void Gui_DrawLoadScreen(int value)
 {

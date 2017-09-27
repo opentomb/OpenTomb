@@ -84,6 +84,8 @@ typedef struct gl_text_line_s
     uint16_t                    y_align : 4;
     uint16_t                    show : 1;
     
+    GLfloat                     line_width;
+    GLfloat                     line_height;
     GLfloat                     x;
     GLfloat                     y;
     GLfloat                     rect[4];    //x0, y0, x1, y1

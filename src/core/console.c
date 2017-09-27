@@ -267,7 +267,7 @@ void Con_SetLinesCount(uint16_t count)
             char **old_lines = con_base.lines_text;
             uint16_t *new_styles = (uint16_t*)malloc(count * sizeof(uint16_t));
             uint16_t *old_styles = con_base.lines_style_id;
-            
+
             for(uint16_t i = 0; i < count; i++)
             {
                 new_lines[i] = (i < con_base.lines_count) ? (old_lines[i]) : ((char*)calloc(con_base.line_size * sizeof(char), 1));
@@ -489,7 +489,7 @@ void Con_CalcCursorPosition()
         GLint y = con_base.cursor_y + con_base.line_height;
 
         v = cursor_array;
-        con_base.cursor_x = 8 + 1 + glf_get_string_len(gl_font, con_base.lines_text[0], con_base.cursor_pos);
+        con_base.cursor_x = 8 + 1 + glf_get_string_len(gl_font, con_base.lines_text[0], con_base.cursor_pos) / 64.0f;
 
        *v++ = (GLfloat)con_base.cursor_x;
        *v++ = (GLfloat)y - 0.1 * (GLfloat)con_base.line_height;
@@ -679,7 +679,7 @@ void Con_Draw(float time)
             if(style)
             {
                 vec4_copy(gl_font->gl_font_color, style->font_color);
-                glf_render_str(gl_font, (GLfloat)x, (GLfloat)y, con_base.lines_text[i]);
+                glf_render_str(gl_font, (GLfloat)x, (GLfloat)y, con_base.lines_text[i], -1);
             }
         }
     }
