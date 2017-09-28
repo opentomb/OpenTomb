@@ -45,13 +45,14 @@ void main()
         //Soft lightning
         current_light_intensity = clamp(((light_outerRadius[i] - current_light_distance)/light_outerRadius[i]),0.0,1.0);
         
+        lightDirection += current_light_position;
+        
         if(current_light_intensity == 0.0)
             continue;//Skip zero intensity lights
         
         // Diffuse term
         lightColor = max(lightColor, light_color[i] * current_light_intensity * shading(normal, current_light_position) );
         
-        lightDirection += current_light_position;
         // Specular currently term is not used (only TR4 and up, was not yet implemented. Maybe later.)
     }
 #endif
