@@ -33,7 +33,6 @@ int av_get_packet(SDL_RWops *pb, AVPacket *pkt, int size)
         pkt->data = (uint8_t*)malloc(pkt->allocated_size);
     }
     pkt->size = size;
-    pkt->dts = 0;
     pkt->pts = 0;
     pkt->duration = 0;
     pkt->flags = 0;
@@ -55,12 +54,14 @@ void av_packet_unref(AVPacket *pkt)
 
 void codec_init(struct tiny_codec_s *s, SDL_RWops *rw)
 {
-    s->pb = rw;
+    s->input = rw;
     s->private_context = NULL;
     s->free_context = NULL;
     s->fps_num = 24;
     s->fps_denum = 1;
 
+    av_init_packet(&s->audio.pkt);
+    s->audio.pkt.is_video = 0;
     s->audio.buff_allocated_size = 0;
     s->audio.buff_size = 0;
     s->audio.buff_offset = 0;
@@ -77,6 +78,8 @@ void codec_init(struct tiny_codec_s *s, SDL_RWops *rw)
     s->audio.codec_tag = 0;
     s->audio.block_align = 0;
 
+    av_init_packet(&s->video.pkt);
+    s->video.pkt.is_video = 1;
     s->video.rgba = NULL;
     s->video.entry = NULL;
     s->video.entry_size = 0;
@@ -96,8 +99,10 @@ void codec_clear(struct tiny_codec_s *s)
         s->private_context = NULL;
     }
     s->packet = NULL;
+    av_packet_unref(&s->video.pkt);
     s->video.decode = NULL;
     s->video.codec_tag = 0;
+    av_packet_unref(&s->audio.pkt);
     s->audio.decode = NULL;
     s->audio.codec_tag = 0;
     s->audio.buff_allocated_size = 0;
@@ -116,6 +121,11 @@ void codec_clear(struct tiny_codec_s *s)
         s->video.free_data(s->video.priv_data);
         s->video.priv_data = NULL;
         s->video.free_data = NULL;
+    }
+    if(s->video.rgba)
+    {
+        free(s->video.rgba);
+        s->video.rgba = NULL;
     }
 
     if(s->audio.buff)

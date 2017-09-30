@@ -113,7 +113,7 @@ static int read_fps(const char* line, uint64_t *num, uint64_t *denum)
 
 static int rpl_read_packet(struct tiny_codec_s *s, struct AVPacket *pkt)
 {
-    SDL_RWops *pb = s->pb;
+    SDL_RWops *pb = s->input;
     RPLContext *rpl = (RPLContext*)s->private_context;
     int ret = -1;
     index_entry_p entry;
@@ -222,7 +222,7 @@ void adpcm_decode_init(struct tiny_codec_s *avctx);
 
 int codec_open_rpl(struct tiny_codec_s *s)
 {
-    SDL_RWops *pb = s->pb;
+    SDL_RWops *pb = s->input;
     s->private_context = (RPLContext*)calloc(sizeof(RPLContext), 1);
     s->free_context = free;
     RPLContext *rpl = (RPLContext*)s->private_context;
@@ -362,6 +362,7 @@ int codec_open_rpl(struct tiny_codec_s *s)
     SDL_RWseek(pb, chunk_catalog_offset, RW_SEEK_SET);
     total_audio_size = 0;
 
+    s->video.rgba = (uint8_t*)malloc(4 * s->video.width * s->video.height);
     s->video.entry_size = number_of_chunks;
     s->video.entry = (index_entry_p)malloc(number_of_chunks * sizeof(index_entry_t));
     s->audio.entry_size = number_of_chunks;

@@ -910,7 +910,7 @@ void Engine_MainLoop()
             fps->font_id    = FONT_PRIMARY;
             fps->style_id   = FONTSTYLE_MENU_TITLE;
         }
-
+        
         int codec_end_state = stream_codec_check_end(&engine_video);
         if(codec_end_state == 1)
         {
@@ -1587,10 +1587,32 @@ int  Engine_PlayVideo(const char *name)
 {
     if(engine_video.state == VIDEO_STATE_STOPPED)
     {
-        Audio_StreamExternalStop();
-        Audio_StopStreams(-1);
-        Con_SetShown(0);
-        return stream_codec_play_rpl(&engine_video, name);
+        codec_init(&engine_video.codec, SDL_RWFromFile(name, "rb"));
+        if(engine_video.codec.input)
+        {
+            if(0 == codec_open_rpl(&engine_video.codec))
+            {
+                Audio_StreamExternalStop();
+                Audio_StopStreams(-1);
+                Con_SetShown(0);
+                
+                while(Audio_StreamExternalBufferIsNeedUpdate())
+                {
+                    if(engine_video.codec.audio.decode && (engine_video.codec.packet(&engine_video.codec, &engine_video.codec.audio.pkt) >= 0))
+                    {
+                        engine_video.codec.audio.decode(&engine_video.codec, &engine_video.codec.audio.pkt);
+                    }
+                    if(engine_video.codec.audio.buff && (engine_video.codec.audio.buff_offset >= Audio_StreamExternalBufferOffset()))
+                    {
+                        Audio_StreamExternalUpdateBuffer(engine_video.codec.audio.buff, engine_video.codec.audio.buff_size,
+                            engine_video.codec.audio.bits_per_sample, engine_video.codec.audio.channels, engine_video.codec.audio.sample_rate);
+                    }
+                }
+                
+                return stream_codec_play(&engine_video);
+            }
+            codec_clear(&engine_video.codec);
+        }
     }
     return 0;
 }
@@ -1810,7 +1832,6 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "xxx"))
         {
-            //stream_codec_play_rpl(&engine_video, "data/tr2/fmv/CRASH.RPL");
             SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
             if(f)
             {

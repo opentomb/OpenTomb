@@ -21,12 +21,6 @@ extern "C" {
 typedef struct AVPacket
 {
     /**
-     * A reference to the reference-counted buffer where the packet data is
-     * stored.
-     * May be NULL, then the packet data is not reference-counted.
-     */
-    //AVBufferRef *buf;
-    /**
      * Presentation timestamp in AVStream->time_base units; the time at which
      * the decompressed packet will be presented to the user.
      * Can be AV_NOPTS_VALUE if it is not stored in the file.
@@ -37,11 +31,12 @@ typedef struct AVPacket
      */
     int64_t pts;
     /**
-     * Decompression timestamp in AVStream->time_base units; the time at which
-     * the packet is decompressed.
-     * Can be AV_NOPTS_VALUE if it is not stored in the file.
+     * Duration of this packet in AVStream->time_base units, 0 if unknown.
+     * Equals next_pts - this_pts in presentation order.
      */
-    int64_t dts;
+    int64_t duration;
+    int64_t pos;                            ///< byte position in input stream, -1 if unknown
+    
     uint8_t *data;
     int   size;
     int   allocated_size;
@@ -51,14 +46,6 @@ typedef struct AVPacket
      */
     uint16_t   flags;
     uint16_t   is_video;
-
-    /**
-     * Duration of this packet in AVStream->time_base units, 0 if unknown.
-     * Equals next_pts - this_pts in presentation order.
-     */
-    int64_t duration;
-
-    int64_t pos;                            ///< byte position in stream, -1 if unknown
 } AVPacket;
 
 typedef struct index_entry_s
@@ -72,7 +59,7 @@ typedef struct index_entry_s
 
 typedef struct tiny_codec_s
 {
-    struct SDL_RWops   *pb;
+    struct SDL_RWops   *input;
     void               *private_context;
     void              (*free_context)(void *context);
     int               (*packet)(struct tiny_codec_s *s, struct AVPacket *pkt);
@@ -80,6 +67,7 @@ typedef struct tiny_codec_s
     uint64_t            fps_denum;
     struct
     {
+        AVPacket        pkt;
         uint32_t        codec_tag;
         uint16_t        width;
         uint16_t        height;
@@ -95,6 +83,7 @@ typedef struct tiny_codec_s
 
     struct
     {
+        AVPacket        pkt;
         uint32_t        codec_tag;
         uint16_t        frquency;
         uint16_t        format;

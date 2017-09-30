@@ -51,7 +51,7 @@ void stream_codec_video_unlock(stream_codec_p s);
 void stream_codec_audio_lock(stream_codec_p s);
 void stream_codec_audio_unlock(stream_codec_p s);
 
-int stream_codec_play_rpl(stream_codec_p s, const char *name);
+int stream_codec_play(stream_codec_p s);
 
 #ifdef __cplusplus
 }

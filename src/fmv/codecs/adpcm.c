@@ -369,7 +369,7 @@ static int xa_decode(struct tiny_codec_s *avctx, int16_t *out0, int16_t *out1,
 
 static void adpcm_swf_decode(struct tiny_codec_s *avctx, const uint8_t *buf, int buf_size, int16_t *samples)
 {
-    ADPCMDecodeContext *c = avctx->audio.priv_data;
+    ADPCMDecodeContext *c = (ADPCMDecodeContext*)avctx->audio.priv_data;
     GetBitContext gb;
     const int *table;
     int k0, signmask, nb_bits, count;
@@ -671,7 +671,11 @@ static int32_t adpcm_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
     }
 
     /* get output buffer */
-    output_buff_size = codec_resize_audio_buffer(avctx, avctx->audio.bits_per_sample >> 3, FFMAX(coded_samples, nb_samples));
+    if(coded_samples)
+    {
+        nb_samples = coded_samples;
+    }
+    output_buff_size = codec_resize_audio_buffer(avctx, avctx->audio.bits_per_sample >> 3, nb_samples);
     samples = (int16_t*)avctx->audio.buff;
     samples_p = (int16_t**)avctx->audio.buff_p;
 
