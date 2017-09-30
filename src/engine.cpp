@@ -911,7 +911,7 @@ void Engine_MainLoop()
             fps->font_id    = FONT_PRIMARY;
             fps->style_id   = FONTSTYLE_MENU_TITLE;
         }
-
+        
         int codec_end_state = stream_codec_check_end(&engine_video);
         if(codec_end_state == 1)
         {
@@ -1621,7 +1621,7 @@ extern "C" int Engine_ExecCmd(char *ch)
             Con_AddLine("cls - clean console\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("show_fps - switch show fps flag\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("spacing - read and write spacing\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("showing_lines - read and write number of showing lines\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("con_height - console area height in pixels\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("cvars - lua's table of cvar's, to see them type: show_table(cvars)\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("free_look - switch camera mode\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("r_crosshair - switch crosshair visibility\0", FONTSTYLE_CONSOLE_NOTIFY);
@@ -1678,17 +1678,17 @@ extern "C" int Engine_ExecCmd(char *ch)
             Con_SetLineInterval(atof(token));
             return 1;
         }
-        else if(!strcmp(token, "showing_lines"))
+        else if(!strcmp(token, "con_height"))
         {
             ch = SC_ParseToken(ch, token, sizeof(token));
             if(NULL == ch)
             {
-                Con_Notify("showing lines = %d", Con_GetShowingLines());
+                Con_Notify("showing lines = %d", (int)Con_GetHeight());
                 return 1;
             }
             else
             {
-                Con_SetShowingLines(atoi(token));
+                Con_SetHeight(atoi(token));
             }
             return 1;
         }

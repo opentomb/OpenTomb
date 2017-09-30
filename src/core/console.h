@@ -34,18 +34,16 @@ void Con_Destroy();
 
 float Con_GetLineInterval();
 void  Con_SetLineInterval(float interval);
-uint16_t Con_GetShowingLines();
-void Con_SetShowingLines(uint16_t value);
+void Con_SetHeight(uint16_t value);
+uint16_t Con_GetHeight();
 void Con_SetBackgroundColor(float color[4]);
 void Con_SetShowCursorPeriod(float time);
 
 void Con_SetLinesCount(uint16_t count);
 void Con_SetLogLinesCount(uint16_t count);
-void Con_SetMaxLineLenght(uint16_t line_size);
 
 void Con_Filter(char *text);
 void Con_Edit(int key);
-void Con_CalcCursorPosition();
 void Con_AddLog(const char *text);
 void Con_AddLine(const char *text, uint16_t font_style);
 void Con_AddText(const char *text, uint16_t font_style);

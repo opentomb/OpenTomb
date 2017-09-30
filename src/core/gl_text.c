@@ -164,11 +164,17 @@ void GLText_RenderStringLine(gl_text_line_p l)
         if(l->line_width > 0.0f)
         {
             int n_sym = 0;
-            for(char *ch = glf_get_string_for_width(gl_font, l->text, w_pt, &n_sym); *ch; ch = glf_get_string_for_width(gl_font, ch, w_pt, &n_sym))
+            n_lines = 0;
+            for(char *ch = glf_get_string_for_width(gl_font, l->text, w_pt, &n_sym); *begin; ch = glf_get_string_for_width(gl_font, ch, w_pt, &n_sym))
             {
+                if(!n_lines)
+                {
+                    glf_get_string_bb(gl_font, l->text, n_sym, &x0, &y0, &x1, &y1);
+                }
                 ++n_lines;
+                begin = ch;
             }
-            glf_get_string_bb(gl_font, l->text, 1, &x0, &y0, &x1, &y1);
+            begin = l->text;
             x1 = x0 + w_pt;
             y1 = y0 + n_lines * gl_font->font_size * l->line_height * 64.0f;
         }
@@ -208,7 +214,7 @@ void GLText_RenderStringLine(gl_text_line_p l)
                 break;
         }
 
-        if(style->rect)
+        if(style->rect)  // it is BS
         {
             BindWhiteTexture();
             GLfloat x0 = l->rect[0] + real_x - style->rect_border * screen_width;
