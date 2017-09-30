@@ -1835,6 +1835,7 @@ extern "C" int Engine_ExecCmd(char *ch)
         }
         else if(!strcmp(token, "xxx"))
         {
+            Con_SetLinesHistorySize(18);
             SDL_RWops *f = SDL_RWFromFile("ascII.txt", "r");
             if(f)
             {

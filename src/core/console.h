@@ -7,24 +7,10 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
-
-#define CON_MIN_LOG 16
-#define CON_MAX_LOG 128
-
-#define CON_MIN_LINES 64
-#define CON_MAX_LINES 512
-
-#define CON_MIN_LINE_SIZE 80
-#define CON_MAX_LINE_SIZE 256
 
 #define CON_MIN_LINE_INTERVAL 0.5
 #define CON_MAX_LINE_INTERVAL 4.0
 
-
-#define GUI_MIN_FONT_SIZE  1
-#define GUI_MAX_FONT_SIZE  72
 
 void Con_Init();
 void Con_SetExecFunction(int(*exec_cmd)(char *ch));

@@ -230,57 +230,49 @@ void Con_SetShowCursorPeriod(float time)
 
 void Con_SetLinesHistorySize(uint16_t count)
 {
-    /*if((count >= CON_MIN_LINES) && (count <= CON_MAX_LINES))
+    if((count >= 16) && (count <= 32767) && (count != con_base.lines_buff_size))
     {
-        if(con_base.lines_text)
+        char **new_buff = (char**)calloc(count, sizeof(char*));
+        for(uint16_t i = 0; i < con_base.lines_count; ++i)
         {
-            char **new_lines = (char**)malloc(count * sizeof(char*));
-            char **old_lines = con_base.lines_text;
-            uint16_t *new_styles = (uint16_t*)malloc(count * sizeof(uint16_t));
-            uint16_t *old_styles = con_base.lines_style_id;
-
-            for(uint16_t i = 0; i < count; i++)
+            if(i < count)
             {
-                new_lines[i] = (i < con_base.lines_count) ? (old_lines[i]) : ((char*)calloc(con_base.line_size * sizeof(char), 1));
-                new_styles[i] = (i < con_base.lines_count) ? (old_styles[i]) : (FONTSTYLE_GENERIC);
+                new_buff[i] = con_base.lines_buff[i];
             }
-            for(uint16_t i = count; i < con_base.lines_count; i++)
+            else
             {
-                free(old_lines[i]);
+                free(con_base.lines_buff[i]);
             }
-            con_base.lines_text = new_lines;
-            con_base.lines_style_id = new_styles;
-            free(old_lines);
-            free(old_styles);
         }
-        con_base.log_pos = 0;
-        con_base.lines_count = count;
-    }*/
+        free(con_base.lines_buff);
+        con_base.lines_buff = new_buff;
+        con_base.lines_buff_size = count;
+        con_base.lines_count = (con_base.lines_count < count) ? (con_base.lines_count) : (count - 1);
+    }
 }
 
 
 void Con_SetCommandsHistorySize(uint16_t count)
 {
-    /*if((count >= CON_MIN_LOG) && (count <= CON_MAX_LOG))
+    if((count >= 16) && (count <= 32767) && (count != con_base.commands_buff_size))
     {
-        if(con_base.log_lines)
+        char **new_buff = (char**)calloc(count, sizeof(char*));
+        for(uint16_t i = 0; i < con_base.commands_count; ++i)
         {
-            char **new_lines = (char**)malloc(count * sizeof(char*));
-            char **old_lines = con_base.log_lines;
-            for(uint16_t i = 0; i < count; i++)
+            if(i < count)
             {
-                new_lines[i] = (i < con_base.log_lines_count) ? (old_lines[i]) : ((char*)calloc(con_base.line_size * sizeof(char), 1));
+                new_buff[i] = con_base.commands_buff[i];
             }
-            for(uint16_t i = count; i < con_base.log_lines_count; i++)
+            else
             {
-                free(old_lines[i]);
+                free(con_base.commands_buff[i]);
             }
-            con_base.log_lines = new_lines;
-            free(old_lines);
         }
-        con_base.log_pos = 0;
-        con_base.log_lines_count = count;
-    }*/
+        free(con_base.commands_buff);
+        con_base.commands_buff = new_buff;
+        con_base.commands_buff_size = count;
+        con_base.commands_count = (con_base.commands_count < count) ? (con_base.commands_count) : (count - 1);
+    }
 }
 
 void Con_Filter(char *text)
