@@ -77,18 +77,12 @@ static void *stream_codec_thread_func(void *data)
     stream_codec_p s = (stream_codec_p)data;
     if(s)
     {
-        AVPacket pkt_video, pkt_audio;
         uint64_t frame = 0;
         uint64_t ns = 0;
         struct timespec time_start = { 0 };
         struct timespec vid_time;
         int can_continue = 1;
 
-        s->codec.video.rgba = (uint8_t*)malloc(4 * s->codec.video.width * s->codec.video.height);
-        av_init_packet(&pkt_video);
-        pkt_video.is_video = 1;
-        av_init_packet(&pkt_audio);
-        pkt_audio.is_video = 0;
         clock_gettime(CLOCK_REALTIME, &time_start);
 
         while(!s->stop && can_continue)
@@ -105,18 +99,18 @@ static void *stream_codec_thread_func(void *data)
                 vid_time.tv_sec++;
             }
 
-            if(s->update_audio && s->codec.audio.decode && (s->codec.packet(&s->codec, &pkt_audio) >= 0))
+            if(s->update_audio && s->codec.audio.decode && (s->codec.packet(&s->codec, &s->codec.audio.pkt) >= 0))
             {
                 pthread_mutex_lock(&s->audio_buffer_mutex);
-                s->codec.audio.decode(&s->codec, &pkt_audio);
+                s->codec.audio.decode(&s->codec, &s->codec.audio.pkt);
                 s->update_audio = 0;
                 pthread_mutex_unlock(&s->audio_buffer_mutex);
             }
 
-            if(s->codec.video.decode && (s->codec.packet(&s->codec, &pkt_video) >= 0))
+            if(s->codec.video.decode && (s->codec.packet(&s->codec, &s->codec.video.pkt) >= 0))
             {
                 pthread_mutex_lock(&s->video_buffer_mutex);
-                s->codec.video.decode(&s->codec, &pkt_video);
+                s->codec.video.decode(&s->codec, &s->codec.video.pkt);
                 pthread_mutex_unlock(&s->video_buffer_mutex);
                 can_continue++;
             }
@@ -125,20 +119,15 @@ static void *stream_codec_thread_func(void *data)
             pthread_mutex_timedlock(&s->timer_mutex, &vid_time);
         }
         s->state = VIDEO_STATE_QEUED;
-        av_packet_unref(&pkt_video);
-        av_packet_unref(&pkt_audio);
-        
+
         pthread_mutex_lock(&s->video_buffer_mutex);
-        free(s->codec.video.rgba);
-        s->codec.video.rgba = NULL;
-        pthread_mutex_unlock(&s->video_buffer_mutex);
-        
         pthread_mutex_lock(&s->audio_buffer_mutex);
         codec_clear(&s->codec);
         pthread_mutex_unlock(&s->audio_buffer_mutex);
+        pthread_mutex_unlock(&s->video_buffer_mutex);
         
-        SDL_RWclose(s->codec.pb);
-        s->codec.pb = NULL;
+        SDL_RWclose(s->codec.input);
+        s->codec.input = NULL;
     }
     s->state = VIDEO_STATE_STOPPED;
 
@@ -170,28 +159,13 @@ void stream_codec_audio_unlock(stream_codec_p s)
 }
 
 
-int stream_codec_play_rpl(stream_codec_p s, const char *name)
+int stream_codec_play(stream_codec_p s)
 {
-    if((0 == s->thread) && (s->state == VIDEO_STATE_STOPPED))
+    if((s->state == VIDEO_STATE_STOPPED) && s->codec.input)
     {
-        codec_init(&s->codec, SDL_RWFromFile(name, "rb"));
-        if(s->codec.pb)
-        {
-            if(0 == codec_open_rpl(&s->codec))
-            {
-                s->state = VIDEO_STATE_QEUED;
-                s->stop = 0;
-                s->update_audio = 1;
-
-                pthread_create(&s->thread, NULL, stream_codec_thread_func, s);
-                return s->thread != 0;
-            }
-            else
-            {
-                SDL_RWclose(s->codec.pb);
-                s->codec.pb = NULL;
-            }
-        }
+        s->state = VIDEO_STATE_QEUED;
+        s->stop = 0;
+        return 0 != pthread_create(&s->thread, NULL, stream_codec_thread_func, s);
     }
     return 0;
 }
