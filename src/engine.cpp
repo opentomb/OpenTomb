@@ -1705,7 +1705,7 @@ extern "C" int Engine_ExecCmd(char *ch)
             ch = SC_ParseToken(ch, token, sizeof(token));
             if(NULL == ch)
             {
-                Con_Notify("showing lines = %d", (int)Con_GetHeight());
+                Con_Notify("console height = %dpx", (int)Con_GetHeight());
                 return 1;
             }
             else

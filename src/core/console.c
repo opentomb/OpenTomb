@@ -8,6 +8,7 @@
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
+#include <memory.h>
 
 #include "utf8_32.h"
 #include "gl_font.h"
@@ -22,7 +23,6 @@ static struct
 {
     GLfloat                     background_color[4];
     GLfloat                     edit_font_color[4];
-    GLfloat                     main_font_color[4];
 
     uint32_t                    edit_size;
     char                       *edit_buff;
@@ -31,6 +31,7 @@ static struct
     uint16_t                    commands_count;
     uint16_t                    lines_buff_size;
     uint16_t                    commands_buff_size;
+    uint16_t                   *lines_styles;
     char                      **lines_buff;
     char                      **commands_buff;
     
@@ -62,12 +63,15 @@ void Con_Init()
 
     con_base.edit_size = 4096;
     con_base.edit_buff = (char*)calloc(con_base.edit_size, sizeof(char));
-    con_base.lines_buff = NULL;
-    con_base.commands_buff = NULL;
+    
+    con_base.lines_buff_size = 128;
+    con_base.lines_buff = (char**)calloc(con_base.lines_buff_size, sizeof(char*));
+    con_base.lines_styles = (uint16_t*)calloc(con_base.lines_buff_size, sizeof(uint16_t));
+    con_base.commands_buff_size = 128;   
+    con_base.commands_buff = (char**)calloc(con_base.commands_buff_size, sizeof(char*));
+    
     con_base.lines_count = 0;
     con_base.commands_count = 0;
-    con_base.lines_buff_size = 0;
-    con_base.commands_buff_size;
     con_base.height = 240;
 
     // spacing check
@@ -115,11 +119,6 @@ void Con_InitGlobals()
     con_base.edit_font_color[1] = 0.9f;
     con_base.edit_font_color[2] = 0.7f;
     con_base.edit_font_color[3] = 1.0f;
-
-    con_base.main_font_color[0] = 0.9f;
-    con_base.main_font_color[1] = 0.7f;
-    con_base.main_font_color[2] = 0.8f;
-    con_base.main_font_color[3] = 1.0f;
 
     con_base.exec_cmd        = NULL;
     con_base.spacing         = CON_MIN_LINE_INTERVAL;
@@ -435,26 +434,28 @@ void Con_AddLog(const char *text)
 
 void Con_AddLine(const char *text, uint16_t font_style)
 {
-    if(text != NULL)
+    if(text && *text)
     {
-        size_t len = 0;
-        /*do
+        uint32_t len = strlen(text);
+        char *str = (char*)malloc((len + 1) * sizeof(char));
+        memcpy(str, text, len);
+        str[len] = 0;
+        if(con_base.lines_count + 1 < con_base.lines_buff_size)
         {
-            char *last = con_base.lines_text[con_base.lines_count-1];             // save pointer to the last log string
-            len = strlen(text);
-            for(uint16_t i = con_base.lines_count - 1; i > 1; i--)               // shift log
-            {
-                con_base.lines_style_id[i] = con_base.lines_style_id[i - 1];
-                con_base.lines_text[i]  = con_base.lines_text[i - 1];             // shift is round
-            }
-
-            con_base.lines_text[1] = last;                                       // cycle the shift
-            con_base.lines_style_id[1] = font_style;
-            strncpy(con_base.lines_text[1], text, con_base.line_size);
-            con_base.lines_text[1][con_base.line_size - 1] = 0;                  // paranoid end of string
-            text += con_base.line_size - 1;
+            con_base.lines_styles[con_base.lines_count] = font_style;
+            con_base.lines_buff[con_base.lines_count++] = str;
         }
-        while(len >= con_base.line_size);*/
+        else
+        {
+            free(con_base.lines_buff[0]);
+            for(uint16_t i = 1; i < con_base.lines_buff_size; ++i)
+            {
+                con_base.lines_buff[i - 1] = con_base.lines_buff[i];
+                con_base.lines_styles[i - 1] = con_base.lines_styles[i];
+            }
+            con_base.lines_buff[con_base.lines_buff_size - 1] = str;
+            con_base.lines_styles[con_base.lines_buff_size - 1] = font_style;
+        }
     }
 }
 
@@ -622,6 +623,25 @@ void Con_Draw(float time)
                 glf_render_str(gl_font, 8, y, begin, n_sym);
             }
             begin = end;
+        }
+        
+        for(uint16_t i = 0; i < con_base.lines_count; i++)
+        {
+            char *str = con_base.lines_buff[con_base.lines_count - i - 1];
+            gl_fontstyle_p style = GLText_GetFontStyle(con_base.lines_styles[con_base.lines_count - i - 1]);
+            begin = str;
+            end = str;
+            for(char *ch = glf_get_string_for_width(gl_font, begin, w_pt, &n_sym); style && *begin; ch = glf_get_string_for_width(gl_font, ch, w_pt, &n_sym))
+            {
+                y += con_base.line_height;
+                if(y > screen_info.h)
+                {
+                    return;
+                }
+                vec4_copy(gl_font->gl_font_color, style->font_color);
+                glf_render_str(gl_font, 8, y, begin, n_sym);
+                begin = ch;
+            }
         }
     }
 }
