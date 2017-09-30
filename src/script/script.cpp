@@ -472,21 +472,17 @@ int Script_ParseConsole(lua_State *lua)
         Con_SetLineInterval(lua_tonumber(lua, -1));
         lua_pop(lua, 1);
 
-        /*lua_getfield(lua, -1, "line_size");
-        Con_SetMaxLineLenght(lua_tonumber(lua, -1));
-        lua_pop(lua, 1);*/
+        lua_getfield(lua, -1, "height");
+        Con_SetHeight(lua_tonumber(lua, -1));
+        lua_pop(lua, 1);
 
         lua_getfield(lua, -1, "lines_count");
-        Con_SetLinesCount(lua_tonumber(lua, -1));
+        Con_SetLinesHistorySize(lua_tonumber(lua, -1));
         lua_pop(lua, 1);
 
-        lua_getfield(lua, -1, "log_size");
-        Con_SetLogLinesCount(lua_tonumber(lua, -1));
+        lua_getfield(lua, -1, "commands_count");
+        Con_SetCommandsHistorySize(lua_tonumber(lua, -1));
         lua_pop(lua, 1);
-
-        /*lua_getfield(lua, -1, "showing_lines");
-        Con_SetShowingLines(lua_tonumber(lua, -1));
-        lua_pop(lua, 1);*/
 
         lua_getfield(lua, -1, "show");
         Con_SetShown(lua_tonumber(lua, -1));

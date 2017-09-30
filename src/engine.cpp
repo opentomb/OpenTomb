@@ -806,6 +806,8 @@ void Engine_PollSDLEvents()
                         case SDLK_RIGHT:
                         case SDLK_HOME:
                         case SDLK_END:
+                        case SDLK_PAGEUP:
+                        case SDLK_PAGEDOWN:
                         case SDLK_BACKSPACE:
                         case SDLK_DELETE:
                             Con_Edit(event.key.keysym.sym);
@@ -1873,7 +1875,7 @@ extern "C" int Engine_ExecCmd(char *ch)
                 snprintf(buf, 1024, "Command \"%s\" not found", token);
                 Con_AddLine(buf, FONTSTYLE_CONSOLE_WARNING);
             }
-            return 0;
+            return 1;
         }
     }
 

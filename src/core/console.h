@@ -39,12 +39,11 @@ uint16_t Con_GetHeight();
 void Con_SetBackgroundColor(float color[4]);
 void Con_SetShowCursorPeriod(float time);
 
-void Con_SetLinesCount(uint16_t count);
-void Con_SetLogLinesCount(uint16_t count);
+void Con_SetLinesHistorySize(uint16_t count);
+void Con_SetCommandsHistorySize(uint16_t count);
 
 void Con_Filter(char *text);
 void Con_Edit(int key);
-void Con_AddLog(const char *text);
 void Con_AddLine(const char *text, uint16_t font_style);
 void Con_AddText(const char *text, uint16_t font_style);
 void Con_Printf(const char *fmt, ...);
