@@ -275,9 +275,17 @@ void Con_SetCommandsHistorySize(uint16_t count)
     }
 }
 
+
+void Con_Scroll(int value)
+{
+    con_base.lines_scroll += value;
+    con_base.lines_scroll = (con_base.lines_scroll < 0) ? (0) : (con_base.lines_scroll);
+}
+
+
 void Con_Filter(char *text)
 {
-    if(text != NULL)
+    if(text)
     {
         uint8_t *utf8 = (uint8_t*)text;
         uint32_t utf32;
@@ -318,14 +326,11 @@ void Con_Edit(int key)
     switch(key)
     {
         case SDLK_PAGEUP:
-            con_base.lines_scroll++;
+            Con_Scroll(1);
             break;
         
         case SDLK_PAGEDOWN:
-            if(con_base.lines_scroll > 0)
-            {
-                con_base.lines_scroll--;
-            }
+            Con_Scroll(-1);
             break;
             
         case SDLK_UP:
@@ -462,7 +467,7 @@ void Con_AddLine(const char *text, uint16_t font_style)
 
 void Con_AddText(const char *text, uint16_t font_style)
 {
-    if(text != NULL)
+    if(text)
     {
         char buf[4096], ch;
         size_t i, j, text_size = strlen(text);
@@ -626,7 +631,8 @@ void Con_Draw(float time)
             begin = end;
         }
         
-        con_base.lines_scroll = (con_base.lines_scroll + 1 > con_base.lines_count) ? (con_base.lines_count) : con_base.lines_scroll;
+        con_base.lines_scroll = (con_base.lines_scroll + 1 > con_base.lines_count) ? (con_base.lines_count - 1) : (con_base.lines_scroll);
+        con_base.lines_scroll = (con_base.lines_scroll < 0) ? (0) : (con_base.lines_scroll);
         for(uint16_t i = con_base.lines_scroll; i < con_base.lines_count; i++)
         {
             char *str = con_base.lines_buff[con_base.lines_count - i - 1];

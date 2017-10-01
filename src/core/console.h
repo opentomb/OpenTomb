@@ -28,6 +28,7 @@ void Con_SetShowCursorPeriod(float time);
 void Con_SetLinesHistorySize(uint16_t count);
 void Con_SetCommandsHistorySize(uint16_t count);
 
+void Con_Scroll(int value);
 void Con_Filter(char *text);
 void Con_Edit(int key);
 void Con_AddLine(const char *text, uint16_t font_style);
