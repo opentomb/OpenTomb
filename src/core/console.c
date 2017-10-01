@@ -314,7 +314,7 @@ void Con_Edit(int key)
         }
         con_base.edit_buff[0] = 0;
         con_base.cursor_pos = 0;
-        con_base.command_pos = 0;
+        con_base.command_pos = (con_base.commands_count > 0) ? (con_base.commands_count - 1) : (0);
         return;
     }
 
