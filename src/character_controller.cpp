@@ -873,9 +873,14 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         climb->edge_point[2] /= d;
         vec3_copy(climb->point, climb->edge_point);
         //renderer.debugDrawer->DrawLine(to, climb->point, color, color);
-        /*
-         * unclimbable edge slant %)
-         */
+        vec3_sub(from, test_to, test_from);
+        vec3_sub(to, climb->point, test_from);
+        if(from[0] * to[0] + from[1] * to[1] < 0.0f)
+        {
+            return;
+        }
+        
+        // unclimbable edge slant test
         vec3_cross(n2, n0, n1);
         d = ent->character->critical_slant_z_component;
         d *= d * (n2[0] * n2[0] + n2[1] * n2[1] + n2[2] * n2[2]);
