@@ -3,7 +3,6 @@
 #define ENGINE_GUI_H
 
 #include <stdint.h>
-#include "../core/gl_text.h"
 
 // Anchoring is needed to link specific GUI element to specific screen position,
 // independent of screen resolution and aspect ratio. Vertical and horizontal
@@ -17,14 +16,6 @@
 #define GUI_ANCHOR_HOR_LEFT         0
 #define GUI_ANCHOR_HOR_RIGHT        1
 #define GUI_ANCHOR_HOR_CENTER       2
-
-
-struct inventory_node_s;
-
-
-#define GUI_MENU_ITEMTYPE_SYSTEM 0
-#define GUI_MENU_ITEMTYPE_SUPPLY 1
-#define GUI_MENU_ITEMTYPE_QUEST  2
 
 // Immutable bars enumeration.
 // These are the bars that are always exist in GUI.
@@ -56,7 +47,6 @@ enum BarColorType
 };
 
 // Main bar class.
-
 class gui_ProgressBar
 {
 public:
@@ -135,146 +125,9 @@ private:
     float         mBaseRatio;           // Max. / actual value ratio.
 };
 
-// Offscreen divider specifies how far item notifier will be placed from
-// the final slide position. Usually it's enough to be 1/8 of the screen
-// width, but if you want to increase or decrease notifier size, you must
-// change this value properly.
-
-#define GUI_NOTIFIER_OFFSCREEN_DIVIDER 8.0
-
-// Notifier show time is a time notifier stays on screen (excluding slide
-// effect). Maybe it's better to move it to script later.
-
-#define GUI_NOTIFIER_SHOWTIME 2.0
-
-class gui_ItemNotifier
-{
-public:
-    gui_ItemNotifier();
-
-    void    Start(int item, float time);
-    void    Reset();
-    void    Animate();
-    void    Draw();
-
-    void    SetRot(float X, float Y);
-    void    SetSize(float size);
-    void    SetRotateTime(float time);
-
-private:
-    bool    mActive;
-    int     mItem;
-
-    float   mPosY;
-    float   mStartPosX;
-    float   mEndPosX;
-    float   mCurrPosX;
-
-    float   mRotX;
-    float   mRotY;
-    float   mCurrRotX;
-    float   mCurrRotY;
-
-    float   mSize;
-
-    float   mShowTime;
-    float   mCurrTime;
-    float   mRotateTime;
-};
-
 void Gui_Init();
-void Gui_Destroy();
-
 void Gui_InitBars();
-void Gui_InitNotifier();
-
-/**
- * Inventory rendering / manipulation functions
- */
-void Item_Frame(struct ss_bone_frame_s *bf, float time);
-void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatrix);
-/*
- * Inventory renderer class
- */
-class gui_InventoryManager
-{
-public:
-    enum inventoryState
-    {
-        INVENTORY_DISABLED = 0,
-        INVENTORY_IDLE,
-        INVENTORY_OPEN,
-        INVENTORY_CLOSE,
-        INVENTORY_R_LEFT,
-        INVENTORY_R_RIGHT,
-        INVENTORY_UP,
-        INVENTORY_DOWN,
-        INVENTORY_ACTIVATE
-    };
-
-    gui_InventoryManager();
-   ~gui_InventoryManager();
-
-    int getCurrentState()
-    {
-        return mCurrentState;
-    }
-
-    int getNextState()
-    {
-        return mNextState;
-    }
-
-    void send(inventoryState state)
-    {
-        mNextState = state;
-    }
-
-    int getItemsType()
-    {
-        return mCurrentItemsType;
-    }
-
-    int setItemsType(int type);
-    void setInventory(struct inventory_node_s **i);
-    void setTitle(int items_type);
-    void frame(float time);
-    void render();
-
-    gl_text_line_t              mLabel_Title;
-    char                        mLabel_Title_text[GUI_LINE_DEFAULTSIZE];
-    gl_text_line_t              mLabel_ItemName;
-    char                        mLabel_ItemName_text[GUI_LINE_DEFAULTSIZE];
-
-private:
-    struct inventory_node_s   **mInventory;
-    int                         mCurrentState;
-    int                         mNextState;
-    int                         mNextItemsCount;
-
-    int                         mCurrentItemsType;
-    int                         mCurrentItemsCount;
-    int                         mItemsOffset;
-
-    float                       mRingRotatePeriod;
-    float                       mRingTime;
-    float                       mRingAngle;
-    float                       mRingVerticalAngle;
-    float                       mRingAngleStep;
-    float                       mBaseRingRadius;
-    float                       mRingRadius;
-    float                       mVerticalOffset;
-
-    float                       mItemRotatePeriod;
-    float                       mItemTime;
-    float                       mItemAngle;
-
-    int getItemElementsCountByType(int type);
-    void restoreItemAngle(float time);
-};
-
-
-extern gui_InventoryManager  *main_inventory_manager;
+void Gui_Destroy();
 
 /**
  * Helper method to setup OpenGL state for console drawing.
@@ -321,12 +174,6 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
                   const GLuint texture = 0);
 
 /**
- * Item notifier functions.
- */
-void Gui_NotifierStart(int item);
-void Gui_NotifierStop();
-
-/**
  * General GUI drawing routines.
  */
 void Gui_DrawCrosshair();
@@ -334,8 +181,6 @@ void Gui_DrawBars();
 void Gui_DrawLoadScreen(int value);
 bool Gui_SetScreenTexture(void *data, int w, int h, int bpp);
 bool Gui_LoadScreenAssignPic(const char* pic_name);
-void Gui_DrawInventory();
-void Gui_DrawNotifier();
 
 /**
  * General GUI update routines.

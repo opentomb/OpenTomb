@@ -736,7 +736,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     const float z_step = -0.66 * ent->character->climb_r;
     float from[3], to[3];
     float *pos = ent->transform + 12;
-    float n0[4], n1[4];                                                         // planes equations
+    double n0[4], n1[4];                                                        // planes equations
     char up_founded = 0;
     collision_result_t cb;
     //const float color[3] = {1.0, 0.0, 0.0};
@@ -838,7 +838,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
 
     if((up_founded == 2) && ((n0[2] > 0.0f) || (n1[2] > 0.0f)))
     {
-        float d, n2[4];
+        double d, n2[4];
         // get the character plane equation
         vec3_copy(n2, ent->transform + 0);
         n2[3] = -vec3_dot(n2, pos);

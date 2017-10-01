@@ -19,7 +19,7 @@ extern "C" {
 #include "script/script.h"
 #include "render/camera.h"
 #include "physics/physics.h"
-#include "gui/gui.h"
+#include "gui/gui_inventory.h"
 #include "audio/audio.h"
 #include "engine.h"
 #include "controls.h"

@@ -70,7 +70,7 @@ void GLText_Init()
         font_data.fonts[i].font_size = 0;
         font_data.fonts[i].gl_font   = NULL;
     }
-    
+
     for(int i = 0; i < GLTEXT_MAX_TEMP_LINES; i++)
     {
         font_data.gl_temp_lines[i].text_size = GUI_LINE_DEFAULTSIZE;
@@ -84,7 +84,7 @@ void GLText_Init()
         font_data.gl_temp_lines[i].font_id  = FONT_SECONDARY;
         font_data.gl_temp_lines[i].style_id = FONTSTYLE_GENERIC;
     }
-    
+
     font_data.temp_lines_used = 0;
 }
 
@@ -92,7 +92,7 @@ void GLText_Init()
 void GLText_Destroy()
 {
     int i;
-    
+
     for(i = 0; i < GLTEXT_MAX_TEMP_LINES ; i++)
     {
         font_data.gl_temp_lines[i].show = 0;
@@ -102,7 +102,7 @@ void GLText_Destroy()
     }
 
     font_data.temp_lines_used = GLTEXT_MAX_TEMP_LINES;
-    
+
     for(i = 0; i < font_data.max_fonts; i++)
     {
         glf_free_font(font_data.fonts[i].gl_font);
@@ -142,94 +142,135 @@ void GLText_UpdateResize(int w, int h, float scale)
 
 void GLText_RenderStringLine(gl_text_line_p l)
 {
-    GLfloat real_x = 0.0, real_y = 0.0;
-
     gl_tex_font_p gl_font = NULL;
     gl_fontstyle_p style = NULL;
-
-    if(!l->show || ((gl_font = GLText_GetFont(l->font_id)) == NULL) || ((style = GLText_GetFontStyle(l->style_id)) == NULL))
+    
+    if(l->show && (gl_font = GLText_GetFont(l->font_id)) && (style = GLText_GetFontStyle(l->style_id)))
     {
-        return;
+        GLfloat real_x = 0.0f, real_y = 0.0f;
+        int32_t x0, y0, x1, y1;
+        GLfloat shadow_color[4];
+        int32_t w_pt = (l->line_width * 64.0f + 0.5f);
+        int32_t dy = l->line_height * gl_font->font_size;
+        int n_lines = 1;
+        char *begin = l->text;
+        char *end = begin;
+        
+        shadow_color[0] = 0.0f;
+        shadow_color[1] = 0.0f;
+        shadow_color[2] = 0.0f;
+        shadow_color[3] = (float)style->font_color[3] * GUI_FONT_SHADOW_TRANSPARENCY;
+
+        if(l->line_width > 0.0f)
+        {
+            int n_sym = 0;
+            n_lines = 0;
+            for(char *ch = glf_get_string_for_width(gl_font, l->text, w_pt, &n_sym); *begin; ch = glf_get_string_for_width(gl_font, ch, w_pt, &n_sym))
+            {
+                if(!n_lines)
+                {
+                    glf_get_string_bb(gl_font, l->text, n_sym, &x0, &y0, &x1, &y1);
+                }
+                ++n_lines;
+                begin = ch;
+            }
+            begin = l->text;
+            x1 = x0 + w_pt;
+            y1 = y0 + n_lines * gl_font->font_size * l->line_height * 64.0f;
+        }
+        else
+        {
+            glf_get_string_bb(gl_font, l->text, -1, &x0, &y0, &x1, &y1);
+        }
+
+        l->rect[0] = (GLfloat)x0 / 64.0f;
+        l->rect[1] = (GLfloat)y0 / 64.0f;
+        l->rect[2] = (GLfloat)x1 / 64.0f;
+        l->rect[3] = (GLfloat)y1 / 64.0f;
+
+        switch(l->x_align)
+        {
+            case GLTEXT_ALIGN_LEFT:
+                real_x = l->x;   // Used with center and right alignments.
+                break;
+            case GLTEXT_ALIGN_RIGHT:
+                real_x = (float)screen_width - (l->rect[2] - l->rect[0]) - l->x;
+                break;
+            case GLTEXT_ALIGN_CENTER:
+                real_x = l->x - 0.5f * (l->rect[2] - l->rect[0]);
+                break;
+        }
+
+        switch(l->y_align)
+        {
+            case GLTEXT_ALIGN_BOTTOM:
+                real_y = l->y;
+                break;
+            case GLTEXT_ALIGN_TOP:
+                real_y = (float)screen_height - (l->rect[3] - l->rect[1]) - l->y;
+                break;
+            case GLTEXT_ALIGN_CENTER:
+                real_y = l->y - 0.5f * (l->rect[3] - l->rect[1]);
+                break;
+        }
+
+        if(style->rect)  // it is BS
+        {
+            BindWhiteTexture();
+            GLfloat x0 = l->rect[0] + real_x - style->rect_border * screen_width;
+            GLfloat y0 = l->rect[1] + real_y - style->rect_border * screen_height;
+            GLfloat x1 = l->rect[2] + real_x + style->rect_border * screen_width;
+            GLfloat y1 = l->rect[3] + real_y + style->rect_border * screen_height;
+            GLfloat *v, backgroundArray[32];
+
+            v = backgroundArray;
+           *v++ = x0; *v++ = y0;
+            vec4_copy(v, style->rect_color);
+            v += 4;
+           *v++ = 0.0; *v++ = 0.0;
+
+           *v++ = x1; *v++ = y0;
+            vec4_copy(v, style->rect_color);
+            v += 4;
+           *v++ = 0.0; *v++ = 0.0;
+
+           *v++ = x1; *v++ = y1;
+            vec4_copy(v, style->rect_color);
+            v += 4;
+           *v++ = 0.0; *v++ = 0.0;
+
+           *v++ = x0; *v++ = y1;
+            vec4_copy(v, style->rect_color);
+            v += 4;
+           *v++ = 0.0; *v++ = 0.0;
+
+            qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray);
+            qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 2);
+            qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 6);
+            qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+        }
+
+
+        for(int line = n_lines - 1; line >= 0; --line)
+        {
+            int n_sym = -1;
+            if(n_lines > 1)
+            {
+                end = glf_get_string_for_width(gl_font, begin, w_pt, &n_sym);
+            }
+            if(style->shadowed)
+            {
+                vec4_copy(gl_font->gl_font_color, shadow_color);
+                glf_render_str(gl_font,
+                               (real_x + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
+                               (real_y + line * dy + GUI_FONT_SHADOW_VERTICAL_SHIFT),
+                               begin, n_sym);
+            }
+            vec4_copy(gl_font->gl_font_color, style->font_color);
+            glf_render_str(gl_font, real_x, real_y + line * dy, begin, n_sym);
+            begin = end;
+        }
     }
-
-    glf_get_string_bb(gl_font, l->text, -1, l->rect+0, l->rect+1, l->rect+2, l->rect+3);
-
-    switch(l->x_align)
-    {
-        case GLTEXT_ALIGN_LEFT:
-            real_x = l->x;   // Used with center and right alignments.
-            break;
-        case GLTEXT_ALIGN_RIGHT:
-            real_x = (float)screen_width - (l->rect[2] - l->rect[0]) - l->x;
-            break;
-        case GLTEXT_ALIGN_CENTER:
-            real_x = l->x - 0.5f * (l->rect[2] - l->rect[0]);
-            break;
-    }
-
-    switch(l->y_align)
-    {
-        case GLTEXT_ALIGN_BOTTOM:
-            real_y = l->y;
-            break;
-        case GLTEXT_ALIGN_TOP:
-            real_y = (float)screen_height - (l->rect[3] - l->rect[1]) - l->y;
-            break;
-        case GLTEXT_ALIGN_CENTER:
-            real_y = l->y - 0.5f * (l->rect[3] - l->rect[1]);
-            break;
-    }
-
-    if(style->rect)
-    {
-        BindWhiteTexture();
-        GLfloat x0 = l->rect[0] + real_x - style->rect_border * screen_width;
-        GLfloat y0 = l->rect[1] + real_y - style->rect_border * screen_height;
-        GLfloat x1 = l->rect[2] + real_x + style->rect_border * screen_width;
-        GLfloat y1 = l->rect[3] + real_y + style->rect_border * screen_height;
-        GLfloat *v, backgroundArray[32];
-
-        v = backgroundArray;
-       *v++ = x0; *v++ = y0;
-        vec4_copy(v, style->rect_color);
-        v += 4;
-       *v++ = 0.0; *v++ = 0.0;
-
-       *v++ = x1; *v++ = y0;
-        vec4_copy(v, style->rect_color);
-        v += 4;
-       *v++ = 0.0; *v++ = 0.0;
-
-       *v++ = x1; *v++ = y1;
-        vec4_copy(v, style->rect_color);
-        v += 4;
-       *v++ = 0.0; *v++ = 0.0;
-
-       *v++ = x0; *v++ = y1;
-        vec4_copy(v, style->rect_color);
-        v += 4;
-       *v++ = 0.0; *v++ = 0.0;
-
-        qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray);
-        qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 2);
-        qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), backgroundArray + 6);
-        qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-    }
-
-    if(style->shadowed)
-    {
-        gl_font->gl_font_color[0] = 0.0f;
-        gl_font->gl_font_color[1] = 0.0f;
-        gl_font->gl_font_color[2] = 0.0f;
-        gl_font->gl_font_color[3] = (float)style->font_color[3] * GUI_FONT_SHADOW_TRANSPARENCY;// Derive alpha from base color.
-        glf_render_str(gl_font,
-                       (real_x + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
-                       (real_y + GUI_FONT_SHADOW_VERTICAL_SHIFT  ),
-                       l->text);
-    }
-
-    vec4_copy(gl_font->gl_font_color, style->font_color);
-    glf_render_str(gl_font, real_x, real_y, l->text);
 }
 
 
@@ -239,7 +280,7 @@ void GLText_RenderStrings()
 
     qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
+
     while(l)
     {
         GLText_RenderStringLine(l);
@@ -305,7 +346,7 @@ gl_text_line_p GLText_OutTextXY(GLfloat x, GLfloat y, const char *fmt, ...)
 {
     gl_text_line_p ret = NULL;
     va_list argptr;
-    
+
     va_start(argptr, fmt);
     ret = GLText_VOutTextXY(x, y, fmt, argptr);
     va_end(argptr);
@@ -322,7 +363,9 @@ gl_text_line_p GLText_VOutTextXY(GLfloat x, GLfloat y, const char *fmt, va_list 
 
         l->font_id = FONT_SECONDARY;
         l->style_id = FONTSTYLE_GENERIC;
-
+        l->line_width = -1.0f;
+        l->line_height = 1.75f;
+        
         vsnprintf(l->text, GUI_LINE_DEFAULTSIZE, fmt, argptr);
 
         l->next = NULL;
@@ -359,7 +402,7 @@ int GLText_AddFont(uint16_t index, uint16_t size, const char* path)
             return 1;
         }
     }
-    
+
     return 0;
 }
 
@@ -385,7 +428,7 @@ int GLText_AddFontStyle(uint16_t index,
     if(index < font_data.max_styles)
     {
         gl_fontstyle_p desired_style = font_data.styles + index;
-                
+
         desired_style->rect_border   = rect_border;
         desired_style->rect_color[0] = rect_R;
         desired_style->rect_color[1] = rect_G;
@@ -401,7 +444,7 @@ int GLText_AddFontStyle(uint16_t index,
         desired_style->rect      = rect;
         return 1;
     }
-    
+
     return 0;
 }
 
@@ -424,7 +467,7 @@ int GLText_RemoveFontStyle(uint16_t index)
         font_data.styles[index].rect     = 0x00;
         return 1;
     }
-    
+
     return 0;
 }
 
@@ -435,7 +478,7 @@ gl_tex_font_p GLText_GetFont(uint16_t index)
     {
         return font_data.fonts[index].gl_font;
     }
-    
+
     return NULL;
 }
 
@@ -446,6 +489,6 @@ gl_fontstyle_p GLText_GetFontStyle(uint16_t index)
     {
         return font_data.styles + index;
     }
-    
+
     return NULL;
 }

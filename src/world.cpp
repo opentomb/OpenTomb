@@ -28,6 +28,7 @@ extern "C" {
 #include "state_control/state_control.h"
 #include "physics/physics.h"
 #include "gui/gui.h"
+#include "gui/gui_inventory.h"
 #include "vt/vt_level.h"
 #include "room.h"
 #include "world.h"

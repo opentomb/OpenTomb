@@ -32,8 +32,8 @@ typedef struct char_info_s
     GLfloat         tex_x1;
     GLfloat         tex_y1;
 
-    GLfloat         advance_x;
-    GLfloat         advance_y;
+    GLfloat         advance_x_pt;
+    GLfloat         advance_y_pt;
 }char_info_t, *char_info_p;
 
 typedef struct gl_tex_font_s
@@ -90,12 +90,13 @@ void glf_free_font(gl_tex_font_p glf);
 void glf_resize(gl_tex_font_p glf, uint16_t font_size);
 void glf_reface(gl_tex_font_p glf, const char *file_name, uint16_t font_size);
 
-float    glf_get_string_len(gl_tex_font_p glf, const char *text, int n);
-float    glf_get_ascender(gl_tex_font_p glf);
+int32_t  glf_get_string_len(gl_tex_font_p glf, const char *text, int n);  // size in 1 / 64 px
+char    *glf_get_string_for_width(gl_tex_font_p glf, char *text, int32_t w_pt, int *n_sym);
+int32_t  glf_get_ascender(gl_tex_font_p glf);  // size in 1 / 64 px
 uint16_t glf_get_font_size(gl_tex_font_p glf);
-void     glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, GLfloat *x0, GLfloat *y0, GLfloat *x1, GLfloat *y1);
+void     glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, int32_t *x0, int32_t *y0, int32_t *x1, int32_t *y1);  // size in 1 / 64 px
 
-void     glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text);     // UTF-8
+void     glf_render_str(gl_tex_font_p glf, GLfloat x, GLfloat y, const char *text, int32_t n_sym);     // UTF-8
 
 
 #ifdef	__cplusplus

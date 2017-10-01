@@ -16,7 +16,7 @@ extern "C" {
 #include "render/camera.h"
 #include "render/frustum.h"
 #include "render/render.h"
-#include "gui/gui.h"
+#include "gui/gui_inventory.h"
 #include "script/script.h"
 #include "vt/tr_versions.h"
 #include "audio/audio.h"

@@ -61,10 +61,9 @@ console =
 {
     background_color = {r = 0, g = 0, b = 0, a = 200};
 
-    line_size = 72;
-    log_size = 16;
+    commands_count = 128;
     lines_count = 128;
-    showing_lines = 128;
+    height = 320;
     spacing = 0.5;
     show_cursor_period = 0.5;
     show = 0;
