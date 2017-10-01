@@ -124,6 +124,7 @@ gui_InventoryManager::gui_InventoryManager()
 
     mLabel_Title.x              = 0.0;
     mLabel_Title.y              = 30.0;
+    mLabel_Title.line_width     = -1.0f;
     mLabel_Title.x_align        = GLTEXT_ALIGN_CENTER;
     mLabel_Title.y_align        = GLTEXT_ALIGN_TOP;
 
@@ -135,6 +136,7 @@ gui_InventoryManager::gui_InventoryManager()
 
     mLabel_ItemName.x           = 0.0;
     mLabel_ItemName.y           = 50.0;
+    mLabel_ItemName.line_width  = -1.0f;
     mLabel_ItemName.x_align     = GLTEXT_ALIGN_CENTER;
     mLabel_ItemName.y_align     = GLTEXT_ALIGN_BOTTOM;
 
