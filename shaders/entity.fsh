@@ -35,21 +35,22 @@ void main()
     
     for (int i = 0; i < NUMBER_OF_LIGHTS; i++)
     {
-        // Geometry
-        current_light_position = light_position[i] - varying_position;
-        current_light_distance = length(current_light_position);
-        
         //'Classic' lightning
         //current_light_intensity = clamp(((light_outerRadius[i] - current_light_distance)/(light_outerRadius[i]-light_innerRadius[i])),0.0,1.0);
         
         //Soft lightning
         current_light_intensity = clamp(((light_outerRadius[i] - current_light_distance)/light_outerRadius[i]),0.0,1.0);
         
-        lightDirection += current_light_position;
-        
+		//Skip light if its intensity is 0
         if(current_light_intensity == 0.0)
             continue;//Skip zero intensity lights
         
+		// Geometry
+        current_light_position = light_position[i] - varying_position;
+        current_light_distance = length(current_light_position);
+		
+		lightDirection += current_light_position;
+		
         // Diffuse term
         lightColor = max(lightColor, light_color[i] * current_light_intensity * shading(normal, current_light_position) );
         
