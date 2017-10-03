@@ -769,7 +769,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             n0[3] = -vec3_dot(n0, cb.point);
             from[0] = to[0] = cb.point[0] - cb.normale[0];
             from[1] = to[1] = cb.point[1] - cb.normale[1];
-            from[2] = cb.point[2] + ent->character->max_step_up_height;
+            from[2] = test_from[2] + ent->character->climb_r;
             to[2] = test_to[2];
             //renderer.debugDrawer->DrawLine(from, to, color, color);
             if(Physics_RayTestFiltered(&cb, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST))
@@ -852,7 +852,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             n1[0] * (n0[1] * n2[2] - n0[2] * n2[1]) -
             n2[0] * (n0[1] * n1[2] - n0[2] * n1[1]);
 
-        if(fabs(d) < 0.005)
+        if(fabs(d) < 0.005f)
         {
             return;
         }
@@ -875,7 +875,9 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         //renderer.debugDrawer->DrawLine(to, climb->point, color, color);
         vec3_sub(from, test_to, test_from);
         vec3_sub(to, climb->point, test_from);
-        if(from[0] * to[0] + from[1] * to[1] < 0.0f)
+        if((from[0] * to[0] + from[1] * to[1] < 0.0f) || 
+           (climb->point[2] < test_to[2]) || 
+           (climb->point[2] > test_from[2] + ent->character->climb_r))
         {
             return;
         }
@@ -933,6 +935,19 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
                 {
                     climb->next_z_space = cb.point[2] - climb->edge_point[2];
                 }
+            }
+        }
+        
+        if(climb->next_z_space > 0.0f)
+        {
+            float r = ent->bf->bone_tags->mesh_base->radius;
+            from[0] = to[0] = test_from[0];
+            from[1] = to[1] = test_from[1];
+            from[2] = test_from[2] - r;
+            to[2] = test_from[2] + r;
+            if(Physics_RayTestFiltered(&cb, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST))
+            {
+                climb->edge_hit = (cb.fraction > 0.0f) ? (0x01) : (0.0f);
             }
         }
 

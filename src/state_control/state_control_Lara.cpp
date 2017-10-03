@@ -1529,7 +1529,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARA_JUMP_UP:
             cmd->rot[0] = 0;
             ent->no_fix_all = 0x01;
-            if(clean_action && (ent->move_type != MOVE_WALLS_CLIMB) && (ent->move_type != MOVE_CLIMBING))
+            if(clean_action && (ent->move_type != MOVE_WALLS_CLIMB) && (ent->move_type != MOVE_CLIMBING) && (ss_anim->current_frame > 2))
             {
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE + ent->character->climb_r;
                 Character_GetMiddleHandsPos(ent, climb_from);
@@ -2493,13 +2493,12 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             if(clean_action && (cmd->move[0] == 1) && (ent->move_type != MOVE_CLIMBING))
             {
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;
-                Character_GetMiddleHandsPos(ent, climb_from);
-                climb_from[0] -= ent->character->climb_r * ent->transform[4 + 0];
-                climb_from[1] -= ent->character->climb_r * ent->transform[4 + 1];
-                climb_from[2] = curr_fc->transition_level;
+                climb_from[0] = pos[0];
+                climb_from[1] = pos[1];
+                climb_from[2] = curr_fc->transition_level + TR_METERING_STEP;
                 climb_to[0] = climb_from[0] + t * ent->transform[4 + 0];
                 climb_to[1] = climb_from[1] + t * ent->transform[4 + 1];
-                climb_to[2] = climb_from[2] - ent->character->max_step_up_height;
+                climb_to[2] = climb_from[2] - ent->character->max_step_up_height - TR_METERING_STEP;
                 Character_CheckClimbability(ent, climb, climb_from, climb_to);
                 low_vertical_space = climb->edge_hit && climb->edge_point[2] <= curr_fc->transition_level;
                 if(climb->edge_hit && (climb->next_z_space >= ent->character->height - LARA_HANG_VERTICAL_EPSILON))

@@ -122,6 +122,9 @@ void codec_simplify_fps(struct tiny_codec_s *s);
 uint32_t codec_resize_audio_buffer(struct tiny_codec_s *s, uint32_t sample_size, uint32_t samples);
 
 int codec_open_rpl(struct tiny_codec_s *s);
+                    
+#define codec_decode_audio(s) do{ if((s)->packet((s), &(s)->audio.pkt) >= 0) (s)->audio.decode((s), &(s)->audio.pkt); }while(0)
+#define codec_decode_video(s) do{ if((s)->packet((s), &(s)->video.pkt) >= 0) (s)->video.decode((s), &(s)->video.pkt); }while(0)
 
 #ifdef __cplusplus
 }

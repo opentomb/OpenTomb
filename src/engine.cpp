@@ -1601,10 +1601,7 @@ int  Engine_PlayVideo(const char *name)
                 
                 while(Audio_StreamExternalBufferIsNeedUpdate())
                 {
-                    if(engine_video.codec.audio.decode && (engine_video.codec.packet(&engine_video.codec, &engine_video.codec.audio.pkt) >= 0))
-                    {
-                        engine_video.codec.audio.decode(&engine_video.codec, &engine_video.codec.audio.pkt);
-                    }
+                    codec_decode_audio(&engine_video.codec);
                     if(engine_video.codec.audio.buff && (engine_video.codec.audio.buff_offset >= Audio_StreamExternalBufferOffset()))
                     {
                         Audio_StreamExternalUpdateBuffer(engine_video.codec.audio.buff, engine_video.codec.audio.buff_size,
