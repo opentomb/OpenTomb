@@ -764,6 +764,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         // NEAR WALL CASE
         if(cb.fraction > 0.0f)
         {
+            uint8_t heavy_flag = ent->self->collision_heavy;
             climb->edge_obj = cb.obj;
             vec3_copy(n0, cb.normale);
             n0[3] = -vec3_dot(n0, cb.point);
@@ -772,6 +773,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             from[2] = test_from[2] + ent->character->climb_r;
             to[2] = test_to[2];
             //renderer.debugDrawer->DrawLine(from, to, color, color);
+            ent->self->collision_heavy = 0x01;
             if(Physics_RayTestFiltered(&cb, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST))
             {
                 vec3_copy(n1, cb.normale);
@@ -795,6 +797,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
                     to[2] += z_step;
                 }
             }
+            ent->self->collision_heavy = heavy_flag;
         }
     }
     else
@@ -875,13 +878,13 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         //renderer.debugDrawer->DrawLine(to, climb->point, color, color);
         vec3_sub(from, test_to, test_from);
         vec3_sub(to, climb->point, test_from);
-        if((from[0] * to[0] + from[1] * to[1] < 0.0f) || 
-           (climb->point[2] < test_to[2]) || 
+        if((from[0] * to[0] + from[1] * to[1] < 0.0f) ||
+           (climb->point[2] < test_to[2]) ||
            (climb->point[2] > test_from[2] + ent->character->climb_r))
         {
             return;
         }
-        
+
         // unclimbable edge slant test
         vec3_cross(n2, n0, n1);
         d = ent->character->critical_slant_z_component;
@@ -937,7 +940,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
                 }
             }
         }
-        
+
         if(climb->next_z_space > 0.0f)
         {
             float r = ent->bf->bone_tags->mesh_base->radius;
@@ -947,7 +950,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             to[2] = test_from[2] + r;
             if(Physics_RayTestFiltered(&cb, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST))
             {
-                climb->edge_hit = (cb.fraction > 0.0f) ? (0x01) : (0.0f);
+                climb->edge_hit = (cb.fraction > 0.0f) ? (0x01) : (0x00);
             }
         }
 

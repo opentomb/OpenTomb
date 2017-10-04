@@ -39,8 +39,8 @@
 class bt_engine_ClosestRayResultCallback : public btCollisionWorld::ClosestRayResultCallback
 {
 public:
-    bt_engine_ClosestRayResultCallback(engine_container_p cont, int16_t filter) :
-        btCollisionWorld::ClosestRayResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0)),
+    bt_engine_ClosestRayResultCallback(engine_container_p cont, float from[3], float to[3], int16_t filter) :
+        btCollisionWorld::ClosestRayResultCallback(btVector3(from[0], from[1], from[2]), btVector3(to[0], to[1], to[2])),
         m_cont(cont),
         m_filter(filter)
     {
@@ -51,16 +51,16 @@ public:
         m_collisionFilterMask |= (filter & COLLISION_GROUP_DYNAMICS) ? (btBroadphaseProxy::DefaultFilter) : 0x0000;
     }
 
-    virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace) override
+    virtual btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override
     {
         room_p r0 = NULL, r1 = NULL;
         engine_container_p c1;
 
-        r0 = (m_cont)?(m_cont->room):(NULL);
+        r0 = (m_cont) ? (m_cont->room) : (NULL);
         c1 = (engine_container_p)rayResult.m_collisionObject->getUserPointer();
         r1 = (c1) ? (c1->room) : (NULL);
 
-        if(c1 && ((c1->collision_group & m_filter) == 0x0000) || (c1 == m_cont))
+        if(c1 && (((c1->collision_group & m_filter) == 0x0000) || (c1 == m_cont)))
         {
             return 1.0f;
         }
@@ -78,11 +78,17 @@ public:
             }
             if(Room_IsInNearRoomsList(r0, r1))
             {
+                if(m_cont->collision_heavy && (r0 != r1) && (!m_cont->sector || ((m_cont->sector->room_above != r1) && (m_cont->sector->room_below != r1))))
+                {
+                    btVector3 pt = this->m_rayFromWorld.lerp(this->m_rayToWorld, rayResult.m_hitFraction);
+                    room_sector_p ps0 = Room_GetSectorRaw(r1, m_cont->sector->pos);
+                    room_sector_p ps1 = Room_GetSectorRaw(r0, pt.m_floats);
+                    if(!ps0 || !ps1 || (ps0->portal_to_room != r0) || (ps1->portal_to_room != r1))
+                    {
+                        return 1.0f;
+                    }
+                }
                 return ClosestRayResultCallback::addSingleResult(rayResult, normalInWorldSpace);
-            }
-            else
-            {
-                return 1.0f;
             }
         }
 
@@ -97,8 +103,8 @@ public:
 class bt_engine_ClosestConvexResultCallback : public btCollisionWorld::ClosestConvexResultCallback
 {
 public:
-    bt_engine_ClosestConvexResultCallback(engine_container_p cont, int16_t filter) :
-        btCollisionWorld::ClosestConvexResultCallback(btVector3(0.0, 0.0, 0.0), btVector3(0.0, 0.0, 0.0)),
+    bt_engine_ClosestConvexResultCallback(engine_container_p cont, float from[3], float to[3], int16_t filter) :
+        btCollisionWorld::ClosestConvexResultCallback(btVector3(from[0], from[1], from[2]), btVector3(to[0], to[1], to[2])),
         m_cont(cont),
         m_filter(filter)
     {
@@ -118,7 +124,7 @@ public:
         c1 = (engine_container_p)convexResult.m_hitCollisionObject->getUserPointer();
         r1 = (c1) ? (c1->room) : (NULL);
 
-        if(c1 && ((c1->collision_group & m_filter) == 0x0000) || (c1 == m_cont))
+        if(c1 && (((c1->collision_group & m_filter) == 0x0000) || (c1 == m_cont)))
         {
             return 1.0f;
         }
@@ -137,10 +143,6 @@ public:
             if(Room_IsInNearRoomsList(r0, r1))
             {
                 return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
-            }
-            else
-            {
-                return 1.0f;
             }
         }
 
@@ -189,16 +191,16 @@ struct bt_engine_OverlapFilterCallback : public btOverlapFilterCallback
                 return false;
             }
 
-            collides = ((!r0 && !r1) || Room_IsInNearRoomsList(r0, r1) && !Room_IsInOverlappedRoomsList(r0, r1) &&
-                        (num_ghosts || (c0->collision_group & c1->collision_mask) && (c1->collision_group & c0->collision_mask)));
+            collides = ((!r0 && !r1) || (Room_IsInNearRoomsList(r0, r1) && !Room_IsInOverlappedRoomsList(r0, r1) &&
+                        (num_ghosts || ((c0->collision_group & c1->collision_mask) && (c1->collision_group & c0->collision_mask)))));
 
-            if(collides && (r0 != r1) && (r0->content->overlapped_room_list || r1->content->overlapped_room_list))
+            if(collides && (r0 != r1) && c0 && c1 && (r0->content->overlapped_room_list || r1->content->overlapped_room_list || c0->collision_heavy || c1->collision_heavy))
             {
                 if(c0->sector && c1->sector)
                 {
-                    room_sector_p pc0 = Room_GetSectorRaw(r1, c0->sector->pos);
-                    room_sector_p pc1 = Room_GetSectorRaw(r0, c0->sector->pos);
-                    collides = pc0 && pc1 && (pc0->portal_to_room == r0) && (pc1->portal_to_room == r1);
+                    room_sector_p ps0 = Room_GetSectorRaw(r1, c0->sector->pos);
+                    room_sector_p ps1 = Room_GetSectorRaw(r0, c1->sector->pos);
+                    collides = ps0 && ps1 && (ps0->portal_to_room == r0) && (ps1->portal_to_room == r1);
                 }
                 else if(c0->sector && !c1->sector)
                 {
@@ -533,7 +535,7 @@ void Physics_SetGravity(float g[3])
 
 int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont, int16_t filter)
 {
-    bt_engine_ClosestRayResultCallback cb(cont, filter);
+    bt_engine_ClosestRayResultCallback cb(cont, from, to, filter);
     btVector3 vFrom(from[0], from[1], from[2]), vTo(to[0], to[1], to[2]);
 
     if(result)
@@ -566,7 +568,7 @@ int  Physics_RayTest(struct collision_result_s *result, float from[3], float to[
 
 int  Physics_RayTestFiltered(struct collision_result_s *result, float from[3], float to[3], struct engine_container_s *cont, int16_t filter)
 {
-    bt_engine_ClosestRayResultCallback cb(cont, filter);
+    bt_engine_ClosestRayResultCallback cb(cont, from, to, filter);
     btVector3 vFrom(from[0], from[1], from[2]), vTo(to[0], to[1], to[2]);
 
     cb.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
@@ -602,7 +604,7 @@ int  Physics_RayTestFiltered(struct collision_result_s *result, float from[3], f
 
 int  Physics_SphereTest(struct collision_result_s *result, float from[3], float to[3], float R, struct engine_container_s *cont, int16_t filter)
 {
-    bt_engine_ClosestConvexResultCallback cb(cont, filter);
+    bt_engine_ClosestConvexResultCallback cb(cont, from, to, filter);
     btVector3 vFrom(from[0], from[1], from[2]), vTo(to[0], to[1], to[2]);
     btTransform tFrom, tTo;
     btSphereShape sphere(R);

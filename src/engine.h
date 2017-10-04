@@ -46,7 +46,9 @@
 typedef struct engine_container_s
 {
     uint16_t                     object_type;
-    uint16_t                     collision_shape;
+    uint16_t                     collision_shape : 8;
+    uint16_t                     collision_heavy : 1;
+    uint16_t                     : 7;
     int16_t                      collision_group;
     int16_t                      collision_mask;
     void                        *object;
