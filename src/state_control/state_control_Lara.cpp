@@ -1750,7 +1750,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                         ent->dir_flag = ENT_MOVE_FORWARD;
                         if(ss_anim->current_animation != TR_ANIMATION_LARA_LADDER_UP_HANDS)
                         {
-                            if(climb->edge_hit && (climb->next_z_space >= 512.0f) && ((climb->next_z_space < ent->character->height - LARA_HANG_VERTICAL_EPSILON) || (cmd->crouch == 1)))
+                            if(climb->edge_hit && (climb->next_z_space >= 512.0f - LARA_HANG_VERTICAL_EPSILON) && ((climb->next_z_space < ent->character->height - LARA_HANG_VERTICAL_EPSILON) || (cmd->crouch == 1)))
                             {
                                 vec3_copy(climb->point, climb->edge_point);
                                 ss_anim->next_state = TR_STATE_LARA_CLIMB_TO_CRAWL;     // crawlspace climb
@@ -1838,7 +1838,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     pos[0] = climb->point[0] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 0];
                     pos[1] = climb->point[1] - (LARA_HANG_WALL_DISTANCE) * ent->transform[4 + 1];
                     pos[2] = climb->point[2] - ent->bf->bb_max[2] + LARA_HANG_VERTICAL_OFFSET;
-                    if(climb->edge_hit && (climb->next_z_space >= 512.0f) && ((climb->next_z_space < ent->character->height - LARA_HANG_VERTICAL_EPSILON) || (cmd->crouch == 1)))
+                    if(climb->edge_hit && (climb->next_z_space >= 512.0f - LARA_HANG_VERTICAL_EPSILON) && ((climb->next_z_space < ent->character->height - LARA_HANG_VERTICAL_EPSILON) || (cmd->crouch == 1)))
                     {
                         vec3_copy(climb->point, climb->edge_point);
                         ss_anim->next_state = TR_STATE_LARA_CLIMB_TO_CRAWL;     // crawlspace climb
