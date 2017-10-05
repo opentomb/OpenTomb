@@ -713,6 +713,13 @@ void Engine_PollSDLEvents()
                 mouse_setup = 1;
                 break;
 
+            case SDL_MOUSEWHEEL:
+                if(Con_IsShown())
+                {
+                    Con_Scroll(event.wheel.y);
+                }
+                break;
+
             case SDL_MOUSEBUTTONDOWN:
                 if(event.button.button == 1) //LM = 1, MM = 2, RM = 3
                 {
