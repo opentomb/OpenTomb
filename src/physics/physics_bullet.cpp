@@ -142,6 +142,15 @@ public:
             }
             if(Room_IsInNearRoomsList(r0, r1))
             {
+                if(m_cont->collision_heavy && (r0 != r1) && (!m_cont->sector || ((m_cont->sector->room_above != r1) && (m_cont->sector->room_below != r1))))
+                {
+                    room_sector_p ps0 = Room_GetSectorRaw(r1, m_cont->sector->pos);
+                    room_sector_p ps1 = Room_GetSectorRaw(r0, convexResult.m_hitPointLocal.m_floats);
+                    if(!ps0 || !ps1 || (ps0->portal_to_room != r0) || (ps1->portal_to_room != r1))
+                    {
+                        return 1.0f;
+                    }
+                }
                 return ClosestConvexResultCallback::addSingleResult(convexResult, normalInWorldSpace);
             }
         }
