@@ -730,6 +730,13 @@ void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
  * @param climb - returned climb information
  * @param test_from - where we start check height (i.e. middle hands position)
  * @param test_to - test area parameters (next pos xy, z_min)
+ *
+ * OZ ^
+ *    *-------------* from
+ *    |             |
+ *    |             |
+ *    |             |
+ * to *-------------*
  */
 void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float test_from[3], float test_to[3])
 {
@@ -752,6 +759,14 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     climb->edge_hit = 0x00;
     climb->edge_obj = NULL;
 
+    to[0] = test_from[0];
+    to[1] = test_from[1];
+    to[2] = test_to[2];
+    if(Physics_RayTestFiltered(&cb, test_from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST))
+    {
+        test_to[2] = cb.point[2];
+    }
+    
     from[0] = test_from[0];
     from[1] = test_from[1];
     from[2] = test_from[2];
@@ -821,12 +836,16 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             from[0] = test_from[0];
             from[1] = test_from[1];
             from[2] = to[2] = cb.point[2];
-            for(; to[2] >= test_to[2]; from[2] += z_step, to[2] += z_step)      // we can't climb under floor!
+            for(; to[2] >= test_to[2]; from[2] += z_step, to[2] += z_step)
             {
                 //renderer.debugDrawer->DrawLine(from, to, color, color);
-                if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST) && (cb.fraction > 0.0f))
+                if(Physics_SphereTest(&cb, from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
                 {
-                    if(up_founded && (vec3_dist_sq(cb.normale, n0) > 0.05f))
+                    if(cb.fraction == 0.0f)
+                    {
+                        return;
+                    }
+                    if(up_founded && (cb.normale[2] < 0.01f) && (vec3_dist_sq(cb.normale, n0) > 0.05f))
                     {
                         vec3_copy(n1, cb.normale);
                         n1[3] = -vec3_dot(n1, cb.point);
@@ -855,7 +874,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             n1[0] * (n0[1] * n2[2] - n0[2] * n2[1]) -
             n2[0] * (n0[1] * n1[2] - n0[2] * n1[1]);
 
-        if(fabs(d) < 0.005f)
+        if(fabs(d) < 0.005)
         {
             return;
         }
