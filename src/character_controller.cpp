@@ -942,21 +942,28 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         climb->t[1] = climb->edge_tan_xy[1];
 
         // Calc hang info
+        from[0] = test_to[0];
+        from[1] = test_to[1];
+        from[2] = climb->edge_point[2];
         climb->next_z_space = 2.0f * ent->character->height;
-        vec3_copy(from, climb->edge_point);
-        vec3_copy(to, from);
-        to[2] += climb->next_z_space;
-        if(Physics_RayTestFiltered(&cb, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST))
         {
-            climb->next_z_space = cb.point[2] - climb->edge_point[2];
-            if(climb->next_z_space < 0.01f)
+            room_p next_room = World_FindRoomByPosCogerrence(from, ent->self->room);
+            room_sector_p next_sector = (next_room) ? (Room_GetSectorXYZ(next_room, from)) : (NULL);
+            if(next_sector)
             {
-                climb->next_z_space = 2.0 * ent->character->height;
-                from[2] += fabs(climb->next_z_space);
+                next_sector = Sector_GetHighest(next_sector);
+                climb->next_z_space = next_sector->ceiling - climb->edge_point[2];
+                vec3_copy(to, from);
+                from[2] = next_sector->ceiling;
+                to[2] = next_sector->ceiling + TR_METERING_SECTORSIZE;
                 if(Physics_RayTestFiltered(&cb, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST))
                 {
                     climb->next_z_space = cb.point[2] - climb->edge_point[2];
                 }
+            }
+            else
+            {
+                climb->next_z_space = 0.0f;
             }
         }
 
