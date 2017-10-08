@@ -858,7 +858,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         }
     }
 
-    if((up_founded == 2) && ((n0[2] > 0.0f) || (n1[2] > 0.0f)))
+    if(up_founded == 2)
     {
         double d, n2[4];
         // get the character plane equation
@@ -957,19 +957,6 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
                 {
                     climb->next_z_space = cb.point[2] - climb->edge_point[2];
                 }
-            }
-        }
-
-        if(climb->next_z_space > 0.0f)
-        {
-            float r = ent->bf->bone_tags->mesh_base->radius;
-            from[0] = to[0] = test_from[0];
-            from[1] = to[1] = test_from[1];
-            from[2] = test_from[2] - r;
-            to[2] = test_from[2] + r;
-            if(Physics_RayTestFiltered(&cb, from, to, ent->self, COLLISION_FILTER_HEIGHT_TEST))
-            {
-                climb->edge_hit = (cb.fraction > 0.0f) ? (0x01) : (0x00);
             }
         }
 

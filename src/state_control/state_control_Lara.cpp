@@ -355,7 +355,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                      (ss_anim->current_animation == TR_ANIMATION_LARA_WALL_SMASH_LEFT)  ||
                      (ss_anim->current_animation == TR_ANIMATION_LARA_WALL_SMASH_RIGHT)) )
                 {
-                    t = ent->character->forvard_size + LARA_TRY_HANG_WALL_OFFSET;
+                    t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE + ent->character->climb_r;
                     climb_from[0] = pos[0];
                     climb_from[1] = pos[1];
                     climb_from[2] = pos[2] + 0.5 * DEFAULT_CLIMB_UP_HEIGHT;
