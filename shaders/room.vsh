@@ -18,11 +18,14 @@ void main(void)
     vec4 vCol = gl_Color;
 
     gl_Position = modelViewProjection * gl_Vertex;
-
+    
     float fPerturb = 0.0;
     float fGlow = 0.0;
     float fFlicker = 0.0;
 
+    //(Draw) Distance (Relative to camera)
+    float dd = length(gl_Position);
+    
 #if IS_WATER
     //Calculate sum and time
     float fSum = vPos.x + vPos.y + vPos.z;
@@ -41,10 +44,12 @@ void main(void)
     fFlicker = 0.4 * abs(sin(fFlickerTime)) + 0.6;
     vCol *=  mix(1.0, fFlicker, 0.6);
 #endif
-
+    float d = clamp(((32768.0 - dd)/(16384.0)),0.0,1.0);
+    vCol *= vec4(d,d,d,1.0);
+    
     //Set texture co-ord
     varying_texCoord = gl_MultiTexCoord0.xy;
-
+        
     //Set color
     varying_color = vCol;
 }

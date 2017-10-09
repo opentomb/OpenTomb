@@ -4,7 +4,7 @@
 print("Level script loaded (SLINC.lua)");
 
 level_PostLoad = function()
-
+    addCharacterHair(player, getHairSetup(HAIR_TR3));
 end;
 
 level_PreLoad = function()

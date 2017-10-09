@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 
 extern "C" {
 #include <lua.h>
@@ -1411,21 +1412,25 @@ void ShowDebugInfo()
 
 void Engine_TakeScreenShot()
 {
-    static int screenshot_cnt = 0;
     GLint ViewPort[4];
     char fname[128];
     GLubyte *pixels;
     uint32_t str_size;
 
+    time_t now = time(0);
+    struct tm tstruct = *localtime(&now);
+    char buf[80];
+    strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &tstruct);
+    
     qglGetIntegerv(GL_VIEWPORT, ViewPort);
-    snprintf(fname, 128, "screen_%.5d.png", screenshot_cnt);
+    snprintf(fname, sizeof(fname), "screen_%s.png", buf);
+    
     str_size = ViewPort[2] * 4;
     pixels = (GLubyte*)malloc(str_size * ViewPort[3]);
     qglReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels);
     Image_Save(fname, IMAGE_FORMAT_PNG, (uint8_t*)pixels, ViewPort[2], ViewPort[3], 32);
 
     free(pixels);
-    screenshot_cnt++;
 }
 
 
