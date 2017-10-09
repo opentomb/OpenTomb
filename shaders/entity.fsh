@@ -41,20 +41,17 @@ void main()
         lightDirection += current_light_position;
 
         //'Classic' lightning
-        //current_light_intensity = clamp(((light_outerRadius[i] - current_light_distance) / (light_outerRadius[i]-light_innerRadius[i])), 0.0, 1.0);
+        //current_light_intensity = clamp(((light_outerRadius[i] - current_light_distance) / (light_outerRadius[i] - light_innerRadius[i])), 0.0, 1.0);
 
         //Soft lightning
-        current_light_intensity = clamp(((light_outerRadius[i] - current_light_distance)/light_outerRadius[i]),0.0,1.0);
-
-        //Skip light if its intensity is 0  // conditions inside cycle are worse than unused simple instructions
-        //if(current_light_intensity == 0.0)
-        //    continue;//Skip zero intensity lights
+        current_light_intensity = clamp(((light_outerRadius[i] - current_light_distance) / light_outerRadius[i]), 0.0, 1.0);
 
         // Diffuse term
-        lightColor = max(lightColor, light_color[i] * current_light_intensity * shading(normal, current_light_position));
+        if(current_light_intensity != 0.0)
+            lightColor = max(lightColor, light_color[i] * current_light_intensity * shading(normal, current_light_position));
     }
 #endif
-    lightAmbient = light_ambient * shading(normal,lightDirection);
+    lightAmbient = light_ambient * shading(normal, lightDirection);
 
     //Get texture (pixel).
     vec4 texColor = texture2D(color_map, varying_texCoord);
@@ -63,5 +60,5 @@ void main()
     vec4 tmp = (lightAmbient + lightColor) * texColor * varying_color;
 
     //Use texture and lightning, but preserves alpha (transparency).
-    gl_FragColor = vec4(tmp.rgb,texColor.a);
+    gl_FragColor = vec4(tmp.rgb, texColor.a);
 }
