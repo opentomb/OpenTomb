@@ -83,7 +83,9 @@ public:
                     btVector3 pt = this->m_rayFromWorld.lerp(this->m_rayToWorld, rayResult.m_hitFraction);
                     room_sector_p ps0 = Room_GetSectorRaw(r1, m_cont->sector->pos);
                     room_sector_p ps1 = Room_GetSectorRaw(r0, pt.m_floats);
-                    if(!ps0 || !ps1 || (ps0->portal_to_room != r0) || (ps1->portal_to_room != r1))
+                    if((!ps0 || !ps1 || (ps0->portal_to_room != r0) || (ps1->portal_to_room != r1)) &&
+                       (!ps0 || ((ps0->room_above != r0) && (ps0->room_below != r0))) &&
+                       (!ps1 || ((ps1->room_above != r0) && (ps1->room_below != r0))))
                     {
                         return 1.0f;
                     }
@@ -146,7 +148,9 @@ public:
                 {
                     room_sector_p ps0 = Room_GetSectorRaw(r1, m_cont->sector->pos);
                     room_sector_p ps1 = Room_GetSectorRaw(r0, convexResult.m_hitPointLocal.m_floats);
-                    if(!ps0 || !ps1 || (ps0->portal_to_room != r0) || (ps1->portal_to_room != r1))
+                    if((!ps0 || !ps1 || (ps0->portal_to_room != r0) || (ps1->portal_to_room != r1)) &&
+                       (!ps0 || ((ps0->room_above != r0) && (ps0->room_below != r0))) &&
+                       (!ps1 || ((ps1->room_above != r0) && (ps1->room_below != r0))))
                     {
                         return 1.0f;
                     }
@@ -209,7 +213,9 @@ struct bt_engine_OverlapFilterCallback : public btOverlapFilterCallback
                 {
                     room_sector_p ps0 = Room_GetSectorRaw(r1, c0->sector->pos);
                     room_sector_p ps1 = Room_GetSectorRaw(r0, c1->sector->pos);
-                    collides = ps0 && ps1 && (ps0->portal_to_room == r0) && (ps1->portal_to_room == r1);
+                    collides = (ps0 && ps1 && (ps0->portal_to_room == r0) && (ps1->portal_to_room == r1)) ||
+                               (ps0 && ((ps0->room_above == r0) || (ps0->room_below == r0))) ||
+                               (ps1 && ((ps1->room_above == r0) || (ps1->room_below == r0)));
                 }
                 else if(c0->sector && !c1->sector)
                 {

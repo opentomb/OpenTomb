@@ -1801,7 +1801,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 break;
             }
 
-            if((state->dead == 0) && clean_action)                               // we have to update climb point every time so entity can move
+            if((state->dead == 0) && clean_action)                              // we have to update climb point every time so entity can move
             {
                 //t = LARA_TRY_HANG_WALL_OFFSET;
                 t = LARA_TRY_HANG_WALL_OFFSET + LARA_HANG_WALL_DISTANCE;

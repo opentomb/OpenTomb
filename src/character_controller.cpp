@@ -583,11 +583,10 @@ void Character_GetHeightInfo(struct entity_s *ent, float pos[3], struct height_i
     to[1] = from[1];
     to[2] = from[2] - 8192.0f;
 
-    Physics_RayTest(&fc->floor_hit, from ,to, fc->self, COLLISION_FILTER_HEIGHT_TEST);
+    Physics_RayTestFiltered(&fc->floor_hit, from ,to, fc->self, COLLISION_FILTER_HEIGHT_TEST);
 
     to[2] = from[2] + 4096.0f;
-    Physics_RayTest(&fc->ceiling_hit, from ,to, fc->self, COLLISION_FILTER_HEIGHT_TEST);
-
+    Physics_RayTestFiltered(&fc->ceiling_hit, from ,to, fc->self, COLLISION_FILTER_HEIGHT_TEST);
 
     fc->slide = 0x00;
     if(fc->floor_hit.hit && (fc->floor_hit.normale[2] > 0.02) && (fc->floor_hit.normale[2] < ent->character->critical_slant_z_component))
@@ -746,10 +745,10 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     double n0[4], n1[4];                                                        // planes equations
     char up_founded = 0;
     collision_result_t cb;
-    //const float color[3] = {1.0, 0.0, 0.0};
+    //const float color[3] = {1.0f, 0.0f, 0.0f};
 
     if(ent->self->sector && ent->self->sector->room_above &&
-       ent->self->sector->room_above->bb_min[2] < test_from[2] + 256.0f)
+       ent->self->sector->room_above->bb_min[2] < test_from[2] + TR_METERING_STEP)
     {
         Entity_MoveToRoom(ent, ent->self->sector->room_above->real_room);
     }
@@ -766,7 +765,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     {
         test_to[2] = cb.point[2];
     }
-    
+
     from[0] = test_from[0];
     from[1] = test_from[1];
     from[2] = test_from[2];
@@ -783,8 +782,16 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             climb->edge_obj = cb.obj;
             vec3_copy(n0, cb.normale);
             n0[3] = -vec3_dot(n0, cb.point);
-            from[0] = to[0] = cb.point[0] - cb.normale[0];
-            from[1] = to[1] = cb.point[1] - cb.normale[1];
+            from[0] = to[0] = cb.point[0] - cb.normale[0] * 2.0f;
+            from[1] = to[1] = cb.point[1] - cb.normale[1] * 2.0f;
+            to[2] = cb.point[2];
+            // get stable normale
+            if(Physics_SphereTest(&cb, test_from, to, ent->character->climb_r, ent->self, COLLISION_FILTER_HEIGHT_TEST))
+            {
+                vec3_copy(n0, cb.normale);
+                n0[3] = -vec3_dot(n0, cb.point);
+            }
+
             from[2] = test_from[2] + ent->character->climb_r;
             to[2] = test_to[2];
             //renderer.debugDrawer->DrawLine(from, to, color, color);
@@ -896,10 +903,10 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         vec3_copy(climb->point, climb->edge_point);
         //renderer.debugDrawer->DrawLine(to, climb->point, color, color);
         vec3_sub(from, test_to, test_from);
-        vec3_sub(to, climb->point, test_from);
+        vec3_sub(to, climb->edge_point, test_from);
         if((from[0] * to[0] + from[1] * to[1] < 0.0f) ||
-           (climb->point[2] < test_to[2]) ||
-           (climb->point[2] > test_from[2] + ent->character->climb_r))
+           (climb->edge_point[2] < test_to[2]) ||
+           (climb->edge_point[2] > test_from[2] + ent->character->climb_r))
         {
             return;
         }
