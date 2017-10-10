@@ -1913,7 +1913,7 @@ int Sector_AllowTraverse(struct room_sector_s *rs, float floor)
     if((rs->floor_corners[0][2] != f0) || (rs->floor_corners[1][2] != f0) ||
        (rs->floor_corners[2][2] != f0) || (rs->floor_corners[3][2] != f0) ||
        (rs->floor_penetration_config != TR_PENETRATION_CONFIG_SOLID) ||
-       (rs->ceiling - floor < TR_METERING_SECTORSIZE))
+       (rs->ceiling - floor < TR_METERING_SECTORSIZE - 1.1f))
     {
         return 0x00;
     }

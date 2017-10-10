@@ -514,21 +514,9 @@ int lua_AddRoomToOverlappedList(lua_State * lua)
     {
         room_p r0 = World_GetRoomByID(lua_tointeger(lua, 1));
         room_p r1 = World_GetRoomByID(lua_tointeger(lua, 2));
-        if(r0 && r1 && (r0 != r1) && !Room_IsInOverlappedRoomsList(r0, r1))
+        if(r0 && r1 && (r0 != r1))
         {
-            room_p *old_list = r0->content->overlapped_room_list;
-            room_p *new_list = (room_p*)malloc((r0->content->overlapped_room_list_size + 1) * sizeof(room_p));
-            for(uint16_t i = 0; i < r0->content->overlapped_room_list_size; ++i)
-            {
-                new_list[i] = r0->content->overlapped_room_list[i];
-            }
-            new_list[r0->content->overlapped_room_list_size] = r1->real_room;
-            r0->content->overlapped_room_list = new_list;
-            r0->content->overlapped_room_list_size++;
-            if(old_list)
-            {
-                free(old_list);
-            }
+            Room_AddToOverlappedRoomsList(r0, r1);
         }
     }
     return 0;
@@ -541,21 +529,9 @@ int lua_AddRoomToNearList(lua_State * lua)
     {
         room_p r0 = World_GetRoomByID(lua_tointeger(lua, 1));
         room_p r1 = World_GetRoomByID(lua_tointeger(lua, 2));
-        if(r0 && r1 && (r0 != r1) && !Room_IsInOverlappedRoomsList(r0, r1))
+        if(r0 && r1 && (r0 != r1))
         {
-            room_p *old_list = r0->content->near_room_list;
-            room_p *new_list = (room_p*)malloc((r0->content->near_room_list_size + 1) * sizeof(room_p));
-            for(uint16_t i = 0; i < r0->content->near_room_list_size; ++i)
-            {
-                new_list[i] = r0->content->near_room_list[i];
-            }
-            new_list[r0->content->near_room_list_size] = r1->real_room;
-            r0->content->near_room_list = new_list;
-            r0->content->near_room_list_size++;
-            if(old_list)
-            {
-                free(old_list);
-            }
+            Room_AddToNearRoomsList(r0, r1);
         }
     }
     return 0;
@@ -1066,7 +1042,7 @@ int lua_SetCameraFrame(lua_State *lua)
         }
     }
     lua_pushboolean(lua, can_continue);
-    
+
     return 1;
 }
 

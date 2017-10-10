@@ -308,6 +308,7 @@ struct room_sector_s *Room_GetSectorRaw(struct room_s *room, float pos[3]);
 struct room_sector_s *Room_GetSectorXYZ(struct room_s *room, float pos[3]);
 
 void Room_AddToNearRoomsList(struct room_s *room, struct room_s *r);
+void Room_AddToOverlappedRoomsList(struct room_s *room, struct room_s *r);
 int  Room_IsJoined(struct room_s *r1, struct room_s *r2);
 int  Room_IsOverlapped(struct room_s *r0, struct room_s *r1);
 int  Room_IsInNearRoomsList(struct room_s *r0, struct room_s *r1);
