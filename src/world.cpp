@@ -956,9 +956,6 @@ struct room_box_s *World_GetRoomBoxByID(uint32_t id)
 
 void World_BuildNearRoomsList(struct room_s *room)
 {
-    room->content->near_room_list_size = 0;
-    room->content->near_room_list = NULL;
-
     room_sector_p rs = room->content->sectors;
     for(uint32_t i = 0; i < room->sectors_count; i++, rs++)
     {
@@ -991,14 +988,13 @@ void World_BuildNearRoomsList(struct room_s *room)
 
 void World_BuildOverlappedRoomsList(struct room_s *room)
 {
-    room->content->overlapped_room_list_size = 0;
-    room->content->overlapped_room_list = NULL;
     room_p r = global_world.rooms;
     for(uint32_t i = 0; i < global_world.rooms_count; ++i, ++r)
     {
         if((room->real_room != r->real_room) && Room_IsOverlapped(room, r))
         {
             Room_AddToOverlappedRoomsList(room, r);
+            Room_AddToOverlappedRoomsList(r, room);
         }
     }
 }
@@ -2423,6 +2419,15 @@ void World_GenRoomProperties(class VT_Level *tr)
         World_BuildOverlappedRoomsList(global_world.rooms + i);
         // Generate links to the near rooms.
         World_BuildNearRoomsList(global_world.rooms + i);
+    }
+
+    for(uint32_t i = 0; i < global_world.rooms_count; i++)
+    {
+        room_p r = global_world.rooms + i;
+        for(uint16_t j = 0; j < r->content->near_room_list_size; ++j)
+        {
+            Room_AddToNearRoomsList(r->content->near_room_list[j], r);
+        }
     }
 }
 
