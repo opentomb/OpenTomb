@@ -14,8 +14,10 @@
 shader_stage::shader_stage(GLenum type, const char *filename, const char *additionalDefines)
 {
     char shader_path[1024];
-    strncpy(shader_path, Engine_GetBasePath(), sizeof(shader_path));
-    strncat(shader_path, filename, sizeof(shader_path));
+    size_t shader_path_base_len = sizeof(shader_path) - 1;
+    strncpy(shader_path, Engine_GetBasePath(), shader_path_base_len);
+    shader_path[shader_path_base_len] = 0;
+    strncat(shader_path, filename, shader_path_base_len - strlen(shader_path));
     shader = qglCreateShaderObjectARB(type);
     if (!loadShaderFromFile(shader, shader_path, additionalDefines))
         abort();

@@ -752,7 +752,7 @@ int World_CreateItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_i
 
 int World_DeleteItem(uint32_t item_id)
 {
-    std::map<const uint32_t, base_item_p>::iterator it = global_world.items_tree.find(item_id);
+    std::map<uint32_t, base_item_p>::iterator it = global_world.items_tree.find(item_id);
 
     if(it != global_world.items_tree.end())
     {
