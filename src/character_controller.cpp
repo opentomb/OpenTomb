@@ -964,6 +964,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         {
             room_p next_room = World_FindRoomByPosCogerrence(from, ent->self->room);
             room_sector_p next_sector = (next_room) ? (Room_GetSectorXYZ(next_room, from)) : (NULL);
+            next_sector = Sector_GetPortalSectorTargetRaw(next_sector);
             if(next_sector)
             {
                 next_sector = Sector_GetHighest(next_sector);
