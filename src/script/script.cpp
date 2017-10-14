@@ -1002,8 +1002,10 @@ bool Script_LuaInit()
 int Script_DoLuaFile(lua_State *lua, const char *local_path)
 {
     char script_path[1024];
-    strncpy(script_path, Engine_GetBasePath(), sizeof(script_path));
-    strncat(script_path, local_path, sizeof(script_path));
+    size_t script_path_base_len = sizeof(script_path) - 1;
+    strncpy(script_path, Engine_GetBasePath(), script_path_base_len);
+    script_path[script_path_base_len] = 0;
+    strncat(script_path, local_path, script_path_base_len - 1);
     return luaL_dofile(lua, script_path);
 }
 
