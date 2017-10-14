@@ -492,6 +492,8 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
     v = ent->bf->bone_tags[0].transform + 12;
     Mat4_vec3_mul_macro(from, ent->transform, v);
     from[2] -= ent->speed[2] * engine_frame_time;
+    from[0] = ent->transform[12 + 0];
+    from[1] = ent->transform[12 + 1];
     Character_GetHeightInfo(ent, from, hi, ent->character->height);
 }
 
