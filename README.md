@@ -6,12 +6,12 @@ OpenTomb — an open-source Tomb Raider 1-5 engine remake
 ### Table of contents ###
 
 - [What is this?](#what-is-this)
-- [Why it's developed?](#why-its-developed)
+- [Why create a new engine?](#why-create-a-new-engine)
 - [Features](#features)
 - [Supported platforms](#supported-platforms)
-- [Configuration and autoexec files](#configuration-and-autoexec-files)
-- [Installation and running](#installation-and-running)
+- [Setup](#setup)
 - [Compiling](#compiling)
+- [Running and Configuration](#running-and-configuration)
 - [Licensing](#licensing)
 - [Credits](#credits)
 
@@ -36,22 +36,22 @@ Links to forums and info:
 * TR forum link: http://www.tombraiderforums.com/showthread.php?t=197508
 * Discord channel: https://discord.gg/d8mQgdc
 
-### Why it's developed? ###
+### Why create a new engine? ###
 Many may ask — why develop another TR engine clone, while we have fully working Windows
 builds of TR2-5, and TR1 is perfectly working through DosBox? The answer is simple - the
-older engine gets, less chance it'll become compatible with further systems; but in case of
+older engine gets, the less chance it'll become compatible with new systems; but in case of
 OpenTomb, you can port it to any platform you wish.
 
-Other people may ask — why we're developing it, if there are already patchers for existing
+Other people may ask — why are we developing it, if there are already patchers for existing
 engines, like TREP, TRNG, etc.? The answer is simple — no matter how advanced your patcher
-is, you are limited by original binary — no new features, no graphic enhancements, no new
-structures and functions. You are not that limited with open-source engine.
+is, you are limited by the original binary — no new features, no graphic enhancements, no new
+structures and functions. You are not limited in such ways with an open-source engine.
 
 ### Features ###
-* OpenTomb has completely different collision approach. Engine uses special terrain
+* OpenTomb has completely different collision approach. The engine uses a special terrain
   generator to make every room's optimized collisional mesh from so-called "floordata",
   which was a significant limiting factor in originals.  
-* OpenTomb does not run at fixed 30 FPS speed, as any old engine did. Instead, variable FPS
+* OpenTomb is not limited to 30 FPS, as any old engine did. Instead, a variable FPS
   rate is implemented, just like in any contemporary PC game.  
 * OpenTomb uses common and flexible libraries, like OpenGL, OpenAL, SDL and Bullet Physics.  
 * Lua scripting is a key gameplay feature in OpenTomb, as all entity functionality is not
@@ -65,35 +65,20 @@ structures and functions. You are not that limited with open-source engine.
 OpenTomb is a cross-platform engine — currently, you can run it on Windows, Mac or Linux.
 No mobile implementations are made yet, but they are fully possible.
 
-### Configuration and autoexec files ###
-Currently, all settings in OpenTomb are managed through configuration and autoexec files.
-Configuration file contains persistent engine and game settings, while autoexec contains
-any commands which should be executed on engine start-up.
-
-Configuration file (config.lua) is divided into different sections: screen, audio, render,
-controls, console and system. In each of these sections, you can change numerous parameters,
-which names are usually intuitive to understand.  
-Autoexec file (autoexec.lua) is a simple command file which is executed at engine start-up,
-just like you type them in the console. Basically, you shouldn't remove any existing commands
-from autoexec, as most likely engine won't start properly then, but you can modify these
-commands or add new ones — like changing start-up level by modifying setgamef() command.
-
-### Installation and running ###
+### Setup ###
 You don't need to install OpenTomb, but you need all classic TR game resources. Problem is,
-these resources (except level files themselves) are tend to be in some cryptic formats or
-incompatible across game versions. Because of this, you need to convert some game resources
-by yourself or get them from somewhere on the Net. Anyway, here is the list of all needed
-assets and where to get them:
+these resources (except level files themselves) tend to be in some cryptic formats, or
+incompatible across game versions. Because of this, you'll need to convert some game resources yourself,
+or get them from somewhere on the Net. Anyway, here is the list of all needed assets and where to get them:
 
  * Data folders from each game. Get them from your retail game CDs or Steam/GOG bundles.
    Just take data folder from each game's folder, and put it into corresponding
-   /data/tr*/ folder.
+   /data/tr*/ folder. For instance, for TR3, the path would be OpenTomb/data/tr3/data/
    
  * CD audio tracks. OpenTomb only supports OGG audiotracks for a moment, so you should
    convert original soundtracks by yourself, or just download whole TR1-5 music package
-   here: http://trep.trlevel.de/opentomb/files/tr_soundtracks_for_opentomb.zip  
-   PLEASE NOTE: script file bundled in this archive is outdated, so don't overwrite
-   existing soundtrack.lua file with one provided in archive.
+   here: https://opentomb.earvillage.net/  
+   PLEASE NOTE: Files may need to be renamed for this to work, please see: https://github.com/opentomb/OpenTomb/issues/447
    
  * Loading screens for TR1-3 and TR5. For TR3, get them from pix directory of your
    installed official game. Just put this pix directory into /data/tr3/ folder. As for
@@ -133,6 +118,25 @@ NB: Please note that OpenTomb requires C++11 (-std=c++11) flag to compile proper
 You may use CPU-specific optimization flags (-march=prescott, -march=i486, -march=core2),
 as well as general optimization flags (-O1 and -O2), but DON'T USE -O3 flag, as Bullet tends to
 crash with this optimization level (GCC 5.1+ may compile it without errors).
+
+### Running and Configuration ###
+To run OpenTomb, simply run the executable generated by the build. By default, no command line options 
+are needed. Access the console by pressing `. This allows you to enter commands to select levels, change 
+settings, and more. Enter 'help' to get a list of commands. Enter 'exit' to quit the engine.
+
+Currently, all settings in OpenTomb are managed through config.lua and autoexec.lua.
+Config.lua contains persistent engine and game settings, while autoexec.lua contains
+any commands which should be executed on engine start-up.
+
+Config.lua is divided into different sections: screen, audio, render, controls, console and system. 
+In each of these sections, you can change numerous parameters, the names of which are usually fairly intuitive.  
+
+Autoexec.lua is a simple list of commands which are ran at startup. Modifying existing commands may cause the engine to
+function incorrectly.
+
+To select a level, enter 'setgamef(game, level) into either autoexec.lua or in the console, where game is 1-5. Mansion 
+levels are generally 0, and games which do not have a mansion begin from level 1. For example, to load level 2 of TR3, 
+you would enter setgamef(3, 2).
 
 ### Licensing ###
 OpenTomb is an open-source engine distributed under LGPLv3 license, which means that ANY part of
