@@ -182,7 +182,6 @@ if(MINGW AND CMAKE_CROSSCOMPILING)
     # Cross compiling on Linux with the MinGW toolchain.
     message(STATUS "MinGW Cross-Compilation")
 
-    set(OPENAL_INCLUDE_DIR "/usr/${COMPILER_PREFIX}/include/AL")
     set(OPENAL_LIBRARY OpenAL32)
 
     set(SDL2_INCLUDE_DIR "/usr/${COMPILER_PREFIX}/include/SDL2")

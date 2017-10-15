@@ -6,24 +6,10 @@
 
 #include "../config-opentomb.h"
 
-extern "C" {
-#include <al.h>
-#include <alc.h>
-#ifdef HAVE_ALEXT_H
-#include <alext.h>
-#endif
-#ifdef HAVE_EFX_H
-#include <efx.h>
-#endif
-#ifdef HAVE_EFX_PRESETS_H
-#include <efx-presets.h>
-#endif
-
 #include <codec.h>
 #include <ogg.h>
 #include <os_types.h>
 #include <vorbisfile.h>
-}
 
 #include "../core/system.h"
 #include "../core/vmath.h"
@@ -38,6 +24,7 @@ extern "C" {
 #include "../engine.h"
 #include "../game.h"
 
+#include "audio_al.h"
 #include "audio.h"
 #include "audio_stream.h"
 #include "audio_fx.h"

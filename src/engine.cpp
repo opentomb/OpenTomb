@@ -12,10 +12,9 @@ extern "C" {
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
-#include <al.h>
-#include <alc.h>
 }
 
+#include "audio/audio_al.h"
 #include "core/system.h"
 #include "core/gl_util.h"
 #include "core/gl_font.h"

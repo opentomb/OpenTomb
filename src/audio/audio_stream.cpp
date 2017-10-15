@@ -6,11 +6,7 @@
 
 #include "../config-opentomb.h"
 
-extern "C" {
-#include <al.h>
-#include <alc.h>
-}
-
+#include "audio_al.h"
 #include "audio.h"
 #include "audio_stream.h"
 
