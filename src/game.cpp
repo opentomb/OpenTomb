@@ -547,7 +547,7 @@ void Game_ApplyControls(struct entity_s *ent)
 
         if( (control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0 ) )
         {
-            ent->character->cmd.rot[1] = (control_mapper.joy_move_y > 0) ? (1) : (-1);
+            ent->character->cmd.rot[1] = (control_mapper.joy_move_y > 0) ? (-1) : (1);
         }
         else
         {
