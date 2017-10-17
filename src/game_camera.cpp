@@ -45,6 +45,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     collision_result_t cb;
     entity_p target = World_GetEntityByID(cam_state->target_id);
     const int16_t filter = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC;
+    const float test_r = 16.0f;
 
     if(target && (cam_state->state == CAMERA_STATE_FIXED))
     {
@@ -106,14 +107,14 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
                 cameraTo[2] = cameraFrom[2];
 
                 //If collided we want to go right otherwise stay left
-                if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self, filter))
+                if(Physics_SphereTest(NULL, cameraFrom, cameraTo, test_r, ent->self, filter))
                 {
                     cameraTo[0] = cameraFrom[0] + sinf((ent->angles[0] + 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
                     cameraTo[1] = cameraFrom[1] - cosf((ent->angles[0] + 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
                     cameraTo[2] = cameraFrom[2];
 
                     //If collided we want to go to back else right
-                    if(Physics_SphereTest(NULL, cameraFrom, cameraTo, 16.0f, ent->self, filter))
+                    if(Physics_SphereTest(NULL, cameraFrom, cameraTo, test_r, ent->self, filter))
                     {
                         cam_state->target_dir = TR_CAM_TARG_BACK;
                     }
@@ -180,7 +181,6 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     else
     {
         Mat4_vec3_mul(cam_pos, ent->transform, ent->bf->bone_tags->full_transform + 12);
-        cam_pos[2] += cam_state->entity_offset_z;
     }
 
     //Code to manage screen shaking effects
@@ -193,12 +193,16 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     }*/
 
     vec3_copy(cameraFrom, cam_pos);
-    cam_pos[2] += cam_state->entity_offset_z;
     vec3_copy(cameraTo, cam_pos);
+    cameraTo[2] += 2.0f * cam_state->entity_offset_z;
 
-    if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self, filter))
+    if(Physics_SphereTest(&cb, cameraFrom, cameraTo, test_r, ent->self, filter))
     {
-        vec3_add_mul(cam_pos, cb.point, cb.normale, 2.0f);
+        vec3_add_mul(cam_pos, cb.point, cb.normale, 2.5f * test_r);
+    }
+    else
+    {
+        vec3_copy(cam_pos, cameraTo);
     }
 
     if (cam_state->entity_offset_x != 0.0f)
@@ -209,7 +213,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
         cam_pos[2] += cam_state->entity_offset_x * cam->gl_transform[0 + 2];
         vec3_copy(cameraTo, cam_pos);
 
-        if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self, filter))
+        if(Physics_SphereTest(&cb, cameraFrom, cameraTo, test_r, ent->self, filter))
         {
             vec3_add_mul(cam_pos, cb.point, cb.normale, 2.0f);
         }
@@ -235,7 +239,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
         }
         vec3_copy(cameraTo, cam_pos);
 
-        if(Physics_SphereTest(&cb, cameraFrom, cameraTo, 16.0f, ent->self, filter))
+        if(Physics_SphereTest(&cb, cameraFrom, cameraTo, test_r, ent->self, filter))
         {
             vec3_add_mul(cam_pos, cb.point, cb.normale, 2.0f);
         }

@@ -276,6 +276,7 @@ void Room_MoveActiveItems(struct room_s *room_to, struct room_s *room_from);
 void Room_GenSpritesBuffer(struct room_s *room);
 
 struct room_sector_s *Sector_GetPortalSectorTargetRaw(struct room_sector_s *rs);
+struct room_sector_s *Sector_GetPortalSectorTargetReal(struct room_sector_s *rs);
 
 struct room_sector_s *Sector_GetLowest(struct room_sector_s *sector);
 struct room_sector_s *Sector_GetHighest(struct room_sector_s *sector);

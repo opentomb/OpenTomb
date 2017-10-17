@@ -62,7 +62,7 @@ function twobp_init(id)        -- Two-block platform
         return entity_funcs[id].onActivate(object_id, activator_id);
     end;
     
-    entity_funcs[id].onLoop = function(object_id, activator_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(entity_funcs[object_id].waiting == false) then
             if(entity_funcs[object_id].mode < 2) then
                 if(entity_funcs[object_id].current_height < entity_funcs[object_id].raise_height) then
@@ -109,7 +109,7 @@ function twobp_init(id)        -- Two-block platform
     end;
     
     entity_funcs[id].onStand = function(object_id, activator_id)
-        if(getEntityActivity(object_id) and (getEntityModel(activator_id) == 0)) then  -- Lara
+        if(getEntityActivity(object_id) and (getEntityModelID(activator_id) == 0)) then  -- Lara
             entity_funcs[object_id].push = true;
         end;
     end;
@@ -139,7 +139,7 @@ function rblock_init(id)        -- Raising block (generic)
     
     if(entity_funcs[id].dummy == true) then
         setEntityScaling(id, 1.0, 1.0, 1.0);
-        setEntityVisibility(id, 0);
+        setEntityVisibility(id, false);
         entity_funcs[id].curr_height = entity_funcs[id].max_height;
         entity_funcs[id].direction   = 2;
     else
@@ -155,7 +155,7 @@ function rblock_init(id)        -- Raising block (generic)
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
-    entity_funcs[id].onLoop = function(object_id, activator_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(entity_funcs[object_id].direction == 1) then
             if((entity_funcs[object_id].dummy == false) and (entity_funcs[object_id].curr_height < entity_funcs[object_id].max_height)) then
                 local dz = frame_time * entity_funcs[object_id].move_speed;
@@ -220,7 +220,7 @@ function expplatform_init(id)        -- Expanding platform
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
-    entity_funcs[id].onLoop = function(object_id, activator_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(entity_funcs[object_id].direction == 1) then
             if(entity_funcs[object_id].curr_width < entity_funcs[object_id].max_width) then
                 local dz = frame_time * entity_funcs[object_id].move_speed;

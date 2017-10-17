@@ -13,9 +13,9 @@ extern "C" {
 #include "core/system.h"
 #include "core/console.h"
 #include "core/vmath.h"
+#include "script/script.h"
 #include "room.h"
 #include "trigger.h"
-#include "script.h"
 #include "gameflow.h"
 #include "game.h"
 #include "audio.h"
@@ -164,9 +164,14 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                 case TR_FD_TRIGTYPE_ANTIPAD:
                     action_type = TR_ACTIONTYPE_ANTI;
+                    mask_mode = TRIGGER_OP_AND_INV;
                 case TR_FD_TRIGTYPE_PAD:
                     // Check move type for triggering entity.
-                    header_condition = (entity_activator->move_type == MOVE_ON_FLOOR);
+                    {
+                        room_sector_p lowest_sector  = Sector_GetLowest(entity_activator->current_sector);
+                        header_condition = (entity_activator->move_type == MOVE_ON_FLOOR) && lowest_sector &&
+                                           (entity_activator->transform[12 + 2] <= lowest_sector->floor + 16);
+                    }
                     break;
 
                 case TR_FD_TRIGTYPE_SWITCH:
@@ -207,6 +212,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                 case TR_FD_TRIGTYPE_ANTITRIGGER:
                 case TR_FD_TRIGTYPE_HEAVYANTITRIGGER:
                     action_type = TR_ACTIONTYPE_ANTI;
+                    mask_mode = TRIGGER_OP_AND_INV;
                     break;
 
                 case TR_FD_TRIGTYPE_MONKEY:
@@ -350,7 +356,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                             {
                                 if(action_type == TR_ACTIONTYPE_ANTI)
                                 {
-                                    activation_state = Entity_Deactivate(trig_entity, entity_activator);
+                                    activation_state = Entity_Activate(trig_entity, entity_activator, trigger->mask, mask_mode, trigger->once, 0.0f);
                                 }
                                 else if((activator_sector_status == 0) || (trigger->timer > 0))
                                 {
@@ -367,12 +373,12 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                         {
                             if(activator == TR_ACTIVATOR_SWITCH)
                             {
-                                World_SetFlipMap(command->operands, switch_mask, TRIGGER_OP_XOR);
+                                World_SetFlipMap(command->operands, switch_mask, mask_mode);
                                 World_SetFlipState(command->operands, FLIP_STATE_BY_FLAG);
                             }
                             else
                             {
-                                World_SetFlipMap(command->operands, trigger->mask, TRIGGER_OP_OR);
+                                World_SetFlipMap(command->operands, trigger->mask, mask_mode);
                                 World_SetFlipState(command->operands, FLIP_STATE_BY_FLAG);
                             }
                         }
@@ -443,7 +449,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     case TR_FD_TRIGFUNC_FLIPEFFECT:
                         if((activator_sector_status == 0) || (activator == TR_ACTIVATOR_SWITCH))
                         {
-                            //snprintf(buf, 128, "   doEffect(%d, %d); \n", command->operands, trigger->timer);
+                            Script_DoFlipEffect(engine_lua, command->operands, trigger->timer);
                         }
                         break;
 

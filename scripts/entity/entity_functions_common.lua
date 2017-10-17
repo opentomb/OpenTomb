@@ -1,43 +1,35 @@
 -- OPENTOMB ENTITY FUNCTIONS SCRIPT
 -- By TeslaRus, Lwmte, 2014-2016
 
--- Load up some extra entity scripts.
-
-dofile(base_path .. "scripts/entity/script_switch.lua");     -- Additional switch scripts.
-
 
 function door_init(id)   -- NORMAL doors only!
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, true);
     
-    local state_on = 1;
-    local state_off = 0;
+    entity_funcs[id].state_on = 1;
+    entity_funcs[id].state_off = 0;
     local object_mask = getEntityMask(id);
     if(object_mask == 0x1F) then
-        setEntityAnimStateHeavy(id, ANIM_TYPE_BASE, state_on);
+        setEntityAnimStateHeavy(id, ANIM_TYPE_BASE, entity_funcs[id].state_on);
         setEntityTriggerLayout(id, 0x00, 0, 0); -- Reset activation mask and event.
-        state_on = 0;
-        state_off = 1;
+        entity_funcs[id].state_on = 0;
+        entity_funcs[id].state_off = 1;
     end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_on);
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_on);
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_off);
         return ENTITY_TRIGGERING_DEACTIVATED;
     end;
     
-    entity_funcs[id].onLoop = function(object_id)
-        if(getEntityEvent(object_id) == 0) then
-            setEntityTimer(object_id, 0.0);
-        end;
-
-        if((tickEntity(object_id) == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if((tick_state == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
+            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_off);
             setEntityEvent(object_id, 0);
         end;
     end
@@ -59,9 +51,8 @@ function pushdoor_init(id)   -- Pushdoors (TR4)
 
         if((not getEntityActivity(object_id))) then
             setEntityActivity(object_id, true);
-            local x, y, z, az, ax, ay = getEntityPos(object_id);
-            setEntityPos(activator_id, x, y, z, az + 180.0, ax, ay);
-            moveEntityLocal(activator_id, 0.0, 256.0, 0.0);
+            entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
             -- floor door 317 anim
             -- vertical door 412 anim
             setEntityAnim(activator_id, ANIM_TYPE_BASE, 412, 0);
@@ -72,124 +63,9 @@ function pushdoor_init(id)   -- Pushdoors (TR4)
 end
 
 
-function set_activation_offset(id)
-    local model_id = getEntityModelID(id);
-    local dx = 0.0;
-    local dy = 360.0;
-    local dz = 0.0;
-    local  r = 128.0;
-
-    if(getLevelVersion() < TR_II) then
-        if(model_id == 56) then
-            dy = 0.0;
-            r = 160.0;
-        end
-    elseif(getLevelVersion() < TR_III) then
-        if(model_id == 105) then
-            dy = 0.0;
-            r = 160.0;
-        end
-    elseif(getLevelVersion() < TR_IV) then
-        if(model_id == 130) then
-            dy = 0.0;
-            r = 160.0;
-        end
-    end
-
-    setEntityActivationOffset(id, dx, dy, dz, r);
-end
-
-
-function keyhole_init(id)    -- Key and puzzle holes
-
-    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
-    setEntityActivity(id, false);
-    set_activation_offset(id);
-
-    entity_funcs[id].onActivate = function(object_id, activator_id)
-        if((object_id == nil) or (getEntityActivity(object_id))) then
-            return ENTITY_TRIGGERING_NOT_READY;
-        end
-        
-        if((not getEntityActivity(object_id)) and (switch_activate(object_id, activator_id) == 1)) then
-            setEntityPos(activator_id, getEntityPos(object_id));
-            moveEntityLocal(activator_id, getEntityActivationOffset(id));
-            entityRotateToTriggerZ(activator_id, object_id);
-            return ENTITY_TRIGGERING_ACTIVATED;
-        end
-        return ENTITY_TRIGGERING_NOT_READY;
-    end;
-end
-
-function switch_init(id)     -- Ordinary switches
-    
-    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
-    set_activation_offset(id);
-
-    entity_funcs[id].onActivate = function(object_id, activator_id)
-        if((object_id == nil) or (getEntityTimer(object_id) > 0.0)) then
-            return ENTITY_TRIGGERING_NOT_READY;
-        end
-        
-        if(switch_activate(object_id, activator_id) > 0) then
-            setEntityPos(activator_id, getEntityPos(object_id));                -- Move activator right next to object.
-            moveEntityLocal(activator_id, getEntityActivationOffset(id));       -- Shift activator back to proper distance.
-            entityRotateToTriggerZ(activator_id, object_id);
-            return ENTITY_TRIGGERING_ACTIVATED;
-        end;
-        return ENTITY_TRIGGERING_NOT_READY;
-    end;
-    
-    entity_funcs[id].onLoop = function(object_id)
-        if((tickEntity(object_id) == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 1);
-            setEntitySectorStatus(object_id, 1);
-            setEntityEvent(object_id, 0);
-        end;
-    end;
-end
-
-
-function lever_switch_init(id)     -- Big switches (TR4) - lever
-    
-    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
-    setEntityActivationOffset(id, 0.0, -520.0, 0.0, 128);
-
-    entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(object_id == nil) then
-            return ENTITY_TRIGGERING_NOT_READY;
-        end
-        
-        local state = switch_activate(object_id, activator_id);                 -- 0 - nothing / in process, 1 - on, 2 - off
-        if(state > 0) then
-            setEntityPos(activator_id, getEntityPos(object_id));                -- Move activator right next to object.
-            moveEntityLocal(activator_id, getEntityActivationOffset(id));       -- Shift activator back to proper distance.
-            entityRotateToTriggerZ(activator_id, object_id);
-            if(state == 1) then
-                setEntityActivationDirection(id, 0.0, -1.0, 0.0);
-                setEntityActivationOffset(id, 0.0, 520.0, 0.0, 128);
-            else
-                setEntityActivationDirection(id, 0.0, 1.0, 0.0);
-                setEntityActivationOffset(id, 0.0, -520.0, 0.0, 128);
-            end;
-            setEntityCollision(id, 1);
-            return ENTITY_TRIGGERING_ACTIVATED;
-        end;
-        return ENTITY_TRIGGERING_NOT_READY;
-    end;
-    
-    entity_funcs[id].onLoop = function(object_id)
-        if((tickEntity(object_id) == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, 0);              -- 0 - diactivate anim
-            setEntitySectorStatus(object_id, 1);
-            setEntityEvent(object_id, 0);
-        end;
-    end;
-end
-
-
 function anim_single_init(id)      -- Ordinary one way animatings
 
+    local version = getLevelVersion();
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, false);
    
@@ -199,18 +75,32 @@ function anim_single_init(id)      -- Ordinary one way animatings
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
 
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityActivity(object_id, false);
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(tick_state == TICK_STOPPED) then
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, 0);
+            setEntityActivity(object_id, false);
+        end;
+    end;
+
     --TODO: move that hack to level script (after loading scripts system backporting?)
-    if(id == 12) then
-        entity_funcs[id].onLoop = function(object_id)
-            local x, y, z = getEntityPos(object_id);
-            if(x > 48896) then
-                x = x - 1024.0 * frame_time;
-                if(x < 48896) then
-                    x = 48896;
+    if(version == TR_I) then
+        if(id == 12) then
+            entity_funcs[id].onLoop = function(object_id, tick_state)
+                local x, y, z = getEntityPos(object_id);
+                if(x > 48896) then
+                    x = x - 1024.0 * frame_time;
+                    if(x < 48896) then
+                        x = 48896;
+                    end;
+                    setEntityPos(object_id, x, y, z);
+                else
+                    entity_funcs[id].onLoop = nil;
                 end;
-                setEntityPos(object_id, x, y, z);
-            else
-                entity_funcs[id].onLoop = nil;
             end;
         end;
     end;
@@ -240,8 +130,8 @@ function anim_init(id)      -- Ordinary animatings
         return ENTITY_TRIGGERING_DEACTIVATED;
     end;
 
-    entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(tick_state == TICK_STOPPED) then
             setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
             setEntityActivity(object_id, false);
             -- disable entity?
@@ -251,7 +141,14 @@ end
 
 
 function pushable_init(id)
-    setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
+    setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
+    setEntityTypeFlag(id, ENTITY_TYPE_TRAVERSE, 1);
+    if(getLevelVersion() < TR_IV) then
+        setEntityTypeFlag(id, ENTITY_TYPE_TRAVERSE_FLOOR, 1);
+    end;
+
+    setEntityCollisionFlags(id, COLLISION_GROUP_STATIC_ROOM, nil, nil);
+    setEntityCollisionGroupAndMask(id, COLLISION_GROUP_STATIC_ROOM, COLLISION_MASK_ALL);
 end
 
 
@@ -260,19 +157,38 @@ function pickup_init(id, item_id)    -- Pick-ups
     setEntityTypeFlag(id, ENTITY_TYPE_PICKABLE);
     setEntityActivationOffset(id, 0.0, 0.0, 0.0, 480.0);
     setEntityActivity(id, false);
+    setEntityAnimFlag(id, ANIM_TYPE_BASE, ANIM_FRAME_LOCK);
+    entity_funcs[id].activator_id = nil;
+    entity_funcs[id].need_set_pos = true;
+
+    entity_funcs[id].onSave = function()
+        if(entity_funcs[id].activator_id ~= nil) then
+            local addr = "\nentity_funcs[" .. id .. "].";
+            local ret  = addr .. "activator_id = " .. entity_funcs[id].activator_id .. ";";
+            if(entity_funcs[id].need_set_pos) then
+                ret = ret .. addr .. "need_set_pos = true;";
+            else
+                ret = ret .. addr .. "need_set_pos = false;";
+            end;
+            return ret;
+        end;
+
+        return "";
+    end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if((item_id == nil) or (object_id == nil)) then
+        if((item_id == nil) or (object_id == nil) or (entity_funcs[object_id].activator_id ~= nil)) then
             return ENTITY_TRIGGERING_NOT_READY;
         end
-        
-        local need_set_pos = true;
+
+        enableEntity(object_id);
+        setEntityActivity(id, false);
         local curr_anim = getEntityAnim(activator_id, ANIM_TYPE_BASE);
 
         if(curr_anim == 103) then                 -- Stay idle
             local dx, dy, dz = getEntityVector(object_id, activator_id);
             if(dz < -256.0) then
-                need_set_pos = false;
+                entity_funcs[object_id].need_set_pos = false;
                 setEntityAnim(activator_id, ANIM_TYPE_BASE, 425, 0); -- Standing pickup, test version
                 --noFixEntityCollision(activator_id);
             else
@@ -288,16 +204,24 @@ function pickup_init(id, item_id)    -- Pick-ups
             return ENTITY_TRIGGERING_NOT_READY;                      -- Disable picking up, if Lara isn't idle.
         end;
 
-        addTask(
-        function()
+        entity_funcs[object_id].activator_id = activator_id;
+        setEntityActivity(object_id, true);
+
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(entity_funcs[object_id].activator_id ~= nil) then
+            local activator_id = entity_funcs[object_id].activator_id;
+
             -- Position corrector
             if(getEntityMoveType(activator_id) == MOVE_UNDERWATER) then
                 if(getEntityDistance(object_id, activator_id) > 128.0) then
-                    moveEntityToEntity(activator_id, object_id, 25.0);
+                    moveEntityToEntity(activator_id, object_id, 25.0 * 60.0 * frame_time);
                 end;
-            elseif(need_set_pos) then
+            elseif(entity_funcs[object_id].need_set_pos) then
                 if(getEntityDistance(object_id, activator_id) > 32.0) then
-                    moveEntityToEntity(activator_id, object_id, 50.0);
+                    moveEntityToEntity(activator_id, object_id, 50.0 * 60.0 * frame_time);
                 end;
             end;
             
@@ -316,11 +240,10 @@ function pickup_init(id, item_id)    -- Pick-ups
 
             addItem(activator_id, item_id);
             disableEntity(object_id);
-            return false;   -- Item successfully picked up, kill the task.
-        end);
-        return ENTITY_TRIGGERING_ACTIVATED;
+            entity_funcs[object_id].activator_id = nil;
+        end;
     end;
-end
+end;
 
 
 function boulder_init(id)
@@ -350,25 +273,54 @@ function boulder_heavy_init(id)
     setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
     setEntityActivity(id, false);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
-    local group = bit32.bor(COLLISION_GROUP_TRIGGERS, COLLISION_GROUP_CHARACTERS);
-    local mask = bit32.bor(COLLISION_GROUP_STATIC_ROOM, COLLISION_GROUP_STATIC_OBLECT);
+    createGhosts(id);
+    local group = bit32.bor(COLLISION_GROUP_TRIGGERS, COLLISION_GROUP_KINEMATIC);
+    local mask = COLLISION_GROUP_STATIC_ROOM;
     setEntityCollisionFlags(id, group, nil, mask);
 
+    local x, y, z = getEntityPos(id);
+    entity_funcs[id].x = x;
+    entity_funcs[id].y = y;
+    entity_funcs[id].z = z;
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(not getEntityActivity(object_id)) then
+        if(not getEntityActivity(object_id) and (getEntityEvent(object_id) == 0)) then
             setEntityActivity(object_id, true);
             setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
     end
 
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityPos(object_id, entity_funcs[object_id].x, entity_funcs[object_id].y, entity_funcs[object_id].z);
+        setEntityActivity(object_id, false);
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    end
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityActivity(object_id)) then
-            local is_stopped = moveEntityHeavy(object_id, 2048.0 * frame_time, true);
+            local dy = 2048.0 * frame_time;
+            local R = 512;
+            local r = 256;
+            local test_y = R - r + dy;
+            local lim = dy / test_y;
+            local is_stopped, t = getEntitySphereTest(object_id, mask, r, 0.0, test_y, 0.0);
+            if(is_stopped) then
+                dy = t * test_y - (R - r);
+                is_stopped = dy < 16.0;
+            end;
+            
+            local need_fix, fx, fy, fz = getEntityCollisionFix(object_id, COLLISION_GROUP_STATIC_ROOM);
+            if(need_fix and (fz < 64.0)) then
+                moveEntityGlobal(object_id, 0.0, 0.0, fz * 60.0 * frame_time);
+            end;
+
+            moveEntityLocal(object_id, 0.0, dy, 0.0);
+
             local is_dropped = dropEntity(object_id, frame_time, true);
             if(is_dropped and is_stopped) then
                 setEntityActivity(object_id, false);
-                dropEntity(object_id, 1.0, true);
+                dropEntity(object_id, 64.0, true);
             end;
         end;
     end;
@@ -380,3 +332,69 @@ function boulder_heavy_init(id)
     end;
 
 end;
+
+
+function zipline_init(id)
+    setEntityActivity(id, false);
+    setEntityAnim(id, ANIM_TYPE_BASE, 0, 0);
+    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
+
+    setEntityActivationOffset(id, 0.0, 350.0, 0.0, 256.0);
+    setEntityActivationDirection(id, 0.0, 1.0, 0.0, 0.77);
+    
+    entity_funcs[id].activator_id = nil;
+
+    local anim_grab = 215;
+    local anim_drop = 217;
+    if(getLevelVersion() >= TR_III) then
+        anim_grab = 214;
+        anim_drop = 216;
+    end;
+
+    entity_funcs[id].onSave = function()
+        if(entity_funcs[id].activator_id ~= nil) then
+            local addr = "\nentity_funcs[" .. id .. "].";
+            return addr .. "activator_id = " .. entity_funcs[id].activator_id .. ";";
+        end;
+        return "";
+    end;
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(getEntityEvent(object_id) == 0) then
+            setEntityEvent(object_id, 1);
+            setEntityActivity(id, true);
+            setEntityAnim(activator_id, ANIM_TYPE_BASE, anim_grab, 0);
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+            entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
+            entity_funcs[id].activator_id = activator_id;
+            return ENTITY_TRIGGERING_ACTIVATED;
+        end;
+        return ENTITY_TRIGGERING_NOT_READY;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if((entity_funcs[object_id].activator_id ~= nil) and (a == 1)) then
+            local dx = 0.0;
+            local dy = 4096.0 * frame_time;
+            local dz = 0.0 - dy / 4.0;
+            local hit = getEntityRayTest(object_id, COLLISION_GROUP_STATIC_ROOM, dx, dy + 128.0, dz, 0, 0, 0);
+            if(hit) then
+                if(70 == getEntityAnimState(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE)) then
+                    setEntityAnim(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE, anim_drop, 0);
+                end;
+                entity_funcs[object_id].activator_id = nil;
+                setEntityActivity(object_id, false);
+            else
+                moveEntityLocal(object_id, dx, dy, dz);
+            end;
+        end;
+
+        if((entity_funcs[object_id].activator_id ~= nil) and (70 == getEntityAnimState(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE))) then
+            setEntityPos(entity_funcs[object_id].activator_id, getEntityPos(object_id));
+        end;
+    end;
+end;
+
+

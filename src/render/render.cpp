@@ -11,6 +11,7 @@
 #include "../core/vmath.h"
 #include "../core/polygon.h"
 #include "../core/obb.h"
+#include "../script/script.h"
 #include "../vt/tr_versions.h"
 #include "camera.h"
 #include "render.h"
@@ -20,7 +21,6 @@
 #include "shader_manager.h"
 #include "../room.h"
 #include "../world.h"
-#include "../script.h"
 #include "../mesh.h"
 #include "../skeletal_model.h"
 #include "../entity.h"
@@ -230,7 +230,7 @@ void CRender::UpdateAnimTextures()
  */
 void CRender::GenWorldList(struct camera_s *cam)
 {
-    this->CleanList();                                                          // clear old render list
+    this->CleanList();
     this->dynamicBSP->Reset(m_anim_sequences);
     this->frustumManager->Reset();
     cam->frustum->next = NULL;
@@ -262,7 +262,8 @@ void CRender::GenWorldList(struct camera_s *cam)
             }
             else if((cam_pos[0] <= dest_room->bb_max[0] + eps) && (cam_pos[0] >= dest_room->bb_min[0] - eps) &&
                     (cam_pos[1] <= dest_room->bb_max[1] + eps) && (cam_pos[1] >= dest_room->bb_min[1] - eps) &&
-                    (cam_pos[2] <= dest_room->bb_max[2] + eps) && (cam_pos[2] >= dest_room->bb_min[2] - eps))
+                    (cam_pos[2] <= dest_room->bb_max[2] + eps) && (cam_pos[2] >= dest_room->bb_min[2] - eps) &&
+                    !Room_IsInOverlappedRoomsList(curr_room, dest_room))
             {
                 portal_p np = dest_room->portals;
                 dest_room->frustum = NULL;                                      // room with camera inside has no frustums!
@@ -324,12 +325,6 @@ void CRender::DrawList()
 
         m_active_texture = 0;
         this->DrawSkyBox(m_camera->gl_view_proj_mat);
-        entity_p player = World_GetPlayer();
-
-        if(player)
-        {
-            this->DrawEntity(player, m_camera->gl_view_mat, m_camera->gl_view_proj_mat);
-        }
 
         /*
          * room rendering
@@ -392,19 +387,6 @@ void CRender::DrawList()
             }
         }
 
-        if(player && (player->bf->animations.model->transparency_flags == MESH_HAS_TRANSPARENCY))
-        {
-            float tr[16];
-            for(uint16_t j = 0; j < player->bf->bone_tag_count; j++)
-            {
-                if(player->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
-                {
-                    Mat4_Mat4_mul(tr, player->transform, player->bf->bone_tags[j].full_transform);
-                    dynamicBSP->AddNewPolygonList(player->bf->bone_tags[j].mesh_base->transparency_polygons, tr, m_camera->frustum);
-                }
-            }
-        }
-
         if(dynamicBSP->m_root->polygons_front && (dynamicBSP->m_vbo != 0))
         {
             const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(false, false);
@@ -438,11 +420,6 @@ void CRender::DrawListDebugLines()
     if(r_flags && m_camera)
     {
         debugDrawer->SetDrawFlags(r_flags);
-
-        if(World_GetPlayer())
-        {
-            debugDrawer->DrawEntityDebugLines(World_GetPlayer());
-        }
 
         /*
          * Render world debug information
@@ -929,7 +906,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
     {
         for(uint16_t i = 0; i < room->overlapped_room_list_size; i++)
         {
-            if(room->overlapped_room_list[i]->is_in_r_list)
+            if(room->overlapped_room_list[i]->real_room->is_in_r_list)
             {
                 need_stencil = true;
                 break;
@@ -999,6 +976,13 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, modelViewProjectionTransform);
         this->DrawMesh(room->content->mesh, NULL, NULL);
     }
+
+#if STENCIL_FRUSTUM
+    if(need_stencil)
+    {
+        qglDisable(GL_STENCIL_TEST);
+    }
+#endif
 
     if (room->content->static_mesh_count > 0)
     {
@@ -1088,13 +1072,6 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
             }
         }
     }
-
-#if STENCIL_FRUSTUM
-    if(need_stencil)
-    {
-        qglDisable(GL_STENCIL_TEST);
-    }
-#endif
 }
 
 

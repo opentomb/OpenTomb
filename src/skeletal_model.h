@@ -256,6 +256,7 @@ void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
 
 void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);
 void SSBoneFrame_Clear(ss_bone_frame_p bf);
+void SSBoneFrame_Copy(struct ss_bone_frame_s *dst, struct ss_bone_frame_s *src);
 void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time);
 void SSBoneFrame_RotateBone(struct ss_bone_frame_s *bf, const float q_rotate[4], int bone);
 int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);

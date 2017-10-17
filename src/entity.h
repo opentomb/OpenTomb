@@ -16,6 +16,7 @@ struct physics_data_s;
 #define ENTITY_STATE_ENABLED                        (0x0001)    // Entity is enabled.
 #define ENTITY_STATE_ACTIVE                         (0x0002)    // Entity is animated.
 #define ENTITY_STATE_VISIBLE                        (0x0004)    // Entity is visible.
+#define ENTITY_STATE_COLLIDABLE                     (0x0008)    // Collisions enabled.
 
 #define ENTITY_TYPE_GENERIC                         (0x0000)    // Just an animating.
 #define ENTITY_TYPE_INTERACTIVE                     (0x0001)    // Can respond to other entity's commands.
@@ -68,6 +69,7 @@ typedef struct entity_s
     uint32_t                            move_type : 4;          // on floor / free fall / swim ....
     uint32_t                            no_fix_all : 1;
     uint32_t                            no_fix_z : 1;
+    uint32_t                            no_anim_pos_autocorrection : 1;
     
     float                               timer;              // Set by "timer" trigger field
     uint32_t                            callback_flags;     // information about scripts callbacks
@@ -105,6 +107,7 @@ void Entity_Disable(entity_p ent);
 void Entity_EnableCollision(entity_p ent);
 void Entity_DisableCollision(entity_p ent);
 void Entity_UpdateRoomPos(entity_p ent);
+void Entity_MoveToRoom(entity_p entity, struct room_s *new_room);
 
 void Entity_Frame(entity_p entity, float time);  // process frame + trying to change state
 
@@ -122,14 +125,14 @@ int  Entity_GetSubstanceState(entity_p entity);
 void Entity_UpdateRigidBody(struct entity_s *ent, int force);
 void Entity_GhostUpdate(struct entity_s *ent);
 
-int  Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float move_global[3], int16_t filter);
-int  Entity_CheckNextPenetration(struct entity_s *ent, float move[3], int16_t filter);
+int  Entity_GetPenetrationFixVector(struct entity_s *ent, float reaction[3], float ent_move[3], int16_t filter);
+int  Entity_CheckNextPenetration(struct entity_s *ent, float move[3], float reaction[3], int16_t filter);
 void Entity_FixPenetrations(struct entity_s *ent, float move[3], int16_t filter);
 
 void Entity_CheckCollisionCallbacks(entity_p ent);
 void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim);
 void Entity_ProcessSector(entity_p ent);
-void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int frame);
+void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int frame, float new_transform[16] = NULL);
 void Entity_MoveToSink(entity_p entity, uint32_t sink_index);
 void Entity_MoveForward(entity_p ent, float dist);
 void Entity_MoveStrafe(entity_p ent, float dist);

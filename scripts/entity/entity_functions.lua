@@ -44,11 +44,19 @@ end;
 --------------------------------------------------------------------------------
 
 dofile(base_path .. "scripts/entity/entity_functions_common.lua");
+dofile(base_path .. "scripts/entity/entity_functions_switch.lua");
 dofile(base_path .. "scripts/entity/entity_functions_traps.lua");
 dofile(base_path .. "scripts/entity/entity_functions_unique.lua");
 dofile(base_path .. "scripts/entity/entity_functions_enemies.lua");
 dofile(base_path .. "scripts/entity/entity_functions_platforms.lua");
 
+
+function getEntitySaveData(id)
+    if((entity_funcs ~= nil) and (entity_funcs[id] ~= nil) and (entity_funcs[id].onSave ~= nil)) then
+        return entity_funcs[id].onSave();
+    end;
+    return "";
+end;
 
 function gen_soundsource_init(id)    -- Generic sound source (continous)
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
@@ -63,9 +71,9 @@ function gen_soundsource_init(id)    -- Generic sound source (continous)
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         playSound(entity_funcs[object_id].sound_id, object_id);
-        if(tickEntity(object_id) == TICK_STOPPED) then
+        if(tick_state == TICK_STOPPED) then
             setEntityActivity(object_id, false)
             stopSound(entity_funcs[object_id].sound_id, object_id);
         end;
@@ -89,8 +97,8 @@ function randomized_soundsource_init(id)    -- Randomized sound source
         return swapEntityActivity(object_id);
     end
     
-    entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(tick_state == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
         if((math.random(1000) > (1000 - entity_funcs[object_id].chance)) and (getEntityDistance(player, object_id) < 8192.0)) then
             playSound(entity_funcs[object_id].sound_id, object_id);
         end;
@@ -112,15 +120,14 @@ function propeller_init(id)      -- Generic propeller (TR1-TR2)
     setEntityActivity(id, true);
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        return swapEntityState(object_id, 0, 1);
+        local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if(a ~= 0) then
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+        end;
     end;
     
-    entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
-    
-    entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then 
-            setEntityAnimState(object_id, ANIM_TYPE_BASE, 0) 
-        end;
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
     end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
@@ -155,7 +162,7 @@ function fallblock_init(id)  -- Falling block (TR1-3)
                     return true;
                 end;
                 if(once) then
-                    setEntityCollision(object_id, 0);
+                    setEntityCollision(object_id, false);
                     once = false;
                 end;
                 if(dropEntity(object_id, frame_time, true)) then
@@ -175,7 +182,9 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
     
     local level_version = getLevelVersion();
-    if((level_version < TR_II) or (level_version >= TR_III)) then setEntityVisibility(id, 0) end;
+    if((level_version < TR_II) or (level_version >= TR_III)) then 
+        setEntityVisibility(id, false) 
+    end;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (activator_id == nil)) then
@@ -185,12 +194,12 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
         local anim = getEntityAnim(object_id, ANIM_TYPE_BASE);
         if(anim == 0) then
             setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
-            setEntityVisibility(object_id, 1);
+            setEntityVisibility(object_id, true);
             addTask(
             function()
                 if(dropEntity(object_id, frame_time, true)) then
                     setEntityAnim(object_id, ANIM_TYPE_BASE, 2, 0);
-                    setEntityCollision(object_id, 0);
+                    setEntityCollision(object_id, false);
                     return false;
                 end;
                 return true;
@@ -207,17 +216,3 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
     end
 end
 
-
-function baddie_init(id)    -- INVALID!
-
-    setEntityTypeFlag(id, ENTITY_TYPE_ACTOR);
-    disableEntity(id);
-    
-    entity_funcs[id].onActivate = function(object_id, activator_id)
-        if(not getEntityActivity(object_id)) then 
-            enableEntity(object_id) 
-        end;
-        return ENTITY_TRIGGERING_ACTIVATED;
-    end;
-    
-end

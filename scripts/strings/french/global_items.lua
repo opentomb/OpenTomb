@@ -1,5 +1,7 @@
 ﻿-- OPENTOMB INVENTORY GLOBAL ITEM NAMES
 -- by Lwmte, Sep 2014
+-- French Translation by: Joey79100 and zdimension.
+-- Translation Version: 1.1.0.0 (January 9th, 2016)
 
 --------------------------------------------------------------------------------
 -- In this file, we list all the global item names used across all games.
@@ -50,7 +52,7 @@ ITEM_NAME_HK_LASERSIGHT       = "H&K + Viseur laser"
 ITEM_NAME_PISTOL_AMMO = "Munitions pour pistolets"
 ITEM_NAME_SHOTGUN_AMMO = "Munitions pour fusil"
 ITEM_NAME_SHOTGUN_NORMAL_AMMO = "Cartouches normales"
-ITEM_NAME_SHOTGUN_WIDESHOT_AMMO = "Chevrotine pour Fusil"
+ITEM_NAME_SHOTGUN_WIDESHOT_AMMO = "Chevrotine pour fusil"
 ITEM_NAME_MAGNUM_AMMO = "Munitions pour magnums"
 ITEM_NAME_AUTOMAG_AMMO = "Munitions pour pistolets automatiques"
 ITEM_NAME_DESERTEAGLE_AMMO = "Munitions pour Desert Eagle"
@@ -73,5 +75,5 @@ ITEM_NAME_GRAPPLEGUN_AMMO = "Munitions pour lance-grappin"
 ITEM_NAME_FLARES = "Torches"
 ITEM_NAME_TORCH  = "Torche"   -- Don't know why we may need this?..
 
-ITEM_NAME_SMALL_MEDIPACK = "Petite trousse de secours"
-ITEM_NAME_LARGE_MEDIPACK = "Grande trousse de secours"
+ITEM_NAME_SMALL_MEDIPACK = "Petite trousse de soins"
+ITEM_NAME_LARGE_MEDIPACK = "Grande trousse de soins"

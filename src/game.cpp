@@ -17,6 +17,8 @@ extern "C" {
 #include "render/camera.h"
 #include "render/frustum.h"
 #include "render/render.h"
+#include "script/script.h"
+#include "vt/tr_versions.h"
 #include "engine.h"
 #include "physics.h"
 #include "controls.h"
@@ -26,7 +28,6 @@ extern "C" {
 #include "audio.h"
 #include "skeletal_model.h"
 #include "entity.h"
-#include "script.h"
 #include "trigger.h"
 #include "anim_state_control.h"
 #include "character_controller.h"
@@ -99,20 +100,6 @@ int lua_noclip(lua_State * lua)
 }
 
 
-int lua_debuginfo(lua_State * lua)
-{
-    if(lua_gettop(lua) == 0)
-    {
-        screen_info.debug_view_state++;
-    }
-    else
-    {
-        screen_info.debug_view_state = lua_tointeger(lua, 1);
-    }
-    return 0;
-}
-
-
 void Game_InitGlobals()
 {
     control_states.free_look_speed = 3000.0;
@@ -127,7 +114,6 @@ void Game_RegisterLuaFunctions(lua_State *lua)
 {
     if(lua != NULL)
     {
-        lua_register(lua, "debuginfo", lua_debuginfo);
         lua_register(lua, "mlook", lua_mlook);
         lua_register(lua, "freelook", lua_freelook);
         lua_register(lua, "cam_distance", lua_cam_distance);
@@ -212,14 +198,20 @@ void Save_Entity(FILE **f, entity_p ent)
     {
         uint32_t room_id = (ent->self->room)?(ent->self->room->id):(0xFFFFFFFF);
         fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->bf->animations.model->id, room_id,
-                ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
+                ent->transform[12 + 0], ent->transform[12+1], ent->transform[12+2],
                 ent->angles[0], ent->angles[1], ent->angles[2], ent->id);
     }
     else
     {
         fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id,
-                ent->transform[12+0], ent->transform[12+1], ent->transform[12+2],
+                ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2],
                 ent->angles[0], ent->angles[1], ent->angles[2]);
+    }
+
+    char save_buff[32768] = {0};
+    if(Script_GetEntitySaveData(engine_lua, ent->id, save_buff, sizeof(save_buff)) > 0)
+    {
+        fprintf(*f, "\n%s", save_buff);
     }
 
     ss_animation_p ss_anim = &ent->bf->animations;
@@ -271,6 +263,7 @@ void Save_Entity(FILE **f, entity_p ent)
     fprintf(*f, "\nsetEntityFlags(%d, 0x%.4X, 0x%.4X, 0x%.8X);", ent->id, ent->state_flags, ent->type_flags, ent->callback_flags);
     fprintf(*f, "\nsetEntityCollisionFlags(%d, %d, %d, %d);", ent->id, ent->self->collision_group, ent->self->collision_shape, ent->self->collision_mask);
     fprintf(*f, "\nsetEntityTriggerLayout(%d, 0x%.2X);", ent->id, ent->trigger_layout);
+    fprintf(*f, "\nsetEntityTimer(%d, %.3f);", ent->id, ent->timer);
 
     if(ent->self->room != NULL)
     {
@@ -283,20 +276,29 @@ void Save_Entity(FILE **f, entity_p ent)
 
     for(ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
     {
-        fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->current_animation, ss_anim->current_frame, ss_anim->next_animation, ss_anim->next_frame);
-        fprintf(*f, "\nsetEntityAnimStateHeavy(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state_heavy);
-        fprintf(*f, "\nsetEntityAnimState(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state);
-        fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %d, %.2f, %.2f, %.2f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type, ss_anim->targeting_bone,
-            ss_anim->target[0], ss_anim->target[1], ss_anim->target[2],
-            ss_anim->bone_direction[0], ss_anim->bone_direction[1], ss_anim->bone_direction[2]);
-        fprintf(*f, "\nentitySSAnimSetAxisMod(%d, %d, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
-            ss_anim->targeting_axis_mod[0], ss_anim->targeting_axis_mod[1], ss_anim->targeting_axis_mod[2]);
-        fprintf(*f, "\nentitySSAnimSetTargetingLimit(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
-            ss_anim->targeting_limit[0], ss_anim->targeting_limit[1], ss_anim->targeting_limit[2], ss_anim->targeting_limit[3]);
-        fprintf(*f, "\nentitySSAnimSetCurrentRotation(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
-            ss_anim->current_mod[0], ss_anim->current_mod[1], ss_anim->current_mod[2], ss_anim->current_mod[3]);
-        fprintf(*f, "\nentitySSAnimSetExtFlags(%d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled,
-            ss_anim->anim_ext_flags, ss_anim->targeting_flags);
+        if(ss_anim->model)
+        {
+            fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_animation, ss_anim->next_frame, ss_anim->current_animation, ss_anim->current_frame);
+            fprintf(*f, "\nsetEntityAnimStateHeavy(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state_heavy);
+            fprintf(*f, "\nsetEntityAnimState(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state);
+            fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %d, %.2f, %.2f, %.2f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type, ss_anim->targeting_bone,
+                ss_anim->target[0], ss_anim->target[1], ss_anim->target[2],
+                ss_anim->bone_direction[0], ss_anim->bone_direction[1], ss_anim->bone_direction[2]);
+            fprintf(*f, "\nentitySSAnimSetAxisMod(%d, %d, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
+                ss_anim->targeting_axis_mod[0], ss_anim->targeting_axis_mod[1], ss_anim->targeting_axis_mod[2]);
+            fprintf(*f, "\nentitySSAnimSetTargetingLimit(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
+                ss_anim->targeting_limit[0], ss_anim->targeting_limit[1], ss_anim->targeting_limit[2], ss_anim->targeting_limit[3]);
+            fprintf(*f, "\nentitySSAnimSetCurrentRotation(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
+                ss_anim->current_mod[0], ss_anim->current_mod[1], ss_anim->current_mod[2], ss_anim->current_mod[3]);
+            fprintf(*f, "\nentitySSAnimSetExtFlags(%d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled,
+                ss_anim->anim_ext_flags, ss_anim->targeting_flags);
+            fprintf(*f, "\nentitySSAnimSetEnable(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled);
+        }
+    }
+
+    if(ent->no_fix_all)
+    {
+        fprintf(*f, "\nnoFixEntityCollision(%d);", ent->id);
     }
 }
 
@@ -348,6 +350,16 @@ int Game_Save(const char* name)
     {
         fprintf(f, "setFlipMap(%d, 0x%02X, 0);\n", i, flip_map[i]);
         fprintf(f, "setFlipState(%d, %d);\n", i, flip_state[i]);
+    }
+    if(World_GetVersion() < TR_IV)
+    {
+        fprintf(f, "setGlobalFlipState(%d);\n", (int)World_GetGlobalFlipState());
+    }
+
+    char save_buffer[32768] = {0};
+    if(Script_GetFlipEffectsSaveData(engine_lua, save_buffer, sizeof(save_buffer)) > 0)
+    {
+        fprintf(f, "\n%s\n", save_buffer);
     }
 
     Save_Entity(&f, World_GetPlayer());    // Save Lara.
@@ -447,7 +459,7 @@ void Game_ApplyControls(struct entity_s *ent)
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
         engine_camera.current_room = World_FindRoomByPosCogerrence(engine_camera.gl_transform + 12, engine_camera.current_room);
     }
-    else if(control_states.noclip != 0)
+    else if(control_states.noclip)
     {
         float pos[3];
         float dist = (control_states.state_walk)?(control_states.free_look_speed * engine_frame_time * 0.3):(control_states.free_look_speed * engine_frame_time);
@@ -463,8 +475,10 @@ void Game_ApplyControls(struct entity_s *ent)
         pos[2] = engine_camera.gl_transform[12 + 2] + engine_camera.gl_transform[8 + 2] * control_states.cam_distance - 512.0;
         vec3_copy(ent->transform + 12, pos);
         Entity_UpdateTransform(ent);
+        Entity_UpdateRoomPos(ent);
         Entity_UpdateRigidBody(ent, 1);
         Entity_GhostUpdate(ent);
+        Entity_FixPenetrations(ent, NULL, COLLISION_FILTER_CHARACTER);
     }
     else
     {
@@ -530,15 +544,20 @@ void Game_ApplyControls(struct entity_s *ent)
 void Game_UpdateAllEntities(struct RedBlackNode_s *x)
 {
     entity_p ent = (entity_p)x->data;
-    if(!ent->self->room || ent->self->room == ent->self->room->real_room)
+    if(ent && (!ent->self->room || (ent->self->room == ent->self->room->real_room)))
     {
+        if(ent->character)
+        {
+            Character_Update(ent);
+        }
         if(ent->state_flags & ENTITY_STATE_ENABLED)
         {
             Entity_ProcessSector(ent);
-            Script_LoopEntity(engine_lua, ent->id);
+            Script_LoopEntity(engine_lua, ent);
         }
         Entity_Frame(ent, engine_frame_time);
-        Entity_UpdateRigidBody(ent, 0);
+        Entity_UpdateRigidBody(ent, ent->character != NULL);
+        Entity_UpdateRoomPos(ent);
     }
 
     if(x->left != NULL)
@@ -565,88 +584,15 @@ void Game_UpdateAI()
 }
 
 
-void Game_UpdateCharactersTree(struct RedBlackNode_s *x)
-{
-    entity_p ent = (entity_p)x->data;
-
-    if(ent && ent->character)
-    {
-        if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
-        {
-            Entity_CheckActivators(ent);
-        }
-        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
-        {
-            ent->character->resp.kill = 1;                                      // Kill, if no HP.
-        }
-        Character_ApplyCommands(ent);
-
-        Entity_ProcessSector(ent);
-        Character_UpdateParams(ent);
-        Entity_CheckCollisionCallbacks(ent);
-
-        for(int h = 0; h < ent->character->hair_count; h++)
-        {
-            Hair_Update(ent->character->hairs[h], ent->physics);
-        }
-    }
-
-    if(x->left != NULL)
-    {
-        Game_UpdateCharactersTree(x->left);
-    }
-    if(x->right != NULL)
-    {
-        Game_UpdateCharactersTree(x->right);
-    }
-}
-
-
-void Game_UpdateCharacters()
-{
-    entity_p ent = World_GetPlayer();
-
-    if(ent && ent->character)
-    {
-        if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
-        {
-            Entity_CheckActivators(ent);
-        }
-        if(Character_GetParam(ent, PARAM_HEALTH) <= 0.0)
-        {
-            ent->character->resp.kill = 0;   // Kill, if no HP.
-        }
-        
-        for(int h = 0; h < ent->character->hair_count; h++)
-        {
-            Hair_Update(ent->character->hairs[h], ent->physics);
-        }
-    }
-
-    RedBlackNode_p root = World_GetEntityTreeRoot();
-    if(root)
-    {
-        Game_UpdateCharactersTree(root);
-    }
-}
-
-
 void Game_Frame(float time)
 {
     entity_p player = World_GetPlayer();
-    bool is_entitytree = (World_GetEntityTreeRoot() != NULL);
-    bool is_character  = (player != NULL);
 
     // GUI and controls should be updated at all times!
-
-    Gui_Update();
-
-    ///@FIXME: I have no idea what's happening here! - Lwmte
-
     if(!Con_IsShown() && control_states.gui_inventory && main_inventory_manager)
     {
-        if((is_character) &&
-           (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
+        if(player &&
+          (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
         {
             main_inventory_manager->setInventory(&player->character->inventory);
             main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
@@ -663,34 +609,45 @@ void Game_Frame(float time)
         return;
     }
 
+    // In game mode
     Script_DoTasks(engine_lua, time);
     Game_UpdateAI();
-    if(is_character)
-    {
-        Entity_ProcessSector(player);
-        Character_UpdateParams(player);
-        Entity_CheckCollisionCallbacks(player);
-    }
 
     // This must be called EVERY frame to max out smoothness.
     // Includes animations, camera movement, and so on.
-    if(engine_camera_state.state != CAMERA_STATE_FLYBY)
+    if(player && (engine_camera_state.state != CAMERA_STATE_FLYBY))
     {
         Game_ApplyControls(player);
+        if(!control_states.noclip)
+        {
+            Character_Update(player);
+            if(player->character->target_id == ENTITY_ID_NONE)
+            {
+                entity_p target = Character_FindTarget(player);
+                if(target)
+                {
+                    player->character->target_id = target->id;
+                }
+            }
+            else if(player->character->weapon_current_state != WEAPON_STATE_HIDE)
+            {
+                entity_p target = World_GetEntityByID(player->character->target_id);
+                if(!target || !Character_IsTargetAccessible(player, target))
+                {
+                    player->character->target_id = ENTITY_ID_NONE;
+                }
+            }
+        }
+        Entity_Frame(player, engine_frame_time);
+        Entity_UpdateRigidBody(player, 1);
+
     }
 
-    Cam_PlayFlyBy(&engine_camera_state, time);
-
-    if(is_character)
+    if(!control_states.noclip && !control_states.free_look)
     {
-        if(player->type_flags & ENTITY_TYPE_DYNAMIC)
+        Cam_PlayFlyBy(&engine_camera_state, time);
+        if(player)
         {
-            Entity_UpdateRigidBody(player, 0);
-        }
-        if(!control_states.noclip && !control_states.free_look)
-        {
-            Character_ApplyCommands(player);
-            Entity_Frame(player, engine_frame_time);
             if(engine_camera_state.state != CAMERA_STATE_FLYBY)
             {
                 engine_camera_state.entity_offset_x = 16.0f;
@@ -712,9 +669,7 @@ void Game_Frame(float time)
         }
     }
 
-    Game_UpdateCharacters();
-
-    if(is_entitytree)
+    if(World_GetEntityTreeRoot())
     {
         Game_UpdateAllEntities(World_GetEntityTreeRoot());
     }
@@ -795,7 +750,7 @@ void Game_SetCameraTarget(uint32_t entity_id, float timer)
 {
     entity_p ent = World_GetEntityByID(entity_id);
     engine_camera_state.target_id = entity_id;
-    if(ent && (engine_camera_state.state == CAMERA_STATE_NORMAL))
+    if(ent && (!ent->character || (ent->character->parameters.param[PARAM_HEALTH] > 0.0f)) && (engine_camera_state.state == CAMERA_STATE_NORMAL))
     {
         engine_camera_state.state = CAMERA_STATE_LOOK_AT;
         engine_camera_state.time = timer;

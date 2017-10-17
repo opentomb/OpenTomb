@@ -12,6 +12,11 @@ function tallblock_init(id)    -- Tall moving block (TR1)
 	
     entity_funcs[id].distance_passed = 0;
     
+    entity_funcs[id].onSave = function()
+        local addr = "\nentity_funcs[" .. id .. "].";
+        return addr .. "distance_passed = " .. entity_funcs[id].distance_passed .. ";";
+    end;
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(getEntityEvent(object_id) == 0) then
             setEntityActivity(object_id, true);
@@ -30,7 +35,7 @@ function tallblock_init(id)    -- Tall moving block (TR1)
         return ENTITY_TRIGGERING_NOT_READY;
     end
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         local move_dist = 32.0 * 60.0 * frame_time;
         if(getEntityEvent(object_id) == 0) then 
             move_dist = 0.0 - move_dist;
@@ -55,17 +60,63 @@ end
 
 function midastouch_init(id)    -- Midas gold touch
 
-    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
-    
-    entity_funcs[id].onLoop = function(object_id)
+    --enable Midas death anim
+    setModelAnimReplaceFlag(5, 0, 0x01);
+    setModelAnimReplaceFlag(5, 1, 0x01);
+    setModelAnimReplaceFlag(5, 2, 0x01);
+    setModelAnimReplaceFlag(5, 3, 0x01);
+    setModelAnimReplaceFlag(5, 4, 0x01);
+    setModelAnimReplaceFlag(5, 5, 0x01);
+    setModelAnimReplaceFlag(5, 6, 0x01);
+    setModelAnimReplaceFlag(5, 7, 0x01);
+    setModelAnimReplaceFlag(5, 8, 0x01);
+    setModelAnimReplaceFlag(5, 9, 0x01);
+    setModelAnimReplaceFlag(5, 10, 0x01);
+    setModelAnimReplaceFlag(5, 11, 0x01);
+    setModelAnimReplaceFlag(5, 12, 0x01);
+    setModelAnimReplaceFlag(5, 13, 0x01);
+    setModelAnimReplaceFlag(5, 14, 0x01);
+    setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
+
+    setEntityActivationOffset(id, -640.0, 0.0, -512.0, 128.0);
+    setEntityActivationDirection(id, 1.0, 0.0, 0.0, 0.87);
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        if(activator_id == nil) then
+            return ENTITY_TRIGGERING_NOT_READY;
+        end
+
+        if((not entitySSAnimGetEnable(activator_id, ANIM_TYPE_MISK_1)) and (getItemsCount(activator_id, 100) > 0)) then
+            entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
+            entitySSAnimEnsureExists(activator_id, ANIM_TYPE_MISK_1, 5);
+            setEntityAnim(activator_id, ANIM_TYPE_MISK_1, 0, 0);
+            entitySSAnimSetEnable(activator_id, ANIM_TYPE_MISK_1, 1);
+            entitySSAnimSetEnable(activator_id, ANIM_TYPE_BASE, 0);
+        end;
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityDistance(player, object_id) < 1024.0) then
             local lara_anim, frame, count = getEntityAnim(player, ANIM_TYPE_BASE);
             local lara_sector = getEntitySectorIndex(player);
             local hand_sector = getEntitySectorIndex(object_id);
             
+            if(entitySSAnimGetEnable(player, ANIM_TYPE_MISK_1)) then
+                entityMoveToTriggerActivationPoint(player, object_id);
+                local a, f, c = getEntityAnim(activator_id, ANIM_TYPE_MISK_1);
+                if((a == 0) and (f + 1 >= c)) then
+                    entitySSAnimSetEnable(player, ANIM_TYPE_MISK_1, 0);
+                    entitySSAnimSetEnable(player, ANIM_TYPE_BASE, 1);
+                    removeItem(player, 100, 1);
+                    addItem(player, ITEM_PUZZLE_1, 1);
+                end;
+            end;
+
             if((lara_sector == hand_sector) and (getEntityMoveType(player) == MOVE_ON_FLOOR) and (lara_anim ~= 50)) then
                 setCharacterParam(player, PARAM_HEALTH, 0);
-                entitySSAnimEnsureExists(player, ANIM_TYPE_MISK_1, 5); --ANIM_TYPE_MISK_1 - add const
+                entitySSAnimEnsureExists(player, ANIM_TYPE_MISK_1, 5);          --ANIM_TYPE_MISK_1 - add const
                 setEntityAnim(player, ANIM_TYPE_MISK_1, 1, 0);
                 entitySSAnimSetEnable(player, ANIM_TYPE_MISK_1, 1);
                 entitySSAnimSetEnable(player, ANIM_TYPE_BASE, 0);
@@ -73,8 +124,6 @@ function midastouch_init(id)    -- Midas gold touch
             end;
         end;
     end
-    
-    prepareEntity(id);
 end
 
 
@@ -82,58 +131,106 @@ function damocles_init(id)      -- Sword of Damocles
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
+    setEntityCollisionFlags(id, bit32.bor(COLLISION_GROUP_TRIGGERS, COLLISION_GROUP_CHARACTERS), nil, COLLISION_GROUP_CHARACTERS);
     setEntityActivity(id, false);
-    
+    local rot_speed = 60.0 * (((math.random(20) - 10) / 5) + 1);
+
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
-        entity_funcs[id].rot_speed = ((math.random(20) - 10) / 5) + 1;
-        entity_funcs[id].falling = false;
         return ENTITY_TRIGGERING_ACTIVATED;
     end    
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
-        entity_funcs[id].rot_speed = 0.0;
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
     
-    entity_funcs[id].onLoop = function(object_id)
-        rotateEntity(object_id, entity_funcs[object_id].rot_speed);
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        rotateEntity(object_id, rot_speed * frame_time);
         
         if(sameRoom(player, object_id)) then
-            local dx,dy,dz = getEntityVector(player, object_id);
-            if((math.abs(dx) < 1024.0) and (math.abs(dy) < 1024.0) and (entity_funcs[object_id].falling == false)) then
-                entity_funcs[object_id].falling = true;
-                addTask(
-                function()
-                    moveEntityToEntity(object_id, player, 32.0, true);
-                    if(dropEntity(object_id, frame_time, true)) then
-                        playSound(103, object_id);
-                        setEntityActivity(object_id, false);
-                        entity_funcs[object_id].falling = false;
-                        return false;
-                    end;
-                    return true;
-                end);
+            local dx, dy, dz = getEntityVector(player, object_id);
+            local vx, vy, vz = getEntitySpeed(object_id);
+            if((vz < 0.0) or (dx * dx + dy * dy < 1048576.0)) then
+                moveEntityToEntity(object_id, player, 48.0 * 60.0 * frame_time, true);
+                if(dropEntity(object_id, frame_time, true)) then
+                    playSound(103, object_id);
+                    setEntityActivity(object_id, false);
+                    entity_funcs[id].onLoop = nil;
+                end;
             end;
         end
     end    
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if((entity_funcs[object_id].falling == true) and (getEntityModelID(activator_id) == 0) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
+        if(getEntityActivity(object_id) and (activator_id == player) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
             setCharacterParam(activator_id, PARAM_HEALTH, 0);
             playSound(SOUND_GEN_DEATH, activator_id);
             playSound(103, object_id);
             addEntityRagdoll(activator_id, RD_TYPE_LARA);
-            setEntityActivity(object_id, false);
-            setEntityBodyMass(object_id, 1, 15.0);
         end;
-    end
+    end;
+end
+
+
+function Thor_hummer_init(id)      -- map 5
+
+    setEntityActivity(id, false);
     
-    entity_funcs[id].onDelete = function(object_id)
-        entity_funcs[object_id].rot_speed = nil;
-        entity_funcs[object_id].falling = nil;
-    end
+    entity_funcs[id].spawned_id = spawnEntity(45, 25, getEntityPos(63));
+    --print("thor spawned id = " .. entity_funcs[id].spawned_id);
+    
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if(a == 0) then
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 1, 0);
+            setEntityAnim(entity_funcs[object_id].spawned_id, ANIM_TYPE_BASE, 1, 0);
+            setEntityActivity(object_id, true);
+        end;
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+        if(a == 1) then
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+            setEntityAnim(entity_funcs[object_id].spawned_id, ANIM_TYPE_BASE, 0, 0);
+        end;
+        return ENTITY_TRIGGERING_DEACTIVATED;
+    end;
+
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
+
+        if((tick_state == TICK_STOPPED) and (a <= 1)) then
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 0, 0);
+            setEntityAnim(entity_funcs[object_id].spawned_id, ANIM_TYPE_BASE, 0, 0);
+            return;
+        end;
+
+        if(a == 1) then
+            if((f + 1 >= c) and (getEntityTimer(object_id) >= 0.75)) then
+                setEntityAnim(object_id, ANIM_TYPE_BASE, 2, 0);
+                setEntityAnim(entity_funcs[object_id].spawned_id, ANIM_TYPE_BASE, 2, 0);
+            end;
+        elseif((a == 2) and (f + 1 >= c)) then
+            setEntityAnim(object_id, ANIM_TYPE_BASE, 3, 0);
+            setEntityAnim(entity_funcs[object_id].spawned_id, ANIM_TYPE_BASE, 3, 0);
+            
+            setEntityCollision(19, true);
+            setEntityVisibility(19, true);
+            moveEntityLocal(19, 0, 0, -1024);
+            setEntityCollision(20, true);
+            setEntityVisibility(20, true);
+            moveEntityLocal(20, 0, 0, -1024);
+        elseif(a == 3) then
+            local b1_dropped = dropEntity(19, frame_time, true);
+            local b2_dropped = dropEntity(20, frame_time, true);
+            if(b1_dropped and b2_dropped) then
+                setEntityActivity(object_id, false);
+            end;
+        end;
+    end;
 end
 
 
@@ -147,7 +244,7 @@ function natla_cabin_TR1_init(id)
         return ENTITY_TRIGGERING_ACTIVATED;
     end
 
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityEnability(object_id)) then
             local st = getEntityAnimState(object_id, ANIM_TYPE_BASE);
             if(st == 4) then
@@ -161,6 +258,35 @@ function natla_cabin_TR1_init(id)
         end;
     end
 end
+
+
+function ScionHolder_init(id)
+    if(getLevel() == 15) then
+        setEntityTypeFlag(id, ENTITY_TYPE_ACTOR, 1);  -- make it targetable
+        entity_funcs[id].onHit = function(object_id, activator_id)
+            setCharacterTarget(activator_id, nil);
+            setEntityActivity(object_id, false);
+            setEntityTypeFlag(0x6b, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
+            disableEntity(0x69);
+        end;
+    elseif(getLevel() == 14) then
+        setEntityTypeFlag(id, ENTITY_TYPE_INTERACTIVE);
+        setEntityActivationOffset(id, -660.0, 2048.0, 128.0, 256.0);
+        setEntityActivationDirection(id, 1.0, 0.0, 0.0, 0.77);
+
+        entity_funcs[id].onActivate = function(object_id, activator_id)
+            if(activator_id == nil) then
+                return ENTITY_TRIGGERING_NOT_READY;
+            end
+
+            entityRotateToTriggerZ(activator_id, object_id);
+            entityMoveToTriggerActivationPoint(activator_id, object_id);
+            -- play cutscene here!
+            setLevel(15);
+            return ENTITY_TRIGGERING_ACTIVATED;
+        end;
+    end;
+end;
 
 
 ----------------------------------------------
@@ -206,7 +332,7 @@ function doorbell_init(id)    -- Lara's Home doorbell (TR2)
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityDistance(player, object_id) < 4096.0) then
             playSound(334, object_id);
             setEntityActivity(object_id, false);
@@ -223,11 +349,11 @@ function heli_rig_TR2_init(id)    -- Helicopter in Offshore Rig (TR2)
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
-        setEntityVisibility(object_id, 1);
+        setEntityVisibility(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
     end
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityLock(object_id)) then
             if(getEntityAnimState(object_id, ANIM_TYPE_BASE) ~= 2) then
                 setEntityAnimState(object_id, ANIM_TYPE_BASE, 2);
@@ -255,7 +381,7 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(not getEntityActivity(object_id)) then
             setEntityActivity(object_id, true);
-            setEntityVisibility(id, 1);
+            setEntityVisibility(id, true);
             playSound(297, object_id);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
@@ -266,7 +392,7 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         local dy = 40.0 * 60.0 * frame_time;
         entity_funcs[object_id].distance_passed = entity_funcs[object_id].distance_passed + dy;
         moveEntityLocal(object_id, 0.0, dy, 0.0);
@@ -293,7 +419,7 @@ function crystal_TR3_init(id)   -- "Savegame" crystal (TR3 version)
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, true);
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityDistance(player, object_id) < 512.0) then
             playSound(SOUND_MEDIPACK);
             changeCharacterParam(player, PARAM_HEALTH, 200);
@@ -349,7 +475,7 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
     
-    entity_funcs[id].onLoop = function(object_id)
+    entity_funcs[id].onLoop = function(object_id, tick_state)
         local px,py,pz,ax = getEntityPos(object_id);
         playSound(191, object_id);
         
@@ -503,8 +629,8 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
-    entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(tick_state == TICK_STOPPED) then
             setEntityActivity(object_id, false);
         end;
         
@@ -552,8 +678,10 @@ function plough_init(id)     -- Plough (TR4)
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
     
-    entity_funcs[id].onLoop = function(object_id)
-        if(tickEntity(object_id) == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        if(tick_state == TICK_STOPPED) then 
+            setEntityActivity(object_id, false) 
+        end;
     end
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
