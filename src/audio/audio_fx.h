@@ -42,11 +42,11 @@ enum TR_AUDIO_FX {
 void Audio_InitFX();
 void Audio_DeinitFX();
 
-void Audio_SetFX(ALuint source);
-void Audio_UnsetFX(ALuint source);
+void Audio_SetFX(uint32_t source);
+void Audio_UnsetFX(uint32_t source);
 
 
-void Audio_SetFXWaterStateForSource(ALuint source);
+void Audio_SetFXWaterStateForSource(uint32_t source);
 void Audio_SetFXRoomType(int value);
 void Audio_SetFXWaterState(bool state);
 bool Audio_GetFXWaterState();

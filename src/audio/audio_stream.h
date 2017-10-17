@@ -73,7 +73,7 @@ typedef struct stream_track_s
     uint32_t        buffer_offset;
     ALuint          source;
     ALuint          buffers[TR_AUDIO_STREAM_NUMBUFFERS];
-    ALfloat         current_volume;     // Stream volume, considering fades.
+    float           current_volume;     // Stream volume, considering fades.
 }stream_track_t, *stream_track_p;
 
 

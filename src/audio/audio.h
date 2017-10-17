@@ -155,6 +155,8 @@ extern struct audio_settings_s audio_settings;
 
 void Audio_InitGlobals();
 
+void Audio_CoreInit();
+void Audio_CoreDeinit();
 void Audio_Init(uint32_t num_Sources = TR_AUDIO_MAX_CHANNELS);
 void Audio_GenSamples(class VT_Level *tr);
 void Audio_CacheTrack(int id);
@@ -177,8 +179,6 @@ int  Audio_ResumeStreams(int stream_type = -1);     // Resume ALL streams.
 int Audio_StreamPlay(const uint32_t track_index, const uint8_t mask = 0);
 
 
-void Audio_StreamExternalInit();
-void Audio_StreamExternalDeinit();
 int Audio_StreamExternalPlay();
 int Audio_StreamExternalStop();
 int Audio_StreamExternalBufferIsNeedUpdate();

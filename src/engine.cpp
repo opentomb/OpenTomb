@@ -12,8 +12,6 @@ extern "C" {
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
-#include <al.h>
-#include <alc.h>
 }
 
 #include "core/system.h"
@@ -55,8 +53,6 @@ static SDL_Joystick           *sdl_joystick   = NULL;
 static SDL_GameController     *sdl_controller = NULL;
 static SDL_Haptic             *sdl_haptic     = NULL;
 static SDL_GLContext           sdl_gl_context = 0;
-static ALCdevice              *al_device      = NULL;
-static ALCcontext             *al_context     = NULL;
 
 static stream_codec_t           engine_video;
 
@@ -119,10 +115,10 @@ extern "C" int  Engine_ExecCmd(char *ch);
 
 void Engine_Init_Pre();
 void Engine_Init_Post();
+void Engine_LoadConfig(const char *filename);
 void Engine_InitGL();
-void Engine_InitAL();
 void Engine_InitSDLVideo();
-void Engine_InitSDLControls();
+void Engine_InitSDLSubsystems();
 void Engine_InitDefaultGlobals();
 
 void Engine_Display(float time);
@@ -200,10 +196,9 @@ void Engine_Start(int argc, char **argv)
     Engine_LoadConfig(config_name ? config_name : "config.lua");
 
     // Init generic SDL interfaces.
-    Engine_InitSDLControls();
+    Engine_InitSDLSubsystems();
     Engine_InitSDLVideo();
-    Engine_InitAL();
-    Audio_StreamExternalInit();
+    Audio_CoreInit();
 
     // Additional OpenGL initialization.
     Engine_InitGL();
@@ -244,7 +239,6 @@ void Engine_Shutdown(int val)
         engine_lua = NULL;
     }
 
-    Audio_StreamExternalDeinit();
     Physics_Destroy();
     Gui_Destroy();
     Con_Destroy();
@@ -275,18 +269,7 @@ void Engine_Shutdown(int val)
         sdl_haptic = NULL;
     }
 
-    if(al_context)  // T4Larson <t4larson@gmail.com>: fixed
-    {
-        alcMakeContextCurrent(NULL);
-        alcDestroyContext(al_context);
-        al_context = NULL;
-    }
-
-    if(al_device)
-    {
-        alcCloseDevice(al_device);
-        al_device = NULL;
-    }
+    Audio_CoreDeinit();
 
     Sys_Destroy();
     SDL_Quit();
@@ -384,35 +367,6 @@ void Engine_InitGL()
 }
 
 
-void Engine_InitAL()
-{
-    ALCint paramList[] = {
-        ALC_STEREO_SOURCES,  TR_AUDIO_STREAM_NUMSOURCES,
-        ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES),
-        ALC_FREQUENCY,       44100, 0};
-
-    Con_Printf("Audio driver: %s", SDL_GetCurrentAudioDriver());
-
-    al_device = alcOpenDevice(NULL);
-    if (!al_device)
-    {
-        Sys_DebugLog(SYS_LOG_FILENAME, "InitAL: No AL audio devices!");
-        return;
-    }
-
-    al_context = alcCreateContext(al_device, paramList);
-    if(!alcMakeContextCurrent(al_context))
-    {
-        Sys_DebugLog(SYS_LOG_FILENAME, "InitAL: AL context is not current!");
-        return;
-    }
-
-    alSpeedOfSound(330.0 * 512.0);
-    alDopplerVelocity(330.0 * 510.0);
-    alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
-}
-
-
 void Engine_InitSDLVideo()
 {
     Uint32 video_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_MOUSE_FOCUS | SDL_WINDOW_INPUT_FOCUS;
@@ -496,10 +450,10 @@ void Engine_InitSDLVideo()
 }
 
 
-void Engine_InitSDLControls()
+void Engine_InitSDLSubsystems()
 {
     int    NumJoysticks;
-    Uint32 init_flags    = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_EVENTS;   // These flags are used in any case.
+    Uint32 init_flags = SDL_INIT_VIDEO | SDL_INIT_EVENTS;                       // These flags are used in any case.
 
     if(control_mapper.use_joy == 1)
     {
@@ -598,12 +552,6 @@ void Engine_LoadConfig(const char *filename)
     {
         Sys_Warn("Could not find config file");
     }
-}
-
-
-void Engine_SaveConfig(const char *filename)
-{
-
 }
 
 
@@ -1421,10 +1369,10 @@ void Engine_TakeScreenShot()
     struct tm tstruct = *localtime(&now);
     char buf[80];
     strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &tstruct);
-    
+
     qglGetIntegerv(GL_VIEWPORT, ViewPort);
     snprintf(fname, sizeof(fname), "screen_%s.png", buf);
-    
+
     str_size = ViewPort[2] * 4;
     pixels = (GLubyte*)malloc(str_size * ViewPort[3]);
     qglReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_RGBA, GL_UNSIGNED_BYTE, pixels);

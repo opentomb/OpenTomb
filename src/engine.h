@@ -126,8 +126,6 @@ void Engine_Start(int argc, char **argv);
 void Engine_Shutdown(int val) __attribute__((noreturn));
 const char *Engine_GetBasePath();
 void Engine_SetDone();
-void Engine_LoadConfig(const char *filename);
-void Engine_SaveConfig(const char *filename);
 void Engine_JoyRumble(float power, int time);
 
 void Engine_GLSwapWindow();

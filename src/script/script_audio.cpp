@@ -7,14 +7,11 @@ extern "C" {
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
-#include <al.h>
-#include <alc.h>
 }
 
 #include "script.h"
 
 #include "../core/system.h"
-#include "../core/gl_text.h"
 #include "../core/console.h"
 #include "../audio/audio.h"
 

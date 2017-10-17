@@ -42,6 +42,10 @@ extern "C" {
 #include "audio_stream.h"
 #include "audio_fx.h"
 
+
+static ALCdevice              *al_device      = NULL;
+static ALCcontext             *al_context     = NULL;
+
 // Effect structure.
 // Contains all global effect parameters.
 typedef struct audio_effect_s
@@ -731,6 +735,56 @@ void AudioSource::LinkEmitter()
 }
 
 
+void Audio_CoreInit()
+{
+    ALCint paramList[] = {
+        ALC_STEREO_SOURCES,  TR_AUDIO_STREAM_NUMSOURCES,
+        ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES),
+        ALC_FREQUENCY,       44100, 0};
+
+    Con_Printf("Audio driver: %s", SDL_GetCurrentAudioDriver());
+
+    al_device = alcOpenDevice(NULL);
+    if (!al_device)
+    {
+        Sys_DebugLog(SYS_LOG_FILENAME, "InitAL: No AL audio devices!");
+        return;
+    }
+
+    al_context = alcCreateContext(al_device, paramList);
+    if(!alcMakeContextCurrent(al_context))
+    {
+        Sys_DebugLog(SYS_LOG_FILENAME, "InitAL: AL context is not current!");
+        return;
+    }
+
+    alSpeedOfSound(330.0 * 512.0);
+    alDopplerVelocity(330.0 * 510.0);
+    alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+
+    StreamTrack_Init(&audio_world_data.external_stream);
+}
+
+
+void Audio_CoreDeinit()
+{
+    StreamTrack_Clear(&audio_world_data.external_stream);
+
+    if(al_context)  // T4Larson <t4larson@gmail.com>: fixed
+    {
+        alcMakeContextCurrent(NULL);
+        alcDestroyContext(al_context);
+        al_context = NULL;
+    }
+
+    if(al_device)
+    {
+        alcCloseDevice(al_device);
+        al_device = NULL;
+    }
+}
+
+
 int Audio_StreamPlay(uint32_t track_index, const uint8_t mask)
 {
     int    target_stream = -1;
@@ -781,7 +835,7 @@ int Audio_StreamPlay(uint32_t track_index, const uint8_t mask)
     {
         Audio_StopStreams(stb->stream_type);
     }
-    
+
     // Entry found, now process to actual track loading.
     target_stream = Audio_GetFreeStream();            // At first, we need to get free stream.
     if(target_stream == -1)
@@ -807,7 +861,7 @@ int Audio_StreamPlay(uint32_t track_index, const uint8_t mask)
             break;
         }
     }
-    
+
     if(audio_settings.use_effects)
     {
         if(s->type == TR_AUDIO_STREAM_TYPE_CHAT)
@@ -819,7 +873,7 @@ int Audio_StreamPlay(uint32_t track_index, const uint8_t mask)
             Audio_UnsetFX(s->source);
         }
     }
-    
+
     if(StreamTrack_Play(s) <= 0)
     {
         Con_AddLine("StreamPlay: CANCEL, stream play error.", FONTSTYLE_CONSOLE_WARNING);
@@ -839,7 +893,7 @@ void Audio_UpdateStreams(float time)
         if((s->state != TR_AUDIO_STREAM_STOPPED) && alIsSource(s->source))
         {
             ALint state = 0;
-            ALfloat inc = 0.0f;//15 920 704 //12 056 352	
+            ALfloat inc = 0.0f;//15 920 704 //12 056 352
             alGetSourcei(s->source, AL_SOURCE_STATE, &state);
             StreamTrackBuffer *stb = ((s->track >= 0) && (s->track < audio_world_data.stream_buffers_count)) ?
                 (audio_world_data.stream_buffers[s->track]) : (NULL);
@@ -849,7 +903,7 @@ void Audio_UpdateStreams(float time)
                 StreamTrack_Stop(s);
                 continue;
             }
-            
+
             switch(s->type)
             {
                 case TR_AUDIO_STREAM_TYPE_BACKGROUND:
@@ -864,7 +918,7 @@ void Audio_UpdateStreams(float time)
                     inc = time * TR_AUDIO_STREAM_CROSSFADE_CHAT;
                     break;
             }
-            
+
             if(s->state == TR_AUDIO_STREAM_STOPPING)
             {
                 s->current_volume -= inc;
@@ -901,7 +955,7 @@ void Audio_UpdateStreams(float time)
                     break;
                 }
             }
-            
+
             if((s->buffer_offset >= stb->buffer_size) && (s->type == TR_AUDIO_STREAM_TYPE_BACKGROUND))
             {
                 s->buffer_offset = 0;
@@ -2037,18 +2091,6 @@ void Audio_Update(float time)
     Audio_UpdateSources();
     Audio_UpdateStreams(time);
     Audio_UpdateListenerByCamera(&engine_camera, time);
-}
-
-
-void Audio_StreamExternalInit()
-{
-    StreamTrack_Init(&audio_world_data.external_stream);
-}
-
-
-void Audio_StreamExternalDeinit()
-{
-    StreamTrack_Clear(&audio_world_data.external_stream);
 }
 
 

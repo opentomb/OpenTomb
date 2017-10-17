@@ -135,7 +135,7 @@ int Audio_LoadReverbToFX(const int effect_index, const EFXEAXREVERBPROPERTIES *r
 #endif
 
 
-void Audio_SetFX(ALuint source)
+void Audio_SetFX(uint32_t source)
 {
 #ifdef HAVE_ALEXT_H
     ALuint effect;
@@ -170,7 +170,7 @@ void Audio_SetFX(ALuint source)
 }
 
 
-void Audio_UnsetFX(ALuint source)
+void Audio_UnsetFX(uint32_t source)
 {
 #ifdef HAVE_ALEXT_H
     // Remove any audio sends and direct filters from channel.
@@ -180,7 +180,7 @@ void Audio_UnsetFX(ALuint source)
 }
 
 
-void Audio_SetFXWaterStateForSource(ALuint source)
+void Audio_SetFXWaterStateForSource(uint32_t source)
 {
 #ifdef HAVE_ALEXT_H
     // Water low-pass filter is applied when source's is_water flag is set.
