@@ -1599,6 +1599,7 @@ extern "C" int Engine_ExecCmd(char *ch)
             Con_AddLine("Available commands:\0", FONTSTYLE_CONSOLE_WARNING);
             Con_AddLine("help - show help info\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("loadMap(\"file_name\") - load level \"file_name\"\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("setgamef(game, level) - load level (ie: setgamef(2, 1) for TR2 level 1)\0", FONTSTYLE_CONSOLE_NOTIFY);            
             Con_AddLine("save, load - save and load game state in \"file_name\"\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("exit - close program\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("cls - clean console\0", FONTSTYLE_CONSOLE_NOTIFY);
