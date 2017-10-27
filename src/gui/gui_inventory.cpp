@@ -761,28 +761,31 @@ void gui_ItemNotifier::Draw()
         base_item_p item = World_GetBaseItemByID(mItem);
         if(item)
         {
-            int anim = item->bf->animations.current_animation;
-            int frame = item->bf->animations.current_frame;
+            int curr_anim = item->bf->animations.current_animation;
+            int next_anim = item->bf->animations.next_animation;
+            int curr_frame = item->bf->animations.current_frame;
+            int next_frame = item->bf->animations.next_frame;
             float time = item->bf->animations.frame_time;
-
-            item->bf->animations.current_animation = 0;
-            item->bf->animations.current_frame = 0;
-            item->bf->animations.frame_time = 0.0;
-
-            Item_Frame(item->bf, 0.0);
+            float ang = (mCurrRotX + mRotX) * M_PI / 180.0f;
             float matrix[16];
             Mat4_E_macro(matrix);
+           
             matrix[12 + 0] = mCurrPosX;
             matrix[12 + 1] = mPosY;
             matrix[12 + 2] = -2048.0;
-            float ang = (mCurrRotX + mRotX) * M_PI / 180.0f;
+            
             Mat4_RotateY_SinCos(matrix, sinf(ang), cosf(ang));
             ang = (mCurrRotY + mRotY) * M_PI / 180.0f;
             Mat4_RotateX_SinCos(matrix, sinf(ang), cosf(ang));
+            
+            Anim_SetAnimation(&item->bf->animations, 0, 0);
+            SSBoneFrame_Update(item->bf, 0.0f);
             Gui_RenderItem(item->bf, mSize, matrix);
 
-            item->bf->animations.current_animation = anim;
-            item->bf->animations.current_frame = frame;
+            item->bf->animations.current_animation = curr_anim;
+            item->bf->animations.next_animation = next_anim;
+            item->bf->animations.current_frame = curr_frame;
+            item->bf->animations.next_frame = next_frame;
             item->bf->animations.frame_time = time;
         }
     }
