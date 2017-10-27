@@ -736,8 +736,6 @@ void Audio_CoreInit()
         ALC_MONO_SOURCES,   (TR_AUDIO_MAX_CHANNELS - TR_AUDIO_STREAM_NUMSOURCES),
         ALC_FREQUENCY,       44100, 0};
 
-    Con_Printf("Audio driver: %s", SDL_GetCurrentAudioDriver());
-
     al_device = alcOpenDevice(NULL);
     if (!al_device)
     {
