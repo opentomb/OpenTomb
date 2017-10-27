@@ -271,15 +271,30 @@ int gui_InventoryManager::setItemsType(int type)
 
 void gui_InventoryManager::frame(float time)
 {
-    if((mInventory == NULL) || (*mInventory == NULL))
+    if(mInventory && *mInventory)
+    {
+        this->frameStates(time);
+        this->frameItems(time);
+    }
+    else
     {
         mCurrentState = INVENTORY_DISABLED;
         mNextState = INVENTORY_DISABLED;
-        return;
     }
+}
 
+void gui_InventoryManager::frameStates(float time)
+{
     switch(mCurrentState)
     {
+        case INVENTORY_ACTIVATE:
+            if(mNextState == INVENTORY_ACTIVATE)
+            {
+                mNextState = INVENTORY_IDLE;
+                mCurrentState = INVENTORY_IDLE;
+            }
+            break;
+
         case INVENTORY_R_LEFT:
             mRingTime += time;
             mRingAngle = mRingAngleStep * mRingTime / mRingRotatePeriod;
@@ -333,6 +348,11 @@ void gui_InventoryManager::frame(float time)
                     }
                     mLabel_ItemName.show = 1;
                     mLabel_Title.show = 1;
+                    break;
+
+                case INVENTORY_ACTIVATE:
+                    mCurrentState = INVENTORY_ACTIVATE;
+                    mNextState = INVENTORY_IDLE;
                     break;
 
                 case INVENTORY_CLOSE:
@@ -511,68 +531,92 @@ void gui_InventoryManager::frame(float time)
     }
 }
 
+void gui_InventoryManager::frameItems(float time)
+{
+    int ring_item_index = 0;
+    for(inventory_node_p i = *mInventory; i; i = i->next)
+    {
+        base_item_p bi = World_GetBaseItemByID(i->id);
+        if(bi && (bi->type == mCurrentItemsType))
+        {
+            if((ring_item_index == mItemsOffset) && (mCurrentState == INVENTORY_ACTIVATE))
+            {
+                Item_Frame(bi->bf, time);
+                if((bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM))
+                {
+                    //ActivateItemCallback!
+                    mNextState = INVENTORY_IDLE;
+                    mCurrentState = INVENTORY_IDLE;
+                }
+            }
+            else
+            {
+                Anim_SetAnimation(&bi->bf->animations, 0, 0);
+                Item_Frame(bi->bf, 0.0);
+            }
+            ring_item_index++;
+        }
+    }
+}
+
 void gui_InventoryManager::render()
 {
     if((mCurrentState != INVENTORY_DISABLED) && (mInventory != NULL) && (*mInventory != NULL))
     {
         float matrix[16], offset[3], ang;
-        int num = 0;
+        int ring_item_index = 0;
         mLabel_Title.x = screen_info.w / 2;
         mLabel_ItemName.x = screen_info.w / 2;
         for(inventory_node_p i = *mInventory; i; i = i->next)
         {
             base_item_p bi = World_GetBaseItemByID(i->id);
-            if((bi == NULL) || (bi->type != mCurrentItemsType))
+            if(bi && (bi->type == mCurrentItemsType))
             {
-                continue;
-            }
-
-            Mat4_E_macro(matrix);
-            matrix[12 + 2] = - mBaseRingRadius * 2.0;
-            ang = (25.0f + mRingVerticalAngle) * M_PI / 180.0f;
-            Mat4_RotateX_SinCos(matrix, sinf(ang), cosf(ang));
-            ang = (mRingAngleStep * (-mItemsOffset + num) + mRingAngle) * M_PI / 180.0f;
-            Mat4_RotateY_SinCos(matrix, sinf(ang), cosf(ang));
-            offset[0] = 0.0;
-            offset[1] = mVerticalOffset;
-            offset[2] = mRingRadius;
-            Mat4_Translate(matrix, offset);
-            Mat4_RotateX_SinCos(matrix,-1.0f, 0.0f);  //-90.0
-            Mat4_RotateZ_SinCos(matrix, 1.0f, 0.0f);  //90.0
-            if(num == mItemsOffset)
-            {
-                if(bi->name[0])
+                Mat4_E_macro(matrix);
+                matrix[12 + 2] = - mBaseRingRadius * 2.0;
+                ang = (25.0f + mRingVerticalAngle) * M_PI / 180.0f;
+                Mat4_RotateX_SinCos(matrix, sinf(ang), cosf(ang));
+                ang = (mRingAngleStep * (-mItemsOffset + ring_item_index) + mRingAngle) * M_PI / 180.0f;
+                Mat4_RotateY_SinCos(matrix, sinf(ang), cosf(ang));
+                offset[0] = 0.0;
+                offset[1] = mVerticalOffset;
+                offset[2] = mRingRadius;
+                Mat4_Translate(matrix, offset);
+                Mat4_RotateX_SinCos(matrix,-1.0f, 0.0f);  //-90.0
+                Mat4_RotateZ_SinCos(matrix, 1.0f, 0.0f);  //90.0
+                if(ring_item_index == mItemsOffset)
                 {
-                    if(i->count == 1)
+                    if(bi->name[0])
                     {
-                        strncpy(mLabel_ItemName_text, bi->name, GUI_LINE_DEFAULTSIZE);
+                        if(i->count == 1)
+                        {
+                            strncpy(mLabel_ItemName_text, bi->name, GUI_LINE_DEFAULTSIZE);
+                        }
+                        else
+                        {
+                            snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, "%s (%d)", bi->name, i->count);
+                        }
                     }
                     else
                     {
-                        snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, "%s (%d)", bi->name, i->count);
+                        snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, "ITEM_ID_%d (%d)", i->id, i->count);
                     }
+                    ang = M_PI_2 + M_PI * mItemAngle / 180.0f - ang;
+                    Mat4_RotateZ_SinCos(matrix, sinf(ang), cosf(ang));
                 }
                 else
                 {
-                    snprintf(mLabel_ItemName_text, GUI_LINE_DEFAULTSIZE, "ITEM_ID_%d (%d)", i->id, i->count);
+                    ang = M_PI_2 - ang;
+                    Mat4_RotateZ_SinCos(matrix, sinf(ang), cosf(ang));
                 }
-                ang = M_PI_2 + M_PI * mItemAngle / 180.0f - ang;
-                Mat4_RotateZ_SinCos(matrix, sinf(ang), cosf(ang));
-                Item_Frame(bi->bf, 0.0);                                        // here will be time != 0 for using items animation
+                offset[0] = -0.5 * bi->bf->centre[0];
+                offset[1] = -0.5 * bi->bf->centre[1];
+                offset[2] = -0.5 * bi->bf->centre[2];
+                Mat4_Translate(matrix, offset);
+                Mat4_Scale(matrix, 0.7, 0.7, 0.7);
+                Gui_RenderItem(bi->bf, 0.0, matrix);
+                ring_item_index++;
             }
-            else
-            {
-                ang = M_PI_2 - ang;
-                Mat4_RotateZ_SinCos(matrix, sinf(ang), cosf(ang));
-                Item_Frame(bi->bf, 0.0);
-            }
-            offset[0] = -0.5 * bi->bf->centre[0];
-            offset[1] = -0.5 * bi->bf->centre[1];
-            offset[2] = -0.5 * bi->bf->centre[2];
-            Mat4_Translate(matrix, offset);
-            Mat4_Scale(matrix, 0.7, 0.7, 0.7);
-            Gui_RenderItem(bi->bf, 0.0, matrix);
-            num++;
         }
     }
 }

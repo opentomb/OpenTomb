@@ -68,7 +68,7 @@ PFNGLDEPTHMASKPROC                      qglDepthMask = NULL;
 PFNGLDEPTHRANGEPROC                     qglDepthRange = NULL;
 
 /* Accumulation Buffer */
-PFNGLCLEARACCUMPROC                     qglClearAccum = NULL;               
+PFNGLCLEARACCUMPROC                     qglClearAccum = NULL;
 PFNGLACCUMPROC                          qglAccum = NULL;
 
 /* Transformation */
@@ -274,6 +274,17 @@ PFNGLGENERATEMIPMAPEXTPROC              qglGenerateMipmap = NULL;
 static char *engine_gl_ext_str = NULL;
 static GLuint whiteTexture = 0;
 
+static void FillGLExtensionsStringBuffer()
+{
+    const char *buf = (const char*)qglGetString(GL_EXTENSIONS);
+    if(buf)
+    {
+        size_t buf_size = strlen(buf) + 1;
+        engine_gl_ext_str = (char*)malloc(buf_size);
+        strncpy(engine_gl_ext_str, buf, buf_size);
+    }
+}
+
 /**
  * Get addresses of GL functions and initialise engine_gl_ext_str string.
  */
@@ -338,7 +349,7 @@ void InitGLExtFuncs()
     qglDepthRange = (PFNGLDEPTHRANGEPROC)SDL_GL_GetProcAddress("glDepthRange");
 
     /* Accumulation Buffer */
-    qglClearAccum = (PFNGLCLEARACCUMPROC)SDL_GL_GetProcAddress("glClearAccum");               
+    qglClearAccum = (PFNGLCLEARACCUMPROC)SDL_GL_GetProcAddress("glClearAccum");
     qglAccum = (PFNGLACCUMPROC)SDL_GL_GetProcAddress("glAccum");
 
     /* Transformation */
@@ -359,7 +370,7 @@ void InitGLExtFuncs()
     qglScalef = (PFNGLSCALEFPROC)SDL_GL_GetProcAddress("glScalef");
     qglTranslated = (PFNGLTRANSLATEDPROC)SDL_GL_GetProcAddress("glTranslated");
     qglTranslatef = (PFNGLTRANSLATEFPROC)SDL_GL_GetProcAddress("glTranslatef");
-    
+
     /* Raster functions */
     qglPixelZoom = (PFNGLPIXELZOOMPROC)SDL_GL_GetProcAddress("glPixelZoom");
     qglPixelStoref = (PFNGLPIXELSTOREFPROC)SDL_GL_GetProcAddress("glPixelStoref");
@@ -410,7 +421,7 @@ void InitGLExtFuncs()
     qglTexImage1D = (PFNGLTEXIMAGE1DPROC)SDL_GL_GetProcAddress("glTexImage1D");
     qglTexImage2D = (PFNGLTEXIMAGE2DPROC)SDL_GL_GetProcAddress("glTexImage2D");
     qglGetTexImage = (PFNGLGETTEXIMAGEPROC)SDL_GL_GetProcAddress("glGetTexImage");
-    
+
     /* 1.1 functions */
     /* texture objects */
     qglGenTextures = (PFNGLGENTEXTURESPROC)SDL_GL_GetProcAddress("glGenTextures");
@@ -438,15 +449,9 @@ void InitGLExtFuncs()
     qglDrawArrays = (PFNGLDRAWARRAYSPROC)SDL_GL_GetProcAddress("glDrawArrays");
     qglDrawElements = (PFNGLDRAWELEMENTSPROC)SDL_GL_GetProcAddress("glDrawElements");
     qglInterleavedArrays = (PFNGLINTERLEAVEDARRAYSPROC)SDL_GL_GetProcAddress("glInterleavedArrays");
-    
-    const char *buf = (const char*)qglGetString(GL_EXTENSIONS);
-    if(buf)
-    {
-        size_t buf_size = strlen(buf) + 1;
-        engine_gl_ext_str = (char*)malloc(buf_size);
-        strncpy(engine_gl_ext_str, buf, buf_size);
-    }
-    
+
+    FillGLExtensionsStringBuffer();
+
     qglGenTextures(1, &whiteTexture);
     qglBindTexture(GL_TEXTURE_2D, whiteTexture);
     qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -608,7 +613,7 @@ int IsGLExtensionSupported(const char *ext)
 int checkOpenGLError()
 {
     int ret = 0;
-    
+
     for(GLenum  glErr = qglGetError(); glErr != GL_NO_ERROR; glErr = qglGetError())
     {
         ret = 1;
@@ -651,7 +656,7 @@ int checkOpenGLError()
                 break;
         };
     }
-    
+
     return ret;
 }
 

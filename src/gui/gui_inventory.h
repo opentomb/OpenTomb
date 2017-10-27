@@ -143,6 +143,8 @@ private:
     float                       mItemAngle;
 
     int getItemElementsCountByType(int type);
+    void frameStates(float time);
+    void frameItems(float time);
     void restoreItemAngle(float time);
 };
 
