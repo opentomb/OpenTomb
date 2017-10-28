@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdarg.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 
