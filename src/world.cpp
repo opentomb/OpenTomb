@@ -279,7 +279,6 @@ void World_Clear()
     if(main_inventory_manager != NULL)
     {
         main_inventory_manager->setInventory(NULL);
-        main_inventory_manager->setItemsType(1);                                // see base items
     }
 
     global_world.player = NULL;

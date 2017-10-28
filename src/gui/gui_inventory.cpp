@@ -105,9 +105,9 @@ gui_InventoryManager::gui_InventoryManager()
     mCurrentState               = INVENTORY_DISABLED;
     mNextState                  = INVENTORY_DISABLED;
     mCurrentItemsType           = GUI_MENU_ITEMTYPE_SYSTEM;
+    mNextItemsType              = GUI_MENU_ITEMTYPE_SYSTEM;
     mCurrentItemsCount          = 0;
-    mItemsOffset                = 0;
-    mNextItemsCount             = 0;
+    mSelectedItem               = 0;
 
     mRingRotatePeriod           = 0.5;
     mRingTime                   = 0.0;
@@ -178,6 +178,48 @@ int gui_InventoryManager::getItemElementsCountByType(int type)
     return ret;
 }
 
+int gui_InventoryManager::getPreviousItemsType(int curr_type)
+{
+    int ret = -1;
+    for(inventory_node_p i = *mInventory; i; i = i->next)
+    {
+        base_item_p bi = World_GetBaseItemByID(i->id);
+        if(bi)
+        {
+            if(bi->type + 1 == curr_type)
+            {
+                return bi->type;
+            }
+            else if((bi->type < curr_type) && (ret < bi->type))
+            {
+                ret = bi->type;
+            }
+        }
+    }
+    return ret;
+}
+
+int gui_InventoryManager::getNextItemsType(int curr_type)
+{
+    int ret = -1;
+    for(inventory_node_p i = *mInventory; i; i = i->next)
+    {
+        base_item_p bi = World_GetBaseItemByID(i->id);
+        if(bi)
+        {
+            if(bi->type - 1 == curr_type)
+            {
+                return bi->type;
+            }
+            else if((bi->type > curr_type) && (ret > bi->type))
+            {
+                ret = bi->type;
+            }
+        }
+    }
+    return ret;
+}
+
 void gui_InventoryManager::restoreItemAngle(float time)
 {
     if(mItemAngle > 0.0f)
@@ -233,41 +275,19 @@ void gui_InventoryManager::setTitle(int items_type)
     Script_GetString(engine_lua, string_index, GUI_LINE_DEFAULTSIZE, mLabel_Title_text);
 }
 
-int gui_InventoryManager::setItemsType(int type)
+void gui_InventoryManager::updateCurrentRing()
 {
-    if((mInventory == NULL) || (*mInventory == NULL))
+    if(mInventory && *mInventory)
     {
-        mCurrentItemsType = type;
-        return type;
-    }
-
-    int count = this->getItemElementsCountByType(type);
-    if(count == 0)
-    {
-        for(inventory_node_p i = *mInventory; i; i = i->next)
+        mCurrentItemsCount = this->getItemElementsCountByType(mCurrentItemsType);
+        setTitle(mCurrentItemsType);
+        if(mCurrentItemsCount)
         {
-            base_item_p bi = World_GetBaseItemByID(i->id);
-            if(bi)
-            {
-                type = bi->type;
-                count = this->getItemElementsCountByType(mCurrentItemsType);
-                break;
-            }
+            mRingAngleStep = 360.0 / mCurrentItemsCount;
+            mSelectedItem %= mCurrentItemsCount;
         }
+        mRingAngle = 180.0;
     }
-
-    if(count > 0)
-    {
-        mCurrentItemsCount = count;
-        mCurrentItemsType = type;
-        mRingAngleStep = 360.0 / mCurrentItemsCount;
-        mItemsOffset %= count;
-        mRingTime = 0.0;
-        mRingAngle = 0.0;
-        return type;
-    }
-
-    return -1;
 }
 
 void gui_InventoryManager::frame(float time)
@@ -306,10 +326,10 @@ void gui_InventoryManager::frameStates(float time)
                 mRingAngle = 0.0;
                 mNextState = INVENTORY_IDLE;
                 mCurrentState = INVENTORY_IDLE;
-                mItemsOffset--;
-                if(mItemsOffset < 0)
+                mSelectedItem--;
+                if(mSelectedItem < 0)
                 {
-                    mItemsOffset = mCurrentItemsCount - 1;
+                    mSelectedItem = mCurrentItemsCount - 1;
                 }
             }
             restoreItemAngle(time);
@@ -325,10 +345,10 @@ void gui_InventoryManager::frameStates(float time)
                 mRingAngle = 0.0;
                 mNextState = INVENTORY_IDLE;
                 mCurrentState = INVENTORY_IDLE;
-                mItemsOffset++;
-                if(mItemsOffset >= mCurrentItemsCount)
+                mSelectedItem++;
+                if(mSelectedItem >= mCurrentItemsCount)
                 {
-                    mItemsOffset = 0;
+                    mSelectedItem = 0;
                 }
             }
             restoreItemAngle(time);
@@ -372,8 +392,8 @@ void gui_InventoryManager::frameStates(float time)
                     break;
 
                 case INVENTORY_UP:
-                    mNextItemsCount = this->getItemElementsCountByType(mCurrentItemsType + 1);
-                    if(mNextItemsCount > 0)
+                    mNextItemsType = this->getNextItemsType(mCurrentItemsType);
+                    if(mNextItemsType >= 0)
                     {
                         //Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         mCurrentState = mNextState;
@@ -388,8 +408,8 @@ void gui_InventoryManager::frameStates(float time)
                     break;
 
                 case INVENTORY_DOWN:
-                    mNextItemsCount = this->getItemElementsCountByType(mCurrentItemsType - 1);
-                    if(mNextItemsCount > 0)
+                    mNextItemsType = this->getPreviousItemsType(mCurrentItemsType);
+                    if(mNextItemsType >= 0)
                     {
                         //Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         mCurrentState = mNextState;
@@ -408,13 +428,27 @@ void gui_InventoryManager::frameStates(float time)
         case INVENTORY_DISABLED:
             if(mNextState == INVENTORY_OPEN)
             {
-                if(setItemsType(mCurrentItemsType) >= 0)
+                Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+                for(inventory_node_p i = *mInventory; i; i = i->next)
                 {
-                    Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
-                    mCurrentState = INVENTORY_OPEN;
-                    mRingAngle = 180.0;
-                    mRingVerticalAngle = 180.0;
+                    base_item_p bi = World_GetBaseItemByID(i->id);
+                    if(bi)
+                    {
+                        if(bi->type == GUI_MENU_ITEMTYPE_SUPPLY)
+                        {
+                            mCurrentItemsType = GUI_MENU_ITEMTYPE_SUPPLY;
+                            break;
+                        }
+                        else
+                        {
+                            mCurrentItemsType = bi->type;
+                        }
+                    }
                 }
+                this->updateCurrentRing();
+                mCurrentState = INVENTORY_OPEN;
+                mRingAngle = 180.0;
+                mRingVerticalAngle = 180.0;
             }
             break;
 
@@ -436,12 +470,8 @@ void gui_InventoryManager::frameStates(float time)
                     //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     mRingRadius = 0.0;
                     mVerticalOffset = mBaseRingRadius;
-                    mRingAngleStep = 360.0 / mNextItemsCount;
-                    mRingAngle = 180.0;
-                    mCurrentItemsType++;
-                    mCurrentItemsCount = mNextItemsCount;
-                    mItemsOffset = 0;
-                    setTitle(mCurrentItemsType);
+                    mCurrentItemsType = mNextItemsType;
+                    updateCurrentRing();
                 }
                 mRingRadius = mBaseRingRadius * (mRingTime - mRingRotatePeriod) / mRingRotatePeriod;
                 mVerticalOffset -= mBaseRingRadius * time / mRingRotatePeriod;
@@ -474,12 +504,8 @@ void gui_InventoryManager::frameStates(float time)
                     //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     mRingRadius = 0.0;
                     mVerticalOffset = -mBaseRingRadius;
-                    mRingAngleStep = 360.0 / mNextItemsCount;
-                    mRingAngle = 180.0;
-                    mCurrentItemsType--;
-                    mCurrentItemsCount = mNextItemsCount;
-                    mItemsOffset = 0;
-                    setTitle(mCurrentItemsType);
+                    mCurrentItemsType = mNextItemsType;
+                    updateCurrentRing();
                 }
                 mRingRadius = mBaseRingRadius * (mRingTime - mRingRotatePeriod) / mRingRotatePeriod;
                 mVerticalOffset += mBaseRingRadius * time / mRingRotatePeriod;
@@ -540,7 +566,7 @@ void gui_InventoryManager::frameItems(float time)
         base_item_p bi = World_GetBaseItemByID(i->id);
         if(bi && (bi->type == mCurrentItemsType))
         {
-            if((ring_item_index == mItemsOffset) && (mCurrentState == INVENTORY_ACTIVATE))
+            if((ring_item_index == mSelectedItem) && (mCurrentState == INVENTORY_ACTIVATE))
             {
                 Item_Frame(bi->bf, time);
                 if((bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM))
@@ -577,7 +603,7 @@ void gui_InventoryManager::render()
                 matrix[12 + 2] = - mBaseRingRadius * 2.0;
                 ang = (25.0f + mRingVerticalAngle) * M_PI / 180.0f;
                 Mat4_RotateX_SinCos(matrix, sinf(ang), cosf(ang));
-                ang = (mRingAngleStep * (-mItemsOffset + ring_item_index) + mRingAngle) * M_PI / 180.0f;
+                ang = (mRingAngleStep * (-mSelectedItem + ring_item_index) + mRingAngle) * M_PI / 180.0f;
                 Mat4_RotateY_SinCos(matrix, sinf(ang), cosf(ang));
                 offset[0] = 0.0;
                 offset[1] = mVerticalOffset;
@@ -585,7 +611,7 @@ void gui_InventoryManager::render()
                 Mat4_Translate(matrix, offset);
                 Mat4_RotateX_SinCos(matrix,-1.0f, 0.0f);  //-90.0
                 Mat4_RotateZ_SinCos(matrix, 1.0f, 0.0f);  //90.0
-                if(ring_item_index == mItemsOffset)
+                if(ring_item_index == mSelectedItem)
                 {
                     if(bi->name[0])
                     {

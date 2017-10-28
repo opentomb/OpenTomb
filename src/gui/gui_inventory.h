@@ -108,7 +108,6 @@ public:
         return mCurrentItemsType;
     }
 
-    int setItemsType(int type);
     void setInventory(struct inventory_node_s **i);
     void setTitle(int items_type);
     void frame(float time);
@@ -123,11 +122,11 @@ private:
     struct inventory_node_s   **mInventory;
     int                         mCurrentState;
     int                         mNextState;
-    int                         mNextItemsCount;
 
     int                         mCurrentItemsType;
+    int                         mNextItemsType;
     int                         mCurrentItemsCount;
-    int                         mItemsOffset;
+    int                         mSelectedItem;
 
     float                       mRingRotatePeriod;
     float                       mRingTime;
@@ -143,6 +142,9 @@ private:
     float                       mItemAngle;
 
     int getItemElementsCountByType(int type);
+    int getPreviousItemsType(int curr_type);
+    int getNextItemsType(int curr_type);
+    void updateCurrentRing();
     void frameStates(float time);
     void frameItems(float time);
     void restoreItemAngle(float time);
