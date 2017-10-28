@@ -19,22 +19,59 @@
 #include "gl_font.h"
 #include "gl_util.h"
 
+//T4Larson <t4larson@gmail.com>: fixed font construction and destruction!
 #define vec4_copy(x, y) {(x)[0] = (y)[0]; (x)[1] = (y)[1]; (x)[2] = (y)[2]; (x)[3] = (y)[3];}
 
-gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint16_t font_size)
+static FT_Library g_ft_library = NULL;
+
+typedef struct char_info_s
 {
-    if(ft_library != NULL)
+    GLuint          tex_index;
+    GLint           width;
+    GLint           height;
+    GLint           left;
+    GLint           top;
+
+    GLfloat         tex_x0;
+    GLfloat         tex_y0;
+    GLfloat         tex_x1;
+    GLfloat         tex_y1;
+
+    GLfloat         advance_x_pt;
+    GLfloat         advance_y_pt;
+}char_info_t, *char_info_p;
+
+void glf_init()
+{
+    if(!g_ft_library)
+    {
+        FT_Init_FreeType(&g_ft_library);
+    }
+}
+
+void glf_destroy()
+{
+    if(g_ft_library)
+    {
+        FT_Done_FreeType(g_ft_library);
+        g_ft_library = NULL;
+    }
+}
+
+gl_tex_font_p glf_create_font(const char *file_name, uint16_t font_size)
+{
+    if(g_ft_library)
     {
         gl_tex_font_p glf = (gl_tex_font_p)malloc(sizeof(gl_tex_font_t));
         glf->ft_face = NULL;
 
-        if(FT_New_Face(ft_library, file_name, 0, &glf->ft_face))                //T4Larson <t4larson@gmail.com>: fixed font construction and destruction!
+        if(FT_New_Face(g_ft_library, file_name, 0, (FT_Face*)&glf->ft_face))
         {
             free(glf);
             return NULL;
         }
 
-        glf->glyphs_count = glf->ft_face->num_glyphs;
+        glf->glyphs_count = ((FT_Face)glf->ft_face)->num_glyphs;
         glf->glyphs = (char_info_p)malloc(glf->glyphs_count * sizeof(char_info_t));
 
         qglGetIntegerv(GL_MAX_TEXTURE_SIZE, &glf->gl_max_tex_width);
@@ -64,20 +101,20 @@ gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint
  * @param font_size: size of font glyph?
  * @return pointer to the gl_tex_font_s structure;
  */
-gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t face_data_size, uint16_t font_size)
+gl_tex_font_p glf_create_font_mem(void *face_data, size_t face_data_size, uint16_t font_size)
 {
-    if(ft_library != NULL)
+    if(g_ft_library)
     {
         gl_tex_font_p glf = (gl_tex_font_p)malloc(sizeof(gl_tex_font_t));
         glf->ft_face = NULL;
 
-        if(FT_New_Memory_Face(ft_library, (const FT_Byte*)face_data, face_data_size, 0, &glf->ft_face))
+        if(FT_New_Memory_Face(g_ft_library, (const FT_Byte*)face_data, face_data_size, 0, (FT_Face*)&glf->ft_face))
         {
             free(glf);
             return NULL;
         }
 
-        glf->glyphs_count = glf->ft_face->num_glyphs;
+        glf->glyphs_count = ((FT_Face)glf->ft_face)->num_glyphs;
         glf->glyphs = (char_info_p)malloc(glf->glyphs_count * sizeof(char_info_t));
 
         qglGetIntegerv(GL_MAX_TEXTURE_SIZE, &glf->gl_max_tex_width);
@@ -248,12 +285,12 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
                 continue;
             }
             /* convert to an anti-aliased bitmap */
-            if(FT_Render_Glyph(glf->ft_face->glyph, FT_RENDER_MODE_NORMAL))
+            if(FT_Render_Glyph(((FT_Face)glf->ft_face)->glyph, FT_RENDER_MODE_NORMAL))
             {
                 continue;
             }
 
-            g = glf->ft_face->glyph;
+            g = ((FT_Face)glf->ft_face)->glyph;
             glf->glyphs[i].width = g->bitmap.width;
             glf->glyphs[i].height = g->bitmap.rows;
             glf->glyphs[i].advance_x_pt = g->advance.x;
@@ -330,16 +367,6 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
 }
 
 
-void glf_reface(gl_tex_font_p glf, const char *file_name, uint16_t font_size)
-{
-    if(FT_New_Face(glf->ft_library, file_name, 0, &glf->ft_face))
-    {
-        return;
-    }
-    glf_resize(glf, font_size);
-}
-
-
 int32_t glf_get_ascender(gl_tex_font_p glf)
 {
     if((glf->font_size == 0) || (glf->ft_face == NULL))
@@ -347,7 +374,7 @@ int32_t glf_get_ascender(gl_tex_font_p glf)
         return 0.0;
     }
 
-    return glf->ft_face->ascender;
+    return ((FT_Face)glf->ft_face)->ascender;
 }
 
 

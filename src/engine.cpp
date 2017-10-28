@@ -243,6 +243,7 @@ void Engine_Shutdown(int val)
     Gui_Destroy();
     Con_Destroy();
     GLText_Destroy();
+    glf_destroy();
     Sys_Destroy();
 
     /* no more renderings */
@@ -307,6 +308,7 @@ void Engine_Init_Pre()
     stream_codec_init(&engine_video);
 
     Sys_Init();
+    glf_init();
     GLText_Init();
     Con_Init();
     Gameflow_Init();

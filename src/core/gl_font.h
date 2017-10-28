@@ -15,36 +15,15 @@ extern "C" {
 #include <stdint.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
-#include <ft2build.h>
-#include <freetype.h>
 
-
-typedef struct char_info_s
-{
-    GLuint          tex_index;
-    GLint           width;
-    GLint           height;
-    GLint           left;
-    GLint           top;
-
-    GLfloat         tex_x0;
-    GLfloat         tex_y0;
-    GLfloat         tex_x1;
-    GLfloat         tex_y1;
-
-    GLfloat         advance_x_pt;
-    GLfloat         advance_y_pt;
-}char_info_t, *char_info_p;
-
+struct char_info_s;
+    
 typedef struct gl_tex_font_s
 {
-    FT_Library               ft_library;
-    FT_Face                  ft_face;
+    void                    *ft_face;  // for internal usage only
+    struct char_info_s      *glyphs;   // for internal usage only
     uint16_t                 font_size;
-
-    struct char_info_s      *glyphs;
     uint16_t                 glyphs_count;
-
     uint16_t                 gl_tex_indexes_count;
     uint16_t                 gl_real_tex_indexes_count;
     GLuint                  *gl_tex_indexes;
@@ -53,7 +32,7 @@ typedef struct gl_tex_font_s
     GLfloat                  gl_font_color[4];
 }gl_tex_font_t, *gl_tex_font_p;
 
-
+    
 // Font struct contains additional field for font type which is
 // used to dynamically create or delete fonts.
 typedef struct gl_font_cont_s
@@ -84,11 +63,13 @@ typedef struct gl_fontstyle_s
 #define GUI_FONT_SHADOW_HORIZONTAL_SHIFT 0.7
 
 
-gl_tex_font_p glf_create_font(FT_Library ft_library, const char *file_name, uint16_t font_size);
-gl_tex_font_p glf_create_font_mem(FT_Library ft_library, void *face_data, size_t face_data_size, uint16_t font_size);
+void glf_init();
+void glf_destroy();
+
+gl_tex_font_p glf_create_font(const char *file_name, uint16_t font_size);
+gl_tex_font_p glf_create_font_mem(void *face_data, size_t face_data_size, uint16_t font_size);
 void glf_free_font(gl_tex_font_p glf);
 void glf_resize(gl_tex_font_p glf, uint16_t font_size);
-void glf_reface(gl_tex_font_p glf, const char *file_name, uint16_t font_size);
 
 int32_t  glf_get_string_len(gl_tex_font_p glf, const char *text, int n);  // size in 1 / 64 px
 char    *glf_get_string_for_width(gl_tex_font_p glf, char *text, int32_t w_pt, int *n_sym);

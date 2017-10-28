@@ -5,15 +5,11 @@
  * Created on October 24, 2015, 11:34 AM
  */
 
-#include <stdint.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include <math.h>
-
-#include <ft2build.h>
-#include <freetype.h>
-#include <ftglyph.h>
-#include <ftmodapi.h>
+#include <stdint.h>
+#include <stdlib.h>
 
 #include "gl_text.h"
 #include "gl_font.h"
@@ -27,7 +23,6 @@ static struct
     gl_text_line_p           gl_base_lines;
     gl_text_line_t           gl_temp_lines[GLTEXT_MAX_TEMP_LINES];
     uint16_t                 temp_lines_used;
-    FT_Library               font_library;               // GLF font library unit.
     uint16_t                 max_styles;
     struct gl_fontstyle_s   *styles;
 
@@ -42,8 +37,6 @@ static int screen_height = 0;
 void GLText_Init()
 {
     int i;
-    font_data.font_library   = NULL;
-    FT_Init_FreeType(&font_data.font_library);
 
     font_data.max_styles = GLTEXT_MAX_FONTSTYLES;
     font_data.styles     = (gl_fontstyle_p)malloc(font_data.max_styles * sizeof(gl_fontstyle_t));
@@ -117,9 +110,6 @@ void GLText_Destroy()
 
     font_data.max_fonts = 0;
     font_data.max_styles = 0;
-
-    FT_Done_FreeType(font_data.font_library);
-    font_data.font_library = NULL;
 }
 
 
@@ -390,7 +380,7 @@ int GLText_AddFont(uint16_t index, uint16_t size, const char* path)
 {
     if(index < font_data.max_fonts)
     {
-        gl_tex_font_p new_font = glf_create_font(font_data.font_library, path, size);
+        gl_tex_font_p new_font = glf_create_font(path, size);
         if(new_font)
         {
             if(font_data.fonts[index].gl_font)
