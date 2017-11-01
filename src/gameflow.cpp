@@ -110,8 +110,8 @@ void Gameflow_ProcessCommands()
                 {
                     Engine_PlayVideo(info.path);
                 }
-                break;                
-                
+                break;
+
             case GF_NOENTRY:
                 continue;
 
@@ -190,7 +190,7 @@ bool Gameflow_GetLevelInfo(level_info_p info, int game_id, int level_id)
         return false;
     }
 
-    level_id = (level_id <= info->num_levels) ? (level_id) : (0);
+    level_id = (level_id <= info->num_levels) ? (level_id) : (1);
     lua_rawgeti(engine_lua, -1, level_id);
     if(!lua_istable(engine_lua, -1))
     {

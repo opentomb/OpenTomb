@@ -962,8 +962,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         from[2] = climb->edge_point[2];
         climb->next_z_space = 2.0f * ent->character->height;
         {
-            room_p next_room = World_FindRoomByPosCogerrence(from, ent->self->room);
-            room_sector_p next_sector = (next_room) ? (Room_GetSectorXYZ(next_room, from)) : (NULL);
+            room_sector_p next_sector = (ent->self->room) ? (Room_GetSectorXYZ(ent->self->room, from)) : (NULL);
             next_sector = Sector_GetPortalSectorTargetRaw(next_sector);
             if(next_sector)
             {
