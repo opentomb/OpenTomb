@@ -135,6 +135,7 @@ bool Gameflow_SetMap(const char* filePath, int game_id, int level_id)
     level_info_t info;
     if(Gameflow_GetLevelInfo(&info, game_id, level_id))
     {
+        level_id = (level_id <= info.num_levels) ? (level_id) : (1);
         if(!Gui_LoadScreenAssignPic(info.pic))
         {
             Gui_LoadScreenAssignPic("resource/graphics/legal");
@@ -275,6 +276,7 @@ bool Gameflow_SetGameInternal(int game_id, int level_id)
     level_info_t info;
     if(Gameflow_GetLevelInfo(&info, game_id, level_id))
     {
+        level_id = (level_id <= info.num_levels) ? (level_id) : (1);
         if(!Gui_LoadScreenAssignPic(info.pic))
         {
             Gui_LoadScreenAssignPic("resource/graphics/legal");
