@@ -13,6 +13,7 @@ function genBaseItems()
 
     if(ver < TR_II) then
         createBaseItem(ITEM_PASSPORT, 71, 71, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);
+        createBaseItem(ITEM_LARAHOME, 82, 82, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LARAHOME);
         createBaseItem(ITEM_VIDEO, 95, 95, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_VIDEO);
         createBaseItem(ITEM_AUDIO, 96, 96, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_AUDIO);
         createBaseItem(ITEM_CONTROLS, 97, 97, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_CONTROLS);
@@ -50,6 +51,7 @@ function genBaseItems()
 
     elseif(ver < TR_III) then
         createBaseItem(ITEM_PASSPORT, 120, 120, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);
+        createBaseItem(ITEM_LARAHOME, 134, 134, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LARAHOME);
         createBaseItem(ITEM_VIDEO, 153, 153, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_VIDEO);
         createBaseItem(ITEM_AUDIO, 154, 154, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_AUDIO);
         createBaseItem(ITEM_CONTROLS, 155, 155, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_CONTROLS);
@@ -93,6 +95,7 @@ function genBaseItems()
 
     elseif(ver < TR_IV) then
         createBaseItem(ITEM_PASSPORT, 145, 145, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);
+        createBaseItem(ITEM_LARAHOME, 159, 159, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LARAHOME);
         createBaseItem(ITEM_VIDEO, 181, 181, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_VIDEO);
         createBaseItem(ITEM_AUDIO, 182, 182, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_AUDIO);
         createBaseItem(ITEM_CONTROLS, 183, 183, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_CONTROLS);
@@ -286,5 +289,30 @@ function genBaseItems()
 
     end
 end
+
+
+items_funcs = {};
+
+items_funcs[ITEM_SMALL_MEDIPACK] = {}; 
+items_funcs[ITEM_SMALL_MEDIPACK].onUse = function(id)
+    setCharacterParam(id, PARAM_HEALTH, 0);  -- not all meds are usefull
+    removeItem(id, ITEM_SMALL_MEDIPACK, 1);
+    return 1;
+end;
+
+items_funcs[ITEM_LARGE_MEDIPACK] = {};
+items_funcs[ITEM_LARGE_MEDIPACK].onUse = function(id)
+    setCharacterParam(id, PARAM_HEALTH, -1);
+    removeItem(id, ITEM_LARGE_MEDIPACK, 1);
+
+    setEntityCollision(id, true);
+    setCharacterRagdollActivity(id, false);
+    setCharacterState(id, CHARACTER_STATE_DEAD, 0);
+    setCharacterParam(id, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
+    setEntityAnimFlag(id, ANIM_TYPE_BASE, ANIM_NORMAL_CONTROL);
+    setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
+    setEntityActivity(id, true);
+    return 1;
+end;
 
 print("Items script loaded");

@@ -268,6 +268,7 @@ addTask(checkDebugKeys);
 
 addItem(player, ITEM_COMPASS, 1);
 addItem(player, ITEM_PASSPORT, 1);
+addItem(player, ITEM_LARAHOME, 1);
 addItem(player, ITEM_CONTROLS, 1);
 addItem(player, ITEM_AUDIO, 1);
 addItem(player, ITEM_PISTOL, 1);

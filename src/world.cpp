@@ -278,7 +278,7 @@ void World_Clear()
 
     if(main_inventory_manager != NULL)
     {
-        main_inventory_manager->setInventory(NULL);
+        main_inventory_manager->setInventory(NULL, ENTITY_ID_NONE);
     }
 
     global_world.player = NULL;

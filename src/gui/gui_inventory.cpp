@@ -20,6 +20,8 @@
 #include "../script/script.h"
 #include "../audio/audio.h"
 #include "../inventory.h"
+#include "../entity.h"
+#include "../gameflow.h"
 #include "../world.h"
 #include "gui.h"
 #include "gui_inventory.h"
@@ -34,6 +36,47 @@ void Gui_InitNotifier()
     Notifier.SetRot(180.0, 270.0);
     Notifier.SetSize(128.0);
     Notifier.SetRotateTime(2500.0);
+}
+
+int32_t Item_Use(struct inventory_node_s **root, uint32_t item_id, uint32_t actor_id)
+{
+    inventory_node_p i = *root;
+    base_item_p bi = NULL;
+    
+    for(; i; i = i->next)
+    {
+        if(i->id == item_id)
+        {
+            bi = World_GetBaseItemByID(i->id);
+            break;
+        }
+    }
+
+    if(bi)
+    {
+        switch(bi->id)
+        {
+            case ITEM_LARAHOME:
+                return Gameflow_SetGame(Gameflow_GetCurrentGameID(), 0);
+                
+            case ITEM_PASSPORT:
+                return Gameflow_SetGame(Gameflow_GetCurrentGameID(), 1);
+                
+            case ITEM_COMPASS:
+            case ITEM_VIDEO:
+            case ITEM_AUDIO:
+            case ITEM_CONTROLS:
+            case ITEM_LOAD:
+            case ITEM_SAVE:
+            case ITEM_MAP:
+                break;
+                
+            default:
+                return Script_UseItem(engine_lua, i->id, actor_id);
+        }
+    }
+    
+    return 0;
 }
 
 /**
@@ -122,6 +165,7 @@ gui_InventoryManager::gui_InventoryManager()
     mItemAngle                  = 0.0;
 
     mInventory                  = NULL;
+    mOwnerId                    = ENTITY_ID_NONE;
 
     mLabel_Title.x              = 0.0;
     mLabel_Title.y              = 30.0;
@@ -243,9 +287,10 @@ void gui_InventoryManager::restoreItemAngle(float time)
     }
 }
 
-void gui_InventoryManager::setInventory(struct inventory_node_s **i)
+void gui_InventoryManager::setInventory(struct inventory_node_s **i, uint32_t owner_id)
 {
     mInventory = i;
+    mOwnerId = owner_id;
     mCurrentState = INVENTORY_DISABLED;
     mNextState = INVENTORY_DISABLED;
     mLabel_ItemName.show = 0;
@@ -571,9 +616,18 @@ void gui_InventoryManager::frameItems(float time)
                 Item_Frame(bi->bf, time);
                 if((bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM))
                 {
-                    //ActivateItemCallback!
-                    mNextState = INVENTORY_IDLE;
-                    mCurrentState = INVENTORY_IDLE;
+                    if(0 < Item_Use(mInventory, bi->id, mOwnerId))
+                    {
+                        mLabel_ItemName.show = 0;
+                        mLabel_Title.show = 0;
+                        mNextState = INVENTORY_CLOSE;
+                        mCurrentState = INVENTORY_CLOSE;
+                    }
+                    else
+                    {
+                        mNextState = INVENTORY_IDLE;
+                        mCurrentState = INVENTORY_IDLE;
+                    }
                 }
             }
             else

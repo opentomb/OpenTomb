@@ -23,6 +23,7 @@ extern "C" {
 #include "../room.h"
 #include "../entity.h"
 #include "../engine.h"
+#include "../inventory.h"
 #include "../controls.h"
 #include "../game.h"
 #include "../gameflow.h"
@@ -166,6 +167,44 @@ bool Script_GetString(lua_State *lua, int string_index, size_t string_size, char
 /*
  * Gameplay functions
  */
+
+int Script_UseItem(lua_State *lua, int item_id, int activator_id)
+{
+    int top = lua_gettop(lua);
+    int ret = -1;
+
+    lua_getglobal(lua, "items_funcs");
+    if(!lua_istable(lua, -1))
+    {
+        lua_settop(lua, top);
+        return -1;
+    }
+
+    lua_rawgeti(lua, -1, item_id);
+    if(!lua_istable(lua, -1))
+    {
+        lua_settop(lua, top);
+        return -1;
+    }
+
+    lua_pushstring(lua, "onUse");
+    lua_rawget(lua, -2);
+    if(!lua_isfunction(lua, -1))
+    {
+        lua_settop(lua, top);
+        return -1;
+    }
+
+    lua_pushinteger(lua, activator_id);
+    if(lua_pcall(lua, 1, 1, 0) == LUA_OK)
+    {
+        ret = lua_tointeger(lua, -1);
+    }
+    lua_settop(lua, top);
+
+    return ret;
+}
+
 
 int Script_DoTasks(lua_State *lua, float time)
 {
@@ -804,6 +843,20 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, GF_OP_KILLTOCOMPLETE);
         LUA_EXPOSE(lua, GF_OP_REMOVEAMMO);
 
+        LUA_EXPOSE(lua, ITEM_TYPE_SYSTEM);
+        LUA_EXPOSE(lua, ITEM_TYPE_SUPPLY);
+        LUA_EXPOSE(lua, ITEM_TYPE_QUEST);
+        
+        LUA_EXPOSE(lua, ITEM_COMPASS);
+        LUA_EXPOSE(lua, ITEM_PASSPORT);
+        LUA_EXPOSE(lua, ITEM_LARAHOME);
+        LUA_EXPOSE(lua, ITEM_VIDEO);
+        LUA_EXPOSE(lua, ITEM_AUDIO);
+        LUA_EXPOSE(lua, ITEM_CONTROLS);
+        LUA_EXPOSE(lua, ITEM_LOAD);
+        LUA_EXPOSE(lua, ITEM_SAVE);
+        LUA_EXPOSE(lua, ITEM_MAP);
+        
         LUA_EXPOSE(lua, TR_FD_TRIGTYPE_TRIGGER);
         LUA_EXPOSE(lua, TR_FD_TRIGTYPE_PAD);
         LUA_EXPOSE(lua, TR_FD_TRIGTYPE_SWITCH);

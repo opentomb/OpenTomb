@@ -108,7 +108,7 @@ public:
         return mCurrentItemsType;
     }
 
-    void setInventory(struct inventory_node_s **i);
+    void setInventory(struct inventory_node_s **i, uint32_t owner_id);
     void setTitle(int items_type);
     void frame(float time);
     void render();
@@ -120,6 +120,7 @@ public:
 
 private:
     struct inventory_node_s   **mInventory;
+    uint32_t                    mOwnerId;
     int                         mCurrentState;
     int                         mNextState;
 

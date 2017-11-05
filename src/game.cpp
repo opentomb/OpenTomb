@@ -591,7 +591,7 @@ void Game_Frame(float time)
         if(player &&
           (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
         {
-            main_inventory_manager->setInventory(&player->inventory);
+            main_inventory_manager->setInventory(&player->inventory, player->id);
             main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
         }
         if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_IDLE)
