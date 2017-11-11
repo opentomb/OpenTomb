@@ -514,26 +514,14 @@ void Game_ApplyControls(struct entity_s *ent)
 
         if(control_states.use_small_medi)
         {
-            if((Inventory_GetItemsCount(ent->inventory, ITEM_SMALL_MEDIPACK) > 0) &&
-               (Character_ChangeParam(ent, PARAM_HEALTH, 250)))
-            {
-                Inventory_RemoveItem(&ent->inventory, ITEM_SMALL_MEDIPACK, 1);
-                Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
-            }
-
-            control_states.use_small_medi = !control_states.use_small_medi;
+            Script_UseItem(engine_lua, ITEM_SMALL_MEDIPACK, ent->id);
+            control_states.use_small_medi = 0;
         }
 
         if(control_states.use_big_medi)
         {
-            if((Inventory_GetItemsCount(ent->inventory, ITEM_LARGE_MEDIPACK) > 0) &&
-               (Character_ChangeParam(ent, PARAM_HEALTH, LARA_PARAM_HEALTH_MAX)))
-            {
-                Inventory_RemoveItem(&ent->inventory, ITEM_LARGE_MEDIPACK, 1);
-                Audio_Send(TR_AUDIO_SOUND_MEDIPACK);
-            }
-
-            control_states.use_big_medi = !control_states.use_big_medi;
+            Script_UseItem(engine_lua, ITEM_LARGE_MEDIPACK, ent->id);
+            control_states.use_big_medi = 0;
         }
 
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0))

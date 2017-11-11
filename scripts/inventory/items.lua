@@ -295,8 +295,11 @@ items_funcs = {};
 
 items_funcs[ITEM_SMALL_MEDIPACK] = {}; 
 items_funcs[ITEM_SMALL_MEDIPACK].onUse = function(id)
-    setCharacterParam(id, PARAM_HEALTH, 0);  -- not all meds are usefull
+    changeCharacterParam(id, PARAM_HEALTH, 250);
     removeItem(id, ITEM_SMALL_MEDIPACK, 1);
+    if(player == id) then
+        playSound(SOUND_MEDIPACK);
+    end;
     return 1;
 end;
 
@@ -304,14 +307,9 @@ items_funcs[ITEM_LARGE_MEDIPACK] = {};
 items_funcs[ITEM_LARGE_MEDIPACK].onUse = function(id)
     setCharacterParam(id, PARAM_HEALTH, -1);
     removeItem(id, ITEM_LARGE_MEDIPACK, 1);
-
-    setEntityCollision(id, true);
-    setCharacterRagdollActivity(id, false);
-    setCharacterState(id, CHARACTER_STATE_DEAD, 0);
-    setCharacterParam(id, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
-    setEntityAnimFlag(id, ANIM_TYPE_BASE, ANIM_NORMAL_CONTROL);
-    setCharacterKeyAnim(id, ANIM_TYPE_BASE, ANIMATION_KEY_INIT);
-    setEntityActivity(id, true);
+    if(player == id) then
+        playSound(SOUND_MEDIPACK);
+    end;
     return 1;
 end;
 
