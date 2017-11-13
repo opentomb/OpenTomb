@@ -232,7 +232,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_DEATH;
             }
-            else if(curr_fc->slide == CHARACTER_SLIDE_FRONT)
+            else if(state->slide == CHARACTER_SLIDE_FRONT)
             {
                 Audio_Send(TR_AUDIO_SOUND_LANDING, TR_AUDIO_EMITTER_ENTITY, ent->id);
 
@@ -246,7 +246,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
                 }
             }
-            else if(curr_fc->slide == CHARACTER_SLIDE_BACK)
+            else if(state->slide == CHARACTER_SLIDE_BACK)
             {
                 if(cmd->jump)
                 {
@@ -507,12 +507,12 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             cmd->rot[0] = 0;
             Character_Lean(ent, cmd, 0.0f);
 
-            if(curr_fc->slide == CHARACTER_SLIDE_BACK)      // Slide checking is only for jumps direction correction!
+            if(state->slide == CHARACTER_SLIDE_BACK)      // Slide checking is only for jumps direction correction!
             {
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_JUMP_BACK_BEGIN, 0);
                 cmd->move[0] = -1;
             }
-            else if(curr_fc->slide == CHARACTER_SLIDE_FRONT)
+            else if(state->slide == CHARACTER_SLIDE_FRONT)
             {
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_JUMP_FORWARD_BEGIN, 0);
                 cmd->move[0] = 1;
@@ -760,11 +760,11 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_DEATH;
             }
-            else if(curr_fc->slide == CHARACTER_SLIDE_FRONT)
+            else if(state->slide == CHARACTER_SLIDE_FRONT)
             {
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
             }
-            else if(curr_fc->slide == CHARACTER_SLIDE_BACK)
+            else if(state->slide == CHARACTER_SLIDE_BACK)
             {
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
                 ent->dir_flag = ENT_MOVE_BACKWARD;
@@ -881,11 +881,11 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_RUN_FORWARD;    // Normal run then die
             }
-            else if(curr_fc->slide == CHARACTER_SLIDE_FRONT)
+            else if(state->slide == CHARACTER_SLIDE_FRONT)
             {
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_SLIDE_FORWARD, 0);
             }
-            else if(curr_fc->slide == CHARACTER_SLIDE_BACK)
+            else if(state->slide == CHARACTER_SLIDE_BACK)
             {
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_START_SLIDE_BACKWARD, 0);
             }
@@ -1248,11 +1248,11 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
-            else if(!curr_fc->slide)
+            else if(!state->slide)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;
             }
-            else if(curr_fc->slide && cmd->jump)
+            else if(state->slide && cmd->jump)
             {
                 ss_anim->next_state = TR_STATE_LARA_JUMP_BACK;
             }
@@ -1273,7 +1273,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_FREE_FALL_FORWARD, 0);
             }
-            else if(!curr_fc->slide)
+            else if(!state->slide)
             {
                 if((cmd->move[0] == 1) && (World_GetVersion() >= TR_III))
                 {
@@ -1284,7 +1284,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                      ss_anim->next_state = TR_STATE_LARA_STOP;                  // stop
                 }
             }
-            else if(curr_fc->slide && cmd->jump)
+            else if(state->slide && cmd->jump)
             {
                 ss_anim->next_state = TR_STATE_LARA_JUMP_FORWARD;               // jump
             }

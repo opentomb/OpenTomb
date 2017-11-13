@@ -18,8 +18,8 @@ function twobp_init(id)        -- Two-block platform
     
     local curr_OCB = getEntityOCB(id);
     
-    entity_funcs[id].raise_height = bit32.rshift(bit32.band(curr_OCB, 0xFFF0), 4) * 256.0;
-    entity_funcs[id].raise_speed  = bit32.band(curr_OCB, 0x000F) * 60 / 2.0; -- Double FPS.
+    entity_funcs[id].raise_height = ((curr_OCB & 0xFFF0) >> 4) * 256.0;
+    entity_funcs[id].raise_speed  = (curr_OCB & 0x000F) * 60 / 2.0;             -- Double FPS.
     
     -- Mode legend: 0 - normal ascent, 1 - normal descent, 2 - push.
     -- Only two classic modes are parsed from OCB, extra modes can be implemented through script.

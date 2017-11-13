@@ -589,18 +589,6 @@ void Character_GetHeightInfo(struct entity_s *ent, float pos[3], struct height_i
 
     to[2] = from[2] + 4096.0f;
     Physics_RayTestFiltered(&fc->ceiling_hit, from ,to, fc->self, COLLISION_FILTER_HEIGHT_TEST);
-
-    fc->slide = 0x00;
-    if(fc->floor_hit.hit && (fc->floor_hit.normale[2] > 0.02) && (fc->floor_hit.normale[2] < ent->character->critical_slant_z_component))
-    {
-        collision_result_t cs;
-        to[2] = fc->floor_hit.point[2];
-        if(Physics_SphereTest(&cs, from, to, ent->character->sphere, fc->self, COLLISION_FILTER_HEIGHT_TEST) &&
-           (fabs(cs.normale[2] - fc->floor_hit.normale[2]) < 0.01))
-        {
-            fc->slide = (fc->floor_hit.normale[0] * ent->transform[4 + 0] + fc->floor_hit.normale[1] * ent->transform[4 + 1] >= 0.0f) ? (CHARACTER_SLIDE_FRONT) : (CHARACTER_SLIDE_BACK);
-        }
-    }
 }
 
 /**
@@ -1228,14 +1216,6 @@ int Character_MoveOnFloor(struct entity_s *ent)
     float norm_move_xy_len, t, *pos = ent->transform + 12;
     float tv[3], move[3], norm_move_xy[2];
 
-    /*
-     * init height info structure
-     */
-    ent->character->state.floor_collide = 0x00;
-    ent->character->state.ceiling_collide = 0x00;
-    ent->character->state.wall_collide = 0x00;
-    ent->character->state.step_z = 0x00;
-
     t = ent->anim_linear_speed * ent->character->linear_speed_mult;
     ent->angles[0] += ROT_SPEED_LAND * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * (float)ent->character->cmd.rot[0];
     Entity_UpdateTransform(ent); // apply rotations
@@ -1310,20 +1290,35 @@ int Character_MoveOnFloor(struct entity_s *ent)
        (pos[2] < ent->character->height_info.floor_hit.point[2] + ent->character->fall_down_height) &&
        (ent->speed[2] <= 0.0f))
     {
+        height_info_p fc = &ent->character->height_info;
+        if((fc->floor_hit.normale[2] > 0.02) && (fc->floor_hit.normale[2] < ent->character->critical_slant_z_component))
+        {
+            float from[3];
+            collision_result_t cs;
+            from[0] = tv[0] = ent->transform[12 + 0];
+            from[1] = tv[1] = ent->transform[12 + 1];
+            from[2] = tv[2] = fc->floor_hit.point[2];
+            from[2] += 2.0f * ent->character->sphere;
+            if(Physics_SphereTest(&cs, from, tv, ent->character->sphere, fc->self, COLLISION_FILTER_HEIGHT_TEST) &&
+               (fabs(cs.normale[2] - fc->floor_hit.normale[2]) < 0.01))
+            {
+                ent->character->state.slide = (fc->floor_hit.normale[0] * ent->transform[4 + 0] + fc->floor_hit.normale[1] * ent->transform[4 + 1] >= 0.0f) ? (CHARACTER_SLIDE_FRONT) : (CHARACTER_SLIDE_BACK);
+            }
+        }
         ent->character->state.floor_collide = 0x01;
-        vec3_copy(tv, ent->character->height_info.floor_hit.normale);
+        vec3_copy(tv, fc->floor_hit.normale);
 
-        if(ent->character->height_info.slide)
+        if(ent->character->state.slide)
         {
             tv[2] = -tv[2];
             t = ent->character->linear_speed_mult * DEFAULT_CHARACTER_SLIDE_SPEED_MULT;
             vec3_mul_scalar(ent->speed, tv, t);                                 // slide down direction
             t = 180.0f * atan2f(tv[0], -tv[1]) / M_PI;                          // from -180 deg to +180 deg
-            if(ent->character->height_info.slide == CHARACTER_SLIDE_FRONT)
+            if(ent->character->state.slide == CHARACTER_SLIDE_FRONT)
             {
                 ent->angles[0] = t + 180.0f;
             }
-            else //if(ent->character->state.slide == CHARACTER_SLIDE_BACK)
+            else //if(fc->slide == CHARACTER_SLIDE_BACK)
             {
                 ent->angles[0] = t;
             }
@@ -1381,13 +1376,9 @@ int Character_MoveOnFloor(struct entity_s *ent)
 int Character_MoveFly(struct entity_s *ent)
 {
     float move[3], *pos = ent->transform + 12;
-
-    ent->character->state.floor_collide = 0x00;
-    ent->character->state.ceiling_collide = 0x00;
-    ent->character->state.wall_collide = 0x00;
-
     character_command_p cmd = &ent->character->cmd;
     float dir[3] = {0.0f, 0.0f, 0.0f};
+
     // Calculate current speed.
     if(cmd->move[0] || cmd->move[1] || cmd->move[2])
     {
@@ -1432,12 +1423,8 @@ int Character_MoveFly(struct entity_s *ent)
 int Character_FreeFalling(struct entity_s *ent)
 {
     float move[3], g[3], *pos = ent->transform + 12;
-
-    ent->character->state.floor_collide = 0x00;
-    ent->character->state.ceiling_collide = 0x00;
-    ent->character->state.wall_collide = 0x00;
-
     float rot = ROT_SPEED_FREEFALL * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
+
     ent->angles[0] += rot;
     ent->angles[1] = 0.0f;
 
@@ -1507,14 +1494,9 @@ int Character_FreeFalling(struct entity_s *ent)
 int Character_MonkeyClimbing(struct entity_s *ent)
 {
     float move[3];
-    float t, *pos = ent->transform + 12;
+    float *pos = ent->transform + 12;
+    float t = ent->anim_linear_speed * ent->character->linear_speed_mult;
     int ret = 1;
-
-    ent->character->state.floor_collide = 0x00;
-    ent->character->state.ceiling_collide = 0x00;
-    ent->character->state.wall_collide = 0x00;
-
-    t = ent->anim_linear_speed * ent->character->linear_speed_mult;
 
     ent->angles[0] += ROT_SPEED_MONKEYSWING * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
     ent->angles[1] = 0.0f;
@@ -1569,10 +1551,6 @@ int Character_WallsClimbing(struct entity_s *ent)
     climb_info_t *climb = &ent->character->climb;
     float move[3], t, *pos = ent->transform + 12;
 
-    ent->character->state.floor_collide = 0x00;
-    ent->character->state.ceiling_collide = 0x00;
-    ent->character->state.wall_collide = 0x00;
-
     Character_CheckWallsClimbability(ent, climb);
     Character_GetMiddleHandsPos(ent, move);
     if(!climb->wall_hit || (climb->edge_hit && (climb->edge_point[2] < move[2])))
@@ -1625,10 +1603,6 @@ int Character_Climbing(struct entity_s *ent)
 {
     float move[3];
     float t, *pos = ent->transform + 12;
-
-    ent->character->state.floor_collide = 0x00;
-    ent->character->state.ceiling_collide = 0x00;
-    ent->character->state.wall_collide = 0x00;
 
     t = ent->anim_linear_speed * ent->character->linear_speed_mult;
     ent->angles[0] += ROT_SPEED_MONKEYSWING * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
@@ -1685,10 +1659,6 @@ int Character_MoveUnderWater(struct entity_s *ent)
         ent->move_type = MOVE_FREE_FALLING;
         return 2;
     }
-
-    ent->character->state.floor_collide = 0x00;
-    ent->character->state.ceiling_collide = 0x00;
-    ent->character->state.wall_collide = 0x00;
 
     // Calculate current speed.
     if(ent->character->cmd.jump)
@@ -1751,10 +1721,6 @@ int Character_MoveOnWater(struct entity_s *ent)
 {
     float move[3];
     float *pos = ent->transform + 12;
-
-    ent->character->state.floor_collide = 0x00;
-    ent->character->state.ceiling_collide = 0x00;
-    ent->character->state.wall_collide = 0x00;
 
     ent->angles[0] += ROT_SPEED_ONWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
     ent->angles[1] = 0.0f;
@@ -2090,7 +2056,7 @@ void Character_ApplyCommands(struct entity_s *ent)
     }
 
     Character_UpdateCurrentHeight(ent);
-
+    
     if((ent->character->cmd.ready_weapon != 0x00) && (ent->character->current_weapon > 0) && (ent->character->weapon_current_state == WEAPON_STATE_HIDE))
     {
         Character_SetWeaponModel(ent, ent->character->current_weapon, WEAPON_STATE_HIDE_TO_READY);
@@ -2101,6 +2067,12 @@ void Character_ApplyCommands(struct entity_s *ent)
         ent->character->state_func(ent, &ent->bf->animations);
     }
 
+    ent->character->state.slide = 0x00;
+    ent->character->state.floor_collide = 0x00;
+    ent->character->state.ceiling_collide = 0x00;
+    ent->character->state.wall_collide = 0x00;
+    ent->character->state.step_z = 0x00;
+    
     if(!ent->no_move)
     {
         switch(ent->move_type)

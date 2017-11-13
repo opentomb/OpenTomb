@@ -264,13 +264,13 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
         -- rotation in fourth bit (0x08) and working mode in next two bits (0x30).
 
         local curr_OCB  = getEntityOCB(object_id);
-        local rot_value = bit32.band(curr_OCB, 0x07);
+        local rot_value = curr_OCB & 0x07;
         
         -- Spikes are vertically rotated in 45 degree step, and zero rotational value actually means
         -- that spikes are pointed downwards (e. g. 180 degrees rotation).
         
         rotateEntity(object_id, 0.0, 0.0, (180.0 + rot_value * 45.0));
-        if(bit32.band(curr_OCB, 0x08) ~= 0) then 
+        if((curr_OCB & 0x08) ~= 0) then 
             rotateEntity(object_id, 270.0) 
         end;   -- Rotate horizontally.
         
@@ -287,7 +287,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
         -- Mode 0 is normal teeth spike movement (continous pop-retract), mode 1 is sticked out
         -- constantly mode, and mode 2 is single pop-retract (as seen in Coastal Ruins shooting range).
         
-        entity_funcs[object_id].mode = bit32.rshift(bit32.band(curr_OCB, 0x30), 4);
+        entity_funcs[object_id].mode = ((curr_OCB & 0x30) >> 4);
         setEntityActivity(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
     end    
@@ -423,7 +423,7 @@ function spikewall_init(id)      -- Spike wall
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityCallbackFlag(id, ENTITY_CALLBACK_COLLISION, 1);
-    setEntityCollisionFlags(id, bit32.bor(COLLISION_GROUP_TRIGGERS, COLLISION_GROUP_CHARACTERS), nil, COLLISION_GROUP_CHARACTERS);
+    setEntityCollisionFlags(id, COLLISION_GROUP_TRIGGERS | COLLISION_GROUP_CHARACTERS, nil, COLLISION_GROUP_CHARACTERS);
     setEntityActivity(id, false);
     
     entity_funcs[id].onActivate = function(object_id, activator_id)

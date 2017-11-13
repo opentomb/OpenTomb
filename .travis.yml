@@ -6,7 +6,7 @@ sudo: required
 dist: trusty
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y libegl1-mesa-dev libgles2-mesa-dev cmake libopenal-dev libsdl2-dev libpng12-dev liblua5.2-dev zlib1g-dev
+  - sudo apt-get install -y libegl1-mesa-dev libgles2-mesa-dev cmake libopenal-dev libsdl2-dev libpng12-dev liblua5.3-dev zlib1g-dev
 install: true
 script:
   - mkdir build

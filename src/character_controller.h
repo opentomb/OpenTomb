@@ -193,8 +193,7 @@ typedef struct height_info_s
 {
     int8_t                                   ceiling_climb;
     int8_t                                   walls_climb;
-    int8_t                                   walls_climb_dir;
-    uint8_t                                  slide; //0 - none, 1 - forward, 2 - backward
+    int16_t                                  walls_climb_dir;
     struct engine_container_s               *self;
 
     struct collision_result_s                floor_hit;
@@ -226,6 +225,7 @@ typedef struct character_state_s
     uint32_t    ceiling_collide : 1;
     uint32_t    wall_collide : 1;
     uint32_t    step_z : 2;     //0 - none, 1 - dz to step up, 2 - dz to step down;
+    uint32_t    slide : 1;
     uint32_t    uw_current : 1;
     uint32_t    attack : 1;
     uint32_t    dead : 2;

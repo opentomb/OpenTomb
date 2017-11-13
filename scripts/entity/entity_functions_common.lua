@@ -461,7 +461,7 @@ function projectile_init(id, speed, damage)
     createGhosts(id);
     local group = COLLISION_GROUP_CHARACTER;
     local mask = COLLISION_GROUP_CHARACTER;
-    local filter = bit32.bor(COLLISION_GROUP_STATIC_ROOM, COLLISION_GROUP_STATIC_OBLECT, COLLISION_GROUP_KINEMATIC);
+    local filter = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC;
     setEntityCollisionFlags(id, group, nil, mask);
     setEntityGhostCollisionShape(id, 0, COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setEntityActivity(id, true);

@@ -39,12 +39,6 @@ function swapEntityState(object_id, state_1, state_2)
     end;
 end;
 
-function swapEntityEvent(object_id)
-    local current_event = getEntityEvent(object_id);
-    setEntityEvent(object_id, bit32.bnot(current_event));
-    --setEntityEvent(object_id, not current_event);
-end;
-
 function swapEntityActivity(object_id)
     local current_activity = getEntityActivity(object_id);
     if(current_activity) then
