@@ -66,6 +66,7 @@ void Character_Create(struct entity_s *ent)
         ret->state.ceiling_collide = 0x00;
         ret->state.wall_collide = 0x00;
         ret->state.step_z = 0x00;
+        ret->state.slide = 0x00;
         ret->state.uw_current = 0x00;
         ret->state.attack = 0x00;
         ret->state.dead = 0x00;
