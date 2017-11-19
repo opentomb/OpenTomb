@@ -2344,7 +2344,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
             ss_animation_p anim_rh = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_WEAPON_RH);
             if(!anim_rh)
             {
-                anim_rh = SSBoneFrame_AddOverrideAnim(ent->bf, World_GetModelByID(weapon_model), ANIM_TYPE_WEAPON_RH);
+                anim_rh = SSBoneFrame_AddOverrideAnim(ent->bf, sm, ANIM_TYPE_WEAPON_RH);
             }
             anim_rh->model = sm;
             anim_rh->onEndFrame = NULL;
@@ -2354,7 +2354,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
             ss_animation_p anim_lh = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_WEAPON_LH);
             if(!anim_lh)
             {
-                anim_lh = SSBoneFrame_AddOverrideAnim(ent->bf, World_GetModelByID(weapon_model), ANIM_TYPE_WEAPON_LH);
+                anim_lh = SSBoneFrame_AddOverrideAnim(ent->bf, sm, ANIM_TYPE_WEAPON_LH);
             }
             anim_lh->model = sm;
             anim_lh->onEndFrame = NULL;
@@ -2375,7 +2375,7 @@ int Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_
             ss_animation_p anim_th = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_WEAPON_TH);
             if(!anim_th)
             {
-                anim_th = SSBoneFrame_AddOverrideAnim(ent->bf, World_GetModelByID(weapon_model), ANIM_TYPE_WEAPON_TH);
+                anim_th = SSBoneFrame_AddOverrideAnim(ent->bf, sm, ANIM_TYPE_WEAPON_TH);
             }
             anim_th->model = sm;
             anim_th->onEndFrame = NULL;

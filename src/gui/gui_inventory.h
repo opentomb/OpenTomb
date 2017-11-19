@@ -143,8 +143,6 @@ private:
     float                       mItemAngle;
 
     int getItemElementsCountByType(int type);
-    int getPreviousItemsType(int curr_type);
-    int getNextItemsType(int curr_type);
     void updateCurrentRing();
     void frameStates(float time);
     void frameItems(float time);

@@ -313,4 +313,37 @@ items_funcs[ITEM_LARGE_MEDIPACK].onUse = function(id)
     return 1;
 end;
 
+items_funcs[ITEM_PISTOL] = {};
+items_funcs[ITEM_PISTOL].onUse = function(id)
+    setCharacterCurrentWeapon(id, 1);
+    return 1;
+end;
+
+items_funcs[ITEM_SHOTGUN] = {};
+items_funcs[ITEM_SHOTGUN].onUse = function(id)
+    if(getItemsCount(id, ITEM_SHOTGUN_NORMAL_AMMO) > 0) then
+        setCharacterCurrentWeapon(id, 2);
+        return 1;
+    end;
+    return 0;
+end;
+
+items_funcs[ITEM_MAGNUM] = {};
+items_funcs[ITEM_MAGNUM].onUse = function(id)
+    if(getItemsCount(id, ITEM_MAGNUM_AMMO) > 0) then
+        setCharacterCurrentWeapon(id, 3);
+        return 1;
+    end;
+    return 0;
+end;
+
+items_funcs[ITEM_UZI] = {};
+items_funcs[ITEM_UZI].onUse = function(id)
+    if(getItemsCount(id, ITEM_UZI_AMMO) > 0) then
+        setCharacterCurrentWeapon(id, 4);
+        return 1;
+    end;
+    return 0;
+end;
+
 print("Items script loaded");
