@@ -340,7 +340,7 @@ int lua_GetCharacterCombatMode(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character)
         {
-            lua_pushnumber(lua, ent->character->weapon_current_state);
+            lua_pushnumber(lua, ent->character->weapon_state);
             return 1;
         }
     }
@@ -676,7 +676,7 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character)
         {
-            lua_pushinteger(lua, ent->character->current_weapon);
+            lua_pushinteger(lua, ent->character->weapon_id);
             return 1;
         }
         else
@@ -700,7 +700,7 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character)
         {
-            ent->character->current_weapon = lua_tointeger(lua, 2);
+            Character_ChangeWeapon(ent, lua_tointeger(lua, 2));
         }
         else
         {

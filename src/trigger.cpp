@@ -186,7 +186,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
 
                 case TR_FD_TRIGTYPE_COMBAT:
                     // Check weapon status for triggering entity.
-                    header_condition = header_condition && (entity_activator->character && (entity_activator->character->weapon_current_state > 0));
+                    header_condition = header_condition && (entity_activator->character && (entity_activator->character->weapon_state > 0));
                     break;
 
                 case TR_FD_TRIGTYPE_DUMMY:

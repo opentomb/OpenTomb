@@ -281,8 +281,8 @@ typedef struct character_s
     uint16_t                    bone_l_hand_end;
     uint16_t                    bone_r_hand_start;
     uint16_t                    bone_r_hand_end;
-    int16_t                     current_weapon;
-    int16_t                     weapon_current_state;
+    int16_t                     weapon_id;
+    int16_t                     weapon_state;
 
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     void                       (*set_key_anim_func)(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim);
@@ -356,6 +356,7 @@ int   Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_v
 int Character_IsTargetAccessible(struct entity_s *character, struct entity_s *target);
 struct entity_s *Character_FindTarget(struct entity_s *ent);
 void  Character_SetTarget(struct entity_s *ent, uint32_t target_id);
+int   Character_ChangeWeapon(struct entity_s *ent, int weapon_model);
 int   Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state);
 
 /*

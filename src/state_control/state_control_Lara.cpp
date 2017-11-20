@@ -158,7 +158,7 @@ void StateControl_LaraSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss
 int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 {
     int i;
-    int clean_action = (ent->character->cmd.action && (ent->character->weapon_current_state == WEAPON_STATE_HIDE));
+    int clean_action = (ent->character->cmd.action && (ent->character->weapon_state == WEAPON_STATE_HIDE));
     float t, *pos = ent->transform + 12;
     float global_offset[3], move[3], climb_from[3], climb_to[3], reaction[3];
     height_info_t next_fc, *curr_fc;
