@@ -651,13 +651,9 @@ int lua_SetCharacterWeaponModel(lua_State *lua)
     if(lua_gettop(lua) >= 3)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
+        if(ent && ent->character && ent->character->set_weapon_model_func)
         {
-            Character_SetWeaponModel(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+            ent->character->set_weapon_model_func(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
         }
     }
     else

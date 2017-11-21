@@ -121,13 +121,6 @@ struct inventory_node_s;
 #define ENTITY_TLAYOUT_LOCK     0x40    // Activity lock
 #define ENTITY_TLAYOUT_SSTATUS  0x80    // Sector status
 
-#define WEAPON_STATE_HIDE                       (0x00)
-#define WEAPON_STATE_HIDE_TO_READY              (0x01)
-#define WEAPON_STATE_IDLE                       (0x02)
-#define WEAPON_STATE_IDLE_TO_FIRE               (0x03)
-#define WEAPON_STATE_FIRE                       (0x04)
-#define WEAPON_STATE_FIRE_TO_IDLE               (0x05)
-#define WEAPON_STATE_IDLE_TO_HIDE               (0x06)
 
 typedef void (*collision_callback_t)(struct entity_s *ent, struct collision_node_s *cn);
 

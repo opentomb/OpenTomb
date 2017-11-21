@@ -6,6 +6,7 @@
 
 int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim);
 void StateControl_LaraSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim);
+void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state);
 
 int StateControl_Bat(struct entity_s *ent, struct ss_animation_s *ss_anim);
 void StateControl_BatSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim);
@@ -74,6 +75,7 @@ void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
             case STATE_FUNCTIONS_LARA:
                 ent->character->state_func = StateControl_Lara;
                 ent->character->set_key_anim_func = StateControl_LaraSetKeyAnim;
+                ent->character->set_weapon_model_func = StateControl_LaraSetWeaponModel;
                 break;
 
             case STATE_FUNCTIONS_BAT:

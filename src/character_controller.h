@@ -63,10 +63,17 @@
 #define CHARACTER_BASE_RADIUS   (128.0)
 #define CHARACTER_BASE_HEIGHT   (512.0)
 
+#define WEAPON_STATE_HIDE                       (0x00)
+#define WEAPON_STATE_HIDE_TO_READY              (0x01)
+#define WEAPON_STATE_IDLE                       (0x02)
+#define WEAPON_STATE_IDLE_TO_FIRE               (0x03)
+#define WEAPON_STATE_FIRE                       (0x04)
+#define WEAPON_STATE_FIRE_TO_IDLE               (0x05)
+#define WEAPON_STATE_IDLE_TO_HIDE               (0x06)
+
 /*
  * ENTITY MOVEMENT TYPES
  */
-
 #define MOVE_STATIC_POS         (0)
 #define MOVE_KINEMATIC          (1)
 #define MOVE_ON_FLOOR           (2)
@@ -286,6 +293,7 @@ typedef struct character_s
 
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     void                       (*set_key_anim_func)(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim);
+    void                       (*set_weapon_model_func)(struct entity_s *ent, int weapon_model, int weapon_state);
     float                       linear_speed_mult;
     float                       rotate_speed_mult;
     float                       min_step_up_height;
@@ -355,14 +363,7 @@ int   Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_v
 
 int Character_IsTargetAccessible(struct entity_s *character, struct entity_s *target);
 struct entity_s *Character_FindTarget(struct entity_s *ent);
-void  Character_SetTarget(struct entity_s *ent, uint32_t target_id);
-int   Character_ChangeWeapon(struct entity_s *ent, int weapon_model);
-int   Character_SetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state);
-
-/*
- * ss_animation callbacks
- */
-int   Character_DoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, float time);
-int   Character_DoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, float time);
+void Character_SetTarget(struct entity_s *ent, uint32_t target_id);
+void Character_ChangeWeapon(struct entity_s *ent, int weapon_model);
 
 #endif  // CHARACTER_CONTROLLER_H
