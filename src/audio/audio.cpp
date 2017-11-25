@@ -31,6 +31,8 @@ extern "C" {
 #include "audio_stream.h"
 #include "audio_fx.h"
 
+#define STB_VORBIS_HEADER_ONLY
+#include "stb_vorbis.c"
 
 static ALCdevice              *al_device      = NULL;
 static ALCcontext             *al_context     = NULL;
@@ -145,34 +147,6 @@ public:
 };
 
 
-/*size_t sdl_ov_fread(void *data, size_t size, size_t n, void *ctx)
-{
-    return SDL_RWread((SDL_RWops*)ctx, data, size, n);
-}
-
-int sdl_ov_fseek(void *ctx, ogg_int64_t offset, int whence)
-{
-    return SDL_RWseek((SDL_RWops*)ctx, offset, whence);
-}
-
-int sdl_ov_fclose(void *ctx)
-{
-    return SDL_RWclose((SDL_RWops*)ctx);
-}
-
-long sdl_ov_ftell(void *ctx)
-{
-    return SDL_RWtell((SDL_RWops*)ctx);
-}*/
-
-/*static ov_callbacks ov_sdl_callbacks =
-{
-    sdl_ov_fread,
-    sdl_ov_fseek,
-    sdl_ov_fclose,
-    sdl_ov_ftell
-};*/
-
 // ======== PRIVATE PROTOTYPES =============
 int  Audio_LogALError(int error_marker = 0);    // AL-specific error handler.
 void Audio_LogOGGError(int code);               // Ogg-specific error handler.
@@ -255,62 +229,50 @@ bool StreamTrackBuffer::Load(int track_index)
 ///@TODO: fix vorbis streaming! ov_bitrate may differ in differ section
 bool StreamTrackBuffer::Load_Ogg(const char *path)
 {
-    /*vorbis_info    *vorbis_Info = NULL;
-    SDL_RWops      *audio_file = SDL_RWFromFile(path, "rb");
-    OggVorbis_File  vorbis_Stream;*/
-    bool            ret = false;
-
-    /*if(!audio_file)
+    int err = 0;
+    stb_vorbis_alloc alloc;
+    alloc.alloc_buffer_length_in_bytes = 256 * 1024;
+    alloc.alloc_buffer = (char*)Sys_GetTempMem(alloc.alloc_buffer_length_in_bytes);
+    stb_vorbis *ov = stb_vorbis_open_filename(path, &err, &alloc);
+    
+    if(!ov)
     {
         Sys_DebugLog(SYS_LOG_FILENAME, "OGG: Couldn't open file: %s.", path);
+        Sys_ReturnTempMem(alloc.alloc_buffer_length_in_bytes);
         return false;
     }
 
-    memset(&vorbis_Stream, 0x00, sizeof(OggVorbis_File));
-    if(ov_open_callbacks(audio_file, &vorbis_Stream, NULL, 0, ov_sdl_callbacks) < 0)
-    {
-        SDL_RWclose(audio_file);
-        Sys_DebugLog(SYS_LOG_FILENAME, "OGG: Couldn't open Ogg stream.");
-        return false;
-    }
-
-    vorbis_Info = ov_info(&vorbis_Stream, -1);
-    channels = vorbis_Info->channels;
+    stb_vorbis_info info = stb_vorbis_get_info(ov);
+    channels = info.channels;
     sample_bitsize = 16;
-    buffer_part = vorbis_Info->bitrate_nominal;
-    rate = vorbis_Info->rate;
-
+    buffer_part = 96 * info.max_frame_size;
+    rate = info.sample_rate;
+    
     {
         const size_t temp_buf_size = 64 * 1024 * 1024;
-        char *temp_buff = (char*)malloc(temp_buf_size);
+        size_t buffer_left = temp_buf_size / 2;
+        short *temp_buff = (short*)malloc(temp_buf_size);
         size_t readed = 0;
         buffer_size = 0;
-        do
+        while(0 != (readed = stb_vorbis_get_frame_short_interleaved(ov, channels, temp_buff + buffer_size, buffer_left)))
         {
-            int section;
-            readed = ov_read(&vorbis_Stream, temp_buff + buffer_size, 32768, 0, 2, 1, &section);
-            buffer_size += readed;
-            if(buffer_size + 32768 >= temp_buf_size)
-            {
-                buffer_size = 0;
-                break;
-            }
+            buffer_size += readed * channels;
+            buffer_left -= readed * channels;
         }
-        while(readed > 0);
-
-        ov_clear(&vorbis_Stream);   //ov_clear closes (vorbis_Stream->datasource == audio_file);
-
+        buffer_size *= 2;
+        stb_vorbis_close(ov);
+        Sys_ReturnTempMem(alloc.alloc_buffer_length_in_bytes);
+        
         if(buffer_size > 0)
         {
             buffer = (uint8_t*)malloc(buffer_size);
             memcpy(buffer, temp_buff, buffer_size);
-            Con_Notify("file \"%s\" loaded with rate=%d, bitrate=%.1f", path, rate, ((float)vorbis_Info->bitrate_nominal / 1000.0f));
-            ret = true;
+            Con_Notify("file \"%s\" loaded with rate=%d, bitrate=%.1f", path, rate, ((float)info.sample_rate / 1000.0f));
         }
         free(temp_buff);
-    }*/
+    }
 
-    return ret;
+    return buffer_size > 0;
 }
 
 
