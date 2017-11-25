@@ -11,7 +11,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 add_subdirectory(extern/bullet)
 add_subdirectory(extern/freetype2)
-add_subdirectory(extern/ogg)
+add_subdirectory(extern/lua)
 
 set(OPENTOMB_SRCS
     src/core/console.c

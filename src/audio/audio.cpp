@@ -12,11 +12,6 @@ extern "C" {
 #ifdef HAVE_ALEXT_H
 #include <alext.h>
 #endif
-
-#include <codec.h>
-#include <ogg.h>
-#include <os_types.h>
-#include <vorbisfile.h>
 }
 
 #include "../core/system.h"
@@ -150,7 +145,7 @@ public:
 };
 
 
-size_t sdl_ov_fread(void *data, size_t size, size_t n, void *ctx)
+/*size_t sdl_ov_fread(void *data, size_t size, size_t n, void *ctx)
 {
     return SDL_RWread((SDL_RWops*)ctx, data, size, n);
 }
@@ -168,15 +163,15 @@ int sdl_ov_fclose(void *ctx)
 long sdl_ov_ftell(void *ctx)
 {
     return SDL_RWtell((SDL_RWops*)ctx);
-}
+}*/
 
-static ov_callbacks ov_sdl_callbacks =
+/*static ov_callbacks ov_sdl_callbacks =
 {
     sdl_ov_fread,
     sdl_ov_fseek,
     sdl_ov_fclose,
     sdl_ov_ftell
-};
+};*/
 
 // ======== PRIVATE PROTOTYPES =============
 int  Audio_LogALError(int error_marker = 0);    // AL-specific error handler.
@@ -260,12 +255,12 @@ bool StreamTrackBuffer::Load(int track_index)
 ///@TODO: fix vorbis streaming! ov_bitrate may differ in differ section
 bool StreamTrackBuffer::Load_Ogg(const char *path)
 {
-    vorbis_info    *vorbis_Info = NULL;
+    /*vorbis_info    *vorbis_Info = NULL;
     SDL_RWops      *audio_file = SDL_RWFromFile(path, "rb");
-    OggVorbis_File  vorbis_Stream;
+    OggVorbis_File  vorbis_Stream;*/
     bool            ret = false;
 
-    if(!audio_file)
+    /*if(!audio_file)
     {
         Sys_DebugLog(SYS_LOG_FILENAME, "OGG: Couldn't open file: %s.", path);
         return false;
@@ -313,7 +308,7 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
             ret = true;
         }
         free(temp_buff);
-    }
+    }*/
 
     return ret;
 }
@@ -1861,7 +1856,7 @@ int  Audio_LogALError(int error_marker)
 }
 
 
-void Audio_LogOGGError(int code)
+/*void Audio_LogOGGError(int code)
 {
     switch(code)
     {
@@ -1884,7 +1879,7 @@ void Audio_LogOGGError(int code)
             Sys_DebugLog(SYS_LOG_FILENAME, "OGG error: Unknown Ogg error.");
             break;
     }
-}
+}*/
 
 
 int Audio_LoadALbufferFromWAV_Mem(ALuint buf_number, uint8_t *sample_pointer, uint32_t sample_size, uint32_t uncomp_sample_size)
