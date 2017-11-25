@@ -201,7 +201,6 @@ endif()
 
 set(OPENTOMB_ICON "resource/icon/opentomb.rc")
 find_package(PNG REQUIRED)
-find_package(Lua REQUIRED)
 find_package(ZLIB REQUIRED)
 
 # Check for optional OpenAL include files that are not present in all implementations of the library
@@ -218,7 +217,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
 target_include_directories(
     ${PROJECT_NAME} PRIVATE
     ${PNG_INCLUDE_DIRS}
-    ${LUA_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIR}
     ${OPENAL_INCLUDE_DIR}
@@ -229,9 +227,8 @@ target_link_libraries(
     ${PROJECT_NAME}
     bullet
     freetype2
-    ogg
+    lua
     ${PNG_LIBRARIES}
-    ${LUA_LIBRARIES}
     ${OPENAL_LIBRARY}
     ${SDL2_LIBRARY}
     ${ZLIB_LIBRARIES}
