@@ -227,7 +227,7 @@ target_link_libraries(
     ${PROJECT_NAME}
     bullet
     freetype2
-    lua
+    lua5.3
     ${PNG_LIBRARIES}
     ${OPENAL_LIBRARY}
     ${SDL2_LIBRARY}
