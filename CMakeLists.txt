@@ -145,6 +145,7 @@ set(OPENTOMB_SRCS
     src/audio/audio_fx.h
     src/audio/audio_stream.cpp
     src/audio/audio_stream.h
+    src/audio/stb_vorbis.c
     src/character_controller.cpp
     src/character_controller.h
     src/controls.cpp
