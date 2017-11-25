@@ -11,7 +11,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 add_subdirectory(extern/bullet)
 add_subdirectory(extern/freetype2)
-add_subdirectory(extern/ogg)
+add_subdirectory(extern/lua)
 
 set(OPENTOMB_SRCS
     src/core/console.c
@@ -145,6 +145,7 @@ set(OPENTOMB_SRCS
     src/audio/audio_fx.h
     src/audio/audio_stream.cpp
     src/audio/audio_stream.h
+    src/audio/stb_vorbis.c
     src/character_controller.cpp
     src/character_controller.h
     src/controls.cpp
@@ -201,7 +202,6 @@ endif()
 
 set(OPENTOMB_ICON "resource/icon/opentomb.rc")
 find_package(PNG REQUIRED)
-find_package(Lua REQUIRED)
 find_package(ZLIB REQUIRED)
 
 # Check for optional OpenAL include files that are not present in all implementations of the library
@@ -218,7 +218,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
 target_include_directories(
     ${PROJECT_NAME} PRIVATE
     ${PNG_INCLUDE_DIRS}
-    ${LUA_INCLUDE_DIR}
     ${ZLIB_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIR}
     ${OPENAL_INCLUDE_DIR}
@@ -229,9 +228,8 @@ target_link_libraries(
     ${PROJECT_NAME}
     bullet
     freetype2
-    ogg
+    lua5.3
     ${PNG_LIBRARIES}
-    ${LUA_LIBRARIES}
     ${OPENAL_LIBRARY}
     ${SDL2_LIBRARY}
     ${ZLIB_LIBRARIES}
