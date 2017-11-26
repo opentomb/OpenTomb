@@ -64,21 +64,23 @@ enum TR_AUDIO_STREAM_METHOD
 #define TR_AUDIO_STREAM_PAUSED      (2)
 #define TR_AUDIO_STREAM_STOPPING    (3)
 
+struct stream_internal_s;
+
 typedef struct stream_track_s
 {
-    int32_t         track;
-    uint16_t        type; // Either BACKGROUND, ONESHOT or CHAT.
-    uint16_t        state;
-    uint32_t        linked_buffers;
-    uint32_t        buffer_offset;
-    ALuint          source;
-    ALuint          buffers[TR_AUDIO_STREAM_NUMBUFFERS];
-    float           current_volume;     // Stream volume, considering fades.
+    int32_t                     track;
+    uint16_t                    type; // Either BACKGROUND, ONESHOT or CHAT.
+    uint16_t                    state;
+    uint32_t                    linked_buffers;
+    uint32_t                    buffer_offset;
+    float                       current_volume;     // Stream volume, considering fades.
+    struct stream_internal_s   *internal;
 }stream_track_t, *stream_track_p;
 
 
 void StreamTrack_Init(stream_track_p s);
 void StreamTrack_Clear(stream_track_p s);
+void StreamTrack_SetEffects(stream_track_p s, int value);
 int StreamTrack_Play(stream_track_p s);
 int StreamTrack_Stop(stream_track_p s);
 int StreamTrack_Pause(stream_track_p s);
@@ -86,6 +88,7 @@ int StreamTrack_CheckForEnd(stream_track_p s);
 
 int StreamTrack_IsNeedUpdateBuffer(stream_track_p s);
 int StreamTrack_UpdateBuffer(stream_track_p s, uint8_t *buff, size_t size, int sample_bitsize, int channels, int frequency);
+int StreamTrack_UpdateState(stream_track_p s, float time, float volume);
 
 
 #endif // AUDIO_STREAM_H

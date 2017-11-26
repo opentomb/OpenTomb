@@ -810,19 +810,12 @@ int Audio_StreamPlay(uint32_t track_index, const uint8_t mask)
             break;
         }
     }
-
+    
     if(audio_settings.use_effects)
     {
-        if(s->type == TR_AUDIO_STREAM_TYPE_CHAT)
-        {
-            Audio_SetFX(s->source);
-        }
-        else
-        {
-            Audio_UnsetFX(s->source);
-        }
+        StreamTrack_SetEffects(s, s->type == TR_AUDIO_STREAM_TYPE_CHAT);
     }
-
+    
     if(StreamTrack_Play(s) <= 0)
     {
         Con_AddLine("StreamPlay: CANCEL, stream play error.", FONTSTYLE_CONSOLE_WARNING);
@@ -839,59 +832,11 @@ void Audio_UpdateStreams(float time)
     stream_track_p s = audio_world_data.stream_tracks;
     for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; ++i, ++s)
     {
-        if((s->state != TR_AUDIO_STREAM_STOPPED) && alIsSource(s->source))
+        if(StreamTrack_UpdateState(s, time, audio_settings.sound_volume))
         {
-            ALint state = 0;
-            ALfloat inc = 0.0f;//15 920 704 //12 056 352
-            alGetSourcei(s->source, AL_SOURCE_STATE, &state);
             StreamTrackBuffer *stb = ((s->track >= 0) && (s->track < audio_world_data.stream_buffers_count)) ?
                 (audio_world_data.stream_buffers[s->track]) : (NULL);
-
-            if(StreamTrack_CheckForEnd(s))
-            {
-                StreamTrack_Stop(s);
-                continue;
-            }
-
-            switch(s->type)
-            {
-                case TR_AUDIO_STREAM_TYPE_BACKGROUND:
-                    inc = time * TR_AUDIO_STREAM_CROSSFADE_BACKGROUND;
-                    break;
-
-                case TR_AUDIO_STREAM_TYPE_ONESHOT:
-                    inc = time * TR_AUDIO_STREAM_CROSSFADE_ONESHOT;
-                    break;
-
-                case TR_AUDIO_STREAM_TYPE_CHAT:
-                    inc = time * TR_AUDIO_STREAM_CROSSFADE_CHAT;
-                    break;
-            }
-
-            if(s->state == TR_AUDIO_STREAM_STOPPING)
-            {
-                s->current_volume -= inc;
-                if(s->current_volume <= 0.0f)
-                {
-                    s->current_volume = 0.0f;
-                    StreamTrack_Stop(s);
-                    continue;
-                }
-                else
-                {
-                    alSourcef(s->source, AL_GAIN, s->current_volume);
-                }
-            }
-            else if((s->state == TR_AUDIO_STREAM_PLAYING) && (s->current_volume < audio_settings.sound_volume))
-            {
-                s->current_volume += inc;
-                if(s->current_volume > audio_settings.sound_volume)
-                {
-                    s->current_volume = audio_settings.sound_volume;
-                }
-                alSourcef(s->source, AL_GAIN, s->current_volume);
-            }
-
+            
             while(stb && StreamTrack_IsNeedUpdateBuffer(s) && (s->buffer_offset < stb->buffer_size))
             {
                 size_t bytes = stb->buffer_part;
@@ -971,19 +916,14 @@ int Audio_GetFreeStream()
     stream_track_p s = audio_world_data.stream_tracks;
     for(uint32_t i = 0; i < audio_world_data.stream_tracks_count; ++i, ++s)
     {
-        if(alIsSource(s->source))
+        if(s->state == TR_AUDIO_STREAM_STOPPED)
         {
-            ALint state = 0;
-            alGetSourcei(s->source, AL_SOURCE_STATE, &state);
-            if((state == AL_STOPPED) || (state == AL_INITIAL))
-            {
-                return i;
-            }
-            if(state == AL_PAUSED)
-            {
-                StreamTrack_Stop(s);
-                return i;
-            }
+            return i;
+        }
+        else if(s->state == TR_AUDIO_STREAM_PAUSED)
+        {
+            StreamTrack_Stop(s);
+            return i;
         }
     }
 
@@ -2043,32 +1983,7 @@ void Audio_Update(float time)
 }
 
 
-int Audio_StreamExternalPlay()
+struct stream_track_s *Audio_GetStreamExternal()
 {
-    return StreamTrack_Play(&audio_world_data.external_stream);
-}
-
-
-int Audio_StreamExternalStop()
-{
-    return StreamTrack_Stop(&audio_world_data.external_stream);
-}
-
-
-int Audio_StreamExternalBufferIsNeedUpdate()
-{
-    return StreamTrack_IsNeedUpdateBuffer(&audio_world_data.external_stream);
-}
-
-
-uint32_t Audio_StreamExternalBufferOffset()
-{
-    return audio_world_data.external_stream.buffer_offset;
-}
-
-
-int Audio_StreamExternalUpdateBuffer(uint8_t *buff, size_t size, int sample_bitsize, int channels, int frequency)
-{
-    audio_world_data.external_stream.current_volume = audio_settings.sound_volume;
-    return StreamTrack_UpdateBuffer(&audio_world_data.external_stream, buff, size, sample_bitsize, channels, frequency);
+    return &audio_world_data.external_stream;
 }

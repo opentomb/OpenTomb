@@ -31,6 +31,7 @@ extern "C" {
 #include "gui/gui_inventory.h"
 #include "vt/vt_level.h"
 #include "audio/audio.h"
+#include "audio/audio_stream.h"
 #include "game.h"
 #include "mesh.h"
 #include "skeletal_model.h"
@@ -288,7 +289,7 @@ const char *Engine_GetBasePath()
 void Engine_SetDone()
 {
     stream_codec_stop(&engine_video, 0);
-    Audio_StreamExternalStop();
+    StreamTrack_Stop(Audio_GetStreamExternal());
     engine_done = 1;
 }
 
@@ -877,7 +878,7 @@ void Engine_MainLoop()
         int codec_end_state = stream_codec_check_end(&engine_video);
         if(codec_end_state == 1)
         {
-            Audio_StreamExternalStop();
+            StreamTrack_Stop(Audio_GetStreamExternal());
         }
 
         if(codec_end_state >= 0)
@@ -892,18 +893,20 @@ void Engine_MainLoop()
         }
         else
         {
+            stream_track_p s = Audio_GetStreamExternal();
             stream_codec_audio_lock(&engine_video);
-            if(engine_video.codec.audio.buff && (engine_video.codec.audio.buff_offset >= Audio_StreamExternalBufferOffset()))
+            if(engine_video.codec.audio.buff && (engine_video.codec.audio.buff_offset >= s->buffer_offset))
             {
-                Audio_StreamExternalUpdateBuffer(engine_video.codec.audio.buff, engine_video.codec.audio.buff_size,
+                s->current_volume = audio_settings.sound_volume;
+                StreamTrack_UpdateBuffer(s, engine_video.codec.audio.buff, engine_video.codec.audio.buff_size,
                     engine_video.codec.audio.bits_per_sample, engine_video.codec.audio.channels, engine_video.codec.audio.sample_rate);
             }
-            if(Audio_StreamExternalBufferIsNeedUpdate())
+            if(StreamTrack_IsNeedUpdateBuffer(s))
             {
                 engine_video.update_audio = 1;
             }
             stream_codec_audio_unlock(&engine_video);
-            Audio_StreamExternalPlay();
+            StreamTrack_Play(s);
 
             stream_codec_video_lock(&engine_video);
             if(engine_video.codec.video.rgba)
@@ -1559,16 +1562,18 @@ int  Engine_PlayVideo(const char *name)
         {
             if(0 == codec_open_rpl(&engine_video.codec))
             {
-                Audio_StreamExternalStop();
+                stream_track_p s = Audio_GetStreamExternal();
+                StreamTrack_Stop(s);
                 Audio_StopStreams(-1);
                 Con_SetShown(0);
 
-                while(Audio_StreamExternalBufferIsNeedUpdate())
+                s->current_volume = audio_settings.sound_volume;
+                while(StreamTrack_IsNeedUpdateBuffer(s))
                 {
                     codec_decode_audio(&engine_video.codec);
-                    if(engine_video.codec.audio.buff && (engine_video.codec.audio.buff_offset >= Audio_StreamExternalBufferOffset()))
+                    if(engine_video.codec.audio.buff && (engine_video.codec.audio.buff_offset >= s->buffer_offset))
                     {
-                        Audio_StreamExternalUpdateBuffer(engine_video.codec.audio.buff, engine_video.codec.audio.buff_size,
+                        StreamTrack_UpdateBuffer(s, engine_video.codec.audio.buff, engine_video.codec.audio.buff_size,
                             engine_video.codec.audio.bits_per_sample, engine_video.codec.audio.channels, engine_video.codec.audio.sample_rate);
                     }
                 }
