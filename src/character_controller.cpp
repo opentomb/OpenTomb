@@ -1162,7 +1162,7 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
 void Character_LookAt(struct entity_s *ent, float target[3])
 {
     const float bone_dir[3] = {0.0f, 1.0f, 0.0f};
-    const float head_target_limit[4] = {0.0f, 1.0f, 0.0f, 0.273f};
+    const float head_target_limit[4] = {0.0f, 1.0f, 0.0f, 0.373f};
     ss_animation_p anim_head_track = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_HEAD_TRACK);
     ss_animation_p  base_anim = &ent->bf->animations;
 
@@ -1182,10 +1182,10 @@ void Character_LookAt(struct entity_s *ent, float target[3])
         anim_head_track->anim_ext_flags |= ANIM_EXT_TARGET_TO;
         if((ent->move_type == MOVE_ON_FLOOR) || (ent->move_type == MOVE_FREE_FALLING))
         {
-            const float axis_mod[3] = {0.23f, 0.33f, 1.0f};
+            const float axis_mod[3] = {0.23f, 0.03f, 1.0f};
             const float target_limit[4] = {0.0f, 1.0f, 0.0f, 0.883f};
 
-            base_anim->targeting_flags = 0x0000;
+            base_anim->targeting_flags = ANIM_TARGET_USE_AXIS_MOD;
             SSBoneFrame_SetTarget(base_anim, base_anim->model->mesh_tree[ent->character->bone_head].parent, target, bone_dir);
             SSBoneFrame_SetTargetingLimit(base_anim, target_limit);
             SSBoneFrame_SetTargetingAxisMod(base_anim, axis_mod);
