@@ -40,10 +40,10 @@ set(OPENTOMB_SRCS
     src/fmv/tiny_codec.c
     src/fmv/stream_codec.h
     src/fmv/stream_codec.c
-    src/fmv/common.h
-    src/fmv/bytestream.h
-    src/fmv/get_bits.h
-    src/fmv/rpl.c
+    src/fmv/internal/common.h
+    src/fmv/internal/bytestream.h
+    src/fmv/internal/get_bits.h
+    src/fmv/containers/rpl.c
     src/fmv/codecs/avcodec.h
     src/fmv/codecs/adpcm.h
     src/fmv/codecs/adpcm.c

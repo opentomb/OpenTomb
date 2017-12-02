@@ -29,7 +29,7 @@
 #include <stdint.h>
 #include <limits.h>
 #include "common.h"
-#include "tiny_codec.h"
+#include "../tiny_codec.h"
 
 /*
  * Safe bitstream reading:

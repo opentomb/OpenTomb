@@ -35,13 +35,13 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 
-#include "avcodec.h"
-#define BITSTREAM_READER_LE
-#include "../get_bits.h"
-#include "../bytestream.h"
 #include "../tiny_codec.h"
+#include "avcodec.h"
 #include "adpcm.h"
 #include "adpcm_data.h"
+#define BITSTREAM_READER_LE
+#include "../internal/get_bits.h"
+#include "../internal/bytestream.h"
 
 /**
  * @file

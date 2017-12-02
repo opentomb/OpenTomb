@@ -23,8 +23,8 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 
-#include "tiny_codec.h"
-#include "codecs/avcodec.h"
+#include "../tiny_codec.h"
+#include "../codecs/avcodec.h"
 
 
 #define RPL_SIGNATURE "ARMovie"

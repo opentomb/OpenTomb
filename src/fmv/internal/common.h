@@ -28,7 +28,7 @@
 
 #include <stdint.h>
 #include <limits.h>
-#include "tiny_codec.h"
+#include "../tiny_codec.h"
 
 extern const uint8_t ff_reverse[256];
 

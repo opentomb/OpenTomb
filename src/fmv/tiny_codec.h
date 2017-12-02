@@ -65,6 +65,7 @@ typedef struct tiny_codec_s
     int               (*packet)(struct tiny_codec_s *s, struct AVPacket *pkt);
     uint64_t            fps_num;
     uint64_t            fps_denum;
+
     struct
     {
         AVPacket        pkt;

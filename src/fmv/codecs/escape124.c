@@ -19,14 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#define BITSTREAM_READER_LE
 #include <inttypes.h>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 
-#include "../get_bits.h"
 #include "../tiny_codec.h"
-
+#define BITSTREAM_READER_LE
+#include "../internal/get_bits.h"
 
 typedef union MacroBlock
 {
