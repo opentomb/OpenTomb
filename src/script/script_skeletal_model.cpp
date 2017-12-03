@@ -669,25 +669,22 @@ int lua_EntitySSAnimEnsureExists(lua_State * lua)
 
 int lua_EntitySSAnimSetTarget(lua_State * lua)
 {
-    if(lua_gettop(lua) >= 9)
+    if(lua_gettop(lua) >= 8)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
+        int ind = lua_tointeger(lua, 2);
+        if(ent && (ind >= 0) && (ind < ent->bf->bone_tag_count))
         {
-            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2));
-            if(ss_anim)
-            {
-                float pos[3], dir[3];
-                uint16_t targeted_bone = lua_tointeger(lua, 3);
-                pos[0] = lua_tonumber(lua, 4);
-                pos[1] = lua_tonumber(lua, 5);
-                pos[2] = lua_tonumber(lua, 6);
-                dir[0] = lua_tonumber(lua, 7);
-                dir[1] = lua_tonumber(lua, 8);
-                dir[2] = lua_tonumber(lua, 9);
+            ss_bone_tag_p b_tag = ent->bf->bone_tags + ind;
+            float pos[3], dir[3];
+            pos[0] = lua_tonumber(lua, 3);
+            pos[1] = lua_tonumber(lua, 4);
+            pos[2] = lua_tonumber(lua, 5);
+            dir[0] = lua_tonumber(lua, 6);
+            dir[1] = lua_tonumber(lua, 7);
+            dir[2] = lua_tonumber(lua, 8);
 
-                SSBoneFrame_SetTarget(ss_anim, targeted_bone, pos, dir);
-            }
+            SSBoneFrame_SetTarget(b_tag, pos, dir);
         }
         else
         {
@@ -696,7 +693,7 @@ int lua_EntitySSAnimSetTarget(lua_State * lua)
     }
     else
     {
-        Con_Warning("entitySSAnimSetTarget: expecting arguments (entity_id, anim_type_id, targeted_bone, target_x, target_y, target_z, bone_dir_x, bone_dir_y, bone_dir_z)");
+        Con_Warning("entitySSAnimSetTarget: expecting arguments (entity_id, targeted_bone, target_x, target_y, target_z, bone_dir_x, bone_dir_y, bone_dir_z)");
     }
 
     return 0;
@@ -708,17 +705,15 @@ int lua_EntitySSAnimSetAxisMod(lua_State * lua)
     if(lua_gettop(lua) >= 5)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
+        int ind = lua_tointeger(lua, 2);
+        if(ent && (ind >= 0) && (ind < ent->bf->bone_tag_count))
         {
-            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2));
-            if(ss_anim)
-            {
-                float mod[3];
-                mod[0] = lua_tonumber(lua, 3);
-                mod[1] = lua_tonumber(lua, 4);
-                mod[2] = lua_tonumber(lua, 5);
-                SSBoneFrame_SetTargetingAxisMod(ss_anim, mod);
-            }
+            ss_bone_tag_p b_tag = ent->bf->bone_tags + ind;
+            float mod[3];
+            mod[0] = lua_tonumber(lua, 3);
+            mod[1] = lua_tonumber(lua, 4);
+            mod[2] = lua_tonumber(lua, 5);
+            SSBoneFrame_SetTargetingAxisMod(b_tag, mod);
         }
         else
         {
@@ -727,7 +722,7 @@ int lua_EntitySSAnimSetAxisMod(lua_State * lua)
     }
     else
     {
-        Con_Warning("entitySSAnimSetAxisMod: expecting arguments (entity_id, anim_type_id, mod_x, mod_y, mod_z)");
+        Con_Warning("entitySSAnimSetAxisMod: expecting arguments (entity_id, bone_id, mod_x, mod_y, mod_z)");
     }
 
     return 0;
@@ -739,18 +734,16 @@ int lua_EntitySSAnimSetTargetingLimit(lua_State * lua)
     if(lua_gettop(lua) >= 6)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
+        int ind = lua_tointeger(lua, 2);
+        if(ent && (ind >= 0) && (ind < ent->bf->bone_tag_count))
         {
-            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2));
-            if(ss_anim)
-            {
-                float q[4];
-                q[0] = lua_tonumber(lua, 3);
-                q[1] = lua_tonumber(lua, 4);
-                q[2] = lua_tonumber(lua, 5);
-                q[3] = lua_tonumber(lua, 6);
-                SSBoneFrame_SetTargetingLimit(ss_anim, q);
-            }
+            ss_bone_tag_p b_tag = ent->bf->bone_tags + ind;
+            float q[4];
+            q[0] = lua_tonumber(lua, 3);
+            q[1] = lua_tonumber(lua, 4);
+            q[2] = lua_tonumber(lua, 5);
+            q[3] = lua_tonumber(lua, 6);
+            SSBoneFrame_SetTargetingLimit(b_tag, q);
         }
         else
         {
@@ -759,7 +752,7 @@ int lua_EntitySSAnimSetTargetingLimit(lua_State * lua)
     }
     else
     {
-        Con_Warning("entitySSAnimSetTargetingLimit: expecting arguments (entity_id, anim_type_id, q_x, q_y, q_z, q_w)");
+        Con_Warning("entitySSAnimSetTargetingLimit: expecting arguments (entity_id, bone_id, q_x, q_y, q_z, q_w)");
     }
 
     return 0;
@@ -771,18 +764,14 @@ int lua_EntitySSAnimSetCurrentRotation(lua_State * lua)
     if(lua_gettop(lua) >= 6)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
+        int ind = lua_tointeger(lua, 2);
+        if(ent && (ind >= 0) && (ind < ent->bf->bone_tag_count))
         {
-            ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, lua_tointeger(lua, 2));
-            if(ss_anim)
-            {
-                float q[4];
-                q[0] = lua_tonumber(lua, 3);
-                q[1] = lua_tonumber(lua, 4);
-                q[2] = lua_tonumber(lua, 5);
-                q[3] = lua_tonumber(lua, 6);
-                vec4_copy(ss_anim->current_mod, q);
-            }
+            ss_bone_tag_p b_tag = ent->bf->bone_tags + ind;
+            b_tag->mod.current_mod[0] = lua_tonumber(lua, 3);
+            b_tag->mod.current_mod[1] = lua_tonumber(lua, 4);
+            b_tag->mod.current_mod[2] = lua_tonumber(lua, 5);
+            b_tag->mod.current_mod[3] = lua_tonumber(lua, 6);
         }
         else
         {
@@ -791,7 +780,7 @@ int lua_EntitySSAnimSetCurrentRotation(lua_State * lua)
     }
     else
     {
-        Con_Warning("entitySSAnimSetCurrentRotation: expecting arguments (entity_id, anim_type_id, q_x, q_y, q_z, q_w)");
+        Con_Warning("entitySSAnimSetCurrentRotation: expecting arguments (entity_id, bone_id, q_x, q_y, q_z, q_w)");
     }
 
     return 0;
@@ -800,7 +789,7 @@ int lua_EntitySSAnimSetCurrentRotation(lua_State * lua)
 
 int lua_EntitySSAnimSetExtFlags(lua_State * lua)
 {
-    if(lua_gettop(lua) >= 5)
+    if(lua_gettop(lua) >= 4)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
@@ -810,7 +799,6 @@ int lua_EntitySSAnimSetExtFlags(lua_State * lua)
             {
                 ss_anim->enabled = 0x01 & (lua_tointeger(lua, 3));
                 ss_anim->anim_ext_flags = lua_tointeger(lua, 4);
-                ss_anim->targeting_flags = lua_tointeger(lua, 5);
             }
         }
         else
@@ -820,7 +808,7 @@ int lua_EntitySSAnimSetExtFlags(lua_State * lua)
     }
     else
     {
-        Con_Warning("entitySSAnimSetCurrentRotation: expecting arguments (entity_id, anim_type_id, enabled, anim_ext_flags, anim_targeting_flags)");
+        Con_Warning("entitySSAnimSetCurrentRotation: expecting arguments (entity_id, anim_type_id, enabled, anim_ext_flags)");
     }
 
     return 0;

@@ -3157,13 +3157,12 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
         uint16_t targeted_bone_start = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (ent->character->bone_l_hand_start) : (ent->character->bone_r_hand_start);
         uint16_t targeted_bone_end = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (ent->character->bone_l_hand_end) : (ent->character->bone_r_hand_end);
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
+        ss_bone_tag_p b_tag = ent->bf->bone_tags + targeted_bone_start;
         bool silent = false;
         bool force_hide = (ent->character->weapon_id <= 0);
         if(target)
         {
             float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.224f};
-            ss_anim->targeting_flags = 0x0000;
-            SSBoneFrame_SetTarget(ss_anim, targeted_bone_start, target->obb->centre, bone_dir);
             if(ss_anim->type == ANIM_TYPE_WEAPON_LH)
             {
                 vec3_RotateZ(targeting_limit, targeting_limit, 40.0f);
@@ -3172,16 +3171,16 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
             {
                 vec3_RotateZ(targeting_limit, targeting_limit, -40.0f);
             }
-            SSBoneFrame_SetTargetingLimit(ss_anim, targeting_limit);
-
-            if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, ss_anim))
+            SSBoneFrame_SetTargetingLimit(b_tag, targeting_limit);
+            SSBoneFrame_SetTarget(b_tag, target->obb->centre, bone_dir);
+            if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target->obb->centre))
             {
                 target = NULL;
                 silent = true;
             }
         }
 
-        ss_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
+        b_tag->is_targeted = 0x00;
         switch(ss_anim->next_state)
         {
             case WEAPON_STATE_HIDE:
@@ -3286,7 +3285,7 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
 
                 if(target)
                 {
-                    ss_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
+                    b_tag->is_targeted = 0x01;
                     if(!ent->character->cmd.action && !ent->character->cmd.ready_weapon)
                     {
                         float max_time = (float)ss_anim->current_frame * ss_anim->period;
@@ -3327,7 +3326,7 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
             case WEAPON_STATE_FIRE:
                 if(target)
                 {
-                    ss_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
+                    b_tag->is_targeted = 0x01;
                 }
                 
                 if(!force_hide && !silent && ent->character->cmd.action)
@@ -3451,22 +3450,21 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
         int32_t t;
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
         bool force_hide = (ent->character->weapon_id <= 0);
+        ss_bone_tag_p b_tag = ent->bf->bone_tags + ent->character->bone_torso;
         if(target)
         {
             const float bone_dir[3] = {0.0f, 1.0f, 0.0f};
             const float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.624f};
-            ss_anim->targeting_flags = 0x0000;
-            SSBoneFrame_SetTarget(ss_anim, ent->character->bone_torso, target->obb->centre, bone_dir);
-            SSBoneFrame_SetTargetingLimit(ss_anim, targeting_limit);
+            SSBoneFrame_SetTarget(b_tag, target->obb->centre, bone_dir);
+            SSBoneFrame_SetTargetingLimit(b_tag, targeting_limit);
 
-            if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, ss_anim))
+            if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target->obb->centre))
             {
                 target = NULL;
             }
         }
-        ss_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
+        b_tag->is_targeted = 0x00;
         Character_ClearLookAt(ent);
-        //ss_anim->model->animations[ss_anim->current_animation].state_id;
         switch(ss_anim->next_state)
         {
             case WEAPON_STATE_HIDE:
@@ -3573,7 +3571,7 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
 
                 if(target)
                 {
-                    ss_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
+                    b_tag->is_targeted = 0x01;
                     if(!ent->character->cmd.action && !ent->character->cmd.ready_weapon)
                     {
                         float max_time = (float)ss_anim->current_frame * ss_anim->period;
@@ -3614,7 +3612,7 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
             case WEAPON_STATE_FIRE:
                 if(target)
                 {
-                    ss_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
+                    b_tag->is_targeted = 0x01;
                 }
                 if(!force_hide && ent->character->cmd.action)
                 {
@@ -3694,7 +3692,7 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
                     ent->character->weapon_state = WEAPON_STATE_HIDE;
                     ent->character->set_weapon_model_func(ent, ent->character->weapon_id, WEAPON_STATE_HIDE);
                 }
-                ss_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
+                b_tag->is_targeted = 0x00;
                 break;
         };
     }

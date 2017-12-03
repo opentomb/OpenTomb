@@ -1163,49 +1163,41 @@ void Character_LookAt(struct entity_s *ent, float target[3])
 {
     const float bone_dir[3] = {0.0f, 1.0f, 0.0f};
     const float head_target_limit[4] = {0.0f, 1.0f, 0.0f, 0.373f};
-    ss_animation_p anim_head_track = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_HEAD_TRACK);
-    ss_animation_p  base_anim = &ent->bf->animations;
+    ss_bone_tag_p head = ent->bf->bone_tags + ent->character->bone_head;
 
-    base_anim->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
-
-    if(!anim_head_track)
+    if(SSBoneFrame_CheckTargetBoneLimit(ent->bf, head, target))
     {
-        anim_head_track = SSBoneFrame_AddOverrideAnim(ent->bf, NULL, ANIM_TYPE_HEAD_TRACK);
-    }
-
-    anim_head_track->targeting_flags = 0x0000;
-    SSBoneFrame_SetTarget(anim_head_track, ent->character->bone_head, target, bone_dir);
-    SSBoneFrame_SetTargetingLimit(anim_head_track, head_target_limit);
-
-    if(SSBoneFrame_CheckTargetBoneLimit(ent->bf, anim_head_track))
-    {
-        anim_head_track->anim_ext_flags |= ANIM_EXT_TARGET_TO;
-        if((ent->move_type == MOVE_ON_FLOOR) || (ent->move_type == MOVE_FREE_FALLING))
+        SSBoneFrame_SetTarget(head, target, bone_dir);
+        SSBoneFrame_SetTargetingLimit(head, head_target_limit);
+        if((ent->move_type == MOVE_ON_FLOOR) || (ent->move_type == MOVE_FREE_FALLING) &&
+           head->parent && head->parent->parent)
         {
             const float axis_mod[3] = {0.23f, 0.03f, 1.0f};
             const float target_limit[4] = {0.0f, 1.0f, 0.0f, 0.883f};
 
-            base_anim->targeting_flags = ANIM_TARGET_USE_AXIS_MOD;
-            SSBoneFrame_SetTarget(base_anim, base_anim->model->mesh_tree[ent->character->bone_head].parent, target, bone_dir);
-            SSBoneFrame_SetTargetingLimit(base_anim, target_limit);
-            SSBoneFrame_SetTargetingAxisMod(base_anim, axis_mod);
-            base_anim->anim_ext_flags |= ANIM_EXT_TARGET_TO;
+            SSBoneFrame_SetTarget(head->parent, target, bone_dir);
+            SSBoneFrame_SetTargetingLimit(head->parent, target_limit);
+            SSBoneFrame_SetTargetingAxisMod(head->parent, axis_mod);
         }
     }
     else
     {
-        anim_head_track->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
+        head->is_targeted = 0x00;
+        if(head->parent)
+        {
+            head->parent->is_targeted = 0x00;
+        }
     }
 }
 
 
 void Character_ClearLookAt(struct entity_s *ent)
 {
-    ss_animation_p anim_head_track = SSBoneFrame_GetOverrideAnim(ent->bf, ANIM_TYPE_HEAD_TRACK);
-    ent->bf->animations.anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
-    if(anim_head_track)
+    ss_bone_tag_p head = ent->bf->bone_tags + ent->character->bone_head;
+    head->is_targeted = 0x00;
+    if(head->parent)
     {
-        anim_head_track->anim_ext_flags &= ~ANIM_EXT_TARGET_TO;
+        head->parent->is_targeted = 0x00;
     }
 }
 

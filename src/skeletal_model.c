@@ -194,24 +194,38 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
         bf->bone_tags[0].parent = NULL;                                         // root
         for(uint16_t i = 0; i < bf->bone_tag_count; i++)
         {
-            bf->bone_tags[i].index = i;
-            bf->bone_tags[i].is_hidden = 0x00;
-            bf->bone_tags[i].mesh_base = model->mesh_tree[i].mesh_base;
-            bf->bone_tags[i].mesh_replace = NULL;
-            bf->bone_tags[i].mesh_skin = NULL;
-            bf->bone_tags[i].mesh_slot = NULL;
-            bf->bone_tags[i].skin_map = NULL;
-            bf->bone_tags[i].alt_anim = NULL;
-            bf->bone_tags[i].body_part = model->mesh_tree[i].body_part;
+            ss_bone_tag_p b_tag = bf->bone_tags + i;
+            b_tag->index = i;
+            b_tag->is_hidden = 0x00;
+            b_tag->is_targeted = 0x00;
+            b_tag->is_axis_modded = 0x00;
+            b_tag->mesh_base = model->mesh_tree[i].mesh_base;
+            b_tag->mesh_replace = NULL;
+            b_tag->mesh_skin = NULL;
+            b_tag->mesh_slot = NULL;
+            b_tag->skin_map = NULL;
+            b_tag->alt_anim = NULL;
+            b_tag->body_part = model->mesh_tree[i].body_part;
 
-            vec3_copy(bf->bone_tags[i].offset, model->mesh_tree[i].offset);
-            vec4_set_zero(bf->bone_tags[i].qrotate);
-            Mat4_E_macro(bf->bone_tags[i].transform);
-            Mat4_E_macro(bf->bone_tags[i].full_transform);
+            vec3_copy(b_tag->offset, model->mesh_tree[i].offset);
+            vec4_set_zero(b_tag->qrotate);
+            Mat4_E_macro(b_tag->transform);
+            Mat4_E_macro(b_tag->full_transform);
 
+            vec3_set_zero(b_tag->mod.target);
+            vec4_set_zero_angle(b_tag->mod.current_mod);
+            b_tag->mod.bone_direction[0] = 0.0f;
+            b_tag->mod.bone_direction[1] = 1.0f;
+            b_tag->mod.bone_direction[2] = 0.0f;
+            b_tag->mod.targeting_limit[0] = 0.0f;
+            b_tag->mod.targeting_limit[1] = 1.0f;
+            b_tag->mod.targeting_limit[2] = 0.0f;
+            b_tag->mod.targeting_limit[3] =-1.0f;
+            vec3_set_one(b_tag->mod.targeting_axis_mod);
+            
             if(i > 0)
             {
-                bf->bone_tags[i].parent = bf->bone_tags + model->mesh_tree[i].parent;
+                b_tag->parent = bf->bone_tags + model->mesh_tree[i].parent;
             }
         }
     }
@@ -227,18 +241,6 @@ void SSBoneFrame_InitSSAnim(struct ss_animation_s *ss_anim, uint32_t anim_type_i
     ss_anim->model = NULL;
     ss_anim->onFrame = NULL;
     ss_anim->onEndFrame = NULL;
-    ss_anim->targeting_bone = 0x00;
-    ss_anim->targeting_flags = 0x0000;
-    vec3_set_zero(ss_anim->target);
-    vec4_set_zero_angle(ss_anim->current_mod);
-    ss_anim->bone_direction[0] = 0.0f;
-    ss_anim->bone_direction[1] = 1.0f;
-    ss_anim->bone_direction[2] = 0.0f;
-    ss_anim->targeting_limit[0] = 0.0f;
-    ss_anim->targeting_limit[1] = 1.0f;
-    ss_anim->targeting_limit[2] = 0.0f;
-    ss_anim->targeting_limit[3] =-1.0f;
-    vec3_set_one(ss_anim->targeting_axis_mod);
 
     ss_anim->frame_time = 0.0f;
     ss_anim->next_state = 0;
@@ -364,11 +366,7 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
     {
         Mat4_Mat4_mul(btag->full_transform, btag->parent->full_transform, btag->transform);
         Mat4_Copy(btag->orig_transform, btag->full_transform);
-    }
-
-    for(ss_animation_p ss_anim = &bf->animations; ss_anim; ss_anim = ss_anim->next)
-    {
-        SSBoneFrame_TargetBoneToSlerp(bf, ss_anim, time);
+        SSBoneFrame_TargetBoneToSlerp(bf, btag, time);
     }
 }
 
@@ -399,22 +397,21 @@ void SSBoneFrame_RotateBone(struct ss_bone_frame_s *bf, const float q_rotate[4],
 }
 
 
-int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_bone_tag_s *b_tag, float target[3])
 {
-    ss_bone_tag_p b_tag = b_tag = bf->bone_tags + ss_anim->targeting_bone;
     float target_dir[3], target_local[3], limit_dir[3], t;
 
-    Mat4_vec3_mul_inv(target_local, bf->transform, ss_anim->target);
+    Mat4_vec3_mul_inv(target_local, bf->transform, target);
     if(b_tag->parent)
     {
         Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
     }
     vec3_sub(target_dir, target_local, b_tag->transform + 12);
     vec3_norm(target_dir, t);
-    vec3_copy(limit_dir, ss_anim->targeting_limit);
+    vec3_copy(limit_dir, b_tag->mod.targeting_limit);
 
-    if((ss_anim->targeting_limit[3] == -1.0f) ||
-       (vec3_dot(limit_dir, target_dir) > ss_anim->targeting_limit[3]))
+    if((b_tag->mod.targeting_limit[3] == -1.0f) ||
+       (vec3_dot(limit_dir, target_dir) > b_tag->mod.targeting_limit[3]))
     {
         return 1;
     }
@@ -423,95 +420,97 @@ int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_anim
 }
 
 
-void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim, float time)
+void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_bone_tag_s *b_tag, float time)
 {
-    if(ss_anim->anim_ext_flags & ANIM_EXT_TARGET_TO)
+    if(b_tag->is_targeted)
     {
-        ss_bone_tag_p b_tag = bf->bone_tags + ss_anim->targeting_bone;
         float clamped_q[4], q[4], target_dir[3], target_local[3], bone_dir[3];
 
-        Mat4_vec3_mul_inv(target_local, bf->transform, ss_anim->target);
+        Mat4_vec3_mul_inv(target_local, bf->transform, b_tag->mod.target);
         if(b_tag->parent)
         {
             Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
         }
         vec3_sub(target_dir, target_local, b_tag->transform + 12);
-        if(ss_anim->targeting_flags & ANIM_TARGET_OWERRIDE_ANIM)
+        if(0 /*b_tag->is_target_over_anim*/)
         {
-            Mat4_vec3_rot_macro(bone_dir, b_tag->transform, ss_anim->bone_direction);
+            Mat4_vec3_rot_macro(bone_dir, bf->transform, b_tag->mod.bone_direction);
         }
         else
         {
-            vec3_copy(bone_dir, ss_anim->bone_direction);
+            vec3_copy(bone_dir, b_tag->mod.bone_direction);
         }
 
         vec4_GetQuaternionRotation(q, bone_dir, target_dir);
-        if(q[3] < ss_anim->targeting_limit[3])
+        if(q[3] < b_tag->mod.targeting_limit[3])
         {
-            vec4_clampw(q, ss_anim->targeting_limit[3]);
+            vec4_clampw(q, b_tag->mod.targeting_limit[3]);
         }
-        if(ss_anim->targeting_flags & ANIM_TARGET_USE_AXIS_MOD)
+        if(b_tag->is_axis_modded)
         {
-            q[0] *= ss_anim->targeting_axis_mod[0];
-            q[1] *= ss_anim->targeting_axis_mod[1];
-            q[2] *= ss_anim->targeting_axis_mod[2];
+            q[0] *= b_tag->mod.targeting_axis_mod[0];
+            q[1] *= b_tag->mod.targeting_axis_mod[1];
+            q[2] *= b_tag->mod.targeting_axis_mod[2];
             q[3] = 1.0f - vec3_sqabs(q);
             q[3] = sqrtf(q[3]);
         }
-        vec4_slerp_to(clamped_q, ss_anim->current_mod, q, time * M_PI / 1.3f);
-        vec4_copy(ss_anim->current_mod, clamped_q);
-        SSBoneFrame_RotateBone(bf, ss_anim->current_mod, ss_anim->targeting_bone);
+        vec4_slerp_to(clamped_q, b_tag->mod.current_mod, q, time * M_PI / 1.3f);
+        vec4_copy(b_tag->mod.current_mod, clamped_q);
+        SSBoneFrame_RotateBone(bf, b_tag->mod.current_mod, b_tag->index);
     }
-    else if(ss_anim->current_mod[3] < 1.0f)
+    else if(b_tag->mod.current_mod[3] < 1.0f)
     {       
-        if(ss_anim->current_mod[3] < 0.99f)
+        if(b_tag->mod.current_mod[3] < 0.99f)
         {
             float zero_ang[4] = {0.0f, 0.0f, 0.0f, 1.0f};
             float clamped_q[4];
-            vec4_slerp_to(clamped_q, ss_anim->current_mod, zero_ang, time * M_PI / 1.3f);
-            vec4_copy(ss_anim->current_mod, clamped_q);
-            SSBoneFrame_RotateBone(bf, ss_anim->current_mod, ss_anim->targeting_bone);
+            vec4_slerp_to(clamped_q, b_tag->mod.current_mod, zero_ang, time * M_PI / 1.3f);
+            vec4_copy(b_tag->mod.current_mod, clamped_q);
+            SSBoneFrame_RotateBone(bf, b_tag->mod.current_mod, b_tag->index);
         }
         else
         {
-            vec4_set_zero_angle(ss_anim->current_mod);
+            vec4_set_zero_angle(b_tag->mod.current_mod);
         }
     }
 }
 
 
-void SSBoneFrame_SetTarget(struct ss_animation_s *ss_anim, uint16_t targeted_bone, const float target_pos[3], const float bone_dir[3])
+void SSBoneFrame_SetTarget(struct ss_bone_tag_s *b_tag, const float target_pos[3], const float bone_dir[3])
 {
-    ss_anim->targeting_bone = targeted_bone;
-    vec3_copy(ss_anim->target, target_pos);
-    vec3_copy(ss_anim->bone_direction, bone_dir);
+    b_tag->is_targeted = 0x01;
+    vec3_copy(b_tag->mod.target, target_pos);
+    vec3_copy(b_tag->mod.bone_direction, bone_dir);
 }
 
 
-void SSBoneFrame_SetTargetingAxisMod(struct ss_animation_s *ss_anim, const float mod[3])
+void SSBoneFrame_SetTargetingAxisMod(struct ss_bone_tag_s *b_tag, const float mod[3])
 {
     if(mod)
     {
-        vec3_copy(ss_anim->targeting_axis_mod, mod);
-        ss_anim->targeting_flags |= ANIM_TARGET_USE_AXIS_MOD;
+        vec3_copy(b_tag->mod.targeting_axis_mod, mod);
+        b_tag->is_axis_modded = 0x01;
     }
     else
     {
-        vec3_set_one(ss_anim->targeting_axis_mod);
-        ss_anim->targeting_flags &= ~ANIM_TARGET_USE_AXIS_MOD;
+        vec3_set_one(b_tag->mod.targeting_axis_mod);
+        b_tag->is_axis_modded = 0x00;
     }
 }
 
 
-void SSBoneFrame_SetTargetingLimit(struct ss_animation_s *ss_anim, const float limit[4])
+void SSBoneFrame_SetTargetingLimit(struct ss_bone_tag_s *b_tag, const float limit[4])
 {
     if(limit)
     {
-        vec4_copy(ss_anim->targeting_limit, limit);
+        vec4_copy(b_tag->mod.targeting_limit, limit);
     }
     else
     {
-        ss_anim->targeting_limit[3] = -1.0f;
+        b_tag->mod.targeting_limit[0] = 0.0f;
+        b_tag->mod.targeting_limit[1] = 0.0f;
+        b_tag->mod.targeting_limit[2] = 0.0f;
+        b_tag->mod.targeting_limit[3] = -1.0f;
     }
 }
 

@@ -213,9 +213,28 @@ int Save_Entity(entity_p ent, void *data)
 
         for(uint16_t i = 0; i < ent->bf->bone_tag_count; ++i)
         {
-            if(ent->bf->bone_tags[i].is_hidden)
+            ss_bone_tag_p b_tag = ent->bf->bone_tags + i;
+            if(b_tag->is_hidden)
             {
                 fprintf(*f, "\nsetEntityBoneVisibility(%d, %d, false);", ent->id, i);
+            }
+            if(ent->character)
+            {
+                if(b_tag->is_targeted)
+                {
+                    fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %.2f, %.2f, %.2f, %.6f, %.6f, %.6f);", ent->id, i,
+                        b_tag->mod.target[0], b_tag->mod.target[1], b_tag->mod.target[2],
+                        b_tag->mod.bone_direction[0], b_tag->mod.bone_direction[1], b_tag->mod.bone_direction[2]);
+                }
+                if(b_tag->is_axis_modded)
+                {
+                    fprintf(*f, "\nentitySSAnimSetAxisMod(%d, %d, %.6f, %.6f, %.6f);", ent->id, i,
+                        b_tag->mod.targeting_axis_mod[0], b_tag->mod.targeting_axis_mod[1], b_tag->mod.targeting_axis_mod[2]);
+                }
+                fprintf(*f, "\nentitySSAnimSetTargetingLimit(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, i,
+                    b_tag->mod.targeting_limit[0], b_tag->mod.targeting_limit[1], b_tag->mod.targeting_limit[2], b_tag->mod.targeting_limit[3]);
+                fprintf(*f, "\nentitySSAnimSetCurrentRotation(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, i,
+                    b_tag->mod.current_mod[0], b_tag->mod.current_mod[1], b_tag->mod.current_mod[2], b_tag->mod.current_mod[3]);
             }
         }
 
@@ -284,17 +303,7 @@ int Save_Entity(entity_p ent, void *data)
                 fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_animation, ss_anim->next_frame, ss_anim->current_animation, ss_anim->current_frame);
                 fprintf(*f, "\nsetEntityAnimStateHeavy(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state_heavy);
                 fprintf(*f, "\nsetEntityAnimState(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state);
-                fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %d, %.2f, %.2f, %.2f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type, ss_anim->targeting_bone,
-                    ss_anim->target[0], ss_anim->target[1], ss_anim->target[2],
-                    ss_anim->bone_direction[0], ss_anim->bone_direction[1], ss_anim->bone_direction[2]);
-                fprintf(*f, "\nentitySSAnimSetAxisMod(%d, %d, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
-                    ss_anim->targeting_axis_mod[0], ss_anim->targeting_axis_mod[1], ss_anim->targeting_axis_mod[2]);
-                fprintf(*f, "\nentitySSAnimSetTargetingLimit(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
-                    ss_anim->targeting_limit[0], ss_anim->targeting_limit[1], ss_anim->targeting_limit[2], ss_anim->targeting_limit[3]);
-                fprintf(*f, "\nentitySSAnimSetCurrentRotation(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, ss_anim->type,
-                    ss_anim->current_mod[0], ss_anim->current_mod[1], ss_anim->current_mod[2], ss_anim->current_mod[3]);
-                fprintf(*f, "\nentitySSAnimSetExtFlags(%d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled,
-                    ss_anim->anim_ext_flags, ss_anim->targeting_flags);
+                fprintf(*f, "\nentitySSAnimSetExtFlags(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled, ss_anim->anim_ext_flags);
                 fprintf(*f, "\nentitySSAnimSetEnable(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled);
             }
         }

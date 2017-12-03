@@ -26,10 +26,10 @@ extern "C" {
 #define SS_CHANGING_HEAVY       (0x04)      // 0x04 - rough change by set animation;
 
     
-#define ANIM_EXT_TARGET_TO              (1)
+//#define ANIM_EXT_TARGET_TO              (1)
     
-#define ANIM_TARGET_USE_AXIS_MOD        (0x0001)
-#define ANIM_TARGET_OWERRIDE_ANIM       (0x0002)
+//#define ANIM_TARGET_USE_AXIS_MOD        (0x0001)
+//#define ANIM_TARGET_OWERRIDE_ANIM       (0x0002)
 
 #define ANIM_TYPE_BASE                  (0x0000)
 #define ANIM_TYPE_HEAD_TRACK            (0x0001)
@@ -60,6 +60,16 @@ typedef struct ss_bone_tag_s
     struct ss_bone_tag_s   *parent;
     uint16_t                index;
     uint16_t                is_hidden : 1;
+    uint16_t                is_targeted : 1;
+    uint16_t                is_axis_modded : 1;
+    struct
+    {
+        float               bone_direction[3];
+        float               targeting_limit[4];                                 // x, y, z, cos(alpha_limit)
+        float               targeting_axis_mod[3];
+        float               current_mod[4];
+        float               target[3];
+    }                       mod;
     struct base_mesh_s     *mesh_base;                                          // base mesh - pointer to the first mesh in array
     struct base_mesh_s     *mesh_replace;
     struct base_mesh_s     *mesh_skin;                                          // base skinned mesh for ТР4+
@@ -90,14 +100,6 @@ typedef struct ss_animation_s
     
     uint16_t                    anim_frame_flags;                               // base animation control flags
     uint16_t                    anim_ext_flags;                                 // additional animation control flags
-
-    uint16_t                    targeting_bone;
-    uint16_t                    targeting_flags;
-    float                       bone_direction[3];
-    float                       targeting_limit[4];                             // x, y, z, cos(alpha_limit)
-    float                       targeting_axis_mod[3];
-    float                       current_mod[4];
-    float                       target[3];
 
     float                       period;                                         // one frame change period
     float                       frame_time;                                     // current time
@@ -259,11 +261,11 @@ void SSBoneFrame_Clear(ss_bone_frame_p bf);
 void SSBoneFrame_Copy(struct ss_bone_frame_s *dst, struct ss_bone_frame_s *src);
 void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time);
 void SSBoneFrame_RotateBone(struct ss_bone_frame_s *bf, const float q_rotate[4], int bone);
-int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
-void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim, float time);
-void SSBoneFrame_SetTarget(struct ss_animation_s *ss_anim, uint16_t targeted_bone, const float target_pos[3], const float bone_dir[3]);
-void SSBoneFrame_SetTargetingAxisMod(struct ss_animation_s *ss_anim, const float mod[3]);
-void SSBoneFrame_SetTargetingLimit(struct ss_animation_s *ss_anim, const float limit[4]);
+int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_bone_tag_s *b_tag, float target[3]);
+void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_bone_tag_s *b_tag, float time);
+void SSBoneFrame_SetTarget(struct ss_bone_tag_s *b_tag, const float target_pos[3], const float bone_dir[3]);
+void SSBoneFrame_SetTargetingAxisMod(struct ss_bone_tag_s *b_tag, const float mod[3]);
+void SSBoneFrame_SetTargetingLimit(struct ss_bone_tag_s *b_tag, const float limit[4]);
 struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, struct skeletal_model_s *sm, uint16_t anim_type_id);
 struct ss_animation_s *SSBoneFrame_GetOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
 void SSBoneFrame_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_type);
